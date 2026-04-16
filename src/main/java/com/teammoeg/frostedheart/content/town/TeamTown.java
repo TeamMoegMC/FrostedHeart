@@ -24,13 +24,11 @@ import java.util.Map.Entry;
 
 import com.teammoeg.chorda.dataholders.team.CTeamDataManager;
 import com.teammoeg.frostedheart.bootstrap.common.FHSpecialDataTypes;
-import com.teammoeg.frostedheart.content.town.block.AbstractTownBuildingBlockEntity;
 import com.teammoeg.frostedheart.content.town.block.TownBlockEntity;
 import com.teammoeg.frostedheart.content.town.building.AbstractTownBuilding;
 import com.teammoeg.frostedheart.content.town.building.AbstractTownResidentWorkBuilding;
 import com.teammoeg.frostedheart.content.town.building.ITownBuilding;
 import com.teammoeg.frostedheart.content.town.buildings.house.HouseBuilding;
-import com.teammoeg.frostedheart.content.town.provider.TeamTownProvider;
 import com.teammoeg.frostedheart.content.town.resident.Resident;
 
 import com.teammoeg.frostedheart.content.town.resource.TeamTownResourceActionExecutorHandler;
@@ -47,7 +45,7 @@ import net.minecraft.core.BlockPos;
  * The TeamTown is only an interface of the underlying TeamTownData.
  * You may use this to access or modify town data.
  */
-public class TeamTown implements Town, ITownWithResidents, ITownWithBuildings {
+public class TeamTown implements ITown, ITownWithResidents, ITownWithBuildings {
 
     /** The town data, actual data stored on disk. */
     TeamTownData data;

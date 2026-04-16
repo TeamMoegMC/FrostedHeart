@@ -2173,7 +2173,7 @@ public class FHBlocks {
             .build()
             .register();
 
-    // Town blocks, registrate
+    // ITown blocks, registrate
     public static final BlockEntry<HouseBlock> HOUSE = REGISTRATE.block("house", HouseBlock::new)
             .properties(t -> AbstractTownBuildingBlock.TOWN_BUILDING_CORE_BLOCK_BASE_PROPERTY)
             .tag(FHTags.Blocks.TOWN_BLOCKS.tag)

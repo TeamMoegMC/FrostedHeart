@@ -27,8 +27,8 @@ import com.teammoeg.chorda.block.entity.CTickableBlockEntity;
 import com.teammoeg.chorda.scheduler.ScheduledTaskTileEntity;
 import com.teammoeg.chorda.scheduler.SchedulerQueue;
 import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.content.town.ITown;
 import com.teammoeg.frostedheart.content.town.ITownWithBuildings;
-import com.teammoeg.frostedheart.content.town.Town;
 import com.teammoeg.frostedheart.content.town.building.AbstractTownBuilding;
 import com.teammoeg.frostedheart.content.town.provider.ITownProviderSerializable;
 
@@ -76,7 +76,7 @@ public abstract class AbstractTownBuildingBlockEntity<T extends AbstractTownBuil
 
     public Optional<T> getBuilding(){
         if(this.townProvider == null){
-            FHMain.LOGGER.warn("AbstractTownBuildingBlockEntity: Town provider is null");
+            FHMain.LOGGER.warn("AbstractTownBuildingBlockEntity: ITown provider is null");
             return Optional.empty();
         }
         ITownWithBuildings town = townProvider.getTown();
@@ -118,7 +118,7 @@ public abstract class AbstractTownBuildingBlockEntity<T extends AbstractTownBuil
     @Override
     public void readCustomNBT(CompoundTag compoundNBT, boolean b) {
     	if(compoundNBT.contains("townProvider")){
-            ITownProviderSerializable<? extends Town> providerRaw = ITownProviderSerializable.fromNBT(compoundNBT.getCompound("townProvider"));
+            ITownProviderSerializable<? extends ITown> providerRaw = ITownProviderSerializable.fromNBT(compoundNBT.getCompound("townProvider"));
             if(providerRaw != null){
                 if(ITownWithBuildings.class.isAssignableFrom(providerRaw.getTownType())){
                     //这里经过getTownType判断类型之后，townProvider的类型一定为ITownWithBuildings，所以应该不会有问题了

@@ -98,7 +98,7 @@ public class FHNetwork extends CBaseNetwork {
         registerMessage("heat_network_request_c2s", HeatNetworkRequestC2SPacket.class);
         registerMessage("heat_network_response_s2c", HeatNetworkResponseS2CPacket.class);
 
-        // Town Messages
+        // ITown Messages
         registerMessage("team_town_data_s2c", TeamTownDataS2CPacket.class);
         registerMessage("wandering_refugee_open_trade_gui", WanderingRefugeeOpenTradeGUIMessage.class);
         registerMessage("wandering_refugee_recruit", WanderingRefugeeRecruitMessage.class);

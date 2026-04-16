@@ -82,7 +82,7 @@ public class MineBaseBuilding extends AbstractTownResidentWorkBuilding {
 	}
 
 	@Override
-	public boolean work(Town town) {
+	public boolean work(ITownWithBuildings town) {
 		/*
 		if (town instanceof TeamTown teamTown) {
 			double toModify=0;

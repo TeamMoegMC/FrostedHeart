@@ -48,8 +48,8 @@ public class WarehouseBlockEntity extends AbstractTownBuildingBlockEntity<Wareho
     @Override
     public void refresh(@NotNull WarehouseBuilding building) {
         super.refresh(building);
-        Town town = this.getTown();
-        if(town instanceof TeamTown teamTown){
+        ITownWithBuildings buildingTown = this.getTown();
+        if(buildingTown instanceof TeamTown teamTown){
             teamTown.getTownData().ifPresent(TeamTownData::reloadMaxCapacity);
         }
     }

@@ -26,8 +26,8 @@ import com.teammoeg.chorda.dataholders.team.CTeamDataManager;
 import com.teammoeg.chorda.dataholders.team.TeamDataHolder;
 import com.teammoeg.chorda.text.Components;
 import com.teammoeg.frostedheart.content.climate.gamedata.chunkheat.ChunkHeatData;
+import com.teammoeg.frostedheart.content.town.ITown;
 import com.teammoeg.frostedheart.content.town.TeamTown;
-import com.teammoeg.frostedheart.content.town.Town;
 import com.teammoeg.frostedheart.content.town.building.AbstractTownBuilding;
 import com.teammoeg.frostedheart.content.town.provider.TeamTownProvider;
 import com.teammoeg.frostedresearch.mixinutil.IOwnerTile;
@@ -49,8 +49,6 @@ import net.minecraft.core.Direction;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
 import org.jetbrains.annotations.NotNull;
-
-import java.util.UUID;
 
 public abstract class AbstractTownBuildingBlock extends CBlock {
     public static final BooleanProperty LIT = BlockStateProperties.LIT;
@@ -79,7 +77,7 @@ public abstract class AbstractTownBuildingBlock extends CBlock {
             // register the house to the town
             if (entity instanceof ServerPlayer placer) {
                 TeamDataHolder teamDataHolder = CTeamDataManager.get(placer);
-                if (Town.DEBUG_MODE ||ChunkHeatData.hasActiveAdjust(world, pos)) {
+                if (ITown.DEBUG_MODE ||ChunkHeatData.hasActiveAdjust(world, pos)) {
                     TeamTown.from(placer).addTownBlock(pos, townBlockEntity);
                     if(townBlockEntity instanceof AbstractTownBuildingBlockEntity<?> abstractTownBuildingBlockEntity){
 

@@ -27,7 +27,7 @@ import net.minecraft.server.level.ServerLevel;
 import java.util.Map;
 import java.util.Optional;
 
-public interface ITownWithBuildings extends Town{
+public interface ITownWithBuildings{
     Map<BlockPos, AbstractTownBuilding> getTownBuildings();
 
     default Optional<AbstractTownBuilding> getTownBuilding(BlockPos pos){

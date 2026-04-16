@@ -31,7 +31,7 @@ import net.minecraft.world.item.ItemStack;
 import java.util.List;
 
 /**
- * Town resource attribute of Items.
+ * ITown resource attribute of Items.
  * Holds the resource type and the level.
  * The amount of a resource with specific type and level can be read using this class.
 

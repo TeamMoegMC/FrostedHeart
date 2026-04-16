@@ -2,7 +2,7 @@ package com.teammoeg.frostedheart.content.town.building;
 
 import com.mojang.serialization.Codec;
 import com.teammoeg.chorda.io.CodecUtil;
-import com.teammoeg.frostedheart.content.town.Town;
+import com.teammoeg.frostedheart.content.town.ITownWithBuildings;
 import com.teammoeg.frostedheart.content.town.buildings.house.HouseBuilding;
 import com.teammoeg.frostedheart.content.town.buildings.hunting.HuntingBaseBuilding;
 import com.teammoeg.frostedheart.content.town.buildings.mine.MineBaseBuilding;
@@ -33,7 +33,7 @@ public interface ITownBuilding {
      * @param town town of this building
      * @return true if worked successful
      */
-    boolean work(Town town);
+    boolean work(ITownWithBuildings town);
 
     /**
      * 获取城镇工作时该建筑参与工作的优先级。
@@ -50,5 +50,5 @@ public interface ITownBuilding {
     }
     int DEFAULT_PRIORITY=0;
 
-    void onRemoved(Town town);
+    void onRemoved(ITownWithBuildings town);
 }

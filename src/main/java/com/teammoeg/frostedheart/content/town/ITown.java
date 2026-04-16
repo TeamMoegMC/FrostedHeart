@@ -19,38 +19,17 @@
 
 package com.teammoeg.frostedheart.content.town;
 
-import com.teammoeg.frostedheart.content.town.resource.action.IActionExecutorHandler;
-
-import java.util.Optional;
-
 /**
- * Interface for accessing town data.
- * <p>
- * This is an abstract town, it may be a (player) team town, or a npc town.
+ * 融合了ITownWithResources, ITownWithBuildings, ITownWithResidents三个城镇功能的接口。
+ * <br>
+ * 一个具有完整功能的标准城镇应该继承这个接口。
  */
-public interface Town {
+public interface ITown extends ITownWithResources, ITownWithBuildings, ITownWithResidents {
 
     /**
      * Debug mode.
      * Should be deleted or turned to false when released.
      */
     public static final boolean DEBUG_MODE = true;//todo: 正式发布记得删掉
-
-    /*
-      Gets the resource manager.
-      Resource manager is used to change resources in the town.
-      Maybe there will be an interface super all resources managers, including town resource manager? I don't know.
-      已弃用，请使用getActionExecutorHandler操作资源。
-      @return resource manager
-     */
-    //TownResourceManager getResourceManager();
-
-    /**
-     * Get the {@link IActionExecutorHandler} of this town, which is used to execute resource modifying actions.
-     *
-     * @return the action executor handler
-     */
-    IActionExecutorHandler getActionExecutorHandler();
-
 
 }

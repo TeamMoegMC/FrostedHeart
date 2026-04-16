@@ -41,7 +41,7 @@ import net.minecraft.world.item.Items;
 import java.util.ArrayList;
 import java.util.UUID;
 
-import static com.teammoeg.frostedheart.content.town.Town.DEBUG_MODE;
+import static com.teammoeg.frostedheart.content.town.ITown.DEBUG_MODE;
 import static java.lang.Double.NEGATIVE_INFINITY;
 
 public class HuntingBaseBuilding extends AbstractTownResidentWorkBuilding {
@@ -107,7 +107,7 @@ public class HuntingBaseBuilding extends AbstractTownResidentWorkBuilding {
 	}
 
 	@Override
-	public boolean work(Town town) {
+	public boolean work(ITownWithBuildings town) {
 		if (town instanceof TeamTown teamTown) {
 			double totalEfficiency=0;
 			for(Resident resident:this.getResidents(teamTown)) {
@@ -119,14 +119,14 @@ public class HuntingBaseBuilding extends AbstractTownResidentWorkBuilding {
 			}
 			double picked=teamTown.maypickTerrainResource(TerrainResourceType.HUNT, totalEfficiency*2);
 
-			TownResourceActionResults.ItemResourceActionResult result = town
+			TownResourceActionResults.ItemResourceActionResult result = teamTown
 					.getActionExecutorHandler()
 					.execute(new TownResourceActions.ItemResourceAction(new ItemStack(Items.BEEF), ResourceActionType.ADD, picked, ResourceActionMode.MAXIMIZE));
 			teamTown.pickTerrainResource(TerrainResourceType.HUNT, result.modifiedAmount());
 
 			return true;
 		}
-		FHMain.LOGGER.error("HuntingBaseBuilding.work: Town is not TeamTown, need to fix work method.");//添加对其它城镇的适配
+		FHMain.LOGGER.error("HuntingBaseBuilding.work: ITown is not TeamTown, need to fix work method.");//添加对其它城镇的适配
 		throw new IllegalArgumentException("HuntingBaseBuilding ERROR: Can't work in non-team town :" + town);
 	}
 

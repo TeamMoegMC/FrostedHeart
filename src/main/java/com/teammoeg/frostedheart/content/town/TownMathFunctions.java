@@ -4,7 +4,7 @@ public class TownMathFunctions {
     /** The temperature at which the house is comfortable. */
     public static final double COMFORTABLE_TEMP_HOUSE = 24;
     public static final int MAX_TEMP_HOUSE = 50;
-    public static final int MIN_TEMP_HOUSE = (Town.DEBUG_MODE ? -50 : 0);
+    public static final int MIN_TEMP_HOUSE = (ITown.DEBUG_MODE ? -50 : 0);
 
     /**
      * 用于调整数据。

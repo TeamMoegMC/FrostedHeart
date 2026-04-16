@@ -28,7 +28,7 @@ import lombok.Getter;
 /**
  * <strong>THIS IS ALSO A VIRTUAL RESOURCE KEY THAT DIRECTLY STORED IN {@link TeamTownResourceHolder}!</strong>
  * <p>
- * Town resource attribute of virtual resources.
+ * ITown resource attribute of virtual resources.
  * Holds the resource type and the level.
  * The amount of a resource with specific type and level can be read using this class.
  */

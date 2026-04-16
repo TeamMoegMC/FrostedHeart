@@ -21,7 +21,7 @@ package com.teammoeg.frostedheart.content.town.buildings.warehouse;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
-import com.teammoeg.frostedheart.content.town.Town;
+import com.teammoeg.frostedheart.content.town.ITown;
 import com.teammoeg.frostedheart.content.town.block.OccupiedVolume;
 import com.teammoeg.frostedheart.content.town.building.AbstractTownBuilding;
 import com.teammoeg.frostedheart.content.town.resource.VirtualResourceType;
@@ -75,7 +75,7 @@ public class WarehouseBuilding extends AbstractTownBuilding {
 	 * 这曾是仓库的work方法，但是我认为考虑到它的特殊性，将它单独分出来了。
 	 * @param town 城镇
 	 */
-	public void addCapacity(Town town) {
+	public void addCapacity(ITown town) {
 		//town.getResourceManager().addIfHaveCapacity(VirtualResourceType.MAX_CAPACITY.generateAttribute(0), capacity);
 		TownResourceActions.VirtualResourceAttributeAction action = new TownResourceActions.VirtualResourceAttributeAction(VirtualResourceType.MAX_CAPACITY.generateAttribute(0), capacity, ResourceActionType.ADD, ResourceActionMode.ATTEMPT);
 		town.getActionExecutorHandler().execute(action);

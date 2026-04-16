@@ -1,7 +1,7 @@
 package com.teammoeg.frostedheart.content.town.provider;
 
+import com.teammoeg.frostedheart.content.town.ITown;
 import com.teammoeg.frostedheart.content.town.TeamTown;
-import com.teammoeg.frostedheart.content.town.Town;
 
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
@@ -12,7 +12,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Supplier;
 
-public interface ITownProviderSerializable<T extends Town> extends ITownProvider<T>, INBTSerializable<Tag> {
+public interface ITownProviderSerializable<T extends ITown> extends ITownProvider<T>, INBTSerializable<Tag> {
 
     /**
      * @return provider提供的城镇类型
@@ -24,9 +24,9 @@ public interface ITownProviderSerializable<T extends Town> extends ITownProvider
      * <br>
      * Value:一个生成Provider的构造函数
      */
-    public static final Map<String, Supplier<? extends ITownProviderSerializable<? extends Town>>> PROVIDERS = new HashMap<>();
+    public static final Map<String, Supplier<? extends ITownProviderSerializable<? extends ITown>>> PROVIDERS = new HashMap<>();
 
-    static <T extends Town> void register(Class<T> townType
+    static <T extends ITown> void register(Class<T> townType
             , Supplier<? extends ITownProviderSerializable<T>> constructor){
         PROVIDERS.put(townType.getSimpleName(), constructor);
     }
@@ -42,12 +42,12 @@ public interface ITownProviderSerializable<T extends Town> extends ITownProvider
         return tag;
     }
 
-    static @Nullable ITownProviderSerializable<? extends Town> fromNBT(CompoundTag tag){
+    static @Nullable ITownProviderSerializable<? extends ITown> fromNBT(CompoundTag tag){
         if(tag.contains("townType")){
             String townType = tag.getString("townType");
-            Supplier<? extends ITownProviderSerializable<? extends Town>> constructor = PROVIDERS.get(townType);
+            Supplier<? extends ITownProviderSerializable<? extends ITown>> constructor = PROVIDERS.get(townType);
             if(constructor != null && tag.contains("data")){
-                ITownProviderSerializable<? extends Town> provider = constructor.get();
+                ITownProviderSerializable<? extends ITown> provider = constructor.get();
                 provider.deserializeNBT(tag.get("data"));
                 return provider;
             }

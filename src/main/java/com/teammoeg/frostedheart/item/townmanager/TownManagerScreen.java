@@ -152,7 +152,7 @@ public class TownManagerScreen extends Screen {
 
         @Override
         public void onEnter() {
-            FHMain.LOGGER.error("TownMangerScreen ERROR: Town is null!");
+            FHMain.LOGGER.error("TownMangerScreen ERROR: ITown is null!");
         }
 
         @Override

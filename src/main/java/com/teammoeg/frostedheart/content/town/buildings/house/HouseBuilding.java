@@ -38,7 +38,7 @@ import com.teammoeg.frostedheart.content.town.resource.ItemStackResourceKey;
 import com.teammoeg.frostedheart.content.town.resource.action.*;
 import net.minecraft.core.BlockPos;
 
-import static com.teammoeg.frostedheart.content.town.Town.DEBUG_MODE;
+import static com.teammoeg.frostedheart.content.town.ITown.DEBUG_MODE;
 import static com.teammoeg.frostedheart.content.town.resource.ItemResourceType.RESIDENT_FOOD_LEVEL;
 
 /**
@@ -171,11 +171,12 @@ public class HouseBuilding extends AbstractTownBuilding implements ITownResident
                 && volume >= 8;
     }
 
+
     @Override
-    public boolean work(Town town) {
-        if(! (town instanceof ITownWithResidents)){
-            //尚未存在其它种类城镇，或许需要特别处理
-            throw new IllegalArgumentException("HouseBuilding ERROR: Can't work in non-team town :" + town);
+    public boolean work(ITownWithBuildings buildingTown) {
+        if(!(buildingTown instanceof ITown town)){
+            FHMain.LOGGER.error("HouseBuilding: town is not a complete town!");
+            return false;
         }
         //获取所有居民
         Set<UUID> residentsUUID = this.residentsUUID;
@@ -197,17 +198,15 @@ public class HouseBuilding extends AbstractTownBuilding implements ITownResident
 //        }
         //不供应食物会导致居民属性降低
         if (residentNum * 20 > totalFoods) {
-            if(town instanceof ITownWithResidents residentTown){
-                for(UUID uuid : residentsUUID){
-                    Optional<Resident> resident = residentTown.getResident(uuid);
-                    if(resident.isPresent()){
-                        Resident r = resident.get();
-                        r.costHealth(10);
-                        r.costMental(10);
-                        r.costStrength(5);
-                    } else {
-                        throw new IllegalArgumentException("HouseBuilding ERROR: Can't find resident in town :" + town + " \nResident uuid:" + uuid);
-                    }
+            for (UUID uuid : residentsUUID) {
+                Optional<Resident> resident = town.getResident(uuid);
+                if (resident.isPresent()) {
+                    Resident r = resident.get();
+                    r.costHealth(10);
+                    r.costMental(10);
+                    r.costStrength(5);
+                } else {
+                    throw new IllegalArgumentException("HouseBuilding ERROR: Can't find resident in town :" + town + " \nResident uuid:" + uuid);
                 }
             }
             return false;
@@ -256,50 +255,46 @@ public class HouseBuilding extends AbstractTownBuilding implements ITownResident
             availableFoodTypes.remove(toRemove);
         }
 
-        if(town instanceof ITownWithResidents residentTown){
-            double temperatureRating = TownMathFunctions.calculateTemperatureRating(this.temperature);
-            //double decorationRating = this.decorationRating;
-            double spaceRating = TownMathFunctions.calculateSpaceRating(volume, area);
-            double houseComprehensiveRating = (spaceRating * (1 + decorationRating)
-                    + temperatureRating) / 3;
+        double temperatureRating = TownMathFunctions.calculateTemperatureRating(this.temperature);
+        //double decorationRating = this.decorationRating;
+        double spaceRating = TownMathFunctions.calculateSpaceRating(volume, area);
+        double houseComprehensiveRating = (spaceRating * (1 + decorationRating)
+                + temperatureRating) / 3;
 //            avgLevel /= residentNum * 20;//计算平均食物等级
-            nutrition_Average /= residentNum * 20; //计算平均营养价值
+        nutrition_Average /= residentNum * 20; //计算平均营养价值
 
-            double deviation = (nutrition_Average - 10000) / 10000; // 相对偏差（-1到+1）
-            double balanceScore = Math.exp(-3.0 * deviation * deviation); // 10用来控制曲线宽度
-            double levelScore = 1; //目前不采用食物等级，只是用来控制消耗食物优先级
+        double deviation = (nutrition_Average - 10000) / 10000; // 相对偏差（-1到+1）
+        double balanceScore = Math.exp(-3.0 * deviation * deviation); // 10用来控制曲线宽度
+        double levelScore = 1; //目前不采用食物等级，只是用来控制消耗食物优先级
 
 
-            for(UUID uuid : residentsUUID){
-                if(residentTown.getResident(uuid).isPresent()){
-                    Resident r = residentTown.getResident(uuid).get();
+        for(UUID uuid : residentsUUID){
+            if(town.getResident(uuid).isPresent()){
+                Resident r = town.getResident(uuid).get();
 
 //                    foodAmounts.replaceAll((type, amount) -> amount / residentNum);//避免居民数量影响方差计算结果
 //                    double levelScore = 1 + Math.log(1 + avgLevel);/*即使食物等级为0，也加属性*/
 /*                    double balanceScore = foodAmounts.values().stream()
-                            .mapToDouble(amount ->
-                                    Math.pow(amount - residentNum * foodTypes.length,显然residentNum * foodTypes.length等于平均值 2))
-                            .average()
-                            .orElse(0);
-                    balanceScore = Math.exp( - 0.2 * balanceScore);*/    //已改为营养值控制
+                        .mapToDouble(amount ->
+                                Math.pow(amount - residentNum * foodTypes.length,显然residentNum * foodTypes.length等于平均值 2))
+                        .average()
+                        .orElse(0);
+                balanceScore = Math.exp( - 0.2 * balanceScore);*/    //已改为营养值控制
 
-                    r.addHealth( 2.5 * temperatureRating * levelScore * balanceScore * (100 - r.getHealth())/ 100);
-                    r.addMental( houseComprehensiveRating * Math.pow(levelScore, 2.0) * balanceScore * (100 - r.getMental())/ 100);
-                    r.addStrength( 0.2 * balanceScore * Math.exp( - 0.1 * r.getStrength()));
-                }else {
-                    throw new IllegalArgumentException("HouseBuilding ERROR: Can't find resident in town :" + town + " \nResident uuid:" + uuid);
-                }
+                r.addHealth( 2.5 * temperatureRating * levelScore * balanceScore * (100 - r.getHealth())/ 100);
+                r.addMental( houseComprehensiveRating * Math.pow(levelScore, 2.0) * balanceScore * (100 - r.getMental())/ 100);
+                r.addStrength( 0.2 * balanceScore * Math.exp( - 0.1 * r.getStrength()));
+            }else {
+                throw new IllegalArgumentException("HouseBuilding ERROR: Can't find resident in town :" + town + " \nResident uuid:" + uuid);
             }
-        } else {
-            FHMain.LOGGER.error("HouseBuilding ERROR: Town is not a ITownWithResidents :{}", town);
         }
 
         return true;
     }
 
     @Override
-    public void onRemoved(Town town) {
-        if(town instanceof ITownWithResidents residentTown){
+    public void onRemoved(ITownWithBuildings buildingTown) {
+        if(buildingTown instanceof ITownWithResidents residentTown){
             for(UUID uuid : residentsUUID){
                 residentTown.getResident(uuid).ifPresent(resident -> resident.setHousePos(null));
             }

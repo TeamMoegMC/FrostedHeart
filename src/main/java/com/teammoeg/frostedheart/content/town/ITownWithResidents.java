@@ -25,7 +25,7 @@ import java.util.Collection;
 import java.util.Optional;
 import java.util.UUID;
 
-public interface ITownWithResidents extends Town{
+public interface ITownWithResidents{
     /**
      * get all residents in the town.
      * @return collection of all residents

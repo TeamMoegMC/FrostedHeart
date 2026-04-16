@@ -548,7 +548,7 @@ public class FHConfig {
 			}
 			public final Resource RESOURCE;
 			Town(ForgeConfigSpec.Builder builder) {
-				builder.push("Town");
+				builder.push("ITown");
 				enableTownTick = builder.comment("Enables town tick every second.")
 					.comment("This tick includes the running of town worker blocks.")
 					.define("enableTownTick", true);

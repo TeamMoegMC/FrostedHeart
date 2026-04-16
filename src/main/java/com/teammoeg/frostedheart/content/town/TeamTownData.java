@@ -53,7 +53,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
- * Town data for a whole team.
+ * ITown data for a whole team.
  * <p>
  * It maintains town resources, worker data, and holds a team data when
  * initialized.
@@ -85,19 +85,19 @@ public class TeamTownData implements SpecialData {
 	/**
 	 * The town name.
 	 */
-	String name = "Default Town";
+	String name = "Default ITown";
 	/**
 	 * The town residents.
 	 */
 	Map<UUID, Resident> residents = new LinkedHashMap<>();
 	/**
-	 * Town resources. Including normal resources and town services. Including
+	 * ITown resources. Including normal resources and town services. Including
 	 * resources gathered from town and resources gathered from player. Must be
 	 * changed by TownResourceManager.
 	 */
 	TeamTownResourceHolder resources = new TeamTownResourceHolder();
 	/**
-	 * Town blocks and their worker data
+	 * ITown blocks and their worker data
 	 */
 	Map<BlockPos, AbstractTownBuilding> buildings = new LinkedHashMap<>();
 
@@ -126,7 +126,7 @@ public class TeamTownData implements SpecialData {
 		super();
 		if (teamData instanceof TeamDataHolder data) {
 
-			this.name = data.getTeam().getName() + "'s Town";
+			this.name = data.getTeam().getName() + "'s ITown";
 
 		}
 	}
@@ -141,7 +141,7 @@ public class TeamTownData implements SpecialData {
 	}
 
 	/**
-	 * Town logic update (every 20 ticks). This method first validates the town
+	 * ITown logic update (every 20 ticks). This method first validates the town
 	 * blocks, then sorts them by priority and calls the work methods.
 	 *
 	 * @param world server world instance
@@ -211,7 +211,7 @@ public class TeamTownData implements SpecialData {
 	 * 处理村民死亡
 	 */
 	private void tickResidentsMorning() {
-		if (Town.DEBUG_MODE) {
+		if (ITown.DEBUG_MODE) {
 			return;// 测试时村民不死
 		}
 		List<Resident> deadResidents = new ArrayList<>();

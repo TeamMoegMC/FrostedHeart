@@ -21,8 +21,8 @@ package com.teammoeg.frostedheart.content.town.resource;
 
 /**
  * The interface of town resource type.
- * Town resource type should be a enum.
- * Town resource type have a max level as integer.
+ * ITown resource type should be a enum.
+ * ITown resource type have a max level as integer.
  * Max level can be 0 or any positive integer.
  */
 public interface ITownResourceType extends IGettable {

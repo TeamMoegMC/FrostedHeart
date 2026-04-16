@@ -23,7 +23,8 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.chorda.util.CDistHelper;
 import com.teammoeg.chorda.util.CUtils;
-import com.teammoeg.frostedheart.content.town.Town;
+import com.teammoeg.frostedheart.content.town.ITown;
+import com.teammoeg.frostedheart.content.town.ITownWithBuildings;
 import com.teammoeg.frostedheart.content.town.block.OccupiedVolume;
 import com.teammoeg.frostedheart.content.town.building.AbstractTownBuilding;
 
@@ -93,7 +94,7 @@ public class MineBuilding extends AbstractTownBuilding {
 	}
 
 	@Override
-	public boolean work(Town town) {
+	public boolean work(ITownWithBuildings town) {
 		return super.work(town);
 	}
 

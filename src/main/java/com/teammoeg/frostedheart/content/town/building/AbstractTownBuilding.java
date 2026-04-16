@@ -19,7 +19,7 @@
 
 package com.teammoeg.frostedheart.content.town.building;
 
-import com.teammoeg.frostedheart.content.town.Town;
+import com.teammoeg.frostedheart.content.town.ITownWithBuildings;
 import com.teammoeg.frostedheart.content.town.block.OccupiedVolume;
 import lombok.Getter;
 import lombok.Setter;
@@ -60,11 +60,11 @@ public abstract class AbstractTownBuilding implements ITownBuilding{
         return initialized && !occupiedAreaOverlapped && isStructureValid;
     }
 
-    public boolean work(Town town){
+    public boolean work(ITownWithBuildings town){
         return true;
     }
 
-    public void onRemoved(Town town){
+    public void onRemoved(ITownWithBuildings town){
 
     }
 

@@ -52,7 +52,7 @@ public class TeamTownProvider implements ITownProviderSerializable<TeamTown>{
 
     @Override
     public String toString() {
-        return "{Team Town Provider: " +
+        return "{Team ITown Provider: " +
                 ownerUUID +
                 '}';
     }
