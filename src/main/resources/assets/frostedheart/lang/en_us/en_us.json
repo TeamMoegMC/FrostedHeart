@@ -441,5 +441,13 @@
   "waypoint.frostedheart.del_quick_waypoint": "Delete Quick Waypoint",
   "tooltip.frostedheart.fertilizer.basic": "Basic Fertilizer",
   "tooltip.frostedheart.fertilizer.advanced": "Advanced Fertilizer",
-  "tooltip.frostedheart.fertilizer.ultimate": "Modern Fertilizer"
+  "tooltip.frostedheart.fertilizer.ultimate": "Modern Fertilizer",
+  "hint.frostedheart.crouch_and_rclick": "Shift + R-Click",
+  "hint.frostedheart.charcoal_pit.rclick_with_straws": "R-Click with Straws",
+  "hint.frostedheart.charcoal_pit.rclick_with_logs": "R-Click with Logs",
+  "hint.frostedheart.charcoal_pit.rclick_with_igniter": "Use any Igniter",
+  "hint.frostedheart.charcoal_pit.put_straws": "Fill with Straws",
+  "hint.frostedheart.charcoal_pit.put_logs": "Fill with Logs",
+  "hint.frostedheart.charcoal_pit.put_ingredient": "Fill with Ingredient",
+  "hint.frostedheart.charcoal_pit.ignite": "Ignite"
 }

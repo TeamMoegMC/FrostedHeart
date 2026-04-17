@@ -19,14 +19,17 @@
 
 package com.teammoeg.frostedheart.infrastructure.config;
 
+import com.teammoeg.chorda.client.cui.screenadapter.OverlayPositioner;
 import com.teammoeg.chorda.math.Colors;
 import com.teammoeg.frostedheart.content.climate.FHTemperatureDifficulty;
+import com.teammoeg.frostedheart.content.keyhint.KeyHintOverlay;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.biome.Biomes;
 import net.minecraftforge.common.ForgeConfigSpec;
 import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.config.ModConfig;
 
+import java.time.MonthDay;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Stream;
@@ -54,7 +57,7 @@ public class FHConfig {
 		public final ForgeConfigSpec.DoubleValue textSpeed;
 		public final ForgeConfigSpec.BooleanValue renderScenario;
 		public final ForgeConfigSpec.BooleanValue enableTip;
-		public final ForgeConfigSpec.EnumValue<TempOrbPos> tipPosition;
+		public final ForgeConfigSpec.EnumValue<OverlayPositioner.All> tipPosition;
 		public final ForgeConfigSpec.DoubleValue fogDensity;
 		public final ForgeConfigSpec.IntValue fogColorDay;
 		public final ForgeConfigSpec.IntValue fogColorNight;
@@ -72,6 +75,9 @@ public class FHConfig {
 		public final ForgeConfigSpec.IntValue themeColor;
 		public final ForgeConfigSpec.BooleanValue enableWheelMenuCursor;
 		public final ForgeConfigSpec.BooleanValue enableTooltips;
+		public final ForgeConfigSpec.BooleanValue enableKeyHints;
+		public final ForgeConfigSpec.ConfigValue<List<? extends String>> disabledHints;
+		public final ForgeConfigSpec.EnumValue<OverlayPositioner.All> hintPosition;
 
 		Client(ForgeConfigSpec.Builder builder) {
 			builder.push("Frosted HUD");
@@ -108,13 +114,30 @@ public class FHConfig {
 			builder.push("Tip");
 				enableTip = builder.comment("Enables the tips rendering. ")
 						.define("enableTip", true);
-				tipPosition = builder.comment("")
-						.defineEnum("tipPosition", TempOrbPos.MIDDLE_RIGHT);
+				tipPosition = builder.comment("The position where the tip display")
+						.defineEnum("tipPosition", OverlayPositioner.All.MIDDLE_RIGHT);
 			builder.pop();
 			builder.push("Waypoint");
 				enableWaypoint = builder
 						.comment("Enables the waypoints rendering. ")
 						.define("enableWaypoint", true);
+			builder.pop();
+			builder.push("Key Hint");
+			enableKeyHints = builder.comment("Enable key hints")
+					.define("enableKeyHints", true);
+			disabledHints = builder.comment("Disable the hints you don't want to display")
+					.comment("Example: 'frostedheart:example'")
+					.defineList("disabledHints", List.of(), o -> {
+						var input = new ResourceLocation((String) o);
+						for (KeyHintOverlay.TriggerType<?> t : KeyHintOverlay.TriggerType.getAllTypes())
+							for (ResourceLocation rl : t.getRegistered().keySet())
+								if (rl.equals(input))
+									return true;
+						return false;
+					});
+			hintPosition = builder
+					.comment("The position where the hint display")
+					.defineEnum("hintPosition", OverlayPositioner.All.MIDDLE_LEFT);
 			builder.pop();
 			builder.pop();
 
@@ -570,6 +593,7 @@ public class FHConfig {
 			public final ForgeConfigSpec.ConfigValue<Boolean> enablePlayerPooping;
 			public final ForgeConfigSpec.BooleanValue enableDailyKitchen;
 			public final ForgeConfigSpec.ConfigValue<Boolean> enableScenario;
+			public final ForgeConfigSpec.ConfigValue<Boolean> specialMode;
 
 			Misc(ForgeConfigSpec.Builder builder) {
 				builder.push("Miscellaneous");
@@ -593,6 +617,9 @@ public class FHConfig {
 				enableScenario = builder
 					.comment("Enables the scenario system. ")
 					.define("enableScenario", true);
+				specialMode = builder
+						.comment("Enables a very special mode when the time is right.")
+						.define("specialMode", true);
 				builder.pop();
 			}
 		}
@@ -623,9 +650,7 @@ public class FHConfig {
 	}
 
 	public enum TempOrbPos {
-		MIDDLE_LEFT, MIDDLE, MIDDLE_RIGHT,
-		TOP_LEFT, TOP_MIDDLE, TOP_RIGHT,
-		BOTTOM_LEFT, BOTTOM_MIDDLE, BOTTOM_RIGHT
+		MIDDLE, TOP_LEFT, TOP_RIGHT, BOTTOM_LEFT, BOTTOM_RIGHT
 	}
 
 	public static final ForgeConfigSpec CLIENT_CONFIG;
@@ -679,5 +704,10 @@ public class FHConfig {
 			return FHConfig.SERVER.WORLDGEN.invertNonWinterBiomes.get() ? stream.anyMatch(name::equals) : stream.noneMatch(name::equals);
 		}
 		return false;
+	}
+
+	static final boolean specialDay = MonthDay.of(4, 1).equals(MonthDay.now());
+	public static boolean isSpecialMode() {
+		return specialDay && FHConfig.SERVER.MISC.specialMode.get();
 	}
 }

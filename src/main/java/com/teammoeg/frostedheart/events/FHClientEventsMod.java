@@ -39,6 +39,7 @@ import com.teammoeg.frostedheart.bootstrap.common.FHEntityTypes;
 import com.teammoeg.frostedheart.bootstrap.common.FHItems;
 import com.teammoeg.frostedheart.bootstrap.common.FHMultiblocks;
 import com.teammoeg.frostedheart.bootstrap.reference.FHParticleTypes;
+import com.teammoeg.frostedheart.compat.charcoalpit.CharcoalPitClient;
 import com.teammoeg.frostedheart.compat.ie.FHManual;
 import com.teammoeg.frostedheart.compat.tetra.TetraClient;
 import com.teammoeg.frostedheart.content.climate.block.generator.t1.T1GeneratorRenderer;
@@ -52,6 +53,7 @@ import com.teammoeg.frostedheart.content.climate.tooltips.EquipmentTempStats;
 import com.teammoeg.frostedheart.content.climate.tooltips.FoodTempStats;
 import com.teammoeg.frostedheart.content.climate.tooltips.PlantTempStats;
 import com.teammoeg.frostedheart.content.health.tooltip.FoodNutritionStats;
+import com.teammoeg.frostedheart.content.keyhint.KeyHintOverlay;
 import com.teammoeg.frostedheart.content.scenario.client.gui.layered.font.KGlyphProvider;
 import com.teammoeg.frostedheart.content.tips.client.gui.TipOverlay;
 import com.teammoeg.frostedheart.content.town.resident.WanderingRefugeeRenderer;
@@ -102,8 +104,12 @@ public class FHClientEventsMod {
         if (CompatModule.isTetraLoaded()) {
             LOGGER.info(CLIENT_SETUP, "Initializing Tetra Client");
             TetraClient.init();
-            
         }
+        if (CompatModule.isCharcoalPitLoaded()) {
+            LOGGER.info(CLIENT_SETUP, "Initializing CharcoalPit Client");
+            CharcoalPitClient.init();
+        }
+
         //if (CompatModule.isFTBQLoaded()) {
         //    LOGGER.info(CLIENT_SETUP, "Initializing FTB Quests");
         //    FHGuiProviders.setRewardGuiProviders();
@@ -300,6 +306,7 @@ public class FHClientEventsMod {
     }
     @SubscribeEvent
     public static void registerGuiOverlays(RegisterGuiOverlaysEvent event) {
+        event.registerAboveAll("key_hint", new CUIOverlay(KeyHintOverlay.INSTANCE));
     	event.registerAboveAll("insight", new InsightOverlay());
         event.registerAboveAll("wheel_menu", WheelMenuRenderer.OVERLAY);
         event.registerAboveAll("twr_tip", new CUIOverlay(TipOverlay.INSTANCE, true, CUIOverlay.whenScreenOpened));

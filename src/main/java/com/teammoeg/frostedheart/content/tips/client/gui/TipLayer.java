@@ -10,11 +10,11 @@ import com.teammoeg.chorda.client.cui.contentpanel.FlatIconButton;
 import com.teammoeg.chorda.client.cui.contentpanel.ImageLine;
 import com.teammoeg.chorda.client.cui.contentpanel.Line;
 import com.teammoeg.chorda.client.cui.contentpanel.LineHelper;
+import com.teammoeg.chorda.client.cui.screenadapter.OverlayPositioner;
 import com.teammoeg.chorda.client.cui.widgets.Button;
 import com.teammoeg.chorda.client.icon.FlatIcon;
 import com.teammoeg.chorda.client.ui.CGuiHelper;
 import com.teammoeg.chorda.math.Colors;
-import com.teammoeg.chorda.math.Point;
 import com.teammoeg.frostedheart.content.tips.Tip;
 import com.teammoeg.frostedheart.content.tips.TipHelper;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
@@ -195,38 +195,8 @@ public class TipLayer extends UILayer {
         setHeight(getContentHeight());
 
         // 4. 调整位置
-        var pos = startPos();
-        int w = getWidth();
-        int x = pos.getX();
-        int y = pos.getY();
-
-        if (x + w > sw) {
-            x = Math.max(x - 12 - w, 4);
-        }
-        int i = getHeight() + 3;
-        if (y + i > sh) {
-            y = sh - i - 6;
-        }
-        setPos(x, y);
-    }
-
-    Point startPos() {
-        int sw = ClientUtils.screenWidth();
-        int swc = sw/2-getWidth()/2;
-        int sh = ClientUtils.screenHeight();
-        int sch = (sh/2-getHeight()/2) - (int)(sh*.025F);
-
-        return switch (FHConfig.CLIENT.tipPosition.get()) {
-            case TOP_LEFT      -> new Point(8, 12);
-            case TOP_MIDDLE    -> new Point(swc, 12);
-            case TOP_RIGHT     -> new Point(sw, 12);
-            case MIDDLE_LEFT   -> new Point(8, sch);
-            case MIDDLE        -> new Point(swc, sch);
-            case BOTTOM_LEFT   -> new Point(8, sh);
-            case BOTTOM_MIDDLE -> new Point(swc, sh);
-            case BOTTOM_RIGHT  -> new Point(sw, sh);
-            default            -> new Point(sw, sch);
-        };
+        var pos = OverlayPositioner.position(this, FHConfig.CLIENT.tipPosition.get().startPos(this));
+        setPos(pos.getX(), pos.getY());
     }
 
     @Override
