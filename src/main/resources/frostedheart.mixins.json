@@ -21,6 +21,7 @@
     "create.MixinSawMovementBehaviour",
     "create.MixinSawTileEntity",
     "create.MixinToolboxInventory",
+    "create.MixinValveHandleBlock",
     "drawer.ControllerBlockEntityMixin",
     "forge.C2SModListReplyMixin",
     "forge.FluidHandlerItemStackMixin",
@@ -80,7 +81,6 @@
     "tetra.MixinToolbeltInventory"
   ],
   "client": [
-    "ftb.MixinCTeamManager",
     "client.BossHealthOverlayAccess",
     "client.ChatScreenMixin",
     "client.ClientPacketListenerMixin",
@@ -99,6 +99,7 @@
     "client.create.ClientEventsMixin",
     "client.immersiveengineering.SawmillProcessMixin",
     "create.MixinOpenConfigButtonHandler",
+    "ftb.MixinCTeamManager",
     "minecraft.fix.ConnectionMixin_ShowReason",
     "minecraft.water.LocalPlayerMixin",
     "oculus.IrisRenderingPipelineAccess"
