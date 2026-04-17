@@ -19,8 +19,10 @@
 
 package com.teammoeg.chorda.client.cui;
 
+import com.teammoeg.chorda.client.CInputHelper;
 import com.teammoeg.chorda.client.ClientUtils;
 import com.teammoeg.chorda.client.RenderingHint;
+import com.teammoeg.chorda.client.cui.base.PrimaryLayer;
 import com.teammoeg.chorda.client.cui.base.TooltipBuilder;
 import com.teammoeg.chorda.client.cui.base.UIElement;
 import com.teammoeg.chorda.client.cui.base.UILayer;
@@ -37,6 +39,7 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.FormattedText;
+import org.lwjgl.glfw.GLFW;
 
 import java.awt.*;
 
@@ -63,8 +66,9 @@ public class CUIDebugHelper {
 	}
 
 	public static void renderDebug(GuiGraphics graphics, int x, int y, RenderingHint hint, CUIScreen manager) {
-		if (!isDebugEnabled() || Screen.hasAltDown() || !shouldRender(manager)) return;
+        if (Screen.hasAltDown() || !shouldRender(manager)) return;
 		// debug
+		if (CInputHelper.isKeyPressed(GLFW.GLFW_KEY_RIGHT_SHIFT) && manager.getPrimaryLayer() != null) UILayer.hoveredEle = manager.getPrimaryLayer();
 		var ele = UILayer.hoveredEle;
 		graphics.pose().pushPose();
 		graphics.pose().translate(0, 0, 1200);
@@ -107,6 +111,7 @@ public class CUIDebugHelper {
 		if (!list.isEmpty())
 			list.add(net.minecraft.network.chat.Component.literal(" "));
 		var ele = UILayer.hoveredEle;
+		assert ele != null;
 		var b = ele.getBounds();
 		var gray = ChatFormatting.GRAY;
 		var color = ChatFormatting.GOLD;
@@ -164,7 +169,7 @@ public class CUIDebugHelper {
 		if (!isDebugEnabled() || ClientUtils.getMc().screen == null) return false;
 
 		var ele = UILayer.hoveredEle;
-		if (ele == null) return false;
+		if (ele == null) return false; else if (ele instanceof PrimaryLayer) return true;
 
 		var p = ele;
 		while (p != null) {

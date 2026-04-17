@@ -20,7 +20,7 @@
 package com.teammoeg.chorda.client.cui.screenadapter;
 
 import com.mojang.blaze3d.platform.InputConstants;
-import com.teammoeg.chorda.client.CInputHelper.Cursor;
+import com.teammoeg.chorda.Chorda;
 import com.teammoeg.chorda.client.ClientUtils;
 import com.teammoeg.chorda.client.MouseCaptureUtil;
 import com.teammoeg.chorda.client.MouseHelper;
@@ -30,7 +30,7 @@ import com.teammoeg.chorda.client.cui.base.PrimaryLayer;
 import com.teammoeg.chorda.client.cui.base.TooltipBuilder;
 import com.teammoeg.chorda.client.ui.CGuiHelper;
 import com.teammoeg.chorda.math.Colors;
-import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.chorda.math.Rect;
 import com.teammoeg.frostedheart.util.client.FGuis;
 import lombok.Getter;
 import lombok.Setter;
@@ -66,7 +66,7 @@ import java.util.function.Predicate;
  * CUI overlay. Renders CUI interfaces on the game HUD, supporting mouse capture, input event dispatching,
  * and a virtual mouse pointer. Also implements JEI's IGlobalGuiHandler to provide exclusion areas.
  */
-@Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE, value = Dist.CLIENT)
+@Mod.EventBusSubscriber(modid = Chorda.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE, value = Dist.CLIENT)
 public class CUIOverlay implements IGuiOverlay, CUIScreen, IGlobalGuiHandler {
 	/** 所有已注册的CUI覆盖层集合 / Set of all registered CUI overlays */
 	public static final Set<CUIOverlay> CUI_OVERLAYS = new HashSet<>();
@@ -371,7 +371,11 @@ public class CUIOverlay implements IGuiOverlay, CUIScreen, IGlobalGuiHandler {
 	public static final Rect2i NONE = new Rect2i(0, 0, 0, 0);
 	@Override
 	public Collection<Rect2i> getGuiExtraAreas() {
-		return List.of(renderAboveScreen && whenVisibleAndEnabled.test(this) ? primaryLayer.getBounds().toRect2i() : NONE);
+		return List.of(renderAboveScreen && whenVisibleAndEnabled.test(this) ? fixArea(primaryLayer.getBounds()) : NONE);
+	}
+
+	private static Rect2i fixArea(Rect bounds) {
+		return new Rect2i(bounds.getX(), bounds.getY(), Math.max(0, bounds.getW()), Math.max(0, bounds.getH()));
 	}
 	//char typed event not available
 	//mouse dragged event not available

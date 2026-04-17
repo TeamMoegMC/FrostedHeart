@@ -29,8 +29,6 @@ import com.teammoeg.chorda.client.StencilHelper;
 import com.teammoeg.chorda.client.StencilHelper.StencilStackElement;
 import com.teammoeg.chorda.client.cui.CUIDebugHelper;
 import com.teammoeg.chorda.client.cui.theme.Theme;
-import com.teammoeg.chorda.client.cui.theme.VanillaTheme;
-
 import lombok.Getter;
 import lombok.Setter;
 import net.minecraft.Util;
@@ -86,12 +84,6 @@ public abstract class UILayer extends UIElement {
      */
     @Setter
 	protected Theme theme;
-
-    /**
-     * 获取当前主题（自定义 getter 方法，非 Lombok 生成）。
-     * @return 当前主题实例
-     */
-    /**/
 
 	public UILayer(UIElement panel) {
 		super(panel);

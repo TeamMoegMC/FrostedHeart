@@ -38,9 +38,9 @@ public class ArchiveTheme implements Theme {
         int x2 = x + w;
         int y2 = y + h;
         graphics.fill(x+1, y+1, x2-1, y2-1, 0xFF282A31);
-        graphics.fill(x, y, x2, y + 1, UIBGBorderColor()); // top
-        graphics.fill(x, y2 - 1, x2, y2, UIBGBorderColor()); // bottom
-        graphics.fill(x2 - 1, y, x2, y2, UIBGBorderColor()); // right
+//        graphics.fill(x, y, x2, y + 1, UIBGBorderColor()); // top
+//        graphics.fill(x, y2 - 1, x2, y2, UIBGBorderColor()); // bottom
+//        graphics.fill(x2 - 1, y, x2, y2, UIBGBorderColor()); // right
     }
 
     @Override

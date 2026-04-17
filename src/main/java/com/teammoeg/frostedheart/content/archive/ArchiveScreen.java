@@ -58,6 +58,12 @@ public final class ArchiveScreen extends PrimaryLayer {
         
         this.contentPanel = new ContentPanel(this) {
             @Override
+            public void drawBackground(GuiGraphics graphics, int x, int y, int w, int h, RenderingHint hint) {
+                int i = this.scrollBar.isVisible() ? this.scrollBar.getWidth() : 0;
+                super.drawBackground(graphics, x, y, w+i, h, hint);
+            }
+
+            @Override
             public void resize() {
                 int h = (int)(ClientUtils.screenHeight() * 0.8F);
                 int w = (int)(h * 1.3333F); // 4:3

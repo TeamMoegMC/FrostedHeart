@@ -54,6 +54,7 @@ public class TipOverlay extends PrimaryLayer {
             element.refresh();
         }
         alignWidgets();
+        setSizeToContentSize();
     }
 
     private TipOverlay() {

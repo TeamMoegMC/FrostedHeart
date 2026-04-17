@@ -23,6 +23,7 @@ import com.teammoeg.frostedheart.content.tips.ServerTipHelper;
 import dev.ftb.mods.ftblibrary.config.ConfigGroup;
 import dev.ftb.mods.ftbquests.quest.Quest;
 import dev.ftb.mods.ftbquests.quest.reward.Reward;
+import dev.ftb.mods.ftbquests.quest.reward.RewardAutoClaim;
 import dev.ftb.mods.ftbquests.quest.reward.RewardType;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
@@ -41,6 +42,7 @@ public class TipReward extends Reward {
     public TipReward(long id, Quest q, String tipId) {
         super(id, q);
         this.tipId = tipId;
+        this.autoclaim = RewardAutoClaim.INVISIBLE;
     }
 
     @Override

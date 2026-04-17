@@ -20,19 +20,16 @@
 package com.teammoeg.frostedresearch.handler;
 
 import blusunrize.immersiveengineering.api.multiblocks.MultiblockHandler;
-
-import java.util.Map;
-
 import com.teammoeg.chorda.events.PlayerTeamChangedEvent;
 import com.teammoeg.chorda.events.TeamCreatedEvent;
 import com.teammoeg.chorda.events.TeamLoadedEvent;
 import com.teammoeg.chorda.util.CUtils;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData;
-import com.teammoeg.frostedresearch.Lang;
 import com.teammoeg.frostedresearch.FHResearch;
 import com.teammoeg.frostedresearch.FRMain;
 import com.teammoeg.frostedresearch.FRNetwork;
 import com.teammoeg.frostedresearch.FRSpecialDataTypes;
+import com.teammoeg.frostedresearch.Lang;
 import com.teammoeg.frostedresearch.ResearchHooks;
 import com.teammoeg.frostedresearch.ResearchHooks.BlockUnlockList;
 import com.teammoeg.frostedresearch.ResearchHooks.CategoryUnlockList;
@@ -45,7 +42,6 @@ import com.teammoeg.frostedresearch.events.DrawDeskOpenEvent;
 import com.teammoeg.frostedresearch.events.PopulateUnlockListEvent;
 import com.teammoeg.frostedresearch.network.FHResearchDataSyncPacket;
 import com.teammoeg.frostedresearch.recipe.InspireRecipe;
-
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
@@ -56,7 +52,6 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.common.util.FakePlayer;
 import net.minecraftforge.event.AddReloadListenerEvent;
-import net.minecraftforge.event.AttachCapabilitiesEvent;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
 import net.minecraftforge.event.entity.player.ItemTooltipEvent;
@@ -68,6 +63,8 @@ import net.minecraftforge.fml.LogicalSide;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.network.PacketDistributor;
 import net.minecraftforge.network.PacketDistributor.PacketTarget;
+
+import java.util.Map;
 
 @Mod.EventBusSubscriber(modid = FRMain.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public class ResearchCommonEvents {
@@ -168,7 +165,7 @@ public class ResearchCommonEvents {
     public static void onItemTooltip(ItemTooltipEvent event) {
         final ItemStack stack = event.getItemStack();
         Item i = stack.getItem();
-        if (!stack.isEmpty()) {
+        if (!stack.isEmpty()) { // FIXME 区分NBT
             Map<String, Component> rstooltip= JEICompat.research.get(i);
             if(rstooltip!=null)
                 event.getToolTip().addAll(rstooltip.values());

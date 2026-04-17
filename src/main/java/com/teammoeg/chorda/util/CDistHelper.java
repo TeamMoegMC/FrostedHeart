@@ -123,9 +123,10 @@ public class CDistHelper {
 	 * @return 在线管理员列表 / the list of online operators
 	 */
 	public static List<ServerPlayer> getOnlineOPs() {
+		if (getServer() == null) return List.of();
 		var ops = new ArrayList<ServerPlayer>();
-		for (ServerPlayer p1 : server.getPlayerList().getPlayers()) {
-			if (server.getPlayerList().isOp(p1.getGameProfile())) {
+		for (ServerPlayer p1 : getServer().getPlayerList().getPlayers()) {
+			if (getServer().getPlayerList().isOp(p1.getGameProfile())) {
 				ops.add(p1);
 			}
 		}

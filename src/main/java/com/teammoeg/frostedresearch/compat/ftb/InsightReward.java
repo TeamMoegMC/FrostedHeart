@@ -20,14 +20,11 @@
 package com.teammoeg.frostedresearch.compat.ftb;
 
 import com.teammoeg.chorda.dataholders.team.TeamDataClosure;
-import com.teammoeg.frostedheart.compat.ftbq.FHRewardTypes;
 import com.teammoeg.frostedheart.util.Lang;
 import com.teammoeg.frostedheart.util.client.FHClientUtils;
 import com.teammoeg.frostedresearch.api.ResearchDataAPI;
 import com.teammoeg.frostedresearch.data.TeamResearchData;
-
 import dev.ftb.mods.ftblibrary.config.ConfigGroup;
-import dev.ftb.mods.ftblibrary.icon.Color4I;
 import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftbquests.net.DisplayRewardToastMessage;
 import dev.ftb.mods.ftbquests.quest.Quest;
@@ -50,7 +47,7 @@ public class InsightReward extends Reward {
     }
 
     public InsightReward(long id, Quest quest) {
-        this(id, quest, 100);
+        this(id, quest, 1);
     }
 
     @Override
