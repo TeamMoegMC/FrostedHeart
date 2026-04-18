@@ -160,7 +160,7 @@ public class ShrubTreeFeature extends Feature<ShrubTreeConfig> {
 
         final int upwindLength = 7;
         final int sideSpread = 5;
-        final int maxLayers = 7;
+        final int maxLayers = 14;
 
         int upStepX = upwind.getStepX(), upStepZ = upwind.getStepZ();
         int rightStepX = right.getStepX(), rightStepZ = right.getStepZ();
@@ -199,40 +199,40 @@ public class ShrubTreeFeature extends Feature<ShrubTreeConfig> {
                         baseZ + up * upStepZ + side * rightStepZ
                 );
 
-                placeSnowOnly(level, targetPos, layers, searchPos);
+                placeSnowStack(level, targetPos, layers, searchPos);
             }
         }
     }
 
-    private void placeSnowOnly(WorldGenLevel level, BlockPos pos, int layers, BlockPos.MutableBlockPos searchPos) {
-        layers = Math.max(1, Math.min(7, layers));
-        int px = pos.getX(), pz = pos.getZ();
-
-        for (int dy = 1; dy >= -2; dy--) {
-            int py = pos.getY() + dy;
-            searchPos.set(px, py, pz);
-            BlockState current = level.getBlockState(searchPos);
-
-            if (!(current.isAir() || current.is(Blocks.SNOW) || current.canBeReplaced())) continue;
-
-            searchPos.set(px, py - 1, pz);
-            if (!level.getBlockState(searchPos).isSolid()) continue;
-
-            if (current.is(Blocks.SNOW)) {
-                layers = Math.min(7, Math.max(layers, current.getValue(SnowLayerBlock.LAYERS)));
-            }
-
-            searchPos.set(px, py, pz);
-            level.setBlock(searchPos, SnowCache.SNOW_LAYER_STATES[layers], 2);
-            return;
-        }
-    }
+//    private void placeSnowOnly(WorldGenLevel level, BlockPos pos, int layers, BlockPos.MutableBlockPos searchPos) {
+//        layers = Math.max(1, Math.min(7, layers));
+//        int px = pos.getX(), pz = pos.getZ();
+//
+//        for (int dy = 1; dy >= -2; dy--) {
+//            int py = pos.getY() + dy;
+//            searchPos.set(px, py, pz);
+//            BlockState current = level.getBlockState(searchPos);
+//
+//            if (!(current.isAir() || current.is(Blocks.SNOW) || current.canBeReplaced())) continue;
+//
+//            searchPos.set(px, py - 1, pz);
+//            if (!level.getBlockState(searchPos).isSolid()) continue;
+//
+//            if (current.is(Blocks.SNOW)) {
+//                layers = Math.min(7, Math.max(layers, current.getValue(SnowLayerBlock.LAYERS)));
+//            }
+//
+//            searchPos.set(px, py, pz);
+//            level.setBlock(searchPos, SnowCache.SNOW_LAYER_STATES[layers], 2);
+//            return;
+//        }
+//    }
 
     /**
      * 背风面新月形雪堆
      */
     private void generateCrescentDrift(WorldGenLevel level, BlockPos treePos, Direction windDir, RandomSource random) {
-        final int peakLayers = 32;
+        final int peakLayers = 28;
         final int armLength = 7;
         final int tailLength = 9;
 

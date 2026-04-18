@@ -459,6 +459,7 @@ public class ChunkHeatData {
     }
 
     //热点代码优化
+    private static final HeatQueryResult EMPTY_RESULT = new HeatQueryResult(false, 0f);
     @Nullable
     public static ChunkHeatData get(LevelAccessor world, int chunkX, int chunkZ) {
         return get(world, chunkX, chunkZ, false);
@@ -466,7 +467,10 @@ public class ChunkHeatData {
 
     @Nullable
     public static ChunkHeatData get(LevelAccessor world, int chunkX, int chunkZ, boolean loadChunk) {
-        return getOptional(world, chunkX, chunkZ, loadChunk).orElse(null);
+        if (!loadChunk && !world.getChunkSource().hasChunk(chunkX, chunkZ)) {
+            return null;
+        }
+        return getCapability(world.getChunk(chunkX, chunkZ)).resolve().orElse(null);
     }
 
 
@@ -512,7 +516,7 @@ public class ChunkHeatData {
 
     public static HeatQueryResult queryAdjust(@Nullable ChunkHeatData data, BlockPos pos) {
         if (data == null || data.adjusters.isEmpty()) {
-            return new HeatQueryResult(false, 0f);
+            return EMPTY_RESULT;
         }
 
         boolean active = false;
