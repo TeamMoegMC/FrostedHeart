@@ -62,6 +62,7 @@ public class StencilHelper {
 	    private boolean isBufferFinished=false;
 	    private ShaderInstance shader;
 	    private VertexBuffer vertexBuffer=new VertexBuffer(VertexBuffer.Usage.DYNAMIC);
+	    private Matrix4f modelView=new Matrix4f(),projection=new Matrix4f();
 	    private StencilStackElement() {
 	    	
 	    }
@@ -129,7 +130,9 @@ public class StencilHelper {
 	        RenderSystem.colorMask(false, false, false, false);
 	    	vertexBuffer.bind();
 	    	vertexBuffer.upload(buffer);
-	    	vertexBuffer.drawWithShader(RenderSystem.getModelViewMatrix(), RenderSystem.getProjectionMatrix(), shader);
+	    	modelView.set(RenderSystem.getModelViewMatrix());
+	    	projection.set(RenderSystem.getProjectionMatrix());
+	    	vertexBuffer.drawWithShader(modelView, projection, shader);
 	    	isBufferFinished=true;
 	    	RenderSystem.colorMask(colorMask.get(0)!=0, colorMask.get(1)!=0, colorMask.get(2)!=0, colorMask.get(3)!=0);
 	        //切换到新stencil byte
@@ -151,7 +154,7 @@ public class StencilHelper {
 		        RenderSystem.stencilOp(GL11.GL_KEEP, GL11.GL_DECR, GL11.GL_DECR);
 		        RenderSystem.colorMask(false, false, false, false);
 				vertexBuffer.bind();
-				vertexBuffer.drawWithShader(RenderSystem.getModelViewMatrix(), RenderSystem.getProjectionMatrix(), shader);
+				vertexBuffer.drawWithShader(modelView, projection, shader);
 				RenderSystem.colorMask(colorMask.get(0)!=0, colorMask.get(1)!=0, colorMask.get(2)!=0, colorMask.get(3)!=0);
 	    	}
 			if(!stencilEnabled)

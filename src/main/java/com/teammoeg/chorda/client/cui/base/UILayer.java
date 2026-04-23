@@ -28,7 +28,6 @@ import com.teammoeg.chorda.client.RenderingHint;
 import com.teammoeg.chorda.client.StencilHelper;
 import com.teammoeg.chorda.client.StencilHelper.StencilStackElement;
 import com.teammoeg.chorda.client.cui.CUIDebugHelper;
-import com.teammoeg.chorda.client.cui.theme.Theme;
 import lombok.Getter;
 import lombok.Setter;
 import net.minecraft.Util;
@@ -77,14 +76,6 @@ public abstract class UILayer extends UIElement {
 	@Getter
 	@Setter
 	protected Vector2f transformOrigin = new Vector2f(.5f,.5f);
-
-    /**
-     * 设置元素的主题（由 Lombok 生成 setter）。
-     * 通过 setTheme(Theme) 方法访问。
-     */
-    @Setter
-	protected Theme theme;
-
 	public UILayer(UIElement panel) {
 		super(panel);
 		elements = new ArrayList<>();
@@ -308,10 +299,6 @@ public abstract class UILayer extends UIElement {
 	}
 	@Override
 	public void render(GuiGraphics graphics,  int x, int y, int w, int h, RenderingHint hint) {
-
-		
-
-
 		int contentX = x;
 		int contentY = y;
 		if (isSmoothScrollEnabled()) {
@@ -328,28 +315,19 @@ public abstract class UILayer extends UIElement {
 			contentX += offsetX;
 			contentY += offsetY;
 		}
-		Theme lastTheme=hint.currentTheme;
-		if(theme!=null)
-			hint.currentTheme=theme;
 		hint.pushHint();
 		graphics.pose().pushPose();
 		try {
-			graphics.pose().translate(0, 0, zIndex);
+			if(zIndex>0)
+				graphics.pose().translate(0, 0, zIndex);
 			
 			if(transform!=null) {
 				float dx=x+w*transformOrigin.x;
 				float dy=y+h*transformOrigin.y;
-				
-				//graphics.pose().translate(0, 0, 50);
 				graphics.pose().translate(dx, dy, 0);
 				graphics.pose().mulPoseMatrix(transform);
 				graphics.pose().translate(-dx, -dy, 0);
-
-				//graphics.fill(x+Mth.floor(getMouseX())-2,y+Mth.floor(getMouseY())-2, x+Mth.floor(getMouseX())+2, y+Mth.floor(getMouseY())+2, 0xffff00ff+(hint.renderingDepth)*0x2200);
-				
-				//graphics.pose().translate(0, 0, -50);
 			}
-			//invertedTransform=after;
 			drawBackground(graphics, x, y, w, h, hint);
 		    final boolean isScissorEnabled=isScissorEnabled();
 	        beforeDrawElements(graphics,x,y, contentX, contentY, w, h);
@@ -373,12 +351,8 @@ public abstract class UILayer extends UIElement {
 		}finally {
 			graphics.pose().popPose();
 			hint.popHint();
-			hint.currentTheme=lastTheme;
 		}
 		lastFrameTime = Util.getNanos();
-		//if(isMouseOver)
-		//	TechIcons.ADD.draw(graphics, (int)getMouseX()+x-4, (int)getMouseY()+y-4, 8, 8);
-		//graphics.pose().popPose();
 	}
 	public void beforeDrawElements(GuiGraphics graphics,int parX,int parY, int x, int y, int w, int h) {}
 	public void afterDrawElements(GuiGraphics graphics,int parX,int parY, int x, int y, int w, int h) {}
@@ -393,7 +367,6 @@ public abstract class UILayer extends UIElement {
 	}
 	@Override
 	public void updateRenderInfo(int x,int y,double mx, double my, float pt) {
-
     	if(transform!=null) {
     		float dx=x+width*transformOrigin.x;
     		float dy=y+height*transformOrigin.y;
@@ -402,21 +375,19 @@ public abstract class UILayer extends UIElement {
     		m4f.mul(transform);
     		m4f.translate(-dx, -dy, 0);
     		m4f.invert();
-    		Vector3d v2f=unprojectScreenToPlane((mx),(my),m4f);
+    		Vector3d v2f=unprojectScreenToPlane((mx),(my),zIndex,m4f);
     		if(v2f!=null) {
     			mx=v2f.x;
     			my=v2f.y;
-    			System.out.println(mx+","+my);
     		}
     	}
-		
 		super.updateRenderInfo(x,y,mx, my, pt);
 		for(UIElement elm:elements) {
 			elm.updateRenderInfo(x+offsetX+this.getX(),y+offsetY+this.getY(),mx,my, pt);
 		}
 	}
-	public Vector3d unprojectScreenToPlane(double screenX, double screenY,Matrix4f mvp) {
-		Vector3d start=new Vector3d(screenX,screenY, (zIndex));
+	private static Vector3d unprojectScreenToPlane(double screenX, double screenY,int z,Matrix4f mvp) {
+		Vector3d start=new Vector3d(screenX,screenY, z);
 		start.mulPosition(mvp);
 		return start;
 	}
@@ -439,15 +410,12 @@ public abstract class UILayer extends UIElement {
 				return;
 			}
 		}
-
 		if(CUIDebugHelper.isDebugEnabled()) {
 			if (element.isMouseOver()) {
 				hoveredEle = element;
 			}
 		}
-
 		element.render(graphics, childX, childY, childW, childH, hint);
-
 	}
 
 	@Override
