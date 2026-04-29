@@ -326,7 +326,8 @@ public abstract class UILayer extends UIElement {
 		}
 		Theme lastTheme=hint.currentTheme;
 		hint.pushHint();
-		hint.currentTheme=this.theme;
+		if(this.theme!=null)
+			hint.currentTheme=this.theme;
 		graphics.pose().pushPose();
 		try {
 			if(zIndex>0)
