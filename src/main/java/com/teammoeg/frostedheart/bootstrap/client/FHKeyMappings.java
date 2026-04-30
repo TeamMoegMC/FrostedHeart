@@ -34,6 +34,7 @@ public class FHKeyMappings {
     public static Lazy<KeyMapping> key_openWheelMenu = createKey("open_wheel_menu",GLFW.GLFW_KEY_R,KeyConflictContext.IN_GAME);
     public static Lazy<KeyMapping> key_health = createKey("health",GLFW.GLFW_KEY_H,KeyConflictContext.IN_GAME);
     public static Lazy<KeyMapping> key_clothes = createKey("clothes",GLFW.GLFW_KEY_Y,KeyConflictContext.IN_GAME);
+    public static Lazy<KeyMapping> key_drink = createKey("drink",GLFW.GLFW_KEY_C,KeyConflictContext.IN_GAME);
     public static void init() {
 
     }

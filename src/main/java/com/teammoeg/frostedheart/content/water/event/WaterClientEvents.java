@@ -19,51 +19,78 @@
 
 package com.teammoeg.frostedheart.content.water.event;
 
-import com.teammoeg.chorda.util.CUtils;
+import com.teammoeg.chorda.client.ClientUtils;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.FHNetwork;
+import com.teammoeg.frostedheart.bootstrap.client.FHKeyMappings;
 import com.teammoeg.frostedheart.content.water.network.PlayerDrinkWaterMessage;
-
-import net.minecraft.core.BlockPos;
-import net.minecraft.world.entity.Pose;
-import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.Item;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.ClipContext;
-import net.minecraft.world.level.Level;
-import net.minecraft.world.phys.HitResult;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.world.level.material.Fluids;
+import net.minecraft.world.phys.BlockHitResult;
 import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.event.entity.player.PlayerInteractEvent;
+import net.minecraftforge.client.event.InputEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
+import org.lwjgl.glfw.GLFW;
+
+import java.util.List;
+
+import static com.teammoeg.frostedheart.content.keyhint.KeyHintOverlay.*;
 
 @Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE,value=Dist.CLIENT)
 public class WaterClientEvents {
 
-    @SubscribeEvent
-    public static void onPlayerRightClickBlock(PlayerInteractEvent.RightClickBlock event) {
-        ItemStack heldItem = event.getItemStack();
-        Player player = event.getEntity();
-        //drink water block
-        if (heldItem.isEmpty()  && player.getPose() == Pose.CROUCHING) {
-        	BlockPos pos=event.getHitVec().getBlockPos().offset(event.getFace().getNormal());
-        	if(!event.getLevel().getFluidState(pos).isEmpty())
-        		FHNetwork.INSTANCE.sendToServer(new PlayerDrinkWaterMessage(pos));
-        }
+    static {
+        registerTrigger(FHMain.rl("drink_world_water"), TriggerType.LOOKING_AT_BLOCK, r -> {
+            if (ClientUtils.getMc().hitResult instanceof BlockHitResult bhr) {
+                var pos = bhr.getBlockPos().relative(bhr.getDirection());
+                if (ClientUtils.getWorld().getFluidState(pos).is(Fluids.WATER)) {
+                    return List.of(keyMappingHint(FHKeyMappings.key_drink.get()));
+                }
+            }
+            return List.of();
+        });
     }
 
     @SubscribeEvent
-    public static void onPlayerRightClickEmpty(PlayerInteractEvent.RightClickEmpty event) {
-        Player player = event.getEntity();
-        Level level = event.getLevel();
-        //drink water block
-        HitResult hitresult = Item.getPlayerPOVHitResult(level, player, ClipContext.Fluid.SOURCE_ONLY);
-        if (player.getPose() == Pose.CROUCHING && hitresult.getType() == HitResult.Type.BLOCK) {
-        
-        	BlockPos pos=CUtils.vec2Pos(hitresult.getLocation());
-        	if(!event.getLevel().getFluidState(pos).isEmpty())
-        		FHNetwork.INSTANCE.sendToServer(new PlayerDrinkWaterMessage(pos));
+    public static void onClientKey(InputEvent.Key event) {
+        if (event.getAction() == GLFW.GLFW_PRESS && FHKeyMappings.key_drink.get().consumeClick()) {
+            if (ClientUtils.getMc().hitResult instanceof BlockHitResult bhr) {
+                var pos = bhr.getBlockPos().relative(bhr.getDirection());
+                if (ClientUtils.getWorld().getFluidState(pos).is(Fluids.WATER)) {
+                    ClientUtils.getLocalPlayer().playSound(SoundEvents.GENERIC_DRINK, 0.2F, 1);
+                    FHNetwork.INSTANCE.sendToServer(new PlayerDrinkWaterMessage(pos));
+                }
+            }
         }
     }
+
+//    @SubscribeEvent
+//    public static void onPlayerRightClickBlock(PlayerInteractEvent.RightClickBlock event) {
+//        ItemStack heldItem = event.getItemStack();
+//        Player player = event.getEntity();
+//        //drink water block
+//        if (heldItem.isEmpty()  && player.getPose() == Pose.CROUCHING) {
+//        	BlockPos pos=event.getHitVec().getBlockPos().offset(event.getFace().getNormal());
+//        	if(!event.getLevel().getFluidState(pos).isEmpty()) {
+//                FHNetwork.INSTANCE.sendToServer(new PlayerDrinkWaterMessage(pos));
+//                player.playSound(SoundEvents.GENERIC_DRINK, 0.2F, 1);
+//            }
+//        }
+//    }
+//
+//    @SubscribeEvent
+//    public static void onPlayerRightClickEmpty(PlayerInteractEvent.RightClickEmpty event) {
+//        Player player = event.getEntity();
+//        Level level = event.getLevel();
+//        //drink water block
+//        HitResult hitresult = Item.getPlayerPOVHitResult(level, player, ClipContext.Fluid.SOURCE_ONLY);
+//        if (player.getPose() == Pose.CROUCHING && hitresult.getType() == HitResult.Type.BLOCK) {
+//
+//        	BlockPos pos=CUtils.vec2Pos(hitresult.getLocation());
+//        	if(!event.getLevel().getFluidState(pos).isEmpty())
+//        		FHNetwork.INSTANCE.sendToServer(new PlayerDrinkWaterMessage(pos));
+//        }
+//    }
 
 }

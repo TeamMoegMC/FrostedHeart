@@ -19,8 +19,6 @@
 
 package com.teammoeg.frostedheart.events;
 
-import org.lwjgl.glfw.GLFW;
-
 import com.teammoeg.chorda.CompatModule;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.FHNetwork;
@@ -30,11 +28,11 @@ import com.teammoeg.frostedheart.content.climate.render.InfraredViewRenderer;
 import com.teammoeg.frostedheart.content.health.network.C2SOpenNutritionScreenMessage;
 import com.teammoeg.frostedheart.content.scenario.client.ClientScene;
 import com.teammoeg.frostedheart.content.wheelmenu.WheelMenuRenderer;
-
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.InputEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
+import org.lwjgl.glfw.GLFW;
 
 @Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE, value = Dist.CLIENT)
 public class FHKeyHandler {
@@ -63,9 +61,14 @@ public class FHKeyHandler {
             if(FHKeyMappings.key_clothes.get().consumeClick()) {
                 FHNetwork.INSTANCE.sendToServer(new C2SOpenClothesScreenMessage());
             }
+
+            // open wheel menu
             if(FHKeyMappings.key_openWheelMenu.get().consumeClick()&&!WheelMenuRenderer.isOpened()) {
             	WheelMenuRenderer.open();
             }
+
+            // drink water
+            // see WaterClientEvents.java
         }
     }
 
