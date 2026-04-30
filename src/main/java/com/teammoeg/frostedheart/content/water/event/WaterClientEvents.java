@@ -33,30 +33,17 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import org.lwjgl.glfw.GLFW;
 
-import java.util.List;
-
-import static com.teammoeg.frostedheart.content.keyhint.KeyHintOverlay.*;
-
 @Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE,value=Dist.CLIENT)
 public class WaterClientEvents {
-
-    static {
-        registerTrigger(FHMain.rl("drink_world_water"), TriggerType.LOOKING_AT_BLOCK, r -> {
-            if (ClientUtils.getMc().hitResult instanceof BlockHitResult bhr) {
-                var pos = bhr.getBlockPos().relative(bhr.getDirection());
-                if (ClientUtils.getWorld().getFluidState(pos).is(Fluids.WATER)) {
-                    return List.of(keyMappingHint(FHKeyMappings.key_drink.get()));
-                }
-            }
-            return List.of();
-        });
-    }
 
     @SubscribeEvent
     public static void onClientKey(InputEvent.Key event) {
         if (event.getAction() == GLFW.GLFW_PRESS && FHKeyMappings.key_drink.get().consumeClick()) {
             if (ClientUtils.getMc().hitResult instanceof BlockHitResult bhr) {
-                var pos = bhr.getBlockPos().relative(bhr.getDirection());
+                var pos = bhr.getBlockPos();
+                if (!ClientUtils.getWorld().getFluidState(pos).is(Fluids.WATER)) {
+                    pos = bhr.getBlockPos().relative(bhr.getDirection());
+                }
                 if (ClientUtils.getWorld().getFluidState(pos).is(Fluids.WATER)) {
                     ClientUtils.getLocalPlayer().playSound(SoundEvents.GENERIC_DRINK, 0.2F, 1);
                     FHNetwork.INSTANCE.sendToServer(new PlayerDrinkWaterMessage(pos));

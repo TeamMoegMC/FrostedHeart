@@ -54,6 +54,7 @@ import com.teammoeg.frostedheart.content.climate.tooltips.FoodTempStats;
 import com.teammoeg.frostedheart.content.climate.tooltips.PlantTempStats;
 import com.teammoeg.frostedheart.content.health.tooltip.FoodNutritionStats;
 import com.teammoeg.frostedheart.content.keyhint.KeyHintOverlay;
+import com.teammoeg.frostedheart.content.keyhint.KeyHintRegistrate;
 import com.teammoeg.frostedheart.content.scenario.client.gui.layered.font.KGlyphProvider;
 import com.teammoeg.frostedheart.content.tips.client.gui.TipOverlay;
 import com.teammoeg.frostedheart.content.town.resident.WanderingRefugeeRenderer;
@@ -94,6 +95,8 @@ public class FHClientEventsMod {
 
         LOGGER.info(CLIENT_SETUP, "Initializing Key Mappings");
         FHKeyMappings.init();
+        LOGGER.info(CLIENT_SETUP, "Initializing Key Hints");
+        KeyHintRegistrate.init();
         LOGGER.info(CLIENT_SETUP, "Initializing Screens");
         FHScreens.init();
 
