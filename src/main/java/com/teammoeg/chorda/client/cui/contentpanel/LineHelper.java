@@ -74,4 +74,8 @@ public class LineHelper {
     public static BreakLine br(UIElement parent, Coloring color) {
         return br(parent).color(color);
     }
+
+    public static UIEleWrapperLine warp(UIElement parent, UIElement elementToWrap) {
+        return new UIEleWrapperLine(parent, elementToWrap);
+    }
 }

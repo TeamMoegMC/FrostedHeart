@@ -19,6 +19,22 @@
 
 package com.teammoeg.frostedheart.content.wheelmenu;
 
+import com.teammoeg.chorda.client.ClientUtils;
+import com.teammoeg.chorda.client.cui.base.UIElement;
+import com.teammoeg.chorda.client.cui.editor.*;
+import com.teammoeg.chorda.client.icon.CIcons;
+import com.teammoeg.chorda.client.icon.CIcons.CIcon;
+import com.teammoeg.chorda.client.icon.CIcons.ItemIcon;
+import com.teammoeg.chorda.io.ConfigFileUtil;
+import com.teammoeg.chorda.text.Components;
+import com.teammoeg.chorda.util.CFunctionUtils;
+import com.teammoeg.frostedheart.content.archive.ArchiveTheme;
+import com.teammoeg.frostedheart.content.wheelmenu.useractions.CommandInputAction;
+import com.teammoeg.frostedheart.content.wheelmenu.useractions.KeyMappingTriggerAction;
+import net.minecraft.client.KeyMapping;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -27,30 +43,6 @@ import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Stream;
-
-import com.teammoeg.chorda.client.ClientUtils;
-import com.teammoeg.chorda.client.cui.base.UIElement;
-import com.teammoeg.chorda.client.cui.editor.BaseEditDialog;
-import com.teammoeg.chorda.client.cui.editor.EditListDialog;
-import com.teammoeg.chorda.client.cui.editor.EditUtils;
-import com.teammoeg.chorda.client.cui.editor.Editor;
-import com.teammoeg.chorda.client.cui.editor.EditorDialogBuilder;
-import com.teammoeg.chorda.client.cui.editor.EditorSelector;
-import com.teammoeg.chorda.client.cui.editor.Editors;
-import com.teammoeg.chorda.client.cui.editor.OpenEditorButton;
-import com.teammoeg.chorda.client.cui.editor.SelectDialog;
-import com.teammoeg.chorda.client.icon.CIcons;
-import com.teammoeg.chorda.client.icon.CIcons.CIcon;
-import com.teammoeg.chorda.client.icon.CIcons.ItemIcon;
-import com.teammoeg.chorda.io.ConfigFileUtil;
-import com.teammoeg.chorda.text.Components;
-import com.teammoeg.chorda.util.CFunctionUtils;
-import com.teammoeg.frostedheart.content.wheelmenu.useractions.CommandInputAction;
-import com.teammoeg.frostedheart.content.wheelmenu.useractions.KeyMappingTriggerAction;
-
-import net.minecraft.client.KeyMapping;
-import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
 
 public class WheelMenuEditors {
 	public static final Editor<KeyMapping> KEY_EDITOR = (p, l, v, c) -> new SelectDialog<>(p, l, v, c,
@@ -76,10 +68,11 @@ public class WheelMenuEditors {
 	public static final Editor<Collection<ResourceLocation>> SELECTION_ENABLED = 
 		EditListDialog.createSetEditor(null, ()->Stream.concat(WheelMenuRenderer.displayedSelections.stream(), WheelMenuRenderer.hiddenSelections.stream()), CFunctionUtils.mapIfMapNullable(WheelMenuRenderer.selections::get, Selection::getMessage, t -> Components.str(t.toString())), CFunctionUtils.mapIfMapNullable(WheelMenuRenderer.selections::get, Selection::getIcon, n -> CIcons.nop()));
 
-		public static class SelectionConfigScreen extends BaseEditDialog{
+	public static class SelectionConfigScreen extends BaseEditDialog{
 
 			public SelectionConfigScreen(UIElement panel) {
 				super(panel);
+				setTheme(ArchiveTheme.INSTANCE);
 			}
 
 			@Override

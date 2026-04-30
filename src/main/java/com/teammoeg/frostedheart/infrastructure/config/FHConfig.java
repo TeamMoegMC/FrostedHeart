@@ -22,7 +22,6 @@ package com.teammoeg.frostedheart.infrastructure.config;
 import com.teammoeg.chorda.client.cui.screenadapter.OverlayPositioner;
 import com.teammoeg.chorda.math.Colors;
 import com.teammoeg.frostedheart.content.climate.FHTemperatureDifficulty;
-import com.teammoeg.frostedheart.content.keyhint.KeyHintOverlay;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.biome.Biomes;
 import net.minecraftforge.common.ForgeConfigSpec;
@@ -127,14 +126,7 @@ public class FHConfig {
 					.define("enableKeyHints", true);
 			disabledHints = builder.comment("Disable the hints you don't want to display")
 					.comment("Example: 'frostedheart:example'")
-					.defineList("disabledHints", List.of(), o -> {
-						var input = new ResourceLocation((String) o);
-						for (KeyHintOverlay.TriggerType<?> t : KeyHintOverlay.TriggerType.getAllTypes())
-							for (ResourceLocation rl : t.getRegistered().keySet())
-								if (rl.equals(input))
-									return true;
-						return false;
-					});
+					.defineList("disabledHints", List.of(), o -> true);
 			hintPosition = builder
 					.comment("The position where the hint display")
 					.defineEnum("hintPosition", OverlayPositioner.All.MIDDLE_LEFT);

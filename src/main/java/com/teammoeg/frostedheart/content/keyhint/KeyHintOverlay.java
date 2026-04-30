@@ -33,7 +33,9 @@ public class KeyHintOverlay extends PrimaryLayer {
     public static final KeyHintOverlay INSTANCE = new KeyHintOverlay();
     private KeyHintOverlay() {}
 
+    @Getter
     private static final List<KeyHint> active = new ArrayList<>();
+    @Getter
     private static final List<KeyHint> collected = new ArrayList<>();
 
     @Override
@@ -46,6 +48,7 @@ public class KeyHintOverlay extends PrimaryLayer {
 
     @Override
     public void refresh() {
+        // TODO 优化
         addChildUIElements();
         if (elements.isEmpty()) return;
         alignWidgets();
@@ -135,23 +138,24 @@ public class KeyHintOverlay extends PrimaryLayer {
             if (data == null) continue;
 
             // 遍历该类型的所有项目
-            for (var entry : type.getRegistered().entrySet()) {
+            type.getRegistered().forEach((key, entry) -> {
                 boolean skip = false;
                 // 检查是否被禁用
                 for (String s : FHConfig.CLIENT.disabledHints.get()) {
-                    if (type.getRegistered().containsKey(new ResourceLocation(s))) {
+                    if (s.equals(key.toString())) {
                         skip = true;
                         break;
                     }
                 }
-                if (skip) continue;
-                // 收集提示
-                @SuppressWarnings("unchecked")
-                Collection<KeyHint> hints = ((Function<Object, Collection<KeyHint>>) entry.getValue()).apply(data);
-                if (hints != null) {
-                    collected.addAll(hints);
+                if (!skip) {
+                    // 收集提示
+                    @SuppressWarnings("unchecked")
+                    Collection<KeyHint> hints = ((Function<Object, Collection<KeyHint>>) entry).apply(data);
+                    if (hints != null) {
+                        collected.addAll(hints);
+                    }
                 }
-            }
+            });
         }
 
         MinecraftForge.EVENT_BUS.post(new KeyHintCollectEvent(player, collected));

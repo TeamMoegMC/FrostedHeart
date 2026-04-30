@@ -83,7 +83,7 @@ public class ContentPanel extends UILayer {
 
     @Override
     public void drawBackground(GuiGraphics graphics, int x, int y, int w, int h, RenderingHint hint) {
-        hint.theme(this).drawUIBackground(graphics, x-8, y-8, w+16, h+16);
+        hint.theme(this).drawUIBackground(graphics, x-8, y-8, w+16+(scrollBar.isVisible()?10:0), h+16);
     }
 
     public void fillContent(Collection<? extends UIElement> widgets) {
@@ -133,13 +133,22 @@ public class ContentPanel extends UILayer {
             element.refresh();
         }
         alignWidgets();
+
+        if (scrollBar.isVisible()) {
+            setWidth(getWidth()-10);
+            for (UIElement element : elements) {
+                element.refresh();
+            }
+            alignWidgets();
+            scrollBar.setSize(6, getHeight());
+            scrollBar.setPos(getX()+getWidth()+4, getY());
+        }
     }
 
     public void resize() {
         int h = (int)(ClientUtils.screenHeight() * 0.8F);
         int w = (int)(h * 1.3333F); // 4:3
         setSize(w, h);
-        scrollBar.setPosAndSize(getX() + getWidth()+7, -7, 6, getHeight()+14);
     }
 
     @Override
@@ -171,14 +180,12 @@ public class ContentPanel extends UILayer {
         public  Builder text(String text) {
             return text(text,a->{});
         }
-
         public  Builder text(Component text) {
             return text(text,a->{});
         }
         public  Builder text(String text,Consumer<TextLine> config) {
             return text(Component.literal(text),config);
         }
-
         public  Builder text(Component text,Consumer<TextLine> config) {
             return add(new TextLine(parent, text, Alignment.LEFT),config);
         }
@@ -189,55 +196,54 @@ public class ContentPanel extends UILayer {
         public  Builder img(String imageLocation) {
             return img(imageLocation, a->{});
         }
-
         public  Builder img(String imageLocation,Consumer<ImageLine> config) {
             return img(ResourceLocation.tryParse(imageLocation), config);
         }
-
         public  Builder img(ResourceLocation imageLocation,Consumer<ImageLine> config) {
             return add(new ImageLine(parent, imageLocation, Alignment.CENTER),config);
         }
+
         public  Builder items(ItemStack... items) {
             return items(a->{},items);
         }
-
         public  Builder items(Collection<ItemStack> items) {
             return items(items, a->{});
         }
         public  Builder items(Consumer<ItemRow> config,ItemStack... items) {
             return items(List.of(items),config);
         }
-
         public  Builder items(Collection<ItemStack> items,Consumer<ItemRow> config) {
             return add(new ItemRow(parent, items, Alignment.CENTER),config);
         }
+
         public  Builder space() {
             return space(a->{});
         }
-
         public  Builder space(int height) {
             return space(height,a->{});
         }
         public  Builder space(Consumer<EmptyLine> config) {
             return space(8,config);
         }
-
         public  Builder space(int height,Consumer<EmptyLine> config) {
             return add(new EmptyLine(parent, height),config);
         }
+
         public  Builder br() {
             return br(a->{});
         }
-
         public  Builder br(Coloring color) {
             return br(color,a->{});
         }
         public  Builder br(Consumer<BreakLine> config) {
             return add(new BreakLine(parent),config);
         }
-
         public  Builder br(Coloring color,Consumer<BreakLine> config) {
             return br(c->{c.color(color);config.accept(c);});
+        }
+
+        public  Builder wrap(UIElement elementToWrap) {
+            return add(new UIEleWrapperLine(parent, elementToWrap), a->{});
         }
         public ContentPanel build() {
             parent.refresh();

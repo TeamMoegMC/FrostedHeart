@@ -15,6 +15,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.SimpleContainer;
+import net.minecraft.world.phys.BlockHitResult;
 
 import java.util.List;
 
@@ -24,10 +25,14 @@ public class CharcoalPitClient {
 
     public static void init() {
         registerTrigger(FHMain.rl("charcoal_pit_kilnable"), TriggerType.HOLDING_ITEM_MAINHAND, s -> {
-            var manager = ClientUtils.getWorld().getRecipeManager();
-            var container = new SimpleContainer(s);
-            if (manager.getRecipeFor(PotteryKilnRecipe.POTTERY_RECIPE, container, ClientUtils.getWorld()).isPresent()) {
-                return List.of(keyMappingHint(KeyBindings.PLACE_KILN));
+            var h = ClientUtils.getMc().hitResult;
+            if (h instanceof BlockHitResult b && b.getDirection() == Direction.UP
+                    && ClientUtils.getWorld().getBlockState(b.getBlockPos()).isSolid()) {
+                var manager = ClientUtils.getWorld().getRecipeManager();
+                var container = new SimpleContainer(s);
+                if (manager.getRecipeFor(PotteryKilnRecipe.POTTERY_RECIPE, container, ClientUtils.getWorld()).isPresent()) {
+                    return List.of(keyMappingHint(KeyBindings.PLACE_KILN));
+                }
             }
             return List.of();
         });
@@ -51,12 +56,12 @@ public class CharcoalPitClient {
             return List.of();
         });
 
-        registerTrigger(FHMain.rl("charcoal_pit_bloomery"), TriggerType.LOOKING_AT_BLOCK, b -> {
-            if (b.getDirection() == Direction.UP) {
+        registerTrigger(FHMain.rl("charcoal_pit_bloomery"), TriggerType.HOLDING_ITEM_MAINHAND, s -> {
+            var h = ClientUtils.getMc().hitResult;
+            if (h instanceof BlockHitResult b && b.getDirection() == Direction.UP) {
                 var state = ClientUtils.getWorld().getBlockState(b.getBlockPos());
-                var item = ClientUtils.getLocalPlayer().getMainHandItem();
-                if (!(state.getBlock() instanceof BlockBloomery && item.is(TagKey.create(Registries.ITEM, new ResourceLocation("charcoal_pit:orekiln_fuels"))))) {
-                    if (!((state.getBlock() instanceof BlockMainBloomery || state.getBlock() instanceof BlockBloomery) && BloomeryRecipe.getRecipe(item, ClientUtils.getWorld()) != null)) {
+                if (!(state.getBlock() instanceof BlockBloomery && s.is(TagKey.create(Registries.ITEM, new ResourceLocation("charcoal_pit:orekiln_fuels"))))) {
+                    if (!((state.getBlock() instanceof BlockMainBloomery || state.getBlock() instanceof BlockBloomery) && BloomeryRecipe.getRecipe(s, ClientUtils.getWorld()) != null)) {
                         if (state.getBlock() instanceof BlockBloomery && state.getValue(BlockBloomery.STAGE) == 8) {
                             return List.of(customHint(Component.translatable("hint.frostedheart.charcoal_pit.rclick_with_igniter"), Component.translatable("hint.frostedheart.charcoal_pit.ignite")));
                         } else {

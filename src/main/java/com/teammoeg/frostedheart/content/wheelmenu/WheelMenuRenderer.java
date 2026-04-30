@@ -28,6 +28,7 @@ import com.teammoeg.chorda.client.ClientUtils;
 import com.teammoeg.chorda.client.MouseCaptureUtil;
 import com.teammoeg.chorda.client.ScrollTracker;
 import com.teammoeg.chorda.client.cui.contentpanel.Alignment;
+import com.teammoeg.chorda.client.cui.screenadapter.CUIScreenWrapper;
 import com.teammoeg.chorda.client.icon.FlatIcon;
 import com.teammoeg.chorda.client.ui.CGuiHelper;
 import com.teammoeg.chorda.config.ConfigFileType;
@@ -239,8 +240,8 @@ public class WheelMenuRenderer {
 			MinecraftForge.EVENT_BUS.post(new WheelMenuSelectionRegisterEvent(registeredSelections));
 		// 在此处添加轮盘选项
 
-		registeredSelections.put(new ResourceLocation("wheel_menu","edit"),new Selection(Component.translatable("gui.wheel_menu.editor.edit"), FlatIcon.LIST.toCIcon(), s->{
-			WheelMenuEditors.openConfigScreen();
+		registeredSelections.put(new ResourceLocation("wheel_menu","edit"),new Selection(Component.translatable("gui.frostedheart.edit_configs_client"), FlatIcon.WRENCH.toCIcon(), s->{
+			CUIScreenWrapper.open(new ConfigScreen());
 		}));
 		isInitialized=true;
 		}

@@ -21,6 +21,7 @@ package com.teammoeg.frostedresearch.gui.drawdesk;
 
 import com.teammoeg.chorda.client.RenderingHint;
 import com.teammoeg.chorda.client.cui.base.MouseButton;
+import com.teammoeg.chorda.client.cui.base.UIElement;
 import com.teammoeg.chorda.client.cui.base.UILayer;
 import com.teammoeg.chorda.client.cui.contentpanel.Alignment;
 import com.teammoeg.chorda.client.cui.contentpanel.ContentPanel;
@@ -61,7 +62,11 @@ class HelpPanel extends UILayer {
 			}
 
 			@Override
-			public void resize() {
+			public void refresh() {
+				for (UIElement element : elements) {
+					element.refresh();
+				}
+				alignWidgets();
 				scrollBar.setPosAndSize(getX() + getWidth()+10, 20, 7, getHeight()-15);
 			}
 		};

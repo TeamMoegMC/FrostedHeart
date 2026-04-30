@@ -19,25 +19,17 @@
 
 package com.teammoeg.frostedheart.content.water.item;
 
-import static net.minecraftforge.fluids.capability.templates.FluidHandlerItemStack.*;
-
-import java.util.List;
-import java.util.Optional;
-
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-
 import com.teammoeg.caupona.fluid.SoupFluid;
 import com.teammoeg.caupona.util.StewInfo;
 import com.teammoeg.chorda.util.CUtils;
 import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
-
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
+import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.entity.LivingEntity;
@@ -63,6 +55,13 @@ import net.minecraftforge.fluids.capability.IFluidHandlerItem;
 import net.minecraftforge.fluids.capability.ItemFluidContainer;
 import net.minecraftforge.fluids.capability.templates.FluidHandlerItemStack;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+import java.util.List;
+import java.util.Optional;
+
+import static net.minecraftforge.fluids.capability.templates.FluidHandlerItemStack.FLUID_NBT_KEY;
+
 public class DrinkContainerItem extends ItemFluidContainer {
 
     public DrinkContainerItem(Properties properties, int capacity) {
@@ -85,8 +84,9 @@ public class DrinkContainerItem extends ItemFluidContainer {
             // if failed at picking up, empty the fluid inside if shift
             if (player.isShiftKeyDown()) {
             	IFluidHandlerItem handler=cur.getCapability(ForgeCapabilities.FLUID_HANDLER_ITEM).orElse(null);
-            	if(handler!=null ) {
+            	if(handler!=null && !handler.getFluidInTank(0).isEmpty()) {
                     handler.drain(capacity, FluidAction.EXECUTE);
+                    player.playSound(SoundEvents.BUCKET_EMPTY);
                     return InteractionResultHolder.sidedSuccess(handler.getContainer(), level.isClientSide);
                 }
             }

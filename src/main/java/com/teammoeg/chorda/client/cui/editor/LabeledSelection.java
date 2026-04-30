@@ -192,8 +192,9 @@ public class LabeledSelection<R> extends LabeledPane<TextButton> {
 
     @Override
     public void alignWidgets() {
-        int w = (int)(this.getWidth()*0.45F);
-        obj.setX(this.getWidth() - (w+obj.getWidth())/2);
+//        int w = (int)(this.getWidth()*0.45F);
+//        obj.setX(this.getWidth() - (w+obj.getWidth())/2);
+        obj.setX(this.getWidth() - (obj.getWidth()));
         label.setPos(4, (this.getContentHeight() - 8) / 2);
         setHeight(getContentHeight());
     }
