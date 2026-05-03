@@ -24,7 +24,9 @@ import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.bootstrap.client.FHKeyMappings;
 import com.teammoeg.frostedheart.content.water.network.PlayerDrinkWaterMessage;
+import net.minecraft.core.BlockPos;
 import net.minecraft.sounds.SoundEvents;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.material.Fluids;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraftforge.api.distmarker.Dist;
@@ -39,17 +41,27 @@ public class WaterClientEvents {
     @SubscribeEvent
     public static void onClientKey(InputEvent.Key event) {
         if (event.getAction() == GLFW.GLFW_PRESS && FHKeyMappings.key_drink.get().consumeClick()) {
-            if (ClientUtils.getMc().hitResult instanceof BlockHitResult bhr) {
+            var mc = ClientUtils.getMc();
+            if (mc.hitResult instanceof BlockHitResult bhr) {
                 var pos = bhr.getBlockPos();
-                if (!ClientUtils.getWorld().getFluidState(pos).is(Fluids.WATER)) {
-                    pos = bhr.getBlockPos().relative(bhr.getDirection());
+                if (!containsWater(pos)) {
+                    if (!containsWater(pos.relative(bhr.getDirection()))) {
+                        return;
+                    }
                 }
-                if (ClientUtils.getWorld().getFluidState(pos).is(Fluids.WATER)) {
-                    ClientUtils.getLocalPlayer().playSound(SoundEvents.GENERIC_DRINK, 0.2F, 1);
-                    FHNetwork.INSTANCE.sendToServer(new PlayerDrinkWaterMessage(pos));
-                }
+                ClientUtils.getLocalPlayer().playSound(SoundEvents.GENERIC_DRINK, 0.2F, 1);
+                FHNetwork.INSTANCE.sendToServer(new PlayerDrinkWaterMessage(pos));
             }
         }
+    }
+
+    public static boolean containsWater(BlockPos pos) {
+        var level = ClientUtils.getWorld();
+        if (level.getFluidState(pos).is(Fluids.WATER)) {
+            return true;
+        }
+        var block = level.getBlockState(pos);
+        return block.hasProperty(BlockStateProperties.WATERLOGGED) && block.getValue(BlockStateProperties.WATERLOGGED);
     }
 
 //    @SubscribeEvent

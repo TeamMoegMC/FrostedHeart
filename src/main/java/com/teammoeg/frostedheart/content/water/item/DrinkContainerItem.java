@@ -151,7 +151,7 @@ public class DrinkContainerItem extends ItemFluidContainer {
      * @param stack
      * @return
      */
-    public boolean isDrinkable(ItemStack stack) {
+    public static boolean isDrinkable(ItemStack stack) {
         IFluidHandlerItem fluidHandlerItem = stack.getCapability(ForgeCapabilities.FLUID_HANDLER_ITEM).orElse(null);
         return !fluidHandlerItem.getFluidInTank(0).isEmpty() && fluidHandlerItem.getFluidInTank(0).getAmount() >= 250;
     }

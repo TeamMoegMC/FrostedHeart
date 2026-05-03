@@ -395,7 +395,7 @@
   "itemname.frostedheart.start_head": "破损的太空头盔",
   "itemname.frostedheart.start_leg": "破损的太空裤子",
   "key.categories.frostedheart": "寒霜之心",
-  "key.frostedheart.infrared_view": "调整红外视野",
+  "key.frostedheart.infrared_view": "切换红外视野",
   "key.frostedheart.skip_dialog": "跳过对话",
   "key.frostedheart.clothes": "打开换衣",
   "key.frostedheart.health": "打开饮食均衡",
@@ -989,6 +989,7 @@
   "block.frostedheart.fertilized_dirt": "施肥的泥土",
   "block.frostedheart.fertilized_farmland": "施肥的耕地",
   "item.frostedheart.modifiers.hands": "戴在手上时：",
+  "hint.frostedheart.rclick": "右键",
   "hint.frostedheart.crouch_and_rclick": "潜行+右键",
   "hint.frostedheart.charcoal_pit.rclick_with_straws": "手持干草右键",
   "hint.frostedheart.charcoal_pit.rclick_with_logs": "手持原木右键",
@@ -997,6 +998,8 @@
   "hint.frostedheart.charcoal_pit.put_logs": "填入原木",
   "hint.frostedheart.charcoal_pit.put_ingredient": "填入原料",
   "hint.frostedheart.charcoal_pit.ignite": "点燃",
+  "hint.frostedheart.sled.leash": "拴在雪橇上",
+  "hint.frostedheart.sled.put": "放在雪橇上",
   "block.frostedheart.concrete": "混凝土",
   "block.frostedheart.concrete_cracked_0": "开裂的混凝土",
   "block.frostedheart.concrete_cracked_1": "开裂的混凝土",
@@ -1078,5 +1081,6 @@
   "hint.frostedheart.desc.charcoal_pit_kilnable": "可在陶窑烧制",
   "hint.frostedheart.desc.charcoal_pit_kiln": "陶窑阶段",
   "hint.frostedheart.desc.charcoal_pit_bloomery": "熟铁吹炼炉",
-  "hint.frostedheart.desc.drink_world_water": "水源喝水"
+  "hint.frostedheart.desc.drink_world_water": "水源喝水",
+  "hint.frostedheart.desc.sled_interact": "与雪橇交互"
 }

@@ -48,9 +48,9 @@ public class KeyHintConfigScreen extends PrimaryLayer {
 
             @Override
             public void resize() {
-                int w = Math.min(ClientUtils.screenWidth(), 125*ClientUtils.getMc().options.guiScale().get());
-                int h = (int) (ClientUtils.screenHeight()*0.9F-20);
-                setSize(w, h);
+                int h = (int)(ClientUtils.screenHeight() * 0.8F);
+                int w = (int)(h * 1.3333F); // 4:3
+                setSize(w, h-20);
             }
         };
         panel.setParent(this);

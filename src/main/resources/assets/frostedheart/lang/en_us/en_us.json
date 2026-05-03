@@ -449,6 +449,7 @@
   "tooltip.frostedheart.fertilizer.advanced": "Advanced Fertilizer",
   "tooltip.frostedheart.fertilizer.ultimate": "Modern Fertilizer",
   "hint.frostedheart.edit": "Key Hints",
+  "hint.frostedheart.rclick": "R-Click",
   "hint.frostedheart.crouch_and_rclick": "Shift + R-Click",
   "hint.frostedheart.charcoal_pit.rclick_with_straws": "R-Click with Straws",
   "hint.frostedheart.charcoal_pit.rclick_with_logs": "R-Click with Logs",
@@ -457,6 +458,8 @@
   "hint.frostedheart.charcoal_pit.put_logs": "Fill with Logs",
   "hint.frostedheart.charcoal_pit.put_ingredient": "Fill with Ingredient",
   "hint.frostedheart.charcoal_pit.ignite": "Ignite",
+  "hint.frostedheart.sled.leash": "Attach to the Sled",
+  "hint.frostedheart.sled.put": "Put on the Sled",
   "hint.frostedheart.category.holding_item_mainhand": "Item in Mainhand",
   "hint.frostedheart.category.holding_item_offhand": "Item in Offhand",
   "hint.frostedheart.category.looking_at_block": "Looking at Block",
@@ -466,5 +469,6 @@
   "hint.frostedheart.desc.charcoal_pit_kilnable": "Can be fired in kiln",
   "hint.frostedheart.desc.charcoal_pit_kiln": "Kiln stage",
   "hint.frostedheart.desc.charcoal_pit_bloomery": "Bloomery",
-  "hint.frostedheart.desc.drink_world_water": "Drink water from the source"
+  "hint.frostedheart.desc.drink_world_water": "Drink water from the source",
+  "hint.frostedheart.desc.sled_interact": "Interact with the sled"
 }

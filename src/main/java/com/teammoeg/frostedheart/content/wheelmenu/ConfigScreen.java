@@ -42,7 +42,7 @@ public class ConfigScreen extends PrimaryLayer {
 
     @Override
     public void addChildUIElements() {
-        add(panel);
+        panel.setParent(this);
     }
 
     static class ConfigButton extends TextButton {

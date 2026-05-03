@@ -33,6 +33,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.HitResult;
 import org.joml.Quaternionf;
 
 import java.util.function.Function;
@@ -147,6 +148,14 @@ public class ClientUtils {
 
     public static int screenCenterY() {
         return screenHeight() / 2;
+    }
+
+    public static int guiScale() {
+        return getMc().options.guiScale().get();
+    }
+
+    public static HitResult hitResult() {
+        return getMc().hitResult;
     }
 
     public static ResourceLocation getDimLocation() {
