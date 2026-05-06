@@ -19,37 +19,17 @@
 
 package com.teammoeg.frostedheart.content.climate.gamedata.climate;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
-import java.util.function.LongFunction;
-import javax.annotation.Nullable;
-
-import org.joml.Vector2f;
-import org.joml.Vector2i;
-
 import com.google.common.collect.ImmutableList;
-import com.mojang.datafixers.util.Pair;
 import com.teammoeg.chorda.io.CodecUtil;
 import com.teammoeg.chorda.io.NBTSerializable;
 import com.teammoeg.chorda.math.BaseRandomSource;
-import com.teammoeg.chorda.math.Rect;
 import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
-import com.teammoeg.frostedheart.content.climate.WorldTemperature;
 import com.teammoeg.frostedheart.content.climate.event.ClimateCommonEvents;
 import com.teammoeg.frostedheart.content.climate.gamedata.climate.DayClimateData.HourData;
 import com.teammoeg.frostedheart.content.climate.network.FHClimatePacket;
-import com.teammoeg.frostedheart.mixin.minecraft.temperature.ServerLevelMixin_WeatherCycle;
-
 import lombok.Setter;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.server.level.ServerLevel;
@@ -61,6 +41,9 @@ import net.minecraft.world.level.LevelAccessor;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.network.PacketDistributor;
+
+import javax.annotation.Nullable;
+import java.util.*;
 
 /**
  * Climate Data Capability attached to a world.
@@ -425,6 +408,9 @@ public class WorldClimate implements NBTSerializable {
 	public static ClimateType getClimate(LevelAccessor world,ChunkPos pos) {
 		return getCapability(world).map(t->t.getClimate(pos)).orElse(ClimateType.NONE);
 	}
+    public static ClimateType getClimate(LevelAccessor world, BlockPos pos) {
+        return getClimate(world, new ChunkPos(pos));
+    }
     /**
      * Retrieves hourly updated temperature from cache
      * If exceeds cache size, return NaN

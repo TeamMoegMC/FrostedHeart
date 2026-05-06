@@ -26,6 +26,7 @@ import com.simibubi.create.foundation.utility.Lang;
 import com.teammoeg.chorda.block.entity.CTickableBlockEntity;
 import com.teammoeg.chorda.math.CMath;
 import com.teammoeg.chorda.text.CFormatHelper;
+import com.teammoeg.frostedheart.content.climate.gamedata.climate.WorldClimate;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import lombok.Getter;
 import lombok.Setter;
@@ -34,6 +35,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.tags.BiomeTags;
+import net.minecraft.util.Mth;
 import net.minecraft.world.level.block.AirBlock;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
@@ -138,8 +140,9 @@ public class VAWTBlockEntity extends GeneratingKineticBlockEntity implements
 
         collectPos();
         double sc = 0;
-        double lambda = -Math.log(0.5) / 8.0;
+        double lambda = -Math.log(0.05) / 8.0;
         float threshold = FHConfig.SERVER.VAWT.vawtEmptyAreaAllowsBlockCount.get();
+        var myPos = getBlockPos().getCenter();
         for (BlockPos pos : collectedPos) {
             if (level.canSeeSky(pos)) continue;
 
@@ -151,14 +154,15 @@ public class VAWTBlockEntity extends GeneratingKineticBlockEntity implements
                     successTime = 0;
                     return lastEnvResult = false;
                 } else if (!(block.getBlock() instanceof AirBlock)) {
-                    double distance = Math.max(pos2.getCenter().distanceTo(getBlockPos().getCenter())-0.5f, 1);
-                    sc += Math.max(threshold * Math.exp(-lambda * distance), 0.1F);
+                    double distance = Math.max(pos2.getCenter().distanceTo(myPos)-0.5f, 1);
+                    sc += Mth.clamp(threshold * Math.exp(-lambda * distance), 1F, 8F);
+                    break;
                 }
                 pos2 = pos2.above();
                 block = level.getBlockState(pos2);
             }
 
-            if (sc >= threshold) {
+            if (sc > threshold) {
                 reason = "blocked";
                 successTime = 0;
                 return lastEnvResult = false;
@@ -221,14 +225,22 @@ public class VAWTBlockEntity extends GeneratingKineticBlockEntity implements
 
         //        Gen   Dmg
         // Clear  1x    1x
+        // Cloudy 1.1x  1x
         // Snow   1.5x  2x
         // Storm  2x    4x
-        if (level.isThundering()) {
-            addModifier(ModifierType.SPEED, "thundering", 2F);
-            addModifier(ModifierType.DAMAGE, "thundering", 4F);
-        } else if (level.isRaining()) {
-            addModifier(ModifierType.SPEED, "raining/snowing", 1.5F);
-            addModifier(ModifierType.DAMAGE, "raining/snowing", 2F);
+        switch (WorldClimate.getClimate(level, getBlockPos())) {
+            case SNOW_BLIZZARD, SNOW -> {
+                addModifier(ModifierType.SPEED, "raining/snowing", 1.5F);
+                addModifier(ModifierType.DAMAGE, "raining/snowing", 2F);
+            }
+            case BLIZZARD -> {
+                addModifier(ModifierType.SPEED, "thundering", 2F);
+                addModifier(ModifierType.DAMAGE, "thundering", 4F);
+            }
+            case CLOUDY -> {
+                addModifier(ModifierType.SPEED, "cloudy", 1.1F);
+            }
+            default -> {}
         }
 
         if (getBlockState().getBlock() instanceof VAWTBlock v) {
