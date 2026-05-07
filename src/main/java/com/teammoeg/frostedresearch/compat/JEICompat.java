@@ -19,32 +19,16 @@
 
 package com.teammoeg.frostedresearch.compat;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.IdentityHashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
-import java.util.function.Function;
-import java.util.stream.Stream;
-
-import javax.annotation.Nullable;
-
 import com.google.common.collect.ImmutableList;
-import com.teammoeg.frostedresearch.Lang;
 import com.teammoeg.frostedresearch.FHResearch;
 import com.teammoeg.frostedresearch.FRMain;
+import com.teammoeg.frostedresearch.Lang;
 import com.teammoeg.frostedresearch.ResearchHooks;
 import com.teammoeg.frostedresearch.UnlockList;
 import com.teammoeg.frostedresearch.api.ClientResearchDataAPI;
 import com.teammoeg.frostedresearch.research.Research;
 import com.teammoeg.frostedresearch.research.effects.Effect;
 import com.teammoeg.frostedresearch.research.effects.EffectCrafting;
-
 import mezz.jei.api.IModPlugin;
 import mezz.jei.api.JeiPlugin;
 import mezz.jei.api.constants.RecipeTypes;
@@ -66,12 +50,15 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.Recipe;
 import net.minecraft.world.item.crafting.RecipeManager;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.fml.DistExecutor;
+
+import javax.annotation.Nullable;
+import java.util.*;
+import java.util.Map.Entry;
+import java.util.function.Function;
+import java.util.stream.Stream;
 @JeiPlugin
 public class JEICompat implements IModPlugin {
 
@@ -86,8 +73,9 @@ public class JEICompat implements IModPlugin {
 
     public static Map<ResourceLocation, Recipe<?>> overrides = new HashMap<>();
 
-    private static Map<Item, List<IJeiIngredientInfoRecipe>> infos = new HashMap<>();
-    public static Map<Item, Map<String,Component>> research=new HashMap<>();
+    public static Map<ItemStack, List<IJeiIngredientInfoRecipe>> infos = new HashMap<>();
+    public static Map<ItemStack, Map<String, Component>> research = new HashMap<>();
+
     public static void addInfo() {
         if (man == null) {
             cachedInfoAdd = true;
@@ -95,34 +83,26 @@ public class JEICompat implements IModPlugin {
         }
         FRMain.LOGGER.info("added research jei info");
         cachedInfoAdd = false;
-        Set<Item> items = new HashSet<>();
+        infos.clear();
+        Component it = Lang.translateKey("gui.jei.info.require_research");
+
+        // 使用 Map 去重，对每个不同的输出 ItemStack 只创建一个信息配方
+        Map<ItemStack, List<IJeiIngredientInfoRecipe>> newInfos = new HashMap<>();
         for (Recipe<?> i : ResearchHooks.getLockList(ResearchHooks.RECIPE_UNLOCK_LIST)) {
             ItemStack out = RecipeUtil.getResultItem(i);
             if (out != null && !out.isEmpty()) {
-                items.add(out.getItem());
+                newInfos.computeIfAbsent(out.copy(), stack -> {
+                    List<IJeiIngredientInfoRecipe> il = IngredientInfoRecipe.create(
+                            jei.getIngredientManager(),
+                            ImmutableList.of(stack),
+                            VanillaTypes.ITEM_STACK, it
+                    );
+                    man.addRecipes(RecipeTypes.INFORMATION, il);
+                    return il;
+                });
             }
         }
-        infos.clear();
-        Component it = Lang.translateKey("gui.jei.info.require_research");
-		/*List<IngredientInfoRecipe<ItemStack>> rinfos=(List<IngredientInfoRecipe<ItemStack>>) man.getRecipes(man.getRecipeCategory(VanillaRecipeCategoryUid.INFORMATION));
-		for(IngredientInfoRecipe<ItemStack> info:rinfos) {
-			List<ItemStack> iss=info.getIngredients();
-			if(iss.size()==1) {
-				if(items.remove(iss.get(0).getItem())) {
-					infos.put(iss.get(0).getItem(),rinfos);
-				}
-			}
-		}*/
-
-
-        for (Item i : items) {
-            List<IJeiIngredientInfoRecipe> il = IngredientInfoRecipe.create(jei.getIngredientManager(),ImmutableList.of(new ItemStack(i)),
-                    VanillaTypes.ITEM_STACK, it);
-            man.addRecipes(RecipeTypes.INFORMATION,il);
-
-            infos.put(i, il);
-
-        }
+        infos = newInfos;
     }
 
     public static <T> void checkNotNull(@Nullable T object, String name) {
@@ -155,47 +135,45 @@ public class JEICompat implements IModPlugin {
             return;
         if (cachedInfoAdd)
             addInfo();
-        Set<Item> locked = new HashSet<>();
-        Set<Item> unlocked = new HashSet<>();
-        UnlockList<Recipe> unlockList=ClientResearchDataAPI.getData().get().getUnlockList(ResearchHooks.RECIPE_UNLOCK_LIST);
+
+        Map<ItemStack, Boolean> stackLockedStatus = new HashMap<>(); // true=锁定, false=解锁
+        UnlockList<Recipe> unlockList = ClientResearchDataAPI.getData().get().getUnlockList(ResearchHooks.RECIPE_UNLOCK_LIST);
+
         for (Recipe<?> i : ResearchHooks.getLockList(ResearchHooks.RECIPE_UNLOCK_LIST)) {
-            //System.out.println(i.getType().toString()+":"+String.join(",",all.stream().map(Object::toString).collect(Collectors.toList())));
-            ItemStack irs = RecipeUtil.getResultItem(i);
-           
-            //Recipe<?> ovrd = overrides.get(i.getId());
-            if (!unlockList.has(i)) {
-            	Set<RecipeType<?>> type=types.get(i);
-            	if(type!=null)
-	                for (RecipeType<?> rl : type) {
-	                	try {
-	                    man.hideRecipes((RecipeType)rl, Collections.singletonList(i));
-	                	}catch(Exception ex) {
-	                        FRMain.LOGGER.error("Error hiding recipe",ex);
-	                    }//IDK How JEI And IE conflict, so just catch all.
-	                }
-                if (!irs.isEmpty())
-                    locked.add(irs.getItem());
+            ItemStack out = RecipeUtil.getResultItem(i);
+            if (out == null || out.isEmpty()) continue;
+
+            Set<RecipeType<?>> type = types.get(i);
+            if (type != null) {
+                for (RecipeType<?> rl : type) {
+                    try {
+                        if (!unlockList.has(i)) {
+                            man.hideRecipes((RecipeType) rl, Collections.singletonList(i));
+                        } else {
+                            man.unhideRecipes((RecipeType) rl, Collections.singletonList(i));
+                        }
+                    } catch (Exception ex) {
+                        FRMain.LOGGER.error("Error hiding recipe", ex);
+                    }
+                }
+            }
+
+            // 记录对应 ItemStack 的锁定状态（若有解锁的配方，则整体视为解锁）
+            boolean locked = !unlockList.has(i);
+            stackLockedStatus.merge(out.copy(), locked, (oldVal, newVal) -> oldVal && newVal);
+        }
+
+        // 根据 ItemStack 控制提示的显隐
+        for (Entry<ItemStack, List<IJeiIngredientInfoRecipe>> entry : infos.entrySet()) {
+            Boolean locked = stackLockedStatus.get(entry.getKey());
+            // 如果该 ItemStack 对应的所有配方都被锁定，或没有找到状态（不在表中），则显示提示
+            if (locked == null || locked) {
+                man.unhideRecipes(RecipeTypes.INFORMATION, entry.getValue());
             } else {
-            	Set<RecipeType<?>> type=types.get(i);
-            	if(type!=null)
-	                for (RecipeType<?> rl : type) {
-	                	try {
-	                    man.unhideRecipes((RecipeType)rl, Collections.singletonList(i));
-	                	}catch(Exception ex) {
-	                        FRMain.LOGGER.error("Error hiding recipe",ex);
-	                    }//IDK How JEI And IE conflict, so just catch all.
-	                }
-                if (!irs.isEmpty())
-                    unlocked.add(irs.getItem());
+                man.hideRecipes(RecipeTypes.INFORMATION, entry.getValue());
             }
         }
-        for (Entry<Item, List<IJeiIngredientInfoRecipe>> entry : infos.entrySet()) {
-            if (locked.contains(entry.getKey()) || !unlocked.contains(entry.getKey())) {
-                man.unhideRecipes(RecipeTypes.INFORMATION,entry.getValue());
-            } else {
-                man.hideRecipes(RecipeTypes.INFORMATION,entry.getValue());
-            }
-        }
+
         UnlockList<ResourceLocation> categoryUnlockList=ClientResearchDataAPI.getData().get().getUnlockList(ResearchHooks.CATEGORY_UNLOCK_LIST);
         for (ResourceLocation rl : ResearchHooks.getLockList(ResearchHooks.CATEGORY_UNLOCK_LIST)) {
         	RecipeType<?> type=man.getRecipeType(rl).orElse(null);
@@ -206,21 +184,26 @@ public class JEICompat implements IModPlugin {
 	                man.unhideRecipeCategory(type);
         	}
         }
+
         research.clear();
-        for(Research research:FHResearch.getAllResearch()) {
-        	for(Effect effect:research.getEffects()) {
-	        	if((!ClientResearchDataAPI.getData().get().isEffectGranted(research, effect))&&effect instanceof EffectCrafting) {
-	        		Set<Item> item=new HashSet<>();
-	        		EffectCrafting crafting=(EffectCrafting) effect;
-	        		if(crafting.getIngredient()!=null)
-	        			Stream.of(crafting.getIngredient().getItems()).map(t->t.getItem()).forEach(item::add);
-	        		else if(crafting.getUnlocks()!=null)
-	        			crafting.getUnlocks().stream().map(RecipeUtil::getResultItem).filter(t->t!=null&&!t.isEmpty()).map(ItemStack::getItem).forEach(item::add);
-	        		for(Item ix:item) {
-	        			JEICompat.research.computeIfAbsent(ix, i->new LinkedHashMap<>()).put(research.getId(), Lang.translateTooltip("research_unlockable", research.getName()));
-	        		}
-	        	}
-        	}
+        for (Research research : FHResearch.getAllResearch()) {
+            for (Effect effect : research.getEffects()) {
+                if (!ClientResearchDataAPI.getData().get().isEffectGranted(research, effect) && effect instanceof EffectCrafting) {
+                    Set<ItemStack> items = new HashSet<>();
+                    EffectCrafting crafting = (EffectCrafting) effect;
+                    if (crafting.getIngredient() != null)
+                        Stream.of(crafting.getIngredient().getItems()).forEach(items::add);
+                    else if (crafting.getUnlocks() != null)
+                        crafting.getUnlocks().stream()
+                                .map(RecipeUtil::getResultItem)
+                                .filter(t -> t != null && !t.isEmpty())
+                                .forEach(items::add);
+                    for (ItemStack stack : items) {
+                        JEICompat.research.computeIfAbsent(stack.copy(), i -> new LinkedHashMap<>())
+                                .put(research.getId(), Lang.translateTooltip("research_unlockable", research.getName()));
+                    }
+                }
+            }
         }
     }
 

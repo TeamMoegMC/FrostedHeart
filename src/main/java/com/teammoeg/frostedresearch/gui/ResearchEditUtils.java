@@ -23,6 +23,7 @@ import com.teammoeg.chorda.client.cui.base.UIElement;
 import com.teammoeg.chorda.client.cui.editor.EditUtils;
 import com.teammoeg.chorda.text.Components;
 import com.teammoeg.frostedresearch.FHResearch;
+import com.teammoeg.frostedresearch.FRMain;
 import com.teammoeg.frostedresearch.research.Research;
 import com.teammoeg.frostedresearch.research.ResearchCategory;
 import com.teammoeg.frostedresearch.research.ResearchEditors;
@@ -54,6 +55,7 @@ public class ResearchEditUtils {
 						ResearchEditUtils.saveResearch(t);
 					}
 				});
+                FRMain.LOGGER.info("Saving research '{}'", b.getId());
 				ResearchEditUtils.saveResearch(b);
 	            
 	            FHResearch.load(b);

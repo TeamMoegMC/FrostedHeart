@@ -43,12 +43,10 @@ import com.teammoeg.frostedresearch.events.PopulateUnlockListEvent;
 import com.teammoeg.frostedresearch.network.FHResearchDataSyncPacket;
 import com.teammoeg.frostedresearch.recipe.InspireRecipe;
 import net.minecraft.ChatFormatting;
-import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.common.util.FakePlayer;
 import net.minecraftforge.event.AddReloadListenerEvent;
@@ -63,8 +61,6 @@ import net.minecraftforge.fml.LogicalSide;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.network.PacketDistributor;
 import net.minecraftforge.network.PacketDistributor.PacketTarget;
-
-import java.util.Map;
 
 @Mod.EventBusSubscriber(modid = FRMain.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public class ResearchCommonEvents {
@@ -164,20 +160,21 @@ public class ResearchCommonEvents {
     @SubscribeEvent
     public static void onItemTooltip(ItemTooltipEvent event) {
         final ItemStack stack = event.getItemStack();
-        Item i = stack.getItem();
-        if (!stack.isEmpty()) { // FIXME 区分NBT
-            Map<String, Component> rstooltip= JEICompat.research.get(i);
-            if(rstooltip!=null)
-                event.getToolTip().addAll(rstooltip.values());
+        if (!stack.isEmpty()) {
+            JEICompat.research.forEach((locked, tooltip) -> {
+                if (ItemStack.isSameItemSameTags(stack, locked)) {
+                    event.getToolTip().addAll(tooltip.values());
+                }
+            });
 
-        }
-        // Inspiration item
-        for (InspireRecipe ir : CUtils.filterRecipes(null, InspireRecipe.TYPE)) {
-            if (ir.item.test(stack)) {
-                event.getToolTip().add(Lang.translateTooltip("inspire_item").withStyle(ChatFormatting.GRAY));
-                break;
+            for (InspireRecipe ir : CUtils.filterRecipes(null, InspireRecipe.TYPE)) {
+                if (ir.item.test(stack)) {
+                    event.getToolTip().add(Lang.translateTooltip("inspire_item").withStyle(ChatFormatting.GRAY));
+                    break;
+                }
             }
         }
+
     }
 
 	@SubscribeEvent
