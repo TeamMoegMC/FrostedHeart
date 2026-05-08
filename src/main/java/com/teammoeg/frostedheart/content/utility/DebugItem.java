@@ -19,8 +19,8 @@
 
 package com.teammoeg.frostedheart.content.utility;
 
-import com.teammoeg.frostedheart.content.tips.ServerTipHelper;
-import com.teammoeg.frostedheart.content.tips.client.gui.DebugScreen;
+import com.teammoeg.frostedheart.content.ui.tips.ServerTipHelper;
+import com.teammoeg.frostedheart.content.ui.tips.client.gui.DebugScreen;
 import com.teammoeg.frostedheart.item.FHBaseItem;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;

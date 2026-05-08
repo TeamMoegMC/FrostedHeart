@@ -21,9 +21,8 @@ package com.teammoeg.frostedheart.compat.tetra;
 
 import com.teammoeg.chorda.client.icon.CIcons;
 import com.teammoeg.frostedheart.bootstrap.common.ToolCompat;
-import com.teammoeg.frostedheart.content.wheelmenu.SelectionBuilder;
-import com.teammoeg.frostedheart.content.wheelmenu.WheelMenuSelectionRegisterEvent;
-
+import com.teammoeg.frostedheart.content.ui.wheelmenu.SelectionBuilder;
+import com.teammoeg.frostedheart.content.ui.wheelmenu.WheelMenuSelectionRegisterEvent;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;

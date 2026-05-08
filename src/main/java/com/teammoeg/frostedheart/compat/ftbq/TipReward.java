@@ -19,7 +19,7 @@
 
 package com.teammoeg.frostedheart.compat.ftbq;
 
-import com.teammoeg.frostedheart.content.tips.ServerTipHelper;
+import com.teammoeg.frostedheart.content.ui.tips.ServerTipHelper;
 import dev.ftb.mods.ftblibrary.config.ConfigGroup;
 import dev.ftb.mods.ftbquests.quest.Quest;
 import dev.ftb.mods.ftbquests.quest.reward.Reward;

@@ -19,23 +19,13 @@
 
 package com.teammoeg.frostedheart.infrastructure.data;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
-import java.util.function.Function;
-import java.util.stream.Collectors;
-
-import javax.annotation.Nonnull;
-
 import com.teammoeg.chorda.util.struct.EnumDefaultedMap;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.climate.data.*;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData.BodyPart;
 import com.teammoeg.frostedheart.content.climate.recipe.CampfireDefrostRecipe;
 import com.teammoeg.frostedheart.content.trade.policy.TradePolicy;
-import com.teammoeg.frostedheart.content.wheelmenu.WheelMenuRenderer;
-
+import com.teammoeg.frostedheart.content.ui.wheelmenu.WheelMenuRenderer;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.ReloadableServerResources;
 import net.minecraft.server.packs.resources.ResourceManager;
@@ -48,6 +38,14 @@ import net.minecraft.world.item.crafting.RecipeType;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.fml.loading.FMLEnvironment;
 import net.minecraftforge.registries.RegistryObject;
+
+import javax.annotation.Nonnull;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 public class FHRecipeCachingReloadListener implements ResourceManagerReloadListener {
     private final ReloadableServerResources dataPackRegistries;

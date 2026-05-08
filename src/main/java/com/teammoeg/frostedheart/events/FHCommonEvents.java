@@ -23,6 +23,7 @@ import com.teammoeg.chorda.text.Components;
 import com.teammoeg.chorda.util.CRegistryHelper;
 import com.teammoeg.chorda.util.CUtils;
 import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
 import com.teammoeg.frostedheart.bootstrap.common.FHItems;
 import com.teammoeg.frostedheart.bootstrap.common.FHMobEffects;
@@ -31,6 +32,7 @@ import com.teammoeg.frostedheart.bootstrap.reference.FHArmorMaterial;
 import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData.BodyPart;
 import com.teammoeg.frostedheart.content.steamenergy.HeatStatContainer;
+import com.teammoeg.frostedheart.content.ui.waypoint.network.WaypointSyncAllPacket;
 import com.teammoeg.frostedheart.content.utility.DeathInventoryData;
 import com.teammoeg.frostedheart.content.utility.oredetect.CoreSpade;
 import com.teammoeg.frostedheart.content.utility.oredetect.GeologistsHammer;
@@ -172,6 +174,9 @@ public class FHCommonEvents {
 
 			event.getEntity().sendSystemMessage(Lang.translateKey("message.frostedheart.temperature_help"));
 		}
+
+		if (event.getEntity() instanceof ServerPlayer player)
+			FHNetwork.INSTANCE.sendPlayer(player, new WaypointSyncAllPacket(player));
 	}
 
 	@SubscribeEvent

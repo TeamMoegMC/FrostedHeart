@@ -21,9 +21,9 @@ package com.teammoeg.frostedheart.infrastructure.command;
 
 import com.mojang.brigadier.context.CommandContext;
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.content.tips.ServerTipHelper;
-import com.teammoeg.frostedheart.content.tips.Tip;
-import com.teammoeg.frostedheart.content.tips.TipHelper;
+import com.teammoeg.frostedheart.content.ui.tips.ServerTipHelper;
+import com.teammoeg.frostedheart.content.ui.tips.Tip;
+import com.teammoeg.frostedheart.content.ui.tips.TipHelper;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;

@@ -19,16 +19,17 @@
 
 package com.teammoeg.frostedheart.content.climate.event;
 
-import com.teammoeg.frostedheart.*;
 import com.simibubi.create.foundation.utility.worldWrappers.WrappedServerWorld;
 import com.teammoeg.chorda.dataholders.team.CTeamDataManager;
 import com.teammoeg.chorda.dataholders.team.TeamDataHolder;
 import com.teammoeg.chorda.math.CMath;
-import com.teammoeg.frostedheart.bootstrap.common.FHSpecialDataTypes;
-import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
+import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.bootstrap.common.FHAttributes;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlocks;
 import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
+import com.teammoeg.frostedheart.bootstrap.common.FHSpecialDataTypes;
+import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
 import com.teammoeg.frostedheart.content.agriculture.FertilizedDirt;
 import com.teammoeg.frostedheart.content.agriculture.Fertilizer;
 import com.teammoeg.frostedheart.content.climate.ForecastHandler;
@@ -46,7 +47,6 @@ import com.teammoeg.frostedheart.content.climate.player.EquipmentSlotType.SlotKe
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData.BodyPart;
 import com.teammoeg.frostedheart.content.climate.player.TemperatureUpdate;
-import com.teammoeg.frostedheart.content.waypoint.network.WaypointSyncAllPacket;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import com.teammoeg.frostedheart.mixin.minecraft.temperature.ServerLevelMixin_PlaceExtraSnow;
 import net.minecraft.core.BlockPos;
@@ -425,7 +425,6 @@ public class ClimateCommonEvents {
             FHCapabilities.CLIMATE_DATA.getCapability(serverWorld)
                     .ifPresent((cap) -> FHNetwork.INSTANCE.sendPlayer(currentPlayer, new FHClimatePacket(cap,currentPlayer)));
 
-            FHNetwork.INSTANCE.sendPlayer(currentPlayer, new WaypointSyncAllPacket(currentPlayer));
             // System.out.println("=x-x=");
             // System.out.println(ForgeRegistries.LOOT_MODIFIER_SERIALIZERS.getValue(new
             // ResourceLocation(FHMain.MODID,"add_loot")));

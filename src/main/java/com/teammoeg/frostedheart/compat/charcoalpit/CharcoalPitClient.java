@@ -19,7 +19,7 @@ import net.minecraft.world.phys.BlockHitResult;
 
 import java.util.List;
 
-import static com.teammoeg.frostedheart.content.keyhint.KeyHintOverlay.*;
+import static com.teammoeg.frostedheart.content.ui.keyhint.KeyHintOverlay.*;
 
 public class CharcoalPitClient {
 

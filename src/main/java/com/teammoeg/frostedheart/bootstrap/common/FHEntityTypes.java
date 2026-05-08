@@ -20,8 +20,8 @@
 package com.teammoeg.frostedheart.bootstrap.common;
 
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.block.gunpowderbarrel.GunpowderBarrelEntity;
 import com.teammoeg.frostedheart.content.town.resident.WanderingRefugee;
+import com.teammoeg.frostedheart.content.utility.gunpowderbarrel.GunpowderBarrelEntity;
 import com.teammoeg.frostedheart.content.utility.seld.ContainerHolderEntity;
 import com.teammoeg.frostedheart.content.utility.seld.SledEntity;
 import com.teammoeg.frostedheart.content.world.entities.CuriosityEntity;
