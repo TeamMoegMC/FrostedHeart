@@ -24,6 +24,7 @@ import com.google.gson.GsonBuilder;
 import com.mojang.logging.LogUtils;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import com.teammoeg.chorda.client.ClickActions;
 import com.teammoeg.chorda.math.Colors;
 import com.teammoeg.frostedheart.FHMain;
 import net.minecraft.resources.ResourceLocation;

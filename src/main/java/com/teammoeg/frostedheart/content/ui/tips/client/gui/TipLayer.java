@@ -263,7 +263,7 @@ public class TipLayer extends UILayer {
             if (!(display.alwaysVisible() || alwaysVisibleOverride)) {
                 pose.scale(1-progress, 1, 1);
             }
-            graphics.fill(0, 0, w+8, 1, display.fontColor());
+            graphics.fill(0, 0, w+8, 1, Colors.cyanToTheme(display.fontColor()));
             pose.popPose();
         }
     }

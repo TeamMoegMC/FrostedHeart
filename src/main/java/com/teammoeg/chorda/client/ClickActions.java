@@ -17,20 +17,21 @@
  *
  */
 
-package com.teammoeg.frostedheart.content.ui.tips;
+package com.teammoeg.chorda.client;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import com.teammoeg.chorda.Chorda;
 import com.teammoeg.chorda.CompatModule;
 import com.teammoeg.chorda.client.cui.editor.Editor;
 import com.teammoeg.chorda.client.cui.editor.EditorDialogBuilder;
 import com.teammoeg.chorda.client.cui.editor.Editors;
+import com.teammoeg.chorda.client.popup.Popup;
+import com.teammoeg.chorda.compat.ftb.FTBQCompat;
+import com.teammoeg.chorda.compat.jei.JEICompat;
 import com.teammoeg.chorda.math.Colors;
 import com.teammoeg.chorda.text.Components;
 import com.teammoeg.chorda.util.CRegistryHelper;
-import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.compat.jei.JEICompat;
-import com.teammoeg.frostedresearch.compat.ftb.FTBQCompat;
 import net.minecraft.Util;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
@@ -50,8 +51,8 @@ import static com.teammoeg.frostedheart.FHMain.LOGGER;
 
 public class ClickActions {
     private static final Map<ResourceLocation, Action> ACTIONS = new HashMap<>();
-    private static final Action EMPTY = new Action(FHMain.rl("empty"), "tips.frostedheart.click_action.empty", s -> {});
-    public static final ClickAction NO_ACTION = new ClickAction(FHMain.rl("empty"), "");
+    private static final Action EMPTY = new Action(Chorda.rl("empty"), "tips.frostedheart.click_action.empty", s -> {});
+    public static final ClickAction NO_ACTION = new ClickAction(EMPTY.location, "");
 
     public static final Codec<ClickAction> CODEC = RecordCodecBuilder.create(i -> i.group(
             ResourceLocation.CODEC.fieldOf("clickAction").forGetter(ClickAction::action),
@@ -77,48 +78,42 @@ public class ClickActions {
 
     static {
         register(EMPTY);
-        register(FHMain.rl("open_url"),        "tips.frostedheart.click_action.open_url",   s -> {
+        register(Chorda.rl("open_url"),        "tips.frostedheart.click_action.open_url",   s -> {
             try {
                 Util.getPlatform().openUrl(new URL(s));
             } catch (MalformedURLException e) {
                 throw new RuntimeException("Invalid URL '" + s + "'");
             }
         });
-        register(FHMain.rl("open_quest"),      "tips.frostedheart.click_action.open_quest", s -> {
+        register(Chorda.rl("open_quest"),      "tips.frostedheart.click_action.open_quest", s -> {
             if (!CompatModule.isFTBQLoaded()) {
                 throw new RuntimeException("FTBQuest is not installed");
             }
-            FTBQCompat.openGui(Long.parseLong(s, 16));
+            FTBQCompat.openQuest(Long.parseLong(s, 16));
         });
-        register(FHMain.rl("open_file"),       "tips.frostedheart.click_action.open_file",  s -> {
+        register(Chorda.rl("open_file"),       "tips.frostedheart.click_action.open_file",  s -> {
             var file = new File(FMLPaths.GAMEDIR.get().toFile(), s);
             if (!file.exists()) {
                 throw new RuntimeException("File '" + file + "' not exists");
             }
             Util.getPlatform().openUri(file.toURI());
         });
-        register(FHMain.rl("show_jei_recipe"), "tips.frostedheart.click_action.jei_recipe", s -> {
+        register(Chorda.rl("show_jei_recipe"), "tips.frostedheart.click_action.jei_recipe", s -> {
             var item = CRegistryHelper.getItem(ResourceLocation.tryParse(s)).getDefaultInstance();
             if (item.isEmpty()) {
                 throw new RuntimeException("Unknown Item '%s'".formatted(s));
             }
             JEICompat.showJEIFor(item);
         });
-        register(FHMain.rl("show_jei_usages"), "tips.frostedheart.click_action.jei_usages", s -> {
+        register(Chorda.rl("show_jei_usages"), "tips.frostedheart.click_action.jei_usages", s -> {
             var item = CRegistryHelper.getItem(ResourceLocation.tryParse(s)).getDefaultInstance();
             if (item.isEmpty()) {
                 throw new RuntimeException("Unknown Item '%s'".formatted(s));
             }
             JEICompat.showJEIUsageFor(item);
         });
-        register(FHMain.rl("edit_tip"),        "tips.frostedheart.click_action.edit_tip",   s -> {
-            if (s.startsWith("{")) {
-                TipHelper.edit(TipHelper.parse(s), null);
-            } else {
-                TipHelper.edit(s, null);
-            }
-        });
     }
+
     private ClickActions() {}
 
     public static void register(ResourceLocation location, String description, Consumer<String> action) {

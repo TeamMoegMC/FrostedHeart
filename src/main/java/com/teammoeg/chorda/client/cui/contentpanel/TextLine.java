@@ -19,6 +19,7 @@
 
 package com.teammoeg.chorda.client.cui.contentpanel;
 
+import com.teammoeg.chorda.client.ClickActions;
 import com.teammoeg.chorda.client.RenderingHint;
 import com.teammoeg.chorda.client.StringTextComponentParser;
 import com.teammoeg.chorda.client.cui.base.MouseButton;
@@ -27,7 +28,6 @@ import com.teammoeg.chorda.client.cui.theme.Coloring;
 import com.teammoeg.chorda.client.cui.widgets.Button;
 import com.teammoeg.chorda.client.icon.FlatIcon;
 import com.teammoeg.chorda.client.ui.CGuiHelper;
-import com.teammoeg.frostedheart.content.ui.tips.ClickActions;
 import lombok.Getter;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;

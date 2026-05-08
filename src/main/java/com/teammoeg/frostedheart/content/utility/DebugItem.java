@@ -19,7 +19,7 @@
 
 package com.teammoeg.frostedheart.content.utility;
 
-import com.teammoeg.frostedheart.content.ui.tips.ServerTipHelper;
+import com.teammoeg.chorda.client.popup.PopupHelper;
 import com.teammoeg.frostedheart.content.ui.tips.client.gui.DebugScreen;
 import com.teammoeg.frostedheart.item.FHBaseItem;
 import net.minecraft.network.chat.Component;
@@ -41,7 +41,7 @@ public class DebugItem extends FHBaseItem {
         if (worldIn.isClientSide) {
             DebugScreen.openDebugScreen();
         } else {
-            ServerTipHelper.sendPopup(Component.literal("Debug Screen"), (ServerPlayer) playerIn);
+            PopupHelper.sendPopup(Component.literal("Debug Screen"), (ServerPlayer) playerIn);
         }
         return super.use(worldIn, playerIn, handIn);
     }

@@ -19,9 +19,10 @@
 
 package com.teammoeg.chorda;
 
+import com.teammoeg.chorda.client.popup.DisplayPopupPacket;
+import com.teammoeg.chorda.network.CBaseNetwork;
 import com.teammoeg.chorda.network.ContainerDataSyncMessageS2C;
 import com.teammoeg.chorda.network.ContainerOperationMessageC2S;
-import com.teammoeg.chorda.network.CBaseNetwork;
 
 /**
  * Chorda 网络通道管理类。注册并管理客户端与服务端之间的网络消息。
@@ -48,6 +49,10 @@ public class ChordaNetwork extends CBaseNetwork{
         // 基础消息 / Fundamental messages
         registerMessage("container_operation", ContainerOperationMessageC2S.class);
         registerMessage("container_sync", ContainerDataSyncMessageS2C.class);
+
+        // popup
+        registerMessage("popup", DisplayPopupPacket.class);
+
 
     }
 }

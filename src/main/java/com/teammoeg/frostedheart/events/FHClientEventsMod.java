@@ -54,6 +54,7 @@ import com.teammoeg.frostedheart.content.climate.tooltips.PlantTempStats;
 import com.teammoeg.frostedheart.content.health.tooltip.FoodNutritionStats;
 import com.teammoeg.frostedheart.content.scenario.client.gui.layered.font.KGlyphProvider;
 import com.teammoeg.frostedheart.content.town.resident.WanderingRefugeeRenderer;
+import com.teammoeg.frostedheart.content.ui.FHClickActions;
 import com.teammoeg.frostedheart.content.ui.keyhint.KeyHintOverlay;
 import com.teammoeg.frostedheart.content.ui.keyhint.KeyHintRegistrate;
 import com.teammoeg.frostedheart.content.ui.tips.client.gui.TipOverlay;
@@ -99,6 +100,8 @@ public class FHClientEventsMod {
         KeyHintRegistrate.init();
         LOGGER.info(CLIENT_SETUP, "Initializing Screens");
         FHScreens.init();
+        LOGGER.info(CLIENT_SETUP, "Initializing ClickActions");
+        FHClickActions.init();
 
         if (CompatModule.isIELoaded()) {
             LOGGER.info(CLIENT_SETUP, "Initializing IE Manual");

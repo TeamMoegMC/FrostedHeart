@@ -9,7 +9,7 @@ public class TipTheme implements Theme {
     public TipLayer tipLayer;
 
     public int getFontColor() {
-        return tipLayer != null ? tipLayer.display.fontColor() : Colors.CYAN;
+        return tipLayer != null ? Colors.cyanToTheme(tipLayer.display.fontColor()) : Colors.CYAN;
     }
 
     public int getBackgroundColor() {

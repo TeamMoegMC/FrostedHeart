@@ -39,7 +39,6 @@ import com.teammoeg.frostedheart.content.trade.network.TradeCommitPacket;
 import com.teammoeg.frostedheart.content.trade.network.TradeUpdatePacket;
 import com.teammoeg.frostedheart.content.ui.tips.network.DisplayCustomTipPacket;
 import com.teammoeg.frostedheart.content.ui.tips.network.DisplayCustomTipRequestPacket;
-import com.teammoeg.frostedheart.content.ui.tips.network.DisplayPopupPacket;
 import com.teammoeg.frostedheart.content.ui.tips.network.DisplayTipPacket;
 import com.teammoeg.frostedheart.content.ui.waypoint.network.WaypointRemovePacket;
 import com.teammoeg.frostedheart.content.ui.waypoint.network.WaypointSyncAllPacket;
@@ -116,7 +115,6 @@ public class FHNetwork extends CBaseNetwork {
         registerMessage("single_tip", DisplayTipPacket.class);
         registerMessage("custom_tip", DisplayCustomTipPacket.class);
         registerMessage("display_request", DisplayCustomTipRequestPacket.class);
-        registerMessage("popup", DisplayPopupPacket.class);
 
         // Waypoint Messages
         registerMessage("waypoint_remove", WaypointRemovePacket.class);

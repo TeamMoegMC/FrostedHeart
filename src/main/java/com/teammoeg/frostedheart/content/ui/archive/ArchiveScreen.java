@@ -21,6 +21,7 @@ package com.teammoeg.frostedheart.content.ui.archive;
 
 import com.teammoeg.chorda.client.AnimationUtil;
 import com.teammoeg.chorda.client.CSSStylingUtil;
+import com.teammoeg.chorda.client.ClickActions;
 import com.teammoeg.chorda.client.ClientUtils;
 import com.teammoeg.chorda.client.RenderingHint;
 import com.teammoeg.chorda.client.cui.base.PrimaryLayer;
@@ -31,7 +32,6 @@ import com.teammoeg.chorda.client.cui.screenadapter.CUIScreen;
 import com.teammoeg.chorda.client.cui.screenadapter.CUIScreenWrapper;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.ui.archive.ArchiveCategory.ArchiveEntry;
-import com.teammoeg.frostedheart.content.ui.tips.ClickActions;
 import net.minecraft.client.gui.GuiGraphics;
 
 import javax.annotation.Nullable;

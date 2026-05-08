@@ -17,11 +17,10 @@
  *
  */
 
-package com.teammoeg.frostedheart.content.ui.tips.network;
+package com.teammoeg.chorda.client.popup;
 
 import com.teammoeg.chorda.network.CMessage;
 import com.teammoeg.chorda.text.Components;
-import com.teammoeg.frostedheart.content.ui.tips.Popup;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraftforge.network.NetworkEvent;

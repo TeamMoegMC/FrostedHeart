@@ -17,7 +17,7 @@
  *
  */
 
-package com.teammoeg.frostedheart.content.ui.tips;
+package com.teammoeg.chorda.client.popup;
 
 import com.teammoeg.chorda.client.AnimationUtil;
 import com.teammoeg.chorda.client.ClientUtils;
