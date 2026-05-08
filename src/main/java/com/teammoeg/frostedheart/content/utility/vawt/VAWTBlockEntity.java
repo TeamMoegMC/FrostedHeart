@@ -24,7 +24,9 @@ import com.simibubi.create.content.kinetics.base.GeneratingKineticBlockEntity;
 import com.simibubi.create.foundation.item.TooltipHelper;
 import com.simibubi.create.foundation.utility.Lang;
 import com.teammoeg.chorda.math.CMath;
+import com.teammoeg.chorda.math.Colors;
 import com.teammoeg.chorda.text.CFormatHelper;
+import com.teammoeg.frostedheart.compat.create.IHaveOutlines;
 import com.teammoeg.frostedheart.content.climate.gamedata.climate.WorldClimate;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import lombok.Getter;
@@ -35,16 +37,17 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.tags.BiomeTags;
 import net.minecraft.util.Mth;
-import net.minecraft.world.level.block.AirBlock;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.AABB;
 import net.minecraftforge.common.Tags;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class VAWTBlockEntity extends GeneratingKineticBlockEntity implements IHaveGoggleInformation {
+public class VAWTBlockEntity extends GeneratingKineticBlockEntity implements IHaveGoggleInformation, IHaveOutlines {
 
     enum ModifierType {SPEED, DAMAGE}
     record Modifier(ModifierType modifierType, String reason, float value) {}
@@ -54,6 +57,7 @@ public class VAWTBlockEntity extends GeneratingKineticBlockEntity implements IHa
     private boolean generatable = false;
     @Getter
     private boolean damaged = false;
+    private BlockPos wrongPos = getBlockPos();
 
     @Getter
     private float speedEffect = 0;
@@ -141,31 +145,41 @@ public class VAWTBlockEntity extends GeneratingKineticBlockEntity implements IHa
         double lambda = -Math.log(0.05) / 8.0;
         float threshold = FHConfig.SERVER.VAWT.vawtEmptyAreaAllowsBlockCount.get();
         var myPos = getBlockPos().getCenter();
+
+        var probablyWrong = getBlockPos(); // 检测时遇到的影响值最大的方块
+        double max = 0;
         for (BlockPos pos : collectedPos) {
             if (level.canSeeSky(pos)) continue;
 
             var pos2 = pos;
             var block = level.getBlockState(pos2);
-            while (pos2.getY() <= level.getMaxBuildHeight()) {
+            while (pos2.getY() <= level.getMaxBuildHeight()) { // 循环直到遇到第一个非空气方块
                 if (block.getBlock() instanceof VAWTBlock) {
-                    reason = "neighbor";
+                    reason = "neighbor"; // 另一个风力涡轮
                     successTime = 0;
+                    wrongPos = pos2;
                     return lastEnvResult = false;
-                } else if (!(block.getBlock() instanceof AirBlock)) {
+                } else if (!block.isAir() && !block.canBeReplaced()) {
                     double distance = Math.max(pos2.getCenter().distanceTo(myPos)-0.5f, 1);
-                    sc += Mth.clamp(threshold * Math.exp(-lambda * distance), 1F, 8F);
-                    break;
+                    double effect = Mth.clamp(threshold * Math.exp(-lambda * distance), 1F, 8F);
+                    if (effect > max) {
+                        max = effect;
+                        probablyWrong = pos2;
+                    }
+                    sc += effect;
                 }
                 pos2 = pos2.above();
                 block = level.getBlockState(pos2);
             }
 
             if (sc > threshold) {
-                reason = "blocked";
+                reason = "blocked"; // 总影响值超过阈值
                 successTime = 0;
+                wrongPos = probablyWrong;
                 return lastEnvResult = false;
             }
         }
+        wrongPos = getBlockPos();
         successTime++;
         return lastEnvResult = true;
     }
@@ -198,6 +212,14 @@ public class VAWTBlockEntity extends GeneratingKineticBlockEntity implements IHa
             generatable = false;
         } else if (!canSeeSky) {
             reason = "blocked";
+            var pos = getBlockPos().above();
+            while (pos.getY() < level.getMaxBuildHeight()) {
+                if (!level.getBlockState(pos).isAir()) {
+                    break;
+                }
+                pos = pos.above();
+            }
+            wrongPos = pos;
             generatable = false;
         } else if ((getBlockPos().getY() < level.getSeaLevel()-16 || biome.containsTag(Tags.Biomes.IS_CAVE) || biome.containsTag(BiomeTags.IS_NETHER))) {
             reason = "underground";
@@ -287,6 +309,7 @@ public class VAWTBlockEntity extends GeneratingKineticBlockEntity implements IHa
         this.reason = compound.getString("reason");
         this.speedEffect = compound.getFloat("speed_effect");
         this.damageEffect = compound.getFloat("damage_effect");
+        this.wrongPos = BlockPos.of(compound.getLong("wrong_pos"));
     }
 
     @Override
@@ -296,6 +319,7 @@ public class VAWTBlockEntity extends GeneratingKineticBlockEntity implements IHa
         compound.putString("reason", reason);
         compound.putFloat("speed_effect", speedEffect);
         compound.putFloat("damage_effect", damageEffect);
+        compound.putLong("wrong_pos", wrongPos.asLong());
     }
 
     @Override
@@ -335,5 +359,18 @@ public class VAWTBlockEntity extends GeneratingKineticBlockEntity implements IHa
             }
         }
         return true;
+    }
+
+    @Override
+    public Collection<ShapeInfo> getOutlineShapes() {
+        var pos = getBlockPos();
+        int range = FHConfig.SERVER.VAWT.vawtEmptyAreaRange.get();
+        var box = new AABB(pos.getX()-range, pos.getY(), pos.getZ()-range,
+                pos.getX()+range+1, level.getMaxBuildHeight(), pos.getZ()+range+1);
+        if (wrongPos != null && !wrongPos.equals(pos)) {
+            return List.of(ShapeInfo.of("vawt_area", box, Colors.themeColor(), 320),
+                    ShapeInfo.fromBlock(level, wrongPos, "vawt_wrong_pos", Colors.RED, 320));
+        }
+        return List.of(ShapeInfo.of("vawt_area", box));
     }
 }

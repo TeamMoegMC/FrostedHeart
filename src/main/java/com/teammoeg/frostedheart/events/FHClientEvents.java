@@ -33,6 +33,7 @@ import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.FrostedHud;
 import com.teammoeg.frostedheart.bootstrap.common.FHItems;
 import com.teammoeg.frostedheart.bootstrap.common.FHMobEffects;
+import com.teammoeg.frostedheart.compat.create.GoggleInfoOutlineHandler;
 import com.teammoeg.frostedheart.content.climate.network.C2SOpenClothesScreenMessage;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData;
 import com.teammoeg.frostedheart.content.climate.render.InfraredViewRenderer;
@@ -394,6 +395,10 @@ public class FHClientEvents {
             	
             }
             WheelMenuRenderer.tick();
+        }
+
+        if (CompatModule.isCreateLoaded()) {
+            GoggleInfoOutlineHandler.tick();
         }
     }
 
