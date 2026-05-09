@@ -2,8 +2,10 @@ package com.teammoeg.frostedheart.compat.create;
 
 import com.simibubi.create.AllSpecialTextures;
 import com.simibubi.create.CreateClient;
+import com.simibubi.create.content.equipment.goggles.GogglesItem;
 import com.teammoeg.chorda.client.ClientUtils;
 import com.teammoeg.frostedheart.compat.create.IHaveOutlines.ShapeInfo;
+import net.minecraft.world.level.GameType;
 import net.minecraft.world.phys.BlockHitResult;
 
 import java.util.HashMap;
@@ -13,8 +15,12 @@ public class GoggleInfoOutlineHandler {
     static Map<String, VisibleShape> shapes = new HashMap<>();
 
     public static void tick() {
-        var result = ClientUtils.hitResult();
-        var level = ClientUtils.getWorld();
+        var mc = ClientUtils.getMc();
+        var result = mc.hitResult;
+        var player = mc.player;
+        var level = mc.level;
+        if (level == null || player == null || mc.options.hideGui || mc.gameMode.getPlayerMode() == GameType.SPECTATOR || !GogglesItem.isWearingGoggles(mc.player))
+            return;
 
         // 更新当前注视方块提供的形状
         if (result instanceof BlockHitResult bhr) {
