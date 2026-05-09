@@ -207,7 +207,7 @@ public class WheelMenuRenderer {
 				FHKeyMappings.key_openWheelMenu.get().getKey().getDisplayName());
 		var lines = font.split(message, (int) (innerRadius * 2 - 16));
 		String pageText=(wheelMenuPage+1)+"/"+maxPage;
-		CGuiHelper.drawStringLines(graphics, font, lines, 0, -lines.size() * 5, Colors.themeColor(), 1, true, true, Alignment.CENTER);
+		CGuiHelper.drawStringLines(graphics, font, lines, 0, -lines.size() * 5, Colors.themeColor(), 1, true, Colors.setAlpha(Colors.BLACK, 128), Alignment.CENTER);
 		graphics.drawCenteredString(font, pageText, 0, 30, Colors.WHITE);
 
 		// 渲染“鼠标”

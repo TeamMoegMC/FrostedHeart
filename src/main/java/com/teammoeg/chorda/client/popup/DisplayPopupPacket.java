@@ -44,7 +44,7 @@ public record DisplayPopupPacket(String message) implements CMessage {
 
     @Override
     public void handle(Supplier<NetworkEvent.Context> context) {
-        context.get().enqueueWork(() -> Popup.put(Component.translatable(message)));
+        context.get().enqueueWork(() -> PopupOverlay.pop(Component.translatable(message)));
         context.get().setPacketHandled(true);
     }
 }

@@ -26,7 +26,7 @@ import com.teammoeg.chorda.CompatModule;
 import com.teammoeg.chorda.client.cui.editor.Editor;
 import com.teammoeg.chorda.client.cui.editor.EditorDialogBuilder;
 import com.teammoeg.chorda.client.cui.editor.Editors;
-import com.teammoeg.chorda.client.popup.Popup;
+import com.teammoeg.chorda.client.popup.PopupOverlay;
 import com.teammoeg.chorda.compat.ftb.FTBQCompat;
 import com.teammoeg.chorda.compat.jei.JEICompat;
 import com.teammoeg.chorda.math.Colors;
@@ -141,7 +141,7 @@ public class ClickActions {
             message = "Unable to execute action '%s', accepted context: '%s'".formatted(action.location, context);
             LOGGER.error(message, e);
         }
-        Popup.put(Components.withColor(message, Colors.RED).append("\n").append(Component.translatable("tips.frostedheart.error.desc")));
+        PopupOverlay.pop(Components.withColor(message, Colors.RED).append("\n").append(Component.translatable("tips.frostedheart.error.desc")));
         return false;
     }
 

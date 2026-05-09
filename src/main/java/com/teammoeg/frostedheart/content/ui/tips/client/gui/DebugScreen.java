@@ -23,7 +23,7 @@ import com.simibubi.create.foundation.config.ui.BaseConfigScreen;
 import com.teammoeg.chorda.client.ClientUtils;
 import com.teammoeg.chorda.client.MouseHelper;
 import com.teammoeg.chorda.client.icon.FlatIcon;
-import com.teammoeg.chorda.client.popup.Popup;
+import com.teammoeg.chorda.client.popup.PopupOverlay;
 import com.teammoeg.chorda.client.widget.IconButton;
 import com.teammoeg.chorda.math.Colors;
 import com.teammoeg.chorda.text.Components;
@@ -110,7 +110,7 @@ public class DebugScreen extends Screen {
             FrostedHud.renderDebugOverlay = !FrostedHud.renderDebugOverlay
         );
         addButton(FlatIcon.LIST, Colors.themeColor(), "Create Pop-up message", (b) ->
-            Popup.put(input.getValue())
+            PopupOverlay.pop(input.getValue())
         );
         addButton(FlatIcon.LIST, Colors.themeColor(), "Unlock All Tips", (b) ->
             TipManager.state().unlockAll()
@@ -127,7 +127,7 @@ public class DebugScreen extends Screen {
             var config = new BaseConfigScreen(this, FHMain.MODID);
             this.minecraft.setScreen(config);
         }
-        Popup.clear();
+        PopupOverlay.clear();
         return "opened";
     }
 

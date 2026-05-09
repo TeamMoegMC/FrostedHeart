@@ -76,7 +76,7 @@ public class ArchiveTheme implements Theme {
         var font = ClientUtils.font();
         var context = CGuiHelper.split(tooltipLines, font, mouseX, graphics.guiWidth());
         int w = context.maxWidth();
-        int h = context.lineSize() * font.lineHeight;
+        int h = context.lineSize() * (font.lineHeight+2) - 3;
         var pos = DefaultTooltipPositioner.INSTANCE.positionTooltip(ClientUtils.screenWidth(), ClientUtils.screenHeight(), mouseX, mouseY+6, w, h);
         int x = pos.x();
         int y = pos.y();
@@ -85,7 +85,7 @@ public class ArchiveTheme implements Theme {
         graphics.pose().pushPose();
         graphics.pose().translate(0, 0, zOffset+400);
         graphics.fill(x-border, y-border, x+w+border, y+h+border, 0xFF282A31);
-        CGuiHelper.drawStringLines(graphics, font, context.lines(), x, y, UITextColor(), 0, true, false);
+        CGuiHelper.drawStringLines(graphics, font, context.lines(), x, y, UITextColor(), 2, true, 0);
         graphics.pose().popPose();
     }
 

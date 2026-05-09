@@ -8,9 +8,11 @@
   "mixins": [
     "CapabilityManagerAccess",
     "MinecraftServerMixin"
+    "MinecraftServerMixin",
   ],
   "client": [
-    "IdMapMixin_AddModdedBlocksAutomatically"
+    "IdMapMixin_AddModdedBlocksAutomatically",
+    "MinecraftResizeDisplayMixin"
   ],
   "injectors": {
     "defaultRequire": 1

@@ -429,10 +429,10 @@ public class CGuiHelper {
 	 *                   {@link Object}
 	 * @param lineSpace  行间距
 	 * @param shadow     是否添加文本阴影
-	 * @param background 是否渲染背景(参考F3显示的文本)
+	 * @param background 背景颜色，传入{@code 0}禁用(参考F3显示的文本)
 	 */
 	public static void drawStringLines(GuiGraphics graphics, Font font, List<?> texts, int x, int y, int color,
-			int lineSpace, boolean shadow, boolean background) {
+			int lineSpace, boolean shadow, int background) {
 		drawStringLines(graphics, font, texts, x, y, color, lineSpace, shadow, background, Alignment.LEFT);
 	}
 
@@ -443,7 +443,7 @@ public class CGuiHelper {
 	 *                   {@link Object}
 	 * @param lineSpace  行间距
 	 * @param shadow     是否添加文本阴影
-	 * @param background 是否渲染背景(参考F3显示的文本)
+	 * @param background 背景颜色，传入{@code 0}禁用(参考F3显示的文本)
 	 * @param alignment
 	 *                   <p>
 	 *                   {@link Alignment#LEFT} 在给予的坐标右侧绘制左对齐文本
@@ -454,11 +454,11 @@ public class CGuiHelper {
 	 *                   <p>
 	 */
 	public static void drawStringLines(GuiGraphics graphics, Font font, List<?> texts, int x, int y, int color,
-			int lineSpace, boolean shadow, boolean background, Alignment alignment) {
+			int lineSpace, boolean shadow, int background, Alignment alignment) {
 		if (texts.isEmpty())
 			return;
 
-		int backgroundColor = background ? Colors.setAlpha(Colors.BLACK, 0.5F) : 0;
+//		background = background != 0 ? Colors.setAlpha(Colors.BLACK, 0.5F) : 0;
 
 		int lineOffset = 0;
 		for (Object text : texts) {
@@ -488,12 +488,12 @@ public class CGuiHelper {
 			int drawY = y + lineOffset;
 
 			// 背景
-			if (background) {
+			if (background == 0 || Colors.alpha(background) > 0) {
 				int bgX1 = drawX - 2;
 				int bgY1 = drawY - 1;
 				int bgX2 = drawX + textWidth + 2;
 				int bgY2 = bgY1 + (font.lineHeight + lineSpace);
-				graphics.fill(bgX1, bgY1, bgX2, bgY2, backgroundColor);
+				graphics.fill(bgX1, bgY1, bgX2, bgY2, background);
 			}
 
 			// 文本
@@ -514,7 +514,7 @@ public class CGuiHelper {
 	 *
 	 * @param lineSpace  行间距
 	 * @param shadow     是否添加文本阴影
-	 * @param background 是否渲染背景(参考F3显示的文本)
+	 * @param background 背景颜色，传入{@code 0}禁用(参考F3显示的文本)
 	 * @param alignment
 	 *                   <p>
 	 *                   {@link Alignment#LEFT} 在区域左侧绘制左对齐文本
@@ -525,9 +525,9 @@ public class CGuiHelper {
 	 *                   <p>
 	 */
 	public static void drawStringInBound(GuiGraphics graphics, Font font, Component text, int x, int y, int width,
-			int color, int lineSpace, boolean shadow, boolean background, Alignment alignment) {
+			int color, int lineSpace, boolean shadow, int background, Alignment alignment) {
 
-		int backgroundColor = background ? Colors.setAlpha(Colors.BLACK, 0.5F) : 0;
+//		background = background != 0 ? Colors.setAlpha(Colors.BLACK, 0.5F) : 0;
 		var split = font.split(text, width);
 
 		int lineOffset = 0;
@@ -541,12 +541,12 @@ public class CGuiHelper {
 			int drawY = y + lineOffset;
 
 			// 背景
-			if (background) {
+			if (background != 0 || Colors.alpha(background) > 0) {
 				int bgX1 = drawX - 2;
 				int bgY1 = drawY - 1;
 				int bgX2 = drawX + textWidth + 2;
 				int bgY2 = bgY1 + (font.lineHeight + lineSpace);
-				graphics.fill(bgX1, bgY1, bgX2, bgY2, backgroundColor);
+				graphics.fill(bgX1, bgY1, bgX2, bgY2, background);
 			}
 			// 文本
 			graphics.drawString(font, line, drawX, drawY, color, shadow);
@@ -562,7 +562,7 @@ public class CGuiHelper {
 	 *                        {@link Object}
 	 * @param lineSpace       行间距
 	 * @param shadow          是否添加文本阴影
-	 * @param backgroundColor 背景颜色，传入{@code 0}禁用
+	 * @param backgroundColor 背景颜色，传入{@code 0}禁用(参考F3显示的文本)
 	 * @param alignment
 	 *                        <p>
 	 *                        {@link Alignment#LEFT} 在区域左侧绘制左对齐文本

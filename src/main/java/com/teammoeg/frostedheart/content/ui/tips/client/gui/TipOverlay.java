@@ -9,7 +9,6 @@ import com.teammoeg.chorda.client.cui.screenadapter.CUIScreenWrapper;
 import com.teammoeg.chorda.math.Rect;
 import com.teammoeg.frostedheart.content.ui.tips.Tip;
 import lombok.Getter;
-import net.minecraftforge.common.util.Size2i;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -66,7 +65,6 @@ public class TipOverlay extends PrimaryLayer {
         addUIElements();
     }
 
-    Size2i lastScreenSize;
     @Override
     public void tick() {
         super.tick();
@@ -85,11 +83,6 @@ public class TipOverlay extends PrimaryLayer {
         } else {
             tipLayer.setEditing(false);
         }
-        var newSize = new Size2i(ClientUtils.screenWidth(), ClientUtils.screenHeight());
-        if (!newSize.equals(lastScreenSize)) {
-            refresh();
-        }
-        lastScreenSize = newSize;
 
         if (tipLayer.state == TipLayer.State.IDLE && !QUEUE.isEmpty()) {
             nextTip();

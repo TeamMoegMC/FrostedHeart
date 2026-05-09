@@ -22,6 +22,7 @@ package com.teammoeg.chorda.listeners;
 import com.teammoeg.chorda.Chorda;
 import com.teammoeg.chorda.client.cui.screenadapter.CUIOverlay;
 import com.teammoeg.chorda.client.model.DynamicBlockModelReference;
+import com.teammoeg.chorda.client.popup.PopupOverlay;
 import com.teammoeg.chorda.creativeTab.CreativeTabItemHelper;
 import com.teammoeg.chorda.creativeTab.ICreativeModeTabItem;
 import net.minecraftforge.api.distmarker.Dist;
@@ -82,5 +83,6 @@ public class ChordaClientRegistry {
 	@SubscribeEvent(priority = EventPriority.LOWEST)
 	public static void registerGuiOverlays(RegisterGuiOverlaysEvent event) {
 		event.registerAboveAll("cui_virtual_mouse", CUIOverlay.VIRTUAL_MOUSE_OVERLAY);
+		event.registerAboveAll("chorda_popup", new CUIOverlay(PopupOverlay.INSTANCE, true));
 	}
 }

@@ -1138,7 +1138,7 @@ public class FrostedHud {
         }
         // 文本
         if (!CInputHelper.isKeyPressed(GLFW.GLFW_KEY_LEFT_ALT)) {
-            CGuiHelper.drawStringLines(stack, font, lines.subList(0, Math.min(lines.size(), 256)), 0, 0, Colors.CYAN, 1, false, true);
+            CGuiHelper.drawStringLines(stack, font, lines.subList(0, Math.min(lines.size(), 256)), 0, 0, Colors.CYAN, 1, false, Colors.setAlpha(Colors.BLACK, 128));
         }
         stack.pose().popPose();
     }

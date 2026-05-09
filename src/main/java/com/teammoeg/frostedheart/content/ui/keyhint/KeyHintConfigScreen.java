@@ -14,7 +14,7 @@ import com.teammoeg.chorda.client.cui.editor.LabeledSelection;
 import com.teammoeg.chorda.client.cui.theme.UIColors;
 import com.teammoeg.chorda.client.cui.widgets.TextButton;
 import com.teammoeg.chorda.client.icon.CIcons;
-import com.teammoeg.chorda.client.popup.Popup;
+import com.teammoeg.chorda.client.popup.PopupOverlay;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.ui.archive.ArchiveTheme;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
@@ -67,7 +67,7 @@ public class KeyHintConfigScreen extends PrimaryLayer {
                         FHConfig.CLIENT.disabledHints.set(collect());
                         FHConfig.CLIENT.disabledHints.save();
                     } catch (Exception e) {
-                        Popup.put(e.getMessage());
+                        PopupOverlay.pop(e.getMessage());
                         FHMain.LOGGER.warn(e);
                     }
                     closeGui(true);

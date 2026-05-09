@@ -29,7 +29,6 @@ import com.teammoeg.chorda.client.StencilHelper;
 import com.teammoeg.chorda.client.StencilHelper.StencilStackElement;
 import com.teammoeg.chorda.client.cui.CUIDebugHelper;
 import com.teammoeg.chorda.client.cui.theme.Theme;
-
 import lombok.Getter;
 import lombok.Setter;
 import net.minecraft.Util;
@@ -126,14 +125,14 @@ public abstract class UILayer extends UIElement {
 		this.width=this.getContentWidth();
 		this.height=this.getContentHeight();
 	}
-	public void add(UIElement element) {
+	public boolean add(UIElement element) {
 		if (element == null) {
 			Chorda.LOGGER.warn(Chorda.UI, "trying to add null.");
-			return;
+			return false;
 		}
 		if (element.getParent() != this) {
 			Chorda.LOGGER.warn(Chorda.UI, element+" Could not be added because parent mismatch");
-			return;
+			return false;
 		}
 		if (element instanceof RatedScrollbar psb) {
 			attachedScrollbar = psb;
@@ -141,6 +140,7 @@ public abstract class UILayer extends UIElement {
 
 		elements.add(element);
 		contentWidth = contentHeight = -1;
+		return true;
 	}
 
 
@@ -318,8 +318,8 @@ public abstract class UILayer extends UIElement {
 			float f = 1.0f - (float)Math.exp(-delta / 0.05F);
 			displayOffsetX += (offsetX - displayOffsetX) * f;
 			displayOffsetY += (offsetY - displayOffsetY) * f;
-			contentX += Math.round(displayOffsetX);
-			contentY += Math.round(displayOffsetY);
+			contentX += (int)displayOffsetX;
+			contentY += (int)displayOffsetY;
 		} else {
 			contentX += offsetX;
 			contentY += offsetY;
@@ -371,7 +371,7 @@ public abstract class UILayer extends UIElement {
 	public void afterDrawElements(GuiGraphics graphics,int parX,int parY, int x, int y, int w, int h) {}
 	public final void doDrawElements(GuiGraphics graphics,  int x, int y,int contentX,int contentY, int w, int h, RenderingHint hint) {
 		//小数点后变换避免动画不连续
-		graphics.pose().translate(displayOffsetX-(int)displayOffsetX, displayOffsetX-(int)displayOffsetX, 0);
+		graphics.pose().translate(displayOffsetX-(int)displayOffsetX, displayOffsetY-(int)displayOffsetY, 0);
 		for(UIElement elm:elements) {
 			if(elm.isVisible()) {
 				drawElement(graphics, elm,x,y, contentX, contentY, w, h,hint);

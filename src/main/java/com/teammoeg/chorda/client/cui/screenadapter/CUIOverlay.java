@@ -29,6 +29,7 @@ import com.teammoeg.chorda.client.cui.base.MouseButton;
 import com.teammoeg.chorda.client.cui.base.PrimaryLayer;
 import com.teammoeg.chorda.client.cui.base.TooltipBuilder;
 import com.teammoeg.chorda.client.ui.CGuiHelper;
+import com.teammoeg.chorda.events.client.WindowResizeEvent;
 import com.teammoeg.chorda.math.Colors;
 import com.teammoeg.chorda.math.Rect;
 import com.teammoeg.frostedheart.util.client.FGuis;
@@ -365,6 +366,13 @@ public class CUIOverlay implements IGuiOverlay, CUIScreen, IGlobalGuiHandler {
 			for(CUIOverlay col : CUI_OVERLAYS) {
 				col.tick();
 			}
+		}
+	}
+
+	@SubscribeEvent
+	public static void onWindowResize(WindowResizeEvent event) {
+		for (CUIOverlay overlay : CUI_OVERLAYS) {
+			overlay.primaryLayer.initGui();
 		}
 	}
 

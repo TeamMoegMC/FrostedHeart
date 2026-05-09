@@ -23,7 +23,7 @@ import com.teammoeg.chorda.client.cui.theme.Coloring;
 import com.teammoeg.chorda.client.cui.theme.Theme;
 import com.teammoeg.chorda.client.cui.theme.UIColors;
 import com.teammoeg.chorda.client.icon.FlatIcon;
-import com.teammoeg.chorda.client.popup.Popup;
+import com.teammoeg.chorda.client.popup.PopupOverlay;
 import com.teammoeg.chorda.io.FileUtil;
 import com.teammoeg.chorda.math.Colors;
 import com.teammoeg.frostedheart.content.ui.archive.ArchiveCategory;
@@ -129,10 +129,10 @@ public class TipHelper {
             FileUtil.transfer(toString(tip), file);
             String message = "Saved tip '%s' to %s".formatted(tip.id(), file);
             LOGGER.info(message);
-            Popup.put(message);
+            PopupOverlay.pop(message);
         } catch (Exception e) {
             LOGGER.error("Unable to save tip: '{}'", file, e);
-            Popup.put(Component.translatable("tips.frostedheart.error.save").withStyle(ChatFormatting.RED));
+            PopupOverlay.pop(Component.translatable("tips.frostedheart.error.save").withStyle(ChatFormatting.RED));
             return false;
         }
         TipManager.INSTANCE.loadFromFile();
@@ -146,7 +146,7 @@ public class TipHelper {
             return false;
         }
         if (path.delete()) {
-            Popup.put("Deleted tip '" + tip.id() + "'");
+            PopupOverlay.pop("Deleted tip '" + tip.id() + "'");
             return true;
         }
         TipHelper.Error.OTHER.createAndDisplay("Unable to delete file: " + path);
