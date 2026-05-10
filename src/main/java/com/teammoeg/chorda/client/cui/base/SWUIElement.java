@@ -22,9 +22,9 @@ public abstract class SWUIElement extends UIElement {
 
     @Override
     public final void render(GuiGraphics graphics, int x, int y, int w, int h, RenderingHint hint) {
+        graphics.pose().pushPose();
         try {
             updateDisplayPos(x ,y);
-            graphics.pose().pushPose();
             graphics.pose().translate(displayX -(int) displayX, displayY -(int) displayY, 0);
             doRender(graphics, (int) displayX, (int) displayY, w, h, hint);
         } finally {
