@@ -39,8 +39,6 @@ import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData;
 import com.teammoeg.frostedheart.content.climate.render.InfraredViewRenderer;
 import com.teammoeg.frostedheart.content.health.network.C2SOpenNutritionScreenMessage;
 import com.teammoeg.frostedheart.content.health.screen.HealthStatScreen;
-import com.teammoeg.frostedheart.content.scenario.client.ClientScene;
-import com.teammoeg.frostedheart.content.scenario.client.dialog.HUDDialog;
 import com.teammoeg.frostedheart.content.ui.archive.ArchiveScreen;
 import com.teammoeg.frostedheart.content.ui.tips.client.gui.DebugScreen;
 import com.teammoeg.frostedheart.content.ui.waypoint.ClientWaypointManager;
@@ -52,6 +50,7 @@ import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import com.teammoeg.frostedheart.infrastructure.data.FHRecipeCachingReloadListener;
 import com.teammoeg.frostedheart.util.FHVersion;
 import com.teammoeg.frostedheart.util.Lang;
+
 import dev.ftb.mods.ftbquests.client.FTBQuestsClient;
 import dev.ftb.mods.ftbquests.item.FTBQuestsItems;
 import net.minecraft.ChatFormatting;
@@ -212,8 +211,6 @@ public class FHClientEvents {
     public static void fireLogin(ClientPlayerNetworkEvent.LoggingIn event) {
         DistExecutor.safeRunWhenOn(Dist.CLIENT, () -> CClientTeamDataManager.INSTANCE::reset);
         // TODO: temporary fix for client not sending ready packet
-        ClientScene.INSTANCE = new ClientScene();
-        ClientScene.INSTANCE.sendClientReady();
         FHMain.LOGGER.info("loaded wheel menu");
         WheelMenuRenderer.load();
 
@@ -266,12 +263,6 @@ public class FHClientEvents {
                     if (FrostedHud.renderForecast)
                         FrostedHud.renderForecast(stack, anchorX, anchorY, mc, renderViewPlayer);
                     FrostedHud.renderHotbar(stack, anchorX, anchorY, mc, renderViewPlayer, partialTicks);
-                    if (FHConfig.CLIENT.renderScenario.get())
-                        FrostedHud.renderScenarioAct(stack, anchorX, anchorY, mc, renderViewPlayer);
-                }
-
-                if (ClientScene.INSTANCE != null && ClientScene.INSTANCE.dialog instanceof HUDDialog dialog) {
-                    dialog.render(stack, 0, 0, PartialTickTracker.getTickAlignedPartialTicks());
                 }
                 event.setCanceled(true);
             }
@@ -375,8 +366,6 @@ public class FHClientEvents {
             Minecraft mc = ClientUtils.getMc();
             Player pe = ClientUtils.getPlayer();
             if (mc.level != null) {
-                if (ClientScene.INSTANCE != null)
-                    ClientScene.INSTANCE.tick(mc);
 	            PlayerTemperatureData.getCapability(pe).ifPresent(t -> {
 	                t.smoothedBodyPrev = t.smoothedBody;
 	                t.smoothedBody = t.smoothedBody * .9f + t.getCoreBodyTemp() * .1f;

@@ -1,0 +1,112 @@
+/*
+ * Copyright (c) 2026 TeamMoeg
+ *
+ * This file is part of Frosted Heart.
+ *
+ * Frosted Heart is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, version 3.
+ *
+ * Frosted Heart is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
+ *
+ */
+
+package com.teammoeg.frostedscenario.client.gui.layered.java2d;
+
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+
+import com.teammoeg.frostedscenario.client.gui.layered.OrderedRenderableContent;
+import com.teammoeg.frostedscenario.client.gui.layered.RenderParams;
+
+import net.minecraft.util.Unit;
+
+public abstract class GraphicLayerContent extends OrderedRenderableContent {
+
+
+	int x,y,width,height;
+	float opacity=1;
+	public GraphicLayerContent() {
+		this(0,0,-1,-1);
+	}
+	public GraphicLayerContent(int x, int y, int w, int h) {
+		super();
+		this.x = x;
+		this.y = y;
+		if(w<0) {
+			w=2048;
+		}
+		this.width = w;
+		if(h<0) {
+			h=1152;
+		}
+		this.height = h;
+	}
+
+
+	public GraphicLayerContent(int x, int y, int width, int height,int z, float opacity) {
+		super();
+		this.x = x;
+		this.y = y;
+		this.width = width;
+		this.height = height;
+		this.opacity = opacity;
+		this.z=z;
+	}
+	protected GraphicLayerContent(int x, int y, int width, int height, int z) {
+		super();
+		this.x = x;
+		this.y = y;
+		this.width = width;
+		this.height = height;
+		this.z = z;
+	}
+	@Override
+	public void render(RenderParams params) {
+	}
+	public float getOpacity() {
+		return opacity;
+	}
+	public void setOpacity(float opacity) {
+		this.opacity = opacity;
+	}
+	public void setWidth(int width) {
+		if(width<0) {
+			width=2048;
+		}
+		this.width = width;
+	}
+	public void setHeight(int height) {
+		if(height<0) {
+			height=1152;
+		}
+		this.height = height;
+	}
+	public int getX() {
+		return x;
+	}
+	public void setX(int x) {
+		this.x = x;
+	}
+	public int getY() {
+		return y;
+	}
+	public void setY(int y) {
+		this.y = y;
+	}
+	public int getWidth() {
+		return width;
+	}
+	public int getHeight() {
+		return height;
+	}
+
+
+
+}

@@ -30,7 +30,6 @@
     "forge.ServerLifecycleHooksMixin",
     "immersiveengineering.IERegistrationMixin",
     "immersiveengineering.OwnerableStateMixin",
-    "minecraft.accessors.NewChatGuiAccessor",
     "minecraft.agriculture.CropBlockMixin",
     "minecraft.campfire.CampfireBlockMixin_TimeLimit",
     "minecraft.campfire.CampfireTileEntityMixin_TimeLimit",
@@ -82,7 +81,6 @@
   ],
   "client": [
     "client.BossHealthOverlayAccess",
-    "client.ChatScreenMixin",
     "client.ClientPacketListenerMixin",
     "client.ConnectScreenAccess",
     "client.ConnectScreenMixin",

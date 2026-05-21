@@ -52,7 +52,6 @@ import com.teammoeg.frostedheart.content.climate.tooltips.EquipmentTempStats;
 import com.teammoeg.frostedheart.content.climate.tooltips.FoodTempStats;
 import com.teammoeg.frostedheart.content.climate.tooltips.PlantTempStats;
 import com.teammoeg.frostedheart.content.health.tooltip.FoodNutritionStats;
-import com.teammoeg.frostedheart.content.scenario.client.gui.layered.font.KGlyphProvider;
 import com.teammoeg.frostedheart.content.town.resident.WanderingRefugeeRenderer;
 import com.teammoeg.frostedheart.content.ui.FHClickActions;
 import com.teammoeg.frostedheart.content.ui.keyhint.KeyHintOverlay;
@@ -69,6 +68,7 @@ import com.teammoeg.frostedheart.content.utility.seld.SledModel;
 import com.teammoeg.frostedheart.content.world.entities.CuriosityEntityModel;
 import com.teammoeg.frostedheart.content.world.entities.CuriosityEntityRenderer;
 import com.teammoeg.frostedresearch.gui.InsightOverlay;
+
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.FarmBlock;
@@ -317,16 +317,11 @@ public class FHClientEventsMod {
         event.registerAboveAll("wheel_menu", WheelMenuRenderer.OVERLAY);
         event.registerAboveAll("twr_tip", new CUIOverlay(TipOverlay.INSTANCE, true, CUIOverlay.whenScreenOpened));
     }
-    @SubscribeEvent
-    public static void registerReloadListeners(RegisterClientReloadListenersEvent event) {
-        event.registerReloadListener(KGlyphProvider.INSTANCE);
-    }
     
 
 	@SubscribeEvent
 	public static void registerKeys(RegisterKeyMappingsEvent ev) {
 
-		ev.register(FHKeyMappings.key_skipDialog.get());
 		if(CompatModule.isLdLibLoaded())
 			ev.register(FHKeyMappings.key_InfraredView.get());
         ev.register(FHKeyMappings.key_health.get());

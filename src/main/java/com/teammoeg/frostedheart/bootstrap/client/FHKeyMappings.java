@@ -20,6 +20,7 @@
 package com.teammoeg.frostedheart.bootstrap.client;
 
 import com.mojang.blaze3d.platform.InputConstants;
+import com.teammoeg.chorda.client.CInputHelper;
 import com.teammoeg.frostedheart.FHMain;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
@@ -29,7 +30,6 @@ import net.minecraftforge.common.util.Lazy;
 import org.lwjgl.glfw.GLFW;
 
 public class FHKeyMappings {
-    public static Lazy<KeyMapping> key_skipDialog = createKey("skip_dialog",GLFW.GLFW_KEY_Z,KeyConflictContext.IN_GAME);
     public static Lazy<KeyMapping> key_InfraredView = createKey("infrared_view",GLFW.GLFW_KEY_I,KeyConflictContext.IN_GAME);
     public static Lazy<KeyMapping> key_openWheelMenu = createKey("open_wheel_menu",GLFW.GLFW_KEY_R,KeyConflictContext.IN_GAME);
     public static Lazy<KeyMapping> key_health = createKey("health",GLFW.GLFW_KEY_H,KeyConflictContext.IN_GAME);
@@ -38,16 +38,8 @@ public class FHKeyMappings {
     public static void init() {
 
     }
-    public static Lazy<KeyMapping> createKey(String category,String name,int keyCode,IKeyConflictContext conflictType){
-    	return Lazy.of(()->{
-    		KeyMapping km=new KeyMapping("key."+category+"."+name,
-    			keyCode, "key.categories."+category);
-    		km.setKeyConflictContext(conflictType);
-    		return km;
-    	});
-    }
     public static Lazy<KeyMapping> createKey(String name,int keyCode,IKeyConflictContext conflictType){
-    	return createKey(FHMain.MODID,name,keyCode,conflictType);
+    	return CInputHelper.createKey(FHMain.MODID,name,keyCode,conflictType);
     }
     public static boolean hasSDown() {
         return InputConstants.isKeyDown(Minecraft.getInstance().getWindow().getWindow(), GLFW.GLFW_KEY_S);

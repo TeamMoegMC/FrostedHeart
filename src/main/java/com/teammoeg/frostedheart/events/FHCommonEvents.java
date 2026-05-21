@@ -44,6 +44,7 @@ import com.teammoeg.frostedheart.util.CConstants;
 import com.teammoeg.frostedheart.util.FUtils;
 import com.teammoeg.frostedheart.util.IgnitionHandler;
 import com.teammoeg.frostedheart.util.Lang;
+
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleTypes;
@@ -309,7 +310,6 @@ public class FHCommonEvents {
 		ev.getOriginal().reviveCaps();
 		CUtils.clonePlayerCapability(FHCapabilities.WANTED_FOOD.capability(), ev.getOriginal(), ev.getEntity());
 		// CUtils.clonePlayerCapability(FHCapabilities.ENERGY,ev.getOriginal(),ev.getEntity());
-		CUtils.clonePlayerCapability(FHCapabilities.SCENARIO, ev.getOriginal(), ev.getEntity());
 		CUtils.clonePlayerCapability(FHCapabilities.WAYPOINT, ev.getOriginal(), ev.getEntity());
 		//System.out.println(LazyOptional.empty());
 		//System.out.println(FHCapabilities.PLAYER_TEMP.getCapability(ev.getOriginal()));

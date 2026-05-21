@@ -125,7 +125,9 @@ public class CapabilityRegistry {
 	 */
 	public static <T extends NBTSerializable> NBTCapabilityType<T> register(Class<T> capClass, NonNullSupplier<T> factory){
 		NBTCapabilityType<T> cap=new NBTCapabilityType<>(capClass,factory);
-		capabilities.add(cap);
+		synchronized(capabilities) {
+			capabilities.add(cap);
+		}
 		return cap;
 	}
 	/**
@@ -141,7 +143,9 @@ public class CapabilityRegistry {
 	 */
 	public static <T> TransientCapability<T> registerTransient(Class<T> capClass){
 		TransientCapability<T> cap=new TransientCapability<>(capClass);
-		capabilities.add(cap);
+		synchronized(capabilities) {
+			capabilities.add(cap);
+		}
 		return cap;
 	}
 	/**
@@ -158,7 +162,9 @@ public class CapabilityRegistry {
 	 */
 	public static <T> CodecCapabilityType<T> register(Class<T> capClass, NonNullSupplier<T> factory, Codec<T> codec){
 		CodecCapabilityType<T> cap=new CodecCapabilityType<>(capClass,factory,codec);
-		capabilities.add(cap);
+		synchronized(capabilities) {
+			capabilities.add(cap);
+		}
 		return cap;
 	}
 	/**

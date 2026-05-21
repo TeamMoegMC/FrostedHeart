@@ -19,6 +19,9 @@
 
 package com.teammoeg.frostedheart.bootstrap.common;
 
+import static com.teammoeg.chorda.capability.CapabilityRegistry.register;
+import static com.teammoeg.chorda.capability.CapabilityRegistry.registerTransient;
+
 import com.teammoeg.chorda.capability.types.codec.CodecCapabilityType;
 import com.teammoeg.chorda.capability.types.nbt.NBTCapabilityType;
 import com.teammoeg.chorda.capability.types.nonpresistent.TransientCapability;
@@ -30,7 +33,6 @@ import com.teammoeg.frostedheart.content.health.capability.NutritionCapability;
 import com.teammoeg.frostedheart.content.health.dailykitchen.WantedFoodCapability;
 import com.teammoeg.frostedheart.content.robotics.logistics.LogisticNetwork;
 import com.teammoeg.frostedheart.content.robotics.logistics.RobotChunk;
-import com.teammoeg.frostedheart.content.scenario.runner.ScenarioConductor;
 import com.teammoeg.frostedheart.content.steamenergy.HeatEndpoint;
 import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatStorageCapability;
 import com.teammoeg.frostedheart.content.town.ChunkTownResourceCapability;
@@ -39,9 +41,6 @@ import com.teammoeg.frostedheart.content.ui.waypoint.capability.WaypointCapabili
 import com.teammoeg.frostedheart.content.utility.DeathInventoryData;
 import com.teammoeg.frostedheart.content.water.capability.WaterLevelCapability;
 
-import static com.teammoeg.chorda.capability.CapabilityRegistry.register;
-import static com.teammoeg.chorda.capability.CapabilityRegistry.registerTransient;
-
 public class FHCapabilities {
 	
 	
@@ -49,7 +48,6 @@ public class FHCapabilities {
 	public static final NBTCapabilityType<DeathInventoryData> DEATH_INV=register(DeathInventoryData.class);
 	public static final NBTCapabilityType<PlayerTemperatureData> PLAYER_TEMP=register(PlayerTemperatureData.class);
 	//public static final NBTCapabilityType<EnergyCore> ENERGY=register(EnergyCore.class);
-	public static final NBTCapabilityType<ScenarioConductor> SCENARIO=register(ScenarioConductor.class);
 	public static final NBTCapabilityType<PlayerTradeData> TRADE_PLAYER=register(PlayerTradeData.class);
 	
 	public static final CodecCapabilityType<ChunkHeatData> CHUNK_HEAT=register(ChunkHeatData.class,ChunkHeatData.CODEC);

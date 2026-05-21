@@ -19,13 +19,18 @@
 
 package com.teammoeg.chorda.client;
 
+import org.lwjgl.glfw.GLFW;
+import org.lwjgl.system.MemoryUtil;
+
 import com.mojang.blaze3d.platform.InputConstants;
+
+import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.sounds.SoundEvents;
-import org.lwjgl.glfw.GLFW;
-import org.lwjgl.system.MemoryUtil;
+import net.minecraftforge.client.settings.IKeyConflictContext;
+import net.minecraftforge.common.util.Lazy;
 
 /**
  * 客户端输入辅助工具类，提供键盘和鼠标输入状态检测、剪贴板操作和光标管理功能。
@@ -163,4 +168,12 @@ public class CInputHelper {
 		}
 	}
 
+    public static Lazy<KeyMapping> createKey(String category,String name,int keyCode,IKeyConflictContext conflictType){
+    	return Lazy.of(()->{
+    		KeyMapping km=new KeyMapping("key."+category+"."+name,
+    			keyCode, "key.categories."+category);
+    		km.setKeyConflictContext(conflictType);
+    		return km;
+    	});
+    }
 }

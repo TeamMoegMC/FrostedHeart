@@ -22,9 +22,16 @@ package com.teammoeg.frostedheart;
 import com.teammoeg.chorda.network.CBaseNetwork;
 import com.teammoeg.frostedheart.clusterserver.network.S2CRedirectPacket;
 import com.teammoeg.frostedheart.clusterserver.network.S2CTokenPacket;
-import com.teammoeg.frostedheart.content.climate.network.*;
+import com.teammoeg.frostedheart.content.climate.network.C2SOpenClothesScreenMessage;
+import com.teammoeg.frostedheart.content.climate.network.FHBodyDataSyncPacket;
+import com.teammoeg.frostedheart.content.climate.network.FHClimatePacket;
+import com.teammoeg.frostedheart.content.climate.network.FHNotifyChunkHeatUpdatePacket;
+import com.teammoeg.frostedheart.content.climate.network.FHRequestInfraredViewDataSyncPacket;
+import com.teammoeg.frostedheart.content.climate.network.FHResponseInfraredViewDataSyncPacket;
+import com.teammoeg.frostedheart.content.climate.network.FHTemperatureDisplayPacket;
+import com.teammoeg.frostedheart.content.climate.network.SoilThermometerRequestPacket;
+import com.teammoeg.frostedheart.content.climate.network.SoilThermometerUpdatePacket;
 import com.teammoeg.frostedheart.content.health.network.C2SOpenNutritionScreenMessage;
-import com.teammoeg.frostedheart.content.scenario.network.*;
 import com.teammoeg.frostedheart.content.steamenergy.EndPointDataPacket;
 import com.teammoeg.frostedheart.content.steamenergy.HeatNetworkRequestC2SPacket;
 import com.teammoeg.frostedheart.content.steamenergy.HeatNetworkResponseS2CPacket;
@@ -81,20 +88,7 @@ public class FHNetwork extends CBaseNetwork {
         registerMessage("trade_commit", TradeCommitPacket.class);
         registerMessage("trade_update", TradeUpdatePacket.class);
 
-        //Scenario Messages
-        registerMessage("scenario_client_op", C2SScenarioResponsePacket.class);
-        registerMessage("scenario_server_command", S2CScenarioCommandPacket.class);
-        registerMessage("scenario_scene", S2CSenarioScenePacket.class);
-        registerMessage("scenario_ready", C2SClientReadyPacket.class);
-        registerMessage("scenario_link", C2SLinkClickedPacket.class);
-        registerMessage("scenario_act", S2CSenarioActPacket.class);
-        registerMessage("scenario_settings", C2SSettingsPacket.class);
-        registerMessage("scenario_set_cookie", S2CSetCookiesMessage.class);
-        registerMessage("scenario_get_cookie", S2CRequestCookieMessage.class);
-        registerMessage("scenario_send_cookie", C2SScenarioCookies.class);
-        registerMessage("scenario_render_status",C2SRenderingStatusMessage.class);
-        registerMessage("scenario_wait_render",S2CWaitTransMessage.class);
-        
+
 
         // Heat Messages
         registerMessage("heat_endpoint", EndPointDataPacket.class);

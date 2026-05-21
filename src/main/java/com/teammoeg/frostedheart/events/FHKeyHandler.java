@@ -26,8 +26,8 @@ import com.teammoeg.frostedheart.bootstrap.client.FHKeyMappings;
 import com.teammoeg.frostedheart.content.climate.network.C2SOpenClothesScreenMessage;
 import com.teammoeg.frostedheart.content.climate.render.InfraredViewRenderer;
 import com.teammoeg.frostedheart.content.health.network.C2SOpenNutritionScreenMessage;
-import com.teammoeg.frostedheart.content.scenario.client.ClientScene;
 import com.teammoeg.frostedheart.content.ui.wheelmenu.WheelMenuRenderer;
+
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.InputEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -40,12 +40,7 @@ public class FHKeyHandler {
     @SubscribeEvent
     public static void onClientKey(InputEvent.Key event) {
         if (event.getAction() == GLFW.GLFW_PRESS) {
-            // skip scenario dialog
-            if (FHKeyMappings.key_skipDialog.get().consumeClick()) {
-                if (ClientScene.INSTANCE != null)
-                    ClientScene.INSTANCE.sendContinuePacket(true);
-                //event.setCanceled(true);
-            }
+   
 
             // toggle infrared view
             if (CompatModule.isLdLibLoaded() && FHKeyMappings.key_InfraredView.get().consumeClick()) {
