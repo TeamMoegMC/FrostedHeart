@@ -884,6 +884,12 @@ public class WorldClimate implements NBTSerializable {
 	}
 
 
-
+    public float getTemp(ChunkPos cp) {
+        if(daycache!=null) {
+            ClimateResult cr=whitecurtainCache.computeIfAbsent(cp, this::getClimateOfWhiteCurtain);
+            return Math.min(daycache.getTemp(hourInDay), cr.temperature());
+        }
+        return 0;
+    }
 
 }

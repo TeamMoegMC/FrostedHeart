@@ -35,7 +35,6 @@ import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
-import net.minecraft.tags.BiomeTags;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.GameRules;
@@ -82,11 +81,18 @@ public abstract class ServerLevelMixin_TemperatureUpdate
         ServerLevel level = (ServerLevel) (Object) this;
         final long now = level.getGameTime();
         ChunkPos chunkpos = pChunk.getPos();
+        ChunkHeatData chunkHeatData = ChunkHeatData.get(level, chunkpos.x, chunkpos.z);
+
+        float climateBase=0;
+        WorldClimate wc = WorldClimate.get(level);
+        if (wc != null) {
+            climateBase = wc.getTemp(chunkpos);
+        }
+
         boolean updateTempBlock = (now + chunkpos.x + chunkpos.z)
                 % FHConfig.SERVER.CLIMATE.tempBlockstateUpdateIntervalTicks.get() == 0;
 
         boolean isRaining = level.isRaining();
-        WorldClimate wc = WorldClimate.get(level);
         if (wc != null)
         {
             isRaining = wc.getClimate(chunkpos).isSnowyOrBlizzard();
@@ -128,7 +134,7 @@ public abstract class ServerLevelMixin_TemperatureUpdate
                     && level.isAreaLoaded(blockpos2, 1)) // Forge: check area to avoid loading neighbors in unloaded chunks
             {
                 // Check if the block should freeze based on our custom logic
-                frostedheart$freezeWater(level, blockpos2);
+                frostedheart$freezeWater(level, blockpos2, chunkHeatData, climateBase);
             }
 
             if (isRaining)
@@ -199,7 +205,7 @@ public abstract class ServerLevelMixin_TemperatureUpdate
                         if (std != null && std.willTransit())
                         {
                             handled = frostedHeart$updateBlockBasedOnTemperature(
-                                    pChunk, level, blockpos3, blockstate2, std);
+                                    pChunk, level, blockpos3, blockstate2, std, chunkHeatData, climateBase);
                         }
 
                         // Fast gate custom plant temperature logic:
@@ -210,7 +216,7 @@ public abstract class ServerLevelMixin_TemperatureUpdate
                             if (plantData != null)
                             {
                                 handled = frostedHeart$updatePlantBasedOnTemperature(
-                                        level, blockpos3, blockstate2, plantData);
+                                        level, blockpos3, blockstate2, plantData, chunkHeatData, climateBase);
                             }
                         }
 
@@ -271,16 +277,14 @@ public abstract class ServerLevelMixin_TemperatureUpdate
      * And it freeze water based on its level, so it turns into various thin ice.
      */
     @Unique
-    private boolean frostedheart$freezeWater(ServerLevel level, BlockPos pos)
+    private boolean frostedheart$freezeWater(ServerLevel level, BlockPos pos,ChunkHeatData chunkHeatData, float climateBase)
     {
-        int heatChunkX = SectionPos.blockToSectionCoord(pos.getX());
-        int heatChunkZ = SectionPos.blockToSectionCoord(pos.getZ());
-        ChunkHeatData heatData = ChunkHeatData.get(level, heatChunkX, heatChunkZ);
+
 
 
         if (pos.getY() >= level.getMinBuildHeight()
                 && pos.getY() < level.getMaxBuildHeight()
-                && WorldTemperature.blockWithHeatData(level, pos, heatData) < WorldTemperature.WATER_FREEZES)
+                && WorldTemperature.blockWithHeatData(level, pos, chunkHeatData, climateBase) < WorldTemperature.WATER_FREEZES)
         {
             BlockState blockstate = level.getBlockState(pos);
             FluidState fluidstate = blockstate.getFluidState();
@@ -349,13 +353,9 @@ public abstract class ServerLevelMixin_TemperatureUpdate
     @Unique
     private boolean frostedHeart$updatePlantBasedOnTemperature(ServerLevel level, BlockPos pos,
                                                                BlockState currentState,
-                                                               PlantTempData selfData)
+                                                               PlantTempData selfData,ChunkHeatData chunkHeatData,float climateBase)
     {
-        int heatChunkX = SectionPos.blockToSectionCoord(pos.getX());
-        int heatChunkZ = SectionPos.blockToSectionCoord(pos.getZ());
-        ChunkHeatData heatData = ChunkHeatData.get(level, heatChunkX, heatChunkZ);
-
-        float t = WorldTemperature.blockWithHeatData(level, pos, heatData);
+        float t = WorldTemperature.blockWithHeatData(level, pos, chunkHeatData,climateBase);
         var selfStatus = WorldTemperature.checkPlantStatus(level, pos, selfData, t);
         int heatCapacity = selfData.heatCapacity();
         if (selfStatus.willDie() && heatCapacity > 0 && level.getRandom().nextInt(heatCapacity) == 0)
@@ -380,12 +380,9 @@ public abstract class ServerLevelMixin_TemperatureUpdate
     @Unique
     private boolean frostedHeart$updateBlockBasedOnTemperature(LevelChunk pChunk, ServerLevel level,
                                                                BlockPos pos, final BlockState currentState,
-                                                               StateTransitionData std)
+                                                               StateTransitionData std,ChunkHeatData chunkHeatData,float climateBase)
     {
-        int heatChunkX = SectionPos.blockToSectionCoord(pos.getX());
-        int heatChunkZ = SectionPos.blockToSectionCoord(pos.getZ());
-        ChunkHeatData heatData = ChunkHeatData.get(level, heatChunkX, heatChunkZ);
-        ChunkHeatData.HeatQueryResult heatQuery = ChunkHeatData.queryAdjust(heatData, pos);
+        ChunkHeatData.HeatQueryResult heatQuery = ChunkHeatData.queryAdjust(chunkHeatData, pos);
 
         int heatCapacity = std.heatCapacity();
         if (heatCapacity <= 0 || level.random.nextInt(heatCapacity) != 0)
@@ -404,7 +401,7 @@ public abstract class ServerLevelMixin_TemperatureUpdate
             }
         }
 
-        float t = WorldTemperature.blockWithHeatQuery(level, pos, heatQuery);
+        float t = WorldTemperature.blockWithHeatQuery(level, pos, heatQuery,climateBase);
 
         // Determine the target state based on temperature thresholds
         // We check transitions in order of priority (solid->gas, gas->solid, etc.)

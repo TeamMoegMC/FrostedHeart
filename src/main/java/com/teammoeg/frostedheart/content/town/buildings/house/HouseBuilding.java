@@ -174,122 +174,100 @@ public class HouseBuilding extends AbstractTownBuilding implements ITownResident
 
     @Override
     public boolean work(ITownWithBuildings buildingTown) {
-        if(!(buildingTown instanceof ITown town)){
+        if (!(buildingTown instanceof ITown town)) {
             FHMain.LOGGER.error("HouseBuilding: town is not a complete town!");
             return false;
         }
-        //获取所有居民
-        Set<UUID> residentsUUID = this.residentsUUID;
-        double residentNum = residentsUUID.size();
-/*        ItemResourceType[] foodTypes = new ItemResourceType[]{
-                ItemResourceType.FOOD_GRAINS,
-                ItemResourceType.FOOD_FRUIT_AND_VEGETABLES,
-                ItemResourceType.FOOD_PROTEIN,
-                ItemResourceType.FOOD_EDIBLE_OIL
-        };*/
 
-        Map<ItemResourceType, Double> foodAmounts = new HashMap<>();
-        double totalFoods = 0;
+        Set<UUID> residentsUUID = this.residentsUUID;
+        int residentNum = residentsUUID.size();
+        if (residentNum == 0) {
+            return true; // 没有居民，无需执行任何逻辑
+        }
+
         IActionExecutorHandler executorHandler = town.getActionExecutorHandler();
-        //获取所有食物总量，食物总量不足的话不供应食物
-//        for (ItemResourceType foodType : foodTypes) {
-            foodAmounts.put(RESIDENT_FOOD_LEVEL, TownResourceActions.get(executorHandler, RESIDENT_FOOD_LEVEL));
-            totalFoods += foodAmounts.get(RESIDENT_FOOD_LEVEL);
-//        }
-        //不供应食物会导致居民属性降低
-        if (residentNum * 20 > totalFoods) {
-            for (UUID uuid : residentsUUID) {
-                Optional<Resident> resident = town.getResident(uuid);
-                if (resident.isPresent()) {
-                    Resident r = resident.get();
-                    r.costHealth(10);
-                    r.costMental(10);
-                    r.costStrength(5);
-                } else {
-                    throw new IllegalArgumentException("HouseBuilding ERROR: Can't find resident in town :" + town + " \nResident uuid:" + uuid);
-                }
-            }
+        double totalFoods = TownResourceActions.get(executorHandler, RESIDENT_FOOD_LEVEL);
+        float residentConsumption = 7.5F; // 1单位食物 = 半格鸡腿（1饥饿值）
+        double toCost = residentNum * residentConsumption;
+
+        // 食物不足：惩罚所有居民并返回
+        if (toCost > totalFoods) {
+            punishResidents(town, residentsUUID, 10, 10, 5);
             return false;
         }
 
-        double toCost = residentNum * 20;//1单位食物=半格鸡腿，这里假设一天吃一整条饥饿条，20单位食物
-        /*foodAmounts.clear(); // 清空这个Map的内容，之后当做costedFoods来使用*/
-        List<ItemResourceType> availableFoodTypes = new ArrayList<>(List.of(RESIDENT_FOOD_LEVEL));
-//        double avgLevel = 0;
-        double nutrition_Average = 0;
-        while(toCost > 0.001){
-            ItemResourceType toRemove = null;
-            for (ItemResourceType foodType : availableFoodTypes) {
-                TownResourceActions.TownResourceTypeCostAction costTypeAction = new TownResourceActions.TownResourceTypeCostAction
-                        (foodType, toCost / residentNum, 0, 4, ResourceActionMode.MAXIMIZE, ResourceActionOrder.DESCENDING);//优先消耗高质量食物
-                TownResourceActionResults.TownResourceTypeCostActionResult result = executorHandler.execute(costTypeAction);
-                toCost -= result.totalModifiedAmount();
+        // 消耗食物并累计营养值
+        double nutritionSum = consumeFoodAndComputeNutrition(executorHandler, toCost, residentNum);
 
-                for (ITownResourceAttributeActionResult<?> detail : result.details()) {
+        // 根据营养和房屋评分提升居民属性
+        applyResidentBuffs(town, residentsUUID, nutritionSum, residentNum, residentConsumption);
+        return true;
+    }
 
-                    if (detail instanceof TownResourceActionResults.ItemResourceAttributeCostActionResult itemResult) {
-                        Map<ItemStackResourceKey, Double> itemDetails = itemResult.details();
-                        //遍历具体的物品营养
-                        for (Map.Entry<ItemStackResourceKey, Double> entry : itemDetails.entrySet()) {
-                            ItemStackResourceKey key = entry.getKey();
-                            Double amount = entry.getValue(); // 获取消耗数量
+    /**
+     * 因食物不足惩罚所有居民（降低健康/精神/力量）
+     */
+    private void punishResidents(ITown town, Set<UUID> residentsUUID, double healthLoss, double mentalLoss, double strengthLoss) {
+        for (UUID uuid : residentsUUID) {
+            Resident r = town.getResident(uuid).orElseThrow(() ->
+                    new IllegalArgumentException("HouseBuilding ERROR: Can't find resident in town: " + town + ", uuid: " + uuid));
+            r.costHealth(healthLoss);
+            r.costMental(mentalLoss);
+            r.costStrength(strengthLoss);
+        }
+    }
 
-                            for(NutritionRecipe recipe : CUtils.filterRecipes(CDistHelper.getRecipeManager(), NutritionRecipe.TYPE)){
-                                if (recipe.conform(key.getItem())) {
-                                    nutrition_Average += (recipe.getNutrition().getNutritionValue() / 4.0) * amount;
-                                }
-                            }
+    /**
+     * 执行食物消耗动作，并累计所有消耗物品的营养值。
+     * @return 消耗物品的营养值总和
+     */
+    private double consumeFoodAndComputeNutrition(IActionExecutorHandler executorHandler, double toCost, int residentNum) {
+        // 构造消耗动作：期望数量为每位居民的平均消耗量，优先消耗高质量食物
+        TownResourceActions.TownResourceTypeCostAction action = new TownResourceActions.TownResourceTypeCostAction(
+                RESIDENT_FOOD_LEVEL, toCost / residentNum, 0, 4,
+                ResourceActionMode.MAXIMIZE, ResourceActionOrder.DESCENDING);
+        TownResourceActionResults.TownResourceTypeCostActionResult result = executorHandler.execute(action);
+
+        double nutritionSum = 0.0;
+        for (ITownResourceAttributeActionResult<?> detail : result.details()) {
+            if (detail instanceof TownResourceActionResults.ItemResourceAttributeCostActionResult itemResult) {
+                for (Map.Entry<ItemStackResourceKey, Double> entry : itemResult.details().entrySet()) {
+                    ItemStackResourceKey key = entry.getKey();
+                    double amount = entry.getValue();
+                    // 查找对应的营养配方并累加营养值
+                    for (NutritionRecipe recipe : CUtils.filterRecipes(CDistHelper.getRecipeManager(), NutritionRecipe.TYPE)) {
+                        if (recipe.conform(key.getItem())) {
+                            nutritionSum += (recipe.getNutrition().getNutritionValue() / 4.0) * amount;
                         }
-                    } else {
-                        // 如果不是，可能是其他的资源类型结果
                     }
                 }
-
-
-                /*foodAmounts.merge(foodType, result.totalModifiedAmount(), Double::sum);*/
-//                avgLevel += result.getAverageLevel() * result.totalModifiedAmount();//先加等级乘数量，后面再除以数量
-                if(!result.allCosted()){
-                    toRemove = foodType;
-                }
             }
-            availableFoodTypes.remove(toRemove);
         }
+        return nutritionSum;
+    }
+
+    /**
+     * 根据营养均衡度与房屋评分计算居民属性增益并应用。
+     */
+    private void applyResidentBuffs(ITown town, Set<UUID> residentsUUID, double nutritionSum, int residentNum, float residentConsumption) {
+        // 计算平均营养价值
+        double nutritionAverage = nutritionSum / (residentNum * residentConsumption);
+        double deviation = (nutritionAverage - 10000) / 10000;
+        double balanceScore = Math.exp(-3.0 * deviation * deviation);
+        double levelScore = 1.0; // 暂不使用食物等级
 
         double temperatureRating = TownMathFunctions.calculateTemperatureRating(this.temperature);
-        //double decorationRating = this.decorationRating;
         double spaceRating = TownMathFunctions.calculateSpaceRating(volume, area);
-        double houseComprehensiveRating = (spaceRating * (1 + decorationRating)
-                + temperatureRating) / 3;
-//            avgLevel /= residentNum * 20;//计算平均食物等级
-        nutrition_Average /= residentNum * 20; //计算平均营养价值
+        double houseComprehensiveRating = (spaceRating * (1 + decorationRating) + temperatureRating) / 3;
 
-        double deviation = (nutrition_Average - 10000) / 10000; // 相对偏差（-1到+1）
-        double balanceScore = Math.exp(-3.0 * deviation * deviation); // 10用来控制曲线宽度
-        double levelScore = 1; //目前不采用食物等级，只是用来控制消耗食物优先级
+        for (UUID uuid : residentsUUID) {
+            Resident r = town.getResident(uuid).orElseThrow(() ->
+                    new IllegalArgumentException("HouseBuilding ERROR: Can't find resident in town: " + town + ", uuid: " + uuid));
 
-
-        for(UUID uuid : residentsUUID){
-            if(town.getResident(uuid).isPresent()){
-                Resident r = town.getResident(uuid).get();
-
-//                    foodAmounts.replaceAll((type, amount) -> amount / residentNum);//避免居民数量影响方差计算结果
-//                    double levelScore = 1 + Math.log(1 + avgLevel);/*即使食物等级为0，也加属性*/
-/*                    double balanceScore = foodAmounts.values().stream()
-                        .mapToDouble(amount ->
-                                Math.pow(amount - residentNum * foodTypes.length,显然residentNum * foodTypes.length等于平均值 2))
-                        .average()
-                        .orElse(0);
-                balanceScore = Math.exp( - 0.2 * balanceScore);*/    //已改为营养值控制
-
-                r.addHealth( 2.5 * temperatureRating * levelScore * balanceScore * (100 - r.getHealth())/ 100);
-                r.addMental( houseComprehensiveRating * Math.pow(levelScore, 2.0) * balanceScore * (100 - r.getMental())/ 100);
-                r.addStrength( 0.2 * balanceScore * Math.exp( - 0.1 * r.getStrength()));
-            }else {
-                throw new IllegalArgumentException("HouseBuilding ERROR: Can't find resident in town :" + town + " \nResident uuid:" + uuid);
-            }
+            r.addHealth(2.5 * temperatureRating * levelScore * balanceScore * (100 - r.getHealth()) / 100);
+            r.addMental(houseComprehensiveRating * Math.pow(levelScore, 2.0) * balanceScore * (100 - r.getMental()) / 100);
+            r.addStrength(0.2 * balanceScore * Math.exp(-0.1 * r.getStrength()));
         }
-
-        return true;
     }
 
     @Override

@@ -122,11 +122,11 @@ public abstract class GeneratorLogic<T extends GeneratorLogic<T, ?>, R extends G
 
 
 	public void tryRegist(IMultiblockContext<R> ctx) {
-		ctx.getState().tryRegist(ctx.getLevel().getRawLevel(), CMultiblockHelper.getAbsoluteMaster(ctx));
+		ctx.getState().tryRegist(ctx.getLevel().getRawLevel(), CMultiblockHelper.getAbsoluteMaster(ctx),CMultiblockHelper.getMultiblock(ctx).masterPosInMB().getY());
 	}
 
 	public void regist(IMultiblockContext<R> ctx) {
-		ctx.getState().regist(ctx.getLevel().getRawLevel(), CMultiblockHelper.getAbsoluteMaster(ctx));
+		ctx.getState().regist(ctx.getLevel().getRawLevel(), CMultiblockHelper.getAbsoluteMaster(ctx),CMultiblockHelper.getMultiblock(ctx).masterPosInMB().getY());
 	}
 	public void onExplode(IMultiblockContext<R> ctx) {
 		

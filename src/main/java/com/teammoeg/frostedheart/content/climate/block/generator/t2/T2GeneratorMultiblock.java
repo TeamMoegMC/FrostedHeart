@@ -46,12 +46,18 @@ public class T2GeneratorMultiblock extends HeatingMultiblock {
     @Override
     public void disassemble(Level world, BlockPos origin, boolean mirrored, Direction clickDirectionAtCreation) {
         //FHMain.LOGGER.info("Running");
+
         CMultiblockHelper.getBEHelperOptional(world, origin).ifPresent(te -> {
             T2GeneratorState state = (T2GeneratorState) te.getState();
             if (state != null) {
+                state.getDataNoCheck().ifPresent(data -> {
+                    data.actualPos = null;    // 取消绑定，城镇 tick 将跳过
+                });
+
             	if(state.manager!=null) {
             		//FHMain.LOGGER.info("invalidated network T2GeneratorMultiblock.");
             		state.manager.invalidate(world);
+
             	}//else FHMain.LOGGER.error("manager is null when disassembling T2GeneratorMultiblock.");
             }else FHMain.LOGGER.error("T2GeneratorState is null when disassembling T2GeneratorMultiblock.");
         });

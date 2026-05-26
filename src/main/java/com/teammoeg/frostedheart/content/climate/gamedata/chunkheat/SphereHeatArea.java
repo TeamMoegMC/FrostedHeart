@@ -52,10 +52,13 @@ public class SphereHeatArea extends CubicHeatArea {
 
     @Override
     public boolean isEffective(int x, int y, int z) {
-        long l = (long) Math.pow(x - getCenterX(), 2);
-        l += (long) Math.pow(y - getCenterY(), 2);
-        l += (long) Math.pow(z - getCenterZ(), 2);
-        return l <= (long) r * r;
+        int dx = x - getCenterX();
+        int dy = y - getCenterY();
+        int dz = z - getCenterZ();
+        if (dx < -r || dx > r || dy < -r || dy > r || dz < -r || dz > r)
+            return false;
+        long d2 = (long)dx * dx + (long)dy * dy + (long)dz * dz;
+        return d2 <= (long)r * r;
     }
 
     @Override

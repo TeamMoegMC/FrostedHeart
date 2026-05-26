@@ -99,7 +99,7 @@ public abstract class GeneratorContainer<R extends GeneratorState, T extends Gen
 		 * state.setOwner(CTeamDataManager.get(inventoryPlayer.player).getId());
 		 * state.regist(inventoryPlayer.player.level(),master); }
 		 */
-		state.tryRegist(inventoryPlayer.player.level(), master);
+		state.tryRegist(inventoryPlayer.player.level(), master,CMultiblockHelper.getMultiblock(ctx.mbContext()).masterPosInMB().getY());
 		Optional<GeneratorData> optdata = state.getData(master);
 
 		optdata.ifPresent(data -> {

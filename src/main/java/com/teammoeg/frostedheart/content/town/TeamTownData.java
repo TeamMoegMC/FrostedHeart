@@ -20,6 +20,9 @@
 package com.teammoeg.frostedheart.content.town;
 
 import blusunrize.immersiveengineering.common.util.Utils;
+import com.teammoeg.frostedheart.bootstrap.common.FHSpecialDataTypes;
+import com.teammoeg.frostedheart.content.climate.block.generator.GeneratorData;
+import com.teammoeg.frostedheart.content.climate.gamedata.chunkheat.ChunkHeatData;
 import com.teammoeg.frostedheart.content.town.block.OccupiedVolume;
 import lombok.Getter;
 
@@ -146,8 +149,15 @@ public class TeamTownData implements SpecialData {
 	 *
 	 * @param world server world instance
 	 */
-	public void tick(ServerLevel world) {
+	public void tick(ServerLevel world, TeamDataHolder teamData) {
 		//if (!FHConfig.SERVER.TOWN.enableTownTick.get()) return;
+        Optional<GeneratorData> genDataOpt = teamData.getOptional(FHSpecialDataTypes.GENERATOR_DATA);
+        if (genDataOpt.isPresent()) {
+            GeneratorData genData = genDataOpt.get();
+            if (genData.actualPos != null) {
+                genData.townTick(world, teamData);
+            }
+        }
 	}
 
 	public void tickMorning(ServerLevel world) {

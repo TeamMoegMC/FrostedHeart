@@ -21,6 +21,7 @@ package com.teammoeg.frostedheart.content.climate.block.generator;
 
 import java.util.Optional;
 
+import com.teammoeg.frostedheart.content.climate.gamedata.chunkheat.ChunkHeatData;
 import org.jetbrains.annotations.NotNull;
 
 import com.mojang.serialization.Codec;
@@ -80,6 +81,7 @@ public class GeneratorData implements SpecialData {
             CompoundTag.CODEC.fieldOf("items").forGetter(o -> o.inventory.serializeNBT()),
             ItemStack.CODEC.optionalFieldOf("res",ItemStack.EMPTY).forGetter(o -> o.currentItem),
             BlockPos.CODEC.optionalFieldOf("actualPos").forGetter(o -> Optional.ofNullable(o.actualPos)),
+            Codec.INT.optionalFieldOf("masterYPosInMB", 0).forGetter(o -> o.masterYPosInMB),
             ResourceLocation.CODEC.optionalFieldOf("dim").forGetter(o -> o.dimension == null ? Optional.empty() : Optional.of(o.dimension.location()))
     ).apply(t, GeneratorData::new));
     public final ItemStackHandler inventory = new ItemStackHandler(2) {
@@ -119,14 +121,16 @@ public class GeneratorData implements SpecialData {
     public float TLevel, RLevel;
     public ItemStack currentItem = ItemStack.EMPTY;
     public BlockPos actualPos = null;
-    
+    public int masterYPosInMB;
+
     public ResourceKey<Level> dimension;
+    public transient int townProcessedTicks = 0;
 
     public GeneratorData(SpecialDataHolder teamData) {
     }
 
 
-    public GeneratorData(int process, int processMax, int overdriveLevel, boolean[] flags, float steamLevel, float power,float lastPower, int heated, int ranged, float tLevel, float rLevel, CompoundTag inventory, ItemStack currentItem, Optional<BlockPos> actualPos, Optional<ResourceLocation> dimension) {
+    public GeneratorData(int process, int processMax, int overdriveLevel, boolean[] flags, float steamLevel, float power,float lastPower, int heated, int ranged, float tLevel, float rLevel, CompoundTag inventory, ItemStack currentItem, Optional<BlockPos> actualPos,int masterYPosInMB, Optional<ResourceLocation> dimension) {
         super();
         this.process = process;
         this.processMax = processMax;
@@ -145,6 +149,7 @@ public class GeneratorData implements SpecialData {
         this.inventory.deserializeNBT(inventory);
         this.currentItem = currentItem;
         this.actualPos = actualPos.orElse(null);
+        this.masterYPosInMB = masterYPosInMB;
         this.dimension = dimension.map(t -> ResourceKey.create(Registries.DIMENSION, t)).orElse(null);
     }
 
@@ -221,76 +226,93 @@ public class GeneratorData implements SpecialData {
      * But does not update the heat adjust. That is done in HeatingLogic#serverTick
      * @param w
      */
-    public void tick(Level w,SpecialDataHolder<?> teamData) {
-        isActive = tickFuelProcess(w,teamData);
-        tickHeatedProcess(w);
-
+    public void tickBlock(Level w, SpecialDataHolder<?> teamData){
+        if (townProcessedTicks > 0) {
+            townProcessedTicks--;
+            return;
+        }
+        isActive = tickFuelProcess(w,teamData,1);
+        tickHeatedProcess(w,1);
     }
 
-    public void tickHeatedProcess(Level world) {
+    //来自城镇的tick
+    public void townTick(Level w, SpecialDataHolder<?> teamData) {
+        if (actualPos == null)
+            return;
+
+        lastPower = power;
+        isActive = tickFuelProcess(w,teamData,20);
+        tickHeatedProcess(w,20);
+        townProcessedTicks = 20;
+
+        int r = getRadius();
+        int t = getTempMod();
+        if (r > 0 && t > 0) {
+            ChunkHeatData.addSphereTempAdjust(w, actualPos.below(masterYPosInMB), r, t);
+        } else {
+            ChunkHeatData.removeTempAdjust(w, actualPos.below(masterYPosInMB));
+        }
+    }
+
+    public void tickHeatedProcess(Level world, int ticks) {
         int heatedMax = getMaxHeated();
         int rangedMax = getMaxRanged();
-        
-        if (isActive) {
-            if (heated != heatedMax) {
-                if (world.random.nextFloat() < heatChance * (isOverdrive ? 2 : 1)) {
-                    if (heated < heatedMax) {
-                        heated++;
-                    } else {
-                        heated--;
+
+        for (int i = 0; i < ticks; i++) {
+            if (isActive) {
+                if (heated != heatedMax) {
+                    if (world.random.nextFloat() < heatChance * (isOverdrive ? 2 : 1)) {
+                        if (heated < heatedMax) heated++;
+                        else heated--;
                     }
                 }
-            }
-            if (ranged != rangedMax) {
-                if (world.random.nextFloat() < heatChance * (isOverdrive ? 2 : 1)) {
-                    if (ranged < rangedMax) {
-                        ranged++;
-                    } else {
-                        ranged--;
+                if (ranged != rangedMax) {
+                    if (world.random.nextFloat() < heatChance * (isOverdrive ? 2 : 1)) {
+                        if (ranged < rangedMax) ranged++;
+                        else ranged--;
                     }
                 }
-            }
-        } else {
-            if (heated > 0) {
-                if (world.random.nextFloat() < heatChance * 2) {
+            } else {
+                if (heated > 0 && world.random.nextFloat() < heatChance * 2) {
                     heated--;
                 }
-            }
-            if (ranged >0) {
-            	if (world.random.nextFloat() < heatChance * 2) {
-            		ranged --;
+                if (ranged > 0 && world.random.nextFloat() < heatChance * 2) {
+                    ranged--;
                 }
             }
         }
         TLevel = heated / 100F;
         RLevel = ranged / 100F;
-
     }
+
     public boolean hasFuel() {
     	return process>0||!inventory.getStackInSlot(INPUT_SLOT).isEmpty();
     }
     private static final Style WARN_STYLE=Style.EMPTY.withColor(ChatFormatting.RED).withBold(true);
-    public boolean tickFuelProcess(Level w,SpecialDataHolder<?> teamData) {
+    public boolean tickFuelProcess(Level w,SpecialDataHolder<?> teamData,int ticks) {
 
         boolean hasFuel = true;
         int lastOverdrive=overdriveLevel;
         if (isBroken)
             return false;
-        overdriveLevel -= 5 * (teamData.getData(FRSpecialDataTypes.RESEARCH_DATA).getVariantDouble(ResearchVariant.OVERDRIVE_RECOVER) + 1);
+        overdriveLevel -= 5 * ticks * (teamData.getData(FRSpecialDataTypes.RESEARCH_DATA).getVariantDouble(ResearchVariant.OVERDRIVE_RECOVER) + 1);
+
         boolean isWorking=false;
         
         if(this.isWorking) {
-        	int baseFuelCost=1;
+            int baseFuelCost = ticks;
+
         	float maxPower=steamLevel*25;//calculate max steam heat
-        	float powerRemain=Math.max(0, maxPower-lastPower);//then calculate heat required to generate 
+        	float powerRemain=Math.max(0, maxPower-lastPower);//then calculate heat required to generate
         	double efficiency=getHeatEfficiency(teamData);//get team heat efficiency
-        	
-            float actualPowerCost=(float) (powerRemain/efficiency/25f*8f);//25 heat per 8 fuel tick
-            int extraCost=Mth.floor(actualPowerCost);
-           
-	        if (isOverdrive) {
-	        	baseFuelCost+=1;
-	        }
+
+            float actualPowerCost=(float) (powerRemain / efficiency/ 25f * 8f);//25 heat per 8 fuel tick
+            int extraCost = Mth.floor(actualPowerCo;
+
+            if (isOverdrive) {
+                baseFuelCost += ticks;
+            }
+
 	        //System.out.println(baseFuelCost+","+extraCost);
             while (process <= baseFuelCost+extraCost && hasFuel) {
                 hasFuel = consumesFuel(w,teamData);
@@ -300,7 +322,7 @@ public class GeneratorData implements SpecialData {
                 process -= baseFuelCost;
                 isWorking=true;
                 if(isOverdrive) {
-	                overdriveLevel += 20;
+                    overdriveLevel += 20 * ticks;
 	                if (overdriveLevel >= this.getMaxOverdrive()) {
 	                    isBroken = true;
 	                }

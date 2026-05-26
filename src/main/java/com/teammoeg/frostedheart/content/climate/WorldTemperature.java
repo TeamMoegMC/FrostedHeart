@@ -21,6 +21,7 @@ package com.teammoeg.frostedheart.content.climate;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.WeakHashMap;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -33,6 +34,7 @@ import com.teammoeg.frostedheart.content.climate.gamedata.climate.WorldClimate;
 import com.teammoeg.frostedheart.content.climate.data.PlantTempData;
 import com.teammoeg.frostedheart.content.climate.data.WorldTempData;
 
+import it.unimi.dsi.fastutil.objects.Object2FloatOpenHashMap;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.tags.BlockTags;
@@ -251,8 +253,9 @@ public class WorldTemperature {
     public static final float TEMPERATURE_CHANGE_PER_BLOCK_BELOW_LAVA_INTERFACE = 20F;
 
     // temperature cache
-    public static Map<Level, Float> worldCache = new HashMap<>();
-    public static Map<Biome, Float> biomeCache = new HashMap<>();
+    public static Map<Level, Float> worldCache = new WeakHashMap<>();
+    public static Object2FloatOpenHashMap<Biome> biomeCache = new Object2FloatOpenHashMap<>();
+    private static final float[] ALTITUDE_CACHE = buildAltitudeCache();
 
     public static void clear() {
         worldCache.clear();
@@ -286,7 +289,13 @@ public class WorldTemperature {
      */
     public static float biome(LevelReader w, BlockPos pos) {
         Biome b = w.getBiome(pos).get();
-        return biomeCache.computeIfAbsent(b,t-> BiomeTempData.getBiomeTemp(w, t));
+        float cached = biomeCache.getFloat(b);
+        if (cached != biomeCache.defaultReturnValue()) {
+            return cached;
+        }
+        float temp = BiomeTempData.getBiomeTemp(w, b);
+        biomeCache.put(b, temp);
+        return temp;
     }
 
     /**
@@ -311,31 +320,42 @@ public class WorldTemperature {
     public static float altitude(LevelReader w, BlockPos pos) {
         // TODO: This is for only overworld
         int y = pos.getY();
+        if (y < BUILD_LOWER_LIMIT || y > BUILD_UPPER_LIMIT) return 0;
+        return ALTITUDE_CACHE[y - BUILD_LOWER_LIMIT];
+    }
+    private static float[] buildAltitudeCache() {
+        int min = BUILD_LOWER_LIMIT, max = BUILD_UPPER_LIMIT;
+        float[] cache = new float[max - min + 1];
+        for (int y = min; y <= max; y++) {
+            cache[y - min] = computeAltitude(y);
+        }
+        return cache;
+    }
+    private static float computeAltitude(int y) {
         // extremely lowers above stratosphere
         if (y > STRATOSPHERE_LEVEL) {
             int yc = Mth.clamp(y, STRATOSPHERE_LEVEL, BUILD_UPPER_LIMIT);
             return (yc - STRATOSPHERE_LEVEL) * TEMPERATURE_CHANGE_PER_BLOCK_ABOVE_STRATOSPHERE_LEVEL;
         }
         // decrease above sea
-        else if (y > SEA_LEVEL) {
+        if (y > SEA_LEVEL) {
             int yc = Mth.clamp(y, SEA_LEVEL, BUILD_UPPER_LIMIT);
             return (yc - SEA_LEVEL) * TEMPERATURE_CHANGE_PER_BLOCK_ABOVE_SEA_LEVEL;
         }
         // an insulated zone in normal stone area
-        else if (y > STONE_INTERFACE_LEVEL) {
+        if (y > STONE_INTERFACE_LEVEL) {
             return 0;
         }
         // increase in deepslate
-        else if (y > LAVA_INTERFACE_LEVEL) {
+        if (y > LAVA_INTERFACE_LEVEL) {
             int yc = Mth.clamp(y, LAVA_INTERFACE_LEVEL, STONE_INTERFACE_LEVEL);
             return (STONE_INTERFACE_LEVEL - yc) * TEMPERATURE_CHANGE_PER_BLOCK_BELOW_STONE_INTERFACE;
         }
         // significant increase in lava to bedrock
-        else {
-            int yc = Mth.clamp(y, BUILD_LOWER_LIMIT, LAVA_INTERFACE_LEVEL);
-            return (LAVA_INTERFACE_LEVEL - yc) * TEMPERATURE_CHANGE_PER_BLOCK_BELOW_LAVA_INTERFACE;
-        }
+        int yc = Mth.clamp(y, BUILD_LOWER_LIMIT, LAVA_INTERFACE_LEVEL);
+        return (LAVA_INTERFACE_LEVEL - yc) * TEMPERATURE_CHANGE_PER_BLOCK_BELOW_LAVA_INTERFACE;
     }
+
 
     /**
      * Get World temperature for a specific world, in absolute value.
@@ -644,12 +664,12 @@ public class WorldTemperature {
 
 
     //热点代码优化
-    public static float blockWithHeatData(LevelReader world, BlockPos pos, @Nullable ChunkHeatData heatData) {
-        return blockWithHeat(world, pos, heat(world, pos, heatData));
+    public static float blockWithHeatData(LevelReader world, BlockPos pos, @Nullable ChunkHeatData heatData, float climateBase) {
+        return blockWithHeat(world, pos, heat(world, pos, heatData), climateBase);
     }
 
-    public static float blockWithHeatQuery(LevelReader world, BlockPos pos, ChunkHeatData.HeatQueryResult heatQuery) {
-        return blockWithHeat(world, pos, heatQuery.additionTemperature());
+    public static float blockWithHeatQuery(LevelReader world, BlockPos pos, ChunkHeatData.HeatQueryResult heatQuery, float climateBase) {
+        return blockWithHeat(world, pos, heatQuery.additionTemperature(), climateBase);
     }
 
     /**
@@ -658,7 +678,7 @@ public class WorldTemperature {
      *
      * Result = Dimension + Biome + Altitude + Climate + HeatAdjusts.
      */
-    private static float blockWithHeat(LevelReader world, BlockPos pos, float heat) {
+    private static float blockWithHeat(LevelReader world, BlockPos pos, float heat, float climateBase) {
         int y = pos.getY();
 
         float climateBlockAffection;
@@ -675,7 +695,7 @@ public class WorldTemperature {
             climateBlockAffection = 0.0F;
         }
 
-        float nature = climate(world, pos) * climateBlockAffection
+        float nature = climateBase * climateBlockAffection
                 + dimension(world)
                 + biome(world, pos)
                 + altitude(world, pos);

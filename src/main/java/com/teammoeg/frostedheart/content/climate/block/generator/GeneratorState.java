@@ -91,7 +91,7 @@ public class GeneratorState extends HeatingState {
         	GeneratorData dat=teamData.getData(FHSpecialDataTypes.GENERATOR_DATA);
         	
         	if(origin.equals(dat.actualPos)) {
-        		dat.tick(level, teamData);
+                dat.tickBlock(level, teamData);
         		dat.lastPower=endpoint.getHeat();
         		endpoint.setHeat(dat.power);
                 endpoint.setTempLevel(dat.TLevel);
@@ -118,13 +118,14 @@ public class GeneratorState extends HeatingState {
      * @param level  the level to check
      * @param origin the origin to check
      */
-    public void regist(Level level, BlockPos origin) {
+    public void regist(Level level, BlockPos origin,int masterYPosInMB) {
         getDataNoCheck().ifPresent(t -> {
             if (!origin.equals(t.actualPos)) {
                 t.onPosChange();
                 onDataChange();
             }
             t.actualPos = origin;
+            t.masterYPosInMB = masterYPosInMB;
             t.dimension = level.dimension();
         });
     }
@@ -136,7 +137,7 @@ public class GeneratorState extends HeatingState {
      * @param level  the level to check
      * @param origin the origin to check
      */
-    public void tryRegist(Level level, BlockPos origin) {
+    public void tryRegist(Level level, BlockPos origin, int masterYPosInMB) {
         getDataNoCheck().ifPresent(t -> {
             if (t.actualPos==null) {
                 if (!origin.equals(t.actualPos)) {
@@ -144,9 +145,19 @@ public class GeneratorState extends HeatingState {
                     onDataChange();
                 }
                 t.actualPos = origin;
+                t.masterYPosInMB = masterYPosInMB;
                 t.dimension = level.dimension();
             }
         });
+    }
+
+    @Override
+    public boolean shouldUpdateAdjust() {
+        //方块端在城镇接管期间不得重复写入
+        if (getDataNoCheck().filter(d -> d.townProcessedTicks > 0).isPresent()) {
+            return false;
+        }
+        return super.shouldUpdateAdjust();
     }
 
     @Override
