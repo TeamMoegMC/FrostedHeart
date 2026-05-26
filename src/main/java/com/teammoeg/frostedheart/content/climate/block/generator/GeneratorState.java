@@ -118,7 +118,7 @@ public class GeneratorState extends HeatingState {
      * @param level  the level to check
      * @param origin the origin to check
      */
-    public void regist(Level level, BlockPos origin,int masterYPosInMB) {
+    public void regist(Level level, BlockPos origin,short masterYPosInMB) {
         getDataNoCheck().ifPresent(t -> {
             if (!origin.equals(t.actualPos)) {
                 t.onPosChange();
@@ -137,7 +137,7 @@ public class GeneratorState extends HeatingState {
      * @param level  the level to check
      * @param origin the origin to check
      */
-    public void tryRegist(Level level, BlockPos origin, int masterYPosInMB) {
+    public void tryRegist(Level level, BlockPos origin, short masterYPosInMB) {
         getDataNoCheck().ifPresent(t -> {
             if (t.actualPos==null) {
                 if (!origin.equals(t.actualPos)) {

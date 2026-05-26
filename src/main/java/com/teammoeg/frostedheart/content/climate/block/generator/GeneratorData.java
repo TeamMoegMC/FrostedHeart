@@ -81,7 +81,7 @@ public class GeneratorData implements SpecialData {
             CompoundTag.CODEC.fieldOf("items").forGetter(o -> o.inventory.serializeNBT()),
             ItemStack.CODEC.optionalFieldOf("res",ItemStack.EMPTY).forGetter(o -> o.currentItem),
             BlockPos.CODEC.optionalFieldOf("actualPos").forGetter(o -> Optional.ofNullable(o.actualPos)),
-            Codec.INT.optionalFieldOf("masterYPosInMB", 0).forGetter(o -> o.masterYPosInMB),
+            Codec.SHORT.optionalFieldOf("masterYPosInMB", (short) 0).forGetter(o -> o.masterYPosInMB),
             ResourceLocation.CODEC.optionalFieldOf("dim").forGetter(o -> o.dimension == null ? Optional.empty() : Optional.of(o.dimension.location()))
     ).apply(t, GeneratorData::new));
     public final ItemStackHandler inventory = new ItemStackHandler(2) {
@@ -121,7 +121,7 @@ public class GeneratorData implements SpecialData {
     public float TLevel, RLevel;
     public ItemStack currentItem = ItemStack.EMPTY;
     public BlockPos actualPos = null;
-    public int masterYPosInMB;
+    public short masterYPosInMB;
 
     public ResourceKey<Level> dimension;
     public transient int townProcessedTicks = 0;
@@ -130,7 +130,7 @@ public class GeneratorData implements SpecialData {
     }
 
 
-    public GeneratorData(int process, int processMax, int overdriveLevel, boolean[] flags, float steamLevel, float power,float lastPower, int heated, int ranged, float tLevel, float rLevel, CompoundTag inventory, ItemStack currentItem, Optional<BlockPos> actualPos,int masterYPosInMB, Optional<ResourceLocation> dimension) {
+    public GeneratorData(int process, int processMax, int overdriveLevel, boolean[] flags, float steamLevel, float power,float lastPower, int heated, int ranged, float tLevel, float rLevel, CompoundTag inventory, ItemStack currentItem, Optional<BlockPos> actualPos,short masterYPosInMB, Optional<ResourceLocation> dimension) {
         super();
         this.process = process;
         this.processMax = processMax;
@@ -307,7 +307,7 @@ public class GeneratorData implements SpecialData {
         	double efficiency=getHeatEfficiency(teamData);//get team heat efficiency
 
             float actualPowerCost=(float) (powerRemain / efficiency/ 25f * 8f);//25 heat per 8 fuel tick
-            int extraCost = Mth.floor(actualPowerCo;
+            int extraCost = Mth.floor(actualPowerCost);
 
             if (isOverdrive) {
                 baseFuelCost += ticks;

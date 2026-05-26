@@ -112,7 +112,7 @@ public class HuntingBaseBuilding extends AbstractTownResidentWorkBuilding {
 			double totalEfficiency=0;
 			for(Resident resident:this.getResidents(teamTown)) {
 				if(resident==null)continue;
-				double efficiency=0.2 * getResidentScore(resident);
+				double efficiency=2 * getResidentScore(resident);
 				if(efficiency<=0)continue;
 //				efficiency=2;
 				totalEfficiency+=efficiency;
