@@ -39,16 +39,19 @@ import java.util.Map;
 public class MineBuilding extends AbstractTownBuilding {
 
 	public static final Codec<MineBuilding> CODEC = RecordCodecBuilder.create(t -> t.group(
-					BlockPos.CODEC.fieldOf("pos").forGetter(o -> o.pos),
-					Codec.BOOL.fieldOf("isStructureValid").forGetter(o -> o.isStructureValid),
-					OccupiedVolume.CODEC.fieldOf("occupiedVolume").forGetter(o -> o.occupiedVolume),
-					Codec.DOUBLE.fieldOf("rating").forGetter(o -> o.rating),
-					Codec.STRING.fieldOf("biomePath").forGetter(o -> o.biomePath.toString())
+                    BlockPos.CODEC.optionalFieldOf("pos",BlockPos.ZERO).forGetter(o -> o.pos),
+                    Codec.BOOL.optionalFieldOf("isStructureValid",false).forGetter(o -> o.isStructureValid),
+                    OccupiedVolume.CODEC.optionalFieldOf("occupiedVolume",OccupiedVolume.EMPTY).forGetter(o -> o.occupiedVolume),
+					Codec.DOUBLE.optionalFieldOf("rating",0D).forGetter(o -> o.rating),
+					Codec.STRING.optionalFieldOf("biomePath","").forGetter(o -> o.biomePath.toString())
 					)
 			.apply(t, MineBuilding::new));
 
 	public static final Map<ResourceLocation, Map<Item,  Integer>> BIOME_RESOURCES = new HashMap<>();
-	public static final Map<Item, Integer> DEFAULT_RESOURCES = Map.of(Items.COBBLESTONE, 1);
+    public static final Map<Item, Integer> DEFAULT_RESOURCES = Map.of(
+            Items.COBBLESTONE, 2,
+            Items.COAL, 1
+    );
 
 	public ResourceLocation biomePath;
 
@@ -97,5 +100,9 @@ public class MineBuilding extends AbstractTownBuilding {
 	public boolean work(ITownWithBuildings town) {
 		return super.work(town);
 	}
+
+    public ResourceLocation getBiomePath() {
+        return biomePath;
+    }
 
 }

@@ -30,6 +30,6 @@ public interface ITown extends ITownWithResources, ITownWithBuildings, ITownWith
      * Debug mode.
      * Should be deleted or turned to false when released.
      */
-    public static final boolean DEBUG_MODE = true;//todo: 正式发布记得删掉
+    public static final boolean DEBUG_MODE = false;//todo: 正式发布记得删掉
 
 }

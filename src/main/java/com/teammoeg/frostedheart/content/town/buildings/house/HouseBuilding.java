@@ -48,15 +48,15 @@ import static com.teammoeg.frostedheart.content.town.resource.ItemResourceType.R
 public class HouseBuilding extends AbstractTownBuilding implements ITownResidentBuilding {
 
     public static final Codec<HouseBuilding> CODEC = RecordCodecBuilder.create(t -> t.group(
-            BlockPos.CODEC.fieldOf("pos").forGetter(o -> o.pos),
-            Codec.BOOL.fieldOf("isStructureValid").forGetter(o -> o.isStructureValid),
-            OccupiedVolume.CODEC.fieldOf("occupiedVolume").forGetter(o -> o.occupiedVolume),
-            Codec.INT.fieldOf("area").forGetter(o -> o.area),
-            Codec.INT.fieldOf("volume").forGetter(o -> o.volume),
-            Codec.DOUBLE.fieldOf("temperature").forGetter(o -> o.temperature),
-            Codec.DOUBLE.fieldOf("decorationRating").forGetter(o -> o.decorationRating),
-            Codec.INT.fieldOf("maxResident").forGetter(o -> o.maxResidents),
-            Codec.DOUBLE.fieldOf("temperatureModifier").forGetter(o -> o.temperatureModifier))
+            BlockPos.CODEC.optionalFieldOf("pos",BlockPos.ZERO).forGetter(o -> o.pos),
+            Codec.BOOL.optionalFieldOf("isStructureValid",false).forGetter(o -> o.isStructureValid),
+            OccupiedVolume.CODEC.optionalFieldOf("occupiedVolume",OccupiedVolume.EMPTY).forGetter(o -> o.occupiedVolume),
+            Codec.INT.optionalFieldOf("area",0).forGetter(o -> o.area),
+            Codec.INT.optionalFieldOf("volume",0).forGetter(o -> o.volume),
+            Codec.DOUBLE.optionalFieldOf("temperature",0D).forGetter(o -> o.temperature),
+            Codec.DOUBLE.optionalFieldOf("decorationRating",0D).forGetter(o -> o.decorationRating),
+            Codec.INT.optionalFieldOf("maxResident",0).forGetter(o -> o.maxResidents),
+            Codec.DOUBLE.optionalFieldOf("temperatureModifier",0D).forGetter(o -> o.temperatureModifier))
             .apply(t, HouseBuilding::new));
 
     private final Set<UUID> residentsUUID = new HashSet<>();
@@ -187,13 +187,23 @@ public class HouseBuilding extends AbstractTownBuilding implements ITownResident
 
         IActionExecutorHandler executorHandler = town.getActionExecutorHandler();
         double totalFoods = TownResourceActions.get(executorHandler, RESIDENT_FOOD_LEVEL);
-        float residentConsumption = 7.5F; // 1单位食物 = 半格鸡腿（1饥饿值）
+        float residentConsumption = 6.5F; // 1单位食物 = 半格鸡腿（1饥饿值）
         double toCost = residentNum * residentConsumption;
 
         // 食物不足：惩罚所有居民并返回
         if (toCost > totalFoods) {
-            punishResidents(town, residentsUUID, 10, 10, 5);
-            return false;
+            double nutritionSum = consumeFoodAndComputeNutrition(executorHandler, totalFoods, residentNum);
+
+            double nutritionAverage = nutritionSum / (residentNum * residentConsumption);
+            // 营养折扣：营养越高惩罚越轻，最多减轻 50%
+            double nutritionSatisfaction = Math.min(1.0, nutritionAverage / 10000.0); // 满足率 0~1
+            double penaltyModifier = 1.0 - nutritionSatisfaction * 0.5;
+
+            double deficitRatio = (toCost - totalFoods) / toCost;// 0~1，缺得越多系数越大
+            double healthPenalty  = 10 * deficitRatio * penaltyModifier;
+            double mentalPenalty  = 10 * deficitRatio * penaltyModifier;
+            double strengthPenalty = 5 * deficitRatio * penaltyModifier;
+            punishResidents(town, residentsUUID, healthPenalty, mentalPenalty, strengthPenalty);
         }
 
         // 消耗食物并累计营养值
@@ -264,9 +274,23 @@ public class HouseBuilding extends AbstractTownBuilding implements ITownResident
             Resident r = town.getResident(uuid).orElseThrow(() ->
                     new IllegalArgumentException("HouseBuilding ERROR: Can't find resident in town: " + town + ", uuid: " + uuid));
 
-            r.addHealth(2.5 * temperatureRating * levelScore * balanceScore * (100 - r.getHealth()) / 100);
-            r.addMental(houseComprehensiveRating * Math.pow(levelScore, 2.0) * balanceScore * (100 - r.getMental()) / 100);
-            r.addStrength(0.2 * balanceScore * Math.exp(-0.1 * r.getStrength()));
+            double healthGain = 5.0 * temperatureRating * levelScore * balanceScore * (100 - r.getHealth()) / 100;
+            if (r.getHealth() < 30) {
+                healthGain = Math.max(healthGain, 0.5);  // 保底每天至少恢复 0.5 点
+            }
+            r.addHealth(healthGain);
+
+            double mentalGain = 2.0 * houseComprehensiveRating * Math.pow(levelScore, 2.0) * balanceScore * (100 - r.getMental()) / 100;
+            if (r.getMental() < 30) {
+                mentalGain = Math.max(mentalGain, 0.5);
+            }
+            r.addMental(mentalGain);
+
+            double strengthGain = 1.0 * balanceScore * Math.exp(-0.05 * r.getStrength());
+            if (r.getStrength() < 30) {
+                strengthGain = Math.max(strengthGain, 0.25);
+            }
+            r.addStrength(strengthGain);
         }
     }
 

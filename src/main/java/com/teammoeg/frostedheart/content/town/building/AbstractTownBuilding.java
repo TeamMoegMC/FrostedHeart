@@ -24,6 +24,7 @@ import com.teammoeg.frostedheart.content.town.block.OccupiedVolume;
 import lombok.Getter;
 import lombok.Setter;
 import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerLevel;
 
 /**
  *
@@ -58,6 +59,11 @@ public abstract class AbstractTownBuilding implements ITownBuilding{
     @Override
     public boolean isBuildingWorkable(){
         return initialized && !occupiedAreaOverlapped && isStructureValid;
+    }
+
+    @Override
+    public boolean work(ITownWithBuildings town, ServerLevel world){
+        return work(town);
     }
 
     public boolean work(ITownWithBuildings town){

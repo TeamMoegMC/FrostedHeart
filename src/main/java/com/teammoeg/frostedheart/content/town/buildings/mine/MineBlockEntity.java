@@ -37,13 +37,14 @@ public class MineBlockEntity extends AbstractTownBuildingBlockEntity<MineBuildin
     }
 
     public boolean scanStructure(MineBuilding building){
-        MineBlockScanner scanner = new MineBlockScanner(level, this.getBlockPos().above(), 512);
-        if(scanner.scan()){
-            double validStoneOrOre = scanner.getValidStone();
-            building.setOccupiedVolume(scanner.getOccupiedVolume());
-            return validStoneOrOre > 16;
-        }
-        return false;
+        return true;
+//        MineBlockScanner scanner = new MineBlockScanner(level, this.getBlockPos().above(), 512);
+//        if(scanner.scan()){
+//            double validStoneOrOre = scanner.getValidStone();
+//            building.setOccupiedVolume(scanner.getOccupiedVolume());
+//            return validStoneOrOre > 16;
+//        }
+//        return false;
     }
 
     /*

@@ -3,6 +3,7 @@ package com.teammoeg.frostedheart.content.town;
 public class TownMathFunctions {
     /** The temperature at which the house is comfortable. */
     public static final double COMFORTABLE_TEMP_HOUSE = 24;
+    public static final double WORKING_TEMP = 0;
     public static final int MAX_TEMP_HOUSE = 50;
     public static final int MIN_TEMP_HOUSE = (ITown.DEBUG_MODE ? -50 : 0);
 
@@ -76,5 +77,17 @@ public class TownMathFunctions {
         double height = volume / (float) area;
         double score = area * (1.55 + Math.log(height - 1.6) * 0.6);
         return 1 - Math.exp(-0.024 * Math.pow(score, 1.11));
+    }
+
+    public static double attributeScore(double value) {
+        if (value <= 0) return 0.0;
+        if (value >= 100) return 1.0;
+        if (value <= 40) {
+            // 0～40 线性: 0 → 0.5
+            return 0.5 * (value / 40.0);
+        } else {
+            // 40～100 线性: 0.5 → 1.0
+            return 0.5 + 0.5 * ((value - 40) / 60.0);
+        }
     }
 }

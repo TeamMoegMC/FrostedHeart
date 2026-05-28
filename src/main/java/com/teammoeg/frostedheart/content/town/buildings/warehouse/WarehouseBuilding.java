@@ -33,12 +33,12 @@ import net.minecraft.core.BlockPos;
 
 public class WarehouseBuilding extends AbstractTownBuilding {
 	public static final Codec<WarehouseBuilding> CODEC = RecordCodecBuilder.create(t -> t.group(
-					BlockPos.CODEC.fieldOf("pos").forGetter(o -> o.pos),
-					Codec.BOOL.fieldOf("isStructureValid").forGetter(o -> o.isStructureValid),
-					OccupiedVolume.CODEC.fieldOf("occupiedVolume").forGetter(o -> o.occupiedVolume),
-					Codec.DOUBLE.fieldOf("capacity").forGetter(o -> o.capacity),
-					Codec.INT.fieldOf("area").forGetter(o -> o.area),
-					Codec.INT.fieldOf("volume").forGetter(o -> o.volume)
+                    BlockPos.CODEC.optionalFieldOf("pos",BlockPos.ZERO).forGetter(o -> o.pos),
+                    Codec.BOOL.optionalFieldOf("isStructureValid",false).forGetter(o -> o.isStructureValid),
+                    OccupiedVolume.CODEC.optionalFieldOf("occupiedVolume",OccupiedVolume.EMPTY).forGetter(o -> o.occupiedVolume),
+					Codec.DOUBLE.optionalFieldOf("capacity",0D).forGetter(o -> o.capacity),
+					Codec.INT.optionalFieldOf("area",0).forGetter(o -> o.area),
+					Codec.INT.optionalFieldOf("volume",0).forGetter(o -> o.volume)
 			)
 			.apply(t, WarehouseBuilding::new));
 

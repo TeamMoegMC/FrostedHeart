@@ -125,6 +125,8 @@ public class GeneratorData implements SpecialData {
 
     public ResourceKey<Level> dimension;
     public transient int townProcessedTicks = 0;
+    private transient int lastWrittenRadius = -1;
+    private transient int lastWrittenTempMod = -1;
 
     public GeneratorData(SpecialDataHolder teamData) {
     }
@@ -248,9 +250,15 @@ public class GeneratorData implements SpecialData {
         int r = getRadius();
         int t = getTempMod();
         if (r > 0 && t > 0) {
-            ChunkHeatData.addSphereTempAdjust(w, actualPos.below(masterYPosInMB), r, t);
+            if (r != lastWrittenRadius || t != lastWrittenTempMod) {
+                ChunkHeatData.addSphereTempAdjust(w, actualPos.below(masterYPosInMB), r, t);
+                lastWrittenRadius = r;
+                lastWrittenTempMod = t;
+            }
         } else {
             ChunkHeatData.removeTempAdjust(w, actualPos.below(masterYPosInMB));
+            lastWrittenRadius = -1;
+            lastWrittenTempMod = -1;
         }
     }
 

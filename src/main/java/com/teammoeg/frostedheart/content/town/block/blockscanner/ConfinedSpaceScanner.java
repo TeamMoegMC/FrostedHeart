@@ -95,6 +95,7 @@ public class ConfinedSpaceScanner extends AbstractBlockScanner {
             if (!isValidAir(pos1)) {
                 // 非空气方块：添加到scannedBlocks，但不添加到nextScanningBlocks
                 // 会通过processBlock被处理
+                processBlock(pos1);
                 scannedBlocks.add(key1);
                 continue;
             }

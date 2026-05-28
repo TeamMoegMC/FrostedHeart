@@ -290,10 +290,27 @@ public class SurroundingTemperatureSimulator {
 
                 final double sx = localQx[i], sy = localQy[i], sz = localQz[i];
                 final double dx = sx + vx, dy = sy + vy, dz = sz + vz;
-                final int bx = Mth.floor(dx), by = Mth.floor(dy), bz = Mth.floor(dz);
+
+                int bx = (int) dx; if (dx < bx) bx--;
+                int by = (int) dy; if (dy < by) by--;
+                int bz = (int) dz; if (dz < bz) bz--;
 
                 // ---- 缓存查找（世代标记 + 直接数组索引） ----
-                final CachedBlockInfo info = getInfoFast(buf, bx, by, bz);
+                //坐标范围 [-16,16) 映射到 [0,32) 再编码为一维索引。
+                final int rx = bx - ox, ry = by - oy, rz = bz - oz;
+                CachedBlockInfo info;
+                if (rx < -CACHE_OFFSET || ry < -CACHE_OFFSET || rz < -CACHE_OFFSET ||
+                        rx >= CACHE_OFFSET || ry >= CACHE_OFFSET || rz >= CACHE_OFFSET) {
+                    info = AIR_INFO;
+                } else {
+                    int idx = ((rx + CACHE_OFFSET) << 10) | ((ry + CACHE_OFFSET) << 5) | (rz + CACHE_OFFSET);
+                    info = buf.posCache[idx];
+                    if (buf.gen[idx] != buf.currentGen) {
+                        info = computeBlockInfo(rx, ry, rz, bx, by, bz);
+                        buf.posCache[idx] = info;
+                        buf.gen[idx] = buf.currentGen;
+                    }
+                }
 
                 // ---- 碰撞处理（三路分支：FULL / 部分形状 / EMPTY） ----
                 if (info.isFull) {
@@ -364,9 +381,6 @@ public class SurroundingTemperatureSimulator {
                 }
 
                 // ---- 风力计算 ----
-                int rx = bx - this.ox;
-                int rz = bz - this.oz;
-
                 int topY;
                 if (rx >= -CACHE_OFFSET && rx < CACHE_OFFSET &&
                         rz >= -CACHE_OFFSET && rz < CACHE_OFFSET) {
@@ -394,32 +408,6 @@ public class SurroundingTemperatureSimulator {
     }
 
     // ======================== 缓存与方块访问 ========================
-
-    /**
-     * 快速缓存查找：世代标记 + 直接数组索引。
-     * 坐标范围 [-16,16) 映射到 [0,32) 再编码为一维索引。
-     */
-    private CachedBlockInfo getInfoFast(WorkBuffer buf, int bx, int by, int bz) {
-        int rx = bx - ox, ry = by - oy, rz = bz - oz;
-
-        // 边界检查：超出已加载区段范围则视为空气
-        if (rx < -CACHE_OFFSET || rx >= CACHE_OFFSET ||
-                ry < -CACHE_OFFSET || ry >= CACHE_OFFSET ||
-                rz < -CACHE_OFFSET || rz >= CACHE_OFFSET) {
-            return AIR_INFO;
-        }
-
-        // 编码为一维索引：每轴 5 bit，共 15 bit，范围 [0, 32767]
-        int idx = ((rx + CACHE_OFFSET) << 10) | ((ry + CACHE_OFFSET) << 5) | (rz + CACHE_OFFSET);
-
-        CachedBlockInfo ci = buf.getCached(idx);
-        if (ci == null) {
-            ci = computeBlockInfo(rx, ry, rz, bx, by, bz);
-            buf.putCached(idx, ci);
-        }
-        return ci;
-    }
-
     /**
      * 计算方块的碰撞形状和温度。
      * 通过 stateCache（IdentityHashMap）对同一 BlockState 去重。

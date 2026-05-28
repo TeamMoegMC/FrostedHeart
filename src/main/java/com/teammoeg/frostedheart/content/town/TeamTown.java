@@ -38,6 +38,7 @@ import com.teammoeg.frostedheart.content.town.terrainresource.TerrainResourceTyp
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.ChunkPos;
 
 /**
  * The town for a player team.
@@ -228,6 +229,9 @@ public class TeamTown implements ITown, ITownWithResidents, ITownWithBuildings {
 	public double pickTerrainResource(TerrainResourceType type,double maxPick) {
 		return data.pickTerrainResource(type, maxPick);
 	}
+    public double pickTerrainResource(TerrainResourceType type, ChunkPos chunkPos,double maxPick) {
+        return data.pickTerrainResource(type,chunkPos,maxPick);
+    }
 	public void unpickTerrainResource(TerrainResourceType type,double maxPick) {
 		data.unpickTerrainResource(type, maxPick);
 	}

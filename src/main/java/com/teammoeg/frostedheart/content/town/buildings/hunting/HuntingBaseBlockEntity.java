@@ -75,6 +75,8 @@ public class HuntingBaseBlockEntity extends AbstractTownBuildingBlockEntity<Hunt
 					building.setOccupiedVolume(scanner.getOccupiedVolume());
 					building.tanningRackNum = scanner.getTanningRackNum();
 					building.rating = computeRating(building.volume, building.area, building.temperature, this.getTemperatureModifier());
+                    int calculated = (int) (TownMathFunctions.calculateSpaceRating(scanner.getVolume(), scanner.getArea()) / 4 * scanner.getArea());
+                    building.maxResidents = Math.max(1, calculated);
 					return true;
 				}
 			}
@@ -95,10 +97,6 @@ public class HuntingBaseBlockEntity extends AbstractTownBuildingBlockEntity<Hunt
 		return (3 * TownMathFunctions.calculateSpaceRating(volume, area)
 				+ 2 * TownMathFunctions.calculateTemperatureRating(temperature + temperatureModifier))
 				/ 5;
-	}
-
-	private static int calculateMaxResidents(int volume, int area, int bedNum) {
-			return Math.min((int) (TownMathFunctions.calculateSpaceRating(volume, area) / 4 * area), bedNum);
 	}
 
 	@Override

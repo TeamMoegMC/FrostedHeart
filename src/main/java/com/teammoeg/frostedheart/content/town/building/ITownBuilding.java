@@ -8,6 +8,7 @@ import com.teammoeg.frostedheart.content.town.buildings.hunting.HuntingBaseBuild
 import com.teammoeg.frostedheart.content.town.buildings.mine.MineBaseBuilding;
 import com.teammoeg.frostedheart.content.town.buildings.mine.MineBuilding;
 import com.teammoeg.frostedheart.content.town.buildings.warehouse.WarehouseBuilding;
+import net.minecraft.server.level.ServerLevel;
 
 /**
  * it used to be TownWorker.
@@ -33,7 +34,7 @@ public interface ITownBuilding {
      * @param town town of this building
      * @return true if worked successful
      */
-    boolean work(ITownWithBuildings town);
+    boolean work(ITownWithBuildings town, ServerLevel world);
 
     /**
      * 获取城镇工作时该建筑参与工作的优先级。

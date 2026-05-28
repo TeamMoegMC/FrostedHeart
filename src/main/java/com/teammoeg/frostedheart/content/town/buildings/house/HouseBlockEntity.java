@@ -190,6 +190,6 @@ public class HouseBlockEntity extends AbstractTownBuildingBlockEntity<HouseBuild
 
 	@Override
 	public @NotNull HouseBuilding createBuilding() {
-		return new HouseBuilding(this.getBlockPos());
+		return new  HouseBuilding(this.getBlockPos());
 	}
 }

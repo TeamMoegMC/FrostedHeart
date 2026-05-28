@@ -539,7 +539,7 @@ public class FHConfig {
 				Resource(ForgeConfigSpec.Builder builder) {
 					builder.push("Pick Resource");
 					oreCount=builder.comment("Ore Count per block squared")
-						.defineInRange("orePerSq", 15d, 0d, 1000000d);
+						.defineInRange("orePerSq", 1000d, 0d, 1000000d);
 					oreRecovery=builder.comment("Ore Recovery per block per day")
 						.defineInRange("orePerDay", 0d, 0d, 1000000d);
 					treeCount=builder.comment("Tree Count per block squared")
