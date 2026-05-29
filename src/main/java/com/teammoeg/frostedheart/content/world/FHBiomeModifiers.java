@@ -96,6 +96,17 @@ public class FHBiomeModifiers {
                     .waterColor(0x3938C9)
                     .waterFogColor(0x050533);
 
+            final MobSpawnSettingsBuilder spawns = builder.getMobSpawnSettings();
+
+            // spawns.addSpawn(MobCategory.CREATURE, new MobSpawnSettings.SpawnerData(EntityType.POLAR_BEAR, 1, 1, 2));
+            // spawns.addSpawn(MobCategory.MONSTER, new MobSpawnSettings.SpawnerData(EntityType.STRAY, 20, 1, 3));
+            spawns.addSpawn(MobCategory.CREATURE, new MobSpawnSettings.SpawnerData(FHEntityTypes.WANDERING_REFUGEE.get(), 1, 1, 5));
+
+            //防止洞穴群系修改地表
+            if (biome.is(FHTags.Biomes.IS_CAVE.tag))
+            {
+                return;
+            }
             final BiomeGenerationSettingsBuilder settings = builder.getGenerationSettings();
             for (Holder<PlacedFeature> feature : surfaceStructures)
             {
@@ -108,13 +119,6 @@ public class FHBiomeModifiers {
             {
                 settings.addFeature(GenerationStep.Decoration.TOP_LAYER_MODIFICATION, feature);
             }
-
-            final MobSpawnSettingsBuilder spawns = builder.getMobSpawnSettings();
-
-            // spawns.addSpawn(MobCategory.CREATURE, new MobSpawnSettings.SpawnerData(EntityType.POLAR_BEAR, 1, 1, 2));
-            // spawns.addSpawn(MobCategory.MONSTER, new MobSpawnSettings.SpawnerData(EntityType.STRAY, 20, 1, 3));
-            spawns.addSpawn(MobCategory.CREATURE, new MobSpawnSettings.SpawnerData(FHEntityTypes.WANDERING_REFUGEE.get(), 1, 1, 5));
-
         }
 
         @Override
