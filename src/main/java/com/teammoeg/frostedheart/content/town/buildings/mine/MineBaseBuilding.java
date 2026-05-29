@@ -62,8 +62,8 @@ public class MineBaseBuilding extends AbstractTownResidentWorkBuilding {
 	public int volume;
 
     private int connectionRadius = 1024;
-    public Set<BlockPos> linkedMines;
-    private static final double BASE_PER_SCORE = 4.0;
+    public Set<BlockPos> linkedMines = new HashSet<>();
+    private static final double BASE_PER_SCORE = 6.0;
 
 
 	public MineBaseBuilding(BlockPos pos) {
@@ -90,11 +90,11 @@ public class MineBaseBuilding extends AbstractTownResidentWorkBuilding {
 		super(pos);
 		this.isStructureValid = isStructureValid;
 		this.occupiedVolume = occupiedVolume;
-		this.residentsID = new java.util.HashSet<>(residentsID);
+		this.residentsID = new HashSet<>(residentsID);
 		this.area = area;
 		this.volume = volume;
 		this.maxResidents = maxResidents;
-        this.linkedMines = new java.util.HashSet<>(linkedMines);
+        this.linkedMines = new HashSet<>(linkedMines);
 	}
 
 	@Override

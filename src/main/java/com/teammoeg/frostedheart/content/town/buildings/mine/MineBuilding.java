@@ -49,7 +49,7 @@ public class MineBuilding extends AbstractTownBuilding {
 
 	public static final Map<ResourceLocation, Map<Item,  Integer>> BIOME_RESOURCES = new HashMap<>();
     public static final Map<Item, Integer> DEFAULT_RESOURCES = Map.of(
-            Items.COBBLESTONE, 2,
+            Items.COBBLESTONE, 1,
             Items.COAL, 1
     );
 
