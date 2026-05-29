@@ -255,7 +255,7 @@ public class GeneratorData implements SpecialData {
                 lastWrittenRadius = r;
                 lastWrittenTempMod = t;
             }
-        } else {
+        } else if (lastWrittenRadius != -1) {
             ChunkHeatData.removeTempAdjust(w, actualPos.below(masterYPosInMB));
             lastWrittenRadius = -1;
             lastWrittenTempMod = -1;
@@ -365,7 +365,8 @@ public class GeneratorData implements SpecialData {
         processMax = 0;
         power = 0;
         lastPower=0;
-        
+        lastWrittenRadius = -1;
+        lastWrittenTempMod = -1;
     }
 
     protected double getHeatEfficiency(SpecialDataHolder<?> teamData) {
