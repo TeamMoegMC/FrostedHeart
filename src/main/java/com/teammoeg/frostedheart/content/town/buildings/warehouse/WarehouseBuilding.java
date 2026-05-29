@@ -38,13 +38,15 @@ public class WarehouseBuilding extends AbstractTownBuilding {
                     OccupiedVolume.CODEC.optionalFieldOf("occupiedVolume",OccupiedVolume.EMPTY).forGetter(o -> o.occupiedVolume),
 					Codec.DOUBLE.optionalFieldOf("capacity",0D).forGetter(o -> o.capacity),
 					Codec.INT.optionalFieldOf("area",0).forGetter(o -> o.area),
-					Codec.INT.optionalFieldOf("volume",0).forGetter(o -> o.volume)
+					Codec.INT.optionalFieldOf("volume",0).forGetter(o -> o.volume),
+                    Codec.INT.optionalFieldOf("decorationAmount",0).forGetter(o -> o.decorationAmount)
 			)
 			.apply(t, WarehouseBuilding::new));
 
     int volume;//有效体积
     int area;//占地面积
-    double capacity;//该仓库的最大容量
+    public double capacity;//该仓库的最大容量
+    public int decorationAmount;
 	public WarehouseBuilding(BlockPos pos) {
         super(pos);
     }
@@ -59,13 +61,14 @@ public class WarehouseBuilding extends AbstractTownBuilding {
      * @param area the area
      * @param volume the volume
      */
-    public WarehouseBuilding(BlockPos pos, boolean isStructureValid, OccupiedVolume occupiedVolume, double capacity, int area, int volume) {
+    public WarehouseBuilding(BlockPos pos, boolean isStructureValid, OccupiedVolume occupiedVolume, double capacity, int area, int volume,int decorationAmount) {
         super(pos);
         this.isStructureValid = isStructureValid;
         this.occupiedVolume = occupiedVolume;
         this.capacity = capacity;
         this.area = area;
         this.volume = volume;
+        this.decorationAmount = decorationAmount;
     }
 
 	/**

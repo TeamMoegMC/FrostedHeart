@@ -1940,6 +1940,12 @@ public class FHBlocks {
             .blockstate(FHBlockStateGen.simpleCubeAll("concrete/concrete_cracked_"+i))
             .simpleItem()
             .register());
+    public static final BlockEntry<WarehouseStorageRackBlock> WAREHOUSE_STORAGE_RACK = REGISTRATE.block("warehouse_storage_rack", WarehouseStorageRackBlock::new)
+            .initialProperties(() -> Blocks.CHEST)
+            .properties(BlockBehaviour.Properties::noOcclusion)
+            .blockstate(FHBlockStateGen.existed())
+            .simpleItem()
+            .register();
     static {
         REGISTRATE.setCreativeTab(FHTabs.FUNCTIONAL_BLOCKS);
     }

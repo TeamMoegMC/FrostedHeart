@@ -39,6 +39,8 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.Objects;
 
+import static com.teammoeg.frostedheart.content.town.TownMathFunctions.calculateDecorationRating;
+
 public class WarehouseBlockEntity extends AbstractTownBuildingBlockEntity<WarehouseBuilding> implements MenuProvider {
 
     public WarehouseBlockEntity(BlockPos pos, BlockState state) {
@@ -73,7 +75,9 @@ public class WarehouseBlockEntity extends AbstractTownBuildingBlockEntity<Wareho
             	building.area = scanner.getArea();
             	building.volume = scanner.getVolume();
                 //容量与体积相似，但是在随着房间高度增高略有衰减
-            	building.capacity = building.area*Math.pow((building.volume*0.02/building.area), 0.9)*37;
+                building.decorationAmount = scanner.decorations.values().stream().mapToInt(Integer::intValue).sum();
+
+                building.capacity = building.area * Math.pow(building.volume * 0.02 / building.area, 0.9) * 1980 + building.decorationAmount * 512;
             	building.setOccupiedVolume(scanner.getOccupiedVolume());
                 return true;
             }

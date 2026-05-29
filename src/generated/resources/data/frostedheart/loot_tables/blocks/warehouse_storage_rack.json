@@ -11,11 +11,11 @@
       "entries": [
         {
           "type": "minecraft:item",
-          "name": "frostedheart:hunting_camp"
+          "name": "frostedheart:warehouse_storage_rack"
         }
       ],
       "rolls": 1.0
     }
   ],
-  "random_sequence": "frostedheart:blocks/hunting_camp"
+  "random_sequence": "frostedheart:blocks/warehouse_storage_rack"
 }
