@@ -22,7 +22,6 @@ package com.teammoeg.frostedheart.content.town.terrainresource;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import lombok.Getter;
-import lombok.Setter;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.ChunkPos;
 

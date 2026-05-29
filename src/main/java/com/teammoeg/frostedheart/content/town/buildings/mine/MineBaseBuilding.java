@@ -25,13 +25,10 @@ import com.teammoeg.frostedheart.content.town.*;
 import com.teammoeg.frostedheart.content.town.block.OccupiedVolume;
 import com.teammoeg.frostedheart.content.town.building.AbstractTownResidentWorkBuilding;
 import com.teammoeg.frostedheart.content.town.building.ITownBuilding;
-import com.teammoeg.frostedheart.content.town.buildings.hunting.HuntingBaseBuilding;
 import com.teammoeg.frostedheart.content.town.resident.Resident;
-import com.teammoeg.frostedheart.content.town.resource.action.IActionExecutorHandler;
 import com.teammoeg.frostedheart.content.town.resource.action.ResourceActionMode;
 import com.teammoeg.frostedheart.content.town.resource.action.ResourceActionType;
 import com.teammoeg.frostedheart.content.town.resource.action.TownResourceActions;
-import com.teammoeg.frostedheart.content.town.terrainresource.TerrainResourceData;
 import com.teammoeg.frostedheart.content.town.terrainresource.TerrainResourceType;
 import net.minecraft.core.UUIDUtil;
 
@@ -237,8 +234,18 @@ public class MineBaseBuilding extends AbstractTownResidentWorkBuilding {
         return geometricMean * workProficiencyPart;
     }
 
-    public void clearLinkedMines() { linkedMines.clear(); }
-    public void addLinkedMine(BlockPos pos) { linkedMines.add(pos); }
+    public void clearLinkedMines() {
+        if (linkedMines != null) {
+            linkedMines.clear();
+        }
+    }
+
+    public void addLinkedMine(BlockPos pos) {
+        if (linkedMines == null) {
+            linkedMines = new HashSet<>();
+        }
+        linkedMines.add(pos);
+    }
 
     public Set<BlockPos> getLinkedMines() {
         return linkedMines;
