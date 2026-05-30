@@ -77,6 +77,7 @@ public class ImprovedFreezeTopLayerFeature extends Feature<NoneFeatureConfigurat
         for (int idx = 0; idx < 256; ++idx) {
             int x = originX + (idx & 15);
             int z = originZ + (idx >> 4);
+            //MOTION_BLOCKING为地表上方高一格
             int y = level.getHeight(Heightmap.Types.MOTION_BLOCKING, x, z);
             topY[idx] = y;
             if (maxY < y) maxY = y;
@@ -87,18 +88,26 @@ public class ImprovedFreezeTopLayerFeature extends Feature<NoneFeatureConfigurat
             isNotWinter[idx] = notWinter;
 
             if (notWinter) {
-                // 立即执行原版行为（结冰、覆雪）
-                tempPos.set(x, y - 1, z);
+                // 进入分支执行原版行为（结冰、覆雪）
                 Biome biome = biomeHolder.value();
-
-                if (biome.shouldFreeze(level, tempPos, false)) {
-                    level.setBlock(tempPos, ICE, 2);
-                }
-                if (biome.shouldSnow(level, cursor)) {
-                    level.setBlock(cursor, SNOW, 2);
-                    BlockState stateDown = level.getBlockState(tempPos);
-                    if (stateDown.hasProperty(SnowyDirtBlock.SNOWY)) {
-                        level.setBlock(tempPos, stateDown.setValue(SnowyDirtBlock.SNOWY, true), 2);
+                //tempPos低一格
+                tempPos.set(x, y - 1, z);
+                if (biome.coldEnoughToSnow(tempPos)) {
+                    //结冰
+                    BlockState surfaceBlockState = level.getBlockState(tempPos);
+                    if (surfaceBlockState.getFluidState().getType() == Fluids.WATER) {
+                        level.setBlock(tempPos, ICE, 2);
+                    }else {
+                    //雪层
+                        BlockState cursorState = level.getBlockState(cursor);
+                        if (cursorState.isAir() && SNOW.canSurvive(level, cursor)) {
+                            if (!cursorState.is(Blocks.SNOW)) {
+                                level.setBlock(cursor, SNOW, 2);
+                                if (surfaceBlockState.hasProperty(SnowyDirtBlock.SNOWY)) {
+                                    level.setBlock(tempPos, surfaceBlockState.setValue(SnowyDirtBlock.SNOWY, true), 2);
+                                }
+                            }
+                        }
                     }
                 }
                 // 光照初始化为0，避免影响水平传播

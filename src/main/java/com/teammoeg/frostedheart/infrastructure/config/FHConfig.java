@@ -447,8 +447,6 @@ public class FHConfig {
 		public static class WorldGen {
 			public final ForgeConfigSpec.BooleanValue enableSnowAccumulationDuringWeather;
 			public final ForgeConfigSpec.IntValue snowAccumulationDifficulty;
-			public final ForgeConfigSpec.ConfigValue<List<? extends String>> nonWinterBiomes;
-			public final ForgeConfigSpec.BooleanValue invertNonWinterBiomes;
 			public final ForgeConfigSpec.BooleanValue enableSnowAccumulationDuringWorldgen;
 
 			WorldGen(ForgeConfigSpec.Builder builder) {
@@ -457,23 +455,6 @@ public class FHConfig {
 					.define("enableSnowAccumulationDuringWeather", true);
 				snowAccumulationDifficulty = builder.comment("The the inverse of this value is the probability of snow adding one layer during each tick.")
 					.defineInRange("snowAccumulationDifficulty", 16, 1, Integer.MAX_VALUE);
-				nonWinterBiomes = builder.comment("Biomes that are not considered winter biomes.")
-					.define("nonWinterBiomes", List.of(
-						Biomes.NETHER_WASTES.location().toString(),
-						Biomes.CRIMSON_FOREST.location().toString(),
-						Biomes.WARPED_FOREST.location().toString(),
-						Biomes.BASALT_DELTAS.location().toString(),
-						Biomes.SOUL_SAND_VALLEY.location().toString(),
-						Biomes.END_BARRENS.location().toString(),
-						Biomes.END_HIGHLANDS.location().toString(),
-						Biomes.END_MIDLANDS.location().toString(),
-						Biomes.THE_END.location().toString(),
-						Biomes.THE_VOID.location().toString(),
-						// oceans freeze already in their own style
-						Biomes.FROZEN_OCEAN.location().toString(),
-						Biomes.DEEP_FROZEN_OCEAN.location().toString()));
-				invertNonWinterBiomes = builder.comment("If true, the 'nonWinterBiomes' config option will be interpreted as a list of winter biomes, and all others will be ignored.")
-					.define("invertNonWinterBiomes", false);
 				enableSnowAccumulationDuringWorldgen = builder.comment("Enables snow accumulation during world generation.")
 					.define("enableSnowAccumulationDuringWorldgen", false);
 				builder.pop();
@@ -688,14 +669,6 @@ public class FHConfig {
 		ModLoadingContext.get().registerConfig(ModConfig.Type.CLIENT, FHConfig.CLIENT_CONFIG);
 		ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, FHConfig.COMMON_CONFIG);
 		ModLoadingContext.get().registerConfig(ModConfig.Type.SERVER, FHConfig.SERVER_CONFIG);
-	}
-
-	public static boolean isWinterBiome(ResourceLocation name) {
-		if (name != null) {
-			final Stream<ResourceLocation> stream = FHConfig.SERVER.WORLDGEN.nonWinterBiomes.get().stream().map(ResourceLocation::new);
-			return FHConfig.SERVER.WORLDGEN.invertNonWinterBiomes.get() ? stream.anyMatch(name::equals) : stream.noneMatch(name::equals);
-		}
-		return false;
 	}
 
 	static final boolean specialDay = MonthDay.of(4, 1).equals(MonthDay.now());
