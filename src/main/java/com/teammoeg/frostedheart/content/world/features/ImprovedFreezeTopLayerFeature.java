@@ -19,24 +19,19 @@
 
 package com.teammoeg.frostedheart.content.world.features;
 
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+
 import com.mojang.serialization.Codec;
+import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.core.Vec3i;
+import net.minecraft.core.Holder;
 import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.WorldGenLevel;
 import net.minecraft.world.level.biome.Biome;
-import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.level.block.DoublePlantBlock;
-import net.minecraft.world.level.block.LiquidBlock;
+import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.levelgen.Heightmap;
@@ -70,31 +65,61 @@ public class ImprovedFreezeTopLayerFeature extends Feature<NoneFeatureConfigurat
         final int originX = pos.getX();
         final int originZ = pos.getZ();
         final RandomSource random = context.random();
-        final boolean enableAccumulation =
-                FHConfig.SERVER.WORLDGEN.enableSnowAccumulationDuringWorldgen.get();
         final BlockPos.MutableBlockPos cursor = new BlockPos.MutableBlockPos();
         final BlockPos.MutableBlockPos tempPos = new BlockPos.MutableBlockPos();
 
-        // First, find the highest exposed y pos in the chunk
-        // Also cache each column's top height so we can skip getBlockState
-        // calls in the guaranteed-open-air region above terrain.
         final int[] topY = new int[256];
+        final boolean[] isNotWinter = new boolean[256];
         int maxY = 0;
-        for (int idx = 0; idx < 256; idx++)
-        {
-            int y = level.getHeight(Heightmap.Types.MOTION_BLOCKING,
-                    originX + (idx & 15), originZ + (idx >> 4));
+        int[] prevSkyLights = new int[256];
+
+
+        for (int idx = 0; idx < 256; ++idx) {
+            int x = originX + (idx & 15);
+            int z = originZ + (idx >> 4);
+            int y = level.getHeight(Heightmap.Types.MOTION_BLOCKING, x, z);
             topY[idx] = y;
-            if (maxY < y)
-            {
-                maxY = y;
+            if (maxY < y) maxY = y;
+
+            cursor.set(x, y, z);
+            Holder<Biome> biomeHolder = level.getBiome(cursor);
+            boolean notWinter = biomeHolder.is(FHTags.Biomes.NOT_IMPROVED_WINTER.tag);
+            isNotWinter[idx] = notWinter;
+
+            if (notWinter) {
+                // 立即执行原版行为（结冰、覆雪）
+                tempPos.set(x, y - 1, z);
+                Biome biome = biomeHolder.value();
+
+                if (biome.shouldFreeze(level, tempPos, false)) {
+                    level.setBlock(tempPos, ICE, 2);
+                }
+                if (biome.shouldSnow(level, cursor)) {
+                    level.setBlock(cursor, SNOW, 2);
+                    BlockState stateDown = level.getBlockState(tempPos);
+                    if (stateDown.hasProperty(SnowyDirtBlock.SNOWY)) {
+                        level.setBlock(tempPos, stateDown.setValue(SnowyDirtBlock.SNOWY, true), 2);
+                    }
+                }
+                // 光照初始化为0，避免影响水平传播
+                prevSkyLights[idx] = 0;
+            } else {
+                // 冬季列初始光照为7
+                prevSkyLights[idx] = 7;
             }
         }
 
+
+        final boolean enableAccumulation =
+                FHConfig.SERVER.WORLDGEN.enableSnowAccumulationDuringWorldgen.get();
+        // First, find the highest exposed y pos in the chunk
+        // Also cache each column's top height so we can skip getBlockState
+        // calls in the guaranteed-open-air region above terrain.
+
         // Then, step downwards, tracking the exposure to sky at each step
-        int[] skyLights = new int[256], prevSkyLights = new int[256];
+        int[] skyLights = new int[256];
         BlockState[] stateCache = new BlockState[256];
-        Arrays.fill(prevSkyLights, 7);
+
         for (int y = maxY; y >= 0; y--)
         {
             boolean hasSkyLight = false;
@@ -102,6 +127,11 @@ public class ImprovedFreezeTopLayerFeature extends Feature<NoneFeatureConfigurat
             // Propagate skylight vertically and cache block states
             for (int idx = 0; idx < 256; idx++)
             {
+                if (isNotWinter[idx]) {
+                    stateCache[idx] = AIR;
+                    skyLights[idx] = 0;
+                    continue;
+                }
                 final int x = originX + (idx & 15);
                 final int z = originZ + (idx >> 4);
 
@@ -137,11 +167,15 @@ public class ImprovedFreezeTopLayerFeature extends Feature<NoneFeatureConfigurat
             // Extend skylight horizontally (zero-allocation, replaces per-block BFS)
             if (hasSkyLight)
             {
-                propagateSkyLights(skyLights);
+                propagateSkyLights(skyLights,isNotWinter);
             }
             // Place snow and ice where skylight reaches
             for (int idx = 0; idx < 256; idx++)
             {
+                if (isNotWinter[idx]) {
+                    continue;
+                }
+
                 final int skyLight = prevSkyLights[idx];
                 if (skyLight > 0)
                 {
@@ -161,6 +195,7 @@ public class ImprovedFreezeTopLayerFeature extends Feature<NoneFeatureConfigurat
             boolean nextHasSkyLight = false;
             for (int i = 0; i < 256; i++)
             {
+                if(isNotWinter[i]) continue;
                 if (prevSkyLights[i] > 0)
                 {
                     nextHasSkyLight = true;
@@ -180,22 +215,22 @@ public class ImprovedFreezeTopLayerFeature extends Feature<NoneFeatureConfigurat
      * Sweeps from highest light level downward, spreading to adjacent cells.
      * Replaces the original per-block BFS (ArrayList + HashSet + Vec3i allocations).
      */
-    private static void propagateSkyLights(int[] skyLights)
+    private static void propagateSkyLights(int[] skyLights,boolean[] isNotWinter)
     {
         for (int light = 7; light >= 2; light--)
         {
             final int spread = light - 1;
             for (int idx = 0; idx < 256; idx++)
             {
-                if (skyLights[idx] == light)
-                {
-                    final int x = idx & 15;
-                    final int z = idx >> 4;
-                    if (x > 0  && skyLights[idx - 1]  < spread) skyLights[idx - 1]  = spread;
-                    if (x < 15 && skyLights[idx + 1]  < spread) skyLights[idx + 1]  = spread;
-                    if (z > 0  && skyLights[idx - 16] < spread) skyLights[idx - 16] = spread;
-                    if (z < 15 && skyLights[idx + 16] < spread) skyLights[idx + 16] = spread;
+                if (skyLights[idx] != light) {
+                    continue;
                 }
+                final int x = idx & 15;
+                final int z = idx >> 4;
+                if (x > 0  && !isNotWinter[idx - 1]  && skyLights[idx - 1]  < spread) skyLights[idx - 1]  = spread;
+                if (x < 15 && !isNotWinter[idx + 1]  && skyLights[idx + 1]  < spread) skyLights[idx + 1]  = spread;
+                if (z > 0  && !isNotWinter[idx - 16] && skyLights[idx - 16] < spread) skyLights[idx - 16] = spread;
+                if (z < 15 && !isNotWinter[idx + 16] && skyLights[idx + 16] < spread) skyLights[idx + 16] = spread;
             }
         }
     }
@@ -217,7 +252,7 @@ public class ImprovedFreezeTopLayerFeature extends Feature<NoneFeatureConfigurat
             {
                 int existing = state.getValue(BlockStateProperties.LAYERS);
                 int newLayers = calcLayers(level, idx, y, originX, originZ,
-                        stateCache, pos, tempPos, random, skyLight);
+                        stateCache, tempPos, random, skyLight);
                 if (newLayers > existing)
                 {
                     level.setBlock(pos, state.setValue(
@@ -229,7 +264,7 @@ public class ImprovedFreezeTopLayerFeature extends Feature<NoneFeatureConfigurat
 
         final boolean liquidBlock = block instanceof LiquidBlock;
         final boolean replaceable = state.canBeReplaced();
-        final FluidState fluidState = level.getFluidState(pos);
+        final FluidState fluidState = state.getFluidState();
 
         // Query fluid state only when the current block could plausibly contain or be replaced by fluid
         if (fluidState.getType() == Fluids.WATER)
@@ -265,7 +300,7 @@ public class ImprovedFreezeTopLayerFeature extends Feature<NoneFeatureConfigurat
             if (enableAccumulation)
             {
                 layers = calcLayers(level, idx, y, originX, originZ,
-                        stateCache, pos, tempPos, random, skyLight);
+                        stateCache, tempPos, random, skyLight);
             }
             else
             {
@@ -277,7 +312,7 @@ public class ImprovedFreezeTopLayerFeature extends Feature<NoneFeatureConfigurat
     }
 
     private int calcLayers(WorldGenLevel level, int idx, int y, int originX, int originZ,
-                           BlockState[] stateCache, BlockPos pos,
+                           BlockState[] stateCache,
                            BlockPos.MutableBlockPos tempPos,
                            RandomSource random, int skyLight)
     {

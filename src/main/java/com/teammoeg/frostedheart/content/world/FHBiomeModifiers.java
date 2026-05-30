@@ -81,7 +81,9 @@ public class FHBiomeModifiers {
         @Override
         public void modify(Holder<Biome> biome, Phase phase, ModifiableBiomeInfo.BiomeInfo.Builder builder)
         {
-            if (biome.is(FHTags.Biomes.NOT_WINTER.tag) || phase != Phase.MODIFY)
+
+            //NOT_IMPROVED_WINTER的群系也使用improved_freeze，但是json里添加，其他不自动更改。
+            if (biome.is(FHTags.Biomes.NOT_IMPROVED_WINTER.tag) || phase != Phase.MODIFY)
             {
                 return;
             }

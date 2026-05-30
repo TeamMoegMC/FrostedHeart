@@ -107,7 +107,7 @@ public class TeamTown implements ITown, ITownWithResidents, ITownWithBuildings {
      * @param pos position of the block
      * @param townBlockEntity the townBlockEntity entity associated with the block
      */
-    public void addTownBlock(BlockPos pos, TownBlockEntity<? extends ITownBuilding> townBlockEntity) {
+    public void addTownBlock(BlockPos pos, TownBlockEntity<?> townBlockEntity) {
         ITownBuilding building =townBlockEntity.createBuilding();
         if(building instanceof AbstractTownBuilding abstractTownBuilding){
             data.buildings.put(pos, abstractTownBuilding);
