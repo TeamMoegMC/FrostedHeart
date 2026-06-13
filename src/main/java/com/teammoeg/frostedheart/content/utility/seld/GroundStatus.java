@@ -120,11 +120,16 @@ public enum GroundStatus {
 
             float friction = cumulativeFriction / blockCount;
             if (sled.onGround()) {
-                //alters friction when on slope
-                double slopeFriction = Mth.clamp(sled.getXRot(), -45, 45) / 45f;
-                //Factor that will be added to a block slipperiness when the sled is considered on a slope (angled down)
-                // This is also scaled by the slope angle, applying the full number at 45 degrees. This config alters how fast sleds go down slopes
-                friction += 0.06 * slopeFriction;
+//                俯仰角导致摩擦力变化
+                float pitch = sled.getXRot();
+                if (pitch > 0) {
+                    friction += (float) (0.06 * Mth.clamp(pitch, 0, 45) / 45.0);
+                } else if (pitch < -5.0f) {
+                    friction += (float) (0.06 * Mth.clamp(pitch, -45, 0) / 45.0);
+                }else if (pitch < 0) {
+                    friction += (float) (0.02 * Mth.clamp(pitch, -45, 0) / 45.0);
+                }
+
             }
 
             float landFriction = Math.min(0.9995f, friction);

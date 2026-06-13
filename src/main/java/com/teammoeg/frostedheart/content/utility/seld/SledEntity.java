@@ -512,15 +512,15 @@ public class SledEntity extends Entity {
         //check if on next pos is down or up and if has block relatively near below (ie on ground but with more leeway)
         if (this.projectedPos.y != 0 && this.onGround()) {
             double k = Mth.clamp(this.projectedPos.y, -1, 1);
-            if (k > 0) {
+            if (k > 0.6) {
                 //decelerate uphill if doesnt have wolf
                 if (!this.hasPuller())
                     this.setDeltaMovement(movement.scale(1 + -0.06 * k));
-            } else {
+            } else if (k < 0){
                 //boost downhill
                 this.boost = true;
                 //gives downward velocity to keep on the slope
-                this.setDeltaMovement(movement.add(movement.normalize().scale(k * -0.01f)).add(0, -0.2, 0));
+                this.setDeltaMovement(movement.add(movement.normalize().scale(k * -0.01f)));
             }
         }
 
