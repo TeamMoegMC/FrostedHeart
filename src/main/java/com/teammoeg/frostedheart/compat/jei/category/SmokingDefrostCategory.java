@@ -19,8 +19,6 @@
 
 package com.teammoeg.frostedheart.compat.jei.category;
 
-import java.util.Arrays;
-
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
@@ -29,7 +27,6 @@ import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.bootstrap.common.FHItems;
 import com.teammoeg.frostedheart.content.climate.recipe.SmokingDefrostRecipe;
 import com.teammoeg.frostedheart.util.Lang;
-
 import mezz.jei.api.gui.builder.IRecipeLayoutBuilder;
 import mezz.jei.api.gui.drawable.IDrawable;
 import mezz.jei.api.gui.drawable.IDrawableAnimated;
@@ -40,6 +37,7 @@ import mezz.jei.api.recipe.IFocusGroup;
 import mezz.jei.api.recipe.RecipeIngredientRole;
 import mezz.jei.api.recipe.RecipeType;
 import mezz.jei.api.recipe.category.IRecipeCategory;
+import mezz.jei.common.Constants;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
@@ -47,6 +45,8 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Blocks;
+
+import java.util.Arrays;
 
 public class SmokingDefrostCategory implements IRecipeCategory<SmokingDefrostRecipe> {
     public static RecipeType<SmokingDefrostRecipe> UID = RecipeType.create(FHMain.MODID, "defrost_smoking",SmokingDefrostRecipe.class);
@@ -58,7 +58,7 @@ public class SmokingDefrostCategory implements IRecipeCategory<SmokingDefrostRec
 
     public SmokingDefrostCategory(IGuiHelper guiHelper) {
         this.ICON = new DoubleItemIcon(() -> new ItemStack(Blocks.SMOKER), () -> new ItemStack(FHItems.frozen_seeds.get()));
-        this.BACKGROUND = guiHelper.drawableBuilder(new ResourceLocation("jei","textures/jei/gui/gui_vanilla.png"), 0, 186, 82, 34)
+        this.BACKGROUND = guiHelper.drawableBuilder(Constants.RECIPE_GUI_VANILLA, 0, 186, 82, 34)
                 .addPadding(0, 10, 0, 0)
                 .build();
         this.cachedArrows = CacheBuilder.newBuilder()
@@ -66,7 +66,7 @@ public class SmokingDefrostCategory implements IRecipeCategory<SmokingDefrostRec
                 .build(new CacheLoader<Integer, IDrawableAnimated>() {
                     @Override
                     public IDrawableAnimated load(Integer cookTime) {
-                        return guiHelper.drawableBuilder(new ResourceLocation("jei","textures/jei/gui/gui_vanilla.png"), 82, 128, 24, 17)
+                        return guiHelper.drawableBuilder(Constants.RECIPE_GUI_VANILLA, 82, 128, 24, 17)
                                 .buildAnimated(cookTime, IDrawableAnimated.StartDirection.LEFT, false);
                     }
                 });

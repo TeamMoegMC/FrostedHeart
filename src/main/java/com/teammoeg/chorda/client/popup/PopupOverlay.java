@@ -29,8 +29,16 @@ public class PopupOverlay extends PrimaryLayer {
         pop(Component.literal(message));
     }
 
+    public static void pop(String message, int displayTime) {
+        pop(Component.literal(message), displayTime);
+    }
+
     public static void pop(Component message) {
-        var ele = new PopupElement(INSTANCE, message);
+        pop(message, -1);
+    }
+
+    public static void pop(Component message, int displayTime) {
+        var ele = new PopupElement(message, displayTime <= 0 ? (int) (MIN_DISPLAY_TIME * Math.max(INSTANCE.getFont().width(message) / 200F, 1)) : displayTime);
         POPUPS.addLast(ele);
         if (POPUPS.size() > MAX_POPUP_STACK_SIZE) POPUPS.peek().animState = PopupElement.State.FADING_OUT;
         INSTANCE.elements.add(0, ele);
@@ -78,16 +86,21 @@ public class PopupOverlay extends PrimaryLayer {
     }
 
     static class PopupElement extends SWUIElement {
-        static final int FADE_ANIM_LENGTH = 400;
         final Component message;
         final int displayTime;
         CGuiHelper.LineDrawingContext context;
         State animState = State.FADING_IN;
 
-        public PopupElement(UIElement parent, Component message) {
-            super(parent);
+        public PopupElement(Component message) {
+            super(PopupOverlay.INSTANCE);
             this.message = message;
             this.displayTime = (int) (MIN_DISPLAY_TIME * Math.max(getFont().width(message) / 200F, 1));
+        }
+
+        public PopupElement(Component message, int displayTime) {
+            super(PopupOverlay.INSTANCE);
+            this.message = message;
+            this.displayTime = displayTime;
         }
 
         @Override

@@ -105,10 +105,12 @@ public class VAWTBlock extends KineticBlock implements IBE<VAWTBlockEntity> {
             return;
         }
         
-        tooltip.add(Component.translatable("gui.frostedheart.durability_left").append(CFormatHelper.msToTime(durability)));
-        tooltip.add(Component.translatable("message.frostedheart.vawt.speed_bonus",
-                        Component.literal(String.valueOf(type.weight*100-100)))
-                .withStyle(type.weight < 1 ? ChatFormatting.RED : ChatFormatting.GREEN));
+        tooltip.add(Component.translatable("gui.frostedheart.durability_left").append(CFormatHelper.msToTime(durability)).withStyle(ChatFormatting.GRAY));
+        if (type.weight != 1) {
+            tooltip.add(Component.translatable("message.frostedheart.vawt.speed_bonus",
+                            Component.literal(String.valueOf(type.weight * 100 - 100)))
+                    .withStyle(type.weight < 1 ? ChatFormatting.RED : ChatFormatting.GREEN));
+        }
     }
 
     @Override
