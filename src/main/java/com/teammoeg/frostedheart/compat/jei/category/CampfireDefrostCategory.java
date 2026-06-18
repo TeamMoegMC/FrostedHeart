@@ -19,115 +19,51 @@
 
 package com.teammoeg.frostedheart.compat.jei.category;
 
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
-import com.simibubi.create.compat.jei.DoubleItemIcon;
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.bootstrap.common.FHItems;
 import com.teammoeg.frostedheart.content.climate.recipe.CampfireDefrostRecipe;
-import com.teammoeg.frostedheart.util.Lang;
 import mezz.jei.api.gui.builder.IRecipeLayoutBuilder;
-import mezz.jei.api.gui.drawable.IDrawable;
-import mezz.jei.api.gui.drawable.IDrawableAnimated;
-import mezz.jei.api.gui.drawable.IDrawableStatic;
-import mezz.jei.api.gui.ingredient.IRecipeSlotsView;
+import mezz.jei.api.gui.widgets.IRecipeExtrasBuilder;
 import mezz.jei.api.helpers.IGuiHelper;
 import mezz.jei.api.recipe.IFocusGroup;
-import mezz.jei.api.recipe.RecipeIngredientRole;
 import mezz.jei.api.recipe.RecipeType;
-import mezz.jei.api.recipe.category.IRecipeCategory;
-import mezz.jei.common.Constants;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.network.chat.Component;
-import net.minecraft.world.item.ItemStack;
+import mezz.jei.library.plugins.vanilla.cooking.AbstractCookingCategory;
+import mezz.jei.library.util.RecipeUtil;
 import net.minecraft.world.level.block.Blocks;
 
-import java.util.Arrays;
-
-public class CampfireDefrostCategory implements IRecipeCategory<CampfireDefrostRecipe> {
+public class CampfireDefrostCategory extends AbstractCookingCategory<CampfireDefrostRecipe> {
     public static RecipeType<CampfireDefrostRecipe> UID = RecipeType.create(FHMain.MODID, "defrost_campfire", CampfireDefrostRecipe.class);
-    private IDrawable BACKGROUND;
-    private IDrawable ICON;
-    private LoadingCache<Integer, IDrawableAnimated> cachedArrows;
-    private IDrawable animatedFlame;
-    private IDrawableStatic staticFlame;
 
     public CampfireDefrostCategory(IGuiHelper guiHelper) {
-        this.ICON = new DoubleItemIcon(() -> new ItemStack(Blocks.CAMPFIRE), () -> new ItemStack(FHItems.frozen_seeds.get()));
-        this.BACKGROUND = guiHelper.drawableBuilder(Constants.RECIPE_GUI_VANILLA, 0, 186, 82, 34)
-                .addPadding(0, 10, 0, 0)
-                .build();
-        this.cachedArrows = CacheBuilder.newBuilder()
-                .maximumSize(25)
-                .build(new CacheLoader<Integer, IDrawableAnimated>() {
-                    @Override
-                    public IDrawableAnimated load(Integer cookTime) {
-                        return guiHelper.drawableBuilder(Constants.RECIPE_GUI_VANILLA, 82, 128, 24, 17)
-                                .buildAnimated(cookTime, IDrawableAnimated.StartDirection.LEFT, false);
-                    }
-                });
-        staticFlame = guiHelper.createDrawable(Constants.RECIPE_GUI_VANILLA, 82, 114, 14, 14);
-        animatedFlame = guiHelper.createAnimatedDrawable(staticFlame, 300, IDrawableAnimated.StartDirection.TOP, true);
+        super(guiHelper, UID, Blocks.CAMPFIRE, "gui.jei.category." + FHMain.MODID + ".defrost_campfire", 400, 82, 44);
     }
 
     @Override
-    public void draw(CampfireDefrostRecipe recipe,IRecipeSlotsView view , GuiGraphics transform, double mouseX, double mouseY) {
-        animatedFlame.draw(transform, 1, 20);
-        IDrawableAnimated arrow = getArrow(recipe);
-        arrow.draw(transform, 24, 8);
-        drawCookTime(recipe, transform, 35);
+    public void setRecipe(IRecipeLayoutBuilder builder, CampfireDefrostRecipe recipe, IFocusGroup focuses) {
+        builder.addInputSlot(1, 1)
+                .setStandardSlotBackground()
+                .addIngredients(recipe.getIngredients().get(0));
+
+        builder.addOutputSlot(61, 9)
+                .setOutputSlotBackground()
+                .addItemStack(RecipeUtil.getResultItem(recipe));
     }
 
-    protected void drawCookTime(CampfireDefrostRecipe recipe, GuiGraphics matrixStack, int y) {
-        int cookTime = recipe.getCookingTime();
-        if (cookTime > 0) {
-            int cookTimeSeconds = cookTime / 20;
-            Component timeString = Lang.translateKey("gui.jei.category.smelting.time.seconds", cookTimeSeconds);
-            Minecraft minecraft = Minecraft.getInstance();
-            Font fontRenderer = minecraft.font;
-            int stringWidth = fontRenderer.width(timeString);
-            matrixStack.drawString(fontRenderer, timeString, BACKGROUND.getWidth() - stringWidth, y, 0xFF808080, false);
-        }
-    }
-
-
-    protected IDrawableAnimated getArrow(CampfireDefrostRecipe recipe) {
+    @Override
+    public void createRecipeExtras(IRecipeExtrasBuilder builder, CampfireDefrostRecipe recipe, IFocusGroup focuses) {
         int cookTime = recipe.getCookingTime();
         if (cookTime <= 0) {
-            cookTime = 100;
+            cookTime = regularCookTime;
         }
-        return this.cachedArrows.getUnchecked(cookTime);
+        builder.addAnimatedRecipeArrow(cookTime)
+                .setPosition(26, 7);
+        builder.addAnimatedRecipeFlame(300)
+                .setPosition(1, 20);
+
+        addCookTime(builder, recipe);
     }
 
     @Override
-    public IDrawable getBackground() {
-        return BACKGROUND;
+    public boolean isHandled(CampfireDefrostRecipe recipe) {
+        return true;
     }
-
-    @Override
-    public IDrawable getIcon() {
-        return ICON;
-    }
-
-
-    public Component getTitle() {
-        return (Lang.translateKey("gui.jei.category." + FHMain.MODID + ".defrost_campfire"));
-    }
-
-
-
-    @Override
-    public void setRecipe(IRecipeLayoutBuilder recipeLayout, CampfireDefrostRecipe recipe, IFocusGroup ingredients) {
-        recipeLayout.addSlot(RecipeIngredientRole.INPUT, 1, 1).addIngredients(recipe.getIngredient());
-        recipeLayout.addSlot(RecipeIngredientRole.OUTPUT, 61, 9).addItemStacks(Arrays.asList(recipe.getIss()));
-    }
-
-	@Override
-	public RecipeType<CampfireDefrostRecipe> getRecipeType() {
-		return UID;
-	}
-
 }
