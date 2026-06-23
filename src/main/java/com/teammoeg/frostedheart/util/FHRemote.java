@@ -19,18 +19,17 @@
 
 package com.teammoeg.frostedheart.util;
 
+import com.google.gson.JsonParser;
+import com.teammoeg.chorda.util.struct.OptionalLazy;
+import com.teammoeg.frostedheart.restarter.TssapProtocolHandler;
+import net.minecraftforge.fml.ModList;
+import net.minecraftforge.fml.loading.FMLPaths;
+
 import java.io.File;
 import java.io.FileReader;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.Scanner;
-
-import com.google.gson.JsonParser;
-import com.teammoeg.chorda.util.struct.OptionalLazy;
-import com.teammoeg.frostedheart.restarter.TssapProtocolHandler;
-
-import net.minecraftforge.fml.ModList;
-import net.minecraftforge.fml.loading.FMLPaths;
 
 import static com.teammoeg.frostedheart.FHMain.*;
 
@@ -108,7 +107,7 @@ public class FHRemote {
                 }
             }
         } catch (Throwable e) {
-            e.printStackTrace();
+            LOGGER.warn(e);
         }
         return "";
     }

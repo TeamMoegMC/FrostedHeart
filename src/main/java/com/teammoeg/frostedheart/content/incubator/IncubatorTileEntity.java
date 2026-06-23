@@ -19,43 +19,38 @@
 
 package com.teammoeg.frostedheart.content.incubator;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-
-import com.teammoeg.frostedheart.FHMain;
+import blusunrize.immersiveengineering.common.blocks.IEBlockInterfaces.IProcessBE;
+import blusunrize.immersiveengineering.common.util.inventory.IEInventoryHandler;
+import blusunrize.immersiveengineering.common.util.inventory.IIEInventory;
 import com.teammoeg.chorda.block.CBlockInterfaces;
 import com.teammoeg.chorda.block.entity.CBlockEntity;
 import com.teammoeg.chorda.block.entity.CTickableBlockEntity;
 import com.teammoeg.chorda.math.CMath;
+import com.teammoeg.chorda.util.CUtils;
+import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.bootstrap.common.FHFluids;
 import com.teammoeg.frostedheart.bootstrap.common.FHItems;
-import com.teammoeg.frostedheart.util.Lang;
-import com.teammoeg.chorda.util.CRegistryHelper;
-import com.teammoeg.chorda.util.CUtils;
-
-import blusunrize.immersiveengineering.common.blocks.IEBlockInterfaces.IProcessBE;
-import blusunrize.immersiveengineering.common.util.inventory.IEInventoryHandler;
-import blusunrize.immersiveengineering.common.util.inventory.IIEInventory;
-import net.minecraft.world.entity.player.Inventory;
-import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.inventory.AbstractContainerMenu;
-import net.minecraft.world.level.material.Fluid;
-import net.minecraft.world.level.material.Fluids;
-import net.minecraft.world.ContainerHelper;
-import net.minecraft.world.MenuProvider;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.network.chat.Component;
-import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.world.level.block.entity.BlockEntityType;
-import net.minecraft.world.level.block.state.BlockState;
+import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.NonNullList;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
+import net.minecraft.world.ContainerHelper;
+import net.minecraft.world.MenuProvider;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntityType;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.material.Fluid;
+import net.minecraft.world.level.material.Fluids;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.ForgeCapabilities;
 import net.minecraftforge.common.util.LazyOptional;
@@ -65,6 +60,9 @@ import net.minecraftforge.fluids.capability.IFluidHandler.FluidAction;
 import net.minecraftforge.fluids.capability.templates.FluidTank;
 import net.minecraftforge.items.IItemHandler;
 import net.minecraftforge.items.ItemHandlerHelper;
+
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 public class IncubatorTileEntity extends CBlockEntity implements CTickableBlockEntity,
         CBlockInterfaces.IActiveState,  MenuProvider, IProcessBE,IIEInventory {
@@ -241,7 +239,7 @@ public class IncubatorTileEntity extends CBlockEntity implements CTickableBlockE
         if (i == 1)
             return canBeCatalyst(itemStack) || itemStack.getItem() == Items.ROTTEN_FLESH;
         if (i == 2)
-            return canBeInput(itemStack) || itemStack.isEdible();
+            return !itemStack.is(FHTags.Items.INCUBATOR_BLACKLIST.tag) && (canBeInput(itemStack) || itemStack.isEdible());
         return i != 3;
     }
 
