@@ -236,7 +236,7 @@ public class CUIOverlay implements IGuiOverlay, CUIScreen, IGlobalGuiHandler {
 		primaryLayer.drawForeground(graphics, x, y, w, h);
 		//this.width = w;
 		//this.height = h;
-		TooltipBuilder builder=new TooltipBuilder(100);
+		TooltipBuilder builder=new TooltipBuilder(1000);
 		primaryLayer.getTooltip(builder);
 		graphics.pose().pushPose();
 		builder.draw(graphics, (int)mouseX, (int)mouseY, primaryLayer.theme());

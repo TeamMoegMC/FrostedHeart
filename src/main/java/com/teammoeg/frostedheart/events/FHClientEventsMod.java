@@ -55,6 +55,7 @@ import com.teammoeg.frostedheart.content.health.tooltip.FoodNutritionStats;
 import com.teammoeg.frostedheart.content.scenario.client.gui.layered.font.KGlyphProvider;
 import com.teammoeg.frostedheart.content.town.resident.WanderingRefugeeRenderer;
 import com.teammoeg.frostedheart.content.ui.FHClickActions;
+import com.teammoeg.frostedheart.content.ui.dialogue.DialogueOverlay;
 import com.teammoeg.frostedheart.content.ui.keyhint.KeyHintOverlay;
 import com.teammoeg.frostedheart.content.ui.keyhint.KeyHintRegistrate;
 import com.teammoeg.frostedheart.content.ui.tips.client.gui.TipOverlay;
@@ -315,6 +316,7 @@ public class FHClientEventsMod {
         event.registerAboveAll("key_hint", new CUIOverlay(KeyHintOverlay.INSTANCE));
     	event.registerAboveAll("insight", new InsightOverlay());
         event.registerAboveAll("wheel_menu", WheelMenuRenderer.OVERLAY);
+        event.registerAboveAll("dialogue", new CUIOverlay(DialogueOverlay.INSTANCE, true, CUIOverlay.whenScreenOpened));
         event.registerAboveAll("twr_tip", new CUIOverlay(TipOverlay.INSTANCE, true, CUIOverlay.whenScreenOpened));
     }
     @SubscribeEvent

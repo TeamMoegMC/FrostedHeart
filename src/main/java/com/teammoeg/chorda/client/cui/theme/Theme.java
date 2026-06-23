@@ -122,12 +122,12 @@ public interface Theme {
 	 * @param zOffset Z轴偏移 / the z-axis offset
 	 */
 	default void drawTooltip(GuiGraphics graphics, List<Component> tooltipLines, int mouseX, int mouseY, int zOffset) {
-//		graphics.pose().pushPose();
-//		graphics.pose().translate(0, 0, zOffset);
+		graphics.pose().pushPose();
+		graphics.pose().translate(0, 0, zOffset);
 //		graphics.setColor(1f, 1f, 1f, 0.8f);
 		graphics.renderTooltip(ClientUtils.getMc().font, tooltipLines, Optional.empty(), mouseX, Math.max(mouseY, 18));
 //		graphics.setColor(1f, 1f, 1f, 1f);
-//		graphics.pose().popPose();
+		graphics.pose().popPose();
 	}
 
 	/**
