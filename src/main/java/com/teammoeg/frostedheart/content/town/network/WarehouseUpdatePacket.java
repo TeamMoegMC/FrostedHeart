@@ -25,11 +25,7 @@ import com.teammoeg.frostedheart.content.town.buildings.warehouse.VirtualItemSta
 import com.teammoeg.frostedheart.content.town.buildings.warehouse.WarehouseMenu;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
-import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.world.item.Item;
-import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.network.NetworkEvent;
 
 import java.util.ArrayList;
@@ -50,7 +46,7 @@ public class WarehouseUpdatePacket implements CMessage {
 		int size = buffer.readVarInt();
 		this.resources = new ArrayList<>(size);
 		for (int i = 0; i < size; i++) {
-			SimpleItemKey key = readSimpleItemKey(buffer);
+			SimpleItemKey key = SimpleItemKey.fromBuffer(buffer);
 			long amount = buffer.readVarLong();
 			this.resources.add(new VirtualItemStack(key, amount));
 		}
@@ -61,20 +57,9 @@ public class WarehouseUpdatePacket implements CMessage {
 		buffer.writeBoolean(this.isIncremental);
 		buffer.writeVarInt(this.resources.size());
 		for (VirtualItemStack vStack : this.resources) {
-			writeSimpleItemKey(buffer, vStack.getKey());
+			vStack.getKey().writeTo(buffer);
 			buffer.writeVarLong(vStack.getAmount());
 		}
-	}
-
-	private static void writeSimpleItemKey(FriendlyByteBuf buf, SimpleItemKey key) {
-		buf.writeId(BuiltInRegistries.ITEM, key.item());
-		buf.writeNbt(key.tag());
-	}
-
-	private static SimpleItemKey readSimpleItemKey(FriendlyByteBuf buf) {
-		Item item = buf.readById(BuiltInRegistries.ITEM);
-		CompoundTag tag = buf.readNbt();
-		return new SimpleItemKey(item, tag);
 	}
 
 	@Override

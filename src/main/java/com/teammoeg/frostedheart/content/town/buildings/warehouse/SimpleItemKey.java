@@ -2,7 +2,9 @@ package com.teammoeg.frostedheart.content.town.buildings.warehouse;
 
 import com.teammoeg.frostedheart.content.town.resource.ItemStackResourceKey;
 import groovyjarjarantlr4.v4.runtime.misc.Nullable;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 
@@ -28,5 +30,17 @@ public record SimpleItemKey(Item item, @Nullable CompoundTag tag)
         ItemStack s = new ItemStack(item, count);
         s.setTag(tag != null ? tag.copy() : null);
         return s;
+    }
+
+    public void writeTo(FriendlyByteBuf buf) {
+        buf.writeId(BuiltInRegistries.ITEM, item);
+        buf.writeNbt(tag);
+    }
+
+    public static SimpleItemKey fromBuffer(FriendlyByteBuf buf) {
+        return new SimpleItemKey(
+            buf.readById(BuiltInRegistries.ITEM),
+            buf.readNbt()
+        );
     }
 }

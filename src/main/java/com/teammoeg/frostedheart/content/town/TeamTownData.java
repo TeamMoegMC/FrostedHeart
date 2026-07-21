@@ -25,6 +25,8 @@ import com.teammoeg.frostedheart.content.climate.block.generator.GeneratorData;
 import com.teammoeg.frostedheart.content.town.block.OccupiedVolume;
 import com.teammoeg.frostedheart.content.town.buildings.mine.MineBaseBuilding;
 import com.teammoeg.frostedheart.content.town.buildings.mine.MineBuilding;
+import com.teammoeg.frostedheart.content.town.event.*;
+import com.teammoeg.frostedheart.content.town.resource.ITownResourceKey;
 import lombok.Getter;
 
 import com.mojang.serialization.Codec;
@@ -65,7 +67,7 @@ import java.util.stream.Collectors;
  * <p>
  * Everything permanent should be saved in this class.
  */
-public class TeamTownData implements SpecialData {
+public class TeamTownData implements SpecialData{
     public static final Codec<TeamTownData> CODEC = RecordCodecBuilder.create(t -> t.group(
         //Only prevent decoding failures in this field from breaking the whole object.
         CodecUtil.defaultSupply(Codec.STRING, () -> "Default Town")
@@ -118,6 +120,12 @@ public class TeamTownData implements SpecialData {
     int labour=0;
     @Getter
     int maxLabour=0;
+
+    @Getter
+    private final DataSyncCache dataSyncCache = new DataSyncCache();
+
+
+
     public TeamTownData(String name, TeamTownResourceHolder resources, Map<BlockPos, ITownBuilding> buildings, Map<UUID, Resident> residents, Map<TerrainResourceType, TerrainResourceData> terrainResource,int labour,int maxlabour) {
         super();
         this.name = name;
@@ -152,12 +160,21 @@ public class TeamTownData implements SpecialData {
     }
 
     /**
+     * process some town logic that needs to run every tick, like sync data to client
+     * @param level server world instance
+     * @param teamData tickSecond有这个参数，所以我也顺便加上了
+     */
+    public void tick(ServerLevel level, TeamDataHolder teamData) {
+
+    }
+
+    /**
      * ITown logic update (every 20 ticks). This method first validates the town
      * blocks, then sorts them by priority and calls the work methods.
      *
      * @param world server world instance
      */
-    public void tick(ServerLevel world, TeamDataHolder teamData) {
+    public void tickSecond(ServerLevel world, TeamDataHolder teamData) {
         //if (!FHConfig.SERVER.TOWN.enableTownTick.get()) return;
         Optional<GeneratorData> genDataOpt = teamData.getOptional(FHSpecialDataTypes.GENERATOR_DATA);
         if (genDataOpt.isPresent()) {
@@ -473,5 +490,44 @@ public class TeamTownData implements SpecialData {
         return actual;
     }
 
+    /**
+     * 用于在服务端向客户端同步发生变化的数据
+     */
+    class DataSyncCache implements ITownBuildingChangeEventListener, ITownResourceChangeEventListener, ITownResidentChangeEventListener {
+        /**
+         * 记录发生变化但未同步到客户端的资源，通常将在下一tick同步。
+         */
+        private Set<ITownResourceKey> changedResourceKey = new HashSet<>();
+        private Set<UUID> changedResidentUUID = new HashSet<>();
+        private Set<BlockPos> changedBuildingPos = new HashSet<>();
 
+        public void addChanged(ITownResourceKey changedResourceKey){
+            this.changedResourceKey.add(changedResourceKey);
+        }
+
+        public void addChanged(UUID changedResidentUUID){
+            this.changedResidentUUID.add(changedResidentUUID);
+        }
+
+        public void addChanged(BlockPos changedBuildingPos){
+            this.changedBuildingPos.add(changedBuildingPos);
+        }
+
+
+
+        @Override
+        public void onBuildingChange(TownBuildingChangeEvent event) {
+
+        }
+
+        @Override
+        public void onResidentChange(TownResidentChangeEvent event) {
+
+        }
+
+        @Override
+        public void onResourceChange(TownResourceChangeEvent event) {
+
+        }
+    }
 }
