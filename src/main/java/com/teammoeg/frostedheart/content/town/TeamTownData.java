@@ -27,6 +27,7 @@ import com.teammoeg.frostedheart.content.town.buildings.mine.MineBaseBuilding;
 import com.teammoeg.frostedheart.content.town.buildings.mine.MineBuilding;
 import com.teammoeg.frostedheart.content.town.event.*;
 import com.teammoeg.frostedheart.content.town.resource.ITownResourceKey;
+import com.teammoeg.frostedheart.content.town.util.ObservableTownMap;
 import lombok.Getter;
 
 import com.mojang.serialization.Codec;
@@ -76,10 +77,10 @@ public class TeamTownData implements SpecialData{
         CodecUtil.defaultSupply(CodecUtil.catchingCodec(TeamTownResourceHolder.CODEC), TeamTownResourceHolder::new)
         .fieldOf("resources").forGetter(o -> o.resources),
 
-        CodecUtil.defaultSupply(CodecUtil.catchingCodec(CodecUtil.mapCodec("pos", BlockPos.CODEC, "building", AbstractTownBuilding.CODEC)), LinkedHashMap::new)
+        CodecUtil.defaultSupply(CodecUtil.catchingCodec(CodecUtil.mapCodec("pos", BlockPos.CODEC, "building", AbstractTownBuilding.CODEC)), ObservableTownMap::new)
         .fieldOf("blocks").forGetter(o -> new HashMap<>(o.buildings)),
 
-        CodecUtil.defaultSupply(CodecUtil.catchingCodec(CodecUtil.mapCodec("uuid", UUIDUtil.CODEC, "data", Resident.CODEC)), LinkedHashMap::new)
+        CodecUtil.defaultSupply(CodecUtil.catchingCodec(CodecUtil.mapCodec("uuid", UUIDUtil.CODEC, "data", Resident.CODEC)), ObservableTownMap::new)
         .fieldOf("residents").forGetter(o -> o.residents),
 
         CodecUtil.defaultSupply(CodecUtil.catchingCodec(CodecUtil.mapCodec("type", CodecUtil.enumCodec(TerrainResourceType.values()), "data", TerrainResourceData.CODEC)), HashMap::new)
@@ -102,7 +103,7 @@ public class TeamTownData implements SpecialData{
     /**
      * The town residents.
      */
-    Map<UUID, Resident> residents = new LinkedHashMap<>();
+    ObservableTownMap<UUID, Resident> residents = new ObservableTownMap<>();
     /**
      * ITown resources. Including normal resources and town services. Including
      * resources gathered from town and resources gathered from player. Must be
@@ -112,7 +113,7 @@ public class TeamTownData implements SpecialData{
     /**
      * ITown blocks and their worker data
      */
-    Map<BlockPos, AbstractTownBuilding> buildings = new LinkedHashMap<>();
+    ObservableTownMap<BlockPos, AbstractTownBuilding> buildings = new ObservableTownMap<>();
 
 
     Map<TerrainResourceType, TerrainResourceData> terrainResource=new EnumMap<>(TerrainResourceType.class);
@@ -139,6 +140,9 @@ public class TeamTownData implements SpecialData{
         this.terrainResource.putAll(terrainResource);
         this.labour=0;
         this.maxLabour=0;
+        // 复制完成后绑定 onChange，避免上面 putAll/forEach 时误触发脏标记
+        this.buildings.setOnChange(this.dataSyncCache::addChanged);
+        this.residents.setOnChange(this.dataSyncCache::addChanged);
     }
 
     public TeamTownData(SpecialDataHolder teamData) {
@@ -148,6 +152,8 @@ public class TeamTownData implements SpecialData{
             this.name = data.getTeam().getName() + "'s ITown";
 
         }
+        this.buildings.setOnChange(this.dataSyncCache::addChanged);
+        this.residents.setOnChange(this.dataSyncCache::addChanged);
     }
 
     /**
@@ -511,6 +517,52 @@ public class TeamTownData implements SpecialData{
 
         public void addChanged(BlockPos changedBuildingPos){
             this.changedBuildingPos.add(changedBuildingPos);
+        }
+
+        /**
+         * 取出当前所有脏建筑键并清空。发包前调用。
+         */
+        public Set<BlockPos> drainChangedBuildings() {
+            if (changedBuildingPos.isEmpty()) return Set.of();
+            Set<BlockPos> out = new HashSet<>(changedBuildingPos);
+            changedBuildingPos.clear();
+            return out;
+        }
+
+        /**
+         * 取出当前所有脏居民键并清空。发包前调用。
+         */
+        public Set<UUID> drainChangedResidents() {
+            if (changedResidentUUID.isEmpty()) return Set.of();
+            Set<UUID> out = new HashSet<>(changedResidentUUID);
+            changedResidentUUID.clear();
+            return out;
+        }
+
+        /**
+         * 取出当前所有脏资源键并清空。发包前调用（资源层 fire 尚未接入时通常为空）。
+         */
+        public Set<ITownResourceKey> drainChangedResources() {
+            if (changedResourceKey.isEmpty()) return Set.of();
+            Set<ITownResourceKey> out = new HashSet<>(changedResourceKey);
+            changedResourceKey.clear();
+            return out;
+        }
+
+        /**
+         * 是否还有未同步的脏数据。
+         */
+        public boolean hasChanges() {
+            return !changedBuildingPos.isEmpty() || !changedResidentUUID.isEmpty() || !changedResourceKey.isEmpty();
+        }
+
+        /**
+         * 清空所有脏键记录（如加载存档后已完成一次全量同步时调用）。
+         */
+        public void clearChanged() {
+            changedBuildingPos.clear();
+            changedResidentUUID.clear();
+            changedResourceKey.clear();
         }
 
 
