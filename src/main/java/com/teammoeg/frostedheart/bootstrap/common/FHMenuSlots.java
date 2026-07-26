@@ -28,6 +28,7 @@ import com.teammoeg.chorda.menu.CCustomMenuSlot.NetworkEncoder;
 import com.teammoeg.chorda.menu.CCustomMenuSlot.OtherDataSlotEncoder;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.robotics.logistics.Filter;
+import com.teammoeg.frostedheart.content.town.buildings.warehouse.WarehouseInterfaceTarget;
 
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -35,6 +36,8 @@ import net.minecraftforge.fml.common.Mod;
 @Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.MOD)
 public class FHMenuSlots {
 	public static final NetworkEncoder<Filter> FILTER_ENCODER=CCustomMenuSlot.Encoders.codec(Filter.CODEC);
+	public static final NetworkEncoder<WarehouseInterfaceTarget> WAREHOUSE_INTERFACE_TARGET_ENCODER =
+			CCustomMenuSlot.Encoders.codec(WarehouseInterfaceTarget.CODEC);
 	public static final OtherDataSlotEncoder<Filter> FILTER_ENCODER_SLOT=new OtherDataSlotEncoder<>(){
 
 		@Override
@@ -55,11 +58,29 @@ public class FHMenuSlots {
 		}
 
 	};
+	public static final OtherDataSlotEncoder<WarehouseInterfaceTarget> WAREHOUSE_INTERFACE_TARGET_ENCODER_SLOT =
+			new OtherDataSlotEncoder<>() {
+				@Override
+				public WarehouseInterfaceTarget copy(WarehouseInterfaceTarget data) {
+					return data;
+				}
+
+				@Override
+				public WarehouseInterfaceTarget getDefault() {
+					return null;
+				}
+
+				@Override
+				public NetworkEncoder<WarehouseInterfaceTarget> getEncoder() {
+					return WAREHOUSE_INTERFACE_TARGET_ENCODER;
+				}
+			};
 	public FHMenuSlots() {
 	}
 	
 	@SubscribeEvent
 	public static void registerMenuSlot(MenuSlotEncoderRegisterEvent event) {
 		event.getRegistry().register(FILTER_ENCODER);
+		event.getRegistry().register(WAREHOUSE_INTERFACE_TARGET_ENCODER);
 	}
 }

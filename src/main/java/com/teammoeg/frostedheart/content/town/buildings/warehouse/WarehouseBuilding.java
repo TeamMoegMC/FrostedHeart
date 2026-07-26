@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 TeamMoeg
+ * Copyright (c) 2026 TeamMoeg
  *
  * This file is part of Frosted Heart.
  *
@@ -31,6 +31,12 @@ import com.teammoeg.frostedheart.content.town.resource.action.TownResourceAction
 
 import net.minecraft.core.BlockPos;
 
+import java.util.Collection;
+import java.util.Collections;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
+
 public class WarehouseBuilding extends AbstractTownBuilding {
 	public static final Codec<WarehouseBuilding> CODEC = RecordCodecBuilder.create(t -> t.group(
                     BlockPos.CODEC.optionalFieldOf("pos",BlockPos.ZERO).forGetter(o -> o.pos),
@@ -39,7 +45,9 @@ public class WarehouseBuilding extends AbstractTownBuilding {
 					Codec.DOUBLE.optionalFieldOf("capacity",0D).forGetter(o -> o.capacity),
 					Codec.INT.optionalFieldOf("area",0).forGetter(o -> o.area),
 					Codec.INT.optionalFieldOf("volume",0).forGetter(o -> o.volume),
-                    Codec.INT.optionalFieldOf("decorationAmount",0).forGetter(o -> o.decorationAmount)
+                    Codec.INT.optionalFieldOf("decorationAmount",0).forGetter(o -> o.decorationAmount),
+                    BlockPos.CODEC.listOf().optionalFieldOf("interfaces", List.of())
+                            .forGetter(o -> List.copyOf(o.interfacePositions))
 			)
 			.apply(t, WarehouseBuilding::new));
 
@@ -47,6 +55,8 @@ public class WarehouseBuilding extends AbstractTownBuilding {
     int area;//占地面积
     public double capacity;//该仓库的最大容量
     public int decorationAmount;
+    private final Set<BlockPos> interfacePositions = new LinkedHashSet<>();
+
 	public WarehouseBuilding(BlockPos pos) {
         super(pos);
     }
@@ -62,6 +72,11 @@ public class WarehouseBuilding extends AbstractTownBuilding {
      * @param volume the volume
      */
     public WarehouseBuilding(BlockPos pos, boolean isStructureValid, OccupiedVolume occupiedVolume, double capacity, int area, int volume,int decorationAmount) {
+        this(pos, isStructureValid, occupiedVolume, capacity, area, volume, decorationAmount, List.of());
+    }
+
+    public WarehouseBuilding(BlockPos pos, boolean isStructureValid, OccupiedVolume occupiedVolume, double capacity,
+                             int area, int volume, int decorationAmount, List<BlockPos> interfacePositions) {
         super(pos);
         this.isStructureValid = isStructureValid;
         this.occupiedVolume = occupiedVolume;
@@ -69,6 +84,7 @@ public class WarehouseBuilding extends AbstractTownBuilding {
         this.area = area;
         this.volume = volume;
         this.decorationAmount = decorationAmount;
+        replaceInterfaces(interfacePositions);
     }
 
 	/**
@@ -95,4 +111,23 @@ public class WarehouseBuilding extends AbstractTownBuilding {
 	public double getCapacity() {
 		return capacity;
 	}
+
+    public Set<BlockPos> getInterfacePositions() {
+        return Collections.unmodifiableSet(interfacePositions);
+    }
+
+    public boolean containsInterface(BlockPos interfacePos) {
+        return interfacePositions.contains(interfacePos);
+    }
+
+    public Set<BlockPos> replaceInterfaces(Collection<BlockPos> positions) {
+        Set<BlockPos> previous = new LinkedHashSet<>(interfacePositions);
+        interfacePositions.clear();
+        positions.stream().map(BlockPos::immutable).forEach(interfacePositions::add);
+        return previous;
+    }
+
+    public boolean removeInterface(BlockPos interfacePos) {
+        return interfacePositions.remove(interfacePos);
+    }
 }

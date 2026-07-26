@@ -38,6 +38,8 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Objects;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 import static com.teammoeg.frostedheart.content.town.TownMathFunctions.calculateDecorationRating;
 
@@ -59,10 +61,16 @@ public class WarehouseBlockEntity extends AbstractTownBuildingBlockEntity<Wareho
     public boolean scanStructure(WarehouseBuilding building){
         BlockPos warehousePos = this.getBlockPos();
         BlockPos doorPos = AbstractBlockScanner.getDoorAdjacent(level, warehousePos);
-        if (doorPos == null) return false;
+        if (doorPos == null) {
+            clearInterfaces(building);
+            return false;
+        }
         BlockPos floorBelowDoor = AbstractBlockScanner.getBlockBelow((pos)->!(Objects.requireNonNull(level).getBlockState(pos).is(BlockTags.DOORS)), doorPos);//找到门下面垫的的那个方块
+        if (floorBelowDoor == null) {
+            clearInterfaces(building);
+            return false;
+        }
         for (Direction direction : AbstractBlockScanner.PLANE_DIRECTIONS) {
-            assert floorBelowDoor != null;
             BlockPos startPos = floorBelowDoor.relative(direction);//找到门下方块旁边的方块
             if (!FloorBlockScanner.isValidFloorOrLadder(Objects.requireNonNull(level), startPos)) {//如果门下方块旁边的方块不是合法的地板，找一下它下面的方块
                 if (!FloorBlockScanner.isValidFloorOrLadder(Objects.requireNonNull(level), startPos.below()) || FloorBlockScanner.isBuildingBlock(level, startPos.above(2))) {//如果它下面的方块也不是合法地板（或者梯子），或者门的上半部分堵了方块，就不找了。我们默认村民不能从两格以上的高度跳下来，也不能从一格高的空间爬过去
@@ -79,10 +87,49 @@ public class WarehouseBlockEntity extends AbstractTownBuildingBlockEntity<Wareho
 
                 building.capacity = building.area * Math.pow(building.volume * 0.02 / building.area, 0.9) * 1980 + building.decorationAmount * 512;
             	building.setOccupiedVolume(scanner.getOccupiedVolume());
+                publishInterfaces(building, scanner.getWallInterfacePositions());
                 return true;
             }
         }
+        clearInterfaces(building);
         return false;
+    }
+
+    private void publishInterfaces(WarehouseBuilding building, Set<BlockPos> discovered) {
+        if (level == null || townProvider == null) {
+            clearInterfaces(building);
+            return;
+        }
+
+        Set<BlockPos> accepted = new LinkedHashSet<>();
+        for (BlockPos interfacePos : discovered) {
+            if (level.getBlockEntity(interfacePos) instanceof WarehouseInterfaceBlockEntity warehouseInterface
+                    && warehouseInterface.tryBind(townProvider, worldPosition)) {
+                accepted.add(interfacePos.immutable());
+            }
+        }
+
+        Set<BlockPos> previous = building.replaceInterfaces(accepted);
+        previous.removeAll(accepted);
+        for (BlockPos removedPos : previous) {
+            if (level.isLoaded(removedPos)
+                    && level.getBlockEntity(removedPos) instanceof WarehouseInterfaceBlockEntity warehouseInterface) {
+                warehouseInterface.unbindIfBoundTo(townProvider, worldPosition);
+            }
+        }
+    }
+
+    private void clearInterfaces(WarehouseBuilding building) {
+        Set<BlockPos> previous = building.replaceInterfaces(Set.of());
+        if (level == null || townProvider == null) {
+            return;
+        }
+        for (BlockPos interfacePos : previous) {
+            if (level.isLoaded(interfacePos)
+                    && level.getBlockEntity(interfacePos) instanceof WarehouseInterfaceBlockEntity warehouseInterface) {
+                warehouseInterface.unbindIfBoundTo(townProvider, worldPosition);
+            }
+        }
     }
 
 

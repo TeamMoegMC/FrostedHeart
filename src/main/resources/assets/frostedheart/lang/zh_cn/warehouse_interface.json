@@ -1,0 +1,10 @@
+{
+  "block.frostedheart.warehouse_interface": "仓库接口",
+  "container.frostedheart.warehouse_interface": "仓库接口",
+  "gui.frostedheart.warehouse_interface.adjust_hint": "滚轮调整数量，Shift/Ctrl 可加速",
+  "gui.frostedheart.warehouse_interface.empty_target": "未设置：对应物品格中的物品会全部入库",
+  "gui.frostedheart.warehouse_interface.status.unavailable": "仓库不可用",
+  "gui.frostedheart.warehouse_interface.status.unbound": "未绑定仓库",
+  "gui.frostedheart.warehouse_interface.status.working": "工作正常",
+  "gui.frostedheart.warehouse_interface.target_amount": "目标数量：%s"
+}

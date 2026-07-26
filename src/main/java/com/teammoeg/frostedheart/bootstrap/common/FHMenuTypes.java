@@ -22,6 +22,8 @@ package com.teammoeg.frostedheart.bootstrap.common;
 import blusunrize.immersiveengineering.api.multiblocks.blocks.logic.IMultiblockState;
 import com.teammoeg.frostedheart.content.town.buildings.warehouse.WarehouseMenu;
 import com.teammoeg.frostedheart.content.town.buildings.warehouse.WarehouseBlockEntity;
+import com.teammoeg.frostedheart.content.town.buildings.warehouse.WarehouseInterfaceBlockEntity;
+import com.teammoeg.frostedheart.content.town.buildings.warehouse.WarehouseInterfaceMenu;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
 
@@ -98,6 +100,8 @@ public class FHMenuTypes {
 	public static final RegistryObject<MenuType<WardrobeMenu>> WARDROBE = register(WardrobeBlockEntity.class, ("wardrobe"), WardrobeMenu::new);
 
 	public static final RegistryObject<MenuType<WarehouseMenu>> WAREHOUSE = register(WarehouseBlockEntity.class, ("warehouse"), WarehouseMenu::new);
+	public static final RegistryObject<MenuType<WarehouseInterfaceMenu>> WAREHOUSE_INTERFACE =
+			register(WarehouseInterfaceBlockEntity.class, "warehouse_interface", WarehouseInterfaceMenu::new);
 	
 	@SuppressWarnings("unchecked")
 	public static <T extends AbstractContainerMenu, BE extends BlockEntity> RegistryObject<MenuType<T>> register(Class<BE> BEClass, String name, BEMenuFactory<T, BE> factory) {
