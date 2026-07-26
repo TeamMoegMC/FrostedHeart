@@ -27,6 +27,7 @@ import com.teammoeg.chorda.util.CUtils;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.content.town.ITownWithBuildings;
 import com.teammoeg.frostedheart.content.town.block.AbstractTownBuildingBlock;
+import com.teammoeg.frostedheart.util.CConstants;
 import com.teammoeg.frostedheart.util.client.FHClientUtils;
 
 import net.minecraft.world.level.block.state.BlockState;
@@ -81,7 +82,7 @@ public class HouseBlock extends AbstractTownBuildingBlock implements CEntityBloc
                         //player.displayClientMessage(Components.str("Rating: " +
                         //        CMath.round(, 2)), false);
                     },
-                    () -> player.displayClientMessage(Components.str("No corresponding town building instance found."), false));
+                    () -> player.displayClientMessage(Components.str(CConstants.NO_CORRESPONDING_TOWN_BUILDING_INSTANCE_FOUND), false));
             return InteractionResult.SUCCESS;
         }
         return InteractionResult.PASS;

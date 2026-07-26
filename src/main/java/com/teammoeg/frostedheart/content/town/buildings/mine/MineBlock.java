@@ -35,6 +35,7 @@ import blusunrize.immersiveengineering.common.util.Utils;
 import com.teammoeg.frostedheart.content.town.block.AbstractTownBuildingBlockEntity;
 import com.teammoeg.frostedheart.content.town.block.TownBlockEntity;
 import com.teammoeg.frostedheart.content.town.provider.TeamTownProvider;
+import com.teammoeg.frostedheart.util.CConstants;
 import com.teammoeg.frostedresearch.mixinutil.IOwnerTile;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerPlayer;
@@ -69,7 +70,7 @@ public class MineBlock extends AbstractTownBuildingBlock implements CEntityBlock
                 AbstractTownBuildingBlock.displayBasicInfo(player, building);
                 player.displayClientMessage(Components.str("Biome: " + building.biomePath), false);
                 player.displayClientMessage(Components.str("Rating: " + String.format("%.2f", building.rating)), false);
-            }, () -> player.displayClientMessage(Components.str("No corresponding town building instance found."), false));
+            }, () -> player.displayClientMessage(Components.str(CConstants.NO_CORRESPONDING_TOWN_BUILDING_INSTANCE_FOUND), false));
             return InteractionResult.SUCCESS;
         }
         return InteractionResult.PASS;

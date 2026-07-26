@@ -24,6 +24,7 @@ import com.teammoeg.chorda.text.Components;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.content.town.block.AbstractTownBuildingBlock;
 
+import com.teammoeg.frostedheart.util.CConstants;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.entity.player.Player;
@@ -62,7 +63,7 @@ public class WarehouseBlock extends AbstractTownBuildingBlock implements CEntity
                     player.displayClientMessage(Components.str("Area: " + (building.area)), false);
                     player.displayClientMessage(Components.str("Capacity: " + BigDecimal.valueOf(building.capacity)
                             .setScale(2, RoundingMode.HALF_UP).doubleValue()), false);
-                }}, () -> player.displayClientMessage(Components.str("No corresponding town building instance found."), false));
+                }}, () -> player.displayClientMessage(Components.str(CConstants.NO_CORRESPONDING_TOWN_BUILDING_INSTANCE_FOUND), false));
             return InteractionResult.SUCCESS;
         }
         return InteractionResult.PASS;

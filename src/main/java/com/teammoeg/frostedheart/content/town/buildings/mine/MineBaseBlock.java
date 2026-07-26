@@ -26,6 +26,7 @@ import com.teammoeg.chorda.text.Components;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.content.town.block.AbstractTownBuildingBlock;
 
+import com.teammoeg.frostedheart.util.CConstants;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
@@ -56,7 +57,7 @@ public class MineBaseBlock extends AbstractTownBuildingBlock implements CEntityB
                 player.displayClientMessage(Components.str("Volume: " + (building.volume)), false);
                 if(building.isBuildingWorkable())
                     player.displayClientMessage(Components.str("Max residents: " + (building.maxResidents)), false);
-            }, () -> player.displayClientMessage(Components.str("No corresponding town building instance found."), false));
+            }, () -> player.displayClientMessage(Components.str(CConstants.NO_CORRESPONDING_TOWN_BUILDING_INSTANCE_FOUND), false));
             return InteractionResult.SUCCESS;
         }
         return InteractionResult.PASS;
