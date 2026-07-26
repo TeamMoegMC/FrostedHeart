@@ -158,9 +158,6 @@ public class FloorBlockScanner extends AbstractBlockScanner {
                 }
             }
             // 使用 LongSet 迭代避免重复处理
-            // 注意：fastutil 的 LongOpenHashSet 在迭代过程中被结构性修改（add/remove）时不会像 HashMap
-            // 那样抛出 ConcurrentModificationException，而是会破坏迭代器内部状态（wrapped 字段变为 null），
-            // 导致下一次 nextLong() 抛出 NullPointerException。因此迭代期间只能写入独立的临时集合，循环结束后再合并。
             LongSet laddersToExpand = new LongOpenHashSet();
             for (long lpos : possibleFloorsLong) {
                 BlockPos blockPos = BlockPos.of(lpos);

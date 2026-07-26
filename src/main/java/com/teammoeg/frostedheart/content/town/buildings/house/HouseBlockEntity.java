@@ -27,6 +27,7 @@ import javax.annotation.Nonnull;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
 import com.teammoeg.frostedheart.content.steamenergy.HeatEndpoint;
+import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.town.TownMathFunctions;
 import com.teammoeg.frostedheart.content.town.block.AbstractTownBuildingBlockEntity;
 import com.teammoeg.frostedheart.content.town.block.blockscanner.AbstractBlockScanner;
@@ -104,9 +105,12 @@ public class HouseBlockEntity extends AbstractTownBuildingBlockEntity<HouseBuild
 		if (!doorPosSet.isEmpty()) {
 			for (BlockPos doorPos : doorPosSet) {
 				BlockPos floorBelowDoor = AbstractBlockScanner.getBlockBelow((pos) -> !(Objects.requireNonNull(level).getBlockState(pos).is(BlockTags.DOORS)), doorPos);// 找到门下面垫的的那个方块
+				if (floorBelowDoor == null) {
+					FHMain.LOGGER.error("HouseScanner: 门 {} 下方未找到支撑方块，跳过该门的房屋结构扫描（房屋位置 {}）", doorPos, housePos);
+					continue;
+				}
 				for (Direction direction : AbstractBlockScanner.PLANE_DIRECTIONS) {
 					//FHMain.LOGGER.debug("HouseScanner: creating new HouseBlockScanner");
-					assert floorBelowDoor != null;
 					BlockPos startPos = floorBelowDoor.relative(direction);// 找到门下方块旁边的方块
 					//FHMain.LOGGER.debug("HouseScanner: start pos 1" + startPos);
 					if (!FloorBlockScanner.isValidFloorOrLadder(Objects.requireNonNull(level), startPos)) {// 如果门下方块旁边的方块不是合法的地板，找一下它下面的方块
