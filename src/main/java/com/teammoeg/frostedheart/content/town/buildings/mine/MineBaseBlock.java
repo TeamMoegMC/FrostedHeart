@@ -52,10 +52,10 @@ public class MineBaseBlock extends AbstractTownBuildingBlock implements CEntityB
             te.getBuilding().ifPresentOrElse(building -> {
                 te.refresh_safe(building);
                 AbstractTownBuildingBlock.displayBasicInfo(player, building);
-                player.displayClientMessage(Components.str("Area: " + (building.area)), false);
-                player.displayClientMessage(Components.str("Volume: " + (building.volume)), false);
+                player.displayClientMessage(Components.str("Area: " + (building.getArea())), false);
+                player.displayClientMessage(Components.str("Volume: " + (building.getVolume())), false);
                 if(building.isBuildingWorkable())
-                    player.displayClientMessage(Components.str("Max residents: " + (building.maxResidents)), false);
+                    player.displayClientMessage(Components.str("Max residents: " + (building.getMaxResidents())), false);
             }, () -> player.displayClientMessage(Components.str("No corresponding town building instance found."), false));
             return InteractionResult.SUCCESS;
         }

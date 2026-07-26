@@ -67,8 +67,8 @@ public class MineBlock extends AbstractTownBuildingBlock implements CEntityBlock
             te.getBuilding().ifPresentOrElse(building -> {
                 te.refresh_safe(building);
                 AbstractTownBuildingBlock.displayBasicInfo(player, building);
-                player.displayClientMessage(Components.str("Biome: " + building.biomePath), false);
-                player.displayClientMessage(Components.str("Rating: " + String.format("%.2f", building.rating)), false);
+                player.displayClientMessage(Components.str("Biome: " + building.getBiomePath()), false);
+                player.displayClientMessage(Components.str("Rating: " + String.format("%.2f", building.getRating())), false);
             }, () -> player.displayClientMessage(Components.str("No corresponding town building instance found."), false));
             return InteractionResult.SUCCESS;
         }

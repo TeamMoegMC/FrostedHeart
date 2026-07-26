@@ -134,6 +134,8 @@ public class TeamTownData implements SpecialData{
         buildings.forEach((pos, building) -> {
             if(building instanceof AbstractTownBuilding abstractTownBuilding){
                 this.buildings.put(pos, abstractTownBuilding);
+                // 复制完成后注入变化监听，使字段 setter 能 fire 增量同步事件（此时 onChange 尚未绑定，不会误触发脏标记）
+                abstractTownBuilding.setChangeEventListener(this.dataSyncCache);
             }
         });
         this.residents.putAll(residents);
@@ -243,8 +245,8 @@ public class TeamTownData implements SpecialData{
                 AbstractTownBuilding otherBuilding = buildingsWithOccupiedAreas.get(j);
                 OccupiedVolume otherOccupiedVolume = otherBuilding.getOccupiedVolume();
                 if (occupiedVolume.intersects(otherOccupiedVolume)) {
-                    building.occupiedAreaOverlapped = true;
-                    otherBuilding.occupiedAreaOverlapped = true;
+                    building.setOccupiedAreaOverlapped(true);
+                    otherBuilding.setOccupiedAreaOverlapped(true);
                 }
             }
         }
@@ -569,7 +571,7 @@ public class TeamTownData implements SpecialData{
 
         @Override
         public void onBuildingChange(TownBuildingChangeEvent event) {
-
+            this.addChanged(event.changedBuildingPos);
         }
 
         @Override

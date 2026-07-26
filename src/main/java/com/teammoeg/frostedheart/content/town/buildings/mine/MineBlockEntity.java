@@ -26,6 +26,8 @@ import com.teammoeg.frostedheart.content.town.block.AbstractTownBuildingBlockEnt
 import com.teammoeg.frostedheart.content.town.building.AbstractTownBuilding;
 
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Holder;
+import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -83,7 +85,8 @@ public class MineBlockEntity extends AbstractTownBuildingBlockEntity<MineBuildin
     public void refresh(@NotNull MineBuilding building) {
         assert level != null;
         super.refresh(building);
-        building.biomePath= CRegistryHelper.getBiomeKeyRuntime(level, CUtils.fastGetBiome(level, worldPosition).get());
+        Holder<Biome> biomeHolder = CUtils.fastGetBiome(level, worldPosition);
+        building.setBiomePath(CRegistryHelper.getBiomeKeyRuntime(level, biomeHolder.value()));
     }
 
     @Override

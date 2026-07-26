@@ -69,14 +69,14 @@ public class HuntingBaseBlockEntity extends AbstractTownBuildingBlockEntity<Hunt
 				}
 				HuntingBaseBlockScanner scanner = new HuntingBaseBlockScanner(this.level, startPos);
 				if (scanner.scan()) {
-					building.volume = scanner.getVolume();
-					building.area = scanner.getArea();
-					building.temperature = scanner.getTemperature();
+					building.setVolume(scanner.getVolume());
+					building.setArea(scanner.getArea());
+					building.setTemperature(scanner.getTemperature());
 					building.setOccupiedVolume(scanner.getOccupiedVolume());
-					building.tanningRackNum = scanner.getTanningRackNum();
-					building.rating = computeRating(building.volume, building.area, building.temperature, this.getTemperatureModifier());
+					building.setTanningRackNum(scanner.getTanningRackNum());
+					building.setRating(computeRating(building.getVolume(), building.getArea(), building.getTemperature(), this.getTemperatureModifier()));
                     int calculated = (int) (TownMathFunctions.calculateSpaceRating(scanner.getVolume(), scanner.getArea()) / 4 * scanner.getArea());
-                    building.maxResidents = Math.max(1, calculated);
+                    building.setMaxResidents(Math.max(1, calculated));
 					return true;
 				}
 			}
@@ -131,7 +131,7 @@ public class HuntingBaseBlockEntity extends AbstractTownBuildingBlockEntity<Hunt
 	@Override
 	public void refresh(@NotNull HuntingBaseBuilding building) {
 		super.refresh(building);
-		building.temperatureModifier = this.getTemperatureModifier();
+		building.setTemperatureModifier(this.getTemperatureModifier());
 	}
 
 	@Override

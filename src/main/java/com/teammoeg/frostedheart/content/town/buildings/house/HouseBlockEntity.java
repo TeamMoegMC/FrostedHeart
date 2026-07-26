@@ -78,7 +78,7 @@ public class HouseBlockEntity extends AbstractTownBuildingBlockEntity<HouseBuild
 	 */
 	public void refresh(@NotNull HouseBuilding building) {
 		super.refresh(building);
-		building.temperatureModifier = temperatureModifier;
+		building.setTemperatureModifier(temperatureModifier);
 	}
 
 	@Override
@@ -119,12 +119,12 @@ public class HouseBlockEntity extends AbstractTownBuildingBlockEntity<HouseBuild
 					HouseBlockScanner scanner = new HouseBlockScanner(this.level, startPos);
 					if (scanner.scan()) {
 						//FHMain.LOGGER.debug("HouseScanner: scan successful");
-						building.volume = scanner.getVolume();
-						building.area = scanner.getArea();
-						building.decorationRating = calculateDecorationRating(scanner.decorations, scanner.getArea());
-						building.temperature = scanner.getTemperature();
-						building.setOccupiedVolume(scanner.getOccupiedVolume());
-						building.maxResidents = calculateMaxResidents(building.area, building.volume, scanner.getBeds().size());
+					building.setVolume(scanner.getVolume());
+					building.setArea(scanner.getArea());
+					building.setDecorationRating(calculateDecorationRating(scanner.decorations, scanner.getArea()));
+					building.setTemperature(scanner.getTemperature());
+					building.setOccupiedVolume(scanner.getOccupiedVolume());
+					building.setMaxResidents(calculateMaxResidents(building.getArea(), building.getVolume(), scanner.getBeds().size()));
 						return true;
 					}
 				}

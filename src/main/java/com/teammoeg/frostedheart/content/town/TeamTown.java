@@ -111,6 +111,7 @@ public class TeamTown implements ITown, ITownWithResidents, ITownWithBuildings {
         ITownBuilding building =townBlockEntity.createBuilding();
         if(building instanceof AbstractTownBuilding abstractTownBuilding){
             data.buildings.put(pos, abstractTownBuilding);
+            abstractTownBuilding.setChangeEventListener(data.getDataSyncCache());
         }
     }
 

@@ -102,9 +102,9 @@ public abstract class AbstractTownBuildingBlock extends CBlock {
     public static void displayBasicInfo(Player player, AbstractTownBuilding building) {
         if(building != null){
             player.displayClientMessage(Components.str(building.isBuildingWorkable() ? "Workable" : "Unworkable"), false);
-            player.displayClientMessage(Components.str(building.initialized ? "Initialized" : "Not Initialized"), false);
-            player.displayClientMessage(Components.str(building.isStructureValid ? "Structure Valid" : "Structure Invalid"), false);
-            player.displayClientMessage(Components.str(building.occupiedAreaOverlapped ? "Occupied Area Overlapped" : "Occupied Area didn't Overlap"), false);
+            player.displayClientMessage(Components.str(building.isInitialized() ? "Initialized" : "Not Initialized"), false);
+            player.displayClientMessage(Components.str(building.isStructureValid() ? "Structure Valid" : "Structure Invalid"), false);
+            player.displayClientMessage(Components.str(building.isOccupiedAreaOverlapped() ? "Occupied Area Overlapped" : "Occupied Area didn't Overlap"), false);
         }
     }
 }

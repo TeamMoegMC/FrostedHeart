@@ -53,8 +53,8 @@ public abstract class AbstractTownBuildingBlockEntity<T extends AbstractTownBuil
      * 重新进行结构的扫描、温度的检测等工作，并刷新城镇中的建筑状态
      */
     public void refresh(@NotNull T building){
-        building.initialized = true;
-        building.isStructureValid = scanStructure(building);
+        building.setInitialized(true);
+        building.setIsStructureValid(scanStructure(building));
     }
 
     /**

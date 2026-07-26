@@ -67,9 +67,9 @@ public class WarehouseMenu extends CBlockEntityMenu<WarehouseBlockEntity> {
 				public int get(int index) {
 					return blockEntity.getBuilding().map(building -> switch (index) {
                         case 0 -> building.isBuildingWorkable() ? 1 : 0;
-                        case 1 -> building.initialized ? 1 : 0;
-                        case 2 -> building.isStructureValid ? 1 : 0;
-                        case 3 -> building.occupiedAreaOverlapped ? 1 : 0;
+                        case 1 -> building.isInitialized() ? 1 : 0;
+                        case 2 -> building.isStructureValid() ? 1 : 0;
+                        case 3 -> building.isOccupiedAreaOverlapped() ? 1 : 0;
                         case 4 -> building.getVolume();
                         case 5 -> building.getArea();
                         case 6 -> (int) (building.getCapacity() * 100);
