@@ -296,9 +296,18 @@ public class CTeamDataManager {
         for (Entry<UUID, TeamDataHolder> entry : dataByOwnId.entrySet()) {
             String fn = entry.getKey().toString() + ".nbt";
             File f = local.resolve(fn).toFile();
+            files.remove(fn);
             try {
-                NbtIo.writeCompressed(entry.getValue().serialize(false), f);
-                files.remove(fn);
+                CompoundTag serialized = entry.getValue().serialize(false);
+                CompoundTag serializedData = serialized.getCompound("data");
+                boolean hasMissingData = entry.getValue().getTypes().stream()
+                        .anyMatch(type -> !serializedData.contains(type.getId()));
+                if (hasMissingData) {
+                    Chorda.LOGGER.error("Refusing to overwrite data file for team {} because serialization was incomplete",
+                            entry.getKey());
+                    continue;
+                }
+                NbtIo.writeCompressed(serialized, f);
                 Chorda.LOGGER.debug("Data file for team " + entry.getKey().toString() + " saved.");
             } catch (IOException e) {
                 Chorda.LOGGER.error("Unable to save data file for team " + entry.getKey().toString() + ", ignoring...");
