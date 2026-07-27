@@ -25,8 +25,8 @@ import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 
 public enum TerrainResourceType {
 	WOOD(FHConfig.SERVER.TOWN.RESOURCE.treeRecovery,FHConfig.SERVER.TOWN.RESOURCE.treeCount),
-	ORE(FHConfig.SERVER.TOWN.RESOURCE.oreRecovery,FHConfig.SERVER.TOWN.RESOURCE.oreCount),
-	HUNT(FHConfig.SERVER.TOWN.RESOURCE.huntRecovery,FHConfig.SERVER.TOWN.RESOURCE.huntCount),
+	ORE(FHConfig.SERVER.TOWN.RESOURCE.oreRecoveryPerChunkDay,FHConfig.SERVER.TOWN.RESOURCE.oreReservePerChunk),
+	HUNT(FHConfig.SERVER.TOWN.RESOURCE.huntRecoveryPerSquareBlockDay,FHConfig.SERVER.TOWN.RESOURCE.huntReservePerSquareBlock),
 	POI(FHConfig.SERVER.TOWN.RESOURCE.poiRecovery,FHConfig.SERVER.TOWN.RESOURCE.poiCount),//鸭蛋：khj写的，不知道是啥
 	SALVAGE(FHConfig.SERVER.TOWN.RESOURCE.salvageRecovery,FHConfig.SERVER.TOWN.RESOURCE.salvageCount);//暂无用途
 	private final Supplier<Double> recoverSpeed;

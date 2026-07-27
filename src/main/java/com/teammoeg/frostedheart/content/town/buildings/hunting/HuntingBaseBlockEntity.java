@@ -25,6 +25,7 @@ import com.teammoeg.frostedheart.content.steamenergy.HeatEndpoint;
 import com.teammoeg.frostedheart.content.town.*;
 import com.teammoeg.frostedheart.content.town.block.AbstractTownBuildingBlockEntity;
 import com.teammoeg.frostedheart.content.town.building.AbstractTownBuilding;
+import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import com.teammoeg.frostedheart.util.client.FHClientUtils;
 import com.teammoeg.frostedheart.content.town.block.blockscanner.AbstractBlockScanner;
 import com.teammoeg.frostedheart.content.town.block.blockscanner.FloorBlockScanner;
@@ -42,14 +43,20 @@ import javax.annotation.Nonnull;
 import java.util.*;
 
 public class HuntingBaseBlockEntity extends AbstractTownBuildingBlockEntity<HuntingBaseBuilding> {
-	HeatEndpoint endpoint = HeatEndpoint.consumer(99, 1);
-	LazyOptional<HeatEndpoint> endpointCap = LazyOptional.of(() -> endpoint);
+	final HeatEndpoint endpoint;
+	final LazyOptional<HeatEndpoint> endpointCap;
 	@Getter
     private double temperatureModifier = 0;
 
 
 	public HuntingBaseBlockEntity(BlockPos pos, BlockState state) {
 		super(FHBlockEntityTypes.HUNTING_BASE.get(), pos, state);
+		FHConfig.Server.Town.Hunting config = FHConfig.SERVER.TOWN.HUNTING;
+		endpoint = HeatEndpoint.consumer(
+				config.heatEndpointPriority.get(),
+				config.heatConsumptionPerTick.get().floatValue()
+		);
+		endpointCap = LazyOptional.of(() -> endpoint);
 	}
 
 	public boolean scanStructure(HuntingBaseBuilding building) {
@@ -75,8 +82,14 @@ public class HuntingBaseBlockEntity extends AbstractTownBuildingBlockEntity<Hunt
 					building.setOccupiedVolume(scanner.getOccupiedVolume());
 					building.tanningRackNum = scanner.getTanningRackNum();
 					building.rating = computeRating(building.volume, building.area, building.temperature, this.getTemperatureModifier());
-                    int calculated = (int) (TownMathFunctions.calculateSpaceRating(scanner.getVolume(), scanner.getArea()) / 4 * scanner.getArea());
-                    building.maxResidents = Math.max(1, calculated);
+					double effectiveFloorBlocks = TownMathFunctions.calculateSpaceRating(scanner.getVolume(), scanner.getArea())
+							* scanner.getArea();
+					int calculated = (int) (effectiveFloorBlocks
+							/ FHConfig.SERVER.TOWN.HUNTING.floorBlocksPerWorkerSlot.get());
+					building.maxResidents = Math.max(
+							FHConfig.SERVER.TOWN.HUNTING.minimumWorkerSlots.get(),
+							calculated
+					);
 					return true;
 				}
 			}
@@ -94,17 +107,27 @@ public class HuntingBaseBlockEntity extends AbstractTownBuildingBlockEntity<Hunt
 	 * @return computed rating value
 	 */
 	public static double computeRating(int volume, int area,  double temperature, double temperatureModifier) {
-		return (3 * TownMathFunctions.calculateSpaceRating(volume, area)
-				+ 2 * TownMathFunctions.calculateTemperatureRating(temperature + temperatureModifier))
-				/ 5;
+		FHConfig.Server.Town.Hunting config = FHConfig.SERVER.TOWN.HUNTING;
+		double spaceWeight = config.spaceRatingWeight.get();
+		double temperatureWeight = config.temperatureRatingWeight.get();
+		double totalWeight = spaceWeight + temperatureWeight;
+		if (totalWeight <= 0.0) return 0.0;
+		return (spaceWeight * TownMathFunctions.calculateSpaceRating(volume, area)
+				+ temperatureWeight * TownMathFunctions.calculateTemperatureRating(temperature + temperatureModifier))
+				/ totalWeight;
 	}
 
 	@Override
 	public void tick() {
 		assert level != null;
 		if (!level.isClientSide) {
-			if (endpoint.tryDrainHeat(1)) {
-				temperatureModifier = Math.max(endpoint.getTempLevel() * 10, TownMathFunctions.COMFORTABLE_TEMP_HOUSE);
+			FHConfig.Server.Town.Hunting config = FHConfig.SERVER.TOWN.HUNTING;
+			double heatConsumptionPerTick = config.heatConsumptionPerTick.get();
+			if (heatConsumptionPerTick > 0.0 && endpoint.tryDrainHeat((float) heatConsumptionPerTick)) {
+				temperatureModifier = Math.max(
+						endpoint.getTempLevel() * config.heatTemperatureLevelScaleCelsius.get(),
+						config.minimumHeatingModifierCelsius.get()
+				);
 				if (setActive(true)) {
 					setChanged();
 				}

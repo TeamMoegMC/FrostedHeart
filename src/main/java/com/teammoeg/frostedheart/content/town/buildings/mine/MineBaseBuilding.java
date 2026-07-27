@@ -30,6 +30,7 @@ import com.teammoeg.frostedheart.content.town.resource.action.ResourceActionMode
 import com.teammoeg.frostedheart.content.town.resource.action.ResourceActionType;
 import com.teammoeg.frostedheart.content.town.resource.action.TownResourceActions;
 import com.teammoeg.frostedheart.content.town.terrainresource.TerrainResourceType;
+import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import net.minecraft.core.UUIDUtil;
 
 import net.minecraft.core.BlockPos;
@@ -61,9 +62,12 @@ public class MineBaseBuilding extends AbstractTownResidentWorkBuilding {
 
 	public int volume;
 
-    private int connectionRadius = 1024;
     public Set<BlockPos> linkedMines = new HashSet<>();
-    private static final double BASE_PER_SCORE = 6.0;
+    /**
+     * Unit definition for config values: a standard worker has each core
+     * attribute at 50 and zero mining proficiency.
+     */
+    private static final double STANDARD_WORKER_ATTRIBUTE_SCORE = TownMathFunctions.attributeScore(50.0);
 
 
 	public MineBaseBuilding(BlockPos pos) {
@@ -99,66 +103,21 @@ public class MineBaseBuilding extends AbstractTownResidentWorkBuilding {
 
 	@Override
 	public boolean work(ITownWithBuildings town) {
-		/*
-		if (town instanceof TeamTown teamTown) {
-			double toModify=0;
-			for(UUID residentID : residentsID) {
-				Resident resident=teamTown.getResident(residen  tID).orElse(null);
-				if(resident==null)continue;
-				double efficiency=0.2 * getResidentScore(resident);
-				if(efficiency<=0)continue;
-//				efficiency = 2.0;
-				toModify+=efficiency;
-			}
-			final double picked=teamTown.maypickTerrainResource(TerrainResourceType.ORE, toModify);
-			IActionExecutorHandler resourceExecutorHandler=teamTown.getActionExecutorHandler();
-			Map<Item, Double> comprehensiveWeights = new HashMap<>();
-			AtomicInteger validMines = new AtomicInteger();
-			linkedMines.stream()
-					.map(teamTown::getTownBuilding)
-					.filter(Optional::isPresent)
-					.map(Optional::get)
-					.filter(MineBuilding.class::isInstance)
-					.map(building -> (MineBuilding) building)
-					.filter(AbstractTownBuilding::isBuildingWorkable)
-					.map(mine -> mine.biomePath)
-					.map(MineBuilding::getWeights)
-					.map(weights ->{
-						//得到单个矿场归一化后的Weights
-						double totalWeight=weights.values().stream().reduce(0, Integer::sum);
-						Map<Item, Double> weightsNormalized=new HashMap<>();
-						weights.forEach((key, value) -> weightsNormalized.put(key,  ((double)value / totalWeight)));
-						validMines.addAndGet(1);
-						return weightsNormalized;
-					})
-					.forEach(weights -> weights.forEach((key, value) -> comprehensiveWeights.merge(key, value, Double::sum)));
-			//各个矿场权重求和后除以矿场数，再次归一化
-			comprehensiveWeights.entrySet().forEach(entry -> entry.setValue(entry.getValue() / validMines.doubleValue()));
-			double modified = comprehensiveWeights.entrySet().stream().map(entry -> new TownResourceActions.ItemResourceAction
-							(new ItemStack(entry.getKey()), ResourceActionType.ADD, picked * entry.getValue(), ResourceActionMode.ATTEMPT))
-					.map(resourceExecutorHandler::execute)
-							.filter(result -> result instanceof TownResourceActionResults.ItemResourceActionResult)
-											.filter(TownResourceActionResults.ItemResourceActionResult::allModified)
-					.mapToDouble(TownResourceActionResults.ItemResourceActionResult::modifiedAmount)
-					.sum();
-			teamTown.pickTerrainResource(TerrainResourceType.ORE, modified);
-			return true;
-		}
-		throw new IllegalArgumentException("MineBaseBuilding ERROR: Can't work in non-team town :" + town);*/
 
         if (!(town instanceof TeamTown teamTown)) {
             throw new IllegalArgumentException("MineBaseBuilding ERROR: Can't work in non-team town :" + town);
         }
 
-        // 1. 居民效率
-        double totalEfficiency = 0.0;
+        // 1. Requested output, measured in item units per town day.
+        double requestedOutputPerDay = 0.0;
         for (UUID id : residentsID) {
             Resident r = teamTown.getResident(id).orElse(null);
             if (r == null) continue;
-            double eff = BASE_PER_SCORE * getResidentScore(r);
-            if (eff > 0) totalEfficiency += eff;
+            double workerOutputPerDay = FHConfig.SERVER.TOWN.MINING.baseOutputPerStandardWorkerDay.get()
+                    * getResidentScore(r);
+            if (workerOutputPerDay > 0) requestedOutputPerDay += workerOutputPerDay;
         }
-        if (totalEfficiency <= 0.0) return false;
+        if (requestedOutputPerDay <= 0.0) return false;
 
         // 2. 收集有效矿场并按区块分组
         Map<ChunkPos, Double> chunkTotalWeight = new HashMap<>();
@@ -193,7 +152,7 @@ public class MineBaseBuilding extends AbstractTownResidentWorkBuilding {
             ChunkPos chunk = entry.getKey();
             Map<Item, Integer> weights = entry.getValue();
             double weightSum = chunkTotalWeight.get(chunk);
-            double desired = totalEfficiency * weightSum / grandTotal;
+            double desired = requestedOutputPerDay * weightSum / grandTotal;
 
             // 使用 TeamTown 的封装方法
             double actual = teamTown.pickTerrainResource(TerrainResourceType.ORE, chunk, desired);
@@ -217,21 +176,51 @@ public class MineBaseBuilding extends AbstractTownResidentWorkBuilding {
 		if(!this.isBuildingWorkable()) return NEGATIVE_INFINITY;
 		int currentResidentNum = this.residentsID.size();
 		if(currentResidentNum >= maxResidents) return NEGATIVE_INFINITY;
-		//double rating = state.getRating();
-		return -currentResidentNum + 1.0 * currentResidentNum / maxResidents + 0.4/*the base priority of workerType*/;
+        FHConfig.Server.Town.Mining config = FHConfig.SERVER.TOWN.MINING;
+		return config.assignmentBasePriority.get()
+                - config.assignmentPenaltyPerWorker.get() * currentResidentNum
+                + config.assignmentFillRatioBonus.get() * currentResidentNum / maxResidents;
 	}
 
     @Override
     public double getResidentScore(Resident resident) {
+        FHConfig.Server.Town.Mining config = FHConfig.SERVER.TOWN.MINING;
         double healthScore = TownMathFunctions.attributeScore(resident.getHealth());
         double mentalScore = TownMathFunctions.attributeScore(resident.getMental());
         double strengthScore = TownMathFunctions.attributeScore(resident.getStrength());
         double intelligenceScore = TownMathFunctions.attributeScore(resident.getIntelligence());
-        double geometricMean = Math.pow(
-                healthScore * mentalScore * strengthScore * intelligenceScore, 0.25
+
+        double weightedAttributeScore = weightedGeometricMean(
+                new double[]{healthScore, mentalScore, strengthScore, intelligenceScore},
+                new double[]{
+                        config.healthWeight.get(),
+                        config.mentalWeight.get(),
+                        config.strengthWeight.get(),
+                        config.intelligenceWeight.get()
+                }
         );
-        double workProficiencyPart = 1.0 + 1.5 * TownMathFunctions.CalculatingFunction1(resident.getWorkProficiency(MineBaseBuilding.class));
-        return geometricMean * workProficiencyPart;
+        double attributeProductivity = weightedAttributeScore / STANDARD_WORKER_ATTRIBUTE_SCORE;
+
+        double proficiency = Math.max(0.0, resident.getWorkProficiency(MineBaseBuilding.class));
+        double proficiencyPart = 1.0 + config.maximumProficiencyBonus.get()
+                * (1.0 - Math.exp(-proficiency * config.proficiencyCurvePerPoint.get()));
+        return attributeProductivity * proficiencyPart;
+    }
+
+    private static double weightedGeometricMean(double[] scores, double[] weights) {
+        double totalWeight = 0.0;
+        double weightedLogSum = 0.0;
+        for (int i = 0; i < scores.length; i++) {
+            double weight = weights[i];
+            if (weight <= 0.0) continue;
+            if (scores[i] <= 0.0) return 0.0;
+            totalWeight += weight;
+            weightedLogSum += weight * Math.log(scores[i]);
+        }
+        if (totalWeight <= 0.0) {
+            return STANDARD_WORKER_ATTRIBUTE_SCORE;
+        }
+        return Math.exp(weightedLogSum / totalWeight);
     }
 
     public void clearLinkedMines() {
@@ -251,5 +240,7 @@ public class MineBaseBuilding extends AbstractTownResidentWorkBuilding {
         return linkedMines;
     }
 
-    public int getConnectionRadius() { return connectionRadius; }
+    public int getConnectionRadius() {
+        return FHConfig.SERVER.TOWN.MINING.connectionRadiusBlocks.get();
+    }
 }

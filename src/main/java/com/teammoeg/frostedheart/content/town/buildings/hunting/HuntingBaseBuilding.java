@@ -29,6 +29,7 @@ import com.teammoeg.frostedheart.content.town.building.AbstractTownResidentWorkB
 import com.teammoeg.frostedheart.content.town.resident.Resident;
 import com.teammoeg.frostedheart.content.town.resource.TeamTownResourceHolder;
 import com.teammoeg.frostedheart.content.town.resource.action.*;
+import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import net.minecraft.core.UUIDUtil;
 
 import com.teammoeg.frostedheart.content.town.terrainresource.TerrainResourceType;
@@ -111,8 +112,7 @@ public class HuntingBaseBuilding extends AbstractTownResidentWorkBuilding {
 		this.temperatureModifier = temperatureModifier;
 	}
 
-    //硬编码猎人收获评分
-    private static final double THROWS_PER_SCORE = 2.0;
+	private static final double STANDARD_WORKER_ATTRIBUTE_SCORE = TownMathFunctions.attributeScore(50.0);
 
 	@Override
 	public boolean work(ITownWithBuildings town, ServerLevel world) {
@@ -121,27 +121,33 @@ public class HuntingBaseBuilding extends AbstractTownResidentWorkBuilding {
             throw new IllegalArgumentException("HuntingBaseBuilding ERROR: Can't work in non-team town :" + town);
         }
 
-        // 1. 计算所有猎人的总技能评分
-        double totalScore = 0.0;
-        Collection<Resident> residents = this.getResidents(teamTown);
-        for (Resident resident : residents) {
-            if (resident == null) continue;
-            double score = getResidentScore(resident);
-            if (score > 0) totalScore += score;
-        }
+		// 1. Dimensionless productivity relative to a standard hunter.
+		double totalProductivity = 0.0;
+		Collection<Resident> residents = this.getResidents(teamTown);
+		for (Resident resident : residents) {
+			if (resident == null) continue;
+			double productivity = getResidentScore(resident);
+			if (productivity > 0) totalProductivity += productivity;
+		}
 
-        // 2. 期望投掷次数
-        int desiredThrows = (int) Math.floor(totalScore * THROWS_PER_SCORE);
-        if (desiredThrows <= 0) desiredThrows = 1;
+		// 2. Whole loot-table rolls requested per town day.
+		FHConfig.Server.Town.Hunting config = FHConfig.SERVER.TOWN.HUNTING;
+		int desiredThrows = Math.max(
+					config.minimumLootRollsPerBaseDay.get(),
+					(int) Math.floor(totalProductivity * config.baseLootRollsPerStandardWorkerDay.get())
+			);
+		if (desiredThrows <= 0) return false;
 
         // 3. 受野外猎物储量限制
         double available = teamTown.maypickTerrainResource(TerrainResourceType.HUNT, desiredThrows);
         int actualThrows = Math.min(desiredThrows, (int) Math.floor(available));
         if (actualThrows <= 0) return false;
 
-        // 4. 计算幸运值（基于平均技能评分）
-        int residentCount = this.residentsID.size();
-        float luck = residentCount > 0 ? (float) (totalScore / residentCount * 0.1f) : 0.0f;
+		// 4. LootContext luck based on average dimensionless productivity.
+		int residentCount = this.residentsID.size();
+		float luck = residentCount > 0
+					? (float) (totalProductivity / residentCount * config.lootLuckPerStandardWorker.get())
+					: 0.0f;
 
         // 5. 获取战利品表
         // 获取战利品表
@@ -199,20 +205,52 @@ public class HuntingBaseBuilding extends AbstractTownResidentWorkBuilding {
 		if(!this.isBuildingWorkable()) return NEGATIVE_INFINITY;
 		int currentResidentNum = this.residentsID.size();
 		if(currentResidentNum >= maxResidents) return NEGATIVE_INFINITY;
-		return -currentResidentNum + (double) currentResidentNum / maxResidents + 0.5/*the base priority of workerType*/ + rating;
+		FHConfig.Server.Town.Hunting config = FHConfig.SERVER.TOWN.HUNTING;
+		return config.assignmentBasePriority.get()
+				- config.assignmentPenaltyPerWorker.get() * currentResidentNum
+				+ config.assignmentFillRatioBonus.get() * currentResidentNum / maxResidents
+				+ config.assignmentRatingMultiplier.get() * rating;
 	}
 
 	@Override
 	public double getResidentScore(Resident resident) {
-        double healthScore = TownMathFunctions.attributeScore(resident.getHealth());
-        double mentalScore = TownMathFunctions.attributeScore(resident.getMental());
-        double strengthScore = TownMathFunctions.attributeScore(resident.getStrength());
-        double intelligenceScore = TownMathFunctions.attributeScore(resident.getIntelligence());
-        double geometricMean = Math.pow(
-                healthScore * mentalScore * strengthScore * intelligenceScore, 0.25
-        );
-        double workProficiencyPart = 1.0 + 1.5 * TownMathFunctions.CalculatingFunction1(resident.getWorkProficiency(HuntingBaseBuilding.class));
-        return geometricMean * workProficiencyPart;
+		FHConfig.Server.Town.Hunting config = FHConfig.SERVER.TOWN.HUNTING;
+		double healthScore = TownMathFunctions.attributeScore(resident.getHealth());
+		double mentalScore = TownMathFunctions.attributeScore(resident.getMental());
+		double strengthScore = TownMathFunctions.attributeScore(resident.getStrength());
+		double intelligenceScore = TownMathFunctions.attributeScore(resident.getIntelligence());
+
+		double weightedAttributeScore = weightedGeometricMean(
+				new double[]{healthScore, mentalScore, strengthScore, intelligenceScore},
+				new double[]{
+						config.healthWeight.get(),
+						config.mentalWeight.get(),
+						config.strengthWeight.get(),
+						config.intelligenceWeight.get()
+				}
+		);
+		double attributeProductivity = weightedAttributeScore / STANDARD_WORKER_ATTRIBUTE_SCORE;
+
+		double proficiency = Math.max(0.0, resident.getWorkProficiency(HuntingBaseBuilding.class));
+		double proficiencyPart = 1.0 + config.maximumProficiencyBonus.get()
+				* (1.0 - Math.exp(-proficiency * config.proficiencyCurvePerPoint.get()));
+		return attributeProductivity * proficiencyPart;
+	}
+
+	private static double weightedGeometricMean(double[] scores, double[] weights) {
+		double totalWeight = 0.0;
+		double weightedLogSum = 0.0;
+		for (int i = 0; i < scores.length; i++) {
+			double weight = weights[i];
+			if (weight <= 0.0) continue;
+			if (scores[i] <= 0.0) return 0.0;
+			totalWeight += weight;
+			weightedLogSum += weight * Math.log(scores[i]);
+		}
+		if (totalWeight <= 0.0) {
+			return STANDARD_WORKER_ATTRIBUTE_SCORE;
+		}
+		return Math.exp(weightedLogSum / totalWeight);
 	}
 
 	public double getEffectiveTemperature() {
@@ -221,7 +259,7 @@ public class HuntingBaseBuilding extends AbstractTownResidentWorkBuilding {
 
 	public static boolean isTemperatureValid(double effectiveTemperature){
 		if (DEBUG_MODE) return true;
-		return effectiveTemperature >= TownMathFunctions.WORKING_TEMP;
+		return effectiveTemperature >= FHConfig.SERVER.TOWN.HUNTING.minimumWorkingTemperatureCelsius.get();
 	}
 
 	public boolean isTemperatureValid() {
@@ -229,6 +267,7 @@ public class HuntingBaseBuilding extends AbstractTownResidentWorkBuilding {
 	}
 
 	public boolean isSpaceValid(){
-		return this.area >= 4 && this.volume >= 8;
+		return this.area >= FHConfig.SERVER.TOWN.HUNTING.minimumFloorAreaBlocks.get()
+				&& this.volume >= FHConfig.SERVER.TOWN.HUNTING.minimumInteriorVolumeBlocks.get();
 	}
 }

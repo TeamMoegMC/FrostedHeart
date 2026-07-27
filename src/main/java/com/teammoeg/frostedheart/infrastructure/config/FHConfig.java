@@ -506,31 +506,272 @@ public class FHConfig {
 		public static class Town {
 			public final ForgeConfigSpec.BooleanValue enableTownTick;
 			public final ForgeConfigSpec.BooleanValue enableTownTickMorning;
+			public static class Hunting {
+				/**
+				 * Hunting production is settled once per town day by tickMorning().
+				 * A standard worker has health, mental, strength and intelligence all
+				 * equal to 50, and zero hunting proficiency.
+				 */
+				public final ForgeConfigSpec.DoubleValue baseLootRollsPerStandardWorkerDay;
+				public final ForgeConfigSpec.IntValue minimumLootRollsPerBaseDay;
+				public final ForgeConfigSpec.DoubleValue lootLuckPerStandardWorker;
+				public final ForgeConfigSpec.DoubleValue floorBlocksPerWorkerSlot;
+				public final ForgeConfigSpec.IntValue minimumWorkerSlots;
+				public final ForgeConfigSpec.IntValue minimumFloorAreaBlocks;
+				public final ForgeConfigSpec.IntValue minimumInteriorVolumeBlocks;
+				public final ForgeConfigSpec.DoubleValue minimumWorkingTemperatureCelsius;
+				public final ForgeConfigSpec.DoubleValue maximumProficiencyBonus;
+				public final ForgeConfigSpec.DoubleValue proficiencyCurvePerPoint;
+				public final ForgeConfigSpec.DoubleValue healthWeight;
+				public final ForgeConfigSpec.DoubleValue mentalWeight;
+				public final ForgeConfigSpec.DoubleValue strengthWeight;
+				public final ForgeConfigSpec.DoubleValue intelligenceWeight;
+				public final ForgeConfigSpec.DoubleValue spaceRatingWeight;
+				public final ForgeConfigSpec.DoubleValue temperatureRatingWeight;
+				public final ForgeConfigSpec.DoubleValue assignmentBasePriority;
+				public final ForgeConfigSpec.DoubleValue assignmentPenaltyPerWorker;
+				public final ForgeConfigSpec.DoubleValue assignmentFillRatioBonus;
+				public final ForgeConfigSpec.DoubleValue assignmentRatingMultiplier;
+				public final ForgeConfigSpec.IntValue heatEndpointPriority;
+				public final ForgeConfigSpec.DoubleValue heatConsumptionPerTick;
+				public final ForgeConfigSpec.DoubleValue heatTemperatureLevelScaleCelsius;
+				public final ForgeConfigSpec.DoubleValue minimumHeatingModifierCelsius;
+
+				Hunting(ForgeConfigSpec.Builder builder) {
+					builder.push("Hunting");
+					baseLootRollsPerStandardWorkerDay = builder
+						.comment("Base hunting-loot-table rolls per standard worker per Minecraft day.")
+						.comment("One successful roll consumes one hunt terrain-resource unit.")
+						.comment("A standard worker has all four attributes at 50 and zero hunting proficiency.")
+						.defineInRange("baseLootRollsPerStandardWorkerDay", 7d / 6d, 0d, 1000000d);
+					minimumLootRollsPerBaseDay = builder
+						.comment("Minimum whole loot-table rolls per workable hunting base per Minecraft day.")
+						.comment("The default of 1 preserves the existing workerless-base output; set to 0 to require productive workers.")
+						.defineInRange("minimumLootRollsPerBaseDay", 1, 0, 1000000);
+					lootLuckPerStandardWorker = builder
+						.comment("LootContext luck produced by an average standard worker, in loot-luck units.")
+						.comment("Actual luck scales with the average dimensionless productivity of assigned residents.")
+						.defineInRange("lootLuckPerStandardWorker", 7d / 120d, 0d, 1000000d);
+					floorBlocksPerWorkerSlot = builder
+						.comment("Effective floor area required for one hunting-base worker slot, in blocks per worker.")
+						.comment("Space rating multiplies effective floor area before slots are calculated.")
+						.defineInRange("floorBlocksPerWorkerSlot", 4d, 0.01d, 1000000d);
+					minimumWorkerSlots = builder
+						.comment("Minimum worker slots granted to every structurally valid hunting base, in workers.")
+						.defineInRange("minimumWorkerSlots", 1, 0, 4096);
+					minimumFloorAreaBlocks = builder
+						.comment("Minimum valid hunting-base floor area, in square blocks.")
+						.defineInRange("minimumFloorAreaBlocks", 4, 0, 1000000);
+					minimumInteriorVolumeBlocks = builder
+						.comment("Minimum valid hunting-base interior volume, in cubic blocks.")
+						.defineInRange("minimumInteriorVolumeBlocks", 8, 0, 1000000);
+					minimumWorkingTemperatureCelsius = builder
+						.comment("Minimum effective indoor temperature at which the hunting base can work, in degrees Celsius.")
+						.defineInRange("minimumWorkingTemperatureCelsius", 0d, -1000d, 1000d);
+					maximumProficiencyBonus = builder
+						.comment("Maximum additional hunting productivity from proficiency, as a dimensionless multiplier.")
+						.comment("For example, 1.5 means proficiency can add up to +150%, for a final proficiency factor up to 2.5.")
+						.defineInRange("maximumProficiencyBonus", 1.5d, 0d, 100d);
+					proficiencyCurvePerPoint = builder
+						.comment("Proficiency-curve rate in inverse proficiency points.")
+						.comment("Proficiency factor = 1 + maximumProficiencyBonus * (1 - exp(-proficiency * rate)).")
+						.defineInRange("proficiencyCurvePerPoint", 0.04d, 0d, 100d);
+
+					builder.push("Attribute Weights");
+					healthWeight = defineHuntingAttributeWeight(builder, "healthWeight", "health");
+					mentalWeight = defineHuntingAttributeWeight(builder, "mentalWeight", "mental");
+					strengthWeight = defineHuntingAttributeWeight(builder, "strengthWeight", "strength");
+					intelligenceWeight = defineHuntingAttributeWeight(builder, "intelligenceWeight", "intelligence");
+					builder.pop();
+
+					builder.push("Building Rating");
+					spaceRatingWeight = builder
+						.comment("Relative dimensionless weight of space quality in hunting-base rating.")
+						.defineInRange("spaceWeight", 3d, 0d, 1000d);
+					temperatureRatingWeight = builder
+						.comment("Relative dimensionless weight of temperature quality in hunting-base rating.")
+						.comment("Setting both rating weights to zero makes building rating zero.")
+						.defineInRange("temperatureWeight", 2d, 0d, 1000d);
+					builder.pop();
+
+					builder.push("Worker Assignment");
+					assignmentBasePriority = builder
+						.comment("Dimensionless base priority used when assigning residents to hunting bases.")
+						.defineInRange("basePriority", 0.5d, -1000000d, 1000000d);
+					assignmentPenaltyPerWorker = builder
+						.comment("Priority subtracted for each worker already assigned to this hunting base.")
+						.defineInRange("penaltyPerWorker", 1d, 0d, 1000000d);
+					assignmentFillRatioBonus = builder
+						.comment("Priority added times the occupied-slot ratio (assigned workers / worker slots).")
+						.defineInRange("fillRatioBonus", 1d, -1000000d, 1000000d);
+					assignmentRatingMultiplier = builder
+						.comment("Multiplier converting hunting-base rating into worker-assignment priority.")
+						.defineInRange("ratingMultiplier", 1d, -1000000d, 1000000d);
+					builder.pop();
+
+					builder.push("Heating");
+					heatEndpointPriority = builder
+						.comment("Heat-network consumer priority. Lower-priority endpoints detach first when heat is insufficient.")
+						.comment("Changing this for an existing block entity requires its chunk to be reloaded.")
+						.defineInRange("endpointPriority", 99, -1000000, 1000000);
+					heatConsumptionPerTick = builder
+						.comment("Heat consumed by an active hunting base per game tick, in heat units per tick.")
+						.comment("Set to 0 to disable hunting-base network heating. Changing it may require a chunk reload.")
+						.defineInRange("consumptionPerTick", 1d, 0d, 1000000d);
+					heatTemperatureLevelScaleCelsius = builder
+						.comment("Degrees Celsius of temperature modifier per heat-network temperature level.")
+						.defineInRange("temperatureLevelScaleCelsius", 10d, -1000d, 1000d);
+					minimumHeatingModifierCelsius = builder
+						.comment("Minimum temperature modifier while heat is successfully consumed, in degrees Celsius.")
+						.defineInRange("minimumModifierCelsius", 24d, -1000d, 1000d);
+					builder.pop();
+					builder.pop();
+				}
+
+				private static ForgeConfigSpec.DoubleValue defineHuntingAttributeWeight(
+						ForgeConfigSpec.Builder builder, String key, String attributeName) {
+					return builder
+						.comment("Relative dimensionless weight of " + attributeName + " in hunting productivity.")
+						.comment("Weights are normalized by their sum; setting every attribute weight to zero disables attribute effects.")
+						.defineInRange(key, 1d, 0d, 1000d);
+				}
+			}
+			public static class Mining {
+				/**
+				 * Mining production is settled once per town day by tickMorning().
+				 * A standard worker has health, mental, strength and intelligence all
+				 * equal to 50, and zero mining proficiency.
+				 */
+				public final ForgeConfigSpec.DoubleValue baseOutputPerStandardWorkerDay;
+				public final ForgeConfigSpec.DoubleValue floorBlocksPerWorkerSlot;
+				public final ForgeConfigSpec.IntValue minimumWorkerSlots;
+				public final ForgeConfigSpec.IntValue connectionRadiusBlocks;
+				public final ForgeConfigSpec.DoubleValue maximumProficiencyBonus;
+				public final ForgeConfigSpec.DoubleValue proficiencyCurvePerPoint;
+				public final ForgeConfigSpec.DoubleValue healthWeight;
+				public final ForgeConfigSpec.DoubleValue mentalWeight;
+				public final ForgeConfigSpec.DoubleValue strengthWeight;
+				public final ForgeConfigSpec.DoubleValue intelligenceWeight;
+				public final ForgeConfigSpec.DoubleValue assignmentBasePriority;
+				public final ForgeConfigSpec.DoubleValue assignmentPenaltyPerWorker;
+				public final ForgeConfigSpec.DoubleValue assignmentFillRatioBonus;
+
+				Mining(ForgeConfigSpec.Builder builder) {
+					builder.push("Mining");
+					baseOutputPerStandardWorkerDay = builder
+						.comment("Base mining output in item units per standard worker per Minecraft day.")
+						.comment("A standard worker has all four attributes at 50 and zero mining proficiency.")
+						.comment("1 item unit is one item stored in town storage; fractional units are retained.")
+						.defineInRange("baseOutputPerStandardWorkerDay", 3.5d, 0d, 1000000d);
+					floorBlocksPerWorkerSlot = builder
+						.comment("Effective floor area required for one mining-base worker slot, in blocks per worker.")
+						.comment("Space rating multiplies effective floor area before slots are calculated.")
+						.defineInRange("floorBlocksPerWorkerSlot", 4d, 0.01d, 1000000d);
+					minimumWorkerSlots = builder
+						.comment("Minimum worker slots granted to every structurally valid mining base, in workers.")
+						.defineInRange("minimumWorkerSlots", 1, 0, 4096);
+					connectionRadiusBlocks = builder
+						.comment("Maximum straight-line distance from a mining base to an assigned mining camp, in blocks.")
+						.defineInRange("connectionRadiusBlocks", 1024, 0, 32000);
+					maximumProficiencyBonus = builder
+						.comment("Maximum additional mining productivity from proficiency, as a dimensionless multiplier.")
+						.comment("For example, 1.5 means proficiency can add up to +150%, for a final proficiency factor up to 2.5.")
+						.defineInRange("maximumProficiencyBonus", 1.5d, 0d, 100d);
+					proficiencyCurvePerPoint = builder
+						.comment("Proficiency-curve rate in inverse proficiency points.")
+						.comment("Proficiency factor = 1 + maximumProficiencyBonus * (1 - exp(-proficiency * rate)).")
+						.defineInRange("proficiencyCurvePerPoint", 0.04d, 0d, 100d);
+
+					builder.push("Attribute Weights");
+					healthWeight = defineMiningAttributeWeight(builder, "healthWeight", "health");
+					mentalWeight = defineMiningAttributeWeight(builder, "mentalWeight", "mental");
+					strengthWeight = defineMiningAttributeWeight(builder, "strengthWeight", "strength");
+					intelligenceWeight = defineMiningAttributeWeight(builder, "intelligenceWeight", "intelligence");
+					builder.pop();
+
+					builder.push("Worker Assignment");
+					assignmentBasePriority = builder
+						.comment("Dimensionless base priority used when assigning residents to mining bases.")
+						.defineInRange("basePriority", 0.4d, -1000000d, 1000000d);
+					assignmentPenaltyPerWorker = builder
+						.comment("Priority subtracted for each worker already assigned to this mining base.")
+						.defineInRange("penaltyPerWorker", 1d, 0d, 1000000d);
+					assignmentFillRatioBonus = builder
+						.comment("Priority added times the occupied-slot ratio (assigned workers / worker slots).")
+						.defineInRange("fillRatioBonus", 1d, -1000000d, 1000000d);
+					builder.pop();
+					builder.pop();
+				}
+
+				private static ForgeConfigSpec.DoubleValue defineMiningAttributeWeight(
+						ForgeConfigSpec.Builder builder, String key, String attributeName) {
+					return builder
+						.comment("Relative dimensionless weight of " + attributeName + " in mining productivity.")
+						.comment("Weights are normalized by their sum; setting every attribute weight to zero disables attribute effects.")
+						.defineInRange(key, 1d, 0d, 1000d);
+				}
+			}
 			public static class Resource{
+				/**
+				 * @deprecated Use {@link #oreReservePerChunk}. Kept as a Java alias
+				 * for source compatibility; both fields refer to the same config value.
+				 */
+				@Deprecated
 				public final ForgeConfigSpec.ConfigValue<Double> oreCount;
+				/**
+				 * @deprecated Use {@link #oreRecoveryPerChunkDay}. Kept as a Java
+				 * alias for source compatibility; both fields refer to the same config value.
+				 */
+				@Deprecated
 				public final ForgeConfigSpec.ConfigValue<Double> oreRecovery;
+				public final ForgeConfigSpec.ConfigValue<Double> oreReservePerChunk;
+				public final ForgeConfigSpec.ConfigValue<Double> oreRecoveryPerChunkDay;
 				public final ForgeConfigSpec.ConfigValue<Double> treeCount;
 				public final ForgeConfigSpec.ConfigValue<Double> treeRecovery;
+				/**
+				 * @deprecated Use {@link #huntReservePerSquareBlock}. Kept as a Java
+				 * alias for source compatibility; both fields refer to the same config value.
+				 */
+				@Deprecated
 				public final ForgeConfigSpec.ConfigValue<Double> huntCount;
+				/**
+				 * @deprecated Use {@link #huntRecoveryPerSquareBlockDay}. Kept as a
+				 * Java alias for source compatibility; both fields refer to the same config value.
+				 */
+				@Deprecated
 				public final ForgeConfigSpec.ConfigValue<Double> huntRecovery;
+				public final ForgeConfigSpec.ConfigValue<Double> huntReservePerSquareBlock;
+				public final ForgeConfigSpec.ConfigValue<Double> huntRecoveryPerSquareBlockDay;
 				public final ForgeConfigSpec.ConfigValue<Double> poiCount;
 				public final ForgeConfigSpec.ConfigValue<Double> poiRecovery;
 				public final ForgeConfigSpec.ConfigValue<Double> salvageCount;
 				public final ForgeConfigSpec.ConfigValue<Double> salvageRecovery;
 				Resource(ForgeConfigSpec.Builder builder) {
 					builder.push("Pick Resource");
-					oreCount=builder.comment("Ore Count per block squared")
+					oreReservePerChunk = builder
+						.comment("Total extractable ore reserve in ore/item units per active mining chunk.")
+						.comment("The TOML key keeps its legacy name orePerSq for compatibility, but current chunk-tracked mining does not multiply it by chunk area.")
 						.defineInRange("orePerSq", 1000d, 0d, 1000000d);
-					oreRecovery=builder.comment("Ore Recovery per block per day")
+					oreRecoveryPerChunkDay = builder
+						.comment("Configured ore recovery in ore units per chunk per Minecraft day.")
+						.comment("Current chunk-tracked mining does not yet apply this recovery value.")
 						.defineInRange("orePerDay", 0d, 0d, 1000000d);
+					oreCount = oreReservePerChunk;
+					oreRecovery = oreRecoveryPerChunkDay;
 					treeCount=builder.comment("Tree Count per block squared")
 						.defineInRange("treePerSq", 0.4d, 0d, 1000000d);
 					treeRecovery=builder.comment("Tree Recovery per block per day")
 						.defineInRange("treePerDay", 0.0025d, 0d, 1000000d);
-					huntCount=builder.comment("Hunt Count per block squared")
+					huntReservePerSquareBlock = builder
+						.comment("Hunt terrain-resource density in loot-roll units per square block.")
+						.comment("The TOML key keeps its legacy name huntPerSq for compatibility.")
 						.defineInRange("huntPerSq", 0.1d, 0d, 1000000d);
-					huntRecovery=builder.comment("Hunt Recovery per block per day")
+					huntRecoveryPerSquareBlockDay = builder
+						.comment("Hunt terrain-resource recovery density in hunt units per square block per Minecraft day.")
+						.comment("Recovery is applied over the resource system's currently depleted radius.")
 						.defineInRange("huntPerDay", 0.005d, 0d, 1000000d);
+					huntCount = huntReservePerSquareBlock;
+					huntRecovery = huntRecoveryPerSquareBlockDay;
 					poiCount=builder.comment("Research Point Count per block squared")
 						.defineInRange("poiPerSq", 100d, 0d, 1000000d);
 					poiRecovery=builder.comment("Research Point Recovery per block per day")
@@ -542,6 +783,8 @@ public class FHConfig {
 					builder.pop();
 				}
 			}
+			public final Hunting HUNTING;
+			public final Mining MINING;
 			public final Resource RESOURCE;
 			Town(ForgeConfigSpec.Builder builder) {
 				builder.push("ITown");
@@ -551,6 +794,8 @@ public class FHConfig {
 				enableTownTickMorning = builder.comment("Enables town tick in the morning of each days.")
 					.comment("This tick includes the refresh of some town things, like house allocating, checking overlap of buildings, work assigning...")
 					.define("enableTownTickMorning", true);
+				HUNTING = new Hunting(builder);
+				MINING = new Mining(builder);
 				RESOURCE=new Resource(builder);
 				builder.pop();
 

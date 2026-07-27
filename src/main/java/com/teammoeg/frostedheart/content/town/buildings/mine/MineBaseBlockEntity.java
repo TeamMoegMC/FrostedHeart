@@ -25,6 +25,7 @@ import com.teammoeg.frostedheart.content.town.block.AbstractTownBuildingBlockEnt
 import com.teammoeg.frostedheart.content.town.block.blockscanner.AbstractBlockScanner;
 import com.teammoeg.frostedheart.content.town.block.blockscanner.FloorBlockScanner;
 import com.teammoeg.frostedheart.content.town.building.AbstractTownBuilding;
+import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.core.Direction;
@@ -61,8 +62,14 @@ public class MineBaseBlockEntity extends AbstractTownBuildingBlockEntity<MineBas
                 //this.rack = scanner.getRack();
                 //this.chest = scanner.getChest();
                 building.setOccupiedVolume(scanner.getOccupiedVolume());
-                int calculated = (int) (TownMathFunctions.calculateSpaceRating(scanner.getVolume(), scanner.getArea()) / 4 * scanner.getArea());
-                building.maxResidents = Math.max(1, calculated);
+                double effectiveFloorBlocks = TownMathFunctions.calculateSpaceRating(scanner.getVolume(), scanner.getArea())
+                        * scanner.getArea();
+                int calculated = (int) (effectiveFloorBlocks
+                        / FHConfig.SERVER.TOWN.MINING.floorBlocksPerWorkerSlot.get());
+                building.maxResidents = Math.max(
+                        FHConfig.SERVER.TOWN.MINING.minimumWorkerSlots.get(),
+                        calculated
+                );
                 return true;
             }
         }
