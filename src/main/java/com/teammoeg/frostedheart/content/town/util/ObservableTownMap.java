@@ -21,12 +21,15 @@ package com.teammoeg.frostedheart.content.town.util;
 
 import java.util.AbstractCollection;
 import java.util.AbstractSet;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 /**
@@ -49,14 +52,24 @@ import java.util.function.Consumer;
  * </ul>
  *
  * <p>典型用途：将 {@code TeamTownData} 的 {@code buildings} / {@code residents} 换成本类，
- * 在 {@code TeamTownData} 构造器里把 {@code onChange} 接到 {@code dataSyncCache::addChanged}：
+ * 在 {@code TeamTownData} 构造器里绑定三个回调：
+ * <ul>
+ *     <li>{@code setOnAttach}（建议<b>批量 put 之前</b>绑定）——把 {@code dataSyncCache} 自动传给
+ *         每个 value，使建筑/居民对象内部字段变更能 fire 增量同步事件（layer ②）；</li>
+ *     <li>{@code setOnDetach}——value 被替换/移除时解除绑定，避免僵死对象继续 fire；</li>
+ *     <li>{@code setOnChange}（建议<b>批量 put 之后</b>绑定）——把被改的键转发到
+ *         {@code dataSyncCache.addChanged}，仅用于集合层面脏标记（layer ①），避免加载存档时误标脏。</li>
+ * </ul>
  * <pre>{@code
- * this.buildings.setOnChange(this.dataSyncCache::addChanged);
- * this.residents.setOnChange(this.dataSyncCache::addChanged);
+ * this.buildings.setOnAttach(b -> b.setChangeEventListener(this.dataSyncCache));
+ * this.residents.setOnAttach(r -> r.setChangeEventListener(this.dataSyncCache));
+ * this.buildings.setOnDetach(b -> b.setChangeEventListener(null));
+ * this.residents.setOnDetach(r -> r.setChangeEventListener(null));
+ * this.buildings.setOnChange((pos) -> this.dataSyncCache.onBuildingChange(new TownBuildingChangeEvent(this.buildings, pos)));
+ * this.residents.setOnChange((uuid) -> this.dataSyncCache.onResidentChange(new TownResidentChangeEvent(this.residents, uuid)));
  * }</pre>
- * 之后任何位置的集合增删——构造器、玩家交互、每日逻辑——都会自动通知，
- * <b>调用方无需手动标记</b>。建筑/居民对象的<b>内部字段</b>变更（不走 Map）
- * 由各自的事件体系负责，本类只管集合层面的增减。</p>
+ * 之后任何位置的集合增删——构造器、玩家交互、每日逻辑——都会自动接管监听器接线与脏标记，
+ * <b>调用方无需手动 {@code setChangeEventListener}</b>。</p>
  *
  * <p>{@code onChange} 默认是 no-op（无参构造 / codec 反序列化阶段），因此在本类被外部
  * 绑定回调之前发生的变化会被静默丢弃——这通常无害（如加载存档后的首次全量同步会覆盖）。
@@ -69,6 +82,8 @@ import java.util.function.Consumer;
 public final class ObservableTownMap<K, V> extends LinkedHashMap<K, V> {
 
     private Consumer<K> onChange = k -> {};
+    private Consumer<V> onAttach = v -> {};
+    private Consumer<V> onDetach = v -> {};
 
     /** 无参构造：codec 反序列化 / 运行时默认使用，回调为 no-op（变更被静默丢弃）。 */
     public ObservableTownMap() {
@@ -82,20 +97,59 @@ public final class ObservableTownMap<K, V> extends LinkedHashMap<K, V> {
         this.onChange = Objects.requireNonNull(onChange);
     }
 
+    /**
+     * 注入 onAttach 回调：每次 put / putAll 新增或替换 value 时，用此回调把外部监听器
+     * （如 {@code dataSyncCache}）传给 value 对象（要求其具备 {@code setChangeEventListener}）。
+     * 这样 value 内部字段变更即可经自身监听器 fire 增量同步事件（layer ②）。
+     * 建议<b>在批量 put 之前</b>绑定，使反序列化得到的对象也自动接上监听器。
+     * 非 null；传 null 会立即抛出 {@link NullPointerException}。
+     */
+    public void setOnAttach(Consumer<V> onAttach) {
+        this.onAttach = Objects.requireNonNull(onAttach);
+    }
+
+    /**
+     * 注入 onDetach 回调：value 被替换 / 移除 / clear 时解除其与外部监听器的绑定
+     * （通常传 {@code v -> v.setChangeEventListener(null)}），
+     * 避免已离开 Map 的僵死对象继续向 {@code dataSyncCache} fire。
+     * 非 null；传 null 会立即抛出 {@link NullPointerException}。
+     */
+    public void setOnDetach(Consumer<V> onDetach) {
+        this.onDetach = Objects.requireNonNull(onDetach);
+    }
+
     private void notifyChange(K key) {
         onChange.accept(key);
+    }
+
+    private void detachAndNotify(K key, V value) {
+        onDetach.accept(value);
+        notifyChange(key);
     }
 
     @Override
     public V put(K key, V value) {
         V old = super.put(key, value);
+        if (old != null) {
+            onDetach.accept(old);
+        }
+        onAttach.accept(value);
         notifyChange(key);
         return old;
     }
 
     @Override
     public void putAll(Map<? extends K, ? extends V> m) {
-        m.keySet().forEach(this::notifyChange);
+        for (Map.Entry<? extends K, ? extends V> e : m.entrySet()) {
+            K key = e.getKey();
+            V newVal = e.getValue();
+            V old = this.get(key);
+            if (old != null) {
+                onDetach.accept(old);
+            }
+            onAttach.accept(newVal);
+            notifyChange(key);
+        }
         super.putAll(m);
     }
 
@@ -104,7 +158,7 @@ public final class ObservableTownMap<K, V> extends LinkedHashMap<K, V> {
         @SuppressWarnings("unchecked")
         V old = super.remove(key);
         if (old != null) {
-            notifyChange((K) key);
+            detachAndNotify((K) key, old);
         }
         return old;
     }
@@ -112,8 +166,10 @@ public final class ObservableTownMap<K, V> extends LinkedHashMap<K, V> {
     @Override
     public void clear() {
         if (!isEmpty()) {
-            for (K key : keySet()) {
-                notifyChange(key);
+            List<Map.Entry<K, V>> snapshot = new ArrayList<>(entrySet());
+            for (Map.Entry<K, V> e : snapshot) {
+                onDetach.accept(e.getValue());
+                notifyChange(e.getKey());
             }
         }
         super.clear();
@@ -138,12 +194,12 @@ public final class ObservableTownMap<K, V> extends LinkedHashMap<K, V> {
 
     private static final class WrappedEntryIterator<K, V> implements Iterator<Map.Entry<K, V>> {
         private final Iterator<Map.Entry<K, V>> delegate;
-        private final Consumer<K> onRemove;
+        private final BiConsumer<K, V> onEntryRemoved;
         private Map.Entry<K, V> current;
 
-        WrappedEntryIterator(Iterator<Map.Entry<K, V>> delegate, Consumer<K> onRemove) {
+        WrappedEntryIterator(Iterator<Map.Entry<K, V>> delegate, BiConsumer<K, V> onEntryRemoved) {
             this.delegate = delegate;
-            this.onRemove = onRemove;
+            this.onEntryRemoved = onEntryRemoved;
         }
 
         @Override
@@ -159,7 +215,7 @@ public final class ObservableTownMap<K, V> extends LinkedHashMap<K, V> {
         @Override
         public void remove() {
             if (current != null) {
-                onRemove.accept(current.getKey());
+                onEntryRemoved.accept(current.getKey(), current.getValue());
             }
             delegate.remove();
         }
@@ -189,7 +245,7 @@ public final class ObservableTownMap<K, V> extends LinkedHashMap<K, V> {
 
         @Override
         public Iterator<Map.Entry<K, V>> iterator() {
-            return new WrappedEntryIterator<>(delegate.iterator(), ObservableTownMap.this::notifyChange);
+            return new WrappedEntryIterator<>(delegate.iterator(), ObservableTownMap.this::detachAndNotify);
         }
     }
 

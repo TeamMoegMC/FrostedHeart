@@ -25,9 +25,12 @@ import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.town.ITownWithResidents;
 import com.teammoeg.frostedheart.content.town.building.ITownResidentWorkBuilding;
+import com.teammoeg.frostedheart.content.town.event.ITownResidentChangeEventListener;
+import com.teammoeg.frostedheart.content.town.event.TownResidentChangeEvent;
 import com.teammoeg.chorda.io.CodecUtil;
 import com.teammoeg.chorda.io.SerializeUtil;
 
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 import net.minecraft.nbt.CompoundTag;
@@ -75,11 +78,34 @@ public class Resident {
         setWorkPos(workPos.orElse(null));
     }
 
+    // ===== 增量同步：变化监听器（transient，不被 codec 序列化）=====
+    @Getter(AccessLevel.NONE)
+    private transient ITownResidentChangeEventListener changeListener;
+
+    public void setChangeEventListener(ITownResidentChangeEventListener listener) {
+        this.changeListener = listener;
+    }
+
+    /** 内部字段变更时触发增量同步事件；listener 为 null（解码/构造阶段）时为 no-op，不会误标脏。 */
+    private void fireChange() {
+        if (this.changeListener != null) {
+            this.changeListener.onResidentChange(new TownResidentChangeEvent(this, this.uuid));
+        }
+    }
+
+    public void setFirstName(String firstName) {
+        this.firstName = firstName;
+        fireChange();
+    }
+
+    public void setLastName(String lastName) {
+        this.lastName = lastName;
+        fireChange();
+    }
+
     private UUID uuid;
-    @Setter
     @Getter
     private String firstName = "Steve";
-    @Setter
     @Getter
     private String lastName = "Alexander";
     /** Stats range from 0 to 100 start*/
@@ -110,7 +136,6 @@ public class Resident {
     //the pos of the HouseBlock that the resident is living in
     @Nullable
     @Getter
-    @Setter
     private BlockPos housePos;
     //the pos of the worker block that the resident is working in
     @Nullable
@@ -178,7 +203,9 @@ public class Resident {
             amount = Math.max(0, amount);
             FHMain.LOGGER.error("Resident.addWorkProficiency:Trying to add work proficiency with negative amount!");
         }
-        return workProficiency.merge(type.getSimpleName(), amount, Double::sum);
+        double result = workProficiency.merge(type.getSimpleName(), amount, Double::sum);
+        fireChange();
+        return result;
     }
 
     public double setWorkProficiency(Class<? extends ITownResidentWorkBuilding> type,double amount){
@@ -187,6 +214,7 @@ public class Resident {
             FHMain.LOGGER.error("Resident.setWorkProficiency:Trying to set work proficiency to negative amount!");
         }
         workProficiency.put(type.getSimpleName(), amount);
+        fireChange();
         return amount;
     }
 
@@ -279,8 +307,14 @@ public class Resident {
         return null;
     }
 
+    public void setHousePos(BlockPos pos){
+        this.housePos = pos;
+        fireChange();
+    }
+
     public void setWorkPos(BlockPos pos){
         this.workPos = pos;
+        fireChange();
     }
 
     public void setHealth(double health) {
@@ -288,6 +322,7 @@ public class Resident {
             throw new IllegalArgumentException("Health must be between 0 and 100");
         }
         this.health = health;
+        fireChange();
     }
 
     public void costHealth(double amount) {
@@ -303,6 +338,7 @@ public class Resident {
             throw new IllegalArgumentException("Mental must be between 0 and 100");
         }
         this.mental = mental;
+        fireChange();
     }
 
     public void costMental(double amount) {
@@ -318,6 +354,7 @@ public class Resident {
             throw new IllegalArgumentException("Strength must be between 0 and 100");
         }
         this.strength = strength;
+        fireChange();
     }
 
     public void costStrength(double amount) {
@@ -333,6 +370,7 @@ public class Resident {
             throw new IllegalArgumentException("Intelligence must be between 0 and 100");
         }
         this.intelligence = intelligence;
+        fireChange();
     }
 
     public void costIntelligence(double amount) {
@@ -348,6 +386,7 @@ public class Resident {
             throw new IllegalArgumentException("Education level must be non-negative");
         }
         this.educationLevel = educationLevel;
+        fireChange();
     }
 
     public void costEducationLevel(int amount) {

@@ -106,6 +106,19 @@ public class CodecUtil {
 			}
 			return Codec.INT.dispatch(o->ImmutableList.copyOf(classes).indexOf(o.getClass()), ImmutableList.copyOf(codecs)::get);
 		}
+		/**
+		 * 编码时始终按类型名称（字符串key）分发，解码时优先按名称解析，失败则回退到旧版整数索引。
+		 * 用于从 {@link #buildByInt()} 迁移到字符串分发时保持旧存档兼容：
+		 * 旧数据（int索引）仍可读取，重新保存后自动升级为字符串key，且新增类型不再受注册顺序约束。
+		 * <p>
+		 * Encodes always by type name (string key); decodes by name first, falling back to the
+		 * legacy integer index. Use this to migrate from {@link #buildByInt()} while keeping old
+		 * saves readable — legacy int data still loads and is upgraded to string keys on next save.
+		 */
+		public Codec<A> buildByNameWithLegacyInt(){
+			return Codec.either(buildByName(), buildByInt())
+					.xmap(e->e.map(Function.identity(), Function.identity()), Either::left);
+		}
 		public Codec<A> build(){
 			return new CompressDifferCodec<>(buildByName(),buildByInt());
 		}

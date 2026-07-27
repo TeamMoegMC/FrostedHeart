@@ -131,20 +131,24 @@ public class TeamTownData implements SpecialData{
         super();
         this.name = name;
         this.resources = resources;
+        // 在批量 put 之前绑定 attach/detach，使反序列化得到的建筑/居民也自动接上（或解除）dataSyncCache 监听器
+        this.buildings.setOnAttach(b -> b.setChangeEventListener(this.dataSyncCache));
+        this.residents.setOnAttach(r -> r.setChangeEventListener(this.dataSyncCache));
+        this.buildings.setOnDetach(b -> b.setChangeEventListener(null));
+        this.residents.setOnDetach(r -> r.setChangeEventListener(null));
         buildings.forEach((pos, building) -> {
             if(building instanceof AbstractTownBuilding abstractTownBuilding){
-                this.buildings.put(pos, abstractTownBuilding);
-                // 复制完成后注入变化监听，使字段 setter 能 fire 增量同步事件（此时 onChange 尚未绑定，不会误触发脏标记）
-                abstractTownBuilding.setChangeEventListener(this.dataSyncCache);
+                this.buildings.put(pos, abstractTownBuilding); // put 时自动 onAttach 接线
             }
         });
-        this.residents.putAll(residents);
+        this.residents.putAll(residents); // putAll 时自动 onAttach 接线
         this.terrainResource.putAll(terrainResource);
         this.labour=0;
         this.maxLabour=0;
-        // 复制完成后绑定 onChange，避免上面 putAll/forEach 时误触发脏标记
-        this.buildings.setOnChange(this.dataSyncCache::addChanged);
-        this.residents.setOnChange(this.dataSyncCache::addChanged);
+        this.resources.setChangeListener(dataSyncCache);
+        // 批量 put 完成后再绑定 onChange，避免加载存档时误触发脏标记（layer ① 仅集合层面）
+        this.buildings.setOnChange((pos) -> {this.dataSyncCache.onBuildingChange(new TownBuildingChangeEvent(this.buildings, pos));});
+        this.residents.setOnChange((uuid)-> {this.dataSyncCache.onResidentChange(new TownResidentChangeEvent(this.residents, uuid));});
     }
 
     public TeamTownData(SpecialDataHolder teamData) {
@@ -154,8 +158,13 @@ public class TeamTownData implements SpecialData{
             this.name = data.getTeam().getName() + "'s ITown";
 
         }
-        this.buildings.setOnChange(this.dataSyncCache::addChanged);
-        this.residents.setOnChange(this.dataSyncCache::addChanged);
+        this.buildings.setOnAttach(b -> b.setChangeEventListener(this.dataSyncCache));
+        this.residents.setOnAttach(r -> r.setChangeEventListener(this.dataSyncCache));
+        this.buildings.setOnDetach(b -> b.setChangeEventListener(null));
+        this.residents.setOnDetach(r -> r.setChangeEventListener(null));
+        this.resources.setChangeListener(dataSyncCache);
+        this.buildings.setOnChange((pos) -> {this.dataSyncCache.onBuildingChange(new TownBuildingChangeEvent(this.buildings, pos));});
+        this.residents.setOnChange((uuid)-> {this.dataSyncCache.onResidentChange(new TownResidentChangeEvent(this.residents, uuid));});
     }
 
     /**
@@ -581,7 +590,7 @@ public class TeamTownData implements SpecialData{
 
         @Override
         public void onResourceChange(TownResourceChangeEvent event) {
-
+            this.addChanged(event.changedResourceKey);
         }
     }
 }
