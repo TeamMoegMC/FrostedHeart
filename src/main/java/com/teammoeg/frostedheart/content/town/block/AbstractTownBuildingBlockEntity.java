@@ -87,12 +87,17 @@ public abstract class AbstractTownBuildingBlockEntity<T extends AbstractTownBuil
         Optional<AbstractTownBuilding> buildingOptional = town.getTownBuilding(this.worldPosition);
         if(buildingOptional.isPresent()){
             AbstractTownBuilding building = buildingOptional.get();
-            if(building instanceof AbstractTownBuilding){
-                return Optional.ofNullable(getBuilding(building));
-            }
-        } else{
-            FHMain.LOGGER.warn("AbstractTownBuildingBlockEntity: Building doesn't exist in town");
+            return Optional.ofNullable(getBuilding(building));
         }
+        if (level != null && !level.isClientSide) {
+            town.addTownBlock(worldPosition, this);
+            Optional<T> recoveredBuilding = town.getTownBuilding(worldPosition).map(this::getBuilding);
+            if (recoveredBuilding.isPresent()) {
+                FHMain.LOGGER.info("AbstractTownBuildingBlockEntity: Recovered missing town building at {}", worldPosition);
+                return recoveredBuilding;
+            }
+        }
+        FHMain.LOGGER.warn("AbstractTownBuildingBlockEntity: Building doesn't exist in town");
         return Optional.empty();
     }
 

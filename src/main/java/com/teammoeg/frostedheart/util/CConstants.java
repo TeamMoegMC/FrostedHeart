@@ -21,4 +21,5 @@ package com.teammoeg.frostedheart.util;
 
 public class CConstants {
     public static final String FIRST_LOGIN_GIVE_MANUAL = "first";
+    public static final String NO_CORRESPONDING_TOWN_BUILDING_INSTANCE_FOUND = "No corresponding town building instance found. Check if you placed this block by yourself. Auto-placement like structure generation does not instantiate a link to the player's town.";
 }

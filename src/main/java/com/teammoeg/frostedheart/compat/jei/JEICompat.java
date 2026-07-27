@@ -19,6 +19,8 @@
 
 package com.teammoeg.frostedheart.compat.jei;
 
+import com.simibubi.create.compat.jei.category.MysteriousItemConversionCategory;
+import com.teammoeg.chorda.CompatModule;
 import com.teammoeg.chorda.client.cui.screenadapter.CUIOverlay;
 import com.teammoeg.chorda.math.Point;
 import com.teammoeg.chorda.util.CUtils;
@@ -111,6 +113,14 @@ public class JEICompat implements IModPlugin {
     public void onRuntimeAvailable(IJeiRuntime jeiRuntime) {
         man = jeiRuntime.getRecipeManager();
         jei = jeiRuntime;
+        // 隐藏机械动力的神必转化配方
+        if (CompatModule.isCreateLoaded()) {
+            man.createRecipeCategoryLookup().get().forEach(c -> {
+                if (c instanceof MysteriousItemConversionCategory) {
+                    man.hideRecipeCategory(c.getRecipeType());
+                }
+            });
+        }
         // man.hideRecipeCategory(RecipeTypes.BLASTING);
         // man.hideRecipeCategory(RecipeTypes.SMOKING);
         // man.hideRecipeCategory(RecipeTypes.SMELTING);

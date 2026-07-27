@@ -19,20 +19,17 @@
 
 package com.teammoeg.frostedheart.infrastructure.gen;
 
-import static com.teammoeg.frostedheart.bootstrap.reference.FHTags.*;
-
 import blusunrize.immersiveengineering.common.blocks.multiblocks.IEMultiblocks;
 import blusunrize.immersiveengineering.common.register.IEBlocks;
 import com.simibubi.create.AllItems;
 import com.simibubi.create.AllTags;
-import com.teammoeg.chorda.util.CRegistryHelper;
-import com.teammoeg.frostedheart.*;
-import com.teammoeg.frostedheart.bootstrap.common.FHBlocks;
+import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.bootstrap.common.FHEntityTypes;
 import com.teammoeg.frostedheart.bootstrap.common.FHFluids;
 import com.teammoeg.frostedheart.bootstrap.common.FHMultiblocks;
 import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
 import com.teammoeg.frostedheart.content.town.resource.ItemResourceType;
+import com.teammoeg.frostedheart.content.water.item.DrinkContainerItem;
 import com.teammoeg.frostedresearch.FRContents;
 import com.tterrag.registrate.providers.ProviderType;
 import com.tterrag.registrate.providers.RegistrateTagsProvider;
@@ -51,6 +48,8 @@ import net.minecraft.world.level.material.Fluid;
 import net.minecraftforge.common.Tags;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.RegistryObject;
+
+import static com.teammoeg.frostedheart.bootstrap.reference.FHTags.forgeItemTag;
 
 /**
  * See CreateRegistrateTags for reference.
@@ -290,6 +289,15 @@ public class FHRegistrateTags {
                 .add(Items.SWEET_BERRIES);*/
         prov.tag(FHTags.Items.MAP_TOWN_RESOURCE_ATTRIBUTE_TO_TAG.get(ItemResourceType.RESIDENT_FOOD_LEVEL.generateAttribute(0)))
                 .add(Items.BREAD);
+
+        var incubatorBlacklist = prov.tag(FHTags.Items.INCUBATOR_BLACKLIST.tag);
+        incubatorBlacklist
+                .add(Items.POTION, Items.LINGERING_POTION, Items.SPLASH_POTION);
+
+        for (Item item : ForgeRegistries.ITEMS) {
+            if (item instanceof DrinkContainerItem)
+                incubatorBlacklist.add(item);
+        }
 
         for (FHTags.Items tag : FHTags.Items.values()) {
             if (tag.alwaysDatagen) {

@@ -28,6 +28,7 @@ import com.teammoeg.chorda.client.icon.CIcons;
 import com.teammoeg.chorda.client.icon.CIcons.CIcon;
 import com.teammoeg.chorda.client.ui.CGuiHelper;
 import com.teammoeg.chorda.text.Components;
+import lombok.Getter;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 
@@ -41,6 +42,7 @@ public abstract class Button extends UIElement {
 	/** 按钮标题文本 / Button title text */
 	protected Component title;
 	/** 按钮图标 / Button icon */
+	@Getter
 	protected CIcon icon;
 
 	/**

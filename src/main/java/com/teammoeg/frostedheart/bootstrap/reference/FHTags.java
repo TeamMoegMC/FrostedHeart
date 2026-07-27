@@ -24,7 +24,6 @@ import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.town.resource.ItemResourceAttribute;
 import com.teammoeg.frostedheart.content.town.resource.ItemResourceType;
 import com.teammoeg.frostedheart.util.Lang;
-
 import net.minecraft.core.Holder;
 import net.minecraft.core.HolderSet.Named;
 import net.minecraft.core.RegistryAccess;
@@ -49,7 +48,9 @@ import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.IForgeRegistry;
 import net.minecraftforge.registries.tags.ITag;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 public class FHTags {
 	public static final TagKey<ConfiguredFeature<?,?>> BIG_TREE=TagKey.create(Registries.CONFIGURED_FEATURE, FHMain.rl("big_tree"));
@@ -211,6 +212,7 @@ public class FHTags {
 		POTASSIUM_RICH,
 		NITROGEN_RICH,
 		PHOSPHOROUS_RICH,
+		INCUBATOR_BLACKLIST,
 
 		// caupona
 		WOLFBERRIES(NameSpace.CP),

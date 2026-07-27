@@ -19,14 +19,11 @@
 
 package com.teammoeg.frostedheart.compat.jei.category;
 
-import java.util.Arrays;
-
 import com.teammoeg.chorda.client.ClientUtils;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.bootstrap.common.FHMultiblocks;
 import com.teammoeg.frostedheart.content.climate.block.generator.GeneratorRecipe;
 import com.teammoeg.frostedheart.util.Lang;
-
 import mezz.jei.api.constants.VanillaTypes;
 import mezz.jei.api.gui.builder.IRecipeLayoutBuilder;
 import mezz.jei.api.gui.drawable.IDrawable;
@@ -42,6 +39,8 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
+
+import java.util.Arrays;
 
 public class GeneratorFuelCategory implements IRecipeCategory<GeneratorRecipe> {
     public static RecipeType<GeneratorRecipe> UID =  RecipeType.create(FHMain.MODID, "generator_fuel",GeneratorRecipe.class);
@@ -63,7 +62,7 @@ public class GeneratorFuelCategory implements IRecipeCategory<GeneratorRecipe> {
     public void draw(GeneratorRecipe recipe,IRecipeSlotsView view , GuiGraphics transform,  double mouseX, double mouseY) {
         FIRE.draw(transform, 60, 30);
         SWITCH.draw(transform, 32, 32);
-        String burnTime = recipe.time + " ticks";
+        var burnTime = Component.translatable("gui.frostedheart.second", recipe.time/20);
         transform.drawString(ClientUtils.getMc().font, burnTime,80, 60, 0xFFFFFFFF);
     }
 

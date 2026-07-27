@@ -116,15 +116,11 @@ public abstract class ServerLevelMixin_TemperatureUpdate
             BlockPos blockpos1 = level.getHeightmapPos(
                     Heightmap.Types.MOTION_BLOCKING,
                     level.getBlockRandomPos(i, 0, j, 15));
-            BlockPos blockpos2;
-            if (blockpos1.getY() > -64)
-            {
-                blockpos2 = blockpos1.below();
-            }
-            else
-            {
-                blockpos2 = blockpos1;
-            }
+            // Empty heightmap columns resolve to the dimension's minimum build height.
+            // Do not move below it: dimensions such as the End use 0 rather than -64.
+            BlockPos blockpos2 = blockpos1.getY() > level.getMinBuildHeight()
+                    ? blockpos1.below()
+                    : blockpos1;
 
             Holder<Biome> biomeHolder = CUtils.fastGetBiome(pChunk, blockpos2);
             Biome biome = biomeHolder.value();

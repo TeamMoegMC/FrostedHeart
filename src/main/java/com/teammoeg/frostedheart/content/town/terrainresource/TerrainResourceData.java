@@ -117,9 +117,14 @@ public class TerrainResourceData {
     }
 
     public static class ChunkResourceTracker {
+        private static final Codec<ChunkPos> CHUNK_POS_KEY_CODEC = Codec.STRING.xmap(value -> {
+            long packed = Long.parseLong(value);
+            return new ChunkPos((int) (packed >> 32), (int) (packed & 0xFFFFFFFFL));
+        }, pos -> Long.toString(((long) pos.x << 32) | (pos.z & 0xFFFFFFFFL)));
+
         public static final Codec<ChunkResourceTracker> CODEC = RecordCodecBuilder.create(ins -> ins.group(
         Codec.unboundedMap(
-                Codec.LONG.xmap(val -> new ChunkPos((int)(val >> 32), (int)(val & 0xFFFFFFFFL)), pos -> ((long)pos.x << 32) | (pos.z & 0xFFFFFFFFL)), Codec.DOUBLE)
+                CHUNK_POS_KEY_CODEC, Codec.DOUBLE)
         .optionalFieldOf("extractedResources", Map.of())
         .forGetter(o -> o.extractedResources)
         ).apply(ins, ChunkResourceTracker::new));
@@ -131,7 +136,10 @@ public class TerrainResourceData {
         public ChunkResourceTracker() {}
 
         public ChunkResourceTracker(Map<ChunkPos, Double> extractedResources) {
-            this.extractedResources = extractedResources;
+            // Codec map decoders may return an immutable map. The tracker updates this
+            // collection every time a mine extracts resources, so keep an owned,
+            // mutable copy after loading.
+            this.extractedResources = new HashMap<>(extractedResources);
         }
 
         public double mayCostResource(ChunkPos chunk, double amount, double perChunkTotal) {
@@ -146,7 +154,7 @@ public class TerrainResourceData {
         }
 
         public void setActiveChunks(Set<ChunkPos> activeChunks) {
-            this.activeChunks = activeChunks;
+            this.activeChunks = new HashSet<>(activeChunks);
         }
 
         public void clearActiveChunks() {

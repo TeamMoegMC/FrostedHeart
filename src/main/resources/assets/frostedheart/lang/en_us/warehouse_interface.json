@@ -1,0 +1,9 @@
+{
+  "container.frostedheart.warehouse_interface": "Warehouse Interface",
+  "gui.frostedheart.warehouse_interface.adjust_hint": "Scroll to adjust; Shift/Ctrl changes the increment",
+  "gui.frostedheart.warehouse_interface.empty_target": "No target: all items in the paired slot are stored",
+  "gui.frostedheart.warehouse_interface.status.unavailable": "Warehouse unavailable",
+  "gui.frostedheart.warehouse_interface.status.unbound": "No warehouse bound",
+  "gui.frostedheart.warehouse_interface.status.working": "Working",
+  "gui.frostedheart.warehouse_interface.target_amount": "Target amount: %s"
+}

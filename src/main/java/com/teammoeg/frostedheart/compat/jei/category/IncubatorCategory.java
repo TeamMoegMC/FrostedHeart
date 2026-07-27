@@ -19,15 +19,12 @@
 
 package com.teammoeg.frostedheart.compat.jei.category;
 
-import java.util.Arrays;
-
 import com.teammoeg.chorda.client.ClientUtils;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlocks;
 import com.teammoeg.frostedheart.bootstrap.common.FHItems;
 import com.teammoeg.frostedheart.content.incubator.IncubateRecipe;
 import com.teammoeg.frostedheart.util.Lang;
-
 import mezz.jei.api.forge.ForgeTypes;
 import mezz.jei.api.gui.builder.IRecipeLayoutBuilder;
 import mezz.jei.api.gui.builder.IRecipeSlotBuilder;
@@ -45,6 +42,8 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.material.Fluids;
+
+import java.util.Arrays;
 
 public class IncubatorCategory implements IRecipeCategory<IncubateRecipe> {
     public static RecipeType<IncubateRecipe> UID = RecipeType.create(FHMain.MODID, "incubator",IncubateRecipe.class);
@@ -74,11 +73,11 @@ public class IncubatorCategory implements IRecipeCategory<IncubateRecipe> {
         PROC.draw(transform, 76, 24);
         EFF.draw(transform, 15, 31);
 
-        String burnTime;
+        Component burnTime;
         if (recipe.time < 1000 || recipe.time % 60 != 0)
-            burnTime = recipe.time + " s";
+            burnTime = Component.translatable("gui.frostedheart.second", recipe.time);
         else
-            burnTime = recipe.time / 60 + " m";
+            burnTime = Component.translatable("gui.frostedheart.minute", recipe.time / 60);
         int width = ClientUtils.getMc().font.width(burnTime);
         transform.drawString(ClientUtils.getMc().font, burnTime, 162 - width, 62, 0xFFFFFF);
     }
@@ -121,7 +120,7 @@ public class IncubatorCategory implements IRecipeCategory<IncubateRecipe> {
 			fluidout.setFluidRenderer(recipe.output_fluid.getAmount()*5, false, 16,46).addIngredient(ForgeTypes.FLUID_STACK, recipe.output_fluid)
 			.addTooltipCallback((v,t)->{if(recipe.isFood)t.add(Lang.translateGui("per_food_value", recipe.output_fluid.getAmount()));});
 		
-		builder.addSlot(RecipeIngredientRole.INPUT, 29, 47).addItemStack(FHItems.QUICKLIME.asStack());
+		builder.addSlot(RecipeIngredientRole.INPUT, 30, 48).addItemStack(FHItems.QUICKLIME.asStack());
 		
 		builder.addSlot(recipe.consume_catalyst?RecipeIngredientRole.INPUT:RecipeIngredientRole.CATALYST, 12, 13)
 		.addItemStacks(Arrays.asList(recipe.catalyst.getMatchingStacks()))

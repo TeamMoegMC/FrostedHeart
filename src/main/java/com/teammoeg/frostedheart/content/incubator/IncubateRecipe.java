@@ -19,35 +19,34 @@
 
 package com.teammoeg.frostedheart.content.incubator;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import javax.annotation.Nullable;
-
-import com.google.gson.JsonObject;
-import com.teammoeg.frostedheart.bootstrap.common.FHBlocks;
-import com.teammoeg.chorda.io.SerializeUtil;
-import com.teammoeg.chorda.util.CRegistryHelper;
-
 import blusunrize.immersiveengineering.api.ApiUtils;
 import blusunrize.immersiveengineering.api.crafting.IERecipeSerializer;
+import blusunrize.immersiveengineering.api.crafting.IERecipeTypes.TypeWithClass;
 import blusunrize.immersiveengineering.api.crafting.IESerializableRecipe;
 import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
-import blusunrize.immersiveengineering.api.crafting.IERecipeTypes.TypeWithClass;
+import com.google.gson.JsonObject;
+import com.teammoeg.chorda.io.SerializeUtil;
+import com.teammoeg.chorda.util.CRegistryHelper;
+import com.teammoeg.frostedheart.bootstrap.common.FHBlocks;
+import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
+import net.minecraft.core.RegistryAccess;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.GsonHelper;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
-import net.minecraft.world.item.crafting.RecipeType;
 import net.minecraft.world.item.crafting.Ingredient;
-import net.minecraft.core.RegistryAccess;
-import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.world.item.crafting.RecipeType;
 import net.minecraft.world.level.ItemLike;
-import net.minecraft.util.GsonHelper;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.common.crafting.conditions.ICondition.IContext;
 import net.minecraftforge.common.util.Lazy;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.registries.RegistryObject;
+
+import javax.annotation.Nullable;
+import java.util.ArrayList;
+import java.util.List;
 
 public class IncubateRecipe extends IESerializableRecipe {
     public static class Serializer extends IERecipeSerializer<IncubateRecipe> {
@@ -121,7 +120,7 @@ public class IncubateRecipe extends IESerializableRecipe {
         isFood = true;
         List<ItemLike> items = new ArrayList<>();
         for (Item i : CRegistryHelper.getItems()) {
-            if (i.isEdible())
+            if (i.isEdible() && !i.getDefaultInstance().is(FHTags.Items.INCUBATOR_BLACKLIST.tag))
                 items.add(i);
         }
 

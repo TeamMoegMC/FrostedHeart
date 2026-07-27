@@ -63,6 +63,7 @@ import com.teammoeg.frostedheart.content.town.buildings.hunting.HuntingBaseBlock
 import com.teammoeg.frostedheart.content.town.buildings.mine.MineBaseBlock;
 import com.teammoeg.frostedheart.content.town.buildings.mine.MineBlock;
 import com.teammoeg.frostedheart.content.town.buildings.warehouse.WarehouseBlock;
+import com.teammoeg.frostedheart.content.town.buildings.warehouse.WarehouseInterfaceBlock;
 import com.teammoeg.frostedheart.content.utility.gunpowderbarrel.GunpowderBarrelBlock;
 import com.teammoeg.frostedheart.content.utility.gunpowderbarrel.GunpowderBarrelItem;
 import com.teammoeg.frostedheart.content.utility.incinerator.GasVentBlock;
@@ -2194,6 +2195,18 @@ public class FHBlocks {
             .simpleItem()
             .lang("Warehouse")
             .register();
+
+    public static final BlockEntry<WarehouseInterfaceBlock> WAREHOUSE_INTERFACE =
+            REGISTRATE.block("warehouse_interface", WarehouseInterfaceBlock::new)
+                    .initialProperties(() -> Blocks.IRON_BLOCK)
+                    .tag(FHTags.Blocks.TOWN_WALLS.tag)
+                    .tag(FHTags.Blocks.METAL_MACHINES.tag)
+                    .blockstate(FHBlockStateGen.existed())
+                    .item()
+                    .model(existingItemModel())
+                    .build()
+                    .lang("Warehouse Interface")
+                    .register();
 
     public static final BlockEntry<MineBlock> MINE = REGISTRATE.block("mine", MineBlock::new)
             .properties(t -> AbstractTownBuildingBlock.TOWN_BUILDING_CORE_BLOCK_BASE_PROPERTY)

@@ -135,3 +135,5 @@ run/
 /src/datagen/resources/data/frostedheart/data/~$nutrition.xlsx
 /usercache.json
 /usernamecache.json
+
+.claude/

@@ -12,7 +12,17 @@ public class PopupHelper {
      * @param player 目标玩家
      */
     public static void sendPopup(String message, ServerPlayer player) {
-        ChordaNetwork.INSTANCE.sendPlayer(player, new DisplayPopupPacket(message));
+        ChordaNetwork.INSTANCE.sendPlayer(player, new DisplayPopupPacket(Component.literal(message)));
+    }
+
+    /**
+     * 向玩家发送 popup
+     * @param message 消息
+     * @param displayTime 显示时间
+     * @param player 目标玩家
+     */
+    public static void sendPopup(String message, int displayTime, ServerPlayer player) {
+        ChordaNetwork.INSTANCE.sendPlayer(player, new DisplayPopupPacket(Component.literal(message), displayTime));
     }
 
     /**
@@ -20,7 +30,7 @@ public class PopupHelper {
      * @param message 消息
      */
     public static void sendPopupToAll(String message) {
-        ChordaNetwork.INSTANCE.sendToAll(new DisplayPopupPacket(message));
+        ChordaNetwork.INSTANCE.sendToAll(new DisplayPopupPacket(Component.literal(message)));
     }
 
     /**
@@ -30,6 +40,16 @@ public class PopupHelper {
      */
     public static void sendPopup(Component message, ServerPlayer player) {
         ChordaNetwork.INSTANCE.sendPlayer(player, new DisplayPopupPacket(message));
+    }
+
+    /**
+     * 向玩家发送 popup
+     * @param message 消息
+     * @param displayTime 显示时间
+     * @param player 目标玩家
+     */
+    public static void sendPopup(Component message, int displayTime, ServerPlayer player) {
+        ChordaNetwork.INSTANCE.sendPlayer(player, new DisplayPopupPacket(message, displayTime));
     }
 
     /**

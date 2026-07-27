@@ -44,7 +44,7 @@ import mezz.jei.api.registration.IRecipeCategoryRegistration;
 import mezz.jei.api.registration.IRecipeRegistration;
 import mezz.jei.api.registration.IVanillaCategoryExtensionRegistration;
 import mezz.jei.api.runtime.IJeiRuntime;
-import mezz.jei.library.ingredients.IngredientInfoRecipe;
+import mezz.jei.library.plugins.jei.info.IngredientInfoRecipe;
 import mezz.jei.library.util.RecipeUtil;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
@@ -92,11 +92,11 @@ public class JEICompat implements IModPlugin {
             ItemStack out = RecipeUtil.getResultItem(i);
             if (out != null && !out.isEmpty()) {
                 newInfos.computeIfAbsent(out.copy(), stack -> {
-                    List<IJeiIngredientInfoRecipe> il = IngredientInfoRecipe.create(
+                    List<IJeiIngredientInfoRecipe> il = Collections.singletonList(IngredientInfoRecipe.create(
                             jei.getIngredientManager(),
                             ImmutableList.of(stack),
                             VanillaTypes.ITEM_STACK, it
-                    );
+                    ));
                     man.addRecipes(RecipeTypes.INFORMATION, il);
                     return il;
                 });

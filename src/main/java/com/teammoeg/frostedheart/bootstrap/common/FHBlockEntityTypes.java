@@ -45,6 +45,7 @@ import com.teammoeg.frostedheart.content.town.buildings.hunting.HuntingBaseBlock
 import com.teammoeg.frostedheart.content.town.buildings.mine.MineBaseBlockEntity;
 import com.teammoeg.frostedheart.content.town.buildings.mine.MineBlockEntity;
 import com.teammoeg.frostedheart.content.town.buildings.warehouse.WarehouseBlockEntity;
+import com.teammoeg.frostedheart.content.town.buildings.warehouse.WarehouseInterfaceBlockEntity;
 import com.teammoeg.frostedheart.content.utility.gunpowderbarrel.GunpowderBarrelBlockEntity;
 import com.teammoeg.frostedheart.content.utility.incinerator.GasVentTileEntity;
 import com.teammoeg.frostedheart.content.utility.incinerator.OilBurnerTileEntity;
@@ -136,6 +137,9 @@ public class FHBlockEntityTypes {
     );
     public static final RegistryObject<BlockEntityType<WarehouseBlockEntity>> WAREHOUSE = REGISTER.register(
             "warehouse", makeType(WarehouseBlockEntity::new, FHBlocks.WAREHOUSE::get)
+    );
+    public static final RegistryObject<BlockEntityType<WarehouseInterfaceBlockEntity>> WAREHOUSE_INTERFACE = REGISTER.register(
+            "warehouse_interface", makeType(WarehouseInterfaceBlockEntity::new, FHBlocks.WAREHOUSE_INTERFACE::get)
     );
     public static final RegistryObject<BlockEntityType<MineBlockEntity>> MINE = REGISTER.register(
             "mine", makeType(MineBlockEntity::new, FHBlocks.MINE::get)

@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "facing=north": {
+      "model": "frostedheart:block/warehouse_interface"
+    },
+    "facing=east": {
+      "model": "frostedheart:block/warehouse_interface",
+      "y": 90
+    },
+    "facing=south": {
+      "model": "frostedheart:block/warehouse_interface",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "frostedheart:block/warehouse_interface",
+      "y": 270
+    }
+  }
+}
