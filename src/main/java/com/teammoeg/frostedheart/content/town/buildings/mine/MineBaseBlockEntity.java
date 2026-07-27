@@ -66,10 +66,10 @@ public class MineBaseBlockEntity extends AbstractTownBuildingBlockEntity<MineBas
                         * scanner.getArea();
                 int calculated = (int) (effectiveFloorBlocks
                         / FHConfig.SERVER.TOWN.MINING.floorBlocksPerWorkerSlot.get());
-                building.maxResidents = Math.max(
+                building.setMaxResidents(Math.max(
                         FHConfig.SERVER.TOWN.MINING.minimumWorkerSlots.get(),
                         calculated
-                );
+                ));
                 return true;
             }
         }
