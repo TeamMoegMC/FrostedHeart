@@ -77,5 +77,5 @@ public record SimpleItemKey(Item item, @Nullable CompoundTag tag)
     public boolean matches(ItemStack stack) {
         return stack.getItem() == item && Objects.equals(stack.getTag(), tag);
     }
-    }
+
 }
