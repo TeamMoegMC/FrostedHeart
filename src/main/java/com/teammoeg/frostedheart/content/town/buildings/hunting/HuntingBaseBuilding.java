@@ -19,7 +19,6 @@
 
 package com.teammoeg.frostedheart.content.town.buildings.hunting;
 
-import com.google.common.collect.ImmutableMap;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.frostedheart.FHMain;
@@ -27,7 +26,6 @@ import com.teammoeg.frostedheart.content.town.*;
 import com.teammoeg.frostedheart.content.town.block.OccupiedVolume;
 import com.teammoeg.frostedheart.content.town.building.AbstractTownResidentWorkBuilding;
 import com.teammoeg.frostedheart.content.town.resident.Resident;
-import com.teammoeg.frostedheart.content.town.resource.TeamTownResourceHolder;
 import com.teammoeg.frostedheart.content.town.resource.action.*;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import net.minecraft.core.UUIDUtil;
@@ -61,7 +59,8 @@ public class HuntingBaseBuilding extends AbstractTownResidentWorkBuilding {
 					Codec.DOUBLE.optionalFieldOf("temperature",0D).forGetter(o -> o.getTemperature()),
 					Codec.INT.optionalFieldOf("maxResidents",0).forGetter(o -> o.getMaxResidents()),
 					Codec.INT.optionalFieldOf("tanningRackNum",0).forGetter(o -> o.getTanningRackNum()),
-					Codec.DOUBLE.optionalFieldOf("temperatureModifier",null).forGetter(o -> o.getTemperatureModifier()))
+					Codec.DOUBLE.optionalFieldOf("temperatureModifier",0D).forGetter(o -> o.getTemperatureModifier()),
+					Codec.DOUBLE.optionalFieldOf("lootRollCarry",0D).forGetter(o -> o.getLootRollCarry()))
 			.apply(t, HuntingBaseBuilding::new));
 	@Getter
 	private int area;
@@ -75,6 +74,8 @@ public class HuntingBaseBuilding extends AbstractTownResidentWorkBuilding {
 	private double temperatureModifier;
 	@Getter
 	private double rating;
+	@Getter
+	private double lootRollCarry;
 
 	public void setArea(int area) { this.area = area; fireChange(); }
 	public void setVolume(int volume) { this.volume = volume; fireChange(); }
@@ -82,6 +83,15 @@ public class HuntingBaseBuilding extends AbstractTownResidentWorkBuilding {
 	public void setTemperature(double temperature) { this.temperature = temperature; fireChange(); }
 	public void setTemperatureModifier(double temperatureModifier) { this.temperatureModifier = temperatureModifier; fireChange(); }
 	public void setRating(double rating) { this.rating = rating; fireChange(); }
+	public void setLootRollCarry(double lootRollCarry) {
+		double safeCarry = Double.isFinite(lootRollCarry)
+				? Math.max(0.0, Math.min(Math.nextDown(1.0), lootRollCarry))
+				: 0.0;
+		if (Double.compare(this.lootRollCarry, safeCarry) != 0) {
+			this.lootRollCarry = safeCarry;
+			fireChange();
+		}
+	}
 
 	public HuntingBaseBuilding(BlockPos pos) {
         super(pos);
@@ -100,8 +110,9 @@ public class HuntingBaseBuilding extends AbstractTownResidentWorkBuilding {
 	 * @param maxResidents the maximum residents
 	 * @param tanningRackNum the number of tanning racks
 	 * @param temperatureModifier the temperature modifier
+	 * @param lootRollCarry fractional expected loot-table rolls retained between work cycles
 	 */
-	public HuntingBaseBuilding(BlockPos pos, boolean isStructureValid, OccupiedVolume occupiedVolume, java.util.List<UUID> residentsID, int area, int volume, double temperature, int maxResidents, int tanningRackNum, double temperatureModifier) {
+	public HuntingBaseBuilding(BlockPos pos, boolean isStructureValid, OccupiedVolume occupiedVolume, java.util.List<UUID> residentsID, int area, int volume, double temperature, int maxResidents, int tanningRackNum, double temperatureModifier, double lootRollCarry) {
 		super(pos);
 		this.setIsStructureValid(isStructureValid);
 		this.setOccupiedVolume(occupiedVolume);
@@ -112,9 +123,8 @@ public class HuntingBaseBuilding extends AbstractTownResidentWorkBuilding {
 		this.setMaxResidents(maxResidents);
 		this.setTanningRackNum(tanningRackNum);
 		this.setTemperatureModifier(temperatureModifier);
+		this.setLootRollCarry(lootRollCarry);
 	}
-
-	private static final double STANDARD_WORKER_ATTRIBUTE_SCORE = TownMathFunctions.attributeScore(50.0);
 
 	@Override
 	public boolean work(ITownWithBuildings town, ServerLevel world) {
@@ -132,12 +142,21 @@ public class HuntingBaseBuilding extends AbstractTownResidentWorkBuilding {
 			if (productivity > 0) totalProductivity += productivity;
 		}
 
-		// 2. Whole loot-table rolls requested per town day.
+		// 2. Settle expected rolls. Only the fractional remainder is carried to
+		// the next town day; whole rolls blocked by terrain supply are not backlogged.
 		FHConfig.Server.Town.Hunting config = FHConfig.SERVER.TOWN.HUNTING;
-		int desiredThrows = Math.max(
-					config.minimumLootRollsPerBaseDay.get(),
-					(int) Math.floor(totalProductivity * config.baseLootRollsPerStandardWorkerDay.get())
-			);
+		double expectedThrows = config.passiveExpectedLootRollsPerBaseDay.get()
+				+ totalProductivity * config.expectedLootRollsPerStandardWorkerDay.get();
+		int desiredThrows;
+		if (config.useFractionalLootRollCarry.get()) {
+			TownMathFunctions.FractionalSettlement settlement =
+					TownMathFunctions.settleFractionalAmount(lootRollCarry, expectedThrows);
+			desiredThrows = (int) Math.min(Integer.MAX_VALUE, settlement.wholeAmount());
+			setLootRollCarry(settlement.carry());
+		} else {
+			desiredThrows = (int) Math.min(Integer.MAX_VALUE, Math.floor(expectedThrows));
+			setLootRollCarry(0.0);
+		}
 		if (desiredThrows <= 0) return false;
 
         // 3. 受野外猎物储量限制
@@ -145,14 +164,8 @@ public class HuntingBaseBuilding extends AbstractTownResidentWorkBuilding {
         int actualThrows = Math.min(desiredThrows, (int) Math.floor(available));
         if (actualThrows <= 0) return false;
 
-		// 4. LootContext luck based on average dimensionless productivity.
-		int residentCount = this.residentsID.size();
-		float luck = residentCount > 0
-					? (float) (totalProductivity / residentCount * config.lootLuckPerStandardWorker.get())
-					: 0.0f;
-
-        // 5. 获取战利品表
-        // 获取战利品表
+        // 4. 获取固定概率的战利品表。居民生产力只决定抽取次数，
+		// 不再通过 Loot Luck 隐式改变物品组成。
         LootTable lootTable = world.getServer().getLootData()
                 .getLootTable(new ResourceLocation(FHMain.MODID, "town/hunting"));
         if (lootTable == LootTable.EMPTY) {
@@ -161,7 +174,7 @@ public class HuntingBaseBuilding extends AbstractTownResidentWorkBuilding {
         }
 
         LootParams lootParams = new LootParams.Builder(world)
-                .withLuck(luck)
+                .withLuck(0.0f)
                 .create(LootContextParamSets.EMPTY);
 
         List<ItemStack> loot = new ArrayList<>();
@@ -177,7 +190,7 @@ public class HuntingBaseBuilding extends AbstractTownResidentWorkBuilding {
             merged.merge(stack.getItem(), stack.getCount(), Integer::sum);
         }
 
-        // 6. 将战利品存入仓库
+        // 5. 将战利品存入仓库
         for (Map.Entry<Item, Integer> entry : merged.entrySet()) {
             ItemStack batch = new ItemStack(entry.getKey(), entry.getValue());
             teamTown.getActionExecutorHandler().execute(
@@ -190,7 +203,7 @@ public class HuntingBaseBuilding extends AbstractTownResidentWorkBuilding {
             );
         }
 
-        // 7. 扣除对应的野外猎物储量（无论仓库是否满，猎物已猎杀）
+        // 6. 扣除对应的野外猎物储量（无论仓库是否满，猎物已猎杀）
         teamTown.pickTerrainResource(TerrainResourceType.HUNT, actualThrows);
         return true;
 	}
@@ -217,42 +230,27 @@ public class HuntingBaseBuilding extends AbstractTownResidentWorkBuilding {
 	@Override
 	public double getResidentScore(Resident resident) {
 		FHConfig.Server.Town.Hunting config = FHConfig.SERVER.TOWN.HUNTING;
-		double healthScore = TownMathFunctions.attributeScore(resident.getHealth());
-		double mentalScore = TownMathFunctions.attributeScore(resident.getMental());
-		double strengthScore = TownMathFunctions.attributeScore(resident.getStrength());
-		double intelligenceScore = TownMathFunctions.attributeScore(resident.getIntelligence());
-
-		double weightedAttributeScore = weightedGeometricMean(
-				new double[]{healthScore, mentalScore, strengthScore, intelligenceScore},
+		return TownMathFunctions.linearResidentProductivity(
+				new double[]{
+						resident.getHealth(),
+						resident.getMental(),
+						resident.getStrength(),
+						resident.getIntelligence()
+				},
 				new double[]{
 						config.healthWeight.get(),
 						config.mentalWeight.get(),
 						config.strengthWeight.get(),
 						config.intelligenceWeight.get()
-				}
+				},
+				resident.getWorkProficiency(HuntingBaseBuilding.class),
+				config.productivityAtAttributeZero.get(),
+				config.productivityAtAttributeHundred.get(),
+				config.maximumProficiency.get(),
+				config.bonusAtMaximumProficiency.get(),
+				config.minimumResidentProductivity.get(),
+				config.maximumResidentProductivity.get()
 		);
-		double attributeProductivity = weightedAttributeScore / STANDARD_WORKER_ATTRIBUTE_SCORE;
-
-		double proficiency = Math.max(0.0, resident.getWorkProficiency(HuntingBaseBuilding.class));
-		double proficiencyPart = 1.0 + config.maximumProficiencyBonus.get()
-				* (1.0 - Math.exp(-proficiency * config.proficiencyCurvePerPoint.get()));
-		return attributeProductivity * proficiencyPart;
-	}
-
-	private static double weightedGeometricMean(double[] scores, double[] weights) {
-		double totalWeight = 0.0;
-		double weightedLogSum = 0.0;
-		for (int i = 0; i < scores.length; i++) {
-			double weight = weights[i];
-			if (weight <= 0.0) continue;
-			if (scores[i] <= 0.0) return 0.0;
-			totalWeight += weight;
-			weightedLogSum += weight * Math.log(scores[i]);
-		}
-		if (totalWeight <= 0.0) {
-			return STANDARD_WORKER_ATTRIBUTE_SCORE;
-		}
-		return Math.exp(weightedLogSum / totalWeight);
 	}
 
 	public double getEffectiveTemperature() {

@@ -65,11 +65,6 @@ public class MineBaseBuilding extends AbstractTownResidentWorkBuilding {
 	private int volume;
 
     public Set<BlockPos> linkedMines = new HashSet<>();
-    /**
-     * Unit definition for config values: a standard worker has each core
-     * attribute at 50 and zero mining proficiency.
-     */
-    private static final double STANDARD_WORKER_ATTRIBUTE_SCORE = TownMathFunctions.attributeScore(50.0);
 
 	public void setArea(int area) { this.area = area; fireChange(); }
 	public void setVolume(int volume) { this.volume = volume; fireChange(); }
@@ -190,42 +185,27 @@ public class MineBaseBuilding extends AbstractTownResidentWorkBuilding {
     @Override
     public double getResidentScore(Resident resident) {
         FHConfig.Server.Town.Mining config = FHConfig.SERVER.TOWN.MINING;
-        double healthScore = TownMathFunctions.attributeScore(resident.getHealth());
-        double mentalScore = TownMathFunctions.attributeScore(resident.getMental());
-        double strengthScore = TownMathFunctions.attributeScore(resident.getStrength());
-        double intelligenceScore = TownMathFunctions.attributeScore(resident.getIntelligence());
-
-        double weightedAttributeScore = weightedGeometricMean(
-                new double[]{healthScore, mentalScore, strengthScore, intelligenceScore},
+        return TownMathFunctions.linearResidentProductivity(
+                new double[]{
+                        resident.getHealth(),
+                        resident.getMental(),
+                        resident.getStrength(),
+                        resident.getIntelligence()
+                },
                 new double[]{
                         config.healthWeight.get(),
                         config.mentalWeight.get(),
                         config.strengthWeight.get(),
                         config.intelligenceWeight.get()
-                }
+                },
+                resident.getWorkProficiency(MineBaseBuilding.class),
+                config.productivityAtAttributeZero.get(),
+                config.productivityAtAttributeHundred.get(),
+                config.maximumProficiency.get(),
+                config.bonusAtMaximumProficiency.get(),
+                config.minimumResidentProductivity.get(),
+                config.maximumResidentProductivity.get()
         );
-        double attributeProductivity = weightedAttributeScore / STANDARD_WORKER_ATTRIBUTE_SCORE;
-
-        double proficiency = Math.max(0.0, resident.getWorkProficiency(MineBaseBuilding.class));
-        double proficiencyPart = 1.0 + config.maximumProficiencyBonus.get()
-                * (1.0 - Math.exp(-proficiency * config.proficiencyCurvePerPoint.get()));
-        return attributeProductivity * proficiencyPart;
-    }
-
-    private static double weightedGeometricMean(double[] scores, double[] weights) {
-        double totalWeight = 0.0;
-        double weightedLogSum = 0.0;
-        for (int i = 0; i < scores.length; i++) {
-            double weight = weights[i];
-            if (weight <= 0.0) continue;
-            if (scores[i] <= 0.0) return 0.0;
-            totalWeight += weight;
-            weightedLogSum += weight * Math.log(scores[i]);
-        }
-        if (totalWeight <= 0.0) {
-            return STANDARD_WORKER_ATTRIBUTE_SCORE;
-        }
-        return Math.exp(weightedLogSum / totalWeight);
     }
 
     public void clearLinkedMines() {

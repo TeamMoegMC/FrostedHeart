@@ -512,16 +512,20 @@ public class FHConfig {
 				 * A standard worker has health, mental, strength and intelligence all
 				 * equal to 50, and zero hunting proficiency.
 				 */
-				public final ForgeConfigSpec.DoubleValue baseLootRollsPerStandardWorkerDay;
-				public final ForgeConfigSpec.IntValue minimumLootRollsPerBaseDay;
-				public final ForgeConfigSpec.DoubleValue lootLuckPerStandardWorker;
+				public final ForgeConfigSpec.DoubleValue expectedLootRollsPerStandardWorkerDay;
+				public final ForgeConfigSpec.DoubleValue passiveExpectedLootRollsPerBaseDay;
+				public final ForgeConfigSpec.BooleanValue useFractionalLootRollCarry;
 				public final ForgeConfigSpec.DoubleValue floorBlocksPerWorkerSlot;
 				public final ForgeConfigSpec.IntValue minimumWorkerSlots;
 				public final ForgeConfigSpec.IntValue minimumFloorAreaBlocks;
 				public final ForgeConfigSpec.IntValue minimumInteriorVolumeBlocks;
 				public final ForgeConfigSpec.DoubleValue minimumWorkingTemperatureCelsius;
-				public final ForgeConfigSpec.DoubleValue maximumProficiencyBonus;
-				public final ForgeConfigSpec.DoubleValue proficiencyCurvePerPoint;
+				public final ForgeConfigSpec.DoubleValue productivityAtAttributeZero;
+				public final ForgeConfigSpec.DoubleValue productivityAtAttributeHundred;
+				public final ForgeConfigSpec.DoubleValue maximumProficiency;
+				public final ForgeConfigSpec.DoubleValue bonusAtMaximumProficiency;
+				public final ForgeConfigSpec.DoubleValue minimumResidentProductivity;
+				public final ForgeConfigSpec.DoubleValue maximumResidentProductivity;
 				public final ForgeConfigSpec.DoubleValue healthWeight;
 				public final ForgeConfigSpec.DoubleValue mentalWeight;
 				public final ForgeConfigSpec.DoubleValue strengthWeight;
@@ -539,19 +543,21 @@ public class FHConfig {
 
 				Hunting(ForgeConfigSpec.Builder builder) {
 					builder.push("Hunting");
-					baseLootRollsPerStandardWorkerDay = builder
-						.comment("Base hunting-loot-table rolls per standard worker per Minecraft day.")
-						.comment("One successful roll consumes one hunt terrain-resource unit.")
+					expectedLootRollsPerStandardWorkerDay = builder
+						.comment("Long-run expected hunting-loot-table rolls per standard worker per Minecraft day.")
+						.comment("Fractional rolls are retained by each hunting base when fractional carry is enabled.")
 						.comment("A standard worker has all four attributes at 50 and zero hunting proficiency.")
-						.defineInRange("baseLootRollsPerStandardWorkerDay", 7d / 6d, 0d, 1000000d);
-					minimumLootRollsPerBaseDay = builder
-						.comment("Minimum whole loot-table rolls per workable hunting base per Minecraft day.")
-						.comment("The default of 1 preserves the existing workerless-base output; set to 0 to require productive workers.")
-						.defineInRange("minimumLootRollsPerBaseDay", 1, 0, 1000000);
-					lootLuckPerStandardWorker = builder
-						.comment("LootContext luck produced by an average standard worker, in loot-luck units.")
-						.comment("Actual luck scales with the average dimensionless productivity of assigned residents.")
-						.defineInRange("lootLuckPerStandardWorker", 7d / 120d, 0d, 1000000d);
+						.comment("The default loot table averages 1.5 item units per roll, so the default 7/6 rolls equal 1.75 expected items.")
+						.comment("One executed roll consumes one hunt terrain-resource unit even if it yields no stored item.")
+						.defineInRange("expectedLootRollsPerStandardWorkerDay", 7d / 6d, 0d, 1000000d);
+					passiveExpectedLootRollsPerBaseDay = builder
+						.comment("Long-run expected loot-table rolls supplied by each workable hunting base without labor.")
+						.comment("The default of 0 requires productive workers.")
+						.defineInRange("passiveExpectedLootRollsPerBaseDay", 0d, 0d, 1000000d);
+					useFractionalLootRollCarry = builder
+						.comment("Retain fractional expected rolls on each hunting base for exact long-run settlement.")
+						.comment("When disabled, expected rolls are rounded down independently each day.")
+						.define("useFractionalLootRollCarry", true);
 					floorBlocksPerWorkerSlot = builder
 						.comment("Effective floor area required for one hunting-base worker slot, in blocks per worker.")
 						.comment("Space rating multiplies effective floor area before slots are calculated.")
@@ -568,14 +574,28 @@ public class FHConfig {
 					minimumWorkingTemperatureCelsius = builder
 						.comment("Minimum effective indoor temperature at which the hunting base can work, in degrees Celsius.")
 						.defineInRange("minimumWorkingTemperatureCelsius", 0d, -1000d, 1000d);
-					maximumProficiencyBonus = builder
-						.comment("Maximum additional hunting productivity from proficiency, as a dimensionless multiplier.")
-						.comment("For example, 1.5 means proficiency can add up to +150%, for a final proficiency factor up to 2.5.")
-						.defineInRange("maximumProficiencyBonus", 1.5d, 0d, 100d);
-					proficiencyCurvePerPoint = builder
-						.comment("Proficiency-curve rate in inverse proficiency points.")
-						.comment("Proficiency factor = 1 + maximumProficiencyBonus * (1 - exp(-proficiency * rate)).")
-						.defineInRange("proficiencyCurvePerPoint", 0.04d, 0d, 100d);
+
+					builder.push("Resident Productivity");
+					productivityAtAttributeZero = builder
+						.comment("Relative hunting productivity at weighted attribute 0 and proficiency 0.")
+						.defineInRange("productivityAtAttributeZero", 0.5d, 0d, 100d);
+					productivityAtAttributeHundred = builder
+						.comment("Relative hunting productivity at weighted attribute 100 and proficiency 0.")
+						.comment("Linear interpolation makes weighted attribute 50 equal 1.0 with the defaults.")
+						.defineInRange("productivityAtAttributeHundred", 1.5d, 0d, 100d);
+					maximumProficiency = builder
+						.comment("Profession proficiency that grants the full configured productivity bonus.")
+						.defineInRange("maximumProficiency", 100d, 1d, 100d);
+					bonusAtMaximumProficiency = builder
+						.comment("Additive relative productivity granted at maximum hunting proficiency.")
+						.defineInRange("bonusAtMaximumProficiency", 1d, 0d, 100d);
+					minimumResidentProductivity = builder
+						.comment("Minimum final hunting productivity in standard-worker units.")
+						.defineInRange("minimumResidentProductivity", 0.5d, 0d, 100d);
+					maximumResidentProductivity = builder
+						.comment("Maximum final hunting productivity in standard-worker units.")
+						.defineInRange("maximumResidentProductivity", 2.5d, 0d, 100d);
+					builder.pop();
 
 					builder.push("Attribute Weights");
 					healthWeight = defineHuntingAttributeWeight(builder, "healthWeight", "health");
@@ -632,7 +652,7 @@ public class FHConfig {
 						ForgeConfigSpec.Builder builder, String key, String attributeName) {
 					return builder
 						.comment("Relative dimensionless weight of " + attributeName + " in hunting productivity.")
-						.comment("Weights are normalized by their sum; setting every attribute weight to zero disables attribute effects.")
+						.comment("Weights are normalized by their sum; setting every weight to zero uses an equal-weight average.")
 						.defineInRange(key, 1d, 0d, 1000d);
 				}
 			}
@@ -646,8 +666,12 @@ public class FHConfig {
 				public final ForgeConfigSpec.DoubleValue floorBlocksPerWorkerSlot;
 				public final ForgeConfigSpec.IntValue minimumWorkerSlots;
 				public final ForgeConfigSpec.IntValue connectionRadiusBlocks;
-				public final ForgeConfigSpec.DoubleValue maximumProficiencyBonus;
-				public final ForgeConfigSpec.DoubleValue proficiencyCurvePerPoint;
+				public final ForgeConfigSpec.DoubleValue productivityAtAttributeZero;
+				public final ForgeConfigSpec.DoubleValue productivityAtAttributeHundred;
+				public final ForgeConfigSpec.DoubleValue maximumProficiency;
+				public final ForgeConfigSpec.DoubleValue bonusAtMaximumProficiency;
+				public final ForgeConfigSpec.DoubleValue minimumResidentProductivity;
+				public final ForgeConfigSpec.DoubleValue maximumResidentProductivity;
 				public final ForgeConfigSpec.DoubleValue healthWeight;
 				public final ForgeConfigSpec.DoubleValue mentalWeight;
 				public final ForgeConfigSpec.DoubleValue strengthWeight;
@@ -673,14 +697,28 @@ public class FHConfig {
 					connectionRadiusBlocks = builder
 						.comment("Maximum straight-line distance from a mining base to an assigned mining camp, in blocks.")
 						.defineInRange("connectionRadiusBlocks", 1024, 0, 32000);
-					maximumProficiencyBonus = builder
-						.comment("Maximum additional mining productivity from proficiency, as a dimensionless multiplier.")
-						.comment("For example, 1.5 means proficiency can add up to +150%, for a final proficiency factor up to 2.5.")
-						.defineInRange("maximumProficiencyBonus", 1.5d, 0d, 100d);
-					proficiencyCurvePerPoint = builder
-						.comment("Proficiency-curve rate in inverse proficiency points.")
-						.comment("Proficiency factor = 1 + maximumProficiencyBonus * (1 - exp(-proficiency * rate)).")
-						.defineInRange("proficiencyCurvePerPoint", 0.04d, 0d, 100d);
+
+					builder.push("Resident Productivity");
+					productivityAtAttributeZero = builder
+						.comment("Relative mining productivity at weighted attribute 0 and proficiency 0.")
+						.defineInRange("productivityAtAttributeZero", 0.5d, 0d, 100d);
+					productivityAtAttributeHundred = builder
+						.comment("Relative mining productivity at weighted attribute 100 and proficiency 0.")
+						.comment("Linear interpolation makes weighted attribute 50 equal 1.0 with the defaults.")
+						.defineInRange("productivityAtAttributeHundred", 1.5d, 0d, 100d);
+					maximumProficiency = builder
+						.comment("Profession proficiency that grants the full configured productivity bonus.")
+						.defineInRange("maximumProficiency", 100d, 1d, 100d);
+					bonusAtMaximumProficiency = builder
+						.comment("Additive relative productivity granted at maximum mining proficiency.")
+						.defineInRange("bonusAtMaximumProficiency", 1d, 0d, 100d);
+					minimumResidentProductivity = builder
+						.comment("Minimum final mining productivity in standard-worker units.")
+						.defineInRange("minimumResidentProductivity", 0.5d, 0d, 100d);
+					maximumResidentProductivity = builder
+						.comment("Maximum final mining productivity in standard-worker units.")
+						.defineInRange("maximumResidentProductivity", 2.5d, 0d, 100d);
+					builder.pop();
 
 					builder.push("Attribute Weights");
 					healthWeight = defineMiningAttributeWeight(builder, "healthWeight", "health");
@@ -707,7 +745,7 @@ public class FHConfig {
 						ForgeConfigSpec.Builder builder, String key, String attributeName) {
 					return builder
 						.comment("Relative dimensionless weight of " + attributeName + " in mining productivity.")
-						.comment("Weights are normalized by their sum; setting every attribute weight to zero disables attribute effects.")
+						.comment("Weights are normalized by their sum; setting every weight to zero uses an equal-weight average.")
 						.defineInRange(key, 1d, 0d, 1000d);
 				}
 			}

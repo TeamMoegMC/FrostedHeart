@@ -48,6 +48,7 @@ import java.util.*;
  * For the actual entity, see {@link ResidentEntity}.
  */
 public class Resident {
+    public static final double MAX_WORK_PROFICIENCY = 100.0;
 	public static final Codec<Resident> CODEC=RecordCodecBuilder.create(t->t.group(
             Codec.STRING.fieldOf("firstName").forGetter(o->o.firstName),
             Codec.STRING.fieldOf("lastName").forGetter(o->o.lastName),
@@ -72,7 +73,8 @@ public class Resident {
         setIntelligence(intelligence);
         setEducationLevel(educationLevel);
         if(workProficiency!=null){
-            this.workProficiency.putAll(workProficiency);
+            workProficiency.forEach((key, value) ->
+                    this.workProficiency.put(key, normalizeWorkProficiency(value)));
         }
         setHousePos(housePos.orElse(null));
         setWorkPos(workPos.orElse(null));
@@ -175,7 +177,8 @@ public class Resident {
         setIntelligence(intelligence);
         setEducationLevel(educationLevel);
         if(workProficiency!=null){
-            this.workProficiency.putAll(workProficiency);
+            workProficiency.forEach((key, value) ->
+                    this.workProficiency.put(key, normalizeWorkProficiency(value)));
         }
         setHousePos(housePos);
         setWorkPos(workPos);
@@ -194,34 +197,39 @@ public class Resident {
     }
 
     public double getWorkProficiency(Class<? extends ITownResidentWorkBuilding> type) {
-        return workProficiency.computeIfAbsent(type.getSimpleName(), (k)->generateRandomProficiency());
+        String key = type.getSimpleName();
+        double proficiency = normalizeWorkProficiency(
+                workProficiency.computeIfAbsent(key, ignored -> generateRandomProficiency()));
+        workProficiency.put(key, proficiency);
+        return proficiency;
     }
 
     public double addWorkProficiency(Class<? extends ITownResidentWorkBuilding> type, double amount){
-        workProficiency.computeIfAbsent(type.getSimpleName(), (k)->generateRandomProficiency());
-        if(amount < 0){
-            amount = Math.max(0, amount);
-            FHMain.LOGGER.error("Resident.addWorkProficiency:Trying to add work proficiency with negative amount!");
+        if(!Double.isFinite(amount) || amount < 0){
+            amount = 0;
+            FHMain.LOGGER.error("Resident.addWorkProficiency:Trying to add invalid work proficiency amount!");
         }
-        double result = workProficiency.merge(type.getSimpleName(), amount, Double::sum);
+        double result = normalizeWorkProficiency(getWorkProficiency(type) + amount);
+        workProficiency.put(type.getSimpleName(), result);
         fireChange();
         return result;
     }
 
     public double setWorkProficiency(Class<? extends ITownResidentWorkBuilding> type,double amount){
         if(amount < 0){
-            amount = Math.max(0, amount);
+            amount = 0;
             FHMain.LOGGER.error("Resident.setWorkProficiency:Trying to set work proficiency to negative amount!");
         }
+        amount = normalizeWorkProficiency(amount);
         workProficiency.put(type.getSimpleName(), amount);
         fireChange();
         return amount;
     }
 
     /**
-     * 普通地增加工作熟练度，不需要输入数量，一般是工作时默认调用地增加工作熟练度的方法。
-     * 会随熟练度的提高衰减。
-     * @return 增加后的数量
+     * 增加 1 点职业熟练度。熟练度范围固定为 0 到 100。
+     *
+     * @return 增加后的熟练度
      */
     public double addWorkProficiency(Class<? extends ITownResidentWorkBuilding> type){
         return addWorkProficiency(type, 1);
@@ -263,7 +271,9 @@ public class Resident {
         int rawEducationLevel = data.getInt("educationLevel");
 
         CompoundTag workProficiencyNBT = data.getCompound("workProficiency");
-        workProficiency.keySet().forEach(key -> workProficiency.put(key, workProficiencyNBT.getDouble(key)));
+        workProficiency.clear();
+        workProficiencyNBT.getAllKeys().forEach(key ->
+                workProficiency.put(key, normalizeWorkProficiency(workProficiencyNBT.getDouble(key))));
 
         if (data.contains("workPos")) {
             setWorkPos(BlockPos.of(data.getLong("workPos")));
@@ -417,6 +427,13 @@ public class Resident {
 
     private static double generateRandomProficiency() {
         return Math.pow(Math.random(), 2) * 50;
+    }
+
+    private static double normalizeWorkProficiency(double proficiency) {
+        if (!Double.isFinite(proficiency)) {
+            return 0.0;
+        }
+        return Math.max(0.0, Math.min(MAX_WORK_PROFICIENCY, proficiency));
     }
 
 }

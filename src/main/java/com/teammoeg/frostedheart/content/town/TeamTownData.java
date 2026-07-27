@@ -362,6 +362,9 @@ public class TeamTownData implements SpecialData{
                 break;
             }
             for(Resident resident:availableResidents.values()){
+                if (!topPriorityBuilding.canResidentWork(resident)) {
+                    continue;
+                }
                 double residentScore = residentScoreCache.computeIfAbsent(resident, topPriorityBuilding::getResidentScore);
                 if(residentScore > bestResidentScore){
                     bestResident = resident;
@@ -371,9 +374,9 @@ public class TeamTownData implements SpecialData{
             if(bestResident != null){
                 topPriorityBuilding.addResident(bestResident);
                 availableResidents.remove(bestResident.getUUID());
-            }
-            if(topPriorityBuilding.getResidentPriority() != Double.NEGATIVE_INFINITY){
-                availableBuildings.add(topPriorityBuilding);
+                if(topPriorityBuilding.getResidentPriority() != Double.NEGATIVE_INFINITY){
+                    availableBuildings.add(topPriorityBuilding);
+                }
             }
         }
     }

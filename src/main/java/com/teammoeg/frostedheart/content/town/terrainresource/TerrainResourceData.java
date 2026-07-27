@@ -29,13 +29,15 @@ import javax.annotation.Nullable;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 public class TerrainResourceData {
     public static final Codec<TerrainResourceData> CODEC = RecordCodecBuilder.create(ins -> ins.group(
     Codec.DOUBLE.optionalFieldOf("extracted", 0.0).forGetter(o -> o.extracted),
 
-    ChunkResourceTracker.CODEC.optionalFieldOf("chunkTracker", null).forGetter(o -> o.chunkResourceTracker)
+    ChunkResourceTracker.CODEC.optionalFieldOf("chunkTracker")
+            .forGetter(o -> Optional.ofNullable(o.chunkResourceTracker))
 
     ).apply(ins, TerrainResourceData::new));
     public static final int DEFAULT_MAX_RADIUS = 3200;
@@ -59,6 +61,10 @@ public class TerrainResourceData {
     public TerrainResourceData(double extracted, ChunkResourceTracker tracker) {
         this.extracted = extracted;
         this.chunkResourceTracker = tracker;
+    }
+
+    private TerrainResourceData(double extracted, Optional<ChunkResourceTracker> tracker) {
+        this(extracted, tracker.orElse(null));
     }
 
 	public void recalculateRadius(double resoucePerSquare,int maxradius) {
