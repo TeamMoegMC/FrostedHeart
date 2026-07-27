@@ -25,6 +25,8 @@ import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.town.*;
 import com.teammoeg.frostedheart.content.town.block.OccupiedVolume;
 import com.teammoeg.frostedheart.content.town.building.AbstractTownResidentWorkBuilding;
+import com.teammoeg.frostedheart.content.town.building.TownProductionReportItem;
+import com.teammoeg.frostedheart.content.town.building.TownProductionStopReason;
 import com.teammoeg.frostedheart.content.town.resident.Resident;
 import com.teammoeg.frostedheart.content.town.resource.action.*;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
@@ -49,8 +51,57 @@ import static com.teammoeg.frostedheart.content.town.ITown.DEBUG_MODE;
 import static java.lang.Double.NEGATIVE_INFINITY;
 
 public class HuntingBaseBuilding extends AbstractTownResidentWorkBuilding {
+    public record HuntingDailyReport(
+            boolean hasData,
+            int plannedRolls,
+            int executedRolls,
+            List<TownProductionReportItem> items,
+            TownProductionStopReason stopReason
+    ) {
+        public static final HuntingDailyReport EMPTY =
+                new HuntingDailyReport(false, 0, 0, List.of(), TownProductionStopReason.NONE);
+        public static final Codec<HuntingDailyReport> CODEC = RecordCodecBuilder.create(instance -> instance.group(
+                Codec.BOOL.optionalFieldOf("hasData", false).forGetter(HuntingDailyReport::hasData),
+                Codec.INT.optionalFieldOf("plannedRolls", 0).forGetter(HuntingDailyReport::plannedRolls),
+                Codec.INT.optionalFieldOf("executedRolls", 0).forGetter(HuntingDailyReport::executedRolls),
+                TownProductionReportItem.CODEC.listOf().optionalFieldOf("items", List.of()).forGetter(HuntingDailyReport::items),
+                TownProductionStopReason.CODEC.optionalFieldOf("stopReason", TownProductionStopReason.NONE)
+                        .forGetter(HuntingDailyReport::stopReason)
+        ).apply(instance, HuntingDailyReport::new));
+
+        public HuntingDailyReport {
+            plannedRolls = Math.max(0, plannedRolls);
+            executedRolls = Math.min(plannedRolls, Math.max(0, executedRolls));
+            items = List.copyOf(items);
+            stopReason = stopReason == null ? TownProductionStopReason.NONE : stopReason;
+        }
+
+        public double generated() {
+            return items.stream().mapToDouble(TownProductionReportItem::produced).sum();
+        }
+
+        public double stored() {
+            return items.stream().mapToDouble(TownProductionReportItem::stored).sum();
+        }
+
+        public double lost() {
+            return items.stream().mapToDouble(TownProductionReportItem::lost).sum();
+        }
+    }
+
+    public record HuntingForecast(
+            double totalProductivity,
+            double newExpectedRolls,
+            double currentCarry,
+            int plannedRolls,
+            int availableRolls,
+            TownProductionStopReason stopReason
+    ) {}
+
 	public static final Codec<HuntingBaseBuilding> CODEC = RecordCodecBuilder.create(t -> t.group(
 					BlockPos.CODEC.optionalFieldOf("pos",BlockPos.ZERO).forGetter(o -> o.pos),
+					Codec.BOOL.optionalFieldOf("initialized", false).forGetter(o -> o.isInitialized()),
+					Codec.BOOL.optionalFieldOf("occupiedAreaOverlapped", false).forGetter(o -> o.isOccupiedAreaOverlapped()),
 					Codec.BOOL.optionalFieldOf("isStructureValid",false).forGetter(o -> o.isStructureValid()),
 					OccupiedVolume.CODEC.optionalFieldOf("occupiedVolume",OccupiedVolume.EMPTY).forGetter(o -> o.getOccupiedVolume()),
 					Codec.list(UUIDUtil.CODEC).optionalFieldOf("residentsID",List.of()).forGetter(o -> new ArrayList<>(o.getResidentsID())),
@@ -60,7 +111,10 @@ public class HuntingBaseBuilding extends AbstractTownResidentWorkBuilding {
 					Codec.INT.optionalFieldOf("maxResidents",0).forGetter(o -> o.getMaxResidents()),
 					Codec.INT.optionalFieldOf("tanningRackNum",0).forGetter(o -> o.getTanningRackNum()),
 					Codec.DOUBLE.optionalFieldOf("temperatureModifier",0D).forGetter(o -> o.getTemperatureModifier()),
-					Codec.DOUBLE.optionalFieldOf("lootRollCarry",0D).forGetter(o -> o.getLootRollCarry()))
+					Codec.DOUBLE.optionalFieldOf("rating",0D).forGetter(o -> o.getRating()),
+					Codec.DOUBLE.optionalFieldOf("lootRollCarry",0D).forGetter(o -> o.getLootRollCarry()),
+                    HuntingDailyReport.CODEC.optionalFieldOf("dailyReport", HuntingDailyReport.EMPTY)
+                            .forGetter(HuntingBaseBuilding::getDailyReport))
 			.apply(t, HuntingBaseBuilding::new));
 	@Getter
 	private int area;
@@ -76,6 +130,8 @@ public class HuntingBaseBuilding extends AbstractTownResidentWorkBuilding {
 	private double rating;
 	@Getter
 	private double lootRollCarry;
+    @Getter
+    private HuntingDailyReport dailyReport = HuntingDailyReport.EMPTY;
 
 	public void setArea(int area) { this.area = area; fireChange(); }
 	public void setVolume(int volume) { this.volume = volume; fireChange(); }
@@ -112,8 +168,15 @@ public class HuntingBaseBuilding extends AbstractTownResidentWorkBuilding {
 	 * @param temperatureModifier the temperature modifier
 	 * @param lootRollCarry fractional expected loot-table rolls retained between work cycles
 	 */
-	public HuntingBaseBuilding(BlockPos pos, boolean isStructureValid, OccupiedVolume occupiedVolume, java.util.List<UUID> residentsID, int area, int volume, double temperature, int maxResidents, int tanningRackNum, double temperatureModifier, double lootRollCarry) {
+	public HuntingBaseBuilding(BlockPos pos, boolean initialized, boolean occupiedAreaOverlapped,
+                              boolean isStructureValid, OccupiedVolume occupiedVolume,
+                              java.util.List<UUID> residentsID, int area, int volume,
+                              double temperature, int maxResidents, int tanningRackNum,
+                              double temperatureModifier, double rating, double lootRollCarry,
+                              HuntingDailyReport dailyReport) {
 		super(pos);
+        this.setInitialized(initialized);
+        this.setOccupiedAreaOverlapped(occupiedAreaOverlapped);
 		this.setIsStructureValid(isStructureValid);
 		this.setOccupiedVolume(occupiedVolume);
 		this.residentsID = new java.util.HashSet<>(residentsID);
@@ -123,7 +186,9 @@ public class HuntingBaseBuilding extends AbstractTownResidentWorkBuilding {
 		this.setMaxResidents(maxResidents);
 		this.setTanningRackNum(tanningRackNum);
 		this.setTemperatureModifier(temperatureModifier);
+        this.setRating(rating);
 		this.setLootRollCarry(lootRollCarry);
+        this.dailyReport = dailyReport == null ? HuntingDailyReport.EMPTY : dailyReport;
 	}
 
 	@Override
@@ -133,36 +198,61 @@ public class HuntingBaseBuilding extends AbstractTownResidentWorkBuilding {
             throw new IllegalArgumentException("HuntingBaseBuilding ERROR: Can't work in non-team town :" + town);
         }
 
-		// 1. Dimensionless productivity relative to a standard hunter.
-		double totalProductivity = 0.0;
-		Collection<Resident> residents = this.getResidents(teamTown);
-		for (Resident resident : residents) {
-			if (resident == null) continue;
-			double productivity = getResidentScore(resident);
-			if (productivity > 0) totalProductivity += productivity;
-		}
+        // 1. Dimensionless productivity relative to a standard hunter.
+        double totalProductivity = 0.0;
+        List<Resident> workingResidents = this.getResidents(teamTown).stream()
+                .filter(Objects::nonNull)
+                .filter(this::canResidentWork)
+                .toList();
+        for (Resident resident : workingResidents) {
+            double productivity = getResidentScore(resident);
+            if (productivity > 0) totalProductivity += productivity;
+        }
 
-		// 2. Settle expected rolls. Only the fractional remainder is carried to
-		// the next town day; whole rolls blocked by terrain supply are not backlogged.
-		FHConfig.Server.Town.Hunting config = FHConfig.SERVER.TOWN.HUNTING;
-		double expectedThrows = config.passiveExpectedLootRollsPerBaseDay.get()
-				+ totalProductivity * config.expectedLootRollsPerStandardWorkerDay.get();
-		int desiredThrows;
-		if (config.useFractionalLootRollCarry.get()) {
-			TownMathFunctions.FractionalSettlement settlement =
-					TownMathFunctions.settleFractionalAmount(lootRollCarry, expectedThrows);
-			desiredThrows = (int) Math.min(Integer.MAX_VALUE, settlement.wholeAmount());
-			setLootRollCarry(settlement.carry());
-		} else {
-			desiredThrows = (int) Math.min(Integer.MAX_VALUE, Math.floor(expectedThrows));
-			setLootRollCarry(0.0);
-		}
-		if (desiredThrows <= 0) return false;
+        // 2. Settle expected rolls. Only the fractional remainder is carried to
+        // the next town day; whole rolls blocked by terrain supply are not backlogged.
+        FHConfig.Server.Town.Hunting config = FHConfig.SERVER.TOWN.HUNTING;
+        double workerExpectedThrows =
+                totalProductivity * config.expectedLootRollsPerStandardWorkerDay.get();
+        double expectedThrows =
+                config.passiveExpectedLootRollsPerBaseDay.get() + workerExpectedThrows;
+        int desiredThrows;
+        if (config.useFractionalLootRollCarry.get()) {
+            TownMathFunctions.FractionalSettlement settlement =
+                    TownMathFunctions.settleFractionalAmount(lootRollCarry, expectedThrows);
+            desiredThrows = (int) Math.min(Integer.MAX_VALUE, settlement.wholeAmount());
+            setLootRollCarry(settlement.carry());
+        } else {
+            desiredThrows = (int) Math.min(Integer.MAX_VALUE, Math.floor(expectedThrows));
+            setLootRollCarry(0.0);
+        }
+
+        // A fractional expected roll still represents a day of hunting work.
+        // Experience requires at least one available HUNT unit, but does not
+        // depend on integer settlement or warehouse acceptance.
+        boolean hasWorkOpportunity = workerExpectedThrows > 0.0
+                && teamTown.maypickTerrainResource(TerrainResourceType.HUNT, 1.0) >= 1.0;
+        if (desiredThrows <= 0) {
+            setDailyReport(new HuntingDailyReport(
+                    true, 0, 0, List.of(),
+                    expectedThrows > 0.0
+                            ? TownProductionStopReason.ACCUMULATING
+                            : TownProductionStopReason.NO_ELIGIBLE_WORKERS
+            ));
+            if (hasWorkOpportunity) {
+                grantDailyHuntingProficiency(workingResidents);
+            }
+            return false;
+        }
 
         // 3. 受野外猎物储量限制
         double available = teamTown.maypickTerrainResource(TerrainResourceType.HUNT, desiredThrows);
         int actualThrows = Math.min(desiredThrows, (int) Math.floor(available));
-        if (actualThrows <= 0) return false;
+        if (actualThrows <= 0) {
+            setDailyReport(new HuntingDailyReport(
+                    true, desiredThrows, 0, List.of(), TownProductionStopReason.TERRAIN_DEPLETED));
+            return false;
+        }
 
         // 4. 获取固定概率的战利品表。居民生产力只决定抽取次数，
 		// 不再通过 Loot Luck 隐式改变物品组成。
@@ -170,6 +260,8 @@ public class HuntingBaseBuilding extends AbstractTownResidentWorkBuilding {
                 .getLootTable(new ResourceLocation(FHMain.MODID, "town/hunting"));
         if (lootTable == LootTable.EMPTY) {
             FHMain.LOGGER.error("Missing hunting loot table");
+            setDailyReport(new HuntingDailyReport(
+                    true, desiredThrows, 0, List.of(), TownProductionStopReason.MISSING_LOOT_TABLE));
             return false;
         }
 
@@ -191,9 +283,11 @@ public class HuntingBaseBuilding extends AbstractTownResidentWorkBuilding {
         }
 
         // 5. 将战利品存入仓库
+        Map<Item, double[]> reportAmounts = new HashMap<>();
         for (Map.Entry<Item, Integer> entry : merged.entrySet()) {
             ItemStack batch = new ItemStack(entry.getKey(), entry.getValue());
-            teamTown.getActionExecutorHandler().execute(
+            TownResourceActionResults.ItemResourceActionResult result =
+                    teamTown.getActionExecutorHandler().execute(
                     new TownResourceActions.ItemResourceAction(
                             batch,
                             ResourceActionType.ADD,
@@ -201,12 +295,83 @@ public class HuntingBaseBuilding extends AbstractTownResidentWorkBuilding {
                             ResourceActionMode.MAXIMIZE
                     )
             );
+            reportAmounts.put(entry.getKey(), new double[]{entry.getValue(), result.modifiedAmount()});
         }
 
         // 6. 扣除对应的野外猎物储量（无论仓库是否满，猎物已猎杀）
         teamTown.pickTerrainResource(TerrainResourceType.HUNT, actualThrows);
+        if (hasWorkOpportunity) {
+            grantDailyHuntingProficiency(workingResidents);
+        }
+        setDailyReport(new HuntingDailyReport(
+                true,
+                desiredThrows,
+                actualThrows,
+                toReportItems(reportAmounts),
+                actualThrows < desiredThrows
+                        ? TownProductionStopReason.TERRAIN_DEPLETED
+                        : TownProductionStopReason.NONE
+        ));
         return true;
 	}
+
+    public HuntingForecast getForecast(TeamTown town) {
+        double totalProductivity = this.getResidents(town).stream()
+                .filter(Objects::nonNull)
+                .filter(this::canResidentWork)
+                .mapToDouble(this::getResidentScore)
+                .filter(value -> value > 0.0)
+                .sum();
+        FHConfig.Server.Town.Hunting config = FHConfig.SERVER.TOWN.HUNTING;
+        double workerRolls =
+                totalProductivity * config.expectedLootRollsPerStandardWorkerDay.get();
+        double newExpectedRolls =
+                config.passiveExpectedLootRollsPerBaseDay.get() + workerRolls;
+        double amountToSettle = newExpectedRolls
+                + (config.useFractionalLootRollCarry.get() ? lootRollCarry : 0.0);
+        int planned = (int) Math.min(Integer.MAX_VALUE, Math.floor(Math.max(0.0, amountToSettle)));
+        int available = Math.min(
+                planned,
+                (int) Math.floor(town.getRemainingTerrainResource(TerrainResourceType.HUNT))
+        );
+        TownProductionStopReason reason;
+        if (planned <= 0) {
+            reason = newExpectedRolls > 0.0
+                    ? TownProductionStopReason.ACCUMULATING
+                    : TownProductionStopReason.NO_ELIGIBLE_WORKERS;
+        } else if (available < planned) {
+            reason = TownProductionStopReason.TERRAIN_DEPLETED;
+        } else {
+            reason = TownProductionStopReason.NONE;
+        }
+        return new HuntingForecast(
+                totalProductivity, newExpectedRolls, lootRollCarry, planned, available, reason);
+    }
+
+    private void setDailyReport(HuntingDailyReport dailyReport) {
+        this.dailyReport = dailyReport == null ? HuntingDailyReport.EMPTY : dailyReport;
+        fireChange();
+    }
+
+    private static List<TownProductionReportItem> toReportItems(Map<Item, double[]> amounts) {
+        return amounts.entrySet().stream()
+                .map(entry -> new TownProductionReportItem(
+                        entry.getKey(), entry.getValue()[0], entry.getValue()[1]))
+                .sorted(Comparator.comparingDouble(TownProductionReportItem::produced).reversed()
+                        .thenComparing(item -> item.item().getDescriptionId()))
+                .toList();
+    }
+
+    private static void grantDailyHuntingProficiency(List<Resident> workingResidents) {
+        FHConfig.Server.Town.ResidentProgression progression =
+                FHConfig.SERVER.TOWN.RESIDENT_PROGRESSION;
+        for (Resident resident : workingResidents) {
+            resident.gainDailyWorkProficiency(
+                    HuntingBaseBuilding.class,
+                    progression.proficiencyGrowthAtZeroPerWorkday.get(),
+                    progression.minimumProficiencyGrowthPerWorkday.get());
+        }
+    }
 
 	@Override
 	public boolean isBuildingWorkable() {

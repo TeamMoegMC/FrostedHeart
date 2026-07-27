@@ -31,6 +31,7 @@ import com.teammoeg.frostedheart.util.client.FHClientUtils;
 
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.InteractionHand;
@@ -38,6 +39,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.Level;
+import net.minecraftforge.network.NetworkHooks;
 
 import java.util.function.Supplier;
 
@@ -64,19 +66,7 @@ public class HuntingBaseBlock extends AbstractTownBuildingBlock implements CEnti
             }
             te.getBuilding().ifPresentOrElse(building -> {
                 te.refresh_safe(building);
-                AbstractTownBuildingBlock.displayBasicInfo(player, building);
-                player.displayClientMessage(Components.str("Raw temperature: " +
-                        CMath.round(building.getTemperature(), 2)), false);
-                player.displayClientMessage(Components.str("Temperature modifier: " +
-                        CMath.round(te.getTemperatureModifier(), 2)), false);
-                player.displayClientMessage(Components.str("Effective temperature: " + String.format("%.2f", building.getEffectiveTemperature()) + "(Temperature " + (building.isTemperatureValid() ? "Valid" : "Invalid") + ")"), false);
-                if(building.isBuildingWorkable())
-                    player.displayClientMessage(Components.str("MaxResident: " + building.getMaxResidents()) , false);
-                player.displayClientMessage(Components.str("TanningRackNum: " + building.getTanningRackNum()), false);
-                player.displayClientMessage(Components.str("Volume: " + building.getVolume()), false);
-                player.displayClientMessage(Components.str("Area: " + building.getArea()), false);
-                player.displayClientMessage(Components.str("Rating: " +
-                        CMath.round(building.getRating(), 2)), false);
+                NetworkHooks.openScreen((ServerPlayer) player, te, pos);
             }, () -> player.displayClientMessage(Components.str(CConstants.NO_CORRESPONDING_TOWN_BUILDING_INSTANCE_FOUND), false));
             return InteractionResult.SUCCESS;
         }

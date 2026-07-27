@@ -19,6 +19,7 @@
 
 package com.teammoeg.frostedheart.content.town;
 
+import com.teammoeg.chorda.client.RenderingHint;
 import com.teammoeg.chorda.client.cui.base.MenuPrimaryLayer;
 import com.teammoeg.chorda.client.cui.base.MouseButton;
 import com.teammoeg.chorda.client.cui.base.UILayer;
@@ -27,6 +28,8 @@ import com.teammoeg.chorda.client.icon.CIcons;
 import com.teammoeg.chorda.menu.CBlockEntityMenu;
 import com.teammoeg.frostedheart.content.town.block.AbstractTownBuildingBlockEntity;
 import com.teammoeg.frostedheart.content.town.tabs.AbstractTownTab;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.network.chat.Component;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -69,7 +72,14 @@ public abstract class AbstractTownWorkerBlockScreen<C extends CBlockEntityMenu<?
             AbstractTownTab<C> tab = tabs.get(i);
             int btnX = -22;
             int btnY = 2 + i * 20;
-            TabImageButtonElement btn = getTabButton(btnX, btnY, tabI, tab.getIcon(), tab.getActiveIcon());
+            TabImageButtonElement btn = getTabButton(
+                    btnX,
+                    btnY,
+                    tabI,
+                    tab.getIcon(),
+                    tab.getActiveIcon(),
+                    tab.getContentIcon(),
+                    tab.getTitle());
             btn.bind(() -> activeTab);
             this.tabButtons.add(btn);
             this.add(btn); // 添加到主 Screen
@@ -95,14 +105,46 @@ public abstract class AbstractTownWorkerBlockScreen<C extends CBlockEntityMenu<?
         return menu;
     }
 
-    public TabImageButtonElement getTabButton(int x, int y, int tabI,CIcons.CIcon icon,CIcons.CIcon activeIcon) {
-        return new TabImageButtonElement(this, x, y, 22, 18, tabI, icon, activeIcon){
+    public TabImageButtonElement getTabButton(
+            int x,
+            int y,
+            int tabI,
+            CIcons.CIcon inactiveBackground,
+            CIcons.CIcon activeBackground,
+            CIcons.CIcon contentIcon,
+            Component title
+    ) {
+        TabImageButtonElement button = new TabImageButtonElement(
+                this,
+                x,
+                y,
+                22,
+                18,
+                tabI,
+                activeBackground,
+                inactiveBackground
+        ) {
+            @Override
+            public void render(
+                    GuiGraphics graphics,
+                    int renderX,
+                    int renderY,
+                    int width,
+                    int height,
+                    RenderingHint hint
+            ) {
+                super.render(graphics, renderX, renderY, width, height, hint);
+                contentIcon.draw(graphics, renderX + 3, renderY + 1, 16, 16);
+            }
+
             @Override
             public void onClicked(MouseButton button) {
                 selectTab(tabI);
             }
 
         };
+        button.setTitle(title);
+        return button;
     }
     @Override
     public boolean onInit() {
@@ -132,4 +174,3 @@ public abstract class AbstractTownWorkerBlockScreen<C extends CBlockEntityMenu<?
     }
 
 }
-

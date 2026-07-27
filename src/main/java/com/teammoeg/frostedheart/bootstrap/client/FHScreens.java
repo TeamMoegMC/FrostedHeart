@@ -38,6 +38,10 @@ import com.teammoeg.frostedheart.content.robotics.logistics.gui.StorageChestScre
 import com.teammoeg.frostedheart.content.robotics.logistics.gui.SupplierChestScreen;
 import com.teammoeg.frostedheart.content.steamenergy.HeatStatScreen;
 import com.teammoeg.frostedheart.content.steamenergy.sauna.SaunaScreen;
+import com.teammoeg.frostedheart.content.town.buildings.house.HouseScreen;
+import com.teammoeg.frostedheart.content.town.buildings.hunting.HuntingBaseScreen;
+import com.teammoeg.frostedheart.content.town.buildings.mine.MineBaseScreen;
+import com.teammoeg.frostedheart.content.town.buildings.mine.MineScreen;
 import com.teammoeg.frostedheart.content.town.buildings.warehouse.WarehouseScreen;
 import com.teammoeg.frostedheart.content.town.buildings.warehouse.WarehouseInterfaceScreen;
 import com.teammoeg.frostedheart.content.trade.gui.TradeScreen;
@@ -58,6 +62,10 @@ public class FHScreens {
         registerCUIScreen(FHMenuTypes.TRADE_GUI.get(), TradeScreen::new);
         registerCUIScreen(FHMenuTypes.HEAT_STAT.get(), HeatStatScreen::new);
         registerCUIScreen(FHMenuTypes.WAREHOUSE.get(),WarehouseScreen::new);
+        registerCUIScreen(FHMenuTypes.HOUSE.get(), HouseScreen::new);
+        registerCUIScreen(FHMenuTypes.MINE_BASE.get(), MineBaseScreen::new);
+        registerCUIScreen(FHMenuTypes.HUNTING_BASE.get(), HuntingBaseScreen::new);
+        registerCUIScreen(FHMenuTypes.MINE.get(), MineScreen::new);
         registerCUIScreen(FHMenuTypes.WAREHOUSE_INTERFACE.get(), WarehouseInterfaceScreen::new);
         MenuScreens.register(FHMenuTypes.SAUNA.get(), SaunaScreen::new);
         MenuScreens.register(FHMenuTypes.INCUBATOR_T1.get(), IncubatorT1Screen::new);

@@ -25,10 +25,13 @@ import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.town.ITownWithResidents;
 import com.teammoeg.frostedheart.content.town.building.ITownResidentWorkBuilding;
+import com.teammoeg.frostedheart.content.town.buildings.hunting.HuntingBaseBuilding;
+import com.teammoeg.frostedheart.content.town.buildings.mine.MineBaseBuilding;
 import com.teammoeg.frostedheart.content.town.event.ITownResidentChangeEventListener;
 import com.teammoeg.frostedheart.content.town.event.TownResidentChangeEvent;
 import com.teammoeg.chorda.io.CodecUtil;
 import com.teammoeg.chorda.io.SerializeUtil;
+import com.teammoeg.chorda.math.CMath;
 
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -76,6 +79,7 @@ public class Resident {
             workProficiency.forEach((key, value) ->
                     this.workProficiency.put(key, normalizeWorkProficiency(value)));
         }
+        initializeMissingWorkProficiencies();
         setHousePos(housePos.orElse(null));
         setWorkPos(workPos.orElse(null));
     }
@@ -135,6 +139,7 @@ public class Resident {
      */
     @Getter
     private final Map<String, Double> workProficiency = new HashMap<>();
+    private transient final Set<String> proficiencyGainedToday = new HashSet<>();
     //the pos of the HouseBlock that the resident is living in
     @Nullable
     @Getter
@@ -145,9 +150,7 @@ public class Resident {
     private BlockPos workPos;
 
     public Resident(String firstName, String lastName) {
-        setFirstName(firstName);
-        setLastName(lastName);
-        setUuid(UUID.randomUUID());
+        this(firstName, lastName, UUID.randomUUID());
     }
 
     //public Resident() {
@@ -161,6 +164,7 @@ public class Resident {
         setFirstName(firstName);
         setLastName(lastName);
         setUuid(uuid);
+        initializeAdultAttributesAndExperience();
     }
 
     public Resident (String firstName, String lastName, String uuid){
@@ -180,6 +184,7 @@ public class Resident {
             workProficiency.forEach((key, value) ->
                     this.workProficiency.put(key, normalizeWorkProficiency(value)));
         }
+        initializeMissingWorkProficiencies();
         setHousePos(housePos);
         setWorkPos(workPos);
     }
@@ -198,10 +203,47 @@ public class Resident {
 
     public double getWorkProficiency(Class<? extends ITownResidentWorkBuilding> type) {
         String key = type.getSimpleName();
-        double proficiency = normalizeWorkProficiency(
-                workProficiency.computeIfAbsent(key, ignored -> generateRandomProficiency()));
-        workProficiency.put(key, proficiency);
+        Double storedProficiency = workProficiency.get(key);
+        if (storedProficiency == null) {
+            double generatedProficiency = generateRandomProficiency();
+            workProficiency.put(key, generatedProficiency);
+            fireChange();
+            return generatedProficiency;
+        }
+
+        double proficiency = normalizeWorkProficiency(storedProficiency);
+        if (Double.compare(storedProficiency, proficiency) != 0) {
+            workProficiency.put(key, proficiency);
+            fireChange();
+        }
         return proficiency;
+    }
+
+    /**
+     * Applies at most one proficiency gain for this profession in the current
+     * town workday.
+     */
+    public double gainDailyWorkProficiency(
+            Class<? extends ITownResidentWorkBuilding> type,
+            double growthAtZero,
+            double minimumGrowth
+    ) {
+        String key = type.getSimpleName();
+        double currentProficiency = getWorkProficiency(type);
+        if (!proficiencyGainedToday.add(key)) {
+            return currentProficiency;
+        }
+
+        double gain = ResidentAttributeModel.calculateDailyProficiencyGain(
+                currentProficiency, growthAtZero, minimumGrowth);
+        if (gain <= 0.0) {
+            return currentProficiency;
+        }
+        return addWorkProficiency(type, gain);
+    }
+
+    public void resetDailyProficiencyGrowth() {
+        proficiencyGainedToday.clear();
     }
 
     public double addWorkProficiency(Class<? extends ITownResidentWorkBuilding> type, double amount){
@@ -266,14 +308,19 @@ public class Resident {
         // to avoid setter validation exceptions on corrupt data
         double rawHealth = data.getDouble("health");
         double rawMental = data.getDouble("happiness");
-        double rawStrength = data.getDouble("strength");
-        double rawIntelligence = data.getDouble("intelligence");
+        double rawStrength = data.contains("strength", Tag.TAG_ANY_NUMERIC)
+                ? data.getDouble("strength")
+                : 50.0;
+        double rawIntelligence = data.contains("intelligence", Tag.TAG_ANY_NUMERIC)
+                ? data.getDouble("intelligence")
+                : 50.0;
         int rawEducationLevel = data.getInt("educationLevel");
 
         CompoundTag workProficiencyNBT = data.getCompound("workProficiency");
         workProficiency.clear();
         workProficiencyNBT.getAllKeys().forEach(key ->
                 workProficiency.put(key, normalizeWorkProficiency(workProficiencyNBT.getDouble(key))));
+        initializeMissingWorkProficiencies();
 
         if (data.contains("workPos")) {
             setWorkPos(BlockPos.of(data.getLong("workPos")));
@@ -425,8 +472,23 @@ public class Resident {
         return uuid.hashCode();
     }
 
+    private void initializeAdultAttributesAndExperience() {
+        setStrength(ResidentAttributeModel.generateAdultAttribute(CMath.RANDOM::nextDouble));
+        setIntelligence(ResidentAttributeModel.generateAdultAttribute(CMath.RANDOM::nextDouble));
+        initializeMissingWorkProficiencies();
+    }
+
+    private void initializeMissingWorkProficiencies() {
+        workProficiency.computeIfAbsent(
+                HuntingBaseBuilding.class.getSimpleName(),
+                ignored -> generateRandomProficiency());
+        workProficiency.computeIfAbsent(
+                MineBaseBuilding.class.getSimpleName(),
+                ignored -> generateRandomProficiency());
+    }
+
     private static double generateRandomProficiency() {
-        return Math.pow(Math.random(), 2) * 50;
+        return ResidentAttributeModel.generateInitialWorkProficiency(CMath.RANDOM::nextDouble);
     }
 
     private static double normalizeWorkProficiency(double proficiency) {

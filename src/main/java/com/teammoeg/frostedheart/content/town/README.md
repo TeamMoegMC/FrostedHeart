@@ -126,7 +126,7 @@ public interface ITown extends ITownWithResources, ITownWithBuildings, ITownWith
 
 | 建筑 | Building 类 | 是否工作 | 关键点 |
 |---|---|---|---|
-| House | `buildings/house/HouseBuilding` | 否（住宅） | 仅 `implements ITownResidentBuilding`；`work()` 消耗 `RESIDENT_FOOD_LEVEL`（按 `DESCENDING` 先吃高级食物），不足则扣健康/精神/力量，充足则按温度/装饰/空间评分增益；`getRating()` 决定分房优先级。 |
+| House | `buildings/house/HouseBuilding` | 否（住宅） | 仅 `implements ITownResidentBuilding`；`work()` 每日按配置消耗一次 `RESIDENT_FOOD_LEVEL`，由食物满足度、营养质量、有效温度和综合舒适度线性计算生命/精神的损失与恢复，不再改变力量；最近一次结算写入 `DailyReport`，`getRating()` 决定分房优先级。 |
 | Hunting Base | `buildings/hunting/HuntingBaseBuilding` | 是 | 继承 `AbstractTownResidentWorkBuilding`；按居民 score 总和决定投掷次数，受 `TerrainResourceType.HUNT` 限制，用战利品表 `town/hunting` 产出并 ADD 进仓库。 |
 | Mine Base | `buildings/mine/MineBaseBuilding` | 是 | 持有 `Set<BlockPos> linkedMines`；汇总有效 `MineBuilding` 权重，按区块向 `ORE` 开采。 |
 | Mine | `buildings/mine/MineBuilding` | 否（标记） | 仅扫描/标记；`BiomeMineResourceRecipe` 提供生物群系矿产权重（`getWeights(biome)`）。 |
@@ -240,7 +240,7 @@ TownResourceActionResults.TownResourceTypeCostActionResult result =
   - `TownBuildingUpdatePacket` / `TownResidentUpdatePacket` / `TownResourceUpdatePacket`：**空实现占位**，尚未使用。
   - `WarehouseUpdatePacket` / `WarehouseInteractPacket`：仓库物品同步与存取（C→S 改资源并回写玩家手持物）。
   - `WanderingRefugeeOpenTradeGUIMessage` / `WanderingRefugeeRecruitMessage`：难民交易/招募。
-- **GUI**（`tabs/` + `AbstractTownWorkerBlockScreen`）：通用工人方块界面，左侧 Tab 列表；`TownInformationTab`（建筑状态/体积/面积/容量，用 `BuildingInfoElement`）、`TownResourceTab`（仓库物品网格 `VirtualItemGridElement`）。仓库专用 `WarehouseScreen`。
+- **GUI**（`tabs/` + `AbstractTownWorkerBlockScreen`）：通用工人方块界面，左侧 Tab 列表；仓库使用 `TownInformationTab` / `TownResourceTab`。住宅使用 `HouseScreen`，概览页展示最近一次日结，居民页从客户端当前的整份城镇快照读取居民属性并支持逐人查看；住宅没有额外同步包。
 
 ---
 
@@ -250,8 +250,8 @@ TownResourceActionResults.TownResourceTypeCostActionResult result =
 |---|---|
 | `bootstrap/common/FHBlocks.java` | `HOUSE / WAREHOUSE / MINE / MINE_BASE / HUNTING_BASE` 方块注册（`REGISTRATE.block(...)`） |
 | `bootstrap/common/FHBlockEntityTypes.java` | 对应方块实体注册：`makeType(XxxBlockEntity::new, FHBlocks.XXX::get)` |
-| `bootstrap/common/FHMenuTypes.java` | `WAREHOUSE` 菜单（`register(WarehouseBlockEntity.class, "warehouse", WarehouseMenu::new)`） |
-| `bootstrap/client/FHScreens.java` | `registerCUIScreen(FHMenuTypes.WAREHOUSE.get(), WarehouseScreen::new)` |
+| `bootstrap/common/FHMenuTypes.java` | `WAREHOUSE` / `HOUSE` 菜单注册 |
+| `bootstrap/client/FHScreens.java` | `WarehouseScreen` / `HouseScreen` 客户端界面注册 |
 | `bootstrap/reference/FHTags.java` | `Blocks.TOWN_DECORATIONS` / `Blocks.TOWN_WALLS`；`Items.MAP_TAG_TO_TOWN_RESOURCE_ATTRIBUTE` / `MAP_TOWN_RESOURCE_ATTRIBUTE_TO_TAG`（Tag ↔ ItemResourceAttribute 双向映射） |
 | `infrastructure/gen/FHRegistrateTags.java` | 各建筑方块、装饰/墙 Tag、资源 Tag 的实际条目 |
 | `bootstrap/common/FHCapabilities.java` | `CHUNK_TOWN_RESOURCE`（区块资源 Capability） |

@@ -25,9 +25,12 @@ import com.teammoeg.frostedheart.content.town.*;
 import com.teammoeg.frostedheart.content.town.block.OccupiedVolume;
 import com.teammoeg.frostedheart.content.town.building.AbstractTownResidentWorkBuilding;
 import com.teammoeg.frostedheart.content.town.building.ITownBuilding;
+import com.teammoeg.frostedheart.content.town.building.TownProductionReportItem;
+import com.teammoeg.frostedheart.content.town.building.TownProductionStopReason;
 import com.teammoeg.frostedheart.content.town.resident.Resident;
 import com.teammoeg.frostedheart.content.town.resource.action.ResourceActionMode;
 import com.teammoeg.frostedheart.content.town.resource.action.ResourceActionType;
+import com.teammoeg.frostedheart.content.town.resource.action.TownResourceActionResults;
 import com.teammoeg.frostedheart.content.town.resource.action.TownResourceActions;
 import com.teammoeg.frostedheart.content.town.terrainresource.TerrainResourceType;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
@@ -44,8 +47,51 @@ import java.util.*;
 import static java.lang.Double.NEGATIVE_INFINITY;
 
 public class MineBaseBuilding extends AbstractTownResidentWorkBuilding {
+    public record MiningDailyReport(
+            boolean hasData,
+            double requested,
+            double extracted,
+            List<TownProductionReportItem> items,
+            TownProductionStopReason stopReason
+    ) {
+        public static final MiningDailyReport EMPTY =
+                new MiningDailyReport(false, 0.0, 0.0, List.of(), TownProductionStopReason.NONE);
+        public static final Codec<MiningDailyReport> CODEC = RecordCodecBuilder.create(instance -> instance.group(
+                Codec.BOOL.optionalFieldOf("hasData", false).forGetter(MiningDailyReport::hasData),
+                Codec.DOUBLE.optionalFieldOf("requested", 0.0).forGetter(MiningDailyReport::requested),
+                Codec.DOUBLE.optionalFieldOf("extracted", 0.0).forGetter(MiningDailyReport::extracted),
+                TownProductionReportItem.CODEC.listOf().optionalFieldOf("items", List.of()).forGetter(MiningDailyReport::items),
+                TownProductionStopReason.CODEC.optionalFieldOf("stopReason", TownProductionStopReason.NONE)
+                        .forGetter(MiningDailyReport::stopReason)
+        ).apply(instance, MiningDailyReport::new));
+
+        public MiningDailyReport {
+            requested = sanitize(requested);
+            extracted = Math.min(requested, sanitize(extracted));
+            items = List.copyOf(items);
+            stopReason = stopReason == null ? TownProductionStopReason.NONE : stopReason;
+        }
+
+        public double stored() {
+            return items.stream().mapToDouble(TownProductionReportItem::stored).sum();
+        }
+
+        public double lost() {
+            return items.stream().mapToDouble(TownProductionReportItem::lost).sum();
+        }
+    }
+
+    public record MiningForecast(
+            double totalProductivity,
+            double requested,
+            double extractable,
+            TownProductionStopReason stopReason
+    ) {}
+
 	public static final Codec<MineBaseBuilding> CODEC = RecordCodecBuilder.create(t -> t.group(
                     BlockPos.CODEC.optionalFieldOf("pos",BlockPos.ZERO).forGetter(o -> o.pos),
+                    Codec.BOOL.optionalFieldOf("initialized", false).forGetter(o -> o.isInitialized()),
+                    Codec.BOOL.optionalFieldOf("occupiedAreaOverlapped", false).forGetter(o -> o.isOccupiedAreaOverlapped()),
                     Codec.BOOL.optionalFieldOf("isStructureValid",false).forGetter(o -> o.isStructureValid()),
                     OccupiedVolume.CODEC.optionalFieldOf("occupiedVolume",OccupiedVolume.EMPTY).forGetter(o -> o.getOccupiedVolume()),
                     Codec.list(UUIDUtil.CODEC).optionalFieldOf("residentsID",List.of()).forGetter(o -> new ArrayList<>(o.getResidentsID())),
@@ -55,7 +101,9 @@ public class MineBaseBuilding extends AbstractTownResidentWorkBuilding {
 					Codec.INT.optionalFieldOf("maxResidents",0).forGetter(o -> o.getMaxResidents()),
 
                     Codec.list(BlockPos.CODEC).optionalFieldOf("linkedMines", new ArrayList<>())
-                            .forGetter(o -> o.getLinkedMines() == null ? new ArrayList<>() : new ArrayList<>(o.getLinkedMines()))
+                            .forGetter(o -> o.getLinkedMines() == null ? new ArrayList<>() : new ArrayList<>(o.getLinkedMines())),
+                    MiningDailyReport.CODEC.optionalFieldOf("dailyReport", MiningDailyReport.EMPTY)
+                            .forGetter(MineBaseBuilding::getDailyReport)
 			)
 			.apply(t, MineBaseBuilding::new));
 
@@ -65,6 +113,8 @@ public class MineBaseBuilding extends AbstractTownResidentWorkBuilding {
 	private int volume;
 
     public Set<BlockPos> linkedMines = new HashSet<>();
+    @Getter
+    private MiningDailyReport dailyReport = MiningDailyReport.EMPTY;
 
 	public void setArea(int area) { this.area = area; fireChange(); }
 	public void setVolume(int volume) { this.volume = volume; fireChange(); }
@@ -90,15 +140,22 @@ public class MineBaseBuilding extends AbstractTownResidentWorkBuilding {
 	 * @param volume the volume
 	 * @param maxResidents the maximum residents
 	 */
-	public MineBaseBuilding(BlockPos pos, boolean isStructureValid, OccupiedVolume occupiedVolume, java.util.List<UUID> residentsID, int area, int volume, int maxResidents,List<BlockPos> linkedMines) {
+	public MineBaseBuilding(BlockPos pos, boolean initialized, boolean occupiedAreaOverlapped,
+                            boolean isStructureValid, OccupiedVolume occupiedVolume,
+                            java.util.List<UUID> residentsID, int area, int volume,
+                            int maxResidents, List<BlockPos> linkedMines,
+                            MiningDailyReport dailyReport) {
 		super(pos);
+        this.setInitialized(initialized);
+        this.setOccupiedAreaOverlapped(occupiedAreaOverlapped);
 		this.setIsStructureValid(isStructureValid);
 		this.setOccupiedVolume(occupiedVolume);
 		this.residentsID = new HashSet<>(residentsID);
 		this.setArea(area);
 		this.setVolume(volume);
-		this.setMaxResidents(maxResidents);
+        this.setMaxResidents(maxResidents);
         this.linkedMines = new HashSet<>(linkedMines);
+        this.dailyReport = dailyReport == null ? MiningDailyReport.EMPTY : dailyReport;
 	}
 
 	@Override
@@ -108,16 +165,23 @@ public class MineBaseBuilding extends AbstractTownResidentWorkBuilding {
             throw new IllegalArgumentException("MineBaseBuilding ERROR: Can't work in non-team town :" + town);
         }
 
+        List<Resident> workingResidents = residentsID.stream()
+                .map(id -> teamTown.getResident(id).orElse(null))
+                .filter(Objects::nonNull)
+                .filter(this::canResidentWork)
+                .toList();
         // 1. Requested output, measured in item units per town day.
         double requestedOutputPerDay = 0.0;
-        for (UUID id : residentsID) {
-            Resident r = teamTown.getResident(id).orElse(null);
-            if (r == null) continue;
+        for (Resident r : workingResidents) {
             double workerOutputPerDay = FHConfig.SERVER.TOWN.MINING.baseOutputPerStandardWorkerDay.get()
                     * getResidentScore(r);
             if (workerOutputPerDay > 0) requestedOutputPerDay += workerOutputPerDay;
         }
-        if (requestedOutputPerDay <= 0.0) return false;
+        if (requestedOutputPerDay <= 0.0) {
+            setDailyReport(new MiningDailyReport(true, 0.0, 0.0, List.of(),
+                    TownProductionStopReason.NO_ELIGIBLE_WORKERS));
+            return false;
+        }
 
         // 2. 收集有效矿场并按区块分组
         Map<ChunkPos, Double> chunkTotalWeight = new HashMap<>();
@@ -145,9 +209,16 @@ public class MineBaseBuilding extends AbstractTownResidentWorkBuilding {
             chunkTotalWeight.merge(chunk, (double) sum, Double::sum);
             grandTotal += sum;
         }
-        if (grandTotal <= 0.0) return false;
+        if (grandTotal <= 0.0) {
+            setDailyReport(new MiningDailyReport(true, requestedOutputPerDay, 0.0, List.of(),
+                    TownProductionStopReason.NO_USABLE_MINES));
+            return false;
+        }
 
         // 3. 逐区块开采
+        boolean performedWork = false;
+        double extractedTotal = 0.0;
+        Map<Item, double[]> reportAmounts = new HashMap<>();
         for (Map.Entry<ChunkPos, Map<Item, Integer>> entry : chunkWeights.entrySet()) {
             ChunkPos chunk = entry.getKey();
             Map<Item, Integer> weights = entry.getValue();
@@ -157,19 +228,107 @@ public class MineBaseBuilding extends AbstractTownResidentWorkBuilding {
             // 使用 TeamTown 的封装方法
             double actual = teamTown.pickTerrainResource(TerrainResourceType.ORE, chunk, desired);
             if (actual <= 0.0) continue;
+            performedWork = true;
+            extractedTotal += actual;
 
             for (Map.Entry<Item, Integer> wEntry : weights.entrySet()) {
                 Item item = wEntry.getKey();
                 double itemAmount = actual * wEntry.getValue() / weightSum;
-                teamTown.getActionExecutorHandler().execute(
+                TownResourceActionResults.ItemResourceActionResult result =
+                        teamTown.getActionExecutorHandler().execute(
                         new TownResourceActions.ItemResourceAction(
                                 new ItemStack(item), ResourceActionType.ADD, itemAmount, ResourceActionMode.ATTEMPT
                         )
                 );
+                double[] amounts = reportAmounts.computeIfAbsent(item, ignored -> new double[2]);
+                amounts[0] += itemAmount;
+                amounts[1] += result.modifiedAmount();
             }
         }
-		return true;
+        TownProductionStopReason stopReason =
+                performedWork && extractedTotal + 1.0e-9 >= requestedOutputPerDay
+                        ? TownProductionStopReason.NONE
+                        : TownProductionStopReason.TERRAIN_DEPLETED;
+        setDailyReport(new MiningDailyReport(
+                true,
+                requestedOutputPerDay,
+                extractedTotal,
+                toReportItems(reportAmounts),
+                stopReason
+        ));
+        if (performedWork) {
+            FHConfig.Server.Town.ResidentProgression progression =
+                    FHConfig.SERVER.TOWN.RESIDENT_PROGRESSION;
+            for (Resident resident : workingResidents) {
+                resident.gainDailyWorkProficiency(
+                        MineBaseBuilding.class,
+                        progression.proficiencyGrowthAtZeroPerWorkday.get(),
+                        progression.minimumProficiencyGrowthPerWorkday.get());
+            }
+        }
+		return performedWork;
 	}
+
+    public MiningForecast getForecast(TeamTown town) {
+        double totalProductivity = residentsID.stream()
+                .map(id -> town.getResident(id).orElse(null))
+                .filter(Objects::nonNull)
+                .filter(this::canResidentWork)
+                .mapToDouble(this::getResidentScore)
+                .filter(value -> value > 0.0)
+                .sum();
+        double requested = totalProductivity
+                * FHConfig.SERVER.TOWN.MINING.baseOutputPerStandardWorkerDay.get();
+        if (requested <= 0.0) {
+            return new MiningForecast(totalProductivity, 0.0, 0.0,
+                    TownProductionStopReason.NO_ELIGIBLE_WORKERS);
+        }
+
+        Map<ChunkPos, Double> chunkWeights = new HashMap<>();
+        double totalWeight = 0.0;
+        for (BlockPos minePos : linkedMines) {
+            ITownBuilding building = town.getTownBuilding(minePos).orElse(null);
+            if (!(building instanceof MineBuilding mine) || !mine.isBuildingWorkable()) continue;
+            double weight = MineBuilding.getWeights(mine.getBiomePath()).values().stream()
+                    .mapToDouble(Integer::doubleValue).sum();
+            if (weight <= 0.0) continue;
+            chunkWeights.merge(new ChunkPos(minePos), weight, Double::sum);
+            totalWeight += weight;
+        }
+        if (totalWeight <= 0.0) {
+            return new MiningForecast(totalProductivity, requested, 0.0,
+                    TownProductionStopReason.NO_USABLE_MINES);
+        }
+
+        double extractable = 0.0;
+        for (Map.Entry<ChunkPos, Double> entry : chunkWeights.entrySet()) {
+            double desired = requested * entry.getValue() / totalWeight;
+            extractable += Math.min(desired,
+                    town.getRemainingTerrainResource(TerrainResourceType.ORE, entry.getKey()));
+        }
+        return new MiningForecast(totalProductivity, requested, extractable,
+                extractable + 1.0e-9 >= requested
+                        ? TownProductionStopReason.NONE
+                        : TownProductionStopReason.TERRAIN_DEPLETED);
+    }
+
+    private void setDailyReport(MiningDailyReport dailyReport) {
+        this.dailyReport = dailyReport == null ? MiningDailyReport.EMPTY : dailyReport;
+        fireChange();
+    }
+
+    private static List<TownProductionReportItem> toReportItems(Map<Item, double[]> amounts) {
+        return amounts.entrySet().stream()
+                .map(entry -> new TownProductionReportItem(
+                        entry.getKey(), entry.getValue()[0], entry.getValue()[1]))
+                .sorted(Comparator.comparingDouble(TownProductionReportItem::produced).reversed()
+                        .thenComparing(item -> item.item().getDescriptionId()))
+                .toList();
+    }
+
+    private static double sanitize(double value) {
+        return Double.isFinite(value) ? Math.max(0.0, value) : 0.0;
+    }
 
 	@Override
 	public double getResidentPriority() {

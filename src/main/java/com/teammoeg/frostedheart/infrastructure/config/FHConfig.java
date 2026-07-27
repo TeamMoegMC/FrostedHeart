@@ -506,6 +506,76 @@ public class FHConfig {
 		public static class Town {
 			public final ForgeConfigSpec.BooleanValue enableTownTick;
 			public final ForgeConfigSpec.BooleanValue enableTownTickMorning;
+
+			public static class Housing {
+				public final ForgeConfigSpec.DoubleValue foodConsumptionPerResidentDay;
+				public final ForgeConfigSpec.DoubleValue nutritionReferencePerFoodUnit;
+				public final ForgeConfigSpec.DoubleValue minimumNutritionRecoveryMultiplier;
+				public final ForgeConfigSpec.DoubleValue healthLossAtZeroFoodPerResidentDay;
+				public final ForgeConfigSpec.DoubleValue mentalLossAtZeroFoodPerResidentDay;
+				public final ForgeConfigSpec.DoubleValue maximumHealthRecoveryPerResidentDay;
+				public final ForgeConfigSpec.DoubleValue maximumMentalRecoveryPerResidentDay;
+				public final ForgeConfigSpec.DoubleValue temperatureComfortWeight;
+				public final ForgeConfigSpec.DoubleValue spaceComfortWeight;
+				public final ForgeConfigSpec.DoubleValue decorationComfortWeight;
+
+				Housing(ForgeConfigSpec.Builder builder) {
+					builder.push("Housing");
+					foodConsumptionPerResidentDay = builder
+						.comment("Food-resource units consumed per resident per Minecraft day.")
+						.defineInRange("foodConsumptionPerResidentDay", 6.5d, 0d, 100d);
+					nutritionReferencePerFoodUnit = builder
+						.comment("Nutrition value per consumed food-resource unit that grants maximum food quality.")
+						.defineInRange("nutritionReferencePerFoodUnit", 7000d, 1d, 1000000d);
+					minimumNutritionRecoveryMultiplier = builder
+						.comment("Recovery multiplier provided by food with zero nutrition quality.")
+						.defineInRange("minimumNutritionRecoveryMultiplier", 0.5d, 0d, 1d);
+					healthLossAtZeroFoodPerResidentDay = builder
+						.comment("Health points lost per resident-day when no required food is consumed.")
+						.defineInRange("healthLossAtZeroFoodPerResidentDay", 8d, 0d, 100d);
+					mentalLossAtZeroFoodPerResidentDay = builder
+						.comment("Mental points lost per resident-day when no required food is consumed.")
+						.defineInRange("mentalLossAtZeroFoodPerResidentDay", 5d, 0d, 100d);
+					maximumHealthRecoveryPerResidentDay = builder
+						.comment("Maximum health points recovered per resident-day at health 0 under perfect conditions.")
+						.defineInRange("maximumHealthRecoveryPerResidentDay", 2d, 0d, 100d);
+					maximumMentalRecoveryPerResidentDay = builder
+						.comment("Maximum mental points recovered per resident-day at mental 0 under perfect conditions.")
+						.defineInRange("maximumMentalRecoveryPerResidentDay", 1.5d, 0d, 100d);
+
+					builder.push("Comfort Weights");
+					temperatureComfortWeight = builder
+						.comment("Relative weight of effective-temperature comfort in the unified house rating.")
+						.defineInRange("temperatureComfortWeight", 0.4d, 0d, 1000d);
+					spaceComfortWeight = builder
+						.comment("Relative weight of space quality in the unified house rating.")
+						.defineInRange("spaceComfortWeight", 0.3d, 0d, 1000d);
+					decorationComfortWeight = builder
+						.comment("Relative weight of decoration quality in the unified house rating.")
+						.comment("The three comfort weights are normalized by their sum.")
+						.defineInRange("decorationComfortWeight", 0.3d, 0d, 1000d);
+					builder.pop();
+					builder.pop();
+				}
+			}
+
+			public static class ResidentProgression {
+				public final ForgeConfigSpec.DoubleValue proficiencyGrowthAtZeroPerWorkday;
+				public final ForgeConfigSpec.DoubleValue minimumProficiencyGrowthPerWorkday;
+
+				ResidentProgression(ForgeConfigSpec.Builder builder) {
+					builder.push("Resident Progression");
+					proficiencyGrowthAtZeroPerWorkday = builder
+						.comment("Profession proficiency gained per effective workday at proficiency 0.")
+						.comment("Growth decreases linearly as proficiency approaches 100.")
+						.defineInRange("proficiencyGrowthAtZeroPerWorkday", 2.4d, 0d, 100d);
+					minimumProficiencyGrowthPerWorkday = builder
+						.comment("Minimum profession proficiency gained per effective workday below proficiency 100.")
+						.defineInRange("minimumProficiencyGrowthPerWorkday", 0.25d, 0d, 100d);
+					builder.pop();
+				}
+			}
+
 			public static class Hunting {
 				/**
 				 * Hunting production is settled once per town day by tickMorning().
@@ -598,10 +668,10 @@ public class FHConfig {
 					builder.pop();
 
 					builder.push("Attribute Weights");
-					healthWeight = defineHuntingAttributeWeight(builder, "healthWeight", "health");
-					mentalWeight = defineHuntingAttributeWeight(builder, "mentalWeight", "mental");
-					strengthWeight = defineHuntingAttributeWeight(builder, "strengthWeight", "strength");
-					intelligenceWeight = defineHuntingAttributeWeight(builder, "intelligenceWeight", "intelligence");
+					healthWeight = defineHuntingAttributeWeight(builder, "healthWeight", "health", 25d);
+					mentalWeight = defineHuntingAttributeWeight(builder, "mentalWeight", "mental", 20d);
+					strengthWeight = defineHuntingAttributeWeight(builder, "strengthWeight", "strength", 25d);
+					intelligenceWeight = defineHuntingAttributeWeight(builder, "intelligenceWeight", "intelligence", 30d);
 					builder.pop();
 
 					builder.push("Building Rating");
@@ -649,11 +719,11 @@ public class FHConfig {
 				}
 
 				private static ForgeConfigSpec.DoubleValue defineHuntingAttributeWeight(
-						ForgeConfigSpec.Builder builder, String key, String attributeName) {
+						ForgeConfigSpec.Builder builder, String key, String attributeName, double defaultValue) {
 					return builder
 						.comment("Relative dimensionless weight of " + attributeName + " in hunting productivity.")
 						.comment("Weights are normalized by their sum; setting every weight to zero uses an equal-weight average.")
-						.defineInRange(key, 1d, 0d, 1000d);
+						.defineInRange(key, defaultValue, 0d, 1000d);
 				}
 			}
 			public static class Mining {
@@ -711,20 +781,20 @@ public class FHConfig {
 						.defineInRange("maximumProficiency", 100d, 1d, 100d);
 					bonusAtMaximumProficiency = builder
 						.comment("Additive relative productivity granted at maximum mining proficiency.")
-						.defineInRange("bonusAtMaximumProficiency", 1d, 0d, 100d);
+						.defineInRange("bonusAtMaximumProficiency", 0.5d, 0d, 100d);
 					minimumResidentProductivity = builder
 						.comment("Minimum final mining productivity in standard-worker units.")
 						.defineInRange("minimumResidentProductivity", 0.5d, 0d, 100d);
 					maximumResidentProductivity = builder
 						.comment("Maximum final mining productivity in standard-worker units.")
-						.defineInRange("maximumResidentProductivity", 2.5d, 0d, 100d);
+						.defineInRange("maximumResidentProductivity", 2d, 0d, 100d);
 					builder.pop();
 
 					builder.push("Attribute Weights");
-					healthWeight = defineMiningAttributeWeight(builder, "healthWeight", "health");
-					mentalWeight = defineMiningAttributeWeight(builder, "mentalWeight", "mental");
-					strengthWeight = defineMiningAttributeWeight(builder, "strengthWeight", "strength");
-					intelligenceWeight = defineMiningAttributeWeight(builder, "intelligenceWeight", "intelligence");
+					healthWeight = defineMiningAttributeWeight(builder, "healthWeight", "health", 30d);
+					mentalWeight = defineMiningAttributeWeight(builder, "mentalWeight", "mental", 10d);
+					strengthWeight = defineMiningAttributeWeight(builder, "strengthWeight", "strength", 45d);
+					intelligenceWeight = defineMiningAttributeWeight(builder, "intelligenceWeight", "intelligence", 15d);
 					builder.pop();
 
 					builder.push("Worker Assignment");
@@ -742,11 +812,11 @@ public class FHConfig {
 				}
 
 				private static ForgeConfigSpec.DoubleValue defineMiningAttributeWeight(
-						ForgeConfigSpec.Builder builder, String key, String attributeName) {
+						ForgeConfigSpec.Builder builder, String key, String attributeName, double defaultValue) {
 					return builder
 						.comment("Relative dimensionless weight of " + attributeName + " in mining productivity.")
 						.comment("Weights are normalized by their sum; setting every weight to zero uses an equal-weight average.")
-						.defineInRange(key, 1d, 0d, 1000d);
+						.defineInRange(key, defaultValue, 0d, 1000d);
 				}
 			}
 			public static class Resource{
@@ -822,7 +892,9 @@ public class FHConfig {
 				}
 			}
 			public final Hunting HUNTING;
+			public final Housing HOUSING;
 			public final Mining MINING;
+			public final ResidentProgression RESIDENT_PROGRESSION;
 			public final Resource RESOURCE;
 			Town(ForgeConfigSpec.Builder builder) {
 				builder.push("ITown");
@@ -832,6 +904,8 @@ public class FHConfig {
 				enableTownTickMorning = builder.comment("Enables town tick in the morning of each days.")
 					.comment("This tick includes the refresh of some town things, like house allocating, checking overlap of buildings, work assigning...")
 					.define("enableTownTickMorning", true);
+				HOUSING = new Housing(builder);
+				RESIDENT_PROGRESSION = new ResidentProgression(builder);
 				HUNTING = new Hunting(builder);
 				MINING = new Mining(builder);
 				RESOURCE=new Resource(builder);

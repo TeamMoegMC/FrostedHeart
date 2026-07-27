@@ -31,10 +31,12 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
+import net.minecraftforge.network.NetworkHooks;
 
 public class MineBaseBlock extends AbstractTownBuildingBlock implements CEntityBlock<MineBaseBlockEntity> {
 
@@ -52,11 +54,7 @@ public class MineBaseBlock extends AbstractTownBuildingBlock implements CEntityB
             }
             te.getBuilding().ifPresentOrElse(building -> {
                 te.refresh_safe(building);
-                AbstractTownBuildingBlock.displayBasicInfo(player, building);
-                player.displayClientMessage(Components.str("Area: " + (building.getArea())), false);
-                player.displayClientMessage(Components.str("Volume: " + (building.getVolume())), false);
-                if(building.isBuildingWorkable())
-                    player.displayClientMessage(Components.str("Max residents: " + (building.getMaxResidents())), false);
+                NetworkHooks.openScreen((ServerPlayer) player, te, pos);
             }, () -> player.displayClientMessage(Components.str(CConstants.NO_CORRESPONDING_TOWN_BUILDING_INSTANCE_FOUND), false));
             return InteractionResult.SUCCESS;
         }

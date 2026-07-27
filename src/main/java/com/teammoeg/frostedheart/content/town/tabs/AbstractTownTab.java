@@ -24,6 +24,7 @@ import com.teammoeg.chorda.client.icon.CIcons;
 import com.teammoeg.chorda.menu.CBlockEntityMenu;
 import com.teammoeg.frostedheart.content.town.block.AbstractTownBuildingBlockEntity;
 import com.teammoeg.frostedheart.content.town.AbstractTownWorkerBlockScreen;
+import net.minecraft.network.chat.Component;
 
 public abstract class AbstractTownTab<C extends CBlockEntityMenu<? extends AbstractTownBuildingBlockEntity>> {
     protected final AbstractTownWorkerBlockScreen<C> screen;
@@ -35,6 +36,10 @@ public abstract class AbstractTownTab<C extends CBlockEntityMenu<? extends Abstr
     public abstract CIcons.CIcon getIcon();
 
     public abstract CIcons.CIcon getActiveIcon();
+
+    public abstract CIcons.CIcon getContentIcon();
+
+    public abstract Component getTitle();
 
     public abstract void build(UILayer layer);
 

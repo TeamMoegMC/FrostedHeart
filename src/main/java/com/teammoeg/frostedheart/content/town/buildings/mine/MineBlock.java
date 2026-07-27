@@ -49,6 +49,7 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
+import net.minecraftforge.network.NetworkHooks;
 
 public class MineBlock extends AbstractTownBuildingBlock implements CEntityBlock<MineBlockEntity> {
 
@@ -67,9 +68,7 @@ public class MineBlock extends AbstractTownBuildingBlock implements CEntityBlock
             }
             te.getBuilding().ifPresentOrElse(building -> {
                 te.refresh_safe(building);
-                AbstractTownBuildingBlock.displayBasicInfo(player, building);
-                player.displayClientMessage(Components.str("Biome: " + building.getBiomePath()), false);
-                player.displayClientMessage(Components.str("Rating: " + String.format("%.2f", building.getRating())), false);
+                NetworkHooks.openScreen((ServerPlayer) player, te, pos);
             }, () -> player.displayClientMessage(Components.str(CConstants.NO_CORRESPONDING_TOWN_BUILDING_INSTANCE_FOUND), false));
             return InteractionResult.SUCCESS;
         }

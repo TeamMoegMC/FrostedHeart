@@ -149,7 +149,7 @@ public class WarehouseBlockEntity extends AbstractTownBuildingBlockEntity<Wareho
 
     @Override
     public Component getDisplayName() {
-        return Component.translatable("container.warehouse");
+        return Component.translatable("container.frostedheart.warehouse");
     }
 
     @Override

@@ -20,6 +20,14 @@
 package com.teammoeg.frostedheart.bootstrap.common;
 
 import blusunrize.immersiveengineering.api.multiblocks.blocks.logic.IMultiblockState;
+import com.teammoeg.frostedheart.content.town.buildings.house.HouseBlockEntity;
+import com.teammoeg.frostedheart.content.town.buildings.house.HouseMenu;
+import com.teammoeg.frostedheart.content.town.buildings.hunting.HuntingBaseBlockEntity;
+import com.teammoeg.frostedheart.content.town.buildings.hunting.HuntingBaseMenu;
+import com.teammoeg.frostedheart.content.town.buildings.mine.MineBaseBlockEntity;
+import com.teammoeg.frostedheart.content.town.buildings.mine.MineBaseMenu;
+import com.teammoeg.frostedheart.content.town.buildings.mine.MineBlockEntity;
+import com.teammoeg.frostedheart.content.town.buildings.mine.MineMenu;
 import com.teammoeg.frostedheart.content.town.buildings.warehouse.WarehouseMenu;
 import com.teammoeg.frostedheart.content.town.buildings.warehouse.WarehouseBlockEntity;
 import com.teammoeg.frostedheart.content.town.buildings.warehouse.WarehouseInterfaceBlockEntity;
@@ -100,6 +108,14 @@ public class FHMenuTypes {
 	public static final RegistryObject<MenuType<WardrobeMenu>> WARDROBE = register(WardrobeBlockEntity.class, ("wardrobe"), WardrobeMenu::new);
 
 	public static final RegistryObject<MenuType<WarehouseMenu>> WAREHOUSE = register(WarehouseBlockEntity.class, ("warehouse"), WarehouseMenu::new);
+	public static final RegistryObject<MenuType<HouseMenu>> HOUSE =
+			register(HouseBlockEntity.class, "house", HouseMenu::new);
+	public static final RegistryObject<MenuType<MineBaseMenu>> MINE_BASE =
+			register(MineBaseBlockEntity.class, "mine_base", MineBaseMenu::new);
+	public static final RegistryObject<MenuType<HuntingBaseMenu>> HUNTING_BASE =
+			register(HuntingBaseBlockEntity.class, "hunting_base", HuntingBaseMenu::new);
+	public static final RegistryObject<MenuType<MineMenu>> MINE =
+			register(MineBlockEntity.class, "mine", MineMenu::new);
 	public static final RegistryObject<MenuType<WarehouseInterfaceMenu>> WAREHOUSE_INTERFACE =
 			register(WarehouseInterfaceBlockEntity.class, "warehouse_interface", WarehouseInterfaceMenu::new);
 	

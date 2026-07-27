@@ -36,6 +36,7 @@ import com.teammoeg.frostedheart.content.town.resident.Resident;
 import com.teammoeg.frostedheart.content.town.resource.ItemResourceType;
 import com.teammoeg.frostedheart.content.town.resource.ItemStackResourceKey;
 import com.teammoeg.frostedheart.content.town.resource.action.*;
+import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import net.minecraft.core.BlockPos;
 
 import lombok.Getter;
@@ -49,16 +50,53 @@ import static com.teammoeg.frostedheart.content.town.resource.ItemResourceType.R
  */
 public class HouseBuilding extends AbstractTownBuilding implements ITownResidentBuilding {
 
+    public record DailyReport(
+            boolean hasData,
+            int residentCount,
+            double foodRequired,
+            double foodConsumed,
+            double foodSatisfaction,
+            double nutritionQuality,
+            double nutritionRecoveryMultiplier,
+            double effectiveTemperature,
+            double temperatureRating,
+            double spaceRating,
+            double decorationRating,
+            double comfortRating
+    ) {
+        public static final DailyReport EMPTY = new DailyReport(
+                false, 0, 0.0, 0.0, 1.0, 0.0, 0.0,
+                0.0, 0.0, 0.0, 0.0, 0.0);
+
+        public static final Codec<DailyReport> CODEC = RecordCodecBuilder.create(t -> t.group(
+                Codec.BOOL.optionalFieldOf("hasData", false).forGetter(DailyReport::hasData),
+                Codec.INT.optionalFieldOf("residentCount", 0).forGetter(DailyReport::residentCount),
+                Codec.DOUBLE.optionalFieldOf("foodRequired", 0.0).forGetter(DailyReport::foodRequired),
+                Codec.DOUBLE.optionalFieldOf("foodConsumed", 0.0).forGetter(DailyReport::foodConsumed),
+                Codec.DOUBLE.optionalFieldOf("foodSatisfaction", 1.0).forGetter(DailyReport::foodSatisfaction),
+                Codec.DOUBLE.optionalFieldOf("nutritionQuality", 0.0).forGetter(DailyReport::nutritionQuality),
+                Codec.DOUBLE.optionalFieldOf("nutritionRecoveryMultiplier", 0.0).forGetter(DailyReport::nutritionRecoveryMultiplier),
+                Codec.DOUBLE.optionalFieldOf("effectiveTemperature", 0.0).forGetter(DailyReport::effectiveTemperature),
+                Codec.DOUBLE.optionalFieldOf("temperatureRating", 0.0).forGetter(DailyReport::temperatureRating),
+                Codec.DOUBLE.optionalFieldOf("spaceRating", 0.0).forGetter(DailyReport::spaceRating),
+                Codec.DOUBLE.optionalFieldOf("decorationRating", 0.0).forGetter(DailyReport::decorationRating),
+                Codec.DOUBLE.optionalFieldOf("comfortRating", 0.0).forGetter(DailyReport::comfortRating)
+        ).apply(t, DailyReport::new));
+    }
+
     public static final Codec<HouseBuilding> CODEC = RecordCodecBuilder.create(t -> t.group(
             BlockPos.CODEC.optionalFieldOf("pos",BlockPos.ZERO).forGetter(o -> o.pos),
             Codec.BOOL.optionalFieldOf("isStructureValid",false).forGetter(o -> o.isStructureValid()),
             OccupiedVolume.CODEC.optionalFieldOf("occupiedVolume",OccupiedVolume.EMPTY).forGetter(o -> o.getOccupiedVolume()),
+            Codec.BOOL.optionalFieldOf("initialized", false).forGetter(o -> o.isInitialized()),
+            Codec.BOOL.optionalFieldOf("occupiedAreaOverlapped", false).forGetter(o -> o.isOccupiedAreaOverlapped()),
             Codec.INT.optionalFieldOf("area",0).forGetter(o -> o.getArea()),
             Codec.INT.optionalFieldOf("volume",0).forGetter(o -> o.getVolume()),
             Codec.DOUBLE.optionalFieldOf("temperature",0D).forGetter(o -> o.getTemperature()),
             Codec.DOUBLE.optionalFieldOf("decorationRating",0D).forGetter(o -> o.getDecorationRating()),
             Codec.INT.optionalFieldOf("maxResident",0).forGetter(o -> o.getMaxResidents()),
-            Codec.DOUBLE.optionalFieldOf("temperatureModifier",0D).forGetter(o -> o.getTemperatureModifier()))
+            Codec.DOUBLE.optionalFieldOf("temperatureModifier",0D).forGetter(o -> o.getTemperatureModifier()),
+            DailyReport.CODEC.optionalFieldOf("dailyReport", DailyReport.EMPTY).forGetter(o -> o.getDailyReport()))
             .apply(t, HouseBuilding::new));
 
     private final Set<UUID> residentsUUID = new HashSet<>();
@@ -92,6 +130,8 @@ public class HouseBuilding extends AbstractTownBuilding implements ITownResident
      */
     @Getter
     private double temperatureModifier;
+    @Getter
+    private DailyReport dailyReport = DailyReport.EMPTY;
 
     public void setArea(int area) { this.area = area; fireChange(); }
     public void setVolume(int volume) { this.volume = volume; fireChange(); }
@@ -106,15 +146,36 @@ public class HouseBuilding extends AbstractTownBuilding implements ITownResident
     }
 
     public HouseBuilding(BlockPos pos, boolean isStructureValid, OccupiedVolume occupiedVolume, int area, int volume, double temperature, double decorationRating, int maxResidents, double temperatureModifier) {
+        this(pos, isStructureValid, occupiedVolume, false, false, area, volume, temperature,
+                decorationRating, maxResidents, temperatureModifier, DailyReport.EMPTY);
+    }
+
+    public HouseBuilding(
+            BlockPos pos,
+            boolean isStructureValid,
+            OccupiedVolume occupiedVolume,
+            boolean initialized,
+            boolean occupiedAreaOverlapped,
+            int area,
+            int volume,
+            double temperature,
+            double decorationRating,
+            int maxResidents,
+            double temperatureModifier,
+            DailyReport dailyReport
+    ) {
         super(pos);
         this.setIsStructureValid(isStructureValid);
         this.setOccupiedVolume(occupiedVolume);
+        this.setInitialized(initialized);
+        this.setOccupiedAreaOverlapped(occupiedAreaOverlapped);
         this.setArea(area);
         this.setVolume(volume);
         this.setTemperature(temperature);
         this.setDecorationRating(decorationRating);
         this.setMaxResidents(maxResidents);
         this.setTemperatureModifier(temperatureModifier);
+        this.dailyReport = dailyReport == null ? DailyReport.EMPTY : dailyReport;
     }
 
     /**
@@ -174,7 +235,7 @@ public class HouseBuilding extends AbstractTownBuilding implements ITownResident
     }
 
     public double getRating(){
-        return decorationRating * 0.3 + TownMathFunctions.calculateTemperatureRating(temperature) * 0.4 + TownMathFunctions.calculateSpaceRating(volume, area) * 0.3;
+        return getComfortRating();
     }
 
     @Override
@@ -193,68 +254,41 @@ public class HouseBuilding extends AbstractTownBuilding implements ITownResident
             return false;
         }
 
-        Set<UUID> residentsUUID = this.residentsUUID;
-        int residentNum = residentsUUID.size();
+        Collection<Resident> residents = getResidents(town);
+        int residentNum = residents.size();
         if (residentNum == 0) {
-            return true; // 没有居民，无需执行任何逻辑
+            setDailyReport(createDailyReport(0, new FoodConsumption(0.0, 0.0)));
+            return true;
         }
 
         IActionExecutorHandler executorHandler = town.getActionExecutorHandler();
-        double totalFoods = TownResourceActions.get(executorHandler, RESIDENT_FOOD_LEVEL);
-        float residentConsumption = 6.5F; // 1单位食物 = 半格鸡腿（1饥饿值）
-        double toCost = residentNum * residentConsumption;
+        FHConfig.Server.Town.Housing config = FHConfig.SERVER.TOWN.HOUSING;
+        double foodRequired = residentNum * config.foodConsumptionPerResidentDay.get();
+        FoodConsumption consumption = consumeFoodAndComputeNutrition(executorHandler, foodRequired);
+        DailyReport report = createDailyReport(residentNum, consumption);
+        setDailyReport(report);
 
-        // 食物不足：惩罚所有居民并返回
-        if (toCost > totalFoods) {
-            double nutritionSum = consumeFoodAndComputeNutrition(executorHandler, totalFoods, residentNum);
-
-            double nutritionAverage = nutritionSum / (residentNum * residentConsumption);
-            // 营养折扣：营养越高惩罚越轻，最多减轻 50%
-            double nutritionSatisfaction = Math.min(1.0, nutritionAverage / 10000.0); // 满足率 0~1
-            double penaltyModifier = 1.0 - nutritionSatisfaction * 0.5;
-
-            double deficitRatio = (toCost - totalFoods) / toCost;// 0~1，缺得越多系数越大
-            double healthPenalty  = 10 * deficitRatio * penaltyModifier;
-            double mentalPenalty  = 10 * deficitRatio * penaltyModifier;
-            double strengthPenalty = 5 * deficitRatio * penaltyModifier;
-            punishResidents(town, residentsUUID, healthPenalty, mentalPenalty, strengthPenalty);
+        for (Resident resident : residents) {
+            applyResidentEffects(resident, calculateResidentEffects(resident, report));
         }
-
-        // 消耗食物并累计营养值
-        double nutritionSum = consumeFoodAndComputeNutrition(executorHandler, toCost, residentNum);
-
-        // 根据营养和房屋评分提升居民属性
-        applyResidentBuffs(town, residentsUUID, nutritionSum, residentNum, residentConsumption);
         return true;
     }
 
     /**
-     * 因食物不足惩罚所有居民（降低健康/精神/力量）
-     */
-    private void punishResidents(ITown town, Set<UUID> residentsUUID, double healthLoss, double mentalLoss, double strengthLoss) {
-        for (UUID uuid : residentsUUID) {
-            Resident r = town.getResident(uuid).orElseThrow(() ->
-                    new IllegalArgumentException("HouseBuilding ERROR: Can't find resident in town: " + town + ", uuid: " + uuid));
-            r.costHealth(healthLoss);
-            r.costMental(mentalLoss);
-            r.costStrength(strengthLoss);
-        }
-    }
-
-    /**
      * 执行食物消耗动作，并累计所有消耗物品的营养值。
-     * @return 消耗物品的营养值总和
+     * @return 实际消耗的食物资源量和营养值总和
      */
-    private double consumeFoodAndComputeNutrition(IActionExecutorHandler executorHandler, double toCost, int residentNum) {
-        // 构造消耗动作：期望数量为每位居民的平均消耗量，优先消耗高质量食物
+    private FoodConsumption consumeFoodAndComputeNutrition(IActionExecutorHandler executorHandler, double toCost) {
         TownResourceActions.TownResourceTypeCostAction action = new TownResourceActions.TownResourceTypeCostAction(
-                RESIDENT_FOOD_LEVEL, toCost / residentNum, 0, 4,
+                RESIDENT_FOOD_LEVEL, Math.max(0.0, toCost), 0, 4,
                 ResourceActionMode.MAXIMIZE, ResourceActionOrder.DESCENDING);
         TownResourceActionResults.TownResourceTypeCostActionResult result = executorHandler.execute(action);
 
+        double foodConsumed = 0.0;
         double nutritionSum = 0.0;
         for (ITownResourceAttributeActionResult<?> detail : result.details()) {
             if (detail instanceof TownResourceActionResults.ItemResourceAttributeCostActionResult itemResult) {
+                foodConsumed += itemResult.totalModifiedAmount();
                 for (Map.Entry<ItemStackResourceKey, Double> entry : itemResult.details().entrySet()) {
                     ItemStackResourceKey key = entry.getKey();
                     double amount = entry.getValue();
@@ -267,45 +301,109 @@ public class HouseBuilding extends AbstractTownBuilding implements ITownResident
                 }
             }
         }
-        return nutritionSum;
+        return new FoodConsumption(foodConsumed, nutritionSum);
     }
 
-    /**
-     * 根据营养均衡度与房屋评分计算居民属性增益并应用。
-     */
-    private void applyResidentBuffs(ITown town, Set<UUID> residentsUUID, double nutritionSum, int residentNum, float residentConsumption) {
-        // 计算平均营养价值
-        double nutritionAverage = nutritionSum / (residentNum * residentConsumption);
-        double deviation = (nutritionAverage - 10000) / 10000;
-        double balanceScore = Math.exp(-3.0 * deviation * deviation);
-        double levelScore = 1.0; // 暂不使用食物等级
-
-        double temperatureRating = TownMathFunctions.calculateTemperatureRating(this.temperature);
+    private DailyReport createDailyReport(int residentCount, FoodConsumption consumption) {
+        FHConfig.Server.Town.Housing config = FHConfig.SERVER.TOWN.HOUSING;
+        double foodRequired = residentCount * config.foodConsumptionPerResidentDay.get();
+        double foodSatisfaction = HouseDailyModel.calculateFoodSatisfaction(
+                foodRequired, consumption.foodConsumed());
+        double nutritionQuality = HouseDailyModel.calculateNutritionQuality(
+                consumption.nutritionValue(),
+                consumption.foodConsumed(),
+                config.nutritionReferencePerFoodUnit.get());
+        double nutritionMultiplier = HouseDailyModel.calculateNutritionRecoveryMultiplier(
+                nutritionQuality, config.minimumNutritionRecoveryMultiplier.get());
+        double effectiveTemperature = getEffectiveTemperature();
+        double temperatureRating = TownMathFunctions.calculateTemperatureRating(effectiveTemperature);
         double spaceRating = TownMathFunctions.calculateSpaceRating(volume, area);
-        double houseComprehensiveRating = (spaceRating * (1 + decorationRating) + temperatureRating) / 3;
+        double comfortRating = calculateComfortRating(temperatureRating, spaceRating, decorationRating);
+        return new DailyReport(
+                true,
+                residentCount,
+                foodRequired,
+                consumption.foodConsumed(),
+                foodSatisfaction,
+                nutritionQuality,
+                nutritionMultiplier,
+                effectiveTemperature,
+                temperatureRating,
+                spaceRating,
+                decorationRating,
+                comfortRating
+        );
+    }
 
-        for (UUID uuid : residentsUUID) {
-            Resident r = town.getResident(uuid).orElseThrow(() ->
-                    new IllegalArgumentException("HouseBuilding ERROR: Can't find resident in town: " + town + ", uuid: " + uuid));
+    public HouseDailyModel.ResidentEffects calculateResidentEffects(Resident resident) {
+        return calculateResidentEffects(resident, dailyReport);
+    }
 
-            double healthGain = 5.0 * temperatureRating * levelScore * balanceScore * (100 - r.getHealth()) / 100;
-            if (r.getHealth() < 30) {
-                healthGain = Math.max(healthGain, 0.5);  // 保底每天至少恢复 0.5 点
-            }
-            r.addHealth(healthGain);
+    private HouseDailyModel.ResidentEffects calculateResidentEffects(Resident resident, DailyReport report) {
+        FHConfig.Server.Town.Housing config = FHConfig.SERVER.TOWN.HOUSING;
+        return HouseDailyModel.calculateResidentEffects(
+                resident.getHealth(),
+                resident.getMental(),
+                report.foodSatisfaction(),
+                report.nutritionRecoveryMultiplier(),
+                report.temperatureRating(),
+                report.comfortRating(),
+                config.healthLossAtZeroFoodPerResidentDay.get(),
+                config.mentalLossAtZeroFoodPerResidentDay.get(),
+                config.maximumHealthRecoveryPerResidentDay.get(),
+                config.maximumMentalRecoveryPerResidentDay.get()
+        );
+    }
 
-            double mentalGain = 2.0 * houseComprehensiveRating * Math.pow(levelScore, 2.0) * balanceScore * (100 - r.getMental()) / 100;
-            if (r.getMental() < 30) {
-                mentalGain = Math.max(mentalGain, 0.5);
-            }
-            r.addMental(mentalGain);
+    public double getTemperatureRating() {
+        return TownMathFunctions.calculateTemperatureRating(getEffectiveTemperature());
+    }
 
-            double strengthGain = 1.0 * balanceScore * Math.exp(-0.05 * r.getStrength());
-            if (r.getStrength() < 30) {
-                strengthGain = Math.max(strengthGain, 0.25);
-            }
-            r.addStrength(strengthGain);
+    public double getSpaceRating() {
+        return TownMathFunctions.calculateSpaceRating(volume, area);
+    }
+
+    public double getComfortRating() {
+        return calculateComfortRating(getTemperatureRating(), getSpaceRating(), decorationRating);
+    }
+
+    private static double calculateComfortRating(
+            double temperatureRating,
+            double spaceRating,
+            double decorationRating
+    ) {
+        FHConfig.Server.Town.Housing config = FHConfig.SERVER.TOWN.HOUSING;
+        return HouseDailyModel.calculateComfortRating(
+                temperatureRating,
+                spaceRating,
+                decorationRating,
+                config.temperatureComfortWeight.get(),
+                config.spaceComfortWeight.get(),
+                config.decorationComfortWeight.get()
+        );
+    }
+
+    private void setDailyReport(DailyReport dailyReport) {
+        this.dailyReport = dailyReport == null ? DailyReport.EMPTY : dailyReport;
+        fireChange();
+    }
+
+    private static void applyResidentEffects(
+            Resident resident,
+            HouseDailyModel.ResidentEffects effects
+    ) {
+        resident.setHealth(clampResidentAttribute(resident.getHealth() + effects.healthDelta()));
+        resident.setMental(clampResidentAttribute(resident.getMental() + effects.mentalDelta()));
+    }
+
+    private static double clampResidentAttribute(double value) {
+        if (!Double.isFinite(value)) {
+            return 0.0;
         }
+        return Math.max(0.0, Math.min(100.0, value));
+    }
+
+    private record FoodConsumption(double foodConsumed, double nutritionValue) {
     }
 
     @Override

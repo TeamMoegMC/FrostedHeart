@@ -27,12 +27,17 @@ import com.teammoeg.frostedheart.content.town.building.AbstractTownBuilding;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.MenuProvider;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class MineBlockEntity extends AbstractTownBuildingBlockEntity<MineBuilding> {
+public class MineBlockEntity extends AbstractTownBuildingBlockEntity<MineBuilding> implements MenuProvider {
 
     public MineBlockEntity(BlockPos pos, BlockState state){
         super(FHBlockEntityTypes.MINE.get(),pos,state);
@@ -100,5 +105,16 @@ public class MineBlockEntity extends AbstractTownBuildingBlockEntity<MineBuildin
     @Override
     public @NotNull MineBuilding createBuilding() {
         return new MineBuilding(this.getBlockPos());
+    }
+
+    @Override
+    public @Nullable AbstractContainerMenu createMenu(
+            int id, @NotNull Inventory inventory, @NotNull Player player) {
+        return new MineMenu(id, inventory, this);
+    }
+
+    @Override
+    public Component getDisplayName() {
+        return Component.translatable("container.frostedheart.mine");
     }
 }

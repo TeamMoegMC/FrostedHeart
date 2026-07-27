@@ -39,7 +39,12 @@ import lombok.Getter;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.Component;
 import net.minecraft.tags.BlockTags;
+import net.minecraft.world.MenuProvider;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.util.LazyOptional;
@@ -56,7 +61,7 @@ import static com.teammoeg.frostedheart.content.town.TownMathFunctions.calculate
  * maintain the house - Check if the house structure is valid - Compute comfort
  * rating based on the house structure
  */
-public class HouseBlockEntity extends AbstractTownBuildingBlockEntity<HouseBuilding> {
+public class HouseBlockEntity extends AbstractTownBuildingBlockEntity<HouseBuilding> implements MenuProvider {
 
 	@Getter
     private double temperatureModifier = 0;
@@ -195,5 +200,20 @@ public class HouseBlockEntity extends AbstractTownBuildingBlockEntity<HouseBuild
 	@Override
 	public @NotNull HouseBuilding createBuilding() {
 		return new  HouseBuilding(this.getBlockPos());
+	}
+
+	@Nullable
+	@Override
+	public AbstractContainerMenu createMenu(
+			int id,
+			@NotNull Inventory playerInventory,
+			@NotNull Player player
+	) {
+		return new HouseMenu(id, playerInventory, this);
+	}
+
+	@Override
+	public Component getDisplayName() {
+		return Component.translatable("container.frostedheart.house");
 	}
 }

@@ -20,16 +20,13 @@
 package com.teammoeg.frostedheart.content.town.buildings.house;
 
 import com.teammoeg.chorda.block.CEntityBlock;
-import com.teammoeg.chorda.dataholders.team.CTeamDataManager;
-import com.teammoeg.chorda.math.CMath;
 import com.teammoeg.chorda.text.Components;
-import com.teammoeg.chorda.util.CUtils;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
-import com.teammoeg.frostedheart.content.town.ITownWithBuildings;
 import com.teammoeg.frostedheart.content.town.block.AbstractTownBuildingBlock;
 import com.teammoeg.frostedheart.util.CConstants;
 import com.teammoeg.frostedheart.util.client.FHClientUtils;
 
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.block.entity.BlockEntityType;
@@ -39,6 +36,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.level.Level;
+import net.minecraftforge.network.NetworkHooks;
 
 import java.util.function.Supplier;
 
@@ -68,19 +66,7 @@ public class HouseBlock extends AbstractTownBuildingBlock implements CEntityBloc
             te.getBuilding().ifPresentOrElse(
                     building -> {
                         te.refresh_safe(building);
-                        AbstractTownBuildingBlock.displayBasicInfo(player, building);
-                        player.displayClientMessage(Components.str("Raw temperature: " +
-                                CMath.round(building.getTemperature(), 2)), false);
-                        player.displayClientMessage(Components.str("Temperature modifier: " +
-                                CMath.round(te.getTemperatureModifier(), 2)), false);
-                        player.displayClientMessage(Components.str("Effective temperature: " +
-                                CMath.round(building.getEffectiveTemperature(), 2) + "(Temperature " + (building.isTemperatureValid() ? "Valid" : "Invalid") + ")"), false);
-                        player.displayClientMessage(Components.str("Volume: " + (building.getVolume())), false);
-                        player.displayClientMessage(Components.str("Area: " + (building.getArea())), false);
-                        //player.displayClientMessage(Components.str("Bed num: " + te.getBeds().size()), false);
-                        player.displayClientMessage(Components.str("Max resident: " + (building.getMaxResidents())), false);
-                        //player.displayClientMessage(Components.str("Rating: " +
-                        //        CMath.round(, 2)), false);
+                        NetworkHooks.openScreen((ServerPlayer) player, te, pos);
                     },
                     () -> player.displayClientMessage(Components.str(CConstants.NO_CORRESPONDING_TOWN_BUILDING_INSTANCE_FOUND), false));
             return InteractionResult.SUCCESS;

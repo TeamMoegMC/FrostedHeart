@@ -91,6 +91,18 @@ public class TerrainResourceData {
 	public double getRemainResource() {
 		return total-extracted;
 	}
+
+    /**
+     * Returns the remaining global resource without relying on the transient
+     * radius/total cache, which is not part of the town codec.
+     */
+    public double getRemainResource(double resourcePerSquare, int maxRadius) {
+        return Math.max(0.0, calculateTotalResource(resourcePerSquare, maxRadius) - extracted);
+    }
+
+    public static double calculateTotalResource(double resourcePerSquare, int maxRadius) {
+        return Math.max(0.0, PI * resourcePerSquare * maxRadius * maxRadius);
+    }
 	public double getSize() {
 		return PI*radius*radius;
 	}
@@ -165,6 +177,14 @@ public class TerrainResourceData {
 
         public void clearActiveChunks() {
             activeChunks.clear();
+        }
+
+        /**
+         * Read-only query used by client-facing mine information. This does not
+         * require the chunk to be in the transient active set.
+         */
+        public double getExtracted(ChunkPos chunk) {
+            return Math.max(0.0, extractedResources.getOrDefault(chunk, 0.0));
         }
 
     }

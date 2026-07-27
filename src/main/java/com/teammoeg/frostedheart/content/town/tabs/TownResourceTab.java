@@ -25,6 +25,8 @@ import com.teammoeg.frostedheart.content.town.AbstractTownWorkerBlockScreen;
 import com.teammoeg.frostedheart.content.town.buildings.warehouse.VirtualItemGridElement;
 import com.teammoeg.frostedheart.content.town.buildings.warehouse.WarehouseMenu;
 import com.teammoeg.frostedheart.content.town.buildings.warehouse.WarehouseScreen;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.item.Items;
 
 public class TownResourceTab extends AbstractTownTab<WarehouseMenu> {
 
@@ -42,11 +44,21 @@ public class TownResourceTab extends AbstractTownTab<WarehouseMenu> {
 
     @Override
     public CIcons.CIcon getIcon() {
-        return WarehouseScreen.inactiveButton;
+        return WarehouseScreen.INACTIVE_TAB;
     }
 
     @Override
     public CIcons.CIcon getActiveIcon() {
-        return WarehouseScreen.activeButton;
+        return WarehouseScreen.ACTIVE_TAB;
+    }
+
+    @Override
+    public CIcons.CIcon getContentIcon() {
+        return CIcons.getIcon(Items.CHEST);
+    }
+
+    @Override
+    public Component getTitle() {
+        return Component.translatable("gui.frostedheart.warehouse.inventory");
     }
 }

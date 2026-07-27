@@ -31,6 +31,11 @@ import com.teammoeg.frostedheart.content.town.block.blockscanner.AbstractBlockSc
 import com.teammoeg.frostedheart.content.town.block.blockscanner.FloorBlockScanner;
 import lombok.Getter;
 import net.minecraft.tags.BlockTags;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.MenuProvider;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.core.Direction;
 import net.minecraft.core.BlockPos;
@@ -42,7 +47,7 @@ import org.jetbrains.annotations.Nullable;
 import javax.annotation.Nonnull;
 import java.util.*;
 
-public class HuntingBaseBlockEntity extends AbstractTownBuildingBlockEntity<HuntingBaseBuilding> {
+public class HuntingBaseBlockEntity extends AbstractTownBuildingBlockEntity<HuntingBaseBuilding> implements MenuProvider {
 	final HeatEndpoint endpoint;
 	final LazyOptional<HeatEndpoint> endpointCap;
 	@Getter
@@ -172,4 +177,15 @@ public class HuntingBaseBlockEntity extends AbstractTownBuildingBlockEntity<Hunt
 	public @NotNull HuntingBaseBuilding createBuilding() {
 		return new HuntingBaseBuilding(this.getBlockPos());
 	}
+
+    @Override
+    public @Nullable AbstractContainerMenu createMenu(
+            int id, @NotNull Inventory inventory, @NotNull Player player) {
+        return new HuntingBaseMenu(id, inventory, this);
+    }
+
+    @Override
+    public Component getDisplayName() {
+        return Component.translatable("container.frostedheart.hunting_base");
+    }
 }

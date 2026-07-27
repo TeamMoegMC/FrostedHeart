@@ -213,6 +213,7 @@ public class TeamTownData implements SpecialData{
         this.assignWork();
         this.linkMinesToBases();
         this.recalcOreChunkResources();
+        residents.values().forEach(Resident::resetDailyProficiencyGrowth);
         this.buildingsWork(world);
         this.recoverResources();
     }
@@ -477,6 +478,36 @@ public class TeamTownData implements SpecialData{
     public double maypickTerrainResource(TerrainResourceType type, double d) {
         TerrainResourceData rd=this.terrainResource.computeIfAbsent(type, RESOURCE_DATA_SUPPLIER);
         return rd.mayCostResource(d);
+    }
+
+    /**
+     * Read-only global-resource query. Unlike maypickTerrainResource this does
+     * not create or mutate town data and is safe for client-side information UI.
+     */
+    public double getRemainingTerrainResource(TerrainResourceType type) {
+        TerrainResourceData rd = terrainResource.get(type);
+        double extracted = rd == null ? 0.0 : rd.getExtracted();
+        return Math.max(0.0, TerrainResourceData.calculateTotalResource(
+                type.getResourcePerSq(), TerrainResourceData.DEFAULT_MAX_RADIUS) - extracted);
+    }
+
+    /**
+     * Read-only per-chunk resource query. The returned value is independent of
+     * the server-only active chunk set.
+     */
+    public double getRemainingTerrainResource(TerrainResourceType type, ChunkPos chunk) {
+        TerrainResourceData rd = terrainResource.get(type);
+        double extracted = 0.0;
+        if (rd != null && rd.getChunkResourceTracker() != null) {
+            extracted = rd.getChunkResourceTracker().getExtracted(chunk);
+        }
+        return Math.max(0.0, type.getResourcePerSq() - extracted);
+    }
+
+    public double getExtractedTerrainResource(TerrainResourceType type, ChunkPos chunk) {
+        TerrainResourceData rd = terrainResource.get(type);
+        if (rd == null || rd.getChunkResourceTracker() == null) return 0.0;
+        return rd.getChunkResourceTracker().getExtracted(chunk);
     }
 
     public void setTerrainResourceTypeActiveChunks(TerrainResourceType type, Set<ChunkPos> chunks) {

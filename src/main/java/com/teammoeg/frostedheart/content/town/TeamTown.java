@@ -239,6 +239,18 @@ public class TeamTown implements ITown, ITownWithResidents, ITownWithBuildings {
         return data.pickTerrainResource(type,chunkPos,maxPick);
     }
 
+    public double getRemainingTerrainResource(TerrainResourceType type) {
+        return data.getRemainingTerrainResource(type);
+    }
+
+    public double getRemainingTerrainResource(TerrainResourceType type, ChunkPos chunkPos) {
+        return data.getRemainingTerrainResource(type, chunkPos);
+    }
+
+    public double getExtractedTerrainResource(TerrainResourceType type, ChunkPos chunkPos) {
+        return data.getExtractedTerrainResource(type, chunkPos);
+    }
+
 	public void unpickTerrainResource(TerrainResourceType type,double maxPick) {
 		data.unpickTerrainResource(type, maxPick);
 	}

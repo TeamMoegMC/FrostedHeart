@@ -14,44 +14,43 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
- *
  */
 
-package com.teammoeg.frostedheart.content.town.buildings.warehouse;
+package com.teammoeg.frostedheart.content.town;
 
 import com.teammoeg.chorda.client.RenderingHint;
-import com.teammoeg.chorda.client.cui.base.UILayer;
 import com.teammoeg.chorda.client.icon.CIcons;
+import com.teammoeg.chorda.menu.CBlockEntityMenu;
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.content.town.AbstractTownWorkerBlockScreen;
-import com.teammoeg.frostedheart.content.town.tabs.TownInformationTab;
-import com.teammoeg.frostedheart.content.town.tabs.TownResourceTab;
+import com.teammoeg.frostedheart.content.town.block.AbstractTownBuildingBlockEntity;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.resources.ResourceLocation;
 
-public class WarehouseScreen extends AbstractTownWorkerBlockScreen<WarehouseMenu> {
-    private static final CIcons.CTextureIcon ALL = CIcons
+/**
+ * Shared 176x222 town-building frame. Its upper 130 pixels are information;
+ * the lower part remains the normal player inventory and hotbar.
+ */
+public abstract class StandardTownBuildingScreen<
+        C extends CBlockEntityMenu<? extends AbstractTownBuildingBlockEntity>>
+        extends AbstractTownWorkerBlockScreen<C> {
+    protected static final CIcons.CTextureIcon ALL = CIcons
             .getIcon(new ResourceLocation(FHMain.MODID, "textures/gui/townworkerblock.png"));
-    private static final CIcons.CTextureIcon BACKGROUND =
+    protected static final CIcons.CTextureIcon BACKGROUND =
             ALL.withUV(0, 0, 176, 222, 256, 256);
-    public static final CIcons.CTextureIcon ACTIVE_TAB =
+    protected static final CIcons.CTextureIcon ACTIVE_TAB =
             ALL.withUV(180, 59, 22, 18, 256, 256);
-    public static final CIcons.CTextureIcon INACTIVE_TAB =
+    protected static final CIcons.CTextureIcon INACTIVE_TAB =
             ALL.withUV(202, 59, 22, 18, 256, 256);
 
-    public WarehouseScreen(WarehouseMenu inventorySlotsIn) {
-        super(inventorySlotsIn);
+    protected StandardTownBuildingScreen(C menu) {
+        super(menu);
     }
 
     @Override
-    public void drawBackground(GuiGraphics graphics, int x, int y, int w, int h, RenderingHint hint) {
+    public void drawBackground(
+            GuiGraphics graphics, int x, int y, int width, int height,
+            RenderingHint hint
+    ) {
         BACKGROUND.draw(graphics, x, y, 176, 222);
     }
-
-    @Override
-    protected void initTabs() {
-        addTab(new TownInformationTab(this));
-        addTab(new TownResourceTab(this));
-    }
-
 }

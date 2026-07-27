@@ -41,10 +41,13 @@ public class MineBuilding extends AbstractTownBuilding {
 
 	public static final Codec<MineBuilding> CODEC = RecordCodecBuilder.create(t -> t.group(
                     BlockPos.CODEC.optionalFieldOf("pos",BlockPos.ZERO).forGetter(o -> o.pos),
+                    Codec.BOOL.optionalFieldOf("initialized", false).forGetter(o -> o.isInitialized()),
+                    Codec.BOOL.optionalFieldOf("occupiedAreaOverlapped", false).forGetter(o -> o.isOccupiedAreaOverlapped()),
                     Codec.BOOL.optionalFieldOf("isStructureValid",false).forGetter(o -> o.isStructureValid()),
                     OccupiedVolume.CODEC.optionalFieldOf("occupiedVolume",OccupiedVolume.EMPTY).forGetter(o -> o.getOccupiedVolume()),
 					Codec.DOUBLE.optionalFieldOf("rating",0D).forGetter(o -> o.getRating()),
-					Codec.STRING.optionalFieldOf("biomePath","").forGetter(o -> o.getBiomePath().toString())
+					Codec.STRING.optionalFieldOf("biomePath","minecraft:plains")
+                            .forGetter(o -> o.getBiomePath().toString())
 					)
 			.apply(t, MineBuilding::new));
 
@@ -54,7 +57,7 @@ public class MineBuilding extends AbstractTownBuilding {
             Items.COAL, 1
     );
 
-	private ResourceLocation biomePath;
+	private ResourceLocation biomePath = new ResourceLocation("minecraft", "plains");
 
 	@Getter
 	private double rating;//might be removed
@@ -75,12 +78,19 @@ public class MineBuilding extends AbstractTownBuilding {
      * @param rating the building rating
      * @param biomePathString the biome path as string
      */
-    public MineBuilding(BlockPos pos, boolean isStructureValid, OccupiedVolume occupiedVolume, double rating, String biomePathString) {
+    public MineBuilding(BlockPos pos, boolean initialized, boolean occupiedAreaOverlapped,
+                        boolean isStructureValid, OccupiedVolume occupiedVolume,
+                        double rating, String biomePathString) {
         super(pos);
+        this.setInitialized(initialized);
+        this.setOccupiedAreaOverlapped(occupiedAreaOverlapped);
         this.setIsStructureValid(isStructureValid);
         this.setOccupiedVolume(occupiedVolume);
         this.setRating(rating);
-        this.setBiomePath(new ResourceLocation(biomePathString));
+        ResourceLocation decodedBiome = ResourceLocation.tryParse(biomePathString);
+        this.setBiomePath(decodedBiome == null
+                ? new ResourceLocation("minecraft", "plains")
+                : decodedBiome);
     }
 
 	private static void loadBiomeResources() {
@@ -100,6 +110,13 @@ public class MineBuilding extends AbstractTownBuilding {
 		}
 		return DEFAULT_RESOURCES;
 	}
+
+    public static boolean hasBiomeRecipe(ResourceLocation biomeID) {
+        if (BIOME_RESOURCES.isEmpty()) {
+            loadBiomeResources();
+        }
+        return BIOME_RESOURCES.containsKey(biomeID);
+    }
 
 	@Override
 	public boolean work(ITownWithBuildings town) {

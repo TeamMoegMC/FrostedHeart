@@ -30,12 +30,17 @@ import net.minecraft.tags.BlockTags;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.core.Direction;
 import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.MenuProvider;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.AbstractContainerMenu;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Objects;
 
-public class MineBaseBlockEntity extends AbstractTownBuildingBlockEntity<MineBaseBuilding> {
+public class MineBaseBlockEntity extends AbstractTownBuildingBlockEntity<MineBaseBuilding> implements MenuProvider {
 
     public MineBaseBlockEntity(BlockPos pos, BlockState state){
         super(FHBlockEntityTypes.MINE_BASE.get(),pos,state);
@@ -108,5 +113,16 @@ public class MineBaseBlockEntity extends AbstractTownBuildingBlockEntity<MineBas
     @Override
     public @NotNull MineBaseBuilding createBuilding() {
         return new MineBaseBuilding(this.getBlockPos());
+    }
+
+    @Override
+    public @Nullable AbstractContainerMenu createMenu(
+            int id, @NotNull Inventory inventory, @NotNull Player player) {
+        return new MineBaseMenu(id, inventory, this);
+    }
+
+    @Override
+    public Component getDisplayName() {
+        return Component.translatable("container.frostedheart.mine_base");
     }
 }
