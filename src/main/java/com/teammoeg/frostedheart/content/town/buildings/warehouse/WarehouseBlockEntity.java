@@ -80,12 +80,12 @@ public class WarehouseBlockEntity extends AbstractTownBuildingBlockEntity<Wareho
             }
             WarehouseBlockScanner scanner = new WarehouseBlockScanner(level, startPos);
             if(scanner.scan()){
-            	building.area = scanner.getArea();
-            	building.volume = scanner.getVolume();
+            	building.setArea(scanner.getArea());
+            	building.setVolume(scanner.getVolume());
                 //容量与体积相似，但是在随着房间高度增高略有衰减
-                building.decorationAmount = scanner.decorations.values().stream().mapToInt(Integer::intValue).sum();
+                building.setDecorationAmount(scanner.decorations.values().stream().mapToInt(Integer::intValue).sum());
 
-                building.capacity = building.area * Math.pow(building.volume * 0.02 / building.area, 0.9) * 1980 + building.decorationAmount * 512;
+                building.setCapacity(building.getArea() * Math.pow(building.getVolume() * 0.02 / building.getArea(), 0.9) * 1980 + building.getDecorationAmount() * 512);
             	building.setOccupiedVolume(scanner.getOccupiedVolume());
                 publishInterfaces(building, scanner.getWallInterfacePositions());
                 return true;

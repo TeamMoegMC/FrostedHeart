@@ -24,7 +24,11 @@ import java.util.stream.Collectors;
 
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.town.buildings.warehouse.SimpleItemKey;
+import com.teammoeg.frostedheart.content.town.event.ITownResourceChangeEventListener;
+import com.teammoeg.frostedheart.content.town.event.TownResourceChangeEvent;
 import it.unimi.dsi.fastutil.objects.Object2DoubleOpenHashMap;
+import lombok.AccessLevel;
+import lombok.Setter;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.item.Item;
 import org.apache.commons.lang3.mutable.MutableBoolean;
@@ -64,6 +68,15 @@ public class TeamTownResourceHolder {
      */
     @Getter
     private double occupiedCapacity = 0.0;
+
+    /**
+     * 变化监听。由 TeamTownData 提供；
+     * 各字段 setter 通过该监听 fire 事件，从而进入增量同步的脏标记。
+     * 解码阶段此值为 null，因此 setter 不会误触发脏标记。
+     */
+    @Getter(AccessLevel.NONE)
+    @Setter
+    private transient ITownResourceChangeEventListener changeListener;
 
     /**
      * 缓存ItemResourceAttribute对应的物品。
@@ -338,28 +351,31 @@ public class TeamTownResourceHolder {
      * Use addUnsafe and costUnsafe in this package.
      * Use methods in TownResourceManager in other classes.
      */
-private void addSigned(ITownResourceKey townResourceKey, double amount){
-    //System.out.println("resourcesBefore: " + resources);
-    if(townResourceKey instanceof ItemStackResourceKey itemStackResourceKey){
-        if(itemStackResourceKey.isEmpty()) return;
-        double amountExist = get(itemStackResourceKey);
-        if(amountExist <= DELTA){
-            addItemToCache(itemStackResourceKey);
-        }
-        if(Math.abs(resources.merge(itemStackResourceKey, amount, Double::sum)) <= DELTA){
-            resources.removeDouble(itemStackResourceKey);
-        }
-        this.occupiedCapacity += amount;
-        markVirtualItemsDirty();
-    }
-    if(townResourceKey instanceof VirtualResourceAttribute virtualResourceKey){
-        resources.merge(virtualResourceKey, amount, Double::sum);
-        if(virtualResourceKey.type.needCapacity){
+    private void addSigned(ITownResourceKey townResourceKey, double amount){
+        //System.out.println("resourcesBefore: " + resources);
+        if(townResourceKey instanceof ItemStackResourceKey itemStackResourceKey){
+            if(itemStackResourceKey.isEmpty()) return;
+            double amountExist = get(itemStackResourceKey);
+            if(amountExist <= DELTA){
+                addItemToCache(itemStackResourceKey);
+            }
+            if(Math.abs(resources.merge(itemStackResourceKey, amount, Double::sum)) <= DELTA){
+                resources.removeDouble(itemStackResourceKey);
+            }
             this.occupiedCapacity += amount;
+            markVirtualItemsDirty();
         }
-    }
-    //System.out.println("addSigned: " + townResourceKey + " " + amount);
-    //System.out.println("resources: " + resources);
+        if(townResourceKey instanceof VirtualResourceAttribute virtualResourceKey){
+            resources.merge(virtualResourceKey, amount, Double::sum);
+            if(virtualResourceKey.type.needCapacity){
+                this.occupiedCapacity += amount;
+            }
+        }
+        if(amount != 0 && this.changeListener != null){
+            this.changeListener.onResourceChange(new TownResourceChangeEvent(this, townResourceKey));
+        }
+        //System.out.println("addSigned: " + townResourceKey + " " + amount);
+        //System.out.println("resources: " + resources);
     }
     private void addSigned(ItemStack pItemStack, double amount){
         addSigned(new ItemStackResourceKey(pItemStack), amount);

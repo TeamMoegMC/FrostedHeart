@@ -32,6 +32,7 @@ import com.teammoeg.frostedheart.content.town.resource.action.TownResourceAction
 import com.teammoeg.frostedheart.content.town.terrainresource.TerrainResourceType;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import net.minecraft.core.UUIDUtil;
+import lombok.Getter;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.item.Item;
@@ -45,22 +46,23 @@ import static java.lang.Double.NEGATIVE_INFINITY;
 public class MineBaseBuilding extends AbstractTownResidentWorkBuilding {
 	public static final Codec<MineBaseBuilding> CODEC = RecordCodecBuilder.create(t -> t.group(
                     BlockPos.CODEC.optionalFieldOf("pos",BlockPos.ZERO).forGetter(o -> o.pos),
-                    Codec.BOOL.optionalFieldOf("isStructureValid",false).forGetter(o -> o.isStructureValid),
-                    OccupiedVolume.CODEC.optionalFieldOf("occupiedVolume",OccupiedVolume.EMPTY).forGetter(o -> o.occupiedVolume),
-                    Codec.list(UUIDUtil.CODEC).optionalFieldOf("residentsID",List.of()).forGetter(o -> new ArrayList<>(o.residentsID)),
-                    Codec.INT.optionalFieldOf("area",0).forGetter(o -> o.area),
-                    Codec.INT.optionalFieldOf("volume",0).forGetter(o -> o.volume),
+                    Codec.BOOL.optionalFieldOf("isStructureValid",false).forGetter(o -> o.isStructureValid()),
+                    OccupiedVolume.CODEC.optionalFieldOf("occupiedVolume",OccupiedVolume.EMPTY).forGetter(o -> o.getOccupiedVolume()),
+                    Codec.list(UUIDUtil.CODEC).optionalFieldOf("residentsID",List.of()).forGetter(o -> new ArrayList<>(o.getResidentsID())),
+                    Codec.INT.optionalFieldOf("area",0).forGetter(o -> o.getArea()),
+                    Codec.INT.optionalFieldOf("volume",0).forGetter(o -> o.getVolume()),
 
-					Codec.INT.optionalFieldOf("maxResidents",0).forGetter(o -> o.maxResidents),
+					Codec.INT.optionalFieldOf("maxResidents",0).forGetter(o -> o.getMaxResidents()),
 
                     Codec.list(BlockPos.CODEC).optionalFieldOf("linkedMines", new ArrayList<>())
-                            .forGetter(o -> o.linkedMines == null ? new ArrayList<>() : new ArrayList<>(o.linkedMines))
+                            .forGetter(o -> o.getLinkedMines() == null ? new ArrayList<>() : new ArrayList<>(o.getLinkedMines()))
 			)
 			.apply(t, MineBaseBuilding::new));
 
-	public int area;
-
-	public int volume;
+	@Getter
+	private int area;
+	@Getter
+	private int volume;
 
     public Set<BlockPos> linkedMines = new HashSet<>();
     /**
@@ -68,6 +70,9 @@ public class MineBaseBuilding extends AbstractTownResidentWorkBuilding {
      * attribute at 50 and zero mining proficiency.
      */
     private static final double STANDARD_WORKER_ATTRIBUTE_SCORE = TownMathFunctions.attributeScore(50.0);
+
+	public void setArea(int area) { this.area = area; fireChange(); }
+	public void setVolume(int volume) { this.volume = volume; fireChange(); }
 
 
 	public MineBaseBuilding(BlockPos pos) {
@@ -92,12 +97,12 @@ public class MineBaseBuilding extends AbstractTownResidentWorkBuilding {
 	 */
 	public MineBaseBuilding(BlockPos pos, boolean isStructureValid, OccupiedVolume occupiedVolume, java.util.List<UUID> residentsID, int area, int volume, int maxResidents,List<BlockPos> linkedMines) {
 		super(pos);
-		this.isStructureValid = isStructureValid;
-		this.occupiedVolume = occupiedVolume;
+		this.setIsStructureValid(isStructureValid);
+		this.setOccupiedVolume(occupiedVolume);
 		this.residentsID = new HashSet<>(residentsID);
-		this.area = area;
-		this.volume = volume;
-		this.maxResidents = maxResidents;
+		this.setArea(area);
+		this.setVolume(volume);
+		this.setMaxResidents(maxResidents);
         this.linkedMines = new HashSet<>(linkedMines);
 	}
 
@@ -226,6 +231,7 @@ public class MineBaseBuilding extends AbstractTownResidentWorkBuilding {
     public void clearLinkedMines() {
         if (linkedMines != null) {
             linkedMines.clear();
+            fireChange();
         }
     }
 
@@ -234,6 +240,7 @@ public class MineBaseBuilding extends AbstractTownResidentWorkBuilding {
             linkedMines = new HashSet<>();
         }
         linkedMines.add(pos);
+        fireChange();
     }
 
     public Set<BlockPos> getLinkedMines() {

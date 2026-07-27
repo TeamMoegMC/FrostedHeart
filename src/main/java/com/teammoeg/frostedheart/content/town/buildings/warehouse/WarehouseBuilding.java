@@ -25,6 +25,7 @@ import com.teammoeg.frostedheart.content.town.ITown;
 import com.teammoeg.frostedheart.content.town.block.OccupiedVolume;
 import com.teammoeg.frostedheart.content.town.building.AbstractTownBuilding;
 import com.teammoeg.frostedheart.content.town.resource.VirtualResourceType;
+import lombok.Getter;
 import com.teammoeg.frostedheart.content.town.resource.action.ResourceActionMode;
 import com.teammoeg.frostedheart.content.town.resource.action.ResourceActionType;
 import com.teammoeg.frostedheart.content.town.resource.action.TownResourceActions;
@@ -40,23 +41,28 @@ import java.util.Set;
 public class WarehouseBuilding extends AbstractTownBuilding {
 	public static final Codec<WarehouseBuilding> CODEC = RecordCodecBuilder.create(t -> t.group(
                     BlockPos.CODEC.optionalFieldOf("pos",BlockPos.ZERO).forGetter(o -> o.pos),
-                    Codec.BOOL.optionalFieldOf("isStructureValid",false).forGetter(o -> o.isStructureValid),
-                    OccupiedVolume.CODEC.optionalFieldOf("occupiedVolume",OccupiedVolume.EMPTY).forGetter(o -> o.occupiedVolume),
-					Codec.DOUBLE.optionalFieldOf("capacity",0D).forGetter(o -> o.capacity),
-					Codec.INT.optionalFieldOf("area",0).forGetter(o -> o.area),
-					Codec.INT.optionalFieldOf("volume",0).forGetter(o -> o.volume),
-                    Codec.INT.optionalFieldOf("decorationAmount",0).forGetter(o -> o.decorationAmount),
+                    Codec.BOOL.optionalFieldOf("isStructureValid",false).forGetter(o -> o.isStructureValid()),
+                    OccupiedVolume.CODEC.optionalFieldOf("occupiedVolume",OccupiedVolume.EMPTY).forGetter(o -> o.getOccupiedVolume()),
+					Codec.DOUBLE.optionalFieldOf("capacity",0D).forGetter(o -> o.getCapacity()),
+					Codec.INT.optionalFieldOf("area",0).forGetter(o -> o.getArea()),
+					Codec.INT.optionalFieldOf("volume",0).forGetter(o -> o.getVolume()),
+                    Codec.INT.optionalFieldOf("decorationAmount",0).forGetter(o -> o.getDecorationAmount()),
                     BlockPos.CODEC.listOf().optionalFieldOf("interfaces", List.of())
                             .forGetter(o -> List.copyOf(o.interfacePositions))
 			)
 			.apply(t, WarehouseBuilding::new));
 
-    int volume;//有效体积
-    int area;//占地面积
-    public double capacity;//该仓库的最大容量
-    public int decorationAmount;
+    private int volume;//有效体积
+    private int area;//占地面积
+    private double capacity;//该仓库的最大容量
+    @Getter
+    private int decorationAmount;
     private final Set<BlockPos> interfacePositions = new LinkedHashSet<>();
 
+    public void setVolume(int volume) { this.volume = volume; fireChange(); }
+    public void setArea(int area) { this.area = area; fireChange(); }
+    public void setCapacity(double capacity) { this.capacity = capacity; fireChange(); }
+    public void setDecorationAmount(int decorationAmount) { this.decorationAmount = decorationAmount; fireChange(); }
 	public WarehouseBuilding(BlockPos pos) {
         super(pos);
     }
@@ -78,12 +84,12 @@ public class WarehouseBuilding extends AbstractTownBuilding {
     public WarehouseBuilding(BlockPos pos, boolean isStructureValid, OccupiedVolume occupiedVolume, double capacity,
                              int area, int volume, int decorationAmount, List<BlockPos> interfacePositions) {
         super(pos);
-        this.isStructureValid = isStructureValid;
-        this.occupiedVolume = occupiedVolume;
-        this.capacity = capacity;
-        this.area = area;
-        this.volume = volume;
-        this.decorationAmount = decorationAmount;
+        this.setIsStructureValid(isStructureValid);
+        this.setOccupiedVolume(occupiedVolume);
+        this.setCapacity(capacity);
+        this.setArea(area);
+        this.setVolume(volume);
+        this.setDecorationAmount(decorationAmount);
         replaceInterfaces(interfacePositions);
     }
 

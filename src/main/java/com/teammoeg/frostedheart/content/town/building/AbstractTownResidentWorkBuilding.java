@@ -13,7 +13,12 @@ import java.util.UUID;
 public abstract class AbstractTownResidentWorkBuilding extends AbstractTownBuilding implements ITownResidentWorkBuilding{
     protected Set<UUID> residentsID = new HashSet<>();
     @Getter
-    public int maxResidents;
+    private int maxResidents;
+
+    public void setMaxResidents(int maxResidents) {
+        this.maxResidents = maxResidents;
+        fireChange();
+    }
 
     protected AbstractTownResidentWorkBuilding(BlockPos pos) {
         super(pos);
@@ -32,12 +37,16 @@ public abstract class AbstractTownResidentWorkBuilding extends AbstractTownBuild
 
     public boolean addResident(Resident resident){
         resident.setWorkPos(this.getPos());
-        return this.residentsID.add(resident.getUUID());
+        boolean added = this.residentsID.add(resident.getUUID());
+        if (added) fireChange();
+        return added;
     }
 
     public boolean removeResident(Resident resident){
         resident.setWorkPos(null);
-        return this.residentsID.remove(resident.getUUID());
+        boolean removed = this.residentsID.remove(resident.getUUID());
+        if (removed) fireChange();
+        return removed;
     }
 
     @Override

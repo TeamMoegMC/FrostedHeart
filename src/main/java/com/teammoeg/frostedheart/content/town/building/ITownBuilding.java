@@ -21,7 +21,9 @@ public interface ITownBuilding {
             .type("mine", MineBuilding.class, MineBuilding.CODEC)
             .type("mineBase", MineBaseBuilding.class, MineBaseBuilding.CODEC)
             .type("warehouse", WarehouseBuilding.class, WarehouseBuilding.CODEC)
-            .buildByInt();
+            // 按字符串key分发（写盘存 "house"/"mine" 等名称），解码时兼容旧存档的整数索引。
+            // 新增建筑类型时可任意位置插入，不再受注册顺序约束。
+            .buildByNameWithLegacyInt();
 
     /**
      * check if this building is workable.

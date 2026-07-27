@@ -110,7 +110,7 @@ public class TeamTown implements ITown, ITownWithResidents, ITownWithBuildings {
     public void addTownBlock(BlockPos pos, TownBlockEntity<?> townBlockEntity) {
         ITownBuilding building =townBlockEntity.createBuilding();
         if(building instanceof AbstractTownBuilding abstractTownBuilding){
-            data.buildings.put(pos, abstractTownBuilding);
+            data.buildings.put(pos, abstractTownBuilding); // put 时由 ObservableTownMap.onAttach 自动接线
         }
     }
 
@@ -185,14 +185,16 @@ public class TeamTown implements ITown, ITownWithResidents, ITownWithBuildings {
      * @return true if the resident was removed
      */
     public boolean removeResident(String firstName, String lastName) {
-        boolean removed = false;
+        // 先收集再删除：避免遍历 entrySet 时直接 remove 导致 ConcurrentModificationException；
+        // 并且走 removeResident(UUID) 完整流程，同步清理住房/工作建筑中的引用。
+        List<UUID> toRemove = new ArrayList<>();
         for (Entry<UUID, Resident> entry : getResidents().entrySet()) {
             if (entry.getValue().getFirstName().equals(firstName) && entry.getValue().getLastName().equals(lastName)) {
-                getResidents().remove(entry.getKey());
-                removed = true;
+                toRemove.add(entry.getKey());
             }
         }
-        return removed;
+        toRemove.forEach(this::removeResident);
+        return !toRemove.isEmpty();
     }
 
     /**

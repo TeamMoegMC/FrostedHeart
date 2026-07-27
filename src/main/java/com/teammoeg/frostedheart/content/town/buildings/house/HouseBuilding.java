@@ -38,6 +38,8 @@ import com.teammoeg.frostedheart.content.town.resource.ItemStackResourceKey;
 import com.teammoeg.frostedheart.content.town.resource.action.*;
 import net.minecraft.core.BlockPos;
 
+import lombok.Getter;
+
 import static com.teammoeg.frostedheart.content.town.ITown.DEBUG_MODE;
 import static com.teammoeg.frostedheart.content.town.resource.ItemResourceType.RESIDENT_FOOD_LEVEL;
 
@@ -49,46 +51,54 @@ public class HouseBuilding extends AbstractTownBuilding implements ITownResident
 
     public static final Codec<HouseBuilding> CODEC = RecordCodecBuilder.create(t -> t.group(
             BlockPos.CODEC.optionalFieldOf("pos",BlockPos.ZERO).forGetter(o -> o.pos),
-            Codec.BOOL.optionalFieldOf("isStructureValid",false).forGetter(o -> o.isStructureValid),
-            OccupiedVolume.CODEC.optionalFieldOf("occupiedVolume",OccupiedVolume.EMPTY).forGetter(o -> o.occupiedVolume),
-            Codec.INT.optionalFieldOf("area",0).forGetter(o -> o.area),
-            Codec.INT.optionalFieldOf("volume",0).forGetter(o -> o.volume),
-            Codec.DOUBLE.optionalFieldOf("temperature",0D).forGetter(o -> o.temperature),
-            Codec.DOUBLE.optionalFieldOf("decorationRating",0D).forGetter(o -> o.decorationRating),
-            Codec.INT.optionalFieldOf("maxResident",0).forGetter(o -> o.maxResidents),
-            Codec.DOUBLE.optionalFieldOf("temperatureModifier",0D).forGetter(o -> o.temperatureModifier))
+            Codec.BOOL.optionalFieldOf("isStructureValid",false).forGetter(o -> o.isStructureValid()),
+            OccupiedVolume.CODEC.optionalFieldOf("occupiedVolume",OccupiedVolume.EMPTY).forGetter(o -> o.getOccupiedVolume()),
+            Codec.INT.optionalFieldOf("area",0).forGetter(o -> o.getArea()),
+            Codec.INT.optionalFieldOf("volume",0).forGetter(o -> o.getVolume()),
+            Codec.DOUBLE.optionalFieldOf("temperature",0D).forGetter(o -> o.getTemperature()),
+            Codec.DOUBLE.optionalFieldOf("decorationRating",0D).forGetter(o -> o.getDecorationRating()),
+            Codec.INT.optionalFieldOf("maxResident",0).forGetter(o -> o.getMaxResidents()),
+            Codec.DOUBLE.optionalFieldOf("temperatureModifier",0D).forGetter(o -> o.getTemperatureModifier()))
             .apply(t, HouseBuilding::new));
 
     private final Set<UUID> residentsUUID = new HashSet<>();
 
     /**
-     * 住宅结构是否有效
-     */
-    boolean isStructureValid;
-    /**
      * 住宅的有效面积
      */
-    public int area;
+    @Getter
+    private int area;
     /**
      * 住宅的体积
      */
-    public int volume;
+    @Getter
+    private int volume;
     /**
      * 住宅内部平均温度
      */
-    public double temperature;
+    @Getter
+    private double temperature;
     /**
      * 住宅内部装饰物的综合评分，取值范围为0-1
      */
-    public double decorationRating;
+    @Getter
+    private double decorationRating;
     /**
      * 最大可居住居民数
      */
-    public int maxResidents;
+    private int maxResidents;
     /**
      * 温度修正系数，用于调节房屋内温度效果
      */
-    public double temperatureModifier;
+    @Getter
+    private double temperatureModifier;
+
+    public void setArea(int area) { this.area = area; fireChange(); }
+    public void setVolume(int volume) { this.volume = volume; fireChange(); }
+    public void setTemperature(double temperature) { this.temperature = temperature; fireChange(); }
+    public void setDecorationRating(double decorationRating) { this.decorationRating = decorationRating; fireChange(); }
+    public void setMaxResidents(int maxResidents) { this.maxResidents = maxResidents; fireChange(); }
+    public void setTemperatureModifier(double temperatureModifier) { this.temperatureModifier = temperatureModifier; fireChange(); }
 
 
     public HouseBuilding(BlockPos pos) {
@@ -97,14 +107,14 @@ public class HouseBuilding extends AbstractTownBuilding implements ITownResident
 
     public HouseBuilding(BlockPos pos, boolean isStructureValid, OccupiedVolume occupiedVolume, int area, int volume, double temperature, double decorationRating, int maxResidents, double temperatureModifier) {
         super(pos);
-        this.isStructureValid = isStructureValid;
-        this.occupiedVolume = occupiedVolume;
-        this.area = area;
-        this.volume = volume;
-        this.temperature = temperature;
-        this.decorationRating = decorationRating;
-        this.maxResidents = maxResidents;
-        this.temperatureModifier = temperatureModifier;
+        this.setIsStructureValid(isStructureValid);
+        this.setOccupiedVolume(occupiedVolume);
+        this.setArea(area);
+        this.setVolume(volume);
+        this.setTemperature(temperature);
+        this.setDecorationRating(decorationRating);
+        this.setMaxResidents(maxResidents);
+        this.setTemperatureModifier(temperatureModifier);
     }
 
     /**
@@ -112,23 +122,27 @@ public class HouseBuilding extends AbstractTownBuilding implements ITownResident
      */
     public HouseBuilding(BlockPos pos, boolean isStructureValid, int area, int volume, double temperature, double decorationRating, int maxResidents, double temperatureModifier) {
         super(pos);
-        this.isStructureValid = isStructureValid;
-        this.area = area;
-        this.volume = volume;
-        this.temperature = temperature;
-        this.decorationRating = decorationRating;
-        this.maxResidents = maxResidents;
-        this.temperatureModifier = temperatureModifier;
+        this.setIsStructureValid(isStructureValid);
+        this.setArea(area);
+        this.setVolume(volume);
+        this.setTemperature(temperature);
+        this.setDecorationRating(decorationRating);
+        this.setMaxResidents(maxResidents);
+        this.setTemperatureModifier(temperatureModifier);
     }
 
 
     public boolean addResident(Resident resident) {
         resident.setHousePos(this.getPos());
-        return residentsUUID.add(resident.getUUID());
+        boolean added = residentsUUID.add(resident.getUUID());
+        if (added) fireChange();
+        return added;
     }
 
     public boolean removeResident(Resident resident){
-        return residentsUUID.remove(resident.getUUID());
+        boolean removed = residentsUUID.remove(resident.getUUID());
+        if (removed) fireChange();
+        return removed;
     }
 
     @Override

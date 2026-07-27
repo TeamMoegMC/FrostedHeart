@@ -53,33 +53,35 @@ import static java.lang.Double.NEGATIVE_INFINITY;
 public class HuntingBaseBuilding extends AbstractTownResidentWorkBuilding {
 	public static final Codec<HuntingBaseBuilding> CODEC = RecordCodecBuilder.create(t -> t.group(
 					BlockPos.CODEC.optionalFieldOf("pos",BlockPos.ZERO).forGetter(o -> o.pos),
-					Codec.BOOL.optionalFieldOf("isStructureValid",false).forGetter(o -> o.isStructureValid),
-					OccupiedVolume.CODEC.optionalFieldOf("occupiedVolume",OccupiedVolume.EMPTY).forGetter(o -> o.occupiedVolume),
-					Codec.list(UUIDUtil.CODEC).optionalFieldOf("residentsID",List.of()).forGetter(o -> new ArrayList<>(o.residentsID)),
-					Codec.INT.optionalFieldOf("area",0).forGetter(o -> o.area),
-					Codec.INT.optionalFieldOf("volume",0).forGetter(o -> o.volume),
-					Codec.DOUBLE.optionalFieldOf("temperature",0D).forGetter(o -> o.temperature),
-					Codec.INT.optionalFieldOf("maxResidents",0).forGetter(o -> o.maxResidents),
-					Codec.INT.optionalFieldOf("tanningRackNum",0).forGetter(o -> o.tanningRackNum),
-					Codec.DOUBLE.optionalFieldOf("temperatureModifier",null).forGetter(o -> o.temperatureModifier))
+					Codec.BOOL.optionalFieldOf("isStructureValid",false).forGetter(o -> o.isStructureValid()),
+					OccupiedVolume.CODEC.optionalFieldOf("occupiedVolume",OccupiedVolume.EMPTY).forGetter(o -> o.getOccupiedVolume()),
+					Codec.list(UUIDUtil.CODEC).optionalFieldOf("residentsID",List.of()).forGetter(o -> new ArrayList<>(o.getResidentsID())),
+					Codec.INT.optionalFieldOf("area",0).forGetter(o -> o.getArea()),
+					Codec.INT.optionalFieldOf("volume",0).forGetter(o -> o.getVolume()),
+					Codec.DOUBLE.optionalFieldOf("temperature",0D).forGetter(o -> o.getTemperature()),
+					Codec.INT.optionalFieldOf("maxResidents",0).forGetter(o -> o.getMaxResidents()),
+					Codec.INT.optionalFieldOf("tanningRackNum",0).forGetter(o -> o.getTanningRackNum()),
+					Codec.DOUBLE.optionalFieldOf("temperatureModifier",null).forGetter(o -> o.getTemperatureModifier()))
 			.apply(t, HuntingBaseBuilding::new));
-	// get max resident
 	@Getter
-	public int maxResidents;
+	private int area;
+	@Getter
+	private int volume;
+	@Getter
+	private int tanningRackNum;
+	@Getter
+	private double temperature;
+	@Getter
+	private double temperatureModifier;
+	@Getter
+	private double rating;
 
-	public boolean isStructureValid;
-
-	public int area;
-
-	public int volume;
-
-	public int tanningRackNum;
-
-	public double temperature;
-
-	public double temperatureModifier;
-
-	public double rating;
+	public void setArea(int area) { this.area = area; fireChange(); }
+	public void setVolume(int volume) { this.volume = volume; fireChange(); }
+	public void setTanningRackNum(int tanningRackNum) { this.tanningRackNum = tanningRackNum; fireChange(); }
+	public void setTemperature(double temperature) { this.temperature = temperature; fireChange(); }
+	public void setTemperatureModifier(double temperatureModifier) { this.temperatureModifier = temperatureModifier; fireChange(); }
+	public void setRating(double rating) { this.rating = rating; fireChange(); }
 
 	public HuntingBaseBuilding(BlockPos pos) {
         super(pos);
@@ -101,15 +103,15 @@ public class HuntingBaseBuilding extends AbstractTownResidentWorkBuilding {
 	 */
 	public HuntingBaseBuilding(BlockPos pos, boolean isStructureValid, OccupiedVolume occupiedVolume, java.util.List<UUID> residentsID, int area, int volume, double temperature, int maxResidents, int tanningRackNum, double temperatureModifier) {
 		super(pos);
-		this.isStructureValid = isStructureValid;
-		this.occupiedVolume = occupiedVolume;
+		this.setIsStructureValid(isStructureValid);
+		this.setOccupiedVolume(occupiedVolume);
 		this.residentsID = new java.util.HashSet<>(residentsID);
-		this.area = area;
-		this.volume = volume;
-		this.temperature = temperature;
-		this.maxResidents = maxResidents;
-		this.tanningRackNum = tanningRackNum;
-		this.temperatureModifier = temperatureModifier;
+		this.setArea(area);
+		this.setVolume(volume);
+		this.setTemperature(temperature);
+		this.setMaxResidents(maxResidents);
+		this.setTanningRackNum(tanningRackNum);
+		this.setTemperatureModifier(temperatureModifier);
 	}
 
 	private static final double STANDARD_WORKER_ATTRIBUTE_SCORE = TownMathFunctions.attributeScore(50.0);

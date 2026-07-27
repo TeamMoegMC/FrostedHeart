@@ -66,17 +66,17 @@ public class HuntingBaseBlock extends AbstractTownBuildingBlock implements CEnti
                 te.refresh_safe(building);
                 AbstractTownBuildingBlock.displayBasicInfo(player, building);
                 player.displayClientMessage(Components.str("Raw temperature: " +
-                        CMath.round(building.temperature, 2)), false);
+                        CMath.round(building.getTemperature(), 2)), false);
                 player.displayClientMessage(Components.str("Temperature modifier: " +
                         CMath.round(te.getTemperatureModifier(), 2)), false);
                 player.displayClientMessage(Components.str("Effective temperature: " + String.format("%.2f", building.getEffectiveTemperature()) + "(Temperature " + (building.isTemperatureValid() ? "Valid" : "Invalid") + ")"), false);
                 if(building.isBuildingWorkable())
-                    player.displayClientMessage(Components.str("MaxResident: " + building.maxResidents) , false);
-                player.displayClientMessage(Components.str("TanningRackNum: " + building.tanningRackNum), false);
-                player.displayClientMessage(Components.str("Volume: " + building.volume), false);
-                player.displayClientMessage(Components.str("Area: " + building.area), false);
+                    player.displayClientMessage(Components.str("MaxResident: " + building.getMaxResidents()) , false);
+                player.displayClientMessage(Components.str("TanningRackNum: " + building.getTanningRackNum()), false);
+                player.displayClientMessage(Components.str("Volume: " + building.getVolume()), false);
+                player.displayClientMessage(Components.str("Area: " + building.getArea()), false);
                 player.displayClientMessage(Components.str("Rating: " +
-                        CMath.round(building.rating, 2)), false);
+                        CMath.round(building.getRating(), 2)), false);
             }, () -> player.displayClientMessage(Components.str(CConstants.NO_CORRESPONDING_TOWN_BUILDING_INSTANCE_FOUND), false));
             return InteractionResult.SUCCESS;
         }

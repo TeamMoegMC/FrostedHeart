@@ -34,7 +34,6 @@ import com.teammoeg.frostedheart.content.agriculture.FertilizedDirt;
 import com.teammoeg.frostedheart.content.agriculture.Fertilizer;
 import com.teammoeg.frostedheart.content.climate.ForecastHandler;
 import com.teammoeg.frostedheart.content.climate.WorldTemperature;
-import com.teammoeg.frostedheart.content.climate.block.generator.GeneratorData;
 import com.teammoeg.frostedheart.content.climate.data.ArmorTempData;
 import com.teammoeg.frostedheart.content.climate.data.PlantTempData;
 import com.teammoeg.frostedheart.content.climate.data.PlantTemperature;
@@ -356,7 +355,7 @@ public class ClimateCommonEvents {
                     if (DEBUG_MODE || trd.getOptional(FHSpecialDataTypes.GENERATOR_DATA).filter(g -> serverWorld.dimension().equals(g.dimension)).isPresent()) {
                         if (serverWorld.getGameTime() % 20 == i % 20) {// Split town calculations to multiple seconds
                             if (!trd.getTeam().getOnlineMembers().isEmpty()) {
-                                trd.getData(FHSpecialDataTypes.TOWN_DATA).tick(serverWorld,trd);
+                                trd.getData(FHSpecialDataTypes.TOWN_DATA).tickSecond(serverWorld,trd);
                             }
                         }
                         if (serverWorld.getDayTime() % 24000 == i % 20 + 1000) {

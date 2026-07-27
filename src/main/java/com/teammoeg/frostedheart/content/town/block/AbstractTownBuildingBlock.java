@@ -77,7 +77,7 @@ public abstract class AbstractTownBuildingBlock extends CBlock {
             // register the house to the town
             if (entity instanceof ServerPlayer placer) {
                 TeamDataHolder teamDataHolder = CTeamDataManager.get(placer);
-                if (ITown.DEBUG_MODE ||ChunkHeatData.hasActiveAdjust(world, pos)) {
+                //if (ITown.DEBUG_MODE ||ChunkHeatData.hasActiveAdjust(world, pos)) {
                     TeamTown.from(placer).addTownBlock(pos, townBlockEntity);
                     if(townBlockEntity instanceof AbstractTownBuildingBlockEntity<?> abstractTownBuildingBlockEntity){
 
@@ -85,7 +85,7 @@ public abstract class AbstractTownBuildingBlock extends CBlock {
                             abstractTownBuildingBlockEntity.townProvider = new TeamTownProvider(teamDataHolder.getId());
                         }
                     }
-                }
+                //}
                 if(teamDataHolder != null){
                     IOwnerTile.trySetOwner((BlockEntity) townBlockEntity, teamDataHolder.getId());
                 }
@@ -102,9 +102,9 @@ public abstract class AbstractTownBuildingBlock extends CBlock {
     public static void displayBasicInfo(Player player, AbstractTownBuilding building) {
         if(building != null){
             player.displayClientMessage(Components.str(building.isBuildingWorkable() ? "Workable" : "Unworkable"), false);
-            player.displayClientMessage(Components.str(building.initialized ? "Initialized" : "Not Initialized"), false);
-            player.displayClientMessage(Components.str(building.isStructureValid ? "Structure Valid" : "Structure Invalid"), false);
-            player.displayClientMessage(Components.str(building.occupiedAreaOverlapped ? "Occupied Area Overlapped" : "Occupied Area didn't Overlap"), false);
+            player.displayClientMessage(Components.str(building.isInitialized() ? "Initialized" : "Not Initialized"), false);
+            player.displayClientMessage(Components.str(building.isStructureValid() ? "Structure Valid" : "Structure Invalid"), false);
+            player.displayClientMessage(Components.str(building.isOccupiedAreaOverlapped() ? "Occupied Area Overlapped" : "Occupied Area didn't Overlap"), false);
         }
     }
 }

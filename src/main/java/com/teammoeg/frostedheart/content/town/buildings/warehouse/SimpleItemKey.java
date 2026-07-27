@@ -24,6 +24,7 @@ import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.frostedheart.content.town.resource.ItemStackResourceKey;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.Nullable;
@@ -61,7 +62,20 @@ public record SimpleItemKey(Item item, @Nullable CompoundTag tag)
         return s;
     }
 
+    public void writeTo(FriendlyByteBuf buf) {
+        buf.writeId(BuiltInRegistries.ITEM, item);
+        buf.writeNbt(tag);
+    }
+
+    public static SimpleItemKey fromBuffer(FriendlyByteBuf buf) {
+        return new SimpleItemKey(
+            buf.readById(BuiltInRegistries.ITEM),
+            buf.readNbt()
+        );
+    }
+
     public boolean matches(ItemStack stack) {
         return stack.getItem() == item && Objects.equals(stack.getTag(), tag);
+    }
     }
 }

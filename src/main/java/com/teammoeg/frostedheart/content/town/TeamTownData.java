@@ -25,6 +25,9 @@ import com.teammoeg.frostedheart.content.climate.block.generator.GeneratorData;
 import com.teammoeg.frostedheart.content.town.block.OccupiedVolume;
 import com.teammoeg.frostedheart.content.town.buildings.mine.MineBaseBuilding;
 import com.teammoeg.frostedheart.content.town.buildings.mine.MineBuilding;
+import com.teammoeg.frostedheart.content.town.event.*;
+import com.teammoeg.frostedheart.content.town.resource.ITownResourceKey;
+import com.teammoeg.frostedheart.content.town.util.ObservableTownMap;
 import lombok.Getter;
 
 import com.mojang.serialization.Codec;
@@ -65,7 +68,7 @@ import java.util.stream.Collectors;
  * <p>
  * Everything permanent should be saved in this class.
  */
-public class TeamTownData implements SpecialData {
+public class TeamTownData implements SpecialData{
     public static final Codec<TeamTownData> CODEC = RecordCodecBuilder.create(t -> t.group(
         //Only prevent decoding failures in this field from breaking the whole object.
         CodecUtil.defaultSupply(Codec.STRING, () -> "Default Town")
@@ -74,10 +77,10 @@ public class TeamTownData implements SpecialData {
         CodecUtil.defaultSupply(CodecUtil.catchingCodec(TeamTownResourceHolder.CODEC), TeamTownResourceHolder::new)
         .fieldOf("resources").forGetter(o -> o.resources),
 
-        CodecUtil.defaultSupply(CodecUtil.catchingCodec(CodecUtil.mapCodec("pos", BlockPos.CODEC, "building", AbstractTownBuilding.CODEC)), LinkedHashMap::new)
+        CodecUtil.defaultSupply(CodecUtil.catchingCodec(CodecUtil.mapCodec("pos", BlockPos.CODEC, "building", AbstractTownBuilding.CODEC)), ObservableTownMap::new)
         .fieldOf("blocks").forGetter(o -> new HashMap<>(o.buildings)),
 
-        CodecUtil.defaultSupply(CodecUtil.catchingCodec(CodecUtil.mapCodec("uuid", UUIDUtil.CODEC, "data", Resident.CODEC)), LinkedHashMap::new)
+        CodecUtil.defaultSupply(CodecUtil.catchingCodec(CodecUtil.mapCodec("uuid", UUIDUtil.CODEC, "data", Resident.CODEC)), ObservableTownMap::new)
         .fieldOf("residents").forGetter(o -> o.residents),
 
         CodecUtil.defaultSupply(CodecUtil.catchingCodec(CodecUtil.mapCodec("type", CodecUtil.enumCodec(TerrainResourceType.values()), "data", TerrainResourceData.CODEC)), HashMap::new)
@@ -100,7 +103,7 @@ public class TeamTownData implements SpecialData {
     /**
      * The town residents.
      */
-    Map<UUID, Resident> residents = new LinkedHashMap<>();
+    ObservableTownMap<UUID, Resident> residents = new ObservableTownMap<>();
     /**
      * ITown resources. Including normal resources and town services. Including
      * resources gathered from town and resources gathered from player. Must be
@@ -110,7 +113,7 @@ public class TeamTownData implements SpecialData {
     /**
      * ITown blocks and their worker data
      */
-    Map<BlockPos, AbstractTownBuilding> buildings = new LinkedHashMap<>();
+    ObservableTownMap<BlockPos, AbstractTownBuilding> buildings = new ObservableTownMap<>();
 
 
     Map<TerrainResourceType, TerrainResourceData> terrainResource=new EnumMap<>(TerrainResourceType.class);
@@ -118,19 +121,34 @@ public class TeamTownData implements SpecialData {
     int labour=0;
     @Getter
     int maxLabour=0;
+
+    @Getter
+    private final DataSyncCache dataSyncCache = new DataSyncCache();
+
+
+
     public TeamTownData(String name, TeamTownResourceHolder resources, Map<BlockPos, ITownBuilding> buildings, Map<UUID, Resident> residents, Map<TerrainResourceType, TerrainResourceData> terrainResource,int labour,int maxlabour) {
         super();
         this.name = name;
         this.resources = resources;
+        // 在批量 put 之前绑定 attach/detach，使反序列化得到的建筑/居民也自动接上（或解除）dataSyncCache 监听器
+        this.buildings.setOnAttach(b -> b.setChangeEventListener(this.dataSyncCache));
+        this.residents.setOnAttach(r -> r.setChangeEventListener(this.dataSyncCache));
+        this.buildings.setOnDetach(b -> b.setChangeEventListener(null));
+        this.residents.setOnDetach(r -> r.setChangeEventListener(null));
         buildings.forEach((pos, building) -> {
             if(building instanceof AbstractTownBuilding abstractTownBuilding){
-                this.buildings.put(pos, abstractTownBuilding);
+                this.buildings.put(pos, abstractTownBuilding); // put 时自动 onAttach 接线
             }
         });
-        this.residents.putAll(residents);
+        this.residents.putAll(residents); // putAll 时自动 onAttach 接线
         this.terrainResource.putAll(terrainResource);
         this.labour=0;
         this.maxLabour=0;
+        this.resources.setChangeListener(dataSyncCache);
+        // 批量 put 完成后再绑定 onChange，避免加载存档时误触发脏标记（layer ① 仅集合层面）
+        this.buildings.setOnChange((pos) -> {this.dataSyncCache.onBuildingChange(new TownBuildingChangeEvent(this.buildings, pos));});
+        this.residents.setOnChange((uuid)-> {this.dataSyncCache.onResidentChange(new TownResidentChangeEvent(this.residents, uuid));});
     }
 
     public TeamTownData(SpecialDataHolder teamData) {
@@ -140,6 +158,13 @@ public class TeamTownData implements SpecialData {
             this.name = data.getTeam().getName() + "'s ITown";
 
         }
+        this.buildings.setOnAttach(b -> b.setChangeEventListener(this.dataSyncCache));
+        this.residents.setOnAttach(r -> r.setChangeEventListener(this.dataSyncCache));
+        this.buildings.setOnDetach(b -> b.setChangeEventListener(null));
+        this.residents.setOnDetach(r -> r.setChangeEventListener(null));
+        this.resources.setChangeListener(dataSyncCache);
+        this.buildings.setOnChange((pos) -> {this.dataSyncCache.onBuildingChange(new TownBuildingChangeEvent(this.buildings, pos));});
+        this.residents.setOnChange((uuid)-> {this.dataSyncCache.onResidentChange(new TownResidentChangeEvent(this.residents, uuid));});
     }
 
     /**
@@ -152,12 +177,21 @@ public class TeamTownData implements SpecialData {
     }
 
     /**
+     * process some town logic that needs to run every tick, like sync data to client
+     * @param level server world instance
+     * @param teamData tickSecond有这个参数，所以我也顺便加上了
+     */
+    public void tick(ServerLevel level, TeamDataHolder teamData) {
+
+    }
+
+    /**
      * ITown logic update (every 20 ticks). This method first validates the town
      * blocks, then sorts them by priority and calls the work methods.
      *
      * @param world server world instance
      */
-    public void tick(ServerLevel world, TeamDataHolder teamData) {
+    public void tickSecond(ServerLevel world, TeamDataHolder teamData) {
         //if (!FHConfig.SERVER.TOWN.enableTownTick.get()) return;
         Optional<GeneratorData> genDataOpt = teamData.getOptional(FHSpecialDataTypes.GENERATOR_DATA);
         if (genDataOpt.isPresent()) {
@@ -220,8 +254,8 @@ public class TeamTownData implements SpecialData {
                 AbstractTownBuilding otherBuilding = buildingsWithOccupiedAreas.get(j);
                 OccupiedVolume otherOccupiedVolume = otherBuilding.getOccupiedVolume();
                 if (occupiedVolume.intersects(otherOccupiedVolume)) {
-                    building.occupiedAreaOverlapped = true;
-                    otherBuilding.occupiedAreaOverlapped = true;
+                    building.setOccupiedAreaOverlapped(true);
+                    otherBuilding.setOccupiedAreaOverlapped(true);
                 }
             }
         }
@@ -473,5 +507,90 @@ public class TeamTownData implements SpecialData {
         return actual;
     }
 
+    /**
+     * 用于在服务端向客户端同步发生变化的数据
+     */
+    class DataSyncCache implements ITownBuildingChangeEventListener, ITownResourceChangeEventListener, ITownResidentChangeEventListener {
+        /**
+         * 记录发生变化但未同步到客户端的资源，通常将在下一tick同步。
+         */
+        private Set<ITownResourceKey> changedResourceKey = new HashSet<>();
+        private Set<UUID> changedResidentUUID = new HashSet<>();
+        private Set<BlockPos> changedBuildingPos = new HashSet<>();
 
+        public void addChanged(ITownResourceKey changedResourceKey){
+            this.changedResourceKey.add(changedResourceKey);
+        }
+
+        public void addChanged(UUID changedResidentUUID){
+            this.changedResidentUUID.add(changedResidentUUID);
+        }
+
+        public void addChanged(BlockPos changedBuildingPos){
+            this.changedBuildingPos.add(changedBuildingPos);
+        }
+
+        /**
+         * 取出当前所有脏建筑键并清空。发包前调用。
+         */
+        public Set<BlockPos> drainChangedBuildings() {
+            if (changedBuildingPos.isEmpty()) return Set.of();
+            Set<BlockPos> out = new HashSet<>(changedBuildingPos);
+            changedBuildingPos.clear();
+            return out;
+        }
+
+        /**
+         * 取出当前所有脏居民键并清空。发包前调用。
+         */
+        public Set<UUID> drainChangedResidents() {
+            if (changedResidentUUID.isEmpty()) return Set.of();
+            Set<UUID> out = new HashSet<>(changedResidentUUID);
+            changedResidentUUID.clear();
+            return out;
+        }
+
+        /**
+         * 取出当前所有脏资源键并清空。发包前调用（资源层 fire 尚未接入时通常为空）。
+         */
+        public Set<ITownResourceKey> drainChangedResources() {
+            if (changedResourceKey.isEmpty()) return Set.of();
+            Set<ITownResourceKey> out = new HashSet<>(changedResourceKey);
+            changedResourceKey.clear();
+            return out;
+        }
+
+        /**
+         * 是否还有未同步的脏数据。
+         */
+        public boolean hasChanges() {
+            return !changedBuildingPos.isEmpty() || !changedResidentUUID.isEmpty() || !changedResourceKey.isEmpty();
+        }
+
+        /**
+         * 清空所有脏键记录（如加载存档后已完成一次全量同步时调用）。
+         */
+        public void clearChanged() {
+            changedBuildingPos.clear();
+            changedResidentUUID.clear();
+            changedResourceKey.clear();
+        }
+
+
+
+        @Override
+        public void onBuildingChange(TownBuildingChangeEvent event) {
+            this.addChanged(event.changedBuildingPos);
+        }
+
+        @Override
+        public void onResidentChange(TownResidentChangeEvent event) {
+
+        }
+
+        @Override
+        public void onResourceChange(TownResourceChangeEvent event) {
+            this.addChanged(event.changedResourceKey);
+        }
+    }
 }

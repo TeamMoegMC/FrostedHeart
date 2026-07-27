@@ -158,6 +158,7 @@ public class FloorBlockScanner extends AbstractBlockScanner {
                 }
             }
             // 使用 LongSet 迭代避免重复处理
+            LongSet laddersToExpand = new LongOpenHashSet();
             for (long lpos : possibleFloorsLong) {
                 BlockPos blockPos = BlockPos.of(lpos);
                 BlockState state = getBlockState(blockPos);
@@ -165,11 +166,14 @@ public class FloorBlockScanner extends AbstractBlockScanner {
                 if (state.is(BlockTags.CLIMBABLE) || stateAboveTemp.is(BlockTags.CLIMBABLE)) {
                     for (BlockPos ladder : getBlocksAboveAndBelow(blockPos, (pos) -> !(getBlockState(pos).is(BlockTags.CLIMBABLE)))) {
                         if (isValidLadder(ladder)) {
-                            for (BlockPos pos : getPossibleFloorNearLadder(ladder)) {
-                                possibleFloorsLong.add(pos.asLong());
-                            }
+                            laddersToExpand.add(ladder.asLong());
                         }
                     }
+                }
+            }
+            for (long ladderLong : laddersToExpand) {
+                for (BlockPos pos : getPossibleFloorNearLadder(BlockPos.of(ladderLong))) {
+                    possibleFloorsLong.add(pos.asLong());
                 }
             }
         }

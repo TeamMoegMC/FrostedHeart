@@ -57,8 +57,8 @@ public class MineBaseBlockEntity extends AbstractTownBuildingBlockEntity<MineBas
             }
             MineBaseBlockScanner scanner = new MineBaseBlockScanner(level, startPos);
             if(scanner.scan()){
-                building.area = scanner.getArea();
-                building.volume = scanner.getVolume();
+                building.setArea(scanner.getArea());
+                building.setVolume(scanner.getVolume());
                 //this.rack = scanner.getRack();
                 //this.chest = scanner.getChest();
                 building.setOccupiedVolume(scanner.getOccupiedVolume());

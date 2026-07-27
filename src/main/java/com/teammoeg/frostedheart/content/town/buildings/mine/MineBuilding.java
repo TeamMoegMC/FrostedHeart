@@ -22,6 +22,7 @@ package com.teammoeg.frostedheart.content.town.buildings.mine;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.chorda.util.CDistHelper;
+import lombok.Getter;
 import com.teammoeg.chorda.util.CUtils;
 import com.teammoeg.frostedheart.content.town.ITown;
 import com.teammoeg.frostedheart.content.town.ITownWithBuildings;
@@ -40,10 +41,10 @@ public class MineBuilding extends AbstractTownBuilding {
 
 	public static final Codec<MineBuilding> CODEC = RecordCodecBuilder.create(t -> t.group(
                     BlockPos.CODEC.optionalFieldOf("pos",BlockPos.ZERO).forGetter(o -> o.pos),
-                    Codec.BOOL.optionalFieldOf("isStructureValid",false).forGetter(o -> o.isStructureValid),
-                    OccupiedVolume.CODEC.optionalFieldOf("occupiedVolume",OccupiedVolume.EMPTY).forGetter(o -> o.occupiedVolume),
-					Codec.DOUBLE.optionalFieldOf("rating",0D).forGetter(o -> o.rating),
-					Codec.STRING.optionalFieldOf("biomePath","").forGetter(o -> o.biomePath.toString())
+                    Codec.BOOL.optionalFieldOf("isStructureValid",false).forGetter(o -> o.isStructureValid()),
+                    OccupiedVolume.CODEC.optionalFieldOf("occupiedVolume",OccupiedVolume.EMPTY).forGetter(o -> o.getOccupiedVolume()),
+					Codec.DOUBLE.optionalFieldOf("rating",0D).forGetter(o -> o.getRating()),
+					Codec.STRING.optionalFieldOf("biomePath","").forGetter(o -> o.getBiomePath().toString())
 					)
 			.apply(t, MineBuilding::new));
 
@@ -53,9 +54,13 @@ public class MineBuilding extends AbstractTownBuilding {
             Items.COAL, 1
     );
 
-	public ResourceLocation biomePath;
+	private ResourceLocation biomePath;
 
-	public double rating;//might be removed
+	@Getter
+	private double rating;//might be removed
+
+	public void setBiomePath(ResourceLocation biomePath) { this.biomePath = biomePath; fireChange(); }
+	public void setRating(double rating) { this.rating = rating; fireChange(); }
 
 	public MineBuilding(BlockPos pos) {
         super(pos);
@@ -72,10 +77,10 @@ public class MineBuilding extends AbstractTownBuilding {
      */
     public MineBuilding(BlockPos pos, boolean isStructureValid, OccupiedVolume occupiedVolume, double rating, String biomePathString) {
         super(pos);
-        this.isStructureValid = isStructureValid;
-        this.occupiedVolume = occupiedVolume;
-        this.rating = rating;
-        this.biomePath = new ResourceLocation(biomePathString);
+        this.setIsStructureValid(isStructureValid);
+        this.setOccupiedVolume(occupiedVolume);
+        this.setRating(rating);
+        this.setBiomePath(new ResourceLocation(biomePathString));
     }
 
 	private static void loadBiomeResources() {

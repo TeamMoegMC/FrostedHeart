@@ -70,15 +70,15 @@ public class HouseBlock extends AbstractTownBuildingBlock implements CEntityBloc
                         te.refresh_safe(building);
                         AbstractTownBuildingBlock.displayBasicInfo(player, building);
                         player.displayClientMessage(Components.str("Raw temperature: " +
-                                CMath.round(building.temperature, 2)), false);
+                                CMath.round(building.getTemperature(), 2)), false);
                         player.displayClientMessage(Components.str("Temperature modifier: " +
                                 CMath.round(te.getTemperatureModifier(), 2)), false);
                         player.displayClientMessage(Components.str("Effective temperature: " +
                                 CMath.round(building.getEffectiveTemperature(), 2) + "(Temperature " + (building.isTemperatureValid() ? "Valid" : "Invalid") + ")"), false);
-                        player.displayClientMessage(Components.str("Volume: " + (building.volume)), false);
-                        player.displayClientMessage(Components.str("Area: " + (building.area)), false);
+                        player.displayClientMessage(Components.str("Volume: " + (building.getVolume())), false);
+                        player.displayClientMessage(Components.str("Area: " + (building.getArea())), false);
                         //player.displayClientMessage(Components.str("Bed num: " + te.getBeds().size()), false);
-                        player.displayClientMessage(Components.str("Max resident: " + (building.maxResidents)), false);
+                        player.displayClientMessage(Components.str("Max resident: " + (building.getMaxResidents())), false);
                         //player.displayClientMessage(Components.str("Rating: " +
                         //        CMath.round(, 2)), false);
                     },
