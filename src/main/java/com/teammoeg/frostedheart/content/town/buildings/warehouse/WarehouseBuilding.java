@@ -43,6 +43,8 @@ public class WarehouseBuilding extends AbstractTownBuilding {
                     BlockPos.CODEC.optionalFieldOf("pos",BlockPos.ZERO).forGetter(o -> o.pos),
                     Codec.BOOL.optionalFieldOf("isStructureValid",false).forGetter(o -> o.isStructureValid()),
                     OccupiedVolume.CODEC.optionalFieldOf("occupiedVolume",OccupiedVolume.EMPTY).forGetter(o -> o.getOccupiedVolume()),
+                    Codec.BOOL.optionalFieldOf("initialized", false).forGetter(o -> o.isInitialized()),
+                    Codec.BOOL.optionalFieldOf("occupiedAreaOverlapped", false).forGetter(o -> o.isOccupiedAreaOverlapped()),
 					Codec.DOUBLE.optionalFieldOf("capacity",0D).forGetter(o -> o.getCapacity()),
 					Codec.INT.optionalFieldOf("area",0).forGetter(o -> o.getArea()),
 					Codec.INT.optionalFieldOf("volume",0).forGetter(o -> o.getVolume()),
@@ -77,15 +79,19 @@ public class WarehouseBuilding extends AbstractTownBuilding {
      * @param area the area
      * @param volume the volume
      */
-    public WarehouseBuilding(BlockPos pos, boolean isStructureValid, OccupiedVolume occupiedVolume, double capacity, int area, int volume,int decorationAmount) {
-        this(pos, isStructureValid, occupiedVolume, capacity, area, volume, decorationAmount, List.of());
+    public WarehouseBuilding(BlockPos pos, boolean isStructureValid, OccupiedVolume occupiedVolume, boolean initialized,
+                             boolean occupiedAreaOverlapped, double capacity, int area, int volume, int decorationAmount) {
+        this(pos, isStructureValid, occupiedVolume, initialized, occupiedAreaOverlapped, capacity, area, volume, decorationAmount, List.of());
     }
 
-    public WarehouseBuilding(BlockPos pos, boolean isStructureValid, OccupiedVolume occupiedVolume, double capacity,
+    public WarehouseBuilding(BlockPos pos, boolean isStructureValid, OccupiedVolume occupiedVolume, boolean initialized,
+                             boolean occupiedAreaOverlapped, double capacity,
                              int area, int volume, int decorationAmount, List<BlockPos> interfacePositions) {
         super(pos);
         this.setIsStructureValid(isStructureValid);
         this.setOccupiedVolume(occupiedVolume);
+        this.setInitialized(initialized);
+        this.setOccupiedAreaOverlapped(occupiedAreaOverlapped);
         this.setCapacity(capacity);
         this.setArea(area);
         this.setVolume(volume);

@@ -221,6 +221,16 @@ public class TeamTown implements ITown, ITownWithResidents, ITownWithBuildings {
         return data.resources;
     }
 
+    /**
+     * Get the daily snapshot history of the town, newest entry last.
+     * Used by information GUIs such as the Mayor's Seal.
+     *
+     * @return unmodifiable view is not guaranteed; treat as read-only
+     */
+    public List<TownHistoryEntry> getHistory() {
+        return data.getHistory();
+    }
+
     //@Override
     public Optional<TeamTownData> getTownData() {
         return Optional.of(data);
