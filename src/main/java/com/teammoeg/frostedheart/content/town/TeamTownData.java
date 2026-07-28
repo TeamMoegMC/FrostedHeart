@@ -122,6 +122,12 @@ public class TeamTownData implements SpecialData{
     @Getter
     int maxLabour=0;
 
+    /**
+     * 用于将城镇数据变化的监听器塞到各个地方。
+     * 由于只需要在第一个tick进行，所以弄个boolean记一下、
+     * 由于我希望只在服务端这么做，所以不放在构造方法中。
+     */
+    private boolean listenerInitialized = false;
     @Getter
     private final DataSyncCache dataSyncCache = new DataSyncCache();
 
@@ -131,40 +137,22 @@ public class TeamTownData implements SpecialData{
         super();
         this.name = name;
         this.resources = resources;
-        // 在批量 put 之前绑定 attach/detach，使反序列化得到的建筑/居民也自动接上（或解除）dataSyncCache 监听器
-        this.buildings.setOnAttach(b -> b.setChangeEventListener(this.dataSyncCache));
-        this.residents.setOnAttach(r -> r.setChangeEventListener(this.dataSyncCache));
-        this.buildings.setOnDetach(b -> b.setChangeEventListener(null));
-        this.residents.setOnDetach(r -> r.setChangeEventListener(null));
         buildings.forEach((pos, building) -> {
             if(building instanceof AbstractTownBuilding abstractTownBuilding){
-                this.buildings.put(pos, abstractTownBuilding); // put 时自动 onAttach 接线
+                this.buildings.put(pos, abstractTownBuilding);
             }
         });
-        this.residents.putAll(residents); // putAll 时自动 onAttach 接线
+        this.residents.putAll(residents);
         this.terrainResource.putAll(terrainResource);
         this.labour=0;
         this.maxLabour=0;
-        this.resources.setChangeListener(dataSyncCache);
-        // 批量 put 完成后再绑定 onChange，避免加载存档时误触发脏标记（layer ① 仅集合层面）
-        this.buildings.setOnChange((pos) -> {this.dataSyncCache.onBuildingChange(new TownBuildingChangeEvent(this.buildings, pos));});
-        this.residents.setOnChange((uuid)-> {this.dataSyncCache.onResidentChange(new TownResidentChangeEvent(this.residents, uuid));});
     }
 
     public TeamTownData(SpecialDataHolder teamData) {
         super();
         if (teamData instanceof TeamDataHolder data) {
-
-            this.name = data.getTeam().getName() + "'s ITown";
-
+            this.name = data.getTeam().getName() + "'s Town";
         }
-        this.buildings.setOnAttach(b -> b.setChangeEventListener(this.dataSyncCache));
-        this.residents.setOnAttach(r -> r.setChangeEventListener(this.dataSyncCache));
-        this.buildings.setOnDetach(b -> b.setChangeEventListener(null));
-        this.residents.setOnDetach(r -> r.setChangeEventListener(null));
-        this.resources.setChangeListener(dataSyncCache);
-        this.buildings.setOnChange((pos) -> {this.dataSyncCache.onBuildingChange(new TownBuildingChangeEvent(this.buildings, pos));});
-        this.residents.setOnChange((uuid)-> {this.dataSyncCache.onResidentChange(new TownResidentChangeEvent(this.residents, uuid));});
     }
 
     /**
@@ -182,7 +170,16 @@ public class TeamTownData implements SpecialData{
      * @param teamData tickSecond有这个参数，所以我也顺便加上了
      */
     public void tick(ServerLevel level, TeamDataHolder teamData) {
-
+        if(!this.listenerInitialized){
+            this.buildings.setOnAttach(b -> b.setChangeEventListener(this.dataSyncCache));
+            this.residents.setOnAttach(r -> r.setChangeEventListener(this.dataSyncCache));
+            this.buildings.setOnDetach(b -> b.setChangeEventListener(null));
+            this.residents.setOnDetach(r -> r.setChangeEventListener(null));
+            this.resources.setChangeListener(dataSyncCache);
+            this.buildings.setOnChange((pos) -> {this.dataSyncCache.onBuildingChange(new TownBuildingChangeEvent(this.buildings, pos));});
+            this.residents.setOnChange((uuid)-> {this.dataSyncCache.onResidentChange(new TownResidentChangeEvent(this.residents, uuid));});
+            this.listenerInitialized = true;
+        }
     }
 
     /**
