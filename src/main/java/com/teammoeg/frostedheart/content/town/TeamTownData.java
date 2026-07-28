@@ -20,12 +20,16 @@
 package com.teammoeg.frostedheart.content.town;
 
 import blusunrize.immersiveengineering.common.util.Utils;
+import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.bootstrap.common.FHSpecialDataTypes;
 import com.teammoeg.frostedheart.content.climate.block.generator.GeneratorData;
 import com.teammoeg.frostedheart.content.town.block.OccupiedVolume;
 import com.teammoeg.frostedheart.content.town.buildings.mine.MineBaseBuilding;
 import com.teammoeg.frostedheart.content.town.buildings.mine.MineBuilding;
 import com.teammoeg.frostedheart.content.town.event.*;
+import com.teammoeg.frostedheart.content.town.network.TownBuildingUpdatePacket;
+import com.teammoeg.frostedheart.content.town.network.TownResidentUpdatePacket;
+import com.teammoeg.frostedheart.content.town.network.TownResourceUpdatePacket;
 import com.teammoeg.frostedheart.content.town.resource.ITownResourceKey;
 import com.teammoeg.frostedheart.content.town.util.ObservableTownMap;
 import lombok.Getter;
@@ -180,6 +184,44 @@ public class TeamTownData implements SpecialData{
             this.residents.setOnChange((uuid)-> {this.dataSyncCache.onResidentChange(new TownResidentChangeEvent(this.residents, uuid));});
             this.listenerInitialized = true;
         }
+
+        if(!dataSyncCache.changedResourceKey.isEmpty()){
+            Map<ITownResourceKey, Double> changedResource = new HashMap<>();
+            for(ITownResourceKey resourceKey : this.dataSyncCache.drainChangedResources()){
+                changedResource.put(resourceKey, this.resources.get(resourceKey));
+            }
+            teamData.sendToOnline(FHNetwork.INSTANCE, new TownResourceUpdatePacket(changedResource, resources.getOccupiedCapacity()));
+        }
+
+        if(!dataSyncCache.changedResidentUUID.isEmpty()){
+            Map<UUID, Resident> changedResidents = new HashMap<>();
+            Set<UUID> removedResidents = new HashSet<>();
+            for(UUID uuid : this.dataSyncCache.drainChangedResidents()){
+                Resident resident = residents.get(uuid);
+                if(resident == null){
+                    removedResidents.add(uuid);
+                } else{
+                    changedResidents.put(uuid, resident);
+                }
+            }
+            teamData.sendToOnline(FHNetwork.INSTANCE, new TownResidentUpdatePacket(changedResidents, removedResidents));
+        }
+
+        if(!dataSyncCache.changedBuildingPos.isEmpty()){
+            Map<BlockPos, ITownBuilding> changedBuildings = new HashMap<>();
+            Set<BlockPos> removedBuildings = new HashSet<>();
+            for(BlockPos pos : this.dataSyncCache.drainChangedBuildings()){
+                ITownBuilding building = buildings.get(pos);
+                if(building == null){
+                    removedBuildings.add(pos);
+                } else{
+                    changedBuildings.put(pos, building);
+                }
+            }
+            teamData.sendToOnline(FHNetwork.INSTANCE, new TownBuildingUpdatePacket(changedBuildings, removedBuildings));
+        }
+
+
     }
 
     /**
