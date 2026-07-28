@@ -3,7 +3,6 @@ package com.teammoeg.frostedheart.content.town.network;
 import java.util.*;
 import java.util.function.Supplier;
 
-import com.mojang.serialization.Codec;
 import com.teammoeg.chorda.dataholders.team.CClientTeamDataManager;
 import com.teammoeg.chorda.io.CodecUtil;
 import com.teammoeg.chorda.io.codec.DataOps;
@@ -21,9 +20,6 @@ import net.minecraftforge.network.NetworkEvent;
  * 包含需要更新（新增/修改）的建筑和需要移除的建筑位置。
  */
 public class TownBuildingUpdatePacket implements CMessage {
-    private static final Codec<Map<BlockPos, ITownBuilding>> BUILDINGS_CODEC =
-        CodecUtil.mapCodec("pos", BlockPos.CODEC, "building", ITownBuilding.CODEC);
-
     private final Map<BlockPos, ITownBuilding> changed;
     private final Set<BlockPos> removed;
 
@@ -33,9 +29,10 @@ public class TownBuildingUpdatePacket implements CMessage {
     }
 
     public TownBuildingUpdatePacket(FriendlyByteBuf buffer) {
-        // Read changed buildings via codec
-        Object data = ObjectWriter.readObject(buffer);
-        this.changed = CodecUtil.decodeOrThrow(BUILDINGS_CODEC.decode(DataOps.COMPRESSED, data));
+        // Read changed buildings: key via native BlockPos, value via ITownBuilding.CODEC
+        this.changed = buffer.readMap(
+            FriendlyByteBuf::readBlockPos,
+            buf -> { Object o = ObjectWriter.readObject(buf); return CodecUtil.decodeOrThrow(ITownBuilding.CODEC.decode(DataOps.COMPRESSED, o)); });
         // Read removed positions
         int removedSize = buffer.readVarInt();
         this.removed = new HashSet<>(removedSize);
@@ -46,9 +43,10 @@ public class TownBuildingUpdatePacket implements CMessage {
 
     @Override
     public void encode(FriendlyByteBuf buffer) {
-        // Write changed buildings via codec
-        Object data = CodecUtil.encodeOrThrow(BUILDINGS_CODEC.encodeStart(DataOps.COMPRESSED, changed));
-        ObjectWriter.writeObject(buffer, data);
+        // Write changed buildings: key via native BlockPos, value via ITownBuilding.CODEC
+        buffer.writeMap(changed,
+            FriendlyByteBuf::writeBlockPos,
+            (buf, building) -> CodecUtil.writeCodec(buf, ITownBuilding.CODEC, building));
         // Write removed positions
         buffer.writeVarInt(removed.size());
         for (BlockPos pos : removed) {
@@ -61,7 +59,7 @@ public class TownBuildingUpdatePacket implements CMessage {
         context.get().enqueueWork(() -> {
             CClientTeamDataManager.INSTANCE.getInstance()
                 .getOptional(FHSpecialDataTypes.TOWN_DATA)
-                ;//todo .ifPresent(townData -> townData.applyBuildingUpdate(changed, removed));
+                .ifPresent(townData -> townData.applyBuildingUpdate(changed, removed));
         });
         context.get().setPacketHandled(true);
     }

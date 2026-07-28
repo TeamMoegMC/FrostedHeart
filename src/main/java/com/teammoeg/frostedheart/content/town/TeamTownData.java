@@ -538,6 +538,52 @@ public class TeamTownData implements SpecialData{
         return actual;
     }
 
+    // ===================== 客户端增量同步入口 =====================
+    // 以下三个方法仅在【客户端】TeamTownData 实例上被对应的增量包调用。
+    // 客户端实例的 buildings/residents 未绑定任何 onChange/onAttach/onDetach 回调
+    // （那些回调只在服务端 tick() 中绑定），因此这里对 Map 的增删不会触发脏标记，
+    // 也不会形成“客户端→服务端”的回环。每个方法都按服务端发来的当前权威值覆盖本地。
+
+    /**
+     * 客户端增量同步：用服务端发来的变更（新增/修改）覆盖对应建筑，并移除已删除的建筑。
+     * @param changed 发生变化的建筑（pos → 当前完整建筑对象）
+     * @param removed 需要从客户端移除的建筑位置
+     */
+    public void applyBuildingUpdate(Map<BlockPos, ITownBuilding> changed, Set<BlockPos> removed) {
+        for (Map.Entry<BlockPos, ITownBuilding> entry : changed.entrySet()) {
+            if (entry.getValue() instanceof AbstractTownBuilding building) {
+                buildings.put(entry.getKey(), building);
+            }
+        }
+        for (BlockPos pos : removed) {
+            buildings.remove(pos);
+        }
+    }
+
+    /**
+     * 客户端增量同步：用服务端发来的变更（新增/修改）覆盖对应居民，并移除已删除的居民。
+     * @param changed 发生变化的居民（uuid → 当前完整居民对象）
+     * @param removed 需要从客户端移除的居民 uuid
+     */
+    public void applyResidentUpdate(Map<UUID, Resident> changed, Set<UUID> removed) {
+        residents.putAll(changed);
+        for (UUID uuid : removed) {
+            residents.remove(uuid);
+        }
+    }
+
+    /**
+     * 客户端增量同步：用服务端发来的当前值覆盖对应资源，并刷新已占用容量。
+     * @param changes 发生变化的资源（key → 当前权威数量）
+     * @param occupiedCapacity 服务端下发的最新已占用容量
+     */
+    public void applyResourceUpdate(Map<ITownResourceKey, Double> changes, double occupiedCapacity) {
+        for (Map.Entry<ITownResourceKey, Double> entry : changes.entrySet()) {
+            resources.applySyncEntry(entry.getKey(), entry.getValue());
+        }
+        resources.setOccupiedCapacity(occupiedCapacity);
+    }
+
     /**
      * 用于在服务端向客户端同步发生变化的数据
      */
@@ -616,7 +662,7 @@ public class TeamTownData implements SpecialData{
 
         @Override
         public void onResidentChange(TownResidentChangeEvent event) {
-
+            this.addChanged(event.changedResidentID);
         }
 
         @Override

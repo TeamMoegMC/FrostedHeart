@@ -3,7 +3,6 @@ package com.teammoeg.frostedheart.content.town.network;
 import java.util.*;
 import java.util.function.Supplier;
 
-import com.mojang.serialization.Codec;
 import com.teammoeg.chorda.dataholders.team.CClientTeamDataManager;
 import com.teammoeg.chorda.io.CodecUtil;
 import com.teammoeg.chorda.io.codec.DataOps;
@@ -20,9 +19,6 @@ import net.minecraftforge.network.NetworkEvent;
  * 包含发生变化的资源key及其当前数量，以及最新的已占用容量。
  */
 public class TownResourceUpdatePacket implements CMessage {
-    private static final Codec<Map<ITownResourceKey, Double>> RESOURCES_CODEC =
-        CodecUtil.mapCodec("resourceKey", ITownResourceKey.CODEC, "amount", Codec.DOUBLE);
-
     private final Map<ITownResourceKey, Double> changes;
     private final double occupiedCapacity;
 
@@ -32,18 +28,20 @@ public class TownResourceUpdatePacket implements CMessage {
     }
 
     public TownResourceUpdatePacket(FriendlyByteBuf buffer) {
-        // Read changed resources via codec
-        Object data = ObjectWriter.readObject(buffer);
-        this.changes = CodecUtil.decodeOrThrow(RESOURCES_CODEC.decode(DataOps.COMPRESSED, data));
+        // Read changed resources: key via ITownResourceKey.CODEC, value via native double
+        this.changes = buffer.readMap(
+            buf -> { Object o = ObjectWriter.readObject(buf); return CodecUtil.decodeOrThrow(ITownResourceKey.CODEC.decode(DataOps.COMPRESSED, o)); },
+            FriendlyByteBuf::readDouble);
         // Read occupied capacity
         this.occupiedCapacity = buffer.readDouble();
     }
 
     @Override
     public void encode(FriendlyByteBuf buffer) {
-        // Write changed resources via codec
-        Object data = CodecUtil.encodeOrThrow(RESOURCES_CODEC.encodeStart(DataOps.COMPRESSED, changes));
-        ObjectWriter.writeObject(buffer, data);
+        // Write changed resources: key via ITownResourceKey.CODEC, value via native double
+        buffer.writeMap(changes,
+            (buf, key) -> CodecUtil.writeCodec(buf, ITownResourceKey.CODEC, key),
+            FriendlyByteBuf::writeDouble);
         // Write occupied capacity
         buffer.writeDouble(occupiedCapacity);
     }
@@ -53,7 +51,7 @@ public class TownResourceUpdatePacket implements CMessage {
         context.get().enqueueWork(() -> {
             CClientTeamDataManager.INSTANCE.getInstance()
                 .getOptional(FHSpecialDataTypes.TOWN_DATA)
-                ;//todo .ifPresent(townData -> townData.applyResourceUpdate(changes, occupiedCapacity));
+                .ifPresent(townData -> townData.applyResourceUpdate(changes, occupiedCapacity));
         });
         context.get().setPacketHandled(true);
     }

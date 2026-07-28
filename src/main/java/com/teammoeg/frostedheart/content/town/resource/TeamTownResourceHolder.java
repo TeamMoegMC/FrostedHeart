@@ -501,6 +501,27 @@ public class TeamTownResourceHolder {
     }
 
     /**
+     * 客户端增量同步用：将一个资源直接设为指定数量（不经过容量校验）。
+     * 数量近似为 0 时移除该键，与服务端 {@link #removeZeros()} 行为对齐。
+     * 占用容量由单独的 {@link #setOccupiedCapacity(double)} 同步。
+     */
+    public void applySyncEntry(ITownResourceKey key, double amount) {
+        if (amount <= DELTA) {
+            resources.removeDouble(key);
+        } else {
+            resources.put(key, amount);
+        }
+    }
+
+    /**
+     * 客户端增量同步用：直接覆盖已占用容量。
+     * 权威值由服务端在资源增量包中一并下发，客户端无需自行重算。
+     */
+    public void setOccupiedCapacity(double occupiedCapacity) {
+        this.occupiedCapacity = occupiedCapacity;
+    }
+
+    /**
      * 将所有服务资源设置为0
      */
     public void resetAllServices(){
