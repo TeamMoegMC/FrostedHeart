@@ -205,9 +205,11 @@ public class TeamTownData implements SpecialData{
             this.residents.setOnAttach(r -> r.setChangeEventListener(this.dataSyncCache));
             this.buildings.setOnDetach(b -> b.setChangeEventListener(null));
             this.residents.setOnDetach(r -> r.setChangeEventListener(null));
-            this.resources.setChangeListener(dataSyncCache);
+            this.resources.setChangeListener(this.dataSyncCache);
             this.buildings.setOnChange((pos) -> {this.dataSyncCache.onBuildingChange(new TownBuildingChangeEvent(this.buildings, pos));});
             this.residents.setOnChange((uuid)-> {this.dataSyncCache.onResidentChange(new TownResidentChangeEvent(this.residents, uuid));});
+            this.buildings.values().forEach(building -> building.setChangeEventListener(this.dataSyncCache));
+            this.residents.values().forEach(resident -> resident.setChangeEventListener(this.dataSyncCache));
             this.listenerInitialized = true;
         }
 
