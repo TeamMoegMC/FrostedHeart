@@ -30,6 +30,7 @@ import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.bootstrap.common.FHSpecialDataTypes;
 import com.teammoeg.frostedheart.content.town.TeamTown;
 import com.teammoeg.frostedheart.content.town.TeamTownData;
+import com.teammoeg.frostedheart.content.town.event.ITownDataUpdateListener;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.Nullable;
@@ -48,7 +49,7 @@ import java.util.List;
  * the 176x222 townworkerblock frame with left-side tabs. It is a client-only
  * read-only view backed by the town snapshot synced from the server.
  */
-public class TownManagerScreen extends PrimaryLayer {
+public class TownManagerScreen extends PrimaryLayer implements ITownDataUpdateListener {
 
     private static final CIcons.CTextureIcon ALL = CIcons
             .getIcon(new ResourceLocation(FHMain.MODID, "textures/gui/town_manage_screen.png"));
@@ -167,7 +168,37 @@ public class TownManagerScreen extends PrimaryLayer {
     @Override
     public boolean onInit() {
         this.setSize(FRAME_WIDTH, FRAME_HEIGHT);
+        // 打开界面时注册为城镇数据监听器，增量/全量同步到达即刷新本界面。
+        TeamTownData.addClientListener(this);
         return super.onInit();
+    }
+
+    @Override
+    public void onClosed() {
+        // 关闭界面时移除监听器，避免悬挂引用与无谓刷新。
+        TeamTownData.removeClientListener(this);
+        super.onClosed();
+    }
+
+    @Override
+    public void onBuildingsChanged() {
+        if (contentLayer != null) {
+            contentLayer.refresh();
+        }
+    }
+
+    @Override
+    public void onResidentsChanged() {
+        if (contentLayer != null) {
+            contentLayer.refresh();
+        }
+    }
+
+    @Override
+    public void onResourcesChanged() {
+        if (contentLayer != null) {
+            contentLayer.refresh();
+        }
     }
 
     @Override

@@ -61,6 +61,7 @@ import net.minecraft.server.level.ServerLevel;
 
 import java.util.*;
 import java.util.Map.Entry;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -147,6 +148,17 @@ public class TeamTownData implements SpecialData{
     private boolean listenerInitialized = false;
     @Getter
     private final DataSyncCache dataSyncCache = new DataSyncCache();
+
+    /**
+     * 客户端 GUI 监听器集合（static 而非实例字段）。
+     * <p>
+     * 原因：全量同步包 {@code TeamTownDataS2CPacket} 会用新解码出的实例替换客户端
+     * TeamTownData；若监听器挂在实例上，GUI 打开后收到全量包就会丢失监听。static 集合
+     * 与实例替换解耦；客户端同一时刻只有一个本地玩家队伍，全局唯一无歧义。所有增删与触发
+     * 都发生在主线程（包处理经 {@code NetworkEvent.Context#enqueueWork}），
+     * ConcurrentHashMap 仅作额外的并发保护。
+     */
+    private static final Set<ITownDataUpdateListener> clientListeners = ConcurrentHashMap.newKeySet();
 
 
 
@@ -627,11 +639,66 @@ public class TeamTownData implements SpecialData{
         return actual;
     }
 
+    // ===================== 客户端 GUI 监听器 =====================
+    // 增量包 applyXxxUpdate 与全量包 TeamTownDataS2CPacket 在客户端调用下方方法，
+    // 通知当前打开的城镇 GUI 刷新。GUI 在 onInit() 注册、onClosed() 移除
+    // （见 AbstractTownWorkerBlockScreen 与 TownManagerScreen）。
+
+    /**
+     * 注册一个客户端 GUI 监听器（GUI 打开时调用）。
+     * <p>Register a client-side GUI listener (called when the GUI opens).</p>
+     */
+    public static void addClientListener(ITownDataUpdateListener listener) {
+        clientListeners.add(listener);
+    }
+
+    /**
+     * 移除一个客户端 GUI 监听器（GUI 关闭时调用）。
+     * <p>Remove a client-side GUI listener (called when the GUI closes).</p>
+     */
+    public static void removeClientListener(ITownDataUpdateListener listener) {
+        clientListeners.remove(listener);
+    }
+
+    /**
+     * 通知所有已注册 GUI：三类数据均可能已变化。由全量同步包在替换实例后调用，
+     * 保证 GUI 打开瞬间收到的最新全量数据能立即刷新到界面。
+     * <p>
+     * Notify all registered GUIs that any of the three categories may have changed.
+     * Called by the full-sync packet after the instance is replaced, so the freshest
+     * full snapshot is reflected immediately.
+     * </p>
+     */
+    public static void fireClientDataChanged() {
+        fireBuildingsChanged();
+        fireResidentsChanged();
+        fireResourcesChanged();
+    }
+
+    private static void fireBuildingsChanged() {
+        for (ITownDataUpdateListener listener : clientListeners) {
+            listener.onBuildingsChanged();
+        }
+    }
+
+    private static void fireResidentsChanged() {
+        for (ITownDataUpdateListener listener : clientListeners) {
+            listener.onResidentsChanged();
+        }
+    }
+
+    private static void fireResourcesChanged() {
+        for (ITownDataUpdateListener listener : clientListeners) {
+            listener.onResourcesChanged();
+        }
+    }
+
     // ===================== 客户端增量同步入口 =====================
     // 以下三个方法仅在【客户端】TeamTownData 实例上被对应的增量包调用。
     // 客户端实例的 buildings/residents 未绑定任何 onChange/onAttach/onDetach 回调
     // （那些回调只在服务端 tick() 中绑定），因此这里对 Map 的增删不会触发脏标记，
-    // 也不会形成“客户端→服务端”的回环。每个方法都按服务端发来的当前权威值覆盖本地。
+    // 也不会形成“客户端→服务端”的回环。每个方法都按服务端发来的当前权威值覆盖本地，
+    // 并在返回前触发对应类别的客户端 GUI 监听器，使打开中的界面即时刷新。
 
     /**
      * 客户端增量同步：用服务端发来的变更（新增/修改）覆盖对应建筑，并移除已删除的建筑。
@@ -647,6 +714,7 @@ public class TeamTownData implements SpecialData{
         for (BlockPos pos : removed) {
             buildings.remove(pos);
         }
+        fireBuildingsChanged();
     }
 
     /**
@@ -659,6 +727,7 @@ public class TeamTownData implements SpecialData{
         for (UUID uuid : removed) {
             residents.remove(uuid);
         }
+        fireResidentsChanged();
     }
 
     /**
@@ -671,6 +740,7 @@ public class TeamTownData implements SpecialData{
             resources.applySyncEntry(entry.getKey(), entry.getValue());
         }
         resources.setOccupiedCapacity(occupiedCapacity);
+        fireResourcesChanged();
     }
 
     /**

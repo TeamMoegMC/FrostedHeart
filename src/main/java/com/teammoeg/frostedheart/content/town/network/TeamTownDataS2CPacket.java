@@ -54,9 +54,11 @@ public class TeamTownDataS2CPacket implements CMessage {
     }
     @Override
     public void handle(Supplier<NetworkEvent.Context> context) {
-        context.get().enqueueWork(() -> {
+		context.get().enqueueWork(() -> {
 			try {
 				CClientTeamDataManager.INSTANCE.getInstance().setData(FHSpecialDataTypes.TOWN_DATA, FHSpecialDataTypes.TOWN_DATA.loadData(DataOps.COMPRESSED, data));
+				// 全量包会替换客户端 TeamTownData 实例；通知打开中的 GUI 立即刷新到最新快照。
+				TeamTownData.fireClientDataChanged();
 			} catch (Exception e) {
 				FHMain.LOGGER.error("Failed to load data when syncing town data", e);
 			}

@@ -27,6 +27,7 @@ import com.teammoeg.chorda.client.cui.widgets.TabImageButtonElement;
 import com.teammoeg.chorda.client.icon.CIcons;
 import com.teammoeg.chorda.menu.CBlockEntityMenu;
 import com.teammoeg.frostedheart.content.town.block.AbstractTownBuildingBlockEntity;
+import com.teammoeg.frostedheart.content.town.event.ITownDataUpdateListener;
 import com.teammoeg.frostedheart.content.town.tabs.AbstractTownTab;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
@@ -34,7 +35,7 @@ import net.minecraft.network.chat.Component;
 import java.util.ArrayList;
 import java.util.List;
 
-public abstract class AbstractTownWorkerBlockScreen<C extends CBlockEntityMenu<? extends AbstractTownBuildingBlockEntity>> extends MenuPrimaryLayer<C> {
+public abstract class AbstractTownWorkerBlockScreen<C extends CBlockEntityMenu<? extends AbstractTownBuildingBlockEntity>> extends MenuPrimaryLayer<C> implements ITownDataUpdateListener {
 
 
     private int activeTab = 0;
@@ -151,8 +152,31 @@ public abstract class AbstractTownWorkerBlockScreen<C extends CBlockEntityMenu<?
         int sw = 176;
         int sh = 222;
         this.setSize(sw, sh);
-
+        // 打开界面时注册为城镇数据监听器，增量/全量同步到达即刷新本界面。
+        TeamTownData.addClientListener(this);
         return super.onInit();
+    }
+
+    @Override
+    public void onClosed() {
+        // 关闭界面时移除监听器，避免悬挂引用与无谓刷新。
+        TeamTownData.removeClientListener(this);
+        super.onClosed();
+    }
+
+    @Override
+    public void onBuildingsChanged() {
+        updateTabContent();
+    }
+
+    @Override
+    public void onResidentsChanged() {
+        updateTabContent();
+    }
+
+    @Override
+    public void onResourcesChanged() {
+        updateTabContent();
     }
 
     protected void initTabs() {}
