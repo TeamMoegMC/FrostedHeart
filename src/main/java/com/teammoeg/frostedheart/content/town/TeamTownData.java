@@ -94,7 +94,10 @@ public class TeamTownData implements SpecialData{
         .fieldOf("labour").forGetter(o -> o.labour),
 
         CodecUtil.defaultSupply(CodecUtil.catchingCodec(Codec.INT), () -> 0)
-        .fieldOf("maxLabour").forGetter(o -> o.maxLabour)
+        .fieldOf("maxLabour").forGetter(o -> o.maxLabour),
+
+        CodecUtil.defaultSupply(CodecUtil.catchingCodec(TownHistoryEntry.CODEC.listOf()), ArrayList::new)
+        .fieldOf("history").forGetter(o -> o.history)
 
         )
 
@@ -125,6 +128,16 @@ public class TeamTownData implements SpecialData{
     int labour=0;
     @Getter
     int maxLabour=0;
+    /**
+     * 城镇每日快照历史，最新条目在末尾，最多保留 {@link #MAX_HISTORY_ENTRIES} 条。
+     * 随存档持久化，并随城镇数据全量同步下发客户端。
+     * <p>
+     * Daily snapshot history of the town, newest entry last, capped at
+     * {@link #MAX_HISTORY_ENTRIES} entries. Persisted with the save and synced
+     * to clients with the full town data sync.
+     */
+    @Getter
+    List<TownHistoryEntry> history = new ArrayList<>();
 
     /**
      * 用于将城镇数据变化的监听器塞到各个地方。
@@ -137,8 +150,9 @@ public class TeamTownData implements SpecialData{
 
 
 
-    public TeamTownData(String name, TeamTownResourceHolder resources, Map<BlockPos, ITownBuilding> buildings, Map<UUID, Resident> residents, Map<TerrainResourceType, TerrainResourceData> terrainResource,int labour,int maxlabour) {
+    public TeamTownData(String name, TeamTownResourceHolder resources, Map<BlockPos, ITownBuilding> buildings, Map<UUID, Resident> residents, Map<TerrainResourceType, TerrainResourceData> terrainResource,int labour,int maxlabour, List<TownHistoryEntry> history) {
         super();
+        this.history = new ArrayList<>(history);
         this.name = name;
         this.resources = resources;
         buildings.forEach((pos, building) -> {
@@ -255,6 +269,39 @@ public class TeamTownData implements SpecialData{
         residents.values().forEach(Resident::resetDailyProficiencyGrowth);
         this.buildingsWork(world);
         this.recoverResources();
+        this.recordDailySnapshot(world);
+    }
+
+    /**
+     * 历史快照的最大保留条数。
+     * <p>
+     * Maximum number of retained history entries.
+     */
+    public static final int MAX_HISTORY_ENTRIES = 30;
+
+    /**
+     * 在每日结算完成后记录一条城镇快照。同一天重复结算时覆盖当天条目，
+     * 超过 {@link #MAX_HISTORY_ENTRIES} 条时丢弃最旧的记录。
+     * <p>
+     * Records a daily town snapshot after settlement. Repeated settlements on
+     * the same day overwrite that day's entry; oldest entries are dropped once
+     * {@link #MAX_HISTORY_ENTRIES} is exceeded.
+     *
+     * @param world 服务端世界 / server world instance
+     */
+    void recordDailySnapshot(ServerLevel world) {
+        long day = world.getDayTime() / 24000L;
+        double avgHealth = residents.values().stream().mapToDouble(Resident::getHealth).average().orElse(0);
+        double avgMental = residents.values().stream().mapToDouble(Resident::getMental).average().orElse(0);
+        TownHistoryEntry entry = new TownHistoryEntry(day, residents.size(), avgHealth, avgMental, buildings.size());
+        if (!history.isEmpty() && history.get(history.size() - 1).day() == day) {
+            history.set(history.size() - 1, entry);
+        } else {
+            history.add(entry);
+        }
+        while (history.size() > MAX_HISTORY_ENTRIES) {
+            history.remove(0);
+        }
     }
 
     /**
