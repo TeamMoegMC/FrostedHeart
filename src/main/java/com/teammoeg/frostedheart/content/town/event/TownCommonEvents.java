@@ -19,18 +19,20 @@
 
 package com.teammoeg.frostedheart.content.town.event;
 
+import com.teammoeg.chorda.menu.CBlockEntityMenu;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
+import com.teammoeg.frostedheart.content.town.block.AbstractTownBuildingBlockEntity;
 import com.teammoeg.frostedheart.content.town.network.TeamTownDataS2CPacket;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraftforge.event.AttachCapabilitiesEvent;
-import net.minecraftforge.event.TickEvent;
+import net.minecraftforge.event.entity.player.PlayerContainerEvent;
+import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.LogicalSide;
 import net.minecraftforge.fml.common.Mod;
 
 @Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE)
@@ -45,12 +47,37 @@ public class TownCommonEvents {
         }
     }
 
+    /**
+     * 玩家登录时全量同步城镇数据。增量同步只发变化(delta)，新登录客户端的
+     * TeamTownData 为空，必须发一次全量作为兜底。
+     */
     @SubscribeEvent
-    public static void tickPlayer(TickEvent.PlayerTickEvent event) {
-        if (event.side == LogicalSide.SERVER && event.phase == TickEvent.Phase.END && event.player instanceof ServerPlayer player) {
+    public static void syncTownDataOnLogin(PlayerEvent.PlayerLoggedInEvent event) {
+        if (event.getEntity() instanceof ServerPlayer player) {
+            FHNetwork.INSTANCE.sendPlayer(player, new TeamTownDataS2CPacket(player));
+        }
+    }
 
-            // ITown data sync (TODO: currently, every tick for debug. change to per-need update in future.)
-            FHNetwork.INSTANCE.sendPlayer(player,new TeamTownDataS2CPacket(player));
+    /**
+     * 玩家切换维度时全量同步城镇数据（维度切换后客户端需要重新获得权威快照）。
+     */
+    @SubscribeEvent
+    public static void syncTownDataOnDimensionChange(PlayerEvent.PlayerChangedDimensionEvent event) {
+        if (event.getEntity() instanceof ServerPlayer player) {
+            FHNetwork.INSTANCE.sendPlayer(player, new TeamTownDataS2CPacket(player));
+        }
+    }
+
+    /**
+     * 玩家打开城镇相关 GUI（基于方块实体的城镇建筑菜单）时全量同步城镇数据，
+     * 确保界面打开瞬间即有最新权威数据。
+     */
+    @SubscribeEvent
+    public static void syncTownDataOnGuiOpen(PlayerContainerEvent.Open event) {
+        if (event.getEntity() instanceof ServerPlayer player
+                && event.getContainer() instanceof CBlockEntityMenu<?> menu
+                && menu.getBlock() instanceof AbstractTownBuildingBlockEntity) {
+            FHNetwork.INSTANCE.sendPlayer(player, new TeamTownDataS2CPacket(player));
         }
     }
 }

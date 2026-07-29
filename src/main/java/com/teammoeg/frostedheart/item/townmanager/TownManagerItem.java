@@ -19,7 +19,10 @@
 
 package com.teammoeg.frostedheart.item.townmanager;
 
+import com.teammoeg.frostedheart.FHNetwork;
+import com.teammoeg.frostedheart.content.town.network.TeamTownDataS2CPacket;
 import com.teammoeg.frostedheart.item.FHBaseItem;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.entity.player.Player;
@@ -40,6 +43,9 @@ public class TownManagerItem extends FHBaseItem {
 
         if (level.isClientSide) {
             DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> TownManagerClientHelper::openScreen);
+        } else if (player instanceof ServerPlayer serverPlayer) {
+            // 城镇管理主界面为纯客户端 CUI（无容器菜单钩子），在此服务端分支补一次全量同步兜底
+            FHNetwork.INSTANCE.sendPlayer(serverPlayer, new TeamTownDataS2CPacket(serverPlayer));
         }
 
         return InteractionResultHolder.success(stack);
