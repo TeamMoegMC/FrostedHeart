@@ -54,7 +54,24 @@ public class WorldMarker {
 		public static final Codec<ChunkMarker> CODEC=RecordCodecBuilder.create(t->t.group(
 				CodecUtil.discreteList(LongArrayCodecHelper.CODEC).fieldOf("data").forGetter(ChunkMarker::toLongArrayHelperList)
 		).apply(t, ChunkMarker::fromLongArrayHelperList));
-		BitSet[] sections=new BitSet[16];
+		/**
+		 * 方块 Y 偏移，使最低世界 Y(-64) 映射到段索引 0。必须是 16 的倍数，否则会破坏段内比特的 (y&15) 计算。
+		 * <p>
+		 * Y offset so the lowest world Y (-64) maps to section index 0. Must be a multiple of 16,
+		 * otherwise the in-section (y&15) bit computation breaks.
+		 */
+		private static final int Y_OFFSET = 64;
+		/**
+		 * 段数量，覆盖 Y∈[-64, 447) 足以容纳全部原版本维度的方块。
+		 * <p>
+		 * Number of sections, covering Y∈[-64, 447) which is enough for every vanilla dimension.
+		 */
+		static final int SECTION_COUNT = 32;
+		BitSet[] sections=new BitSet[SECTION_COUNT];
+		/** 将世界 Y 映射为段索引。使用 Y_OFFSET 让负 Y 也能落在合法区间内。 */
+		private int sectionIndex(int y) {
+			return (y + Y_OFFSET) >> 4;
+		}
 		
 		public ChunkMarker() {
 		}
@@ -91,11 +108,12 @@ public class WorldMarker {
 			return ((x&15)<<8)+((y&15)<<4)+(z&15);
 		}
 		public boolean getBit(int x,int y,int z) {
-			if(sections[y>>4+4]==null)return false;
-			return sections[y>>4+4].get(getBitIndex(x,y,z));
+			int sec = sectionIndex(y);
+			if(sections[sec]==null)return false;
+			return sections[sec].get(getBitIndex(x,y,z));
 		}
 		public void setBit(int x,int y,int z,boolean data) {
-			getOrCreateSection(y>>4+4).set(getBitIndex(x,y,z), data);
+			getOrCreateSection(sectionIndex(y)).set(getBitIndex(x,y,z), data);
 		}
 		public void setBit(BlockPos pos,boolean data) {
 			setBit(pos.getX(),pos.getY(),pos.getZ(),data);
@@ -110,7 +128,7 @@ public class WorldMarker {
 				int bitIndex = 0;
 				while ((bitIndex = section.nextSetBit(bitIndex)) != -1) {
 					int relX = (bitIndex >> 8) & 0xF;
-					int relY = ((bitIndex >> 4) & 0xF) + (sectionIndex << 4);
+					int relY = ((bitIndex >> 4) & 0xF) + (sectionIndex << 4) - Y_OFFSET;
 					int relZ = bitIndex & 0xF;
 					int absX = chunkPos.getMinBlockX() + relX;
 					int absZ = chunkPos.getMinBlockZ() + relZ;
@@ -178,8 +196,8 @@ public class WorldMarker {
 			ChunkPos chunkPos = entry.getKey();
 			ChunkMarker otherMarker = entry.getValue();
 			ChunkMarker thisMarker = getter.apply(chunkPos);
-			for (int i = 0; i < 16; i++) {
-				BitSet otherSection = otherMarker.sections[i];
+		for (int i = 0; i < ChunkMarker.SECTION_COUNT; i++) {
+			BitSet otherSection = otherMarker.sections[i];
 				if (otherSection == null) continue;
 				BitSet thisSection = thisMarker.getOrCreateSection(i);
 				thisSection.or(otherSection);
@@ -228,8 +246,8 @@ public class WorldMarker {
 			ChunkMarker otherMarker = entry.getValue();
 			ChunkMarker thisMarker = poss.get(chunkPos);
 			if (thisMarker == null) continue;
-			for (int i = 0; i < 16; i++) {
-				BitSet otherSection = otherMarker.sections[i];
+		for (int i = 0; i < ChunkMarker.SECTION_COUNT; i++) {
+			BitSet otherSection = otherMarker.sections[i];
 				if (otherSection == null) continue;
 				BitSet thisSection = thisMarker.sections[i];
 				if (thisSection == null) continue;
