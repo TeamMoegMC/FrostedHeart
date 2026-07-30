@@ -1,6 +1,7 @@
 package com.teammoeg.frostedheart.content.ui.dialogue;
 
 import com.teammoeg.chorda.client.AnimationUtil;
+import com.teammoeg.chorda.client.CInputHelper;
 import com.teammoeg.chorda.client.ClientUtils;
 import com.teammoeg.chorda.client.RenderingHint;
 import com.teammoeg.chorda.client.TesselateHelper;
@@ -18,9 +19,9 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
 
+import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.List;
 
 public class DialogueOverlay extends PrimaryLayer {
     public static final DialogueOverlay INSTANCE = new DialogueOverlay();
@@ -29,7 +30,7 @@ public class DialogueOverlay extends PrimaryLayer {
         setEnabled(false);
     }
 
-    private final Set<Selection> selections = new HashSet<>();
+    private final List<Selection> selections = new ArrayList<>();
     private final Button close = TextButton.create(this, Component.translatable("gui.close"), FlatIcon.LEAVE.toCIcon(), mb -> {
         close();
         ClientUtils.getMc().popGuiLayer();
@@ -90,8 +91,8 @@ public class DialogueOverlay extends PrimaryLayer {
         }
         alignWidgets();
 
-        var pos = OverlayPositioner.position(this, OverlayPositioner.LeftAndRight.RIGHT.startPos(this));
-        setOffsetX(pos.getX());
+        var pos = OverlayPositioner.position(this, OverlayPositioner.All.MIDDLE.startPos(this));
+        setOffsetX(pos.getX()+110);
         setOffsetY(pos.getY()+6);
     }
 
@@ -110,6 +111,18 @@ public class DialogueOverlay extends PrimaryLayer {
         return super.onMousePressed(button);
     }
 
+    @Override
+    public boolean onKeyPressed(int keyCode, int scanCode, int modifiers) {
+        if (!selections.isEmpty()) {
+            int index = CInputHelper.mapNumber(keyCode, -1);
+            if (index >= 0 && index < selections.size()) {
+                selections.get(index).onClicked(MouseButton.LEFT);
+                return true;
+            }
+        }
+        return super.onKeyPressed(keyCode, scanCode, modifiers);
+    }
+
     public class Selection extends Button {
         final Button original;
         final FadeAnimationController animation = new FadeAnimationController("DialogueSelection" + hashCode(), 200);
@@ -118,12 +131,12 @@ public class DialogueOverlay extends PrimaryLayer {
         public Selection(Button original) {
             super(DialogueOverlay.this, original.getTitle(), original.getIcon());
             this.original = original;
-            setSize(175, 18);
+            setSize(175, 17);
         }
 
         @Override
         public boolean hasTooltip() {
-            return original.hasTooltip();
+            return isMouseOver() && isVisible();
         }
 
         @Override
@@ -150,29 +163,39 @@ public class DialogueOverlay extends PrimaryLayer {
         @Override
         public void render(GuiGraphics graphics, int x, int y, int w, int h, RenderingHint hint) {
             if (!isVisible()) return;
-            float change = 10F / ClientUtils.getMc().getFps();
-            if (isEnabled())
-                hover = Mth.clamp(hover + (isMouseOver ? change : -change), 0, 1);
+            if (isEnabled()) {
+                float change = 10F / ClientUtils.getMc().getFps();
+                hover = Mth.clamp(hover + (isMouseOver ? change : -change), 0, 1.3F);
+            }
+
+            // 到动画实际显示前的延迟
+            float delay = 0.3F;
+            float h2 = hover < delay ? 0 : hover-delay;
 
             graphics.pose().pushPose();
-            graphics.pose().translate(16*(1-animation.progress+(hover*hover*0.5F)), 0, 0);
+            graphics.pose().translate(16*(1-animation.progress+(h2*h2*0.5F)), 0, 0);
             graphics.setColor(1, 1, 1, animation.progress);
 
             animation.update();
-            int color = Colors.blend(Colors.themeColor(), Colors.setAlpha(Colors.BLACK, 0.5F), hover*hover*0.5F);
+            int color = Colors.blend(Colors.themeColor(), Colors.setAlpha(Colors.BLACK, 0.5F), h2*h2*0.5F);
             TesselateHelper.getShapeTesslator()
-                    .fillRect(graphics.pose().last().pose(), x, y+1, x+100, y+h-2, color)
-                    .fillGradient(graphics.pose().last().pose(), x+100, y+1, x+150, y+h-2, color, Colors.setAlpha(color, 0))
+                    .fillRect(graphics.pose().last().pose(), x, y+1, x+100, y+h-1, color)
+                    .fillGradient(graphics.pose().last().pose(), x+100, y+1, x+150, y+h-1, color, Colors.setAlpha(color, 0))
                     .close();
-            if (hasIcon() && animation.progress > 0.5F) {
-                icon.draw(graphics, x+4, y+3, 10, 10);
-            }
+            if (hasIcon() && animation.progress > 0.5F)
+                icon.draw(graphics, x + 4, y + 3, 10, 10);
             if (!isEnabled())
-                graphics.setColor(1, 1, 1, 0.5F);
+                graphics.setColor(1, 1, 1, 0.35F);
             graphics.drawString(getFont(), getTitle(), x+18, y+4, Colors.setAlpha(Colors.themeColor(), Math.max(animation.progress, 0.05F)));
 
             graphics.setColor(1, 1, 1, 1);
             graphics.pose().popPose();
+        }
+
+        @Override
+        public void onClosed() {
+            super.onClosed();
+            animation.close();
         }
     }
 

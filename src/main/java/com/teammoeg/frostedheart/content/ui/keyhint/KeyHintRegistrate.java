@@ -41,8 +41,12 @@ public class KeyHintRegistrate {
                 }
                 if (!sled.hasPuller()) {
                     for (Mob mob : ClientUtils.getWorld().getEntitiesOfClass(Mob.class, new AABB(player.blockPosition()).inflate(5))) {
-                        if (mob instanceof Wolf wolf && wolf.isOwnedBy(player) && wolf.getLeashHolder() == player) {
-                            return List.of(customHint(Component.translatable("key.mouse.right"), Component.translatable("hint.frostedheart.sled.leash")));
+                        if (mob instanceof Wolf wolf && wolf.isOwnedBy(player)) {
+                            if (wolf.getLeashHolder() == player) {
+                                return List.of(customHint(Component.translatable("key.mouse.right"), Component.translatable("hint.frostedheart.sled.leash")));
+                            } else {
+                                return List.of(customHint(Component.empty(), Component.translatable("hint.frostedheart.sled.wolf")));
+                            }
                         }
                     }
                 }

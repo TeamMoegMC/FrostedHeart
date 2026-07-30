@@ -33,6 +33,7 @@ import com.teammoeg.chorda.math.Colors;
 import com.teammoeg.chorda.text.Components;
 import com.teammoeg.chorda.util.CRegistryHelper;
 import net.minecraft.Util;
+import net.minecraft.client.gui.screens.ConfirmLinkScreen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.ResourceLocation;
@@ -79,11 +80,16 @@ public class ClickActions {
     static {
         register(EMPTY);
         register(Chorda.rl("open_url"),        "tips.frostedheart.click_action.open_url",   s -> {
-            try {
-                Util.getPlatform().openUrl(new URL(s));
-            } catch (MalformedURLException e) {
-                throw new RuntimeException("Invalid URL '" + s + "'");
-            }
+            ClientUtils.getMc().setScreen(new ConfirmLinkScreen(b -> {
+                try {
+                    if (b) Util.getPlatform().openUrl(new URL(s));
+                } catch (MalformedURLException e) {
+                    String message = "Invalid URL '" + s + "'";
+                    PopupOverlay.pop(Components.withColor(message, Colors.RED).append("\n").append(Component.translatable("tips.frostedheart.error.desc")));
+                } finally {
+                    ClientUtils.getMc().popGuiLayer();
+                }
+            }, s, false));
         });
         register(Chorda.rl("open_quest"),      "tips.frostedheart.click_action.open_quest", s -> {
             if (!CompatModule.isFTBQLoaded()) {

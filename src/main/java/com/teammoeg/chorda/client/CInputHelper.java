@@ -27,6 +27,9 @@ import net.minecraft.sounds.SoundEvents;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.system.MemoryUtil;
 
+import static org.lwjgl.glfw.GLFW.GLFW_KEY_0;
+import static org.lwjgl.glfw.GLFW.GLFW_KEY_KP_0;
+
 /**
  * 客户端输入辅助工具类，提供键盘和鼠标输入状态检测、剪贴板操作和光标管理功能。
  * 封装了GLFW底层输入API，提供更方便的修饰键检测（Shift/Ctrl/Alt）、
@@ -123,6 +126,15 @@ public class CInputHelper {
 
 	public static boolean isPrevKey(int keyCode, int scanCode, int modifier) {
 		return (keyCode == GLFW.GLFW_KEY_TAB && modifier == GLFW.GLFW_MOD_SHIFT) || keyCode == GLFW.GLFW_KEY_W || keyCode == GLFW.GLFW_KEY_UP || keyCode == GLFW.GLFW_KEY_PAGE_UP;
+	}
+
+	public static int mapNumber(int keyCode, int offset) {
+		if (keyCode >= GLFW_KEY_KP_0) {
+			return keyCode - GLFW_KEY_KP_0 + offset;
+		} else if (keyCode >= GLFW_KEY_0) {
+			return keyCode - GLFW_KEY_0 + offset;
+		}
+		return 0;
 	}
 
 	/**
