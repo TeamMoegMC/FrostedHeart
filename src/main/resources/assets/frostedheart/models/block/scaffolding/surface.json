@@ -1,0 +1,26 @@
+{
+	"format_version": "1.9.0",
+	"credit": "Made with Blockbench",
+	"parent": "minecraft:block/cube_all",
+	"render_type": "cutout",
+	"texture_size": [32, 32],
+	"textures": {
+		"particle": "frostedheart:block/scaffolding/metal",
+		"all": "frostedheart:block/scaffolding/metal"
+	},
+	"elements": [
+		{
+			"name": "suface",
+			"from": [-0.025, 13.975, -0.025],
+			"to": [16.025, 16.025, 16.025],
+			"faces": {
+				"north": {"uv": [15, 8, 16, 16], "rotation": 90, "texture": "#all", "cullface": "north"},
+				"east": {"uv": [15, 8, 16, 16], "rotation": 90, "texture": "#all", "cullface": "east"},
+				"south": {"uv": [15, 8, 16, 16], "rotation": 90, "texture": "#all", "cullface": "south"},
+				"west": {"uv": [15, 8, 16, 16], "rotation": 90, "texture": "#all", "cullface": "west"},
+				"up": {"uv": [0, 0, 8, 8], "texture": "#all", "cullface": "up"},
+				"down": {"uv": [0, 0, 8, 8], "rotation": 270, "texture": "#all"}
+			}
+		}
+	]
+}

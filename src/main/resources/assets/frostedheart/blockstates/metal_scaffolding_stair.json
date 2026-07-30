@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "facing=east": {
+      "model": "frostedheart:block/metal_scaffolding_stair",
+      "y": 270
+    },
+    "facing=north": {
+      "model": "frostedheart:block/metal_scaffolding_stair",
+      "y": 180
+    },
+    "facing=south": {
+      "model": "frostedheart:block/metal_scaffolding_stair"
+    },
+    "facing=west": {
+      "model": "frostedheart:block/metal_scaffolding_stair",
+      "y": 90
+    }
+  }
+}

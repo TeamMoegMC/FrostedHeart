@@ -1,0 +1,35 @@
+{
+	"format_version": "1.9.0",
+	"credit": "Made with Blockbench",
+	"parent": "minecraft:block/cube_all",
+	"render_type": "cutout",
+	"texture_size": [32, 32],
+	"textures": {
+		"all": "frostedheart:block/scaffolding/metal",
+		"particle": "frostedheart:block/scaffolding/metaling/metal"
+	},
+	"elements": [
+		{
+			"from": [15, 15, 15],
+			"to": [1, 1, 1],
+			"rotation": {"angle": 0, "axis": "y", "origin": [16, 0, 0]},
+			"faces": {
+				"north": {"uv": [15.5, 0.5, 8.5, 7.5], "texture": "#all"},
+				"east": {"uv": [15.5, 0.5, 8.5, 7.5], "texture": "#all"},
+				"south": {"uv": [15.5, 0.5, 8.5, 7.5], "texture": "#all"},
+				"west": {"uv": [15.5, 0.5, 8.5, 7.5], "texture": "#all"}
+			}
+		},
+		{
+			"from": [1, 1, 1],
+			"to": [15, 15, 15],
+			"rotation": {"angle": 0, "axis": "y", "origin": [16, 0, 0]},
+			"faces": {
+				"north": {"uv": [8.5, 0.5, 15.5, 7.5], "texture": "#all"},
+				"east": {"uv": [8.5, 0.5, 15.5, 7.5], "texture": "#all"},
+				"south": {"uv": [8.5, 0.5, 15.5, 7.5], "texture": "#all"},
+				"west": {"uv": [8.5, 0.5, 15.5, 7.5], "texture": "#all"}
+			}
+		}
+	]
+}

@@ -1,0 +1,7 @@
+{
+  "parent": "frostedheart:item/metal_scaffolding",
+  "render_type": "cutout",
+  "textures": {
+    "all": "frostedheart:block/scaffolding/metal"
+  }
+}

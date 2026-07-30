@@ -114,8 +114,7 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 import static com.teammoeg.frostedheart.FHMain.REGISTRATE;
-import static com.teammoeg.frostedheart.infrastructure.gen.FHBlockStateGen.existingItemModel;
-import static com.teammoeg.frostedheart.infrastructure.gen.FHBlockStateGen.ruinedMachines;
+import static com.teammoeg.frostedheart.infrastructure.gen.FHBlockStateGen.*;
 import static com.teammoeg.frostedheart.infrastructure.gen.FHTagGen.*;
 import static net.minecraft.world.level.block.Blocks.*;
 
@@ -1941,6 +1940,21 @@ public class FHBlocks {
             .blockstate(FHBlockStateGen.simpleCubeAll("concrete/concrete_cracked_"+i))
             .simpleItem()
             .register());
+    public static final BlockEntry<FHScaffoldingBlock> METAL_SCAFFOLDING = REGISTRATE.block("metal_scaffolding", FHScaffoldingBlock::new)
+            .initialProperties(() -> COPPER_BLOCK)
+            .properties(p -> p.mapColor(MapColor.COLOR_LIGHT_GRAY)
+                    .strength(1))
+            .tag(BlockTags.MINEABLE_WITH_PICKAXE, BlockTags.NEEDS_STONE_TOOL, BlockTags.CLIMBABLE)
+            .blockstate(existed())
+            .simpleItem()
+            .register();
+    public static final BlockEntry<FHScaffoldingStairBlock> METAL_SCAFFOLDING_STAIR = REGISTRATE.block("metal_scaffolding_stair", FHScaffoldingStairBlock::new)
+            .initialProperties(METAL_SCAFFOLDING)
+            .tag(BlockTags.MINEABLE_WITH_PICKAXE, BlockTags.NEEDS_STONE_TOOL)
+            .blockstate(existed())
+            .simpleItem()
+            .register();
+
     public static final BlockEntry<WarehouseStorageRackBlock> WAREHOUSE_STORAGE_RACK = REGISTRATE.block("warehouse_storage_rack", WarehouseStorageRackBlock::new)
             .initialProperties(() -> Blocks.CHEST)
             .properties(BlockBehaviour.Properties::noOcclusion)

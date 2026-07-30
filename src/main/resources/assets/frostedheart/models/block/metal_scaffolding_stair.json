@@ -1,0 +1,7 @@
+{
+  "parent": "frostedheart:block/scaffolding/stair",
+  "render_type": "cutout",
+  "textures": {
+    "all": "frostedheart:block/scaffolding/metal"
+  }
+}
