@@ -1952,7 +1952,8 @@ public class FHBlocks {
             .initialProperties(METAL_SCAFFOLDING)
             .tag(BlockTags.MINEABLE_WITH_PICKAXE, BlockTags.NEEDS_STONE_TOOL)
             .blockstate(existed())
-            .simpleItem()
+            .item(FHScaffoldingStairBlockItem::new)
+            .build()
             .register();
 
     public static final BlockEntry<WarehouseStorageRackBlock> WAREHOUSE_STORAGE_RACK = REGISTRATE.block("warehouse_storage_rack", WarehouseStorageRackBlock::new)

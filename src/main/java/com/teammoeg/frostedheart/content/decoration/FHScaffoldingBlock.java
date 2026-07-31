@@ -1,5 +1,10 @@
 package com.teammoeg.frostedheart.content.decoration;
 
+import com.simibubi.create.content.equipment.extendoGrip.ExtendoGripItem;
+import com.simibubi.create.foundation.placement.IPlacementHelper;
+import com.simibubi.create.foundation.placement.PlacementHelpers;
+import com.simibubi.create.foundation.placement.PlacementOffset;
+import com.simibubi.create.infrastructure.config.AllConfigs;
 import com.teammoeg.chorda.block.CBlock;
 import com.teammoeg.chorda.util.struct.FastEnumMap;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlocks;
@@ -10,7 +15,10 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.BlockItem;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
@@ -27,6 +35,7 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
+import net.minecraftforge.common.ForgeMod;
 import net.minecraftforge.registries.ForgeRegistries;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -34,6 +43,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Predicate;
 
 public class FHScaffoldingBlock extends CBlock implements SimpleWaterloggedBlock {
     public static final BooleanProperty SURFACE = BooleanProperty.create("surface");
@@ -59,6 +69,8 @@ public class FHScaffoldingBlock extends CBlock implements SimpleWaterloggedBlock
     }
 
     private static final ConcurrentHashMap<BlockState, VoxelShape> shapeCache = new ConcurrentHashMap<>();
+
+    public static final int PLACEMENT_HELPER_ID = PlacementHelpers.register(new ScaffoldingPlacementHelper());
 
     public FHScaffoldingBlock(Properties blockProps) {
         super(blockProps);
@@ -129,11 +141,19 @@ public class FHScaffoldingBlock extends CBlock implements SimpleWaterloggedBlock
 
     @Override
     public InteractionResult use(BlockState pState, Level pLevel, BlockPos pPos, Player pPlayer, InteractionHand pHand, BlockHitResult pHit) {
-        if (pPlayer.getItemInHand(pHand).is(FHTags.forgeTag(ForgeRegistries.ITEMS, "rods"))) {
+        var heldItem = pPlayer.getItemInHand(pHand);
+
+        if (heldItem.is(FHTags.forgeTag(ForgeRegistries.ITEMS, "rods"))) {
             pLevel.setBlock(pPos, pState.setValue(HANDRAIL, !pState.getValue(HANDRAIL)), 2);
             pLevel.playSound((Player)null, pPos, SoundEvents.COPPER_PLACE, SoundSource.BLOCKS, 1.0F, 0.8F + pLevel.random.nextFloat() * 0.4F);
             return InteractionResult.SUCCESS;
         }
+
+        IPlacementHelper helper = PlacementHelpers.get(PLACEMENT_HELPER_ID);
+        if (helper.matchesItem(heldItem))
+            return helper.getOffset(pPlayer, pLevel, pState, pPos, pHit)
+                    .placeInWorld(pLevel, (BlockItem) heldItem.getItem(), pPlayer, pHand, pHit);
+
         return super.use(pState, pLevel, pPos, pPlayer, pHand, pHit);
     }
 
@@ -145,7 +165,7 @@ public class FHScaffoldingBlock extends CBlock implements SimpleWaterloggedBlock
         return calcState(pState, pPos, pLevel);
     }
 
-    private @NotNull BlockState calcState(BlockState prevState, BlockPos pos, LevelAccessor level) {
+    public static @NotNull BlockState calcState(BlockState prevState, BlockPos pos, LevelAccessor level) {
         var neighbors = getNeighbors(pos);
 
         BlockPos posDown = neighbors.get(Direction.DOWN);
@@ -160,7 +180,7 @@ public class FHScaffoldingBlock extends CBlock implements SimpleWaterloggedBlock
         boolean crossZ;
         boolean surface;
 
-        if (upState.getBlock() instanceof FHScaffoldingBlock) {
+        if (upState.getBlock() instanceof FHScaffoldingBlock || downState.getBlock() instanceof FHScaffoldingBlock) {
             crossX = false;
             crossZ = false;
         } else {
@@ -194,16 +214,83 @@ public class FHScaffoldingBlock extends CBlock implements SimpleWaterloggedBlock
                 .setValue(CROSS_Z, crossZ);
     }
 
-    public boolean isScaffolding(BlockState state) {
+    public static boolean isScaffolding(BlockState state) {
         var block = state.getBlock();
         return block instanceof FHScaffoldingBlock || block instanceof FHScaffoldingStairBlock;
     }
 
-    private FastEnumMap<Direction, BlockPos> getNeighbors(BlockPos pos) {
+    public static FastEnumMap<Direction, BlockPos> getNeighbors(BlockPos pos) {
         FastEnumMap<Direction, BlockPos> map = new FastEnumMap<>(Direction.values());
         for (Direction dir : Direction.values()) {
             map.put(dir, pos.relative(dir));
         }
         return map;
+    }
+
+    public static class ScaffoldingPlacementHelper implements IPlacementHelper {
+
+        @Override
+        public Predicate<ItemStack> getItemPredicate() {
+            return i -> i.getItem() instanceof BlockItem
+                    && ((BlockItem) i.getItem()).getBlock() instanceof FHScaffoldingBlock;
+        }
+
+        @Override
+        public Predicate<BlockState> getStatePredicate() {
+            return FHScaffoldingBlock::isScaffolding;
+        }
+
+        private boolean canExtendToward(BlockState state, Direction side) {
+            return getStatePredicate().test(state) && side.getAxis() == Direction.Axis.Y;
+        }
+
+        private int attachedBlocks(Level world, BlockPos pos, Direction direction) {
+            BlockPos checkPos = pos.relative(direction);
+            int count = 0;
+            while (getStatePredicate().test(world.getBlockState(checkPos))) {
+                count++;
+                checkPos = checkPos.relative(direction);
+            }
+            return count;
+        }
+
+        @Override
+        public PlacementOffset getOffset(Player player, Level world, BlockState state, BlockPos pos, BlockHitResult ray) {
+            List<Direction> directions;
+
+            if (player != null && ray.getDirection() == Direction.UP) {
+                Direction facing = player.getDirection();
+                directions = List.of(facing);
+            } else {
+                directions = IPlacementHelper.orderedByDistance(pos, ray.getLocation(),
+                        dir -> canExtendToward(state, dir));
+            }
+
+            int range = AllConfigs.server().equipment.placementAssistRange.get();
+            if (player != null) {
+                AttributeInstance reach = player.getAttribute(ForgeMod.BLOCK_REACH.get());
+                if (reach != null && reach.hasModifier(ExtendoGripItem.singleRangeAttributeModifier))
+                    range += 4;
+            }
+
+            for (Direction dir : directions) {
+                int poles = attachedBlocks(world, pos, dir);
+                if (poles >= range)
+                    continue;
+
+                BlockPos newPos = pos.relative(dir, poles + 1);
+                int newY = newPos.getY();
+                if (newY <= world.getMinBuildHeight() || newY >= world.getMaxBuildHeight())
+                    continue;
+                BlockState newState = world.getBlockState(newPos);
+                if (!newState.canBeReplaced())
+                    continue;
+
+                return PlacementOffset.success(newPos,
+                        bState -> calcState(bState, newPos, world));
+            }
+
+            return PlacementOffset.fail();
+        }
     }
 }

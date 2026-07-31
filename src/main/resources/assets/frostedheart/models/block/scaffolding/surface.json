@@ -11,8 +11,8 @@
 	"elements": [
 		{
 			"name": "suface",
-			"from": [-0.025, 13.975, -0.025],
-			"to": [16.025, 16.025, 16.025],
+			"from": [-0.015, 13.985, -0.015],
+			"to": [16.015, 16.015, 16.015],
 			"faces": {
 				"north": {"uv": [15, 8, 16, 16], "rotation": 90, "texture": "#all", "cullface": "north"},
 				"east": {"uv": [15, 8, 16, 16], "rotation": 90, "texture": "#all", "cullface": "east"},
