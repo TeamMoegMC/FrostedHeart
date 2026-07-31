@@ -19,10 +19,6 @@ import net.minecraft.world.level.levelgen.DensityFunction;
  *
  * 接线方式：见 ChunkAccessBiomeMixin —— 用 @ModifyArg 把传给
  * ChunkAccess#fillBiomesFromNoise 的 BiomeResolver 换成本类。
- * 无需触碰 LevelChunkSection 的 palette 内部，也不与 FastNoise 的
- * @Redirect 冲突（FastNoise 存在时，它的 FastWorldgen/FastBiomeGen
- * 会拿着本包装类逐格取值，两者链式叠加）。
- *
  * 每 (x,z) 四分位列成本：
  *   1 次完整 TargetPoint 采样（拿 5 个 Y 不变坐标）
  * + 1 次列顶复采校验（守护非 vanilla router 的 datapack，5 坐标不一致则整列回退原版）

@@ -62,12 +62,12 @@ public class WarehouseBlockEntity extends AbstractTownBuildingBlockEntity<Wareho
         BlockPos warehousePos = this.getBlockPos();
         BlockPos doorPos = AbstractBlockScanner.getDoorAdjacent(level, warehousePos);
         if (doorPos == null) {
-            clearInterfaces(building);
+            clearWallDevices(building);
             return false;
         }
         BlockPos floorBelowDoor = AbstractBlockScanner.getBlockBelow((pos)->!(Objects.requireNonNull(level).getBlockState(pos).is(BlockTags.DOORS)), doorPos);//找到门下面垫的的那个方块
         if (floorBelowDoor == null) {
-            clearInterfaces(building);
+            clearWallDevices(building);
             return false;
         }
         for (Direction direction : AbstractBlockScanner.PLANE_DIRECTIONS) {
@@ -88,10 +88,11 @@ public class WarehouseBlockEntity extends AbstractTownBuildingBlockEntity<Wareho
                 building.setCapacity(building.getArea() * Math.pow(building.getVolume() * 0.02 / building.getArea(), 0.9) * 1980 + building.getDecorationAmount() * 512);
             	building.setOccupiedVolume(scanner.getOccupiedVolume());
                 publishInterfaces(building, scanner.getWallInterfacePositions());
+                publishEmitters(building, scanner.getWallEmitterPositions());
                 return true;
             }
         }
-        clearInterfaces(building);
+        clearWallDevices(building);
         return false;
     }
 
@@ -119,6 +120,30 @@ public class WarehouseBlockEntity extends AbstractTownBuildingBlockEntity<Wareho
         }
     }
 
+    private void publishEmitters(WarehouseBuilding building, Set<BlockPos> discovered) {
+        if (level == null || townProvider == null) {
+            clearEmitters(building);
+            return;
+        }
+
+        Set<BlockPos> accepted = new LinkedHashSet<>();
+        for (BlockPos emitterPos : discovered) {
+            if (level.getBlockEntity(emitterPos) instanceof WarehouseLevelEmitterBlockEntity levelEmitter
+                    && levelEmitter.tryBind(townProvider, worldPosition)) {
+                accepted.add(emitterPos.immutable());
+            }
+        }
+
+        Set<BlockPos> previous = building.replaceEmitters(accepted);
+        previous.removeAll(accepted);
+        for (BlockPos removedPos : previous) {
+            if (level.isLoaded(removedPos)
+                    && level.getBlockEntity(removedPos) instanceof WarehouseLevelEmitterBlockEntity levelEmitter) {
+                levelEmitter.unbindIfBoundTo(townProvider, worldPosition);
+            }
+        }
+    }
+
     private void clearInterfaces(WarehouseBuilding building) {
         Set<BlockPos> previous = building.replaceInterfaces(Set.of());
         if (level == null || townProvider == null) {
@@ -130,6 +155,24 @@ public class WarehouseBlockEntity extends AbstractTownBuildingBlockEntity<Wareho
                 warehouseInterface.unbindIfBoundTo(townProvider, worldPosition);
             }
         }
+    }
+
+    private void clearEmitters(WarehouseBuilding building) {
+        Set<BlockPos> previous = building.replaceEmitters(Set.of());
+        if (level == null || townProvider == null) {
+            return;
+        }
+        for (BlockPos emitterPos : previous) {
+            if (level.isLoaded(emitterPos)
+                    && level.getBlockEntity(emitterPos) instanceof WarehouseLevelEmitterBlockEntity levelEmitter) {
+                levelEmitter.unbindIfBoundTo(townProvider, worldPosition);
+            }
+        }
+    }
+
+    private void clearWallDevices(WarehouseBuilding building) {
+        clearInterfaces(building);
+        clearEmitters(building);
     }
 
 

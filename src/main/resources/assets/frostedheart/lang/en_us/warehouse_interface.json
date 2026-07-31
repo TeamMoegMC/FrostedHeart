@@ -5,5 +5,11 @@
   "gui.frostedheart.warehouse_interface.status.unavailable": "Warehouse unavailable",
   "gui.frostedheart.warehouse_interface.status.unbound": "No warehouse bound",
   "gui.frostedheart.warehouse_interface.status.working": "Working",
-  "gui.frostedheart.warehouse_interface.target_amount": "Target amount: %s"
+  "gui.frostedheart.warehouse_interface.target_amount": "Target amount: %s",
+  "gui.frostedheart.warehouse_interface.redstone_mode.ignore": "RS: Ignore",
+  "gui.frostedheart.warehouse_interface.redstone_mode.ignore.tooltip": "Ignores redstone and always restocks from the town warehouse",
+  "gui.frostedheart.warehouse_interface.redstone_mode.high": "RS: High",
+  "gui.frostedheart.warehouse_interface.redstone_mode.high.tooltip": "Restocks from the town warehouse only while powered by redstone",
+  "gui.frostedheart.warehouse_interface.redstone_mode.low": "RS: Low",
+  "gui.frostedheart.warehouse_interface.redstone_mode.low.tooltip": "Restocks from the town warehouse only while not powered by redstone"
 }

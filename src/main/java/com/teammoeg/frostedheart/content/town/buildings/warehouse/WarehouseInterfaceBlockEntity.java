@@ -68,6 +68,7 @@ public class WarehouseInterfaceBlockEntity extends CBlockEntity implements CTick
     public static final int STATUS_WORKING = 2;
 
     private final LazyTickWorker balanceWorker = new LazyTickWorker(10, this::validateAndBalance);
+    private WarehouseRedstoneMode redstoneMode = WarehouseRedstoneMode.IGNORE;
     private boolean suppressInventoryCallback;
     private final ItemStackHandler inventory = new ItemStackHandler(SLOT_COUNT) {
         @Override
@@ -102,6 +103,47 @@ public class WarehouseInterfaceBlockEntity extends CBlockEntity implements CTick
 
     public int getConnectionStatus() {
         return connectionStatus;
+    }
+
+    public WarehouseRedstoneMode getRedstoneMode() {
+        return redstoneMode;
+    }
+
+    /**
+     * 循环切换红石控制模式，并立即重新评估补货。
+     * <p>
+     * Cycles the redstone control mode and re-evaluates balancing right away.
+     */
+    public void cycleRedstoneMode() {
+        redstoneMode = redstoneMode.nextControlMode();
+        if (level != null) {
+            setChanged();
+            if (!level.isClientSide) {
+                balanceWorker.enqueue();
+            }
+        }
+    }
+
+    /**
+     * 红石信号变化时由方块调用，使门控的补货输出能即时响应。
+     * <p>
+     * Called by the block when a neighbor update arrives, so gated restocking reacts
+     * to redstone changes immediately.
+     */
+    public void onNeighborSignalChanged() {
+        if (redstoneMode != WarehouseRedstoneMode.IGNORE && level != null && !level.isClientSide) {
+            balanceWorker.enqueue();
+        }
+    }
+
+    /**
+     * 判断当前是否允许从城镇仓库补货输出。存回仓库的方向不受红石模式影响。
+     * <p>
+     * Checks whether restocking output from the town warehouse is currently allowed.
+     * Storing items back into the warehouse is never gated.
+     */
+    private boolean isOutputAllowed() {
+        return level != null && redstoneMode.allowsOutput(level.hasNeighborSignal(worldPosition));
     }
 
     public void setTarget(int slot, @Nullable WarehouseInterfaceTarget target) {
@@ -269,7 +311,9 @@ public class WarehouseInterfaceBlockEntity extends CBlockEntity implements CTick
         }
 
         // Fill all deficits after exports, allowing items exported above to be reused.
-        for (int slot = 0; slot < SLOT_COUNT; slot++) {
+        // Restocking is gated by the redstone control mode; storing back is not.
+        boolean outputAllowed = isOutputAllowed();
+        for (int slot = 0; slot < SLOT_COUNT && outputAllowed; slot++) {
             WarehouseInterfaceTarget target = targets[slot];
             if (target == null) {
                 continue;
@@ -363,6 +407,8 @@ public class WarehouseInterfaceBlockEntity extends CBlockEntity implements CTick
             suppressInventoryCallback = false;
         }
 
+        redstoneMode = WarehouseRedstoneMode.byOrdinal(nbt.getInt("redstoneMode"), WarehouseRedstoneMode.IGNORE);
+
         Arrays.fill(targets, null);
         ListTag targetList = nbt.getList("targets", Tag.TAG_COMPOUND);
         for (Tag rawTag : targetList) {
@@ -398,6 +444,7 @@ public class WarehouseInterfaceBlockEntity extends CBlockEntity implements CTick
     @Override
     public void writeCustomNBT(CompoundTag nbt, boolean descPacket) {
         nbt.put("inventory", inventory.serializeNBT());
+        nbt.putInt("redstoneMode", redstoneMode.ordinal());
 
         ListTag targetList = new ListTag();
         for (int slot = 0; slot < SLOT_COUNT; slot++) {

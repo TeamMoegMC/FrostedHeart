@@ -6,5 +6,11 @@
   "gui.frostedheart.warehouse_interface.status.unavailable": "仓库不可用",
   "gui.frostedheart.warehouse_interface.status.unbound": "未绑定仓库",
   "gui.frostedheart.warehouse_interface.status.working": "工作正常",
-  "gui.frostedheart.warehouse_interface.target_amount": "目标数量：%s"
+  "gui.frostedheart.warehouse_interface.target_amount": "目标数量：%s",
+  "gui.frostedheart.warehouse_interface.redstone_mode.ignore": "红石：忽略",
+  "gui.frostedheart.warehouse_interface.redstone_mode.ignore.tooltip": "忽略红石信号，始终从城镇仓库补货",
+  "gui.frostedheart.warehouse_interface.redstone_mode.high": "红石：有信号",
+  "gui.frostedheart.warehouse_interface.redstone_mode.high.tooltip": "仅当接收到红石信号时从城镇仓库补货",
+  "gui.frostedheart.warehouse_interface.redstone_mode.low": "红石：无信号",
+  "gui.frostedheart.warehouse_interface.redstone_mode.low.tooltip": "仅当没有红石信号时从城镇仓库补货"
 }

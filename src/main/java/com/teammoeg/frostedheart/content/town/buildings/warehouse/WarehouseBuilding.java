@@ -50,7 +50,9 @@ public class WarehouseBuilding extends AbstractTownBuilding {
 					Codec.INT.optionalFieldOf("volume",0).forGetter(o -> o.getVolume()),
                     Codec.INT.optionalFieldOf("decorationAmount",0).forGetter(o -> o.getDecorationAmount()),
                     BlockPos.CODEC.listOf().optionalFieldOf("interfaces", List.of())
-                            .forGetter(o -> List.copyOf(o.interfacePositions))
+                            .forGetter(o -> List.copyOf(o.interfacePositions)),
+                    BlockPos.CODEC.listOf().optionalFieldOf("emitters", List.of())
+                            .forGetter(o -> List.copyOf(o.emitterPositions))
 			)
 			.apply(t, WarehouseBuilding::new));
 
@@ -60,6 +62,7 @@ public class WarehouseBuilding extends AbstractTownBuilding {
     @Getter
     private int decorationAmount;
     private final Set<BlockPos> interfacePositions = new LinkedHashSet<>();
+    private final Set<BlockPos> emitterPositions = new LinkedHashSet<>();
 
     public void setVolume(int volume) { this.volume = volume; fireChange(); }
     public void setArea(int area) { this.area = area; fireChange(); }
@@ -81,12 +84,20 @@ public class WarehouseBuilding extends AbstractTownBuilding {
      */
     public WarehouseBuilding(BlockPos pos, boolean isStructureValid, OccupiedVolume occupiedVolume, boolean initialized,
                              boolean occupiedAreaOverlapped, double capacity, int area, int volume, int decorationAmount) {
-        this(pos, isStructureValid, occupiedVolume, initialized, occupiedAreaOverlapped, capacity, area, volume, decorationAmount, List.of());
+        this(pos, isStructureValid, occupiedVolume, initialized, occupiedAreaOverlapped, capacity, area, volume, decorationAmount, List.of(), List.of());
     }
 
     public WarehouseBuilding(BlockPos pos, boolean isStructureValid, OccupiedVolume occupiedVolume, boolean initialized,
                              boolean occupiedAreaOverlapped, double capacity,
                              int area, int volume, int decorationAmount, List<BlockPos> interfacePositions) {
+        this(pos, isStructureValid, occupiedVolume, initialized, occupiedAreaOverlapped, capacity, area, volume,
+                decorationAmount, interfacePositions, List.of());
+    }
+
+    public WarehouseBuilding(BlockPos pos, boolean isStructureValid, OccupiedVolume occupiedVolume, boolean initialized,
+                             boolean occupiedAreaOverlapped, double capacity,
+                             int area, int volume, int decorationAmount, List<BlockPos> interfacePositions,
+                             List<BlockPos> emitterPositions) {
         super(pos);
         this.setIsStructureValid(isStructureValid);
         this.setOccupiedVolume(occupiedVolume);
@@ -97,6 +108,7 @@ public class WarehouseBuilding extends AbstractTownBuilding {
         this.setVolume(volume);
         this.setDecorationAmount(decorationAmount);
         replaceInterfaces(interfacePositions);
+        replaceEmitters(emitterPositions);
     }
 
 	/**
@@ -141,5 +153,24 @@ public class WarehouseBuilding extends AbstractTownBuilding {
 
     public boolean removeInterface(BlockPos interfacePos) {
         return interfacePositions.remove(interfacePos);
+    }
+
+    public Set<BlockPos> getEmitterPositions() {
+        return Collections.unmodifiableSet(emitterPositions);
+    }
+
+    public boolean containsEmitter(BlockPos emitterPos) {
+        return emitterPositions.contains(emitterPos);
+    }
+
+    public Set<BlockPos> replaceEmitters(Collection<BlockPos> positions) {
+        Set<BlockPos> previous = new LinkedHashSet<>(emitterPositions);
+        emitterPositions.clear();
+        positions.stream().map(BlockPos::immutable).forEach(emitterPositions::add);
+        return previous;
+    }
+
+    public boolean removeEmitter(BlockPos emitterPos) {
+        return emitterPositions.remove(emitterPos);
     }
 }

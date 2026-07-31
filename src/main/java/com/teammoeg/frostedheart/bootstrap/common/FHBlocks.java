@@ -64,6 +64,7 @@ import com.teammoeg.frostedheart.content.town.buildings.mine.MineBaseBlock;
 import com.teammoeg.frostedheart.content.town.buildings.mine.MineBlock;
 import com.teammoeg.frostedheart.content.town.buildings.warehouse.WarehouseBlock;
 import com.teammoeg.frostedheart.content.town.buildings.warehouse.WarehouseInterfaceBlock;
+import com.teammoeg.frostedheart.content.town.buildings.warehouse.WarehouseLevelEmitterBlock;
 import com.teammoeg.frostedheart.content.utility.gunpowderbarrel.GunpowderBarrelBlock;
 import com.teammoeg.frostedheart.content.utility.gunpowderbarrel.GunpowderBarrelItem;
 import com.teammoeg.frostedheart.content.utility.incinerator.GasVentBlock;
@@ -2221,6 +2222,18 @@ public class FHBlocks {
                     .model(existingItemModel())
                     .build()
                     .lang("Warehouse Interface")
+                    .register();
+
+    public static final BlockEntry<WarehouseLevelEmitterBlock> WAREHOUSE_LEVEL_EMITTER =
+            REGISTRATE.block("warehouse_level_emitter", WarehouseLevelEmitterBlock::new)
+                    .initialProperties(() -> Blocks.IRON_BLOCK)
+                    .tag(FHTags.Blocks.TOWN_WALLS.tag)
+                    .tag(FHTags.Blocks.METAL_MACHINES.tag)
+                    .blockstate(FHBlockStateGen.existed())
+                    .item()
+                    .model(existingItemModel())
+                    .build()
+                    .lang("Warehouse Level Emitter")
                     .register();
 
     public static final BlockEntry<MineBlock> MINE = REGISTRATE.block("mine", MineBlock::new)

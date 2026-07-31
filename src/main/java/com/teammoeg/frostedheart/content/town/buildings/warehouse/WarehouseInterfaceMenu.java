@@ -34,9 +34,11 @@ public class WarehouseInterfaceMenu extends CBlockEntityMenu<WarehouseInterfaceB
     private static final int CMD_SET_TARGET = 0;
     private static final int CMD_CLEAR_TARGET = 1;
     private static final int CMD_SET_AMOUNT = 2;
+    private static final int CMD_CYCLE_REDSTONE_MODE = 3;
 
     private final List<CDataSlot<WarehouseInterfaceTarget>> targetData = new ArrayList<>();
     private final CDataSlot<Integer> connectionStatus;
+    private final CDataSlot<Integer> redstoneMode;
 
     public WarehouseInterfaceMenu(int id, Inventory playerInventory, WarehouseInterfaceBlockEntity blockEntity) {
         super(FHMenuTypes.WAREHOUSE_INTERFACE.get(), blockEntity, id, playerInventory.player,
@@ -58,8 +60,10 @@ public class WarehouseInterfaceMenu extends CBlockEntityMenu<WarehouseInterfaceB
         }
 
         connectionStatus = CCustomMenuSlot.SLOT_INT.create(this);
+        redstoneMode = CCustomMenuSlot.SLOT_INT.create(this);
         if (serverSide) {
             connectionStatus.bind(blockEntity::getConnectionStatus);
+            redstoneMode.bind(() -> blockEntity.getRedstoneMode().ordinal());
         }
 
         addPlayerInventory(playerInventory, 8, 84, 142);
@@ -76,6 +80,11 @@ public class WarehouseInterfaceMenu extends CBlockEntityMenu<WarehouseInterfaceB
         return connectionStatus.getValue();
     }
 
+    public WarehouseRedstoneMode getRedstoneMode() {
+        Integer value = redstoneMode.getValue();
+        return WarehouseRedstoneMode.byOrdinal(value == null ? 0 : value, WarehouseRedstoneMode.IGNORE);
+    }
+
     public void setTargetFromCarried(int slot) {
         sendTargetCommand(CMD_SET_TARGET, slot, 0);
     }
@@ -88,6 +97,10 @@ public class WarehouseInterfaceMenu extends CBlockEntityMenu<WarehouseInterfaceB
         sendTargetCommand(CMD_SET_AMOUNT, slot, amount);
     }
 
+    public void cycleRedstoneMode() {
+        sendTargetCommand(CMD_CYCLE_REDSTONE_MODE, 0, 0);
+    }
+
     private void sendTargetCommand(int command, int slot, int value) {
         sendMessage(((command & 0xff) << 8) | (slot & 0xff), value);
     }
@@ -96,6 +109,10 @@ public class WarehouseInterfaceMenu extends CBlockEntityMenu<WarehouseInterfaceB
     public void receiveMessage(short buttonId, int state) {
         int command = (buttonId & 0xff00) >> 8;
         int slot = buttonId & 0xff;
+        if (command == CMD_CYCLE_REDSTONE_MODE) {
+            blockEntity.cycleRedstoneMode();
+            return;
+        }
         if (slot < 0 || slot >= WarehouseInterfaceBlockEntity.SLOT_COUNT) {
             return;
         }
