@@ -46,6 +46,7 @@
     "minecraft.misc.ComposterBlockOutputContainerMixin",
     "minecraft.misc.MinecraftServerMixin_GenerateSpacecraft",
     "minecraft.misc.NoiseBasedChunkGeneratorMixin",
+    "minecraft.misc.NoiseBasedChunkGeneratorMixin$Accessor",
     "minecraft.misc.NoiseChunkFastPathMixin",
     "minecraft.misc.PlayerInventoryMixin_KeepEquipment",
     "minecraft.misc.PlayerMixin_KeepEquipment",

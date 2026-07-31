@@ -25,12 +25,26 @@ import net.minecraft.world.level.levelgen.NoiseChunk;
 import java.util.EnumSet;
 
 /**
- * 合并 FastNoise 核心功能：快速噪声填充、快速群系填充、高度图后处理、对象池。
+ * 合并 FastNoise 核心功能：快速噪声填充、快速群系填充
  *
  */
 public final class FastNoiseEngine {
+    @SuppressWarnings({"unchecked"})
+    private static final PalettedContainer.Configuration<Holder<Biome>>[] BIOME_CONFIGS = new PalettedContainer.Configuration[] {
+            new PalettedContainer.Configuration<>(PalettedContainer.Strategy.SINGLE_VALUE_PALETTE_FACTORY, 0),
+            new PalettedContainer.Configuration<>(PalettedContainer.Strategy.LINEAR_PALETTE_FACTORY, 1),
+            new PalettedContainer.Configuration<>(PalettedContainer.Strategy.LINEAR_PALETTE_FACTORY, 2),
+            new PalettedContainer.Configuration<>(PalettedContainer.Strategy.LINEAR_PALETTE_FACTORY, 3),
+            new PalettedContainer.Configuration<>(PalettedContainer.Strategy.LINEAR_PALETTE_FACTORY, 4),
+            new PalettedContainer.Configuration<>(PalettedContainer.Strategy.LINEAR_PALETTE_FACTORY, 5),
+            new PalettedContainer.Configuration<>(PalettedContainer.Strategy.LINEAR_PALETTE_FACTORY, 6)
+    };
+    // ---- 噪声填充缓存 ----
+    private static final PalettedContainer.Configuration<BlockState> BLOCK_CONFIG =
+            new PalettedContainer.Configuration<>(PalettedContainer.Strategy.LINEAR_PALETTE_FACTORY, 4);
+
     public static final BlockState AIR = Blocks.AIR.defaultBlockState();
-    
+
     private FastNoiseEngine() {}
 
     // ---- 快速噪声填充 ----
@@ -173,7 +187,7 @@ public final class FastNoiseEngine {
                     existing.value = biomes[0];
                 } else {
                     container.data = new PalettedContainer.Data<>(
-                            new PalettedContainer.Configuration<>(PalettedContainer.Strategy.SINGLE_VALUE_PALETTE_FACTORY, 0),
+                            BIOME_CONFIGS[0 ],
                             new ZeroBitStorage(64),
                             new SingleValuePalette<>(container.registry, container, java.util.List.of(biomes[0]))
                     );
@@ -184,7 +198,7 @@ public final class FastNoiseEngine {
                 System.arraycopy(biomes, 0, palette, 0, size);
                 long[] packed = packStorage(storage, bits);
                 container.data = new PalettedContainer.Data<>(
-                        new PalettedContainer.Configuration<>(PalettedContainer.Strategy.LINEAR_PALETTE_FACTORY, bits),
+                        BIOME_CONFIGS[bits],
                         new SimpleBitStorage(bits, 64, packed),
                         new LinearPalette<>(container.registry, palette, container, bits, size)
                 );
@@ -224,7 +238,7 @@ public final class FastNoiseEngine {
                     size
             );
             section.states.data = new PalettedContainer.Data<>(
-                    new PalettedContainer.Configuration<>(PalettedContainer.Strategy.LINEAR_PALETTE_FACTORY, 4),
+                    BLOCK_CONFIG,
                     new SimpleBitStorage(4, 4096, this.storage),
                     palette
             );

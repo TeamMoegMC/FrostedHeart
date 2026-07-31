@@ -5,7 +5,6 @@ import com.teammoeg.frostedheart.util.FastNoiseEngine;
 import net.minecraft.core.Holder;
 import net.minecraft.world.level.StructureManager;
 import net.minecraft.world.level.biome.*;
-import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.levelgen.*;
@@ -13,6 +12,7 @@ import net.minecraft.world.level.levelgen.blending.Blender;
 import org.spongepowered.asm.mixin.*;
 import org.spongepowered.asm.mixin.gen.Invoker;
 import org.spongepowered.asm.mixin.injection.*;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(NoiseBasedChunkGenerator.class)
 public abstract class NoiseBasedChunkGeneratorMixin {
@@ -41,55 +41,60 @@ public abstract class NoiseBasedChunkGeneratorMixin {
     }
 
 
-    /** 原版 doFill 方法，当不满足快速路径时回退使用 */
-    @Invoker("doFill")
-    abstract ChunkAccess invokeDoFill(
-            Blender blender, StructureManager structures, RandomState random,
-            ChunkAccess chunk, int minCellY, int cellHeight);
-
-    @Invoker("createNoiseChunk")
-    abstract NoiseChunk invokeCreateNoiseChunk(
-            ChunkAccess chunk, StructureManager structures, Blender blender, RandomState random);
-
     /**
-     * 取代 lambda$fillFromNoise$11 内部对 doFill 的调用，
-     * 在满足条件时改用 FastNoiseEngine 快速填充。
+     * 将 doFill 的调用重定向到 FastNoiseEngine 的快速噪声填充。
      */
-    @Redirect(
-            method = "lambda$fillFromNoise$11",
-            at = @At(
-                    value = "INVOKE",
-                    target = "Lnet/minecraft/world/level/levelgen/NoiseBasedChunkGenerator;doFill(Lnet/minecraft/world/level/levelgen/blending/Blender;Lnet/minecraft/world/level/StructureManager;Lnet/minecraft/world/level/levelgen/RandomState;Lnet/minecraft/world/level/chunk/ChunkAccess;II)Lnet/minecraft/world/level/chunk/ChunkAccess;"
-            ),
+    /**
+     * 在 doFill 方法头部拦截，若满足快速路径条件，则用 FastNoiseEngine 填充并立即返回，
+     * 否则原方法体正常执行。
+     */
+    @Inject(
+            method = "doFill",
+            at = @At("HEAD"),
+            cancellable = true,
             require = 1
     )
-    private ChunkAccess fastNoise$redirectDoFill(
-            NoiseBasedChunkGenerator self,
-            Blender blender, StructureManager structures, RandomState random,
-            ChunkAccess chunk, int minCellY, int cellHeight
+    private void fastNoise$tryPopulateNoise(
+            Blender pBlender, StructureManager pStructureManager, RandomState pRandom, ChunkAccess pChunk, int pMinCellY, int pCellCountY, CallbackInfoReturnable<ChunkAccess> cir
     ) {
         // 获取默认方块
-        Holder<NoiseGeneratorSettings> settings = self.generatorSettings();
+        Holder<NoiseGeneratorSettings> settings = ((Accessor) this).getSettings();
         BlockState defaultBlock = settings.value().defaultBlock();
 
-        // 快速路径条件：非空气默认方块、无 retrogen、区块当前全为空气
-        if (defaultBlock != Blocks.AIR.defaultBlockState()
-                && !chunk.isUpgrading()
-                && FastNoiseEngine.isChunkEmpty(chunk)) {
-
-            NoiseChunk noiseChunk = chunk.getOrCreateNoiseChunk(
-                    c -> this.invokeCreateNoiseChunk(c, structures, blender, random)
-            );
-
-            FastNoiseEngine.populateNoise(
-                    noiseChunk, defaultBlock, chunk,
-                    minCellY, cellHeight,
-                    chunk.getMinBuildHeight()
-            );
-            return chunk;
+        // 快速路径条件
+        if (defaultBlock == FastNoiseEngine.AIR
+                || pChunk.isUpgrading()
+                || !FastNoiseEngine.isChunkEmpty(pChunk)) {
+            return; // 回退原版
         }
 
-        // 回退到原版 doFill
-        return this.invokeDoFill(blender, structures, random, chunk, minCellY, cellHeight);
+        // 创建 NoiseChunk
+        NoiseChunk noiseChunk = pChunk.getOrCreateNoiseChunk(
+                c -> ((Accessor) this).invokeCreateNoiseChunk(c, pStructureManager, pBlender, pRandom)
+        );
+
+        // 执行快速填充
+        FastNoiseEngine.populateNoise(
+                noiseChunk, defaultBlock, pChunk, pMinCellY, pCellCountY,
+                pChunk.getMinBuildHeight()
+        );
+
+        // 直接返回 chunk，阻止原版 doFill 执行
+        cir.setReturnValue(pChunk);
+    }
+
+
+    @Mixin(NoiseBasedChunkGenerator.class)
+    public interface Accessor {
+        @org.spongepowered.asm.mixin.gen.Accessor("settings")
+        Holder<NoiseGeneratorSettings> getSettings();
+
+        @Invoker("createNoiseChunk")
+        NoiseChunk invokeCreateNoiseChunk(
+                ChunkAccess chunk,
+                StructureManager structures,
+                Blender blender,
+                RandomState random
+        );
     }
 }
