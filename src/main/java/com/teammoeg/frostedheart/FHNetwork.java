@@ -29,6 +29,9 @@ import com.teammoeg.frostedheart.content.steamenergy.EndPointDataPacket;
 import com.teammoeg.frostedheart.content.steamenergy.HeatNetworkRequestC2SPacket;
 import com.teammoeg.frostedheart.content.steamenergy.HeatNetworkResponseS2CPacket;
 import com.teammoeg.frostedheart.content.town.network.TeamTownDataS2CPacket;
+import com.teammoeg.frostedheart.content.town.network.TownBuildingUpdatePacket;
+import com.teammoeg.frostedheart.content.town.network.TownResidentUpdatePacket;
+import com.teammoeg.frostedheart.content.town.network.TownResourceUpdatePacket;
 import com.teammoeg.frostedheart.content.town.network.WanderingRefugeeOpenTradeGUIMessage;
 import com.teammoeg.frostedheart.content.town.network.WanderingRefugeeRecruitMessage;
 import com.teammoeg.frostedheart.content.town.network.WarehouseInteractPacket;
@@ -103,6 +106,9 @@ public class FHNetwork extends CBaseNetwork {
 
         // ITown Messages
         registerMessage("team_town_data_s2c", TeamTownDataS2CPacket.class);
+        registerMessage("town_building_update", TownBuildingUpdatePacket.class);
+        registerMessage("town_resident_update", TownResidentUpdatePacket.class);
+        registerMessage("town_resource_update", TownResourceUpdatePacket.class);
         registerMessage("wandering_refugee_open_trade_gui", WanderingRefugeeOpenTradeGUIMessage.class);
         registerMessage("wandering_refugee_recruit", WanderingRefugeeRecruitMessage.class);
         registerMessage("warehouse_c2s_interact_packet", WarehouseInteractPacket.class);
