@@ -100,11 +100,13 @@ public class Resident {
     }
 
     public void setFirstName(String firstName) {
+        if (Objects.equals(this.firstName, firstName)) return;
         this.firstName = firstName;
         fireChange();
     }
 
     public void setLastName(String lastName) {
+        if (Objects.equals(this.lastName, lastName)) return;
         this.lastName = lastName;
         fireChange();
     }
@@ -365,11 +367,13 @@ public class Resident {
     }
 
     public void setHousePos(BlockPos pos){
+        if (Objects.equals(this.housePos, pos)) return;
         this.housePos = pos;
         fireChange();
     }
 
     public void setWorkPos(BlockPos pos){
+        if (Objects.equals(this.workPos, pos)) return;
         this.workPos = pos;
         fireChange();
     }
@@ -378,6 +382,7 @@ public class Resident {
         if (health < 0 || health > 100) {
             throw new IllegalArgumentException("Health must be between 0 and 100");
         }
+        if (this.health == health) return;
         this.health = health;
         fireChange();
     }
@@ -394,6 +399,7 @@ public class Resident {
         if (mental < 0 || mental > 100) {
             throw new IllegalArgumentException("Mental must be between 0 and 100");
         }
+        if (this.mental == mental) return;
         this.mental = mental;
         fireChange();
     }
@@ -410,6 +416,7 @@ public class Resident {
         if (strength < 0 || strength > 100) {
             throw new IllegalArgumentException("Strength must be between 0 and 100");
         }
+        if (this.strength == strength) return;
         this.strength = strength;
         fireChange();
     }
@@ -426,6 +433,7 @@ public class Resident {
         if (intelligence < 0 || intelligence > 100) {
             throw new IllegalArgumentException("Intelligence must be between 0 and 100");
         }
+        if (this.intelligence == intelligence) return;
         this.intelligence = intelligence;
         fireChange();
     }
@@ -442,6 +450,7 @@ public class Resident {
         if (educationLevel < 0) {
             throw new IllegalArgumentException("Education level must be non-negative");
         }
+        if (this.educationLevel == educationLevel) return;
         this.educationLevel = educationLevel;
         fireChange();
     }

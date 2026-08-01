@@ -50,6 +50,7 @@ import com.teammoeg.frostedheart.content.town.buildings.house.HouseBuilding;
 import com.teammoeg.frostedheart.content.town.buildings.warehouse.WarehouseBuilding;
 import com.teammoeg.frostedheart.content.town.resident.Resident;
 import com.teammoeg.frostedheart.content.town.resource.TeamTownResourceHolder;
+import com.teammoeg.frostedheart.content.town.resource.VirtualResourceType;
 import com.teammoeg.frostedheart.content.town.terrainresource.TerrainResourceType;
 import com.teammoeg.frostedheart.content.town.terrainresource.TerrainResourceData;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
@@ -216,9 +217,18 @@ public class TeamTownData implements SpecialData{
         if(!dataSyncCache.changedResourceKey.isEmpty()){
             Map<ITownResourceKey, Double> changedResource = new HashMap<>();
             for(ITownResourceKey resourceKey : this.dataSyncCache.drainChangedResources()){
-                changedResource.put(resourceKey, this.resources.get(resourceKey));
+                double current = this.resources.get(resourceKey);
+                // 发送端值级去重：当前值与上次已同步值相同（且此前已同步过）时跳过，
+                // 消除"操作级 fire"（如 reloadMaxCapacity 的清零+加回）造成的空转资源包。
+                if(this.dataSyncCache.isResourceUnchanged(resourceKey, current)){
+                    continue;
+                }
+                changedResource.put(resourceKey, current);
             }
-            teamData.sendToOnline(FHNetwork.INSTANCE, new TownResourceUpdatePacket(changedResource, resources.getOccupiedCapacity()));
+            if(!changedResource.isEmpty()){
+                teamData.sendToOnline(FHNetwork.INSTANCE, new TownResourceUpdatePacket(changedResource, resources.getOccupiedCapacity()));
+                changedResource.forEach(this.dataSyncCache::markResourceSynced);
+            }
         }
 
         if(!dataSyncCache.changedResidentUUID.isEmpty()){
@@ -536,8 +546,22 @@ public class TeamTownData implements SpecialData{
 
     /**
      * 清零MaxCapacity，并从仓库中重新读取和添加
+     * <p>
+     * 净变化守卫：先累加所有可工作仓库的容量总和，与当前 max_capacity 相同则直接返回。
+     * 否则才执行"清零→逐仓加回"。避免仓库被定时刷新（{@code WarehouseBlockEntity.refresh}
+     * 无条件调用本方法）时，因"操作级 fire"（清零与加回各 fire 一次）而向客户端发送
+     * 内容未变的资源增量包。
      */
     public void reloadMaxCapacity(){
+        double totalCapacity = 0.0;
+        for (AbstractTownBuilding b : buildings.values()) {
+            if (b instanceof WarehouseBuilding warehouse && warehouse.isBuildingWorkable()) {
+                totalCapacity += warehouse.getCapacity();
+            }
+        }
+        if (Math.abs(totalCapacity - resources.get(VirtualResourceType.MAX_CAPACITY.generateAttribute(0))) < TeamTownResourceHolder.DELTA) {
+            return;
+        }
         resources.resetMaxCapacity();
         TeamTown teamTown = this.createTeamTown();
         buildings.values().stream().filter(building -> building instanceof WarehouseBuilding)
@@ -746,6 +770,15 @@ public class TeamTownData implements SpecialData{
     }
 
     /**
+     * 全量同步包（{@link TeamTownDataS2CPacket}）发出成功后调用：
+     * 以当前资源值为基准重建增量去重快照，避免跨全量包的值级去重误判。
+     * 委托给 {@link DataSyncCache#markFullSynced()}（内部类跨包不可访问）。
+     */
+    public void markFullSynced() {
+        this.dataSyncCache.markFullSynced();
+    }
+
+    /**
      * 用于在服务端向客户端同步发生变化的数据
      */
     class DataSyncCache implements ITownBuildingChangeEventListener, ITownResourceChangeEventListener, ITownResidentChangeEventListener {
@@ -755,6 +788,53 @@ public class TeamTownData implements SpecialData{
         private Set<ITownResourceKey> changedResourceKey = new HashSet<>();
         private Set<UUID> changedResidentUUID = new HashSet<>();
         private Set<BlockPos> changedBuildingPos = new HashSet<>();
+
+        /**
+         * 上次已通过增量包同步给客户端的资源值快照（仅服务端维护）。
+         * <p>
+         * 发送端值级去重：仅当资源"当前值"与上次同步值不同（或该键从未同步过）时才发包。
+         * 只覆盖资源层（纯数值比对，每键仅一个 double，内存极小）；建筑/居民的空转
+         * fire 由 setter 值守卫（{@link AbstractTownBuilding} / 各子类）在源头拦截。
+         */
+        private final Map<ITownResourceKey, Double> lastSyncedResources = new HashMap<>();
+
+        /**
+         * 判断该资源自上次增量同步后是否实际未变。
+         *
+         * @param key          资源键
+         * @param currentValue 当前值
+         * @return true 表示当前值与上次同步值相同且该键此前已同步过，应跳过发包
+         */
+        public boolean isResourceUnchanged(ITownResourceKey key, double currentValue) {
+            Double last = lastSyncedResources.get(key);
+            if (last == null) {
+                return false; // 键从未同步过（或此前已归零移除）：视为变化
+            }
+            return Math.abs(last - currentValue) < TeamTownResourceHolder.DELTA;
+        }
+
+        /**
+         * 记录某资源已通过增量包同步（发包后调用）。值近似为 0 时移除记录，
+         * 防止快照随"增删交替"的键无限膨胀。
+         */
+        public void markResourceSynced(ITownResourceKey key, double value) {
+            if (Math.abs(value) < TeamTownResourceHolder.DELTA) {
+                lastSyncedResources.remove(key);
+            } else {
+                lastSyncedResources.put(key, value);
+            }
+        }
+
+        /**
+         * 全量同步包（{@link TeamTownDataS2CPacket}）发出成功后调用：
+         * 以当前全部资源值重建快照。否则跨全量包的值级去重会误判——
+         * 例如 max_capacity 100(已同步) → 200(全量) → 100(增量) 时，
+         * 若快照停留在 100 会把最后一次变更误当作"未变化"而跳过。
+         */
+        public void markFullSynced() {
+            lastSyncedResources.clear();
+            lastSyncedResources.putAll(TeamTownData.this.resources.getAllResources());
+        }
 
         public void addChanged(ITownResourceKey changedResourceKey){
             this.changedResourceKey.add(changedResourceKey);

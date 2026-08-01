@@ -133,12 +133,12 @@ public class HouseBuilding extends AbstractTownBuilding implements ITownResident
     @Getter
     private DailyReport dailyReport = DailyReport.EMPTY;
 
-    public void setArea(int area) { this.area = area; fireChange(); }
-    public void setVolume(int volume) { this.volume = volume; fireChange(); }
-    public void setTemperature(double temperature) { this.temperature = temperature; fireChange(); }
-    public void setDecorationRating(double decorationRating) { this.decorationRating = decorationRating; fireChange(); }
-    public void setMaxResidents(int maxResidents) { this.maxResidents = maxResidents; fireChange(); }
-    public void setTemperatureModifier(double temperatureModifier) { this.temperatureModifier = temperatureModifier; fireChange(); }
+    public void setArea(int area) { if (this.area == area) return; this.area = area; fireChange(); }
+    public void setVolume(int volume) { if (this.volume == volume) return; this.volume = volume; fireChange(); }
+    public void setTemperature(double temperature) { if (Double.compare(this.temperature, temperature) == 0) return; this.temperature = temperature; fireChange(); }
+    public void setDecorationRating(double decorationRating) { if (Double.compare(this.decorationRating, decorationRating) == 0) return; this.decorationRating = decorationRating; fireChange(); }
+    public void setMaxResidents(int maxResidents) { if (this.maxResidents == maxResidents) return; this.maxResidents = maxResidents; fireChange(); }
+    public void setTemperatureModifier(double temperatureModifier) { if (Double.compare(this.temperatureModifier, temperatureModifier) == 0) return; this.temperatureModifier = temperatureModifier; fireChange(); }
 
 
     public HouseBuilding(BlockPos pos) {

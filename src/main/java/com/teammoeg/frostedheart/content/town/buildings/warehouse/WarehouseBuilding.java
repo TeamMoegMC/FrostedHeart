@@ -61,10 +61,10 @@ public class WarehouseBuilding extends AbstractTownBuilding {
     private int decorationAmount;
     private final Set<BlockPos> interfacePositions = new LinkedHashSet<>();
 
-    public void setVolume(int volume) { this.volume = volume; fireChange(); }
-    public void setArea(int area) { this.area = area; fireChange(); }
-    public void setCapacity(double capacity) { this.capacity = capacity; fireChange(); }
-    public void setDecorationAmount(int decorationAmount) { this.decorationAmount = decorationAmount; fireChange(); }
+    public void setVolume(int volume) { if (this.volume == volume) return; this.volume = volume; fireChange(); }
+    public void setArea(int area) { if (this.area == area) return; this.area = area; fireChange(); }
+    public void setCapacity(double capacity) { if (Double.compare(this.capacity, capacity) == 0) return; this.capacity = capacity; fireChange(); }
+    public void setDecorationAmount(int decorationAmount) { if (this.decorationAmount == decorationAmount) return; this.decorationAmount = decorationAmount; fireChange(); }
 	public WarehouseBuilding(BlockPos pos) {
         super(pos);
     }

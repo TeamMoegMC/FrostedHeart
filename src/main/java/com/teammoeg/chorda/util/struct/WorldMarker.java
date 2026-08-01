@@ -107,6 +107,16 @@ public class WorldMarker {
 		private int getBitIndex(int x,int y,int z) {
 			return ((x&15)<<8)+((y&15)<<4)+(z&15);
 		}
+		@Override
+		public boolean equals(Object o) {
+			if (this == o) return true;
+			if (!(o instanceof ChunkMarker other)) return false;
+			return Arrays.deepEquals(this.sections, other.sections);
+		}
+		@Override
+		public int hashCode() {
+			return Arrays.deepHashCode(this.sections);
+		}
 		public boolean getBit(int x,int y,int z) {
 			int sec = sectionIndex(y);
 			if(sections[sec]==null)return false;
@@ -230,6 +240,36 @@ public class WorldMarker {
 		Stream.Builder<BlockPos> builder = Stream.builder();
 		forEach(builder::add);
 		return builder.build();
+	}
+	/**
+	 * 值语义相等：两个 WorldMarker 包含完全相同的标记位置时才相等。
+	 * <p>
+	 * Value equality: two markers are equal iff they mark exactly the same positions.
+	 * 该实现使 {@code OccupiedVolume} 能按内容比较，是增量同步 setter 值守卫的基础。
+	 */
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (!(o instanceof WorldMarker other)) return false;
+		if (this.poss.size() != other.poss.size()) return false;
+		for (Map.Entry<ChunkPos, ChunkMarker> e : this.poss.entrySet()) {
+			ChunkMarker otherMarker = other.poss.get(e.getKey());
+			if (otherMarker == null || !e.getValue().equals(otherMarker)) {
+				return false;
+			}
+		}
+		return true;
+	}
+	/**
+	 * 与 {@link #equals(Object)} 保持一致，且与 map 迭代顺序无关。
+	 */
+	@Override
+	public int hashCode() {
+		int h = 0;
+		for (Map.Entry<ChunkPos, ChunkMarker> e : poss.entrySet()) {
+			h += e.getKey().hashCode() * 31 + e.getValue().hashCode();
+		}
+		return h;
 	}
 	/**
 	 * 判断当前 WorldMarker 与另一个 WorldMarker 是否存在相同的位置标记。

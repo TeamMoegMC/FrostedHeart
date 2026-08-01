@@ -48,6 +48,9 @@ public class TeamTownDataS2CPacket implements CMessage {
 	public TeamTownDataS2CPacket(TeamTownData townData) {
 		try {
 			data= FHSpecialDataTypes.TOWN_DATA.saveData(DataOps.COMPRESSED, townData);
+			// 全量包会把客户端状态推进到当前全量值：以当前资源值为基准重建服务端
+			// 增量去重快照，避免跨全量包的值级去重误判。序列化失败则不重置。
+			townData.markFullSynced();
 		} catch (Exception e) {
 			FHMain.LOGGER.error("Failed to save town data when syncing town data", e);
 		}

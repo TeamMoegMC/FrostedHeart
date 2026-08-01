@@ -81,21 +81,25 @@ public abstract class AbstractTownBuilding implements ITownBuilding{
     }
 
     public void setInitialized(boolean initialized) {
+        if (this.initialized == initialized) return;
         this.initialized = initialized;
         fireChange();
     }
 
     public void setOccupiedAreaOverlapped(boolean occupiedAreaOverlapped) {
+        if (this.occupiedAreaOverlapped == occupiedAreaOverlapped) return;
         this.occupiedAreaOverlapped = occupiedAreaOverlapped;
         fireChange();
     }
 
     public void setIsStructureValid(boolean isStructureValid) {
+        if (this.isStructureValid == isStructureValid) return;
         this.isStructureValid = isStructureValid;
         fireChange();
     }
 
     public void setOccupiedVolume(OccupiedVolume occupiedVolume) {
+        if (java.util.Objects.equals(this.occupiedVolume, occupiedVolume)) return;
         this.occupiedVolume = occupiedVolume;
         fireChange();
     }
