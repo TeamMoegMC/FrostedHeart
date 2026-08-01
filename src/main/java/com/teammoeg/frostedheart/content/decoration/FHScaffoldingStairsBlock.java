@@ -5,7 +5,6 @@ import com.simibubi.create.foundation.placement.IPlacementHelper;
 import com.simibubi.create.foundation.placement.PlacementHelpers;
 import com.simibubi.create.foundation.utility.VoxelShaper;
 import com.teammoeg.chorda.block.CBlock;
-import com.teammoeg.frostedheart.bootstrap.common.FHBlocks;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.InteractionHand;
@@ -30,14 +29,14 @@ import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import org.jetbrains.annotations.Nullable;
 
-public class FHScaffoldingStairBlock extends CBlock implements SimpleWaterloggedBlock {
+public class FHScaffoldingStairsBlock extends CBlock implements SimpleWaterloggedBlock {
 
     protected static final VoxelShaper SHAPE = new AllShapes.Builder(Block.box(0, 14, 0, 16, 16, 4))
             .add(0, 6, 4, 16, 8, 12)
             .add(0, -2, 12, 16, 0, 16)
             .forHorizontal(Direction.NORTH);
 
-    public FHScaffoldingStairBlock(Properties blockProps) {
+    public FHScaffoldingStairsBlock(Properties blockProps) {
         super(blockProps);
         registerDefaultState(stateDefinition.any()
                 .setValue(BlockStateProperties.WATERLOGGED, false)
@@ -52,8 +51,10 @@ public class FHScaffoldingStairBlock extends CBlock implements SimpleWaterlogged
 
     @Override
     public @Nullable BlockState getStateForPlacement(BlockPlaceContext pContext) {
+        var pos = pContext.getClickedPos();
+        var level = pContext.getLevel();
         return defaultBlockState()
-                .setValue(BlockStateProperties.WATERLOGGED, false)
+                .setValue(BlockStateProperties.WATERLOGGED, level.getFluidState(pos).getType() == Fluids.WATER)
                 .setValue(HorizontalDirectionalBlock.FACING, pContext.getHorizontalDirection());
     }
 
@@ -82,6 +83,6 @@ public class FHScaffoldingStairBlock extends CBlock implements SimpleWaterlogged
 
     @Override
     public VoxelShape getShape(BlockState pState, BlockGetter pLevel, BlockPos pPos, CollisionContext pContext) {
-        return (pContext.isHoldingItem(pState.getBlock().asItem()) || pContext.isHoldingItem(FHBlocks.METAL_SCAFFOLDING.asItem())) ? Shapes.block() : SHAPE.get(pState.getValue(HorizontalDirectionalBlock.FACING));
+        return FHScaffoldingBlock.isScaffolding(pState) ? Shapes.block() : SHAPE.get(pState.getValue(HorizontalDirectionalBlock.FACING));
     }
 }

@@ -7,7 +7,6 @@ import com.simibubi.create.foundation.placement.PlacementOffset;
 import com.simibubi.create.infrastructure.config.AllConfigs;
 import com.teammoeg.chorda.block.CBlock;
 import com.teammoeg.chorda.util.struct.FastEnumMap;
-import com.teammoeg.frostedheart.bootstrap.common.FHBlocks;
 import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -100,7 +99,7 @@ public class FHScaffoldingBlock extends CBlock implements SimpleWaterloggedBlock
 
     @Override
     public VoxelShape getShape(BlockState pState, BlockGetter pLevel, BlockPos pPos, CollisionContext pContext) {
-        return (pContext.isHoldingItem(pState.getBlock().asItem()) || pContext.isHoldingItem(FHBlocks.METAL_SCAFFOLDING_STAIR.asItem())) ? Shapes.block() : shapeCache.computeIfAbsent(pState, this::computeShape);
+        return isScaffolding(pState) ? Shapes.block() : shapeCache.computeIfAbsent(pState, this::computeShape);
     }
 
     private VoxelShape computeShape(BlockState state) {
@@ -215,8 +214,7 @@ public class FHScaffoldingBlock extends CBlock implements SimpleWaterloggedBlock
     }
 
     public static boolean isScaffolding(BlockState state) {
-        var block = state.getBlock();
-        return block instanceof FHScaffoldingBlock || block instanceof FHScaffoldingStairBlock;
+        return state.is(FHTags.Blocks.SCAFFOLDING.get());
     }
 
     public static FastEnumMap<Direction, BlockPos> getNeighbors(BlockPos pos) {

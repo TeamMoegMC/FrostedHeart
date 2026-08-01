@@ -5,7 +5,7 @@
                 "surface": "true"
             },
             "apply": {
-                "model": "frostedheart:block/scaffolding/surface"
+                "model": "frostedheart:block/scaffolding/metal/surface"
             }
         },
         {
@@ -13,7 +13,7 @@
                 "legs": "true"
             },
             "apply": {
-                "model": "frostedheart:block/scaffolding/legs"
+                "model": "frostedheart:block/scaffolding/metal/legs"
             }
         },
         {
@@ -21,7 +21,7 @@
                 "braces": "true"
             },
             "apply": {
-                "model": "frostedheart:block/scaffolding/braces"
+                "model": "frostedheart:block/scaffolding/metal/braces"
             }
         },
         {
@@ -29,7 +29,7 @@
                 "braces_reverse": "true"
             },
             "apply": {
-                "model": "frostedheart:block/scaffolding/braces_reverse"
+                "model": "frostedheart:block/scaffolding/metal/braces_reverse"
             }
         },
         {
@@ -37,7 +37,7 @@
                 "cross_x": "true"
             },
             "apply": {
-                "model": "frostedheart:block/scaffolding/cross_x"
+                "model": "frostedheart:block/scaffolding/metal/cross_x"
             }
         },
         {
@@ -45,7 +45,7 @@
                 "cross_z": "true"
             },
             "apply": {
-                "model": "frostedheart:block/scaffolding/cross_z",
+                "model": "frostedheart:block/scaffolding/metal/cross_z",
                 "y": 90
             }
         },
@@ -54,7 +54,7 @@
                 "handrail": "true"
             },
             "apply": {
-                "model": "frostedheart:block/scaffolding/handrail"
+                "model": "frostedheart:block/scaffolding/metal/handrail"
             }
         }
     ]

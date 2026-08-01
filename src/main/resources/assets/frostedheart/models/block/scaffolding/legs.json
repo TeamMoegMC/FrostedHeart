@@ -1,12 +1,10 @@
 {
-	"format_version": "1.9.0",
 	"credit": "Made with Blockbench",
-	"parent": "minecraft:block/cube_all",
+	"parent": "block/block",
 	"render_type": "cutout",
 	"texture_size": [32, 32],
 	"textures": {
-		"particle": "frostedheart:block/scaffolding/metal",
-		"all": "frostedheart:block/scaffolding/metal"
+		"particle": "#all"
 	},
 	"elements": [
 		{

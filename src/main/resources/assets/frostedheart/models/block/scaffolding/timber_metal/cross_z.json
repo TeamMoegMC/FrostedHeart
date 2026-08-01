@@ -1,0 +1,7 @@
+{
+	"credit": "Made with Blockbench",
+	"parent": "frostedheart:block/scaffolding/cross_z",
+	"textures": {
+		"all": "frostedheart:block/scaffolding/timber_metal"
+	}
+}

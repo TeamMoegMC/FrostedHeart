@@ -1,0 +1,21 @@
+{
+  "values": [
+    "frostedheart:metal_scaffolding_stairs",
+    "frostedheart:metal_scaffolding",
+    "frostedheart:wooden_scaffolding_stairs",
+    "frostedheart:wooden_scaffolding",
+    "frostedheart:timber_metal_scaffolding_stairs",
+    "frostedheart:timber_metal_scaffolding",
+    "minecraft:scaffolding",
+    "create:andesite_scaffolding",
+    "create:brass_scaffolding",
+    "create:copper_scaffolding",
+    "immersiveengineering:treated_scaffold",
+    "immersiveengineering:alu_scaffolding_standard",
+    "immersiveengineering:alu_scaffolding_grate_top",
+    "immersiveengineering:alu_scaffolding_wooden_top",
+    "immersiveengineering:steel_scaffolding_standard",
+    "immersiveengineering:steel_scaffolding_grate_top",
+    "immersiveengineering:steel_scaffolding_wooden_top"
+  ]
+}

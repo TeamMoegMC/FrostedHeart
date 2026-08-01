@@ -1,0 +1,7 @@
+{
+	"credit": "Made with Blockbench",
+	"parent": "frostedheart:block/scaffolding/braces_reverse",
+	"textures": {
+		"all": "frostedheart:block/scaffolding/metal"
+	}
+}

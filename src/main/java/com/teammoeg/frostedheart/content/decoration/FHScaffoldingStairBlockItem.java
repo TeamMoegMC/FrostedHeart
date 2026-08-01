@@ -34,7 +34,7 @@ public class FHScaffoldingStairBlockItem extends BlockItem {
     @Override
     public InteractionResult useOn(UseOnContext context) {
         var player = context.getPlayer();
-        if (player != null && !player.isCrouching()) {
+        if (player != null && !player.isShiftKeyDown()) {
             var heldItem = context.getItemInHand();
             var level = context.getLevel();
             var pos = context.getClickedPos();
@@ -55,7 +55,7 @@ public class FHScaffoldingStairBlockItem extends BlockItem {
         @Override
         public Predicate<ItemStack> getItemPredicate() {
             return i -> i.getItem() instanceof BlockItem
-                    && ((BlockItem) i.getItem()).getBlock() instanceof FHScaffoldingStairBlock;
+                    && ((BlockItem) i.getItem()).getBlock() instanceof FHScaffoldingStairsBlock;
         }
 
         @Override

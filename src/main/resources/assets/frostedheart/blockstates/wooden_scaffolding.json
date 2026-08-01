@@ -1,0 +1,61 @@
+{
+    "multipart": [
+        {
+            "when": {
+                "surface": "true"
+            },
+            "apply": {
+                "model": "frostedheart:block/scaffolding/wooden/surface"
+            }
+        },
+        {
+            "when": {
+                "legs": "true"
+            },
+            "apply": {
+                "model": "frostedheart:block/scaffolding/wooden/legs"
+            }
+        },
+        {
+            "when": {
+                "braces": "true"
+            },
+            "apply": {
+                "model": "frostedheart:block/scaffolding/wooden/braces"
+            }
+        },
+        {
+            "when": {
+                "braces_reverse": "true"
+            },
+            "apply": {
+                "model": "frostedheart:block/scaffolding/wooden/braces_reverse"
+            }
+        },
+        {
+            "when": {
+                "cross_x": "true"
+            },
+            "apply": {
+                "model": "frostedheart:block/scaffolding/wooden/cross_x"
+            }
+        },
+        {
+            "when": {
+                "cross_z": "true"
+            },
+            "apply": {
+                "model": "frostedheart:block/scaffolding/wooden/cross_z",
+                "y": 90
+            }
+        },
+        {
+            "when": {
+                "handrail": "true"
+            },
+            "apply": {
+                "model": "frostedheart:block/scaffolding/wooden/handrail"
+            }
+        }
+    ]
+}

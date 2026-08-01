@@ -125,7 +125,8 @@ public class FHTags {
 		NON_MOVABLE(NameSpace.CREATE),
 		SAFE_NBT(NameSpace.CREATE),
 		SLED_SNOW(),
-		CROP()
+		CROP(),
+		SCAFFOLDING
 
 		;
 
