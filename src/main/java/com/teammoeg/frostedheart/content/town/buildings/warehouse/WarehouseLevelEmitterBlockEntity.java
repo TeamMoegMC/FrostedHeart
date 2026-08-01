@@ -29,7 +29,11 @@ import com.teammoeg.frostedheart.content.town.ITownWithBuildings;
 import com.teammoeg.frostedheart.content.town.ITownWithResources;
 import com.teammoeg.frostedheart.content.town.building.AbstractTownBuilding;
 import com.teammoeg.frostedheart.content.town.provider.ITownProviderSerializable;
+import com.teammoeg.frostedheart.content.town.resource.TeamTownResourceActionExecutorHandler;
+import com.teammoeg.frostedheart.content.town.resource.TeamTownResourceHolder;
 import com.teammoeg.frostedheart.content.town.resource.action.TownResourceActions;
+import com.teammoeg.frostedheart.content.town.resource.watcher.IWarehouseStockWatcher;
+import com.teammoeg.frostedheart.content.town.resource.watcher.IWarehouseStockWatcherNode;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
@@ -62,12 +66,11 @@ import java.util.Optional;
  * warehouse interface's redstone control mode it enables level-emitter-controlled
  * warehouse output.
  */
-public class WarehouseLevelEmitterBlockEntity extends CBlockEntity implements CTickableBlockEntity, MenuProvider {
+public class WarehouseLevelEmitterBlockEntity extends CBlockEntity implements IWarehouseStockWatcherNode, MenuProvider {
     public static final int STATUS_UNBOUND = 0;
     public static final int STATUS_UNAVAILABLE = 1;
     public static final int STATUS_WORKING = 2;
 
-    private final LazyTickWorker refreshWorker = new LazyTickWorker(10, this::refreshState);
     @Nullable
     private SimpleItemKey filter;
     private int threshold = 1;
@@ -78,11 +81,16 @@ public class WarehouseLevelEmitterBlockEntity extends CBlockEntity implements CT
     private ITownProviderSerializable<? extends ITownWithBuildings> townProvider;
     private BlockPos warehousePos;
     private int connectionStatus = STATUS_UNBOUND;
+    // 由资源持有者分配的 watcher，用于精准订阅物品数量变化
+    @Nullable
+    private IWarehouseStockWatcher watcher;
 
+    //构造器
     public WarehouseLevelEmitterBlockEntity(BlockPos pos, BlockState state) {
         super(FHBlockEntityTypes.WAREHOUSE_LEVEL_EMITTER.get(), pos, state);
     }
 
+    // --- getters ---
     @Nullable
     public SimpleItemKey getFilter() {
         return filter;
@@ -108,16 +116,44 @@ public class WarehouseLevelEmitterBlockEntity extends CBlockEntity implements CT
         return connectionStatus;
     }
 
+
+    // ---------- IWarehouseStockWatcherNode 实现 ----------
+
     public void setFilter(@Nullable SimpleItemKey newFilter) {
+        SimpleItemKey oldFilter = this.filter;
         this.filter = newFilter;
         if (level != null) {
             setChanged();
             if (!level.isClientSide) {
-                refreshWorker.enqueue();
+                if (watcher != null) {
+                    configureWatcher(); // 自动重新 add/remove
+                }
+                refreshState(); // 立即查一次库存更新红石
             }
         }
     }
 
+    @Override
+    public void updateWatcher(IWarehouseStockWatcher newWatcher) {
+        this.watcher = newWatcher;
+        configureWatcher();
+    }
+
+    @Override
+    public void onStockChange(SimpleItemKey item, long newAmount) {
+        if (level == null || level.isClientSide) return;
+        lastKnownStock = newAmount;
+        boolean on = (mode == WarehouseRedstoneMode.LOW_SIGNAL) == (newAmount < threshold);
+        setEmitterOn(on, newAmount);
+    }
+
+    private void configureWatcher() {
+        if (watcher == null) return;
+        watcher.reset();
+        if (filter != null) {
+            watcher.addWatch(filter);
+        }
+    }
     public void setFilterFromStack(ItemStack stack) {
         if (!stack.isEmpty()) {
             setFilter(SimpleItemKey.from(stack));
@@ -128,9 +164,7 @@ public class WarehouseLevelEmitterBlockEntity extends CBlockEntity implements CT
         this.threshold = Math.max(1, newThreshold);
         if (level != null) {
             setChanged();
-            if (!level.isClientSide) {
-                refreshWorker.enqueue();
-            }
+            if (!level.isClientSide) refreshState();
         }
     }
 
@@ -138,11 +172,11 @@ public class WarehouseLevelEmitterBlockEntity extends CBlockEntity implements CT
         this.mode = this.mode.nextEmitterMode();
         if (level != null) {
             setChanged();
-            if (!level.isClientSide) {
-                refreshWorker.enqueue();
-            }
+            if (!level.isClientSide) refreshState();
         }
     }
+
+    // ---------- 绑定管理 ----------
 
     /**
      * Claims this emitter for a warehouse. A still-valid binding owned by a
@@ -157,8 +191,12 @@ public class WarehouseLevelEmitterBlockEntity extends CBlockEntity implements CT
             return true;
         }
         if (warehousePos != null && resolveBinding(false).isPresent()) {
+            // 旧绑定仍有效，不抢夺
             return false;
         }
+
+        // 清理旧绑定（包括旧的 watcher）
+        clearBinding();
 
         this.townProvider = provider;
         this.warehousePos = newWarehousePos.immutable();
@@ -166,7 +204,9 @@ public class WarehouseLevelEmitterBlockEntity extends CBlockEntity implements CT
         if (level != null) {
             setChanged();
         }
-        refreshWorker.enqueue();
+
+        // 获取新的 watcher 并配置
+        refreshWatcherAndState();
         return true;
     }
 
@@ -215,6 +255,12 @@ public class WarehouseLevelEmitterBlockEntity extends CBlockEntity implements CT
     }
 
     private void clearBinding() {
+        // 释放 watcher，它会自动从资源持有者的索引中清除
+        if (watcher != null) {
+            watcher.reset();
+            watcher = null;
+        }
+
         boolean changed = townProvider != null || warehousePos != null;
         townProvider = null;
         warehousePos = null;
@@ -225,16 +271,38 @@ public class WarehouseLevelEmitterBlockEntity extends CBlockEntity implements CT
     }
 
     /**
-     * 查询城镇库存并刷新输出状态。状态翻转时通知相邻方块及正面方块的邻居，
-     * 与 AE2 发信器的邻居通知行为一致。
-     * <p>
-     * Polls the town stock and refreshes the output state. On a state flip, neighbors
-     * of this block and of the block in front are notified, like the AE2 level emitter.
+     * 与仓库建立新的 Watcher 订阅，并且刷新一次当前库存状态。
      */
-    private void refreshState() {
-        if (level == null || level.isClientSide) {
+    private void refreshWatcherAndState() {
+        if (level == null || level.isClientSide) return;
+
+        Optional<BindingContext> binding = resolveBinding(false);
+        if (binding.isEmpty()) {
+            connectionStatus = STATUS_UNBOUND;
+            setEmitterOn(false, 0);
             return;
         }
+
+        BindingContext ctx = binding.get();
+        if (!(ctx.town() instanceof ITownWithResources resourceTown)
+                || !ctx.warehouse().isBuildingWorkable()) {
+            connectionStatus = STATUS_UNAVAILABLE;
+            setEmitterOn(false, 0);
+            return;
+        }
+
+        TeamTownResourceHolder holder = ((TeamTownResourceActionExecutorHandler) resourceTown.getActionExecutorHandler()).resourceHolder;
+        this.watcher = holder.createWatcher(this); // 会回调 updateWatcher
+
+        connectionStatus = STATUS_WORKING;
+        refreshState(); // 主动拉取一次当前库存
+    }
+
+    // ---------- 状态刷新（仅用于配置变更或主动查询） ----------
+
+    private void refreshState() {
+        if (level == null || level.isClientSide) return;
+
         Optional<BindingContext> binding = resolveBinding(true);
         if (binding.isEmpty()) {
             connectionStatus = STATUS_UNBOUND;
@@ -242,9 +310,9 @@ public class WarehouseLevelEmitterBlockEntity extends CBlockEntity implements CT
             return;
         }
 
-        BindingContext context = binding.get();
-        if (!(context.town() instanceof ITownWithResources resourceTown)
-                || !context.warehouse().isBuildingWorkable()) {
+        BindingContext ctx = binding.get();
+        if (!(ctx.town() instanceof ITownWithResources resourceTown)
+                || !ctx.warehouse().isBuildingWorkable()) {
             connectionStatus = STATUS_UNAVAILABLE;
             setEmitterOn(false, 0);
             return;
@@ -257,8 +325,7 @@ public class WarehouseLevelEmitterBlockEntity extends CBlockEntity implements CT
         }
 
         long stock = (long) TownResourceActions.get(resourceTown.getActionExecutorHandler(), filter.toStack(1));
-        // 与 AE2 发信器一致的判定：HIGH_SIGNAL 在存量 >= 阈值时开启，LOW_SIGNAL 在存量 < 阈值时开启。
-        boolean on = mode == WarehouseRedstoneMode.LOW_SIGNAL ? stock < threshold : stock >= threshold;
+        boolean on = (mode == WarehouseRedstoneMode.LOW_SIGNAL) == (stock < threshold);
         setEmitterOn(on, stock);
     }
 
@@ -276,28 +343,41 @@ public class WarehouseLevelEmitterBlockEntity extends CBlockEntity implements CT
         }
     }
 
-    @Override
-    public void tick() {
-        if (level != null && !level.isClientSide) {
-            refreshWorker.tick();
-        }
-    }
+    // ---------- 生命周期 ----------
 
     @Override
     public void onLoad() {
         super.onLoad();
         if (level != null && !level.isClientSide) {
-            refreshWorker.enqueue();
+            // 方块加载时（无论是首次放置还是 chunk 重载），重新连接 watcher
+            // 城镇资源常驻，Watcher 机制会自动同步最新库存
+            refreshWatcherAndState();
         }
     }
 
     @Override
     public void onRemoved() {
         if (level != null && !level.isClientSide) {
-            resolveBinding(false).ifPresent(context -> context.warehouse().removeEmitter(worldPosition));
+            // 只有方块真正被破坏（不再是发信器）才清理 watcher 和绑定
+            if (!(level.getBlockState(worldPosition).getBlock() instanceof WarehouseLevelEmitterBlock)) {
+                // 释放 watcher（自动从索引清理）
+                if (watcher != null) {
+                    watcher.reset();
+                    watcher = null;
+                }
+                // 从仓库注销
+                resolveBinding(false).ifPresent(context -> context.warehouse().removeEmitter(worldPosition));
+                // 清空绑定信息
+                townProvider = null;
+                warehousePos = null;
+                connectionStatus = STATUS_UNBOUND;
+            }
         }
         super.onRemoved();
     }
+
+
+    // ---------- 序列化 ----------
 
     @Override
     public void readCustomNBT(CompoundTag nbt, boolean descPacket) {
@@ -321,7 +401,6 @@ public class WarehouseLevelEmitterBlockEntity extends CBlockEntity implements CT
             ITownProviderSerializable<? extends ITown> rawProvider =
                     ITownProviderSerializable.fromNBT(nbt.getCompound("townProvider"));
             if (rawProvider != null && ITownWithBuildings.class.isAssignableFrom(rawProvider.getTownType())) {
-                // The runtime type check above guarantees this provider supplies a town with buildings.
                 townProvider = castTownProvider(rawProvider);
                 warehousePos = BlockPos.of(nbt.getLong("warehousePos"));
             }

@@ -26,6 +26,9 @@ import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.town.buildings.warehouse.SimpleItemKey;
 import com.teammoeg.frostedheart.content.town.event.ITownResourceChangeEventListener;
 import com.teammoeg.frostedheart.content.town.event.TownResourceChangeEvent;
+import com.teammoeg.frostedheart.content.town.resource.watcher.IWarehouseStockWatcher;
+import com.teammoeg.frostedheart.content.town.resource.watcher.IWarehouseStockWatcherNode;
+import com.teammoeg.frostedheart.content.town.resource.watcher.WarehouseStockWatcher;
 import it.unimi.dsi.fastutil.objects.Object2DoubleOpenHashMap;
 import lombok.AccessLevel;
 import lombok.Setter;
@@ -77,6 +80,9 @@ public class TeamTownResourceHolder {
     @Getter(AccessLevel.NONE)
     @Setter
     private transient ITownResourceChangeEventListener changeListener;
+    public final Map<SimpleItemKey, Set<WarehouseStockWatcher>> exactIndex = new HashMap<>();
+    // 全监听 Watcher 集合
+    public final Set<WarehouseStockWatcher> watchAllWatchers = new HashSet<>();
 
     /**
      * 缓存ItemResourceAttribute对应的物品。
@@ -371,6 +377,7 @@ public class TeamTownResourceHolder {
                 this.occupiedCapacity += amount;
             }
         }
+        notifyStockWatchers(townResourceKey);
         if(amount != 0 && this.changeListener != null){
             this.changeListener.onResourceChange(new TownResourceChangeEvent(this, townResourceKey));
         }
@@ -543,6 +550,33 @@ public class TeamTownResourceHolder {
         this.isVirtualItemsDirty = false;
 
         return this.cachedVirtualItems;
+    }
+
+    /**
+     * 为指定 Node 创建一个新的 Watcher，并立即通过 updateWatcher 交还给 Node。
+     * Node 应保存返回的引用，用于后续配置。
+     */
+    public IWarehouseStockWatcher createWatcher(IWarehouseStockWatcherNode node) {
+        WarehouseStockWatcher watcher = new WarehouseStockWatcher(node, this);
+        node.updateWatcher(watcher);
+        return watcher;
+    }
+
+    // 资源变化时通知
+    private void notifyStockWatchers(ITownResourceKey townResourceKey) {
+        if (!(townResourceKey instanceof ItemStackResourceKey itemKey)) return;
+        SimpleItemKey simpleKey = SimpleItemKey.from(itemKey);
+        long newAmount = (long) get(itemKey);
+
+        Set<WarehouseStockWatcher> exact = exactIndex.get(simpleKey);
+        if (exact != null) {
+            for (WarehouseStockWatcher w : exact) {
+                w.getNode().onStockChange(simpleKey, newAmount);
+            }
+        }
+        for (WarehouseStockWatcher w : watchAllWatchers) {
+            w.getNode().onStockChange(simpleKey, newAmount);
+        }
     }
 
 }
