@@ -1942,6 +1942,7 @@ public class FHBlocks {
             .blockstate(FHBlockStateGen.simpleCubeAll("concrete/concrete_cracked_"+i))
             .simpleItem()
             .register());
+
     public static final BlockEntry<FHScaffoldingStairsBlock> METAL_SCAFFOLDING_STAIRS = REGISTRATE.block("metal_scaffolding_stairs", FHScaffoldingStairsBlock::new)
             .properties(p -> p.mapColor(MapColor.COLOR_LIGHT_GRAY)
                     .requiresCorrectToolForDrops()
@@ -1958,8 +1959,10 @@ public class FHBlocks {
             .properties(BlockBehaviour.Properties::dynamicShape)
             .tag(FHTags.Blocks.SCAFFOLDING.tag, BlockTags.MINEABLE_WITH_PICKAXE, BlockTags.NEEDS_STONE_TOOL, BlockTags.CLIMBABLE, AllTags.AllBlockTags.WRENCH_PICKUP.tag)
             .blockstate(existed())
-            .simpleItem()
+            .item(FHScaffoldingBlockItem::new)
+            .build()
             .register();
+
     public static final BlockEntry<FHScaffoldingStairsBlock> WOODEN_SCAFFOLDING_STAIRS = REGISTRATE.block("wooden_scaffolding_stairs", FHScaffoldingStairsBlock::new)
             .properties(p -> p.mapColor(MapColor.PODZOL)
                     .sound(SoundType.WOOD)
@@ -1976,8 +1979,10 @@ public class FHBlocks {
             .properties(BlockBehaviour.Properties::dynamicShape)
             .tag(FHTags.Blocks.SCAFFOLDING.tag, BlockTags.MINEABLE_WITH_AXE, BlockTags.CLIMBABLE, AllTags.AllBlockTags.WRENCH_PICKUP.tag)
             .blockstate(existed())
-            .simpleItem()
+            .item(FHScaffoldingBlockItem::new)
+            .build()
             .register();
+
     public static final BlockEntry<FHScaffoldingStairsBlock> TIMBER_METAL_SCAFFOLDING_STAIRS = REGISTRATE.block("timber_metal_scaffolding_stairs", FHScaffoldingStairsBlock::new)
             .properties(p -> p.mapColor(MapColor.PODZOL)
                     .noOcclusion()
@@ -1993,7 +1998,8 @@ public class FHBlocks {
             .properties(BlockBehaviour.Properties::dynamicShape)
             .tag(FHTags.Blocks.SCAFFOLDING.tag, BlockTags.MINEABLE_WITH_PICKAXE, BlockTags.MINEABLE_WITH_AXE, BlockTags.CLIMBABLE, AllTags.AllBlockTags.WRENCH_PICKUP.tag)
             .blockstate(existed())
-            .simpleItem()
+            .item(FHScaffoldingBlockItem::new)
+            .build()
             .register();
 
     public static final BlockEntry<WarehouseStorageRackBlock> WAREHOUSE_STORAGE_RACK = REGISTRATE.block("warehouse_storage_rack", WarehouseStorageRackBlock::new)

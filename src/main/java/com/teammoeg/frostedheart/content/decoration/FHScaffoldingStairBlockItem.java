@@ -1,11 +1,11 @@
 package com.teammoeg.frostedheart.content.decoration;
 
 import com.simibubi.create.content.equipment.extendoGrip.ExtendoGripItem;
-import com.simibubi.create.foundation.mixin.accessor.UseOnContextAccessor;
 import com.simibubi.create.foundation.placement.IPlacementHelper;
 import com.simibubi.create.foundation.placement.PlacementHelpers;
 import com.simibubi.create.foundation.placement.PlacementOffset;
 import com.simibubi.create.infrastructure.config.AllConfigs;
+import com.teammoeg.frostedheart.item.FHBlockItem;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.InteractionResult;
@@ -23,7 +23,7 @@ import net.minecraftforge.common.ForgeMod;
 
 import java.util.function.Predicate;
 
-public class FHScaffoldingStairBlockItem extends BlockItem {
+public class FHScaffoldingStairBlockItem extends FHBlockItem {
 
     public static final int PLACEMENT_HELPER_ID = PlacementHelpers.register(new PlacementHelper());
 
@@ -32,22 +32,11 @@ public class FHScaffoldingStairBlockItem extends BlockItem {
     }
 
     @Override
-    public InteractionResult useOn(UseOnContext context) {
-        var player = context.getPlayer();
-        if (player != null && !player.isShiftKeyDown()) {
-            var heldItem = context.getItemInHand();
-            var level = context.getLevel();
-            var pos = context.getClickedPos();
-            var state = level.getBlockState(pos);
-            IPlacementHelper helper = PlacementHelpers.get(PLACEMENT_HELPER_ID);
-            if (helper.matchesItem(heldItem) && helper.matchesState(state)) {
-                var hit = ((UseOnContextAccessor)context).create$getHitResult();
-                return helper.getOffset(player, level, state, pos, hit)
-                        .placeInWorld(level, (BlockItem) heldItem.getItem(), player, context.getHand(), hit);
-            }
-        }
+    public InteractionResult onItemUseFirst(ItemStack stack, UseOnContext context) {
+        var result = FHScaffoldingBlockItem.helperPlace(stack, context, PLACEMENT_HELPER_ID);
+        if (result != null) return result;
 
-        return super.useOn(context);
+        return super.onItemUseFirst(stack, context);
     }
 
     public static class PlacementHelper implements IPlacementHelper {

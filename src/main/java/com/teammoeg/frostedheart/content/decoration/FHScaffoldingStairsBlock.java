@@ -1,19 +1,12 @@
 package com.teammoeg.frostedheart.content.decoration;
 
 import com.simibubi.create.AllShapes;
-import com.simibubi.create.foundation.placement.IPlacementHelper;
-import com.simibubi.create.foundation.placement.PlacementHelpers;
 import com.simibubi.create.foundation.utility.VoxelShaper;
 import com.teammoeg.chorda.block.CBlock;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.world.InteractionHand;
-import net.minecraft.world.InteractionResult;
-import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.BlockGetter;
-import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.HorizontalDirectionalBlock;
@@ -23,7 +16,6 @@ import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.level.material.Fluids;
-import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
@@ -58,17 +50,6 @@ public class FHScaffoldingStairsBlock extends CBlock implements SimpleWaterlogge
                 .setValue(HorizontalDirectionalBlock.FACING, pContext.getHorizontalDirection());
     }
 
-    @Override
-    public InteractionResult use(BlockState pState, Level pLevel, BlockPos pPos, Player pPlayer, InteractionHand pHand, BlockHitResult pHit) {
-        var heldItem = pPlayer.getItemInHand(pHand);
-        IPlacementHelper helper = PlacementHelpers.get(FHScaffoldingBlock.PLACEMENT_HELPER_ID);
-        if (helper.matchesItem(heldItem))
-            return helper.getOffset(pPlayer, pLevel, pState, pPos, pHit)
-                    .placeInWorld(pLevel, (BlockItem) heldItem.getItem(), pPlayer, pHand, pHit);
-
-        return super.use(pState, pLevel, pPos, pPlayer, pHand, pHit);
-    }
-
     public FluidState getFluidState(BlockState pState) {
         return pState.getValue(BlockStateProperties.WATERLOGGED) ? Fluids.WATER.getSource(false) : super.getFluidState(pState);
     }
@@ -83,6 +64,6 @@ public class FHScaffoldingStairsBlock extends CBlock implements SimpleWaterlogge
 
     @Override
     public VoxelShape getShape(BlockState pState, BlockGetter pLevel, BlockPos pPos, CollisionContext pContext) {
-        return FHScaffoldingBlock.isScaffolding(pState) ? Shapes.block() : SHAPE.get(pState.getValue(HorizontalDirectionalBlock.FACING));
+        return FHScaffoldingBlock.isHoldingScaffolding(pState, pLevel, pPos, pContext) ? Shapes.block() : SHAPE.get(pState.getValue(HorizontalDirectionalBlock.FACING));
     }
 }
