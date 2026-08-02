@@ -75,10 +75,11 @@ public class VirtualItemGridElement extends UIElement{
         List<VirtualItemStack> itemList = itemSource.get();
         if (itemList == null) return;
 
-        //计算滚动索引
+        //计算滚动索引（列表缩短时钳制，避免保留的滚动位置越界导致空白网格）
         int totalRows = (int) Math.ceil((double) itemList.size() / cols);
         int invisibleRows = Math.max(0, totalRows - rows);
-        int startIndex = (int) (scrollOffset * invisibleRows) * cols;
+        int startRow = Math.min((int) (scrollOffset * invisibleRows), invisibleRows);
+        int startIndex = startRow * cols;
 
 
         guiGraphics.pose().pushPose();
@@ -270,7 +271,7 @@ public class VirtualItemGridElement extends UIElement{
         if (list == null) return -1;
         int totalRows = (int) Math.ceil((double) list.size() / cols);
         int invisibleRows = Math.max(0, totalRows - rows);
-        int startRow = (int) (scrollOffset * invisibleRows);
+        int startRow = Math.min((int) (scrollOffset * invisibleRows), invisibleRows);
         return (startRow + row) * cols + col;
     }
 

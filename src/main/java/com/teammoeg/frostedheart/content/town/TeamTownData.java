@@ -42,17 +42,12 @@ import com.teammoeg.chorda.dataholders.team.TeamDataHolder;
 import com.teammoeg.chorda.io.CodecUtil;
 import com.teammoeg.chorda.math.CMath;
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.bootstrap.common.FHSpecialDataTypes;
-import com.teammoeg.frostedheart.content.climate.block.generator.GeneratorData;
-import com.teammoeg.frostedheart.content.town.block.OccupiedVolume;
 import com.teammoeg.frostedheart.content.town.block.TownBlockEntity;
 import com.teammoeg.frostedheart.content.town.building.AbstractTownBuilding;
 import com.teammoeg.frostedheart.content.town.building.ITownBuilding;
 import com.teammoeg.frostedheart.content.town.building.ITownResidentBuilding;
 import com.teammoeg.frostedheart.content.town.building.ITownResidentWorkBuilding;
 import com.teammoeg.frostedheart.content.town.buildings.house.HouseBuilding;
-import com.teammoeg.frostedheart.content.town.buildings.mine.MineBaseBuilding;
-import com.teammoeg.frostedheart.content.town.buildings.mine.MineBuilding;
 import com.teammoeg.frostedheart.content.town.buildings.warehouse.WarehouseBuilding;
 import com.teammoeg.frostedheart.content.town.event.ITownBuildingChangeEventListener;
 import com.teammoeg.frostedheart.content.town.event.ITownResidentChangeEventListener;
@@ -61,15 +56,11 @@ import com.teammoeg.frostedheart.content.town.event.TownBuildingChangeEvent;
 import com.teammoeg.frostedheart.content.town.event.TownResidentChangeEvent;
 import com.teammoeg.frostedheart.content.town.event.TownResourceChangeEvent;
 import com.teammoeg.frostedheart.content.town.resident.Resident;
-import com.teammoeg.frostedheart.content.town.resource.ITownResourceKey;
 import com.teammoeg.frostedheart.content.town.resource.TeamTownResourceHolder;
 import com.teammoeg.frostedheart.content.town.resource.VirtualResourceType;
 import com.teammoeg.frostedheart.content.town.terrainresource.TerrainResourceType;
 import com.teammoeg.frostedheart.content.town.terrainresource.TerrainResourceData;
-import com.teammoeg.frostedheart.content.town.terrainresource.TerrainResourceType;
-import com.teammoeg.frostedheart.content.town.util.ObservableTownMap;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
-import lombok.Getter;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.UUIDUtil;
 import net.minecraft.server.level.ServerLevel;
@@ -787,7 +778,7 @@ public class TeamTownData implements SpecialData{
     }
 
     /**
-     * 全量同步包（{@link TeamTownDataS2CPacket}）发出成功后调用：
+     * 全量同步包（{@link com.teammoeg.frostedheart.content.town.network.TeamTownDataS2CPacket}）发出成功后调用：
      * 以当前资源值为基准重建增量去重快照，避免跨全量包的值级去重误判。
      * 委托给 {@link DataSyncCache#markFullSynced()}（内部类跨包不可访问）。
      */
@@ -843,7 +834,7 @@ public class TeamTownData implements SpecialData{
         }
 
         /**
-         * 全量同步包（{@link TeamTownDataS2CPacket}）发出成功后调用：
+         * 全量同步包（{@link com.teammoeg.frostedheart.content.town.network.TeamTownDataS2CPacket}）发出成功后调用：
          * 以当前全部资源值重建快照。否则跨全量包的值级去重会误判——
          * 例如 max_capacity 100(已同步) → 200(全量) → 100(增量) 时，
          * 若快照停留在 100 会把最后一次变更误当作"未变化"而跳过。

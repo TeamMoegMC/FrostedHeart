@@ -180,25 +180,30 @@ public class TownManagerScreen extends PrimaryLayer implements ITownDataUpdateLi
         super.onClosed();
     }
 
+    /**
+     * 城镇数据变化时无需重建内容：所有面板（TownOverviewTab / TownResidentsPanel /
+     * TownBuildingsPanel / TownStatisticsPanel）在 render() 阶段通过 Supplier 从
+     * 客户端城镇快照实时取值，每帧都会渲染最新数据。若在此处调用
+     * {@code contentLayer.refresh()}，clearElement() 会销毁全部子元素并以默认状态
+     * 重建，导致滚动位置、选中的建筑/居民等瞬时 UI 状态被重置（例如建筑详情
+     * 切回第一座建筑、名单滚动回到顶端）。
+     * <p>
+     * No rebuild is needed when town data changes: every panel reads the current
+     * client snapshot via a Supplier during render(), so content stays fresh each
+     * frame. Calling refresh() here would clearElement() and rebuild all children
+     * with default state, resetting transient UI state such as scroll offsets and
+     * the selected building/resident.
+     */
     @Override
     public void onBuildingsChanged() {
-        if (contentLayer != null) {
-            contentLayer.refresh();
-        }
     }
 
     @Override
     public void onResidentsChanged() {
-        if (contentLayer != null) {
-            contentLayer.refresh();
-        }
     }
 
     @Override
     public void onResourcesChanged() {
-        if (contentLayer != null) {
-            contentLayer.refresh();
-        }
     }
 
     @Override

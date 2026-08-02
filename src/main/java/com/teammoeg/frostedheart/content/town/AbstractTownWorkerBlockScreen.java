@@ -164,19 +164,30 @@ public abstract class AbstractTownWorkerBlockScreen<C extends CBlockEntityMenu<?
         super.onClosed();
     }
 
+    /**
+     * 城镇数据变化时无需重建内容：所有面板（BuildingInfoElement / TownInfoPanel /
+     * VirtualItemGridElement / TownWorkforcePanel 等）在 render() 阶段通过 Supplier
+     * 从客户端城镇快照实时取值，每帧都会渲染最新数据。若在此处调用
+     * {@code contentLayer.refresh()}，clearElement() 会销毁全部子元素并以默认状态
+     * 重建，导致滚动位置、选中的建筑/居民等瞬时 UI 状态被重置（例如滚动条回到
+     * 顶端、建筑详情切回第一座建筑）。
+     * <p>
+     * No rebuild is needed when town data changes: every panel reads the current
+     * client snapshot via a Supplier during render(), so content stays fresh each
+     * frame. Calling refresh() here would clearElement() and rebuild all children
+     * with default state, resetting transient UI state such as scroll offsets and
+     * the selected building/resident.
+     */
     @Override
     public void onBuildingsChanged() {
-        updateTabContent();
     }
 
     @Override
     public void onResidentsChanged() {
-        updateTabContent();
     }
 
     @Override
     public void onResourcesChanged() {
-        updateTabContent();
     }
 
     protected void initTabs() {}
