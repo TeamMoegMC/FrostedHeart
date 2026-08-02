@@ -1,0 +1,7 @@
+{
+	"credit": "Made with Blockbench",
+	"parent": "frostedheart:block/scaffolding/surface",
+	"textures": {
+		"all": "frostedheart:block/scaffolding/metal"
+	}
+}

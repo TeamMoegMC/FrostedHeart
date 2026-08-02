@@ -21,8 +21,10 @@ package com.teammoeg.frostedheart.content.town.buildings.warehouse;
 
 import com.teammoeg.chorda.block.CGuiBlock;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.item.context.BlockPlaceContext;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.HorizontalDirectionalBlock;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
@@ -54,6 +56,16 @@ public class WarehouseInterfaceBlock extends CGuiBlock<WarehouseInterfaceBlockEn
     @Override
     public BlockState getStateForPlacement(BlockPlaceContext context) {
         return defaultBlockState().setValue(FACING, context.getHorizontalDirection().getOpposite());
+    }
+
+    @Override
+    public void neighborChanged(BlockState state, Level level, BlockPos pos, net.minecraft.world.level.block.Block block,
+                                BlockPos fromPos, boolean isMoving) {
+        super.neighborChanged(state, level, pos, block, fromPos, isMoving);
+        if (!level.isClientSide
+                && level.getBlockEntity(pos) instanceof WarehouseInterfaceBlockEntity warehouseInterface) {
+            warehouseInterface.onNeighborSignalChanged();
+        }
     }
 
     @Override

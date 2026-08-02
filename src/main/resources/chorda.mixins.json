@@ -7,7 +7,8 @@
   "plugin": "",
   "mixins": [
     "CapabilityManagerAccess",
-    "MinecraftServerMixin"
+    "MinecraftServerMixin",
+    "BlockMixin"
   ],
   "client": [
     "IdMapMixin_AddModdedBlocksAutomatically",

@@ -19,9 +19,6 @@
 
 package com.teammoeg.frostedheart.content.town;
 
-import java.util.*;
-import java.util.Map.Entry;
-
 import com.teammoeg.chorda.dataholders.team.CTeamDataManager;
 import com.teammoeg.frostedheart.bootstrap.common.FHSpecialDataTypes;
 import com.teammoeg.frostedheart.content.town.block.TownBlockEntity;
@@ -30,15 +27,21 @@ import com.teammoeg.frostedheart.content.town.building.AbstractTownResidentWorkB
 import com.teammoeg.frostedheart.content.town.building.ITownBuilding;
 import com.teammoeg.frostedheart.content.town.buildings.house.HouseBuilding;
 import com.teammoeg.frostedheart.content.town.resident.Resident;
-
 import com.teammoeg.frostedheart.content.town.resource.TeamTownResourceActionExecutorHandler;
 import com.teammoeg.frostedheart.content.town.resource.TeamTownResourceHolder;
 import com.teammoeg.frostedheart.content.town.terrainresource.TerrainResourceType;
-
-import net.minecraft.world.entity.player.Player;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.ChunkPos;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Optional;
+import java.util.UUID;
 
 /**
  * The town for a player team.
@@ -146,8 +149,8 @@ public class TeamTown implements ITown, ITownWithResidents, ITownWithBuildings {
         return true;
     }
 
-    public void addResident(String firstName, String lastName) {
-        addResident(new Resident(firstName, lastName));
+    public boolean addResident(String firstName, String lastName) {
+        return addResident(new Resident(firstName, lastName));
     }
 
     public boolean removeResident(UUID id) {

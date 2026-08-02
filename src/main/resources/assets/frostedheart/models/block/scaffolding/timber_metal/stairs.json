@@ -1,0 +1,7 @@
+{
+	"credit": "Made with Blockbench",
+	"parent": "frostedheart:block/scaffolding/stairs",
+	"textures": {
+		"all": "frostedheart:block/scaffolding/timber_metal"
+	}
+}

@@ -57,11 +57,11 @@ public class CUIDebugHelper {
 
 	}
 	public static boolean isDebugEnabled() {
-		return ClientUtils.getMc().options.renderDebug&&isDebugEnabled;
+		return /*ClientUtils.getMc().options.renderDebug&&*/isDebugEnabled;
 		
 	}
 	public static void toggleDebug() {
-		if(ClientUtils.getMc().options.renderDebug)
+//		if(ClientUtils.getMc().options.renderDebug)
 			isDebugEnabled=!isDebugEnabled;
 	}
 

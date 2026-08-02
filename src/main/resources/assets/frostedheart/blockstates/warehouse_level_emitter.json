@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "facing=north": {
+      "model": "frostedheart:block/warehouse_level_emitter"
+    },
+    "facing=east": {
+      "model": "frostedheart:block/warehouse_level_emitter",
+      "y": 90
+    },
+    "facing=south": {
+      "model": "frostedheart:block/warehouse_level_emitter",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "frostedheart:block/warehouse_level_emitter",
+      "y": 270
+    }
+  }
+}

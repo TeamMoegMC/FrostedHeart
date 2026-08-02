@@ -1,0 +1,61 @@
+{
+    "multipart": [
+        {
+            "when": {
+                "surface": "true"
+            },
+            "apply": {
+                "model": "frostedheart:block/scaffolding/metal/surface"
+            }
+        },
+        {
+            "when": {
+                "legs": "true"
+            },
+            "apply": {
+                "model": "frostedheart:block/scaffolding/metal/legs"
+            }
+        },
+        {
+            "when": {
+                "braces": "true"
+            },
+            "apply": {
+                "model": "frostedheart:block/scaffolding/metal/braces"
+            }
+        },
+        {
+            "when": {
+                "braces_reverse": "true"
+            },
+            "apply": {
+                "model": "frostedheart:block/scaffolding/metal/braces_reverse"
+            }
+        },
+        {
+            "when": {
+                "cross_x": "true"
+            },
+            "apply": {
+                "model": "frostedheart:block/scaffolding/metal/cross_x"
+            }
+        },
+        {
+            "when": {
+                "cross_z": "true"
+            },
+            "apply": {
+                "model": "frostedheart:block/scaffolding/metal/cross_z",
+                "y": 90
+            }
+        },
+        {
+            "when": {
+                "handrail": "true"
+            },
+            "apply": {
+                "model": "frostedheart:block/scaffolding/metal/handrail"
+            }
+        }
+    ]
+}

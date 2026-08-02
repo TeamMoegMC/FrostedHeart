@@ -40,6 +40,7 @@ import static blusunrize.immersiveengineering.api.utils.SafeChunkUtils.getBlockS
 public class WarehouseBlockScanner extends BuildingBlockScanner {
     public final Map<String, Integer> decorations = new HashMap<>();
     private final Set<BlockPos> interfaceCandidates = new LinkedHashSet<>();
+    private final Set<BlockPos> emitterCandidates = new LinkedHashSet<>();
 
     public WarehouseBlockScanner(Level world, BlockPos startPos) {
         super(world, startPos);
@@ -57,6 +58,9 @@ public class WarehouseBlockScanner extends BuildingBlockScanner {
         if (block instanceof WarehouseInterfaceBlock) {
             interfaceCandidates.add(pos.immutable());
         }
+        if (block instanceof WarehouseLevelEmitterBlock) {
+            emitterCandidates.add(pos.immutable());
+        }
     }
 
     public boolean scan(){
@@ -68,13 +72,25 @@ public class WarehouseBlockScanner extends BuildingBlockScanner {
      * does not. This excludes interface blocks used as furniture inside a room.
      */
     public Set<BlockPos> getWallInterfacePositions() {
+        return getWallDevicePositions(interfaceCandidates, WarehouseInterfaceBlock.class, WarehouseInterfaceBlock.FACING);
+    }
+
+    /**
+     * Returns only level emitters whose back faces the scanned room and whose front
+     * does not, following the same wall rule as interfaces.
+     */
+    public Set<BlockPos> getWallEmitterPositions() {
+        return getWallDevicePositions(emitterCandidates, WarehouseLevelEmitterBlock.class, WarehouseLevelEmitterBlock.FACING);
+    }
+
+    private Set<BlockPos> getWallDevicePositions(Set<BlockPos> candidates, Class<?> deviceClass, net.minecraft.world.level.block.state.properties.DirectionProperty facingProperty) {
         Set<BlockPos> result = new LinkedHashSet<>();
-        for (BlockPos pos : interfaceCandidates) {
+        for (BlockPos pos : candidates) {
             BlockState state = world.getBlockState(pos);
-            if (!(state.getBlock() instanceof WarehouseInterfaceBlock) || !state.hasProperty(WarehouseInterfaceBlock.FACING)) {
+            if (!deviceClass.isInstance(state.getBlock()) || !state.hasProperty(facingProperty)) {
                 continue;
             }
-            Direction facing = state.getValue(WarehouseInterfaceBlock.FACING);
+            Direction facing = state.getValue(facingProperty);
             boolean backIsInside = occupiedVolume.getOccupiedBlocks().get(pos.relative(facing.getOpposite()));
             boolean frontIsInside = occupiedVolume.getOccupiedBlocks().get(pos.relative(facing));
             if (backIsInside && !frontIsInside) {

@@ -20,6 +20,7 @@
 package com.teammoeg.frostedheart.bootstrap.common;
 
 import com.google.common.collect.ImmutableMap;
+import com.simibubi.create.AllTags;
 import com.teammoeg.caupona.CPTags;
 import com.teammoeg.caupona.worldgen.DefaultTreeGrower;
 import com.teammoeg.chorda.block.CDirectionalFacingBlock;
@@ -64,6 +65,7 @@ import com.teammoeg.frostedheart.content.town.buildings.mine.MineBaseBlock;
 import com.teammoeg.frostedheart.content.town.buildings.mine.MineBlock;
 import com.teammoeg.frostedheart.content.town.buildings.warehouse.WarehouseBlock;
 import com.teammoeg.frostedheart.content.town.buildings.warehouse.WarehouseInterfaceBlock;
+import com.teammoeg.frostedheart.content.town.buildings.warehouse.WarehouseLevelEmitterBlock;
 import com.teammoeg.frostedheart.content.utility.gunpowderbarrel.GunpowderBarrelBlock;
 import com.teammoeg.frostedheart.content.utility.gunpowderbarrel.GunpowderBarrelItem;
 import com.teammoeg.frostedheart.content.utility.incinerator.GasVentBlock;
@@ -114,8 +116,7 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 import static com.teammoeg.frostedheart.FHMain.REGISTRATE;
-import static com.teammoeg.frostedheart.infrastructure.gen.FHBlockStateGen.existingItemModel;
-import static com.teammoeg.frostedheart.infrastructure.gen.FHBlockStateGen.ruinedMachines;
+import static com.teammoeg.frostedheart.infrastructure.gen.FHBlockStateGen.*;
 import static com.teammoeg.frostedheart.infrastructure.gen.FHTagGen.*;
 import static net.minecraft.world.level.block.Blocks.*;
 
@@ -1941,6 +1942,66 @@ public class FHBlocks {
             .blockstate(FHBlockStateGen.simpleCubeAll("concrete/concrete_cracked_"+i))
             .simpleItem()
             .register());
+
+    public static final BlockEntry<FHScaffoldingStairsBlock> METAL_SCAFFOLDING_STAIRS = REGISTRATE.block("metal_scaffolding_stairs", FHScaffoldingStairsBlock::new)
+            .properties(p -> p.mapColor(MapColor.COLOR_LIGHT_GRAY)
+                    .requiresCorrectToolForDrops()
+                    .noOcclusion()
+                    .sound(SoundType.COPPER)
+                    .strength(1.5F, 16))
+            .tag(FHTags.Blocks.SCAFFOLDING.tag, BlockTags.MINEABLE_WITH_PICKAXE, BlockTags.NEEDS_STONE_TOOL, AllTags.AllBlockTags.WRENCH_PICKUP.tag)
+            .blockstate(existed())
+            .item(FHScaffoldingStairBlockItem::new)
+            .build()
+            .register();
+    public static final BlockEntry<FHScaffoldingBlock> METAL_SCAFFOLDING = REGISTRATE.block("metal_scaffolding", FHScaffoldingBlock::new)
+            .initialProperties(METAL_SCAFFOLDING_STAIRS)
+            .properties(BlockBehaviour.Properties::dynamicShape)
+            .tag(FHTags.Blocks.SCAFFOLDING.tag, BlockTags.MINEABLE_WITH_PICKAXE, BlockTags.NEEDS_STONE_TOOL, BlockTags.CLIMBABLE, AllTags.AllBlockTags.WRENCH_PICKUP.tag)
+            .blockstate(existed())
+            .item(FHScaffoldingBlockItem::new)
+            .build()
+            .register();
+
+    public static final BlockEntry<FHScaffoldingStairsBlock> WOODEN_SCAFFOLDING_STAIRS = REGISTRATE.block("wooden_scaffolding_stairs", FHScaffoldingStairsBlock::new)
+            .properties(p -> p.mapColor(MapColor.PODZOL)
+                    .sound(SoundType.WOOD)
+                    .noOcclusion()
+                    .ignitedByLava()
+                    .strength(1, 6))
+            .tag(FHTags.Blocks.SCAFFOLDING.tag, BlockTags.MINEABLE_WITH_AXE, AllTags.AllBlockTags.WRENCH_PICKUP.tag)
+            .blockstate(existed())
+            .item(FHScaffoldingStairBlockItem::new)
+            .build()
+            .register();
+    public static final BlockEntry<FHScaffoldingBlock> WOODEN_SCAFFOLDING = REGISTRATE.block("wooden_scaffolding", FHScaffoldingBlock::new)
+            .initialProperties(WOODEN_SCAFFOLDING_STAIRS)
+            .properties(BlockBehaviour.Properties::dynamicShape)
+            .tag(FHTags.Blocks.SCAFFOLDING.tag, BlockTags.MINEABLE_WITH_AXE, BlockTags.CLIMBABLE, AllTags.AllBlockTags.WRENCH_PICKUP.tag)
+            .blockstate(existed())
+            .item(FHScaffoldingBlockItem::new)
+            .build()
+            .register();
+
+    public static final BlockEntry<FHScaffoldingStairsBlock> TIMBER_METAL_SCAFFOLDING_STAIRS = REGISTRATE.block("timber_metal_scaffolding_stairs", FHScaffoldingStairsBlock::new)
+            .properties(p -> p.mapColor(MapColor.PODZOL)
+                    .noOcclusion()
+                    .sound(SoundType.WOOD)
+                    .strength(1, 12))
+            .tag(FHTags.Blocks.SCAFFOLDING.tag, BlockTags.MINEABLE_WITH_PICKAXE, BlockTags.MINEABLE_WITH_AXE, AllTags.AllBlockTags.WRENCH_PICKUP.tag)
+            .blockstate(existed())
+            .item(FHScaffoldingStairBlockItem::new)
+            .build()
+            .register();
+    public static final BlockEntry<FHScaffoldingBlock> TIMBER_METAL_SCAFFOLDING = REGISTRATE.block("timber_metal_scaffolding", FHScaffoldingBlock::new)
+            .initialProperties(TIMBER_METAL_SCAFFOLDING_STAIRS)
+            .properties(BlockBehaviour.Properties::dynamicShape)
+            .tag(FHTags.Blocks.SCAFFOLDING.tag, BlockTags.MINEABLE_WITH_PICKAXE, BlockTags.MINEABLE_WITH_AXE, BlockTags.CLIMBABLE, AllTags.AllBlockTags.WRENCH_PICKUP.tag)
+            .blockstate(existed())
+            .item(FHScaffoldingBlockItem::new)
+            .build()
+            .register();
+
     public static final BlockEntry<WarehouseStorageRackBlock> WAREHOUSE_STORAGE_RACK = REGISTRATE.block("warehouse_storage_rack", WarehouseStorageRackBlock::new)
             .initialProperties(() -> Blocks.CHEST)
             .properties(BlockBehaviour.Properties::noOcclusion)
@@ -2206,6 +2267,18 @@ public class FHBlocks {
                     .model(existingItemModel())
                     .build()
                     .lang("Warehouse Interface")
+                    .register();
+
+    public static final BlockEntry<WarehouseLevelEmitterBlock> WAREHOUSE_LEVEL_EMITTER =
+            REGISTRATE.block("warehouse_level_emitter", WarehouseLevelEmitterBlock::new)
+                    .initialProperties(() -> Blocks.IRON_BLOCK)
+                    .tag(FHTags.Blocks.TOWN_WALLS.tag)
+                    .tag(FHTags.Blocks.METAL_MACHINES.tag)
+                    .blockstate(FHBlockStateGen.existed())
+                    .item()
+                    .model(existingItemModel())
+                    .build()
+                    .lang("Warehouse Level Emitter")
                     .register();
 
     public static final BlockEntry<MineBlock> MINE = REGISTRATE.block("mine", MineBlock::new)

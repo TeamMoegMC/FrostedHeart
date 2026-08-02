@@ -19,9 +19,6 @@
 
 package com.teammoeg.frostedheart.infrastructure.command;
 
-import java.util.Arrays;
-import java.util.stream.IntStream;
-
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.DoubleArgumentType;
@@ -32,21 +29,43 @@ import com.teammoeg.chorda.text.Components;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.town.TeamTown;
 import com.teammoeg.frostedheart.content.town.resident.Resident;
-import com.teammoeg.frostedheart.content.town.resource.*;
+import com.teammoeg.frostedheart.content.town.resource.ITownResourceType;
+import com.teammoeg.frostedheart.content.town.resource.ItemResourceType;
+import com.teammoeg.frostedheart.content.town.resource.VirtualResourceAttribute;
+import com.teammoeg.frostedheart.content.town.resource.VirtualResourceType;
 import com.teammoeg.frostedheart.content.town.resource.action.*;
-
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.event.RegisterCommandsEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
-import net.minecraft.world.item.ItemStack;
+
+import java.util.Arrays;
+import java.util.stream.IntStream;
 
 @Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public class TownCommand {
     @SubscribeEvent
     public static void register(RegisterCommandsEvent event) {
         CommandDispatcher<CommandSourceStack> dispatcher = event.getDispatcher();
+
+        var tickManual =
+                Commands.literal("tick")
+                        .executes(ct -> {
+                            var player = ct.getSource().getPlayer();
+                            if (player != null) {
+                                var data = TeamTown.from(player).getTownData();
+                                if (data.isPresent()) {
+                                    data.get().tickMorning(ct.getSource().getLevel());
+                                    ct.getSource().sendSuccess(() -> Component.literal("Success"), false);
+                                    return Command.SINGLE_SUCCESS;
+                                }
+                            }
+                            ct.getSource().sendFailure(Component.literal("Unable to get your team's data"));
+                            return 0;
+                        });
 
         LiteralArgumentBuilder<CommandSourceStack> name =
                 Commands.literal("name")
@@ -332,6 +351,7 @@ public class TownCommand {
         // alias without modid
         dispatcher.register(Commands.literal("town")
                 .requires(s -> s.hasPermission(2))
+                .then(tickManual)
                 .then(name)
                 .then(Commands.literal("resources")
                         .then(listItemStackResources)

@@ -19,18 +19,17 @@
 
 package com.teammoeg.chorda.client.cui.widgets;
 
-import java.util.function.Consumer;
-
 import com.teammoeg.chorda.client.RenderingHint;
 import com.teammoeg.chorda.client.cui.base.TooltipBuilder;
 import com.teammoeg.chorda.client.cui.base.UIElement;
 import com.teammoeg.chorda.client.icon.CIcons.CIcon;
-
 import lombok.Getter;
 import lombok.Setter;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.Ingredient;
+
+import java.util.function.Consumer;
 
 /**
  * 带覆盖层图标的物品槽控件。在物品上方绘制一个额外的覆盖层图标，并支持自定义提示信息。
@@ -111,7 +110,7 @@ public class OverlayItemSlot extends ItemSlot {
 
         if (overlay != null) {
         	graphics.pose().pushPose();
-        	graphics.pose().translate(0, 0, 200);
+        	graphics.pose().translate(0, 0, 300);
             overlay.draw(graphics, x, y, overlayWidth, overlayHeight);
             graphics.pose().popPose();
         }

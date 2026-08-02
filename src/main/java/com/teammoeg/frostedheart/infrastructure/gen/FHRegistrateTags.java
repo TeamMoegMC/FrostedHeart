@@ -21,6 +21,7 @@ package com.teammoeg.frostedheart.infrastructure.gen;
 
 import blusunrize.immersiveengineering.common.blocks.multiblocks.IEMultiblocks;
 import blusunrize.immersiveengineering.common.register.IEBlocks;
+import com.simibubi.create.AllBlocks;
 import com.simibubi.create.AllItems;
 import com.simibubi.create.AllTags;
 import com.teammoeg.frostedheart.FHMain;
@@ -204,6 +205,15 @@ public class FHRegistrateTags {
                 .add(IEMultiblocks.SQUEEZER.getBlock())
                 // town stuff
                 .addTag(FHTags.Blocks.TOWN_BLOCKS.tag);
+
+        var scaffolding = prov.tag(FHTags.Blocks.SCAFFOLDING.tag)
+                .add(Blocks.SCAFFOLDING)
+                .add(AllBlocks.ANDESITE_SCAFFOLD.get())
+                .add(AllBlocks.BRASS_SCAFFOLD.get())
+                .add(AllBlocks.COPPER_SCAFFOLD.get())
+                .add(IEBlocks.WoodenDecoration.TREATED_SCAFFOLDING.get());
+        IEBlocks.MetalDecoration.ALU_SCAFFOLDING.values().forEach(s -> scaffolding.add(s.get()));
+        IEBlocks.MetalDecoration.STEEL_SCAFFOLDING.values().forEach(s -> scaffolding.add(s.get()));
 
 
 

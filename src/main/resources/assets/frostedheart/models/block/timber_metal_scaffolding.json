@@ -1,0 +1,6 @@
+{
+  "parent": "frostedheart:block/scaffolding/scaffolding_inventory",
+  "textures": {
+    "all": "frostedheart:block/scaffolding/timber_metal"
+  }
+}

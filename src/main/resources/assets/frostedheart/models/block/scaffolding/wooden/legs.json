@@ -1,0 +1,6 @@
+{
+	"parent": "frostedheart:block/scaffolding/legs",
+	"textures": {
+		"all": "frostedheart:block/scaffolding/wooden"
+	}
+}

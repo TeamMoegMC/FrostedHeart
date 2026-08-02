@@ -1,0 +1,6 @@
+{
+  "parent": "frostedheart:block/scaffolding/stairs",
+  "textures": {
+    "all": "frostedheart:block/scaffolding/metal"
+  }
+}

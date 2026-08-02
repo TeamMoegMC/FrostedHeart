@@ -32,6 +32,8 @@ import com.teammoeg.frostedheart.content.town.buildings.warehouse.WarehouseMenu;
 import com.teammoeg.frostedheart.content.town.buildings.warehouse.WarehouseBlockEntity;
 import com.teammoeg.frostedheart.content.town.buildings.warehouse.WarehouseInterfaceBlockEntity;
 import com.teammoeg.frostedheart.content.town.buildings.warehouse.WarehouseInterfaceMenu;
+import com.teammoeg.frostedheart.content.town.buildings.warehouse.WarehouseLevelEmitterBlockEntity;
+import com.teammoeg.frostedheart.content.town.buildings.warehouse.WarehouseLevelEmitterMenu;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
 
@@ -118,7 +120,9 @@ public class FHMenuTypes {
 			register(MineBlockEntity.class, "mine", MineMenu::new);
 	public static final RegistryObject<MenuType<WarehouseInterfaceMenu>> WAREHOUSE_INTERFACE =
 			register(WarehouseInterfaceBlockEntity.class, "warehouse_interface", WarehouseInterfaceMenu::new);
-	
+	public static final RegistryObject<MenuType<WarehouseLevelEmitterMenu>> WAREHOUSE_LEVEL_EMITTER =
+			register(WarehouseLevelEmitterBlockEntity.class, "warehouse_level_emitter", WarehouseLevelEmitterMenu::new);
+
 	@SuppressWarnings("unchecked")
 	public static <T extends AbstractContainerMenu, BE extends BlockEntity> RegistryObject<MenuType<T>> register(Class<BE> BEClass, String name, BEMenuFactory<T, BE> factory) {
 		return CONTAINERS.register(name, () -> IForgeMenuType.create((id, inv, pb) -> {
