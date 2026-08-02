@@ -38,6 +38,7 @@ import com.teammoeg.frostedheart.content.town.resource.ItemStackResourceKey;
 import com.teammoeg.frostedheart.content.town.resource.action.*;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.UUIDUtil;
 
 import lombok.Getter;
 
@@ -95,6 +96,7 @@ public class HouseBuilding extends AbstractTownBuilding implements ITownResident
             Codec.DOUBLE.optionalFieldOf("temperature",0D).forGetter(o -> o.getTemperature()),
             Codec.DOUBLE.optionalFieldOf("decorationRating",0D).forGetter(o -> o.getDecorationRating()),
             Codec.INT.optionalFieldOf("maxResident",0).forGetter(o -> o.getMaxResidents()),
+            Codec.list(UUIDUtil.CODEC).optionalFieldOf("residentsUUID",List.of()).forGetter(o -> new ArrayList<>(o.residentsUUID)),
             Codec.DOUBLE.optionalFieldOf("temperatureModifier",0D).forGetter(o -> o.getTemperatureModifier()),
             DailyReport.CODEC.optionalFieldOf("dailyReport", DailyReport.EMPTY).forGetter(o -> o.getDailyReport()))
             .apply(t, HouseBuilding::new));
@@ -147,7 +149,7 @@ public class HouseBuilding extends AbstractTownBuilding implements ITownResident
 
     public HouseBuilding(BlockPos pos, boolean isStructureValid, OccupiedVolume occupiedVolume, int area, int volume, double temperature, double decorationRating, int maxResidents, double temperatureModifier) {
         this(pos, isStructureValid, occupiedVolume, false, false, area, volume, temperature,
-                decorationRating, maxResidents, temperatureModifier, DailyReport.EMPTY);
+                decorationRating, maxResidents, List.of(), temperatureModifier, DailyReport.EMPTY);
     }
 
     public HouseBuilding(
@@ -161,6 +163,7 @@ public class HouseBuilding extends AbstractTownBuilding implements ITownResident
             double temperature,
             double decorationRating,
             int maxResidents,
+            List<UUID> residentsUUID,
             double temperatureModifier,
             DailyReport dailyReport
     ) {
@@ -174,6 +177,7 @@ public class HouseBuilding extends AbstractTownBuilding implements ITownResident
         this.setTemperature(temperature);
         this.setDecorationRating(decorationRating);
         this.setMaxResidents(maxResidents);
+        this.residentsUUID.addAll(residentsUUID);
         this.setTemperatureModifier(temperatureModifier);
         this.dailyReport = dailyReport == null ? DailyReport.EMPTY : dailyReport;
     }
