@@ -25,6 +25,8 @@ import com.teammoeg.chorda.client.ScrollTracker;
 import com.teammoeg.chorda.client.cui.base.MouseButton;
 import com.teammoeg.chorda.client.cui.base.TooltipBuilder;
 import com.teammoeg.chorda.client.cui.base.UIElement;
+import com.teammoeg.chorda.client.cui.widgets.AbstractFilterGhostSlot;
+import com.teammoeg.chorda.client.icon.FlatIcon;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
@@ -39,9 +41,8 @@ import net.minecraft.world.item.ItemStack;
  * Ghost slot for the warehouse level emitter's watched item: left-click with a carried
  * item to set it, right-click to clear, scroll to adjust the threshold.
  */
-class WarehouseLevelEmitterFilterElement extends UIElement {
+class WarehouseLevelEmitterFilterElement extends AbstractFilterGhostSlot {
     private final WarehouseLevelEmitterMenu menu;
-    private final ScrollTracker scrollTracker = new ScrollTracker();
 
     WarehouseLevelEmitterFilterElement(UIElement parent, WarehouseLevelEmitterMenu menu) {
         super(parent);
@@ -50,76 +51,63 @@ class WarehouseLevelEmitterFilterElement extends UIElement {
     }
 
     @Override
-    public void render(GuiGraphics graphics, int x, int y, int w, int h, RenderingHint hint) {
-        graphics.fill(x - 1, y - 1, x + 17, y + 17, 0xff373737);
-        graphics.fill(x, y, x + 16, y + 16, 0xff8b8b8b);
-
-        SimpleItemKey filter = menu.getFilter();
-        if (filter != null) {
-            graphics.renderItem(filter.toStack(1), x, y);
-        }
-
-        if (isMouseOver()) {
-            graphics.fill(x, y, x + 16, y + 16, 0x66ffffff);
-        }
+    protected ItemStack getDisplayStack() {
+        SimpleItemKey f = menu.getFilter();
+        return f != null ? f.toStack(1) : ItemStack.EMPTY;
     }
 
     @Override
-    public boolean onMousePressed(MouseButton button) {
-        if (!isMouseOver()) {
-            return super.onMousePressed(button);
-        }
-        if (button == MouseButton.RIGHT) {
-            menu.clearFilter();
-            return true;
-        }
-        if (button == MouseButton.LEFT && !menu.getCarried().isEmpty()) {
-            menu.setFilterFromCarried();
-            return true;
-        }
-        return false;
+    protected int getCurrentValue() {
+        return menu.getThreshold();
     }
 
     @Override
-    public boolean onMouseScrolled(double scroll) {
-        if (!isMouseOver()) {
-            return super.onMouseScrolled(scroll);
-        }
-        scrollTracker.addScroll(scroll);
-        int wheel = scrollTracker.getScroll();
-        if (wheel != 0) {
-            long newThreshold = (long) menu.getThreshold() + (long) wheel * getAdjustIncrement();
-            menu.setThreshold((int) Mth.clamp(newThreshold, 1, Integer.MAX_VALUE));
-        }
-        return true;
+    protected void setValue(int newValue) {
+        menu.setThreshold(newValue);
     }
 
-    private int getAdjustIncrement() {
+    @Override
+    protected void setFilterFromCarried() {
+        menu.setFilterFromCarried();
+    }
+
+    @Override
+    protected void clearFilter() {
+        menu.clearFilter();
+    }
+
+    @Override
+    protected ItemStack getMenuCarried() {
+        return menu.getCarried();
+    }
+
+    @Override
+    protected int getMaxValue() {
+        return Integer.MAX_VALUE;
+    }
+
+    @Override
+    protected int getAdjustIncrement() {
         boolean shift = CInputHelper.isShiftKeyDown();
-        boolean control = CInputHelper.isCtrlKeyDown();
-        if (shift && control) {
-            return 64;
-        }
-        if (control) {
-            return 16;
-        }
+        boolean ctrl = CInputHelper.isCtrlKeyDown();
+        if (shift && ctrl) return 64;
+        if (ctrl) return 16;
         return shift ? 8 : 1;
     }
 
     @Override
-    public void getTooltip(TooltipBuilder tooltip) {
-        SimpleItemKey filter = menu.getFilter();
-        if (filter != null) {
-            ItemStack display = filter.toStack(1);
-            Screen.getTooltipFromItem(Minecraft.getInstance(), display).forEach(tooltip::accept);
-            tooltip.accept(Component.translatable("gui.frostedheart.warehouse_level_emitter.threshold", menu.getThreshold())
-                    .withStyle(ChatFormatting.GRAY));
-            tooltip.accept(Component.translatable("gui.frostedheart.warehouse_level_emitter.adjust_hint")
-                    .withStyle(ChatFormatting.DARK_GRAY));
-        } else {
-            tooltip.accept(Component.translatable("gui.frostedheart.warehouse_level_emitter.empty_filter")
-                    .withStyle(ChatFormatting.GRAY));
-        }
-        super.getTooltip(tooltip);
+    protected void onLeftClickWithoutCarried() {
+        clearFilter();
+    }
+
+    @Override
+    protected boolean shouldDrawCount() {
+        return false;
+    }
+
+    @Override
+    protected void renderBackground(GuiGraphics graphics, int x, int y, int w, int h, RenderingHint hint) {
+        graphics.fill(x - 1, y - 1, x + 17, y + 17, 0xff373737);
+        graphics.fill(x, y, x + 16, y + 16, 0xff8b8b8b);
     }
 }

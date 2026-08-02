@@ -40,9 +40,9 @@ public class WarehouseStockWatcher implements IWarehouseStockWatcher {
         if (this.watchAll == watchAll) return;
         this.watchAll = watchAll;
         if (watchAll) {
-            holder.watchAllWatchers.add(this);
+//            holder.watchAllWatchers.add(this);
         } else {
-            holder.watchAllWatchers.remove(this);
+//            holder.watchAllWatchers.remove(this);
         }
     }
 

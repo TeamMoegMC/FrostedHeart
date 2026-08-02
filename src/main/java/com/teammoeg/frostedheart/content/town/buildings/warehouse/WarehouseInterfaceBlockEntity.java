@@ -29,11 +29,15 @@ import com.teammoeg.frostedheart.content.town.ITownWithBuildings;
 import com.teammoeg.frostedheart.content.town.ITownWithResources;
 import com.teammoeg.frostedheart.content.town.building.AbstractTownBuilding;
 import com.teammoeg.frostedheart.content.town.provider.ITownProviderSerializable;
+import com.teammoeg.frostedheart.content.town.resource.TeamTownResourceActionExecutorHandler;
+import com.teammoeg.frostedheart.content.town.resource.TeamTownResourceHolder;
 import com.teammoeg.frostedheart.content.town.resource.action.IActionExecutorHandler;
 import com.teammoeg.frostedheart.content.town.resource.action.ResourceActionMode;
 import com.teammoeg.frostedheart.content.town.resource.action.ResourceActionType;
 import com.teammoeg.frostedheart.content.town.resource.action.TownResourceActionResults;
 import com.teammoeg.frostedheart.content.town.resource.action.TownResourceActions;
+import com.teammoeg.frostedheart.content.town.resource.watcher.IWarehouseStockWatcher;
+import com.teammoeg.frostedheart.content.town.resource.watcher.IWarehouseStockWatcherNode;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
@@ -61,13 +65,16 @@ import java.util.Arrays;
 import java.util.Objects;
 import java.util.Optional;
 
-public class WarehouseInterfaceBlockEntity extends CBlockEntity implements CTickableBlockEntity, MenuProvider {
+public class WarehouseInterfaceBlockEntity extends CBlockEntity implements CTickableBlockEntity, MenuProvider,
+        IWarehouseStockWatcherNode {
+
     public static final int SLOT_COUNT = 9;
     public static final int STATUS_UNBOUND = 0;
     public static final int STATUS_UNAVAILABLE = 1;
     public static final int STATUS_WORKING = 2;
 
-    private final LazyTickWorker balanceWorker = new LazyTickWorker(10, this::validateAndBalance);
+    // 事件驱动标志，替代原有的 LazyTickWorker
+    private boolean needsBalance = true;
     private WarehouseRedstoneMode redstoneMode = WarehouseRedstoneMode.IGNORE;
     private boolean suppressInventoryCallback;
     private final ItemStackHandler inventory = new ItemStackHandler(SLOT_COUNT) {
@@ -76,7 +83,7 @@ public class WarehouseInterfaceBlockEntity extends CBlockEntity implements CTick
             if (!suppressInventoryCallback && level != null) {
                 WarehouseInterfaceBlockEntity.this.setChanged();
                 if (!level.isClientSide) {
-                    balanceWorker.enqueue();
+                    markNeedsBalance();
                 }
             }
         }
@@ -87,6 +94,9 @@ public class WarehouseInterfaceBlockEntity extends CBlockEntity implements CTick
     private ITownProviderSerializable<? extends ITownWithBuildings> townProvider;
     private BlockPos warehousePos;
     private int connectionStatus = STATUS_UNBOUND;
+
+    // 仓库库存监听 Watcher
+    private IWarehouseStockWatcher watcher;
 
     public WarehouseInterfaceBlockEntity(BlockPos pos, BlockState state) {
         super(FHBlockEntityTypes.WAREHOUSE_INTERFACE.get(), pos, state);
@@ -119,7 +129,7 @@ public class WarehouseInterfaceBlockEntity extends CBlockEntity implements CTick
         if (level != null) {
             setChanged();
             if (!level.isClientSide) {
-                balanceWorker.enqueue();
+                markNeedsBalance();
             }
         }
     }
@@ -132,7 +142,7 @@ public class WarehouseInterfaceBlockEntity extends CBlockEntity implements CTick
      */
     public void onNeighborSignalChanged() {
         if (redstoneMode != WarehouseRedstoneMode.IGNORE && level != null && !level.isClientSide) {
-            balanceWorker.enqueue();
+            markNeedsBalance();
         }
     }
 
@@ -154,7 +164,11 @@ public class WarehouseInterfaceBlockEntity extends CBlockEntity implements CTick
         if (level != null) {
             setChanged();
             if (!level.isClientSide) {
-                balanceWorker.enqueue();
+                // 更新 Watcher 监听列表
+                if (watcher != null) {
+                    configureWatcher();
+                }
+                markNeedsBalance();
             }
         }
     }
@@ -192,13 +206,23 @@ public class WarehouseInterfaceBlockEntity extends CBlockEntity implements CTick
             return false;
         }
 
+        // 清除旧绑定（含 Watcher）
+        clearBinding();
+
         this.townProvider = provider;
         this.warehousePos = newWarehousePos.immutable();
         this.connectionStatus = STATUS_UNAVAILABLE;
         if (level != null) {
             setChanged();
         }
-        balanceWorker.enqueue();
+        // 注册 Watcher 并立即标记需要平衡
+        resolveBinding(false).ifPresent(ctx -> {
+            if (ctx.town() instanceof ITownWithResources resourceTown) {
+                TeamTownResourceHolder holder = ((TeamTownResourceActionExecutorHandler) resourceTown.getActionExecutorHandler()).resourceHolder;
+                this.watcher = holder.createWatcher(this);
+            }
+        });
+        markNeedsBalance();
         return true;
     }
 
@@ -247,6 +271,11 @@ public class WarehouseInterfaceBlockEntity extends CBlockEntity implements CTick
     }
 
     private void clearBinding() {
+        // 清理 Watcher
+        if (watcher != null) {
+            watcher.reset();
+            watcher = null;
+        }
         boolean changed = townProvider != null || warehousePos != null;
         townProvider = null;
         warehousePos = null;
@@ -256,6 +285,48 @@ public class WarehouseInterfaceBlockEntity extends CBlockEntity implements CTick
         }
     }
 
+    // ---------- IWarehouseStockWatcherNode 实现 ----------
+
+    @Override
+    public void updateWatcher(IWarehouseStockWatcher newWatcher) {
+        this.watcher = newWatcher;
+        configureWatcher();
+    }
+
+    @Override
+    public void onStockChange(SimpleItemKey itemKey, long newAmount) {
+        // 只需标记需要平衡，下一 tick 统一处理
+        markNeedsBalance();
+    }
+
+    /**
+     * 根据当前所有目标重新配置 Watcher 的监听物品集合。
+     */
+    private void configureWatcher() {
+        if (watcher == null) return;
+        watcher.reset();
+        for (int slot = 0; slot < SLOT_COUNT; slot++) {
+            WarehouseInterfaceTarget target = targets[slot];
+            if (target != null) {
+                watcher.addWatch(target.key());
+            }
+        }
+    }
+
+    // ---------- 平衡逻辑 ----------
+
+    /**
+     * 标记需要执行库存平衡。外部事件（库存变化、红石变化、目标改变、物品推送）均调用此方法。
+     */
+    private void markNeedsBalance() {
+        needsBalance = true;
+        setChanged();
+    }
+
+    /**
+     * 执行一次完整的绑定校验与库存平衡。
+     * 原 LazyTickWorker 的回调逻辑，现直接由 tick 驱动。
+     */
     private void validateAndBalance() {
         if (level == null || level.isClientSide) {
             return;
@@ -358,10 +429,15 @@ public class WarehouseInterfaceBlockEntity extends CBlockEntity implements CTick
         }
     }
 
+    // ---------- 生命周期 ----------
+
     @Override
     public void tick() {
         if (level != null && !level.isClientSide) {
-            balanceWorker.tick();
+            if (needsBalance) {
+                needsBalance = false;
+                validateAndBalance();
+            }
         }
     }
 
@@ -369,9 +445,42 @@ public class WarehouseInterfaceBlockEntity extends CBlockEntity implements CTick
     public void onLoad() {
         super.onLoad();
         if (level != null && !level.isClientSide) {
-            balanceWorker.enqueue();
+            // 若 Watcher 丢失但绑定仍有效，则重新创建 Watcher
+            if (watcher == null && warehousePos != null) {
+                resolveBinding(false).ifPresent(ctx -> {
+                    if (ctx.town() instanceof ITownWithResources resourceTown) {
+                        TeamTownResourceHolder holder = ((TeamTownResourceActionExecutorHandler) resourceTown.getActionExecutorHandler()).resourceHolder;
+                        this.watcher = holder.createWatcher(this);
+                    }
+                });
+            }
+            // 加载后务必执行一次平衡，以确保状态与仓库一致
+            markNeedsBalance();
         }
     }
+
+    @Override
+    public void onRemoved() {
+        if (level != null && !level.isClientSide) {
+            // 仅当方块被真正破坏（不再为接口方块）时才清理绑定与 Watcher，并掉落物品
+            if (!(level.getBlockState(worldPosition).getBlock() instanceof WarehouseInterfaceBlock)) {
+                resolveBinding(false).ifPresent(context -> context.warehouse().removeInterface(worldPosition));
+                clearBinding();
+                for (int slot = 0; slot < SLOT_COUNT; slot++) {
+                    ItemStack stack = inventory.getStackInSlot(slot);
+                    if (!stack.isEmpty()) {
+                        Containers.dropItemStack(level, worldPosition.getX() + 0.5, worldPosition.getY() + 0.5,
+                                worldPosition.getZ() + 0.5, stack.copy());
+                        setInventoryStackInternal(slot, ItemStack.EMPTY);
+                    }
+                }
+            }
+        }
+        inventoryCapability.invalidate();
+        super.onRemoved();
+    }
+
+    // ---------- 网络与 Capability ----------
 
     @Override
     public <T> @NotNull LazyOptional<T> getCapability(@NotNull Capability<T> capability, @Nullable Direction side) {
@@ -381,22 +490,7 @@ public class WarehouseInterfaceBlockEntity extends CBlockEntity implements CTick
         return super.getCapability(capability, side);
     }
 
-    @Override
-    public void onRemoved() {
-        if (level != null && !level.isClientSide) {
-            resolveBinding(false).ifPresent(context -> context.warehouse().removeInterface(worldPosition));
-            for (int slot = 0; slot < SLOT_COUNT; slot++) {
-                ItemStack stack = inventory.getStackInSlot(slot);
-                if (!stack.isEmpty()) {
-                    Containers.dropItemStack(level, worldPosition.getX() + 0.5, worldPosition.getY() + 0.5,
-                            worldPosition.getZ() + 0.5, stack.copy());
-                    setInventoryStackInternal(slot, ItemStack.EMPTY);
-                }
-            }
-        }
-        inventoryCapability.invalidate();
-        super.onRemoved();
-    }
+    // ---------- 序列化 ----------
 
     @Override
     public void readCustomNBT(CompoundTag nbt, boolean descPacket) {

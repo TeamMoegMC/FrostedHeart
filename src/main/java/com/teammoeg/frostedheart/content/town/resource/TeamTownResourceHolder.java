@@ -30,6 +30,7 @@ import com.teammoeg.frostedheart.content.town.resource.watcher.IWarehouseStockWa
 import com.teammoeg.frostedheart.content.town.resource.watcher.IWarehouseStockWatcherNode;
 import com.teammoeg.frostedheart.content.town.resource.watcher.WarehouseStockWatcher;
 import it.unimi.dsi.fastutil.objects.Object2DoubleOpenHashMap;
+import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import lombok.AccessLevel;
 import lombok.Setter;
 import net.minecraft.tags.TagKey;
@@ -80,9 +81,11 @@ public class TeamTownResourceHolder {
     @Getter(AccessLevel.NONE)
     @Setter
     private transient ITownResourceChangeEventListener changeListener;
-    public final Map<SimpleItemKey, Set<WarehouseStockWatcher>> exactIndex = new HashMap<>();
-    // 全监听 Watcher 集合
-    public final Set<WarehouseStockWatcher> watchAllWatchers = new HashSet<>();
+
+    //物品索引Watcher
+    public final Map<SimpleItemKey, Set<WarehouseStockWatcher>> exactIndex = new Object2ObjectOpenHashMap<>();
+//    // 全监听 Watcher 集合
+//    public final Set<WarehouseStockWatcher> watchAllWatchers = new ObjectOpenHashSet<>();
 
     /**
      * 缓存ItemResourceAttribute对应的物品。
@@ -589,15 +592,17 @@ public class TeamTownResourceHolder {
         SimpleItemKey simpleKey = SimpleItemKey.from(itemKey);
         long newAmount = (long) get(itemKey);
 
+        // 精确匹配
         Set<WarehouseStockWatcher> exact = exactIndex.get(simpleKey);
         if (exact != null) {
             for (WarehouseStockWatcher w : exact) {
                 w.getNode().onStockChange(simpleKey, newAmount);
             }
         }
-        for (WarehouseStockWatcher w : watchAllWatchers) {
-            w.getNode().onStockChange(simpleKey, newAmount);
-        }
+        // 全监听
+//        for (WarehouseStockWatcher w : watchAllWatchers) {
+//            w.getNode().onStockChange(simpleKey, newAmount);
+//        }
     }
 
 }
