@@ -1,7 +1,7 @@
 # FrostedHeart — `town` 包开发者参考（AI Generated）
 
 > 路径：`src/main/java/com/teammoeg/frostedheart/content/town`
-> 适用版本：当前仓库 `main`（最近修改 2026-07）
+> 适用版本：当前仓库 `main`（最近修改 2026-08；含增量同步重构，见 §9 与 §14）
 
 本文件汇总 `town`（城镇）系统的关键架构、常用类与典型扩展方式，供日常开发与排查使用。
 内容基于源码阅读，所有路径相对于 `town` 包根目录。
@@ -16,6 +16,7 @@
 - **`TeamTown`** —— `TeamTownData` 的轻量门面/视图（`implements ITown, ITownWithResidents, ITownWithBuildings`），只暴露读写入口，不存状态。
 - **`AbstractTownBuildingBlockEntity`** —— 方块放置时创建对应的 `AbstractTownBuilding`，并注册进城镇的 `buildings` 映射。
 - 每个游戏日（`tickMorning`）统一校验结构、分配居民、链接矿场、执行建筑工作、更新资源。
+- **增量同步（服务端 `tick()`）** —— 集合增删 / 建筑与居民字段变更 / 资源数量变化经 **Listener → `DataSyncCache` 脏键集** 统一捕获，按 tick flush 为三类增量包；登录 / 切维度 / 开 GUI / 镇长印章时以 `TeamTownDataS2CPacket` 全量兜底（详见 §14）。
 
 ---
 
@@ -25,9 +26,11 @@
 town/
 ├── ITown.java / ITownWithBuildings / ITownWithResidents / ITownWithResources.java   # 核心接口
 ├── TeamTown.java                # 门面
-├── TeamTownData.java            # 持久化数据 + 每日主流程 tickMorning
+├── TeamTownData.java            # 持久化数据 + 每日主流程 tickMorning + 增量同步 tick
 ├── ChunkTownResourceCapability.java
 ├── TownMathFunctions.java       # 评分/温度工具
+├── TownHistoryEntry.java        # 每日快照历史（随存档持久化、随全量包下发）
+├── util/ObservableTownMap.java  # 集合层自动 fire 的 LinkedHashMap（增量同步基础设施）
 ├── block/                       # 方块与方块实体基类、占用体积
 │   ├── AbstractTownBuildingBlock / ...BlockEntity / TownBlockEntity(接口)
 │   ├── OccupiedVolume.java
@@ -35,14 +38,16 @@ town/
 ├── building/                    # 建筑逻辑抽象
 │   ├── AbstractTownBuilding / AbstractTownResidentWorkBuilding
 │   ├── ITownBuilding(Codec分派) / ITownResidentBuilding / ITownResidentWorkBuilding
+│   ├── TownProductionReportItem / TownProductionStopReason
 │   └── buildings/{house,hunting,mine,warehouse}/   # 四件套具体建筑
 ├── resource/                    # 资源系统（Holder / Action / Type / Attribute）
 │   ├── TeamTownResourceHolder / TownResourceManager(已废弃)
 │   ├── TeamTownResourceActionExecutorHandler
-│   └── action/                  # 命令式资源动作
-├── resident/                    # Resident / Family / WanderingRefugee
+│   ├── action/                  # 命令式资源动作
+│   └── watcher/                 # 仓库库存监视器（IWarehouseStockWatcher 等）
+├── resident/                    # Resident / Family / WanderingRefugee / ResidentEntity
 ├── terrainresource/             # TerrainResourceType / TerrainResourceData
-├── event/                       # 三类变更事件 + 监听器
+├── event/                       # 三类变更事件 + 监听器 + 客户端 ITownDataUpdateListener
 ├── network/                     # S2C / C2S 数据包
 ├── provider/                    # 队伍→城镇 关联与存档
 └── tabs/                        # GUI Tab
@@ -77,8 +82,18 @@ public interface ITown extends ITownWithResources, ITownWithBuildings, ITownWith
 
 ### 3.3 `TeamTownData`（持久化数据 + 每日主流程）
 
-`implements SpecialData`，`CODEC` 字段：`name / resources / blocks / residents / terrainResource / labour / maxLabour`。
+`implements SpecialData`，`CODEC` 字段：`name / resources / blocks / residents / terrainResource / labour / maxLabour / history`。
 所有「永久状态」都在此处；`TeamTown` 只是指向它的视图。
+
+**同步相关状态**：
+- `buildings` / `residents` 是 `util/ObservableTownMap`（集合增删自动 fire 到脏标记）。
+- `dataSyncCache`（`DataSyncCache`，TeamTownData 内部类）—— 脏状态**唯一真相源**：实现三个 `XxxChangeEventListener`，持 `changedBuildingPos / changedResidentUUID / changedResourceKey` 三脏键集 + 资源发送端值级去重快照（`lastSyncedResources`）。
+- `clientListeners`（static `Set<ITownDataUpdateListener>`）—— 客户端 GUI 数据刷新用（全量包替换实例后监听不丢失）。
+
+**每 tick 增量同步 `tick(ServerLevel, TeamDataHolder)`**：首 tick 把监听器注入既有建筑/居民（R1 修复点），此后每个 tick 检查脏键集：
+- 资源：先做**发送端值级去重**（当前值 == 上次已同步值则跳过）→ `TownResourceUpdatePacket`
+- 居民 / 建筑：按脏键查 Map 分「变更 / 移除」→ `TownResidentUpdatePacket` / `TownBuildingUpdatePacket`
+- 空转抑制三道防线：setter 值守卫（值未变不 fire）+ `reloadMaxCapacity` 净变化守卫 + 资源值级去重（见 §14）。
 
 **每日主流程 `tickMorning(ServerLevel)`** 依次：
 
@@ -106,13 +121,15 @@ public interface ITown extends ITownWithResources, ITownWithBuildings, ITownWith
   default int getWorkPriority();   // 默认 0，越大越先工作
   void onRemoved(ITownWithBuildings town);
   ```
-- **`AbstractTownBuilding`** 关键状态：
+- **`AbstractTownBuilding`** 关键状态（字段已私有化，统一经 **setter 变更**；setter 带**值守卫**——值未变直接 return，不 fire，避免空转脏标记；`changeListener` 由 `TeamTownData` 注入，解码阶段为 null 不误触发）：
   ```java
   protected final BlockPos pos;
-  public boolean initialized = false;            // 是否完成首次扫描
-  public boolean occupiedAreaOverlapped = false; // 是否与别处重叠
-  public boolean isStructureValid = false;       // 结构是否合法
-  public OccupiedVolume occupiedVolume;          // 占用体积
+  private boolean initialized = false;            // 是否完成首次扫描
+  private boolean occupiedAreaOverlapped = false; // 是否与别处重叠
+  private boolean isStructureValid = false;       // 结构是否合法
+  private OccupiedVolume occupiedVolume = OccupiedVolume.EMPTY; // 占用体积
+  // setter: setInitialized / setOccupiedAreaOverlapped / setIsStructureValid / setOccupiedVolume
+  //   → if (this.x == x) return; this.x = x; fireChange();
   isBuildingWorkable() = initialized && !occupiedAreaOverlapped && isStructureValid;
   work(ITownWithBuildings) 默认返回 true;
   ```
@@ -130,7 +147,7 @@ public interface ITown extends ITownWithResources, ITownWithBuildings, ITownWith
 | Hunting Base | `buildings/hunting/HuntingBaseBuilding` | 是 | 继承 `AbstractTownResidentWorkBuilding`；按居民 score 总和决定投掷次数，受 `TerrainResourceType.HUNT` 限制，用战利品表 `town/hunting` 产出并 ADD 进仓库。 |
 | Mine Base | `buildings/mine/MineBaseBuilding` | 是 | 持有 `Set<BlockPos> linkedMines`；汇总有效 `MineBuilding` 权重，按区块向 `ORE` 开采。 |
 | Mine | `buildings/mine/MineBuilding` | 否（标记） | 仅扫描/标记；`BiomeMineResourceRecipe` 提供生物群系矿产权重（`getWeights(biome)`）。 |
-| Warehouse | `buildings/warehouse/WarehouseBuilding` | 否 | `addCapacity(ITown)` 把 `capacity` 作为 `MAX_CAPACITY` 资源加入城镇；每日 `reloadMaxCapacity()` 先清零再累加。配套 `WarehouseMenu`/`WarehouseScreen`/`WarehouseBlockScanner`。 |
+| Warehouse | `buildings/warehouse/WarehouseBuilding` | 否 | `addCapacity(ITown)` 把 `capacity` 作为 `MAX_CAPACITY` 资源加入城镇；`TeamTownData.reloadMaxCapacity()` 带**净变化守卫**（先累加所有可工作仓库容量，与当前 `MAX_CAPACITY` 相同则直接返回，否则才清零重加——避免 `WarehouseBlockEntity.refresh` 定时刷新造成的空转资源包）。配套 `WarehouseMenu`/`WarehouseScreen`/`WarehouseBlockScanner`，以及 `WarehouseInterface*`（接口箱）与 `WarehouseLevelEmitter*`（红石输出）。 |
 
 ---
 
@@ -217,7 +234,7 @@ TownResourceActionResults.TownResourceTypeCostActionResult result =
 
 ## 7. 居民系统
 
-- **`Resident`**（抽象模拟数据，非实体）：字段 `uuid, firstName, lastName, health, mental, strength, intelligence`(0~100), `educationLevel`, `Map<String,Double> workProficiency`（key = 建筑类 `getSimpleName()`，如 `"HuntingBaseBuilding"`）, `housePos`, `workPos`。提供 `get/add/cost` 系列（越界抛异常/夹取）。`setDeath(town)` 调用 `town.removeResident(uuid)`。
+- **`Resident`**（抽象模拟数据，非实体）：字段 `uuid, firstName, lastName, health, mental, strength, intelligence`(0~100), `educationLevel`, `Map<String,Double> workProficiency`（key = 建筑类 `getSimpleName()`，如 `"HuntingBaseBuilding"`）, `housePos`, `workPos`。提供 `get/add/cost` 系列（越界抛异常/夹取）。`setDeath(town)` 调用 `town.removeResident(uuid)`。**所有 setter 均带值守卫并 `fireChange()`**（值未变不 fire），由 `TeamTownData` 注入的 `changeListener` 驱动增量同步（见 §14）。
 - **`Family`**：简单包装 `Resident[] + lastName`，目前仅数据容器。
 - **`ResidentEntity extends Mob`**：预留实体类，目前为空（居民以 `Resident` 数据形式活在 `TeamTownData`，不生成单独实体）。
 - **`WanderingRefugee`**：流浪难民实体（`extends AbstractVillager implements NeutralMob, VillagerDataHolder`），可被招募为居民或交易；`mobInteract` 打开交易界面，`WanderingRefugeeRecruitMessage` 处理招募（生成粒子、移除实体、写入 `TeamTown.addResident`）。
@@ -234,13 +251,17 @@ TownResourceActionResults.TownResourceTypeCostActionResult result =
 
 ## 9. 事件 / 网络 / GUI
 
-- **事件**（`event/`）：基于 `java.util.EventObject` 的轻量事件：`TownBuildingChangeEvent` / `TownResidentChangeEvent` / `TownResourceChangeEvent`，及对应监听器接口。当前 `TeamTownData.dataSyncCache` 虽实现了三个监听器，方法体为空（细粒度同步尚未启用）。`TownCommonEvents` 负责给区块挂 `chunk_town_resource` Capability，以及（调试期）向玩家全量同步 `TeamTownDataS2CPacket`。
-- **网络**（`network/`，均为 `CMessage`）：
-  - `TeamTownDataS2CPacket`：S→C 全量同步（GUI 实际依赖它）。
-  - `TownBuildingUpdatePacket` / `TownResidentUpdatePacket` / `TownResourceUpdatePacket`：**空实现占位**，尚未使用。
+- **事件**（`event/`）：基于 `java.util.EventObject` 的轻量事件：`TownBuildingChangeEvent` / `TownResidentChangeEvent` / `TownResourceChangeEvent`，及对应监听器接口（`ITownBuildingChangeEventListener` 等）。
+  - **服务端**：`TeamTownData.dataSyncCache` 实现三个监听器，是增量同步的脏标记入口（见 §14）；建筑 / 居民对象在装入 Map 后由 `TeamTownData` 注入监听（`setChangeEventListener`）。
+  - **客户端**：`ITownDataUpdateListener`（三回调均默认空实现），GUI 打开时 `addClientListener`、关闭时 `removeClientListener`；增量包 `applyXxxUpdate` 按类别触发，全量包替换实例后触发全部三类。
+  - `TownCommonEvents`：给区块挂 `chunk_town_resource` Capability，以及**全量兜底**触发（登录 / 切维度 / 开城镇建筑 GUI → `TeamTownDataS2CPacket`）。
+- **网络**（`network/`，均为 `CMessage`，在 `FHNetwork` 统一注册）：
+  - `TeamTownDataS2CPacket`：S→C **全量兜底**（登录 / 切维度 / 开 GUI / 镇长印章 / `/townsync fullsync` 手动），客户端解码后替换整份 `TeamTownData` 实例并 `fireClientDataChanged()`。
+  - `TownBuildingUpdatePacket` / `TownResidentUpdatePacket` / `TownResourceUpdatePacket`：**增量包**（完整实现：encode/decode/handle + 客户端 `applyXxxUpdate` 覆盖式 merge + 移除），服务端 `tick()` 每 tick flush 脏键集发出（见 §14）。
   - `WarehouseUpdatePacket` / `WarehouseInteractPacket`：仓库物品同步与存取（C→S 改资源并回写玩家手持物）。
   - `WanderingRefugeeOpenTradeGUIMessage` / `WanderingRefugeeRecruitMessage`：难民交易/招募。
-- **GUI**（`tabs/` + `AbstractTownWorkerBlockScreen`）：通用工人方块界面，左侧 Tab 列表；仓库使用 `TownInformationTab` / `TownResourceTab`。住宅使用 `HouseScreen`，概览页展示最近一次日结，居民页从客户端当前的整份城镇快照读取居民属性并支持逐人查看；住宅没有额外同步包。
+- **GUI**（`tabs/` + `StandardTownBuildingScreen` / `AbstractTownWorkerBlockScreen`）：通用工人方块界面，左侧 Tab 列表；仓库使用 `TownInformationTab` / `TownResourceTab`。住宅使用 `HouseScreen`，概览页展示最近一次日结，居民页从客户端快照读取居民属性并支持逐人查看。
+  - **数据刷新约定**：数据面板（`TownBuildingsPanel` / `TownResidentsPanel` / `TownInfoPanel` / `TownStatisticsPanel` / `TownWorkforcePanel` / `BuildingInfoElement` / `VirtualItemGridElement` / `HouseResidentPanel`）在 `render()` 阶段经 **Supplier 从客户端快照实时取数**（每帧解析最新实例）；**收包时禁止 `contentLayer.refresh()` 重建界面**（会重置滚动位置/选中状态）。`ITownDataUpdateListener` 回调可留空实现——内容每帧自动更新。
 
 ---
 
@@ -256,6 +277,7 @@ TownResourceActionResults.TownResourceTypeCostActionResult result =
 | `infrastructure/gen/FHRegistrateTags.java` | 各建筑方块、装饰/墙 Tag、资源 Tag 的实际条目 |
 | `bootstrap/common/FHCapabilities.java` | `CHUNK_TOWN_RESOURCE`（区块资源 Capability） |
 | `bootstrap/common/FHSpecialDataTypes.java` | `TOWN_DATA`（城镇 SpecialData 类型，挂在队伍数据上） |
+| `FHNetwork.java` | 注册 `TeamTownDataS2CPacket` + 三增量包 + 仓库/难民包（新增数据包必须在此 `registerMessage`，否则运行时崩 "does not registered in this channel"） |
 
 ---
 
@@ -296,8 +318,9 @@ TownResourceActionResults.TownResourceTypeCostActionResult result =
 4. **容量**：物品与 `needCapacity` 虚拟资源各占 1 容量，由 `WarehouseBuilding.addCapacity` 每日累加、`resetMaxCapacity` 每日清零。
 5. **`isBuildingWorkable()`** = `initialized && !occupiedAreaOverlapped && isStructureValid`。结构重叠或被其它建筑占位的方块不会工作。
 6. **`DEBUG_MODE`**（`ITown.DEBUG_MODE=false`）：控制是否跳过温度校验、居民死亡等。**正式发布前务必置 false/删除**。
-7. **细粒度同步未启用**：`TownBuilding/Resident/ResourceUpdatePacket` 目前为空实现，GUI 暂时依赖 `TeamTownDataS2CPacket` 全量同步。
-8. **居民以数据形式存在**：`Resident` 存于 `TeamTownData.residents`，不生成独立实体（`ResidentEntity` 预留为空）。
+7. **增量同步已启用**：`TownBuilding/Resident/ResourceUpdatePacket` 为完整实现，服务端 `tick()` 每 tick flush 脏键集；全量包仅作兜底（登录 / 切维度 / 开 GUI / 镇长印章）。详见 §14。
+8. **新增 setter 必须带值守卫**：任何会改变建筑/居民字段的 setter 都要先判断「值未变直接 return」，再 `fireChange()`；否则会造成空转脏标记 → 每 tick 重复发包。资源层增量发包前有值级去重兜底，但建筑/居民层**没有**（内存敏感，未做指纹），依赖 setter 守卫在源头拦截。
+9. **居民以数据形式存在**：`Resident` 存于 `TeamTownData.residents`，不生成独立实体（`ResidentEntity` 预留为空）。
 
 ---
 
@@ -319,7 +342,48 @@ TownResourceActionResults.TownResourceTypeCostActionResult result =
 | 队伍关联/存档 | `provider/*`、`ChunkTownResourceCapability.java` |
 | GUI | `tabs/*`、`buildings/warehouse/WarehouseScreen.java` |
 | 评分/温度 | `TownMathFunctions.java` |
+| 增量同步总览 | `TeamTownData.java`（`tick()` / `DataSyncCache` / `applyXxxUpdate`）、`util/ObservableTownMap.java`、`event/ITownDataUpdateListener.java` |
 
 ---
 
-> 注：`util/` 目录当前为空；`TeamTownData.dataSyncCache` 监听器方法体为空，细粒度客户端同步待实现。
+> 注：`util/` 目录存放增量同步基础设施（`ObservableTownMap`）；`TeamTownData.dataSyncCache` 为脏状态唯一真相源，细粒度客户端同步已启用（见 §14）。
+
+---
+
+## 14. 客户端增量同步（2026-08 重构完成）
+
+> 目标：把「每 tick 给每个玩家发整份 `TeamTownData` 全量」改成「只发变化」。原 per-tick 全量同步已移除，全量包仅作兜底。
+
+### 14.1 变更检测链路（三层捕获）
+
+| 层 | 触发源 | 实现 | 进入脏标记 |
+|---|---|---|---|
+| ① 集合增删 | `buildings` / `residents` 的 put / remove / replace / clear / 迭代器 remove | `util/ObservableTownMap`（LinkedHashMap 子类，纯 fire 中继，不持脏状态） | `onChange(key)` → `DataSyncCache.onXxxChange` |
+| ② 对象字段 | 建筑 / 居民内部字段 setter | setter 值守卫 + `fireChange()`（`changeListener` 由 `TeamTownData` 注入，解码阶段 null 不误触） | `onXxxChange` |
+| ③ 资源 | `TeamTownResourceHolder.addSigned` 等唯一资源入口 | `addSigned` 内 `amount ≠ 0 && changeListener ≠ null` 时 fire | `onResourceChange` |
+
+### 14.2 脏状态唯一真相源 `DataSyncCache`
+
+- `TeamTownData` 内部类，实现三个 `XxxChangeEventListener`；持 `changedBuildingPos / changedResidentUUID / changedResourceKey` 三脏键集 + `lastSyncedResources` 值级去重快照。
+- **不在** `ObservableTownMap` 内维护第二份脏状态（纯 fire 中继）；add / replace / remove 进**同一个** changed 集，发包时查 Map 判增/删。
+- 接线时机：`setOnAttach/onDetach` 在批量 put **之前**绑定（反序列化对象也自动接/解监听），`setOnChange` 在批量 put **之后**绑定（只做脏标记，避免加载存档误标脏）。
+
+### 14.3 flush 与发包（`tick()` 每 tick）
+
+1. 资源：对脏键做**发送端值级去重**（当前值 ≈ 上次已同步值则跳过）→ `TownResourceUpdatePacket(changed, occupiedCapacity)` → `markResourceSynced`。
+2. 居民 / 建筑：脏键查 Map，`null` → removed 集，否则 changed 集 → 各自包。
+3. 全量兜底触发点：`TownCommonEvents`（登录 / 切维度 / 开城镇建筑 GUI）+ `TownManagerItem.use`（镇长印章）→ `TeamTownDataS2CPacket`；客户端解码后**替换整份实例**并 `fireClientDataChanged()`。
+
+### 14.4 空转抑制（三道防线，2026-08-01）
+
+| 防线 | 位置 | 作用 |
+|---|---|---|
+| A. setter 值守卫 | `AbstractTownBuilding` / `HouseBuilding` / `WarehouseBuilding` / `Resident` 全部 setter | 值未变不 fire，从源头消除字段层空转 |
+| B. `reloadMaxCapacity` 净变化守卫 | `TeamTownData.reloadMaxCapacity()` | 容量总和与当前 `MAX_CAPACITY` 差 < DELTA 直接 return，消除「清零+加回」操作级 fire |
+| C. 资源发送端值级去重 | `DataSyncCache.lastSyncedResources` | 当前值 == 上次已同步值跳过发包（仅资源层；建筑/居民不设指纹——服务器规模大、内存敏感） |
+
+### 14.5 客户端侧
+
+- 三增量包 `handle()` → `applyXxxUpdate`（覆盖式 merge + 移除，**不回 fire**）。
+- GUI 数据面板 render 阶段经 Supplier 实时取数，收包不重建界面（见 §9）；`TeamTownDataS2CPacket` 替换实例不影响（Supplier 每帧重新解析）。
+- 全量包序列化成功后调 `markFullSynced()` 重置资源去重基线。
