@@ -64,16 +64,16 @@ public class WanderingRefugeeRecruitMessage implements CMessage {
                         player.displayClientMessage(Component.translatable("message.frostedheart.wandering_refugee.too_far_to_recruit"), false);
                     } else{
                         TeamTown town = TeamTown.from(player);
-                        if (town.addResident(new Resident(refugee.getFirstName(), refugee.getLastName()))){
-                        //随便产生点粒子效果吧
-                        {
+                        if (town.addResident(new Resident(refugee.getFirstName(), refugee.getLastName()))) {
+                            // 随便产生点粒子效果吧
                             for (int i = 0; i < 16; i++) {
                                 player.level().addParticle(ParticleTypes.EXPLOSION, refugee.getX(), refugee.getY(), refugee.getZ(), Math.random(), Math.random(), 0.01D);
                                 player.level().addParticle(ParticleTypes.END_ROD, refugee.getX(), refugee.getY(), refugee.getZ(), Math.random(), Math.random(), 0.01D);
                             }
-                        }
-                        player.displayClientMessage(Component.translatable("message.frostedheart.wandering_refugee.recruited"), false);
-                        refugee.remove(Entity.RemovalReason.DISCARDED);
+                            player.displayClientMessage(Component.translatable("message.frostedheart.wandering_refugee.recruited"), false);
+                            refugee.remove(Entity.RemovalReason.DISCARDED);
+                        } else {
+                            player.displayClientMessage(Component.translatable("message.frostedheart.wandering_refugee.cannot_accommodate"), false);
                         }
                     }
                 }

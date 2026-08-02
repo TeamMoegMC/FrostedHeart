@@ -152,6 +152,8 @@
   "gui.frostedheart.update_recommended": "The Winter Rescue Update: ",
   "gui.frostedheart.wandering_refugee.trade_button": "Trade with refugee",
   "gui.frostedheart.wandering_refugee.recruit_button": "Recruit refugee to your town",
+  "gui.frostedheart.wandering_refugee.recruit_disabled_no_housing": "Your town has no vacant houses to accommodate more residents",
+  "message.frostedheart.wandering_refugee.cannot_accommodate": "Your town has no vacant house to accommodate this refugee",
   "gui.frostedheart.snow_sack.auto_pickup": "Auto Pickup: %s",
   "gui.frostedheart.snow_sack.delete_overflow": "Destroy Overflows: %s",
   "gui.frostedheart.snow_sack.stored_snow": "Stored Snow: %s",

@@ -153,6 +153,40 @@ public class TeamTown implements ITown, ITownWithResidents, ITownWithBuildings {
         return addResident(new Resident(firstName, lastName));
     }
 
+    /**
+     * 客户端/服务端通用：判断城镇是否还能再容纳一名居民。
+     * 逻辑镜像 {@link TeamTownData#allocateHouse()} 的空闲槽位判定：
+     * 存在任一可工作的 {@code HouseBuilding} 仍有空余房屋槽位即可。
+     * <p>
+     * 容量按居民实际住房归属（{@code Resident.housePos}）计数而非
+     * {@code HouseBuilding.getResidentsID()}：后者不在 CODEC 序列化范围，
+     * 客户端快照 / 存档重载后恒为空集，不能作为容量依据；此口径与城镇 GUI
+     * 显示、{@link TeamTownData#allocateHouse()} 的真实分配结果保持一致。
+     * <p>
+     * Client/server shared: whether the town can still accommodate one more resident.
+     * Counts actual occupancy by {@code Resident.housePos} instead of
+     * {@code HouseBuilding.getResidentsID()}, because the latter is not serialized
+     * by the CODEC and is always empty on client snapshots / after save reloads;
+     * this matches the town GUI display and the real allocation of
+     * {@link TeamTownData#allocateHouse()}.
+     *
+     * @return 可容纳则返回 true / true if another resident can be accommodated
+     */
+    public boolean canAddResident() {
+        return data.buildings.values().stream()
+                .filter(b -> b instanceof HouseBuilding)
+                .map(b -> (HouseBuilding) b)
+                .filter(HouseBuilding::isBuildingWorkable)
+                .anyMatch(h -> countResidentsAt(h.getPos()) < h.getMaxResidents());
+    }
+
+    /** 统计实际住在指定房屋的居民数（按 housePos 归属）。 */
+    private long countResidentsAt(BlockPos housePos) {
+        return data.residents.values().stream()
+                .filter(resident -> housePos.equals(resident.getHousePos()))
+                .count();
+    }
+
     public boolean removeResident(UUID id) {
         if(!data.residents.containsKey(id)){
             return false;
