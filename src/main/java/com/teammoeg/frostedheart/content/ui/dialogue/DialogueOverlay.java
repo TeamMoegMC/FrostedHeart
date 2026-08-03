@@ -116,8 +116,11 @@ public class DialogueOverlay extends PrimaryLayer {
         if (!selections.isEmpty()) {
             int index = CInputHelper.mapNumber(keyCode, -1);
             if (index >= 0 && index < selections.size()) {
-                selections.get(index).onClicked(MouseButton.LEFT);
-                return true;
+                var selection = selections.get(index);
+                if (selection.isEnabled()) {
+                    selection.onClicked(MouseButton.LEFT);
+                    return true;
+                }
             }
         }
         return super.onKeyPressed(keyCode, scanCode, modifiers);
