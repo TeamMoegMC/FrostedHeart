@@ -24,16 +24,13 @@ import java.util.Random;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
 import com.teammoeg.frostedheart.util.Lang;
-import com.teammoeg.chorda.util.CRegistryHelper;
 
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.fluids.capability.ItemFluidContainer;
 
 class Benefits {
@@ -153,13 +150,12 @@ class Benefits {
         if (capability.getEatenTimes() > 3) return;
         Item foodOrSoupContainer = foodItemStack.getItem();
         if (foodOrSoupContainer instanceof ItemFluidContainer) {
-            assert foodItemStack.getTag() != null;
-            Fluid fluid = CRegistryHelper.getFluid(new ResourceLocation(foodItemStack.getTag().getCompound("Fluid").getString("FluidName")));
-            //TODO add caupona dependency
-            //BowlContainingRecipe recipe = BowlContainingRecipe.recipes.get(fluid);
-            //if (recipe != null) {
-            //    tryGive(recipe.handle(fluid).getItem());
-            //}
+            // 保温杯等流体容器：把容器内的汤解析为对应汤碗后匹配（见 FluidFoodHelper）
+            // Fluid containers (thermos etc.): resolve the contained soup to its bowl Item and match
+            Item soupFood = FluidFoodHelper.resolveFoodItem(foodItemStack);
+            if (soupFood != null) {
+                tryGive(soupFood);
+            }
         } else tryGive(foodOrSoupContainer);
     }
 }

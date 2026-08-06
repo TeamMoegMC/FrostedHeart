@@ -25,6 +25,7 @@ import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
 import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
 import com.teammoeg.frostedheart.content.health.capability.NutritionCapability;
 import com.teammoeg.frostedheart.content.health.dailykitchen.DailyKitchen;
+import com.teammoeg.frostedheart.content.health.dailykitchen.FluidFoodHelper;
 import com.teammoeg.frostedheart.content.health.event.GatherFoodNutritionEvent;
 import com.teammoeg.frostedheart.content.water.network.PlayerDrinkWaterMessage;
 import com.teammoeg.frostedheart.util.Lang;
@@ -97,11 +98,14 @@ public class HealthCommonEvents {
 		if (event.getEntity() instanceof Player player) {
 			NutritionCapability.getCapability(player).ifPresent(e -> e.eat(player, event.getItem()));
 			// 记录吃过的食物种类（仅可食用），供每日厨房次日生成"想吃的菜"。
+			// 流体容器（保温杯）经 FluidFoodHelper 解析为对应的汤碗后再记录。
 			// 服务端专属：WANTED_FOOD 能力只附加在 ServerPlayer 上。
 			// Record eaten food kinds (edible only) for the daily kitchen to generate
-			// wanted foods next morning. Server only: WANTED_FOOD is attached to ServerPlayer.
+			// wanted foods next morning. Fluid containers (thermos) are resolved to their
+			// soup bowl Item via FluidFoodHelper first. Server only: WANTED_FOOD is attached
+			// to ServerPlayer.
 			if (!player.level().isClientSide && player instanceof ServerPlayer) {
-				FHCapabilities.WANTED_FOOD.getCapability(player).ifPresent(w -> w.addEatenFood(event.getItem().getItem()));
+				FHCapabilities.WANTED_FOOD.getCapability(player).ifPresent(w -> w.addEatenFood(FluidFoodHelper.resolveFoodItem(event.getItem())));
 			}
 		}
 	}
