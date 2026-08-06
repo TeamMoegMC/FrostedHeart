@@ -95,6 +95,25 @@ public class DailyKitchen {
         }
 
     }
+
+    /**
+     * 向玩家重发"今日想吃的菜"提示消息（不重新生成）。
+     * 用于玩家登录时：若当天已生成过（wantedFoods 非空），只需把消息再发一遍，
+     * 避免玩家没看到；若当天尚未生成（wantedFoods 为空）则静默返回，交由
+     * 补生成逻辑在玩家 tick 中生成并发送。
+     * <p>
+     * Re-sends today's "wanted foods" message to the player without re-generating.
+     * Used on player login: if today's wanted foods already exist (wantedFoods is not
+     * empty), the message is just sent again so the player can see it; otherwise
+     * returns silently and the daily generation logic sends a fresh message on tick.
+     *
+     * @param player 目标玩家 / the target player
+     */
+    public static void sendWantedFoodsMessage(Player player){
+        WantedFoodCapability wantedFoodCapability = FHCapabilities.WANTED_FOOD.getCapability(player).orElse(null);
+        if (wantedFoodCapability == null || wantedFoodCapability.getWantedFoods().isEmpty()) return;
+        player.displayClientMessage(WantedFoodsGenerator.buildWantedFoodsText(wantedFoodCapability.getWantedFoods()), false);
+    }
 }
 
 

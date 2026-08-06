@@ -60,10 +60,13 @@ public class WantedFoodCapability implements NBTSerializable{
     private Set<Item> foodsEaten= new HashSet<>();
     private int eatenTimes = 0;
     private int eatenFoodsAmount = 0;
+    /** 上次生成想吃的菜的世界日索引（-1 表示从未生成过）/ world day index of the last wanted foods generation (-1 = never generated) */
+    private int lastGeneratedDay = -1;
     private final String key_wantedFoods = "wantedFoods";
     private final String key_foodsEaten = "foodsEaten";
     private final String key_eatenFoodsAmount = "eatenFoodsAmount";
     private final String key_eatenTimes = "key_eatenTimes";
+    private final String key_lastGeneratedDay = "lastGeneratedDay";
 
 
     public WantedFoodCapability(){
@@ -126,6 +129,7 @@ public class WantedFoodCapability implements NBTSerializable{
         nbt.put(key_foodsEaten, eatenList);
         nbt.put(key_eatenFoodsAmount, IntTag.valueOf(this.eatenFoodsAmount));
         nbt.put(key_eatenTimes, IntTag.valueOf((this.eatenTimes)));
+        nbt.putInt(key_lastGeneratedDay, this.lastGeneratedDay);
 
 	}
 
@@ -135,6 +139,7 @@ public class WantedFoodCapability implements NBTSerializable{
         ListTag list = nbt.getList(key_wantedFoods, Tag.TAG_STRING/*9*/);
         this.eatenFoodsAmount = nbt.getInt(key_eatenFoodsAmount);
         this.eatenTimes = nbt.getInt(key_eatenTimes);
+        this.lastGeneratedDay = nbt.getInt(key_lastGeneratedDay);
         for(Tag itemNBT : list){
             wantedFoods.add(turnStringNBTToItem(itemNBT));
         }
@@ -183,5 +188,28 @@ public class WantedFoodCapability implements NBTSerializable{
 		this.foodsEaten.addAll(other.foodsEaten);
 		this.eatenTimes = other.eatenTimes;
 		this.eatenFoodsAmount = other.eatenFoodsAmount;
+		this.lastGeneratedDay = other.lastGeneratedDay;
+	}
+
+	/**
+	 * 获取上次生成想吃的菜的世界日索引。
+	 * <p>
+	 * Gets the world day index of the last wanted foods generation.
+	 *
+	 * @return 世界日索引；-1 表示从未生成过 / the world day index, or -1 if never generated
+	 */
+	public int getLastGeneratedDay() {
+		return lastGeneratedDay;
+	}
+
+	/**
+	 * 记录上次生成想吃的菜的世界日索引。
+	 * <p>
+	 * Records the world day index of the last wanted foods generation.
+	 *
+	 * @param day 世界日索引 / the world day index
+	 */
+	public void setLastGeneratedDay(int day) {
+		this.lastGeneratedDay = day;
 	}
 }

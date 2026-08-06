@@ -26,6 +26,7 @@ import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
 import com.teammoeg.frostedheart.content.health.capability.NutritionCapability;
 import com.teammoeg.frostedheart.content.health.dailykitchen.DailyKitchen;
 import com.teammoeg.frostedheart.content.health.dailykitchen.FluidFoodHelper;
+import com.teammoeg.frostedheart.content.health.dailykitchen.WantedFoodCapability;
 import com.teammoeg.frostedheart.content.health.event.GatherFoodNutritionEvent;
 import com.teammoeg.frostedheart.content.water.network.PlayerDrinkWaterMessage;
 import com.teammoeg.frostedheart.util.Lang;
@@ -72,6 +73,22 @@ public class HealthCommonEvents {
 		});
 
 		original.invalidateCaps();
+	}
+
+	@SubscribeEvent
+	public static void onPlayerLoggedIn(PlayerEvent.PlayerLoggedInEvent event) {
+		if (!(event.getEntity() instanceof ServerPlayer player))
+			return;
+		// 登录时若当天已生成过想吃的菜，只重发消息（不重新生成）；
+		// 当天未生成（如离线跨日）时跳过，由玩家 tick 的补生成逻辑生成并发送新消息。
+		// On login, re-send today's wanted foods message if already generated today
+		// (without re-generating); if not generated yet (e.g. offline over a day rollover),
+		// skip and let the tick-based catch-up generation send a fresh message.
+		WantedFoodCapability cap = FHCapabilities.WANTED_FOOD.getCapability(player).orElse(null);
+		long today = player.level().getDayTime() / 24000L;
+		if (cap != null && today == cap.getLastGeneratedDay()) {
+			DailyKitchen.sendWantedFoodsMessage(player);
+		}
 	}
 
 	@SubscribeEvent

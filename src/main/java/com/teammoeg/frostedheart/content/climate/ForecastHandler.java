@@ -19,8 +19,10 @@
 
 package com.teammoeg.frostedheart.content.climate;
 
+import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
 import com.teammoeg.frostedheart.content.climate.gamedata.climate.WorldClimate;
 import com.teammoeg.frostedheart.content.health.dailykitchen.DailyKitchen;
+import com.teammoeg.frostedheart.content.health.dailykitchen.WantedFoodCapability;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import com.teammoeg.frostedheart.util.Lang;
 import com.teammoeg.frostedresearch.api.ResearchDataAPI;
@@ -104,8 +106,17 @@ public class ForecastHandler {
                 }
             }
 
-            if (serverPlayer.level().getDayTime() % 24000 == 41 && FHConfig.SERVER.MISC.enableDailyKitchen.get())
-                DailyKitchen.generateWantedFood(serverPlayer);//This is daily kitchen thing,not forecast message.
+            // This is daily kitchen thing, not forecast message.
+            // 按"世界日变化 + 当天未生成"触发（而非 ==41 精确时刻），玩家上线/睡醒/错过 41 都能当天补生成。
+            // Trigger on "world day changed and not yet generated today" (instead of the exact ==41 tick),
+            // so players who join late, wake up after skipping the night, or miss the 41 tick still get
+            // today's wanted foods.
+            WantedFoodCapability cap = FHCapabilities.WANTED_FOOD.getCapability(serverPlayer).orElse(null);
+            long today = serverPlayer.level().getDayTime() / 24000L;
+            if (cap != null && today != cap.getLastGeneratedDay() && FHConfig.SERVER.MISC.enableDailyKitchen.get()) {
+                DailyKitchen.generateWantedFood(serverPlayer);
+                cap.setLastGeneratedDay((int) today);
+            }
         }
     }
 }

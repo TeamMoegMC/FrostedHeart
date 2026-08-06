@@ -90,4 +90,23 @@ class WantedFoodsGenerator {
     public MutableComponent getWantedFoodsText() {
         return wantedFoodsText;
     }
+
+    /**
+     * 根据已生成的食物集合组装"今日想吃的菜"提示文本（不重新生成）。
+     * 供玩家登录时重发当天的想吃的菜使用，格式与 {@link #generate()} 生成时一致。
+     * <p>
+     * Builds the "wanted foods" message text from an already generated food set (no
+     * re-generation). Used to re-send today's wanted foods on player login; format
+     * matches the one produced by {@link #generate()}.
+     *
+     * @param foods 已生成的食物集合 / the already generated food set
+     * @return 提示文本 / the message text
+     */
+    static MutableComponent buildWantedFoodsText(Set<Item> foods) {
+        MutableComponent text = Lang.translateMessage("wanted_foods");
+        for (Item food : foods) {
+            text.append(Lang.translateKey(food.getDescriptionId())).append(Components.str("  "));
+        }
+        return text;
+    }
 }
