@@ -263,7 +263,12 @@ public class FHClientEventsMod {
         .add(FHBlocks.TITANIUM_BLOCK)
         .add(FHBlocks.INVAR_BLOCK)
         .add(FHBlocks.TIN_BLOCK)
-        .add(FHBlocks.MAGNESIUM_BLOCK);
+        .add(FHBlocks.MAGNESIUM_BLOCK)
+        .add(FHBlocks.METAL_VAWT)
+        .add(FHBlocks.ALLOY_VAWT)
+        .add(FHBlocks.METAL_SCAFFOLDING)
+        .add(FHBlocks.METAL_SCAFFOLDING_STAIRS);
+
         ShaderCompatHelper.use(Blocks.GOLD_BLOCK)
         .add(FHBlocks.ELECTRUM_BLOCK);
         ShaderCompatHelper.use(Blocks.COPPER_BLOCK)

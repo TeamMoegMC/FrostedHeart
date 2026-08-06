@@ -55,7 +55,7 @@ import java.util.*;
 public class SurroundingTemperatureSimulator {
 
 
-    public static record SimulationResult(float blockTemp, float windStrength) {
+    public record SimulationResult(float blockTemp, float windStrength) {
     }
 
     /**
@@ -81,52 +81,24 @@ public class SurroundingTemperatureSimulator {
 
     /**
      * 线程局部工作缓冲区。
-     * 避免每次模拟调用分配大数组，通过世代标记实现 O(1) 重置。
+     * 避免每次模拟调用分配大数组；每次调用通过一次 Arrays.fill(posCache, null)
+     * 复位位置缓存（128KB 引用清零被 JIT 内在化为 SIMD memset，仅数 μs）。
+     * <p>
+     * 曾采用"世代标记"（gen[] + currentGen）惰性失效方案，但热循环每步都要
+     * 额外读取 gen[idx] 并比较分支（约 8 万次/调用），累计成本高于一次 memset；
+     * 且 gen[] 本身占 128KB/线程。故改为整体清零：缓存内存减半，热循环每步
+     * 少一次 load + 比较 + 分支。
+     * <p>
+     * 粒子状态数组（原 qx/qy/qz/pvx/pvy/pvz，共 6n 个 double，约 200KB/线程）
+     * 已随"粒子外层循环交换"删除——每个粒子的轨迹完全独立，其位置与速度在
+     * 全部 num_rounds 轮中驻留于局部变量（寄存器），无需数组中转。
      */
     private static final class WorkBuffer {
-        // 粒子状态数组（SoA 布局）
-        final double[] qx = new double[n];
-        final double[] qy = new double[n];
-        final double[] qz = new double[n];
-
-        final double[] pvx = new double[n];
-        final double[] pvy = new double[n];
-        final double[] pvz = new double[n];
-
         // 位置缓存：32^3 = 32768 个槽位，覆盖 [-16,16) 三个轴
         final CachedBlockInfo[] posCache = new CachedBlockInfo[CACHE_SIZE];
-        final int[] gen = new int[CACHE_SIZE]; // 世代标记
-        int currentGen = 1;
 
         //优化：预计算高度图（32×32 = 1024 个 int）
         final int[] topYCache = new int[CACHE_DIM * CACHE_DIM];
-
-        /**
-         * O(1) 重置：仅递增世代号，旧缓存自动失效
-         */
-        void reset() {
-            currentGen++;
-            // int 溢出保护：溢出到 ≤0 时强制清空（约 21 亿次调用才触发一次）
-            if (currentGen <= 0) {
-                Arrays.fill(gen, 0);
-                currentGen = 1;
-            }
-        }
-
-        /**
-         * 读取缓存：仅当世代匹配时返回，否则视为未缓存
-         */
-        CachedBlockInfo getCached(int idx) {
-            return (gen[idx] == currentGen) ? posCache[idx] : null;
-        }
-
-        /**
-         * 写入缓存并标记当前世代
-         */
-        void putCached(int idx, CachedBlockInfo info) {
-            posCache[idx] = info;
-            gen[idx] = currentGen;
-        }
     }
 
     // ======================== 静态常量 ========================
@@ -203,7 +175,7 @@ public class SurroundingTemperatureSimulator {
     public Heightmap[] maps = new Heightmap[4];
 
     private final int ox, oy, oz; // origin 坐标（int 缓存，避免反复 getX/Y/Z）
-    private SplittableRandom rnd;  // 无锁随机数（替代 java.util.Random 的 CAS）
+    private final FastRandom rnd;  // 无锁随机数（xoroshiro128+，见内部类注释）
 
     // BlockState → CachedBlockInfo 去重缓存（实例级，避免跨世界污染）
     private final IdentityHashMap<BlockState, CachedBlockInfo> stateCache =
@@ -254,61 +226,61 @@ public class SurroundingTemperatureSimulator {
                     sections[j] = sections[j].copy();
         }
 
-        rnd = new SplittableRandom(
+        rnd = new FastRandom(
                 BlockPos.asLong(sourceX, sourceY, sourceZ) ^ (world.getGameTime() >> 6));
     }
 
     // ======================== 核心模拟 ========================
 
     public SimulationResult getBlockTemperatureAndWind(double qx0, double qy0, double qz0) {
-        // 获取当前线程的工作缓冲区并重置（O(1)）
+        // 获取当前线程的工作缓冲区；一次 memset 复位位置缓存（见 WorkBuffer 注释）
         WorkBuffer buf = WORK_BUFFER.get();
-        buf.reset();
-
-        // 初始化所有粒子：位置 = 玩家位置，速度索引 = 序号
-        Arrays.fill(buf.qx, qx0);
-        Arrays.fill(buf.qy, qy0);
-        Arrays.fill(buf.qz, qz0);
-        System.arraycopy(speedVX, 0, buf.pvx, 0, n);
-        System.arraycopy(speedVY, 0, buf.pvy, 0, n);
-        System.arraycopy(speedVZ, 0, buf.pvz, 0, n);
+        final CachedBlockInfo[] posCache = buf.posCache;
+        Arrays.fill(posCache, null);
 
         //预计算高度图
         fillTopYCache(buf.topYCache);
 
         float heat = 0f, wind = 0f, minTemp = 0f, maxTemp = 0f;
         // 局部变量缓存，JIT 优化更友好
-        final double[] localPvx = buf.pvx, localPvy = buf.pvy, localPvz = buf.pvz;
-        final double[] localQx = buf.qx, localQy = buf.qy, localQz = buf.qz;
         final int[] topYCache = buf.topYCache;
 
-        for (int round = 0; round < num_rounds; ++round) {
-            for (int i = 0; i < n; ++i) {
-                final double vx = localPvx[i];
-                final double vy = localPvy[i];
-                final double vz = localPvz[i];
+        // ★ 粒子外层 / 轮次内层（loop interchange）：
+        // 每个粒子的轨迹完全独立（粒子间无交互），交换循环顺序是安全的。
+        // 粒子位置与速度在全部 num_rounds 轮中驻留局部变量（寄存器），
+        // 省去了原实现每轮 6 次数组读 + 3 次数组写，以及 6n 的初始化填充；
+        // 同时删除了 WorkBuffer 中约 200KB/线程 的粒子状态数组。
+        // 注意：rnd 的消费顺序与"轮次外层"不同，单次调用的具体随机路径会变，
+        // 但蒙特卡洛统计分布不变（结果本就是 n 个粒子的随机平均）。
+        for (int i = 0; i < n; ++i) {
+            double sx = qx0, sy = qy0, sz = qz0;
+            double vx = speedVX[i], vy = speedVY[i], vz = speedVZ[i];
 
-                final double sx = localQx[i], sy = localQy[i], sz = localQz[i];
+            for (int round = 0; round < num_rounds; ++round) {
                 final double dx = sx + vx, dy = sy + vy, dz = sz + vz;
 
-                int bx = (int) dx; if (dx < bx) bx--;
-                int by = (int) dy; if (dy < by) by--;
-                int bz = (int) dz; if (dz < bz) bz--;
+                // Math.floor 是 JIT 内在函数（roundsd 硬件取整 + cvttsd2si），无分支；
+                // 旧写法 "int 截断 + 条件递减" 是数据依赖分支，粒子方向各异导致约半数误预测。
+                // 两者逐点等价（含 -0.0 与负值边界；世界坐标远小于 int 溢出阈）。
+                int bx = (int) Math.floor(dx);
+                int by = (int) Math.floor(dy);
+                int bz = (int) Math.floor(dz);
 
-                // ---- 缓存查找（世代标记 + 直接数组索引） ----
+                // ---- 缓存查找（直接数组索引 + null 哨兵） ----
                 //坐标范围 [-16,16) 映射到 [0,32) 再编码为一维索引。
                 final int rx = bx - ox, ry = by - oy, rz = bz - oz;
+                // 无符号单分支越界检查：(v+16) 落在 [0,32) 当且仅当其第 5 位及以上全为 0；
+                // 任一分量越界（负数或 ≥32）都会在 OR 结果中留下高位 → >>>5 非零。
+                final int px = rx + CACHE_OFFSET, py = ry + CACHE_OFFSET, pz = rz + CACHE_OFFSET;
                 CachedBlockInfo info;
-                if (rx < -CACHE_OFFSET || ry < -CACHE_OFFSET || rz < -CACHE_OFFSET ||
-                        rx >= CACHE_OFFSET || ry >= CACHE_OFFSET || rz >= CACHE_OFFSET) {
+                if (((px | py | pz) >>> 5) != 0) {
                     info = AIR_INFO;
                 } else {
-                    int idx = ((rx + CACHE_OFFSET) << 10) | ((ry + CACHE_OFFSET) << 5) | (rz + CACHE_OFFSET);
-                    info = buf.posCache[idx];
-                    if (buf.gen[idx] != buf.currentGen) {
+                    int idx = (px << 10) | (py << 5) | pz;
+                    info = posCache[idx];
+                    if (info == null) {
                         info = computeBlockInfo(rx, ry, rz, bx, by, bz);
-                        buf.posCache[idx] = info;
-                        buf.gen[idx] = buf.currentGen;
+                        posCache[idx] = info;
                     }
                 }
 
@@ -319,16 +291,15 @@ public class SurroundingTemperatureSimulator {
                     if (sxi != bx || syi != by || szi != bz) {
                         // 从外部进入 → 计算入射面并反弹
                         int nid;
-                        if (rnd.nextInt(3) == 0) {
+                        if (rnd.nextInt3()== 0) {
                             nid = rnd.nextInt(n);
                         } else {
                             nid = getOutboundSpeedFrom(
                                     computeEntryFace(sx, sy, sz, vx, vy, vz, bx, by, bz));
                         }
-                        // ★ 仅在反弹时写入 3 个 double（替代每轮写入 1 个 int）
-                        localPvx[i] = speedVX[nid];
-                        localPvy[i] = speedVY[nid];
-                        localPvz[i] = speedVZ[nid];
+                        vx = speedVX[nid];
+                        vy = speedVY[nid];
+                        vz = speedVZ[nid];
                     }
                     // 粒子已在同一 FULL 方块内部 → 不反弹（与原代码行为一致：
                     //   shape.clip 对两端点都在 AABB 内部时返回 null → 不进入反弹分支）
@@ -346,24 +317,24 @@ public class SurroundingTemperatureSimulator {
                         BlockHitResult brtr = AABB.clip(info.aabbList, svec, dvec, bpos);
                         int nid;
                         if (brtr != null) {
-                            nid = rnd.nextInt(3) == 0
+                            nid = rnd.nextInt3() == 0
                                     ? rnd.nextInt(n)
                                     : getOutboundSpeedFrom(brtr.getDirection());
                         } else {
                             nid = rnd.nextInt(n);
                         }
 
-                        localPvx[i] = speedVX[nid];
-                        localPvy[i] = speedVY[nid];
-                        localPvz[i] = speedVZ[nid];
+                        vx = speedVX[nid];
+                        vy = speedVY[nid];
+                        vz = speedVZ[nid];
                     }
                 }
-                // EMPTY：无碰撞，nid 不变，零开销
+                // EMPTY：无碰撞，速度不变，零开销
 
-                // ---- 更新粒子状态 ----
-                localQx[i] = dx;
-                localQy[i] = dy;
-                localQz[i] = dz;
+                // ---- 更新粒子状态（仅局部变量） ----
+                sx = dx;
+                sy = dy;
+                sz = dz;
 
                 // ---- 温度累积 ----
                 final float curheat = info.temperature;
@@ -381,10 +352,11 @@ public class SurroundingTemperatureSimulator {
                 }
 
                 // ---- 风力计算 ----
+                // 注意：topY 仅要求 xz 在界内（与 y 无关），不能与上方三轴检查合并，
+                // 否则 y 越界、xz 界内的粒子会从"真实地形高度"误变为 -32767 强风。
                 int topY;
-                if (rx >= -CACHE_OFFSET && rx < CACHE_OFFSET &&
-                        rz >= -CACHE_OFFSET && rz < CACHE_OFFSET) {
-                    topY = topYCache[topYIndex(rx, rz)];
+                if (((px | pz) >>> 5) == 0) {
+                    topY = topYCache[(px << 5) | pz];
                 } else {
                     // 保持与 getTopY 越界时一致
                     topY = -32767;
@@ -606,6 +578,59 @@ public class SurroundingTemperatureSimulator {
         WORK_BUFFER.remove();
     }
 
+    /**
+     * xoroshiro128+ 伪随机数生成器（16B 状态，实例级，无共享无锁）。
+     * <p>
+     * 替代 SplittableRandom：后者的 nextInt(bound) 对非 2 的幂上界使用
+     * 取模拒绝采样（idiv 数十周期，且可能多次拒绝）；本实现使用 Lemire
+     * 高位乘法定界（Math.multiplyHigh，无除法、无拒绝循环）。
+     * 偏差量级 2^-64，对蒙特卡洛温度估计在统计上无影响。
+     */
+    private static final class FastRandom {
+        private long s0, s1;
+
+        FastRandom(long seed) {
+            // splitmix64 展开种子，避免弱种子
+            long z = seed + 0x9E3779B97F4A7C15L;
+            z = (z ^ (z >>> 30)) * 0xBF58476D1CE4E5B9L;
+            z = (z ^ (z >>> 27)) * 0x94D049BB133111EBL;
+            s0 = z ^ (z >>> 31);
+            z = s0 + 0x9E3779B97F4A7C15L;
+            z = (z ^ (z >>> 30)) * 0xBF58476D1CE4E5B9L;
+            z = (z ^ (z >>> 27)) * 0x94D049BB133111EBL;
+            s1 = z ^ (z >>> 31);
+        }
+
+        long nextLong() {
+            long a = s0, b = s1;
+            long r = a + b;
+            b ^= a;
+            s0 = Long.rotateLeft(a, 24) ^ b ^ (b << 16);
+            s1 = Long.rotateLeft(b, 37);
+            return r;
+        }
+
+        /**
+         * 返回 [0, bound) 的均匀整数（Lemire 无拒绝采样）。
+         * Java 17 无 Long.unsignedMultiplyHigh，用 multiplyHigh + 符号修正等效：
+         * umulhi(r,b) = smulhi(r,b) + (r<0 ? b : 0)（b>0 恒成立）。
+         */
+        int nextInt(int bound) {
+            long r = nextLong();
+            long hi = Math.multiplyHigh(r, (long) bound);
+            if (r < 0) hi += bound;
+            return (int) hi;
+        }
+
+        /** 返回 {0,1,2} 均匀分布，无乘法/除法，平均 1.33 次迭代 */
+        int nextInt3() {
+            long r;
+            do {
+                r = nextLong() & 3;
+            } while (r == 3);
+            return (int) r;
+        }
+    }
 
     // ======================== 兼容性保留（未使用） ========================
 
