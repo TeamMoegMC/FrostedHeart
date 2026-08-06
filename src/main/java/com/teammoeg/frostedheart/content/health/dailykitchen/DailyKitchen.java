@@ -53,29 +53,38 @@ public class DailyKitchen {
     public static void generateWantedFood(Player player){
     	WantedFoodCapability wantedFoodCapability = FHCapabilities.WANTED_FOOD.getCapability(player).orElse(null);
     	if(wantedFoodCapability==null)return;
-       /* LazyOptional<IDietTracker> dietTracker = DietCapability.get(player);
-        if(!dietTracker.isPresent()){
-            return;
-        }
-        
-        if(wantedFoodCapability==null)return;
-        Set<Item> foodsEaten = DietCapability.get(player).map(IDietTracker::getEaten).orElseGet(HashSet::new);*/
-        /*为了避免重复，每日厨房从diet存储的数据中获取foodsEaten。
-        但若diet存储的foodsEaten会在死亡时候清空的话，则此处获取的foodsEaten也会是空的。
-        在runClient测试中死亡会清空包括foodsEaten在内的所有数据(在TWR环境中不应如此)，此处暂且保留。
-        *如果在整合包测试中也存在死亡后清空foodsEaten数据的话，则需要在fh里面保存foodsEaten数据
-        艹了，为什么我的build文件夹里没有libs文件夹*/
-    	//TODO 增加食物食用记录
+    	WantedFoodsGenerator generator = generateWantedFoods(wantedFoodCapability);
+    	if (generator != null) {
+    		player.displayClientMessage(generator.getWantedFoodsText(), false);
+    	}
+    }
+
+    /**
+     * 根据玩家已吃过的食物种类生成今日"想吃的菜"。吃过的食物由健康事件处理器
+     * （HealthCommonEvents#finishUsingItems）在进食时写入 capability（见 {@link WantedFoodCapability#addEatenFood}）。
+     * 未达到生成门槛（吃过的食物种类不足 10 种）时返回 null，调用方不应发送提示消息。
+     * <p>
+     * Generates today's wanted foods based on the kinds of food the player has eaten.
+     * Eaten food kinds are recorded into the capability by the health event handler
+     * (HealthCommonEvents#finishUsingItems) when eating (see {@link WantedFoodCapability#addEatenFood}).
+     * Returns null when the generation threshold (10 distinct eaten food kinds) is not reached,
+     * in which case the caller should not send the message.
+     *
+     * @param wantedFoodCapability 玩家的每日厨房能力 / the player's daily kitchen capability
+     * @return 生成器实例（含生成的候选与提示文本），未达标时返回 null / the generator holding generated
+     *         candidates and message text, or null if the threshold is not reached
+     */
+    static WantedFoodsGenerator generateWantedFoods(WantedFoodCapability wantedFoodCapability){
         int eatenFoodsAmount = wantedFoodCapability.getFoodsEaten().size();
         int wantedFoodsAmount = Math.min(eatenFoodsAmount / 10, 3);
-        if(wantedFoodsAmount==0) return;
+        if(wantedFoodsAmount==0) return null;
         
         wantedFoodCapability.setEatenFoodsAmount(eatenFoodsAmount);
 
         WantedFoodsGenerator generator = new WantedFoodsGenerator(wantedFoodCapability.getFoodsEaten(), eatenFoodsAmount);
 
         wantedFoodCapability.setWantedFoods(generator.generate());
-        player.displayClientMessage(generator.getWantedFoodsText(), false);
+        return generator;
     }
 
 

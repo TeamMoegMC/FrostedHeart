@@ -52,8 +52,16 @@ class WantedFoodsGenerator {
 
     }
 
+    /**
+     * 判断食物是否为"可推荐的正常食物"：既不是生食(raw_food)也不是坏食(bad_food)。
+     * 每日厨房只把正常食物加入"想吃的菜"候选，避免推荐生肉、腐肉等有害食物。
+     * <p>
+     * Checks whether a food is a recommendable normal food, i.e. neither raw food
+     * (raw_food tag) nor bad food (bad_food tag). Only normal foods are picked as
+     * "wanted food" candidates so harmful food like raw meat or rotten flesh is avoided.
+     */
     private static boolean isNotBadFood(Item food) {
-        return ForgeRegistries.ITEMS.getDelegate(food).map(t->t.is(FHTags.Items.RAW_FOOD.tag)||t.is(FHTags.Items.BAD_FOOD.tag)).orElse(false);
+        return ForgeRegistries.ITEMS.getDelegate(food).map(t->!t.is(FHTags.Items.RAW_FOOD.tag)&&!t.is(FHTags.Items.BAD_FOOD.tag)).orElse(false);
     }
 
     public HashSet<Item> generate() {

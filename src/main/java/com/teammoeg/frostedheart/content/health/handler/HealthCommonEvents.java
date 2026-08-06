@@ -58,6 +58,11 @@ public class HealthCommonEvents {
 		if (!(player instanceof ServerPlayer))
 			return;
 		original.reviveCaps();
+		// 保留每日厨房记录（吃过的食物种类 + 今日想吃的菜），避免死亡后清零
+		// Preserve daily kitchen records (eaten food kinds + today's wanted foods) across death
+		FHCapabilities.WANTED_FOOD.getCapability(original).ifPresent(old -> {
+			FHCapabilities.WANTED_FOOD.getCapability(player).ifPresent(n -> n.copyFrom(old));
+		});
 		NutritionCapability.getCapability(player).ifPresent(nutrition -> {
 			NutritionCapability.getCapability(original).ifPresent(n -> {
 				nutrition.set(n.get());
@@ -91,6 +96,13 @@ public class HealthCommonEvents {
 		DailyKitchen.tryGiveBenefits(event);
 		if (event.getEntity() instanceof Player player) {
 			NutritionCapability.getCapability(player).ifPresent(e -> e.eat(player, event.getItem()));
+			// 记录吃过的食物种类（仅可食用），供每日厨房次日生成"想吃的菜"。
+			// 服务端专属：WANTED_FOOD 能力只附加在 ServerPlayer 上。
+			// Record eaten food kinds (edible only) for the daily kitchen to generate
+			// wanted foods next morning. Server only: WANTED_FOOD is attached to ServerPlayer.
+			if (!player.level().isClientSide && player instanceof ServerPlayer) {
+				FHCapabilities.WANTED_FOOD.getCapability(player).ifPresent(w -> w.addEatenFood(event.getItem().getItem()));
+			}
 		}
 	}
 

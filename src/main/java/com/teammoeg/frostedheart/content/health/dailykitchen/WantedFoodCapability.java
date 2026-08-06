@@ -61,6 +61,7 @@ public class WantedFoodCapability implements NBTSerializable{
     private int eatenTimes = 0;
     private int eatenFoodsAmount = 0;
     private final String key_wantedFoods = "wantedFoods";
+    private final String key_foodsEaten = "foodsEaten";
     private final String key_eatenFoodsAmount = "eatenFoodsAmount";
     private final String key_eatenTimes = "key_eatenTimes";
 
@@ -118,6 +119,11 @@ public class WantedFoodCapability implements NBTSerializable{
             list.add(turnItemToStringNBT(item));
         }
         nbt.put(key_wantedFoods, list);
+        ListTag eatenList = new ListTag();
+        for(Item item: this.foodsEaten){
+            eatenList.add(turnItemToStringNBT(item));
+        }
+        nbt.put(key_foodsEaten, eatenList);
         nbt.put(key_eatenFoodsAmount, IntTag.valueOf(this.eatenFoodsAmount));
         nbt.put(key_eatenTimes, IntTag.valueOf((this.eatenTimes)));
 
@@ -132,9 +138,50 @@ public class WantedFoodCapability implements NBTSerializable{
         for(Tag itemNBT : list){
             wantedFoods.add(turnStringNBTToItem(itemNBT));
         }
+        foodsEaten.clear();
+        ListTag eatenList = nbt.getList(key_foodsEaten, Tag.TAG_STRING);
+        for(Tag itemNBT : eatenList){
+            Item item = turnStringNBTToItem(itemNBT);
+            if (item != null) {//物品已不存在时跳过，避免空项污染候选池 / skip vanished items to avoid polluting the candidate pool
+                foodsEaten.add(item);
+            }
+        }
 	}
 
-	public Set<Item> getFoodsEaten() {
+    public Set<Item> getFoodsEaten() {
 		return foodsEaten;
+	}
+
+	/**
+	 * 记录玩家吃过的一种食物（仅可食用的物品，且自动按物品去重）。
+	 * <p>
+	 * Records one kind of food the player has eaten. Only edible items are recorded
+	 * and duplicates (same Item) are naturally eliminated by the underlying Set,
+	 * so the collection is a set of distinct eaten food kinds.
+	 *
+	 * @param food 吃下的物品 / the item that was eaten
+	 */
+	public void addEatenFood(Item food) {
+		if (food != null && food.isEdible()) {
+			foodsEaten.add(food);
+		}
+	}
+
+	/**
+	 * 从另一个能力实例复制全部数据（用于玩家复活后保留每日厨房记录）。
+	 * <p>
+	 * Copies all data from another capability instance (used to preserve
+	 * daily kitchen records after the player respawns).
+	 *
+	 * @param other 数据来源的能力实例 / the capability instance to copy from
+	 */
+	public void copyFrom(WantedFoodCapability other) {
+		if (other == null) return;
+		this.wantedFoods.clear();
+		this.wantedFoods.addAll(other.wantedFoods);
+		this.foodsEaten.clear();
+		this.foodsEaten.addAll(other.foodsEaten);
+		this.eatenTimes = other.eatenTimes;
+		this.eatenFoodsAmount = other.eatenFoodsAmount;
 	}
 }
