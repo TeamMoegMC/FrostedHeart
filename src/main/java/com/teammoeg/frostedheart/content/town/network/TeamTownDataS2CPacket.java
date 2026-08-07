@@ -48,8 +48,9 @@ public class TeamTownDataS2CPacket implements CMessage {
 	public TeamTownDataS2CPacket(TeamTownData townData) {
 		try {
 			data= FHSpecialDataTypes.TOWN_DATA.saveData(DataOps.COMPRESSED, townData);
-			// 全量包会把客户端状态推进到当前全量值：以当前资源值为基准重建服务端
-			// 增量去重快照，避免跨全量包的值级去重误判。序列化失败则不重置。
+			// 全量包只单播给当前玩家，但资源值级去重基线是全队共享的：若按当前值重建基线，
+			// 会吞掉窗口内（已标记未 flush）的资源增量，导致其他在线玩家丢失该变更。
+			// 因此只清空基线，使下一轮 flush 对所有脏资源键强制发包（双向安全）。序列化失败则不重置。
 			townData.markFullSynced();
 		} catch (Exception e) {
 			FHMain.LOGGER.error("Failed to save town data when syncing town data", e);

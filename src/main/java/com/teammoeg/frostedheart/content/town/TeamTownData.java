@@ -779,7 +779,8 @@ public class TeamTownData implements SpecialData{
 
     /**
      * 全量同步包（{@link com.teammoeg.frostedheart.content.town.network.TeamTownDataS2CPacket}）发出成功后调用：
-     * 以当前资源值为基准重建增量去重快照，避免跨全量包的值级去重误判。
+     * 清空资源值级去重基线，使下一轮 flush 对所有脏资源键强制发包（全量包单播、基线全队共享，
+     * 重建基线会吞掉其他玩家的窗口内增量，详见 {@link DataSyncCache#markFullSynced()}）。
      * 委托给 {@link DataSyncCache#markFullSynced()}（内部类跨包不可访问）。
      */
     public void markFullSynced() {
@@ -835,13 +836,17 @@ public class TeamTownData implements SpecialData{
 
         /**
          * 全量同步包（{@link com.teammoeg.frostedheart.content.town.network.TeamTownDataS2CPacket}）发出成功后调用：
-         * 以当前全部资源值重建快照。否则跨全量包的值级去重会误判——
-         * 例如 max_capacity 100(已同步) → 200(全量) → 100(增量) 时，
-         * 若快照停留在 100 会把最后一次变更误当作"未变化"而跳过。
+         * 清空资源值级去重基线，使下一轮 flush 对所有脏资源键强制发包（last==null 一律视为变化）。
+         * <p>
+         * 为何不按"当前值重建基线"：全量包只单播给单个玩家（登录/切维度/开 GUI/印章），
+         * 而基线是全队共享的。若把基线推进到当前值，窗口内（已标记未 flush）的资源变更
+         * 会在下一 tick 被值级去重误判为"未变化"而跳过，导致未收到全量包的其他在线玩家
+         * 丢失该增量。改为清空基线则双向安全：① 其他玩家下一 tick 收到窗口内全部变更；
+         * ② 收到全量包的玩家若快照值随后回跳（如 200 → 100），也会被强制发包修正。
+         * 代价：全量包后首次 flush 会把窗口内脏键（含空转键）多发送一次冗余包，量小可接受。
          */
         public void markFullSynced() {
             lastSyncedResources.clear();
-            lastSyncedResources.putAll(TeamTownData.this.resources.getAllResources());
         }
 
         public void addChanged(ITownResourceKey changedResourceKey){

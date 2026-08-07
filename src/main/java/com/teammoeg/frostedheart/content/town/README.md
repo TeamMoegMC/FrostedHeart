@@ -386,4 +386,4 @@ TownResourceActionResults.TownResourceTypeCostActionResult result =
 
 - 三增量包 `handle()` → `applyXxxUpdate`（覆盖式 merge + 移除，**不回 fire**）。
 - GUI 数据面板 render 阶段经 Supplier 实时取数，收包不重建界面（见 §9）；`TeamTownDataS2CPacket` 替换实例不影响（Supplier 每帧重新解析）。
-- 全量包序列化成功后调 `markFullSynced()` 重置资源去重基线。
+- 全量包序列化成功后调 `markFullSynced()` **清空**资源去重基线：基线空 → `isResourceUnchanged` 恒 false → 下一轮 flush 对所有脏资源键强制发包（2026-08-07 修复：全量包仅单播给单个玩家而基线全队共享，若按当前值重建基线会吞掉其他玩家窗口内（已标记未 flush）的资源增量；清空则双向安全，代价是首次 flush 多一次冗余资源包）。
