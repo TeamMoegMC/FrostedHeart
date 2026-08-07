@@ -21,7 +21,6 @@ package com.teammoeg.frostedheart.content.town.buildings.warehouse;
 
 import com.teammoeg.chorda.block.entity.CBlockEntity;
 import com.teammoeg.chorda.block.entity.CTickableBlockEntity;
-import com.teammoeg.chorda.util.struct.LazyTickWorker;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.content.town.ITown;
@@ -215,14 +214,8 @@ public class WarehouseInterfaceBlockEntity extends CBlockEntity implements CTick
         if (level != null) {
             setChanged();
         }
-        // 注册 Watcher 并立即标记需要平衡
-        resolveBinding(false).ifPresent(ctx -> {
-            if (ctx.town() instanceof ITownWithResources resourceTown) {
-                TeamTownResourceHolder holder = ((TeamTownResourceActionExecutorHandler) resourceTown.getActionExecutorHandler()).resourceHolder;
-                this.watcher = holder.createWatcher(this);
-            }
-        });
-        markNeedsBalance();
+        // 注册 Watcher
+        ensureWatcherAndRefresh();
         return true;
     }
 
@@ -318,7 +311,11 @@ public class WarehouseInterfaceBlockEntity extends CBlockEntity implements CTick
     /**
      * 标记需要执行库存平衡。外部事件（库存变化、红石变化、目标改变、物品推送）均调用此方法。
      */
-    private void markNeedsBalance() {
+    public void markNeedsBalance() {
+        if (resolveBinding(false).map(ctx -> !ctx.warehouse().isBuildingWorkable()).orElse(true)) {
+            return;
+        }
+
         needsBalance = true;
         setChanged();
     }
@@ -420,6 +417,26 @@ public class WarehouseInterfaceBlockEntity extends CBlockEntity implements CTick
         }
     }
 
+    /**
+     * 与仓库建立新的 Watcher 订阅，并且刷新一次当前库存状态。
+     */
+    public void ensureWatcherAndRefresh() {
+        if (watcher != null|| level == null || level.isClientSide) return;
+
+        Optional<BindingContext> binding = resolveBinding(false);
+        if (binding.isEmpty()) return;
+        BindingContext ctx = binding.get();
+        if (!(ctx.town() instanceof ITownWithResources resourceTown) || !ctx.warehouse().isBuildingWorkable()) {
+            connectionStatus = STATUS_UNAVAILABLE;
+            return;
+        }
+
+        TeamTownResourceHolder holder = ((TeamTownResourceActionExecutorHandler) resourceTown.getActionExecutorHandler()).resourceHolder;
+
+        holder.createWatcher(this);
+        markNeedsBalance();
+    }
+
     private void setInventoryStackInternal(int slot, ItemStack stack) {
         suppressInventoryCallback = true;
         try {
@@ -445,27 +462,28 @@ public class WarehouseInterfaceBlockEntity extends CBlockEntity implements CTick
     public void onLoad() {
         super.onLoad();
         if (level != null && !level.isClientSide) {
-            // 若 Watcher 丢失但绑定仍有效，则重新创建 Watcher
-            if (watcher == null && warehousePos != null) {
-                resolveBinding(false).ifPresent(ctx -> {
-                    if (ctx.town() instanceof ITownWithResources resourceTown) {
-                        TeamTownResourceHolder holder = ((TeamTownResourceActionExecutorHandler) resourceTown.getActionExecutorHandler()).resourceHolder;
-                        this.watcher = holder.createWatcher(this);
-                    }
-                });
-            }
-            // 加载后务必执行一次平衡，以确保状态与仓库一致
-            markNeedsBalance();
+            ensureWatcherAndRefresh();
         }
     }
 
     @Override
     public void onRemoved() {
         if (level != null && !level.isClientSide) {
-            // 仅当方块被真正破坏（不再为接口方块）时才清理绑定与 Watcher，并掉落物品
-            if (!(level.getBlockState(worldPosition).getBlock() instanceof WarehouseInterfaceBlock)) {
+            if (level.getBlockState(worldPosition).getBlock() instanceof WarehouseInterfaceBlock) {
+                // 区块卸载：只清理 Watcher，保留绑定和库存（库存随方块保存）
+                if (watcher != null) {
+                    watcher.reset();
+                    watcher = null;
+                }
+            } else {
+                // 方块被破坏：完整清理，包括掉落物品
+                if (watcher != null) {
+                    watcher.reset();
+                    watcher = null;
+                }
                 resolveBinding(false).ifPresent(context -> context.warehouse().removeInterface(worldPosition));
-                clearBinding();
+                clearBinding(); // 注意 clearBinding 中也会 reset watcher，但此时已为 null，安全
+                // 掉落物品
                 for (int slot = 0; slot < SLOT_COUNT; slot++) {
                     ItemStack stack = inventory.getStackInSlot(slot);
                     if (!stack.isEmpty()) {

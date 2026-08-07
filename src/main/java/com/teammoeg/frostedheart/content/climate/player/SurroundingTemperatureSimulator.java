@@ -241,7 +241,11 @@ public class SurroundingTemperatureSimulator {
         //预计算高度图
         fillTopYCache(buf.topYCache);
 
-        float heat = 0f, wind = 0f, minTemp = 0f, maxTemp = 0f;
+        float heat = 0f, minTemp = 0f, maxTemp = 0f;
+        // 风力改 int 计数（断开 float 累加的 3-4 周期串行依赖链）：
+        // 2f/0.5f 均为 2 的幂且计数恒 < 2^24，末尾 2f*windStrong + 0.5f*windWeak
+        // 与逐步 float 累加逐 bit 等价。
+        int windStrong = 0, windWeak = 0;
         // 局部变量缓存，JIT 优化更友好
         final int[] topYCache = buf.topYCache;
 
@@ -272,6 +276,15 @@ public class SurroundingTemperatureSimulator {
                 // 无符号单分支越界检查：(v+16) 落在 [0,32) 当且仅当其第 5 位及以上全为 0；
                 // 任一分量越界（负数或 ≥32）都会在 OR 结果中留下高位 → >>>5 非零。
                 final int px = rx + CACHE_OFFSET, py = ry + CACHE_OFFSET, pz = rz + CACHE_OFFSET;
+                // xz 越界解析退出：界外恒为 AIR（无碰撞、无热量、不消耗 rnd），速度不变 →
+                // 直线运动，而缓存区域是凸立方体 ⟹ xz 一旦出界永不返回；
+                // 且 xz 出界时 topY 恒为 -32767 → 后续每步（含本步）恒为强风 +2。
+                // 剩余轮次贡献确定，直接计入并结束该粒子，结果与原循环逐 bit 等价。
+                // （y 单独越界不做此处理：xz 仍在界内时 topY 取真实地形高度，非恒强风。）
+                if (((px | pz) >>> 5) != 0) {
+                    windStrong += num_rounds - round;
+                    break;
+                }
                 CachedBlockInfo info;
                 if (((px | py | pz) >>> 5) != 0) {
                     info = AIR_INFO;
@@ -362,20 +375,21 @@ public class SurroundingTemperatureSimulator {
                     topY = -32767;
                 }
 
-                if (topY <= by) {
-                    // 方块位于天空下方 → 强风
-                    wind += 2f;
-                } else if (info.isEmpty) {
+                // 强风无分支化：topY <= by ⟺ topY - by - 1 < 0（int 不溢出），符号位即计数
+                int strong = (topY - by - 1) >>> 31;
+                windStrong += strong;
+                if (strong == 0 && info.isEmpty) {
                     // 复用上方已查到的 info（原代码此处对同一 bpos 二次调用 getInfoCached）
                     double ddx = bx + 0.5 - qx0, ddy = by + 0.5 - qy0, ddz = bz + 0.5 - qz0;
                     if (ddx * ddx + ddy * ddy + ddz * ddz >= 16.0) {
                         // 粒子飞出 4 格以上且遇到空气 → 弱风
-                        wind += 0.5f;
+                        windWeak++;
                     }
                 }
             }
         }
 
+        float wind = 2f * windStrong + 0.5f * windWeak;
         return new SimulationResult(Mth.clamp(heat / n, minTemp, maxTemp), wind / n);
     }
 
@@ -525,11 +539,7 @@ public class SurroundingTemperatureSimulator {
         if (y >= 0) i |= 1;
         PalettedContainer<BlockState> current = sections[i];
         if (current == null) return Blocks.AIR.defaultBlockState();
-        try {
-            return current.get(x & 15, y & 15, z & 15);
-        } catch (Exception ex) {
-            throw new RuntimeException("Failed to get block at " + x + "," + y + "," + z);
-        }
+        return current.get(x & 15, y & 15, z & 15);
     }
 
     /**
@@ -547,9 +557,13 @@ public class SurroundingTemperatureSimulator {
      * 坐标覆盖相对 origin 的 [-16,16) × [-16,16)。
      */
     private void fillTopYCache(int[] topYCache) {
-        for (int x = -CACHE_OFFSET; x < CACHE_OFFSET; x++) {
-            for (int z = -CACHE_OFFSET; z < CACHE_OFFSET; z++) {
-                topYCache[topYIndex(x, z)] = getTopY(x, z);
+        for (int px = 0; px < CACHE_DIM; px++) {
+            int mapX = (px >>> 4) << 1;
+            int x = px & 15;
+            int rowBase = px << 5;
+            for (int pz = 0; pz < CACHE_DIM; pz++) {
+                int mapIndex = mapX | (pz >>> 4);
+                topYCache[rowBase | pz] = maps[mapIndex].getFirstAvailable(x, pz & 15);
             }
         }
     }

@@ -20,8 +20,6 @@
 package com.teammoeg.frostedheart.content.town.buildings.warehouse;
 
 import com.teammoeg.chorda.block.entity.CBlockEntity;
-import com.teammoeg.chorda.block.entity.CTickableBlockEntity;
-import com.teammoeg.chorda.util.struct.LazyTickWorker;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.content.town.ITown;
@@ -120,7 +118,6 @@ public class WarehouseLevelEmitterBlockEntity extends CBlockEntity implements IW
     // ---------- IWarehouseStockWatcherNode 实现 ----------
 
     public void setFilter(@Nullable SimpleItemKey newFilter) {
-        SimpleItemKey oldFilter = this.filter;
         this.filter = newFilter;
         if (level != null) {
             setChanged();
@@ -142,6 +139,11 @@ public class WarehouseLevelEmitterBlockEntity extends CBlockEntity implements IW
     @Override
     public void onStockChange(SimpleItemKey item, long newAmount) {
         if (level == null || level.isClientSide) return;
+        if (resolveBinding(false).map(ctx -> !ctx.warehouse().isBuildingWorkable()).orElse(true)) {
+            // 建筑无效，强制关闭
+            setEmitterOn(false, lastKnownStock);
+            return;
+        }
         lastKnownStock = newAmount;
         boolean on = (mode == WarehouseRedstoneMode.LOW_SIGNAL) == (newAmount < threshold);
         setEmitterOn(on, newAmount);
@@ -206,7 +208,7 @@ public class WarehouseLevelEmitterBlockEntity extends CBlockEntity implements IW
         }
 
         // 获取新的 watcher 并配置
-        refreshWatcherAndState();
+        ensureWatcherAndRefresh();
         return true;
     }
 
@@ -273,8 +275,8 @@ public class WarehouseLevelEmitterBlockEntity extends CBlockEntity implements IW
     /**
      * 与仓库建立新的 Watcher 订阅，并且刷新一次当前库存状态。
      */
-    private void refreshWatcherAndState() {
-        if (level == null || level.isClientSide) return;
+    public void ensureWatcherAndRefresh() {
+        if (watcher != null || level == null || level.isClientSide) return;
 
         Optional<BindingContext> binding = resolveBinding(false);
         if (binding.isEmpty()) {
@@ -284,14 +286,14 @@ public class WarehouseLevelEmitterBlockEntity extends CBlockEntity implements IW
         }
 
         BindingContext ctx = binding.get();
-        if (!(ctx.town() instanceof ITownWithResources resourceTown)
-                || !ctx.warehouse().isBuildingWorkable()) {
+        if (!(ctx.town() instanceof ITownWithResources resourceTown)) {
             connectionStatus = STATUS_UNAVAILABLE;
             setEmitterOn(false, 0);
             return;
         }
 
         TeamTownResourceHolder holder = ((TeamTownResourceActionExecutorHandler) resourceTown.getActionExecutorHandler()).resourceHolder;
+
         this.watcher = holder.createWatcher(this); // 会回调 updateWatcher
 
         connectionStatus = STATUS_WORKING;
@@ -351,23 +353,26 @@ public class WarehouseLevelEmitterBlockEntity extends CBlockEntity implements IW
         if (level != null && !level.isClientSide) {
             // 方块加载时（无论是首次放置还是 chunk 重载），重新连接 watcher
             // 城镇资源常驻，Watcher 机制会自动同步最新库存
-            refreshWatcherAndState();
+            ensureWatcherAndRefresh();
         }
     }
 
     @Override
     public void onRemoved() {
         if (level != null && !level.isClientSide) {
-            // 只有方块真正被破坏（不再是发信器）才清理 watcher 和绑定
-            if (!(level.getBlockState(worldPosition).getBlock() instanceof WarehouseLevelEmitterBlock)) {
-                // 释放 watcher（自动从索引清理）
+            if (level.getBlockState(worldPosition).getBlock() instanceof WarehouseLevelEmitterBlock) {
+                // 区块卸载：仅释放 Watcher，保留绑定，onLoad 会重建
                 if (watcher != null) {
                     watcher.reset();
                     watcher = null;
                 }
-                // 从仓库注销
+            } else {
+                // 方块被破坏或替换：彻底清理
+                if (watcher != null) {
+                    watcher.reset();
+                    watcher = null;
+                }
                 resolveBinding(false).ifPresent(context -> context.warehouse().removeEmitter(worldPosition));
-                // 清空绑定信息
                 townProvider = null;
                 warehousePos = null;
                 connectionStatus = STATUS_UNBOUND;
