@@ -239,8 +239,12 @@ public class TeamTownResourceHolder {
             //VirtualResourceAttribute由于同时属于ITownResourceKey，在前面处理掉了
             if(thing instanceof ItemResourceAttribute itemResourceAttribute){
                 MutableDouble adder = new MutableDouble();
-                for(ItemStackResourceKey itemStackResourceKey : ITEM_RESOURCE_ATTRIBUTE_CACHE.getOrDefault(itemResourceAttribute, new HashSet<>())){
-                    adder.add(get(itemStackResourceKey) * getResourceAmount(itemStackResourceKey, itemResourceAttribute));
+                // 缺键视为空集（迭代零次），避免每调用分配空 HashSet
+                HashSet<ItemStackResourceKey> attrItems = ITEM_RESOURCE_ATTRIBUTE_CACHE.get(itemResourceAttribute);
+                if (attrItems != null) {
+                    for(ItemStackResourceKey itemStackResourceKey : attrItems){
+                        adder.add(get(itemStackResourceKey) * getResourceAmount(itemStackResourceKey, itemResourceAttribute));
+                    }
                 }
                 return adder.doubleValue();
             }
@@ -270,8 +274,9 @@ public class TeamTownResourceHolder {
         Map<ItemStackResourceKey, Double> items = new HashMap<>();
         for(ITownResourceKey townResourceKey : resources.keySet()){
             if(townResourceKey instanceof ItemStackResourceKey itemStackResourceKey) {
-                if (get(itemStackResourceKey) > DELTA) {
-                    items.put(itemStackResourceKey, get(itemStackResourceKey));
+                double amount = get(itemStackResourceKey);
+                if (amount > DELTA) {
+                    items.put(itemStackResourceKey, amount);
                 }
             }
         }
@@ -280,15 +285,14 @@ public class TeamTownResourceHolder {
 
     public Map<ItemStackResourceKey, Double> getAllItemsByResourceAttribute(ItemResourceAttribute itemResourceAttribute){
         Map<ItemStackResourceKey, Double> items = new HashMap<>();
+        // 缺键视为空集（contains 恒 false），避免每调用分配空 HashSet
+        HashSet<ItemStackResourceKey> attrItems = ITEM_RESOURCE_ATTRIBUTE_CACHE.get(itemResourceAttribute);
         for(ITownResourceKey townResourceKey : resources.keySet()){
-            if(townResourceKey instanceof ItemStackResourceKey itemStackResourceKey) {
-                for(ItemStackResourceKey itemKeyOfAttribute : ITEM_RESOURCE_ATTRIBUTE_CACHE.getOrDefault(itemResourceAttribute, new HashSet<>())){
-                    if(itemStackResourceKey.equals(itemKeyOfAttribute)){
-                        if (get(itemStackResourceKey) > DELTA) {
-                            items.put(itemStackResourceKey, get(itemStackResourceKey));
-                        }
-                        break;
-                    }
+            if(townResourceKey instanceof ItemStackResourceKey itemStackResourceKey
+                    && attrItems != null && attrItems.contains(itemStackResourceKey)) {
+                double amount = get(itemStackResourceKey);
+                if (amount > DELTA) {
+                    items.put(itemStackResourceKey, amount);
                 }
             }
         }
@@ -303,8 +307,9 @@ public class TeamTownResourceHolder {
     public Map<ItemStackResourceKey, Double> getAllItems(ItemResourceAttribute attribute){
         Map<ItemStackResourceKey, Double> items = new HashMap<>();
         for(ItemStackResourceKey itemStackResourceKey : ITEM_RESOURCE_ATTRIBUTE_CACHE.get(attribute)){
-            if(get(itemStackResourceKey) > DELTA){
-                items.put(itemStackResourceKey, get(itemStackResourceKey) * getResourceAmount(itemStackResourceKey, attribute));
+            double amount = get(itemStackResourceKey);
+            if(amount > DELTA){
+                items.put(itemStackResourceKey, amount * getResourceAmount(itemStackResourceKey, attribute));
             }
         }
         return items;

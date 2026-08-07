@@ -83,6 +83,9 @@ public abstract class ServerLevelMixin_TemperatureUpdate
         ChunkPos chunkpos = pChunk.getPos();
         ChunkHeatData chunkHeatData = ChunkHeatData.get(level, chunkpos.x, chunkpos.z);
 
+        // ConfigValue.get() 为 spec 值表查询：同一 tick 内配置恒定，hoist 到局部变量
+        int tempBlockstateUpdateIntervalTicks = FHConfig.SERVER.CLIMATE.tempBlockstateUpdateIntervalTicks.get();
+
         float climateBase=0;
         WorldClimate wc = WorldClimate.get(level);
         if (wc != null) {
@@ -90,7 +93,7 @@ public abstract class ServerLevelMixin_TemperatureUpdate
         }
 
         boolean updateTempBlock = (now + chunkpos.x + chunkpos.z)
-                % FHConfig.SERVER.CLIMATE.tempBlockstateUpdateIntervalTicks.get() == 0;
+                % tempBlockstateUpdateIntervalTicks == 0;
 
         boolean isRaining = level.isRaining();
         if (wc != null)
@@ -380,6 +383,9 @@ public abstract class ServerLevelMixin_TemperatureUpdate
     {
         ChunkHeatData.HeatQueryResult heatQuery = ChunkHeatData.queryAdjust(chunkHeatData, pos);
 
+        // 每方块随机刻尝试均会执行本方法：ambientBlockStateUpdateDivisor 同一 tick 内恒定，hoist 到开头
+        int ambientBlockStateUpdateDivisor = FHConfig.SERVER.CLIMATE.ambientBlockStateUpdateDivisor.get();
+
         int heatCapacity = std.heatCapacity();
         if (heatCapacity <= 0 || level.random.nextInt(heatCapacity) != 0)
         {
@@ -411,7 +417,7 @@ public abstract class ServerLevelMixin_TemperatureUpdate
             {
                 // To save performance, we only focus on blocks that player cares more about,
                 // otherwise we reduce transition rate
-                boolean shouldDoAdjust = level.random.nextInt(FHConfig.SERVER.CLIMATE.ambientBlockStateUpdateDivisor.get()) == 0
+                boolean shouldDoAdjust = level.random.nextInt(ambientBlockStateUpdateDivisor) == 0
                         || heatQuery.hasActiveAdjust();
 
                 if (!shouldDoAdjust)
@@ -439,7 +445,7 @@ public abstract class ServerLevelMixin_TemperatureUpdate
                 }
                 else
                 {
-                    boolean shouldDoAdjust = level.random.nextInt(FHConfig.SERVER.CLIMATE.ambientBlockStateUpdateDivisor.get()) == 0
+                    boolean shouldDoAdjust = level.random.nextInt(ambientBlockStateUpdateDivisor) == 0
                             || heatQuery.hasActiveAdjust();
 
                     if (!shouldDoAdjust)

@@ -157,6 +157,9 @@ public class TownResidentsPanel extends UIElement {
         TeamTown town = townSource.get();
         List<Line> lines = new ArrayList<>();
         lines.add(new Line(Component.literal(resident.toString()), 0xFFFFAA00));
+        lines.add(new Line(Component.translatable("gui.frostedheart.town_manager.age")
+                .append(Component.literal(": "))
+                .append(Component.translatable(Resident.ageLangKey(resident.getAge()))), 0xFFFFFFFF));
         lines.add(stat("gui.frostedheart.town.health", resident.getHealth()));
         lines.add(stat("gui.frostedheart.town.mental", resident.getMental()));
         lines.add(stat("gui.frostedheart.town.strength", resident.getStrength()));

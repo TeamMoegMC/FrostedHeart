@@ -63,7 +63,7 @@ public class WeatherForecast {
         }
     }
 
-    private static int getTemperatureLevel(float temp) {
+    public static int getTemperatureLevel(float temp) {
         if (temp >= WorldTemperature.WARM_PERIOD_PEAK-WorldTemperature.FORECAST_SENSITIVE_THERSOLD*2) {
             return 1;
         } else if (temp <= -2) {

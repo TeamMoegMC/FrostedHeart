@@ -49,6 +49,7 @@ public interface ITownResidentWorkBuilding extends ITownResidentBuilding {
      * 可在子类覆写此方法，以对不同的工作设置工作条件。
      */
     default boolean canResidentWork(Resident resident){
+        if(resident.getAge() == Resident.AGE_INFANT) return false;
         if(resident.getHealth() <= 10) return false;
         if(resident.getMental() <= 5) return false;
         if(resident.getHousePos() == null) return false;

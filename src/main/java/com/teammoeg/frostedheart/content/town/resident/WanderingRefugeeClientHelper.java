@@ -23,11 +23,30 @@ public class WanderingRefugeeClientHelper {
     private static ITownDataUpdateListener refreshListener = null;
 
     public static void openScreen(WanderingRefugee entity) {
-        var trade = TextButton.create(DialogueOverlay.INSTANCE, Component.translatable("gui.frostedheart.wandering_refugee.trade_button"), FlatIcon.TRADE.toCIcon(), mb ->
-            FHNetwork.INSTANCE.sendToServer(new WanderingRefugeeOpenTradeGUIMessage(entity.getId()))
-        );
-        // 招募按钮：禁用时显示"无空余房屋"提示，状态翻转时提示自动跟随
-        var recruit = new TextButton(DialogueOverlay.INSTANCE, Component.translatable("gui.frostedheart.wandering_refugee.recruit_button"), FlatIcon.GAIN.toCIcon()) {
+        // 交易按钮：幼儿禁用（幼儿不会交易，但可招募），悬停显示提示
+        var trade = new TextButton(DialogueOverlay.INSTANCE,
+                Component.translatable("gui.frostedheart.wandering_refugee.trade_button"),
+                FlatIcon.TRADE.toCIcon()) {
+            @Override
+            public void onClicked(MouseButton button) {
+                FHNetwork.INSTANCE.sendToServer(new WanderingRefugeeOpenTradeGUIMessage(entity.getId()));
+            }
+
+            @Override
+            public void getTooltip(TooltipBuilder list) {
+                if (!isEnabled()) {
+                    list.accept(Component.translatable("gui.frostedheart.wandering_refugee.trade_disabled_too_young"));
+                }
+            }
+        };
+        trade.setEnabled(entity.getAgeGroup() != Resident.AGE_INFANT);
+        // 招募按钮：标题带年龄组；禁用时显示"无空余房屋"提示，状态翻转时提示自动跟随
+        var recruit = new TextButton(DialogueOverlay.INSTANCE,
+                Component.translatable("gui.frostedheart.wandering_refugee.recruit_button")
+                        .append(Component.literal(" ("))
+                        .append(Component.translatable(Resident.ageLangKey(entity.getAgeGroup())))
+                        .append(Component.literal(")")),
+                FlatIcon.GAIN.toCIcon()) {
             @Override
             public void onClicked(MouseButton button) {
                 FHNetwork.INSTANCE.sendToServer(new WanderingRefugeeRecruitMessage(entity.getId()));
@@ -73,6 +92,12 @@ public class WanderingRefugeeClientHelper {
         };
         TeamTownData.addClientListener(refreshListener);
 
+        // 对话关闭时（任何方式）立即移除监听器，避免驻留到下次打开；保留上述自移除逻辑作双保险
+        DialogueOverlay.closeCallback = () -> {
+            TeamTownData.removeClientListener(refreshListener);
+            refreshListener = null;
+        };
+
         DialogueScreen.open(true, trade, recruit);
 //        Minecraft.getInstance().setScreen(new WanderingRefugeeScreen(entity));
     }
@@ -85,7 +110,10 @@ public class WanderingRefugeeClientHelper {
      * @return 可招募则返回 true / true if another resident can be recruited
      */
     private static boolean canAddResident() {
-        TeamTownData townData = CClientTeamDataManager.INSTANCE.getInstance().getData(FHSpecialDataTypes.TOWN_DATA);
-        return townData != null && townData.createTeamTown().canAddResident();
+        // 用 getOptional 而非 getData：数据缺失时只读判空，不向客户端 holder 塞入空城镇数据
+        return CClientTeamDataManager.INSTANCE.getInstance()
+                .getOptional(FHSpecialDataTypes.TOWN_DATA)
+                .map(townData -> townData.createTeamTown().canAddResident())
+                .orElse(false);
     }
 }

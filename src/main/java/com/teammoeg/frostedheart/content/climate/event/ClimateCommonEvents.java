@@ -361,7 +361,7 @@ public class ClimateCommonEvents {
                         }
                         if (serverWorld.getDayTime() % 24000 == i % 20 + 1000) {
                             if (!trd.getTeam().getOnlineMembers().isEmpty()) {
-                                trd.getData(FHSpecialDataTypes.TOWN_DATA).tickMorning(serverWorld);// execute only once a day
+                                trd.getData(FHSpecialDataTypes.TOWN_DATA).tickMorning(serverWorld, trd);// execute only once a day
                             }
                         }
                     }
@@ -450,8 +450,11 @@ public class ClimateCommonEvents {
      * @author AlcatrazEscapee
      */
     public static void placeExtraSnow(ServerLevel level, ChunkAccess chunk) {
-        if (FHConfig.SERVER.WORLDGEN.enableSnowAccumulationDuringWeather.get()
-                && level.random.nextInt(FHConfig.SERVER.WORLDGEN.snowAccumulationDifficulty.get()) == 0) {
+        // ConfigValue.get() 为 spec 值表查询：同一 tick 内配置恒定，hoist 到局部变量
+        boolean enableSnowAccumulation = FHConfig.SERVER.WORLDGEN.enableSnowAccumulationDuringWeather.get();
+        int snowAccumulationDifficulty = FHConfig.SERVER.WORLDGEN.snowAccumulationDifficulty.get();
+        if (enableSnowAccumulation
+                && level.random.nextInt(snowAccumulationDifficulty) == 0) {
             int blockX = chunk.getPos().getMinBlockX();
             int blockZ = chunk.getPos().getMinBlockZ();
             BlockPos pos = level.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING,

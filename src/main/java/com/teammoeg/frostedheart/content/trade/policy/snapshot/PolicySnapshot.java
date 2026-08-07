@@ -21,6 +21,7 @@ package com.teammoeg.frostedheart.content.trade.policy.snapshot;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -43,7 +44,8 @@ public class PolicySnapshot {
     };
     Map<String, BaseData> data = new HashMap<>();
     List<BuyData> buys = new ArrayList<>();
-    Map<String, SellData> sells = new HashMap<>();
+    // LinkedHashMap 保证注册序：儿童截断取"前一半"时双端确定，不会因 HashMap 迭代序产生键集分歧
+    Map<String, SellData> sells = new LinkedHashMap<>();
     public int maxExp;
 
     public void calculateRecovery(int deltaDays, FHVillagerData data) {
@@ -72,6 +74,22 @@ public class PolicySnapshot {
 
     public void registerSell(SellData sd) {
         getSells().put(sd.getId(), sd);
+    }
+
+    /**
+     * 儿童商贩：只保留前一半商品条目（低档为主），至少保留 1 条。价格与库存不动。
+     */
+    public void trimTradesToHalf() {
+        if (sells.size() > 1) {
+            List<SellData> list = new ArrayList<>(sells.values());
+            Map<String, SellData> kept = new LinkedHashMap<>();
+            for (SellData sd : list.subList(0, Math.max(1, list.size() / 2)))
+                kept.put(sd.getId(), sd);
+            sells = kept;
+        }
+        if (buys.size() > 1) {
+            buys = new ArrayList<>(buys.subList(0, Math.max(1, buys.size() / 2)));
+        }
     }
 
     @Override

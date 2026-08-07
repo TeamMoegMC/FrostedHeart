@@ -29,9 +29,30 @@ public final class ResidentAttributeModel {
     public static final double MIN_VALUE = 0.0;
     public static final double MAX_VALUE = 100.0;
     public static final double MAX_INITIAL_WORK_PROFICIENCY = 50.0;
+    public static final double ELDER_PROFICIENCY_LOWER_BOUND = 50.0;
+    /**
+     * 非青壮年年龄组（幼儿/儿童/老人）属性生成的分布宽度：
+     * 采样均值映射到 [center - 50*spread, center + 50*spread] 区间。
+     */
+    public static final double DEFAULT_ATTRIBUTE_SPREAD = 0.8;
     public static final int ADULT_ATTRIBUTE_SAMPLE_COUNT = 4;
 
     private ResidentAttributeModel() {
+    }
+
+    /**
+     * Generates one center-biased attribute by averaging four independent
+     * samples from the unit interval, then mapping the [0,1] mean onto a band
+     * of width {@code spread} centered at {@code center}.
+     */
+    public static double generateAttribute(DoubleSupplier randomDouble, double center, double spread) {
+        Objects.requireNonNull(randomDouble);
+        double sum = 0.0;
+        for (int i = 0; i < ADULT_ATTRIBUTE_SAMPLE_COUNT; i++) {
+            sum += unitSample(randomDouble);
+        }
+        double mean = sum / ADULT_ATTRIBUTE_SAMPLE_COUNT;
+        return clampFinite(MAX_VALUE * (center / MAX_VALUE + (mean - 0.5) * spread), MIN_VALUE, MAX_VALUE, MIN_VALUE);
     }
 
     /**
@@ -39,21 +60,33 @@ public final class ResidentAttributeModel {
      * samples from the unit interval.
      */
     public static double generateAdultAttribute(DoubleSupplier randomDouble) {
+        return generateAttribute(randomDouble, 50.0, 1.0);
+    }
+
+    /**
+     * Generates prior profession experience in [0, max], biased toward low values.
+     */
+    public static double generateInitialWorkProficiency(DoubleSupplier randomDouble, double max) {
         Objects.requireNonNull(randomDouble);
-        double sum = 0.0;
-        for (int i = 0; i < ADULT_ATTRIBUTE_SAMPLE_COUNT; i++) {
-            sum += unitSample(randomDouble);
-        }
-        return MAX_VALUE * sum / ADULT_ATTRIBUTE_SAMPLE_COUNT;
+        double sample = unitSample(randomDouble);
+        return clampFinite(max * sample * sample, MIN_VALUE, MAX_VALUE, MIN_VALUE);
     }
 
     /**
      * Generates prior profession experience in [0, 50], biased toward low values.
      */
     public static double generateInitialWorkProficiency(DoubleSupplier randomDouble) {
+        return generateInitialWorkProficiency(randomDouble, MAX_INITIAL_WORK_PROFICIENCY);
+    }
+
+    /**
+     * Generates prior profession experience in [50, 100] for elders, who are
+     * born with naturally higher work proficiency.
+     */
+    public static double generateElderInitialWorkProficiency(DoubleSupplier randomDouble) {
         Objects.requireNonNull(randomDouble);
         double sample = unitSample(randomDouble);
-        return MAX_INITIAL_WORK_PROFICIENCY * sample * sample;
+        return clampFinite(ELDER_PROFICIENCY_LOWER_BOUND + ELDER_PROFICIENCY_LOWER_BOUND * sample, MIN_VALUE, MAX_VALUE, MIN_VALUE);
     }
 
     /**

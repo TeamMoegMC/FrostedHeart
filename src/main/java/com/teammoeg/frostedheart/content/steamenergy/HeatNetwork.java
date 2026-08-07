@@ -58,9 +58,11 @@ public class HeatNetwork implements MenuProvider, NBTSerializable {
     /**
      * All connected endpoints of the network.
      */
-    transient PriorityQueue<LazyOptional<HeatEndpoint>> endpoints = 
+    transient PriorityQueue<LazyOptional<HeatEndpoint>> endpoints =
     	new PriorityQueue<>(Comparator.<LazyOptional<HeatEndpoint>>comparingInt(t->t.map(HeatEndpoint::getPriority).orElse(-100))
     		.reversed().thenComparing(t->t.map(HeatEndpoint::getDistance).orElse(-100)));
+    /** 每 tick 供热分配暂存（仅 tick 内使用，clear 复用避免每 tick 分配 Map；迭代序=插入序与新建一致）。 */
+    private transient LinkedHashMap<HeatEndpoint, Float> intook = new LinkedHashMap<>();
     /** A blockpos-distance map for existing pipelines. */
     Map<BlockPos, Integer> propagated = new HashMap<>();
     /**
@@ -461,7 +463,7 @@ public class HeatNetwork implements MenuProvider, NBTSerializable {
         	return false;
         	
         });
-        LinkedHashMap<HeatEndpoint,Float> intook=new LinkedHashMap<>();
+        intook.clear();
         for (LazyOptional<HeatEndpoint> lep : endpoints) {
         	HeatEndpoint endpoint=lep.orElse(null);
         	if(endpoint!=null)

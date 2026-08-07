@@ -22,15 +22,14 @@ package com.teammoeg.frostedheart.content.climate.player;
 import com.teammoeg.chorda.util.CDistHelper;
 import com.teammoeg.chorda.util.CUtils;
 import it.unimi.dsi.fastutil.objects.Object2ObjectArrayMap;
+import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.objects.ObjectIterator;
 import lombok.Getter;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 
-import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -38,7 +37,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
 public class TemperatureThreadingPool {
-	Map<UUID,Future<SurroundingTemperatureSimulator.SimulationResult>> resultMap;
+	Object2ObjectOpenHashMap<UUID,Future<SurroundingTemperatureSimulator.SimulationResult>> resultMap;
 	/**
 	 * 每个玩家上次提交模拟时的输入快照（仅主线程访问，无需同步）。
 	 * <p>
@@ -73,7 +72,7 @@ public class TemperatureThreadingPool {
 	public TemperatureThreadingPool(int threadNum) {
 		if(threadNum!=0) {
 			scheduler=Executors.newFixedThreadPool(threadNum, CUtils.makeThreadFactory("block-temperature-calculation", true));
-			resultMap=new HashMap<>();
+			resultMap=new Object2ObjectOpenHashMap<>();
 		}
 	}
 	public boolean tryCommitWork(ServerPlayer player) {
@@ -112,16 +111,19 @@ public class TemperatureThreadingPool {
 	public void tick() {
 		if(resultMap!=null) {
 			int tasksRemain=0;
-			for(Iterator<Entry<UUID, Future<SurroundingTemperatureSimulator.SimulationResult>>> it = resultMap.entrySet().iterator(); it.hasNext();) {
-				Entry<UUID, Future<SurroundingTemperatureSimulator.SimulationResult>> entry=it.next();
+			for(ObjectIterator<Object2ObjectMap.Entry<UUID, Future<SurroundingTemperatureSimulator.SimulationResult>>> it = resultMap.object2ObjectEntrySet().iterator(); it.hasNext();) {
+				Object2ObjectMap.Entry<UUID, Future<SurroundingTemperatureSimulator.SimulationResult>> entry=it.next();
 				if(entry.getValue().isDone()) {
+					// fastutil 的 MapEntry 是索引式：remove() 后索引置 -1 不可再访问，须先取键值
+					UUID id = entry.getKey();
+					Future<SurroundingTemperatureSimulator.SimulationResult> done = entry.getValue();
 					it.remove();
 
-					ServerPlayer player=CDistHelper.getServer().getPlayerList().getPlayer(entry.getKey());
+					ServerPlayer player=CDistHelper.getServer().getPlayerList().getPlayer(id);
 					//System.out.println("work has done for"+player.getName().getString());
 					if(player!=null) {
 						try {
-							this.submitPlayerData(player, entry.getValue().get());
+							this.submitPlayerData(player, done.get());
 						} catch (InterruptedException e) {//this error should not happen
 							e.printStackTrace();
 						} catch (ExecutionException e) {//internal calculation cause exception, we should throw it to cause crash
@@ -129,7 +131,7 @@ public class TemperatureThreadingPool {
 						}
 					}else {
 						// 玩家已离线：清理输入快照，避免缓慢泄漏
-						lastInputs.remove(entry.getKey());
+						lastInputs.remove(id);
 					}
 				}else tasksRemain++;
 			}

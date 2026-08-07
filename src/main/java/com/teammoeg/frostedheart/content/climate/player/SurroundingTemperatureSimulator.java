@@ -645,27 +645,6 @@ public class SurroundingTemperatureSimulator {
             return (int) r;
         }
     }
-
-    // ======================== 兼容性保留（未使用） ========================
-
-    /**
-     * 检查射线是否与方块碰撞并返回碰撞面。
-     * 原代码保留方法，模拟循环中未使用。
-     */
-    @SuppressWarnings("unused")
-    private Direction getHitingFace(double sx, double sy, double sz,
-                                    double vx, double vy, double vz) {
-        int bx = Mth.floor(sx + vx), by = Mth.floor(sy + vy), bz = Mth.floor(sz + vz);
-        int rx = bx - ox, ry = by - oy, rz = bz - oz;
-        BlockState bs = getBlock(rx, ry, rz);
-        CachedBlockInfo ci = stateCache.computeIfAbsent(bs,
-                s -> computeBlockInfo(rx, ry, rz, bx, by, bz));
-        if (ci.isEmpty) return null;
-        Vec3 svec = new Vec3(sx, sy, sz);
-        Vec3 vvec = new Vec3(sx + vx, sy + vy, sz + vz);
-        BlockHitResult brtr = AABB.clip(ci.aabbList, svec, vvec, new BlockPos(bx, by, bz));
-        return brtr != null ? brtr.getDirection() : null;
-    }
 }
 
 

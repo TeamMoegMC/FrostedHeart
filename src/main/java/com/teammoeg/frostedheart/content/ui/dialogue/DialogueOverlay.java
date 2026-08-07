@@ -19,6 +19,7 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
 
+import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -39,6 +40,14 @@ public class DialogueOverlay extends PrimaryLayer {
     public boolean closeable;
 
     public void open(boolean closeable, Collection<Button> buttons) {
+        // 新对话开始：清掉旧对话的选项，避免关闭后 200ms 淡出窗口内的"幽灵选项"仍可点击
+        for (Selection s : this.selections) {
+            elements.remove(s);
+            s.animation.close();
+        }
+        this.selections.clear();
+        // 注意：不能在这里清空 closeCallback——它由上一次 openScreen 在调用 open() 前设置，
+        // 同栈帧内清空会使关闭时的监听器清理永不触发（泄漏）；close() 触发后自清空，每次 openScreen 也覆盖新值
         addSelections(buttons);
         this.closeable = closeable;
         if (closeable) {
@@ -53,7 +62,19 @@ public class DialogueOverlay extends PrimaryLayer {
             selection.animation.fadeOut();
         }
         setEnabled(false);
+        // 触发并清空：任何方式关闭（右键/关闭按钮/点击选项）都执行一次清理回调
+        if (closeCallback != null) {
+            Runnable cb = closeCallback;
+            closeCallback = null;
+            cb.run();
+        }
     }
+
+    /**
+     * 对话关闭时的清理回调（只触发一次，触发后自动清空）。
+     */
+    @Nullable
+    public static Runnable closeCallback;
 
     @Override
     public void tick() {

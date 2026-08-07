@@ -288,6 +288,9 @@ public class HouseBuilding extends AbstractTownBuilding implements ITownResident
                 ResourceActionMode.MAXIMIZE, ResourceActionOrder.DESCENDING);
         TownResourceActionResults.TownResourceTypeCostActionResult result = executorHandler.execute(action);
 
+        // 食谱表与方法内恒定（同一方法内 /reload 不会中途执行），提到循环外只重建一次
+        List<NutritionRecipe> recipes = CUtils.filterRecipes(CDistHelper.getRecipeManager(), NutritionRecipe.TYPE);
+
         double foodConsumed = 0.0;
         double nutritionSum = 0.0;
         for (ITownResourceAttributeActionResult<?> detail : result.details()) {
@@ -297,7 +300,7 @@ public class HouseBuilding extends AbstractTownBuilding implements ITownResident
                     ItemStackResourceKey key = entry.getKey();
                     double amount = entry.getValue();
                     // 查找对应的营养配方并累加营养值
-                    for (NutritionRecipe recipe : CUtils.filterRecipes(CDistHelper.getRecipeManager(), NutritionRecipe.TYPE)) {
+                    for (NutritionRecipe recipe : recipes) {
                         if (recipe.conform(key.getItem())) {
                             nutritionSum += (recipe.getNutrition().getNutritionValue() / 4.0) * amount;
                         }

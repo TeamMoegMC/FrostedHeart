@@ -68,14 +68,16 @@ public class SteamCoreTileEntity extends GeneratingKineticBlockEntity implements
         super.tick();
         
         if (!level.isClientSide) {
-            if (network.tryDrainHeat(FHConfig.SERVER.STEAM_CORE.steamCorePowerIntake.get().floatValue())) {
+            // ConfigValue.get() 为 spec 值表查询：同一 tick 内配置恒定，hoist 到局部变量
+            float powerIntake = FHConfig.SERVER.STEAM_CORE.steamCorePowerIntake.get().floatValue();
+            if (network.tryDrainHeat(powerIntake)) {
             	float targetSpeed=FHConfig.SERVER.STEAM_CORE.steamCoreGeneratedSpeed.get().floatValue();
                 if (generatingSpeed !=targetSpeed) {
                 	generatingSpeed=targetSpeed;
                 	this.setActive(true);
                 	this.updateGeneratedRotation();
                 }
-                
+
                 setChanged();
             } else if(generatingSpeed!=0){
             	generatingSpeed=0;

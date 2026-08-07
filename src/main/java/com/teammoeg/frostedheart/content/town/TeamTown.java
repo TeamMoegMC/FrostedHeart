@@ -37,6 +37,7 @@ import net.minecraft.world.level.ChunkPos;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -173,18 +174,24 @@ public class TeamTown implements ITown, ITownWithResidents, ITownWithBuildings {
      * @return 可容纳则返回 true / true if another resident can be accommodated
      */
     public boolean canAddResident() {
-        return data.buildings.values().stream()
-                .filter(b -> b instanceof HouseBuilding)
-                .map(b -> (HouseBuilding) b)
-                .filter(HouseBuilding::isBuildingWorkable)
-                .anyMatch(h -> countResidentsAt(h.getPos()) < h.getMaxResidents());
-    }
-
-    /** 统计实际住在指定房屋的居民数（按 housePos 归属）。 */
-    private long countResidentsAt(BlockPos housePos) {
-        return data.residents.values().stream()
-                .filter(resident -> housePos.equals(resident.getHousePos()))
-                .count();
+        // 单次遍历统计各房屋实际入住人数（仅计已分配房屋的居民；null housePos 与原
+        // housePos.equals(...) 恒 false 的计数口径一致，不占槽位），再单次遍历建筑
+        // 检查空余槽位：O(居民+建筑)，替代原 O(建筑×居民) 的嵌套 stream。
+        Map<BlockPos, Integer> occupancy = new HashMap<>();
+        for (Resident resident : data.residents.values()) {
+            BlockPos housePos = resident.getHousePos();
+            if (housePos != null) {
+                occupancy.merge(housePos, 1, Integer::sum);
+            }
+        }
+        for (AbstractTownBuilding building : data.buildings.values()) {
+            if (building instanceof HouseBuilding house && house.isBuildingWorkable()) {
+                if (occupancy.getOrDefault(house.getPos(), 0) < house.getMaxResidents()) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     public boolean removeResident(UUID id) {

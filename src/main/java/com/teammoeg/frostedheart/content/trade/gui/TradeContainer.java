@@ -238,6 +238,8 @@ public class TradeContainer extends AbstractContainerMenu {
             if (relations.sum() > TradeConstants.RELATION_TO_TRADE) {
                 for (Entry<String, Integer> entry : order.entrySet()) {
                     SellData sd = policy.getSells().get(entry.getKey());
+                    // 订单键可能不在服务端商品表（儿童截断/关系门槛清空/客户端直发任意键）：跳过而非 NPE
+                    if (sd == null) continue;
                     int cnt = Math.min(sd.getStore(), entry.getValue());
                     int price = cnt * sd.getPrice();
                     
@@ -337,7 +339,10 @@ public class TradeContainer extends AbstractContainerMenu {
         }
         voffer = 0;
         for (Entry<String, Integer> entry : order.entrySet()) {
-            voffer += policy.getSells().get(entry.getKey()).getPrice() * entry.getValue();
+            SellData sd = policy.getSells().get(entry.getKey());
+            // 订单键可能不在服务端商品表（儿童截断/关系门槛清空/客户端直发任意键）：跳过而非 NPE
+            if (sd == null) continue;
+            voffer += sd.getPrice() * entry.getValue();
         }
         originalVOffer = voffer;
         relationMinus = 0;

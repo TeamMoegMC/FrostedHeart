@@ -54,7 +54,7 @@ public class HeatingDeviceContext {
 
     @Getter
     ServerPlayer player;
-    public static EnumMap<BodyPart, BodyPartContext> partData = new EnumMap<>(BodyPart.class);
+    private final EnumMap<BodyPart, BodyPartContext> partData = new EnumMap<>(BodyPart.class);
 
     HeatingDeviceContext(ServerPlayer player) {
         super();

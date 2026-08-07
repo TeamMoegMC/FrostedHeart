@@ -82,7 +82,7 @@ public interface ITown extends ITownWithResources, ITownWithBuildings, ITownWith
 
 ### 3.3 `TeamTownData`（持久化数据 + 每日主流程）
 
-`implements SpecialData`，`CODEC` 字段：`name / resources / blocks / residents / terrainResource / labour / maxLabour / history`。
+`implements SpecialData`，`CODEC` 字段：`name / resources / blocks / residents / terrainResource / labour / maxLabour / history / lastRefugeeSpawnDay`。
 所有「永久状态」都在此处；`TeamTown` 只是指向它的视图。
 
 **同步相关状态**：
@@ -95,18 +95,22 @@ public interface ITown extends ITownWithResources, ITownWithBuildings, ITownWith
 - 居民 / 建筑：按脏键查 Map 分「变更 / 移除」→ `TownResidentUpdatePacket` / `TownBuildingUpdatePacket`
 - 空转抑制三道防线：setter 值守卫（值未变不 fire）+ `reloadMaxCapacity` 净变化守卫 + 资源值级去重（见 §14）。
 
-**每日主流程 `tickMorning(ServerLevel)`** 依次：
+**每日主流程 `tickMorning(ServerLevel, TeamDataHolder)`** 依次：
 
 1. `checkBlocks` —— 移除已失效/方块被改的建筑（与 `TownBlockEntity.getBuilding` 一致性校验）。
 2. `checkOccupiedAreaOverlap` —— 用 `OccupiedVolume.intersects` 两两比对，重叠的双方 `occupiedAreaOverlapped=true`（导致 `isBuildingWorkable` 失败）。
 3. `tickResidentsMorning` —— `health<=5` 或 `mental<=5` 判定死亡（`DEBUG_MODE` 下跳过）；无房者 `costHealth(10)`。
-4. `residentAllocatingCheck` —— 清空所有居民的 house/work 位置后从建筑回写，并剔除超限/已亡居民。
-5. `allocateHouse` —— 按 `HouseBuilding.getRating()` **降序** 优先分配无房居民。
-6. `assignWork` —— 工作建筑入优先级队列（`getResidentPriority()` 降序），对每个建筑挑 `getResidentScore` 最高的可用居民。
-7. `linkMinesToBases` —— 按 `MineBaseBuilding.getConnectionRadius()` 把范围内的 `MineBuilding` 链到矿基。
-8. `recalcOreChunkResources` —— 设定 `ORE` 的活跃区块（`setTerrainResourceTypeActiveChunks`）。
-9. `buildingsWork` —— `reloadMaxCapacity()` 后按 `getWorkPriority()` 降序执行 `building.work(town, world)`。
-10. `recoverResources` —— 地形资源按配置的 `recoverSpeed` 恢复。
+4. `tickResidentsAging` —— 居民老化结算（见 §7）：`ageDays+1`，幼儿/儿童达标后成长，各年龄组按 `FHConfig.SERVER.TOWN.RESIDENT_AGING` 每日增减属性并封顶。
+5. `residentAllocatingCheck` —— 清空所有居民的 house/work 位置后从建筑回写，并剔除超限/已亡居民。
+6. `allocateHouse` —— 按 `HouseBuilding.getRating()` **降序** 优先分配无房居民。
+7. `assignWork` —— 工作建筑入优先级队列（`getResidentPriority()` 降序），对每个建筑挑 `getResidentScore` 最高的可用居民（幼儿 `AGE_INFANT` 被 `canResidentWork` 与 `assignWork` 双重排除）。
+8. `tickRefugeeSpawnAndDespawn` —— 难民刷新与清场（见 §7）：先清场（塔旁无房/超时的 `townSpawned` 难民消失），塔开启且当天未结算时按天气概率刷一批到塔附近（`REFUGEE_SPAWN` 配置，`lastRefugeeSpawnDay` 按世界日防重复）。
+9. `linkMinesToBases` —— 按 `MineBaseBuilding.getConnectionRadius()` 把范围内的 `MineBuilding` 链到矿基。
+10. `recalcOreChunkResources` —— 设定 `ORE` 的活跃区块（`setTerrainResourceTypeActiveChunks`）。
+11. `buildingsWork` —— `reloadMaxCapacity()` 后按 `getWorkPriority()` 降序执行 `building.work(town, world)`。
+12. `recoverResources` —— 地形资源按配置的 `recoverSpeed` 恢复。
+
+CODEC 字段：`name / resources / blocks / residents / terrainResource / labour / maxLabour / history / lastRefugeeSpawnDay`（后两个沿用 `CodecUtil.defaultSupply(catchingCodec(Codec.INT), () -> 0)` 容错惯例）。
 
 ---
 
@@ -234,10 +238,16 @@ TownResourceActionResults.TownResourceTypeCostActionResult result =
 
 ## 7. 居民系统
 
-- **`Resident`**（抽象模拟数据，非实体）：字段 `uuid, firstName, lastName, health, mental, strength, intelligence`(0~100), `educationLevel`, `Map<String,Double> workProficiency`（key = 建筑类 `getSimpleName()`，如 `"HuntingBaseBuilding"`）, `housePos`, `workPos`。提供 `get/add/cost` 系列（越界抛异常/夹取）。`setDeath(town)` 调用 `town.removeResident(uuid)`。**所有 setter 均带值守卫并 `fireChange()`**（值未变不 fire），由 `TeamTownData` 注入的 `changeListener` 驱动增量同步（见 §14）。
+- **`Resident`**（抽象模拟数据，非实体）：字段 `uuid, firstName, lastName, health, mental, strength, intelligence`(0~100), `educationLevel`, `Map<String,Double> workProficiency`（key = 建筑类 `getSimpleName()`，如 `"HuntingBaseBuilding"`）, `housePos`, `workPos`，以及 **`age`（0 幼儿 / 1 儿童 / 2 青壮年 / 3 老人，默认 2）与 `ageDays`**（CODEC/NBT 均带默认值向后兼容）。提供 `get/add/cost` 系列（越界抛异常/夹取）。`setDeath(town)` 调用 `town.removeResident(uuid)`。**所有 setter 均带值守卫并 `fireChange()`**（值未变不 fire），由 `TeamTownData` 注入的 `changeListener` 驱动增量同步（见 §14）。
+  - 按年龄组生成：`initializeAttributesForAge(age)` —— 幼儿力量/智力 center 20/30、儿童 40/40、老人 35/65（spread 0.8）、青壮年沿用 `generateAdultAttribute`；初始工作熟练度幼儿 0、儿童 [0,25]、老人 [50,100]（`generateElderInitialWorkProficiency`）、青壮年 [0,50]。
+  - 每日老化由 `TeamTownData.tickResidentsAging` 结算：`growStrengthDaily/growIntelligenceDaily`（封顶各年龄组 cap，儿童力量/智商上限 80/85 可超过直接招募的成年难民）、`decayStrengthDaily`（老人力量萎缩至 floor 25）。
+  - 寒流高质量难民：`applyColdSurvivorBuffs()` —— 血量 20~40、力量/智商 +15、初始熟练度 ×1.5，招募时应用。
+  - 静态辅助：`randomAgeDaysForAge(int)`（招募时按年龄组随机成长进度）、`ageLangKey(int)`（年龄显示翻译键）。
 - **`Family`**：简单包装 `Resident[] + lastName`，目前仅数据容器。
 - **`ResidentEntity extends Mob`**：预留实体类，目前为空（居民以 `Resident` 数据形式活在 `TeamTownData`，不生成单独实体）。
-- **`WanderingRefugee`**：流浪难民实体（`extends AbstractVillager implements NeutralMob, VillagerDataHolder`），可被招募为居民或交易；`mobInteract` 打开交易界面，`WanderingRefugeeRecruitMessage` 处理招募（生成粒子、移除实体、写入 `TeamTown.addResident`）。
+- **`WanderingRefugee`**：流浪难民实体（`extends AbstractVillager implements NeutralMob, VillagerDataHolder`），可被招募为居民或交易；`mobInteract` 打开交易界面，`WanderingRefugeeRecruitMessage` 处理招募（生成粒子、移除实体、写入 `TeamTown.addResident`，**年龄/成长进度/寒流 buff 随招募传入**）。
+  - 年龄：同步字段 `AGE`（`EntityDataAccessor<Integer>`，客户端可读）；`getAgeScale()` 幼儿 0.4 / 儿童 0.5 / 其余 1.0，`getDimensions` 随年龄缩放（视线高度自动跟随），渲染器 `WanderingRefugeeRenderer.scale` 同步缩小模型与阴影。**不使用** `isBaby()`（会触发 `mobInteract` 守卫导致儿童无法招募）。
+  - 城镇刷新：`townSpawned / waitingDays / townOwner(UUID) / coldSurvivor` 为服务端 NBT 字段（不同步），`TeamTownData.tickRefugeeSpawnAndDespawn` 每日按天气概率在开启的能量塔（`GeneratorData.isWorking`，非 `isActive`）8~24 格内刷批（`/town spawn_refugees` 可强制触发）；清场时无房位或等待超 `maxWaitDays` 天即消失。天气判定复用 `WeatherForecast.getTemperatureLevel`（public）+ `WorldTemperature.climate` + `WorldClimate.isSun/isBlizzard`：暖流（≥1 级且晴天）+30% 概率 +1 数量、寒流（≤-1 级或暴风雪）-30% 概率 -1 数量且 `coldQualityChance` 概率高质量低血量、平稳为基准 60%。
 
 ---
 

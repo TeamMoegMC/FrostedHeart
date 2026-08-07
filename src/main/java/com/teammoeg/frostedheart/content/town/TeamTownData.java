@@ -21,8 +21,12 @@ package com.teammoeg.frostedheart.content.town;
 
 import blusunrize.immersiveengineering.common.util.Utils;
 import com.teammoeg.frostedheart.FHNetwork;
+import com.teammoeg.frostedheart.bootstrap.common.FHEntityTypes;
 import com.teammoeg.frostedheart.bootstrap.common.FHSpecialDataTypes;
+import com.teammoeg.frostedheart.content.climate.WorldTemperature;
 import com.teammoeg.frostedheart.content.climate.block.generator.GeneratorData;
+import com.teammoeg.frostedheart.content.climate.gamedata.climate.WeatherForecast;
+import com.teammoeg.frostedheart.content.climate.gamedata.climate.WorldClimate;
 import com.teammoeg.frostedheart.content.town.block.OccupiedVolume;
 import com.teammoeg.frostedheart.content.town.buildings.mine.MineBaseBuilding;
 import com.teammoeg.frostedheart.content.town.buildings.mine.MineBuilding;
@@ -32,6 +36,7 @@ import com.teammoeg.frostedheart.content.town.network.TownResidentUpdatePacket;
 import com.teammoeg.frostedheart.content.town.network.TownResourceUpdatePacket;
 import com.teammoeg.frostedheart.content.town.resource.ITownResourceKey;
 import com.teammoeg.frostedheart.content.town.util.ObservableTownMap;
+import it.unimi.dsi.fastutil.objects.Object2DoubleOpenHashMap;
 import lombok.Getter;
 
 import com.mojang.serialization.Codec;
@@ -56,16 +61,21 @@ import com.teammoeg.frostedheart.content.town.event.TownBuildingChangeEvent;
 import com.teammoeg.frostedheart.content.town.event.TownResidentChangeEvent;
 import com.teammoeg.frostedheart.content.town.event.TownResourceChangeEvent;
 import com.teammoeg.frostedheart.content.town.resident.Resident;
+import com.teammoeg.frostedheart.content.town.resident.WanderingRefugee;
 import com.teammoeg.frostedheart.content.town.resource.TeamTownResourceHolder;
 import com.teammoeg.frostedheart.content.town.resource.VirtualResourceType;
 import com.teammoeg.frostedheart.content.town.terrainresource.TerrainResourceType;
 import com.teammoeg.frostedheart.content.town.terrainresource.TerrainResourceData;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
+import com.teammoeg.frostedheart.infrastructure.config.FHConfig.Server.Town.RefugeeSpawn;
+import com.teammoeg.frostedheart.infrastructure.config.FHConfig.Server.Town.ResidentAging;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.UUIDUtil;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.levelgen.Heightmap;
 
 import java.util.*;
 import java.util.Map.Entry;
@@ -106,7 +116,10 @@ public class TeamTownData implements SpecialData{
         .fieldOf("maxLabour").forGetter(o -> o.maxLabour),
 
         CodecUtil.defaultSupply(CodecUtil.catchingCodec(TownHistoryEntry.CODEC.listOf()), ArrayList::new)
-        .fieldOf("history").forGetter(o -> o.history)
+        .fieldOf("history").forGetter(o -> o.history),
+
+        CodecUtil.defaultSupply(CodecUtil.catchingCodec(Codec.INT), () -> 0)
+        .fieldOf("lastRefugeeSpawnDay").forGetter(o -> o.lastRefugeeSpawnDay)
 
         )
 
@@ -149,6 +162,12 @@ public class TeamTownData implements SpecialData{
     List<TownHistoryEntry> history = new ArrayList<>();
 
     /**
+     * 最近一次按世界日结算难民刷新的日期（服务端持久化）。
+     * 防止同一天内重复结算（含 /town tick 手动调用）导致重复刷新。
+     */
+    int lastRefugeeSpawnDay = 0;
+
+    /**
      * 用于将城镇数据变化的监听器塞到各个地方。
      * 由于只需要在第一个tick进行，所以弄个boolean记一下、
      * 由于我希望只在服务端这么做，所以不放在构造方法中。
@@ -170,7 +189,7 @@ public class TeamTownData implements SpecialData{
 
 
 
-    public TeamTownData(String name, TeamTownResourceHolder resources, Map<BlockPos, ITownBuilding> buildings, Map<UUID, Resident> residents, Map<TerrainResourceType, TerrainResourceData> terrainResource,int labour,int maxlabour, List<TownHistoryEntry> history) {
+    public TeamTownData(String name, TeamTownResourceHolder resources, Map<BlockPos, ITownBuilding> buildings, Map<UUID, Resident> residents, Map<TerrainResourceType, TerrainResourceData> terrainResource,int labour,int maxlabour, List<TownHistoryEntry> history, int lastRefugeeSpawnDay) {
         super();
         this.history = new ArrayList<>(history);
         this.name = name;
@@ -184,6 +203,7 @@ public class TeamTownData implements SpecialData{
         this.terrainResource.putAll(terrainResource);
         this.labour=0;
         this.maxLabour=0;
+        this.lastRefugeeSpawnDay = lastRefugeeSpawnDay;
     }
 
     public TeamTownData(SpecialDataHolder teamData) {
@@ -286,16 +306,18 @@ public class TeamTownData implements SpecialData{
         }
     }
 
-    public void tickMorning(ServerLevel world) {
+    public void tickMorning(ServerLevel world, TeamDataHolder teamData) {
         if (!FHConfig.SERVER.TOWN.enableTownTickMorning.get()) return;
         FHMain.LOGGER.debug("Ticking morning for {}...", name);
         TeamTown town = this.createTeamTown();
         this.checkBlocks(world, town);
         this.checkOccupiedAreaOverlap();
         this.tickResidentsMorning();
+        this.tickResidentsAging();
         this.residentAllocatingCheck(town);
         this.allocateHouse();
         this.assignWork();
+        this.tickRefugeeSpawnAndDespawn(world, teamData);
         this.linkMinesToBases();
         this.recalcOreChunkResources();
         residents.values().forEach(Resident::resetDailyProficiencyGrowth);
@@ -323,9 +345,14 @@ public class TeamTownData implements SpecialData{
      */
     void recordDailySnapshot(ServerLevel world) {
         long day = world.getDayTime() / 24000L;
-        double avgHealth = residents.values().stream().mapToDouble(Resident::getHealth).average().orElse(0);
-        double avgMental = residents.values().stream().mapToDouble(Resident::getMental).average().orElse(0);
-        TownHistoryEntry entry = new TownHistoryEntry(day, residents.size(), avgHealth, avgMental, buildings.size());
+        // DoubleSummaryStatistics 与 DoubleStream.average() 同源（Kahan 补偿求和），位级一致；空集 getAverage()=0.0
+        DoubleSummaryStatistics healthStat = new DoubleSummaryStatistics();
+        DoubleSummaryStatistics mentalStat = new DoubleSummaryStatistics();
+        for (Resident resident : residents.values()) {
+            healthStat.accept(resident.getHealth());
+            mentalStat.accept(resident.getMental());
+        }
+        TownHistoryEntry entry = new TownHistoryEntry(day, residents.size(), healthStat.getAverage(), mentalStat.getAverage(), buildings.size());
         if (!history.isEmpty() && history.get(history.size() - 1).day() == day) {
             history.set(history.size() - 1, entry);
         } else {
@@ -401,6 +428,206 @@ public class TeamTownData implements SpecialData{
         deadResidents.forEach(resident -> resident.setDeath(town));
     }
 
+    /**
+     * 每日老化结算：ageDays+1，幼儿/儿童达标后成长为下一个年龄组（属性保留），
+     * 各年龄组按配置每日增减属性并封顶。
+     */
+    private void tickResidentsAging() {
+        ResidentAging aging = FHConfig.SERVER.TOWN.RESIDENT_AGING;
+        for (Resident resident : residents.values()) {
+            resident.setAgeDays(resident.getAgeDays() + 1);
+            switch (resident.getAge()) {
+                case Resident.AGE_INFANT -> {
+                    if (resident.getAgeDays() >= aging.infantToChildDays.get()) {
+                        resident.setAge(Resident.AGE_CHILD);
+                    } else {
+                        resident.growStrengthDaily(aging.infantStrengthGainPerDay.get(), aging.infantAttributeCap.get());
+                        resident.growIntelligenceDaily(aging.infantIntelligenceGainPerDay.get(), aging.infantAttributeCap.get());
+                    }
+                }
+                case Resident.AGE_CHILD -> {
+                    if (resident.getAgeDays() >= aging.childToAdultDays.get()) {
+                        resident.setAge(Resident.AGE_ADULT);
+                    } else {
+                        resident.growStrengthDaily(aging.childStrengthGainPerDay.get(), aging.childStrengthCap.get());
+                        resident.growIntelligenceDaily(aging.childIntelligenceGainPerDay.get(), aging.childIntelligenceCap.get());
+                    }
+                }
+                case Resident.AGE_ADULT -> {
+                    resident.growStrengthDaily(aging.adultStrengthGainPerDay.get(), aging.adultAttributeCap.get());
+                    resident.growIntelligenceDaily(aging.adultIntelligenceGainPerDay.get(), aging.adultAttributeCap.get());
+                }
+                case Resident.AGE_ELDER -> resident.decayStrengthDaily(aging.elderStrengthDecayPerDay.get(), aging.elderStrengthFloor.get());
+            }
+        }
+    }
+
+    /**
+     * 难民刷新时的天气判定结果。
+     */
+    enum RefugeeSpawnWeather {
+        WARM, NORMAL, COLD
+    }
+
+    /**
+     * 每天早晨按天气概率在开启的能量塔附近刷新一批流浪难民；无视容量照刷，塔旁等待。
+     * 同一天只结算一次（按世界日持久化）；已刷难民的清场由实体自身按日界结算，不在此处理。
+     */
+    private void tickRefugeeSpawnAndDespawn(ServerLevel world, TeamDataHolder teamData) {
+        RefugeeSpawn config = FHConfig.SERVER.TOWN.REFUGEE_SPAWN;
+        if (!config.enableRefugeeSpawn.get()) return;
+        // 队伍无人在线时不刷新；不置位当天标记，有人上线当天仍可刷。
+        // 防御：getTeam() 可为 null（旧存档恢复已解散队伍的 holder），getOnlineMembers() 内部不判空
+        if (teamData.getTeam() == null || teamData.getTeam().getOnlineMembers().isEmpty()) return;
+        // 用 gameTime（单调递增、不受 /time set 影响）而非 dayTime，避免玩家改时间造成跳刷/误判
+        int day = (int) (world.getGameTime() / 24000L);
+        // "当天只结算一次"守卫：/town tick 同日多次调用也不会重复刷批
+        if (day == this.lastRefugeeSpawnDay) return;
+        Optional<GeneratorData> genDataOpt = teamData.getOptional(FHSpecialDataTypes.GENERATOR_DATA);
+        if (genDataOpt.isEmpty() || genDataOpt.get().actualPos == null || !genDataOpt.get().isWorking) {
+            // 塔不存在/未开启：置位当天，防止同日反复调用重复判定
+            this.lastRefugeeSpawnDay = day;
+            return;
+        }
+        GeneratorData genData = genDataOpt.get();
+        BlockPos towerPos = genData.actualPos;
+        RefugeeSpawnWeather weather = getSpawnWeather(world, towerPos);
+        double chance = config.baseSpawnChancePerDay.get()
+            + (weather == RefugeeSpawnWeather.WARM ? config.warmSpawnChanceBonus.get()
+            : weather == RefugeeSpawnWeather.COLD ? -config.coldSpawnChancePenalty.get() : 0);
+        chance = Math.max(0.0, Math.min(1.0, chance));
+        if (CMath.RANDOM.nextDouble() >= chance) {
+            FHMain.LOGGER.debug("No refugee batch this morning, weather={}, chance={}", weather, chance);
+            this.lastRefugeeSpawnDay = day;
+            return;
+        }
+        FHMain.LOGGER.debug("Spawning refugee batch, weather={}", weather);
+        int spawned = this.spawnRefugeeBatch(world, teamData, weather);
+        // 全部生成失败时不置位，当天可重试
+        if (spawned > 0) {
+            this.lastRefugeeSpawnDay = day;
+        }
+    }
+
+    /**
+     * 强制刷一批难民（调试命令 /town spawn_refugees 用），并更新按日结算标记。
+     */
+    public void debugSpawnRefugeeBatch(ServerLevel world, TeamDataHolder teamData) {
+        Optional<GeneratorData> genDataOpt = teamData.getOptional(FHSpecialDataTypes.GENERATOR_DATA);
+        if (genDataOpt.isEmpty() || genDataOpt.get().actualPos == null) return;
+        RefugeeSpawnWeather weather = getSpawnWeather(world, genDataOpt.get().actualPos);
+        int spawned = spawnRefugeeBatch(world, teamData, weather);
+        if (spawned > 0) {
+            this.lastRefugeeSpawnDay = (int) (world.getGameTime() / 24000L);
+        }
+        FHMain.LOGGER.info("Debug-spawned {} refugee(s), weather={}", spawned, weather);
+    }
+
+    /**
+     * 在能量塔周围按天气参数刷一批难民。
+     *
+     * @return 实际生成数量
+     */
+    int spawnRefugeeBatch(ServerLevel world, TeamDataHolder teamData, RefugeeSpawnWeather weather) {
+        RefugeeSpawn config = FHConfig.SERVER.TOWN.REFUGEE_SPAWN;
+        Optional<GeneratorData> genDataOpt = teamData.getOptional(FHSpecialDataTypes.GENERATOR_DATA);
+        if (genDataOpt.isEmpty() || genDataOpt.get().actualPos == null) return 0;
+        GeneratorData genData = genDataOpt.get();
+        int sizeMod = weather == RefugeeSpawnWeather.WARM ? config.warmSpawnBatchBonus.get()
+            : weather == RefugeeSpawnWeather.COLD ? -config.coldSpawnBatchPenalty.get() : 0;
+        int min = Math.max(1, config.batchSizeMin.get() + sizeMod);
+        int max = Math.max(min, config.batchSizeMax.get() + sizeMod);
+        int batchSize = min + CMath.RANDOM.nextInt(max - min + 1);
+        int spawned = 0;
+        for (int i = 0; i < batchSize; i++) {
+            BlockPos pos = findRefugeeSpawnPos(world, genData.actualPos);
+            if (pos == null) continue;
+            WanderingRefugee refugee = FHEntityTypes.WANDERING_REFUGEE.get().create(world);
+            if (refugee == null) continue;
+            refugee.setAgeGroup(pickAgeByWeight());
+            refugee.markTownSpawned(teamData.getId());
+            if (weather == RefugeeSpawnWeather.COLD && CMath.RANDOM.nextDouble() < config.coldQualityChance.get()) {
+                refugee.setColdSurvivor(true);
+            }
+            refugee.setPersistenceRequired();
+            refugee.setPos(pos.getX() + 0.5D, pos.getY(), pos.getZ() + 0.5D);
+            // 生成可能被世界拒绝（如实体数量上限），成功才计数并寻路，避免计数虚高使"全部失败也置位当天"
+            if (world.addFreshEntity(refugee)) {
+                // 默默寻路走到能量塔旁，聚拢在塔附近等待（无任何特效）
+                refugee.getNavigation().moveTo(genData.actualPos.getX() + 0.5D, genData.actualPos.getY(), genData.actualPos.getZ() + 0.5D, 1.0D);
+                spawned++;
+            }
+        }
+        return spawned;
+    }
+
+    /**
+     * 按配置权重轮盘随机一个年龄组。
+     */
+    private int pickAgeByWeight() {
+        RefugeeSpawn config = FHConfig.SERVER.TOWN.REFUGEE_SPAWN;
+        double infant = config.weightInfant.get();
+        double child = config.weightChild.get();
+        double adult = config.weightAdult.get();
+        double elder = config.weightElder.get();
+        if (infant + child + adult + elder <= 0.0D) {
+            // 全零权重回退默认分布，避免轮盘恒落最后一项
+            infant = 10.0D;
+            child = 20.0D;
+            adult = 50.0D;
+            elder = 20.0D;
+        }
+        double roll = CMath.RANDOM.nextDouble() * (infant + child + adult + elder);
+        if (roll < infant) return Resident.AGE_INFANT;
+        roll -= infant;
+        if (roll < child) return Resident.AGE_CHILD;
+        roll -= child;
+        if (roll < adult) return Resident.AGE_ADULT;
+        return Resident.AGE_ELDER;
+    }
+
+    /**
+     * 判定当天的刷新天气：暖流 = 温度级别≥1 且晴天；寒流 = 温度级别≤-1 或暴风雪；其余平稳。
+     * 温度取塔位置的气候基线（与预报系统同源）。
+     */
+    private RefugeeSpawnWeather getSpawnWeather(ServerLevel world, BlockPos towerPos) {
+        int tempLevel = WeatherForecast.getTemperatureLevel(WorldTemperature.climate(world, towerPos));
+        if (tempLevel >= 1 && WorldClimate.isSun(world)) {
+            return RefugeeSpawnWeather.WARM;
+        }
+        if (tempLevel <= -1 || WorldClimate.isBlizzard(world)) {
+            return RefugeeSpawnWeather.COLD;
+        }
+        return RefugeeSpawnWeather.NORMAL;
+    }
+
+    /**
+     * 在塔周围 [minR, maxR] 随机距离与角度找可落地生成点，最多尝试 16 次。
+     */
+    private BlockPos findRefugeeSpawnPos(ServerLevel world, BlockPos towerPos) {
+        RefugeeSpawn config = FHConfig.SERVER.TOWN.REFUGEE_SPAWN;
+        int minR = config.spawnRadiusMinBlocks.get();
+        int maxR = Math.max(minR, config.spawnRadiusMaxBlocks.get());
+        for (int attempt = 0; attempt < 16; attempt++) {
+            double angle = CMath.RANDOM.nextDouble() * Math.PI * 2.0D;
+            double dist = minR + CMath.RANDOM.nextDouble() * (maxR - minR);
+            int x = towerPos.getX() + (int) Math.round(Math.cos(angle) * dist);
+            int z = towerPos.getZ() + (int) Math.round(Math.sin(angle) * dist);
+            // 未加载区块直接跳过：getHeight 对未加载区块会同步加载，塔区块卸载时每天最多 16×batchSize 次
+            if (!world.hasChunkAt(x, z)) continue;
+            int y = world.getHeight(Heightmap.Types.MOTION_BLOCKING, x, z);
+            BlockPos pos = new BlockPos(x, y, z);
+            BlockState ground = world.getBlockState(pos.below());
+            if (!ground.isSolid()) continue;
+            BlockState standing = world.getBlockState(pos);
+            BlockState overhead = world.getBlockState(pos.above());
+            if (!standing.isAir() && !standing.canBeReplaced()) continue;
+            if (!overhead.isAir() && !overhead.canBeReplaced()) continue;
+            return pos;
+        }
+        return null;
+    }
+
     private void residentAllocatingCheck(TeamTown town) {
         // 清空residents里所有居民存储的的house和work位置，之后再加回来，以刷新居民的工作和房屋
         residents.values().forEach(resident -> {
@@ -460,7 +687,7 @@ public class TeamTownData implements SpecialData{
     }
 
     void assignWork() {
-        Map<UUID, Resident> availableResidents = residents.values().stream().filter(resident->resident.getWorkPos() == null && resident.getHousePos() != null)
+        Map<UUID, Resident> availableResidents = residents.values().stream().filter(resident->resident.getWorkPos() == null && resident.getHousePos() != null && resident.getAge() != Resident.AGE_INFANT)
         .collect(Collectors.toMap(Resident::getUUID, t->t));
         PriorityQueue<ITownResidentWorkBuilding> availableBuildings = buildings.values().stream()
                 .filter(AbstractTownBuilding::isBuildingWorkable)
@@ -805,7 +1032,7 @@ public class TeamTownData implements SpecialData{
          * 只覆盖资源层（纯数值比对，每键仅一个 double，内存极小）；建筑/居民的空转
          * fire 由 setter 值守卫（{@link AbstractTownBuilding} / 各子类）在源头拦截。
          */
-        private final Map<ITownResourceKey, Double> lastSyncedResources = new HashMap<>();
+        private final Object2DoubleOpenHashMap<ITownResourceKey> lastSyncedResources = new Object2DoubleOpenHashMap<>();
 
         /**
          * 判断该资源自上次增量同步后是否实际未变。
@@ -815,11 +1042,10 @@ public class TeamTownData implements SpecialData{
          * @return true 表示当前值与上次同步值相同且该键此前已同步过，应跳过发包
          */
         public boolean isResourceUnchanged(ITownResourceKey key, double currentValue) {
-            Double last = lastSyncedResources.get(key);
-            if (last == null) {
+            if (!lastSyncedResources.containsKey(key)) {
                 return false; // 键从未同步过（或此前已归零移除）：视为变化
             }
-            return Math.abs(last - currentValue) < TeamTownResourceHolder.DELTA;
+            return Math.abs(lastSyncedResources.getDouble(key) - currentValue) < TeamTownResourceHolder.DELTA;
         }
 
         /**

@@ -576,6 +576,117 @@ public class FHConfig {
 				}
 			}
 
+			public static class RefugeeSpawn {
+				public final ForgeConfigSpec.BooleanValue enableRefugeeSpawn;
+				public final ForgeConfigSpec.DoubleValue baseSpawnChancePerDay;
+				public final ForgeConfigSpec.DoubleValue warmSpawnChanceBonus;
+				public final ForgeConfigSpec.IntValue warmSpawnBatchBonus;
+				public final ForgeConfigSpec.DoubleValue coldSpawnChancePenalty;
+				public final ForgeConfigSpec.IntValue coldSpawnBatchPenalty;
+				public final ForgeConfigSpec.DoubleValue coldQualityChance;
+				public final ForgeConfigSpec.IntValue spawnRadiusMinBlocks;
+				public final ForgeConfigSpec.IntValue spawnRadiusMaxBlocks;
+				public final ForgeConfigSpec.IntValue batchSizeMin;
+				public final ForgeConfigSpec.IntValue batchSizeMax;
+				public final ForgeConfigSpec.DoubleValue weightInfant;
+				public final ForgeConfigSpec.DoubleValue weightChild;
+				public final ForgeConfigSpec.DoubleValue weightAdult;
+				public final ForgeConfigSpec.DoubleValue weightElder;
+				public final ForgeConfigSpec.IntValue maxWaitDays;
+
+				RefugeeSpawn(ForgeConfigSpec.Builder builder) {
+					builder.push("Refugee Spawn");
+					enableRefugeeSpawn = builder.comment("Enables the daily wandering-refugee batch near the team's energy tower (能量塔),")
+						.comment("gated on the tower being switched on and the daily weather roll.")
+						.define("enableRefugeeSpawn", true);
+					baseSpawnChancePerDay = builder.comment("Base chance of a refugee batch spawning on any morning.")
+						.comment("Modified by warm/cold weather, clamped to [0,1].")
+						.defineInRange("baseSpawnChancePerDay", 0.6d, 0d, 1d);
+					warmSpawnChanceBonus = builder.comment("Spawn chance bonus during a warm current (温度级别>=1) with sunny weather.")
+						.defineInRange("warmSpawnChanceBonus", 0.3d, 0d, 1d);
+					warmSpawnBatchBonus = builder.comment("Extra refugees per batch during a warm sunny day.")
+						.defineInRange("warmSpawnBatchBonus", 1, 0, 10);
+					coldSpawnChancePenalty = builder.comment("Spawn chance penalty during a cold current (温度级别<=-1) or a blizzard.")
+						.defineInRange("coldSpawnChancePenalty", 0.3d, 0d, 1d);
+					coldSpawnBatchPenalty = builder.comment("Fewer refugees per batch during a cold current or blizzard.")
+						.defineInRange("coldSpawnBatchPenalty", 1, 0, 10);
+					coldQualityChance = builder.comment("Chance that a refugee spawned during a cold current is high-quality but low-health")
+						.comment("(strength/intelligence +15, initial proficiency x1.5, health 20-40).")
+						.defineInRange("coldQualityChance", 0.5d, 0d, 1d);
+					spawnRadiusMinBlocks = builder.comment("Minimum horizontal distance from the tower master block for refugee spawns, in blocks.")
+						.defineInRange("spawnRadiusMinBlocks", 8, 0, 64);
+					spawnRadiusMaxBlocks = builder.comment("Maximum horizontal distance from the tower master block for refugee spawns, in blocks.")
+						.defineInRange("spawnRadiusMaxBlocks", 24, 0, 128);
+					batchSizeMin = builder.comment("Minimum refugees spawned per daily batch (before weather modifiers).")
+						.defineInRange("batchSizeMin", 1, 0, 10);
+					batchSizeMax = builder.comment("Maximum refugees spawned per daily batch (before weather modifiers).")
+						.defineInRange("batchSizeMax", 3, 1, 10);
+					weightInfant = builder.comment("Relative weight of infants (age 0) in each batch.")
+						.defineInRange("weightInfant", 10d, 0d, 1000d);
+					weightChild = builder.comment("Relative weight of children (age 1) in each batch.")
+						.defineInRange("weightChild", 20d, 0d, 1000d);
+					weightAdult = builder.comment("Relative weight of young adults (age 2) in each batch.")
+						.defineInRange("weightAdult", 50d, 0d, 1000d);
+					weightElder = builder.comment("Relative weight of elders (age 3) in each batch.")
+						.defineInRange("weightElder", 20d, 0d, 1000d);
+					maxWaitDays = builder.comment("Days a town-spawned refugee waits near the tower before leaving on their own.")
+						.comment("They also leave the first morning the town has no vacant house.")
+						.defineInRange("maxWaitDays", 3, 1, 100);
+					builder.pop();
+				}
+			}
+
+			public static class ResidentAging {
+				public final ForgeConfigSpec.IntValue infantToChildDays;
+				public final ForgeConfigSpec.IntValue childToAdultDays;
+				public final ForgeConfigSpec.DoubleValue infantStrengthGainPerDay;
+				public final ForgeConfigSpec.DoubleValue infantIntelligenceGainPerDay;
+				public final ForgeConfigSpec.DoubleValue infantAttributeCap;
+				public final ForgeConfigSpec.DoubleValue childStrengthGainPerDay;
+				public final ForgeConfigSpec.DoubleValue childIntelligenceGainPerDay;
+				public final ForgeConfigSpec.DoubleValue childStrengthCap;
+				public final ForgeConfigSpec.DoubleValue childIntelligenceCap;
+				public final ForgeConfigSpec.DoubleValue adultStrengthGainPerDay;
+				public final ForgeConfigSpec.DoubleValue adultIntelligenceGainPerDay;
+				public final ForgeConfigSpec.DoubleValue adultAttributeCap;
+				public final ForgeConfigSpec.DoubleValue elderStrengthDecayPerDay;
+				public final ForgeConfigSpec.DoubleValue elderStrengthFloor;
+
+				ResidentAging(ForgeConfigSpec.Builder builder) {
+					builder.push("Resident Aging");
+					infantToChildDays = builder.comment("Age-days at which an infant (0) grows into a child (1).")
+						.defineInRange("infantToChildDays", 10, 1, 1000);
+					childToAdultDays = builder.comment("Age-days at which a child (1) grows into a young adult (2).")
+						.comment("Elders (3) never grow in this way; they only spawn naturally.")
+						.defineInRange("childToAdultDays", 30, 2, 10000);
+					infantStrengthGainPerDay = builder.comment("Strength gained per day by infants (age 0).")
+						.defineInRange("infantStrengthGainPerDay", 0.2d, 0d, 100d);
+					infantIntelligenceGainPerDay = builder.comment("Intelligence gained per day by infants (age 0).")
+						.defineInRange("infantIntelligenceGainPerDay", 0.2d, 0d, 100d);
+					infantAttributeCap = builder.comment("Strength/intelligence cap for infants (age 0).")
+						.defineInRange("infantAttributeCap", 40d, 0d, 100d);
+					childStrengthGainPerDay = builder.comment("Strength gained per day by children (age 1).")
+						.defineInRange("childStrengthGainPerDay", 0.3d, 0d, 100d);
+					childIntelligenceGainPerDay = builder.comment("Intelligence gained per day by children (age 1).")
+						.defineInRange("childIntelligenceGainPerDay", 0.4d, 0d, 100d);
+					childStrengthCap = builder.comment("Strength cap for children (age 1). Higher than the adult starting average so grown children can outstrip direct recruits.")
+						.defineInRange("childStrengthCap", 80d, 0d, 100d);
+					childIntelligenceCap = builder.comment("Intelligence cap for children (age 1).")
+						.defineInRange("childIntelligenceCap", 85d, 0d, 100d);
+					adultStrengthGainPerDay = builder.comment("Strength gained per day by young adults (age 2). Very slow.")
+						.defineInRange("adultStrengthGainPerDay", 0.05d, 0d, 100d);
+					adultIntelligenceGainPerDay = builder.comment("Intelligence gained per day by young adults (age 2). Very slow.")
+						.defineInRange("adultIntelligenceGainPerDay", 0.05d, 0d, 100d);
+					adultAttributeCap = builder.comment("Strength/intelligence cap for young adults (age 2).")
+						.defineInRange("adultAttributeCap", 60d, 0d, 100d);
+					elderStrengthDecayPerDay = builder.comment("Strength lost per day by elders (age 3); decay never drops below the floor.")
+						.defineInRange("elderStrengthDecayPerDay", 0.1d, 0d, 100d);
+					elderStrengthFloor = builder.comment("Strength floor for elders (age 3).")
+						.defineInRange("elderStrengthFloor", 25d, 0d, 100d);
+					builder.pop();
+				}
+			}
+
 			public static class Hunting {
 				/**
 				 * Hunting production is settled once per town day by tickMorning().
@@ -895,6 +1006,8 @@ public class FHConfig {
 			public final Housing HOUSING;
 			public final Mining MINING;
 			public final ResidentProgression RESIDENT_PROGRESSION;
+			public final RefugeeSpawn REFUGEE_SPAWN;
+			public final ResidentAging RESIDENT_AGING;
 			public final Resource RESOURCE;
 			Town(ForgeConfigSpec.Builder builder) {
 				builder.push("ITown");
@@ -906,6 +1019,8 @@ public class FHConfig {
 					.define("enableTownTickMorning", true);
 				HOUSING = new Housing(builder);
 				RESIDENT_PROGRESSION = new ResidentProgression(builder);
+				REFUGEE_SPAWN = new RefugeeSpawn(builder);
+				RESIDENT_AGING = new ResidentAging(builder);
 				HUNTING = new Hunting(builder);
 				MINING = new Mining(builder);
 				RESOURCE=new Resource(builder);
