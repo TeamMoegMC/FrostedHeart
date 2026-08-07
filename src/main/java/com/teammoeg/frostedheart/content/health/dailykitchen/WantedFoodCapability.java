@@ -44,6 +44,7 @@ import java.util.Set;
 
 import com.teammoeg.chorda.io.NBTSerializable;
 import com.teammoeg.chorda.util.CRegistryHelper;
+import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
 
 import net.minecraft.world.item.Item;
 import net.minecraft.nbt.CompoundTag;
@@ -52,6 +53,7 @@ import net.minecraft.nbt.IntTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.StringTag;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraftforge.registries.ForgeRegistries;
 
 
 public class WantedFoodCapability implements NBTSerializable{
@@ -158,16 +160,35 @@ public class WantedFoodCapability implements NBTSerializable{
 	}
 
 	/**
-	 * 记录玩家吃过的一种食物（仅可食用的物品，且自动按物品去重）。
+	 * 判断食物是否为可推荐的"正常食物"：既不是生食（raw_food 标签）也不是坏食（bad_food 标签）。
+	 * 每日厨房只把正常食物记入"吃过的食物"，避免推荐生肉、腐肉等有害食物。
 	 * <p>
-	 * Records one kind of food the player has eaten. Only edible items are recorded
-	 * and duplicates (same Item) are naturally eliminated by the underlying Set,
-	 * so the collection is a set of distinct eaten food kinds.
+	 * Checks whether a food is a recommendable normal food, i.e. neither raw food
+	 * (raw_food tag) nor bad food (bad_food tag). The daily kitchen only records
+	 * normal foods as "eaten" so harmful food like raw meat or rotten flesh is avoided.
+	 *
+	 * @param food 待判定物品 / the item to check
+	 * @return 是否为正常食物 / whether it is a normal food
+	 */
+	public static boolean isNormalFood(Item food) {
+		return ForgeRegistries.ITEMS.getDelegate(food).map(t -> !t.is(FHTags.Items.RAW_FOOD.tag) && !t.is(FHTags.Items.BAD_FOOD.tag)).orElse(false);
+	}
+
+	/**
+	 * 记录玩家吃过的一种食物（仅可食用的正常食物，且自动按物品去重）。
+	 * 入口即过滤生食/坏食：一方面"想吃的菜"只从正常食物中推荐，
+	 * 另一方面避免候选池全是生/坏食时生成逻辑反复落空。
+	 * <p>
+	 * Records one kind of food the player has eaten. Only edible normal foods are
+	 * recorded and duplicates (same Item) are naturally eliminated by the underlying
+	 * Set, so the collection is a set of distinct eaten food kinds. Raw/bad foods
+	 * are filtered out here so wanted foods are only recommended from normal foods
+	 * and the generation logic never ends up with an empty candidate pool.
 	 *
 	 * @param food 吃下的物品 / the item that was eaten
 	 */
 	public void addEatenFood(Item food) {
-		if (food != null && food.isEdible()) {
+		if (food != null && food.isEdible() && isNormalFood(food)) {
 			foodsEaten.add(food);
 		}
 	}

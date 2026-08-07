@@ -25,16 +25,11 @@ import java.util.Random;
 import java.util.Set;
 
 import com.teammoeg.chorda.text.Components;
-import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
 import com.teammoeg.frostedheart.util.Lang;
 
 import net.minecraft.world.item.Item;
-import net.minecraft.tags.ItemTags;
-import net.minecraft.tags.TagKey;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraftforge.fluids.capability.ItemFluidContainer;
-import net.minecraftforge.registries.ForgeRegistries;
 
 class WantedFoodsGenerator {
     private final Random random;
@@ -42,7 +37,8 @@ class WantedFoodsGenerator {
     private MutableComponent wantedFoodsText = Lang.translateMessage("wanted_foods");
     private final int eatenFoodsAmount;
     private final int maxGenerateAmount;
-    private HashSet<Item> wantedFoods = new HashSet<>();
+    /** 单次抽取落空时的最大重试次数，防止极端随机/过滤导致无限递归 / max retry attempts when a single draw comes up empty, prevents infinite recursion */
+    private static final int MAX_GENERATE_ATTEMPTS = 3;
 
     public WantedFoodsGenerator(Set<Item> foodsEaten, int eatenFoodsAmount) {
         random = new Random();
@@ -53,18 +49,40 @@ class WantedFoodsGenerator {
     }
 
     /**
-     * 判断食物是否为"可推荐的正常食物"：既不是生食(raw_food)也不是坏食(bad_food)。
-     * 每日厨房只把正常食物加入"想吃的菜"候选，避免推荐生肉、腐肉等有害食物。
+     * 随机抽取 1-3 种玩家吃过且可推荐的正常食物作为"今日想吃的菜"。
+     * 生食/坏食已在写入 foodsEaten 时过滤（见 {@link WantedFoodCapability#addEatenFood}），
+     * 此处仅剩流体容器等少量过滤可能导致单次落空，故有限重试后仍为空则返回空集，
+     * 由调用方静默处理（当天不显示想吃的菜），杜绝递归栈溢出。
      * <p>
-     * Checks whether a food is a recommendable normal food, i.e. neither raw food
-     * (raw_food tag) nor bad food (bad_food tag). Only normal foods are picked as
-     * "wanted food" candidates so harmful food like raw meat or rotten flesh is avoided.
+     * Randomly picks 1-3 kinds of recommendable normal foods the player has eaten as
+     * today's wanted foods. Raw/bad foods are already filtered when writing into
+     * foodsEaten (see {@link WantedFoodCapability#addEatenFood}), so a single draw can
+     * only come up empty due to residual filters like fluid containers; retrying a
+     * bounded number of times and then returning an empty set lets the caller stay
+     * silent (no wanted foods shown that day) instead of recursing into a stack overflow.
+     *
+     * @return 想吃的食物集合（可能为空）/ the wanted food set (possibly empty)
      */
-    private static boolean isNotBadFood(Item food) {
-        return ForgeRegistries.ITEMS.getDelegate(food).map(t->!t.is(FHTags.Items.RAW_FOOD.tag)&&!t.is(FHTags.Items.BAD_FOOD.tag)).orElse(false);
+    public HashSet<Item> generate() {
+        for (int attempt = 0; attempt < MAX_GENERATE_ATTEMPTS; attempt++) {
+            HashSet<Item> result = generateOnce();
+            if (!result.isEmpty()) {
+                return result;
+            }
+        }
+        return new HashSet<>();
     }
 
-    public HashSet<Item> generate() {
+    /**
+     * 单次抽取：随机选中 maxGenerateAmount 个不重复索引，取对应位置食物中可推荐的部分。
+     * <p>
+     * Single draw: randomly selects non-repeated indices and keeps the recommendable
+     * foods at those positions.
+     *
+     * @return 本次抽到的正常食物集合（可能为空）/ the recommendable foods drawn this time (possibly empty)
+     */
+    private HashSet<Item> generateOnce() {
+        HashSet<Item> result = new HashSet<>();
         ArrayList<Integer> wantedFoodsNumber = new ArrayList<>();
         for (int i = 0; i < maxGenerateAmount; ) {
             int randomNumber = random.nextInt(eatenFoodsAmount);
@@ -75,16 +93,13 @@ class WantedFoodsGenerator {
         }
         int i = 0;
         for (Item food : foodsEaten) {
-            if (wantedFoodsNumber.contains(i) && (isNotBadFood(food)) && !(food instanceof ItemFluidContainer/*Don't eat thermos!*/)) {
-                wantedFoods.add(food);
+            if (wantedFoodsNumber.contains(i) && (WantedFoodCapability.isNormalFood(food)) && !(food instanceof ItemFluidContainer/*Don't eat thermos!*/)) {
+                result.add(food);
                 wantedFoodsText.append(Lang.translateKey(food.getDescriptionId())).append(Components.str("  "));
             }
             i++;
         }
-        if (wantedFoods.isEmpty()) {
-            wantedFoods = this.generate();
-        }
-        return wantedFoods;
+        return result;
     }
 
     public MutableComponent getWantedFoodsText() {

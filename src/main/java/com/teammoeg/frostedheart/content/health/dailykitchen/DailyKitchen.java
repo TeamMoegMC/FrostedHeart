@@ -43,7 +43,10 @@ import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
 
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.Item;
 import net.minecraftforge.event.entity.living.LivingEntityUseItemEvent;
+
+import java.util.HashSet;
 
 public class DailyKitchen {
     /**
@@ -62,17 +65,18 @@ public class DailyKitchen {
     /**
      * 根据玩家已吃过的食物种类生成今日"想吃的菜"。吃过的食物由健康事件处理器
      * （HealthCommonEvents#finishUsingItems）在进食时写入 capability（见 {@link WantedFoodCapability#addEatenFood}）。
-     * 未达到生成门槛（吃过的食物种类不足 10 种）时返回 null，调用方不应发送提示消息。
+     * 未达到生成门槛（吃过的正常食物种类不足 10 种）时返回 null，调用方不应发送提示消息。
      * <p>
      * Generates today's wanted foods based on the kinds of food the player has eaten.
      * Eaten food kinds are recorded into the capability by the health event handler
      * (HealthCommonEvents#finishUsingItems) when eating (see {@link WantedFoodCapability#addEatenFood}).
-     * Returns null when the generation threshold (10 distinct eaten food kinds) is not reached,
+     * Returns null when the generation threshold (10 distinct eaten normal food kinds) is not reached,
      * in which case the caller should not send the message.
      *
      * @param wantedFoodCapability 玩家的每日厨房能力 / the player's daily kitchen capability
-     * @return 生成器实例（含生成的候选与提示文本），未达标时返回 null / the generator holding generated
-     *         candidates and message text, or null if the threshold is not reached
+     * @return 生成器实例（含生成的候选与提示文本），未达标或候选为空时返回 null / the generator holding
+     *         generated candidates and message text, or null if the threshold is not reached
+     *         or the candidates come up empty
      */
     static WantedFoodsGenerator generateWantedFoods(WantedFoodCapability wantedFoodCapability){
         int eatenFoodsAmount = wantedFoodCapability.getFoodsEaten().size();
@@ -83,7 +87,9 @@ public class DailyKitchen {
 
         WantedFoodsGenerator generator = new WantedFoodsGenerator(wantedFoodCapability.getFoodsEaten(), eatenFoodsAmount);
 
-        wantedFoodCapability.setWantedFoods(generator.generate());
+        HashSet<Item> generated = generator.generate();
+        if (generated.isEmpty()) return null;//极端情况：候选为空（如全是流体容器），静默跳过当日推荐 / extreme case: empty candidates (e.g. all fluid containers), silently skip today's recommendation
+        wantedFoodCapability.setWantedFoods(generated);
         return generator;
     }
 
