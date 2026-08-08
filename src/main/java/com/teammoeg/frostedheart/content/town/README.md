@@ -110,7 +110,7 @@ public interface ITown extends ITownWithResources, ITownWithBuildings, ITownWith
 11. `buildingsWork` —— `reloadMaxCapacity()` 后按 `getWorkPriority()` 降序执行 `building.work(town, world)`。
 12. `recoverResources` —— 地形资源按配置的 `recoverSpeed` 恢复。
 
-CODEC 字段：`name / resources / blocks / residents / terrainResource / labour / maxLabour / history / lastRefugeeSpawnDay`（后两个沿用 `CodecUtil.defaultSupply(catchingCodec(Codec.INT), () -> 0)` 容错惯例）。
+CODEC 字段：`name / resources / blocks / residents / terrainResource / labour / maxLabour / history / lastRefugeeSpawnDay`；其中 `lastRefugeeSpawnDay` 使用逻辑气候日的 `Codec.LONG`，缺省为 `-1`，兼容首日结算。
 
 ---
 

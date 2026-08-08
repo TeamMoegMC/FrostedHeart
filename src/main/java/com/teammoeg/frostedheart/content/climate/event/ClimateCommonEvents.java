@@ -348,6 +348,13 @@ public class ClimateCommonEvents {
         if (event.side == LogicalSide.SERVER && event.phase == Phase.START && CTeamDataManager.INSTANCE != null) {
             Level world = event.level;
             if (!world.isClientSide && world instanceof ServerLevel serverWorld) {
+                // 先让逻辑气候时钟吸收本 tick 的 dayTime 变化，再执行依赖“世界日”的城镇逻辑。
+                // 每 tick 更新可在 /time set 后于早晨结算前完成回退归一化；WorldClockSource
+                // 内部按 20 tick 折算秒数，正常流速下仍只会每 20 tick 累加一秒。
+                WorldClimate climateData = WorldClimate.get(serverWorld);
+                if (climateData != null) {
+                    climateData.updateClock(serverWorld);
+                }
 
                 // ITown logic tick
                 int i = 0;
@@ -368,21 +375,18 @@ public class ClimateCommonEvents {
                     i++;
                 }
 
-                // Update clock source every second, and check hour data if it needs an update
+                // Refresh climate caches and check hour data once per second.
                 if (serverWorld.getGameTime() % 20 == 0) {
-                    WorldClimate data = WorldClimate.get(serverWorld);
-
-                    if (data != null) {
+                    if (climateData != null) {
                         if (FHConfig.SERVER.CLIMATE.addInitClimate.get())
-                            if (!data.isInitialEventAdded()) {
-                                data.setInitialEventAdded(true);
+                            if (!climateData.isInitialEventAdded()) {
+                                climateData.setInitialEventAdded(true);
                                 if (serverWorld.dimensionTypeRegistration().is(BuiltinDimensionTypes.OVERWORLD)) {
-                                    data.addInitTempEvent(serverWorld);
+                                    climateData.addInitTempEvent(serverWorld);
                                 }
                             }
-                        data.updateClock(serverWorld);
-                        data.updateCache(serverWorld);
-                        data.trimTempEventStream();
+                        climateData.updateCache(serverWorld);
+                        climateData.trimTempEventStream();
                     }
 
                 }

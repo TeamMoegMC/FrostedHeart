@@ -27,6 +27,7 @@ import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
 import com.teammoeg.frostedheart.content.town.TeamTownData;
 import com.teammoeg.frostedheart.content.climate.AttractedByGeneratorGoal;
 import com.teammoeg.frostedheart.content.climate.WorldTemperature;
+import com.teammoeg.frostedheart.content.climate.gamedata.climate.WorldClimate;
 import com.teammoeg.frostedheart.content.trade.*;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 
@@ -110,7 +111,7 @@ public class WanderingRefugee extends AbstractVillager implements NeutralMob, Vi
     private boolean townSpawned = false;
     private int waitingDays = 0;
     /** 上次结算等待天数的世界日；-1 表示尚未初始化（新刷/旧存档），加载后首日宽限 */
-    private int lastWaitingCheckDay = -1;
+    private long lastWaitingCheckDay = -1L;
     @Nullable
     private UUID townOwner = null;
     private boolean coldSurvivor = false;
@@ -178,20 +179,20 @@ public class WanderingRefugee extends AbstractVillager implements NeutralMob, Vi
      * 城镇刷出难民的每日清场（由实体自理，无队伍侧登记/扫描）：
      * 按真实经过的游戏日补算等待天数（同一天只结算一次），等待超时或城镇无空房位/数据缺失时离开。
      * 区块卸载/未加载期间的天数在重载时一次性补齐，等待天数始终真实。
-     * 使用与城镇早晨结算相同的 dayTime 日期源，睡觉跳日也会计入等待天数。
+     * 使用 WorldClockSource 的逻辑日期：睡觉跳时会推进日期，/time set 回退不会让日期倒退。
      */
     private void tickRefugeeWaitingCheck() {
         if (this.townOwner == null) return;
-        int day = (int) (this.level().getDayTime() / 24000L);
-        if (this.lastWaitingCheckDay == -1) {
+        long day = WorldClimate.getWorldDay(this.level());
+        if (this.lastWaitingCheckDay == -1L) {
             // 新刷出/旧存档：当天宽限，次日起按日界结算
             this.lastWaitingCheckDay = day;
             return;
         }
-        int elapsedDays = day - this.lastWaitingCheckDay;
+        long elapsedDays = day - this.lastWaitingCheckDay;
         if (elapsedDays <= 0) return;
         this.lastWaitingCheckDay = day;
-        this.waitingDays += elapsedDays;
+        this.waitingDays = (int) Math.min(Integer.MAX_VALUE, (long) this.waitingDays + elapsedDays);
         if (this.waitingDays >= FHConfig.SERVER.TOWN.REFUGEE_SPAWN.maxWaitDays.get() || !this.canTownStillHost()) {
             this.remove(Entity.RemovalReason.DISCARDED);
         }
@@ -355,7 +356,7 @@ public class WanderingRefugee extends AbstractVillager implements NeutralMob, Vi
         pCompound.putInt("age", this.getAgeGroup());
         pCompound.putBoolean("townSpawned", this.townSpawned);
         pCompound.putInt("waitingDays", this.waitingDays);
-        pCompound.putInt("lastWaitingCheckDay", this.lastWaitingCheckDay);
+        pCompound.putLong("lastWaitingCheckDay", this.lastWaitingCheckDay);
         if (this.townOwner != null) {
             pCompound.putUUID("townOwner", this.townOwner);
         }
@@ -389,8 +390,9 @@ public class WanderingRefugee extends AbstractVillager implements NeutralMob, Vi
         if ((pCompound.contains("waitingDays", Tag.TAG_INT))) {
             waitingDays = pCompound.getInt("waitingDays");
         }
-        if ((pCompound.contains("lastWaitingCheckDay", Tag.TAG_INT))) {
-            lastWaitingCheckDay = pCompound.getInt("lastWaitingCheckDay");
+        if ((pCompound.contains("lastWaitingCheckDay", Tag.TAG_ANY_NUMERIC))) {
+            // getLong 同时兼容旧存档中的 TAG_INT。
+            lastWaitingCheckDay = pCompound.getLong("lastWaitingCheckDay");
         }
         if ((pCompound.contains("townOwner", Tag.TAG_INT_ARRAY))) {
             townOwner = pCompound.getUUID("townOwner");

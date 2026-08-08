@@ -626,9 +626,9 @@ public class FHConfig {
 					weightChild = builder.comment("Relative weight of children (age 1) in each batch.")
 						.defineInRange("weightChild", 20d, 0d, 1000d);
 					weightAdult = builder.comment("Relative weight of young adults (age 2) in each batch.")
-						.defineInRange("weightAdult", 50d, 0d, 1000d);
+						.defineInRange("weightAdult", 60d, 0d, 1000d);
 					weightElder = builder.comment("Relative weight of elders (age 3) in each batch.")
-						.defineInRange("weightElder", 20d, 0d, 1000d);
+						.defineInRange("weightElder", 10d, 0d, 1000d);
 					maxWaitDays = builder.comment("Days a town-spawned refugee waits near the tower before leaving on their own.")
 						.comment("They also leave the first morning the town has no vacant house.")
 						.defineInRange("maxWaitDays", 3, 1, 100);
@@ -655,10 +655,10 @@ public class FHConfig {
 				ResidentAging(ForgeConfigSpec.Builder builder) {
 					builder.push("Resident Aging");
 					infantToChildDays = builder.comment("Age-days at which an infant (0) grows into a child (1).")
-						.defineInRange("infantToChildDays", 10, 1, 1000);
+						.defineInRange("infantToChildDays", 10, 1, 100);
 					childToAdultDays = builder.comment("Age-days at which a child (1) grows into a young adult (2).")
 						.comment("Elders (3) never grow in this way; they only spawn naturally.")
-						.defineInRange("childToAdultDays", 30, 2, 10000);
+						.defineInRange("childToAdultDays", 30, 1, 100);
 					infantStrengthGainPerDay = builder.comment("Strength gained per day by infants (age 0).")
 						.defineInRange("infantStrengthGainPerDay", 0.2d, 0d, 100d);
 					infantIntelligenceGainPerDay = builder.comment("Intelligence gained per day by infants (age 0).")

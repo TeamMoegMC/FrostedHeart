@@ -118,7 +118,7 @@ public class TeamTownData implements SpecialData{
         CodecUtil.defaultSupply(CodecUtil.catchingCodec(TownHistoryEntry.CODEC.listOf()), ArrayList::new)
         .fieldOf("history").forGetter(o -> o.history),
 
-        CodecUtil.defaultSupply(CodecUtil.catchingCodec(Codec.INT), () -> 0)
+        CodecUtil.defaultSupply(CodecUtil.catchingCodec(Codec.LONG), () -> -1L)
         .fieldOf("lastRefugeeSpawnDay").forGetter(o -> o.lastRefugeeSpawnDay)
 
         )
@@ -165,7 +165,7 @@ public class TeamTownData implements SpecialData{
      * 最近一次按世界日结算难民刷新的日期（服务端持久化）。
      * 防止同一天内重复结算（含 /town tick 手动调用）导致重复刷新。
      */
-    int lastRefugeeSpawnDay = 0;
+    long lastRefugeeSpawnDay = -1L;
 
     /**
      * 用于将城镇数据变化的监听器塞到各个地方。
@@ -189,7 +189,7 @@ public class TeamTownData implements SpecialData{
 
 
 
-    public TeamTownData(String name, TeamTownResourceHolder resources, Map<BlockPos, ITownBuilding> buildings, Map<UUID, Resident> residents, Map<TerrainResourceType, TerrainResourceData> terrainResource,int labour,int maxlabour, List<TownHistoryEntry> history, int lastRefugeeSpawnDay) {
+    public TeamTownData(String name, TeamTownResourceHolder resources, Map<BlockPos, ITownBuilding> buildings, Map<UUID, Resident> residents, Map<TerrainResourceType, TerrainResourceData> terrainResource,int labour,int maxlabour, List<TownHistoryEntry> history, long lastRefugeeSpawnDay) {
         super();
         this.history = new ArrayList<>(history);
         this.name = name;
@@ -344,7 +344,7 @@ public class TeamTownData implements SpecialData{
      * @param world 服务端世界 / server world instance
      */
     void recordDailySnapshot(ServerLevel world) {
-        long day = world.getDayTime() / 24000L;
+        long day = WorldClimate.getWorldDay(world);
         // DoubleSummaryStatistics 与 DoubleStream.average() 同源（Kahan 补偿求和），位级一致；空集 getAverage()=0.0
         DoubleSummaryStatistics healthStat = new DoubleSummaryStatistics();
         DoubleSummaryStatistics mentalStat = new DoubleSummaryStatistics();
@@ -479,8 +479,8 @@ public class TeamTownData implements SpecialData{
         // 队伍无人在线时不刷新；不置位当天标记，有人上线当天仍可刷。
         // 防御：getTeam() 可为 null（旧存档恢复已解散队伍的 holder），getOnlineMembers() 内部不判空
         if (teamData.getTeam() == null || teamData.getTeam().getOnlineMembers().isEmpty()) return;
-        // 与 tickMorning 的早晨触发器使用同一个 dayTime 日期源，确保睡觉跳日后仍会正常结算刷新。
-        int day = (int) (world.getDayTime() / 24000L);
+        // WorldClockSource 已在本次城镇 tick 前更新：睡觉跳时会推进日期，/time set 回退不会让日期倒退。
+        long day = WorldClimate.getWorldDay(world);
         // "当天只结算一次"守卫：/town tick 同日多次调用也不会重复刷批
         if (day == this.lastRefugeeSpawnDay) return;
         Optional<GeneratorData> genDataOpt = teamData.getOptional(FHSpecialDataTypes.GENERATOR_DATA);
@@ -518,7 +518,7 @@ public class TeamTownData implements SpecialData{
         RefugeeSpawnWeather weather = getSpawnWeather(world, genDataOpt.get().actualPos);
         int spawned = spawnRefugeeBatch(world, teamData, weather);
         if (spawned > 0) {
-            this.lastRefugeeSpawnDay = (int) (world.getDayTime() / 24000L);
+            this.lastRefugeeSpawnDay = WorldClimate.getWorldDay(world);
         }
         FHMain.LOGGER.info("Debug-spawned {} refugee(s), weather={}", spawned, weather);
     }
