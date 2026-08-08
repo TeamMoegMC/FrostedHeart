@@ -178,11 +178,11 @@ public class WanderingRefugee extends AbstractVillager implements NeutralMob, Vi
      * 城镇刷出难民的每日清场（由实体自理，无队伍侧登记/扫描）：
      * 按真实经过的游戏日补算等待天数（同一天只结算一次），等待超时或城镇无空房位/数据缺失时离开。
      * 区块卸载/未加载期间的天数在重载时一次性补齐，等待天数始终真实。
-     * 用 gameTime（单调递增、不受 /time set 影响）而非 dayTime，避免玩家改时间造成骤增/停滞。
+     * 使用与城镇早晨结算相同的 dayTime 日期源，睡觉跳日也会计入等待天数。
      */
     private void tickRefugeeWaitingCheck() {
         if (this.townOwner == null) return;
-        int day = (int) (this.level().getGameTime() / 24000L);
+        int day = (int) (this.level().getDayTime() / 24000L);
         if (this.lastWaitingCheckDay == -1) {
             // 新刷出/旧存档：当天宽限，次日起按日界结算
             this.lastWaitingCheckDay = day;

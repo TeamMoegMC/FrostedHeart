@@ -479,8 +479,8 @@ public class TeamTownData implements SpecialData{
         // 队伍无人在线时不刷新；不置位当天标记，有人上线当天仍可刷。
         // 防御：getTeam() 可为 null（旧存档恢复已解散队伍的 holder），getOnlineMembers() 内部不判空
         if (teamData.getTeam() == null || teamData.getTeam().getOnlineMembers().isEmpty()) return;
-        // 用 gameTime（单调递增、不受 /time set 影响）而非 dayTime，避免玩家改时间造成跳刷/误判
-        int day = (int) (world.getGameTime() / 24000L);
+        // 与 tickMorning 的早晨触发器使用同一个 dayTime 日期源，确保睡觉跳日后仍会正常结算刷新。
+        int day = (int) (world.getDayTime() / 24000L);
         // "当天只结算一次"守卫：/town tick 同日多次调用也不会重复刷批
         if (day == this.lastRefugeeSpawnDay) return;
         Optional<GeneratorData> genDataOpt = teamData.getOptional(FHSpecialDataTypes.GENERATOR_DATA);
@@ -518,7 +518,7 @@ public class TeamTownData implements SpecialData{
         RefugeeSpawnWeather weather = getSpawnWeather(world, genDataOpt.get().actualPos);
         int spawned = spawnRefugeeBatch(world, teamData, weather);
         if (spawned > 0) {
-            this.lastRefugeeSpawnDay = (int) (world.getGameTime() / 24000L);
+            this.lastRefugeeSpawnDay = (int) (world.getDayTime() / 24000L);
         }
         FHMain.LOGGER.info("Debug-spawned {} refugee(s), weather={}", spawned, weather);
     }
