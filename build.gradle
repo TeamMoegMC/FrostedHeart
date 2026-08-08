@@ -64,10 +64,10 @@ minecraft {
 
             // debug level logging
             // property 'forge.logging.markers', 'REGISTRIES'
-            // property 'forge.logging.console.level', 'debug'
+             property 'forge.logging.console.level', 'debug'
 
             // for normal run just log at info level
-            property 'forge.logging.console.level', 'info'
+//            property 'forge.logging.console.level', 'info'
 
             //jvmArgs '-Xdebug','-Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=9009'
 
