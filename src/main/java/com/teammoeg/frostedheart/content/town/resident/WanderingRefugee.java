@@ -337,6 +337,16 @@ public class WanderingRefugee extends AbstractVillager implements NeutralMob, Vi
     }
 
     @Override
+    public void onSyncedDataUpdated(EntityDataAccessor<?> key) {
+        if (AGE.equals(key)) {
+            // getDimensions() depends on the custom age group. Refresh the cached
+            // hitbox and eye height on both the server setter and client sync path.
+            this.refreshDimensions();
+        }
+        super.onSyncedDataUpdated(key);
+    }
+
+    @Override
     protected void rewardTradeXp(MerchantOffer pOffer) {
 
     }
