@@ -1010,7 +1010,7 @@ public class FHConfig {
 			public final ResidentAging RESIDENT_AGING;
 			public final Resource RESOURCE;
 			Town(ForgeConfigSpec.Builder builder) {
-				builder.push("ITown");
+				builder.push("Town");
 				enableTownTick = builder.comment("Enables town tick every second.")
 					.comment("This tick includes the running of town worker blocks.")
 					.define("enableTownTick", true);
