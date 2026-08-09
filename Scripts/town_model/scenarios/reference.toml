@@ -1,0 +1,507 @@
+[meta]
+name = "TWR 城镇临界自循环参考场景"
+description = "8/24/48 人、T2 能量塔与球形加热器热场的首轮可调基线；参数不是最终平衡结论。"
+
+[sources]
+world_temperature = "src/main/java/com/teammoeg/frostedheart/content/climate/WorldTemperature.java"
+heat_area = "src/main/java/com/teammoeg/frostedheart/content/climate/gamedata/chunkheat/ChunkHeatData.java"
+generator = "src/main/java/com/teammoeg/frostedheart/content/climate/block/generator/GeneratorData.java"
+radiator = "src/main/java/com/teammoeg/frostedheart/content/climate/block/radiator/RadiatorState.java"
+housing = "src/main/java/com/teammoeg/frostedheart/content/town/buildings/house/HouseDailyModel.java"
+hunting = "src/main/java/com/teammoeg/frostedheart/content/town/buildings/hunting/HuntingBaseBuilding.java"
+
+[simulation]
+days = 120                    # game day
+dt_hours = 0.25               # game hour
+runs = 1000                   # Monte Carlo runs per combination
+seed = 20260810
+populations = [8, 24, 48]     # residents
+soft_comfort_degree_hours = 110.0 # substantial event threshold, C*hour per day
+
+[climate]
+baseline_c = -10.0            # degrees C; WorldTemperature overworld baseline
+local_offset_c = 0.0          # degrees C; biome + altitude scenario offset
+daily_swing_c = 2.0           # degrees C
+tracks = 3                    # independent climate-event tracks
+calm_days_min = 2.0           # game day
+calm_days_max = 7.0
+event_days_min = 2.0
+event_days_max = 7.0
+warm_probability = 0.20
+cold_amplitude_min_c = 8.0
+cold_amplitude_max_c = 55.0
+cold_amplitude_shape = 4.0       # high-tier waves are deliberately rare
+warm_amplitude_min_c = 4.0
+warm_amplitude_max_c = 18.0
+design_cold_start_day = 30.0
+design_cold_duration_days = 5.0
+design_cold_amplitude_c = 55.0
+forecast_hours = 120          # game hour; current HUD horizon
+
+[heat_field]
+# Designer-facing first estimates. These fictional-game coefficients must be
+# calibrated; unlike derived FV/(block3*C*day), they distinguish steady loss
+# from startup energy.
+envelope_loss_fv_per_block2_c_hour = 0.008
+volume_leak_fv_per_block3_c_hour = 0.0002
+capacitance_fv_per_block3_c = 0.006
+
+[network]
+capacity_fv_per_hour = 4000.0
+efficiency = 0.90
+current_efficiency = 1.0
+current_heat_efficiency = 1.2
+current_capacity_heat_per_tick = 25.0
+
+[population]
+worker_fraction = 0.68
+swe_per_worker = 1.0
+fce_per_person = 1.0
+food_energy_per_fce_day = 7.0
+nutrition_per_fce_day = 1.0
+cold_food_per_fce_degree_hour = 0.003
+health_loss_no_food_per_day = 8.0
+mental_loss_no_food_per_day = 5.0
+health_loss_per_survival_degree_hour = 0.020
+mental_loss_per_comfort_degree_hour = 0.002
+health_recovery_per_day = 2.0
+mental_recovery_per_day = 1.5
+death_threshold = 5.0
+
+[inventory.initial]
+biomass = 80.0
+industry_goods = 0.0
+
+[inventory.initial_per_person]
+fuel_fv = 130000.0
+food_energy = 49.0
+nutrition = 7.0
+
+[inventory.capacity]
+biomass = 2000.0
+industry_goods = 100000.0
+
+[inventory.capacity_per_person]
+fuel_fv = 150000.0
+food_energy = 210.0
+nutrition = 30.0
+
+[layout]
+search_radius_blocks = 36
+restarts = 8
+iterations = 1500
+initial_temperature_c = 18.0
+
+[[emitter]]
+name = "tower"
+kind = "tower"
+position = [0.0, 0.0, 0.0]
+radius_blocks = 24.0
+setpoint_c = 20.0
+overdrive_setpoint_c = 30.0
+max_power_fv_per_hour = 2600.0
+overdrive_power_multiplier = 2.6
+base_burn_fv_per_hour = 1000.0
+overdrive_burn_fv_per_hour = 1000.0
+efficiency = 0.80
+ramp_c_per_hour = 10.0
+networked = false
+priority = 0
+min_population = 0
+active_by_default = true
+movable = false
+current_heat_ceiling_c = 20.0
+current_overdrive_heat_ceiling_c = 30.0
+current_network_heat_per_tick = 0.0
+
+[[emitter]]
+name = "east_heater"
+kind = "heater"
+position = [24.0, 0.0, 1.0]
+radius_blocks = 16.0
+setpoint_c = 18.0
+overdrive_setpoint_c = 20.0
+max_power_fv_per_hour = 1000.0
+overdrive_power_multiplier = 2.5
+base_burn_fv_per_hour = 0.0
+overdrive_burn_fv_per_hour = 0.0
+efficiency = 0.90
+ramp_c_per_hour = 10.0
+networked = true
+priority = 100
+min_population = 25
+active_by_default = true
+movable = true
+current_heat_ceiling_c = 20.0
+current_overdrive_heat_ceiling_c = 20.0
+current_network_heat_per_tick = 4.0
+
+[[emitter]]
+name = "west_heater"
+kind = "heater"
+position = [-24.0, 0.0, 1.0]
+radius_blocks = 16.0
+setpoint_c = 18.0
+overdrive_setpoint_c = 20.0
+max_power_fv_per_hour = 1000.0
+overdrive_power_multiplier = 2.5
+base_burn_fv_per_hour = 0.0
+overdrive_burn_fv_per_hour = 0.0
+efficiency = 0.90
+ramp_c_per_hour = 10.0
+networked = true
+priority = 100
+min_population = 33
+active_by_default = true
+movable = true
+current_heat_ceiling_c = 20.0
+current_overdrive_heat_ceiling_c = 20.0
+current_network_heat_per_tick = 4.0
+
+# Buildings are axis-aligned interior-air boxes. Position is the minimum voxel
+# coordinate and size is [x, y, z], all in blocks.
+[[building]]
+name = "house_1"
+kind = "house"
+position = [-9, 1, -5]
+size = [6, 4, 6]
+capacity = 8
+min_population = 0
+envelope_u_fv_per_block2_c_hour = 0.030
+leakage_fv_per_block3_c_hour = 0.004
+capacitance_fv_per_block3_c = 0.30
+comfort_c = 18.0
+work_min_c = 0.0
+survival_min_c = -5.0
+maximum_c = 50.0
+legacy_direct_heat = true
+legacy_heat_modifier_c = 24.0
+legacy_network_heat_per_tick = 1.0
+movable = true
+
+[[building]]
+name = "house_2"
+kind = "house"
+position = [-9, 1, -13]
+size = [6, 4, 6]
+capacity = 8
+min_population = 9
+envelope_u_fv_per_block2_c_hour = 0.030
+leakage_fv_per_block3_c_hour = 0.004
+capacitance_fv_per_block3_c = 0.30
+comfort_c = 18.0
+work_min_c = 0.0
+survival_min_c = -5.0
+maximum_c = 50.0
+legacy_direct_heat = true
+legacy_heat_modifier_c = 24.0
+legacy_network_heat_per_tick = 1.0
+movable = true
+
+[[building]]
+name = "house_3"
+kind = "house"
+position = [3, 1, -13]
+size = [6, 4, 6]
+capacity = 8
+min_population = 17
+envelope_u_fv_per_block2_c_hour = 0.030
+leakage_fv_per_block3_c_hour = 0.004
+capacitance_fv_per_block3_c = 0.30
+comfort_c = 18.0
+work_min_c = 0.0
+survival_min_c = -5.0
+maximum_c = 50.0
+legacy_direct_heat = true
+legacy_heat_modifier_c = 24.0
+legacy_network_heat_per_tick = 1.0
+movable = true
+
+[[building]]
+name = "house_4"
+kind = "house"
+position = [13, 1, 3]
+size = [6, 4, 6]
+capacity = 8
+min_population = 25
+envelope_u_fv_per_block2_c_hour = 0.030
+leakage_fv_per_block3_c_hour = 0.004
+capacitance_fv_per_block3_c = 0.30
+comfort_c = 18.0
+work_min_c = 0.0
+survival_min_c = -5.0
+maximum_c = 50.0
+legacy_direct_heat = true
+legacy_heat_modifier_c = 24.0
+legacy_network_heat_per_tick = 1.0
+movable = true
+
+[[building]]
+name = "house_5"
+kind = "house"
+position = [-19, 1, 3]
+size = [6, 4, 6]
+capacity = 8
+min_population = 33
+envelope_u_fv_per_block2_c_hour = 0.030
+leakage_fv_per_block3_c_hour = 0.004
+capacitance_fv_per_block3_c = 0.30
+comfort_c = 18.0
+work_min_c = 0.0
+survival_min_c = -5.0
+maximum_c = 50.0
+legacy_direct_heat = true
+legacy_heat_modifier_c = 24.0
+legacy_network_heat_per_tick = 1.0
+movable = true
+
+[[building]]
+name = "house_6"
+kind = "house"
+position = [21, 1, -5]
+size = [6, 4, 6]
+capacity = 8
+min_population = 41
+envelope_u_fv_per_block2_c_hour = 0.030
+leakage_fv_per_block3_c_hour = 0.004
+capacitance_fv_per_block3_c = 0.30
+comfort_c = 18.0
+work_min_c = 0.0
+survival_min_c = -5.0
+maximum_c = 50.0
+legacy_direct_heat = true
+legacy_heat_modifier_c = 24.0
+legacy_network_heat_per_tick = 1.0
+movable = true
+
+[[building]]
+name = "fuel_shop_1"
+kind = "fuel"
+position = [-9, 1, 3]
+size = [6, 4, 6]
+capacity = 8
+min_population = 0
+envelope_u_fv_per_block2_c_hour = 0.025
+leakage_fv_per_block3_c_hour = 0.004
+capacitance_fv_per_block3_c = 0.25
+comfort_c = 15.0
+work_min_c = 0.0
+survival_min_c = -8.0
+maximum_c = 50.0
+legacy_direct_heat = false
+legacy_heat_modifier_c = 0.0
+legacy_network_heat_per_tick = 0.0
+movable = true
+
+[[building]]
+name = "hunting_base"
+kind = "hunting"
+position = [3, 1, -5]
+size = [6, 4, 6]
+capacity = 12
+min_population = 0
+envelope_u_fv_per_block2_c_hour = 0.025
+leakage_fv_per_block3_c_hour = 0.004
+capacitance_fv_per_block3_c = 0.25
+comfort_c = 15.0
+work_min_c = 0.0
+survival_min_c = -8.0
+maximum_c = 50.0
+legacy_direct_heat = true
+legacy_heat_modifier_c = 24.0
+legacy_network_heat_per_tick = 1.0
+movable = true
+
+[[building]]
+name = "greenhouse"
+kind = "greenhouse"
+position = [3, 1, 3]
+size = [8, 5, 8]
+capacity = 16
+min_population = 9
+envelope_u_fv_per_block2_c_hour = 0.040
+leakage_fv_per_block3_c_hour = 0.006
+capacitance_fv_per_block3_c = 0.22
+comfort_c = 18.0
+work_min_c = 5.0
+survival_min_c = 0.0
+maximum_c = 40.0
+legacy_direct_heat = false
+legacy_heat_modifier_c = 0.0
+legacy_network_heat_per_tick = 0.0
+movable = true
+
+[[building]]
+name = "industry_shop"
+kind = "industry"
+position = [13, 1, -5]
+size = [6, 4, 6]
+capacity = 12
+min_population = 9
+envelope_u_fv_per_block2_c_hour = 0.025
+leakage_fv_per_block3_c_hour = 0.004
+capacitance_fv_per_block3_c = 0.25
+comfort_c = 15.0
+work_min_c = 0.0
+survival_min_c = -8.0
+maximum_c = 50.0
+legacy_direct_heat = false
+legacy_heat_modifier_c = 0.0
+legacy_network_heat_per_tick = 0.0
+movable = true
+
+[[building]]
+name = "fuel_shop_2"
+kind = "fuel"
+position = [21, 1, 3]
+size = [6, 4, 6]
+capacity = 12
+min_population = 25
+envelope_u_fv_per_block2_c_hour = 0.025
+leakage_fv_per_block3_c_hour = 0.004
+capacitance_fv_per_block3_c = 0.25
+comfort_c = 15.0
+work_min_c = 0.0
+survival_min_c = -8.0
+maximum_c = 50.0
+legacy_direct_heat = false
+legacy_heat_modifier_c = 0.0
+legacy_network_heat_per_tick = 0.0
+movable = true
+
+[[building]]
+name = "greenhouse_2"
+kind = "greenhouse"
+position = [-21, 1, -5]
+size = [8, 5, 8]
+capacity = 16
+min_population = 33
+envelope_u_fv_per_block2_c_hour = 0.040
+leakage_fv_per_block3_c_hour = 0.006
+capacitance_fv_per_block3_c = 0.22
+comfort_c = 18.0
+work_min_c = 5.0
+survival_min_c = 0.0
+maximum_c = 40.0
+legacy_direct_heat = false
+legacy_heat_modifier_c = 0.0
+legacy_network_heat_per_tick = 0.0
+movable = true
+
+[[process]]
+name = "peat_cutting"
+category = "fuel"
+building_kind = "fuel"
+priority = 10
+base_labor_share = 0.20
+max_swe = 2.0
+min_population = 0
+outputs_per_swe_day = { fuel_fv = 68000.0 }
+inputs_per_swe_day = {}
+
+[[process]]
+name = "forestry"
+category = "fuel"
+building_kind = "fuel"
+priority = 11
+base_labor_share = 0.10
+max_swe = 2.0
+min_population = 0
+outputs_per_swe_day = { biomass = 27.0 }
+inputs_per_swe_day = {}
+
+[[process]]
+name = "briquetting"
+category = "fuel"
+building_kind = "fuel"
+priority = 12
+base_labor_share = 0.10
+max_swe = 2.0
+min_population = 0
+outputs_per_swe_day = { fuel_fv = 58000.0 }
+inputs_per_swe_day = { biomass = 12.0 }
+
+[[process]]
+name = "hunting_food"
+category = "food"
+building_kind = "hunting"
+priority = 20
+base_labor_share = 0.48
+max_swe = 12.0
+min_population = 0
+outputs_per_swe_day = { food_energy = 26.0, nutrition = 9.0 }
+inputs_per_swe_day = {}
+# Current code defaults: 7/6 rolls * 1.5 expected items and default 1 food
+# resource per tagged item. Kept separate from the proposed food-energy model.
+current_outputs_per_swe_day = { food_energy = 1.75, nutrition = 0.8 }
+current_inputs_per_swe_day = {}
+
+[[process]]
+name = "greenhouse_food"
+category = "food"
+building_kind = "greenhouse"
+priority = 21
+base_labor_share = 0.20
+max_swe = 4.0
+capacity_scales_with_buildings = true
+min_population = 9
+outputs_per_swe_day = { food_energy = 15.0, nutrition = 12.0 }
+inputs_per_swe_day = { fuel_fv = 10000.0 }
+
+[[process]]
+name = "general_industry"
+category = "industry"
+building_kind = "industry"
+priority = 100
+base_labor_share = 0.10
+max_swe = 3.0
+min_population = 9
+outputs_per_swe_day = { industry_goods = 8.0 }
+inputs_per_swe_day = { fuel_fv = 44000.0 }
+
+[[process]]
+name = "coke_expansion"
+category = "fuel"
+building_kind = "fuel"
+priority = 13
+base_labor_share = 0.08
+max_swe = 2.0
+min_population = 25
+outputs_per_swe_day = { fuel_fv = 80000.0 }
+inputs_per_swe_day = { biomass = 20.0 }
+
+[[policy]]
+name = "none"
+reserve_days = 3.0
+critical_reserve_days = 1.0
+cold_trigger_level = -3
+preheat_hours = 1
+setpoint_offset_c = 0.0
+allow_overdrive = false
+allow_load_shedding = false
+fuel_labor_bonus = 0.0
+food_labor_bonus = 0.0
+
+[[policy]]
+name = "forecast"
+reserve_days = 7.0
+critical_reserve_days = 2.0
+cold_trigger_level = -3
+preheat_hours = 120
+setpoint_offset_c = 0.0
+allow_overdrive = true
+allow_load_shedding = true
+fuel_labor_bonus = 0.18
+food_labor_bonus = 0.18
+
+[[policy]]
+name = "conservative"
+reserve_days = 12.0
+critical_reserve_days = 4.0
+cold_trigger_level = -2
+preheat_hours = 120
+setpoint_offset_c = 0.0
+allow_overdrive = true
+allow_load_shedding = true
+fuel_labor_bonus = 0.25
+food_labor_bonus = 0.25
