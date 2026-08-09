@@ -169,11 +169,6 @@ repositories {
         }
     }
     maven {
-        // location of a maven mirror for JEI files, as a fallback
-        name = "ModMaven"
-        url = "https://modmaven.dev"
-    }
-    maven {
         //location of the maven for mixed mappings, create, registrate, and flywheel
         name = "tterrag maven"
         url = "https://maven.tterrag.com/"
