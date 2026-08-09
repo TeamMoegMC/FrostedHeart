@@ -391,7 +391,11 @@ public class HouseBuilding extends AbstractTownBuilding implements ITownResident
     }
 
     private void setDailyReport(DailyReport dailyReport) {
-        this.dailyReport = dailyReport == null ? DailyReport.EMPTY : dailyReport;
+        DailyReport report = dailyReport == null ? DailyReport.EMPTY : dailyReport;
+        // 值级守卫：DailyReport 为 record（逐字段比较，无随机/时钟字段），空房等未变化
+        // 场景连续两天报告相等——不再 fireChange，避免每日建筑包重发全部房屋条目
+        if (Objects.equals(this.dailyReport, report)) return;
+        this.dailyReport = report;
         fireChange();
     }
 

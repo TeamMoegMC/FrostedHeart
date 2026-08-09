@@ -922,6 +922,24 @@ public class TeamTownData implements SpecialData{
     }
 
     /**
+     * 全量同步包批内 fire 标记 + 单调递增批次号：批内连续回调（建筑→居民→资源）之间
+     * 数据不变（实例替换在 fireClientDataChanged 之前完成），监听器可据此对同一批的
+     * 重复回调去重一次；批号供监听器区分「当前批已求值」与「新一轮批」（纯布尔在
+     * 连续两次全量包之间无增量回调时会残留为真，跳过新一轮求值）。
+     * 仅客户端主线程访问（全量包 enqueueWork / 增量包 handler），无需并发保护。
+     */
+    private static boolean inClientBatchFire = false;
+    private static long clientSyncBatchId = 0;
+
+    public static boolean isInClientBatchFire() {
+        return inClientBatchFire;
+    }
+
+    public static long getClientSyncBatchId() {
+        return clientSyncBatchId;
+    }
+
+    /**
      * 通知所有已注册 GUI：三类数据均可能已变化。由全量同步包在替换实例后调用，
      * 保证 GUI 打开瞬间收到的最新全量数据能立即刷新到界面。
      * <p>
@@ -931,9 +949,15 @@ public class TeamTownData implements SpecialData{
      * </p>
      */
     public static void fireClientDataChanged() {
-        fireBuildingsChanged();
-        fireResidentsChanged();
-        fireResourcesChanged();
+        inClientBatchFire = true;
+        clientSyncBatchId++;
+        try {
+            fireBuildingsChanged();
+            fireResidentsChanged();
+            fireResourcesChanged();
+        } finally {
+            inClientBatchFire = false;
+        }
     }
 
     private static void fireBuildingsChanged() {

@@ -183,6 +183,10 @@ public class WanderingRefugee extends AbstractVillager implements NeutralMob, Vi
      */
     private void tickRefugeeWaitingCheck() {
         if (this.townOwner == null) return;
+        // 世界日查询是 capability 查找（每次 Optional 分配）：每实体每秒采样一次即可。
+        // 跨日结算按真实日差幂等补算（lastWaitingCheckDay 仅在结算时推进），
+        // ≤1 秒的采样延迟不改变任何结算结果；canTownStillHost() 的评估随之降至 1Hz。
+        if (this.tickCount % 20 != 0) return;
         long day = WorldClimate.getWorldDay(this.level());
         if (this.lastWaitingCheckDay == -1L) {
             // 新刷出/旧存档：当天宽限，次日起按日界结算

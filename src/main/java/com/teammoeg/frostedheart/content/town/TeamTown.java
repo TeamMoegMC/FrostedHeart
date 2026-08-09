@@ -141,6 +141,17 @@ public class TeamTown implements ITown, ITownWithResidents, ITownWithBuildings {
     }
 
     public boolean addResident(Resident resident) {
+        // 无空房位短路：满员时直接拒绝，跳过 put+全量 allocateHouse+回滚（失败路径从
+        // O(H log H)+每房评分降为 O(R+H)）。短路需双条件：canAddResident()（occupancy
+        // 口径）与 hasFreeHouseSlot()（residentsID 口径，镜像 allocateHouse filter）
+        // 同时判满才成立——正常态两口径一致（一致性由 residentAllocatingCheck 每日重建
+        // 与 addResident/removeResident 双写维护），双条件等价于旧路径必然失败；任一
+        // 不一致窗口不满足双条件 → 不短路，走旧路径与旧代码逐字节一致。不一致窗口：
+        // 建筑同位置替换（setPlacedBy→addTownBlock 的 put 覆盖旧条目不调 onRemoved，
+        // 旧居民 housePos 悬空而新实例 residentsID 为空，至次日结算恢复）、旧存档重载
+        // 至次日结算前。竞争路径（两个 homeless 抢最后槽位）同样不拦截，仍走
+        // put→allocateHouse→无房回滚。
+        if (!canAddResident() && !hasFreeHouseSlot()) return false;
         data.residents.put(resident.getUUID(), resident);
         data.allocateHouse();
         if(resident.getHousePos() == null){
@@ -160,16 +171,20 @@ public class TeamTown implements ITown, ITownWithResidents, ITownWithBuildings {
      * 存在任一可工作的 {@code HouseBuilding} 仍有空余房屋槽位即可。
      * <p>
      * 容量按居民实际住房归属（{@code Resident.housePos}）计数而非
-     * {@code HouseBuilding.getResidentsID()}：后者不在 CODEC 序列化范围，
-     * 客户端快照 / 存档重载后恒为空集，不能作为容量依据；此口径与城镇 GUI
-     * 显示、{@link TeamTownData#allocateHouse()} 的真实分配结果保持一致。
+     * {@code HouseBuilding.getResidentsID()}：residentsUUID 已随 CODEC 序列化
+     * （2026-08-02 起），与 housePos 的一致性由 residentAllocatingCheck 每日重建、
+     * addResident/removeResident 双写维护，正常态两者等价；不一致窗口（建筑同位置
+     * 替换、旧存档重载）至次日结算修复，见 {@link #addResident(Resident)} 短路注释；
+     * 此口径与城镇 GUI 显示、{@link TeamTownData#allocateHouse()} 的真实分配结果保持一致。
      * <p>
      * Client/server shared: whether the town can still accommodate one more resident.
      * Counts actual occupancy by {@code Resident.housePos} instead of
-     * {@code HouseBuilding.getResidentsID()}, because the latter is not serialized
-     * by the CODEC and is always empty on client snapshots / after save reloads;
-     * this matches the town GUI display and the real allocation of
-     * {@link TeamTownData#allocateHouse()}.
+     * {@code HouseBuilding.getResidentsID()}: the two stay consistent via the daily
+     * residentAllocatingCheck rebuild and the addResident/removeResident double-writes,
+     * so they are equivalent in the normal state (inconsistency windows — same-pos
+     * building replacement, old-save reload — are repaired at the next daily settlement,
+     * see the {@link #addResident(Resident)} short-circuit comment); this matches the
+     * town GUI display and the real allocation of {@link TeamTownData#allocateHouse()}.
      *
      * @return 可容纳则返回 true / true if another resident can be accommodated
      */
@@ -189,6 +204,23 @@ public class TeamTown implements ITown, ITownWithResidents, ITownWithBuildings {
                 if (occupancy.getOrDefault(house.getPos(), 0) < house.getMaxResidents()) {
                     return true;
                 }
+            }
+        }
+        return false;
+    }
+
+    /**
+     * 是否存在空余房屋槽位：按 residentsID 口径，镜像 {@link TeamTownData#allocateHouse()}
+     * 的候选过滤（workable 且 {@code maxResidents > getResidentsID().size()}），O(H) 纯读。
+     * 供 {@link #addResident(Resident)} 短路与 canAddResident() 双条件判满：
+     * 任一不一致窗口下两口径结果不同 → 短路不触发，保证与旧路径严格等价。
+     */
+    private boolean hasFreeHouseSlot() {
+        for (AbstractTownBuilding building : data.buildings.values()) {
+            if (building instanceof HouseBuilding house
+                    && house.isBuildingWorkable()
+                    && house.getMaxResidents() > house.getResidentsID().size()) {
+                return true;
             }
         }
         return false;

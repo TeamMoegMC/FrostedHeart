@@ -71,6 +71,9 @@ public class WanderingRefugeeClientHelper {
         }
         final TextButton recruitButton = recruit;
         refreshListener = new ITownDataUpdateListener() {
+            /** 最近一次已求值的全量同步批次：同一批内建筑/居民双回调之间数据不变，仅求值一次 */
+            private long lastRefreshedSyncBatch = -1L;
+
             @Override
             public void onBuildingsChanged() {
                 refreshRecruit();
@@ -87,6 +90,13 @@ public class WanderingRefugeeClientHelper {
                     refreshListener = null;
                     return;
                 }
+                // 全量包批内去重：同批重复回调（居民包+建筑包顺序处理）跳过，canAddResident 只求值一次；
+                // 批外（增量包路径）每次照常求值，早晨结算的双求值保持原样
+                long syncBatch = TeamTownData.getClientSyncBatchId();
+                if (TeamTownData.isInClientBatchFire() && syncBatch == lastRefreshedSyncBatch) {
+                    return;
+                }
+                lastRefreshedSyncBatch = syncBatch;
                 recruitButton.setEnabled(canAddResident());
             }
         };

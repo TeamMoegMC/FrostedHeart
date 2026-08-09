@@ -80,14 +80,16 @@ public class SurroundingTemperatureSimulator {
     }
 
     /**
-     * 线程局部工作缓冲区。
-     * 避免每次模拟调用分配大数组；每次调用通过一次 Arrays.fill(posCache, null)
-     * 复位位置缓存（128KB 引用清零被 JIT 内在化为 SIMD memset，仅数 μs）。
+     * 线程局部工作缓冲区（SoA 布局）。
      * <p>
-     * 曾采用"世代标记"（gen[] + currentGen）惰性失效方案，但热循环每步都要
-     * 额外读取 gen[idx] 并比较分支（约 8 万次/调用），累计成本高于一次 memset；
-     * 且 gen[] 本身占 128KB/线程。故改为整体清零：缓存内存减半，热循环每步
-     * 少一次 load + 比较 + 分支。
+     * 位置缓存拆成三个平行数组，替代原来的 CachedBlockInfo[] 引用数组：
+     * 旧布局每步命中要"读引用 → 按引用跳到堆对象读字段"两次**串行依赖**加载，
+     * CPU 大量时间空转等内存；SoA 后分支决策只看 cellKind（32KB，常驻 L1），
+     * cellTemp 与之并行发射（无依赖），指针追逐消失。
+     * <p>
+     * cellKind：0=未计算（每次调用一次 32KB memset 复位，比原 128KB 引用填充快 4 倍），
+     * 1=EMPTY，2=FULL，3=PARTIAL。cellTemp 无需复位——由 kind==0 把关，
+     * 旧值永远不会被读到。
      * <p>
      * 粒子状态数组（原 qx/qy/qz/pvx/pvy/pvz，共 6n 个 double，约 200KB/线程）
      * 已随"粒子外层循环交换"删除——每个粒子的轨迹完全独立，其位置与速度在
@@ -95,7 +97,8 @@ public class SurroundingTemperatureSimulator {
      */
     private static final class WorkBuffer {
         // 位置缓存：32^3 = 32768 个槽位，覆盖 [-16,16) 三个轴
-        final CachedBlockInfo[] posCache = new CachedBlockInfo[CACHE_SIZE];
+        final byte[] cellKind = new byte[CACHE_SIZE];
+        final float[] cellTemp = new float[CACHE_SIZE];
 
         //优化：预计算高度图（32×32 = 1024 个 int）
         final int[] topYCache = new int[CACHE_DIM * CACHE_DIM];
@@ -117,8 +120,10 @@ public class SurroundingTemperatureSimulator {
     private static final double[] speedVX, speedVY, speedVZ;
     private static final int[][] speedVectorByDirection = new int[6][];
 
-    // 越界查询返回的常量空气信息
-    private static final CachedBlockInfo AIR_INFO = new CachedBlockInfo(EMPTY, 0f);
+    // cellKind 取值：0=未计算（每次调用 memset 复位），其余见 WorkBuffer 注释
+    private static final int KIND_EMPTY = 1;
+    private static final int KIND_FULL = 2;
+    private static final int KIND_PARTIAL = 3;
 
     // 位置缓存维度参数
     private static final int CACHE_DIM = 32;      // 每轴 32 格
@@ -233,10 +238,11 @@ public class SurroundingTemperatureSimulator {
     // ======================== 核心模拟 ========================
 
     public SimulationResult getBlockTemperatureAndWind(double qx0, double qy0, double qz0) {
-        // 获取当前线程的工作缓冲区；一次 memset 复位位置缓存（见 WorkBuffer 注释）
+        // 获取当前线程的工作缓冲区；一次 32KB memset 复位 kind 缓存（见 WorkBuffer 注释）
         WorkBuffer buf = WORK_BUFFER.get();
-        final CachedBlockInfo[] posCache = buf.posCache;
-        Arrays.fill(posCache, null);
+        final byte[] cellKind = buf.cellKind;
+        final float[] cellTemp = buf.cellTemp;
+        Arrays.fill(cellKind, (byte) 0);
 
         //预计算高度图
         fillTopYCache(buf.topYCache);
@@ -259,6 +265,8 @@ public class SurroundingTemperatureSimulator {
         for (int i = 0; i < n; ++i) {
             double sx = qx0, sy = qy0, sz = qz0;
             double vx = speedVX[i], vy = speedVY[i], vz = speedVZ[i];
+            // 初始方块坐标用于第 1 步的进入判断
+            int prevBx = Mth.floor(qx0), prevBy = Mth.floor(qy0), prevBz = Mth.floor(qz0);
 
             for (int round = 0; round < num_rounds; ++round) {
                 final double dx = sx + vx, dy = sy + vy, dz = sz + vz;
@@ -270,7 +278,7 @@ public class SurroundingTemperatureSimulator {
                 int by = (int) Math.floor(dy);
                 int bz = (int) Math.floor(dz);
 
-                // ---- 缓存查找（直接数组索引 + null 哨兵） ----
+                // ---- SoA 缓存查找 ----
                 //坐标范围 [-16,16) 映射到 [0,32) 再编码为一维索引。
                 final int rx = bx - ox, ry = by - oy, rz = bz - oz;
                 // 无符号单分支越界检查：(v+16) 落在 [0,32) 当且仅当其第 5 位及以上全为 0；
@@ -285,30 +293,51 @@ public class SurroundingTemperatureSimulator {
                     windStrong += num_rounds - round;
                     break;
                 }
-                CachedBlockInfo info;
-                if (((px | py | pz) >>> 5) != 0) {
-                    info = AIR_INFO;
+                // 此处 px、pz 必在 [0,32)，只剩 y 可能越界；
+                // y 越界等价于 EMPTY + 0°C（原 AIR_INFO 语义：不碰撞、不计热、参与弱风判断）。
+                final int idx = (px << 10) | (py << 5) | pz;
+                int kind;
+                float curheat;
+                if (py >>> 5 != 0) {
+                    kind = KIND_EMPTY;
+                    curheat = 0f;
+                } else if ((kind = cellKind[idx]) == 0) {
+                    CachedBlockInfo computed = computeBlockInfo(rx, ry, rz, bx, by, bz);
+                    kind = computed.isEmpty ? KIND_EMPTY
+                            : computed.isFull ? KIND_FULL : KIND_PARTIAL;
+                    cellKind[idx] = (byte) kind;
+                    cellTemp[idx] = computed.temperature;
+
+                    curheat = computed.temperature;
                 } else {
-                    int idx = (px << 10) | (py << 5) | pz;
-                    info = posCache[idx];
-                    if (info == null) {
-                        info = computeBlockInfo(rx, ry, rz, bx, by, bz);
-                        posCache[idx] = info;
-                    }
+                    curheat = cellTemp[idx];
                 }
 
                 // ---- 碰撞处理（三路分支：FULL / 部分形状 / EMPTY） ----
-                if (info.isFull) {
-                    // FULL 方块：解析法 Slab Method 求入射面，零对象分配
-                    int sxi = Mth.floor(sx), syi = Mth.floor(sy), szi = Mth.floor(sz);
-                    if (sxi != bx || syi != by || szi != bz) {
-                        // 从外部进入 → 计算入射面并反弹
+                if (kind == KIND_FULL) {
+                    // 利用 prevBx 代替 Mth.floor(sx)，省去三个 floor
+                    if (prevBx != bx || prevBy != by || prevBz != bz) {
                         int nid;
-                        if (rnd.nextInt3()== 0) {
+                        if (rnd.nextInt3() == 0) {
                             nid = rnd.nextInt(n);
                         } else {
-                            nid = getOutboundSpeedFrom(
-                                    computeEntryFace(sx, sy, sz, vx, vy, vz, bx, by, bz));
+                            // 快速入射面判定：利用块坐标变化
+                            //单轴穿越 → 直接推出入射面，免除法：ddx,ddy,ddz 中只有一个 ±1，其余为 0
+                            int ddx = bx - prevBx, ddy = by - prevBy, ddz = bz - prevBz;
+                            Direction face;
+                            int cnt = ddx*ddx + ddy*ddy + ddz*ddz;
+                            if (cnt == 1) {
+                                face = ddx > 0 ? Direction.WEST
+                                        : ddx < 0 ? Direction.EAST
+                                        : ddy > 0 ? Direction.DOWN
+                                        : ddy < 0 ? Direction.UP
+                                        : ddz > 0 ? Direction.NORTH
+                                        : Direction.SOUTH;
+                            } else {
+                                // 斜向穿过棱/角 → 回退解析法 Slab Method 求入射面，零对象分配
+                                face = computeEntryFace(sx, sy, sz, vx, vy, vz, bx, by, bz);
+                            }
+                            nid = getOutboundSpeedFrom(face);
                         }
                         vx = speedVX[nid];
                         vy = speedVY[nid];
@@ -317,26 +346,23 @@ public class SurroundingTemperatureSimulator {
                     // 粒子已在同一 FULL 方块内部 → 不反弹（与原代码行为一致：
                     //   shape.clip 对两端点都在 AABB 内部时返回 null → 不进入反弹分支）
 
-                } else if (!info.isEmpty) {
+                } else if (kind == KIND_PARTIAL) {
                     // 部分形状（楼梯、半砖等，占比 <10%）：回退到原版 clip
                     // 此处不可避免需要创建 Vec3/BlockPos，因为 MC API 要求
+                    CachedBlockInfo info = computeBlockInfo(rx, ry, rz, bx, by, bz);
+
                     Vec3 svec = new Vec3(sx, sy, sz);
                     Vec3 dvec = new Vec3(dx, dy, dz);
                     BlockPos bpos = new BlockPos(bx, by, bz);
-                    BlockHitResult bhr = info.shape.clip(svec, dvec, bpos);
-                    // 原代码逻辑：对 partial shape，条件为 bhr != null && bhr.isInside()
-                    // （shape == FULL 在此分支中不可能为 true，已被上方 isFull 拦截）
-                    if (bhr != null && bhr.isInside()) {
-                        BlockHitResult brtr = AABB.clip(info.aabbList, svec, dvec, bpos);
+                    BlockHitResult brtr = AABB.clip(info.aabbList, svec, dvec, bpos);
+                    if (brtr != null) {
+                        // 根据原版行为：碰撞就概率反弹
                         int nid;
-                        if (brtr != null) {
-                            nid = rnd.nextInt3() == 0
-                                    ? rnd.nextInt(n)
-                                    : getOutboundSpeedFrom(brtr.getDirection());
-                        } else {
+                        if (rnd.nextInt3() == 0) {
                             nid = rnd.nextInt(n);
+                        } else {
+                            nid = getOutboundSpeedFrom(brtr.getDirection());
                         }
-
                         vx = speedVX[nid];
                         vy = speedVY[nid];
                         vz = speedVZ[nid];
@@ -348,9 +374,11 @@ public class SurroundingTemperatureSimulator {
                 sx = dx;
                 sy = dy;
                 sz = dz;
+                prevBx = bx;
+                prevBy = by;
+                prevBz = bz;
 
-                // ---- 温度累积 ----
-                final float curheat = info.temperature;
+                // ---- 温度累积（curheat 已在缓存查找处取出） ----
                 if (curheat != 0f) {
                     if (curheat < minTemp) minTemp = curheat;
                     else if (curheat > maxTemp) maxTemp = curheat;
@@ -365,23 +393,16 @@ public class SurroundingTemperatureSimulator {
                 }
 
                 // ---- 风力计算 ----
-                // 注意：topY 仅要求 xz 在界内（与 y 无关），不能与上方三轴检查合并，
-                // 否则 y 越界、xz 界内的粒子会从"真实地形高度"误变为 -32767 强风。
-                int topY;
-                if (((px | pz) >>> 5) == 0) {
-                    topY = topYCache[(px << 5) | pz];
-                } else {
-                    // 保持与 getTopY 越界时一致
-                    topY = -32767;
-                }
+                // xz 此处必在界内（上方越界已 break），直接查高度图，无需再判界
+                int topY = topYCache[(px << 5) | pz];
 
                 // 强风无分支化：topY <= by ⟺ topY - by - 1 < 0（int 不溢出），符号位即计数
                 int strong = (topY - by - 1) >>> 31;
                 windStrong += strong;
-                if (strong == 0 && info.isEmpty) {
-                    // 复用上方已查到的 info（原代码此处对同一 bpos 二次调用 getInfoCached）
-                    double ddx = bx + 0.5 - qx0, ddy = by + 0.5 - qy0, ddz = bz + 0.5 - qz0;
-                    if (ddx * ddx + ddy * ddy + ddz * ddz >= 16.0) {
+                if (strong == 0 && kind == KIND_EMPTY) {
+                    // 复用上方已查到的 kind（原代码此处对同一 bpos 二次查询缓存）
+                    double distX = bx + 0.5 - qx0, distY = by + 0.5 - qy0, distZ = bz + 0.5 - qz0;
+                    if (distX * distX + distY * distY + distZ * distZ >= 16.0) {
                         // 粒子飞出 4 格以上且遇到空气 → 弱风
                         windWeak++;
                     }
@@ -543,16 +564,6 @@ public class SurroundingTemperatureSimulator {
     }
 
     /**
-     * 获取相对 origin 的最高方块 Y 坐标。
-     */
-    public int getTopY(int x, int z) {
-        if (x >= 16 || z >= 16 || x < -16 || z < -16) return -32767;
-        int i = 0;
-        if (x >= 0) i |= 2;
-        if (z >= 0) i |= 1;
-        return maps[i].getFirstAvailable(x & 15, z & 15);
-    }
-    /**
      * 预计算当前 32×32 区域内的 topY。
      * 坐标覆盖相对 origin 的 [-16,16) × [-16,16)。
      */
@@ -566,10 +577,6 @@ public class SurroundingTemperatureSimulator {
                 topYCache[rowBase | pz] = maps[mapIndex].getFirstAvailable(x, pz & 15);
             }
         }
-    }
-
-    private static int topYIndex(int rx, int rz) {
-        return ((rx + CACHE_OFFSET) << 5) | (rz + CACHE_OFFSET);
     }
 
     // ======================== 生命周期管理 ========================
