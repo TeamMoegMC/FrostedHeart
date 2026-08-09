@@ -169,13 +169,11 @@ repositories {
         }
     }
     maven {
-        //location of the maven for mixed mappings, create, registrate, and flywheel
-        name = "tterrag maven"
-        url = "https://maven.tterrag.com/"
+        // Mirror used by Create itself for Registrate after the old tterrag Maven was retired.
+        name = "Registrate mirror"
+        url = "https://maven.ithundxr.dev/mirror"
         content {
-            includeGroup "com.jozufozu.flywheel"
             includeGroup "com.tterrag.registrate"
-            includeGroup "com.simibubi.create"
         }
     }
     // Needed for Curios API
@@ -239,7 +237,24 @@ repositories {
         }
     }
 }
+
+def createBundle = configurations.create("createBundle")
+def extractedCreateLibraries = layout.buildDirectory.dir("create-libraries")
+def extractCreateLibraries = tasks.register("extractCreateLibraries", Sync) {
+    from({ zipTree(createBundle.singleFile) }) {
+        include "META-INF/jarjar/flywheel-forge-${minecraft_version}-${flywheel_version}.jar"
+        eachFile { details -> details.path = details.name }
+        includeEmptyDirs = false
+    }
+    into extractedCreateLibraries
+}
+def flywheelCompileJar = files(
+        extractedCreateLibraries.map { it.file("flywheel-forge-${minecraft_version}-${flywheel_version}.jar") }
+).builtBy(extractCreateLibraries)
+
 dependencies {
+    add(createBundle.name, "curse.maven:create-328085:5838779")
+
     compileOnly 'org.projectlombok:lombok:1.18.36'
     annotationProcessor 'org.projectlombok:lombok:1.18.36'
 
@@ -254,15 +269,13 @@ dependencies {
     datagenImplementation fg.deobf("blusunrize.immersiveengineering:ImmersiveEngineering:${ie_version}:datagen")
 
     // Create
-    implementation fg.deobf("com.simibubi.create:create-${minecraft_version}:${create_version}:slim") { transitive = false }
-    implementation fg.deobf("com.jozufozu.flywheel:flywheel-forge-${minecraft_version}:${flywheel_version}")
-    implementation fg.deobf("com.tterrag.registrate:Registrate:${registrate_version}")
+    implementation fg.deobf("curse.maven:create-328085:5838779")
+    compileOnly flywheelCompileJar
+    compileOnly fg.deobf("com.tterrag.registrate:Registrate:${registrate_version}")
     // SP
     implementation fg.deobf("curse.maven:steam-powered-create-534610:5778650")
     // II
 
-    // create maven is no up to date
-//    implementation fg.deobf("curse.maven:create-328085:5838779")
 	// Storage Drawer
 	compileOnly fg.deobf("curse.maven:storage-drawers-223852:5981672")
 	
