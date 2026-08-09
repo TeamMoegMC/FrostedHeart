@@ -9,3 +9,12 @@ Read these files for project context (maintained by Codex, shared across the tea
 - Read [diary/README.md](diary/README.md) and the latest relevant diary entries before starting development.
 - After completing development work, create a new timestamp-prefixed, mnemonic-suffixed Markdown entry in `diary/` using the shared format.
 - Identify yourself in every entry and record decisions, validation, and remaining work so future humans and agents do not repeat completed investigation.
+
+## Related repository
+
+The companion modpack repository is attached as a secondary project folder.
+
+Before changing KubeJS scripts, recipes, datapacks, quests, or pack configuration:
+- locate and read the companion repository's AGENTS.md;
+- inspect both repositories for related identifiers and registrations;
+- validate and report changes for each Git repository separately.
