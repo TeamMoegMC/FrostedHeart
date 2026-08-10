@@ -165,8 +165,7 @@ public class TeamTownResourceHolder {
         if(itemsOfAttribute == null || itemsOfAttribute.isEmpty()) return 0.0;
         if(itemsOfAttribute.contains(itemStackResourceKey)){
             Map<ItemResourceAttribute, Double> itemAmounts = ITEM_RESOURCE_AMOUNTS.get(itemStackResourceKey);
-            if(itemAmounts == null) return 1.0;
-            amount.setValue(itemAmounts.getOrDefault(attribute, 1.0));
+            amount.setValue(getConfiguredOrDefaultResourceAmount(itemStackResourceKey, attribute, itemAmounts));
         } else{
             itemStackResourceKey.getItem().builtInRegistryHolder().tags()
                     .map(FHTags.Items.MAP_TAG_TO_TOWN_RESOURCE_ATTRIBUTE::get)
@@ -174,14 +173,29 @@ public class TeamTownResourceHolder {
                     .findFirst()
                     .ifPresent(attribute1 -> {
                         Map<ItemResourceAttribute, Double> itemAmounts = ITEM_RESOURCE_AMOUNTS.get(itemStackResourceKey);
-                        if(itemAmounts == null || itemAmounts.isEmpty()) {
-                            amount.setValue(1.0);
-                            return;
-                        }
-                        amount.setValue(itemAmounts.getOrDefault(attribute1, 1.0));
+                        amount.setValue(getConfiguredOrDefaultResourceAmount(itemStackResourceKey, attribute1, itemAmounts));
                     });
         }
         return amount.getValue();
+    }
+
+    /**
+     * Explicit item-resource recipes remain authoritative. Resident food that
+     * has no explicit override is valued from vanilla hunger plus nominal
+     * saturation; every other resource keeps the historical default of 1.
+     */
+    private static double getConfiguredOrDefaultResourceAmount(
+            ItemStackResourceKey itemStackResourceKey,
+            ItemResourceAttribute attribute,
+            Map<ItemResourceAttribute, Double> configuredAmounts
+    ) {
+        if (configuredAmounts != null && configuredAmounts.containsKey(attribute)) {
+            return configuredAmounts.get(attribute);
+        }
+        if (attribute.getType() == ItemResourceType.RESIDENT_FOOD_LEVEL) {
+            return TownFoodResourceAmount.fromItemStack(itemStackResourceKey.toItemStack(), 1.0);
+        }
+        return 1.0;
     }
 
     /**

@@ -774,7 +774,7 @@ public class TeamTownData implements SpecialData{
         reloadMaxCapacity();
 
         buildings.values().stream()
-                .filter(AbstractTownBuilding::isBuildingWorkable)
+                .filter(AbstractTownBuilding::shouldRunDailySettlement)
                 .sorted(Comparator.comparingInt(AbstractTownBuilding::getWorkPriority).reversed())
                 .forEach(building -> building.work(teamTown,world));
     }

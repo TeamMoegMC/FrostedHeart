@@ -35,6 +35,7 @@ import com.teammoeg.frostedheart.content.town.building.ITownResidentBuilding;
 import com.teammoeg.frostedheart.content.town.resident.Resident;
 import com.teammoeg.frostedheart.content.town.resource.ItemResourceType;
 import com.teammoeg.frostedheart.content.town.resource.ItemStackResourceKey;
+import com.teammoeg.frostedheart.content.town.resource.TownFoodNutritionModel;
 import com.teammoeg.frostedheart.content.town.resource.action.*;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import net.minecraft.core.BlockPos;
@@ -244,10 +245,20 @@ public class HouseBuilding extends AbstractTownBuilding implements ITownResident
 
     @Override
     public boolean isBuildingWorkable() {
-        return super.isBuildingWorkable()
-                && isTemperatureValid()
-                && area >= 4
-                && volume >= 8;
+        return HouseDailyModel.isBuildingWorkable(
+                super.isBuildingWorkable(), area, volume, isTemperatureValid());
+    }
+
+    /**
+     * A valid house remains responsible for its existing residents even when
+     * its temperature is outside the habitable range. Temperature still makes
+     * the house unworkable for allocation/UI purposes, but must not suspend
+     * food consumption and resident health/mental settlement for free.
+     */
+    @Override
+    public boolean shouldRunDailySettlement() {
+        return HouseDailyModel.shouldRunDailySettlement(
+                super.isBuildingWorkable(), area, volume);
     }
 
 
@@ -299,12 +310,7 @@ public class HouseBuilding extends AbstractTownBuilding implements ITownResident
                 for (Map.Entry<ItemStackResourceKey, Double> entry : itemResult.details().entrySet()) {
                     ItemStackResourceKey key = entry.getKey();
                     double amount = entry.getValue();
-                    // 查找对应的营养配方并累加营养值
-                    for (NutritionRecipe recipe : recipes) {
-                        if (recipe.conform(key.getItem())) {
-                            nutritionSum += (recipe.getNutrition().getNutritionValue() / 4.0) * amount;
-                        }
-                    }
+                    nutritionSum += TownFoodNutritionModel.getNutritionPerItem(key, recipes) * amount;
                 }
             }
         }

@@ -26,6 +26,35 @@ public final class HouseDailyModel {
     private HouseDailyModel() {
     }
 
+    public static boolean isStructurallyWorkable(
+            boolean baseBuildingWorkable,
+            int area,
+            int volume
+    ) {
+        return baseBuildingWorkable && area >= 4 && volume >= 8;
+    }
+
+    public static boolean isBuildingWorkable(
+            boolean baseBuildingWorkable,
+            int area,
+            int volume,
+            boolean temperatureValid
+    ) {
+        return isStructurallyWorkable(baseBuildingWorkable, area, volume) && temperatureValid;
+    }
+
+    /**
+     * Daily resident obligations depend on the house structure, not its
+     * temperature. This deliberately differs from {@link #isBuildingWorkable}.
+     */
+    public static boolean shouldRunDailySettlement(
+            boolean baseBuildingWorkable,
+            int area,
+            int volume
+    ) {
+        return isStructurallyWorkable(baseBuildingWorkable, area, volume);
+    }
+
     public static double calculateFoodSatisfaction(double requiredFood, double consumedFood) {
         double safeRequiredFood = nonNegative(requiredFood);
         if (safeRequiredFood <= 0.0) {

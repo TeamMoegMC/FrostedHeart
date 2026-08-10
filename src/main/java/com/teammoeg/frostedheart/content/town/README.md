@@ -107,7 +107,7 @@ public interface ITown extends ITownWithResources, ITownWithBuildings, ITownWith
 8. `tickRefugeeSpawnAndDespawn` —— 难民刷新与清场（见 §7）：先清场（塔旁无房/超时的 `townSpawned` 难民消失），塔开启且当天未结算时按天气概率刷一批到塔附近（`REFUGEE_SPAWN` 配置，`lastRefugeeSpawnDay` 按世界日防重复）。
 9. `linkMinesToBases` —— 按 `MineBaseBuilding.getConnectionRadius()` 把范围内的 `MineBuilding` 链到矿基。
 10. `recalcOreChunkResources` —— 设定 `ORE` 的活跃区块（`setTerrainResourceTypeActiveChunks`）。
-11. `buildingsWork` —— `reloadMaxCapacity()` 后按 `getWorkPriority()` 降序执行 `building.work(town, world)`。
+11. `buildingsWork` —— `reloadMaxCapacity()` 后筛选 `shouldRunDailySettlement()`，再按 `getWorkPriority()` 降序执行 `building.work(town, world)`；默认资格等于 `isBuildingWorkable()`，住宅会单独忽略温度门槛。
 12. `recoverResources` —— 地形资源按配置的 `recoverSpeed` 恢复。
 
 CODEC 字段：`name / resources / blocks / residents / terrainResource / labour / maxLabour / history / lastRefugeeSpawnDay`；其中 `lastRefugeeSpawnDay` 使用逻辑气候日的 `Codec.LONG`，缺省为 `-1`，兼容首日结算。
@@ -121,6 +121,7 @@ CODEC 字段：`name / resources / blocks / residents / terrainResource / labour
 - **`ITownBuilding`**（旧称 TownWorker，建筑逻辑核心）：自带**类型分派 `Codec`**，新增建筑必须在此登记（见 §6）。关键方法：
   ```java
   boolean isBuildingWorkable();
+  default boolean shouldRunDailySettlement(); // 默认等于 isBuildingWorkable()
   boolean work(ITownWithBuildings town, ServerLevel world);
   default int getWorkPriority();   // 默认 0，越大越先工作
   void onRemoved(ITownWithBuildings town);
@@ -147,7 +148,7 @@ CODEC 字段：`name / resources / blocks / residents / terrainResource / labour
 
 | 建筑 | Building 类 | 是否工作 | 关键点 |
 |---|---|---|---|
-| House | `buildings/house/HouseBuilding` | 否（住宅） | 仅 `implements ITownResidentBuilding`；`work()` 每日按配置消耗一次 `RESIDENT_FOOD_LEVEL`，由食物满足度、营养质量、有效温度和综合舒适度线性计算生命/精神的损失与恢复，不再改变力量；最近一次结算写入 `DailyReport`，`getRating()` 决定分房优先级。 |
+| House | `buildings/house/HouseBuilding` | 否（住宅） | 仅 `implements ITownResidentBuilding`；`work()` 每日按配置消耗一次 `RESIDENT_FOOD_LEVEL`，由食物满足度、营养质量、有效温度和综合舒适度线性计算生命/精神的损失与恢复，不再改变力量；低于 `0°C` 或高于 `50°C` 时仍为不可工作、不会分配新人，但 `shouldRunDailySettlement()` 仍使已有居民吃饭并结算状态；最近一次结算写入 `DailyReport`，`getRating()` 决定分房优先级。 |
 | Hunting Base | `buildings/hunting/HuntingBaseBuilding` | 是 | 继承 `AbstractTownResidentWorkBuilding`；按居民 score 总和决定投掷次数，受 `TerrainResourceType.HUNT` 限制，用战利品表 `town/hunting` 产出并 ADD 进仓库。 |
 | Mine Base | `buildings/mine/MineBaseBuilding` | 是 | 持有 `Set<BlockPos> linkedMines`；汇总有效 `MineBuilding` 权重，按区块向 `ORE` 开采。 |
 | Mine | `buildings/mine/MineBuilding` | 否（标记） | 仅扫描/标记；`BiomeMineResourceRecipe` 提供生物群系矿产权重（`getWeights(biome)`）。 |
@@ -185,7 +186,8 @@ CODEC 字段：`name / resources / blocks / residents / terrainResource / labour
 - **`ItemResourceAttribute`**：`(type, level)`，用 `Interner` 缓存；与 `FHTags.Items` 的 `MAP_TAG_TO_TOWN_RESOURCE_ATTRIBUTE` / `MAP_TOWN_RESOURCE_ATTRIBUTE_TO_TAG` 双向映射（TagKey ↔ Attribute）；`fromItemStack(itemStack)` 取物品所有属性。
 - **`ItemStackResourceKey`**：`Item + tag`（count 固定 1）的 Map 键，自定义 `hashCode/equals`。
 - **`VirtualResourceType`**（无物品、长期存盘）：目前仅 `MAX_CAPACITY`（不占容量、是 service、level 0）。`VirtualResourceAttribute` 既是属性也是直接存盘的 Key。
-- **`ItemResourceAmountRecipe`**：配方类（IE 配方），定义「某物品 → 某资源 Tag 的转化量」；`TeamTownResourceHolder.loadItemResourceAmounts()` 加载进缓存。
+- **`ItemResourceAmountRecipe`**：配方类（IE 配方），定义「某物品 → 某资源 Tag 的转化量」；`TeamTownResourceHolder.loadItemResourceAmounts()` 加载进缓存。显式配方优先；居民食物没有显式值时按 `饥饿值 + 2 × 饥饿值 × 饱和度系数` 换算，其他资源仍默认 `1`。
+- 居民食物 Tag 使用互斥的 level 0–4：危险/未建模原料、基础生食、普通熟食与主食、复合/高密度餐食、完整军粮与稀有强化食物。住宅先按 level 4 → 0 消耗；同等级内再按 `NutritionRecipe` 营养标量除以该物品的居民食物资源量降序消耗，平局按物品注册名与 NBT 稳定排序。
 
 ### 6.2 `TeamTownResourceHolder`（资源持有者）
 

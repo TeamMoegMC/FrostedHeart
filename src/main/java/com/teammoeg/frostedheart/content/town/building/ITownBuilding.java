@@ -32,6 +32,17 @@ public interface ITownBuilding {
     boolean isBuildingWorkable();
 
     /**
+     * Whether this building should participate in the town's daily settlement.
+     * <p>
+     * Most buildings only settle while they are workable. Buildings whose
+     * daily logic represents an obligation rather than optional production may
+     * override this independently from {@link #isBuildingWorkable()}.
+     */
+    default boolean shouldRunDailySettlement() {
+        return isBuildingWorkable();
+    }
+
+    /**
      * Work logic of this building
      * @param town town of this building
      * @return true if worked successful

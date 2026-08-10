@@ -247,6 +247,7 @@ dependencies {
 
     testCompileOnly 'org.projectlombok:lombok:1.18.36'
     testAnnotationProcessor 'org.projectlombok:lombok:1.18.36'
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.10.2'
 
     minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
 //    implementation fileTree(include: ['*.jar'], dir: 'libs')
@@ -336,6 +337,10 @@ dependencies {
 	//gradle data processing
 	implementation 'org.codehaus.groovy:groovy-json:3.0.9'
 
+}
+
+tasks.named('test', Test) {
+    useJUnitPlatform()
 }
 
 import groovy.json.JsonOutput
