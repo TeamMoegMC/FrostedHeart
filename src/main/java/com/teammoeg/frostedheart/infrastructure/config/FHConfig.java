@@ -22,6 +22,7 @@ package com.teammoeg.frostedheart.infrastructure.config;
 import com.teammoeg.chorda.client.cui.screenadapter.OverlayPositioner;
 import com.teammoeg.chorda.math.Colors;
 import com.teammoeg.frostedheart.content.climate.FHTemperatureDifficulty;
+import com.teammoeg.frostedheart.content.town.model.TownModelParameters;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.biome.Biomes;
 import net.minecraftforge.common.ForgeConfigSpec;
@@ -523,7 +524,8 @@ public class FHConfig {
 					builder.push("Housing");
 					foodConsumptionPerResidentDay = builder
 						.comment("Food-resource units consumed per resident per Minecraft day.")
-						.defineInRange("foodConsumptionPerResidentDay", 6.5d, 0d, 100d);
+						.defineInRange("foodConsumptionPerResidentDay",
+							TownModelParameters.Defaults.FOOD_PER_RESIDENT_DAY, 0d, 100d);
 					nutritionReferencePerFoodUnit = builder
 						.comment("Nutrition value per consumed food-resource unit that grants maximum food quality.")
 						.defineInRange("nutritionReferencePerFoodUnit", 7000d, 1d, 1000000d);
@@ -730,7 +732,9 @@ public class FHConfig {
 						.comment("A standard worker has all four attributes at 50 and zero hunting proficiency.")
 						.comment("The default loot table averages 1.5 item units per roll, so the default 7/6 rolls equal 1.75 expected items.")
 						.comment("One executed roll consumes one hunt terrain-resource unit even if it yields no stored item.")
-						.defineInRange("expectedLootRollsPerStandardWorkerDay", 7d / 6d, 0d, 1000000d);
+						.defineInRange("expectedLootRollsPerStandardWorkerDay",
+							TownModelParameters.Defaults.HUNTING_EXPECTED_LOOT_ROLLS_PER_SWE_DAY,
+							0d, 1000000d);
 					passiveExpectedLootRollsPerBaseDay = builder
 						.comment("Long-run expected loot-table rolls supplied by each workable hunting base without labor.")
 						.comment("The default of 0 requires productive workers.")
@@ -759,30 +763,43 @@ public class FHConfig {
 					builder.push("Resident Productivity");
 					productivityAtAttributeZero = builder
 						.comment("Relative hunting productivity at weighted attribute 0 and proficiency 0.")
-						.defineInRange("productivityAtAttributeZero", 0.5d, 0d, 100d);
+						.defineInRange("productivityAtAttributeZero",
+							TownModelParameters.Defaults.HUNTING_PRODUCTIVITY_AT_ATTRIBUTE_ZERO,
+							0d, 100d);
 					productivityAtAttributeHundred = builder
 						.comment("Relative hunting productivity at weighted attribute 100 and proficiency 0.")
 						.comment("Linear interpolation makes weighted attribute 50 equal 1.0 with the defaults.")
-						.defineInRange("productivityAtAttributeHundred", 1.5d, 0d, 100d);
+						.defineInRange("productivityAtAttributeHundred",
+							TownModelParameters.Defaults.HUNTING_PRODUCTIVITY_AT_ATTRIBUTE_HUNDRED,
+							0d, 100d);
 					maximumProficiency = builder
 						.comment("Profession proficiency that grants the full configured productivity bonus.")
-						.defineInRange("maximumProficiency", 100d, 1d, 100d);
+						.defineInRange("maximumProficiency",
+							TownModelParameters.Defaults.HUNTING_MAXIMUM_PROFICIENCY, 1d, 100d);
 					bonusAtMaximumProficiency = builder
 						.comment("Additive relative productivity granted at maximum hunting proficiency.")
-						.defineInRange("bonusAtMaximumProficiency", 1d, 0d, 100d);
+						.defineInRange("bonusAtMaximumProficiency",
+							TownModelParameters.Defaults.HUNTING_BONUS_AT_MAXIMUM_PROFICIENCY,
+							0d, 100d);
 					minimumResidentProductivity = builder
 						.comment("Minimum final hunting productivity in standard-worker units.")
-						.defineInRange("minimumResidentProductivity", 0.5d, 0d, 100d);
+						.defineInRange("minimumResidentProductivity",
+							TownModelParameters.Defaults.HUNTING_MINIMUM_PRODUCTIVITY, 0d, 100d);
 					maximumResidentProductivity = builder
 						.comment("Maximum final hunting productivity in standard-worker units.")
-						.defineInRange("maximumResidentProductivity", 2.5d, 0d, 100d);
+						.defineInRange("maximumResidentProductivity",
+							TownModelParameters.Defaults.HUNTING_MAXIMUM_PRODUCTIVITY, 0d, 100d);
 					builder.pop();
 
 					builder.push("Attribute Weights");
-					healthWeight = defineHuntingAttributeWeight(builder, "healthWeight", "health", 25d);
-					mentalWeight = defineHuntingAttributeWeight(builder, "mentalWeight", "mental", 20d);
-					strengthWeight = defineHuntingAttributeWeight(builder, "strengthWeight", "strength", 25d);
-					intelligenceWeight = defineHuntingAttributeWeight(builder, "intelligenceWeight", "intelligence", 30d);
+					healthWeight = defineHuntingAttributeWeight(builder, "healthWeight", "health",
+						TownModelParameters.Defaults.HUNTING_HEALTH_WEIGHT);
+					mentalWeight = defineHuntingAttributeWeight(builder, "mentalWeight", "mental",
+						TownModelParameters.Defaults.HUNTING_MENTAL_WEIGHT);
+					strengthWeight = defineHuntingAttributeWeight(builder, "strengthWeight", "strength",
+						TownModelParameters.Defaults.HUNTING_STRENGTH_WEIGHT);
+					intelligenceWeight = defineHuntingAttributeWeight(builder, "intelligenceWeight", "intelligence",
+						TownModelParameters.Defaults.HUNTING_INTELLIGENCE_WEIGHT);
 					builder.pop();
 
 					builder.push("Building Rating");
@@ -867,7 +884,9 @@ public class FHConfig {
 						.comment("Base mining output in item units per standard worker per Minecraft day.")
 						.comment("A standard worker has all four attributes at 50 and zero mining proficiency.")
 						.comment("1 item unit is one item stored in town storage; fractional units are retained.")
-						.defineInRange("baseOutputPerStandardWorkerDay", 3.5d, 0d, 1000000d);
+						.defineInRange("baseOutputPerStandardWorkerDay",
+							TownModelParameters.Defaults.MINING_BASE_OUTPUT_PER_SWE_DAY,
+							0d, 1000000d);
 					floorBlocksPerWorkerSlot = builder
 						.comment("Effective floor area required for one mining-base worker slot, in blocks per worker.")
 						.comment("Space rating multiplies effective floor area before slots are calculated.")
@@ -882,30 +901,43 @@ public class FHConfig {
 					builder.push("Resident Productivity");
 					productivityAtAttributeZero = builder
 						.comment("Relative mining productivity at weighted attribute 0 and proficiency 0.")
-						.defineInRange("productivityAtAttributeZero", 0.5d, 0d, 100d);
+						.defineInRange("productivityAtAttributeZero",
+							TownModelParameters.Defaults.MINING_PRODUCTIVITY_AT_ATTRIBUTE_ZERO,
+							0d, 100d);
 					productivityAtAttributeHundred = builder
 						.comment("Relative mining productivity at weighted attribute 100 and proficiency 0.")
 						.comment("Linear interpolation makes weighted attribute 50 equal 1.0 with the defaults.")
-						.defineInRange("productivityAtAttributeHundred", 1.5d, 0d, 100d);
+						.defineInRange("productivityAtAttributeHundred",
+							TownModelParameters.Defaults.MINING_PRODUCTIVITY_AT_ATTRIBUTE_HUNDRED,
+							0d, 100d);
 					maximumProficiency = builder
 						.comment("Profession proficiency that grants the full configured productivity bonus.")
-						.defineInRange("maximumProficiency", 100d, 1d, 100d);
+						.defineInRange("maximumProficiency",
+							TownModelParameters.Defaults.MINING_MAXIMUM_PROFICIENCY, 1d, 100d);
 					bonusAtMaximumProficiency = builder
 						.comment("Additive relative productivity granted at maximum mining proficiency.")
-						.defineInRange("bonusAtMaximumProficiency", 0.5d, 0d, 100d);
+						.defineInRange("bonusAtMaximumProficiency",
+							TownModelParameters.Defaults.MINING_BONUS_AT_MAXIMUM_PROFICIENCY,
+							0d, 100d);
 					minimumResidentProductivity = builder
 						.comment("Minimum final mining productivity in standard-worker units.")
-						.defineInRange("minimumResidentProductivity", 0.5d, 0d, 100d);
+						.defineInRange("minimumResidentProductivity",
+							TownModelParameters.Defaults.MINING_MINIMUM_PRODUCTIVITY, 0d, 100d);
 					maximumResidentProductivity = builder
 						.comment("Maximum final mining productivity in standard-worker units.")
-						.defineInRange("maximumResidentProductivity", 2d, 0d, 100d);
+						.defineInRange("maximumResidentProductivity",
+							TownModelParameters.Defaults.MINING_MAXIMUM_PRODUCTIVITY, 0d, 100d);
 					builder.pop();
 
 					builder.push("Attribute Weights");
-					healthWeight = defineMiningAttributeWeight(builder, "healthWeight", "health", 30d);
-					mentalWeight = defineMiningAttributeWeight(builder, "mentalWeight", "mental", 10d);
-					strengthWeight = defineMiningAttributeWeight(builder, "strengthWeight", "strength", 45d);
-					intelligenceWeight = defineMiningAttributeWeight(builder, "intelligenceWeight", "intelligence", 15d);
+					healthWeight = defineMiningAttributeWeight(builder, "healthWeight", "health",
+						TownModelParameters.Defaults.MINING_HEALTH_WEIGHT);
+					mentalWeight = defineMiningAttributeWeight(builder, "mentalWeight", "mental",
+						TownModelParameters.Defaults.MINING_MENTAL_WEIGHT);
+					strengthWeight = defineMiningAttributeWeight(builder, "strengthWeight", "strength",
+						TownModelParameters.Defaults.MINING_STRENGTH_WEIGHT);
+					intelligenceWeight = defineMiningAttributeWeight(builder, "intelligenceWeight", "intelligence",
+						TownModelParameters.Defaults.MINING_INTELLIGENCE_WEIGHT);
 					builder.pop();
 
 					builder.push("Worker Assignment");

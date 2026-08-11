@@ -343,6 +343,17 @@ tasks.named('test', Test) {
     useJUnitPlatform()
 }
 
+tasks.register('runTownSimulation', JavaExec) {
+    group = 'frostedheart'
+    description = 'Runs the incremental Java town numerical model command-line tool.'
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'com.teammoeg.frostedheart.content.town.model.TownSimulationMain'
+    if (project.hasProperty('townArgs')) {
+        args org.apache.tools.ant.types.Commandline.translateCommandline(
+                project.property('townArgs').toString())
+    }
+}
+
 import groovy.json.JsonOutput
 import groovy.json.JsonSlurper
 

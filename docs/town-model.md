@@ -1,6 +1,6 @@
 # 城镇临界自给数值模型
 
-> 状态：模型设计草案；模拟器尚未开始实现。2026-08-10 已先修复冷住宅跳过日结算和居民食物恒为 `1` 单位的问题，本文基线已同步更新。
+> 状态：阶段 0（参数快照与纯代数审计）已实现；阶段 1 及多日模拟尚未开始。2026-08-10 已先修复冷住宅跳过日结算、居民食物恒为 `1` 单位和同等级食物无序的问题，本文基线已同步更新。
 >
 > 目标：把 FH/TWR 当前代码和数据中的城镇数值关系整理为一套可调用、可审计、可模拟的 Java 数学模型。本文是后续实现时的上下文基准。
 
@@ -101,7 +101,7 @@ HUNT 地形资源首版也不作为瓶颈。当前默认总量约为数百万次
 
 - 气候和风险报告：每游戏小时更新。
 - 建筑实际日结算：只计算早晨时点的体素温度。
-- T1 燃料：在控制状态不变时直接按每日解析公式累计。
+- T1 燃料：每 20 tick 批处理，但剩余燃料过程 tick 会跨燃料物品和批次结转；长期速率与完整利用配方时长的解析值一致。
 - T2 热网：只有网络燃料与缓冲状态需要保留当前每 20 tick 的取整语义；不需要每 20 tick 重算建筑体素。
 
 ## 4. 气候、地点与方块温度
@@ -268,7 +268,7 @@ Q_{heat}(l_T)=\lfloor10l_T\rfloor
 D_{effective,f}=\left\lfloor D_{recipe,f}(m_{base}+e_{generator})\right\rfloor
 \]
 
-普通运行每个游戏 tick 消耗 `baseFuelProcessTicksPerGameTick=1` 个燃料过程 tick；超载额外消耗 `overdriveExtraFuelProcessTicksPerGameTick=1` 个。因此在没有 T2 网络附加消耗时：
+普通运行每个游戏 tick 消耗 `baseFuelProcessTicksPerGameTick=1` 个燃料过程 tick；超载额外消耗 `overdriveExtraFuelProcessTicksPerGameTick=1` 个。若假设一件燃料的全部有效时长都被用完，在没有 T2 网络附加消耗时：
 
 \[
 N_{fuel/day}=\frac{24000(c_{base}+c_{overdrive})}{D_{effective,f}}
@@ -280,15 +280,40 @@ N_{fuel/day}=\frac{24000(c_{base}+c_{overdrive})}{D_{effective,f}}
 - \(c_{base}=1\)：普通运行每游戏 tick 的过程 tick 消耗。
 - 普通模式 \(c_{overdrive}=0\)，超载模式 \(c_{overdrive}=1\)。
 
-无研究、普通 T1 的理论值：
+无研究、普通 T1 的长期配方时长理论值：
 
 - 煤有效时长 `floor(1600×0.7)=1120`，消耗 `21.4286 coal/day`。
 - 焦煤有效时长 `floor(3200×0.7)=2240`，消耗 `10.7143 coke/day`。
 
-完成两级燃烧效率研究后，倍率为 `0.9`：
+`TeamTownData.tickSecond` 每 20 game ticks 调用一次 `GeneratorData.townTick`。设一次批处理需要的燃料过程 tick 为
 
-- 煤有效时长 `1440`，消耗 `16.6667 coal/day`。
-- 焦煤有效时长 `2880`，消耗 `8.3333 coke/day`。
+\[
+b=20(c_{base}+c_{overdrive})
+\]
+
+修复后的 `GeneratorData` 把 `process` 严格定义为剩余燃料过程 tick 余额。设批次开始时余额为 \(R\)，其状态转移为：
+
+\[
+\text{while }R<b:\quad R\leftarrow R+D_{effective,f}
+\]
+
+\[
+R\leftarrow R-b
+\]
+
+判断条件使用严格小于号：余额刚好等于批次需求时直接消费，不提前装入下一份燃料。装入新燃料使用加法，因此不足一个批次的旧燃料余量也不会被覆盖。由此 1-tick 更新与 20-tick 更新的长期燃料率相同：
+
+- 煤：`D_effective=1120`，消耗 `21.4286 coal/day`。
+- 焦煤：`D_effective=2240`，消耗 `10.7143 coke/day`。
+
+某一个有限日内实际从仓库取出的燃料物品数仍为整数，并受日初余额影响；上述值表示无限长运行的平均消耗率。阶段 1 推进库存时必须保存 \(R\)，不能每天独立对平均值取整。
+
+有效时长使用显式十进制计算，再执行向下取整。这样既保留公式中的 `floor` 语义，也不会因二进制浮点误差少一个 tick。完成两级燃烧效率研究后倍率为 `0.9`：
+
+- 煤有效时长 `1440`。
+- 焦煤有效时长 `2880`。
+
+上述补燃状态转移和十进制时长计算均位于 `GeneratorFuelModel`，由 `GeneratorData` 和模拟器共同调用。`audit` 继续同时报告解析速率和 20-tick 批处理速率；两者不相等时应视为回归错误。
 
 ### 5.3 T2 网络参数的意义
 
@@ -918,9 +943,16 @@ M_N=m_{nutrition,min}+(1-m_{nutrition,min})Q_N
 
 ## 11. Java 模型接口
 
-后续实现建立不依赖 `Level`、NBT、方块实体或 Forge 注册表的纯 Java API：
+阶段 0 已建立不依赖 `Level`、NBT、方块实体或 Forge 注册表的纯 Java API：
 
-- `TownModelParameters`：聚合气候、供热、居民、住宅、采矿和狩猎参数。
+- `TownModelParameters`：目前聚合阶段 0 使用的 T1、住宅食物需求、采矿、狩猎与肉类食物参数；默认常量被 `FHConfig` 直接引用。
+- `TownStageZeroModel.analyze(...)`：接受参数 records 和从数据文件解析出的矿权重、掉落条目、燃料时长，返回纯代数统计量。
+- `GeneratorFuelModel`：同时被 `GeneratorData` 与审计调用，包含有效时长、当前补料判定、理想燃料率和 20-tick 批处理燃料率。
+- `GeneratorHeatFieldModel`：同时被 `GeneratorData` 与审计调用，包含塔等级到球形半径和热场温度的映射。
+- `TownFoodResourceAmount` 与 `TownMathFunctions.linearResidentProductivity`：继续由游戏和审计共用。
+
+后续阶段再按需增加：
+
 - `TownScenario`：描述一场实验。
 - `TownState`：描述某个时间点的居民、库存、燃料过程、加工 carry 和累计开采量。
 - `TownDayResult`：一天的输入、生产、消费和状态变化账本。
@@ -946,18 +978,16 @@ M_N=m_{nutrition,min}+(1-m_{nutrition,min})Q_N
 
 ### 12.1 读取范围
 
-`audit` 读取：
+阶段 0 的 `audit` 只读取本阶段代数确实使用的来源：
 
 - FH `FHConfig` 中城镇默认参数。
 - FH 煤和焦煤 generator recipes。
 - FH 狩猎掉落表。
-- FH 食物资源标签和营养 recipes。
-- FH 群系温度数据，特别是 `minecraft:snowy_plains`。
 - TWR `biome_mine.js` 中 `fossil_deposits` 权重。
-- TWR `generator_efficiency_1/2.json` 和 `generator_heat_1.json` 研究加成。
+- TWR `generator_efficiency_1/2.json` 研究加成。
 - 对仍为 Java 常量的参数，读取统一的参数快照构造器并记录对应源码符号。
 
-首版 `audit` 不读取 IE 焦炉和 Create 风扇配方，因为具体机器已被场景中的每日加工能力替代。
+FH 食物标签与营养 recipes 在阶段 2 加入真实库存消费时读取；群系温度在阶段 4 读取；`generator_heat_1` 与所有 T2 端点数据在阶段 5 读取。阶段 0 也不读取 IE 焦炉和 Create 风扇配方，因为具体机器将由场景中的每日加工能力替代。
 
 ### 12.2 输出
 
@@ -991,6 +1021,8 @@ M_N=m_{nutrition,min}+(1-m_{nutrition,min})Q_N
 - 全部肉做熟时维持一个居民所需劳动：`0.2881250 hunting SWE/resident`
 
 这些理论预测必须在进行复杂场景模拟之前显示。蒙特卡洛不能用随机结果掩盖明显的代数不可行性。
+
+上述 `21.4286/10.7143` 和 `18.3673/9.1837` 既是完整使用燃料配方时长的解析基线，也是当前 20-tick 批处理代码的长期速率。`audit` 保留两组指标用于持续验证批处理等价性。
 
 ## 13. 场景文件
 
@@ -1041,16 +1073,22 @@ Scripts/town_scenarios/
 
 ## 14. 命令行工具
 
-增加 Java `TownSimulationMain` 和 Gradle 入口 `runTownSimulation`：
+Java `TownSimulationMain` 和 Gradle 入口 `runTownSimulation` 已建立。阶段 0 的实际调用方式为：
 
-- `audit --pack-root <TWR .minecraft> --output <dir>`
-- `simulate --scenario <json> --runs <N> --seed-base <S>`
-- `sweep --scenario <json> --parameter <name> --values <list> --runs <N>`
+```bash
+./gradlew runTownSimulation -PtownArgs='audit --pack-root "<TWR .minecraft>" --output build/reports/town-model/audit/my-run'
+```
+
+命令规划：
+
+- `audit --pack-root <TWR .minecraft> --output <dir>`：阶段 0 已实现。
+- `simulate --scenario <json> --runs <N> --seed-base <S>`：阶段 1 起逐步实现。
+- `sweep --scenario <json> --parameter <name> --values <list> --runs <N>`：阶段 6 实现。
 
 输出：
 
 - JSON：完整参数、来源、运行汇总和失败事件。
-- CSV：逐小时气候/建筑温度、逐日库存/生产/居民状态。
+- CSV：逐小时气候/建筑温度、逐日库存/生产/居民状态；阶段 0 没有时间序列，因此暂不生成 CSV。
 - 终端摘要：核心代数系数、成功概率、P5/P50/P95 和最先发生的瓶颈。
 
 不生成 HTML，不依赖 Python、Pandas、SciPy 或绘图库。
@@ -1142,12 +1180,16 @@ Scripts/town_scenarios/
 
 ### 阶段 0：参数快照与纯代数审计
 
+状态：**已完成（2026-08-10）**。
+
 - 建立参数 records 和 `audit`。
 - 读取 FH/TWR 数据并生成两个 JSON 报告。
 - 输出 SWE、煤产率、肉件数产率、生肉/全熟食物单位产率、居民食物需求和 T1 每日燃料消耗。
 - 不运行多日模拟。
 
 验收：本文件第 12.3 节的理论基线全部精确出现，并且每个值能追溯到源码或数据文件。
+
+实际结果：全部基线通过回归测试并出现在报告中；阶段 0 随后识别并修复了 20-tick 补料尾数损失和二级燃烧效率浮点截断，解析值与当前批处理值现在一致。报告保存在 `build/reports/town-model/audit/<run-id>/`，不提交生成物。
 
 ### 阶段 1：单日确定性生产
 
@@ -1202,7 +1244,7 @@ Scripts/town_scenarios/
 
 在任何完整模拟之前，当前默认值已经给出一条决定性燃料约束和一条食物加工约束：
 
-1. T1 使用焦煤且无研究时，需要约 `9.1837 mining SWE` 才能仅维持塔的连续普通运行；8 名标准居民即使全部采矿仍不足。
+1. T1 使用焦煤且无研究时需要约 `9.1837 mining SWE`；20-tick 批处理与该解析值一致。8 名标准居民即使全部采矿仍不足。
 2. 每名居民若只吃生肉，需要约 `1.2483 hunting SWE`；若肉全部做熟，只需要约 `0.2881 hunting SWE`。因此 `rawMeatProcessingCapacityPerDay` 会强烈决定食物闭环位置。
 
 所以当前城镇闭环最明确的不闭合仍在采煤劳动与塔耗；食物侧不能再从“肉件数”直接断言不可行，而必须把肉类构成、原版食物值和每日加工吞吐一起纳入。后续模拟的第一职责是验证这些代数预测在库存、健康、气候和随机掉落加入后如何表现；第二职责才是寻找合理的新参数范围。

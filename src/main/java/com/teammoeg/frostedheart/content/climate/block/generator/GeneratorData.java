@@ -181,20 +181,28 @@ public class GeneratorData implements SpecialData {
             inventory.extractItem(INPUT_SLOT, count, false);
             currentItem = recipe.output.copy();
             currentItem.setCount(currentItem.getCount());
-            double effi = getEfficiency(teamData);
-            this.process = (int) (recipe.time * effi);
-            this.processMax = process;
+            int loadedProcessTicks = GeneratorFuelModel.effectiveFuelProcessTicks(
+                    recipe.time,
+                    GeneratorFuelModel.CURRENT_BASE_FUEL_DURATION_MULTIPLIER,
+                    getEfficiencyResearchBonus(teamData));
+            this.process = GeneratorFuelModel.addFuelProcessTicks(process, loadedProcessTicks);
+            this.processMax = loadedProcessTicks;
             return true;
         }
-        if (this.processMax != 0) {
-            this.process = 0;
+        if (this.process <= 0) {
             processMax = 0;
         }
         return false;
     }
 
     protected double getEfficiency(SpecialDataHolder<?> teamData) {
-        return teamData.getData(FRSpecialDataTypes.RESEARCH_DATA).getVariantDouble(ResearchVariant.GENERATOR_EFFICIENCY) + 0.7;
+        return getEfficiencyResearchBonus(teamData)
+                + GeneratorFuelModel.CURRENT_BASE_FUEL_DURATION_MULTIPLIER;
+    }
+
+    protected double getEfficiencyResearchBonus(SpecialDataHolder<?> teamData) {
+        return teamData.getData(FRSpecialDataTypes.RESEARCH_DATA)
+                .getVariantDouble(ResearchVariant.GENERATOR_EFFICIENCY);
     }
 
 	public GeneratorRecipe getRecipe(Level w,ItemStack stack) {
@@ -242,10 +250,11 @@ public class GeneratorData implements SpecialData {
         if (actualPos == null)
             return;
 
+        int townBatchTicks = GeneratorFuelModel.CURRENT_TOWN_BATCH_GAME_TICKS;
         lastPower = power;
-        isActive = tickFuelProcess(w,teamData,20);
-        tickHeatedProcess(w,20);
-        townProcessedTicks = 20;
+        isActive = tickFuelProcess(w,teamData,townBatchTicks);
+        tickHeatedProcess(w,townBatchTicks);
+        townProcessedTicks = townBatchTicks;
 
         int r = getRadius();
         int t = getTempMod();
@@ -322,7 +331,7 @@ public class GeneratorData implements SpecialData {
             }
 
 	        //System.out.println(baseFuelCost+","+extraCost);
-            while (process <= baseFuelCost+extraCost && hasFuel) {
+            while (GeneratorFuelModel.shouldLoadNextFuel(process, baseFuelCost + extraCost) && hasFuel) {
                 hasFuel = consumesFuel(w,teamData);
             }
            
@@ -412,10 +421,10 @@ public class GeneratorData implements SpecialData {
      * @return in blocks
      */
     public int getRadius() {
-        float rlevel = RLevel;
-        if (rlevel <= 1)
-            return (int) (16 * rlevel);
-        return (int) (16 + (rlevel - 1) * 8);
+        return GeneratorHeatFieldModel.radiusBlocks(
+                RLevel,
+                GeneratorHeatFieldModel.CURRENT_BASE_RADIUS_BLOCKS,
+                GeneratorHeatFieldModel.CURRENT_ADDITIONAL_RADIUS_PER_LEVEL_BLOCKS);
     }
 
     /**
@@ -429,6 +438,7 @@ public class GeneratorData implements SpecialData {
      * @return in degrees
      */
     public int getTempMod() {
-        return (int) (TLevel * 10);
+        return GeneratorHeatFieldModel.temperatureCelsius(
+                TLevel, GeneratorHeatFieldModel.CURRENT_TEMPERATURE_PER_LEVEL_CELSIUS);
     }
 }

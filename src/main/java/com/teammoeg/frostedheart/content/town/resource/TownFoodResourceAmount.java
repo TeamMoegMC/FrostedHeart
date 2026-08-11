@@ -51,8 +51,13 @@ public final class TownFoodResourceAmount {
      * Pure numerical form used by the town model and future simulator.
      */
     public static double fromFoodProperties(int hunger, float saturationModifier) {
+        return fromFoodProperties(hunger, (double) saturationModifier);
+    }
+
+    /** Pure double-precision form used by source-data audits. */
+    public static double fromFoodProperties(int hunger, double saturationModifier) {
         double nonNegativeHunger = Math.max(0, hunger);
-        double nominalSaturation = nonNegativeHunger * Math.max(0.0f, saturationModifier) * 2.0;
+        double nominalSaturation = nonNegativeHunger * Math.max(0.0, saturationModifier) * 2.0;
         return nonNegativeHunger + nominalSaturation;
     }
 }
