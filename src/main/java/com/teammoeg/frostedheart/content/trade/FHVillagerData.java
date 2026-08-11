@@ -65,6 +65,8 @@ public class FHVillagerData implements MenuProvider {
     public long totaltraded;
     private int tradelevel;
     public AbstractVillager parent;
+    /** 非实体居民的稳定 id（-1 表示附着在真实实体上） / Stable id for entity-less citizens (-1 if attached to a real entity) */
+    private int citizenId = -1;
 
     private static ServerStatsCounter getStats(Player pe) {
         if (pe instanceof ServerPlayer)
@@ -86,6 +88,8 @@ public class FHVillagerData implements MenuProvider {
     }
 
     public void deserialize(CompoundTag data) {
+        if (data.contains("citizenId"))
+            citizenId = data.getInt("citizenId");
         CompoundTag nbt = data.getCompound("storage");
         storage.clear();
         for (String k : nbt.getAllKeys())
@@ -233,6 +237,8 @@ public class FHVillagerData implements MenuProvider {
         if (policytype != null)
             data.putString("type", policytype.toString());
         data.putLong("last", lastUpdated);
+        if (citizenId != -1)
+            data.putInt("citizenId", citizenId);
         return data;
     }
 
@@ -264,8 +270,32 @@ public class FHVillagerData implements MenuProvider {
      * @param w
      * @param trigger
      */
+    /**
+     * 获取非实体居民的稳定 id。
+     * <p>
+     * Gets the stable id for an entity-less citizen.
+     *
+     * @return 居民 id，-1 表示无 / citizen id, or -1 if none
+     */
+    public int getCitizenId() {
+        return citizenId;
+    }
+
+    /**
+     * 设置非实体居民的稳定 id。
+     * <p>
+     * Sets the stable id for an entity-less citizen.
+     *
+     * @param citizenId 居民 id / citizen id
+     */
+    public void setCitizenId(int citizenId) {
+        this.citizenId = citizenId;
+    }
+
     public void update(ServerLevel w, Player trigger) {
-        initWithRandomPolicy(parent);
+        // 无实体居民不初始化随机政策（保持 policytype=null → 空政策快照，仅作接口入口）
+        if (parent != null)
+            initWithRandomPolicy(parent);
         long day = WorldClimate.getWorldDay(w);
         CUtils.ofMap(relations, trigger.getUUID()).ifPresent(t -> t.update(day));
         if (lastUpdated == -1) {

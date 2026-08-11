@@ -36,7 +36,7 @@ import java.util.function.Consumer;
  * 一个会在键被新增 / 替换 / 移除时触发 {@code onChange} 回调的 {@link LinkedHashMap} 包装类。
  *
  * <p>本类<b>不持有任何脏状态</b>（脏键集由外部监听器如 {@code DataSyncCache} 维护），
- * 仅作为“自动 fire 中继”：拦截集合层面的变更入口，把被改的键转发出去。
+ * 仅作为"自动 fire 中继"：拦截集合层面的变更入口，把被改的键转发出去。
  * 调用方只要写 {@code buildings.put(pos, b)} / {@code buildings.remove(pos)}，
  * 无需手动标记——变更会经 {@code onChange} 自动送达订阅者。</p>
  *
@@ -52,7 +52,9 @@ import java.util.function.Consumer;
  * </ul>
  *
  * <p>典型用途：将 {@code TeamTownData} 的 {@code buildings} / {@code residents} 换成本类，
- * 在 {@code TeamTownData} 构造器里绑定三个回调：
+ * 在 {@code TeamTownData} 构造器里绑定三个回调（本类为<b>增量更新专用</b>——三个回调
+ * 都是 DataSyncCache 同步链路的组成部分，单回调即可，居民模拟等外部消费者不应注册于此，
+ * 居民生命周期事件由 {@code TeamTownData} 门面另行通知）：
  * <ul>
  *     <li>{@code setOnAttach}（建议<b>批量 put 之前</b>绑定）——把 {@code dataSyncCache} 自动传给
  *         每个 value，使建筑/居民对象内部字段变更能 fire 增量同步事件（layer ②）；</li>

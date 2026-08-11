@@ -25,6 +25,7 @@ import com.teammoeg.chorda.util.CRegistryHelper;
 import com.teammoeg.frostedheart.bootstrap.common.FHSpecialDataTypes;
 import com.teammoeg.chorda.ChordaMetaEvents;
 import com.teammoeg.chorda.CompatModule;
+import com.teammoeg.chorda.dataholders.team.CTeamDataManager;
 import com.teammoeg.frostedheart.bootstrap.client.FHTabs;
 import com.teammoeg.frostedheart.bootstrap.common.FHAttributes;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;

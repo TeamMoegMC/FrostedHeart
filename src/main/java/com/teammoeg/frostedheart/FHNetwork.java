@@ -28,6 +28,10 @@ import com.teammoeg.frostedheart.content.scenario.network.*;
 import com.teammoeg.frostedheart.content.steamenergy.EndPointDataPacket;
 import com.teammoeg.frostedheart.content.steamenergy.HeatNetworkRequestC2SPacket;
 import com.teammoeg.frostedheart.content.steamenergy.HeatNetworkResponseS2CPacket;
+import com.teammoeg.frostedheart.content.town.citizen.sync.C2SCitizenActionPacket;
+import com.teammoeg.frostedheart.content.town.citizen.sync.S2CCitizenBatchPacket;
+import com.teammoeg.frostedheart.content.town.citizen.sync.S2CCitizenDespawnPacket;
+import com.teammoeg.frostedheart.content.town.citizen.sync.S2CCitizenSpawnPacket;
 import com.teammoeg.frostedheart.content.town.network.TeamTownDataS2CPacket;
 import com.teammoeg.frostedheart.content.town.network.TownBuildingUpdatePacket;
 import com.teammoeg.frostedheart.content.town.network.TownResidentUpdatePacket;
@@ -113,6 +117,12 @@ public class FHNetwork extends CBaseNetwork {
         registerMessage("wandering_refugee_recruit", WanderingRefugeeRecruitMessage.class);
         registerMessage("warehouse_c2s_interact_packet", WarehouseInteractPacket.class);
         registerMessage("warehouse_update_packet", WarehouseUpdatePacket.class);
+
+        // Citizen hybrid simulation messages
+        registerMessage("citizen_spawn", S2CCitizenSpawnPacket.class);
+        registerMessage("citizen_batch", S2CCitizenBatchPacket.class);
+        registerMessage("citizen_despawn", S2CCitizenDespawnPacket.class);
+        registerMessage("citizen_action", C2SCitizenActionPacket.class);
 
         // Generator Messages
         //registerMessage("generator_upgrade", GeneratorModifyPacket.class);

@@ -177,6 +177,76 @@ public class TeamTownData implements SpecialData{
     private final DataSyncCache dataSyncCache = new DataSyncCache();
 
     /**
+     * 居民生命周期监听器（服务端单订阅）：居民增删/每日结算事件的门面出口。
+     * 事件通道与 DataSyncCache 的 {@code ObservableTownMap} 钩子链完全分离——
+     * 那三个钩子是增量更新专用（见 {@link ObservableTownMap} javadoc），居民模拟
+     * 不注册其上，而是经 {@link TeamTown} 门面方法 fire：added 只在房屋分配完成后
+     * 触发（锚点必已就绪，单次通知无双触发）。仅在服务端设置，客户端实例无人注册。
+     * <p>
+     * Resident lifecycle listener (single subscriber, server side): the facade
+     * outlet for resident add/remove and daily-settlement events. The channel is
+     * fully separate from DataSyncCache's ObservableTownMap hook chain — those
+     * hooks are incremental-sync-only (see {@link ObservableTownMap} javadoc),
+     * and the citizen simulation does not register there; it listens via facade
+     * fires from {@link TeamTown}: added fires only after house allocation
+     * (anchor guaranteed ready; single notification, no double-fire).
+     * Never set on client instances.
+     */
+    private ITownResidentListener residentListener;
+
+    /**
+     * 设置居民生命周期监听器（服务端，模拟 adopt 时调用）。
+     * 单订阅者——居民模拟是唯一消费者；重复设置覆盖（同实例幂等）。
+     * <p>
+     * Sets the resident lifecycle listener (server, called on adopt). Single
+     * subscriber — the citizen simulation is the only consumer; re-setting
+     * overwrites (idempotent for the same instance).
+     *
+     * @param listener 监听器 / the listener
+     */
+    public void setResidentListener(ITownResidentListener listener) {
+        this.residentListener = listener;
+    }
+
+    /**
+     * 通知居民生命周期监听器：居民已加入城镇。
+     * 触发点：{@link TeamTown#addResident} 成功路径与 {@code debugAddResident}
+     * （put 后锚点已就绪；单次通知，无双触发）。
+     * <p>
+     * Fires "resident added" to the lifecycle listener (after house allocation;
+     * single notification, no double-fire).
+     *
+     * @param resident 加入的居民 / the added resident
+     */
+    public void fireResidentAdded(Resident resident) {
+        if (this.residentListener != null)
+            this.residentListener.onResidentAdded(resident);
+    }
+
+    /**
+     * 通知居民生命周期监听器：居民已移出城镇。
+     * 触发点：{@link TeamTown#removeResident}（集合移除完成后）。
+     * <p>
+     * Fires "resident removed" to the lifecycle listener (after collection removal).
+     *
+     * @param resident 移出的居民 / the removed resident
+     */
+    public void fireResidentRemoved(Resident resident) {
+        if (this.residentListener != null)
+            this.residentListener.onResidentRemoved(resident);
+    }
+
+    /**
+     * 通知居民生命周期监听器：每日结算完成（tickMorning 末尾）。
+     * <p>
+     * Fires "daily settlement done" to the lifecycle listener (end of tickMorning).
+     */
+    public void fireMorningDone() {
+        if (this.residentListener != null)
+            this.residentListener.onTownMorningDone(this);
+    }
+
+    /**
      * 客户端 GUI 监听器集合（static 而非实例字段）。
      * <p>
      * 原因：全量同步包 {@code TeamTownDataS2CPacket} 会用新解码出的实例替换客户端
@@ -324,6 +394,10 @@ public class TeamTownData implements SpecialData{
         this.buildingsWork(world);
         this.recoverResources();
         this.recordDailySnapshot(world);
+        // 每日结算完成通知：锚点/工作重分配与难民处理全部完成后，经门面告知
+        // 挂靠的居民模拟刷新锚点、清理无家条目（低频，跟随 town 生命周期，
+        // 无需周期性对账；经单订阅监听器，与 DataSyncCache 钩子链无关）。
+        this.fireMorningDone();
     }
 
     /**
