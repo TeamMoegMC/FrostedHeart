@@ -57,10 +57,22 @@ class TownStageZeroModelTest {
     @Test
     void miningOutputParameterDirectlyMovesCoalYield() {
         TownModelParameters defaults = TownModelParameters.currentDefaults();
+        TownModelParameters.MiningParameters mining = defaults.mining();
         TownModelParameters changed = new TownModelParameters(
-                new TownModelParameters.MiningParameters(4.2, defaults.mining().productivity()),
+                new TownModelParameters.MiningParameters(
+                        4.2,
+                        mining.floorBlocksPerWorkerSlot(),
+                        mining.minimumWorkerSlots(),
+                        mining.connectionRadiusBlocks(),
+                        mining.productivity(),
+                        mining.assignmentBasePriority(),
+                        mining.assignmentPenaltyPerWorker(),
+                        mining.assignmentFillRatioBonus()),
                 defaults.hunting(),
                 defaults.housing(),
+                defaults.residents(),
+                defaults.buildingScoring(),
+                defaults.terrainResources(),
                 defaults.generatorT1(),
                 defaults.meatFoods());
 

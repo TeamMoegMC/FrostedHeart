@@ -95,22 +95,28 @@ public final class ResidentAttributeModel {
     public static double calculateDailyProficiencyGain(
             double proficiency,
             double growthAtZero,
-            double minimumGrowth
+            double minimumGrowth,
+            double maximumProficiency
     ) {
-        double normalizedProficiency = clampFinite(proficiency, MIN_VALUE, MAX_VALUE, MIN_VALUE);
-        if (normalizedProficiency >= MAX_VALUE) {
+        double safeMaximum = Math.max(1.0, finiteOr(maximumProficiency, MAX_VALUE));
+        double normalizedProficiency = clampFinite(proficiency, MIN_VALUE, safeMaximum, MIN_VALUE);
+        if (normalizedProficiency >= safeMaximum) {
             return 0.0;
         }
 
-        double safeGrowthAtZero = clampFinite(growthAtZero, 0.0, MAX_VALUE, 0.0);
-        double safeMinimumGrowth = clampFinite(minimumGrowth, 0.0, MAX_VALUE, 0.0);
-        double diminishingGrowth = safeGrowthAtZero * (1.0 - normalizedProficiency / MAX_VALUE);
+        double safeGrowthAtZero = clampFinite(growthAtZero, 0.0, safeMaximum, 0.0);
+        double safeMinimumGrowth = clampFinite(minimumGrowth, 0.0, safeMaximum, 0.0);
+        double diminishingGrowth = safeGrowthAtZero * (1.0 - normalizedProficiency / safeMaximum);
         double gain = Math.max(safeMinimumGrowth, diminishingGrowth);
-        return Math.min(gain, MAX_VALUE - normalizedProficiency);
+        return Math.min(gain, safeMaximum - normalizedProficiency);
     }
 
     private static double unitSample(DoubleSupplier randomDouble) {
         return clampFinite(randomDouble.getAsDouble(), 0.0, 1.0, 0.0);
+    }
+
+    private static double finiteOr(double value, double fallback) {
+        return Double.isFinite(value) ? value : fallback;
     }
 
     private static double clampFinite(double value, double minimum, double maximum, double fallback) {

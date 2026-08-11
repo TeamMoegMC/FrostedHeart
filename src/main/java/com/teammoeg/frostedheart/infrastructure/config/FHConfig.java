@@ -507,6 +507,52 @@ public class FHConfig {
 		public static class Town {
 			public final ForgeConfigSpec.BooleanValue enableTownTick;
 			public final ForgeConfigSpec.BooleanValue enableTownTickMorning;
+			public final ForgeConfigSpec.IntValue townUpdateIntervalGameTicks;
+
+			public static class GeneratorT1 {
+				public final ForgeConfigSpec.DoubleValue baseFuelDurationMultiplier;
+				public final ForgeConfigSpec.IntValue baseProcessTicksPerGameTick;
+				public final ForgeConfigSpec.IntValue overdriveExtraProcessTicksPerGameTick;
+				public final ForgeConfigSpec.IntValue baseRadiusBlocks;
+				public final ForgeConfigSpec.IntValue additionalRadiusPerLevelBlocks;
+				public final ForgeConfigSpec.IntValue temperaturePerLevelCelsius;
+
+				GeneratorT1(ForgeConfigSpec.Builder builder) {
+					builder.push("Generator T1");
+					baseFuelDurationMultiplier = builder
+						.comment("Multiplier applied to generator-recipe process ticks before research efficiency is added.")
+						.comment("The effective duration is decimalFloor(recipeTicks * (this value + research bonus)).")
+						.defineInRange("baseFuelDurationMultiplier",
+							TownModelParameters.Defaults.GENERATOR_T1_BASE_FUEL_DURATION_MULTIPLIER,
+							0.001d, 1000000d);
+					baseProcessTicksPerGameTick = builder
+						.comment("Fuel process ticks consumed per active game tick in normal operation.")
+						.defineInRange("baseProcessTicksPerGameTick",
+							TownModelParameters.Defaults.GENERATOR_T1_BASE_PROCESS_TICKS_PER_GAME_TICK,
+							1, 1000000);
+					overdriveExtraProcessTicksPerGameTick = builder
+						.comment("Additional fuel process ticks consumed per active game tick while overdrive is enabled.")
+						.defineInRange("overdriveExtraProcessTicksPerGameTick",
+							TownModelParameters.Defaults.GENERATOR_T1_OVERDRIVE_EXTRA_PROCESS_TICKS_PER_GAME_TICK,
+							0, 1000000);
+					baseRadiusBlocks = builder
+						.comment("Spherical heat-field radius at range level 1, in blocks.")
+						.defineInRange("baseRadiusBlocks",
+							TownModelParameters.Defaults.GENERATOR_T1_BASE_RADIUS_BLOCKS,
+							0, 1000000);
+					additionalRadiusPerLevelBlocks = builder
+						.comment("Additional spherical heat-field radius per range level above 1, in blocks.")
+						.defineInRange("additionalRadiusPerLevelBlocks",
+							TownModelParameters.Defaults.GENERATOR_T1_ADDITIONAL_RADIUS_PER_LEVEL_BLOCKS,
+							0, 1000000);
+					temperaturePerLevelCelsius = builder
+						.comment("Heat-field temperature increase per generator temperature level, in Celsius.")
+						.defineInRange("temperaturePerLevelCelsius",
+							TownModelParameters.Defaults.GENERATOR_T1_TEMPERATURE_PER_LEVEL_CELSIUS,
+							0, 1000000);
+					builder.pop();
+				}
+			}
 
 			public static class Housing {
 				public final ForgeConfigSpec.DoubleValue foodConsumptionPerResidentDay;
@@ -519,61 +565,266 @@ public class FHConfig {
 				public final ForgeConfigSpec.DoubleValue temperatureComfortWeight;
 				public final ForgeConfigSpec.DoubleValue spaceComfortWeight;
 				public final ForgeConfigSpec.DoubleValue decorationComfortWeight;
+				public final ForgeConfigSpec.IntValue minimumFloorAreaBlocks;
+				public final ForgeConfigSpec.IntValue minimumInteriorVolumeBlocks;
+				public final ForgeConfigSpec.DoubleValue minimumTemperatureCelsius;
+				public final ForgeConfigSpec.DoubleValue maximumTemperatureCelsius;
+				public final ForgeConfigSpec.DoubleValue floorBlocksPerResident;
+				public final ForgeConfigSpec.DoubleValue decorationCountLogOffset;
+				public final ForgeConfigSpec.DoubleValue decorationCountLogMultiplier;
+				public final ForgeConfigSpec.DoubleValue decorationTypeBaseScore;
+				public final ForgeConfigSpec.DoubleValue decorationBaseDemand;
+				public final ForgeConfigSpec.DoubleValue decorationFloorBlocksPerDemand;
 
 				Housing(ForgeConfigSpec.Builder builder) {
 					builder.push("Housing");
 					foodConsumptionPerResidentDay = builder
 						.comment("Food-resource units consumed per resident per Minecraft day.")
 						.defineInRange("foodConsumptionPerResidentDay",
-							TownModelParameters.Defaults.FOOD_PER_RESIDENT_DAY, 0d, 100d);
+							TownModelParameters.Defaults.HOUSING_FOOD_PER_RESIDENT_DAY, 0d, 100d);
 					nutritionReferencePerFoodUnit = builder
 						.comment("Nutrition value per consumed food-resource unit that grants maximum food quality.")
-						.defineInRange("nutritionReferencePerFoodUnit", 7000d, 1d, 1000000d);
+						.defineInRange("nutritionReferencePerFoodUnit",
+							TownModelParameters.Defaults.HOUSING_NUTRITION_REFERENCE_PER_FOOD_UNIT,
+							1d, 1000000d);
 					minimumNutritionRecoveryMultiplier = builder
 						.comment("Recovery multiplier provided by food with zero nutrition quality.")
-						.defineInRange("minimumNutritionRecoveryMultiplier", 0.5d, 0d, 1d);
+						.defineInRange("minimumNutritionRecoveryMultiplier",
+							TownModelParameters.Defaults.HOUSING_MINIMUM_NUTRITION_RECOVERY_MULTIPLIER,
+							0d, 1d);
 					healthLossAtZeroFoodPerResidentDay = builder
 						.comment("Health points lost per resident-day when no required food is consumed.")
-						.defineInRange("healthLossAtZeroFoodPerResidentDay", 8d, 0d, 100d);
+						.defineInRange("healthLossAtZeroFoodPerResidentDay",
+							TownModelParameters.Defaults.HOUSING_HEALTH_LOSS_AT_ZERO_FOOD_PER_RESIDENT_DAY,
+							0d, 100d);
 					mentalLossAtZeroFoodPerResidentDay = builder
 						.comment("Mental points lost per resident-day when no required food is consumed.")
-						.defineInRange("mentalLossAtZeroFoodPerResidentDay", 5d, 0d, 100d);
+						.defineInRange("mentalLossAtZeroFoodPerResidentDay",
+							TownModelParameters.Defaults.HOUSING_MENTAL_LOSS_AT_ZERO_FOOD_PER_RESIDENT_DAY,
+							0d, 100d);
 					maximumHealthRecoveryPerResidentDay = builder
 						.comment("Maximum health points recovered per resident-day at health 0 under perfect conditions.")
-						.defineInRange("maximumHealthRecoveryPerResidentDay", 2d, 0d, 100d);
+						.defineInRange("maximumHealthRecoveryPerResidentDay",
+							TownModelParameters.Defaults.HOUSING_MAXIMUM_HEALTH_RECOVERY_PER_RESIDENT_DAY,
+							0d, 100d);
 					maximumMentalRecoveryPerResidentDay = builder
 						.comment("Maximum mental points recovered per resident-day at mental 0 under perfect conditions.")
-						.defineInRange("maximumMentalRecoveryPerResidentDay", 1.5d, 0d, 100d);
+						.defineInRange("maximumMentalRecoveryPerResidentDay",
+							TownModelParameters.Defaults.HOUSING_MAXIMUM_MENTAL_RECOVERY_PER_RESIDENT_DAY,
+							0d, 100d);
+
+					builder.push("Structure and Capacity");
+					minimumFloorAreaBlocks = builder
+						.comment("Minimum valid house floor area, in square blocks.")
+						.defineInRange("minimumFloorAreaBlocks",
+							TownModelParameters.Defaults.HOUSING_MINIMUM_FLOOR_AREA_BLOCKS,
+							0, 1000000);
+					minimumInteriorVolumeBlocks = builder
+						.comment("Minimum valid house interior volume, in cubic blocks.")
+						.defineInRange("minimumInteriorVolumeBlocks",
+							TownModelParameters.Defaults.HOUSING_MINIMUM_INTERIOR_VOLUME_BLOCKS,
+							0, 1000000);
+					minimumTemperatureCelsius = builder
+						.comment("Minimum effective temperature for assigning new residents to a house.")
+						.defineInRange("minimumTemperatureCelsius",
+							TownModelParameters.Defaults.HOUSING_MINIMUM_TEMPERATURE_CELSIUS,
+							-1000d, 1000d);
+					maximumTemperatureCelsius = builder
+						.comment("Maximum effective temperature for assigning new residents to a house.")
+						.defineInRange("maximumTemperatureCelsius",
+							TownModelParameters.Defaults.HOUSING_MAXIMUM_TEMPERATURE_CELSIUS,
+							-1000d, 1000d);
+					floorBlocksPerResident = builder
+						.comment("Effective floor blocks required per resident before bed count is applied.")
+						.defineInRange("floorBlocksPerResident",
+							TownModelParameters.Defaults.HOUSING_FLOOR_BLOCKS_PER_RESIDENT,
+							0.01d, 1000000d);
+					builder.pop();
 
 					builder.push("Comfort Weights");
 					temperatureComfortWeight = builder
 						.comment("Relative weight of effective-temperature comfort in the unified house rating.")
-						.defineInRange("temperatureComfortWeight", 0.4d, 0d, 1000d);
+						.defineInRange("temperatureComfortWeight",
+							TownModelParameters.Defaults.HOUSING_TEMPERATURE_COMFORT_WEIGHT,
+							0d, 1000d);
 					spaceComfortWeight = builder
 						.comment("Relative weight of space quality in the unified house rating.")
-						.defineInRange("spaceComfortWeight", 0.3d, 0d, 1000d);
+						.defineInRange("spaceComfortWeight",
+							TownModelParameters.Defaults.HOUSING_SPACE_COMFORT_WEIGHT,
+							0d, 1000d);
 					decorationComfortWeight = builder
 						.comment("Relative weight of decoration quality in the unified house rating.")
 						.comment("The three comfort weights are normalized by their sum.")
-						.defineInRange("decorationComfortWeight", 0.3d, 0d, 1000d);
+						.defineInRange("decorationComfortWeight",
+							TownModelParameters.Defaults.HOUSING_DECORATION_COMFORT_WEIGHT,
+							0d, 1000d);
+					builder.pop();
+
+					builder.push("Decoration Rating");
+					decorationCountLogOffset = builder
+						.comment("Positive count offset inside the logarithmic score for each decoration type.")
+						.defineInRange("countLogOffset",
+							TownModelParameters.Defaults.DECORATION_COUNT_LOG_OFFSET,
+							0.000001d, 1000d);
+					decorationCountLogMultiplier = builder
+						.comment("Multiplier applied to each decoration type's logarithmic count score.")
+						.defineInRange("countLogMultiplier",
+							TownModelParameters.Defaults.DECORATION_COUNT_LOG_MULTIPLIER,
+							0d, 1000d);
+					decorationTypeBaseScore = builder
+						.comment("Base score added for each decoration type present in the house.")
+						.defineInRange("typeBaseScore",
+							TownModelParameters.Defaults.DECORATION_TYPE_BASE_SCORE,
+							-1000d, 1000d);
+					decorationBaseDemand = builder
+						.comment("Base decoration score required for a rating of one before floor-area demand.")
+						.defineInRange("baseDemand",
+							TownModelParameters.Defaults.DECORATION_BASE_DEMAND,
+							0.000001d, 1000000d);
+					decorationFloorBlocksPerDemand = builder
+						.comment("Floor blocks that add one point of decoration demand.")
+						.defineInRange("floorBlocksPerDemand",
+							TownModelParameters.Defaults.DECORATION_FLOOR_BLOCKS_PER_DEMAND,
+							0.000001d, 1000000d);
 					builder.pop();
 					builder.pop();
 				}
 			}
 
+			public static class BuildingScoring {
+				public final ForgeConfigSpec.DoubleValue comfortableTemperatureCelsius;
+				public final ForgeConfigSpec.DoubleValue minimumTemperatureRating;
+				public final ForgeConfigSpec.DoubleValue temperatureRatingSlope;
+				public final ForgeConfigSpec.DoubleValue temperatureRatingHalfPointDifferenceCelsius;
+				public final ForgeConfigSpec.DoubleValue spaceAreaCoefficient;
+				public final ForgeConfigSpec.DoubleValue spaceHeightLogCoefficient;
+				public final ForgeConfigSpec.DoubleValue spaceHeightLogOffset;
+				public final ForgeConfigSpec.DoubleValue spaceResponseScale;
+				public final ForgeConfigSpec.DoubleValue spaceResponseExponent;
+
+				BuildingScoring(ForgeConfigSpec.Builder builder) {
+					builder.push("Building Scoring");
+					comfortableTemperatureCelsius = builder
+						.comment("Comfortable indoor temperature used by house and work-building ratings.")
+						.defineInRange("comfortableTemperatureCelsius",
+							TownModelParameters.Defaults.BUILDING_COMFORTABLE_TEMPERATURE_CELSIUS,
+							-1000d, 1000d);
+					minimumTemperatureRating = builder
+						.comment("Constant floor added to the indoor-temperature sigmoid rating.")
+						.defineInRange("minimumTemperatureRating",
+							TownModelParameters.Defaults.BUILDING_MINIMUM_TEMPERATURE_RATING,
+							0d, 1d);
+					temperatureRatingSlope = builder
+						.comment("Sigmoid slope per Celsius of distance from the comfortable temperature.")
+						.defineInRange("temperatureRatingSlope",
+							TownModelParameters.Defaults.BUILDING_TEMPERATURE_RATING_SLOPE,
+							0d, 1000d);
+					temperatureRatingHalfPointDifferenceCelsius = builder
+						.comment("Temperature difference from comfort at the sigmoid's one-half point.")
+						.defineInRange("temperatureRatingHalfPointDifferenceCelsius",
+							TownModelParameters.Defaults.BUILDING_TEMPERATURE_RATING_HALF_POINT_DIFFERENCE_CELSIUS,
+							0d, 1000d);
+					spaceAreaCoefficient = builder
+						.comment("Base effective-space score contributed by each floor block.")
+						.defineInRange("spaceAreaCoefficient",
+							TownModelParameters.Defaults.BUILDING_SPACE_AREA_COEFFICIENT,
+							-1000d, 1000d);
+					spaceHeightLogCoefficient = builder
+						.comment("Multiplier of the logarithmic average-height term in space scoring.")
+						.defineInRange("spaceHeightLogCoefficient",
+							TownModelParameters.Defaults.BUILDING_SPACE_HEIGHT_LOG_COEFFICIENT,
+							-1000d, 1000d);
+					spaceHeightLogOffset = builder
+						.comment("Average-height offset subtracted before taking the space-score logarithm.")
+						.defineInRange("spaceHeightLogOffset",
+							TownModelParameters.Defaults.BUILDING_SPACE_HEIGHT_LOG_OFFSET,
+							-1000d, 1000d);
+					spaceResponseScale = builder
+						.comment("Scale of the exponential response converting effective space to a 0-1 rating.")
+						.defineInRange("spaceResponseScale",
+							TownModelParameters.Defaults.BUILDING_SPACE_RESPONSE_SCALE,
+							0d, 1000d);
+					spaceResponseExponent = builder
+						.comment("Exponent applied to effective space before the exponential response.")
+						.defineInRange("spaceResponseExponent",
+							TownModelParameters.Defaults.BUILDING_SPACE_RESPONSE_EXPONENT,
+							0d, 1000d);
+					builder.pop();
+				}
+			}
+
 			public static class ResidentProgression {
+				public final ForgeConfigSpec.DoubleValue maximumWorkProficiency;
 				public final ForgeConfigSpec.DoubleValue proficiencyGrowthAtZeroPerWorkday;
 				public final ForgeConfigSpec.DoubleValue minimumProficiencyGrowthPerWorkday;
 
 				ResidentProgression(ForgeConfigSpec.Builder builder) {
 					builder.push("Resident Progression");
+					maximumWorkProficiency = builder
+						.comment("Maximum stored profession proficiency for every resident.")
+						.defineInRange("maximumWorkProficiency",
+							TownModelParameters.Defaults.RESIDENT_MAXIMUM_WORK_PROFICIENCY,
+							1d, 1000000d);
 					proficiencyGrowthAtZeroPerWorkday = builder
 						.comment("Profession proficiency gained per effective workday at proficiency 0.")
 						.comment("Growth decreases linearly as proficiency approaches 100.")
-						.defineInRange("proficiencyGrowthAtZeroPerWorkday", 2.4d, 0d, 100d);
+						.defineInRange("proficiencyGrowthAtZeroPerWorkday",
+							TownModelParameters.Defaults.RESIDENT_PROFICIENCY_GROWTH_AT_ZERO_PER_WORKDAY,
+							0d, 100d);
 					minimumProficiencyGrowthPerWorkday = builder
 						.comment("Minimum profession proficiency gained per effective workday below proficiency 100.")
-						.defineInRange("minimumProficiencyGrowthPerWorkday", 0.25d, 0d, 100d);
+						.defineInRange("minimumProficiencyGrowthPerWorkday",
+							TownModelParameters.Defaults.RESIDENT_MINIMUM_PROFICIENCY_GROWTH_PER_WORKDAY,
+							0d, 100d);
+					builder.pop();
+				}
+			}
+
+			public static class ResidentRules {
+				public final ForgeConfigSpec.DoubleValue homelessHealthLossPerDay;
+				public final ForgeConfigSpec.DoubleValue removalHealthThreshold;
+				public final ForgeConfigSpec.DoubleValue removalMentalThreshold;
+				public final ForgeConfigSpec.IntValue minimumWorkingAge;
+				public final ForgeConfigSpec.DoubleValue minimumWorkingHealthExclusive;
+				public final ForgeConfigSpec.DoubleValue minimumWorkingMentalExclusive;
+				public final ForgeConfigSpec.BooleanValue workRequiresHousing;
+
+				ResidentRules(ForgeConfigSpec.Builder builder) {
+					builder.push("Resident Rules");
+					homelessHealthLossPerDay = builder
+						.comment("Health lost each morning by a resident without an assigned house.")
+						.defineInRange("homelessHealthLossPerDay",
+							TownModelParameters.Defaults.RESIDENT_HOMELESS_HEALTH_LOSS_PER_DAY,
+							0d, 100d);
+					removalHealthThreshold = builder
+						.comment("Residents at or below this health value are removed during morning settlement.")
+						.defineInRange("removalHealthThreshold",
+							TownModelParameters.Defaults.RESIDENT_REMOVAL_HEALTH_THRESHOLD,
+							0d, 100d);
+					removalMentalThreshold = builder
+						.comment("Residents at or below this mental value leave during morning settlement.")
+						.defineInRange("removalMentalThreshold",
+							TownModelParameters.Defaults.RESIDENT_REMOVAL_MENTAL_THRESHOLD,
+							0d, 100d);
+					minimumWorkingAge = builder
+						.comment("Minimum resident age group allowed to work: 0 infant, 1 child, 2 adult, 3 elder.")
+						.defineInRange("minimumWorkingAge",
+							TownModelParameters.Defaults.RESIDENT_MINIMUM_WORKING_AGE,
+							0, 3);
+					minimumWorkingHealthExclusive = builder
+						.comment("A resident must have health strictly greater than this value to work.")
+						.defineInRange("minimumWorkingHealthExclusive",
+							TownModelParameters.Defaults.RESIDENT_MINIMUM_WORKING_HEALTH_EXCLUSIVE,
+							0d, 100d);
+					minimumWorkingMentalExclusive = builder
+						.comment("A resident must have mental strictly greater than this value to work.")
+						.defineInRange("minimumWorkingMentalExclusive",
+							TownModelParameters.Defaults.RESIDENT_MINIMUM_WORKING_MENTAL_EXCLUSIVE,
+							0d, 100d);
+					workRequiresHousing = builder
+						.comment("Require an assigned house before a resident can work.")
+						.define("workRequiresHousing",
+							TownModelParameters.Defaults.RESIDENT_WORK_REQUIRES_HOUSING);
 					builder.pop();
 				}
 			}
@@ -657,34 +908,34 @@ public class FHConfig {
 				ResidentAging(ForgeConfigSpec.Builder builder) {
 					builder.push("Resident Aging");
 					infantToChildDays = builder.comment("Age-days at which an infant (0) grows into a child (1).")
-						.defineInRange("infantToChildDays", 10, 1, 100);
+						.defineInRange("infantToChildDays", TownModelParameters.Defaults.RESIDENT_INFANT_TO_CHILD_DAYS, 1, 100);
 					childToAdultDays = builder.comment("Age-days at which a child (1) grows into a young adult (2).")
 						.comment("Elders (3) never grow in this way; they only spawn naturally.")
-						.defineInRange("childToAdultDays", 30, 1, 100);
+						.defineInRange("childToAdultDays", TownModelParameters.Defaults.RESIDENT_CHILD_TO_ADULT_DAYS, 1, 100);
 					infantStrengthGainPerDay = builder.comment("Strength gained per day by infants (age 0).")
-						.defineInRange("infantStrengthGainPerDay", 0.2d, 0d, 100d);
+						.defineInRange("infantStrengthGainPerDay", TownModelParameters.Defaults.RESIDENT_INFANT_STRENGTH_GAIN_PER_DAY, 0d, 100d);
 					infantIntelligenceGainPerDay = builder.comment("Intelligence gained per day by infants (age 0).")
-						.defineInRange("infantIntelligenceGainPerDay", 0.2d, 0d, 100d);
+						.defineInRange("infantIntelligenceGainPerDay", TownModelParameters.Defaults.RESIDENT_INFANT_INTELLIGENCE_GAIN_PER_DAY, 0d, 100d);
 					infantAttributeCap = builder.comment("Strength/intelligence cap for infants (age 0).")
-						.defineInRange("infantAttributeCap", 40d, 0d, 100d);
+						.defineInRange("infantAttributeCap", TownModelParameters.Defaults.RESIDENT_INFANT_ATTRIBUTE_CAP, 0d, 100d);
 					childStrengthGainPerDay = builder.comment("Strength gained per day by children (age 1).")
-						.defineInRange("childStrengthGainPerDay", 0.3d, 0d, 100d);
+						.defineInRange("childStrengthGainPerDay", TownModelParameters.Defaults.RESIDENT_CHILD_STRENGTH_GAIN_PER_DAY, 0d, 100d);
 					childIntelligenceGainPerDay = builder.comment("Intelligence gained per day by children (age 1).")
-						.defineInRange("childIntelligenceGainPerDay", 0.4d, 0d, 100d);
+						.defineInRange("childIntelligenceGainPerDay", TownModelParameters.Defaults.RESIDENT_CHILD_INTELLIGENCE_GAIN_PER_DAY, 0d, 100d);
 					childStrengthCap = builder.comment("Strength cap for children (age 1). Higher than the adult starting average so grown children can outstrip direct recruits.")
-						.defineInRange("childStrengthCap", 80d, 0d, 100d);
+						.defineInRange("childStrengthCap", TownModelParameters.Defaults.RESIDENT_CHILD_STRENGTH_CAP, 0d, 100d);
 					childIntelligenceCap = builder.comment("Intelligence cap for children (age 1).")
-						.defineInRange("childIntelligenceCap", 85d, 0d, 100d);
+						.defineInRange("childIntelligenceCap", TownModelParameters.Defaults.RESIDENT_CHILD_INTELLIGENCE_CAP, 0d, 100d);
 					adultStrengthGainPerDay = builder.comment("Strength gained per day by young adults (age 2). Very slow.")
-						.defineInRange("adultStrengthGainPerDay", 0.05d, 0d, 100d);
+						.defineInRange("adultStrengthGainPerDay", TownModelParameters.Defaults.RESIDENT_ADULT_STRENGTH_GAIN_PER_DAY, 0d, 100d);
 					adultIntelligenceGainPerDay = builder.comment("Intelligence gained per day by young adults (age 2). Very slow.")
-						.defineInRange("adultIntelligenceGainPerDay", 0.05d, 0d, 100d);
+						.defineInRange("adultIntelligenceGainPerDay", TownModelParameters.Defaults.RESIDENT_ADULT_INTELLIGENCE_GAIN_PER_DAY, 0d, 100d);
 					adultAttributeCap = builder.comment("Strength/intelligence cap for young adults (age 2).")
-						.defineInRange("adultAttributeCap", 60d, 0d, 100d);
+						.defineInRange("adultAttributeCap", TownModelParameters.Defaults.RESIDENT_ADULT_ATTRIBUTE_CAP, 0d, 100d);
 					elderStrengthDecayPerDay = builder.comment("Strength lost per day by elders (age 3); decay never drops below the floor.")
-						.defineInRange("elderStrengthDecayPerDay", 0.1d, 0d, 100d);
+						.defineInRange("elderStrengthDecayPerDay", TownModelParameters.Defaults.RESIDENT_ELDER_STRENGTH_DECAY_PER_DAY, 0d, 100d);
 					elderStrengthFloor = builder.comment("Strength floor for elders (age 3).")
-						.defineInRange("elderStrengthFloor", 25d, 0d, 100d);
+						.defineInRange("elderStrengthFloor", TownModelParameters.Defaults.RESIDENT_ELDER_STRENGTH_FLOOR, 0d, 100d);
 					builder.pop();
 				}
 			}
@@ -738,27 +989,40 @@ public class FHConfig {
 					passiveExpectedLootRollsPerBaseDay = builder
 						.comment("Long-run expected loot-table rolls supplied by each workable hunting base without labor.")
 						.comment("The default of 0 requires productive workers.")
-						.defineInRange("passiveExpectedLootRollsPerBaseDay", 0d, 0d, 1000000d);
+						.defineInRange("passiveExpectedLootRollsPerBaseDay",
+							TownModelParameters.Defaults.HUNTING_PASSIVE_EXPECTED_LOOT_ROLLS_PER_BASE_DAY,
+							0d, 1000000d);
 					useFractionalLootRollCarry = builder
 						.comment("Retain fractional expected rolls on each hunting base for exact long-run settlement.")
 						.comment("When disabled, expected rolls are rounded down independently each day.")
-						.define("useFractionalLootRollCarry", true);
+						.define("useFractionalLootRollCarry",
+							TownModelParameters.Defaults.HUNTING_USE_FRACTIONAL_LOOT_ROLL_CARRY);
 					floorBlocksPerWorkerSlot = builder
 						.comment("Effective floor area required for one hunting-base worker slot, in blocks per worker.")
 						.comment("Space rating multiplies effective floor area before slots are calculated.")
-						.defineInRange("floorBlocksPerWorkerSlot", 4d, 0.01d, 1000000d);
+						.defineInRange("floorBlocksPerWorkerSlot",
+							TownModelParameters.Defaults.HUNTING_FLOOR_BLOCKS_PER_WORKER_SLOT,
+							0.01d, 1000000d);
 					minimumWorkerSlots = builder
 						.comment("Minimum worker slots granted to every structurally valid hunting base, in workers.")
-						.defineInRange("minimumWorkerSlots", 1, 0, 4096);
+						.defineInRange("minimumWorkerSlots",
+							TownModelParameters.Defaults.HUNTING_MINIMUM_WORKER_SLOTS,
+							0, 4096);
 					minimumFloorAreaBlocks = builder
 						.comment("Minimum valid hunting-base floor area, in square blocks.")
-						.defineInRange("minimumFloorAreaBlocks", 4, 0, 1000000);
+						.defineInRange("minimumFloorAreaBlocks",
+							TownModelParameters.Defaults.HUNTING_MINIMUM_FLOOR_AREA_BLOCKS,
+							0, 1000000);
 					minimumInteriorVolumeBlocks = builder
 						.comment("Minimum valid hunting-base interior volume, in cubic blocks.")
-						.defineInRange("minimumInteriorVolumeBlocks", 8, 0, 1000000);
+						.defineInRange("minimumInteriorVolumeBlocks",
+							TownModelParameters.Defaults.HUNTING_MINIMUM_INTERIOR_VOLUME_BLOCKS,
+							0, 1000000);
 					minimumWorkingTemperatureCelsius = builder
 						.comment("Minimum effective indoor temperature at which the hunting base can work, in degrees Celsius.")
-						.defineInRange("minimumWorkingTemperatureCelsius", 0d, -1000d, 1000d);
+						.defineInRange("minimumWorkingTemperatureCelsius",
+							TownModelParameters.Defaults.HUNTING_MINIMUM_WORKING_TEMPERATURE_CELSIUS,
+							-1000d, 1000d);
 
 					builder.push("Resident Productivity");
 					productivityAtAttributeZero = builder
@@ -805,26 +1069,38 @@ public class FHConfig {
 					builder.push("Building Rating");
 					spaceRatingWeight = builder
 						.comment("Relative dimensionless weight of space quality in hunting-base rating.")
-						.defineInRange("spaceWeight", 3d, 0d, 1000d);
+						.defineInRange("spaceWeight",
+							TownModelParameters.Defaults.HUNTING_SPACE_RATING_WEIGHT,
+							0d, 1000d);
 					temperatureRatingWeight = builder
 						.comment("Relative dimensionless weight of temperature quality in hunting-base rating.")
 						.comment("Setting both rating weights to zero makes building rating zero.")
-						.defineInRange("temperatureWeight", 2d, 0d, 1000d);
+						.defineInRange("temperatureWeight",
+							TownModelParameters.Defaults.HUNTING_TEMPERATURE_RATING_WEIGHT,
+							0d, 1000d);
 					builder.pop();
 
 					builder.push("Worker Assignment");
 					assignmentBasePriority = builder
 						.comment("Dimensionless base priority used when assigning residents to hunting bases.")
-						.defineInRange("basePriority", 0.5d, -1000000d, 1000000d);
+						.defineInRange("basePriority",
+							TownModelParameters.Defaults.HUNTING_ASSIGNMENT_BASE_PRIORITY,
+							-1000000d, 1000000d);
 					assignmentPenaltyPerWorker = builder
 						.comment("Priority subtracted for each worker already assigned to this hunting base.")
-						.defineInRange("penaltyPerWorker", 1d, 0d, 1000000d);
+						.defineInRange("penaltyPerWorker",
+							TownModelParameters.Defaults.HUNTING_ASSIGNMENT_PENALTY_PER_WORKER,
+							0d, 1000000d);
 					assignmentFillRatioBonus = builder
 						.comment("Priority added times the occupied-slot ratio (assigned workers / worker slots).")
-						.defineInRange("fillRatioBonus", 1d, -1000000d, 1000000d);
+						.defineInRange("fillRatioBonus",
+							TownModelParameters.Defaults.HUNTING_ASSIGNMENT_FILL_RATIO_BONUS,
+							-1000000d, 1000000d);
 					assignmentRatingMultiplier = builder
 						.comment("Multiplier converting hunting-base rating into worker-assignment priority.")
-						.defineInRange("ratingMultiplier", 1d, -1000000d, 1000000d);
+						.defineInRange("ratingMultiplier",
+							TownModelParameters.Defaults.HUNTING_ASSIGNMENT_RATING_MULTIPLIER,
+							-1000000d, 1000000d);
 					builder.pop();
 
 					builder.push("Heating");
@@ -890,13 +1166,19 @@ public class FHConfig {
 					floorBlocksPerWorkerSlot = builder
 						.comment("Effective floor area required for one mining-base worker slot, in blocks per worker.")
 						.comment("Space rating multiplies effective floor area before slots are calculated.")
-						.defineInRange("floorBlocksPerWorkerSlot", 4d, 0.01d, 1000000d);
+						.defineInRange("floorBlocksPerWorkerSlot",
+							TownModelParameters.Defaults.MINING_FLOOR_BLOCKS_PER_WORKER_SLOT,
+							0.01d, 1000000d);
 					minimumWorkerSlots = builder
 						.comment("Minimum worker slots granted to every structurally valid mining base, in workers.")
-						.defineInRange("minimumWorkerSlots", 1, 0, 4096);
+						.defineInRange("minimumWorkerSlots",
+							TownModelParameters.Defaults.MINING_MINIMUM_WORKER_SLOTS,
+							0, 4096);
 					connectionRadiusBlocks = builder
 						.comment("Maximum straight-line distance from a mining base to an assigned mining camp, in blocks.")
-						.defineInRange("connectionRadiusBlocks", 1024, 0, 32000);
+						.defineInRange("connectionRadiusBlocks",
+							TownModelParameters.Defaults.MINING_CONNECTION_RADIUS_BLOCKS,
+							0, 32000);
 
 					builder.push("Resident Productivity");
 					productivityAtAttributeZero = builder
@@ -943,13 +1225,19 @@ public class FHConfig {
 					builder.push("Worker Assignment");
 					assignmentBasePriority = builder
 						.comment("Dimensionless base priority used when assigning residents to mining bases.")
-						.defineInRange("basePriority", 0.4d, -1000000d, 1000000d);
+						.defineInRange("basePriority",
+							TownModelParameters.Defaults.MINING_ASSIGNMENT_BASE_PRIORITY,
+							-1000000d, 1000000d);
 					assignmentPenaltyPerWorker = builder
 						.comment("Priority subtracted for each worker already assigned to this mining base.")
-						.defineInRange("penaltyPerWorker", 1d, 0d, 1000000d);
+						.defineInRange("penaltyPerWorker",
+							TownModelParameters.Defaults.MINING_ASSIGNMENT_PENALTY_PER_WORKER,
+							0d, 1000000d);
 					assignmentFillRatioBonus = builder
 						.comment("Priority added times the occupied-slot ratio (assigned workers / worker slots).")
-						.defineInRange("fillRatioBonus", 1d, -1000000d, 1000000d);
+						.defineInRange("fillRatioBonus",
+							TownModelParameters.Defaults.MINING_ASSIGNMENT_FILL_RATIO_BONUS,
+							-1000000d, 1000000d);
 					builder.pop();
 					builder.pop();
 				}
@@ -1002,11 +1290,11 @@ public class FHConfig {
 					oreReservePerChunk = builder
 						.comment("Total extractable ore reserve in ore/item units per active mining chunk.")
 						.comment("The TOML key keeps its legacy name orePerSq for compatibility, but current chunk-tracked mining does not multiply it by chunk area.")
-						.defineInRange("orePerSq", 1000d, 0d, 1000000d);
+						.defineInRange("orePerSq", TownModelParameters.Defaults.ORE_RESERVE_PER_CHUNK, 0d, 1000000d);
 					oreRecoveryPerChunkDay = builder
 						.comment("Configured ore recovery in ore units per chunk per Minecraft day.")
 						.comment("Current chunk-tracked mining does not yet apply this recovery value.")
-						.defineInRange("orePerDay", 0d, 0d, 1000000d);
+						.defineInRange("orePerDay", TownModelParameters.Defaults.ORE_RECOVERY_PER_CHUNK_DAY, 0d, 1000000d);
 					oreCount = oreReservePerChunk;
 					oreRecovery = oreRecoveryPerChunkDay;
 					treeCount=builder.comment("Tree Count per block squared")
@@ -1016,11 +1304,11 @@ public class FHConfig {
 					huntReservePerSquareBlock = builder
 						.comment("Hunt terrain-resource density in loot-roll units per square block.")
 						.comment("The TOML key keeps its legacy name huntPerSq for compatibility.")
-						.defineInRange("huntPerSq", 0.1d, 0d, 1000000d);
+						.defineInRange("huntPerSq", TownModelParameters.Defaults.HUNT_RESERVE_PER_SQUARE_BLOCK, 0d, 1000000d);
 					huntRecoveryPerSquareBlockDay = builder
 						.comment("Hunt terrain-resource recovery density in hunt units per square block per Minecraft day.")
 						.comment("Recovery is applied over the resource system's currently depleted radius.")
-						.defineInRange("huntPerDay", 0.005d, 0d, 1000000d);
+						.defineInRange("huntPerDay", TownModelParameters.Defaults.HUNT_RECOVERY_PER_SQUARE_BLOCK_DAY, 0d, 1000000d);
 					huntCount = huntReservePerSquareBlock;
 					huntRecovery = huntRecoveryPerSquareBlockDay;
 					poiCount=builder.comment("Research Point Count per block squared")
@@ -1036,7 +1324,10 @@ public class FHConfig {
 			}
 			public final Hunting HUNTING;
 			public final Housing HOUSING;
+			public final BuildingScoring BUILDING_SCORING;
+			public final GeneratorT1 GENERATOR_T1;
 			public final Mining MINING;
+			public final ResidentRules RESIDENT_RULES;
 			public final ResidentProgression RESIDENT_PROGRESSION;
 			public final RefugeeSpawn REFUGEE_SPAWN;
 			public final ResidentAging RESIDENT_AGING;
@@ -1046,10 +1337,19 @@ public class FHConfig {
 				enableTownTick = builder.comment("Enables town tick every second.")
 					.comment("This tick includes the running of town worker blocks.")
 					.define("enableTownTick", true);
+				townUpdateIntervalGameTicks = builder
+					.comment("Interval between online town generator updates, in game ticks.")
+					.comment("The update consumes the same total fuel as per-tick processing because fuel balances carry across batches.")
+					.defineInRange("townUpdateIntervalGameTicks",
+						TownModelParameters.Defaults.TOWN_UPDATE_INTERVAL_GAME_TICKS,
+						1, 1200);
 				enableTownTickMorning = builder.comment("Enables town tick in the morning of each days.")
 					.comment("This tick includes the refresh of some town things, like house allocating, checking overlap of buildings, work assigning...")
 					.define("enableTownTickMorning", true);
+				GENERATOR_T1 = new GeneratorT1(builder);
+				BUILDING_SCORING = new BuildingScoring(builder);
 				HOUSING = new Housing(builder);
+				RESIDENT_RULES = new ResidentRules(builder);
 				RESIDENT_PROGRESSION = new ResidentProgression(builder);
 				REFUGEE_SPAWN = new RefugeeSpawn(builder);
 				RESIDENT_AGING = new ResidentAging(builder);

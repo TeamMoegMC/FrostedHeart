@@ -18,21 +18,22 @@
 
 package com.teammoeg.frostedheart.content.town.model;
 
-import com.teammoeg.frostedheart.content.climate.block.generator.GeneratorFuelModel;
-import com.teammoeg.frostedheart.content.climate.block.generator.GeneratorHeatFieldModel;
 import com.teammoeg.frostedheart.content.town.TownMathFunctions;
 
 import java.util.List;
 
 /**
  * Forge-independent parameter snapshot for the town numerical model.
- * Stage 0 intentionally contains only parameters needed by its algebraic
- * audit; later stages can extend this aggregate without changing the formulas.
+ * Stage 0 snapshots the T1, resident, housing and work parameters that later
+ * simulation stages will consume. Climate and T2 are intentionally absent.
  */
 public record TownModelParameters(
         MiningParameters mining,
         HuntingParameters hunting,
         HousingParameters housing,
+        ResidentParameters residents,
+        BuildingScoringParameters buildingScoring,
+        TerrainResourceParameters terrainResources,
         GeneratorT1Parameters generatorT1,
         List<MeatFoodParameters> meatFoods
 ) {
@@ -40,10 +41,18 @@ public record TownModelParameters(
         meatFoods = List.copyOf(meatFoods);
     }
 
+    /**
+     * Builds the simulator's default input from the single source-owned
+     * default table below. Gameplay code must read the corresponding
+     * FHConfig values instead of calling this method.
+     */
     public static TownModelParameters currentDefaults() {
         return new TownModelParameters(
                 new MiningParameters(
                         Defaults.MINING_BASE_OUTPUT_PER_SWE_DAY,
+                        Defaults.MINING_FLOOR_BLOCKS_PER_WORKER_SLOT,
+                        Defaults.MINING_MINIMUM_WORKER_SLOTS,
+                        Defaults.MINING_CONNECTION_RADIUS_BLOCKS,
                         new ResidentProductivityParameters(
                                 Defaults.MINING_HEALTH_WEIGHT,
                                 Defaults.MINING_MENTAL_WEIGHT,
@@ -54,9 +63,19 @@ public record TownModelParameters(
                                 Defaults.MINING_MAXIMUM_PROFICIENCY,
                                 Defaults.MINING_BONUS_AT_MAXIMUM_PROFICIENCY,
                                 Defaults.MINING_MINIMUM_PRODUCTIVITY,
-                                Defaults.MINING_MAXIMUM_PRODUCTIVITY)),
+                                Defaults.MINING_MAXIMUM_PRODUCTIVITY),
+                        Defaults.MINING_ASSIGNMENT_BASE_PRIORITY,
+                        Defaults.MINING_ASSIGNMENT_PENALTY_PER_WORKER,
+                        Defaults.MINING_ASSIGNMENT_FILL_RATIO_BONUS),
                 new HuntingParameters(
                         Defaults.HUNTING_EXPECTED_LOOT_ROLLS_PER_SWE_DAY,
+                        Defaults.HUNTING_PASSIVE_EXPECTED_LOOT_ROLLS_PER_BASE_DAY,
+                        Defaults.HUNTING_USE_FRACTIONAL_LOOT_ROLL_CARRY,
+                        Defaults.HUNTING_FLOOR_BLOCKS_PER_WORKER_SLOT,
+                        Defaults.HUNTING_MINIMUM_WORKER_SLOTS,
+                        Defaults.HUNTING_MINIMUM_FLOOR_AREA_BLOCKS,
+                        Defaults.HUNTING_MINIMUM_INTERIOR_VOLUME_BLOCKS,
+                        Defaults.HUNTING_MINIMUM_WORKING_TEMPERATURE_CELSIUS,
                         new ResidentProductivityParameters(
                                 Defaults.HUNTING_HEALTH_WEIGHT,
                                 Defaults.HUNTING_MENTAL_WEIGHT,
@@ -67,17 +86,87 @@ public record TownModelParameters(
                                 Defaults.HUNTING_MAXIMUM_PROFICIENCY,
                                 Defaults.HUNTING_BONUS_AT_MAXIMUM_PROFICIENCY,
                                 Defaults.HUNTING_MINIMUM_PRODUCTIVITY,
-                                Defaults.HUNTING_MAXIMUM_PRODUCTIVITY)),
-                new HousingParameters(Defaults.FOOD_PER_RESIDENT_DAY),
+                                Defaults.HUNTING_MAXIMUM_PRODUCTIVITY),
+                        Defaults.HUNTING_SPACE_RATING_WEIGHT,
+                        Defaults.HUNTING_TEMPERATURE_RATING_WEIGHT,
+                        Defaults.HUNTING_ASSIGNMENT_BASE_PRIORITY,
+                        Defaults.HUNTING_ASSIGNMENT_PENALTY_PER_WORKER,
+                        Defaults.HUNTING_ASSIGNMENT_FILL_RATIO_BONUS,
+                        Defaults.HUNTING_ASSIGNMENT_RATING_MULTIPLIER),
+                new HousingParameters(
+                        Defaults.HOUSING_FOOD_PER_RESIDENT_DAY,
+                        Defaults.HOUSING_NUTRITION_REFERENCE_PER_FOOD_UNIT,
+                        Defaults.HOUSING_MINIMUM_NUTRITION_RECOVERY_MULTIPLIER,
+                        Defaults.HOUSING_HEALTH_LOSS_AT_ZERO_FOOD_PER_RESIDENT_DAY,
+                        Defaults.HOUSING_MENTAL_LOSS_AT_ZERO_FOOD_PER_RESIDENT_DAY,
+                        Defaults.HOUSING_MAXIMUM_HEALTH_RECOVERY_PER_RESIDENT_DAY,
+                        Defaults.HOUSING_MAXIMUM_MENTAL_RECOVERY_PER_RESIDENT_DAY,
+                        Defaults.HOUSING_MINIMUM_FLOOR_AREA_BLOCKS,
+                        Defaults.HOUSING_MINIMUM_INTERIOR_VOLUME_BLOCKS,
+                        Defaults.HOUSING_MINIMUM_TEMPERATURE_CELSIUS,
+                        Defaults.HOUSING_MAXIMUM_TEMPERATURE_CELSIUS,
+                        Defaults.HOUSING_FLOOR_BLOCKS_PER_RESIDENT,
+                        Defaults.HOUSING_TEMPERATURE_COMFORT_WEIGHT,
+                        Defaults.HOUSING_SPACE_COMFORT_WEIGHT,
+                        Defaults.HOUSING_DECORATION_COMFORT_WEIGHT,
+                        new DecorationRatingParameters(
+                                Defaults.DECORATION_COUNT_LOG_OFFSET,
+                                Defaults.DECORATION_COUNT_LOG_MULTIPLIER,
+                                Defaults.DECORATION_TYPE_BASE_SCORE,
+                                Defaults.DECORATION_BASE_DEMAND,
+                                Defaults.DECORATION_FLOOR_BLOCKS_PER_DEMAND)),
+                new ResidentParameters(
+                        Defaults.RESIDENT_HOMELESS_HEALTH_LOSS_PER_DAY,
+                        Defaults.RESIDENT_REMOVAL_HEALTH_THRESHOLD,
+                        Defaults.RESIDENT_REMOVAL_MENTAL_THRESHOLD,
+                        Defaults.RESIDENT_MINIMUM_WORKING_AGE,
+                        Defaults.RESIDENT_MINIMUM_WORKING_HEALTH_EXCLUSIVE,
+                        Defaults.RESIDENT_MINIMUM_WORKING_MENTAL_EXCLUSIVE,
+                        Defaults.RESIDENT_WORK_REQUIRES_HOUSING,
+                        Defaults.RESIDENT_MAXIMUM_WORK_PROFICIENCY,
+                        Defaults.RESIDENT_PROFICIENCY_GROWTH_AT_ZERO_PER_WORKDAY,
+                        Defaults.RESIDENT_MINIMUM_PROFICIENCY_GROWTH_PER_WORKDAY,
+                        new ResidentAgingParameters(
+                                Defaults.RESIDENT_INFANT_TO_CHILD_DAYS,
+                                Defaults.RESIDENT_CHILD_TO_ADULT_DAYS,
+                                Defaults.RESIDENT_INFANT_STRENGTH_GAIN_PER_DAY,
+                                Defaults.RESIDENT_INFANT_INTELLIGENCE_GAIN_PER_DAY,
+                                Defaults.RESIDENT_INFANT_ATTRIBUTE_CAP,
+                                Defaults.RESIDENT_CHILD_STRENGTH_GAIN_PER_DAY,
+                                Defaults.RESIDENT_CHILD_INTELLIGENCE_GAIN_PER_DAY,
+                                Defaults.RESIDENT_CHILD_STRENGTH_CAP,
+                                Defaults.RESIDENT_CHILD_INTELLIGENCE_CAP,
+                                Defaults.RESIDENT_ADULT_STRENGTH_GAIN_PER_DAY,
+                                Defaults.RESIDENT_ADULT_INTELLIGENCE_GAIN_PER_DAY,
+                                Defaults.RESIDENT_ADULT_ATTRIBUTE_CAP,
+                                Defaults.RESIDENT_ELDER_STRENGTH_DECAY_PER_DAY,
+                                Defaults.RESIDENT_ELDER_STRENGTH_FLOOR)),
+                new BuildingScoringParameters(
+                        new TemperatureRatingParameters(
+                                Defaults.BUILDING_COMFORTABLE_TEMPERATURE_CELSIUS,
+                                Defaults.BUILDING_MINIMUM_TEMPERATURE_RATING,
+                                Defaults.BUILDING_TEMPERATURE_RATING_SLOPE,
+                                Defaults.BUILDING_TEMPERATURE_RATING_HALF_POINT_DIFFERENCE_CELSIUS),
+                        new SpaceRatingParameters(
+                                Defaults.BUILDING_SPACE_AREA_COEFFICIENT,
+                                Defaults.BUILDING_SPACE_HEIGHT_LOG_COEFFICIENT,
+                                Defaults.BUILDING_SPACE_HEIGHT_LOG_OFFSET,
+                                Defaults.BUILDING_SPACE_RESPONSE_SCALE,
+                                Defaults.BUILDING_SPACE_RESPONSE_EXPONENT)),
+                new TerrainResourceParameters(
+                        Defaults.ORE_RESERVE_PER_CHUNK,
+                        Defaults.ORE_RECOVERY_PER_CHUNK_DAY,
+                        Defaults.HUNT_RESERVE_PER_SQUARE_BLOCK,
+                        Defaults.HUNT_RECOVERY_PER_SQUARE_BLOCK_DAY),
                 new GeneratorT1Parameters(
-                        GeneratorFuelModel.CURRENT_BASE_FUEL_DURATION_MULTIPLIER,
-                        GeneratorFuelModel.CURRENT_BASE_PROCESS_TICKS_PER_GAME_TICK,
-                        GeneratorFuelModel.CURRENT_OVERDRIVE_EXTRA_PROCESS_TICKS_PER_GAME_TICK,
-                        GeneratorFuelModel.CURRENT_TOWN_BATCH_GAME_TICKS,
-                        GeneratorFuelModel.GAME_TICKS_PER_DAY,
-                        GeneratorHeatFieldModel.CURRENT_BASE_RADIUS_BLOCKS,
-                        GeneratorHeatFieldModel.CURRENT_ADDITIONAL_RADIUS_PER_LEVEL_BLOCKS,
-                        GeneratorHeatFieldModel.CURRENT_TEMPERATURE_PER_LEVEL_CELSIUS),
+                        Defaults.GENERATOR_T1_BASE_FUEL_DURATION_MULTIPLIER,
+                        Defaults.GENERATOR_T1_BASE_PROCESS_TICKS_PER_GAME_TICK,
+                        Defaults.GENERATOR_T1_OVERDRIVE_EXTRA_PROCESS_TICKS_PER_GAME_TICK,
+                        Defaults.TOWN_UPDATE_INTERVAL_GAME_TICKS,
+                        GameUnits.GAME_TICKS_PER_DAY,
+                        Defaults.GENERATOR_T1_BASE_RADIUS_BLOCKS,
+                        Defaults.GENERATOR_T1_ADDITIONAL_RADIUS_PER_LEVEL_BLOCKS,
+                        Defaults.GENERATOR_T1_TEMPERATURE_PER_LEVEL_CELSIUS),
                 List.of(
                         new MeatFoodParameters("minecraft:beef", "minecraft:cooked_beef", 3, 0.3, 8, 0.8),
                         new MeatFoodParameters("minecraft:porkchop", "minecraft:cooked_porkchop", 3, 0.3, 8, 0.8),
@@ -88,17 +177,126 @@ public record TownModelParameters(
 
     public record MiningParameters(
             double baseOutputPerStandardWorkerDay,
-            ResidentProductivityParameters productivity
+            double floorBlocksPerWorkerSlot,
+            int minimumWorkerSlots,
+            int connectionRadiusBlocks,
+            ResidentProductivityParameters productivity,
+            double assignmentBasePriority,
+            double assignmentPenaltyPerWorker,
+            double assignmentFillRatioBonus
     ) {
     }
 
     public record HuntingParameters(
             double expectedLootRollsPerStandardWorkerDay,
-            ResidentProductivityParameters productivity
+            double passiveExpectedLootRollsPerBaseDay,
+            boolean useFractionalLootRollCarry,
+            double floorBlocksPerWorkerSlot,
+            int minimumWorkerSlots,
+            int minimumFloorAreaBlocks,
+            int minimumInteriorVolumeBlocks,
+            double minimumWorkingTemperatureCelsius,
+            ResidentProductivityParameters productivity,
+            double spaceRatingWeight,
+            double temperatureRatingWeight,
+            double assignmentBasePriority,
+            double assignmentPenaltyPerWorker,
+            double assignmentFillRatioBonus,
+            double assignmentRatingMultiplier
     ) {
     }
 
-    public record HousingParameters(double foodConsumptionPerResidentDay) {
+    public record HousingParameters(
+            double foodConsumptionPerResidentDay,
+            double nutritionReferencePerFoodUnit,
+            double minimumNutritionRecoveryMultiplier,
+            double healthLossAtZeroFoodPerResidentDay,
+            double mentalLossAtZeroFoodPerResidentDay,
+            double maximumHealthRecoveryPerResidentDay,
+            double maximumMentalRecoveryPerResidentDay,
+            int minimumFloorAreaBlocks,
+            int minimumInteriorVolumeBlocks,
+            double minimumTemperatureCelsius,
+            double maximumTemperatureCelsius,
+            double floorBlocksPerResident,
+            double temperatureComfortWeight,
+            double spaceComfortWeight,
+            double decorationComfortWeight,
+            DecorationRatingParameters decorationRating
+    ) {
+    }
+
+    public record ResidentParameters(
+            double homelessHealthLossPerDay,
+            double removalHealthThreshold,
+            double removalMentalThreshold,
+            int minimumWorkingAge,
+            double minimumWorkingHealthExclusive,
+            double minimumWorkingMentalExclusive,
+            boolean workRequiresHousing,
+            double maximumWorkProficiency,
+            double proficiencyGrowthAtZeroPerWorkday,
+            double minimumProficiencyGrowthPerWorkday,
+            ResidentAgingParameters aging
+    ) {
+    }
+
+    public record ResidentAgingParameters(
+            int infantToChildDays,
+            int childToAdultDays,
+            double infantStrengthGainPerDay,
+            double infantIntelligenceGainPerDay,
+            double infantAttributeCap,
+            double childStrengthGainPerDay,
+            double childIntelligenceGainPerDay,
+            double childStrengthCap,
+            double childIntelligenceCap,
+            double adultStrengthGainPerDay,
+            double adultIntelligenceGainPerDay,
+            double adultAttributeCap,
+            double elderStrengthDecayPerDay,
+            double elderStrengthFloor
+    ) {
+    }
+
+    public record BuildingScoringParameters(
+            TemperatureRatingParameters temperature,
+            SpaceRatingParameters space
+    ) {
+    }
+
+    public record TemperatureRatingParameters(
+            double comfortableTemperatureCelsius,
+            double minimumRating,
+            double sigmoidSlopePerCelsius,
+            double halfPointTemperatureDifferenceCelsius
+    ) {
+    }
+
+    public record SpaceRatingParameters(
+            double areaCoefficient,
+            double heightLogCoefficient,
+            double heightLogOffset,
+            double responseScale,
+            double responseExponent
+    ) {
+    }
+
+    public record DecorationRatingParameters(
+            double countLogOffset,
+            double countLogMultiplier,
+            double typeBaseScore,
+            double baseDemand,
+            double floorBlocksPerDemand
+    ) {
+    }
+
+    public record TerrainResourceParameters(
+            double oreReservePerChunk,
+            double oreRecoveryPerChunkDay,
+            double huntReservePerSquareBlock,
+            double huntRecoveryPerSquareBlockDay
+    ) {
     }
 
     public record GeneratorT1Parameters(
@@ -159,11 +357,84 @@ public record TownModelParameters(
     ) {
     }
 
-    /** Defaults shared directly with FHConfig declarations. */
+    /**
+     * Single source of truth for FH-owned model defaults.
+     * <p>
+     * Change balancing defaults here. TownModelParameters consumes them for
+     * simulation, while FHConfig consumes them when declaring runtime config
+     * defaults. Runtime gameplay code must read FHConfig, never this class.
+     */
     public static final class Defaults {
-        public static final double FOOD_PER_RESIDENT_DAY = 6.5;
+        public static final int TOWN_UPDATE_INTERVAL_GAME_TICKS = 20;
+
+        public static final double HOUSING_FOOD_PER_RESIDENT_DAY = 6.5;
+        public static final double HOUSING_NUTRITION_REFERENCE_PER_FOOD_UNIT = 7000.0;
+        public static final double HOUSING_MINIMUM_NUTRITION_RECOVERY_MULTIPLIER = 0.5;
+        public static final double HOUSING_HEALTH_LOSS_AT_ZERO_FOOD_PER_RESIDENT_DAY = 8.0;
+        public static final double HOUSING_MENTAL_LOSS_AT_ZERO_FOOD_PER_RESIDENT_DAY = 5.0;
+        public static final double HOUSING_MAXIMUM_HEALTH_RECOVERY_PER_RESIDENT_DAY = 2.0;
+        public static final double HOUSING_MAXIMUM_MENTAL_RECOVERY_PER_RESIDENT_DAY = 1.5;
+        public static final int HOUSING_MINIMUM_FLOOR_AREA_BLOCKS = 4;
+        public static final int HOUSING_MINIMUM_INTERIOR_VOLUME_BLOCKS = 8;
+        public static final double HOUSING_MINIMUM_TEMPERATURE_CELSIUS = 0.0;
+        public static final double HOUSING_MAXIMUM_TEMPERATURE_CELSIUS = 50.0;
+        public static final double HOUSING_FLOOR_BLOCKS_PER_RESIDENT = 4.0;
+        public static final double HOUSING_TEMPERATURE_COMFORT_WEIGHT = 0.4;
+        public static final double HOUSING_SPACE_COMFORT_WEIGHT = 0.3;
+        public static final double HOUSING_DECORATION_COMFORT_WEIGHT = 0.3;
+
+        public static final double BUILDING_COMFORTABLE_TEMPERATURE_CELSIUS = 24.0;
+        public static final double BUILDING_MINIMUM_TEMPERATURE_RATING = 0.017;
+        public static final double BUILDING_TEMPERATURE_RATING_SLOPE = 0.4;
+        public static final double BUILDING_TEMPERATURE_RATING_HALF_POINT_DIFFERENCE_CELSIUS = 10.0;
+        public static final double BUILDING_SPACE_AREA_COEFFICIENT = 1.55;
+        public static final double BUILDING_SPACE_HEIGHT_LOG_COEFFICIENT = 0.6;
+        public static final double BUILDING_SPACE_HEIGHT_LOG_OFFSET = 1.6;
+        public static final double BUILDING_SPACE_RESPONSE_SCALE = 0.024;
+        public static final double BUILDING_SPACE_RESPONSE_EXPONENT = 1.11;
+
+        public static final double DECORATION_COUNT_LOG_OFFSET = 0.32;
+        public static final double DECORATION_COUNT_LOG_MULTIPLIER = 1.75;
+        public static final double DECORATION_TYPE_BASE_SCORE = 0.9;
+        public static final double DECORATION_BASE_DEMAND = 6.0;
+        public static final double DECORATION_FLOOR_BLOCKS_PER_DEMAND = 16.0;
+
+        public static final double RESIDENT_HOMELESS_HEALTH_LOSS_PER_DAY = 10.0;
+        public static final double RESIDENT_REMOVAL_HEALTH_THRESHOLD = 5.0;
+        public static final double RESIDENT_REMOVAL_MENTAL_THRESHOLD = 5.0;
+        public static final int RESIDENT_MINIMUM_WORKING_AGE = 1;
+        public static final double RESIDENT_MINIMUM_WORKING_HEALTH_EXCLUSIVE = 10.0;
+        public static final double RESIDENT_MINIMUM_WORKING_MENTAL_EXCLUSIVE = 5.0;
+        public static final boolean RESIDENT_WORK_REQUIRES_HOUSING = true;
+        public static final double RESIDENT_MAXIMUM_WORK_PROFICIENCY = 100.0;
+        public static final double RESIDENT_PROFICIENCY_GROWTH_AT_ZERO_PER_WORKDAY = 2.4;
+        public static final double RESIDENT_MINIMUM_PROFICIENCY_GROWTH_PER_WORKDAY = 0.25;
+        public static final int RESIDENT_INFANT_TO_CHILD_DAYS = 10;
+        public static final int RESIDENT_CHILD_TO_ADULT_DAYS = 30;
+        public static final double RESIDENT_INFANT_STRENGTH_GAIN_PER_DAY = 0.2;
+        public static final double RESIDENT_INFANT_INTELLIGENCE_GAIN_PER_DAY = 0.2;
+        public static final double RESIDENT_INFANT_ATTRIBUTE_CAP = 40.0;
+        public static final double RESIDENT_CHILD_STRENGTH_GAIN_PER_DAY = 0.3;
+        public static final double RESIDENT_CHILD_INTELLIGENCE_GAIN_PER_DAY = 0.4;
+        public static final double RESIDENT_CHILD_STRENGTH_CAP = 80.0;
+        public static final double RESIDENT_CHILD_INTELLIGENCE_CAP = 85.0;
+        public static final double RESIDENT_ADULT_STRENGTH_GAIN_PER_DAY = 0.05;
+        public static final double RESIDENT_ADULT_INTELLIGENCE_GAIN_PER_DAY = 0.05;
+        public static final double RESIDENT_ADULT_ATTRIBUTE_CAP = 60.0;
+        public static final double RESIDENT_ELDER_STRENGTH_DECAY_PER_DAY = 0.1;
+        public static final double RESIDENT_ELDER_STRENGTH_FLOOR = 25.0;
+
+        public static final double GENERATOR_T1_BASE_FUEL_DURATION_MULTIPLIER = 0.7;
+        public static final int GENERATOR_T1_BASE_PROCESS_TICKS_PER_GAME_TICK = 1;
+        public static final int GENERATOR_T1_OVERDRIVE_EXTRA_PROCESS_TICKS_PER_GAME_TICK = 1;
+        public static final int GENERATOR_T1_BASE_RADIUS_BLOCKS = 16;
+        public static final int GENERATOR_T1_ADDITIONAL_RADIUS_PER_LEVEL_BLOCKS = 8;
+        public static final int GENERATOR_T1_TEMPERATURE_PER_LEVEL_CELSIUS = 10;
 
         public static final double MINING_BASE_OUTPUT_PER_SWE_DAY = 3.5;
+        public static final double MINING_FLOOR_BLOCKS_PER_WORKER_SLOT = 4.0;
+        public static final int MINING_MINIMUM_WORKER_SLOTS = 1;
+        public static final int MINING_CONNECTION_RADIUS_BLOCKS = 1024;
         public static final double MINING_HEALTH_WEIGHT = 30.0;
         public static final double MINING_MENTAL_WEIGHT = 10.0;
         public static final double MINING_STRENGTH_WEIGHT = 45.0;
@@ -174,8 +445,18 @@ public record TownModelParameters(
         public static final double MINING_BONUS_AT_MAXIMUM_PROFICIENCY = 0.5;
         public static final double MINING_MINIMUM_PRODUCTIVITY = 0.5;
         public static final double MINING_MAXIMUM_PRODUCTIVITY = 2.0;
+        public static final double MINING_ASSIGNMENT_BASE_PRIORITY = 0.4;
+        public static final double MINING_ASSIGNMENT_PENALTY_PER_WORKER = 1.0;
+        public static final double MINING_ASSIGNMENT_FILL_RATIO_BONUS = 1.0;
 
         public static final double HUNTING_EXPECTED_LOOT_ROLLS_PER_SWE_DAY = 7.0 / 6.0;
+        public static final double HUNTING_PASSIVE_EXPECTED_LOOT_ROLLS_PER_BASE_DAY = 0.0;
+        public static final boolean HUNTING_USE_FRACTIONAL_LOOT_ROLL_CARRY = true;
+        public static final double HUNTING_FLOOR_BLOCKS_PER_WORKER_SLOT = 4.0;
+        public static final int HUNTING_MINIMUM_WORKER_SLOTS = 1;
+        public static final int HUNTING_MINIMUM_FLOOR_AREA_BLOCKS = 4;
+        public static final int HUNTING_MINIMUM_INTERIOR_VOLUME_BLOCKS = 8;
+        public static final double HUNTING_MINIMUM_WORKING_TEMPERATURE_CELSIUS = 0.0;
         public static final double HUNTING_HEALTH_WEIGHT = 25.0;
         public static final double HUNTING_MENTAL_WEIGHT = 20.0;
         public static final double HUNTING_STRENGTH_WEIGHT = 25.0;
@@ -186,8 +467,27 @@ public record TownModelParameters(
         public static final double HUNTING_BONUS_AT_MAXIMUM_PROFICIENCY = 1.0;
         public static final double HUNTING_MINIMUM_PRODUCTIVITY = 0.5;
         public static final double HUNTING_MAXIMUM_PRODUCTIVITY = 2.5;
+        public static final double HUNTING_SPACE_RATING_WEIGHT = 3.0;
+        public static final double HUNTING_TEMPERATURE_RATING_WEIGHT = 2.0;
+        public static final double HUNTING_ASSIGNMENT_BASE_PRIORITY = 0.5;
+        public static final double HUNTING_ASSIGNMENT_PENALTY_PER_WORKER = 1.0;
+        public static final double HUNTING_ASSIGNMENT_FILL_RATIO_BONUS = 1.0;
+        public static final double HUNTING_ASSIGNMENT_RATING_MULTIPLIER = 1.0;
+
+        public static final double ORE_RESERVE_PER_CHUNK = 1000.0;
+        public static final double ORE_RECOVERY_PER_CHUNK_DAY = 0.0;
+        public static final double HUNT_RESERVE_PER_SQUARE_BLOCK = 0.1;
+        public static final double HUNT_RECOVERY_PER_SQUARE_BLOCK_DAY = 0.005;
 
         private Defaults() {
+        }
+    }
+
+    /** Fixed Minecraft unit conversions, not gameplay tuning parameters. */
+    public static final class GameUnits {
+        public static final int GAME_TICKS_PER_DAY = 24_000;
+
+        private GameUnits() {
         }
     }
 }

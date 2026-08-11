@@ -27,12 +27,6 @@ import java.math.RoundingMode;
  * fuel-value unit.
  */
 public final class GeneratorFuelModel {
-    public static final double CURRENT_BASE_FUEL_DURATION_MULTIPLIER = 0.7;
-    public static final int CURRENT_BASE_PROCESS_TICKS_PER_GAME_TICK = 1;
-    public static final int CURRENT_OVERDRIVE_EXTRA_PROCESS_TICKS_PER_GAME_TICK = 1;
-    public static final int CURRENT_TOWN_BATCH_GAME_TICKS = 20;
-    public static final int GAME_TICKS_PER_DAY = 24_000;
-
     private GeneratorFuelModel() {
     }
 

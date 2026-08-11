@@ -2,6 +2,8 @@ package com.teammoeg.frostedheart.content.town.building;
 
 import com.teammoeg.frostedheart.content.town.ITownWithResidents;
 import com.teammoeg.frostedheart.content.town.resident.Resident;
+import com.teammoeg.frostedheart.content.town.resident.ResidentDailyModel;
+import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 
 import java.util.Collection;
 import java.util.UUID;
@@ -49,11 +51,16 @@ public interface ITownResidentWorkBuilding extends ITownResidentBuilding {
      * 可在子类覆写此方法，以对不同的工作设置工作条件。
      */
     default boolean canResidentWork(Resident resident){
-        if(resident.getAge() == Resident.AGE_INFANT) return false;
-        if(resident.getHealth() <= 10) return false;
-        if(resident.getMental() <= 5) return false;
-        if(resident.getHousePos() == null) return false;
-        return true;
+        FHConfig.Server.Town.ResidentRules config = FHConfig.SERVER.TOWN.RESIDENT_RULES;
+        return ResidentDailyModel.canWork(
+                resident.getAge(),
+                resident.getHealth(),
+                resident.getMental(),
+                resident.getHousePos() != null,
+                config.minimumWorkingAge.get(),
+                config.minimumWorkingHealthExclusive.get(),
+                config.minimumWorkingMentalExclusive.get(),
+                config.workRequiresHousing.get());
     }
 
     /**

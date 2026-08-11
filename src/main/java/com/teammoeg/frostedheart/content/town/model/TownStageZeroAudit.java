@@ -221,6 +221,8 @@ public final class TownStageZeroAudit {
         List<IdentifiedPath> inputs = List.of(
                 new IdentifiedPath("fh:town-model-parameters", paths.townModelParameters()),
                 new IdentifiedPath("fh:town-math-functions", paths.townMathFunctions()),
+                new IdentifiedPath("fh:house-daily-model", paths.houseDailyModel()),
+                new IdentifiedPath("fh:resident-daily-model", paths.residentDailyModel()),
                 new IdentifiedPath("fh:town-food-resource-amount", paths.townFoodResourceAmount()),
                 new IdentifiedPath("fh:generator-fuel-model", paths.generatorFuelModel()),
                 new IdentifiedPath("fh:generator-heat-field-model", paths.generatorHeatFieldModel()),
@@ -257,35 +259,34 @@ public final class TownStageZeroAudit {
         TownModelParameters.MiningParameters mining = parameters.mining();
         TownModelParameters.HuntingParameters hunting = parameters.hunting();
         TownModelParameters.GeneratorT1Parameters generator = parameters.generatorT1();
-        add(values, "mining.baseOutputPerStandardWorkerDay", mining.baseOutputPerStandardWorkerDay(),
-                "item/SWE/day", "java-default", paths.townModelParameters(),
-                "TownModelParameters.Defaults.MINING_BASE_OUTPUT_PER_SWE_DAY");
+        addMiningParameters(values, mining, paths.townModelParameters());
         addProductivity(values, "mining.productivity", mining.productivity(), paths.townModelParameters());
-        add(values, "hunting.expectedLootRollsPerStandardWorkerDay",
-                hunting.expectedLootRollsPerStandardWorkerDay(), "roll/SWE/day", "java-default",
-                paths.townModelParameters(),
-                "TownModelParameters.Defaults.HUNTING_EXPECTED_LOOT_ROLLS_PER_SWE_DAY");
+        addHuntingParameters(values, hunting, paths.townModelParameters());
         addProductivity(values, "hunting.productivity", hunting.productivity(), paths.townModelParameters());
-        add(values, "housing.foodConsumptionPerResidentDay",
-                parameters.housing().foodConsumptionPerResidentDay(), "food-unit/resident/day",
-                "java-default", paths.townModelParameters(),
-                "TownModelParameters.Defaults.FOOD_PER_RESIDENT_DAY");
+        addHousingParameters(values, parameters.housing(), paths.townModelParameters());
+        addResidentParameters(values, parameters.residents(), paths.townModelParameters());
+        addBuildingScoringParameters(values, parameters.buildingScoring(), paths.townModelParameters());
+        addTerrainResourceParameters(values, parameters.terrainResources(), paths.townModelParameters());
         add(values, "generatorT1.baseFuelDurationMultiplier", generator.baseFuelDurationMultiplier(),
-                "dimensionless", "java-constant", paths.generatorFuelModel(),
-                "GeneratorFuelModel.CURRENT_BASE_FUEL_DURATION_MULTIPLIER");
+                "dimensionless", "shared-default", paths.townModelParameters(),
+                "TownModelParameters.Defaults.GENERATOR_T1_BASE_FUEL_DURATION_MULTIPLIER -> "
+                        + "FHConfig.SERVER.TOWN.GENERATOR_T1.baseFuelDurationMultiplier");
         add(values, "generatorT1.baseProcessTicksPerGameTick", generator.baseProcessTicksPerGameTick(),
-                "process-tick/game-tick", "java-constant", paths.generatorFuelModel(),
-                "GeneratorFuelModel.CURRENT_BASE_PROCESS_TICKS_PER_GAME_TICK");
+                "process-tick/game-tick", "shared-default", paths.townModelParameters(),
+                "TownModelParameters.Defaults.GENERATOR_T1_BASE_PROCESS_TICKS_PER_GAME_TICK -> "
+                        + "FHConfig.SERVER.TOWN.GENERATOR_T1.baseProcessTicksPerGameTick");
         add(values, "generatorT1.overdriveExtraProcessTicksPerGameTick",
                 generator.overdriveExtraProcessTicksPerGameTick(), "process-tick/game-tick",
-                "java-constant", paths.generatorFuelModel(),
-                "GeneratorFuelModel.CURRENT_OVERDRIVE_EXTRA_PROCESS_TICKS_PER_GAME_TICK");
+                "shared-default", paths.townModelParameters(),
+                "TownModelParameters.Defaults.GENERATOR_T1_OVERDRIVE_EXTRA_PROCESS_TICKS_PER_GAME_TICK -> "
+                        + "FHConfig.SERVER.TOWN.GENERATOR_T1.overdriveExtraProcessTicksPerGameTick");
         add(values, "generatorT1.townBatchGameTicks", generator.townBatchGameTicks(),
-                "game-tick/batch", "java-constant", paths.generatorFuelModel(),
-                "GeneratorFuelModel.CURRENT_TOWN_BATCH_GAME_TICKS");
+                "game-tick/batch", "shared-default", paths.townModelParameters(),
+                "TownModelParameters.Defaults.TOWN_UPDATE_INTERVAL_GAME_TICKS -> "
+                        + "FHConfig.SERVER.TOWN.townUpdateIntervalGameTicks");
         add(values, "generatorT1.gameTicksPerDay", generator.gameTicksPerDay(),
-                "game-tick/day", "java-constant", paths.generatorFuelModel(),
-                "GeneratorFuelModel.GAME_TICKS_PER_DAY");
+                "game-tick/day", "minecraft-unit", paths.townModelParameters(),
+                "TownModelParameters.GameUnits.GAME_TICKS_PER_DAY");
         add(values, "generatorT1.coalRecipeProcessTicks", coalRecipeTicks,
                 "process-tick/item", "fh-recipe", paths.generatorCoal(), "time");
         add(values, "generatorT1.cokeRecipeProcessTicks", cokeRecipeTicks,
@@ -300,16 +301,19 @@ public final class TownStageZeroAudit {
                 efficiencyLevelOne + efficiencyLevelTwo, "dimensionless", "derived",
                 paths.generatorEfficiencyTwo(), "level1Bonus + level2Bonus");
         add(values, "generatorT1.baseRadiusBlocks", generator.baseRadiusBlocks(), "block",
-                "java-constant", paths.generatorHeatFieldModel(),
-                "GeneratorHeatFieldModel.CURRENT_BASE_RADIUS_BLOCKS");
+                "shared-default", paths.townModelParameters(),
+                "TownModelParameters.Defaults.GENERATOR_T1_BASE_RADIUS_BLOCKS -> "
+                        + "FHConfig.SERVER.TOWN.GENERATOR_T1.baseRadiusBlocks");
         add(values, "generatorT1.additionalRadiusPerLevelBlocks",
-                generator.additionalRadiusPerLevelBlocks(), "block/level", "java-constant",
-                paths.generatorHeatFieldModel(),
-                "GeneratorHeatFieldModel.CURRENT_ADDITIONAL_RADIUS_PER_LEVEL_BLOCKS");
+                generator.additionalRadiusPerLevelBlocks(), "block/level", "shared-default",
+                paths.townModelParameters(),
+                "TownModelParameters.Defaults.GENERATOR_T1_ADDITIONAL_RADIUS_PER_LEVEL_BLOCKS -> "
+                        + "FHConfig.SERVER.TOWN.GENERATOR_T1.additionalRadiusPerLevelBlocks");
         add(values, "generatorT1.temperaturePerLevelCelsius", generator.temperaturePerLevelCelsius(),
-                "celsius/level", "java-constant",
-                paths.generatorHeatFieldModel(),
-                "GeneratorHeatFieldModel.CURRENT_TEMPERATURE_PER_LEVEL_CELSIUS");
+                "celsius/level", "shared-default",
+                paths.townModelParameters(),
+                "TownModelParameters.Defaults.GENERATOR_T1_TEMPERATURE_PER_LEVEL_CELSIUS -> "
+                        + "FHConfig.SERVER.TOWN.GENERATOR_T1.temperaturePerLevelCelsius");
 
         for (TownModelParameters.MeatFoodParameters meat : parameters.meatFoods()) {
             String prefix = "food." + meat.rawItem();
@@ -358,6 +362,7 @@ public final class TownStageZeroAudit {
         fields.put("bonusAtMaximumProficiency", productivity.bonusAtMaximumProficiency());
         fields.put("minimumProductivity", productivity.minimumProductivity());
         fields.put("maximumProductivity", productivity.maximumProductivity());
+        String configSection = prefix.startsWith("mining.") ? "MINING" : "HUNTING";
         fields.forEach((name, value) -> {
             String unit;
             if (name.endsWith("Weight")) {
@@ -367,9 +372,253 @@ public final class TownStageZeroAudit {
             } else {
                 unit = "SWE/worker";
             }
-            add(values, prefix + "." + name, value, unit, "java-default", source,
-                    "TownModelParameters.Defaults");
+            add(values, prefix + "." + name, value, unit, "shared-default", source,
+                    "TownModelParameters.Defaults." + configSection + "_"
+                            + productivityDefaultSuffix(name) + " -> FHConfig.SERVER.TOWN."
+                            + configSection + "." + productivityConfigField(name));
         });
+    }
+
+    private static void addMiningParameters(
+            List<ParameterValue> values,
+            TownModelParameters.MiningParameters mining,
+            Path source
+    ) {
+        addShared(values, "mining.baseOutputPerStandardWorkerDay", mining.baseOutputPerStandardWorkerDay(),
+                "item/SWE/day", source, "MINING_BASE_OUTPUT_PER_SWE_DAY", "MINING.baseOutputPerStandardWorkerDay");
+        addShared(values, "mining.floorBlocksPerWorkerSlot", mining.floorBlocksPerWorkerSlot(),
+                "block2/worker", source, "MINING_FLOOR_BLOCKS_PER_WORKER_SLOT", "MINING.floorBlocksPerWorkerSlot");
+        addShared(values, "mining.minimumWorkerSlots", mining.minimumWorkerSlots(),
+                "worker", source, "MINING_MINIMUM_WORKER_SLOTS", "MINING.minimumWorkerSlots");
+        addShared(values, "mining.connectionRadiusBlocks", mining.connectionRadiusBlocks(),
+                "block", source, "MINING_CONNECTION_RADIUS_BLOCKS", "MINING.connectionRadiusBlocks");
+        addShared(values, "mining.assignmentBasePriority", mining.assignmentBasePriority(),
+                "priority", source, "MINING_ASSIGNMENT_BASE_PRIORITY", "MINING.assignmentBasePriority");
+        addShared(values, "mining.assignmentPenaltyPerWorker", mining.assignmentPenaltyPerWorker(),
+                "priority/worker", source, "MINING_ASSIGNMENT_PENALTY_PER_WORKER", "MINING.assignmentPenaltyPerWorker");
+        addShared(values, "mining.assignmentFillRatioBonus", mining.assignmentFillRatioBonus(),
+                "priority", source, "MINING_ASSIGNMENT_FILL_RATIO_BONUS", "MINING.assignmentFillRatioBonus");
+    }
+
+    private static void addHuntingParameters(
+            List<ParameterValue> values,
+            TownModelParameters.HuntingParameters hunting,
+            Path source
+    ) {
+        addShared(values, "hunting.expectedLootRollsPerStandardWorkerDay",
+                hunting.expectedLootRollsPerStandardWorkerDay(), "roll/SWE/day", source,
+                "HUNTING_EXPECTED_LOOT_ROLLS_PER_SWE_DAY", "HUNTING.expectedLootRollsPerStandardWorkerDay");
+        addShared(values, "hunting.passiveExpectedLootRollsPerBaseDay",
+                hunting.passiveExpectedLootRollsPerBaseDay(), "roll/base/day", source,
+                "HUNTING_PASSIVE_EXPECTED_LOOT_ROLLS_PER_BASE_DAY", "HUNTING.passiveExpectedLootRollsPerBaseDay");
+        addShared(values, "hunting.useFractionalLootRollCarry", hunting.useFractionalLootRollCarry(),
+                "boolean", source, "HUNTING_USE_FRACTIONAL_LOOT_ROLL_CARRY", "HUNTING.useFractionalLootRollCarry");
+        addShared(values, "hunting.floorBlocksPerWorkerSlot", hunting.floorBlocksPerWorkerSlot(),
+                "block2/worker", source, "HUNTING_FLOOR_BLOCKS_PER_WORKER_SLOT", "HUNTING.floorBlocksPerWorkerSlot");
+        addShared(values, "hunting.minimumWorkerSlots", hunting.minimumWorkerSlots(),
+                "worker", source, "HUNTING_MINIMUM_WORKER_SLOTS", "HUNTING.minimumWorkerSlots");
+        addShared(values, "hunting.minimumFloorAreaBlocks", hunting.minimumFloorAreaBlocks(),
+                "block2", source, "HUNTING_MINIMUM_FLOOR_AREA_BLOCKS", "HUNTING.minimumFloorAreaBlocks");
+        addShared(values, "hunting.minimumInteriorVolumeBlocks", hunting.minimumInteriorVolumeBlocks(),
+                "block3", source, "HUNTING_MINIMUM_INTERIOR_VOLUME_BLOCKS", "HUNTING.minimumInteriorVolumeBlocks");
+        addShared(values, "hunting.minimumWorkingTemperatureCelsius", hunting.minimumWorkingTemperatureCelsius(),
+                "celsius", source, "HUNTING_MINIMUM_WORKING_TEMPERATURE_CELSIUS", "HUNTING.minimumWorkingTemperatureCelsius");
+        addShared(values, "hunting.spaceRatingWeight", hunting.spaceRatingWeight(),
+                "relative-weight", source, "HUNTING_SPACE_RATING_WEIGHT", "HUNTING.spaceRatingWeight");
+        addShared(values, "hunting.temperatureRatingWeight", hunting.temperatureRatingWeight(),
+                "relative-weight", source, "HUNTING_TEMPERATURE_RATING_WEIGHT", "HUNTING.temperatureRatingWeight");
+        addShared(values, "hunting.assignmentBasePriority", hunting.assignmentBasePriority(),
+                "priority", source, "HUNTING_ASSIGNMENT_BASE_PRIORITY", "HUNTING.assignmentBasePriority");
+        addShared(values, "hunting.assignmentPenaltyPerWorker", hunting.assignmentPenaltyPerWorker(),
+                "priority/worker", source, "HUNTING_ASSIGNMENT_PENALTY_PER_WORKER", "HUNTING.assignmentPenaltyPerWorker");
+        addShared(values, "hunting.assignmentFillRatioBonus", hunting.assignmentFillRatioBonus(),
+                "priority", source, "HUNTING_ASSIGNMENT_FILL_RATIO_BONUS", "HUNTING.assignmentFillRatioBonus");
+        addShared(values, "hunting.assignmentRatingMultiplier", hunting.assignmentRatingMultiplier(),
+                "priority/rating", source, "HUNTING_ASSIGNMENT_RATING_MULTIPLIER", "HUNTING.assignmentRatingMultiplier");
+    }
+
+    private static void addHousingParameters(
+            List<ParameterValue> values,
+            TownModelParameters.HousingParameters housing,
+            Path source
+    ) {
+        addShared(values, "housing.foodConsumptionPerResidentDay", housing.foodConsumptionPerResidentDay(),
+                "food-unit/resident/day", source, "HOUSING_FOOD_PER_RESIDENT_DAY", "HOUSING.foodConsumptionPerResidentDay");
+        addShared(values, "housing.nutritionReferencePerFoodUnit", housing.nutritionReferencePerFoodUnit(),
+                "nutrition/food-unit", source, "HOUSING_NUTRITION_REFERENCE_PER_FOOD_UNIT", "HOUSING.nutritionReferencePerFoodUnit");
+        addShared(values, "housing.minimumNutritionRecoveryMultiplier", housing.minimumNutritionRecoveryMultiplier(),
+                "dimensionless", source, "HOUSING_MINIMUM_NUTRITION_RECOVERY_MULTIPLIER", "HOUSING.minimumNutritionRecoveryMultiplier");
+        addShared(values, "housing.healthLossAtZeroFoodPerResidentDay", housing.healthLossAtZeroFoodPerResidentDay(),
+                "health/resident/day", source, "HOUSING_HEALTH_LOSS_AT_ZERO_FOOD_PER_RESIDENT_DAY", "HOUSING.healthLossAtZeroFoodPerResidentDay");
+        addShared(values, "housing.mentalLossAtZeroFoodPerResidentDay", housing.mentalLossAtZeroFoodPerResidentDay(),
+                "mental/resident/day", source, "HOUSING_MENTAL_LOSS_AT_ZERO_FOOD_PER_RESIDENT_DAY", "HOUSING.mentalLossAtZeroFoodPerResidentDay");
+        addShared(values, "housing.maximumHealthRecoveryPerResidentDay", housing.maximumHealthRecoveryPerResidentDay(),
+                "health/resident/day", source, "HOUSING_MAXIMUM_HEALTH_RECOVERY_PER_RESIDENT_DAY", "HOUSING.maximumHealthRecoveryPerResidentDay");
+        addShared(values, "housing.maximumMentalRecoveryPerResidentDay", housing.maximumMentalRecoveryPerResidentDay(),
+                "mental/resident/day", source, "HOUSING_MAXIMUM_MENTAL_RECOVERY_PER_RESIDENT_DAY", "HOUSING.maximumMentalRecoveryPerResidentDay");
+        addShared(values, "housing.minimumFloorAreaBlocks", housing.minimumFloorAreaBlocks(),
+                "block2", source, "HOUSING_MINIMUM_FLOOR_AREA_BLOCKS", "HOUSING.minimumFloorAreaBlocks");
+        addShared(values, "housing.minimumInteriorVolumeBlocks", housing.minimumInteriorVolumeBlocks(),
+                "block3", source, "HOUSING_MINIMUM_INTERIOR_VOLUME_BLOCKS", "HOUSING.minimumInteriorVolumeBlocks");
+        addShared(values, "housing.minimumTemperatureCelsius", housing.minimumTemperatureCelsius(),
+                "celsius", source, "HOUSING_MINIMUM_TEMPERATURE_CELSIUS", "HOUSING.minimumTemperatureCelsius");
+        addShared(values, "housing.maximumTemperatureCelsius", housing.maximumTemperatureCelsius(),
+                "celsius", source, "HOUSING_MAXIMUM_TEMPERATURE_CELSIUS", "HOUSING.maximumTemperatureCelsius");
+        addShared(values, "housing.floorBlocksPerResident", housing.floorBlocksPerResident(),
+                "block2/resident", source, "HOUSING_FLOOR_BLOCKS_PER_RESIDENT", "HOUSING.floorBlocksPerResident");
+        addShared(values, "housing.temperatureComfortWeight", housing.temperatureComfortWeight(),
+                "relative-weight", source, "HOUSING_TEMPERATURE_COMFORT_WEIGHT", "HOUSING.temperatureComfortWeight");
+        addShared(values, "housing.spaceComfortWeight", housing.spaceComfortWeight(),
+                "relative-weight", source, "HOUSING_SPACE_COMFORT_WEIGHT", "HOUSING.spaceComfortWeight");
+        addShared(values, "housing.decorationComfortWeight", housing.decorationComfortWeight(),
+                "relative-weight", source, "HOUSING_DECORATION_COMFORT_WEIGHT", "HOUSING.decorationComfortWeight");
+        TownModelParameters.DecorationRatingParameters decoration = housing.decorationRating();
+        addShared(values, "housing.decorationRating.countLogOffset", decoration.countLogOffset(),
+                "item", source, "DECORATION_COUNT_LOG_OFFSET", "HOUSING.decorationCountLogOffset");
+        addShared(values, "housing.decorationRating.countLogMultiplier", decoration.countLogMultiplier(),
+                "score", source, "DECORATION_COUNT_LOG_MULTIPLIER", "HOUSING.decorationCountLogMultiplier");
+        addShared(values, "housing.decorationRating.typeBaseScore", decoration.typeBaseScore(),
+                "score/type", source, "DECORATION_TYPE_BASE_SCORE", "HOUSING.decorationTypeBaseScore");
+        addShared(values, "housing.decorationRating.baseDemand", decoration.baseDemand(),
+                "score", source, "DECORATION_BASE_DEMAND", "HOUSING.decorationBaseDemand");
+        addShared(values, "housing.decorationRating.floorBlocksPerDemand", decoration.floorBlocksPerDemand(),
+                "block2/score", source, "DECORATION_FLOOR_BLOCKS_PER_DEMAND", "HOUSING.decorationFloorBlocksPerDemand");
+    }
+
+    private static void addResidentParameters(
+            List<ParameterValue> values,
+            TownModelParameters.ResidentParameters residents,
+            Path source
+    ) {
+        addShared(values, "residents.homelessHealthLossPerDay", residents.homelessHealthLossPerDay(),
+                "health/resident/day", source, "RESIDENT_HOMELESS_HEALTH_LOSS_PER_DAY", "RESIDENT_RULES.homelessHealthLossPerDay");
+        addShared(values, "residents.removalHealthThreshold", residents.removalHealthThreshold(),
+                "health", source, "RESIDENT_REMOVAL_HEALTH_THRESHOLD", "RESIDENT_RULES.removalHealthThreshold");
+        addShared(values, "residents.removalMentalThreshold", residents.removalMentalThreshold(),
+                "mental", source, "RESIDENT_REMOVAL_MENTAL_THRESHOLD", "RESIDENT_RULES.removalMentalThreshold");
+        addShared(values, "residents.minimumWorkingAge", residents.minimumWorkingAge(),
+                "age-group", source, "RESIDENT_MINIMUM_WORKING_AGE", "RESIDENT_RULES.minimumWorkingAge");
+        addShared(values, "residents.minimumWorkingHealthExclusive", residents.minimumWorkingHealthExclusive(),
+                "health", source, "RESIDENT_MINIMUM_WORKING_HEALTH_EXCLUSIVE", "RESIDENT_RULES.minimumWorkingHealthExclusive");
+        addShared(values, "residents.minimumWorkingMentalExclusive", residents.minimumWorkingMentalExclusive(),
+                "mental", source, "RESIDENT_MINIMUM_WORKING_MENTAL_EXCLUSIVE", "RESIDENT_RULES.minimumWorkingMentalExclusive");
+        addShared(values, "residents.workRequiresHousing", residents.workRequiresHousing(),
+                "boolean", source, "RESIDENT_WORK_REQUIRES_HOUSING", "RESIDENT_RULES.workRequiresHousing");
+        addShared(values, "residents.maximumWorkProficiency", residents.maximumWorkProficiency(),
+                "proficiency-point", source, "RESIDENT_MAXIMUM_WORK_PROFICIENCY", "RESIDENT_PROGRESSION.maximumWorkProficiency");
+        addShared(values, "residents.proficiencyGrowthAtZeroPerWorkday", residents.proficiencyGrowthAtZeroPerWorkday(),
+                "proficiency-point/workday", source, "RESIDENT_PROFICIENCY_GROWTH_AT_ZERO_PER_WORKDAY", "RESIDENT_PROGRESSION.proficiencyGrowthAtZeroPerWorkday");
+        addShared(values, "residents.minimumProficiencyGrowthPerWorkday", residents.minimumProficiencyGrowthPerWorkday(),
+                "proficiency-point/workday", source, "RESIDENT_MINIMUM_PROFICIENCY_GROWTH_PER_WORKDAY", "RESIDENT_PROGRESSION.minimumProficiencyGrowthPerWorkday");
+        TownModelParameters.ResidentAgingParameters aging = residents.aging();
+        addShared(values, "residents.aging.infantToChildDays", aging.infantToChildDays(),
+                "day", source, "RESIDENT_INFANT_TO_CHILD_DAYS", "RESIDENT_AGING.infantToChildDays");
+        addShared(values, "residents.aging.childToAdultDays", aging.childToAdultDays(),
+                "day", source, "RESIDENT_CHILD_TO_ADULT_DAYS", "RESIDENT_AGING.childToAdultDays");
+        addShared(values, "residents.aging.infantStrengthGainPerDay", aging.infantStrengthGainPerDay(),
+                "strength/day", source, "RESIDENT_INFANT_STRENGTH_GAIN_PER_DAY", "RESIDENT_AGING.infantStrengthGainPerDay");
+        addShared(values, "residents.aging.infantIntelligenceGainPerDay", aging.infantIntelligenceGainPerDay(),
+                "intelligence/day", source, "RESIDENT_INFANT_INTELLIGENCE_GAIN_PER_DAY", "RESIDENT_AGING.infantIntelligenceGainPerDay");
+        addShared(values, "residents.aging.infantAttributeCap", aging.infantAttributeCap(),
+                "attribute", source, "RESIDENT_INFANT_ATTRIBUTE_CAP", "RESIDENT_AGING.infantAttributeCap");
+        addShared(values, "residents.aging.childStrengthGainPerDay", aging.childStrengthGainPerDay(),
+                "strength/day", source, "RESIDENT_CHILD_STRENGTH_GAIN_PER_DAY", "RESIDENT_AGING.childStrengthGainPerDay");
+        addShared(values, "residents.aging.childIntelligenceGainPerDay", aging.childIntelligenceGainPerDay(),
+                "intelligence/day", source, "RESIDENT_CHILD_INTELLIGENCE_GAIN_PER_DAY", "RESIDENT_AGING.childIntelligenceGainPerDay");
+        addShared(values, "residents.aging.childStrengthCap", aging.childStrengthCap(),
+                "strength", source, "RESIDENT_CHILD_STRENGTH_CAP", "RESIDENT_AGING.childStrengthCap");
+        addShared(values, "residents.aging.childIntelligenceCap", aging.childIntelligenceCap(),
+                "intelligence", source, "RESIDENT_CHILD_INTELLIGENCE_CAP", "RESIDENT_AGING.childIntelligenceCap");
+        addShared(values, "residents.aging.adultStrengthGainPerDay", aging.adultStrengthGainPerDay(),
+                "strength/day", source, "RESIDENT_ADULT_STRENGTH_GAIN_PER_DAY", "RESIDENT_AGING.adultStrengthGainPerDay");
+        addShared(values, "residents.aging.adultIntelligenceGainPerDay", aging.adultIntelligenceGainPerDay(),
+                "intelligence/day", source, "RESIDENT_ADULT_INTELLIGENCE_GAIN_PER_DAY", "RESIDENT_AGING.adultIntelligenceGainPerDay");
+        addShared(values, "residents.aging.adultAttributeCap", aging.adultAttributeCap(),
+                "attribute", source, "RESIDENT_ADULT_ATTRIBUTE_CAP", "RESIDENT_AGING.adultAttributeCap");
+        addShared(values, "residents.aging.elderStrengthDecayPerDay", aging.elderStrengthDecayPerDay(),
+                "strength/day", source, "RESIDENT_ELDER_STRENGTH_DECAY_PER_DAY", "RESIDENT_AGING.elderStrengthDecayPerDay");
+        addShared(values, "residents.aging.elderStrengthFloor", aging.elderStrengthFloor(),
+                "strength", source, "RESIDENT_ELDER_STRENGTH_FLOOR", "RESIDENT_AGING.elderStrengthFloor");
+    }
+
+    private static void addBuildingScoringParameters(
+            List<ParameterValue> values,
+            TownModelParameters.BuildingScoringParameters scoring,
+            Path source
+    ) {
+        TownModelParameters.TemperatureRatingParameters temperature = scoring.temperature();
+        addShared(values, "buildingScoring.temperature.comfortableTemperatureCelsius", temperature.comfortableTemperatureCelsius(),
+                "celsius", source, "BUILDING_COMFORTABLE_TEMPERATURE_CELSIUS", "BUILDING_SCORING.comfortableTemperatureCelsius");
+        addShared(values, "buildingScoring.temperature.minimumRating", temperature.minimumRating(),
+                "rating", source, "BUILDING_MINIMUM_TEMPERATURE_RATING", "BUILDING_SCORING.minimumTemperatureRating");
+        addShared(values, "buildingScoring.temperature.sigmoidSlopePerCelsius", temperature.sigmoidSlopePerCelsius(),
+                "1/celsius", source, "BUILDING_TEMPERATURE_RATING_SLOPE", "BUILDING_SCORING.temperatureRatingSlope");
+        addShared(values, "buildingScoring.temperature.halfPointTemperatureDifferenceCelsius", temperature.halfPointTemperatureDifferenceCelsius(),
+                "celsius", source, "BUILDING_TEMPERATURE_RATING_HALF_POINT_DIFFERENCE_CELSIUS", "BUILDING_SCORING.temperatureRatingHalfPointDifferenceCelsius");
+        TownModelParameters.SpaceRatingParameters space = scoring.space();
+        addShared(values, "buildingScoring.space.areaCoefficient", space.areaCoefficient(),
+                "score/block2", source, "BUILDING_SPACE_AREA_COEFFICIENT", "BUILDING_SCORING.spaceAreaCoefficient");
+        addShared(values, "buildingScoring.space.heightLogCoefficient", space.heightLogCoefficient(),
+                "score/block2", source, "BUILDING_SPACE_HEIGHT_LOG_COEFFICIENT", "BUILDING_SCORING.spaceHeightLogCoefficient");
+        addShared(values, "buildingScoring.space.heightLogOffset", space.heightLogOffset(),
+                "block", source, "BUILDING_SPACE_HEIGHT_LOG_OFFSET", "BUILDING_SCORING.spaceHeightLogOffset");
+        addShared(values, "buildingScoring.space.responseScale", space.responseScale(),
+                "1/score", source, "BUILDING_SPACE_RESPONSE_SCALE", "BUILDING_SCORING.spaceResponseScale");
+        addShared(values, "buildingScoring.space.responseExponent", space.responseExponent(),
+                "dimensionless", source, "BUILDING_SPACE_RESPONSE_EXPONENT", "BUILDING_SCORING.spaceResponseExponent");
+    }
+
+    private static void addTerrainResourceParameters(
+            List<ParameterValue> values,
+            TownModelParameters.TerrainResourceParameters resources,
+            Path source
+    ) {
+        addShared(values, "terrainResources.oreReservePerChunk", resources.oreReservePerChunk(),
+                "ore/chunk", source, "ORE_RESERVE_PER_CHUNK", "RESOURCE.oreReservePerChunk");
+        addShared(values, "terrainResources.oreRecoveryPerChunkDay", resources.oreRecoveryPerChunkDay(),
+                "ore/chunk/day", source, "ORE_RECOVERY_PER_CHUNK_DAY", "RESOURCE.oreRecoveryPerChunkDay");
+        addShared(values, "terrainResources.huntReservePerSquareBlock", resources.huntReservePerSquareBlock(),
+                "hunt/block2", source, "HUNT_RESERVE_PER_SQUARE_BLOCK", "RESOURCE.huntReservePerSquareBlock");
+        addShared(values, "terrainResources.huntRecoveryPerSquareBlockDay", resources.huntRecoveryPerSquareBlockDay(),
+                "hunt/block2/day", source, "HUNT_RECOVERY_PER_SQUARE_BLOCK_DAY", "RESOURCE.huntRecoveryPerSquareBlockDay");
+    }
+
+    private static void addShared(
+            List<ParameterValue> values,
+            String name,
+            Object value,
+            String unit,
+            Path source,
+            String defaultConstant,
+            String configPath
+    ) {
+        add(values, name, value, unit, "shared-default", source,
+                "TownModelParameters.Defaults." + defaultConstant
+                        + " -> FHConfig.SERVER.TOWN." + configPath);
+    }
+
+    private static String productivityDefaultSuffix(String fieldName) {
+        return switch (fieldName) {
+            case "healthWeight" -> "HEALTH_WEIGHT";
+            case "mentalWeight" -> "MENTAL_WEIGHT";
+            case "strengthWeight" -> "STRENGTH_WEIGHT";
+            case "intelligenceWeight" -> "INTELLIGENCE_WEIGHT";
+            case "productivityAtAttributeZero" -> "PRODUCTIVITY_AT_ATTRIBUTE_ZERO";
+            case "productivityAtAttributeHundred" -> "PRODUCTIVITY_AT_ATTRIBUTE_HUNDRED";
+            case "maximumProficiency" -> "MAXIMUM_PROFICIENCY";
+            case "bonusAtMaximumProficiency" -> "BONUS_AT_MAXIMUM_PROFICIENCY";
+            case "minimumProductivity" -> "MINIMUM_PRODUCTIVITY";
+            case "maximumProductivity" -> "MAXIMUM_PRODUCTIVITY";
+            default -> throw new IllegalArgumentException("Unknown productivity field: " + fieldName);
+        };
+    }
+
+    private static String productivityConfigField(String fieldName) {
+        return switch (fieldName) {
+            case "minimumProductivity" -> "minimumResidentProductivity";
+            case "maximumProductivity" -> "maximumResidentProductivity";
+            default -> fieldName;
+        };
     }
 
     private static void add(
@@ -549,6 +798,8 @@ public final class TownStageZeroAudit {
     private record InputPaths(
             Path townModelParameters,
             Path townMathFunctions,
+            Path houseDailyModel,
+            Path residentDailyModel,
             Path townFoodResourceAmount,
             Path generatorFuelModel,
             Path generatorHeatFieldModel,
@@ -566,6 +817,8 @@ public final class TownStageZeroAudit {
             return new InputPaths(
                     projectRoot.resolve("src/main/java/com/teammoeg/frostedheart/content/town/model/TownModelParameters.java"),
                     projectRoot.resolve("src/main/java/com/teammoeg/frostedheart/content/town/TownMathFunctions.java"),
+                    projectRoot.resolve("src/main/java/com/teammoeg/frostedheart/content/town/buildings/house/HouseDailyModel.java"),
+                    projectRoot.resolve("src/main/java/com/teammoeg/frostedheart/content/town/resident/ResidentDailyModel.java"),
                     projectRoot.resolve("src/main/java/com/teammoeg/frostedheart/content/town/resource/TownFoodResourceAmount.java"),
                     projectRoot.resolve("src/main/java/com/teammoeg/frostedheart/content/climate/block/generator/GeneratorFuelModel.java"),
                     projectRoot.resolve("src/main/java/com/teammoeg/frostedheart/content/climate/block/generator/GeneratorHeatFieldModel.java"),
@@ -582,7 +835,8 @@ public final class TownStageZeroAudit {
 
         void requireAll() throws IOException {
             for (Path path : List.of(
-                    townModelParameters, townMathFunctions, townFoodResourceAmount,
+                    townModelParameters, townMathFunctions, houseDailyModel, residentDailyModel,
+                    townFoodResourceAmount,
                     generatorFuelModel, generatorHeatFieldModel, generatorData,
                     climateCommonEvents, fhConfig, generatorCoal,
                     generatorCoke, huntingLoot, biomeMineScript,

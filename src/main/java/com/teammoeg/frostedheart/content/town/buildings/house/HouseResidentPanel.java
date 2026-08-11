@@ -25,6 +25,7 @@ import com.teammoeg.chorda.client.cui.base.UIElement;
 import com.teammoeg.frostedheart.content.town.buildings.hunting.HuntingBaseBuilding;
 import com.teammoeg.frostedheart.content.town.buildings.mine.MineBaseBuilding;
 import com.teammoeg.frostedheart.content.town.resident.Resident;
+import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import com.teammoeg.frostedheart.content.town.tabs.TownTextLayout;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
@@ -183,11 +184,11 @@ final class HouseResidentPanel extends UIElement {
         lines.add(statLine(
                 "gui.frostedheart.house.mining",
                 resident.getWorkProficiency(MineBaseBuilding.class),
-                Resident.MAX_WORK_PROFICIENCY));
+                FHConfig.SERVER.TOWN.RESIDENT_PROGRESSION.maximumWorkProficiency.get()));
         lines.add(statLine(
                 "gui.frostedheart.house.hunting",
                 resident.getWorkProficiency(HuntingBaseBuilding.class),
-                Resident.MAX_WORK_PROFICIENCY));
+                FHConfig.SERVER.TOWN.RESIDENT_PROGRESSION.maximumWorkProficiency.get()));
         lines.add(DetailLine.EMPTY);
 
         HouseBuilding house = menu.getHouse().orElse(null);

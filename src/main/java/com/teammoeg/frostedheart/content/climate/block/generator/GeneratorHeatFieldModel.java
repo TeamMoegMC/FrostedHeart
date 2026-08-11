@@ -20,10 +20,6 @@ package com.teammoeg.frostedheart.content.climate.block.generator;
 
 /** Shared level-to-spherical-heat-field formulas for generators. */
 public final class GeneratorHeatFieldModel {
-    public static final int CURRENT_BASE_RADIUS_BLOCKS = 16;
-    public static final int CURRENT_ADDITIONAL_RADIUS_PER_LEVEL_BLOCKS = 8;
-    public static final int CURRENT_TEMPERATURE_PER_LEVEL_CELSIUS = 10;
-
     private GeneratorHeatFieldModel() {
     }
 

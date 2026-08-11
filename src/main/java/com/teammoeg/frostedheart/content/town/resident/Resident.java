@@ -61,7 +61,6 @@ public class Resident {
     public static final int AGE_ADULT = 2;
     /** 年龄组：3 老人（力量萎缩、智力更高、初始熟练度更高），只天然刷新不会成长而来 */
     public static final int AGE_ELDER = 3;
-    public static final double MAX_WORK_PROFICIENCY = 100.0;
 	public static final Codec<Resident> CODEC=RecordCodecBuilder.create(t->t.group(
             Codec.STRING.fieldOf("firstName").forGetter(o->o.firstName),
             Codec.STRING.fieldOf("lastName").forGetter(o->o.lastName),
@@ -272,7 +271,10 @@ public class Resident {
         }
 
         double gain = ResidentAttributeModel.calculateDailyProficiencyGain(
-                currentProficiency, growthAtZero, minimumGrowth);
+                currentProficiency,
+                growthAtZero,
+                minimumGrowth,
+                FHConfig.SERVER.TOWN.RESIDENT_PROGRESSION.maximumWorkProficiency.get());
         if (gain <= 0.0) {
             return currentProficiency;
         }
@@ -632,7 +634,9 @@ public class Resident {
         if (!Double.isFinite(proficiency)) {
             return 0.0;
         }
-        return Math.max(0.0, Math.min(MAX_WORK_PROFICIENCY, proficiency));
+        return Math.max(0.0, Math.min(
+                FHConfig.SERVER.TOWN.RESIDENT_PROGRESSION.maximumWorkProficiency.get(),
+                proficiency));
     }
 
     /**

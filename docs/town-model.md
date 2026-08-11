@@ -1,6 +1,6 @@
 # 城镇临界自给数值模型
 
-> 状态：阶段 0（参数快照与纯代数审计）已实现；阶段 1 及多日模拟尚未开始。2026-08-10 已先修复冷住宅跳过日结算、居民食物恒为 `1` 单位和同等级食物无序的问题，本文基线已同步更新。
+> 状态：阶段 0（参数快照与纯代数审计）已实现；阶段 1 及多日模拟尚未开始。2026-08-11 已把 T1、居民、住宅、采矿和狩猎的 FH 自有参数统一到单一默认值来源，并修复 T1 燃料批处理结转与效率浮点截断。气候与 T2 暂不进入参数表。
 >
 > 目标：把 FH/TWR 当前代码和数据中的城镇数值关系整理为一套可调用、可审计、可模拟的 Java 数学模型。本文是后续实现时的上下文基准。
 
@@ -25,11 +25,20 @@
 
 所有数值分为三类：
 
-1. **模型参数 `TownModelParameters`**：决定数学公式形状或生产率，可在模拟中覆盖。默认值来自当前 Java、`FHConfig`、FH 数据包或 TWR KubeJS。
+1. **模型参数 `TownModelParameters`**：决定数学公式形状或生产率，可在模拟中覆盖。当前纳入范围内所有由 FH Java 控制的默认值只在 `TownModelParameters.Defaults` 定义一次；模拟器由此构造参数，`FHConfig` 的对应配置项也只引用这些默认值。
 2. **场景参数 `TownScenario`**：描述某一座玩家城镇，例如人口、岗位、建筑体素、塔和加热器位置、初始库存、每日加工能力。这些不进入 `FHConfig`。
 3. **派生统计量**：由前两类计算，例如每 SWE 日产煤、每居民需要的猎人 SWE、塔的每日焦煤消耗。派生量不能与底层参数同时成为相互独立的配置，否则会产生矛盾。
 
 不过，最核心的派生量必须成为命令行工具的一等输出和一等扫描目标。数值策划可以直接要求“把每采矿 SWE 日产煤调到 2.0”，工具再唯一地换算为需要修改的底层参数。
+
+源码默认值、运行时值和外部数据的关系固定为：
+
+- 调整模组源码默认数值：只修改 `TownModelParameters.Defaults`。
+- 模拟器默认输入：调用 `TownModelParameters.currentDefaults()`，不读取 `FHConfig`，也不复制常量。
+- 游戏运行时：只读取 `FHConfig`；其默认值来自 `TownModelParameters.Defaults`，服务器 TOML 可以有意覆盖默认值。
+- 已生成的服务器 TOML 不会因模组默认值变化而覆盖服主的显式配置；测试新默认值时需要使用新世界配置或删除对应旧键。
+- FH/TWR recipe、loot table、tag、研究 JSON 和 KubeJS 权重属于外部数据输入，由 `audit` 单独解析，不能伪装成 Java 配置默认值。
+- `24000 game ticks/day` 等 Minecraft 单位换算放在 `TownModelParameters.GameUnits`，不是可调玩法参数。
 
 ### 1.3 每个符号都必须有定义
 
@@ -89,7 +98,7 @@ HUNT 地形资源首版也不作为瓶颈。当前默认总量约为数百万次
 
 | 系统 | 当前频率 | 当前行为 |
 |---|---:|---|
-| 能量塔城镇接管 | 约每 20 tick | `TeamTownData.tickSecond` 调用 `GeneratorData.townTick`，一次批量处理 20 tick 燃料 |
+| 能量塔城镇接管 | 默认每 20 tick | 调度间隔读取 `FHConfig.SERVER.TOWN.townUpdateIntervalGameTicks`；`TeamTownData.tickSecond` 调用 `GeneratorData.townTick` 批量处理同样数量的 tick |
 | 方块实体普通 tick | 每 tick | 住宅/狩猎基地只更新旧热网温度修正，并把自己登记进全局扫描队列 |
 | 建筑结构与温度扫描 | 默认整个维度每 tick 执行 1 个已登记任务 | `SchedulerQueue` 轮询建筑；每栋建筑的实际扫描间隔约为“登记建筑数 / 每 tick 任务数” |
 | 气候缓存 | 每秒检查，数据按小时生成 | 气候温度在一个游戏小时内保持同一小时值 |
@@ -101,7 +110,7 @@ HUNT 地形资源首版也不作为瓶颈。当前默认总量约为数百万次
 
 - 气候和风险报告：每游戏小时更新。
 - 建筑实际日结算：只计算早晨时点的体素温度。
-- T1 燃料：每 20 tick 批处理，但剩余燃料过程 tick 会跨燃料物品和批次结转；长期速率与完整利用配方时长的解析值一致。
+- T1 燃料：按可配置的城镇更新间隔批处理，默认 20 tick；剩余燃料过程 tick 会跨燃料物品和批次结转，长期速率与逐 tick 解析值一致。
 - T2 热网：只有网络燃料与缓冲状态需要保留当前每 20 tick 的取整语义；不需要每 20 tick 重算建筑体素。
 
 ## 4. 气候、地点与方块温度
@@ -285,10 +294,10 @@ N_{fuel/day}=\frac{24000(c_{base}+c_{overdrive})}{D_{effective,f}}
 - 煤有效时长 `floor(1600×0.7)=1120`，消耗 `21.4286 coal/day`。
 - 焦煤有效时长 `floor(3200×0.7)=2240`，消耗 `10.7143 coke/day`。
 
-`TeamTownData.tickSecond` 每 20 game ticks 调用一次 `GeneratorData.townTick`。设一次批处理需要的燃料过程 tick 为
+设城镇能量塔更新间隔为 \(\Delta t_{town}\)，单位 game tick，默认值为 `20`。调度器和 `GeneratorData.townTick` 都读取 `FHConfig.SERVER.TOWN.townUpdateIntervalGameTicks`。一次批处理需要的燃料过程 tick 为
 
 \[
-b=20(c_{base}+c_{overdrive})
+b=\Delta t_{town}(c_{base}+c_{overdrive})
 \]
 
 修复后的 `GeneratorData` 把 `process` 严格定义为剩余燃料过程 tick 余额。设批次开始时余额为 \(R\)，其状态转移为：
@@ -301,7 +310,7 @@ b=20(c_{base}+c_{overdrive})
 R\leftarrow R-b
 \]
 
-判断条件使用严格小于号：余额刚好等于批次需求时直接消费，不提前装入下一份燃料。装入新燃料使用加法，因此不足一个批次的旧燃料余量也不会被覆盖。由此 1-tick 更新与 20-tick 更新的长期燃料率相同：
+判断条件使用严格小于号：余额刚好等于批次需求时直接消费，不提前装入下一份燃料。装入新燃料使用加法，因此不足一个批次的旧燃料余量也不会被覆盖。由此逐 tick 更新与任意合法批处理间隔的长期燃料率相同：
 
 - 煤：`D_effective=1120`，消耗 `21.4286 coal/day`。
 - 焦煤：`D_effective=2240`，消耗 `10.7143 coke/day`。
@@ -428,7 +437,7 @@ p_{min},p_{max}
 - 精神严格大于 `5`。
 - 不是婴儿；首版不存在婴儿。
 
-工作资格阈值也要进入居民参数，不能继续作为无名硬编码。
+这些条件现已进入 `ResidentParameters`，游戏侧由 `FHConfig.SERVER.TOWN.RESIDENT_RULES` 传给同一个纯函数 `ResidentDailyModel.canWork`。`minimumWorkingHealthExclusive` 和 `minimumWorkingMentalExclusive` 名称中的 `Exclusive` 表示居民属性必须**严格大于**阈值；默认值分别是 `10` 与 `5`。是否必须有住宅由 `workRequiresHousing=true` 控制，最低工作年龄组由 `minimumWorkingAge=1` 控制。
 
 ## 7. 采矿与煤炭
 
@@ -735,7 +744,7 @@ N_{space,b}=\left\lfloor\frac{S_{space,b}A_b}{a_{resident}}\right\rfloor
 N_{capacity,b}=\min(N_{space,b},B_b)
 \]
 
-住宅还要求最小地板面积 `4`、最小内部体积 `8`。这些当前硬编码值需要提取为参数。
+住宅还要求最小地板面积 `4`、最小内部体积 `8`。它们现为 `HousingParameters.minimumFloorAreaBlocks` 与 `minimumInteriorVolumeBlocks`，运行时分别读取同名 Housing 配置项。
 
 ### 9.3 装饰评分
 
@@ -875,7 +884,7 @@ M_N=m_{nutrition,min}+(1-m_{nutrition,min})Q_N
 - 精神 `<=5`：居民离开并从城镇移除。
 - 健康 `<=10` 或精神 `<=5`：不能工作。
 
-这些阈值和无家可归伤害都需要提取为居民参数。
+这些阈值和无家可归伤害现已进入 `ResidentParameters` 与 `FHConfig.SERVER.TOWN.RESIDENT_RULES`。`ResidentDailyModel.settleMorning` 固定执行“先扣无家可归健康，再按包含等号的阈值移除”，模拟器不再另写一份判断。
 
 每日调度现在区分两个判定：
 
@@ -884,35 +893,49 @@ M_N=m_{nutrition,min}+(1-m_{nutrition,min})Q_N
 
 因此冷住宅不再“免费静止”。已有居民仍会消耗食物并运行连续状态公式，但冷住宅不会接收新居民。当前修复有意只剥离温度门槛；无效、重叠或过小住宅仍不参与日结算，模拟 `current` 语义时必须保持这一边界并检查是否还存在关联残留问题。
 
+### 9.9 熟练度与年龄增长
+
+居民职业熟练度的保存上限为 `P_resident,max`，默认 `100`。一次有效工作日的熟练度增长为：
+
+\[
+\Delta P=\min\left(
+\max\left(g_0\left(1-\frac{P}{P_{resident,max}}\right),g_{min}\right),
+P_{resident,max}-P
+\right)
+\]
+
+- `maximumWorkProficiency` \(P_{resident,max}\)：居民可保存的职业熟练度上限，默认 `100`。
+- `proficiencyGrowthAtZeroPerWorkday` \(g_0\)：熟练度为零时每有效工作日增长量，默认 `2.4`。
+- `minimumProficiencyGrowthPerWorkday` \(g_{min}\)：未满级时的每日增长下限，默认 `0.25`。
+
+年龄增长仍按日结算，现有全部 `ResidentAging` 配置也已进入 `ResidentAgingParameters`：幼儿在第 `10` 日变为儿童、儿童在第 `30` 日变为青壮年；幼儿每日力量/智力各 `+0.2`、封顶 `40`；儿童每日力量 `+0.3`、智力 `+0.4`、分别封顶 `80/85`；青壮年每日两项各 `+0.05`、封顶 `60`；老人力量每日 `-0.1`、最低 `25`。这些参数已被快照记录，但阶段 1 的固定成年人口模拟不会立刻启用年龄变化。
+
 ## 10. 参数目录与配置归属
 
 ### 10.1 已在 `FHConfig` 中的参数
 
-实现时直接读取，不复制默认值：
+游戏实现只读取 `FHConfig`，模拟器只读取 `TownModelParameters`。当前已经完成单一默认值接线的参数组是：
 
-- 住宅：每居民食物需求、营养参考、最低营养恢复倍率、缺粮健康/精神损失、最大健康/精神恢复、三项舒适权重。
-- 采矿：每 SWE 总产量、工位面积、连接半径、属性生产力端点、熟练度奖励、生产力上下限和四项权重。
-- 狩猎：每 SWE 掉落次数、小数 carry、工位/面积/体积/温度要求、属性生产力端点、熟练度奖励、生产力上下限和四项权重。
-- 居民熟练度增长。
-- 每矿井区块矿物单位和 HUNT 资源参数。
+- `BuildingScoringParameters`：住宅、采矿和狩猎共用的空间评分五参数及温度评分四参数。
+- `HousingParameters`：食物与营养结算、健康/精神变化、最小面积/体积、分房温度范围、每居民有效面积、三项舒适权重及装饰评分五参数。
+- `ResidentParameters`：无家可归损伤、移除阈值、工作资格、熟练度上限与增长；其中 `ResidentAgingParameters` 包含全部 14 个年龄增长参数。
+- `MiningParameters`：每 SWE 产量、工位、连接半径、居民生产力和岗位分配参数。
+- `HuntingParameters`：每 SWE 掉落、被动掉落、carry、结构/温度门槛、工位、居民生产力、建筑评分权重和岗位分配参数。
+- `TerrainResourceParameters`：矿井区块矿物储量/恢复与 HUNT 面积储量/恢复。树木、研究点和废料资源不参与当前煤—肉闭环，暂未进入模型参数。
+- `GeneratorT1Parameters`：基础燃料时长倍率、普通/超载过程 tick 耗速、球形热场半径、每级温度和城镇更新间隔。
+
+当前共有 `105` 个可配置的 FH 默认常量进入 `TownModelParameters.Defaults`；另有 `24000 game ticks/day` 保留为不可调的 `GameUnits`。
 
 ### 10.2 当前硬编码、需要提取的模型参数
 
-下列值先进入纯 Java 参数 records；游戏侧开始调用纯函数时，再以保持当前默认值的方式加入 `FHConfig`：
+本轮完成后仍未提取的量只属于明确推迟的系统：
 
-- 塔和加热器的基础半径、额外等级半径、每级热场温度。
-- 基础燃料时长倍率 `0.7`。
-- 普通/超载每 tick 燃料过程消耗。
+- 加热器的基础半径、额外等级半径和每级热场温度。
 - T2 热缓冲、热量换算、燃料换算、provider 输出/容量。
 - 加热器消耗、容量和优先级。
-- 住宅最低/最高可结算温度、舒适温度、最小面积/体积、每居民有效面积。
-- 空间评分的 `1.55, 0.6, 1.6, 0.024, 1.11`。
-- 温度评分的 `0.017, 0.4, 10`。
-- 装饰评分的 `0.32, 1.75, 0.9, 6, 16`。
-- 无家可归健康损失、死亡/离开阈值、工作健康/精神阈值。
 - 长期气候事件概率、寒潮档位、持续时间、平静期、峰值和噪声参数。
 
-所有这些参数在模拟中都可覆盖。是否最终全部保留为面向服主的 `FHConfig` 项，可以在敏感度结果出来后再收窄；但纯函数中不能继续存在无法追踪的魔法数字。
+狩猎基地和住宅现存的旧直接热网消费者字段也故意不进入 `TownModelParameters`；它们要等 T2 时序与目标架构一起处理，不能成为 T1 自给结论的输入。
 
 ### 10.3 只属于 `TownScenario` 的参数
 
@@ -945,11 +968,13 @@ M_N=m_{nutrition,min}+(1-m_{nutrition,min})Q_N
 
 阶段 0 已建立不依赖 `Level`、NBT、方块实体或 Forge 注册表的纯 Java API：
 
-- `TownModelParameters`：目前聚合阶段 0 使用的 T1、住宅食物需求、采矿、狩猎与肉类食物参数；默认常量被 `FHConfig` 直接引用。
+- `TownModelParameters`：目前聚合 T1、公共建筑评分、居民、住宅、采矿、狩猎、矿物/HUNT 地形资源与肉类食物参数。`Defaults` 是纳入范围内 FH Java 参数的唯一源码默认值来源，`GameUnits` 只保存不可调的 Minecraft 单位换算。
 - `TownStageZeroModel.analyze(...)`：接受参数 records 和从数据文件解析出的矿权重、掉落条目、燃料时长，返回纯代数统计量。
 - `GeneratorFuelModel`：同时被 `GeneratorData` 与审计调用，包含有效时长、当前补料判定、理想燃料率和 20-tick 批处理燃料率。
 - `GeneratorHeatFieldModel`：同时被 `GeneratorData` 与审计调用，包含塔等级到球形半径和热场温度的映射。
-- `TownFoodResourceAmount` 与 `TownMathFunctions.linearResidentProductivity`：继续由游戏和审计共用。
+- `TownFoodResourceAmount` 与 `TownMathFunctions`：食物换算、SWE、空间、温度和装饰公式由游戏与模拟共用；评分函数的所有系数都必须由调用者传入。
+- `HouseDailyModel`：住宅结构门槛、食物/营养、舒适和居民恢复公式；游戏传 `FHConfig`，模拟器传 `TownModelParameters`。
+- `ResidentDailyModel`：晨间无家可归/移除与工作资格的唯一纯函数实现。
 
 后续阶段再按需增加：
 
@@ -980,12 +1005,12 @@ M_N=m_{nutrition,min}+(1-m_{nutrition,min})Q_N
 
 阶段 0 的 `audit` 只读取本阶段代数确实使用的来源：
 
-- FH `FHConfig` 中城镇默认参数。
+- FH `TownModelParameters.Defaults` 及其对应的 `FHConfig` 配置路径。
 - FH 煤和焦煤 generator recipes。
 - FH 狩猎掉落表。
 - TWR `biome_mine.js` 中 `fossil_deposits` 权重。
 - TWR `generator_efficiency_1/2.json` 研究加成。
-- 对仍为 Java 常量的参数，读取统一的参数快照构造器并记录对应源码符号。
+- 对 Java 控制的参数，记录 `TownModelParameters.Defaults -> FHConfig` 的完整映射；固定游戏单位单独标为 `minecraft-unit`。当前 `source-snapshot.json` 共记录 `155` 个输入，其中 `106` 个为 Java 共享默认值或固定游戏单位。
 
 FH 食物标签与营养 recipes 在阶段 2 加入真实库存消费时读取；群系温度在阶段 4 读取；`generator_heat_1` 与所有 T2 端点数据在阶段 5 读取。阶段 0 也不读取 IE 焦炉和 Create 风扇配方，因为具体机器将由场景中的每日加工能力替代。
 
@@ -1180,11 +1205,12 @@ Java `TownSimulationMain` 和 Gradle 入口 `runTownSimulation` 已建立。阶�
 
 ### 阶段 0：参数快照与纯代数审计
 
-状态：**已完成（2026-08-10）**。
+状态：**已完成并扩展（2026-08-11）**。
 
 - 建立参数 records 和 `audit`。
 - 读取 FH/TWR 数据并生成两个 JSON 报告。
 - 输出 SWE、煤产率、肉件数产率、生肉/全熟食物单位产率、居民食物需求和 T1 每日燃料消耗。
+- 完成居民、住宅、公共建筑评分、采矿/狩猎工作与矿物/HUNT 资源的共享参数快照；这些参数先进入 audit，按后续阶段逐步进入时间模拟。
 - 不运行多日模拟。
 
 验收：本文件第 12.3 节的理论基线全部精确出现，并且每个值能追溯到源码或数据文件。

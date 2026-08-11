@@ -98,7 +98,8 @@ public class MineBaseScreen extends StandardTownBuildingScreen<MineBaseMenu> {
                     resident -> ResidentAttributeModel.calculateDailyProficiencyGain(
                             resident.getWorkProficiency(MineBaseBuilding.class),
                             progression.proficiencyGrowthAtZeroPerWorkday.get(),
-                            progression.minimumProficiencyGrowthPerWorkday.get()),
+                            progression.minimumProficiencyGrowthPerWorkday.get(),
+                            progression.maximumWorkProficiency.get()),
                     Component.translatable("gui.frostedheart.mine_base.mining_proficiency"),
                     value -> Component.translatable(
                             "gui.frostedheart.mine_base.personal_contribution", one(value))

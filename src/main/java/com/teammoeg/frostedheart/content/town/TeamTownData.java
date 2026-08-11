@@ -61,6 +61,7 @@ import com.teammoeg.frostedheart.content.town.event.TownBuildingChangeEvent;
 import com.teammoeg.frostedheart.content.town.event.TownResidentChangeEvent;
 import com.teammoeg.frostedheart.content.town.event.TownResourceChangeEvent;
 import com.teammoeg.frostedheart.content.town.resident.Resident;
+import com.teammoeg.frostedheart.content.town.resident.ResidentDailyModel;
 import com.teammoeg.frostedheart.content.town.resident.WanderingRefugee;
 import com.teammoeg.frostedheart.content.town.resource.TeamTownResourceHolder;
 import com.teammoeg.frostedheart.content.town.resource.VirtualResourceType;
@@ -414,13 +415,18 @@ public class TeamTownData implements SpecialData{
         if (ITown.DEBUG_MODE) {
             return;// 测试时村民不死
         }
+        FHConfig.Server.Town.ResidentRules config = FHConfig.SERVER.TOWN.RESIDENT_RULES;
         List<Resident> deadResidents = new ArrayList<>();
         for (Resident resident : residents.values()) {
-            if (resident.getHousePos() == null) {
-                resident.costHealth(10);
-            }
-            if (resident.getHealth() <= 5 || // 似了
-                resident.getMental() <= 5) {// 跑了
+            ResidentDailyModel.MorningResult result = ResidentDailyModel.settleMorning(
+                    resident.getHealth(),
+                    resident.getMental(),
+                    resident.getHousePos() != null,
+                    config.homelessHealthLossPerDay.get(),
+                    config.removalHealthThreshold.get(),
+                    config.removalMentalThreshold.get());
+            resident.setHealth(result.healthAfterHomelessPenalty());
+            if (result.removed()) {
                 deadResidents.add(resident);
             }
         }

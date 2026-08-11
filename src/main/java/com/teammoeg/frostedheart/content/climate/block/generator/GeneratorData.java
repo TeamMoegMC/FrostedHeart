@@ -33,6 +33,7 @@ import com.teammoeg.chorda.dataholders.team.TeamDataHolder;
 import com.teammoeg.chorda.io.CodecUtil;
 import com.teammoeg.chorda.util.CUtils;
 import com.teammoeg.frostedheart.bootstrap.common.FHSpecialDataTypes;
+import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import com.teammoeg.frostedheart.util.Lang;
 import com.teammoeg.frostedresearch.FRSpecialDataTypes;
 import com.teammoeg.frostedresearch.data.ResearchVariant;
@@ -181,9 +182,10 @@ public class GeneratorData implements SpecialData {
             inventory.extractItem(INPUT_SLOT, count, false);
             currentItem = recipe.output.copy();
             currentItem.setCount(currentItem.getCount());
+            FHConfig.Server.Town.GeneratorT1 config = FHConfig.SERVER.TOWN.GENERATOR_T1;
             int loadedProcessTicks = GeneratorFuelModel.effectiveFuelProcessTicks(
                     recipe.time,
-                    GeneratorFuelModel.CURRENT_BASE_FUEL_DURATION_MULTIPLIER,
+                    config.baseFuelDurationMultiplier.get(),
                     getEfficiencyResearchBonus(teamData));
             this.process = GeneratorFuelModel.addFuelProcessTicks(process, loadedProcessTicks);
             this.processMax = loadedProcessTicks;
@@ -197,7 +199,7 @@ public class GeneratorData implements SpecialData {
 
     protected double getEfficiency(SpecialDataHolder<?> teamData) {
         return getEfficiencyResearchBonus(teamData)
-                + GeneratorFuelModel.CURRENT_BASE_FUEL_DURATION_MULTIPLIER;
+                + FHConfig.SERVER.TOWN.GENERATOR_T1.baseFuelDurationMultiplier.get();
     }
 
     protected double getEfficiencyResearchBonus(SpecialDataHolder<?> teamData) {
@@ -250,7 +252,7 @@ public class GeneratorData implements SpecialData {
         if (actualPos == null)
             return;
 
-        int townBatchTicks = GeneratorFuelModel.CURRENT_TOWN_BATCH_GAME_TICKS;
+        int townBatchTicks = FHConfig.SERVER.TOWN.townUpdateIntervalGameTicks.get();
         lastPower = power;
         isActive = tickFuelProcess(w,teamData,townBatchTicks);
         tickHeatedProcess(w,townBatchTicks);
@@ -317,7 +319,9 @@ public class GeneratorData implements SpecialData {
         boolean isWorking=false;
         
         if(this.isWorking) {
-            int baseFuelCost = ticks;
+            FHConfig.Server.Town.GeneratorT1 config = FHConfig.SERVER.TOWN.GENERATOR_T1;
+            int baseFuelCost = Math.multiplyExact(
+                    ticks, config.baseProcessTicksPerGameTick.get());
 
         	float maxPower=steamLevel*25;//calculate max steam heat
         	float powerRemain=Math.max(0, maxPower-lastPower);//then calculate heat required to generate
@@ -327,7 +331,8 @@ public class GeneratorData implements SpecialData {
             int extraCost = Mth.floor(actualPowerCost);
 
             if (isOverdrive) {
-                baseFuelCost += ticks;
+                baseFuelCost = Math.addExact(baseFuelCost, Math.multiplyExact(
+                        ticks, config.overdriveExtraProcessTicksPerGameTick.get()));
             }
 
 	        //System.out.println(baseFuelCost+","+extraCost);
@@ -412,33 +417,27 @@ public class GeneratorData implements SpecialData {
     }
     /**
      * Get the actual range of the heating device.
-     * The range is calculated by the formula:
-     * 12 + 4 * (rangeLevel - 1) if rangeLevel>1
-     * <p>
-     * The Base range at level 1 is 12 blocks.
-     * For each additional level, the range increases by 4 blocks.
+     * The base radius and additional radius per level come from FHConfig;
+     * their source defaults live in TownModelParameters.Defaults.
      *
      * @return in blocks
      */
     public int getRadius() {
         return GeneratorHeatFieldModel.radiusBlocks(
                 RLevel,
-                GeneratorHeatFieldModel.CURRENT_BASE_RADIUS_BLOCKS,
-                GeneratorHeatFieldModel.CURRENT_ADDITIONAL_RADIUS_PER_LEVEL_BLOCKS);
+                FHConfig.SERVER.TOWN.GENERATOR_T1.baseRadiusBlocks.get(),
+                FHConfig.SERVER.TOWN.GENERATOR_T1.additionalRadiusPerLevelBlocks.get());
     }
 
     /**
      * Get the actual temperature modification of the heating device.
-     * The temperature modification is calculated by the formula:
-     * 10 * temperatureLevel
-     * <p>
-     * The Base temperature modification at level 1 is 10.
-     * For each additional level, the temperature modification increases by 10.
+     * The temperature increase per level comes from FHConfig; its source
+     * default lives in TownModelParameters.Defaults.
      *
      * @return in degrees
      */
     public int getTempMod() {
         return GeneratorHeatFieldModel.temperatureCelsius(
-                TLevel, GeneratorHeatFieldModel.CURRENT_TEMPERATURE_PER_LEVEL_CELSIUS);
+                TLevel, FHConfig.SERVER.TOWN.GENERATOR_T1.temperaturePerLevelCelsius.get());
     }
 }

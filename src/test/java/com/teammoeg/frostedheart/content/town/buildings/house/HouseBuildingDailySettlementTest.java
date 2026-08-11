@@ -26,13 +26,13 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class HouseBuildingDailySettlementTest {
     @Test
     void coldHouseStillRunsResidentSettlement() {
-        assertFalse(HouseDailyModel.isBuildingWorkable(true, 4, 8, false));
-        assertTrue(HouseDailyModel.shouldRunDailySettlement(true, 4, 8));
+        assertFalse(HouseDailyModel.isBuildingWorkable(true, 4, 8, false, 4, 8));
+        assertTrue(HouseDailyModel.shouldRunDailySettlement(true, 4, 8, 4, 8));
     }
 
     @Test
     void structurallyInvalidHouseDoesNotRunSettlement() {
-        assertFalse(HouseDailyModel.isBuildingWorkable(false, 4, 8, false));
-        assertFalse(HouseDailyModel.shouldRunDailySettlement(false, 4, 8));
+        assertFalse(HouseDailyModel.isBuildingWorkable(false, 4, 8, false, 4, 8));
+        assertFalse(HouseDailyModel.shouldRunDailySettlement(false, 4, 8, 4, 8));
     }
 }

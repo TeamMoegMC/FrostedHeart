@@ -232,7 +232,9 @@ public class HouseBuilding extends AbstractTownBuilding implements ITownResident
 
     public static boolean isTemperatureValid(double effectiveTemperature){
         if (DEBUG_MODE) return true;
-        return effectiveTemperature >= TownMathFunctions.MIN_TEMP_HOUSE && effectiveTemperature <= TownMathFunctions.MAX_TEMP_HOUSE;
+        FHConfig.Server.Town.Housing config = FHConfig.SERVER.TOWN.HOUSING;
+        return effectiveTemperature >= config.minimumTemperatureCelsius.get()
+                && effectiveTemperature <= config.maximumTemperatureCelsius.get();
     }
 
     public boolean isTemperatureValid(){
@@ -245,8 +247,11 @@ public class HouseBuilding extends AbstractTownBuilding implements ITownResident
 
     @Override
     public boolean isBuildingWorkable() {
+        FHConfig.Server.Town.Housing config = FHConfig.SERVER.TOWN.HOUSING;
         return HouseDailyModel.isBuildingWorkable(
-                super.isBuildingWorkable(), area, volume, isTemperatureValid());
+                super.isBuildingWorkable(), area, volume, isTemperatureValid(),
+                config.minimumFloorAreaBlocks.get(),
+                config.minimumInteriorVolumeBlocks.get());
     }
 
     /**
@@ -257,8 +262,11 @@ public class HouseBuilding extends AbstractTownBuilding implements ITownResident
      */
     @Override
     public boolean shouldRunDailySettlement() {
+        FHConfig.Server.Town.Housing config = FHConfig.SERVER.TOWN.HOUSING;
         return HouseDailyModel.shouldRunDailySettlement(
-                super.isBuildingWorkable(), area, volume);
+                super.isBuildingWorkable(), area, volume,
+                config.minimumFloorAreaBlocks.get(),
+                config.minimumInteriorVolumeBlocks.get());
     }
 
 
@@ -329,8 +337,8 @@ public class HouseBuilding extends AbstractTownBuilding implements ITownResident
         double nutritionMultiplier = HouseDailyModel.calculateNutritionRecoveryMultiplier(
                 nutritionQuality, config.minimumNutritionRecoveryMultiplier.get());
         double effectiveTemperature = getEffectiveTemperature();
-        double temperatureRating = TownMathFunctions.calculateTemperatureRating(effectiveTemperature);
-        double spaceRating = TownMathFunctions.calculateSpaceRating(volume, area);
+        double temperatureRating = calculateTemperatureRating(effectiveTemperature);
+        double spaceRating = calculateSpaceRating(volume, area);
         double comfortRating = calculateComfortRating(temperatureRating, spaceRating, decorationRating);
         return new DailyReport(
                 true,
@@ -369,11 +377,11 @@ public class HouseBuilding extends AbstractTownBuilding implements ITownResident
     }
 
     public double getTemperatureRating() {
-        return TownMathFunctions.calculateTemperatureRating(getEffectiveTemperature());
+        return calculateTemperatureRating(getEffectiveTemperature());
     }
 
     public double getSpaceRating() {
-        return TownMathFunctions.calculateSpaceRating(volume, area);
+        return calculateSpaceRating(volume, area);
     }
 
     public double getComfortRating() {
@@ -394,6 +402,28 @@ public class HouseBuilding extends AbstractTownBuilding implements ITownResident
                 config.spaceComfortWeight.get(),
                 config.decorationComfortWeight.get()
         );
+    }
+
+    private static double calculateTemperatureRating(double temperature) {
+        FHConfig.Server.Town.BuildingScoring config = FHConfig.SERVER.TOWN.BUILDING_SCORING;
+        return TownMathFunctions.calculateTemperatureRating(
+                temperature,
+                config.comfortableTemperatureCelsius.get(),
+                config.minimumTemperatureRating.get(),
+                config.temperatureRatingSlope.get(),
+                config.temperatureRatingHalfPointDifferenceCelsius.get());
+    }
+
+    private static double calculateSpaceRating(int volume, int area) {
+        FHConfig.Server.Town.BuildingScoring config = FHConfig.SERVER.TOWN.BUILDING_SCORING;
+        return TownMathFunctions.calculateSpaceRating(
+                volume,
+                area,
+                config.spaceAreaCoefficient.get(),
+                config.spaceHeightLogCoefficient.get(),
+                config.spaceHeightLogOffset.get(),
+                config.spaceResponseScale.get(),
+                config.spaceResponseExponent.get());
     }
 
     private void setDailyReport(DailyReport dailyReport) {

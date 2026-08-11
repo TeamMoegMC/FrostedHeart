@@ -29,6 +29,7 @@ import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
 import com.teammoeg.frostedheart.content.steamenergy.HeatEndpoint;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.town.TownMathFunctions;
+import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import com.teammoeg.frostedheart.content.town.block.AbstractTownBuildingBlockEntity;
 import com.teammoeg.frostedheart.content.town.block.blockscanner.AbstractBlockScanner;
 import com.teammoeg.frostedheart.content.town.block.blockscanner.FloorBlockScanner;
@@ -51,7 +52,6 @@ import net.minecraftforge.common.util.LazyOptional;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import static com.teammoeg.frostedheart.content.town.TownMathFunctions.calculateDecorationRating;
 
 /**
  * A house in the town.
@@ -130,7 +130,15 @@ public class HouseBlockEntity extends AbstractTownBuildingBlockEntity<HouseBuild
 						//FHMain.LOGGER.debug("HouseScanner: scan successful");
 					building.setVolume(scanner.getVolume());
 					building.setArea(scanner.getArea());
-					building.setDecorationRating(calculateDecorationRating(scanner.decorations, scanner.getArea()));
+					FHConfig.Server.Town.Housing housing = FHConfig.SERVER.TOWN.HOUSING;
+					building.setDecorationRating(TownMathFunctions.calculateDecorationRating(
+							scanner.decorations,
+							scanner.getArea(),
+							housing.decorationCountLogOffset.get(),
+							housing.decorationCountLogMultiplier.get(),
+							housing.decorationTypeBaseScore.get(),
+							housing.decorationBaseDemand.get(),
+							housing.decorationFloorBlocksPerDemand.get()));
 					building.setTemperature(scanner.getTemperature());
 					building.setOccupiedVolume(scanner.getOccupiedVolume());
 					building.setMaxResidents(calculateMaxResidents(building.getArea(), building.getVolume(), scanner.getBeds().size()));
@@ -144,7 +152,17 @@ public class HouseBlockEntity extends AbstractTownBuildingBlockEntity<HouseBuild
 
 
 	public static int calculateMaxResidents(int area, int volume, int bedNum) {
-		int maxResidentOfSpace = (int) (TownMathFunctions.calculateSpaceRating(volume, area) / 4 * area);
+		FHConfig.Server.Town.BuildingScoring scoring = FHConfig.SERVER.TOWN.BUILDING_SCORING;
+		FHConfig.Server.Town.Housing housing = FHConfig.SERVER.TOWN.HOUSING;
+		int maxResidentOfSpace = (int) (TownMathFunctions.calculateSpaceRating(
+				volume,
+				area,
+				scoring.spaceAreaCoefficient.get(),
+				scoring.spaceHeightLogCoefficient.get(),
+				scoring.spaceHeightLogOffset.get(),
+				scoring.spaceResponseScale.get(),
+				scoring.spaceResponseExponent.get())
+				/ housing.floorBlocksPerResident.get() * area);
         return Math.min(maxResidentOfSpace, bedNum);
 	}
 
@@ -153,7 +171,9 @@ public class HouseBlockEntity extends AbstractTownBuildingBlockEntity<HouseBuild
 		assert level != null;
 		if (!level.isClientSide) {
 			if (endpoint.tryDrainHeat(1)) {
-				temperatureModifier = Math.max(endpoint.getTempLevel() * 10, TownMathFunctions.COMFORTABLE_TEMP_HOUSE);
+				temperatureModifier = Math.max(
+						endpoint.getTempLevel() * 10,
+						FHConfig.SERVER.TOWN.BUILDING_SCORING.comfortableTemperatureCelsius.get());
 				if (setActive(true)) {
 					setChanged();
 				}

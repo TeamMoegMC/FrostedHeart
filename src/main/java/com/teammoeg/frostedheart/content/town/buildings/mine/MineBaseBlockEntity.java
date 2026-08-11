@@ -67,7 +67,15 @@ public class MineBaseBlockEntity extends AbstractTownBuildingBlockEntity<MineBas
                 //this.rack = scanner.getRack();
                 //this.chest = scanner.getChest();
                 building.setOccupiedVolume(scanner.getOccupiedVolume());
-                double effectiveFloorBlocks = TownMathFunctions.calculateSpaceRating(scanner.getVolume(), scanner.getArea())
+                FHConfig.Server.Town.BuildingScoring scoring = FHConfig.SERVER.TOWN.BUILDING_SCORING;
+                double effectiveFloorBlocks = TownMathFunctions.calculateSpaceRating(
+                        scanner.getVolume(),
+                        scanner.getArea(),
+                        scoring.spaceAreaCoefficient.get(),
+                        scoring.spaceHeightLogCoefficient.get(),
+                        scoring.spaceHeightLogOffset.get(),
+                        scoring.spaceResponseScale.get(),
+                        scoring.spaceResponseExponent.get())
                         * scanner.getArea();
                 int calculated = (int) (effectiveFloorBlocks
                         / FHConfig.SERVER.TOWN.MINING.floorBlocksPerWorkerSlot.get());

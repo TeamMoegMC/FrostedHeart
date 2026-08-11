@@ -29,18 +29,23 @@ public final class HouseDailyModel {
     public static boolean isStructurallyWorkable(
             boolean baseBuildingWorkable,
             int area,
-            int volume
+            int volume,
+            int minimumArea,
+            int minimumVolume
     ) {
-        return baseBuildingWorkable && area >= 4 && volume >= 8;
+        return baseBuildingWorkable && area >= minimumArea && volume >= minimumVolume;
     }
 
     public static boolean isBuildingWorkable(
             boolean baseBuildingWorkable,
             int area,
             int volume,
-            boolean temperatureValid
+            boolean temperatureValid,
+            int minimumArea,
+            int minimumVolume
     ) {
-        return isStructurallyWorkable(baseBuildingWorkable, area, volume) && temperatureValid;
+        return isStructurallyWorkable(baseBuildingWorkable, area, volume, minimumArea, minimumVolume)
+                && temperatureValid;
     }
 
     /**
@@ -50,9 +55,11 @@ public final class HouseDailyModel {
     public static boolean shouldRunDailySettlement(
             boolean baseBuildingWorkable,
             int area,
-            int volume
+            int volume,
+            int minimumArea,
+            int minimumVolume
     ) {
-        return isStructurallyWorkable(baseBuildingWorkable, area, volume);
+        return isStructurallyWorkable(baseBuildingWorkable, area, volume, minimumArea, minimumVolume);
     }
 
     public static double calculateFoodSatisfaction(double requiredFood, double consumedFood) {

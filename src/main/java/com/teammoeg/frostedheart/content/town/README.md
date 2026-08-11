@@ -238,13 +238,13 @@ TownResourceActionResults.TownResourceTypeCostActionResult result =
 
 ### 6.5 城镇数值模型与阶段 0 审计
 
-- **`model/TownModelParameters`**：Forge 无关的参数 records。阶段 0 的采矿、狩猎、住宅食物需求和 T1 默认值在这里有唯一常量来源；`FHConfig` 的对应默认值直接引用这些常量。
+- **`model/TownModelParameters`**：Forge 无关的参数 records。T1、居民、住宅、公共建筑评分、采矿/狩猎工作和矿物/HUNT 资源的 FH 默认值在这里有唯一常量来源；`FHConfig` 的对应默认值直接引用这些常量。
 - **`model/TownStageZeroModel`**：只做纯代数推导，不读文件、不访问世界，也不运行多日模拟。输入是参数、矿层权重、狩猎掉落条目和 generator recipe 时长。
 - **`model/TownStageZeroAudit`**：读取当前 FH/TWR 源文件，记录 SHA-256 与参数来源，输出 `source-snapshot.json` 和 `audit-report.json`。
-- **`GeneratorFuelModel` / `GeneratorHeatFieldModel`**：位于 generator 包；`GeneratorData` 和审计共用。前者明确区分完整利用配方时长的理想燃料率与当前 20-tick 提前补料的兼容燃料率。
+- **`GeneratorFuelModel` / `GeneratorHeatFieldModel` / `HouseDailyModel` / `ResidentDailyModel` / `TownMathFunctions`**：游戏与模拟共用的纯公式。默认参数只定义在 `TownModelParameters.Defaults`；游戏把 `FHConfig` 的运行时值传入公式，模拟器传入 `TownModelParameters` 值。
 - **`model/TownSimulationMain`**：当前只开放 `audit`；`simulate` 从阶段 1 起逐步加入。Gradle 调用使用 `runTownSimulation -PtownArgs='audit ...'`。
 
-阶段 0 不涉及 T2 热网、气候、库存时间序列或蒙特卡洛。T1 以可结转的燃料过程 tick 余额运行，20-tick 城镇批处理与逐 tick 长期燃料率一致；完整公式见仓库 `docs/town-model.md`。
+阶段 0 不涉及 T2 热网、气候、库存时间序列或蒙特卡洛。T1 以可结转的燃料过程 tick 余额运行，默认 20-tick 城镇批处理与逐 tick 长期燃料率一致；完整公式见仓库 `docs/town-model.md`。
 
 ---
 

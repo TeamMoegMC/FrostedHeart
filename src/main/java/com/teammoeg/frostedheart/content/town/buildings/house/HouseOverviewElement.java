@@ -21,6 +21,7 @@ package com.teammoeg.frostedheart.content.town.buildings.house;
 
 import com.teammoeg.frostedheart.content.town.tabs.BuildingInfoElement;
 import com.teammoeg.frostedheart.content.town.TownMathFunctions;
+import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 
@@ -87,6 +88,7 @@ final class HouseOverviewElement extends BuildingInfoElement {
             List<Component> lines,
             HouseBuilding house
     ) {
+        FHConfig.Server.Town.Housing housing = FHConfig.SERVER.TOWN.HOUSING;
         if (!house.isInitialized()) {
             lines.add(failure("gui.frostedheart.house.failure.not_initialized"));
         }
@@ -96,27 +98,27 @@ final class HouseOverviewElement extends BuildingInfoElement {
         if (!house.isStructureValid()) {
             lines.add(failure("gui.frostedheart.house.failure.invalid_structure"));
         }
-        if (house.getArea() < 4) {
+        if (house.getArea() < housing.minimumFloorAreaBlocks.get()) {
             lines.add(failure(
                     "gui.frostedheart.house.failure.area_too_small",
                     house.getArea(),
-                    4));
+                    housing.minimumFloorAreaBlocks.get()));
         }
-        if (house.getVolume() < 8) {
+        if (house.getVolume() < housing.minimumInteriorVolumeBlocks.get()) {
             lines.add(failure(
                     "gui.frostedheart.house.failure.volume_too_small",
                     house.getVolume(),
-                    8));
+                    housing.minimumInteriorVolumeBlocks.get()));
         }
         if (!house.isTemperatureValid()) {
-            String key = house.getEffectiveTemperature() < TownMathFunctions.MIN_TEMP_HOUSE
+            String key = house.getEffectiveTemperature() < housing.minimumTemperatureCelsius.get()
                     ? "gui.frostedheart.house.failure.temperature_too_low"
                     : "gui.frostedheart.house.failure.temperature_too_high";
             lines.add(failure(
                     key,
                     decimal(house.getEffectiveTemperature()),
-                    TownMathFunctions.MIN_TEMP_HOUSE,
-                    TownMathFunctions.MAX_TEMP_HOUSE));
+                    housing.minimumTemperatureCelsius.get(),
+                    housing.maximumTemperatureCelsius.get()));
         }
     }
 
@@ -137,11 +139,17 @@ final class HouseOverviewElement extends BuildingInfoElement {
     private static Component temperatureValue(double temperature) {
         String statusKey;
         ChatFormatting color;
-        double temperatureRating = TownMathFunctions.calculateTemperatureRating(temperature);
+        FHConfig.Server.Town.BuildingScoring scoring = FHConfig.SERVER.TOWN.BUILDING_SCORING;
+        double temperatureRating = TownMathFunctions.calculateTemperatureRating(
+                temperature,
+                scoring.comfortableTemperatureCelsius.get(),
+                scoring.minimumTemperatureRating.get(),
+                scoring.temperatureRatingSlope.get(),
+                scoring.temperatureRatingHalfPointDifferenceCelsius.get());
         if (temperatureRating >= 0.5) {
             statusKey = "gui.frostedheart.house.temperature_comfortable";
             color = ChatFormatting.GREEN;
-        } else if (temperature < TownMathFunctions.COMFORTABLE_TEMP_HOUSE) {
+        } else if (temperature < scoring.comfortableTemperatureCelsius.get()) {
             statusKey = "gui.frostedheart.house.temperature_too_low";
             color = ChatFormatting.RED;
         } else {
