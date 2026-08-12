@@ -148,7 +148,7 @@ CODEC 字段：`name / resources / blocks / residents / terrainResource / labour
 
 | 建筑 | Building 类 | 是否工作 | 关键点 |
 |---|---|---|---|
-| House | `buildings/house/HouseBuilding` | 否（住宅） | 仅 `implements ITownResidentBuilding`；`work()` 每日按配置消耗一次 `RESIDENT_FOOD_LEVEL`，由食物满足度、营养质量、有效温度和综合舒适度线性计算生命/精神的损失与恢复，不再改变力量；低于 `0°C` 或高于 `50°C` 时仍为不可工作、不会分配新人，但 `shouldRunDailySettlement()` 仍使已有居民吃饭并结算状态；最近一次结算写入 `DailyReport`，`getRating()` 决定分房优先级。 |
+| House | `buildings/house/HouseBuilding` | 否（住宅） | 仅 `implements ITownResidentBuilding`；`work()` 每日按配置消耗一次 `RESIDENT_FOOD_LEVEL`，由食物满足度、营养质量、有效温度和综合舒适度计算生命/精神：缺粮损失使用凸曲线，`[0,40]°C` 外另有有上限的直接温度损失；越界时仍为不可工作、不会分配新人，但 `shouldRunDailySettlement()` 仍使已有居民吃饭并结算状态；最近一次结算写入 `DailyReport`，`getRating()` 决定分房优先级。 |
 | Hunting Base | `buildings/hunting/HuntingBaseBuilding` | 是 | 继承 `AbstractTownResidentWorkBuilding`；按居民 score 总和决定投掷次数，受 `TerrainResourceType.HUNT` 限制，用战利品表 `town/hunting` 产出并 ADD 进仓库。 |
 | Mine Base | `buildings/mine/MineBaseBuilding` | 是 | 持有 `Set<BlockPos> linkedMines`；汇总有效 `MineBuilding` 权重，按区块向 `ORE` 开采。 |
 | Mine | `buildings/mine/MineBuilding` | 否（标记） | 仅扫描/标记；`BiomeMineResourceRecipe` 提供生物群系矿产权重（`getWeights(biome)`）。 |
@@ -236,15 +236,16 @@ TownResourceActionResults.TownResourceTypeCostActionResult result =
     town.getActionExecutorHandler().execute(action);
 ```
 
-### 6.5 城镇数值模型与阶段 0 审计
+### 6.5 城镇数值模型与阶段 0–2 模拟
 
 - **`model/TownModelParameters`**：Forge 无关的参数 records。T1、居民、住宅、公共建筑评分、采矿/狩猎工作和矿物/HUNT 资源的 FH 默认值在这里有唯一常量来源；`FHConfig` 的对应默认值直接引用这些常量。
 - **`model/TownStageZeroModel`**：只做纯代数推导，不读文件、不访问世界，也不运行多日模拟。输入是参数、矿层权重、狩猎掉落条目和 generator recipe 时长。
-- **`model/TownStageZeroAudit`**：读取当前 FH/TWR 源文件，记录 SHA-256 与参数来源，输出 `source-snapshot.json` 和 `audit-report.json`。
-- **`GeneratorFuelModel` / `GeneratorHeatFieldModel` / `HouseDailyModel` / `ResidentDailyModel` / `TownMathFunctions`**：游戏与模拟共用的纯公式。默认参数只定义在 `TownModelParameters.Defaults`；游戏把 `FHConfig` 的运行时值传入公式，模拟器传入 `TownModelParameters` 值。
-- **`model/TownSimulationMain`**：当前只开放 `audit`；`simulate` 从阶段 1 起逐步加入。Gradle 调用使用 `runTownSimulation -PtownArgs='audit ...'`。
+- **`model/TownStageZeroAudit`**：读取当前 FH/TWR 源文件、食物 Tag 与肉类营养 recipe，记录 SHA-256 与参数来源，输出 `source-snapshot.json` 和 `audit-report.json`。
+- **`GeneratorFuelModel` / `GeneratorHeatFieldModel` / `MiningDailyModel` / `HuntingDailyModel` / `HouseDailyModel` / `ResidentDailyModel` / `TownFoodInventoryModel` / `TownFoodProcessingModel` / `TownMathFunctions`**：游戏与模拟共用或场景明确使用的纯公式。默认参数只定义在 `TownModelParameters.Defaults`；游戏把 `FHConfig` 的运行时值传入公式，模拟器传入 `TownModelParameters` 值。
+- **`model/TownStageOneTwoSimulator`**：运行独立单日的采矿、T1、随机狩猎和受控住宅实验，写出 JSON 与 CSV。它不推进阶段 3 的跨日库存、工作资格或岗位反馈。
+- **`model/TownSimulationMain`**：开放 `audit` 和阶段 1–2 `simulate`。Gradle 调用使用 `runTownSimulation -PtownArgs='...'`。
 
-阶段 0 不涉及 T2 热网、气候、库存时间序列或蒙特卡洛。T1 以可结转的燃料过程 tick 余额运行，默认 20-tick 城镇批处理与逐 tick 长期燃料率一致；完整公式见仓库 `docs/town-model.md`。
+阶段 0–2 不涉及 T2 热网、气候、库存时间序列或策略蒙特卡洛。T1 以可结转的燃料过程 tick 余额运行，默认 20-tick 城镇批处理与逐 tick 长期燃料率一致；完整公式见仓库 `docs/town-model.md`。
 
 ---
 

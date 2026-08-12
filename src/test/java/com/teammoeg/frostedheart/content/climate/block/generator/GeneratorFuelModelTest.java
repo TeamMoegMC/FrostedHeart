@@ -60,6 +60,16 @@ class GeneratorFuelModelTest {
         }
     }
 
+    @Test
+    void finiteExactCycleReturnsToZeroBalance() {
+        GeneratorFuelModel.FuelSettlement settlement =
+                GeneratorFuelModel.settleProcessDemand(1_120, 20, 24_000L * 7L, 0L);
+
+        assertEquals(150L, settlement.loadedFuelItems());
+        assertEquals(0L, settlement.remainingProcessTicks());
+        assertEquals(24_000L * 7L, settlement.consumedProcessTicks());
+    }
+
     private static FuelState runForGameTicks(int fuelDuration, int gameTicks, int batchTicks) {
         int remaining = 0;
         int loadedItems = 0;

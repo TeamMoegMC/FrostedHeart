@@ -154,16 +154,16 @@ public class HouseBlockEntity extends AbstractTownBuildingBlockEntity<HouseBuild
 	public static int calculateMaxResidents(int area, int volume, int bedNum) {
 		FHConfig.Server.Town.BuildingScoring scoring = FHConfig.SERVER.TOWN.BUILDING_SCORING;
 		FHConfig.Server.Town.Housing housing = FHConfig.SERVER.TOWN.HOUSING;
-		int maxResidentOfSpace = (int) (TownMathFunctions.calculateSpaceRating(
+		double spaceRating = TownMathFunctions.calculateSpaceRating(
 				volume,
 				area,
 				scoring.spaceAreaCoefficient.get(),
 				scoring.spaceHeightLogCoefficient.get(),
 				scoring.spaceHeightLogOffset.get(),
 				scoring.spaceResponseScale.get(),
-				scoring.spaceResponseExponent.get())
-				/ housing.floorBlocksPerResident.get() * area);
-        return Math.min(maxResidentOfSpace, bedNum);
+				scoring.spaceResponseExponent.get());
+        return HouseDailyModel.calculateCapacity(
+                spaceRating, area, housing.floorBlocksPerResident.get(), bedNum);
 	}
 
 	@Override

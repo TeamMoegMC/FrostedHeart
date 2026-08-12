@@ -97,6 +97,7 @@ public record TownModelParameters(
                         Defaults.HOUSING_FOOD_PER_RESIDENT_DAY,
                         Defaults.HOUSING_NUTRITION_REFERENCE_PER_FOOD_UNIT,
                         Defaults.HOUSING_MINIMUM_NUTRITION_RECOVERY_MULTIPLIER,
+                        Defaults.HOUSING_FOOD_DEFICIT_PENALTY_EXPONENT,
                         Defaults.HOUSING_HEALTH_LOSS_AT_ZERO_FOOD_PER_RESIDENT_DAY,
                         Defaults.HOUSING_MENTAL_LOSS_AT_ZERO_FOOD_PER_RESIDENT_DAY,
                         Defaults.HOUSING_MAXIMUM_HEALTH_RECOVERY_PER_RESIDENT_DAY,
@@ -105,6 +106,10 @@ public record TownModelParameters(
                         Defaults.HOUSING_MINIMUM_INTERIOR_VOLUME_BLOCKS,
                         Defaults.HOUSING_MINIMUM_TEMPERATURE_CELSIUS,
                         Defaults.HOUSING_MAXIMUM_TEMPERATURE_CELSIUS,
+                        Defaults.HOUSING_TEMPERATURE_FULL_STRESS_DISTANCE_CELSIUS,
+                        Defaults.HOUSING_TEMPERATURE_STRESS_PENALTY_EXPONENT,
+                        Defaults.HOUSING_HEALTH_LOSS_AT_FULL_TEMPERATURE_STRESS_PER_RESIDENT_DAY,
+                        Defaults.HOUSING_MENTAL_LOSS_AT_FULL_TEMPERATURE_STRESS_PER_RESIDENT_DAY,
                         Defaults.HOUSING_FLOOR_BLOCKS_PER_RESIDENT,
                         Defaults.HOUSING_TEMPERATURE_COMFORT_WEIGHT,
                         Defaults.HOUSING_SPACE_COMFORT_WEIGHT,
@@ -210,6 +215,7 @@ public record TownModelParameters(
             double foodConsumptionPerResidentDay,
             double nutritionReferencePerFoodUnit,
             double minimumNutritionRecoveryMultiplier,
+            double foodDeficitPenaltyExponent,
             double healthLossAtZeroFoodPerResidentDay,
             double mentalLossAtZeroFoodPerResidentDay,
             double maximumHealthRecoveryPerResidentDay,
@@ -218,6 +224,10 @@ public record TownModelParameters(
             int minimumInteriorVolumeBlocks,
             double minimumTemperatureCelsius,
             double maximumTemperatureCelsius,
+            double temperatureFullStressDistanceCelsius,
+            double temperatureStressPenaltyExponent,
+            double healthLossAtFullTemperatureStressPerResidentDay,
+            double mentalLossAtFullTemperatureStressPerResidentDay,
             double floorBlocksPerResident,
             double temperatureComfortWeight,
             double spaceComfortWeight,
@@ -370,6 +380,7 @@ public record TownModelParameters(
         public static final double HOUSING_FOOD_PER_RESIDENT_DAY = 6.5;
         public static final double HOUSING_NUTRITION_REFERENCE_PER_FOOD_UNIT = 7000.0;
         public static final double HOUSING_MINIMUM_NUTRITION_RECOVERY_MULTIPLIER = 0.5;
+        public static final double HOUSING_FOOD_DEFICIT_PENALTY_EXPONENT = 2.0;
         public static final double HOUSING_HEALTH_LOSS_AT_ZERO_FOOD_PER_RESIDENT_DAY = 8.0;
         public static final double HOUSING_MENTAL_LOSS_AT_ZERO_FOOD_PER_RESIDENT_DAY = 5.0;
         public static final double HOUSING_MAXIMUM_HEALTH_RECOVERY_PER_RESIDENT_DAY = 2.0;
@@ -377,7 +388,11 @@ public record TownModelParameters(
         public static final int HOUSING_MINIMUM_FLOOR_AREA_BLOCKS = 4;
         public static final int HOUSING_MINIMUM_INTERIOR_VOLUME_BLOCKS = 8;
         public static final double HOUSING_MINIMUM_TEMPERATURE_CELSIUS = 0.0;
-        public static final double HOUSING_MAXIMUM_TEMPERATURE_CELSIUS = 50.0;
+        public static final double HOUSING_MAXIMUM_TEMPERATURE_CELSIUS = 40.0;
+        public static final double HOUSING_TEMPERATURE_FULL_STRESS_DISTANCE_CELSIUS = 20.0;
+        public static final double HOUSING_TEMPERATURE_STRESS_PENALTY_EXPONENT = 2.0;
+        public static final double HOUSING_HEALTH_LOSS_AT_FULL_TEMPERATURE_STRESS_PER_RESIDENT_DAY = 10.0;
+        public static final double HOUSING_MENTAL_LOSS_AT_FULL_TEMPERATURE_STRESS_PER_RESIDENT_DAY = 5.0;
         public static final double HOUSING_FLOOR_BLOCKS_PER_RESIDENT = 4.0;
         public static final double HOUSING_TEMPERATURE_COMFORT_WEIGHT = 0.4;
         public static final double HOUSING_SPACE_COMFORT_WEIGHT = 0.3;

@@ -212,20 +212,17 @@ public class HuntingBaseBuilding extends AbstractTownResidentWorkBuilding {
         // 2. Settle expected rolls. Only the fractional remainder is carried to
         // the next town day; whole rolls blocked by terrain supply are not backlogged.
         FHConfig.Server.Town.Hunting config = FHConfig.SERVER.TOWN.HUNTING;
-        double workerExpectedThrows =
-                totalProductivity * config.expectedLootRollsPerStandardWorkerDay.get();
-        double expectedThrows =
-                config.passiveExpectedLootRollsPerBaseDay.get() + workerExpectedThrows;
-        int desiredThrows;
-        if (config.useFractionalLootRollCarry.get()) {
-            TownMathFunctions.FractionalSettlement settlement =
-                    TownMathFunctions.settleFractionalAmount(lootRollCarry, expectedThrows);
-            desiredThrows = (int) Math.min(Integer.MAX_VALUE, settlement.wholeAmount());
-            setLootRollCarry(settlement.carry());
-        } else {
-            desiredThrows = (int) Math.min(Integer.MAX_VALUE, Math.floor(expectedThrows));
-            setLootRollCarry(0.0);
-        }
+        HuntingDailyModel.RollPlan rollPlan = HuntingDailyModel.planRolls(
+                totalProductivity,
+                config.expectedLootRollsPerStandardWorkerDay.get(),
+                config.passiveExpectedLootRollsPerBaseDay.get(),
+                lootRollCarry,
+                config.useFractionalLootRollCarry.get(),
+                Integer.MAX_VALUE);
+        double workerExpectedThrows = rollPlan.workerExpectedRolls();
+        double expectedThrows = rollPlan.newExpectedRolls();
+        int desiredThrows = rollPlan.plannedRolls();
+        setLootRollCarry(rollPlan.nextCarry());
 
         // A fractional expected roll still represents a day of hunting work.
         // Experience requires at least one available HUNT unit, but does not
@@ -247,7 +244,7 @@ public class HuntingBaseBuilding extends AbstractTownResidentWorkBuilding {
 
         // 3. 受野外猎物储量限制
         double available = teamTown.maypickTerrainResource(TerrainResourceType.HUNT, desiredThrows);
-        int actualThrows = Math.min(desiredThrows, (int) Math.floor(available));
+        int actualThrows = HuntingDailyModel.executedRolls(desiredThrows, available);
         if (actualThrows <= 0) {
             setDailyReport(new HuntingDailyReport(
                     true, desiredThrows, 0, List.of(), TownProductionStopReason.TERRAIN_DEPLETED));
@@ -323,17 +320,16 @@ public class HuntingBaseBuilding extends AbstractTownResidentWorkBuilding {
                 .filter(value -> value > 0.0)
                 .sum();
         FHConfig.Server.Town.Hunting config = FHConfig.SERVER.TOWN.HUNTING;
-        double workerRolls =
-                totalProductivity * config.expectedLootRollsPerStandardWorkerDay.get();
-        double newExpectedRolls =
-                config.passiveExpectedLootRollsPerBaseDay.get() + workerRolls;
-        double amountToSettle = newExpectedRolls
-                + (config.useFractionalLootRollCarry.get() ? lootRollCarry : 0.0);
-        int planned = (int) Math.min(Integer.MAX_VALUE, Math.floor(Math.max(0.0, amountToSettle)));
-        int available = Math.min(
-                planned,
-                (int) Math.floor(town.getRemainingTerrainResource(TerrainResourceType.HUNT))
-        );
+        HuntingDailyModel.RollPlan rollPlan = HuntingDailyModel.planRolls(
+                totalProductivity,
+                config.expectedLootRollsPerStandardWorkerDay.get(),
+                config.passiveExpectedLootRollsPerBaseDay.get(),
+                lootRollCarry,
+                config.useFractionalLootRollCarry.get(),
+                town.getRemainingTerrainResource(TerrainResourceType.HUNT));
+        double newExpectedRolls = rollPlan.newExpectedRolls();
+        int planned = rollPlan.plannedRolls();
+        int available = rollPlan.executedRolls();
         TownProductionStopReason reason;
         if (planned <= 0) {
             reason = newExpectedRolls > 0.0

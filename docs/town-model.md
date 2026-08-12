@@ -1,6 +1,6 @@
 # 城镇临界自给数值模型
 
-> 状态：阶段 0（参数快照与纯代数审计）已实现；阶段 1 及多日模拟尚未开始。2026-08-11 已把 T1、居民、住宅、采矿和狩猎的 FH 自有参数统一到单一默认值来源，并修复 T1 燃料批处理结转与效率浮点截断。气候与 T2 暂不进入参数表。
+> 状态：阶段 0–2 已实现；阶段 3 及之后尚未开始。2026-08-12 已把 T1、居民、住宅、采矿和狩猎的 FH 自有参数统一到单一默认值来源，并加入凸缺粮损失与 `[0,40]°C` 外的独立温度压力。阶段 1–2 只运行彼此独立的单日生产/住宅内核实验，不推进跨日库存、岗位、熟练度或居民状态；气候与 T2 仍不进入模拟。
 >
 > 目标：把 FH/TWR 当前代码和数据中的城镇数值关系整理为一套可调用、可审计、可模拟的 Java 数学模型。本文是后续实现时的上下文基准。
 
@@ -792,7 +792,7 @@ S_T=s_{floor}+\frac{1}{1+\exp(k_T(d_T-d_{mid}))}
 | `temperatureRatingSteepness` \(k_T\) | `0.4` | 舒适区边缘下降的陡峭程度 |
 | `temperatureRatingMidpointDeltaCelsius` \(d_{mid}\) | `10` | 偏离舒适温度 10°C 时进入曲线中点 |
 
-住宅可工作温度范围当前为 `[0,50]°C`。范围之外住宅仍被视为不可工作，因此不会分配新居民；但已有居民的每日食物和状态结算仍会执行。极端温度通过 \(S_T\) 压低健康恢复和综合舒适度，不再暂停整栋住宅。
+住宅可工作与无直接温度压力的范围当前统一为 `[0,40]°C`。范围之外住宅仍被视为不可工作，因此不会分配新居民；但已有居民的每日食物和状态结算仍会执行。极端温度既通过 \(S_T\) 压低健康恢复和综合舒适度，也通过 9.7 节的独立温度压力直接损伤健康和精神，不再暂停整栋住宅。
 
 ### 9.5 综合舒适度
 
@@ -855,25 +855,50 @@ M_N=m_{nutrition,min}+(1-m_{nutrition,min})Q_N
 - \(mental_i\)：结算前精神，范围 `0..100`。
 - \(L_H\)：完全缺粮时每日健康损失，当前 `8`。
 - \(L_M\)：完全缺粮时每日精神损失，当前 `5`。
+- \(p_F\)：缺粮压力指数，当前 `2`。
+- \(T\)：住宅有效温度，单位 °C。
+- \(T_{min},T_{max}\)：不产生直接温度压力的闭区间，当前 `[0,40]°C`。
+- \(D_T\)：从安全区间边界到满温度压力的距离，当前 `20°C`。
+- \(p_T\)：温度压力指数，当前 `2`。
+- \(L_{HT}\)：满温度压力时每日健康损失，当前 `10`。
+- \(L_{MT}\)：满温度压力时每日精神损失，当前 `5`。
 - \(R_H\)：健康为 0、其他条件完美时的最大每日恢复，当前 `2`。
 - \(R_M\)：精神为 0、其他条件完美时的最大每日恢复，当前 `1.5`。
 
+缺粮压力与温度压力分别定义为：
+
 \[
-\Delta health_i=-L_H(1-S_F)+R_HS_FM_NS_T\left(1-\frac{health_i}{100}\right)
+S_F^{loss}=(1-S_F)^{p_F}
 \]
 
 \[
-\Delta mental_i=-L_M(1-S_F)+R_MS_FM_NC_b\left(1-\frac{mental_i}{100}\right)
+d_T=\max(T_{min}-T,\ T-T_{max},\ 0)
+\]
+
+\[
+S_T^{loss}=\left[\min\left(\frac{d_T}{D_T},1\right)\right]^{p_T}
+\]
+
+\[
+\Delta health_i=-L_HS_F^{loss}-L_{HT}S_T^{loss}
++R_HS_FM_NS_T\left(1-\frac{health_i}{100}\right)
+\]
+
+\[
+\Delta mental_i=-L_MS_F^{loss}-L_{MT}S_T^{loss}
++R_MS_FM_NC_b\left(1-\frac{mental_i}{100}\right)
 \]
 
 结果限制在 `[0,100]`。
 
 数学含义：
 
-- 缺粮惩罚与缺口线性相关，恢复也被食物满足度线性缩放。
+- 缺粮惩罚是缺口的凸函数：默认平方曲线让小缺口较温和、严重缺粮迅速恶化；恢复仍被食物满足度线性缩放。
 - 高健康/高精神居民因 `(1-current/100)` 接近零，很难继续恢复。
-- 温度只直接影响健康恢复；精神恢复使用包含温度、空间和装饰的综合舒适度。
+- 温度在 `[0,40]°C` 内没有独立惩罚；越界后按边界距离的平方增加，并在越界 `20°C` 时封顶。`-10°C` 与 `50°C` 都对应 `0.25` 温度压力，`-20°C` 与 `60°C` 达到满压力。
+- 原有温度评分仍影响健康恢复；精神恢复仍使用包含温度、空间和装饰的综合舒适度。独立温度损失不会与缺粮相乘，避免一个交叉项掩盖两个旋钮各自的意义。
 - 低营养不会加重饥饿损失，只会降低恢复。
+- `ResidentEffects` 同时报告食物压力、温度压力、两类健康/精神分项惩罚、总惩罚、恢复和净变化；游戏只应用净变化，模拟器把全部分项写入 JSON/CSV。
 
 ### 9.8 早晨死亡、无家可归与冷住宅结算
 
@@ -888,7 +913,7 @@ M_N=m_{nutrition,min}+(1-m_{nutrition,min})Q_N
 
 每日调度现在区分两个判定：
 
-- `isBuildingWorkable()`：住宅结构有效、已初始化、未重叠、面积至少 `4`、体积至少 `8`，且温度在 `[0,50]°C`；用于分房和 UI 工作状态。
+- `isBuildingWorkable()`：住宅结构有效、已初始化、未重叠、面积至少 `4`、体积至少 `8`，且温度在 `[0,40]°C`；用于分房和 UI 工作状态。
 - `shouldRunDailySettlement()`：只要求上述结构条件，不检查温度；用于已有居民的食物、健康和精神日结算。
 
 因此冷住宅不再“免费静止”。已有居民仍会消耗食物并运行连续状态公式，但冷住宅不会接收新居民。当前修复有意只剥离温度门槛；无效、重叠或过小住宅仍不参与日结算，模拟 `current` 语义时必须保持这一边界并检查是否还存在关联残留问题。
@@ -917,14 +942,14 @@ P_{resident,max}-P
 游戏实现只读取 `FHConfig`，模拟器只读取 `TownModelParameters`。当前已经完成单一默认值接线的参数组是：
 
 - `BuildingScoringParameters`：住宅、采矿和狩猎共用的空间评分五参数及温度评分四参数。
-- `HousingParameters`：食物与营养结算、健康/精神变化、最小面积/体积、分房温度范围、每居民有效面积、三项舒适权重及装饰评分五参数。
+- `HousingParameters`：食物与营养结算、凸缺粮压力、健康/精神恢复与损失、安全温度范围、温度压力曲线、最小面积/体积、每居民有效面积、三项舒适权重及装饰评分五参数。
 - `ResidentParameters`：无家可归损伤、移除阈值、工作资格、熟练度上限与增长；其中 `ResidentAgingParameters` 包含全部 14 个年龄增长参数。
 - `MiningParameters`：每 SWE 产量、工位、连接半径、居民生产力和岗位分配参数。
 - `HuntingParameters`：每 SWE 掉落、被动掉落、carry、结构/温度门槛、工位、居民生产力、建筑评分权重和岗位分配参数。
 - `TerrainResourceParameters`：矿井区块矿物储量/恢复与 HUNT 面积储量/恢复。树木、研究点和废料资源不参与当前煤—肉闭环，暂未进入模型参数。
 - `GeneratorT1Parameters`：基础燃料时长倍率、普通/超载过程 tick 耗速、球形热场半径、每级温度和城镇更新间隔。
 
-当前共有 `105` 个可配置的 FH 默认常量进入 `TownModelParameters.Defaults`；另有 `24000 game ticks/day` 保留为不可调的 `GameUnits`。
+当前共有 `110` 个可配置的 FH 默认常量进入 `TownModelParameters.Defaults`；另有 `24000 game ticks/day` 保留为不可调的 `GameUnits`。
 
 ### 10.2 当前硬编码、需要提取的模型参数
 
@@ -966,15 +991,21 @@ P_{resident,max}-P
 
 ## 11. Java 模型接口
 
-阶段 0 已建立不依赖 `Level`、NBT、方块实体或 Forge 注册表的纯 Java API：
+阶段 0–2 已建立不依赖 `Level`、NBT、方块实体或 Forge 注册表的纯 Java API：
 
 - `TownModelParameters`：目前聚合 T1、公共建筑评分、居民、住宅、采矿、狩猎、矿物/HUNT 地形资源与肉类食物参数。`Defaults` 是纳入范围内 FH Java 参数的唯一源码默认值来源，`GameUnits` 只保存不可调的 Minecraft 单位换算。
 - `TownStageZeroModel.analyze(...)`：接受参数 records 和从数据文件解析出的矿权重、掉落条目、燃料时长，返回纯代数统计量。
 - `GeneratorFuelModel`：同时被 `GeneratorData` 与审计调用，包含有效时长、当前补料判定、理想燃料率和 20-tick 批处理燃料率。
 - `GeneratorHeatFieldModel`：同时被 `GeneratorData` 与审计调用，包含塔等级到球形半径和热场温度的映射。
 - `TownFoodResourceAmount` 与 `TownMathFunctions`：食物换算、SWE、空间、温度和装饰公式由游戏与模拟共用；评分函数的所有系数都必须由调用者传入。
-- `HouseDailyModel`：住宅结构门槛、食物/营养、舒适和居民恢复公式；游戏传 `FHConfig`，模拟器传 `TownModelParameters`。
+- `HouseDailyModel`：住宅结构门槛、食物/营养、舒适、凸缺粮压力、独立温度压力和居民净变化公式；游戏传 `FHConfig`，模拟器传 `TownModelParameters`。
 - `ResidentDailyModel`：晨间无家可归/移除与工作资格的唯一纯函数实现。
+- `MiningDailyModel`：采矿 SWE 到总产量、矿物权重分配及无限迁矿区块计数；`MineBaseBuilding` 已直接调用。
+- `HuntingDailyModel`：期望掉落、整数结算、carry 和 HUNT 上限；`HuntingBaseBuilding.work/getForecast` 已直接调用。
+- `TownFoodProcessingModel`：场景层的 `1 raw meat -> 1 cooked meat` 抽象吞吐；它不表示任何具体机器。
+- `TownFoodInventoryModel`：五级食物优先级、同级营养质量排序和小数物品消费；游戏侧 `TownFoodNutritionModel` 复用同一个质量函数。
+- `HouseDailyModel.evaluateSettlement`：一次住宅结算的需求、食物满足度、营养、温度、空间和舒适度；`HouseBuilding` 已直接调用。住宅容量也由该模型提供并由 `HouseBlockEntity` 调用。
+- `TownStageOneTwoData/Scenario/Theory/Simulator`：读取当前 FH/TWR 数据、载入单日场景、生成解析基线和固定种子样本。
 
 后续阶段再按需增加：
 
@@ -1003,16 +1034,17 @@ P_{resident,max}-P
 
 ### 12.1 读取范围
 
-阶段 0 的 `audit` 只读取本阶段代数确实使用的来源：
+当前 `audit` 读取阶段 0–2 代数和单日模拟确实使用的来源：
 
 - FH `TownModelParameters.Defaults` 及其对应的 `FHConfig` 配置路径。
 - FH 煤和焦煤 generator recipes。
 - FH 狩猎掉落表。
 - TWR `biome_mine.js` 中 `fossil_deposits` 权重。
 - TWR `generator_efficiency_1/2.json` 研究加成。
-- 对 Java 控制的参数，记录 `TownModelParameters.Defaults -> FHConfig` 的完整映射；固定游戏单位单独标为 `minecraft-unit`。当前 `source-snapshot.json` 共记录 `155` 个输入，其中 `106` 个为 Java 共享默认值或固定游戏单位。
+- 对 Java 控制的参数，记录 `TownModelParameters.Defaults -> FHConfig` 的完整映射；固定游戏单位单独标为 `minecraft-unit`。
+- FH 五个居民食物等级 Tag，以及八个生/熟肉 `diet_override` 营养 recipe。
 
-FH 食物标签与营养 recipes 在阶段 2 加入真实库存消费时读取；群系温度在阶段 4 读取；`generator_heat_1` 与所有 T2 端点数据在阶段 5 读取。阶段 0 也不读取 IE 焦炉和 Create 风扇配方，因为具体机器将由场景中的每日加工能力替代。
+群系温度在阶段 4 读取；`generator_heat_1` 与所有 T2 端点数据在阶段 5 读取。工具仍不读取 IE 焦炉和 Create 风扇配方，因为具体机器由场景中的每日加工能力替代。快照输入总数以每次 `audit` 输出为准，避免文档数字随数据文件变化而失真。
 
 ### 12.2 输出
 
@@ -1098,25 +1130,32 @@ Scripts/town_scenarios/
 
 ## 14. 命令行工具
 
-Java `TownSimulationMain` 和 Gradle 入口 `runTownSimulation` 已建立。阶段 0 的实际调用方式为：
+Java `TownSimulationMain` 和 Gradle 入口 `runTownSimulation` 已建立。审计调用方式为：
 
 ```bash
 ./gradlew runTownSimulation -PtownArgs='audit --pack-root "<TWR .minecraft>" --output build/reports/town-model/audit/my-run'
 ```
 
-命令规划：
+阶段 1–2 单日模拟调用方式为：
+
+```bash
+./gradlew runTownSimulation -PtownArgs='simulate --pack-root "<TWR .minecraft>" --scenario Scripts/town_scenarios/baseline/stage12-one-day.json --output build/reports/town-model/simulations/stage12-baseline'
+```
+
+已实现命令：
 
 - `audit --pack-root <TWR .minecraft> --output <dir>`：阶段 0 已实现。
-- `simulate --scenario <json> --runs <N> --seed-base <S>`：阶段 1 起逐步实现。
-- `sweep --scenario <json> --parameter <name> --values <list> --runs <N>`：阶段 6 实现。
+- `simulate --pack-root <TWR .minecraft> --scenario <json> [--runs <N>] [--seed <S>] [--output <dir>]`：阶段 1–2 已实现。
+
+通用 `sweep`、多日 `simulate`、策略蒙特卡洛和布局搜索属于阶段 3 或之后，本轮没有提前实现。
 
 输出：
 
 - JSON：完整参数、来源、运行汇总和失败事件。
-- CSV：逐小时气候/建筑温度、逐日库存/生产/居民状态；阶段 0 没有时间序列，因此暂不生成 CSV。
+- CSV：阶段 1–2 输出逐样本狩猎结果，以及采矿—T1、肉加工、住宅温度、食物满足度四组专用诊断扫描；住宅扫描额外输出食物/温度压力、两类分项惩罚、总惩罚与恢复，没有逐日状态时间序列。
 - 终端摘要：核心代数系数、成功概率、P5/P50/P95 和最先发生的瓶颈。
 
-不生成 HTML，不依赖 Python、Pandas、SciPy 或绘图库。
+Java 模拟不生成 HTML，也不依赖 Python、Pandas、SciPy 或绘图库。独立的 `Scripts/plot_town_stage12.py` 只读取上述 CSV，并在 Conda `standard` 中用 Matplotlib 生成 PNG。
 
 ## 15. 统计量及其精确定义
 
@@ -1219,19 +1258,27 @@ Java `TownSimulationMain` 和 Gradle 入口 `runTownSimulation` 已建立。阶�
 
 ### 阶段 1：单日确定性生产
 
+状态：**已完成（2026-08-11）**。
+
 - 实现 SWE、采矿、无限迁矿、抽象煤加工和 T1 燃料。
 - 使用一个标准矿工和一个固定属性矿工验证公式。
 - 暂不加入气候、住宅和随机狩猎。
 
 验收：逐项资源守恒；修改 `3.5`、属性权重或煤占比后，理论与程序结果同步变化。
 
+实际结果：标准矿工为 `1 SWE`，当前 TWR 权重下日产 `3.5` 总矿物和 `1.1666667` 煤。T1 煤/焦煤的有限精确燃烧周期都回到零过程 tick 余额，并与解析长期率完全一致。煤、焦煤的加工只结算本日输入和吞吐，不建立跨日库存。
+
 ### 阶段 2：狩猎、食物和住宅日结算
+
+状态：**已完成（2026-08-11）**。
 
 - 加入真实掉落表随机、carry、抽象肉加工、食物和营养。
 - 加入住宅容量、舒适度、健康和精神。
 - 先用恒定合法温度，不加入气候。
 
 验收：确定性住宅公式精确；狩猎长期均值满足 `3 × 标准误`；冷住宅仍消费食物并执行状态结算；生肉、熟肉和部分加工三种理论食物产率与模拟一致。
+
+实际结果：基准使用 `10000` 个固定种子的独立单日样本。标准猎人执行 `1` 次掉落并留下 `1/6` carry；每次掉落肉件数的样本均值 `1.0233`，理论 `1.0263158`，误差小于 `3 × SE`。全熟食物单位样本均值 `19.22036`，理论 `19.3368421`，同样通过 `3 × SE`。部分加工诊断使用恰好产生 `1 roll/day` 的 `6/7 hunting SWE` 归一化实验，因此每个容量点都有可精确枚举的单次掉落理论值，而没有推进多日库存。
 
 ### 阶段 3：多日库存与岗位反馈
 
@@ -1274,3 +1321,37 @@ Java `TownSimulationMain` 和 Gradle 入口 `runTownSimulation` 已建立。阶�
 2. 每名居民若只吃生肉，需要约 `1.2483 hunting SWE`；若肉全部做熟，只需要约 `0.2881 hunting SWE`。因此 `rawMeatProcessingCapacityPerDay` 会强烈决定食物闭环位置。
 
 所以当前城镇闭环最明确的不闭合仍在采煤劳动与塔耗；食物侧不能再从“肉件数”直接断言不可行，而必须把肉类构成、原版食物值和每日加工吞吐一起纳入。后续模拟的第一职责是验证这些代数预测在库存、健康、气候和随机掉落加入后如何表现；第二职责才是寻找合理的新参数范围。
+
+## 18. 阶段 1–2 观测量与图
+
+阶段 1–2 固定输出以下最重要的理论—模拟对照量：
+
+| 观测量 | 精确定义 | 当前结果 |
+|---|---|---:|
+| 采矿 SWE 煤产率 | `单日煤产量 / 单日采矿 SWE` | `1.1666667 coal/SWE-day` |
+| T1 煤路线劳动 | `T1 理论煤耗 / 采矿 SWE 煤产率` | `18.3673469 SWE` |
+| T1 焦煤路线劳动 | `T1 理论焦煤耗 / 采矿 SWE 煤产率`，按 `1 coal -> 1 coke` | `9.1836735 SWE` |
+| 每执行掉落肉件数 | `每个独立单日样本的肉件数均值` | 理论 `1.0263158`；模拟 `1.0233 ± 0.01130 SE` |
+| 每执行掉落全熟食物量 | `每个独立单日样本全部肉做熟后的食物单位均值` | 理论 `19.3368421`；模拟 `19.22036 ± 0.21923 SE` |
+| 住宅容量 | `min(floor(spaceRating × area / floorBlocksPerResident), beds)` | 基准住宅 `2 residents` |
+| 住宅食物满足度 | `consumedFood / requiredFood`，限制在 `[0,1]` | 基准 `1.0` |
+| 住宅营养质量 | `(nutrition / consumedFood) / nutritionReference`，限制在 `[0,1]` | 基准熟鸡肉 `0.0649351` |
+| 居民日变化 | 第 9.7 节健康/精神公式 | 基准 `+0.53194 health`、`+0.32386 mental` |
+| 80% 食物控制响应 | `24°C`、满营养、健康/精神各 `50` | 食物压力 `0.04`；`+0.47921 health`、`+0.28657 mental` |
+| -10°C 温度控制响应 | 满食物/营养、健康/精神各 `50` | 温度压力 `0.25`；`-2.48293 health`、`-0.93637 mental` |
+
+这里必须区分“每执行一次掉落”和“每 hunting SWE-day 长期期望”。标准猎人的单日整数结算是 `1 roll` 并留下 `1/6 carry`；长期代数仍是 `7/6 roll/SWE-day`，所以长期肉产率仍为 `1.1973684 meat/SWE-day`。阶段 2 不通过推进六日库存来伪造这个长期值。
+
+![阶段 1–2 生产闭环参数扫描](figures/town-model/stage12-production-balance.png)
+
+肉加工图的横轴实验把猎人固定为 `6/7 SWE`，因此恰好得到 `1 roll/day`。处理容量是该单次掉落中最多做熟的肉件数；纵轴再除以 `6/7 SWE`，得到每 hunting SWE 能供养的居民数。这样部分加工的理论值可以逐条目、逐整数数量精确枚举。当前从不加工的 `0.8011 resident/SWE` 上升到容量 `3 meat/day` 时的全熟上界 `3.4707 resident/SWE`。
+
+![阶段 1–2 住宅状态参数扫描](figures/town-model/stage12-house-response.png)
+
+住宅图现在验证了两项新规则，并保留一个尚未处理的营养结论：
+
+1. `[0,40]°C` 是无直接温度压力区间。默认满压力距离 `20°C`、指数 `2`，所以 `-10°C` 和 `50°C` 都是 `0.25` 压力；在满食物、满营养、健康/精神各 `50` 的控制实验中，`-10°C` 变为 `-2.48293 health/day`、`-0.93637 mental/day`。`-20°C` 与 `60°C` 达到封顶压力，健康直接损失不再随更极端温度继续增长。
+2. 缺粮损失改为平方曲线后，净变化零点下降到健康满足度约 `0.70359`、精神满足度约 `0.70678`。同一控制实验中，`0.8` 食物满足度已是 `+0.47921 health/day`、`+0.28657 mental/day`；`0.4` 则迅速恶化为 `-2.48039 health/day`、`-1.55671 mental/day`。这实现了“小缺口可承受、严重缺粮很危险”，且完全缺粮的最大损失仍保持 `8/5`。
+3. 肉类营养质量远低于 `nutritionReferencePerFoodUnit=7000`。基准库存中熟鸡肉在同级内先于熟牛肉消耗，但仍只有 `Q_N=0.06494`，恢复倍率主要由最低保底 `0.5` 决定。这说明后续调参时必须同时检查“食物单位”和“营养参考值”，不能只提高肉产量。
+
+图表数据来自 Java 输出的 `mining-t1-sweep.csv`、`hunting-processing-sweep.csv`、`house-temperature-sweep.csv` 和 `house-food-sweep.csv`。后两者同时保存食物/温度压力、分项惩罚、总惩罚和恢复；Matplotlib 只负责展示，不重新计算游戏公式。

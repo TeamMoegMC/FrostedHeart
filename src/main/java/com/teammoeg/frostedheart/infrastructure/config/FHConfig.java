@@ -558,6 +558,7 @@ public class FHConfig {
 				public final ForgeConfigSpec.DoubleValue foodConsumptionPerResidentDay;
 				public final ForgeConfigSpec.DoubleValue nutritionReferencePerFoodUnit;
 				public final ForgeConfigSpec.DoubleValue minimumNutritionRecoveryMultiplier;
+				public final ForgeConfigSpec.DoubleValue foodDeficitPenaltyExponent;
 				public final ForgeConfigSpec.DoubleValue healthLossAtZeroFoodPerResidentDay;
 				public final ForgeConfigSpec.DoubleValue mentalLossAtZeroFoodPerResidentDay;
 				public final ForgeConfigSpec.DoubleValue maximumHealthRecoveryPerResidentDay;
@@ -569,6 +570,10 @@ public class FHConfig {
 				public final ForgeConfigSpec.IntValue minimumInteriorVolumeBlocks;
 				public final ForgeConfigSpec.DoubleValue minimumTemperatureCelsius;
 				public final ForgeConfigSpec.DoubleValue maximumTemperatureCelsius;
+				public final ForgeConfigSpec.DoubleValue temperatureFullStressDistanceCelsius;
+				public final ForgeConfigSpec.DoubleValue temperatureStressPenaltyExponent;
+				public final ForgeConfigSpec.DoubleValue healthLossAtFullTemperatureStressPerResidentDay;
+				public final ForgeConfigSpec.DoubleValue mentalLossAtFullTemperatureStressPerResidentDay;
 				public final ForgeConfigSpec.DoubleValue floorBlocksPerResident;
 				public final ForgeConfigSpec.DoubleValue decorationCountLogOffset;
 				public final ForgeConfigSpec.DoubleValue decorationCountLogMultiplier;
@@ -592,6 +597,11 @@ public class FHConfig {
 						.defineInRange("minimumNutritionRecoveryMultiplier",
 							TownModelParameters.Defaults.HOUSING_MINIMUM_NUTRITION_RECOVERY_MULTIPLIER,
 							0d, 1d);
+					foodDeficitPenaltyExponent = builder
+						.comment("Exponent applied to the missing-food fraction before health and mental penalties.")
+						.defineInRange("foodDeficitPenaltyExponent",
+							TownModelParameters.Defaults.HOUSING_FOOD_DEFICIT_PENALTY_EXPONENT,
+							0.01d, 100d);
 					healthLossAtZeroFoodPerResidentDay = builder
 						.comment("Health points lost per resident-day when no required food is consumed.")
 						.defineInRange("healthLossAtZeroFoodPerResidentDay",
@@ -625,12 +635,12 @@ public class FHConfig {
 							TownModelParameters.Defaults.HOUSING_MINIMUM_INTERIOR_VOLUME_BLOCKS,
 							0, 1000000);
 					minimumTemperatureCelsius = builder
-						.comment("Minimum effective temperature for assigning new residents to a house.")
+						.comment("Minimum effective temperature for assigning residents and avoiding direct cold stress.")
 						.defineInRange("minimumTemperatureCelsius",
 							TownModelParameters.Defaults.HOUSING_MINIMUM_TEMPERATURE_CELSIUS,
 							-1000d, 1000d);
 					maximumTemperatureCelsius = builder
-						.comment("Maximum effective temperature for assigning new residents to a house.")
+						.comment("Maximum effective temperature for assigning residents and avoiding direct heat stress.")
 						.defineInRange("maximumTemperatureCelsius",
 							TownModelParameters.Defaults.HOUSING_MAXIMUM_TEMPERATURE_CELSIUS,
 							-1000d, 1000d);
@@ -639,6 +649,29 @@ public class FHConfig {
 						.defineInRange("floorBlocksPerResident",
 							TownModelParameters.Defaults.HOUSING_FLOOR_BLOCKS_PER_RESIDENT,
 							0.01d, 1000000d);
+					builder.pop();
+
+					builder.push("Temperature Stress");
+					temperatureFullStressDistanceCelsius = builder
+						.comment("Degrees outside the safe temperature range at which direct temperature stress reaches 100%.")
+						.defineInRange("fullStressDistanceCelsius",
+							TownModelParameters.Defaults.HOUSING_TEMPERATURE_FULL_STRESS_DISTANCE_CELSIUS,
+							0.01d, 1000d);
+					temperatureStressPenaltyExponent = builder
+						.comment("Exponent applied to normalized distance outside the safe temperature range.")
+						.defineInRange("penaltyExponent",
+							TownModelParameters.Defaults.HOUSING_TEMPERATURE_STRESS_PENALTY_EXPONENT,
+							0.01d, 100d);
+					healthLossAtFullTemperatureStressPerResidentDay = builder
+						.comment("Maximum direct health loss per resident-day from cold or heat stress.")
+						.defineInRange("healthLossAtFullStressPerResidentDay",
+							TownModelParameters.Defaults.HOUSING_HEALTH_LOSS_AT_FULL_TEMPERATURE_STRESS_PER_RESIDENT_DAY,
+							0d, 100d);
+					mentalLossAtFullTemperatureStressPerResidentDay = builder
+						.comment("Maximum direct mental loss per resident-day from cold or heat stress.")
+						.defineInRange("mentalLossAtFullStressPerResidentDay",
+							TownModelParameters.Defaults.HOUSING_MENTAL_LOSS_AT_FULL_TEMPERATURE_STRESS_PER_RESIDENT_DAY,
+							0d, 100d);
 					builder.pop();
 
 					builder.push("Comfort Weights");

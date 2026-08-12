@@ -65,13 +65,8 @@ public final class TownFoodNutritionModel {
             double nutritionPerItem,
             double foodResourceAmount
     ) {
-        if (!Double.isFinite(nutritionPerItem)
-                || !Double.isFinite(foodResourceAmount)
-                || nutritionPerItem <= 0.0
-                || foodResourceAmount <= TeamTownResourceHolder.DELTA) {
-            return 0.0;
-        }
-        return nutritionPerItem / foodResourceAmount;
+        return TownFoodInventoryModel.nutritionPerFoodUnit(
+                nutritionPerItem, foodResourceAmount);
     }
 
     public static List<ItemStackResourceKey> orderByNutritionQuality(

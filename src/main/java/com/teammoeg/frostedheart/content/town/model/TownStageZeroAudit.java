@@ -48,7 +48,7 @@ import java.util.regex.Pattern;
 public final class TownStageZeroAudit {
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     private static final DateTimeFormatter FILE_TIME = DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss");
-    private static final String SCOPE = "stage-0-t1-algebra";
+    private static final String SCOPE = "stage-0-to-2-source-algebra";
 
     private TownStageZeroAudit() {
     }
@@ -72,6 +72,8 @@ public final class TownStageZeroAudit {
                 Files.readString(paths.biomeMineScript()), "the_winter_rescue:fossil_deposits");
         double efficiencyLevelOne = parseResearchStatBonus(paths.generatorEfficiencyOne(), "generator_effi");
         double efficiencyLevelTwo = parseResearchStatBonus(paths.generatorEfficiencyTwo(), "generator_effi");
+        TownStageOneTwoData stageOneTwoData = TownStageOneTwoData.load(
+                normalizedProjectRoot, normalizedPackRoot);
 
         TownStageZeroModel.StageZeroMetrics metrics = TownStageZeroModel.analyze(
                 parameters,
@@ -96,8 +98,9 @@ public final class TownStageZeroAudit {
                 cokeRecipeTicks,
                 cumulativeEfficiencyBonus);
 
-        List<SourceFile> sourceFiles = sourceFiles(paths);
-        List<ParameterValue> parameterValues = parameterValues(
+        List<SourceFile> sourceFiles = new ArrayList<>(sourceFiles(paths));
+        addStageOneTwoSourceFiles(sourceFiles, stageOneTwoData);
+        List<ParameterValue> parameterValues = new ArrayList<>(parameterValues(
                 parameters,
                 paths,
                 mineWeights,
@@ -105,7 +108,9 @@ public final class TownStageZeroAudit {
                 coalRecipeTicks,
                 cokeRecipeTicks,
                 efficiencyLevelOne,
-                efficiencyLevelTwo);
+                efficiencyLevelTwo));
+        addStageOneTwoFoodParameters(
+                parameterValues, stageOneTwoData, paths.townModelParameters());
         String snapshotHash = snapshotHash(sourceFiles, parameterValues);
         String generatedAt = OffsetDateTime.now().toString();
         SourceSnapshot snapshot = new SourceSnapshot(
@@ -118,7 +123,10 @@ public final class TownStageZeroAudit {
                 snapshotHash,
                 auditMetrics(metrics, efficiencyOneMetrics, efficiencyTwoMetrics),
                 issues,
-                List.of("T2 generator heat network", "multi-day simulation", "climate and thermal inertia"));
+                List.of(
+                        "stage-3 multi-day inventory and worker feedback",
+                        "stage-4 climate and heat fields",
+                        "stage-5 T2 generator heat network"));
 
         Files.createDirectories(output);
         Path snapshotPath = output.resolve("source-snapshot.json");
@@ -243,6 +251,51 @@ public final class TownStageZeroAudit {
                     sha256(Files.readAllBytes(input.path()))));
         }
         return List.copyOf(result);
+    }
+
+    private static void addStageOneTwoSourceFiles(
+            List<SourceFile> result,
+            TownStageOneTwoData data
+    ) throws IOException {
+        for (Map.Entry<String, String> entry : data.sourceFiles().entrySet()) {
+            if (!entry.getKey().startsWith("fh.food.level.")
+                    && !entry.getKey().startsWith("fh.nutrition.")
+                    && !entry.getKey().startsWith("fh.model.")) {
+                continue;
+            }
+            Path path = Path.of(entry.getValue());
+            result.add(new SourceFile(
+                    entry.getKey(),
+                    path.toAbsolutePath().normalize().toString(),
+                    sha256(Files.readAllBytes(path))));
+        }
+    }
+
+    private static void addStageOneTwoFoodParameters(
+            List<ParameterValue> values,
+            TownStageOneTwoData data,
+            Path townModelParametersSource
+    ) {
+        data.foods().values().stream()
+                .sorted(Comparator.comparing(TownStageOneTwoData.FoodDefinition::item))
+                .forEach(food -> {
+                    Path nutritionSource = Path.of(
+                            data.sourceFiles().get("fh.nutrition." + food.item()));
+                    add(values, "food." + food.item() + ".foodLevel", food.foodLevel(),
+                            "priority-level", "fh-item-tag",
+                            residentFoodLevelSource(data, food.foodLevel()), "values");
+                    add(values, "food." + food.item() + ".foodUnitsPerItem",
+                            food.foodUnitsPerItem(), "food-unit/item", "derived-minecraft-food",
+                            townModelParametersSource,
+                            "TownFoodResourceAmount.fromFoodProperties(hunger, saturationModifier)");
+                    add(values, "food." + food.item() + ".nutritionPerItem",
+                            food.nutritionPerItem(), "nutrition/item", "fh-nutrition-recipe",
+                            nutritionSource, "sum(group channels) / 4");
+                });
+    }
+
+    private static Path residentFoodLevelSource(TownStageOneTwoData data, int level) {
+        return Path.of(data.sourceFiles().get("fh.food.level." + level));
     }
 
     private static List<ParameterValue> parameterValues(
@@ -448,6 +501,8 @@ public final class TownStageZeroAudit {
                 "nutrition/food-unit", source, "HOUSING_NUTRITION_REFERENCE_PER_FOOD_UNIT", "HOUSING.nutritionReferencePerFoodUnit");
         addShared(values, "housing.minimumNutritionRecoveryMultiplier", housing.minimumNutritionRecoveryMultiplier(),
                 "dimensionless", source, "HOUSING_MINIMUM_NUTRITION_RECOVERY_MULTIPLIER", "HOUSING.minimumNutritionRecoveryMultiplier");
+        addShared(values, "housing.foodDeficitPenaltyExponent", housing.foodDeficitPenaltyExponent(),
+                "exponent", source, "HOUSING_FOOD_DEFICIT_PENALTY_EXPONENT", "HOUSING.foodDeficitPenaltyExponent");
         addShared(values, "housing.healthLossAtZeroFoodPerResidentDay", housing.healthLossAtZeroFoodPerResidentDay(),
                 "health/resident/day", source, "HOUSING_HEALTH_LOSS_AT_ZERO_FOOD_PER_RESIDENT_DAY", "HOUSING.healthLossAtZeroFoodPerResidentDay");
         addShared(values, "housing.mentalLossAtZeroFoodPerResidentDay", housing.mentalLossAtZeroFoodPerResidentDay(),
@@ -464,6 +519,24 @@ public final class TownStageZeroAudit {
                 "celsius", source, "HOUSING_MINIMUM_TEMPERATURE_CELSIUS", "HOUSING.minimumTemperatureCelsius");
         addShared(values, "housing.maximumTemperatureCelsius", housing.maximumTemperatureCelsius(),
                 "celsius", source, "HOUSING_MAXIMUM_TEMPERATURE_CELSIUS", "HOUSING.maximumTemperatureCelsius");
+        addShared(values, "housing.temperatureFullStressDistanceCelsius",
+                housing.temperatureFullStressDistanceCelsius(),
+                "celsius", source, "HOUSING_TEMPERATURE_FULL_STRESS_DISTANCE_CELSIUS",
+                "HOUSING.temperatureFullStressDistanceCelsius");
+        addShared(values, "housing.temperatureStressPenaltyExponent",
+                housing.temperatureStressPenaltyExponent(),
+                "exponent", source, "HOUSING_TEMPERATURE_STRESS_PENALTY_EXPONENT",
+                "HOUSING.temperatureStressPenaltyExponent");
+        addShared(values, "housing.healthLossAtFullTemperatureStressPerResidentDay",
+                housing.healthLossAtFullTemperatureStressPerResidentDay(),
+                "health/resident/day", source,
+                "HOUSING_HEALTH_LOSS_AT_FULL_TEMPERATURE_STRESS_PER_RESIDENT_DAY",
+                "HOUSING.healthLossAtFullTemperatureStressPerResidentDay");
+        addShared(values, "housing.mentalLossAtFullTemperatureStressPerResidentDay",
+                housing.mentalLossAtFullTemperatureStressPerResidentDay(),
+                "mental/resident/day", source,
+                "HOUSING_MENTAL_LOSS_AT_FULL_TEMPERATURE_STRESS_PER_RESIDENT_DAY",
+                "HOUSING.mentalLossAtFullTemperatureStressPerResidentDay");
         addShared(values, "housing.floorBlocksPerResident", housing.floorBlocksPerResident(),
                 "block2/resident", source, "HOUSING_FLOOR_BLOCKS_PER_RESIDENT", "HOUSING.floorBlocksPerResident");
         addShared(values, "housing.temperatureComfortWeight", housing.temperatureComfortWeight(),
@@ -781,7 +854,7 @@ public final class TownStageZeroAudit {
     }
 
     public static void printSummary(AuditRun run) {
-        System.out.println("Town model audit: stage 0 / T1");
+        System.out.println("Town model audit: stages 0-2 sources / T1 algebra");
         System.out.println("Snapshot: " + run.snapshot().snapshotHash());
         for (AuditMetric metric : run.report().metrics()) {
             System.out.printf(Locale.ROOT, "  %-44s %14.7f  %s%n",

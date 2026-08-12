@@ -112,9 +112,46 @@ public final class GeneratorFuelModel {
                 gameTicksPerDay);
     }
 
+    /**
+     * Executes the same carry-preserving batch transition as GeneratorData for
+     * a finite process-tick demand with an unlimited supply of one fuel item.
+     */
+    public static FuelSettlement settleProcessDemand(
+            int effectiveFuelProcessTicks,
+            int requestedProcessTicksPerBatch,
+            long totalRequestedProcessTicks,
+            long initialRemainingProcessTicks
+    ) {
+        requirePositive(effectiveFuelProcessTicks, "effectiveFuelProcessTicks");
+        requirePositive(requestedProcessTicksPerBatch, "requestedProcessTicksPerBatch");
+        if (totalRequestedProcessTicks < 0L || initialRemainingProcessTicks < 0L) {
+            throw new IllegalArgumentException("Fuel demand and initial balance must be non-negative.");
+        }
+        long remainingDemand = totalRequestedProcessTicks;
+        long balance = initialRemainingProcessTicks;
+        long loadedItems = 0L;
+        while (remainingDemand > 0L) {
+            long batch = Math.min(requestedProcessTicksPerBatch, remainingDemand);
+            while (balance < batch) {
+                balance = Math.addExact(balance, effectiveFuelProcessTicks);
+                loadedItems = Math.addExact(loadedItems, 1L);
+            }
+            balance -= batch;
+            remainingDemand -= batch;
+        }
+        return new FuelSettlement(totalRequestedProcessTicks, loadedItems, balance);
+    }
+
     private static void requirePositive(int value, String name) {
         if (value <= 0) {
             throw new IllegalArgumentException(name + " must be positive.");
         }
+    }
+
+    public record FuelSettlement(
+            long consumedProcessTicks,
+            long loadedFuelItems,
+            long remainingProcessTicks
+    ) {
     }
 }

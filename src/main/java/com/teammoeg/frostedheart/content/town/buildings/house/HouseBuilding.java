@@ -327,32 +327,45 @@ public class HouseBuilding extends AbstractTownBuilding implements ITownResident
 
     private DailyReport createDailyReport(int residentCount, FoodConsumption consumption) {
         FHConfig.Server.Town.Housing config = FHConfig.SERVER.TOWN.HOUSING;
-        double foodRequired = residentCount * config.foodConsumptionPerResidentDay.get();
-        double foodSatisfaction = HouseDailyModel.calculateFoodSatisfaction(
-                foodRequired, consumption.foodConsumed());
-        double nutritionQuality = HouseDailyModel.calculateNutritionQuality(
-                consumption.nutritionValue(),
-                consumption.foodConsumed(),
-                config.nutritionReferencePerFoodUnit.get());
-        double nutritionMultiplier = HouseDailyModel.calculateNutritionRecoveryMultiplier(
-                nutritionQuality, config.minimumNutritionRecoveryMultiplier.get());
-        double effectiveTemperature = getEffectiveTemperature();
-        double temperatureRating = calculateTemperatureRating(effectiveTemperature);
-        double spaceRating = calculateSpaceRating(volume, area);
-        double comfortRating = calculateComfortRating(temperatureRating, spaceRating, decorationRating);
+        FHConfig.Server.Town.BuildingScoring scoring = FHConfig.SERVER.TOWN.BUILDING_SCORING;
+        HouseDailyModel.SettlementReport modelReport = HouseDailyModel.evaluateSettlement(
+                new HouseDailyModel.SettlementInput(
+                        residentCount,
+                        consumption.foodConsumed(),
+                        consumption.nutritionValue(),
+                        getEffectiveTemperature(),
+                        area,
+                        volume,
+                        decorationRating),
+                new HouseDailyModel.SettlementParameters(
+                        config.foodConsumptionPerResidentDay.get(),
+                        config.nutritionReferencePerFoodUnit.get(),
+                        config.minimumNutritionRecoveryMultiplier.get(),
+                        scoring.comfortableTemperatureCelsius.get(),
+                        scoring.minimumTemperatureRating.get(),
+                        scoring.temperatureRatingSlope.get(),
+                        scoring.temperatureRatingHalfPointDifferenceCelsius.get(),
+                        scoring.spaceAreaCoefficient.get(),
+                        scoring.spaceHeightLogCoefficient.get(),
+                        scoring.spaceHeightLogOffset.get(),
+                        scoring.spaceResponseScale.get(),
+                        scoring.spaceResponseExponent.get(),
+                        config.temperatureComfortWeight.get(),
+                        config.spaceComfortWeight.get(),
+                        config.decorationComfortWeight.get()));
         return new DailyReport(
                 true,
-                residentCount,
-                foodRequired,
-                consumption.foodConsumed(),
-                foodSatisfaction,
-                nutritionQuality,
-                nutritionMultiplier,
-                effectiveTemperature,
-                temperatureRating,
-                spaceRating,
-                decorationRating,
-                comfortRating
+                modelReport.residentCount(),
+                modelReport.foodRequired(),
+                modelReport.foodConsumed(),
+                modelReport.foodSatisfaction(),
+                modelReport.nutritionQuality(),
+                modelReport.nutritionRecoveryMultiplier(),
+                modelReport.effectiveTemperature(),
+                modelReport.temperatureRating(),
+                modelReport.spaceRating(),
+                modelReport.decorationRating(),
+                modelReport.comfortRating()
         );
     }
 
@@ -367,12 +380,21 @@ public class HouseBuilding extends AbstractTownBuilding implements ITownResident
                 resident.getMental(),
                 report.foodSatisfaction(),
                 report.nutritionRecoveryMultiplier(),
+                report.effectiveTemperature(),
                 report.temperatureRating(),
                 report.comfortRating(),
-                config.healthLossAtZeroFoodPerResidentDay.get(),
-                config.mentalLossAtZeroFoodPerResidentDay.get(),
-                config.maximumHealthRecoveryPerResidentDay.get(),
-                config.maximumMentalRecoveryPerResidentDay.get()
+                new HouseDailyModel.ResidentEffectParameters(
+                        config.foodDeficitPenaltyExponent.get(),
+                        config.healthLossAtZeroFoodPerResidentDay.get(),
+                        config.mentalLossAtZeroFoodPerResidentDay.get(),
+                        config.minimumTemperatureCelsius.get(),
+                        config.maximumTemperatureCelsius.get(),
+                        config.temperatureFullStressDistanceCelsius.get(),
+                        config.temperatureStressPenaltyExponent.get(),
+                        config.healthLossAtFullTemperatureStressPerResidentDay.get(),
+                        config.mentalLossAtFullTemperatureStressPerResidentDay.get(),
+                        config.maximumHealthRecoveryPerResidentDay.get(),
+                        config.maximumMentalRecoveryPerResidentDay.get())
         );
     }
 
