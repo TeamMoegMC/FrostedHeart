@@ -189,16 +189,19 @@ public class TeamTownResourceActionExecutorHandler extends AbstractActionExecuto
             double availableAmount;
             if (action.isAdd()) availableAmount = resourceHolder.getCapacityLeft();
             else availableAmount = resourceHolder.get(action.itemToModify());
-            if (availableAmount < amount) {
-                if (action.actionMode() == ResourceActionMode.ATTEMPT || availableAmount <= TeamTownResourceHolder.DELTA) {
+            double modifiedAmount = TownInventoryModel.modifiedAmount(
+                    amount, availableAmount, action.actionMode());
+            if (modifiedAmount < amount) {
+                if (modifiedAmount <= TeamTownResourceHolder.DELTA) {
                     return new TownResourceActionResults.ItemResourceActionResult(action, false, 0, amount);
                 }
                 if (action.isAdd()) {
-                    resourceHolder.addUnsafe(action.itemToModify(), availableAmount);
+                    resourceHolder.addUnsafe(action.itemToModify(), modifiedAmount);
                 } else {
-                    resourceHolder.costUnsafe(action.itemToModify(), availableAmount);
+                    resourceHolder.costUnsafe(action.itemToModify(), modifiedAmount);
                 }
-                return new TownResourceActionResults.ItemResourceActionResult(action, false, availableAmount, amount - availableAmount);
+                return new TownResourceActionResults.ItemResourceActionResult(
+                        action, false, modifiedAmount, amount - modifiedAmount);
             } else {
                 if (action.isAdd()) {
                     resourceHolder.addUnsafe(action.itemToModify(), amount);

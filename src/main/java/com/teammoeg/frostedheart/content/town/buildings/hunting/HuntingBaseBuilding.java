@@ -379,13 +379,21 @@ public class HuntingBaseBuilding extends AbstractTownResidentWorkBuilding {
 	@Override
 	public double getResidentPriority() {
 		if(!this.isBuildingWorkable()) return NEGATIVE_INFINITY;
-		int currentResidentNum = this.residentsID.size();
-		if(currentResidentNum >= getMaxResidents()) return NEGATIVE_INFINITY;
+		return getResidentPriority(this.residentsID.size());
+	}
+
+    @Override
+    public double getResidentPriority(int currentResidentNum) {
+		if(!this.isBuildingWorkable()) return NEGATIVE_INFINITY;
 		FHConfig.Server.Town.Hunting config = FHConfig.SERVER.TOWN.HUNTING;
-		return config.assignmentBasePriority.get()
-				- config.assignmentPenaltyPerWorker.get() * currentResidentNum
-				+ config.assignmentFillRatioBonus.get() * currentResidentNum / getMaxResidents()
-				+ config.assignmentRatingMultiplier.get() * rating;
+		return HuntingDailyModel.assignmentPriority(
+                currentResidentNum,
+                getMaxResidents(),
+                rating,
+                config.assignmentBasePriority.get(),
+                config.assignmentPenaltyPerWorker.get(),
+                config.assignmentFillRatioBonus.get(),
+                config.assignmentRatingMultiplier.get());
 	}
 
 	@Override

@@ -61,7 +61,9 @@ import com.teammoeg.frostedheart.content.town.event.TownBuildingChangeEvent;
 import com.teammoeg.frostedheart.content.town.event.TownResidentChangeEvent;
 import com.teammoeg.frostedheart.content.town.event.TownResourceChangeEvent;
 import com.teammoeg.frostedheart.content.town.resident.Resident;
+import com.teammoeg.frostedheart.content.town.resident.ResidentAgingModel;
 import com.teammoeg.frostedheart.content.town.resident.ResidentDailyModel;
+import com.teammoeg.frostedheart.content.town.model.TownAssignmentModel;
 import com.teammoeg.frostedheart.content.town.resident.WanderingRefugee;
 import com.teammoeg.frostedheart.content.town.resource.TeamTownResourceHolder;
 import com.teammoeg.frostedheart.content.town.resource.VirtualResourceType;
@@ -440,31 +442,30 @@ public class TeamTownData implements SpecialData{
      */
     private void tickResidentsAging() {
         ResidentAging aging = FHConfig.SERVER.TOWN.RESIDENT_AGING;
+        ResidentAgingModel.Parameters parameters =
+                new ResidentAgingModel.Parameters(
+                        aging.infantToChildDays.get(),
+                        aging.childToAdultDays.get(),
+                        aging.infantStrengthGainPerDay.get(),
+                        aging.infantIntelligenceGainPerDay.get(),
+                        aging.infantAttributeCap.get(),
+                        aging.childStrengthGainPerDay.get(),
+                        aging.childIntelligenceGainPerDay.get(),
+                        aging.childStrengthCap.get(),
+                        aging.childIntelligenceCap.get(),
+                        aging.adultStrengthGainPerDay.get(),
+                        aging.adultIntelligenceGainPerDay.get(),
+                        aging.adultAttributeCap.get(),
+                        aging.elderStrengthDecayPerDay.get(),
+                        aging.elderStrengthFloor.get());
         for (Resident resident : residents.values()) {
-            resident.setAgeDays(resident.getAgeDays() + 1);
-            switch (resident.getAge()) {
-                case Resident.AGE_INFANT -> {
-                    if (resident.getAgeDays() >= aging.infantToChildDays.get()) {
-                        resident.setAge(Resident.AGE_CHILD);
-                    } else {
-                        resident.growStrengthDaily(aging.infantStrengthGainPerDay.get(), aging.infantAttributeCap.get());
-                        resident.growIntelligenceDaily(aging.infantIntelligenceGainPerDay.get(), aging.infantAttributeCap.get());
-                    }
-                }
-                case Resident.AGE_CHILD -> {
-                    if (resident.getAgeDays() >= aging.childToAdultDays.get()) {
-                        resident.setAge(Resident.AGE_ADULT);
-                    } else {
-                        resident.growStrengthDaily(aging.childStrengthGainPerDay.get(), aging.childStrengthCap.get());
-                        resident.growIntelligenceDaily(aging.childIntelligenceGainPerDay.get(), aging.childIntelligenceCap.get());
-                    }
-                }
-                case Resident.AGE_ADULT -> {
-                    resident.growStrengthDaily(aging.adultStrengthGainPerDay.get(), aging.adultAttributeCap.get());
-                    resident.growIntelligenceDaily(aging.adultIntelligenceGainPerDay.get(), aging.adultAttributeCap.get());
-                }
-                case Resident.AGE_ELDER -> resident.decayStrengthDaily(aging.elderStrengthDecayPerDay.get(), aging.elderStrengthFloor.get());
-            }
+            ResidentAgingModel.AgingResult result = ResidentAgingModel.settleDay(
+                    resident.getAge(), resident.getAgeDays(), resident.getStrength(),
+                    resident.getIntelligence(), parameters);
+            resident.setAgeDays(result.ageDays());
+            resident.setAge(result.age());
+            resident.setStrength(result.strength());
+            resident.setIntelligence(result.intelligence());
         }
     }
 
@@ -693,44 +694,25 @@ public class TeamTownData implements SpecialData{
     }
 
     void assignWork() {
-        Map<UUID, Resident> availableResidents = residents.values().stream().filter(resident->resident.getWorkPos() == null && resident.getHousePos() != null && resident.getAge() != Resident.AGE_INFANT)
-        .collect(Collectors.toMap(Resident::getUUID, t->t));
-        PriorityQueue<ITownResidentWorkBuilding> availableBuildings = buildings.values().stream()
+        List<Resident> availableResidents = residents.values().stream()
+                .filter(resident -> resident.getWorkPos() == null
+                        && resident.getHousePos() != null
+                        && resident.getAge() != Resident.AGE_INFANT)
+                .toList();
+        List<ITownResidentWorkBuilding> availableBuildings = buildings.values().stream()
                 .filter(AbstractTownBuilding::isBuildingWorkable)
                 .filter(building -> building instanceof ITownResidentWorkBuilding)
                 .map(building -> (ITownResidentWorkBuilding) building)
-                //.sorted(Comparator.comparingDouble(o -> -o.getResidentPriority()))//PriorityQueue本身就有排序，不需要额外排序
-                .collect(Collectors.toCollection(() -> new PriorityQueue<>(Comparator.comparingDouble(ITownResidentWorkBuilding::getResidentPriority).reversed())));
-
-        Map<ITownResidentWorkBuilding, Map<Resident, Double/*score*/>> buildingResidentScoreCache = new HashMap<>();
-
-        while(!availableBuildings.isEmpty()){
-            ITownResidentWorkBuilding topPriorityBuilding = availableBuildings.poll();
-            if(topPriorityBuilding.getResidentPriority() == Double.NEGATIVE_INFINITY) break;
-            Resident bestResident = null;
-            double bestResidentScore = 0;
-            Map<Resident, Double> residentScoreCache = buildingResidentScoreCache.computeIfAbsent(topPriorityBuilding, a->new HashMap<>());
-            if(availableResidents.isEmpty()){
-                break;
-            }
-            for(Resident resident:availableResidents.values()){
-                if (!topPriorityBuilding.canResidentWork(resident)) {
-                    continue;
-                }
-                double residentScore = residentScoreCache.computeIfAbsent(resident, topPriorityBuilding::getResidentScore);
-                if(residentScore > bestResidentScore){
-                    bestResident = resident;
-                    bestResidentScore = residentScore;
-                }
-            }
-            if(bestResident != null){
-                topPriorityBuilding.addResident(bestResident);
-                availableResidents.remove(bestResident.getUUID());
-                if(topPriorityBuilding.getResidentPriority() != Double.NEGATIVE_INFINITY){
-                    availableBuildings.add(topPriorityBuilding);
-                }
-            }
-        }
+                .toList();
+        TownAssignmentModel.fillVacancies(
+                availableResidents,
+                availableBuildings,
+                ITownResidentWorkBuilding::getMaxResidents,
+                building -> building.getResidentsID().size(),
+                ITownResidentWorkBuilding::getResidentPriority,
+                ITownResidentWorkBuilding::canResidentWork,
+                ITownResidentWorkBuilding::getResidentScore)
+                .forEach(assignment -> assignment.workplace().addResident(assignment.resident()));
     }
 
     void linkMinesToBases() {

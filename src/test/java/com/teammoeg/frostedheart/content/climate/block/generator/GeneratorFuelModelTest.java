@@ -70,6 +70,20 @@ class GeneratorFuelModelTest {
         assertEquals(24_000L * 7L, settlement.consumedProcessTicks());
     }
 
+    @Test
+    void finiteSupplyPreservesPartialBalanceAndStarvesWholeBatches() {
+        GeneratorFuelModel.FiniteFuelSettlement settlement =
+                GeneratorFuelModel.settleFiniteProcessDemand(
+                        45, 20, 100, 0, 1);
+
+        assertEquals(1L, settlement.loadedFuelItems());
+        assertEquals(40L, settlement.consumedProcessTicks());
+        assertEquals(5L, settlement.remainingProcessTicks());
+        assertEquals(2L, settlement.servedBatches());
+        assertEquals(3L, settlement.starvedBatches());
+        assertEquals(0.4, settlement.serviceFraction(), 1.0e-12);
+    }
+
     private static FuelState runForGameTicks(int fuelDuration, int gameTicks, int batchTicks) {
         int remaining = 0;
         int loadedItems = 0;

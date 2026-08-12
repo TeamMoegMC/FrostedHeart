@@ -59,6 +59,25 @@ public final class HuntingDailyModel {
         return Math.min(safePlanned, availableRolls);
     }
 
+    /** Current dynamic vacancy priority for one hunting base. */
+    public static double assignmentPriority(
+            int currentWorkers,
+            int maximumWorkers,
+            double rating,
+            double basePriority,
+            double penaltyPerWorker,
+            double fillRatioBonus,
+            double ratingMultiplier
+    ) {
+        int maximum = Math.max(0, maximumWorkers);
+        int current = Math.max(0, currentWorkers);
+        if (maximum == 0 || current >= maximum) return Double.NEGATIVE_INFINITY;
+        return finiteOrZero(basePriority)
+                - nonNegative(penaltyPerWorker) * current
+                + finiteOrZero(fillRatioBonus) * current / maximum
+                + finiteOrZero(ratingMultiplier) * finiteOrZero(rating);
+    }
+
     private static int saturatingInt(long value) {
         if (value <= 0L) return 0;
         return value >= Integer.MAX_VALUE ? Integer.MAX_VALUE : (int) value;
@@ -66,6 +85,10 @@ public final class HuntingDailyModel {
 
     private static double nonNegative(double value) {
         return Double.isFinite(value) ? Math.max(0.0, value) : 0.0;
+    }
+
+    private static double finiteOrZero(double value) {
+        return Double.isFinite(value) ? value : 0.0;
     }
 
     public record RollPlan(

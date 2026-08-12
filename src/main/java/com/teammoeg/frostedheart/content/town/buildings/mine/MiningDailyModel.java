@@ -33,6 +33,22 @@ public final class MiningDailyModel {
         return safeWeightTotal > 0.0 ? safeTotal * safeWeight / safeWeightTotal : 0.0;
     }
 
+    /** Current dynamic vacancy priority for one mining base. */
+    public static double assignmentPriority(
+            int currentWorkers,
+            int maximumWorkers,
+            double basePriority,
+            double penaltyPerWorker,
+            double fillRatioBonus
+    ) {
+        int maximum = Math.max(0, maximumWorkers);
+        int current = Math.max(0, currentWorkers);
+        if (maximum == 0 || current >= maximum) return Double.NEGATIVE_INFINITY;
+        return finiteOrZero(basePriority)
+                - nonNegative(penaltyPerWorker) * current
+                + finiteOrZero(fillRatioBonus) * current / maximum;
+    }
+
     /** Number of mine chunks that have been completely exhausted. */
     public static long exhaustedChunks(double cumulativeOreUnits, double oreReservePerChunk) {
         double reserve = positive(oreReservePerChunk, "oreReservePerChunk");
@@ -49,6 +65,10 @@ public final class MiningDailyModel {
 
     private static double nonNegative(double value) {
         return Double.isFinite(value) ? Math.max(0.0, value) : 0.0;
+    }
+
+    private static double finiteOrZero(double value) {
+        return Double.isFinite(value) ? value : 0.0;
     }
 
     private static double positive(double value, String name) {

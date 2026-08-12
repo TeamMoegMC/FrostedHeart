@@ -339,12 +339,19 @@ public class MineBaseBuilding extends AbstractTownResidentWorkBuilding {
 	@Override
 	public double getResidentPriority() {
 		if(!this.isBuildingWorkable()) return NEGATIVE_INFINITY;
-		int currentResidentNum = this.residentsID.size();
-		if(currentResidentNum >= getMaxResidents()) return NEGATIVE_INFINITY;
+		return getResidentPriority(this.residentsID.size());
+	}
+
+    @Override
+    public double getResidentPriority(int currentResidentNum) {
+		if(!this.isBuildingWorkable()) return NEGATIVE_INFINITY;
         FHConfig.Server.Town.Mining config = FHConfig.SERVER.TOWN.MINING;
-		return config.assignmentBasePriority.get()
-                - config.assignmentPenaltyPerWorker.get() * currentResidentNum
-                + config.assignmentFillRatioBonus.get() * currentResidentNum / getMaxResidents();
+		return MiningDailyModel.assignmentPriority(
+                currentResidentNum,
+                getMaxResidents(),
+                config.assignmentBasePriority.get(),
+                config.assignmentPenaltyPerWorker.get(),
+                config.assignmentFillRatioBonus.get());
 	}
 
     @Override

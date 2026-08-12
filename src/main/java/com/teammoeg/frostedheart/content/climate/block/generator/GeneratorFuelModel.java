@@ -142,6 +142,58 @@ public final class GeneratorFuelModel {
         return new FuelSettlement(totalRequestedProcessTicks, loadedItems, balance);
     }
 
+    /**
+     * Executes the current town-batch transition with a finite number of fuel
+     * items. A starved batch consumes no partial process balance, matching
+     * GeneratorData: the balance is paid only after it reaches the full batch.
+     */
+    public static FiniteFuelSettlement settleFiniteProcessDemand(
+            int effectiveFuelProcessTicks,
+            int requestedProcessTicksPerBatch,
+            long totalRequestedProcessTicks,
+            long initialRemainingProcessTicks,
+            long availableFuelItems
+    ) {
+        requirePositive(effectiveFuelProcessTicks, "effectiveFuelProcessTicks");
+        requirePositive(requestedProcessTicksPerBatch, "requestedProcessTicksPerBatch");
+        if (totalRequestedProcessTicks < 0L
+                || initialRemainingProcessTicks < 0L
+                || availableFuelItems < 0L) {
+            throw new IllegalArgumentException("Fuel demand, balance, and supply must be non-negative.");
+        }
+        long remainingDemand = totalRequestedProcessTicks;
+        long balance = initialRemainingProcessTicks;
+        long fuelLeft = availableFuelItems;
+        long loadedItems = 0L;
+        long consumedTicks = 0L;
+        long servedBatches = 0L;
+        long starvedBatches = 0L;
+        while (remainingDemand > 0L) {
+            long batch = Math.min(requestedProcessTicksPerBatch, remainingDemand);
+            while (balance < batch && fuelLeft > 0L) {
+                balance = Math.addExact(balance, effectiveFuelProcessTicks);
+                fuelLeft--;
+                loadedItems++;
+            }
+            if (balance >= batch) {
+                balance -= batch;
+                consumedTicks += batch;
+                servedBatches++;
+            } else {
+                starvedBatches++;
+            }
+            remainingDemand -= batch;
+        }
+        return new FiniteFuelSettlement(
+                totalRequestedProcessTicks,
+                consumedTicks,
+                loadedItems,
+                fuelLeft,
+                balance,
+                servedBatches,
+                starvedBatches);
+    }
+
     private static void requirePositive(int value, String name) {
         if (value <= 0) {
             throw new IllegalArgumentException(name + " must be positive.");
@@ -153,5 +205,20 @@ public final class GeneratorFuelModel {
             long loadedFuelItems,
             long remainingProcessTicks
     ) {
+    }
+
+    public record FiniteFuelSettlement(
+            long requestedProcessTicks,
+            long consumedProcessTicks,
+            long loadedFuelItems,
+            long remainingFuelItems,
+            long remainingProcessTicks,
+            long servedBatches,
+            long starvedBatches
+    ) {
+        public double serviceFraction() {
+            return requestedProcessTicks > 0L
+                    ? (double) consumedProcessTicks / requestedProcessTicks : 1.0;
+        }
     }
 }

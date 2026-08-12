@@ -39,6 +39,15 @@ public interface ITownResidentWorkBuilding extends ITownResidentBuilding {
     double getResidentPriority();
 
     /**
+     * Priority at an explicit worker count. Implementations with count-based
+     * priorities override this so the pure assignment model can plan a whole
+     * morning without mutating buildings between comparisons.
+     */
+    default double getResidentPriority(int residentCount) {
+        return getResidentPriority();
+    }
+
+    /**
      * 获取居民在此种类工作方块工作的适合程度。
      * 决定居民的工作效率。
      * 建筑挑选居民时，分数高的居民会优先进入。

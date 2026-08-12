@@ -65,9 +65,15 @@ public final class TownSimulationMain {
         Path output = options.containsKey("output") ? Path.of(options.get("output")) : null;
         Integer runs = options.containsKey("runs") ? Integer.valueOf(options.get("runs")) : null;
         Long seed = options.containsKey("seed") ? Long.valueOf(options.get("seed")) : null;
-        TownStageOneTwoSimulator.SimulationRun run = TownStageOneTwoSimulator.run(
-                projectRoot, packRoot, scenario, output, runs, seed);
-        TownStageOneTwoSimulator.printSummary(run);
+        if (TownStageThreeScenario.isStageThree(scenario)) {
+            TownStageThreeSimulator.SimulationRun run = TownStageThreeSimulator.run(
+                    projectRoot, packRoot, scenario, output, runs, seed);
+            TownStageThreeSimulator.printSummary(run);
+        } else {
+            TownStageOneTwoSimulator.SimulationRun run = TownStageOneTwoSimulator.run(
+                    projectRoot, packRoot, scenario, output, runs, seed);
+            TownStageOneTwoSimulator.printSummary(run);
+        }
     }
 
     private static String requireOption(Map<String, String> options, String name) {
@@ -106,5 +112,7 @@ public final class TownSimulationMain {
         System.err.println("  TownSimulationMain simulate --pack-root <TWR .minecraft> "
                 + "--scenario <json> [--project-root <FH root>] [--output <directory>] "
                 + "[--runs <N>] [--seed <S>]");
+        System.err.println("    modelStage=3 scenarios run the constant-temperature multi-day loop;");
+        System.err.println("    scenarios without modelStage=3 retain stage-1/2 independent-day behavior.");
     }
 }
