@@ -29,6 +29,7 @@ import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
 import com.teammoeg.frostedheart.content.climate.event.ClimateCommonEvents;
 import com.teammoeg.frostedheart.content.climate.gamedata.climate.DayClimateData.HourData;
 import com.teammoeg.frostedheart.content.climate.network.FHClimatePacket;
+import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import lombok.Setter;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
@@ -489,7 +490,7 @@ public class WorldClimate implements NBTSerializable {
     public WorldClimate() {
         clockSource = new WorldClockSource();
         dailyTempData = new LinkedList<>();
-        for(int i=0;i<3;i++)
+        for(int i = 0; i < FHConfig.SERVER.CLIMATE.longTermTrackCount.get(); i++)
         	tracks.add(new ClimateEventTrack());
     }
 

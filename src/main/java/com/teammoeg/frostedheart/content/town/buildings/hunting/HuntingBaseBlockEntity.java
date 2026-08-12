@@ -88,12 +88,11 @@ public class HuntingBaseBlockEntity extends AbstractTownBuildingBlockEntity<Hunt
 					building.setTanningRackNum(scanner.getTanningRackNum());
 					building.setRating(computeRating(building.getVolume(), building.getArea(), building.getTemperature(), this.getTemperatureModifier()));
 					FHConfig.Server.Town.BuildingScoring scoring = FHConfig.SERVER.TOWN.BUILDING_SCORING;
-					double effectiveFloorBlocks = calculateSpaceRating(
-							scanner.getVolume(), scanner.getArea(), scoring)
-							* scanner.getArea();
 					FHConfig.Server.Town.Hunting config = FHConfig.SERVER.TOWN.HUNTING;
-					int calculated = (int) (effectiveFloorBlocks / config.floorBlocksPerWorkerSlot.get());
-					building.setMaxResidents(Math.max(config.minimumWorkerSlots.get(), calculated));
+					building.setMaxResidents(HuntingDailyModel.calculateCapacity(
+							calculateSpaceRating(scanner.getVolume(), scanner.getArea(), scoring),
+							scanner.getArea(), config.floorBlocksPerWorkerSlot.get(),
+							config.minimumWorkerSlots.get()));
 					return true;
 				}
 			}

@@ -41,10 +41,24 @@ public final class TownStageThreeModel {
             TownModelParameters parameters,
             SplittableRandom random
     ) {
+        return settleDay(state, scenario, data, parameters, random,
+                new DailyEnvironment(
+                        scenario.house().temperatureCelsius(), true,
+                        scenario.workplaces().huntRating(), true));
+    }
+
+    public static DayResult settleDay(
+            TownStageThreeState state,
+            TownStageThreeScenario scenario,
+            TownStageOneTwoData data,
+            TownModelParameters parameters,
+            SplittableRandom random,
+            DailyEnvironment environment
+    ) {
         int day = state.day();
         List<ResourceFlow> flows = new ArrayList<>();
         settleMorningAndAging(state, parameters);
-        restoreAndFillAssignments(state, scenario, parameters);
+        restoreAndFillAssignments(state, scenario, parameters, environment);
 
         double miningSwe = 0.0;
         double huntingSwe = 0.0;
@@ -60,7 +74,8 @@ public final class TownStageThreeModel {
         for (String building : scenario.buildingOrder()) {
             switch (building) {
                 case TownStageThreeState.HOUSE_ID -> {
-                    HouseStep result = settleHouse(state, scenario, data, parameters, flows);
+                    HouseStep result = settleHouse(
+                            state, scenario, data, parameters, environment, flows);
                     foodRequired = result.requiredFoodUnits();
                     foodConsumed = result.consumedFoodUnits();
                     foodSatisfaction = result.foodSatisfaction();
@@ -73,7 +88,7 @@ public final class TownStageThreeModel {
                 }
                 case TownStageThreeState.HUNT_ID -> {
                     HuntingStep result = settleHunt(
-                            state, scenario, data, parameters, random, flows);
+                            state, scenario, data, parameters, random, environment, flows);
                     huntingSwe = result.swe();
                     huntRolls = result.rolls();
                     huntingFoodPotential = result.potentialFood();
@@ -160,7 +175,8 @@ public final class TownStageThreeModel {
     private static void restoreAndFillAssignments(
             TownStageThreeState state,
             TownStageThreeScenario scenario,
-            TownModelParameters parameters
+            TownModelParameters parameters,
+            DailyEnvironment environment
     ) {
         int houseCapacity = houseCapacity(scenario, parameters);
         trimAssignments(state.residents(), true, TownStageThreeState.HOUSE_ID, houseCapacity);
@@ -169,7 +185,8 @@ public final class TownStageThreeModel {
         trimAssignments(state.residents(), false, TownStageThreeState.HUNT_ID,
                 scenario.workplaces().huntCapacity());
         for (TownStageThreeState.ResidentState resident : state.residents()) {
-            if (resident.homeId() == null && assignedCount(
+            if (environment.houseAcceptsNewResidents()
+                    && resident.homeId() == null && assignedCount(
                     state.residents(), true, TownStageThreeState.HOUSE_ID) < houseCapacity) {
                 resident.setHomeId(TownStageThreeState.HOUSE_ID);
             }
@@ -180,15 +197,20 @@ public final class TownStageThreeModel {
                         && resident.homeId() != null
                         && resident.age() != 0)
                 .toList();
-        List<Workplace> workplaces = List.of(
-                new Workplace(TownStageThreeState.MINE_ID, scenario.workplaces().mineCapacity()),
-                new Workplace(TownStageThreeState.HUNT_ID, scenario.workplaces().huntCapacity()));
+        List<Workplace> workplaces = new ArrayList<>();
+        workplaces.add(new Workplace(
+                TownStageThreeState.MINE_ID, scenario.workplaces().mineCapacity()));
+        if (environment.huntingWorkable()) {
+            workplaces.add(new Workplace(
+                    TownStageThreeState.HUNT_ID, scenario.workplaces().huntCapacity()));
+        }
         TownAssignmentModel.fillVacancies(
                 availableResidents,
                 workplaces,
                 Workplace::capacity,
                 workplace -> assignedCount(state.residents(), false, workplace.id()),
-                (workplace, count) -> assignmentPriority(workplace.id(), count, scenario, parameters),
+                (workplace, count) -> assignmentPriority(
+                        workplace.id(), count, scenario, parameters, environment),
                 (workplace, resident) -> canWork(resident, parameters),
                 (workplace, resident) -> productivity(workplace.id(), resident, parameters))
                 .forEach(assignment -> assignment.resident().setWorkId(assignment.workplace().id()));
@@ -225,7 +247,8 @@ public final class TownStageThreeModel {
             String workplace,
             int count,
             TownStageThreeScenario scenario,
-            TownModelParameters parameters
+            TownModelParameters parameters,
+            DailyEnvironment environment
     ) {
         if (TownStageThreeState.MINE_ID.equals(workplace)) {
             TownModelParameters.MiningParameters mining = parameters.mining();
@@ -236,7 +259,7 @@ public final class TownStageThreeModel {
         }
         TownModelParameters.HuntingParameters hunting = parameters.hunting();
         return HuntingDailyModel.assignmentPriority(
-                count, scenario.workplaces().huntCapacity(), scenario.workplaces().huntRating(),
+                count, scenario.workplaces().huntCapacity(), environment.huntingRating(),
                 hunting.assignmentBasePriority(), hunting.assignmentPenaltyPerWorker(),
                 hunting.assignmentFillRatioBonus(), hunting.assignmentRatingMultiplier());
     }
@@ -246,6 +269,7 @@ public final class TownStageThreeModel {
             TownStageThreeScenario scenario,
             TownStageOneTwoData data,
             TownModelParameters parameters,
+            DailyEnvironment environment,
             List<ResourceFlow> flows
     ) {
         List<TownStageThreeState.ResidentState> residents = state.residents().stream()
@@ -270,7 +294,7 @@ public final class TownStageThreeModel {
         HouseDailyModel.SettlementReport report = HouseDailyModel.evaluateSettlement(
                 new HouseDailyModel.SettlementInput(
                         residents.size(), consumption.consumedFoodUnits(),
-                        consumption.consumedNutrition(), scenario.house().temperatureCelsius(),
+                        consumption.consumedNutrition(), environment.houseTemperatureCelsius(),
                         scenario.house().areaBlocks(), scenario.house().volumeBlocks(),
                         scenario.house().decorationRating()),
                 TownStageOneTwoTheory.houseParameters(parameters));
@@ -337,8 +361,12 @@ public final class TownStageThreeModel {
             TownStageOneTwoData data,
             TownModelParameters parameters,
             SplittableRandom random,
+            DailyEnvironment environment,
             List<ResourceFlow> flows
     ) {
+        if (!environment.huntingWorkable()) {
+            return new HuntingStep(0.0, 0, 0.0, 0.0);
+        }
         List<TownStageThreeState.ResidentState> workers = eligibleWorkers(
                 state, TownStageThreeState.HUNT_ID, parameters);
         double swe = workers.stream().mapToDouble(
@@ -609,6 +637,15 @@ public final class TownStageThreeModel {
             long loadedFuelItems,
             long consumedProcessTicks,
             long requestedProcessTicks
+    ) {
+    }
+
+    /** Morning building snapshot supplied by stage 3 (constant) or stage 4 (climate/heat field). */
+    public record DailyEnvironment(
+            double houseTemperatureCelsius,
+            boolean houseAcceptsNewResidents,
+            double huntingRating,
+            boolean huntingWorkable
     ) {
     }
 

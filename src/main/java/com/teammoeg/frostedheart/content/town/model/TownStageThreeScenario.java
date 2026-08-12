@@ -46,17 +46,27 @@ public record TownStageThreeScenario(
     }
 
     public static boolean isStageThree(Path path) throws IOException {
+        return modelStage(path) == 3;
+    }
+
+    public static int modelStage(Path path) throws IOException {
         JsonObject root = JsonParser.parseString(Files.readString(path)).getAsJsonObject();
-        return integer(root, "modelStage", 1) == 3;
+        return integer(root, "modelStage", 1);
     }
 
     public static TownStageThreeScenario load(Path path) throws IOException {
+        return loadForStage(path, 3);
+    }
+
+    static TownStageThreeScenario loadForStage(Path path, int requiredStage) throws IOException {
         JsonObject root = JsonParser.parseString(Files.readString(path)).getAsJsonObject();
         int schemaVersion = integer(root, "schemaVersion", 1);
         int modelStage = integer(root, "modelStage", 0);
-        if (schemaVersion != 1 || modelStage != 3) {
+        if (schemaVersion != 1 || modelStage != requiredStage) {
             throw new IllegalArgumentException(
-                    "Stage-3 scenarios require schemaVersion=1 and modelStage=3.");
+                    "Stage-" + requiredStage
+                            + " scenarios require schemaVersion=1 and modelStage="
+                            + requiredStage + ".");
         }
 
         JsonObject metadataJson = object(root, "metadata");
@@ -160,6 +170,12 @@ public record TownStageThreeScenario(
         return new TownStageThreeScenario(
                 schemaVersion, modelStage, metadata, simulation, population, house,
                 workplaces, order, warehouse, processing, tower, terrain, diagnostics);
+    }
+
+    public TownStageThreeScenario withWorkplaces(Workplaces value) {
+        return new TownStageThreeScenario(
+                schemaVersion, modelStage, metadata, simulation, population, house,
+                value, buildingOrder, warehouse, processing, tower, terrain, diagnostics);
     }
 
     private static void validateBuildingOrder(List<String> order) {

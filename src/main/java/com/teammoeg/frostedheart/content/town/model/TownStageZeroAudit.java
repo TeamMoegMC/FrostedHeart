@@ -44,11 +44,11 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-/** Reads current FH/TWR stage-0 sources and writes traceable algebra reports. */
+/** Reads current FH/TWR model sources and writes traceable parameter/algebra reports. */
 public final class TownStageZeroAudit {
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     private static final DateTimeFormatter FILE_TIME = DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss");
-    private static final String SCOPE = "stage-0-to-2-source-algebra";
+    private static final String SCOPE = "stage-0-to-4-source-algebra-and-climate-geometry";
 
     private TownStageZeroAudit() {
     }
@@ -125,7 +125,6 @@ public final class TownStageZeroAudit {
                 issues,
                 List.of(
                         "stage-3 multi-day inventory and worker feedback",
-                        "stage-4 climate and heat fields",
                         "stage-5 T2 generator heat network"));
 
         Files.createDirectories(output);
@@ -234,13 +233,19 @@ public final class TownStageZeroAudit {
                 new IdentifiedPath("fh:town-food-resource-amount", paths.townFoodResourceAmount()),
                 new IdentifiedPath("fh:generator-fuel-model", paths.generatorFuelModel()),
                 new IdentifiedPath("fh:generator-heat-field-model", paths.generatorHeatFieldModel()),
+                new IdentifiedPath("fh:spherical-heat-field-model", paths.sphericalHeatFieldModel()),
                 new IdentifiedPath("fh:generator-data", paths.generatorData()),
                 new IdentifiedPath("fh:climate-common-events", paths.climateCommonEvents()),
+                new IdentifiedPath("fh:climate-event-model", paths.climateEventModel()),
+                new IdentifiedPath("fh:interpolation-climate-event", paths.interpolationClimateEvent()),
+                new IdentifiedPath("fh:block-temperature-model", paths.blockTemperatureModel()),
+                new IdentifiedPath("fh:world-temperature", paths.worldTemperature()),
                 new IdentifiedPath("fh:town-config", paths.fhConfig()),
                 new IdentifiedPath("fh:generator-coal-recipe", paths.generatorCoal()),
                 new IdentifiedPath("fh:generator-coke-recipe", paths.generatorCoke()),
                 new IdentifiedPath("fh:hunting-loot", paths.huntingLoot()),
                 new IdentifiedPath("twr:biome-mine-script", paths.biomeMineScript()),
+                new IdentifiedPath("twr:snowy-plains-biome", paths.snowyPlainsBiome()),
                 new IdentifiedPath("twr:generator-efficiency-1", paths.generatorEfficiencyOne()),
                 new IdentifiedPath("twr:generator-efficiency-2", paths.generatorEfficiencyTwo()));
         List<SourceFile> result = new ArrayList<>();
@@ -320,6 +325,7 @@ public final class TownStageZeroAudit {
         addResidentParameters(values, parameters.residents(), paths.townModelParameters());
         addBuildingScoringParameters(values, parameters.buildingScoring(), paths.townModelParameters());
         addTerrainResourceParameters(values, parameters.terrainResources(), paths.townModelParameters());
+        addClimateParameters(values, parameters.climate(), paths.townModelParameters());
         add(values, "generatorT1.baseFuelDurationMultiplier", generator.baseFuelDurationMultiplier(),
                 "dimensionless", "shared-default", paths.townModelParameters(),
                 "TownModelParameters.Defaults.GENERATOR_T1_BASE_FUEL_DURATION_MULTIPLIER -> "
@@ -656,6 +662,85 @@ public final class TownStageZeroAudit {
                 "hunt/block2/day", source, "HUNT_RECOVERY_PER_SQUARE_BLOCK_DAY", "RESOURCE.huntRecoveryPerSquareBlockDay");
     }
 
+    private static void addClimateParameters(
+            List<ParameterValue> values,
+            TownModelParameters.ClimateParameters climate,
+            Path source
+    ) {
+        addClimateShared(values, "climate.trackCount", climate.trackCount(), "track", source,
+                "CLIMATE_TRACK_COUNT", "longTermTrackCount");
+        addClimateShared(values, "climate.eventChoiceRollBound", climate.eventChoiceRollBound(), "integer-roll", source,
+                "CLIMATE_EVENT_CHOICE_ROLL_BOUND", "eventChoiceRollBound");
+        addClimateShared(values, "climate.warmEventMinimumRollInclusive", climate.warmEventMinimumRollInclusive(), "integer-roll", source,
+                "CLIMATE_WARM_EVENT_MINIMUM_ROLL_INCLUSIVE", "warmEventMinimumRollInclusive");
+        addClimateShared(values, "climate.openingWarmRollBonus", climate.openingWarmRollBonus(), "integer-roll", source,
+                "CLIMATE_OPENING_WARM_ROLL_BONUS", "openingWarmRollBonus");
+        addClimateShared(values, "climate.openingBiasThroughDayInclusive", climate.openingBiasThroughDayInclusive(), "game-day", source,
+                "CLIMATE_OPENING_BIAS_THROUGH_DAY_INCLUSIVE", "openingBiasThroughDayInclusive");
+        addClimateShared(values, "climate.coldBottomExtremeCelsius", climate.coldBottomExtremeCelsius(), "celsius", source,
+                "CLIMATE_COLD_BOTTOM_EXTREME_CELSIUS", "coldBottomExtremeCelsius");
+        addClimateShared(values, "climate.coldBottomSevereCelsius", climate.coldBottomSevereCelsius(), "celsius", source,
+                "CLIMATE_COLD_BOTTOM_SEVERE_CELSIUS", "coldBottomSevereCelsius");
+        addClimateShared(values, "climate.coldBottomStrongCelsius", climate.coldBottomStrongCelsius(), "celsius", source,
+                "CLIMATE_COLD_BOTTOM_STRONG_CELSIUS", "coldBottomStrongCelsius");
+        addClimateShared(values, "climate.coldBottomNormalCelsius", climate.coldBottomNormalCelsius(), "celsius", source,
+                "CLIMATE_COLD_BOTTOM_NORMAL_CELSIUS", "coldBottomNormalCelsius");
+        addClimateShared(values, "climate.coldBottomWeightExtreme", climate.coldBottomWeightExtreme(), "relative-weight", source,
+                "CLIMATE_COLD_BOTTOM_WEIGHT_EXTREME", "coldBottomWeightExtreme");
+        addClimateShared(values, "climate.coldBottomWeightSevere", climate.coldBottomWeightSevere(), "relative-weight", source,
+                "CLIMATE_COLD_BOTTOM_WEIGHT_SEVERE", "coldBottomWeightSevere");
+        addClimateShared(values, "climate.coldBottomWeightStrong", climate.coldBottomWeightStrong(), "relative-weight", source,
+                "CLIMATE_COLD_BOTTOM_WEIGHT_STRONG", "coldBottomWeightStrong");
+        addClimateShared(values, "climate.coldBottomWeightNormal", climate.coldBottomWeightNormal(), "relative-weight", source,
+                "CLIMATE_COLD_BOTTOM_WEIGHT_NORMAL", "coldBottomWeightNormal");
+        addClimateShared(values, "climate.eventMinimumDays", climate.eventMinimumDays(), "game-day", source,
+                "CLIMATE_EVENT_MINIMUM_DAYS", "climateEventMinimumDays");
+        addClimateShared(values, "climate.eventMaximumDaysExclusive", climate.eventMaximumDaysExclusive(), "game-day", source,
+                "CLIMATE_EVENT_MAXIMUM_DAYS_EXCLUSIVE", "climateEventMaximumDaysExclusive");
+        addClimateShared(values, "climate.paddingMinimumHours", climate.paddingMinimumHours(), "game-hour", source,
+                "CLIMATE_PADDING_MINIMUM_HOURS", "climatePaddingMinimumHours");
+        addClimateShared(values, "climate.paddingMaximumHoursExclusive", climate.paddingMaximumHoursExclusive(), "game-hour", source,
+                "CLIMATE_PADDING_MAXIMUM_HOURS_EXCLUSIVE", "climatePaddingMaximumHoursExclusive");
+        addClimateShared(values, "climate.calmMinimumDays", climate.calmMinimumDays(), "game-day", source,
+                "CLIMATE_CALM_MINIMUM_DAYS", "climateCalmMinimumDays");
+        addClimateShared(values, "climate.calmMaximumDaysExclusive", climate.calmMaximumDaysExclusive(), "game-day", source,
+                "CLIMATE_CALM_MAXIMUM_DAYS_EXCLUSIVE", "climateCalmMaximumDaysExclusive");
+        addClimateShared(values, "climate.coldPreludePeakCelsius", climate.coldPreludePeakCelsius(), "celsius", source,
+                "CLIMATE_COLD_PRELUDE_PEAK_CELSIUS", "coldPreludePeakCelsius");
+        addClimateShared(values, "climate.warmPeakCelsius", climate.warmPeakCelsius(), "celsius", source,
+                "CLIMATE_WARM_PEAK_CELSIUS", "warmPeakCelsius");
+        addClimateShared(values, "climate.eventNoiseStandardDeviationCelsius", climate.eventNoiseStandardDeviationCelsius(), "celsius", source,
+                "CLIMATE_EVENT_NOISE_STANDARD_DEVIATION_CELSIUS", "climateEventNoiseStandardDeviationCelsius");
+        addClimateShared(values, "climate.warmNoiseScale", climate.warmNoiseScale(), "dimensionless", source,
+                "CLIMATE_WARM_NOISE_SCALE", "warmEventNoiseScale");
+        addClimateShared(values, "climate.absoluteZeroCelsius", climate.absoluteZeroCelsius(), "celsius", source,
+                "CLIMATE_ABSOLUTE_ZERO_CELSIUS", "absoluteZeroCelsius");
+        addClimateShared(values, "climate.overworldBaselineCelsius", climate.overworldBaselineCelsius(), "celsius", source,
+                "CLIMATE_OVERWORLD_BASELINE_CELSIUS", "overworldBaselineCelsius");
+        addClimateShared(values, "climate.stoneInterfaceLevel", climate.stoneInterfaceLevel(), "block-y", source,
+                "CLIMATE_STONE_INTERFACE_LEVEL", "climateStoneInterfaceLevel");
+        addClimateShared(values, "climate.seaLevel", climate.seaLevel(), "block-y", source,
+                "CLIMATE_SEA_LEVEL", "climateSeaLevel");
+        addClimateShared(values, "climate.blockMaximumClimateAffection", climate.blockMaximumClimateAffection(), "dimensionless", source,
+                "CLIMATE_BLOCK_MAXIMUM_AFFECTION", "blockMaximumClimateAffection");
+        addClimateShared(values, "climate.blockHeatApplicationMultiplier", climate.blockHeatApplicationMultiplier(), "dimensionless", source,
+                "CLIMATE_BLOCK_HEAT_APPLICATION_MULTIPLIER", "blockHeatApplicationMultiplier");
+    }
+
+    private static void addClimateShared(
+            List<ParameterValue> values,
+            String name,
+            Object value,
+            String unit,
+            Path source,
+            String defaultConstant,
+            String configField
+    ) {
+        add(values, name, value, unit, "shared-default", source,
+                "TownModelParameters.Defaults." + defaultConstant
+                        + " -> FHConfig.SERVER.CLIMATE." + configField);
+    }
+
     private static void addShared(
             List<ParameterValue> values,
             String name,
@@ -854,7 +939,7 @@ public final class TownStageZeroAudit {
     }
 
     public static void printSummary(AuditRun run) {
-        System.out.println("Town model audit: stages 0-2 sources / T1 algebra");
+        System.out.println("Town model audit: stages 0-4 sources / T1 algebra and climate geometry");
         System.out.println("Snapshot: " + run.snapshot().snapshotHash());
         for (AuditMetric metric : run.report().metrics()) {
             System.out.printf(Locale.ROOT, "  %-44s %14.7f  %s%n",
@@ -876,13 +961,19 @@ public final class TownStageZeroAudit {
             Path townFoodResourceAmount,
             Path generatorFuelModel,
             Path generatorHeatFieldModel,
+            Path sphericalHeatFieldModel,
             Path generatorData,
             Path climateCommonEvents,
+            Path climateEventModel,
+            Path interpolationClimateEvent,
+            Path blockTemperatureModel,
+            Path worldTemperature,
             Path fhConfig,
             Path generatorCoal,
             Path generatorCoke,
             Path huntingLoot,
             Path biomeMineScript,
+            Path snowyPlainsBiome,
             Path generatorEfficiencyOne,
             Path generatorEfficiencyTwo
     ) {
@@ -895,13 +986,19 @@ public final class TownStageZeroAudit {
                     projectRoot.resolve("src/main/java/com/teammoeg/frostedheart/content/town/resource/TownFoodResourceAmount.java"),
                     projectRoot.resolve("src/main/java/com/teammoeg/frostedheart/content/climate/block/generator/GeneratorFuelModel.java"),
                     projectRoot.resolve("src/main/java/com/teammoeg/frostedheart/content/climate/block/generator/GeneratorHeatFieldModel.java"),
+                    projectRoot.resolve("src/main/java/com/teammoeg/frostedheart/content/climate/gamedata/chunkheat/SphericalHeatFieldModel.java"),
                     projectRoot.resolve("src/main/java/com/teammoeg/frostedheart/content/climate/block/generator/GeneratorData.java"),
                     projectRoot.resolve("src/main/java/com/teammoeg/frostedheart/content/climate/event/ClimateCommonEvents.java"),
+                    projectRoot.resolve("src/main/java/com/teammoeg/frostedheart/content/climate/gamedata/climate/ClimateEventModel.java"),
+                    projectRoot.resolve("src/main/java/com/teammoeg/frostedheart/content/climate/gamedata/climate/InterpolationClimateEvent.java"),
+                    projectRoot.resolve("src/main/java/com/teammoeg/frostedheart/content/climate/BlockTemperatureModel.java"),
+                    projectRoot.resolve("src/main/java/com/teammoeg/frostedheart/content/climate/WorldTemperature.java"),
                     projectRoot.resolve("src/main/java/com/teammoeg/frostedheart/infrastructure/config/FHConfig.java"),
                     projectRoot.resolve("src/main/resources/data/frostedheart/recipes/generator/coal.json"),
                     projectRoot.resolve("src/main/resources/data/frostedheart/recipes/generator/coal_coke.json"),
                     projectRoot.resolve("src/main/resources/data/frostedheart/loot_tables/town/hunting.json"),
                     packRoot.resolve("kubejs/server_scripts/src/recipes_types/frostedheart/biome_mine.js"),
+                    packRoot.resolve("kubejs/data/minecraft/worldgen/biome/snowy_plains.json"),
                     packRoot.resolve("config/fhresearches/generator_efficiency_1.json"),
                     packRoot.resolve("config/fhresearches/generator_efficiency_2.json"));
         }
@@ -910,9 +1007,11 @@ public final class TownStageZeroAudit {
             for (Path path : List.of(
                     townModelParameters, townMathFunctions, houseDailyModel, residentDailyModel,
                     townFoodResourceAmount,
-                    generatorFuelModel, generatorHeatFieldModel, generatorData,
-                    climateCommonEvents, fhConfig, generatorCoal,
-                    generatorCoke, huntingLoot, biomeMineScript,
+                    generatorFuelModel, generatorHeatFieldModel, sphericalHeatFieldModel,
+                    generatorData, climateCommonEvents, climateEventModel,
+                    interpolationClimateEvent, blockTemperatureModel, worldTemperature,
+                    fhConfig, generatorCoal, generatorCoke, huntingLoot, biomeMineScript,
+                    snowyPlainsBiome,
                     generatorEfficiencyOne, generatorEfficiencyTwo)) {
                 if (!Files.isRegularFile(path)) {
                     throw new IOException("Required stage-0 audit input is missing: " + path);

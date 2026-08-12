@@ -22,6 +22,8 @@ package com.teammoeg.frostedheart.infrastructure.config;
 import com.teammoeg.chorda.client.cui.screenadapter.OverlayPositioner;
 import com.teammoeg.chorda.math.Colors;
 import com.teammoeg.frostedheart.content.climate.FHTemperatureDifficulty;
+import com.teammoeg.frostedheart.content.climate.gamedata.climate.ClimateEventModel;
+import com.teammoeg.frostedheart.content.climate.gamedata.climate.WorldClockSource;
 import com.teammoeg.frostedheart.content.town.model.TownModelParameters;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.biome.Biomes;
@@ -293,6 +295,35 @@ public class FHConfig {
 			public final ForgeConfigSpec.IntValue ambientBlockStateUpdateDivisor;
 			public final ForgeConfigSpec.IntValue tempRandomTickSpeedDivisor;
 			public final ForgeConfigSpec.ConfigValue<Integer> blizzardFrequency;
+			public final ForgeConfigSpec.IntValue longTermTrackCount;
+			public final ForgeConfigSpec.IntValue eventChoiceRollBound;
+			public final ForgeConfigSpec.IntValue warmEventMinimumRollInclusive;
+			public final ForgeConfigSpec.IntValue openingWarmRollBonus;
+			public final ForgeConfigSpec.IntValue openingBiasThroughDayInclusive;
+			public final ForgeConfigSpec.DoubleValue coldBottomExtremeCelsius;
+			public final ForgeConfigSpec.DoubleValue coldBottomSevereCelsius;
+			public final ForgeConfigSpec.DoubleValue coldBottomStrongCelsius;
+			public final ForgeConfigSpec.DoubleValue coldBottomNormalCelsius;
+			public final ForgeConfigSpec.IntValue coldBottomWeightExtreme;
+			public final ForgeConfigSpec.IntValue coldBottomWeightSevere;
+			public final ForgeConfigSpec.IntValue coldBottomWeightStrong;
+			public final ForgeConfigSpec.IntValue coldBottomWeightNormal;
+			public final ForgeConfigSpec.IntValue climateEventMinimumDays;
+			public final ForgeConfigSpec.IntValue climateEventMaximumDaysExclusive;
+			public final ForgeConfigSpec.IntValue climatePaddingMinimumHours;
+			public final ForgeConfigSpec.IntValue climatePaddingMaximumHoursExclusive;
+			public final ForgeConfigSpec.IntValue climateCalmMinimumDays;
+			public final ForgeConfigSpec.IntValue climateCalmMaximumDaysExclusive;
+			public final ForgeConfigSpec.DoubleValue coldPreludePeakCelsius;
+			public final ForgeConfigSpec.DoubleValue warmPeakCelsius;
+			public final ForgeConfigSpec.DoubleValue climateEventNoiseStandardDeviationCelsius;
+			public final ForgeConfigSpec.DoubleValue warmEventNoiseScale;
+			public final ForgeConfigSpec.IntValue climateStoneInterfaceLevel;
+			public final ForgeConfigSpec.IntValue climateSeaLevel;
+			public final ForgeConfigSpec.DoubleValue blockMaximumClimateAffection;
+			public final ForgeConfigSpec.DoubleValue blockHeatApplicationMultiplier;
+			public final ForgeConfigSpec.DoubleValue absoluteZeroCelsius;
+			public final ForgeConfigSpec.DoubleValue overworldBaselineCelsius;
 			public final ForgeConfigSpec.ConfigValue<Double> hurtingHeatUpdate;
 			public final ForgeConfigSpec.ConfigValue<Integer> minBodyTempChange;
 			public final ForgeConfigSpec.ConfigValue<Integer> maxBodyTempChange;
@@ -361,6 +392,60 @@ public class FHConfig {
 					.define("addInitClimate", true);
 				blizzardFrequency = builder.comment("Frequency out of 10 a blizzard happens when a new climate event happens.")
 					.defineInRange("blizzardFrequency", 3, 0, 10);
+
+				builder.push("Long Term Events");
+				longTermTrackCount = builder
+					.comment("Number of independent ordinary climate-event tracks combined by max-positive plus min-negative temperature.")
+					.defineInRange("trackCount", TownModelParameters.Defaults.CLIMATE_TRACK_COUNT, 1, 16);
+				eventChoiceRollBound = builder
+					.comment("Exclusive bound of the integer roll selecting a cold or warm event.")
+					.defineInRange("eventChoiceRollBound", TownModelParameters.Defaults.CLIMATE_EVENT_CHOICE_ROLL_BOUND, 1, 1000000);
+				warmEventMinimumRollInclusive = builder
+					.comment("A climate event is warm when the selection roll plus opening bonus reaches this value.")
+					.defineInRange("warmEventMinimumRollInclusive", TownModelParameters.Defaults.CLIMATE_WARM_EVENT_MINIMUM_ROLL_INCLUSIVE, 0, 1000000);
+				openingWarmRollBonus = builder
+					.comment("Warm-selection bonus during the opening-bias period. Long simulations burn in past this period.")
+					.defineInRange("openingWarmRollBonus", TownModelParameters.Defaults.CLIMATE_OPENING_WARM_ROLL_BONUS, 0, 1000000);
+				openingBiasThroughDayInclusive = builder
+					.comment("Last inclusive world day receiving the opening warm-selection bonus.")
+					.defineInRange("openingBiasThroughDayInclusive", TownModelParameters.Defaults.CLIMATE_OPENING_BIAS_THROUGH_DAY_INCLUSIVE, 0, 1000000);
+				coldBottomExtremeCelsius = builder.defineInRange("coldBottomExtremeCelsius", (double) TownModelParameters.Defaults.CLIMATE_COLD_BOTTOM_EXTREME_CELSIUS, -273.0, 1000.0);
+				coldBottomSevereCelsius = builder.defineInRange("coldBottomSevereCelsius", (double) TownModelParameters.Defaults.CLIMATE_COLD_BOTTOM_SEVERE_CELSIUS, -273.0, 1000.0);
+				coldBottomStrongCelsius = builder.defineInRange("coldBottomStrongCelsius", (double) TownModelParameters.Defaults.CLIMATE_COLD_BOTTOM_STRONG_CELSIUS, -273.0, 1000.0);
+				coldBottomNormalCelsius = builder.defineInRange("coldBottomNormalCelsius", (double) TownModelParameters.Defaults.CLIMATE_COLD_BOTTOM_NORMAL_CELSIUS, -273.0, 1000.0);
+				coldBottomWeightExtreme = builder.defineInRange("coldBottomWeightExtreme", TownModelParameters.Defaults.CLIMATE_COLD_BOTTOM_WEIGHT_EXTREME, 1, 1000000);
+				coldBottomWeightSevere = builder.defineInRange("coldBottomWeightSevere", TownModelParameters.Defaults.CLIMATE_COLD_BOTTOM_WEIGHT_SEVERE, 1, 1000000);
+				coldBottomWeightStrong = builder.defineInRange("coldBottomWeightStrong", TownModelParameters.Defaults.CLIMATE_COLD_BOTTOM_WEIGHT_STRONG, 1, 1000000);
+				coldBottomWeightNormal = builder.defineInRange("coldBottomWeightNormal", TownModelParameters.Defaults.CLIMATE_COLD_BOTTOM_WEIGHT_NORMAL, 1, 1000000);
+				climateEventMinimumDays = builder.defineInRange("eventMinimumDays", TownModelParameters.Defaults.CLIMATE_EVENT_MINIMUM_DAYS, 1, 1000000);
+				climateEventMaximumDaysExclusive = builder.defineInRange("eventMaximumDaysExclusive", TownModelParameters.Defaults.CLIMATE_EVENT_MAXIMUM_DAYS_EXCLUSIVE, 2, 1000000);
+				climatePaddingMinimumHours = builder.defineInRange("paddingMinimumHours", TownModelParameters.Defaults.CLIMATE_PADDING_MINIMUM_HOURS, 0, 1000000);
+				climatePaddingMaximumHoursExclusive = builder.defineInRange("paddingMaximumHoursExclusive", TownModelParameters.Defaults.CLIMATE_PADDING_MAXIMUM_HOURS_EXCLUSIVE, 1, 1000000);
+				climateCalmMinimumDays = builder.defineInRange("calmMinimumDays", TownModelParameters.Defaults.CLIMATE_CALM_MINIMUM_DAYS, 1, 1000000);
+				climateCalmMaximumDaysExclusive = builder.defineInRange("calmMaximumDaysExclusive", TownModelParameters.Defaults.CLIMATE_CALM_MAXIMUM_DAYS_EXCLUSIVE, 2, 1000000);
+				coldPreludePeakCelsius = builder.defineInRange("coldPreludePeakCelsius", (double) TownModelParameters.Defaults.CLIMATE_COLD_PRELUDE_PEAK_CELSIUS, -273.0, 1000.0);
+				warmPeakCelsius = builder.defineInRange("warmPeakCelsius", (double) TownModelParameters.Defaults.CLIMATE_WARM_PEAK_CELSIUS, -273.0, 1000.0);
+				climateEventNoiseStandardDeviationCelsius = builder.defineInRange("eventNoiseStandardDeviationCelsius", (double) TownModelParameters.Defaults.CLIMATE_EVENT_NOISE_STANDARD_DEVIATION_CELSIUS, 0.0, 1000.0);
+				warmEventNoiseScale = builder.defineInRange("warmNoiseScale", (double) TownModelParameters.Defaults.CLIMATE_WARM_NOISE_SCALE, 0.0, 1000.0);
+				climateStoneInterfaceLevel = builder
+					.comment("At or below this Y level, climate does not affect block temperature.")
+					.defineInRange("stoneInterfaceLevel", TownModelParameters.Defaults.CLIMATE_STONE_INTERFACE_LEVEL, -1000000, 1000000);
+				climateSeaLevel = builder
+					.comment("Above this Y level, block climate affection reaches its configured maximum.")
+					.defineInRange("seaLevel", TownModelParameters.Defaults.CLIMATE_SEA_LEVEL, -1000000, 1000000);
+				blockMaximumClimateAffection = builder
+					.comment("Maximum alpha multiplying climate temperature in the block-temperature formula.")
+					.defineInRange("blockMaximumClimateAffection", (double) TownModelParameters.Defaults.CLIMATE_BLOCK_MAXIMUM_AFFECTION, 0.0, 100.0);
+				blockHeatApplicationMultiplier = builder
+					.comment("Multiplier applied to the maximum heat-field value before the heat-field ceiling is enforced.")
+					.defineInRange("blockHeatApplicationMultiplier", (double) TownModelParameters.Defaults.CLIMATE_BLOCK_HEAT_APPLICATION_MULTIPLIER, 0.0, 100.0);
+				absoluteZeroCelsius = builder
+					.comment("Lower clamp for temperature calculations, in Celsius.")
+					.defineInRange("absoluteZeroCelsius", (double) TownModelParameters.Defaults.CLIMATE_ABSOLUTE_ZERO_CELSIUS, -1000.0, 0.0);
+				overworldBaselineCelsius = builder
+					.comment("Fallback dimension temperature when no datapack world-temperature value is available.")
+					.defineInRange("overworldBaselineCelsius", (double) TownModelParameters.Defaults.CLIMATE_OVERWORLD_BASELINE_CELSIUS, -273.0, 1000.0);
+				builder.pop();
 				
 				builder.pop();
 				builder.push("Generator");
@@ -370,6 +455,28 @@ public class FHConfig {
 					.defineInRange("generatorSteamTick", 60, 1, Integer.MAX_VALUE);
 				builder.pop();
 
+			}
+
+			public ClimateEventModel.Parameters eventModelParameters() {
+				return new ClimateEventModel.Parameters(
+					WorldClockSource.secondsPerHour,
+					WorldClockSource.secondsPerDay,
+					eventChoiceRollBound.get(),
+					warmEventMinimumRollInclusive.get(),
+					openingWarmRollBonus.get(),
+					openingBiasThroughDayInclusive.get(),
+					coldBottomExtremeCelsius.get().floatValue(),
+					coldBottomSevereCelsius.get().floatValue(),
+					coldBottomStrongCelsius.get().floatValue(),
+					coldBottomNormalCelsius.get().floatValue(),
+					coldBottomWeightExtreme.get(), coldBottomWeightSevere.get(),
+					coldBottomWeightStrong.get(), coldBottomWeightNormal.get(),
+					climateEventMinimumDays.get(), climateEventMaximumDaysExclusive.get(),
+					climatePaddingMinimumHours.get(), climatePaddingMaximumHoursExclusive.get(),
+					climateCalmMinimumDays.get(), climateCalmMaximumDaysExclusive.get(),
+					coldPreludePeakCelsius.get().floatValue(), warmPeakCelsius.get().floatValue(),
+					climateEventNoiseStandardDeviationCelsius.get().floatValue(),
+					warmEventNoiseScale.get().floatValue());
 			}
 		}
 

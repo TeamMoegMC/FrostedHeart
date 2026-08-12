@@ -24,8 +24,8 @@ import java.util.List;
 
 /**
  * Forge-independent parameter snapshot for the town numerical model.
- * Stage 0 snapshots the T1, resident, housing and work parameters that later
- * simulation stages will consume. Climate and T2 are intentionally absent.
+ * Stage 0 snapshots the T1, climate, resident, housing and work parameters that
+ * later simulation stages consume. T2 is intentionally absent.
  */
 public record TownModelParameters(
         MiningParameters mining,
@@ -35,6 +35,7 @@ public record TownModelParameters(
         BuildingScoringParameters buildingScoring,
         TerrainResourceParameters terrainResources,
         GeneratorT1Parameters generatorT1,
+        ClimateParameters climate,
         List<MeatFoodParameters> meatFoods
 ) {
     public TownModelParameters {
@@ -172,6 +173,36 @@ public record TownModelParameters(
                         Defaults.GENERATOR_T1_BASE_RADIUS_BLOCKS,
                         Defaults.GENERATOR_T1_ADDITIONAL_RADIUS_PER_LEVEL_BLOCKS,
                         Defaults.GENERATOR_T1_TEMPERATURE_PER_LEVEL_CELSIUS),
+                new ClimateParameters(
+                        Defaults.CLIMATE_TRACK_COUNT,
+                        Defaults.CLIMATE_EVENT_CHOICE_ROLL_BOUND,
+                        Defaults.CLIMATE_WARM_EVENT_MINIMUM_ROLL_INCLUSIVE,
+                        Defaults.CLIMATE_OPENING_WARM_ROLL_BONUS,
+                        Defaults.CLIMATE_OPENING_BIAS_THROUGH_DAY_INCLUSIVE,
+                        Defaults.CLIMATE_COLD_BOTTOM_EXTREME_CELSIUS,
+                        Defaults.CLIMATE_COLD_BOTTOM_SEVERE_CELSIUS,
+                        Defaults.CLIMATE_COLD_BOTTOM_STRONG_CELSIUS,
+                        Defaults.CLIMATE_COLD_BOTTOM_NORMAL_CELSIUS,
+                        Defaults.CLIMATE_COLD_BOTTOM_WEIGHT_EXTREME,
+                        Defaults.CLIMATE_COLD_BOTTOM_WEIGHT_SEVERE,
+                        Defaults.CLIMATE_COLD_BOTTOM_WEIGHT_STRONG,
+                        Defaults.CLIMATE_COLD_BOTTOM_WEIGHT_NORMAL,
+                        Defaults.CLIMATE_EVENT_MINIMUM_DAYS,
+                        Defaults.CLIMATE_EVENT_MAXIMUM_DAYS_EXCLUSIVE,
+                        Defaults.CLIMATE_PADDING_MINIMUM_HOURS,
+                        Defaults.CLIMATE_PADDING_MAXIMUM_HOURS_EXCLUSIVE,
+                        Defaults.CLIMATE_CALM_MINIMUM_DAYS,
+                        Defaults.CLIMATE_CALM_MAXIMUM_DAYS_EXCLUSIVE,
+                        Defaults.CLIMATE_COLD_PRELUDE_PEAK_CELSIUS,
+                        Defaults.CLIMATE_WARM_PEAK_CELSIUS,
+                        Defaults.CLIMATE_EVENT_NOISE_STANDARD_DEVIATION_CELSIUS,
+                        Defaults.CLIMATE_WARM_NOISE_SCALE,
+                        Defaults.CLIMATE_ABSOLUTE_ZERO_CELSIUS,
+                        Defaults.CLIMATE_OVERWORLD_BASELINE_CELSIUS,
+                        Defaults.CLIMATE_STONE_INTERFACE_LEVEL,
+                        Defaults.CLIMATE_SEA_LEVEL,
+                        Defaults.CLIMATE_BLOCK_MAXIMUM_AFFECTION,
+                        Defaults.CLIMATE_BLOCK_HEAT_APPLICATION_MULTIPLIER),
                 List.of(
                         new MeatFoodParameters("minecraft:beef", "minecraft:cooked_beef", 3, 0.3, 8, 0.8),
                         new MeatFoodParameters("minecraft:porkchop", "minecraft:cooked_porkchop", 3, 0.3, 8, 0.8),
@@ -321,6 +352,40 @@ public record TownModelParameters(
     ) {
     }
 
+    /** Ordinary long-term climate and block-temperature parameters used in stage 4. */
+    public record ClimateParameters(
+            int trackCount,
+            int eventChoiceRollBound,
+            int warmEventMinimumRollInclusive,
+            int openingWarmRollBonus,
+            int openingBiasThroughDayInclusive,
+            float coldBottomExtremeCelsius,
+            float coldBottomSevereCelsius,
+            float coldBottomStrongCelsius,
+            float coldBottomNormalCelsius,
+            int coldBottomWeightExtreme,
+            int coldBottomWeightSevere,
+            int coldBottomWeightStrong,
+            int coldBottomWeightNormal,
+            int eventMinimumDays,
+            int eventMaximumDaysExclusive,
+            int paddingMinimumHours,
+            int paddingMaximumHoursExclusive,
+            int calmMinimumDays,
+            int calmMaximumDaysExclusive,
+            float coldPreludePeakCelsius,
+            float warmPeakCelsius,
+            float eventNoiseStandardDeviationCelsius,
+            float warmNoiseScale,
+            float absoluteZeroCelsius,
+            float overworldBaselineCelsius,
+            int stoneInterfaceLevel,
+            int seaLevel,
+            float blockMaximumClimateAffection,
+            float blockHeatApplicationMultiplier
+    ) {
+    }
+
     public record ResidentProductivityParameters(
             double healthWeight,
             double mentalWeight,
@@ -445,6 +510,36 @@ public record TownModelParameters(
         public static final int GENERATOR_T1_BASE_RADIUS_BLOCKS = 16;
         public static final int GENERATOR_T1_ADDITIONAL_RADIUS_PER_LEVEL_BLOCKS = 8;
         public static final int GENERATOR_T1_TEMPERATURE_PER_LEVEL_CELSIUS = 10;
+
+        public static final int CLIMATE_TRACK_COUNT = 3;
+        public static final int CLIMATE_EVENT_CHOICE_ROLL_BOUND = 10;
+        public static final int CLIMATE_WARM_EVENT_MINIMUM_ROLL_INCLUSIVE = 8;
+        public static final int CLIMATE_OPENING_WARM_ROLL_BONUS = 3;
+        public static final int CLIMATE_OPENING_BIAS_THROUGH_DAY_INCLUSIVE = 15;
+        public static final float CLIMATE_COLD_BOTTOM_EXTREME_CELSIUS = -40.0F;
+        public static final float CLIMATE_COLD_BOTTOM_SEVERE_CELSIUS = -30.0F;
+        public static final float CLIMATE_COLD_BOTTOM_STRONG_CELSIUS = -20.0F;
+        public static final float CLIMATE_COLD_BOTTOM_NORMAL_CELSIUS = -10.0F;
+        public static final int CLIMATE_COLD_BOTTOM_WEIGHT_EXTREME = 1;
+        public static final int CLIMATE_COLD_BOTTOM_WEIGHT_SEVERE = 2;
+        public static final int CLIMATE_COLD_BOTTOM_WEIGHT_STRONG = 3;
+        public static final int CLIMATE_COLD_BOTTOM_WEIGHT_NORMAL = 4;
+        public static final int CLIMATE_EVENT_MINIMUM_DAYS = 2;
+        public static final int CLIMATE_EVENT_MAXIMUM_DAYS_EXCLUSIVE = 7;
+        public static final int CLIMATE_PADDING_MINIMUM_HOURS = 8;
+        public static final int CLIMATE_PADDING_MAXIMUM_HOURS_EXCLUSIVE = 24;
+        public static final int CLIMATE_CALM_MINIMUM_DAYS = 2;
+        public static final int CLIMATE_CALM_MAXIMUM_DAYS_EXCLUSIVE = 7;
+        public static final float CLIMATE_COLD_PRELUDE_PEAK_CELSIUS = -5.0F;
+        public static final float CLIMATE_WARM_PEAK_CELSIUS = 8.0F;
+        public static final float CLIMATE_EVENT_NOISE_STANDARD_DEVIATION_CELSIUS = 1.0F;
+        public static final float CLIMATE_WARM_NOISE_SCALE = 2.0F;
+        public static final float CLIMATE_ABSOLUTE_ZERO_CELSIUS = -273.0F;
+        public static final float CLIMATE_OVERWORLD_BASELINE_CELSIUS = -10.0F;
+        public static final int CLIMATE_STONE_INTERFACE_LEVEL = 0;
+        public static final int CLIMATE_SEA_LEVEL = 63;
+        public static final float CLIMATE_BLOCK_MAXIMUM_AFFECTION = 0.5F;
+        public static final float CLIMATE_BLOCK_HEAT_APPLICATION_MULTIPLIER = 2.0F;
 
         public static final double MINING_BASE_OUTPUT_PER_SWE_DAY = 3.5;
         public static final double MINING_FLOOR_BLOCKS_PER_WORKER_SLOT = 4.0;

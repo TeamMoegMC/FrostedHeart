@@ -59,6 +59,20 @@ public final class HuntingDailyModel {
         return Math.min(safePlanned, availableRolls);
     }
 
+    /** Current scan-time worker-capacity formula for a hunting base. */
+    public static int calculateCapacity(
+            double spaceRating,
+            int floorAreaBlocks,
+            double floorBlocksPerWorkerSlot,
+            int minimumWorkerSlots
+    ) {
+        double effectiveFloorBlocks = Math.max(0.0, spaceRating) * Math.max(0, floorAreaBlocks);
+        int calculated = floorBlocksPerWorkerSlot > 0.0
+                ? saturatingInt((long) Math.floor(effectiveFloorBlocks / floorBlocksPerWorkerSlot))
+                : 0;
+        return Math.max(Math.max(0, minimumWorkerSlots), calculated);
+    }
+
     /** Current dynamic vacancy priority for one hunting base. */
     public static double assignmentPriority(
             int currentWorkers,

@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "modelStage": 4,
+  "metadata": {
+    "name": "stage4-t1-8-residents",
+    "description": "Eight standard adults in a compact two-storey T1 layout under current random climate."
+  },
+  "simulation": { "days": 120, "runs": 1000, "seed": 41008, "climateBurnInDays": 365, "morningHour": 1 },
+  "location": { "dimensionTemperatureCelsius": -10.0, "biomeTemperatureCelsius": 0.0, "ignoreAltitudeTemperature": true },
+  "population": { "standardAdults": 8, "initialHealth": 50.0, "initialMental": 50.0, "initialStrength": 50.0, "initialIntelligence": 50.0, "initialMiningProficiency": 0.0, "initialHuntingProficiency": 0.0, "initialAgeDays": 30 },
+  "house": { "temperatureCelsius": 24.0, "areaBlocks": 128, "volumeBlocks": 384, "bedCount": 8, "decorationRating": 0.75 },
+  "workplaces": { "mineCapacity": 8, "huntCapacity": 8, "huntRating": 1.0 },
+  "buildingOrder": ["house", "mine", "hunt"],
+  "warehouse": {
+    "capacityItems": 100000.0,
+    "initialInventory": [
+      { "item": "immersiveengineering:coal_coke", "amountItems": 75.0 },
+      { "item": "minecraft:cooked_beef", "amountItems": 17.5 }
+    ]
+  },
+  "processing": { "coalToCokeItemsPerDay": null, "rawMeatItemsPerDay": null, "cokeItem": "immersiveengineering:coal_coke" },
+  "tower": { "fuel": "coke", "fuelItem": "immersiveengineering:coal_coke", "activeFraction": 1.0, "overdrive": false, "researchEfficiencyBonus": 0.0 },
+  "terrain": { "initialHuntUnits": 1000000.0, "maximumHuntUnits": 1000000.0, "huntRecoveryUnitsPerDay": 0.0 },
+  "diagnostics": { "frontierMaximumPopulation": 64, "compareBuildingOrders": false },
+  "thermalLayout": {
+    "towerCenter": [0, 63, 0],
+    "buildings": [
+      { "id": "house-reference", "role": "house", "floorAreaBlocks": 128, "boxes": [{ "min": [-8, 64, -4], "size": [16, 3, 8] }] },
+      { "id": "hunt-reference", "role": "hunt", "floorAreaBlocks": 128, "boxes": [{ "min": [-8, 67, -4], "size": [16, 3, 8] }] }
+    ]
+  }
+}

@@ -65,7 +65,20 @@ public final class TownSimulationMain {
         Path output = options.containsKey("output") ? Path.of(options.get("output")) : null;
         Integer runs = options.containsKey("runs") ? Integer.valueOf(options.get("runs")) : null;
         Long seed = options.containsKey("seed") ? Long.valueOf(options.get("seed")) : null;
-        if (TownStageThreeScenario.isStageThree(scenario)) {
+        int modelStage = TownStageThreeScenario.modelStage(scenario);
+        if (modelStage == 4) {
+            TownStageFourScenario stageFourScenario = TownStageFourScenario.load(scenario);
+            if (stageFourScenario.populationSweep() != null) {
+                TownStageFourPopulationSweepSimulator.SimulationRun run =
+                        TownStageFourPopulationSweepSimulator.run(
+                                projectRoot, packRoot, scenario, output, runs, seed);
+                TownStageFourPopulationSweepSimulator.printSummary(run);
+            } else {
+                TownStageFourSimulator.SimulationRun run = TownStageFourSimulator.run(
+                        projectRoot, packRoot, scenario, output, runs, seed);
+                TownStageFourSimulator.printSummary(run);
+            }
+        } else if (modelStage == 3) {
             TownStageThreeSimulator.SimulationRun run = TownStageThreeSimulator.run(
                     projectRoot, packRoot, scenario, output, runs, seed);
             TownStageThreeSimulator.printSummary(run);
@@ -112,7 +125,9 @@ public final class TownSimulationMain {
         System.err.println("  TownSimulationMain simulate --pack-root <TWR .minecraft> "
                 + "--scenario <json> [--project-root <FH root>] [--output <directory>] "
                 + "[--runs <N>] [--seed <S>]");
+        System.err.println("    modelStage=4 scenarios couple current climate and one T1 sphere to the multi-day loop;");
+        System.err.println("    an optional populationSweep object runs paired-seed compact layouts over a population range;");
         System.err.println("    modelStage=3 scenarios run the constant-temperature multi-day loop;");
-        System.err.println("    scenarios without modelStage=3 retain stage-1/2 independent-day behavior.");
+        System.err.println("    scenarios without modelStage=3/4 retain stage-1/2 independent-day behavior.");
     }
 }

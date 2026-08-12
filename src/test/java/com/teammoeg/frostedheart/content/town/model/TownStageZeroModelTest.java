@@ -74,6 +74,7 @@ class TownStageZeroModelTest {
                 defaults.buildingScoring(),
                 defaults.terrainResources(),
                 defaults.generatorT1(),
+                defaults.climate(),
                 defaults.meatFoods());
 
         assertEquals(1.4, analyze(changed).coalPerMiningSweDay(), EPSILON);
