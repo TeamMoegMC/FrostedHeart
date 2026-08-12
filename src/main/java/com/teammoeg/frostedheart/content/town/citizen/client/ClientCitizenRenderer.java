@@ -171,19 +171,19 @@ public final class ClientCitizenRenderer {
 	 * Mid-range LOD: low-poly humanoid (body + head boxes, rotated by the
 	 * 16-way facing, bobbing while moving).
 	 */
-	private static void emitHumanoid(BufferBuilder buf, Matrix4f mat, ClientCitizen c, double[] pos, float[] col,
-			float time) {
-		int d = c.lastDir & 15; // lastDir 保证非 NONE / lastDir is guaranteed non-NONE
-		float cos = CitizenState.DIR_X[d] / 1024.0f;
-		float sin = CitizenState.DIR_Z[d] / 1024.0f;
-		float bob = 0.0f;
-		if (c.isMoving())
-			bob = Mth.abs(Mth.sin(time * 0.6f + (c.id & 7) * 1.7f)) * BOB_AMP;
-		double cy = pos[1] + bob;
-		addBox(buf, mat, pos[0], cy, pos[2], BODY_W, BODY_H, BODY_D, cos, sin, col[0], col[1], col[2]);
-		addBox(buf, mat, pos[0], cy + BODY_H, pos[2], HEAD_SIZE, HEAD_SIZE, HEAD_SIZE, cos, sin,
-				HEAD_COLOR[0], HEAD_COLOR[1], HEAD_COLOR[2]);
-	}
+    private static void emitHumanoid(BufferBuilder buf, Matrix4f mat, ClientCitizen c, double[] pos, float[] col,
+                                     float time) {
+        int yaw = c.yaw & 0xFF;                       // 0–255 连续朝向
+        float cos = CitizenState.DIR_X_256[yaw] / 1024.0f;
+        float sin = CitizenState.DIR_Z_256[yaw] / 1024.0f;
+        float bob = 0.0f;
+        if (c.isMoving())
+            bob = Mth.abs(Mth.sin(time * 0.6f + (c.id & 7) * 1.7f)) * BOB_AMP;
+        double cy = pos[1] + bob;
+        addBox(buf, mat, pos[0], cy, pos[2], BODY_W, BODY_H, BODY_D, cos, sin, col[0], col[1], col[2]);
+        addBox(buf, mat, pos[0], cy + BODY_H, pos[2], HEAD_SIZE, HEAD_SIZE, HEAD_SIZE, cos, sin,
+                HEAD_COLOR[0], HEAD_COLOR[1], HEAD_COLOR[2]);
+    }
 
 	/**
 	 * 发射一个绕 Y 轴旋转的盒体（24 顶点）。局部 +X 为"前方"（移动方向）。

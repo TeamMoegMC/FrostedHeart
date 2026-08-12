@@ -56,8 +56,6 @@ public final class FakeCitizenManager {
 	private static final double EXIT_DIST2 = 28.0 * 28.0;
 	/** 假实体表：居民 id → 假实体 / Fake entity table: citizen id → fake entity */
 	private static final Int2ObjectOpenHashMap<FakeCitizenEntity> ACTIVE = new Int2ObjectOpenHashMap<>();
-	/** 负数实体 id 分配器 / Negative entity id allocator */
-	private static int nextFakeId = -1_000_000;
 	/**
 	 * 单 tick（1/20 秒）内假实体最大朝向变化角（度）。
 	 * 原版村民视觉上转向本就偏慢，保守取 360°/s（即每 tick ≤18°）；
@@ -122,7 +120,7 @@ public final class FakeCitizenManager {
 				continue;
 			FakeCitizenEntity ent = new FakeCitizenEntity(FHEntityTypes.FAKE_CITIZEN.get(), level);
 			ent.setCitizenId(c.id);
-			ent.setId(nextFakeId--);
+            ent.setId(-c.id - 1);
 			ent.setPos(pos[0], pos[1], pos[2]);
 			ent.xo = pos[0];
 			ent.yo = pos[1];
@@ -181,28 +179,16 @@ public final class FakeCitizenManager {
 		// the rate clamp is a backstop against extreme flips only. newYaw stays
 		// continuous (unwrapped) across the ±180° seam because vanilla renders the
 		// entity yaw with plain lerp — per-tick folding is what caused one-frame spins.
-		// 目标 yaw 由平滑后的位移向量求得（EMA α=0.35，约 3 tick 收敛）。
-		// 之前直接用单 tick 位移：分离力（≤0.047 格/tick 侧向）、快照 1/16 格量化、
-		// 包到达时插值弦方向变化都会让位移方向在真实前进方向附近抖动，K=0.5 的
-		// 快速追赶把噪声如实反映到身体上 = 残余的小幅朝向晃动。
-		// Target yaw now comes from the EMA-smoothed displacement vector (α=0.35,
-		// converges in ~3 ticks). Raw per-tick displacement carries noise from the
-		// separation force, snapshot quantization and interpolation re-anchoring,
-		// and the fast K=0.5 chase rendered it as small-amplitude yaw twitching.
-		ent.smoothDX = (float) ((pos[0] - oldX) * 0.35 + ent.smoothDX * 0.65);
-		ent.smoothDZ = (float) ((pos[2] - oldZ) * 0.35 + ent.smoothDZ * 0.65);
-		float targetYaw = headingOf(ent); // NaN = 静止，保持当前朝向 / NaN = standing, hold facing
-		if (Float.isNaN(targetYaw))
-			return;
+		float targetYaw = Mth.wrapDegrees(yawOf(c));
 		float curYaw = ent.getYRot();                // 上一 tick 渲染 yaw / last tick's yaw
 		// 短路径角差：落在 (-180,180] / shortest signed angular delta in (-180,180]
 		float delta = Mth.wrapDegrees(targetYaw - curYaw);
-		// 角死区：偏差 < 2° 不转身。真实转向最小步进 22.5°（16 向），死区只抹掉
-		// 平滑后仍残余的亚度级噪声，不影响任何真实转向的响应。
-		// Angular deadband: ignore deviations < 2°. Real turns step at ≥22.5°
-		// (16-way), so the deadband only absorbs sub-degree residual noise.
-		if (Math.abs(delta) < 2.0f)
-			return;
+        // 现在 yaw 是 256 级连续值，单步只有 1.4°，不再需要 2° 大死区。
+        // 直接用指数趋近，让微小变化也能平滑跟随；K=0.5 已经能平滑过渡。
+        // With 256-step continuous yaw, one step is only 1.4°; the 2° deadband
+        // would block it. Exponential approach alone is smooth enough.
+        if (Math.abs(delta) < 0.1f)
+            return;
 		float step = delta * 0.5f;                   // 指数趋近 K=0.5 / exponential approach K=0.5
 		if (step > MAX_YAW_PER_TICK)
 			step = MAX_YAW_PER_TICK;
@@ -234,31 +220,6 @@ public final class FakeCitizenManager {
 	}
 
 	/**
-	 * 由平滑位移向量（EMA）求目标 yaw（度，±180°）。
-	 * 平滑后位移过小（静止 / 网络回弹）返回 NaN → 保持当前朝向。
-	 * 平滑会衰减噪声，目标 yaw 不再是严格的 22.5° 整数倍，残余亚度级偏差
-	 * 由 drive() 的 2° 角死区吸收。
-	 * <p>
-	 * Resolves the target yaw from the smoothed displacement vector (degrees,
-	 * ±180°). Returns NaN when the smoothed displacement is tiny (standing /
-	 * network ease-back) so the facing is held. Smoothing attenuates noise, so
-	 * the result is no longer an exact multiple of 22.5°; sub-degree residue is
-	 * absorbed by drive()'s 2° angular deadband.
-	 *
-	 * @param ent 假实体 / the fake entity
-	 * @return 目标 yaw，或 NaN / target yaw, or NaN
-	 */
-	private static float headingOf(FakeCitizenEntity ent) {
-		double dx = ent.smoothDX;
-		double dz = ent.smoothDZ;
-		if (dx * dx + dz * dz < 0.0009) // 静止阈值 0.03 格：平滑后行走位移 ≈0.137，噪声残余 ≈0.016
-			return Float.NaN;
-		// 数学角（+X 为 0，逆时针）转 MC yaw（+Z 为 0，顺时针）：mcYaw = angleDeg - 90，与 yawFromDir 同约定
-		double angleDeg = Math.toDegrees(Math.atan2(dz, dx));
-		return Mth.wrapDegrees((float) (angleDeg - 90.0));
-	}
-
-	/**
 	 * 由最近非静止方向求 MC 朝向角（度）。
 	 * <p>
 	 * Resolves the MC yaw (degrees) from the last non-stationary direction.
@@ -266,9 +227,9 @@ public final class FakeCitizenManager {
 	 * @param c 模拟缓存 / the simulation cache entry
 	 * @return 朝向角 / yaw in degrees
 	 */
-	private static float yawOf(ClientCitizen c) {
-		return (CitizenState.yawFromDir(c.lastDir & 15) & 0xFF) * (360.0f / 256.0f);
-	}
+    private static float yawOf(ClientCitizen c) {
+        return (c.yaw & 0xFF) * (360.0f / 256.0f);
+    }
 
 	/**
 	 * 某居民当前是否由假实体接管（批量渲染器据此跳过）。
@@ -288,9 +249,15 @@ public final class FakeCitizenManager {
 	 * <p>
 	 * Disposes all fake entities (called on world exit).
 	 */
-	public static void clearAll() {
-		for (FakeCitizenEntity e : ACTIVE.values())
-			e.discard();
-		ACTIVE.clear();
-	}
+    public static void clearAll() {
+        ClientLevel level = Minecraft.getInstance().level;
+        if (level != null) {
+            for (FakeCitizenEntity e : ACTIVE.values())
+                level.removeEntity(e.getId(), Entity.RemovalReason.DISCARDED);
+        } else {
+            for (FakeCitizenEntity e : ACTIVE.values())
+                e.discard();
+        }
+        ACTIVE.clear();
+    }
 }

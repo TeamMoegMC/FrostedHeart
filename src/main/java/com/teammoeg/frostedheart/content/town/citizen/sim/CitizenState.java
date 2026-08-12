@@ -36,6 +36,8 @@ public final class CitizenState {
 	public static final int FIXED_SCALE = 1024;
 	/** 无方向（静止）哨兵值 / Sentinel for "no direction" (stationary) */
 	public static final byte DIR_NONE = (byte) 255;
+    /** 到达判定距离（定点，1.5 方块） / Arrival threshold (fixed-point, 1.5 blocks) */
+    public static final int ARRIVE_DIST2 = 1536 * 1536;
 
 	/** 空闲 / Idle */
 	public static final byte IDLE = 0;
@@ -64,10 +66,12 @@ public final class CitizenState {
 	/** 是否为移动状态 / Whether the state involves movement */
 	public static final boolean[] MOVING = new boolean[STATE_COUNT];
 
-	/** 16 向方向表的 X 分量（×1024 定点） / X component of the 16-way direction table (fixed-point ×1024) */
-	public static final int[] DIR_X = new int[16];
-	/** 16 向方向表的 Z 分量（×1024 定点） / Z component of the 16-way direction table (fixed-point ×1024) */
-	public static final int[] DIR_Z = new int[16];
+    /** 256 向方向表（yaw 0–255 → MC yaw 角度 → 位移分量定点值） */
+    public static final int[] DIR_X_256 = new int[256];
+    public static final int[] DIR_Z_256 = new int[256];
+
+    /** 16 向索引 → 对应的 8‑bit yaw（0‑255），由 yawFromDir 预计算 */
+    public static final byte[] DIR_TO_YAW = new byte[16];
 
 	static {
 		SPEED[IDLE] = 0;
@@ -75,13 +79,21 @@ public final class CitizenState {
 		SPEED[RETURN_HOME] = 200; // ≈ 3.9 方块/秒
 		SPEED[SLEEP] = 0;
 		SPEED[WORK] = 200; // ≈ 3.9 方块/秒（通勤；到岗后 dir==NONE 自然静止）
-		for (int i = 0; i < STATE_COUNT; i++)
+		for (int i = 0; i < STATE_COUNT; i++){
 			MOVING[i] = SPEED[i] > 0;
-		for (int i = 0; i < 16; i++) {
-			double a = i * Math.PI / 8.0;
-			DIR_X[i] = (int) Math.round(Math.cos(a) * FIXED_SCALE);
-			DIR_Z[i] = (int) Math.round(Math.sin(a) * FIXED_SCALE);
-		}
+        }
+
+        for (int i = 0; i < 256; i++) {
+            double mcYaw = (i & 0xFF) * 360.0 / 256.0; // 0 = south, clockwise
+            double rad = Math.toRadians(mcYaw);
+            // MC: x 方向为 -sin, z 方向为 cos
+            DIR_X_256[i] = (int) Math.round(-Math.sin(rad) * FIXED_SCALE);
+            DIR_Z_256[i] = (int) Math.round( Math.cos(rad) * FIXED_SCALE);
+        }
+
+        for (int i = 0; i < 16; i++) {
+            DIR_TO_YAW[i] = yawFromDir(i);
+        }
 	}
 
 	/**

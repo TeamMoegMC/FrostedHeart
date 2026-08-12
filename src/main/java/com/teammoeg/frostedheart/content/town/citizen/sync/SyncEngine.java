@@ -44,7 +44,7 @@ import net.minecraft.server.level.ServerPlayer;
  *   <li>AOI：每 {@value #AOI_REFRESH} tick 以玩家为中心 {@value #AOI_RADIUS} 格刷新可见集合，
  *       进出触发 spawn/despawn 全量包；</li>
  *   <li>Dead Reckoning：服务端镜像客户端外推模型，仅当真实位置与外推位置误差超过
- *       {@value #ERROR_DIST} 方块（或方向/状态变化）时才将该居民标记为脏；匀速行走全程零带宽；</li>
+ *       {@value #ERROR_DIST} 方块（或方向/状态变化）时才将该居民标记为脏；匀速行走仅按档位心跳重锚；</li>
 	 * <li>分频：按最近观察者距离 32/64/+∞ 格分 4/8/20 tick 三档，按 stick 间隔错开避免尖峰；</li>
  *   <li>合包：每人每 {@value #FLUSH_INTERVAL} tick 至多一个批包，chunk 分组，
  *       单包最多 {@value #MAX_ENTRIES_PER_PACKET} 条（带宽预算）。</li>
@@ -74,8 +74,6 @@ public final class SyncEngine {
 	private static final int ERROR2 = (int) (ERROR_DIST * 1024) * (int) (ERROR_DIST * 1024);
 	/** 外推时间钳制（tick），防止长时间未更新导致溢出 / Extrapolation clamp in ticks, prevents overflow */
 	private static final long DT_CLAMP = 40;
-	/** 移动状态心跳间隔（tick）：匀速移动中最少每 N tick 强制同步一次基准点，保证客户端外推持续 / Movement heartbeat: min re-sync interval for moving citizens */
-	private static final long HEARTBEAT_INTERVAL = 20;
 
 	/** 各玩家当前追踪的居民 id 集合 / Tracked citizen id sets per player */
 	private final Map<ServerPlayer, IntOpenHashSet> tracked = new HashMap<>();
@@ -142,7 +140,7 @@ public final class SyncEngine {
 					String name = c.getCitizenName(id);
 					if (name == null)
 						name = ""; // 未托管（命令）居民：客户端回退 id 派生名 / unmanaged (command) citizen: client falls back to the id-derived name
-					spawns.add(new S2CCitizenSpawnPacket.Entry(id, sim.px[i], sim.py[i], sim.pz[i], sim.rdir[i],
+					spawns.add(new S2CCitizenSpawnPacket.Entry(id, sim.px[i], sim.py[i], sim.pz[i], sim.yaw[i],
 							sim.state[i], name));
 				}
 			}
@@ -162,6 +160,17 @@ public final class SyncEngine {
 	private void flushDeltas(CitizenSimScheduler sched, List<ServerPlayer> players, long gameTime) {
 		due.clear();
 		long aoi2 = (long) AOI_RADIUS * AOI_RADIUS;
+
+        // 缓存玩家坐标，避免循环中重复调用
+        int playerCount = players.size();
+        int[] pxs = new int[playerCount];
+        int[] pzs = new int[playerCount];
+        for (int j = 0; j < playerCount; j++) {
+            ServerPlayer p = players.get(j);
+            pxs[j] = p.getBlockX();
+            pzs[j] = p.getBlockZ();
+        }
+
 		// 遍历全部容器收集"脏且到期"条目（跨容器共享规范模型，id 全局唯一）
 		for (CitizenContainer c : sched.containers()) {
 			CitizenSim sim = c.sim();
@@ -169,30 +178,23 @@ public final class SyncEngine {
 			for (int i = 0; i < n; i++) {
 				// 最近观察者距离（未刷新 AOI 的间隙期也近似正确）
 				long minDist2 = Long.MAX_VALUE;
-				for (ServerPlayer p : players) {
-					long dx = (sim.px[i] >> 10) - p.getBlockX();
-					long dz = (sim.pz[i] >> 10) - p.getBlockZ();
-					long d2 = dx * dx + dz * dz;
-					if (d2 < minDist2)
-						minDist2 = d2;
-				}
+                for (int j = 0; j < playerCount; j++) {
+                    long dx = (sim.px[i] >> 10) - pxs[j];
+                    long dz = (sim.pz[i] >> 10) - pzs[j];
+                    long d2 = dx * dx + dz * dz;
+                    if (d2 < minDist2) minDist2 = d2;
+                }
+                
 				if (minDist2 > aoi2)
 					continue;
-				if (!isDirty(sim, i, gameTime))
-					continue;
 				int interval = tierInterval(minDist2);
+				if (!isDirty(sim, i, gameTime, interval))
+					continue;
 				// 按 stick 间隔判断（替代原 (gameTime+id) % interval 写法——
 				// 后者在外层每 4 tick 执行下，3/4 的居民仅 id%4==0 的能通过过滤，永远收不到增量包）
 				if (gameTime - sim.stick[i] < interval)
 					continue;
 				due.add(sim.id[i]);
-				// 更新共享规范模型
-				sim.sx[i] = sim.px[i];
-				sim.sy[i] = sim.py[i];
-				sim.sz[i] = sim.pz[i];
-				sim.sdir[i] = sim.rdir[i];
-				sim.sstate[i] = sim.state[i];
-				sim.stick[i] = gameTime;
 			}
 		}
 		// 广播移除
@@ -233,8 +235,24 @@ public final class SyncEngine {
 				int lx = (sim.px[i] - (cx << 14)) / S2CCitizenBatchPacket.LOCAL_QUANT;
 				int lz = (sim.pz[i] - (cz << 14)) / S2CCitizenBatchPacket.LOCAL_QUANT;
 				int ly = sim.py[i] >> 6;
+				// 纯心跳条目：yaw/state 与上次发送一致 → 客户端已持有（TCP 保序必一致），
+				// state 高位标记"沿用"、编码省 yaw 字节。判定基于"上一次 flush 的规范值"
+				// （规范模型在 flush 末尾统一更新，见下）。停止外推信号由 state 本身携带：
+				// 到达后行为系统把 MOVING 状态切回静止态，状态变化走脏检测发完整条目；
+				// 切换前 MOVING 停步的间隙由持续心跳重锚，客户端漂移有界。
+				// Pure-heartbeat entry: yaw/state unchanged since last send → already on
+				// the client (TCP ordering), the state high bit marks "reuse" and the
+				// yaw byte is dropped. The decision compares against last flush's canonical
+				// values (written back at the end of this flush). The stop-extrapolation
+				// signal now lives in the state byte itself: on arrival the behavior
+				// system flips the MOVING state to a static one, and the change is sent
+				// as a full entry via the dirty path; meanwhile continued heartbeats
+				// re-anchor the client with bounded drift.
+				byte st = sim.state[i];
+                if (st == sim.sstate[i] && sim.yaw[i] == sim.syaw[i])
+                    st |= S2CCitizenBatchPacket.ENTRY_PURE_HEARTBEAT;
 				byChunk.computeIfAbsent(key, k -> new ArrayList<>()).add(new S2CCitizenBatchPacket.Entry(id, lx, ly,
-						lz, sim.rdir[i], sim.state[i]));
+						lz, sim.yaw[i], st));
 				if (++count >= MAX_ENTRIES_PER_PACKET)
 					break;
 			}
@@ -249,6 +267,30 @@ public final class SyncEngine {
 			}
 			FHNetwork.INSTANCE.sendPlayer(p, new S2CCitizenBatchPacket(groups));
 		}
+		// 规范模型延后到本 flush 末尾统一回写：组包循环中的纯心跳判定必须与
+		// "上一次发送"的规范值比较；若在收集阶段就地更新，该比较恒成立，
+		// 全部条目都会被打成纯心跳，yaw/state 自此不再同步（回归 A）。
+		// 与组包循环同模式：经 id 反查容器与索引（防御移除竞态）。
+		// Canonical model is written back at the END of the flush: the pure-heartbeat
+		// decision must compare against what was sent LAST flush; updating during
+		// collection made the comparison vacuously true and every entry a heartbeat,
+		// freezing client yaw/state (regression A). Same id→container/index
+		// re-resolution as the packet-build loop (defensive against removal races).
+		for (int id : due) {
+			CitizenContainer c = sched.findById(id);
+			if (c == null)
+				continue;
+			CitizenSim sim = c.sim();
+			int i = sim.indexOf(id);
+			if (i < 0)
+				continue;
+			sim.sx[i] = sim.px[i];
+			sim.sy[i] = sim.py[i];
+			sim.sz[i] = sim.pz[i];
+			sim.syaw[i] = sim.yaw[i];
+			sim.sstate[i] = sim.state[i];
+			sim.stick[i] = gameTime;
+		}
 	}
 
 	/**
@@ -257,26 +299,36 @@ public final class SyncEngine {
 	 * Dead-reckoning dirty check: whether the true position diverges from the
 	 * canonical extrapolated model beyond the threshold.
 	 */
-	private boolean isDirty(CitizenSim sim, int i, long gameTime) {
-		if (sim.state[i] != sim.sstate[i] || sim.rdir[i] != sim.sdir[i])
+	private boolean isDirty(CitizenSim sim, int i, long gameTime, int interval) {
+        if (sim.state[i] != sim.sstate[i] || sim.yaw[i] != sim.syaw[i])
 			return true;
 		long dt = gameTime - sim.stick[i];
 		// 移动心跳：匀速状态下 Dead Reckoning 误差恒 0 不会自然发包，
-		// 强制每 HEARTBEAT_INTERVAL tick 刷新一次基准点，
-		// 限制客户端外推漂移在心跳间隔以内（配合客户端外推钳制 EXTRAPOLATE_CLAMP）
+		// 强制按距离档位刷新基准点——与发包节奏（tierInterval）同频。
+		// 若心跳固定 20 tick 而近档发包 4 tick：方向翻转 burst 后接 1s 长间隙，
+		// 客户端自适应窗口（prevGap）骤短、段长骤长 → 沿行进方向猛冲瞬移。
+		// 同频后包间隔均匀，窗口恒等于段长，该问题在机制上消失。
+		// Movement heartbeat follows the distance tier (same cadence as the
+		// flush interval): a fixed 20-tick heartbeat next to a 4-tick near-tier
+		// flush made a dir-flip burst followed by a 1 s gap; the client's
+		// adaptive window (prevGap) then matched neither — blast-forward
+		// teleports. Uniform cadence keeps window ≡ segment time.
 		int ss = sim.sstate[i] & 0xFF;
-		if (ss < CitizenState.STATE_COUNT && CitizenState.MOVING[ss] && dt >= HEARTBEAT_INTERVAL)
+		if (ss < CitizenState.STATE_COUNT && CitizenState.MOVING[ss] && dt >= interval)
 			return true;
 		if (dt > DT_CLAMP)
 			dt = DT_CLAMP;
+
 		int predX = sim.sx[i];
 		int predZ = sim.sz[i];
-		int sd = sim.sdir[i] & 0xFF;
-		if (sd != 0xFF && ss < CitizenState.STATE_COUNT && CitizenState.MOVING[ss]) {
-			int speed = CitizenState.SPEED[ss];
-			predX += (int) (((long) CitizenState.DIR_X[sd] * speed * dt) >> 10);
-			predZ += (int) (((long) CitizenState.DIR_Z[sd] * speed * dt) >> 10);
-		}
+        int syaw = sim.syaw[i] & 0xFF;
+
+        if (ss < CitizenState.STATE_COUNT && CitizenState.MOVING[ss]) {
+            int speed = CitizenState.SPEED[ss];
+            predX += (int)(((long)CitizenState.DIR_X_256[syaw] * speed * dt) >> 10);
+            predZ += (int)(((long)CitizenState.DIR_Z_256[syaw] * speed * dt) >> 10);
+        }
+
 		long ex = sim.px[i] - predX;
 		long ey = sim.py[i] - sim.sy[i];
 		long ez = sim.pz[i] - predZ;

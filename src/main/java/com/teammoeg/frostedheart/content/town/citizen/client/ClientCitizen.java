@@ -20,6 +20,7 @@
 package com.teammoeg.frostedheart.content.town.citizen.client;
 
 import com.teammoeg.frostedheart.content.town.citizen.sim.CitizenState;
+import net.minecraft.client.Minecraft;
 
 /**
  * 客户端居民渲染状态，快照插值 + 方向外推。
@@ -34,152 +35,119 @@ import com.teammoeg.frostedheart.content.town.citizen.sim.CitizenState;
  * {@value #EXTRAPOLATE_CLAMP} s). A snapshot arrival re-anchors the
  * interpolation at the current render position, keeping the path continuous
  * (no teleport), strictly mirroring the server-side dead-reckoning model.
+ *
+ * <p>朝向现为 8‑bit 连续 yaw（0‑255 ≈ 0‑360°），直接从服务端接收，客户端不做
+ * 任何过滤或防抖，彻底消除转弯冻结与抖动。</p>
  */
 public final class ClientCitizen {
 
-/**
- * 外推钳制时长（秒）。与服务端 {@link com.teammoeg.frostedheart.content.town.citizen.sync.SyncEngine#HEARTBEAT_INTERVAL}
- *（20 tick = 1 秒）对齐并留余量，保证心跳更新到来前外推持续不中断，
- * 避免"跑几步就停住"的现象。
- * <p>
- * Extrapolation clamp in seconds. Aligned with the server heartbeat
- * ({@link com.teammoeg.frostedheart.content.town.citizen.sync.SyncEngine#HEARTBEAT_INTERVAL},
- * 20 ticks = 1 s) with margin so extrapolation continues until the next heartbeat,
- * preventing the "runs a few steps then freezes" artifact.
- */
-private static final double EXTRAPOLATE_CLAMP = 1.5;
+    /**
+     * 外推钳制时长（秒）。与服务端最远档心跳（20 tick = 1 秒，最粗节奏）对齐
+     * 并留余量，保证心跳更新到来前外推持续不中断，避免"跑几步就停住"的现象。
+     */
+    private static final double EXTRAPOLATE_CLAMP = 1.5;
 
-	public final int id;
-	/** 真实姓名（spawn 包同步，城镇托管居民）；空串 = 未托管，回退 CitizenNames 派生名 / Real name (synced by the spawn packet, town-backed); empty = unmanaged, falls back to CitizenNames */
-	public final String name;
-	/** 上一快照 / Previous snapshot */
-	public double x0, y0, z0;
-	/** 最新快照 / Latest snapshot */
-	public double x1, y1, z1;
-	public byte dir;
-	public byte state;
-	/** 最近一次非 NONE 的方向（供假实体/低模保持朝向） / Last non-NONE direction (facing persistence for fake entity/low-poly) */
-	public byte lastDir;
-	/** 方向持久性过滤：候选方向（-1=无） / Dir persistence filter: candidate (-1 = none) */
-	private byte pendingDir = -1;
-	/** 方向持久性过滤：候选连续批包数（≥2 才提交 lastDir） / Dir persistence filter: consecutive batches seen (commit to lastDir at ≥2) */
-	private byte pendingCount = 0;
-	/** 快照到达时间（nanoTime） / Snapshot arrival times (nanoTime) */
-	private long t0, t1;
-	private final double[] posBuf = new double[3];
+    public final int id;
+    /** 真实姓名（spawn 包同步，城镇托管居民）；空串 = 未托管，回退 CitizenNames 派生名 */
+    public final String name;
 
-	ClientCitizen(int id, int px, int py, int pz, byte dir, byte state, String name) {
-		this.id = id;
-		this.name = name == null ? "" : name;
-		this.x0 = this.x1 = px / 1024.0;
-		this.y0 = this.y1 = py / 1024.0;
-		this.z0 = this.z1 = pz / 1024.0;
-		this.dir = dir;
-		this.state = state;
-		this.lastDir = dir != CitizenState.DIR_NONE ? dir : 4; // 默认朝南 / default facing south
-		this.t0 = this.t1 = System.nanoTime();
-	}
+    /** 上一快照 / Previous snapshot */
+    public double x0, y0, z0;
+    /** 最新快照 / Latest snapshot */
+    public double x1, y1, z1;
 
-	void update(int px, int py, int pz, byte dir, byte state) {
-		// 以"当前渲染位置（含外推尾巴）"为新插值起点，快照到达瞬间位置连续、无回跳。
-		// 修复前 x0 = x1 会丢弃外推尾巴：匀速行走时尾巴恰好等于真实位移不显形，
-		// 但转向/停下时（客户端仍沿旧方向外推）到达帧会瞬间回退 speed × 发包间隔
-		// （近距档约 0.5 格、心跳档最多约 2.7 格）= 可见瞬移。
-		// Interpolate from the current rendered position (extrapolation tail
-		// included) so a snapshot arrival never snaps the render position back.
-		// Before: x0 = x1 discarded the extrapolation tail — invisible during
-		// straight motion (the tail equals the true displacement), but on
-		// turns/stops (client still extrapolating along the stale direction)
-		// the arrival frame jumped back speed × packet gap (≈0.5 blocks near
-		// tier, up to ≈2.7 blocks at the heartbeat tier) — a visible teleport.
-		double[] cur = renderPos();
-		long now = System.nanoTime();
-		long prevGap = now - this.t0; // 真实收包间隔（自适应的窗口时长估计，而非上一次设置的窗口）
-		this.x0 = cur[0];
-		this.y0 = cur[1];
-		this.z0 = cur[2];
-		this.t0 = now;
-		this.t1 = now + Math.max(prevGap, 50_000_000L); // 窗口 ≥ 50ms：首个批包前平滑收敛
-		this.x1 = px / 1024.0;
-		this.y1 = py / 1024.0;
-		this.z1 = pz / 1024.0;
-		this.dir = dir;
-		this.state = state;
-		// 连续 2 个批包同值才提交 lastDir：单包抖动（服务端 dir 毛刺）不改变朝向。
-		// Commit to lastDir only after the same dir arrives in 2 consecutive
-		// batches: single-batch jitter never changes the facing.
-		if (dir != CitizenState.DIR_NONE) {
-			if (pendingDir == dir) {
-				if (++pendingCount >= 2)
-					this.lastDir = dir;
-			} else {
-				pendingDir = dir;
-				pendingCount = 1;
-			}
-		} else {
-			pendingDir = -1;
-			pendingCount = 0; // DIR_NONE 只清 pending，不写 lastDir（防 & 15 把 255 映射成 dir 15）
-		}
-		// 注意：不得在此覆盖 t1。t1 是上方设置的"插值窗口结束时刻"（now + 收包间隔），
-		// 若重置为当前时刻，interval≈0 会被钳到 50ms：渲染位置每个包到达后 50ms 内
-		// 硬贴到快照然后冻结到下一个包（近距 200ms 一跳、心跳档 1s 一跳 ≈3.9 格 = 瞬移），
-		// 且外推分支 interval>0.35 永不成立，Dead Reckoning 完全失效；
-		// 位置"冻结→猛跳"还让 FakeCitizenManager 按位移求朝向时目标 yaw 来回翻转（抽搐）。
-	}
+    /** 连续朝向 (0‑255) / Continuous yaw (0‑255) */
+    public byte yaw;
+    /** 行为状态 / Behavior state */
+    public byte state;
 
-	/**
-	 * 当前是否处于移动状态。
-	 * <p>
-	 * Whether currently in a moving state.
-	 *
-	 * @return 移动中返回 true / true if moving
-	 */
-	public boolean isMoving() {
-		int s = state & 0xFF;
-		return dir != CitizenState.DIR_NONE && s < CitizenState.STATE_COUNT && CitizenState.MOVING[s];
-	}
+    /** 快照到达时间（游戏时间秒） / Snapshot arrival times (game-time seconds) */
+    private double t0, t1;
+    private final double[] posBuf = new double[3];
 
-	/**
-	 * 计算当前渲染位置（含插值与外推），写入 out[3]。
-	 * <p>
-	 * Computes the current render position (interpolated + extrapolated) into out[3].
-	 *
-	 * @return 渲染位置数组 [x, y, z] / render position array [x, y, z]
-	 */
-	public double[] renderPos() {
-		long now = System.nanoTime();
-		double interval = (t1 - t0) / 1e9;
-		if (interval < 0.05)
-			interval = 0.05;
-		else if (interval > 1.0)
-			interval = 1.0;
-		double g = (now - t0) / 1e9 / interval;
-		if (g > 1.0)
-			g = 1.0;
-		double x = x0 + (x1 - x0) * g;
-		double y = y0 + (y1 - y0) * g;
-		double z = z0 + (z1 - z0) * g;
-		if (isMoving()) {
-			double extra = (now - t1) / 1e9;
-			if (extra > EXTRAPOLATE_CLAMP)
-				extra = EXTRAPOLATE_CLAMP;
-			// 仅远距档（收包间隔 > 0.35s，8/20 tick 心跳）才外推：
-			// 近距档 4 tick 快照足够密集，插值即平滑；外推反而会在服务端停下后
-			// 产生过冲回弹（渲染倒退滑回真值，配合行走动画看起来"倒着走"）。
-			// Extrapolate only on sparse tiers (packet gap > 0.35 s, the 8/20-tick
-			// heartbeats): the 4-tick near tier is dense enough for pure
-			// interpolation, and extrapolation there would overshoot on stops
-			// (the render glides back to the truth — reads as walking backwards).
-			if (extra > 0 && interval > 0.35) {
-				int d = dir & 0xFF;
-				double speed = CitizenState.SPEED[state & 0xFF] * 20.0 / CitizenState.FIXED_SCALE;
-				x += CitizenState.DIR_X[d] / 1024.0 * speed * extra;
-				z += CitizenState.DIR_Z[d] / 1024.0 * speed * extra;
-			}
-		}
-		posBuf[0] = x;
-		posBuf[1] = y;
-		posBuf[2] = z;
-		return posBuf;
-	}
+    ClientCitizen(int id, int px, int py, int pz, byte yaw, byte state, String name) {
+        this.id = id;
+        this.name = name == null ? "" : name;
+        this.x0 = this.x1 = px / 1024.0;
+        this.y0 = this.y1 = py / 1024.0;
+        this.z0 = this.z1 = pz / 1024.0;
+        this.yaw = yaw;
+        this.state = state;
+        this.t0 = this.t1 = now();
+    }
+
+    /**
+     * 快照到达：用当前渲染位置作为新插值起点，保证位置连续。
+     * @param px 绝对定点 X
+     * @param py 绝对定点 Y
+     * @param pz 绝对定点 Z
+     * @param yaw 连续朝向 (0‑255)
+     * @param state 行为状态
+     */
+    void update(int px, int py, int pz, byte yaw, byte state) {
+        double[] cur = renderPos();
+        double now = now();
+        double prevGap = now - this.t0;
+        this.x0 = cur[0];
+        this.y0 = cur[1];
+        this.z0 = cur[2];
+        this.t0 = now;
+        this.t1 = now + Math.max(prevGap, 0.05);
+        this.x1 = px / 1024.0;
+        this.y1 = py / 1024.0;
+        this.z1 = pz / 1024.0;
+        this.yaw = yaw;
+        this.state = state;
+    }
+
+    /**
+     * 当前是否处于移动状态。仅根据 state 判断，不再依赖哨兵 dir。
+     */
+    public boolean isMoving() {
+        int s = state & 0xFF;
+        return s < CitizenState.STATE_COUNT && CitizenState.MOVING[s];
+    }
+
+    /**
+     * 计算当前渲染位置（插值 + 外推）。
+     */
+    public double[] renderPos() {
+        double now = now();
+        double interval = t1 - t0;
+        if (interval < 0.05) interval = 0.05;
+        else if (interval > 1.0) interval = 1.0;
+
+        double g = (now - t0) / interval;
+        if (g > 1.0) g = 1.0;
+
+        double x = x0 + (x1 - x0) * g;
+        double y = y0 + (y1 - y0) * g;
+        double z = z0 + (z1 - z0) * g;
+
+        if (isMoving()) {
+            double extra = now - t1;
+            if (extra > EXTRAPOLATE_CLAMP) extra = EXTRAPOLATE_CLAMP;
+            if (extra > 0 && interval > 0.35) {
+                int idx = yaw & 0xFF;
+                double speed = CitizenState.SPEED[state & 0xFF] * 20.0 / CitizenState.FIXED_SCALE;
+                x += CitizenState.DIR_X_256[idx] / 1024.0 * speed * extra;
+                z += CitizenState.DIR_Z_256[idx] / 1024.0 * speed * extra;
+            }
+        }
+        posBuf[0] = x;
+        posBuf[1] = y;
+        posBuf[2] = z;
+        return posBuf;
+    }
+
+    // 当前游戏时间（秒），暂停时不增长。与下方全部秒制常量（EXTRAPOLATE_CLAMP=1.5、
+    // 窗口钳制 0.05~1.0、外推门限 interval>0.35）一致；帧时间小数部分使包间间隔
+    // 精确到亚 tick。曾误返回 tick（回归 B：窗口坍缩为 1 tick，渲染位置分段冻结/瞬移）。
+    // Current game time in seconds (pause-aware). Matches the second-scale constants
+    // below; the frame-time fraction keeps inter-packet gaps sub-tick accurate.
+    private static double now() {
+        Minecraft mc = Minecraft.getInstance();
+        if (mc.level == null) return 0.0;
+        return (mc.level.getGameTime() + mc.getFrameTime()) / 20.0;
+    }
 }

@@ -39,9 +39,6 @@ import net.minecraft.world.level.levelgen.Heightmap;
  * included.
  */
 public final class MovementSystem {
-
-	/** 到达判定距离（定点，1.5 方块） / Arrival threshold (fixed-point, 1.5 blocks) */
-	private static final int ARRIVE_DIST2 = 1536 * 1536;
 	/** 分离半径（定点，1.5 方块） / Separation radius (fixed-point, 1.5 blocks) */
 	private static final int SEP_DIST2 = 1536 * 1536;
 	/** 单 tick 最大分离位移（定点） / Max separation displacement per tick (fixed-point) */
@@ -82,7 +79,7 @@ public final class MovementSystem {
 		}
 	}
 
-	private void step(CitizenSimScheduler sched, CitizenSim sim, ServerLevel level, int i, long gameTime) {
+/*	private void step(CitizenSimScheduler sched, CitizenSim sim, ServerLevel level, int i, long gameTime) {
 		int dx = sim.tx[i] - sim.px[i];
 		int dz = sim.tz[i] - sim.pz[i];
 		long dist2 = (long) dx * dx + (long) dz * dz;
@@ -160,7 +157,76 @@ public final class MovementSystem {
 
 		separate(sched, sim, i);
 		checkStuck(sim, i, dist2, gameTime);
-	}
+	}*/
+private void step(CitizenSimScheduler sched, CitizenSim sim, ServerLevel level, int i, long gameTime) {
+    int dx = sim.tx[i] - sim.px[i];
+    int dz = sim.tz[i] - sim.pz[i];
+    long dist2 = (long) dx * dx + (long) dz * dz;
+
+    // 到达：直接停下，yaw 保持不变
+    if (dist2 < CitizenState.ARRIVE_DIST2) {
+        return;
+    }
+
+    // 1. 确定移动目标方向（优先流场，近距/不可用回退直线）
+    int moveDir16 = -1;
+    if (dist2 > FIELD_MIN_DIST2) {
+        FlowField field = sched.fields.request(sim.tx[i] >> 10, sim.tz[i] >> 10, gameTime);
+        if (field != null) {
+            moveDir16 = field.sampleDir(sim.px[i] >> 10, sim.pz[i] >> 10);
+        }
+    }
+    if (moveDir16 < 0) {
+        moveDir16 = CitizenState.dirFromVector(dx, dz);
+    }
+
+    // 2. 地形可通行性检查（使用最终确定的方向）
+    int feetY = sim.py[i] >> 10;
+    int bx = sim.px[i] >> 10;
+    int bz = sim.pz[i] >> 10;
+    int checkYawByte = CitizenState.DIR_TO_YAW[moveDir16] & 0xFF;
+    int nbX = bx + Integer.signum(CitizenState.DIR_X_256[checkYawByte]);
+    int nbZ = bz + Integer.signum(CitizenState.DIR_Z_256[checkYawByte]);
+
+    if (!passable(level, nbX, nbZ, feetY)) {
+        moveDir16 = rotatePassable(level, bx, bz, moveDir16, feetY);
+        if (moveDir16 < 0) {
+            // 全堵：停下等重规划
+            checkStuck(sim, i, dist2, gameTime);
+            return;
+        }
+    }
+
+    // 3. 目标 yaw（256 级）
+    byte targetYaw = CitizenState.DIR_TO_YAW[moveDir16]; // 直接用缓存，避免重复计算
+
+    // 4. 视觉 yaw 缓慢旋转跟随（1 步/tick）
+    int curYaw = sim.yaw[i] & 0xFF;
+    int tgtYaw = targetYaw & 0xFF;
+    int diff = tgtYaw - curYaw;
+    if (diff > 128) diff -= 256;
+    else if (diff < -128) diff += 256;
+
+    int step = 3; // 每 tick 最多旋转 3 步（约 4.2°/tick）
+    if (diff > 0) {
+        if (diff < step) step = diff;
+        sim.yaw[i] = (byte)((curYaw + step) & 0xFF);
+    } else if (diff < 0) {
+        if (-diff < step) step = -diff;
+        sim.yaw[i] = (byte)((curYaw - step) & 0xFF);
+    }
+
+    // 5. 使用最终确定的移动方向进行位移
+    int moveYawByte = CitizenState.DIR_TO_YAW[moveDir16] & 0xFF;
+    int speed = CitizenState.SPEED[sim.state[i]];
+    sim.px[i] += (CitizenState.DIR_X_256[moveYawByte] * speed) >> 10;
+    sim.pz[i] += (CitizenState.DIR_Z_256[moveYawByte] * speed) >> 10;
+
+    // 6. 分离力与卡住检测
+    separate(sched, sim, i);
+    checkStuck(sim, i, dist2, gameTime);
+}
+
 
 	private void separate(CitizenSimScheduler sched, CitizenSim sim, int i) {
 		neighborBuf.clear();
@@ -263,19 +329,27 @@ public final class MovementSystem {
 	 * When the forward cell is impassable, try ±22.5° then ±45° bins for a
 	 * passable direction (wall following); -1 if all are blocked.
 	 */
-	private static int rotatePassable(ServerLevel level, int bx, int bz, int dir, int feetY) {
-		for (int k = 1; k <= 2; k++) {
-			int d1 = (dir + k) & 15;
-			int d2 = (dir - k + 16) & 15;
-			if (passable(level, bx + Integer.signum(CitizenState.DIR_X[d1]),
-					bz + Integer.signum(CitizenState.DIR_Z[d1]), feetY))
-				return d1;
-			if (passable(level, bx + Integer.signum(CitizenState.DIR_X[d2]),
-					bz + Integer.signum(CitizenState.DIR_Z[d2]), feetY))
-				return d2;
-		}
-		return -1;
-	}
+    private static int rotatePassable(ServerLevel level, int bx, int bz, int dir, int feetY) {
+        for (int k = 1; k <= 2; k++) {
+            int d1 = (dir + k) & 15;
+            int d2 = (dir - k + 16) & 15;
+
+            int yawD1 = CitizenState.DIR_TO_YAW[d1] & 0xFF;
+            int yawD2 = CitizenState.DIR_TO_YAW[d2] & 0xFF;
+
+            if (passable(level,
+                    bx + Integer.signum(CitizenState.DIR_X_256[yawD1]),
+                    bz + Integer.signum(CitizenState.DIR_Z_256[yawD1]),
+                    feetY))
+                return d1;
+            if (passable(level,
+                    bx + Integer.signum(CitizenState.DIR_X_256[yawD2]),
+                    bz + Integer.signum(CitizenState.DIR_Z_256[yawD2]),
+                    feetY))
+                return d2;
+        }
+        return -1;
+    }
 
 	/**
 	 * 该方块列中 ≤ maxFeet 的最高可站立脚底高度（方块单位）。
@@ -316,24 +390,23 @@ public final class MovementSystem {
 	 * @param dist2 当前距目标平方距离（定点） / current squared target distance (fixed-point)
 	 * @param gameTime 当前游戏时间 / current game time
 	 */
-	private void checkStuck(CitizenSim sim, int i, long dist2, long gameTime) {
-		int now = (int) gameTime;
-		if (sim.stuckTick[i] == 0) {
-			sim.stuckTick[i] = now;
-			sim.bestDist2[i] = dist2;
-			return;
-		}
-		if (dist2 < sim.bestDist2[i]) {
-			sim.bestDist2[i] = dist2;
-			sim.stuckTick[i] = now;
-			return;
-		}
-		if (now - sim.stuckTick[i] > STUCK_TICKS) {
-			sim.dir[i] = CitizenState.DIR_NONE;
-			sim.rdir[i] = CitizenState.DIR_NONE; // 客户端立即看到停止帧 / client sees the stop immediately
-			sim.candDir[i] = -1;
-			sim.candAge[i] = 0;
-			sim.stuckTick[i] = now;
-		}
-	}
+    private void checkStuck(CitizenSim sim, int i, long dist2, long gameTime) {
+        int now = (int) gameTime;
+        if (sim.stuckTick[i] == 0) {
+            sim.stuckTick[i] = now;
+            sim.bestDist2[i] = dist2;
+            return;
+        }
+        if (dist2 < sim.bestDist2[i]) {
+            sim.bestDist2[i] = dist2;
+            sim.stuckTick[i] = now;
+            return;
+        }
+        if (now - sim.stuckTick[i] > STUCK_TICKS) {
+            // 卡住自救：将目标拉回当前位置，下一 tick 自动停止移动
+            sim.tx[i] = sim.px[i];
+            sim.tz[i] = sim.pz[i];
+            sim.stuckTick[i] = now;
+        }
+    }
 }

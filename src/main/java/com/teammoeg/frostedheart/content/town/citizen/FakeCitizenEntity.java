@@ -61,18 +61,6 @@ public class FakeCitizenEntity extends Mob {
 	 */
 	public float smoothMoved;
 
-	/**
-	 * 平滑位移向量（一阶 EMA，FakeCitizenManager 每 tick 写入），供朝向求取。
-	 * 单 tick 位移受分离力/快照量化/插值重锚影响有噪点，直接以其求 yaw 会让
-	 * 目标方向小幅抖动（朝向抽搐残余）；向量级平滑后噪声大幅衰减。
-	 * <p>
-	 * Smoothed displacement vector (first-order EMA, written each tick by
-	 * FakeCitizenManager) for heading estimation. Raw per-tick displacement is
-	 * noisy (separation force, snapshot quantization, interpolation re-anchor),
-	 * which otherwise leaks into the target yaw as small-amplitude twitching.
-	 */
-	public float smoothDX, smoothDZ;
-
 	public FakeCitizenEntity(EntityType<? extends FakeCitizenEntity> type, Level level) {
 		super(type, level);
 		this.setInvulnerable(true);

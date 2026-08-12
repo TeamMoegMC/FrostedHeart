@@ -147,9 +147,8 @@ public class TownSimData implements CitizenContainer, ITownResidentListener {
 		CitizenSim loaded = CitizenSim.load(simTag);
 		for (int k = 0; k < loaded.size(); k++) {
 			int i = sim.add(loaded.id[k], loaded.px[k], loaded.py[k], loaded.pz[k], loaded.tickPhase[k]);
-			sim.dir[i] = loaded.dir[k];
-			sim.rdir[i] = loaded.dir[k]; // 与恢复的转向 dir 对齐，防加载后首个 flush 误发停止帧 / align reported dir with the restored steering dir
 			sim.yaw[i] = loaded.yaw[k];
+            sim.syaw[i] = loaded.syaw[k];
 			sim.state[i] = loaded.state[k];
 			sim.homeX[i] = loaded.homeX[k];
 			sim.homeZ[i] = loaded.homeZ[k];

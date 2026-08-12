@@ -43,10 +43,10 @@ public final class CitizenSim {
 	public int[] id;
 	/** 位置（定点 1/1024 方块） / Position (fixed-point 1/1024 block) */
 	public int[] px, py, pz;
-	/** 16 向移动方向，255=静止 / 16-way movement direction, 255 = stationary */
-	public byte[] dir;
 	/** 量化朝向 / Quantized yaw */
 	public byte[] yaw;
+    // Dead Reckoning canonical yaw，客户端应该的规范朝向
+    public byte[] syaw;
 	/** 行为状态，见 {@link CitizenState} / Behavior state, see {@link CitizenState} */
 	public byte[] state;
 	/** 归属性锚点（家），方块坐标 / Home anchor, block coordinates */
@@ -61,16 +61,10 @@ public final class CitizenSim {
 	public byte[] tickPhase;
 	/** Dead Reckoning 规范模型：上次广播的位置/方向/状态/时刻 / Dead-reckoning canonical model: last broadcast pos/dir/state/time */
 	public int[] sx, sy, sz;
-	public byte[] sdir, sstate;
+	public byte[] sstate;
 	public long[] stick;
 	/** 卡住计时：上次取得进度（dist2 水位下降）的游戏时刻（int 截断，0=未初始化）；运行期数据，不落盘 / Stuck timer: game time of last progress (dist2 watermark drop) (truncated int, 0 = uninitialized); runtime-only, not persisted */
 	public int[] stuckTick;
-	/** 上报方向（同步给客户端 + Dead Reckoning 预测）：转向 dir 经连续 2 tick 持久性过滤后提交于此；运行期数据，不落盘 / Reported direction (synced to clients + used for DR prediction): steering dir committed here after a 2-consecutive-tick persistence filter; runtime-only, not persisted */
-	public byte[] rdir;
-	/** 上报方向过滤：候选方向（-1 哨兵表示无候选）；运行期数据，不落盘 / Reported-dir filter: candidate steering dir (-1 sentinel = none); runtime-only, not persisted */
-	public byte[] candDir;
-	/** 上报方向过滤：候选连续保持 tick 数；运行期数据，不落盘 / Reported-dir filter: consecutive ticks the candidate has persisted; runtime-only, not persisted */
-	public byte[] candAge;
 	/** 行程最小目标距离平方（卡住判定水位，突破才计进度）；运行期数据，不落盘 / Journey min dist2 watermark (stuck detection: only a lower dist2 counts as progress); runtime-only, not persisted */
 	public long[] bestDist2;
 
@@ -89,9 +83,9 @@ public final class CitizenSim {
 		px = new int[cap];
 		py = new int[cap];
 		pz = new int[cap];
-		dir = new byte[cap];
 		yaw = new byte[cap];
-		state = new byte[cap];
+        syaw = new byte[cap];
+        state = new byte[cap];
 		homeX = new int[cap];
 		homeZ = new int[cap];
 		wx = new int[cap];
@@ -105,13 +99,9 @@ public final class CitizenSim {
 		sx = new int[cap];
 		sy = new int[cap];
 		sz = new int[cap];
-		sdir = new byte[cap];
 		sstate = new byte[cap];
 		stick = new long[cap];
 		stuckTick = new int[cap];
-		rdir = new byte[cap];
-		candDir = new byte[cap];
-		candAge = new byte[cap];
 		bestDist2 = new long[cap];
 	}
 
@@ -121,8 +111,8 @@ public final class CitizenSim {
 		px = Arrays.copyOf(px, newCap);
 		py = Arrays.copyOf(py, newCap);
 		pz = Arrays.copyOf(pz, newCap);
-		dir = Arrays.copyOf(dir, newCap);
 		yaw = Arrays.copyOf(yaw, newCap);
+        syaw = Arrays.copyOf(syaw, newCap);
 		state = Arrays.copyOf(state, newCap);
 		homeX = Arrays.copyOf(homeX, newCap);
 		homeZ = Arrays.copyOf(homeZ, newCap);
@@ -137,13 +127,9 @@ public final class CitizenSim {
 		sx = Arrays.copyOf(sx, newCap);
 		sy = Arrays.copyOf(sy, newCap);
 		sz = Arrays.copyOf(sz, newCap);
-		sdir = Arrays.copyOf(sdir, newCap);
 		sstate = Arrays.copyOf(sstate, newCap);
 		stick = Arrays.copyOf(stick, newCap);
 		stuckTick = Arrays.copyOf(stuckTick, newCap);
-		rdir = Arrays.copyOf(rdir, newCap);
-		candDir = Arrays.copyOf(candDir, newCap);
-		candAge = Arrays.copyOf(candAge, newCap);
 		bestDist2 = Arrays.copyOf(bestDist2, newCap);
 		capacity = newCap;
 	}
@@ -177,20 +163,16 @@ public final class CitizenSim {
 		tx[i] = x;
 		ty[i] = y;
 		tz[i] = z;
-		dir[i] = CitizenState.DIR_NONE;
 		yaw[i] = 0;
-		state[i] = CitizenState.IDLE;
+        syaw[i] = 0;
+        state[i] = CitizenState.IDLE;
 		tickPhase[i] = phase;
 		sx[i] = x;
 		sy[i] = y;
 		sz[i] = z;
-		sdir[i] = CitizenState.DIR_NONE;
 		sstate[i] = CitizenState.IDLE;
 		stick[i] = 0;
 		stuckTick[i] = 0;
-		rdir[i] = CitizenState.DIR_NONE;
-		candDir[i] = -1;
-		candAge[i] = 0;
 		bestDist2[i] = 0;
 		idToIndex.put(newId, i);
 		return i;
@@ -214,8 +196,8 @@ public final class CitizenSim {
 			px[i] = px[last];
 			py[i] = py[last];
 			pz[i] = pz[last];
-			dir[i] = dir[last];
 			yaw[i] = yaw[last];
+            syaw[i] = syaw[last];
 			state[i] = state[last];
 			homeX[i] = homeX[last];
 			homeZ[i] = homeZ[last];
@@ -230,13 +212,9 @@ public final class CitizenSim {
 			sx[i] = sx[last];
 			sy[i] = sy[last];
 			sz[i] = sz[last];
-			sdir[i] = sdir[last];
 			sstate[i] = sstate[last];
 			stick[i] = stick[last];
 			stuckTick[i] = stuckTick[last];
-			rdir[i] = rdir[last];
-			candDir[i] = candDir[last];
-			candAge[i] = candAge[last];
 			bestDist2[i] = bestDist2[last];
 			idToIndex.put(id[i], i);
 		}
@@ -314,8 +292,8 @@ public final class CitizenSim {
 		tag.putIntArray("px", Arrays.copyOf(px, size));
 		tag.putIntArray("py", Arrays.copyOf(py, size));
 		tag.putIntArray("pz", Arrays.copyOf(pz, size));
-		tag.putByteArray("dir", Arrays.copyOf(dir, size));
 		tag.putByteArray("yaw", Arrays.copyOf(yaw, size));
+        tag.putByteArray("syaw", Arrays.copyOf(syaw, size));
 		tag.putByteArray("state", Arrays.copyOf(state, size));
 		tag.putIntArray("homeX", Arrays.copyOf(homeX, size));
 		tag.putIntArray("homeZ", Arrays.copyOf(homeZ, size));
@@ -342,8 +320,8 @@ public final class CitizenSim {
 		int[] apx = tag.getIntArray("px");
 		int[] apy = tag.getIntArray("py");
 		int[] apz = tag.getIntArray("pz");
-		byte[] adir = tag.getByteArray("dir");
 		byte[] ayaw = tag.getByteArray("yaw");
+        byte[] asyaw = tag.getByteArray("syaw");
 		byte[] astate = tag.getByteArray("state");
 		int[] ahomeX = tag.getIntArray("homeX");
 		int[] ahomeZ = tag.getIntArray("homeZ");
@@ -355,9 +333,8 @@ public final class CitizenSim {
 		int[] atz = tag.getIntArray("tz");
 		for (int k = 0; k < n; k++) {
 			int i = sim.add(ids[k], apx[k], apy[k], apz[k], (byte) (ids[k] % 20));
-			sim.dir[i] = adir[k];
-			sim.rdir[i] = adir[k]; // 与恢复的转向 dir 对齐，防加载后首个 flush 误发停止帧 / align reported dir with the restored steering dir
 			sim.yaw[i] = ayaw[k];
+            sim.syaw[i] = asyaw[k];
 			sim.state[i] = astate[k];
 			sim.homeX[i] = ahomeX[k];
 			sim.homeZ[i] = ahomeZ[k];

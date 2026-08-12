@@ -58,7 +58,7 @@ public final class ClientCitizenCache {
 	 */
 	public static void applySpawn(List<S2CCitizenSpawnPacket.Entry> entries) {
 		for (S2CCitizenSpawnPacket.Entry e : entries)
-			CITIZENS.put(e.id(), new ClientCitizen(e.id(), e.px(), e.py(), e.pz(), e.dir(), e.state(), e.name()));
+			CITIZENS.put(e.id(), new ClientCitizen(e.id(), e.px(), e.py(), e.pz(), e.yaw(), e.state(), e.name()));
 	}
 
 	/**
@@ -68,21 +68,28 @@ public final class ClientCitizenCache {
 	 *
 	 * @param groups chunk 分组 / chunk groups
 	 */
-	public static void applyBatch(List<S2CCitizenBatchPacket.Group> groups) {
-		for (S2CCitizenBatchPacket.Group g : groups) {
-			int baseX = g.cx() << 14;
-			int baseZ = g.cz() << 14;
-			for (S2CCitizenBatchPacket.Entry e : g.entries()) {
-				ClientCitizen c = CITIZENS.get(e.id());
-				if (c == null)
-					continue; // 未追踪（AOI 边界竞态），忽略
-				int px = baseX + e.lx() * S2CCitizenBatchPacket.LOCAL_QUANT;
-				int py = e.ly() << 6;
-				int pz = baseZ + e.lz() * S2CCitizenBatchPacket.LOCAL_QUANT;
-				c.update(px, py, pz, e.dir(), e.state());
-			}
-		}
-	}
+    public static void applyBatch(List<S2CCitizenBatchPacket.Group> groups) {
+        for (S2CCitizenBatchPacket.Group g : groups) {
+            int baseX = g.cx() << 14;
+            int baseZ = g.cz() << 14;
+            for (S2CCitizenBatchPacket.Entry e : g.entries()) {
+                ClientCitizen c = CITIZENS.get(e.id());
+                if (c == null)
+                    continue;
+                int px = baseX + e.lx() * S2CCitizenBatchPacket.LOCAL_QUANT;
+                int py = e.ly() << 6;
+                int pz = baseZ + e.lz() * S2CCitizenBatchPacket.LOCAL_QUANT;
+                byte yaw = e.yaw();
+                byte state = e.state();
+                if ((state & S2CCitizenBatchPacket.ENTRY_PURE_HEARTBEAT) != 0) {
+                    // 纯心跳：沿用客户端现有的 yaw/state（服务端保证未变）
+                    yaw = c.yaw;
+                    state = c.state;
+                }
+                c.update(px, py, pz, yaw, state);
+            }
+        }
+    }
 
 	/**
 	 * 应用销毁包。

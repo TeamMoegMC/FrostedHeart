@@ -52,6 +52,7 @@ public final class BehaviorSystem {
 	/** 到岗后每决策周期踱步概率（/256） / Pacing probability per decision cycle when on duty (/256) */
 	private static final int WORK_PACE_CHANCE = 10;
 
+
 	/**
 	 * 处理本 tick 分片内所有活跃居民的行为决策。
 	 * 遍历调度器的全部容器（每镇一份模拟 + 未托管命令居民）。
@@ -103,13 +104,13 @@ public final class BehaviorSystem {
 				startMove(sim, i, sim.homeX[i] << 10, sim.homeZ[i] << 10, CitizenState.RETURN_HOME, gameTime);
 			} else if (workTime && sim.wx[i] != -1) {
 				startMove(sim, i, sim.wx[i] << 10, sim.wz[i] << 10, CitizenState.WORK, gameTime);
-			} else if (sim.dir[i] == CitizenState.DIR_NONE) {
+			} else if (isArrived(sim, i)) {
 				// 已到达闲逛目标（移动系统停下了单位）
 				sim.state[i] = CitizenState.IDLE;
 			}
 			break;
 		case CitizenState.RETURN_HOME:
-			if (sim.dir[i] == CitizenState.DIR_NONE) {
+			if (isArrived(sim, i)) {
 				sim.state[i] = night ? CitizenState.SLEEP : CitizenState.IDLE;
 			}
 			break;
@@ -121,7 +122,7 @@ public final class BehaviorSystem {
 			// 下班（夜晚或工作时段结束）优先于一切，直接回家
 			if (night || !workTime) {
 				startMove(sim, i, sim.homeX[i] << 10, sim.homeZ[i] << 10, CitizenState.RETURN_HOME, gameTime);
-			} else if (sim.dir[i] == CitizenState.DIR_NONE) {
+			} else if (isArrived(sim, i)) {
 				// 已到岗：原地站岗；小概率在岗位 ±3 格内踱步（原地踱步，不离开岗位）
 				int r = CitizenState.nextRand(sim.id[i], gameTime) & 0xFF;
 				if (r < WORK_PACE_CHANCE) {
@@ -171,4 +172,10 @@ public final class BehaviorSystem {
 		long day = level.getDayTime() % 24000L;
 		return day >= WORK_START && day < WORK_END;
 	}
+
+    private boolean isArrived(CitizenSim sim, int i) {
+        int dx = sim.tx[i] - sim.px[i];
+        int dz = sim.tz[i] - sim.pz[i];
+        return (long) dx * dx + (long) dz * dz < CitizenState.ARRIVE_DIST2;
+    }
 }

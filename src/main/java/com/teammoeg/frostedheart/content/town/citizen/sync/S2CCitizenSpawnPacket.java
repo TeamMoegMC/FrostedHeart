@@ -41,7 +41,7 @@ import net.minecraftforge.network.NetworkEvent;
 public final class S2CCitizenSpawnPacket implements CMessage {
 
 	/** 出生条目 / Spawn entry */
-	public record Entry(int id, int px, int py, int pz, byte dir, byte state, String name) {
+	public record Entry(int id, int px, int py, int pz, byte yaw, byte state, String name) {
 	}
 
 	private final List<Entry> entries;
@@ -66,7 +66,7 @@ public final class S2CCitizenSpawnPacket implements CMessage {
 			buf.writeInt(e.px());
 			buf.writeInt(e.py());
 			buf.writeInt(e.pz());
-			buf.writeByte(e.dir());
+			buf.writeByte(e.yaw());
 			buf.writeByte(e.state());
 			buf.writeUtf(e.name(), 64);
 		}
