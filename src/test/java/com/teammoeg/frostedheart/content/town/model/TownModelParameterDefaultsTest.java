@@ -84,6 +84,13 @@ class TownModelParameterDefaultsTest {
                 parameters.residents().homelessHealthLossPerDay(), EPSILON);
         assertEquals(TownModelParameters.Defaults.MINING_FLOOR_BLOCKS_PER_WORKER_SLOT,
                 parameters.mining().floorBlocksPerWorkerSlot(), EPSILON);
+        assertEquals(TownModelParameters.Defaults.TOWN_OBSERVATION_HISTORY_DAYS,
+                parameters.observation().historyDays());
+        assertEquals(90, parameters.observation().historyDays());
+        assertEquals(TownModelParameters.Defaults.TOWN_OBSERVATION_RESERVE_WARNING_DAYS,
+                parameters.observation().reserveWarningDays(), EPSILON);
+        assertEquals(TownModelParameters.Defaults.TOWN_OBSERVATION_RESERVE_CRITICAL_DAYS,
+                parameters.observation().reserveCriticalDays(), EPSILON);
     }
 
     private static void assertConfigUses(String configSource, String constantName) {

@@ -26,8 +26,11 @@ import com.teammoeg.frostedheart.content.town.TeamTown;
 import com.teammoeg.frostedheart.content.town.building.AbstractTownBuilding;
 import com.teammoeg.frostedheart.content.town.building.ITownResidentBuilding;
 import com.teammoeg.frostedheart.content.town.building.ITownResidentWorkBuilding;
+import com.teammoeg.frostedheart.content.town.buildings.house.HouseBuilding;
+import com.teammoeg.frostedheart.content.town.buildings.hunting.HuntingBaseBuilding;
 import com.teammoeg.frostedheart.content.town.resident.Resident;
 import com.teammoeg.frostedheart.content.town.tabs.TownTextLayout;
+import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
@@ -40,6 +43,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Supplier;
+import java.util.Locale;
 
 /**
  * 城镇方块页签的内容面板。左侧为可滚动的建筑名单，点击选择后
@@ -165,10 +169,90 @@ public class TownBuildingsPanel extends UIElement {
 
         showWorkableInfo(lines, building);
 
+        if (building instanceof HouseBuilding house) {
+            addHouseDetails(lines, house);
+        } else if (building instanceof HuntingBaseBuilding hunting) {
+            addHuntingDetails(lines, hunting);
+        }
+
         if (building instanceof ITownResidentBuilding residentBuilding) {
             addResidentCount(lines, pos, residentBuilding);
         }
         return lines;
+    }
+
+    private static void addHouseDetails(List<Line> lines, HouseBuilding house) {
+        lines.add(new Line(Component.translatable("gui.frostedheart.town_manager.effective_temperature",
+                formatOneDecimal(house.getEffectiveTemperature())),
+                house.isTemperatureValid() ? 0xFF55FF55 : 0xFFFF5555));
+        HouseBuilding.DailyReport report = house.getDailyReport();
+        if (report.hasData()) {
+            lines.add(new Line(Component.translatable("gui.frostedheart.town_manager.food_satisfaction",
+                    formatPercent(report.foodSatisfaction())), 0xFFFFFFFF));
+            lines.add(new Line(Component.translatable("gui.frostedheart.town_manager.comfort",
+                    formatPercent(report.comfortRating())), 0xFFFFFFFF));
+        } else {
+            lines.add(new Line(Component.translatable("gui.frostedheart.town_manager.daily_data_unavailable"),
+                    0xFF777777));
+        }
+        FHConfig.Server.Town.Housing config = FHConfig.SERVER.TOWN.HOUSING;
+        if (house.getArea() < config.minimumFloorAreaBlocks.get()) {
+            lines.add(reason("gui.frostedheart.town.failure.area",
+                    house.getArea(), config.minimumFloorAreaBlocks.get()));
+        }
+        if (house.getVolume() < config.minimumInteriorVolumeBlocks.get()) {
+            lines.add(reason("gui.frostedheart.town.failure.volume",
+                    house.getVolume(), config.minimumInteriorVolumeBlocks.get()));
+        }
+        if (!house.isTemperatureValid()) {
+            lines.add(reason("gui.frostedheart.town.failure.temperature"));
+        }
+    }
+
+    private static void addHuntingDetails(List<Line> lines, HuntingBaseBuilding hunting) {
+        lines.add(new Line(Component.translatable("gui.frostedheart.town_manager.effective_temperature",
+                formatOneDecimal(hunting.getEffectiveTemperature())),
+                hunting.isTemperatureValid() ? 0xFF55FF55 : 0xFFFF5555));
+        HuntingBaseBuilding.HuntingDailyReport report = hunting.getDailyReport();
+        if (report.hasData()) {
+            lines.add(new Line(Component.translatable("gui.frostedheart.town_manager.hunting_rolls",
+                    report.plannedRolls(), report.executedRolls()), 0xFFFFFFFF));
+        } else {
+            lines.add(new Line(Component.translatable("gui.frostedheart.town_manager.daily_data_unavailable"),
+                    0xFF777777));
+        }
+        Component stopReason;
+        if (!hunting.isTemperatureValid()) {
+            stopReason = Component.translatable("gui.frostedheart.town_manager.stop_reason.temperature");
+        } else if (!hunting.isSpaceValid()) {
+            stopReason = Component.translatable("gui.frostedheart.town_manager.stop_reason.space");
+        } else {
+            stopReason = Component.translatable("gui.frostedheart.town_manager.stop_reason."
+                    + report.stopReason().name().toLowerCase(Locale.ROOT));
+        }
+        lines.add(new Line(Component.translatable("gui.frostedheart.town_manager.stop_reason", stopReason),
+                report.stopReason().name().equals("NONE") && hunting.isTemperatureValid()
+                        && hunting.isSpaceValid() ? 0xFF55FF55 : 0xFFFFAA00));
+        FHConfig.Server.Town.Hunting config = FHConfig.SERVER.TOWN.HUNTING;
+        if (hunting.getArea() < config.minimumFloorAreaBlocks.get()) {
+            lines.add(reason("gui.frostedheart.town.failure.area",
+                    hunting.getArea(), config.minimumFloorAreaBlocks.get()));
+        }
+        if (hunting.getVolume() < config.minimumInteriorVolumeBlocks.get()) {
+            lines.add(reason("gui.frostedheart.town.failure.volume",
+                    hunting.getVolume(), config.minimumInteriorVolumeBlocks.get()));
+        }
+        if (!hunting.isTemperatureValid()) {
+            lines.add(reason("gui.frostedheart.town.failure.temperature"));
+        }
+    }
+
+    private static String formatOneDecimal(double value) {
+        return String.format(Locale.ROOT, "%.1f°C", value);
+    }
+
+    private static String formatPercent(double value) {
+        return String.format(Locale.ROOT, "%.0f%%", Math.max(0.0, Math.min(1.0, value)) * 100.0);
     }
 
     private static void showWorkableInfo(List<Line> lines, AbstractTownBuilding building) {
@@ -304,6 +388,10 @@ public class TownBuildingsPanel extends UIElement {
 
     private static Line reason(String key) {
         return new Line(Component.literal("• ").append(Component.translatable(key)), 0xFFFF5555);
+    }
+
+    private static Line reason(String key, Object... arguments) {
+        return new Line(Component.literal("• ").append(Component.translatable(key, arguments)), 0xFFFF5555);
     }
 
     private static List<VisualLine> wrapDetailLines(Font font, List<Line> lines) {

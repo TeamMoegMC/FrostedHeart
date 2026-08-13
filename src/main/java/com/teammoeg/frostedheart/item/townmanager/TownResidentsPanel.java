@@ -22,8 +22,15 @@ package com.teammoeg.frostedheart.item.townmanager;
 import com.teammoeg.chorda.client.RenderingHint;
 import com.teammoeg.chorda.client.cui.base.MouseButton;
 import com.teammoeg.chorda.client.cui.base.UIElement;
+import com.teammoeg.chorda.client.cui.base.UILayer;
+import com.teammoeg.chorda.client.cui.base.Verifier;
+import com.teammoeg.chorda.client.cui.theme.Coloring;
+import com.teammoeg.chorda.client.cui.widgets.TextBox;
+import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.content.town.TeamTown;
+import com.teammoeg.frostedheart.content.town.TownNamingModel;
 import com.teammoeg.frostedheart.content.town.building.AbstractTownBuilding;
+import com.teammoeg.frostedheart.content.town.network.TownResidentNameEditRequestPacket;
 import com.teammoeg.frostedheart.content.town.resident.Resident;
 import com.teammoeg.frostedheart.content.town.tabs.TownTextLayout;
 import net.minecraft.client.Minecraft;
@@ -34,6 +41,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.util.Mth;
 import org.jetbrains.annotations.Nullable;
+import org.lwjgl.glfw.GLFW;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -50,7 +58,7 @@ import java.util.function.Supplier;
  * clicking a resident shows their attributes, housing/work assignment and work
  * proficiencies on the right. Layout and interaction follow TownWorkforcePanel.
  */
-public class TownResidentsPanel extends UIElement {
+public class TownResidentsPanel extends UILayer {
 
     private static final int WIDTH = TownManagerScreen.CONTENT_WIDTH;
     private static final int HEIGHT = TownManagerScreen.CONTENT_HEIGHT;
@@ -59,38 +67,70 @@ public class TownResidentsPanel extends UIElement {
     private static final int ROW_HEIGHT = 16;
     private static final int VISIBLE_ROWS = (HEIGHT - LIST_TOP - 4) / ROW_HEIGHT;
     private static final int DETAIL_LINE_HEIGHT = 12;
-    private static final int DETAIL_TOP = 6;
+    private static final int DETAIL_TOP = 36;
     private static final int DETAIL_VISIBLE = (HEIGHT - DETAIL_TOP - 4) / DETAIL_LINE_HEIGHT;
     private static final int SCROLLBAR_WIDTH = 6;
     private static final int DETAIL_TEXT_WIDTH = WIDTH - LIST_WIDTH - SCROLLBAR_WIDTH - 13;
     private static final int MIN_THUMB_HEIGHT = 10;
 
     private final Supplier<TeamTown> townSource;
+    private final ResidentNameBox lastNameBox;
+    private final ResidentNameBox firstNameBox;
 
     @Nullable
     private UUID selectedResident;
     private int listScroll;
     private int detailScroll;
     private boolean draggingDetailBar;
+    @Nullable
+    private UUID editorResidentId;
+    private String displayedNameKey = "";
+    @Nullable
+    private String pendingNameKey;
+    private boolean updatingNameEditors;
 
     public TownResidentsPanel(UIElement parent, int x, int y, Supplier<TeamTown> townSource) {
         super(parent);
         this.townSource = townSource;
         setPos(x, y);
         setSize(WIDTH, HEIGHT);
+        setScissorEnabled(false);
+        lastNameBox = new ResidentNameBox(this, false);
+        firstNameBox = new ResidentNameBox(this, true);
+        int editorX = LIST_WIDTH + 22;
+        int editorWidth = WIDTH - editorX - SCROLLBAR_WIDTH - 4;
+        lastNameBox.setPos(editorX, 2);
+        lastNameBox.setSize(editorWidth, 13);
+        firstNameBox.setPos(editorX, 18);
+        firstNameBox.setSize(editorWidth, 13);
     }
 
     @Override
-    public void render(GuiGraphics graphics, int x, int y, int width, int height, RenderingHint hint) {
+    public void addUIElements() {
+        add(lastNameBox);
+        add(firstNameBox);
+    }
+
+    @Override
+    public void alignWidgets() {
+    }
+
+    @Override
+    public void drawBackground(GuiGraphics graphics, int x, int y, int width, int height, RenderingHint hint) {
         Font font = Minecraft.getInstance().font;
         List<Resident> residents = residents();
         Resident selected = normalizeSelection(residents);
+        syncNameEditors(selected);
         drawPanel(graphics, x, y, width, height);
         graphics.fill(x + LIST_WIDTH, y + 1, x + LIST_WIDTH + 1, y + height - 1, 0xFF777777);
         graphics.drawString(font,
                 Component.translatable("gui.frostedheart.town_manager.residents"),
                 x + 4, y + 6, 0xFFFFAA00, true);
         renderList(graphics, font, x, y, residents);
+        graphics.drawString(font, Component.translatable("gui.frostedheart.town_manager.last_name"),
+                x + LIST_WIDTH + 5, y + 5, 0xFFAAAAAA, false);
+        graphics.drawString(font, Component.translatable("gui.frostedheart.town_manager.first_name"),
+                x + LIST_WIDTH + 5, y + 21, 0xFFAAAAAA, false);
         renderDetails(graphics, font, x, y, detailLines(selected));
     }
 
@@ -156,7 +196,6 @@ public class TownResidentsPanel extends UIElement {
         }
         TeamTown town = townSource.get();
         List<Line> lines = new ArrayList<>();
-        lines.add(new Line(Component.literal(resident.toString()), 0xFFFFAA00));
         lines.add(new Line(Component.translatable("gui.frostedheart.town_manager.age")
                 .append(Component.literal(": "))
                 .append(Component.translatable(Resident.ageLangKey(resident.getAge()))), 0xFFFFFFFF));
@@ -208,6 +247,7 @@ public class TownResidentsPanel extends UIElement {
     @Override
     public boolean onMousePressed(MouseButton button) {
         if (!isMouseOver() || button != MouseButton.LEFT) return false;
+        if (super.onMousePressed(button)) return true;
         if (getMouseX() >= WIDTH - SCROLLBAR_WIDTH - 2 && detailScrollable()) {
             draggingDetailBar = true;
             updateDetailScrollFromMouse();
@@ -219,7 +259,9 @@ public class TownResidentsPanel extends UIElement {
         List<Resident> residents = residents();
         int index = listScroll + row;
         if (index >= residents.size()) return false;
+        commitResidentName();
         selectedResident = residents.get(index).getUUID();
+        editorResidentId = null;
         detailScroll = 0;
         return true;
     }
@@ -323,6 +365,119 @@ public class TownResidentsPanel extends UIElement {
         graphics.fill(x, y, x + 1, y + height, 0xFF373737);
         graphics.fill(x, y + height - 1, x + width, y + height, 0xFF8B8B8B);
         graphics.fill(x + width - 1, y, x + width, y + height, 0xFF8B8B8B);
+    }
+
+    private void syncNameEditors(@Nullable Resident resident) {
+        if (resident == null) {
+            editorResidentId = null;
+            displayedNameKey = "";
+            pendingNameKey = null;
+            setNameEditorText("", "");
+            lastNameBox.setEnabled(false);
+            firstNameBox.setEnabled(false);
+            return;
+        }
+        lastNameBox.setEnabled(true);
+        firstNameBox.setEnabled(true);
+        if (!resident.getUUID().equals(editorResidentId)) {
+            editorResidentId = resident.getUUID();
+            setNameEditorText(resident.getFirstName(), resident.getLastName());
+            displayedNameKey = nameKey(resident.getUUID(), resident.getFirstName(), resident.getLastName());
+            pendingNameKey = null;
+        } else if (!lastNameBox.isFocused() && !firstNameBox.isFocused()) {
+            String authoritativeKey = nameKey(resident.getUUID(), resident.getFirstName(), resident.getLastName());
+            if (pendingNameKey != null) {
+                if (!authoritativeKey.equals(pendingNameKey)) return;
+                pendingNameKey = null;
+            }
+            if (!authoritativeKey.equals(displayedNameKey)) {
+                setNameEditorText(resident.getFirstName(), resident.getLastName());
+                displayedNameKey = authoritativeKey;
+            }
+        }
+    }
+
+    private void resetResidentName() {
+        Resident selected = normalizeSelection(residents());
+        editorResidentId = null;
+        syncNameEditors(selected);
+    }
+
+    private void commitResidentName() {
+        if (editorResidentId == null) return;
+        TownNamingModel.normalizeResidentName(firstNameBox.getText(), lastNameBox.getText())
+                .ifPresent(name -> {
+                    String key = nameKey(editorResidentId, name.firstName(), name.lastName());
+                    if (key.equals(pendingNameKey)) return;
+                    if (pendingNameKey == null && key.equals(displayedNameKey)) return;
+                    pendingNameKey = key;
+                    FHNetwork.INSTANCE.sendToServer(new TownResidentNameEditRequestPacket(
+                            editorResidentId, name.firstName(), name.lastName()));
+                });
+    }
+
+    private static String nameKey(UUID residentId, String firstName, String lastName) {
+        return residentId + "\u0000" + firstName + "\u0000" + lastName;
+    }
+
+    private void setNameEditorText(String firstName, String lastName) {
+        updatingNameEditors = true;
+        try {
+            if (!lastName.equals(lastNameBox.getText())) lastNameBox.setText(lastName, false);
+            if (!firstName.equals(firstNameBox.getText())) firstNameBox.setText(firstName, false);
+        } finally {
+            updatingNameEditors = false;
+        }
+    }
+
+    private final class ResidentNameBox extends TextBox {
+        private boolean focusedLastFrame;
+
+        ResidentNameBox(UILayer parent, boolean required) {
+            super(parent);
+            setMaxLength(TownNamingModel.MAX_RESIDENT_NAME_PART_LENGTH);
+            textColor = Coloring.argb(0xFFFFAA00);
+            errorColor = Coloring.argb(0xFFFF5555);
+            if (required) {
+                setFilter(Verifier.successOrComponent(value -> !value.strip().isEmpty(),
+                        () -> Component.translatable("gui.frostedheart.town_manager.first_name_required")));
+            }
+        }
+
+        @Override
+        public void onTextChanged() {
+            // TextBox fires this for cursor motion and programmatic updates too.
+            // Commit once on Enter, Tab, or focus loss instead.
+        }
+
+        @Override
+        public void onEnterPressed() {
+            commitResidentName();
+        }
+
+        @Override
+        public void onTabPressed() {
+            commitResidentName();
+        }
+
+        @Override
+        public boolean onKeyPressed(int keyCode, int scanCode, int modifier) {
+            if (keyCode == GLFW.GLFW_KEY_ESCAPE && isFocused()) resetResidentName();
+            return super.onKeyPressed(keyCode, scanCode, modifier);
+        }
+
+        @Override
+        public void render(GuiGraphics graphics, int x, int y, int width, int height, RenderingHint hint) {
+            boolean focused = isFocused();
+            if (!focused && focusedLastFrame && !updatingNameEditors) commitResidentName();
+            focusedLastFrame = focused;
+            super.render(graphics, x, y, width, height, hint);
+        }
+
+        @Override
+        public void drawTextBox(GuiGraphics graphics, int x, int y, int width, int height, RenderingHint hint) {
+            if (isFocused()) super.drawTextBox(graphics, x, y, width, height, hint);
+        }
     }
 
     private record Line(Component text, int color) {}

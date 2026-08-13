@@ -326,6 +326,7 @@ public final class TownStageZeroAudit {
         addBuildingScoringParameters(values, parameters.buildingScoring(), paths.townModelParameters());
         addTerrainResourceParameters(values, parameters.terrainResources(), paths.townModelParameters());
         addClimateParameters(values, parameters.climate(), paths.townModelParameters());
+        addObservationParameters(values, parameters.observation(), paths.townModelParameters());
         add(values, "generatorT1.baseFuelDurationMultiplier", generator.baseFuelDurationMultiplier(),
                 "dimensionless", "shared-default", paths.townModelParameters(),
                 "TownModelParameters.Defaults.GENERATOR_T1_BASE_FUEL_DURATION_MULTIPLIER -> "
@@ -798,6 +799,21 @@ public final class TownStageZeroAudit {
                 "CLIMATE_BLOCK_MAXIMUM_AFFECTION", "blockMaximumClimateAffection");
         addClimateShared(values, "climate.blockHeatApplicationMultiplier", climate.blockHeatApplicationMultiplier(), "dimensionless", source,
                 "CLIMATE_BLOCK_HEAT_APPLICATION_MULTIPLIER", "blockHeatApplicationMultiplier");
+    }
+
+    private static void addObservationParameters(
+            List<ParameterValue> values,
+            TownModelParameters.ObservationParameters observation,
+            Path source
+    ) {
+        addShared(values, "observation.historyDays", observation.historyDays(),
+                "town-settlement", source, "TOWN_OBSERVATION_HISTORY_DAYS", "OBSERVATION.historyDays");
+        addShared(values, "observation.reserveWarningDays", observation.reserveWarningDays(),
+                "reserve-day", source, "TOWN_OBSERVATION_RESERVE_WARNING_DAYS",
+                "OBSERVATION.reserveWarningDays");
+        addShared(values, "observation.reserveCriticalDays", observation.reserveCriticalDays(),
+                "reserve-day", source, "TOWN_OBSERVATION_RESERVE_CRITICAL_DAYS",
+                "OBSERVATION.reserveCriticalDays");
     }
 
     private static void addClimateShared(

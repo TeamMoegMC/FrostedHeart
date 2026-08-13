@@ -21,8 +21,10 @@ import java.util.Set;
 
 /** Stateful event/episode observer layered on the exact stage-4 day transition. */
 final class TownStageFourObserver {
-    static final double SOFT_RESERVE_WARNING_DAYS = 3.0;
-    static final double RECOVERED_RESERVE_DAYS = 7.0;
+    static final double SOFT_RESERVE_WARNING_DAYS =
+            TownModelParameters.Defaults.TOWN_OBSERVATION_RESERVE_CRITICAL_DAYS;
+    static final double RECOVERED_RESERVE_DAYS =
+            TownModelParameters.Defaults.TOWN_OBSERVATION_RESERVE_WARNING_DAYS;
     private static final double EPSILON = 1.0e-9;
 
     private final int simulatedDays;

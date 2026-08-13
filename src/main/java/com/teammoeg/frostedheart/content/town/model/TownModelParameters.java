@@ -36,10 +36,31 @@ public record TownModelParameters(
         TerrainResourceParameters terrainResources,
         GeneratorT1Parameters generatorT1,
         ClimateParameters climate,
+        ObservationParameters observation,
         List<MeatFoodParameters> meatFoods
 ) {
     public TownModelParameters {
         meatFoods = List.copyOf(meatFoods);
+    }
+
+    /** Source-compatible constructor for scenario tests created before observation parameters existed. */
+    public TownModelParameters(
+            MiningParameters mining,
+            HuntingParameters hunting,
+            HousingParameters housing,
+            ResidentParameters residents,
+            BuildingScoringParameters buildingScoring,
+            TerrainResourceParameters terrainResources,
+            GeneratorT1Parameters generatorT1,
+            ClimateParameters climate,
+            List<MeatFoodParameters> meatFoods
+    ) {
+        this(mining, hunting, housing, residents, buildingScoring, terrainResources,
+                generatorT1, climate,
+                new ObservationParameters(Defaults.TOWN_OBSERVATION_HISTORY_DAYS,
+                        Defaults.TOWN_OBSERVATION_RESERVE_WARNING_DAYS,
+                        Defaults.TOWN_OBSERVATION_RESERVE_CRITICAL_DAYS),
+                meatFoods);
     }
 
     /**
@@ -239,6 +260,10 @@ public record TownModelParameters(
                         Defaults.CLIMATE_SEA_LEVEL,
                         Defaults.CLIMATE_BLOCK_MAXIMUM_AFFECTION,
                         Defaults.CLIMATE_BLOCK_HEAT_APPLICATION_MULTIPLIER),
+                new ObservationParameters(
+                        Defaults.TOWN_OBSERVATION_HISTORY_DAYS,
+                        Defaults.TOWN_OBSERVATION_RESERVE_WARNING_DAYS,
+                        Defaults.TOWN_OBSERVATION_RESERVE_CRITICAL_DAYS),
                 List.of(
                         new MeatFoodParameters("minecraft:beef", "minecraft:cooked_beef", 3, 0.3, 8, 0.8),
                         new MeatFoodParameters("minecraft:porkchop", "minecraft:cooked_porkchop", 3, 0.3, 8, 0.8),
@@ -463,6 +488,14 @@ public record TownModelParameters(
     ) {
     }
 
+    /** Player-facing operational thresholds shared by gameplay and simulation. */
+    public record ObservationParameters(
+            int historyDays,
+            double reserveWarningDays,
+            double reserveCriticalDays
+    ) {
+    }
+
     public record ResidentProductivityParameters(
             double healthWeight,
             double mentalWeight,
@@ -518,6 +551,9 @@ public record TownModelParameters(
      */
     public static final class Defaults {
         public static final int TOWN_UPDATE_INTERVAL_GAME_TICKS = 20;
+        public static final int TOWN_OBSERVATION_HISTORY_DAYS = 90;
+        public static final double TOWN_OBSERVATION_RESERVE_WARNING_DAYS = 7.0;
+        public static final double TOWN_OBSERVATION_RESERVE_CRITICAL_DAYS = 3.0;
 
         public static final double HOUSING_FOOD_PER_RESIDENT_DAY = 6.5;
         public static final double HOUSING_NUTRITION_REFERENCE_PER_FOOD_UNIT = 7000.0;

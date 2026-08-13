@@ -34,7 +34,13 @@ import com.teammoeg.frostedheart.content.town.event.*;
 import com.teammoeg.frostedheart.content.town.network.TownBuildingUpdatePacket;
 import com.teammoeg.frostedheart.content.town.network.TownResidentUpdatePacket;
 import com.teammoeg.frostedheart.content.town.network.TownResourceUpdatePacket;
+import com.teammoeg.frostedheart.content.town.network.TownHistoryUpdatePacket;
 import com.teammoeg.frostedheart.content.town.observation.TownObservationModel;
+import com.teammoeg.frostedheart.content.town.observation.TownOperationalHistory;
+import com.teammoeg.frostedheart.content.town.observation.TownOperationalStatus;
+import com.teammoeg.frostedheart.content.town.observation.TownOperationalStatusModel;
+import com.teammoeg.frostedheart.content.town.observation.TownOperationalStatusProvider;
+import com.teammoeg.frostedheart.content.town.observation.TownHistoryModel;
 import com.teammoeg.frostedheart.content.town.observation.TownSignalEvent;
 import com.teammoeg.frostedheart.content.town.resource.ITownResourceKey;
 import com.teammoeg.frostedheart.content.town.util.ObservableTownMap;
@@ -157,11 +163,11 @@ public class TeamTownData implements SpecialData{
     @Getter
     int maxLabour=0;
     /**
-     * 城镇每日快照历史，最新条目在末尾，最多保留 {@link #MAX_HISTORY_ENTRIES} 条。
+     * 城镇结算快照历史，最新条目在末尾，按观测配置裁剪。
      * 随存档持久化，并随城镇数据全量同步下发客户端。
      * <p>
-     * Daily snapshot history of the town, newest entry last, capped at
-     * {@link #MAX_HISTORY_ENTRIES} entries. Persisted with the save and synced
+     * Settlement snapshot history of the town, newest entry last, capped at
+     * the configured number of entries. Persisted with the save and synced
      * to clients with the full town data sync.
      */
     @Getter
@@ -169,6 +175,8 @@ public class TeamTownData implements SpecialData{
 
     /** Threshold events accumulated during the current daily settlement. */
     private transient final List<TownSignalEvent> pendingDailySignals = new ArrayList<>();
+    /** Last per-second service state; null until the first generator observation. */
+    private transient Boolean lastObservedTowerActive;
 
     /**
      * 最近一次按世界日结算难民刷新的日期（服务端持久化）。
@@ -311,8 +319,22 @@ public class TeamTownData implements SpecialData{
             GeneratorData genData = genDataOpt.get();
             if (genData.actualPos != null) {
                 genData.townTick(world, teamData);
+                queueTowerServiceCrossing(world, genData.isActive);
             }
         }
+    }
+
+    private void queueTowerServiceCrossing(ServerLevel world, boolean active) {
+        if (lastObservedTowerActive != null && lastObservedTowerActive != active) {
+            int hour = (int) ((world.getDayTime() % 24000L) / 1000L);
+            pendingDailySignals.add(new TownSignalEvent(-1L, hour,
+                    active ? TownSignalEvent.Type.TOWER_SERVICE_RESTORED
+                            : TownSignalEvent.Type.TOWER_SERVICE_LOST,
+                    active ? TownSignalEvent.Severity.INFORMATION
+                            : TownSignalEvent.Severity.CRITICAL,
+                    1, "per-second GeneratorData.isActive crossing"));
+        }
+        lastObservedTowerActive = active;
     }
 
     public void tickMorning(ServerLevel world, TeamDataHolder teamData) {
@@ -336,93 +358,66 @@ public class TeamTownData implements SpecialData{
     }
 
     /**
-     * 历史快照的最大保留条数。
+     * 每次城镇结算完成后记录一条快照。连续执行 /town tick 时，即使世界时间
+     * 没有前进，每次也会分配一个新的城镇结算日；超过配置条数时丢弃最旧记录。
      * <p>
-     * Maximum number of retained history entries.
-     */
-    public static final int MAX_HISTORY_ENTRIES = 30;
-
-    /**
-     * 在每日结算完成后记录一条城镇快照。同一天重复结算时覆盖当天条目，
-     * 超过 {@link #MAX_HISTORY_ENTRIES} 条时丢弃最旧的记录。
-     * <p>
-     * Records a daily town snapshot after settlement. Repeated settlements on
-     * the same day overwrite that day's entry; oldest entries are dropped once
-     * {@link #MAX_HISTORY_ENTRIES} is exceeded.
+     * Records one snapshot after every town settlement. Repeated /town tick
+     * commands receive distinct town settlement days even when world time does
+     * not advance; oldest entries are dropped at the configured history cap.
      *
      * @param world 服务端世界 / server world instance
      */
     void recordDailySnapshot(ServerLevel world, TeamDataHolder teamData) {
-        long day = WorldClimate.getWorldDay(world);
-        FHConfig.Server.Town.ResidentRules config = FHConfig.SERVER.TOWN.RESIDENT_RULES;
-        TownObservationModel.ResidentRules rules = new TownObservationModel.ResidentRules(
-                config.homelessHealthLossPerDay.get(), config.removalHealthThreshold.get(),
-                config.removalMentalThreshold.get(), config.minimumWorkingAge.get(),
-                config.minimumWorkingHealthExclusive.get(),
-                config.minimumWorkingMentalExclusive.get(), config.workRequiresHousing.get());
-        List<TownObservationModel.ResidentStatus> statuses = residents.values().stream()
-                .map(resident -> new TownObservationModel.ResidentStatus(
-                        resident.getUUID().toString(), resident.getAge(), resident.getHealth(),
-                        resident.getMental(), resident.getHousePos() != null))
-                .toList();
-        TownObservationModel.ResidentSnapshot residentSnapshot =
-                TownObservationModel.observeResidents(statuses, rules);
+        long day = TownHistoryModel.nextSettlementDay(history, WorldClimate.getWorldDay(world));
         Optional<GeneratorData> generator = teamData.getOptional(FHSpecialDataTypes.GENERATOR_DATA);
-        boolean towerWorking = generator.map(value -> value.isWorking).orElse(false);
-        int climateLevel = generator.filter(value -> value.actualPos != null)
-                .map(value -> WeatherForecast.getTemperatureLevel(
-                        WorldTemperature.climate(world, value.actualPos)))
-                .orElse(0);
+        BlockPos fallback = generator.filter(value -> value.actualPos != null)
+                .map(value -> value.actualPos)
+                .orElseGet(() -> buildings.keySet().stream().findFirst().orElse(BlockPos.ZERO));
+        TownOperationalStatus current = TownOperationalStatusProvider.capture(
+                world, teamData, createTeamTown(), fallback);
+        boolean towerWorking = current.tower().active();
+        int climateLevel = current.climateLevel();
         TownHistoryEntry previous = history.isEmpty() ? null : history.get(history.size() - 1);
         List<TownSignalEvent> signals = new ArrayList<>();
-        if (previous != null && previous.day() == day) signals.addAll(previous.events());
         for (TownSignalEvent signal : pendingDailySignals) {
-            signals.add(new TownSignalEvent(
+            addUniqueSignal(signals, new TownSignalEvent(
                     day, signal.hour(), signal.type(), signal.severity(),
                     signal.affectedCount(), signal.episodeId(), signal.detail()));
         }
         pendingDailySignals.clear();
-        if (previous != null && previous.day() != day) {
-            addDailyThresholdSignals(day, previous, residentSnapshot, towerWorking, climateLevel, signals);
+        if (previous != null) {
+            addDailyThresholdSignals(day, previous, current, signals);
         }
         TownHistoryEntry entry = new TownHistoryEntry(
-                day, residentSnapshot.population(), residentSnapshot.averageHealth(),
-                residentSnapshot.averageMental(), buildings.size(), residentSnapshot.p10Health(),
-                residentSnapshot.minimumHealth(), residentSnapshot.p10Mental(),
-                residentSnapshot.minimumMental(), residentSnapshot.unableToWorkCount(),
-                residentSnapshot.exitRiskCount(), towerWorking, climateLevel, signals);
-        if (!history.isEmpty() && history.get(history.size() - 1).day() == day) {
-            history.set(history.size() - 1, entry);
-        } else {
-            history.add(entry);
-        }
-        while (history.size() > MAX_HISTORY_ENTRIES) {
+                day, current.population(), current.averageHealth(),
+                current.averageMental(), buildings.size(), current.p10Health(),
+                current.population() == 0 ? 0.0 : residents.values().stream()
+                        .mapToDouble(Resident::getHealth).min().orElse(0.0),
+                current.p10Mental(), current.population() == 0 ? 0.0 : residents.values().stream()
+                        .mapToDouble(Resident::getMental).min().orElse(0.0),
+                current.unableToWorkCount(), current.exitRiskCount(), towerWorking,
+                climateLevel, signals, TownOperationalHistory.from(current));
+        history.add(entry);
+        int configuredHistoryDays = FHConfig.SERVER.TOWN.OBSERVATION.historyDays.get();
+        while (history.size() > configuredHistoryDays) {
             history.remove(0);
         }
+        teamData.sendToOnline(FHNetwork.INSTANCE, new TownHistoryUpdatePacket(entry));
     }
 
     private static void addDailyThresholdSignals(
             long day,
             TownHistoryEntry previous,
-            TownObservationModel.ResidentSnapshot current,
-            boolean towerWorking,
-            int climateLevel,
+            TownOperationalStatus current,
             List<TownSignalEvent> signals
     ) {
-        if (previous.towerWorking() != towerWorking) {
-            signals.add(new TownSignalEvent(day, 0,
-                    towerWorking ? TownSignalEvent.Type.TOWER_SERVICE_RESTORED
-                            : TownSignalEvent.Type.TOWER_SERVICE_LOST,
-                    towerWorking ? TownSignalEvent.Severity.INFORMATION
-                            : TownSignalEvent.Severity.CRITICAL,
-                    1, "daily tower-working state crossed"));
-        }
+        int climateLevel = current.climateLevel();
         if (previous.climateLevel() >= 0 && climateLevel < 0) {
-            signals.add(new TownSignalEvent(day, 0, TownSignalEvent.Type.CLIMATE_COLD_WARNING,
-                    TownSignalEvent.Severity.WARNING, 1, "forecast temperature category below normal"));
+            addUniqueSignal(signals, new TownSignalEvent(day, 0, TownSignalEvent.Type.CLIMATE_COLD_WARNING,
+                    TownSignalEvent.Severity.WARNING, 1, "current temperature category below normal"));
         } else if (previous.climateLevel() < 0 && climateLevel >= 0) {
-            signals.add(new TownSignalEvent(day, 0, TownSignalEvent.Type.CLIMATE_COLD_ENDED,
-                    TownSignalEvent.Severity.INFORMATION, 1, "forecast temperature category returned to normal"));
+            addUniqueSignal(signals, new TownSignalEvent(day, 0, TownSignalEvent.Type.CLIMATE_COLD_ENDED,
+                    TownSignalEvent.Severity.INFORMATION, 1, "current temperature category returned to normal"));
         }
         addCountCrossing(day, previous.unableToWorkCount(), current.unableToWorkCount(),
                 TownSignalEvent.Type.WORK_CAPACITY_LOST,
@@ -430,6 +425,61 @@ public class TeamTownData implements SpecialData{
         addCountCrossing(day, previous.exitRiskCount(), current.exitRiskCount(),
                 TownSignalEvent.Type.EXIT_RISK_ENTERED,
                 TownSignalEvent.Type.EXIT_RISK_RECOVERED, signals);
+
+        TownOperationalHistory priorOperational = previous.operational();
+        if (!priorOperational.equals(TownOperationalHistory.EMPTY)) {
+            boolean towerWorking = current.tower().active();
+            boolean previousTowerWorking = priorOperational.tower().active();
+            if (previousTowerWorking != towerWorking) {
+                addUniqueSignal(signals, new TownSignalEvent(day, 0,
+                        towerWorking ? TownSignalEvent.Type.TOWER_SERVICE_RESTORED
+                                : TownSignalEvent.Type.TOWER_SERVICE_LOST,
+                        towerWorking ? TownSignalEvent.Severity.INFORMATION
+                                : TownSignalEvent.Severity.CRITICAL,
+                        1, "daily GeneratorData.isActive state crossed"));
+            }
+            FHConfig.Server.Town.Observation config = FHConfig.SERVER.TOWN.OBSERVATION;
+            addReserveCrossing(day, priorOperational.foodReserveDays().toLiveMetric(),
+                    current.foodReserveDays(), TownSignalEvent.Type.FOOD_RESERVE_WARNING,
+                    TownSignalEvent.Type.FOOD_SHORTAGE, TownSignalEvent.Type.FOOD_RESERVE_RECOVERED,
+                    Math.max(1, current.population()), config, signals);
+            addReserveCrossing(day, priorOperational.fuelReserveDays().toLiveMetric(),
+                    current.fuelReserveDays(), TownSignalEvent.Type.FUEL_RESERVE_WARNING,
+                    TownSignalEvent.Type.FUEL_SHORTAGE, TownSignalEvent.Type.FUEL_RESERVE_RECOVERED,
+                    1, config, signals);
+            addCountCrossing(day, priorOperational.unsafeOccupiedHouseCount(),
+                    current.unsafeOccupiedHouseCount(), TownSignalEvent.Type.HOUSE_TEMPERATURE_UNSAFE,
+                    TownSignalEvent.Type.HOUSE_TEMPERATURE_RECOVERED, signals);
+            addCountCrossing(day, priorOperational.stoppedStaffedHuntingCount(),
+                    current.stoppedStaffedHuntingCount(), TownSignalEvent.Type.HUNTING_TEMPERATURE_STOP,
+                    TownSignalEvent.Type.HUNTING_TEMPERATURE_RECOVERED, signals);
+        }
+    }
+
+    private static void addReserveCrossing(
+            long day,
+            TownOperationalStatus.Metric previous,
+            TownOperationalStatus.Metric current,
+            TownSignalEvent.Type warning,
+            TownSignalEvent.Type critical,
+            TownSignalEvent.Type recovered,
+            int affectedCount,
+            FHConfig.Server.Town.Observation config,
+            List<TownSignalEvent> signals
+    ) {
+        TownOperationalStatusModel.ReserveTransition transition =
+                TownOperationalStatusModel.reserveTransition(previous, current,
+                        config.reserveWarningDays.get(), config.reserveCriticalDays.get());
+        TownSignalEvent event = switch (transition) {
+            case WARNING -> new TownSignalEvent(day, 0, warning, TownSignalEvent.Severity.WARNING,
+                    affectedCount, "reserve entered warning band");
+            case CRITICAL -> new TownSignalEvent(day, 0, critical, TownSignalEvent.Severity.CRITICAL,
+                    affectedCount, "reserve entered critical band");
+            case RECOVERED -> new TownSignalEvent(day, 0, recovered, TownSignalEvent.Severity.INFORMATION,
+                    affectedCount, "reserve recovered to safe band");
+            case NONE -> null;
+        };
+        if (event != null) addUniqueSignal(signals, event);
     }
 
     private static void addCountCrossing(
@@ -442,10 +492,18 @@ public class TeamTownData implements SpecialData{
     ) {
         int delta = current - previous;
         if (delta == 0) return;
-        signals.add(new TownSignalEvent(day, 0, delta > 0 ? increase : decrease,
+        addUniqueSignal(signals, new TownSignalEvent(day, 0, delta > 0 ? increase : decrease,
                 delta > 0 ? TownSignalEvent.Severity.CRITICAL
                         : TownSignalEvent.Severity.INFORMATION,
-                Math.abs(delta), "daily resident threshold count crossed"));
+                Math.abs(delta), "daily threshold count crossed"));
+    }
+
+    private static void addUniqueSignal(List<TownSignalEvent> signals, TownSignalEvent candidate) {
+        boolean duplicate = signals.stream().anyMatch(existing -> existing.day() == candidate.day()
+                && existing.hour() == candidate.hour() && existing.type() == candidate.type()
+                && existing.severity() == candidate.severity()
+                && existing.affectedCount() == candidate.affectedCount());
+        if (!duplicate) signals.add(candidate);
     }
 
     /**
@@ -1025,6 +1083,7 @@ public class TeamTownData implements SpecialData{
             fireBuildingsChanged();
             fireResidentsChanged();
             fireResourcesChanged();
+            fireHistoryChanged();
         } finally {
             inClientBatchFire = false;
         }
@@ -1045,6 +1104,12 @@ public class TeamTownData implements SpecialData{
     private static void fireResourcesChanged() {
         for (ITownDataUpdateListener listener : clientListeners) {
             listener.onResourcesChanged();
+        }
+    }
+
+    private static void fireHistoryChanged() {
+        for (ITownDataUpdateListener listener : clientListeners) {
+            listener.onHistoryChanged();
         }
     }
 
@@ -1096,6 +1161,18 @@ public class TeamTownData implements SpecialData{
         }
         resources.setOccupiedCapacity(occupiedCapacity);
         fireResourcesChanged();
+    }
+
+    /** Client-side authoritative town-name update. */
+    public void applyNameUpdate(String updatedName) {
+        this.name = updatedName;
+    }
+
+    /** Client-side idempotent history merge; retransmitted entries replace by town day. */
+    public void applyHistoryUpdate(TownHistoryEntry entry) {
+        history = new ArrayList<>(TownHistoryModel.upsert(history, entry,
+                FHConfig.SERVER.TOWN.OBSERVATION.historyDays.get()));
+        fireHistoryChanged();
     }
 
     /**

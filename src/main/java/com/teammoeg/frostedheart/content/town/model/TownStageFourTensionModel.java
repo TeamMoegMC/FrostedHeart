@@ -23,8 +23,10 @@ import java.util.Map;
 
 /** Pure controls and measurements for the fixed 24-resident stage-4 experiment. */
 public final class TownStageFourTensionModel {
-    static final double DANGER_RESERVE_MINIMUM_DAYS = 3.0;
-    static final double DANGER_RESERVE_MAXIMUM_DAYS = 7.0;
+    static final double DANGER_RESERVE_MINIMUM_DAYS =
+            TownModelParameters.Defaults.TOWN_OBSERVATION_RESERVE_CRITICAL_DAYS;
+    static final double DANGER_RESERVE_MAXIMUM_DAYS =
+            TownModelParameters.Defaults.TOWN_OBSERVATION_RESERVE_WARNING_DAYS;
     private static final int BUILDING_HEIGHT_BLOCKS = 3;
 
     private TownStageFourTensionModel() {

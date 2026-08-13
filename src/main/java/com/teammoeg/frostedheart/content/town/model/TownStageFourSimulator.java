@@ -488,7 +488,7 @@ public final class TownStageFourSimulator {
                                 + "%.9f,%.9f,%.9f,%.9f,%.9f,%.9f,"
                                 + "%.9f,%.9f,%.9f,%.9f,%.9f,%.9f,"
                                 + "%.9f,%.9f,%.9f,%.9f,%.9f,%.9f,"
-                                + "%.9f,%.9f,%.9f,%.9f,%.9f,%.9f%n",
+                                + "%.9f,%.9f,%.9f%n",
                         row.day(), row.meanPopulation(), row.meanDeaths(),
                         row.foodReserve().p05(), row.foodReserve().p50(), row.foodReserve().p95(),
                         row.fuelReserve().p05(), row.fuelReserve().p50(), row.fuelReserve().p95(),

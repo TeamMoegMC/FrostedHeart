@@ -32,6 +32,7 @@ import com.teammoeg.frostedheart.content.town.*;
 import com.teammoeg.frostedheart.content.town.block.OccupiedVolume;
 import com.teammoeg.frostedheart.content.town.building.AbstractTownBuilding;
 import com.teammoeg.frostedheart.content.town.building.ITownResidentBuilding;
+import com.teammoeg.frostedheart.content.town.building.ITownTemperatureBuilding;
 import com.teammoeg.frostedheart.content.town.resident.Resident;
 import com.teammoeg.frostedheart.content.town.resource.ItemResourceType;
 import com.teammoeg.frostedheart.content.town.resource.ItemStackResourceKey;
@@ -50,7 +51,7 @@ import static com.teammoeg.frostedheart.content.town.resource.ItemResourceType.R
  * 城镇住宅。
  * 它不继承AbstractTownResidentWorkBuilding，因为那个类用于需要居民参与工作的城镇建筑，但居民在房屋中并非工作。
  */
-public class HouseBuilding extends AbstractTownBuilding implements ITownResidentBuilding {
+public class HouseBuilding extends AbstractTownBuilding implements ITownResidentBuilding, ITownTemperatureBuilding {
 
     public record DailyReport(
             boolean hasData,

@@ -298,7 +298,7 @@ public class TeamTown implements ITown, ITownWithResidents, ITownWithBuildings {
     }
 
     /**
-     * Get the daily snapshot history of the town, newest entry last.
+     * Get the settlement snapshot history of the town, newest entry last.
      * Used by information GUIs such as the Mayor's Seal.
      *
      * @return unmodifiable view is not guaranteed; treat as read-only

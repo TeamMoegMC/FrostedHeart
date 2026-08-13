@@ -54,19 +54,10 @@ public class TownCommand {
 
         var tickManual =
                 Commands.literal("tick")
-                        .executes(ct -> {
-                            var player = ct.getSource().getPlayer();
-                            if (player != null) {
-                                var data = TeamTown.from(player).getTownData();
-                                if (data.isPresent()) {
-                                    data.get().tickMorning(ct.getSource().getLevel(), CTeamDataManager.get(player));
-                                    ct.getSource().sendSuccess(() -> Component.literal("Success"), false);
-                                    return Command.SINGLE_SUCCESS;
-                                }
-                            }
-                            ct.getSource().sendFailure(Component.literal("Unable to get your team's data"));
-                            return 0;
-                        });
+                        .executes(ct -> advanceTown(ct.getSource(), 1))
+                        .then(Commands.argument("repeats", IntegerArgumentType.integer(1, 90))
+                                .executes(ct -> advanceTown(ct.getSource(),
+                                        IntegerArgumentType.getInteger(ct, "repeats"))));
 
         var spawnRefugees =
                 Commands.literal("spawn_refugees")
@@ -390,5 +381,24 @@ public class TownCommand {
                         .then(listBlocks)
                 )
         );
+    }
+
+    private static int advanceTown(CommandSourceStack source, int repeats) {
+        var player = source.getPlayer();
+        if (player != null) {
+            var data = TeamTown.from(player).getTownData();
+            if (data.isPresent()) {
+                var teamData = CTeamDataManager.get(player);
+                for (int index = 0; index < repeats; index++) {
+                    data.get().tickMorning(source.getLevel(), teamData);
+                }
+                source.sendSuccess(() -> Component.literal(
+                        "Advanced the town by " + repeats + (repeats == 1 ? " settlement day" : " settlement days")),
+                        false);
+                return Command.SINGLE_SUCCESS;
+            }
+        }
+        source.sendFailure(Component.literal("Unable to get your team's data"));
+        return 0;
     }
 }

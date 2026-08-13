@@ -562,7 +562,7 @@ public class Resident {
 
     @Override
     public String toString() {
-        return firstName + " " + lastName;
+        return lastName.isEmpty() ? firstName : firstName + " " + lastName;
     }
 
     @Override

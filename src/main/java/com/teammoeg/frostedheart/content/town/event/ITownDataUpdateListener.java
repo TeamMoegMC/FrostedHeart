@@ -59,4 +59,8 @@ public interface ITownDataUpdateListener extends EventListener {
      */
     default void onResourcesChanged() {
     }
+
+    /** Called when retained settlement history receives or refreshes an entry. */
+    default void onHistoryChanged() {
+    }
 }

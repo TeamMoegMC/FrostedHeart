@@ -25,6 +25,7 @@ import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.town.*;
 import com.teammoeg.frostedheart.content.town.block.OccupiedVolume;
 import com.teammoeg.frostedheart.content.town.building.AbstractTownResidentWorkBuilding;
+import com.teammoeg.frostedheart.content.town.building.ITownTemperatureBuilding;
 import com.teammoeg.frostedheart.content.town.building.TownProductionReportItem;
 import com.teammoeg.frostedheart.content.town.building.TownProductionStopReason;
 import com.teammoeg.frostedheart.content.town.resident.Resident;
@@ -50,7 +51,7 @@ import java.util.*;
 import static com.teammoeg.frostedheart.content.town.ITown.DEBUG_MODE;
 import static java.lang.Double.NEGATIVE_INFINITY;
 
-public class HuntingBaseBuilding extends AbstractTownResidentWorkBuilding {
+public class HuntingBaseBuilding extends AbstractTownResidentWorkBuilding implements ITownTemperatureBuilding {
     public record HuntingDailyReport(
             boolean hasData,
             int plannedRolls,

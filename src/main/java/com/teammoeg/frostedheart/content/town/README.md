@@ -29,7 +29,7 @@ town/
 ├── TeamTownData.java            # 持久化数据 + 每日主流程 tickMorning + 增量同步 tick
 ├── ChunkTownResourceCapability.java
 ├── TownMathFunctions.java       # 评分/温度工具
-├── TownHistoryEntry.java        # 每日快照历史（随存档持久化、随全量包下发）
+├── TownHistoryEntry.java        # 城镇结算快照历史（随存档持久化、随全量包下发）
 ├── util/ObservableTownMap.java  # 集合层自动 fire 的 LinkedHashMap（增量同步基础设施）
 ├── block/                       # 方块与方块实体基类、占用体积
 │   ├── AbstractTownBuildingBlock / ...BlockEntity / TownBlockEntity(接口)

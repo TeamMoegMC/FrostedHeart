@@ -620,6 +620,29 @@ public class FHConfig {
 			public final ForgeConfigSpec.BooleanValue enableTownTickMorning;
 			public final ForgeConfigSpec.IntValue townUpdateIntervalGameTicks;
 
+			public static class Observation {
+				public final ForgeConfigSpec.IntValue historyDays;
+				public final ForgeConfigSpec.DoubleValue reserveWarningDays;
+				public final ForgeConfigSpec.DoubleValue reserveCriticalDays;
+
+				Observation(ForgeConfigSpec.Builder builder) {
+					builder.push("Player Observation");
+					historyDays = builder
+						.comment("Number of town settlement snapshots retained for the Mayor's Seal.")
+						.defineInRange("historyDays",
+							TownModelParameters.Defaults.TOWN_OBSERVATION_HISTORY_DAYS, 2, 3650);
+					reserveWarningDays = builder
+						.comment("Food or T1 fuel reserve days below this value are shown as a warning.")
+						.defineInRange("reserveWarningDays",
+							TownModelParameters.Defaults.TOWN_OBSERVATION_RESERVE_WARNING_DAYS, 0d, 3650d);
+					reserveCriticalDays = builder
+						.comment("Food or T1 fuel reserve days below this value are shown as critical.")
+						.defineInRange("reserveCriticalDays",
+							TownModelParameters.Defaults.TOWN_OBSERVATION_RESERVE_CRITICAL_DAYS, 0d, 3650d);
+					builder.pop();
+				}
+			}
+
 			public static class GeneratorT1 {
 				public final ForgeConfigSpec.DoubleValue baseFuelDurationMultiplier;
 				public final ForgeConfigSpec.IntValue baseProcessTicksPerGameTick;
@@ -1559,6 +1582,7 @@ public class FHConfig {
 			public final RefugeeSpawn REFUGEE_SPAWN;
 			public final ResidentAging RESIDENT_AGING;
 			public final Resource RESOURCE;
+			public final Observation OBSERVATION;
 			Town(ForgeConfigSpec.Builder builder) {
 				builder.push("Town");
 				enableTownTick = builder.comment("Enables town tick every second.")
@@ -1574,6 +1598,7 @@ public class FHConfig {
 					.comment("This tick includes the refresh of some town things, like house allocating, checking overlap of buildings, work assigning...")
 					.define("enableTownTickMorning", true);
 				GENERATOR_T1 = new GeneratorT1(builder);
+				OBSERVATION = new Observation(builder);
 				BUILDING_SCORING = new BuildingScoring(builder);
 				HOUSING = new Housing(builder);
 				RESIDENT_RULES = new ResidentRules(builder);

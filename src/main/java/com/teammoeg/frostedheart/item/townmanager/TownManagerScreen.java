@@ -27,10 +27,14 @@ import com.teammoeg.chorda.client.cui.widgets.TabImageButtonElement;
 import com.teammoeg.chorda.client.icon.CIcons;
 import com.teammoeg.chorda.dataholders.team.CClientTeamDataManager;
 import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.bootstrap.common.FHSpecialDataTypes;
 import com.teammoeg.frostedheart.content.town.TeamTown;
 import com.teammoeg.frostedheart.content.town.TeamTownData;
 import com.teammoeg.frostedheart.content.town.event.ITownDataUpdateListener;
+import com.teammoeg.frostedheart.content.town.network.TownOperationalStatusRequestPacket;
+import com.teammoeg.frostedheart.content.town.observation.TownOperationalStatus;
+import com.teammoeg.frostedheart.content.town.observation.TownOperationalStatusClientCache;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.Nullable;
@@ -76,6 +80,7 @@ public class TownManagerScreen extends PrimaryLayer implements ITownDataUpdateLi
     private int activeTab = 0;
     private final List<TownManagerTab> tabs = new ArrayList<>();
     private final UILayer contentLayer;
+    private int statusRequestTicks;
 
     public TownManagerScreen() {
         super();
@@ -83,6 +88,7 @@ public class TownManagerScreen extends PrimaryLayer implements ITownDataUpdateLi
         tabs.add(new TownResidentsTab(this));
         tabs.add(new TownBuildingsTab(this));
         tabs.add(new TownStatisticsTab(this));
+        tabs.add(new TownEventsTab(this));
         this.contentLayer = new UILayer(this) {
             @Override
             public void addUIElements() {
@@ -121,6 +127,11 @@ public class TownManagerScreen extends PrimaryLayer implements ITownDataUpdateLi
     public TeamTown getTown() {
         TeamTownData data = getTownData();
         return data == null ? null : data.createTeamTown();
+    }
+
+    @Nullable
+    public TownOperationalStatus getOperationalStatus() {
+        return TownOperationalStatusClientCache.get();
     }
 
     /**
@@ -170,7 +181,21 @@ public class TownManagerScreen extends PrimaryLayer implements ITownDataUpdateLi
         this.setSize(FRAME_WIDTH, FRAME_HEIGHT);
         // 打开界面时注册为城镇数据监听器，增量/全量同步到达即刷新本界面。
         TeamTownData.addClientListener(this);
+        TownOperationalStatusClientCache.reset();
+        requestOperationalStatus();
         return super.onInit();
+    }
+
+    @Override
+    public void tick() {
+        super.tick();
+        statusRequestTicks++;
+        if (statusRequestTicks >= 20) requestOperationalStatus();
+    }
+
+    private void requestOperationalStatus() {
+        statusRequestTicks = 0;
+        FHNetwork.INSTANCE.sendToServer(new TownOperationalStatusRequestPacket());
     }
 
     @Override
