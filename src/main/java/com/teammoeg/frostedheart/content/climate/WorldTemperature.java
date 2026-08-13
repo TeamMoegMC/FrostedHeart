@@ -225,8 +225,6 @@ public class WorldTemperature {
             COLD_PERIOD_BOTTOM_T9,
             COLD_PERIOD_BOTTOM_T10
     };
-    public static final int FORECAST_SENSITIVE_THERSOLD=2;
-    
     // Matter state transitions
     public static final float CO2_FREEZES = -78;
     public static final float OXYGEN_FREEZES = -218;

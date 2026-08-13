@@ -132,6 +132,41 @@ public record TownModelParameters(
                         Defaults.RESIDENT_MAXIMUM_WORK_PROFICIENCY,
                         Defaults.RESIDENT_PROFICIENCY_GROWTH_AT_ZERO_PER_WORKDAY,
                         Defaults.RESIDENT_MINIMUM_PROFICIENCY_GROWTH_PER_WORKDAY,
+                        new ResidentGenerationParameters(
+                                Defaults.RESIDENT_INITIAL_HEALTH,
+                                Defaults.RESIDENT_INITIAL_MENTAL,
+                                Defaults.RESIDENT_ATTRIBUTE_SAMPLE_COUNT,
+                                Defaults.RESIDENT_INFANT_STRENGTH_CENTER,
+                                Defaults.RESIDENT_INFANT_INTELLIGENCE_CENTER,
+                                Defaults.RESIDENT_CHILD_STRENGTH_CENTER,
+                                Defaults.RESIDENT_CHILD_INTELLIGENCE_CENTER,
+                                Defaults.RESIDENT_ADULT_STRENGTH_CENTER,
+                                Defaults.RESIDENT_ADULT_INTELLIGENCE_CENTER,
+                                Defaults.RESIDENT_ELDER_STRENGTH_CENTER,
+                                Defaults.RESIDENT_ELDER_INTELLIGENCE_CENTER,
+                                Defaults.RESIDENT_NON_ADULT_ATTRIBUTE_SPREAD,
+                                Defaults.RESIDENT_ADULT_ATTRIBUTE_SPREAD,
+                                Defaults.RESIDENT_INFANT_INITIAL_PROFICIENCY,
+                                Defaults.RESIDENT_CHILD_MAXIMUM_INITIAL_PROFICIENCY,
+                                Defaults.RESIDENT_ADULT_MAXIMUM_INITIAL_PROFICIENCY,
+                                Defaults.RESIDENT_ELDER_MINIMUM_INITIAL_PROFICIENCY,
+                                Defaults.RESIDENT_ELDER_MAXIMUM_INITIAL_PROFICIENCY,
+                                Defaults.RESIDENT_ADULT_AGE_RANGE_DAYS_EXCLUSIVE,
+                                new ResidentAgeWeightParameters(
+                                        Defaults.RESIDENT_AGE_WEIGHT_INFANT,
+                                        Defaults.RESIDENT_AGE_WEIGHT_CHILD,
+                                        Defaults.RESIDENT_AGE_WEIGHT_ADULT,
+                                        Defaults.RESIDENT_AGE_WEIGHT_ELDER),
+                                new ResidentAgeWeightParameters(
+                                        Defaults.RESIDENT_FALLBACK_AGE_WEIGHT_INFANT,
+                                        Defaults.RESIDENT_FALLBACK_AGE_WEIGHT_CHILD,
+                                        Defaults.RESIDENT_FALLBACK_AGE_WEIGHT_ADULT,
+                                        Defaults.RESIDENT_FALLBACK_AGE_WEIGHT_ELDER),
+                                Defaults.RESIDENT_COLD_SURVIVOR_HEALTH_MINIMUM,
+                                Defaults.RESIDENT_COLD_SURVIVOR_HEALTH_MAXIMUM,
+                                Defaults.RESIDENT_COLD_SURVIVOR_ATTRIBUTE_BONUS,
+                                Defaults.RESIDENT_COLD_SURVIVOR_PROFICIENCY_MULTIPLIER,
+                                Defaults.RESIDENT_COLD_SURVIVOR_CHANCE),
                         new ResidentAgingParameters(
                                 Defaults.RESIDENT_INFANT_TO_CHILD_DAYS,
                                 Defaults.RESIDENT_CHILD_TO_ADULT_DAYS,
@@ -195,6 +230,7 @@ public record TownModelParameters(
                         Defaults.CLIMATE_CALM_MAXIMUM_DAYS_EXCLUSIVE,
                         Defaults.CLIMATE_COLD_PRELUDE_PEAK_CELSIUS,
                         Defaults.CLIMATE_WARM_PEAK_CELSIUS,
+                        Defaults.CLIMATE_FORECAST_SENSITIVITY_CELSIUS,
                         Defaults.CLIMATE_EVENT_NOISE_STANDARD_DEVIATION_CELSIUS,
                         Defaults.CLIMATE_WARM_NOISE_SCALE,
                         Defaults.CLIMATE_ABSOLUTE_ZERO_CELSIUS,
@@ -278,7 +314,47 @@ public record TownModelParameters(
             double maximumWorkProficiency,
             double proficiencyGrowthAtZeroPerWorkday,
             double minimumProficiencyGrowthPerWorkday,
+            ResidentGenerationParameters generation,
             ResidentAgingParameters aging
+    ) {
+    }
+
+    /** Recruitment-time resident distribution currently used by gameplay. */
+    public record ResidentGenerationParameters(
+            double initialHealth,
+            double initialMental,
+            int attributeSampleCount,
+            double infantStrengthCenter,
+            double infantIntelligenceCenter,
+            double childStrengthCenter,
+            double childIntelligenceCenter,
+            double adultStrengthCenter,
+            double adultIntelligenceCenter,
+            double elderStrengthCenter,
+            double elderIntelligenceCenter,
+            double nonAdultAttributeSpread,
+            double adultAttributeSpread,
+            double infantInitialProficiency,
+            double childMaximumInitialProficiency,
+            double adultMaximumInitialProficiency,
+            double elderMinimumInitialProficiency,
+            double elderMaximumInitialProficiency,
+            int adultAgeRangeDaysExclusive,
+            ResidentAgeWeightParameters ageWeights,
+            ResidentAgeWeightParameters fallbackAgeWeights,
+            double coldSurvivorHealthMinimum,
+            double coldSurvivorHealthMaximum,
+            double coldSurvivorAttributeBonus,
+            double coldSurvivorProficiencyMultiplier,
+            double coldSurvivorChance
+    ) {
+    }
+
+    public record ResidentAgeWeightParameters(
+            double infant,
+            double child,
+            double adult,
+            double elder
     ) {
     }
 
@@ -375,6 +451,7 @@ public record TownModelParameters(
             int calmMaximumDaysExclusive,
             float coldPreludePeakCelsius,
             float warmPeakCelsius,
+            float forecastSensitivityCelsius,
             float eventNoiseStandardDeviationCelsius,
             float warmNoiseScale,
             float absoluteZeroCelsius,
@@ -489,6 +566,38 @@ public record TownModelParameters(
         public static final double RESIDENT_MAXIMUM_WORK_PROFICIENCY = 100.0;
         public static final double RESIDENT_PROFICIENCY_GROWTH_AT_ZERO_PER_WORKDAY = 2.4;
         public static final double RESIDENT_MINIMUM_PROFICIENCY_GROWTH_PER_WORKDAY = 0.25;
+        public static final double RESIDENT_INITIAL_HEALTH = 50.0;
+        public static final double RESIDENT_INITIAL_MENTAL = 50.0;
+        public static final int RESIDENT_ATTRIBUTE_SAMPLE_COUNT = 4;
+        public static final double RESIDENT_INFANT_STRENGTH_CENTER = 20.0;
+        public static final double RESIDENT_INFANT_INTELLIGENCE_CENTER = 30.0;
+        public static final double RESIDENT_CHILD_STRENGTH_CENTER = 40.0;
+        public static final double RESIDENT_CHILD_INTELLIGENCE_CENTER = 40.0;
+        public static final double RESIDENT_ADULT_STRENGTH_CENTER = 50.0;
+        public static final double RESIDENT_ADULT_INTELLIGENCE_CENTER = 50.0;
+        public static final double RESIDENT_ELDER_STRENGTH_CENTER = 35.0;
+        public static final double RESIDENT_ELDER_INTELLIGENCE_CENTER = 65.0;
+        public static final double RESIDENT_NON_ADULT_ATTRIBUTE_SPREAD = 0.8;
+        public static final double RESIDENT_ADULT_ATTRIBUTE_SPREAD = 1.0;
+        public static final double RESIDENT_INFANT_INITIAL_PROFICIENCY = 0.0;
+        public static final double RESIDENT_CHILD_MAXIMUM_INITIAL_PROFICIENCY = 25.0;
+        public static final double RESIDENT_ADULT_MAXIMUM_INITIAL_PROFICIENCY = 50.0;
+        public static final double RESIDENT_ELDER_MINIMUM_INITIAL_PROFICIENCY = 50.0;
+        public static final double RESIDENT_ELDER_MAXIMUM_INITIAL_PROFICIENCY = 100.0;
+        public static final int RESIDENT_ADULT_AGE_RANGE_DAYS_EXCLUSIVE = 3650;
+        public static final double RESIDENT_AGE_WEIGHT_INFANT = 10.0;
+        public static final double RESIDENT_AGE_WEIGHT_CHILD = 20.0;
+        public static final double RESIDENT_AGE_WEIGHT_ADULT = 60.0;
+        public static final double RESIDENT_AGE_WEIGHT_ELDER = 10.0;
+        public static final double RESIDENT_FALLBACK_AGE_WEIGHT_INFANT = 10.0;
+        public static final double RESIDENT_FALLBACK_AGE_WEIGHT_CHILD = 20.0;
+        public static final double RESIDENT_FALLBACK_AGE_WEIGHT_ADULT = 50.0;
+        public static final double RESIDENT_FALLBACK_AGE_WEIGHT_ELDER = 20.0;
+        public static final double RESIDENT_COLD_SURVIVOR_HEALTH_MINIMUM = 20.0;
+        public static final double RESIDENT_COLD_SURVIVOR_HEALTH_MAXIMUM = 40.0;
+        public static final double RESIDENT_COLD_SURVIVOR_ATTRIBUTE_BONUS = 15.0;
+        public static final double RESIDENT_COLD_SURVIVOR_PROFICIENCY_MULTIPLIER = 1.5;
+        public static final double RESIDENT_COLD_SURVIVOR_CHANCE = 0.5;
         public static final int RESIDENT_INFANT_TO_CHILD_DAYS = 10;
         public static final int RESIDENT_CHILD_TO_ADULT_DAYS = 30;
         public static final double RESIDENT_INFANT_STRENGTH_GAIN_PER_DAY = 0.2;
@@ -532,6 +641,7 @@ public record TownModelParameters(
         public static final int CLIMATE_CALM_MAXIMUM_DAYS_EXCLUSIVE = 7;
         public static final float CLIMATE_COLD_PRELUDE_PEAK_CELSIUS = -5.0F;
         public static final float CLIMATE_WARM_PEAK_CELSIUS = 8.0F;
+        public static final float CLIMATE_FORECAST_SENSITIVITY_CELSIUS = 2.0F;
         public static final float CLIMATE_EVENT_NOISE_STANDARD_DEVIATION_CELSIUS = 1.0F;
         public static final float CLIMATE_WARM_NOISE_SCALE = 2.0F;
         public static final float CLIMATE_ABSOLUTE_ZERO_CELSIUS = -273.0F;

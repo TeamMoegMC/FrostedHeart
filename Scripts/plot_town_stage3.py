@@ -78,7 +78,8 @@ def finish_axis(axis: plt.Axes) -> None:
 
 def population(report: Path) -> int:
     summary = read_json(report / "summary.json")
-    return int(summary["scenario"]["population"]["standardAdults"])
+    population = summary["scenario"]["population"]
+    return int(population.get("initialResidents", population.get("standardAdults")))
 
 
 def plot_feasibility(reports: list[Path], output_dir: Path) -> Path:

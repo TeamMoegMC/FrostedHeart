@@ -31,7 +31,8 @@ public record TownStageFourScenario(
         Location location,
         Position towerCenter,
         List<ThermalBuilding> thermalBuildings,
-        PopulationSweep populationSweep
+        PopulationSweep populationSweep,
+        TensionExperiment tensionExperiment
 ) {
     public TownStageFourScenario {
         thermalBuildings = List.copyOf(thermalBuildings);
@@ -83,20 +84,49 @@ public record TownStageFourScenario(
             JsonObject sweep = root.getAsJsonObject("populationSweep");
             int minimumPopulation = positiveInteger(sweep, "minimumPopulation", 1);
             int maximumPopulation = positiveInteger(sweep, "maximumPopulation", 200);
-            int populationPoints = positiveInteger(sweep, "populationPoints", 100);
+            int populationPoints = positiveInteger(sweep, "populationPoints", 20);
+            JsonArray populationValuesJson = sweep.has("populationValues")
+                    ? sweep.getAsJsonArray("populationValues") : new JsonArray();
+            List<Integer> populationValues = new ArrayList<>();
+            for (JsonElement value : populationValuesJson) populationValues.add(value.getAsInt());
             JsonArray trajectoryJson = sweep.has("trajectoryPopulations")
                     ? sweep.getAsJsonArray("trajectoryPopulations") : new JsonArray();
             List<Integer> trajectoryPopulations = new ArrayList<>();
             for (JsonElement value : trajectoryJson) trajectoryPopulations.add(value.getAsInt());
+            int timelinePopulation = positiveInteger(sweep, "timelinePopulation", 24);
             populationSweep = new PopulationSweep(
                     minimumPopulation, maximumPopulation, populationPoints,
+                    populationValues,
                     trajectoryPopulations.isEmpty()
                             ? List.of(1, 8, 11, 12, 13, 14, 16, 24, 48, 200)
-                            : trajectoryPopulations);
+                            : trajectoryPopulations,
+                    timelinePopulation);
+        }
+        TensionExperiment tensionExperiment = null;
+        if (root.has("tensionExperiment")) {
+            JsonObject tension = root.getAsJsonObject("tensionExperiment");
+            tensionExperiment = new TensionExperiment(
+                    nonNegativeInteger(tension, "townBurnInDays", 120),
+                    positive(number(tension, "foodReserveCapDays", 14.0),
+                            "tensionExperiment.foodReserveCapDays"),
+                    positive(number(tension, "fuelReserveCapNormalDays", 21.0),
+                            "tensionExperiment.fuelReserveCapNormalDays"),
+                    positiveIntegerList(tension, "mineCapacities", List.of(5, 6, 7, 8)),
+                    positiveIntegerList(tension, "huntCapacities", List.of(3, 4, 6, 8)),
+                    positiveInteger(tension, "detailedMineCapacity", 8),
+                    positiveInteger(tension, "detailedHuntCapacity", 4),
+                    positiveInteger(tension, "visibleForecastHours", 120),
+                    positiveInteger(tension, "overdriveActionWindowHours", 24),
+                    positiveInteger(tension, "forecastSampleHours", 3),
+                    boundedInteger(tension, "forecastTriggerLevel", -2, -4, -1));
+        }
+        if (populationSweep != null && tensionExperiment != null) {
+            throw new IllegalArgumentException(
+                    "populationSweep and tensionExperiment are mutually exclusive.");
         }
         return new TownStageFourScenario(
                 town, burnInDays, morningHour, location, towerCenter, buildings,
-                populationSweep);
+                populationSweep, tensionExperiment);
     }
 
     public ThermalBuilding building(String role) {
@@ -184,6 +214,34 @@ public record TownStageFourScenario(
         return positive(value, name);
     }
 
+    private static int nonNegativeInteger(JsonObject root, String name, int fallback) {
+        int value = root.has(name) ? root.get(name).getAsInt() : fallback;
+        if (value < 0) throw new IllegalArgumentException(name + " must be non-negative.");
+        return value;
+    }
+
+    private static List<Integer> positiveIntegerList(
+            JsonObject root,
+            String name,
+            List<Integer> fallback
+    ) {
+        if (!root.has(name)) return fallback;
+        List<Integer> values = new ArrayList<>();
+        Set<Integer> unique = new HashSet<>();
+        for (JsonElement element : root.getAsJsonArray(name)) {
+            int value = positive(element.getAsInt(), "tensionExperiment." + name);
+            if (!unique.add(value)) {
+                throw new IllegalArgumentException(
+                        "Duplicate tensionExperiment." + name + " value: " + value);
+            }
+            values.add(value);
+        }
+        if (values.isEmpty()) {
+            throw new IllegalArgumentException("tensionExperiment." + name + " cannot be empty.");
+        }
+        return List.copyOf(values);
+    }
+
     private static int boundedInteger(JsonObject root, String name, int fallback, int lower, int upper) {
         int value = root.has(name) ? root.get(name).getAsInt() : fallback;
         if (value < lower || value > upper) {
@@ -194,6 +252,13 @@ public record TownStageFourScenario(
 
     private static int positive(int value, String name) {
         if (value <= 0) throw new IllegalArgumentException(name + " must be positive.");
+        return value;
+    }
+
+    private static double positive(double value, String name) {
+        if (!Double.isFinite(value) || value <= 0.0) {
+            throw new IllegalArgumentException(name + " must be finite and positive.");
+        }
         return value;
     }
 
@@ -262,9 +327,12 @@ public record TownStageFourScenario(
             int minimumPopulation,
             int maximumPopulation,
             int populationPoints,
-            List<Integer> trajectoryPopulations
+            List<Integer> populationValues,
+            List<Integer> trajectoryPopulations,
+            int timelinePopulation
     ) {
         public PopulationSweep {
+            populationValues = List.copyOf(populationValues);
             trajectoryPopulations = List.copyOf(trajectoryPopulations);
             if (minimumPopulation <= 0 || maximumPopulation < minimumPopulation) {
                 throw new IllegalArgumentException(
@@ -276,6 +344,21 @@ public record TownStageFourScenario(
                         "populationSweep.populationPoints must be in [1, "
                                 + availablePopulations + "].");
             }
+            Set<Integer> populationValueSet = new HashSet<>();
+            for (int population : populationValues) {
+                if (population < minimumPopulation || population > maximumPopulation) {
+                    throw new IllegalArgumentException(
+                            "Every explicit population value must lie inside the sweep range.");
+                }
+                if (!populationValueSet.add(population)) {
+                    throw new IllegalArgumentException(
+                            "Duplicate explicit population value: " + population);
+                }
+            }
+            if (!populationValues.isEmpty() && populationValues.size() != populationPoints) {
+                throw new IllegalArgumentException(
+                        "populationValues size must equal populationPoints when provided.");
+            }
             Set<Integer> unique = new HashSet<>();
             for (int population : trajectoryPopulations) {
                 if (population < minimumPopulation || population > maximumPopulation) {
@@ -286,6 +369,42 @@ public record TownStageFourScenario(
                     throw new IllegalArgumentException(
                             "Duplicate trajectory population: " + population);
                 }
+            }
+            if (timelinePopulation < minimumPopulation || timelinePopulation > maximumPopulation) {
+                throw new IllegalArgumentException(
+                        "populationSweep.timelinePopulation must lie inside the sweep range.");
+            }
+        }
+    }
+
+    /** Optional fixed-population experiment for operational reserve tension. */
+    public record TensionExperiment(
+            int townBurnInDays,
+            double foodReserveCapDays,
+            double fuelReserveCapNormalDays,
+            List<Integer> mineCapacities,
+            List<Integer> huntCapacities,
+            int detailedMineCapacity,
+            int detailedHuntCapacity,
+            int visibleForecastHours,
+            int overdriveActionWindowHours,
+            int forecastSampleHours,
+            int forecastTriggerLevel
+    ) {
+        public TensionExperiment {
+            mineCapacities = List.copyOf(mineCapacities);
+            huntCapacities = List.copyOf(huntCapacities);
+            if (!mineCapacities.contains(detailedMineCapacity)) {
+                throw new IllegalArgumentException(
+                        "detailedMineCapacity must be included in mineCapacities.");
+            }
+            if (!huntCapacities.contains(detailedHuntCapacity)) {
+                throw new IllegalArgumentException(
+                        "detailedHuntCapacity must be included in huntCapacities.");
+            }
+            if (overdriveActionWindowHours > visibleForecastHours) {
+                throw new IllegalArgumentException(
+                        "overdriveActionWindowHours cannot exceed visibleForecastHours.");
             }
         }
     }

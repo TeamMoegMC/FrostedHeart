@@ -316,6 +316,7 @@ public class FHConfig {
 			public final ForgeConfigSpec.IntValue climateCalmMaximumDaysExclusive;
 			public final ForgeConfigSpec.DoubleValue coldPreludePeakCelsius;
 			public final ForgeConfigSpec.DoubleValue warmPeakCelsius;
+			public final ForgeConfigSpec.DoubleValue forecastSensitivityCelsius;
 			public final ForgeConfigSpec.DoubleValue climateEventNoiseStandardDeviationCelsius;
 			public final ForgeConfigSpec.DoubleValue warmEventNoiseScale;
 			public final ForgeConfigSpec.IntValue climateStoneInterfaceLevel;
@@ -425,6 +426,9 @@ public class FHConfig {
 				climateCalmMaximumDaysExclusive = builder.defineInRange("calmMaximumDaysExclusive", TownModelParameters.Defaults.CLIMATE_CALM_MAXIMUM_DAYS_EXCLUSIVE, 2, 1000000);
 				coldPreludePeakCelsius = builder.defineInRange("coldPreludePeakCelsius", (double) TownModelParameters.Defaults.CLIMATE_COLD_PRELUDE_PEAK_CELSIUS, -273.0, 1000.0);
 				warmPeakCelsius = builder.defineInRange("warmPeakCelsius", (double) TownModelParameters.Defaults.CLIMATE_WARM_PEAK_CELSIUS, -273.0, 1000.0);
+				forecastSensitivityCelsius = builder
+					.comment("Temperature margin used when the player forecast crosses a named cold level.")
+					.defineInRange("forecastSensitivityCelsius", (double) TownModelParameters.Defaults.CLIMATE_FORECAST_SENSITIVITY_CELSIUS, 0.0, 100.0);
 				climateEventNoiseStandardDeviationCelsius = builder.defineInRange("eventNoiseStandardDeviationCelsius", (double) TownModelParameters.Defaults.CLIMATE_EVENT_NOISE_STANDARD_DEVIATION_CELSIUS, 0.0, 1000.0);
 				warmEventNoiseScale = builder.defineInRange("warmNoiseScale", (double) TownModelParameters.Defaults.CLIMATE_WARM_NOISE_SCALE, 0.0, 1000.0);
 				climateStoneInterfaceLevel = builder
@@ -969,6 +973,88 @@ public class FHConfig {
 				}
 			}
 
+			public static class ResidentGeneration {
+				public final ForgeConfigSpec.DoubleValue initialHealth;
+				public final ForgeConfigSpec.DoubleValue initialMental;
+				public final ForgeConfigSpec.IntValue attributeSampleCount;
+				public final ForgeConfigSpec.DoubleValue infantStrengthCenter;
+				public final ForgeConfigSpec.DoubleValue infantIntelligenceCenter;
+				public final ForgeConfigSpec.DoubleValue childStrengthCenter;
+				public final ForgeConfigSpec.DoubleValue childIntelligenceCenter;
+				public final ForgeConfigSpec.DoubleValue adultStrengthCenter;
+				public final ForgeConfigSpec.DoubleValue adultIntelligenceCenter;
+				public final ForgeConfigSpec.DoubleValue elderStrengthCenter;
+				public final ForgeConfigSpec.DoubleValue elderIntelligenceCenter;
+				public final ForgeConfigSpec.DoubleValue nonAdultAttributeSpread;
+				public final ForgeConfigSpec.DoubleValue adultAttributeSpread;
+				public final ForgeConfigSpec.DoubleValue infantInitialProficiency;
+				public final ForgeConfigSpec.DoubleValue childMaximumInitialProficiency;
+				public final ForgeConfigSpec.DoubleValue adultMaximumInitialProficiency;
+				public final ForgeConfigSpec.DoubleValue elderMinimumInitialProficiency;
+				public final ForgeConfigSpec.DoubleValue elderMaximumInitialProficiency;
+				public final ForgeConfigSpec.IntValue adultAgeRangeDaysExclusive;
+				public final ForgeConfigSpec.DoubleValue fallbackWeightInfant;
+				public final ForgeConfigSpec.DoubleValue fallbackWeightChild;
+				public final ForgeConfigSpec.DoubleValue fallbackWeightAdult;
+				public final ForgeConfigSpec.DoubleValue fallbackWeightElder;
+				public final ForgeConfigSpec.DoubleValue coldSurvivorHealthMinimum;
+				public final ForgeConfigSpec.DoubleValue coldSurvivorHealthMaximum;
+				public final ForgeConfigSpec.DoubleValue coldSurvivorAttributeBonus;
+				public final ForgeConfigSpec.DoubleValue coldSurvivorProficiencyMultiplier;
+
+				ResidentGeneration(ForgeConfigSpec.Builder builder) {
+					builder.push("Resident Generation");
+					initialHealth = builder.comment("Health assigned to an ordinary newly recruited resident.")
+						.defineInRange("initialHealth", TownModelParameters.Defaults.RESIDENT_INITIAL_HEALTH, 0d, 100d);
+					initialMental = builder.comment("Mental state assigned to an ordinary newly recruited resident.")
+						.defineInRange("initialMental", TownModelParameters.Defaults.RESIDENT_INITIAL_MENTAL, 0d, 100d);
+					attributeSampleCount = builder.comment("Uniform samples averaged for each initial strength/intelligence draw; larger values concentrate residents near the age-group center.")
+						.defineInRange("attributeSampleCount", TownModelParameters.Defaults.RESIDENT_ATTRIBUTE_SAMPLE_COUNT, 1, 100);
+					infantStrengthCenter = attribute(builder, "infantStrengthCenter", "Infant initial strength distribution center.", TownModelParameters.Defaults.RESIDENT_INFANT_STRENGTH_CENTER);
+					infantIntelligenceCenter = attribute(builder, "infantIntelligenceCenter", "Infant initial intelligence distribution center.", TownModelParameters.Defaults.RESIDENT_INFANT_INTELLIGENCE_CENTER);
+					childStrengthCenter = attribute(builder, "childStrengthCenter", "Child initial strength distribution center.", TownModelParameters.Defaults.RESIDENT_CHILD_STRENGTH_CENTER);
+					childIntelligenceCenter = attribute(builder, "childIntelligenceCenter", "Child initial intelligence distribution center.", TownModelParameters.Defaults.RESIDENT_CHILD_INTELLIGENCE_CENTER);
+					adultStrengthCenter = attribute(builder, "adultStrengthCenter", "Adult initial strength distribution center.", TownModelParameters.Defaults.RESIDENT_ADULT_STRENGTH_CENTER);
+					adultIntelligenceCenter = attribute(builder, "adultIntelligenceCenter", "Adult initial intelligence distribution center.", TownModelParameters.Defaults.RESIDENT_ADULT_INTELLIGENCE_CENTER);
+					elderStrengthCenter = attribute(builder, "elderStrengthCenter", "Elder initial strength distribution center.", TownModelParameters.Defaults.RESIDENT_ELDER_STRENGTH_CENTER);
+					elderIntelligenceCenter = attribute(builder, "elderIntelligenceCenter", "Elder initial intelligence distribution center.", TownModelParameters.Defaults.RESIDENT_ELDER_INTELLIGENCE_CENTER);
+					nonAdultAttributeSpread = builder.comment("Width multiplier of infant, child, and elder initial attribute distributions.")
+						.defineInRange("nonAdultAttributeSpread", TownModelParameters.Defaults.RESIDENT_NON_ADULT_ATTRIBUTE_SPREAD, 0d, 2d);
+					adultAttributeSpread = builder.comment("Width multiplier of adult initial attribute distributions.")
+						.defineInRange("adultAttributeSpread", TownModelParameters.Defaults.RESIDENT_ADULT_ATTRIBUTE_SPREAD, 0d, 2d);
+					infantInitialProficiency = proficiency(builder, "infantInitialProficiency", "Initial proficiency assigned to infants.", TownModelParameters.Defaults.RESIDENT_INFANT_INITIAL_PROFICIENCY);
+					childMaximumInitialProficiency = proficiency(builder, "childMaximumInitialProficiency", "Upper bound before the squared low-skill bias for child initial proficiency.", TownModelParameters.Defaults.RESIDENT_CHILD_MAXIMUM_INITIAL_PROFICIENCY);
+					adultMaximumInitialProficiency = proficiency(builder, "adultMaximumInitialProficiency", "Upper bound before the squared low-skill bias for adult initial proficiency.", TownModelParameters.Defaults.RESIDENT_ADULT_MAXIMUM_INITIAL_PROFICIENCY);
+					elderMinimumInitialProficiency = proficiency(builder, "elderMinimumInitialProficiency", "Lower bound of the uniform elder initial proficiency distribution.", TownModelParameters.Defaults.RESIDENT_ELDER_MINIMUM_INITIAL_PROFICIENCY);
+					elderMaximumInitialProficiency = proficiency(builder, "elderMaximumInitialProficiency", "Upper bound of the uniform elder initial proficiency distribution.", TownModelParameters.Defaults.RESIDENT_ELDER_MAXIMUM_INITIAL_PROFICIENCY);
+					adultAgeRangeDaysExclusive = builder.comment("Random age-day span added after childToAdultDays for directly recruited adults and elders.")
+						.defineInRange("adultAgeRangeDaysExclusive", TownModelParameters.Defaults.RESIDENT_ADULT_AGE_RANGE_DAYS_EXCLUSIVE, 1, 1000000);
+					fallbackWeightInfant = weight(builder, "fallbackWeightInfant", TownModelParameters.Defaults.RESIDENT_FALLBACK_AGE_WEIGHT_INFANT);
+					fallbackWeightChild = weight(builder, "fallbackWeightChild", TownModelParameters.Defaults.RESIDENT_FALLBACK_AGE_WEIGHT_CHILD);
+					fallbackWeightAdult = weight(builder, "fallbackWeightAdult", TownModelParameters.Defaults.RESIDENT_FALLBACK_AGE_WEIGHT_ADULT);
+					fallbackWeightElder = weight(builder, "fallbackWeightElder", TownModelParameters.Defaults.RESIDENT_FALLBACK_AGE_WEIGHT_ELDER);
+					coldSurvivorHealthMinimum = attribute(builder, "coldSurvivorHealthMinimum", "Minimum health of a cold-current high-quality survivor.", TownModelParameters.Defaults.RESIDENT_COLD_SURVIVOR_HEALTH_MINIMUM);
+					coldSurvivorHealthMaximum = attribute(builder, "coldSurvivorHealthMaximum", "Maximum health of a cold-current high-quality survivor.", TownModelParameters.Defaults.RESIDENT_COLD_SURVIVOR_HEALTH_MAXIMUM);
+					coldSurvivorAttributeBonus = attribute(builder, "coldSurvivorAttributeBonus", "Strength and intelligence bonus of a cold-current high-quality survivor.", TownModelParameters.Defaults.RESIDENT_COLD_SURVIVOR_ATTRIBUTE_BONUS);
+					coldSurvivorProficiencyMultiplier = builder.comment("Work-proficiency multiplier of a cold-current high-quality survivor.")
+						.defineInRange("coldSurvivorProficiencyMultiplier", TownModelParameters.Defaults.RESIDENT_COLD_SURVIVOR_PROFICIENCY_MULTIPLIER, 0d, 100d);
+					builder.pop();
+				}
+
+				private static ForgeConfigSpec.DoubleValue attribute(ForgeConfigSpec.Builder builder, String key, String comment, double value) {
+					return builder.comment(comment).defineInRange(key, value, 0d, 100d);
+				}
+
+				private static ForgeConfigSpec.DoubleValue proficiency(ForgeConfigSpec.Builder builder, String key, String comment, double value) {
+					return builder.comment(comment).defineInRange(key, value, 0d, 100d);
+				}
+
+				private static ForgeConfigSpec.DoubleValue weight(ForgeConfigSpec.Builder builder, String key, double value) {
+					return builder.comment("Fallback age weight used only when all configured refugee age weights are zero.")
+						.defineInRange(key, value, 0d, 1000d);
+				}
+			}
+
 			public static class RefugeeSpawn {
 				public final ForgeConfigSpec.BooleanValue enableRefugeeSpawn;
 				public final ForgeConfigSpec.DoubleValue baseSpawnChancePerDay;
@@ -1004,8 +1090,8 @@ public class FHConfig {
 					coldSpawnBatchPenalty = builder.comment("Fewer refugees per batch during a cold current or blizzard.")
 						.defineInRange("coldSpawnBatchPenalty", 1, 0, 10);
 					coldQualityChance = builder.comment("Chance that a refugee spawned during a cold current is high-quality but low-health")
-						.comment("(strength/intelligence +15, initial proficiency x1.5, health 20-40).")
-						.defineInRange("coldQualityChance", 0.5d, 0d, 1d);
+						.comment("The health range, attribute bonus, and proficiency multiplier are configured under Resident Generation.")
+						.defineInRange("coldQualityChance", TownModelParameters.Defaults.RESIDENT_COLD_SURVIVOR_CHANCE, 0d, 1d);
 					spawnRadiusMinBlocks = builder.comment("Minimum horizontal distance from the tower master block for refugee spawns, in blocks.")
 						.defineInRange("spawnRadiusMinBlocks", 8, 0, 64);
 					spawnRadiusMaxBlocks = builder.comment("Maximum horizontal distance from the tower master block for refugee spawns, in blocks.")
@@ -1015,13 +1101,13 @@ public class FHConfig {
 					batchSizeMax = builder.comment("Maximum refugees spawned per daily batch (before weather modifiers).")
 						.defineInRange("batchSizeMax", 3, 1, 10);
 					weightInfant = builder.comment("Relative weight of infants (age 0) in each batch.")
-						.defineInRange("weightInfant", 10d, 0d, 1000d);
+						.defineInRange("weightInfant", TownModelParameters.Defaults.RESIDENT_AGE_WEIGHT_INFANT, 0d, 1000d);
 					weightChild = builder.comment("Relative weight of children (age 1) in each batch.")
-						.defineInRange("weightChild", 20d, 0d, 1000d);
+						.defineInRange("weightChild", TownModelParameters.Defaults.RESIDENT_AGE_WEIGHT_CHILD, 0d, 1000d);
 					weightAdult = builder.comment("Relative weight of young adults (age 2) in each batch.")
-						.defineInRange("weightAdult", 60d, 0d, 1000d);
+						.defineInRange("weightAdult", TownModelParameters.Defaults.RESIDENT_AGE_WEIGHT_ADULT, 0d, 1000d);
 					weightElder = builder.comment("Relative weight of elders (age 3) in each batch.")
-						.defineInRange("weightElder", 10d, 0d, 1000d);
+						.defineInRange("weightElder", TownModelParameters.Defaults.RESIDENT_AGE_WEIGHT_ELDER, 0d, 1000d);
 					maxWaitDays = builder.comment("Days a town-spawned refugee waits near the tower before leaving on their own.")
 						.comment("They also leave the first morning the town has no vacant house.")
 						.defineInRange("maxWaitDays", 3, 1, 100);
@@ -1469,6 +1555,7 @@ public class FHConfig {
 			public final Mining MINING;
 			public final ResidentRules RESIDENT_RULES;
 			public final ResidentProgression RESIDENT_PROGRESSION;
+			public final ResidentGeneration RESIDENT_GENERATION;
 			public final RefugeeSpawn REFUGEE_SPAWN;
 			public final ResidentAging RESIDENT_AGING;
 			public final Resource RESOURCE;
@@ -1491,6 +1578,7 @@ public class FHConfig {
 				HOUSING = new Housing(builder);
 				RESIDENT_RULES = new ResidentRules(builder);
 				RESIDENT_PROGRESSION = new ResidentProgression(builder);
+				RESIDENT_GENERATION = new ResidentGeneration(builder);
 				REFUGEE_SPAWN = new RefugeeSpawn(builder);
 				RESIDENT_AGING = new ResidentAging(builder);
 				HUNTING = new Hunting(builder);

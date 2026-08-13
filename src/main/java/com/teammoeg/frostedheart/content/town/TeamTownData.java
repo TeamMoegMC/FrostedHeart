@@ -34,6 +34,8 @@ import com.teammoeg.frostedheart.content.town.event.*;
 import com.teammoeg.frostedheart.content.town.network.TownBuildingUpdatePacket;
 import com.teammoeg.frostedheart.content.town.network.TownResidentUpdatePacket;
 import com.teammoeg.frostedheart.content.town.network.TownResourceUpdatePacket;
+import com.teammoeg.frostedheart.content.town.observation.TownObservationModel;
+import com.teammoeg.frostedheart.content.town.observation.TownSignalEvent;
 import com.teammoeg.frostedheart.content.town.resource.ITownResourceKey;
 import com.teammoeg.frostedheart.content.town.util.ObservableTownMap;
 import it.unimi.dsi.fastutil.objects.Object2DoubleOpenHashMap;
@@ -62,6 +64,7 @@ import com.teammoeg.frostedheart.content.town.event.TownResidentChangeEvent;
 import com.teammoeg.frostedheart.content.town.event.TownResourceChangeEvent;
 import com.teammoeg.frostedheart.content.town.resident.Resident;
 import com.teammoeg.frostedheart.content.town.resident.ResidentAgingModel;
+import com.teammoeg.frostedheart.content.town.resident.ResidentGenerationModel;
 import com.teammoeg.frostedheart.content.town.resident.ResidentDailyModel;
 import com.teammoeg.frostedheart.content.town.model.TownAssignmentModel;
 import com.teammoeg.frostedheart.content.town.resident.WanderingRefugee;
@@ -163,6 +166,9 @@ public class TeamTownData implements SpecialData{
      */
     @Getter
     List<TownHistoryEntry> history = new ArrayList<>();
+
+    /** Threshold events accumulated during the current daily settlement. */
+    private transient final List<TownSignalEvent> pendingDailySignals = new ArrayList<>();
 
     /**
      * 最近一次按世界日结算难民刷新的日期（服务端持久化）。
@@ -326,7 +332,7 @@ public class TeamTownData implements SpecialData{
         residents.values().forEach(Resident::resetDailyProficiencyGrowth);
         this.buildingsWork(world);
         this.recoverResources();
-        this.recordDailySnapshot(world);
+        this.recordDailySnapshot(world, teamData);
     }
 
     /**
@@ -346,16 +352,45 @@ public class TeamTownData implements SpecialData{
      *
      * @param world 服务端世界 / server world instance
      */
-    void recordDailySnapshot(ServerLevel world) {
+    void recordDailySnapshot(ServerLevel world, TeamDataHolder teamData) {
         long day = WorldClimate.getWorldDay(world);
-        // DoubleSummaryStatistics 与 DoubleStream.average() 同源（Kahan 补偿求和），位级一致；空集 getAverage()=0.0
-        DoubleSummaryStatistics healthStat = new DoubleSummaryStatistics();
-        DoubleSummaryStatistics mentalStat = new DoubleSummaryStatistics();
-        for (Resident resident : residents.values()) {
-            healthStat.accept(resident.getHealth());
-            mentalStat.accept(resident.getMental());
+        FHConfig.Server.Town.ResidentRules config = FHConfig.SERVER.TOWN.RESIDENT_RULES;
+        TownObservationModel.ResidentRules rules = new TownObservationModel.ResidentRules(
+                config.homelessHealthLossPerDay.get(), config.removalHealthThreshold.get(),
+                config.removalMentalThreshold.get(), config.minimumWorkingAge.get(),
+                config.minimumWorkingHealthExclusive.get(),
+                config.minimumWorkingMentalExclusive.get(), config.workRequiresHousing.get());
+        List<TownObservationModel.ResidentStatus> statuses = residents.values().stream()
+                .map(resident -> new TownObservationModel.ResidentStatus(
+                        resident.getUUID().toString(), resident.getAge(), resident.getHealth(),
+                        resident.getMental(), resident.getHousePos() != null))
+                .toList();
+        TownObservationModel.ResidentSnapshot residentSnapshot =
+                TownObservationModel.observeResidents(statuses, rules);
+        Optional<GeneratorData> generator = teamData.getOptional(FHSpecialDataTypes.GENERATOR_DATA);
+        boolean towerWorking = generator.map(value -> value.isWorking).orElse(false);
+        int climateLevel = generator.filter(value -> value.actualPos != null)
+                .map(value -> WeatherForecast.getTemperatureLevel(
+                        WorldTemperature.climate(world, value.actualPos)))
+                .orElse(0);
+        TownHistoryEntry previous = history.isEmpty() ? null : history.get(history.size() - 1);
+        List<TownSignalEvent> signals = new ArrayList<>();
+        if (previous != null && previous.day() == day) signals.addAll(previous.events());
+        for (TownSignalEvent signal : pendingDailySignals) {
+            signals.add(new TownSignalEvent(
+                    day, signal.hour(), signal.type(), signal.severity(),
+                    signal.affectedCount(), signal.episodeId(), signal.detail()));
         }
-        TownHistoryEntry entry = new TownHistoryEntry(day, residents.size(), healthStat.getAverage(), mentalStat.getAverage(), buildings.size());
+        pendingDailySignals.clear();
+        if (previous != null && previous.day() != day) {
+            addDailyThresholdSignals(day, previous, residentSnapshot, towerWorking, climateLevel, signals);
+        }
+        TownHistoryEntry entry = new TownHistoryEntry(
+                day, residentSnapshot.population(), residentSnapshot.averageHealth(),
+                residentSnapshot.averageMental(), buildings.size(), residentSnapshot.p10Health(),
+                residentSnapshot.minimumHealth(), residentSnapshot.p10Mental(),
+                residentSnapshot.minimumMental(), residentSnapshot.unableToWorkCount(),
+                residentSnapshot.exitRiskCount(), towerWorking, climateLevel, signals);
         if (!history.isEmpty() && history.get(history.size() - 1).day() == day) {
             history.set(history.size() - 1, entry);
         } else {
@@ -364,6 +399,53 @@ public class TeamTownData implements SpecialData{
         while (history.size() > MAX_HISTORY_ENTRIES) {
             history.remove(0);
         }
+    }
+
+    private static void addDailyThresholdSignals(
+            long day,
+            TownHistoryEntry previous,
+            TownObservationModel.ResidentSnapshot current,
+            boolean towerWorking,
+            int climateLevel,
+            List<TownSignalEvent> signals
+    ) {
+        if (previous.towerWorking() != towerWorking) {
+            signals.add(new TownSignalEvent(day, 0,
+                    towerWorking ? TownSignalEvent.Type.TOWER_SERVICE_RESTORED
+                            : TownSignalEvent.Type.TOWER_SERVICE_LOST,
+                    towerWorking ? TownSignalEvent.Severity.INFORMATION
+                            : TownSignalEvent.Severity.CRITICAL,
+                    1, "daily tower-working state crossed"));
+        }
+        if (previous.climateLevel() >= 0 && climateLevel < 0) {
+            signals.add(new TownSignalEvent(day, 0, TownSignalEvent.Type.CLIMATE_COLD_WARNING,
+                    TownSignalEvent.Severity.WARNING, 1, "forecast temperature category below normal"));
+        } else if (previous.climateLevel() < 0 && climateLevel >= 0) {
+            signals.add(new TownSignalEvent(day, 0, TownSignalEvent.Type.CLIMATE_COLD_ENDED,
+                    TownSignalEvent.Severity.INFORMATION, 1, "forecast temperature category returned to normal"));
+        }
+        addCountCrossing(day, previous.unableToWorkCount(), current.unableToWorkCount(),
+                TownSignalEvent.Type.WORK_CAPACITY_LOST,
+                TownSignalEvent.Type.WORK_CAPACITY_RECOVERED, signals);
+        addCountCrossing(day, previous.exitRiskCount(), current.exitRiskCount(),
+                TownSignalEvent.Type.EXIT_RISK_ENTERED,
+                TownSignalEvent.Type.EXIT_RISK_RECOVERED, signals);
+    }
+
+    private static void addCountCrossing(
+            long day,
+            int previous,
+            int current,
+            TownSignalEvent.Type increase,
+            TownSignalEvent.Type decrease,
+            List<TownSignalEvent> signals
+    ) {
+        int delta = current - previous;
+        if (delta == 0) return;
+        signals.add(new TownSignalEvent(day, 0, delta > 0 ? increase : decrease,
+                delta > 0 ? TownSignalEvent.Severity.CRITICAL
+                        : TownSignalEvent.Severity.INFORMATION,
+                Math.abs(delta), "daily resident threshold count crossed"));
     }
 
     /**
@@ -430,6 +512,14 @@ public class TeamTownData implements SpecialData{
             resident.setHealth(result.healthAfterHomelessPenalty());
             if (result.removed()) {
                 deadResidents.add(resident);
+                TownSignalEvent.Type type = result.removedForHealth() && result.removedForMental()
+                        ? TownSignalEvent.Type.RESIDENT_EXIT_BOTH
+                        : result.removedForHealth()
+                        ? TownSignalEvent.Type.RESIDENT_EXIT_HEALTH
+                        : TownSignalEvent.Type.RESIDENT_EXIT_MENTAL;
+                pendingDailySignals.add(new TownSignalEvent(
+                        -1L, 0, type, TownSignalEvent.Severity.IRREVERSIBLE, 1,
+                        resident.getUUID().toString()));
             }
         }
         TeamTown town = TeamTown.create(this);
@@ -573,24 +663,16 @@ public class TeamTownData implements SpecialData{
      */
     private int pickAgeByWeight() {
         RefugeeSpawn config = FHConfig.SERVER.TOWN.REFUGEE_SPAWN;
-        double infant = config.weightInfant.get();
-        double child = config.weightChild.get();
-        double adult = config.weightAdult.get();
-        double elder = config.weightElder.get();
-        if (infant + child + adult + elder <= 0.0D) {
-            // 全零权重回退默认分布，避免轮盘恒落最后一项
-            infant = 10.0D;
-            child = 20.0D;
-            adult = 50.0D;
-            elder = 20.0D;
-        }
-        double roll = CMath.RANDOM.nextDouble() * (infant + child + adult + elder);
-        if (roll < infant) return Resident.AGE_INFANT;
-        roll -= infant;
-        if (roll < child) return Resident.AGE_CHILD;
-        roll -= child;
-        if (roll < adult) return Resident.AGE_ADULT;
-        return Resident.AGE_ELDER;
+        FHConfig.Server.Town.ResidentGeneration fallback =
+                FHConfig.SERVER.TOWN.RESIDENT_GENERATION;
+        return ResidentGenerationModel.pickAge(
+                CMath.RANDOM::nextDouble,
+                new ResidentGenerationModel.AgeWeights(
+                        config.weightInfant.get(), config.weightChild.get(),
+                        config.weightAdult.get(), config.weightElder.get()),
+                new ResidentGenerationModel.AgeWeights(
+                        fallback.fallbackWeightInfant.get(), fallback.fallbackWeightChild.get(),
+                        fallback.fallbackWeightAdult.get(), fallback.fallbackWeightElder.get()));
     }
 
     /**

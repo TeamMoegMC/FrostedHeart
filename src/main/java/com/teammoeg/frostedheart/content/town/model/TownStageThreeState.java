@@ -13,11 +13,13 @@ package com.teammoeg.frostedheart.content.town.model;
 import com.teammoeg.frostedheart.content.town.resource.TownFoodInventoryModel;
 import com.teammoeg.frostedheart.content.town.resource.TownInventoryModel;
 import com.teammoeg.frostedheart.content.town.resource.action.ResourceActionMode;
+import com.teammoeg.frostedheart.content.town.resident.ResidentGenerationModel;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.SplittableRandom;
 
 /** Mutable, serializable-in-principle state for one stage-3 Monte Carlo run. */
 public final class TownStageThreeState {
@@ -60,16 +62,39 @@ public final class TownStageThreeState {
     }
 
     public static TownStageThreeState initial(TownStageThreeScenario scenario) {
+        return initial(scenario, TownModelParameters.currentDefaults(),
+                new SplittableRandom(scenario.simulation().seed()));
+    }
+
+    public static TownStageThreeState initial(
+            TownStageThreeScenario scenario,
+            TownModelParameters parameters,
+            SplittableRandom random
+    ) {
         TownStageThreeScenario.Population population = scenario.population();
-        List<ResidentState> residents = new ArrayList<>(population.standardAdults());
-        for (int index = 0; index < population.standardAdults(); index++) {
-            residents.add(new ResidentState(
-                    String.format("resident-%03d", index),
-                    population.initialHealth(), population.initialMental(),
-                    population.initialStrength(), population.initialIntelligence(),
-                    population.initialMiningProficiency(),
-                    population.initialHuntingProficiency(),
-                    2, population.initialAgeDays(), HOUSE_ID, null));
+        List<ResidentState> residents = new ArrayList<>(population.initialResidents());
+        for (int index = 0; index < population.initialResidents(); index++) {
+            if (population.initialization()
+                    == TownStageThreeScenario.PopulationInitialization.GAME_GENERATED) {
+                ResidentGenerationModel.GeneratedResident generated =
+                        ResidentGenerationModel.generate(
+                                random::nextDouble, random::nextInt,
+                                generationParameters(parameters.residents()));
+                residents.add(new ResidentState(
+                        String.format("resident-%03d", index),
+                        generated.health(), generated.mental(), generated.strength(),
+                        generated.intelligence(), generated.miningProficiency(),
+                        generated.huntingProficiency(), generated.age(), generated.ageDays(),
+                        HOUSE_ID, null));
+            } else {
+                residents.add(new ResidentState(
+                        String.format("resident-%03d", index),
+                        population.initialHealth(), population.initialMental(),
+                        population.initialStrength(), population.initialIntelligence(),
+                        population.initialMiningProficiency(),
+                        population.initialHuntingProficiency(),
+                        2, population.initialAgeDays(), HOUSE_ID, null));
+            }
         }
         LinkedHashMap<String, Double> inventory = new LinkedHashMap<>();
         for (TownStageThreeScenario.InventoryItem item : scenario.warehouse().initialInventory()) {
@@ -78,6 +103,40 @@ public final class TownStageThreeState {
         return new TownStageThreeState(
                 residents, inventory, scenario.warehouse().capacityItems(),
                 scenario.terrain().initialHuntUnits());
+    }
+
+    private static ResidentGenerationModel.Parameters generationParameters(
+            TownModelParameters.ResidentParameters residents
+    ) {
+        TownModelParameters.ResidentGenerationParameters generation = residents.generation();
+        TownModelParameters.ResidentAgingParameters aging = residents.aging();
+        return new ResidentGenerationModel.Parameters(
+                generation.initialHealth(), generation.initialMental(),
+                generation.attributeSampleCount(),
+                new ResidentGenerationModel.AttributeCenters(
+                        generation.infantStrengthCenter(), generation.infantIntelligenceCenter()),
+                new ResidentGenerationModel.AttributeCenters(
+                        generation.childStrengthCenter(), generation.childIntelligenceCenter()),
+                new ResidentGenerationModel.AttributeCenters(
+                        generation.adultStrengthCenter(), generation.adultIntelligenceCenter()),
+                new ResidentGenerationModel.AttributeCenters(
+                        generation.elderStrengthCenter(), generation.elderIntelligenceCenter()),
+                generation.nonAdultAttributeSpread(), generation.adultAttributeSpread(),
+                generation.infantInitialProficiency(),
+                generation.childMaximumInitialProficiency(),
+                generation.adultMaximumInitialProficiency(),
+                generation.elderMinimumInitialProficiency(),
+                generation.elderMaximumInitialProficiency(),
+                aging.infantToChildDays(), aging.childToAdultDays(),
+                generation.adultAgeRangeDaysExclusive(),
+                ageWeights(generation.ageWeights()), ageWeights(generation.fallbackAgeWeights()));
+    }
+
+    private static ResidentGenerationModel.AgeWeights ageWeights(
+            TownModelParameters.ResidentAgeWeightParameters weights
+    ) {
+        return new ResidentGenerationModel.AgeWeights(
+                weights.infant(), weights.child(), weights.adult(), weights.elder());
     }
 
     public InventoryMutation add(String item, double requested, ResourceActionMode mode) {

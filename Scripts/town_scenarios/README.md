@@ -5,9 +5,10 @@ The four `baseline/stage3-t1-*.json` files are the 1/8/24/48-resident,
 120-day stage-3 references.
 The three `baseline/stage4-t1-*.json` files are the 8/24/48-resident,
 120-day × 1000-seed current-climate, one-T1-sphere references.
-`experiments/stage4-t1-population-sweep.json` runs 100 evenly spaced integer
-populations from 1 through 200 with paired seeds and writes ten selected
-population reserve trajectories, concentrated around the stage-3 threshold.
+`experiments/stage4-t1-population-sweep.json` runs 20 explicit populations from
+1 through 200 with paired seeds and writes ten selected population reserve
+trajectories, concentrated around the stage-3 threshold. It also captures all
+daily states and threshold events for the configured `timelinePopulation`.
 
 Its experiments are deliberately independent:
 
@@ -71,11 +72,51 @@ FH-owned defaults never belong in scenario files. The Java simulator obtains tho
   `TownModelParameters.currentDefaults()` and share their source defaults with
   `FHConfig.SERVER.CLIMATE` / `FHConfig.SERVER.TOWN.GENERATOR_T1`.
 - An optional `populationSweep` object selects a range, number of curve points,
-  and explicit `trajectoryPopulations`. Each requested population gets a
+  optional explicit `populationValues`, `trajectoryPopulations`, and one
+  `timelinePopulation`. Each requested population gets a
   three-block-high balanced integer rectangle whose current house/hunting
   capacity formula is at least that population. Initial edible food scales with
   population to preserve reserve days; the T1 coke inventory remains fixed
   because tower demand is independent of population.
 - Sweep output is `population.csv`, `reserve-trajectories.csv`, and a
-  self-defining `summary.json`. All populations reuse the same run seeds, so
-  their differences are paired comparisons under the same climate samples.
+  self-defining `summary.json`. `player-timeline-trials.csv`, `event-raster.csv`,
+  and `initial-residents.csv` contain player-facing daily histories, every
+  trial's discrete events, and the exact seeded initial resident population.
+  The aggregate CSVs include shared resident P10/work/exit
+  risk snapshots, reserve slopes, threshold-event rates, Fano factors, crisis
+  episode sizes, warning lead times, and recovery times. A single-population
+  stage-4 run additionally writes its first seed's `observations.csv` and
+  `events.csv`. All populations reuse the same run seeds, so their differences
+  are paired comparisons under the same climate samples.
+- `population.initialization: "gameGenerated"` invokes the same pure resident
+  recruitment model used by gameplay: configured age weights, age-day ranges,
+  age-group strength/intelligence distributions, and initial work proficiencies.
+  Omit it (or use `"fixed"`) to preserve deterministic standard-resident fixtures.
+- `population.initialResidents` is the population count for new scenarios.
+  The loader still accepts the legacy `standardAdults` key used by fixed adult
+  stage-3/4 fixtures, but does not serialize that misleading name into reports.
+
+## Stage-4 24-resident tension experiment
+
+`experiments/stage4-t1-24-tension.json` keeps population fixed at 24 and adds a
+`tensionExperiment` object instead of a `populationSweep`:
+
+- `townBurnInDays` advances climate, residents, assignments, inventories, T1
+  fuel balance and proficiency together before the measured interval. Runs that
+  already lost residents during burn-in remain failures; the report separately
+  gives burn-in survival and measured survival conditional on reaching day 0.
+- `foodReserveCapDays` and `fuelReserveCapNormalDays` describe an external
+  transmitter that exports only surplus food and coal/coke after each town
+  tick. They are scenario automation controls, not `FHConfig` parameters. Other
+  ore/loot products still occupy the current shared warehouse.
+- `mineCapacities` and `huntCapacities` are player-built workplace sizes. The
+  hunting box is rebuilt with the current space/capacity formula; the mine is
+  temperature independent and needs no thermal box.
+- The `fixed` policy leaves normal T1 on continuously. The `forecast` policy
+  samples the player-visible forecast category every three hours and toggles
+  the current T1 overdrive when a configured severe level appears in the next
+  action window. It does not read exact future temperature as a control value.
+- The experiment writes `capacity-grid.csv`, detailed paired `runs.csv` and
+  player histories/events for the configured detailed layout. Run
+  `Scripts/plot_town_stage4_tension.py` in Conda `standard` to generate the
+  player history, downsampled event raster, capacity map and strategy tradeoff.

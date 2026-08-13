@@ -46,12 +46,23 @@ public final class ResidentAttributeModel {
      * of width {@code spread} centered at {@code center}.
      */
     public static double generateAttribute(DoubleSupplier randomDouble, double center, double spread) {
+        return generateAttribute(randomDouble, center, spread, ADULT_ATTRIBUTE_SAMPLE_COUNT);
+    }
+
+    /** Generates one center-biased attribute using the configured sample count. */
+    public static double generateAttribute(
+            DoubleSupplier randomDouble,
+            double center,
+            double spread,
+            int sampleCount
+    ) {
         Objects.requireNonNull(randomDouble);
+        int safeSampleCount = Math.max(1, sampleCount);
         double sum = 0.0;
-        for (int i = 0; i < ADULT_ATTRIBUTE_SAMPLE_COUNT; i++) {
+        for (int i = 0; i < safeSampleCount; i++) {
             sum += unitSample(randomDouble);
         }
-        double mean = sum / ADULT_ATTRIBUTE_SAMPLE_COUNT;
+        double mean = sum / safeSampleCount;
         return clampFinite(MAX_VALUE * (center / MAX_VALUE + (mean - 0.5) * spread), MIN_VALUE, MAX_VALUE, MIN_VALUE);
     }
 
@@ -84,9 +95,20 @@ public final class ResidentAttributeModel {
      * born with naturally higher work proficiency.
      */
     public static double generateElderInitialWorkProficiency(DoubleSupplier randomDouble) {
+        return generateElderInitialWorkProficiency(
+                randomDouble, ELDER_PROFICIENCY_LOWER_BOUND, MAX_VALUE);
+    }
+
+    public static double generateElderInitialWorkProficiency(
+            DoubleSupplier randomDouble,
+            double minimum,
+            double maximum
+    ) {
         Objects.requireNonNull(randomDouble);
         double sample = unitSample(randomDouble);
-        return clampFinite(ELDER_PROFICIENCY_LOWER_BOUND + ELDER_PROFICIENCY_LOWER_BOUND * sample, MIN_VALUE, MAX_VALUE, MIN_VALUE);
+        double lower = clampFinite(minimum, MIN_VALUE, MAX_VALUE, MIN_VALUE);
+        double upper = clampFinite(maximum, lower, MAX_VALUE, MAX_VALUE);
+        return clampFinite(lower + (upper - lower) * sample, MIN_VALUE, MAX_VALUE, MIN_VALUE);
     }
 
     /**

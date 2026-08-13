@@ -240,7 +240,7 @@ public class Resident {
     public double getWorkProficiency(Class<? extends ITownResidentWorkBuilding> type) {
         String key = type.getSimpleName();
         if (!workProficiency.containsKey(key)) {
-            double generatedProficiency = generateRandomProficiency();
+            double generatedProficiency = generateRandomProficiencyForAge();
             workProficiency.put(key, generatedProficiency);
             fireChange();
             return generatedProficiency;
@@ -583,24 +583,18 @@ public class Resident {
      * 青壮年沿用原有成人属性生成，分布不变。
      */
     private void initializeAttributesForAge(int age) {
-        switch (age) {
-            case AGE_INFANT -> {
-                setStrength(ResidentAttributeModel.generateAttribute(CMath.RANDOM::nextDouble, 20.0, ResidentAttributeModel.DEFAULT_ATTRIBUTE_SPREAD));
-                setIntelligence(ResidentAttributeModel.generateAttribute(CMath.RANDOM::nextDouble, 30.0, ResidentAttributeModel.DEFAULT_ATTRIBUTE_SPREAD));
-            }
-            case AGE_CHILD -> {
-                setStrength(ResidentAttributeModel.generateAttribute(CMath.RANDOM::nextDouble, 40.0, ResidentAttributeModel.DEFAULT_ATTRIBUTE_SPREAD));
-                setIntelligence(ResidentAttributeModel.generateAttribute(CMath.RANDOM::nextDouble, 40.0, ResidentAttributeModel.DEFAULT_ATTRIBUTE_SPREAD));
-            }
-            case AGE_ELDER -> {
-                setStrength(ResidentAttributeModel.generateAttribute(CMath.RANDOM::nextDouble, 35.0, ResidentAttributeModel.DEFAULT_ATTRIBUTE_SPREAD));
-                setIntelligence(ResidentAttributeModel.generateAttribute(CMath.RANDOM::nextDouble, 65.0, ResidentAttributeModel.DEFAULT_ATTRIBUTE_SPREAD));
-            }
-            default -> {
-                setStrength(ResidentAttributeModel.generateAdultAttribute(CMath.RANDOM::nextDouble));
-                setIntelligence(ResidentAttributeModel.generateAdultAttribute(CMath.RANDOM::nextDouble));
-            }
-        }
+        ResidentGenerationModel.Parameters parameters = generationParametersFromConfig();
+        ResidentGenerationModel.AttributeCenters centers = parameters.centers(age);
+        double spread = age == AGE_ADULT
+                ? parameters.adultAttributeSpread() : parameters.nonAdultAttributeSpread();
+        setHealth(parameters.initialHealth());
+        setMental(parameters.initialMental());
+        setStrength(ResidentAttributeModel.generateAttribute(
+                CMath.RANDOM::nextDouble, centers.strength(), spread,
+                parameters.attributeSampleCount()));
+        setIntelligence(ResidentAttributeModel.generateAttribute(
+                CMath.RANDOM::nextDouble, centers.intelligence(), spread,
+                parameters.attributeSampleCount()));
         initializeMissingWorkProficiencies();
     }
 
@@ -618,16 +612,8 @@ public class Resident {
      * 初始熟练度按年龄分发：幼儿 0、儿童上限 25、老人 [50,100]、青壮年 [0,50]。
      */
     private double generateRandomProficiencyForAge() {
-        return switch (age) {
-            case AGE_INFANT -> 0.0;
-            case AGE_CHILD -> ResidentAttributeModel.generateInitialWorkProficiency(CMath.RANDOM::nextDouble, 25.0);
-            case AGE_ELDER -> ResidentAttributeModel.generateElderInitialWorkProficiency(CMath.RANDOM::nextDouble);
-            default -> generateRandomProficiency();
-        };
-    }
-
-    private static double generateRandomProficiency() {
-        return ResidentAttributeModel.generateInitialWorkProficiency(CMath.RANDOM::nextDouble);
+        return ResidentGenerationModel.generateProficiency(
+                age, CMath.RANDOM::nextDouble, generationParametersFromConfig());
     }
 
     private static double normalizeWorkProficiency(double proficiency) {
@@ -645,14 +631,8 @@ public class Resident {
      * 青壮年/老人 childToAdultDays 后再多 0-10 年。
      */
     public static int randomAgeDaysForAge(int age) {
-        FHConfig.Server.Town.ResidentAging cfg = FHConfig.SERVER.TOWN.RESIDENT_AGING;
-        return switch (age) {
-            case AGE_INFANT -> CMath.RANDOM.nextInt(cfg.infantToChildDays.get());
-            case AGE_CHILD -> cfg.infantToChildDays.get()
-                    // 兜底：两个配置无交叉约束，防止服主设置 infantToChildDays > childToAdultDays 时负参数抛异常
-                    + CMath.RANDOM.nextInt(Math.max(1, cfg.childToAdultDays.get() - cfg.infantToChildDays.get()));
-            default -> cfg.childToAdultDays.get() + CMath.RANDOM.nextInt(3650);
-        };
+        return ResidentGenerationModel.randomAgeDays(
+                age, CMath.RANDOM::nextInt, generationParametersFromConfig());
     }
 
     /**
@@ -672,11 +652,53 @@ public class Resident {
      * 力量/智商更高、初始工作熟练度更高，但血量更低（20-40）。
      */
     public void applyColdSurvivorBuffs() {
-        setHealth(20.0 + 20.0 * CMath.RANDOM.nextDouble());
-        addStrength(15.0);
-        addIntelligence(15.0);
-        workProficiency.replaceAll((key, value) -> normalizeWorkProficiency(value * 1.5));
+        FHConfig.Server.Town.ResidentGeneration generation =
+                FHConfig.SERVER.TOWN.RESIDENT_GENERATION;
+        double minimumHealth = Math.min(
+                generation.coldSurvivorHealthMinimum.get(),
+                generation.coldSurvivorHealthMaximum.get());
+        double maximumHealth = Math.max(
+                generation.coldSurvivorHealthMinimum.get(),
+                generation.coldSurvivorHealthMaximum.get());
+        setHealth(minimumHealth
+                + (maximumHealth - minimumHealth) * CMath.RANDOM.nextDouble());
+        addStrength(generation.coldSurvivorAttributeBonus.get());
+        addIntelligence(generation.coldSurvivorAttributeBonus.get());
+        workProficiency.replaceAll((key, value) -> normalizeWorkProficiency(
+                value * generation.coldSurvivorProficiencyMultiplier.get()));
         fireChange();
+    }
+
+    private static ResidentGenerationModel.Parameters generationParametersFromConfig() {
+        FHConfig.Server.Town.ResidentGeneration generation =
+                FHConfig.SERVER.TOWN.RESIDENT_GENERATION;
+        FHConfig.Server.Town.ResidentAging aging = FHConfig.SERVER.TOWN.RESIDENT_AGING;
+        FHConfig.Server.Town.RefugeeSpawn spawn = FHConfig.SERVER.TOWN.REFUGEE_SPAWN;
+        return new ResidentGenerationModel.Parameters(
+                generation.initialHealth.get(), generation.initialMental.get(),
+                generation.attributeSampleCount.get(),
+                new ResidentGenerationModel.AttributeCenters(
+                        generation.infantStrengthCenter.get(), generation.infantIntelligenceCenter.get()),
+                new ResidentGenerationModel.AttributeCenters(
+                        generation.childStrengthCenter.get(), generation.childIntelligenceCenter.get()),
+                new ResidentGenerationModel.AttributeCenters(
+                        generation.adultStrengthCenter.get(), generation.adultIntelligenceCenter.get()),
+                new ResidentGenerationModel.AttributeCenters(
+                        generation.elderStrengthCenter.get(), generation.elderIntelligenceCenter.get()),
+                generation.nonAdultAttributeSpread.get(), generation.adultAttributeSpread.get(),
+                generation.infantInitialProficiency.get(),
+                generation.childMaximumInitialProficiency.get(),
+                generation.adultMaximumInitialProficiency.get(),
+                generation.elderMinimumInitialProficiency.get(),
+                generation.elderMaximumInitialProficiency.get(),
+                aging.infantToChildDays.get(), aging.childToAdultDays.get(),
+                generation.adultAgeRangeDaysExclusive.get(),
+                new ResidentGenerationModel.AgeWeights(
+                        spawn.weightInfant.get(), spawn.weightChild.get(),
+                        spawn.weightAdult.get(), spawn.weightElder.get()),
+                new ResidentGenerationModel.AgeWeights(
+                        generation.fallbackWeightInfant.get(), generation.fallbackWeightChild.get(),
+                        generation.fallbackWeightAdult.get(), generation.fallbackWeightElder.get()));
     }
 
 }

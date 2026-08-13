@@ -179,7 +179,7 @@ def plot_self_supply(rows: list[dict[str, str]], output: Path) -> Path:
     for axis, simulation_prefix, theory_key, color, marker, ylabel in panels:
         axis.plot(
             population, values(rows, theory_key), color=color,
-            label="Theory: optimal initial worker split, no cold stoppage",
+            label="Theory: optimal split for standard-adult reference",
         )
         simulation_band(
             axis, population, rows, simulation_prefix, color, marker,
@@ -353,6 +353,366 @@ def plot_thermal_limit(
     return save(figure, output, "stage4-t1-coverage-thermal-limit.png")
 
 
+def plot_low_tail_risk(rows: list[dict[str, str]], output: Path) -> Path:
+    population = values(rows, "population")
+    figure, axes = plt.subplots(1, 2, figsize=(14.8, 5.5), sharey=True)
+    for axis, average_prefix, tail_prefix, ylabel in (
+        (
+            axes[0], "minimum_average_health", "minimum_p10_health",
+            "Lowest observed health over 120 days (points, P5–P95)",
+        ),
+        (
+            axes[1], "minimum_average_mental", "minimum_p10_mental",
+            "Lowest observed mental state over 120 days (points, P5–P95)",
+        ),
+    ):
+        simulation_band(
+            axis, population, rows, average_prefix, BLUE, "o",
+            "Town mean on its worst day",
+        )
+        simulation_band(
+            axis, population, rows, tail_prefix, ORANGE, "s",
+            "Resident P10 on its worst day",
+        )
+        axis.axhline(
+            5.0, color=NEUTRAL, linewidth=1.3, linestyle="--",
+            label="Current removal threshold",
+        )
+        axis.set_xlim(1, 200)
+        axis.set_ylim(0, 100)
+        axis.set_xlabel("Resident population")
+        axis.set_ylabel(ylabel)
+        axis.legend(frameon=False, loc="upper right")
+        finish_axis(axis)
+    figure.tight_layout(w_pad=2.8)
+    return save(figure, output, "stage4-observable-low-tail-risk.png")
+
+
+def plot_reserve_trends(rows: list[dict[str, str]], output: Path) -> Path:
+    selected = {11, 12, 13, 14, 16, 24}
+    by_population: dict[int, list[dict[str, str]]] = defaultdict(list)
+    for row in rows:
+        population = int(row["population"])
+        if population in selected:
+            by_population[population].append(row)
+    colors = list(plt.get_cmap("tab10").colors)
+    figure, axes = plt.subplots(1, 2, figsize=(15.2, 6.0))
+    for index, population in enumerate(sorted(by_population)):
+        current = sorted(by_population[population], key=lambda row: int(row["day"]))
+        day = [int(row["day"]) + 1 for row in current]
+        color = colors[index]
+        width = 3.0 if population == 13 else 2.0
+        for axis, prefix in (
+            (axes[0], "fuel_reserve_trend"),
+            (axes[1], "food_reserve_trend"),
+        ):
+            axis.plot(
+                day, values(current, f"{prefix}_p50"), color=color,
+                linewidth=width, label=f"P={population}",
+            )
+            axis.fill_between(
+                day, values(current, f"{prefix}_p05"),
+                values(current, f"{prefix}_p95"), color=color,
+                alpha=0.08 if population != 13 else 0.14, linewidth=0,
+            )
+    for axis, ylabel in (
+        (axes[0], "Daily change in T1 fuel reserve (reserve-days/day, P5–P95)"),
+        (axes[1], "Daily change in edible food reserve (reserve-days/day, P5–P95)"),
+    ):
+        axis.axhline(0.0, color=NEUTRAL, linewidth=1.3, linestyle="--")
+        axis.set_xlim(1, 120)
+        axis.set_yscale("symlog", linthresh=0.25, linscale=0.8)
+        axis.set_xlabel("Simulation day")
+        axis.set_ylabel(ylabel)
+        finish_axis(axis)
+    axes[1].legend(frameon=False, loc="upper left", ncol=2)
+    figure.tight_layout(w_pad=2.7)
+    return save(figure, output, "stage4-observable-reserve-trends.png")
+
+
+def plot_work_and_exit_risk(rows: list[dict[str, str]], output: Path) -> Path:
+    population = values(rows, "population")
+    figure, axes = plt.subplots(1, 2, figsize=(14.6, 5.4), sharey=True)
+    simulation_band(
+        axes[0], population, rows, "maximum_unable_to_work_fraction",
+        BLUE, "o", "Peak residents unable to work",
+    )
+    simulation_band(
+        axes[0], population, rows, "maximum_exit_risk_fraction",
+        ORANGE, "s", "Peak residents due to exit next morning",
+    )
+    axes[0].set_ylabel("Population exposed at the worst daily snapshot (fraction, P5–P95)")
+    axes[0].legend(frameon=False, loc="upper right")
+
+    simulation_band(
+        axes[1], population, rows, "maximum_episode_affected_fraction",
+        PURPLE, "D", "Largest crisis episode",
+    )
+    axes[1].set_ylabel("Residents losing work capacity or exiting (fraction, P5–P95)")
+    axes[1].legend(frameon=False, loc="upper right")
+    for axis in axes:
+        axis.set_xlim(1, 200)
+        axis.set_ylim(0, 1.02)
+        axis.set_xlabel("Resident population")
+        finish_axis(axis)
+    figure.tight_layout(w_pad=3.0)
+    return save(figure, output, "stage4-observable-work-and-exit-risk.png")
+
+
+def plot_event_dynamics(rows: list[dict[str, str]], output: Path) -> Path:
+    population = values(rows, "population")
+    figure, axes = plt.subplots(1, 2, figsize=(14.8, 5.5))
+    simulation_band(
+        axes[0], population, rows, "adverse_signal_rate_per_30_days",
+        BLUE, "o", "Adverse threshold crossings",
+    )
+    simulation_band(
+        axes[0], population, rows, "resident_exit_rate_per_30_days",
+        ORANGE, "s", "Irreversible resident exits",
+    )
+    axes[0].set_yscale("symlog", linthresh=0.25, linscale=0.8)
+    axes[0].set_ylabel("Threshold-crossing event rate (events per 30 days, P5–P95)")
+    axes[0].legend(frameon=False, loc="upper left")
+
+    simulation_band(
+        axes[1], population, rows, "adverse_signal_fano_factor",
+        BLUE, "o", "Adverse threshold crossings",
+    )
+    simulation_band(
+        axes[1], population, rows, "resident_exit_fano_factor",
+        ORANGE, "s", "Irreversible resident exits",
+    )
+    axes[1].axhline(
+        1.0, color=NEUTRAL, linewidth=1.3, linestyle="--",
+        label="Poisson variability",
+    )
+    axes[1].set_yscale("symlog", linthresh=1.0, linscale=0.8)
+    axes[1].set_ylabel("Daily count variance ÷ mean (Fano factor, P5–P95)")
+    axes[1].legend(frameon=False, loc="upper left")
+    for axis in axes:
+        axis.set_xlim(1, 200)
+        axis.set_xlabel("Resident population")
+        finish_axis(axis)
+    figure.tight_layout(w_pad=3.0)
+    return save(figure, output, "stage4-observable-event-dynamics.png")
+
+
+def plot_warning_and_recovery(rows: list[dict[str, str]], output: Path) -> Path:
+    population = values(rows, "population")
+    figure, axes = plt.subplots(1, 2, figsize=(14.8, 5.5))
+    axes[0].scatter(
+        population, values(rows, "crisis_probability"), s=20, marker="o",
+        facecolor="white", edgecolor=BLUE, linewidth=1.15,
+        label="At least one crisis episode",
+    )
+    axes[0].scatter(
+        population, values(rows, "unrecovered_episode_probability"), s=20, marker="s",
+        facecolor="white", edgecolor=ORANGE, linewidth=1.15,
+        label="Episode still unrecovered at day 120",
+    )
+    axes[0].scatter(
+        population, values(rows, "prior_warning_probability_among_exit_runs"),
+        s=20, marker="^", facecolor="white", edgecolor=GREEN, linewidth=1.15,
+        label="Exit runs warned at least 1 day earlier",
+    )
+    axes[0].set_ylim(0, 1.02)
+    axes[0].set_ylabel("Monte Carlo runs (probability)")
+    axes[0].legend(frameon=False, loc="center right")
+
+    simulation_band(
+        axes[1], population, rows, "first_exit_warning_lead_days",
+        GREEN, "^", "First warning to first exit (exit runs only)",
+    )
+    simulation_band(
+        axes[1], population, rows, "mean_recovery_days",
+        PURPLE, "D", "Episode start to 7-day reserve recovery",
+    )
+    axes[1].set_ylabel("Episode timing (days, P5–P95; zero if no qualifying run)")
+    axes[1].legend(frameon=False, loc="upper right")
+    for axis in axes:
+        axis.set_xlim(1, 200)
+        axis.set_xlabel("Resident population")
+        finish_axis(axis)
+    figure.tight_layout(w_pad=3.0)
+    return save(figure, output, "stage4-observable-warning-and-recovery.png")
+
+
+def representative_trial(
+    timeline_rows: list[dict[str, str]], event_rows: list[dict[str, str]]
+) -> tuple[int, str]:
+    exit_types = {
+        "RESIDENT_EXIT_HEALTH", "RESIDENT_EXIT_MENTAL", "RESIDENT_EXIT_BOTH",
+    }
+    first_exit: dict[int, int] = {}
+    for row in event_rows:
+        if row["type"] in exit_types:
+            trial = int(row["trial"])
+            day = int(row["day"])
+            first_exit[trial] = min(day, first_exit.get(trial, day))
+    if first_exit:
+        ordered_days = sorted(first_exit.values())
+        median_day = ordered_days[len(ordered_days) // 2]
+        trial = min(first_exit, key=lambda value: (abs(first_exit[value] - median_day), value))
+        return trial, f"trial {trial}; first exit near the exit-trial median"
+
+    event_count: dict[int, int] = defaultdict(int)
+    for row in event_rows:
+        if row["severity"] != "INFORMATION":
+            event_count[int(row["trial"])] += 1
+    trials = sorted({int(row["trial"]) for row in timeline_rows})
+    ordered_counts = sorted(event_count.get(trial, 0) for trial in trials)
+    median_count = ordered_counts[len(ordered_counts) // 2]
+    trial = min(trials, key=lambda value: (abs(event_count.get(value, 0) - median_count), value))
+    return trial, f"trial {trial}; adverse-event count near the trial median"
+
+
+def plot_player_timeline(
+    timeline_rows: list[dict[str, str]],
+    event_rows: list[dict[str, str]],
+    output: Path,
+) -> tuple[Path, int, str]:
+    trial, reason = representative_trial(timeline_rows, event_rows)
+    rows = sorted(
+        (row for row in timeline_rows if int(row["trial"]) == trial),
+        key=lambda row: int(row["day"]),
+    )
+    day = [int(row["day"]) + 1 for row in rows]
+    figure, axes = plt.subplots(4, 1, figsize=(14.6, 15.2), sharex=True)
+
+    temperature = axes[0]
+    temperature.plot(day, values(rows, "morning_climate_c"), color=SKY, label="Climate at tower")
+    temperature.plot(day, values(rows, "house_temperature_c"), color=BLUE, label="House interior")
+    temperature.plot(day, values(rows, "hunting_temperature_c"), color=ORANGE, label="Hunting interior")
+    temperature.axhline(0.0, color=NEUTRAL, linewidth=1.3, linestyle="--", label="0 °C work/safety threshold")
+    temperature.set_ylabel("Morning temperature (°C)")
+    temperature.legend(frameon=False, loc="lower right", ncol=2)
+
+    reserves = axes[1]
+    reserves.plot(day, values(rows, "fuel_reserve_days"), color=BLUE, label="T1 fuel")
+    reserves.plot(day, values(rows, "food_reserve_days"), color=ORANGE, label="Edible food")
+    reserves.axhline(3.0, color=YELLOW, linewidth=1.3, linestyle=(0, (3, 2)), label="3-day warning")
+    reserves.axhline(7.0, color=GREEN, linewidth=1.3, linestyle="--", label="7-day recovery")
+    reserves.set_yscale("symlog", linthresh=1.0, linscale=0.8)
+    reserves.set_ylim(bottom=0.0)
+    reserves.set_ylabel("Warehouse reserve (days, symlog)")
+    reserves.legend(frameon=False, loc="upper left", ncol=2)
+
+    wellbeing = axes[2]
+    wellbeing.plot(day, values(rows, "average_health"), color=BLUE, label="Mean health")
+    wellbeing.plot(day, values(rows, "p10_health"), color=BLUE, linestyle="--", label="P10 health")
+    wellbeing.plot(day, values(rows, "average_mental"), color=PURPLE, label="Mean mental")
+    wellbeing.plot(day, values(rows, "p10_mental"), color=PURPLE, linestyle="--", label="P10 mental")
+    wellbeing.axhline(5.0, color=NEUTRAL, linewidth=1.3, linestyle=(0, (3, 2)), label="Exit threshold")
+    wellbeing.set_ylim(0.0, 100.0)
+    wellbeing.set_ylabel("Resident state (points)")
+    wellbeing.legend(frameon=False, loc="upper right", ncol=2)
+
+    residents = axes[3]
+    residents.step(day, values(rows, "population"), color=NEUTRAL, where="post", label="Residents")
+    residents.plot(day, values(rows, "unable_to_work_count"), color=ORANGE, label="Unable to work")
+    residents.plot(day, values(rows, "exit_risk_count"), color=PURPLE, label="Due to exit next morning")
+    exit_days = [
+        int(row["day"]) + 1 for row in event_rows
+        if int(row["trial"]) == trial and row["type"].startswith("RESIDENT_EXIT_")
+    ]
+    if exit_days:
+        maximum = max(values(rows, "population") or [1.0])
+        residents.scatter(exit_days, [maximum] * len(exit_days), marker="x", s=65,
+                          color="#000000", linewidth=1.8, label="Resident exit")
+    residents.set_ylabel("Residents (count)")
+    residents.set_xlabel("Simulation day")
+    residents.legend(frameon=False, loc="upper right", ncol=2)
+
+    for axis in axes:
+        axis.set_xlim(1, max(day))
+        finish_axis(axis)
+    figure.tight_layout(h_pad=1.3)
+    return save(figure, output, "stage4-player-town-history.png"), trial, reason
+
+
+def event_category(event_type: str) -> str:
+    if event_type.startswith("RESIDENT_EXIT_"):
+        return "Resident exit"
+    if event_type in {"WORK_CAPACITY_LOST", "EXIT_RISK_ENTERED"}:
+        return "Resident threshold"
+    if event_type.startswith("FOOD_") or event_type.startswith("FUEL_"):
+        return "Resource threshold"
+    return "Climate or thermal threshold"
+
+
+def plot_event_raster(
+    rows: list[dict[str, str]], trial_count: int, simulated_days: int, output: Path
+) -> Path:
+    styles = {
+        "Climate or thermal threshold": (SKY, "|"),
+        "Resource threshold": (YELLOW, "o"),
+        "Resident threshold": (PURPLE, "s"),
+        "Resident exit": ("#000000", "x"),
+    }
+    adverse = [row for row in rows if row["severity"] != "INFORMATION"]
+    figure, axis = plt.subplots(figsize=(14.6, 8.2))
+    for category, (color, marker) in styles.items():
+        current = [row for row in adverse if event_category(row["type"]) == category]
+        axis.scatter(
+            [int(row["day"]) + 1 for row in current],
+            [int(row["trial"]) + 1 for row in current],
+            s=12 if marker != "|" else 22, marker=marker, color=color,
+            linewidth=0.7, alpha=0.78, label=category,
+        )
+    axis.set_xlim(1, simulated_days)
+    axis.set_ylim(0.5, trial_count + 0.5)
+    axis.set_xlabel("Simulation day")
+    axis.set_ylabel("Monte Carlo trial")
+    axis.legend(frameon=False, loc="upper right", ncol=2)
+    finish_axis(axis)
+    figure.tight_layout()
+    return save(figure, output, "stage4-player-event-raster.png")
+
+
+def plot_initial_resident_heterogeneity(
+    rows: list[dict[str, str]], summary: dict, output: Path
+) -> Path:
+    labels = ["Infant", "Child", "Adult", "Elder"]
+    observed_counts = [0, 0, 0, 0]
+    for row in rows:
+        observed_counts[int(row["age_group"])] += 1
+    total = max(1, sum(observed_counts))
+    observed = [count / total for count in observed_counts]
+    weights = summary["parameters"]["residents"]["generation"]["ageWeights"]
+    expected_raw = [float(weights[key]) for key in ("infant", "child", "adult", "elder")]
+    expected_total = sum(expected_raw)
+    expected = [value / expected_total for value in expected_raw]
+
+    figure, axes = plt.subplots(1, 2, figsize=(15.0, 5.8))
+    age_axis, attribute_axis = axes
+    positions = list(range(4))
+    age_axis.bar([value - 0.18 for value in positions], expected, width=0.36,
+                 color=SKY, label="Configured probability")
+    age_axis.bar([value + 0.18 for value in positions], observed, width=0.36,
+                 color=ORANGE, label="Simulated residents")
+    age_axis.set_xticks(positions, labels)
+    age_axis.set_ylim(0.0, 0.7)
+    age_axis.set_ylabel("Initial residents (fraction)")
+    age_axis.legend(frameon=False, loc="upper left")
+
+    attribute_axis.hist(values(rows, "strength"), bins=35, density=True,
+                        histtype="step", color=BLUE, linewidth=2.5, label="Strength")
+    attribute_axis.hist(values(rows, "intelligence"), bins=35, density=True,
+                        histtype="step", color=PURPLE, linewidth=2.5, label="Intelligence")
+    attribute_axis.hist(values(rows, "mining_proficiency"), bins=35, density=True,
+                        histtype="step", color=ORANGE, linewidth=2.2, label="Mining proficiency")
+    attribute_axis.hist(values(rows, "hunting_proficiency"), bins=35, density=True,
+                        histtype="step", color=GREEN, linewidth=2.2, label="Hunting proficiency")
+    attribute_axis.set_xlim(0.0, 100.0)
+    attribute_axis.set_xlabel("Initial resident value (points)")
+    attribute_axis.set_ylabel("Probability density")
+    attribute_axis.legend(frameon=False, loc="upper right")
+    for axis in axes:
+        finish_axis(axis)
+    figure.tight_layout(w_pad=3.0)
+    return save(figure, output, "stage4-player-initial-residents.png")
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -363,14 +723,33 @@ def main() -> None:
     arguments = parser.parse_args()
     population_rows = read_csv(arguments.input / "population.csv")
     reserve_rows = read_csv(arguments.input / "reserve-trajectories.csv")
+    timeline_rows = read_csv(arguments.input / "player-timeline-trials.csv")
+    event_rows = read_csv(arguments.input / "event-raster.csv")
+    initial_resident_rows = read_csv(arguments.input / "initial-residents.csv")
     summary = read_json(arguments.input / "summary.json")
     configure_style()
+    timeline_path, trial, reason = plot_player_timeline(
+        timeline_rows, event_rows, arguments.output,
+    )
+    print(f"{timeline_path} ({reason})")
     for path in (
+        plot_event_raster(
+            event_rows,
+            int(summary["runsPerPopulation"]),
+            int(summary["days"]),
+            arguments.output,
+        ),
+        plot_initial_resident_heterogeneity(initial_resident_rows, summary, arguments.output),
         plot_capacity_and_temperature(population_rows, arguments.output),
         plot_self_supply(population_rows, arguments.output),
         plot_probabilities(population_rows, arguments.output),
         plot_reserves(reserve_rows, arguments.output),
         plot_thermal_limit(summary, population_rows, arguments.output),
+        plot_low_tail_risk(population_rows, arguments.output),
+        plot_reserve_trends(reserve_rows, arguments.output),
+        plot_work_and_exit_risk(population_rows, arguments.output),
+        plot_event_dynamics(population_rows, arguments.output),
+        plot_warning_and_recovery(population_rows, arguments.output),
     ):
         print(path)
 

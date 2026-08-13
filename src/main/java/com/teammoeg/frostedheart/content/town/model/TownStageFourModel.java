@@ -66,11 +66,19 @@ public final class TownStageFourModel {
             TownStageFourScenario scenario,
             TownModelParameters parameters
     ) {
+        return analyzeLayout(scenario, parameters, scenario.town().tower().overdrive());
+    }
+
+    public static ThermalLayout analyzeLayout(
+            TownStageFourScenario scenario,
+            TownModelParameters parameters,
+            boolean overdrive
+    ) {
         TownModelParameters.GeneratorT1Parameters generator = parameters.generatorT1();
         int radius = GeneratorHeatFieldModel.radiusBlocks(
                 1.0, generator.baseRadiusBlocks(), generator.additionalRadiusPerLevelBlocks());
         int heat = GeneratorHeatFieldModel.temperatureCelsius(
-                scenario.town().tower().overdrive() ? 2.0 : 1.0,
+                overdrive ? 2.0 : 1.0,
                 generator.temperaturePerLevelCelsius());
         TownStageFourScenario.Position center = scenario.towerCenter();
         List<BuildingGeometry> buildings = new ArrayList<>();
@@ -234,6 +242,14 @@ public final class TownStageFourModel {
 
         public float temperature(int day, int hour) {
             return hourlyTemperatureCelsius[Math.addExact(Math.multiplyExact(day, 24), hour)];
+        }
+
+        public int lengthHours() {
+            return hourlyTemperatureCelsius.length;
+        }
+
+        public float temperatureAtHour(int hour) {
+            return hourlyTemperatureCelsius[hour];
         }
     }
 

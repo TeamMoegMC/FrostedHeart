@@ -2,23 +2,28 @@
   "schemaVersion": 1,
   "modelStage": 4,
   "metadata": {
-    "name": "stage4-t1-compact-population-sweep",
-    "description": "One to two hundred game-generated residents in current-code compact-capacity house and hunting layouts under one normal T1 sphere."
+    "name": "stage4-t1-24-steady-state-tension",
+    "description": "Twenty-four game-generated residents with finite operating reserves, right-sized jobs, joint town/climate burn-in, and paired fixed versus forecast-driven T1 overdrive."
   },
   "simulation": {
     "days": 120,
     "runs": 1000,
-    "seed": 41008,
+    "seed": 42424,
     "climateBurnInDays": 365,
     "morningHour": 1
   },
-  "populationSweep": {
-    "minimumPopulation": 1,
-    "maximumPopulation": 200,
-    "populationPoints": 20,
-    "populationValues": [1, 4, 8, 10, 11, 12, 13, 14, 15, 16, 20, 24, 32, 48, 64, 96, 128, 160, 180, 200],
-    "trajectoryPopulations": [1, 8, 11, 12, 13, 14, 16, 24, 48, 200],
-    "timelinePopulation": 24
+  "tensionExperiment": {
+    "townBurnInDays": 120,
+    "foodReserveCapDays": 14.0,
+    "fuelReserveCapNormalDays": 21.0,
+    "mineCapacities": [5, 6, 7, 8],
+    "huntCapacities": [3, 4, 6, 8],
+    "detailedMineCapacity": 8,
+    "detailedHuntCapacity": 4,
+    "visibleForecastHours": 120,
+    "overdriveActionWindowHours": 24,
+    "forecastSampleHours": 3,
+    "forecastTriggerLevel": -2
   },
   "location": {
     "dimensionTemperatureCelsius": -10.0,
@@ -26,7 +31,7 @@
     "ignoreAltitudeTemperature": true
   },
   "population": {
-    "initialResidents": 8,
+    "initialResidents": 24,
     "initialization": "gameGenerated",
     "initialHealth": 50.0,
     "initialMental": 50.0,
@@ -38,22 +43,22 @@
   },
   "house": {
     "temperatureCelsius": 24.0,
-    "areaBlocks": 128,
-    "volumeBlocks": 384,
-    "bedCount": 8,
+    "areaBlocks": 384,
+    "volumeBlocks": 1152,
+    "bedCount": 24,
     "decorationRating": 0.75
   },
   "workplaces": {
     "mineCapacity": 8,
-    "huntCapacity": 8,
+    "huntCapacity": 4,
     "huntRating": 1.0
   },
   "buildingOrder": ["house", "mine", "hunt"],
   "warehouse": {
     "capacityItems": 100000.0,
     "initialInventory": [
-      { "item": "immersiveengineering:coal_coke", "amountItems": 75.0 },
-      { "item": "minecraft:cooked_beef", "amountItems": 17.5 }
+      { "item": "immersiveengineering:coal_coke", "amountItems": 225.0 },
+      { "item": "minecraft:cooked_beef", "amountItems": 105.0 }
     ]
   },
   "processing": {
@@ -74,7 +79,7 @@
     "huntRecoveryUnitsPerDay": 0.0
   },
   "diagnostics": {
-    "frontierMaximumPopulation": 200,
+    "frontierMaximumPopulation": 24,
     "compareBuildingOrders": false
   },
   "thermalLayout": {
@@ -83,14 +88,14 @@
       {
         "id": "house-template",
         "role": "house",
-        "floorAreaBlocks": 128,
-        "boxes": [{ "min": [-8, 64, -4], "size": [16, 3, 8] }]
+        "floorAreaBlocks": 384,
+        "boxes": [{ "min": [-12, 64, -8], "size": [24, 3, 16] }]
       },
       {
         "id": "hunt-template",
         "role": "hunt",
-        "floorAreaBlocks": 128,
-        "boxes": [{ "min": [-8, 67, -4], "size": [16, 3, 8] }]
+        "floorAreaBlocks": 384,
+        "boxes": [{ "min": [-12, 67, -8], "size": [24, 3, 16] }]
       }
     ]
   }

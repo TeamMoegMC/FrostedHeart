@@ -21,6 +21,9 @@ package com.teammoeg.frostedheart.content.town;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import com.teammoeg.frostedheart.content.town.observation.TownSignalEvent;
+
+import java.util.List;
 
 /**
  * 城镇每日快照。每日城镇结算（tickMorning）后记录一条，
@@ -35,13 +38,54 @@ import com.mojang.serialization.codecs.RecordCodecBuilder;
  * @param avgMental 居民平均精神 / average resident mental (0-100)
  * @param buildings 城镇建筑数量 / town building count
  */
-public record TownHistoryEntry(long day, int population, double avgHealth, double avgMental, int buildings) {
+public record TownHistoryEntry(
+        long day,
+        int population,
+        double avgHealth,
+        double avgMental,
+        int buildings,
+        double p10Health,
+        double minHealth,
+        double p10Mental,
+        double minMental,
+        int unableToWorkCount,
+        int exitRiskCount,
+        boolean towerWorking,
+        int climateLevel,
+        List<TownSignalEvent> events
+) {
 
     public static final Codec<TownHistoryEntry> CODEC = RecordCodecBuilder.create(t -> t.group(
             Codec.LONG.fieldOf("day").forGetter(TownHistoryEntry::day),
             Codec.INT.fieldOf("population").forGetter(TownHistoryEntry::population),
             Codec.DOUBLE.fieldOf("avgHealth").forGetter(TownHistoryEntry::avgHealth),
             Codec.DOUBLE.fieldOf("avgMental").forGetter(TownHistoryEntry::avgMental),
-            Codec.INT.fieldOf("buildings").forGetter(TownHistoryEntry::buildings)
+            Codec.INT.fieldOf("buildings").forGetter(TownHistoryEntry::buildings),
+            Codec.DOUBLE.optionalFieldOf("p10Health", 0.0).forGetter(TownHistoryEntry::p10Health),
+            Codec.DOUBLE.optionalFieldOf("minHealth", 0.0).forGetter(TownHistoryEntry::minHealth),
+            Codec.DOUBLE.optionalFieldOf("p10Mental", 0.0).forGetter(TownHistoryEntry::p10Mental),
+            Codec.DOUBLE.optionalFieldOf("minMental", 0.0).forGetter(TownHistoryEntry::minMental),
+            Codec.INT.optionalFieldOf("unableToWorkCount", 0).forGetter(TownHistoryEntry::unableToWorkCount),
+            Codec.INT.optionalFieldOf("exitRiskCount", 0).forGetter(TownHistoryEntry::exitRiskCount),
+            Codec.BOOL.optionalFieldOf("towerWorking", false).forGetter(TownHistoryEntry::towerWorking),
+            Codec.INT.optionalFieldOf("climateLevel", 0).forGetter(TownHistoryEntry::climateLevel),
+            TownSignalEvent.CODEC.listOf().optionalFieldOf("events", List.of()).forGetter(TownHistoryEntry::events)
     ).apply(t, TownHistoryEntry::new));
+
+    public TownHistoryEntry {
+        events = List.copyOf(events);
+    }
+
+    /** Source-compatible constructor for callers that only have legacy averages. */
+    public TownHistoryEntry(
+            long day,
+            int population,
+            double avgHealth,
+            double avgMental,
+            int buildings
+    ) {
+        this(day, population, avgHealth, avgMental, buildings,
+                avgHealth, avgHealth, avgMental, avgMental,
+                0, 0, false, 0, List.of());
+    }
 }

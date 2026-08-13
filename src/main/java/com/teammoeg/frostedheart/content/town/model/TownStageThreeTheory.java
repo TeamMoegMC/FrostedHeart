@@ -42,7 +42,7 @@ public final class TownStageThreeTheory {
                 scenario.tower().researchEfficiencyBonus());
         double rawCoalDemand = tower.theoryItemsPerActiveDay() * scenario.tower().activeFraction();
         double fuelMiningSwe = rawCoalDemand / coalPerMiningSwe;
-        int population = scenario.population().standardAdults();
+        int population = scenario.population().initialResidents();
         double foodDemand = population * parameters.housing().foodConsumptionPerResidentDay();
         double cookedHuntingSwe = foodDemand / cookedFoodPerHuntingSwe;
         double rawHuntingSwe = foodDemand / rawFoodPerHuntingSwe;

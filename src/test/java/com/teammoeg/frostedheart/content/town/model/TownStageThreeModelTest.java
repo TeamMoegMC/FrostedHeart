@@ -86,7 +86,8 @@ class TownStageThreeModelTest {
                 new TownStageThreeScenario.Metadata("test", ""),
                 new TownStageThreeScenario.Simulation(10, 1, 1L),
                 new TownStageThreeScenario.Population(
-                        population, 50, 50, 50, 50, 0, 0, 30),
+                        population, TownStageThreeScenario.PopulationInitialization.FIXED,
+                        50, 50, 50, 50, 0, 0, 30),
                 new TownStageThreeScenario.House(24, 8 * population, 24 * population,
                         population, 0.75),
                 new TownStageThreeScenario.Workplaces(population, 1, 1.0),

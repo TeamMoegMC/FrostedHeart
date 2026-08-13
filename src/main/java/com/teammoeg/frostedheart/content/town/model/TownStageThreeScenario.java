@@ -82,7 +82,11 @@ public record TownStageThreeScenario(
 
         JsonObject populationJson = object(root, "population");
         Population population = new Population(
-                positiveInteger(populationJson, "standardAdults", 24),
+                populationJson.has("initialResidents")
+                        ? positiveInteger(populationJson, "initialResidents", 24)
+                        : positiveInteger(populationJson, "standardAdults", 24),
+                PopulationInitialization.parse(string(
+                        populationJson, "initialization", "fixed")),
                 bounded(number(populationJson, "initialHealth", 50.0), 0.0, 100.0,
                         "population.initialHealth"),
                 bounded(number(populationJson, "initialMental", 50.0), 0.0, 100.0,
@@ -101,16 +105,16 @@ public record TownStageThreeScenario(
         House house = new House(
                 finite(number(houseJson, "temperatureCelsius", 24.0),
                         "house.temperatureCelsius"),
-                positiveInteger(houseJson, "areaBlocks", population.standardAdults() * 16),
-                positiveInteger(houseJson, "volumeBlocks", population.standardAdults() * 48),
-                positiveInteger(houseJson, "bedCount", population.standardAdults()),
+                positiveInteger(houseJson, "areaBlocks", population.initialResidents() * 16),
+                positiveInteger(houseJson, "volumeBlocks", population.initialResidents() * 48),
+                positiveInteger(houseJson, "bedCount", population.initialResidents()),
                 bounded(number(houseJson, "decorationRating", 0.75), 0.0, 1.0,
                         "house.decorationRating"));
 
         JsonObject workplacesJson = object(root, "workplaces");
         Workplaces workplaces = new Workplaces(
-                positiveInteger(workplacesJson, "mineCapacity", population.standardAdults()),
-                positiveInteger(workplacesJson, "huntCapacity", population.standardAdults()),
+                positiveInteger(workplacesJson, "mineCapacity", population.initialResidents()),
+                positiveInteger(workplacesJson, "huntCapacity", population.initialResidents()),
                 bounded(number(workplacesJson, "huntRating", 1.0), 0.0, 1.0,
                         "workplaces.huntRating"));
 
@@ -176,6 +180,12 @@ public record TownStageThreeScenario(
         return new TownStageThreeScenario(
                 schemaVersion, modelStage, metadata, simulation, population, house,
                 value, buildingOrder, warehouse, processing, tower, terrain, diagnostics);
+    }
+
+    public TownStageThreeScenario withTower(Tower value) {
+        return new TownStageThreeScenario(
+                schemaVersion, modelStage, metadata, simulation, population, house,
+                workplaces, buildingOrder, warehouse, processing, value, terrain, diagnostics);
     }
 
     private static void validateBuildingOrder(List<String> order) {
@@ -289,7 +299,8 @@ public record TownStageThreeScenario(
     }
 
     public record Population(
-            int standardAdults,
+            int initialResidents,
+            PopulationInitialization initialization,
             double initialHealth,
             double initialMental,
             double initialStrength,
@@ -298,6 +309,20 @@ public record TownStageThreeScenario(
             double initialHuntingProficiency,
             int initialAgeDays
     ) {
+    }
+
+    public enum PopulationInitialization {
+        FIXED,
+        GAME_GENERATED;
+
+        private static PopulationInitialization parse(String value) {
+            return switch (value) {
+                case "fixed" -> FIXED;
+                case "gameGenerated" -> GAME_GENERATED;
+                default -> throw new IllegalArgumentException(
+                        "population.initialization must be 'fixed' or 'gameGenerated'.");
+            };
+        }
     }
 
     public record House(
@@ -348,6 +373,11 @@ public record TownStageThreeScenario(
             if (fuelItem == null || fuelItem.isBlank()) {
                 throw new IllegalArgumentException("tower.fuelItem is required.");
             }
+        }
+
+        public Tower withOverdrive(boolean value) {
+            return new Tower(
+                    fuel, fuelItem, activeFraction, value, researchEfficiencyBonus);
         }
     }
 

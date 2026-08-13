@@ -117,7 +117,9 @@ public final class TownStageThreeSimulator {
         for (int run = 0; run < runs; run++) {
             long runSeed = mixedSeed(seed, run);
             SplittableRandom random = new SplittableRandom(runSeed);
-            TownStageThreeState state = TownStageThreeState.initial(scenario);
+            TownStageThreeState state = TownStageThreeState.initial(
+                    scenario, parameters,
+                    new SplittableRandom(runSeed ^ 0x6A09E667F3BCC909L));
             double minimumHealth = Double.POSITIVE_INFINITY;
             double minimumMental = Double.POSITIVE_INFINITY;
             TownStageThreeModel.DayResult finalDay = null;

@@ -13,6 +13,8 @@ package com.teammoeg.frostedheart.content.town.model;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.teammoeg.frostedheart.content.town.buildings.hunting.HuntingDailyModel;
+import com.teammoeg.frostedheart.content.town.observation.TownObservationModel;
+import com.teammoeg.frostedheart.content.town.observation.TownSignalEvent;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -67,8 +69,8 @@ public final class TownStageFourSimulator {
         Execution execution = execute(
                 scenario, townScenario, data, parameters, layout, capacity, runs, seed);
         Summary summary = new Summary(
-                1, 4,
-                "current-climate-one-t1-sphere-multiday",
+                2, 4,
+                "current-climate-one-t1-sphere-multiday-with-events",
                 scenario.town().metadata(), runs, scenario.town().simulation().days(), seed,
                 List.of(
                         "Ordinary long-term climate uses current event probabilities, durations, Gaussian perturbations, Hermite interpolation and three-track max-positive plus min-negative combination.",
@@ -78,7 +80,8 @@ public final class TownStageFourSimulator {
                         "Heat inertia and random T1 level ramp are excluded: served hours use the configured steady T1 level and unserved hours immediately lose heat.",
                         "A partial daily tower service fraction is placed at the start of the following 24-hour interval; exact intra-day outage timing is not represented by stage-3 fuel settlement.",
                         "Building temperature is the spatial mean of current block temperatures over explicit interior voxels. Only the configured morning hour enters town settlement.",
-                        "Mine production remains temperature-independent; a cold hunting base skips production, while existing cold-house residents still consume food and receive temperature stress."),
+                        "Mine production remains temperature-independent; a cold hunting base skips production, while existing cold-house residents still consume food and receive temperature stress.",
+                        "Resident P10, work eligibility and next-morning exit risk use the shared gameplay observation kernel; discrete threshold crossings form crisis episodes without changing gameplay state."),
                 parameters,
                 data.sourceFiles(),
                 scenario,
@@ -93,6 +96,8 @@ public final class TownStageFourSimulator {
         Path dailyAggregatePath = output.resolve("daily-aggregate.csv");
         Path hourlyPath = output.resolve("hourly.csv");
         Path buildingsPath = output.resolve("buildings.csv");
+        Path observationsPath = output.resolve("observations.csv");
+        Path eventsPath = output.resolve("events.csv");
         Files.writeString(summaryPath, GSON.toJson(summary) + System.lineSeparator(),
                 StandardCharsets.UTF_8);
         writeRuns(runsPath, execution.rows());
@@ -100,9 +105,11 @@ public final class TownStageFourSimulator {
         writeDailyAggregate(dailyAggregatePath, execution.dailyAggregate());
         writeHourly(hourlyPath, execution.hourlyTrace());
         writeBuildings(buildingsPath, layout);
+        writeObservations(observationsPath, execution.firstRunObservations());
+        writeEvents(eventsPath, execution.firstRunEvents());
         return new SimulationRun(
                 output, summaryPath, runsPath, dailyPath, dailyAggregatePath,
-                hourlyPath, buildingsPath, summary);
+                hourlyPath, buildingsPath, observationsPath, eventsPath, summary);
     }
 
     static Execution execute(
@@ -115,9 +122,30 @@ public final class TownStageFourSimulator {
             int runs,
             long seed
     ) {
+        return execute(
+                scenario, townScenario, data, parameters, layout, capacityTheory,
+                runs, seed, false);
+    }
+
+    static Execution execute(
+            TownStageFourScenario scenario,
+            TownStageThreeScenario townScenario,
+            TownStageOneTwoData data,
+            TownModelParameters parameters,
+            TownStageFourModel.ThermalLayout layout,
+            CapacityTheory capacityTheory,
+            int runs,
+            long seed,
+            boolean captureTrials
+    ) {
         List<RunRow> rows = new ArrayList<>(runs);
         List<DailyTrace> daily = new ArrayList<>();
         List<HourlyTrace> hourlyTrace = new ArrayList<>();
+        List<TownStageFourObserver.DailyObservation> firstRunObservations = new ArrayList<>();
+        List<TownSignalEvent> firstRunEvents = new ArrayList<>();
+        List<TrialDailyTrace> trialDaily = new ArrayList<>();
+        List<TrialEvent> trialEvents = new ArrayList<>();
+        List<InitialResidentTrace> initialResidents = new ArrayList<>();
         int days = townScenario.simulation().days();
         DailyAccumulator dailyAggregate = new DailyAccumulator(days, runs);
         for (int run = 0; run < runs; run++) {
@@ -125,7 +153,20 @@ public final class TownStageFourSimulator {
             SplittableRandom townRandom = new SplittableRandom(runSeed ^ 0xA49E2D8391C34621L);
             TownStageFourModel.ClimateSeries climate = TownStageFourModel.climateSeries(
                     runSeed, scenario.climateBurnInDays(), days, parameters);
-            TownStageThreeState state = TownStageThreeState.initial(townScenario);
+            TownStageThreeState state = TownStageThreeState.initial(
+                    townScenario, parameters,
+                    new SplittableRandom(runSeed ^ 0x6A09E667F3BCC909L));
+            if (captureTrials) {
+                for (TownStageThreeState.ResidentState resident : state.residents()) {
+                    initialResidents.add(new InitialResidentTrace(
+                            run, runSeed, resident.id(), resident.age(), resident.ageDays(),
+                            resident.health(), resident.mental(), resident.strength(),
+                            resident.intelligence(), resident.miningProficiency(),
+                            resident.huntingProficiency()));
+                }
+            }
+            TownStageFourObserver observer = new TownStageFourObserver(
+                    days, state, townScenario, data, parameters);
             double previousTowerService = townScenario.tower().activeFraction() > 0.0
                     && state.amount(townScenario.tower().fuelItem()) >= 1.0
                     ? 1.0 : 0.0;
@@ -181,9 +222,16 @@ public final class TownStageFourSimulator {
                         TownStageFourModel.dailyEnvironment(morning, scenario, parameters);
                 if (environment.houseAcceptsNewResidents()) morningHouseWorkableDays++;
                 if (environment.huntingWorkable()) morningHuntingWorkableDays++;
+                List<TownObservationModel.ResidentStatus> beforeSettlement =
+                        TownStageFourObserver.copyStatuses(state);
                 TownStageThreeModel.DayResult result = TownStageThreeModel.settleDay(
                         state, townScenario, data, parameters, townRandom, environment);
-                dailyAggregate.accept(run, result);
+                observer.observeDay(
+                        day, beforeSettlement, state, result, environment,
+                        morning.climateTemperatureCelsius()
+                                < capacityTheory.fullyCoveredMinimumClimateCelsius());
+                TownStageFourObserver.DailyObservation observation = observer.latestObservation();
+                dailyAggregate.accept(run, result, observation);
                 previousTowerService = result.towerServiceFraction();
                 finalDay = result;
                 if (run == 0) {
@@ -197,8 +245,34 @@ public final class TownStageFourSimulator {
                             result.foodSatisfaction(), result.foodReserveDays(), result.fuelReserveDays(),
                             result.towerServiceFraction(), result.minimumHealth(), result.minimumMental()));
                 }
+                if (captureTrials) {
+                    trialDaily.add(new TrialDailyTrace(
+                            run, runSeed, day, morning.climateTemperatureCelsius(),
+                            environment.houseTemperatureCelsius(),
+                            morning.building("hunt").temperatureCelsius(),
+                            result.towerServiceFraction(), result.population(),
+                            result.cumulativeDeaths(), countAge(state, 0), countAge(state, 1),
+                            countAge(state, 2), countAge(state, 3), result.assignedMiners(),
+                            result.assignedHunters(), result.miningSwe(), result.huntingSwe(),
+                            result.foodSatisfaction(), result.foodReserveDays(), result.fuelReserveDays(),
+                            observation.averageHealth(), observation.p10Health(),
+                            observation.averageMental(), observation.p10Mental(),
+                            observation.unableToWorkCount(), observation.exitRiskCount(),
+                            observation.adverseEventCount(), observation.residentExits(),
+                            observation.crisisActive()));
+                }
             }
             if (finalDay == null) throw new IllegalStateException("Stage-4 simulation has no days.");
+            TownStageFourObserver.RunMetrics observationMetrics = observer.finish();
+            if (run == 0) {
+                firstRunObservations.addAll(observer.observations());
+                firstRunEvents.addAll(observer.events());
+            }
+            if (captureTrials) {
+                for (TownSignalEvent event : observer.events()) {
+                    trialEvents.add(new TrialEvent(run, runSeed, event));
+                }
+            }
             int hours = days * 24;
             rows.add(new RunRow(
                     run, runSeed, finalDay.population(), state.deaths(),
@@ -214,11 +288,18 @@ public final class TownStageFourSimulator {
                     state.deaths() == 0,
                     state.deaths() == 0
                             && state.firstFoodShortageDay() == null
-                            && state.firstFuelShortageDay() == null));
+                            && state.firstFuelShortageDay() == null,
+                    observationMetrics));
         }
         return new Execution(
                 List.copyOf(rows), List.copyOf(daily), dailyAggregate.finish(),
-                List.copyOf(hourlyTrace));
+                List.copyOf(hourlyTrace), List.copyOf(firstRunObservations),
+                List.copyOf(firstRunEvents), List.copyOf(trialDaily),
+                List.copyOf(trialEvents), List.copyOf(initialResidents));
+    }
+
+    private static int countAge(TownStageThreeState state, int age) {
+        return (int) state.residents().stream().filter(resident -> resident.age() == age).count();
     }
 
     static CapacityTheory capacityTheory(
@@ -264,6 +345,13 @@ public final class TownStageFourSimulator {
                 .filter(row -> row.firstFoodShortageDay() != null).count();
         long fuelShortage = rows.stream()
                 .filter(row -> row.firstFuelShortageDay() != null).count();
+        long crisisRuns = rows.stream()
+                .filter(row -> row.observationMetrics().crisisEpisodeCount() > 0).count();
+        long exitRuns = rows.stream().filter(row -> row.deaths() > 0).count();
+        long warnedExitRuns = rows.stream()
+                .filter(row -> row.observationMetrics().firstExitWarningLeadDays() > 0).count();
+        long unrecoveredRuns = rows.stream()
+                .filter(row -> row.observationMetrics().unrecoveredEpisode()).count();
         return new AggregateSummary(
                 fraction(survived, rows.size()), wilson95(survived, rows.size()),
                 fraction(noShortage, rows.size()), wilson95(noShortage, rows.size()),
@@ -279,7 +367,38 @@ public final class TownStageFourSimulator {
                 statistics(rows.stream().mapToDouble(RunRow::huntingWorkableHourFraction).toArray()),
                 statistics(rows.stream().mapToDouble(RunRow::morningHouseWorkableDayFraction).toArray()),
                 statistics(rows.stream().mapToDouble(RunRow::morningHuntingWorkableDayFraction).toArray()),
-                statistics(rows.stream().mapToDouble(RunRow::towerStarvedHours).toArray()));
+                statistics(rows.stream().mapToDouble(RunRow::towerStarvedHours).toArray()),
+                statistics(rows.stream().mapToDouble(row -> row.observationMetrics().minimumAverageHealth()).toArray()),
+                statistics(rows.stream().mapToDouble(row -> row.observationMetrics().minimumP10Health()).toArray()),
+                statistics(rows.stream().mapToDouble(row -> row.observationMetrics().minimumAverageMental()).toArray()),
+                statistics(rows.stream().mapToDouble(row -> row.observationMetrics().minimumP10Mental()).toArray()),
+                statistics(rows.stream().mapToDouble(row -> row.observationMetrics().maximumUnableToWorkFraction()).toArray()),
+                statistics(rows.stream().mapToDouble(row -> row.observationMetrics().maximumExitRiskFraction()).toArray()),
+                statistics(rows.stream().mapToDouble(row -> row.observationMetrics().minimumFoodReserveDays()).toArray()),
+                statistics(rows.stream().mapToDouble(row -> row.observationMetrics().minimumFuelReserveDays()).toArray()),
+                statistics(rows.stream().mapToDouble(row -> row.observationMetrics().maximumFoodDrawdownDays()).toArray()),
+                statistics(rows.stream().mapToDouble(row -> row.observationMetrics().maximumFuelDrawdownDays()).toArray()),
+                statistics(rows.stream().mapToDouble(row -> row.observationMetrics().residentExitRatePer30Days()).toArray()),
+                statistics(rows.stream().mapToDouble(row -> row.observationMetrics().adverseSignalRatePer30Days()).toArray()),
+                statistics(rows.stream().mapToDouble(row -> row.observationMetrics().residentExitFanoFactor()).toArray()),
+                statistics(rows.stream().mapToDouble(row -> row.observationMetrics().adverseSignalFanoFactor()).toArray()),
+                statistics(rows.stream().mapToDouble(row -> row.observationMetrics().residentExitIntervalCv()).toArray()),
+                statistics(rows.stream().mapToDouble(row -> row.observationMetrics().crisisEpisodeCount()).toArray()),
+                statistics(rows.stream().mapToDouble(row -> row.observationMetrics().maximumEpisodeAffectedFraction()).toArray()),
+                fraction(crisisRuns, rows.size()),
+                fraction(exitRuns, rows.size()),
+                fraction(warnedExitRuns, exitRuns),
+                statistics(rows.stream()
+                        .map(RunRow::observationMetrics)
+                        .filter(metrics -> metrics.firstExitWarningLeadDays() >= 0)
+                        .mapToDouble(TownStageFourObserver.RunMetrics::firstExitWarningLeadDays)
+                        .toArray()),
+                statistics(rows.stream()
+                        .map(RunRow::observationMetrics)
+                        .filter(metrics -> metrics.recoveredEpisodeCount() > 0)
+                        .mapToDouble(TownStageFourObserver.RunMetrics::meanRecoveryDays)
+                        .toArray()),
+                fraction(unrecoveredRuns, rows.size()));
     }
 
     private static void writeRuns(Path path, List<RunRow> rows) throws IOException {
@@ -290,10 +409,20 @@ public final class TownStageFourSimulator {
                     + "hunting_workable_hour_fraction,morning_house_workable_day_fraction,"
                     + "morning_hunting_workable_day_fraction,tower_starved_hours,final_food_reserve_days,"
                     + "final_fuel_reserve_days,fuel_potential_coverage,food_potential_coverage,"
-                    + "survived,no_shortage\n");
+                    + "survived,no_shortage,minimum_average_health,minimum_p10_health,"
+                    + "minimum_average_mental,minimum_p10_mental,maximum_unable_to_work_fraction,"
+                    + "maximum_exit_risk_fraction,minimum_food_reserve_days,minimum_fuel_reserve_days,"
+                    + "maximum_food_drawdown_days,maximum_fuel_drawdown_days,"
+                    + "resident_exit_rate_per_30_days,adverse_signal_rate_per_30_days,"
+                    + "resident_exit_fano_factor,adverse_signal_fano_factor,resident_exit_interval_cv,"
+                    + "crisis_episode_count,maximum_episode_affected_fraction,"
+                    + "first_exit_warning_lead_days,recovered_episode_count,mean_recovery_days,"
+                    + "unrecovered_episode\n");
             for (RunRow row : rows) {
+                TownStageFourObserver.RunMetrics metrics = row.observationMetrics();
                 writer.write(String.format(Locale.ROOT,
-                        "%d,%d,%d,%d,%s,%s,%.9f,%.9f,%.9f,%.9f,%.9f,%.9f,%.9f,%.9f,%d,%.9f,%.9f,%.9f,%.9f,%s,%s%n",
+                        "%d,%d,%d,%d,%s,%s,%.9f,%.9f,%.9f,%.9f,%.9f,%.9f,%.9f,%.9f,%d,%.9f,%.9f,%.9f,%.9f,%s,%s,"
+                                + "%.9f,%.9f,%.9f,%.9f,%.9f,%.9f,%.9f,%.9f,%.9f,%.9f,%.9f,%.9f,%.9f,%.9f,%.9f,%d,%.9f,%d,%d,%.9f,%s%n",
                         row.run(), row.seed(), row.finalPopulation(), row.deaths(),
                         nullableInteger(row.firstFoodShortageDay()),
                         nullableInteger(row.firstFuelShortageDay()),
@@ -303,7 +432,18 @@ public final class TownStageFourSimulator {
                         row.morningHouseWorkableDayFraction(), row.morningHuntingWorkableDayFraction(),
                         row.towerStarvedHours(), row.finalFoodReserveDays(), row.finalFuelReserveDays(),
                         row.fuelPotentialCoverage(), row.foodPotentialCoverage(),
-                        row.survived(), row.noShortage()));
+                        row.survived(), row.noShortage(),
+                        metrics.minimumAverageHealth(), metrics.minimumP10Health(),
+                        metrics.minimumAverageMental(), metrics.minimumP10Mental(),
+                        metrics.maximumUnableToWorkFraction(), metrics.maximumExitRiskFraction(),
+                        metrics.minimumFoodReserveDays(), metrics.minimumFuelReserveDays(),
+                        metrics.maximumFoodDrawdownDays(), metrics.maximumFuelDrawdownDays(),
+                        metrics.residentExitRatePer30Days(), metrics.adverseSignalRatePer30Days(),
+                        metrics.residentExitFanoFactor(), metrics.adverseSignalFanoFactor(),
+                        metrics.residentExitIntervalCv(), metrics.crisisEpisodeCount(),
+                        metrics.maximumEpisodeAffectedFraction(), metrics.firstExitWarningLeadDays(),
+                        metrics.recoveredEpisodeCount(), metrics.meanRecoveryDays(),
+                        metrics.unrecoveredEpisode()));
             }
         }
     }
@@ -331,13 +471,37 @@ public final class TownStageFourSimulator {
     ) throws IOException {
         try (BufferedWriter writer = Files.newBufferedWriter(path, StandardCharsets.UTF_8)) {
             writer.write("day,mean_population,mean_deaths,food_reserve_p05,food_reserve_p50,"
-                    + "food_reserve_p95,fuel_reserve_p05,fuel_reserve_p50,fuel_reserve_p95\n");
+                    + "food_reserve_p95,fuel_reserve_p05,fuel_reserve_p50,fuel_reserve_p95,"
+                    + "food_reserve_trend_p05,food_reserve_trend_p50,food_reserve_trend_p95,"
+                    + "fuel_reserve_trend_p05,fuel_reserve_trend_p50,fuel_reserve_trend_p95,"
+                    + "average_health_p05,average_health_p50,average_health_p95,"
+                    + "p10_health_p05,p10_health_p50,p10_health_p95,"
+                    + "average_mental_p05,average_mental_p50,average_mental_p95,"
+                    + "p10_mental_p05,p10_mental_p50,p10_mental_p95,"
+                    + "unable_to_work_fraction_p05,unable_to_work_fraction_p50,unable_to_work_fraction_p95,"
+                    + "exit_risk_fraction_p05,exit_risk_fraction_p50,exit_risk_fraction_p95,"
+                    + "mean_adverse_event_count,mean_resident_exits,crisis_probability\n");
             for (DailyAggregate row : rows) {
                 writer.write(String.format(Locale.ROOT,
-                        "%d,%.9f,%.9f,%.9f,%.9f,%.9f,%.9f,%.9f,%.9f%n",
+                        "%d,%.9f,%.9f,%.9f,%.9f,%.9f,%.9f,%.9f,%.9f,"
+                                + "%.9f,%.9f,%.9f,%.9f,%.9f,%.9f,"
+                                + "%.9f,%.9f,%.9f,%.9f,%.9f,%.9f,"
+                                + "%.9f,%.9f,%.9f,%.9f,%.9f,%.9f,"
+                                + "%.9f,%.9f,%.9f,%.9f,%.9f,%.9f,"
+                                + "%.9f,%.9f,%.9f,%.9f,%.9f,%.9f%n",
                         row.day(), row.meanPopulation(), row.meanDeaths(),
                         row.foodReserve().p05(), row.foodReserve().p50(), row.foodReserve().p95(),
-                        row.fuelReserve().p05(), row.fuelReserve().p50(), row.fuelReserve().p95()));
+                        row.fuelReserve().p05(), row.fuelReserve().p50(), row.fuelReserve().p95(),
+                        row.foodReserveTrend().p05(), row.foodReserveTrend().p50(), row.foodReserveTrend().p95(),
+                        row.fuelReserveTrend().p05(), row.fuelReserveTrend().p50(), row.fuelReserveTrend().p95(),
+                        row.averageHealth().p05(), row.averageHealth().p50(), row.averageHealth().p95(),
+                        row.p10Health().p05(), row.p10Health().p50(), row.p10Health().p95(),
+                        row.averageMental().p05(), row.averageMental().p50(), row.averageMental().p95(),
+                        row.p10Mental().p05(), row.p10Mental().p50(), row.p10Mental().p95(),
+                        row.unableToWorkFraction().p05(), row.unableToWorkFraction().p50(),
+                        row.unableToWorkFraction().p95(), row.exitRiskFraction().p05(),
+                        row.exitRiskFraction().p50(), row.exitRiskFraction().p95(),
+                        row.meanAdverseEventCount(), row.meanResidentExits(), row.crisisProbability()));
             }
         }
     }
@@ -371,6 +535,43 @@ public final class TownStageFourSimulator {
         }
     }
 
+    private static void writeObservations(
+            Path path,
+            List<TownStageFourObserver.DailyObservation> rows
+    ) throws IOException {
+        try (BufferedWriter writer = Files.newBufferedWriter(path, StandardCharsets.UTF_8)) {
+            writer.write("day,population,cumulative_exits,average_health,p10_health,minimum_health,"
+                    + "average_mental,p10_mental,minimum_mental,unable_to_work_count,exit_risk_count,"
+                    + "food_reserve_days,food_reserve_trend_days_per_day,food_time_to_empty_days,"
+                    + "fuel_reserve_days,fuel_reserve_trend_days_per_day,fuel_time_to_empty_days,"
+                    + "adverse_event_count,resident_exits,crisis_active,episode_id\n");
+            for (TownStageFourObserver.DailyObservation row : rows) {
+                writer.write(String.format(Locale.ROOT,
+                        "%d,%d,%d,%.9f,%.9f,%.9f,%.9f,%.9f,%.9f,%d,%d,"
+                                + "%.9f,%.9f,%s,%.9f,%.9f,%s,%d,%d,%s,%d%n",
+                        row.day(), row.population(), row.cumulativeExits(),
+                        row.averageHealth(), row.p10Health(), row.minimumHealth(),
+                        row.averageMental(), row.p10Mental(), row.minimumMental(),
+                        row.unableToWorkCount(), row.exitRiskCount(), row.foodReserveDays(),
+                        row.foodReserveTrendDaysPerDay(), finiteCsv(row.foodTimeToEmptyDays()),
+                        row.fuelReserveDays(), row.fuelReserveTrendDaysPerDay(),
+                        finiteCsv(row.fuelTimeToEmptyDays()), row.adverseEventCount(),
+                        row.residentExits(), row.crisisActive(), row.episodeId()));
+            }
+        }
+    }
+
+    private static void writeEvents(Path path, List<TownSignalEvent> rows) throws IOException {
+        try (BufferedWriter writer = Files.newBufferedWriter(path, StandardCharsets.UTF_8)) {
+            writer.write("day,hour,type,severity,affected_count,episode_id,detail\n");
+            for (TownSignalEvent row : rows) {
+                writer.write(String.format(Locale.ROOT, "%d,%d,%s,%s,%d,%d,%s%n",
+                        row.day(), row.hour(), row.type(), row.severity(), row.affectedCount(),
+                        row.episodeId(), csvText(row.detail())));
+            }
+        }
+    }
+
     public static void printSummary(SimulationRun run) {
         Summary summary = run.summary();
         System.out.printf(Locale.ROOT,
@@ -398,6 +599,14 @@ public final class TownStageFourSimulator {
 
     private static String nullableInteger(Integer value) {
         return value == null ? "" : value.toString();
+    }
+
+    private static String finiteCsv(double value) {
+        return Double.isFinite(value) ? String.format(Locale.ROOT, "%.9f", value) : "";
+    }
+
+    private static String csvText(String value) {
+        return '"' + value.replace("\"", "\"\"") + '"';
     }
 
     static double divide(double numerator, double denominator) {
@@ -457,20 +666,59 @@ public final class TownStageFourSimulator {
         private final double[][] deaths;
         private final double[][] foodReserve;
         private final double[][] fuelReserve;
+        private final double[][] foodReserveTrend;
+        private final double[][] fuelReserveTrend;
+        private final double[][] averageHealth;
+        private final double[][] p10Health;
+        private final double[][] averageMental;
+        private final double[][] p10Mental;
+        private final double[][] unableToWorkFraction;
+        private final double[][] exitRiskFraction;
+        private final double[][] adverseEventCounts;
+        private final double[][] residentExits;
+        private final double[][] crisisActive;
 
         private DailyAccumulator(int days, int runs) {
             population = new double[days][runs];
             deaths = new double[days][runs];
             foodReserve = new double[days][runs];
             fuelReserve = new double[days][runs];
+            foodReserveTrend = new double[days][runs];
+            fuelReserveTrend = new double[days][runs];
+            averageHealth = new double[days][runs];
+            p10Health = new double[days][runs];
+            averageMental = new double[days][runs];
+            p10Mental = new double[days][runs];
+            unableToWorkFraction = new double[days][runs];
+            exitRiskFraction = new double[days][runs];
+            adverseEventCounts = new double[days][runs];
+            residentExits = new double[days][runs];
+            crisisActive = new double[days][runs];
         }
 
-        private void accept(int run, TownStageThreeModel.DayResult result) {
+        private void accept(
+                int run,
+                TownStageThreeModel.DayResult result,
+                TownStageFourObserver.DailyObservation observation
+        ) {
             int day = result.day();
             population[day][run] = result.population();
             deaths[day][run] = result.cumulativeDeaths();
             foodReserve[day][run] = result.foodReserveDays();
             fuelReserve[day][run] = result.fuelReserveDays();
+            foodReserveTrend[day][run] = observation.foodReserveTrendDaysPerDay();
+            fuelReserveTrend[day][run] = observation.fuelReserveTrendDaysPerDay();
+            averageHealth[day][run] = observation.averageHealth();
+            p10Health[day][run] = observation.p10Health();
+            averageMental[day][run] = observation.averageMental();
+            p10Mental[day][run] = observation.p10Mental();
+            int denominator = Math.max(1, observation.population());
+            unableToWorkFraction[day][run] =
+                    (double) observation.unableToWorkCount() / denominator;
+            exitRiskFraction[day][run] = (double) observation.exitRiskCount() / denominator;
+            adverseEventCounts[day][run] = observation.adverseEventCount();
+            residentExits[day][run] = observation.residentExits();
+            crisisActive[day][run] = observation.crisisActive() ? 1.0 : 0.0;
         }
 
         private List<DailyAggregate> finish() {
@@ -481,7 +729,14 @@ public final class TownStageFourSimulator {
                         Arrays.stream(population[day]).average().orElse(0.0),
                         Arrays.stream(deaths[day]).average().orElse(0.0),
                         statistics(foodReserve[day]),
-                        statistics(fuelReserve[day])));
+                        statistics(fuelReserve[day]),
+                        statistics(foodReserveTrend[day]), statistics(fuelReserveTrend[day]),
+                        statistics(averageHealth[day]), statistics(p10Health[day]),
+                        statistics(averageMental[day]), statistics(p10Mental[day]),
+                        statistics(unableToWorkFraction[day]), statistics(exitRiskFraction[day]),
+                        Arrays.stream(adverseEventCounts[day]).average().orElse(0.0),
+                        Arrays.stream(residentExits[day]).average().orElse(0.0),
+                        Arrays.stream(crisisActive[day]).average().orElse(0.0)));
             }
             return List.copyOf(result);
         }
@@ -491,7 +746,12 @@ public final class TownStageFourSimulator {
             List<RunRow> rows,
             List<DailyTrace> firstRunDaily,
             List<DailyAggregate> dailyAggregate,
-            List<HourlyTrace> hourlyTrace
+            List<HourlyTrace> hourlyTrace,
+            List<TownStageFourObserver.DailyObservation> firstRunObservations,
+            List<TownSignalEvent> firstRunEvents,
+            List<TrialDailyTrace> trialDaily,
+            List<TrialEvent> trialEvents,
+            List<InitialResidentTrace> initialResidents
     ) {
     }
 
@@ -503,6 +763,8 @@ public final class TownStageFourSimulator {
             Path dailyAggregatePath,
             Path hourlyPath,
             Path buildingsPath,
+            Path observationsPath,
+            Path eventsPath,
             Summary summary
     ) {
     }
@@ -574,7 +836,30 @@ public final class TownStageFourSimulator {
             Distribution huntingWorkableHourFraction,
             Distribution morningHouseWorkableDayFraction,
             Distribution morningHuntingWorkableDayFraction,
-            Distribution towerStarvedHours
+            Distribution towerStarvedHours,
+            Distribution minimumAverageHealth,
+            Distribution minimumP10Health,
+            Distribution minimumAverageMental,
+            Distribution minimumP10Mental,
+            Distribution maximumUnableToWorkFraction,
+            Distribution maximumExitRiskFraction,
+            Distribution minimumFoodReserveDays,
+            Distribution minimumFuelReserveDays,
+            Distribution maximumFoodDrawdownDays,
+            Distribution maximumFuelDrawdownDays,
+            Distribution residentExitRatePer30Days,
+            Distribution adverseSignalRatePer30Days,
+            Distribution residentExitFanoFactor,
+            Distribution adverseSignalFanoFactor,
+            Distribution residentExitIntervalCv,
+            Distribution crisisEpisodeCount,
+            Distribution maximumEpisodeAffectedFraction,
+            double crisisProbability,
+            double residentExitProbability,
+            double priorWarningProbabilityAmongExitRuns,
+            Distribution firstExitWarningLeadDays,
+            Distribution meanRecoveryDays,
+            double unrecoveredEpisodeProbability
     ) {
     }
 
@@ -611,7 +896,8 @@ public final class TownStageFourSimulator {
             double fuelPotentialCoverage,
             double foodPotentialCoverage,
             boolean survived,
-            boolean noShortage
+            boolean noShortage,
+            TownStageFourObserver.RunMetrics observationMetrics
     ) {
     }
 
@@ -621,7 +907,18 @@ public final class TownStageFourSimulator {
             double meanPopulation,
             double meanDeaths,
             Distribution foodReserve,
-            Distribution fuelReserve
+            Distribution fuelReserve,
+            Distribution foodReserveTrend,
+            Distribution fuelReserveTrend,
+            Distribution averageHealth,
+            Distribution p10Health,
+            Distribution averageMental,
+            Distribution p10Mental,
+            Distribution unableToWorkFraction,
+            Distribution exitRiskFraction,
+            double meanAdverseEventCount,
+            double meanResidentExits,
+            double crisisProbability
     ) {
     }
 
@@ -658,6 +955,57 @@ public final class TownStageFourSimulator {
             double huntingTemperatureCelsius,
             boolean houseWorkable,
             boolean huntingWorkable
+    ) {
+    }
+
+    public record TrialDailyTrace(
+            int run,
+            long seed,
+            int day,
+            double morningClimateCelsius,
+            double houseTemperatureCelsius,
+            double huntingTemperatureCelsius,
+            double towerService,
+            int population,
+            int cumulativeDeaths,
+            int infants,
+            int children,
+            int adults,
+            int elders,
+            int miners,
+            int hunters,
+            double miningSwe,
+            double huntingSwe,
+            double foodSatisfaction,
+            double foodReserveDays,
+            double fuelReserveDays,
+            double averageHealth,
+            double p10Health,
+            double averageMental,
+            double p10Mental,
+            int unableToWorkCount,
+            int exitRiskCount,
+            int adverseEventCount,
+            int residentExits,
+            boolean crisisActive
+    ) {
+    }
+
+    public record TrialEvent(int run, long seed, TownSignalEvent event) {
+    }
+
+    public record InitialResidentTrace(
+            int run,
+            long seed,
+            String residentId,
+            int age,
+            int ageDays,
+            double health,
+            double mental,
+            double strength,
+            double intelligence,
+            double miningProficiency,
+            double huntingProficiency
     ) {
     }
 }

@@ -589,6 +589,59 @@ public final class TownStageZeroAudit {
                 "proficiency-point/workday", source, "RESIDENT_PROFICIENCY_GROWTH_AT_ZERO_PER_WORKDAY", "RESIDENT_PROGRESSION.proficiencyGrowthAtZeroPerWorkday");
         addShared(values, "residents.minimumProficiencyGrowthPerWorkday", residents.minimumProficiencyGrowthPerWorkday(),
                 "proficiency-point/workday", source, "RESIDENT_MINIMUM_PROFICIENCY_GROWTH_PER_WORKDAY", "RESIDENT_PROGRESSION.minimumProficiencyGrowthPerWorkday");
+        TownModelParameters.ResidentGenerationParameters generation = residents.generation();
+        addShared(values, "residents.generation.initialHealth", generation.initialHealth(),
+                "health", source, "RESIDENT_INITIAL_HEALTH", "RESIDENT_GENERATION.initialHealth");
+        addShared(values, "residents.generation.initialMental", generation.initialMental(),
+                "mental", source, "RESIDENT_INITIAL_MENTAL", "RESIDENT_GENERATION.initialMental");
+        addShared(values, "residents.generation.attributeSampleCount", generation.attributeSampleCount(),
+                "sample", source, "RESIDENT_ATTRIBUTE_SAMPLE_COUNT", "RESIDENT_GENERATION.attributeSampleCount");
+        addShared(values, "residents.generation.infantStrengthCenter", generation.infantStrengthCenter(),
+                "strength", source, "RESIDENT_INFANT_STRENGTH_CENTER", "RESIDENT_GENERATION.infantStrengthCenter");
+        addShared(values, "residents.generation.infantIntelligenceCenter", generation.infantIntelligenceCenter(),
+                "intelligence", source, "RESIDENT_INFANT_INTELLIGENCE_CENTER", "RESIDENT_GENERATION.infantIntelligenceCenter");
+        addShared(values, "residents.generation.childStrengthCenter", generation.childStrengthCenter(),
+                "strength", source, "RESIDENT_CHILD_STRENGTH_CENTER", "RESIDENT_GENERATION.childStrengthCenter");
+        addShared(values, "residents.generation.childIntelligenceCenter", generation.childIntelligenceCenter(),
+                "intelligence", source, "RESIDENT_CHILD_INTELLIGENCE_CENTER", "RESIDENT_GENERATION.childIntelligenceCenter");
+        addShared(values, "residents.generation.adultStrengthCenter", generation.adultStrengthCenter(),
+                "strength", source, "RESIDENT_ADULT_STRENGTH_CENTER", "RESIDENT_GENERATION.adultStrengthCenter");
+        addShared(values, "residents.generation.adultIntelligenceCenter", generation.adultIntelligenceCenter(),
+                "intelligence", source, "RESIDENT_ADULT_INTELLIGENCE_CENTER", "RESIDENT_GENERATION.adultIntelligenceCenter");
+        addShared(values, "residents.generation.elderStrengthCenter", generation.elderStrengthCenter(),
+                "strength", source, "RESIDENT_ELDER_STRENGTH_CENTER", "RESIDENT_GENERATION.elderStrengthCenter");
+        addShared(values, "residents.generation.elderIntelligenceCenter", generation.elderIntelligenceCenter(),
+                "intelligence", source, "RESIDENT_ELDER_INTELLIGENCE_CENTER", "RESIDENT_GENERATION.elderIntelligenceCenter");
+        addShared(values, "residents.generation.nonAdultAttributeSpread", generation.nonAdultAttributeSpread(),
+                "relative-width", source, "RESIDENT_NON_ADULT_ATTRIBUTE_SPREAD", "RESIDENT_GENERATION.nonAdultAttributeSpread");
+        addShared(values, "residents.generation.adultAttributeSpread", generation.adultAttributeSpread(),
+                "relative-width", source, "RESIDENT_ADULT_ATTRIBUTE_SPREAD", "RESIDENT_GENERATION.adultAttributeSpread");
+        addShared(values, "residents.generation.infantInitialProficiency", generation.infantInitialProficiency(),
+                "proficiency", source, "RESIDENT_INFANT_INITIAL_PROFICIENCY", "RESIDENT_GENERATION.infantInitialProficiency");
+        addShared(values, "residents.generation.childMaximumInitialProficiency", generation.childMaximumInitialProficiency(),
+                "proficiency", source, "RESIDENT_CHILD_MAXIMUM_INITIAL_PROFICIENCY", "RESIDENT_GENERATION.childMaximumInitialProficiency");
+        addShared(values, "residents.generation.adultMaximumInitialProficiency", generation.adultMaximumInitialProficiency(),
+                "proficiency", source, "RESIDENT_ADULT_MAXIMUM_INITIAL_PROFICIENCY", "RESIDENT_GENERATION.adultMaximumInitialProficiency");
+        addShared(values, "residents.generation.elderMinimumInitialProficiency", generation.elderMinimumInitialProficiency(),
+                "proficiency", source, "RESIDENT_ELDER_MINIMUM_INITIAL_PROFICIENCY", "RESIDENT_GENERATION.elderMinimumInitialProficiency");
+        addShared(values, "residents.generation.elderMaximumInitialProficiency", generation.elderMaximumInitialProficiency(),
+                "proficiency", source, "RESIDENT_ELDER_MAXIMUM_INITIAL_PROFICIENCY", "RESIDENT_GENERATION.elderMaximumInitialProficiency");
+        addShared(values, "residents.generation.adultAgeRangeDaysExclusive", generation.adultAgeRangeDaysExclusive(),
+                "day", source, "RESIDENT_ADULT_AGE_RANGE_DAYS_EXCLUSIVE", "RESIDENT_GENERATION.adultAgeRangeDaysExclusive");
+        addAgeWeights(values, "residents.generation.ageWeights", generation.ageWeights(), source,
+                "RESIDENT_AGE_WEIGHT_", "REFUGEE_SPAWN.weight");
+        addAgeWeights(values, "residents.generation.fallbackAgeWeights", generation.fallbackAgeWeights(), source,
+                "RESIDENT_FALLBACK_AGE_WEIGHT_", "RESIDENT_GENERATION.fallbackWeight");
+        addShared(values, "residents.generation.coldSurvivorHealthMinimum", generation.coldSurvivorHealthMinimum(),
+                "health", source, "RESIDENT_COLD_SURVIVOR_HEALTH_MINIMUM", "RESIDENT_GENERATION.coldSurvivorHealthMinimum");
+        addShared(values, "residents.generation.coldSurvivorHealthMaximum", generation.coldSurvivorHealthMaximum(),
+                "health", source, "RESIDENT_COLD_SURVIVOR_HEALTH_MAXIMUM", "RESIDENT_GENERATION.coldSurvivorHealthMaximum");
+        addShared(values, "residents.generation.coldSurvivorAttributeBonus", generation.coldSurvivorAttributeBonus(),
+                "attribute", source, "RESIDENT_COLD_SURVIVOR_ATTRIBUTE_BONUS", "RESIDENT_GENERATION.coldSurvivorAttributeBonus");
+        addShared(values, "residents.generation.coldSurvivorProficiencyMultiplier", generation.coldSurvivorProficiencyMultiplier(),
+                "multiplier", source, "RESIDENT_COLD_SURVIVOR_PROFICIENCY_MULTIPLIER", "RESIDENT_GENERATION.coldSurvivorProficiencyMultiplier");
+        addShared(values, "residents.generation.coldSurvivorChance", generation.coldSurvivorChance(),
+                "probability", source, "RESIDENT_COLD_SURVIVOR_CHANCE", "REFUGEE_SPAWN.coldQualityChance");
         TownModelParameters.ResidentAgingParameters aging = residents.aging();
         addShared(values, "residents.aging.infantToChildDays", aging.infantToChildDays(),
                 "day", source, "RESIDENT_INFANT_TO_CHILD_DAYS", "RESIDENT_AGING.infantToChildDays");
@@ -618,6 +671,24 @@ public final class TownStageZeroAudit {
                 "strength/day", source, "RESIDENT_ELDER_STRENGTH_DECAY_PER_DAY", "RESIDENT_AGING.elderStrengthDecayPerDay");
         addShared(values, "residents.aging.elderStrengthFloor", aging.elderStrengthFloor(),
                 "strength", source, "RESIDENT_ELDER_STRENGTH_FLOOR", "RESIDENT_AGING.elderStrengthFloor");
+    }
+
+    private static void addAgeWeights(
+            List<ParameterValue> values,
+            String prefix,
+            TownModelParameters.ResidentAgeWeightParameters weights,
+            Path source,
+            String constantPrefix,
+            String configPrefix
+    ) {
+        addShared(values, prefix + ".infant", weights.infant(), "relative-weight", source,
+                constantPrefix + "INFANT", configPrefix + "Infant");
+        addShared(values, prefix + ".child", weights.child(), "relative-weight", source,
+                constantPrefix + "CHILD", configPrefix + "Child");
+        addShared(values, prefix + ".adult", weights.adult(), "relative-weight", source,
+                constantPrefix + "ADULT", configPrefix + "Adult");
+        addShared(values, prefix + ".elder", weights.elder(), "relative-weight", source,
+                constantPrefix + "ELDER", configPrefix + "Elder");
     }
 
     private static void addBuildingScoringParameters(
@@ -709,6 +780,8 @@ public final class TownStageZeroAudit {
                 "CLIMATE_COLD_PRELUDE_PEAK_CELSIUS", "coldPreludePeakCelsius");
         addClimateShared(values, "climate.warmPeakCelsius", climate.warmPeakCelsius(), "celsius", source,
                 "CLIMATE_WARM_PEAK_CELSIUS", "warmPeakCelsius");
+        addClimateShared(values, "climate.forecastSensitivityCelsius", climate.forecastSensitivityCelsius(), "celsius", source,
+                "CLIMATE_FORECAST_SENSITIVITY_CELSIUS", "forecastSensitivityCelsius");
         addClimateShared(values, "climate.eventNoiseStandardDeviationCelsius", climate.eventNoiseStandardDeviationCelsius(), "celsius", source,
                 "CLIMATE_EVENT_NOISE_STANDARD_DEVIATION_CELSIUS", "climateEventNoiseStandardDeviationCelsius");
         addClimateShared(values, "climate.warmNoiseScale", climate.warmNoiseScale(), "dimensionless", source,
