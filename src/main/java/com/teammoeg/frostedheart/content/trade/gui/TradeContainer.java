@@ -194,7 +194,9 @@ public class TradeContainer extends AbstractContainerMenu {
     }
 
     public boolean stillValid(Player playerIn) {
-        return ve.getTradingPlayer() == playerIn;
+        // 无实体居民：无 getTradingPlayer 实体支撑，退化为"仍存活 + 菜单未切换"
+        return ve == null ? (playerIn.isAlive() && playerIn.containerMenu == this)
+                : ve.getTradingPlayer() == playerIn;
     }
 
     public void commitTrade(ServerPlayer pe) {
@@ -209,7 +211,8 @@ public class TradeContainer extends AbstractContainerMenu {
                 for (BuyData bd : policy.getBuys()) {
                     if (bd.getItem().test(is)) {
                         int cnt = Math.min(is.getCount(), bd.getStore());
-                        if (ve.wantsToPickUp(is)) {
+                        // 无实体居民没有背包：物品不入实体背包（直接消耗 / 由居民模拟系统处理）
+                        if (ve != null && ve.wantsToPickUp(is)) {
                             ve.getInventory().addItem(ItemHandlerHelper.copyStackWithSize(is, cnt));
                         }
                         FHMain.LOGGER.debug(TRADE,"Provided: "+is+" actual:"+cnt+" stock:"+bd.getStore()+" per:"+bd.getPrice());
@@ -301,7 +304,9 @@ public class TradeContainer extends AbstractContainerMenu {
 
     @Override
     public void removed(Player pPlayer) {
-        this.ve.setTradingPlayer(null);
+        // 无实体居民无需清理交易状态
+        if (ve != null)
+            this.ve.setTradingPlayer(null);
         if (!pPlayer.isAlive()
                 || pPlayer instanceof ServerPlayer && ((ServerPlayer) pPlayer).hasDisconnected()) {
             for (int j = 0; j < inv.getSlots(); ++j) {

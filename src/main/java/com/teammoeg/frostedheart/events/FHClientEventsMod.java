@@ -53,6 +53,7 @@ import com.teammoeg.frostedheart.content.climate.tooltips.FoodTempStats;
 import com.teammoeg.frostedheart.content.climate.tooltips.PlantTempStats;
 import com.teammoeg.frostedheart.content.health.tooltip.FoodNutritionStats;
 import com.teammoeg.frostedheart.content.scenario.client.gui.layered.font.KGlyphProvider;
+import com.teammoeg.frostedheart.content.town.citizen.client.FakeCitizenRenderer;
 import com.teammoeg.frostedheart.content.town.resident.WanderingRefugeeRenderer;
 import com.teammoeg.frostedheart.content.ui.FHClickActions;
 import com.teammoeg.frostedheart.content.ui.dialogue.DialogueOverlay;
@@ -439,6 +440,7 @@ public class FHClientEventsMod {
     public static void registerRenderers(EntityRenderersEvent.RegisterRenderers event) {
         event.registerEntityRenderer(FHEntityTypes.CURIOSITY.get(), CuriosityEntityRenderer::new);
         event.registerEntityRenderer(FHEntityTypes.WANDERING_REFUGEE.get(), WanderingRefugeeRenderer::new);
+        event.registerEntityRenderer(FHEntityTypes.FAKE_CITIZEN.get(), FakeCitizenRenderer::new);
         event.registerEntityRenderer(FHEntityTypes.SLED.get(), SledEntityRenderer::new);
         event.registerEntityRenderer(FHEntityTypes.CONTAINER_ENTITY.get(), ContainerHolderEntityRenderer::new);
         event.registerEntityRenderer(FHEntityTypes.GUNPOWDER_BARREL_ENTITY.get(), ThrownBlockRenderer::new);

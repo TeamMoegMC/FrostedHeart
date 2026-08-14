@@ -158,11 +158,43 @@ public class TeamTown implements ITown, ITownWithResidents, ITownWithBuildings {
             removeResident(resident);
             return false;
         }
+        // 门面 fire（唯一触发点）：put 先于房屋分配，map 钩子链（DataSyncCache 专用）
+        // 首次触发时 housePos 尚为空，模拟不为其建条目；分配完成后这里经门面单次
+        // 通知（锚点必已就绪、无双触发），模拟立即出生居民（事件驱动，替代原 1Hz
+        // 对齐延迟）。
+        data.fireResidentAdded(resident);
         return true;
     }
 
     public boolean addResident(String firstName, String lastName) {
         return addResident(new Resident(firstName, lastName));
+    }
+
+    /**
+     * 调试/非玩家镇专用：直接加入一名居民并预置房屋锚点
+     * （绕过 canAddResident/allocateHouse——无需任何建筑，housePos 即生成锚点）。
+     * 直写 residents map 后经门面 fire 单次通知——housePos 已就绪，模拟立即按锚点
+     * 出生条目（模拟 adopt 注册后）；未接管时由调度器接管的全量对账补建。
+     * <p>
+     * Debug / non-player-town helper: adds a resident directly with a preset
+     * house anchor (bypasses canAddResident/allocateHouse — no buildings
+     * needed; housePos is the spawn anchor). After the direct map write the
+     * facade fires a single notification — the anchor is already set, so the
+     * attached simulation spawns the entry at the anchor immediately (once
+     * adopted); before adoption the scheduler's takeover reconciliation
+     * rebuilds it.
+     *
+     * @param firstName 名 / first name
+     * @param lastName 姓 / last name
+     * @param anchor 生成锚点（房屋位置） / spawn anchor (house position)
+     * @return 新居民 / the new resident
+     */
+    public Resident debugAddResident(String firstName, String lastName, BlockPos anchor) {
+        Resident resident = new Resident(firstName, lastName);
+        resident.setHousePos(anchor);
+        data.residents.put(resident.getUUID(), resident);
+        data.fireResidentAdded(resident);
+        return resident;
     }
 
     /**
@@ -251,6 +283,9 @@ public class TeamTown implements ITown, ITownWithResidents, ITownWithBuildings {
             );
         }
         data.residents.remove(id);
+        // 门面 fire：集合移除完成后单次通知（模拟立即 despawn 条目；幂等——
+        // 未见过的居民忽略，如 addResident 无房回滚时从未出生过条目）。
+        data.fireResidentRemoved(resident);
         return true;
     }
 

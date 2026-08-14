@@ -39,6 +39,7 @@ import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * A simulator built on Alphagem618's heat conducting model
@@ -183,8 +184,8 @@ public class SurroundingTemperatureSimulator {
     private final FastRandom rnd;  // 无锁随机数（xoroshiro128+，见内部类注释）
 
     // BlockState → CachedBlockInfo 去重缓存（实例级，避免跨世界污染）
-    private final IdentityHashMap<BlockState, CachedBlockInfo> stateCache =
-            new IdentityHashMap<>(256);
+    private static final ConcurrentHashMap<BlockState, CachedBlockInfo> GLOBAL_CACHE = new ConcurrentHashMap<>(256);
+
 
     // ======================== 构造器 ========================
 
@@ -422,32 +423,25 @@ public class SurroundingTemperatureSimulator {
      * @param localX/Y/Z 相对 origin 的坐标（用于 getBlock）
      * @param worldX/Y/Z 世界坐标（用于 getCollisionShape）
      */
+    // 两个全局单例：空气 和 无温度全满方块
+    private static final CachedBlockInfo AIR_INFO = new CachedBlockInfo(EMPTY, 0f);
+    private static final CachedBlockInfo FULL_ZERO_TEMP_INFO = new CachedBlockInfo(FULL, 0f);
     private CachedBlockInfo computeBlockInfo(int localX, int localY, int localZ,
                                              int worldX, int worldY, int worldZ) {
         BlockState bs = getBlock(localX, localY, localZ);
 
-        // BlockState 在 MC 中是单例，IdentityHashMap 用 == 比较，最快
-        CachedBlockInfo cached = stateCache.get(bs);
-        if (cached != null) return cached;
-
-        // 计算碰撞形状
-        VoxelShape shape;
+        // 1. 空气直接返回单例（不需要缓存，因为空气种类极少，且 isAir() 几乎零开销）
         if (bs.isAir()) {
-            shape = EMPTY;
-        } else if (bs.getBlock().hasDynamicShape()) {
-            // 动态形状无法按 state 缓存，保守视为实心
-            shape = FULL;
-        } else {
-            try {
-                // null BlockGetter：原代码设计如此，vanilla 仅查询 shape 缓存
-                shape = bs.getCollisionShape(null, new BlockPos(worldX, worldY, worldZ));
-            } catch (Exception ex) {
-                ex.printStackTrace();
-                shape = FULL;
-            }
+            return AIR_INFO;
         }
 
-        // 计算温度
+        // 2. 快速查全局缓存（无锁读，命中则直接返回，完全避免后续计算）
+        CachedBlockInfo cached = GLOBAL_CACHE.get(bs);
+        if (cached != null) {
+            return cached;
+        }
+
+        // 3. 缓存未命中 —— 计算温度
         float temp = 0f;
         BlockTempData b = BlockTempData.getData(bs.getBlock());
         if (b != null) {
@@ -469,10 +463,34 @@ public class SurroundingTemperatureSimulator {
             }
         }
 
-        cached = new CachedBlockInfo(shape, temp);
-        stateCache.put(bs, cached);
-        return cached;
+        // 4. 计算形状
+        VoxelShape shape;
+        if (bs.getBlock().hasDynamicShape()) {
+            shape = FULL;
+        } else {
+            try {
+                shape = bs.getCollisionShape(null, new BlockPos(worldX, worldY, worldZ));
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                shape = FULL;
+            }
+        }
+
+        // 5. 根据结果选择应该存入缓存的“值”
+        final CachedBlockInfo result;
+        if (shape == EMPTY) {
+            result = AIR_INFO;               // 形状为空 → 共享空气单例
+        } else if (shape == FULL && temp == 0f) {
+            result = FULL_ZERO_TEMP_INFO;    // 零温全满 → 共享全满零温单例
+        } else {
+            result = new CachedBlockInfo(shape, temp); // 有温度或复杂形状 → 独立对象
+        }
+
+        // 6. 尝试原子性地存入缓存（如果已有其他线程抢先，则使用已有的值）
+        CachedBlockInfo existing = GLOBAL_CACHE.putIfAbsent(bs, result);
+        return existing != null ? existing : result;
     }
+
 
     // ======================== 碰撞辅助 ========================
 

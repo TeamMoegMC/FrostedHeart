@@ -112,6 +112,39 @@ public class Resident {
         }
     }
 
+    // ===== 居民模拟绑定（transient，不被 codec 序列化；重启后由城镇接管 rebind 重建）=====
+    // (transient, not codec-serialized; rebuilt by the town takeover rebind after restart)
+    @Getter(AccessLevel.NONE)
+    private transient int simId = -1;
+
+    /**
+     * 该居民绑定的模拟条目 id；-1 = 未绑定（尚未被模拟系统接管）。
+     * 单一居民概念：城镇数据里的 Resident 就是模拟居民，此 id 是它在
+     * 模拟中的会话/网络键（反向绑定在模拟条目的 uuidHi/uuidLo）。
+     * <p>
+     * The sim entry id this resident is bound to; -1 = unbound.
+     * One resident concept: the Resident in town data IS the simulated citizen;
+     * this id is its session/wire key in the simulation (the reverse binding
+     * lives in the sim entry's uuidHi/uuidLo).
+     *
+     * @return 模拟条目 id / sim entry id
+     */
+    public int getSimId() {
+        return this.simId;
+    }
+
+    /**
+     * 设置模拟绑定（仅由城镇模拟数据 TownSimData 的事件回调与接管恢复调用）。
+     * <p>
+     * Sets the sim binding (called only by the town sim data's event callbacks
+     * and takeover restore).
+     *
+     * @param simId 模拟条目 id；-1 解除 / sim entry id; -1 unbinds
+     */
+    public void setSimId(int simId) {
+        this.simId = simId;
+    }
+
     public void setFirstName(String firstName) {
         if (Objects.equals(this.firstName, firstName)) return;
         this.firstName = firstName;

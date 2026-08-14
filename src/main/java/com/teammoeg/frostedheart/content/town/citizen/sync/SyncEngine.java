@@ -1,0 +1,345 @@
+/*
+ * Copyright (c) 2026 TeamMoeg
+ *
+ * This file is part of Frosted Heart.
+ *
+ * Frosted Heart is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, version 3.
+ *
+ * Frosted Heart is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
+ *
+ */
+
+package com.teammoeg.frostedheart.content.town.citizen.sync;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+
+import com.teammoeg.frostedheart.FHNetwork;
+import com.teammoeg.frostedheart.content.town.citizen.sim.CitizenContainer;
+import com.teammoeg.frostedheart.content.town.citizen.sim.CitizenSim;
+import com.teammoeg.frostedheart.content.town.citizen.sim.CitizenSimScheduler;
+import com.teammoeg.frostedheart.content.town.citizen.sim.CitizenState;
+
+import it.unimi.dsi.fastutil.ints.IntArrayList;
+import it.unimi.dsi.fastutil.ints.IntList;
+import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
+import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+
+/**
+ * 网络同步引擎：AOI 兴趣管理 + Dead Reckoning 误差驱动发包 + 按距离分频 + 合包。
+ * <ul>
+ *   <li>AOI：每 {@value #AOI_REFRESH} tick 以玩家为中心 {@value #AOI_RADIUS} 格刷新可见集合，
+ *       进出触发 spawn/despawn 全量包；</li>
+ *   <li>Dead Reckoning：服务端镜像客户端外推模型，仅当真实位置与外推位置误差超过
+ *       {@value #ERROR_DIST} 方块（或方向/状态变化）时才将该居民标记为脏；匀速行走仅按档位心跳重锚；</li>
+	 * <li>分频：按最近观察者距离 32/64/+∞ 格分 4/8/20 tick 三档，按 stick 间隔错开避免尖峰；</li>
+ *   <li>合包：每人每 {@value #FLUSH_INTERVAL} tick 至多一个批包，chunk 分组，
+ *       单包最多 {@value #MAX_ENTRIES_PER_PACKET} 条（带宽预算）。</li>
+ * </ul>
+ * 规范模型（last-sent）为全体玩家共享的近似值：以"任一玩家收到"为更新时机，
+ * 远距玩家收到的条目可能略多于理论最小值，换取 O(居民数) 而非 O(居民数×玩家数) 的存储。
+ * <p>
+ * Network sync engine: AOI interest management + dead-reckoning error-driven
+ * sending + distance-tiered frequency + packet batching. See the Chinese list
+ * above for parameters. The canonical (last-sent) model is a shared
+ * approximation across players, updated when any player is sent an entry —
+ * trading slightly more entries for far players against O(citizens) instead of
+ * O(citizens × players) bookkeeping.
+ */
+public final class SyncEngine {
+
+	/** AOI 半径（方块） / AOI radius in blocks */
+	public static final int AOI_RADIUS = 96;
+	/** AOI 刷新周期（tick） / AOI refresh interval in ticks */
+	public static final int AOI_REFRESH = 20;
+	/** 增量发送周期（tick） / Delta flush interval in ticks */
+	public static final int FLUSH_INTERVAL = 4;
+	/** 单包条目上限（带宽预算） / Max entries per packet (bandwidth budget) */
+	public static final int MAX_ENTRIES_PER_PACKET = 240;
+	/** Dead Reckoning 误差阈值（方块） / Dead-reckoning error threshold in blocks */
+	private static final double ERROR_DIST = 0.3;
+	private static final int ERROR2 = (int) (ERROR_DIST * 1024) * (int) (ERROR_DIST * 1024);
+	/** 外推时间钳制（tick），防止长时间未更新导致溢出 / Extrapolation clamp in ticks, prevents overflow */
+	private static final long DT_CLAMP = 40;
+
+	/** 各玩家当前追踪的居民 id 集合 / Tracked citizen id sets per player */
+	private final Map<ServerPlayer, IntOpenHashSet> tracked = new HashMap<>();
+	/** 待广播的移除 id / Pending removal ids to broadcast */
+	private final IntList pendingRemoval = new IntArrayList();
+	/** 本 flush 周期内"脏且到期"的居民 id / Dirty-and-due ids in the current flush */
+	private final IntOpenHashSet due = new IntOpenHashSet();
+
+	/**
+	 * 记录居民被移除，下一 flush 向追踪者广播 despawn。
+	 * <p>
+	 * Records a citizen removal; the despawn is broadcast to trackers on the next flush.
+	 *
+	 * @param citizenId 稳定 id / stable id
+	 */
+	public void notifyRemoved(int citizenId) {
+		pendingRemoval.add(citizenId);
+	}
+
+	/**
+	 * 主同步入口，每 tick 由调度器调用。
+	 * <p>
+	 * Main sync entry, called by the scheduler every tick.
+	 *
+	 * @param sched 调度器 / the scheduler
+	 * @param level 维度 / the level
+	 * @param gameTime 当前游戏时间 / current game time
+	 */
+	public void flush(CitizenSimScheduler sched, ServerLevel level, long gameTime) {
+		List<ServerPlayer> players = level.players();
+		if (players.isEmpty()) {
+			tracked.clear();
+			return;
+		}
+		if (gameTime % AOI_REFRESH == 0)
+			refreshAOI(sched, players);
+		if (gameTime % FLUSH_INTERVAL == 0)
+			flushDeltas(sched, players, gameTime);
+	}
+
+	private void refreshAOI(CitizenSimScheduler sched, List<ServerPlayer> players) {
+		long aoi2 = (long) AOI_RADIUS * AOI_RADIUS;
+		// 清理已离线/跨维度的玩家
+		tracked.keySet().removeIf(p -> !players.contains(p));
+		for (ServerPlayer p : players) {
+			int pbx = p.getBlockX();
+			int pbz = p.getBlockZ();
+			IntOpenHashSet now = new IntOpenHashSet();
+			List<S2CCitizenSpawnPacket.Entry> spawns = new ArrayList<>();
+			IntOpenHashSet old = tracked.get(p);
+			// 遍历全部容器（每镇一份模拟 + 未托管容器），条目带各自容器的名字缓存
+			for (CitizenContainer c : sched.containers()) {
+				CitizenSim sim = c.sim();
+				int n = sim.size();
+				for (int i = 0; i < n; i++) {
+					long dx = (sim.px[i] >> 10) - pbx;
+					long dz = (sim.pz[i] >> 10) - pbz;
+					if (dx * dx + dz * dz > aoi2)
+						continue;
+					int id = sim.id[i];
+					now.add(id);
+					if (old != null && old.contains(id))
+						continue;
+					String name = c.getCitizenName(id);
+					if (name == null)
+						name = ""; // 未托管（命令）居民：客户端回退 id 派生名 / unmanaged (command) citizen: client falls back to the id-derived name
+					spawns.add(new S2CCitizenSpawnPacket.Entry(id, sim.px[i], sim.py[i], sim.pz[i], sim.yaw[i],
+							sim.state[i], name));
+				}
+			}
+			tracked.put(p, now);
+			IntList despawns = new IntArrayList();
+			if (old != null)
+				for (int id : old)
+					if (!now.contains(id))
+						despawns.add(id);
+			if (!spawns.isEmpty())
+				FHNetwork.INSTANCE.sendPlayer(p, new S2CCitizenSpawnPacket(spawns));
+			if (!despawns.isEmpty())
+				FHNetwork.INSTANCE.sendPlayer(p, new S2CCitizenDespawnPacket(despawns));
+		}
+	}
+
+	private void flushDeltas(CitizenSimScheduler sched, List<ServerPlayer> players, long gameTime) {
+		due.clear();
+		long aoi2 = (long) AOI_RADIUS * AOI_RADIUS;
+
+        // 缓存玩家坐标，避免循环中重复调用
+        int playerCount = players.size();
+        int[] pxs = new int[playerCount];
+        int[] pzs = new int[playerCount];
+        for (int j = 0; j < playerCount; j++) {
+            ServerPlayer p = players.get(j);
+            pxs[j] = p.getBlockX();
+            pzs[j] = p.getBlockZ();
+        }
+
+		// 遍历全部容器收集"脏且到期"条目（跨容器共享规范模型，id 全局唯一）
+		for (CitizenContainer c : sched.containers()) {
+			CitizenSim sim = c.sim();
+			int n = sim.size();
+			for (int i = 0; i < n; i++) {
+				// 最近观察者距离（未刷新 AOI 的间隙期也近似正确）
+				long minDist2 = Long.MAX_VALUE;
+                for (int j = 0; j < playerCount; j++) {
+                    long dx = (sim.px[i] >> 10) - pxs[j];
+                    long dz = (sim.pz[i] >> 10) - pzs[j];
+                    long d2 = dx * dx + dz * dz;
+                    if (d2 < minDist2) minDist2 = d2;
+                }
+                
+				if (minDist2 > aoi2)
+					continue;
+				int interval = tierInterval(minDist2);
+				if (!isDirty(sim, i, gameTime, interval))
+					continue;
+				// 按 stick 间隔判断（替代原 (gameTime+id) % interval 写法——
+				// 后者在外层每 4 tick 执行下，3/4 的居民仅 id%4==0 的能通过过滤，永远收不到增量包）
+				if (gameTime - sim.stick[i] < interval)
+					continue;
+				due.add(sim.id[i]);
+			}
+		}
+		// 广播移除
+		if (!pendingRemoval.isEmpty()) {
+			for (int k = 0; k < pendingRemoval.size(); k++) {
+				int id = pendingRemoval.getInt(k);
+				for (ServerPlayer p : players) {
+					IntOpenHashSet set = tracked.get(p);
+					if (set != null && set.remove(id))
+						FHNetwork.INSTANCE.sendPlayer(p,
+								new S2CCitizenDespawnPacket(new IntArrayList(new int[] { id })));
+				}
+			}
+			pendingRemoval.clear();
+		}
+		if (due.isEmpty())
+			return;
+		// 按玩家组包：chunk 分组 + 条目上限
+		for (ServerPlayer p : players) {
+			IntOpenHashSet set = tracked.get(p);
+			if (set == null || set.isEmpty())
+				continue;
+			Long2ObjectOpenHashMap<List<S2CCitizenBatchPacket.Entry>> byChunk = new Long2ObjectOpenHashMap<>();
+			int count = 0;
+			for (int id : set) {
+				if (!due.contains(id))
+					continue;
+				CitizenContainer c = sched.findById(id);
+				if (c == null)
+					continue;
+				CitizenSim sim = c.sim();
+				int i = sim.indexOf(id);
+				if (i < 0)
+					continue;
+				int cx = sim.px[i] >> 14; // 定点坐标 >> 14 = chunk 坐标
+				int cz = sim.pz[i] >> 14;
+				long key = ((long) cx << 32) | (cz & 0xFFFFFFFFL);
+				int lx = (sim.px[i] - (cx << 14)) / S2CCitizenBatchPacket.LOCAL_QUANT;
+				int lz = (sim.pz[i] - (cz << 14)) / S2CCitizenBatchPacket.LOCAL_QUANT;
+				int ly = sim.py[i] >> 6;
+				// 纯心跳条目：yaw/state 与上次发送一致 → 客户端已持有（TCP 保序必一致），
+				// state 高位标记"沿用"、编码省 yaw 字节。判定基于"上一次 flush 的规范值"
+				// （规范模型在 flush 末尾统一更新，见下）。停止外推信号由 state 本身携带：
+				// 到达后行为系统把 MOVING 状态切回静止态，状态变化走脏检测发完整条目；
+				// 切换前 MOVING 停步的间隙由持续心跳重锚，客户端漂移有界。
+				// Pure-heartbeat entry: yaw/state unchanged since last send → already on
+				// the client (TCP ordering), the state high bit marks "reuse" and the
+				// yaw byte is dropped. The decision compares against last flush's canonical
+				// values (written back at the end of this flush). The stop-extrapolation
+				// signal now lives in the state byte itself: on arrival the behavior
+				// system flips the MOVING state to a static one, and the change is sent
+				// as a full entry via the dirty path; meanwhile continued heartbeats
+				// re-anchor the client with bounded drift.
+				byte st = sim.state[i];
+                if (st == sim.sstate[i] && sim.yaw[i] == sim.syaw[i])
+                    st |= S2CCitizenBatchPacket.ENTRY_PURE_HEARTBEAT;
+				byChunk.computeIfAbsent(key, k -> new ArrayList<>()).add(new S2CCitizenBatchPacket.Entry(id, lx, ly,
+						lz, sim.yaw[i], st));
+				if (++count >= MAX_ENTRIES_PER_PACKET)
+					break;
+			}
+			if (byChunk.isEmpty())
+				continue;
+			List<S2CCitizenBatchPacket.Group> groups = new ArrayList<>(byChunk.size());
+			for (Iterator<Long2ObjectOpenHashMap.Entry<List<S2CCitizenBatchPacket.Entry>>> it = byChunk
+					.long2ObjectEntrySet().fastIterator(); it.hasNext();) {
+				Long2ObjectOpenHashMap.Entry<List<S2CCitizenBatchPacket.Entry>> e = it.next();
+				long key = e.getLongKey();
+				groups.add(new S2CCitizenBatchPacket.Group((int) (key >> 32), (int) key, e.getValue()));
+			}
+			FHNetwork.INSTANCE.sendPlayer(p, new S2CCitizenBatchPacket(groups));
+		}
+		// 规范模型延后到本 flush 末尾统一回写：组包循环中的纯心跳判定必须与
+		// "上一次发送"的规范值比较；若在收集阶段就地更新，该比较恒成立，
+		// 全部条目都会被打成纯心跳，yaw/state 自此不再同步（回归 A）。
+		// 与组包循环同模式：经 id 反查容器与索引（防御移除竞态）。
+		// Canonical model is written back at the END of the flush: the pure-heartbeat
+		// decision must compare against what was sent LAST flush; updating during
+		// collection made the comparison vacuously true and every entry a heartbeat,
+		// freezing client yaw/state (regression A). Same id→container/index
+		// re-resolution as the packet-build loop (defensive against removal races).
+		for (int id : due) {
+			CitizenContainer c = sched.findById(id);
+			if (c == null)
+				continue;
+			CitizenSim sim = c.sim();
+			int i = sim.indexOf(id);
+			if (i < 0)
+				continue;
+			sim.sx[i] = sim.px[i];
+			sim.sy[i] = sim.py[i];
+			sim.sz[i] = sim.pz[i];
+			sim.syaw[i] = sim.yaw[i];
+			sim.sstate[i] = sim.state[i];
+			sim.stick[i] = gameTime;
+		}
+	}
+
+	/**
+	 * Dead Reckoning 脏检测：真实位置与规范外推模型的误差是否超阈值。
+	 * <p>
+	 * Dead-reckoning dirty check: whether the true position diverges from the
+	 * canonical extrapolated model beyond the threshold.
+	 */
+	private boolean isDirty(CitizenSim sim, int i, long gameTime, int interval) {
+        if (sim.state[i] != sim.sstate[i] || sim.yaw[i] != sim.syaw[i])
+			return true;
+		long dt = gameTime - sim.stick[i];
+		// 移动心跳：匀速状态下 Dead Reckoning 误差恒 0 不会自然发包，
+		// 强制按距离档位刷新基准点——与发包节奏（tierInterval）同频。
+		// 若心跳固定 20 tick 而近档发包 4 tick：方向翻转 burst 后接 1s 长间隙，
+		// 客户端自适应窗口（prevGap）骤短、段长骤长 → 沿行进方向猛冲瞬移。
+		// 同频后包间隔均匀，窗口恒等于段长，该问题在机制上消失。
+		// Movement heartbeat follows the distance tier (same cadence as the
+		// flush interval): a fixed 20-tick heartbeat next to a 4-tick near-tier
+		// flush made a dir-flip burst followed by a 1 s gap; the client's
+		// adaptive window (prevGap) then matched neither — blast-forward
+		// teleports. Uniform cadence keeps window ≡ segment time.
+		int ss = sim.sstate[i] & 0xFF;
+		if (ss < CitizenState.STATE_COUNT && CitizenState.MOVING[ss] && dt >= interval)
+			return true;
+		if (dt > DT_CLAMP)
+			dt = DT_CLAMP;
+
+		int predX = sim.sx[i];
+		int predZ = sim.sz[i];
+        int syaw = sim.syaw[i] & 0xFF;
+
+        if (ss < CitizenState.STATE_COUNT && CitizenState.MOVING[ss]) {
+            int speed = CitizenState.SPEED[ss];
+            predX += (int)(((long)CitizenState.DIR_X_256[syaw] * speed * dt) >> 10);
+            predZ += (int)(((long)CitizenState.DIR_Z_256[syaw] * speed * dt) >> 10);
+        }
+
+		long ex = sim.px[i] - predX;
+		long ey = sim.py[i] - sim.sy[i];
+		long ez = sim.pz[i] - predZ;
+		return ex * ex + ey * ey + ez * ez > ERROR2;
+	}
+
+	private static int tierInterval(long minDist2) {
+		if (minDist2 < 32L * 32L)
+			return 4;
+		if (minDist2 < 64L * 64L)
+			return 8;
+		return 20;
+	}
+}

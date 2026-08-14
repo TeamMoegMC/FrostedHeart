@@ -114,12 +114,14 @@ public class WanderingRefugeeClientHelper {
 
     /**
      * 从客户端城镇数据快照判断能否再招募一名居民。
+     * 公开供居民交互菜单（CitizenMenuClient）复用同一判断。
      * <p>
      * Whether another resident can be recruited, based on the client-side town data snapshot.
+     * Public so the citizen menu (CitizenMenuClient) reuses the same check.
      *
      * @return 可招募则返回 true / true if another resident can be recruited
      */
-    private static boolean canAddResident() {
+    public static boolean canAddResident() {
         // 用 getOptional 而非 getData：数据缺失时只读判空，不向客户端 holder 塞入空城镇数据
         return CClientTeamDataManager.INSTANCE.getInstance()
                 .getOptional(FHSpecialDataTypes.TOWN_DATA)
