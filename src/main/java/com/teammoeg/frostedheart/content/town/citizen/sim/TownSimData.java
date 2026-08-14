@@ -129,9 +129,11 @@ public class TownSimData implements CitizenContainer, ITownResidentListener {
 	 * runtime state, not persisted). Public for the store (AITownManager's
 	 * global save) and the CODEC.
 	 */
-	public static CompoundTag toNbt(TownSimData data) {
-		return data.sim.save(new CompoundTag());
-	}
+    public static CompoundTag toNbt(TownSimData data) {
+        CompoundTag root = new CompoundTag();
+        root.put("sim", data.sim.save(new CompoundTag()));
+        return root;
+    }
 
 	/**
 	 * 从 NBT 恢复（逐条合并进 final sim）。
