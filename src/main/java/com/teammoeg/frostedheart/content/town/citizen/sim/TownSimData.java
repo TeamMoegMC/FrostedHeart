@@ -130,7 +130,9 @@ public class TownSimData implements CitizenContainer, ITownResidentListener {
 	 * global save) and the CODEC.
 	 */
 	public static CompoundTag toNbt(TownSimData data) {
-		return data.sim.save(new CompoundTag());
+		CompoundTag tag = new CompoundTag();
+		tag.put("sim", data.sim.save(new CompoundTag()));
+		return tag;
 	}
 
 	/**
@@ -141,7 +143,11 @@ public class TownSimData implements CitizenContainer, ITownResidentListener {
 	 * @param tag 源标签 / source tag
 	 */
 	public void loadFromNbt(CompoundTag tag) {
-		CompoundTag simTag = tag.getCompound("sim");
+		// The first hybrid-simulation build accidentally wrote CitizenSim fields
+		// directly into this tag. Accept that flat layout while writing the
+		// intended nested layout from now on.
+		CompoundTag nested = tag.getCompound("sim");
+		CompoundTag simTag = nested.isEmpty() ? tag : nested;
 		if (simTag.isEmpty())
 			return;
 		CitizenSim loaded = CitizenSim.load(simTag);
@@ -284,6 +290,7 @@ public class TownSimData implements CitizenContainer, ITownResidentListener {
 	public void adopt(CitizenSimScheduler sched, ServerLevel level, TeamTownData townData) {
 		this.activeSched = sched;
 		this.activeLevel = level;
+		this.lastActiveLevel = level.dimension();
 		this.adopted = true;
 		townData.setResidentListener(this);
 		syncTownResidents(level, townData);
@@ -310,6 +317,7 @@ public class TownSimData implements CitizenContainer, ITownResidentListener {
 	public void adopt(CitizenSimScheduler sched, ServerLevel level, AITownData aiTown) {
 		this.activeSched = sched;
 		this.activeLevel = level;
+		this.lastActiveLevel = level.dimension();
 		this.adopted = true;
 		syncTownResidents(level, aiTown.getAllResidents());
 	}
@@ -326,24 +334,46 @@ public class TownSimData implements CitizenContainer, ITownResidentListener {
 	}
 
 	/**
-	 * 维度变更检测（每 20 tick 由调度器调用）：跨维度时全量清空本镇模拟
-	 * （条目重生由事件驱动在新维度重新出生；despawn 由调度器 registry diff 广播）。
+	 * 维度变更检测（每 20 tick 由调度器调用）：跨维度时先通知旧调度器移除旧 id，
+	 * 再切换运行期引用、清空旧模拟并按权威居民集合立即在新维度重建。
 	 * <p>
 	 * Level-change detection (called every 20 ticks by the scheduler): on a
-	 * cross-dimension switch the town's entries are fully cleared (respawning is
-	 * event-driven on the new level; despawns go through the registry diff).
+	 * cross-dimension switch, notifies the old scheduler about the old ids,
+	 * switches runtime references, clears the old simulation, and immediately
+	 * rebuilds it in the new level from the authoritative resident collection.
 	 *
 	 * @param level 当前维度 / the current level
 	 * @param sched 调度器 / the scheduler
+	 * @param residents 本镇权威居民集合 / authoritative residents of this town
 	 */
-	public void onLevelChange(ServerLevel level, CitizenSimScheduler sched) {
-		if (lastActiveLevel != null && !lastActiveLevel.equals(level.dimension())) {
-			sim.clear();
-			tradeData.clear();
-			nameCache.clear();
-			FHMain.LOGGER.debug("Citizen sim for town reset across dimension change");
+	public void onLevelChange(ServerLevel level, CitizenSimScheduler sched,
+			Collection<Resident> residents) {
+		if (lastActiveLevel == null || lastActiveLevel.equals(level.dimension())) {
+			this.activeSched = sched;
+			this.activeLevel = level;
+			lastActiveLevel = level.dimension();
+			return;
 		}
+
+		CitizenSimScheduler oldSched = this.activeSched;
+		IntArrayList oldIds = new IntArrayList(sim.size());
+		for (int i = 0; i < sim.size(); i++)
+			oldIds.add(sim.id[i]);
+		if (oldSched != null && oldSched != sched) {
+			for (int i = 0; i < oldIds.size(); i++)
+				oldSched.sync.notifyRemoved(oldIds.getInt(i));
+		}
+
+		this.activeSched = sched;
+		this.activeLevel = level;
 		lastActiveLevel = level.dimension();
+		for (Resident resident : residents)
+			resident.setSimId(-1);
+		sim.clear();
+		tradeData.clear();
+		nameCache.clear();
+		syncTownResidents(level, residents);
+		FHMain.LOGGER.debug("Citizen sim for town rebuilt across dimension change: {} entries", sim.size());
 	}
 
 	/**

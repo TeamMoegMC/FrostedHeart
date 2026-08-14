@@ -28,6 +28,7 @@ import com.teammoeg.chorda.dataholders.team.CTeamDataManager;
 import com.teammoeg.chorda.dataholders.team.TeamDataHolder;
 import com.teammoeg.frostedheart.bootstrap.common.FHSpecialDataTypes;
 import com.teammoeg.frostedheart.content.town.ITown;
+import com.teammoeg.frostedheart.content.town.TeamTown;
 import com.teammoeg.frostedheart.content.town.ai_town.AITownData;
 import com.teammoeg.frostedheart.content.town.ai_town.AITownManager;
 import com.teammoeg.frostedheart.content.town.citizen.nav.FlowFieldCache;
@@ -311,7 +312,7 @@ public final class CitizenSimScheduler {
 				data.adopt(this, level, townData);
 			} else {
 				// 维度变更检测：跨维度全量重生
-				data.onLevelChange(level, this);
+				data.onLevelChange(level, this, TeamTown.create(townData).getAllResidents());
 			}
 			newContainers.add(data);
 			CitizenSim sim = data.sim();
@@ -328,7 +329,7 @@ public final class CitizenSimScheduler {
 				data.adopt(this, level, aiTown);
 			} else {
 				// 维度变更检测：跨维度全量重生
-				data.onLevelChange(level, this);
+				data.onLevelChange(level, this, aiTown.getAllResidents());
 			}
 			newContainers.add(data);
 			CitizenSim sim = data.sim();

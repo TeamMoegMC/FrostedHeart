@@ -46,7 +46,9 @@ public record BlockTempData(Block block,float temperature, boolean level, boolea
 		Codec.BOOL.optionalFieldOf("level_divide",false).forGetter(o->o.level),
 		Codec.BOOL.optionalFieldOf("must_lit",false).forGetter(o->o.lit)).apply(t, BlockTempData::new));
 	public static RegistryObject<CodecRecipeSerializer<BlockTempData>> TYPE;
-	private static Map<Block,BlockTempData> CACHE =ImmutableMap.of();
+	private static volatile Map<Block,BlockTempData> CACHE =ImmutableMap.of();
+	/** Monotonic recipe-cache generation used by simulator caches for lazy invalidation. */
+	private static volatile long cacheVersion;
 
     @Nullable
     public static BlockTempData getData(Block block) {
@@ -56,6 +58,11 @@ public record BlockTempData(Block block,float temperature, boolean level, boolea
     public static void updateCache(RecipeManager manager) {
         Collection<Recipe<?>> recipes = manager.getRecipes();
         BlockTempData.CACHE = BlockTempData.TYPE.get().filterRecipes(recipes).collect(Collectors.toMap(t->t.getData().block(), t->t.getData()));
+        cacheVersion++;
+    }
+
+    public static long getCacheVersion() {
+        return cacheVersion;
     }
 
     public float getTemp() {

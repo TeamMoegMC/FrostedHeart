@@ -314,8 +314,6 @@ public final class CitizenSim {
 	 * @return 恢复后的实例 / the restored instance
 	 */
 	public static CitizenSim load(CompoundTag tag) {
-		CitizenSim sim = new CitizenSim(tag.getInt("size"));
-		int n = tag.getInt("size");
 		int[] ids = tag.getIntArray("id");
 		int[] apx = tag.getIntArray("px");
 		int[] apy = tag.getIntArray("py");
@@ -331,20 +329,36 @@ public final class CitizenSim {
 		int[] atx = tag.getIntArray("tx");
 		int[] aty = tag.getIntArray("ty");
 		int[] atz = tag.getIntArray("tz");
+		// id/position are the minimum viable record. Clamp a corrupt declared
+		// size to the available core arrays; all remaining arrays are optional
+		// so older saves can fall back to the defaults established by add().
+		int n = Math.max(0, tag.getInt("size"));
+		n = Math.min(n, Math.min(Math.min(ids.length, apx.length),
+				Math.min(apy.length, apz.length)));
+		CitizenSim sim = new CitizenSim(n);
 		for (int k = 0; k < n; k++) {
 			int i = sim.add(ids[k], apx[k], apy[k], apz[k], (byte) (ids[k] % 20));
-			sim.yaw[i] = ayaw[k];
-            sim.syaw[i] = asyaw[k];
-			sim.state[i] = astate[k];
-			sim.homeX[i] = ahomeX[k];
-			sim.homeZ[i] = ahomeZ[k];
+			if (k < ayaw.length)
+				sim.yaw[i] = ayaw[k];
+			// syaw was introduced by the 256-step yaw refactor. Older saves do
+			// not contain it; their current yaw is the correct canonical baseline.
+			sim.syaw[i] = k < asyaw.length ? asyaw[k] : sim.yaw[i];
+			if (k < astate.length)
+				sim.state[i] = astate[k];
+			if (k < ahomeX.length)
+				sim.homeX[i] = ahomeX[k];
+			if (k < ahomeZ.length)
+				sim.homeZ[i] = ahomeZ[k];
 			if (k < auuidHi.length)
 				sim.uuidHi[i] = auuidHi[k];
 			if (k < auuidLo.length)
 				sim.uuidLo[i] = auuidLo[k];
-			sim.tx[i] = atx[k];
-			sim.ty[i] = aty[k];
-			sim.tz[i] = atz[k];
+			if (k < atx.length)
+				sim.tx[i] = atx[k];
+			if (k < aty.length)
+				sim.ty[i] = aty[k];
+			if (k < atz.length)
+				sim.tz[i] = atz[k];
 		}
 		return sim;
 	}

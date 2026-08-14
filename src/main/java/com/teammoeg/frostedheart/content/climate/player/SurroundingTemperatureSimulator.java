@@ -80,6 +80,10 @@ public class SurroundingTemperatureSimulator {
         }
     }
 
+    /** Cached block info paired with the block-temperature recipe generation that produced it. */
+    private record VersionedBlockInfo(long recipeVersion, CachedBlockInfo info) {
+    }
+
     /**
      * 线程局部工作缓冲区（SoA 布局）。
      * <p>
@@ -183,8 +187,8 @@ public class SurroundingTemperatureSimulator {
     private final int ox, oy, oz; // origin 坐标（int 缓存，避免反复 getX/Y/Z）
     private final FastRandom rnd;  // 无锁随机数（xoroshiro128+，见内部类注释）
 
-    // BlockState → CachedBlockInfo 去重缓存（实例级，避免跨世界污染）
-    private static final ConcurrentHashMap<BlockState, CachedBlockInfo> GLOBAL_CACHE = new ConcurrentHashMap<>(256);
+    // BlockState → CachedBlockInfo 全局去重缓存；配方版本不匹配时按条目惰性替换。
+    private static final ConcurrentHashMap<BlockState, VersionedBlockInfo> GLOBAL_CACHE = new ConcurrentHashMap<>(256);
 
 
     // ======================== 构造器 ========================
@@ -418,7 +422,7 @@ public class SurroundingTemperatureSimulator {
     // ======================== 缓存与方块访问 ========================
     /**
      * 计算方块的碰撞形状和温度。
-     * 通过 stateCache（IdentityHashMap）对同一 BlockState 去重。
+     * 通过 GLOBAL_CACHE 对同一 BlockState 去重。
      *
      * @param localX/Y/Z 相对 origin 的坐标（用于 getBlock）
      * @param worldX/Y/Z 世界坐标（用于 getCollisionShape）
@@ -435,10 +439,11 @@ public class SurroundingTemperatureSimulator {
             return AIR_INFO;
         }
 
-        // 2. 快速查全局缓存（无锁读，命中则直接返回，完全避免后续计算）
-        CachedBlockInfo cached = GLOBAL_CACHE.get(bs);
-        if (cached != null) {
-            return cached;
+        // 2. 快速查全局缓存（无锁读）；配方重载后版本不匹配，进入重算。
+        long recipeVersion = BlockTempData.getCacheVersion();
+        VersionedBlockInfo cached = GLOBAL_CACHE.get(bs);
+        if (cached != null && cached.recipeVersion() == recipeVersion) {
+            return cached.info();
         }
 
         // 3. 缓存未命中 —— 计算温度
@@ -478,17 +483,24 @@ public class SurroundingTemperatureSimulator {
 
         // 5. 根据结果选择应该存入缓存的“值”
         final CachedBlockInfo result;
-        if (shape == EMPTY) {
-            result = AIR_INFO;               // 形状为空 → 共享空气单例
+        if (BlockInfoCachePolicy.canReuseAirInfo(shape, temp)) {
+            // 空碰撞并不等于空气：fire/soul_fire 等热源也是空碰撞，只有零温度才可共享。
+            result = AIR_INFO;
         } else if (shape == FULL && temp == 0f) {
             result = FULL_ZERO_TEMP_INFO;    // 零温全满 → 共享全满零温单例
         } else {
             result = new CachedBlockInfo(shape, temp); // 有温度或复杂形状 → 独立对象
         }
 
-        // 6. 尝试原子性地存入缓存（如果已有其他线程抢先，则使用已有的值）
-        CachedBlockInfo existing = GLOBAL_CACHE.putIfAbsent(bs, result);
-        return existing != null ? existing : result;
+        // 6. 配方可能在计算期间完成重载；丢弃跨版本结果并按新版本重算。
+        if (BlockTempData.getCacheVersion() != recipeVersion)
+            return computeBlockInfo(localX, localY, localZ, worldX, worldY, worldZ);
+        VersionedBlockInfo candidate = new VersionedBlockInfo(recipeVersion, result);
+        VersionedBlockInfo selected = GLOBAL_CACHE.compute(bs, (key, existing) ->
+                existing != null && existing.recipeVersion() == recipeVersion ? existing : candidate);
+        if (BlockTempData.getCacheVersion() != recipeVersion)
+            return computeBlockInfo(localX, localY, localZ, worldX, worldY, worldZ);
+        return selected.info();
     }
 
 
