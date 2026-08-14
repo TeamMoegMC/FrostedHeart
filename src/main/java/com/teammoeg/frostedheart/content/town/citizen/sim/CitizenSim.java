@@ -67,6 +67,8 @@ public final class CitizenSim {
 	public int[] stuckTick;
 	/** 行程最小目标距离平方（卡住判定水位，突破才计进度）；运行期数据，不落盘 / Journey min dist2 watermark (stuck detection: only a lower dist2 counts as progress); runtime-only, not persisted */
 	public long[] bestDist2;
+    /** 分离力缓存（定点位移，非计算 tick 复用）；瞬态，不落盘 */
+    public int[] sepX, sepZ;
 
 	private final Int2IntOpenHashMap idToIndex = new Int2IntOpenHashMap();
 
@@ -103,6 +105,8 @@ public final class CitizenSim {
 		stick = new long[cap];
 		stuckTick = new int[cap];
 		bestDist2 = new long[cap];
+        sepX = new int[cap];
+        sepZ = new int[cap];
 	}
 
 	private void grow() {
@@ -132,6 +136,8 @@ public final class CitizenSim {
 		stuckTick = Arrays.copyOf(stuckTick, newCap);
 		bestDist2 = Arrays.copyOf(bestDist2, newCap);
 		capacity = newCap;
+        sepX = Arrays.copyOf(sepX, newCap);
+        sepZ = Arrays.copyOf(sepZ, newCap);
 	}
 
 	/**
@@ -175,6 +181,8 @@ public final class CitizenSim {
 		stuckTick[i] = 0;
 		bestDist2[i] = 0;
 		idToIndex.put(newId, i);
+        sepX[i] = 0;
+        sepZ[i] = 0;
 		return i;
 	}
 
@@ -217,6 +225,8 @@ public final class CitizenSim {
 			stuckTick[i] = stuckTick[last];
 			bestDist2[i] = bestDist2[last];
 			idToIndex.put(id[i], i);
+            sepX[i] = sepX[last];
+            sepZ[i] = sepZ[last];
 		}
 		return true;
 	}

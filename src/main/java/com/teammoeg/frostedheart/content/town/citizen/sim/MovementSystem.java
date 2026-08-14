@@ -59,217 +59,216 @@ public final class MovementSystem {
 	 * @param level 维度 / the level
 	 * @param gameTime 当前游戏时间 / current game time
 	 */
-	public void tickAll(CitizenSimScheduler sched, ServerLevel level, long gameTime) {
-		for (CitizenContainer c : sched.containers()) {
-			CitizenSim sim = c.sim();
-			int n = sim.size();
-			for (int i = 0; i < n; i++) {
-				if (!sched.isActive(c, i))
-					continue;
-				// 每 tick 贴合当前列地面：站立（空闲/睡觉）居民不再只有"移动+跨边界"才重采样，
-				// 挖掉/填上脚下方块时也能及时重新贴合，杜绝"挖掉方块后一直浮空不刷新"。
-				// Re-conform the ground under every active citizen each tick — standing
-				// citizens previously re-sampled only when moving across a block
-				// boundary, so digging out their feet never refreshed them (floating).
-				conformHeight(sim, level, i);
-				if (!CitizenState.MOVING[sim.state[i]])
-					continue;
-				step(sched, sim, level, i, gameTime);
-			}
-		}
-	}
+    public void tickAll(CitizenSimScheduler sched, ServerLevel level, long gameTime) {
+        boolean doConform = gameTime % 5 == 0;   // 每 5 tick 站立居民贴地
+        boolean doSeparation = (gameTime & 1) == 0; // 每 2 tick 计算分离力
 
-/*	private void step(CitizenSimScheduler sched, CitizenSim sim, ServerLevel level, int i, long gameTime) {
-		int dx = sim.tx[i] - sim.px[i];
-		int dz = sim.tz[i] - sim.pz[i];
-		long dist2 = (long) dx * dx + (long) dz * dz;
-		if (dist2 < ARRIVE_DIST2) {
-			// 到达：直接停下，不吸附目标（吸附会造成最多 1.5 格瞬时位移 = 可见瞬移）。
-			// Arrive: stop in place; do NOT snap onto the target (a snap is a
-			// positional jump of up to 1.5 blocks — a visible teleport).
-			sim.dir[i] = CitizenState.DIR_NONE;
-			sim.rdir[i] = CitizenState.DIR_NONE; // 停止立即上报 / stop is committed immediately
-			sim.candDir[i] = -1;
-			sim.candAge[i] = 0;
-			return;
-		}
-		int dir = -1;
-		// 远距尝试流场；场未就绪/不可达时回退直线
-		if (dist2 > FIELD_MIN_DIST2) {
-			FlowField field = sched.fields.request(sim.tx[i] >> 10, sim.tz[i] >> 10, gameTime);
-			if (field != null)
-				dir = field.sampleDir(sim.px[i] >> 10, sim.pz[i] >> 10);
-		}
-		if (dir < 0)
-			dir = CitizenState.dirFromVector(dx, dz);
-		// 地形可通行性：直线模式原本完全不查地形，居民会直穿峭壁/墙/水面（"无视地形高度"），
-		// 且高度贴合在越界时采样列顶会把居民抬到屋檐/悬空物顶上（"浮空"）。
-		// 规则与流场 BFS 一致（高度差 ≤1）+ 落脚净空 2 格 + 非流体 + 未加载区块不可通行；
-		// 前进方向被堵时向两侧旋转试探（贴墙绕行），全堵则停下等行为系统重规划。
-		// Straight-line steering previously had zero terrain checks (citizens walked
-		// through cliffs/walls/water) and height conformance sampled the column top
-		// (citizens lifted onto overhangs = floating). Passability now mirrors the
-		// flow-field BFS rule (|Δheight| ≤ 1) plus 2-block headroom, no fluid, and
-		// unloaded chunks are impassable; blocked cells trigger ±22.5°/±45° wall
-		// following, and fully-blocked surroundings stop the citizen for replanning.
-		int feetY = sim.py[i] >> 10;
-		if (dir >= 0) {
-			int bx = sim.px[i] >> 10;
-			int bz = sim.pz[i] >> 10;
-			int nbX = bx + Integer.signum(CitizenState.DIR_X[dir]);
-			int nbZ = bz + Integer.signum(CitizenState.DIR_Z[dir]);
-			if (!passable(level, nbX, nbZ, feetY))
-				dir = rotatePassable(level, bx, bz, dir, feetY);
-		}
-		if (dir < 0) {
-			// 四周全部不可通行：停下（客户端立即看到停止帧），卡住水位仍兜底
-			sim.dir[i] = CitizenState.DIR_NONE;
-			sim.rdir[i] = CitizenState.DIR_NONE;
-			sim.candDir[i] = -1;
-			sim.candAge[i] = 0;
-			checkStuck(sim, i, dist2, gameTime);
-			return;
-		}
-		// 转向 dir 逐 tick 重算（分离力后置、近目标角变快都会让它抖动）；上报 dir 加
-		// 连续 2 tick 持久性过滤，单 tick 翻转不传播给客户端，杜绝目标 yaw 振荡。
-		// Steering dir is recomputed every tick (jittery from late separation and
-		// fast angle change near targets); the reported dir commits only after the
-		// candidate persists 2 consecutive ticks, so single-tick flips never reach
-		// the client and the client-side target yaw stops oscillating.
-		sim.dir[i] = (byte) dir;
-		sim.yaw[i] = CitizenState.yawFromDir(dir);
-		if (dir == CitizenState.DIR_NONE) {
-			sim.rdir[i] = CitizenState.DIR_NONE;
-			sim.candDir[i] = -1;
-			sim.candAge[i] = 0;
-		} else if (sim.candDir[i] == dir) {
-			if (sim.candAge[i] == 1)
-				sim.rdir[i] = (byte) dir; // 连续第 2 tick 相同才提交 / commit on the 2nd consecutive tick
-			sim.candAge[i] = 2;
-		} else {
-			sim.candDir[i] = (byte) dir;
-			sim.candAge[i] = 1;
-		}
-		int speed = CitizenState.SPEED[sim.state[i]];
-		// 定点乘法：(分量×1024 * 速度) >> 10
-		sim.px[i] += (CitizenState.DIR_X[dir] * speed) >> 10;
-		sim.pz[i] += (CitizenState.DIR_Z[dir] * speed) >> 10;
+        for (CitizenContainer c : sched.containers()) {
+            CitizenSim sim = c.sim();
+            int n = sim.size();
+            for (int i = 0; i < n; i++) {
+                if (!sched.isActive(c, i))
+                    continue;
 
-		separate(sched, sim, i);
-		checkStuck(sim, i, dist2, gameTime);
-	}*/
-private void step(CitizenSimScheduler sched, CitizenSim sim, ServerLevel level, int i, long gameTime) {
-    int dx = sim.tx[i] - sim.px[i];
-    int dz = sim.tz[i] - sim.pz[i];
-    long dist2 = (long) dx * dx + (long) dz * dz;
-
-    // 到达：直接停下，yaw 保持不变
-    if (dist2 < CitizenState.ARRIVE_DIST2) {
-        return;
-    }
-
-    // 1. 确定移动目标方向（优先流场，近距/不可用回退直线）
-    int moveDir16 = -1;
-    if (dist2 > FIELD_MIN_DIST2) {
-        FlowField field = sched.fields.request(sim.tx[i] >> 10, sim.tz[i] >> 10, gameTime);
-        if (field != null) {
-            moveDir16 = field.sampleDir(sim.px[i] >> 10, sim.pz[i] >> 10);
+                if (CitizenState.MOVING[sim.state[i]]) {
+                    // 移动居民：只调用一次 step
+                    step(sched, sim, level, i, gameTime, doSeparation);
+                } else if (doConform) {
+                    // 站立居民：每 5 tick 贴地一次
+                    conformHeight(sim, level, i);
+                }
+            }
         }
     }
-    if (moveDir16 < 0) {
-        moveDir16 = CitizenState.dirFromVector(dx, dz);
-    }
 
-    // 2. 地形可通行性检查（使用最终确定的方向）
-    int feetY = sim.py[i] >> 10;
-    int bx = sim.px[i] >> 10;
-    int bz = sim.pz[i] >> 10;
-    int checkYawByte = CitizenState.DIR_TO_YAW[moveDir16] & 0xFF;
-    int nbX = bx + Integer.signum(CitizenState.DIR_X_256[checkYawByte]);
-    int nbZ = bz + Integer.signum(CitizenState.DIR_Z_256[checkYawByte]);
+// 在 MovementSystem 类中添加以下代码
 
-    if (!passable(level, nbX, nbZ, feetY)) {
-        moveDir16 = rotatePassable(level, bx, bz, moveDir16, feetY);
-        if (moveDir16 < 0) {
-            // 全堵：停下等重规划
-            checkStuck(sim, i, dist2, gameTime);
+    /**
+     * 合成基础移动方向位移与分离力，并执行轴分离移动。
+     * 基础移动速度由状态速度决定；分离力来自邻居，限制在 SEP_MAX 内。
+     */
+    private void step(CitizenSimScheduler sched, CitizenSim sim, ServerLevel level, int i, long gameTime, boolean doSeparation) {
+        int dx = sim.tx[i] - sim.px[i];
+        int dz = sim.tz[i] - sim.pz[i];
+        long dist2 = (long) dx * dx + (long) dz * dz;
+
+        // 到达：直接停下，yaw 保持不变
+        if (dist2 < CitizenState.ARRIVE_DIST2) {
             return;
         }
+
+        // ===== 1. 确定移动目标方向（优先流场，近距回退直线） =====
+        int moveDir16 = -1;
+        if (dist2 > FIELD_MIN_DIST2) {
+            FlowField field = sched.fields.request(sim.tx[i] >> 10, sim.tz[i] >> 10, gameTime);
+            if (field != null) {
+                moveDir16 = field.sampleDir(sim.px[i] >> 10, sim.pz[i] >> 10);
+            }
+        }
+        if (moveDir16 < 0) {
+            moveDir16 = CitizenState.dirFromVector(dx, dz);
+        }
+
+        // ===== 2. 地形可通行性检查（只用于确定最终导航方向） =====
+        int feetY = sim.py[i] >> 10;
+        int bx = sim.px[i] >> 10;
+        int bz = sim.pz[i] >> 10;
+        int checkYawByte = CitizenState.DIR_TO_YAW[moveDir16] & 0xFF;
+        int nbX = bx + Integer.signum(CitizenState.DIR_X_256[checkYawByte]);
+        int nbZ = bz + Integer.signum(CitizenState.DIR_Z_256[checkYawByte]);
+
+        if (!passable(level, nbX, nbZ, feetY)) {
+            moveDir16 = rotatePassable(level, bx, bz, moveDir16, feetY);
+            if (moveDir16 < 0) {
+                // 全堵：停下等重规划
+                checkStuck(sim, i, dist2, gameTime);
+                return;
+            }
+        }
+
+        // ===== 3. 视觉 yaw 缓慢旋转跟随 =====
+        byte targetYaw = CitizenState.DIR_TO_YAW[moveDir16];
+        int curYaw = sim.yaw[i] & 0xFF;
+        int tgtYaw = targetYaw & 0xFF;
+        int diff = tgtYaw - curYaw;
+        if (diff > 128) diff -= 256;
+        else if (diff < -128) diff += 256;
+
+        if (diff > 0) sim.yaw[i] = (byte)((curYaw + 3) & 0xFF); // 每 tick 最多 3 步
+        else if (diff < 0) sim.yaw[i] = (byte)((curYaw - 3) & 0xFF);
+
+        // ===== 4. 基础位移（由导航方向决定） =====
+        int moveYawByte = CitizenState.DIR_TO_YAW[moveDir16] & 0xFF;
+        int speed = CitizenState.SPEED[sim.state[i]];
+        int baseX = (CitizenState.DIR_X_256[moveYawByte] * speed) >> 10;
+        int baseZ = (CitizenState.DIR_Z_256[moveYawByte] * speed) >> 10;
+
+        // 记录移动前所在格，用于判断是否跨格
+        int oldBX = sim.px[i] >> 10;
+        int oldBZ = sim.pz[i] >> 10;
+
+        // ===== 5. 分离力（只计算，不直接应用） =====
+        int pushX, pushZ;
+        if (doSeparation) {
+            int[] sep = computeSeparation(sched, sim, i);
+            pushX = sep[0];
+            pushZ = sep[1];
+            sim.sepX[i] = pushX;  // 缓存
+            sim.sepZ[i] = pushZ;
+        } else {
+            pushX = sim.sepX[i];
+            pushZ = sim.sepZ[i];
+        }
+
+        // 合成总位移
+        int moveX = baseX + pushX;
+        int moveZ = baseZ + pushZ;
+
+        // ===== 6. 轴分离移动（核心碰撞，格内 0 查询，跨格才查一次） =====
+        moveAxisSeparated(sched, sim, level, i, moveX, moveZ);
+
+        // ===== 7. 贴地 =====
+        // 跨格时立即贴地，无论是否本 tick 已贴过
+        int newBX = sim.px[i] >> 10;
+        int newBZ = sim.pz[i] >> 10;
+        boolean crossed = newBX != oldBX || newBZ != oldBZ;
+        if (crossed) {
+            conformHeight(sim, level, i);
+        }
+
+        // ===== 8. 卡住检测 =====
+        checkStuck(sim, i, dist2, gameTime);
     }
 
-    // 3. 目标 yaw（256 级）
-    byte targetYaw = CitizenState.DIR_TO_YAW[moveDir16]; // 直接用缓存，避免重复计算
+    /**
+     * 只计算邻居分离力，返回 [pushX, pushZ]。
+     * 不直接修改位置，便于和基础位移合成，供轴分离移动统一处理。
+     */
+    private int[] computeSeparation(CitizenSimScheduler sched, CitizenSim sim, int i) {
+        neighborBuf.clear();
+        sched.grid.queryNeighbors(sim.px[i] >> 10, sim.pz[i] >> 10, neighborBuf);
 
-    // 4. 视觉 yaw 缓慢旋转跟随（1 步/tick）
-    int curYaw = sim.yaw[i] & 0xFF;
-    int tgtYaw = targetYaw & 0xFF;
-    int diff = tgtYaw - curYaw;
-    if (diff > 128) diff -= 256;
-    else if (diff < -128) diff += 256;
+        int pushX = 0;
+        int pushZ = 0;
+        int count = neighborBuf.size();
 
-    int step = 3; // 每 tick 最多旋转 3 步（约 4.2°/tick）
-    if (diff > 0) {
-        if (diff < step) step = diff;
-        sim.yaw[i] = (byte)((curYaw + step) & 0xFF);
-    } else if (diff < 0) {
-        if (-diff < step) step = -diff;
-        sim.yaw[i] = (byte)((curYaw - step) & 0xFF);
+        for (int k = 0; k < count; k++) {
+            int jid = neighborBuf.getInt(k);
+            if (jid == sim.id[i]) continue;
+
+            CitizenContainer oc = sched.findById(jid);
+            if (oc == null) continue;
+
+            CitizenSim osim = oc.sim();
+            int j = osim.indexOf(jid);
+            if (j < 0) continue;
+
+            int dx = sim.px[i] - osim.px[j];
+            int dz = sim.pz[i] - osim.pz[j];
+            int d2 = dx * dx + dz * dz;
+            if (d2 == 0 || d2 > SEP_DIST2) continue;
+
+            int push = (SEP_DIST2 - d2) >> 13;
+            pushX += (int) (((long) dx * push) >> 10);
+            pushZ += (int) (((long) dz * push) >> 10);
+        }
+
+        if (pushX > SEP_MAX) pushX = SEP_MAX;
+        else if (pushX < -SEP_MAX) pushX = -SEP_MAX;
+        if (pushZ > SEP_MAX) pushZ = SEP_MAX;
+        else if (pushZ < -SEP_MAX) pushZ = -SEP_MAX;
+
+        return new int[]{pushX, pushZ};
     }
 
-    // 5. 使用最终确定的移动方向进行位移
-    int moveYawByte = CitizenState.DIR_TO_YAW[moveDir16] & 0xFF;
-    int speed = CitizenState.SPEED[sim.state[i]];
-    sim.px[i] += (CitizenState.DIR_X_256[moveYawByte] * speed) >> 10;
-    sim.pz[i] += (CitizenState.DIR_Z_256[moveYawByte] * speed) >> 10;
+    /**
+     * 轴分离移动：先 X 后 Z。
+     * 每轴只有在跨格时才调用 passable()，不可通行则把坐标钳制在当前格边界，
+     * 从而获得贴墙滑行，并机制性杜绝 corner cutting 与分离力推墙。
+     */
+    private void moveAxisSeparated(CitizenSimScheduler sched, CitizenSim sim, ServerLevel level,
+                                   int i, int moveX, int moveZ) {
+        int feetY = sim.py[i] >> 10;
 
-    // 6. 分离力与卡住检测
-    separate(sched, sim, i);
-    checkStuck(sim, i, dist2, gameTime);
-}
+        // ---------- X 轴 ----------
+        int oldX = sim.px[i];
+        int newX = oldX + moveX;
+        int oldBX = oldX >> 10;
+        int newBX = newX >> 10;
 
+        if (newBX != oldBX) {
+            int nbX = newBX;
+            int nbZ = sim.pz[i] >> 10;
+            if (!passable(level, nbX, nbZ, feetY)) {
+                // 贴墙：不进入新格，停在当前格边界
+                if (moveX > 0) {
+                    newX = newBX << 10;          // 正方向：新格起点即边界
+                } else {
+                    newX = (newBX + 1) << 10;    // 负方向：新格终点加 1 即边界
+                }
+            }
+        }
+        sim.px[i] = newX;
 
-	private void separate(CitizenSimScheduler sched, CitizenSim sim, int i) {
-		neighborBuf.clear();
-		sched.grid.queryNeighbors(sim.px[i] >> 10, sim.pz[i] >> 10, neighborBuf);
-		int pushX = 0;
-		int pushZ = 0;
-		int count = neighborBuf.size();
-		for (int k = 0; k < count; k++) {
-			// 网格条目是稳定 id（跨容器无索引冲突，两镇居民互相让路）：反查容器与索引
-			// Grid entries are stable ids (no index collisions across containers —
-			// citizens of different towns separate from each other): resolve the
-			// owning container and index.
-			int jid = neighborBuf.getInt(k);
-			if (jid == sim.id[i])
-				continue;
-			CitizenContainer oc = sched.findById(jid);
-			if (oc == null)
-				continue;
-			CitizenSim osim = oc.sim();
-			int j = osim.indexOf(jid);
-			if (j < 0)
-				continue;
-			int dx = sim.px[i] - osim.px[j];
-			int dz = sim.pz[i] - osim.pz[j];
-			int d2 = dx * dx + dz * dz;
-			if (d2 == 0 || d2 > SEP_DIST2)
-				continue;
-			// 距离越近推得越开（反比近似，免开方）
-			int push = (SEP_DIST2 - d2) >> 13;
-			pushX += (int) (((long) dx * push) >> 10);
-			pushZ += (int) (((long) dz * push) >> 10);
-		}
-		if (pushX > SEP_MAX)
-			pushX = SEP_MAX;
-		else if (pushX < -SEP_MAX)
-			pushX = -SEP_MAX;
-		if (pushZ > SEP_MAX)
-			pushZ = SEP_MAX;
-		else if (pushZ < -SEP_MAX)
-			pushZ = -SEP_MAX;
-		sim.px[i] += pushX;
-		sim.pz[i] += pushZ;
-	}
+        // ---------- Z 轴 ----------
+        int oldZ = sim.pz[i];
+        int newZ = oldZ + moveZ;
+        int oldBZ = oldZ >> 10;
+        int newBZ = newZ >> 10;
+
+        if (newBZ != oldBZ) {
+            int nbX = sim.px[i] >> 10;   // 注意：使用已更新后的 X
+            int nbZ = newBZ;
+            if (!passable(level, nbX, nbZ, feetY)) {
+                if (moveZ > 0) {
+                    newZ = newBZ << 10;
+                } else {
+                    newZ = (newBZ + 1) << 10;
+                }
+            }
+        }
+        sim.pz[i] = newZ;
+    }
 
 	/**
 	 * 贴合当前列地面高度（含屋檐下扫描），每 tick 对全部活跃居民调用。
