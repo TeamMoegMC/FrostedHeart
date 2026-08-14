@@ -80,12 +80,12 @@ public interface CitizenContainer {
 	}
 
 	/**
-	 * 标记数据需要持久化。城镇容器持久化走 holder 自动存盘（无需显式标记），
-	 * 未托管容器覆写为 SavedData 的 setDirty()。
+	 * 标记数据需要持久化。城镇容器把标记转发给全局
+	 * {@code AITownManager} SavedData，未托管容器转发给本维度 SavedData。
 	 * <p>
-	 * Marks the data dirty for persistence. Town containers persist via the
-	 * holder's automatic save (no explicit mark needed); the unmanaged
-	 * container overrides this with its SavedData's setDirty().
+	 * Marks the data dirty for persistence. Town containers forward to the
+	 * global {@code AITownManager} SavedData; the unmanaged container forwards
+	 * to its per-level SavedData.
 	 */
 	default void markDirty() {
 	}

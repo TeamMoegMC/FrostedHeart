@@ -43,18 +43,17 @@ import net.minecraftforge.server.ServerLifecycleHooks;
  *       AI 镇的模拟统一存全局单文件）；</li>
  *   <li>lastAIId（/fhcitizen ai_add_resident 定位最近创建的 AI 镇）。</li>
  * </ul>
- * 落盘遵循标准 SavedData 语义：结构变更处 {@link #markDirty()}（setDirty），
- * Minecraft 内建 6000t 自动保存 + 停服保存负责写盘——无自定义存盘调度器；
- * 位置数据（行走状态）为瞬态不主动标记，随任何落盘顺带全量保存。
+ * 落盘遵循标准 SavedData 语义：任何持久字段变化（含移动位置/状态/目标）经
+ * {@link #markDirty()}（setDirty）标记，Minecraft 内建 6000t 自动保存 +
+ * 停服保存负责写盘——无自定义存盘调度器或逐 tick 磁盘 I/O。
  * <p>
  * AI town registry + global simulation store (overworld SavedData
  * {@value #DATA_NAME}): AI towns (self-contained, no team) and the player-town
  * simulation table (keyed by team holder id — the simulation is decoupled from
- * teams entirely). Persistence follows standard SavedData semantics: structural
- * changes mark dirty via {@link #markDirty()}; Minecraft's built-in 6000-tick
- * autosave and the server-stop save handle the actual writes — no custom save
- * scheduler; transient position data is never marked and is saved along with
- * any other write.
+ * teams entirely). Persistence follows standard SavedData semantics: all
+ * persisted-field changes mark dirty via {@link #markDirty()}; Minecraft's
+ * built-in 6000-tick autosave and the server-stop save handle the actual
+ * writes — no custom save scheduler or per-tick disk I/O.
  */
 public final class AITownManager {
 
@@ -211,8 +210,15 @@ public final class AITownManager {
 					FHMain.LOGGER.error("AITownManager: failed to decode player sim {}: {}", key, t.toString());
 				}
 			}
-			if (tag.contains("lastAIId"))
-				lastAIId = tag.getUUID("lastAIId");
+			if (tag.contains("lastAIId")) {
+				try {
+					UUID decodedLast = tag.getUUID("lastAIId");
+					lastAIId = byId.containsKey(decodedLast) ? decodedLast : null;
+				} catch (RuntimeException ex) {
+					FHMain.LOGGER.error("AITownManager: failed to decode lastAIId: {}", ex.toString());
+					lastAIId = null;
+				}
+			}
 			return new AITownSaveData();
 		}
 	}

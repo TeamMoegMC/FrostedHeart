@@ -91,6 +91,7 @@ public final class CitizenEvents {
 	 */
 	@SubscribeEvent
 	public static void onServerStopping(ServerStoppingEvent event) {
+		CitizenSimScheduler.markAllDirty();
 		NavJobExecutor.shutdown();
 		CitizenSimScheduler.resetAll();
 	}

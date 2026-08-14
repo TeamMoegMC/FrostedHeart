@@ -92,7 +92,15 @@ public class AITownData implements ITownWithResidents {
 		CompoundTag residentsTag = tag.getCompound("residents");
 		for (String key : residentsTag.getAllKeys()) {
 			try {
-				town.residents.put(UUID.fromString(key), new Resident(residentsTag.getCompound(key)));
+				UUID storedKey = UUID.fromString(key);
+				Resident resident = new Resident(residentsTag.getCompound(key));
+				UUID residentId = resident.getUUID();
+				if (!storedKey.equals(residentId))
+					FHMain.LOGGER.warn("AITownData: resident key {} disagrees with payload {} in town {}; using payload UUID",
+							storedKey, residentId, town.name);
+				if (town.residents.putIfAbsent(residentId, resident) != null)
+					FHMain.LOGGER.error("AITownData: duplicate resident UUID {} in town {}; keeping first entry",
+							residentId, town.name);
 			} catch (Throwable t) {
 				FHMain.LOGGER.error("AITownData: failed to decode resident {} in town {}: {}", key, town.name, t.toString());
 			}

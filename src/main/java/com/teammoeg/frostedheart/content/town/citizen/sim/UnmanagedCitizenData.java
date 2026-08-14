@@ -108,11 +108,11 @@ public final class UnmanagedCitizenData extends SavedData implements CitizenCont
 				// uuid≠0 的镇居民条目丢弃：重启后由各镇接管时 rebind 重建
 				// (town residents dropped: rebuilt by each town's takeover rebind)
 			}
-			data.nextId = Math.max(data.nextId, data.maxId() + 1);
+			data.ensureNextIdAfter(data.maxId());
 			data.setDirty(); // 立即回写新格式 / rewrite in the new format
 			FHMain.LOGGER.info("Migrated citizen sim save to unmanaged format: {} unmanaged entries", data.sim.size());
 		}
-		data.nextId = Math.max(data.nextId, data.maxId() + 1); // 保底：现存 id 永不复用
+		data.ensureNextIdAfter(data.maxId()); // 保底：现存 id 永不复用
 		return data;
 	}
 
@@ -130,6 +130,27 @@ public final class UnmanagedCitizenData extends SavedData implements CitizenCont
 				max = sim.id[i];
 		}
 		return max;
+	}
+
+	/**
+	 * 确保下一个 id 严格大于给定的已用 id。调度器首次接管时会用本维度所有
+	 * town/AI/未托管条目的最大 id 校准一次，以修复跨 SavedData 文件在异常中断
+	 * 后可能出现的分配器落后。
+	 * <p>
+	 * Ensures the next allocated id is strictly above a known used id. On first
+	 * takeover the scheduler calibrates this against every town, AI-town and
+	 * unmanaged entry in the level, repairing an allocator lag caused by a
+	 * partially completed cross-SavedData save.
+	 *
+	 * @param usedId 已使用的最大 id / largest known used id
+	 */
+	void ensureNextIdAfter(int usedId) {
+		if (usedId < nextId)
+			return;
+		if (usedId == Integer.MAX_VALUE)
+			throw new IllegalStateException("Citizen id space exhausted");
+		nextId = Math.max(1, usedId + 1);
+		setDirty();
 	}
 
 	/**
@@ -178,6 +199,8 @@ public final class UnmanagedCitizenData extends SavedData implements CitizenCont
 	 * @return 新 id / the new id
 	 */
 	public int allocId() {
+		if (nextId <= 0 || nextId == Integer.MAX_VALUE)
+			throw new IllegalStateException("Citizen id space exhausted or corrupt: " + nextId);
 		int id = nextId++;
 		setDirty();
 		return id;

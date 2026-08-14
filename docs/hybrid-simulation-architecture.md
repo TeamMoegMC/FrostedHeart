@@ -63,9 +63,10 @@ frostedheart/content/town/citizen/
 > 每日结算刷新锚点，调度器首次接管时一次性恢复（rebindAll）。
 > **AI 镇是独立 Town**（`AITownData` implements ITownWithResidents）：不伪造
 > AbstractTeam、不建队伍 holder、不参与每日结算（调试镇稳定不演化）；居民增删
-> 直调 sim 事件回调 + 结构变更 dirty 标记。落盘遵循标准 SavedData 语义——结构
-> 变更处 `setDirty()`，Minecraft 内建 6000t 自动保存/停服写盘（无自定义存盘
-> 调度器），位置数据为瞬态不主动标记。不再有 1Hz 全局对账同步器；
+> 直调 sim 事件回调 + 结构变更 dirty 标记。落盘遵循标准 SavedData 语义——
+> 位置、朝向、行为状态、目标、锚点等权威字段变化也只设置 dirty 内存标志
+> （不立即写盘），由 Minecraft 内建 6000t 自动保存/停服统一写盘，并在正常
+> 停服前做一次兜底标记。不再有 1Hz 全局对账同步器；
 > `/fhcitizen clear` 只清未托管命令居民。
 
 ---
@@ -332,8 +333,8 @@ public final class ClientCitizen {
 
 ## 10. 持久化
 
-- 镇容器 `TownSimData` 与队伍零关联，统一存**全局单文件**（`AITownManager`，overworld SavedData "fh_ai_towns"：AI 镇列表 + 玩家镇模拟表 key=队伍 holder id）；结构变更（出生/移除条目）经 dirty 回调 `setDirty()`，Minecraft 内建 6000t 自动保存/停服写盘（无自定义存盘调度器）。仅落盘 `CitizenSim`，tradeData/nameCache 等运行期状态不落盘。
-- 未托管容器 `UnmanagedCitizenData extends SavedData`（per-level，沿用旧文件名 `fh_citizen_sim`），结构变更处 `setDirty()`（无周期调度）；同时承载全局稳定 id 分配器（nextId 持久化、永不复用）。
+- 镇容器 `TownSimData` 与队伍零关联，统一存**全局单文件**（`AITownManager`，overworld SavedData "fh_ai_towns"：AI 镇列表 + 玩家镇模拟表 key=队伍 holder id）；所有落盘字段变化（位置/朝向/行为状态/目标/锚点/出生/移除）经 dirty 回调 `setDirty()`，只设置内存标志，不产生逐 tick 磁盘 I/O；Minecraft 内建 6000t 自动保存/停服负责真正写盘。除 `CitizenSim` 外还保存最近所属维度，确保跨重启换维度时重建 per-level 会话 id；tradeData/nameCache 等运行期状态不落盘。
+- 未托管容器 `UnmanagedCitizenData extends SavedData`（per-level，沿用旧文件名 `fh_citizen_sim`），采用同样的变更标脏语义；同时承载本维度稳定 id 分配器（nextId 持久化、永不复用）。首次接管会以本维度全部容器的最大现存 id 校准分配器；若坏档或不完整写盘已造成跨容器 id 冲突，只重分配冲突的会话 id，位置/状态/居民 UUID 保持不变。
 - 序列化按 SoA 数组直写 NBT `int[]/byte[]` 数组字段，遵循项目 Codec-first 约定可用 `Codec.INT_STREAM`/`BYTE_BUFFER`；1 万居民落盘 < 1MB，毫秒级。
 - 冷数据档案另存一个 compound。版本号字段预留迁移空间（参考仓库根 `NBT_MIGRATION_GUIDE.md`）。
 

@@ -36,9 +36,8 @@ import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.level.Level;
 
 /**
  * 城镇居民模拟数据（与队伍零关联的纯模拟数据）：玩家镇与 AI 镇共用同一类，
@@ -51,11 +50,12 @@ import net.minecraft.world.level.Level;
  * 每日结算完成经同一监听器刷新锚点，首次接管时一次性恢复。
  * 事件驱动，无周期性对账同步器。
  * <p>
- * NBT 序列化（{@link #toNbt}/{@link #loadFromNbt}）仅落盘 sim（tradeData/
- * nameCache 是运行期身份状态）；解码由存储方 total 化（坏数据绝不向外抛——
+	 * NBT 序列化（{@link #toNbt}/{@link #loadFromNbt}）落盘 sim 与最近所属维度
+	 * （tradeData/nameCache 是运行期身份状态）；解码由存储方 total 化（坏数据绝不向外抛——
  * 会拒绝整个全局文件，按空模拟启动，由接管对账重建）。落盘遵循标准 SavedData
- * 语义：结构变更（出生/移除条目）经 {@link #setMarkDirty} 注入的 dirty 回调
- * 标记，Minecraft 自动保存/停服负责写盘；位置数据为瞬态不标记。
+ * 语义：任何落盘字段变化（位置、朝向、状态、目标、锚点、出生/移除）经
+ * {@link #setMarkDirty} 注入的 dirty 回调标记，Minecraft 自动保存/停服负责
+ * 写盘。这样既保留自动保存检查点，也能在正常退出时写入最后位置。
  * <p>
  * Shared per-town citizen simulation data, decoupled from the team entirely:
  * player towns and AI towns use this same class, all stored in the global
@@ -90,14 +90,14 @@ public class TownSimData implements CitizenContainer, ITownResidentListener {
 	 */
 	private final Int2ObjectOpenHashMap<String> nameCache = new Int2ObjectOpenHashMap<>();
 
-	/** 最后活跃维度（transient）：维度切换时全量重生 / Last active level: full respawn across dimensions */
-	private transient ResourceKey<Level> lastActiveLevel;
+	/** 最后活跃维度（落盘）：跨重启维度切换时也能全量重生 / Last active level (persisted): enables full respawn across restart-spanning dimension changes */
+	private ResourceLocation lastActiveDimension;
 	/** 接管状态（transient）：调度器首次接管时完成一次性恢复 + 注册事件 / Adopted flag: one-time restore + event registration */
 	private transient boolean adopted = false;
 	/** 接管时的调度器/维度引用（transient，事件回调内使用）/ Scheduler & level references (transient, used in callbacks) */
 	private transient CitizenSimScheduler activeSched;
 	private transient ServerLevel activeLevel;
-	/** 结构变更 dirty 回调（transient，由存储方注入：玩家镇 → AITownManager::markDirty；AI 镇不设——AITownData 自管）/ Structural-change dirty callback (transient, injected by the store: player towns → AITownManager::markDirty; AI towns leave unset — AITownData manages its own dirty) */
+	/** 持久化 dirty 回调（transient，玩家镇与 AI 镇均由存储方注入 AITownManager::markDirty）/ Persistence dirty callback (transient, injected as AITownManager::markDirty for both player and AI towns) */
 	private transient Runnable markDirtyCallback;
 
 	public TownSimData() {
@@ -105,13 +105,12 @@ public class TownSimData implements CitizenContainer, ITownResidentListener {
 	}
 
 	/**
-	 * 注入结构变更 dirty 回调（存储方在 adopt 前调用）：条目出生/移除时标记，
-	 * 由 Minecraft 自动保存/停服负责落盘（标准 SavedData 语义，无周期调度）。
+	 * 注入持久化 dirty 回调（存储方在 adopt 前调用）：任何落盘字段变化时标记，
+	 * 由 Minecraft 自动保存/停服负责落盘（标准 SavedData 语义）。
 	 * <p>
-	 * Injects the structural-change dirty callback (called by the store before
-	 * adopt): marks on entry spawn/removal; Minecraft's autosave and server
-	 * stop handle the actual write (standard SavedData semantics, no periodic
-	 * scheduling).
+	 * Injects the persistence dirty callback (called by the store before adopt):
+	 * any persisted-field mutation marks the backing SavedData; Minecraft's
+	 * autosave and server stop handle the actual write.
 	 *
 	 * @param callback 回调；null 清除 / the callback; null clears it
 	 */
@@ -119,19 +118,27 @@ public class TownSimData implements CitizenContainer, ITownResidentListener {
 		this.markDirtyCallback = callback;
 	}
 
+	@Override
+	public void markDirty() {
+		if (markDirtyCallback != null)
+			markDirtyCallback.run();
+	}
+
 	/* ===================== 序列化 ===================== */
 
 	/**
-	 * 序列化（仅写 sim；tradeData/nameCache/lastActiveLevel/adopted 均不落盘）。
+	 * 序列化（写 sim 与最后活跃维度；tradeData/nameCache/adopted 不落盘）。
 	 * public：供存储方（AITownManager 全局文件）与 CODEC 调用。
 	 * <p>
-	 * Serializes (sim only; tradeData/nameCache/lastActiveLevel/adopted are
-	 * runtime state, not persisted). Public for the store (AITownManager's
-	 * global save) and the CODEC.
+	 * Serializes the sim and last active dimension; tradeData/nameCache/adopted
+	 * remain runtime-only. Public for the store (AITownManager's global save)
+	 * and the CODEC.
 	 */
 	public static CompoundTag toNbt(TownSimData data) {
 		CompoundTag tag = new CompoundTag();
 		tag.put("sim", data.sim.save(new CompoundTag()));
+		if (data.lastActiveDimension != null)
+			tag.putString("dimension", data.lastActiveDimension.toString());
 		return tag;
 	}
 
@@ -143,6 +150,14 @@ public class TownSimData implements CitizenContainer, ITownResidentListener {
 	 * @param tag 源标签 / source tag
 	 */
 	public void loadFromNbt(CompoundTag tag) {
+		if (tag.contains("dimension")) {
+			String encodedDimension = tag.getString("dimension");
+			if (!encodedDimension.isBlank()) {
+				ResourceLocation dimension = ResourceLocation.tryParse(encodedDimension);
+				if (dimension != null)
+					lastActiveDimension = dimension;
+			}
+		}
 		// The first hybrid-simulation build accidentally wrote CitizenSim fields
 		// directly into this tag. Accept that flat layout while writing the
 		// intended nested layout from now on.
@@ -200,11 +215,14 @@ public class TownSimData implements CitizenContainer, ITownResidentListener {
 		int idx = sim.findByUuid(hi, lo);
 		if (idx >= 0) {
 			// 幂等：重复事件只更新锚点/工作/名字（房屋与工作每日由城镇重分配）
+			boolean persistedChanged = sim.homeX[idx] != anchor.getX() || sim.homeZ[idx] != anchor.getZ();
 			sim.homeX[idx] = anchor.getX();
 			sim.homeZ[idx] = anchor.getZ();
 			sim.wx[idx] = work != null ? work.getX() : -1;
 			sim.wz[idx] = work != null ? work.getZ() : -1;
 			nameCache.put(sim.id[idx], resident.getFirstName() + " " + resident.getLastName());
+			if (persistedChanged)
+				markDirty();
 			return;
 		}
 		// 新条目：出生在锚点附近地面，双向绑定身份（simId ↔ uuid）
@@ -220,9 +238,8 @@ public class TownSimData implements CitizenContainer, ITownResidentListener {
 		sim.wz[i] = work != null ? work.getZ() : -1;
 		resident.setSimId(id);
 		nameCache.put(id, resident.getFirstName() + " " + resident.getLastName());
-		// 结构变更（新条目出生）：标记 dirty，随 Minecraft 自动保存/停服落盘
-		if (markDirtyCallback != null)
-			markDirtyCallback.run();
+		activeSched.register(this, id);
+		markDirty();
 	}
 
 	/**
@@ -245,10 +262,7 @@ public class TownSimData implements CitizenContainer, ITownResidentListener {
 		if (idx < 0)
 			return;
 		resident.setSimId(-1);
-		activeSched.remove(activeLevel, sim.id[idx]);
-		// 结构变更（条目移除）：标记 dirty，随 Minecraft 自动保存/停服落盘
-		if (markDirtyCallback != null)
-			markDirtyCallback.run();
+		activeSched.remove(this, sim.id[idx]);
 	}
 
 	/**
@@ -288,12 +302,20 @@ public class TownSimData implements CitizenContainer, ITownResidentListener {
 	 * @param townData 本镇数据 / this town's data
 	 */
 	public void adopt(CitizenSimScheduler sched, ServerLevel level, TeamTownData townData) {
+		ResourceLocation savedDimension = this.lastActiveDimension;
 		this.activeSched = sched;
 		this.activeLevel = level;
-		this.lastActiveLevel = level.dimension();
+		this.lastActiveDimension = level.dimension().location();
 		this.adopted = true;
 		townData.setResidentListener(this);
-		syncTownResidents(level, townData);
+		Collection<Resident> residents = TeamTown.create(townData).getAllResidents();
+		if (savedDimension != null && !savedDimension.equals(level.dimension().location()))
+			rebuildAfterOfflineLevelChange(level, residents);
+		else {
+			if (savedDimension == null)
+				markDirty();
+			syncTownResidents(level, residents);
+		}
 	}
 
 	/**
@@ -315,11 +337,58 @@ public class TownSimData implements CitizenContainer, ITownResidentListener {
 	 * @param aiTown 本 AI 镇数据 / this AI town's data
 	 */
 	public void adopt(CitizenSimScheduler sched, ServerLevel level, AITownData aiTown) {
+		ResourceLocation savedDimension = this.lastActiveDimension;
 		this.activeSched = sched;
 		this.activeLevel = level;
-		this.lastActiveLevel = level.dimension();
+		this.lastActiveDimension = level.dimension().location();
 		this.adopted = true;
-		syncTownResidents(level, aiTown.getAllResidents());
+		if (savedDimension != null && !savedDimension.equals(level.dimension().location()))
+			rebuildAfterOfflineLevelChange(level, aiTown.getAllResidents());
+		else {
+			if (savedDimension == null)
+				markDirty();
+			syncTownResidents(level, aiTown.getAllResidents());
+		}
+	}
+
+	/** 首次接管时发现落盘维度不同：旧会话 id 不属于当前 per-level id 空间。 */
+	private void rebuildAfterOfflineLevelChange(ServerLevel level, Collection<Resident> residents) {
+		for (Resident resident : residents)
+			resident.setSimId(-1);
+		sim.clear();
+		tradeData.clear();
+		nameCache.clear();
+		markDirty();
+		syncTownResidents(level, residents);
+		FHMain.LOGGER.debug("Citizen sim rebuilt after offline dimension change: {} entries", sim.size());
+	}
+
+	/**
+	 * 保留完整模拟状态地替换冲突会话 id，并同步运行期缓存与 Resident 反向绑定。
+	 * <p>
+	 * Replaces a colliding session id without losing simulation state, keeping
+	 * runtime caches and the Resident reverse binding consistent.
+	 */
+	void reassignId(int index, int newId, Collection<Resident> residents) {
+		long hi = sim.uuidHi[index];
+		long lo = sim.uuidLo[index];
+		int oldId = sim.replaceId(index, newId);
+		String name = nameCache.remove(oldId);
+		if (name != null)
+			nameCache.put(newId, name);
+		FHVillagerData trade = tradeData.remove(oldId);
+		if (trade != null) {
+			trade.setCitizenId(newId);
+			tradeData.put(newId, trade);
+		}
+		for (Resident resident : residents) {
+			UUID uuid = resident.getUUID();
+			if (uuid.getMostSignificantBits() == hi && uuid.getLeastSignificantBits() == lo) {
+				resident.setSimId(newId);
+				break;
+			}
+		}
+		markDirty();
 	}
 
 	/**
@@ -348,10 +417,10 @@ public class TownSimData implements CitizenContainer, ITownResidentListener {
 	 */
 	public void onLevelChange(ServerLevel level, CitizenSimScheduler sched,
 			Collection<Resident> residents) {
-		if (lastActiveLevel == null || lastActiveLevel.equals(level.dimension())) {
+		if (lastActiveDimension == null || lastActiveDimension.equals(level.dimension().location())) {
 			this.activeSched = sched;
 			this.activeLevel = level;
-			lastActiveLevel = level.dimension();
+			lastActiveDimension = level.dimension().location();
 			return;
 		}
 
@@ -366,12 +435,13 @@ public class TownSimData implements CitizenContainer, ITownResidentListener {
 
 		this.activeSched = sched;
 		this.activeLevel = level;
-		lastActiveLevel = level.dimension();
+		lastActiveDimension = level.dimension().location();
 		for (Resident resident : residents)
 			resident.setSimId(-1);
 		sim.clear();
 		tradeData.clear();
 		nameCache.clear();
+		markDirty();
 		syncTownResidents(level, residents);
 		FHMain.LOGGER.debug("Citizen sim for town rebuilt across dimension change: {} entries", sim.size());
 	}
@@ -387,12 +457,12 @@ public class TownSimData implements CitizenContainer, ITownResidentListener {
 	 * continuity), spawns missing entries, drops homeless ones and prunes ghosts.
 	 */
 	private void syncTownResidents(ServerLevel level, Collection<Resident> residents) {
-		Set<Long> liveKeys = new HashSet<>();
+		Set<UUID> liveIds = new HashSet<>();
 		for (Resident r : residents) {
 			UUID u = r.getUUID();
 			long hi = u.getMostSignificantBits();
 			long lo = u.getLeastSignificantBits();
-			liveKeys.add(hi ^ lo);
+			liveIds.add(u);
 			BlockPos house = r.getHousePos();
 			BlockPos work = r.getWorkPos();
 			BlockPos anchor = house != null ? house : work;
@@ -401,7 +471,7 @@ public class TownSimData implements CitizenContainer, ITownResidentListener {
 				// 无家无业：城镇每日也让它掉血至死，模拟里不保留幽灵
 				if (idx >= 0) {
 					r.setSimId(-1);
-					activeSched.remove(level, sim.id[idx]);
+					activeSched.remove(this, sim.id[idx]);
 				}
 				continue;
 			}
@@ -410,12 +480,15 @@ public class TownSimData implements CitizenContainer, ITownResidentListener {
 				onResidentAdded(r);
 			} else {
 				// 既有条目：更新锚点/工作/名字（房屋与工作每日由城镇重分配）
+				boolean persistedChanged = sim.homeX[idx] != anchor.getX() || sim.homeZ[idx] != anchor.getZ();
 				sim.homeX[idx] = anchor.getX();
 				sim.homeZ[idx] = anchor.getZ();
 				sim.wx[idx] = work != null ? work.getX() : -1;
 				sim.wz[idx] = work != null ? work.getZ() : -1;
 				r.setSimId(sim.id[idx]);
 				nameCache.put(sim.id[idx], r.getFirstName() + " " + r.getLastName());
+				if (persistedChanged)
+					markDirty();
 			}
 		}
 		// 幽灵剪除：本容器条目代表的居民已不在城镇（防御非门面直写/事件丢失）。
@@ -424,11 +497,11 @@ public class TownSimData implements CitizenContainer, ITownResidentListener {
 		for (int i = 0; i < sim.size(); i++) {
 			if (sim.uuidHi[i] == 0 && sim.uuidLo[i] == 0)
 				continue; // 防御：城镇容器不应有未托管条目
-			if (!liveKeys.contains(sim.uuidHi[i] ^ sim.uuidLo[i]))
+			if (!liveIds.contains(new UUID(sim.uuidHi[i], sim.uuidLo[i])))
 				stale.add(sim.id[i]);
 		}
 		for (int k = 0; k < stale.size(); k++)
-			activeSched.remove(level, stale.getInt(k));
+			activeSched.remove(this, stale.getInt(k));
 	}
 
 	/**
@@ -469,5 +542,4 @@ public class TownSimData implements CitizenContainer, ITownResidentListener {
 		tradeData.remove(citizenId);
 		nameCache.remove(citizenId);
 	}
-	// markDirty：default 空实现——城镇容器经 holder 自动存盘，无需显式标记
 }

@@ -72,13 +72,21 @@ public final class BehaviorSystem {
 		for (CitizenContainer c : sched.containers()) {
 			CitizenSim sim = c.sim();
 			int n = sim.size();
+			boolean persistedChanged = false;
 			for (int i = 0; i < n; i++) {
 				if (sim.tickPhase[i] != slice)
 					continue;
 				if (!sched.isActive(c, i))
 					continue;
+				byte oldState = sim.state[i];
+				int oldTargetX = sim.tx[i];
+				int oldTargetZ = sim.tz[i];
 				tickOne(sim, i, night, workTime, gameTime);
+				persistedChanged |= oldState != sim.state[i]
+						|| oldTargetX != sim.tx[i] || oldTargetZ != sim.tz[i];
 			}
+			if (persistedChanged)
+				c.markDirty();
 		}
 	}
 

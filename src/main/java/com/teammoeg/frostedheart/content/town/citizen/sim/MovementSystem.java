@@ -66,9 +66,16 @@ public final class MovementSystem {
         for (CitizenContainer c : sched.containers()) {
             CitizenSim sim = c.sim();
             int n = sim.size();
+			boolean persistedChanged = false;
             for (int i = 0; i < n; i++) {
                 if (!sched.isActive(c, i))
                     continue;
+				int oldX = sim.px[i];
+				int oldY = sim.py[i];
+				int oldZ = sim.pz[i];
+				int oldTargetX = sim.tx[i];
+				int oldTargetZ = sim.tz[i];
+				byte oldYaw = sim.yaw[i];
 
                 if (CitizenState.MOVING[sim.state[i]]) {
                     // 移动居民：只调用一次 step
@@ -77,7 +84,12 @@ public final class MovementSystem {
                     // 站立居民：每 5 tick 贴地一次
                     conformHeight(sim, level, i);
                 }
+				persistedChanged |= oldX != sim.px[i] || oldY != sim.py[i] || oldZ != sim.pz[i]
+						|| oldTargetX != sim.tx[i] || oldTargetZ != sim.tz[i]
+						|| oldYaw != sim.yaw[i];
             }
+			if (persistedChanged)
+				c.markDirty();
         }
     }
 

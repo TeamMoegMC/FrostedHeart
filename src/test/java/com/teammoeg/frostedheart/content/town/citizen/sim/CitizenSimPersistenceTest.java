@@ -9,8 +9,12 @@ package com.teammoeg.frostedheart.content.town.citizen.sim;
 import net.minecraft.nbt.CompoundTag;
 import org.junit.jupiter.api.Test;
 
+import java.util.concurrent.atomic.AtomicInteger;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class CitizenSimPersistenceTest {
 
@@ -48,6 +52,105 @@ class CitizenSimPersistenceTest {
         decoded.loadFromNbt(flatLegacy);
 
         assertSample(decoded.sim);
+    }
+
+    @Test
+    void townSimRoundTripPreservesLastActiveDimension() {
+        CompoundTag encoded = TownSimData.toNbt(new TownSimData());
+        encoded.putString("dimension", "minecraft:the_nether");
+        TownSimData decoded = new TownSimData();
+
+        decoded.loadFromNbt(encoded);
+
+        assertEquals("minecraft:the_nether", TownSimData.toNbt(decoded).getString("dimension"));
+    }
+
+    @Test
+    void corruptDuplicateIdsAndInvalidStateAreSanitized() {
+        CompoundTag corrupt = new CompoundTag();
+        corrupt.putInt("size", 2);
+        corrupt.putIntArray("id", new int[] { 7, 7 });
+        corrupt.putIntArray("px", new int[] { 1024, 8192 });
+        corrupt.putIntArray("py", new int[] { 2048, 9216 });
+        corrupt.putIntArray("pz", new int[] { 3072, 10240 });
+        corrupt.putByteArray("state", new byte[] { (byte) 99, CitizenState.WORK });
+        corrupt.putLongArray("uuidHi", new long[] { 123L });
+
+        CitizenSim decoded = CitizenSim.load(corrupt);
+
+        assertEquals(1, decoded.size());
+        assertEquals(7, decoded.id[0]);
+        assertEquals(1024, decoded.px[0]);
+        assertEquals(CitizenState.IDLE, decoded.state[0]);
+        assertEquals(0L, decoded.uuidHi[0]);
+        assertEquals(0L, decoded.uuidLo[0]);
+    }
+
+    @Test
+    void runtimeDuplicateIdsAreRejected() {
+        CitizenSim sim = new CitizenSim(2);
+        sim.add(9, 0, 0, 0, (byte) 9);
+
+        assertThrows(IllegalArgumentException.class, () -> sim.add(9, 1, 2, 3, (byte) 9));
+        assertEquals(1, sim.size());
+    }
+
+    @Test
+    void invalidRuntimeIdsAreRejected() {
+        CitizenSim sim = new CitizenSim(2);
+
+        assertThrows(IllegalArgumentException.class, () -> sim.add(0, 0, 0, 0, (byte) 0));
+        assertThrows(IllegalArgumentException.class,
+                () -> sim.add(Integer.MAX_VALUE, 0, 0, 0, (byte) 0));
+        assertEquals(0, sim.size());
+    }
+
+    @Test
+    void replacingSessionIdPreservesDataAndReverseLookup() {
+        CitizenSim sim = sampleSim();
+
+        assertEquals(41, sim.replaceId(0, 77));
+
+        assertEquals(-1, sim.indexOf(41));
+        assertEquals(0, sim.indexOf(77));
+        assertEquals(77, sim.id[0]);
+        assertEquals((byte) (77 % BehaviorSystem.SLICE), sim.tickPhase[0]);
+        assertEquals(1024, sim.px[0]);
+        assertEquals(123L, sim.uuidHi[0]);
+        assertEquals(CitizenState.WORK, sim.state[0]);
+    }
+
+    @Test
+    void corruptDuplicateManagedIdentityIsSanitized() {
+        CompoundTag corrupt = new CompoundTag();
+        corrupt.putInt("size", 2);
+        corrupt.putIntArray("id", new int[] { 21, 22 });
+        corrupt.putIntArray("px", new int[] { 1024, 8192 });
+        corrupt.putIntArray("py", new int[] { 2048, 9216 });
+        corrupt.putIntArray("pz", new int[] { 3072, 10240 });
+        corrupt.putLongArray("uuidHi", new long[] { 123L, 123L });
+        corrupt.putLongArray("uuidLo", new long[] { 456L, 456L });
+
+        CitizenSim decoded = CitizenSim.load(corrupt);
+
+        assertEquals(1, decoded.size());
+        assertEquals(21, decoded.id[0]);
+        assertEquals(123L, decoded.uuidHi[0]);
+        assertEquals(456L, decoded.uuidLo[0]);
+    }
+
+    @Test
+    void unifiedRemovalMarksBackingDataDirty() {
+        TownSimData data = new TownSimData();
+        AtomicInteger dirtyCalls = new AtomicInteger();
+        data.setMarkDirty(dirtyCalls::incrementAndGet);
+        data.sim.add(13, 0, 0, 0, (byte) 13);
+
+        assertTrue(CitizenSimScheduler.removeData(data, 13));
+        assertEquals(0, data.sim.size());
+        assertEquals(1, dirtyCalls.get());
+        assertFalse(CitizenSimScheduler.removeData(data, 13));
+        assertEquals(1, dirtyCalls.get());
     }
 
     private static CitizenSim sampleSim() {

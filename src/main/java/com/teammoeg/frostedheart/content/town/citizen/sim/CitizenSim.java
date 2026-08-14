@@ -20,6 +20,9 @@
 package com.teammoeg.frostedheart.content.town.citizen.sim;
 
 import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.UUID;
 
 import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
 import net.minecraft.nbt.CompoundTag;
@@ -153,6 +156,10 @@ public final class CitizenSim {
 	 * @return 运行期索引 / runtime index
 	 */
 	public int add(int newId, int x, int y, int z, byte phase) {
+		if (newId <= 0 || newId == Integer.MAX_VALUE)
+			throw new IllegalArgumentException("Invalid citizen id " + newId);
+		if (idToIndex.containsKey(newId))
+			throw new IllegalArgumentException("Duplicate citizen id " + newId);
 		if (size == capacity)
 			grow();
 		int i = size++;
@@ -241,6 +248,35 @@ public final class CitizenSim {
 	 */
 	public int indexOf(int citizenId) {
 		return idToIndex.get(citizenId);
+	}
+
+	/**
+	 * 替换一个运行期会话 id，同时维护反向索引与分帧相位。仅用于跨容器 id
+	 * 冲突恢复；位置、状态、目标和持久居民 UUID 均保持不变。
+	 * <p>
+	 * Replaces a runtime session id while maintaining the reverse index and
+	 * time-slice phase. Used only for cross-container collision recovery; all
+	 * position, state, target and durable resident UUID fields are preserved.
+	 *
+	 * @param index 运行期索引 / runtime index
+	 * @param newId 新稳定 id / new stable id
+	 * @return 旧 id / previous id
+	 */
+	public int replaceId(int index, int newId) {
+		if (index < 0 || index >= size)
+			throw new IndexOutOfBoundsException(index);
+		if (newId <= 0 || newId == Integer.MAX_VALUE)
+			throw new IllegalArgumentException("Invalid citizen id " + newId);
+		int oldId = id[index];
+		if (oldId == newId)
+			return oldId;
+		if (idToIndex.containsKey(newId))
+			throw new IllegalArgumentException("Duplicate citizen id " + newId);
+		idToIndex.remove(oldId);
+		id[index] = newId;
+		tickPhase[index] = (byte) (newId % BehaviorSystem.SLICE);
+		idToIndex.put(newId, index);
+		return oldId;
 	}
 
 	/**
@@ -346,23 +382,42 @@ public final class CitizenSim {
 		n = Math.min(n, Math.min(Math.min(ids.length, apx.length),
 				Math.min(apy.length, apz.length)));
 		CitizenSim sim = new CitizenSim(n);
+		Set<UUID> managedIdentities = new HashSet<>();
 		for (int k = 0; k < n; k++) {
+			if (ids[k] <= 0 || ids[k] == Integer.MAX_VALUE)
+				continue;
+			// A duplicated stable id makes one array slot unreachable through the
+			// id index and breaks removal/sync. Preserve the first valid record and
+			// discard later corrupt duplicates.
+			if (sim.indexOf(ids[k]) >= 0)
+				continue;
+			UUID managedIdentity = null;
+			if (k < auuidHi.length && k < auuidLo.length
+					&& (auuidHi[k] != 0 || auuidLo[k] != 0)) {
+				managedIdentity = new UUID(auuidHi[k], auuidLo[k]);
+				if (!managedIdentities.add(managedIdentity))
+					continue;
+			}
 			int i = sim.add(ids[k], apx[k], apy[k], apz[k], (byte) (ids[k] % 20));
 			if (k < ayaw.length)
 				sim.yaw[i] = ayaw[k];
 			// syaw was introduced by the 256-step yaw refactor. Older saves do
 			// not contain it; their current yaw is the correct canonical baseline.
 			sim.syaw[i] = k < asyaw.length ? asyaw[k] : sim.yaw[i];
-			if (k < astate.length)
-				sim.state[i] = astate[k];
+			if (k < astate.length) {
+				int loadedState = astate[k] & 0xFF;
+				sim.state[i] = loadedState < CitizenState.STATE_COUNT ? astate[k] : CitizenState.IDLE;
+			}
 			if (k < ahomeX.length)
 				sim.homeX[i] = ahomeX[k];
 			if (k < ahomeZ.length)
 				sim.homeZ[i] = ahomeZ[k];
-			if (k < auuidHi.length)
-				sim.uuidHi[i] = auuidHi[k];
-			if (k < auuidLo.length)
-				sim.uuidLo[i] = auuidLo[k];
+			// Identity is an atomic pair. A half-written UUID is treated as the
+			// unmanaged sentinel instead of inventing a different resident id.
+			if (managedIdentity != null) {
+				sim.uuidHi[i] = managedIdentity.getMostSignificantBits();
+				sim.uuidLo[i] = managedIdentity.getLeastSignificantBits();
+			}
 			if (k < atx.length)
 				sim.tx[i] = atx[k];
 			if (k < aty.length)

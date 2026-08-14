@@ -20,12 +20,14 @@
 package com.teammoeg.frostedheart.content.town.citizen.sim;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import com.teammoeg.chorda.dataholders.team.CTeamDataManager;
 import com.teammoeg.chorda.dataholders.team.TeamDataHolder;
+import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.bootstrap.common.FHSpecialDataTypes;
 import com.teammoeg.frostedheart.content.town.ITown;
 import com.teammoeg.frostedheart.content.town.TeamTown;
@@ -33,9 +35,11 @@ import com.teammoeg.frostedheart.content.town.ai_town.AITownData;
 import com.teammoeg.frostedheart.content.town.ai_town.AITownManager;
 import com.teammoeg.frostedheart.content.town.citizen.nav.FlowFieldCache;
 import com.teammoeg.frostedheart.content.town.citizen.sync.SyncEngine;
+import com.teammoeg.frostedheart.content.town.resident.Resident;
 
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
+import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import net.minecraft.core.BlockPos;
 import net.minecraft.resources.ResourceKey;
@@ -94,6 +98,21 @@ public final class CitizenSimScheduler {
 		BY_LEVEL.clear();
 	}
 
+	/**
+	 * 标记所有已接管容器需要保存。正常停服在清空运行期注册表前调用，确保即使
+	 * 某个未来写路径遗漏了细粒度标记，当前权威快照仍会进入停服保存。
+	 * <p>
+	 * Marks every adopted container dirty. Called before clearing the runtime
+	 * registry during a normal server stop so the authoritative snapshot is
+	 * included in the stop-save even if a future mutation path misses its
+	 * fine-grained mark.
+	 */
+	public static void markAllDirty() {
+		for (CitizenSimScheduler sched : BY_LEVEL.values())
+			for (CitizenContainer container : sched.containers)
+				container.markDirty();
+	}
+
 	public final SpatialGrid grid = new SpatialGrid();
 	public final SyncEngine sync = new SyncEngine();
 	/** 流场缓存（瞬态，不随存档持久化） / Flow field cache (transient, not persisted) */
@@ -109,6 +128,8 @@ public final class CitizenSimScheduler {
 	private Int2ObjectOpenHashMap<CitizenContainer> byId = new Int2ObjectOpenHashMap<>();
 	/** 未托管容器（懒加载，首次访问触发旧格式迁移） / Unmanaged container (lazy; first access migrates old format) */
 	private UnmanagedCitizenData unmanaged;
+	/** 首次注册表刷新时是否已用全部现存条目校准 id 分配器 / Whether the allocator was calibrated against all existing entries */
+	private boolean allocatorReconciled;
 
 	private CitizenSimScheduler() {
 	}
@@ -174,7 +195,10 @@ public final class CitizenSimScheduler {
 	 * @return 新居民的稳定 id / stable id of the new citizen
 	 */
 	public int spawnUnmanaged(ServerLevel level, int blockX, int blockZ) {
-		return getUnmanaged(level).spawn(level, blockX, blockZ, -1);
+		UnmanagedCitizenData data = getUnmanaged(level);
+		int id = data.spawn(level, blockX, blockZ, -1);
+		register(data, id);
+		return id;
 	}
 
 	/**
@@ -189,7 +213,10 @@ public final class CitizenSimScheduler {
 	 * @return 新居民的稳定 id / stable id of the new citizen
 	 */
 	public int spawnUnmanaged(ServerLevel level, int blockX, int blockZ, int blockY) {
-		return getUnmanaged(level).spawn(level, blockX, blockZ, blockY);
+		UnmanagedCitizenData data = getUnmanaged(level);
+		int id = data.spawn(level, blockX, blockZ, blockY);
+		register(data, id);
+		return id;
 	}
 
 	/**
@@ -211,8 +238,21 @@ public final class CitizenSimScheduler {
 		for (int i = 0; i < sim.size(); i++)
 			ids.add(sim.id[i]);
 		for (int k = 0; k < ids.size(); k++)
-			remove(level, ids.getInt(k));
+			remove(data, ids.getInt(k));
 		return ids.size();
+	}
+
+	/**
+	 * 立即登记一个新条目，消除出生后到下次 20t 注册表刷新之间的不可见窗口。
+	 * <p>
+	 * Registers a new entry immediately, removing the lookup gap between birth
+	 * and the next 20-tick registry refresh.
+	 *
+	 * @param container 所属容器 / owning container
+	 * @param citizenId 稳定 id / stable id
+	 */
+	void register(CitizenContainer container, int citizenId) {
+		byId.put(citizenId, container);
 	}
 
 	/**
@@ -228,10 +268,35 @@ public final class CitizenSimScheduler {
 		CitizenContainer c = byId.get(citizenId);
 		if (c == null)
 			return;
-		if (c.sim().remove(citizenId)) {
-			c.onDataRemoved(citizenId);
-			sync.notifyRemoved(citizenId);
-		}
+		remove(c, citizenId);
+	}
+
+	/**
+	 * 从已知所属容器立即移除条目。事件驱动的出生/移除可能发生在两次注册表刷新
+	 * 之间，因此不能只依赖可能滞后的 {@link #byId}。
+	 * <p>
+	 * Removes an entry from its known owner immediately. Event-driven births
+	 * and removals can occur between registry refreshes, so this path must not
+	 * rely solely on the potentially stale {@link #byId} lookup.
+	 *
+	 * @param container 所属容器 / owning container
+	 * @param citizenId 稳定 id / stable id
+	 */
+	void remove(CitizenContainer container, int citizenId) {
+		if (!removeData(container, citizenId))
+			return;
+		if (byId.get(citizenId) == container)
+			byId.remove(citizenId);
+		sync.notifyRemoved(citizenId);
+	}
+
+	/** 数据层统一删除语义：条目、运行期缓存与 dirty 标记必须原子同行。 */
+	static boolean removeData(CitizenContainer container, int citizenId) {
+		if (!container.sim().remove(citizenId))
+			return false;
+		container.onDataRemoved(citizenId);
+		container.markDirty();
+		return true;
 	}
 
 	/**
@@ -299,25 +364,30 @@ public final class CitizenSimScheduler {
 	 * @param level 维度 / the level
 	 */
 	private void refreshRegistry(ServerLevel level) {
+		reconcileAllocator(level);
 		List<CitizenContainer> newContainers = new ArrayList<>();
 		Int2ObjectOpenHashMap<CitizenContainer> newById = new Int2ObjectOpenHashMap<>();
+		UnmanagedCitizenData unmanaged = getUnmanaged(level);
+		IntOpenHashSet usedIds = new IntOpenHashSet();
+		CitizenSim unmanagedSim = unmanaged.sim();
+		for (int i = 0; i < unmanagedSim.size(); i++)
+			usedIds.add(unmanagedSim.id[i]);
 		CTeamDataManager.INSTANCE.forAllData(FHSpecialDataTypes.TOWN_DATA, (townData, holder) -> {
 			if (!ITown.DEBUG_MODE && !isTownInLevel(holder, level))
 				return;
 			// 模拟数据不挂队伍：全局单文件按队伍 id 取（玩家镇模拟与队伍零关联）
 			TownSimData data = AITownManager.getPlayerSim(holder.getId());
+			Collection<Resident> residents = TeamTown.create(townData).getAllResidents();
 			if (!data.isAdopted()) {
 				// 首次接管：注入 dirty 回调 + 一次性恢复（启动加载/旧存档迁移）+ 注册居民变更事件
 				data.setMarkDirty(AITownManager::markDirty);
 				data.adopt(this, level, townData);
 			} else {
 				// 维度变更检测：跨维度全量重生
-				data.onLevelChange(level, this, TeamTown.create(townData).getAllResidents());
+				data.onLevelChange(level, this, residents);
 			}
 			newContainers.add(data);
-			CitizenSim sim = data.sim();
-			for (int i = 0; i < sim.size(); i++)
-				newById.put(sim.id[i], data);
+			indexTownContainer(data, residents, unmanaged, usedIds, newById);
 		});
 		// AI 镇段：独立 Town（无队伍），走全局注册表（维度门控用自身落盘维度）
 		for (AITownData aiTown : AITownManager.all()) {
@@ -325,23 +395,20 @@ public final class CitizenSimScheduler {
 				continue;
 			TownSimData data = aiTown.getSimData();
 			if (!data.isAdopted()) {
-				// 首次接管：一次性对账（补建添加时未接管窗口的条目）
+				// 首次接管：注入全局 dirty 回调 + 一次性对账（补建添加时未接管窗口的条目）
+				data.setMarkDirty(AITownManager::markDirty);
 				data.adopt(this, level, aiTown);
 			} else {
 				// 维度变更检测：跨维度全量重生
 				data.onLevelChange(level, this, aiTown.getAllResidents());
 			}
 			newContainers.add(data);
-			CitizenSim sim = data.sim();
-			for (int i = 0; i < sim.size(); i++)
-				newById.put(sim.id[i], data);
+			indexTownContainer(data, aiTown.getAllResidents(), unmanaged, usedIds, newById);
 		}
-		UnmanagedCitizenData unmanaged = getUnmanaged(level); // 懒加载（首次触发旧格式迁移）
 		this.unmanaged = unmanaged;
 		newContainers.add(unmanaged);
-		CitizenSim uSim = unmanaged.sim();
-		for (int i = 0; i < uSim.size(); i++)
-			newById.put(uSim.id[i], unmanaged);
+		for (int i = 0; i < unmanagedSim.size(); i++)
+			newById.put(unmanagedSim.id[i], unmanaged);
 		// registry diff：本周期消失的条目 → despawn 广播（镇消失/维度切换/事件竞态兜底）
 		for (Int2ObjectOpenHashMap.Entry<CitizenContainer> e : byId.int2ObjectEntrySet()) {
 			int id = e.getIntKey();
@@ -350,6 +417,55 @@ public final class CitizenSimScheduler {
 		}
 		this.containers = newContainers;
 		this.byId = newById;
+	}
+
+	/** 将 town 容器加入注册表；跨容器 id 冲突时仅换会话 id，不丢当前位置与状态。 */
+	private void indexTownContainer(TownSimData data, Collection<Resident> residents,
+			UnmanagedCitizenData allocator, IntOpenHashSet usedIds,
+			Int2ObjectOpenHashMap<CitizenContainer> registry) {
+		CitizenSim sim = data.sim();
+		allocator.ensureNextIdAfter(maxId(sim));
+		for (int i = 0; i < sim.size(); i++) {
+			int id = sim.id[i];
+			if (!usedIds.add(id)) {
+				int replacement = allocator.allocId();
+				data.reassignId(i, replacement, residents);
+				usedIds.add(replacement);
+				FHMain.LOGGER.warn("Reassigned duplicate citizen id {} to {} while rebuilding level registry",
+						id, replacement);
+				id = replacement;
+			}
+			registry.put(id, data);
+		}
+	}
+
+	/**
+	 * 首次接管前校准 per-level id 分配器。条目和分配器分属两个 SavedData 文件，
+	 * 异常中断可能只完成其中一个文件的写入；扫描一次现存最大 id 可避免重用。
+	 */
+	private void reconcileAllocator(ServerLevel level) {
+		if (allocatorReconciled)
+			return;
+		UnmanagedCitizenData data = getUnmanaged(level);
+		int[] highestId = { maxId(data.sim()) };
+		CTeamDataManager.INSTANCE.forAllData(FHSpecialDataTypes.TOWN_DATA, (townData, holder) -> {
+			if (!ITown.DEBUG_MODE && !isTownInLevel(holder, level))
+				return;
+			highestId[0] = Math.max(highestId[0], maxId(AITownManager.getPlayerSim(holder.getId()).sim()));
+		});
+		for (AITownData aiTown : AITownManager.all()) {
+			if (aiTown.isInLevel(level))
+				highestId[0] = Math.max(highestId[0], maxId(aiTown.getSimData().sim()));
+		}
+		data.ensureNextIdAfter(highestId[0]);
+		allocatorReconciled = true;
+	}
+
+	private static int maxId(CitizenSim sim) {
+		int max = 0;
+		for (int i = 0; i < sim.size(); i++)
+			max = Math.max(max, sim.id[i]);
+		return max;
 	}
 
 	/**
