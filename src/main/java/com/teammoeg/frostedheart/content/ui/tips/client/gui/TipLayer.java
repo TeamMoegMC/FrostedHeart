@@ -149,6 +149,17 @@ public class TipLayer extends UILayer {
         refresh();
     }
 
+    void clearImmediately() {
+        AnimationUtil.remove("fh_tip_fading");
+        AnimationUtil.remove("fh_tip_progress");
+        this.tip = Tip.EMPTY;
+        this.lastTip = null;
+        this.display = Tip.Display.DEFAULT;
+        this.state = State.IDLE;
+        this.progress = 0;
+        this.alwaysVisibleOverride = false;
+    }
+
     private void updateYP() {
         var MC = ClientUtils.getMc();
         if (MC.player != null) {
@@ -178,8 +189,8 @@ public class TipLayer extends UILayer {
 
         // 2. 获取内容最大宽度
         int contentWidth = 0;
-        for (String c : tip.contents()) {
-            contentWidth = Math.max(contentWidth, getFont().width(Component.translatable(c)));
+        for (Component component : tip.displayContents()) {
+            contentWidth = Math.max(contentWidth, getFont().width(component));
         }
         if (TipHelper.hasImage(tip)) {
             contentWidth = Math.max(contentWidth, CGuiHelper.getImgSize(tip.image()).width);
@@ -204,13 +215,13 @@ public class TipLayer extends UILayer {
         clearElement();
         add(panel);
         panel.clearElement();
-        if (tip.contents().isEmpty()) return;
+        if (tip.displayContents().isEmpty()) return;
 
         var lines = new ArrayList<Line<?>>();
-        List<String> contents = tip.contents();
+        List<Component> contents = tip.displayContents();
         for (int i = 0; i < contents.size(); i++) {
-            String text = contents.get(i);
-            var line = LineHelper.text(panel, Component.translatable(text));
+            Component text = contents.get(i);
+            var line = LineHelper.text(panel, text);
             if (i == 0) {
                 if (parent instanceof TipOverlay) {
                     line.button(closeBtn);

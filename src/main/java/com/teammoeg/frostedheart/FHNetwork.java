@@ -38,6 +38,7 @@ import com.teammoeg.frostedheart.content.town.network.TownHistoryUpdatePacket;
 import com.teammoeg.frostedheart.content.town.network.TownNameEditRequestPacket;
 import com.teammoeg.frostedheart.content.town.network.TownNameUpdatePacket;
 import com.teammoeg.frostedheart.content.town.network.TownResidentNameEditRequestPacket;
+import com.teammoeg.frostedheart.content.town.network.TownSignalNotificationPacket;
 import com.teammoeg.frostedheart.content.town.network.WanderingRefugeeOpenTradeGUIMessage;
 import com.teammoeg.frostedheart.content.town.network.WanderingRefugeeRecruitMessage;
 import com.teammoeg.frostedheart.content.town.network.WarehouseInteractPacket;
@@ -121,6 +122,7 @@ public class FHNetwork extends CBaseNetwork {
         registerMessage("town_name_edit_request", TownNameEditRequestPacket.class);
         registerMessage("town_name_update", TownNameUpdatePacket.class);
         registerMessage("town_resident_name_edit_request", TownResidentNameEditRequestPacket.class);
+        registerMessage("town_signal_notification", TownSignalNotificationPacket.class);
         registerMessage("wandering_refugee_open_trade_gui", WanderingRefugeeOpenTradeGUIMessage.class);
         registerMessage("wandering_refugee_recruit", WanderingRefugeeRecruitMessage.class);
         registerMessage("warehouse_c2s_interact_packet", WarehouseInteractPacket.class);

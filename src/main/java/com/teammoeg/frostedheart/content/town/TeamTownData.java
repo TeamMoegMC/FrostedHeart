@@ -35,6 +35,7 @@ import com.teammoeg.frostedheart.content.town.network.TownBuildingUpdatePacket;
 import com.teammoeg.frostedheart.content.town.network.TownResidentUpdatePacket;
 import com.teammoeg.frostedheart.content.town.network.TownResourceUpdatePacket;
 import com.teammoeg.frostedheart.content.town.network.TownHistoryUpdatePacket;
+import com.teammoeg.frostedheart.content.town.network.TownSignalNotificationPacket;
 import com.teammoeg.frostedheart.content.town.observation.TownObservationModel;
 import com.teammoeg.frostedheart.content.town.observation.TownOperationalHistory;
 import com.teammoeg.frostedheart.content.town.observation.TownOperationalStatus;
@@ -42,6 +43,9 @@ import com.teammoeg.frostedheart.content.town.observation.TownOperationalStatusM
 import com.teammoeg.frostedheart.content.town.observation.TownOperationalStatusProvider;
 import com.teammoeg.frostedheart.content.town.observation.TownHistoryModel;
 import com.teammoeg.frostedheart.content.town.observation.TownSignalEvent;
+import com.teammoeg.frostedheart.content.town.observation.TownSignalEventModel;
+import com.teammoeg.frostedheart.content.town.observation.TownSignalNotice;
+import com.teammoeg.frostedheart.content.town.observation.TownTowerTipThrottle;
 import com.teammoeg.frostedheart.content.town.resource.ITownResourceKey;
 import com.teammoeg.frostedheart.content.town.util.ObservableTownMap;
 import it.unimi.dsi.fastutil.objects.Object2DoubleOpenHashMap;
@@ -175,8 +179,14 @@ public class TeamTownData implements SpecialData{
 
     /** Threshold events accumulated during the current daily settlement. */
     private transient final List<TownSignalEvent> pendingDailySignals = new ArrayList<>();
+    /** Settlement events waiting for one per-server-tick player brief. */
+    private transient final List<TownSignalEvent> pendingTownTipSignals = new ArrayList<>();
+    /** Tower notifications emitted by the immediate/debounce state machine. */
+    private transient final List<TownSignalNotice> pendingTowerTipSignals = new ArrayList<>();
     /** Last per-second service state; null until the first generator observation. */
     private transient Boolean lastObservedTowerActive;
+    private transient TownTowerTipThrottle.State towerTipState = TownTowerTipThrottle.INITIAL;
+    private transient long nextTownTipNotificationId;
 
     /**
      * 最近一次按世界日结算难民刷新的日期（服务端持久化）。
@@ -303,7 +313,11 @@ public class TeamTownData implements SpecialData{
             teamData.sendToOnline(FHNetwork.INSTANCE, new TownBuildingUpdatePacket(changedBuildings, removedBuildings));
         }
 
-
+        TownTowerTipThrottle.Result deferredTower = TownTowerTipThrottle.onTick(
+                towerTipState, level.getGameTime());
+        towerTipState = deferredTower.state();
+        pendingTowerTipSignals.addAll(deferredTower.emitted());
+        flushTownTipNotifications(teamData);
     }
 
     /**
@@ -319,8 +333,10 @@ public class TeamTownData implements SpecialData{
             GeneratorData genData = genDataOpt.get();
             if (genData.actualPos != null) {
                 genData.townTick(world, teamData);
-                queueTowerServiceCrossing(world, genData.isActive);
             }
+            // An unformed tower cannot heat even if GeneratorData still carries
+            // the last active flag from before the multiblock was broken.
+            queueTowerServiceCrossing(world, genData.actualPos != null && genData.isActive);
         }
     }
 
@@ -333,8 +349,29 @@ public class TeamTownData implements SpecialData{
                     active ? TownSignalEvent.Severity.INFORMATION
                             : TownSignalEvent.Severity.CRITICAL,
                     1, "per-second GeneratorData.isActive crossing"));
+            TownTowerTipThrottle.Result result = TownTowerTipThrottle.onCrossing(
+                    towerTipState, world.getGameTime(), active);
+            towerTipState = result.state();
+            pendingTowerTipSignals.addAll(result.emitted());
         }
         lastObservedTowerActive = active;
+    }
+
+    private void flushTownTipNotifications(TeamDataHolder teamData) {
+        if (!pendingTowerTipSignals.isEmpty()) {
+            teamData.sendToOnline(FHNetwork.INSTANCE, new TownSignalNotificationPacket(
+                    ++nextTownTipNotificationId, List.copyOf(pendingTowerTipSignals)));
+            pendingTowerTipSignals.clear();
+        }
+        if (!pendingTownTipSignals.isEmpty()) {
+            List<TownSignalNotice> compacted = TownSignalEventModel.compactNotifications(
+                    pendingTownTipSignals);
+            pendingTownTipSignals.clear();
+            if (!compacted.isEmpty()) {
+                teamData.sendToOnline(FHNetwork.INSTANCE, new TownSignalNotificationPacket(
+                        ++nextTownTipNotificationId, compacted));
+            }
+        }
     }
 
     public void tickMorning(ServerLevel world, TeamDataHolder teamData) {
@@ -379,6 +416,8 @@ public class TeamTownData implements SpecialData{
         int climateLevel = current.climateLevel();
         TownHistoryEntry previous = history.isEmpty() ? null : history.get(history.size() - 1);
         List<TownSignalEvent> signals = new ArrayList<>();
+        boolean hasPerSecondTowerSignal = pendingDailySignals.stream()
+                .anyMatch(signal -> TownSignalEventModel.isTowerService(signal.type()));
         for (TownSignalEvent signal : pendingDailySignals) {
             addUniqueSignal(signals, new TownSignalEvent(
                     day, signal.hour(), signal.type(), signal.severity(),
@@ -386,7 +425,12 @@ public class TeamTownData implements SpecialData{
         }
         pendingDailySignals.clear();
         if (previous != null) {
-            addDailyThresholdSignals(day, previous, current, signals);
+            addDailyThresholdSignals(day, previous, current, signals, hasPerSecondTowerSignal);
+        }
+        for (TownSignalEvent signal : signals) {
+            if (!TownSignalEventModel.isTowerService(signal.type()) || !hasPerSecondTowerSignal) {
+                pendingTownTipSignals.add(signal);
+            }
         }
         TownHistoryEntry entry = new TownHistoryEntry(
                 day, current.population(), current.averageHealth(),
@@ -409,7 +453,8 @@ public class TeamTownData implements SpecialData{
             long day,
             TownHistoryEntry previous,
             TownOperationalStatus current,
-            List<TownSignalEvent> signals
+            List<TownSignalEvent> signals,
+            boolean skipTowerFallback
     ) {
         int climateLevel = current.climateLevel();
         if (previous.climateLevel() >= 0 && climateLevel < 0) {
@@ -430,7 +475,7 @@ public class TeamTownData implements SpecialData{
         if (!priorOperational.equals(TownOperationalHistory.EMPTY)) {
             boolean towerWorking = current.tower().active();
             boolean previousTowerWorking = priorOperational.tower().active();
-            if (previousTowerWorking != towerWorking) {
+            if (!skipTowerFallback && previousTowerWorking != towerWorking) {
                 addUniqueSignal(signals, new TownSignalEvent(day, 0,
                         towerWorking ? TownSignalEvent.Type.TOWER_SERVICE_RESTORED
                                 : TownSignalEvent.Type.TOWER_SERVICE_LOST,
@@ -493,17 +538,12 @@ public class TeamTownData implements SpecialData{
         int delta = current - previous;
         if (delta == 0) return;
         addUniqueSignal(signals, new TownSignalEvent(day, 0, delta > 0 ? increase : decrease,
-                delta > 0 ? TownSignalEvent.Severity.CRITICAL
-                        : TownSignalEvent.Severity.INFORMATION,
+                TownSignalEventModel.defaultSeverity(delta > 0 ? increase : decrease),
                 Math.abs(delta), "daily threshold count crossed"));
     }
 
     private static void addUniqueSignal(List<TownSignalEvent> signals, TownSignalEvent candidate) {
-        boolean duplicate = signals.stream().anyMatch(existing -> existing.day() == candidate.day()
-                && existing.hour() == candidate.hour() && existing.type() == candidate.type()
-                && existing.severity() == candidate.severity()
-                && existing.affectedCount() == candidate.affectedCount());
-        if (!duplicate) signals.add(candidate);
+        TownSignalEventModel.addToHistory(signals, candidate);
     }
 
     /**

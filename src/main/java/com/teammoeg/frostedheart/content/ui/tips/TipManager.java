@@ -167,14 +167,7 @@ public class TipManager {
 
             state.unlock(tip.unlocks().stream().map(TipManager.this::getTip).toList(), true);
 
-            if (tip.display().pin() && !TipOverlay.getQUEUE().isEmpty()) {
-                Tip last = TipOverlay.getQUEUE().get(0);
-                TipOverlay.removeCurrent();
-                TipOverlay.getQUEUE().add(0, last);
-                TipOverlay.getQUEUE().add(0, tip);
-            } else {
-                TipOverlay.getQUEUE().add(tip);
-            }
+            enqueue(tip);
 
             // 添加下一个 tip
             if (TipHelper.hasNext(tip)) {
@@ -199,13 +192,19 @@ public class TipManager {
                 state.unlock(tip, true);
             }
 
+            enqueue(tip);
+        }
+
+        private void enqueue(Tip tip) {
+            Tip current = TipOverlay.getCurrent();
             if (tip.display().pin() && !TipOverlay.getQUEUE().isEmpty()) {
-                Tip last = TipOverlay.getQUEUE().get(0);
-                TipOverlay.removeCurrent();
-                TipOverlay.getQUEUE().add(0, last);
-                TipOverlay.getQUEUE().add(0, tip);
+                Tip interrupted = current == Tip.EMPTY ? null : current;
+                TipOverlay.replaceQueue(TipQueueModel.preempt(
+                        TipOverlay.getQUEUE(), interrupted, tip, Tip::id));
+                if (interrupted != null) TipOverlay.removeCurrent();
             } else {
-                TipOverlay.getQUEUE().add(tip);
+                TipOverlay.replaceQueue(TipQueueModel.enqueue(
+                        TipOverlay.getQUEUE(), tip, Tip::id));
             }
         }
 

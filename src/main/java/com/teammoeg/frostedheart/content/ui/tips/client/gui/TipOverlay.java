@@ -8,6 +8,8 @@ import com.teammoeg.chorda.client.cui.editor.EditorFieldsDialog;
 import com.teammoeg.chorda.client.cui.screenadapter.CUIScreenWrapper;
 import com.teammoeg.chorda.math.Rect;
 import com.teammoeg.frostedheart.content.ui.tips.Tip;
+import com.teammoeg.frostedheart.content.ui.tips.TipQueueModel;
+import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import lombok.Getter;
 
 import java.util.ArrayList;
@@ -21,9 +23,12 @@ public class TipOverlay extends PrimaryLayer {
     final TipLayer tipLayer;
 
     public static void add(Tip tip) {
-        if (!QUEUE.contains(tip)) {
-            QUEUE.add(tip);
-        }
+        replaceQueue(TipQueueModel.enqueue(QUEUE, tip, Tip::id));
+    }
+
+    public static void replaceQueue(List<Tip> tips) {
+        QUEUE.clear();
+        QUEUE.addAll(tips);
     }
 
     public static Tip getCurrent() {
@@ -43,6 +48,10 @@ public class TipOverlay extends PrimaryLayer {
 
     public static void removeCurrent() {
         INSTANCE.tipLayer.state = TipLayer.State.FADING_OUT;
+    }
+
+    private static boolean isTownEventTip(Tip tip) {
+        return tip != null && tip.id().startsWith("/town/events/");
     }
 
     @Override
@@ -67,6 +76,16 @@ public class TipOverlay extends PrimaryLayer {
 
     @Override
     public void tick() {
+        if (!FHConfig.CLIENT.enableTip.get()) {
+            QUEUE.clear();
+            tipLayer.clearImmediately();
+            return;
+        }
+        if (!FHConfig.CLIENT.enableTownEventTips.get()) {
+            boolean currentIsTownEvent = isTownEventTip(tipLayer.getTip());
+            QUEUE.removeIf(TipOverlay::isTownEventTip);
+            if (currentIsTownEvent) tipLayer.clearImmediately();
+        }
         super.tick();
         if (ClientUtils.getMc().screen instanceof CUIScreenWrapper cui) {
             if (cui.getPrimaryLayer().getDialog() instanceof EditorFieldsDialog<?> efd) {

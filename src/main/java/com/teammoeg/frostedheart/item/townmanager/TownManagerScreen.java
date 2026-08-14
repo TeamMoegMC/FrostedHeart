@@ -76,6 +76,7 @@ public class TownManagerScreen extends PrimaryLayer implements ITownDataUpdateLi
     public static final int CONTENT_Y = 6;
     public static final int CONTENT_WIDTH = 160;
     public static final int CONTENT_HEIGHT = 204;
+    public static final int EVENTS_TAB = 4;
 
     private int activeTab = 0;
     private final List<TownManagerTab> tabs = new ArrayList<>();
@@ -83,12 +84,17 @@ public class TownManagerScreen extends PrimaryLayer implements ITownDataUpdateLi
     private int statusRequestTicks;
 
     public TownManagerScreen() {
+        this(0);
+    }
+
+    public TownManagerScreen(int initialTab) {
         super();
         tabs.add(new TownOverviewTab(this));
         tabs.add(new TownResidentsTab(this));
         tabs.add(new TownBuildingsTab(this));
         tabs.add(new TownStatisticsTab(this));
         tabs.add(new TownEventsTab(this));
+        this.activeTab = Math.max(0, Math.min(tabs.size() - 1, initialTab));
         this.contentLayer = new UILayer(this) {
             @Override
             public void addUIElements() {

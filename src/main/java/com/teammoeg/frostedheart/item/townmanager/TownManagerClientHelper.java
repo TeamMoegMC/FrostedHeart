@@ -34,4 +34,8 @@ public class TownManagerClientHelper {
     public static void openScreen() {
         CUIScreenWrapper.open(new TownManagerScreen());
     }
+
+    public static void openEvents() {
+        CUIScreenWrapper.open(new TownManagerScreen(TownManagerScreen.EVENTS_TAB));
+    }
 }

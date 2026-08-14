@@ -59,6 +59,7 @@ public class FHConfig {
 		public final ForgeConfigSpec.DoubleValue textSpeed;
 		public final ForgeConfigSpec.BooleanValue renderScenario;
 		public final ForgeConfigSpec.BooleanValue enableTip;
+		public final ForgeConfigSpec.BooleanValue enableTownEventTips;
 		public final ForgeConfigSpec.EnumValue<OverlayPositioner.All> tipPosition;
 		public final ForgeConfigSpec.DoubleValue fogDensity;
 		public final ForgeConfigSpec.IntValue fogColorDay;
@@ -116,6 +117,8 @@ public class FHConfig {
 			builder.push("Tip");
 				enableTip = builder.comment("Enables the tips rendering. ")
 						.define("enableTip", true);
+				enableTownEventTips = builder.comment("Enables transient town event tips. ")
+						.define("enableTownEventTips", true);
 				tipPosition = builder.comment("The position where the tip display")
 						.defineEnum("tipPosition", OverlayPositioner.All.MIDDLE_RIGHT);
 			builder.pop();
