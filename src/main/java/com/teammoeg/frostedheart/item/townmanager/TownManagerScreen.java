@@ -44,27 +44,35 @@ import java.util.List;
 
 /**
  * 镇长印章的城镇管理界面。基于 Chorda CUI 框架（{@link PrimaryLayer}）实现，
- * 外观与城镇建筑方块界面一致：townworkerblock.png 176x222 框架加左侧页签。
- * 界面为纯客户端只读视图，数据来自每 tick 同步的客户端城镇快照。
+ * 外观沿用城镇建筑方块界面的 222 像素高框架与左侧页签，但由于本界面
+ * 不显示玩家背包，框架通过横向三段拉伸扩展为 264 像素宽。
+ * 界面数据来自同步的客户端城镇快照；名称和岗位等编辑通过服务端权威请求提交。
  * 由 {@link TownManagerClientHelper#openScreen()} 通过 CUIScreenWrapper 打开。
  * <p>
  * Town management screen of the Mayor's Seal. Built on the Chorda CUI
- * framework (PrimaryLayer) and visually consistent with town building GUIs:
- * the 176x222 townworkerblock frame with left-side tabs. It is a client-only
- * read-only view backed by the town snapshot synced from the server.
+ * framework (PrimaryLayer) and visually consistent with town building GUIs.
+ * Because this screen has no player inventory, its frame is horizontally
+ * three-sliced horizontally to 264x222 while preserving the original side borders. Views
+ * read the synced client snapshot; edits are submitted as server-authoritative
+ * requests.
  */
 public class TownManagerScreen extends PrimaryLayer implements ITownDataUpdateListener {
 
     private static final CIcons.CTextureIcon ALL = CIcons
             .getIcon(new ResourceLocation(FHMain.MODID, "textures/gui/town_manage_screen.png"));
-    private static final CIcons.CTextureIcon BACKGROUND =
-            ALL.withUV(0, 0, 176, 222, 256, 256);
+    private static final int FRAME_SIDE_WIDTH = 8;
+    private static final CIcons.CTextureIcon BACKGROUND_LEFT =
+            ALL.withUV(0, 0, FRAME_SIDE_WIDTH, 222, 256, 256);
+    private static final CIcons.CTextureIcon BACKGROUND_CENTER =
+            ALL.withUV(FRAME_SIDE_WIDTH, 0, 160, 222, 256, 256);
+    private static final CIcons.CTextureIcon BACKGROUND_RIGHT =
+            ALL.withUV(168, 0, FRAME_SIDE_WIDTH, 222, 256, 256);
     private static final CIcons.CTextureIcon ACTIVE_TAB =
             ALL.withUV(180, 59, 22, 18, 256, 256);
     private static final CIcons.CTextureIcon INACTIVE_TAB =
             ALL.withUV(202, 59, 22, 18, 256, 256);
 
-    public static final int FRAME_WIDTH = 176;
+    public static final int FRAME_WIDTH = 264;
     public static final int FRAME_HEIGHT = 222;
     /**
      * 内容区左上角与尺寸。本界面没有玩家背包，内容可使用整个框架内边距。
@@ -74,9 +82,9 @@ public class TownManagerScreen extends PrimaryLayer implements ITownDataUpdateLi
      */
     public static final int CONTENT_X = 8;
     public static final int CONTENT_Y = 6;
-    public static final int CONTENT_WIDTH = 160;
+    public static final int CONTENT_WIDTH = FRAME_WIDTH - CONTENT_X * 2;
     public static final int CONTENT_HEIGHT = 204;
-    public static final int EVENTS_TAB = 4;
+    public static final int EVENTS_TAB = 5;
 
     private int activeTab = 0;
     private final List<TownManagerTab> tabs = new ArrayList<>();
@@ -92,6 +100,7 @@ public class TownManagerScreen extends PrimaryLayer implements ITownDataUpdateLi
         tabs.add(new TownOverviewTab(this));
         tabs.add(new TownResidentsTab(this));
         tabs.add(new TownBuildingsTab(this));
+        tabs.add(new TownStaffingTab(this));
         tabs.add(new TownStatisticsTab(this));
         tabs.add(new TownEventsTab(this));
         this.activeTab = Math.max(0, Math.min(tabs.size() - 1, initialTab));
@@ -239,7 +248,11 @@ public class TownManagerScreen extends PrimaryLayer implements ITownDataUpdateLi
 
     @Override
     public void drawBackground(GuiGraphics graphics, int x, int y, int width, int height, RenderingHint hint) {
-        BACKGROUND.draw(graphics, x, y, FRAME_WIDTH, FRAME_HEIGHT);
+        int centerWidth = FRAME_WIDTH - FRAME_SIDE_WIDTH * 2;
+        BACKGROUND_LEFT.draw(graphics, x, y, FRAME_SIDE_WIDTH, FRAME_HEIGHT);
+        BACKGROUND_CENTER.draw(graphics, x + FRAME_SIDE_WIDTH, y, centerWidth, FRAME_HEIGHT);
+        BACKGROUND_RIGHT.draw(graphics, x + FRAME_WIDTH - FRAME_SIDE_WIDTH, y,
+                FRAME_SIDE_WIDTH, FRAME_HEIGHT);
     }
 
     @Override

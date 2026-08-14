@@ -74,6 +74,8 @@ public final class HuntingDailyModel {
     }
 
     /** Current dynamic vacancy priority for one hunting base. */
+    /** @deprecated Replaced by the ordered town-level staffing plan. */
+    @Deprecated(forRemoval = true)
     public static double assignmentPriority(
             int currentWorkers,
             int maximumWorkers,

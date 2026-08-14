@@ -307,6 +307,11 @@ public class TeamTown implements ITown, ITownWithResidents, ITownWithBuildings {
         return data.getHistory();
     }
 
+    /** Player-visible work-building order and guaranteed staffing targets. */
+    public TownStaffingPlan getStaffingPlan() {
+        return data.getStaffingPlan();
+    }
+
     //@Override
     public Optional<TeamTownData> getTownData() {
         return Optional.of(data);

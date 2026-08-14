@@ -44,7 +44,7 @@ class TownStageThreeModelTest {
     }
 
     @Test
-    void ineligibleStickyWorkerKeepsSlotAndBlocksReplacement() {
+    void ineligibleWorkerReleasesSlotAndIsReplaced() {
         TownStageThreeScenario scenario = scenario(2, List.of("mine", "hunt", "house"));
         TownStageThreeState state = TownStageThreeState.initial(scenario);
         state.residents().get(0).setWorkId(TownStageThreeState.HUNT_ID);
@@ -54,9 +54,31 @@ class TownStageThreeModelTest {
                 state, scenario, data(), TownModelParameters.currentDefaults(),
                 new SplittableRandom(1L));
 
-        assertEquals(1, result.assignedHunters());
+        assertEquals(0, result.assignedHunters());
         assertEquals(0.0, result.huntingSwe(), 1.0e-12);
         assertEquals(TownStageThreeState.MINE_ID, state.residents().get(1).workId());
+        assertEquals(null, state.residents().get(0).workId());
+    }
+
+    @Test
+    void guaranteedTargetShortfallUsesTheSharedDailyPlanner() {
+        TownStageThreeScenario scenario = scenario(2, List.of("house", "mine", "hunt"))
+                .withWorkplaces(new TownStageThreeScenario.Workplaces(2, 2, 1.0))
+                .withStaffing(new TownStageThreeScenario.Staffing(
+                        List.of("hunt", "mine"), Map.of("hunt", 2, "mine", 0)));
+        TownStageThreeState state = TownStageThreeState.initial(scenario);
+        state.residents().get(0).setHealth(10.0);
+
+        TownStageThreeModel.DayResult result = TownStageThreeModel.settleDay(
+                state, scenario, data(), TownModelParameters.currentDefaults(),
+                new SplittableRandom(3L));
+
+        assertEquals(2, result.staffingTargetWorkers());
+        assertEquals(1, result.staffingTargetCovered());
+        assertEquals(1, result.staffingTargetShortfall());
+        assertEquals(1, result.unableToWorkResidents());
+        assertEquals(1, result.assignedHunters());
+        assertEquals(0, result.assignedMiners());
     }
 
     @Test
@@ -91,6 +113,7 @@ class TownStageThreeModelTest {
                 new TownStageThreeScenario.House(24, 8 * population, 24 * population,
                         population, 0.75),
                 new TownStageThreeScenario.Workplaces(population, 1, 1.0),
+                TownStageThreeScenario.Staffing.automatic(),
                 order,
                 new TownStageThreeScenario.Warehouse(10_000, List.of(
                         new TownStageThreeScenario.InventoryItem("cooked_beef", 10),

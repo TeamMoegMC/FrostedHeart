@@ -134,6 +134,17 @@ public class TeamTownData implements SpecialData{
         CodecUtil.defaultSupply(CodecUtil.catchingCodec(TownHistoryEntry.CODEC.listOf()), ArrayList::new)
         .fieldOf("history").forGetter(o -> o.history),
 
+        // Older saves did not persist town age. A negative sentinel lets the
+        // constructor migrate them from the retained settlement count.
+        CodecUtil.defaultSupply(CodecUtil.catchingCodec(Codec.LONG), () -> -1L)
+        .fieldOf("townDay").forGetter(o -> o.townDay),
+
+        // Old saves have no staffingPlan field. Decode them as EMPTY; the
+        // constructor then derives a deterministic plan from surviving work
+        // buildings and their existing rosters.
+        CodecUtil.defaultSupply(CodecUtil.catchingCodec(TownStaffingPlan.CODEC), () -> TownStaffingPlan.EMPTY)
+        .fieldOf("staffingPlan").forGetter(TeamTownData::getStaffingPlan),
+
         CodecUtil.defaultSupply(CodecUtil.catchingCodec(Codec.LONG), () -> -1L)
         .fieldOf("lastRefugeeSpawnDay").forGetter(o -> o.lastRefugeeSpawnDay)
 
@@ -177,6 +188,17 @@ public class TeamTownData implements SpecialData{
     @Getter
     List<TownHistoryEntry> history = new ArrayList<>();
 
+    /** Number of completed town settlements since the town data was created. */
+    @Getter
+    long townDay;
+
+    /**
+     * 玩家编辑的工作建筑队列与保障人数。列表顺序是完整优先关系；保障人数是
+     * 第一轮优先补足的目标而非硬上限。通过 {@link #getStaffingPlan()} 读取时会与
+     * 当前建筑表对齐，以清理已拆除建筑并补入新建筑。
+     */
+    private TownStaffingPlan staffingPlan = TownStaffingPlan.EMPTY;
+
     /** Threshold events accumulated during the current daily settlement. */
     private transient final List<TownSignalEvent> pendingDailySignals = new ArrayList<>();
     /** Settlement events waiting for one per-server-tick player brief. */
@@ -187,6 +209,12 @@ public class TeamTownData implements SpecialData{
     private transient Boolean lastObservedTowerActive;
     private transient TownTowerTipThrottle.State towerTipState = TownTowerTipThrottle.INITIAL;
     private transient long nextTownTipNotificationId;
+    /**
+     * 上一次日结算后的保障岗位缺口，仅用于识别“出现缺口/完全恢复”的状态穿越。
+     * 它不是城镇玩法状态，不写入存档；重新载入后的第一次结算会建立新的运行时
+     * 基线，若当时已有缺口则会发出一次当前风险警告。
+     */
+    private transient Integer lastStaffingTargetShortfall;
 
     /**
      * 最近一次按世界日结算难民刷新的日期（服务端持久化）。
@@ -213,12 +241,26 @@ public class TeamTownData implements SpecialData{
      * ConcurrentHashMap 仅作额外的并发保护。
      */
     private static final Set<ITownDataUpdateListener> clientListeners = ConcurrentHashMap.newKeySet();
-
-
-
-    public TeamTownData(String name, TeamTownResourceHolder resources, Map<BlockPos, ITownBuilding> buildings, Map<UUID, Resident> residents, Map<TerrainResourceType, TerrainResourceData> terrainResource,int labour,int maxlabour, List<TownHistoryEntry> history, long lastRefugeeSpawnDay) {
+    /**
+     * Codec 解码构造器。所有建筑必须先装入本实例，再规范化岗位计划，这样旧存档的
+     * 空计划才能从仍存在的工作建筑和旧名册中迁移出稳定的初始队列与保障人数。
+     *
+     * @param name 城镇名称
+     * @param resources 城镇资源仓储
+     * @param buildings 已持久化的城镇建筑
+     * @param residents 已持久化的居民
+     * @param terrainResource 地形资源状态
+     * @param labour 旧劳动字段；当前构造逻辑保持历史行为并重置为零
+     * @param maxlabour 旧最大劳动字段；当前构造逻辑保持历史行为并重置为零
+     * @param history 城镇结算历史
+     * @param townDay 已完成的城镇日；旧存档使用负数哨兵并从保留历史数量迁移
+     * @param staffingPlan 已保存的岗位计划；旧存档缺失时由 Codec 提供空计划
+     * @param lastRefugeeSpawnDay 最近一次难民自然刷新所用的稳定世界日
+     */
+    public TeamTownData(String name, TeamTownResourceHolder resources, Map<BlockPos, ITownBuilding> buildings, Map<UUID, Resident> residents, Map<TerrainResourceType, TerrainResourceData> terrainResource,int labour,int maxlabour, List<TownHistoryEntry> history, long townDay, TownStaffingPlan staffingPlan, long lastRefugeeSpawnDay) {
         super();
         this.history = new ArrayList<>(history);
+        this.townDay = townDay >= 0L ? townDay : history.size();
         this.name = name;
         this.resources = resources;
         buildings.forEach((pos, building) -> {
@@ -230,7 +272,15 @@ public class TeamTownData implements SpecialData{
         this.terrainResource.putAll(terrainResource);
         this.labour=0;
         this.maxLabour=0;
+        this.staffingPlan = staffingPlan == null ? TownStaffingPlan.EMPTY : staffingPlan;
+        normalizeStaffingPlan();
         this.lastRefugeeSpawnDay = lastRefugeeSpawnDay;
+    }
+
+    /** Source-compatible constructor for callers predating the persistent town-day field. */
+    public TeamTownData(String name, TeamTownResourceHolder resources, Map<BlockPos, ITownBuilding> buildings, Map<UUID, Resident> residents, Map<TerrainResourceType, TerrainResourceData> terrainResource,int labour,int maxlabour, List<TownHistoryEntry> history, TownStaffingPlan staffingPlan, long lastRefugeeSpawnDay) {
+        this(name, resources, buildings, residents, terrainResource, labour, maxlabour,
+                history, -1L, staffingPlan, lastRefugeeSpawnDay);
     }
 
     public TeamTownData(SpecialDataHolder teamData) {
@@ -247,6 +297,81 @@ public class TeamTownData implements SpecialData{
      */
     public TeamTown createTeamTown() {
         return TeamTown.create(this);
+    }
+
+    /**
+     * 返回与当前建筑集合一致的权威岗位计划。
+     * <p>
+     * 读取前会执行轻量规范化：移除已拆除或不再属于工作建筑的条目，并把尚未进入
+     * 计划的新工作建筑追加到队尾。旧存档中的空计划也在这里完成惰性迁移。因此调用方
+     * 不应缓存旧的计划对象，而应在需要显示或编辑时重新读取。
+     *
+     * @return 当前规范化后的不可变岗位计划
+     */
+    public TownStaffingPlan getStaffingPlan() {
+        normalizeStaffingPlan();
+        return staffingPlan;
+    }
+
+    /**
+     * 将岗位计划与当前 {@link #buildings} 对齐，并仅在内容实际变化时替换对象。
+     * 已存在条目的玩家顺序和保障人数保持不变；缺失条目的迁移规则由
+     * {@link TownStaffingPlan#normalize(Map)} 统一定义。
+     */
+    private void normalizeStaffingPlan() {
+        TownStaffingPlan normalized = staffingPlan.normalize(buildings);
+        if (!normalized.equals(staffingPlan)) staffingPlan = normalized;
+    }
+
+    /**
+     * 在服务端最新计划上设置一栋工作建筑的保障人数。
+     * <p>
+     * 请求中的建筑位置必须仍对应工作建筑；目标值会在编辑当下限制到
+     * {@code [0, getMaxResidents()]}。本方法只修改下一次日结算使用的计划，不会在
+     * 白天中途移动居民。
+     *
+     * @param building 要编辑的工作建筑位置
+     * @param target 新保障人数
+     * @return 内容实际改变时为 {@code true}；建筑无效或结果未变化时为 {@code false}
+     */
+    public boolean setStaffingTarget(BlockPos building, int target) {
+        Optional<TownStaffingPlan> changed = getStaffingPlan().withTarget(
+                building, target, buildings);
+        if (changed.isEmpty() || changed.get().equals(staffingPlan)) return false;
+        staffingPlan = changed.get();
+        return true;
+    }
+
+    /**
+     * 在服务端最新计划上移动一栋工作建筑。
+     * <p>
+     * 使用“移到某条目之前”的相对操作而不是客户端提交整张列表，可避免两个队员
+     * 同时编辑时用旧快照覆盖彼此的其他修改。{@code before} 为空表示移到队尾。
+     *
+     * @param building 要移动的工作建筑位置
+     * @param before 移动后紧随其后的锚点；为空表示队尾
+     * @return 内容实际改变时为 {@code true}；建筑/锚点无效或结果未变化时为 {@code false}
+     */
+    public boolean moveStaffingEntry(BlockPos building, Optional<BlockPos> before) {
+        Optional<TownStaffingPlan> changed = getStaffingPlan().move(
+                building, before, buildings);
+        if (changed.isEmpty() || changed.get().equals(staffingPlan)) return false;
+        staffingPlan = changed.get();
+        return true;
+    }
+
+    /**
+     * 客户端应用服务端下发的完整权威岗位计划。
+     * <p>
+     * 该入口只用于 S2C 增量同步。替换后仍会针对客户端当前建筑快照规范化，并通知
+     * 已打开的城镇界面；游戏逻辑不得通过此方法在服务端编辑计划。
+     *
+     * @param updated 服务端权威计划；空值按空计划处理
+     */
+    public void applyStaffingPlan(TownStaffingPlan updated) {
+        staffingPlan = updated == null ? TownStaffingPlan.EMPTY : updated;
+        normalizeStaffingPlan();
+        fireStaffingChanged();
     }
 
     /**
@@ -405,6 +530,7 @@ public class TeamTownData implements SpecialData{
      * @param world 服务端世界 / server world instance
      */
     void recordDailySnapshot(ServerLevel world, TeamDataHolder teamData) {
+        if (townDay < Long.MAX_VALUE) townDay++;
         long day = TownHistoryModel.nextSettlementDay(history, WorldClimate.getWorldDay(world));
         Optional<GeneratorData> generator = teamData.getOptional(FHSpecialDataTypes.GENERATOR_DATA);
         BlockPos fallback = generator.filter(value -> value.actualPos != null)
@@ -446,7 +572,7 @@ public class TeamTownData implements SpecialData{
         while (history.size() > configuredHistoryDays) {
             history.remove(0);
         }
-        teamData.sendToOnline(FHNetwork.INSTANCE, new TownHistoryUpdatePacket(entry));
+        teamData.sendToOnline(FHNetwork.INSTANCE, new TownHistoryUpdatePacket(entry, townDay));
     }
 
     private static void addDailyThresholdSignals(
@@ -815,6 +941,16 @@ public class TeamTownData implements SpecialData{
         return null;
     }
 
+    /**
+     * 在每日正式分配前修复居民位置与建筑名册之间的双向一致性。
+     * <p>
+     * 方法先清空所有居民保存的住房/工作位置，再以各建筑保存的 UUID 名册重建反向
+     * 引用，同时删除已经不存在的居民。住宅名册仍在这里按容量裁剪；工作建筑故意
+     * 不裁剪，因为其 {@link Set} 没有玩家优先语义，随机删除会破坏岗位队列。全部
+     * 工作名册稍后由 {@link #assignWork()} 按容量、资格、保障人数和队列原子重建。
+     *
+     * @param town 当前城镇门面；为兼容既有调用签名保留，当前实现不读取该参数
+     */
     private void residentAllocatingCheck(TeamTown town) {
         // 清空residents里所有居民存储的的house和work位置，之后再加回来，以刷新居民的工作和房屋
         residents.values().forEach(resident -> {
@@ -828,9 +964,11 @@ public class TeamTownData implements SpecialData{
                 //移除已不存在的居民
                 residentIDs.removeIf(uuid -> !residents.containsKey(uuid));
 
-                //移除超过上限的居民
+                // 住宅在此修剪超额名册；工作建筑稍后由 assignWork 原子重建。
+                // 不能在这里迭代 HashSet 随机删人，否则会绕过玩家队列与居民适配分数。
                 int maxResident = residentBuilding.getMaxResidents();
-                if (residentIDs.size() > maxResident) {
+                if (!(residentBuilding instanceof ITownResidentWorkBuilding)
+                        && residentIDs.size() > maxResident) {
                     Iterator<UUID> iterator = residentIDs.iterator();
                     int removeCount = residentIDs.size() - maxResident;
                     for (int i = 0; i < removeCount && iterator.hasNext(); i++) {
@@ -873,26 +1011,99 @@ public class TeamTownData implements SpecialData{
         }
     }
 
+    /**
+     * 为当天生产生成一份完整、确定性的工作名册。
+     * <p>
+     * 执行顺序如下：
+     * <ol>
+     *     <li>规范化玩家岗位计划，并严格按其中的建筑顺序构造当日岗位输入；</li>
+     *     <li>在清空旧名册前保存上一日岗位，仅作为居民生产力完全相同时的稳定平局条件；</li>
+     *     <li>调用共享纯函数 {@link TownAssignmentModel#plan(List, List, java.util.function.Function, java.util.function.BiPredicate, java.util.function.ToDoubleBiFunction, Comparator)}，先补保障人数，再按最低占用率分配剩余劳动力；</li>
+     *     <li>规划成功后一次性清空居民工作位置和建筑名册，再提交全部新分配；</li>
+     *     <li>汇总保障人数缺口并排入当日阈值事件。</li>
+     * </ol>
+     * 先规划后提交保证计算过程中旧状态保持完整，也确保不合格居民在本次日结算释放
+     * 岗位。采矿和狩猎随后直接使用这份晨间快照，不再运行另一套资格过滤。
+     */
     void assignWork() {
-        List<Resident> availableResidents = residents.values().stream()
-                .filter(resident -> resident.getWorkPos() == null
-                        && resident.getHousePos() != null
-                        && resident.getAge() != Resident.AGE_INFANT)
-                .toList();
-        List<ITownResidentWorkBuilding> availableBuildings = buildings.values().stream()
-                .filter(AbstractTownBuilding::isBuildingWorkable)
-                .filter(building -> building instanceof ITownResidentWorkBuilding)
-                .map(building -> (ITownResidentWorkBuilding) building)
-                .toList();
-        TownAssignmentModel.fillVacancies(
-                availableResidents,
-                availableBuildings,
-                ITownResidentWorkBuilding::getMaxResidents,
-                building -> building.getResidentsID().size(),
-                ITownResidentWorkBuilding::getResidentPriority,
-                ITownResidentWorkBuilding::canResidentWork,
-                ITownResidentWorkBuilding::getResidentScore)
-                .forEach(assignment -> assignment.workplace().addResident(assignment.resident()));
+        TownStaffingPlan plan = getStaffingPlan();
+        Map<BlockPos, ITownResidentWorkBuilding> workBuildings = new LinkedHashMap<>();
+        for (TownStaffingPlan.Entry entry : plan.entries()) {
+            AbstractTownBuilding building = buildings.get(entry.building());
+            if (building instanceof ITownResidentWorkBuilding workBuilding) {
+                workBuildings.put(entry.building(), workBuilding);
+            }
+        }
+
+        Map<Resident, ITownResidentWorkBuilding> previous = new IdentityHashMap<>();
+        for (Resident resident : residents.values()) {
+            AbstractTownBuilding old = resident.getWorkPos() == null
+                    ? null : buildings.get(resident.getWorkPos());
+            if (old instanceof ITownResidentWorkBuilding workBuilding) {
+                previous.put(resident, workBuilding);
+            }
+        }
+        List<TownAssignmentModel.Workplace<ITownResidentWorkBuilding>> workplaces =
+                new ArrayList<>();
+        for (TownStaffingPlan.Entry entry : plan.entries()) {
+            ITownResidentWorkBuilding building = workBuildings.get(entry.building());
+            if (building != null) {
+                workplaces.add(new TownAssignmentModel.Workplace<>(
+                        building, building.getMaxResidents(), entry.targetWorkers(),
+                        ((AbstractTownBuilding) building).isBuildingWorkable()));
+            }
+        }
+
+        TownAssignmentModel.Plan<Resident, ITownResidentWorkBuilding> result =
+                TownAssignmentModel.plan(
+                        new ArrayList<>(residents.values()), workplaces,
+                        previous::get,
+                        ITownResidentWorkBuilding::canResidentWork,
+                        ITownResidentWorkBuilding::getResidentScore,
+                        Comparator.comparing(Resident::getUUID));
+
+        residents.values().forEach(resident -> resident.setWorkPos(null));
+        for (ITownResidentWorkBuilding building : workBuildings.values()) {
+            if (building instanceof com.teammoeg.frostedheart.content.town.building.AbstractTownResidentWorkBuilding residentWorkBuilding) {
+                residentWorkBuilding.clearResidents();
+            } else {
+                building.getResidentsID().clear();
+            }
+        }
+        result.assignments().forEach(assignment ->
+                assignment.workplace().addResident(assignment.resident()));
+        int targetShortfall = result.workplaces().values().stream()
+                .mapToInt(TownAssignmentModel.WorkplaceStatus::targetShortfall)
+                .sum();
+        queueStaffingTargetCrossing(targetShortfall);
+    }
+
+    /**
+     * 根据本日保障岗位总缺口记录状态穿越，而不是每天重复记录持续状态。
+     * <p>
+     * 缺口从零变为正数时产生 {@code STAFFING_TARGET_UNMET}；从正数回到零时产生
+     * {@code STAFFING_TARGET_RECOVERED}。正数之间的大小变化只更新运行时基线，当前
+     * 界面会直接显示最新缺口，不额外制造重复 Tip。
+     *
+     * @param shortfall 所有有效工作建筑的 {@code max(target-assigned, 0)} 之和
+     */
+    private void queueStaffingTargetCrossing(int shortfall) {
+        int current = Math.max(0, shortfall);
+        if (current > 0 && (lastStaffingTargetShortfall == null
+                || lastStaffingTargetShortfall == 0)) {
+            pendingDailySignals.add(new TownSignalEvent(
+                    -1L, 0, TownSignalEvent.Type.STAFFING_TARGET_UNMET,
+                    TownSignalEvent.Severity.WARNING, current,
+                    "guaranteed staffing target shortfall"));
+        } else if (current == 0 && lastStaffingTargetShortfall != null
+                && lastStaffingTargetShortfall > 0) {
+            pendingDailySignals.add(new TownSignalEvent(
+                    -1L, 0, TownSignalEvent.Type.STAFFING_TARGET_RECOVERED,
+                    TownSignalEvent.Severity.INFORMATION,
+                    lastStaffingTargetShortfall,
+                    "guaranteed staffing targets restored"));
+        }
+        lastStaffingTargetShortfall = current;
     }
 
     void linkMinesToBases() {
@@ -1108,10 +1319,11 @@ public class TeamTownData implements SpecialData{
     }
 
     /**
-     * 通知所有已注册 GUI：三类数据均可能已变化。由全量同步包在替换实例后调用，
+     * 通知所有已注册 GUI：建筑、居民、资源、历史和岗位计划均可能已变化。
+     * 由全量同步包在替换实例后调用，
      * 保证 GUI 打开瞬间收到的最新全量数据能立即刷新到界面。
      * <p>
-     * Notify all registered GUIs that any of the three categories may have changed.
+     * Notify all registered GUIs that any synchronized town category may have changed.
      * Called by the full-sync packet after the instance is replaced, so the freshest
      * full snapshot is reflected immediately.
      * </p>
@@ -1124,6 +1336,7 @@ public class TeamTownData implements SpecialData{
             fireResidentsChanged();
             fireResourcesChanged();
             fireHistoryChanged();
+            fireStaffingChanged();
         } finally {
             inClientBatchFire = false;
         }
@@ -1150,6 +1363,16 @@ public class TeamTownData implements SpecialData{
     private static void fireHistoryChanged() {
         for (ITownDataUpdateListener listener : clientListeners) {
             listener.onHistoryChanged();
+        }
+    }
+
+    /**
+     * 通知客户端监听器重新读取权威岗位计划。岗位面板在渲染阶段读取最新数据，因此
+     * 回调无需重建整个页面，也不会丢失滚动或拖拽以外的临时 UI 状态。
+     */
+    private static void fireStaffingChanged() {
+        for (ITownDataUpdateListener listener : clientListeners) {
+            listener.onStaffingChanged();
         }
     }
 
@@ -1213,6 +1436,12 @@ public class TeamTownData implements SpecialData{
         history = new ArrayList<>(TownHistoryModel.upsert(history, entry,
                 FHConfig.SERVER.TOWN.OBSERVATION.historyDays.get()));
         fireHistoryChanged();
+    }
+
+    /** Client-side history merge paired with the server's persistent town age. */
+    public void applyHistoryUpdate(TownHistoryEntry entry, long updatedTownDay) {
+        townDay = Math.max(0L, updatedTownDay);
+        applyHistoryUpdate(entry);
     }
 
     /**

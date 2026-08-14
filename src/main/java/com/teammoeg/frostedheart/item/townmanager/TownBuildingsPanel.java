@@ -58,7 +58,7 @@ public class TownBuildingsPanel extends UIElement {
 
     private static final int WIDTH = TownManagerScreen.CONTENT_WIDTH;
     private static final int HEIGHT = TownManagerScreen.CONTENT_HEIGHT;
-    private static final int LIST_WIDTH = 62;
+    private static final int LIST_WIDTH = 96;
     private static final int LIST_TOP = 18;
     private static final int ROW_HEIGHT = 16;
     private static final int VISIBLE_ROWS = (HEIGHT - LIST_TOP - 4) / ROW_HEIGHT;
@@ -248,7 +248,9 @@ public class TownBuildingsPanel extends UIElement {
     }
 
     private static String formatOneDecimal(double value) {
-        return String.format(Locale.ROOT, "%.1f°C", value);
+        // Keep the numeric argument unit-free. Each locale owns its unit text;
+        // the English default font used by the pack does not provide a degree glyph.
+        return String.format(Locale.ROOT, "%.1f", value);
     }
 
     private static String formatPercent(double value) {

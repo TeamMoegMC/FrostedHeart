@@ -36,13 +36,23 @@ public interface ITownResidentWorkBuilding extends ITownResidentBuilding {
      * <br>
      * 这个方法不应直接调用下面的那个同名方法，以避免重复读取nbt中的数据。
      */
-    double getResidentPriority();
+    /**
+     * @deprecated Staffing priority is now the town-level ordered
+     * {@code TownStaffingPlan}; this compatibility formula is ignored by the
+     * daily planner.
+    */
+    @Deprecated(forRemoval = true)
+    default double getResidentPriority() {
+        return 0.0;
+    }
 
     /**
      * Priority at an explicit worker count. Implementations with count-based
      * priorities override this so the pure assignment model can plan a whole
      * morning without mutating buildings between comparisons.
      */
+    /** @deprecated See {@link #getResidentPriority()}. */
+    @Deprecated(forRemoval = true)
     default double getResidentPriority(int residentCount) {
         return getResidentPriority();
     }
@@ -78,6 +88,8 @@ public interface ITownResidentWorkBuilding extends ITownResidentBuilding {
      * <br>
      * 此方法无需在子类覆写。
      */
+    /** @deprecated The daily planner reassesses every resident atomically. */
+    @Deprecated(forRemoval = true)
     default boolean canResidentBeAssigned(Resident resident){
         if(resident.getWorkPos() == null) return true;
         return canResidentWork(resident);

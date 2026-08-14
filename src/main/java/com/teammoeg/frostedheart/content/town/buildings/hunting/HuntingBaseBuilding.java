@@ -49,7 +49,6 @@ import net.minecraft.world.level.storage.loot.parameters.LootContextParamSets;
 import java.util.*;
 
 import static com.teammoeg.frostedheart.content.town.ITown.DEBUG_MODE;
-import static java.lang.Double.NEGATIVE_INFINITY;
 
 public class HuntingBaseBuilding extends AbstractTownResidentWorkBuilding implements ITownTemperatureBuilding {
     public record HuntingDailyReport(
@@ -203,7 +202,6 @@ public class HuntingBaseBuilding extends AbstractTownResidentWorkBuilding implem
         double totalProductivity = 0.0;
         List<Resident> workingResidents = this.getResidents(teamTown).stream()
                 .filter(Objects::nonNull)
-                .filter(this::canResidentWork)
                 .toList();
         for (Resident resident : workingResidents) {
             double productivity = getResidentScore(resident);
@@ -375,26 +373,6 @@ public class HuntingBaseBuilding extends AbstractTownResidentWorkBuilding implem
 		return super.isBuildingWorkable()
 				&& isTemperatureValid()
 				&& isSpaceValid();
-	}
-
-	@Override
-	public double getResidentPriority() {
-		if(!this.isBuildingWorkable()) return NEGATIVE_INFINITY;
-		return getResidentPriority(this.residentsID.size());
-	}
-
-    @Override
-    public double getResidentPriority(int currentResidentNum) {
-		if(!this.isBuildingWorkable()) return NEGATIVE_INFINITY;
-		FHConfig.Server.Town.Hunting config = FHConfig.SERVER.TOWN.HUNTING;
-		return HuntingDailyModel.assignmentPriority(
-                currentResidentNum,
-                getMaxResidents(),
-                rating,
-                config.assignmentBasePriority.get(),
-                config.assignmentPenaltyPerWorker.get(),
-                config.assignmentFillRatioBonus.get(),
-                config.assignmentRatingMultiplier.get());
 	}
 
 	@Override

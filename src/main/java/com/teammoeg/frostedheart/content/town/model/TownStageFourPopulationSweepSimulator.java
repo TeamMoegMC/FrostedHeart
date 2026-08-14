@@ -269,7 +269,7 @@ public final class TownStageFourPopulationSweepSimulator {
                         "Population-scaled compact-capacity layout derived from "
                                 + source.metadata().name() + "."),
                 source.simulation(), scaledPopulation, scaledHouse, scaledWorkplaces,
-                source.buildingOrder(), warehouse, source.processing(), source.tower(),
+                source.staffing(), source.buildingOrder(), warehouse, source.processing(), source.tower(),
                 source.terrain(), new TownStageThreeScenario.Diagnostics(
                         Math.max(population, source.diagnostics().frontierMaximumPopulation()),
                         false));

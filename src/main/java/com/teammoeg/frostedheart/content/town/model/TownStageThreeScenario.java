@@ -19,6 +19,8 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -32,6 +34,7 @@ public record TownStageThreeScenario(
         Population population,
         House house,
         Workplaces workplaces,
+        Staffing staffing,
         List<String> buildingOrder,
         Warehouse warehouse,
         Processing processing,
@@ -40,9 +43,11 @@ public record TownStageThreeScenario(
         Diagnostics diagnostics
 ) {
     public static final List<String> REQUIRED_BUILDINGS = List.of("house", "mine", "hunt");
+    public static final List<String> WORK_BUILDINGS = List.of("mine", "hunt");
 
     public TownStageThreeScenario {
         buildingOrder = List.copyOf(buildingOrder);
+        staffing = staffing == null ? Staffing.automatic() : staffing;
     }
 
     public static boolean isStageThree(Path path) throws IOException {
@@ -118,6 +123,18 @@ public record TownStageThreeScenario(
                 bounded(number(workplacesJson, "huntRating", 1.0), 0.0, 1.0,
                         "workplaces.huntRating"));
 
+        JsonObject staffingJson = object(root, "staffing");
+        List<String> staffingQueue = stringList(
+                staffingJson, "queue", WORK_BUILDINGS);
+        validateStaffingQueue(staffingQueue);
+        JsonObject targetJson = object(staffingJson, "targets");
+        Map<String, Integer> staffingTargets = new LinkedHashMap<>();
+        for (String building : WORK_BUILDINGS) {
+            staffingTargets.put(building,
+                    nonNegativeInteger(targetJson, building, 0));
+        }
+        Staffing staffing = new Staffing(staffingQueue, staffingTargets);
+
         List<String> buildingOrder = stringList(root, "buildingOrder", REQUIRED_BUILDINGS);
         validateBuildingOrder(buildingOrder);
 
@@ -165,7 +182,7 @@ public record TownStageThreeScenario(
 
         return new TownStageThreeScenario(
                 schemaVersion, modelStage, metadata, simulation, population,
-                house, workplaces, buildingOrder, warehouse, processing, tower,
+                house, workplaces, staffing, buildingOrder, warehouse, processing, tower,
                 terrain, diagnostics);
     }
 
@@ -173,19 +190,26 @@ public record TownStageThreeScenario(
         validateBuildingOrder(order);
         return new TownStageThreeScenario(
                 schemaVersion, modelStage, metadata, simulation, population, house,
-                workplaces, order, warehouse, processing, tower, terrain, diagnostics);
+                workplaces, staffing, order, warehouse, processing, tower, terrain, diagnostics);
     }
 
     public TownStageThreeScenario withWorkplaces(Workplaces value) {
         return new TownStageThreeScenario(
                 schemaVersion, modelStage, metadata, simulation, population, house,
-                value, buildingOrder, warehouse, processing, tower, terrain, diagnostics);
+                value, staffing, buildingOrder, warehouse, processing, tower, terrain, diagnostics);
     }
 
     public TownStageThreeScenario withTower(Tower value) {
         return new TownStageThreeScenario(
                 schemaVersion, modelStage, metadata, simulation, population, house,
-                workplaces, buildingOrder, warehouse, processing, value, terrain, diagnostics);
+                workplaces, staffing, buildingOrder, warehouse, processing, value, terrain, diagnostics);
+    }
+
+    public TownStageThreeScenario withStaffing(Staffing value) {
+        return new TownStageThreeScenario(
+                schemaVersion, modelStage, metadata, simulation, population, house,
+                workplaces, value, buildingOrder, warehouse, processing, tower,
+                terrain, diagnostics);
     }
 
     private static void validateBuildingOrder(List<String> order) {
@@ -195,6 +219,16 @@ public record TownStageThreeScenario(
                 || !values.containsAll(REQUIRED_BUILDINGS)) {
             throw new IllegalArgumentException(
                     "buildingOrder must contain house, mine, and hunt exactly once.");
+        }
+    }
+
+    private static void validateStaffingQueue(List<String> order) {
+        Set<String> values = new HashSet<>(order);
+        if (order.size() != WORK_BUILDINGS.size()
+                || values.size() != WORK_BUILDINGS.size()
+                || !values.containsAll(WORK_BUILDINGS)) {
+            throw new IllegalArgumentException(
+                    "staffing.queue must contain mine and hunt exactly once.");
         }
     }
 
@@ -335,6 +369,26 @@ public record TownStageThreeScenario(
     }
 
     public record Workplaces(int mineCapacity, int huntCapacity, double huntRating) {
+    }
+
+    public record Staffing(List<String> queue, Map<String, Integer> targets) {
+        public Staffing {
+            queue = List.copyOf(queue);
+            validateStaffingQueue(queue);
+            Map<String, Integer> normalized = new LinkedHashMap<>();
+            for (String building : WORK_BUILDINGS) {
+                normalized.put(building, Math.max(0, targets.getOrDefault(building, 0)));
+            }
+            targets = Map.copyOf(normalized);
+        }
+
+        public static Staffing automatic() {
+            return new Staffing(WORK_BUILDINGS, Map.of());
+        }
+
+        public int target(String building) {
+            return targets.getOrDefault(building, 0);
+        }
     }
 
     public record Warehouse(double capacityItems, List<InventoryItem> initialInventory) {

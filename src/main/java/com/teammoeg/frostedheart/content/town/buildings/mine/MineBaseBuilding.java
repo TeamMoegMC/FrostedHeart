@@ -44,8 +44,6 @@ import net.minecraft.world.level.ChunkPos;
 
 import java.util.*;
 
-import static java.lang.Double.NEGATIVE_INFINITY;
-
 public class MineBaseBuilding extends AbstractTownResidentWorkBuilding {
     public record MiningDailyReport(
             boolean hasData,
@@ -168,7 +166,6 @@ public class MineBaseBuilding extends AbstractTownResidentWorkBuilding {
         List<Resident> workingResidents = residentsID.stream()
                 .map(id -> teamTown.getResident(id).orElse(null))
                 .filter(Objects::nonNull)
-                .filter(this::canResidentWork)
                 .toList();
         // 1. Requested output, measured in item units per town day.
         double totalProductivity = 0.0;
@@ -335,24 +332,6 @@ public class MineBaseBuilding extends AbstractTownResidentWorkBuilding {
     private static double sanitize(double value) {
         return Double.isFinite(value) ? Math.max(0.0, value) : 0.0;
     }
-
-	@Override
-	public double getResidentPriority() {
-		if(!this.isBuildingWorkable()) return NEGATIVE_INFINITY;
-		return getResidentPriority(this.residentsID.size());
-	}
-
-    @Override
-    public double getResidentPriority(int currentResidentNum) {
-		if(!this.isBuildingWorkable()) return NEGATIVE_INFINITY;
-        FHConfig.Server.Town.Mining config = FHConfig.SERVER.TOWN.MINING;
-		return MiningDailyModel.assignmentPriority(
-                currentResidentNum,
-                getMaxResidents(),
-                config.assignmentBasePriority.get(),
-                config.assignmentPenaltyPerWorker.get(),
-                config.assignmentFillRatioBonus.get());
-	}
 
     @Override
     public double getResidentScore(Resident resident) {

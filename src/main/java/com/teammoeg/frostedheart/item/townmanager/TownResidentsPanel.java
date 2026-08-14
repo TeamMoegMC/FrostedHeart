@@ -21,6 +21,7 @@ package com.teammoeg.frostedheart.item.townmanager;
 
 import com.teammoeg.chorda.client.RenderingHint;
 import com.teammoeg.chorda.client.cui.base.MouseButton;
+import com.teammoeg.chorda.client.cui.base.TooltipBuilder;
 import com.teammoeg.chorda.client.cui.base.UIElement;
 import com.teammoeg.chorda.client.cui.base.UILayer;
 import com.teammoeg.chorda.client.cui.base.Verifier;
@@ -33,6 +34,7 @@ import com.teammoeg.frostedheart.content.town.building.AbstractTownBuilding;
 import com.teammoeg.frostedheart.content.town.network.TownResidentNameEditRequestPacket;
 import com.teammoeg.frostedheart.content.town.resident.Resident;
 import com.teammoeg.frostedheart.content.town.tabs.TownTextLayout;
+import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
@@ -62,7 +64,7 @@ public class TownResidentsPanel extends UILayer {
 
     private static final int WIDTH = TownManagerScreen.CONTENT_WIDTH;
     private static final int HEIGHT = TownManagerScreen.CONTENT_HEIGHT;
-    private static final int LIST_WIDTH = 62;
+    private static final int LIST_WIDTH = 96;
     private static final int LIST_TOP = 18;
     private static final int ROW_HEIGHT = 16;
     private static final int VISIBLE_ROWS = (HEIGHT - LIST_TOP - 4) / ROW_HEIGHT;
@@ -70,6 +72,7 @@ public class TownResidentsPanel extends UILayer {
     private static final int DETAIL_TOP = 36;
     private static final int DETAIL_VISIBLE = (HEIGHT - DETAIL_TOP - 4) / DETAIL_LINE_HEIGHT;
     private static final int SCROLLBAR_WIDTH = 6;
+    private static final int NAME_LABEL_WIDTH = 36;
     private static final int DETAIL_TEXT_WIDTH = WIDTH - LIST_WIDTH - SCROLLBAR_WIDTH - 13;
     private static final int MIN_THUMB_HEIGHT = 10;
 
@@ -97,7 +100,7 @@ public class TownResidentsPanel extends UILayer {
         setScissorEnabled(false);
         lastNameBox = new ResidentNameBox(this, false);
         firstNameBox = new ResidentNameBox(this, true);
-        int editorX = LIST_WIDTH + 22;
+        int editorX = LIST_WIDTH + 5 + NAME_LABEL_WIDTH;
         int editorWidth = WIDTH - editorX - SCROLLBAR_WIDTH - 4;
         lastNameBox.setPos(editorX, 2);
         lastNameBox.setSize(editorWidth, 13);
@@ -204,7 +207,8 @@ public class TownResidentsPanel extends UILayer {
         lines.add(stat("gui.frostedheart.town.strength", resident.getStrength()));
         lines.add(stat("gui.frostedheart.town.intelligence", resident.getIntelligence()));
         lines.add(new Line(Component.translatable("gui.frostedheart.town_manager.education")
-                .append(Component.literal(": " + resident.getEducationLevel())), 0xFFFFFFFF));
+                .append(Component.literal(": "))
+                .append(educationLevel(resident.getEducationLevel())), 0xFFFFFFFF));
         lines.add(new Line(Component.empty(), 0xFFFFFFFF));
         lines.add(assignment("gui.frostedheart.town_manager.house", resident.getHousePos(), town));
         lines.add(assignment("gui.frostedheart.town_manager.work", resident.getWorkPos(), town));
@@ -214,7 +218,9 @@ public class TownResidentsPanel extends UILayer {
             for (Map.Entry<String, Double> entry : resident.getWorkProficiency().entrySet()) {
                 lines.add(new Line(Component.literal("• ")
                         .append(buildingName(entry.getKey()))
-                        .append(Component.literal(": " + Math.round(entry.getValue()))), 0xFFFFFFFF));
+                        .append(Component.literal(": "))
+                        .append(statusBar(entry.getValue())), 0xFFFFFFFF,
+                        statusTooltip(entry.getValue())));
             }
         }
         return lines;
@@ -295,6 +301,19 @@ public class TownResidentsPanel extends UILayer {
         super.onMouseReleased(button);
     }
 
+    @Override
+    public void getTooltip(TooltipBuilder tooltip) {
+        super.getTooltip(tooltip);
+        if (!isMouseOver() || getMouseX() <= LIST_WIDTH
+                || getMouseY() < DETAIL_TOP || getMouseY() >= HEIGHT) return;
+        List<VisualLine> lines = wrapDetailLines(Minecraft.getInstance().font,
+                detailLines(normalizeSelection(residents())));
+        int index = detailScroll + (int) ((getMouseY() - DETAIL_TOP) / DETAIL_LINE_HEIGHT);
+        if (index < 0 || index >= lines.size()) return;
+        Component lineTooltip = lines.get(index).tooltip();
+        if (lineTooltip != null) tooltip.accept(lineTooltip);
+    }
+
     private void updateDetailScrollFromMouse() {
         int lineCount = wrapDetailLines(Minecraft.getInstance().font,
                 detailLines(normalizeSelection(residents()))).size();
@@ -346,14 +365,45 @@ public class TownResidentsPanel extends UILayer {
 
     private static Line stat(String key, double value) {
         return new Line(Component.translatable(key)
-                .append(Component.literal(": " + Math.round(value) + " / 100")), 0xFFFFFFFF);
+                .append(Component.literal(": "))
+                .append(statusBar(value)), 0xFFFFFFFF, statusTooltip(value));
+    }
+
+    private static Component educationLevel(int level) {
+        if (level >= 0 && level <= 5) {
+            return Component.translatable(
+                    "gui.frostedheart.town_manager.education_level." + level);
+        }
+        return Component.translatable(
+                "gui.frostedheart.town_manager.education_level.unknown", level);
+    }
+
+    private static Component statusTooltip(double value) {
+        double bounded = Math.max(0.0, Math.min(100.0, value));
+        String text = bounded == Math.floor(bounded)
+                ? String.valueOf((long) bounded)
+                : String.format(java.util.Locale.ROOT, "%.1f", bounded);
+        return Component.translatable("gui.frostedheart.town_manager.status_value", text);
+    }
+
+    private static Component statusBar(double value) {
+        double bounded = Math.max(0.0, Math.min(100.0, value));
+        int filled = (int) Math.round(bounded / 10.0);
+        ChatFormatting activeColor = bounded < 35.0 ? ChatFormatting.RED
+                : bounded < 70.0 ? ChatFormatting.GOLD : ChatFormatting.GREEN;
+        var bar = Component.empty();
+        for (int index = 0; index < 10; index++) {
+            bar.append(Component.literal("■").withStyle(index < filled
+                    ? activeColor : ChatFormatting.DARK_GRAY));
+        }
+        return bar;
     }
 
     private static List<VisualLine> wrapDetailLines(Font font, List<Line> lines) {
         List<VisualLine> wrapped = new ArrayList<>();
         for (Line line : lines) {
             for (FormattedCharSequence text : TownTextLayout.wrap(font, line.text(), DETAIL_TEXT_WIDTH)) {
-                wrapped.add(new VisualLine(text, line.color()));
+                wrapped.add(new VisualLine(text, line.color(), line.tooltip()));
             }
         }
         return wrapped;
@@ -476,11 +526,29 @@ public class TownResidentsPanel extends UILayer {
 
         @Override
         public void drawTextBox(GuiGraphics graphics, int x, int y, int width, int height, RenderingHint hint) {
-            if (isFocused()) super.drawTextBox(graphics, x, y, width, height, hint);
+            if (!isFocused()) return;
+            graphics.fill(x, y, x + width, y + height, 0xFF181818);
+            graphics.fill(x, y, x + width, y + 1, 0xFFFFAA00);
+            graphics.fill(x, y + height - 1, x + width, y + height, 0xFFFFAA00);
+        }
+
+        @Override
+        public void getTooltip(TooltipBuilder tooltip) {
+            super.getTooltip(tooltip);
+            tooltip.accept(Component.translatable(
+                    "gui.frostedheart.town_manager.edit_resident_name_hint"));
         }
     }
 
-    private record Line(Component text, int color) {}
+    private record Line(Component text, int color, @Nullable Component tooltip) {
+        private Line(Component text, int color) {
+            this(text, color, null);
+        }
+    }
 
-    private record VisualLine(FormattedCharSequence text, int color) {}
+    private record VisualLine(
+            FormattedCharSequence text,
+            int color,
+            @Nullable Component tooltip
+    ) {}
 }

@@ -1334,22 +1334,22 @@ public class FHConfig {
 
 					builder.push("Worker Assignment");
 					assignmentBasePriority = builder
-						.comment("Dimensionless base priority used when assigning residents to hunting bases.")
+						.comment("Deprecated compatibility value; the town-level staffing queue now controls assignment and ignores this setting.")
 						.defineInRange("basePriority",
 							TownModelParameters.Defaults.HUNTING_ASSIGNMENT_BASE_PRIORITY,
 							-1000000d, 1000000d);
 					assignmentPenaltyPerWorker = builder
-						.comment("Priority subtracted for each worker already assigned to this hunting base.")
+						.comment("Deprecated compatibility value; ignored by the current staffing planner.")
 						.defineInRange("penaltyPerWorker",
 							TownModelParameters.Defaults.HUNTING_ASSIGNMENT_PENALTY_PER_WORKER,
 							0d, 1000000d);
 					assignmentFillRatioBonus = builder
-						.comment("Priority added times the occupied-slot ratio (assigned workers / worker slots).")
+						.comment("Deprecated compatibility value; ignored by the current staffing planner.")
 						.defineInRange("fillRatioBonus",
 							TownModelParameters.Defaults.HUNTING_ASSIGNMENT_FILL_RATIO_BONUS,
 							-1000000d, 1000000d);
 					assignmentRatingMultiplier = builder
-						.comment("Multiplier converting hunting-base rating into worker-assignment priority.")
+						.comment("Deprecated compatibility value; ignored by the current staffing planner.")
 						.defineInRange("ratingMultiplier",
 							TownModelParameters.Defaults.HUNTING_ASSIGNMENT_RATING_MULTIPLIER,
 							-1000000d, 1000000d);
@@ -1476,17 +1476,17 @@ public class FHConfig {
 
 					builder.push("Worker Assignment");
 					assignmentBasePriority = builder
-						.comment("Dimensionless base priority used when assigning residents to mining bases.")
+						.comment("Deprecated compatibility value; the town-level staffing queue now controls assignment and ignores this setting.")
 						.defineInRange("basePriority",
 							TownModelParameters.Defaults.MINING_ASSIGNMENT_BASE_PRIORITY,
 							-1000000d, 1000000d);
 					assignmentPenaltyPerWorker = builder
-						.comment("Priority subtracted for each worker already assigned to this mining base.")
+						.comment("Deprecated compatibility value; ignored by the current staffing planner.")
 						.defineInRange("penaltyPerWorker",
 							TownModelParameters.Defaults.MINING_ASSIGNMENT_PENALTY_PER_WORKER,
 							0d, 1000000d);
 					assignmentFillRatioBonus = builder
-						.comment("Priority added times the occupied-slot ratio (assigned workers / worker slots).")
+						.comment("Deprecated compatibility value; ignored by the current staffing planner.")
 						.defineInRange("fillRatioBonus",
 							TownModelParameters.Defaults.MINING_ASSIGNMENT_FILL_RATIO_BONUS,
 							-1000000d, 1000000d);

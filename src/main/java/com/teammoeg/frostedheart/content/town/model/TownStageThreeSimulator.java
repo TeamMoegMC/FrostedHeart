@@ -242,17 +242,23 @@ public final class TownStageThreeSimulator {
 
     private static void writeDaily(Path path, List<DailyAggregate> rows) throws IOException {
         try (BufferedWriter writer = Files.newBufferedWriter(path, StandardCharsets.UTF_8)) {
-            writer.write("day,mean_population,mean_deaths,mean_miners,mean_hunters,mean_mining_swe,"
-                    + "mean_hunting_swe,mean_food_satisfaction,food_reserve_p05,food_reserve_p50,"
+            writer.write("day,mean_population,mean_deaths,mean_miners,mean_hunters,"
+                    + "mean_staffing_targets,mean_staffing_covered,mean_staffing_shortfall,"
+                    + "mean_eligible_unassigned,mean_unable_to_work,mean_workplace_changes,"
+                    + "mean_mining_swe,mean_hunting_swe,mean_food_satisfaction,food_reserve_p05,food_reserve_p50,"
                     + "food_reserve_p95,fuel_reserve_p05,fuel_reserve_p50,fuel_reserve_p95,"
                     + "mean_tower_service,mean_minimum_health,mean_minimum_mental,mean_coal_accepted,"
                     + "mean_hunting_food_produced\n");
             for (DailyAggregate row : rows) {
                 writer.write(String.format(Locale.ROOT,
                         "%d,%.9f,%.9f,%.9f,%.9f,%.9f,%.9f,%.9f,%.9f,%.9f,%.9f,"
-                                + "%.9f,%.9f,%.9f,%.9f,%.9f,%.9f,%.9f,%.9f%n",
+                                + "%.9f,%.9f,%.9f,%.9f,%.9f,%.9f,%.9f,%.9f,%.9f,"
+                                + "%.9f,%.9f,%.9f,%.9f,%.9f%n",
                         row.day(), row.meanPopulation(), row.meanDeaths(), row.meanMiners(),
-                        row.meanHunters(), row.meanMiningSwe(), row.meanHuntingSwe(),
+                        row.meanHunters(), row.meanStaffingTargets(), row.meanStaffingCovered(),
+                        row.meanStaffingShortfall(), row.meanEligibleUnassigned(),
+                        row.meanUnableToWork(), row.meanWorkplaceChanges(),
+                        row.meanMiningSwe(), row.meanHuntingSwe(),
                         row.meanFoodSatisfaction(), row.foodReserve().p05(), row.foodReserve().p50(),
                         row.foodReserve().p95(), row.fuelReserve().p05(), row.fuelReserve().p50(),
                         row.fuelReserve().p95(), row.meanTowerService(), row.meanMinimumHealth(),
@@ -424,6 +430,12 @@ public final class TownStageThreeSimulator {
         private final double[][] deaths;
         private final double[][] miners;
         private final double[][] hunters;
+        private final double[][] staffingTargets;
+        private final double[][] staffingCovered;
+        private final double[][] staffingShortfall;
+        private final double[][] eligibleUnassigned;
+        private final double[][] unableToWork;
+        private final double[][] workplaceChanges;
         private final double[][] miningSwe;
         private final double[][] huntingSwe;
         private final double[][] foodSatisfaction;
@@ -441,6 +453,12 @@ public final class TownStageThreeSimulator {
             deaths = matrix(days, runs);
             miners = matrix(days, runs);
             hunters = matrix(days, runs);
+            staffingTargets = matrix(days, runs);
+            staffingCovered = matrix(days, runs);
+            staffingShortfall = matrix(days, runs);
+            eligibleUnassigned = matrix(days, runs);
+            unableToWork = matrix(days, runs);
+            workplaceChanges = matrix(days, runs);
             miningSwe = matrix(days, runs);
             huntingSwe = matrix(days, runs);
             foodSatisfaction = matrix(days, runs);
@@ -459,6 +477,12 @@ public final class TownStageThreeSimulator {
             deaths[day][run] = result.cumulativeDeaths();
             miners[day][run] = result.assignedMiners();
             hunters[day][run] = result.assignedHunters();
+            staffingTargets[day][run] = result.staffingTargetWorkers();
+            staffingCovered[day][run] = result.staffingTargetCovered();
+            staffingShortfall[day][run] = result.staffingTargetShortfall();
+            eligibleUnassigned[day][run] = result.eligibleUnassignedWorkers();
+            unableToWork[day][run] = result.unableToWorkResidents();
+            workplaceChanges[day][run] = result.workplaceChanges();
             miningSwe[day][run] = result.miningSwe();
             huntingSwe[day][run] = result.huntingSwe();
             foodSatisfaction[day][run] = result.foodSatisfaction();
@@ -478,6 +502,9 @@ public final class TownStageThreeSimulator {
                         day,
                         mean(population[day]), mean(deaths[day]),
                         mean(miners[day]), mean(hunters[day]),
+                        mean(staffingTargets[day]), mean(staffingCovered[day]),
+                        mean(staffingShortfall[day]), mean(eligibleUnassigned[day]),
+                        mean(unableToWork[day]), mean(workplaceChanges[day]),
                         mean(miningSwe[day]), mean(huntingSwe[day]),
                         mean(foodSatisfaction[day]),
                         statistics(foodReserve[day]), statistics(fuelReserve[day]),
@@ -578,6 +605,12 @@ public final class TownStageThreeSimulator {
             double meanDeaths,
             double meanMiners,
             double meanHunters,
+            double meanStaffingTargets,
+            double meanStaffingCovered,
+            double meanStaffingShortfall,
+            double meanEligibleUnassigned,
+            double meanUnableToWork,
+            double meanWorkplaceChanges,
             double meanMiningSwe,
             double meanHuntingSwe,
             double meanFoodSatisfaction,

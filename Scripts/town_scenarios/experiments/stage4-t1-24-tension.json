@@ -53,6 +53,7 @@
     "huntCapacity": 4,
     "huntRating": 1.0
   },
+  "staffing": { "queue": ["mine", "hunt"], "targets": { "mine": 0, "hunt": 0 } },
   "buildingOrder": ["house", "mine", "hunt"],
   "warehouse": {
     "capacityItems": 100000.0,

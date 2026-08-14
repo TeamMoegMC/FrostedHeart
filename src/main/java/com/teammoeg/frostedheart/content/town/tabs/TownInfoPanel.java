@@ -20,6 +20,7 @@ package com.teammoeg.frostedheart.content.town.tabs;
 
 import com.teammoeg.chorda.client.RenderingHint;
 import com.teammoeg.chorda.client.cui.base.MouseButton;
+import com.teammoeg.chorda.client.cui.base.TooltipBuilder;
 import com.teammoeg.chorda.client.cui.base.UIElement;
 import com.teammoeg.chorda.client.icon.CIcons;
 import net.minecraft.client.Minecraft;
@@ -41,21 +42,34 @@ import java.util.function.Supplier;
  * scrollbar. All three town production screens use the same row geometry.
  */
 public class TownInfoPanel extends UIElement {
-    public record Row(Component text, int color, @Nullable ItemStack icon) {
+    public record Row(
+            Component text,
+            int color,
+            @Nullable ItemStack icon,
+            @Nullable Component tooltip
+    ) {
+        public Row(Component text, int color, @Nullable ItemStack icon) {
+            this(text, color, icon, null);
+        }
+
         public static Row text(Component text) {
-            return new Row(text, 0xFFFFFFFF, null);
+            return new Row(text, 0xFFFFFFFF, null, null);
         }
 
         public static Row colored(Component text, int color) {
-            return new Row(text, color, null);
+            return new Row(text, color, null, null);
         }
 
         public static Row item(Item item, Component text) {
-            return new Row(text, 0xFFFFFFFF, new ItemStack(item));
+            return new Row(text, 0xFFFFFFFF, new ItemStack(item), null);
         }
 
         public static Row empty() {
-            return new Row(Component.empty(), 0xFFFFFFFF, null);
+            return new Row(Component.empty(), 0xFFFFFFFF, null, null);
+        }
+
+        public Row withTooltip(Component tooltip) {
+            return new Row(text, color, icon, tooltip);
         }
     }
 
@@ -73,7 +87,8 @@ public class TownInfoPanel extends UIElement {
             FormattedCharSequence text,
             int color,
             @Nullable ItemStack icon,
-            int textIndent
+            int textIndent,
+            @Nullable Component tooltip
     ) {}
 
     public TownInfoPanel(
@@ -150,6 +165,18 @@ public class TownInfoPanel extends UIElement {
         return true;
     }
 
+    @Override
+    public void getTooltip(TooltipBuilder tooltip) {
+        if (!isMouseOver()) return;
+        int localY = (int) getMouseY() - PADDING_Y;
+        if (localY < 0) return;
+        List<VisualRow> rows = visualRows();
+        int index = scrollStart + localY / LINE_HEIGHT;
+        if (index < 0 || index >= rows.size()) return;
+        Component rowTooltip = rows.get(index).tooltip();
+        if (rowTooltip != null) tooltip.accept(rowTooltip);
+    }
+
     private void renderScrollbar(
             GuiGraphics graphics, int x, int y, int width, int height,
             int totalRows, int visibleRows, int maxScroll
@@ -221,7 +248,8 @@ public class TownInfoPanel extends UIElement {
                         wrapped.get(index),
                         row.color(),
                         hasIcon && index == 0 ? row.icon() : null,
-                        textIndent
+                        textIndent,
+                        row.tooltip()
                 ));
             }
         }

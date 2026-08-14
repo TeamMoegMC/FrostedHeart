@@ -43,6 +43,7 @@ public final class TownSignalTipPresentationModel {
             case HOUSE_TEMPERATURE_UNSAFE, HOUSE_TEMPERATURE_RECOVERED,
                     HUNTING_TEMPERATURE_STOP, HUNTING_TEMPERATURE_RECOVERED,
                     WORK_CAPACITY_LOST, WORK_CAPACITY_RECOVERED,
+                    STAFFING_TARGET_UNMET, STAFFING_TARGET_RECOVERED,
                     EXIT_RISK_ENTERED, EXIT_RISK_RECOVERED,
                     RESIDENT_EXIT_HEALTH, RESIDENT_EXIT_MENTAL, RESIDENT_EXIT_BOTH -> true;
             default -> false;

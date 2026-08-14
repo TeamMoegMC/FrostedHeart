@@ -80,7 +80,9 @@ public record TownSignalEvent(
         RESIDENT_EXIT_HEALTH,
         RESIDENT_EXIT_MENTAL,
         RESIDENT_EXIT_BOTH,
-        CRISIS_RECOVERED
+        CRISIS_RECOVERED,
+        STAFFING_TARGET_UNMET,
+        STAFFING_TARGET_RECOVERED
     }
 
     public enum Severity {

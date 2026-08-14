@@ -24,6 +24,7 @@
     "decorationRating": 0.75
   },
   "workplaces": { "mineCapacity": 1, "huntCapacity": 1, "huntRating": 1.0 },
+  "staffing": { "queue": ["mine", "hunt"], "targets": { "mine": 0, "hunt": 0 } },
   "buildingOrder": ["house", "mine", "hunt"],
   "warehouse": {
     "capacityItems": 100000.0,

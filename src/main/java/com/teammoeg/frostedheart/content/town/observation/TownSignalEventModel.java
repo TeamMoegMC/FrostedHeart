@@ -107,11 +107,13 @@ public final class TownSignalEventModel {
             case CLIMATE_COLD_ENDED, TOWER_SERVICE_RESTORED,
                     HOUSE_TEMPERATURE_RECOVERED, HUNTING_TEMPERATURE_RECOVERED,
                     FOOD_RESERVE_RECOVERED, FUEL_RESERVE_RECOVERED,
-                    WORK_CAPACITY_RECOVERED, EXIT_RISK_RECOVERED,
+                    WORK_CAPACITY_RECOVERED, STAFFING_TARGET_RECOVERED,
+                    EXIT_RISK_RECOVERED,
                     CRISIS_RECOVERED -> TownSignalEvent.Severity.INFORMATION;
             case CLIMATE_COLD_WARNING, HUNTING_TEMPERATURE_STOP,
                     FOOD_RESERVE_WARNING, FUEL_RESERVE_WARNING,
-                    WORK_CAPACITY_LOST -> TownSignalEvent.Severity.WARNING;
+                    WORK_CAPACITY_LOST, STAFFING_TARGET_UNMET
+                    -> TownSignalEvent.Severity.WARNING;
             case TOWER_SERVICE_LOST, HOUSE_TEMPERATURE_UNSAFE,
                     FOOD_SHORTAGE, FUEL_SHORTAGE,
                     EXIT_RISK_ENTERED -> TownSignalEvent.Severity.CRITICAL;
@@ -152,6 +154,7 @@ public final class TownSignalEventModel {
             case FOOD_RESERVE_WARNING, FOOD_SHORTAGE, FOOD_RESERVE_RECOVERED -> Domain.FOOD_RESERVE;
             case FUEL_RESERVE_WARNING, FUEL_SHORTAGE, FUEL_RESERVE_RECOVERED -> Domain.FUEL_RESERVE;
             case WORK_CAPACITY_LOST, WORK_CAPACITY_RECOVERED -> Domain.WORK_CAPACITY;
+            case STAFFING_TARGET_UNMET, STAFFING_TARGET_RECOVERED -> Domain.STAFFING_TARGET;
             case EXIT_RISK_ENTERED, EXIT_RISK_RECOVERED -> Domain.EXIT_RISK;
             case CRISIS_RECOVERED -> Domain.CRISIS;
             case RESIDENT_EXIT_HEALTH -> Domain.RESIDENT_EXIT_HEALTH;
@@ -168,6 +171,7 @@ public final class TownSignalEventModel {
         FOOD_RESERVE,
         FUEL_RESERVE,
         WORK_CAPACITY,
+        STAFFING_TARGET,
         EXIT_RISK,
         CRISIS,
         RESIDENT_EXIT_HEALTH,

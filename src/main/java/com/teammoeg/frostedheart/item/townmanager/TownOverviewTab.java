@@ -66,11 +66,12 @@ public class TownOverviewTab extends TownManagerTab {
         layer.add(new TownInfoPanel(
                 layer,
                 TownManagerScreen.CONTENT_X,
-                TownManagerScreen.CONTENT_Y + 16,
+                TownManagerScreen.CONTENT_Y + 30,
                 TownManagerScreen.CONTENT_WIDTH,
-                TownManagerScreen.CONTENT_HEIGHT - 16,
+                TownManagerScreen.CONTENT_HEIGHT - 30,
                 this::collectRows));
         layer.add(new TownNameEditor(layer, screen::getTown));
+        layer.add(new TownDayLabel(layer, screen::getTownData));
     }
 
     private List<TownInfoPanel.Row> collectRows() {
@@ -156,14 +157,14 @@ public class TownOverviewTab extends TownManagerTab {
                 .mapToDouble(Resident::getHealth).average().orElse(0) : status.averageHealth();
         double avgMental = status == null ? town.getAllResidents().stream()
                 .mapToDouble(Resident::getMental).average().orElse(0) : status.averageMental();
-        rows.add(TownInfoPanel.Row.text(label("gui.frostedheart.town_manager.average_health")
-                .append(statusBar(avgHealth))));
-        rows.add(TownInfoPanel.Row.text(label("gui.frostedheart.town_manager.average_mental")
-                .append(statusBar(avgMental))));
-        rows.add(TownInfoPanel.Row.text(label("gui.frostedheart.town_manager.vulnerable_health")
-                .append(status == null ? noData() : statusBar(status.p10Health()))));
-        rows.add(TownInfoPanel.Row.text(label("gui.frostedheart.town_manager.vulnerable_mental")
-                .append(status == null ? noData() : statusBar(status.p10Mental()))));
+        rows.add(statusRow("gui.frostedheart.town_manager.average_health", avgHealth));
+        rows.add(statusRow("gui.frostedheart.town_manager.average_mental", avgMental));
+        rows.add(status == null
+                ? TownInfoPanel.Row.text(label("gui.frostedheart.town_manager.vulnerable_health").append(noData()))
+                : statusRow("gui.frostedheart.town_manager.vulnerable_health", status.p10Health()));
+        rows.add(status == null
+                ? TownInfoPanel.Row.text(label("gui.frostedheart.town_manager.vulnerable_mental").append(noData()))
+                : statusRow("gui.frostedheart.town_manager.vulnerable_mental", status.p10Mental()));
 
         long homeless = status == null ? town.getAllResidents().stream().filter(r -> r.getHousePos() == null).count()
                 : status.homelessCount();
@@ -238,6 +239,12 @@ public class TownOverviewTab extends TownManagerTab {
                     ? activeColor : ChatFormatting.DARK_GRAY));
         }
         return bar;
+    }
+
+    private static TownInfoPanel.Row statusRow(String labelKey, double metric) {
+        return TownInfoPanel.Row.text(label(labelKey).append(statusBar(metric)))
+                .withTooltip(Component.translatable(
+                        "gui.frostedheart.town_manager.status_value", formatNumber(metric)));
     }
 
     private static MutableComponent damageBar(double fraction) {

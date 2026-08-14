@@ -7,6 +7,7 @@
 package com.teammoeg.frostedheart.item.townmanager;
 
 import com.teammoeg.chorda.client.RenderingHint;
+import com.teammoeg.chorda.client.cui.base.TooltipBuilder;
 import com.teammoeg.chorda.client.cui.base.Verifier;
 import com.teammoeg.chorda.client.cui.base.UILayer;
 import com.teammoeg.chorda.client.cui.theme.Coloring;
@@ -76,7 +77,17 @@ final class TownNameEditor extends TextBox {
 
     @Override
     public void drawTextBox(GuiGraphics graphics, int x, int y, int width, int height, RenderingHint hint) {
-        if (isFocused()) super.drawTextBox(graphics, x, y, width, height, hint);
+        graphics.fill(x, y, x + width, y + height, 0xE0101010);
+        if (isFocused()) {
+            graphics.fill(x, y, x + width, y + 1, 0xFFFFAA00);
+            graphics.fill(x, y + height - 1, x + width, y + height, 0xFFFFAA00);
+        }
+    }
+
+    @Override
+    public void getTooltip(TooltipBuilder tooltip) {
+        super.getTooltip(tooltip);
+        tooltip.accept(Component.translatable("gui.frostedheart.town_manager.edit_town_name_hint"));
     }
 
     private void commit() {

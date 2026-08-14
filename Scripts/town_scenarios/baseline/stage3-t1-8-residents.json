@@ -9,6 +9,7 @@
   "population": { "standardAdults": 8, "initialHealth": 50.0, "initialMental": 50.0, "initialStrength": 50.0, "initialIntelligence": 50.0, "initialMiningProficiency": 0.0, "initialHuntingProficiency": 0.0, "initialAgeDays": 30 },
   "house": { "temperatureCelsius": 24.0, "areaBlocks": 128, "volumeBlocks": 384, "bedCount": 8, "decorationRating": 0.75 },
   "workplaces": { "mineCapacity": 8, "huntCapacity": 8, "huntRating": 1.0 },
+  "staffing": { "queue": ["mine", "hunt"], "targets": { "mine": 0, "hunt": 0 } },
   "buildingOrder": ["house", "mine", "hunt"],
   "warehouse": {
     "capacityItems": 100000.0,

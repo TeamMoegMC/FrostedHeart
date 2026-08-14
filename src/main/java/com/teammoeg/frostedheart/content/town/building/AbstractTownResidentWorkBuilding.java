@@ -49,6 +49,13 @@ public abstract class AbstractTownResidentWorkBuilding extends AbstractTownBuild
         return removed;
     }
 
+    /** Clears the authoritative daily roster without mutating resident fields. */
+    public void clearResidents() {
+        if (this.residentsID.isEmpty()) return;
+        this.residentsID.clear();
+        fireChange();
+    }
+
     @Override
     public Set<UUID> getResidentsID(){
         return residentsID;

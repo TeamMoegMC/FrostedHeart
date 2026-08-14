@@ -27,6 +27,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.SplittableRandom;
 
 /** Exact day-order stage-3 transition built from gameplay-owned pure kernels. */
@@ -58,7 +59,8 @@ public final class TownStageThreeModel {
         int day = state.day();
         List<ResourceFlow> flows = new ArrayList<>();
         settleMorningAndAging(state, parameters);
-        restoreAndFillAssignments(state, scenario, parameters, environment);
+        StaffingStep staffing = restoreAndFillAssignments(
+                state, scenario, parameters, environment);
 
         double miningSwe = 0.0;
         double huntingSwe = 0.0;
@@ -127,6 +129,9 @@ public final class TownStageThreeModel {
 
         DayResult result = new DayResult(
                 day, population, state.deaths(), miners, hunters,
+                staffing.totalTargets(), staffing.coveredTargets(),
+                staffing.targetShortfall(), staffing.eligibleUnassigned(),
+                staffing.unableToWork(), staffing.workplaceChanges(),
                 miningSwe, huntingSwe,
                 foodRequired, foodConsumed, foodSatisfaction,
                 foodReserveDays, fuelReserveDays,
@@ -172,7 +177,7 @@ public final class TownStageThreeModel {
         state.addDeaths(dead.size());
     }
 
-    private static void restoreAndFillAssignments(
+    private static StaffingStep restoreAndFillAssignments(
             TownStageThreeState state,
             TownStageThreeScenario scenario,
             TownModelParameters parameters,
@@ -180,10 +185,6 @@ public final class TownStageThreeModel {
     ) {
         int houseCapacity = houseCapacity(scenario, parameters);
         trimAssignments(state.residents(), true, TownStageThreeState.HOUSE_ID, houseCapacity);
-        trimAssignments(state.residents(), false, TownStageThreeState.MINE_ID,
-                scenario.workplaces().mineCapacity());
-        trimAssignments(state.residents(), false, TownStageThreeState.HUNT_ID,
-                scenario.workplaces().huntCapacity());
         for (TownStageThreeState.ResidentState resident : state.residents()) {
             if (environment.houseAcceptsNewResidents()
                     && resident.homeId() == null && assignedCount(
@@ -192,28 +193,44 @@ public final class TownStageThreeModel {
             }
         }
 
-        List<TownStageThreeState.ResidentState> availableResidents = state.residents().stream()
-                .filter(resident -> resident.workId() == null
-                        && resident.homeId() != null
-                        && resident.age() != 0)
-                .toList();
-        List<Workplace> workplaces = new ArrayList<>();
-        workplaces.add(new Workplace(
-                TownStageThreeState.MINE_ID, scenario.workplaces().mineCapacity()));
-        if (environment.huntingWorkable()) {
-            workplaces.add(new Workplace(
-                    TownStageThreeState.HUNT_ID, scenario.workplaces().huntCapacity()));
+        Map<TownStageThreeState.ResidentState, String> previous = new java.util.IdentityHashMap<>();
+        for (TownStageThreeState.ResidentState resident : state.residents()) {
+            previous.put(resident, resident.workId());
         }
-        TownAssignmentModel.fillVacancies(
-                availableResidents,
-                workplaces,
-                Workplace::capacity,
-                workplace -> assignedCount(state.residents(), false, workplace.id()),
-                (workplace, count) -> assignmentPriority(
-                        workplace.id(), count, scenario, parameters, environment),
-                (workplace, resident) -> canWork(resident, parameters),
-                (workplace, resident) -> productivity(workplace.id(), resident, parameters))
-                .forEach(assignment -> assignment.resident().setWorkId(assignment.workplace().id()));
+        List<TownAssignmentModel.Workplace<String>> workplaces = new ArrayList<>();
+        for (String workplace : scenario.staffing().queue()) {
+            int capacity = TownStageThreeState.MINE_ID.equals(workplace)
+                    ? scenario.workplaces().mineCapacity()
+                    : scenario.workplaces().huntCapacity();
+            boolean workable = !TownStageThreeState.HUNT_ID.equals(workplace)
+                    || environment.huntingWorkable();
+            workplaces.add(new TownAssignmentModel.Workplace<>(
+                    workplace, capacity, scenario.staffing().target(workplace), workable));
+        }
+        TownAssignmentModel.Plan<TownStageThreeState.ResidentState, String> assignmentPlan =
+                TownAssignmentModel.plan(
+                        state.residents(), workplaces, previous::get,
+                        (workplace, resident) -> canWork(resident, parameters),
+                        (workplace, resident) -> productivity(workplace, resident, parameters),
+                        Comparator.comparing(TownStageThreeState.ResidentState::id));
+        state.residents().forEach(resident -> resident.setWorkId(null));
+        assignmentPlan.assignments().forEach(assignment ->
+                assignment.resident().setWorkId(assignment.workplace()));
+        int totalTargets = assignmentPlan.workplaces().values().stream()
+                .mapToInt(TownAssignmentModel.WorkplaceStatus::effectiveTarget).sum();
+        int coveredTargets = assignmentPlan.workplaces().values().stream()
+                .mapToInt(status -> Math.min(status.assigned(), status.effectiveTarget())).sum();
+        int eligible = (int) state.residents().stream()
+                .filter(resident -> canWork(resident, parameters)).count();
+        int eligibleUnassigned = (int) assignmentPlan.unassignedResidents().stream()
+                .filter(resident -> canWork(resident, parameters)).count();
+        int workplaceChanges = (int) state.residents().stream()
+                .filter(resident -> !Objects.equals(previous.get(resident), resident.workId()))
+                .count();
+        return new StaffingStep(
+                totalTargets, coveredTargets, totalTargets - coveredTargets,
+                eligibleUnassigned, state.residents().size() - eligible,
+                workplaceChanges);
     }
 
     private static void trimAssignments(
@@ -241,27 +258,6 @@ public final class TownStageThreeModel {
     ) {
         return (int) residents.stream().filter(resident -> id.equals(
                 home ? resident.homeId() : resident.workId())).count();
-    }
-
-    private static double assignmentPriority(
-            String workplace,
-            int count,
-            TownStageThreeScenario scenario,
-            TownModelParameters parameters,
-            DailyEnvironment environment
-    ) {
-        if (TownStageThreeState.MINE_ID.equals(workplace)) {
-            TownModelParameters.MiningParameters mining = parameters.mining();
-            return MiningDailyModel.assignmentPriority(
-                    count, scenario.workplaces().mineCapacity(),
-                    mining.assignmentBasePriority(), mining.assignmentPenaltyPerWorker(),
-                    mining.assignmentFillRatioBonus());
-        }
-        TownModelParameters.HuntingParameters hunting = parameters.hunting();
-        return HuntingDailyModel.assignmentPriority(
-                count, scenario.workplaces().huntCapacity(), environment.huntingRating(),
-                hunting.assignmentBasePriority(), hunting.assignmentPenaltyPerWorker(),
-                hunting.assignmentFillRatioBonus(), hunting.assignmentRatingMultiplier());
     }
 
     private static HouseStep settleHouse(
@@ -321,8 +317,8 @@ public final class TownStageThreeModel {
             TownModelParameters parameters,
             List<ResourceFlow> flows
     ) {
-        List<TownStageThreeState.ResidentState> workers = eligibleWorkers(
-                state, TownStageThreeState.MINE_ID, parameters);
+        List<TownStageThreeState.ResidentState> workers = assignedWorkers(
+                state, TownStageThreeState.MINE_ID);
         double swe = workers.stream().mapToDouble(
                 resident -> productivity(TownStageThreeState.MINE_ID, resident, parameters)).sum();
         double requested = MiningDailyModel.requestedOutput(
@@ -367,8 +363,8 @@ public final class TownStageThreeModel {
         if (!environment.huntingWorkable()) {
             return new HuntingStep(0.0, 0, 0.0, 0.0);
         }
-        List<TownStageThreeState.ResidentState> workers = eligibleWorkers(
-                state, TownStageThreeState.HUNT_ID, parameters);
+        List<TownStageThreeState.ResidentState> workers = assignedWorkers(
+                state, TownStageThreeState.HUNT_ID);
         double swe = workers.stream().mapToDouble(
                 resident -> productivity(TownStageThreeState.HUNT_ID, resident, parameters)).sum();
         TownModelParameters.HuntingParameters hunting = parameters.hunting();
@@ -553,14 +549,12 @@ public final class TownStageThreeModel {
                 parameters.housing().floorBlocksPerResident(), house.bedCount());
     }
 
-    private static List<TownStageThreeState.ResidentState> eligibleWorkers(
+    private static List<TownStageThreeState.ResidentState> assignedWorkers(
             TownStageThreeState state,
-            String workplace,
-            TownModelParameters parameters
+            String workplace
     ) {
         return state.residents().stream()
                 .filter(resident -> workplace.equals(resident.workId()))
-                .filter(resident -> canWork(resident, parameters))
                 .toList();
     }
 
@@ -611,9 +605,6 @@ public final class TownStageThreeModel {
                 aging.elderStrengthDecayPerDay(), aging.elderStrengthFloor());
     }
 
-    private record Workplace(String id, int capacity) {
-    }
-
     private record HouseStep(double requiredFoodUnits, double consumedFoodUnits, double foodSatisfaction) {
     }
 
@@ -637,6 +628,16 @@ public final class TownStageThreeModel {
             long loadedFuelItems,
             long consumedProcessTicks,
             long requestedProcessTicks
+    ) {
+    }
+
+    private record StaffingStep(
+            int totalTargets,
+            int coveredTargets,
+            int targetShortfall,
+            int eligibleUnassigned,
+            int unableToWork,
+            int workplaceChanges
     ) {
     }
 
@@ -666,6 +667,12 @@ public final class TownStageThreeModel {
             int cumulativeDeaths,
             int assignedMiners,
             int assignedHunters,
+            int staffingTargetWorkers,
+            int staffingTargetCovered,
+            int staffingTargetShortfall,
+            int eligibleUnassignedWorkers,
+            int unableToWorkResidents,
+            int workplaceChanges,
             double miningSwe,
             double huntingSwe,
             double foodRequired,

@@ -43,6 +43,19 @@ class TownSignalEventModelTest {
     }
 
     @Test
+    void staffingTargetDomainKeepsOnlyTheLatestCrossing() {
+        List<TownSignalNotice> compacted = TownSignalEventModel.compactNotifications(List.of(
+                event(TownSignalEvent.Type.STAFFING_TARGET_UNMET,
+                        TownSignalEvent.Severity.WARNING, 3),
+                event(TownSignalEvent.Type.STAFFING_TARGET_RECOVERED,
+                        TownSignalEvent.Severity.INFORMATION, 3)));
+
+        assertEquals(1, compacted.size());
+        assertEquals(TownSignalEvent.Type.STAFFING_TARGET_RECOVERED,
+                compacted.get(0).type());
+    }
+
+    @Test
     void dailyHistoryCombinesResidentsWithoutCombiningStateCrossings() {
         List<TownSignalEvent> history = new ArrayList<>();
         TownSignalEventModel.addToHistory(history, exit("first"));

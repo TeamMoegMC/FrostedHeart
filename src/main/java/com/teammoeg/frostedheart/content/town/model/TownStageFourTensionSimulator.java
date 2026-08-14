@@ -343,7 +343,10 @@ public final class TownStageFourTensionSimulator {
     ) {
         return new TownStageThreeModel.DayResult(
                 value.day(), value.population(), value.cumulativeDeaths(),
-                value.assignedMiners(), value.assignedHunters(), value.miningSwe(),
+                value.assignedMiners(), value.assignedHunters(),
+                value.staffingTargetWorkers(), value.staffingTargetCovered(),
+                value.staffingTargetShortfall(), value.eligibleUnassignedWorkers(),
+                value.unableToWorkResidents(), value.workplaceChanges(), value.miningSwe(),
                 value.huntingSwe(), value.foodRequired(), value.foodConsumed(),
                 value.foodSatisfaction(), foodReserveDays, fuelReserveDays,
                 value.towerServiceFraction(), value.loadedFuelItems(), value.oreRequested(),
