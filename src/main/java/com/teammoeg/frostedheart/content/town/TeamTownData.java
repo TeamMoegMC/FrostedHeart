@@ -55,6 +55,7 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.chorda.dataholders.SpecialData;
 import com.teammoeg.chorda.dataholders.SpecialDataHolder;
+import com.teammoeg.chorda.dataholders.team.CClientTeamDataManager;
 import com.teammoeg.chorda.dataholders.team.TeamDataHolder;
 import com.teammoeg.chorda.io.CodecUtil;
 import com.teammoeg.chorda.math.CMath;
@@ -367,6 +368,20 @@ public class TeamTownData implements SpecialData{
      */
     public TeamTown createTeamTown() {
         return TeamTown.create(this);
+    }
+
+    /**
+     * Returns the current logical client's synchronized town snapshot, if the
+     * initial full synchronization has arrived.
+     * <p>
+     * Client town-building block entities must use this accessor instead of
+     * {@code CTeamDataManager}: the latter is server-only and only appears to
+     * work in an integrated server because both logical sides share one JVM.
+     */
+    public static Optional<TeamTown> getClientTown() {
+        return CClientTeamDataManager.INSTANCE.getInstance()
+                .getOptional(FHSpecialDataTypes.TOWN_DATA)
+                .map(TeamTownData::createTeamTown);
     }
 
     /**

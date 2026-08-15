@@ -408,5 +408,7 @@ TownResourceActionResults.TownResourceTypeCostActionResult result =
 ### 14.5 客户端侧
 
 - 三增量包 `handle()` → `applyXxxUpdate`（覆盖式 merge + 移除，**不回 fire**）。
+- 城镇建筑方块实体统一通过 `AbstractTownBuildingBlockEntity#getTown()` 解析数据源：逻辑服务端使用序列化的 `townProvider`，逻辑客户端使用 `CClientTeamDataManager` 中当前的同步快照。客户端不得调用仅供服务端使用的 `CTeamDataManager`；该错误在集成服务器中会因双方共享 JVM 而被掩盖，在独立客户端连接专用服务器时只会得到空数据。
 - GUI 数据面板 render 阶段经 Supplier 实时取数，收包不重建界面（见 §9）；`TeamTownDataS2CPacket` 替换实例不影响（Supplier 每帧重新解析）。
+- 住宅、矿工之家、猎人之家、矿井和仓库的建筑属性都读取上述城镇快照。仓库仅保留物品列表专用的 `WarehouseUpdatePacket`；容量、面积、体积和工作状态不再通过原版 16 位 `ContainerData` 同步，避免大数值截断。
 - 全量包序列化成功后调 `markFullSynced()` **清空**资源去重基线：基线空 → `isResourceUnchanged` 恒 false → 下一轮 flush 对所有脏资源键强制发包（2026-08-07 修复：全量包仅单播给单个玩家而基线全队共享，若按当前值重建基线会吞掉其他玩家窗口内（已标记未 flush）的资源增量；清空则双向安全，代价是首次 flush 多一次冗余资源包）。

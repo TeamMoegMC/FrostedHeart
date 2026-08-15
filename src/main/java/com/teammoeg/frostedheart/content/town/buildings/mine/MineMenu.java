@@ -37,8 +37,7 @@ public class MineMenu extends CBlockEntityMenu<MineBlockEntity> {
     }
 
     public Optional<TeamTown> getTown() {
-        if (blockEntity.townProvider == null) return Optional.empty();
-        ITownWithBuildings town = blockEntity.townProvider.getTown();
+        ITownWithBuildings town = blockEntity.getTown();
         return town instanceof TeamTown teamTown ? Optional.of(teamTown) : Optional.empty();
     }
 }

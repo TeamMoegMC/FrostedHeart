@@ -26,12 +26,9 @@ import com.teammoeg.frostedheart.bootstrap.common.FHMenuTypes;
 import com.teammoeg.frostedheart.content.town.TeamTown;
 import com.teammoeg.frostedheart.content.town.network.WarehouseUpdatePacket;
 import com.teammoeg.frostedheart.content.town.resource.action.*;
-import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.inventory.ContainerData;
-import net.minecraft.world.inventory.SimpleContainerData;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 
@@ -45,7 +42,6 @@ public class WarehouseMenu extends CBlockEntityMenu<WarehouseBlockEntity> {
 	private final Map<SimpleItemKey, VirtualItemStack> clientItemMap = new HashMap<>();
 	private boolean isFirstSync = true;
 	private final Player player;
-	private final ContainerData buildingData;
 
 	public WarehouseMenu(int id, Inventory inventoryPlayer, WarehouseBlockEntity tile) {
 		super(FHMenuTypes.WAREHOUSE.get(), tile, id, inventoryPlayer.player, 32);
@@ -61,34 +57,6 @@ public class WarehouseMenu extends CBlockEntityMenu<WarehouseBlockEntity> {
 		} else {
 			this.serverSource = Collections::emptyMap;
 		}
-		//获得建筑信息
-		if (!player.level().isClientSide) {
-			this.buildingData = new ContainerData() {
-				public int get(int index) {
-					return blockEntity.getBuilding().map(building -> switch (index) {
-                        case 0 -> building.isBuildingWorkable() ? 1 : 0;
-                        case 1 -> building.isInitialized() ? 1 : 0;
-                        case 2 -> building.isStructureValid() ? 1 : 0;
-                        case 3 -> building.isOccupiedAreaOverlapped() ? 1 : 0;
-                        case 4 -> building.getVolume();
-                        case 5 -> building.getArea();
-                        case 6 -> (int) (building.getCapacity() * 100);
-                        case 7 -> 1;
-                        default -> 0;
-                    }).orElse(0);
-				}
-
-				@Override
-				public void set(int index, int value) {}
-
-				@Override
-				public int getCount() { return 8; }
-			};
-		} else {
-			this.buildingData = new SimpleContainerData(8);
-		}
-		this.addDataSlots(buildingData);
-
 		super.addPlayerInventory(inventoryPlayer, 8, 140, 197);
 	}
 	@Override
@@ -228,34 +196,34 @@ public class WarehouseMenu extends CBlockEntityMenu<WarehouseBlockEntity> {
 	}
 
 	public boolean hasBuilding() {
-		return buildingData.get(7) == 1;
+		return blockEntity.getBuilding().isPresent();
 	}
 
 	public boolean isWorkable() {
-		return buildingData.get(0) == 1;
+		return blockEntity.getBuilding().map(WarehouseBuilding::isBuildingWorkable).orElse(false);
 	}
 
 	public boolean isInitialized() {
-		return buildingData.get(1) == 1;
+		return blockEntity.getBuilding().map(WarehouseBuilding::isInitialized).orElse(false);
 	}
 
 	public boolean isStructureValid() {
-		return buildingData.get(2) == 1;
+		return blockEntity.getBuilding().map(WarehouseBuilding::isStructureValid).orElse(false);
 	}
 
 	public boolean isAreaOverlapped() {
-		return buildingData.get(3) == 1;
+		return blockEntity.getBuilding().map(WarehouseBuilding::isOccupiedAreaOverlapped).orElse(false);
 	}
 
 	public int getVolume() {
-		return buildingData.get(4);
+		return blockEntity.getBuilding().map(WarehouseBuilding::getVolume).orElse(0);
 	}
 
 	public int getArea() {
-		return buildingData.get(5);
+		return blockEntity.getBuilding().map(WarehouseBuilding::getArea).orElse(0);
 	}
 
 	public double getCapacity() {
-		return buildingData.get(6) / 100.0;
+		return blockEntity.getBuilding().map(WarehouseBuilding::getCapacity).orElse(0.0);
 	}
 }

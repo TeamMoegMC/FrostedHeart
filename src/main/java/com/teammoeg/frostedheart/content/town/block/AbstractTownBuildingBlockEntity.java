@@ -29,6 +29,7 @@ import com.teammoeg.chorda.scheduler.SchedulerQueue;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.town.ITown;
 import com.teammoeg.frostedheart.content.town.ITownWithBuildings;
+import com.teammoeg.frostedheart.content.town.TeamTownData;
 import com.teammoeg.frostedheart.content.town.building.AbstractTownBuilding;
 import com.teammoeg.frostedheart.content.town.provider.ITownProviderSerializable;
 
@@ -38,6 +39,7 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public abstract class AbstractTownBuildingBlockEntity<T extends AbstractTownBuilding> extends CBlockEntity implements
         TownBlockEntity<T>, ScheduledTaskTileEntity, CBlockInterfaces.IActiveState, CTickableBlockEntity {
@@ -76,12 +78,16 @@ public abstract class AbstractTownBuildingBlockEntity<T extends AbstractTownBuil
 
     public Optional<T> getBuilding(){
         if(this.townProvider == null){
-            FHMain.LOGGER.warn("AbstractTownBuildingBlockEntity: ITown provider is null");
+            if (level == null || !level.isClientSide) {
+                FHMain.LOGGER.warn("AbstractTownBuildingBlockEntity: ITown provider is null");
+            }
             return Optional.empty();
         }
-        ITownWithBuildings town = townProvider.getTown();
+        ITownWithBuildings town = getTown();
         if(town == null){
-            FHMain.LOGGER.warn("AbstractTownBuildingBlockEntity: TownProvider didn't get town");
+            if (level == null || !level.isClientSide) {
+                FHMain.LOGGER.warn("AbstractTownBuildingBlockEntity: TownProvider didn't get town");
+            }
             return Optional.empty();
         }
         Optional<AbstractTownBuilding> buildingOptional = town.getTownBuilding(this.worldPosition);
@@ -97,11 +103,20 @@ public abstract class AbstractTownBuildingBlockEntity<T extends AbstractTownBuil
                 return recoveredBuilding;
             }
         }
-        FHMain.LOGGER.warn("AbstractTownBuildingBlockEntity: Building doesn't exist in town");
+        if (level == null || !level.isClientSide) {
+            FHMain.LOGGER.warn("AbstractTownBuildingBlockEntity: Building doesn't exist in town");
+        }
         return Optional.empty();
     }
 
+    @Nullable
     public ITownWithBuildings getTown(){
+        if (townProvider == null) {
+            return null;
+        }
+        if (level != null && level.isClientSide) {
+            return TeamTownData.getClientTown().orElse(null);
+        }
         return townProvider.getTown();
     }
 

@@ -47,10 +47,7 @@ public class HouseMenu extends CBlockEntityMenu<HouseBlockEntity> {
     }
 
     public List<Resident> getResidents() {
-        if (blockEntity.townProvider == null) {
-            return List.of();
-        }
-        ITownWithBuildings town = blockEntity.townProvider.getTown();
+        ITownWithBuildings town = blockEntity.getTown();
         if (!(town instanceof ITownWithResidents residentTown)) {
             return List.of();
         }

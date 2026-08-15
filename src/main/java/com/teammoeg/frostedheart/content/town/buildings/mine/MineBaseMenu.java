@@ -41,14 +41,12 @@ public class MineBaseMenu extends CBlockEntityMenu<MineBaseBlockEntity> {
     }
 
     public Optional<TeamTown> getTown() {
-        if (blockEntity.townProvider == null) return Optional.empty();
-        ITownWithBuildings town = blockEntity.townProvider.getTown();
+        ITownWithBuildings town = blockEntity.getTown();
         return town instanceof TeamTown teamTown ? Optional.of(teamTown) : Optional.empty();
     }
 
     public List<Resident> getResidents() {
-        if (blockEntity.townProvider == null) return List.of();
-        ITownWithBuildings town = blockEntity.townProvider.getTown();
+        ITownWithBuildings town = blockEntity.getTown();
         if (!(town instanceof ITownWithResidents residentTown)) return List.of();
         return residentTown.getAllResidents().stream()
                 .filter(resident -> blockEntity.getBlockPos().equals(resident.getWorkPos()))
