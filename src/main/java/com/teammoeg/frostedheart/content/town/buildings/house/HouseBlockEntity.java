@@ -109,7 +109,7 @@ public class HouseBlockEntity extends AbstractTownBuildingBlockEntity<HouseBuild
 		List<BlockPos> doorPosSet = AbstractBlockScanner.getBlocksAdjacent(housePos, (pos) -> Objects.requireNonNull(level).getBlockState(pos).is(BlockTags.DOORS));
 		if (!doorPosSet.isEmpty()) {
 			for (BlockPos doorPos : doorPosSet) {
-				BlockPos floorBelowDoor = AbstractBlockScanner.getBlockBelow((pos) -> !(Objects.requireNonNull(level).getBlockState(pos).is(BlockTags.DOORS)), doorPos);// 找到门下面垫的的那个方块
+				BlockPos floorBelowDoor = AbstractBlockScanner.getBlockBelow(Objects.requireNonNull(level), (pos) -> !(Objects.requireNonNull(level).getBlockState(pos).is(BlockTags.DOORS)), doorPos);// 找到门下面垫的的那个方块
 				if (floorBelowDoor == null) {
 					FHMain.LOGGER.error("HouseScanner: 门 {} 下方未找到支撑方块，跳过该门的房屋结构扫描（房屋位置 {}）", doorPos, housePos);
 					continue;

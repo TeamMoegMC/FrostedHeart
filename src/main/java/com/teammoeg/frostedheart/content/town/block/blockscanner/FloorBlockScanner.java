@@ -149,7 +149,7 @@ public class FloorBlockScanner extends AbstractBlockScanner {
 
         if(canUseLadder) {
             if (hasClimbableAbove) {
-                for (BlockPos ladder : getBlocksAboveAndBelow(startPos.above(), (pos) -> !(getBlockState(pos).is(BlockTags.CLIMBABLE)))) {
+                for (BlockPos ladder : getBlocksAboveAndBelow(world, startPos.above(), (pos) -> !(getBlockState(pos).is(BlockTags.CLIMBABLE)))) {
                     if (isValidLadder(ladder)) {
                         for (BlockPos pos : getPossibleFloor(ladder)) {
                             possibleFloorsLong.add(pos.asLong());
@@ -164,7 +164,7 @@ public class FloorBlockScanner extends AbstractBlockScanner {
                 BlockState state = getBlockState(blockPos);
                 BlockState stateAboveTemp = getBlockState(blockPos.above());
                 if (state.is(BlockTags.CLIMBABLE) || stateAboveTemp.is(BlockTags.CLIMBABLE)) {
-                    for (BlockPos ladder : getBlocksAboveAndBelow(blockPos, (pos) -> !(getBlockState(pos).is(BlockTags.CLIMBABLE)))) {
+                    for (BlockPos ladder : getBlocksAboveAndBelow(world, blockPos, (pos) -> !(getBlockState(pos).is(BlockTags.CLIMBABLE)))) {
                         if (isValidLadder(ladder)) {
                             laddersToExpand.add(ladder.asLong());
                         }

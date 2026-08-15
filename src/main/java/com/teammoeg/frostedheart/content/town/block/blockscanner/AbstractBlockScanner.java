@@ -59,12 +59,9 @@ import org.jetbrains.annotations.Nullable;
  * <p>可以进行的操作包括但不限于统计数量、统计温度</p>
  * <p>和扫描方块有关的其它方法也可以丢在这里</p>
  * <p>这里面的方法可能存在问题，发现的话请帮我改了谢谢茄子(</p>
- * <p><b>这里的部分方法由于高度限制只适用于主世界！</b></p>
  */
 public abstract class AbstractBlockScanner {
     // 常量定义
-    public static final int MAX_HEIGHT = 320;
-    public static final int MIN_HEIGHT = -64;
     public static final int DEFAULT_MAX_SCAN_BLOCKS = 4096;
     public static final int MIN_ABOVE_HEIGHT = 2;
 
@@ -128,8 +125,8 @@ public abstract class AbstractBlockScanner {
     }
 
 
-    public static int countBlocksAdjacent(Level world, BlockPos startPos, Block targetBlock){
-        return countBlocksAdjacent(startPos, (pos)->world.getBlockState(pos).getBlock() == targetBlock);
+    public static int countBlocksAdjacent(LevelReader level, BlockPos startPos, Block targetBlock){
+        return countBlocksAdjacent(level, startPos, (pos)->level.getBlockState(pos).getBlock() == targetBlock);
     }
 
     /**
@@ -137,11 +134,11 @@ public abstract class AbstractBlockScanner {
      * @param target The block you are searching
      * @return The number of targetBlock adjacent to startPos
      */
-    public static int countBlocksAdjacent( BlockPos startPos, Predicate<BlockPos> target){
+    public static int countBlocksAdjacent(LevelReader level, BlockPos startPos, Predicate<BlockPos> target){
         int num = 0;
         for(Direction direction : Direction.values()){
             BlockPos adjacentPos = startPos.relative(direction);
-            if(adjacentPos.getY() >= MIN_HEIGHT && adjacentPos.getY() <= MAX_HEIGHT){
+            if(adjacentPos.getY() >= level.getMinBuildHeight() && adjacentPos.getY() < level.getMaxBuildHeight()){
                 if(target.test(adjacentPos)){
                     num++;
                 }
@@ -172,14 +169,16 @@ public abstract class AbstractBlockScanner {
         }
         return new HeightCheckingInfo(num, false);
     }
-    public static int countBlocksAbove(Predicate<BlockPos> target, BlockPos startPos){
+    public static int countBlocksAbove(LevelReader level, Predicate<BlockPos> target, BlockPos startPos){
         BlockPos scanningBlock;
         int num = 0;
         scanningBlock = startPos.above();
-        while(scanningBlock.getY() < MAX_HEIGHT){
+        int maxBuildHeight = level.getMaxBuildHeight();
+        while(scanningBlock.getY() < maxBuildHeight){
             if(target.test(scanningBlock)){
                 num++;
             }
+            scanningBlock = scanningBlock.above();
         }
         return num;
     }
@@ -215,11 +214,12 @@ public abstract class AbstractBlockScanner {
         return null;
     }
 
-    public static ArrayList<BlockPos> getBlocksAbove(Predicate<BlockPos> target, BlockPos startPos, Predicate<BlockPos> stopAt){
+    public static ArrayList<BlockPos> getBlocksAbove(LevelReader level, Predicate<BlockPos> target, BlockPos startPos, Predicate<BlockPos> stopAt){
         BlockPos scanningBlock;
         scanningBlock = startPos.above();
         ArrayList<BlockPos> blocks = new ArrayList<>();
-        while(scanningBlock.getY() <= MAX_HEIGHT){
+        int maxBuildHeight = level.getMaxBuildHeight();
+        while(scanningBlock.getY() < maxBuildHeight){
             if(stopAt.test(scanningBlock)){
                 return blocks;
             }
@@ -230,19 +230,20 @@ public abstract class AbstractBlockScanner {
         }
         return blocks;
     }
-    public static ArrayList<BlockPos> getBlocksAbove(Predicate<BlockPos> target, BlockPos startPos){
-        return getBlocksAbove(target, startPos, (useless)->false);
+    public static ArrayList<BlockPos> getBlocksAbove(LevelReader level, Predicate<BlockPos> target, BlockPos startPos){
+        return getBlocksAbove(level, target, startPos, (useless)->false);
     }
-    public static ArrayList<BlockPos> getBlocksAbove(BlockPos startPos, Predicate<BlockPos> stopAt){
-        return getBlocksAbove((useless)->true, startPos, stopAt);
+    public static ArrayList<BlockPos> getBlocksAbove(LevelReader level, BlockPos startPos, Predicate<BlockPos> stopAt){
+        return getBlocksAbove(level, (useless)->true, startPos, stopAt);
     }
 
 
-    public static ArrayList<BlockPos> getBlocksBelow(Predicate<BlockPos> target, BlockPos startPos, Predicate<BlockPos> stopAt){
+    public static ArrayList<BlockPos> getBlocksBelow(LevelReader level, Predicate<BlockPos> target, BlockPos startPos, Predicate<BlockPos> stopAt){
         BlockPos scanningBlock;
         scanningBlock = startPos.below();
         ArrayList<BlockPos> blocks = new ArrayList<>();
-        while(scanningBlock.getY() >= MIN_HEIGHT){
+        int minBuildHeight = level.getMinBuildHeight();
+        while(scanningBlock.getY() >= minBuildHeight){
             if(stopAt.test(scanningBlock)){
                 return blocks;
             }
@@ -253,24 +254,24 @@ public abstract class AbstractBlockScanner {
         }
         return blocks;
     }
-    public static ArrayList<BlockPos> getBlocksBelow(Predicate<BlockPos> target, BlockPos startPos){
-        return getBlocksBelow(target, startPos, (useless)->false);
+    public static ArrayList<BlockPos> getBlocksBelow(LevelReader level, Predicate<BlockPos> target, BlockPos startPos){
+        return getBlocksBelow(level, target, startPos, (useless)->false);
     }
-    public static ArrayList<BlockPos> getBlocksBelow(BlockPos startPos, Predicate<BlockPos> stopAt){
-        return getBlocksBelow((useless)->true, startPos, stopAt);
+    public static ArrayList<BlockPos> getBlocksBelow(LevelReader level, BlockPos startPos, Predicate<BlockPos> stopAt){
+        return getBlocksBelow(level, (useless)->true, startPos, stopAt);
     }
 
-    public static ArrayList<BlockPos> getBlocksAboveAndBelow(Predicate<BlockPos> target, BlockPos startPos, Predicate<BlockPos> stopAt){
+    public static ArrayList<BlockPos> getBlocksAboveAndBelow(LevelReader level, Predicate<BlockPos> target, BlockPos startPos, Predicate<BlockPos> stopAt){
         ArrayList<BlockPos> blocks = new ArrayList<>();
-        blocks.addAll(getBlocksBelow(target, startPos, stopAt));
-        blocks.addAll(getBlocksAbove(target, startPos, stopAt));
+        blocks.addAll(getBlocksBelow(level, target, startPos, stopAt));
+        blocks.addAll(getBlocksAbove(level, target, startPos, stopAt));
         return blocks;
     }
-    public static ArrayList<BlockPos> getBlocksAboveAndBelow(Predicate<BlockPos> target, BlockPos startPos){
-        return getBlocksAboveAndBelow(target, startPos, (useless)->false);
+    public static ArrayList<BlockPos> getBlocksAboveAndBelow(LevelReader level, Predicate<BlockPos> target, BlockPos startPos){
+        return getBlocksAboveAndBelow(level, target, startPos, (useless)->false);
     }
-    public static ArrayList<BlockPos> getBlocksAboveAndBelow(BlockPos startPos, Predicate<BlockPos> stopAt){
-        return getBlocksAboveAndBelow((useless)->true, startPos, stopAt);
+    public static ArrayList<BlockPos> getBlocksAboveAndBelow(LevelReader level, BlockPos startPos, Predicate<BlockPos> stopAt){
+        return getBlocksAboveAndBelow(level, (useless)->true, startPos, stopAt);
     }
 
     public static ArrayList<BlockPos> getBlocksAdjacent_plane(Predicate<BlockPos> target, BlockPos scanningBlock){
@@ -341,10 +342,11 @@ public abstract class AbstractBlockScanner {
      * @return return the first position of the block that makes target returns true
      */
     @Nullable
-    public static BlockPos getBlockBelow(Predicate<BlockPos> target, BlockPos startPos){
+    public static BlockPos getBlockBelow(LevelReader level, Predicate<BlockPos> target, BlockPos startPos){
         BlockPos scanningBlock;
         scanningBlock = startPos.below();
-        while(scanningBlock.getY() >= MIN_HEIGHT){
+        int minBuildHeight = level.getMinBuildHeight();
+        while(scanningBlock.getY() >= minBuildHeight){
             if(target.test(scanningBlock)){
                 return scanningBlock;
             }

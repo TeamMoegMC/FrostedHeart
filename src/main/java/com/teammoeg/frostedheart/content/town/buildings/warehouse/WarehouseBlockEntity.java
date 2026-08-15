@@ -77,7 +77,7 @@ public class WarehouseBlockEntity extends AbstractTownBuildingBlockEntity<Wareho
             clearWallDevices(building);
             return false;
         }
-        BlockPos floorBelowDoor = AbstractBlockScanner.getBlockBelow((pos)->!(Objects.requireNonNull(level).getBlockState(pos).is(BlockTags.DOORS)), doorPos);//找到门下面垫的的那个方块
+        BlockPos floorBelowDoor = AbstractBlockScanner.getBlockBelow(Objects.requireNonNull(level), (pos)->!(Objects.requireNonNull(level).getBlockState(pos).is(BlockTags.DOORS)), doorPos);//找到门下面垫的的那个方块
         if (floorBelowDoor == null) {
             clearWallDevices(building);
             return false;
