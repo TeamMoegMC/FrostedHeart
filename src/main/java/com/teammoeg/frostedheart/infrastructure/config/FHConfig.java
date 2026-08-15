@@ -509,7 +509,9 @@ public class FHConfig {
 		}
 
 		public static class VAWT {
-			public final ForgeConfigSpec.ConfigValue<Float> vawtDurability;
+			// 注意：Forge 配置不能存 Float —— TOML 会把它写成 1.0 并以 Double 读回，导致
+			// "not correct. Correcting" 死循环。用 Double 存，使用处自行 floatValue()。
+			public final ForgeConfigSpec.ConfigValue<Double> vawtDurability;
 			public final ForgeConfigSpec.ConfigValue<Double> vawtCapacity;
 			public final ForgeConfigSpec.IntValue vawtEmptyAreaRange;
 			public final ForgeConfigSpec.IntValue vawtEmptyAreaAllowsBlockCount;
@@ -521,7 +523,7 @@ public class FHConfig {
 								The durability coefficient of VAWT.
 								It will not affect the VAWTs that was previously placed.
 								""")
-						.define("vawtDurability", 1f);
+						.define("vawtDurability", 1.0D);
 				vawtCapacity = builder.comment("The capacity which VAWT can provide.")
 						.defineInRange("vawtCapacity", 9f, 0f, 256f);
 				vawtEmptyAreaRange = builder.comment("Detection radius of the open area.")
@@ -1657,6 +1659,111 @@ public class FHConfig {
 			}
 		}
 
+		/**
+		 * 「雪原深处的好奇心」Boss 配置。
+		 * <p>
+		 * Config for the "Curiosity of the Deep Frostland" boss. See
+		 * docs/curiosity-boss-design.md.
+		 */
+		public static class Curiosity {
+			public final ForgeConfigSpec.IntValue arenaRadius;
+			public final ForgeConfigSpec.IntValue lingerRadius;
+			public final ForgeConfigSpec.IntValue lingerSeconds;
+			public final ForgeConfigSpec.IntValue escapeRadius;
+			public final ForgeConfigSpec.IntValue escapeSeconds;
+			public final ForgeConfigSpec.IntValue huntDurationTicks;
+			public final ForgeConfigSpec.IntValue mazeDurationTicks;
+			public final ForgeConfigSpec.IntValue mazeRaiseTicks;
+			public final ForgeConfigSpec.IntValue risingTicks;
+			public final ForgeConfigSpec.IntValue burrowTicks;
+			public final ForgeConfigSpec.IntValue coldTier1;
+			public final ForgeConfigSpec.IntValue coldTier2;
+			public final ForgeConfigSpec.IntValue coldPerRound;
+			public final ForgeConfigSpec.IntValue coldCap;
+			public final ForgeConfigSpec.DoubleValue trackerSpeed;
+			public final ForgeConfigSpec.DoubleValue trackerSpeedPerRound;
+			public final ForgeConfigSpec.DoubleValue trackerSpeedCap;
+			public final ForgeConfigSpec.BooleanValue powderSnowEnabled;
+			public final ForgeConfigSpec.IntValue powderSnowIntervalTicks;
+			public final ForgeConfigSpec.IntValue powderSnowMaxPatches;
+			public final ForgeConfigSpec.IntValue moundIntervalTicks;
+			public final ForgeConfigSpec.IntValue moundLifetimeTicks;
+			public final ForgeConfigSpec.IntValue coreHealth;
+			public final ForgeConfigSpec.IntValue coreBurnTicks;
+			public final ForgeConfigSpec.IntValue mazeCells;
+			public final ForgeConfigSpec.IntValue spawnWeight;
+			public final ForgeConfigSpec.ConfigValue<List<? extends String>> spawnBiomes;
+			public final ForgeConfigSpec.IntValue oreFrostDropCount;
+			public final ForgeConfigSpec.IntValue oreFrostDropXp;
+			public final ForgeConfigSpec.BooleanValue bossMusic;
+
+			Curiosity(ForgeConfigSpec.Builder builder) {
+				builder.push("Curiosity Boss");
+				arenaRadius = builder.comment("Radius of the boss arena in blocks.")
+						.defineInRange("arenaRadius", 24, 8, 96);
+				lingerRadius = builder.comment("Radius in which a lingering player wakes the boss up.")
+						.defineInRange("lingerRadius", 12, 2, 64);
+				lingerSeconds = builder.comment("How long a player must linger to wake the boss up.")
+						.defineInRange("lingerSeconds", 5, 1, 600);
+				escapeRadius = builder.comment("Radius outside which the boss resets (players fled or all died).")
+						.defineInRange("escapeRadius", 40, 16, 128);
+				escapeSeconds = builder.comment("Grace period before reset when nobody is in the arena.")
+						.defineInRange("escapeSeconds", 10, 1, 600);
+				huntDurationTicks = builder.comment("Duration of the underground hunting phase in ticks.")
+						.defineInRange("huntDurationTicks", 1200, 200, 24000);
+				mazeDurationTicks = builder.comment("Time to find and burn the exposed core in ticks.")
+						.defineInRange("mazeDurationTicks", 1200, 200, 24000);
+				mazeRaiseTicks = builder.comment("Duration of the maze rising animation in ticks.")
+						.defineInRange("mazeRaiseTicks", 100, 20, 400);
+				risingTicks = builder.comment("Duration of the rising intro in ticks.")
+						.defineInRange("risingTicks", 60, 10, 400);
+				burrowTicks = builder.comment("Duration of the burrow transition in ticks.")
+						.defineInRange("burrowTicks", 40, 10, 200);
+				coldTier1 = builder.comment("Cold field value during rising/hunt (negative).")
+						.defineInRange("coldTier1", -15, -200, 0);
+				coldTier2 = builder.comment("Cold field value during the maze phase (negative).")
+						.defineInRange("coldTier2", -30, -200, 0);
+				coldPerRound = builder.comment("Extra cold added per round after each burrow (negative).")
+						.defineInRange("coldPerRound", -15, -200, 0);
+				coldCap = builder.comment("Lower bound of the cold field value (negative).")
+						.defineInRange("coldCap", -75, -200, 0);
+				trackerSpeed = builder.comment("Tracker speed in blocks per tick (player sprint is about 0.28).")
+						.defineInRange("trackerSpeed", 0.24, 0.05, 2.0);
+				trackerSpeedPerRound = builder.comment("Tracker speed bonus per round.")
+						.defineInRange("trackerSpeedPerRound", 0.03, 0.0, 1.0);
+				trackerSpeedCap = builder.comment("Tracker speed upper bound.")
+						.defineInRange("trackerSpeedCap", 0.45, 0.05, 3.0);
+				powderSnowEnabled = builder.comment("Whether the tracker leaves powder snow patches.")
+						.define("powderSnowEnabled", true);
+				powderSnowIntervalTicks = builder.comment("Ticks between powder snow patches.")
+						.defineInRange("powderSnowIntervalTicks", 30, 5, 400);
+				powderSnowMaxPatches = builder.comment("Max powder snow blocks kept at once (rolling window).")
+						.defineInRange("powderSnowMaxPatches", 40, 4, 256);
+				moundIntervalTicks = builder.comment("Ticks between surface mound spawns.")
+						.defineInRange("moundIntervalTicks", 10, 2, 100);
+				moundLifetimeTicks = builder.comment("Lifetime of a surface mound in ticks.")
+						.defineInRange("moundLifetimeTicks", 10, 2, 100);
+				coreHealth = builder.comment("Health of the exposed core.")
+						.defineInRange("coreHealth", 20, 1, 200);
+				coreBurnTicks = builder.comment("Burn ticks before the ignited core disperses.")
+						.defineInRange("coreBurnTicks", 60, 10, 400);
+				mazeCells = builder.comment("Maze grid size in cells (cell is 3 blocks, wall is 1).")
+						.defineInRange("mazeCells", 11, 5, 21);
+				spawnWeight = builder.comment("Natural spawn weight. High default for testing; lower before release.")
+						.defineInRange("spawnWeight", 10, 0, 1000);
+				spawnBiomes = builder.comment("Biome IDs where the boss may spawn. Default: snowy plains only; the pack adds custom snowy biomes here.")
+						.defineListAllowEmpty("spawnBiomes",
+								() -> new ArrayList<>(List.of("minecraft:snowy_plains")), o -> o instanceof String);
+				oreFrostDropCount = builder.comment("Number of random condensed ore balls dropped on dispersal.")
+						.defineInRange("oreFrostDropCount", 24, 0, 256);
+				oreFrostDropXp = builder.comment("Experience orbs awarded on dispersal.")
+						.defineInRange("oreFrostDropXp", 50, 0, 10000);
+				bossMusic = builder.comment("Play the boss music (the_fall_of_arcana) during the fight.")
+						.define("bossMusic", true);
+				builder.pop();
+			}
+		}
+
 		public final WeatherForecast WEATHER_FORECAST;
 		public final Climate CLIMATE;
 		public final SteamCore STEAM_CORE;
@@ -1667,6 +1774,7 @@ public class FHConfig {
 		public final TemperatureSimulation SIMULATION;
 		public final Town TOWN;
 		public final Misc MISC;
+		public final Curiosity CURIOSITY;
 
 		Server(ForgeConfigSpec.Builder builder) {
 			WEATHER_FORECAST = new WeatherForecast(builder);
@@ -1679,6 +1787,7 @@ public class FHConfig {
 			SIMULATION = new TemperatureSimulation(builder);
 			TOWN = new Town(builder);
 			MISC = new Misc(builder);
+			CURIOSITY = new Curiosity(builder);
 		}
 	}
 
