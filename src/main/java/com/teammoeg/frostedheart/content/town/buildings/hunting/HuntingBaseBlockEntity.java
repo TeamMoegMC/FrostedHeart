@@ -69,7 +69,7 @@ public class HuntingBaseBlockEntity extends AbstractTownBuildingBlockEntity<Hunt
 		List<BlockPos> doorPosSet = AbstractBlockScanner.getBlocksAdjacent(housePos, (pos) -> Objects.requireNonNull(level).getBlockState(pos).is(BlockTags.DOORS));
 		if (doorPosSet.isEmpty()) return false;
 		for (BlockPos doorPos : doorPosSet) {
-			BlockPos floorBelowDoor = AbstractBlockScanner.getBlockBelow((pos) -> !(Objects.requireNonNull(level).getBlockState(pos).is(BlockTags.DOORS)), doorPos);// 找到门下面垫的的那个方块
+			BlockPos floorBelowDoor = AbstractBlockScanner.getBlockBelow(Objects.requireNonNull(level), (pos) -> !(Objects.requireNonNull(level).getBlockState(pos).is(BlockTags.DOORS)), doorPos);// 找到门下面垫的的那个方块
 			for (Direction direction : AbstractBlockScanner.PLANE_DIRECTIONS) {
 				assert floorBelowDoor != null;
 				BlockPos startPos = floorBelowDoor.relative(direction);// 找到门下方块旁边的方块

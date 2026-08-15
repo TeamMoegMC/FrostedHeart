@@ -139,7 +139,7 @@ public class ConfinedSpaceScanner extends AbstractBlockScanner {
         BlockPos scanningBlock;
         scanningBlock = startPos.above();
         LongSet blocks = new LongOpenHashSet();
-        while(scanningBlock.getY() <= MAX_HEIGHT){
+        while(scanningBlock.getY() < world.getMaxBuildHeight()){
             long key = scanningBlock.asLong();
             if( scannedBlocks.contains(key) || !isValidAir(scanningBlock) ){
                 return new AbstractMap.SimpleEntry<>(blocks, true);
