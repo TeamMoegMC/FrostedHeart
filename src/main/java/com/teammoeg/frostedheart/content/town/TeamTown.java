@@ -26,6 +26,9 @@ import com.teammoeg.frostedheart.content.town.building.AbstractTownBuilding;
 import com.teammoeg.frostedheart.content.town.building.AbstractTownResidentWorkBuilding;
 import com.teammoeg.frostedheart.content.town.building.ITownBuilding;
 import com.teammoeg.frostedheart.content.town.buildings.house.HouseBuilding;
+import com.teammoeg.frostedheart.content.town.buildings.mine.MineBaseBuilding;
+import com.teammoeg.frostedheart.content.town.buildings.mine.MineBuilding;
+import com.teammoeg.frostedheart.content.town.buildings.warehouse.WarehouseBuilding;
 import com.teammoeg.frostedheart.content.town.resident.Resident;
 import com.teammoeg.frostedheart.content.town.resource.TeamTownResourceActionExecutorHandler;
 import com.teammoeg.frostedheart.content.town.resource.TeamTownResourceHolder;
@@ -34,6 +37,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.ChunkPos;
+import net.minecraft.world.level.block.entity.BlockEntity;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -114,6 +118,9 @@ public class TeamTown implements ITown, ITownWithResidents, ITownWithBuildings {
     public void addTownBlock(BlockPos pos, TownBlockEntity<?> townBlockEntity) {
         ITownBuilding building =townBlockEntity.createBuilding();
         if(building instanceof AbstractTownBuilding abstractTownBuilding){
+            ServerLevel level = townBlockEntity instanceof BlockEntity blockEntity
+                    && blockEntity.getLevel() instanceof ServerLevel serverLevel ? serverLevel : null;
+            removeTownBlockInternal(level, pos);
             data.buildings.put(pos, abstractTownBuilding); // put 时由 ObservableTownMap.onAttach 自动接线
         }
     }
@@ -124,8 +131,59 @@ public class TeamTown implements ITown, ITownWithResidents, ITownWithBuildings {
      * @param pos position of the block
      */
     public void removeTownBlock(ServerLevel sl,BlockPos pos) {
-        AbstractTownBuilding building=data.buildings.remove(pos);
+        removeTownBlockInternal(sl, pos);
+    }
+
+    /**
+     * Idempotent common building-removal path used by active block teardown,
+     * same-position replacement, and the morning reconciliation fallback.
+     */
+    private void removeTownBlockInternal(ServerLevel level, BlockPos pos) {
+        AbstractTownBuilding building = data.buildings.get(pos);
+        if (building == null) {
+            return;
+        }
+
+        if (level != null && building instanceof WarehouseBuilding warehouse) {
+            // Release watcher-backed devices while the exact warehouse instance
+            // is still resolvable through its provider. Unloaded devices retain
+            // their saved binding but remain inert once the map entry is gone.
+            warehouse.unbindLoadedDevices(level);
+        }
+
+        data.buildings.remove(pos);
         building.onRemoved(this);
+
+        // Building rosters are normally authoritative, but older or partially
+        // repaired saves may disagree with Resident fields. Clear exact
+        // position references defensively without reallocating until morning.
+        for (Resident resident : data.residents.values()) {
+            if (pos.equals(resident.getHousePos())) {
+                resident.setHousePos(null);
+            }
+            if (pos.equals(resident.getWorkPos())) {
+                resident.setWorkPos(null);
+            }
+        }
+
+        if (building instanceof MineBuilding) {
+            for (AbstractTownBuilding remaining : data.buildings.values()) {
+                if (remaining instanceof MineBaseBuilding mineBase) {
+                    mineBase.removeLinkedMine(pos);
+                }
+            }
+            data.recalcOreChunkResources();
+        } else if (building instanceof MineBaseBuilding) {
+            data.recalcOreChunkResources();
+        }
+
+        if (building instanceof WarehouseBuilding) {
+            // MAX_CAPACITY is derived from surviving physical warehouses. The
+            // stored resources and occupied-capacity counter are untouched.
+            data.reloadMaxCapacity();
+        }
+
+        data.checkOccupiedAreaOverlap();
     }
 
     public Map<UUID, Resident> getResidents() {

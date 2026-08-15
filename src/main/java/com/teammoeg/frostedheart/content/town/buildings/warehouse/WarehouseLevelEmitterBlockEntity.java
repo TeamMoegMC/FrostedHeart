@@ -218,6 +218,16 @@ public class WarehouseLevelEmitterBlockEntity extends CBlockEntity implements IW
         }
     }
 
+    void unbindIfBoundTo(WarehouseBuilding warehouse) {
+        if (warehousePos == null || !warehousePos.equals(warehouse.getPos()) || townProvider == null) {
+            return;
+        }
+        ITownWithBuildings town = townProvider.getTown();
+        if (town != null && town.getTownBuilding(warehousePos).orElse(null) == warehouse) {
+            clearBinding();
+        }
+    }
+
     private boolean isBoundTo(ITownProviderSerializable<? extends ITownWithBuildings> provider, BlockPos candidatePos) {
         return warehousePos != null
                 && warehousePos.equals(candidatePos)

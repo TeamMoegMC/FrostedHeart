@@ -31,6 +31,7 @@ import com.teammoeg.frostedheart.content.town.resource.action.ResourceActionType
 import com.teammoeg.frostedheart.content.town.resource.action.TownResourceActions;
 
 import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerLevel;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -172,5 +173,27 @@ public class WarehouseBuilding extends AbstractTownBuilding {
 
     public boolean removeEmitter(BlockPos emitterPos) {
         return emitterPositions.remove(emitterPos);
+    }
+
+    /**
+     * Releases watcher-backed devices that are currently loaded before this
+     * logical warehouse is detached from the town. Unloaded devices validate
+     * the missing warehouse mapping when they next load and stay inoperable.
+     */
+    public void unbindLoadedDevices(ServerLevel level) {
+        for (BlockPos interfacePos : interfacePositions) {
+            if (level.isLoaded(interfacePos)
+                    && level.getBlockEntity(interfacePos) instanceof WarehouseInterfaceBlockEntity warehouseInterface) {
+                warehouseInterface.unbindIfBoundTo(this);
+            }
+        }
+        for (BlockPos emitterPos : emitterPositions) {
+            if (level.isLoaded(emitterPos)
+                    && level.getBlockEntity(emitterPos) instanceof WarehouseLevelEmitterBlockEntity levelEmitter) {
+                levelEmitter.unbindIfBoundTo(this);
+            }
+        }
+        replaceInterfaces(Set.of());
+        replaceEmitters(Set.of());
     }
 }

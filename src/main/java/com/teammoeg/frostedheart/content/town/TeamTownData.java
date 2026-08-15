@@ -765,9 +765,8 @@ public class TeamTownData implements SpecialData{
      * 检查所有town blocks是否和当前储存的一致
      */
     void checkBlocks(ServerLevel level, TeamTown town) {
-        Iterator<AbstractTownBuilding> iterator = buildings.values().iterator();
-        while (iterator.hasNext()) {
-            AbstractTownBuilding building = iterator.next();
+        List<BlockPos> invalidBuildings = new ArrayList<>();
+        for (AbstractTownBuilding building : buildings.values()) {
             BlockPos pos = building.getPos();
             if (level.isLoaded(pos)) {
                 //BlockState bs = level.getBlockState(pos);
@@ -779,17 +778,18 @@ public class TeamTownData implements SpecialData{
                         continue;
                     }
                 }
-                iterator.remove();
-                building.onRemoved(town);
+                invalidBuildings.add(pos);
             }
         }
+        invalidBuildings.forEach(pos -> town.removeTownBlock(level, pos));
     }
 
-    private void checkOccupiedAreaOverlap() {
+    void checkOccupiedAreaOverlap() {
         // removeNonTownBlocks(world);
         List<AbstractTownBuilding> buildingsWithOccupiedAreas = buildings.values().stream()
                 .filter(building -> building.getOccupiedVolume() != null && building.getOccupiedVolume() != OccupiedVolume.EMPTY)
                 .toList();
+        Set<AbstractTownBuilding> overlapped = new HashSet<>();
         // 两两比对，根据OccupiedArea的外接矩形是否重合初步筛选可能重叠的worker
         for (int i = 0; i < buildingsWithOccupiedAreas.size() - 1; i++) {
             AbstractTownBuilding building = buildingsWithOccupiedAreas.get(i);
@@ -798,10 +798,13 @@ public class TeamTownData implements SpecialData{
                 AbstractTownBuilding otherBuilding = buildingsWithOccupiedAreas.get(j);
                 OccupiedVolume otherOccupiedVolume = otherBuilding.getOccupiedVolume();
                 if (occupiedVolume.intersects(otherOccupiedVolume)) {
-                    building.setOccupiedAreaOverlapped(true);
-                    otherBuilding.setOccupiedAreaOverlapped(true);
+                    overlapped.add(building);
+                    overlapped.add(otherBuilding);
                 }
             }
+        }
+        for (AbstractTownBuilding building : buildings.values()) {
+            building.setOccupiedAreaOverlapped(overlapped.contains(building));
         }
     }
 

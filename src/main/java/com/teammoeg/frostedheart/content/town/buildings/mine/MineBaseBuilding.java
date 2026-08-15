@@ -360,7 +360,7 @@ public class MineBaseBuilding extends AbstractTownResidentWorkBuilding {
     }
 
     public void clearLinkedMines() {
-        if (linkedMines != null) {
+        if (linkedMines != null && !linkedMines.isEmpty()) {
             linkedMines.clear();
             fireChange();
         }
@@ -370,8 +370,15 @@ public class MineBaseBuilding extends AbstractTownResidentWorkBuilding {
         if (linkedMines == null) {
             linkedMines = new HashSet<>();
         }
-        linkedMines.add(pos);
-        fireChange();
+        if (linkedMines.add(pos)) {
+            fireChange();
+        }
+    }
+
+    public void removeLinkedMine(BlockPos pos) {
+        if (linkedMines != null && linkedMines.remove(pos)) {
+            fireChange();
+        }
     }
 
     public Set<BlockPos> getLinkedMines() {

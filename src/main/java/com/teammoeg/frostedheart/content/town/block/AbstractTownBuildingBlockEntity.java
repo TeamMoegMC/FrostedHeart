@@ -35,6 +35,7 @@ import com.teammoeg.frostedheart.content.town.provider.ITownProviderSerializable
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
@@ -73,7 +74,10 @@ public abstract class AbstractTownBuildingBlockEntity<T extends AbstractTownBuil
     }
 
     public boolean isStillValid(){
-        return true;
+        return level != null
+                && !isRemoved()
+                && level.isLoaded(worldPosition)
+                && level.getBlockEntity(worldPosition) == this;
     }
 
     public Optional<T> getBuilding(){
@@ -95,7 +99,7 @@ public abstract class AbstractTownBuildingBlockEntity<T extends AbstractTownBuil
             AbstractTownBuilding building = buildingOptional.get();
             return Optional.ofNullable(getBuilding(building));
         }
-        if (level != null && !level.isClientSide) {
+        if (canRecoverMissingBuilding()) {
             town.addTownBlock(worldPosition, this);
             Optional<T> recoveredBuilding = town.getTownBuilding(worldPosition).map(this::getBuilding);
             if (recoveredBuilding.isPresent()) {
@@ -107,6 +111,45 @@ public abstract class AbstractTownBuildingBlockEntity<T extends AbstractTownBuil
             FHMain.LOGGER.warn("AbstractTownBuildingBlockEntity: Building doesn't exist in town");
         }
         return Optional.empty();
+    }
+
+    /**
+     * Missing-building recovery is only valid while this exact block entity is
+     * still installed in the world. A removed menu may retain the old Java
+     * object briefly; allowing that object to recover would recreate a building
+     * after its core block was already destroyed.
+     */
+    private boolean canRecoverMissingBuilding() {
+        return level != null
+                && !level.isClientSide
+                && !isRemoved()
+                && level.isLoaded(worldPosition)
+                && level.getBlockEntity(worldPosition) == this;
+    }
+
+    /**
+     * Active block removal unregisters the logical building immediately.
+     * {@link com.teammoeg.chorda.block.entity.CBlockEntity} does not invoke this
+     * callback for chunk unloads, so unloaded buildings remain registered.
+     */
+    @Override
+    public void onRemoved() {
+        if (level instanceof ServerLevel serverLevel && townProvider != null) {
+            // LevelChunk normally detaches this block entity from its map before
+            // setRemoved(), so null is expected here. A different live instance
+            // means this is a stale callback and must not remove its replacement.
+            BlockEntity currentBlockEntity = level.getBlockEntity(worldPosition);
+            if (currentBlockEntity == null || currentBlockEntity == this) {
+                ITownWithBuildings town = townProvider.getTown();
+                if (town != null) {
+                    Optional<T> mappedBuilding = town.getTownBuilding(worldPosition).map(this::getBuilding);
+                    if (mappedBuilding.isPresent()) {
+                        town.removeTownBlock(serverLevel, worldPosition);
+                    }
+                }
+            }
+        }
+        super.onRemoved();
     }
 
     @Nullable

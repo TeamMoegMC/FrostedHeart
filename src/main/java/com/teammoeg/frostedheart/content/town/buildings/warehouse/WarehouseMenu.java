@@ -49,6 +49,7 @@ public class WarehouseMenu extends CBlockEntityMenu<WarehouseBlockEntity> {
 		//获得城镇资源信息
 		if (this.player instanceof ServerPlayer serverPlayer) {
 			this.serverSource = () -> {
+				if (!canAccessWarehouse()) return Collections.emptyMap();
 				TeamTown town = TeamTown.from(serverPlayer);
 				if (town == null) return Collections.emptyMap();
 				return town.getResourceHolder().getVirtualItemMap();
@@ -161,6 +162,9 @@ public class WarehouseMenu extends CBlockEntityMenu<WarehouseBlockEntity> {
 
 	@Override
 	public ItemStack quickMoveStack(Player player, int index) {
+		if (!canAccessWarehouse()) {
+			return ItemStack.EMPTY;
+		}
 		ItemStack originalStack = ItemStack.EMPTY;
 		Slot slot = this.slots.get(index);
 
@@ -170,8 +174,8 @@ public class WarehouseMenu extends CBlockEntityMenu<WarehouseBlockEntity> {
 
 			if (!player.level().isClientSide) {
 				TeamTown town = TeamTown.from(player);
-				IActionExecutorHandler executor = town.getActionExecutorHandler();
 				if (town == null) return ItemStack.EMPTY;
+				IActionExecutorHandler executor = town.getActionExecutorHandler();
 				//构建存入 Action
 				TownResourceActions.ItemStackAction action = new TownResourceActions.ItemStackAction(
 						slotStack,
@@ -197,6 +201,15 @@ public class WarehouseMenu extends CBlockEntityMenu<WarehouseBlockEntity> {
 
 	public boolean hasBuilding() {
 		return blockEntity.getBuilding().isPresent();
+	}
+
+	/**
+	 * Server-authoritative access guard for every warehouse inventory path.
+	 * A stale menu may outlive its removed block entity for part of a tick, but
+	 * it must not expose the shared town resource pool during that window.
+	 */
+	public boolean canAccessWarehouse() {
+		return !blockEntity.isRemoved() && hasBuilding();
 	}
 
 	public boolean isWorkable() {

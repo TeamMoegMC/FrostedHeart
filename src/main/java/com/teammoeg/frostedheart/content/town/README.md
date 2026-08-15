@@ -76,7 +76,7 @@ public interface ITown extends ITownWithResources, ITownWithBuildings, ITownWith
 ### 3.2 `TeamTown`（门面）
 
 - `TeamTown.create(TeamTownData)` / `TeamTown.from(Player)`（`from` 从队伍数据取 `FHSpecialDataTypes.TOWN_DATA`）。
-- 建筑：`addTownBlock` 内部调用 `townBlockEntity.createBuilding()` 后放入 `data.buildings`；`removeTownBlock` 调用 `building.onRemoved(this)`。
+- 建筑：`addTownBlock` 先通过统一注销路径清理同位置旧实例，再调用 `townBlockEntity.createBuilding()` 放入 `data.buildings`；`removeTownBlock` 是幂等的统一注销入口，会调用 `building.onRemoved(this)`，并同步清理居民位置引用、矿井链接、仓库容量和占用区域重叠状态。
 - 资源：`getActionExecutorHandler()` → `data.resources.actionExecutor`；`getResourceHolder()` → `data.resources`。
 - 地形资源：`pickTerrainResource(type, maxPick)` / `pickTerrainResource(type, chunkPos, maxPick)` / `unpickTerrainResource` / `maypickTerrainResource`。
 
@@ -97,8 +97,8 @@ public interface ITown extends ITownWithResources, ITownWithBuildings, ITownWith
 
 **每日主流程 `tickMorning(ServerLevel, TeamDataHolder)`** 依次：
 
-1. `checkBlocks` —— 移除已失效/方块被改的建筑（与 `TownBlockEntity.getBuilding` 一致性校验）。
-2. `checkOccupiedAreaOverlap` —— 用 `OccupiedVolume.intersects` 两两比对，重叠的双方 `occupiedAreaOverlapped=true`（导致 `isBuildingWorkable` 失败）。
+1. `checkBlocks` —— 校验已失效/方块被改的建筑（与 `TownBlockEntity.getBuilding` 一致性校验），并复用 `TeamTown.removeTownBlock` 注销；这是主动拆除即时注销之外，针对存档异常、世界编辑等情况的晨间兜底。
+2. `checkOccupiedAreaOverlap` —— 用 `OccupiedVolume.intersects` 两两比对，并为所有剩余建筑同时设置或清除 `occupiedAreaOverlapped`（重叠会导致 `isBuildingWorkable` 失败）。
 3. `tickResidentsMorning` —— `health<=5` 或 `mental<=5` 判定死亡（`DEBUG_MODE` 下跳过）；无房者 `costHealth(10)`。
 4. `tickResidentsAging` —— 居民老化结算（见 §7）：`ageDays+1`，幼儿/儿童达标后成长，各年龄组按 `FHConfig.SERVER.TOWN.RESIDENT_AGING` 每日增减属性并封顶。
 5. `residentAllocatingCheck` —— 清空所有居民的 house/work 位置后从建筑回写，并剔除超限/已亡居民。
@@ -152,7 +152,7 @@ CODEC 字段：`name / resources / blocks / residents / terrainResource / labour
 | Hunting Base | `buildings/hunting/HuntingBaseBuilding` | 是 | 继承 `AbstractTownResidentWorkBuilding`；按居民 score 总和决定投掷次数，受 `TerrainResourceType.HUNT` 限制，用战利品表 `town/hunting` 产出并 ADD 进仓库。 |
 | Mine Base | `buildings/mine/MineBaseBuilding` | 是 | 持有 `Set<BlockPos> linkedMines`；汇总有效 `MineBuilding` 权重，按区块向 `ORE` 开采。 |
 | Mine | `buildings/mine/MineBuilding` | 否（标记） | 仅扫描/标记；`BiomeMineResourceRecipe` 提供生物群系矿产权重（`getWeights(biome)`）。 |
-| Warehouse | `buildings/warehouse/WarehouseBuilding` | 否 | `addCapacity(ITown)` 把 `capacity` 作为 `MAX_CAPACITY` 资源加入城镇；`TeamTownData.reloadMaxCapacity()` 带**净变化守卫**（先累加所有可工作仓库容量，与当前 `MAX_CAPACITY` 相同则直接返回，否则才清零重加——避免 `WarehouseBlockEntity.refresh` 定时刷新造成的空转资源包）。配套 `WarehouseMenu`/`WarehouseScreen`/`WarehouseBlockScanner`，以及 `WarehouseInterface*`（接口箱）与 `WarehouseLevelEmitter*`（红石输出）。 |
+| Warehouse | `buildings/warehouse/WarehouseBuilding` | 否 | `addCapacity(ITown)` 把 `capacity` 作为 `MAX_CAPACITY` 资源加入城镇；`TeamTownData.reloadMaxCapacity()` 带**净变化守卫**（先累加所有可工作仓库容量，与当前 `MAX_CAPACITY` 相同则直接返回，否则才清零重加——避免 `WarehouseBlockEntity.refresh` 定时刷新造成的空转资源包）。仓库注销时仅移除这部分物理容量，城镇级库存与 `occupiedCapacity` 保留；已加载的接口箱/红石输出器会立即解绑并释放 watcher。配套 `WarehouseMenu`/`WarehouseScreen`/`WarehouseBlockScanner`，以及 `WarehouseInterface*`（接口箱）与 `WarehouseLevelEmitter*`（红石输出）。 |
 
 ---
 
@@ -166,7 +166,7 @@ CODEC 字段：`name / resources / blocks / residents / terrainResource / labour
   @Nullable T getBuilding(AbstractTownBuilding); // 类型匹配转换，不匹配返回 null（用于一致性校验）
   @NotNull T createBuilding();                 // 返回新的具体 Building 实例
   ```
-- **`AbstractTownBuildingBlockEntity<T>`**：持有 `ITownProviderSerializable<? extends ITownWithBuildings> townProvider`；`tick()` 把自己加入 `SchedulerQueue` 延迟重扫；NBT 序列化 `townProvider`；`scanStructure(T)` 为抽象方法（子类实现结构合法性判断并填充 `occupiedVolume`）。
+- **`AbstractTownBuildingBlockEntity<T>`**：持有 `ITownProviderSerializable<? extends ITownWithBuildings> townProvider`；`tick()` 把自己加入 `SchedulerQueue` 延迟重扫；NBT 序列化 `townProvider`；`scanStructure(T)` 为抽象方法（子类实现结构合法性判断并填充 `occupiedVolume`）。服务端主动移除时 `onRemoved()` 立即注销类型匹配的城镇建筑；`CBlockEntity` 会区分区块卸载，所以卸载不注销。缺失映射自恢复仅允许未移除、且仍是世界当前位置实际方块实体的实例执行，避免旧菜单或延迟回调复活建筑。
 - **扫描器**（`block/blockscanner/`）：
   - `AbstractBlockScanner`：模板方法 `boolean scan()`（final，BFS），钩子 `nextScanningBlocks`/`processBlock`/`shouldStopAt`；常量 `MAX_HEIGHT=320, MIN_HEIGHT=-64, DEFAULT_MAX_SCAN_BLOCKS=4096`；静态工具 `countBlocksAdjacent`、`countBlocksAbove`(返回 `HeightCheckingInfo`)、`getDoorAdjacent`、`isAirOrLadder` 等。
   - `FloorBlockScanner`：扫描连通地板（`isFloorBlock`：方块/楼梯/slab；`isWallBlock`：墙/门/栅栏/玻璃板/`FHTags.Blocks.TOWN_WALLS`），支持梯子跨层。
@@ -201,9 +201,10 @@ double get(ItemStack);
 Map<ItemStackResourceKey,Double> getAllItems();
 Map<VirtualResourceAttribute,Double> getAllVirtualResources();
 double getCapacityLeft();             // MAX_CAPACITY - occupiedCapacity
-void resetMaxCapacity();              // 每日重建仓库容量用
+void resetMaxCapacity();              // 晨间或建筑变更时重建仓库容量用
 ```
 - 仅暴露 `addUnsafe` / `costUnsafe`（**不做容量/余量校验**），同步维护 `occupiedCapacity`：物品每个占 1 容量、`needCapacity` 的虚拟资源占 1 容量。
+- 库存是城镇级共享资源，不属于某个 `WarehouseBuilding`。仓库拆除后会立即按剩余可工作仓库重算 `MAX_CAPACITY`，但不会修改库存或 `occupiedCapacity`；若因此超容，Action 系统拒绝新增入库，已有资源仍可由城镇内部逻辑消费。
 - 两个静态缓存：`ITEM_RESOURCE_ATTRIBUTE_CACHE`（Attribute→物品集合）、`ITEM_RESOURCE_AMOUNTS`（物品→(Attribute→数量)）。
 
 ### 6.3 `TownResourceManager` —— ⚠️ 已废弃
@@ -281,7 +282,7 @@ TownResourceActionResults.TownResourceTypeCostActionResult result =
 - **网络**（`network/`，均为 `CMessage`，在 `FHNetwork` 统一注册）：
   - `TeamTownDataS2CPacket`：S→C **全量兜底**（登录 / 切维度 / 开 GUI / 镇长印章 / `/townsync fullsync` 手动），客户端解码后替换整份 `TeamTownData` 实例并 `fireClientDataChanged()`。
   - `TownBuildingUpdatePacket` / `TownResidentUpdatePacket` / `TownResourceUpdatePacket`：**增量包**（完整实现：encode/decode/handle + 客户端 `applyXxxUpdate` 覆盖式 merge + 移除），服务端 `tick()` 每 tick flush 脏键集发出（见 §14）。
-  - `WarehouseUpdatePacket` / `WarehouseInteractPacket`：仓库物品同步与存取（C→S 改资源并回写玩家手持物）。
+  - `WarehouseUpdatePacket` / `WarehouseInteractPacket`：仓库物品同步与存取（C→S 改资源并回写玩家手持物）；交互包会再次验证当前容器、仓库核心方块实体及建筑映射，拆除瞬间持有的旧菜单不能继续修改库存。
   - `WanderingRefugeeOpenTradeGUIMessage` / `WanderingRefugeeRecruitMessage`：难民交易/招募。
 - **GUI**（`tabs/` + `StandardTownBuildingScreen` / `AbstractTownWorkerBlockScreen`）：通用工人方块界面，左侧 Tab 列表；仓库使用 `TownInformationTab` / `TownResourceTab`。住宅使用 `HouseScreen`，概览页展示最近一次日结，居民页从客户端快照读取居民属性并支持逐人查看。
   - **数据刷新约定**：数据面板（`TownBuildingsPanel` / `TownResidentsPanel` / `TownInfoPanel` / `TownStatisticsPanel` / `TownWorkforcePanel` / `BuildingInfoElement` / `VirtualItemGridElement` / `HouseResidentPanel`）在 `render()` 阶段经 **Supplier 从客户端快照实时取数**（每帧解析最新实例）；**收包时禁止 `contentLayer.refresh()` 重建界面**（会重置滚动位置/选中状态）。`ITownDataUpdateListener` 回调可留空实现——内容每帧自动更新。
@@ -344,6 +345,7 @@ TownResourceActionResults.TownResourceTypeCostActionResult result =
 7. **增量同步已启用**：`TownBuilding/Resident/ResourceUpdatePacket` 为完整实现，服务端 `tick()` 每 tick flush 脏键集；全量包仅作兜底（登录 / 切维度 / 开 GUI / 镇长印章）。详见 §14。
 8. **新增 setter 必须带值守卫**：任何会改变建筑/居民字段的 setter 都要先判断「值未变直接 return」，再 `fireChange()`；否则会造成空转脏标记 → 每 tick 重复发包。资源层增量发包前有值级去重兜底，但建筑/居民层**没有**（内存敏感，未做指纹），依赖 setter 守卫在源头拦截。
 9. **居民以数据形式存在**：`Resident` 存于 `TeamTownData.residents`，不生成独立实体（`ResidentEntity` 预留为空）。
+10. **建筑注销必须走统一入口**：不要直接从 `buildings` 删除。`TeamTown.removeTownBlock` 会立即清理住宅/岗位引用（居民本身保留且当天不重新分配）、矿井链接、仓库派生容量和重叠状态；晨间 `checkBlocks` 只负责兜底发现异常。
 
 ---
 
