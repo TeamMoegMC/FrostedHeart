@@ -248,14 +248,17 @@ public class WarehouseMenu extends CBlockEntityMenu<WarehouseBlockEntity> {
 	}
 
 	public int getVolume() {
-		return buildingData.get(4);
+		// 体积/面积/容量这类大数值不经过 ContainerData 同步：MC 的
+		// ClientboundContainerSetDataPacket 以 short(16 位) 传输 value，
+		// 数值超过 32767 即回绕为负数。改为直接读建筑对象（客户端走城镇快照）。
+		return blockEntity.getBuilding().map(WarehouseBuilding::getVolume).orElse(0);
 	}
 
 	public int getArea() {
-		return buildingData.get(5);
+		return blockEntity.getBuilding().map(WarehouseBuilding::getArea).orElse(0);
 	}
 
 	public double getCapacity() {
-		return buildingData.get(6) / 100.0;
+		return blockEntity.getBuilding().map(WarehouseBuilding::getCapacity).orElse(0.0);
 	}
 }
