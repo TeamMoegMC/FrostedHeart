@@ -348,41 +348,47 @@ public class ClimateCommonEvents {
         if (event.side == LogicalSide.SERVER && event.phase == Phase.START && CTeamDataManager.INSTANCE != null) {
             Level world = event.level;
             if (!world.isClientSide && world instanceof ServerLevel serverWorld) {
+                // 先让逻辑气候时钟吸收本 tick 的 dayTime 变化，再执行依赖“世界日”的城镇逻辑。
+                // 每 tick 更新可在 /time set 后于早晨结算前完成回退归一化；WorldClockSource
+                // 内部按 20 tick 折算秒数，正常流速下仍只会每 20 tick 累加一秒。
+                WorldClimate climateData = WorldClimate.get(serverWorld);
+                if (climateData != null) {
+                    climateData.updateClock(serverWorld);
+                }
 
                 // ITown logic tick
                 int i = 0;
+                int townUpdateIntervalGameTicks = FHConfig.SERVER.TOWN.townUpdateIntervalGameTicks.get();
                 for (TeamDataHolder trd : CTeamDataManager.INSTANCE.getAllData()) {
                     if (DEBUG_MODE || trd.getOptional(FHSpecialDataTypes.GENERATOR_DATA).filter(g -> serverWorld.dimension().equals(g.dimension)).isPresent()) {
                         trd.getData(FHSpecialDataTypes.TOWN_DATA).tick(serverWorld,trd);
-                        if (serverWorld.getGameTime() % 20 == i % 20) {// Split town calculations to multiple seconds
+                        if (serverWorld.getGameTime() % townUpdateIntervalGameTicks
+                                == i % townUpdateIntervalGameTicks) {// Split town calculations across update intervals
                             if (!trd.getTeam().getOnlineMembers().isEmpty()) {
                                 trd.getData(FHSpecialDataTypes.TOWN_DATA).tickSecond(serverWorld,trd);
                             }
                         }
                         if (serverWorld.getDayTime() % 24000 == i % 20 + 1000) {
                             if (!trd.getTeam().getOnlineMembers().isEmpty()) {
-                                trd.getData(FHSpecialDataTypes.TOWN_DATA).tickMorning(serverWorld);// execute only once a day
+                                trd.getData(FHSpecialDataTypes.TOWN_DATA).tickMorning(serverWorld, trd);// execute only once a day
                             }
                         }
                     }
                     i++;
                 }
 
-                // Update clock source every second, and check hour data if it needs an update
+                // Refresh climate caches and check hour data once per second.
                 if (serverWorld.getGameTime() % 20 == 0) {
-                    WorldClimate data = WorldClimate.get(serverWorld);
-
-                    if (data != null) {
+                    if (climateData != null) {
                         if (FHConfig.SERVER.CLIMATE.addInitClimate.get())
-                            if (!data.isInitialEventAdded()) {
-                                data.setInitialEventAdded(true);
+                            if (!climateData.isInitialEventAdded()) {
+                                climateData.setInitialEventAdded(true);
                                 if (serverWorld.dimensionTypeRegistration().is(BuiltinDimensionTypes.OVERWORLD)) {
-                                    data.addInitTempEvent(serverWorld);
+                                    climateData.addInitTempEvent(serverWorld);
                                 }
                             }
-                        data.updateClock(serverWorld);
-                        data.updateCache(serverWorld);
-                        data.trimTempEventStream();
+                        climateData.updateCache(serverWorld);
+                        climateData.trimTempEventStream();
                     }
 
                 }
@@ -450,8 +456,11 @@ public class ClimateCommonEvents {
      * @author AlcatrazEscapee
      */
     public static void placeExtraSnow(ServerLevel level, ChunkAccess chunk) {
-        if (FHConfig.SERVER.WORLDGEN.enableSnowAccumulationDuringWeather.get()
-                && level.random.nextInt(FHConfig.SERVER.WORLDGEN.snowAccumulationDifficulty.get()) == 0) {
+        // ConfigValue.get() 为 spec 值表查询：同一 tick 内配置恒定，hoist 到局部变量
+        boolean enableSnowAccumulation = FHConfig.SERVER.WORLDGEN.enableSnowAccumulationDuringWeather.get();
+        int snowAccumulationDifficulty = FHConfig.SERVER.WORLDGEN.snowAccumulationDifficulty.get();
+        if (enableSnowAccumulation
+                && level.random.nextInt(snowAccumulationDifficulty) == 0) {
             int blockX = chunk.getPos().getMinBlockX();
             int blockZ = chunk.getPos().getMinBlockZ();
             BlockPos pos = level.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING,

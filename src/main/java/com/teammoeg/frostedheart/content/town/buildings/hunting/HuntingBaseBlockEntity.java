@@ -87,11 +87,12 @@ public class HuntingBaseBlockEntity extends AbstractTownBuildingBlockEntity<Hunt
 					building.setOccupiedVolume(scanner.getOccupiedVolume());
 					building.setTanningRackNum(scanner.getTanningRackNum());
 					building.setRating(computeRating(building.getVolume(), building.getArea(), building.getTemperature(), this.getTemperatureModifier()));
-					double effectiveFloorBlocks = TownMathFunctions.calculateSpaceRating(scanner.getVolume(), scanner.getArea())
-							* scanner.getArea();
+					FHConfig.Server.Town.BuildingScoring scoring = FHConfig.SERVER.TOWN.BUILDING_SCORING;
 					FHConfig.Server.Town.Hunting config = FHConfig.SERVER.TOWN.HUNTING;
-					int calculated = (int) (effectiveFloorBlocks / config.floorBlocksPerWorkerSlot.get());
-					building.setMaxResidents(Math.max(config.minimumWorkerSlots.get(), calculated));
+					building.setMaxResidents(HuntingDailyModel.calculateCapacity(
+							calculateSpaceRating(scanner.getVolume(), scanner.getArea(), scoring),
+							scanner.getArea(), config.floorBlocksPerWorkerSlot.get(),
+							config.minimumWorkerSlots.get()));
 					return true;
 				}
 			}
@@ -110,13 +111,42 @@ public class HuntingBaseBlockEntity extends AbstractTownBuildingBlockEntity<Hunt
 	 */
 	public static double computeRating(int volume, int area,  double temperature, double temperatureModifier) {
 		FHConfig.Server.Town.Hunting config = FHConfig.SERVER.TOWN.HUNTING;
+		FHConfig.Server.Town.BuildingScoring scoring = FHConfig.SERVER.TOWN.BUILDING_SCORING;
 		double spaceWeight = config.spaceRatingWeight.get();
 		double temperatureWeight = config.temperatureRatingWeight.get();
 		double totalWeight = spaceWeight + temperatureWeight;
 		if (totalWeight <= 0.0) return 0.0;
-		return (spaceWeight * TownMathFunctions.calculateSpaceRating(volume, area)
-				+ temperatureWeight * TownMathFunctions.calculateTemperatureRating(temperature + temperatureModifier))
+		return (spaceWeight * calculateSpaceRating(volume, area, scoring)
+				+ temperatureWeight * calculateTemperatureRating(
+						temperature + temperatureModifier, scoring))
 				/ totalWeight;
+	}
+
+	private static double calculateSpaceRating(
+			int volume,
+			int area,
+			FHConfig.Server.Town.BuildingScoring scoring
+	) {
+		return TownMathFunctions.calculateSpaceRating(
+				volume,
+				area,
+				scoring.spaceAreaCoefficient.get(),
+				scoring.spaceHeightLogCoefficient.get(),
+				scoring.spaceHeightLogOffset.get(),
+				scoring.spaceResponseScale.get(),
+				scoring.spaceResponseExponent.get());
+	}
+
+	private static double calculateTemperatureRating(
+			double temperature,
+			FHConfig.Server.Town.BuildingScoring scoring
+	) {
+		return TownMathFunctions.calculateTemperatureRating(
+				temperature,
+				scoring.comfortableTemperatureCelsius.get(),
+				scoring.minimumTemperatureRating.get(),
+				scoring.temperatureRatingSlope.get(),
+				scoring.temperatureRatingHalfPointDifferenceCelsius.get());
 	}
 
 	@Override

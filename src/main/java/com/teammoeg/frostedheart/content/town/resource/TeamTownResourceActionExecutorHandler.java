@@ -19,11 +19,16 @@
 
 package com.teammoeg.frostedheart.content.town.resource;
 
+import com.teammoeg.chorda.util.CDistHelper;
+import com.teammoeg.chorda.util.CUtils;
+import com.teammoeg.frostedheart.content.health.recipe.NutritionRecipe;
 import com.teammoeg.frostedheart.content.town.resource.action.*;
 import net.minecraft.world.item.ItemStack;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class TeamTownResourceActionExecutorHandler extends AbstractActionExecutorHandler{
@@ -58,7 +63,14 @@ public class TeamTownResourceActionExecutorHandler extends AbstractActionExecuto
             double toCostCopy = toCost;//toCost接下来会修改，复制一份用于记录数量
             Map<ItemStackResourceKey, Double> costDetail = new HashMap<>();
             Map<ItemStackResourceKey, Double> items = resourceHolder.getAllItemsByResourceAttribute(action.resourceToModify());
-            for(ItemStackResourceKey itemStackResourceKey : items.keySet()){
+            List<ItemStackResourceKey> orderedItems = new ArrayList<>(items.keySet());
+            if (action.resourceToModify().getType() == ItemResourceType.RESIDENT_FOOD_LEVEL) {
+                List<NutritionRecipe> recipes = CUtils.filterRecipes(
+                        CDistHelper.getRecipeManager(), NutritionRecipe.TYPE);
+                orderedItems = TownFoodNutritionModel.orderByNutritionQuality(
+                        orderedItems, action.resourceToModify(), recipes);
+            }
+            for(ItemStackResourceKey itemStackResourceKey : orderedItems){
                 double itemResourceAmount = TeamTownResourceHolder.getResourceAmount(itemStackResourceKey, action.resourceToModify());
                 double itemLeft = resourceHolder.get(itemStackResourceKey);
                 double itemAmountToCost = Math.min(toCost/itemResourceAmount, itemLeft);
@@ -177,16 +189,19 @@ public class TeamTownResourceActionExecutorHandler extends AbstractActionExecuto
             double availableAmount;
             if (action.isAdd()) availableAmount = resourceHolder.getCapacityLeft();
             else availableAmount = resourceHolder.get(action.itemToModify());
-            if (availableAmount < amount) {
-                if (action.actionMode() == ResourceActionMode.ATTEMPT || availableAmount <= TeamTownResourceHolder.DELTA) {
+            double modifiedAmount = TownInventoryModel.modifiedAmount(
+                    amount, availableAmount, action.actionMode());
+            if (modifiedAmount < amount) {
+                if (modifiedAmount <= TeamTownResourceHolder.DELTA) {
                     return new TownResourceActionResults.ItemResourceActionResult(action, false, 0, amount);
                 }
                 if (action.isAdd()) {
-                    resourceHolder.addUnsafe(action.itemToModify(), availableAmount);
+                    resourceHolder.addUnsafe(action.itemToModify(), modifiedAmount);
                 } else {
-                    resourceHolder.costUnsafe(action.itemToModify(), availableAmount);
+                    resourceHolder.costUnsafe(action.itemToModify(), modifiedAmount);
                 }
-                return new TownResourceActionResults.ItemResourceActionResult(action, false, availableAmount, amount - availableAmount);
+                return new TownResourceActionResults.ItemResourceActionResult(
+                        action, false, modifiedAmount, amount - modifiedAmount);
             } else {
                 if (action.isAdd()) {
                     resourceHolder.addUnsafe(action.itemToModify(), amount);

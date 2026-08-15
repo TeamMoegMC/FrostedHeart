@@ -19,16 +19,25 @@
 
 package com.teammoeg.frostedheart.content.town.resident;
 
+import com.teammoeg.chorda.dataholders.team.CTeamDataManager;
+import com.teammoeg.chorda.dataholders.team.TeamDataHolder;
 import com.teammoeg.chorda.text.Components;
+import com.teammoeg.frostedheart.bootstrap.common.FHSpecialDataTypes;
 import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
+import com.teammoeg.frostedheart.content.town.TeamTownData;
 import com.teammoeg.frostedheart.content.climate.AttractedByGeneratorGoal;
 import com.teammoeg.frostedheart.content.climate.WorldTemperature;
+import com.teammoeg.frostedheart.content.climate.gamedata.climate.WorldClimate;
 import com.teammoeg.frostedheart.content.trade.*;
+import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 
 import lombok.Getter;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.syncher.EntityDataAccessor;
+import net.minecraft.network.syncher.EntityDataSerializers;
+import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.stats.Stats;
@@ -64,6 +73,8 @@ public class WanderingRefugee extends AbstractVillager implements NeutralMob, Vi
 //    // first and last names
 //    private static final EntityDataAccessor<String> FIRST_NAME = SynchedEntityData.defineId(WanderingRefugee.class, EntityDataSerializers.STRING);
 //    private static final EntityDataAccessor<String> LAST_NAME = SynchedEntityData.defineId(WanderingRefugee.class, EntityDataSerializers.STRING);
+    // age group, synced so the client can scale the model and label the recruit dialog
+    private static final EntityDataAccessor<Integer> AGE = SynchedEntityData.defineId(WanderingRefugee.class, EntityDataSerializers.INT);
 
     // Random pool of last names
     public static final String[] LAST_NAMES = new String[] {
@@ -96,6 +107,14 @@ public class WanderingRefugee extends AbstractVillager implements NeutralMob, Vi
     private UUID persistentAngerTarget;
     //duck_egg: 我不知道这个hired是做什么的，暂且保留
     private boolean hired = false;
+    // town-spawned refugees: server-side only, persisted via NBT, never synced
+    private boolean townSpawned = false;
+    private int waitingDays = 0;
+    /** 上次结算等待天数的世界日；-1 表示尚未初始化（新刷/旧存档），加载后首日宽限 */
+    private long lastWaitingCheckDay = -1L;
+    @Nullable
+    private UUID townOwner = null;
+    private boolean coldSurvivor = false;
     private int amountNeeded = 3 + (int) (getRandom().nextFloat() * 5);
     @Getter
     private String lastName = LAST_NAMES[(int) (Math.random() * LAST_NAMES.length)];
@@ -105,6 +124,116 @@ public class WanderingRefugee extends AbstractVillager implements NeutralMob, Vi
 
     public WanderingRefugee(EntityType<? extends AbstractVillager> pEntityType, Level pLevel) {
         super(pEntityType, pLevel);
+    }
+
+    public int getAgeGroup() {
+        return this.entityData.get(AGE);
+    }
+
+    public void setAgeGroup(int ageGroup) {
+        this.entityData.set(AGE, ageGroup);
+    }
+
+    /**
+     * Model scale of the age group: infants 0.4, children 0.5, everyone else 1.0.
+     */
+    public float getAgeScale() {
+        return switch (this.getAgeGroup()) {
+            case Resident.AGE_INFANT -> 0.4F;
+            case Resident.AGE_CHILD -> 0.5F;
+            default -> 1.0F;
+        };
+    }
+
+    public boolean isTownSpawned() {
+        return townSpawned;
+    }
+
+    public void markTownSpawned(UUID owner) {
+        this.townSpawned = true;
+        this.townOwner = owner;
+    }
+
+    public UUID getTownOwner() {
+        return townOwner;
+    }
+
+    public int getWaitingDays() {
+        return waitingDays;
+    }
+
+    public void increaseWaitingDays() {
+        this.waitingDays++;
+    }
+
+    @Override
+    public void tick() {
+        super.tick();
+        // 等待结算只在服务端、且仅对城镇刷出的难民生效；每刻只做一次布尔+整数比较
+        if (!this.level().isClientSide && this.townSpawned) {
+            this.tickRefugeeWaitingCheck();
+        }
+    }
+
+    /**
+     * 城镇刷出难民的每日清场（由实体自理，无队伍侧登记/扫描）：
+     * 按真实经过的游戏日补算等待天数（同一天只结算一次），等待超时或城镇无空房位/数据缺失时离开。
+     * 区块卸载/未加载期间的天数在重载时一次性补齐，等待天数始终真实。
+     * 使用 WorldClockSource 的逻辑日期：睡觉跳时会推进日期，/time set 回退不会让日期倒退。
+     */
+    private void tickRefugeeWaitingCheck() {
+        if (this.townOwner == null) return;
+        // 世界日查询是 capability 查找（每次 Optional 分配）：每实体每秒采样一次即可。
+        // 跨日结算按真实日差幂等补算（lastWaitingCheckDay 仅在结算时推进），
+        // ≤1 秒的采样延迟不改变任何结算结果；canTownStillHost() 的评估随之降至 1Hz。
+        if (this.tickCount % 20 != 0) return;
+        long day = WorldClimate.getWorldDay(this.level());
+        if (this.lastWaitingCheckDay == -1L) {
+            // 新刷出/旧存档：当天宽限，次日起按日界结算
+            this.lastWaitingCheckDay = day;
+            return;
+        }
+        long elapsedDays = day - this.lastWaitingCheckDay;
+        if (elapsedDays <= 0) return;
+        this.lastWaitingCheckDay = day;
+        this.waitingDays = (int) Math.min(Integer.MAX_VALUE, (long) this.waitingDays + elapsedDays);
+        if (this.waitingDays >= FHConfig.SERVER.TOWN.REFUGEE_SPAWN.maxWaitDays.get() || !this.canTownStillHost()) {
+            this.remove(Entity.RemovalReason.DISCARDED);
+        }
+    }
+
+    /**
+     * 本队城镇是否还有空房位：按 townOwner（= TeamDataHolder.getId()）反查队伍数据。
+     * 队伍数据查不到（队伍解散等）视为无房位，难民次日离开，不会永久滞留。
+     */
+    private boolean canTownStillHost() {
+        TeamDataHolder holder = CTeamDataManager.getDataByResearchID(this.townOwner);
+        if (holder == null) return false;
+        return holder.getOptional(FHSpecialDataTypes.TOWN_DATA)
+                .map(townData -> townData.createTeamTown().canAddResident())
+                .orElse(false);
+    }
+
+    @Override
+    public boolean isChildTrader() {
+        return this.getAgeGroup() == Resident.AGE_CHILD;
+    }
+
+    public boolean isColdSurvivor() {
+        return coldSurvivor;
+    }
+
+    public void setColdSurvivor(boolean coldSurvivor) {
+        this.coldSurvivor = coldSurvivor;
+    }
+
+    /**
+     * Scales the hitbox with the age group. The eye height follows automatically
+     * because the base eye height derives from {@link #getDimensions(Pose)}.
+     */
+    @Override
+    public EntityDimensions getDimensions(Pose pPose) {
+        return super.getDimensions(pPose).scale(this.getAgeScale());
     }
 
     /*
@@ -174,6 +303,11 @@ public class WanderingRefugee extends AbstractVillager implements NeutralMob, Vi
      * @return if trade successfully worked
      */
     public boolean openTradingScreen(ServerPlayer playerIn){
+        // 幼儿不会交易；守卫放在 update 之前，拒绝交易不触发关系衰减
+        if (this.getAgeGroup() == Resident.AGE_INFANT) {
+            playerIn.displayClientMessage(Component.translatable("message.frostedheart.trade.too_young"), false);
+            return false;
+        }
         fh$data.update((ServerLevel) super.level(), playerIn);
         RelationList list = fh$data.getRelationShip(playerIn);
         int unknownLanguage = list.get(RelationModifier.UNKNOWN_LANGUAGE);
@@ -200,14 +334,21 @@ public class WanderingRefugee extends AbstractVillager implements NeutralMob, Vi
         return true;
     }
 
-//    @Override
-//    protected void defineSynchedData() {
-//        super.defineSynchedData();
-//        this.entityData.define(HIRED, false);
-//        this.entityData.define(AMOUNT_NEEDED,  3 + (int) (getRandom().nextFloat() * 5));
-//        this.entityData.define(LAST_NAME, LAST_NAMES[(int) (Math.random() * LAST_NAMES.length)]);
-//        this.entityData.define(FIRST_NAME, FIRST_NAMES[(int) (Math.random() * FIRST_NAMES.length)]);
-//    }
+    @Override
+    protected void defineSynchedData() {
+        super.defineSynchedData();
+        this.entityData.define(AGE, Resident.AGE_ADULT);
+    }
+
+    @Override
+    public void onSyncedDataUpdated(EntityDataAccessor<?> key) {
+        if (AGE.equals(key)) {
+            // getDimensions() depends on the custom age group. Refresh the cached
+            // hitbox and eye height on both the server setter and client sync path.
+            this.refreshDimensions();
+        }
+        super.onSyncedDataUpdated(key);
+    }
 
     @Override
     protected void rewardTradeXp(MerchantOffer pOffer) {
@@ -226,6 +367,14 @@ public class WanderingRefugee extends AbstractVillager implements NeutralMob, Vi
         pCompound.putInt("amountNeeded", this.amountNeeded);
         pCompound.putString("lastName", this.lastName);
         pCompound.putString("firstName", this.firstName);
+        pCompound.putInt("age", this.getAgeGroup());
+        pCompound.putBoolean("townSpawned", this.townSpawned);
+        pCompound.putInt("waitingDays", this.waitingDays);
+        pCompound.putLong("lastWaitingCheckDay", this.lastWaitingCheckDay);
+        if (this.townOwner != null) {
+            pCompound.putUUID("townOwner", this.townOwner);
+        }
+        pCompound.putBoolean("coldSurvivor", this.coldSurvivor);
         CompoundTag cnbt = new CompoundTag();
         fh$data.serialize(cnbt);
         pCompound.put("fhdata", cnbt);
@@ -245,6 +394,25 @@ public class WanderingRefugee extends AbstractVillager implements NeutralMob, Vi
         }
         if ((pCompound.contains("hired", Tag.TAG_BYTE))) {
             hired = pCompound.getBoolean("hired");
+        }
+        if ((pCompound.contains("age", Tag.TAG_INT))) {
+            this.setAgeGroup(pCompound.getInt("age"));
+        }
+        if ((pCompound.contains("townSpawned", Tag.TAG_BYTE))) {
+            townSpawned = pCompound.getBoolean("townSpawned");
+        }
+        if ((pCompound.contains("waitingDays", Tag.TAG_INT))) {
+            waitingDays = pCompound.getInt("waitingDays");
+        }
+        if ((pCompound.contains("lastWaitingCheckDay", Tag.TAG_ANY_NUMERIC))) {
+            // getLong 同时兼容旧存档中的 TAG_INT。
+            lastWaitingCheckDay = pCompound.getLong("lastWaitingCheckDay");
+        }
+        if ((pCompound.contains("townOwner", Tag.TAG_INT_ARRAY))) {
+            townOwner = pCompound.getUUID("townOwner");
+        }
+        if ((pCompound.contains("coldSurvivor", Tag.TAG_BYTE))) {
+            coldSurvivor = pCompound.getBoolean("coldSurvivor");
         }
         if ((pCompound.contains("fhdata", Tag.TAG_COMPOUND))) {
             fh$data.deserialize(pCompound.getCompound("fhdata"));

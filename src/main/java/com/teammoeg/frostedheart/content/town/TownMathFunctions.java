@@ -1,12 +1,6 @@
 package com.teammoeg.frostedheart.content.town;
 
 public class TownMathFunctions {
-    /** The temperature at which the house is comfortable. */
-    public static final double COMFORTABLE_TEMP_HOUSE = 24;
-    public static final double WORKING_TEMP = 0;
-    public static final int MAX_TEMP_HOUSE = 50;
-    public static final int MIN_TEMP_HOUSE = (ITown.DEBUG_MODE ? -50 : 0);
-
     /**
      * 用于调整数据。
      * <br>
@@ -38,9 +32,16 @@ public class TownMathFunctions {
      * @param temperature the actual temperature
      * @return temperature rating between 0 and 1
      */
-    public static double calculateTemperatureRating(double temperature) {
-        double tempDiff = Math.abs(COMFORTABLE_TEMP_HOUSE - temperature);
-        return 0.017 + 1 / (1 + Math.exp(0.4 * (tempDiff - 10)));
+    public static double calculateTemperatureRating(
+            double temperature,
+            double comfortableTemperature,
+            double minimumRating,
+            double sigmoidSlopePerCelsius,
+            double halfPointTemperatureDifferenceCelsius
+    ) {
+        double tempDiff = Math.abs(comfortableTemperature - temperature);
+        return minimumRating + 1 / (1 + Math.exp(sigmoidSlopePerCelsius
+                * (tempDiff - halfPointTemperatureDifferenceCelsius)));
     }
 
     /**
@@ -51,18 +52,26 @@ public class TownMathFunctions {
      * @param area the area of the space
      * @return decoration rating between 0 and 1
      */
-    public static double calculateDecorationRating(java.util.Map<?, Integer> decorations, int area) {
+    public static double calculateDecorationRating(
+            java.util.Map<?, Integer> decorations,
+            int area,
+            double countLogOffset,
+            double countLogMultiplier,
+            double typeBaseScore,
+            double baseDemand,
+            double floorBlocksPerDemand
+    ) {
         double score = 0;
         for (Integer num : decorations.values()) {
-            if (num + 0.32 > 0) { // Ensure the argument for log is positive
-                score += Math.log(num + 0.32) * 1.75 + 0.9;
+            if (num + countLogOffset > 0) { // Ensure the argument for log is positive
+                score += Math.log(num + countLogOffset) * countLogMultiplier + typeBaseScore;
             } else {
                 // Handle the case where num + 0.32 <= 0
                 // For example, you could add a minimal score or skip adding to the score.
                 score += 0; // Or some other handling logic
             }
         }
-        return Math.min(1, score / (6 + area / 16.0f));
+        return Math.min(1, score / (baseDemand + area / floorBlocksPerDemand));
     }
 
     /**
@@ -73,10 +82,19 @@ public class TownMathFunctions {
      * @param area the floor area of the space
      * @return space rating between 0 and 1
      */
-    public static double calculateSpaceRating(int volume, int area) {
+    public static double calculateSpaceRating(
+            int volume,
+            int area,
+            double areaCoefficient,
+            double heightLogCoefficient,
+            double heightLogOffset,
+            double responseScale,
+            double responseExponent
+    ) {
         double height = volume / (float) area;
-        double score = area * (1.55 + Math.log(height - 1.6) * 0.6);
-        return 1 - Math.exp(-0.024 * Math.pow(score, 1.11));
+        double score = area * (areaCoefficient
+                + Math.log(height - heightLogOffset) * heightLogCoefficient);
+        return 1 - Math.exp(-responseScale * Math.pow(score, responseExponent));
     }
 
     public static double attributeScore(double value) {

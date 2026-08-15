@@ -18,6 +18,10 @@ atlassian-ide-plugin.xml
 # Compiled class file
 *.class
 
+# Python analysis tools
+__pycache__/
+*.py[cod]
+
 # Log file
 *.log
 

@@ -29,7 +29,6 @@ import net.minecraft.client.renderer.entity.layers.CrossedArmsItemLayer;
 import net.minecraft.client.renderer.entity.layers.CustomHeadLayer;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.entity.npc.WanderingTrader;
 
 public class WanderingRefugeeRenderer extends MobRenderer<WanderingRefugee, VillagerModel<WanderingRefugee>> {
     private static final ResourceLocation VILLAGER_BASE_SKIN = new ResourceLocation("textures/entity/wandering_trader.png");
@@ -45,9 +44,14 @@ public class WanderingRefugeeRenderer extends MobRenderer<WanderingRefugee, Vill
         return VILLAGER_BASE_SKIN;
     }
 
-    protected void scale(WanderingTrader pLivingEntity, PoseStack pMatrixStack, float pPartialTickTime) {
-        float f = 0.9375F;
-        pMatrixStack.scale(0.9375F, 0.9375F, 0.9375F);
+    @Override
+    protected void scale(WanderingRefugee pEntity, PoseStack pMatrixStack, float pPartialTickTime) {
+        float f = pEntity.getAgeScale();
+        if (f != 1.0F) {
+            pMatrixStack.scale(f, f, f);
+        }
+        // shrink the shadow with small refugees
+        this.shadowRadius = f < 1.0F ? 0.25F : 0.5F;
     }
 
     @Override

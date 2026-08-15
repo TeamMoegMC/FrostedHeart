@@ -44,8 +44,6 @@ import net.minecraft.world.level.ChunkPos;
 
 import java.util.*;
 
-import static java.lang.Double.NEGATIVE_INFINITY;
-
 public class MineBaseBuilding extends AbstractTownResidentWorkBuilding {
     public record MiningDailyReport(
             boolean hasData,
@@ -168,15 +166,16 @@ public class MineBaseBuilding extends AbstractTownResidentWorkBuilding {
         List<Resident> workingResidents = residentsID.stream()
                 .map(id -> teamTown.getResident(id).orElse(null))
                 .filter(Objects::nonNull)
-                .filter(this::canResidentWork)
                 .toList();
         // 1. Requested output, measured in item units per town day.
-        double requestedOutputPerDay = 0.0;
+        double totalProductivity = 0.0;
         for (Resident r : workingResidents) {
-            double workerOutputPerDay = FHConfig.SERVER.TOWN.MINING.baseOutputPerStandardWorkerDay.get()
-                    * getResidentScore(r);
-            if (workerOutputPerDay > 0) requestedOutputPerDay += workerOutputPerDay;
+            double productivity = getResidentScore(r);
+            if (productivity > 0.0) totalProductivity += productivity;
         }
+        double requestedOutputPerDay = MiningDailyModel.requestedOutput(
+                totalProductivity,
+                FHConfig.SERVER.TOWN.MINING.baseOutputPerStandardWorkerDay.get());
         if (requestedOutputPerDay <= 0.0) {
             setDailyReport(new MiningDailyReport(true, 0.0, 0.0, List.of(),
                     TownProductionStopReason.NO_ELIGIBLE_WORKERS));
@@ -223,7 +222,8 @@ public class MineBaseBuilding extends AbstractTownResidentWorkBuilding {
             ChunkPos chunk = entry.getKey();
             Map<Item, Integer> weights = entry.getValue();
             double weightSum = chunkTotalWeight.get(chunk);
-            double desired = requestedOutputPerDay * weightSum / grandTotal;
+            double desired = MiningDailyModel.weightedShare(
+                    requestedOutputPerDay, weightSum, grandTotal);
 
             // 使用 TeamTown 的封装方法
             double actual = teamTown.pickTerrainResource(TerrainResourceType.ORE, chunk, desired);
@@ -233,7 +233,8 @@ public class MineBaseBuilding extends AbstractTownResidentWorkBuilding {
 
             for (Map.Entry<Item, Integer> wEntry : weights.entrySet()) {
                 Item item = wEntry.getKey();
-                double itemAmount = actual * wEntry.getValue() / weightSum;
+                double itemAmount = MiningDailyModel.weightedShare(
+                        actual, wEntry.getValue(), weightSum);
                 TownResourceActionResults.ItemResourceActionResult result =
                         teamTown.getActionExecutorHandler().execute(
                         new TownResourceActions.ItemResourceAction(
@@ -277,8 +278,9 @@ public class MineBaseBuilding extends AbstractTownResidentWorkBuilding {
                 .mapToDouble(this::getResidentScore)
                 .filter(value -> value > 0.0)
                 .sum();
-        double requested = totalProductivity
-                * FHConfig.SERVER.TOWN.MINING.baseOutputPerStandardWorkerDay.get();
+        double requested = MiningDailyModel.requestedOutput(
+                totalProductivity,
+                FHConfig.SERVER.TOWN.MINING.baseOutputPerStandardWorkerDay.get());
         if (requested <= 0.0) {
             return new MiningForecast(totalProductivity, 0.0, 0.0,
                     TownProductionStopReason.NO_ELIGIBLE_WORKERS);
@@ -302,7 +304,8 @@ public class MineBaseBuilding extends AbstractTownResidentWorkBuilding {
 
         double extractable = 0.0;
         for (Map.Entry<ChunkPos, Double> entry : chunkWeights.entrySet()) {
-            double desired = requested * entry.getValue() / totalWeight;
+            double desired = MiningDailyModel.weightedShare(
+                    requested, entry.getValue(), totalWeight);
             extractable += Math.min(desired,
                     town.getRemainingTerrainResource(TerrainResourceType.ORE, entry.getKey()));
         }
@@ -329,17 +332,6 @@ public class MineBaseBuilding extends AbstractTownResidentWorkBuilding {
     private static double sanitize(double value) {
         return Double.isFinite(value) ? Math.max(0.0, value) : 0.0;
     }
-
-	@Override
-	public double getResidentPriority() {
-		if(!this.isBuildingWorkable()) return NEGATIVE_INFINITY;
-		int currentResidentNum = this.residentsID.size();
-		if(currentResidentNum >= getMaxResidents()) return NEGATIVE_INFINITY;
-        FHConfig.Server.Town.Mining config = FHConfig.SERVER.TOWN.MINING;
-		return config.assignmentBasePriority.get()
-                - config.assignmentPenaltyPerWorker.get() * currentResidentNum
-                + config.assignmentFillRatioBonus.get() * currentResidentNum / getMaxResidents();
-	}
 
     @Override
     public double getResidentScore(Resident resident) {

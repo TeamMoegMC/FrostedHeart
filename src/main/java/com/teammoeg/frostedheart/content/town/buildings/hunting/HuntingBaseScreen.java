@@ -93,7 +93,8 @@ public class HuntingBaseScreen extends StandardTownBuildingScreen<HuntingBaseMen
                     resident -> ResidentAttributeModel.calculateDailyProficiencyGain(
                             resident.getWorkProficiency(HuntingBaseBuilding.class),
                             progression.proficiencyGrowthAtZeroPerWorkday.get(),
-                            progression.minimumProficiencyGrowthPerWorkday.get()),
+                            progression.minimumProficiencyGrowthPerWorkday.get(),
+                            progression.maximumWorkProficiency.get()),
                     Component.translatable("gui.frostedheart.hunting_base.hunting_proficiency"),
                     value -> Component.translatable(
                             "gui.frostedheart.hunting_base.personal_contribution",
@@ -158,10 +159,21 @@ public class HuntingBaseScreen extends StandardTownBuildingScreen<HuntingBaseMen
         } else {
             rows.add(MineBaseScreen.text("gui.frostedheart.hunting_base.heating_inactive"));
         }
+        FHConfig.Server.Town.BuildingScoring scoring = FHConfig.SERVER.TOWN.BUILDING_SCORING;
         double spaceRating = TownMathFunctions.calculateSpaceRating(
-                building.getVolume(), building.getArea());
+                building.getVolume(),
+                building.getArea(),
+                scoring.spaceAreaCoefficient.get(),
+                scoring.spaceHeightLogCoefficient.get(),
+                scoring.spaceHeightLogOffset.get(),
+                scoring.spaceResponseScale.get(),
+                scoring.spaceResponseExponent.get());
         double temperatureRating = TownMathFunctions.calculateTemperatureRating(
-                building.getEffectiveTemperature());
+                building.getEffectiveTemperature(),
+                scoring.comfortableTemperatureCelsius.get(),
+                scoring.minimumTemperatureRating.get(),
+                scoring.temperatureRatingSlope.get(),
+                scoring.temperatureRatingHalfPointDifferenceCelsius.get());
         rows.add(MineBaseScreen.text(
                 "gui.frostedheart.hunting_base.space_quality", percent(spaceRating)));
         rows.add(MineBaseScreen.text(

@@ -27,7 +27,8 @@ public class TradeHandler {
     public static void openTradeScreen(ServerPlayer spe, FHVillagerData vd) {
         vd.update(spe.serverLevel(), spe);
         NetworkHooks.openScreen(spe, vd, e -> {
-            e.writeVarInt(vd.parent.getId());
+            // 无实体居民写 -1，客户端 getEntity(-1) 返回 null
+            e.writeVarInt(vd.parent != null ? vd.parent.getId() : -1);
             CompoundTag tag = new CompoundTag();
             e.writeNbt(vd.serializeForSend(tag));
             tag = new CompoundTag();

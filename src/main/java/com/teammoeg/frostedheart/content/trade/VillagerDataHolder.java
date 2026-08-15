@@ -21,4 +21,11 @@ package com.teammoeg.frostedheart.content.trade;
 
 public interface VillagerDataHolder {
     FHVillagerData getFHData();
+
+    /**
+     * 是否为儿童商贩（儿童难民的交易商品种类减半）。
+     */
+    default boolean isChildTrader() {
+        return false;
+    }
 }

@@ -21,6 +21,7 @@ package com.teammoeg.frostedheart.content.climate.gamedata.climate;
 
 import com.google.common.collect.ImmutableList;
 import com.teammoeg.chorda.io.CodecUtil;
+import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import com.teammoeg.chorda.io.NBTSerializable;
 import com.teammoeg.chorda.math.BaseRandomSource;
 import com.teammoeg.frostedheart.FHNetwork;
@@ -28,6 +29,7 @@ import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
 import com.teammoeg.frostedheart.content.climate.event.ClimateCommonEvents;
 import com.teammoeg.frostedheart.content.climate.gamedata.climate.DayClimateData.HourData;
 import com.teammoeg.frostedheart.content.climate.network.FHClimatePacket;
+import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import lombok.Setter;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
@@ -96,7 +98,7 @@ public class WorldClimate implements NBTSerializable {
     protected long lasthour = -1;
     protected int hourInDay = 0;
     protected DayClimateData daycache;
-    protected Map<ChunkPos,ClimateResult> whitecurtainCache=new HashMap<>();
+    protected Long2ObjectOpenHashMap<ClimateResult> whitecurtainCache=new Long2ObjectOpenHashMap<>();
     protected long lastday = -1;
     private boolean isInitialEventAdded;
     @Setter
@@ -488,7 +490,7 @@ public class WorldClimate implements NBTSerializable {
     public WorldClimate() {
         clockSource = new WorldClockSource();
         dailyTempData = new LinkedList<>();
-        for(int i=0;i<3;i++)
+        for(int i = 0; i < FHConfig.SERVER.CLIMATE.longTermTrackCount.get(); i++)
         	tracks.add(new ClimateEventTrack());
     }
 
@@ -641,13 +643,12 @@ public class WorldClimate implements NBTSerializable {
     }
     public ClimateType getClimate(ChunkPos pos) {
 
-		ClimateResult cr=whitecurtainCache.computeIfAbsent(pos, this::getClimateOfWhiteCurtain);
+		ClimateResult cr=whitecurtainCache.computeIfAbsent(pos.toLong(), l -> getClimateOfWhiteCurtain(new ChunkPos(l)));
         return cr.climate().merge(this.getHourData().getType());
     }
     public float getTemp(BlockPos pos) {
     	if(daycache!=null) {
-    		ChunkPos cp=new ChunkPos(pos);
-    		ClimateResult cr=whitecurtainCache.computeIfAbsent(cp, this::getClimateOfWhiteCurtain);
+    		ClimateResult cr=whitecurtainCache.computeIfAbsent(ChunkPos.asLong(pos.getX()>>4,pos.getZ()>>4), l -> getClimateOfWhiteCurtain(new ChunkPos(l)));
     		return Math.min(daycache.getTemp(hourInDay), cr.temperature());
     	}
     	return 0;
@@ -886,7 +887,7 @@ public class WorldClimate implements NBTSerializable {
 
     public float getTemp(ChunkPos cp) {
         if(daycache!=null) {
-            ClimateResult cr=whitecurtainCache.computeIfAbsent(cp, this::getClimateOfWhiteCurtain);
+            ClimateResult cr=whitecurtainCache.computeIfAbsent(cp.toLong(), l -> getClimateOfWhiteCurtain(new ChunkPos(l)));
             return Math.min(daycache.getTemp(hourInDay), cr.temperature());
         }
         return 0;

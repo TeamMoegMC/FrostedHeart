@@ -21,8 +21,12 @@ package com.teammoeg.frostedheart.content.town;
 
 import blusunrize.immersiveengineering.common.util.Utils;
 import com.teammoeg.frostedheart.FHNetwork;
+import com.teammoeg.frostedheart.bootstrap.common.FHEntityTypes;
 import com.teammoeg.frostedheart.bootstrap.common.FHSpecialDataTypes;
+import com.teammoeg.frostedheart.content.climate.WorldTemperature;
 import com.teammoeg.frostedheart.content.climate.block.generator.GeneratorData;
+import com.teammoeg.frostedheart.content.climate.gamedata.climate.WeatherForecast;
+import com.teammoeg.frostedheart.content.climate.gamedata.climate.WorldClimate;
 import com.teammoeg.frostedheart.content.town.block.OccupiedVolume;
 import com.teammoeg.frostedheart.content.town.buildings.mine.MineBaseBuilding;
 import com.teammoeg.frostedheart.content.town.buildings.mine.MineBuilding;
@@ -30,8 +34,21 @@ import com.teammoeg.frostedheart.content.town.event.*;
 import com.teammoeg.frostedheart.content.town.network.TownBuildingUpdatePacket;
 import com.teammoeg.frostedheart.content.town.network.TownResidentUpdatePacket;
 import com.teammoeg.frostedheart.content.town.network.TownResourceUpdatePacket;
+import com.teammoeg.frostedheart.content.town.network.TownHistoryUpdatePacket;
+import com.teammoeg.frostedheart.content.town.network.TownSignalNotificationPacket;
+import com.teammoeg.frostedheart.content.town.observation.TownObservationModel;
+import com.teammoeg.frostedheart.content.town.observation.TownOperationalHistory;
+import com.teammoeg.frostedheart.content.town.observation.TownOperationalStatus;
+import com.teammoeg.frostedheart.content.town.observation.TownOperationalStatusModel;
+import com.teammoeg.frostedheart.content.town.observation.TownOperationalStatusProvider;
+import com.teammoeg.frostedheart.content.town.observation.TownHistoryModel;
+import com.teammoeg.frostedheart.content.town.observation.TownSignalEvent;
+import com.teammoeg.frostedheart.content.town.observation.TownSignalEventModel;
+import com.teammoeg.frostedheart.content.town.observation.TownSignalNotice;
+import com.teammoeg.frostedheart.content.town.observation.TownTowerTipThrottle;
 import com.teammoeg.frostedheart.content.town.resource.ITownResourceKey;
 import com.teammoeg.frostedheart.content.town.util.ObservableTownMap;
+import it.unimi.dsi.fastutil.objects.Object2DoubleOpenHashMap;
 import lombok.Getter;
 
 import com.mojang.serialization.Codec;
@@ -56,16 +73,25 @@ import com.teammoeg.frostedheart.content.town.event.TownBuildingChangeEvent;
 import com.teammoeg.frostedheart.content.town.event.TownResidentChangeEvent;
 import com.teammoeg.frostedheart.content.town.event.TownResourceChangeEvent;
 import com.teammoeg.frostedheart.content.town.resident.Resident;
+import com.teammoeg.frostedheart.content.town.resident.ResidentAgingModel;
+import com.teammoeg.frostedheart.content.town.resident.ResidentGenerationModel;
+import com.teammoeg.frostedheart.content.town.resident.ResidentDailyModel;
+import com.teammoeg.frostedheart.content.town.model.TownAssignmentModel;
+import com.teammoeg.frostedheart.content.town.resident.WanderingRefugee;
 import com.teammoeg.frostedheart.content.town.resource.TeamTownResourceHolder;
 import com.teammoeg.frostedheart.content.town.resource.VirtualResourceType;
 import com.teammoeg.frostedheart.content.town.terrainresource.TerrainResourceType;
 import com.teammoeg.frostedheart.content.town.terrainresource.TerrainResourceData;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
+import com.teammoeg.frostedheart.infrastructure.config.FHConfig.Server.Town.RefugeeSpawn;
+import com.teammoeg.frostedheart.infrastructure.config.FHConfig.Server.Town.ResidentAging;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.UUIDUtil;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.levelgen.Heightmap;
 
 import java.util.*;
 import java.util.Map.Entry;
@@ -106,7 +132,21 @@ public class TeamTownData implements SpecialData{
         .fieldOf("maxLabour").forGetter(o -> o.maxLabour),
 
         CodecUtil.defaultSupply(CodecUtil.catchingCodec(TownHistoryEntry.CODEC.listOf()), ArrayList::new)
-        .fieldOf("history").forGetter(o -> o.history)
+        .fieldOf("history").forGetter(o -> o.history),
+
+        // Older saves did not persist town age. A negative sentinel lets the
+        // constructor migrate them from the retained settlement count.
+        CodecUtil.defaultSupply(CodecUtil.catchingCodec(Codec.LONG), () -> -1L)
+        .fieldOf("townDay").forGetter(o -> o.townDay),
+
+        // Old saves have no staffingPlan field. Decode them as EMPTY; the
+        // constructor then derives a deterministic plan from surviving work
+        // buildings and their existing rosters.
+        CodecUtil.defaultSupply(CodecUtil.catchingCodec(TownStaffingPlan.CODEC), () -> TownStaffingPlan.EMPTY)
+        .fieldOf("staffingPlan").forGetter(TeamTownData::getStaffingPlan),
+
+        CodecUtil.defaultSupply(CodecUtil.catchingCodec(Codec.LONG), () -> -1L)
+        .fieldOf("lastRefugeeSpawnDay").forGetter(o -> o.lastRefugeeSpawnDay)
 
         )
 
@@ -138,15 +178,49 @@ public class TeamTownData implements SpecialData{
     @Getter
     int maxLabour=0;
     /**
-     * 城镇每日快照历史，最新条目在末尾，最多保留 {@link #MAX_HISTORY_ENTRIES} 条。
+     * 城镇结算快照历史，最新条目在末尾，按观测配置裁剪。
      * 随存档持久化，并随城镇数据全量同步下发客户端。
      * <p>
-     * Daily snapshot history of the town, newest entry last, capped at
-     * {@link #MAX_HISTORY_ENTRIES} entries. Persisted with the save and synced
+     * Settlement snapshot history of the town, newest entry last, capped at
+     * the configured number of entries. Persisted with the save and synced
      * to clients with the full town data sync.
      */
     @Getter
     List<TownHistoryEntry> history = new ArrayList<>();
+
+    /** Number of completed town settlements since the town data was created. */
+    @Getter
+    long townDay;
+
+    /**
+     * 玩家编辑的工作建筑队列与保障人数。列表顺序是完整优先关系；保障人数是
+     * 第一轮优先补足的目标而非硬上限。通过 {@link #getStaffingPlan()} 读取时会与
+     * 当前建筑表对齐，以清理已拆除建筑并补入新建筑。
+     */
+    private TownStaffingPlan staffingPlan = TownStaffingPlan.EMPTY;
+
+    /** Threshold events accumulated during the current daily settlement. */
+    private transient final List<TownSignalEvent> pendingDailySignals = new ArrayList<>();
+    /** Settlement events waiting for one per-server-tick player brief. */
+    private transient final List<TownSignalEvent> pendingTownTipSignals = new ArrayList<>();
+    /** Tower notifications emitted by the immediate/debounce state machine. */
+    private transient final List<TownSignalNotice> pendingTowerTipSignals = new ArrayList<>();
+    /** Last per-second service state; null until the first generator observation. */
+    private transient Boolean lastObservedTowerActive;
+    private transient TownTowerTipThrottle.State towerTipState = TownTowerTipThrottle.INITIAL;
+    private transient long nextTownTipNotificationId;
+    /**
+     * 上一次日结算后的保障岗位缺口，仅用于识别“出现缺口/完全恢复”的状态穿越。
+     * 它不是城镇玩法状态，不写入存档；重新载入后的第一次结算会建立新的运行时
+     * 基线，若当时已有缺口则会发出一次当前风险警告。
+     */
+    private transient Integer lastStaffingTargetShortfall;
+
+    /**
+     * 最近一次按世界日结算难民刷新的日期（服务端持久化）。
+     * 防止同一天内重复结算（含 /town tick 手动调用）导致重复刷新。
+     */
+    long lastRefugeeSpawnDay = -1L;
 
     /**
      * 用于将城镇数据变化的监听器塞到各个地方。
@@ -158,6 +232,76 @@ public class TeamTownData implements SpecialData{
     private final DataSyncCache dataSyncCache = new DataSyncCache();
 
     /**
+     * 居民生命周期监听器（服务端单订阅）：居民增删/每日结算事件的门面出口。
+     * 事件通道与 DataSyncCache 的 {@code ObservableTownMap} 钩子链完全分离——
+     * 那三个钩子是增量更新专用（见 {@link ObservableTownMap} javadoc），居民模拟
+     * 不注册其上，而是经 {@link TeamTown} 门面方法 fire：added 只在房屋分配完成后
+     * 触发（锚点必已就绪，单次通知无双触发）。仅在服务端设置，客户端实例无人注册。
+     * <p>
+     * Resident lifecycle listener (single subscriber, server side): the facade
+     * outlet for resident add/remove and daily-settlement events. The channel is
+     * fully separate from DataSyncCache's ObservableTownMap hook chain — those
+     * hooks are incremental-sync-only (see {@link ObservableTownMap} javadoc),
+     * and the citizen simulation does not register there; it listens via facade
+     * fires from {@link TeamTown}: added fires only after house allocation
+     * (anchor guaranteed ready; single notification, no double-fire).
+     * Never set on client instances.
+     */
+    private ITownResidentListener residentListener;
+
+    /**
+     * 设置居民生命周期监听器（服务端，模拟 adopt 时调用）。
+     * 单订阅者——居民模拟是唯一消费者；重复设置覆盖（同实例幂等）。
+     * <p>
+     * Sets the resident lifecycle listener (server, called on adopt). Single
+     * subscriber — the citizen simulation is the only consumer; re-setting
+     * overwrites (idempotent for the same instance).
+     *
+     * @param listener 监听器 / the listener
+     */
+    public void setResidentListener(ITownResidentListener listener) {
+        this.residentListener = listener;
+    }
+
+    /**
+     * 通知居民生命周期监听器：居民已加入城镇。
+     * 触发点：{@link TeamTown#addResident} 成功路径与 {@code debugAddResident}
+     * （put 后锚点已就绪；单次通知，无双触发）。
+     * <p>
+     * Fires "resident added" to the lifecycle listener (after house allocation;
+     * single notification, no double-fire).
+     *
+     * @param resident 加入的居民 / the added resident
+     */
+    public void fireResidentAdded(Resident resident) {
+        if (this.residentListener != null)
+            this.residentListener.onResidentAdded(resident);
+    }
+
+    /**
+     * 通知居民生命周期监听器：居民已移出城镇。
+     * 触发点：{@link TeamTown#removeResident}（集合移除完成后）。
+     * <p>
+     * Fires "resident removed" to the lifecycle listener (after collection removal).
+     *
+     * @param resident 移出的居民 / the removed resident
+     */
+    public void fireResidentRemoved(Resident resident) {
+        if (this.residentListener != null)
+            this.residentListener.onResidentRemoved(resident);
+    }
+
+    /**
+     * 通知居民生命周期监听器：每日结算完成（tickMorning 末尾）。
+     * <p>
+     * Fires "daily settlement done" to the lifecycle listener (end of tickMorning).
+     */
+    public void fireMorningDone() {
+        if (this.residentListener != null)
+            this.residentListener.onTownMorningDone(this);
+    }
+
+    /**
      * 客户端 GUI 监听器集合（static 而非实例字段）。
      * <p>
      * 原因：全量同步包 {@code TeamTownDataS2CPacket} 会用新解码出的实例替换客户端
@@ -167,12 +311,26 @@ public class TeamTownData implements SpecialData{
      * ConcurrentHashMap 仅作额外的并发保护。
      */
     private static final Set<ITownDataUpdateListener> clientListeners = ConcurrentHashMap.newKeySet();
-
-
-
-    public TeamTownData(String name, TeamTownResourceHolder resources, Map<BlockPos, ITownBuilding> buildings, Map<UUID, Resident> residents, Map<TerrainResourceType, TerrainResourceData> terrainResource,int labour,int maxlabour, List<TownHistoryEntry> history) {
+    /**
+     * Codec 解码构造器。所有建筑必须先装入本实例，再规范化岗位计划，这样旧存档的
+     * 空计划才能从仍存在的工作建筑和旧名册中迁移出稳定的初始队列与保障人数。
+     *
+     * @param name 城镇名称
+     * @param resources 城镇资源仓储
+     * @param buildings 已持久化的城镇建筑
+     * @param residents 已持久化的居民
+     * @param terrainResource 地形资源状态
+     * @param labour 旧劳动字段；当前构造逻辑保持历史行为并重置为零
+     * @param maxlabour 旧最大劳动字段；当前构造逻辑保持历史行为并重置为零
+     * @param history 城镇结算历史
+     * @param townDay 已完成的城镇日；旧存档使用负数哨兵并从保留历史数量迁移
+     * @param staffingPlan 已保存的岗位计划；旧存档缺失时由 Codec 提供空计划
+     * @param lastRefugeeSpawnDay 最近一次难民自然刷新所用的稳定世界日
+     */
+    public TeamTownData(String name, TeamTownResourceHolder resources, Map<BlockPos, ITownBuilding> buildings, Map<UUID, Resident> residents, Map<TerrainResourceType, TerrainResourceData> terrainResource,int labour,int maxlabour, List<TownHistoryEntry> history, long townDay, TownStaffingPlan staffingPlan, long lastRefugeeSpawnDay) {
         super();
         this.history = new ArrayList<>(history);
+        this.townDay = townDay >= 0L ? townDay : history.size();
         this.name = name;
         this.resources = resources;
         buildings.forEach((pos, building) -> {
@@ -184,6 +342,15 @@ public class TeamTownData implements SpecialData{
         this.terrainResource.putAll(terrainResource);
         this.labour=0;
         this.maxLabour=0;
+        this.staffingPlan = staffingPlan == null ? TownStaffingPlan.EMPTY : staffingPlan;
+        normalizeStaffingPlan();
+        this.lastRefugeeSpawnDay = lastRefugeeSpawnDay;
+    }
+
+    /** Source-compatible constructor for callers predating the persistent town-day field. */
+    public TeamTownData(String name, TeamTownResourceHolder resources, Map<BlockPos, ITownBuilding> buildings, Map<UUID, Resident> residents, Map<TerrainResourceType, TerrainResourceData> terrainResource,int labour,int maxlabour, List<TownHistoryEntry> history, TownStaffingPlan staffingPlan, long lastRefugeeSpawnDay) {
+        this(name, resources, buildings, residents, terrainResource, labour, maxlabour,
+                history, -1L, staffingPlan, lastRefugeeSpawnDay);
     }
 
     public TeamTownData(SpecialDataHolder teamData) {
@@ -200,6 +367,81 @@ public class TeamTownData implements SpecialData{
      */
     public TeamTown createTeamTown() {
         return TeamTown.create(this);
+    }
+
+    /**
+     * 返回与当前建筑集合一致的权威岗位计划。
+     * <p>
+     * 读取前会执行轻量规范化：移除已拆除或不再属于工作建筑的条目，并把尚未进入
+     * 计划的新工作建筑追加到队尾。旧存档中的空计划也在这里完成惰性迁移。因此调用方
+     * 不应缓存旧的计划对象，而应在需要显示或编辑时重新读取。
+     *
+     * @return 当前规范化后的不可变岗位计划
+     */
+    public TownStaffingPlan getStaffingPlan() {
+        normalizeStaffingPlan();
+        return staffingPlan;
+    }
+
+    /**
+     * 将岗位计划与当前 {@link #buildings} 对齐，并仅在内容实际变化时替换对象。
+     * 已存在条目的玩家顺序和保障人数保持不变；缺失条目的迁移规则由
+     * {@link TownStaffingPlan#normalize(Map)} 统一定义。
+     */
+    private void normalizeStaffingPlan() {
+        TownStaffingPlan normalized = staffingPlan.normalize(buildings);
+        if (!normalized.equals(staffingPlan)) staffingPlan = normalized;
+    }
+
+    /**
+     * 在服务端最新计划上设置一栋工作建筑的保障人数。
+     * <p>
+     * 请求中的建筑位置必须仍对应工作建筑；目标值会在编辑当下限制到
+     * {@code [0, getMaxResidents()]}。本方法只修改下一次日结算使用的计划，不会在
+     * 白天中途移动居民。
+     *
+     * @param building 要编辑的工作建筑位置
+     * @param target 新保障人数
+     * @return 内容实际改变时为 {@code true}；建筑无效或结果未变化时为 {@code false}
+     */
+    public boolean setStaffingTarget(BlockPos building, int target) {
+        Optional<TownStaffingPlan> changed = getStaffingPlan().withTarget(
+                building, target, buildings);
+        if (changed.isEmpty() || changed.get().equals(staffingPlan)) return false;
+        staffingPlan = changed.get();
+        return true;
+    }
+
+    /**
+     * 在服务端最新计划上移动一栋工作建筑。
+     * <p>
+     * 使用“移到某条目之前”的相对操作而不是客户端提交整张列表，可避免两个队员
+     * 同时编辑时用旧快照覆盖彼此的其他修改。{@code before} 为空表示移到队尾。
+     *
+     * @param building 要移动的工作建筑位置
+     * @param before 移动后紧随其后的锚点；为空表示队尾
+     * @return 内容实际改变时为 {@code true}；建筑/锚点无效或结果未变化时为 {@code false}
+     */
+    public boolean moveStaffingEntry(BlockPos building, Optional<BlockPos> before) {
+        Optional<TownStaffingPlan> changed = getStaffingPlan().move(
+                building, before, buildings);
+        if (changed.isEmpty() || changed.get().equals(staffingPlan)) return false;
+        staffingPlan = changed.get();
+        return true;
+    }
+
+    /**
+     * 客户端应用服务端下发的完整权威岗位计划。
+     * <p>
+     * 该入口只用于 S2C 增量同步。替换后仍会针对客户端当前建筑快照规范化，并通知
+     * 已打开的城镇界面；游戏逻辑不得通过此方法在服务端编辑计划。
+     *
+     * @param updated 服务端权威计划；空值按空计划处理
+     */
+    public void applyStaffingPlan(TownStaffingPlan updated) {
+        staffingPlan = updated == null ? TownStaffingPlan.EMPTY : updated;
+        normalizeStaffingPlan();
+        fireStaffingChanged();
     }
 
     /**
@@ -266,7 +508,11 @@ public class TeamTownData implements SpecialData{
             teamData.sendToOnline(FHNetwork.INSTANCE, new TownBuildingUpdatePacket(changedBuildings, removedBuildings));
         }
 
-
+        TownTowerTipThrottle.Result deferredTower = TownTowerTipThrottle.onTick(
+                towerTipState, level.getGameTime());
+        towerTipState = deferredTower.state();
+        pendingTowerTipSignals.addAll(deferredTower.emitted());
+        flushTownTipNotifications(teamData);
     }
 
     /**
@@ -283,57 +529,221 @@ public class TeamTownData implements SpecialData{
             if (genData.actualPos != null) {
                 genData.townTick(world, teamData);
             }
+            // An unformed tower cannot heat even if GeneratorData still carries
+            // the last active flag from before the multiblock was broken.
+            queueTowerServiceCrossing(world, genData.actualPos != null && genData.isActive);
         }
     }
 
-    public void tickMorning(ServerLevel world) {
+    private void queueTowerServiceCrossing(ServerLevel world, boolean active) {
+        if (lastObservedTowerActive != null && lastObservedTowerActive != active) {
+            int hour = (int) ((world.getDayTime() % 24000L) / 1000L);
+            pendingDailySignals.add(new TownSignalEvent(-1L, hour,
+                    active ? TownSignalEvent.Type.TOWER_SERVICE_RESTORED
+                            : TownSignalEvent.Type.TOWER_SERVICE_LOST,
+                    active ? TownSignalEvent.Severity.INFORMATION
+                            : TownSignalEvent.Severity.CRITICAL,
+                    1, "per-second GeneratorData.isActive crossing"));
+            TownTowerTipThrottle.Result result = TownTowerTipThrottle.onCrossing(
+                    towerTipState, world.getGameTime(), active);
+            towerTipState = result.state();
+            pendingTowerTipSignals.addAll(result.emitted());
+        }
+        lastObservedTowerActive = active;
+    }
+
+    private void flushTownTipNotifications(TeamDataHolder teamData) {
+        if (!pendingTowerTipSignals.isEmpty()) {
+            teamData.sendToOnline(FHNetwork.INSTANCE, new TownSignalNotificationPacket(
+                    ++nextTownTipNotificationId, List.copyOf(pendingTowerTipSignals)));
+            pendingTowerTipSignals.clear();
+        }
+        if (!pendingTownTipSignals.isEmpty()) {
+            List<TownSignalNotice> compacted = TownSignalEventModel.compactNotifications(
+                    pendingTownTipSignals);
+            pendingTownTipSignals.clear();
+            if (!compacted.isEmpty()) {
+                teamData.sendToOnline(FHNetwork.INSTANCE, new TownSignalNotificationPacket(
+                        ++nextTownTipNotificationId, compacted));
+            }
+        }
+    }
+
+    public void tickMorning(ServerLevel world, TeamDataHolder teamData) {
         if (!FHConfig.SERVER.TOWN.enableTownTickMorning.get()) return;
         FHMain.LOGGER.debug("Ticking morning for {}...", name);
         TeamTown town = this.createTeamTown();
         this.checkBlocks(world, town);
         this.checkOccupiedAreaOverlap();
         this.tickResidentsMorning();
+        this.tickResidentsAging();
         this.residentAllocatingCheck(town);
         this.allocateHouse();
         this.assignWork();
+        this.tickRefugeeSpawnAndDespawn(world, teamData);
         this.linkMinesToBases();
         this.recalcOreChunkResources();
         residents.values().forEach(Resident::resetDailyProficiencyGrowth);
         this.buildingsWork(world);
         this.recoverResources();
-        this.recordDailySnapshot(world);
+        this.recordDailySnapshot(world, teamData);
+        // 每日结算完成通知：锚点/工作重分配与难民处理全部完成后，经门面告知
+        // 挂靠的居民模拟刷新锚点、清理无家条目（低频，跟随 town 生命周期，
+        // 无需周期性对账；经单订阅监听器，与 DataSyncCache 钩子链无关）。
+        this.fireMorningDone();
     }
 
     /**
-     * 历史快照的最大保留条数。
+     * 每次城镇结算完成后记录一条快照。连续执行 /town tick 时，即使世界时间
+     * 没有前进，每次也会分配一个新的城镇结算日；超过配置条数时丢弃最旧记录。
      * <p>
-     * Maximum number of retained history entries.
-     */
-    public static final int MAX_HISTORY_ENTRIES = 30;
-
-    /**
-     * 在每日结算完成后记录一条城镇快照。同一天重复结算时覆盖当天条目，
-     * 超过 {@link #MAX_HISTORY_ENTRIES} 条时丢弃最旧的记录。
-     * <p>
-     * Records a daily town snapshot after settlement. Repeated settlements on
-     * the same day overwrite that day's entry; oldest entries are dropped once
-     * {@link #MAX_HISTORY_ENTRIES} is exceeded.
+     * Records one snapshot after every town settlement. Repeated /town tick
+     * commands receive distinct town settlement days even when world time does
+     * not advance; oldest entries are dropped at the configured history cap.
      *
      * @param world 服务端世界 / server world instance
      */
-    void recordDailySnapshot(ServerLevel world) {
-        long day = world.getDayTime() / 24000L;
-        double avgHealth = residents.values().stream().mapToDouble(Resident::getHealth).average().orElse(0);
-        double avgMental = residents.values().stream().mapToDouble(Resident::getMental).average().orElse(0);
-        TownHistoryEntry entry = new TownHistoryEntry(day, residents.size(), avgHealth, avgMental, buildings.size());
-        if (!history.isEmpty() && history.get(history.size() - 1).day() == day) {
-            history.set(history.size() - 1, entry);
-        } else {
-            history.add(entry);
+    void recordDailySnapshot(ServerLevel world, TeamDataHolder teamData) {
+        if (townDay < Long.MAX_VALUE) townDay++;
+        long day = TownHistoryModel.nextSettlementDay(history, WorldClimate.getWorldDay(world));
+        Optional<GeneratorData> generator = teamData.getOptional(FHSpecialDataTypes.GENERATOR_DATA);
+        BlockPos fallback = generator.filter(value -> value.actualPos != null)
+                .map(value -> value.actualPos)
+                .orElseGet(() -> buildings.keySet().stream().findFirst().orElse(BlockPos.ZERO));
+        TownOperationalStatus current = TownOperationalStatusProvider.capture(
+                world, teamData, createTeamTown(), fallback);
+        boolean towerWorking = current.tower().active();
+        int climateLevel = current.climateLevel();
+        TownHistoryEntry previous = history.isEmpty() ? null : history.get(history.size() - 1);
+        List<TownSignalEvent> signals = new ArrayList<>();
+        boolean hasPerSecondTowerSignal = pendingDailySignals.stream()
+                .anyMatch(signal -> TownSignalEventModel.isTowerService(signal.type()));
+        for (TownSignalEvent signal : pendingDailySignals) {
+            addUniqueSignal(signals, new TownSignalEvent(
+                    day, signal.hour(), signal.type(), signal.severity(),
+                    signal.affectedCount(), signal.episodeId(), signal.detail()));
         }
-        while (history.size() > MAX_HISTORY_ENTRIES) {
+        pendingDailySignals.clear();
+        if (previous != null) {
+            addDailyThresholdSignals(day, previous, current, signals, hasPerSecondTowerSignal);
+        }
+        for (TownSignalEvent signal : signals) {
+            if (!TownSignalEventModel.isTowerService(signal.type()) || !hasPerSecondTowerSignal) {
+                pendingTownTipSignals.add(signal);
+            }
+        }
+        TownHistoryEntry entry = new TownHistoryEntry(
+                day, current.population(), current.averageHealth(),
+                current.averageMental(), buildings.size(), current.p10Health(),
+                current.population() == 0 ? 0.0 : residents.values().stream()
+                        .mapToDouble(Resident::getHealth).min().orElse(0.0),
+                current.p10Mental(), current.population() == 0 ? 0.0 : residents.values().stream()
+                        .mapToDouble(Resident::getMental).min().orElse(0.0),
+                current.unableToWorkCount(), current.exitRiskCount(), towerWorking,
+                climateLevel, signals, TownOperationalHistory.from(current));
+        history.add(entry);
+        int configuredHistoryDays = FHConfig.SERVER.TOWN.OBSERVATION.historyDays.get();
+        while (history.size() > configuredHistoryDays) {
             history.remove(0);
         }
+        teamData.sendToOnline(FHNetwork.INSTANCE, new TownHistoryUpdatePacket(entry, townDay));
+    }
+
+    private static void addDailyThresholdSignals(
+            long day,
+            TownHistoryEntry previous,
+            TownOperationalStatus current,
+            List<TownSignalEvent> signals,
+            boolean skipTowerFallback
+    ) {
+        int climateLevel = current.climateLevel();
+        if (previous.climateLevel() >= 0 && climateLevel < 0) {
+            addUniqueSignal(signals, new TownSignalEvent(day, 0, TownSignalEvent.Type.CLIMATE_COLD_WARNING,
+                    TownSignalEvent.Severity.WARNING, 1, "current temperature category below normal"));
+        } else if (previous.climateLevel() < 0 && climateLevel >= 0) {
+            addUniqueSignal(signals, new TownSignalEvent(day, 0, TownSignalEvent.Type.CLIMATE_COLD_ENDED,
+                    TownSignalEvent.Severity.INFORMATION, 1, "current temperature category returned to normal"));
+        }
+        addCountCrossing(day, previous.unableToWorkCount(), current.unableToWorkCount(),
+                TownSignalEvent.Type.WORK_CAPACITY_LOST,
+                TownSignalEvent.Type.WORK_CAPACITY_RECOVERED, signals);
+        addCountCrossing(day, previous.exitRiskCount(), current.exitRiskCount(),
+                TownSignalEvent.Type.EXIT_RISK_ENTERED,
+                TownSignalEvent.Type.EXIT_RISK_RECOVERED, signals);
+
+        TownOperationalHistory priorOperational = previous.operational();
+        if (!priorOperational.equals(TownOperationalHistory.EMPTY)) {
+            boolean towerWorking = current.tower().active();
+            boolean previousTowerWorking = priorOperational.tower().active();
+            if (!skipTowerFallback && previousTowerWorking != towerWorking) {
+                addUniqueSignal(signals, new TownSignalEvent(day, 0,
+                        towerWorking ? TownSignalEvent.Type.TOWER_SERVICE_RESTORED
+                                : TownSignalEvent.Type.TOWER_SERVICE_LOST,
+                        towerWorking ? TownSignalEvent.Severity.INFORMATION
+                                : TownSignalEvent.Severity.CRITICAL,
+                        1, "daily GeneratorData.isActive state crossed"));
+            }
+            FHConfig.Server.Town.Observation config = FHConfig.SERVER.TOWN.OBSERVATION;
+            addReserveCrossing(day, priorOperational.foodReserveDays().toLiveMetric(),
+                    current.foodReserveDays(), TownSignalEvent.Type.FOOD_RESERVE_WARNING,
+                    TownSignalEvent.Type.FOOD_SHORTAGE, TownSignalEvent.Type.FOOD_RESERVE_RECOVERED,
+                    Math.max(1, current.population()), config, signals);
+            addReserveCrossing(day, priorOperational.fuelReserveDays().toLiveMetric(),
+                    current.fuelReserveDays(), TownSignalEvent.Type.FUEL_RESERVE_WARNING,
+                    TownSignalEvent.Type.FUEL_SHORTAGE, TownSignalEvent.Type.FUEL_RESERVE_RECOVERED,
+                    1, config, signals);
+            addCountCrossing(day, priorOperational.unsafeOccupiedHouseCount(),
+                    current.unsafeOccupiedHouseCount(), TownSignalEvent.Type.HOUSE_TEMPERATURE_UNSAFE,
+                    TownSignalEvent.Type.HOUSE_TEMPERATURE_RECOVERED, signals);
+            addCountCrossing(day, priorOperational.stoppedStaffedHuntingCount(),
+                    current.stoppedStaffedHuntingCount(), TownSignalEvent.Type.HUNTING_TEMPERATURE_STOP,
+                    TownSignalEvent.Type.HUNTING_TEMPERATURE_RECOVERED, signals);
+        }
+    }
+
+    private static void addReserveCrossing(
+            long day,
+            TownOperationalStatus.Metric previous,
+            TownOperationalStatus.Metric current,
+            TownSignalEvent.Type warning,
+            TownSignalEvent.Type critical,
+            TownSignalEvent.Type recovered,
+            int affectedCount,
+            FHConfig.Server.Town.Observation config,
+            List<TownSignalEvent> signals
+    ) {
+        TownOperationalStatusModel.ReserveTransition transition =
+                TownOperationalStatusModel.reserveTransition(previous, current,
+                        config.reserveWarningDays.get(), config.reserveCriticalDays.get());
+        TownSignalEvent event = switch (transition) {
+            case WARNING -> new TownSignalEvent(day, 0, warning, TownSignalEvent.Severity.WARNING,
+                    affectedCount, "reserve entered warning band");
+            case CRITICAL -> new TownSignalEvent(day, 0, critical, TownSignalEvent.Severity.CRITICAL,
+                    affectedCount, "reserve entered critical band");
+            case RECOVERED -> new TownSignalEvent(day, 0, recovered, TownSignalEvent.Severity.INFORMATION,
+                    affectedCount, "reserve recovered to safe band");
+            case NONE -> null;
+        };
+        if (event != null) addUniqueSignal(signals, event);
+    }
+
+    private static void addCountCrossing(
+            long day,
+            int previous,
+            int current,
+            TownSignalEvent.Type increase,
+            TownSignalEvent.Type decrease,
+            List<TownSignalEvent> signals
+    ) {
+        int delta = current - previous;
+        if (delta == 0) return;
+        addUniqueSignal(signals, new TownSignalEvent(day, 0, delta > 0 ? increase : decrease,
+                TownSignalEventModel.defaultSeverity(delta > 0 ? increase : decrease),
+                Math.abs(delta), "daily threshold count crossed"));
+    }
+
+    private static void addUniqueSignal(List<TownSignalEvent> signals, TownSignalEvent candidate) {
+        TownSignalEventModel.addToHistory(signals, candidate);
     }
 
     /**
@@ -387,20 +797,234 @@ public class TeamTownData implements SpecialData{
         if (ITown.DEBUG_MODE) {
             return;// 测试时村民不死
         }
+        FHConfig.Server.Town.ResidentRules config = FHConfig.SERVER.TOWN.RESIDENT_RULES;
         List<Resident> deadResidents = new ArrayList<>();
         for (Resident resident : residents.values()) {
-            if (resident.getHousePos() == null) {
-                resident.costHealth(10);
-            }
-            if (resident.getHealth() <= 5 || // 似了
-                resident.getMental() <= 5) {// 跑了
+            ResidentDailyModel.MorningResult result = ResidentDailyModel.settleMorning(
+                    resident.getHealth(),
+                    resident.getMental(),
+                    resident.getHousePos() != null,
+                    config.homelessHealthLossPerDay.get(),
+                    config.removalHealthThreshold.get(),
+                    config.removalMentalThreshold.get());
+            resident.setHealth(result.healthAfterHomelessPenalty());
+            if (result.removed()) {
                 deadResidents.add(resident);
+                TownSignalEvent.Type type = result.removedForHealth() && result.removedForMental()
+                        ? TownSignalEvent.Type.RESIDENT_EXIT_BOTH
+                        : result.removedForHealth()
+                        ? TownSignalEvent.Type.RESIDENT_EXIT_HEALTH
+                        : TownSignalEvent.Type.RESIDENT_EXIT_MENTAL;
+                pendingDailySignals.add(new TownSignalEvent(
+                        -1L, 0, type, TownSignalEvent.Severity.IRREVERSIBLE, 1,
+                        resident.getUUID().toString()));
             }
         }
         TeamTown town = TeamTown.create(this);
         deadResidents.forEach(resident -> resident.setDeath(town));
     }
 
+    /**
+     * 每日老化结算：ageDays+1，幼儿/儿童达标后成长为下一个年龄组（属性保留），
+     * 各年龄组按配置每日增减属性并封顶。
+     */
+    private void tickResidentsAging() {
+        ResidentAging aging = FHConfig.SERVER.TOWN.RESIDENT_AGING;
+        ResidentAgingModel.Parameters parameters =
+                new ResidentAgingModel.Parameters(
+                        aging.infantToChildDays.get(),
+                        aging.childToAdultDays.get(),
+                        aging.infantStrengthGainPerDay.get(),
+                        aging.infantIntelligenceGainPerDay.get(),
+                        aging.infantAttributeCap.get(),
+                        aging.childStrengthGainPerDay.get(),
+                        aging.childIntelligenceGainPerDay.get(),
+                        aging.childStrengthCap.get(),
+                        aging.childIntelligenceCap.get(),
+                        aging.adultStrengthGainPerDay.get(),
+                        aging.adultIntelligenceGainPerDay.get(),
+                        aging.adultAttributeCap.get(),
+                        aging.elderStrengthDecayPerDay.get(),
+                        aging.elderStrengthFloor.get());
+        for (Resident resident : residents.values()) {
+            ResidentAgingModel.AgingResult result = ResidentAgingModel.settleDay(
+                    resident.getAge(), resident.getAgeDays(), resident.getStrength(),
+                    resident.getIntelligence(), parameters);
+            resident.setAgeDays(result.ageDays());
+            resident.setAge(result.age());
+            resident.setStrength(result.strength());
+            resident.setIntelligence(result.intelligence());
+        }
+    }
+
+    /**
+     * 难民刷新时的天气判定结果。
+     */
+    enum RefugeeSpawnWeather {
+        WARM, NORMAL, COLD
+    }
+
+    /**
+     * 每天早晨按天气概率在开启的能量塔附近刷新一批流浪难民；无视容量照刷，塔旁等待。
+     * 同一天只结算一次（按世界日持久化）；已刷难民的清场由实体自身按日界结算，不在此处理。
+     */
+    private void tickRefugeeSpawnAndDespawn(ServerLevel world, TeamDataHolder teamData) {
+        RefugeeSpawn config = FHConfig.SERVER.TOWN.REFUGEE_SPAWN;
+        if (!config.enableRefugeeSpawn.get()) return;
+        // 队伍无人在线时不刷新；不置位当天标记，有人上线当天仍可刷。
+        // 防御：getTeam() 可为 null（旧存档恢复已解散队伍的 holder），getOnlineMembers() 内部不判空
+        if (teamData.getTeam() == null || teamData.getTeam().getOnlineMembers().isEmpty()) return;
+        // WorldClockSource 已在本次城镇 tick 前更新：睡觉跳时会推进日期，/time set 回退不会让日期倒退。
+        long day = WorldClimate.getWorldDay(world);
+        // "当天只结算一次"守卫：/town tick 同日多次调用也不会重复刷批
+        if (day == this.lastRefugeeSpawnDay) return;
+        Optional<GeneratorData> genDataOpt = teamData.getOptional(FHSpecialDataTypes.GENERATOR_DATA);
+        if (genDataOpt.isEmpty() || genDataOpt.get().actualPos == null || !genDataOpt.get().isWorking) {
+            // 塔不存在/未开启：置位当天，防止同日反复调用重复判定
+            this.lastRefugeeSpawnDay = day;
+            return;
+        }
+        GeneratorData genData = genDataOpt.get();
+        BlockPos towerPos = genData.actualPos;
+        RefugeeSpawnWeather weather = getSpawnWeather(world, towerPos);
+        double chance = config.baseSpawnChancePerDay.get()
+            + (weather == RefugeeSpawnWeather.WARM ? config.warmSpawnChanceBonus.get()
+            : weather == RefugeeSpawnWeather.COLD ? -config.coldSpawnChancePenalty.get() : 0);
+        chance = Math.max(0.0, Math.min(1.0, chance));
+        if (CMath.RANDOM.nextDouble() >= chance) {
+            FHMain.LOGGER.debug("No refugee batch this morning, weather={}, chance={}", weather, chance);
+            this.lastRefugeeSpawnDay = day;
+            return;
+        }
+        FHMain.LOGGER.debug("Spawning refugee batch, weather={}", weather);
+        int spawned = this.spawnRefugeeBatch(world, teamData, weather);
+        // 全部生成失败时不置位，当天可重试
+        if (spawned > 0) {
+            this.lastRefugeeSpawnDay = day;
+        }
+    }
+
+    /**
+     * 强制刷一批难民（调试命令 /town spawn_refugees 用），并更新按日结算标记。
+     */
+    public void debugSpawnRefugeeBatch(ServerLevel world, TeamDataHolder teamData) {
+        Optional<GeneratorData> genDataOpt = teamData.getOptional(FHSpecialDataTypes.GENERATOR_DATA);
+        if (genDataOpt.isEmpty() || genDataOpt.get().actualPos == null) return;
+        RefugeeSpawnWeather weather = getSpawnWeather(world, genDataOpt.get().actualPos);
+        int spawned = spawnRefugeeBatch(world, teamData, weather);
+        if (spawned > 0) {
+            this.lastRefugeeSpawnDay = WorldClimate.getWorldDay(world);
+        }
+        FHMain.LOGGER.info("Debug-spawned {} refugee(s), weather={}", spawned, weather);
+    }
+
+    /**
+     * 在能量塔周围按天气参数刷一批难民。
+     *
+     * @return 实际生成数量
+     */
+    int spawnRefugeeBatch(ServerLevel world, TeamDataHolder teamData, RefugeeSpawnWeather weather) {
+        RefugeeSpawn config = FHConfig.SERVER.TOWN.REFUGEE_SPAWN;
+        Optional<GeneratorData> genDataOpt = teamData.getOptional(FHSpecialDataTypes.GENERATOR_DATA);
+        if (genDataOpt.isEmpty() || genDataOpt.get().actualPos == null) return 0;
+        GeneratorData genData = genDataOpt.get();
+        int sizeMod = weather == RefugeeSpawnWeather.WARM ? config.warmSpawnBatchBonus.get()
+            : weather == RefugeeSpawnWeather.COLD ? -config.coldSpawnBatchPenalty.get() : 0;
+        int min = Math.max(1, config.batchSizeMin.get() + sizeMod);
+        int max = Math.max(min, config.batchSizeMax.get() + sizeMod);
+        int batchSize = min + CMath.RANDOM.nextInt(max - min + 1);
+        int spawned = 0;
+        for (int i = 0; i < batchSize; i++) {
+            BlockPos pos = findRefugeeSpawnPos(world, genData.actualPos);
+            if (pos == null) continue;
+            WanderingRefugee refugee = FHEntityTypes.WANDERING_REFUGEE.get().create(world);
+            if (refugee == null) continue;
+            refugee.setAgeGroup(pickAgeByWeight());
+            refugee.markTownSpawned(teamData.getId());
+            if (weather == RefugeeSpawnWeather.COLD && CMath.RANDOM.nextDouble() < config.coldQualityChance.get()) {
+                refugee.setColdSurvivor(true);
+            }
+            refugee.setPersistenceRequired();
+            refugee.setPos(pos.getX() + 0.5D, pos.getY(), pos.getZ() + 0.5D);
+            // 生成可能被世界拒绝（如实体数量上限），成功才计数并寻路，避免计数虚高使"全部失败也置位当天"
+            if (world.addFreshEntity(refugee)) {
+                // 默默寻路走到能量塔旁，聚拢在塔附近等待（无任何特效）
+                refugee.getNavigation().moveTo(genData.actualPos.getX() + 0.5D, genData.actualPos.getY(), genData.actualPos.getZ() + 0.5D, 1.0D);
+                spawned++;
+            }
+        }
+        return spawned;
+    }
+
+    /**
+     * 按配置权重轮盘随机一个年龄组。
+     */
+    private int pickAgeByWeight() {
+        RefugeeSpawn config = FHConfig.SERVER.TOWN.REFUGEE_SPAWN;
+        FHConfig.Server.Town.ResidentGeneration fallback =
+                FHConfig.SERVER.TOWN.RESIDENT_GENERATION;
+        return ResidentGenerationModel.pickAge(
+                CMath.RANDOM::nextDouble,
+                new ResidentGenerationModel.AgeWeights(
+                        config.weightInfant.get(), config.weightChild.get(),
+                        config.weightAdult.get(), config.weightElder.get()),
+                new ResidentGenerationModel.AgeWeights(
+                        fallback.fallbackWeightInfant.get(), fallback.fallbackWeightChild.get(),
+                        fallback.fallbackWeightAdult.get(), fallback.fallbackWeightElder.get()));
+    }
+
+    /**
+     * 判定当天的刷新天气：暖流 = 温度级别≥1 且晴天；寒流 = 温度级别≤-1 或暴风雪；其余平稳。
+     * 温度取塔位置的气候基线（与预报系统同源）。
+     */
+    private RefugeeSpawnWeather getSpawnWeather(ServerLevel world, BlockPos towerPos) {
+        int tempLevel = WeatherForecast.getTemperatureLevel(WorldTemperature.climate(world, towerPos));
+        if (tempLevel >= 1 && WorldClimate.isSun(world)) {
+            return RefugeeSpawnWeather.WARM;
+        }
+        if (tempLevel <= -1 || WorldClimate.isBlizzard(world)) {
+            return RefugeeSpawnWeather.COLD;
+        }
+        return RefugeeSpawnWeather.NORMAL;
+    }
+
+    /**
+     * 在塔周围 [minR, maxR] 随机距离与角度找可落地生成点，最多尝试 16 次。
+     */
+    private BlockPos findRefugeeSpawnPos(ServerLevel world, BlockPos towerPos) {
+        RefugeeSpawn config = FHConfig.SERVER.TOWN.REFUGEE_SPAWN;
+        int minR = config.spawnRadiusMinBlocks.get();
+        int maxR = Math.max(minR, config.spawnRadiusMaxBlocks.get());
+        for (int attempt = 0; attempt < 16; attempt++) {
+            double angle = CMath.RANDOM.nextDouble() * Math.PI * 2.0D;
+            double dist = minR + CMath.RANDOM.nextDouble() * (maxR - minR);
+            int x = towerPos.getX() + (int) Math.round(Math.cos(angle) * dist);
+            int z = towerPos.getZ() + (int) Math.round(Math.sin(angle) * dist);
+            // 未加载区块直接跳过：getHeight 对未加载区块会同步加载，塔区块卸载时每天最多 16×batchSize 次
+            if (!world.hasChunkAt(x, z)) continue;
+            int y = world.getHeight(Heightmap.Types.MOTION_BLOCKING, x, z);
+            BlockPos pos = new BlockPos(x, y, z);
+            BlockState ground = world.getBlockState(pos.below());
+            if (!ground.isSolid()) continue;
+            BlockState standing = world.getBlockState(pos);
+            BlockState overhead = world.getBlockState(pos.above());
+            if (!standing.isAir() && !standing.canBeReplaced()) continue;
+            if (!overhead.isAir() && !overhead.canBeReplaced()) continue;
+            return pos;
+        }
+        return null;
+    }
+
+    /**
+     * 在每日正式分配前修复居民位置与建筑名册之间的双向一致性。
+     * <p>
+     * 方法先清空所有居民保存的住房/工作位置，再以各建筑保存的 UUID 名册重建反向
+     * 引用，同时删除已经不存在的居民。住宅名册仍在这里按容量裁剪；工作建筑故意
+     * 不裁剪，因为其 {@link Set} 没有玩家优先语义，随机删除会破坏岗位队列。全部
+     * 工作名册稍后由 {@link #assignWork()} 按容量、资格、保障人数和队列原子重建。
+     *
+     * @param town 当前城镇门面；为兼容既有调用签名保留，当前实现不读取该参数
+     */
     private void residentAllocatingCheck(TeamTown town) {
         // 清空residents里所有居民存储的的house和work位置，之后再加回来，以刷新居民的工作和房屋
         residents.values().forEach(resident -> {
@@ -414,9 +1038,11 @@ public class TeamTownData implements SpecialData{
                 //移除已不存在的居民
                 residentIDs.removeIf(uuid -> !residents.containsKey(uuid));
 
-                //移除超过上限的居民
+                // 住宅在此修剪超额名册；工作建筑稍后由 assignWork 原子重建。
+                // 不能在这里迭代 HashSet 随机删人，否则会绕过玩家队列与居民适配分数。
                 int maxResident = residentBuilding.getMaxResidents();
-                if (residentIDs.size() > maxResident) {
+                if (!(residentBuilding instanceof ITownResidentWorkBuilding)
+                        && residentIDs.size() > maxResident) {
                     Iterator<UUID> iterator = residentIDs.iterator();
                     int removeCount = residentIDs.size() - maxResident;
                     for (int i = 0; i < removeCount && iterator.hasNext(); i++) {
@@ -459,45 +1085,99 @@ public class TeamTownData implements SpecialData{
         }
     }
 
+    /**
+     * 为当天生产生成一份完整、确定性的工作名册。
+     * <p>
+     * 执行顺序如下：
+     * <ol>
+     *     <li>规范化玩家岗位计划，并严格按其中的建筑顺序构造当日岗位输入；</li>
+     *     <li>在清空旧名册前保存上一日岗位，仅作为居民生产力完全相同时的稳定平局条件；</li>
+     *     <li>调用共享纯函数 {@link TownAssignmentModel#plan(List, List, java.util.function.Function, java.util.function.BiPredicate, java.util.function.ToDoubleBiFunction, Comparator)}，先补保障人数，再按最低占用率分配剩余劳动力；</li>
+     *     <li>规划成功后一次性清空居民工作位置和建筑名册，再提交全部新分配；</li>
+     *     <li>汇总保障人数缺口并排入当日阈值事件。</li>
+     * </ol>
+     * 先规划后提交保证计算过程中旧状态保持完整，也确保不合格居民在本次日结算释放
+     * 岗位。采矿和狩猎随后直接使用这份晨间快照，不再运行另一套资格过滤。
+     */
     void assignWork() {
-        Map<UUID, Resident> availableResidents = residents.values().stream().filter(resident->resident.getWorkPos() == null && resident.getHousePos() != null)
-        .collect(Collectors.toMap(Resident::getUUID, t->t));
-        PriorityQueue<ITownResidentWorkBuilding> availableBuildings = buildings.values().stream()
-                .filter(AbstractTownBuilding::isBuildingWorkable)
-                .filter(building -> building instanceof ITownResidentWorkBuilding)
-                .map(building -> (ITownResidentWorkBuilding) building)
-                //.sorted(Comparator.comparingDouble(o -> -o.getResidentPriority()))//PriorityQueue本身就有排序，不需要额外排序
-                .collect(Collectors.toCollection(() -> new PriorityQueue<>(Comparator.comparingDouble(ITownResidentWorkBuilding::getResidentPriority).reversed())));
-
-        Map<ITownResidentWorkBuilding, Map<Resident, Double/*score*/>> buildingResidentScoreCache = new HashMap<>();
-
-        while(!availableBuildings.isEmpty()){
-            ITownResidentWorkBuilding topPriorityBuilding = availableBuildings.poll();
-            if(topPriorityBuilding.getResidentPriority() == Double.NEGATIVE_INFINITY) break;
-            Resident bestResident = null;
-            double bestResidentScore = 0;
-            Map<Resident, Double> residentScoreCache = buildingResidentScoreCache.computeIfAbsent(topPriorityBuilding, a->new HashMap<>());
-            if(availableResidents.isEmpty()){
-                break;
-            }
-            for(Resident resident:availableResidents.values()){
-                if (!topPriorityBuilding.canResidentWork(resident)) {
-                    continue;
-                }
-                double residentScore = residentScoreCache.computeIfAbsent(resident, topPriorityBuilding::getResidentScore);
-                if(residentScore > bestResidentScore){
-                    bestResident = resident;
-                    bestResidentScore = residentScore;
-                }
-            }
-            if(bestResident != null){
-                topPriorityBuilding.addResident(bestResident);
-                availableResidents.remove(bestResident.getUUID());
-                if(topPriorityBuilding.getResidentPriority() != Double.NEGATIVE_INFINITY){
-                    availableBuildings.add(topPriorityBuilding);
-                }
+        TownStaffingPlan plan = getStaffingPlan();
+        Map<BlockPos, ITownResidentWorkBuilding> workBuildings = new LinkedHashMap<>();
+        for (TownStaffingPlan.Entry entry : plan.entries()) {
+            AbstractTownBuilding building = buildings.get(entry.building());
+            if (building instanceof ITownResidentWorkBuilding workBuilding) {
+                workBuildings.put(entry.building(), workBuilding);
             }
         }
+
+        Map<Resident, ITownResidentWorkBuilding> previous = new IdentityHashMap<>();
+        for (Resident resident : residents.values()) {
+            AbstractTownBuilding old = resident.getWorkPos() == null
+                    ? null : buildings.get(resident.getWorkPos());
+            if (old instanceof ITownResidentWorkBuilding workBuilding) {
+                previous.put(resident, workBuilding);
+            }
+        }
+        List<TownAssignmentModel.Workplace<ITownResidentWorkBuilding>> workplaces =
+                new ArrayList<>();
+        for (TownStaffingPlan.Entry entry : plan.entries()) {
+            ITownResidentWorkBuilding building = workBuildings.get(entry.building());
+            if (building != null) {
+                workplaces.add(new TownAssignmentModel.Workplace<>(
+                        building, building.getMaxResidents(), entry.targetWorkers(),
+                        ((AbstractTownBuilding) building).isBuildingWorkable()));
+            }
+        }
+
+        TownAssignmentModel.Plan<Resident, ITownResidentWorkBuilding> result =
+                TownAssignmentModel.plan(
+                        new ArrayList<>(residents.values()), workplaces,
+                        previous::get,
+                        ITownResidentWorkBuilding::canResidentWork,
+                        ITownResidentWorkBuilding::getResidentScore,
+                        Comparator.comparing(Resident::getUUID));
+
+        residents.values().forEach(resident -> resident.setWorkPos(null));
+        for (ITownResidentWorkBuilding building : workBuildings.values()) {
+            if (building instanceof com.teammoeg.frostedheart.content.town.building.AbstractTownResidentWorkBuilding residentWorkBuilding) {
+                residentWorkBuilding.clearResidents();
+            } else {
+                building.getResidentsID().clear();
+            }
+        }
+        result.assignments().forEach(assignment ->
+                assignment.workplace().addResident(assignment.resident()));
+        int targetShortfall = result.workplaces().values().stream()
+                .mapToInt(TownAssignmentModel.WorkplaceStatus::targetShortfall)
+                .sum();
+        queueStaffingTargetCrossing(targetShortfall);
+    }
+
+    /**
+     * 根据本日保障岗位总缺口记录状态穿越，而不是每天重复记录持续状态。
+     * <p>
+     * 缺口从零变为正数时产生 {@code STAFFING_TARGET_UNMET}；从正数回到零时产生
+     * {@code STAFFING_TARGET_RECOVERED}。正数之间的大小变化只更新运行时基线，当前
+     * 界面会直接显示最新缺口，不额外制造重复 Tip。
+     *
+     * @param shortfall 所有有效工作建筑的 {@code max(target-assigned, 0)} 之和
+     */
+    private void queueStaffingTargetCrossing(int shortfall) {
+        int current = Math.max(0, shortfall);
+        if (current > 0 && (lastStaffingTargetShortfall == null
+                || lastStaffingTargetShortfall == 0)) {
+            pendingDailySignals.add(new TownSignalEvent(
+                    -1L, 0, TownSignalEvent.Type.STAFFING_TARGET_UNMET,
+                    TownSignalEvent.Severity.WARNING, current,
+                    "guaranteed staffing target shortfall"));
+        } else if (current == 0 && lastStaffingTargetShortfall != null
+                && lastStaffingTargetShortfall > 0) {
+            pendingDailySignals.add(new TownSignalEvent(
+                    -1L, 0, TownSignalEvent.Type.STAFFING_TARGET_RECOVERED,
+                    TownSignalEvent.Severity.INFORMATION,
+                    lastStaffingTargetShortfall,
+                    "guaranteed staffing targets restored"));
+        }
+        lastStaffingTargetShortfall = current;
     }
 
     void linkMinesToBases() {
@@ -547,7 +1227,7 @@ public class TeamTownData implements SpecialData{
         reloadMaxCapacity();
 
         buildings.values().stream()
-                .filter(AbstractTownBuilding::isBuildingWorkable)
+                .filter(AbstractTownBuilding::shouldRunDailySettlement)
                 .sorted(Comparator.comparingInt(AbstractTownBuilding::getWorkPriority).reversed())
                 .forEach(building -> building.work(teamTown,world));
     }
@@ -695,18 +1375,45 @@ public class TeamTownData implements SpecialData{
     }
 
     /**
-     * 通知所有已注册 GUI：三类数据均可能已变化。由全量同步包在替换实例后调用，
+     * 全量同步包批内 fire 标记 + 单调递增批次号：批内连续回调（建筑→居民→资源）之间
+     * 数据不变（实例替换在 fireClientDataChanged 之前完成），监听器可据此对同一批的
+     * 重复回调去重一次；批号供监听器区分「当前批已求值」与「新一轮批」（纯布尔在
+     * 连续两次全量包之间无增量回调时会残留为真，跳过新一轮求值）。
+     * 仅客户端主线程访问（全量包 enqueueWork / 增量包 handler），无需并发保护。
+     */
+    private static boolean inClientBatchFire = false;
+    private static long clientSyncBatchId = 0;
+
+    public static boolean isInClientBatchFire() {
+        return inClientBatchFire;
+    }
+
+    public static long getClientSyncBatchId() {
+        return clientSyncBatchId;
+    }
+
+    /**
+     * 通知所有已注册 GUI：建筑、居民、资源、历史和岗位计划均可能已变化。
+     * 由全量同步包在替换实例后调用，
      * 保证 GUI 打开瞬间收到的最新全量数据能立即刷新到界面。
      * <p>
-     * Notify all registered GUIs that any of the three categories may have changed.
+     * Notify all registered GUIs that any synchronized town category may have changed.
      * Called by the full-sync packet after the instance is replaced, so the freshest
      * full snapshot is reflected immediately.
      * </p>
      */
     public static void fireClientDataChanged() {
-        fireBuildingsChanged();
-        fireResidentsChanged();
-        fireResourcesChanged();
+        inClientBatchFire = true;
+        clientSyncBatchId++;
+        try {
+            fireBuildingsChanged();
+            fireResidentsChanged();
+            fireResourcesChanged();
+            fireHistoryChanged();
+            fireStaffingChanged();
+        } finally {
+            inClientBatchFire = false;
+        }
     }
 
     private static void fireBuildingsChanged() {
@@ -724,6 +1431,22 @@ public class TeamTownData implements SpecialData{
     private static void fireResourcesChanged() {
         for (ITownDataUpdateListener listener : clientListeners) {
             listener.onResourcesChanged();
+        }
+    }
+
+    private static void fireHistoryChanged() {
+        for (ITownDataUpdateListener listener : clientListeners) {
+            listener.onHistoryChanged();
+        }
+    }
+
+    /**
+     * 通知客户端监听器重新读取权威岗位计划。岗位面板在渲染阶段读取最新数据，因此
+     * 回调无需重建整个页面，也不会丢失滚动或拖拽以外的临时 UI 状态。
+     */
+    private static void fireStaffingChanged() {
+        for (ITownDataUpdateListener listener : clientListeners) {
+            listener.onStaffingChanged();
         }
     }
 
@@ -777,6 +1500,24 @@ public class TeamTownData implements SpecialData{
         fireResourcesChanged();
     }
 
+    /** Client-side authoritative town-name update. */
+    public void applyNameUpdate(String updatedName) {
+        this.name = updatedName;
+    }
+
+    /** Client-side idempotent history merge; retransmitted entries replace by town day. */
+    public void applyHistoryUpdate(TownHistoryEntry entry) {
+        history = new ArrayList<>(TownHistoryModel.upsert(history, entry,
+                FHConfig.SERVER.TOWN.OBSERVATION.historyDays.get()));
+        fireHistoryChanged();
+    }
+
+    /** Client-side history merge paired with the server's persistent town age. */
+    public void applyHistoryUpdate(TownHistoryEntry entry, long updatedTownDay) {
+        townDay = Math.max(0L, updatedTownDay);
+        applyHistoryUpdate(entry);
+    }
+
     /**
      * 全量同步包（{@link com.teammoeg.frostedheart.content.town.network.TeamTownDataS2CPacket}）发出成功后调用：
      * 清空资源值级去重基线，使下一轮 flush 对所有脏资源键强制发包（全量包单播、基线全队共享，
@@ -805,7 +1546,7 @@ public class TeamTownData implements SpecialData{
          * 只覆盖资源层（纯数值比对，每键仅一个 double，内存极小）；建筑/居民的空转
          * fire 由 setter 值守卫（{@link AbstractTownBuilding} / 各子类）在源头拦截。
          */
-        private final Map<ITownResourceKey, Double> lastSyncedResources = new HashMap<>();
+        private final Object2DoubleOpenHashMap<ITownResourceKey> lastSyncedResources = new Object2DoubleOpenHashMap<>();
 
         /**
          * 判断该资源自上次增量同步后是否实际未变。
@@ -815,11 +1556,10 @@ public class TeamTownData implements SpecialData{
          * @return true 表示当前值与上次同步值相同且该键此前已同步过，应跳过发包
          */
         public boolean isResourceUnchanged(ITownResourceKey key, double currentValue) {
-            Double last = lastSyncedResources.get(key);
-            if (last == null) {
+            if (!lastSyncedResources.containsKey(key)) {
                 return false; // 键从未同步过（或此前已归零移除）：视为变化
             }
-            return Math.abs(last - currentValue) < TeamTownResourceHolder.DELTA;
+            return Math.abs(lastSyncedResources.getDouble(key) - currentValue) < TeamTownResourceHolder.DELTA;
         }
 
         /**

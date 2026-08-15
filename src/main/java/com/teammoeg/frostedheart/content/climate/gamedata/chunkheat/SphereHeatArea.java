@@ -52,13 +52,8 @@ public class SphereHeatArea extends CubicHeatArea {
 
     @Override
     public boolean isEffective(int x, int y, int z) {
-        int dx = x - getCenterX();
-        int dy = y - getCenterY();
-        int dz = z - getCenterZ();
-        if (dx < -r || dx > r || dy < -r || dy > r || dz < -r || dz > r)
-            return false;
-        long d2 = (long)dx * dx + (long)dy * dy + (long)dz * dz;
-        return d2 <= (long)r * r;
+        return SphericalHeatFieldModel.contains(
+                getCenterX(), getCenterY(), getCenterZ(), r, x, y, z);
     }
 
     @Override

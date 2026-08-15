@@ -30,6 +30,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.trade.FHVillagerData;
+import com.teammoeg.frostedheart.content.trade.VillagerDataHolder;
 import com.teammoeg.frostedheart.content.trade.policy.snapshot.PolicySnapshot;
 import com.teammoeg.chorda.io.SerializeUtil;
 import com.teammoeg.chorda.util.CRegistryHelper;
@@ -159,6 +160,10 @@ public class TradePolicy extends IESerializableRecipe {
         PolicySnapshot ps = new PolicySnapshot();
         ps.maxExp = this.getExp(ve.getTradeLevel());
         this.CollectPolicies(ps, ve,Integer.MAX_VALUE);
+        // 儿童商贩：交易商品种类减半
+        if (ve.parent instanceof VillagerDataHolder vdh && vdh.isChildTrader()) {
+            ps.trimTradesToHalf();
+        }
         return ps;
     }
 

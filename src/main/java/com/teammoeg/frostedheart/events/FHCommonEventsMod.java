@@ -92,6 +92,11 @@ public class FHCommonEventsMod {
 				.add(Attributes.MOVEMENT_SPEED, 0.2F)
 				.add(Attributes.ATTACK_DAMAGE, 2.0D)
 				.build());
+		// 假居民仅作客户端渲染代理，属性表只为满足 Mob 构造要求 / Fake citizen is a client render proxy; attributes only satisfy the Mob constructor
+		event.put(FHEntityTypes.FAKE_CITIZEN.get(), Mob.createMobAttributes()
+				.add(Attributes.MAX_HEALTH, 20.0D)
+				.add(Attributes.MOVEMENT_SPEED, 0.0D)
+				.build());
 	}
 
 	@SubscribeEvent

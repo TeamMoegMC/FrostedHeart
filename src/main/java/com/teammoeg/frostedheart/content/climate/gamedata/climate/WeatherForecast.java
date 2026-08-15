@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.function.LongFunction;
 
 import com.teammoeg.frostedheart.content.climate.WorldTemperature;
+import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 
 import lombok.Getter;
 
@@ -63,12 +64,15 @@ public class WeatherForecast {
         }
     }
 
-    private static int getTemperatureLevel(float temp) {
-        if (temp >= WorldTemperature.WARM_PERIOD_PEAK-WorldTemperature.FORECAST_SENSITIVE_THERSOLD*2) {
+    public static int getTemperatureLevel(float temp) {
+        if (temp >= FHConfig.SERVER.CLIMATE.warmPeakCelsius.get()
+                - FHConfig.SERVER.CLIMATE.forecastSensitivityCelsius.get() * 2) {
             return 1;
         } else if (temp <= -2) {
-            for (int j = WorldTemperature.BOTTOMS.length - 1; j >= 0; j--) {//check out its level
-                float b = WorldTemperature.BOTTOMS[j]+WorldTemperature.FORECAST_SENSITIVE_THERSOLD;
+            float[] bottoms = forecastBottoms();
+            for (int j = bottoms.length - 1; j >= 0; j--) {//check out its level
+                float b = bottoms[j]
+                        + FHConfig.SERVER.CLIMATE.forecastSensitivityCelsius.get().floatValue();
                 if (temp < b) {//just acrosss a level
                     return -j - 1;
                 }
@@ -79,22 +83,38 @@ public class WeatherForecast {
     private static float getLevelTemperature(int level) {
     	if(level>0) {
 	    	switch(level) {
-	    	case 2:return WorldTemperature.WARM_PERIOD_PEAK;
+			case 2:return FHConfig.SERVER.CLIMATE.warmPeakCelsius.get().floatValue();
 	    	case 1:return WorldTemperature.WARM_PERIOD_LOWER_PEAK;
 	    	default:return 0;
 	    	}
     	}else if(level==0)
     		return 0;
-    	return WorldTemperature.BOTTOMS[-level-1];
+	    return forecastBottoms()[-level-1];
+    }
+
+    private static float[] forecastBottoms() {
+        return new float[]{
+                FHConfig.SERVER.CLIMATE.coldBottomNormalCelsius.get().floatValue(),
+                FHConfig.SERVER.CLIMATE.coldBottomStrongCelsius.get().floatValue(),
+                FHConfig.SERVER.CLIMATE.coldBottomSevereCelsius.get().floatValue(),
+                FHConfig.SERVER.CLIMATE.coldBottomExtremeCelsius.get().floatValue(),
+                WorldTemperature.COLD_PERIOD_BOTTOM_T6,
+                WorldTemperature.COLD_PERIOD_BOTTOM_T7,
+                WorldTemperature.COLD_PERIOD_BOTTOM_T8,
+                WorldTemperature.COLD_PERIOD_BOTTOM_T9,
+                WorldTemperature.COLD_PERIOD_BOTTOM_T10
+        };
     }
     private static float getLevelMaxThresold(float temp) {
-    	return temp+10-WorldTemperature.FORECAST_SENSITIVE_THERSOLD;
+        return temp + 10
+                - FHConfig.SERVER.CLIMATE.forecastSensitivityCelsius.get().floatValue();
     }
     private static float getLevelMinThresold(float temp) {
-    	int delta=10;
-    	if(temp>0)
-    		delta=8;
-    	return temp-delta+WorldTemperature.FORECAST_SENSITIVE_THERSOLD;
+        int delta=10;
+        if(temp>0)
+            delta=8;
+        return temp - delta
+                + FHConfig.SERVER.CLIMATE.forecastSensitivityCelsius.get().floatValue();
     }
     public static List<ForecastFrame> getFrames(Iterable<ClimateResult> futureTemp,ClimateResult lastClimate,int nframes) {
         List<ForecastFrame> frames = new ArrayList<>();

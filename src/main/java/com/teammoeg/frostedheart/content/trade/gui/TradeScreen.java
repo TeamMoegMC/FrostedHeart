@@ -183,7 +183,9 @@ public class TradeScreen extends MenuPrimaryLayer<TradeContainer> {
 		ptf.setPos(0, 119);
 		super.add(ptf);
 		TextField vptf = new TextField(this).centerV().centerH().shadow().setMaxWidth(56).setMinWidth(56)
-			.setMaxLines(1).setText(Lang.translateGui("trade.profession." + menu.data.policytype));
+			.setMaxLines(1).setText(menu.data.policytype != null
+					? Lang.translateGui("trade.profession." + menu.data.policytype)
+					: Lang.translateGui("trade.citizen"));
 		vptf.setPos(132, 119);
 		super.add(vptf);
 
@@ -251,8 +253,10 @@ public class TradeScreen extends MenuPrimaryLayer<TradeContainer> {
 		}
 		InventoryScreen.renderEntityInInventoryFollowsMouse(matrixStack, x + 28, y + 115, 30, (float) ((x + 8) - this.getMouseX()),
 			(float) ((y + 75 - 50) - this.getMouseY()), ClientUtils.getPlayer());
-		InventoryScreen.renderEntityInInventoryFollowsMouse(matrixStack, x + 160, y + 115, 30, (float) ((x + 140) - this.getMouseX()),
-			(float) ((y + 75 - 50) - this.getMouseY()), menu.data.parent);
+		// 无实体村民（居民系统数据居民）占位符：不渲染实体，跳过
+		if (menu.data.parent != null)
+			InventoryScreen.renderEntityInInventoryFollowsMouse(matrixStack, x + 160, y + 115, 30, (float) ((x + 140) - this.getMouseX()),
+				(float) ((y + 75 - 50) - this.getMouseY()), menu.data.parent);
 	}
 
 	@Override

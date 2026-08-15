@@ -24,6 +24,7 @@ import com.mojang.serialization.codecs.RecordCodecBuilder;
 
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.town.ITownWithResidents;
+import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import com.teammoeg.frostedheart.content.town.building.ITownResidentWorkBuilding;
 import com.teammoeg.frostedheart.content.town.buildings.hunting.HuntingBaseBuilding;
 import com.teammoeg.frostedheart.content.town.buildings.mine.MineBaseBuilding;
@@ -32,6 +33,7 @@ import com.teammoeg.frostedheart.content.town.event.TownResidentChangeEvent;
 import com.teammoeg.chorda.io.CodecUtil;
 import com.teammoeg.chorda.io.SerializeUtil;
 import com.teammoeg.chorda.math.CMath;
+import it.unimi.dsi.fastutil.objects.Object2DoubleOpenHashMap;
 
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -51,7 +53,14 @@ import java.util.*;
  * For the actual entity, see {@link ResidentEntity}.
  */
 public class Resident {
-    public static final double MAX_WORK_PROFICIENCY = 100.0;
+    /** 年龄组：0 幼儿（无生产力，不参与劳动） */
+    public static final int AGE_INFANT = 0;
+    /** 年龄组：1 儿童（可劳动，属性可成长到高于成年难民的上限） */
+    public static final int AGE_CHILD = 1;
+    /** 年龄组：2 青壮年（劳动力，属性极慢增长），默认值，兼容旧存档 */
+    public static final int AGE_ADULT = 2;
+    /** 年龄组：3 老人（力量萎缩、智力更高、初始熟练度更高），只天然刷新不会成长而来 */
+    public static final int AGE_ELDER = 3;
 	public static final Codec<Resident> CODEC=RecordCodecBuilder.create(t->t.group(
             Codec.STRING.fieldOf("firstName").forGetter(o->o.firstName),
             Codec.STRING.fieldOf("lastName").forGetter(o->o.lastName),
@@ -63,10 +72,12 @@ public class Resident {
             Codec.INT.optionalFieldOf("educationLevel",0).forGetter(o->o.educationLevel),
             CodecUtil.mapCodec("type", Codec.STRING, "proficiency", Codec.DOUBLE).optionalFieldOf("workProficiency",Map.of()).forGetter(o->o.workProficiency),
             BlockPos.CODEC.optionalFieldOf("housePos").forGetter(o-> Optional.ofNullable(o.housePos)),
-            BlockPos.CODEC.optionalFieldOf("workPos").forGetter(o-> Optional.ofNullable(o.workPos))
+            BlockPos.CODEC.optionalFieldOf("workPos").forGetter(o-> Optional.ofNullable(o.workPos)),
+            Codec.INT.optionalFieldOf("age",AGE_ADULT).forGetter(o->o.age),
+            Codec.INT.optionalFieldOf("ageDays",0).forGetter(o->o.ageDays)
 		).apply(t, Resident::new));
 
-    public Resident(String firstName, String lastName, UUID uuid, double health, double mental, double strength, double intelligence, int educationLevel, Map<String, Double> workProficiency, Optional<BlockPos> housePos, Optional<BlockPos> workPos) {
+    public Resident(String firstName, String lastName, UUID uuid, double health, double mental, double strength, double intelligence, int educationLevel, Map<String, Double> workProficiency, Optional<BlockPos> housePos, Optional<BlockPos> workPos, int age, int ageDays) {
         setFirstName(firstName);
         setLastName(lastName);
         setUuid(uuid);
@@ -75,6 +86,8 @@ public class Resident {
         setStrength(strength);
         setIntelligence(intelligence);
         setEducationLevel(educationLevel);
+        setAge(age);
+        setAgeDays(ageDays);
         if(workProficiency!=null){
             workProficiency.forEach((key, value) ->
                     this.workProficiency.put(key, normalizeWorkProficiency(value)));
@@ -97,6 +110,39 @@ public class Resident {
         if (this.changeListener != null) {
             this.changeListener.onResidentChange(new TownResidentChangeEvent(this, this.uuid));
         }
+    }
+
+    // ===== 居民模拟绑定（transient，不被 codec 序列化；重启后由城镇接管 rebind 重建）=====
+    // (transient, not codec-serialized; rebuilt by the town takeover rebind after restart)
+    @Getter(AccessLevel.NONE)
+    private transient int simId = -1;
+
+    /**
+     * 该居民绑定的模拟条目 id；-1 = 未绑定（尚未被模拟系统接管）。
+     * 单一居民概念：城镇数据里的 Resident 就是模拟居民，此 id 是它在
+     * 模拟中的会话/网络键（反向绑定在模拟条目的 uuidHi/uuidLo）。
+     * <p>
+     * The sim entry id this resident is bound to; -1 = unbound.
+     * One resident concept: the Resident in town data IS the simulated citizen;
+     * this id is its session/wire key in the simulation (the reverse binding
+     * lives in the sim entry's uuidHi/uuidLo).
+     *
+     * @return 模拟条目 id / sim entry id
+     */
+    public int getSimId() {
+        return this.simId;
+    }
+
+    /**
+     * 设置模拟绑定（仅由城镇模拟数据 TownSimData 的事件回调与接管恢复调用）。
+     * <p>
+     * Sets the sim binding (called only by the town sim data's event callbacks
+     * and takeover restore).
+     *
+     * @param simId 模拟条目 id；-1 解除 / sim entry id; -1 unbinds
+     */
+    public void setSimId(int simId) {
+        this.simId = simId;
     }
 
     public void setFirstName(String firstName) {
@@ -140,7 +186,7 @@ public class Resident {
      *  Key: clazz.getSimpleName() of Building class
      */
     @Getter
-    private final Map<String, Double> workProficiency = new HashMap<>();
+    private final Object2DoubleOpenHashMap<String> workProficiency = new Object2DoubleOpenHashMap<>();
     private transient final Set<String> proficiencyGainedToday = new HashSet<>();
     //the pos of the HouseBlock that the resident is living in
     @Nullable
@@ -150,9 +196,28 @@ public class Resident {
     @Nullable
     @Getter
     private BlockPos workPos;
+    /** 年龄组：0 幼儿 / 1 儿童 / 2 青壮年 / 3 老人。默认青壮年，兼容旧存档。 */
+    @Getter
+    private int age = AGE_ADULT;
+    /** 出生后经过的天数，每日结算 +1，用于幼儿→儿童→青壮年的成长判定。 */
+    @Getter
+    private int ageDays = 0;
 
     public Resident(String firstName, String lastName) {
         this(firstName, lastName, UUID.randomUUID());
+    }
+
+    public Resident(String firstName, String lastName, int age, int ageDays) {
+        this(firstName, lastName, UUID.randomUUID(), age, ageDays);
+    }
+
+    public Resident(String firstName, String lastName, UUID uuid, int age, int ageDays) {
+        setFirstName(firstName);
+        setLastName(lastName);
+        setUuid(uuid);
+        setAge(age);
+        setAgeDays(ageDays);
+        initializeAttributesForAge(age);
     }
 
     //public Resident() {
@@ -166,14 +231,14 @@ public class Resident {
         setFirstName(firstName);
         setLastName(lastName);
         setUuid(uuid);
-        initializeAdultAttributesAndExperience();
+        initializeAttributesForAge(AGE_ADULT);
     }
 
     public Resident (String firstName, String lastName, String uuid){
         this(firstName,lastName,UUID.fromString(uuid));
     }
 
-    public Resident(String firstName, String lastName, UUID uuid, double health, double mental, double strength, double intelligence, int educationLevel, Map<String, Double> workProficiency, BlockPos housePos, BlockPos workPos) {
+    public Resident(String firstName, String lastName, UUID uuid, double health, double mental, double strength, double intelligence, int educationLevel, Map<String, Double> workProficiency, BlockPos housePos, BlockPos workPos, int age, int ageDays) {
         setFirstName(firstName);
         setLastName(lastName);
         setUuid(uuid);
@@ -182,6 +247,8 @@ public class Resident {
         setStrength(strength);
         setIntelligence(intelligence);
         setEducationLevel(educationLevel);
+        setAge(age);
+        setAgeDays(ageDays);
         if(workProficiency!=null){
             workProficiency.forEach((key, value) ->
                     this.workProficiency.put(key, normalizeWorkProficiency(value)));
@@ -205,14 +272,14 @@ public class Resident {
 
     public double getWorkProficiency(Class<? extends ITownResidentWorkBuilding> type) {
         String key = type.getSimpleName();
-        Double storedProficiency = workProficiency.get(key);
-        if (storedProficiency == null) {
-            double generatedProficiency = generateRandomProficiency();
+        if (!workProficiency.containsKey(key)) {
+            double generatedProficiency = generateRandomProficiencyForAge();
             workProficiency.put(key, generatedProficiency);
             fireChange();
             return generatedProficiency;
         }
 
+        double storedProficiency = workProficiency.getDouble(key);
         double proficiency = normalizeWorkProficiency(storedProficiency);
         if (Double.compare(storedProficiency, proficiency) != 0) {
             workProficiency.put(key, proficiency);
@@ -237,7 +304,10 @@ public class Resident {
         }
 
         double gain = ResidentAttributeModel.calculateDailyProficiencyGain(
-                currentProficiency, growthAtZero, minimumGrowth);
+                currentProficiency,
+                growthAtZero,
+                minimumGrowth,
+                FHConfig.SERVER.TOWN.RESIDENT_PROGRESSION.maximumWorkProficiency.get());
         if (gain <= 0.0) {
             return currentProficiency;
         }
@@ -291,6 +361,8 @@ public class Resident {
         data.putDouble("strength", strength);
         data.putDouble("intelligence", intelligence);
         data.putInt("educationLevel", educationLevel);
+        data.putInt("age", age);
+        data.putInt("ageDays", ageDays);
         data.put("workProficiency", SerializeUtil.toNBTMap(workProficiency.entrySet(), (entry, compoundNBTBuilder) -> compoundNBTBuilder.putDouble(entry.getKey(), entry.getValue())));
         if (workPos != null) {
             data.putLong("workPos", workPos.asLong());
@@ -317,6 +389,15 @@ public class Resident {
                 ? data.getDouble("intelligence")
                 : 50.0;
         int rawEducationLevel = data.getInt("educationLevel");
+        int rawAge = data.contains("age", Tag.TAG_ANY_NUMERIC)
+                ? data.getInt("age")
+                : AGE_ADULT;
+        int rawAgeDays = data.contains("ageDays", Tag.TAG_ANY_NUMERIC)
+                ? data.getInt("ageDays")
+                : 0;
+        // 先应用年龄，使下方的 initializeMissingWorkProficiencies 能按年龄生成熟练度
+        setAge(rawAge);
+        setAgeDays(rawAgeDays);
 
         CompoundTag workProficiencyNBT = data.getCompound("workProficiency");
         workProficiency.clear();
@@ -356,7 +437,17 @@ public class Resident {
             FHMain.LOGGER.error("Resident.deserialize: Invalid educationLevel value {} for resident {} {}, setting to 0", rawEducationLevel, firstName, lastName);
             rawEducationLevel = 0;
         }
+        if (rawAge < AGE_INFANT || rawAge > AGE_ELDER) {
+            FHMain.LOGGER.error("Resident.deserialize: Invalid age value {} for resident {} {}, setting to 2", rawAge, firstName, lastName);
+            rawAge = AGE_ADULT;
+        }
+        if (rawAgeDays < 0) {
+            FHMain.LOGGER.error("Resident.deserialize: Invalid ageDays value {} for resident {} {}, setting to 0", rawAgeDays, firstName, lastName);
+            rawAgeDays = 0;
+        }
 
+        setAge(rawAge);
+        setAgeDays(rawAgeDays);
         setHealth(rawHealth);
         setMental(rawMental);
         setStrength(rawStrength);
@@ -375,6 +466,18 @@ public class Resident {
     public void setWorkPos(BlockPos pos){
         if (Objects.equals(this.workPos, pos)) return;
         this.workPos = pos;
+        fireChange();
+    }
+
+    public void setAge(int age) {
+        if (this.age == age) return;
+        this.age = age;
+        fireChange();
+    }
+
+    public void setAgeDays(int ageDays) {
+        if (this.ageDays == ageDays) return;
+        this.ageDays = ageDays;
         fireChange();
     }
 
@@ -429,6 +532,24 @@ public class Resident {
         setStrength(Math.min(100, strength + amount));
     }
 
+    /**
+     * 每日属性成长：低于上限时按日增长量增加，封顶在 cap（≤100）。
+     */
+    public void growStrengthDaily(double gain, double cap) {
+        if (gain > 0 && this.strength < cap) {
+            setStrength(Math.min(cap, strength + gain));
+        }
+    }
+
+    /**
+     * 老人每日力量萎缩：不低于 floor。
+     */
+    public void decayStrengthDaily(double decay, double floor) {
+        if (decay > 0 && this.strength > floor) {
+            setStrength(Math.max(floor, strength - decay));
+        }
+    }
+
     public void setIntelligence(double intelligence) {
         if (intelligence < 0 || intelligence > 100) {
             throw new IllegalArgumentException("Intelligence must be between 0 and 100");
@@ -444,6 +565,15 @@ public class Resident {
 
     public void addIntelligence(double amount) {
         setIntelligence(Math.min(100, intelligence + amount));
+    }
+
+    /**
+     * 每日属性成长：低于上限时按日增长量增加，封顶在 cap（≤100）。
+     */
+    public void growIntelligenceDaily(double gain, double cap) {
+        if (gain > 0 && this.intelligence < cap) {
+            setIntelligence(Math.min(cap, intelligence + gain));
+        }
     }
 
     public void setEducationLevel(int educationLevel) {
@@ -465,7 +595,7 @@ public class Resident {
 
     @Override
     public String toString() {
-        return firstName + " " + lastName;
+        return lastName.isEmpty() ? firstName : firstName + " " + lastName;
     }
 
     @Override
@@ -481,30 +611,127 @@ public class Resident {
         return uuid.hashCode();
     }
 
-    private void initializeAdultAttributesAndExperience() {
-        setStrength(ResidentAttributeModel.generateAdultAttribute(CMath.RANDOM::nextDouble));
-        setIntelligence(ResidentAttributeModel.generateAdultAttribute(CMath.RANDOM::nextDouble));
+    /**
+     * 按年龄组初始化力量/智商（幼儿低、儿童中等、老人力量低智力高）与初始工作熟练度。
+     * 青壮年沿用原有成人属性生成，分布不变。
+     */
+    private void initializeAttributesForAge(int age) {
+        ResidentGenerationModel.Parameters parameters = generationParametersFromConfig();
+        ResidentGenerationModel.AttributeCenters centers = parameters.centers(age);
+        double spread = age == AGE_ADULT
+                ? parameters.adultAttributeSpread() : parameters.nonAdultAttributeSpread();
+        setHealth(parameters.initialHealth());
+        setMental(parameters.initialMental());
+        setStrength(ResidentAttributeModel.generateAttribute(
+                CMath.RANDOM::nextDouble, centers.strength(), spread,
+                parameters.attributeSampleCount()));
+        setIntelligence(ResidentAttributeModel.generateAttribute(
+                CMath.RANDOM::nextDouble, centers.intelligence(), spread,
+                parameters.attributeSampleCount()));
         initializeMissingWorkProficiencies();
     }
 
     private void initializeMissingWorkProficiencies() {
-        workProficiency.computeIfAbsent(
-                HuntingBaseBuilding.class.getSimpleName(),
-                ignored -> generateRandomProficiency());
-        workProficiency.computeIfAbsent(
-                MineBaseBuilding.class.getSimpleName(),
-                ignored -> generateRandomProficiency());
+        // fastutil 的原语 computeIfAbsent 重载会无条件插入且与 Map 重载构成歧义，改用显式判键
+        if (!workProficiency.containsKey(HuntingBaseBuilding.class.getSimpleName())) {
+            workProficiency.put(HuntingBaseBuilding.class.getSimpleName(), generateRandomProficiencyForAge());
+        }
+        if (!workProficiency.containsKey(MineBaseBuilding.class.getSimpleName())) {
+            workProficiency.put(MineBaseBuilding.class.getSimpleName(), generateRandomProficiencyForAge());
+        }
     }
 
-    private static double generateRandomProficiency() {
-        return ResidentAttributeModel.generateInitialWorkProficiency(CMath.RANDOM::nextDouble);
+    /**
+     * 初始熟练度按年龄分发：幼儿 0、儿童上限 25、老人 [50,100]、青壮年 [0,50]。
+     */
+    private double generateRandomProficiencyForAge() {
+        return ResidentGenerationModel.generateProficiency(
+                age, CMath.RANDOM::nextDouble, generationParametersFromConfig());
     }
 
     private static double normalizeWorkProficiency(double proficiency) {
         if (!Double.isFinite(proficiency)) {
             return 0.0;
         }
-        return Math.max(0.0, Math.min(MAX_WORK_PROFICIENCY, proficiency));
+        return Math.max(0.0, Math.min(
+                FHConfig.SERVER.TOWN.RESIDENT_PROGRESSION.maximumWorkProficiency.get(),
+                proficiency));
+    }
+
+    /**
+     * 招募时按年龄组在其合法天数区间内随机取一个年龄，使成长进度自然：
+     * 幼儿 [0, infantToChildDays)、儿童 [infantToChildDays, childToAdultDays)、
+     * 青壮年/老人 childToAdultDays 后再多 0-10 年。
+     */
+    public static int randomAgeDaysForAge(int age) {
+        return ResidentGenerationModel.randomAgeDays(
+                age, CMath.RANDOM::nextInt, generationParametersFromConfig());
+    }
+
+    /**
+     * 年龄组对应的语言文件键，供 UI 显示年龄。
+     */
+    public static String ageLangKey(int age) {
+        return switch (age) {
+            case AGE_INFANT -> "gui.frostedheart.resident_age.infant";
+            case AGE_CHILD -> "gui.frostedheart.resident_age.child";
+            case AGE_ELDER -> "gui.frostedheart.resident_age.elder";
+            default -> "gui.frostedheart.resident_age.adult";
+        };
+    }
+
+    /**
+     * 寒流天气下刷新的"高质量低血量"难民招募后应用加成：
+     * 力量/智商更高、初始工作熟练度更高，但血量更低（20-40）。
+     */
+    public void applyColdSurvivorBuffs() {
+        FHConfig.Server.Town.ResidentGeneration generation =
+                FHConfig.SERVER.TOWN.RESIDENT_GENERATION;
+        double minimumHealth = Math.min(
+                generation.coldSurvivorHealthMinimum.get(),
+                generation.coldSurvivorHealthMaximum.get());
+        double maximumHealth = Math.max(
+                generation.coldSurvivorHealthMinimum.get(),
+                generation.coldSurvivorHealthMaximum.get());
+        setHealth(minimumHealth
+                + (maximumHealth - minimumHealth) * CMath.RANDOM.nextDouble());
+        addStrength(generation.coldSurvivorAttributeBonus.get());
+        addIntelligence(generation.coldSurvivorAttributeBonus.get());
+        workProficiency.replaceAll((key, value) -> normalizeWorkProficiency(
+                value * generation.coldSurvivorProficiencyMultiplier.get()));
+        fireChange();
+    }
+
+    private static ResidentGenerationModel.Parameters generationParametersFromConfig() {
+        FHConfig.Server.Town.ResidentGeneration generation =
+                FHConfig.SERVER.TOWN.RESIDENT_GENERATION;
+        FHConfig.Server.Town.ResidentAging aging = FHConfig.SERVER.TOWN.RESIDENT_AGING;
+        FHConfig.Server.Town.RefugeeSpawn spawn = FHConfig.SERVER.TOWN.REFUGEE_SPAWN;
+        return new ResidentGenerationModel.Parameters(
+                generation.initialHealth.get(), generation.initialMental.get(),
+                generation.attributeSampleCount.get(),
+                new ResidentGenerationModel.AttributeCenters(
+                        generation.infantStrengthCenter.get(), generation.infantIntelligenceCenter.get()),
+                new ResidentGenerationModel.AttributeCenters(
+                        generation.childStrengthCenter.get(), generation.childIntelligenceCenter.get()),
+                new ResidentGenerationModel.AttributeCenters(
+                        generation.adultStrengthCenter.get(), generation.adultIntelligenceCenter.get()),
+                new ResidentGenerationModel.AttributeCenters(
+                        generation.elderStrengthCenter.get(), generation.elderIntelligenceCenter.get()),
+                generation.nonAdultAttributeSpread.get(), generation.adultAttributeSpread.get(),
+                generation.infantInitialProficiency.get(),
+                generation.childMaximumInitialProficiency.get(),
+                generation.adultMaximumInitialProficiency.get(),
+                generation.elderMinimumInitialProficiency.get(),
+                generation.elderMaximumInitialProficiency.get(),
+                aging.infantToChildDays.get(), aging.childToAdultDays.get(),
+                generation.adultAgeRangeDaysExclusive.get(),
+                new ResidentGenerationModel.AgeWeights(
+                        spawn.weightInfant.get(), spawn.weightChild.get(),
+                        spawn.weightAdult.get(), spawn.weightElder.get()),
+                new ResidentGenerationModel.AgeWeights(
+                        generation.fallbackWeightInfant.get(), generation.fallbackWeightChild.get(),
+                        generation.fallbackWeightAdult.get(), generation.fallbackWeightElder.get()));
     }
 
 }

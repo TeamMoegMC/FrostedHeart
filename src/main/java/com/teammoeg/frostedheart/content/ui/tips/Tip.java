@@ -28,6 +28,7 @@ import com.teammoeg.chorda.client.ClickActions;
 import com.teammoeg.chorda.math.Colors;
 import com.teammoeg.frostedheart.FHMain;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
 import org.slf4j.Logger;
 
@@ -56,7 +57,8 @@ public record Tip(
         List<String> children,
         ClickActions.ClickAction clickAction,
         Display display,
-        boolean temporary
+        boolean temporary,
+        List<Component> runtimeContents
 ) {
     public static final Codec<Tip> CODEC = RecordCodecBuilder.create(instance -> instance.group(
             Codec.STRING.fieldOf("id").forGetter(Tip::id),
@@ -102,7 +104,8 @@ public record Tip(
                 new ArrayList<>(children == null ? List.of() : children),
                 clickAction,
                 display,
-                false);
+                false,
+                List.of());
     }
     Tip(String id, Collection<String> contents, String category, Optional<ResourceLocation> image, String nextTip, Collection<String> unlocks, Collection<String> children, ClickActions.ClickAction clickAction, Display display) {
         this(id,
@@ -114,12 +117,20 @@ public record Tip(
                 new ArrayList<>(children == null ? List.of() : children),
                 clickAction,
                 display,
-                false);
+                false,
+                List.of());
+    }
+
+    /** Runtime-only rich contents; omitted from CODEC and all persisted tip state. */
+    public List<Component> displayContents() {
+        if (!runtimeContents.isEmpty()) return runtimeContents;
+        return contents.stream().map(Component::translatable).map(Component.class::cast).toList();
     }
 
     public Builder copy() {
         return new Builder(TipHelper.randomString())
                 .contents(contents)
+                .components(runtimeContents)
                 .children(children)
                 .unlocks(unlocks)
                 .category(category)
@@ -136,6 +147,7 @@ public record Tip(
         }
         return new Builder(newId)
                 .contents(contents)
+                .components(runtimeContents)
                 .children(children)
                 .unlocks(unlocks)
                 .category(category)
@@ -153,6 +165,7 @@ public record Tip(
     public static class Builder {
         private final String id;
         private final List<String> contents = new ArrayList<>();
+        private final List<Component> runtimeContents = new ArrayList<>();
         private final List<String> children = new ArrayList<>();
         private final List<String> unlocks = new ArrayList<>();
         private String category = "";
@@ -181,6 +194,16 @@ public record Tip(
 
         public Builder contents(Collection<String> contents) {
             this.contents.addAll(contents);
+            return this;
+        }
+
+        public Builder components(Component... contents) {
+            this.runtimeContents.addAll(List.of(contents));
+            return this;
+        }
+
+        public Builder components(Collection<Component> contents) {
+            this.runtimeContents.addAll(contents);
             return this;
         }
 
@@ -315,7 +338,8 @@ public record Tip(
                     new ArrayList<>(children),
                     clickAction,
                     new Display(displayItems, displayTime, fontColor, backgroundColor, alwaysVisible, onceOnly, hide, pin),
-                    temporary);
+                    temporary,
+                    new ArrayList<>(runtimeContents));
         }
     }
 }

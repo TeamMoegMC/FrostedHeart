@@ -2,6 +2,8 @@ package com.teammoeg.frostedheart.content.town.building;
 
 import com.teammoeg.frostedheart.content.town.ITownWithResidents;
 import com.teammoeg.frostedheart.content.town.resident.Resident;
+import com.teammoeg.frostedheart.content.town.resident.ResidentDailyModel;
+import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 
 import java.util.Collection;
 import java.util.UUID;
@@ -34,7 +36,26 @@ public interface ITownResidentWorkBuilding extends ITownResidentBuilding {
      * <br>
      * 这个方法不应直接调用下面的那个同名方法，以避免重复读取nbt中的数据。
      */
-    double getResidentPriority();
+    /**
+     * @deprecated Staffing priority is now the town-level ordered
+     * {@code TownStaffingPlan}; this compatibility formula is ignored by the
+     * daily planner.
+    */
+    @Deprecated(forRemoval = true)
+    default double getResidentPriority() {
+        return 0.0;
+    }
+
+    /**
+     * Priority at an explicit worker count. Implementations with count-based
+     * priorities override this so the pure assignment model can plan a whole
+     * morning without mutating buildings between comparisons.
+     */
+    /** @deprecated See {@link #getResidentPriority()}. */
+    @Deprecated(forRemoval = true)
+    default double getResidentPriority(int residentCount) {
+        return getResidentPriority();
+    }
 
     /**
      * 获取居民在此种类工作方块工作的适合程度。
@@ -49,10 +70,16 @@ public interface ITownResidentWorkBuilding extends ITownResidentBuilding {
      * 可在子类覆写此方法，以对不同的工作设置工作条件。
      */
     default boolean canResidentWork(Resident resident){
-        if(resident.getHealth() <= 10) return false;
-        if(resident.getMental() <= 5) return false;
-        if(resident.getHousePos() == null) return false;
-        return true;
+        FHConfig.Server.Town.ResidentRules config = FHConfig.SERVER.TOWN.RESIDENT_RULES;
+        return ResidentDailyModel.canWork(
+                resident.getAge(),
+                resident.getHealth(),
+                resident.getMental(),
+                resident.getHousePos() != null,
+                config.minimumWorkingAge.get(),
+                config.minimumWorkingHealthExclusive.get(),
+                config.minimumWorkingMentalExclusive.get(),
+                config.workRequiresHousing.get());
     }
 
     /**
@@ -61,6 +88,8 @@ public interface ITownResidentWorkBuilding extends ITownResidentBuilding {
      * <br>
      * 此方法无需在子类覆写。
      */
+    /** @deprecated The daily planner reassesses every resident atomically. */
+    @Deprecated(forRemoval = true)
     default boolean canResidentBeAssigned(Resident resident){
         if(resident.getWorkPos() == null) return true;
         return canResidentWork(resident);

@@ -1,0 +1,21 @@
+{
+  "replace": false,
+  "values": [
+    "frostedheart:raw_rye_bread",
+    "frostedheart:sawdust",
+    "minecraft:allium",
+    "minecraft:bone",
+    "minecraft:brown_mushroom",
+    "minecraft:cake",
+    "minecraft:carved_pumpkin",
+    "minecraft:chicken",
+    "minecraft:honeycomb",
+    "minecraft:kelp",
+    "minecraft:poisonous_potato",
+    "minecraft:pufferfish",
+    "minecraft:pumpkin",
+    "minecraft:red_mushroom",
+    "minecraft:rotten_flesh",
+    "minecraft:spider_eye"
+  ]
+}

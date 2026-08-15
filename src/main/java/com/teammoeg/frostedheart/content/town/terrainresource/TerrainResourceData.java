@@ -21,12 +21,12 @@ package com.teammoeg.frostedheart.content.town.terrainresource;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import it.unimi.dsi.fastutil.objects.Object2DoubleOpenHashMap;
 import lombok.Getter;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.ChunkPos;
 
 import javax.annotation.Nullable;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
@@ -147,7 +147,7 @@ public class TerrainResourceData {
         .forGetter(o -> o.extractedResources)
         ).apply(ins, ChunkResourceTracker::new));
 
-        private Map<ChunkPos, Double> extractedResources = new HashMap<>();
+        private Object2DoubleOpenHashMap<ChunkPos> extractedResources = new Object2DoubleOpenHashMap<>();
 
         private transient Set<ChunkPos> activeChunks = new HashSet<>(); // 临时计算，不持久化
 
@@ -157,7 +157,7 @@ public class TerrainResourceData {
             // Codec map decoders may return an immutable map. The tracker updates this
             // collection every time a mine extracts resources, so keep an owned,
             // mutable copy after loading.
-            this.extractedResources = new HashMap<>(extractedResources);
+            this.extractedResources = new Object2DoubleOpenHashMap<>(extractedResources);
         }
 
         public double mayCostResource(ChunkPos chunk, double amount, double perChunkTotal) {
@@ -168,7 +168,7 @@ public class TerrainResourceData {
         }
 
         public void cost(ChunkPos chunk, double amount) {
-            extractedResources.merge(chunk, amount, Double::sum);
+            extractedResources.addTo(chunk, amount);
         }
 
         public void setActiveChunks(Set<ChunkPos> activeChunks) {

@@ -78,7 +78,9 @@ public class TemperatureUpdate {
                     return;
                 }
 
-                if (player.tickCount % FHConfig.SERVER.CLIMATE.temperatureUpdateIntervalTicks.get() != 0) {
+                // ConfigValue.get() 为 spec 值表查询：同一 tick 内配置恒定，hoist 到局部变量
+                int temperatureUpdateIntervalTicks = FHConfig.SERVER.CLIMATE.temperatureUpdateIntervalTicks.get();
+                if (player.tickCount % temperatureUpdateIntervalTicks != 0) {
                     return;
                 }
 
@@ -96,17 +98,18 @@ public class TemperatureUpdate {
                     }
                     // Check the current Wet Effect
                     MobEffectInstance current = player.getEffect(FHMobEffects.WET.get());
+                    int wetEffectDuration = FHConfig.SERVER.CLIMATE.wetEffectDuration.get();
+                    int wetClothesDurationMultiplier = FHConfig.SERVER.CLIMATE.wetClothesDurationMultiplier.get();
                     // If armor is on, player gets a longer wet effect
                     if (hasArmor) {
                         player.addEffect(new MobEffectInstance(FHMobEffects.WET.get(),
-                                FHConfig.SERVER.CLIMATE.wetEffectDuration.get() *
-                                        FHConfig.SERVER.CLIMATE.wetClothesDurationMultiplier.get(),
+                                wetEffectDuration * wetClothesDurationMultiplier,
                                 0, false, false));// punish for wet clothes
                     }
                     // Otherwise, if there is no wet effect now, add normal wet effect
-                    else if (current == null || current.getDuration() < FHConfig.SERVER.CLIMATE.wetEffectDuration.get()) {
+                    else if (current == null || current.getDuration() < wetEffectDuration) {
                         player.addEffect(new MobEffectInstance(FHMobEffects.WET.get(),
-                                FHConfig.SERVER.CLIMATE.wetEffectDuration.get(), 0, false, false));
+                                wetEffectDuration, 0, false, false));
                     }
                 }
 
@@ -257,20 +260,29 @@ public class TemperatureUpdate {
 
                 /* MULTI-THREADED SURROUNDING BLOCK TEMPERATURE SIMULATION STARTS */
 
+                // ConfigValue.get() 为 spec 值表查询：同一 tick 内配置恒定，hoist 到局部变量（跨 tick 仍每次重读）
+                int temperatureUpdateIntervalTicks = FHConfig.SERVER.CLIMATE.temperatureUpdateIntervalTicks.get();
+
                 // Interval-based Environment Temperature Update: 20 ticks by default.
                 data.tick();
                 if (data.updateInterval <= 0) {
                     // Multithreaded Environment Simulation
-                    if (threadingPool.tryCommitWork(player))
-                        data.updateInterval = FHConfig.SERVER.CLIMATE.envTempUpdateIntervalTicks.get();
+                    if (threadingPool.tryCommitWork(player)) {
+                        int envTempUpdateIntervalTicks = FHConfig.SERVER.CLIMATE.envTempUpdateIntervalTicks.get();
+                        data.updateInterval = envTempUpdateIntervalTicks;
+                    }
                 }
 
                 /* MULTI-THREADED SURROUNDING BLOCK TEMPERATURE SIMULATION ENDS */
 
                 // Rest of update logic is handled every second.
-                if (player.tickCount % FHConfig.SERVER.CLIMATE.temperatureUpdateIntervalTicks.get() == 0) {
+                if (player.tickCount % temperatureUpdateIntervalTicks == 0) {
 
                     /* ENVIRONMENT TEMPERATURE COMPUTATION STARTS */
+
+                    // 同一 interval 内配置恒定：hoist 到 interval 块开头（每玩家每秒 1 次，替代 part 循环内每 part 1 次）
+                    int heatExchangeTimeConstant = FHConfig.SERVER.CLIMATE.heatExchangeTimeConstant.get();
+                    double heatExchangeTempConstant = FHConfig.SERVER.CLIMATE.heatExchangeTempConstant.get();
 
                     // Compute environment
                     float rawenvtemp = TemperatureComputation.environment(player, data);
@@ -359,7 +371,7 @@ public class TemperatureUpdate {
                         // By default heatExchangeTimeConstant = 167
                         // Since this logic is invoked every 20 ticks (1s), this means
                         // 1 unit = 0.006 degrees per second
-                        float unit = 1F / FHConfig.SERVER.CLIMATE.heatExchangeTimeConstant.get();
+                        float unit = 1F / heatExchangeTimeConstant;
                         float movementHeatedUnits = 0;
                         // Apply Self-heating based on movement status
                         // Food exhaustion is handled by Vanilla, so we don't repeat here
@@ -376,6 +388,8 @@ public class TemperatureUpdate {
                        float totalHeight= player.getBbHeight();
                        double waterHeight=player.getFluidHeight(FluidTags.WATER);
                        float heightRatio=(float) (waterHeight/totalHeight);
+                       // 能力查询幂等且由 NBTCapabilityProvider 缓存：提至 part 循环外
+                       LazyOptional<WaterLevelCapability> waterlevel=FHCapabilities.PLAYER_WATER_LEVEL.getCapability(player);
                        for (PlayerTemperatureData.BodyPart part : PlayerTemperatureData.BodyPart.values()) {
                             // Apply effective heat exchange to part temperature
                             HeatingDeviceContext.BodyPartContext pctx = ctx.getPartData(part);
@@ -412,7 +426,7 @@ public class TemperatureUpdate {
                             // May be negative! (when dt < 0)
                             //float fluidModifiedDT = (1 + fluidModifier) * dt;
                             // Units from heat exchange
-                            float heatExchangedUnits = (float) (dt * unit / FHConfig.SERVER.CLIMATE.heatExchangeTempConstant.get());
+                            float heatExchangedUnits = (float) (dt * unit / heatExchangeTempConstant);
 
 
                             // Additional Homeostasis using Stored (Food) Energy
@@ -436,7 +450,6 @@ public class TemperatureUpdate {
 	                                    player.causeFoodExhaustion(FOOD_EXHAUST_COLD * 4F * part.area);
 	                                }
 	                            }
-	                            LazyOptional<WaterLevelCapability> waterlevel=FHCapabilities.PLAYER_WATER_LEVEL.getCapability(player);
 	                            if (deviation > 0.1 && waterlevel.map(t->t.getWaterLevel()).orElse(1) > 0) {
 	                                if (deviation > 0.5) {
 	                                    homeostasisUnits -= 2F * selfHeatRate * unit;
@@ -508,7 +521,7 @@ public class TemperatureUpdate {
                             ctx.setBodyTemperature(part, partBodyTemps.get(part));
                         }
                         // A movement induced feel temperature delta
-                        float movementFeelTempDelta = Math.max(0, (float) (((movementHeatedUnits-1) / unit - 1 * selfHeatRate) * FHConfig.SERVER.CLIMATE.heatExchangeTempConstant.get()));
+                        float movementFeelTempDelta = Math.max(0, (float) (((movementHeatedUnits-1) / unit - 1 * selfHeatRate) * heatExchangeTempConstant));
                         // Update data and do the relevant display purpose computation there
                         data.update((float) player.getAttributeValue(FHAttributes.ENV_TEMPERATURE.get()), ctx, movementFeelTempDelta);
 

@@ -33,6 +33,7 @@ import com.teammoeg.frostedheart.content.climate.gamedata.chunkheat.ChunkHeatDat
 import com.teammoeg.frostedheart.content.climate.gamedata.climate.WorldClimate;
 import com.teammoeg.frostedheart.content.climate.data.PlantTempData;
 import com.teammoeg.frostedheart.content.climate.data.WorldTempData;
+import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 
 import it.unimi.dsi.fastutil.objects.Object2FloatOpenHashMap;
 import net.minecraft.core.BlockPos;
@@ -86,6 +87,7 @@ import net.minecraft.world.level.levelgen.Heightmap;
 public class WorldTemperature {
 
 
+    /** Legacy compatibility constant; runtime block/air calculations read FHConfig. */
     public static final int ABSOLUTE_ZERO = -273;
 
     public static boolean isBlizzardHarming(LevelAccessor iWorld, BlockPos p) {
@@ -179,6 +181,7 @@ public class WorldTemperature {
     // Climate
     public static final float SNOW_REACHES_GROUND = -13F;
     public static final float BLIZZARD_REACHES_GROUND = -30;
+    /** Legacy compatibility constant; runtime dimension fallback reads FHConfig. */
     public static final float OVERWORLD_BASELINE = -10;
     /**
      * The temporary uprising peak temperature of a cold period.
@@ -222,8 +225,6 @@ public class WorldTemperature {
             COLD_PERIOD_BOTTOM_T9,
             COLD_PERIOD_BOTTOM_T10
     };
-    public static final int FORECAST_SENSITIVE_THERSOLD=2;
-    
     // Matter state transitions
     public static final float CO2_FREEZES = -78;
     public static final float OXYGEN_FREEZES = -218;
@@ -268,7 +269,7 @@ public class WorldTemperature {
      * Now, it is constant: [-10, -10].
      */
     public static float dimension(LevelReader w) {
-        float wt = OVERWORLD_BASELINE;
+        float wt = FHConfig.SERVER.CLIMATE.overworldBaselineCelsius.get().floatValue();
         if (w instanceof Level level) {
             wt = worldCache.computeIfAbsent(level,l-> WorldTempData.getWorldTemp(l));
         }
@@ -402,34 +403,14 @@ public class WorldTemperature {
      * This value is dynamic in game.
      */
     public static float block(LevelReader world, BlockPos pos) {
-        int y = pos.getY();
-
-        float climateBlockAffection;
-        // above sea level, climate significantly influences soil
-        if (y > SEA_LEVEL) {
-            climateBlockAffection = 0.5F;
-        }
-        // a thin layer of stone beneath sea level serves as a climate insulation layer
-        else if (y > STONE_INTERFACE_LEVEL) {
-            climateBlockAffection = 0.5F * (y - STONE_INTERFACE_LEVEL) / (SEA_LEVEL - STONE_INTERFACE_LEVEL);
-        }
-        // below that, climate no longer affects block temperature
-        else {
-            climateBlockAffection = 0.0F;
-        }
-        float nature = climate(world,pos) * climateBlockAffection +dimension(world) + biome(world, pos) + altitude(world, pos);
-        float heat = heat(world,pos);
-        float result;
-        // if nature is greater than heat, use nature: like underground
-        if (nature > heat) {
-            result =  nature;
-        }
-        // otherwise, heats up nature by heat * 2 until reaches heat ceiling: a kind of air conditioner
-        else {
-            result = Math.min(nature+heat*2, heat);
-        }
-
-        return Math.max(ABSOLUTE_ZERO, result);
+        return BlockTemperatureModel.blockTemperature(
+                pos.getY(), FHConfig.SERVER.CLIMATE.climateStoneInterfaceLevel.get(),
+                FHConfig.SERVER.CLIMATE.climateSeaLevel.get(),
+                FHConfig.SERVER.CLIMATE.blockMaximumClimateAffection.get().floatValue(),
+                dimension(world), biome(world, pos), altitude(world, pos), climate(world, pos),
+                heat(world, pos),
+                FHConfig.SERVER.CLIMATE.blockHeatApplicationMultiplier.get().floatValue(),
+                FHConfig.SERVER.CLIMATE.absoluteZeroCelsius.get().floatValue());
     }
 
     /**
@@ -463,7 +444,7 @@ public class WorldTemperature {
         float result = dimension(world) + biome(world, pos) + altitude(world, pos) +
                 climate(world,pos) * climateAirAffection + heat(world,pos) + gaussian(world, 0, 0.3F);
 
-        return Math.max(ABSOLUTE_ZERO, result);
+        return Math.max(FHConfig.SERVER.CLIMATE.absoluteZeroCelsius.get().floatValue(), result);
     }
 
     /**
@@ -679,38 +660,13 @@ public class WorldTemperature {
      * Result = Dimension + Biome + Altitude + Climate + HeatAdjusts.
      */
     private static float blockWithHeat(LevelReader world, BlockPos pos, float heat, float climateBase) {
-        int y = pos.getY();
-
-        float climateBlockAffection;
-        // above sea level, climate significantly influences soil
-        if (y > SEA_LEVEL) {
-            climateBlockAffection = 0.5F;
-        }
-        // a thin layer of stone beneath sea level serves as a climate insulation layer
-        else if (y > STONE_INTERFACE_LEVEL) {
-            climateBlockAffection = 0.5F * (y - STONE_INTERFACE_LEVEL) / (SEA_LEVEL - STONE_INTERFACE_LEVEL);
-        }
-        // below that, climate no longer affects block temperature
-        else {
-            climateBlockAffection = 0.0F;
-        }
-
-        float nature = climateBase * climateBlockAffection
-                + dimension(world)
-                + biome(world, pos)
-                + altitude(world, pos);
-
-        float result;
-        // if nature is greater than heat, use nature: like underground
-        if (nature > heat) {
-            result = nature;
-        }
-        // otherwise, heats up nature by heat * 2 until reaches heat ceiling: a kind of air conditioner
-        else {
-            result = Math.min(nature + heat * 2, heat);
-        }
-
-        return Math.max(ABSOLUTE_ZERO, result);
+        return BlockTemperatureModel.blockTemperature(
+                pos.getY(), FHConfig.SERVER.CLIMATE.climateStoneInterfaceLevel.get(),
+                FHConfig.SERVER.CLIMATE.climateSeaLevel.get(),
+                FHConfig.SERVER.CLIMATE.blockMaximumClimateAffection.get().floatValue(),
+                dimension(world), biome(world, pos), altitude(world, pos), climateBase,
+                heat, FHConfig.SERVER.CLIMATE.blockHeatApplicationMultiplier.get().floatValue(),
+                FHConfig.SERVER.CLIMATE.absoluteZeroCelsius.get().floatValue());
     }
 
     /**

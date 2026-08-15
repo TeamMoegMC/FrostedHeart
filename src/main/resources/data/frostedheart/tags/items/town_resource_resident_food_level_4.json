@@ -1,0 +1,9 @@
+{
+  "replace": false,
+  "values": [
+    "frostedheart:military_rations",
+    "minecraft:enchanted_golden_apple",
+    "minecraft:golden_apple",
+    "minecraft:golden_carrot"
+  ]
+}

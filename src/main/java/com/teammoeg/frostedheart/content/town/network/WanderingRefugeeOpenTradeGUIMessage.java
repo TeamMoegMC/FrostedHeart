@@ -59,9 +59,12 @@ public class WanderingRefugeeOpenTradeGUIMessage implements CMessage {
                 FHMain.LOGGER.error("Network error: player in WanderingRefugeeOpenTradeGUIMessage is null!");
                 return;
             }
-            WanderingRefugee refugee = (WanderingRefugee) player.level().getEntity(refugeeID);
-            if(refugee==null) {
+            if (!(player.level().getEntity(refugeeID) instanceof WanderingRefugee refugee)) {
                 FHMain.LOGGER.error("Network error: refugee in WanderingRefugeeOpenTradeGUIMessage is null!");
+                return;
+            }
+            // 距离校验，防止越权打开远处/他人世界的交易界面
+            if (!refugee.isAlive() || player.distanceTo(refugee) > 16.0D) {
                 return;
             }
             refugee.openTradingScreen(player);

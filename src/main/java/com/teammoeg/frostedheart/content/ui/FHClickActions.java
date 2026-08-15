@@ -2,6 +2,8 @@ package com.teammoeg.frostedheart.content.ui;
 
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.ui.tips.TipHelper;
+import com.teammoeg.frostedheart.content.ui.tips.client.gui.TipOverlay;
+import com.teammoeg.frostedheart.item.townmanager.TownManagerClientHelper;
 
 import static com.teammoeg.chorda.client.ClickActions.register;
 
@@ -14,5 +16,10 @@ public class FHClickActions {
                 TipHelper.edit(s, null);
             }
         });
+        register(FHMain.rl("open_town_events"),
+                "tips.frostedheart.click_action.open_town_events", ignored -> {
+                    TipOverlay.removeCurrent();
+                    TownManagerClientHelper.openEvents();
+                });
     }
 }

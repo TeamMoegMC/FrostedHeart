@@ -52,7 +52,8 @@ import static net.minecraft.world.item.crafting.ShapedRecipe.itemStackFromJson;
 
 /**
  * 表示物品能转换为多少某类型资源。
- * 若物品有某个ItemResourceAttribute的Tag，但是没有表示转换量的recipe，则默认为1.
+ * 若物品有某个ItemResourceAttribute的Tag，但是没有表示转换量的recipe，通常默认为1；
+ * 居民食物资源会改用原版饥饿值与名义饱和度之和。
  * 关于合成json的写法。可参考 src.main.resources.data.frostedneart.recipes.town_resource.example.json
  */
 public class ItemResourceAmountRecipe extends IESerializableRecipe {

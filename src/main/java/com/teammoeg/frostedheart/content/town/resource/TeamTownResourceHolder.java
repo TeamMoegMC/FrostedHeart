@@ -165,8 +165,7 @@ public class TeamTownResourceHolder {
         if(itemsOfAttribute == null || itemsOfAttribute.isEmpty()) return 0.0;
         if(itemsOfAttribute.contains(itemStackResourceKey)){
             Map<ItemResourceAttribute, Double> itemAmounts = ITEM_RESOURCE_AMOUNTS.get(itemStackResourceKey);
-            if(itemAmounts == null) return 1.0;
-            amount.setValue(itemAmounts.getOrDefault(attribute, 1.0));
+            amount.setValue(getConfiguredOrDefaultResourceAmount(itemStackResourceKey, attribute, itemAmounts));
         } else{
             itemStackResourceKey.getItem().builtInRegistryHolder().tags()
                     .map(FHTags.Items.MAP_TAG_TO_TOWN_RESOURCE_ATTRIBUTE::get)
@@ -174,14 +173,29 @@ public class TeamTownResourceHolder {
                     .findFirst()
                     .ifPresent(attribute1 -> {
                         Map<ItemResourceAttribute, Double> itemAmounts = ITEM_RESOURCE_AMOUNTS.get(itemStackResourceKey);
-                        if(itemAmounts == null || itemAmounts.isEmpty()) {
-                            amount.setValue(1.0);
-                            return;
-                        }
-                        amount.setValue(itemAmounts.getOrDefault(attribute1, 1.0));
+                        amount.setValue(getConfiguredOrDefaultResourceAmount(itemStackResourceKey, attribute1, itemAmounts));
                     });
         }
         return amount.getValue();
+    }
+
+    /**
+     * Explicit item-resource recipes remain authoritative. Resident food that
+     * has no explicit override is valued from vanilla hunger plus nominal
+     * saturation; every other resource keeps the historical default of 1.
+     */
+    private static double getConfiguredOrDefaultResourceAmount(
+            ItemStackResourceKey itemStackResourceKey,
+            ItemResourceAttribute attribute,
+            Map<ItemResourceAttribute, Double> configuredAmounts
+    ) {
+        if (configuredAmounts != null && configuredAmounts.containsKey(attribute)) {
+            return configuredAmounts.get(attribute);
+        }
+        if (attribute.getType() == ItemResourceType.RESIDENT_FOOD_LEVEL) {
+            return TownFoodResourceAmount.fromItemStack(itemStackResourceKey.toItemStack(), 1.0);
+        }
+        return 1.0;
     }
 
     /**
@@ -239,8 +253,12 @@ public class TeamTownResourceHolder {
             //VirtualResourceAttribute由于同时属于ITownResourceKey，在前面处理掉了
             if(thing instanceof ItemResourceAttribute itemResourceAttribute){
                 MutableDouble adder = new MutableDouble();
-                for(ItemStackResourceKey itemStackResourceKey : ITEM_RESOURCE_ATTRIBUTE_CACHE.getOrDefault(itemResourceAttribute, new HashSet<>())){
-                    adder.add(get(itemStackResourceKey) * getResourceAmount(itemStackResourceKey, itemResourceAttribute));
+                // 缺键视为空集（迭代零次），避免每调用分配空 HashSet
+                HashSet<ItemStackResourceKey> attrItems = ITEM_RESOURCE_ATTRIBUTE_CACHE.get(itemResourceAttribute);
+                if (attrItems != null) {
+                    for(ItemStackResourceKey itemStackResourceKey : attrItems){
+                        adder.add(get(itemStackResourceKey) * getResourceAmount(itemStackResourceKey, itemResourceAttribute));
+                    }
                 }
                 return adder.doubleValue();
             }
@@ -270,8 +288,9 @@ public class TeamTownResourceHolder {
         Map<ItemStackResourceKey, Double> items = new HashMap<>();
         for(ITownResourceKey townResourceKey : resources.keySet()){
             if(townResourceKey instanceof ItemStackResourceKey itemStackResourceKey) {
-                if (get(itemStackResourceKey) > DELTA) {
-                    items.put(itemStackResourceKey, get(itemStackResourceKey));
+                double amount = get(itemStackResourceKey);
+                if (amount > DELTA) {
+                    items.put(itemStackResourceKey, amount);
                 }
             }
         }
@@ -280,15 +299,14 @@ public class TeamTownResourceHolder {
 
     public Map<ItemStackResourceKey, Double> getAllItemsByResourceAttribute(ItemResourceAttribute itemResourceAttribute){
         Map<ItemStackResourceKey, Double> items = new HashMap<>();
+        // 缺键视为空集（contains 恒 false），避免每调用分配空 HashSet
+        HashSet<ItemStackResourceKey> attrItems = ITEM_RESOURCE_ATTRIBUTE_CACHE.get(itemResourceAttribute);
         for(ITownResourceKey townResourceKey : resources.keySet()){
-            if(townResourceKey instanceof ItemStackResourceKey itemStackResourceKey) {
-                for(ItemStackResourceKey itemKeyOfAttribute : ITEM_RESOURCE_ATTRIBUTE_CACHE.getOrDefault(itemResourceAttribute, new HashSet<>())){
-                    if(itemStackResourceKey.equals(itemKeyOfAttribute)){
-                        if (get(itemStackResourceKey) > DELTA) {
-                            items.put(itemStackResourceKey, get(itemStackResourceKey));
-                        }
-                        break;
-                    }
+            if(townResourceKey instanceof ItemStackResourceKey itemStackResourceKey
+                    && attrItems != null && attrItems.contains(itemStackResourceKey)) {
+                double amount = get(itemStackResourceKey);
+                if (amount > DELTA) {
+                    items.put(itemStackResourceKey, amount);
                 }
             }
         }
@@ -303,8 +321,9 @@ public class TeamTownResourceHolder {
     public Map<ItemStackResourceKey, Double> getAllItems(ItemResourceAttribute attribute){
         Map<ItemStackResourceKey, Double> items = new HashMap<>();
         for(ItemStackResourceKey itemStackResourceKey : ITEM_RESOURCE_ATTRIBUTE_CACHE.get(attribute)){
-            if(get(itemStackResourceKey) > DELTA){
-                items.put(itemStackResourceKey, get(itemStackResourceKey) * getResourceAmount(itemStackResourceKey, attribute));
+            double amount = get(itemStackResourceKey);
+            if(amount > DELTA){
+                items.put(itemStackResourceKey, amount * getResourceAmount(itemStackResourceKey, attribute));
             }
         }
         return items;

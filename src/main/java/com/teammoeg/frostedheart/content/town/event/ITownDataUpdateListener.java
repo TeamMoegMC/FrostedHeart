@@ -28,14 +28,14 @@ import java.util.EventListener;
  * 注册自身，在关闭时通过 {@link com.teammoeg.frostedheart.content.town.TeamTownData#removeClientListener}
  * 移除。增量同步包（TownBuildingUpdatePacket / TownResidentUpdatePacket / TownResourceUpdatePacket）
  * 在 {@code applyXxxUpdate} 中按类别触发对应回调，全量同步包（TeamTownDataS2CPacket）在替换实例后
- * 触发全部三类回调，GUI 在回调中刷新界面即可。
+ * 触发全部类别回调，GUI 在回调中刷新界面即可。
  * <p>
- * 三个方法均提供默认空实现，GUI 只需重写它关心的类别（例如只显示资源的界面重写
+ * 所有方法均提供默认空实现，GUI 只需重写它关心的类别（例如只显示资源的界面重写
  * {@link #onResourcesChanged()} 即可），避免被迫实现不关心的方法。
  * <p>
  * Client-side listener that GUI screens implement to react to incremental town-data
  * updates pushed from the server. Register on open, remove on close; refresh the UI in
- * the relevant callback. All three methods have empty default bodies so a GUI only
+ * the relevant callback. All methods have empty default bodies so a GUI only
  * overrides the categories it actually displays.
  */
 public interface ITownDataUpdateListener extends EventListener {
@@ -58,5 +58,13 @@ public interface ITownDataUpdateListener extends EventListener {
      * <p>Called when resource data changes (amount / occupied capacity).</p>
      */
     default void onResourcesChanged() {
+    }
+
+    /** Called when retained settlement history receives or refreshes an entry. */
+    default void onHistoryChanged() {
+    }
+
+    /** Called when the player-authored staffing queue or a target changes. */
+    default void onStaffingChanged() {
     }
 }

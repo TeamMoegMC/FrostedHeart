@@ -19,6 +19,8 @@
 
 package com.teammoeg.frostedheart.content.town.network;
 
+import com.teammoeg.chorda.dataholders.team.CTeamDataManager;
+import com.teammoeg.chorda.dataholders.team.TeamDataHolder;
 import com.teammoeg.chorda.network.CMessage;
 import com.teammoeg.frostedheart.content.town.TeamTown;
 import com.teammoeg.frostedheart.content.town.resident.Resident;
@@ -60,11 +62,29 @@ public class WanderingRefugeeRecruitMessage implements CMessage {
                 Entity entity = player.level().getEntity(this.refugeeID);
 
                 if (entity instanceof WanderingRefugee refugee) {
+                    if (!refugee.isAlive()) {
+                        return;
+                    }
+                    // 无队伍玩家不能招募：CTeamDataManager.get 无队伍时返回 null，直接调用 getId/TeamTown.from 会 NPE
+                    TeamDataHolder holder = CTeamDataManager.get(player);
+                    if (holder == null) {
+                        player.displayClientMessage(Component.translatable("message.frostedheart.wandering_refugee.need_team"), false);
+                        return;
+                    }
                     if(player.distanceTo(entity) > 16.0D){
                         player.displayClientMessage(Component.translatable("message.frostedheart.wandering_refugee.too_far_to_recruit"), false);
+                    } else if (refugee.isTownSpawned()
+                            && (refugee.getTownOwner() == null || !refugee.getTownOwner().equals(holder.getId()))) {
+                        // 本队刷出的难民只能由本队招募，防止跨队偷人
+                        player.displayClientMessage(Component.translatable("message.frostedheart.wandering_refugee.not_yours"), false);
                     } else{
                         TeamTown town = TeamTown.from(player);
-                        if (town.addResident(new Resident(refugee.getFirstName(), refugee.getLastName()))) {
+                        Resident resident = new Resident(refugee.getFirstName(), refugee.getLastName(),
+                                refugee.getAgeGroup(), Resident.randomAgeDaysForAge(refugee.getAgeGroup()));
+                        if (refugee.isColdSurvivor()) {
+                            resident.applyColdSurvivorBuffs();
+                        }
+                        if (town.addResident(resident)) {
                             // 随便产生点粒子效果吧
                             for (int i = 0; i < 16; i++) {
                                 player.level().addParticle(ParticleTypes.EXPLOSION, refugee.getX(), refugee.getY(), refugee.getZ(), Math.random(), Math.random(), 0.01D);

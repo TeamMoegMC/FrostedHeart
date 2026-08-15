@@ -25,6 +25,7 @@ import com.mojang.brigadier.arguments.DoubleArgumentType;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
+import com.teammoeg.chorda.dataholders.team.CTeamDataManager;
 import com.teammoeg.chorda.text.Components;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.town.TeamTown;
@@ -53,13 +54,20 @@ public class TownCommand {
 
         var tickManual =
                 Commands.literal("tick")
+                        .executes(ct -> advanceTown(ct.getSource(), 1))
+                        .then(Commands.argument("repeats", IntegerArgumentType.integer(1, 90))
+                                .executes(ct -> advanceTown(ct.getSource(),
+                                        IntegerArgumentType.getInteger(ct, "repeats"))));
+
+        var spawnRefugees =
+                Commands.literal("spawn_refugees")
                         .executes(ct -> {
                             var player = ct.getSource().getPlayer();
                             if (player != null) {
                                 var data = TeamTown.from(player).getTownData();
                                 if (data.isPresent()) {
-                                    data.get().tickMorning(ct.getSource().getLevel());
-                                    ct.getSource().sendSuccess(() -> Component.literal("Success"), false);
+                                    data.get().debugSpawnRefugeeBatch(ct.getSource().getLevel(), CTeamDataManager.get(player));
+                                    ct.getSource().sendSuccess(() -> Component.literal("Refugee batch spawned"), false);
                                     return Command.SINGLE_SUCCESS;
                                 }
                             }
@@ -327,6 +335,8 @@ public class TownCommand {
             dispatcher.register(Commands.literal(string)
                     .requires(s -> s.hasPermission(2))
                     .then(Commands.literal("town")
+                            .then(tickManual)
+                            .then(spawnRefugees)
                             .then(name)
                             .then(Commands.literal("resources")
                                     .then(listItemStackResources)
@@ -352,6 +362,7 @@ public class TownCommand {
         dispatcher.register(Commands.literal("town")
                 .requires(s -> s.hasPermission(2))
                 .then(tickManual)
+                .then(spawnRefugees)
                 .then(name)
                 .then(Commands.literal("resources")
                         .then(listItemStackResources)
@@ -370,5 +381,24 @@ public class TownCommand {
                         .then(listBlocks)
                 )
         );
+    }
+
+    private static int advanceTown(CommandSourceStack source, int repeats) {
+        var player = source.getPlayer();
+        if (player != null) {
+            var data = TeamTown.from(player).getTownData();
+            if (data.isPresent()) {
+                var teamData = CTeamDataManager.get(player);
+                for (int index = 0; index < repeats; index++) {
+                    data.get().tickMorning(source.getLevel(), teamData);
+                }
+                source.sendSuccess(() -> Component.literal(
+                        "Advanced the town by " + repeats + (repeats == 1 ? " settlement day" : " settlement days")),
+                        false);
+                return Command.SINGLE_SUCCESS;
+            }
+        }
+        source.sendFailure(Component.literal("Unable to get your team's data"));
+        return 0;
     }
 }

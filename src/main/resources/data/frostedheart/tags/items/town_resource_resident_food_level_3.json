@@ -1,0 +1,15 @@
+{
+  "replace": false,
+  "values": [
+    "frostedheart:compressed_biscuits",
+    "frostedheart:compressed_biscuits_pack",
+    "frostedheart:cooked_whale_meat",
+    "frostedheart:packed_nuts",
+    "frostedheart:rye_porridge",
+    "frostedheart:vegetable_soup",
+    "minecraft:beetroot_soup",
+    "minecraft:mushroom_stew",
+    "minecraft:pumpkin_pie",
+    "minecraft:rabbit_stew"
+  ]
+}

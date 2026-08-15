@@ -29,9 +29,41 @@ public final class ResidentAttributeModel {
     public static final double MIN_VALUE = 0.0;
     public static final double MAX_VALUE = 100.0;
     public static final double MAX_INITIAL_WORK_PROFICIENCY = 50.0;
+    public static final double ELDER_PROFICIENCY_LOWER_BOUND = 50.0;
+    /**
+     * 非青壮年年龄组（幼儿/儿童/老人）属性生成的分布宽度：
+     * 采样均值映射到 [center - 50*spread, center + 50*spread] 区间。
+     */
+    public static final double DEFAULT_ATTRIBUTE_SPREAD = 0.8;
     public static final int ADULT_ATTRIBUTE_SAMPLE_COUNT = 4;
 
     private ResidentAttributeModel() {
+    }
+
+    /**
+     * Generates one center-biased attribute by averaging four independent
+     * samples from the unit interval, then mapping the [0,1] mean onto a band
+     * of width {@code spread} centered at {@code center}.
+     */
+    public static double generateAttribute(DoubleSupplier randomDouble, double center, double spread) {
+        return generateAttribute(randomDouble, center, spread, ADULT_ATTRIBUTE_SAMPLE_COUNT);
+    }
+
+    /** Generates one center-biased attribute using the configured sample count. */
+    public static double generateAttribute(
+            DoubleSupplier randomDouble,
+            double center,
+            double spread,
+            int sampleCount
+    ) {
+        Objects.requireNonNull(randomDouble);
+        int safeSampleCount = Math.max(1, sampleCount);
+        double sum = 0.0;
+        for (int i = 0; i < safeSampleCount; i++) {
+            sum += unitSample(randomDouble);
+        }
+        double mean = sum / safeSampleCount;
+        return clampFinite(MAX_VALUE * (center / MAX_VALUE + (mean - 0.5) * spread), MIN_VALUE, MAX_VALUE, MIN_VALUE);
     }
 
     /**
@@ -39,21 +71,44 @@ public final class ResidentAttributeModel {
      * samples from the unit interval.
      */
     public static double generateAdultAttribute(DoubleSupplier randomDouble) {
+        return generateAttribute(randomDouble, 50.0, 1.0);
+    }
+
+    /**
+     * Generates prior profession experience in [0, max], biased toward low values.
+     */
+    public static double generateInitialWorkProficiency(DoubleSupplier randomDouble, double max) {
         Objects.requireNonNull(randomDouble);
-        double sum = 0.0;
-        for (int i = 0; i < ADULT_ATTRIBUTE_SAMPLE_COUNT; i++) {
-            sum += unitSample(randomDouble);
-        }
-        return MAX_VALUE * sum / ADULT_ATTRIBUTE_SAMPLE_COUNT;
+        double sample = unitSample(randomDouble);
+        return clampFinite(max * sample * sample, MIN_VALUE, MAX_VALUE, MIN_VALUE);
     }
 
     /**
      * Generates prior profession experience in [0, 50], biased toward low values.
      */
     public static double generateInitialWorkProficiency(DoubleSupplier randomDouble) {
+        return generateInitialWorkProficiency(randomDouble, MAX_INITIAL_WORK_PROFICIENCY);
+    }
+
+    /**
+     * Generates prior profession experience in [50, 100] for elders, who are
+     * born with naturally higher work proficiency.
+     */
+    public static double generateElderInitialWorkProficiency(DoubleSupplier randomDouble) {
+        return generateElderInitialWorkProficiency(
+                randomDouble, ELDER_PROFICIENCY_LOWER_BOUND, MAX_VALUE);
+    }
+
+    public static double generateElderInitialWorkProficiency(
+            DoubleSupplier randomDouble,
+            double minimum,
+            double maximum
+    ) {
         Objects.requireNonNull(randomDouble);
         double sample = unitSample(randomDouble);
-        return MAX_INITIAL_WORK_PROFICIENCY * sample * sample;
+        double lower = clampFinite(minimum, MIN_VALUE, MAX_VALUE, MIN_VALUE);
+        double upper = clampFinite(maximum, lower, MAX_VALUE, MAX_VALUE);
+        return clampFinite(lower + (upper - lower) * sample, MIN_VALUE, MAX_VALUE, MIN_VALUE);
     }
 
     /**
@@ -62,22 +117,28 @@ public final class ResidentAttributeModel {
     public static double calculateDailyProficiencyGain(
             double proficiency,
             double growthAtZero,
-            double minimumGrowth
+            double minimumGrowth,
+            double maximumProficiency
     ) {
-        double normalizedProficiency = clampFinite(proficiency, MIN_VALUE, MAX_VALUE, MIN_VALUE);
-        if (normalizedProficiency >= MAX_VALUE) {
+        double safeMaximum = Math.max(1.0, finiteOr(maximumProficiency, MAX_VALUE));
+        double normalizedProficiency = clampFinite(proficiency, MIN_VALUE, safeMaximum, MIN_VALUE);
+        if (normalizedProficiency >= safeMaximum) {
             return 0.0;
         }
 
-        double safeGrowthAtZero = clampFinite(growthAtZero, 0.0, MAX_VALUE, 0.0);
-        double safeMinimumGrowth = clampFinite(minimumGrowth, 0.0, MAX_VALUE, 0.0);
-        double diminishingGrowth = safeGrowthAtZero * (1.0 - normalizedProficiency / MAX_VALUE);
+        double safeGrowthAtZero = clampFinite(growthAtZero, 0.0, safeMaximum, 0.0);
+        double safeMinimumGrowth = clampFinite(minimumGrowth, 0.0, safeMaximum, 0.0);
+        double diminishingGrowth = safeGrowthAtZero * (1.0 - normalizedProficiency / safeMaximum);
         double gain = Math.max(safeMinimumGrowth, diminishingGrowth);
-        return Math.min(gain, MAX_VALUE - normalizedProficiency);
+        return Math.min(gain, safeMaximum - normalizedProficiency);
     }
 
     private static double unitSample(DoubleSupplier randomDouble) {
         return clampFinite(randomDouble.getAsDouble(), 0.0, 1.0, 0.0);
+    }
+
+    private static double finiteOr(double value, double fallback) {
+        return Double.isFinite(value) ? value : fallback;
     }
 
     private static double clampFinite(double value, double minimum, double maximum, double fallback) {

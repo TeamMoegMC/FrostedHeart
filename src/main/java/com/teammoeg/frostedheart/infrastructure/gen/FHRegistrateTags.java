@@ -297,9 +297,6 @@ public class FHRegistrateTags {
                 .add(Items.APPLE)
                 .add(Items.CARROT)
                 .add(Items.SWEET_BERRIES);*/
-        prov.tag(FHTags.Items.MAP_TOWN_RESOURCE_ATTRIBUTE_TO_TAG.get(ItemResourceType.RESIDENT_FOOD_LEVEL.generateAttribute(0)))
-                .add(Items.BREAD);
-
         var incubatorBlacklist = prov.tag(FHTags.Items.INCUBATOR_BLACKLIST.tag);
         incubatorBlacklist
                 .add(Items.POTION, Items.LINGERING_POTION, Items.SPLASH_POTION);

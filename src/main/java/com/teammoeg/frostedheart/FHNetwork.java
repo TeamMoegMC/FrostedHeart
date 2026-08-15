@@ -28,10 +28,23 @@ import com.teammoeg.frostedheart.content.scenario.network.*;
 import com.teammoeg.frostedheart.content.steamenergy.EndPointDataPacket;
 import com.teammoeg.frostedheart.content.steamenergy.HeatNetworkRequestC2SPacket;
 import com.teammoeg.frostedheart.content.steamenergy.HeatNetworkResponseS2CPacket;
+import com.teammoeg.frostedheart.content.town.citizen.sync.C2SCitizenActionPacket;
+import com.teammoeg.frostedheart.content.town.citizen.sync.S2CCitizenBatchPacket;
+import com.teammoeg.frostedheart.content.town.citizen.sync.S2CCitizenDespawnPacket;
+import com.teammoeg.frostedheart.content.town.citizen.sync.S2CCitizenSpawnPacket;
 import com.teammoeg.frostedheart.content.town.network.TeamTownDataS2CPacket;
 import com.teammoeg.frostedheart.content.town.network.TownBuildingUpdatePacket;
 import com.teammoeg.frostedheart.content.town.network.TownResidentUpdatePacket;
 import com.teammoeg.frostedheart.content.town.network.TownResourceUpdatePacket;
+import com.teammoeg.frostedheart.content.town.network.TownOperationalStatusRequestPacket;
+import com.teammoeg.frostedheart.content.town.network.TownOperationalStatusResponsePacket;
+import com.teammoeg.frostedheart.content.town.network.TownHistoryUpdatePacket;
+import com.teammoeg.frostedheart.content.town.network.TownNameEditRequestPacket;
+import com.teammoeg.frostedheart.content.town.network.TownNameUpdatePacket;
+import com.teammoeg.frostedheart.content.town.network.TownResidentNameEditRequestPacket;
+import com.teammoeg.frostedheart.content.town.network.TownSignalNotificationPacket;
+import com.teammoeg.frostedheart.content.town.network.TownStaffingEditRequestPacket;
+import com.teammoeg.frostedheart.content.town.network.TownStaffingPlanUpdatePacket;
 import com.teammoeg.frostedheart.content.town.network.WanderingRefugeeOpenTradeGUIMessage;
 import com.teammoeg.frostedheart.content.town.network.WanderingRefugeeRecruitMessage;
 import com.teammoeg.frostedheart.content.town.network.WarehouseInteractPacket;
@@ -109,10 +122,25 @@ public class FHNetwork extends CBaseNetwork {
         registerMessage("town_building_update", TownBuildingUpdatePacket.class);
         registerMessage("town_resident_update", TownResidentUpdatePacket.class);
         registerMessage("town_resource_update", TownResourceUpdatePacket.class);
+        registerMessage("town_operational_status_request", TownOperationalStatusRequestPacket.class);
+        registerMessage("town_operational_status_response", TownOperationalStatusResponsePacket.class);
+        registerMessage("town_history_update", TownHistoryUpdatePacket.class);
+        registerMessage("town_name_edit_request", TownNameEditRequestPacket.class);
+        registerMessage("town_name_update", TownNameUpdatePacket.class);
+        registerMessage("town_resident_name_edit_request", TownResidentNameEditRequestPacket.class);
+        registerMessage("town_signal_notification", TownSignalNotificationPacket.class);
+        registerMessage("town_staffing_edit_request", TownStaffingEditRequestPacket.class);
+        registerMessage("town_staffing_plan_update", TownStaffingPlanUpdatePacket.class);
         registerMessage("wandering_refugee_open_trade_gui", WanderingRefugeeOpenTradeGUIMessage.class);
         registerMessage("wandering_refugee_recruit", WanderingRefugeeRecruitMessage.class);
         registerMessage("warehouse_c2s_interact_packet", WarehouseInteractPacket.class);
         registerMessage("warehouse_update_packet", WarehouseUpdatePacket.class);
+
+        // Citizen hybrid simulation messages
+        registerMessage("citizen_spawn", S2CCitizenSpawnPacket.class);
+        registerMessage("citizen_batch", S2CCitizenBatchPacket.class);
+        registerMessage("citizen_despawn", S2CCitizenDespawnPacket.class);
+        registerMessage("citizen_action", C2SCitizenActionPacket.class);
 
         // Generator Messages
         //registerMessage("generator_upgrade", GeneratorModifyPacket.class);

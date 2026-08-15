@@ -41,8 +41,6 @@ import java.util.Objects;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
-import static com.teammoeg.frostedheart.content.town.TownMathFunctions.calculateDecorationRating;
-
 public class WarehouseBlockEntity extends AbstractTownBuildingBlockEntity<WarehouseBuilding> implements MenuProvider {
 
     public WarehouseBlockEntity(BlockPos pos, BlockState state) {
@@ -51,10 +49,24 @@ public class WarehouseBlockEntity extends AbstractTownBuildingBlockEntity<Wareho
 
     @Override
     public void refresh(@NotNull WarehouseBuilding building) {
+        boolean wasWorkableBefore = building.isBuildingWorkable();
         super.refresh(building);
         ITownWithBuildings buildingTown = this.getTown();
         if(buildingTown instanceof TeamTown teamTown){
             teamTown.getTownData().ifPresent(TeamTownData::reloadMaxCapacity);
+        }
+
+        if (!wasWorkableBefore && building.isBuildingWorkable() && level != null) {
+            for (BlockPos emitterPos : building.getEmitterPositions()) {
+                if (level.isLoaded(emitterPos) && level.getBlockEntity(emitterPos) instanceof WarehouseLevelEmitterBlockEntity emitter) {
+                    emitter.ensureWatcherAndRefresh();
+                }
+            }
+            for (BlockPos interfacePos : building.getInterfacePositions()) {
+                if (level.isLoaded(interfacePos) && level.getBlockEntity(interfacePos) instanceof WarehouseInterfaceBlockEntity iface) {
+                    iface.ensureWatcherAndRefresh();
+                }
+            }
         }
     }
 

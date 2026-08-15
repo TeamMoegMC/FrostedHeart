@@ -64,10 +64,10 @@ minecraft {
 
             // debug level logging
             // property 'forge.logging.markers', 'REGISTRIES'
-            // property 'forge.logging.console.level', 'debug'
+             property 'forge.logging.console.level', 'debug'
 
             // for normal run just log at info level
-            property 'forge.logging.console.level', 'info'
+//            property 'forge.logging.console.level', 'info'
 
             //jvmArgs '-Xdebug','-Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=9009'
 
@@ -148,6 +148,13 @@ mixin {
 }
 
 repositories {
+	maven {
+		name = "MinecraftForge"
+		url = "https://maven.minecraftforge.net"
+		content {
+			includeGroup "net.minecraftforge"
+		}
+	}
 	maven { url 'https://maven.aliyun.com/repository/public/' }
     mavenCentral()
     mavenLocal()
@@ -162,18 +169,14 @@ repositories {
         }
     }
     maven {
-        // location of a maven mirror for JEI files, as a fallback
+        // ModMaven still hosts these historical Create development artifacts and sources.
+        // Keep it scoped because missing unrelated artifacts may be returned as HTML with HTTP 200.
         name = "ModMaven"
         url = "https://modmaven.dev"
-    }
-    maven {
-        //location of the maven for mixed mappings, create, registrate, and flywheel
-        name = "tterrag maven"
-        url = "https://maven.tterrag.com/"
         content {
+            includeGroup "com.simibubi.create"
             includeGroup "com.jozufozu.flywheel"
             includeGroup "com.tterrag.registrate"
-            includeGroup "com.simibubi.create"
         }
     }
     // Needed for Curios API
@@ -237,12 +240,14 @@ repositories {
         }
     }
 }
+
 dependencies {
     compileOnly 'org.projectlombok:lombok:1.18.36'
     annotationProcessor 'org.projectlombok:lombok:1.18.36'
 
     testCompileOnly 'org.projectlombok:lombok:1.18.36'
     testAnnotationProcessor 'org.projectlombok:lombok:1.18.36'
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.10.2'
 
     minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
 //    implementation fileTree(include: ['*.jar'], dir: 'libs')
@@ -259,8 +264,6 @@ dependencies {
     implementation fg.deobf("curse.maven:steam-powered-create-534610:5778650")
     // II
 
-    // create maven is no up to date
-//    implementation fg.deobf("curse.maven:create-328085:5838779")
 	// Storage Drawer
 	compileOnly fg.deobf("curse.maven:storage-drawers-223852:5981672")
 	
@@ -334,6 +337,21 @@ dependencies {
 	//gradle data processing
 	implementation 'org.codehaus.groovy:groovy-json:3.0.9'
 
+}
+
+tasks.named('test', Test) {
+    useJUnitPlatform()
+}
+
+tasks.register('runTownSimulation', JavaExec) {
+    group = 'frostedheart'
+    description = 'Runs the incremental Java town numerical model command-line tool.'
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'com.teammoeg.frostedheart.content.town.model.TownSimulationMain'
+    if (project.hasProperty('townArgs')) {
+        args org.apache.tools.ant.types.Commandline.translateCommandline(
+                project.property('townArgs').toString())
+    }
 }
 
 import groovy.json.JsonOutput

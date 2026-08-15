@@ -22,6 +22,7 @@ import com.teammoeg.chorda.client.RenderingHint;
 import com.teammoeg.chorda.client.cui.base.MouseButton;
 import com.teammoeg.chorda.client.cui.base.UIElement;
 import com.teammoeg.frostedheart.content.town.resident.Resident;
+import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
@@ -170,7 +171,9 @@ public class TownWorkforcePanel extends UIElement {
         lines.add(stat("gui.frostedheart.town.intelligence", resident.getIntelligence()));
         lines.add(new Line(Component.empty(), 0xFFFFFFFF));
         lines.add(new Line(proficiencyName.copy().append(Component.literal(
-                ": " + Math.round(proficiency.applyAsDouble(resident)) + " / 100")), 0xFFFFFF55));
+                ": " + Math.round(proficiency.applyAsDouble(resident)) + " / "
+                        + Math.round(FHConfig.SERVER.TOWN.RESIDENT_PROGRESSION.maximumWorkProficiency.get()))),
+                0xFFFFFF55));
 
         boolean eligible = canWork.test(resident);
         lines.add(new Line(Component.translatable("gui.frostedheart.town.can_work")

@@ -19,9 +19,6 @@
 
 package com.teammoeg.frostedheart.content.climate.gamedata.climate;
 
-import java.util.Random;
-
-import com.mojang.datafixers.util.Pair;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
@@ -113,65 +110,25 @@ public class InterpolationClimateEvent implements ClimateEvent {
      * @return a new TempEvent.
      */
     public static InterpolationClimateEvent getClimateEvent(RandomSource random,long startTime) {
-        //int blizzardFrequency = FHConfig.SERVER.CLIMATE.blizzardFrequency.get();
-        int rand = random.nextInt(10)+((startTime/WorldClockSource.secondsPerDay<=15)?3:0);
-        /*if (rand < blizzardFrequency) {
-            return getBlizzardClimateEvent(random,startTime);
-        } else */if (rand > 7) {
-            return getWarmClimateEvent(random,startTime);
-        } else {
-            return getColdClimateEvent(random,startTime);
-        }
+        return fromDefinition(ClimateEventModel.generate(
+                random, startTime, FHConfig.SERVER.CLIMATE.eventModelParameters()));
     }
 
     public static InterpolationClimateEvent getColdClimateEvent(RandomSource random,long startTime) {
-        long peakTime = 0, bottomTime = 0, endTime = 0;
-        float peakTemp = 0, bottomTemp = 0;
-        switch (random.nextInt(10)) {
-            case 0:
-                bottomTemp += WorldTemperature.COLD_PERIOD_BOTTOM_T5;
-                break;
-            case 1:
-            case 2:
-                bottomTemp += WorldTemperature.COLD_PERIOD_BOTTOM_T4;
-                break;
-            case 3:
-            case 4:
-            case 5:
-                bottomTemp += WorldTemperature.COLD_PERIOD_BOTTOM_T3;
-                break;
-            default:
-                bottomTemp += WorldTemperature.COLD_PERIOD_BOTTOM_T2;
-                break;
-        }
-
-        long length = 0;
-        length = WorldClockSource.secondsPerDay * 2 + random.nextInt((int) (WorldClockSource.secondsPerDay * 5)); // 2 - 7 days length
-        endTime = startTime + length;
-        long padding = 8 * 50 + random.nextInt(16 * 50);
-        peakTime = startTime + padding; // reach peak within 8-24h
-        bottomTime = startTime + padding + (length - padding) / 4;
-        peakTemp = WorldTemperature.COLD_PERIOD_PEAK - (float) Math.abs(random.nextGaussian());
-        bottomTemp += (float) (random.nextGaussian());
-        long calmLength = WorldClockSource.secondsPerDay * 2 + random.nextInt((int) (WorldClockSource.secondsPerDay * 5)); // 2 - 7 days length
-        long calmEndTime = endTime + calmLength;
-
-        return new InterpolationClimateEvent(startTime, peakTime, peakTemp, bottomTime, bottomTemp, endTime, calmEndTime, true, false);
+        return fromDefinition(ClimateEventModel.generateCold(
+                random, startTime, FHConfig.SERVER.CLIMATE.eventModelParameters()));
     }
 
     public static InterpolationClimateEvent getWarmClimateEvent(RandomSource random,long startTime) {
-        long peakTime = 0, bottomTime = 0, endTime = 0;
-        float peakTemp = 0, bottomTemp = 0;
-        long length = WorldClockSource.secondsPerDay * 2 + random.nextInt((int) (WorldClockSource.secondsPerDay * 5)); // 2 - 7 days length
-        endTime = startTime + length;
-        long padding = 8 * 50 + random.nextInt(16 * 50); // 8-24h
-        peakTime = startTime + padding + (length - padding) / 2;
-        peakTemp = WorldTemperature.WARM_PERIOD_PEAK - 2 * (float) Math.abs(random.nextGaussian());
+        return fromDefinition(ClimateEventModel.generateWarm(
+                random, startTime, FHConfig.SERVER.CLIMATE.eventModelParameters()));
+    }
 
-        long calmLength = WorldClockSource.secondsPerDay * 2 + random.nextInt((int) (WorldClockSource.secondsPerDay * 5)); // 2 - 7 days length
-        long calmEndTime = endTime + calmLength;
-
-        return new InterpolationClimateEvent(startTime, peakTime, peakTemp, bottomTime, bottomTemp, endTime, calmEndTime, false, false);
+    private static InterpolationClimateEvent fromDefinition(ClimateEventModel.EventDefinition event) {
+        return new InterpolationClimateEvent(
+                event.startTime(), event.peakTime(), event.peakTemperatureCelsius(),
+                event.bottomTime(), event.bottomTemperatureCelsius(), event.endTime(),
+                event.calmEndTime(), event.cold(), event.blizzard());
     }
 
     public InterpolationClimateEvent() {
@@ -227,50 +184,16 @@ public class InterpolationClimateEvent implements ClimateEvent {
      * @author JackyWangMislantiaJnirvana <wmjwld@live.cn>
      */
     public float getHourTemp(long t) {
-        //Random random = new Random();
-
-        if (isCold) {
-            if (t >= startTime && t < peakTime) {
-                return getPiecewiseTemp(t, startTime, peakTime, 0, peakTemp, 0, 0);
-            } else if (t >= peakTime && t < bottomTime) {
-                return getPiecewiseTemp(t, peakTime, bottomTime, peakTemp, bottomTemp, 0, 0);
-            } else if (t >= bottomTime && t < endTime) {
-                return getPiecewiseTemp(t, bottomTime, endTime, bottomTemp, 0, 0, 0);
-            } else if (t >= endTime && t <= calmEndTime) {
-                return 0;
-            } else {
-                return 0;
-            }
-        }
-        if (t >= startTime && t < peakTime) {
-            return getPiecewiseTemp(t, startTime, peakTime, 0, peakTemp, 0, 0);
-        } else if (t >= peakTime && t < endTime) {
-            return getPiecewiseTemp(t, peakTime, endTime, peakTemp, 0, 0, 0);
-        } else if (t >= endTime && t <= calmEndTime) {
-            return 0;
-        } else {
-            return 0;
-        }
-
+        return ClimateEventModel.temperatureAt(definition(), t);
     }
 
     /**
      * Interpolation algorithm.
      */
-    private float getPiecewiseTemp(long t, long t0, long t1, float T0, float T1, float dT0, float dT1) {
-
-        float D1 = t - t0;
-        float D2 = t1 - t0;
-        float D3 = t - t1;
-        float D4 = t0 - t1;
-
-        float F1 = D3 / D4;
-        float F2 = D1 / D2;
-
-        float P1 = F1*F1;
-        float P2 = F2*F2;
-
-        return T0 * (1 + 2 * F2) * P1 + T1 * (1 + 2 * F1) * P2 + dT0 * D1 * P1 + dT1 * D3 * P2;
+    private ClimateEventModel.EventDefinition definition() {
+        return new ClimateEventModel.EventDefinition(
+                startTime, peakTime, peakTemp, bottomTime, bottomTemp,
+                endTime, calmEndTime, isCold, isBlizzard);
     }
 
     @Override

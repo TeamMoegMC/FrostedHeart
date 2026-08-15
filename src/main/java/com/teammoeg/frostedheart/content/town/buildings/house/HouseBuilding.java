@@ -32,9 +32,11 @@ import com.teammoeg.frostedheart.content.town.*;
 import com.teammoeg.frostedheart.content.town.block.OccupiedVolume;
 import com.teammoeg.frostedheart.content.town.building.AbstractTownBuilding;
 import com.teammoeg.frostedheart.content.town.building.ITownResidentBuilding;
+import com.teammoeg.frostedheart.content.town.building.ITownTemperatureBuilding;
 import com.teammoeg.frostedheart.content.town.resident.Resident;
 import com.teammoeg.frostedheart.content.town.resource.ItemResourceType;
 import com.teammoeg.frostedheart.content.town.resource.ItemStackResourceKey;
+import com.teammoeg.frostedheart.content.town.resource.TownFoodNutritionModel;
 import com.teammoeg.frostedheart.content.town.resource.action.*;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import net.minecraft.core.BlockPos;
@@ -49,7 +51,7 @@ import static com.teammoeg.frostedheart.content.town.resource.ItemResourceType.R
  * 城镇住宅。
  * 它不继承AbstractTownResidentWorkBuilding，因为那个类用于需要居民参与工作的城镇建筑，但居民在房屋中并非工作。
  */
-public class HouseBuilding extends AbstractTownBuilding implements ITownResidentBuilding {
+public class HouseBuilding extends AbstractTownBuilding implements ITownResidentBuilding, ITownTemperatureBuilding {
 
     public record DailyReport(
             boolean hasData,
@@ -231,7 +233,9 @@ public class HouseBuilding extends AbstractTownBuilding implements ITownResident
 
     public static boolean isTemperatureValid(double effectiveTemperature){
         if (DEBUG_MODE) return true;
-        return effectiveTemperature >= TownMathFunctions.MIN_TEMP_HOUSE && effectiveTemperature <= TownMathFunctions.MAX_TEMP_HOUSE;
+        FHConfig.Server.Town.Housing config = FHConfig.SERVER.TOWN.HOUSING;
+        return effectiveTemperature >= config.minimumTemperatureCelsius.get()
+                && effectiveTemperature <= config.maximumTemperatureCelsius.get();
     }
 
     public boolean isTemperatureValid(){
@@ -244,10 +248,26 @@ public class HouseBuilding extends AbstractTownBuilding implements ITownResident
 
     @Override
     public boolean isBuildingWorkable() {
-        return super.isBuildingWorkable()
-                && isTemperatureValid()
-                && area >= 4
-                && volume >= 8;
+        FHConfig.Server.Town.Housing config = FHConfig.SERVER.TOWN.HOUSING;
+        return HouseDailyModel.isBuildingWorkable(
+                super.isBuildingWorkable(), area, volume, isTemperatureValid(),
+                config.minimumFloorAreaBlocks.get(),
+                config.minimumInteriorVolumeBlocks.get());
+    }
+
+    /**
+     * A valid house remains responsible for its existing residents even when
+     * its temperature is outside the habitable range. Temperature still makes
+     * the house unworkable for allocation/UI purposes, but must not suspend
+     * food consumption and resident health/mental settlement for free.
+     */
+    @Override
+    public boolean shouldRunDailySettlement() {
+        FHConfig.Server.Town.Housing config = FHConfig.SERVER.TOWN.HOUSING;
+        return HouseDailyModel.shouldRunDailySettlement(
+                super.isBuildingWorkable(), area, volume,
+                config.minimumFloorAreaBlocks.get(),
+                config.minimumInteriorVolumeBlocks.get());
     }
 
 
@@ -288,6 +308,9 @@ public class HouseBuilding extends AbstractTownBuilding implements ITownResident
                 ResourceActionMode.MAXIMIZE, ResourceActionOrder.DESCENDING);
         TownResourceActionResults.TownResourceTypeCostActionResult result = executorHandler.execute(action);
 
+        // 食谱表与方法内恒定（同一方法内 /reload 不会中途执行），提到循环外只重建一次
+        List<NutritionRecipe> recipes = CUtils.filterRecipes(CDistHelper.getRecipeManager(), NutritionRecipe.TYPE);
+
         double foodConsumed = 0.0;
         double nutritionSum = 0.0;
         for (ITownResourceAttributeActionResult<?> detail : result.details()) {
@@ -296,12 +319,7 @@ public class HouseBuilding extends AbstractTownBuilding implements ITownResident
                 for (Map.Entry<ItemStackResourceKey, Double> entry : itemResult.details().entrySet()) {
                     ItemStackResourceKey key = entry.getKey();
                     double amount = entry.getValue();
-                    // 查找对应的营养配方并累加营养值
-                    for (NutritionRecipe recipe : CUtils.filterRecipes(CDistHelper.getRecipeManager(), NutritionRecipe.TYPE)) {
-                        if (recipe.conform(key.getItem())) {
-                            nutritionSum += (recipe.getNutrition().getNutritionValue() / 4.0) * amount;
-                        }
-                    }
+                    nutritionSum += TownFoodNutritionModel.getNutritionPerItem(key, recipes) * amount;
                 }
             }
         }
@@ -310,32 +328,45 @@ public class HouseBuilding extends AbstractTownBuilding implements ITownResident
 
     private DailyReport createDailyReport(int residentCount, FoodConsumption consumption) {
         FHConfig.Server.Town.Housing config = FHConfig.SERVER.TOWN.HOUSING;
-        double foodRequired = residentCount * config.foodConsumptionPerResidentDay.get();
-        double foodSatisfaction = HouseDailyModel.calculateFoodSatisfaction(
-                foodRequired, consumption.foodConsumed());
-        double nutritionQuality = HouseDailyModel.calculateNutritionQuality(
-                consumption.nutritionValue(),
-                consumption.foodConsumed(),
-                config.nutritionReferencePerFoodUnit.get());
-        double nutritionMultiplier = HouseDailyModel.calculateNutritionRecoveryMultiplier(
-                nutritionQuality, config.minimumNutritionRecoveryMultiplier.get());
-        double effectiveTemperature = getEffectiveTemperature();
-        double temperatureRating = TownMathFunctions.calculateTemperatureRating(effectiveTemperature);
-        double spaceRating = TownMathFunctions.calculateSpaceRating(volume, area);
-        double comfortRating = calculateComfortRating(temperatureRating, spaceRating, decorationRating);
+        FHConfig.Server.Town.BuildingScoring scoring = FHConfig.SERVER.TOWN.BUILDING_SCORING;
+        HouseDailyModel.SettlementReport modelReport = HouseDailyModel.evaluateSettlement(
+                new HouseDailyModel.SettlementInput(
+                        residentCount,
+                        consumption.foodConsumed(),
+                        consumption.nutritionValue(),
+                        getEffectiveTemperature(),
+                        area,
+                        volume,
+                        decorationRating),
+                new HouseDailyModel.SettlementParameters(
+                        config.foodConsumptionPerResidentDay.get(),
+                        config.nutritionReferencePerFoodUnit.get(),
+                        config.minimumNutritionRecoveryMultiplier.get(),
+                        scoring.comfortableTemperatureCelsius.get(),
+                        scoring.minimumTemperatureRating.get(),
+                        scoring.temperatureRatingSlope.get(),
+                        scoring.temperatureRatingHalfPointDifferenceCelsius.get(),
+                        scoring.spaceAreaCoefficient.get(),
+                        scoring.spaceHeightLogCoefficient.get(),
+                        scoring.spaceHeightLogOffset.get(),
+                        scoring.spaceResponseScale.get(),
+                        scoring.spaceResponseExponent.get(),
+                        config.temperatureComfortWeight.get(),
+                        config.spaceComfortWeight.get(),
+                        config.decorationComfortWeight.get()));
         return new DailyReport(
                 true,
-                residentCount,
-                foodRequired,
-                consumption.foodConsumed(),
-                foodSatisfaction,
-                nutritionQuality,
-                nutritionMultiplier,
-                effectiveTemperature,
-                temperatureRating,
-                spaceRating,
-                decorationRating,
-                comfortRating
+                modelReport.residentCount(),
+                modelReport.foodRequired(),
+                modelReport.foodConsumed(),
+                modelReport.foodSatisfaction(),
+                modelReport.nutritionQuality(),
+                modelReport.nutritionRecoveryMultiplier(),
+                modelReport.effectiveTemperature(),
+                modelReport.temperatureRating(),
+                modelReport.spaceRating(),
+                modelReport.decorationRating(),
+                modelReport.comfortRating()
         );
     }
 
@@ -350,21 +381,30 @@ public class HouseBuilding extends AbstractTownBuilding implements ITownResident
                 resident.getMental(),
                 report.foodSatisfaction(),
                 report.nutritionRecoveryMultiplier(),
+                report.effectiveTemperature(),
                 report.temperatureRating(),
                 report.comfortRating(),
-                config.healthLossAtZeroFoodPerResidentDay.get(),
-                config.mentalLossAtZeroFoodPerResidentDay.get(),
-                config.maximumHealthRecoveryPerResidentDay.get(),
-                config.maximumMentalRecoveryPerResidentDay.get()
+                new HouseDailyModel.ResidentEffectParameters(
+                        config.foodDeficitPenaltyExponent.get(),
+                        config.healthLossAtZeroFoodPerResidentDay.get(),
+                        config.mentalLossAtZeroFoodPerResidentDay.get(),
+                        config.minimumTemperatureCelsius.get(),
+                        config.maximumTemperatureCelsius.get(),
+                        config.temperatureFullStressDistanceCelsius.get(),
+                        config.temperatureStressPenaltyExponent.get(),
+                        config.healthLossAtFullTemperatureStressPerResidentDay.get(),
+                        config.mentalLossAtFullTemperatureStressPerResidentDay.get(),
+                        config.maximumHealthRecoveryPerResidentDay.get(),
+                        config.maximumMentalRecoveryPerResidentDay.get())
         );
     }
 
     public double getTemperatureRating() {
-        return TownMathFunctions.calculateTemperatureRating(getEffectiveTemperature());
+        return calculateTemperatureRating(getEffectiveTemperature());
     }
 
     public double getSpaceRating() {
-        return TownMathFunctions.calculateSpaceRating(volume, area);
+        return calculateSpaceRating(volume, area);
     }
 
     public double getComfortRating() {
@@ -387,8 +427,34 @@ public class HouseBuilding extends AbstractTownBuilding implements ITownResident
         );
     }
 
+    private static double calculateTemperatureRating(double temperature) {
+        FHConfig.Server.Town.BuildingScoring config = FHConfig.SERVER.TOWN.BUILDING_SCORING;
+        return TownMathFunctions.calculateTemperatureRating(
+                temperature,
+                config.comfortableTemperatureCelsius.get(),
+                config.minimumTemperatureRating.get(),
+                config.temperatureRatingSlope.get(),
+                config.temperatureRatingHalfPointDifferenceCelsius.get());
+    }
+
+    private static double calculateSpaceRating(int volume, int area) {
+        FHConfig.Server.Town.BuildingScoring config = FHConfig.SERVER.TOWN.BUILDING_SCORING;
+        return TownMathFunctions.calculateSpaceRating(
+                volume,
+                area,
+                config.spaceAreaCoefficient.get(),
+                config.spaceHeightLogCoefficient.get(),
+                config.spaceHeightLogOffset.get(),
+                config.spaceResponseScale.get(),
+                config.spaceResponseExponent.get());
+    }
+
     private void setDailyReport(DailyReport dailyReport) {
-        this.dailyReport = dailyReport == null ? DailyReport.EMPTY : dailyReport;
+        DailyReport report = dailyReport == null ? DailyReport.EMPTY : dailyReport;
+        // 值级守卫：DailyReport 为 record（逐字段比较，无随机/时钟字段），空房等未变化
+        // 场景连续两天报告相等——不再 fireChange，避免每日建筑包重发全部房屋条目
+        if (Objects.equals(this.dailyReport, report)) return;
+        this.dailyReport = report;
         fireChange();
     }
 
