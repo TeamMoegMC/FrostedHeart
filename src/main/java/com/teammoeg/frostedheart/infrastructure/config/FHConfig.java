@@ -1750,7 +1750,7 @@ public class FHConfig {
 				mazeCells = builder.comment("Maze grid size in cells (cell is 3 blocks, wall is 1).")
 						.defineInRange("mazeCells", 11, 5, 21);
 				spawnWeight = builder.comment("Natural spawn weight. High default for testing; lower before release.")
-						.defineInRange("spawnWeight", 10, 0, 1000);
+						.defineInRange("spawnWeight", 1, 0, 1000);
 				spawnBiomes = builder.comment("Biome IDs where the boss may spawn. Default: snowy plains only; the pack adds custom snowy biomes here.")
 						.defineListAllowEmpty("spawnBiomes",
 								() -> new ArrayList<>(List.of("minecraft:snowy_plains")), o -> o instanceof String);
