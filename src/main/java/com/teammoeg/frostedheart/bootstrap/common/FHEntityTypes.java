@@ -26,6 +26,7 @@ import com.teammoeg.frostedheart.content.utility.gunpowderbarrel.GunpowderBarrel
 import com.teammoeg.frostedheart.content.utility.seld.ContainerHolderEntity;
 import com.teammoeg.frostedheart.content.utility.seld.SledEntity;
 import com.teammoeg.frostedheart.content.world.entities.CuriosityEntity;
+import com.teammoeg.frostedheart.content.world.entities.CuriosityMoundEntity;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobCategory;
@@ -45,6 +46,12 @@ public class FHEntityTypes {
             () -> EntityType.Builder.<CuriosityEntity>of(CuriosityEntity::new, MobCategory.CREATURE)
                     .sized(1.0f, 1.0f)
                     .build(new ResourceLocation(FHMain.MODID, "curiosity_entity").toString())
+    );
+    // 追踪者地表隆起表现实体：不存档 / surface mound visual, never saved
+    public static final RegistryObject<EntityType<CuriosityMoundEntity>> CURIOSITY_MOUND = ENTITY_TYPES.register("curiosity_mound",
+            () -> EntityType.Builder.<CuriosityMoundEntity>of(CuriosityMoundEntity::new, MobCategory.MISC)
+                    .sized(1.2f, 0.8f).noSave()
+                    .build(new ResourceLocation(FHMain.MODID, "curiosity_mound").toString())
     );
     public static final RegistryObject<EntityType<SledEntity>> SLED = ENTITY_TYPES.register("sled_entity",
             () -> EntityType.Builder.<SledEntity>of(SledEntity::new, MobCategory.MISC)

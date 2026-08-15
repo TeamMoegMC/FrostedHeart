@@ -70,6 +70,7 @@ import com.teammoeg.frostedheart.content.utility.seld.SledEntityRenderer;
 import com.teammoeg.frostedheart.content.utility.seld.SledModel;
 import com.teammoeg.frostedheart.content.world.entities.CuriosityEntityModel;
 import com.teammoeg.frostedheart.content.world.entities.CuriosityEntityRenderer;
+import com.teammoeg.frostedheart.content.world.entities.CuriosityMoundRenderer;
 import com.teammoeg.frostedresearch.gui.InsightOverlay;
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.level.block.Blocks;
@@ -439,6 +440,7 @@ public class FHClientEventsMod {
     @SubscribeEvent
     public static void registerRenderers(EntityRenderersEvent.RegisterRenderers event) {
         event.registerEntityRenderer(FHEntityTypes.CURIOSITY.get(), CuriosityEntityRenderer::new);
+        event.registerEntityRenderer(FHEntityTypes.CURIOSITY_MOUND.get(), CuriosityMoundRenderer::new);
         event.registerEntityRenderer(FHEntityTypes.WANDERING_REFUGEE.get(), WanderingRefugeeRenderer::new);
         event.registerEntityRenderer(FHEntityTypes.FAKE_CITIZEN.get(), FakeCitizenRenderer::new);
         event.registerEntityRenderer(FHEntityTypes.SLED.get(), SledEntityRenderer::new);

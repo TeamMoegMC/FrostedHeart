@@ -103,6 +103,9 @@ public class FHBiomeModifiers {
             // spawns.addSpawn(MobCategory.CREATURE, new MobSpawnSettings.SpawnerData(EntityType.POLAR_BEAR, 1, 1, 2));
             // spawns.addSpawn(MobCategory.MONSTER, new MobSpawnSettings.SpawnerData(EntityType.STRAY, 20, 1, 3));
             spawns.addSpawn(MobCategory.CREATURE, new MobSpawnSettings.SpawnerData(FHEntityTypes.WANDERING_REFUGEE.get(), 1, 1, 5));
+            // 雪原深处的好奇心：权重由 FHConfig 控制（测试期默认较高，发布前调低）；群系过滤在 canSpawn 中按配置列表判定
+            spawns.addSpawn(MobCategory.CREATURE, new MobSpawnSettings.SpawnerData(FHEntityTypes.CURIOSITY.get(),
+                    FHConfig.SERVER.CURIOSITY.spawnWeight.get(), 1, 1));
 
             //防止洞穴群系修改地表
             if (biome.is(FHTags.Biomes.IS_CAVE.tag))
