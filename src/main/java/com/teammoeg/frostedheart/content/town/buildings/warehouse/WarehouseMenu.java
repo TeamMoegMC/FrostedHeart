@@ -43,6 +43,13 @@ public class WarehouseMenu extends CBlockEntityMenu<WarehouseBlockEntity> {
 	private boolean isFirstSync = true;
 	private final Player player;
 
+	// ---- 客户端视图状态（搜索过滤 + 排序），仅客户端 GUI 使用 ----
+	// 过滤排序后的视图缓存，getResources() 惰性重建，避免每帧重复排序
+	private final List<VirtualItemStack> clientViewList = new ArrayList<>();
+	private WarehouseSortMode sortMode = WarehouseSortMode.AMOUNT_DESC;
+	private String searchText = "";
+	private boolean viewDirty = true;
+
 	public WarehouseMenu(int id, Inventory inventoryPlayer, WarehouseBlockEntity tile) {
 		super(FHMenuTypes.WAREHOUSE.get(), tile, id, inventoryPlayer.player, 32);
 		this.player = inventoryPlayer.player;
@@ -151,12 +158,58 @@ public class WarehouseMenu extends CBlockEntityMenu<WarehouseBlockEntity> {
 			}
 		}
 
-		//排序
-		this.clientItemList.sort(Comparator.comparingLong(VirtualItemStack::getAmount).reversed());
+		//主数据已变化，标记视图需要重建（过滤+排序在 getResources() 中惰性执行）
+		this.viewDirty = true;
 	}
 
+	/**
+	 * 获取过滤并排序后的客户端物品视图。
+	 * 仅当主数据、搜索词或排序模式变化时才重建，渲染帧内多次调用零开销。
+	 */
 	public List<VirtualItemStack> getResources() {
-		return this.clientItemList;
+		if (viewDirty) {
+			rebuildViewList();
+			viewDirty = false;
+		}
+		return clientViewList;
+	}
+
+	private void rebuildViewList() {
+		clientViewList.clear();
+		String query = searchText.trim().toLowerCase(Locale.ROOT);
+		if (query.isEmpty()) {
+			clientViewList.addAll(clientItemList);
+		} else {
+			for (VirtualItemStack vStack : clientItemList) {
+				if (vStack.getLowercaseName().contains(query)) {
+					clientViewList.add(vStack);
+				}
+			}
+		}
+		clientViewList.sort(sortMode.comparator());
+	}
+
+	public WarehouseSortMode getSortMode() {
+		return sortMode;
+	}
+
+	public void setSortMode(WarehouseSortMode sortMode) {
+		if (sortMode != null && sortMode != this.sortMode) {
+			this.sortMode = sortMode;
+			this.viewDirty = true;
+		}
+	}
+
+	public String getSearchText() {
+		return searchText;
+	}
+
+	public void setSearchText(String searchText) {
+		String newText = searchText == null ? "" : searchText;
+		if (!newText.equals(this.searchText)) {
+			this.searchText = newText;
+			this.viewDirty = true;
+		}
 	}
 
 

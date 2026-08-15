@@ -58,36 +58,11 @@ public class SurroundingTemperatureSimulator {
 
     public record SimulationResult(float blockTemp, float windStrength) {
     }
-
-    /**
-     * 缓存的方块信息。不可变，线程安全。
-     * 同一 BlockState 实例共享同一 CachedBlockInfo（通过 stateCache 去重）。
-     */
-    private static final class CachedBlockInfo {
-        final VoxelShape shape;
-        final List<AABB> aabbList;
-        final float temperature;
-        final boolean isFull;
-        final boolean isEmpty;
-
-        CachedBlockInfo(VoxelShape shape, float temperature) {
-            this.shape = shape;
-            this.temperature = temperature;
-            this.isFull = (shape == FULL);
-            this.isEmpty = (shape == EMPTY);
-            // 仅对部分形状（楼梯、半砖等）生成 AABB 列表
-            this.aabbList = (!isFull && !isEmpty) ? shape.toAabbs() : Collections.emptyList();
-        }
-    }
-
-    /** Cached block info paired with the block-temperature recipe generation that produced it. */
-    private record VersionedBlockInfo(long recipeVersion, CachedBlockInfo info) {
-    }
-
+    
     /**
      * 线程局部工作缓冲区（SoA 布局）。
      * <p>
-     * 位置缓存拆成三个平行数组，替代原来的 CachedBlockInfo[] 引用数组：
+     * 位置缓存拆成三个平行数组，替代原来的 CachedBlockTempInfo[] 引用数组：
      * 旧布局每步命中要"读引用 → 按引用跳到堆对象读字段"两次**串行依赖**加载，
      * CPU 大量时间空转等内存；SoA 后分支决策只看 cellKind（32KB，常驻 L1），
      * cellTemp 与之并行发射（无依赖），指针追逐消失。
@@ -111,8 +86,8 @@ public class SurroundingTemperatureSimulator {
 
     // ======================== 静态常量 ========================
 
-    private static final VoxelShape EMPTY = Shapes.empty();
-    private static final VoxelShape FULL = Shapes.block();
+    public static final VoxelShape EMPTY = Shapes.empty();
+    public static final VoxelShape FULL = Shapes.block();
 
     public static final int range = FHConfig.SERVER.SIMULATION.simulationRange.get();
     private static final int rdiff = FHConfig.SERVER.SIMULATION.simulationDivision.get();
@@ -186,10 +161,6 @@ public class SurroundingTemperatureSimulator {
 
     private final int ox, oy, oz; // origin 坐标（int 缓存，避免反复 getX/Y/Z）
     private final FastRandom rnd;  // 无锁随机数（xoroshiro128+，见内部类注释）
-
-    // BlockState → CachedBlockInfo 全局去重缓存；配方版本不匹配时按条目惰性替换。
-    private static final ConcurrentHashMap<BlockState, VersionedBlockInfo> GLOBAL_CACHE = new ConcurrentHashMap<>(256);
-
 
     // ======================== 构造器 ========================
 
@@ -307,7 +278,7 @@ public class SurroundingTemperatureSimulator {
                     kind = KIND_EMPTY;
                     curheat = 0f;
                 } else if ((kind = cellKind[idx]) == 0) {
-                    CachedBlockInfo computed = computeBlockInfo(rx, ry, rz, bx, by, bz);
+                    CachedBlockTempInfo computed = computeBlockInfo(rx, ry, rz, bx, by, bz);
                     kind = computed.isEmpty ? KIND_EMPTY
                             : computed.isFull ? KIND_FULL : KIND_PARTIAL;
                     cellKind[idx] = (byte) kind;
@@ -354,7 +325,7 @@ public class SurroundingTemperatureSimulator {
                 } else if (kind == KIND_PARTIAL) {
                     // 部分形状（楼梯、半砖等，占比 <10%）：回退到原版 clip
                     // 此处不可避免需要创建 Vec3/BlockPos，因为 MC API 要求
-                    CachedBlockInfo info = computeBlockInfo(rx, ry, rz, bx, by, bz);
+                    CachedBlockTempInfo info = computeBlockInfo(rx, ry, rz, bx, by, bz);
 
                     Vec3 svec = new Vec3(sx, sy, sz);
                     Vec3 dvec = new Vec3(dx, dy, dz);
@@ -428,9 +399,9 @@ public class SurroundingTemperatureSimulator {
      * @param worldX/Y/Z 世界坐标（用于 getCollisionShape）
      */
     // 两个全局单例：空气 和 无温度全满方块
-    private static final CachedBlockInfo AIR_INFO = new CachedBlockInfo(EMPTY, 0f);
-    private static final CachedBlockInfo FULL_ZERO_TEMP_INFO = new CachedBlockInfo(FULL, 0f);
-    private CachedBlockInfo computeBlockInfo(int localX, int localY, int localZ,
+    private static final CachedBlockTempInfo AIR_INFO = new CachedBlockTempInfo(EMPTY, 0f);
+    private static final CachedBlockTempInfo FULL_ZERO_TEMP_INFO = new CachedBlockTempInfo(FULL, 0f);
+    private CachedBlockTempInfo computeBlockInfo(int localX, int localY, int localZ,
                                              int worldX, int worldY, int worldZ) {
         BlockState bs = getBlock(localX, localY, localZ);
 
@@ -439,11 +410,10 @@ public class SurroundingTemperatureSimulator {
             return AIR_INFO;
         }
 
-        // 2. 快速查全局缓存（无锁读）；配方重载后版本不匹配，进入重算。
-        long recipeVersion = BlockTempData.getCacheVersion();
-        VersionedBlockInfo cached = GLOBAL_CACHE.get(bs);
-        if (cached != null && cached.recipeVersion() == recipeVersion) {
-            return cached.info();
+        // 2. 快速查全局缓存（无锁读，命中则直接返回，完全避免后续计算）
+        CachedBlockTempInfo cached = CachedBlockTempInfo.get(bs);
+        if (cached != null) {
+            return cached;
         }
 
         // 3. 缓存未命中 —— 计算温度
@@ -482,25 +452,19 @@ public class SurroundingTemperatureSimulator {
         }
 
         // 5. 根据结果选择应该存入缓存的“值”
-        final CachedBlockInfo result;
+        final CachedBlockTempInfo result;
         if (BlockInfoCachePolicy.canReuseAirInfo(shape, temp)) {
             // 空碰撞并不等于空气：fire/soul_fire 等热源也是空碰撞，只有零温度才可共享。
             result = AIR_INFO;
         } else if (shape == FULL && temp == 0f) {
             result = FULL_ZERO_TEMP_INFO;    // 零温全满 → 共享全满零温单例
         } else {
-            result = new CachedBlockInfo(shape, temp); // 有温度或复杂形状 → 独立对象
+            result = new CachedBlockTempInfo(shape, temp); // 有温度或复杂形状 → 独立对象
         }
 
-        // 6. 配方可能在计算期间完成重载；丢弃跨版本结果并按新版本重算。
-        if (BlockTempData.getCacheVersion() != recipeVersion)
-            return computeBlockInfo(localX, localY, localZ, worldX, worldY, worldZ);
-        VersionedBlockInfo candidate = new VersionedBlockInfo(recipeVersion, result);
-        VersionedBlockInfo selected = GLOBAL_CACHE.compute(bs, (key, existing) ->
-                existing != null && existing.recipeVersion() == recipeVersion ? existing : candidate);
-        if (BlockTempData.getCacheVersion() != recipeVersion)
-            return computeBlockInfo(localX, localY, localZ, worldX, worldY, worldZ);
-        return selected.info();
+        // 6. 尝试原子性地存入缓存（如果已有其他线程抢先，则使用已有的值）
+        CachedBlockTempInfo existing = CachedBlockTempInfo.putIfAbsent(bs, result);
+        return existing != null ? existing : result;
     }
 
 
@@ -682,6 +646,7 @@ public class SurroundingTemperatureSimulator {
             return (int) r;
         }
     }
+
 }
 
 
@@ -695,13 +660,13 @@ public class SurroundingTemperatureSimulator {
 //
 //     // Extract block data into shape and temperature, other data are disposed.
 //
-//     private static class CachedBlockInfo {
+//     private static class CachedBlockTempInfo {
 //         VoxelShape shape;
 //         List<AABB> aabbList;
 //         float temperature;
 //         BlockState bs;
 //
-//         public CachedBlockInfo(VoxelShape shape, float temperature, BlockState bs) {
+//         public CachedBlockTempInfo(VoxelShape shape, float temperature, BlockState bs) {
 //             super();
 //             this.shape = shape;
 //             this.aabbList=shape.toAabbs();
@@ -710,7 +675,7 @@ public class SurroundingTemperatureSimulator {
 //             this.bs = bs;
 //         }
 //
-//         public CachedBlockInfo(VoxelShape shape, BlockState bs) {
+//         public CachedBlockTempInfo(VoxelShape shape, BlockState bs) {
 //             super();
 //             this.shape = shape;
 //             this.aabbList=shape.toAabbs();
@@ -779,9 +744,9 @@ public class SurroundingTemperatureSimulator {
 //     private Level level;
 //
 //
-//     public Map<BlockState, CachedBlockInfo> info = new HashMap<>();// state to info cache
+//     public Map<BlockState, CachedBlockTempInfo> info = new HashMap<>();// state to info cache
 //
-//     public Map<BlockPos, CachedBlockInfo> posinfo = new HashMap<>();// position to info cache
+//     public Map<BlockPos, CachedBlockTempInfo> posinfo = new HashMap<>();// position to info cache
 //
 //     public static void init() {
 //
@@ -893,7 +858,7 @@ public class SurroundingTemperatureSimulator {
 //                 Vec3 svec = Qpos[i];
 //                 Vec3 dvec = svec.add(curspeed);
 //                 BlockPos bpos = CUtils.vec2AlignedPos(dvec);
-//                 CachedBlockInfo info = getInfoCached(bpos);
+//                 CachedBlockTempInfo info = getInfoCached(bpos);
 //
 //                 VoxelShape shape = info.shape;
 //                 BlockHitResult bhr = shape.clip(svec, dvec, bpos);
@@ -938,22 +903,22 @@ public class SurroundingTemperatureSimulator {
 //         return topY <= pos.getY();
 //     }
 //
-//     private class CachedBlockInfoGetter implements Function<BlockState,CachedBlockInfo> {
+//     private class CachedBlockTempInfoGetter implements Function<BlockState,CachedBlockTempInfo> {
 //         BlockPos pos;
 //         @Override
-//         public CachedBlockInfo apply(BlockState t) {
-//             CachedBlockInfo info= getInfo(pos, t);
+//         public CachedBlockTempInfo apply(BlockState t) {
+//             CachedBlockTempInfo info= getInfo(pos, t);
 //             return info;
 //         }
 //
 //     }
 //
-//     CachedBlockInfoGetter generator=new CachedBlockInfoGetter();
+//     CachedBlockTempInfoGetter generator=new CachedBlockTempInfoGetter();
 //
 //     // fetch without position cache, but with blockstate cache, blocks with the same
 //     // state should have same collider and heat.
 //
-//     private CachedBlockInfo getInfo(BlockPos pos) {
+//     private CachedBlockTempInfo getInfo(BlockPos pos) {
 //         generator.pos=pos;
 //         BlockPos ofregion = pos.subtract(origin);
 //         BlockState bs = getBlock(ofregion.getX(), ofregion.getY(), ofregion.getZ());
@@ -963,7 +928,7 @@ public class SurroundingTemperatureSimulator {
 //     // Just fetch block temperature and collision without cache.
 //     // Position is only for getCollisionShape method, to avoid some TE based shape.
 //
-//     private CachedBlockInfo getInfo(BlockPos pos, BlockState bs) {
+//     private CachedBlockTempInfo getInfo(BlockPos pos, BlockState bs) {
 //         BlockTempData b = BlockTempData.getData(bs.getBlock());
 //         VoxelShape shape;
 //
@@ -978,7 +943,7 @@ public class SurroundingTemperatureSimulator {
 //             }
 //         }
 //         if (b == null)
-//             return new CachedBlockInfo(shape, bs);
+//             return new CachedBlockTempInfo(shape, bs);
 //         float cblocktemp = 0;
 //         if (b.isLit()) {
 //             boolean litOrActive = bs.hasProperty(BlockStateProperties.LIT) && bs.getValue(BlockStateProperties.LIT);
@@ -997,13 +962,13 @@ public class SurroundingTemperatureSimulator {
 //                 cblocktemp *= (float) (bs.getValue(BlockStateProperties.LEVEL_CAULDRON) + 1) / 4;
 //             }
 //         }
-//         return new CachedBlockInfo(shape, cblocktemp, bs);
+//         return new CachedBlockTempInfo(shape, cblocktemp, bs);
 //     }
 //
 //     // Since a position is highly possible to be fetched for multiple times, add
 //     // cache in normal fetch
 //
-//     private CachedBlockInfo getInfoCached(BlockPos pos) {
+//     private CachedBlockTempInfo getInfoCached(BlockPos pos) {
 //         return posinfo.computeIfAbsent(pos, this::getInfo);
 //     }
 //
@@ -1011,7 +976,7 @@ public class SurroundingTemperatureSimulator {
 //
 //     private Direction getHitingFace(double sx, double sy, double sz, double vx, double vy, double vz) {
 //         BlockPos bpos = new BlockPos((int) (sx + vx), (int) (sy + vy), (int) (sz + vz));
-//         CachedBlockInfo info = getInfoCached(bpos);
+//         CachedBlockTempInfo info = getInfoCached(bpos);
 //         if (info.shape == EMPTY)
 //             return null;
 //         Vec3 svec = new Vec3(sx, sy, sz);

@@ -28,6 +28,8 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.chorda.recipe.CodecRecipeSerializer;
 
+import com.teammoeg.frostedheart.content.climate.player.CachedBlockTempInfo;
+import com.teammoeg.frostedheart.content.climate.player.SurroundingTemperatureSimulator;
 import net.minecraft.data.recipes.FinishedRecipe;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.crafting.Recipe;
@@ -47,8 +49,6 @@ public record BlockTempData(Block block,float temperature, boolean level, boolea
 		Codec.BOOL.optionalFieldOf("must_lit",false).forGetter(o->o.lit)).apply(t, BlockTempData::new));
 	public static RegistryObject<CodecRecipeSerializer<BlockTempData>> TYPE;
 	private static volatile Map<Block,BlockTempData> CACHE =ImmutableMap.of();
-	/** Monotonic recipe-cache generation used by simulator caches for lazy invalidation. */
-	private static volatile long cacheVersion;
 
     @Nullable
     public static BlockTempData getData(Block block) {
@@ -58,11 +58,8 @@ public record BlockTempData(Block block,float temperature, boolean level, boolea
     public static void updateCache(RecipeManager manager) {
         Collection<Recipe<?>> recipes = manager.getRecipes();
         BlockTempData.CACHE = BlockTempData.TYPE.get().filterRecipes(recipes).collect(Collectors.toMap(t->t.getData().block(), t->t.getData()));
-        cacheVersion++;
-    }
-
-    public static long getCacheVersion() {
-        return cacheVersion;
+        // 温度数据已改变，清空方块信息缓存，防止旧温度数据被复用
+        CachedBlockTempInfo.clear();
     }
 
     public float getTemp() {
