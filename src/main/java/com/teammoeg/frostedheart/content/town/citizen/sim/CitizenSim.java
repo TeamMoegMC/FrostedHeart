@@ -46,10 +46,10 @@ public final class CitizenSim {
 	public int[] id;
 	/** 位置（定点 1/1024 方块） / Position (fixed-point 1/1024 block) */
 	public int[] px, py, pz;
-	/** 量化朝向 / Quantized yaw */
-	public byte[] yaw;
-    // Dead Reckoning canonical yaw，客户端应该的规范朝向
-    public byte[] syaw;
+	/** 16 向移动方向索引（0–15），默认 4 = 南（+Z）；服务端不存连续 yaw——视觉软转向在客户端本地完成 / 16-way direction index (0–15), default 4 = south (+Z); the server stores no continuous yaw — visual soft-turning is client-local */
+	public byte[] dir;
+    // Dead Reckoning canonical dir，客户端应该的规范方向
+    public byte[] sdir;
 	/** 行为状态，见 {@link CitizenState} / Behavior state, see {@link CitizenState} */
 	public byte[] state;
 	/** 归属性锚点（家），方块坐标 / Home anchor, block coordinates */
@@ -88,8 +88,8 @@ public final class CitizenSim {
 		px = new int[cap];
 		py = new int[cap];
 		pz = new int[cap];
-		yaw = new byte[cap];
-        syaw = new byte[cap];
+		dir = new byte[cap];
+        sdir = new byte[cap];
         state = new byte[cap];
 		homeX = new int[cap];
 		homeZ = new int[cap];
@@ -118,8 +118,8 @@ public final class CitizenSim {
 		px = Arrays.copyOf(px, newCap);
 		py = Arrays.copyOf(py, newCap);
 		pz = Arrays.copyOf(pz, newCap);
-		yaw = Arrays.copyOf(yaw, newCap);
-        syaw = Arrays.copyOf(syaw, newCap);
+		dir = Arrays.copyOf(dir, newCap);
+        sdir = Arrays.copyOf(sdir, newCap);
 		state = Arrays.copyOf(state, newCap);
 		homeX = Arrays.copyOf(homeX, newCap);
 		homeZ = Arrays.copyOf(homeZ, newCap);
@@ -176,8 +176,8 @@ public final class CitizenSim {
 		tx[i] = x;
 		ty[i] = y;
 		tz[i] = z;
-		yaw[i] = 0;
-        syaw[i] = 0;
+		dir[i] = 4; // 南（+Z），与旧 yaw=0 的默认朝向一致
+        sdir[i] = 4;
         state[i] = CitizenState.IDLE;
 		tickPhase[i] = phase;
 		sx[i] = x;
@@ -211,8 +211,8 @@ public final class CitizenSim {
 			px[i] = px[last];
 			py[i] = py[last];
 			pz[i] = pz[last];
-			yaw[i] = yaw[last];
-            syaw[i] = syaw[last];
+			dir[i] = dir[last];
+            sdir[i] = sdir[last];
 			state[i] = state[last];
 			homeX[i] = homeX[last];
 			homeZ[i] = homeZ[last];
@@ -338,8 +338,8 @@ public final class CitizenSim {
 		tag.putIntArray("px", Arrays.copyOf(px, size));
 		tag.putIntArray("py", Arrays.copyOf(py, size));
 		tag.putIntArray("pz", Arrays.copyOf(pz, size));
-		tag.putByteArray("yaw", Arrays.copyOf(yaw, size));
-        tag.putByteArray("syaw", Arrays.copyOf(syaw, size));
+		tag.putByteArray("dir", Arrays.copyOf(dir, size));
+        tag.putByteArray("sdir", Arrays.copyOf(sdir, size));
 		tag.putByteArray("state", Arrays.copyOf(state, size));
 		tag.putIntArray("homeX", Arrays.copyOf(homeX, size));
 		tag.putIntArray("homeZ", Arrays.copyOf(homeZ, size));
@@ -364,6 +364,9 @@ public final class CitizenSim {
 		int[] apx = tag.getIntArray("px");
 		int[] apy = tag.getIntArray("py");
 		int[] apz = tag.getIntArray("pz");
+		byte[] adir = tag.getByteArray("dir");
+        byte[] asdir = tag.getByteArray("sdir");
+		// 旧存档回退：连续 yaw → 16 向方向（见 CitizenState.dirFromYaw）
 		byte[] ayaw = tag.getByteArray("yaw");
         byte[] asyaw = tag.getByteArray("syaw");
 		byte[] astate = tag.getByteArray("state");
@@ -399,11 +402,19 @@ public final class CitizenSim {
 					continue;
 			}
 			int i = sim.add(ids[k], apx[k], apy[k], apz[k], (byte) (ids[k] % 20));
-			if (k < ayaw.length)
-				sim.yaw[i] = ayaw[k];
-			// syaw was introduced by the 256-step yaw refactor. Older saves do
-			// not contain it; their current yaw is the correct canonical baseline.
-			sim.syaw[i] = k < asyaw.length ? asyaw[k] : sim.yaw[i];
+			if (k < adir.length)
+				sim.dir[i] = adir[k];
+			else if (k < ayaw.length)
+				sim.dir[i] = (byte) CitizenState.dirFromYaw(ayaw[k]);
+			// sdir was introduced with the canonical dead-reckoning model; the
+			// 16-way dir sync replaced both it and yaw. Older saves fall back to
+			// the legacy syaw (converted) or the current dir as the baseline.
+			if (k < asdir.length)
+				sim.sdir[i] = asdir[k];
+			else if (k < asyaw.length)
+				sim.sdir[i] = (byte) CitizenState.dirFromYaw(asyaw[k]);
+			else
+				sim.sdir[i] = sim.dir[i];
 			if (k < astate.length) {
 				int loadedState = astate[k] & 0xFF;
 				sim.state[i] = loadedState < CitizenState.STATE_COUNT ? astate[k] : CitizenState.IDLE;

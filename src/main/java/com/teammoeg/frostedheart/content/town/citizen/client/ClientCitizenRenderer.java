@@ -41,14 +41,14 @@ import net.minecraftforge.client.event.RenderLevelStageEvent;
 /**
  * 客户端居民批量渲染器（v2：三级 LOD，单次 draw call 提交）。
  * 近距（&lt; 24 格）由 FakeCitizenManager 的假实体接管，本类直接跳过；
- * 中距（24–64 格）绘制低模人形（躯干+头两个盒体，16 向朝向旋转、行走起伏）；
+ * 中距（24–64 格）绘制低模人形（躯干+头两个盒体，连续视觉朝向旋转、行走起伏）；
  * 远距（64–96 格）绘制纯色广告牌。中远距全部合并进一个 POSITION_COLOR 批次，
  * 成本 = 每中距居民 48 顶点 / 每远距居民 4 顶点 + 1 次 draw call。
  * <p>
  * Client citizen batch renderer (v2: three-tier LOD, single draw call).
  * Near range (&lt; 24 blocks) is owned by FakeCitizenManager's fake entities
  * and skipped here; mid range (24–64) draws low-poly humanoids (body+head
- * boxes, 16-way yaw rotation, walk bobbing); far range (64–96) draws plain
+ * boxes, continuous visual-yaw rotation, walk bobbing); far range (64–96) draws plain
  * billboards. Mid and far geometry is merged into one POSITION_COLOR batch:
  * 48 vertices per mid-range / 4 per far-range citizen + 1 draw call.
  */
@@ -166,14 +166,15 @@ public final class ClientCitizenRenderer {
 	}
 
 	/**
-	 * 中距 LOD：低模人形（躯干 + 头两个盒体，按 16 向朝向旋转，移动时起伏）。
+	 * 中距 LOD：低模人形（躯干 + 头两个盒体，按客户端本地软转向后的连续
+	 * 视觉朝向旋转，移动时起伏）。
 	 * <p>
 	 * Mid-range LOD: low-poly humanoid (body + head boxes, rotated by the
-	 * 16-way facing, bobbing while moving).
+	 * client-local soft-turned visual yaw, bobbing while moving).
 	 */
     private static void emitHumanoid(BufferBuilder buf, Matrix4f mat, ClientCitizen c, double[] pos, float[] col,
                                      float time) {
-        int yaw = c.yaw & 0xFF;                       // 0–255 连续朝向
+        int yaw = c.visualYaw();                      // 0–255 本地连续视觉朝向
         float cos = CitizenState.DIR_X_256[yaw] / 1024.0f;
         float sin = CitizenState.DIR_Z_256[yaw] / 1024.0f;
         float bob = 0.0f;

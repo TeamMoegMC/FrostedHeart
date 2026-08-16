@@ -96,8 +96,8 @@ public final class UnmanagedCitizenData extends SavedData implements CitizenCont
 				if (loaded.uuidHi[k] == 0 && loaded.uuidLo[k] == 0) {
 					// 命令居民：保留 id 与位置
 					int i = data.sim.add(loaded.id[k], loaded.px[k], loaded.py[k], loaded.pz[k], loaded.tickPhase[k]);
-					data.sim.yaw[i] = loaded.yaw[k];
-                    data.sim.syaw[i] = loaded.syaw[k];
+					data.sim.dir[i] = loaded.dir[k];
+                    data.sim.sdir[i] = loaded.sdir[k];
 					data.sim.state[i] = loaded.state[k];
 					data.sim.homeX[i] = loaded.homeX[k];
 					data.sim.homeZ[i] = loaded.homeZ[k];
@@ -166,8 +166,8 @@ public final class UnmanagedCitizenData extends SavedData implements CitizenCont
 		CitizenSim loaded = CitizenSim.load(simTag);
 		for (int k = 0; k < loaded.size(); k++) {
 			int i = sim.add(loaded.id[k], loaded.px[k], loaded.py[k], loaded.pz[k], loaded.tickPhase[k]);
-			sim.yaw[i] = loaded.yaw[k];
-            sim.syaw[i] = loaded.syaw[k];
+			sim.dir[i] = loaded.dir[k];
+            sim.sdir[i] = loaded.sdir[k];
 			sim.state[i] = loaded.state[k];
 			sim.homeX[i] = loaded.homeX[k];
 			sim.homeZ[i] = loaded.homeZ[k];

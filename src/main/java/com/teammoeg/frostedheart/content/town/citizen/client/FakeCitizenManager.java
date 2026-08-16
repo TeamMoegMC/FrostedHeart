@@ -220,15 +220,20 @@ public final class FakeCitizenManager {
 	}
 
 	/**
-	 * 由最近非静止方向求 MC 朝向角（度）。
+	 * 求当前 MC 视觉朝向角（度）。取客户端本地软转向后的连续 visYaw——
+	 * 16 向同步方向只提供目标，这里的指数趋近/速率钳制叠加在 visYaw 之上，
+	 * 构成双重平滑，dir 阶跃（22.5°）不会直接传导到实体。
 	 * <p>
-	 * Resolves the MC yaw (degrees) from the last non-stationary direction.
+	 * Resolves the current MC visual yaw (degrees) from the client-local
+	 * soft-turned continuous visYaw. The 16-way synced direction only sets the
+	 * target; the exponential approach / rate clamp below stacks on top of
+	 * visYaw, so 22.5° dir steps never reach the entity raw.
 	 *
 	 * @param c 模拟缓存 / the simulation cache entry
 	 * @return 朝向角 / yaw in degrees
 	 */
     private static float yawOf(ClientCitizen c) {
-        return (c.yaw & 0xFF) * (360.0f / 256.0f);
+        return c.visualYaw() * (360.0f / 256.0f);
     }
 
 	/**

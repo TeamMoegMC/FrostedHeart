@@ -27,8 +27,8 @@ class CitizenSimPersistenceTest {
         CitizenSim decoded = CitizenSim.load(legacy);
 
         assertEquals(1, decoded.size());
-        assertEquals(source.yaw[0], decoded.yaw[0]);
-        assertEquals(source.yaw[0], decoded.syaw[0]);
+        assertEquals(source.dir[0], decoded.dir[0]);
+        assertEquals(source.sdir[0], decoded.sdir[0]);
     }
 
     @Test
@@ -161,8 +161,8 @@ class CitizenSimPersistenceTest {
 
     private static void copySampleInto(CitizenSim sim) {
         int i = sim.add(41, 1024, 2048, -3072, (byte) 1);
-        sim.yaw[i] = (byte) 203;
-        sim.syaw[i] = (byte) 197;
+        sim.dir[i] = (byte) 203;
+        sim.sdir[i] = (byte) 197;
         sim.state[i] = CitizenState.WORK;
         sim.homeX[i] = 11;
         sim.homeZ[i] = -12;
@@ -179,8 +179,8 @@ class CitizenSimPersistenceTest {
         assertEquals(1024, sim.px[0]);
         assertEquals(2048, sim.py[0]);
         assertEquals(-3072, sim.pz[0]);
-        assertEquals((byte) 203, sim.yaw[0]);
-        assertEquals((byte) 197, sim.syaw[0]);
+        assertEquals((byte) 203, sim.dir[0]);
+        assertEquals((byte) 197, sim.sdir[0]);
         assertEquals(CitizenState.WORK, sim.state[0]);
         assertEquals(11, sim.homeX[0]);
         assertEquals(-12, sim.homeZ[0]);

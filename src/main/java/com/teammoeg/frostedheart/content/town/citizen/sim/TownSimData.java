@@ -168,8 +168,8 @@ public class TownSimData implements CitizenContainer, ITownResidentListener {
 		CitizenSim loaded = CitizenSim.load(simTag);
 		for (int k = 0; k < loaded.size(); k++) {
 			int i = sim.add(loaded.id[k], loaded.px[k], loaded.py[k], loaded.pz[k], loaded.tickPhase[k]);
-			sim.yaw[i] = loaded.yaw[k];
-            sim.syaw[i] = loaded.syaw[k];
+			sim.dir[i] = loaded.dir[k];
+            sim.sdir[i] = loaded.sdir[k];
 			sim.state[i] = loaded.state[k];
 			sim.homeX[i] = loaded.homeX[k];
 			sim.homeZ[i] = loaded.homeZ[k];

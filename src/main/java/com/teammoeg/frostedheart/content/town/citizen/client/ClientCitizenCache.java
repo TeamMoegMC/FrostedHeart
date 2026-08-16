@@ -58,11 +58,12 @@ public final class ClientCitizenCache {
 	 */
 	public static void applySpawn(List<S2CCitizenSpawnPacket.Entry> entries) {
 		for (S2CCitizenSpawnPacket.Entry e : entries)
-			CITIZENS.put(e.id(), new ClientCitizen(e.id(), e.px(), e.py(), e.pz(), e.yaw(), e.state(), e.name()));
+			CITIZENS.put(e.id(), new ClientCitizen(e.id(), e.px(), e.py(), e.pz(), e.stateDir(), e.name()));
 	}
 
 	/**
 	 * 应用移动增量批包（chunk 相对坐标还原为绝对定点坐标）。
+	 * state+dir 打包字节恒携带当前值，直接下发给 ClientCitizen 解包。
 	 * <p>
 	 * Applies a movement delta batch (restores chunk-relative coords to absolute fixed-point).
 	 *
@@ -79,14 +80,7 @@ public final class ClientCitizenCache {
                 int px = baseX + e.lx() * S2CCitizenBatchPacket.LOCAL_QUANT;
                 int py = e.ly() << 6;
                 int pz = baseZ + e.lz() * S2CCitizenBatchPacket.LOCAL_QUANT;
-                byte yaw = e.yaw();
-                byte state = e.state();
-                if ((state & S2CCitizenBatchPacket.ENTRY_PURE_HEARTBEAT) != 0) {
-                    // 纯心跳：沿用客户端现有的 yaw/state（服务端保证未变）
-                    yaw = c.yaw;
-                    state = c.state;
-                }
-                c.update(px, py, pz, yaw, state);
+                c.update(px, py, pz, e.stateDir());
             }
         }
     }

@@ -33,15 +33,19 @@ import net.minecraftforge.network.NetworkEvent;
 
 /**
  * 服务端 → 客户端：居民进入 AOI 时的全量出生包。
- * 每条目约 15 字节 + 名字 UTF（定点绝对坐标，不压缩——出生是低频事件）。
+ * 每条目约 14 字节 + 名字 UTF（定点绝对坐标，不压缩——出生是低频事件）；
+ * 状态与 16 向方向打包为一个字节（见
+ * {@link com.teammoeg.frostedheart.content.town.citizen.sim.CitizenState#packStateDir}）。
  * <p>
  * Server → client: full spawn packet when citizens enter the AOI.
- * ~15 bytes per entry plus the name UTF (absolute fixed-point coords, uncompressed — spawning is low-frequency).
+ * ~14 bytes per entry plus the name UTF (absolute fixed-point coords,
+ * uncompressed — spawning is low-frequency); state and 16-way direction
+ * share one packed byte (see CitizenState.packStateDir).
  */
 public final class S2CCitizenSpawnPacket implements CMessage {
 
 	/** 出生条目 / Spawn entry */
-	public record Entry(int id, int px, int py, int pz, byte yaw, byte state, String name) {
+	public record Entry(int id, int px, int py, int pz, byte stateDir, String name) {
 	}
 
 	private final List<Entry> entries;
@@ -55,7 +59,7 @@ public final class S2CCitizenSpawnPacket implements CMessage {
 		this.entries = new ArrayList<>(count);
 		for (int i = 0; i < count; i++)
 			entries.add(new Entry(buf.readVarInt(), buf.readInt(), buf.readInt(), buf.readInt(), buf.readByte(),
-					buf.readByte(), buf.readUtf(64)));
+					buf.readUtf(64)));
 	}
 
 	@Override
@@ -66,8 +70,7 @@ public final class S2CCitizenSpawnPacket implements CMessage {
 			buf.writeInt(e.px());
 			buf.writeInt(e.py());
 			buf.writeInt(e.pz());
-			buf.writeByte(e.yaw());
-			buf.writeByte(e.state());
+			buf.writeByte(e.stateDir());
 			buf.writeUtf(e.name(), 64);
 		}
 	}

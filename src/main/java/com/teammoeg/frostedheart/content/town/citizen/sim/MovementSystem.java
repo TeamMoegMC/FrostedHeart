@@ -73,9 +73,9 @@ public final class MovementSystem {
 				int oldX = sim.px[i];
 				int oldY = sim.py[i];
 				int oldZ = sim.pz[i];
-				int oldTargetX = sim.tx[i];
-				int oldTargetZ = sim.tz[i];
-				byte oldYaw = sim.yaw[i];
+			int oldTargetX = sim.tx[i];
+			int oldTargetZ = sim.tz[i];
+			byte oldDir = sim.dir[i];
 
                 if (CitizenState.MOVING[sim.state[i]]) {
                     // 移动居民：只调用一次 step
@@ -84,9 +84,9 @@ public final class MovementSystem {
                     // 站立居民：每 5 tick 贴地一次
                     conformHeight(sim, level, i);
                 }
-				persistedChanged |= oldX != sim.px[i] || oldY != sim.py[i] || oldZ != sim.pz[i]
-						|| oldTargetX != sim.tx[i] || oldTargetZ != sim.tz[i]
-						|| oldYaw != sim.yaw[i];
+			persistedChanged |= oldX != sim.px[i] || oldY != sim.py[i] || oldZ != sim.pz[i]
+					|| oldTargetX != sim.tx[i] || oldTargetZ != sim.tz[i]
+					|| oldDir != sim.dir[i];
             }
 			if (persistedChanged)
 				c.markDirty();
@@ -104,7 +104,7 @@ public final class MovementSystem {
         int dz = sim.tz[i] - sim.pz[i];
         long dist2 = (long) dx * dx + (long) dz * dz;
 
-        // 到达：直接停下，yaw 保持不变
+        // 到达：直接停下，方向保持不变
         if (dist2 < CitizenState.ARRIVE_DIST2) {
             return;
         }
@@ -125,9 +125,8 @@ public final class MovementSystem {
         int feetY = sim.py[i] >> 10;
         int bx = sim.px[i] >> 10;
         int bz = sim.pz[i] >> 10;
-        int checkYawByte = CitizenState.DIR_TO_YAW[moveDir16] & 0xFF;
-        int nbX = bx + Integer.signum(CitizenState.DIR_X_256[checkYawByte]);
-        int nbZ = bz + Integer.signum(CitizenState.DIR_Z_256[checkYawByte]);
+        int nbX = bx + Integer.signum(CitizenState.DIR_X_16[moveDir16]);
+        int nbZ = bz + Integer.signum(CitizenState.DIR_Z_16[moveDir16]);
 
         if (!passable(level, nbX, nbZ, feetY)) {
             moveDir16 = rotatePassable(level, bx, bz, moveDir16, feetY);
@@ -138,22 +137,15 @@ public final class MovementSystem {
             }
         }
 
-        // ===== 3. 视觉 yaw 缓慢旋转跟随 =====
-        byte targetYaw = CitizenState.DIR_TO_YAW[moveDir16];
-        int curYaw = sim.yaw[i] & 0xFF;
-        int tgtYaw = targetYaw & 0xFF;
-        int diff = tgtYaw - curYaw;
-        if (diff > 128) diff -= 256;
-        else if (diff < -128) diff += 256;
+        // ===== 3. 直写 16 向移动方向 =====
+        // 服务端不再维护连续视觉 yaw：同步语义就是"移动方向"，客户端本地
+        // 软转向（visYaw 闭环追赶），渲染平滑与网络/模拟彻底解耦。
+        sim.dir[i] = (byte) moveDir16;
 
-        if (diff > 0) sim.yaw[i] = (byte)((curYaw + 3) & 0xFF); // 每 tick 最多 3 步
-        else if (diff < 0) sim.yaw[i] = (byte)((curYaw - 3) & 0xFF);
-
-        // ===== 4. 基础位移（由导航方向决定） =====
-        int moveYawByte = CitizenState.DIR_TO_YAW[moveDir16] & 0xFF;
+        // ===== 4. 基础位移（由导航方向决定，与同步给客户端的方向严格同源） =====
         int speed = CitizenState.SPEED[sim.state[i]];
-        int baseX = (CitizenState.DIR_X_256[moveYawByte] * speed) >> 10;
-        int baseZ = (CitizenState.DIR_Z_256[moveYawByte] * speed) >> 10;
+        int baseX = (CitizenState.DIR_X_16[moveDir16] * speed) >> 10;
+        int baseZ = (CitizenState.DIR_Z_16[moveDir16] * speed) >> 10;
 
         // 记录移动前所在格，用于判断是否跨格
         int oldBX = sim.px[i] >> 10;
@@ -345,17 +337,14 @@ public final class MovementSystem {
             int d1 = (dir + k) & 15;
             int d2 = (dir - k + 16) & 15;
 
-            int yawD1 = CitizenState.DIR_TO_YAW[d1] & 0xFF;
-            int yawD2 = CitizenState.DIR_TO_YAW[d2] & 0xFF;
-
             if (passable(level,
-                    bx + Integer.signum(CitizenState.DIR_X_256[yawD1]),
-                    bz + Integer.signum(CitizenState.DIR_Z_256[yawD1]),
+                    bx + Integer.signum(CitizenState.DIR_X_16[d1]),
+                    bz + Integer.signum(CitizenState.DIR_Z_16[d1]),
                     feetY))
                 return d1;
             if (passable(level,
-                    bx + Integer.signum(CitizenState.DIR_X_256[yawD2]),
-                    bz + Integer.signum(CitizenState.DIR_Z_256[yawD2]),
+                    bx + Integer.signum(CitizenState.DIR_X_16[d2]),
+                    bz + Integer.signum(CitizenState.DIR_Z_16[d2]),
                     feetY))
                 return d2;
         }

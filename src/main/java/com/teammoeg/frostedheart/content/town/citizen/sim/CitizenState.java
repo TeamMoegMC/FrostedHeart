@@ -66,12 +66,20 @@ public final class CitizenState {
 	/** 是否为移动状态 / Whether the state involves movement */
 	public static final boolean[] MOVING = new boolean[STATE_COUNT];
 
-    /** 256 向方向表（yaw 0–255 → MC yaw 角度 → 位移分量定点值） */
+    /** 256 向方向表（yaw 0–255 → MC yaw 角度 → 位移分量定点值）；仅客户端视觉朝向使用 */
     public static final int[] DIR_X_256 = new int[256];
     public static final int[] DIR_Z_256 = new int[256];
 
-    /** 16 向索引 → 对应的 8‑bit yaw（0‑255），由 yawFromDir 预计算 */
+    /** 16 向索引 → 对应的 8‑bit yaw（0‑255），由 yawFromDir 预计算；仅客户端视觉软转向使用 */
     public static final byte[] DIR_TO_YAW = new byte[16];
+
+    /**
+     * 16 向方向表（dir 0–15 → 位移分量定点值），数值与
+     * DIR_X_256[DIR_TO_YAW[dir]] 完全一致。移动积分、Dead Reckoning 外推
+     * 与网络同步方向一律走这张表，省去 yaw 中间层，双端严格同源。
+     */
+    public static final int[] DIR_X_16 = new int[16];
+    public static final int[] DIR_Z_16 = new int[16];
 
 	static {
 		SPEED[IDLE] = 0;
@@ -93,6 +101,8 @@ public final class CitizenState {
 
         for (int i = 0; i < 16; i++) {
             DIR_TO_YAW[i] = yawFromDir(i);
+            DIR_X_16[i] = DIR_X_256[DIR_TO_YAW[i] & 0xFF];
+            DIR_Z_16[i] = DIR_Z_256[DIR_TO_YAW[i] & 0xFF];
         }
 	}
 
@@ -123,6 +133,38 @@ public final class CitizenState {
 		// 数学角（+X 为 0）转 MC yaw：east(+X)=-90°，south(+Z)=0°，即 mcYaw = angleDeg - 90
 		double mcYaw = angleDeg - 90.0;
 		return (byte) (int) Math.round(mcYaw * 256.0 / 360.0);
+	}
+
+	/**
+	 * 状态(0–7)与 16 向方向(0–15)打包为一个同步字节：bit0–2 = state，bit3–6 = dir，
+	 * bit7 保留为 0。网络同步只发这一个字节，彻底取代旧的 yaw+state 双字节。
+	 * <p>
+	 * Packs behavior state (0–7) and 16-way direction (0–15) into a single sync
+	 * byte: bits 0–2 state, bits 3–6 dir, bit 7 reserved (0). This byte alone
+	 * replaces the old yaw+state pair on the wire.
+	 */
+	public static byte packStateDir(int state, int dir) {
+		return (byte) ((dir << 3) | state);
+	}
+
+	/** 从同步字节解出状态 / Unpacks the behavior state from the sync byte */
+	public static int unpackState(byte sd) {
+		return sd & 7;
+	}
+
+	/** 从同步字节解出 16 向方向 / Unpacks the 16-way direction from the sync byte */
+	public static int unpackDir(byte sd) {
+		return (sd >> 3) & 15;
+	}
+
+	/**
+	 * 旧存档迁移：8-bit 连续 yaw（0–255）四舍五入到最近的 16 向方向索引。
+	 * <p>
+	 * Save migration: rounds a legacy 8-bit continuous yaw (0–255) to the
+	 * nearest 16-way direction index.
+	 */
+	public static int dirFromYaw(byte yaw) {
+		return (((yaw & 0xFF) + 8) >> 4) & 15;
 	}
 
 	/**

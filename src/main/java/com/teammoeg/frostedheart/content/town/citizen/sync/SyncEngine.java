@@ -140,8 +140,8 @@ public final class SyncEngine {
 					String name = c.getCitizenName(id);
 					if (name == null)
 						name = ""; // 未托管（命令）居民：客户端回退 id 派生名 / unmanaged (command) citizen: client falls back to the id-derived name
-					spawns.add(new S2CCitizenSpawnPacket.Entry(id, sim.px[i], sim.py[i], sim.pz[i], sim.yaw[i],
-							sim.state[i], name));
+				spawns.add(new S2CCitizenSpawnPacket.Entry(id, sim.px[i], sim.py[i], sim.pz[i],
+						CitizenState.packStateDir(sim.state[i], sim.dir[i]), name));
 				}
 			}
 			tracked.put(p, now);
@@ -235,24 +235,17 @@ public final class SyncEngine {
 				int lx = (sim.px[i] - (cx << 14)) / S2CCitizenBatchPacket.LOCAL_QUANT;
 				int lz = (sim.pz[i] - (cz << 14)) / S2CCitizenBatchPacket.LOCAL_QUANT;
 				int ly = sim.py[i] >> 6;
-				// 纯心跳条目：yaw/state 与上次发送一致 → 客户端已持有（TCP 保序必一致），
-				// state 高位标记"沿用"、编码省 yaw 字节。判定基于"上一次 flush 的规范值"
-				// （规范模型在 flush 末尾统一更新，见下）。停止外推信号由 state 本身携带：
-				// 到达后行为系统把 MOVING 状态切回静止态，状态变化走脏检测发完整条目；
-				// 切换前 MOVING 停步的间隙由持续心跳重锚，客户端漂移有界。
-				// Pure-heartbeat entry: yaw/state unchanged since last send → already on
-				// the client (TCP ordering), the state high bit marks "reuse" and the
-				// yaw byte is dropped. The decision compares against last flush's canonical
-				// values (written back at the end of this flush). The stop-extrapolation
-				// signal now lives in the state byte itself: on arrival the behavior
-				// system flips the MOVING state to a static one, and the change is sent
-				// as a full entry via the dirty path; meanwhile continued heartbeats
-				// re-anchor the client with bounded drift.
-				byte st = sim.state[i];
-                if (st == sim.sstate[i] && sim.yaw[i] == sim.syaw[i])
-                    st |= S2CCitizenBatchPacket.ENTRY_PURE_HEARTBEAT;
-				byChunk.computeIfAbsent(key, k -> new ArrayList<>()).add(new S2CCitizenBatchPacket.Entry(id, lx, ly,
-						lz, sim.yaw[i], st));
+			// state+dir 打包为一个同步字节（bit0-2 状态，bit3-6 方向）：16 向方向
+			// 取代连续 yaw 后，状态与方向恒可合发，不再有"省略 yaw"的纯心跳分支，
+			// 每条目恒定 6-8 字节。停止外推信号由 state 本身携带：到达后行为系统
+			// 把 MOVING 状态切回静止态，状态变化走脏检测发完整条目。
+			// state+dir packed into one sync byte (bits 0-2 state, bits 3-6 dir):
+			// with the 16-way direction replacing continuous yaw, state and dir
+			// always fit in a single byte — the yaw-omitting pure-heartbeat branch
+			// is gone and every entry is a constant 6-8 bytes.
+			byte sd = CitizenState.packStateDir(sim.state[i], sim.dir[i]);
+			byChunk.computeIfAbsent(key, k -> new ArrayList<>()).add(new S2CCitizenBatchPacket.Entry(id, lx, ly,
+					lz, sd));
 				if (++count >= MAX_ENTRIES_PER_PACKET)
 					break;
 			}
@@ -267,30 +260,30 @@ public final class SyncEngine {
 			}
 			FHNetwork.INSTANCE.sendPlayer(p, new S2CCitizenBatchPacket(groups));
 		}
-		// 规范模型延后到本 flush 末尾统一回写：组包循环中的纯心跳判定必须与
-		// "上一次发送"的规范值比较；若在收集阶段就地更新，该比较恒成立，
-		// 全部条目都会被打成纯心跳，yaw/state 自此不再同步（回归 A）。
-		// 与组包循环同模式：经 id 反查容器与索引（防御移除竞态）。
-		// Canonical model is written back at the END of the flush: the pure-heartbeat
-		// decision must compare against what was sent LAST flush; updating during
-		// collection made the comparison vacuously true and every entry a heartbeat,
-		// freezing client yaw/state (regression A). Same id→container/index
-		// re-resolution as the packet-build loop (defensive against removal races).
-		for (int id : due) {
-			CitizenContainer c = sched.findById(id);
-			if (c == null)
-				continue;
-			CitizenSim sim = c.sim();
-			int i = sim.indexOf(id);
-			if (i < 0)
-				continue;
-			sim.sx[i] = sim.px[i];
-			sim.sy[i] = sim.py[i];
-			sim.sz[i] = sim.pz[i];
-			sim.syaw[i] = sim.yaw[i];
-			sim.sstate[i] = sim.state[i];
-			sim.stick[i] = gameTime;
-		}
+	// 规范模型延后到本 flush 末尾统一回写：脏检测必须与"上一次发送"的规范值
+	// 比较；若在收集阶段就地更新，比较恒成立，dir/state 变化将永不触发补包
+	// （回归 A：曾表现为客户端朝向/状态冻结）。
+	// 与组包循环同模式：经 id 反查容器与索引（防御移除竞态）。
+	// Canonical model is written back at the END of the flush: the dirty check
+	// must compare against what was sent LAST flush; updating during collection
+	// made the comparison vacuously true, freezing client dir/state
+	// (regression A). Same id→container/index re-resolution as the packet-build
+	// loop (defensive against removal races).
+	for (int id : due) {
+		CitizenContainer c = sched.findById(id);
+		if (c == null)
+			continue;
+		CitizenSim sim = c.sim();
+		int i = sim.indexOf(id);
+		if (i < 0)
+			continue;
+		sim.sx[i] = sim.px[i];
+		sim.sy[i] = sim.py[i];
+		sim.sz[i] = sim.pz[i];
+		sim.sdir[i] = sim.dir[i];
+		sim.sstate[i] = sim.state[i];
+		sim.stick[i] = gameTime;
+	}
 	}
 
 	/**
@@ -300,7 +293,7 @@ public final class SyncEngine {
 	 * canonical extrapolated model beyond the threshold.
 	 */
 	private boolean isDirty(CitizenSim sim, int i, long gameTime, int interval) {
-        if (sim.state[i] != sim.sstate[i] || sim.yaw[i] != sim.syaw[i])
+        if (sim.state[i] != sim.sstate[i] || sim.dir[i] != sim.sdir[i])
 			return true;
 		long dt = gameTime - sim.stick[i];
 		// 移动心跳：匀速状态下 Dead Reckoning 误差恒 0 不会自然发包，
@@ -321,12 +314,14 @@ public final class SyncEngine {
 
 		int predX = sim.sx[i];
 		int predZ = sim.sz[i];
-        int syaw = sim.syaw[i] & 0xFF;
+        // 规范外推方向：16 向查表，与移动积分的真实位移方向严格同源
+        // （旧实现用滞后的连续 syaw 外推，转向期间制造误差触发冤枉补包）
+        int sdir = sim.sdir[i] & 15;
 
         if (ss < CitizenState.STATE_COUNT && CitizenState.MOVING[ss]) {
             int speed = CitizenState.SPEED[ss];
-            predX += (int)(((long)CitizenState.DIR_X_256[syaw] * speed * dt) >> 10);
-            predZ += (int)(((long)CitizenState.DIR_Z_256[syaw] * speed * dt) >> 10);
+            predX += (int)(((long)CitizenState.DIR_X_16[sdir] * speed * dt) >> 10);
+            predZ += (int)(((long)CitizenState.DIR_Z_16[sdir] * speed * dt) >> 10);
         }
 
 		long ex = sim.px[i] - predX;
