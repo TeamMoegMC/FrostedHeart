@@ -83,6 +83,40 @@ class TownStageFourModelTest {
     }
 
     @Test
+    void simulationNutritionOverridesDoNotChangeSharedDefaults() {
+        TownModelParameters defaults = TownModelParameters.currentDefaults();
+        TownModelParameters tuned = defaults.withNutritionTuning(250.0, 2.0, 2.0);
+
+        assertEquals(250.0, tuned.housing().nutritionReferencePerFoodUnit(), EPSILON);
+        assertEquals(2.0, tuned.residents().nutrition().reserveLossPerDay(), EPSILON);
+        assertEquals(2.0, tuned.residents().nutrition().gainAtReference(), EPSILON);
+        assertEquals(7000.0, defaults.housing().nutritionReferencePerFoodUnit(), EPSILON);
+        assertEquals(10.0, defaults.residents().nutrition().reserveLossPerDay(), EPSILON);
+    }
+
+    @Test
+    void supplementalFoodReadsExistingNutritionRecipeAndFoodLevel() throws Exception {
+        TownStageFourScenario scenario = TownStageFourScenario.load(Path.of(
+                "Scripts/town_scenarios/experiments/stage4-t1-p50-potato-supplement.json"));
+        TownStageOneTwoData base = new TownStageOneTwoData(
+                List.of(), List.of(), 1600, 3200, List.of(), Map.of(), Map.of());
+        TownStageOneTwoData expanded = base.withSimulationFoods(
+                Path.of("."), scenario.town().warehouse().simulationFoods());
+        TownStageOneTwoData.FoodDefinition potato =
+                expanded.foods().get("minecraft:baked_potato");
+
+        assertEquals(2, potato.foodLevel());
+        assertEquals(11.0, potato.foodUnitsPerItem(), EPSILON);
+        assertEquals(16_000.0, potato.nutrition().carbohydrate(), EPSILON);
+        assertEquals(8_000.0, potato.nutrition().vegetable(), EPSILON);
+        TownStageFourScenario scaled = TownStageFourPopulationSweepSimulator.forPopulation(
+                scenario, 50, expanded, TownModelParameters.currentDefaults());
+        assertEquals(6.25, scaled.town().warehouse().dailySupplies().stream()
+                .filter(item -> "minecraft:baked_potato".equals(item.item()))
+                .findFirst().orElseThrow().amountItems(), EPSILON);
+    }
+
+    @Test
     void compactPopulationLayoutSatisfiesCurrentHouseAndHuntingCapacity() throws Exception {
         TownStageFourScenario base = TownStageFourScenario.load(Path.of(
                 "Scripts/town_scenarios/experiments/stage4-t1-population-sweep.json"));

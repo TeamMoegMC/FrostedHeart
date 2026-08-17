@@ -391,14 +391,15 @@ public class HouseBuilding extends AbstractTownBuilding implements ITownResident
         FHConfig.Server.Town.Housing config = FHConfig.SERVER.TOWN.HOUSING;
         ResidentNutrition safeNutrition = nutrition == null
                 ? ResidentNutrition.DEFAULT_VALUE : nutrition;
+        ResidentNutrition.Parameters nutritionParameters = nutritionParameters(config);
         HouseDailyModel.ResidentEffects effects = HouseDailyModel.calculateResidentEffects(
                 resident.getHealth(),
                 resident.getMental(),
                 foodSatisfaction,
                 safeNutrition.healthRecoveryMultiplier(
-                        config.minimumNutritionRecoveryMultiplier.get()),
+                        config.minimumNutritionRecoveryMultiplier.get(), nutritionParameters),
                 safeNutrition.mentalRecoveryMultiplier(
-                        config.minimumNutritionRecoveryMultiplier.get()),
+                        config.minimumNutritionRecoveryMultiplier.get(), nutritionParameters),
                 getEffectiveTemperature(),
                 getTemperatureRating(),
                 getComfortRating(),
@@ -432,14 +433,15 @@ public class HouseBuilding extends AbstractTownBuilding implements ITownResident
 
     private HouseDailyModel.ResidentEffects calculateResidentEffects(Resident resident, DailyReport report) {
         FHConfig.Server.Town.Housing config = FHConfig.SERVER.TOWN.HOUSING;
+        ResidentNutrition.Parameters nutritionParameters = nutritionParameters(config);
         return HouseDailyModel.calculateResidentEffects(
                 resident.getHealth(),
                 resident.getMental(),
                 report.foodSatisfaction(),
                 resident.getNutrition().healthRecoveryMultiplier(
-                        config.minimumNutritionRecoveryMultiplier.get()),
+                        config.minimumNutritionRecoveryMultiplier.get(), nutritionParameters),
                 resident.getNutrition().mentalRecoveryMultiplier(
-                        config.minimumNutritionRecoveryMultiplier.get()),
+                        config.minimumNutritionRecoveryMultiplier.get(), nutritionParameters),
                 report.effectiveTemperature(),
                 report.temperatureRating(),
                 report.comfortRating(),
@@ -456,6 +458,18 @@ public class HouseBuilding extends AbstractTownBuilding implements ITownResident
                         config.maximumHealthRecoveryPerResidentDay.get(),
                         config.maximumMentalRecoveryPerResidentDay.get())
         );
+    }
+
+    private static ResidentNutrition.Parameters nutritionParameters(
+            FHConfig.Server.Town.Housing config
+    ) {
+        return new ResidentNutrition.Parameters(
+                config.residentNutritionMaximumReserve.get(),
+                config.residentNutritionHealthyReserve.get(),
+                config.residentNutritionRecoveryDirectWeight.get(),
+                config.residentNutritionRecoverySupportWeight.get(),
+                config.residentNutritionDeficiencyGrowthFloor.get(),
+                config.residentNutritionMaximumGrowthBonus.get());
     }
 
     public double getTemperatureRating() {

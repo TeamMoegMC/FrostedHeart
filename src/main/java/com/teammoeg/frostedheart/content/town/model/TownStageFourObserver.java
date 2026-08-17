@@ -13,6 +13,7 @@ package com.teammoeg.frostedheart.content.town.model;
 import com.teammoeg.frostedheart.content.town.observation.TownObservationModel;
 import com.teammoeg.frostedheart.content.town.observation.TownSignalEvent;
 import com.teammoeg.frostedheart.content.town.resident.ResidentDailyModel;
+import com.teammoeg.frostedheart.content.town.resident.ResidentNutrition;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -21,21 +22,24 @@ import java.util.Set;
 
 /** Stateful event/episode observer layered on the exact stage-4 day transition. */
 final class TownStageFourObserver {
-    static final double SOFT_RESERVE_WARNING_DAYS =
-            TownModelParameters.Defaults.TOWN_OBSERVATION_RESERVE_CRITICAL_DAYS;
-    static final double RECOVERED_RESERVE_DAYS =
-            TownModelParameters.Defaults.TOWN_OBSERVATION_RESERVE_WARNING_DAYS;
     private static final double EPSILON = 1.0e-9;
 
     private final int simulatedDays;
     private final int initialPopulation;
     private final TownObservationModel.ResidentRules rules;
+    private final TownModelParameters.ResidentNutritionParameters nutritionParameters;
+    private final double softReserveWarningDays;
+    private final double recoveredReserveDays;
     private final List<TownSignalEvent> events = new ArrayList<>();
     private final List<DailyObservation> observations = new ArrayList<>();
     private final int[] dailyExits;
     private final int[] dailyAdverseEventCounts;
     private Set<String> previousUnable;
     private Set<String> previousExitRisk;
+    private Set<String> previousSevereFat;
+    private Set<String> previousSevereCarbohydrate;
+    private Set<String> previousSevereProtein;
+    private Set<String> previousSevereVegetable;
     private double previousFoodReserve;
     private double previousFuelReserve;
     private boolean previousFoodLow;
@@ -75,17 +79,24 @@ final class TownStageFourObserver {
         this.simulatedDays = simulatedDays;
         this.initialPopulation = state.residents().size();
         this.rules = residentRules(parameters);
+        this.nutritionParameters = parameters.residents().nutrition();
+        this.softReserveWarningDays = parameters.observation().reserveCriticalDays();
+        this.recoveredReserveDays = parameters.observation().reserveWarningDays();
         this.dailyExits = new int[simulatedDays];
         this.dailyAdverseEventCounts = new int[simulatedDays];
         TownObservationModel.ResidentSnapshot initial = observe(state.residents(), rules);
         this.previousUnable = Set.copyOf(initial.unableToWorkResidentIds());
         this.previousExitRisk = Set.copyOf(initial.exitRiskResidentIds());
+        this.previousSevereFat = severeResidents(state, NutritionChannel.FAT);
+        this.previousSevereCarbohydrate = severeResidents(state, NutritionChannel.CARBOHYDRATE);
+        this.previousSevereProtein = severeResidents(state, NutritionChannel.PROTEIN);
+        this.previousSevereVegetable = severeResidents(state, NutritionChannel.VEGETABLE);
         this.previousFoodReserve = TownStageThreeModel.foodReserveDays(
                 state, data, parameters, initialPopulation);
         this.previousFuelReserve = TownStageThreeModel.fuelReserveDays(
                 state, scenario, data, parameters);
-        this.previousFoodLow = previousFoodReserve < SOFT_RESERVE_WARNING_DAYS;
-        this.previousFuelLow = previousFuelReserve < SOFT_RESERVE_WARNING_DAYS;
+        this.previousFoodLow = previousFoodReserve < softReserveWarningDays;
+        this.previousFuelLow = previousFuelReserve < softReserveWarningDays;
     }
 
     static List<TownObservationModel.ResidentStatus> copyStatuses(TownStageThreeState state) {
@@ -108,21 +119,27 @@ final class TownStageFourObserver {
 
         Set<String> currentUnable = Set.copyOf(current.unableToWorkResidentIds());
         Set<String> currentExitRisk = Set.copyOf(current.exitRiskResidentIds());
+        Set<String> severeFat = severeResidents(state, NutritionChannel.FAT);
+        Set<String> severeCarbohydrate = severeResidents(state, NutritionChannel.CARBOHYDRATE);
+        Set<String> severeProtein = severeResidents(state, NutritionChannel.PROTEIN);
+        Set<String> severeVegetable = severeResidents(state, NutritionChannel.VEGETABLE);
         Set<String> newlyUnableIds = difference(currentUnable, previousUnable);
         int newlyUnable = newlyUnableIds.size();
         int newlyAtExitRisk = differenceCount(currentExitRisk, previousExitRisk);
         int recoveredWork = differenceCount(previousUnable, currentUnable);
         int recoveredExitRisk = differenceCount(previousExitRisk, currentExitRisk);
-        boolean foodLow = result.foodReserveDays() < SOFT_RESERVE_WARNING_DAYS;
-        boolean fuelLow = result.fuelReserveDays() < SOFT_RESERVE_WARNING_DAYS;
+        boolean foodLow = result.foodReserveDays() < softReserveWarningDays;
+        boolean fuelLow = result.fuelReserveDays() < softReserveWarningDays;
         boolean foodShortage = result.foodSatisfaction() < 1.0 - EPSILON;
         boolean fuelShortage = result.towerServiceFraction() < 1.0 - EPSILON;
         boolean houseUnsafe = !environment.houseAcceptsNewResidents();
         boolean huntingStopped = !environment.huntingWorkable();
+        boolean severeNutrition = !severeFat.isEmpty() || !severeCarbohydrate.isEmpty()
+                || !severeProtein.isEmpty() || !severeVegetable.isEmpty();
 
         boolean adverseState = foodLow || fuelLow || foodShortage || fuelShortage
                 || houseUnsafe || huntingStopped || !exited.isEmpty()
-                || current.exitRiskCount() > 0;
+                || current.exitRiskCount() > 0 || severeNutrition;
         if (!crisisActive && adverseState) {
             crisisActive = true;
             currentEpisodeId = ++crisisEpisodes;
@@ -134,10 +151,12 @@ final class TownStageFourObserver {
 
         addCrossing(day, foodLow, previousFoodLow,
                 TownSignalEvent.Type.FOOD_RESERVE_WARNING,
-                TownSignalEvent.Severity.WARNING, 1, episodeId, "food reserve below 3 days");
+                TownSignalEvent.Severity.WARNING, 1, episodeId,
+                "food reserve below configured critical days");
         addCrossing(day, fuelLow, previousFuelLow,
                 TownSignalEvent.Type.FUEL_RESERVE_WARNING,
-                TownSignalEvent.Severity.WARNING, 1, episodeId, "T1 fuel reserve below 3 days");
+                TownSignalEvent.Severity.WARNING, 1, episodeId,
+                "T1 fuel reserve below configured critical days");
         addCrossing(day, foodShortage, previousFoodShortage,
                 TownSignalEvent.Type.FOOD_SHORTAGE,
                 TownSignalEvent.Severity.CRITICAL, Math.max(1, result.population()), episodeId,
@@ -170,6 +189,18 @@ final class TownStageFourObserver {
         if (recoveredExitRisk > 0) add(day, TownSignalEvent.Type.EXIT_RISK_RECOVERED,
                 TownSignalEvent.Severity.INFORMATION, recoveredExitRisk, episodeId,
                 "resident moved above next-morning removal threshold");
+        addNutritionCrossings(day, severeFat, previousSevereFat,
+                TownSignalEvent.Type.NUTRITION_FAT_SEVERE,
+                TownSignalEvent.Type.NUTRITION_FAT_RECOVERED, episodeId, "fat");
+        addNutritionCrossings(day, severeCarbohydrate, previousSevereCarbohydrate,
+                TownSignalEvent.Type.NUTRITION_CARBOHYDRATE_SEVERE,
+                TownSignalEvent.Type.NUTRITION_CARBOHYDRATE_RECOVERED, episodeId, "carbohydrate");
+        addNutritionCrossings(day, severeProtein, previousSevereProtein,
+                TownSignalEvent.Type.NUTRITION_PROTEIN_SEVERE,
+                TownSignalEvent.Type.NUTRITION_PROTEIN_RECOVERED, episodeId, "protein");
+        addNutritionCrossings(day, severeVegetable, previousSevereVegetable,
+                TownSignalEvent.Type.NUTRITION_VEGETABLE_SEVERE,
+                TownSignalEvent.Type.NUTRITION_VEGETABLE_RECOVERED, episodeId, "vegetable");
         for (TownObservationModel.ResidentStatus resident : exited) {
             ResidentDailyModel.MorningResult cause = ResidentDailyModel.settleMorning(
                     resident.health(), resident.mental(), resident.hasHousing(),
@@ -204,23 +235,34 @@ final class TownStageFourObserver {
         TownObservationModel.ReserveSignal fuelSignal =
                 TownObservationModel.observeReserve(result.fuelReserveDays(), previousFuelReserve);
         boolean recovered = crisisActive
-                && result.foodReserveDays() >= RECOVERED_RESERVE_DAYS
-                && result.fuelReserveDays() >= RECOVERED_RESERVE_DAYS
+                && result.foodReserveDays() >= recoveredReserveDays
+                && result.fuelReserveDays() >= recoveredReserveDays
                 && !foodShortage && !fuelShortage && !houseUnsafe && !huntingStopped
-                && current.exitRiskCount() == 0;
+                && current.exitRiskCount() == 0 && !severeNutrition;
         if (recovered) {
             int duration = day - episodeStartDay + 1;
             recoveryDurations.add(duration);
             recoveredEpisodes++;
             add(day, TownSignalEvent.Type.CRISIS_RECOVERED,
                     TownSignalEvent.Severity.INFORMATION, 1, currentEpisodeId,
-                    "7-day food and fuel reserves with all critical services restored");
+                    "configured recovered food/fuel reserves with all critical services restored");
             crisisActive = false;
         }
+        MetricSummary strength = metric(state, AttributeMetric.STRENGTH);
+        MetricSummary intelligence = metric(state, AttributeMetric.INTELLIGENCE);
+        MetricSummary fat = metric(state, AttributeMetric.FAT);
+        MetricSummary carbohydrate = metric(state, AttributeMetric.CARBOHYDRATE);
+        MetricSummary protein = metric(state, AttributeMetric.PROTEIN);
+        MetricSummary vegetable = metric(state, AttributeMetric.VEGETABLE);
         observations.add(new DailyObservation(
                 day, result.population(), result.cumulativeDeaths(),
                 current.averageHealth(), current.p10Health(), current.minimumHealth(),
                 current.averageMental(), current.p10Mental(), current.minimumMental(),
+                strength.average(), strength.p10(), intelligence.average(), intelligence.p10(),
+                fat.average(), fat.p10(), carbohydrate.average(), carbohydrate.p10(),
+                protein.average(), protein.p10(), vegetable.average(), vegetable.p10(),
+                severeFat.size(), severeCarbohydrate.size(), severeProtein.size(),
+                severeVegetable.size(),
                 current.unableToWorkCount(), current.exitRiskCount(),
                 foodSignal.reserveDays(), foodSignal.dailyTrend(), foodSignal.timeToEmptyDays(),
                 fuelSignal.reserveDays(), fuelSignal.dailyTrend(), fuelSignal.timeToEmptyDays(),
@@ -241,6 +283,10 @@ final class TownStageFourObserver {
 
         previousUnable = currentUnable;
         previousExitRisk = currentExitRisk;
+        previousSevereFat = severeFat;
+        previousSevereCarbohydrate = severeCarbohydrate;
+        previousSevereProtein = severeProtein;
+        previousSevereVegetable = severeVegetable;
         previousFoodReserve = result.foodReserveDays();
         previousFuelReserve = result.fuelReserveDays();
         previousFoodLow = foodLow;
@@ -322,6 +368,23 @@ final class TownStageFourObserver {
                 affected, episodeId, detail);
     }
 
+    private void addNutritionCrossings(
+            int day,
+            Set<String> current,
+            Set<String> previous,
+            TownSignalEvent.Type entered,
+            TownSignalEvent.Type recovered,
+            long episodeId,
+            String channel
+    ) {
+        int enteredCount = differenceCount(current, previous);
+        int recoveredCount = differenceCount(previous, current);
+        if (enteredCount > 0) add(day, entered, TownSignalEvent.Severity.CRITICAL,
+                enteredCount, episodeId, channel + " reserve crossed below severe threshold");
+        if (recoveredCount > 0) add(day, recovered, TownSignalEvent.Severity.INFORMATION,
+                recoveredCount, episodeId, channel + " reserve recovered above severe threshold");
+    }
+
     private void add(
             int day,
             TownSignalEvent.Type type,
@@ -385,6 +448,45 @@ final class TownStageFourObserver {
                 resident.minimumWorkingMentalExclusive(), resident.workRequiresHousing());
     }
 
+    private Set<String> severeResidents(
+            TownStageThreeState state,
+            NutritionChannel channel
+    ) {
+        double threshold = nutritionParameters.severeReserve();
+        Set<String> result = new HashSet<>();
+        for (TownStageThreeState.ResidentState resident : state.residents()) {
+            double value = switch (channel) {
+                case FAT -> resident.nutrition().fat();
+                case CARBOHYDRATE -> resident.nutrition().carbohydrate();
+                case PROTEIN -> resident.nutrition().protein();
+                case VEGETABLE -> resident.nutrition().vegetable();
+            };
+            if (value < threshold) result.add(resident.id());
+        }
+        return Set.copyOf(result);
+    }
+
+    private static MetricSummary metric(
+            TownStageThreeState state,
+            AttributeMetric metric
+    ) {
+        double[] values = state.residents().stream().mapToDouble(resident -> switch (metric) {
+            case STRENGTH -> resident.strength();
+            case INTELLIGENCE -> resident.intelligence();
+            case FAT -> resident.nutrition().fat();
+            case CARBOHYDRATE -> resident.nutrition().carbohydrate();
+            case PROTEIN -> resident.nutrition().protein();
+            case VEGETABLE -> resident.nutrition().vegetable();
+        }).sorted().toArray();
+        if (values.length == 0) return new MetricSummary(0.0, 0.0);
+        double position = 0.10 * (values.length - 1);
+        int lower = (int) Math.floor(position);
+        int upper = (int) Math.ceil(position);
+        double p10 = lower == upper ? values[lower]
+                : values[lower] * (upper - position) + values[upper] * (position - lower);
+        return new MetricSummary(java.util.Arrays.stream(values).average().orElse(0.0), p10);
+    }
+
     record DailyObservation(
             int day,
             int population,
@@ -395,6 +497,22 @@ final class TownStageFourObserver {
             double averageMental,
             double p10Mental,
             double minimumMental,
+            double averageStrength,
+            double p10Strength,
+            double averageIntelligence,
+            double p10Intelligence,
+            double averageFat,
+            double p10Fat,
+            double averageCarbohydrate,
+            double p10Carbohydrate,
+            double averageProtein,
+            double p10Protein,
+            double averageVegetable,
+            double p10Vegetable,
+            int severeFatCount,
+            int severeCarbohydrateCount,
+            int severeProteinCount,
+            int severeVegetableCount,
             int unableToWorkCount,
             int exitRiskCount,
             double foodReserveDays,
@@ -408,6 +526,13 @@ final class TownStageFourObserver {
             boolean crisisActive,
             long episodeId
     ) {
+    }
+
+    private enum NutritionChannel { FAT, CARBOHYDRATE, PROTEIN, VEGETABLE }
+
+    private enum AttributeMetric { STRENGTH, INTELLIGENCE, FAT, CARBOHYDRATE, PROTEIN, VEGETABLE }
+
+    private record MetricSummary(double average, double p10) {
     }
 
     record RunMetrics(

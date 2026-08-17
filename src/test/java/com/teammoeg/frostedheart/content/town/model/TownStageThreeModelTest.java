@@ -11,6 +11,7 @@
 package com.teammoeg.frostedheart.content.town.model;
 
 import com.teammoeg.frostedheart.content.town.resource.TownFoodProcessingModel;
+import com.teammoeg.frostedheart.content.town.resident.ResidentNutrition;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -18,6 +19,7 @@ import java.util.Map;
 import java.util.SplittableRandom;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class TownStageThreeModelTest {
     @Test
@@ -102,6 +104,100 @@ class TownStageThreeModelTest {
         assertEquals(initialItems + flowDelta, result.inventoryItems(), 1.0e-9);
     }
 
+    @Test
+    void stageThreeConsumesFourChannelNutritionInsteadOfScalarQuality() {
+        TownStageThreeScenario scenario = scenario(1, List.of("house", "mine", "hunt"));
+        TownStageThreeState state = TownStageThreeState.initial(scenario);
+        TownStageOneTwoData base = data();
+        TownStageOneTwoData proteinOnly = new TownStageOneTwoData(
+                base.mineWeights(), base.huntingLoot(), base.coalRecipeProcessTicks(),
+                base.cokeRecipeProcessTicks(), base.meats(),
+                Map.of("cooked_beef", new TownStageOneTwoData.FoodDefinition(
+                        "cooked_beef", 2, 20.8,
+                        new ResidentNutrition.NutritionIntake(0, 0, 6_000, 0))),
+                base.sourceFiles());
+
+        TownStageThreeModel.settleDay(
+                state, scenario, proteinOnly, TownModelParameters.currentDefaults(),
+                new SplittableRandom(9L));
+
+        ResidentNutrition result = state.residents().get(0).nutrition();
+        assertEquals(60.0, result.fat(), 1.0e-12);
+        assertEquals(60.0, result.carbohydrate(), 1.0e-12);
+        assertEquals(60.0, result.vegetable(), 1.0e-12);
+        assertEquals(60.0 + 10.0 * (6.5 / 20.8 * 6_000.0 / 45_500.0),
+                result.protein(), 1.0e-9);
+    }
+
+    @Test
+    void sameDayHuntingAndProcessingFeedEveningHousing() {
+        TownStageThreeScenario source = scenario(1, List.of("house", "mine", "hunt"));
+        TownStageThreeScenario scenario = new TownStageThreeScenario(
+                source.schemaVersion(), source.modelStage(), source.metadata(), source.simulation(),
+                source.population(), source.house(), source.workplaces(),
+                new TownStageThreeScenario.Staffing(
+                        List.of("hunt", "mine"), Map.of("hunt", 1, "mine", 0)),
+                source.buildingOrder(),
+                new TownStageThreeScenario.Warehouse(10_000, List.of(
+                        new TownStageThreeScenario.InventoryItem("coke", 10))),
+                source.processing(), source.tower(), source.terrain(), source.diagnostics());
+        TownStageOneTwoData base = data();
+        TownStageOneTwoData processingOnlyFood = new TownStageOneTwoData(
+                base.mineWeights(), base.huntingLoot(), base.coalRecipeProcessTicks(),
+                base.cokeRecipeProcessTicks(), base.meats(),
+                Map.of(
+                        "beef", new TownStageOneTwoData.FoodDefinition("beef", 1, 0, 0),
+                        "cooked_beef", new TownStageOneTwoData.FoodDefinition(
+                                "cooked_beef", 2, 20.8, 6_000)),
+                base.sourceFiles());
+        TownStageThreeState state = TownStageThreeState.initial(scenario);
+
+        TownStageThreeModel.DayResult result = TownStageThreeModel.settleDay(
+                state, scenario, processingOnlyFood, TownModelParameters.currentDefaults(),
+                new SplittableRandom(12L));
+
+        assertEquals(1, result.huntingRolls());
+        assertEquals(1.0, result.meatProcessed(), 1.0e-12);
+        assertTrue(result.foodConsumed() > 0.0);
+        assertTrue(state.residents().get(0).nutrition().protein() > 60.0);
+    }
+
+    @Test
+    void conditionUtilityStopsOnceProjectedMealFillsTheChannelGap() {
+        TownStageThreeScenario source = scenario(1, List.of("house", "mine", "hunt"));
+        TownStageThreeScenario scenario = new TownStageThreeScenario(
+                source.schemaVersion(), source.modelStage(), source.metadata(), source.simulation(),
+                source.population(), source.house(), source.workplaces(), source.staffing(),
+                source.buildingOrder(),
+                new TownStageThreeScenario.Warehouse(10_000, List.of(
+                        new TownStageThreeScenario.InventoryItem("fatty_meat", 10),
+                        new TownStageThreeScenario.InventoryItem("starchy_vegetable", 10),
+                        new TownStageThreeScenario.InventoryItem("coke", 10))),
+                source.processing(), source.tower(), source.terrain(), source.diagnostics());
+        TownStageOneTwoData mixedFood = new TownStageOneTwoData(
+                List.of(), List.of(), 1_600, 3_200, List.of(),
+                Map.of(
+                        "fatty_meat", new TownStageOneTwoData.FoodDefinition(
+                                "fatty_meat", 2, 20.8,
+                                new ResidentNutrition.NutritionIntake(8_000, 0, 16_000, 0)),
+                        "starchy_vegetable", new TownStageOneTwoData.FoodDefinition(
+                                "starchy_vegetable", 2, 11.0,
+                                new ResidentNutrition.NutritionIntake(0, 16_000, 0, 8_000))),
+                Map.of());
+        TownStageThreeState state = TownStageThreeState.initial(scenario);
+        TownModelParameters parameters = TownModelParameters.currentDefaults()
+                .withNutritionTuning(200.0, 1.0, 2.0);
+
+        TownStageThreeModel.settleDay(
+                state, scenario, mixedFood, parameters, new SplittableRandom(21L));
+
+        ResidentNutrition nutrition = state.residents().get(0).nutrition();
+        assertTrue(nutrition.fat() > 69.0);
+        assertTrue(nutrition.carbohydrate() > 69.0);
+        assertTrue(nutrition.protein() > 69.0);
+        assertTrue(nutrition.vegetable() > 69.0);
+    }
+
     private static TownStageThreeScenario scenario(int population, List<String> order) {
         return new TownStageThreeScenario(
                 1, 3,
@@ -110,7 +206,7 @@ class TownStageThreeModelTest {
                 new TownStageThreeScenario.Population(
                         population, TownStageThreeScenario.PopulationInitialization.FIXED,
                         50, 50, 50, 50, 0, 0, 30),
-                new TownStageThreeScenario.House(24, 8 * population, 24 * population,
+                new TownStageThreeScenario.House(24, 16 * population, 48 * population,
                         population, 0.75),
                 new TownStageThreeScenario.Workplaces(population, 1, 1.0),
                 TownStageThreeScenario.Staffing.automatic(),

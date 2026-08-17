@@ -43,7 +43,8 @@ public final class TownStageThreeSimulator {
             Long seedOverride
     ) throws IOException {
         TownStageThreeScenario scenario = TownStageThreeScenario.load(scenarioPath);
-        TownStageOneTwoData data = TownStageOneTwoData.load(projectRoot, packRoot);
+        TownStageOneTwoData data = TownStageOneTwoData.load(projectRoot, packRoot)
+                .withSimulationFoods(projectRoot, scenario.warehouse().simulationFoods());
         TownModelParameters parameters = TownModelParameters.currentDefaults();
         int runs = runsOverride == null ? scenario.simulation().runs() : requirePositive(runsOverride, "runs");
         long seed = seedOverride == null ? scenario.simulation().seed() : seedOverride;

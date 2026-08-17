@@ -10,6 +10,7 @@ import com.teammoeg.frostedheart.content.town.TeamTown;
 import com.teammoeg.frostedheart.content.town.TownCareLaw;
 import com.teammoeg.frostedheart.content.town.TownPolicyState;
 import com.teammoeg.frostedheart.content.town.network.TownPolicyEditRequestPacket;
+import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import com.teammoeg.frostedheart.content.town.tabs.TownTextLayout;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
@@ -43,7 +44,8 @@ public final class TownPoliciesPanel extends UIElement {
         if (town == null) return;
         TownPolicyState state = town.getPolicyState();
         long townDay = town.getTownData().map(data -> data.getTownDay()).orElse(0L);
-        long cooldown = state.remainingCooldown(townDay);
+        long cooldown = state.remainingCooldown(townDay,
+                FHConfig.SERVER.TOWN.RESIDENT_RULES.townPolicyCooldownDays.get());
         Component status = state.hasPendingChanges()
                 ? Component.translatable("gui.frostedheart.town_manager.policy_pending")
                 : cooldown > 0
@@ -86,7 +88,9 @@ public final class TownPoliciesPanel extends UIElement {
         long day = town.getTownData().map(data -> data.getTownDay()).orElse(0L);
         TownPolicyState state = town.getPolicyState();
         TownCareLaw selected = TownCareLaw.values()[index];
-        if (state.remainingCooldown(day) > 0 || state.displayedCareLaw() == selected) return true;
+        if (state.remainingCooldown(day,
+                FHConfig.SERVER.TOWN.RESIDENT_RULES.townPolicyCooldownDays.get()) > 0
+                || state.displayedCareLaw() == selected) return true;
         FHNetwork.INSTANCE.sendToServer(new TownPolicyEditRequestPacket(selected));
         return true;
     }

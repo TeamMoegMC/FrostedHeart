@@ -44,11 +44,16 @@ public record ResidentNutrition(
     }
 
     public int severeChannelCount() {
+        return severeChannelCount(SEVERE);
+    }
+
+    public int severeChannelCount(double severeReserve) {
+        double threshold = nonNegative(severeReserve);
         int count = 0;
-        if (fat < SEVERE) count++;
-        if (carbohydrate < SEVERE) count++;
-        if (protein < SEVERE) count++;
-        if (vegetable < SEVERE) count++;
+        if (fat < threshold) count++;
+        if (carbohydrate < threshold) count++;
+        if (protein < threshold) count++;
+        if (vegetable < threshold) count++;
         return count;
     }
 
@@ -57,6 +62,12 @@ public record ResidentNutrition(
         double loss = nonNegative(amount);
         return new ResidentNutrition(
                 fat - loss, carbohydrate - loss, protein - loss, vegetable - loss);
+    }
+
+    public ResidentNutrition decay(double amount, double maximumReserve) {
+        double loss = nonNegative(amount);
+        return boundedTo(new ResidentNutrition(
+                fat - loss, carbohydrate - loss, protein - loss, vegetable - loss), maximumReserve);
     }
 
     /**
@@ -69,15 +80,26 @@ public record ResidentNutrition(
             double gainAtReference,
             double maximumCoverage
     ) {
+        return withMeal(intake, referencePerChannel, gainAtReference,
+                maximumCoverage, MAXIMUM);
+    }
+
+    public ResidentNutrition withMeal(
+            NutritionIntake intake,
+            double referencePerChannel,
+            double gainAtReference,
+            double maximumCoverage,
+            double maximumReserve
+    ) {
         double reference = nonNegative(referencePerChannel);
         if (reference <= 0.0) return this;
         double gain = nonNegative(gainAtReference);
         double cap = nonNegative(maximumCoverage);
-        return new ResidentNutrition(
+        return boundedTo(new ResidentNutrition(
                 fat + gain * coverage(intake.fat(), reference, cap),
                 carbohydrate + gain * coverage(intake.carbohydrate(), reference, cap),
                 protein + gain * coverage(intake.protein(), reference, cap),
-                vegetable + gain * coverage(intake.vegetable(), reference, cap));
+                vegetable + gain * coverage(intake.vegetable(), reference, cap)), maximumReserve);
     }
 
     public double fatAvailability() {
@@ -100,6 +122,10 @@ public record ResidentNutrition(
         return 1.0 - availability(minimum());
     }
 
+    public double nutritionRisk(double healthyReserve) {
+        return 1.0 - availability(minimum(), healthyReserve);
+    }
+
     /** Fat/protein only amplify recovery when the direct recovery nutrient exists. */
     public double mentalRecoveryMultiplier(double minimumMultiplier) {
         return recoveryMultiplier(
@@ -107,11 +133,27 @@ public record ResidentNutrition(
                 minimumMultiplier);
     }
 
+    public double mentalRecoveryMultiplier(double minimumMultiplier, Parameters parameters) {
+        return recoveryMultiplier(
+                availability(carbohydrate, parameters.healthyReserve()),
+                availability(fat, parameters.healthyReserve()),
+                availability(protein, parameters.healthyReserve()), minimumMultiplier,
+                parameters.recoveryDirectWeight(), parameters.recoverySupportWeight());
+    }
+
     /** Fat/protein only amplify recovery when the direct recovery nutrient exists. */
     public double healthRecoveryMultiplier(double minimumMultiplier) {
         return recoveryMultiplier(
                 vegetableAvailability(), fatAvailability(), proteinAvailability(),
                 minimumMultiplier);
+    }
+
+    public double healthRecoveryMultiplier(double minimumMultiplier, Parameters parameters) {
+        return recoveryMultiplier(
+                availability(vegetable, parameters.healthyReserve()),
+                availability(fat, parameters.healthyReserve()),
+                availability(protein, parameters.healthyReserve()), minimumMultiplier,
+                parameters.recoveryDirectWeight(), parameters.recoverySupportWeight());
     }
 
     /**
@@ -126,20 +168,61 @@ public record ResidentNutrition(
         return 1.0 + 0.25 * (safe - HEALTHY) / (MAXIMUM - HEALTHY);
     }
 
+    public static double growthMultiplier(double value, Parameters parameters) {
+        double maximum = Math.max(0.001, finiteOrZero(parameters.maximumReserve()));
+        double healthy = Math.max(0.001, Math.min(maximum, finiteOrZero(parameters.healthyReserve())));
+        double safe = Math.max(0.0, Math.min(maximum, finiteOrZero(value)));
+        double floor = Math.max(0.0, Math.min(1.0,
+                finiteOrZero(parameters.deficiencyGrowthFloor())));
+        if (safe <= healthy) {
+            return floor + (1.0 - floor) * safe / healthy;
+        }
+        double surplusRange = maximum - healthy;
+        return surplusRange <= 0.0 ? 1.0 : 1.0
+                + nonNegative(parameters.maximumGrowthBonus()) * (safe - healthy) / surplusRange;
+    }
+
     private static double recoveryMultiplier(
             double direct,
             double fat,
             double protein,
             double minimumMultiplier
     ) {
+        return recoveryMultiplier(direct, fat, protein, minimumMultiplier, 0.6, 0.4);
+    }
+
+    private static double recoveryMultiplier(
+            double direct,
+            double fat,
+            double protein,
+            double minimumMultiplier,
+            double directWeight,
+            double supportWeight
+    ) {
         double minimum = Math.max(0.0, Math.min(1.0, finiteOrZero(minimumMultiplier)));
         double support = (fat + protein) / 2.0;
-        double supplied = 0.6 * direct + 0.4 * direct * support;
+        double directPart = nonNegative(directWeight);
+        double supportPart = nonNegative(supportWeight);
+        double weight = directPart + supportPart;
+        double supplied = weight <= 0.0 ? 0.0
+                : (directPart * direct + supportPart * direct * support) / weight;
         return minimum + (1.0 - minimum) * supplied;
     }
 
     private static double availability(double value) {
         return Math.max(0.0, Math.min(1.0, bounded(value) / HEALTHY));
+    }
+
+    private static double availability(double value, double healthyReserve) {
+        double healthy = Math.max(0.001, finiteOrZero(healthyReserve));
+        return Math.max(0.0, Math.min(1.0, finiteOrZero(value) / healthy));
+    }
+
+    private static ResidentNutrition boundedTo(ResidentNutrition value, double maximumReserve) {
+        double maximum = Math.max(0.0, Math.min(MAXIMUM, finiteOrZero(maximumReserve)));
+        return new ResidentNutrition(
+                Math.min(maximum, value.fat), Math.min(maximum, value.carbohydrate),
+                Math.min(maximum, value.protein), Math.min(maximum, value.vegetable));
     }
 
     private static double coverage(double intake, double reference, double maximumCoverage) {
@@ -179,5 +262,16 @@ public record ResidentNutrition(
             return new NutritionIntake(
                     fat * safe, carbohydrate * safe, protein * safe, vegetable * safe);
         }
+    }
+
+    /** Formula parameters supplied by FHConfig in gameplay and TownModelParameters in simulation. */
+    public record Parameters(
+            double maximumReserve,
+            double healthyReserve,
+            double recoveryDirectWeight,
+            double recoverySupportWeight,
+            double deficiencyGrowthFloor,
+            double maximumGrowthBonus
+    ) {
     }
 }

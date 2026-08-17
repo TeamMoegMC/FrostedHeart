@@ -46,7 +46,9 @@ public final class TownStageFourSimulator {
             Long seedOverride
     ) throws IOException {
         TownStageFourScenario scenario = TownStageFourScenario.load(scenarioPath);
-        TownStageOneTwoData data = TownStageOneTwoData.load(projectRoot, packRoot);
+        TownStageOneTwoData data = TownStageOneTwoData.load(projectRoot, packRoot)
+                .withSimulationFoods(
+                        projectRoot, scenario.town().warehouse().simulationFoods());
         TownModelParameters parameters = TownModelParameters.currentDefaults();
         int runs = runsOverride == null ? scenario.town().simulation().runs()
                 : requirePositive(runsOverride, "runs");
@@ -257,6 +259,14 @@ public final class TownStageFourSimulator {
                             result.foodSatisfaction(), result.foodReserveDays(), result.fuelReserveDays(),
                             observation.averageHealth(), observation.p10Health(),
                             observation.averageMental(), observation.p10Mental(),
+                            observation.averageStrength(), observation.p10Strength(),
+                            observation.averageIntelligence(), observation.p10Intelligence(),
+                            observation.averageFat(), observation.p10Fat(),
+                            observation.averageCarbohydrate(), observation.p10Carbohydrate(),
+                            observation.averageProtein(), observation.p10Protein(),
+                            observation.averageVegetable(), observation.p10Vegetable(),
+                            observation.severeFatCount(), observation.severeCarbohydrateCount(),
+                            observation.severeProteinCount(), observation.severeVegetableCount(),
                             observation.unableToWorkCount(), observation.exitRiskCount(),
                             observation.adverseEventCount(), observation.residentExits(),
                             observation.crisisActive()));
@@ -291,8 +301,11 @@ public final class TownStageFourSimulator {
                             && state.firstFuelShortageDay() == null,
                     observationMetrics));
         }
+        int equilibriumWindow = scenario.populationSweep() == null ? Math.min(30, days)
+                : Math.min(days, scenario.populationSweep().equilibriumWindowDays());
         return new Execution(
                 List.copyOf(rows), List.copyOf(daily), dailyAggregate.finish(),
+                dailyAggregate.equilibrium(equilibriumWindow),
                 List.copyOf(hourlyTrace), List.copyOf(firstRunObservations),
                 List.copyOf(firstRunEvents), List.copyOf(trialDaily),
                 List.copyOf(trialEvents), List.copyOf(initialResidents));
@@ -672,6 +685,19 @@ public final class TownStageFourSimulator {
         private final double[][] p10Health;
         private final double[][] averageMental;
         private final double[][] p10Mental;
+        private final double[][] averageStrength;
+        private final double[][] p10Strength;
+        private final double[][] averageIntelligence;
+        private final double[][] p10Intelligence;
+        private final double[][] averageFat;
+        private final double[][] p10Fat;
+        private final double[][] averageCarbohydrate;
+        private final double[][] p10Carbohydrate;
+        private final double[][] averageProtein;
+        private final double[][] p10Protein;
+        private final double[][] averageVegetable;
+        private final double[][] p10Vegetable;
+        private final double[][] severeNutritionFraction;
         private final double[][] unableToWorkFraction;
         private final double[][] exitRiskFraction;
         private final double[][] adverseEventCounts;
@@ -689,6 +715,19 @@ public final class TownStageFourSimulator {
             p10Health = new double[days][runs];
             averageMental = new double[days][runs];
             p10Mental = new double[days][runs];
+            averageStrength = new double[days][runs];
+            p10Strength = new double[days][runs];
+            averageIntelligence = new double[days][runs];
+            p10Intelligence = new double[days][runs];
+            averageFat = new double[days][runs];
+            p10Fat = new double[days][runs];
+            averageCarbohydrate = new double[days][runs];
+            p10Carbohydrate = new double[days][runs];
+            averageProtein = new double[days][runs];
+            p10Protein = new double[days][runs];
+            averageVegetable = new double[days][runs];
+            p10Vegetable = new double[days][runs];
+            severeNutritionFraction = new double[days][runs];
             unableToWorkFraction = new double[days][runs];
             exitRiskFraction = new double[days][runs];
             adverseEventCounts = new double[days][runs];
@@ -712,10 +751,26 @@ public final class TownStageFourSimulator {
             p10Health[day][run] = observation.p10Health();
             averageMental[day][run] = observation.averageMental();
             p10Mental[day][run] = observation.p10Mental();
+            averageStrength[day][run] = observation.averageStrength();
+            p10Strength[day][run] = observation.p10Strength();
+            averageIntelligence[day][run] = observation.averageIntelligence();
+            p10Intelligence[day][run] = observation.p10Intelligence();
+            averageFat[day][run] = observation.averageFat();
+            p10Fat[day][run] = observation.p10Fat();
+            averageCarbohydrate[day][run] = observation.averageCarbohydrate();
+            p10Carbohydrate[day][run] = observation.p10Carbohydrate();
+            averageProtein[day][run] = observation.averageProtein();
+            p10Protein[day][run] = observation.p10Protein();
+            averageVegetable[day][run] = observation.averageVegetable();
+            p10Vegetable[day][run] = observation.p10Vegetable();
             int denominator = Math.max(1, observation.population());
             unableToWorkFraction[day][run] =
                     (double) observation.unableToWorkCount() / denominator;
             exitRiskFraction[day][run] = (double) observation.exitRiskCount() / denominator;
+            severeNutritionFraction[day][run] = (double) Math.max(
+                    Math.max(observation.severeFatCount(), observation.severeCarbohydrateCount()),
+                    Math.max(observation.severeProteinCount(), observation.severeVegetableCount()))
+                    / denominator;
             adverseEventCounts[day][run] = observation.adverseEventCount();
             residentExits[day][run] = observation.residentExits();
             crisisActive[day][run] = observation.crisisActive() ? 1.0 : 0.0;
@@ -733,6 +788,13 @@ public final class TownStageFourSimulator {
                         statistics(foodReserveTrend[day]), statistics(fuelReserveTrend[day]),
                         statistics(averageHealth[day]), statistics(p10Health[day]),
                         statistics(averageMental[day]), statistics(p10Mental[day]),
+                        statistics(averageStrength[day]), statistics(p10Strength[day]),
+                        statistics(averageIntelligence[day]), statistics(p10Intelligence[day]),
+                        statistics(averageFat[day]), statistics(p10Fat[day]),
+                        statistics(averageCarbohydrate[day]), statistics(p10Carbohydrate[day]),
+                        statistics(averageProtein[day]), statistics(p10Protein[day]),
+                        statistics(averageVegetable[day]), statistics(p10Vegetable[day]),
+                        statistics(severeNutritionFraction[day]),
                         statistics(unableToWorkFraction[day]), statistics(exitRiskFraction[day]),
                         Arrays.stream(adverseEventCounts[day]).average().orElse(0.0),
                         Arrays.stream(residentExits[day]).average().orElse(0.0),
@@ -740,12 +802,39 @@ public final class TownStageFourSimulator {
             }
             return List.copyOf(result);
         }
+
+        private EquilibriumAttributes equilibrium(int windowDays) {
+            int start = Math.max(0, population.length - Math.max(1, windowDays));
+            return new EquilibriumAttributes(
+                    windowDays,
+                    trailingRunDistribution(averageHealth, start),
+                    trailingRunDistribution(averageMental, start),
+                    trailingRunDistribution(averageStrength, start),
+                    trailingRunDistribution(averageIntelligence, start),
+                    trailingRunDistribution(averageFat, start),
+                    trailingRunDistribution(averageCarbohydrate, start),
+                    trailingRunDistribution(averageProtein, start),
+                    trailingRunDistribution(averageVegetable, start));
+        }
+
+        private static Distribution trailingRunDistribution(double[][] values, int startDay) {
+            int runs = values.length == 0 ? 0 : values[0].length;
+            double[] perRun = new double[runs];
+            for (int run = 0; run < runs; run++) {
+                double sum = 0.0;
+                for (int day = startDay; day < values.length; day++) sum += values[day][run];
+                perRun[run] = values.length > startDay
+                        ? sum / (values.length - startDay) : 0.0;
+            }
+            return statistics(perRun);
+        }
     }
 
     record Execution(
             List<RunRow> rows,
             List<DailyTrace> firstRunDaily,
             List<DailyAggregate> dailyAggregate,
+            EquilibriumAttributes equilibriumAttributes,
             List<HourlyTrace> hourlyTrace,
             List<TownStageFourObserver.DailyObservation> firstRunObservations,
             List<TownSignalEvent> firstRunEvents,
@@ -914,6 +1003,19 @@ public final class TownStageFourSimulator {
             Distribution p10Health,
             Distribution averageMental,
             Distribution p10Mental,
+            Distribution averageStrength,
+            Distribution p10Strength,
+            Distribution averageIntelligence,
+            Distribution p10Intelligence,
+            Distribution averageFat,
+            Distribution p10Fat,
+            Distribution averageCarbohydrate,
+            Distribution p10Carbohydrate,
+            Distribution averageProtein,
+            Distribution p10Protein,
+            Distribution averageVegetable,
+            Distribution p10Vegetable,
+            Distribution severeNutritionFraction,
             Distribution unableToWorkFraction,
             Distribution exitRiskFraction,
             double meanAdverseEventCount,
@@ -983,6 +1085,22 @@ public final class TownStageFourSimulator {
             double p10Health,
             double averageMental,
             double p10Mental,
+            double averageStrength,
+            double p10Strength,
+            double averageIntelligence,
+            double p10Intelligence,
+            double averageFat,
+            double p10Fat,
+            double averageCarbohydrate,
+            double p10Carbohydrate,
+            double averageProtein,
+            double p10Protein,
+            double averageVegetable,
+            double p10Vegetable,
+            int severeFatCount,
+            int severeCarbohydrateCount,
+            int severeProteinCount,
+            int severeVegetableCount,
             int unableToWorkCount,
             int exitRiskCount,
             int adverseEventCount,
@@ -992,6 +1110,19 @@ public final class TownStageFourSimulator {
     }
 
     public record TrialEvent(int run, long seed, TownSignalEvent event) {
+    }
+
+    public record EquilibriumAttributes(
+            int windowDays,
+            Distribution health,
+            Distribution mental,
+            Distribution strength,
+            Distribution intelligence,
+            Distribution fat,
+            Distribution carbohydrate,
+            Distribution protein,
+            Distribution vegetable
+    ) {
     }
 
     public record InitialResidentTrace(

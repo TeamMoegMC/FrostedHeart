@@ -933,7 +933,7 @@ P_{resident,max}-P
 - `proficiencyGrowthAtZeroPerWorkday` \(g_0\)：熟练度为零时每有效工作日增长量，默认 `2.4`。
 - `minimumProficiencyGrowthPerWorkday` \(g_{min}\)：未满级时的每日增长下限，默认 `0.25`。
 
-年龄增长仍按日结算，现有全部 `ResidentAging` 配置也已进入 `ResidentAgingParameters`：幼儿在第 `10` 日变为儿童、儿童在第 `30` 日变为青壮年；幼儿每日力量/智力各 `+0.2`、封顶 `40`；儿童每日力量 `+0.3`、智力 `+0.4`、分别封顶 `80/85`；青壮年每日两项各 `+0.05`、封顶 `60`；老人力量每日 `-0.1`、最低 `25`。这些参数已被快照记录，但阶段 1 的固定成年人口模拟不会立刻启用年龄变化。
+年龄增长仍按日结算，现有全部 `ResidentAging` 配置也已进入 `ResidentAgingParameters`：幼儿在第 `30` 日变为儿童、儿童在第 `60` 日变为青壮年；幼儿每日力量/智力各 `+0.2`、封顶 `40`；儿童每日力量 `+0.3`、智力 `+0.4`、分别封顶 `80/85`；青壮年每日两项各 `+0.05`、封顶 `60`；老人力量每日 `-0.1`、最低 `25`。这些参数已被快照记录，但阶段 1 的固定成年人口模拟不会立刻启用年龄变化。
 
 ### 9.10 招募居民的异质性
 
@@ -951,7 +951,7 @@ child:  U_integer[infantToChildDays, childToAdultDays)
 adult/elder: childToAdultDays + U_integer[0, adultAgeRangeDaysExclusive)
 ```
 
-默认 `infantToChildDays=10`、`childToAdultDays=30`、`adultAgeRangeDaysExclusive=3650`。每个初始属性独立取 `n=4` 个 `[0,1]` 均匀样本的均值 \(\bar u\)，再映射为：
+默认 `infantToChildDays=30`、`childToAdultDays=60`、`adultAgeRangeDaysExclusive=3650`。每个初始属性独立取 `n=4` 个 `[0,1]` 均匀样本的均值 \(\bar u\)，再映射为：
 
 ```text
 attribute = clamp[0,100](center + 100 × spread × (mean(u)-0.5))
@@ -1779,25 +1779,25 @@ Stage 3/4 JSON 新增：
 
 ### 23.1 四类持久营养储备
 
-每名居民保存四个 `[0,100]` 的无量纲储备：脂肪 `N_f`、碳水 `N_c`、蛋白质 `N_p` 与蔬菜 `N_v`。旧存档和新居民均从健康基准 `70` 开始；`20` 以下视为严重缺乏。每日先从四项各扣除 `residentNutritionReserveLossPerDay`，再根据实际吃掉的物品对应 `NutritionRecipe` 分项补充：
+每名居民保存四个无量纲储备：脂肪 `N_f`、碳水 `N_c`、蛋白质 `N_p` 与蔬菜 `N_v`。上限、健康基准、严重线和新居民初值分别由 `residentNutritionMaximumReserve / HealthyReserve / SevereReserve / InitialReserve` 控制；默认仍是 `100 / 70 / 20 / 70`。旧存档缺字段时使用 `70` 作为兼容回退。每日先从四项各扣除 `residentNutritionReserveLossPerDay`，再根据实际吃掉的物品对应 `NutritionRecipe` 分项补充：
 
 `gain_x = residentNutritionGainAtReference × clamp(intake_x / reference_x, 0, residentNutritionMaximumCoverage)`。
 
 其中 `reference_x = 当日完整口粮食物单位 × nutritionReferencePerFoodUnit`。默认每日损耗和完整参考餐的增益都为 `10`，所以维持储备需要食物数量与营养构成同时达标。
 
-定义单项可用度 `A_x = clamp(N_x / 70, 0, 1)`，脂肪/蛋白质支持度 `S = (A_f + A_p) / 2`，最低恢复倍率为 `m`。精神与健康的营养倍率分别为：
+定义单项可用度 `A_x = clamp(N_x / healthyReserve, 0, 1)`，脂肪/蛋白质支持度 `S = (A_f + A_p) / 2`，最低恢复倍率为 `m`。令直接与协同权重为 `w_d / w_s`（默认 `0.6 / 0.4`），则供给项为 `Q(A)=(w_d A + w_s A S)/(w_d+w_s)`，精神与健康倍率分别使用 `A_c` 与 `A_v`：
 
-`M_mental = m + (1-m) × (0.6 A_c + 0.4 A_c S)`，
+`M_mental = m + (1-m) × Q(A_c)`，
 
-`M_health = m + (1-m) × (0.6 A_v + 0.4 A_v S)`。
+`M_health = m + (1-m) × Q(A_v)`。
 
 因此碳水直接支持精神恢复，蔬菜直接支持健康恢复；脂肪和蛋白质只在相应直接营养存在时提供协同放大，不能独立产生恢复。缺粮和温度造成的直接损失不被这两个倍率抵消，倍率只作用于既有住宅恢复项。
 
 脂肪与蛋白质还缩放原有年龄成长量。对任一相关储备 `N`：
 
-`G(N) = 0.5 + 0.5N/70`，当 `N≤70`；
+`G(N) = g_floor + (1-g_floor)N/healthyReserve`，当 `N≤healthyReserve`；
 
-`G(N) = 1 + 0.25(N-70)/30`，当 `N>70`。
+`G(N) = 1 + g_bonus(N-healthyReserve)/(maximumReserve-healthyReserve)`，当 `N>healthyReserve`。
 
 脂肪倍率作用于幼儿、儿童和成人原有智力成长；蛋白质倍率只作用于幼儿/儿童原有力量成长。它们不新增成长通道，也不改变年龄段属性上限。
 
@@ -1817,16 +1817,20 @@ Stage 3/4 JSON 新增：
 
 设完整口粮为 `F` 食物资源单位。第一轮按住宅队列顺序处理每栋住宅前 `min(保障人数, 实际住户数)` 名最需照护的居民，并依次尝试供给 `F`；粮食可能在某位保障对象处耗尽。第二轮把剩余粮食在所有非保障住户之间等额分享，每人最多再得到 `F`。这保证玩家明确指定的照护床位先吃饱，同时避免剩余粮食继续被高优先住宅独占。
 
-实际取物始终先比较居民食物 level 4→0。同一 level 内，将一份口粮分成最多八个选择片段，每次根据领取者当前四项缺口、已选食物、健康/精神需要和年龄成长通道重新评分；最后用物品注册名与 NBT 稳定平局。仓库以精确小数资源量扣除物品，因此部分口粮不会因整件取整而系统性偏向先领取者。
+实际取物始终先比较居民食物 level 4→0。同一 level 内，将一份口粮分成 `residentNutritionMealSelectionChunks` 个选择片段（默认八个），每次根据领取者当前四项缺口、已选食物、健康/精神需要和年龄成长通道重新评分；三类需要的权重也分别由 `ChannelNeed / ConditionNeed / GrowthNeedUtilityWeight` 配置。健康与精神只放大仍有蔬菜/碳水缺口的通道，投影片段已补足该项后不会继续因为健康或精神未满而重复堆积同一种食物。最后用物品注册名与 NBT 稳定平局。仓库以精确小数资源量扣除物品，因此部分口粮不会因整件取整而系统性偏向先领取者。
 
 住宅的旧 `DailyReport` 继续保存住户数、总食物满足度和汇总营养，供既有详情页与历史观测读取；真正的健康、精神和营养变化已经逐居民结算。
 
 ### 23.4 政策生效与玩家界面
 
-`TownPolicyState` 使用 `domain → option` 映射保存当前值和待生效值，以便以后增加新的互斥政策域。玩家提交政策后不会白天即时搬家，而在下一次晨间结算开始时统一激活。所有政策域共用七个城镇结算日冷却；冷却从服务端接受变更时开始。
+`TownPolicyState` 使用 `domain → option` 映射保存当前值和待生效值，以便以后增加新的互斥政策域。玩家提交政策后不会白天即时搬家，而在下一次晨间结算开始时统一激活。所有政策域共用 `townPolicyCooldownDays`（默认七个）城镇结算日冷却；冷却从服务端接受变更时开始。
 
 镇长印章新增“住宅调度”和“城镇政策”页。住宅页沿用岗位调度的拖拽队列与整数保障条；政策页显示当前、待生效和剩余冷却。编辑请求不携带城镇标识，服务端始终从发包玩家的队伍解析城镇，并向在线队员广播完整权威状态。居民列表、住宅住户页和岗位页均显示四类营养，便于玩家理解分房与疗养结果。
 
 “数据统计”页增加独立“营养”视图。每次晨间结算结束后，`TownNutritionHistory` 为脂肪、碳水、蛋白质和蔬菜分别保存全镇平均值与线性插值得到的 P10；界面将后者称为“较弱居民”。四张固定 `[0,100]` 折线图同时标出健康基准 `70` 和严重缺乏线 `20`。旧历史快照没有营养字段时以 `available=false` 解码并显示为折线缺口，不能伪装成营养为零；从升级后的第一次结算开始积累真实趋势。
 
-当前 Stage 3/4 长期模拟尚未加入四类营养库存与住宅政策输入；本节描述的是现行游戏日结算和对应纯规则单元测试。正式用旧 Stage 3/4 概率做营养平衡判断前，必须先扩展模拟器并重新生成基准。
+Stage 3/4 长期模拟现在从食物 recipe 原样读取四个营养通道，逐居民执行损耗、按食物等级和个体需要选餐、恢复倍率与营养缩放成长；不再把四项平均成一个住宅质量标量。人口扫描的 `equilibriumWindowDays` 默认是末 30 日：先在每个 trial 内对“当日全镇居民平均属性”取末段时间均值，再跨 trial 报告 P05/P50/P95。`player-timeline-trials.csv` 保存健康、精神、力量、智力、四项营养的平均值/P10及严重人数；`event-raster.csv` 增加四种严重营养进入/恢复事件；`population.csv` 增加八项末段均衡分布。`Scripts/plot_town_stage4_resident_dynamics.py` 生成平均属性—时间、营养—时间、阈值事件—时间和均衡属性—人口四组图。
+
+2026-08-17 的正式固定种子运行使用 `120 days × 1000 trials × 20 population points`，报告位于 `build/reports/town-model/simulations/stage4-t1-population-sweep-nutrition-1000`，四张图位于 `build/reports/town-model/figures/stage4-resident-dynamics-nutrition-1000`。24 人时间线中，四项营养均在第 5 日进入严重缺乏；末 30 日中位数约为脂肪 `0.30`、碳水 `0`、蛋白质 `1.84`、蔬菜 `0`。健康中位数在人口 `4..128` 约为 `47`，到 `160/180/200` 人降为 `44.6/41.6/37.8`。这说明当前肉食基准远不能维持四通道营养，属于后续食谱/参考值调参基线，不是目标平衡。此前的 Stage 3/4 概率和图片仍只保留为历史回归参照。
+
+2026-08-18 的 50 人快速校准使用 `120 days × 100 paired trials`。仅把损耗/增益从 `10/10` 降到 `2/2` 时，纯捕猎仍在约第 35 日全体严重缺乏；使用 `loss=1`、`gain=2`、`reference=200` 后，肉食可以稳定脂肪/蛋白质，但没有输入的碳水/蔬菜仍在约第 50 日全体严重缺乏。最终候选额外为 50 人每日提供 `6.25` 个烤马铃薯（只读取现有 `16000` 碳水、`8000` 蔬菜 recipe），并把条件效用限制在仍有对应营养缺口时生效。末 30 日中位数为脂肪 `70.06`、碳水 `77.62`、蛋白质 `99.88`、蔬菜 `74.89`、健康 `51.50`、精神 `76.50`；第 120 日四项严重人数均为零。报告位于 `build/reports/town-model/simulations/stage4-t1-p50-round2-final-candidate`，对比图位于 `build/reports/town-model/figures/stage4-t1-p50-round2-comparison`。这些参数仍是模拟覆盖值，尚未替换 `TownModelParameters.Defaults` / `FHConfig` 默认值。

@@ -17,6 +17,7 @@ import com.teammoeg.frostedheart.content.town.buildings.mine.MiningDailyModel;
 import com.teammoeg.frostedheart.content.town.resident.ResidentAgingModel;
 import com.teammoeg.frostedheart.content.town.resident.ResidentAttributeModel;
 import com.teammoeg.frostedheart.content.town.resident.ResidentDailyModel;
+import com.teammoeg.frostedheart.content.town.resident.ResidentNutrition;
 import com.teammoeg.frostedheart.content.town.resource.TownFoodInventoryModel;
 import com.teammoeg.frostedheart.content.town.resource.TownFoodProcessingModel;
 import com.teammoeg.frostedheart.content.town.resource.action.ResourceActionMode;
@@ -58,15 +59,12 @@ public final class TownStageThreeModel {
     ) {
         int day = state.day();
         List<ResourceFlow> flows = new ArrayList<>();
-        settleMorningAndAging(state, parameters);
+        decayNutrition(state, parameters);
         StaffingStep staffing = restoreAndFillAssignments(
                 state, scenario, parameters, environment);
 
         double miningSwe = 0.0;
         double huntingSwe = 0.0;
-        double foodRequired = 0.0;
-        double foodConsumed = 0.0;
-        double foodSatisfaction = 1.0;
         double oreRequested = 0.0;
         double coalAccepted = 0.0;
         int huntRolls = 0;
@@ -76,11 +74,7 @@ public final class TownStageThreeModel {
         for (String building : scenario.buildingOrder()) {
             switch (building) {
                 case TownStageThreeState.HOUSE_ID -> {
-                    HouseStep result = settleHouse(
-                            state, scenario, data, parameters, environment, flows);
-                    foodRequired = result.requiredFoodUnits();
-                    foodConsumed = result.consumedFoodUnits();
-                    foodSatisfaction = result.foodSatisfaction();
+                    // Housing is settled after production and processing below.
                 }
                 case TownStageThreeState.MINE_ID -> {
                     MiningStep result = settleMine(state, scenario, data, parameters, flows);
@@ -101,6 +95,11 @@ public final class TownStageThreeModel {
         }
 
         ProcessingStep processing = settleProcessing(state, scenario, data, flows);
+        settleDailySupplies(state, scenario, flows);
+        HouseStep house = settleHouse(
+                state, scenario, data, parameters, environment, flows);
+        settleAging(state, parameters);
+        settleResidentsMorning(state, parameters);
         TowerStep tower = settleTower(state, scenario, data, parameters, flows);
         state.recordLabor(miningSwe, huntingSwe);
         state.setHuntUnits(Math.min(
@@ -133,7 +132,7 @@ public final class TownStageThreeModel {
                 staffing.targetShortfall(), staffing.eligibleUnassigned(),
                 staffing.unableToWork(), staffing.workplaceChanges(),
                 miningSwe, huntingSwe,
-                foodRequired, foodConsumed, foodSatisfaction,
+                house.requiredFoodUnits(), house.consumedFoodUnits(), house.foodSatisfaction(),
                 foodReserveDays, fuelReserveDays,
                 tower.serviceFraction(), tower.loadedFuelItems(),
                 oreRequested, coalAccepted, huntRolls,
@@ -148,7 +147,19 @@ public final class TownStageThreeModel {
         return result;
     }
 
-    private static void settleMorningAndAging(
+    private static void decayNutrition(
+            TownStageThreeState state,
+            TownModelParameters parameters
+    ) {
+        TownModelParameters.ResidentNutritionParameters nutrition =
+                parameters.residents().nutrition();
+        for (TownStageThreeState.ResidentState resident : state.residents()) {
+            resident.setNutrition(resident.nutrition().decay(
+                    nutrition.reserveLossPerDay(), nutrition.maximumReserve()));
+        }
+    }
+
+    private static void settleResidentsMorning(
             TownStageThreeState state,
             TownModelParameters parameters
     ) {
@@ -163,18 +174,28 @@ public final class TownStageThreeModel {
             resident.setHealth(morning.healthAfterHomelessPenalty());
             if (morning.removed()) {
                 dead.add(resident);
-                continue;
             }
+        }
+        state.residents().removeAll(dead);
+        state.addDeaths(dead.size());
+    }
+
+    private static void settleAging(
+            TownStageThreeState state,
+            TownModelParameters parameters
+    ) {
+        TownModelParameters.ResidentParameters residentParameters = parameters.residents();
+        for (TownStageThreeState.ResidentState resident : state.residents()) {
             ResidentAgingModel.AgingResult aging = ResidentAgingModel.settleDay(
                     resident.age(), resident.ageDays(), resident.strength(),
-                    resident.intelligence(), agingParameters(residentParameters.aging()));
+                    resident.intelligence(), resident.nutrition(),
+                    agingParameters(residentParameters.aging()),
+                    residentParameters.nutrition().formulas());
             resident.setAge(aging.age());
             resident.setAgeDays(aging.ageDays());
             resident.setStrength(aging.strength());
             resident.setIntelligence(aging.intelligence());
         }
-        state.residents().removeAll(dead);
-        state.addDeaths(dead.size());
     }
 
     private static StaffingStep restoreAndFillAssignments(
@@ -270,44 +291,209 @@ public final class TownStageThreeModel {
     ) {
         List<TownStageThreeState.ResidentState> residents = state.residents().stream()
                 .filter(resident -> TownStageThreeState.HOUSE_ID.equals(resident.homeId()))
-                .toList();
-        double requiredFood = residents.size() * parameters.housing().foodConsumptionPerResidentDay();
-        List<TownFoodInventoryModel.FoodStack> foods = new ArrayList<>();
+                .sorted(simulatedCareOrder(parameters)).toList();
+        TownModelParameters.HousingParameters housing = parameters.housing();
+        TownModelParameters.ResidentNutritionParameters nutrition =
+                parameters.residents().nutrition();
+        double ration = Math.max(0.0, housing.foodConsumptionPerResidentDay());
+        double requiredFood = residents.size() * ration;
+        List<SimulationFoodCandidate> foods = new ArrayList<>();
+        double availableFood = 0.0;
         for (Map.Entry<String, Double> item : state.inventorySnapshot().entrySet()) {
             TownStageOneTwoData.FoodDefinition food = data.foods().get(item.getKey());
             if (food == null) continue;
-            foods.add(new TownFoodInventoryModel.FoodStack(
+            foods.add(new SimulationFoodCandidate(
                     food.item(), food.foodLevel(), item.getValue(),
-                    food.foodUnitsPerItem(), food.nutritionPerItem()));
+                    food.foodUnitsPerItem(), food.nutrition()));
+            availableFood += item.getValue() * food.foodUnitsPerItem();
         }
-        TownFoodInventoryModel.Consumption consumption =
-                TownFoodInventoryModel.consume(requiredFood, foods);
-        for (TownFoodInventoryModel.FoodUse use : consumption.uses()) {
-            state.cost(use.item(), use.amountItems(), ResourceActionMode.MAXIMIZE);
-            flows.add(new ResourceFlow(state.day(), "house", "consume", use.item(),
-                    use.amountItems(), use.amountItems(), 0.0));
+        double allowance = residents.isEmpty() ? 0.0
+                : Math.min(ration, availableFood / residents.size());
+        Map<TownStageThreeState.ResidentState, SimulationMeal> meals = new LinkedHashMap<>();
+        Map<String, Double> usedItems = new LinkedHashMap<>();
+        double consumedFood = 0.0;
+        ResidentNutrition.NutritionIntake totalNutrition =
+                ResidentNutrition.NutritionIntake.ZERO;
+        for (TownStageThreeState.ResidentState resident : residents) {
+            SimulationMeal meal = consumeSimulationMeal(
+                    resident, allowance, ration, foods, housing, nutrition, usedItems);
+            meals.put(resident, meal);
+            consumedFood += meal.foodUnits();
+            totalNutrition = totalNutrition.plus(meal.nutrition());
         }
+        for (Map.Entry<String, Double> use : usedItems.entrySet()) {
+            state.cost(use.getKey(), use.getValue(), ResourceActionMode.MAXIMIZE);
+            flows.add(new ResourceFlow(state.day(), "house", "consume", use.getKey(),
+                    use.getValue(), use.getValue(), 0.0));
+        }
+        double scalarNutrition = (totalNutrition.fat() + totalNutrition.carbohydrate()
+                + totalNutrition.protein() + totalNutrition.vegetable()) / 4.0;
         HouseDailyModel.SettlementReport report = HouseDailyModel.evaluateSettlement(
                 new HouseDailyModel.SettlementInput(
-                        residents.size(), consumption.consumedFoodUnits(),
-                        consumption.consumedNutrition(), environment.houseTemperatureCelsius(),
+                        residents.size(), consumedFood, scalarNutrition,
+                        environment.houseTemperatureCelsius(),
                         scenario.house().areaBlocks(), scenario.house().volumeBlocks(),
                         scenario.house().decorationRating()),
                 TownStageOneTwoTheory.houseParameters(parameters));
         for (TownStageThreeState.ResidentState resident : residents) {
+            SimulationMeal meal = meals.get(resident);
+            ResidentNutrition updated = resident.nutrition().withMeal(
+                    meal.nutrition(), ration * housing.nutritionReferencePerFoodUnit(),
+                    nutrition.gainAtReference(), nutrition.maximumCoverage(),
+                    nutrition.maximumReserve());
+            resident.setNutrition(updated);
+            double satisfaction = ration <= 0.0 ? 1.0
+                    : Math.max(0.0, Math.min(1.0, meal.foodUnits() / ration));
             HouseDailyModel.ResidentEffects effects = HouseDailyModel.calculateResidentEffects(
-                    resident.health(), resident.mental(), report.foodSatisfaction(),
-                    report.nutritionRecoveryMultiplier(), report.effectiveTemperature(),
+                    resident.health(), resident.mental(), satisfaction,
+                    updated.healthRecoveryMultiplier(
+                            housing.minimumNutritionRecoveryMultiplier(), nutrition.formulas()),
+                    updated.mentalRecoveryMultiplier(
+                            housing.minimumNutritionRecoveryMultiplier(), nutrition.formulas()),
+                    report.effectiveTemperature(),
                     report.temperatureRating(), report.comfortRating(),
                     TownStageOneTwoTheory.residentEffectParameters(parameters));
             resident.setHealth(resident.health() + effects.healthDelta());
             resident.setMental(resident.mental() + effects.mentalDelta());
         }
         state.addFoodDemand(requiredFood);
-        if (report.foodSatisfaction() < 1.0 - TownFoodInventoryModel.RESOURCE_EPSILON) {
+        double satisfaction = requiredFood <= 0.0 ? 1.0
+                : Math.max(0.0, Math.min(1.0, consumedFood / requiredFood));
+        if (satisfaction < 1.0 - TownFoodInventoryModel.RESOURCE_EPSILON) {
             state.markFoodShortage();
         }
-        return new HouseStep(requiredFood, consumption.consumedFoodUnits(), report.foodSatisfaction());
+        return new HouseStep(requiredFood, consumedFood, satisfaction);
+    }
+
+    private static Comparator<TownStageThreeState.ResidentState> simulatedCareOrder(
+            TownModelParameters parameters
+    ) {
+        return Comparator
+                .comparing((TownStageThreeState.ResidentState resident) ->
+                        canWork(resident, parameters))
+                .thenComparingDouble(TownStageThreeState.ResidentState::health)
+                .thenComparingDouble(resident -> resident.nutrition().minimum())
+                .thenComparingDouble(TownStageThreeState.ResidentState::mental)
+                .thenComparing(TownStageThreeState.ResidentState::id);
+    }
+
+    private static SimulationMeal consumeSimulationMeal(
+            TownStageThreeState.ResidentState resident,
+            double allowance,
+            double fullRation,
+            List<SimulationFoodCandidate> candidates,
+            TownModelParameters.HousingParameters housing,
+            TownModelParameters.ResidentNutritionParameters nutrition,
+            Map<String, Double> usedItems
+    ) {
+        double remaining = Math.max(0.0, allowance);
+        double chunk = fullRation > 0.0
+                ? fullRation / Math.max(1, nutrition.mealSelectionChunks()) : remaining;
+        double consumed = 0.0;
+        ResidentNutrition.NutritionIntake intake = ResidentNutrition.NutritionIntake.ZERO;
+        while (remaining > TownFoodInventoryModel.RESOURCE_EPSILON) {
+            ResidentNutrition.NutritionIntake projected = intake;
+            SimulationFoodCandidate selected = candidates.stream()
+                    .filter(candidate -> candidate.amountItems > TownFoodInventoryModel.RESOURCE_EPSILON)
+                    .filter(candidate -> candidate.foodUnitsPerItem > TownFoodInventoryModel.RESOURCE_EPSILON)
+                    .max(Comparator.comparingInt((SimulationFoodCandidate value) -> value.foodLevel)
+                            .thenComparingDouble(value -> simulationFoodUtility(
+                                    resident, value, projected, fullRation, housing, nutrition))
+                            .thenComparing(value -> value.item, Comparator.reverseOrder()))
+                    .orElse(null);
+            if (selected == null) break;
+            double requestedFood = Math.min(remaining,
+                    Math.max(chunk, TownFoodInventoryModel.RESOURCE_EPSILON));
+            double items = Math.min(selected.amountItems,
+                    requestedFood / selected.foodUnitsPerItem);
+            if (items <= TownFoodInventoryModel.RESOURCE_EPSILON) break;
+            selected.amountItems -= items;
+            usedItems.merge(selected.item, items, Double::sum);
+            double food = items * selected.foodUnitsPerItem;
+            consumed += food;
+            remaining -= food;
+            intake = intake.plus(selected.nutrition.scale(items));
+        }
+        return new SimulationMeal(consumed, intake);
+    }
+
+    private static double simulationFoodUtility(
+            TownStageThreeState.ResidentState resident,
+            SimulationFoodCandidate candidate,
+            ResidentNutrition.NutritionIntake projected,
+            double fullRation,
+            TownModelParameters.HousingParameters housing,
+            TownModelParameters.ResidentNutritionParameters parameters
+    ) {
+        double foodUnits = Math.max(TownFoodInventoryModel.RESOURCE_EPSILON,
+                candidate.foodUnitsPerItem);
+        ResidentNutrition.NutritionIntake perFood = candidate.nutrition.scale(1.0 / foodUnits);
+        ResidentNutrition current = resident.nutrition();
+        double reference = Math.max(1.0, housing.nutritionReferencePerFoodUnit());
+        double fatNeed = simulationChannelNeed(current.fat(), projected.fat(), reference,
+                fullRation, parameters);
+        double carbohydrateNeed = simulationChannelNeed(current.carbohydrate(),
+                projected.carbohydrate(), reference, fullRation, parameters);
+        double proteinNeed = simulationChannelNeed(current.protein(), projected.protein(),
+                reference, fullRation, parameters);
+        double vegetableNeed = simulationChannelNeed(current.vegetable(), projected.vegetable(),
+                reference, fullRation, parameters);
+        double healthNeed = 1.0 - resident.health() / 100.0;
+        double mentalNeed = 1.0 - resident.mental() / 100.0;
+        double growthFat = resident.age() == 3 ? 0.0 : fatNeed;
+        double growthProtein = resident.age() <= 1 ? proteinNeed : 0.0;
+        return perFood.fat() * (parameters.channelNeedUtilityWeight() * fatNeed
+                + parameters.growthNeedUtilityWeight() * growthFat)
+                + perFood.carbohydrate() * carbohydrateNeed
+                * (parameters.channelNeedUtilityWeight()
+                + parameters.conditionNeedUtilityWeight() * mentalNeed)
+                + perFood.protein() * (parameters.channelNeedUtilityWeight() * proteinNeed
+                + parameters.growthNeedUtilityWeight() * growthProtein)
+                + perFood.vegetable() * vegetableNeed
+                * (parameters.channelNeedUtilityWeight()
+                + parameters.conditionNeedUtilityWeight() * healthNeed);
+    }
+
+    private static double simulationChannelNeed(
+            double reserve,
+            double projectedIntake,
+            double reference,
+            double fullRation,
+            TownModelParameters.ResidentNutritionParameters parameters
+    ) {
+        double projectedGain = parameters.gainAtReference() * projectedIntake
+                / Math.max(reference * Math.max(fullRation,
+                TownFoodInventoryModel.RESOURCE_EPSILON), 1.0);
+        double healthy = Math.max(0.001, parameters.healthyReserve());
+        return Math.max(0.0, healthy - reserve - projectedGain) / healthy;
+    }
+
+    private record SimulationMeal(
+            double foodUnits,
+            ResidentNutrition.NutritionIntake nutrition
+    ) {
+    }
+
+    private static final class SimulationFoodCandidate {
+        private final String item;
+        private final int foodLevel;
+        private double amountItems;
+        private final double foodUnitsPerItem;
+        private final ResidentNutrition.NutritionIntake nutrition;
+
+        private SimulationFoodCandidate(
+                String item,
+                int foodLevel,
+                double amountItems,
+                double foodUnitsPerItem,
+                ResidentNutrition.NutritionIntake nutrition
+        ) {
+            this.item = item;
+            this.foodLevel = foodLevel;
+            this.amountItems = Math.max(0.0, amountItems);
+            this.foodUnitsPerItem = Math.max(0.0, foodUnitsPerItem);
+            this.nutrition = nutrition;
+        }
     }
 
     private static MiningStep settleMine(
@@ -446,6 +632,22 @@ public final class TownStageThreeModel {
         }
         state.recordProcessingFoodGain(foodGain);
         return new ProcessingStep(coalProcessed, processing.processedItems(), foodGain);
+    }
+
+    private static void settleDailySupplies(
+            TownStageThreeState state,
+            TownStageThreeScenario scenario,
+            List<ResourceFlow> flows
+    ) {
+        for (TownStageThreeScenario.InventoryItem supply
+                : scenario.warehouse().dailySupplies()) {
+            TownStageThreeState.InventoryMutation mutation = state.add(
+                    supply.item(), supply.amountItems(), ResourceActionMode.MAXIMIZE);
+            flows.add(new ResourceFlow(
+                    state.day(), "external_supply", "produce", supply.item(),
+                    supply.amountItems(), mutation.result().modifiedAmount(),
+                    mutation.result().residualAmount()));
+        }
     }
 
     private static TowerStep settleTower(

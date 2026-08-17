@@ -32,12 +32,32 @@ public final class TownResidentCareModel {
             double removalHealthThreshold,
             double removalMentalThreshold
     ) {
+        return assess(id, age, health, mental, nutrition, minimumWorkingAge,
+                minimumWorkingHealthExclusive, minimumWorkingMentalExclusive,
+                removalHealthThreshold, removalMentalThreshold,
+                ResidentNutrition.HEALTHY, ResidentNutrition.SEVERE);
+    }
+
+    public static Need assess(
+            UUID id,
+            int age,
+            double health,
+            double mental,
+            ResidentNutrition nutrition,
+            int minimumWorkingAge,
+            double minimumWorkingHealthExclusive,
+            double minimumWorkingMentalExclusive,
+            double removalHealthThreshold,
+            double removalMentalThreshold,
+            double healthyNutritionReserve,
+            double severeNutritionReserve
+    ) {
         Objects.requireNonNull(id, "id");
         ResidentNutrition safeNutrition = nutrition == null
                 ? ResidentNutrition.DEFAULT_VALUE : nutrition;
         double healthRisk = normalizedRisk(health, removalHealthThreshold);
         double mentalRisk = normalizedRisk(mental, removalMentalThreshold);
-        double nutritionRisk = safeNutrition.nutritionRisk();
+        double nutritionRisk = safeNutrition.nutritionRisk(healthyNutritionReserve);
         double primary = Math.max(healthRisk, Math.max(mentalRisk, nutritionRisk));
         double mean = (healthRisk + mentalRisk + nutritionRisk) / 3.0;
         boolean labourCapable = age >= minimumWorkingAge
@@ -45,12 +65,16 @@ public final class TownResidentCareModel {
                 && mental > minimumWorkingMentalExclusive;
         boolean critical = health <= minimumWorkingHealthExclusive
                 || mental <= minimumWorkingMentalExclusive
-                || safeNutrition.minimum() < ResidentNutrition.SEVERE;
+                || safeNutrition.minimum() < severeNutritionReserve;
         return new Need(id, labourCapable, critical, primary, mean,
-                safeNutrition.severeChannelCount());
+                safeNutrition.severeChannelCount(severeNutritionReserve));
     }
 
     public static Comparator<Need> comparator(TownCareLaw law) {
+        return comparator(law, DEFAULT_SCORE_BAND);
+    }
+
+    public static Comparator<Need> comparator(TownCareLaw law, double scoreBand) {
         TownCareLaw safeLaw = law == null ? TownCareLaw.CLINICAL_TRIAGE : law;
         return (first, second) -> {
             int policy = comparePolicyGroup(first, second, safeLaw);
@@ -60,8 +84,8 @@ public final class TownResidentCareModel {
             int severe = Integer.compare(second.severeNutritionChannels(),
                     first.severeNutritionChannels());
             if (severe != 0) return severe;
-            int primary = Integer.compare(scoreBand(second.primaryRisk()),
-                    scoreBand(first.primaryRisk()));
+            int primary = Integer.compare(scoreBand(second.primaryRisk(), scoreBand),
+                    scoreBand(first.primaryRisk(), scoreBand));
             if (primary != 0) return primary;
             int mean = Double.compare(second.meanRisk(), first.meanRisk());
             return mean != 0 ? mean : first.id().compareTo(second.id());
@@ -73,7 +97,15 @@ public final class TownResidentCareModel {
             TownCareLaw law,
             java.util.function.Predicate<UUID> livedHere
     ) {
-        Comparator<Need> base = comparator(law);
+        return comparatorForHouse(law, livedHere, DEFAULT_SCORE_BAND);
+    }
+
+    public static Comparator<Need> comparatorForHouse(
+            TownCareLaw law,
+            java.util.function.Predicate<UUID> livedHere,
+            double scoreBand
+    ) {
+        Comparator<Need> base = comparator(law, scoreBand);
         return (first, second) -> {
             int firstPolicy = policyGroup(first, law);
             int secondPolicy = policyGroup(second, law);
@@ -83,8 +115,8 @@ public final class TownResidentCareModel {
             int severe = Integer.compare(second.severeNutritionChannels(),
                     first.severeNutritionChannels());
             if (severe != 0) return severe;
-            int firstBand = scoreBand(first.primaryRisk());
-            int secondBand = scoreBand(second.primaryRisk());
+            int firstBand = scoreBand(first.primaryRisk(), scoreBand);
+            int secondBand = scoreBand(second.primaryRisk(), scoreBand);
             if (firstBand != secondBand) return Integer.compare(secondBand, firstBand);
             boolean firstStayed = livedHere.test(first.id());
             boolean secondStayed = livedHere.test(second.id());
@@ -107,7 +139,12 @@ public final class TownResidentCareModel {
     }
 
     private static int scoreBand(double score) {
-        return (int) Math.floor(Math.max(0.0, Math.min(1.0, score)) / DEFAULT_SCORE_BAND);
+        return scoreBand(score, DEFAULT_SCORE_BAND);
+    }
+
+    private static int scoreBand(double score, double width) {
+        double safeWidth = Double.isFinite(width) && width > 0.0 ? width : DEFAULT_SCORE_BAND;
+        return (int) Math.floor(Math.max(0.0, Math.min(1.0, score)) / safeWidth);
     }
 
     private static double normalizedRisk(double value, double removalThreshold) {
