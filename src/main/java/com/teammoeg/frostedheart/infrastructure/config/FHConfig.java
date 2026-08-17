@@ -1677,6 +1677,22 @@ public class FHConfig {
 			}
 		}
 
+		public static class StorageDrawers {
+			public final ForgeConfigSpec.IntValue inputCooldownTicks;
+			public final ForgeConfigSpec.IntValue outputCooldownTicks;
+
+			StorageDrawers(ForgeConfigSpec.Builder builder) {
+				builder.push("Storage Drawers");
+				inputCooldownTicks = builder
+						.comment("Minimum ticks between successful automated item insertions into a drawer controller or slave.")
+						.defineInRange("inputCooldownTicks", 10, 1, Integer.MAX_VALUE);
+				outputCooldownTicks = builder
+						.comment("Minimum ticks between successful automated item extractions from a drawer controller or slave.")
+						.defineInRange("outputCooldownTicks", 40, 1, Integer.MAX_VALUE);
+				builder.pop();
+			}
+		}
+
 		/**
 		 * 「雪原深处的好奇心」Boss 配置。
 		 * <p>
@@ -1791,6 +1807,7 @@ public class FHConfig {
 		public final FireIgnition FIRE_IGNITION;
 		public final TemperatureSimulation SIMULATION;
 		public final Town TOWN;
+		public final StorageDrawers STORAGE_DRAWERS;
 		public final Misc MISC;
 		public final Curiosity CURIOSITY;
 
@@ -1804,6 +1821,7 @@ public class FHConfig {
 			FIRE_IGNITION = new FireIgnition(builder);
 			SIMULATION = new TemperatureSimulation(builder);
 			TOWN = new Town(builder);
+			STORAGE_DRAWERS = new StorageDrawers(builder);
 			MISC = new Misc(builder);
 			CURIOSITY = new Curiosity(builder);
 		}
