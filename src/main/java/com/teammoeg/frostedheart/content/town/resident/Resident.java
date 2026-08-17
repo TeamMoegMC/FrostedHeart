@@ -74,10 +74,12 @@ public class Resident {
             BlockPos.CODEC.optionalFieldOf("housePos").forGetter(o-> Optional.ofNullable(o.housePos)),
             BlockPos.CODEC.optionalFieldOf("workPos").forGetter(o-> Optional.ofNullable(o.workPos)),
             Codec.INT.optionalFieldOf("age",AGE_ADULT).forGetter(o->o.age),
-            Codec.INT.optionalFieldOf("ageDays",0).forGetter(o->o.ageDays)
+            Codec.INT.optionalFieldOf("ageDays",0).forGetter(o->o.ageDays),
+            ResidentNutrition.CODEC.optionalFieldOf("nutrition", ResidentNutrition.DEFAULT_VALUE)
+                    .forGetter(o -> o.nutrition)
 		).apply(t, Resident::new));
 
-    public Resident(String firstName, String lastName, UUID uuid, double health, double mental, double strength, double intelligence, int educationLevel, Map<String, Double> workProficiency, Optional<BlockPos> housePos, Optional<BlockPos> workPos, int age, int ageDays) {
+    public Resident(String firstName, String lastName, UUID uuid, double health, double mental, double strength, double intelligence, int educationLevel, Map<String, Double> workProficiency, Optional<BlockPos> housePos, Optional<BlockPos> workPos, int age, int ageDays, ResidentNutrition nutrition) {
         setFirstName(firstName);
         setLastName(lastName);
         setUuid(uuid);
@@ -88,6 +90,7 @@ public class Resident {
         setEducationLevel(educationLevel);
         setAge(age);
         setAgeDays(ageDays);
+        setNutrition(nutrition);
         if(workProficiency!=null){
             workProficiency.forEach((key, value) ->
                     this.workProficiency.put(key, normalizeWorkProficiency(value)));
@@ -95,6 +98,27 @@ public class Resident {
         initializeMissingWorkProficiencies();
         setHousePos(housePos.orElse(null));
         setWorkPos(workPos.orElse(null));
+    }
+
+    /** Source-compatible persistent constructor used before resident nutrition existed. */
+    public Resident(
+            String firstName,
+            String lastName,
+            UUID uuid,
+            double health,
+            double mental,
+            double strength,
+            double intelligence,
+            int educationLevel,
+            Map<String, Double> workProficiency,
+            Optional<BlockPos> housePos,
+            Optional<BlockPos> workPos,
+            int age,
+            int ageDays
+    ) {
+        this(firstName, lastName, uuid, health, mental, strength, intelligence,
+                educationLevel, workProficiency, housePos, workPos, age, ageDays,
+                ResidentNutrition.DEFAULT_VALUE);
     }
 
     // ===== 增量同步：变化监听器（transient，不被 codec 序列化）=====
@@ -202,6 +226,9 @@ public class Resident {
     /** 出生后经过的天数，每日结算 +1，用于幼儿→儿童→青壮年的成长判定。 */
     @Getter
     private int ageDays = 0;
+    /** Four persistent resident nutrition reserves, normalized to 0..100. */
+    @Getter
+    private ResidentNutrition nutrition = ResidentNutrition.DEFAULT_VALUE;
 
     public Resident(String firstName, String lastName) {
         this(firstName, lastName, UUID.randomUUID());
@@ -363,6 +390,10 @@ public class Resident {
         data.putInt("educationLevel", educationLevel);
         data.putInt("age", age);
         data.putInt("ageDays", ageDays);
+        data.putDouble("nutritionFat", nutrition.fat());
+        data.putDouble("nutritionCarbohydrate", nutrition.carbohydrate());
+        data.putDouble("nutritionProtein", nutrition.protein());
+        data.putDouble("nutritionVegetable", nutrition.vegetable());
         data.put("workProficiency", SerializeUtil.toNBTMap(workProficiency.entrySet(), (entry, compoundNBTBuilder) -> compoundNBTBuilder.putDouble(entry.getKey(), entry.getValue())));
         if (workPos != null) {
             data.putLong("workPos", workPos.asLong());
@@ -395,6 +426,15 @@ public class Resident {
         int rawAgeDays = data.contains("ageDays", Tag.TAG_ANY_NUMERIC)
                 ? data.getInt("ageDays")
                 : 0;
+        ResidentNutrition rawNutrition = new ResidentNutrition(
+                data.contains("nutritionFat", Tag.TAG_ANY_NUMERIC)
+                        ? data.getDouble("nutritionFat") : ResidentNutrition.DEFAULT,
+                data.contains("nutritionCarbohydrate", Tag.TAG_ANY_NUMERIC)
+                        ? data.getDouble("nutritionCarbohydrate") : ResidentNutrition.DEFAULT,
+                data.contains("nutritionProtein", Tag.TAG_ANY_NUMERIC)
+                        ? data.getDouble("nutritionProtein") : ResidentNutrition.DEFAULT,
+                data.contains("nutritionVegetable", Tag.TAG_ANY_NUMERIC)
+                        ? data.getDouble("nutritionVegetable") : ResidentNutrition.DEFAULT);
         // 先应用年龄，使下方的 initializeMissingWorkProficiencies 能按年龄生成熟练度
         setAge(rawAge);
         setAgeDays(rawAgeDays);
@@ -453,6 +493,7 @@ public class Resident {
         setStrength(rawStrength);
         setIntelligence(rawIntelligence);
         setEducationLevel(rawEducationLevel);
+        setNutrition(rawNutrition);
 
         return null;
     }
@@ -478,6 +519,14 @@ public class Resident {
     public void setAgeDays(int ageDays) {
         if (this.ageDays == ageDays) return;
         this.ageDays = ageDays;
+        fireChange();
+    }
+
+    public void setNutrition(ResidentNutrition nutrition) {
+        ResidentNutrition safe = nutrition == null
+                ? ResidentNutrition.DEFAULT_VALUE : nutrition;
+        if (Objects.equals(this.nutrition, safe)) return;
+        this.nutrition = safe;
         fireChange();
     }
 

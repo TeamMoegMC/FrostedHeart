@@ -22,19 +22,37 @@ public final class ResidentAgingModel {
             double intelligence,
             Parameters parameters
     ) {
+        return settleDay(age, ageDays, strength, intelligence,
+                ResidentNutrition.DEFAULT_VALUE, parameters);
+    }
+
+    public static AgingResult settleDay(
+            int age,
+            int ageDays,
+            double strength,
+            double intelligence,
+            ResidentNutrition nutrition,
+            Parameters parameters
+    ) {
         int nextDays = Math.max(0, ageDays) + 1;
         int nextAge = age;
         double nextStrength = boundedAttribute(strength);
         double nextIntelligence = boundedAttribute(intelligence);
+        ResidentNutrition safeNutrition = nutrition == null
+                ? ResidentNutrition.DEFAULT_VALUE : nutrition;
+        double proteinGrowth = ResidentNutrition.growthMultiplier(safeNutrition.protein());
+        double fatGrowth = ResidentNutrition.growthMultiplier(safeNutrition.fat());
         switch (age) {
             case Resident.AGE_INFANT -> {
                 if (nextDays >= parameters.infantToChildDays()) {
                     nextAge = Resident.AGE_CHILD;
                 } else {
                     nextStrength = grow(nextStrength,
-                            parameters.infantStrengthGainPerDay(), parameters.infantAttributeCap());
+                            parameters.infantStrengthGainPerDay() * proteinGrowth,
+                            parameters.infantAttributeCap());
                     nextIntelligence = grow(nextIntelligence,
-                            parameters.infantIntelligenceGainPerDay(), parameters.infantAttributeCap());
+                            parameters.infantIntelligenceGainPerDay() * fatGrowth,
+                            parameters.infantAttributeCap());
                 }
             }
             case Resident.AGE_CHILD -> {
@@ -42,16 +60,19 @@ public final class ResidentAgingModel {
                     nextAge = Resident.AGE_ADULT;
                 } else {
                     nextStrength = grow(nextStrength,
-                            parameters.childStrengthGainPerDay(), parameters.childStrengthCap());
+                            parameters.childStrengthGainPerDay() * proteinGrowth,
+                            parameters.childStrengthCap());
                     nextIntelligence = grow(nextIntelligence,
-                            parameters.childIntelligenceGainPerDay(), parameters.childIntelligenceCap());
+                            parameters.childIntelligenceGainPerDay() * fatGrowth,
+                            parameters.childIntelligenceCap());
                 }
             }
             case Resident.AGE_ADULT -> {
                 nextStrength = grow(nextStrength,
                         parameters.adultStrengthGainPerDay(), parameters.adultAttributeCap());
                 nextIntelligence = grow(nextIntelligence,
-                        parameters.adultIntelligenceGainPerDay(), parameters.adultAttributeCap());
+                        parameters.adultIntelligenceGainPerDay() * fatGrowth,
+                        parameters.adultAttributeCap());
             }
             case Resident.AGE_ELDER -> nextStrength = decay(nextStrength,
                     parameters.elderStrengthDecayPerDay(), parameters.elderStrengthFloor());

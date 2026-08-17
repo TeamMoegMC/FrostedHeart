@@ -23,6 +23,7 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.frostedheart.content.town.observation.TownSignalEvent;
 import com.teammoeg.frostedheart.content.town.observation.TownOperationalHistory;
+import com.teammoeg.frostedheart.content.town.observation.TownNutritionHistory;
 
 import java.util.List;
 
@@ -55,7 +56,8 @@ public record TownHistoryEntry(
         boolean towerWorking,
         int climateLevel,
         List<TownSignalEvent> events,
-        TownOperationalHistory operational
+        TownOperationalHistory operational,
+        TownNutritionHistory nutrition
 ) {
 
     public static final Codec<TownHistoryEntry> CODEC = RecordCodecBuilder.create(t -> t.group(
@@ -74,12 +76,38 @@ public record TownHistoryEntry(
             Codec.INT.optionalFieldOf("climateLevel", 0).forGetter(TownHistoryEntry::climateLevel),
             TownSignalEvent.CODEC.listOf().optionalFieldOf("events", List.of()).forGetter(TownHistoryEntry::events),
             TownOperationalHistory.CODEC.optionalFieldOf("operational", TownOperationalHistory.EMPTY)
-                    .forGetter(TownHistoryEntry::operational)
+                    .forGetter(TownHistoryEntry::operational),
+            TownNutritionHistory.CODEC.optionalFieldOf("nutrition", TownNutritionHistory.EMPTY)
+                    .forGetter(TownHistoryEntry::nutrition)
     ).apply(t, TownHistoryEntry::new));
 
     public TownHistoryEntry {
         events = List.copyOf(events);
         operational = operational == null ? TownOperationalHistory.EMPTY : operational;
+        nutrition = nutrition == null ? TownNutritionHistory.EMPTY : nutrition;
+    }
+
+    /** Source-compatible constructor for callers predating nutrition history. */
+    public TownHistoryEntry(
+            long day,
+            int population,
+            double avgHealth,
+            double avgMental,
+            int buildings,
+            double p10Health,
+            double minHealth,
+            double p10Mental,
+            double minMental,
+            int unableToWorkCount,
+            int exitRiskCount,
+            boolean towerWorking,
+            int climateLevel,
+            List<TownSignalEvent> events,
+            TownOperationalHistory operational
+    ) {
+        this(day, population, avgHealth, avgMental, buildings, p10Health, minHealth,
+                p10Mental, minMental, unableToWorkCount, exitRiskCount, towerWorking,
+                climateLevel, events, operational, TownNutritionHistory.EMPTY);
     }
 
     /** Source-compatible constructor for pre-operational callers. */
@@ -101,7 +129,7 @@ public record TownHistoryEntry(
     ) {
         this(day, population, avgHealth, avgMental, buildings, p10Health, minHealth,
                 p10Mental, minMental, unableToWorkCount, exitRiskCount, towerWorking,
-                climateLevel, events, TownOperationalHistory.EMPTY);
+                climateLevel, events, TownOperationalHistory.EMPTY, TownNutritionHistory.EMPTY);
     }
 
     /** Source-compatible constructor for callers that only have legacy averages. */
@@ -114,6 +142,7 @@ public record TownHistoryEntry(
     ) {
         this(day, population, avgHealth, avgMental, buildings,
                 avgHealth, avgHealth, avgMental, avgMental,
-                0, 0, false, 0, List.of(), TownOperationalHistory.EMPTY);
+                0, 0, false, 0, List.of(), TownOperationalHistory.EMPTY,
+                TownNutritionHistory.EMPTY);
     }
 }

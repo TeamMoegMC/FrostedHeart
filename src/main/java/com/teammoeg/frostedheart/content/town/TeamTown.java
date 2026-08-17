@@ -211,7 +211,12 @@ public class TeamTown implements ITown, ITownWithResidents, ITownWithBuildings {
         // put→allocateHouse→无房回滚。
         if (!canAddResident() && !hasFreeHouseSlot()) return false;
         data.residents.put(resident.getUUID(), resident);
-        data.allocateHouse();
+        // 白天加入的居民只占用一个现有空位；全镇照护排序仍统一留到次日晨间，
+        // 避免一次出生/招募立即打乱所有家庭与玩家刚看到的分配结果。
+        data.allocateNewResident(resident);
+        // 仅在 occupancy 与住宅 UUID 名册暂时不一致时保留旧的全量修复路径。
+        // 正常有空床时不会进入这里；正常满员已被上方双条件短路。
+        if (resident.getHousePos() == null) data.allocateHouse();
         if(resident.getHousePos() == null){
             removeResident(resident);
             return false;
@@ -403,6 +408,14 @@ public class TeamTown implements ITown, ITownWithResidents, ITownWithBuildings {
     /** Player-visible work-building order and guaranteed staffing targets. */
     public TownStaffingPlan getStaffingPlan() {
         return data.getStaffingPlan();
+    }
+
+    public TownHousingPlan getHousingPlan() {
+        return data.getHousingPlan();
+    }
+
+    public TownPolicyState getPolicyState() {
+        return data.getPolicyState();
     }
 
     //@Override

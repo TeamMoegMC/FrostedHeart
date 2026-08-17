@@ -169,6 +169,10 @@ public class TownWorkforcePanel extends UIElement {
         lines.add(stat("gui.frostedheart.town.mental", resident.getMental()));
         lines.add(stat("gui.frostedheart.town.strength", resident.getStrength()));
         lines.add(stat("gui.frostedheart.town.intelligence", resident.getIntelligence()));
+        lines.add(stat("gui.frostedheart.town.nutrition_fat", resident.getNutrition().fat()));
+        lines.add(stat("gui.frostedheart.town.nutrition_carbohydrate", resident.getNutrition().carbohydrate()));
+        lines.add(stat("gui.frostedheart.town.nutrition_protein", resident.getNutrition().protein()));
+        lines.add(stat("gui.frostedheart.town.nutrition_vegetable", resident.getNutrition().vegetable()));
         lines.add(new Line(Component.empty(), 0xFFFFFFFF));
         lines.add(new Line(proficiencyName.copy().append(Component.literal(
                 ": " + Math.round(proficiency.applyAsDouble(resident)) + " / "

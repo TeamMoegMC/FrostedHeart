@@ -25,10 +25,10 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.Items;
 
 /**
- * 数据统计页签：以折线图展示城镇每日快照（人口、平均生命、平均精神）。
+ * 数据统计页签：以折线图展示城镇每日快照（居民、生存与四类营养）。
  * <p>
  * Statistics tab: draws line charts of the town's daily snapshots
- * (population, average health, average mental).
+ * (residents, survival, and four nutrition channels).
  */
 public class TownStatisticsTab extends TownManagerTab {
 

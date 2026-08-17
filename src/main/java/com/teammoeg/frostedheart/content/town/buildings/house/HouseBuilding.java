@@ -34,6 +34,7 @@ import com.teammoeg.frostedheart.content.town.building.AbstractTownBuilding;
 import com.teammoeg.frostedheart.content.town.building.ITownResidentBuilding;
 import com.teammoeg.frostedheart.content.town.building.ITownTemperatureBuilding;
 import com.teammoeg.frostedheart.content.town.resident.Resident;
+import com.teammoeg.frostedheart.content.town.resident.ResidentNutrition;
 import com.teammoeg.frostedheart.content.town.resource.ItemResourceType;
 import com.teammoeg.frostedheart.content.town.resource.ItemStackResourceKey;
 import com.teammoeg.frostedheart.content.town.resource.TownFoodNutritionModel;
@@ -212,6 +213,13 @@ public class HouseBuilding extends AbstractTownBuilding implements ITownResident
         return removed;
     }
 
+    /** Clears the roster for one atomic town-wide residential reassignment. */
+    public void clearResidents() {
+        if (residentsUUID.isEmpty()) return;
+        residentsUUID.clear();
+        fireChange();
+    }
+
     @Override
     public int getMaxResidents() {
         return maxResidents;
@@ -374,13 +382,64 @@ public class HouseBuilding extends AbstractTownBuilding implements ITownResident
         return calculateResidentEffects(resident, dailyReport);
     }
 
+    /** Applies one resident-specific meal and nutrition state under this house's conditions. */
+    public HouseDailyModel.ResidentEffects settleResident(
+            Resident resident,
+            double foodSatisfaction,
+            ResidentNutrition nutrition
+    ) {
+        FHConfig.Server.Town.Housing config = FHConfig.SERVER.TOWN.HOUSING;
+        ResidentNutrition safeNutrition = nutrition == null
+                ? ResidentNutrition.DEFAULT_VALUE : nutrition;
+        HouseDailyModel.ResidentEffects effects = HouseDailyModel.calculateResidentEffects(
+                resident.getHealth(),
+                resident.getMental(),
+                foodSatisfaction,
+                safeNutrition.healthRecoveryMultiplier(
+                        config.minimumNutritionRecoveryMultiplier.get()),
+                safeNutrition.mentalRecoveryMultiplier(
+                        config.minimumNutritionRecoveryMultiplier.get()),
+                getEffectiveTemperature(),
+                getTemperatureRating(),
+                getComfortRating(),
+                new HouseDailyModel.ResidentEffectParameters(
+                        config.foodDeficitPenaltyExponent.get(),
+                        config.healthLossAtZeroFoodPerResidentDay.get(),
+                        config.mentalLossAtZeroFoodPerResidentDay.get(),
+                        config.minimumTemperatureCelsius.get(),
+                        config.maximumTemperatureCelsius.get(),
+                        config.temperatureFullStressDistanceCelsius.get(),
+                        config.temperatureStressPenaltyExponent.get(),
+                        config.healthLossAtFullTemperatureStressPerResidentDay.get(),
+                        config.mentalLossAtFullTemperatureStressPerResidentDay.get(),
+                        config.maximumHealthRecoveryPerResidentDay.get(),
+                        config.maximumMentalRecoveryPerResidentDay.get()));
+        applyResidentEffects(resident, effects);
+        return effects;
+    }
+
+    /** Updates the legacy aggregate report from resident-specific central settlement totals. */
+    public void updateCentralDailyReport(
+            int residentCount,
+            double foodConsumed,
+            double nutritionValue
+    ) {
+        setDailyReport(createDailyReport(
+                Math.max(0, residentCount),
+                new FoodConsumption(Math.max(0.0, foodConsumed),
+                        Math.max(0.0, nutritionValue))));
+    }
+
     private HouseDailyModel.ResidentEffects calculateResidentEffects(Resident resident, DailyReport report) {
         FHConfig.Server.Town.Housing config = FHConfig.SERVER.TOWN.HOUSING;
         return HouseDailyModel.calculateResidentEffects(
                 resident.getHealth(),
                 resident.getMental(),
                 report.foodSatisfaction(),
-                report.nutritionRecoveryMultiplier(),
+                resident.getNutrition().healthRecoveryMultiplier(
+                        config.minimumNutritionRecoveryMultiplier.get()),
+                resident.getNutrition().mentalRecoveryMultiplier(
+                        config.minimumNutritionRecoveryMultiplier.get()),
                 report.effectiveTemperature(),
                 report.temperatureRating(),
                 report.comfortRating(),

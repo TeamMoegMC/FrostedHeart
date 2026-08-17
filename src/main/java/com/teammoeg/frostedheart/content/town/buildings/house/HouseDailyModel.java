@@ -190,10 +190,30 @@ public final class HouseDailyModel {
             double comfortRating,
             ResidentEffectParameters parameters
     ) {
+        return calculateResidentEffects(
+                health, mental, foodSatisfaction,
+                nutritionRecoveryMultiplier, nutritionRecoveryMultiplier,
+                effectiveTemperatureCelsius, temperatureRating, comfortRating, parameters);
+    }
+
+    public static ResidentEffects calculateResidentEffects(
+            double health,
+            double mental,
+            double foodSatisfaction,
+            double healthNutritionRecoveryMultiplier,
+            double mentalNutritionRecoveryMultiplier,
+            double effectiveTemperatureCelsius,
+            double temperatureRating,
+            double comfortRating,
+            ResidentEffectParameters parameters
+    ) {
         double safeHealth = clampFinite(health, 0.0, 100.0, 50.0);
         double safeMental = clampFinite(mental, 0.0, 100.0, 50.0);
         double food = clampFinite(foodSatisfaction, 0.0, 1.0, 0.0);
-        double nutrition = clampFinite(nutritionRecoveryMultiplier, 0.0, 1.0, 0.0);
+        double healthNutrition = clampFinite(
+                healthNutritionRecoveryMultiplier, 0.0, 1.0, 0.0);
+        double mentalNutrition = clampFinite(
+                mentalNutritionRecoveryMultiplier, 0.0, 1.0, 0.0);
         double temperature = clampFinite(temperatureRating, 0.0, 1.0, 0.0);
         double comfort = clampFinite(comfortRating, 0.0, 1.0, 0.0);
 
@@ -216,9 +236,9 @@ public final class HouseDailyModel {
         double healthPenalty = healthFoodPenalty + healthTemperaturePenalty;
         double mentalPenalty = mentalFoodPenalty + mentalTemperaturePenalty;
         double healthRecovery = nonNegative(parameters.maximumHealthRecoveryPerResidentDay())
-                * food * nutrition * temperature * (1.0 - safeHealth / 100.0);
+                * food * healthNutrition * temperature * (1.0 - safeHealth / 100.0);
         double mentalRecovery = nonNegative(parameters.maximumMentalRecoveryPerResidentDay())
-                * food * nutrition * comfort * (1.0 - safeMental / 100.0);
+                * food * mentalNutrition * comfort * (1.0 - safeMental / 100.0);
 
         return new ResidentEffects(
                 foodStress,

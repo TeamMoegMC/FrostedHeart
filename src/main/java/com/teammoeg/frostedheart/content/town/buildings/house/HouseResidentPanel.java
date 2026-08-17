@@ -177,6 +177,10 @@ final class HouseResidentPanel extends UIElement {
         lines.add(statLine("gui.frostedheart.house.mental", resident.getMental(), 100.0));
         lines.add(statLine("gui.frostedheart.house.strength", resident.getStrength(), 100.0));
         lines.add(statLine("gui.frostedheart.house.intelligence", resident.getIntelligence(), 100.0));
+        lines.add(statLine("gui.frostedheart.town.nutrition_fat", resident.getNutrition().fat(), 100.0));
+        lines.add(statLine("gui.frostedheart.town.nutrition_carbohydrate", resident.getNutrition().carbohydrate(), 100.0));
+        lines.add(statLine("gui.frostedheart.town.nutrition_protein", resident.getNutrition().protein(), 100.0));
+        lines.add(statLine("gui.frostedheart.town.nutrition_vegetable", resident.getNutrition().vegetable(), 100.0));
         lines.add(DetailLine.EMPTY);
         lines.add(new DetailLine(
                 Component.translatable("gui.frostedheart.house.proficiency"),

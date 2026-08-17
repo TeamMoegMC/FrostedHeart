@@ -11,6 +11,7 @@ import com.teammoeg.chorda.client.cui.base.MouseButton;
 import com.teammoeg.chorda.client.cui.base.UIElement;
 import com.teammoeg.frostedheart.content.town.TeamTownData;
 import com.teammoeg.frostedheart.content.town.TownHistoryEntry;
+import com.teammoeg.frostedheart.content.town.observation.TownNutritionHistory;
 import com.teammoeg.frostedheart.content.town.observation.TownOperationalHistory;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import net.minecraft.client.Minecraft;
@@ -22,14 +23,16 @@ import java.util.List;
 import java.util.Locale;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.function.ToDoubleFunction;
 
-/** Two player-facing history views. Missing optional samples produce line gaps. */
+/** Three player-facing history views. Missing optional samples produce line gaps. */
 public class TownStatisticsPanel extends UIElement {
     private static final int WIDTH = TownManagerScreen.CONTENT_WIDTH;
     private static final int HEIGHT = TownManagerScreen.CONTENT_HEIGHT;
     private static final int HEADER_HEIGHT = 28;
     private static final int CHART_LABEL_HEIGHT = 11;
-    private static final int CHART_PLOT_HEIGHT = 40;
+    private static final int MAX_CHART_PLOT_HEIGHT = 40;
+    private static final int MIN_CHART_PLOT_HEIGHT = 20;
     private static final int CHART_SPACING = 6;
     private static final int PLOT_MARGIN = 4;
 
@@ -56,9 +59,14 @@ public class TownStatisticsPanel extends UIElement {
             Component days = Component.translatable("gui.frostedheart.town_manager.last_n_days", history.size());
             graphics.drawString(font, days, x + width - 5 - font.width(days), y + 4, 0xFFAAAAAA, true);
         }
-        int half = (width - 8) / 2;
-        drawViewButton(graphics, font, x + 4, y + 14, half, View.RESIDENTS);
-        drawViewButton(graphics, font, x + 4 + half, y + 14, half, View.SURVIVAL);
+        int buttonsWidth = width - 8;
+        int buttonWidth = buttonsWidth / View.values().length;
+        for (View candidate : View.values()) {
+            int buttonX = x + 4 + candidate.ordinal() * buttonWidth;
+            int candidateWidth = candidate.ordinal() == View.values().length - 1
+                    ? buttonsWidth - buttonWidth * candidate.ordinal() : buttonWidth;
+            drawViewButton(graphics, font, buttonX, y + 14, candidateWidth, candidate);
+        }
 
         if (history.size() < 2) {
             drawCentered(graphics, font, Component.translatable("gui.frostedheart.town_manager.collecting"),
@@ -68,11 +76,17 @@ public class TownStatisticsPanel extends UIElement {
             return;
         }
 
-        List<Chart> charts = view == View.RESIDENTS ? residentCharts() : survivalCharts();
+        List<Chart> charts = switch (view) {
+            case RESIDENTS -> residentCharts();
+            case NUTRITION -> nutritionCharts();
+            case SURVIVAL -> survivalCharts();
+        };
+        int plotHeight = chartPlotHeight(height, charts.size());
         int chartY = y + HEADER_HEIGHT;
         for (Chart chart : charts) {
-            drawChart(graphics, font, x + PLOT_MARGIN, chartY, width - PLOT_MARGIN * 2, history, chart);
-            chartY += CHART_LABEL_HEIGHT + CHART_PLOT_HEIGHT + CHART_SPACING;
+            drawChart(graphics, font, x + PLOT_MARGIN, chartY,
+                    width - PLOT_MARGIN * 2, plotHeight, history, chart);
+            chartY += CHART_LABEL_HEIGHT + plotHeight + CHART_SPACING;
         }
     }
 
@@ -89,7 +103,12 @@ public class TownStatisticsPanel extends UIElement {
         if (!isMouseOver() || button != MouseButton.LEFT || getMouseY() < 14 || getMouseY() >= 25) {
             return false;
         }
-        view = getMouseX() < WIDTH / 2 ? View.RESIDENTS : View.SURVIVAL;
+        double relativeX = getMouseX() - 4;
+        int buttonsWidth = WIDTH - 8;
+        if (relativeX < 0 || relativeX >= buttonsWidth) return false;
+        int index = Math.min(View.values().length - 1,
+                (int) Math.floor(relativeX * View.values().length / buttonsWidth));
+        view = View.values()[index];
         return true;
     }
 
@@ -99,6 +118,7 @@ public class TownStatisticsPanel extends UIElement {
             int x,
             int y,
             int width,
+            int plotHeight,
             List<TownHistoryEntry> history,
             Chart chart
     ) {
@@ -116,7 +136,6 @@ public class TownStatisticsPanel extends UIElement {
         }
 
         int plotY = y + CHART_LABEL_HEIGHT;
-        int plotHeight = CHART_PLOT_HEIGHT;
         graphics.fill(x, plotY, x + width, plotY + plotHeight, 0xFF181818);
         graphics.fill(x, plotY, x + width, plotY + 1, 0xFF373737);
         graphics.fill(x, plotY + plotHeight - 1, x + width, plotY + plotHeight, 0xFF8B8B8B);
@@ -216,6 +235,62 @@ public class TownStatisticsPanel extends UIElement {
                         List.of(), -40, 40));
     }
 
+    private static List<Chart> nutritionCharts() {
+        List<Reference> references = List.of(
+                new Reference(70.0, 0xFF55AA55),
+                new Reference(20.0, 0xFFFF5555));
+        return List.of(
+                nutritionChart("gui.frostedheart.town_manager.chart_nutrition_fat",
+                        0xFFFFAA55, 0xFFCC6633,
+                        TownNutritionHistory::averageFat, TownNutritionHistory::p10Fat,
+                        references),
+                nutritionChart("gui.frostedheart.town_manager.chart_nutrition_carbohydrate",
+                        0xFFFFDD55, 0xFFCC9922,
+                        TownNutritionHistory::averageCarbohydrate,
+                        TownNutritionHistory::p10Carbohydrate, references),
+                nutritionChart("gui.frostedheart.town_manager.chart_nutrition_protein",
+                        0xFFFF88CC, 0xFFBB4488,
+                        TownNutritionHistory::averageProtein, TownNutritionHistory::p10Protein,
+                        references),
+                nutritionChart("gui.frostedheart.town_manager.chart_nutrition_vegetable",
+                        0xFF66DD88, 0xFF229955,
+                        TownNutritionHistory::averageVegetable,
+                        TownNutritionHistory::p10Vegetable, references));
+    }
+
+    private static Chart nutritionChart(
+            String titleKey,
+            int averageColor,
+            int lowTailColor,
+            ToDoubleFunction<TownNutritionHistory> average,
+            ToDoubleFunction<TownNutritionHistory> lowTail,
+            List<Reference> references
+    ) {
+        return new Chart(titleKey, List.of(
+                new Series(averageColor, entry -> nutritionMetric(entry, average)),
+                new Series(lowTailColor, entry -> nutritionMetric(entry, lowTail))),
+                references, 0, 100);
+    }
+
+    private static MetricPoint nutritionMetric(
+            TownHistoryEntry entry,
+            ToDoubleFunction<TownNutritionHistory> value
+    ) {
+        TownNutritionHistory nutrition = entry.nutrition();
+        return nutrition.available()
+                ? MetricPoint.of(value.applyAsDouble(nutrition))
+                : new MetricPoint(false, 0.0);
+    }
+
+    private static int chartPlotHeight(int height, int chartCount) {
+        if (chartCount <= 0) return MAX_CHART_PLOT_HEIGHT;
+        int available = height - HEADER_HEIGHT
+                - chartCount * CHART_LABEL_HEIGHT
+                - Math.max(0, chartCount - 1) * CHART_SPACING;
+        return Math.max(MIN_CHART_PLOT_HEIGHT,
+                Math.min(MAX_CHART_PLOT_HEIGHT, available / chartCount));
+    }
+
     private static MetricPoint metric(TownOperationalHistory.Metric metric) {
         return new MetricPoint(metric.available(), metric.value());
     }
@@ -251,6 +326,7 @@ public class TownStatisticsPanel extends UIElement {
 
     private enum View {
         RESIDENTS("gui.frostedheart.town_manager.statistics_residents"),
+        NUTRITION("gui.frostedheart.town_manager.statistics_nutrition"),
         SURVIVAL("gui.frostedheart.town_manager.statistics_survival");
 
         private final String translationKey;

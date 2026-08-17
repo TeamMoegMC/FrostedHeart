@@ -558,6 +558,9 @@ public record TownModelParameters(
         public static final double HOUSING_FOOD_PER_RESIDENT_DAY = 6.5;
         public static final double HOUSING_NUTRITION_REFERENCE_PER_FOOD_UNIT = 7000.0;
         public static final double HOUSING_MINIMUM_NUTRITION_RECOVERY_MULTIPLIER = 0.5;
+        public static final double RESIDENT_NUTRITION_RESERVE_LOSS_PER_DAY = 10.0;
+        public static final double RESIDENT_NUTRITION_GAIN_AT_REFERENCE = 10.0;
+        public static final double RESIDENT_NUTRITION_MAXIMUM_COVERAGE = 2.0;
         public static final double HOUSING_FOOD_DEFICIT_PENALTY_EXPONENT = 2.0;
         public static final double HOUSING_HEALTH_LOSS_AT_ZERO_FOOD_PER_RESIDENT_DAY = 8.0;
         public static final double HOUSING_MENTAL_LOSS_AT_ZERO_FOOD_PER_RESIDENT_DAY = 5.0;

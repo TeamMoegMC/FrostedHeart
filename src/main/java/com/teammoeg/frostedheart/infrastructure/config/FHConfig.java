@@ -697,6 +697,9 @@ public class FHConfig {
 				public final ForgeConfigSpec.DoubleValue foodConsumptionPerResidentDay;
 				public final ForgeConfigSpec.DoubleValue nutritionReferencePerFoodUnit;
 				public final ForgeConfigSpec.DoubleValue minimumNutritionRecoveryMultiplier;
+				public final ForgeConfigSpec.DoubleValue residentNutritionReserveLossPerDay;
+				public final ForgeConfigSpec.DoubleValue residentNutritionGainAtReference;
+				public final ForgeConfigSpec.DoubleValue residentNutritionMaximumCoverage;
 				public final ForgeConfigSpec.DoubleValue foodDeficitPenaltyExponent;
 				public final ForgeConfigSpec.DoubleValue healthLossAtZeroFoodPerResidentDay;
 				public final ForgeConfigSpec.DoubleValue mentalLossAtZeroFoodPerResidentDay;
@@ -736,6 +739,21 @@ public class FHConfig {
 						.defineInRange("minimumNutritionRecoveryMultiplier",
 							TownModelParameters.Defaults.HOUSING_MINIMUM_NUTRITION_RECOVERY_MULTIPLIER,
 							0d, 1d);
+					residentNutritionReserveLossPerDay = builder
+						.comment("Points removed from each resident nutrition reserve before the daily meal.")
+						.defineInRange("residentNutritionReserveLossPerDay",
+							TownModelParameters.Defaults.RESIDENT_NUTRITION_RESERVE_LOSS_PER_DAY,
+							0d, 100d);
+					residentNutritionGainAtReference = builder
+						.comment("Reserve points gained by one full reference-quality daily meal in one channel.")
+						.defineInRange("residentNutritionGainAtReference",
+							TownModelParameters.Defaults.RESIDENT_NUTRITION_GAIN_AT_REFERENCE,
+							0d, 100d);
+					residentNutritionMaximumCoverage = builder
+						.comment("Maximum per-channel meal coverage used for reserve gain.")
+						.defineInRange("residentNutritionMaximumCoverage",
+							TownModelParameters.Defaults.RESIDENT_NUTRITION_MAXIMUM_COVERAGE,
+							0d, 100d);
 					foodDeficitPenaltyExponent = builder
 						.comment("Exponent applied to the missing-food fraction before health and mental penalties.")
 						.defineInRange("foodDeficitPenaltyExponent",
