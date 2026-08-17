@@ -637,7 +637,7 @@ public record TownModelParameters(
         public static final double RESIDENT_COLD_SURVIVOR_ATTRIBUTE_BONUS = 15.0;
         public static final double RESIDENT_COLD_SURVIVOR_PROFICIENCY_MULTIPLIER = 1.5;
         public static final double RESIDENT_COLD_SURVIVOR_CHANCE = 0.5;
-        public static final int RESIDENT_INFANT_TO_CHILD_DAYS = 10;
+        public static final int RESIDENT_INFANT_TO_CHILD_DAYS = 30;
         public static final int RESIDENT_CHILD_TO_ADULT_DAYS = 30;
         public static final double RESIDENT_INFANT_STRENGTH_GAIN_PER_DAY = 0.2;
         public static final double RESIDENT_INFANT_INTELLIGENCE_GAIN_PER_DAY = 0.2;
