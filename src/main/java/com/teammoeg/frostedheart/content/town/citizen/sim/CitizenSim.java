@@ -72,6 +72,10 @@ public final class CitizenSim {
 	public long[] bestDist2;
     /** 分离力缓存（定点位移，非计算 tick 复用）；瞬态，不落盘 */
     public int[] sepX, sepZ;
+    /** 本 tick 停步标记：移动类状态但 XZ 无实际位移（到岗/卡住/贴墙/未激活）；运行期，不落盘 / Per-tick halt flag: MOVING-class state with no XZ displacement; runtime-only */
+    public byte[] halt;
+    /** 规范模型的停步标记（上次发送值）；运行期，不落盘 / Canonical halt flag (last sent); runtime-only */
+    public byte[] shalt;
 
 	private final Int2IntOpenHashMap idToIndex = new Int2IntOpenHashMap();
 
@@ -110,6 +114,8 @@ public final class CitizenSim {
 		bestDist2 = new long[cap];
         sepX = new int[cap];
         sepZ = new int[cap];
+        halt = new byte[cap];
+        shalt = new byte[cap];
 	}
 
 	private void grow() {
@@ -141,6 +147,8 @@ public final class CitizenSim {
 		capacity = newCap;
         sepX = Arrays.copyOf(sepX, newCap);
         sepZ = Arrays.copyOf(sepZ, newCap);
+        halt = Arrays.copyOf(halt, newCap);
+        shalt = Arrays.copyOf(shalt, newCap);
 	}
 
 	/**
@@ -190,6 +198,8 @@ public final class CitizenSim {
 		idToIndex.put(newId, i);
         sepX[i] = 0;
         sepZ[i] = 0;
+        halt[i] = 0;
+        shalt[i] = 0;
 		return i;
 	}
 
@@ -234,6 +244,8 @@ public final class CitizenSim {
 			idToIndex.put(id[i], i);
             sepX[i] = sepX[last];
             sepZ[i] = sepZ[last];
+            halt[i] = halt[last];
+            shalt[i] = shalt[last];
 		}
 		return true;
 	}

@@ -68,11 +68,15 @@ public final class MovementSystem {
             int n = sim.size();
 			boolean persistedChanged = false;
             for (int i = 0; i < n; i++) {
-                if (!sched.isActive(c, i))
+                if (!sched.isActive(c, i)) {
+                    // 未激活 = 本 tick 冻结，移动类状态视同停步
+                    if (CitizenState.MOVING[sim.state[i]])
+                        sim.halt[i] = 1;
                     continue;
-				int oldX = sim.px[i];
-				int oldY = sim.py[i];
-				int oldZ = sim.pz[i];
+                }
+			int oldX = sim.px[i];
+			int oldY = sim.py[i];
+			int oldZ = sim.pz[i];
 			int oldTargetX = sim.tx[i];
 			int oldTargetZ = sim.tz[i];
 			byte oldDir = sim.dir[i];
@@ -84,6 +88,9 @@ public final class MovementSystem {
                     // 站立居民：每 5 tick 贴地一次
                     conformHeight(sim, level, i);
                 }
+			// 停步实测：移动类状态但本 tick XZ 无位移（到岗/卡住/贴墙钳制）。
+			// 该位进同步字节 bit7，客户端见位即停止外推，消除"外推漂移↔心跳回拉"振荡。
+			sim.halt[i] = (byte) (CitizenState.MOVING[sim.state[i]] && sim.px[i] == oldX && sim.pz[i] == oldZ ? 1 : 0);
 			persistedChanged |= oldX != sim.px[i] || oldY != sim.py[i] || oldZ != sim.pz[i]
 					|| oldTargetX != sim.tx[i] || oldTargetZ != sim.tz[i]
 					|| oldDir != sim.dir[i];
