@@ -2,23 +2,23 @@
   "schemaVersion": 1,
   "modelStage": 4,
   "metadata": {
-    "name": "stage4-t1-compact-population-sweep",
-    "description": "One to two hundred game-generated residents in current-code compact-capacity house and hunting layouts under one normal T1 sphere."
+    "name": "stage4-t1-p50-potato-supplement",
+    "description": "Fixed-seed 50-resident nutrition experiment with hunting plus an existing-recipe baked-potato supplement."
   },
   "simulation": {
     "days": 120,
-    "runs": 1000,
+    "runs": 100,
     "seed": 41008,
     "climateBurnInDays": 365,
     "morningHour": 1
   },
   "populationSweep": {
-    "minimumPopulation": 1,
-    "maximumPopulation": 200,
-    "populationPoints": 20,
-    "populationValues": [1, 4, 8, 10, 11, 12, 13, 14, 15, 16, 20, 24, 32, 48, 64, 96, 128, 160, 180, 200],
-    "trajectoryPopulations": [1, 8, 11, 12, 13, 14, 16, 24, 48, 200],
-    "timelinePopulation": 24,
+    "minimumPopulation": 50,
+    "maximumPopulation": 50,
+    "populationPoints": 1,
+    "populationValues": [50],
+    "trajectoryPopulations": [50],
+    "timelinePopulation": 50,
     "equilibriumWindowDays": 30
   },
   "location": {
@@ -53,9 +53,19 @@
   "buildingOrder": ["house", "mine", "hunt"],
   "warehouse": {
     "capacityItems": 100000.0,
+    "simulationFoods": [
+      {
+        "item": "minecraft:baked_potato",
+        "hunger": 5,
+        "saturationModifier": 0.6
+      }
+    ],
     "initialInventory": [
       { "item": "immersiveengineering:coal_coke", "amountItems": 75.0 },
       { "item": "minecraft:cooked_beef", "amountItems": 17.5 }
+    ],
+    "dailySupplies": [
+      { "item": "minecraft:baked_potato", "amountItems": 1.0 }
     ]
   },
   "processing": {
@@ -76,7 +86,7 @@
     "huntRecoveryUnitsPerDay": 0.0
   },
   "diagnostics": {
-    "frontierMaximumPopulation": 200,
+    "frontierMaximumPopulation": 50,
     "compareBuildingOrders": false
   },
   "thermalLayout": {

@@ -34,14 +34,31 @@ public final class ResidentAgingModel {
             ResidentNutrition nutrition,
             Parameters parameters
     ) {
+        return settleDay(age, ageDays, strength, intelligence, nutrition, parameters,
+                new ResidentNutrition.Parameters(
+                        ResidentNutrition.MAXIMUM, ResidentNutrition.HEALTHY,
+                        0.6, 0.4, 0.5, 0.25));
+    }
+
+    public static AgingResult settleDay(
+            int age,
+            int ageDays,
+            double strength,
+            double intelligence,
+            ResidentNutrition nutrition,
+            Parameters parameters,
+            ResidentNutrition.Parameters nutritionParameters
+    ) {
         int nextDays = Math.max(0, ageDays) + 1;
         int nextAge = age;
         double nextStrength = boundedAttribute(strength);
         double nextIntelligence = boundedAttribute(intelligence);
         ResidentNutrition safeNutrition = nutrition == null
                 ? ResidentNutrition.DEFAULT_VALUE : nutrition;
-        double proteinGrowth = ResidentNutrition.growthMultiplier(safeNutrition.protein());
-        double fatGrowth = ResidentNutrition.growthMultiplier(safeNutrition.fat());
+        double proteinGrowth = ResidentNutrition.growthMultiplier(
+                safeNutrition.protein(), nutritionParameters);
+        double fatGrowth = ResidentNutrition.growthMultiplier(
+                safeNutrition.fat(), nutritionParameters);
         switch (age) {
             case Resident.AGE_INFANT -> {
                 if (nextDays >= parameters.infantToChildDays()) {

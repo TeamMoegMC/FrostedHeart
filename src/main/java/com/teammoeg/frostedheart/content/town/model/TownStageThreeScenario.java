@@ -142,7 +142,10 @@ public record TownStageThreeScenario(
         Warehouse warehouse = new Warehouse(
                 positive(number(warehouseJson, "capacityItems", 100_000.0),
                         "warehouse.capacityItems"),
-                inventory(warehouseJson));
+                inventory(warehouseJson),
+                simulationFoods(warehouseJson),
+                inventory(warehouseJson, "dailySupplies",
+                        "warehouse.dailySupplies.amountItems"));
 
         JsonObject processingJson = object(root, "processing");
         Processing processing = new Processing(
@@ -233,15 +236,44 @@ public record TownStageThreeScenario(
     }
 
     private static List<InventoryItem> inventory(JsonObject warehouse) {
-        JsonArray values = warehouse.has("initialInventory")
-                ? warehouse.getAsJsonArray("initialInventory") : new JsonArray();
+        return inventory(warehouse, "initialInventory",
+                "warehouse.initialInventory.amountItems");
+    }
+
+    private static List<InventoryItem> inventory(
+            JsonObject warehouse,
+            String member,
+            String amountName
+    ) {
+        JsonArray values = warehouse.has(member)
+                ? warehouse.getAsJsonArray(member) : new JsonArray();
         List<InventoryItem> result = new ArrayList<>();
         for (JsonElement value : values) {
             JsonObject item = value.getAsJsonObject();
             result.add(new InventoryItem(
                     requiredString(item, "item"),
                     finiteNonNegative(number(item, "amountItems", 0.0),
-                            "warehouse.initialInventory.amountItems")));
+                            amountName)));
+        }
+        return List.copyOf(result);
+    }
+
+    private static List<SimulationFood> simulationFoods(JsonObject warehouse) {
+        JsonArray values = warehouse.has("simulationFoods")
+                ? warehouse.getAsJsonArray("simulationFoods") : new JsonArray();
+        List<SimulationFood> result = new ArrayList<>();
+        Set<String> items = new HashSet<>();
+        for (JsonElement value : values) {
+            JsonObject food = value.getAsJsonObject();
+            String item = requiredString(food, "item");
+            if (!items.add(item)) {
+                throw new IllegalArgumentException("Duplicate warehouse.simulationFoods item: " + item);
+            }
+            result.add(new SimulationFood(
+                    item,
+                    positiveInteger(food, "hunger", 0),
+                    finiteNonNegative(number(food, "saturationModifier", 0.0),
+                            "warehouse.simulationFoods.saturationModifier")));
         }
         return List.copyOf(result);
     }
@@ -391,17 +423,39 @@ public record TownStageThreeScenario(
         }
     }
 
-    public record Warehouse(double capacityItems, List<InventoryItem> initialInventory) {
+    public record Warehouse(
+            double capacityItems,
+            List<InventoryItem> initialInventory,
+            List<SimulationFood> simulationFoods,
+            List<InventoryItem> dailySupplies
+    ) {
         public Warehouse {
             initialInventory = List.copyOf(initialInventory);
+            simulationFoods = List.copyOf(simulationFoods);
+            dailySupplies = List.copyOf(dailySupplies);
             double total = initialInventory.stream().mapToDouble(InventoryItem::amountItems).sum();
             if (total > capacityItems + 1.0 / 8192.0) {
                 throw new IllegalArgumentException("Initial inventory exceeds warehouse capacity.");
             }
         }
+
+        public Warehouse(double capacityItems, List<InventoryItem> initialInventory) {
+            this(capacityItems, initialInventory, List.of(), List.of());
+        }
+
+        public Warehouse(
+                double capacityItems,
+                List<InventoryItem> initialInventory,
+                List<SimulationFood> simulationFoods
+        ) {
+            this(capacityItems, initialInventory, simulationFoods, List.of());
+        }
     }
 
     public record InventoryItem(String item, double amountItems) {
+    }
+
+    public record SimulationFood(String item, int hunger, double saturationModifier) {
     }
 
     public record Processing(

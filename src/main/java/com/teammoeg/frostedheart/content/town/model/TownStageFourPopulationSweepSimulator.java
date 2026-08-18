@@ -48,14 +48,28 @@ public final class TownStageFourPopulationSweepSimulator {
             Integer runsOverride,
             Long seedOverride
     ) throws IOException {
+        return run(projectRoot, packRoot, scenarioPath, outputOverride,
+                runsOverride, seedOverride, TownModelParameters.currentDefaults());
+    }
+
+    public static SimulationRun run(
+            Path projectRoot,
+            Path packRoot,
+            Path scenarioPath,
+            Path outputOverride,
+            Integer runsOverride,
+            Long seedOverride,
+            TownModelParameters parameters
+    ) throws IOException {
         TownStageFourScenario baseScenario = TownStageFourScenario.load(scenarioPath);
         TownStageFourScenario.PopulationSweep sweep = baseScenario.populationSweep();
         if (sweep == null) {
             throw new IllegalArgumentException(
                     "A stage-4 population sweep requires a populationSweep object.");
         }
-        TownStageOneTwoData data = TownStageOneTwoData.load(projectRoot, packRoot);
-        TownModelParameters parameters = TownModelParameters.currentDefaults();
+        TownStageOneTwoData data = TownStageOneTwoData.load(projectRoot, packRoot)
+                .withSimulationFoods(
+                        projectRoot, baseScenario.town().warehouse().simulationFoods());
         int runs = runsOverride == null ? baseScenario.town().simulation().runs()
                 : requirePositive(runsOverride, "runs");
         long seed = seedOverride == null ? baseScenario.town().simulation().seed() : seedOverride;
@@ -110,7 +124,7 @@ public final class TownStageFourPopulationSweepSimulator {
                         TownStageThreeTheory.evaluate(townScenario, data, parameters), population);
                 rows.add(populationRow(
                         population, scenario, layout, capacityTheory, huntingCapacity,
-                        theory, aggregate));
+                        theory, aggregate, execution.equilibriumAttributes()));
             }
             if (trajectoryPopulations.contains(population)) {
                 for (TownStageFourSimulator.DailyAggregate daily : execution.dailyAggregate()) {
@@ -119,7 +133,12 @@ public final class TownStageFourPopulationSweepSimulator {
                             daily.foodReserve(), daily.fuelReserve(),
                             daily.foodReserveTrend(), daily.fuelReserveTrend(),
                             daily.averageHealth(), daily.p10Health(), daily.averageMental(),
-                            daily.p10Mental(), daily.unableToWorkFraction(),
+                            daily.p10Mental(), daily.averageStrength(), daily.p10Strength(),
+                            daily.averageIntelligence(), daily.p10Intelligence(),
+                            daily.averageFat(), daily.p10Fat(), daily.averageCarbohydrate(),
+                            daily.p10Carbohydrate(), daily.averageProtein(), daily.p10Protein(),
+                            daily.averageVegetable(), daily.p10Vegetable(),
+                            daily.severeNutritionFraction(), daily.unableToWorkFraction(),
                             daily.exitRiskFraction(), daily.meanAdverseEventCount(),
                             daily.meanResidentExits(), daily.crisisProbability()));
                 }
@@ -144,6 +163,15 @@ public final class TownStageFourPopulationSweepSimulator {
                         Map.entry(
                         "residentP10",
                         "Linearly interpolated tenth percentile across current residents; unlike the town mean, it exposes the weakest resident tail."),
+                        Map.entry(
+                        "residentNutrition",
+                        "Four independent 0-100 reserves. Meals preserve fat, carbohydrate, protein, and vegetable recipe values instead of averaging them."),
+                        Map.entry(
+                        "equilibriumAttributes",
+                        "For each trial, the mean resident attribute is averaged across the final populationSweep.equilibriumWindowDays; P05/P50/P95 are then computed across trials."),
+                        Map.entry(
+                        "nutritionThresholdEvent",
+                        "A channel-specific entry or recovery crossing at residents.nutrition.severeReserve, aggregated by affected residents and day."),
                         Map.entry(
                         "exitRiskFraction",
                         "Fraction of current residents that would cross the configured health or mental removal threshold at the next morning settlement, including homeless health loss."),
@@ -261,7 +289,12 @@ public final class TownStageFourPopulationSweepSimulator {
                 Math.max(source.warehouse().capacityItems(),
                         inventory.stream().mapToDouble(
                                 TownStageThreeScenario.InventoryItem::amountItems).sum()),
-                inventory);
+                inventory, source.warehouse().simulationFoods(),
+                source.warehouse().dailySupplies().stream()
+                        .map(item -> new TownStageThreeScenario.InventoryItem(
+                                item.item(), data.foods().containsKey(item.item())
+                                        ? item.amountItems() * foodScale : item.amountItems()))
+                        .toList());
         TownStageThreeScenario town = new TownStageThreeScenario(
                 source.schemaVersion(), source.modelStage(),
                 new TownStageThreeScenario.Metadata(
@@ -356,7 +389,8 @@ public final class TownStageFourPopulationSweepSimulator {
             TownStageFourSimulator.CapacityTheory capacityTheory,
             int huntingCapacity,
             TownStageThreeTheory.FrontierPoint theory,
-            TownStageFourSimulator.AggregateSummary aggregate
+            TownStageFourSimulator.AggregateSummary aggregate,
+            TownStageFourSimulator.EquilibriumAttributes equilibrium
     ) {
         TownStageFourModel.BuildingGeometry house = layout.building("house");
         TownStageFourModel.BuildingGeometry hunt = layout.building("hunt");
@@ -379,7 +413,7 @@ public final class TownStageFourPopulationSweepSimulator {
                 aggregate.noShortageProbability(), aggregate.noShortageWilson95(),
                 aggregate.climateServiceableHourFraction(),
                 aggregate.houseWorkableHourFraction(),
-                aggregate.huntingWorkableHourFraction(), observableSummary(aggregate));
+                aggregate.huntingWorkableHourFraction(), observableSummary(aggregate), equilibrium);
     }
 
     private static ObservableSummary observableSummary(
@@ -434,7 +468,15 @@ public final class TownStageFourPopulationSweepSimulator {
                     + "crisis_probability,resident_exit_probability,prior_warning_probability_among_exit_runs,"
                     + "first_exit_warning_lead_days_p05,first_exit_warning_lead_days_p50,first_exit_warning_lead_days_p95,"
                     + "mean_recovery_days_p05,mean_recovery_days_p50,mean_recovery_days_p95,"
-                    + "unrecovered_episode_probability\n");
+                    + "unrecovered_episode_probability,equilibrium_window_days,"
+                    + "equilibrium_health_p05,equilibrium_health_p50,equilibrium_health_p95,"
+                    + "equilibrium_mental_p05,equilibrium_mental_p50,equilibrium_mental_p95,"
+                    + "equilibrium_strength_p05,equilibrium_strength_p50,equilibrium_strength_p95,"
+                    + "equilibrium_intelligence_p05,equilibrium_intelligence_p50,equilibrium_intelligence_p95,"
+                    + "equilibrium_fat_p05,equilibrium_fat_p50,equilibrium_fat_p95,"
+                    + "equilibrium_carbohydrate_p05,equilibrium_carbohydrate_p50,equilibrium_carbohydrate_p95,"
+                    + "equilibrium_protein_p05,equilibrium_protein_p50,equilibrium_protein_p95,"
+                    + "equilibrium_vegetable_p05,equilibrium_vegetable_p50,equilibrium_vegetable_p95\n");
             for (PopulationRow row : rows) {
                 writer.write(String.format(Locale.ROOT,
                         "%d,%d,%d,%d,%.9f,%.9f,%.9f,%.9f,%.9f,%d,%d,"
@@ -491,6 +533,17 @@ public final class TownStageFourPopulationSweepSimulator {
                 appendDistribution(observableCsv, observation.firstExitWarningLeadDays());
                 appendDistribution(observableCsv, observation.meanRecoveryDays());
                 appendNumber(observableCsv, observation.unrecoveredEpisodeProbability());
+                TownStageFourSimulator.EquilibriumAttributes equilibrium =
+                        row.equilibriumAttributes();
+                appendNumber(observableCsv, equilibrium.windowDays());
+                appendDistribution(observableCsv, equilibrium.health());
+                appendDistribution(observableCsv, equilibrium.mental());
+                appendDistribution(observableCsv, equilibrium.strength());
+                appendDistribution(observableCsv, equilibrium.intelligence());
+                appendDistribution(observableCsv, equilibrium.fat());
+                appendDistribution(observableCsv, equilibrium.carbohydrate());
+                appendDistribution(observableCsv, equilibrium.protein());
+                appendDistribution(observableCsv, equilibrium.vegetable());
                 writer.write(observableCsv.toString());
                 writer.newLine();
             }
@@ -524,6 +577,19 @@ public final class TownStageFourPopulationSweepSimulator {
                     + "p10_health_p05,p10_health_p50,p10_health_p95,"
                     + "average_mental_p05,average_mental_p50,average_mental_p95,"
                     + "p10_mental_p05,p10_mental_p50,p10_mental_p95,"
+                    + "average_strength_p05,average_strength_p50,average_strength_p95,"
+                    + "p10_strength_p05,p10_strength_p50,p10_strength_p95,"
+                    + "average_intelligence_p05,average_intelligence_p50,average_intelligence_p95,"
+                    + "p10_intelligence_p05,p10_intelligence_p50,p10_intelligence_p95,"
+                    + "average_fat_p05,average_fat_p50,average_fat_p95,"
+                    + "p10_fat_p05,p10_fat_p50,p10_fat_p95,"
+                    + "average_carbohydrate_p05,average_carbohydrate_p50,average_carbohydrate_p95,"
+                    + "p10_carbohydrate_p05,p10_carbohydrate_p50,p10_carbohydrate_p95,"
+                    + "average_protein_p05,average_protein_p50,average_protein_p95,"
+                    + "p10_protein_p05,p10_protein_p50,p10_protein_p95,"
+                    + "average_vegetable_p05,average_vegetable_p50,average_vegetable_p95,"
+                    + "p10_vegetable_p05,p10_vegetable_p50,p10_vegetable_p95,"
+                    + "severe_nutrition_fraction_p05,severe_nutrition_fraction_p50,severe_nutrition_fraction_p95,"
                     + "unable_to_work_fraction_p05,unable_to_work_fraction_p50,unable_to_work_fraction_p95,"
                     + "exit_risk_fraction_p05,exit_risk_fraction_p50,exit_risk_fraction_p95,"
                     + "mean_adverse_event_count,mean_resident_exits,crisis_probability\n");
@@ -539,6 +605,19 @@ public final class TownStageFourPopulationSweepSimulator {
                 appendDistribution(line, row.p10Health());
                 appendDistribution(line, row.averageMental());
                 appendDistribution(line, row.p10Mental());
+                appendDistribution(line, row.averageStrength());
+                appendDistribution(line, row.p10Strength());
+                appendDistribution(line, row.averageIntelligence());
+                appendDistribution(line, row.p10Intelligence());
+                appendDistribution(line, row.averageFat());
+                appendDistribution(line, row.p10Fat());
+                appendDistribution(line, row.averageCarbohydrate());
+                appendDistribution(line, row.p10Carbohydrate());
+                appendDistribution(line, row.averageProtein());
+                appendDistribution(line, row.p10Protein());
+                appendDistribution(line, row.averageVegetable());
+                appendDistribution(line, row.p10Vegetable());
+                appendDistribution(line, row.severeNutritionFraction());
                 appendDistribution(line, row.unableToWorkFraction());
                 appendDistribution(line, row.exitRiskFraction());
                 appendNumber(line, row.meanAdverseEventCount());
@@ -559,12 +638,17 @@ public final class TownStageFourPopulationSweepSimulator {
                     + "tower_service,population,cumulative_exits,infants,children,adults,elders,"
                     + "miners,hunters,mining_swe,hunting_swe,food_satisfaction,food_reserve_days,"
                     + "fuel_reserve_days,average_health,p10_health,average_mental,p10_mental,"
+                    + "average_strength,p10_strength,average_intelligence,p10_intelligence,"
+                    + "average_fat,p10_fat,average_carbohydrate,p10_carbohydrate,"
+                    + "average_protein,p10_protein,average_vegetable,p10_vegetable,"
+                    + "severe_fat_count,severe_carbohydrate_count,severe_protein_count,severe_vegetable_count,"
                     + "unable_to_work_count,exit_risk_count,adverse_event_count,resident_exits,crisis_active\n");
             for (TownStageFourSimulator.TrialDailyTrace row : rows) {
                 writer.write(String.format(Locale.ROOT,
                         "%d,%d,%d,%.9f,%.9f,%.9f,%.9f,%d,%d,%d,%d,%d,%d,%d,%d,"
                                 + "%.9f,%.9f,%.9f,%.9f,%.9f,%.9f,%.9f,%.9f,%.9f,"
-                                + "%d,%d,%d,%d,%s%n",
+                                + "%.9f,%.9f,%.9f,%.9f,%.9f,%.9f,%.9f,%.9f,"
+                                + "%.9f,%.9f,%.9f,%.9f,%d,%d,%d,%d,%d,%d,%d,%d,%s%n",
                         row.run(), row.seed(), row.day(), row.morningClimateCelsius(),
                         row.houseTemperatureCelsius(), row.huntingTemperatureCelsius(),
                         row.towerService(), row.population(), row.cumulativeDeaths(),
@@ -572,6 +656,12 @@ public final class TownStageFourPopulationSweepSimulator {
                         row.miners(), row.hunters(), row.miningSwe(), row.huntingSwe(),
                         row.foodSatisfaction(), row.foodReserveDays(), row.fuelReserveDays(),
                         row.averageHealth(), row.p10Health(), row.averageMental(), row.p10Mental(),
+                        row.averageStrength(), row.p10Strength(), row.averageIntelligence(),
+                        row.p10Intelligence(), row.averageFat(), row.p10Fat(),
+                        row.averageCarbohydrate(), row.p10Carbohydrate(), row.averageProtein(),
+                        row.p10Protein(), row.averageVegetable(), row.p10Vegetable(),
+                        row.severeFatCount(), row.severeCarbohydrateCount(),
+                        row.severeProteinCount(), row.severeVegetableCount(),
                         row.unableToWorkCount(), row.exitRiskCount(), row.adverseEventCount(),
                         row.residentExits(), row.crisisActive()));
             }
@@ -708,7 +798,8 @@ public final class TownStageFourPopulationSweepSimulator {
             TownStageFourSimulator.Distribution climateServiceableHourFraction,
             TownStageFourSimulator.Distribution houseWorkableHourFraction,
             TownStageFourSimulator.Distribution huntingWorkableHourFraction,
-            ObservableSummary observables
+            ObservableSummary observables,
+            TownStageFourSimulator.EquilibriumAttributes equilibriumAttributes
     ) {
     }
 
@@ -752,6 +843,19 @@ public final class TownStageFourPopulationSweepSimulator {
             TownStageFourSimulator.Distribution p10Health,
             TownStageFourSimulator.Distribution averageMental,
             TownStageFourSimulator.Distribution p10Mental,
+            TownStageFourSimulator.Distribution averageStrength,
+            TownStageFourSimulator.Distribution p10Strength,
+            TownStageFourSimulator.Distribution averageIntelligence,
+            TownStageFourSimulator.Distribution p10Intelligence,
+            TownStageFourSimulator.Distribution averageFat,
+            TownStageFourSimulator.Distribution p10Fat,
+            TownStageFourSimulator.Distribution averageCarbohydrate,
+            TownStageFourSimulator.Distribution p10Carbohydrate,
+            TownStageFourSimulator.Distribution averageProtein,
+            TownStageFourSimulator.Distribution p10Protein,
+            TownStageFourSimulator.Distribution averageVegetable,
+            TownStageFourSimulator.Distribution p10Vegetable,
+            TownStageFourSimulator.Distribution severeNutritionFraction,
             TownStageFourSimulator.Distribution unableToWorkFraction,
             TownStageFourSimulator.Distribution exitRiskFraction,
             double meanAdverseEventCount,

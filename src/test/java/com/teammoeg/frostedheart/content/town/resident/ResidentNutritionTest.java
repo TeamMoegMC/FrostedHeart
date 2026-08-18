@@ -1,8 +1,10 @@
 /* Copyright (c) 2026 TeamMoeg */
 package com.teammoeg.frostedheart.content.town.resident;
 
+import com.electronwill.nightconfig.core.CommentedConfig;
 import com.google.gson.JsonParser;
 import com.mojang.serialization.JsonOps;
+import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import net.minecraft.SharedConstants;
 import net.minecraft.server.Bootstrap;
 import org.junit.jupiter.api.BeforeAll;
@@ -15,6 +17,9 @@ class ResidentNutritionTest {
     static void bootstrapMinecraftRegistries() {
         SharedConstants.tryDetectVersion();
         Bootstrap.bootStrap();
+        CommentedConfig serverConfig = CommentedConfig.inMemory();
+        FHConfig.SERVER_CONFIG.correct(serverConfig);
+        FHConfig.SERVER_CONFIG.setConfig(serverConfig);
     }
 
     @Test
@@ -59,5 +64,21 @@ class ResidentNutritionTest {
                 new ResidentNutrition.NutritionIntake(140, 70, 35, -1),
                 70, 10, 2);
         assertEquals(new ResidentNutrition(20, 10, 10, 10), restored);
+    }
+
+    @Test
+    void configurableReserveRecoveryAndGrowthParametersDriveTheFormula() {
+        ResidentNutrition.Parameters parameters = new ResidentNutrition.Parameters(
+                80, 40, 1, 0, 0.25, 0.5);
+        ResidentNutrition nutrition = new ResidentNutrition(80, 40, 0, 40);
+
+        assertEquals(1.0, nutrition.mentalRecoveryMultiplier(0.2, parameters), 1.0e-12);
+        assertEquals(0.25, ResidentNutrition.growthMultiplier(0, parameters), 1.0e-12);
+        assertEquals(1.0, ResidentNutrition.growthMultiplier(40, parameters), 1.0e-12);
+        assertEquals(1.5, ResidentNutrition.growthMultiplier(80, parameters), 1.0e-12);
+        assertEquals(new ResidentNutrition(80, 80, 80, 80),
+                new ResidentNutrition(79, 79, 79, 79).withMeal(
+                        new ResidentNutrition.NutritionIntake(100, 100, 100, 100),
+                        1, 10, 10, 80));
     }
 }

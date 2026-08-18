@@ -65,6 +65,19 @@ public final class TownSimulationMain {
         Path output = options.containsKey("output") ? Path.of(options.get("output")) : null;
         Integer runs = options.containsKey("runs") ? Integer.valueOf(options.get("runs")) : null;
         Long seed = options.containsKey("seed") ? Long.valueOf(options.get("seed")) : null;
+        boolean hasNutritionOverrides = options.containsKey("nutrition-reference")
+                || options.containsKey("nutrition-loss")
+                || options.containsKey("nutrition-gain");
+        TownModelParameters parameters = TownModelParameters.currentDefaults();
+        if (hasNutritionOverrides) {
+            parameters = parameters.withNutritionTuning(
+                    doubleOption(options, "nutrition-reference",
+                            parameters.housing().nutritionReferencePerFoodUnit()),
+                    doubleOption(options, "nutrition-loss",
+                            parameters.residents().nutrition().reserveLossPerDay()),
+                    doubleOption(options, "nutrition-gain",
+                            parameters.residents().nutrition().gainAtReference()));
+        }
         int modelStage = TownStageThreeScenario.modelStage(scenario);
         if (modelStage == 4) {
             TownStageFourScenario stageFourScenario = TownStageFourScenario.load(scenario);
@@ -76,18 +89,21 @@ public final class TownSimulationMain {
             } else if (stageFourScenario.populationSweep() != null) {
                 TownStageFourPopulationSweepSimulator.SimulationRun run =
                         TownStageFourPopulationSweepSimulator.run(
-                                projectRoot, packRoot, scenario, output, runs, seed);
+                                projectRoot, packRoot, scenario, output, runs, seed, parameters);
                 TownStageFourPopulationSweepSimulator.printSummary(run);
             } else {
+                rejectNutritionOverrides(hasNutritionOverrides);
                 TownStageFourSimulator.SimulationRun run = TownStageFourSimulator.run(
                         projectRoot, packRoot, scenario, output, runs, seed);
                 TownStageFourSimulator.printSummary(run);
             }
         } else if (modelStage == 3) {
+            rejectNutritionOverrides(hasNutritionOverrides);
             TownStageThreeSimulator.SimulationRun run = TownStageThreeSimulator.run(
                     projectRoot, packRoot, scenario, output, runs, seed);
             TownStageThreeSimulator.printSummary(run);
         } else {
+            rejectNutritionOverrides(hasNutritionOverrides);
             TownStageOneTwoSimulator.SimulationRun run = TownStageOneTwoSimulator.run(
                     projectRoot, packRoot, scenario, output, runs, seed);
             TownStageOneTwoSimulator.printSummary(run);
@@ -101,6 +117,21 @@ public final class TownSimulationMain {
             throw new IllegalArgumentException("--" + name + " is required.");
         }
         return value;
+    }
+
+    private static double doubleOption(
+            Map<String, String> options,
+            String name,
+            double fallback
+    ) {
+        return options.containsKey(name) ? Double.parseDouble(options.get(name)) : fallback;
+    }
+
+    private static void rejectNutritionOverrides(boolean present) {
+        if (present) {
+            throw new IllegalArgumentException(
+                    "Nutrition CLI overrides currently require a stage-4 populationSweep scenario.");
+        }
     }
 
     static Map<String, String> parseOptions(String[] args) {
@@ -129,7 +160,8 @@ public final class TownSimulationMain {
                 + "[--project-root <FH root>] [--output <directory>]");
         System.err.println("  TownSimulationMain simulate --pack-root <TWR .minecraft> "
                 + "--scenario <json> [--project-root <FH root>] [--output <directory>] "
-                + "[--runs <N>] [--seed <S>]");
+                + "[--runs <N>] [--seed <S>] [--nutrition-reference <N>] "
+                + "[--nutrition-loss <N>] [--nutrition-gain <N>]");
         System.err.println("    modelStage=4 scenarios couple current climate and one T1 sphere to the multi-day loop;");
         System.err.println("    an optional populationSweep object runs paired-seed compact layouts over a population range;");
         System.err.println("    an optional tensionExperiment object compares fixed and forecast-driven T1 operation for 24 residents;");

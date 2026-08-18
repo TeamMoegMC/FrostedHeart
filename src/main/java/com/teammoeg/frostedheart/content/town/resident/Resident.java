@@ -245,6 +245,7 @@ public class Resident {
         setAge(age);
         setAgeDays(ageDays);
         initializeAttributesForAge(age);
+        initializeNutrition();
     }
 
     //public Resident() {
@@ -259,6 +260,7 @@ public class Resident {
         setLastName(lastName);
         setUuid(uuid);
         initializeAttributesForAge(AGE_ADULT);
+        initializeNutrition();
     }
 
     public Resident (String firstName, String lastName, String uuid){
@@ -283,6 +285,14 @@ public class Resident {
         initializeMissingWorkProficiencies();
         setHousePos(housePos);
         setWorkPos(workPos);
+        initializeNutrition();
+    }
+
+    private void initializeNutrition() {
+        double initial = FHConfig.SERVER.TOWN.HOUSING.residentNutritionInitialReserve.get();
+        double maximum = FHConfig.SERVER.TOWN.HOUSING.residentNutritionMaximumReserve.get();
+        double value = Math.max(0.0, Math.min(maximum, initial));
+        setNutrition(new ResidentNutrition(value, value, value, value));
     }
 
     public void setDeath(ITownWithResidents town){

@@ -39,8 +39,6 @@ import java.util.Set;
 
 /** Executes one centralized, resident-specific town housing meal. */
 public final class TownHousingMealService {
-    private static final int MEAL_CHUNKS = 8;
-
     private TownHousingMealService() {
     }
 
@@ -48,7 +46,8 @@ public final class TownHousingMealService {
     public static void decayNutrition(Iterable<Resident> residents) {
         for (Resident resident : residents) {
             resident.setNutrition(resident.getNutrition().decay(
-                    FHConfig.SERVER.TOWN.HOUSING.residentNutritionReserveLossPerDay.get()));
+                    FHConfig.SERVER.TOWN.HOUSING.residentNutritionReserveLossPerDay.get(),
+                    FHConfig.SERVER.TOWN.HOUSING.residentNutritionMaximumReserve.get()));
         }
     }
 
@@ -63,7 +62,8 @@ public final class TownHousingMealService {
 
         Map<Resident, TownResidentCareModel.Need> needs = assessResidents(town);
         Comparator<Resident> careOrder = Comparator.comparing(
-                needs::get, TownResidentCareModel.comparator(law));
+                needs::get, TownResidentCareModel.comparator(
+                        law, FHConfig.SERVER.TOWN.RESIDENT_RULES.residentialCareScoreBand.get()));
         List<TownFoodAllocationModel.Household<Resident, HouseBuilding>> households =
                 households(town, housingPlan, careOrder);
         TownFoodAllocationModel.Plan<Resident> rationPlan = TownFoodAllocationModel.plan(
@@ -93,7 +93,8 @@ public final class TownHousingMealService {
                         meal.nutrition(),
                         ration * config.nutritionReferencePerFoodUnit.get(),
                         config.residentNutritionGainAtReference.get(),
-                        config.residentNutritionMaximumCoverage.get());
+                        config.residentNutritionMaximumCoverage.get(),
+                        config.residentNutritionMaximumReserve.get());
                 resident.setNutrition(updated);
                 double satisfaction = ration <= 0.0 ? 1.0
                         : Math.max(0.0, Math.min(1.0, meal.foodUnits() / ration));
@@ -134,7 +135,9 @@ public final class TownHousingMealService {
                     rules.minimumWorkingHealthExclusive.get(),
                     rules.minimumWorkingMentalExclusive.get(),
                     rules.removalHealthThreshold.get(),
-                    rules.removalMentalThreshold.get()));
+                    rules.removalMentalThreshold.get(),
+                    FHConfig.SERVER.TOWN.HOUSING.residentNutritionHealthyReserve.get(),
+                    FHConfig.SERVER.TOWN.HOUSING.residentNutritionSevereReserve.get()));
         }
         return result;
     }
@@ -203,7 +206,9 @@ public final class TownHousingMealService {
             List<FoodCandidate> candidates
     ) {
         double remainingFood = Math.max(0.0, allowance);
-        double chunkSize = fullRation > 0.0 ? fullRation / MEAL_CHUNKS : remainingFood;
+        int chunks = Math.max(1, FHConfig.SERVER.TOWN.HOUSING
+                .residentNutritionMealSelectionChunks.get());
+        double chunkSize = fullRation > 0.0 ? fullRation / chunks : remainingFood;
         ResidentNutrition.NutritionIntake intake = ResidentNutrition.NutritionIntake.ZERO;
         double consumed = 0.0;
         while (remainingFood > TeamTownResourceHolder.DELTA) {
@@ -264,10 +269,17 @@ public final class TownHousingMealService {
                 current.vegetable(), projected.vegetable(), reference, fullRation);
         double growthFat = resident.getAge() == Resident.AGE_ELDER ? 0.0 : fatNeed;
         double growthProtein = resident.getAge() <= Resident.AGE_CHILD ? proteinNeed : 0.0;
-        return perFood.fat() * (fatNeed + 0.5 * growthFat)
-                + perFood.carbohydrate() * (carbohydrateNeed + mentalNeed)
-                + perFood.protein() * (proteinNeed + 0.5 * growthProtein)
-                + perFood.vegetable() * (vegetableNeed + healthNeed);
+        FHConfig.Server.Town.Housing config = FHConfig.SERVER.TOWN.HOUSING;
+        double channelWeight = config.residentNutritionChannelNeedUtilityWeight.get();
+        double conditionWeight = config.residentNutritionConditionNeedUtilityWeight.get();
+        double growthWeight = config.residentNutritionGrowthNeedUtilityWeight.get();
+        return perFood.fat() * (channelWeight * fatNeed + growthWeight * growthFat)
+                + perFood.carbohydrate() * carbohydrateNeed
+                * (channelWeight + conditionWeight * mentalNeed)
+                + perFood.protein() * (channelWeight * proteinNeed
+                        + growthWeight * growthProtein)
+                + perFood.vegetable() * vegetableNeed
+                * (channelWeight + conditionWeight * healthNeed);
     }
 
     private static double channelNeed(
@@ -279,8 +291,9 @@ public final class TownHousingMealService {
         double projectedGain = FHConfig.SERVER.TOWN.HOUSING
                 .residentNutritionGainAtReference.get() * projectedIntake
                 / Math.max(reference * Math.max(fullRation, TeamTownResourceHolder.DELTA), 1.0);
-        return Math.max(0.0, ResidentNutrition.HEALTHY - reserve - projectedGain)
-                / ResidentNutrition.HEALTHY;
+        double healthy = Math.max(0.001, FHConfig.SERVER.TOWN.HOUSING
+                .residentNutritionHealthyReserve.get());
+        return Math.max(0.0, healthy - reserve - projectedGain) / healthy;
     }
 
     private static ResidentNutrition.NutritionIntake nutrition(

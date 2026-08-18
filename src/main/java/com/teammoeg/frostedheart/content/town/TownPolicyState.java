@@ -76,12 +76,21 @@ public final class TownPolicyState {
     }
 
     public long remainingCooldown(long townDay) {
-        return Math.max(0L, changedAtTownDay + GLOBAL_COOLDOWN_DAYS - Math.max(0L, townDay));
+        return remainingCooldown(townDay, GLOBAL_COOLDOWN_DAYS);
+    }
+
+    public long remainingCooldown(long townDay, long cooldownDays) {
+        return Math.max(0L, changedAtTownDay + Math.max(0L, cooldownDays)
+                - Math.max(0L, townDay));
     }
 
     public EditResult requestCareLaw(TownCareLaw law, long townDay) {
+        return requestCareLaw(law, townDay, GLOBAL_COOLDOWN_DAYS);
+    }
+
+    public EditResult requestCareLaw(TownCareLaw law, long townDay, long cooldownDays) {
         if (law == null) return new EditResult(false, this);
-        if (remainingCooldown(townDay) > 0L) return new EditResult(false, this);
+        if (remainingCooldown(townDay, cooldownDays) > 0L) return new EditResult(false, this);
         if (law == displayedCareLaw()) return new EditResult(false, this);
         Map<String, String> nextPending = new LinkedHashMap<>(pending);
         nextPending.put(RESIDENTIAL_CARE, law.id());

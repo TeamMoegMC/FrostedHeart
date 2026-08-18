@@ -80,6 +80,7 @@ import com.teammoeg.frostedheart.content.town.resident.Resident;
 import com.teammoeg.frostedheart.content.town.resident.ResidentAgingModel;
 import com.teammoeg.frostedheart.content.town.resident.ResidentGenerationModel;
 import com.teammoeg.frostedheart.content.town.resident.ResidentDailyModel;
+import com.teammoeg.frostedheart.content.town.resident.ResidentNutrition;
 import com.teammoeg.frostedheart.content.town.model.TownAssignmentModel;
 import com.teammoeg.frostedheart.content.town.model.TownResidentCareModel;
 import com.teammoeg.frostedheart.content.town.resident.WanderingRefugee;
@@ -417,7 +418,9 @@ public class TeamTownData implements SpecialData{
     }
 
     public boolean requestCareLaw(TownCareLaw law) {
-        TownPolicyState.EditResult result = policyState.requestCareLaw(law, townDay);
+        TownPolicyState.EditResult result = policyState.requestCareLaw(
+                law, townDay,
+                FHConfig.SERVER.TOWN.RESIDENT_RULES.townPolicyCooldownDays.get());
         if (!result.changed()) return false;
         policyState = result.state();
         return true;
@@ -949,10 +952,19 @@ public class TeamTownData implements SpecialData{
                         aging.adultAttributeCap.get(),
                         aging.elderStrengthDecayPerDay.get(),
                         aging.elderStrengthFloor.get());
+        FHConfig.Server.Town.Housing nutrition = FHConfig.SERVER.TOWN.HOUSING;
+        ResidentNutrition.Parameters nutritionParameters = new ResidentNutrition.Parameters(
+                nutrition.residentNutritionMaximumReserve.get(),
+                nutrition.residentNutritionHealthyReserve.get(),
+                nutrition.residentNutritionRecoveryDirectWeight.get(),
+                nutrition.residentNutritionRecoverySupportWeight.get(),
+                nutrition.residentNutritionDeficiencyGrowthFloor.get(),
+                nutrition.residentNutritionMaximumGrowthBonus.get());
         for (Resident resident : residents.values()) {
             ResidentAgingModel.AgingResult result = ResidentAgingModel.settleDay(
                     resident.getAge(), resident.getAgeDays(), resident.getStrength(),
-                    resident.getIntelligence(), resident.getNutrition(), parameters);
+                    resident.getIntelligence(), resident.getNutrition(), parameters,
+                    nutritionParameters);
             resident.setAgeDays(result.ageDays());
             resident.setAge(result.age());
             resident.setStrength(result.strength());
@@ -1169,6 +1181,7 @@ public class TeamTownData implements SpecialData{
                 .forEach(HouseBuilding::clearResidents);
 
         FHConfig.Server.Town.ResidentRules rules = FHConfig.SERVER.TOWN.RESIDENT_RULES;
+        FHConfig.Server.Town.Housing nutrition = FHConfig.SERVER.TOWN.HOUSING;
         Map<UUID, Resident> remaining = new LinkedHashMap<>();
         residents.values().stream().sorted(Comparator.comparing(Resident::getUUID))
                 .forEach(resident -> remaining.put(resident.getUUID(), resident));
@@ -1181,7 +1194,9 @@ public class TeamTownData implements SpecialData{
                     rules.minimumWorkingHealthExclusive.get(),
                     rules.minimumWorkingMentalExclusive.get(),
                     rules.removalHealthThreshold.get(),
-                    rules.removalMentalThreshold.get()));
+                    rules.removalMentalThreshold.get(),
+                    nutrition.residentNutritionHealthyReserve.get(),
+                    nutrition.residentNutritionSevereReserve.get()));
         }
         TownCareLaw law = policyState.careLaw();
         for (TownHousingPlan.Entry entry : getHousingPlan().entries()) {
@@ -1190,7 +1205,8 @@ public class TeamTownData implements SpecialData{
             Comparator<Resident> comparator = Comparator.comparing(
                     resident -> needs.get(resident.getUUID()),
                     TownResidentCareModel.comparatorForHouse(
-                            law, id -> entry.building().equals(previousHouses.get(id))));
+                            law, id -> entry.building().equals(previousHouses.get(id)),
+                            rules.residentialCareScoreBand.get()));
             List<Resident> selected = remaining.values().stream()
                     .sorted(comparator)
                     .limit(Math.max(0, house.getMaxResidents()))

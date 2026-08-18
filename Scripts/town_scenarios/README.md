@@ -9,6 +9,10 @@ The three `baseline/stage4-t1-*.json` files are the 8/24/48-resident,
 1 through 200 with paired seeds and writes ten selected population reserve
 trajectories, concentrated around the stage-3 threshold. It also captures all
 daily states and threshold events for the configured `timelinePopulation`.
+`experiments/stage4-t1-p50-quick.json` and
+`experiments/stage4-t1-p50-potato-supplement.json` are short fixed-population
+nutrition calibration scenarios; the latter reads the existing baked-potato
+nutrition recipe and adds a population-scaled daily logistics supply.
 
 Its experiments are deliberately independent:
 
@@ -28,7 +32,7 @@ This separation is the stage boundary. The simulator does not yet decide same-da
 - `availableHuntUnits`: maximum integer loot rolls allowed by the HUNT resource.
 - house area is in floor blocks, volume in interior air blocks, temperature in °C, and food inventory in item-resource units.
 
-FH-owned defaults never belong in scenario files. The Java simulator obtains those from `TownModelParameters.currentDefaults()`; gameplay obtains the same defaults through `FHConfig`.
+FH-owned defaults never belong in scenario files. The Java simulator obtains those from `TownModelParameters.currentDefaults()`; gameplay obtains the same defaults through `FHConfig`. A stage-4 population sweep may use the command-line-only `--nutrition-reference`, `--nutrition-loss`, and `--nutrition-gain` overrides for calibration runs. The resolved parameter snapshot is written into `summary.json`; these options do not change gameplay or source defaults.
 
 ## Stage-3 quantities
 
@@ -36,7 +40,9 @@ FH-owned defaults never belong in scenario files. The Java simulator obtains tho
 - The baseline holds the house at `24 °C`; climate and T2 are not evaluated.
 - Every resident starts housed. Home and work assignments then persist exactly as
   they do in `TeamTownData`; only vacant slots are automatically filled.
-- `buildingOrder` is the stable order used for equal-priority daily settlements.
+- `buildingOrder` remains the stable ordering for production buildings that
+  compete for warehouse capacity. Housing always settles after mine/hunt
+  production and raw-meat processing, matching the gameplay evening meal order.
 - `capacityItems` counts all item-resource units, including non-food hunting loot
   and non-coal mining coproducts.
 - `coalToCokeItemsPerDay` and `rawMeatItemsPerDay` are scenario logistics limits;
@@ -46,6 +52,13 @@ FH-owned defaults never belong in scenario files. The Java simulator obtains tho
   `immersiveengineering:coal_coke`.
 - Initial food and coke are seven-day operational reserves. They affect survival,
   but never enter the structural fuel/food self-supply numerators.
+- `warehouse.simulationFoods` declares hunger and saturation metadata for
+  scenario-only food items; food level and all four nutrition values still come
+  from the repository's existing tags and generated diet recipes.
+- `warehouse.dailySupplies` adds a fixed item quantity immediately before the
+  evening meal, is limited by warehouse capacity, and is recorded as an
+  `external_supply` resource flow. Population sweeps scale edible supplies with
+  population. This is an explicit experiment input, not endogenous production.
 - The T1 model uses the audited fuel recipe and exact finite 20-tick batch logic.
 - `compareBuildingOrders` writes all six fixed-seed permutations to
   `order-comparison.csv`; it does not change the main Monte Carlo order.
@@ -73,7 +86,8 @@ FH-owned defaults never belong in scenario files. The Java simulator obtains tho
   `FHConfig.SERVER.CLIMATE` / `FHConfig.SERVER.TOWN.GENERATOR_T1`.
 - An optional `populationSweep` object selects a range, number of curve points,
   optional explicit `populationValues`, `trajectoryPopulations`, and one
-  `timelinePopulation`. Each requested population gets a
+  `timelinePopulation`. `equilibriumWindowDays` selects the final trailing
+  window used for per-trial resident equilibrium attributes. Each requested population gets a
   three-block-high balanced integer rectangle whose current house/hunting
   capacity formula is at least that population. Initial edible food scales with
   population to preserve reserve days; the T1 coke inventory remains fixed
@@ -82,12 +96,19 @@ FH-owned defaults never belong in scenario files. The Java simulator obtains tho
   self-defining `summary.json`. `player-timeline-trials.csv`, `event-raster.csv`,
   and `initial-residents.csv` contain player-facing daily histories, every
   trial's discrete events, and the exact seeded initial resident population.
+  Daily histories retain health, mental, strength, intelligence, all four
+  nutrition reserves and channel-specific severe counts. `population.csv`
+  includes P05/P50/P95 of the final-window equilibrium for all eight attributes;
+  the event raster includes severe-nutrition entry/recovery crossings.
   The aggregate CSVs include shared resident P10/work/exit
   risk snapshots, reserve slopes, threshold-event rates, Fano factors, crisis
   episode sizes, warning lead times, and recovery times. A single-population
   stage-4 run additionally writes its first seed's `observations.csv` and
   `events.csv`. All populations reuse the same run seeds, so their differences
   are paired comparisons under the same climate samples.
+- `Scripts/plot_town_stage4_resident_dynamics.py <sweep-output>` writes the
+  resident attribute, nutrition, threshold-event, and equilibrium-vs-population
+  Monte Carlo figures from those Java CSVs. It never recomputes town dynamics.
 - `population.initialization: "gameGenerated"` invokes the same pure resident
   recruitment model used by gameplay: configured age weights, age-day ranges,
   age-group strength/intelligence distributions, and initial work proficiencies.
