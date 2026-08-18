@@ -25,9 +25,9 @@ import com.teammoeg.chorda.client.cui.base.UILayer;
 import net.minecraft.client.gui.GuiGraphics;
 
 public class FilterLayer extends UILayer {
-	LogisticInterfaceChestOutScreen layer;
+	RequesterChestScreen layer;
 	UIFilterSlot[] slots;
-	public FilterLayer(LogisticInterfaceChestOutScreen panel) {
+	public FilterLayer(RequesterChestScreen panel) {
 		super(panel);
 		layer=panel;
 		slots=new UIFilterSlot[layer.getMenu().list.size()];

@@ -26,12 +26,12 @@ import com.teammoeg.frostedheart.content.robotics.logistics.Filter;
 import net.minecraft.world.item.ItemStack;
 
 public class UIFilterSlot extends AbstractFilterGhostSlot {
-    private final LogisticInterfaceChestOutMenu menu;
+    private final RequesterChestMenu menu;
     private final int index;
     private final FilterLayer layer;
     private ItemStack displayStack = ItemStack.EMPTY;
 
-    public UIFilterSlot(FilterLayer parent, LogisticInterfaceChestOutMenu menu, int index) {
+    public UIFilterSlot(FilterLayer parent, RequesterChestMenu menu, int index) {
         super(parent);
         this.menu = menu;
         this.index = index;

@@ -20,20 +20,20 @@
 package com.teammoeg.frostedheart.content.robotics.logistics.gui;
 
 import com.teammoeg.frostedheart.bootstrap.common.FHMenuTypes;
-import com.teammoeg.frostedheart.content.robotics.logistics.workers.LogisticStorageChestTileEntity;
+import com.teammoeg.frostedheart.content.robotics.logistics.workers.SupplierTileEntity;
 
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraftforge.items.IItemHandler;
 
-public class LogisticStorageChestMenu extends LogisticChestMenu<LogisticStorageChestTileEntity> {
+public class SupplierChestMenu extends LogisticChestMenu<SupplierTileEntity> {
 
-	public LogisticStorageChestMenu(int pContainerId, LogisticStorageChestTileEntity be, Inventory player, IItemHandler handler) {
-		super(FHMenuTypes.LOGISTIC_STORAGE_CHEST.get(), be, pContainerId, player, handler);
+	public SupplierChestMenu(int pContainerId, SupplierTileEntity be, Inventory player, IItemHandler handler) {
+		super(FHMenuTypes.LOGISTIC_INTERFACE_CHEST_IN.get(), be, pContainerId, player, handler);
 		super.addPlayerInventory(player, 8, 87, 145);
 	}
 
-	public LogisticStorageChestMenu(int pContainerId, Inventory player, LogisticStorageChestTileEntity be) {
-		super(FHMenuTypes.LOGISTIC_STORAGE_CHEST.get(), be, pContainerId, player);
+	public SupplierChestMenu(int pContainerId, Inventory player, SupplierTileEntity be) {
+		super(FHMenuTypes.LOGISTIC_INTERFACE_CHEST_IN.get(), be, pContainerId, player);
 		super.addPlayerInventory(player, 8, 87, 145);
 	}
 

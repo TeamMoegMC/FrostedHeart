@@ -33,9 +33,9 @@ import com.teammoeg.frostedheart.content.decoration.RelicChestScreen;
 import com.teammoeg.frostedheart.content.health.screen.HealthStatScreen;
 import com.teammoeg.frostedheart.content.incubator.IncubatorT1Screen;
 import com.teammoeg.frostedheart.content.incubator.IncubatorT2Screen;
-import com.teammoeg.frostedheart.content.robotics.logistics.gui.LogisticInterfaceChestOutScreen;
-import com.teammoeg.frostedheart.content.robotics.logistics.gui.LogisticStorageChestScreen;
-import com.teammoeg.frostedheart.content.robotics.logistics.gui.LogisticInterfaceChestInScreen;
+import com.teammoeg.frostedheart.content.robotics.logistics.gui.RequesterChestScreen;
+import com.teammoeg.frostedheart.content.robotics.logistics.gui.StorageChestScreen;
+import com.teammoeg.frostedheart.content.robotics.logistics.gui.SupplierChestScreen;
 import com.teammoeg.frostedheart.content.steamenergy.HeatStatScreen;
 import com.teammoeg.frostedheart.content.steamenergy.sauna.SaunaScreen;
 import com.teammoeg.frostedheart.content.town.buildings.house.HouseScreen;
@@ -75,9 +75,9 @@ public class FHScreens {
         MenuScreens.register(FHMenuTypes.CLOTHES_GUI.get(), ClothesScreen::new);
         MenuScreens.register(FHMenuTypes.NUTRITION_GUI.get(), HealthStatScreen::new);
         MenuScreens.register(FHMenuTypes.WARDROBE.get(), WardrobeScreen::new);
-        registerCUIScreen(FHMenuTypes.LOGISTIC_INTERFACE_CHEST_IN.get(),LogisticInterfaceChestInScreen::new);
-        registerCUIScreen(FHMenuTypes.LOGISTIC_STORAGE_CHEST.get(), LogisticStorageChestScreen::new);
-        registerCUIScreen(FHMenuTypes.LOGISTIC_INTERFACE_CHEST_OUT.get(), LogisticInterfaceChestOutScreen::new);
+        registerCUIScreen(FHMenuTypes.LOGISTIC_INTERFACE_CHEST_IN.get(),SupplierChestScreen::new);
+        registerCUIScreen(FHMenuTypes.LOGISTIC_STORAGE_CHEST.get(), StorageChestScreen::new);
+        registerCUIScreen(FHMenuTypes.LOGISTIC_INTERFACE_CHEST_OUT.get(), RequesterChestScreen::new);
         MenuScreens.register(FHMenuTypes.SNOW_SACK.get(), SnowSackScreen::new);
     }
 

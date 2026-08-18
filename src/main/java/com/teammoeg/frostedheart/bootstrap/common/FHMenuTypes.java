@@ -55,12 +55,12 @@ import com.teammoeg.frostedheart.content.incubator.HeatIncubatorTileEntity;
 import com.teammoeg.frostedheart.content.incubator.IncubatorT1Container;
 import com.teammoeg.frostedheart.content.incubator.IncubatorT2Container;
 import com.teammoeg.frostedheart.content.incubator.IncubatorTileEntity;
-import com.teammoeg.frostedheart.content.robotics.logistics.gui.LogisticInterfaceChestOutMenu;
-import com.teammoeg.frostedheart.content.robotics.logistics.gui.LogisticStorageChestMenu;
-import com.teammoeg.frostedheart.content.robotics.logistics.gui.LogisticInterfaceChestInMenu;
-import com.teammoeg.frostedheart.content.robotics.logistics.workers.LogisticInterfaceChestOutTileEntity;
-import com.teammoeg.frostedheart.content.robotics.logistics.workers.LogisticStorageChestTileEntity;
-import com.teammoeg.frostedheart.content.robotics.logistics.workers.LogisticInterfaceChestInTileEntity;
+import com.teammoeg.frostedheart.content.robotics.logistics.gui.RequesterChestMenu;
+import com.teammoeg.frostedheart.content.robotics.logistics.gui.StorageChestMenu;
+import com.teammoeg.frostedheart.content.robotics.logistics.gui.SupplierChestMenu;
+import com.teammoeg.frostedheart.content.robotics.logistics.workers.RequesterTileEntity;
+import com.teammoeg.frostedheart.content.robotics.logistics.workers.StorageTileEntity;
+import com.teammoeg.frostedheart.content.robotics.logistics.workers.SupplierTileEntity;
 import com.teammoeg.frostedheart.content.steamenergy.HeatStatContainer;
 import com.teammoeg.frostedheart.content.steamenergy.sauna.SaunaContainer;
 import com.teammoeg.frostedheart.content.steamenergy.sauna.SaunaTileEntity;
@@ -95,9 +95,9 @@ public class FHMenuTypes {
 
 	public static final RegistryObject<MenuType<RelicChestContainer>> RELIC_CHEST = register(RelicChestTileEntity.class, ("relic_chest"), RelicChestContainer::new);
 	
-	public static final RegistryObject<MenuType<LogisticInterfaceChestOutMenu>> LOGISTIC_INTERFACE_CHEST_OUT = register(LogisticInterfaceChestOutTileEntity.class, ("logistic_interface_chest_out"), LogisticInterfaceChestOutMenu::new);
-	public static final RegistryObject<MenuType<LogisticStorageChestMenu>> LOGISTIC_STORAGE_CHEST = register(LogisticStorageChestTileEntity.class,("logistic_storage_chest"), LogisticStorageChestMenu::new);
-	public static final RegistryObject<MenuType<LogisticInterfaceChestInMenu>> LOGISTIC_INTERFACE_CHEST_IN = register(LogisticInterfaceChestInTileEntity.class,("logistic_interface_chest_in"), LogisticInterfaceChestInMenu::new);
+	public static final RegistryObject<MenuType<RequesterChestMenu>> LOGISTIC_INTERFACE_CHEST_OUT = register(RequesterTileEntity.class, ("logistic_interface_chest_out"), RequesterChestMenu::new);
+	public static final RegistryObject<MenuType<StorageChestMenu>> LOGISTIC_STORAGE_CHEST = register(StorageTileEntity.class,("logistic_storage_chest"), StorageChestMenu::new);
+	public static final RegistryObject<MenuType<SupplierChestMenu>> LOGISTIC_INTERFACE_CHEST_IN = register(SupplierTileEntity.class,("logistic_interface_chest_in"), SupplierChestMenu::new);
 
 	public static final RegistryObject<MenuType<SnowSackMenu>> SNOW_SACK = register("snow_sack", SnowSackMenu::new);
 
