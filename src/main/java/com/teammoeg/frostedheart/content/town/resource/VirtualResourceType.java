@@ -26,9 +26,24 @@ import lombok.Getter;
 
 /**
  * 既没有对应物品，又需要长久存储而不在城镇工作时重置的资源。如最大容量、工具(尚未添加)等
+ * <p>
+ * 当前枚举值：
+ * <ul>
+ *     <li>{@link #MAX_CAPACITY} —— 仓库容量上限（service，不占容量，level 0）。</li>
+ *     <li>{@link #TRANSPORT_CAPACITY} —— 运力，代表运送物资的能力；由专门的建筑（尚未加入）产出，
+ *     在运输任务（尚未加入）中消耗。它是持久化的消耗品，不在城镇工作时重置，也不占用仓库容量，level 0。</li>
+ * </ul>
  */
 public enum VirtualResourceType implements ITownResourceType{
-    MAX_CAPACITY(false, true, 0);
+    MAX_CAPACITY(false, true, 0),
+    /**
+     * 运力：运送物资的能力。
+     * 不占仓库容量（{@code needCapacity=false}），不是 service（{@code isService=false}，城镇工作时不清零），无等级（{@code maxLevel=0}）。
+     * 产出/消耗统一走 {@code town.getActionExecutorHandler().execute(new TownResourceActions.VirtualResourceAttributeAction(
+     * TRANSPORT_CAPACITY.generateAttribute(0), amount, ResourceActionType.ADD/COST, ResourceActionMode.ATTEMPT))}，
+     * 与 {@link #MAX_CAPACITY} 的写法一致。
+     */
+    TRANSPORT_CAPACITY(false, false, 0);
 
     /**
      * Service will be reset when working.

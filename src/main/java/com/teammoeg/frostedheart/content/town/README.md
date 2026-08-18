@@ -184,7 +184,7 @@ public interface ITown extends ITownWithResources, ITownWithBuildings, ITownWith
 - **`ItemResourceType`**（有对应物品）：`OTHER, WOOD, STONE, ORE, METAL(10级), FUEL, TOOL, RESIDENT_FOOD_LEVEL(4级)`。每个有 `maxLevel`。
 - **`ItemResourceAttribute`**：`(type, level)`，用 `Interner` 缓存；与 `FHTags.Items` 的 `MAP_TAG_TO_TOWN_RESOURCE_ATTRIBUTE` / `MAP_TOWN_RESOURCE_ATTRIBUTE_TO_TAG` 双向映射（TagKey ↔ Attribute）；`fromItemStack(itemStack)` 取物品所有属性。
 - **`ItemStackResourceKey`**：`Item + tag`（count 固定 1）的 Map 键，自定义 `hashCode/equals`。
-- **`VirtualResourceType`**（无物品、长期存盘）：目前仅 `MAX_CAPACITY`（不占容量、是 service、level 0）。`VirtualResourceAttribute` 既是属性也是直接存盘的 Key。
+- **`VirtualResourceType`**（无物品、长期存盘）：`MAX_CAPACITY`（不占容量、是 service、level 0）、`TRANSPORT_CAPACITY` 运力（不占容量、非 service、level 0，由建筑产出、运输任务消耗）。`VirtualResourceAttribute` 既是属性也是直接存盘的 Key。
 - **`ItemResourceAmountRecipe`**：配方类（IE 配方），定义「某物品 → 某资源 Tag 的转化量」；`TeamTownResourceHolder.loadItemResourceAmounts()` 加载进缓存。显式配方优先；居民食物没有显式值时按 `饥饿值 + 2 × 饥饿值 × 饱和度系数` 换算，其他资源仍默认 `1`。
 - 居民食物 Tag 使用互斥的 level 0–4：危险/未建模原料、基础生食、普通熟食与主食、复合/高密度餐食、完整军粮与稀有强化食物。集中供餐始终先选更高 level；同等级内按当前领取者缺少的脂肪/碳水/蛋白质/蔬菜、健康/精神恢复需求和年龄成长需求动态评分，最后按物品注册名与 NBT 稳定排序。
 
