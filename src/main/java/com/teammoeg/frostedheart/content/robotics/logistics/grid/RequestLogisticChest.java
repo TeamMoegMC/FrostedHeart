@@ -27,10 +27,12 @@ public class RequestLogisticChest extends LogisticChest {
 	public RequestLogisticChest(Level level, BlockPos pos) {
 		super(level, pos);
 	}
+	public RequestLogisticChest(Level level, BlockPos pos,Runnable changeListener) {
+		super(level,pos,changeListener);
+	}
 
 	@Override
 	public boolean fillable() {
-		// TODO Auto-generated method stub
 		return false;
 	}
 

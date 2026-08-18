@@ -40,32 +40,42 @@ import net.minecraftforge.common.util.LazyOptional;
 public class NetworkCoreTileEntity extends CBlockEntity implements CTickableBlockEntity{
 	LogisticNetwork ln;
 	LazyOptional<LogisticNetwork> cap;
+	CompoundTag pendingNetworkData;
 	public NetworkCoreTileEntity( BlockPos pos, BlockState state) {
 		super(FHBlockEntityTypes.NETWORK_CORE.get(),pos, state);
 	}
 
 	@Override
 	public void readCustomNBT(CompoundTag nbt, boolean descPacket) {
-		// TODO Auto-generated method stub
-		
+		if(descPacket)
+			return;
+		pendingNetworkData=nbt.getCompound("logisticNetwork").copy();
+		if(ln!=null) {
+			ln.load(pendingNetworkData);
+			pendingNetworkData=null;
+		}
 	}
 
 	@Override
 	public void writeCustomNBT(CompoundTag nbt, boolean descPacket) {
-		// TODO Auto-generated method stub
-		
+		if(descPacket)
+			return;
+		CompoundTag networkData=new CompoundTag();
+		if(ln!=null)
+			ln.save(networkData);
+		else if(pendingNetworkData!=null)
+			networkData=pendingNetworkData.copy();
+		nbt.put("logisticNetwork",networkData);
 	}
 	LazyTickWorker ticker=new LazyTickWorker(20,()->{
 		
 			ChunkPos cp=new ChunkPos(worldPosition);
 			for(int i=cp.x-1;i<=cp.x+1;i++)
 				for(int j=cp.z-1;j<=cp.z+1;j++) {
-					//FHMain.LOGGER.info(i+","+j);
 					if(level.hasChunk(i, j)) {
-						//FHMain.LOGGER.info("has chunk");
 						FHCapabilities.ROBOTIC_LOGISTIC_CHUNK.getCapability(
 						level.getChunk(i, j)
-						).resolve().get().register(worldPosition);
+						).ifPresent(chunk->chunk.register(worldPosition));
 						
 					}
 				}
@@ -75,7 +85,13 @@ public class NetworkCoreTileEntity extends CBlockEntity implements CTickableBloc
 	public void tick() {
 		if(!this.level.isClientSide) {
 			if(ln==null) {
-				ln=new LogisticNetwork(level,worldPosition);
+				ln=new LogisticNetwork(level,worldPosition,this::setChanged);
+				if(pendingNetworkData!=null) {
+					ln.load(pendingNetworkData);
+					pendingNetworkData=null;
+				}
+			}
+			if(cap==null||!cap.isPresent()) {
 				cap=LazyOptional.of(()->ln);
 				ticker.enqueue();
 			}
@@ -88,7 +104,7 @@ public class NetworkCoreTileEntity extends CBlockEntity implements CTickableBloc
 
 	@Override
 	public <T> @NotNull LazyOptional<T> getCapability(@NotNull Capability<T> cap, @Nullable Direction side) { 
-		if(cap==FHCapabilities.LOGISTIC.capability()) {
+		if(cap==FHCapabilities.LOGISTIC.capability()&&this.cap!=null) {
 			return this.cap.cast();
 		}
 		return super.getCapability(cap, side);
@@ -96,7 +112,30 @@ public class NetworkCoreTileEntity extends CBlockEntity implements CTickableBloc
 	@Override
 	public void onRemoved() {
 		super.onRemoved();
+		if(ln!=null)
+			ln.shutdown();
+		releaseRegistrations();
 		if(cap!=null)
 		cap.invalidate();
+	}
+
+	@Override
+	public void onUnloaded() {
+		releaseRegistrations();
+		if(cap!=null) {
+			cap.invalidate();
+			cap=null;
+		}
+	}
+
+	private void releaseRegistrations() {
+		if(level==null)
+			return;
+		ChunkPos cp=new ChunkPos(worldPosition);
+		for(int x=cp.x-1;x<=cp.x+1;x++)
+			for(int z=cp.z-1;z<=cp.z+1;z++)
+				if(level.hasChunk(x,z))
+					FHCapabilities.ROBOTIC_LOGISTIC_CHUNK.getCapability(level.getChunk(x,z))
+						.ifPresent(chunk->chunk.release(worldPosition));
 	}
 }

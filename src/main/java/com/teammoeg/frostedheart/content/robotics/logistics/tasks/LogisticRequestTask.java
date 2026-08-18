@@ -20,7 +20,6 @@
 package com.teammoeg.frostedheart.content.robotics.logistics.tasks;
 
 import java.util.Map;
-import java.util.Optional;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
@@ -46,8 +45,10 @@ public class LogisticRequestTask extends LogisticTask {
 		BlockPos.CODEC.fieldOf("from").forGetter(o->o.origin),
 		BlockPos.CODEC.fieldOf("to").forGetter(o->o.targetPos),
 		ItemStack.CODEC.fieldOf("stack").forGetter(o->o.stack),
-		ItemKey.CODEC.fieldOf("item").forGetter(o->o.key)
+		ItemKey.CODEC.fieldOf("item").forGetter(o->o.key),
+		Codec.INT.optionalFieldOf("failures",0).forGetter(o->o.failures)
 		).apply(t, LogisticRequestTask::new));
+	private static final int MAX_DELIVERY_FAILURES=15;
 	/**
 	 * original data for a request task
 	 * */
@@ -70,6 +71,7 @@ public class LogisticRequestTask extends LogisticTask {
 	 * ItemKey to put
 	 * */
 	ItemKey key;
+	int failures;
 	/**
 	 * Grid element to put
 	 * */
@@ -85,14 +87,23 @@ public class LogisticRequestTask extends LogisticTask {
 
 	@Override
 	public LogisticTask work(LogisticNetwork network) {
-		//System.out.println("moving "+stack+" to "+targetPos);
-		if(target.isPresent()) {
+		if(target==null&&targetPos!=null) {
+			target=network.getItemHandler(targetPos);
+		}
+		if(target!=null&&target.isPresent()) {
 			stack=ItemHandlerHelper.insertItemStacked(target.resolve().get(), stack, false);
 		}	
 		if(!stack.isEmpty()) {
 			GridAndAmount gaa=network.getHub().findGridForPlace(key, stack);
+			if(gaa==null) {
+				target=null;
+				ticks=20;
+				return ++failures>=MAX_DELIVERY_FAILURES?null:this;
+			}
 			IGridElement grid=gaa.grid().resolve().get();
-			return new LogisticPushTask(targetPos,grid.getPos(),stack,key,gaa.grid());
+			LogisticPushTask pushTask=new LogisticPushTask(targetPos,grid.getPos(),stack,key,gaa.grid());
+			stack=ItemStack.EMPTY;
+			return pushTask;
 		}
 	
 		return null;
@@ -117,18 +128,31 @@ public class LogisticRequestTask extends LogisticTask {
 		IGridElement grid=gaa.grid().resolve().get();
 		origin=grid.getPos();
 		stack=network.getHub().takeItem(gaa.grid(), key, size);
-		//System.out.println("taken "+stack+" to "+targetPos);
+		if(stack.isEmpty())
+			return null;
 		this.ticks=20;
 		return this;
 	}
 
+	@Override
+	public ItemStack takeCarriedStack() {
+		ItemStack carried=stack;
+		stack=ItemStack.EMPTY;
+		return carried==null?ItemStack.EMPTY:carried;
+	}
+
 
 	public LogisticRequestTask(LogisticTaskKey taskKey, int ticks, BlockPos origin, BlockPos targetPos, ItemStack stack, ItemKey key) {
+		this(taskKey,ticks,origin,targetPos,stack,key,0);
+	}
+
+	public LogisticRequestTask(LogisticTaskKey taskKey, int ticks, BlockPos origin, BlockPos targetPos, ItemStack stack, ItemKey key,int failures) {
 		super(taskKey, ticks);
 		this.origin = origin;
 		this.targetPos = targetPos;
 		this.stack = stack;
 		this.key = key;
+		this.failures=failures;
 	}
 
 }

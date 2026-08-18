@@ -19,18 +19,14 @@
 
 package com.teammoeg.frostedheart.content.robotics.logistics.workers;
 
-import java.util.Optional;
-
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import com.teammoeg.chorda.block.entity.CBlockEntity;
 import com.teammoeg.chorda.block.entity.CTickableBlockEntity;
-import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
 import com.teammoeg.frostedheart.content.robotics.logistics.LogisticNetwork;
-import com.teammoeg.frostedheart.content.robotics.logistics.data.ItemKey;
 import com.teammoeg.frostedheart.content.robotics.logistics.grid.LogisticChest;
 import com.teammoeg.frostedheart.content.robotics.logistics.gui.StorageChestMenu;
 
@@ -53,14 +49,14 @@ public class StorageTileEntity extends CBlockEntity implements CTickableBlockEnt
 	public LogisticChest container;
 	public LazyOptional<LogisticChest> grid=LazyOptional.of(()->container);
 	public LazyOptional<LogisticNetwork> network;
-	ItemKey filter;
 	@Getter
 	protected int networkStatus=0;
 	@Getter
 	protected int uplinkStatus=0;
+	private int networkCheckTicks;
 	public StorageTileEntity(BlockPos pos,BlockState bs) {
 		super(FHBlockEntityTypes.STORAGE_CHEST.get(),pos,bs);
-		container=new LogisticChest(null,pos);
+		container=new LogisticChest(null,pos,this::setChanged);
 	}
 	@Override
 	public void readCustomNBT(CompoundTag nbt, boolean descPacket) {
@@ -73,25 +69,42 @@ public class StorageTileEntity extends CBlockEntity implements CTickableBlockEnt
 	@Override
 	public void tick() {
 		if(!this.level.isClientSide) {
+			container.setLevel(level);
 			container.tick();
-			if(network==null||!network.isPresent()) {
-				Optional<LazyOptional<LogisticNetwork>> chunkData=FHCapabilities.ROBOTIC_LOGISTIC_CHUNK.
-				getCapability(this.level.getChunk(this.worldPosition)).map(t->t.getNetworkFor(level, worldPosition));
-				if(chunkData.isPresent()) {
-					LazyOptional<LogisticNetwork> ln=chunkData.get();
-					if(ln.isPresent()) {
-						network=ln;
-						FHMain.LOGGER.info("register self against network sto "+ln);
-						ln.resolve().get().getHub().addElement(grid.cast());
-					}
-				}
-				uplinkStatus=networkStatus=0;
-			}else {
-				uplinkStatus=networkStatus=2;
+			if(network==null||!network.isPresent()||networkCheckTicks--<=0) {
+				refreshNetwork();
+				networkCheckTicks=20;
 			}
+			uplinkStatus=networkStatus=network!=null&&network.isPresent()?2:0;
 			
 		}
-		//.ifPresent(t->t.getNetworkFor(level, worldPosition));
+	}
+
+	private void refreshNetwork() {
+		LazyOptional<LogisticNetwork> candidate=FHCapabilities.ROBOTIC_LOGISTIC_CHUNK
+			.getCapability(level.getChunk(worldPosition))
+			.map(chunk->chunk.getNetworkFor(level,worldPosition))
+			.orElse(LazyOptional.empty());
+		LogisticNetwork current=network!=null&&network.isPresent()?network.resolve().get():null;
+		LogisticNetwork next=candidate.isPresent()?candidate.resolve().get():null;
+		if(current!=null&&next!=null&&current!=next) {
+			current.getHub().removeElement(grid.cast());
+			network=candidate;
+			next.getHub().addElement(grid.cast());
+		}else if(current==null&&next!=null) {
+			network=candidate;
+			next.getHub().addElement(grid.cast());
+		}else if(current!=null&&next==null) {
+			current.getHub().removeElement(grid.cast());
+			network=null;
+		}else if(current==null)
+			network=null;
+	}
+
+	private void disconnectNetwork() {
+		if(network!=null&&network.isPresent())
+			network.resolve().get().getHub().removeElement(grid.cast());
+		network=null;
 	}
 	@Override
 	public AbstractContainerMenu createMenu(int pContainerId, Inventory pPlayerInventory, Player pPlayer) {
@@ -111,6 +124,22 @@ public class StorageTileEntity extends CBlockEntity implements CTickableBlockEnt
 	@Override
 	public void onRemoved() {
 		super.onRemoved();
+		disconnectNetwork();
 		grid.invalidate();
+	}
+
+	@Override
+	public void onUnloaded() {
+		disconnectNetwork();
+		grid.invalidate();
+	}
+
+	@Override
+	public void onLoad() {
+		super.onLoad();
+		container.setLevel(level);
+		if(!grid.isPresent())
+			grid=LazyOptional.of(()->container);
+		networkCheckTicks=0;
 	}
 }

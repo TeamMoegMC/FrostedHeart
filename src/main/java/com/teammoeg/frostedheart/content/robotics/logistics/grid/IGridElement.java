@@ -46,6 +46,8 @@ public interface IGridElement {
 	
 	boolean isChanged();
 	void tick();
+	default void revalidate() {
+	}
 	boolean consumeChange();
 	BlockPos getPos();
 	Level getLevel();

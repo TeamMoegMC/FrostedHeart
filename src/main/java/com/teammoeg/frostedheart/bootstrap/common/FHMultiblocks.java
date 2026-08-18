@@ -32,6 +32,8 @@ import com.teammoeg.frostedheart.content.climate.block.radiator.RadiatorLogic;
 import com.teammoeg.frostedheart.content.climate.block.radiator.RadiatorMultiblock;
 import com.teammoeg.frostedheart.content.climate.block.radiator.RadiatorState;
 import com.teammoeg.frostedheart.content.robotics.logistics.core.LogisticCoreMultiblock;
+import com.teammoeg.frostedheart.content.robotics.logistics.core.LogisticCoreLogic;
+import com.teammoeg.frostedheart.content.robotics.logistics.core.LogisticState;
 
 import blusunrize.immersiveengineering.api.multiblocks.MultiblockHandler;
 import blusunrize.immersiveengineering.api.multiblocks.blocks.MultiblockRegistration;
@@ -63,7 +65,7 @@ public class FHMultiblocks {
 			.notMirrored()
 			.build();
 		
-		public static final MultiblockRegistration<RadiatorState> LOGISTIC_CORE = metal(new RadiatorLogic(), "logistic_core",t->t.lightLevel(bs->bs.getValue(NonMirrorableWithActiveBlock.ACTIVE)?15:0))
+		public static final MultiblockRegistration<LogisticState> LOGISTIC_CORE = metal(new LogisticCoreLogic(), "logistic_core",t->t)
 			.structure(() -> FHMultiblocks.LOGISTIC_CORE)
 			.notMirrored()
 			.build();

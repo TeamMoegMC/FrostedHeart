@@ -67,6 +67,7 @@ public class LogisticChest implements IItemHandler, IGridElement,IItemHandlerMod
 	@Getter
 	int emptySlotCount=MAX_SLOT;
 	private boolean isCacheInvalidated;
+	private final Runnable changeListener;
 
 	public CompoundTag serialize() {
 		return chest.serializeNBT();
@@ -118,6 +119,7 @@ public class LogisticChest implements IItemHandler, IGridElement,IItemHandlerMod
 		id.totalCount+=count;
 	}
 
+	@Override
 	public void revalidate() {
 		Arrays.fill(slotRef, null);
 		cachedData.clear();
@@ -126,6 +128,7 @@ public class LogisticChest implements IItemHandler, IGridElement,IItemHandlerMod
 			onStackAdded(i);
 	}
 	public void computeEmptySlots() {
+		emptySlotCount=0;
 		for(int i=0;i<chest.getSlots();i++) {
 			emptySlotCount+=chest.getStackInSlot(i).isEmpty()?1:0;
 		}
@@ -139,29 +142,36 @@ public class LogisticChest implements IItemHandler, IGridElement,IItemHandlerMod
 	public ItemStack pushItem(ItemKey ik,ItemStack is,boolean fillEmpty) {
 		ItemData id=cachedData.get(ik);
 		ItemStack remain=is;
+		boolean changed=false;
 		if(id!=null) {
 			IntIterator ii=id.slots.iterator();
 			while(ii.hasNext()) {
 				int oldCount=remain.getCount();
 				int slot=ii.nextInt();
 				remain=chest.insertItem(slot, remain, false);
-				id.totalCount+=oldCount-remain.getCount();
+				int inserted=oldCount-remain.getCount();
+				id.totalCount+=inserted;
+				changed|=inserted>0;
 				if(remain.isEmpty())
-					return ItemStack.EMPTY;
+					break;
 			}
 		}
-		
-		for(int i=0;i<chest.getSlots();i++) {
-			if(chest.getStackInSlot(i).isEmpty()) {
-				remain=chest.insertItem(i, remain, false);
-				ItemStack stack=chest.getStackInSlot(i);
-				if(!stack.isEmpty())
-				onStackAdded(i,ik,stack.getCount());
-				if(remain.isEmpty())
-					return ItemStack.EMPTY;
+		if(fillEmpty&&!remain.isEmpty()) {
+			for(int i=0;i<chest.getSlots();i++) {
+				if(chest.getStackInSlot(i).isEmpty()) {
+					int oldCount=remain.getCount();
+					remain=chest.insertItem(i, remain, false);
+					ItemStack stack=chest.getStackInSlot(i);
+					if(!stack.isEmpty())
+						onStackAdded(i,ik,stack.getCount());
+					changed|=oldCount!=remain.getCount();
+					if(remain.isEmpty())
+						break;
+				}
 			}
 		}
-		
+		if(changed)
+			markChanged();
 		return remain;
 		
 	}
@@ -207,6 +217,8 @@ public class LogisticChest implements IItemHandler, IGridElement,IItemHandlerMod
 		if(id.slots.isEmpty()||id.totalCount<=0){
 			cachedData.remove(key);
 		}
+		if(!taken.isEmpty())
+			markChanged();
 		return taken;
 		
 	}
@@ -219,9 +231,9 @@ public class LogisticChest implements IItemHandler, IGridElement,IItemHandlerMod
 		ItemKey origin=slotRef[slot];
 		int originCount=chest.getStackInSlot(slot).getCount();
 		ItemStack remain=chest.insertItem(slot, stack, simulate);
-		if(remain.getCount()<=stack.getCount()) {
+		if(remain.getCount()<stack.getCount()) {
 			ItemStack after=chest.getStackInSlot(slot);
-			isChanged=true;
+			markChanged();
 			if(origin==null||originCount==0) {
 				onStackAdded(slot);
 			}else {
@@ -238,7 +250,7 @@ public class LogisticChest implements IItemHandler, IGridElement,IItemHandlerMod
 		ItemStack extracted=chest.extractItem(slot, amount, simulate);
 		if(!extracted.isEmpty()) {
 			ItemStack after=chest.getStackInSlot(slot);
-			isChanged=true;
+			markChanged();
 			if(after.isEmpty()) {
 				onStackRemoved(slot,originCount);
 			}else {
@@ -270,9 +282,16 @@ public class LogisticChest implements IItemHandler, IGridElement,IItemHandlerMod
 		return changed;
 	}
 	public LogisticChest(Level level, BlockPos pos) {
+		this(level,pos,()->{});
+	}
+	public LogisticChest(Level level, BlockPos pos,Runnable changeListener) {
 		super();
 		this.level = level;
 		this.pos = pos;
+		this.changeListener = changeListener;
+	}
+	public void setLevel(Level level) {
+		this.level=level;
 	}
 	@Override
 	public void setStackInSlot(int slot, @NotNull ItemStack stack) {
@@ -280,7 +299,12 @@ public class LogisticChest implements IItemHandler, IGridElement,IItemHandlerMod
 		onStackRemoved(slot,original.getCount());
 		chest.setStackInSlot(slot, stack);
 		onStackAdded(slot);
+		markChanged();
+	}
+
+	private void markChanged() {
 		isChanged=true;
+		changeListener.run();
 	}
 	
 

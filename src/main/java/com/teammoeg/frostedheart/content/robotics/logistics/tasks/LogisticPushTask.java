@@ -24,7 +24,6 @@ import java.util.Optional;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
-import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
 import com.teammoeg.frostedheart.content.robotics.logistics.LogisticNetwork;
 import com.teammoeg.frostedheart.content.robotics.logistics.data.ItemKey;
 import com.teammoeg.frostedheart.content.robotics.logistics.grid.GridAndAmount;
@@ -43,8 +42,10 @@ public class LogisticPushTask extends LogisticTask {
 		BlockPos.CODEC.fieldOf("from").forGetter(o->o.origin),
 		BlockPos.CODEC.optionalFieldOf("to").forGetter(o->Optional.ofNullable(o.targetPos)),
 		ItemStack.CODEC.fieldOf("stack").forGetter(o->o.stack),
-		ItemKey.CODEC.fieldOf("item").forGetter(o->o.key)
+		ItemKey.CODEC.fieldOf("item").forGetter(o->o.key),
+		Codec.INT.optionalFieldOf("failures",0).forGetter(o->o.failures)
 		).apply(t, LogisticPushTask::new));
+	private static final int MAX_DELIVERY_FAILURES=15;
 	/**
 	 * The origin slot and handler, the task takes item from this chest if required
 	 * initial task for the task
@@ -69,6 +70,7 @@ public class LogisticPushTask extends LogisticTask {
 	 * use stage:work
 	 * */
 	ItemKey key;
+	int failures;
 	/**
 	 * Grid element to put
 	 * prepare stage:prepare
@@ -76,11 +78,16 @@ public class LogisticPushTask extends LogisticTask {
 	 * */
 	transient LazyOptional<IGridElement> target;
 	public LogisticPushTask(LogisticTaskKey taskKey, int ticks, BlockPos origin, Optional<BlockPos> targetPos, ItemStack stack, ItemKey key) {
+		this(taskKey,ticks,origin,targetPos,stack,key,0);
+	}
+
+	public LogisticPushTask(LogisticTaskKey taskKey, int ticks, BlockPos origin, Optional<BlockPos> targetPos, ItemStack stack, ItemKey key,int failures) {
 		super(taskKey, ticks);
 		this.origin = origin;
 		this.targetPos = targetPos.orElse(null);
 		this.stack = stack;
 		this.key = key;
+		this.failures=failures;
 	}
 	
 	public LogisticPushTask(BlockPos origin, BlockPos targetPos, ItemStack stack, ItemKey key, LazyOptional<IGridElement> target) {
@@ -102,33 +109,39 @@ public class LogisticPushTask extends LogisticTask {
 
 	@Override
 	public LogisticTask work(LogisticNetwork network) {
-		//System.out.println("pushing "+stack+" to "+targetPos);
+		if(stack==null||stack.isEmpty())
+			return null;
 		if(target==null&&targetPos!=null) {
 			target=network.getHub().getByPos(targetPos);
 		}
-		if(target!=null)
+		if(target!=null&&target.isPresent())
 			stack=network.getHub().pushItem(target, key, stack);
 		if(!stack.isEmpty()) {
-			origin=targetPos;
-			ticks=20;
 			GridAndAmount gaa=network.getHub().findGridForPlace(key, stack);
 			if(gaa==null) {
 				target=null;
 				targetPos=null;
-				return this;
+				ticks=20;
+				return ++failures>=MAX_DELIVERY_FAILURES?null:this;
 			}
+			if(targetPos!=null)
+				origin=targetPos;
+			ticks=20;
 			target=gaa.grid();
 			targetPos=target.resolve().get().getPos();
+			failures=0;
 			return this;
 		}
 		return null;
 	}
 	@Override
 	public LogisticTask prepare(LogisticNetwork network) {
-		if(!handler.isPresent())
+		if(handler==null||!handler.isPresent())
 			return null;
 		IItemHandler itemHandler=handler.resolve().get();
 		stack=itemHandler.getStackInSlot(fromSlot);
+		if(stack.isEmpty())
+			return null;
 		key=new ItemKey(stack);
 		
 		GridAndAmount gaa=network.getHub().findGridForPlace(key, stack);
@@ -139,6 +152,13 @@ public class LogisticPushTask extends LogisticTask {
 		stack=itemHandler.extractItem(fromSlot, gaa.amount(), false);
 		this.ticks=20;
 		return this;
+	}
+
+	@Override
+	public ItemStack takeCarriedStack() {
+		ItemStack carried=stack;
+		stack=ItemStack.EMPTY;
+		return carried==null?ItemStack.EMPTY:carried;
 	}
 
 

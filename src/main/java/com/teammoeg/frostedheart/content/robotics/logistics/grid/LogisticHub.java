@@ -20,8 +20,6 @@
 package com.teammoeg.frostedheart.content.robotics.logistics.grid;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
@@ -34,11 +32,8 @@ import com.teammoeg.frostedheart.content.robotics.logistics.data.ItemKey;
 
 import it.unimi.dsi.fastutil.objects.Reference2IntOpenHashMap;
 import lombok.Getter;
-import net.minecraft.SharedConstants;
 import net.minecraft.core.BlockPos;
-import net.minecraft.server.Bootstrap;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.common.util.LazyOptional;
 
@@ -69,6 +64,9 @@ public class LogisticHub implements IGridElement {
 		public void removeElement(LazyOptional<IGridElement> elm) {
 			int cnt=countmap.removeInt(elm);
 			totalCount-=cnt;
+		}
+		public boolean isEmpty() {
+			return countmap.isEmpty()||totalCount<=0;
 		}
 		public ItemStack takeItem(ItemKey ik,int amount) {
 			var it=countmap.reference2IntEntrySet().iterator();
@@ -153,7 +151,7 @@ public class LogisticHub implements IGridElement {
 					return remain;
 				}
 				int oldCount=remain.getCount();
-				remain=grid.pushItem(ik,remain, false);
+				remain=grid.pushItem(ik,remain, true);
 				int newCount=remain.getCount();
 				if(oldCount!=newCount) {
 					ItemCountProvider ref=grid.getAllItems().get(ik);
@@ -274,6 +272,7 @@ public class LogisticHub implements IGridElement {
 				}
 				id.addElement(cap, ik.getValue().getTotalCount());
 			}
+			cachedData.entrySet().removeIf(entry->entry.getValue().isEmpty());
 		}else {
 			removeElement(cap);
 		}
@@ -294,12 +293,14 @@ public class LogisticHub implements IGridElement {
 			}
 			this.emptySlotCount-=set.emptySlots;
 		}
+		cachedData.entrySet().removeIf(entry->entry.getValue().isEmpty());
 		
 	}
 	@Override
 	public int getEmptySlotCount() {
 		return emptySlotCount;
 	}
+	@Override
 	public void revalidate() {
 		
 		this.cachedData.clear();
@@ -309,6 +310,7 @@ public class LogisticHub implements IGridElement {
 		gridByPos.values().removeIf(t->!t.isPresent());
 		for(LazyOptional<IGridElement> i:caps) {
 			if(i.isPresent()) {
+				i.resolve().get().revalidate();
 				this.addElement(i);
 			}
 		}
@@ -326,7 +328,7 @@ public class LogisticHub implements IGridElement {
 		}
 		if(fillEmpty) {
 			for(Entry<LazyOptional<IGridElement>, GridStat> entry:gridRef.entrySet()) {
-				if(entry.getValue().emptySlots>0) {
+				if(entry.getKey().isPresent()&&entry.getValue().emptySlots>0&&entry.getKey().resolve().get().fillable()) {
 					int oldcount=remain.getCount();
 					remain=entry.getKey().resolve().get().pushItem(ik, remain, true);
 					if(oldcount!=remain.getCount()) {
@@ -351,10 +353,15 @@ public class LogisticHub implements IGridElement {
 		return ItemStack.EMPTY;
 	}
 	public ItemStack pushItem(LazyOptional<IGridElement> grid,ItemKey ik, ItemStack is) {
-		ItemData id=cachedData.get(ik);
 		ItemStack remain=is;
-		if(id!=null) {
-			remain=id.pushItem(grid,ik, remain);
+		if(grid.isPresent()) {
+			IGridElement element=grid.resolve().get();
+			if(element.fillable()) {
+				int oldCount=remain.getCount();
+				remain=element.pushItem(ik,remain,true);
+				if(oldCount!=remain.getCount())
+					addElement(grid);
+			}
 		}
 		if(remain.isEmpty()) {
 			return ItemStack.EMPTY;
@@ -381,7 +388,7 @@ public class LogisticHub implements IGridElement {
 		
 		
 		for(Entry<LazyOptional<IGridElement>, GridStat> entry:gridRef.entrySet()) {
-			if(entry.getValue().emptySlots>0) {
+			if(entry.getKey().isPresent()&&entry.getValue().emptySlots>0&&entry.getKey().resolve().get().fillable()) {
 				return new GridAndAmount(entry.getKey(),ik.getMaxStackSize());
 			}
 			
@@ -438,41 +445,6 @@ public class LogisticHub implements IGridElement {
 				gridByPos.remove(pos);
 		}
 		return LazyOptional.empty();
-	}
-	public static void main(String[] args) {
-	      SharedConstants.tryDetectVersion();
-	      SharedConstants.enableDataFixerOptimizations();
-		Bootstrap.bootStrap();
-		LogisticHub hub=new LogisticHub(null,null);
-		LogisticChest chestA=new LogisticChest(null,null);
-		LazyOptional<LogisticChest> cacap=LazyOptional.of(()->chestA);
-		LogisticChest chestB=new LogisticChest(null,null);
-		LazyOptional<LogisticChest> cbcap=LazyOptional.of(()->chestB);
-		LogisticChest chestC=new LogisticChest(null,null);
-		LazyOptional<LogisticChest> cccap=LazyOptional.of(()->chestC);
-		hub.addElement(cacap.cast());
-		hub.addElement(cbcap.cast());
-		hub.addElement(cccap.cast());
-		List<IGridElement> ige=new ArrayList<>(Arrays.asList(hub,chestA,chestB,chestC));
-		List<IGridElement> igeo=new ArrayList<>(Arrays.asList(hub,chestA,chestB,chestC));
-		Collections.shuffle(ige);
-		
-		chestA.insertItem(0, new ItemStack(Items.STONE,10), false);
-		chestB.insertItem(0, new ItemStack(Items.BIRCH_PLANKS,30), false);
-		chestB.insertItem(3, new ItemStack(Items.BIRCH_PLANKS,30), false);
-		chestC.insertItem(0, new ItemStack(Items.BIRCH_PLANKS,15), false);
-		for(IGridElement grid:ige) {
-			grid.tick();
-		}
-		cccap.invalidate();
-		for(IGridElement grid:igeo)
-			System.out.println(grid);
-		System.out.println(hub.takeItem(new ItemStack(Items.BIRCH_PLANKS,70)));
-		for(IGridElement grid:ige) {
-			grid.tick();
-		}
-		for(IGridElement grid:igeo)
-			System.out.println(grid);
 	}
 	@Override
 	public boolean fillable() {

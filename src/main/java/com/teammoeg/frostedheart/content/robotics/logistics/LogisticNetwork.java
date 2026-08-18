@@ -20,11 +20,9 @@
 package com.teammoeg.frostedheart.content.robotics.logistics;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Random;
 import java.util.Set;
 
 import com.mojang.serialization.Codec;
@@ -39,17 +37,25 @@ import com.teammoeg.frostedheart.content.robotics.logistics.tasks.LogisticTaskKe
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
+import net.minecraft.world.Containers;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraftforge.common.capabilities.ForgeCapabilities;
+import net.minecraftforge.common.util.LazyOptional;
+import net.minecraftforge.items.IItemHandler;
 
 public class LogisticNetwork {
 	private LogisticHub hub;
 	Set<LogisticTaskKey> keys=new HashSet<>();
 	LinkedList<LogisticTask> tasks=new LinkedList<>();
-	List<LogisticTask> prelist=new ArrayList<>(100);
 	List<LogisticTask> working=new ArrayList<>(40);
 	Level world;
 	BlockPos centerPos;
-	int MAX_WORKING_TASKS=20;
+	private final Runnable markDirty;
+	private int hubRevalidationTicks;
+	private boolean closed;
+	static final int MAX_WORKING_TASKS=20;
+	private static final int HUB_REVALIDATION_INTERVAL=200;
 	private static final TypedCodecRegistry<LogisticTask> idr=new TypedCodecRegistry<>();
 	static {
 		idr.register(LogisticPushTask.class, "push", LogisticPushTask.WORKING_CODEC);
@@ -58,18 +64,23 @@ public class LogisticNetwork {
 	public static final Codec<LogisticTask> TASK_CODEC=idr.codec();
 	
 	public LogisticNetwork(Level world, BlockPos centerPos) {
-		super();
+		this(world,centerPos,()->{});
+	}
+	public LogisticNetwork(Level world, BlockPos centerPos,Runnable markDirty) {
 		this.world = world;
 		this.centerPos = centerPos;
+		this.markDirty = markDirty;
 		hub=new LogisticHub(world,centerPos);
 	}
 	public boolean canAddTask(LogisticTaskKey key) {
 		return !keys.contains(key);
 	}
 	public void addTask(LogisticTaskKey key,LogisticTask task) {
+		if(closed||keys.contains(key))
+			return;
 		task.taskKey=key;
 		keys.add(key);
-		this.prelist.add(task);
+		this.tasks.addLast(task);
 	}
 	public Level getWorld() {
 		return world;
@@ -78,52 +89,126 @@ public class LogisticNetwork {
 		nbt.put("tasks", CodecUtil.toNBTList(working, TASK_CODEC));
 	}
 	public void load(CompoundTag nbt) {
+		tasks.clear();
 		working.clear();
+		keys.clear();
 		working.addAll(CodecUtil.fromNBTList(nbt.getList("tasks", Tag.TAG_COMPOUND), TASK_CODEC));
+		for(LogisticTask task:working) {
+			if(task.taskKey!=null)
+				keys.add(task.taskKey);
+		}
 	}
 	public void tick() {
-		//FHMain.LOGGER.info("hub "+hub);
+		if(closed)
+			return;
 		hub.tick();
-		//FHMain.LOGGER.info("Logistic tasks working:"+working.size()+",queued:"+tasks.size());
+		if(++hubRevalidationTicks>=HUB_REVALIDATION_INTERVAL) {
+			hubRevalidationTicks=0;
+			hub.revalidate();
+		}
 		List<LogisticTask> nextCycle=new ArrayList<>(working);
 		working.clear();
 		for(LogisticTask lt:nextCycle) {
-			//FHMain.LOGGER.info("Logistic task working "+lt.ticks+","+lt.toString());
 			if(lt.ticks>0) {
 				lt.ticks--;
 				working.add(lt);
 			}else {
-				
-				LogisticTask nlt=lt.work(this);
-				if(nlt!=null) {
-					working.add(nlt);
-					nlt.taskKey=lt.taskKey;
-				}else
+				try {
+					LogisticTask nlt=lt.work(this);
+					if(nlt!=null) {
+						working.add(nlt);
+						nlt.taskKey=lt.taskKey;
+					}else {
+						recoverCarriedItem(lt);
+						keys.remove(lt.taskKey);
+					}
+					markDirty.run();
+				}catch(RuntimeException ex) {
+					FHMain.LOGGER.error("Canceling failed logistic task {}",lt,ex);
+					recoverCarriedItem(lt);
 					keys.remove(lt.taskKey);
-					
+					markDirty.run();
+				}
 			}
 		}
-		if(working.size()<MAX_WORKING_TASKS) {
-			Collections.shuffle(prelist);
-			tasks.addAll(prelist);
-			prelist.clear();
-			//FHMain.LOGGER.info("Logistic task preparing");
-			for(int i=0;i<tasks.size();i++) {
-				LogisticTask wrapper=tasks.pollFirst();
-				if(wrapper==null)break;
+		while(working.size()<MAX_WORKING_TASKS&&!tasks.isEmpty()) {
+			LogisticTask wrapper=tasks.pollFirst();
+			try {
 				LogisticTask lt=wrapper.prepare(this);
 				if(lt!=null) {
 					lt.taskKey=wrapper.taskKey;
-					//FHMain.LOGGER.info("Logistic task added "+lt.toString());
 					working.add(lt);
+					markDirty.run();
 				}else {
 					keys.remove(wrapper.taskKey);
-					//tasks.addLast(wrapper);
 				}
-				if(working.size()>=MAX_WORKING_TASKS)
-					break;
+			}catch(RuntimeException ex) {
+				FHMain.LOGGER.error("Canceling failed logistic task {}",wrapper,ex);
+				recoverCarriedItem(wrapper);
+				keys.remove(wrapper.taskKey);
+				markDirty.run();
 			}
 		}
+	}
+
+	public void cancelTasksAt(BlockPos pos) {
+		tasks.removeIf(task->removeQueuedTaskAt(task,pos));
+		List<LogisticTask> retained=new ArrayList<>(working.size());
+		for(LogisticTask task:working) {
+			if(task.taskKey!=null&&task.taskKey.pos().equals(pos)) {
+				recoverCarriedItem(task);
+				keys.remove(task.taskKey);
+			}else
+				retained.add(task);
+		}
+		if(retained.size()!=working.size()) {
+			working.clear();
+			working.addAll(retained);
+			markDirty.run();
+		}
+	}
+
+	private boolean removeQueuedTaskAt(LogisticTask task,BlockPos pos) {
+		if(task.taskKey!=null&&task.taskKey.pos().equals(pos)) {
+			keys.remove(task.taskKey);
+			return true;
+		}
+		return false;
+	}
+
+	public void shutdown() {
+		if(closed)
+			return;
+		closed=true;
+		for(LogisticTask task:working)
+			recoverCarriedItem(task);
+		working.clear();
+		tasks.clear();
+		keys.clear();
+		markDirty.run();
+	}
+
+	private void recoverCarriedItem(LogisticTask task) {
+		var carried=task.takeCarriedStack();
+		if(carried.isEmpty())
+			return;
+		var remainder=carried;
+		try {
+			remainder=hub.pushItem(carried,true);
+		}catch(RuntimeException ex) {
+			FHMain.LOGGER.error("Failed to return item carried by logistic task {}",task,ex);
+		}
+		if(!remainder.isEmpty()&&world!=null&&!world.isClientSide)
+			Containers.dropItemStack(world,centerPos.getX()+0.5,centerPos.getY()+0.5,centerPos.getZ()+0.5,remainder);
+	}
+
+	public LazyOptional<IItemHandler> getItemHandler(BlockPos pos) {
+		if(world==null||!world.hasChunkAt(pos))
+			return LazyOptional.empty();
+		BlockEntity blockEntity=world.getBlockEntity(pos);
+		if(blockEntity==null)
+			return LazyOptional.empty();
+		return blockEntity.getCapability(ForgeCapabilities.ITEM_HANDLER);
 	}
 	public void setWorld(Level world) {
 		this.world = world;

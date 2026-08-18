@@ -19,9 +19,9 @@
 
 package com.teammoeg.frostedheart.content.robotics.logistics.tasks;
 
-import com.mojang.serialization.Codec;
-import com.teammoeg.chorda.io.registry.TypedCodecRegistry;
 import com.teammoeg.frostedheart.content.robotics.logistics.LogisticNetwork;
+
+import net.minecraft.world.item.ItemStack;
 /**
  * Stage for tasks:
  * Queue->Prepared->Working->finished
@@ -42,4 +42,12 @@ public abstract class LogisticTask {
 	}
 	public abstract LogisticTask prepare(LogisticNetwork network);
 	public abstract LogisticTask work(LogisticNetwork network);
+
+	/**
+	 * Removes and returns any item currently carried by this task.
+	 * Unprepared tasks do not carry an item.
+	 */
+	public ItemStack takeCarriedStack() {
+		return ItemStack.EMPTY;
+	}
 }

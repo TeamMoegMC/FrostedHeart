@@ -37,19 +37,31 @@ import net.minecraftforge.common.util.LazyOptional;
 
 public class RobotChunk implements NBTSerializable{
 	Set<BlockPos> networks = new HashSet<>();
-    public LazyOptional<LogisticNetwork> getNetworkFor(Level world,BlockPos actual) {
-    	var it=networks.iterator();
-    	while(it.hasNext()) {
-    		BlockPos pos=it.next();
-    		BlockEntity core = CUtils.getExistingTileEntity(world, pos);
-    		//System.out.println(core);
-    		if(core!=null)
-    			return FHCapabilities.LOGISTIC.getCapability(core);
-    		else
-    			it.remove();
-    	}
-    	return LazyOptional.empty();
-    };
+	public LazyOptional<LogisticNetwork> getNetworkFor(Level world,BlockPos actual) {
+		LazyOptional<LogisticNetwork> nearest=LazyOptional.empty();
+		double nearestDistance=Double.MAX_VALUE;
+		long nearestPosition=Long.MAX_VALUE;
+		var it=networks.iterator();
+		while(it.hasNext()) {
+			BlockPos pos=it.next();
+			BlockEntity core = CUtils.getExistingTileEntity(world, pos);
+			if(core==null) {
+				it.remove();
+				continue;
+			}
+			LazyOptional<LogisticNetwork> candidate=FHCapabilities.LOGISTIC.getCapability(core);
+			if(candidate.isPresent()) {
+				double distance=pos.distSqr(actual);
+				long packedPosition=pos.asLong();
+				if(distance<nearestDistance||(distance==nearestDistance&&packedPosition<nearestPosition)) {
+					nearest=candidate;
+					nearestDistance=distance;
+					nearestPosition=packedPosition;
+				}
+			}
+		}
+		return nearest;
+	}
     
     public RobotChunk(List<BlockPos> networks) {
 		super();
@@ -70,6 +82,7 @@ public class RobotChunk implements NBTSerializable{
 	}
 	@Override
 	public void load(CompoundTag nbt, boolean isPacket) {
+		networks.clear();
 		networks.addAll(CodecUtil.fromNBTList(nbt.getList("networks", Tag.TAG_COMPOUND), BlockPos.CODEC));
 	}
 

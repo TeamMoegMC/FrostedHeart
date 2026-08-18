@@ -21,7 +21,6 @@ package com.teammoeg.frostedheart.content.robotics.logistics.workers;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.function.Supplier;
 
 import org.jetbrains.annotations.NotNull;
@@ -29,19 +28,16 @@ import org.jetbrains.annotations.Nullable;
 
 import com.teammoeg.chorda.block.entity.CBlockEntity;
 import com.teammoeg.chorda.block.entity.CTickableBlockEntity;
-import com.teammoeg.chorda.math.Persentage2FractionHelper;
 import com.teammoeg.chorda.util.struct.LazyTickWorker;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
 import com.teammoeg.frostedheart.content.robotics.logistics.Filter;
 import com.teammoeg.frostedheart.content.robotics.logistics.LogisticNetwork;
-import com.teammoeg.frostedheart.content.robotics.logistics.data.ItemKey;
 import com.teammoeg.frostedheart.content.robotics.logistics.gui.RequesterChestMenu;
 import com.teammoeg.frostedheart.content.robotics.logistics.tasks.LogisticRequestTask;
 import com.teammoeg.frostedheart.content.robotics.logistics.tasks.LogisticTaskKey;
 
-import it.unimi.dsi.fastutil.ints.IntArrayList;
 import lombok.Getter;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -50,7 +46,6 @@ import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.NbtOps;
 import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
-import net.minecraft.util.Mth;
 import net.minecraft.world.MenuProvider;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
@@ -65,19 +60,25 @@ import net.minecraftforge.items.ItemStackHandler;
 
 public class RequesterTileEntity extends CBlockEntity implements  CTickableBlockEntity,MenuProvider,LogisticStatusBlockEntity {
 	
-	ItemStackHandler container=new ItemStackHandler(27);
+	ItemStackHandler container=new ItemStackHandler(27) {
+		@Override
+		protected void onContentsChanged(int slot) {
+			if(level!=null)
+				RequesterTileEntity.this.setChanged();
+		}
+	};
 	public LazyOptional<ItemStackHandler> grid=LazyOptional.of(()->container);
 	public LazyOptional<LogisticNetwork> network;
-	static final int MAX_TASKS=27;
 	public Filter[] filters=new Filter[9];
 	@Getter
 	protected int networkStatus=0;
 	@Getter
 	protected int uplinkStatus=0;
-	List<Supplier<LogisticTaskKey>> keys=new ArrayList<>(MAX_TASKS);
+	List<Supplier<LogisticTaskKey>> keys=new ArrayList<>(filters.length);
+	private int networkCheckTicks;
 	public RequesterTileEntity(BlockPos pos,BlockState bs) {
 		super(FHBlockEntityTypes.REQUESTER_CHEST.get(),pos,bs);
-		for(int i=0;i<MAX_TASKS;i++){
+		for(int i=0;i<filters.length;i++){
 			final int cnt=i;
 			keys.add(Lazy.of(()->new LogisticTaskKey(pos,cnt)));
 		}
@@ -113,82 +114,30 @@ public class RequesterTileEntity extends CBlockEntity implements  CTickableBlock
 		if(network!=null&&network.isPresent()) {
 			boolean hasUplink=false;
 			boolean hasRequest=false;
-			int idx=0;
-			int[] lens=new int[filters.length];
-			int[] slotlens=new int[filters.length];
-			int total=0,totalslot=0;
-			IntArrayList unfilled=new IntArrayList(27);
 			LogisticNetwork networkGrid=network.resolve().get();
-			IntArrayList emptySlots=new IntArrayList(27);
 			for(int i=0;i<filters.length;i++) {
-				
-				if(filters[i]!=null) {
+				Filter filter=filters[i];
+				if(filter!=null&&filter.getKey()!=null) {
 					int currcnt=0;
+					int freeSpace=0;
 					hasUplink=true;
 					for(int j=0;j<container.getSlots();j++) {
 						ItemStack stack=container.getStackInSlot(j);
-						if(filters[i].matches(stack)) {
+						if(stack.isEmpty()) {
+							freeSpace+=filter.getKey().getMaxStackSize();
+						}else if(filter.matches(stack)) {
 							currcnt+=stack.getCount();
-							if(stack.getMaxStackSize()>stack.getCount()) {
-								unfilled.add(j);
-							}
-						}
-						
-					}
-					if(currcnt<filters[i].getSize()) {
-						lens[i]=filters[i].getSize()-currcnt;
-						if(!unfilled.isEmpty()) {
-							int slotnum=unfilled.popInt();
-							ItemStack stack=container.getStackInSlot(slotnum);
-							int reminder=stack.getMaxStackSize()-stack.getCount();
-							if(reminder>0) {
-								reminder=Math.min(lens[i], reminder);
-								LogisticTaskKey key=keys.get(slotnum).get();
-								lens[i]-=reminder;
-								if(networkGrid.canAddTask(key)) {
-									Filter f;
-									if(filters[i].isIgnoreNbt())
-										f=new Filter(new ItemKey(stack),false,1);
-									else
-										f=filters[i];
-									hasRequest=true;
-									networkGrid.addTask(key, new LogisticRequestTask(f,reminder,this.getBlockPos(),grid.cast()));
-								}
-							}
-						}
-						if(lens[i]>0) {
-							total+=lens[i];
-							slotlens[i]=Mth.ceil(lens[i]*1f/filters[i].getKey().getMaxStackSize());
-							totalslot+=slotlens[i];
+							freeSpace+=stack.getMaxStackSize()-stack.getCount();
 						}
 					}
-				}
-				unfilled.clear();
-			}
-			
-			for(int j=0;j<container.getSlots();j++) {
-				if(container.getStackInSlot(j).isEmpty())
-					emptySlots.add(j);
-			}
-			int emptySlotNum=emptySlots.size();
-			Persentage2FractionHelper p2f=new Persentage2FractionHelper(emptySlotNum);
-			for(int i=0;i<filters.length;i++) {
-
-				if(filters[i]!=null) {
-					int toOccupy=slotlens[i];
-					if(slotlens[i]>emptySlotNum)
-						toOccupy=p2f.getPercentRounded(toOccupy*1f/totalslot);
-					
-					for(int k=0;k<toOccupy;k++) {
-						Supplier<LogisticTaskKey> lt=keys.get(emptySlots.popInt());
-						if(networkGrid.canAddTask(lt.get())) {
+					int missing=Math.min(filter.getSize()-currcnt,freeSpace);
+					if(missing>0) {
+						LogisticTaskKey key=keys.get(i).get();
+						if(networkGrid.canAddTask(key)) {
 							hasRequest=true;
-							int ncnt=Math.min(lens[i], filters[i].getKey().getMaxStackSize());
-							lens[i]-=ncnt;
-							networkGrid.addTask(lt.get(), new LogisticRequestTask(filters[i],ncnt,this.getBlockPos(),grid.cast()));
+							int requestSize=Math.min(missing,filter.getKey().getMaxStackSize());
+							networkGrid.addTask(key,new LogisticRequestTask(filter,requestSize,getBlockPos(),grid.cast()));
 						}
-						if(lens[i]<=0)
-							break;
 					}
 				}
 			}
@@ -206,21 +155,28 @@ public class RequesterTileEntity extends CBlockEntity implements  CTickableBlock
 	@Override
 	public void tick() {
 		if(!this.level.isClientSide) {
-			if(network==null||!network.isPresent()) {
-				networkStatus=0;
-				Optional<LazyOptional<LogisticNetwork>> chunkData=FHCapabilities.ROBOTIC_LOGISTIC_CHUNK.
-				getCapability(this.level.getChunk(this.worldPosition)).map(t->t.getNetworkFor(level, worldPosition));
-				if(chunkData.isPresent()) {
-					LazyOptional<LogisticNetwork> ln=chunkData.get();
-					if(ln.isPresent()) {
-						FHMain.LOGGER.info("register self against network req "+ln);
-						network=ln;
-					}
-				}
-			}else
-				networkStatus=2;
+			if(network==null||!network.isPresent()||networkCheckTicks--<=0) {
+				refreshNetwork();
+				networkCheckTicks=20;
+			}
+			networkStatus=network!=null&&network.isPresent()?2:0;
 			worker.tick();
 		}
+	}
+
+	private void refreshNetwork() {
+		LazyOptional<LogisticNetwork> candidate=FHCapabilities.ROBOTIC_LOGISTIC_CHUNK
+			.getCapability(level.getChunk(worldPosition))
+			.map(chunk->chunk.getNetworkFor(level,worldPosition))
+			.orElse(LazyOptional.empty());
+		LogisticNetwork current=network!=null&&network.isPresent()?network.resolve().get():null;
+		LogisticNetwork next=candidate.isPresent()?candidate.resolve().get():null;
+		if(current!=null&&current!=next)
+			current.cancelTasksAt(worldPosition);
+		if(current!=next)
+			network=next==null?null:candidate;
+		else if(current==null)
+			network=null;
 	}
 
 	@Override
@@ -242,7 +198,24 @@ public class RequesterTileEntity extends CBlockEntity implements  CTickableBlock
 	@Override
 	public void onRemoved() {
 		super.onRemoved();
+		if(network!=null&&network.isPresent())
+			network.resolve().get().cancelTasksAt(worldPosition);
+		network=null;
 		grid.invalidate();
+	}
+
+	@Override
+	public void onUnloaded() {
+		network=null;
+		grid.invalidate();
+	}
+
+	@Override
+	public void onLoad() {
+		super.onLoad();
+		if(!grid.isPresent())
+			grid=LazyOptional.of(()->container);
+		networkCheckTicks=0;
 	}
 
 

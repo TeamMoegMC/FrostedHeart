@@ -24,13 +24,16 @@ import java.util.function.Supplier;
 import com.teammoeg.chorda.block.CGuiBlock;
 
 import net.minecraft.core.BlockPos;
+import net.minecraft.world.Containers;
 import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
+import net.minecraftforge.common.capabilities.ForgeCapabilities;
 
 public class LogisticChestBlock<T extends BlockEntity> extends CGuiBlock<T> {
 	Supplier<BlockEntityType<T>> blockEntity;
@@ -55,6 +58,22 @@ public class LogisticChestBlock<T extends BlockEntity> extends CGuiBlock<T> {
 	@Override
 	public Supplier<BlockEntityType<T>> getBlock() {
 		return blockEntity;
+	}
+
+	@Override
+	public void onRemove(BlockState state,Level level,BlockPos pos,BlockState newState,boolean isMoving) {
+		if(state.getBlock()!=newState.getBlock()&&!level.isClientSide) {
+			BlockEntity blockEntity=level.getBlockEntity(pos);
+			if(blockEntity!=null)
+				blockEntity.getCapability(ForgeCapabilities.ITEM_HANDLER).ifPresent(handler->{
+					for(int slot=0;slot<handler.getSlots();slot++) {
+						int count=handler.getStackInSlot(slot).getCount();
+						if(count>0)
+							Containers.dropItemStack(level,pos.getX()+0.5,pos.getY()+0.5,pos.getZ()+0.5,handler.extractItem(slot,count,false));
+					}
+				});
+		}
+		super.onRemove(state,level,pos,newState,isMoving);
 	}
 
 
