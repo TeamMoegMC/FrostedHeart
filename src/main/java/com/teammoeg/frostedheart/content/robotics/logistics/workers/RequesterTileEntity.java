@@ -77,7 +77,7 @@ public class RequesterTileEntity extends CBlockEntity implements  CTickableBlock
 	List<Supplier<LogisticTaskKey>> keys=new ArrayList<>(filters.length);
 	private int networkCheckTicks;
 	public RequesterTileEntity(BlockPos pos,BlockState bs) {
-		super(FHBlockEntityTypes.REQUESTER_CHEST.get(),pos,bs);
+		super(FHBlockEntityTypes.LOGISTIC_INTERFACE_CHEST_OUT.get(),pos,bs);
 		for(int i=0;i<filters.length;i++){
 			final int cnt=i;
 			keys.add(Lazy.of(()->new LogisticTaskKey(pos,cnt)));

@@ -55,7 +55,7 @@ public class StorageTileEntity extends CBlockEntity implements CTickableBlockEnt
 	protected int uplinkStatus=0;
 	private int networkCheckTicks;
 	public StorageTileEntity(BlockPos pos,BlockState bs) {
-		super(FHBlockEntityTypes.STORAGE_CHEST.get(),pos,bs);
+		super(FHBlockEntityTypes.LOGISTIC_STORAGE_CHEST.get(),pos,bs);
 		container=new LogisticChest(null,pos,this::setChanged);
 	}
 	@Override

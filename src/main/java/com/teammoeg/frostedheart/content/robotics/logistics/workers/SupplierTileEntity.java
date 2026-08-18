@@ -19,24 +19,17 @@
 
 package com.teammoeg.frostedheart.content.robotics.logistics.workers;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.function.Supplier;
-
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import com.teammoeg.chorda.block.entity.CBlockEntity;
 import com.teammoeg.chorda.block.entity.CTickableBlockEntity;
-import com.teammoeg.chorda.util.struct.LazyTickWorker;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
 import com.teammoeg.frostedheart.content.robotics.logistics.LogisticNetwork;
 import com.teammoeg.frostedheart.content.robotics.logistics.grid.LogisticChest;
 import com.teammoeg.frostedheart.content.robotics.logistics.grid.RequestLogisticChest;
 import com.teammoeg.frostedheart.content.robotics.logistics.gui.SupplierChestMenu;
-import com.teammoeg.frostedheart.content.robotics.logistics.tasks.LogisticPushTask;
-import com.teammoeg.frostedheart.content.robotics.logistics.tasks.LogisticTaskKey;
 
 import lombok.Getter;
 import net.minecraft.core.BlockPos;
@@ -62,15 +55,10 @@ public class SupplierTileEntity extends CBlockEntity implements CTickableBlockEn
 	protected int networkStatus=0;
 	@Getter
 	protected int uplinkStatus=0;
-	private final List<Supplier<LogisticTaskKey>> keys=new ArrayList<>(27);
 	private int networkCheckTicks;
 	public SupplierTileEntity(BlockPos pos,BlockState bs) {
-		super(FHBlockEntityTypes.SUPPLIER_CHEST.get(),pos,bs);
+		super(FHBlockEntityTypes.LOGISTIC_INTERFACE_CHEST_IN.get(),pos,bs);
 		container=new RequestLogisticChest(null,pos,this::setChanged);
-		for(int slot=0;slot<27;slot++) {
-			final int taskSlot=slot;
-			keys.add(()->new LogisticTaskKey(pos,taskSlot));
-		}
 	}
 
 
@@ -83,19 +71,6 @@ public class SupplierTileEntity extends CBlockEntity implements CTickableBlockEn
 	public void writeCustomNBT(CompoundTag nbt, boolean descPacket) {
 		nbt.put("chest",container.serialize());
 	}
-
-	LazyTickWorker pushWorker=new LazyTickWorker(10,()->{
-		if(network==null||!network.isPresent())
-			return;
-		LogisticNetwork logisticNetwork=network.resolve().get();
-		for(int slot=0;slot<container.getSlots();slot++) {
-			if(container.getStackInSlot(slot).isEmpty())
-				continue;
-			LogisticTaskKey key=keys.get(slot).get();
-			if(logisticNetwork.canAddTask(key))
-				logisticNetwork.addTask(key,new LogisticPushTask(worldPosition,grid.cast(),slot));
-		}
-	});
 
 	@Override
 	public void tick() {
@@ -114,7 +89,6 @@ public class SupplierTileEntity extends CBlockEntity implements CTickableBlockEn
 					uplinkStatus=2;
 			}else
 				uplinkStatus=networkStatus=0;
-			pushWorker.tick();
 		}
 	}
 

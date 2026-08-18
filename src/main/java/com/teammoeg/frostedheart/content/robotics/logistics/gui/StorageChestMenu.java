@@ -28,12 +28,12 @@ import net.minecraftforge.items.IItemHandler;
 public class StorageChestMenu extends LogisticChestMenu<StorageTileEntity> {
 
 	public StorageChestMenu(int pContainerId, StorageTileEntity be, Inventory player, IItemHandler handler) {
-		super(FHMenuTypes.STORAGE_CHEST.get(), be, pContainerId, player, handler);
+		super(FHMenuTypes.LOGISTIC_STORAGE_CHEST.get(), be, pContainerId, player, handler);
 		super.addPlayerInventory(player, 8, 87, 145);
 	}
 
 	public StorageChestMenu(int pContainerId, Inventory player, StorageTileEntity be) {
-		super(FHMenuTypes.STORAGE_CHEST.get(), be, pContainerId, player);
+		super(FHMenuTypes.LOGISTIC_STORAGE_CHEST.get(), be, pContainerId, player);
 		super.addPlayerInventory(player, 8, 87, 145);
 	}
 

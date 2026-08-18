@@ -11,11 +11,11 @@
       "entries": [
         {
           "type": "minecraft:item",
-          "name": "frostedheart:supplier_chest"
+          "name": "frostedheart:logistic_storage_chest"
         }
       ],
       "rolls": 1.0
     }
   ],
-  "random_sequence": "frostedheart:blocks/supplier_chest"
+  "random_sequence": "frostedheart:blocks/logistic_storage_chest"
 }

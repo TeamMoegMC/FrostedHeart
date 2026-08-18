@@ -39,7 +39,7 @@ public class RequesterChestMenu extends LogisticChestMenu<RequesterTileEntity> {
 	public static final int CMD_SET_IGNORE_NBT=2;
 	public static final int CMD_SET_SIZE=3;
 	public RequesterChestMenu(int pContainerId, Inventory inv,RequesterTileEntity blockEntity) {
-		super(FHMenuTypes.REQUEST_CHEST.get(),blockEntity, pContainerId, inv);
+		super(FHMenuTypes.LOGISTIC_INTERFACE_CHEST_OUT.get(),blockEntity, pContainerId, inv);
 		for(int i=0;i<blockEntity.filters.length;i++) {
 			list.add(FHMenuSlots.FILTER_ENCODER_SLOT.create(this));
 		}
@@ -47,7 +47,7 @@ public class RequesterChestMenu extends LogisticChestMenu<RequesterTileEntity> {
 	}
 
 	public RequesterChestMenu(int pContainerId,RequesterTileEntity blockEntity, Inventory inv, IItemHandler handler) {
-		super(FHMenuTypes.REQUEST_CHEST.get(),blockEntity, pContainerId, inv, handler);
+		super(FHMenuTypes.LOGISTIC_INTERFACE_CHEST_OUT.get(),blockEntity, pContainerId, inv, handler);
 		for(int i=0;i<blockEntity.filters.length;i++) {
 			CDataSlot<Filter> slot=FHMenuSlots.FILTER_ENCODER_SLOT.create(this);
 			final int nslot=i;
