@@ -75,9 +75,9 @@ public class FHScreens {
         MenuScreens.register(FHMenuTypes.CLOTHES_GUI.get(), ClothesScreen::new);
         MenuScreens.register(FHMenuTypes.NUTRITION_GUI.get(), HealthStatScreen::new);
         MenuScreens.register(FHMenuTypes.WARDROBE.get(), WardrobeScreen::new);
-        registerCUIScreen(FHMenuTypes.LOGISTIC_INTERFACE_CHEST_IN.get(),SupplierChestScreen::new);
-        registerCUIScreen(FHMenuTypes.LOGISTIC_STORAGE_CHEST.get(), StorageChestScreen::new);
-        registerCUIScreen(FHMenuTypes.LOGISTIC_INTERFACE_CHEST_OUT.get(), RequesterChestScreen::new);
+        registerCUIScreen(FHMenuTypes.SUPPLY_CHEST.get(),SupplierChestScreen::new);
+        registerCUIScreen(FHMenuTypes.STORAGE_CHEST.get(), StorageChestScreen::new);
+        registerCUIScreen(FHMenuTypes.REQUEST_CHEST.get(), RequesterChestScreen::new);
         MenuScreens.register(FHMenuTypes.SNOW_SACK.get(), SnowSackScreen::new);
     }
 

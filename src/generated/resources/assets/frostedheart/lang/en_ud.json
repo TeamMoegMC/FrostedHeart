@@ -184,6 +184,7 @@
   "block.frostedheart.red_sand_permafrost": "ʇsoɹɟɐɯɹǝԀ puɐS pǝᴚ",
   "block.frostedheart.refractory_bricks": "sʞɔıɹᗺ ʎɹoʇɔɐɹɟǝᴚ",
   "block.frostedheart.relic_chest": "ʇsǝɥƆ ɔıןǝᴚ",
+  "block.frostedheart.requester_chest": "ʇsǝɥƆ ɹǝʇsǝnbǝᴚ",
   "block.frostedheart.rooted_dirt_permafrost": "ʇsoɹɟɐɯɹǝԀ ʇɹıᗡ pǝʇooᴚ",
   "block.frostedheart.rotten_wood_block": "ʞɔoןᗺ pooM uǝʇʇoᴚ",
   "block.frostedheart.rubber_dandelion": "ʇooᴚ ɹǝqqnᴚ",
@@ -213,7 +214,9 @@
   "block.frostedheart.smoke_block_t1": "ɹoʇɐɹǝuǝ⅁ ǝʞoɯS Ɩ⟘",
   "block.frostedheart.steam_core": "ǝɹoƆ ɯɐǝʇS",
   "block.frostedheart.steel_block": "ןǝǝʇS ɟo ʞɔoןᗺ",
+  "block.frostedheart.storage_chest": "ʇsǝɥƆ ǝbɐɹoʇS",
   "block.frostedheart.studded_lab_block": "ʞɔoןᗺ qɐꞀ pǝppnʇS",
+  "block.frostedheart.supplier_chest": "ʇsǝɥƆ ɹǝıןddnS",
   "block.frostedheart.sylvite_ore": "ǝɹO ǝʇıʌןʎS",
   "block.frostedheart.test": "ʇsǝ⟘",
   "block.frostedheart.test_logistic_core": "ǝɹoƆ ɔıʇsıboꞀ ʇsǝ⟘",
@@ -601,12 +604,5 @@
   "item.frostedheart.yellow_thermos": "soɯɹǝɥ⟘ ʍoןןǝʎ",
   "item.frostedheart.zinc_dust": "ʇsnᗡ ɔuıZ",
   "item.frostedheart.zinc_oxide_dust": "ʇsnᗡ ǝpıxO ɔuıZ",
-  "item.frostedheart.zinc_slurry": "ʎɹɹnןS ɔuıZ",
-  "tooltip.frostedheart.test_logistic_core": ".(ǝsn ʇsǝʇ) ǝƃuɐɹ ʞunɥɔ ƐxƐ sʇı uıɥʇıʍ ʞɹoʍʇǝu ɐ sǝʌıɹp puɐ sǝʇɐǝɹɔ :ǝɹoɔ ʞɹoʍʇǝu sɔıʇsıƃo⅂",
-  "block.frostedheart.logistic_interface_chest_out": "ʇndʇnO) ǝɔɐɟɹǝʇuI ɔıʇsıƃo⅂",
-  "block.frostedheart.logistic_storage_chest": "ǝƃɐɹoʇS ɔıʇsıƃo⅂",
-  "block.frostedheart.logistic_interface_chest_in": "ʇnduI) ǝɔɐɟɹǝʇuI ɔıʇsıƃo⅂",
-  "tooltip.frostedheart.logistic_interface_chest_out": ".sɹǝʇןıɟ sʇı ןןıɟ oʇ ʞɹoʍʇǝu sɔıʇsıƃoן ǝɥʇ ɯoɹɟ sɯǝʇı sןןnd ʎןuO",
-  "tooltip.frostedheart.logistic_storage_chest": ".(ʇndʇno puɐ ʇnduı ɥʇoq) ʞɹoʍʇǝu sɔıʇsıƃoן ǝɥʇ ɟo ɹǝɟɟnq ןɐuoıʇɔǝɹıpıᗺ",
-  "tooltip.frostedheart.logistic_interface_chest_in": ".ʇı ɯoɹɟ sʇɔɐɹʇxǝ ɹǝʌǝu ʞɹoʍʇǝu ǝɥʇ ;ʞɹoʍʇǝu sɔıʇsıƃoן ǝɥʇ oʇuı sɯǝʇı spǝǝɟ ʎןuO"
+  "item.frostedheart.zinc_slurry": "ʎɹɹnןS ɔuıZ"
 }

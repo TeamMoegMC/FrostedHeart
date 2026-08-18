@@ -16,9 +16,6 @@
 ./gradlew runServer      # Run server
 ```
 
-## Development Preferences
-- Keep verification focused and proportional to the change. For large or complex test-class additions, confirm with the user first to avoid unnecessary token and maintenance cost.
-
 ## Documentation Status
 - chorda/: 377 files with bilingual (CN/EN) Javadoc + 58 package-info.java
 - frostedheart/: Not yet documented

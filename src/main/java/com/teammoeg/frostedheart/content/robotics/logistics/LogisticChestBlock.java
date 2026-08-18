@@ -19,16 +19,12 @@
 
 package com.teammoeg.frostedheart.content.robotics.logistics;
 
-import java.util.List;
 import java.util.function.Supplier;
 
 import com.teammoeg.chorda.block.CGuiBlock;
 
 import net.minecraft.core.BlockPos;
-import net.minecraft.network.chat.Component;
 import net.minecraft.world.Containers;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
@@ -42,12 +38,10 @@ import net.minecraftforge.common.capabilities.ForgeCapabilities;
 public class LogisticChestBlock<T extends BlockEntity> extends CGuiBlock<T> {
 	Supplier<BlockEntityType<T>> blockEntity;
 	VoxelShape shape=Block.box(0, 0, 0, 16, 12, 16);
-	Component description;
 
-	public LogisticChestBlock(Properties blockProps, Supplier<BlockEntityType<T>> blockEntity, Component description) {
+	public LogisticChestBlock(Properties blockProps, Supplier<BlockEntityType<T>> blockEntity) {
 		super(blockProps);
 		this.blockEntity = blockEntity;
-		this.description = description;
 	}
 
 
@@ -82,11 +76,5 @@ public class LogisticChestBlock<T extends BlockEntity> extends CGuiBlock<T> {
 		super.onRemove(state,level,pos,newState,isMoving);
 	}
 
-	@Override
-	public void appendHoverText(ItemStack stack, BlockGetter level, List<Component> tooltip, TooltipFlag flag) {
-		super.appendHoverText(stack, level, tooltip, flag);
-		if (description != null)
-			tooltip.add(description);
-	}
 
 }

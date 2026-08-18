@@ -159,14 +159,14 @@ public class FHBlockEntityTypes {
             "wardrobe", makeType(WardrobeBlockEntity::new, FHBlocks.WARDROBE::get)
     );
 
-    public static final RegistryObject<BlockEntityType<RequesterTileEntity>> LOGISTIC_INTERFACE_CHEST_OUT = REGISTER.register(
-        "logistic_interface_chest_out", makeType(RequesterTileEntity::new, FHBlocks.LOGISTIC_INTERFACE_CHEST_OUT::get)
+    public static final RegistryObject<BlockEntityType<RequesterTileEntity>> REQUESTER_CHEST = REGISTER.register(
+        "requester_chest", makeType(RequesterTileEntity::new, FHBlocks.REQUESTER_CHEST::get)
 );
-    public static final RegistryObject<BlockEntityType<StorageTileEntity>> LOGISTIC_STORAGE_CHEST = REGISTER.register(
-        "logistic_storage_chest", makeType(StorageTileEntity::new, FHBlocks.LOGISTIC_STORAGE_CHEST::get)
+    public static final RegistryObject<BlockEntityType<StorageTileEntity>> STORAGE_CHEST = REGISTER.register(
+        "storage_chest", makeType(StorageTileEntity::new, FHBlocks.STORAGE_CHEST::get)
 );
-    public static final RegistryObject<BlockEntityType<SupplierTileEntity>> LOGISTIC_INTERFACE_CHEST_IN = REGISTER.register(
-        "logistic_interface_chest_in", makeType(SupplierTileEntity::new, FHBlocks.LOGISTIC_INTERFACE_CHEST_IN::get)
+    public static final RegistryObject<BlockEntityType<SupplierTileEntity>> SUPPLIER_CHEST = REGISTER.register(
+        "supplier_chest", makeType(SupplierTileEntity::new, FHBlocks.SUPPLIER_CHEST::get)
 );    public static final RegistryObject<BlockEntityType<NetworkCoreTileEntity>> NETWORK_CORE = REGISTER.register(
     "logistic_test_core", makeType(NetworkCoreTileEntity::new, FHBlocks.TEST_LOGISTIC_CORE::get));
     private static <T extends BlockEntity> Supplier<BlockEntityType<T>> makeType(BlockEntitySupplier<T> create, Supplier<Block> valid) {

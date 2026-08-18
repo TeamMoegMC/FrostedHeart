@@ -81,7 +81,6 @@ import com.tterrag.registrate.providers.loot.RegistrateBlockLootTables;
 import com.tterrag.registrate.util.entry.BlockEntry;
 import net.minecraft.advancements.critereon.StatePropertiesPredicate;
 import net.minecraft.core.BlockPos;
-import net.minecraft.network.chat.Component;
 import net.minecraft.data.loot.packs.VanillaBlockLoot;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.world.entity.EntityType;
@@ -2306,28 +2305,28 @@ public class FHBlocks {
             .lang("Hunting Base")
             .register();
     // Logistic blocks
-    public static final BlockEntry<LogisticChestBlock<RequesterTileEntity>> LOGISTIC_INTERFACE_CHEST_OUT = REGISTRATE.block("logistic_interface_chest_out", o->new LogisticChestBlock<>(o,FHBlockEntityTypes.LOGISTIC_INTERFACE_CHEST_OUT, Component.translatable("tooltip.frostedheart.logistic_interface_chest_out")))
+    public static final BlockEntry<LogisticChestBlock<RequesterTileEntity>> REQUESTER_CHEST = REGISTRATE.block("requester_chest", o->new LogisticChestBlock<>(o,FHBlockEntityTypes.REQUESTER_CHEST))
             .initialProperties(() -> Blocks.CHEST)
             .properties(BlockBehaviour.Properties::noOcclusion)
             .blockstate(FHBlockStateGen.simpleObj(FHMain.rl("bot_dock_in")))
             .tag(FHTags.Blocks.METAL_MACHINES.get())
             .simpleItem()
             .register();
-    public static final BlockEntry<LogisticChestBlock<StorageTileEntity>> LOGISTIC_STORAGE_CHEST = REGISTRATE.block("logistic_storage_chest", o->new LogisticChestBlock<>(o,FHBlockEntityTypes.LOGISTIC_STORAGE_CHEST, Component.translatable("tooltip.frostedheart.logistic_storage_chest")))
+    public static final BlockEntry<LogisticChestBlock<StorageTileEntity>> STORAGE_CHEST = REGISTRATE.block("storage_chest", o->new LogisticChestBlock<>(o,FHBlockEntityTypes.STORAGE_CHEST))
             .initialProperties(() -> Blocks.CHEST)
             .properties(BlockBehaviour.Properties::noOcclusion)
             .blockstate(FHBlockStateGen.simpleObj(FHMain.rl("bot_dock_transfer")))
             .tag(FHTags.Blocks.METAL_MACHINES.get())
             .simpleItem()
             .register();
-    public static final BlockEntry<LogisticChestBlock<SupplierTileEntity>> LOGISTIC_INTERFACE_CHEST_IN = REGISTRATE.block("logistic_interface_chest_in", o->new LogisticChestBlock<>(o,FHBlockEntityTypes.LOGISTIC_INTERFACE_CHEST_IN, Component.translatable("tooltip.frostedheart.logistic_interface_chest_in")))
+    public static final BlockEntry<LogisticChestBlock<SupplierTileEntity>> SUPPLIER_CHEST = REGISTRATE.block("supplier_chest", o->new LogisticChestBlock<>(o,FHBlockEntityTypes.SUPPLIER_CHEST))
             .initialProperties(() -> Blocks.CHEST)
             .properties(BlockBehaviour.Properties::noOcclusion)
             .blockstate(FHBlockStateGen.simpleObj(FHMain.rl("bot_dock_out")))
             .tag(FHTags.Blocks.METAL_MACHINES.get())
             .simpleItem()
             .register();
-    public static final BlockEntry<LogisticChestBlock<NetworkCoreTileEntity>> TEST_LOGISTIC_CORE = REGISTRATE.block("test_logistic_core", o->new LogisticChestBlock<>(o,FHBlockEntityTypes.NETWORK_CORE, Component.translatable("tooltip.frostedheart.test_logistic_core")))
+    public static final BlockEntry<LogisticChestBlock<NetworkCoreTileEntity>> TEST_LOGISTIC_CORE = REGISTRATE.block("test_logistic_core", o->new LogisticChestBlock<>(o,FHBlockEntityTypes.NETWORK_CORE))
             .initialProperties(() -> Blocks.CHEST)
             .properties(BlockBehaviour.Properties::noOcclusion)
             .blockstate(FHBlockStateGen.simpleObj(FHMain.rl("bot_dispatcher")))

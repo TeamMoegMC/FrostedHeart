@@ -17,9 +17,9 @@
     "frostedheart:dsp_vawt",
     "frostedheart:warehouse_interface",
     "frostedheart:warehouse_level_emitter",
-    "frostedheart:logistic_interface_chest_out",
-    "frostedheart:logistic_storage_chest",
-    "frostedheart:logistic_interface_chest_in",
+    "frostedheart:requester_chest",
+    "frostedheart:storage_chest",
+    "frostedheart:supplier_chest",
     "frostedheart:test_logistic_core"
   ]
 }

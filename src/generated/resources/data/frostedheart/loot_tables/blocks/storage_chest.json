@@ -11,11 +11,11 @@
       "entries": [
         {
           "type": "minecraft:item",
-          "name": "frostedheart:logistic_interface_chest_out"
+          "name": "frostedheart:storage_chest"
         }
       ],
       "rolls": 1.0
     }
   ],
-  "random_sequence": "frostedheart:blocks/logistic_interface_chest_out"
+  "random_sequence": "frostedheart:blocks/storage_chest"
 }
