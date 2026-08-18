@@ -24,6 +24,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.LongPredicate;
 
 import com.teammoeg.chorda.dataholders.team.CTeamDataManager;
 import com.teammoeg.chorda.dataholders.team.TeamDataHolder;
@@ -313,7 +314,7 @@ public final class CitizenSimScheduler {
 			refreshRegistry(level);
 		}
 		if (gameTime % 5 == 0)
-			grid.rebuild(containers, this::isActive);
+			grid.rebuild(containers, this::isSpatialPresent);
 		behavior.tick(this, level, (int) (gameTime % BehaviorSystem.SLICE), gameTime);
 		movement.tickAll(this, level, gameTime);
 		fields.tick(level, gameTime);
@@ -344,6 +345,10 @@ public final class CitizenSimScheduler {
 	public boolean isActive(CitizenContainer container, int index) {
 		CitizenSim sim = container.sim();
 		return activeCells.contains(SpatialGrid.cellKey(sim.px[index] >> 10, sim.pz[index] >> 10));
+	}
+
+	private boolean isSpatialPresent(CitizenContainer container, int index) {
+		return isActive(container, index) && CitizenPresence.spatialPresent(container.sim().state[index]);
 	}
 
 	/**
@@ -521,16 +526,75 @@ public final class CitizenSimScheduler {
 			for (int k = 0; k < 4; k++) {
 				int ox = anchor.getX() + DIR_X[k] * r;
 				int oz = anchor.getZ() + DIR_Z[k] * r;
-				if (!level.hasChunkAt(ox, oz))
-					continue;
-				int h = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, ox, oz);
-				if (h <= anchor.getY() + 2)
-					return new BlockPos(ox, h - 1, oz);
+				BlockPos candidate = safeExitAt(level, anchor, ox, oz);
+				if (candidate != null)
+					return candidate;
 			}
 		}
-		return new BlockPos(anchor.getX(), Math.max(1, anchor.getY() - 1), anchor.getZ());
+		BlockPos entrance = safeExitAt(level, anchor, anchor.getX(), anchor.getZ());
+		return entrance != null ? entrance : anchor;
 	}
 
+	/**
+	 * 按住宅内稳定槽位选择首选出口，并在地形不可用或已占用时向外探测。
+	 * 槽位只存在于运行时；常规路径首个候选即可命中，复杂地形最多检查固定数量的候选。
+	 */
+	public static BlockPos groundNear(ServerLevel level, BlockPos anchor, int homeSlot,
+			long seed, LongPredicate occupiedXZ) {
+		for (int attempt = 0; attempt < EXIT_SEARCH_ATTEMPTS; attempt++) {
+			long packedXZ = exitCandidatePosition(anchor, homeSlot, seed, attempt);
+			if (occupiedXZ.test(packedXZ))
+				continue;
+			BlockPos candidate = safeExitAt(level, anchor, BlockPos.getX(packedXZ), BlockPos.getZ(packedXZ));
+			if (candidate != null)
+				return candidate;
+		}
+		BlockPos entrance = safeExitAt(level, anchor, anchor.getX(), anchor.getZ());
+		long entranceXZ = BlockPos.asLong(anchor.getX(), 0, anchor.getZ());
+		return entrance != null && !occupiedXZ.test(entranceXZ) ? entrance : groundNear(level, anchor);
+	}
+
+	/** Compatibility overload for callers without a house-local slot. */
+	public static BlockPos groundNear(ServerLevel level, BlockPos anchor, long seed) {
+		return groundNear(level, anchor, -1, seed, ignored -> false);
+	}
+
+	static long exitCandidatePosition(BlockPos anchor, int homeSlot, long seed, int attempt) {
+		int firstSlot = homeSlot >= 0 ? homeSlot : ((int) seed & 31);
+		int slot = firstSlot + attempt;
+		int radius = 2 + (slot >>> 3);
+		int directionOffset = (int) (seed ^ (seed >>> 32)) & 7;
+		int direction = (slot + directionOffset) & 7;
+		int x = anchor.getX() + EXIT_DIR_X[direction] * radius;
+		int z = anchor.getZ() + EXIT_DIR_Z[direction] * radius;
+		return BlockPos.asLong(x, 0, z);
+	}
+
+	private static BlockPos safeExitAt(ServerLevel level, BlockPos anchor, int x, int z) {
+		if (!level.hasChunkAt(x, z))
+			return null;
+		int feetY = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z);
+		if (feetY < anchor.getY() - 2 || feetY > anchor.getY() + 2)
+			return null;
+		BlockPos feet = new BlockPos(x, feetY, z);
+		BlockPos head = feet.above();
+		BlockPos support = feet.below();
+		var feetState = level.getBlockState(feet);
+		var headState = level.getBlockState(head);
+		var supportState = level.getBlockState(support);
+		if (!feetState.getFluidState().isEmpty() || !headState.getFluidState().isEmpty()
+				|| !supportState.getFluidState().isEmpty())
+			return null;
+		if (!feetState.getCollisionShape(level, feet).isEmpty()
+				|| !headState.getCollisionShape(level, head).isEmpty()
+				|| supportState.getCollisionShape(level, support).isEmpty())
+			return null;
+		return feet;
+	}
+
+	static final int EXIT_SEARCH_ATTEMPTS = 256;
 	private static final int[] DIR_X = { 1, -1, 0, 0 };
 	private static final int[] DIR_Z = { 0, 0, 1, -1 };
+	private static final int[] EXIT_DIR_X = { 1, 1, 0, -1, -1, -1, 0, 1 };
+	private static final int[] EXIT_DIR_Z = { 0, 1, 1, 1, 0, -1, -1, -1 };
 }

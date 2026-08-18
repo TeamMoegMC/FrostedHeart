@@ -39,6 +39,8 @@ import net.minecraft.nbt.CompoundTag;
  * Hot data for 10k citizens is ~600KB, cache-friendly and nearly GC-free.
  */
 public final class CitizenSim {
+	/** 瞬态完整住宅锚点缺失值 / Sentinel for a missing transient full home anchor. */
+	public static final long NO_HOME_POS = Long.MIN_VALUE;
 
 	private int size;
 	private int capacity;
@@ -54,6 +56,18 @@ public final class CitizenSim {
 	public byte[] state;
 	/** 归属性锚点（家），方块坐标 / Home anchor, block coordinates */
 	public int[] homeX, homeZ;
+	/**
+	 * 完整住宅锚点（瞬态 packed BlockPos）；旧的 homeX/homeZ 继续承担持久化和
+	 * 无住宅布局时的导航回退。/ Full home anchor (transient packed BlockPos);
+	 * homeX/homeZ remain the persisted navigation fallback.
+	 */
+	public long[] homePos;
+	/**
+	 * 住宅内按 UUID 排序的稳定序号（瞬态，-1 = 无住宅）；供床位与无冲突出口共同使用，不落盘。
+	 * / Stable UUID-sorted ordinal inside the home (transient, -1 = no home),
+	 * shared by bed assignment and collision-free exit placement.
+	 */
+	public int[] homeSlot;
 	/** 工作锚点（方块坐标），-1 = 无工作（命令生成/失业居民）；运行期数据，不落盘（重启后由人口对齐重建） / Work anchor (block coords), -1 = no job (command-spawned/unemployed); runtime-only, rebuilt by the population align after restart */
 	public int[] wx, wz;
 	/** 代表的城镇居民 UUID 两段（0/0 = 未托管的命令居民） / Town resident UUID halves (0/0 = unmanaged command citizen) */
@@ -72,6 +86,10 @@ public final class CitizenSim {
 	public long[] bestDist2;
     /** 分离力缓存（定点位移，非计算 tick 复用）；瞬态，不落盘 */
     public int[] sepX, sepZ;
+    /** 本 tick 停步标记：移动类状态但 XZ 无实际位移（到岗/卡住/贴墙/未激活）；运行期，不落盘 / Per-tick halt flag: MOVING-class state with no XZ displacement; runtime-only */
+    public byte[] halt;
+    /** 规范模型的停步标记（上次发送值）；运行期，不落盘 / Canonical halt flag (last sent); runtime-only */
+    public byte[] shalt;
 
 	private final Int2IntOpenHashMap idToIndex = new Int2IntOpenHashMap();
 
@@ -93,6 +111,8 @@ public final class CitizenSim {
         state = new byte[cap];
 		homeX = new int[cap];
 		homeZ = new int[cap];
+		homePos = new long[cap];
+		homeSlot = new int[cap];
 		wx = new int[cap];
 		wz = new int[cap];
 		uuidHi = new long[cap];
@@ -110,6 +130,8 @@ public final class CitizenSim {
 		bestDist2 = new long[cap];
         sepX = new int[cap];
         sepZ = new int[cap];
+        halt = new byte[cap];
+        shalt = new byte[cap];
 	}
 
 	private void grow() {
@@ -123,6 +145,8 @@ public final class CitizenSim {
 		state = Arrays.copyOf(state, newCap);
 		homeX = Arrays.copyOf(homeX, newCap);
 		homeZ = Arrays.copyOf(homeZ, newCap);
+		homePos = Arrays.copyOf(homePos, newCap);
+		homeSlot = Arrays.copyOf(homeSlot, newCap);
 		wx = Arrays.copyOf(wx, newCap);
 		wz = Arrays.copyOf(wz, newCap);
 		uuidHi = Arrays.copyOf(uuidHi, newCap);
@@ -141,6 +165,8 @@ public final class CitizenSim {
 		capacity = newCap;
         sepX = Arrays.copyOf(sepX, newCap);
         sepZ = Arrays.copyOf(sepZ, newCap);
+        halt = Arrays.copyOf(halt, newCap);
+        shalt = Arrays.copyOf(shalt, newCap);
 	}
 
 	/**
@@ -169,6 +195,8 @@ public final class CitizenSim {
 		pz[i] = z;
 		homeX[i] = x >> 10;
 		homeZ[i] = z >> 10;
+		homePos[i] = NO_HOME_POS;
+		homeSlot[i] = -1;
 		wx[i] = -1;
 		wz[i] = -1;
 		uuidHi[i] = 0;
@@ -190,6 +218,8 @@ public final class CitizenSim {
 		idToIndex.put(newId, i);
         sepX[i] = 0;
         sepZ[i] = 0;
+        halt[i] = 0;
+        shalt[i] = 0;
 		return i;
 	}
 
@@ -216,6 +246,8 @@ public final class CitizenSim {
 			state[i] = state[last];
 			homeX[i] = homeX[last];
 			homeZ[i] = homeZ[last];
+			homePos[i] = homePos[last];
+			homeSlot[i] = homeSlot[last];
 			wx[i] = wx[last];
 			wz[i] = wz[last];
 			uuidHi[i] = uuidHi[last];
@@ -234,6 +266,8 @@ public final class CitizenSim {
 			idToIndex.put(id[i], i);
             sepX[i] = sepX[last];
             sepZ[i] = sepZ[last];
+            halt[i] = halt[last];
+            shalt[i] = shalt[last];
 		}
 		return true;
 	}

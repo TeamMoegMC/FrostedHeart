@@ -64,6 +64,8 @@ public final class ClientCitizen {
     public int dir;
     /** 行为状态 / Behavior state */
     public byte state;
+    /** 停步标记：移动类状态但服务端实测未位移（到岗/卡住/贴墙），见到即停止外推 / Halt flag: MOVING-class state but no actual displacement server-side */
+    private boolean halt;
 
     /** 客户端本地连续视觉朝向（0-255），闭环追赶 DIR_TO_YAW[dir]，纯渲染用 */
     private int visYaw;
@@ -81,6 +83,7 @@ public final class ClientCitizen {
         this.z0 = this.z1 = pz / 1024.0;
         this.dir = CitizenState.unpackDir(stateDir);
         this.state = (byte) CitizenState.unpackState(stateDir);
+        this.halt = CitizenState.unpackHalt(stateDir);
         // spawn 直接对齐目标朝向：该客户端没有任何历史朝向，"从旧方向过渡"
         // 的旧方向根本不存在，snap 不可感知且是唯一无争议的选择。
         this.visYaw = CitizenState.DIR_TO_YAW[this.dir] & 0xFF;
@@ -121,14 +124,16 @@ public final class ClientCitizen {
         }
         this.dir = newDir;
         this.state = (byte) CitizenState.unpackState(stateDir);
+        this.halt = CitizenState.unpackHalt(stateDir);
     }
 
     /**
-     * 当前是否处于移动状态。仅根据 state 判断，不再依赖哨兵 dir。
+     * 当前是否实际在移动。state 为移动类且服务端未标停步（halt）才算——
+     * 到岗站立的 WORK、卡住、贴墙钳制的居民不外推，消除"漂移↔回拉"振荡。
      */
     public boolean isMoving() {
         int s = state & 0xFF;
-        return s < CitizenState.STATE_COUNT && CitizenState.MOVING[s];
+        return s < CitizenState.STATE_COUNT && CitizenState.MOVING[s] && !halt;
     }
 
     /**
@@ -182,7 +187,12 @@ public final class ClientCitizen {
         if (isMoving()) {
             double extra = now - t1;
             if (extra > EXTRAPOLATE_CLAMP) extra = EXTRAPOLATE_CLAMP;
-            if (extra > 0 && interval > 0.35) {
+            // 外推无条件启用（extra>0 即插值窗口已耗尽、下一包迟到）：
+            // 服务端 Dead Reckoning 模型假设客户端时刻沿 dir 外推，客户端必须同源。
+            // 旧实现有 interval>0.35 的门限，近距档位（窗口 0.2s）永远不外推——
+            // 包稍晚到渲染就冻结在快照点，包到达后 lerp 加速追赶，
+            // "冻结→追赶"的碎步在视觉上就是小幅度瞬移。
+            if (extra > 0) {
                 double speed = CitizenState.SPEED[state & 0xFF] * 20.0 / CitizenState.FIXED_SCALE;
                 x += CitizenState.DIR_X_16[dir] / 1024.0 * speed * extra;
                 z += CitizenState.DIR_Z_16[dir] / 1024.0 * speed * extra;
@@ -194,8 +204,8 @@ public final class ClientCitizen {
         return posBuf;
     }
 
-    // 当前游戏时间（秒），暂停时不增长。与下方全部秒制常量（EXTRAPOLATE_CLAMP=1.5、
-    // 窗口钳制 0.05~1.0、外推门限 interval>0.35、TURN_RATE=60/s）一致；帧时间小数部分使包间间隔
+    // 当前游戏时间（秒），暂停时不增长。与全部秒制常量（EXTRAPOLATE_CLAMP=1.5、
+    // 窗口钳制 0.05~1.0、TURN_RATE=60/s）一致；帧时间小数部分使包间间隔
     // 精确到亚 tick。曾误返回 tick（回归 B：窗口坍缩为 1 tick，渲染位置分段冻结/瞬移）。
     // Current game time in seconds (pause-aware). Matches the second-scale constants
     // below; the frame-time fraction keeps inter-packet gaps sub-tick accurate.

@@ -153,6 +153,27 @@ class CitizenSimPersistenceTest {
         assertEquals(1, dirtyCalls.get());
     }
 
+    @Test
+    void transientHomeLayoutSurvivesGrowthAndSwapRemoveButIsNotPersisted() {
+        CitizenSim sim = new CitizenSim(1);
+        for (int id = 1; id <= 17; id++)
+            sim.add(id, id << 10, 0, 0, (byte) 0);
+        int tail = sim.indexOf(17);
+        sim.homePos[tail] = 123456789L;
+		sim.homeSlot[tail] = 11;
+
+        assertTrue(sim.remove(1));
+
+        int moved = sim.indexOf(17);
+        assertEquals(123456789L, sim.homePos[moved]);
+		assertEquals(11, sim.homeSlot[moved]);
+
+        CitizenSim decoded = CitizenSim.load(sim.save(new CompoundTag()));
+        int restored = decoded.indexOf(17);
+        assertEquals(CitizenSim.NO_HOME_POS, decoded.homePos[restored]);
+		assertEquals(-1, decoded.homeSlot[restored]);
+    }
+
     private static CitizenSim sampleSim() {
         CitizenSim sim = new CitizenSim(1);
         copySampleInto(sim);

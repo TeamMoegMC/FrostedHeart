@@ -27,6 +27,7 @@ import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Holder;
+import net.minecraft.tags.BlockTags;
 import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.WorldGenLevel;
@@ -100,7 +101,7 @@ public class ImprovedFreezeTopLayerFeature extends Feature<NoneFeatureConfigurat
                     }else {
                     //雪层
                         BlockState cursorState = level.getBlockState(cursor);
-                        if (cursorState.isAir() && SNOW.canSurvive(level, cursor)) {
+                        if (cursorState.isAir() && canSnowSurvive(level, cursor)) {
                             if (!cursorState.is(Blocks.SNOW)) {
                                 level.setBlock(cursor, SNOW, 2);
                                 if (surfaceBlockState.hasProperty(SnowyDirtBlock.SNOWY)) {
@@ -265,7 +266,7 @@ public class ImprovedFreezeTopLayerFeature extends Feature<NoneFeatureConfigurat
                 if (newLayers > existing)
                 {
                     level.setBlock(pos, state.setValue(
-                            BlockStateProperties.LAYERS, newLayers), 3);
+                            BlockStateProperties.LAYERS, newLayers), 2);
                 }
             }
             return;
@@ -292,7 +293,7 @@ public class ImprovedFreezeTopLayerFeature extends Feature<NoneFeatureConfigurat
             return;
         }
 
-        if (replaceable && SNOW.canSurvive(level, pos))
+        if (replaceable && canSnowSurvive(level, pos))
         {
             // Special exceptions
             if (block instanceof DoublePlantBlock)
@@ -316,7 +317,7 @@ public class ImprovedFreezeTopLayerFeature extends Feature<NoneFeatureConfigurat
                 layers = 1;
             }
             level.setBlock(pos, SNOW
-                    .setValue(BlockStateProperties.LAYERS, layers), 3);
+                    .setValue(BlockStateProperties.LAYERS, layers), 2);
         }
     }
 
@@ -417,5 +418,34 @@ public class ImprovedFreezeTopLayerFeature extends Feature<NoneFeatureConfigurat
         }
 
         return count;
+    }
+
+    private boolean canSnowSurvive(WorldGenLevel level, BlockPos pos) {
+        BlockPos belowPos = pos.below();
+        BlockState belowState = level.getBlockState(belowPos);
+
+        // 防止未完成初始化的方块实体在生成阶段被查询碰撞形状
+        // 例如 Immersive Engineering 的 FluidPipeBlockEntity
+        if (belowState.isAir()) {
+            return false;
+        }
+
+        //原版逻辑
+        if (belowState.is(BlockTags.SNOW_LAYER_CAN_SURVIVE_ON)) {
+            return true;
+        }
+
+        if (belowState.is(BlockTags.SNOW_LAYER_CANNOT_SURVIVE_ON)) {
+            return false;
+        }
+
+        // 防止未完成初始化的方块实体在生成阶段被查询碰撞形状
+        // 例如 Immersive Engineering 的 FluidPipeBlockEntity
+/*        if (belowState.hasBlockEntity()) {
+            return false;
+        }*/
+        // 检查碰撞形状（仅对不在标签中的方块）
+        return Block.isFaceFull(belowState.getCollisionShape(level, belowPos), Direction.UP)
+                || (belowState.is(Blocks.SNOW) && belowState.getValue(BlockStateProperties.LAYERS) == 8);
     }
 }

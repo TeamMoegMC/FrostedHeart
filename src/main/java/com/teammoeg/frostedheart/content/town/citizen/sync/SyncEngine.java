@@ -27,6 +27,7 @@ import java.util.Map;
 
 import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.content.town.citizen.sim.CitizenContainer;
+import com.teammoeg.frostedheart.content.town.citizen.sim.CitizenPresence;
 import com.teammoeg.frostedheart.content.town.citizen.sim.CitizenSim;
 import com.teammoeg.frostedheart.content.town.citizen.sim.CitizenSimScheduler;
 import com.teammoeg.frostedheart.content.town.citizen.sim.CitizenState;
@@ -69,8 +70,20 @@ public final class SyncEngine {
 	public static final int FLUSH_INTERVAL = 4;
 	/** 单包条目上限（带宽预算） / Max entries per packet (bandwidth budget) */
 	public static final int MAX_ENTRIES_PER_PACKET = 240;
-	/** Dead Reckoning 误差阈值（方块） / Dead-reckoning error threshold in blocks */
-	private static final double ERROR_DIST = 0.3;
+	/**
+	 * Dead Reckoning 误差阈值（方块）。0.3 → 0.2：16 向同步后转弯/贴墙滑行期间
+	 * 客户端沿旧方向外推，旧阈值允许 0.3 格漂移才修正，中距肉眼可辨回拉；
+	 * 收紧后修正更早、单次回拉更小。带宽代价有界——发送频率本就受档位间隔
+	 * 钳制（近档至多 4 tick 一次），阈值只决定"到点发不发"。
+	 * <p>
+	 * Dead-reckoning error threshold in blocks. Tightened 0.3 → 0.2: with
+	 * 16-way sync the client extrapolates along the stale dir during turns and
+	 * wall slides; 0.3 blocks of drift before correction was visible at mid
+	 * range. Bandwidth cost is bounded — send rate is already clamped by the
+	 * tier interval (at most once per 4 ticks near), the threshold only
+	 * decides whether a due check produces an entry.
+	 */
+	private static final double ERROR_DIST = 0.2;
 	private static final int ERROR2 = (int) (ERROR_DIST * 1024) * (int) (ERROR_DIST * 1024);
 	/** 外推时间钳制（tick），防止长时间未更新导致溢出 / Extrapolation clamp in ticks, prevents overflow */
 	private static final long DT_CLAMP = 40;
@@ -78,7 +91,7 @@ public final class SyncEngine {
 	/** 各玩家当前追踪的居民 id 集合 / Tracked citizen id sets per player */
 	private final Map<ServerPlayer, IntOpenHashSet> tracked = new HashMap<>();
 	/** 待广播的移除 id / Pending removal ids to broadcast */
-	private final IntList pendingRemoval = new IntArrayList();
+	private final IntOpenHashSet pendingHidden = new IntOpenHashSet();
 	/** 本 flush 周期内"脏且到期"的居民 id / Dirty-and-due ids in the current flush */
 	private final IntOpenHashSet due = new IntOpenHashSet();
 
@@ -90,7 +103,15 @@ public final class SyncEngine {
 	 * @param citizenId 稳定 id / stable id
 	 */
 	public void notifyRemoved(int citizenId) {
-		pendingRemoval.add(citizenId);
+		notifyHidden(citizenId);
+	}
+
+	/**
+	 * Queues an immediate client-side despawn without removing the simulation row.
+	 * Used when a citizen enters an indoor state such as sleep.
+	 */
+	public void notifyHidden(int citizenId) {
+		pendingHidden.add(citizenId);
 	}
 
 	/**
@@ -106,8 +127,10 @@ public final class SyncEngine {
 		List<ServerPlayer> players = level.players();
 		if (players.isEmpty()) {
 			tracked.clear();
+			pendingHidden.clear();
 			return;
 		}
+		drainHidden(players);
 		if (gameTime % AOI_REFRESH == 0)
 			refreshAOI(sched, players);
 		if (gameTime % FLUSH_INTERVAL == 0)
@@ -129,6 +152,8 @@ public final class SyncEngine {
 				CitizenSim sim = c.sim();
 				int n = sim.size();
 				for (int i = 0; i < n; i++) {
+					if (!CitizenPresence.networkVisible(sim.state[i]))
+						continue;
 					long dx = (sim.px[i] >> 10) - pbx;
 					long dz = (sim.pz[i] >> 10) - pbz;
 					if (dx * dx + dz * dz > aoi2)
@@ -140,8 +165,10 @@ public final class SyncEngine {
 					String name = c.getCitizenName(id);
 					if (name == null)
 						name = ""; // 未托管（命令）居民：客户端回退 id 派生名 / unmanaged (command) citizen: client falls back to the id-derived name
-				spawns.add(new S2CCitizenSpawnPacket.Entry(id, sim.px[i], sim.py[i], sim.pz[i],
-						CitizenState.packStateDir(sim.state[i], sim.dir[i]), name));
+				byte sd = CitizenState.packStateDir(sim.state[i], sim.dir[i]);
+				if (sim.halt[i] != 0)
+					sd |= (byte) CitizenState.HALT_BIT;
+				spawns.add(new S2CCitizenSpawnPacket.Entry(id, sim.px[i], sim.py[i], sim.pz[i], sd, name));
 				}
 			}
 			tracked.put(p, now);
@@ -155,6 +182,23 @@ public final class SyncEngine {
 			if (!despawns.isEmpty())
 				FHNetwork.INSTANCE.sendPlayer(p, new S2CCitizenDespawnPacket(despawns));
 		}
+	}
+
+	private void drainHidden(List<ServerPlayer> players) {
+		if (pendingHidden.isEmpty())
+			return;
+		for (ServerPlayer player : players) {
+			IntOpenHashSet set = tracked.get(player);
+			if (set == null || set.isEmpty())
+				continue;
+			IntArrayList despawns = new IntArrayList();
+			for (int id : pendingHidden)
+				if (set.remove(id))
+					despawns.add(id);
+			if (!despawns.isEmpty())
+				FHNetwork.INSTANCE.sendPlayer(player, new S2CCitizenDespawnPacket(despawns));
+		}
+		pendingHidden.clear();
 	}
 
 	private void flushDeltas(CitizenSimScheduler sched, List<ServerPlayer> players, long gameTime) {
@@ -177,6 +221,8 @@ public final class SyncEngine {
 			int n = sim.size();
 			for (int i = 0; i < n; i++) {
 				// 最近观察者距离（未刷新 AOI 的间隙期也近似正确）
+				if (!CitizenPresence.networkVisible(sim.state[i]))
+					continue;
 				long minDist2 = Long.MAX_VALUE;
                 for (int j = 0; j < playerCount; j++) {
                     long dx = (sim.px[i] >> 10) - pxs[j];
@@ -190,26 +236,17 @@ public final class SyncEngine {
 				int interval = tierInterval(minDist2);
 				if (!isDirty(sim, i, gameTime, interval))
 					continue;
+				// halt 上升沿（走→停）绕过档位限频：停步信号每晚一个档位，
+				// 客户端就多外推一段再被回拉（驻留抽搐的直接成因），必须抢发。
+				boolean haltEdge = sim.halt[i] != 0 && sim.shalt[i] == 0;
 				// 按 stick 间隔判断（替代原 (gameTime+id) % interval 写法——
 				// 后者在外层每 4 tick 执行下，3/4 的居民仅 id%4==0 的能通过过滤，永远收不到增量包）
-				if (gameTime - sim.stick[i] < interval)
+				if (!haltEdge && gameTime - sim.stick[i] < interval)
 					continue;
 				due.add(sim.id[i]);
 			}
 		}
 		// 广播移除
-		if (!pendingRemoval.isEmpty()) {
-			for (int k = 0; k < pendingRemoval.size(); k++) {
-				int id = pendingRemoval.getInt(k);
-				for (ServerPlayer p : players) {
-					IntOpenHashSet set = tracked.get(p);
-					if (set != null && set.remove(id))
-						FHNetwork.INSTANCE.sendPlayer(p,
-								new S2CCitizenDespawnPacket(new IntArrayList(new int[] { id })));
-				}
-			}
-			pendingRemoval.clear();
-		}
 		if (due.isEmpty())
 			return;
 		// 按玩家组包：chunk 分组 + 条目上限
@@ -229,21 +266,24 @@ public final class SyncEngine {
 				int i = sim.indexOf(id);
 				if (i < 0)
 					continue;
+				if (!CitizenPresence.networkVisible(sim.state[i]))
+					continue;
 				int cx = sim.px[i] >> 14; // 定点坐标 >> 14 = chunk 坐标
 				int cz = sim.pz[i] >> 14;
 				long key = ((long) cx << 32) | (cz & 0xFFFFFFFFL);
 				int lx = (sim.px[i] - (cx << 14)) / S2CCitizenBatchPacket.LOCAL_QUANT;
 				int lz = (sim.pz[i] - (cz << 14)) / S2CCitizenBatchPacket.LOCAL_QUANT;
 				int ly = sim.py[i] >> 6;
-			// state+dir 打包为一个同步字节（bit0-2 状态，bit3-6 方向）：16 向方向
-			// 取代连续 yaw 后，状态与方向恒可合发，不再有"省略 yaw"的纯心跳分支，
-			// 每条目恒定 6-8 字节。停止外推信号由 state 本身携带：到达后行为系统
-			// 把 MOVING 状态切回静止态，状态变化走脏检测发完整条目。
-			// state+dir packed into one sync byte (bits 0-2 state, bits 3-6 dir):
-			// with the 16-way direction replacing continuous yaw, state and dir
-			// always fit in a single byte — the yaw-omitting pure-heartbeat branch
-			// is gone and every entry is a constant 6-8 bytes.
+			// state+dir 打包为一个同步字节（bit0-2 状态，bit3-6 方向，bit7 停步标记）：
+			// 16 向方向取代连续 yaw 后，状态与方向恒可合发，每条目恒定 6-8 字节。
+			// 停步位告知客户端"移动类状态但本 tick 未位移"，立即停止外推。
+			// state+dir packed into one sync byte (bits 0-2 state, bits 3-6 dir,
+			// bit 7 halt): constant 6-8 bytes per entry; the halt bit tells the
+			// client "MOVING-class state but no displacement this tick" so it
+			// stops extrapolating at once.
 			byte sd = CitizenState.packStateDir(sim.state[i], sim.dir[i]);
+			if (sim.halt[i] != 0)
+				sd |= (byte) CitizenState.HALT_BIT;
 			byChunk.computeIfAbsent(key, k -> new ArrayList<>()).add(new S2CCitizenBatchPacket.Entry(id, lx, ly,
 					lz, sd));
 				if (++count >= MAX_ENTRIES_PER_PACKET)
@@ -282,6 +322,7 @@ public final class SyncEngine {
 		sim.sz[i] = sim.pz[i];
 		sim.sdir[i] = sim.dir[i];
 		sim.sstate[i] = sim.state[i];
+		sim.shalt[i] = sim.halt[i];
 		sim.stick[i] = gameTime;
 	}
 	}
@@ -293,7 +334,7 @@ public final class SyncEngine {
 	 * canonical extrapolated model beyond the threshold.
 	 */
 	private boolean isDirty(CitizenSim sim, int i, long gameTime, int interval) {
-        if (sim.state[i] != sim.sstate[i] || sim.dir[i] != sim.sdir[i])
+        if (sim.state[i] != sim.sstate[i] || sim.dir[i] != sim.sdir[i] || sim.halt[i] != sim.shalt[i])
 			return true;
 		long dt = gameTime - sim.stick[i];
 		// 移动心跳：匀速状态下 Dead Reckoning 误差恒 0 不会自然发包，
@@ -301,13 +342,19 @@ public final class SyncEngine {
 		// 若心跳固定 20 tick 而近档发包 4 tick：方向翻转 burst 后接 1s 长间隙，
 		// 客户端自适应窗口（prevGap）骤短、段长骤长 → 沿行进方向猛冲瞬移。
 		// 同频后包间隔均匀，窗口恒等于段长，该问题在机制上消失。
+		// 停步（shalt=1）后不再发移动心跳：客户端已知其站立，无漂移可锚，
+		// 到岗站立的 WORK 居民自此零流量（原来每档位一个心跳直到状态翻转）。
 		// Movement heartbeat follows the distance tier (same cadence as the
 		// flush interval): a fixed 20-tick heartbeat next to a 4-tick near-tier
 		// flush made a dir-flip burst followed by a 1 s gap; the client's
 		// adaptive window (prevGap) then matched neither — blast-forward
-		// teleports. Uniform cadence keeps window ≡ segment time.
+		// teleports. Uniform cadence keeps window ≡ segment time. Once halted
+		// (shalt=1) the heartbeat stops: the client knows the citizen stands,
+		// there is no drift to re-anchor, and at-post WORK citizens cost zero
+		// traffic.
 		int ss = sim.sstate[i] & 0xFF;
-		if (ss < CitizenState.STATE_COUNT && CitizenState.MOVING[ss] && dt >= interval)
+		boolean moving = ss < CitizenState.STATE_COUNT && CitizenState.MOVING[ss] && sim.shalt[i] == 0;
+		if (moving && dt >= interval)
 			return true;
 		if (dt > DT_CLAMP)
 			dt = DT_CLAMP;
@@ -318,7 +365,7 @@ public final class SyncEngine {
         // （旧实现用滞后的连续 syaw 外推，转向期间制造误差触发冤枉补包）
         int sdir = sim.sdir[i] & 15;
 
-        if (ss < CitizenState.STATE_COUNT && CitizenState.MOVING[ss]) {
+        if (moving) {
             int speed = CitizenState.SPEED[ss];
             predX += (int)(((long)CitizenState.DIR_X_16[sdir] * speed * dt) >> 10);
             predZ += (int)(((long)CitizenState.DIR_Z_16[sdir] * speed * dt) >> 10);

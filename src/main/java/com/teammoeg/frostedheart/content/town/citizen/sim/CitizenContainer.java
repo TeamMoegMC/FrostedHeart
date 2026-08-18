@@ -21,6 +21,9 @@ package com.teammoeg.frostedheart.content.town.citizen.sim;
 
 import com.teammoeg.frostedheart.content.trade.FHVillagerData;
 
+import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerLevel;
+
 /**
  * 居民模拟容器的统一接口：模拟层（调度器/行为/移动/同步）只依赖此接口，
  * 不关心居民挂靠在哪里——城镇容器（{@link TownSimData}，挂 team holder）
@@ -45,6 +48,30 @@ public interface CitizenContainer {
 	 * @return 模拟数据 / the sim data
 	 */
 	CitizenSim sim();
+
+	/**
+	 * 返回居民用于返家导航的入口。默认回退到持久化的 X/Z 家锚点；城镇容器
+	 * 可用住宅扫描得到的真实入口覆盖。Y 不参与当前二维导航。
+	 * <p>
+	 * Returns the entrance used for homeward navigation. The default falls back
+	 * to the persisted home X/Z; town containers override it with scanned house
+	 * layout data. Y is ignored by the current 2D navigator.
+	 */
+	default long homeEntrancePosition(int index) {
+		CitizenSim data = sim();
+		long home = data.homePos[index];
+		return home != CitizenSim.NO_HOME_POS
+				? home
+				: BlockPos.asLong(data.homeX[index], 0, data.homeZ[index]);
+	}
+
+	/** Called after the authoritative state changes to {@link CitizenState#SLEEP}. */
+	default void onSleepEntered(int index) {
+	}
+
+	/** Called immediately before a sleeping citizen starts its morning trip. */
+	default void onWake(ServerLevel level, int index, long worldDay) {
+	}
 
 	/**
 	 * 居民显示名（同步层用于 spawn 包的姓名广播）。

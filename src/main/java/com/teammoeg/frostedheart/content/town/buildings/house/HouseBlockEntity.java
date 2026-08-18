@@ -142,11 +142,13 @@ public class HouseBlockEntity extends AbstractTownBuildingBlockEntity<HouseBuild
 					building.setTemperature(scanner.getTemperature());
 					building.setOccupiedVolume(scanner.getOccupiedVolume());
 					building.setMaxResidents(calculateMaxResidents(building.getArea(), building.getVolume(), scanner.getBeds().size()));
+					building.setLayout(scanner.getBeds(), doorPos);
 						return true;
 					}
 				}
 			}
 		}
+		building.clearLayout();
 		return false;
 	}
 

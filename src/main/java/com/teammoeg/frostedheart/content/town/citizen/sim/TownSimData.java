@@ -28,16 +28,22 @@ import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.town.TeamTown;
 import com.teammoeg.frostedheart.content.town.TeamTownData;
 import com.teammoeg.frostedheart.content.town.ai_town.AITownData;
+import com.teammoeg.frostedheart.content.town.building.AbstractTownBuilding;
+import com.teammoeg.frostedheart.content.town.buildings.house.HouseBuilding;
 import com.teammoeg.frostedheart.content.town.event.ITownResidentListener;
 import com.teammoeg.frostedheart.content.town.resident.Resident;
 import com.teammoeg.frostedheart.content.trade.FHVillagerData;
 
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
+import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.block.BedBlock;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.BedPart;
 
 /**
  * 城镇居民模拟数据（与队伍零关联的纯模拟数据）：玩家镇与 AI 镇共用同一类，
@@ -97,6 +103,12 @@ public class TownSimData implements CitizenContainer, ITownResidentListener {
 	/** 接管时的调度器/维度引用（transient，事件回调内使用）/ Scheduler & level references (transient, used in callbacks) */
 	private transient CitizenSimScheduler activeSched;
 	private transient ServerLevel activeLevel;
+	/** 玩家镇门面（transient）；AI 镇没有可扫描住宅布局，保持 null。 */
+	private transient TeamTown activeTown;
+	/** 全量对账期间延迟床位重排，避免逐居民重复排序。 */
+	private transient boolean reconcilingResidents;
+	/** 全量对账期间新增、待统一出口定位的居民 id。 */
+	private transient IntArrayList reconcilingNewResidents;
 	/** 持久化 dirty 回调（transient，玩家镇与 AI 镇均由存储方注入 AITownManager::markDirty）/ Persistence dirty callback (transient, injected as AITownManager::markDirty for both player and AI towns) */
 	private transient Runnable markDirtyCallback;
 
@@ -215,30 +227,63 @@ public class TownSimData implements CitizenContainer, ITownResidentListener {
 		int idx = sim.findByUuid(hi, lo);
 		if (idx >= 0) {
 			// 幂等：重复事件只更新锚点/工作/名字（房屋与工作每日由城镇重分配）
-			boolean persistedChanged = sim.homeX[idx] != anchor.getX() || sim.homeZ[idx] != anchor.getZ();
+			long previousHome = sim.homePos[idx];
+			long nextHome = house != null ? house.asLong() : CitizenSim.NO_HOME_POS;
+			boolean persistedChanged = sim.homeX[idx] != anchor.getX() || sim.homeZ[idx] != anchor.getZ()
+					|| sim.wx[idx] != (work != null ? work.getX() : -1)
+					|| sim.wz[idx] != (work != null ? work.getZ() : -1)
+					|| previousHome != nextHome;
 			sim.homeX[idx] = anchor.getX();
 			sim.homeZ[idx] = anchor.getZ();
+			sim.homePos[idx] = nextHome;
+			if (previousHome != nextHome) {
+				sim.homeSlot[idx] = -1;
+			}
 			sim.wx[idx] = work != null ? work.getX() : -1;
 			sim.wz[idx] = work != null ? work.getZ() : -1;
 			nameCache.put(sim.id[idx], resident.getFirstName() + " " + resident.getLastName());
+			if (!reconcilingResidents) {
+				rebuildBedAssignments(previousHome);
+				if (sim.homePos[idx] != previousHome)
+					rebuildBedAssignments(sim.homePos[idx]);
+			}
 			if (persistedChanged)
 				markDirty();
 			return;
 		}
-		// 新条目：出生在锚点附近地面，双向绑定身份（simId ↔ uuid）
-		BlockPos g = CitizenSimScheduler.groundNear(activeLevel, anchor);
+		// 新条目先加入住宅分组，再由 UUID 槽位统一选择出口；全量对账会在末尾批处理。
+		long fullHome = house != null ? house.asLong() : CitizenSim.NO_HOME_POS;
+		BlockPos spawnAnchor = BlockPos.of(resolveEntrance(fullHome, anchor.asLong()));
 		int id = activeSched.allocId(activeLevel);
-		int i = sim.add(id, (g.getX() << 10) + 512, g.getY() << 10, (g.getZ() << 10) + 512,
+		int i = sim.add(id, (spawnAnchor.getX() << 10) + 512, spawnAnchor.getY() << 10,
+				(spawnAnchor.getZ() << 10) + 512,
 				(byte) (id % BehaviorSystem.SLICE));
 		sim.uuidHi[i] = hi;
 		sim.uuidLo[i] = lo;
 		sim.homeX[i] = anchor.getX();
 		sim.homeZ[i] = anchor.getZ();
+		sim.homePos[i] = fullHome;
 		sim.wx[i] = work != null ? work.getX() : -1;
 		sim.wz[i] = work != null ? work.getZ() : -1;
 		resident.setSimId(id);
 		nameCache.put(id, resident.getFirstName() + " " + resident.getLastName());
 		activeSched.register(this, id);
+		boolean night = BehaviorSystem.isNight(activeLevel);
+		if (reconcilingResidents) {
+			if (reconcilingNewResidents != null)
+				reconcilingNewResidents.add(id);
+			if (night)
+				prepareSleepingState(i);
+		} else {
+			rebuildBedAssignments(fullHome);
+			if (night) {
+				prepareSleepingState(i);
+				refreshSleepingResident(i);
+			} else {
+				long worldDay = Math.floorDiv(activeLevel.getDayTime(), 24000L);
+				placeAtHomeExit(i, worldDay);
+			}
+		}
 		markDirty();
 	}
 
@@ -261,8 +306,10 @@ public class TownSimData implements CitizenContainer, ITownResidentListener {
 		int idx = sim.findByUuid(u.getMostSignificantBits(), u.getLeastSignificantBits());
 		if (idx < 0)
 			return;
+		long previousHome = sim.homePos[idx];
 		resident.setSimId(-1);
 		activeSched.remove(this, sim.id[idx]);
+		rebuildBedAssignments(previousHome);
 	}
 
 	/**
@@ -279,6 +326,7 @@ public class TownSimData implements CitizenContainer, ITownResidentListener {
 	public void onTownMorningDone(TeamTownData townData) {
 		if (activeSched == null || activeLevel == null)
 			return;
+		this.activeTown = TeamTown.create(townData);
 		syncTownResidents(activeLevel, townData);
 	}
 
@@ -305,10 +353,11 @@ public class TownSimData implements CitizenContainer, ITownResidentListener {
 		ResourceLocation savedDimension = this.lastActiveDimension;
 		this.activeSched = sched;
 		this.activeLevel = level;
+		this.activeTown = TeamTown.create(townData);
 		this.lastActiveDimension = level.dimension().location();
 		this.adopted = true;
 		townData.setResidentListener(this);
-		Collection<Resident> residents = TeamTown.create(townData).getAllResidents();
+		Collection<Resident> residents = activeTown.getAllResidents();
 		if (savedDimension != null && !savedDimension.equals(level.dimension().location()))
 			rebuildAfterOfflineLevelChange(level, residents);
 		else {
@@ -340,6 +389,7 @@ public class TownSimData implements CitizenContainer, ITownResidentListener {
 		ResourceLocation savedDimension = this.lastActiveDimension;
 		this.activeSched = sched;
 		this.activeLevel = level;
+		this.activeTown = null;
 		this.lastActiveDimension = level.dimension().location();
 		this.adopted = true;
 		if (savedDimension != null && !savedDimension.equals(level.dimension().location()))
@@ -457,51 +507,70 @@ public class TownSimData implements CitizenContainer, ITownResidentListener {
 	 * continuity), spawns missing entries, drops homeless ones and prunes ghosts.
 	 */
 	private void syncTownResidents(ServerLevel level, Collection<Resident> residents) {
-		Set<UUID> liveIds = new HashSet<>();
-		for (Resident r : residents) {
-			UUID u = r.getUUID();
-			long hi = u.getMostSignificantBits();
-			long lo = u.getLeastSignificantBits();
-			liveIds.add(u);
-			BlockPos house = r.getHousePos();
-			BlockPos work = r.getWorkPos();
-			BlockPos anchor = house != null ? house : work;
-			int idx = sim.findByUuid(hi, lo);
-			if (anchor == null) {
-				// 无家无业：城镇每日也让它掉血至死，模拟里不保留幽灵
-				if (idx >= 0) {
-					r.setSimId(-1);
-					activeSched.remove(this, sim.id[idx]);
+		IntArrayList pendingPlacements = new IntArrayList();
+		reconcilingResidents = true;
+		reconcilingNewResidents = pendingPlacements;
+		try {
+			Set<UUID> liveIds = new HashSet<>();
+			for (Resident r : residents) {
+				UUID u = r.getUUID();
+				long hi = u.getMostSignificantBits();
+				long lo = u.getLeastSignificantBits();
+				liveIds.add(u);
+				BlockPos house = r.getHousePos();
+				BlockPos work = r.getWorkPos();
+				BlockPos anchor = house != null ? house : work;
+				int idx = sim.findByUuid(hi, lo);
+				if (anchor == null) {
+					// 无家无业：城镇每日也让它掉血至死，模拟里不保留幽灵
+					if (idx >= 0) {
+						r.setSimId(-1);
+						activeSched.remove(this, sim.id[idx]);
+					}
+					continue;
 				}
-				continue;
+				if (idx < 0) {
+					// 缺失条目：重建（事件丢失/旧存档迁移后的一次性恢复）
+					onResidentAdded(r);
+				} else {
+					// 既有条目：更新锚点/工作/名字（房屋与工作每日由城镇重分配）
+					long previousHome = sim.homePos[idx];
+					long nextHome = house != null ? house.asLong() : CitizenSim.NO_HOME_POS;
+					boolean persistedChanged = sim.homeX[idx] != anchor.getX() || sim.homeZ[idx] != anchor.getZ()
+							|| sim.wx[idx] != (work != null ? work.getX() : -1)
+							|| sim.wz[idx] != (work != null ? work.getZ() : -1)
+							|| previousHome != nextHome;
+					sim.homeX[idx] = anchor.getX();
+					sim.homeZ[idx] = anchor.getZ();
+					sim.homePos[idx] = nextHome;
+					if (previousHome != nextHome) {
+						sim.homeSlot[idx] = -1;
+					}
+					sim.wx[idx] = work != null ? work.getX() : -1;
+					sim.wz[idx] = work != null ? work.getZ() : -1;
+					r.setSimId(sim.id[idx]);
+					nameCache.put(sim.id[idx], r.getFirstName() + " " + r.getLastName());
+					if (persistedChanged)
+						markDirty();
+				}
 			}
-			if (idx < 0) {
-				// 缺失条目：重建（事件丢失/旧存档迁移后的一次性恢复）
-				onResidentAdded(r);
-			} else {
-				// 既有条目：更新锚点/工作/名字（房屋与工作每日由城镇重分配）
-				boolean persistedChanged = sim.homeX[idx] != anchor.getX() || sim.homeZ[idx] != anchor.getZ();
-				sim.homeX[idx] = anchor.getX();
-				sim.homeZ[idx] = anchor.getZ();
-				sim.wx[idx] = work != null ? work.getX() : -1;
-				sim.wz[idx] = work != null ? work.getZ() : -1;
-				r.setSimId(sim.id[idx]);
-				nameCache.put(sim.id[idx], r.getFirstName() + " " + r.getLastName());
-				if (persistedChanged)
-					markDirty();
+			// 幽灵剪除：本容器条目代表的居民已不在城镇（防御非门面直写/事件丢失）。
+			// 先收集后删除——swap-remove 会移动尾部元素，边扫边删会跳过元素。
+			IntArrayList stale = new IntArrayList();
+			for (int i = 0; i < sim.size(); i++) {
+				if (sim.uuidHi[i] == 0 && sim.uuidLo[i] == 0)
+					continue; // 防御：城镇容器不应有未托管条目
+				if (!liveIds.contains(new UUID(sim.uuidHi[i], sim.uuidLo[i])))
+					stale.add(sim.id[i]);
 			}
+			for (int k = 0; k < stale.size(); k++)
+				activeSched.remove(this, stale.getInt(k));
+		} finally {
+			reconcilingResidents = false;
+			reconcilingNewResidents = null;
 		}
-		// 幽灵剪除：本容器条目代表的居民已不在城镇（防御非门面直写/事件丢失）。
-		// 先收集后删除——swap-remove 会移动尾部元素，边扫边删会跳过元素。
-		IntArrayList stale = new IntArrayList();
-		for (int i = 0; i < sim.size(); i++) {
-			if (sim.uuidHi[i] == 0 && sim.uuidLo[i] == 0)
-				continue; // 防御：城镇容器不应有未托管条目
-			if (!liveIds.contains(new UUID(sim.uuidHi[i], sim.uuidLo[i])))
-				stale.add(sim.id[i]);
-		}
-		for (int k = 0; k < stale.size(); k++)
-			activeSched.remove(this, stale.getInt(k));
+		rebuildAllBedAssignments();
+		placePendingResidents(pendingPlacements, Math.floorDiv(level.getDayTime(), 24000L));
 	}
 
 	/**
@@ -511,7 +580,173 @@ public class TownSimData implements CitizenContainer, ITownResidentListener {
 	 * to the collection version.
 	 */
 	private void syncTownResidents(ServerLevel level, TeamTownData townData) {
-		syncTownResidents(level, TeamTown.create(townData).getAllResidents());
+		this.activeTown = TeamTown.create(townData);
+		syncTownResidents(level, activeTown.getAllResidents());
+	}
+
+	private void rebuildAllBedAssignments() {
+		for (int i = 0; i < sim.size(); i++)
+			sim.homeSlot[i] = -1;
+		Long2ObjectOpenHashMap<IntArrayList> byHome = new Long2ObjectOpenHashMap<>();
+		for (int i = 0; i < sim.size(); i++) {
+			long home = sim.homePos[i];
+			if (home != CitizenSim.NO_HOME_POS)
+				byHome.computeIfAbsent(home, ignored -> new IntArrayList()).add(i);
+		}
+		for (var entry : byHome.long2ObjectEntrySet())
+			assignHomeSlots(sim, entry.getValue());
+		for (int i = 0; i < sim.size(); i++) {
+			if (sim.state[i] == CitizenState.SLEEP)
+				refreshSleepingResident(i);
+		}
+	}
+
+	private void rebuildBedAssignments(long home) {
+		if (home == CitizenSim.NO_HOME_POS)
+			return;
+		IntArrayList indices = new IntArrayList();
+		for (int i = 0; i < sim.size(); i++) {
+			if (sim.homePos[i] == home)
+				indices.add(i);
+		}
+		assignHomeSlots(sim, indices);
+		for (int k = 0; k < indices.size(); k++) {
+			int index = indices.getInt(k);
+			if (sim.state[index] == CitizenState.SLEEP)
+				refreshSleepingResident(index);
+		}
+	}
+
+	/** UUID 排序决定床位槽；session id 与 SoA 当前顺序都不参与结果。 */
+	static void assignHomeSlots(CitizenSim data, IntArrayList indices) {
+		for (int k = 0; k < indices.size(); k++)
+			data.homeSlot[indices.getInt(k)] = -1;
+		if (indices.isEmpty())
+			return;
+		indices.sort((left, right) -> {
+			int c = Long.compare(data.uuidHi[left], data.uuidHi[right]);
+			if (c == 0)
+				c = Long.compare(data.uuidLo[left], data.uuidLo[right]);
+			if (c == 0)
+				c = Integer.compare(data.id[left], data.id[right]);
+			return c;
+		});
+		for (int slot = 0; slot < indices.size(); slot++)
+			data.homeSlot[indices.getInt(slot)] = slot;
+	}
+
+	private HouseBuilding resolveHouse(long home) {
+		if (activeTown == null || home == CitizenSim.NO_HOME_POS)
+			return null;
+		AbstractTownBuilding building = activeTown.getTownBuilding(BlockPos.of(home)).orElse(null);
+		return building instanceof HouseBuilding house && house.isStructureValid() ? house : null;
+	}
+
+	private long resolveEntrance(long home, long fallback) {
+		HouseBuilding house = resolveHouse(home);
+		return house != null && house.hasEntrance() ? house.getEntrancePositionLong() : fallback;
+	}
+
+	private long resolveBedPosition(int index) {
+		HouseBuilding house = resolveHouse(sim.homePos[index]);
+		if (house == null)
+			return CitizenSim.NO_HOME_POS;
+		int slot = sim.homeSlot[index];
+		return slot >= 0 && slot < house.getBedCount()
+				? house.getBedPositionLong(slot)
+				: CitizenSim.NO_HOME_POS;
+	}
+
+	private boolean isUsableBed(long packedPos) {
+		if (packedPos == CitizenSim.NO_HOME_POS || activeLevel == null)
+			return false;
+		BlockPos pos = BlockPos.of(packedPos);
+		if (!activeLevel.hasChunkAt(pos))
+			return false;
+		BlockState state = activeLevel.getBlockState(pos);
+		return state.getBlock() instanceof BedBlock
+				&& state.hasProperty(BedBlock.PART)
+				&& state.getValue(BedBlock.PART) == BedPart.HEAD;
+	}
+
+	private static long homeExitSeed(long home, long uuidHi, long uuidLo, long worldDay) {
+		long identity = home != CitizenSim.NO_HOME_POS ? home : uuidHi ^ Long.rotateLeft(uuidLo, 17);
+		long seed = identity ^ worldDay * 0x9E3779B97F4A7C15L;
+		seed ^= seed >>> 33;
+		seed *= 0xFF51AFD7ED558CCDL;
+		seed ^= seed >>> 33;
+		return seed;
+	}
+
+	private void prepareSleepingState(int index) {
+		sim.state[index] = CitizenState.SLEEP;
+		sim.halt[index] = 0;
+		sim.sepX[index] = 0;
+		sim.sepZ[index] = 0;
+		sim.tx[index] = sim.px[index];
+		sim.ty[index] = sim.py[index];
+		sim.tz[index] = sim.pz[index];
+		sim.stuckTick[index] = 0;
+		sim.bestDist2[index] = 0;
+	}
+
+	private void refreshSleepingResident(int index) {
+		onSleepEntered(index);
+		sim.tx[index] = sim.px[index];
+		sim.ty[index] = sim.py[index];
+		sim.tz[index] = sim.pz[index];
+		sim.sepX[index] = 0;
+		sim.sepZ[index] = 0;
+		sim.stuckTick[index] = 0;
+		sim.bestDist2[index] = 0;
+	}
+
+	private void placePendingResidents(IntArrayList citizenIds, long worldDay) {
+		citizenIds.sort((leftId, rightId) -> {
+			int left = sim.indexOf(leftId);
+			int right = sim.indexOf(rightId);
+			if (left < 0 || right < 0)
+				return Integer.compare(left, right);
+			int comparison = Long.compare(sim.homePos[left], sim.homePos[right]);
+			if (comparison == 0)
+				comparison = Integer.compare(sim.homeSlot[left], sim.homeSlot[right]);
+			return comparison != 0 ? comparison : Integer.compare(leftId, rightId);
+		});
+		for (int k = 0; k < citizenIds.size(); k++) {
+			int index = sim.indexOf(citizenIds.getInt(k));
+			if (index >= 0 && sim.state[index] != CitizenState.SLEEP)
+				placeAtHomeExit(index, worldDay);
+		}
+	}
+
+	private void placeAtHomeExit(int index, long worldDay) {
+		BlockPos anchor = BlockPos.of(homeEntrancePosition(index));
+		long seed = homeExitSeed(sim.homePos[index], sim.uuidHi[index], sim.uuidLo[index], worldDay);
+		BlockPos exit = CitizenSimScheduler.groundNear(activeLevel, anchor, sim.homeSlot[index], seed,
+				packedXZ -> isExitOccupied(index, packedXZ));
+		sim.px[index] = (exit.getX() << 10) + 512;
+		sim.py[index] = exit.getY() << 10;
+		sim.pz[index] = (exit.getZ() << 10) + 512;
+		sim.tx[index] = sim.px[index];
+		sim.ty[index] = sim.py[index];
+		sim.tz[index] = sim.pz[index];
+		sim.sepX[index] = 0;
+		sim.sepZ[index] = 0;
+		sim.halt[index] = 0;
+		sim.stuckTick[index] = 0;
+		sim.bestDist2[index] = Long.MAX_VALUE;
+	}
+
+	private boolean isExitOccupied(int selfIndex, long packedXZ) {
+		int blockX = BlockPos.getX(packedXZ);
+		int blockZ = BlockPos.getZ(packedXZ);
+		long home = sim.homePos[selfIndex];
+		for (int i = 0; i < sim.size(); i++) {
+			if (i != selfIndex && sim.homePos[i] == home && CitizenPresence.spatialPresent(sim.state[i])
+					&& (sim.px[i] >> 10) == blockX && (sim.pz[i] >> 10) == blockZ)
+				return true;
+		}
+		return false;
 	}
 
 	/* ===================== CitizenContainer ===================== */
@@ -519,6 +754,40 @@ public class TownSimData implements CitizenContainer, ITownResidentListener {
 	@Override
 	public CitizenSim sim() {
 		return sim;
+	}
+
+	@Override
+	public long homeEntrancePosition(int index) {
+		long fallback = sim.homePos[index] != CitizenSim.NO_HOME_POS
+				? sim.homePos[index]
+				: BlockPos.asLong(sim.homeX[index], sim.py[index] >> 10, sim.homeZ[index]);
+		return resolveEntrance(sim.homePos[index], fallback);
+	}
+
+	@Override
+	public void onSleepEntered(int index) {
+		long bedPosition = resolveBedPosition(index);
+		if (isUsableBed(bedPosition)) {
+			BlockPos bed = BlockPos.of(bedPosition);
+			sim.px[index] = (bed.getX() << 10) + 512;
+			sim.py[index] = bed.getY() << 10;
+			sim.pz[index] = (bed.getZ() << 10) + 512;
+			BlockState state = activeLevel.getBlockState(bed);
+			var facing = state.getValue(BedBlock.FACING);
+			sim.dir[index] = (byte) CitizenState.dirFromVector(facing.getStepX(), facing.getStepZ());
+		} else {
+			BlockPos indoorFallback = BlockPos.of(homeEntrancePosition(index));
+			sim.px[index] = (indoorFallback.getX() << 10) + 512;
+			sim.py[index] = indoorFallback.getY() << 10;
+			sim.pz[index] = (indoorFallback.getZ() << 10) + 512;
+		}
+		if (activeSched != null)
+			activeSched.sync.notifyHidden(sim.id[index]);
+	}
+
+	@Override
+	public void onWake(ServerLevel level, int index, long worldDay) {
+		placeAtHomeExit(index, worldDay);
 	}
 
 	@Override

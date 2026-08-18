@@ -34,6 +34,10 @@ public final class CitizenState {
 
 	/** 定点数缩放：1 方块 = 1024 单位 / Fixed-point scale: 1 block = 1024 units */
 	public static final int FIXED_SCALE = 1024;
+	/** Shared simulated/proxy citizen width in blocks. */
+	public static final float BODY_WIDTH = 0.6F;
+	/** Half-width rounded outward in fixed-point units so collision never underestimates the rendered body. */
+	public static final int COLLISION_RADIUS = (int) Math.ceil(BODY_WIDTH * FIXED_SCALE * 0.5D);
 	/** 无方向（静止）哨兵值 / Sentinel for "no direction" (stationary) */
 	public static final byte DIR_NONE = (byte) 255;
     /** 到达判定距离（定点，1.5 方块） / Arrival threshold (fixed-point, 1.5 blocks) */
@@ -137,14 +141,33 @@ public final class CitizenState {
 
 	/**
 	 * 状态(0–7)与 16 向方向(0–15)打包为一个同步字节：bit0–2 = state，bit3–6 = dir，
-	 * bit7 保留为 0。网络同步只发这一个字节，彻底取代旧的 yaw+state 双字节。
+	 * bit7 = {@link #HALT_BIT} 停步标记。网络同步只发这一个字节，彻底取代旧的
+	 * yaw+state 双字节。
 	 * <p>
 	 * Packs behavior state (0–7) and 16-way direction (0–15) into a single sync
-	 * byte: bits 0–2 state, bits 3–6 dir, bit 7 reserved (0). This byte alone
+	 * byte: bits 0–2 state, bits 3–6 dir, bit 7 halt flag. This byte alone
 	 * replaces the old yaw+state pair on the wire.
 	 */
 	public static byte packStateDir(int state, int dir) {
 		return (byte) ((dir << 3) | state);
+	}
+
+	/**
+	 * 停步标记位（bit7）：状态为移动类但本 tick 实际无 XZ 位移（到岗站立、卡住、
+	 * 被墙钳制、未激活冻结）。客户端见到此位立即停止外推——移动类状态 + 静止
+	 * 的居民若继续外推，会与心跳重锚形成"前进→回拉"振荡（驻留抽搐）。
+	 * <p>
+	 * Halt flag (bit 7): the state is a moving class but no XZ displacement
+	 * happened this tick (at post, stuck, wall-clamped, inactive-frozen). The
+	 * client stops extrapolating on sight; otherwise a stationary citizen in a
+	 * MOVING state oscillates between extrapolation drift and heartbeat
+	 * re-anchoring.
+	 */
+	public static final int HALT_BIT = 0x80;
+
+	/** 从同步字节解出停步标记 / Unpacks the halt flag from the sync byte */
+	public static boolean unpackHalt(byte sd) {
+		return (sd & HALT_BIT) != 0;
 	}
 
 	/** 从同步字节解出状态 / Unpacks the behavior state from the sync byte */

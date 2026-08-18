@@ -21,6 +21,7 @@ package com.teammoeg.frostedheart.bootstrap.common;
 
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.town.citizen.FakeCitizenEntity;
+import com.teammoeg.frostedheart.content.town.citizen.sim.CitizenState;
 import com.teammoeg.frostedheart.content.town.resident.WanderingRefugee;
 import com.teammoeg.frostedheart.content.utility.gunpowderbarrel.GunpowderBarrelEntity;
 import com.teammoeg.frostedheart.content.utility.seld.ContainerHolderEntity;
@@ -71,7 +72,7 @@ public class FHEntityTypes {
     // 居民模拟的近距代理实体：仅客户端手动生成，绝不存档/同步 / Near-range proxy for the citizen sim: client-manual only, never saved/synced
     public static final RegistryObject<EntityType<FakeCitizenEntity>> FAKE_CITIZEN = ENTITY_TYPES.register("fake_citizen",
             () -> EntityType.Builder.<FakeCitizenEntity>of(FakeCitizenEntity::new, MobCategory.MISC)
-                    .sized(0.6F, 1.95F).noSave()
+                    .sized(CitizenState.BODY_WIDTH, 1.95F).noSave()
                     .build(new ResourceLocation(FHMain.MODID, "fake_citizen").toString())
     );
 }
