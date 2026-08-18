@@ -53,6 +53,11 @@ import static com.teammoeg.frostedheart.content.town.resource.ItemResourceType.R
  */
 public class HouseBuilding extends AbstractTownBuilding implements ITownResidentBuilding, ITownTemperatureBuilding {
 
+    private static final long[] NO_BED_POSITIONS = new long[0];
+    private static final Codec<long[]> BED_POSITIONS_CODEC = Codec.LONG_STREAM.xmap(
+            positions -> canonicalizeBedPositions(positions.toArray()),
+            positions -> Arrays.stream(positions));
+
     public record DailyReport(
             boolean hasData,
             int residentCount,
@@ -100,7 +105,10 @@ public class HouseBuilding extends AbstractTownBuilding implements ITownResident
             Codec.INT.optionalFieldOf("maxResident",0).forGetter(o -> o.getMaxResidents()),
             Codec.list(UUIDUtil.CODEC).optionalFieldOf("residentsUUID",List.of()).forGetter(o -> new ArrayList<>(o.residentsUUID)),
             Codec.DOUBLE.optionalFieldOf("temperatureModifier",0D).forGetter(o -> o.getTemperatureModifier()),
-            DailyReport.CODEC.optionalFieldOf("dailyReport", DailyReport.EMPTY).forGetter(o -> o.getDailyReport()))
+            DailyReport.CODEC.optionalFieldOf("dailyReport", DailyReport.EMPTY).forGetter(o -> o.getDailyReport()),
+            BED_POSITIONS_CODEC.optionalFieldOf("bedPositions", NO_BED_POSITIONS).forGetter(o -> o.bedPositions),
+            Codec.LONG.optionalFieldOf("entrancePosition").forGetter(o ->
+                    o.hasEntrance ? Optional.of(o.entrancePosition) : Optional.empty()))
             .apply(t, HouseBuilding::new));
 
     private final Set<UUID> residentsUUID = new HashSet<>();
@@ -136,6 +144,9 @@ public class HouseBuilding extends AbstractTownBuilding implements ITownResident
     private double temperatureModifier;
     @Getter
     private DailyReport dailyReport = DailyReport.EMPTY;
+    private long[] bedPositions = NO_BED_POSITIONS;
+    private long entrancePosition;
+    private boolean hasEntrance;
 
     public void setArea(int area) { if (this.area == area) return; this.area = area; fireChange(); }
     public void setVolume(int volume) { if (this.volume == volume) return; this.volume = volume; fireChange(); }
@@ -169,6 +180,28 @@ public class HouseBuilding extends AbstractTownBuilding implements ITownResident
             double temperatureModifier,
             DailyReport dailyReport
     ) {
+        this(pos, isStructureValid, occupiedVolume, initialized, occupiedAreaOverlapped, area, volume,
+                temperature, decorationRating, maxResidents, residentsUUID, temperatureModifier,
+                dailyReport, NO_BED_POSITIONS, Optional.empty());
+    }
+
+    private HouseBuilding(
+            BlockPos pos,
+            boolean isStructureValid,
+            OccupiedVolume occupiedVolume,
+            boolean initialized,
+            boolean occupiedAreaOverlapped,
+            int area,
+            int volume,
+            double temperature,
+            double decorationRating,
+            int maxResidents,
+            List<UUID> residentsUUID,
+            double temperatureModifier,
+            DailyReport dailyReport,
+            long[] bedPositions,
+            Optional<Long> entrancePosition
+    ) {
         super(pos);
         this.setIsStructureValid(isStructureValid);
         this.setOccupiedVolume(occupiedVolume);
@@ -182,6 +215,9 @@ public class HouseBuilding extends AbstractTownBuilding implements ITownResident
         this.residentsUUID.addAll(residentsUUID);
         this.setTemperatureModifier(temperatureModifier);
         this.dailyReport = dailyReport == null ? DailyReport.EMPTY : dailyReport;
+        this.bedPositions = canonicalizeBedPositions(bedPositions);
+        this.hasEntrance = entrancePosition.isPresent();
+        this.entrancePosition = entrancePosition.orElse(0L);
     }
 
     /**
@@ -215,6 +251,66 @@ public class HouseBuilding extends AbstractTownBuilding implements ITownResident
     @Override
     public int getMaxResidents() {
         return maxResidents;
+    }
+
+    public int getBedCount() {
+        return bedPositions.length;
+    }
+
+    public long getBedPositionLong(int index) {
+        return bedPositions[index];
+    }
+
+    public boolean hasEntrance() {
+        return hasEntrance;
+    }
+
+    public long getEntrancePositionLong() {
+        if (!hasEntrance) {
+            throw new IllegalStateException("House does not have a scanned entrance");
+        }
+        return entrancePosition;
+    }
+
+    void setLayout(Collection<BlockPos> beds, BlockPos entrance) {
+        Objects.requireNonNull(beds, "beds");
+        Objects.requireNonNull(entrance, "entrance");
+        long[] positions = beds.stream()
+                .mapToLong(BlockPos::asLong)
+                .toArray();
+        setLayout(positions, true, entrance.asLong());
+    }
+
+    void clearLayout() {
+        setLayout(NO_BED_POSITIONS, false, 0L);
+    }
+
+    private void setLayout(long[] beds, boolean hasEntrance, long entrance) {
+        long[] canonicalBeds = canonicalizeBedPositions(beds);
+        if (Arrays.equals(this.bedPositions, canonicalBeds)
+                && this.hasEntrance == hasEntrance
+                && (!hasEntrance || this.entrancePosition == entrance)) {
+            return;
+        }
+        this.bedPositions = canonicalBeds;
+        this.hasEntrance = hasEntrance;
+        this.entrancePosition = hasEntrance ? entrance : 0L;
+        fireChange();
+    }
+
+    private static long[] canonicalizeBedPositions(long[] positions) {
+        if (positions == null || positions.length == 0) {
+            return NO_BED_POSITIONS;
+        }
+        long[] sorted = positions.clone();
+        Arrays.sort(sorted);
+        int uniqueCount = 1;
+        for (int readIndex = 1; readIndex < sorted.length; readIndex++) {
+            if (sorted[readIndex] != sorted[uniqueCount - 1]) {
+                sorted[uniqueCount++] = sorted[readIndex];
+            }
+        }
+        return uniqueCount == sorted.length ? sorted : Arrays.copyOf(sorted, uniqueCount);
     }
 
     @Override

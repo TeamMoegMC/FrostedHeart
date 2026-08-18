@@ -27,6 +27,7 @@ import java.util.Map;
 
 import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.content.town.citizen.sim.CitizenContainer;
+import com.teammoeg.frostedheart.content.town.citizen.sim.CitizenPresence;
 import com.teammoeg.frostedheart.content.town.citizen.sim.CitizenSim;
 import com.teammoeg.frostedheart.content.town.citizen.sim.CitizenSimScheduler;
 import com.teammoeg.frostedheart.content.town.citizen.sim.CitizenState;
@@ -90,7 +91,7 @@ public final class SyncEngine {
 	/** 各玩家当前追踪的居民 id 集合 / Tracked citizen id sets per player */
 	private final Map<ServerPlayer, IntOpenHashSet> tracked = new HashMap<>();
 	/** 待广播的移除 id / Pending removal ids to broadcast */
-	private final IntList pendingRemoval = new IntArrayList();
+	private final IntOpenHashSet pendingHidden = new IntOpenHashSet();
 	/** 本 flush 周期内"脏且到期"的居民 id / Dirty-and-due ids in the current flush */
 	private final IntOpenHashSet due = new IntOpenHashSet();
 
@@ -102,7 +103,15 @@ public final class SyncEngine {
 	 * @param citizenId 稳定 id / stable id
 	 */
 	public void notifyRemoved(int citizenId) {
-		pendingRemoval.add(citizenId);
+		notifyHidden(citizenId);
+	}
+
+	/**
+	 * Queues an immediate client-side despawn without removing the simulation row.
+	 * Used when a citizen enters an indoor state such as sleep.
+	 */
+	public void notifyHidden(int citizenId) {
+		pendingHidden.add(citizenId);
 	}
 
 	/**
@@ -118,8 +127,10 @@ public final class SyncEngine {
 		List<ServerPlayer> players = level.players();
 		if (players.isEmpty()) {
 			tracked.clear();
+			pendingHidden.clear();
 			return;
 		}
+		drainHidden(players);
 		if (gameTime % AOI_REFRESH == 0)
 			refreshAOI(sched, players);
 		if (gameTime % FLUSH_INTERVAL == 0)
@@ -141,6 +152,8 @@ public final class SyncEngine {
 				CitizenSim sim = c.sim();
 				int n = sim.size();
 				for (int i = 0; i < n; i++) {
+					if (!CitizenPresence.networkVisible(sim.state[i]))
+						continue;
 					long dx = (sim.px[i] >> 10) - pbx;
 					long dz = (sim.pz[i] >> 10) - pbz;
 					if (dx * dx + dz * dz > aoi2)
@@ -171,6 +184,23 @@ public final class SyncEngine {
 		}
 	}
 
+	private void drainHidden(List<ServerPlayer> players) {
+		if (pendingHidden.isEmpty())
+			return;
+		for (ServerPlayer player : players) {
+			IntOpenHashSet set = tracked.get(player);
+			if (set == null || set.isEmpty())
+				continue;
+			IntArrayList despawns = new IntArrayList();
+			for (int id : pendingHidden)
+				if (set.remove(id))
+					despawns.add(id);
+			if (!despawns.isEmpty())
+				FHNetwork.INSTANCE.sendPlayer(player, new S2CCitizenDespawnPacket(despawns));
+		}
+		pendingHidden.clear();
+	}
+
 	private void flushDeltas(CitizenSimScheduler sched, List<ServerPlayer> players, long gameTime) {
 		due.clear();
 		long aoi2 = (long) AOI_RADIUS * AOI_RADIUS;
@@ -191,6 +221,8 @@ public final class SyncEngine {
 			int n = sim.size();
 			for (int i = 0; i < n; i++) {
 				// 最近观察者距离（未刷新 AOI 的间隙期也近似正确）
+				if (!CitizenPresence.networkVisible(sim.state[i]))
+					continue;
 				long minDist2 = Long.MAX_VALUE;
                 for (int j = 0; j < playerCount; j++) {
                     long dx = (sim.px[i] >> 10) - pxs[j];
@@ -215,18 +247,6 @@ public final class SyncEngine {
 			}
 		}
 		// 广播移除
-		if (!pendingRemoval.isEmpty()) {
-			for (int k = 0; k < pendingRemoval.size(); k++) {
-				int id = pendingRemoval.getInt(k);
-				for (ServerPlayer p : players) {
-					IntOpenHashSet set = tracked.get(p);
-					if (set != null && set.remove(id))
-						FHNetwork.INSTANCE.sendPlayer(p,
-								new S2CCitizenDespawnPacket(new IntArrayList(new int[] { id })));
-				}
-			}
-			pendingRemoval.clear();
-		}
 		if (due.isEmpty())
 			return;
 		// 按玩家组包：chunk 分组 + 条目上限
@@ -245,6 +265,8 @@ public final class SyncEngine {
 				CitizenSim sim = c.sim();
 				int i = sim.indexOf(id);
 				if (i < 0)
+					continue;
+				if (!CitizenPresence.networkVisible(sim.state[i]))
 					continue;
 				int cx = sim.px[i] >> 14; // 定点坐标 >> 14 = chunk 坐标
 				int cz = sim.pz[i] >> 14;

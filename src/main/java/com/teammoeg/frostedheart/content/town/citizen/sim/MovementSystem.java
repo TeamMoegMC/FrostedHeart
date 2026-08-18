@@ -40,9 +40,9 @@ import net.minecraft.world.level.levelgen.Heightmap;
  */
 public final class MovementSystem {
 	/** 分离半径（定点，1.5 方块） / Separation radius (fixed-point, 1.5 blocks) */
-	private static final int SEP_DIST2 = 1536 * 1536;
+	static final int SEP_DIST2 = 1536 * 1536;
 	/** 单 tick 最大分离位移（定点） / Max separation displacement per tick (fixed-point) */
-	private static final int SEP_MAX = 48;
+	static final int SEP_MAX = 48;
 	/** 启用流场的最小目标距离平方（定点，12 方块）；近距直线可直达精确目标 / Min squared target distance for flow-field steering (fixed-point, 12 blocks) */
 	private static final long FIELD_MIN_DIST2 = 12288L * 12288L;
 	/** 卡住判定窗口（tick）：移动中超过此时长未跨越方块边界视为卡住 / Stuck window (ticks): moving without crossing a block boundary longer than this counts as stuck */
@@ -74,12 +74,19 @@ public final class MovementSystem {
                         sim.halt[i] = 1;
                     continue;
                 }
+				if (!CitizenPresence.movementIntegrated(sim.state[i])) {
+					sim.halt[i] = 0;
+					continue;
+				}
 			int oldX = sim.px[i];
 			int oldY = sim.py[i];
 			int oldZ = sim.pz[i];
 			int oldTargetX = sim.tx[i];
 			int oldTargetZ = sim.tz[i];
 			byte oldDir = sim.dir[i];
+
+			if (resolveBoundaryOverlap(sim, level, i))
+				conformHeight(sim, level, i);
 
                 if (CitizenState.MOVING[sim.state[i]]) {
                     // 移动居民：只调用一次 step
@@ -161,9 +168,9 @@ public final class MovementSystem {
         // ===== 5. 分离力（只计算，不直接应用） =====
         int pushX, pushZ;
         if (doSeparation) {
-            int[] sep = computeSeparation(sched, sim, i);
-            pushX = sep[0];
-            pushZ = sep[1];
+			long separation = computeSeparation(sched, sim, i);
+			pushX = (int) (separation >> 32);
+			pushZ = (int) separation;
             sim.sepX[i] = pushX;  // 缓存
             sim.sepZ[i] = pushZ;
         } else {
@@ -195,12 +202,13 @@ public final class MovementSystem {
      * 只计算邻居分离力，返回 [pushX, pushZ]。
      * 不直接修改位置，便于和基础位移合成，供轴分离移动统一处理。
      */
-    private int[] computeSeparation(CitizenSimScheduler sched, CitizenSim sim, int i) {
+    private long computeSeparation(CitizenSimScheduler sched, CitizenSim sim, int i) {
         neighborBuf.clear();
         sched.grid.queryNeighbors(sim.px[i] >> 10, sim.pz[i] >> 10, neighborBuf);
 
         int pushX = 0;
         int pushZ = 0;
+		boolean exactOverlap = false;
         int count = neighborBuf.size();
 
         for (int k = 0; k < count; k++) {
@@ -213,29 +221,78 @@ public final class MovementSystem {
             CitizenSim osim = oc.sim();
             int j = osim.indexOf(jid);
             if (j < 0) continue;
+			if (!CitizenPresence.spatialPresent(osim.state[j])) continue;
 
-            int dx = sim.px[i] - osim.px[j];
-            int dz = sim.pz[i] - osim.pz[j];
-            int d2 = dx * dx + dz * dz;
-            if (d2 == 0 || d2 > SEP_DIST2) continue;
-
-            int push = (SEP_DIST2 - d2) >> 13;
-            pushX += (int) (((long) dx * push) >> 10);
-            pushZ += (int) (((long) dz * push) >> 10);
+			exactOverlap |= sim.px[i] == osim.px[j] && sim.pz[i] == osim.pz[j];
+			long pair = pairSeparation(sim.id[i], sim.px[i], sim.pz[i],
+					osim.id[j], osim.px[j], osim.pz[j]);
+			pushX += (int) (pair >> 32);
+			pushZ += (int) pair;
         }
+
+		// A symmetric crowd can cancel all pair vectors exactly. Give only that
+		// degenerate case a stable per-id nudge so a fully coincident stack still
+		// breaks apart instead of remaining a fixed point forever.
+		if (exactOverlap && pushX == 0 && pushZ == 0) {
+			int direction = mixId(sim.id[i]) & 15;
+			pushX = (CitizenState.DIR_X_16[direction] * SEP_MAX) >> 10;
+			pushZ = (CitizenState.DIR_Z_16[direction] * SEP_MAX) >> 10;
+			if (pushX == 0 && pushZ == 0)
+				pushX = SEP_MAX;
+		}
 
         if (pushX > SEP_MAX) pushX = SEP_MAX;
         else if (pushX < -SEP_MAX) pushX = -SEP_MAX;
         if (pushZ > SEP_MAX) pushZ = SEP_MAX;
         else if (pushZ < -SEP_MAX) pushZ = -SEP_MAX;
 
-        return new int[]{pushX, pushZ};
+		return packVector(pushX, pushZ);
     }
+
+	/** 单个邻居的无分配分离贡献；完全重合时由稳定 id 对生成成对反向方向。 */
+	static long pairSeparation(int selfId, int selfX, int selfZ,
+			int otherId, int otherX, int otherZ) {
+		if (selfId == otherId)
+			return 0L;
+		int dx = selfX - otherX;
+		int dz = selfZ - otherZ;
+		int d2 = dx * dx + dz * dz;
+		if (d2 > SEP_DIST2)
+			return 0L;
+		if (d2 == 0) {
+			int low = Math.min(selfId, otherId);
+			int high = Math.max(selfId, otherId);
+			int direction = mixId(low * 31 ^ high) & 15;
+			int sign = selfId == low ? 1 : -1;
+			dx = CitizenState.DIR_X_16[direction] * sign;
+			dz = CitizenState.DIR_Z_16[direction] * sign;
+		}
+		int strength = (SEP_DIST2 - d2) >> 13;
+		int pushX = clampSeparation((int) (((long) dx * strength) >> 10));
+		int pushZ = clampSeparation((int) (((long) dz * strength) >> 10));
+		return packVector(pushX, pushZ);
+	}
+
+	private static int mixId(int value) {
+		int mixed = value * 0x9E3779B1;
+		mixed ^= mixed >>> 16;
+		mixed *= 0x85EBCA6B;
+		mixed ^= mixed >>> 13;
+		return mixed;
+	}
+
+	private static int clampSeparation(int value) {
+		return Math.max(-SEP_MAX, Math.min(SEP_MAX, value));
+	}
+
+	private static long packVector(int x, int z) {
+		return ((long) x << 32) | (z & 0xFFFFFFFFL);
+	}
 
     /**
      * 轴分离移动：先 X 后 Z。
-     * 每轴只有在跨格时才调用 passable()，不可通行则把坐标钳制在当前格边界，
-     * 从而获得贴墙滑行，并机制性杜绝 corner cutting 与分离力推墙。
+     * 每轴只有在身体前缘跨格时才调用 passable()；不可通行时让身体边缘停在墙面，
+     * 从而获得贴墙滑行，并机制性杜绝半身穿墙、corner cutting 与分离力推墙。
      */
     private void moveAxisSeparated(CitizenSimScheduler sched, CitizenSim sim, ServerLevel level,
                                    int i, int moveX, int moveZ) {
@@ -244,18 +301,16 @@ public final class MovementSystem {
         // ---------- X 轴 ----------
         int oldX = sim.px[i];
         int newX = oldX + moveX;
-        int oldBX = oldX >> 10;
-        int newBX = newX >> 10;
-
-        if (newBX != oldBX) {
-            int nbX = newBX;
-            int nbZ = sim.pz[i] >> 10;
-            if (!passable(level, nbX, nbZ, feetY)) {
-                // 贴墙：不进入新格，停在当前格边界
-                if (moveX > 0) {
-                    newX = newBX << 10;          // 正方向：新格起点即边界
-                } else {
-                    newX = (newBX + 1) << 10;    // 负方向：新格终点加 1 即边界
+        if (moveX != 0) {
+            int oldLeadingCell = leadingOccupiedCell(oldX, moveX);
+            int newLeadingCell = leadingOccupiedCell(newX, moveX);
+            int cellStep = Integer.signum(moveX);
+            for (int cell = oldLeadingCell + cellStep;
+                    cellStep > 0 ? cell <= newLeadingCell : cell >= newLeadingCell;
+                    cell += cellStep) {
+                if (!passableXSpan(level, cell, sim.pz[i], feetY)) {
+                    newX = clampAtBlockedCell(cell, moveX);
+                    break;
                 }
             }
         }
@@ -264,22 +319,112 @@ public final class MovementSystem {
         // ---------- Z 轴 ----------
         int oldZ = sim.pz[i];
         int newZ = oldZ + moveZ;
-        int oldBZ = oldZ >> 10;
-        int newBZ = newZ >> 10;
-
-        if (newBZ != oldBZ) {
-            int nbX = sim.px[i] >> 10;   // 注意：使用已更新后的 X
-            int nbZ = newBZ;
-            if (!passable(level, nbX, nbZ, feetY)) {
-                if (moveZ > 0) {
-                    newZ = newBZ << 10;
-                } else {
-                    newZ = (newBZ + 1) << 10;
+        if (moveZ != 0) {
+            int oldLeadingCell = leadingOccupiedCell(oldZ, moveZ);
+            int newLeadingCell = leadingOccupiedCell(newZ, moveZ);
+            int cellStep = Integer.signum(moveZ);
+            for (int cell = oldLeadingCell + cellStep;
+                    cellStep > 0 ? cell <= newLeadingCell : cell >= newLeadingCell;
+                    cell += cellStep) {
+                if (!passableZSpan(level, sim.px[i], cell, feetY)) {
+                    newZ = clampAtBlockedCell(cell, moveZ);
+                    break;
                 }
             }
         }
         sim.pz[i] = newZ;
     }
+
+	static int clampAtBlockedCell(int blockedCell, int movement) {
+		return movement > 0
+				? blockedCell * CitizenState.FIXED_SCALE - CitizenState.COLLISION_RADIUS
+				: (blockedCell + 1) * CitizenState.FIXED_SCALE + CitizenState.COLLISION_RADIUS;
+	}
+
+	static int leadingOccupiedCell(int center, int movement) {
+		return movement > 0
+				? (center + CitizenState.COLLISION_RADIUS - 1) >> 10
+				: (center - CitizenState.COLLISION_RADIUS) >> 10;
+	}
+
+	private static int minOccupiedCell(int center) {
+		return (center - CitizenState.COLLISION_RADIUS) >> 10;
+	}
+
+	private static int maxOccupiedCell(int center) {
+		return (center + CitizenState.COLLISION_RADIUS - 1) >> 10;
+	}
+
+	private static boolean passableXSpan(ServerLevel level, int cellX, int centerZ, int feetY) {
+		for (int cellZ = minOccupiedCell(centerZ); cellZ <= maxOccupiedCell(centerZ); cellZ++) {
+			if (!passable(level, cellX, cellZ, feetY))
+				return false;
+		}
+		return true;
+	}
+
+	private static boolean passableZSpan(ServerLevel level, int centerX, int cellZ, int feetY) {
+		for (int cellX = minOccupiedCell(centerX); cellX <= maxOccupiedCell(centerX); cellX++) {
+			if (!passable(level, cellX, cellZ, feetY))
+				return false;
+		}
+		return true;
+	}
+
+	private static boolean resolveBoundaryOverlap(CitizenSim sim, ServerLevel level, int i) {
+		int px = sim.px[i];
+		int pz = sim.pz[i];
+		boolean onXBoundary = (px & (CitizenState.FIXED_SCALE - 1)) == 0;
+		boolean onZBoundary = (pz & (CitizenState.FIXED_SCALE - 1)) == 0;
+		if (!onXBoundary && !onZBoundary)
+			return false;
+
+		int feetY = sim.py[i] >> 10;
+		int maxCellX = px >> 10;
+		int maxCellZ = pz >> 10;
+		int minCellX = onXBoundary ? maxCellX - 1 : maxCellX;
+		int minCellZ = onZBoundary ? maxCellZ - 1 : maxCellZ;
+		boolean hasBlockedCell = false;
+		for (int cellX = minCellX; cellX <= maxCellX; cellX++) {
+			for (int cellZ = minCellZ; cellZ <= maxCellZ; cellZ++) {
+				if (!passable(level, cellX, cellZ, feetY))
+					hasBlockedCell = true;
+			}
+		}
+		if (!hasBlockedCell)
+			return false;
+
+		long bestDistance2 = Long.MAX_VALUE;
+		int bestX = px;
+		int bestZ = pz;
+		for (int cellX = minCellX; cellX <= maxCellX; cellX++) {
+			for (int cellZ = minCellZ; cellZ <= maxCellZ; cellZ++) {
+				if (!passable(level, cellX, cellZ, feetY))
+					continue;
+				int candidateX = clampToCellInterior(px, cellX);
+				int candidateZ = clampToCellInterior(pz, cellZ);
+				long dx = (long) candidateX - px;
+				long dz = (long) candidateZ - pz;
+				long distance2 = dx * dx + dz * dz;
+				if (distance2 < bestDistance2) {
+					bestDistance2 = distance2;
+					bestX = candidateX;
+					bestZ = candidateZ;
+				}
+			}
+		}
+		if (bestDistance2 == Long.MAX_VALUE)
+			return false;
+		sim.px[i] = bestX;
+		sim.pz[i] = bestZ;
+		return bestX != px || bestZ != pz;
+	}
+
+	private static int clampToCellInterior(int center, int cell) {
+		int min = cell * CitizenState.FIXED_SCALE + CitizenState.COLLISION_RADIUS;
+		int max = (cell + 1) * CitizenState.FIXED_SCALE - CitizenState.COLLISION_RADIUS;
+		return Math.max(min, Math.min(center, max));
+	}
 
 	/**
 	 * 贴合当前列地面高度（含屋檐下扫描），每 tick 对全部活跃居民调用。

@@ -29,6 +29,7 @@ import com.teammoeg.frostedheart.content.trade.TradeHandler;
 import com.teammoeg.frostedheart.content.town.TeamTown;
 import com.teammoeg.frostedheart.content.town.citizen.CitizenNames;
 import com.teammoeg.frostedheart.content.town.citizen.sim.CitizenContainer;
+import com.teammoeg.frostedheart.content.town.citizen.sim.CitizenPresence;
 import com.teammoeg.frostedheart.content.town.citizen.sim.CitizenSim;
 import com.teammoeg.frostedheart.content.town.citizen.sim.CitizenSimScheduler;
 import com.teammoeg.frostedheart.content.town.resident.Resident;
@@ -105,6 +106,8 @@ public final class C2SCitizenActionPacket implements CMessage {
 			CitizenSim sim = c.sim();
 			int i = sim.indexOf(citizenId);
 			if (i < 0)
+				return;
+			if (!CitizenPresence.networkVisible(sim.state[i]))
 				return;
 			double dx = sim.px[i] / 1024.0 - sender.getX();
 			double dy = sim.py[i] / 1024.0 - sender.getY();

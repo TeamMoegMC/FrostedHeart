@@ -34,6 +34,10 @@ public final class CitizenState {
 
 	/** 定点数缩放：1 方块 = 1024 单位 / Fixed-point scale: 1 block = 1024 units */
 	public static final int FIXED_SCALE = 1024;
+	/** Shared simulated/proxy citizen width in blocks. */
+	public static final float BODY_WIDTH = 0.6F;
+	/** Half-width rounded outward in fixed-point units so collision never underestimates the rendered body. */
+	public static final int COLLISION_RADIUS = (int) Math.ceil(BODY_WIDTH * FIXED_SCALE * 0.5D);
 	/** 无方向（静止）哨兵值 / Sentinel for "no direction" (stationary) */
 	public static final byte DIR_NONE = (byte) 255;
     /** 到达判定距离（定点，1.5 方块） / Arrival threshold (fixed-point, 1.5 blocks) */

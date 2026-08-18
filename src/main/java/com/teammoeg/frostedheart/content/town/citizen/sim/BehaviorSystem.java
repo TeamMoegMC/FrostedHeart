@@ -19,6 +19,7 @@
 
 package com.teammoeg.frostedheart.content.town.citizen.sim;
 
+import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 
 /**
@@ -47,6 +48,12 @@ public final class BehaviorSystem {
 	private static final long WORK_START = 2000;
 	/** 工作时间窗终点（约 18:20；夜晚 12542 前到家） / Work window end (18:20; home before night 12542) */
 	private static final long WORK_END = 12500;
+	/** 睡眠开始时刻 / Sleep-period start. */
+	private static final long NIGHT_START = 12542;
+	/** 睡眠结束前的最后时刻 / Last tick in the sleep period. */
+	private static final long NIGHT_END = 23460;
+	/** 清晨错峰离家窗口（tick） / Staggered morning departure window. */
+	static final int WAKE_WINDOW = 200;
 	/** 到岗后踱步半径（方块） / Pacing radius around the post when on duty (blocks) */
 	private static final int WORK_PACE_RADIUS = 3;
 	/** 到岗后每决策周期踱步概率（/256） / Pacing probability per decision cycle when on duty (/256) */
@@ -67,8 +74,9 @@ public final class BehaviorSystem {
 	 * @param gameTime 当前游戏时间 / current game time
 	 */
 	public void tick(CitizenSimScheduler sched, ServerLevel level, int slice, long gameTime) {
-		boolean night = isNight(level);
-		boolean workTime = isWorkTime(level);
+		long dayTime = level.getDayTime();
+		boolean night = isNight(dayTime);
+		boolean workTime = isWorkTime(dayTime);
 		for (CitizenContainer c : sched.containers()) {
 			CitizenSim sim = c.sim();
 			int n = sim.size();
@@ -78,10 +86,14 @@ public final class BehaviorSystem {
 					continue;
 				if (!sched.isActive(c, i))
 					continue;
+				if (!CitizenPresence.behaviorScheduled(sim.state[i]))
+					continue;
 				byte oldState = sim.state[i];
 				int oldTargetX = sim.tx[i];
 				int oldTargetZ = sim.tz[i];
-				tickOne(sim, i, night, workTime, gameTime);
+				tickOne(c, sim, level, i, night, workTime, dayTime, gameTime);
+				if (oldState != CitizenState.SLEEP && sim.state[i] == CitizenState.SLEEP)
+					sched.sync.notifyHidden(sim.id[i]);
 				persistedChanged |= oldState != sim.state[i]
 						|| oldTargetX != sim.tx[i] || oldTargetZ != sim.tz[i];
 			}
@@ -90,26 +102,23 @@ public final class BehaviorSystem {
 		}
 	}
 
-	private void tickOne(CitizenSim sim, int i, boolean night, boolean workTime, long gameTime) {
+	void tickOne(CitizenContainer container, CitizenSim sim, ServerLevel level, int i,
+			boolean night, boolean workTime, long dayTime, long gameTime) {
 		switch (sim.state[i]) {
 		case CitizenState.IDLE:
 			if (night) {
-				startMove(sim, i, sim.homeX[i] << 10, sim.homeZ[i] << 10, CitizenState.RETURN_HOME, gameTime);
+				startReturnHome(container, sim, i, gameTime);
 			} else if (workTime && sim.wx[i] != -1) {
 				// 上班时间且有工作：优先去上班（通勤），闲逛让位
 				startMove(sim, i, sim.wx[i] << 10, sim.wz[i] << 10, CitizenState.WORK, gameTime);
 			} else if ((CitizenState.nextRand(sim.id[i], gameTime) & 0xFF) < 26) {
 				// 约 10% 概率开始一次闲逛
-				int r1 = CitizenState.nextRand(sim.id[i], gameTime + 1);
-				int r2 = CitizenState.nextRand(sim.id[i], gameTime + 2);
-				int ox = ((r1 & 0xFF) - 128) * WANDER_RADIUS / 128;
-				int oz = ((r2 & 0xFF) - 128) * WANDER_RADIUS / 128;
-				startMove(sim, i, (sim.homeX[i] + ox) << 10, (sim.homeZ[i] + oz) << 10, CitizenState.WANDER, gameTime);
+				startWander(container, sim, i, gameTime);
 			}
 			break;
 		case CitizenState.WANDER:
 			if (night) {
-				startMove(sim, i, sim.homeX[i] << 10, sim.homeZ[i] << 10, CitizenState.RETURN_HOME, gameTime);
+				startReturnHome(container, sim, i, gameTime);
 			} else if (workTime && sim.wx[i] != -1) {
 				startMove(sim, i, sim.wx[i] << 10, sim.wz[i] << 10, CitizenState.WORK, gameTime);
 			} else if (isArrived(sim, i)) {
@@ -119,17 +128,29 @@ public final class BehaviorSystem {
 			break;
 		case CitizenState.RETURN_HOME:
 			if (isArrived(sim, i)) {
-				sim.state[i] = night ? CitizenState.SLEEP : CitizenState.IDLE;
+				if (night) {
+					enterSleep(container, sim, i);
+				} else if (workTime && sim.wx[i] != -1) {
+					startMove(sim, i, sim.wx[i] << 10, sim.wz[i] << 10, CitizenState.WORK, gameTime);
+				} else {
+					sim.state[i] = CitizenState.IDLE;
+				}
 			}
 			break;
 		case CitizenState.SLEEP:
-			if (!night)
-				sim.state[i] = CitizenState.IDLE;
+			if (shouldWake(sim.uuidHi[i], sim.uuidLo[i], dayTime)) {
+				long worldDay = Math.floorDiv(dayTime, 24000L);
+				container.onWake(level, i, worldDay);
+				if (workTime && sim.wx[i] != -1)
+					startMove(sim, i, sim.wx[i] << 10, sim.wz[i] << 10, CitizenState.WORK, gameTime);
+				else
+					startWander(container, sim, i, gameTime);
+			}
 			break;
 		case CitizenState.WORK:
 			// 下班（夜晚或工作时段结束）优先于一切，直接回家
 			if (night || !workTime) {
-				startMove(sim, i, sim.homeX[i] << 10, sim.homeZ[i] << 10, CitizenState.RETURN_HOME, gameTime);
+				startReturnHome(container, sim, i, gameTime);
 			} else if (isArrived(sim, i)) {
 				// 已到岗：原地站岗；小概率在岗位 ±3 格内踱步（原地踱步，不离开岗位）
 				int r = CitizenState.nextRand(sim.id[i], gameTime) & 0xFF;
@@ -145,6 +166,34 @@ public final class BehaviorSystem {
 		default:
 			sim.state[i] = CitizenState.IDLE;
 		}
+	}
+
+	private void startReturnHome(CitizenContainer container, CitizenSim sim, int i, long gameTime) {
+		long entrance = container.homeEntrancePosition(i);
+		startMove(sim, i, BlockPos.getX(entrance) << 10, BlockPos.getZ(entrance) << 10,
+				CitizenState.RETURN_HOME, gameTime);
+	}
+
+	private void startWander(CitizenContainer container, CitizenSim sim, int i, long gameTime) {
+		long entrance = container.homeEntrancePosition(i);
+		int r1 = CitizenState.nextRand(sim.id[i], gameTime + 1);
+		int r2 = CitizenState.nextRand(sim.id[i], gameTime + 2);
+		int ox = ((r1 & 0xFF) - 128) * WANDER_RADIUS / 128;
+		int oz = ((r2 & 0xFF) - 128) * WANDER_RADIUS / 128;
+		startMove(sim, i, (BlockPos.getX(entrance) + ox) << 10,
+				(BlockPos.getZ(entrance) + oz) << 10, CitizenState.WANDER, gameTime);
+	}
+
+	private void enterSleep(CitizenContainer container, CitizenSim sim, int i) {
+		sim.state[i] = CitizenState.SLEEP;
+		sim.halt[i] = 0;
+		sim.sepX[i] = 0;
+		sim.sepZ[i] = 0;
+		container.onSleepEntered(i);
+		sim.tx[i] = sim.px[i];
+		sim.ty[i] = sim.py[i];
+		sim.tz[i] = sim.pz[i];
+		sim.bestDist2[i] = 0;
 	}
 
 	private void startMove(CitizenSim sim, int i, int targetX, int targetZ, byte newState, long gameTime) {
@@ -164,8 +213,12 @@ public final class BehaviorSystem {
 	 * @return 夜晚返回 true / true at night
 	 */
 	public static boolean isNight(ServerLevel level) {
-		long day = level.getDayTime() % 24000L;
-		return day >= 12542 && day <= 23460;
+		return isNight(level.getDayTime());
+	}
+
+	static boolean isNight(long dayTime) {
+		long day = Math.floorMod(dayTime, 24000L);
+		return day >= NIGHT_START && day <= NIGHT_END;
 	}
 
 	/**
@@ -177,8 +230,30 @@ public final class BehaviorSystem {
 	 * @return 工作时段返回 true / true during work hours
 	 */
 	public static boolean isWorkTime(ServerLevel level) {
-		long day = level.getDayTime() % 24000L;
+		return isWorkTime(level.getDayTime());
+	}
+
+	static boolean isWorkTime(long dayTime) {
+		long day = Math.floorMod(dayTime, 24000L);
 		return day >= WORK_START && day < WORK_END;
+	}
+
+	static boolean shouldWake(long uuidHi, long uuidLo, long dayTime) {
+		long dayTick = Math.floorMod(dayTime, 24000L);
+		if (dayTick >= NIGHT_START)
+			return false;
+		long worldDay = Math.floorDiv(dayTime, 24000L);
+		return dayTick >= wakeOffset(uuidHi, uuidLo, worldDay);
+	}
+
+	static int wakeOffset(long uuidHi, long uuidLo, long worldDay) {
+		long mixed = uuidHi ^ Long.rotateLeft(uuidLo, 23) ^ worldDay * 0x9E3779B97F4A7C15L;
+		mixed ^= mixed >>> 30;
+		mixed *= 0xBF58476D1CE4E5B9L;
+		mixed ^= mixed >>> 27;
+		mixed *= 0x94D049BB133111EBL;
+		mixed ^= mixed >>> 31;
+		return (int) Math.floorMod(mixed, WAKE_WINDOW);
 	}
 
     private boolean isArrived(CitizenSim sim, int i) {
