@@ -23,10 +23,10 @@ import com.teammoeg.chorda.client.CInputHelper;
 import com.teammoeg.chorda.client.RenderingHint;
 import net.minecraft.client.gui.GuiGraphics;
 
-public class RequesterChestScreen extends LogisticChestLayer<RequesterChestMenu>{
+public class LogisticInterfaceChestOutScreen extends LogisticChestLayer<LogisticInterfaceChestOutMenu>{
 	FilterLayer filters;
 	DockFilterDialog screen;
-	public RequesterChestScreen(RequesterChestMenu menu) {
+	public LogisticInterfaceChestOutScreen(LogisticInterfaceChestOutMenu menu) {
 		super(menu);
 		filters=new FilterLayer(this);
 		filters.setPos(0, 84);

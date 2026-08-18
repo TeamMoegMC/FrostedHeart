@@ -40,12 +40,12 @@ import net.minecraft.world.item.ItemStack;
 public class DockFilterDialog extends UILayer {
 	CheckBox check;
 	ImageButton back;
-	RequesterChestMenu menu;
+	LogisticInterfaceChestOutMenu menu;
 	TextBoxNoBackground numberBox;
 	final int index;
 	ScrollTracker tracker=new ScrollTracker();
 	ItemStack displayStack;
-	public DockFilterDialog(RequesterChestScreen panel,RequesterChestMenu menu, int index) {
+	public DockFilterDialog(LogisticInterfaceChestOutScreen panel,LogisticInterfaceChestOutMenu menu, int index) {
 		super(panel);
 		this.index=index;
 		this.menu=menu;

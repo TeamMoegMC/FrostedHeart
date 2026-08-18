@@ -34,7 +34,7 @@ import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
 import com.teammoeg.frostedheart.content.robotics.logistics.Filter;
 import com.teammoeg.frostedheart.content.robotics.logistics.LogisticNetwork;
-import com.teammoeg.frostedheart.content.robotics.logistics.gui.RequesterChestMenu;
+import com.teammoeg.frostedheart.content.robotics.logistics.gui.LogisticInterfaceChestOutMenu;
 import com.teammoeg.frostedheart.content.robotics.logistics.tasks.LogisticRequestTask;
 import com.teammoeg.frostedheart.content.robotics.logistics.tasks.LogisticTaskKey;
 
@@ -58,13 +58,13 @@ import net.minecraftforge.common.util.Lazy;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.items.ItemStackHandler;
 
-public class RequesterTileEntity extends CBlockEntity implements  CTickableBlockEntity,MenuProvider,LogisticStatusBlockEntity {
+public class LogisticInterfaceChestOutTileEntity extends CBlockEntity implements  CTickableBlockEntity,MenuProvider,LogisticStatusBlockEntity {
 	
 	ItemStackHandler container=new ItemStackHandler(27) {
 		@Override
 		protected void onContentsChanged(int slot) {
 			if(level!=null)
-				RequesterTileEntity.this.setChanged();
+				LogisticInterfaceChestOutTileEntity.this.setChanged();
 		}
 	};
 	public LazyOptional<ItemStackHandler> grid=LazyOptional.of(()->container);
@@ -76,7 +76,7 @@ public class RequesterTileEntity extends CBlockEntity implements  CTickableBlock
 	protected int uplinkStatus=0;
 	List<Supplier<LogisticTaskKey>> keys=new ArrayList<>(filters.length);
 	private int networkCheckTicks;
-	public RequesterTileEntity(BlockPos pos,BlockState bs) {
+	public LogisticInterfaceChestOutTileEntity(BlockPos pos,BlockState bs) {
 		super(FHBlockEntityTypes.LOGISTIC_INTERFACE_CHEST_OUT.get(),pos,bs);
 		for(int i=0;i<filters.length;i++){
 			final int cnt=i;
@@ -188,7 +188,7 @@ public class RequesterTileEntity extends CBlockEntity implements  CTickableBlock
 
 	@Override
 	public AbstractContainerMenu createMenu(int pContainerId, Inventory pPlayerInventory, Player pPlayer) {
-		return new RequesterChestMenu(pContainerId,this,pPlayerInventory,container);
+		return new LogisticInterfaceChestOutMenu(pContainerId,this,pPlayerInventory,container);
 	}
 
 	@Override

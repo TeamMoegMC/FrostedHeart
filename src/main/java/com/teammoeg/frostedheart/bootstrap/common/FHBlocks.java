@@ -47,9 +47,9 @@ import com.teammoeg.frostedheart.content.incubator.HeatIncubatorBlock;
 import com.teammoeg.frostedheart.content.incubator.IncubatorBlock;
 import com.teammoeg.frostedheart.content.robotics.logistics.LogisticChestBlock;
 import com.teammoeg.frostedheart.content.robotics.logistics.workers.NetworkCoreTileEntity;
-import com.teammoeg.frostedheart.content.robotics.logistics.workers.RequesterTileEntity;
-import com.teammoeg.frostedheart.content.robotics.logistics.workers.StorageTileEntity;
-import com.teammoeg.frostedheart.content.robotics.logistics.workers.SupplierTileEntity;
+import com.teammoeg.frostedheart.content.robotics.logistics.workers.LogisticInterfaceChestOutTileEntity;
+import com.teammoeg.frostedheart.content.robotics.logistics.workers.LogisticStorageChestTileEntity;
+import com.teammoeg.frostedheart.content.robotics.logistics.workers.LogisticInterfaceChestInTileEntity;
 import com.teammoeg.frostedheart.content.steamenergy.HeatPipeBlock;
 import com.teammoeg.frostedheart.content.steamenergy.charger.ChargerBlock;
 import com.teammoeg.frostedheart.content.steamenergy.creative.CreativeHeaterBlock;
@@ -2306,21 +2306,21 @@ public class FHBlocks {
             .lang("Hunting Base")
             .register();
     // Logistic blocks
-    public static final BlockEntry<LogisticChestBlock<RequesterTileEntity>> LOGISTIC_INTERFACE_CHEST_OUT = REGISTRATE.block("logistic_interface_chest_out", o->new LogisticChestBlock<>(o,FHBlockEntityTypes.LOGISTIC_INTERFACE_CHEST_OUT, Component.translatable("tooltip.frostedheart.logistic_interface_chest_out")))
+    public static final BlockEntry<LogisticChestBlock<LogisticInterfaceChestOutTileEntity>> LOGISTIC_INTERFACE_CHEST_OUT = REGISTRATE.block("logistic_interface_chest_out", o->new LogisticChestBlock<>(o,FHBlockEntityTypes.LOGISTIC_INTERFACE_CHEST_OUT, Component.translatable("tooltip.frostedheart.logistic_interface_chest_out")))
             .initialProperties(() -> Blocks.CHEST)
             .properties(BlockBehaviour.Properties::noOcclusion)
             .blockstate(FHBlockStateGen.simpleObj(FHMain.rl("bot_dock_in")))
             .tag(FHTags.Blocks.METAL_MACHINES.get())
             .simpleItem()
             .register();
-    public static final BlockEntry<LogisticChestBlock<StorageTileEntity>> LOGISTIC_STORAGE_CHEST = REGISTRATE.block("logistic_storage_chest", o->new LogisticChestBlock<>(o,FHBlockEntityTypes.LOGISTIC_STORAGE_CHEST, Component.translatable("tooltip.frostedheart.logistic_storage_chest")))
+    public static final BlockEntry<LogisticChestBlock<LogisticStorageChestTileEntity>> LOGISTIC_STORAGE_CHEST = REGISTRATE.block("logistic_storage_chest", o->new LogisticChestBlock<>(o,FHBlockEntityTypes.LOGISTIC_STORAGE_CHEST, Component.translatable("tooltip.frostedheart.logistic_storage_chest")))
             .initialProperties(() -> Blocks.CHEST)
             .properties(BlockBehaviour.Properties::noOcclusion)
             .blockstate(FHBlockStateGen.simpleObj(FHMain.rl("bot_dock_transfer")))
             .tag(FHTags.Blocks.METAL_MACHINES.get())
             .simpleItem()
             .register();
-    public static final BlockEntry<LogisticChestBlock<SupplierTileEntity>> LOGISTIC_INTERFACE_CHEST_IN = REGISTRATE.block("logistic_interface_chest_in", o->new LogisticChestBlock<>(o,FHBlockEntityTypes.LOGISTIC_INTERFACE_CHEST_IN, Component.translatable("tooltip.frostedheart.logistic_interface_chest_in")))
+    public static final BlockEntry<LogisticChestBlock<LogisticInterfaceChestInTileEntity>> LOGISTIC_INTERFACE_CHEST_IN = REGISTRATE.block("logistic_interface_chest_in", o->new LogisticChestBlock<>(o,FHBlockEntityTypes.LOGISTIC_INTERFACE_CHEST_IN, Component.translatable("tooltip.frostedheart.logistic_interface_chest_in")))
             .initialProperties(() -> Blocks.CHEST)
             .properties(BlockBehaviour.Properties::noOcclusion)
             .blockstate(FHBlockStateGen.simpleObj(FHMain.rl("bot_dock_out")))

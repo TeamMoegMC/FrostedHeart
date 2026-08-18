@@ -28,8 +28,7 @@ import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
 import com.teammoeg.frostedheart.content.robotics.logistics.LogisticNetwork;
 import com.teammoeg.frostedheart.content.robotics.logistics.grid.LogisticChest;
-import com.teammoeg.frostedheart.content.robotics.logistics.grid.RequestLogisticChest;
-import com.teammoeg.frostedheart.content.robotics.logistics.gui.SupplierChestMenu;
+import com.teammoeg.frostedheart.content.robotics.logistics.gui.LogisticStorageChestMenu;
 
 import lombok.Getter;
 import net.minecraft.core.BlockPos;
@@ -45,10 +44,9 @@ import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.ForgeCapabilities;
 import net.minecraftforge.common.util.LazyOptional;
 
-@SuppressWarnings("unused")
-public class SupplierTileEntity extends CBlockEntity implements CTickableBlockEntity,MenuProvider,ILogisticProvider,LogisticStatusBlockEntity {
+public class LogisticStorageChestTileEntity extends CBlockEntity implements CTickableBlockEntity,MenuProvider,ILogisticProvider,LogisticStatusBlockEntity{
 	@Getter
-	RequestLogisticChest container;
+	public LogisticChest container;
 	public LazyOptional<LogisticChest> grid=LazyOptional.of(()->container);
 	public LazyOptional<LogisticNetwork> network;
 	@Getter
@@ -56,13 +54,10 @@ public class SupplierTileEntity extends CBlockEntity implements CTickableBlockEn
 	@Getter
 	protected int uplinkStatus=0;
 	private int networkCheckTicks;
-	public SupplierTileEntity(BlockPos pos,BlockState bs) {
-		super(FHBlockEntityTypes.LOGISTIC_INTERFACE_CHEST_IN.get(),pos,bs);
-		container=new RequestLogisticChest(null,pos,this::setChanged);
+	public LogisticStorageChestTileEntity(BlockPos pos,BlockState bs) {
+		super(FHBlockEntityTypes.LOGISTIC_STORAGE_CHEST.get(),pos,bs);
+		container=new LogisticChest(null,pos,this::setChanged);
 	}
-
-
-
 	@Override
 	public void readCustomNBT(CompoundTag nbt, boolean descPacket) {
 		container.deserialize(nbt.getCompound("chest"));
@@ -71,7 +66,6 @@ public class SupplierTileEntity extends CBlockEntity implements CTickableBlockEn
 	public void writeCustomNBT(CompoundTag nbt, boolean descPacket) {
 		nbt.put("chest",container.serialize());
 	}
-
 	@Override
 	public void tick() {
 		if(!this.level.isClientSide) {
@@ -81,14 +75,8 @@ public class SupplierTileEntity extends CBlockEntity implements CTickableBlockEn
 				refreshNetwork();
 				networkCheckTicks=20;
 			}
-			if(network!=null&&network.isPresent()) {
-				networkStatus=2;
-				if(container.getEmptySlotCount()>=27) {
-					uplinkStatus=1;
-				}else 
-					uplinkStatus=2;
-			}else
-				uplinkStatus=networkStatus=0;
+			uplinkStatus=networkStatus=network!=null&&network.isPresent()?2:0;
+			
 		}
 	}
 
@@ -100,7 +88,6 @@ public class SupplierTileEntity extends CBlockEntity implements CTickableBlockEn
 		LogisticNetwork current=network!=null&&network.isPresent()?network.resolve().get():null;
 		LogisticNetwork next=candidate.isPresent()?candidate.resolve().get():null;
 		if(current!=null&&next!=null&&current!=next) {
-			current.cancelTasksAt(worldPosition);
 			current.getHub().removeElement(grid.cast());
 			network=candidate;
 			next.getHub().addElement(grid.cast());
@@ -108,7 +95,6 @@ public class SupplierTileEntity extends CBlockEntity implements CTickableBlockEn
 			network=candidate;
 			next.getHub().addElement(grid.cast());
 		}else if(current!=null&&next==null) {
-			current.cancelTasksAt(worldPosition);
 			current.getHub().removeElement(grid.cast());
 			network=null;
 		}else if(current==null)
@@ -122,7 +108,7 @@ public class SupplierTileEntity extends CBlockEntity implements CTickableBlockEn
 	}
 	@Override
 	public AbstractContainerMenu createMenu(int pContainerId, Inventory pPlayerInventory, Player pPlayer) {
-		return new SupplierChestMenu(pContainerId,this,pPlayerInventory,container);
+		return new LogisticStorageChestMenu(pContainerId,this,pPlayerInventory,container);
 	}
 	@Override
 	public <T> @NotNull LazyOptional<T> getCapability(@NotNull Capability<T> cap, @Nullable Direction side) {
@@ -135,14 +121,9 @@ public class SupplierTileEntity extends CBlockEntity implements CTickableBlockEn
 	public Component getDisplayName() {
 		return Component.translatable(this.getBlockState().getBlock().getDescriptionId());
 	}
-
-
-
 	@Override
 	public void onRemoved() {
 		super.onRemoved();
-		if(network!=null&&network.isPresent())
-			network.resolve().get().cancelTasksAt(worldPosition);
 		disconnectNetwork();
 		grid.invalidate();
 	}
@@ -161,7 +142,4 @@ public class SupplierTileEntity extends CBlockEntity implements CTickableBlockEn
 			grid=LazyOptional.of(()->container);
 		networkCheckTicks=0;
 	}
-
-
-
 }

@@ -23,10 +23,10 @@ import com.teammoeg.chorda.client.RenderingHint;
 
 import net.minecraft.client.gui.GuiGraphics;
 
-public class StorageChestScreen extends LogisticChestLayer<StorageChestMenu> {
+public class LogisticStorageChestScreen extends LogisticChestLayer<LogisticStorageChestMenu> {
 
 
-	public StorageChestScreen(StorageChestMenu container) {
+	public LogisticStorageChestScreen(LogisticStorageChestMenu container) {
 		super(container);
 	}
 	@Override

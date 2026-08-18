@@ -23,10 +23,10 @@ import com.teammoeg.chorda.client.RenderingHint;
 
 import net.minecraft.client.gui.GuiGraphics;
 
-public class SupplierChestScreen extends LogisticChestLayer<SupplierChestMenu> {
+public class LogisticInterfaceChestInScreen extends LogisticChestLayer<LogisticInterfaceChestInMenu> {
 
 
-	public SupplierChestScreen(SupplierChestMenu container) {
+	public LogisticInterfaceChestInScreen(LogisticInterfaceChestInMenu container) {
 		super(container);
 	}
 	@Override

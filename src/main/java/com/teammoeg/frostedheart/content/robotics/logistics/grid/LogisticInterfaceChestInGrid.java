@@ -22,12 +22,12 @@ package com.teammoeg.frostedheart.content.robotics.logistics.grid;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
 
-public class RequestLogisticChest extends LogisticChest {
+public class LogisticInterfaceChestInGrid extends LogisticChest {
 
-	public RequestLogisticChest(Level level, BlockPos pos) {
+	public LogisticInterfaceChestInGrid(Level level, BlockPos pos) {
 		super(level, pos);
 	}
-	public RequestLogisticChest(Level level, BlockPos pos,Runnable changeListener) {
+	public LogisticInterfaceChestInGrid(Level level, BlockPos pos,Runnable changeListener) {
 		super(level,pos,changeListener);
 	}
 

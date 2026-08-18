@@ -27,18 +27,18 @@ import com.teammoeg.frostedheart.bootstrap.common.FHMenuSlots;
 import com.teammoeg.frostedheart.bootstrap.common.FHMenuTypes;
 import com.teammoeg.frostedheart.content.robotics.logistics.Filter;
 import com.teammoeg.frostedheart.content.robotics.logistics.data.ItemKey;
-import com.teammoeg.frostedheart.content.robotics.logistics.workers.RequesterTileEntity;
+import com.teammoeg.frostedheart.content.robotics.logistics.workers.LogisticInterfaceChestOutTileEntity;
 
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraftforge.items.IItemHandler;
 
-public class RequesterChestMenu extends LogisticChestMenu<RequesterTileEntity> {
+public class LogisticInterfaceChestOutMenu extends LogisticChestMenu<LogisticInterfaceChestOutTileEntity> {
 	public List<CDataSlot<Filter>> list=new ArrayList<>();
 	public static final int CMD_SET_FILTER=0;
 	public static final int CMD_CLEAR_FILTER=1;
 	public static final int CMD_SET_IGNORE_NBT=2;
 	public static final int CMD_SET_SIZE=3;
-	public RequesterChestMenu(int pContainerId, Inventory inv,RequesterTileEntity blockEntity) {
+	public LogisticInterfaceChestOutMenu(int pContainerId, Inventory inv,LogisticInterfaceChestOutTileEntity blockEntity) {
 		super(FHMenuTypes.LOGISTIC_INTERFACE_CHEST_OUT.get(),blockEntity, pContainerId, inv);
 		for(int i=0;i<blockEntity.filters.length;i++) {
 			list.add(FHMenuSlots.FILTER_ENCODER_SLOT.create(this));
@@ -46,7 +46,7 @@ public class RequesterChestMenu extends LogisticChestMenu<RequesterTileEntity> {
 		super.addPlayerInventory(inv, 8, 118, 176);
 	}
 
-	public RequesterChestMenu(int pContainerId,RequesterTileEntity blockEntity, Inventory inv, IItemHandler handler) {
+	public LogisticInterfaceChestOutMenu(int pContainerId,LogisticInterfaceChestOutTileEntity blockEntity, Inventory inv, IItemHandler handler) {
 		super(FHMenuTypes.LOGISTIC_INTERFACE_CHEST_OUT.get(),blockEntity, pContainerId, inv, handler);
 		for(int i=0;i<blockEntity.filters.length;i++) {
 			CDataSlot<Filter> slot=FHMenuSlots.FILTER_ENCODER_SLOT.create(this);
