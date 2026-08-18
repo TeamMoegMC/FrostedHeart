@@ -14,6 +14,7 @@ import com.teammoeg.frostedheart.content.town.resource.TownFoodInventoryModel;
 import com.teammoeg.frostedheart.content.town.resource.TownInventoryModel;
 import com.teammoeg.frostedheart.content.town.resource.action.ResourceActionMode;
 import com.teammoeg.frostedheart.content.town.resident.ResidentGenerationModel;
+import com.teammoeg.frostedheart.content.town.resident.ResidentNutrition;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -72,6 +73,11 @@ public final class TownStageThreeState {
             SplittableRandom random
     ) {
         TownStageThreeScenario.Population population = scenario.population();
+        double initialNutrition = Math.max(0.0, Math.min(
+                parameters.residents().nutrition().maximumReserve(),
+                parameters.residents().nutrition().initialReserve()));
+        ResidentNutrition nutrition = new ResidentNutrition(
+                initialNutrition, initialNutrition, initialNutrition, initialNutrition);
         List<ResidentState> residents = new ArrayList<>(population.initialResidents());
         for (int index = 0; index < population.initialResidents(); index++) {
             if (population.initialization()
@@ -85,7 +91,7 @@ public final class TownStageThreeState {
                         generated.health(), generated.mental(), generated.strength(),
                         generated.intelligence(), generated.miningProficiency(),
                         generated.huntingProficiency(), generated.age(), generated.ageDays(),
-                        HOUSE_ID, null));
+                        HOUSE_ID, null, nutrition));
             } else {
                 residents.add(new ResidentState(
                         String.format("resident-%03d", index),
@@ -93,7 +99,7 @@ public final class TownStageThreeState {
                         population.initialStrength(), population.initialIntelligence(),
                         population.initialMiningProficiency(),
                         population.initialHuntingProficiency(),
-                        2, population.initialAgeDays(), HOUSE_ID, null));
+                        2, population.initialAgeDays(), HOUSE_ID, null, nutrition));
             }
         }
         LinkedHashMap<String, Double> inventory = new LinkedHashMap<>();
@@ -330,6 +336,7 @@ public final class TownStageThreeState {
         private int ageDays;
         private String homeId;
         private String workId;
+        private ResidentNutrition nutrition;
 
         ResidentState(
                 String id,
@@ -342,7 +349,8 @@ public final class TownStageThreeState {
                 int age,
                 int ageDays,
                 String homeId,
-                String workId
+                String workId,
+                ResidentNutrition nutrition
         ) {
             this.id = id;
             this.health = health;
@@ -355,6 +363,7 @@ public final class TownStageThreeState {
             this.ageDays = ageDays;
             this.homeId = homeId;
             this.workId = workId;
+            this.nutrition = nutrition;
         }
 
         public String id() { return id; }
@@ -368,6 +377,7 @@ public final class TownStageThreeState {
         public int ageDays() { return ageDays; }
         public String homeId() { return homeId; }
         public String workId() { return workId; }
+        public ResidentNutrition nutrition() { return nutrition; }
 
         public void setHealth(double value) { health = bounded(value); }
         public void setMental(double value) { mental = bounded(value); }
@@ -379,6 +389,9 @@ public final class TownStageThreeState {
         public void setAgeDays(int value) { ageDays = Math.max(0, value); }
         public void setHomeId(String value) { homeId = value; }
         public void setWorkId(String value) { workId = value; }
+        public void setNutrition(ResidentNutrition value) {
+            nutrition = value == null ? ResidentNutrition.DEFAULT_VALUE : value;
+        }
 
         private static double bounded(double value) {
             if (!Double.isFinite(value)) return 0.0;

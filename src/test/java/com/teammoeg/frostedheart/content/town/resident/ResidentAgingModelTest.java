@@ -52,4 +52,16 @@ class ResidentAgingModelTest {
         assertEquals(20.0, result.strength(), 1.0e-12);
         assertEquals(30.0, result.intelligence(), 1.0e-12);
     }
+
+    @Test
+    void proteinAndFatScaleOnlyTheirMappedGrowthChannels() {
+        ResidentAgingModel.AgingResult result = ResidentAgingModel.settleDay(
+                Resident.AGE_CHILD, 20, 30.0, 30.0,
+                new ResidentNutrition(100, 70, 0, 70), PARAMETERS);
+
+        assertEquals(30.0 + PARAMETERS.childStrengthGainPerDay() * 0.5,
+                result.strength(), 1.0e-12);
+        assertEquals(30.0 + PARAMETERS.childIntelligenceGainPerDay() * 1.25,
+                result.intelligence(), 1.0e-12);
+    }
 }

@@ -50,6 +50,7 @@ class TownHistoryModelTest {
                 .getOrThrow(false, message -> fail(message));
         assertFalse(decoded.operational().foodReserveDays().available());
         assertFalse(decoded.operational().minimumHouseTemperatureCelsius().available());
+        assertFalse(decoded.nutrition().available());
     }
 
     @Test
@@ -62,8 +63,10 @@ class TownHistoryModelTest {
                 0, 1,
                 new TownOperationalHistory.Tower(TownOperationalStatus.TowerKind.T1,
                         true, true, false, true, 0.5));
+        TownNutritionHistory nutrition = new TownNutritionHistory(true,
+                70, 55, 68, 54, 72, 60, 65, 40);
         TownHistoryEntry source = new TownHistoryEntry(2, 8, 50, 50, 4,
-                40, 30, 42, 32, 1, 0, true, -1, List.of(), operational);
+                40, 30, 42, 32, 1, 0, true, -1, List.of(), operational, nutrition);
         var encoded = TownHistoryEntry.CODEC.encodeStart(JsonOps.INSTANCE, source)
                 .getOrThrow(false, message -> fail(message));
         TownHistoryEntry decoded = TownHistoryEntry.CODEC.parse(JsonOps.INSTANCE, encoded)

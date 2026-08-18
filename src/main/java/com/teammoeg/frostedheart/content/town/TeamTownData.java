@@ -36,7 +36,9 @@ import com.teammoeg.frostedheart.content.town.network.TownResidentUpdatePacket;
 import com.teammoeg.frostedheart.content.town.network.TownResourceUpdatePacket;
 import com.teammoeg.frostedheart.content.town.network.TownHistoryUpdatePacket;
 import com.teammoeg.frostedheart.content.town.network.TownSignalNotificationPacket;
+import com.teammoeg.frostedheart.content.town.network.TownPolicyStateUpdatePacket;
 import com.teammoeg.frostedheart.content.town.observation.TownObservationModel;
+import com.teammoeg.frostedheart.content.town.observation.TownNutritionHistory;
 import com.teammoeg.frostedheart.content.town.observation.TownOperationalHistory;
 import com.teammoeg.frostedheart.content.town.observation.TownOperationalStatus;
 import com.teammoeg.frostedheart.content.town.observation.TownOperationalStatusModel;
@@ -66,6 +68,7 @@ import com.teammoeg.frostedheart.content.town.building.ITownBuilding;
 import com.teammoeg.frostedheart.content.town.building.ITownResidentBuilding;
 import com.teammoeg.frostedheart.content.town.building.ITownResidentWorkBuilding;
 import com.teammoeg.frostedheart.content.town.buildings.house.HouseBuilding;
+import com.teammoeg.frostedheart.content.town.buildings.house.TownHousingMealService;
 import com.teammoeg.frostedheart.content.town.buildings.warehouse.WarehouseBuilding;
 import com.teammoeg.frostedheart.content.town.event.ITownBuildingChangeEventListener;
 import com.teammoeg.frostedheart.content.town.event.ITownResidentChangeEventListener;
@@ -77,7 +80,9 @@ import com.teammoeg.frostedheart.content.town.resident.Resident;
 import com.teammoeg.frostedheart.content.town.resident.ResidentAgingModel;
 import com.teammoeg.frostedheart.content.town.resident.ResidentGenerationModel;
 import com.teammoeg.frostedheart.content.town.resident.ResidentDailyModel;
+import com.teammoeg.frostedheart.content.town.resident.ResidentNutrition;
 import com.teammoeg.frostedheart.content.town.model.TownAssignmentModel;
+import com.teammoeg.frostedheart.content.town.model.TownResidentCareModel;
 import com.teammoeg.frostedheart.content.town.resident.WanderingRefugee;
 import com.teammoeg.frostedheart.content.town.resource.TeamTownResourceHolder;
 import com.teammoeg.frostedheart.content.town.resource.VirtualResourceType;
@@ -146,6 +151,12 @@ public class TeamTownData implements SpecialData{
         CodecUtil.defaultSupply(CodecUtil.catchingCodec(TownStaffingPlan.CODEC), () -> TownStaffingPlan.EMPTY)
         .fieldOf("staffingPlan").forGetter(TeamTownData::getStaffingPlan),
 
+        CodecUtil.defaultSupply(CodecUtil.catchingCodec(TownHousingPlan.CODEC), () -> TownHousingPlan.EMPTY)
+        .fieldOf("housingPlan").forGetter(TeamTownData::getHousingPlan),
+
+        CodecUtil.defaultSupply(CodecUtil.catchingCodec(TownPolicyState.CODEC), () -> TownPolicyState.DEFAULT)
+        .fieldOf("policyState").forGetter(TeamTownData::getPolicyState),
+
         CodecUtil.defaultSupply(CodecUtil.catchingCodec(Codec.LONG), () -> -1L)
         .fieldOf("lastRefugeeSpawnDay").forGetter(o -> o.lastRefugeeSpawnDay)
 
@@ -199,6 +210,12 @@ public class TeamTownData implements SpecialData{
      * 当前建筑表对齐，以清理已拆除建筑并补入新建筑。
      */
     private TownStaffingPlan staffingPlan = TownStaffingPlan.EMPTY;
+
+    /** Player-authored residential-care queue and guaranteed-ration targets. */
+    private TownHousingPlan housingPlan = TownHousingPlan.EMPTY;
+
+    /** Extensible, globally cooled-down town law selections. */
+    private TownPolicyState policyState = TownPolicyState.DEFAULT;
 
     /** Threshold events accumulated during the current daily settlement. */
     private transient final List<TownSignalEvent> pendingDailySignals = new ArrayList<>();
@@ -328,7 +345,7 @@ public class TeamTownData implements SpecialData{
      * @param staffingPlan 已保存的岗位计划；旧存档缺失时由 Codec 提供空计划
      * @param lastRefugeeSpawnDay 最近一次难民自然刷新所用的稳定世界日
      */
-    public TeamTownData(String name, TeamTownResourceHolder resources, Map<BlockPos, ITownBuilding> buildings, Map<UUID, Resident> residents, Map<TerrainResourceType, TerrainResourceData> terrainResource,int labour,int maxlabour, List<TownHistoryEntry> history, long townDay, TownStaffingPlan staffingPlan, long lastRefugeeSpawnDay) {
+    public TeamTownData(String name, TeamTownResourceHolder resources, Map<BlockPos, ITownBuilding> buildings, Map<UUID, Resident> residents, Map<TerrainResourceType, TerrainResourceData> terrainResource,int labour,int maxlabour, List<TownHistoryEntry> history, long townDay, TownStaffingPlan staffingPlan, TownHousingPlan housingPlan, TownPolicyState policyState, long lastRefugeeSpawnDay) {
         super();
         this.history = new ArrayList<>(history);
         this.townDay = townDay >= 0L ? townDay : history.size();
@@ -345,13 +362,73 @@ public class TeamTownData implements SpecialData{
         this.maxLabour=0;
         this.staffingPlan = staffingPlan == null ? TownStaffingPlan.EMPTY : staffingPlan;
         normalizeStaffingPlan();
+        this.housingPlan = housingPlan == null ? TownHousingPlan.EMPTY : housingPlan;
+        normalizeHousingPlan();
+        this.policyState = policyState == null ? TownPolicyState.DEFAULT : policyState;
         this.lastRefugeeSpawnDay = lastRefugeeSpawnDay;
+    }
+
+    /** Source-compatible constructor for callers predating housing and policy plans. */
+    public TeamTownData(String name, TeamTownResourceHolder resources, Map<BlockPos, ITownBuilding> buildings, Map<UUID, Resident> residents, Map<TerrainResourceType, TerrainResourceData> terrainResource,int labour,int maxlabour, List<TownHistoryEntry> history, long townDay, TownStaffingPlan staffingPlan, long lastRefugeeSpawnDay) {
+        this(name, resources, buildings, residents, terrainResource, labour, maxlabour,
+                history, townDay, staffingPlan, TownHousingPlan.EMPTY,
+                TownPolicyState.DEFAULT, lastRefugeeSpawnDay);
     }
 
     /** Source-compatible constructor for callers predating the persistent town-day field. */
     public TeamTownData(String name, TeamTownResourceHolder resources, Map<BlockPos, ITownBuilding> buildings, Map<UUID, Resident> residents, Map<TerrainResourceType, TerrainResourceData> terrainResource,int labour,int maxlabour, List<TownHistoryEntry> history, TownStaffingPlan staffingPlan, long lastRefugeeSpawnDay) {
         this(name, resources, buildings, residents, terrainResource, labour, maxlabour,
                 history, -1L, staffingPlan, lastRefugeeSpawnDay);
+    }
+
+    public TownHousingPlan getHousingPlan() {
+        normalizeHousingPlan();
+        return housingPlan;
+    }
+
+    private void normalizeHousingPlan() {
+        TownHousingPlan normalized = housingPlan.normalize(buildings);
+        if (!normalized.equals(housingPlan)) housingPlan = normalized;
+    }
+
+    public boolean setHousingGuarantee(BlockPos building, int target) {
+        Optional<TownHousingPlan> changed = getHousingPlan().withGuarantee(
+                building, target, buildings);
+        if (changed.isEmpty() || changed.get().equals(housingPlan)) return false;
+        housingPlan = changed.get();
+        return true;
+    }
+
+    public boolean moveHousingEntry(BlockPos building, Optional<BlockPos> before) {
+        Optional<TownHousingPlan> changed = getHousingPlan().move(
+                building, before, buildings);
+        if (changed.isEmpty() || changed.get().equals(housingPlan)) return false;
+        housingPlan = changed.get();
+        return true;
+    }
+
+    public void applyHousingPlan(TownHousingPlan updated) {
+        housingPlan = updated == null ? TownHousingPlan.EMPTY : updated;
+        normalizeHousingPlan();
+        fireHousingChanged();
+    }
+
+    public TownPolicyState getPolicyState() {
+        return policyState;
+    }
+
+    public boolean requestCareLaw(TownCareLaw law) {
+        TownPolicyState.EditResult result = policyState.requestCareLaw(
+                law, townDay,
+                FHConfig.SERVER.TOWN.RESIDENT_RULES.townPolicyCooldownDays.get());
+        if (!result.changed()) return false;
+        policyState = result.state();
+        return true;
+    }
+
+    public void applyPolicyState(TownPolicyState updated) {
+        policyState = updated == null ? TownPolicyState.DEFAULT : updated;
+        firePoliciesChanged();
     }
 
     public TeamTownData(SpecialDataHolder teamData) {
@@ -590,8 +667,13 @@ public class TeamTownData implements SpecialData{
         TeamTown town = this.createTeamTown();
         this.checkBlocks(world, town);
         this.checkOccupiedAreaOverlap();
-        this.tickResidentsMorning();
-        this.tickResidentsAging();
+        TownPolicyState activatedPolicies = this.policyState.activatePending();
+        if (!activatedPolicies.equals(this.policyState)) {
+            this.policyState = activatedPolicies;
+            teamData.sendToOnline(FHNetwork.INSTANCE,
+                    new TownPolicyStateUpdatePacket(this.policyState));
+        }
+        TownHousingMealService.decayNutrition(this.residents.values());
         this.residentAllocatingCheck(town);
         this.allocateHouse();
         this.assignWork();
@@ -600,6 +682,10 @@ public class TeamTownData implements SpecialData{
         this.recalcOreChunkResources();
         residents.values().forEach(Resident::resetDailyProficiencyGrowth);
         this.buildingsWork(world);
+        TownHousingMealService.settle(
+                town, getHousingPlan(), policyState.careLaw());
+        this.tickResidentsAging();
+        this.tickResidentsMorning();
         this.recoverResources();
         this.recordDailySnapshot(world, teamData);
         // 每日结算完成通知：锚点/工作重分配与难民处理全部完成后，经门面告知
@@ -655,7 +741,9 @@ public class TeamTownData implements SpecialData{
                 current.p10Mental(), current.population() == 0 ? 0.0 : residents.values().stream()
                         .mapToDouble(Resident::getMental).min().orElse(0.0),
                 current.unableToWorkCount(), current.exitRiskCount(), towerWorking,
-                climateLevel, signals, TownOperationalHistory.from(current));
+                climateLevel, signals, TownOperationalHistory.from(current),
+                TownNutritionHistory.capture(residents.values().stream()
+                        .map(Resident::getNutrition).toList()));
         history.add(entry);
         int configuredHistoryDays = FHConfig.SERVER.TOWN.OBSERVATION.historyDays.get();
         while (history.size() > configuredHistoryDays) {
@@ -864,10 +952,19 @@ public class TeamTownData implements SpecialData{
                         aging.adultAttributeCap.get(),
                         aging.elderStrengthDecayPerDay.get(),
                         aging.elderStrengthFloor.get());
+        FHConfig.Server.Town.Housing nutrition = FHConfig.SERVER.TOWN.HOUSING;
+        ResidentNutrition.Parameters nutritionParameters = new ResidentNutrition.Parameters(
+                nutrition.residentNutritionMaximumReserve.get(),
+                nutrition.residentNutritionHealthyReserve.get(),
+                nutrition.residentNutritionRecoveryDirectWeight.get(),
+                nutrition.residentNutritionRecoverySupportWeight.get(),
+                nutrition.residentNutritionDeficiencyGrowthFloor.get(),
+                nutrition.residentNutritionMaximumGrowthBonus.get());
         for (Resident resident : residents.values()) {
             ResidentAgingModel.AgingResult result = ResidentAgingModel.settleDay(
                     resident.getAge(), resident.getAgeDays(), resident.getStrength(),
-                    resident.getIntelligence(), parameters);
+                    resident.getIntelligence(), resident.getNutrition(), parameters,
+                    nutritionParameters);
             resident.setAgeDays(result.ageDays());
             resident.setAge(result.age());
             resident.setStrength(result.strength());
@@ -1056,18 +1153,8 @@ public class TeamTownData implements SpecialData{
                 //移除已不存在的居民
                 residentIDs.removeIf(uuid -> !residents.containsKey(uuid));
 
-                // 住宅在此修剪超额名册；工作建筑稍后由 assignWork 原子重建。
-                // 不能在这里迭代 HashSet 随机删人，否则会绕过玩家队列与居民适配分数。
-                int maxResident = residentBuilding.getMaxResidents();
-                if (!(residentBuilding instanceof ITownResidentWorkBuilding)
-                        && residentIDs.size() > maxResident) {
-                    Iterator<UUID> iterator = residentIDs.iterator();
-                    int removeCount = residentIDs.size() - maxResident;
-                    for (int i = 0; i < removeCount && iterator.hasNext(); i++) {
-                        iterator.next();
-                        iterator.remove();
-                    }
-                }
+                // 工作与住宅名册稍后都由各自的原子规划器完整重建。这里不随机裁剪，
+                // 否则 HashSet 迭代顺序会在规划前丢失玩家队列与原住房稳定性信息。
                 for (UUID resident : residentBuilding.getResidentsID()) {
                     // 把清空的居民的house/work位置设为加回来
                     if (building instanceof HouseBuilding){
@@ -1079,27 +1166,70 @@ public class TeamTownData implements SpecialData{
         }
     }
 
-    // distribute homeless residents to house
+    // Rebuild the complete residential roster in player-authored care order.
     void allocateHouse() {
-        Iterator<HouseBuilding> houseIterator = buildings.values().stream()
-                .filter(building -> building instanceof HouseBuilding)
-                .map(building -> (HouseBuilding) building)
-                .filter(building ->building.isBuildingWorkable() && building.getMaxResidents() > building.getResidentsID().size())
-            .sorted(Comparator.comparingDouble(building -> -building.getRating()))// 优先分配评分最高的house。因此在rating前面加了负号。
-            .iterator();
-        if (!houseIterator.hasNext()) return;
-        HouseBuilding currentHouseData = houseIterator.next();
-        for (Resident resident : residents.values()) {// 遍历所有居民
-            if (resident.getHousePos() == null) {// 为没有house的居民分配进当前的house(暂存在ListNBT中)
-                currentHouseData.addResident(resident);
+        Map<UUID, BlockPos> previousHouses = new HashMap<>();
+        residents.values().forEach(resident -> {
+            if (resident.getHousePos() != null) {
+                previousHouses.put(resident.getUUID(), resident.getHousePos());
             }
-            if (currentHouseData.getResidentsID().size() >= currentHouseData.getMaxResidents()) {// 如果当前house满了，将暂存在ListNBT中的居民信息存入TownWorkerData，然后尝试进入下一个house
-                if (houseIterator.hasNext()) {
-                    currentHouseData = houseIterator.next();
-                } else {
-                    break;
-                }
+            resident.setHousePos(null);
+        });
+        buildings.values().stream()
+                .filter(value -> value instanceof HouseBuilding)
+                .map(value -> (HouseBuilding) value)
+                .forEach(HouseBuilding::clearResidents);
+
+        FHConfig.Server.Town.ResidentRules rules = FHConfig.SERVER.TOWN.RESIDENT_RULES;
+        FHConfig.Server.Town.Housing nutrition = FHConfig.SERVER.TOWN.HOUSING;
+        Map<UUID, Resident> remaining = new LinkedHashMap<>();
+        residents.values().stream().sorted(Comparator.comparing(Resident::getUUID))
+                .forEach(resident -> remaining.put(resident.getUUID(), resident));
+        Map<UUID, TownResidentCareModel.Need> needs = new HashMap<>();
+        for (Resident resident : residents.values()) {
+            needs.put(resident.getUUID(), TownResidentCareModel.assess(
+                    resident.getUUID(), resident.getAge(), resident.getHealth(),
+                    resident.getMental(), resident.getNutrition(),
+                    rules.minimumWorkingAge.get(),
+                    rules.minimumWorkingHealthExclusive.get(),
+                    rules.minimumWorkingMentalExclusive.get(),
+                    rules.removalHealthThreshold.get(),
+                    rules.removalMentalThreshold.get(),
+                    nutrition.residentNutritionHealthyReserve.get(),
+                    nutrition.residentNutritionSevereReserve.get()));
+        }
+        TownCareLaw law = policyState.careLaw();
+        for (TownHousingPlan.Entry entry : getHousingPlan().entries()) {
+            AbstractTownBuilding value = buildings.get(entry.building());
+            if (!(value instanceof HouseBuilding house) || !house.isBuildingWorkable()) continue;
+            Comparator<Resident> comparator = Comparator.comparing(
+                    resident -> needs.get(resident.getUUID()),
+                    TownResidentCareModel.comparatorForHouse(
+                            law, id -> entry.building().equals(previousHouses.get(id)),
+                            rules.residentialCareScoreBand.get()));
+            List<Resident> selected = remaining.values().stream()
+                    .sorted(comparator)
+                    .limit(Math.max(0, house.getMaxResidents()))
+                    .toList();
+            for (Resident resident : selected) {
+                house.addResident(resident);
+                remaining.remove(resident.getUUID());
             }
+        }
+    }
+
+    /**
+     * Places one newly-added resident without rebuilding every household.
+     * The next morning settlement will include them in the full care-priority pass.
+     */
+    void allocateNewResident(Resident resident) {
+        resident.setHousePos(null);
+        for (TownHousingPlan.Entry entry : getHousingPlan().entries()) {
+            AbstractTownBuilding value = buildings.get(entry.building());
+            if (!(value instanceof HouseBuilding house) || !house.isBuildingWorkable()) continue;
+            if (house.getResidentsID().size() >= Math.max(0, house.getMaxResidents())) continue;
+            house.addResident(resident);
+            return;
         }
     }
 
@@ -1246,6 +1376,7 @@ public class TeamTownData implements SpecialData{
 
         buildings.values().stream()
                 .filter(AbstractTownBuilding::shouldRunDailySettlement)
+                .filter(building -> !(building instanceof HouseBuilding))
                 .sorted(Comparator.comparingInt(AbstractTownBuilding::getWorkPriority).reversed())
                 .forEach(building -> building.work(teamTown,world));
     }
@@ -1429,6 +1560,8 @@ public class TeamTownData implements SpecialData{
             fireResourcesChanged();
             fireHistoryChanged();
             fireStaffingChanged();
+            fireHousingChanged();
+            firePoliciesChanged();
         } finally {
             inClientBatchFire = false;
         }
@@ -1465,6 +1598,18 @@ public class TeamTownData implements SpecialData{
     private static void fireStaffingChanged() {
         for (ITownDataUpdateListener listener : clientListeners) {
             listener.onStaffingChanged();
+        }
+    }
+
+    private static void fireHousingChanged() {
+        for (ITownDataUpdateListener listener : clientListeners) {
+            listener.onHousingChanged();
+        }
+    }
+
+    private static void firePoliciesChanged() {
+        for (ITownDataUpdateListener listener : clientListeners) {
+            listener.onPoliciesChanged();
         }
     }
 

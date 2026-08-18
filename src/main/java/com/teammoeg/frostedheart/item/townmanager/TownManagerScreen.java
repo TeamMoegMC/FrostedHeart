@@ -84,7 +84,7 @@ public class TownManagerScreen extends PrimaryLayer implements ITownDataUpdateLi
     public static final int CONTENT_Y = 6;
     public static final int CONTENT_WIDTH = FRAME_WIDTH - CONTENT_X * 2;
     public static final int CONTENT_HEIGHT = 204;
-    public static final int EVENTS_TAB = 5;
+    public static final int EVENTS_TAB = 7;
 
     private int activeTab = 0;
     private final List<TownManagerTab> tabs = new ArrayList<>();
@@ -101,6 +101,8 @@ public class TownManagerScreen extends PrimaryLayer implements ITownDataUpdateLi
         tabs.add(new TownResidentsTab(this));
         tabs.add(new TownBuildingsTab(this));
         tabs.add(new TownStaffingTab(this));
+        tabs.add(new TownHousingTab(this));
+        tabs.add(new TownPoliciesTab(this));
         tabs.add(new TownStatisticsTab(this));
         tabs.add(new TownEventsTab(this));
         this.activeTab = Math.max(0, Math.min(tabs.size() - 1, initialTab));

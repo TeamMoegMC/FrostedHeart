@@ -18,7 +18,8 @@
     "populationPoints": 20,
     "populationValues": [1, 4, 8, 10, 11, 12, 13, 14, 15, 16, 20, 24, 32, 48, 64, 96, 128, 160, 180, 200],
     "trajectoryPopulations": [1, 8, 11, 12, 13, 14, 16, 24, 48, 200],
-    "timelinePopulation": 24
+    "timelinePopulation": 24,
+    "equilibriumWindowDays": 30
   },
   "location": {
     "dimensionTemperatureCelsius": -10.0,

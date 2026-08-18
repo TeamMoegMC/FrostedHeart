@@ -15,6 +15,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.teammoeg.frostedheart.content.town.resource.TownFoodProcessingModel;
 import com.teammoeg.frostedheart.content.town.resource.TownFoodResourceAmount;
+import com.teammoeg.frostedheart.content.town.resident.ResidentNutrition;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -106,8 +107,10 @@ public record TownStageOneTwoData(
             Path cookedNutritionPath = nutritionPath(normalizedProject, meat.cookedItem());
             requireFile(rawNutritionPath);
             requireFile(cookedNutritionPath);
-            double rawNutrition = readNutritionPerItem(rawNutritionPath, meat.rawItem());
-            double cookedNutrition = readNutritionPerItem(cookedNutritionPath, meat.cookedItem());
+            ResidentNutrition.NutritionIntake rawNutrition = readNutritionPerItem(
+                    rawNutritionPath, meat.rawItem());
+            ResidentNutrition.NutritionIntake cookedNutrition = readNutritionPerItem(
+                    cookedNutritionPath, meat.cookedItem());
             double rawFood = TownFoodResourceAmount.fromFoodProperties(
                     meat.rawHunger(), meat.rawSaturationModifier());
             double cookedFood = TownFoodResourceAmount.fromFoodProperties(
@@ -139,6 +142,35 @@ public record TownStageOneTwoData(
                 sources);
     }
 
+    public TownStageOneTwoData withSimulationFoods(
+            Path projectRoot,
+            List<TownStageThreeScenario.SimulationFood> definitions
+    ) throws IOException {
+        if (definitions.isEmpty()) return this;
+        Path normalizedProject = projectRoot.toAbsolutePath().normalize();
+        Map<String, Integer> foodLevels = readFoodLevels(normalizedProject);
+        Map<String, FoodDefinition> expandedFoods = new LinkedHashMap<>(foods);
+        Map<String, String> expandedSources = new LinkedHashMap<>(sourceFiles);
+        for (TownStageThreeScenario.SimulationFood definition : definitions) {
+            if (expandedFoods.containsKey(definition.item())) {
+                throw new IllegalArgumentException(
+                        "Simulation food is already provided by the base model: " + definition.item());
+            }
+            Path nutrition = nutritionPath(normalizedProject, definition.item());
+            requireFile(nutrition);
+            FoodDefinition food = new FoodDefinition(
+                    definition.item(), requireFoodLevel(foodLevels, definition.item()),
+                    TownFoodResourceAmount.fromFoodProperties(
+                            definition.hunger(), definition.saturationModifier()),
+                    readNutritionPerItem(nutrition, definition.item()));
+            expandedFoods.put(food.item(), food);
+            expandedSources.put("fh.nutrition." + food.item(), nutrition.toString());
+        }
+        return new TownStageOneTwoData(
+                mineWeights, huntingLoot, coalRecipeProcessTicks, cokeRecipeProcessTicks,
+                meats, expandedFoods, expandedSources);
+    }
+
     private static Map<String, Integer> readFoodLevels(Path projectRoot) throws IOException {
         Map<String, Integer> result = new HashMap<>();
         for (int level = 0; level <= 4; level++) {
@@ -157,7 +189,10 @@ public record TownStageOneTwoData(
         return Map.copyOf(result);
     }
 
-    private static double readNutritionPerItem(Path path, String expectedItem) throws IOException {
+    private static ResidentNutrition.NutritionIntake readNutritionPerItem(
+            Path path,
+            String expectedItem
+    ) throws IOException {
         JsonObject root = JsonParser.parseString(Files.readString(path)).getAsJsonObject();
         if (!"frostedheart:diet_override".equals(root.get("type").getAsString())) {
             throw new IllegalArgumentException("Unsupported stage-2 nutrition recipe: " + path);
@@ -166,11 +201,11 @@ public record TownStageOneTwoData(
             throw new IllegalArgumentException("Nutrition recipe item mismatch: " + path);
         }
         JsonObject group = root.getAsJsonObject("group");
-        double channelSum = 0.0;
-        for (String channel : List.of("fat", "carbohydrate", "protein", "vegetable")) {
-            channelSum += group.get(channel).getAsDouble();
-        }
-        return channelSum / 4.0;
+        return new ResidentNutrition.NutritionIntake(
+                group.get("fat").getAsDouble(),
+                group.get("carbohydrate").getAsDouble(),
+                group.get("protein").getAsDouble(),
+                group.get("vegetable").getAsDouble());
     }
 
     private static Path nutritionPath(Path projectRoot, String item) {
@@ -205,7 +240,18 @@ public record TownStageOneTwoData(
             String item,
             int foodLevel,
             double foodUnitsPerItem,
-            double nutritionPerItem
+            ResidentNutrition.NutritionIntake nutrition
     ) {
+        public FoodDefinition(String item, int foodLevel, double foodUnitsPerItem,
+                              double scalarNutritionPerItem) {
+            this(item, foodLevel, foodUnitsPerItem, new ResidentNutrition.NutritionIntake(
+                    scalarNutritionPerItem, scalarNutritionPerItem,
+                    scalarNutritionPerItem, scalarNutritionPerItem));
+        }
+
+        public double nutritionPerItem() {
+            return (nutrition.fat() + nutrition.carbohydrate()
+                    + nutrition.protein() + nutrition.vegetable()) / 4.0;
+        }
     }
 }

@@ -19,6 +19,7 @@
 package com.teammoeg.frostedheart.content.town.model;
 
 import com.teammoeg.frostedheart.content.town.TownMathFunctions;
+import com.teammoeg.frostedheart.content.town.resident.ResidentNutrition;
 
 import java.util.List;
 
@@ -61,6 +62,64 @@ public record TownModelParameters(
                         Defaults.TOWN_OBSERVATION_RESERVE_WARNING_DAYS,
                         Defaults.TOWN_OBSERVATION_RESERVE_CRITICAL_DAYS),
                 meatFoods);
+    }
+
+    /** Returns a simulation-only snapshot with selected nutrition pacing values replaced. */
+    public TownModelParameters withNutritionTuning(
+            double referencePerFoodUnit,
+            double reserveLossPerDay,
+            double gainAtReference
+    ) {
+        if (!Double.isFinite(referencePerFoodUnit) || referencePerFoodUnit <= 0.0) {
+            throw new IllegalArgumentException("referencePerFoodUnit must be finite and positive.");
+        }
+        if (!Double.isFinite(reserveLossPerDay) || reserveLossPerDay < 0.0) {
+            throw new IllegalArgumentException("reserveLossPerDay must be finite and non-negative.");
+        }
+        if (!Double.isFinite(gainAtReference) || gainAtReference < 0.0) {
+            throw new IllegalArgumentException("gainAtReference must be finite and non-negative.");
+        }
+        HousingParameters oldHousing = housing;
+        HousingParameters tunedHousing = new HousingParameters(
+                oldHousing.foodConsumptionPerResidentDay(), referencePerFoodUnit,
+                oldHousing.minimumNutritionRecoveryMultiplier(),
+                oldHousing.foodDeficitPenaltyExponent(),
+                oldHousing.healthLossAtZeroFoodPerResidentDay(),
+                oldHousing.mentalLossAtZeroFoodPerResidentDay(),
+                oldHousing.maximumHealthRecoveryPerResidentDay(),
+                oldHousing.maximumMentalRecoveryPerResidentDay(),
+                oldHousing.minimumFloorAreaBlocks(), oldHousing.minimumInteriorVolumeBlocks(),
+                oldHousing.minimumTemperatureCelsius(), oldHousing.maximumTemperatureCelsius(),
+                oldHousing.temperatureFullStressDistanceCelsius(),
+                oldHousing.temperatureStressPenaltyExponent(),
+                oldHousing.healthLossAtFullTemperatureStressPerResidentDay(),
+                oldHousing.mentalLossAtFullTemperatureStressPerResidentDay(),
+                oldHousing.floorBlocksPerResident(), oldHousing.temperatureComfortWeight(),
+                oldHousing.spaceComfortWeight(), oldHousing.decorationComfortWeight(),
+                oldHousing.decorationRating());
+        ResidentParameters oldResidents = residents;
+        ResidentNutritionParameters oldNutrition = oldResidents.nutrition();
+        ResidentNutritionParameters tunedNutrition = new ResidentNutritionParameters(
+                oldNutrition.maximumReserve(), oldNutrition.initialReserve(),
+                oldNutrition.healthyReserve(), oldNutrition.severeReserve(),
+                reserveLossPerDay, gainAtReference, oldNutrition.maximumCoverage(),
+                oldNutrition.recoveryDirectWeight(), oldNutrition.recoverySupportWeight(),
+                oldNutrition.deficiencyGrowthFloor(), oldNutrition.maximumGrowthBonus(),
+                oldNutrition.mealSelectionChunks(), oldNutrition.channelNeedUtilityWeight(),
+                oldNutrition.conditionNeedUtilityWeight(), oldNutrition.growthNeedUtilityWeight());
+        ResidentParameters tunedResidents = new ResidentParameters(
+                oldResidents.homelessHealthLossPerDay(), oldResidents.removalHealthThreshold(),
+                oldResidents.removalMentalThreshold(), oldResidents.minimumWorkingAge(),
+                oldResidents.minimumWorkingHealthExclusive(),
+                oldResidents.minimumWorkingMentalExclusive(), oldResidents.workRequiresHousing(),
+                oldResidents.maximumWorkProficiency(),
+                oldResidents.proficiencyGrowthAtZeroPerWorkday(),
+                oldResidents.minimumProficiencyGrowthPerWorkday(), oldResidents.generation(),
+                oldResidents.aging(), tunedNutrition, oldResidents.residentialCareScoreBand(),
+                oldResidents.townPolicyCooldownDays());
+        return new TownModelParameters(
+                mining, hunting, tunedHousing, tunedResidents, buildingScoring,
+                terrainResources, generatorT1, climate, observation, meatFoods);
     }
 
     /**
@@ -202,7 +261,25 @@ public record TownModelParameters(
                                 Defaults.RESIDENT_ADULT_INTELLIGENCE_GAIN_PER_DAY,
                                 Defaults.RESIDENT_ADULT_ATTRIBUTE_CAP,
                                 Defaults.RESIDENT_ELDER_STRENGTH_DECAY_PER_DAY,
-                                Defaults.RESIDENT_ELDER_STRENGTH_FLOOR)),
+                                Defaults.RESIDENT_ELDER_STRENGTH_FLOOR),
+                        new ResidentNutritionParameters(
+                                Defaults.RESIDENT_NUTRITION_MAXIMUM_RESERVE,
+                                Defaults.RESIDENT_NUTRITION_INITIAL_RESERVE,
+                                Defaults.RESIDENT_NUTRITION_HEALTHY_RESERVE,
+                                Defaults.RESIDENT_NUTRITION_SEVERE_RESERVE,
+                                Defaults.RESIDENT_NUTRITION_RESERVE_LOSS_PER_DAY,
+                                Defaults.RESIDENT_NUTRITION_GAIN_AT_REFERENCE,
+                                Defaults.RESIDENT_NUTRITION_MAXIMUM_COVERAGE,
+                                Defaults.RESIDENT_NUTRITION_RECOVERY_DIRECT_WEIGHT,
+                                Defaults.RESIDENT_NUTRITION_RECOVERY_SUPPORT_WEIGHT,
+                                Defaults.RESIDENT_NUTRITION_DEFICIENCY_GROWTH_FLOOR,
+                                Defaults.RESIDENT_NUTRITION_MAXIMUM_GROWTH_BONUS,
+                                Defaults.RESIDENT_NUTRITION_MEAL_SELECTION_CHUNKS,
+                                Defaults.RESIDENT_NUTRITION_CHANNEL_NEED_UTILITY_WEIGHT,
+                                Defaults.RESIDENT_NUTRITION_CONDITION_NEED_UTILITY_WEIGHT,
+                                Defaults.RESIDENT_NUTRITION_GROWTH_NEED_UTILITY_WEIGHT),
+                        Defaults.RESIDENTIAL_CARE_SCORE_BAND,
+                        Defaults.TOWN_POLICY_COOLDOWN_DAYS),
                 new BuildingScoringParameters(
                         new TemperatureRatingParameters(
                                 Defaults.BUILDING_COMFORTABLE_TEMPERATURE_CELSIUS,
@@ -340,8 +417,36 @@ public record TownModelParameters(
             double proficiencyGrowthAtZeroPerWorkday,
             double minimumProficiencyGrowthPerWorkday,
             ResidentGenerationParameters generation,
-            ResidentAgingParameters aging
+            ResidentAgingParameters aging,
+            ResidentNutritionParameters nutrition,
+            double residentialCareScoreBand,
+            int townPolicyCooldownDays
     ) {
+    }
+
+    /** Four-channel reserve, recovery, growth, and meal-choice tuning. */
+    public record ResidentNutritionParameters(
+            double maximumReserve,
+            double initialReserve,
+            double healthyReserve,
+            double severeReserve,
+            double reserveLossPerDay,
+            double gainAtReference,
+            double maximumCoverage,
+            double recoveryDirectWeight,
+            double recoverySupportWeight,
+            double deficiencyGrowthFloor,
+            double maximumGrowthBonus,
+            int mealSelectionChunks,
+            double channelNeedUtilityWeight,
+            double conditionNeedUtilityWeight,
+            double growthNeedUtilityWeight
+    ) {
+        public ResidentNutrition.Parameters formulas() {
+            return new ResidentNutrition.Parameters(
+                    maximumReserve, healthyReserve, recoveryDirectWeight,
+                    recoverySupportWeight, deficiencyGrowthFloor, maximumGrowthBonus);
+        }
     }
 
     /** Recruitment-time resident distribution currently used by gameplay. */
@@ -558,6 +663,23 @@ public record TownModelParameters(
         public static final double HOUSING_FOOD_PER_RESIDENT_DAY = 6.5;
         public static final double HOUSING_NUTRITION_REFERENCE_PER_FOOD_UNIT = 7000.0;
         public static final double HOUSING_MINIMUM_NUTRITION_RECOVERY_MULTIPLIER = 0.5;
+        public static final double RESIDENT_NUTRITION_MAXIMUM_RESERVE = 100.0;
+        public static final double RESIDENT_NUTRITION_INITIAL_RESERVE = 70.0;
+        public static final double RESIDENT_NUTRITION_HEALTHY_RESERVE = 70.0;
+        public static final double RESIDENT_NUTRITION_SEVERE_RESERVE = 20.0;
+        public static final double RESIDENT_NUTRITION_RESERVE_LOSS_PER_DAY = 10.0;
+        public static final double RESIDENT_NUTRITION_GAIN_AT_REFERENCE = 10.0;
+        public static final double RESIDENT_NUTRITION_MAXIMUM_COVERAGE = 2.0;
+        public static final double RESIDENT_NUTRITION_RECOVERY_DIRECT_WEIGHT = 0.6;
+        public static final double RESIDENT_NUTRITION_RECOVERY_SUPPORT_WEIGHT = 0.4;
+        public static final double RESIDENT_NUTRITION_DEFICIENCY_GROWTH_FLOOR = 0.5;
+        public static final double RESIDENT_NUTRITION_MAXIMUM_GROWTH_BONUS = 0.25;
+        public static final int RESIDENT_NUTRITION_MEAL_SELECTION_CHUNKS = 8;
+        public static final double RESIDENT_NUTRITION_CHANNEL_NEED_UTILITY_WEIGHT = 1.0;
+        public static final double RESIDENT_NUTRITION_CONDITION_NEED_UTILITY_WEIGHT = 1.0;
+        public static final double RESIDENT_NUTRITION_GROWTH_NEED_UTILITY_WEIGHT = 0.5;
+        public static final double RESIDENTIAL_CARE_SCORE_BAND = 0.05;
+        public static final int TOWN_POLICY_COOLDOWN_DAYS = 7;
         public static final double HOUSING_FOOD_DEFICIT_PENALTY_EXPONENT = 2.0;
         public static final double HOUSING_HEALTH_LOSS_AT_ZERO_FOOD_PER_RESIDENT_DAY = 8.0;
         public static final double HOUSING_MENTAL_LOSS_AT_ZERO_FOOD_PER_RESIDENT_DAY = 5.0;
@@ -634,8 +756,8 @@ public record TownModelParameters(
         public static final double RESIDENT_COLD_SURVIVOR_ATTRIBUTE_BONUS = 15.0;
         public static final double RESIDENT_COLD_SURVIVOR_PROFICIENCY_MULTIPLIER = 1.5;
         public static final double RESIDENT_COLD_SURVIVOR_CHANCE = 0.5;
-        public static final int RESIDENT_INFANT_TO_CHILD_DAYS = 10;
-        public static final int RESIDENT_CHILD_TO_ADULT_DAYS = 30;
+        public static final int RESIDENT_INFANT_TO_CHILD_DAYS = 30;
+        public static final int RESIDENT_CHILD_TO_ADULT_DAYS = 60;
         public static final double RESIDENT_INFANT_STRENGTH_GAIN_PER_DAY = 0.2;
         public static final double RESIDENT_INFANT_INTELLIGENCE_GAIN_PER_DAY = 0.2;
         public static final double RESIDENT_INFANT_ATTRIBUTE_CAP = 40.0;

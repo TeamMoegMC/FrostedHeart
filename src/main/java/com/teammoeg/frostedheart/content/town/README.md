@@ -1,7 +1,7 @@
 # FrostedHeart — `town` 包开发者参考（AI Generated）
 
 > 路径：`src/main/java/com/teammoeg/frostedheart/content/town`
-> 适用版本：当前仓库 `main`（最近修改 2026-08；含增量同步重构，见 §9 与 §14）
+> 适用版本：当前仓库 `main`（最近修改 2026-08；含居民营养、住宅照护队列、政策与增量同步）
 
 本文件汇总 `town`（城镇）系统的关键架构、常用类与典型扩展方式，供日常开发与排查使用。
 内容基于源码阅读，所有路径相对于 `town` 包根目录。
@@ -82,7 +82,7 @@ public interface ITown extends ITownWithResources, ITownWithBuildings, ITownWith
 
 ### 3.3 `TeamTownData`（持久化数据 + 每日主流程）
 
-`implements SpecialData`，`CODEC` 字段：`name / resources / blocks / residents / terrainResource / labour / maxLabour / history / lastRefugeeSpawnDay`。
+`implements SpecialData`，`CODEC` 字段：`name / resources / blocks / residents / terrainResource / labour / maxLabour / history / townDay / staffingPlan / housingPlan / policyState / lastRefugeeSpawnDay`。
 所有「永久状态」都在此处；`TeamTown` 只是指向它的视图。
 
 **同步相关状态**：
@@ -99,18 +99,17 @@ public interface ITown extends ITownWithResources, ITownWithBuildings, ITownWith
 
 1. `checkBlocks` —— 校验已失效/方块被改的建筑（与 `TownBlockEntity.getBuilding` 一致性校验），并复用 `TeamTown.removeTownBlock` 注销；这是主动拆除即时注销之外，针对存档异常、世界编辑等情况的晨间兜底。
 2. `checkOccupiedAreaOverlap` —— 用 `OccupiedVolume.intersects` 两两比对，并为所有剩余建筑同时设置或清除 `occupiedAreaOverlapped`（重叠会导致 `isBuildingWorkable` 失败）。
-3. `tickResidentsMorning` —— `health<=5` 或 `mental<=5` 判定死亡（`DEBUG_MODE` 下跳过）；无房者 `costHealth(10)`。
-4. `tickResidentsAging` —— 居民老化结算（见 §7）：`ageDays+1`，幼儿/儿童达标后成长，各年龄组按 `FHConfig.SERVER.TOWN.RESIDENT_AGING` 每日增减属性并封顶。
-5. `residentAllocatingCheck` —— 清空所有居民的 house/work 位置后从建筑回写，并剔除超限/已亡居民。
-6. `allocateHouse` —— 按 `HouseBuilding.getRating()` **降序** 优先分配无房居民。
-7. `assignWork` —— 工作建筑入优先级队列（`getResidentPriority()` 降序），对每个建筑挑 `getResidentScore` 最高的可用居民（幼儿 `AGE_INFANT` 被 `canResidentWork` 与 `assignWork` 双重排除）。
-8. `tickRefugeeSpawnAndDespawn` —— 难民刷新与清场（见 §7）：先清场（塔旁无房/超时的 `townSpawned` 难民消失），塔开启且当天未结算时按天气概率刷一批到塔附近（`REFUGEE_SPAWN` 配置，`lastRefugeeSpawnDay` 按世界日防重复）。
-9. `linkMinesToBases` —— 按 `MineBaseBuilding.getConnectionRadius()` 把范围内的 `MineBuilding` 链到矿基。
-10. `recalcOreChunkResources` —— 设定 `ORE` 的活跃区块（`setTerrainResourceTypeActiveChunks`）。
-11. `buildingsWork` —— `reloadMaxCapacity()` 后筛选 `shouldRunDailySettlement()`，再按 `getWorkPriority()` 降序执行 `building.work(town, world)`；默认资格等于 `isBuildingWorkable()`，住宅会单独忽略温度门槛。
-12. `recoverResources` —— 地形资源按配置的 `recoverSpeed` 恢复。
+3. 激活上一次结算后提交的待生效政策；四类居民营养各扣除一次每日储备损耗。
+4. `residentAllocatingCheck` 后运行 `allocateHouse` —— 按玩家住宅队列逐栋填满；具体居民顺序由当前照护政策、健康/精神/营养风险及同档原住房稳定性决定。
+5. `assignWork` —— 使用 `TownStaffingPlan` 与 `TownAssignmentModel` 原子重建当日工作名册。
+6. `tickRefugeeSpawnAndDespawn`、`linkMinesToBases`、`recalcOreChunkResources` —— 难民、矿井链接和地形资源准备。
+7. `buildingsWork` —— 重算仓储容量并执行所有非住宅生产建筑；住宅不再各自抢粮。
+8. `TownHousingMealService.settle` —— 住宅保障两轮供餐、按居民营养缺口选食物，并逐居民结算健康/精神。
+9. `tickResidentsAging` —— 用餐后的脂肪/蛋白质储备缩放智力/儿童力量成长。
+10. `tickResidentsMorning` —— 疗养后再判定退出，并处罚仍无家可归者。
+11. `recoverResources`、记录历史与事件、触发模拟锚点刷新。
 
-CODEC 字段：`name / resources / blocks / residents / terrainResource / labour / maxLabour / history / lastRefugeeSpawnDay`；其中 `lastRefugeeSpawnDay` 使用逻辑气候日的 `Codec.LONG`，缺省为 `-1`，兼容首日结算。
+旧存档缺少 `housingPlan`、`policyState` 或居民 `nutrition` 时分别迁移为空住宅计划（随后按舒适度补全）、默认临床分诊政策与四项 `70` 的健康营养储备。
 
 ---
 
@@ -148,7 +147,7 @@ CODEC 字段：`name / resources / blocks / residents / terrainResource / labour
 
 | 建筑 | Building 类 | 是否工作 | 关键点 |
 |---|---|---|---|
-| House | `buildings/house/HouseBuilding` | 否（住宅） | 仅 `implements ITownResidentBuilding`；`work()` 每日按配置消耗一次 `RESIDENT_FOOD_LEVEL`，由食物满足度、营养质量、有效温度和综合舒适度计算生命/精神：缺粮损失使用凸曲线，`[0,40]°C` 外另有有上限的直接温度损失；越界时仍为不可工作、不会分配新人，但 `shouldRunDailySettlement()` 仍使已有居民吃饭并结算状态；最近一次结算写入 `DailyReport`，`getRating()` 决定分房优先级。 |
+| House | `buildings/house/HouseBuilding` | 否（住宅） | 仅 `implements ITownResidentBuilding`；晨间由 `TownHousingMealService` 集中供餐并逐居民调用 `settleResident`。缺粮、温度、舒适度和四类营养共同决定生命/精神变化；最近一次汇总仍写入 `DailyReport`。`getRating()` 是住宅舒适度，供旧存档生成初始住宅队列，之后玩家队列才是优先级真相源。 |
 | Hunting Base | `buildings/hunting/HuntingBaseBuilding` | 是 | 继承 `AbstractTownResidentWorkBuilding`；按居民 score 总和决定投掷次数，受 `TerrainResourceType.HUNT` 限制，用战利品表 `town/hunting` 产出并 ADD 进仓库。 |
 | Mine Base | `buildings/mine/MineBaseBuilding` | 是 | 持有 `Set<BlockPos> linkedMines`；汇总有效 `MineBuilding` 权重，按区块向 `ORE` 开采。 |
 | Mine | `buildings/mine/MineBuilding` | 否（标记） | 仅扫描/标记；`BiomeMineResourceRecipe` 提供生物群系矿产权重（`getWeights(biome)`）。 |
@@ -187,7 +186,7 @@ CODEC 字段：`name / resources / blocks / residents / terrainResource / labour
 - **`ItemStackResourceKey`**：`Item + tag`（count 固定 1）的 Map 键，自定义 `hashCode/equals`。
 - **`VirtualResourceType`**（无物品、长期存盘）：目前仅 `MAX_CAPACITY`（不占容量、是 service、level 0）。`VirtualResourceAttribute` 既是属性也是直接存盘的 Key。
 - **`ItemResourceAmountRecipe`**：配方类（IE 配方），定义「某物品 → 某资源 Tag 的转化量」；`TeamTownResourceHolder.loadItemResourceAmounts()` 加载进缓存。显式配方优先；居民食物没有显式值时按 `饥饿值 + 2 × 饥饿值 × 饱和度系数` 换算，其他资源仍默认 `1`。
-- 居民食物 Tag 使用互斥的 level 0–4：危险/未建模原料、基础生食、普通熟食与主食、复合/高密度餐食、完整军粮与稀有强化食物。住宅先按 level 4 → 0 消耗；同等级内再按 `NutritionRecipe` 营养标量除以该物品的居民食物资源量降序消耗，平局按物品注册名与 NBT 稳定排序。
+- 居民食物 Tag 使用互斥的 level 0–4：危险/未建模原料、基础生食、普通熟食与主食、复合/高密度餐食、完整军粮与稀有强化食物。集中供餐始终先选更高 level；同等级内按当前领取者缺少的脂肪/碳水/蛋白质/蔬菜、健康/精神恢复需求和年龄成长需求动态评分，最后按物品注册名与 NBT 稳定排序。
 
 ### 6.2 `TeamTownResourceHolder`（资源持有者）
 
@@ -252,9 +251,10 @@ TownResourceActionResults.TownResourceTypeCostActionResult result =
 
 ## 7. 居民系统
 
-- **`Resident`**（抽象模拟数据，非实体）：字段 `uuid, firstName, lastName, health, mental, strength, intelligence`(0~100), `educationLevel`, `Map<String,Double> workProficiency`（key = 建筑类 `getSimpleName()`，如 `"HuntingBaseBuilding"`）, `housePos`, `workPos`，以及 **`age`（0 幼儿 / 1 儿童 / 2 青壮年 / 3 老人，默认 2）与 `ageDays`**（CODEC/NBT 均带默认值向后兼容）。提供 `get/add/cost` 系列（越界抛异常/夹取）。`setDeath(town)` 调用 `town.removeResident(uuid)`。**所有 setter 均带值守卫并 `fireChange()`**（值未变不 fire），由 `TeamTownData` 注入的 `changeListener` 驱动增量同步（见 §14）。
+- **`Resident`**（抽象模拟数据，非实体）：字段 `uuid, firstName, lastName, health, mental, strength, intelligence`(0~100), `educationLevel`, `Map<String,Double> workProficiency`、`housePos`、`workPos`、年龄，以及持久化的 **`ResidentNutrition(fat, carbohydrate, protein, vegetable)`**（每项 0–100，旧存档默认 70）。`setDeath(town)` 调用 `town.removeResident(uuid)`。**所有 setter 均带值守卫并 `fireChange()`**，由 `TeamTownData` 注入的 `changeListener` 驱动增量同步（见 §14）。
   - 按年龄组生成：`initializeAttributesForAge(age)` —— 幼儿力量/智力 center 20/30、儿童 40/40、老人 35/65（spread 0.8）、青壮年沿用 `generateAdultAttribute`；初始工作熟练度幼儿 0、儿童 [0,25]、老人 [50,100]（`generateElderInitialWorkProficiency`）、青壮年 [0,50]。
-  - 每日老化由 `TeamTownData.tickResidentsAging` 结算：`growStrengthDaily/growIntelligenceDaily`（封顶各年龄组 cap，儿童力量/智商上限 80/85 可超过直接招募的成年难民）、`decayStrengthDaily`（老人力量萎缩至 floor 25）。
+  - 每日老化由 `ResidentAgingModel` 结算：脂肪缩放幼儿、儿童与成人原有智力成长；蛋白质只缩放幼儿/儿童原有力量成长；营养不会创造原本不存在的成长，属性上限保持不变。
+  - 碳水是精神恢复的直接营养，蔬菜是健康恢复的直接营养；脂肪与蛋白质只有在对应直接营养存在时才进一步放大恢复，不能单独替代碳水或蔬菜。
   - 寒流高质量难民：`applyColdSurvivorBuffs()` —— 血量 20~40、力量/智商 +15、初始熟练度 ×1.5，招募时应用。
   - 静态辅助：`randomAgeDaysForAge(int)`（招募时按年龄组随机成长进度）、`ageLangKey(int)`（年龄显示翻译键）。
 - **`Family`**：简单包装 `Resident[] + lastName`，目前仅数据容器。
@@ -285,6 +285,7 @@ TownResourceActionResults.TownResourceTypeCostActionResult result =
   - `WarehouseUpdatePacket` / `WarehouseInteractPacket`：仓库物品同步与存取（C→S 改资源并回写玩家手持物）；交互包会再次验证当前容器、仓库核心方块实体及建筑映射，拆除瞬间持有的旧菜单不能继续修改库存。
   - `WanderingRefugeeOpenTradeGUIMessage` / `WanderingRefugeeRecruitMessage`：难民交易/招募。
 - **GUI**（`tabs/` + `StandardTownBuildingScreen` / `AbstractTownWorkerBlockScreen`）：通用工人方块界面，左侧 Tab 列表；仓库使用 `TownInformationTab` / `TownResourceTab`。住宅使用 `HouseScreen`，概览页展示最近一次日结，居民页从客户端快照读取居民属性并支持逐人查看。
+  - 镇长印章 `TownStatisticsPanel` 含“居民 / 营养 / 生存”三个历史视图。营养历史由 `TownNutritionHistory` 随 `TownHistoryEntry` 持久化并增量同步，四类营养分别展示全镇平均值与 P10“较弱居民”；旧快照缺少该字段时画线留空。
   - **数据刷新约定**：数据面板（`TownBuildingsPanel` / `TownResidentsPanel` / `TownInfoPanel` / `TownStatisticsPanel` / `TownWorkforcePanel` / `BuildingInfoElement` / `VirtualItemGridElement` / `HouseResidentPanel`）在 `render()` 阶段经 **Supplier 从客户端快照实时取数**（每帧解析最新实例）；**收包时禁止 `contentLayer.refresh()` 重建界面**（会重置滚动位置/选中状态）。`ITownDataUpdateListener` 回调可留空实现——内容每帧自动更新。
 
 ---
@@ -330,7 +331,7 @@ TownResourceActionResults.TownResourceTypeCostActionResult result =
 5. **注册接线**：在 `FHBlocks` / `FHBlockEntityTypes` / （若要 GUI）`FHMenuTypes` / `FHScreens` / `FHRegistrateTags` 分别登记（见 §10）。
 6. **资源 Tag（可选）**：若产出/消耗特定物品资源，在 `FHRegistrateTags` 给对应 `ItemResourceAttribute` 的 Tag 添加物品（走 `FHTags.Items.MAP_TAG_TO_TOWN_RESOURCE_ATTRIBUTE`）。
 
-> 住宅类（`HouseBuilding` 模式）只 `implements ITownResidentBuilding`，不继承工作建筑基类；其 `work()` 直接消费食物/增益居民。
+> 住宅类（`HouseBuilding` 模式）只 `implements ITownResidentBuilding`，不继承工作建筑基类；现行晨间流程由 `TownHousingMealService` 集中消费食物，再逐居民调用住宅环境结算，`HouseBuilding.work()` 仅保留为兼容入口。
 
 ---
 

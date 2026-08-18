@@ -67,4 +67,12 @@ public interface ITownDataUpdateListener extends EventListener {
     /** Called when the player-authored staffing queue or a target changes. */
     default void onStaffingChanged() {
     }
+
+    /** Called when the residential-care queue or a guarantee changes. */
+    default void onHousingChanged() {
+    }
+
+    /** Called when active, pending, or cooldown policy state changes. */
+    default void onPoliciesChanged() {
+    }
 }

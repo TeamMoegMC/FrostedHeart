@@ -94,13 +94,15 @@ public record TownStageFourScenario(
             List<Integer> trajectoryPopulations = new ArrayList<>();
             for (JsonElement value : trajectoryJson) trajectoryPopulations.add(value.getAsInt());
             int timelinePopulation = positiveInteger(sweep, "timelinePopulation", 24);
+            int equilibriumWindowDays = positiveInteger(
+                    sweep, "equilibriumWindowDays", 30);
             populationSweep = new PopulationSweep(
                     minimumPopulation, maximumPopulation, populationPoints,
                     populationValues,
                     trajectoryPopulations.isEmpty()
                             ? List.of(1, 8, 11, 12, 13, 14, 16, 24, 48, 200)
                             : trajectoryPopulations,
-                    timelinePopulation);
+                    timelinePopulation, equilibriumWindowDays);
         }
         TensionExperiment tensionExperiment = null;
         if (root.has("tensionExperiment")) {
@@ -329,7 +331,8 @@ public record TownStageFourScenario(
             int populationPoints,
             List<Integer> populationValues,
             List<Integer> trajectoryPopulations,
-            int timelinePopulation
+            int timelinePopulation,
+            int equilibriumWindowDays
     ) {
         public PopulationSweep {
             populationValues = List.copyOf(populationValues);
@@ -373,6 +376,10 @@ public record TownStageFourScenario(
             if (timelinePopulation < minimumPopulation || timelinePopulation > maximumPopulation) {
                 throw new IllegalArgumentException(
                         "populationSweep.timelinePopulation must lie inside the sweep range.");
+            }
+            if (equilibriumWindowDays <= 0) {
+                throw new IllegalArgumentException(
+                        "populationSweep.equilibriumWindowDays must be positive.");
             }
         }
     }

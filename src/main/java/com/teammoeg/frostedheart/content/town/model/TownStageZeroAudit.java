@@ -672,6 +672,41 @@ public final class TownStageZeroAudit {
                 "strength/day", source, "RESIDENT_ELDER_STRENGTH_DECAY_PER_DAY", "RESIDENT_AGING.elderStrengthDecayPerDay");
         addShared(values, "residents.aging.elderStrengthFloor", aging.elderStrengthFloor(),
                 "strength", source, "RESIDENT_ELDER_STRENGTH_FLOOR", "RESIDENT_AGING.elderStrengthFloor");
+        TownModelParameters.ResidentNutritionParameters nutrition = residents.nutrition();
+        addShared(values, "residents.nutrition.maximumReserve", nutrition.maximumReserve(),
+                "nutrition", source, "RESIDENT_NUTRITION_MAXIMUM_RESERVE", "HOUSING.residentNutritionMaximumReserve");
+        addShared(values, "residents.nutrition.initialReserve", nutrition.initialReserve(),
+                "nutrition", source, "RESIDENT_NUTRITION_INITIAL_RESERVE", "HOUSING.residentNutritionInitialReserve");
+        addShared(values, "residents.nutrition.healthyReserve", nutrition.healthyReserve(),
+                "nutrition", source, "RESIDENT_NUTRITION_HEALTHY_RESERVE", "HOUSING.residentNutritionHealthyReserve");
+        addShared(values, "residents.nutrition.severeReserve", nutrition.severeReserve(),
+                "nutrition", source, "RESIDENT_NUTRITION_SEVERE_RESERVE", "HOUSING.residentNutritionSevereReserve");
+        addShared(values, "residents.nutrition.reserveLossPerDay", nutrition.reserveLossPerDay(),
+                "nutrition/day", source, "RESIDENT_NUTRITION_RESERVE_LOSS_PER_DAY", "HOUSING.residentNutritionReserveLossPerDay");
+        addShared(values, "residents.nutrition.gainAtReference", nutrition.gainAtReference(),
+                "nutrition", source, "RESIDENT_NUTRITION_GAIN_AT_REFERENCE", "HOUSING.residentNutritionGainAtReference");
+        addShared(values, "residents.nutrition.maximumCoverage", nutrition.maximumCoverage(),
+                "coverage", source, "RESIDENT_NUTRITION_MAXIMUM_COVERAGE", "HOUSING.residentNutritionMaximumCoverage");
+        addShared(values, "residents.nutrition.recoveryDirectWeight", nutrition.recoveryDirectWeight(),
+                "relative-weight", source, "RESIDENT_NUTRITION_RECOVERY_DIRECT_WEIGHT", "HOUSING.residentNutritionRecoveryDirectWeight");
+        addShared(values, "residents.nutrition.recoverySupportWeight", nutrition.recoverySupportWeight(),
+                "relative-weight", source, "RESIDENT_NUTRITION_RECOVERY_SUPPORT_WEIGHT", "HOUSING.residentNutritionRecoverySupportWeight");
+        addShared(values, "residents.nutrition.deficiencyGrowthFloor", nutrition.deficiencyGrowthFloor(),
+                "multiplier", source, "RESIDENT_NUTRITION_DEFICIENCY_GROWTH_FLOOR", "HOUSING.residentNutritionDeficiencyGrowthFloor");
+        addShared(values, "residents.nutrition.maximumGrowthBonus", nutrition.maximumGrowthBonus(),
+                "multiplier", source, "RESIDENT_NUTRITION_MAXIMUM_GROWTH_BONUS", "HOUSING.residentNutritionMaximumGrowthBonus");
+        addShared(values, "residents.nutrition.mealSelectionChunks", nutrition.mealSelectionChunks(),
+                "count", source, "RESIDENT_NUTRITION_MEAL_SELECTION_CHUNKS", "HOUSING.residentNutritionMealSelectionChunks");
+        addShared(values, "residents.nutrition.channelNeedUtilityWeight", nutrition.channelNeedUtilityWeight(),
+                "relative-weight", source, "RESIDENT_NUTRITION_CHANNEL_NEED_UTILITY_WEIGHT", "HOUSING.residentNutritionChannelNeedUtilityWeight");
+        addShared(values, "residents.nutrition.conditionNeedUtilityWeight", nutrition.conditionNeedUtilityWeight(),
+                "relative-weight", source, "RESIDENT_NUTRITION_CONDITION_NEED_UTILITY_WEIGHT", "HOUSING.residentNutritionConditionNeedUtilityWeight");
+        addShared(values, "residents.nutrition.growthNeedUtilityWeight", nutrition.growthNeedUtilityWeight(),
+                "relative-weight", source, "RESIDENT_NUTRITION_GROWTH_NEED_UTILITY_WEIGHT", "HOUSING.residentNutritionGrowthNeedUtilityWeight");
+        addShared(values, "residents.residentialCareScoreBand", residents.residentialCareScoreBand(),
+                "risk", source, "RESIDENTIAL_CARE_SCORE_BAND", "RESIDENT_RULES.residentialCareScoreBand");
+        addShared(values, "residents.townPolicyCooldownDays", residents.townPolicyCooldownDays(),
+                "town-day", source, "TOWN_POLICY_COOLDOWN_DAYS", "RESIDENT_RULES.townPolicyCooldownDays");
     }
 
     private static void addAgeWeights(

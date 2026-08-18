@@ -20,12 +20,14 @@
 package com.teammoeg.frostedheart.mixin.drawer;
 
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import com.jaquadro.minecraft.storagedrawers.block.tile.BlockEntityController;
 import com.jaquadro.minecraft.storagedrawers.block.tile.BlockEntitySlave;
+import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -33,20 +35,48 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.common.capabilities.Capability;
+import net.minecraftforge.common.capabilities.ForgeCapabilities;
 import net.minecraftforge.common.util.LazyOptional;
+import net.minecraftforge.items.IItemHandler;
+
 @Mixin({BlockEntityController.class,BlockEntitySlave.class})
 public class ControllerBlockEntityMixin extends BlockEntity {
+	@Unique
+	private DrawerItemHandlerThrottle.State fh$transferThrottle;
 
 	public ControllerBlockEntityMixin(BlockEntityType<?> pType, BlockPos pPos, BlockState pBlockState) {
 		super(pType, pPos, pBlockState);
 	}
+
 	/**
 	 * @author khjxiaogu
-	 * @reason disable automatic interaction with controller and slave block, just like GT
+	 * @reason Rate-limit automatic item interaction with controller and slave blocks.
 	 * */
-	@Inject(at=@At("HEAD"),method="getCapability",cancellable=true,remap=false)
-	private void fh$getCapability(Capability cap,Direction side,CallbackInfoReturnable<LazyOptional> cbi) {
-		cbi.setReturnValue(LazyOptional.empty());
+	@Inject(at=@At("RETURN"),method="getCapability",cancellable=true,remap=false)
+	private <T> void fh$getCapability(Capability<T> cap, Direction side,
+			CallbackInfoReturnable<LazyOptional<T>> cbi) {
+		if (cap != ForgeCapabilities.ITEM_HANDLER) {
+			cbi.setReturnValue(LazyOptional.empty());
+			return;
+		}
+
+		LazyOptional<IItemHandler> original = cbi.getReturnValue().cast();
+		LazyOptional<IItemHandler> throttled = original.lazyMap(handler ->
+				new DrawerItemHandlerThrottle(handler, this::fh$getGameTime, fh$getTransferThrottle()));
+		cbi.setReturnValue(throttled.cast());
 	}
 
+	@Unique
+	private DrawerItemHandlerThrottle.State fh$getTransferThrottle() {
+		if (fh$transferThrottle == null)
+			fh$transferThrottle = new DrawerItemHandlerThrottle.State(
+					() -> FHConfig.SERVER.STORAGE_DRAWERS.inputCooldownTicks.get(),
+					() -> FHConfig.SERVER.STORAGE_DRAWERS.outputCooldownTicks.get());
+		return fh$transferThrottle;
+	}
+
+	@Unique
+	private long fh$getGameTime() {
+		return level == null ? 0L : level.getGameTime();
+	}
 }

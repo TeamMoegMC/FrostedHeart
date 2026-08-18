@@ -697,6 +697,21 @@ public class FHConfig {
 				public final ForgeConfigSpec.DoubleValue foodConsumptionPerResidentDay;
 				public final ForgeConfigSpec.DoubleValue nutritionReferencePerFoodUnit;
 				public final ForgeConfigSpec.DoubleValue minimumNutritionRecoveryMultiplier;
+				public final ForgeConfigSpec.DoubleValue residentNutritionReserveLossPerDay;
+				public final ForgeConfigSpec.DoubleValue residentNutritionGainAtReference;
+				public final ForgeConfigSpec.DoubleValue residentNutritionMaximumCoverage;
+				public final ForgeConfigSpec.DoubleValue residentNutritionMaximumReserve;
+				public final ForgeConfigSpec.DoubleValue residentNutritionInitialReserve;
+				public final ForgeConfigSpec.DoubleValue residentNutritionHealthyReserve;
+				public final ForgeConfigSpec.DoubleValue residentNutritionSevereReserve;
+				public final ForgeConfigSpec.DoubleValue residentNutritionRecoveryDirectWeight;
+				public final ForgeConfigSpec.DoubleValue residentNutritionRecoverySupportWeight;
+				public final ForgeConfigSpec.DoubleValue residentNutritionDeficiencyGrowthFloor;
+				public final ForgeConfigSpec.DoubleValue residentNutritionMaximumGrowthBonus;
+				public final ForgeConfigSpec.IntValue residentNutritionMealSelectionChunks;
+				public final ForgeConfigSpec.DoubleValue residentNutritionChannelNeedUtilityWeight;
+				public final ForgeConfigSpec.DoubleValue residentNutritionConditionNeedUtilityWeight;
+				public final ForgeConfigSpec.DoubleValue residentNutritionGrowthNeedUtilityWeight;
 				public final ForgeConfigSpec.DoubleValue foodDeficitPenaltyExponent;
 				public final ForgeConfigSpec.DoubleValue healthLossAtZeroFoodPerResidentDay;
 				public final ForgeConfigSpec.DoubleValue mentalLossAtZeroFoodPerResidentDay;
@@ -736,6 +751,69 @@ public class FHConfig {
 						.defineInRange("minimumNutritionRecoveryMultiplier",
 							TownModelParameters.Defaults.HOUSING_MINIMUM_NUTRITION_RECOVERY_MULTIPLIER,
 							0d, 1d);
+					residentNutritionReserveLossPerDay = builder
+						.comment("Points removed from each resident nutrition reserve before the daily meal.")
+						.defineInRange("residentNutritionReserveLossPerDay",
+							TownModelParameters.Defaults.RESIDENT_NUTRITION_RESERVE_LOSS_PER_DAY,
+							0d, 100d);
+					residentNutritionGainAtReference = builder
+						.comment("Reserve points gained by one full reference-quality daily meal in one channel.")
+						.defineInRange("residentNutritionGainAtReference",
+							TownModelParameters.Defaults.RESIDENT_NUTRITION_GAIN_AT_REFERENCE,
+							0d, 100d);
+					residentNutritionMaximumCoverage = builder
+						.comment("Maximum per-channel meal coverage used for reserve gain.")
+						.defineInRange("residentNutritionMaximumCoverage",
+							TownModelParameters.Defaults.RESIDENT_NUTRITION_MAXIMUM_COVERAGE,
+							0d, 100d);
+					residentNutritionMaximumReserve = builder
+						.comment("Maximum value stored in each resident nutrition channel.")
+						.defineInRange("residentNutritionMaximumReserve",
+							TownModelParameters.Defaults.RESIDENT_NUTRITION_MAXIMUM_RESERVE, 1d, 100d);
+					residentNutritionInitialReserve = builder
+						.comment("Initial value assigned to each nutrition channel of a new resident.")
+						.defineInRange("residentNutritionInitialReserve",
+							TownModelParameters.Defaults.RESIDENT_NUTRITION_INITIAL_RESERVE, 0d, 100d);
+					residentNutritionHealthyReserve = builder
+						.comment("Reserve value that represents full availability for recovery and ordinary growth.")
+						.defineInRange("residentNutritionHealthyReserve",
+							TownModelParameters.Defaults.RESIDENT_NUTRITION_HEALTHY_RESERVE, 0.001d, 100d);
+					residentNutritionSevereReserve = builder
+						.comment("A nutrition channel below this reserve emits a severe-deficiency threshold event.")
+						.defineInRange("residentNutritionSevereReserve",
+							TownModelParameters.Defaults.RESIDENT_NUTRITION_SEVERE_RESERVE, 0d, 100d);
+					residentNutritionRecoveryDirectWeight = builder
+						.comment("Weight of carbohydrate/vegetable alone in mental/health recovery nutrition supply.")
+						.defineInRange("residentNutritionRecoveryDirectWeight",
+							TownModelParameters.Defaults.RESIDENT_NUTRITION_RECOVERY_DIRECT_WEIGHT, 0d, 100d);
+					residentNutritionRecoverySupportWeight = builder
+						.comment("Weight of fat/protein-supported carbohydrate/vegetable recovery supply.")
+						.defineInRange("residentNutritionRecoverySupportWeight",
+							TownModelParameters.Defaults.RESIDENT_NUTRITION_RECOVERY_SUPPORT_WEIGHT, 0d, 100d);
+					residentNutritionDeficiencyGrowthFloor = builder
+						.comment("Strength/intelligence growth multiplier at zero relevant nutrition reserve.")
+						.defineInRange("residentNutritionDeficiencyGrowthFloor",
+							TownModelParameters.Defaults.RESIDENT_NUTRITION_DEFICIENCY_GROWTH_FLOOR, 0d, 1d);
+					residentNutritionMaximumGrowthBonus = builder
+						.comment("Maximum strength/intelligence growth bonus above the healthy reserve.")
+						.defineInRange("residentNutritionMaximumGrowthBonus",
+							TownModelParameters.Defaults.RESIDENT_NUTRITION_MAXIMUM_GROWTH_BONUS, 0d, 10d);
+					residentNutritionMealSelectionChunks = builder
+						.comment("Number of decisions used to compose each resident meal; more chunks improve dietary targeting.")
+						.defineInRange("residentNutritionMealSelectionChunks",
+							TownModelParameters.Defaults.RESIDENT_NUTRITION_MEAL_SELECTION_CHUNKS, 1, 128);
+					residentNutritionChannelNeedUtilityWeight = builder
+						.comment("Meal-selection weight for replenishing a deficient nutrition channel.")
+						.defineInRange("residentNutritionChannelNeedUtilityWeight",
+							TownModelParameters.Defaults.RESIDENT_NUTRITION_CHANNEL_NEED_UTILITY_WEIGHT, 0d, 100d);
+					residentNutritionConditionNeedUtilityWeight = builder
+						.comment("Meal-selection weight for carbohydrate mental need and vegetable health need.")
+						.defineInRange("residentNutritionConditionNeedUtilityWeight",
+							TownModelParameters.Defaults.RESIDENT_NUTRITION_CONDITION_NEED_UTILITY_WEIGHT, 0d, 100d);
+					residentNutritionGrowthNeedUtilityWeight = builder
+						.comment("Extra meal-selection weight for fat intelligence growth and child protein strength growth.")
+						.defineInRange("residentNutritionGrowthNeedUtilityWeight",
+							TownModelParameters.Defaults.RESIDENT_NUTRITION_GROWTH_NEED_UTILITY_WEIGHT, 0d, 100d);
 					foodDeficitPenaltyExponent = builder
 						.comment("Exponent applied to the missing-food fraction before health and mental penalties.")
 						.defineInRange("foodDeficitPenaltyExponent",
@@ -960,6 +1038,8 @@ public class FHConfig {
 				public final ForgeConfigSpec.DoubleValue minimumWorkingHealthExclusive;
 				public final ForgeConfigSpec.DoubleValue minimumWorkingMentalExclusive;
 				public final ForgeConfigSpec.BooleanValue workRequiresHousing;
+				public final ForgeConfigSpec.DoubleValue residentialCareScoreBand;
+				public final ForgeConfigSpec.IntValue townPolicyCooldownDays;
 
 				ResidentRules(ForgeConfigSpec.Builder builder) {
 					builder.push("Resident Rules");
@@ -997,6 +1077,14 @@ public class FHConfig {
 						.comment("Require an assigned house before a resident can work.")
 						.define("workRequiresHousing",
 							TownModelParameters.Defaults.RESIDENT_WORK_REQUIRES_HOUSING);
+					residentialCareScoreBand = builder
+						.comment("Risk-score band within which existing house residency may break residential-care ties.")
+						.defineInRange("residentialCareScoreBand",
+							TownModelParameters.Defaults.RESIDENTIAL_CARE_SCORE_BAND, 0.000001d, 1d);
+					townPolicyCooldownDays = builder
+						.comment("Town days before another mayoral policy change may be requested.")
+						.defineInRange("townPolicyCooldownDays",
+							TownModelParameters.Defaults.TOWN_POLICY_COOLDOWN_DAYS, 0, 3650);
 					builder.pop();
 				}
 			}
@@ -1659,6 +1747,22 @@ public class FHConfig {
 			}
 		}
 
+		public static class StorageDrawers {
+			public final ForgeConfigSpec.IntValue inputCooldownTicks;
+			public final ForgeConfigSpec.IntValue outputCooldownTicks;
+
+			StorageDrawers(ForgeConfigSpec.Builder builder) {
+				builder.push("Storage Drawers");
+				inputCooldownTicks = builder
+						.comment("Minimum ticks between successful automated item insertions into a drawer controller or slave.")
+						.defineInRange("inputCooldownTicks", 10, 1, Integer.MAX_VALUE);
+				outputCooldownTicks = builder
+						.comment("Minimum ticks between successful automated item extractions from a drawer controller or slave.")
+						.defineInRange("outputCooldownTicks", 40, 1, Integer.MAX_VALUE);
+				builder.pop();
+			}
+		}
+
 		/**
 		 * 「雪原深处的好奇心」Boss 配置。
 		 * <p>
@@ -1773,6 +1877,7 @@ public class FHConfig {
 		public final FireIgnition FIRE_IGNITION;
 		public final TemperatureSimulation SIMULATION;
 		public final Town TOWN;
+		public final StorageDrawers STORAGE_DRAWERS;
 		public final Misc MISC;
 		public final Curiosity CURIOSITY;
 
@@ -1786,6 +1891,7 @@ public class FHConfig {
 			FIRE_IGNITION = new FireIgnition(builder);
 			SIMULATION = new TemperatureSimulation(builder);
 			TOWN = new Town(builder);
+			STORAGE_DRAWERS = new StorageDrawers(builder);
 			MISC = new Misc(builder);
 			CURIOSITY = new Curiosity(builder);
 		}

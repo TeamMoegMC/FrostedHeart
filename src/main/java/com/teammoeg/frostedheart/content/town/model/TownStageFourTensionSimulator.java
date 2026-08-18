@@ -56,7 +56,8 @@ public final class TownStageFourTensionSimulator {
             throw new IllegalArgumentException(
                     "The first steady-state tension experiment is fixed at 24 residents.");
         }
-        TownStageOneTwoData data = TownStageOneTwoData.load(projectRoot, packRoot);
+        TownStageOneTwoData data = TownStageOneTwoData.load(projectRoot, packRoot)
+                .withSimulationFoods(projectRoot, base.town().warehouse().simulationFoods());
         TownModelParameters parameters = TownModelParameters.currentDefaults();
         int runs = runsOverride == null ? base.town().simulation().runs()
                 : requirePositive(runsOverride, "runs");

@@ -45,6 +45,10 @@ import com.teammoeg.frostedheart.content.town.network.TownResidentNameEditReques
 import com.teammoeg.frostedheart.content.town.network.TownSignalNotificationPacket;
 import com.teammoeg.frostedheart.content.town.network.TownStaffingEditRequestPacket;
 import com.teammoeg.frostedheart.content.town.network.TownStaffingPlanUpdatePacket;
+import com.teammoeg.frostedheart.content.town.network.TownHousingEditRequestPacket;
+import com.teammoeg.frostedheart.content.town.network.TownHousingPlanUpdatePacket;
+import com.teammoeg.frostedheart.content.town.network.TownPolicyEditRequestPacket;
+import com.teammoeg.frostedheart.content.town.network.TownPolicyStateUpdatePacket;
 import com.teammoeg.frostedheart.content.town.network.WanderingRefugeeOpenTradeGUIMessage;
 import com.teammoeg.frostedheart.content.town.network.WanderingRefugeeRecruitMessage;
 import com.teammoeg.frostedheart.content.town.network.WarehouseInteractPacket;
@@ -131,6 +135,10 @@ public class FHNetwork extends CBaseNetwork {
         registerMessage("town_signal_notification", TownSignalNotificationPacket.class);
         registerMessage("town_staffing_edit_request", TownStaffingEditRequestPacket.class);
         registerMessage("town_staffing_plan_update", TownStaffingPlanUpdatePacket.class);
+        registerMessage("town_housing_edit_request", TownHousingEditRequestPacket.class);
+        registerMessage("town_housing_plan_update", TownHousingPlanUpdatePacket.class);
+        registerMessage("town_policy_edit_request", TownPolicyEditRequestPacket.class);
+        registerMessage("town_policy_state_update", TownPolicyStateUpdatePacket.class);
         registerMessage("wandering_refugee_open_trade_gui", WanderingRefugeeOpenTradeGUIMessage.class);
         registerMessage("wandering_refugee_recruit", WanderingRefugeeRecruitMessage.class);
         registerMessage("warehouse_c2s_interact_packet", WarehouseInteractPacket.class);
