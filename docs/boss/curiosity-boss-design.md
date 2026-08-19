@@ -1,6 +1,6 @@
 # 「雪原深处的好奇心」世界遭遇型 Boss 设计文档
 
-> 状态：设计定稿草案，等待评审后进入实现。
+> Documentation status: Transitional design and implementation reference. The encounter was implemented after the original proposal; verify exact current behavior against source until this file is rewritten as a living system document.
 > 关联系统：温度（`content/climate`）、世界生成（`content/world`）、注册表（`bootstrap/common`）。
 > 命名 ID：`frostedheart:curiosity_entity`（沿用既有注册，见 `FHEntityTypes.CURIOSITY`）。
 > 本文描述「雪原深处的好奇心」（Nanite 匍匐集群）Boss 的玩法流程与技术方案，替换
@@ -8,9 +8,9 @@
 
 ## 1. 背景与定位
 
-### 1.1 世界观依据（`docs/design/`，只读）
+### 1.1 世界观依据（`design/`，只读）
 
-`docs/design/lore.md` 与 `docs/design/world-design.md` 给出了纳米机器人的完整设定，本 Boss 与
+`design/lore.md` 与 `design/world-design.md` 给出了纳米机器人的完整设定，本 Boss 与
 其严格对齐（这些文件标注「AGENTS SHOULD NEVER MODIFY」，只读不改）：
 
 - **「智雾」**：旧联邦军方（the Empire，与 `content/world/structures/package-info.java` 的称谓
@@ -25,7 +25,7 @@
   而非凭空制冷——这同时解释了为什么热量能反制它（热水/加热背包抬高体温、能量塔/加热器
   向环境供入热量，与排热竞争，见 §4.2），以及为什么火能烧散它（瞬时热量注入超过其搬运
   能力，高温驱散胞体）。
-- 美术基调（`docs/design/technicals.md`）：BlockBench 低多边形、16×16 贴图、复古未来风；
+- 美术基调（`design/technicals.md`）：BlockBench 低多边形、16×16 贴图、复古未来风；
   本 Boss 的隆起 mound 与露出核心均呈「半透明纱质」胞体质感。
 - 区域为寒潮后的北美西北部雪原（游戏主舞台），雪原偶遇在叙事上自洽。
 

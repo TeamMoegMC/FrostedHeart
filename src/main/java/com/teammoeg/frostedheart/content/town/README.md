@@ -245,7 +245,7 @@ TownResourceActionResults.TownResourceTypeCostActionResult result =
 - **`model/TownStageOneTwoSimulator`**：运行独立单日的采矿、T1、随机狩猎和受控住宅实验，写出 JSON 与 CSV。它不推进阶段 3 的跨日库存、工作资格或岗位反馈。
 - **`model/TownSimulationMain`**：开放 `audit` 和阶段 1–2 `simulate`。Gradle 调用使用 `runTownSimulation -PtownArgs='...'`。
 
-阶段 0–2 不涉及 T2 热网、气候、库存时间序列或策略蒙特卡洛。T1 以可结转的燃料过程 tick 余额运行，默认 20-tick 城镇批处理与逐 tick 长期燃料率一致；完整公式见仓库 `docs/town-model.md`。
+阶段 0–2 不涉及 T2 热网、气候、库存时间序列或策略蒙特卡洛。T1 以可结转的燃料过程 tick 余额运行，默认 20-tick 城镇批处理与逐 tick 长期燃料率一致；完整公式见仓库 `docs/town/town-model.md`。
 
 ---
 
