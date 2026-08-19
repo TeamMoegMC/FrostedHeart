@@ -36,6 +36,7 @@ import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 public final class SpatialGrid {
 
 	private final Long2ObjectOpenHashMap<IntArrayList> cells = new Long2ObjectOpenHashMap<>();
+	private final List<IntArrayList> listPool = new java.util.ArrayList<>();
 
 	/**
 	 * 计算方块坐标所属 cell 的打包键。
@@ -64,6 +65,10 @@ public final class SpatialGrid {
 	 * @param active 活跃度判定（按容器+索引） / activity predicate (by container + index)
 	 */
 	public void rebuild(List<CitizenContainer> containers, ActivityQuery active) {
+		for (IntArrayList list : cells.values()) {
+			list.clear();
+			listPool.add(list);
+		}
 		cells.clear();
 		for (CitizenContainer c : containers) {
 			CitizenSim sim = c.sim();
@@ -72,7 +77,12 @@ public final class SpatialGrid {
 				if (!active.isActive(c, i))
 					continue;
 				long key = cellKey(sim.px[i] >> 10, sim.pz[i] >> 10);
-				cells.computeIfAbsent(key, k -> new IntArrayList()).add(sim.id[i]);
+				IntArrayList list = cells.get(key);
+				if (list == null) {
+					list = listPool.isEmpty() ? new IntArrayList(4) : listPool.remove(listPool.size() - 1);
+					cells.put(key, list);
+				}
+				list.add(sim.id[i]);
 			}
 		}
 	}

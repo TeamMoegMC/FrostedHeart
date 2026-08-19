@@ -19,210 +19,352 @@
 
 package com.teammoeg.frostedheart.content.town.citizen.client;
 
+import org.joml.Matrix3f;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
 
-import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.BufferBuilder;
-import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.blaze3d.vertex.Tesselator;
-import com.mojang.blaze3d.vertex.VertexFormat;
+import com.mojang.blaze3d.vertex.VertexSorting;
 import com.teammoeg.frostedheart.content.town.citizen.sim.CitizenState;
 
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.GameRenderer;
+import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.client.renderer.LevelRenderer;
+import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.texture.OverlayTexture;
+import net.minecraft.core.BlockPos;
 import net.minecraft.util.Mth;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.client.event.RenderLevelStageEvent;
 
 /**
- * 客户端居民批量渲染器（v2：三级 LOD，单次 draw call 提交）。
- * 近距（&lt; 24 格）由 FakeCitizenManager 的假实体接管，本类直接跳过；
- * 中距（24–64 格）绘制低模人形（躯干+头两个盒体，连续视觉朝向旋转、行走起伏）；
- * 远距（64–96 格）绘制纯色广告牌。中远距全部合并进一个 POSITION_COLOR 批次，
- * 成本 = 每中距居民 48 顶点 / 每远距居民 4 顶点 + 1 次 draw call。
+ * Client citizen batch renderer. Awake near-range citizens are handled by
+ * {@link FakeCitizenManager}; all remaining citizens use textured Steve-proportion
+ * LOD geometry backed by Minecraft's built-in player skins.
  * <p>
- * Client citizen batch renderer (v2: three-tier LOD, single draw call).
- * Near range (&lt; 24 blocks) is owned by FakeCitizenManager's fake entities
- * and skipped here; mid range (24–64) draws low-poly humanoids (body+head
- * boxes, continuous visual-yaw rotation, walk bobbing); far range (64–96) draws plain
- * billboards. Mid and far geometry is merged into one POSITION_COLOR batch:
- * 48 vertices per mid-range / 4 per far-range citizen + 1 draw call.
+ * Visibility is evaluated once per frame. Visible vertices are written directly
+ * into seven reusable skin buffers, so skin variety costs at most seven draw calls
+ * without seven full cache scans or per-frame citizen collections.
  */
 public final class ClientCitizenRenderer {
 
-	/** 最大渲染距离（与 AOI 半径一致） / Max render distance (matches AOI radius) */
 	private static final double MAX_DIST2 = 96.0 * 96.0;
-	/** 低模人形的最大距离平方；更近由假实体接管 / Low-poly humanoid max distance squared; nearer is owned by fake entities */
 	private static final double LOWPOLY_DIST2 = 64.0 * 64.0;
-	/** 各状态配色（RGB） / Per-state colors (RGB) */
-	private static final float[][] COLORS = {
-			{ 0.85f, 0.75f, 0.55f }, // IDLE 米色
-			{ 0.55f, 0.80f, 0.55f }, // WANDER 浅绿
-			{ 0.95f, 0.60f, 0.35f }, // RETURN_HOME 橙
-			{ 0.45f, 0.55f, 0.90f }, // SLEEP 蓝
-			{ 0.90f, 0.85f, 0.40f }, // WORK 黄
-	};
-	/** 头部肤色 / Head skin tone */
-	private static final float[] HEAD_COLOR = { 0.85f, 0.72f, 0.60f };
-	private static final float ALPHA = 0.92f;
-	/** 广告牌尺寸 / Billboard dimensions */
 	private static final double BILLBOARD_HALF_WIDTH = 0.3;
 	private static final double BILLBOARD_HEIGHT = 1.8;
-	/** 低模躯干尺寸（宽/高/厚） / Low-poly body dimensions (width/height/depth) */
-	private static final float BODY_W = 0.55f;
-	private static final float BODY_H = 1.05f;
-	private static final float BODY_D = 0.35f;
-	/** 低模头部边长 / Low-poly head size */
-	private static final float HEAD_SIZE = 0.45f;
-	/** 行走起伏幅度（方块） / Walk bob amplitude (blocks) */
 	private static final float BOB_AMP = 0.05f;
+	private static final double SLEEP_SURFACE_Y = 0.58;
+	private static final float SLEEP_SCALE = 0.8f;
+	private static final float SLEEP_MODEL_ORIGIN = -1.18f;
+	private static final int BUFFER_INITIAL_BYTES = 128 * 1024;
+	private static final float TEXTURE_SIZE = 64.0f;
+	private static final int LIGHT_SAMPLE_INTERVAL = 5;
+
+	private static final RenderType[] SKIN_RENDER_TYPES = createRenderTypes();
+	private static final BufferBuilder[] SKIN_BUFFERS = createBuffers();
+	private static final boolean[] BUFFER_BEGUN = new boolean[CitizenSkins.count()];
+	private static final BlockPos.MutableBlockPos LIGHT_SAMPLE_POS = new BlockPos.MutableBlockPos();
+	/** Immediate-mode render-thread state applied while filling the current skin buffers. */
+	private static int currentPackedLight;
+	private static Matrix3f currentNormalMatrix;
 
 	private ClientCitizenRenderer() {
 	}
 
-	/**
-	 * 渲染入口（RenderLevelStageEvent AFTER_ENTITIES 阶段调用）。
-	 * <p>
-	 * Render entry (called at RenderLevelStageEvent AFTER_ENTITIES stage).
-	 *
-	 * @param event 渲染事件 / the render event
-	 */
+	private static RenderType[] createRenderTypes() {
+		RenderType[] renderTypes = new RenderType[CitizenSkins.count()];
+		for (int i = 0; i < renderTypes.length; i++)
+			renderTypes[i] = CitizenBatchRenderLayout.skinRenderType(CitizenSkins.textureAt(i));
+		return renderTypes;
+	}
+
+	private static BufferBuilder[] createBuffers() {
+		BufferBuilder[] buffers = new BufferBuilder[CitizenSkins.count()];
+		for (int i = 0; i < buffers.length; i++)
+			buffers[i] = new BufferBuilder(BUFFER_INITIAL_BYTES);
+		return buffers;
+	}
+
+	/** Render entry called at {@link RenderLevelStageEvent.Stage#AFTER_ENTITIES}. */
 	public static void render(RenderLevelStageEvent event) {
 		if (ClientCitizenCache.size() == 0)
 			return;
+
 		Camera cam = event.getCamera();
 		Vec3 cp = cam.getPosition();
 		Vector3f left = cam.getLeftVector();
 		Vector3f up = cam.getUpVector();
-		float time = Minecraft.getInstance().level != null
-				? Minecraft.getInstance().level.getGameTime() + event.getPartialTick()
-				: 0.0f;
-
-		RenderSystem.setShader(GameRenderer::getPositionColorShader);
-		RenderSystem.enableBlend();
-		RenderSystem.defaultBlendFunc();
-		RenderSystem.disableCull();
-		RenderSystem.enableDepthTest();
+		Vector3f look = cam.getLookVector();
+		Minecraft minecraft = Minecraft.getInstance();
+		ClientLevel level = minecraft.level;
+		if (level == null)
+			return;
+		long gameTime = level.getGameTime();
+		float time = gameTime + event.getPartialTick();
 
 		PoseStack pose = event.getPoseStack();
 		pose.pushPose();
 		pose.translate(-cp.x, -cp.y, -cp.z);
 		Matrix4f mat = pose.last().pose();
-
-		Tesselator tes = Tesselator.getInstance();
-		BufferBuilder buf = tes.getBuilder();
-		buf.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
+		currentNormalMatrix = pose.last().normal();
 
 		for (ClientCitizen c : ClientCitizenCache.values()) {
-			// 近距已由假实体渲染，跳过 / near range is rendered by fake entities, skip
-			if (FakeCitizenManager.has(c.id))
+			int state = (c.state & 0xFF) % CitizenState.STATE_COUNT;
+			boolean sleeping = state == CitizenState.SLEEP;
+			if (!sleeping && FakeCitizenManager.has(c.id))
 				continue;
+
 			double[] pos = c.renderPos();
 			double dx = pos[0] - cp.x;
 			double dy = pos[1] - cp.y;
 			double dz = pos[2] - cp.z;
 			double d2 = dx * dx + dy * dy + dz * dz;
-			if (d2 > MAX_DIST2)
+			if (d2 > MAX_DIST2 || dx * look.x + dy * look.y + dz * look.z < -1.5)
 				continue;
-			AABB cullBox = new AABB(pos[0] - 0.4, pos[1], pos[2] - 0.4, pos[0] + 0.4, pos[1] + 1.9, pos[2] + 0.4);
+
+			AABB cullBox = sleeping
+					? new AABB(pos[0] - 1.35, pos[1] + 0.45, pos[2] - 1.35,
+							pos[0] + 1.35, pos[1] + 0.95, pos[2] + 1.35)
+					: new AABB(pos[0] - 0.5, pos[1], pos[2] - 0.5,
+							pos[0] + 0.5, pos[1] + 2.0, pos[2] + 0.5);
 			if (!event.getFrustum().isVisible(cullBox))
 				continue;
-			int s = (c.state & 0xFF) % CitizenState.STATE_COUNT;
-			float[] col = COLORS[s];
-			if (d2 <= LOWPOLY_DIST2)
-				emitHumanoid(buf, mat, c, pos, col, time);
+
+			int skin = CitizenSkins.indexFor(c.id);
+			BufferBuilder buf = SKIN_BUFFERS[skin];
+			if (!BUFFER_BEGUN[skin]) {
+				RenderType renderType = SKIN_RENDER_TYPES[skin];
+				buf.begin(renderType.mode(), renderType.format());
+				BUFFER_BEGUN[skin] = true;
+			}
+			currentPackedLight = sampleLight(c, pos, sleeping, level, gameTime);
+
+			if (sleeping && d2 <= LOWPOLY_DIST2)
+				emitSleepingPlayer(buf, mat, c, pos);
+			else if (sleeping)
+				emitSleepingBillboard(buf, mat, c, pos);
+			else if (d2 <= LOWPOLY_DIST2)
+				emitStandingPlayer(buf, mat, c, pos, time);
 			else
-				emitBillboard(buf, mat, left, up, pos, col);
+				emitStandingBillboard(buf, mat, left, up, look, pos);
 		}
-		tes.end();
 		pose.popPose();
-		RenderSystem.enableCull();
-		RenderSystem.disableBlend();
+
+		for (int i = 0; i < SKIN_BUFFERS.length; i++) {
+			if (!BUFFER_BEGUN[i])
+				continue;
+			SKIN_RENDER_TYPES[i].end(SKIN_BUFFERS[i], VertexSorting.DISTANCE_TO_ORIGIN);
+			BUFFER_BEGUN[i] = false;
+		}
 	}
 
-	/**
-	 * 远距 LOD：以脚底为锚点的竖直广告牌（4 顶点）。
-	 * <p>
-	 * Far-range LOD: vertical billboard anchored at the feet (4 vertices).
-	 */
-	private static void emitBillboard(BufferBuilder buf, Matrix4f mat, Vector3f left, Vector3f up, double[] pos,
-			float[] col) {
+	private static int sampleLight(ClientCitizen citizen, double[] pos, boolean sleeping,
+			ClientLevel level, long gameTime) {
+		int x = Mth.floor(pos[0]);
+		int y = Mth.floor(pos[1] + (sleeping ? SLEEP_SURFACE_Y : 1.0));
+		int z = Mth.floor(pos[2]);
+		if (x != citizen.lightBlockX || y != citizen.lightBlockY || z != citizen.lightBlockZ
+				|| gameTime >= citizen.nextLightSampleTick) {
+			LIGHT_SAMPLE_POS.set(x, y, z);
+			citizen.packedLight = LevelRenderer.getLightColor(level, LIGHT_SAMPLE_POS);
+			citizen.lightBlockX = x;
+			citizen.lightBlockY = y;
+			citizen.lightBlockZ = z;
+			citizen.nextLightSampleTick = gameTime + LIGHT_SAMPLE_INTERVAL + (citizen.id & 3);
+		}
+		return citizen.packedLight;
+	}
+
+	private static void emitStandingPlayer(BufferBuilder buf, Matrix4f mat, ClientCitizen c, double[] pos, float time) {
+		int yaw = c.visualYaw();
+		CitizenBatchRenderLayout.Axes axes = CitizenBatchRenderLayout.standingAxes(yaw);
+		float bob = c.isMoving() ? Mth.abs(Mth.sin(time * 0.6f + (c.id & 7) * 1.7f)) * BOB_AMP : 0.0f;
+		double y = pos[1] + bob;
+
+		standingPart(buf, mat, pos[0], y, pos[2], 0.0f, 0.75f, 0.5f, 0.75f, 0.25f,
+				axes, 16, 16, 8, 12, 4); // body
+		standingPart(buf, mat, pos[0], y, pos[2], 0.0f, 1.5f, 0.5f, 0.5f, 0.5f,
+				axes, 0, 0, 8, 8, 8); // head
+		standingPart(buf, mat, pos[0], y, pos[2], -0.375f, 0.75f, 0.25f, 0.75f, 0.25f,
+				axes, 40, 16, 4, 12, 4); // right arm
+		standingPart(buf, mat, pos[0], y, pos[2], 0.375f, 0.75f, 0.25f, 0.75f, 0.25f,
+				axes, 32, 48, 4, 12, 4); // left arm
+		standingPart(buf, mat, pos[0], y, pos[2], -0.125f, 0.0f, 0.25f, 0.75f, 0.25f,
+				axes, 0, 16, 4, 12, 4); // right leg
+		standingPart(buf, mat, pos[0], y, pos[2], 0.125f, 0.0f, 0.25f, 0.75f, 0.25f,
+				axes, 16, 48, 4, 12, 4); // left leg
+	}
+
+	private static void standingPart(BufferBuilder buf, Matrix4f mat, double x, double baseY, double z,
+			float sideOffset, float partBaseY, float width, float height, float depth,
+			CitizenBatchRenderLayout.Axes axes, int texU, int texV, int pixelW, int pixelH, int pixelD) {
+		addTexturedBox(buf, mat,
+				x + axes.xX() * sideOffset, baseY + partBaseY + height * 0.5, z + axes.xZ() * sideOffset,
+				width, height, depth,
+				axes.xX(), axes.xY(), axes.xZ(),
+				axes.yX(), axes.yY(), axes.yZ(),
+				axes.zX(), axes.zY(), axes.zZ(),
+				texU, texV, pixelW, pixelH, pixelD);
+	}
+
+	private static void emitSleepingPlayer(BufferBuilder buf, Matrix4f mat, ClientCitizen c, double[] pos) {
+		int yaw = CitizenState.DIR_TO_YAW[c.dir & 15] & 0xFF;
+		CitizenBatchRenderLayout.Axes axes = CitizenBatchRenderLayout.sleepingAxes(yaw);
+		sleepingPart(buf, mat, pos, axes, 0.0f, 1.125f, 0.5f, 0.75f, 0.25f,
+				16, 16, 8, 12, 4);
+		sleepingPart(buf, mat, pos, axes, 0.0f, 1.75f, 0.5f, 0.5f, 0.5f,
+				0, 0, 8, 8, 8);
+		sleepingPart(buf, mat, pos, axes, -0.375f, 1.125f, 0.25f, 0.75f, 0.25f,
+				40, 16, 4, 12, 4);
+		sleepingPart(buf, mat, pos, axes, 0.375f, 1.125f, 0.25f, 0.75f, 0.25f,
+				32, 48, 4, 12, 4);
+		sleepingPart(buf, mat, pos, axes, -0.125f, 0.375f, 0.25f, 0.75f, 0.25f,
+				0, 16, 4, 12, 4);
+		sleepingPart(buf, mat, pos, axes, 0.125f, 0.375f, 0.25f, 0.75f, 0.25f,
+				16, 48, 4, 12, 4);
+	}
+
+	private static void sleepingPart(BufferBuilder buf, Matrix4f mat, double[] pos, CitizenBatchRenderLayout.Axes axes,
+			float sideOffset, float modelY, float width, float height, float depth,
+			int texU, int texV, int pixelW, int pixelH, int pixelD) {
+		float forwardX = -axes.yX();
+		float forwardZ = -axes.yZ();
+		float scaledDepth = depth * SLEEP_SCALE;
+		float lengthOffset = SLEEP_MODEL_ORIGIN + modelY * SLEEP_SCALE;
+		addTexturedBox(buf, mat,
+				pos[0] + axes.xX() * sideOffset * SLEEP_SCALE + forwardX * lengthOffset,
+				pos[1] + SLEEP_SURFACE_Y + scaledDepth * 0.5,
+				pos[2] + axes.xZ() * sideOffset * SLEEP_SCALE + forwardZ * lengthOffset,
+				width * SLEEP_SCALE, height * SLEEP_SCALE, scaledDepth,
+				axes.xX(), axes.xY(), axes.xZ(),
+				axes.yX(), axes.yY(), axes.yZ(),
+				axes.zX(), axes.zY(), axes.zZ(),
+				texU, texV, pixelW, pixelH, pixelD);
+	}
+
+	private static void emitStandingBillboard(BufferBuilder buf, Matrix4f mat, Vector3f left, Vector3f up,
+			Vector3f look, double[] pos) {
 		double lx = left.x * BILLBOARD_HALF_WIDTH;
 		double ly = left.y * BILLBOARD_HALF_WIDTH;
 		double lz = left.z * BILLBOARD_HALF_WIDTH;
 		double ux = up.x * BILLBOARD_HEIGHT;
 		double uy = up.y * BILLBOARD_HEIGHT;
 		double uz = up.z * BILLBOARD_HEIGHT;
-		quad(buf, mat,
+		standingBillboardQuad(buf, mat,
 				(float) (pos[0] - lx), (float) (pos[1] - ly), (float) (pos[2] - lz),
 				(float) (pos[0] + lx), (float) (pos[1] + ly), (float) (pos[2] + lz),
 				(float) (pos[0] + lx + ux), (float) (pos[1] + ly + uy), (float) (pos[2] + lz + uz),
 				(float) (pos[0] - lx + ux), (float) (pos[1] - ly + uy), (float) (pos[2] - lz + uz),
-				col[0], col[1], col[2]);
+				-look.x, -look.y, -look.z,
+				20, 20, 28, 32);
 	}
 
-	/**
-	 * 中距 LOD：低模人形（躯干 + 头两个盒体，按客户端本地软转向后的连续
-	 * 视觉朝向旋转，移动时起伏）。
-	 * <p>
-	 * Mid-range LOD: low-poly humanoid (body + head boxes, rotated by the
-	 * client-local soft-turned visual yaw, bobbing while moving).
-	 */
-    private static void emitHumanoid(BufferBuilder buf, Matrix4f mat, ClientCitizen c, double[] pos, float[] col,
-                                     float time) {
-        int yaw = c.visualYaw();                      // 0–255 本地连续视觉朝向
-        float cos = CitizenState.DIR_X_256[yaw] / 1024.0f;
-        float sin = CitizenState.DIR_Z_256[yaw] / 1024.0f;
-        float bob = 0.0f;
-        if (c.isMoving())
-            bob = Mth.abs(Mth.sin(time * 0.6f + (c.id & 7) * 1.7f)) * BOB_AMP;
-        double cy = pos[1] + bob;
-        addBox(buf, mat, pos[0], cy, pos[2], BODY_W, BODY_H, BODY_D, cos, sin, col[0], col[1], col[2]);
-        addBox(buf, mat, pos[0], cy + BODY_H, pos[2], HEAD_SIZE, HEAD_SIZE, HEAD_SIZE, cos, sin,
-                HEAD_COLOR[0], HEAD_COLOR[1], HEAD_COLOR[2]);
-    }
-
-	/**
-	 * 发射一个绕 Y 轴旋转的盒体（24 顶点）。局部 +X 为"前方"（移动方向）。
-	 * <p>
-	 * Emits a Y-rotated box (24 vertices). Local +X is "forward" (movement direction).
-	 */
-	private static void addBox(BufferBuilder buf, Matrix4f mat, double cx, double baseY, double cz,
-			float w, float h, float dep, float cos, float sin, float r, float g, float b) {
-		float hw = w * 0.5f;
-		float hd = dep * 0.5f;
-		// 前向半向量（局部 +X）与侧向半向量（局部 +Z） / forward half-vector (local +X) and side half-vector (local +Z)
-		float fx = hw * cos, fz = hw * sin;
-		float sx = -hd * sin, sz = hd * cos;
-		float cxF = (float) cx, czF = (float) cz;
-		float y0 = (float) baseY, y1 = (float) (baseY + h);
-		// 8 角点：v[前/后][左/右] / 8 corners: v[front/back][left/right]
-		float xBL = cxF - fx + sx, zBL = czF - fz + sz; // 后左 / back-left
-		float xBR = cxF - fx - sx, zBR = czF - fz - sz; // 后右 / back-right
-		float xFR = cxF + fx - sx, zFR = czF + fz - sz; // 前右 / front-right
-		float xFL = cxF + fx + sx, zFL = czF + fz + sz; // 前左 / front-left
-		// 底/顶 / bottom & top
-		quad(buf, mat, xBL, y0, zBL, xBR, y0, zBR, xFR, y0, zFR, xFL, y0, zFL, r, g, b);
-		quad(buf, mat, xBL, y1, zBL, xFL, y1, zFL, xFR, y1, zFR, xBR, y1, zBR, r, g, b);
-		// 前/后 / front & back
-		quad(buf, mat, xFR, y0, zFR, xFL, y0, zFL, xFL, y1, zFL, xFR, y1, zFR, r, g, b);
-		quad(buf, mat, xBL, y0, zBL, xBR, y0, zBR, xBR, y1, zBR, xBL, y1, zBL, r, g, b);
-		// 左/右 / left & right
-		quad(buf, mat, xFL, y0, zFL, xBL, y0, zBL, xBL, y1, zBL, xFL, y1, zFL, r, g, b);
-		quad(buf, mat, xBR, y0, zBR, xFR, y0, zFR, xFR, y1, zFR, xBR, y1, zBR, r, g, b);
+	private static void emitSleepingBillboard(BufferBuilder buf, Matrix4f mat, ClientCitizen c, double[] pos) {
+		int yaw = CitizenState.DIR_TO_YAW[c.dir & 15] & 0xFF;
+		float fx = CitizenState.DIR_X_256[yaw] / 1024.0f;
+		float fz = CitizenState.DIR_Z_256[yaw] / 1024.0f;
+		float sx = -fz * 0.27f;
+		float sz = fx * 0.27f;
+		float frontX = (float) pos[0] + fx * 0.38f;
+		float frontZ = (float) pos[2] + fz * 0.38f;
+		float backX = (float) pos[0] - fx * 1.18f;
+		float backZ = (float) pos[2] - fz * 1.18f;
+		float y = (float) (pos[1] + SLEEP_SURFACE_Y + 0.02);
+		texturedQuad(buf, mat,
+				frontX + sx, y, frontZ + sz, frontX - sx, y, frontZ - sz,
+				backX - sx, y, backZ - sz, backX + sx, y, backZ + sz,
+				0, 1, 0,
+				20, 20, 28, 32);
 	}
 
-	private static void quad(BufferBuilder buf, Matrix4f mat,
+	/** Emits a box using the same six-face UV unfolding as vanilla ModelPart.Cube. */
+	private static void addTexturedBox(BufferBuilder buf, Matrix4f mat,
+			double centerX, double centerY, double centerZ, float width, float height, float depth,
+			float rightX, float rightY, float rightZ,
+			float upX, float upY, float upZ,
+			float backX, float backY, float backZ,
+			int texU, int texV, int pixelW, int pixelH, int pixelD) {
+		float hxX = rightX * width * 0.5f, hxY = rightY * width * 0.5f, hxZ = rightZ * width * 0.5f;
+		float hyX = upX * height * 0.5f, hyY = upY * height * 0.5f, hyZ = upZ * height * 0.5f;
+		float hzX = backX * depth * 0.5f, hzY = backY * depth * 0.5f, hzZ = backZ * depth * 0.5f;
+		float cx = (float) centerX, cy = (float) centerY, cz = (float) centerZ;
+
+		float v7x = cx - hxX - hyX - hzX, v7y = cy - hxY - hyY - hzY, v7z = cz - hxZ - hyZ - hzZ;
+		float v0x = cx + hxX - hyX - hzX, v0y = cy + hxY - hyY - hzY, v0z = cz + hxZ - hyZ - hzZ;
+		float v1x = cx + hxX + hyX - hzX, v1y = cy + hxY + hyY - hzY, v1z = cz + hxZ + hyZ - hzZ;
+		float v2x = cx - hxX + hyX - hzX, v2y = cy - hxY + hyY - hzY, v2z = cz - hxZ + hyZ - hzZ;
+		float v3x = cx - hxX - hyX + hzX, v3y = cy - hxY - hyY + hzY, v3z = cz - hxZ - hyZ + hzZ;
+		float v4x = cx + hxX - hyX + hzX, v4y = cy + hxY - hyY + hzY, v4z = cz + hxZ - hyZ + hzZ;
+		float v5x = cx + hxX + hyX + hzX, v5y = cy + hxY + hyY + hzY, v5z = cz + hxZ + hyZ + hzZ;
+		float v6x = cx - hxX + hyX + hzX, v6y = cy - hxY + hyY + hzY, v6z = cz - hxZ + hyZ + hzZ;
+
+		float u0 = texU;
+		float u1 = texU + pixelD;
+		float u2 = u1 + pixelW;
+		// Vanilla f7 (top end) and f8 (east end) branch independently from f6.
+		// They are equal only for cubes; chaining f8 after f7 shifts side/back UVs.
+		float u3 = u2 + pixelW;
+		float u4 = u2 + pixelD;
+		float u5 = u4 + pixelW;
+		float vTop = texV;
+		float vSide = texV + pixelD;
+		float vBottom = vSide + pixelH;
+
+		texturedQuad(buf, mat, v4x, v4y, v4z, v3x, v3y, v3z, v7x, v7y, v7z, v0x, v0y, v0z,
+				-upX, -upY, -upZ,
+				u1, vTop, u2, vSide);
+		texturedQuad(buf, mat, v1x, v1y, v1z, v2x, v2y, v2z, v6x, v6y, v6z, v5x, v5y, v5z,
+				upX, upY, upZ,
+				u2, vSide, u3, vTop);
+		texturedQuad(buf, mat, v7x, v7y, v7z, v3x, v3y, v3z, v6x, v6y, v6z, v2x, v2y, v2z,
+				-rightX, -rightY, -rightZ,
+				u0, vSide, u1, vBottom);
+		texturedQuad(buf, mat, v0x, v0y, v0z, v7x, v7y, v7z, v2x, v2y, v2z, v1x, v1y, v1z,
+				-backX, -backY, -backZ,
+				u1, vSide, u2, vBottom);
+		texturedQuad(buf, mat, v4x, v4y, v4z, v0x, v0y, v0z, v1x, v1y, v1z, v5x, v5y, v5z,
+				rightX, rightY, rightZ,
+				u2, vSide, u4, vBottom);
+		texturedQuad(buf, mat, v3x, v3y, v3z, v4x, v4y, v4z, v5x, v5y, v5z, v6x, v6y, v6z,
+				backX, backY, backZ,
+				u4, vSide, u5, vBottom);
+	}
+
+	private static void texturedQuad(BufferBuilder buf, Matrix4f mat,
 			float x1, float y1, float z1, float x2, float y2, float z2,
 			float x3, float y3, float z3, float x4, float y4, float z4,
-			float r, float g, float b) {
-		buf.vertex(mat, x1, y1, z1).color(r, g, b, ALPHA).endVertex();
-		buf.vertex(mat, x2, y2, z2).color(r, g, b, ALPHA).endVertex();
-		buf.vertex(mat, x3, y3, z3).color(r, g, b, ALPHA).endVertex();
-		buf.vertex(mat, x4, y4, z4).color(r, g, b, ALPHA).endVertex();
+			float nx, float ny, float nz,
+			float u1, float v1, float u2, float v2) {
+		float transformedX = currentNormalMatrix.m00() * nx + currentNormalMatrix.m10() * ny + currentNormalMatrix.m20() * nz;
+		float transformedY = currentNormalMatrix.m01() * nx + currentNormalMatrix.m11() * ny + currentNormalMatrix.m21() * nz;
+		float transformedZ = currentNormalMatrix.m02() * nx + currentNormalMatrix.m12() * ny + currentNormalMatrix.m22() * nz;
+		vertex(buf, mat, x1, y1, z1, u2, v1, transformedX, transformedY, transformedZ);
+		vertex(buf, mat, x2, y2, z2, u1, v1, transformedX, transformedY, transformedZ);
+		vertex(buf, mat, x3, y3, z3, u1, v2, transformedX, transformedY, transformedZ);
+		vertex(buf, mat, x4, y4, z4, u2, v2, transformedX, transformedY, transformedZ);
+	}
+
+	private static void standingBillboardQuad(BufferBuilder buf, Matrix4f mat,
+			float x1, float y1, float z1, float x2, float y2, float z2,
+			float x3, float y3, float z3, float x4, float y4, float z4,
+			float nx, float ny, float nz,
+			float u1, float v1, float u2, float v2) {
+		float transformedX = currentNormalMatrix.m00() * nx + currentNormalMatrix.m10() * ny + currentNormalMatrix.m20() * nz;
+		float transformedY = currentNormalMatrix.m01() * nx + currentNormalMatrix.m11() * ny + currentNormalMatrix.m21() * nz;
+		float transformedZ = currentNormalMatrix.m02() * nx + currentNormalMatrix.m12() * ny + currentNormalMatrix.m22() * nz;
+		vertex(buf, mat, x1, y1, z1, u2, v2, transformedX, transformedY, transformedZ);
+		vertex(buf, mat, x2, y2, z2, u1, v2, transformedX, transformedY, transformedZ);
+		vertex(buf, mat, x3, y3, z3, u1, v1, transformedX, transformedY, transformedZ);
+		vertex(buf, mat, x4, y4, z4, u2, v1, transformedX, transformedY, transformedZ);
+	}
+
+	private static void vertex(BufferBuilder buf, Matrix4f mat, float x, float y, float z, float u, float v,
+			float nx, float ny, float nz) {
+		buf.vertex(mat, x, y, z).color(255, 255, 255, 255)
+				.uv(u / TEXTURE_SIZE, v / TEXTURE_SIZE).overlayCoords(OverlayTexture.NO_OVERLAY)
+				.uv2(currentPackedLight).normal(nx, ny, nz).endVertex();
 	}
 }

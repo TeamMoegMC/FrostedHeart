@@ -1,5 +1,10 @@
 # 城镇居民混合模拟架构（Hybrid Citizen Simulation）
 
+- Status: `Transitional`
+- Last verified: `2026-08-19`
+- Scope: `居民服务端模拟、睡眠展示、AOI 预算、同步、客户端缓存与渲染`
+- Code anchors: `CitizenSim`, `CitizenPresence`, `TownSimData.onSleepEntered`, `SyncEngine`, `ClientCitizen`, `FakeCitizenManager`, `ClientCitizenRenderer`, `FHConfig.SERVER.TOWN`
+
 > 适用环境：Minecraft 1.20.1 / Forge 47.3.0 / Java 17（本仓库 Frosted Heart）
 > 目标规模：单机/联机下 **数千至上万** 个有独立行为的城镇居民，服务端近零实体开销，客户端流畅可见。
 > 核心思想：**服务端纯数据模拟 + 客户端纯表现渲染，网络包同步，完全绕过 `Entity` 体系。**
@@ -28,7 +33,7 @@
 ┌───────────────────────────────┴───────────────────────────────────────────────┐
 │                          客户端 (Logical Client)                              │
 │  ClientCitizenCache    id → 渲染状态（带双缓冲插值快照）                        │
-│  ClientCitizenRenderer 近处少量假实体 / 其余 Flywheel 实例化批渲染              │
+│  ClientCitizenRenderer 清醒近距假实体 / 其余低模与轮廓批渲染                    │
 │  InteractionHooks      准星射线查空间网格 → C2S 交互请求 → 打开菜单             │
 │  （换维度时清空缓存，与服务端 per-level id 空间对齐）                          │
 └───────────────────────────────────────────────────────────────────────────────┘
@@ -44,7 +49,7 @@ frostedheart/content/town/citizen/
 ├── AITownData      独立 AI 镇（无队伍，居民+模拟自包含，implements ITownWithResidents）
 ├── AITownManager   AI 镇注册表 + 全局模拟存储（overworld SavedData "fh_ai_towns"）
 ├── nav/            寻路：TownRoadGraph, FlowField, NavJobExecutor
-├── sync/           同步：SyncEngine, CitizenAOI, 各 S2C/C2S 包
+├── sync/           同步：SyncEngine 与各 S2C/C2S 包
 ├── client/         客户端：ClientCitizenCache, ClientCitizenRenderer, FakeCitizenEntity
 └── data/           定义：CitizenType(Codec), JobDef 等 datapack 数据
 ```
@@ -255,23 +260,26 @@ void tickAll() {
 
 ### 7.1 AOI 兴趣管理
 
-`CitizenAOI` 以每个在线玩家为中心、半径 R（默认 96 格，可配置）维护可见居民集合：
+`SyncEngine` 以每个在线玩家为中心、固定 96 格平面半径维护展示集合；每 20 tick 或服务端配置热变更时统一重选：
 
-- 用 `SpatialGrid` 每 20 tick 刷新一次各玩家的可见集合，进出触发**全量包/移除包**。
-- 服务端只模拟可见区 + 其外一圈缓冲，客户端永远不知道 AOI 外有任何居民存在。
+- `FHConfig.SERVER.TOWN.maxVisibleCitizensPerPlayer`：默认 `128`，范围 `0..4096`，严格限制单个玩家的 `tracked` 集合和 `ClientCitizenCache`。
+- `FHConfig.SERVER.TOWN.maxVisibleCitizensPerServer`：默认 `1024`，范围 `0..65536`，严格限制服务器全部玩家、全部维度的追踪关系总数。同一居民被两名玩家看到会占两个名额，因为客户端缓存和渲染成本实际发生两次。
+- 清醒居民与“已验证并定位到有效床头”的 `SLEEP` 居民共享预算；无床、床失效或区块不可验证的睡眠居民不进入候选集。
+- 每玩家先用定长最大堆选最近的 Top-K；当前打开 `TradeContainer` 的居民优先但仍占名额，已追踪居民具有 4 格保留优势，等距时按稳定 citizen id 决定，从而减少边界 spawn/despawn 抖动。
+- 服务器 tick 末尾再对各维度候选统一裁决总量预算，先发送 despawn 再发送 spawn，客户端应用包时也不会瞬时超过上限。
+- 任一上限为 `0` 时对应范围内不展示居民；真实人口、行为、床位、存档和每日结算不受展示预算影响。
 
 ### 7.2 三类包
 
 | 包 | 时机 | 内容 |
 |----|------|------|
-| `S2CCitizenSpawn` | 进入 AOI | id, 类型, 位置, yaw, state, 皮肤种子（全量，LZ4 前的原始约 20B/人） |
-| `S2CCitizenBatch` | 每 4 tick（5Hz） | 本批 dirty 单位的 `[varint id, int px, py, pz, short vx,vz, byte yaw, byte state]` ≈ 16B/人 |
-| `S2CCitizenEvent` | 状态切换即时 | id + 新 state（驱动动画切换/音效，低延迟） |
-| `S2CCitizenDespawn` | 离开 AOI | varint id 列表 |
+| `S2CCitizenSpawnPacket` | 进入预算集合 | id、绝对定点位置、打包的 state+16向 dir+halt、姓名 |
+| `S2CCitizenBatchPacket` | 每 4 tick（5Hz） | chunk 分组的局部量化位置、id、打包 state+dir+halt；每玩家每批最多 240 条 |
+| `S2CCitizenDespawnPacket` | 离开预算、床失效或居民移除 | varint id 列表 |
 
-- **脏标记**：位置变化 < 0.5 格或状态不变的单位不进 Batch。静止的单位零带宽。
-- **带宽预算**：每玩家每 tick 最多发 N 字节（默认 8KB），超出按距离优先级截断，下 tick 补——近处优先。
-- **5Hz 快照 + 客户端外推**：客户端按 `pos + vel * dt` 外推，收到快照用 `lerp(0.3)` 收敛。万级单位下带宽 ≈ `可见数百人 × 16B × 5Hz ≈ 几十 KB/s`，可接受；若仍紧张，把位置差分化（varint delta 相对上次快照）可再砍一半。
+- **误差驱动脏标记**：服务端镜像客户端 16 向外推模型；状态、方向、halt 变化或位置误差超过 `0.2` 格才到期发送，移动心跳按 4/8/20 tick 距离档位重锚。
+- **离散切换**：入睡、醒来和有效床位置刷新进入 `pendingImmediate`，在下一次 4 tick flush 绕过距离限频；无效床直接进入 `pendingHidden`。
+- **静止零带宽**：睡眠与到岗停止居民完成状态切换后不再发送移动心跳。
 - 走现有 `chorda` 的 `CBaseNetwork`/SimpleChannel 封装，包体手写 `FriendlyByteBuf` 序列化，不走 NBT。
 
 ### 7.3 客户端缓存与插值
@@ -295,7 +303,7 @@ public final class ClientCitizen {
 }
 ```
 
-快照间隔 200ms，插值窗口固定滞后一个间隔（类似 Source 引擎 cl_interp），移动平滑且永不回退。
+普通移动快照使用按实测包间隔调整的插值窗口并在窗口后限时外推。进入或离开 `SLEEP` 时直接 snap 到床头或住宅出口，并重置插值窗口，避免穿墙滑动。
 
 ---
 
@@ -305,16 +313,18 @@ public final class ClientCitizen {
 
 | 路径 | 适用 | 做法 |
 |------|------|------|
-| **假实体** `FakeCitizenEntity` | 距玩家 < 24 格（通常 < 50 个） | 真正的 `Entity`（`canUpdate = false`、无 AI、无碰撞箱查询注册），用原版模型/动画管线，可互动高亮、名牌、阴影 |
-| **实例化批渲染** | 其余全部 | 本包已带 **Flywheel 0.6.11**（Create 依赖）：把居民模型做成 `InstancedModel`，一次 draw call 画几千个实例，每实例数据 = 变换矩阵 + 动画相位 + state |
-| **Billboard LOD** | > 64 格 | 一张图集 quad，近平面剔除 |
+| **假实体** `FakeCitizenEntity` | 清醒且距玩家进入阈值 < 24 格 | 无 AI 的客户端实体，由 `ClientCitizen` 驱动位置、朝向和步行动画；`FakeCitizenRenderer` 使用原版宽臂 `PlayerModel`，28 格退出形成迟滞 |
+| **批量低模** | 清醒 24–64 格；睡眠 0–64 格 | 原版 `RenderType.entityCutoutNoCull` 绘制 Steve 比例的头、躯干、双臂、双腿；睡眠模型沿床方向水平放置，不创建假实体 |
+| **轮廓 LOD** | 64–96 格 | 清醒使用带皮肤躯干正面 UV 的竖直 billboard；睡眠使用贴近床面的水平纹理 quad |
 
 要点：
 
-- **动画不做骨骼重算**：每个 state 预烘焙若干关键姿态矩阵，实例着色器按 `time * speed + phase(id)` 在两个姿态间插值（类似 Imposter/群演方案）。行走循环摆动在 shader 里做，CPU 零开销。
-- 渲染入口：`RenderLevelStageEvent`（AFTER_ENTITIES 阶段）提交 Flywheel 实例；假实体走原版实体渲染自然混入。
-- 距离切换带迟滞（22↔26 格）防抖。假实体的客户端位置由 `ClientCitizenCache` 驱动，`tick()` 空实现。
-- 光照：按所在方块 `level.getBrightness` 每 0.5s 采样一次写入实例属性。
+- `CitizenSkins` 按稳定 citizen id 确定性选择 Minecraft 1.20.1 内置的宽臂 `Makena`、`Efe`、`Noor`、`Kai`、`Ari`、`Zuri`、`Sunny` 皮肤；近景假实体和批量 LOD 共用该映射，跨 LOD、离线重进和重新生成均不换肤。资源直接引用 `textures/entity/player/wide/*.png`，模组不复制原版贴图。
+- 渲染入口是 `RenderLevelStageEvent.AFTER_ENTITIES`；每帧只遍历并剔除一次缓存，按七张皮肤写入七个复用 `BufferBuilder`，仅对本帧实际可见的皮肤提交，最多 7 次 draw call，不创建每帧居民分组集合。
+- 批量顶点使用 `RenderType.entityCutoutNoCull` 的 `DefaultVertexFormat.NEW_ENTITY`，同时提交皮肤 UV、`OverlayTexture.NO_OVERLAY`、居民位置的天空光/方块光和面法线。该 RenderType 的实体 shader 会实际采样 lightmap 并执行原版方向光计算；`POSITION_COLOR_TEX_LIGHTMAP` 的同名 `UV2` 在 Minecraft 1.20.1 对应片元 shader 中没有被采样，不能用于环境明暗。光照值缓存在 `ClientCitizen`：跨方块时立即重采样，静止时按 citizen id 错峰每 5–8 tick 刷新；采样复用单个 `MutableBlockPos`，避免逐帧对象分配。
+- `CitizenBatchRenderLayout` 预计算 256 向站立/睡眠模型轴。站立轴复现 `LivingEntityRenderer` 的 `scale(-1, -1, 1)` 约定，使皮肤局部 `-Z` 始终朝居民前方、局部 `-Y` 朝世界上方；睡眠时局部 `-Z` 朝上、局部 `-Y` 朝床头。每个面的世界法线再经过当前 `PoseStack` normal matrix 一次后复用于四个顶点，不产生逐顶点临时向量。
+- 睡眠使用低矮 AABB 做视锥剔除，关闭行走起伏，并使用同步的床朝向而非客户端软转向。
+- 当前批量路径是低模直接提交，不是 Flywheel instancing；后者仍是更大规模下的后续优化方向。
 
 ---
 
@@ -323,7 +333,7 @@ public final class ClientCitizen {
 玩家右键一个“居民”时，无论它是假实体还是实例化画的：
 
 1. **选取**：客户端 raycast 先撞假实体；没撞到时，用客户端空间网格（同步时顺带维护）做射线-圆柱近似检测，拿到 `citizen id`。
-2. **请求**：发 `C2SCitizenInteract(id)`。服务端校验：id 存活、距离 < 8 格、所在维度一致。
+2. **请求**：发 `C2SCitizenActionPacket(id, action)`。服务端校验：id 存活、属于该玩家当前 `tracked` 集合、状态允许交互且距离不超过 8 格。`SLEEP` 和预算隐藏居民都不可交互。
 3. **响应**：服务端按 id 取数据（对话/交易/雇佣），走现有 `CBaseMenu` 体系开 GUI——**菜单数据源是 CitizenSim，不是实体**，全部读写都在服务端权威数据上。
 4. 攻击/伤害同理：C2S 请求 → 服务端改数值 → 死亡即发 Despawn + 事件包（尸体表现纯客户端）。
 
@@ -337,6 +347,7 @@ public final class ClientCitizen {
 - 未托管容器 `UnmanagedCitizenData extends SavedData`（per-level，沿用旧文件名 `fh_citizen_sim`），采用同样的变更标脏语义；同时承载本维度稳定 id 分配器（nextId 持久化、永不复用）。首次接管会以本维度全部容器的最大现存 id 校准分配器；若坏档或不完整写盘已造成跨容器 id 冲突，只重分配冲突的会话 id，位置/状态/居民 UUID 保持不变。
 - 序列化按 SoA 数组直写 NBT `int[]/byte[]` 数组字段，遵循项目 Codec-first 约定可用 `Codec.INT_STREAM`/`BYTE_BUFFER`；1 万居民落盘 < 1MB，毫秒级。
 - 冷数据档案另存一个 compound。版本号字段预留迁移空间（参考仓库根 `NBT_MIGRATION_GUIDE.md`）。
+- `presentationFlags`、`homePos`、`homeSlot` 等床位展示数据是运行期瞬态 SoA 字段；`PRESENT_ON_VALID_BED` 每次住宅布局/床方块验证后重建，不写入 NBT。
 
 ---
 

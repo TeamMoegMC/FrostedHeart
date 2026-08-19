@@ -624,6 +624,8 @@ public class FHConfig {
 			public final ForgeConfigSpec.BooleanValue enableTownTick;
 			public final ForgeConfigSpec.BooleanValue enableTownTickMorning;
 			public final ForgeConfigSpec.IntValue townUpdateIntervalGameTicks;
+			public final ForgeConfigSpec.IntValue maxVisibleCitizensPerPlayer;
+			public final ForgeConfigSpec.IntValue maxVisibleCitizensPerServer;
 
 			public static class Observation {
 				public final ForgeConfigSpec.IntValue historyDays;
@@ -1723,6 +1725,14 @@ public class FHConfig {
 				enableTownTickMorning = builder.comment("Enables town tick in the morning of each days.")
 					.comment("This tick includes the refresh of some town things, like house allocating, checking overlap of buildings, work assigning...")
 					.define("enableTownTickMorning", true);
+				maxVisibleCitizensPerPlayer = builder
+					.comment("Maximum citizens synchronized and rendered for one player across awake and valid-bed sleepers.")
+					.comment("Zero hides all citizens for every player.")
+					.defineInRange("maxVisibleCitizensPerPlayer", 1024, 0, 4096);
+				maxVisibleCitizensPerServer = builder
+					.comment("Maximum citizen render relations across all players and dimensions on this server.")
+					.comment("The same citizen visible to two players consumes two slots. Zero hides all citizens server-wide.")
+					.defineInRange("maxVisibleCitizensPerServer", 8192, 0, 65536);
 				GENERATOR_T1 = new GeneratorT1(builder);
 				OBSERVATION = new Observation(builder);
 				BUILDING_SCORING = new BuildingScoring(builder);

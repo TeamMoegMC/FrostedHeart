@@ -97,6 +97,7 @@ public final class CitizenSimScheduler {
 	 */
 	public static void resetAll() {
 		BY_LEVEL.clear();
+		SyncEngine.resetServerVisibility();
 	}
 
 	/**

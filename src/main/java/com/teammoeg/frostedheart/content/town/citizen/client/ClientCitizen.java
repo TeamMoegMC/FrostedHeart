@@ -67,6 +67,13 @@ public final class ClientCitizen {
     /** 停步标记：移动类状态但服务端实测未位移（到岗/卡住/贴墙），见到即停止外推 / Halt flag: MOVING-class state but no actual displacement server-side */
     private boolean halt;
 
+    /** 批量渲染光照缓存；包可见以便同包渲染器无映射表读取。 */
+    int packedLight;
+    int lightBlockX = Integer.MIN_VALUE;
+    int lightBlockY = Integer.MIN_VALUE;
+    int lightBlockZ = Integer.MIN_VALUE;
+    long nextLightSampleTick = Long.MIN_VALUE;
+
     /** 客户端本地连续视觉朝向（0-255），闭环追赶 DIR_TO_YAW[dir]，纯渲染用 */
     private int visYaw;
     /** visYaw 上次步进的游戏时刻（秒）与零头累积器（亚步进度不丢帧） */
@@ -98,6 +105,24 @@ public final class ClientCitizen {
      * @param stateDir 状态+方向打包字节
      */
     void update(int px, int py, int pz, byte stateDir) {
+        int newDir = CitizenState.unpackDir(stateDir);
+        byte newState = (byte) CitizenState.unpackState(stateDir);
+        boolean sleepTransition = newState != this.state
+                && (newState == CitizenState.SLEEP || this.state == CitizenState.SLEEP);
+        if (sleepTransition) {
+            double now = now();
+            this.x0 = this.x1 = px / 1024.0;
+            this.y0 = this.y1 = py / 1024.0;
+            this.z0 = this.z1 = pz / 1024.0;
+            this.t0 = this.t1 = now;
+            this.dir = newDir;
+            this.state = newState;
+            this.halt = CitizenState.unpackHalt(stateDir);
+            this.visYaw = CitizenState.DIR_TO_YAW[newDir] & 0xFF;
+            this.visYawLast = now;
+            this.turnAccum = 0;
+            return;
+        }
         double[] cur = renderPos();
         double now = now();
         double prevGap = now - this.t0;
@@ -109,7 +134,6 @@ public final class ClientCitizen {
         this.x1 = px / 1024.0;
         this.y1 = py / 1024.0;
         this.z1 = pz / 1024.0;
-        int newDir = CitizenState.unpackDir(stateDir);
         if (newDir != this.dir) {
             // 回溯转向：dir 变化经过一个发包档位的网络延迟才到达，假设服务端
             // 在上一个快照后即开始转向，按实测包间隔 prevGap 预推进 visYaw
@@ -123,7 +147,7 @@ public final class ClientCitizen {
             else if (diff < 0) visYaw = (visYaw + Math.max(diff, -advance)) & 0xFF;
         }
         this.dir = newDir;
-        this.state = (byte) CitizenState.unpackState(stateDir);
+        this.state = newState;
         this.halt = CitizenState.unpackHalt(stateDir);
     }
 

@@ -27,6 +27,7 @@ import com.teammoeg.frostedheart.content.town.ai_town.AITownData;
 import com.teammoeg.frostedheart.content.town.ai_town.AITownManager;
 import com.teammoeg.frostedheart.content.town.citizen.nav.NavJobExecutor;
 import com.teammoeg.frostedheart.content.town.citizen.sim.CitizenSimScheduler;
+import com.teammoeg.frostedheart.content.town.citizen.sync.SyncEngine;
 import com.teammoeg.frostedheart.content.town.resident.Resident;
 
 import net.minecraft.commands.CommandSourceStack;
@@ -79,6 +80,13 @@ public final class CitizenEvents {
 		// pendingRemoval (fixes the stale last-despawn bug); the registry
 		// aggregation runs inside at gt%20.
 		sched.tick(level);
+	}
+
+	/** Applies the cross-dimension citizen presentation budget after level ticks. */
+	@SubscribeEvent
+	public static void onServerTick(TickEvent.ServerTickEvent event) {
+		if (event.phase == TickEvent.Phase.END)
+			SyncEngine.refreshServerVisibility(event.getServer());
 	}
 
 	/**

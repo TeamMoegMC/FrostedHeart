@@ -95,14 +95,13 @@ public final class UnmanagedCitizenData extends SavedData implements CitizenCont
 			for (int k = 0; k < loaded.size(); k++) {
 				if (loaded.uuidHi[k] == 0 && loaded.uuidLo[k] == 0) {
 					// 命令居民：保留 id 与位置
-					int i = data.sim.add(loaded.id[k], loaded.px[k], loaded.py[k], loaded.pz[k], loaded.tickPhase[k]);
+					int i = data.sim.add(loaded.id[k], loaded.px[k], loaded.py[k], loaded.pz[k]);
 					data.sim.dir[i] = loaded.dir[k];
                     data.sim.sdir[i] = loaded.sdir[k];
 					data.sim.state[i] = loaded.state[k];
 					data.sim.homeX[i] = loaded.homeX[k];
 					data.sim.homeZ[i] = loaded.homeZ[k];
 					data.sim.tx[i] = loaded.tx[k];
-					data.sim.ty[i] = loaded.ty[k];
 					data.sim.tz[i] = loaded.tz[k];
 				}
 				// uuid≠0 的镇居民条目丢弃：重启后由各镇接管时 rebind 重建
@@ -165,7 +164,7 @@ public final class UnmanagedCitizenData extends SavedData implements CitizenCont
 			return;
 		CitizenSim loaded = CitizenSim.load(simTag);
 		for (int k = 0; k < loaded.size(); k++) {
-			int i = sim.add(loaded.id[k], loaded.px[k], loaded.py[k], loaded.pz[k], loaded.tickPhase[k]);
+			int i = sim.add(loaded.id[k], loaded.px[k], loaded.py[k], loaded.pz[k]);
 			sim.dir[i] = loaded.dir[k];
             sim.sdir[i] = loaded.sdir[k];
 			sim.state[i] = loaded.state[k];
@@ -176,7 +175,6 @@ public final class UnmanagedCitizenData extends SavedData implements CitizenCont
 			sim.uuidHi[i] = loaded.uuidHi[k];
 			sim.uuidLo[i] = loaded.uuidLo[k];
 			sim.tx[i] = loaded.tx[k];
-			sim.ty[i] = loaded.ty[k];
 			sim.tz[i] = loaded.tz[k];
 		}
 	}

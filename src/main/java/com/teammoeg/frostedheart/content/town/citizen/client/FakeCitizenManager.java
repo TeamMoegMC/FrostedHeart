@@ -91,7 +91,7 @@ public final class FakeCitizenManager {
 			Map.Entry<Integer, FakeCitizenEntity> e = it.next();
 			FakeCitizenEntity ent = e.getValue();
 			ClientCitizen c = ClientCitizenCache.get(e.getKey());
-			boolean drop = c == null || ent.isRemoved() || ent.level() != level;
+			boolean drop = c == null || c.state == CitizenState.SLEEP || ent.isRemoved() || ent.level() != level;
 			if (!drop) {
 				double[] pos = c.renderPos();
 				double dx = pos[0] - px;
@@ -111,7 +111,7 @@ public final class FakeCitizenManager {
 
 		// 第二遍：为进入近距范围的缓存居民生成假实体
 		for (ClientCitizen c : ClientCitizenCache.values()) {
-			if (ACTIVE.containsKey(c.id))
+			if (c.state == CitizenState.SLEEP || ACTIVE.containsKey(c.id))
 				continue;
 			double[] pos = c.renderPos();
 			double dx = pos[0] - px;
