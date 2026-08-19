@@ -51,14 +51,15 @@ import net.minecraft.server.level.ServerPlayer;
  *   <li>Dead Reckoning：服务端镜像客户端外推模型，仅当真实位置与外推位置误差超过
  *       {@value #ERROR_DIST} 方块（或方向/状态变化）时才将该居民标记为脏；匀速行走仅按档位心跳重锚；</li>
 	 * <li>分频：按最近观察者距离 32/64/+∞ 格分 4/8/20 tick 三档，按 stick 间隔错开避免尖峰；</li>
- *   <li>合包：每人每 {@value #FLUSH_INTERVAL} tick 至多一个批包，chunk 分组，
- *       单包最多 {@value #MAX_ENTRIES_PER_PACKET} 条（带宽预算）。</li>
+	 *   <li>合包：每人每 {@value #FLUSH_INTERVAL} tick 发送一个或多个批包，chunk 分组，
+	 *       单包最多 {@value #MAX_ENTRIES_PER_PACKET} 条（带宽预算）。</li>
  * </ul>
  * 规范模型（last-sent）为全体玩家共享的近似值：以"任一玩家收到"为更新时机，
  * 远距玩家收到的条目可能略多于理论最小值，换取 O(居民数) 而非 O(居民数×玩家数) 的存储。
  * <p>
- * Network sync engine: AOI interest management + dead-reckoning error-driven
- * sending + distance-tiered frequency + packet batching. See the Chinese list
+	 * Network sync engine: AOI interest management + dead-reckoning error-driven
+	 * sending + distance-tiered frequency + packet batching. A flush may emit
+	 * multiple packets per player; see the Chinese list
  * above for parameters. The canonical (last-sent) model is a shared
  * approximation across players, updated when any player is sent an entry —
  * trading slightly more entries for far players against O(citizens) instead of
@@ -105,6 +106,8 @@ public final class SyncEngine {
 	private final IntOpenHashSet pendingImmediate = new IntOpenHashSet();
 	/** 本 flush 周期内"脏且到期"的居民 id / Dirty-and-due ids in the current flush */
 	private final IntOpenHashSet due = new IntOpenHashSet();
+	/** IDs included in a packet after sendPlayer returned normally during this flush. */
+	private final IntOpenHashSet handedOffToAnyPlayer = new IntOpenHashSet();
 	private int[] selectionHeapIds = new int[0];
 	private long[] selectionHeapRanks = new long[0];
 	private int selectionHeapSize;
@@ -451,6 +454,7 @@ public final class SyncEngine {
 
 	private void flushDeltas(CitizenSimScheduler sched, List<ServerPlayer> players, long gameTime) {
 		due.clear();
+		handedOffToAnyPlayer.clear();
 		long aoi2 = (long) AOI_RADIUS * AOI_RADIUS;
 
         // 缓存玩家坐标，避免循环中重复调用
@@ -501,13 +505,14 @@ public final class SyncEngine {
 		// 广播移除
 		if (due.isEmpty())
 			return;
-		// 按玩家组包：chunk 分组 + 条目上限
+		// 按玩家组包：chunk 分组 + 条目上限。240 是单包上限，不是本 flush 截断点。
+		// Packet/canonical ordering:
+		// due -> per-player groups -> <=240 packet batches -> send -> handedOffToAnyPlayer -> canonical writeback
 		for (ServerPlayer p : players) {
 			IntOpenHashSet set = tracked.get(p);
 			if (set == null || set.isEmpty())
 				continue;
 			Long2ObjectOpenHashMap<List<S2CCitizenBatchPacket.Entry>> byChunk = new Long2ObjectOpenHashMap<>();
-			int count = 0;
 			for (int id : set) {
 				if (!due.contains(id))
 					continue;
@@ -526,20 +531,18 @@ public final class SyncEngine {
 				int lx = (sim.px[i] - (cx << 14)) / S2CCitizenBatchPacket.LOCAL_QUANT;
 				int lz = (sim.pz[i] - (cz << 14)) / S2CCitizenBatchPacket.LOCAL_QUANT;
 				int ly = sim.py[i] >> 6;
-			// state+dir 打包为一个同步字节（bit0-2 状态，bit3-6 方向，bit7 停步标记）：
-			// 16 向方向取代连续 yaw 后，状态与方向恒可合发，每条目恒定 6-8 字节。
-			// 停步位告知客户端"移动类状态但本 tick 未位移"，立即停止外推。
-			// state+dir packed into one sync byte (bits 0-2 state, bits 3-6 dir,
-			// bit 7 halt): constant 6-8 bytes per entry; the halt bit tells the
-			// client "MOVING-class state but no displacement this tick" so it
-			// stops extrapolating at once.
-			byte sd = CitizenState.packStateDir(sim.state[i], sim.dir[i]);
-			if (sim.halt[i] != 0)
-				sd |= (byte) CitizenState.HALT_BIT;
-			byChunk.computeIfAbsent(key, k -> new ArrayList<>()).add(new S2CCitizenBatchPacket.Entry(id, lx, ly,
-					lz, sd));
-				if (++count >= MAX_ENTRIES_PER_PACKET)
-					break;
+				// state+dir 打包为一个同步字节（bit0-2 状态，bit3-6 方向，bit7 停步标记）：
+				// 16 向方向取代连续 yaw 后，状态与方向恒可合发，每条目恒定 6-8 字节。
+				// 停步位告知客户端"移动类状态但本 tick 未位移"，立即停止外推。
+				// state+dir packed into one sync byte (bits 0-2 state, bits 3-6 dir,
+				// bit 7 halt): constant 6-8 bytes per entry; the halt bit tells the
+				// client "MOVING-class state but no displacement this tick" so it
+				// stops extrapolating at once.
+				byte sd = CitizenState.packStateDir(sim.state[i], sim.dir[i]);
+				if (sim.halt[i] != 0)
+					sd |= (byte) CitizenState.HALT_BIT;
+				byChunk.computeIfAbsent(key, k -> new ArrayList<>()).add(new S2CCitizenBatchPacket.Entry(id, lx, ly,
+						lz, sd));
 			}
 			if (byChunk.isEmpty())
 				continue;
@@ -550,33 +553,38 @@ public final class SyncEngine {
 				long key = e.getLongKey();
 				groups.add(new S2CCitizenBatchPacket.Group((int) (key >> 32), (int) key, e.getValue()));
 			}
-			FHNetwork.INSTANCE.sendPlayer(p, new S2CCitizenBatchPacket(groups));
+			CitizenDeltaPacketBatcher.forEachPacket(groups, MAX_ENTRIES_PER_PACKET, packetGroups -> {
+				FHNetwork.INSTANCE.sendPlayer(p, new S2CCitizenBatchPacket(packetGroups));
+				for (S2CCitizenBatchPacket.Group group : packetGroups)
+					for (S2CCitizenBatchPacket.Entry entry : group.entries())
+						handedOffToAnyPlayer.add(entry.id());
+			});
 		}
-	// 规范模型延后到本 flush 末尾统一回写：脏检测必须与"上一次发送"的规范值
-	// 比较；若在收集阶段就地更新，比较恒成立，dir/state 变化将永不触发补包
-	// （回归 A：曾表现为客户端朝向/状态冻结）。
-	// 与组包循环同模式：经 id 反查容器与索引（防御移除竞态）。
-	// Canonical model is written back at the END of the flush: the dirty check
-	// must compare against what was sent LAST flush; updating during collection
-	// made the comparison vacuously true, freezing client dir/state
-	// (regression A). Same id→container/index re-resolution as the packet-build
-	// loop (defensive against removal races).
-	for (int id : due) {
-		CitizenContainer c = sched.findById(id);
-		if (c == null)
-			continue;
-		CitizenSim sim = c.sim();
-		int i = sim.indexOf(id);
-		if (i < 0)
-			continue;
-		sim.sx[i] = sim.px[i];
-		sim.sy[i] = sim.py[i];
-		sim.sz[i] = sim.pz[i];
-		sim.sdir[i] = sim.dir[i];
-		sim.sstate[i] = sim.state[i];
-		sim.shalt[i] = sim.halt[i];
-		sim.stick[i] = gameTime;
-	}
+		// 规范模型延后到本 flush 末尾统一回写：脏检测必须与"上一次发送"的规范值
+		// 比较；若在收集阶段就地更新，比较恒成立，dir/state 变化将永不触发补包
+		// （回归 A：曾表现为客户端朝向/状态冻结）。
+		// 与组包循环同模式：经 id 反查容器与索引（防御移除竞态）。
+		// Canonical model is written back at the END of the flush: the dirty check
+		// must compare against what was sent LAST flush; updating during collection
+		// made the comparison vacuously true, freezing client dir/state
+		// (regression A). Same id->container/index re-resolution as the packet-build
+		// loop (defensive against removal races).
+		for (int id : handedOffToAnyPlayer) {
+			CitizenContainer c = sched.findById(id);
+			if (c == null)
+				continue;
+			CitizenSim sim = c.sim();
+			int i = sim.indexOf(id);
+			if (i < 0)
+				continue;
+			sim.sx[i] = sim.px[i];
+			sim.sy[i] = sim.py[i];
+			sim.sz[i] = sim.pz[i];
+			sim.sdir[i] = sim.dir[i];
+			sim.sstate[i] = sim.state[i];
+			sim.shalt[i] = sim.halt[i];
+			sim.stick[i] = gameTime;
+		}
 	}
 
 	/**

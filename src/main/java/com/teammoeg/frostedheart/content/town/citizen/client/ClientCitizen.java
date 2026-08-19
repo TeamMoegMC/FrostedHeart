@@ -21,6 +21,7 @@ package com.teammoeg.frostedheart.content.town.citizen.client;
 
 import com.teammoeg.frostedheart.content.town.citizen.sim.CitizenState;
 import net.minecraft.client.Minecraft;
+import net.minecraft.world.phys.AABB;
 
 /**
  * 客户端居民渲染状态，快照插值 + 16 向方向外推。
@@ -80,7 +81,11 @@ public final class ClientCitizen {
     private double visYawLast = -1, turnAccum;
     /** 快照到达时间（游戏时间秒） / Snapshot arrival times (game-time seconds) */
     private double t0, t1;
+	/** Shared CPU/M3 walk phase at the start of the current snapshot segment. */
+	private float walkPhase;
     private final double[] posBuf = new double[3];
+	/** Snapshot-swept frustum bounds; rebuilt on network updates, never per render frame. */
+	private AABB cullBox;
 
     ClientCitizen(int id, int px, int py, int pz, byte stateDir, String name) {
         this.id = id;
@@ -91,10 +96,12 @@ public final class ClientCitizen {
         this.dir = CitizenState.unpackDir(stateDir);
         this.state = (byte) CitizenState.unpackState(stateDir);
         this.halt = CitizenState.unpackHalt(stateDir);
+		this.walkPhase = CitizenBatchRenderLayout.initialWalkPhase(id);
         // spawn 直接对齐目标朝向：该客户端没有任何历史朝向，"从旧方向过渡"
         // 的旧方向根本不存在，snap 不可感知且是唯一无争议的选择。
         this.visYaw = CitizenState.DIR_TO_YAW[this.dir] & 0xFF;
         this.t0 = this.t1 = now();
+		rebuildCullBox();
     }
 
     /**
@@ -105,12 +112,14 @@ public final class ClientCitizen {
      * @param stateDir 状态+方向打包字节
      */
     void update(int px, int py, int pz, byte stateDir) {
+        double now = now();
+        advanceVisualYaw(now);
+		walkPhase = CitizenBatchRenderLayout.advanceWalkPhase(walkPhase, x0, z0, x1, z1);
         int newDir = CitizenState.unpackDir(stateDir);
         byte newState = (byte) CitizenState.unpackState(stateDir);
         boolean sleepTransition = newState != this.state
                 && (newState == CitizenState.SLEEP || this.state == CitizenState.SLEEP);
         if (sleepTransition) {
-            double now = now();
             this.x0 = this.x1 = px / 1024.0;
             this.y0 = this.y1 = py / 1024.0;
             this.z0 = this.z1 = pz / 1024.0;
@@ -121,10 +130,10 @@ public final class ClientCitizen {
             this.visYaw = CitizenState.DIR_TO_YAW[newDir] & 0xFF;
             this.visYawLast = now;
             this.turnAccum = 0;
+			rebuildCullBox();
             return;
         }
         double[] cur = renderPos();
-        double now = now();
         double prevGap = now - this.t0;
         this.x0 = cur[0];
         this.y0 = cur[1];
@@ -149,6 +158,7 @@ public final class ClientCitizen {
         this.dir = newDir;
         this.state = newState;
         this.halt = CitizenState.unpackHalt(stateDir);
+		rebuildCullBox();
     }
 
     /**
@@ -167,7 +177,10 @@ public final class ClientCitizen {
      * 客户端卡顿时不积累偏差，恢复后自动补进度；误差单调收敛，不存在漂移。
      */
     public int visualYaw() {
-        double now = now();
+        return advanceVisualYaw(now());
+    }
+
+    private int advanceVisualYaw(double now) {
         if (visYawLast < 0) {
             visYawLast = now;
             return visYaw;
@@ -191,6 +204,22 @@ public final class ClientCitizen {
         else visYaw = (visYaw + Math.max(diff, -step)) & 0xFF;
         return visYaw;
     }
+
+	double snapshotStartSeconds() {
+		return t0;
+	}
+
+	double snapshotEndSeconds() {
+		return t1;
+	}
+
+	float walkPhase() {
+		return walkPhase;
+	}
+
+	static double currentTimeSeconds() {
+		return now();
+	}
 
     /**
      * 计算当前渲染位置（插值 + 沿 16 向同步方向外推，与服务端规范模型严格同源）。
@@ -228,6 +257,38 @@ public final class ClientCitizen {
         return posBuf;
     }
 
+	AABB cullingBox() {
+		return cullBox;
+	}
+
+	private void rebuildCullBox() {
+		cullBox = createCullingBox(x0, y0, z0, x1, y1, z1, state & 0xFF, dir, halt);
+	}
+
+	static AABB createCullingBox(double x0, double y0, double z0,
+			double x1, double y1, double z1, int state, int dir, boolean halt) {
+		double extrapolatedX = x1;
+		double extrapolatedZ = z1;
+		boolean moving = state < CitizenState.STATE_COUNT && CitizenState.MOVING[state] && !halt;
+		if (moving) {
+			double speed = CitizenState.SPEED[state] * 20.0 / CitizenState.FIXED_SCALE;
+			extrapolatedX += CitizenState.DIR_X_16[dir] / 1024.0 * speed * EXTRAPOLATE_CLAMP;
+			extrapolatedZ += CitizenState.DIR_Z_16[dir] / 1024.0 * speed * EXTRAPOLATE_CLAMP;
+		}
+		double minX = Math.min(Math.min(x0, x1), extrapolatedX);
+		double maxX = Math.max(Math.max(x0, x1), extrapolatedX);
+		double minY = Math.min(y0, y1);
+		double maxY = Math.max(y0, y1);
+		double minZ = Math.min(Math.min(z0, z1), extrapolatedZ);
+		double maxZ = Math.max(Math.max(z0, z1), extrapolatedZ);
+		if (state == CitizenState.SLEEP) {
+			return new AABB(minX - 1.35, minY + 0.45, minZ - 1.35,
+					maxX + 1.35, maxY + 0.95, maxZ + 1.35);
+		}
+		return new AABB(minX - 0.5, minY, minZ - 0.5,
+				maxX + 0.5, maxY + 2.0, maxZ + 0.5);
+	}
+
     // 当前游戏时间（秒），暂停时不增长。与全部秒制常量（EXTRAPOLATE_CLAMP=1.5、
     // 窗口钳制 0.05~1.0、TURN_RATE=60/s）一致；帧时间小数部分使包间间隔
     // 精确到亚 tick。曾误返回 tick（回归 B：窗口坍缩为 1 tick，渲染位置分段冻结/瞬移）。
@@ -235,7 +296,7 @@ public final class ClientCitizen {
     // below; the frame-time fraction keeps inter-packet gaps sub-tick accurate.
     private static double now() {
         Minecraft mc = Minecraft.getInstance();
-        if (mc.level == null) return 0.0;
+        if (mc == null || mc.level == null) return 0.0;
         return (mc.level.getGameTime() + mc.getFrameTime()) / 20.0;
     }
 }

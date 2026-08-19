@@ -24,7 +24,7 @@ import java.util.List;
 import java.util.function.Supplier;
 
 import com.teammoeg.chorda.network.CMessage;
-import com.teammoeg.frostedheart.content.town.citizen.client.ClientCitizenCache;
+import com.teammoeg.frostedheart.content.town.citizen.client.CitizenRenderCoordinator;
 
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.api.distmarker.Dist;
@@ -109,7 +109,7 @@ public final class S2CCitizenBatchPacket implements CMessage {
 	@Override
 	public void handle(Supplier<NetworkEvent.Context> context) {
 		context.get().enqueueWork(
-				() -> DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> ClientCitizenCache.applyBatch(groups)));
+				() -> DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> CitizenRenderCoordinator.applyBatch(groups)));
 		context.get().setPacketHandled(true);
 	}
 }

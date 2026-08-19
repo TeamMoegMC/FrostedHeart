@@ -25,23 +25,32 @@ import java.util.Map;
 import com.teammoeg.frostedheart.bootstrap.common.FHEntityTypes;
 import com.teammoeg.frostedheart.content.town.citizen.FakeCitizenEntity;
 import com.teammoeg.frostedheart.content.town.citizen.sim.CitizenState;
+import com.teammoeg.frostedheart.content.trade.gui.TradeContainer;
+import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
+import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.phys.Vec3;
+
+import org.joml.Vector3f;
 
 /**
  * 假实体生命周期管理器：把客户端缓存中近距居民映射为客户端本地假实体。
- * 进入 24 格生成、超出 28 格移除（迟滞带防抖动）；使用负数实体 id 段，
+ * 进入 16 格且入选稳定 Top-K 时生成、超出 20 格或落选时移除；Top-K 默认
+ * 上限 64，已接管居民按 4 格距离优势保留，交易和准星目标优先。使用负数实体 id 段，
  * 与服务端实体 id 空间完全隔离。每客户端 tick 将模拟位置/朝向直接写入
  * 实体及其"上一帧"字段，让原版渲染插值自然平滑；行走摆动由实际位移驱动。
  * 与批量渲染器配合：凡由假实体接管的居民，ClientCitizenRenderer 一律跳过。
  * <p>
  * Fake entity lifecycle manager: maps near-range cached citizens to
- * client-local fake entities. Spawn at 24 blocks, remove beyond 28
- * (hysteresis band against flickering); uses a negative entity id space,
+ * client-local fake entities. Candidates enter at 16 blocks and leave at 20;
+ * a stable configurable Top-K (default 64) bounds the vanilla entity path,
+ * with retention hysteresis plus interaction/crosshair priority. Uses a negative entity id space,
  * fully isolated from server ids. Every client tick the simulated
  * position/yaw is written into the entity and its "previous frame" fields
  * so vanilla render interpolation stays smooth; walk swing is driven by
@@ -50,12 +59,11 @@ import net.minecraft.world.entity.Entity;
  */
 public final class FakeCitizenManager {
 
-	/** 生成距离平方（24 格） / Spawn distance squared (24 blocks) */
-	private static final double ENTER_DIST2 = 24.0 * 24.0;
-	/** 移除距离平方（28 格，迟滞带） / Removal distance squared (28 blocks, hysteresis band) */
-	private static final double EXIT_DIST2 = 28.0 * 28.0;
+	private static final double PICK_DIST = 4.5;
 	/** 假实体表：居民 id → 假实体 / Fake entity table: citizen id → fake entity */
 	private static final Int2ObjectOpenHashMap<FakeCitizenEntity> ACTIVE = new Int2ObjectOpenHashMap<>();
+	private static final IntOpenHashSet SELECTED = new IntOpenHashSet();
+	private static final DetailedCitizenSelector SELECTOR = new DetailedCitizenSelector();
 	/**
 	 * 单 tick（1/20 秒）内假实体最大朝向变化角（度）。
 	 * 原版村民视觉上转向本就偏慢，保守取 360°/s（即每 tick ≤18°）；
@@ -82,25 +90,53 @@ public final class FakeCitizenManager {
 		ClientLevel level = mc.level;
 		if (level == null || mc.player == null)
 			return;
+		int limit = FHConfig.CLIENT.maxDetailedCitizenEntities.get();
+		if (limit <= 0 || ClientCitizenCache.size() == 0) {
+			clearAll();
+			return;
+		}
 		double px = mc.player.getX();
 		double pz = mc.player.getZ();
+		Camera camera = mc.gameRenderer.getMainCamera();
+		Vec3 eye = camera.getPosition();
+		Vector3f look = camera.getLookVector();
+		int crosshairId = -1;
+		double crosshairDistance = PICK_DIST;
 
-		// 第一遍：驱动已活跃的假实体；缓存消失 / 实体失效 / 超距则移除
+		SELECTOR.reset(limit);
+		for (ClientCitizen citizen : ClientCitizenCache.values()) {
+			if (citizen.state == CitizenState.SLEEP)
+				continue;
+			double[] pos = citizen.renderPos();
+			double dx = pos[0] - px;
+			double dz = pos[2] - pz;
+			double distance2 = dx * dx + dz * dz;
+			boolean retained = ACTIVE.containsKey(citizen.id);
+			if (!DetailedCitizenSelector.isEligible(distance2, retained))
+				continue;
+			SELECTOR.addCandidate(citizen.id, distance2, retained);
+			double hitDistance = pickDistance(pos, eye, look, crosshairDistance);
+			if (hitDistance < crosshairDistance) {
+				crosshairDistance = hitDistance;
+				crosshairId = citizen.id;
+			}
+		}
+		int interactingId = mc.player.containerMenu instanceof TradeContainer trade && trade.data != null
+				? trade.data.getCitizenId() : -1;
+		SELECTOR.select(crosshairId, interactingId);
+		SELECTED.clear();
+		for (int i = 0; i < SELECTOR.selectedCount(); i++)
+			SELECTED.add(SELECTOR.selectedIdAt(i));
+
+		// Drop ownership before creating replacements. Every non-selected citizen
+		// remains visible through ClientCitizenRenderer in the same frame.
 		Iterator<Map.Entry<Integer, FakeCitizenEntity>> it = ACTIVE.entrySet().iterator();
 		while (it.hasNext()) {
 			Map.Entry<Integer, FakeCitizenEntity> e = it.next();
 			FakeCitizenEntity ent = e.getValue();
 			ClientCitizen c = ClientCitizenCache.get(e.getKey());
-			boolean drop = c == null || c.state == CitizenState.SLEEP || ent.isRemoved() || ent.level() != level;
-			if (!drop) {
-				double[] pos = c.renderPos();
-				double dx = pos[0] - px;
-				double dz = pos[2] - pz;
-				if (dx * dx + dz * dz > EXIT_DIST2)
-					drop = true;
-				else
-					drive(ent, c, pos);
-			}
+			boolean drop = !SELECTED.contains(e.getKey()) || c == null || c.state == CitizenState.SLEEP
+					|| ent.isRemoved() || ent.level() != level;
 			if (drop) {
 				// 走原版 despawn 路径：标记移除 + onClientRemoval，tickEntities 负责清理查找表
 				// Follow the vanilla despawn path so the entity lookup is purged by tickEntities
@@ -109,18 +145,19 @@ public final class FakeCitizenManager {
 			}
 		}
 
-		// 第二遍：为进入近距范围的缓存居民生成假实体
-		for (ClientCitizen c : ClientCitizenCache.values()) {
-			if (c.state == CitizenState.SLEEP || ACTIVE.containsKey(c.id))
+		for (int citizenId : SELECTED) {
+			ClientCitizen c = ClientCitizenCache.get(citizenId);
+			if (c == null || c.state == CitizenState.SLEEP)
 				continue;
 			double[] pos = c.renderPos();
-			double dx = pos[0] - px;
-			double dz = pos[2] - pz;
-			if (dx * dx + dz * dz > ENTER_DIST2)
+			FakeCitizenEntity ent = ACTIVE.get(citizenId);
+			if (ent != null) {
+				drive(ent, c, pos);
 				continue;
-			FakeCitizenEntity ent = new FakeCitizenEntity(FHEntityTypes.FAKE_CITIZEN.get(), level);
+			}
+			ent = new FakeCitizenEntity(FHEntityTypes.FAKE_CITIZEN.get(), level);
 			ent.setCitizenId(c.id);
-            ent.setId(-c.id - 1);
+			ent.setId(-c.id - 1);
 			ent.setPos(pos[0], pos[1], pos[2]);
 			ent.xo = pos[0];
 			ent.yo = pos[1];
@@ -142,6 +179,23 @@ public final class FakeCitizenManager {
 			level.putNonPlayerEntity(ent.getId(), ent);
 			ACTIVE.put(c.id, ent);
 		}
+	}
+
+	private static double pickDistance(double[] pos, Vec3 eye, Vector3f look, double maxDistance) {
+		double cx = pos[0] - eye.x;
+		double cy = pos[1] + 0.9 - eye.y;
+		double cz = pos[2] - eye.z;
+		double t = cx * look.x + cy * look.y + cz * look.z;
+		if (t < 0 || t >= maxDistance)
+			return Double.POSITIVE_INFINITY;
+		double closestX = eye.x + look.x * t;
+		double closestY = eye.y + look.y * t;
+		double closestZ = eye.z + look.z * t;
+		double dx = closestX - pos[0];
+		double dz = closestZ - pos[2];
+		if (dx * dx + dz * dz > 0.25 || closestY < pos[1] - 0.2 || closestY > pos[1] + 2.0)
+			return Double.POSITIVE_INFINITY;
+		return t;
 	}
 
 	/**
@@ -249,13 +303,27 @@ public final class FakeCitizenManager {
 		return ACTIVE.containsKey(citizenId);
 	}
 
+	/** Immediately releases one proxy when its owning cache entry is removed. */
+	static void remove(int citizenId) {
+		FakeCitizenEntity entity = ACTIVE.remove(citizenId);
+		SELECTED.remove(citizenId);
+		if (entity != null && !entity.isRemoved())
+			entity.discard();
+	}
+
+	/** Current detailed proxy count, exposed for diagnostics. */
+	public static int activeCount() {
+		return ACTIVE.size();
+	}
+
 	/**
 	 * 清空全部假实体（退出世界时调用）。
 	 * <p>
 	 * Disposes all fake entities (called on world exit).
 	 */
     public static void clearAll() {
-        ClientLevel level = Minecraft.getInstance().level;
+		Minecraft minecraft = Minecraft.getInstance();
+		ClientLevel level = minecraft == null ? null : minecraft.level;
         if (level != null) {
             for (FakeCitizenEntity e : ACTIVE.values())
                 level.removeEntity(e.getId(), Entity.RemovalReason.DISCARDED);
@@ -264,5 +332,6 @@ public final class FakeCitizenManager {
                 e.discard();
         }
         ACTIVE.clear();
+		SELECTED.clear();
     }
 }

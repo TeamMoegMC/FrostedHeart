@@ -109,6 +109,17 @@ public final class ClientCitizenCache {
 		return CITIZENS.get(id);
 	}
 
+	/** Installs a client-only benchmark citizen without replacing synchronized data. */
+	static boolean installBenchmark(ClientCitizen citizen) {
+		return CITIZENS.putIfAbsent(citizen.id, citizen) == null;
+	}
+
+	/** Removes a benchmark citizen only while the cache still holds the same object. */
+	static void removeBenchmark(ClientCitizen citizen) {
+		if (CITIZENS.get(citizen.id) == citizen)
+			CITIZENS.remove(citizen.id);
+	}
+
 	/**
 	 * 清空缓存（退出世界时调用）。
 	 * <p>
