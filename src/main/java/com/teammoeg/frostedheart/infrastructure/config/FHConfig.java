@@ -1594,6 +1594,38 @@ public class FHConfig {
 						.defineInRange(key, defaultValue, 0d, 1000d);
 				}
 			}
+			public static class TransportStation {
+				public final ForgeConfigSpec.DoubleValue floorBlocksPerWorkerSlot;
+				public final ForgeConfigSpec.IntValue minimumWorkerSlots;
+				public final ForgeConfigSpec.IntValue minimumFloorAreaBlocks;
+				public final ForgeConfigSpec.IntValue minimumInteriorVolumeBlocks;
+
+				TransportStation(ForgeConfigSpec.Builder builder) {
+					builder.push("Transport Station");
+					floorBlocksPerWorkerSlot = builder
+							.comment("Effective floor area required for one transport-station worker slot, in blocks per worker.")
+							.defineInRange("floorBlocksPerWorkerSlot",
+									TownModelParameters.Defaults.TRANSPORT_STATION_FLOOR_BLOCKS_PER_WORKER_SLOT,
+									0.01d, 1000000d);
+					minimumWorkerSlots = builder
+							.comment("Minimum worker slots granted to every structurally valid transport station, in workers.")
+							.defineInRange("minimumWorkerSlots",
+									TownModelParameters.Defaults.TRANSPORT_STATION_MINIMUM_WORKER_SLOTS,
+									0, 4096);
+					minimumFloorAreaBlocks = builder
+							.comment("Minimum effective floor area required for a transport station, in blocks.")
+							.defineInRange("minimumFloorAreaBlocks",
+									TownModelParameters.Defaults.TRANSPORT_STATION_MINIMUM_FLOOR_AREA_BLOCKS,
+									0, 1000000);
+					minimumInteriorVolumeBlocks = builder
+							.comment("Minimum enclosed interior volume required for a transport station, in blocks.")
+							.defineInRange("minimumInteriorVolumeBlocks",
+									TownModelParameters.Defaults.TRANSPORT_STATION_MINIMUM_INTERIOR_VOLUME_BLOCKS,
+									0, 1000000000);
+					builder.pop();
+				}
+			}
+
 			public static class Resource{
 				/**
 				 * @deprecated Use {@link #oreReservePerChunk}. Kept as a Java alias
@@ -1671,6 +1703,7 @@ public class FHConfig {
 			public final BuildingScoring BUILDING_SCORING;
 			public final GeneratorT1 GENERATOR_T1;
 			public final Mining MINING;
+			public final TransportStation TRANSPORT_STATION;
 			public final ResidentRules RESIDENT_RULES;
 			public final ResidentProgression RESIDENT_PROGRESSION;
 			public final ResidentGeneration RESIDENT_GENERATION;
@@ -1711,6 +1744,7 @@ public class FHConfig {
 				RESIDENT_AGING = new ResidentAging(builder);
 				HUNTING = new Hunting(builder);
 				MINING = new Mining(builder);
+				TRANSPORT_STATION = new TransportStation(builder);
 				RESOURCE=new Resource(builder);
 				builder.pop();
 

@@ -13,6 +13,7 @@ import com.teammoeg.frostedheart.content.town.building.AbstractTownBuilding;
 import com.teammoeg.frostedheart.content.town.building.ITownBuilding;
 import com.teammoeg.frostedheart.content.town.buildings.house.HouseBuilding;
 import com.teammoeg.frostedheart.content.town.buildings.hunting.HuntingBaseBuilding;
+import com.teammoeg.frostedheart.content.town.buildings.logistics.TransportStationBuilding;
 import com.teammoeg.frostedheart.content.town.buildings.mine.MineBaseBuilding;
 import com.teammoeg.frostedheart.content.town.buildings.mine.MineBuilding;
 import com.teammoeg.frostedheart.content.town.buildings.warehouse.WarehouseBuilding;
@@ -58,6 +59,29 @@ class TownBuildingRemovalTest {
         // Initialize through the abstract base after every concrete CODEC has
         // been assigned, avoiding the dispatch builder's circular init path.
         AbstractTownBuilding.CODEC.getClass();
+    }
+
+    @Test
+    void removingTransportStationClearsResidentJobsAndDetachedRoster() {
+        BlockPos stationPos = new BlockPos(7, 64, 7);
+        TransportStationBuilding station = new TransportStationBuilding(stationPos);
+        Resident rostered = resident("Station Rostered");
+        Resident inconsistent = resident("Station Inconsistent");
+        station.addResident(rostered);
+        inconsistent.setWorkPos(stationPos);
+        TeamTown town = town(
+                Map.of(stationPos, station),
+                Map.of(rostered.getUUID(), rostered, inconsistent.getUUID(), inconsistent),
+                new TeamTownResourceHolder());
+
+        town.removeTownBlock(null, stationPos);
+
+        assertTrue(town.getTownBuilding(stationPos).isEmpty());
+        assertTrue(town.getResident(rostered.getUUID()).isPresent());
+        assertTrue(town.getResident(inconsistent.getUUID()).isPresent());
+        assertNull(rostered.getWorkPos());
+        assertNull(inconsistent.getWorkPos());
+        assertTrue(station.getResidentsID().isEmpty());
     }
 
     @Test

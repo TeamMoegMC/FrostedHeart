@@ -28,6 +28,7 @@ import com.teammoeg.frostedheart.content.town.building.ITownResidentBuilding;
 import com.teammoeg.frostedheart.content.town.building.ITownResidentWorkBuilding;
 import com.teammoeg.frostedheart.content.town.buildings.house.HouseBuilding;
 import com.teammoeg.frostedheart.content.town.buildings.hunting.HuntingBaseBuilding;
+import com.teammoeg.frostedheart.content.town.buildings.logistics.TransportStationBuilding;
 import com.teammoeg.frostedheart.content.town.resident.Resident;
 import com.teammoeg.frostedheart.content.town.tabs.TownTextLayout;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
@@ -173,6 +174,8 @@ public class TownBuildingsPanel extends UIElement {
             addHouseDetails(lines, house);
         } else if (building instanceof HuntingBaseBuilding hunting) {
             addHuntingDetails(lines, hunting);
+        } else if (building instanceof TransportStationBuilding transportStation) {
+            addTransportStationDetails(lines, transportStation);
         }
 
         if (building instanceof ITownResidentBuilding residentBuilding) {
@@ -244,6 +247,26 @@ public class TownBuildingsPanel extends UIElement {
         }
         if (!hunting.isTemperatureValid()) {
             lines.add(reason("gui.frostedheart.town.failure.temperature"));
+        }
+    }
+
+    private static void addTransportStationDetails(
+            List<Line> lines,
+            TransportStationBuilding transportStation
+    ) {
+        lines.add(new Line(Component.translatable("gui.frostedheart.town.area",
+                transportStation.getArea()), 0xFFFFFFFF));
+        lines.add(new Line(Component.translatable("gui.frostedheart.town.volume",
+                transportStation.getVolume()), 0xFFFFFFFF));
+
+        FHConfig.Server.Town.TransportStation config = FHConfig.SERVER.TOWN.TRANSPORT_STATION;
+        if (transportStation.getArea() < config.minimumFloorAreaBlocks.get()) {
+            lines.add(reason("gui.frostedheart.town.failure.area",
+                    transportStation.getArea(), config.minimumFloorAreaBlocks.get()));
+        }
+        if (transportStation.getVolume() < config.minimumInteriorVolumeBlocks.get()) {
+            lines.add(reason("gui.frostedheart.town.failure.volume",
+                    transportStation.getVolume(), config.minimumInteriorVolumeBlocks.get()));
         }
     }
 
