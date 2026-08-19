@@ -4,8 +4,8 @@ Nutrition covers distinct player-survival and town-resident models.
 
 | Document | Scope | Status |
 |---|---|---|
-| [prev-conversation.md](prev-conversation.md) | Imported mechanics, food data, calculations, and balance observations | Transitional |
+| [prev-conversation.md](prev-conversation.md) | Verified player/resident mechanics, shared food data, current balance, and next-design boundaries | Current |
 
-Primary anchors: `NutritionCapability`, `NutritionRecipe`, `ResidentNutrition`, `FHCapabilities.PLAYER_NUTRITION`, `frostedheart:diet_override`, `FHConfig`.
+Primary anchors: `NutritionCapability`, `NutritionRecipe`, `ResidentNutrition`, `TownHousingMealService`, `FHCapabilities.PLAYER_NUTRITION`, `frostedheart:diet_override`, `FHConfig`.
 
-Reverify the imported material before use; move renewed balance analysis to [`discussion/`](../../discussion/).
+Use the current-state document as the implementation baseline. Put renewed balance proposals and alternatives in [`discussion/`](../../discussion/), and actionable implementation work in [`plans/`](../../plans/).
