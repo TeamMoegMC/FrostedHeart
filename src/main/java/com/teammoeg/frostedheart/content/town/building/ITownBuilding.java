@@ -1,14 +1,22 @@
 package com.teammoeg.frostedheart.content.town.building;
 
 import com.mojang.serialization.Codec;
+import com.mojang.datafixers.util.Pair;
+import com.mojang.serialization.DataResult;
+import com.mojang.serialization.Decoder;
+import com.mojang.serialization.DynamicOps;
+import com.mojang.serialization.Encoder;
 import com.teammoeg.chorda.io.CodecUtil;
 import com.teammoeg.frostedheart.content.town.ITownWithBuildings;
 import com.teammoeg.frostedheart.content.town.buildings.house.HouseBuilding;
 import com.teammoeg.frostedheart.content.town.buildings.hunting.HuntingBaseBuilding;
 import com.teammoeg.frostedheart.content.town.buildings.mine.MineBaseBuilding;
 import com.teammoeg.frostedheart.content.town.buildings.mine.MineBuilding;
+import com.teammoeg.frostedheart.content.town.buildings.logistics.TransportStationBuilding;
 import com.teammoeg.frostedheart.content.town.buildings.warehouse.WarehouseBuilding;
 import net.minecraft.server.level.ServerLevel;
+
+import java.util.function.Supplier;
 
 /**
  * it used to be TownWorker.
@@ -21,9 +29,30 @@ public interface ITownBuilding {
             .type("mine", MineBuilding.class, MineBuilding.CODEC)
             .type("mineBase", MineBaseBuilding.class, MineBaseBuilding.CODEC)
             .type("warehouse", WarehouseBuilding.class, WarehouseBuilding.CODEC)
+            .type("transportStation", TransportStationBuilding.class,
+                    lazyCodec(() -> TransportStationBuilding.CODEC))
             // 按字符串key分发（写盘存 "house"/"mine" 等名称），解码时兼容旧存档的整数索引。
             // 新增建筑类型时可任意位置插入，不再受注册顺序约束。
             .buildByNameWithLegacyInt();
+
+    /**
+     * Defers resolving a concrete codec until after its class has completed
+     * initialization. This avoids the abstract building codec's static
+     * dispatch table observing a null concrete codec during class loading.
+     */
+    private static <T> Codec<T> lazyCodec(Supplier<Codec<T>> codecSupplier) {
+        return Codec.of(new Encoder<>() {
+            @Override
+            public <O> DataResult<O> encode(T input, DynamicOps<O> ops, O prefix) {
+                return codecSupplier.get().encode(input, ops, prefix);
+            }
+        }, new Decoder<>() {
+            @Override
+            public <O> DataResult<Pair<T, O>> decode(DynamicOps<O> ops, O input) {
+                return codecSupplier.get().decode(ops, input);
+            }
+        });
+    }
 
     /**
      * check if this building is workable.

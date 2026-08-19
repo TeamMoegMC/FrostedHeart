@@ -813,6 +813,10 @@ public record TownModelParameters(
         public static final double MINING_FLOOR_BLOCKS_PER_WORKER_SLOT = 4.0;
         public static final int MINING_MINIMUM_WORKER_SLOTS = 1;
         public static final int MINING_CONNECTION_RADIUS_BLOCKS = 1024;
+        public static final double TRANSPORT_STATION_FLOOR_BLOCKS_PER_WORKER_SLOT = 4.0;
+        public static final int TRANSPORT_STATION_MINIMUM_WORKER_SLOTS = 1;
+        public static final int TRANSPORT_STATION_MINIMUM_FLOOR_AREA_BLOCKS = 4;
+        public static final int TRANSPORT_STATION_MINIMUM_INTERIOR_VOLUME_BLOCKS = 8;
         public static final double MINING_HEALTH_WEIGHT = 30.0;
         public static final double MINING_MENTAL_WEIGHT = 10.0;
         public static final double MINING_STRENGTH_WEIGHT = 45.0;

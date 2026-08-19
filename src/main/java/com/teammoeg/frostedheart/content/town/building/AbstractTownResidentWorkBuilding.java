@@ -16,6 +16,7 @@ public abstract class AbstractTownResidentWorkBuilding extends AbstractTownBuild
     private int maxResidents;
 
     public void setMaxResidents(int maxResidents) {
+        if (this.maxResidents == maxResidents) return;
         this.maxResidents = maxResidents;
         fireChange();
     }
@@ -33,6 +34,7 @@ public abstract class AbstractTownResidentWorkBuilding extends AbstractTownBuild
                 });
             }
         }
+        clearResidents();
     }
 
     public boolean addResident(Resident resident){
