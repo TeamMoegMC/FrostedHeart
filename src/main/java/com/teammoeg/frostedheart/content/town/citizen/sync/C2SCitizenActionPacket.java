@@ -107,7 +107,9 @@ public final class C2SCitizenActionPacket implements CMessage {
 			int i = sim.indexOf(citizenId);
 			if (i < 0)
 				return;
-			if (!CitizenPresence.networkVisible(sim.state[i]))
+			if (!sched.sync.isTracked(sender, citizenId))
+				return;
+			if (!CitizenPresence.interactionAllowed(sim.state[i]))
 				return;
 			double dx = sim.px[i] / 1024.0 - sender.getX();
 			double dy = sim.py[i] / 1024.0 - sender.getY();

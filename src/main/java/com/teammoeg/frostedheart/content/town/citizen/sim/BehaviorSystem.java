@@ -82,7 +82,7 @@ public final class BehaviorSystem {
 			int n = sim.size();
 			boolean persistedChanged = false;
 			for (int i = 0; i < n; i++) {
-				if (sim.tickPhase[i] != slice)
+				if ((sim.id[i] % SLICE) != slice)
 					continue;
 				if (!sched.isActive(c, i))
 					continue;
@@ -92,8 +92,13 @@ public final class BehaviorSystem {
 				int oldTargetX = sim.tx[i];
 				int oldTargetZ = sim.tz[i];
 				tickOne(c, sim, level, i, night, workTime, dayTime, gameTime);
-				if (oldState != CitizenState.SLEEP && sim.state[i] == CitizenState.SLEEP)
-					sched.sync.notifyHidden(sim.id[i]);
+				if (oldState != sim.state[i]
+						&& (oldState == CitizenState.SLEEP || sim.state[i] == CitizenState.SLEEP)) {
+					if (CitizenPresence.presentationEligible(sim, i))
+						sched.sync.notifyImmediate(sim.id[i]);
+					else
+						sched.sync.notifyHidden(sim.id[i]);
+				}
 				persistedChanged |= oldState != sim.state[i]
 						|| oldTargetX != sim.tx[i] || oldTargetZ != sim.tz[i];
 			}
@@ -191,7 +196,6 @@ public final class BehaviorSystem {
 		sim.sepZ[i] = 0;
 		container.onSleepEntered(i);
 		sim.tx[i] = sim.px[i];
-		sim.ty[i] = sim.py[i];
 		sim.tz[i] = sim.pz[i];
 		sim.bestDist2[i] = 0;
 	}
