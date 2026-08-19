@@ -5,6 +5,9 @@ Read these files for project context (maintained by Codex, shared across the tea
 - [.Codex/memory/project-structure.md](.Codex/memory/project-structure.md) - Module layout and package maps
 - [.Codex/memory/architecture.md](.Codex/memory/architecture.md) - Patterns, build commands, conventions
 
+## Development Documentation
+
+
 ## Development Diary
 - Read [diary/README.md](diary/README.md) and the latest relevant diary entries before starting development.
 - After completing development work, create a new timestamp-prefixed, mnemonic-suffixed Markdown entry in `diary/` using the shared format.
