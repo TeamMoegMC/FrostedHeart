@@ -1,18 +1,11 @@
 # Nutrition Documentation
 
-Nutrition currently spans player survival and town-resident settlement. Do not assume that player nutrition pools and resident nutrition use the same model.
+Nutrition covers distinct player-survival and town-resident models.
 
-## Reading Map
-
-| Document | Use it for | Documentation status |
+| Document | Scope | Status |
 |---|---|---|
-| [prev-conversation.md](prev-conversation.md) | An imported explanation of player nutrition, resident nutrition, food data, efficiency calculations, and balance concerns | Transitional source note. Reverify mechanics and data before relying on it; balance opinions belong in `discussion/` when revisited. |
+| [prev-conversation.md](prev-conversation.md) | Imported mechanics, food data, calculations, and balance observations | Transitional |
 
-## Primary Code And Data Anchors
+Primary anchors: `NutritionCapability`, `NutritionRecipe`, `ResidentNutrition`, `FHCapabilities.PLAYER_NUTRITION`, `frostedheart:diet_override`, `FHConfig`.
 
-- `NutritionCapability`, `NutritionRecipe`, and `FHCapabilities.PLAYER_NUTRITION`
-- `Resident`, town food settlement, and resident nutrition statistics
-- `frostedheart:diet_override` recipes
-- `FHConfig` nutrition gain and consumption settings
-
-Future work should separate verified player mechanics, verified resident mechanics, and balancing discussion into distinct artifacts.
+Reverify the imported material before use; move renewed balance analysis to [`discussion/`](../../discussion/).

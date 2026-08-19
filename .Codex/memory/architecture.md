@@ -18,8 +18,8 @@
 
 ## Documentation Status
 - chorda/: 377 files with bilingual (CN/EN) Javadoc + 58 package-info.java
-- frostedheart/: Not yet documented
-- frostedresearch/: Not yet documented
+- frostedheart/: Living system documentation under `docs/`; current town, Curiosity, and nutrition material is transitional
+- frostedresearch/: No living system documentation yet
 
 ## Comment Format Convention
 ```java

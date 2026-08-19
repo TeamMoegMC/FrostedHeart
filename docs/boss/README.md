@@ -1,18 +1,11 @@
 # Curiosity Encounter Documentation
 
-This directory currently documents the world encounter named "Curiosity of the Deep Frostland." It connects encounter state, temperature mechanics, temporary arena changes, persistence, spawning, rendering, audio, and rewards.
+This directory covers the "Curiosity of the Deep Frostland" encounter: its state machine, arena, temperature effects, persistence, presentation, and rewards.
 
-## Reading Map
-
-| Document | Use it for | Documentation status |
+| Document | Scope | Status |
 |---|---|---|
-| [curiosity-boss-design.md](curiosity-boss-design.md) | Encounter intent, state machine, temperature interaction, arena behavior, configuration, integration, and implementation decisions | Transitional. The document began as a design plan and was updated while the encounter was implemented; verify exact current behavior against source. |
+| [curiosity-boss-design.md](curiosity-boss-design.md) | Design intent plus accumulated implementation decisions | Transitional |
 
-## Primary Code Anchors
+Primary anchors: `CuriosityEntity`, `FHEntityTypes.CURIOSITY`, `FHConfig.SERVER.CURIOSITY`, `ChunkHeatData`, `SphereHeatArea`.
 
-- `CuriosityEntity` and related entity, model, and renderer classes
-- `FHEntityTypes.CURIOSITY`
-- `FHConfig.SERVER.CURIOSITY`
-- `ChunkHeatData`, `SphereHeatArea`, and the surrounding-temperature pipeline
-
-Human lore and world design under [`design/`](../../design/) are relevant background and are strictly read-only for agents.
+Verify behavior against source; use read-only [`design/`](../../design/) for lore and creative intent.
