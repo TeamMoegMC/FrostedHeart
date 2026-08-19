@@ -28,4 +28,4 @@
 
 - Player nutrition gain, consumption, overflow, punishment, and synchronization paths still lack focused automated tests.
 - Gameplay defaults for resident nutrition remain unbalanced in the verified hunting-only baseline; the successful experimental calibration was not promoted.
-- Use the design questions in `docs/nutrition/prev-conversation.md` as the starting point for the next discussion.
+- Use the design questions in `docs/nutrition/nutrition-player-resident.md` as the starting point for the next discussion.
