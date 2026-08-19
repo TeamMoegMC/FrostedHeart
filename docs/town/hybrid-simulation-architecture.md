@@ -314,14 +314,15 @@ public final class ClientCitizen {
 | 路径 | 适用 | 做法 |
 |------|------|------|
 | **假实体** `FakeCitizenEntity` | 清醒且距玩家进入阈值 < 24 格 | 无 AI 的客户端实体，由 `ClientCitizen` 驱动位置、朝向和步行动画；`FakeCitizenRenderer` 使用原版宽臂 `PlayerModel`，28 格退出形成迟滞 |
-| **批量低模** | 清醒 24–64 格；睡眠 0–64 格 | `POSITION_COLOR_TEX_LIGHTMAP` 绘制 Steve 比例的头、躯干、双臂、双腿；睡眠模型沿床方向水平放置，不创建假实体 |
+| **批量低模** | 清醒 24–64 格；睡眠 0–64 格 | 原版 `RenderType.entityCutoutNoCull` 绘制 Steve 比例的头、躯干、双臂、双腿；睡眠模型沿床方向水平放置，不创建假实体 |
 | **轮廓 LOD** | 64–96 格 | 清醒使用带皮肤躯干正面 UV 的竖直 billboard；睡眠使用贴近床面的水平纹理 quad |
 
 要点：
 
 - `CitizenSkins` 按稳定 citizen id 确定性选择 Minecraft 1.20.1 内置的宽臂 `Makena`、`Efe`、`Noor`、`Kai`、`Ari`、`Zuri`、`Sunny` 皮肤；近景假实体和批量 LOD 共用该映射，跨 LOD、离线重进和重新生成均不换肤。资源直接引用 `textures/entity/player/wide/*.png`，模组不复制原版贴图。
 - 渲染入口是 `RenderLevelStageEvent.AFTER_ENTITIES`；每帧只遍历并剔除一次缓存，按七张皮肤写入七个复用 `BufferBuilder`，仅对本帧实际可见的皮肤提交，最多 7 次 draw call，不创建每帧居民分组集合。
-- 批量顶点使用 `POSITION_COLOR_TEX_LIGHTMAP`，携带居民位置的天空光/方块光，不使用全亮 shader。光照值缓存在 `ClientCitizen`：跨方块时立即重采样，静止时按 citizen id 错峰每 5–8 tick 刷新；采样复用单个 `MutableBlockPos`，避免逐帧对象分配。
+- 批量顶点使用 `RenderType.entityCutoutNoCull` 的 `DefaultVertexFormat.NEW_ENTITY`，同时提交皮肤 UV、`OverlayTexture.NO_OVERLAY`、居民位置的天空光/方块光和面法线。该 RenderType 的实体 shader 会实际采样 lightmap 并执行原版方向光计算；`POSITION_COLOR_TEX_LIGHTMAP` 的同名 `UV2` 在 Minecraft 1.20.1 对应片元 shader 中没有被采样，不能用于环境明暗。光照值缓存在 `ClientCitizen`：跨方块时立即重采样，静止时按 citizen id 错峰每 5–8 tick 刷新；采样复用单个 `MutableBlockPos`，避免逐帧对象分配。
+- `CitizenBatchRenderLayout` 预计算 256 向站立/睡眠模型轴。站立轴复现 `LivingEntityRenderer` 的 `scale(-1, -1, 1)` 约定，使皮肤局部 `-Z` 始终朝居民前方、局部 `-Y` 朝世界上方；睡眠时局部 `-Z` 朝上、局部 `-Y` 朝床头。每个面的世界法线再经过当前 `PoseStack` normal matrix 一次后复用于四个顶点，不产生逐顶点临时向量。
 - 睡眠使用低矮 AABB 做视锥剔除，关闭行走起伏，并使用同步的床朝向而非客户端软转向。
 - 当前批量路径是低模直接提交，不是 Flywheel instancing；后者仍是更大规模下的后续优化方向。
 

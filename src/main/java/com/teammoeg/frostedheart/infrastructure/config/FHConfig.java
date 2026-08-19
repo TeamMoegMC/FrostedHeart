@@ -1695,11 +1695,11 @@ public class FHConfig {
 				maxVisibleCitizensPerPlayer = builder
 					.comment("Maximum citizens synchronized and rendered for one player across awake and valid-bed sleepers.")
 					.comment("Zero hides all citizens for every player.")
-					.defineInRange("maxVisibleCitizensPerPlayer", 128, 0, 4096);
+					.defineInRange("maxVisibleCitizensPerPlayer", 1024, 0, 4096);
 				maxVisibleCitizensPerServer = builder
 					.comment("Maximum citizen render relations across all players and dimensions on this server.")
 					.comment("The same citizen visible to two players consumes two slots. Zero hides all citizens server-wide.")
-					.defineInRange("maxVisibleCitizensPerServer", 1024, 0, 65536);
+					.defineInRange("maxVisibleCitizensPerServer", 8192, 0, 65536);
 				GENERATOR_T1 = new GeneratorT1(builder);
 				OBSERVATION = new Observation(builder);
 				BUILDING_SCORING = new BuildingScoring(builder);

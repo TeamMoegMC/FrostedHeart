@@ -19,22 +19,21 @@
 
 package com.teammoeg.frostedheart.content.town.citizen.client;
 
+import org.joml.Matrix3f;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
 
-import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.BufferBuilder;
-import com.mojang.blaze3d.vertex.BufferUploader;
-import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.blaze3d.vertex.VertexFormat;
+import com.mojang.blaze3d.vertex.VertexSorting;
 import com.teammoeg.frostedheart.content.town.citizen.sim.CitizenState;
 
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
-import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.LevelRenderer;
+import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.core.BlockPos;
 import net.minecraft.util.Mth;
 import net.minecraft.world.phys.AABB;
@@ -64,13 +63,22 @@ public final class ClientCitizenRenderer {
 	private static final float TEXTURE_SIZE = 64.0f;
 	private static final int LIGHT_SAMPLE_INTERVAL = 5;
 
+	private static final RenderType[] SKIN_RENDER_TYPES = createRenderTypes();
 	private static final BufferBuilder[] SKIN_BUFFERS = createBuffers();
 	private static final boolean[] BUFFER_BEGUN = new boolean[CitizenSkins.count()];
 	private static final BlockPos.MutableBlockPos LIGHT_SAMPLE_POS = new BlockPos.MutableBlockPos();
-	/** Immediate-mode render-thread state applied to every vertex of the current citizen. */
+	/** Immediate-mode render-thread state applied while filling the current skin buffers. */
 	private static int currentPackedLight;
+	private static Matrix3f currentNormalMatrix;
 
 	private ClientCitizenRenderer() {
+	}
+
+	private static RenderType[] createRenderTypes() {
+		RenderType[] renderTypes = new RenderType[CitizenSkins.count()];
+		for (int i = 0; i < renderTypes.length; i++)
+			renderTypes[i] = CitizenBatchRenderLayout.skinRenderType(CitizenSkins.textureAt(i));
+		return renderTypes;
 	}
 
 	private static BufferBuilder[] createBuffers() {
@@ -97,17 +105,11 @@ public final class ClientCitizenRenderer {
 		long gameTime = level.getGameTime();
 		float time = gameTime + event.getPartialTick();
 
-		RenderSystem.setShader(GameRenderer::getPositionColorTexLightmapShader);
-		RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f);
-		RenderSystem.enableBlend();
-		RenderSystem.defaultBlendFunc();
-		RenderSystem.disableCull();
-		RenderSystem.enableDepthTest();
-
 		PoseStack pose = event.getPoseStack();
 		pose.pushPose();
 		pose.translate(-cp.x, -cp.y, -cp.z);
 		Matrix4f mat = pose.last().pose();
+		currentNormalMatrix = pose.last().normal();
 
 		for (ClientCitizen c : ClientCitizenCache.values()) {
 			int state = (c.state & 0xFF) % CitizenState.STATE_COUNT;
@@ -134,7 +136,8 @@ public final class ClientCitizenRenderer {
 			int skin = CitizenSkins.indexFor(c.id);
 			BufferBuilder buf = SKIN_BUFFERS[skin];
 			if (!BUFFER_BEGUN[skin]) {
-				buf.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR_TEX_LIGHTMAP);
+				RenderType renderType = SKIN_RENDER_TYPES[skin];
+				buf.begin(renderType.mode(), renderType.format());
 				BUFFER_BEGUN[skin] = true;
 			}
 			currentPackedLight = sampleLight(c, pos, sleeping, level, gameTime);
@@ -146,22 +149,16 @@ public final class ClientCitizenRenderer {
 			else if (d2 <= LOWPOLY_DIST2)
 				emitStandingPlayer(buf, mat, c, pos, time);
 			else
-				emitStandingBillboard(buf, mat, left, up, pos);
+				emitStandingBillboard(buf, mat, left, up, look, pos);
 		}
 		pose.popPose();
 
-		minecraft.gameRenderer.lightTexture().turnOnLightLayer();
 		for (int i = 0; i < SKIN_BUFFERS.length; i++) {
 			if (!BUFFER_BEGUN[i])
 				continue;
-			RenderSystem.setShaderTexture(0, CitizenSkins.textureAt(i));
-			BufferUploader.drawWithShader(SKIN_BUFFERS[i].end());
+			SKIN_RENDER_TYPES[i].end(SKIN_BUFFERS[i], VertexSorting.DISTANCE_TO_ORIGIN);
 			BUFFER_BEGUN[i] = false;
 		}
-		minecraft.gameRenderer.lightTexture().turnOffLightLayer();
-
-		RenderSystem.enableCull();
-		RenderSystem.disableBlend();
 	}
 
 	private static int sampleLight(ClientCitizen citizen, double[] pos, boolean sleeping,
@@ -183,83 +180,85 @@ public final class ClientCitizenRenderer {
 
 	private static void emitStandingPlayer(BufferBuilder buf, Matrix4f mat, ClientCitizen c, double[] pos, float time) {
 		int yaw = c.visualYaw();
-		float forwardX = CitizenState.DIR_X_256[yaw] / 1024.0f;
-		float forwardZ = CitizenState.DIR_Z_256[yaw] / 1024.0f;
+		CitizenBatchRenderLayout.Axes axes = CitizenBatchRenderLayout.standingAxes(yaw);
 		float bob = c.isMoving() ? Mth.abs(Mth.sin(time * 0.6f + (c.id & 7) * 1.7f)) * BOB_AMP : 0.0f;
 		double y = pos[1] + bob;
 
 		standingPart(buf, mat, pos[0], y, pos[2], 0.0f, 0.75f, 0.5f, 0.75f, 0.25f,
-				forwardX, forwardZ, 16, 16, 8, 12, 4); // body
+				axes, 16, 16, 8, 12, 4); // body
 		standingPart(buf, mat, pos[0], y, pos[2], 0.0f, 1.5f, 0.5f, 0.5f, 0.5f,
-				forwardX, forwardZ, 0, 0, 8, 8, 8); // head
+				axes, 0, 0, 8, 8, 8); // head
 		standingPart(buf, mat, pos[0], y, pos[2], -0.375f, 0.75f, 0.25f, 0.75f, 0.25f,
-				forwardX, forwardZ, 40, 16, 4, 12, 4); // right arm
+				axes, 40, 16, 4, 12, 4); // right arm
 		standingPart(buf, mat, pos[0], y, pos[2], 0.375f, 0.75f, 0.25f, 0.75f, 0.25f,
-				forwardX, forwardZ, 32, 48, 4, 12, 4); // left arm
+				axes, 32, 48, 4, 12, 4); // left arm
 		standingPart(buf, mat, pos[0], y, pos[2], -0.125f, 0.0f, 0.25f, 0.75f, 0.25f,
-				forwardX, forwardZ, 0, 16, 4, 12, 4); // right leg
+				axes, 0, 16, 4, 12, 4); // right leg
 		standingPart(buf, mat, pos[0], y, pos[2], 0.125f, 0.0f, 0.25f, 0.75f, 0.25f,
-				forwardX, forwardZ, 16, 48, 4, 12, 4); // left leg
+				axes, 16, 48, 4, 12, 4); // left leg
 	}
 
 	private static void standingPart(BufferBuilder buf, Matrix4f mat, double x, double baseY, double z,
 			float sideOffset, float partBaseY, float width, float height, float depth,
-			float forwardX, float forwardZ, int texU, int texV, int pixelW, int pixelH, int pixelD) {
-		float rightX = -forwardZ;
-		float rightZ = forwardX;
+			CitizenBatchRenderLayout.Axes axes, int texU, int texV, int pixelW, int pixelH, int pixelD) {
 		addTexturedBox(buf, mat,
-				x + rightX * sideOffset, baseY + partBaseY + height * 0.5, z + rightZ * sideOffset,
+				x + axes.xX() * sideOffset, baseY + partBaseY + height * 0.5, z + axes.xZ() * sideOffset,
 				width, height, depth,
-				rightX, 0, rightZ, 0, 1, 0, -forwardX, 0, -forwardZ,
+				axes.xX(), axes.xY(), axes.xZ(),
+				axes.yX(), axes.yY(), axes.yZ(),
+				axes.zX(), axes.zY(), axes.zZ(),
 				texU, texV, pixelW, pixelH, pixelD);
 	}
 
 	private static void emitSleepingPlayer(BufferBuilder buf, Matrix4f mat, ClientCitizen c, double[] pos) {
 		int yaw = CitizenState.DIR_TO_YAW[c.dir & 15] & 0xFF;
-		float forwardX = CitizenState.DIR_X_256[yaw] / 1024.0f;
-		float forwardZ = CitizenState.DIR_Z_256[yaw] / 1024.0f;
-		sleepingPart(buf, mat, pos, forwardX, forwardZ, 0.0f, 1.125f, 0.5f, 0.75f, 0.25f,
+		CitizenBatchRenderLayout.Axes axes = CitizenBatchRenderLayout.sleepingAxes(yaw);
+		sleepingPart(buf, mat, pos, axes, 0.0f, 1.125f, 0.5f, 0.75f, 0.25f,
 				16, 16, 8, 12, 4);
-		sleepingPart(buf, mat, pos, forwardX, forwardZ, 0.0f, 1.75f, 0.5f, 0.5f, 0.5f,
+		sleepingPart(buf, mat, pos, axes, 0.0f, 1.75f, 0.5f, 0.5f, 0.5f,
 				0, 0, 8, 8, 8);
-		sleepingPart(buf, mat, pos, forwardX, forwardZ, -0.375f, 1.125f, 0.25f, 0.75f, 0.25f,
+		sleepingPart(buf, mat, pos, axes, -0.375f, 1.125f, 0.25f, 0.75f, 0.25f,
 				40, 16, 4, 12, 4);
-		sleepingPart(buf, mat, pos, forwardX, forwardZ, 0.375f, 1.125f, 0.25f, 0.75f, 0.25f,
+		sleepingPart(buf, mat, pos, axes, 0.375f, 1.125f, 0.25f, 0.75f, 0.25f,
 				32, 48, 4, 12, 4);
-		sleepingPart(buf, mat, pos, forwardX, forwardZ, -0.125f, 0.375f, 0.25f, 0.75f, 0.25f,
+		sleepingPart(buf, mat, pos, axes, -0.125f, 0.375f, 0.25f, 0.75f, 0.25f,
 				0, 16, 4, 12, 4);
-		sleepingPart(buf, mat, pos, forwardX, forwardZ, 0.125f, 0.375f, 0.25f, 0.75f, 0.25f,
+		sleepingPart(buf, mat, pos, axes, 0.125f, 0.375f, 0.25f, 0.75f, 0.25f,
 				16, 48, 4, 12, 4);
 	}
 
-	private static void sleepingPart(BufferBuilder buf, Matrix4f mat, double[] pos, float forwardX, float forwardZ,
+	private static void sleepingPart(BufferBuilder buf, Matrix4f mat, double[] pos, CitizenBatchRenderLayout.Axes axes,
 			float sideOffset, float modelY, float width, float height, float depth,
 			int texU, int texV, int pixelW, int pixelH, int pixelD) {
-		float rightX = -forwardZ;
-		float rightZ = forwardX;
+		float forwardX = -axes.yX();
+		float forwardZ = -axes.yZ();
 		float scaledDepth = depth * SLEEP_SCALE;
 		float lengthOffset = SLEEP_MODEL_ORIGIN + modelY * SLEEP_SCALE;
 		addTexturedBox(buf, mat,
-				pos[0] + rightX * sideOffset * SLEEP_SCALE + forwardX * lengthOffset,
+				pos[0] + axes.xX() * sideOffset * SLEEP_SCALE + forwardX * lengthOffset,
 				pos[1] + SLEEP_SURFACE_Y + scaledDepth * 0.5,
-				pos[2] + rightZ * sideOffset * SLEEP_SCALE + forwardZ * lengthOffset,
+				pos[2] + axes.xZ() * sideOffset * SLEEP_SCALE + forwardZ * lengthOffset,
 				width * SLEEP_SCALE, height * SLEEP_SCALE, scaledDepth,
-				rightX, 0, rightZ, forwardX, 0, forwardZ, 0, -1, 0,
+				axes.xX(), axes.xY(), axes.xZ(),
+				axes.yX(), axes.yY(), axes.yZ(),
+				axes.zX(), axes.zY(), axes.zZ(),
 				texU, texV, pixelW, pixelH, pixelD);
 	}
 
-	private static void emitStandingBillboard(BufferBuilder buf, Matrix4f mat, Vector3f left, Vector3f up, double[] pos) {
+	private static void emitStandingBillboard(BufferBuilder buf, Matrix4f mat, Vector3f left, Vector3f up,
+			Vector3f look, double[] pos) {
 		double lx = left.x * BILLBOARD_HALF_WIDTH;
 		double ly = left.y * BILLBOARD_HALF_WIDTH;
 		double lz = left.z * BILLBOARD_HALF_WIDTH;
 		double ux = up.x * BILLBOARD_HEIGHT;
 		double uy = up.y * BILLBOARD_HEIGHT;
 		double uz = up.z * BILLBOARD_HEIGHT;
-		texturedQuad(buf, mat,
+		standingBillboardQuad(buf, mat,
 				(float) (pos[0] - lx), (float) (pos[1] - ly), (float) (pos[2] - lz),
 				(float) (pos[0] + lx), (float) (pos[1] + ly), (float) (pos[2] + lz),
 				(float) (pos[0] + lx + ux), (float) (pos[1] + ly + uy), (float) (pos[2] + lz + uz),
 				(float) (pos[0] - lx + ux), (float) (pos[1] - ly + uy), (float) (pos[2] - lz + uz),
+				-look.x, -look.y, -look.z,
 				20, 20, 28, 32);
 	}
 
@@ -277,6 +276,7 @@ public final class ClientCitizenRenderer {
 		texturedQuad(buf, mat,
 				frontX + sx, y, frontZ + sz, frontX - sx, y, frontZ - sz,
 				backX - sx, y, backZ - sz, backX + sx, y, backZ + sz,
+				0, 1, 0,
 				20, 20, 28, 32);
 	}
 
@@ -314,31 +314,57 @@ public final class ClientCitizenRenderer {
 		float vBottom = vSide + pixelH;
 
 		texturedQuad(buf, mat, v4x, v4y, v4z, v3x, v3y, v3z, v7x, v7y, v7z, v0x, v0y, v0z,
+				-upX, -upY, -upZ,
 				u1, vTop, u2, vSide);
 		texturedQuad(buf, mat, v1x, v1y, v1z, v2x, v2y, v2z, v6x, v6y, v6z, v5x, v5y, v5z,
+				upX, upY, upZ,
 				u2, vSide, u3, vTop);
 		texturedQuad(buf, mat, v7x, v7y, v7z, v3x, v3y, v3z, v6x, v6y, v6z, v2x, v2y, v2z,
+				-rightX, -rightY, -rightZ,
 				u0, vSide, u1, vBottom);
 		texturedQuad(buf, mat, v0x, v0y, v0z, v7x, v7y, v7z, v2x, v2y, v2z, v1x, v1y, v1z,
+				-backX, -backY, -backZ,
 				u1, vSide, u2, vBottom);
 		texturedQuad(buf, mat, v4x, v4y, v4z, v0x, v0y, v0z, v1x, v1y, v1z, v5x, v5y, v5z,
+				rightX, rightY, rightZ,
 				u2, vSide, u4, vBottom);
 		texturedQuad(buf, mat, v3x, v3y, v3z, v4x, v4y, v4z, v5x, v5y, v5z, v6x, v6y, v6z,
+				backX, backY, backZ,
 				u4, vSide, u5, vBottom);
 	}
 
 	private static void texturedQuad(BufferBuilder buf, Matrix4f mat,
 			float x1, float y1, float z1, float x2, float y2, float z2,
 			float x3, float y3, float z3, float x4, float y4, float z4,
+			float nx, float ny, float nz,
 			float u1, float v1, float u2, float v2) {
-		vertex(buf, mat, x1, y1, z1, u2, v1);
-		vertex(buf, mat, x2, y2, z2, u1, v1);
-		vertex(buf, mat, x3, y3, z3, u1, v2);
-		vertex(buf, mat, x4, y4, z4, u2, v2);
+		float transformedX = currentNormalMatrix.m00() * nx + currentNormalMatrix.m10() * ny + currentNormalMatrix.m20() * nz;
+		float transformedY = currentNormalMatrix.m01() * nx + currentNormalMatrix.m11() * ny + currentNormalMatrix.m21() * nz;
+		float transformedZ = currentNormalMatrix.m02() * nx + currentNormalMatrix.m12() * ny + currentNormalMatrix.m22() * nz;
+		vertex(buf, mat, x1, y1, z1, u2, v1, transformedX, transformedY, transformedZ);
+		vertex(buf, mat, x2, y2, z2, u1, v1, transformedX, transformedY, transformedZ);
+		vertex(buf, mat, x3, y3, z3, u1, v2, transformedX, transformedY, transformedZ);
+		vertex(buf, mat, x4, y4, z4, u2, v2, transformedX, transformedY, transformedZ);
 	}
 
-	private static void vertex(BufferBuilder buf, Matrix4f mat, float x, float y, float z, float u, float v) {
+	private static void standingBillboardQuad(BufferBuilder buf, Matrix4f mat,
+			float x1, float y1, float z1, float x2, float y2, float z2,
+			float x3, float y3, float z3, float x4, float y4, float z4,
+			float nx, float ny, float nz,
+			float u1, float v1, float u2, float v2) {
+		float transformedX = currentNormalMatrix.m00() * nx + currentNormalMatrix.m10() * ny + currentNormalMatrix.m20() * nz;
+		float transformedY = currentNormalMatrix.m01() * nx + currentNormalMatrix.m11() * ny + currentNormalMatrix.m21() * nz;
+		float transformedZ = currentNormalMatrix.m02() * nx + currentNormalMatrix.m12() * ny + currentNormalMatrix.m22() * nz;
+		vertex(buf, mat, x1, y1, z1, u2, v2, transformedX, transformedY, transformedZ);
+		vertex(buf, mat, x2, y2, z2, u1, v2, transformedX, transformedY, transformedZ);
+		vertex(buf, mat, x3, y3, z3, u1, v1, transformedX, transformedY, transformedZ);
+		vertex(buf, mat, x4, y4, z4, u2, v1, transformedX, transformedY, transformedZ);
+	}
+
+	private static void vertex(BufferBuilder buf, Matrix4f mat, float x, float y, float z, float u, float v,
+			float nx, float ny, float nz) {
 		buf.vertex(mat, x, y, z).color(255, 255, 255, 255)
-				.uv(u / TEXTURE_SIZE, v / TEXTURE_SIZE).uv2(currentPackedLight).endVertex();
+				.uv(u / TEXTURE_SIZE, v / TEXTURE_SIZE).overlayCoords(OverlayTexture.NO_OVERLAY)
+				.uv2(currentPackedLight).normal(nx, ny, nz).endVertex();
 	}
 }
