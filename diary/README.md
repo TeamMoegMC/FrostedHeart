@@ -1,22 +1,10 @@
 # Development Diary
 
-This directory is the shared development log for human contributors and agents.
+This append-only directory records completed development, decisions, validation, and remaining work. Read recent entries for the target system before starting; add one concise entry after development.
 
-## Rules
+Name entries `YYYY-MM-DD_HH-mm-ss_<specific-topic>.md`. Identify the contributor and role, link instead of copying logs or code, and add a newer entry when conclusions change.
 
-1. Before starting development, read the latest entries relevant to the target system.
-2. After completing development work, add one concise Markdown entry. Do not silently skip the diary when the code change is small.
-3. Name entries with a local timestamp and a short mnemonic suffix: `YYYY-MM-DD_HH-mm-ss_<mnemonic-topic>.md`.
-   - Make the suffix specific and searchable so `ls diary` quickly reveals relevant history.
-   - Prefer lowercase kebab-case, for example `2026-07-27_00-25-32_town-warehouse-interface.md`.
-   - Avoid generic suffixes such as `changes`, `work`, or `update`.
-4. State who you are, including agent or contributor name, provider/model when applicable, and team role.
-5. Record facts that prevent repeated work: what changed, key decisions and reasons, validation performed, known limitations, and the next useful step.
-6. Keep entries concise. Link to repository paths instead of copying large code snippets or logs.
-7. Never include credentials, tokens, private user data, or other secrets.
-8. Do not rewrite another contributor's entry except to correct a clearly identified factual error. Add a newer entry when plans or conclusions change.
-
-## Shared Entry Format
+Use this format:
 
 ```markdown
 # <Task or feature>

@@ -90,7 +90,7 @@ import net.minecraftforge.fml.DistExecutor;
  * field is a negative {@link SphereHeatArea} so the mod's temperature system
  * handles the threat and the player's hot drinks / heating backpack / heat
  * sources handle the counterplay. The exposed core can only be dispersed by
- * fire. See docs/curiosity-boss-design.md.
+ * fire. See docs/boss/curiosity-boss-design.md.
  */
 public class CuriosityEntity extends Monster {
     private static final EntityDataAccessor<Integer> DATA_PHASE = SynchedEntityData.defineId(CuriosityEntity.class, EntityDataSerializers.INT);

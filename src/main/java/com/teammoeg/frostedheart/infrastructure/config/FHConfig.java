@@ -1801,7 +1801,7 @@ public class FHConfig {
 		 * 「雪原深处的好奇心」Boss 配置。
 		 * <p>
 		 * Config for the "Curiosity of the Deep Frostland" boss. See
-		 * docs/curiosity-boss-design.md.
+		 * docs/boss/curiosity-boss-design.md.
 		 */
 		public static class Curiosity {
 			public final ForgeConfigSpec.IntValue arenaRadius;

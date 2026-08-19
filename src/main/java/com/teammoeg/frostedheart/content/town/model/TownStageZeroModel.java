@@ -27,7 +27,7 @@ import java.util.Map;
 import java.util.function.ToDoubleFunction;
 import java.util.stream.Collectors;
 
-/** Pure algebraic audit required by stage 0 of docs/town-model.md. */
+/** Pure algebraic audit required by stage 0 of docs/town/town-model.md. */
 public final class TownStageZeroModel {
     private TownStageZeroModel() {
     }
