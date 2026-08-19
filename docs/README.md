@@ -14,6 +14,8 @@ Source code, configuration, datapack content, and companion-pack data are the fi
 
 Only add a system directory when there is useful documentation to place in it. Use player-facing systems such as `town`, `climate`, `energy`, `research`, or `encounters`; do not mirror Java package structure.
 
+Documents that have been replaced but still contain useful historical context belong in [`deprecated/`](deprecated/). They are excluded from the primary system reading path and must not be treated as current behavior.
+
 ## What Belongs Here
 
 Living documentation should explain current implemented behavior:
@@ -49,7 +51,7 @@ Use `Transitional`, `Partial`, or `Deprecated` instead of `Current` when appropr
 3. Define every formula symbol and give values a unit, range, provenance, and distinction between source default and runtime configuration.
 4. Link to paths and symbols rather than line numbers, which become stale quickly.
 5. Separate verified current behavior from limitations and future work. Link to a plan or discussion instead of embedding a speculative roadmap.
-6. Avoid duplicate references. Consolidate useful facts and remove or deprecate obsolete documents; Git and the diary preserve history.
+6. Avoid duplicate references. Consolidate useful facts, then move an obsolete document to `docs/deprecated/` only when its historical reasoning remains useful. Git and the diary preserve everything else.
 7. Keep figures beside their owning system when adding new assets. `docs/figures/` is retained for existing town-model figures during the transition.
 
 ## Maintenance Workflow

@@ -8,7 +8,10 @@ The town system covers resident recruitment and simulation, housing, work assign
 |---|---|---|
 | [town-model.md](town-model.md) | Exact production, food, housing, temperature, settlement, observability, staffing, and simulation formulas | Transitional. It is the most complete reference, but it also contains experiment history and future simulation stages that must not be mistaken for implemented behavior. |
 | [hybrid-simulation-architecture.md](hybrid-simulation-architecture.md) | Citizen data layout, scheduling, behavior, movement, synchronization, rendering, interaction, and persistence | Transitional. It began as an architecture proposal and accumulated implementation updates; verify remaining roadmap material against source. |
-| [TWR numerical model design](TWR%E5%9F%8E%E9%95%87%E6%95%B0%E5%80%BC%E6%A8%A1%E5%9E%8B%E8%AE%BE%E8%AE%A1.md) | Earlier self-sufficiency and thermal-model assumptions, calibration, and simulator usage | Transitional design reference. Prefer `town-model.md` for later implementation facts and verify disagreements against source. |
+
+## Deprecated Predecessors
+
+The [earlier TWR numerical model design](../deprecated/TWR%E5%9F%8E%E9%95%87%E6%95%B0%E5%80%BC%E6%A8%A1%E5%9E%8B%E8%AE%BE%E8%AE%A1.md) preserves historical self-sufficiency and thermal-model reasoning. It has been superseded by later implementation and modeling work and is not part of the current reading path.
 
 ## Primary Code Anchors
 
@@ -23,4 +26,4 @@ Town behavior also depends on climate and temperature code, recipe and loot data
 
 ## Transition Work
 
-Future revisions should split current gameplay mechanics from simulator instructions, historical experiment results, and unimplemented proposals. Until then, use each document's explicit stage/status statements and confirm exact behavior in code before making decisions.
+Future revisions should split current gameplay mechanics from simulator instructions, historical experiment results, and unimplemented proposals. Until then, use each active document's explicit stage/status statements and confirm exact behavior in code before making decisions.

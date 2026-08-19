@@ -23,6 +23,7 @@ Source code and data remain the final authority for implemented behavior. When t
 
 - Start at [docs/README.md](docs/README.md), then read the README and relevant documents for the game system being changed.
 - Organize living documentation by player-facing game system, not Java package, code type, or contributor.
+- Treat `docs/deprecated/` as historical reference only. Do not use it as evidence of current behavior, update deprecated documents as if they were living references, or include them in a system's primary reading path.
 - Keep exact searchable anchors in documentation: classes, methods, registry IDs, configuration keys, commands, data files, formulas, units, and defaults.
 - Put unsettled ideas in `discussion/` and actionable pre-implementation work in `plans/`. Do not present either as implemented behavior.
 - When a change affects documented behavior, update the relevant living document in the same development work. Record the documentation impact in the diary entry, including when no update was needed.

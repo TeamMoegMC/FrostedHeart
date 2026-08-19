@@ -1,5 +1,7 @@
 # TWR 城镇临界自循环数值模型设计
 
+> **Deprecated:** This document preserves an earlier compatibility model, target thermal model, and simulator workflow. It has been superseded by later town implementation and modeling work. Do not use it as evidence of current behavior; start with the [town documentation index](../town/README.md) and [current town model](../town/town-model.md).
+>
 > 状态：首轮可运行模型，不是最终平衡表。本文对应 `Scripts/town_model/` 与
 > `Scripts/town_sim.py`。参考参数集中在
 > `Scripts/town_model/scenarios/reference.toml`，每个量均注明游戏单位或来源。
