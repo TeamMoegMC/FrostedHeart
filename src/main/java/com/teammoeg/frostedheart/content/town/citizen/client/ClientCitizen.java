@@ -81,11 +81,12 @@ public final class ClientCitizen {
     private double visYawLast = -1, turnAccum;
     /** 快照到达时间（游戏时间秒） / Snapshot arrival times (game-time seconds) */
     private double t0, t1;
-	/** Shared CPU/M3 walk phase at the start of the current snapshot segment. */
+	/** Shared CPU/Flywheel walk phase at the start of the current snapshot segment. */
 	private float walkPhase;
     private final double[] posBuf = new double[3];
-	/** Snapshot-swept frustum bounds; rebuilt on network updates, never per render frame. */
+	/** Snapshot-swept frustum bounds, materialized only when the CPU renderer needs them. */
 	private AABB cullBox;
+	private boolean cullBoxDirty = true;
 
     ClientCitizen(int id, int px, int py, int pz, byte stateDir, String name) {
         this.id = id;
@@ -101,7 +102,6 @@ public final class ClientCitizen {
         // 的旧方向根本不存在，snap 不可感知且是唯一无争议的选择。
         this.visYaw = CitizenState.DIR_TO_YAW[this.dir] & 0xFF;
         this.t0 = this.t1 = now();
-		rebuildCullBox();
     }
 
     /**
@@ -130,7 +130,7 @@ public final class ClientCitizen {
             this.visYaw = CitizenState.DIR_TO_YAW[newDir] & 0xFF;
             this.visYawLast = now;
             this.turnAccum = 0;
-			rebuildCullBox();
+			invalidateCullBox();
             return;
         }
         double[] cur = renderPos();
@@ -158,7 +158,7 @@ public final class ClientCitizen {
         this.dir = newDir;
         this.state = newState;
         this.halt = CitizenState.unpackHalt(stateDir);
-		rebuildCullBox();
+		invalidateCullBox();
     }
 
     /**
@@ -258,11 +258,15 @@ public final class ClientCitizen {
     }
 
 	AABB cullingBox() {
+		if (cullBoxDirty) {
+			cullBox = createCullingBox(x0, y0, z0, x1, y1, z1, state & 0xFF, dir, halt);
+			cullBoxDirty = false;
+		}
 		return cullBox;
 	}
 
-	private void rebuildCullBox() {
-		cullBox = createCullingBox(x0, y0, z0, x1, y1, z1, state & 0xFF, dir, halt);
+	private void invalidateCullBox() {
+		cullBoxDirty = true;
 	}
 
 	static AABB createCullingBox(double x0, double y0, double z0,

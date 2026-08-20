@@ -3,32 +3,32 @@
 - Time: `2026-08-20 03:01:44 +08:00`
 - Authors: `Codex (OpenAI GPT-5; investigation and implementation-plan author)`
 - Status: `completed`
-- Scope: `Citizen M3 Body snapshot/yaw timing, SyncEngine delta batching, focused regression coverage, town living documentation`
+- Scope: `Citizen Flywheel Body snapshot/yaw timing, SyncEngine delta batching, focused regression coverage, town living documentation`
 - Related: [`docs/town/citizen-rendering-at-scale.md`](../docs/town/citizen-rendering-at-scale.md), [`docs/town/hybrid-simulation-architecture.md`](../docs/town/hybrid-simulation-architecture.md), `FlywheelCitizenBackend`, `citizen.vert`, `SyncEngine.flushDeltas`, `S2CCitizenBatchPacket`, `FHConfig.SERVER.TOWN.maxVisibleCitizensPerPlayer`
 
 ## Goal
 
 修复两个会被描述为“Citizen 客户端跟不上”的独立问题，并避免用一个修复掩盖另一个问题：
 
-1. M3 `Body` 渲染必须和 Flywheel shader 使用同一动画时钟，使每个位置和 yaw 段从 `blend=0` 开始，不在第一帧预跳。
+1. Flywheel `Body` 渲染必须和 shader 使用同一动画时钟，使每个位置和 yaw 段从 `blend=0` 开始，不在第一帧预跳。
 2. 真实服务端同步在单玩家追踪超过 `240` 个到期居民时，必须发送完整的多包序列，不能截断后把未发送居民记为已发送。
 
 本计划不修改服务端移动规律、客户端插值公式、shader 动画公式、包内编码或 `240` 条的单包上限。
 
 ## 结论先行
 
-在当前复现场景 `/citizen_debug benchmark load 1024 moving` 中，**不是客户端算不过来，也不是服务端同步落后**。该基准由 `CitizenClientBenchmark` 直接在客户端缓存中创建和更新居民，不经过服务端、网络包或 `SyncEngine`。当前 Body 抽动的直接原因是 M3 把 Create 的动画时钟写入实例数据，而 Flywheel shader 的 `uTime` 使用 Flywheel 自己的动画时钟。
+在当前复现场景 `/citizen_debug benchmark load 1024 moving` 中，**不是客户端算不过来，也不是服务端同步落后**。该基准由 `CitizenClientBenchmark` 直接在客户端缓存中创建和更新居民，不经过服务端、网络包或 `SyncEngine`。当前 Body 抽动的直接原因是 Citizen Flywheel backend 把 Create 的动画时钟写入实例数据，而 shader 的 `uTime` 使用 Flywheel 自己的动画时钟。
 
 真实服务器上另有一个可独立触发跳动、冻结或延迟追赶的同步缺陷：`SyncEngine.flushDeltas` 对每名玩家装入 `240` 条后 `break`，却在 flush 末尾推进全部 `due` ID 的规范状态。默认可见上限已提高到每玩家 `1024`，所以这个旧的隐含上限现在会被正常配置触发。
 
 | 现象 | 是否涉及服务端 | 直接原因 | 修复单元 |
 |---|---:|---|---|
-| `1024 moving` 客户端 benchmark 中 M3 Body 抽动 | 否 | Create/Flywheel 时钟域错配 | A. M3 时钟统一 |
+| `1024 moving` 客户端 benchmark 中 Flywheel Body 抽动 | 否 | Create/Flywheel 时钟域错配 | A. Flywheel 时钟统一 |
 | 真实人口超过 240 时部分居民长时间不更新 | 是 | 单 flush 截断，但未发送 ID 仍推进规范状态 | B. Sync 多包与提交语义 |
 
 ## Pre-fix Evidence (Historical)
 
-### A. M3 使用了 shader 之外的时钟
+### A. Flywheel backend 使用了 shader 之外的时钟
 
 证据链，置信度 `10/10`：
 
@@ -102,7 +102,7 @@ Result: 784 entries were not sent, but their next dirty check starts from
 
 ## Decisions
 
-### 1. Flywheel clock is the sole M3 animation clock
+### 1. Flywheel clock is the sole citizen instancing animation clock
 
 `FlywheelCitizenBackend` 改用 `com.jozufozu.flywheel.util.AnimationTickHolder`。`snapshotTime`、`yawTime`、shader `uTime` 和 `ANIMATION_PERIOD_TICKS` 必须属于同一时钟域。
 
@@ -176,7 +176,7 @@ due -> per-player filtered groups -> <=240 packet batches -> send
 
 ## Target Data Flows
 
-### M3 snapshot timing after fix
+### Flywheel snapshot timing after fix
 
 ```text
 ClientCitizen snapshot (game-time seconds)
@@ -227,12 +227,12 @@ advance shared canonical once per ID
 
 ## Implementation Steps
 
-### Unit A: M3 clock unification
+### Unit A: Flywheel clock unification
 
 1. Add a failing regression assertion proving compiled `FlywheelCitizenBackend` references `com.jozufozu.flywheel.util.AnimationTickHolder` and does not reference Create's same-named holder. A small classfile dependency assertion is acceptable here because it tests the exact architectural boundary without ticking a live `Minecraft` singleton.
 2. Add or extract a pure timing assertion for a snapshot starting “now”: when the CPU sample and shader time are the same value, `citizenElapsed(start)` is zero and a 4-tick segment begins at `blend=0`, including period wrap.
 3. Replace the Create import in `FlywheelCitizenBackend` with Flywheel's holder. Do not change the timing formula, duration clamp, yaw rates, instance format or shader.
-4. Run the focused Flywheel test, then compare M3 and CPU rendering in the existing 1024 moving benchmark.
+4. Run the focused Flywheel test, then compare Flywheel and CPU rendering in the existing 1024 moving benchmark.
 
 ### Unit B: Sync batching correctness
 
@@ -247,7 +247,7 @@ advance shared canonical once per ID
 
 1. Run focused tests for Flywheel timing and sync batching.
 2. Run the full Gradle test suite.
-3. Execute M3 visual/lifecycle regression and a real server-backed `>240` population smoke test.
+3. Execute Flywheel visual/lifecycle regression and a real server-backed `>240` population smoke test.
 4. Update both town living documents with implemented behavior and exact class anchors.
 5. Add a new diary entry with implementation decisions, focused/full test results, manual evidence and remaining work.
 6. Mark this plan `completed` and fill `Outcome`; if implementation changes the delivery rule, update `Decisions` before marking complete.
@@ -259,8 +259,8 @@ Current and planned coverage map:
 ```text
 CODE PATHS                                      OBSERVABLE FLOWS
 [~] FlywheelCitizenBackend.writeSnapshot       [+] 1024 client-only moving benchmark
- |-- [GAP, CRITICAL] clock class identity        |-- [GAP] M3 starts/reversals do not twitch
- |-- [PLANNED] start-now -> elapsed 0             |-- [GAP] M3 vs CPU cadence/turn comparison
+ |-- [GAP, CRITICAL] clock class identity        |-- [GAP] Flywheel starts/reversals do not twitch
+ |-- [PLANNED] start-now -> elapsed 0             |-- [GAP] Flywheel vs CPU cadence/turn comparison
  |-- [TESTED] period wrap                         |-- [GAP] F3+T keeps timing smooth
  `-- [TESTED] shortest yaw delta                  `-- [GAP] dimension/backend switch smoke
 
@@ -322,7 +322,7 @@ Then run:
 | `sendPlayer` throws during a packet loop | do not catch and pretend success; canonical commit must not include an unreturned call | Focused fault injection if network wrapper is cheaply injectable; otherwise integration | Server error is logged/raised, not silent |
 | `pendingImmediate` lands after the first 240 entries | multi-packet drain includes the tail | Yes | Otherwise sleep/wake appears delayed; silent |
 | Worst-case all 1024 residents are due every 4 ticks | preserve per-packet limit, measure real traffic, retain configurable visibility cap | Size/count test plus manual metrics | Bandwidth increase is observable; correctness is not traded for silent loss |
-| M3 fix regresses lifecycle rebuild | retain F3+T, origin, dimension and backend-switch tests | Existing automated plus manual | Existing backend status/logging reports fallback |
+| Flywheel fix regresses lifecycle rebuild | retain F3+T, origin, dimension and backend-switch tests | Existing automated plus manual | Existing backend status/logging reports fallback |
 
 After the planned tests, no listed silent production failure remains without either automated coverage or an explicit visible error path. Before implementation, the clock identity and canonical commit rows are critical gaps.
 
@@ -330,7 +330,7 @@ After the planned tests, no listed silent production failure remains without eit
 
 ### Render path
 
-Changing the imported clock does not alter instance stride, dirty frequency, draw batches, shader instruction count or allocation behavior. Expected M3 metrics remain:
+Changing the imported clock does not alter instance stride, dirty frequency, draw batches, shader instruction count or allocation behavior. Expected Flywheel metrics remain:
 
 - `1024 moving` with 64 detailed entities: `960 * 58 = 55,680 B` dirty on each 4-tick snapshot and `0 B` between snapshots.
 - Instance ownership counts, `batchDraws`, light samples and rebuild peaks remain unchanged.
@@ -365,9 +365,9 @@ The batcher streams at most one current packet payload list at a time. Unsplit c
 
 ### Client visual regression
 
-1. Select M3 and load `/citizen_debug benchmark load 1024 moving` in the same fixed camera setup used by prior M3 validation.
+1. Select Flywheel and load `/citizen_debug benchmark load 1024 moving` in the same fixed camera setup used by prior Flywheel validation.
 2. Observe at least two full benchmark direction-reversal cycles. Body position and facing must start each segment continuously, with no rhythmic 4-tick twitch or first-frame yaw snap.
-3. Switch to `cpu_batch` without moving the camera and compare movement/turn cadence, then switch back to M3. Ownership counts must remain valid and no duplicate or empty frame may appear.
+3. Switch to `cpu_batch` without moving the camera and compare movement/turn cadence, then switch back to Flywheel. Ownership counts must remain valid and no duplicate or empty frame may appear.
 4. Repeat after F3+T, Flywheel renderer reload, an origin boundary crossing and a dimension round trip.
 5. Record `/citizen_debug metrics`; dirty-byte cadence and ownership counts must match the pre-fix contract.
 
@@ -387,7 +387,7 @@ The batcher streams at most one current packet payload list at a time. Unsplit c
 - Adding application-level ACKs, retransmission queues or per-player canonical arrays: Forge's existing reliable connection and the shared canonical model remain the project contract.
 - Lowering `maxVisibleCitizensPerPlayer` to hide the overflow: the default 1024 capacity must work as configured.
 - Making the client-only benchmark send server packets: it remains an isolated rendering benchmark.
-- M3 default enablement, Oculus policy, GPU profiling, new LODs, atlases or shadows: those remain separate M5/rendering acceptance work.
+- Flywheel default enablement, Oculus policy, GPU profiling, new LODs, atlases or shadows: those remain separate rendering acceptance work.
 - Server movement, pathfinding, behavior scheduling or town balance changes: neither root cause originates there.
 - Any change under `design/`: this is an implementation defect plan, not a lore or creative-design revision.
 
@@ -412,7 +412,7 @@ After implementation, not before:
 Parallel lanes:
 
 ```text
-Lane A: M3 clock test -> clock import fix
+Lane A: Flywheel clock test -> clock import fix
 Lane B: packet boundary tests -> pure batcher -> SyncEngine sent-union commit
                           |
                           +-- merge A + B
@@ -448,7 +448,7 @@ Implementation completed on `2026-08-20` in the existing Citizen worktree.
   record for the two independent root causes.
 
 Remaining validation is manual and does not block the source fix: run the
-`1024 moving` M3-vs-CPU visual matrix (direction reversal, F3+T, origin
+`1024 moving` Flywheel-vs-CPU visual matrix (direction reversal, F3+T, origin
 crossing, dimension round trip and Flywheel reload) and a real server-backed
 town with more than 240 tracked residents. In the latter, capture one flush's
 packet sizes and confirm the expected `240,240,240,240,64` sequence and client

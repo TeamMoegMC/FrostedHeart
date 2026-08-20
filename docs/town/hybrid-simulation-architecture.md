@@ -34,8 +34,8 @@
 │                          客户端 (Logical Client)                              │
 │  ClientCitizenCache    id → 渲染状态（带双缓冲插值快照）                        │
 │  CitizenRenderCoordinator 统一 packet/tick/render/reload/clear 与 backend 所有权 │
-│   ├── CpuBatchCitizenBackend → 默认低模与轮廓批渲染 / 兼容回退                 │
-│   └── FlywheelCitizenBackend → 显式 M3 动态持久实例（生命周期计数已验收）    │
+│   ├── CpuBatchCitizenBackend → AUTO 不可用时的低模与轮廓兼容回退              │
+│   └── FlywheelCitizenBackend → AUTO 首选 / 显式诊断的动态持久实例            │
 │  InteractionHooks      准星射线查空间网格 → C2S 交互请求 → 打开菜单             │
 │  （换维度时清空缓存，与服务端 per-level id 空间对齐）                          │
 └───────────────────────────────────────────────────────────────────────────────┘
@@ -311,7 +311,7 @@ public final class ClientCitizen {
 
 ---
 
-## 8. 客户端渲染：假实体、CPU 批量与 Flywheel PoC
+## 8. 客户端渲染：假实体、CPU 批量与 Flywheel Instancing
 
 按**可见数量**选渲染路径，两者共存、按距离切换：
 
@@ -326,13 +326,13 @@ public final class ClientCitizen {
 - `CitizenSkins` 按稳定 citizen id 确定性选择 Minecraft 1.20.1 内置的宽臂 `Makena`、`Efe`、`Noor`、`Kai`、`Ari`、`Zuri`、`Sunny` 皮肤；近景假实体和批量 LOD 共用该映射，跨 LOD、离线重进和重新生成均不换肤。资源直接引用 `textures/entity/player/wide/*.png`，模组不复制原版贴图。
 - 渲染入口是 `RenderLevelStageEvent.AFTER_ENTITIES`；每帧只遍历并剔除一次缓存，按七张皮肤写入七个复用 `BufferBuilder`，仅对本帧实际可见的皮肤提交，最多 7 次 draw call，不创建每帧居民分组集合。
 - 批量顶点使用 `RenderType.entityCutoutNoCull` 的 `DefaultVertexFormat.NEW_ENTITY`，同时提交皮肤 UV、`OverlayTexture.NO_OVERLAY`、居民位置的天空光/方块光和面法线。该 RenderType 的实体 shader 会实际采样 lightmap 并执行原版方向光计算；`POSITION_COLOR_TEX_LIGHTMAP` 的同名 `UV2` 在 Minecraft 1.20.1 对应片元 shader 中没有被采样，不能用于环境明暗。光照值缓存在 `ClientCitizen`：跨方块时立即重采样，静止时按 citizen id 错峰每 5–8 tick 刷新；采样复用单个 `MutableBlockPos`，避免逐帧对象分配。
-- `CitizenBatchRenderLayout` 是 CPU/M3 的共享表现合同：定义六个 Body 部件、两个 Billboard quad、皮肤 UV、睡眠比例/锚点、四肢摆动符号，并预计算 256 向站立/睡眠模型轴。站立轴复现 `LivingEntityRenderer` 的 `scale(-1, -1, 1)` 约定，使皮肤局部 `-Z` 始终朝居民前方、局部 `-Y` 朝世界上方；睡眠时局部 `-Z` 朝上、局部 `-Y` 朝床头。每个面的世界法线再经过当前 `PoseStack` normal matrix 一次后复用于四个顶点，不产生逐顶点临时向量。
+- `CitizenBatchRenderLayout` 是 CPU/Flywheel 的共享表现合同：定义六个 Body 部件、两个 Billboard quad、皮肤 UV、睡眠比例/锚点、四肢摆动符号，并预计算 256 向站立/睡眠模型轴。站立轴复现 `LivingEntityRenderer` 的 `scale(-1, -1, 1)` 约定，使皮肤局部 `-Z` 始终朝居民前方、局部 `-Y` 朝世界上方；睡眠时局部 `-Z` 朝上、局部 `-Y` 朝床头。每个面的世界法线再经过当前 `PoseStack` normal matrix 一次后复用于四个顶点，不产生逐顶点临时向量。
 - 睡眠使用低矮 AABB 做视锥剔除，关闭行走起伏，并使用同步的床朝向而非客户端软转向。
 - `DetailedCitizenSelector` 通过复用的原始类型数组和最大堆执行稳定 Top-K；已接管居民按 4 格距离优势保留，等距按稳定 id。配置降低或设为 0 时，下一客户端 tick 立即释放超额代理，未入选居民仍由批量路径绘制。
 - `ClientCitizen` 缓存覆盖双快照与最大外推终点的扫掠 AABB；只在 spawn/网络快照时重建，渲染帧不再逐居民分配剔除对象。
 - `CitizenClientBenchmark` 通过 `/citizen_debug benchmark load <32|64|256|1024> <moving|sleeping>` 注入纯客户端确定性场景；高位 id 和按对象身份清理保证真实同步缓存不被覆盖。`CitizenRenderMetrics` 记录 backend 分类数量、光照采样、材质批次、实例脏字节与最近 256 帧 hook 耗时；Flywheel 引擎本身的 CPU/GPU 时间不在 hook 内，详细口径见 [citizen-rendering-at-scale.md](citizen-rendering-at-scale.md)。
-- `CitizenRenderCoordinator` 统一接管网络 spawn/update/despawn、benchmark 注入、客户端 tick/render、资源重载、Flywheel renderer 重载、切维度和退出清理。`CitizenRenderOwnership` 对每个 id 返回唯一的 `DETAILED_ENTITY`、`BODY_BATCH`、`BILLBOARD_BATCH` 或 `NONE`；`CpuBatchCitizenBackend` 仍为默认。coordinator 分别记录 requested 与 active backend：新 backend 先初始化并从 cache 预热后再原子替换，非 CPU backend 故障或 Oculus shader pack 使 Flywheel 关闭实例化时，只有 active 临时回退 CPU；requested M3 保留，并在 `ReloadRenderersEvent` 中于 Flywheel 替换 `InstanceWorld` 后自动恢复。维度变化在健康检查前通过 `onClientLevelChanged` 重绑定，旧 manager 的失效句柄不会再调用 `delete()`。
-- `FlywheelCitizenBackend` 是显式请求的 M3 动态实例 backend：七张皮肤分别共享 144 顶点 Body 与 8 顶点身体/头部 Billboard，每个批量居民一个 58 B `CitizenInstanceData`。CPU/M3 都消费 `CitizenBatchRenderLayout`；累计步态 phase 属于 `ClientCitizen`，切换 backend、Body/Billboard 或重建 Flywheel 槽不会重置。`citizen.vert` 使用 Flywheel `uTime`，而 `FlywheelCitizenBackend` 写入时也必须取 `com.jozufozu.flywheel.util.AnimationTickHolder`，完成快照插值/限时外推和短路径朝向；四肢幅度按步速对齐原版 `walkAnimation`，并支持睡眠姿态。Body 在 `<68` 格进入并保持到 `72` 格，Billboard 最远 `96` 格；当前 owner 由 `CitizenRenderCoordinator` 共享给 CPU/M3。它实现 `InstancingEngine.OriginShiftListener`：Flywheel 切换渲染原点并清空底层槽后，同帧从 cache 重新创建实例。它只接受 Flywheel `INSTANCING`，BATCHING/OFF、Oculus shader pack 或运行期故障时 active 回退 CPU；完整限制、命令和待完成的图形验收见 [citizen-rendering-at-scale.md](citizen-rendering-at-scale.md)。
+- `CitizenRenderCoordinator` 统一接管网络 spawn/update/despawn、benchmark 注入、客户端 tick/render、资源重载、Flywheel renderer 重载、切维度和退出清理。`CitizenRenderOwnership` 对每个 id 返回唯一的 `DETAILED_ENTITY`、`BODY_BATCH`、`BILLBOARD_BATCH` 或 `NONE`；启动默认 requested 为 `auto`。coordinator 分别记录 requested 与 active backend：新 backend 先初始化并从 cache 预热后再原子替换，非 CPU backend 故障、驱动不支持 instancing 或 Oculus shader pack 使 Flywheel 关闭实例化时，只有 active 临时回退 CPU；requested AUTO/Flywheel 保留，并在 `ReloadRenderersEvent` 中于 Flywheel 替换 `InstanceWorld` 后自动恢复。维度变化在健康检查前通过 `onClientLevelChanged` 重绑定，旧 manager 的失效句柄不会再调用 `delete()`。
+- `FlywheelCitizenBackend` 是 AUTO 首选、也可显式请求的动态实例 backend：七张皮肤分别共享 144 顶点 Body 与 8 顶点身体/头部 Billboard，每个批量居民一个 58 B `CitizenInstanceData`。CPU/Flywheel 都消费 `CitizenBatchRenderLayout`；累计步态 phase 属于 `ClientCitizen`，切换 backend、Body/Billboard 或重建 Flywheel 槽不会重置。`citizen.vert` 使用 Flywheel `uTime`，而 `FlywheelCitizenBackend` 写入时也必须取 `com.jozufozu.flywheel.util.AnimationTickHolder`，完成快照插值/限时外推和短路径朝向；四肢幅度按步速对齐原版 `walkAnimation`，并支持睡眠姿态。Body 在 `<68` 格进入并保持到 `72` 格，Billboard 最远 `96` 格；当前 owner 由 `CitizenRenderCoordinator` 共享给 CPU/Flywheel。它实现 `InstancingEngine.OriginShiftListener`：Flywheel 切换渲染原点并清空底层槽后，同帧从 cache 重新创建实例。它只接受 Flywheel `INSTANCING`，BATCHING/OFF、Oculus shader pack 或运行期故障时 active 回退 CPU；完整限制、命令和待完成的图形验收见 [citizen-rendering-at-scale.md](citizen-rendering-at-scale.md)。
 
 ---
 
@@ -371,7 +371,7 @@ public final class ClientCitizen {
 | 同步脏检查+打包 | 每 4 tick | ~0.2 ms（摊销） |
 | 寻路 | 异步线程 | 主线程 0 |
 
-**客户端现状：** 清醒居民的原版质量代理默认严格限制为 64；默认 backend 仍由 CPU 每帧生成其余低模/billboard 顶点。手动 M3 Flywheel backend 已完成动态实例代码、自动化，以及 1024 moving/sleeping 的所有权、稳态零脏写、F3+T 重建计数和基础画面实机验证。初次画面验收发现实例 Body 的固定摆动呈跑步，改为按实际位移对齐详细实体的原版步态后，实机复验已确认两层行走一致；68/72 格迟滞切换也没有重影、空帧或抖动。随后发现 Flywheel 原点切换会清空自定义实例槽，而旧逻辑仅改写已脱离槽表的数据，造成计数仍在但 Body 全部消失；现已改为监听清槽事件并整体重建，自动化和跨 100 格实机复验均已通过，Body 不再整体消失。原 M3 Billboard 缺少头部导致轮廓跳变，扩展为身体/头部双 quad 后，715 个远景 Billboard 的画面复验确认正常；CPU 回退现与 M3 共用同一双 quad 布局。Flywheel 0.6.11 在 Oculus shader pack 开启时主动关闭实例化，Citizen 会保留 requested M3、临时以 CPU 绘制，并在关闭光影后的 renderer reload 自动恢复 M3。GPU 预算与完整 Embeddium/Oculus 支持矩阵尚未验收，因此还不能默认启用或把服务端吞吐目标直接当作千人同屏客户端结论。
+**客户端现状：** 清醒居民的原版质量代理默认严格限制为 64；启动 requested 为 AUTO，可用时由 Flywheel instancing 绘制其余低模/billboard，不支持 instancing 时由 CPU 每帧生成顶点。Flywheel backend 已完成动态实例代码、自动化，以及 1024 moving/sleeping 的所有权、稳态零脏写、F3+T 重建计数和基础画面实机验证。初次画面验收发现实例 Body 的固定摆动呈跑步，改为按实际位移对齐详细实体的原版步态后，实机复验已确认两层行走一致；68/72 格迟滞切换也没有重影、空帧或抖动。随后发现 Flywheel 原点切换会清空自定义实例槽，而旧逻辑仅改写已脱离槽表的数据，造成计数仍在但 Body 全部消失；现已改为监听清槽事件并整体重建，自动化和跨 100 格实机复验均已通过，Body 不再整体消失。原 Flywheel Billboard 缺少头部导致轮廓跳变，扩展为身体/头部双 quad 后，715 个远景 Billboard 的画面复验确认正常；CPU 回退现与 Flywheel 共用同一双 quad 布局。Flywheel 0.6.11 在 Oculus shader pack 开启时主动关闭实例化，Citizen 会保留 requested AUTO/Flywheel、临时以 CPU 绘制，并在关闭光影后的 renderer reload 自动恢复 Flywheel。GPU 预算与完整 Embeddium/Oculus 支持矩阵仍需作为发布验收项。
 
 **优化清单（按收益排序）：**
 
@@ -394,7 +394,7 @@ public final class ClientCitizen {
 |------|------|------|
 | P1 | CitizenSim SoA + Manager(SavedData) + 分帧 tick + 状态机 | 服务端 1 万单位 tick < 1ms，无渲染 |
 | P2 | 同步三件套 + 客户端缓存插值 + Billboard 占位渲染 | 联机看到人群移动，带宽达标 |
-| P3（进行中） | 已完成有硬上限的假实体 Top-K、稳态 AABB、确定性基准、backend/coordinator 边界、M2 实机验收、M3 动态实例/GPU 动画代码和基础实例生命周期计数实机验证；M3 人工图形兼容与性能验收尚未完成，详见 [citizen-rendering-at-scale.md](citizen-rendering-at-scale.md) | 以 1000 人固定场景的 render-thread/GPU p95 预算验收 |
+| P3（进行中） | 已完成有硬上限的假实体 Top-K、稳态 AABB、确定性基准、backend/coordinator 边界、静态实例验证、Flywheel 动态实例/GPU 动画代码和基础实例生命周期计数实机验证；人工图形兼容与性能验收尚未完成，详见 [citizen-rendering-at-scale.md](citizen-rendering-at-scale.md) | 以 1000 人固定场景的 render-thread/GPU p95 预算验收 |
 | P4 | 路网图 + 流场 + 异步寻路 + 分离 | 下班潮千人同路不卡 |
 | P5 | 交互 RPC + 菜单接入 + 需求/经济低频系统 | 可对话、可交易、可雇佣 |
 
@@ -448,7 +448,7 @@ public final class ClientCitizen {
 1. **快照 + 脏更新**：已实现的 58 B 实例数据只在快照、LOD 或光照值变化时更新对应实例；Flywheel 渲染原点变化会先清空底层槽，再从 cache 整体重建一次。普通 render frame 不重算居民矩阵或生成盒体顶点。
 2. **GPU 刚性部件动画**：六个盒体用静态 `partId` 驱动 vertex shader，不需要 bone texture；CPU 仅在快照到达时累计步态 phase，GPU 按实际快照位移/外推速度驱动反相四肢，频率与幅度对齐原版假实体且不增加整体 bob。
 3. **有限材质批次**：当前保留七张原版皮肤，Body/Billboard 各最多七个批次。只有 RenderDoc 证明这里是瓶颈后才增加 atlas/array texture，不以单 draw call 为先决条件。
-4. **当前 LOD**：详细假实体候选在 16 格进入、20 格退出且最多 64 个；未入选者使用共享的 68/72 格 Body 迟滞，`>72..<=96` 格稳定为 Billboard，回到 `<68` 格才恢复 Body。CPU/M3 共用协调器中的 owner 状态，第三档低模只在 GPU profile 证明有必要时增加。
+4. **当前 LOD**：详细假实体候选在 16 格进入、20 格退出且最多 64 个；未入选者使用共享的 68/72 格 Body 迟滞，`>72..<=96` 格稳定为 Billboard，回到 `<68` 格才恢复 Body。CPU/Flywheel 共用协调器中的 owner 状态，第三档低模只在 GPU profile 证明有必要时增加。
 5. **分级视锥剔除**：按空间网格 cell 剔除，一次测试剔除 16–64 实例。
 6. **光照摊销**：按 cell 采样亮度而非按人，每 tick 轮询刷新部分 cell。
 7. **阴影降级**：中远距实例关闭阴影投射或用贴地 blob shadow。

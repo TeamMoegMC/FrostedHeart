@@ -7,6 +7,11 @@
 package com.teammoeg.frostedheart.content.town.citizen.client;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotSame;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+
+import java.lang.reflect.Field;
 
 import org.junit.jupiter.api.Test;
 
@@ -44,6 +49,26 @@ class ClientCitizenCullBoxTest {
 		assertBox(box, 8.65, 20.45, 28.65, 11.35, 20.95, 31.35);
 	}
 
+	@Test
+	void snapshotUpdatesDeferCullBoxAllocationUntilCpuVisibilityRead() throws ReflectiveOperationException {
+		byte stateDir = CitizenState.packStateDir(CitizenState.WANDER, 0);
+		ClientCitizen citizen = new ClientCitizen(7, 0, 0, 0, stateDir, "");
+
+		assertNull(cachedCullBox(citizen));
+		citizen.update(1024, 0, 0, stateDir);
+		assertNull(cachedCullBox(citizen));
+
+		AABB firstMaterialized = citizen.cullingBox();
+		assertSame(firstMaterialized, cachedCullBox(citizen));
+		assertSame(firstMaterialized, citizen.cullingBox());
+
+		citizen.update(2048, 0, 0, stateDir);
+		assertSame(firstMaterialized, cachedCullBox(citizen));
+		AABB refreshed = citizen.cullingBox();
+		assertNotSame(firstMaterialized, refreshed);
+		assertSame(refreshed, cachedCullBox(citizen));
+	}
+
 	private static void assertBox(AABB box, double minX, double minY, double minZ,
 			double maxX, double maxY, double maxZ) {
 		assertEquals(minX, box.minX, EPSILON);
@@ -52,5 +77,11 @@ class ClientCitizenCullBoxTest {
 		assertEquals(maxX, box.maxX, EPSILON);
 		assertEquals(maxY, box.maxY, EPSILON);
 		assertEquals(maxZ, box.maxZ, EPSILON);
+	}
+
+	private static AABB cachedCullBox(ClientCitizen citizen) throws ReflectiveOperationException {
+		Field field = ClientCitizen.class.getDeclaredField("cullBox");
+		field.setAccessible(true);
+		return (AABB) field.get(citizen);
 	}
 }

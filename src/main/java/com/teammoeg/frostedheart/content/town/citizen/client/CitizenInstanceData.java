@@ -12,7 +12,7 @@ package com.teammoeg.frostedheart.content.town.citizen.client;
 
 import com.jozufozu.flywheel.api.InstanceData;
 
-/** Compact snapshot state consumed by the M3 citizen vertex shader. */
+/** Compact snapshot state consumed by the Flywheel citizen vertex shader. */
 final class CitizenInstanceData extends InstanceData {
 
 	byte blockLight;

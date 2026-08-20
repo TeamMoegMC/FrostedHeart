@@ -19,14 +19,18 @@
 
 package com.teammoeg.frostedheart.content.scenario.client.gui.layered.font;
 
+import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Deque;
+import java.util.HashSet;
 import java.util.List;
-import java.util.Map.Entry;
 import java.util.Optional;
+import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -36,238 +40,357 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import com.google.gson.JsonSyntaxException;
-import com.teammoeg.chorda.client.ClientUtils;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.scenario.client.gui.layered.font.UnihexParser.OverrideRange;
 
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
-import net.minecraft.client.Minecraft;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.packs.resources.Resource;
+import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.server.packs.resources.SimplePreparableReloadListener;
 import net.minecraft.util.FastBufferedInputStream;
 import net.minecraft.util.profiling.ProfilerFiller;
-import net.minecraft.server.packs.resources.ReloadableResourceManager;
-import net.minecraft.server.packs.resources.Resource;
-import net.minecraft.server.packs.resources.ResourceManager;
-import net.minecraft.resources.ResourceLocation;
 
-public class KGlyphProvider extends SimplePreparableReloadListener<Object> {
-	public static KGlyphProvider INSTANCE = new KGlyphProvider();
-	private Int2ObjectMap<GlyphData> data = new Int2ObjectOpenHashMap<>();
-	private Int2ObjectMap<GlyphData> unicodeData = new Int2ObjectOpenHashMap<>();
+public final class KGlyphProvider extends SimplePreparableReloadListener<KGlyphProvider.FontSnapshot> {
+    public static final KGlyphProvider INSTANCE = new KGlyphProvider();
 
-	ResourceManager rm;
+    private volatile FontSnapshot activeSnapshot = FontSnapshot.empty();
 
-	private KGlyphProvider() {
-	}
+    private KGlyphProvider() {
+    }
 
-	public GlyphData getGlyph(int code) {
-		if (ClientUtils.getMc().options.forceUnicodeFont().get()) {
-			return unicodeData.get(code);
-		}
-		return data.get(code);
-	}
+    FontSnapshot activeSnapshot() {
+        return activeSnapshot;
+    }
 
-	public void readFont(JsonObject jo) {
-		FHMain.LOGGER.info("loading fonts...");
-		JsonArray ja = jo.get("providers").getAsJsonArray();
-		for (int i = 0; i < ja.size(); i++) {
+    @Override
+    protected FontSnapshot prepare(ResourceManager resourceManager, ProfilerFiller profiler) {
+        try {
+            SnapshotBuilder builder = new SnapshotBuilder(resourceManager);
+            builder.loadFont(new ResourceLocation("default.json"));
+            return builder.build();
+        } catch (IOException | RuntimeException exception) {
+            throw new IllegalStateException("Failed to build scenario font snapshot", exception);
+        }
+    }
 
-			JsonObject cr = ja.get(i).getAsJsonObject();
-			FHMain.LOGGER.info("loading provider " + cr.get("type").getAsString());
-			switch (cr.get("type").getAsString()) {
-			case "bitmap":
-				readBitmap(cr);
-				break;
-			case "legacy_unicode":
-				readUnicode(cr);
-				break;
-			case "reference":
-				loadFont(new ResourceLocation(cr.get("id").getAsString() + ".json"));
-				break;
-			case "unihex":
-				readUnihex(cr);
-				break;
-			case "space":
-				readSpace(cr);
-				break;
-			}
-		}
-		// System.out.println("loaded "+data.size());
-	}
-	public void readSpace(JsonObject unicode) {
-		for(Entry<String, JsonElement> ent:unicode.get("advances").getAsJsonObject().entrySet()) {
-			GlyphData gd=new GlyphData();
-			gd.height=16;
-			gd.advance=ent.getValue().getAsInt()*2;
-			data.putIfAbsent(ent.getKey().codePointAt(0), gd);
-		}
-	}
-	public void readBitmap(JsonObject unicode) {
-		int height = 9;
-		if (unicode.has("height"))
-			height = unicode.get("height").getAsInt();
-		int ascent = unicode.get("ascent").getAsInt();
-		ResourceLocation file = new ResourceLocation(unicode.get("file").getAsString());
+    @Override
+    protected void apply(FontSnapshot snapshot, ResourceManager resourceManager, ProfilerFiller profiler) {
+        activeSnapshot = snapshot;
+    }
 
-		Optional<Resource> r = rm.getResource(new ResourceLocation(file.getNamespace(), "textures/" + file.getPath()));
-		if (r.isPresent())
-			try {
-				InputStream stream = r.get().open();
-				BufferedImage image = ImageIO.read(stream);
+    static final class FontSnapshot {
+        private final List<GlyphProvider> providers;
+        private final GlyphImageCache imageCache;
 
-				JsonArray ja = unicode.get("chars").getAsJsonArray();
-				if (image != null) {
-					int i = image.getWidth();
-					int j = image.getHeight();
-					int k = i / ja.get(0).getAsString().length();
-					int l = j / ja.size();
-					float f = height * 1f / l;
-					for (int i1 = 0; i1 < ja.size(); i1++) {
-						String codepoints = ja.get(i1).getAsString();
-						for (int k1 = 0; k1 < codepoints.codePointCount(0, codepoints.length()); k1++) {
-							int n = codepoints.codePointAt(k1);
-							if (n == 0) continue;
-							int i2 = getCharacterWidth(image, k, l, k1, i1);
-							GlyphData gd = new GlyphData(k1 * k, i1 * l, k, l, (int) (0.5D + i2 * f) + 1, ascent, f);
-							gd.image = image;
-							data.putIfAbsent(n, gd);
-						}
-					}
-				}
+        FontSnapshot(List<GlyphProvider> providers) {
+            this.providers = List.copyOf(providers);
+            this.imageCache = new GlyphImageCache();
+        }
 
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
+        static FontSnapshot empty() {
+            return new FontSnapshot(List.of());
+        }
 
-	}
+        void resolve(int codePoint, boolean forceUnicode, ResolvedGlyph result) {
+            if (forceUnicode) {
+                for (int index = providers.size() - 1; index >= 0; index--) {
+                    GlyphProvider provider = providers.get(index);
+                    if (provider.supportsUnicode() && provider.resolve(codePoint, true, result)) {
+                        return;
+                    }
+                }
+            } else {
+                for (GlyphProvider provider : providers) {
+                    if (provider.resolve(codePoint, false, result)) {
+                        return;
+                    }
+                }
+            }
+            result.set(GlyphData.EMPTY);
+        }
 
-	private int getCharacterWidth(BufferedImage nativeImageIn, int charWidthIn, int charHeightInsp, int columnIn, int rowIn) {
-		int i;
+        int cachedImageCount() {
+            return imageCache.size();
+        }
+    }
 
-		for (i = charWidthIn - 1; i >= 0; --i) {
+    static final class ResolvedGlyph {
+        private GlyphData glyph;
+        private UnihexGlyphStore unihexStore;
+        private int unihexIndex = -1;
 
-			for (int k = rowIn * charHeightInsp; k < rowIn * charHeightInsp + charHeightInsp; ++k) {
-				if ((nativeImageIn.getRGB(i + columnIn * charWidthIn, k) & 0xFF000000) != 0) {
-					return i + 1;
-				}
-			}
-		}
+        void set(GlyphData glyph) {
+            this.glyph = glyph;
+            this.unihexStore = null;
+            this.unihexIndex = -1;
+        }
 
-		return i + 1;
-	}
+        void set(UnihexGlyphStore store, int glyphIndex) {
+            this.glyph = null;
+            this.unihexStore = store;
+            this.unihexIndex = glyphIndex;
+        }
 
-	public void readUnicode(JsonObject unicode) {
-		String sizes = unicode.get("sizes").getAsString();
-		String template = unicode.get("template").getAsString();
+        int render(FontSnapshot snapshot, Graphics2D graphics, int x, int y, int targetHeight, int color) {
+            if (glyph != null) {
+                return glyph.renderFont(graphics, snapshot.imageCache, x, y, targetHeight, color);
+            }
+            BufferedImage image = snapshot.imageCache.get(unihexStore, unihexIndex, color);
+            int width = unihexStore.width(unihexIndex);
+            graphics.drawImage(image, x, y, x + (int) (width / 16F * targetHeight), y + targetHeight,
+                    0, 0, width, UnihexGlyphStore.GLYPH_HEIGHT, null);
+            return (int) (unihexStore.advance(unihexIndex) / 16F * targetHeight);
+        }
 
-		byte[] sizesb = new byte[65536];
-		try {
-			Optional<Resource> r = rm.getResource(new ResourceLocation(sizes));
-			if (r.isPresent())
-				try (InputStream stream = r.get().open()) {
-					stream.read(sizesb);
-					for (int i = 0; i <= 0xFF; i++) {
-						String hex = String.format("%02x", i);
-						ResourceLocation rrl = new ResourceLocation(String.format(template, hex));
-						ResourceLocation imgloc = new ResourceLocation(rrl.getNamespace(), "textures/" + rrl.getPath());
-						Optional<Resource> resource = rm.getResource(imgloc);
-						if (resource.isPresent())
-							try (InputStream streamImg = resource.get().open()) {
-								BufferedImage image = ImageIO.read(streamImg);
-								if (image != null) {
-									for (int j = 0; j <= 0Xff; j++) {
-										GlyphData gd = new GlyphData((j & 0xF) * 16, (j & 0xF0));
-										int n = (i * 0x100) + j;
-										gd.image = image;
-										gd.parseSize(sizesb[n]);
-										unicodeData.put(n, gd);
-										gd.isUnicode = true;
-										data.putIfAbsent(n, gd);
-									}
-								} else {
-									FHMain.LOGGER.info("Error loading " + rrl);
-								}
-							}
-					}
-				}
+        int height() {
+            return glyph != null ? glyph.height() : UnihexGlyphStore.GLYPH_HEIGHT;
+        }
 
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-	}
+        boolean isUnicode() {
+            return glyph == null || glyph.isUnicode();
+        }
 
-	public void readUnihex(JsonObject unicode) {
-		String file = unicode.get("hex_file").getAsString();
-		List<OverrideRange> ranges = new ArrayList<>();
-		if (unicode.has("size_overrides")) {
-			JsonArray over = unicode.get("size_overrides").getAsJsonArray();
-			for (JsonElement avo : over) {
-				ranges.add(new OverrideRange(avo.getAsJsonObject()));
-			}
-		}
-		try {
-				try (InputStream stream = rm.open(new ResourceLocation(file))) {
-					try (ZipInputStream zipinputstream = new ZipInputStream(stream)) {
-						ZipEntry zipentry;
-						while ((zipentry = zipinputstream.getNextEntry()) != null) {
-							String s = zipentry.getName();
-							FHMain.LOGGER.info("Got " + s+" from zipped file");
-							if (s.endsWith(".hex")) {
-								UnihexParser.readFromStream(new FastBufferedInputStream(zipinputstream), (k, v) -> {
-									unicodeData.put(k, v);
-									data.putIfAbsent(k, v);
-								}, ranges);
-							}
-						}
-					}
-				}
+        boolean isMissing() {
+            return glyph == GlyphData.EMPTY;
+        }
+    }
 
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-	}
+    interface GlyphProvider {
+        boolean supportsUnicode();
 
-	public void onResourceManagerReload(ResourceManager resourceManager) {
-		rm = resourceManager;
-		loadFont(new ResourceLocation("default.json"));
-	}
+        boolean resolve(int codePoint, boolean unicodeLookup, ResolvedGlyph result);
+    }
 
-	public void loadFont(ResourceLocation location) {
-		try {
-			List<Resource> cls = rm.getResourceStack(new ResourceLocation(location.getNamespace(), "font/" + location.getPath()));
-			for (Resource rl : cls) {
-				FHMain.LOGGER.info("Reloading Font from " + rl.sourcePackId());
-				try (BufferedReader stream = rl.openAsReader()) {
-					readFont(JsonParser.parseReader(stream).getAsJsonObject());
-				}
-			}
-		} catch (JsonSyntaxException | IOException e) {
-			FHMain.LOGGER.error("Error loading font", e);
-		}
-	}
+    private record StaticGlyphProvider(Int2ObjectMap<GlyphData> glyphs, boolean supportsUnicode)
+            implements GlyphProvider {
+        @Override
+        public boolean resolve(int codePoint, boolean unicodeLookup, ResolvedGlyph result) {
+            GlyphData glyph = glyphs.get(codePoint);
+            if (glyph == null) {
+                return false;
+            }
+            result.set(glyph);
+            return true;
+        }
+    }
 
-	@Override
-	protected Object prepare(ResourceManager resourceManagerIn, ProfilerFiller profilerIn) {
-		onResourceManagerReload(resourceManagerIn);
-		/*
-		 * for(int i='A';i<'z';i++) {
-		 * System.out.println(Character.toString((char)i)+unicodeData.get(i)); }
-		 */
-		return new Object();
-	}
+    record UnihexProvider(UnihexGlyphStore store) implements GlyphProvider {
+        @Override
+        public boolean supportsUnicode() {
+            return true;
+        }
 
-	@Override
-	protected void apply(Object objectIn, ResourceManager resourceManagerIn, ProfilerFiller profilerIn) {
+        @Override
+        public boolean resolve(int codePoint, boolean unicodeLookup, ResolvedGlyph result) {
+            int glyphIndex = unicodeLookup ? store.findLast(codePoint) : store.findFirst(codePoint);
+            if (glyphIndex < 0) {
+                return false;
+            }
+            result.set(store, glyphIndex);
+            return true;
+        }
+    }
 
-	}
+    private static final class SnapshotBuilder {
+        private final ResourceManager resourceManager;
+        private final List<GlyphProvider> providers = new ArrayList<>();
+        private final Deque<ResourceLocation> referenceStack = new ArrayDeque<>();
+        private final Set<ResourceLocation> visitingReferences = new HashSet<>();
+        private int nextCacheId = 1;
 
-	public static void addListener() {
-		if (Minecraft.getInstance() != null && Minecraft.getInstance().getResourceManager() != null)
-			((ReloadableResourceManager) Minecraft.getInstance().getResourceManager()).registerReloadListener(INSTANCE);
-	}
+        private SnapshotBuilder(ResourceManager resourceManager) {
+            this.resourceManager = resourceManager;
+        }
+
+        FontSnapshot build() {
+            return new FontSnapshot(providers);
+        }
+
+        void loadFont(ResourceLocation location) throws IOException {
+            ResourceLocation file = new ResourceLocation(location.getNamespace(), "font/" + location.getPath());
+            if (!visitingReferences.add(file)) {
+                throw new IllegalArgumentException("Cyclic font reference: " + referenceChain(file));
+            }
+            referenceStack.addLast(file);
+            try {
+                for (Resource resource : resourceManager.getResourceStack(file)) {
+                    FHMain.LOGGER.info("Reloading scenario font from {}", resource.sourcePackId());
+                    try (BufferedReader reader = resource.openAsReader()) {
+                        readFont(JsonParser.parseReader(reader).getAsJsonObject());
+                    }
+                }
+            } finally {
+                referenceStack.removeLast();
+                visitingReferences.remove(file);
+            }
+        }
+
+        private void readFont(JsonObject font) throws IOException {
+            JsonArray providerDefinitions = font.getAsJsonArray("providers");
+            for (JsonElement element : providerDefinitions) {
+                JsonObject provider = element.getAsJsonObject();
+                String type = provider.get("type").getAsString();
+                switch (type) {
+                    case "bitmap" -> readBitmap(provider);
+                    case "legacy_unicode" -> readLegacyUnicode(provider);
+                    case "reference" -> loadFont(new ResourceLocation(provider.get("id").getAsString() + ".json"));
+                    case "unihex" -> readUnihex(provider);
+                    case "space" -> readSpace(provider);
+                    default -> FHMain.LOGGER.warn("Ignoring unsupported scenario font provider type {}", type);
+                }
+            }
+        }
+
+        private void readSpace(JsonObject provider) {
+            Int2ObjectMap<GlyphData> glyphs = new Int2ObjectOpenHashMap<>();
+            for (var entry : provider.getAsJsonObject("advances").entrySet()) {
+                int codePoint = entry.getKey().codePointAt(0);
+                glyphs.putIfAbsent(codePoint, GlyphData.space(allocateCacheId(), entry.getValue().getAsInt() * 2));
+            }
+            providers.add(new StaticGlyphProvider(glyphs, false));
+        }
+
+        private void readBitmap(JsonObject provider) throws IOException {
+            int targetHeight = provider.has("height") ? provider.get("height").getAsInt() : 9;
+            int ascent = provider.get("ascent").getAsInt();
+            ResourceLocation declaredFile = new ResourceLocation(provider.get("file").getAsString());
+            ResourceLocation texture = new ResourceLocation(declaredFile.getNamespace(),
+                    "textures/" + declaredFile.getPath());
+            Optional<Resource> resource = resourceManager.getResource(texture);
+            if (resource.isEmpty()) {
+                return;
+            }
+
+            BufferedImage image;
+            try (InputStream stream = resource.get().open()) {
+                image = ImageIO.read(stream);
+            }
+            if (image == null) {
+                throw new IOException("Unable to decode font bitmap " + texture);
+            }
+
+            JsonArray rows = provider.getAsJsonArray("chars");
+            int cellWidth = image.getWidth() / rows.get(0).getAsString().length();
+            int cellHeight = image.getHeight() / rows.size();
+            float scale = targetHeight / (float) cellHeight;
+            Int2ObjectMap<GlyphData> glyphs = new Int2ObjectOpenHashMap<>();
+            for (int row = 0; row < rows.size(); row++) {
+                String codePoints = rows.get(row).getAsString();
+                int count = codePoints.codePointCount(0, codePoints.length());
+                for (int column = 0; column < count; column++) {
+                    int codePoint = codePoints.codePointAt(column);
+                    if (codePoint == 0) {
+                        continue;
+                    }
+                    int visibleWidth = getCharacterWidth(image, cellWidth, cellHeight, column, row);
+                    int advance = (int) (0.5D + visibleWidth * scale) + 1;
+                    GlyphData glyph = GlyphData.bitmap(allocateCacheId(), column * cellWidth, row * cellHeight,
+                            cellWidth, cellHeight, advance, ascent, scale, image);
+                    glyphs.putIfAbsent(codePoint, glyph);
+                }
+            }
+            providers.add(new StaticGlyphProvider(glyphs, false));
+        }
+
+        private void readLegacyUnicode(JsonObject provider) throws IOException {
+            ResourceLocation sizesLocation = new ResourceLocation(provider.get("sizes").getAsString());
+            Optional<Resource> sizesResource = resourceManager.getResource(sizesLocation);
+            if (sizesResource.isEmpty()) {
+                return;
+            }
+            byte[] sizes = new byte[65536];
+            try (InputStream stream = sizesResource.get().open()) {
+                int offset = 0;
+                while (offset < sizes.length) {
+                    int read = stream.read(sizes, offset, sizes.length - offset);
+                    if (read < 0) {
+                        break;
+                    }
+                    offset += read;
+                }
+            }
+
+            String template = provider.get("template").getAsString();
+            Int2ObjectMap<GlyphData> glyphs = new Int2ObjectOpenHashMap<>();
+            for (int page = 0; page <= 0xFF; page++) {
+                ResourceLocation declaredPage = new ResourceLocation(String.format(template, String.format("%02x", page)));
+                ResourceLocation texture = new ResourceLocation(declaredPage.getNamespace(),
+                        "textures/" + declaredPage.getPath());
+                Optional<Resource> pageResource = resourceManager.getResource(texture);
+                if (pageResource.isEmpty()) {
+                    continue;
+                }
+                BufferedImage image;
+                try (InputStream stream = pageResource.get().open()) {
+                    image = ImageIO.read(stream);
+                }
+                if (image == null) {
+                    throw new IOException("Unable to decode legacy font page " + texture);
+                }
+                for (int pageIndex = 0; pageIndex <= 0xFF; pageIndex++) {
+                    int codePoint = page * 0x100 + pageIndex;
+                    GlyphData glyph = GlyphData.legacyUnicode(allocateCacheId(),
+                            (pageIndex & 0xF) * 16, pageIndex & 0xF0, sizes[codePoint], image);
+                    glyphs.put(codePoint, glyph);
+                }
+            }
+            providers.add(new StaticGlyphProvider(glyphs, true));
+        }
+
+        private void readUnihex(JsonObject provider) throws IOException {
+            ResourceLocation file = new ResourceLocation(provider.get("hex_file").getAsString());
+            List<OverrideRange> overrides = new ArrayList<>();
+            if (provider.has("size_overrides")) {
+                for (JsonElement element : provider.getAsJsonArray("size_overrides")) {
+                    overrides.add(new OverrideRange(element.getAsJsonObject()));
+                }
+            }
+
+            UnihexGlyphStore.Builder storeBuilder = new UnihexGlyphStore.Builder();
+            try (InputStream stream = resourceManager.open(file);
+                    ZipInputStream zip = new ZipInputStream(stream)) {
+                ZipEntry entry;
+                while ((entry = zip.getNextEntry()) != null) {
+                    if (entry.getName().endsWith(".hex")) {
+                        UnihexParser.readFromStream(new FastBufferedInputStream(zip), storeBuilder, overrides);
+                    }
+                }
+            }
+            UnihexGlyphStore store = storeBuilder.build(nextCacheId);
+            nextCacheId = Math.addExact(nextCacheId, store.size());
+            providers.add(new UnihexProvider(store));
+        }
+
+        private int allocateCacheId() {
+            return nextCacheId++;
+        }
+
+        private String referenceChain(ResourceLocation repeated) {
+            StringBuilder chain = new StringBuilder();
+            for (ResourceLocation location : referenceStack) {
+                if (!chain.isEmpty()) {
+                    chain.append(" -> ");
+                }
+                chain.append(location);
+            }
+            if (!chain.isEmpty()) {
+                chain.append(" -> ");
+            }
+            return chain.append(repeated).toString();
+        }
+
+        private static int getCharacterWidth(BufferedImage image, int cellWidth, int cellHeight, int column,
+                int row) {
+            for (int x = cellWidth - 1; x >= 0; x--) {
+                for (int y = row * cellHeight; y < row * cellHeight + cellHeight; y++) {
+                    if ((image.getRGB(x + column * cellWidth, y) & 0xFF000000) != 0) {
+                        return x + 1;
+                    }
+                }
+            }
+            return 0;
+        }
+    }
 }

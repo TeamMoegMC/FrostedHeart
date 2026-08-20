@@ -27,7 +27,7 @@ import com.jozufozu.flywheel.core.model.Model;
 class FlywheelCitizenBackendTest {
 
 	@Test
-	void dynamicInstanceFitsM3Budget() {
+	void dynamicInstanceFitsFlywheelBudget() {
 		assertEquals(58, FlywheelCitizenBackend.INSTANCE_STRIDE_BYTES);
 		assertTrue(FlywheelCitizenBackend.INSTANCE_STRIDE_BYTES <= 64);
 		assertEquals(7, CitizenInstanceType.FORMAT.getAttributeCount());
@@ -104,7 +104,7 @@ class FlywheelCitizenBackendTest {
 	}
 
 	@Test
-	void sharedBillboardLayoutMatchesTheAcceptedM3Silhouette() {
+	void sharedBillboardLayoutMatchesTheAcceptedFlywheelSilhouette() {
 		assertEquals(2, CitizenBatchRenderLayout.billboardQuadCount());
 		assertEquals(8, CitizenBatchRenderLayout.billboardVertexCount());
 

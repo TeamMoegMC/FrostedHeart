@@ -141,35 +141,81 @@ class CitizenRenderCoordinatorTest {
 	}
 
 	@Test
-	void preferredM3RestoresAfterACompatibilityFallback() {
-		TrackingBackend unavailable = new TrackingBackend("flywheel_m3_instancing", false, false);
-		TrackingBackend restored = new TrackingBackend("flywheel_m3_instancing", true, true);
+	void preferredFlywheelBackendRestoresAfterACompatibilityFallback() {
+		TrackingBackend unavailable = new TrackingBackend("flywheel_instancing", false, false);
+		TrackingBackend restored = new TrackingBackend("flywheel_instancing", true, true);
 		AtomicInteger creations = new AtomicInteger();
 		CitizenRenderCoordinator.setFlywheelBackendFactoryForTests(
 				() -> creations.getAndIncrement() == 0 ? unavailable : restored);
 
-		assertFalse(CitizenRenderCoordinator.useFlywheelPocBackend());
+		assertFalse(CitizenRenderCoordinator.useFlywheelBackend());
 		assertEquals("cpu_batch", CitizenRenderCoordinator.backendName());
-		assertEquals("flywheel_m3_instancing", CitizenRenderCoordinator.requestedBackendName());
+		assertEquals("flywheel_instancing", CitizenRenderCoordinator.requestedBackendName());
 		assertTrue(unavailable.closed);
 
 		CitizenRenderCoordinator.onRenderersReloaded(null);
 
 		assertEquals(2, creations.get());
-		assertEquals("flywheel_m3_instancing", CitizenRenderCoordinator.backendName());
-		assertEquals("flywheel_m3_instancing", CitizenRenderCoordinator.requestedBackendName());
+		assertEquals("flywheel_instancing", CitizenRenderCoordinator.backendName());
+		assertEquals("flywheel_instancing", CitizenRenderCoordinator.requestedBackendName());
 		assertFalse(restored.closed);
 	}
 
 	@Test
-	void explicitCpuSelectionCancelsPendingM3Restore() {
-		TrackingBackend unavailable = new TrackingBackend("flywheel_m3_instancing", false, false);
-		TrackingBackend unexpectedRestore = new TrackingBackend("flywheel_m3_instancing", true, true);
+	void autoUsesFlywheelWhenAvailable() {
+		TrackingBackend available = new TrackingBackend("flywheel_instancing", true, true);
+		CitizenRenderCoordinator.setFlywheelBackendFactoryForTests(() -> available);
+
+		assertTrue(CitizenRenderCoordinator.useAutoBackend());
+
+		assertEquals("flywheel_instancing", CitizenRenderCoordinator.backendName());
+		assertEquals("auto", CitizenRenderCoordinator.requestedBackendName());
+		assertFalse(CitizenRenderCoordinator.isCompatibilityFallbackActive());
+	}
+
+	@Test
+	void autoKeepsCpuWhenInstancingIsUnavailableAndRetriesAfterReload() {
+		TrackingBackend unavailable = new TrackingBackend("flywheel_instancing", false, false);
+		TrackingBackend restored = new TrackingBackend("flywheel_instancing", true, true);
+		AtomicInteger creations = new AtomicInteger();
+		CitizenRenderCoordinator.setFlywheelBackendFactoryForTests(
+				() -> creations.getAndIncrement() == 0 ? unavailable : restored);
+
+		assertFalse(CitizenRenderCoordinator.useAutoBackend());
+		assertEquals("cpu_batch", CitizenRenderCoordinator.backendName());
+		assertEquals("auto", CitizenRenderCoordinator.requestedBackendName());
+		assertTrue(CitizenRenderCoordinator.isCompatibilityFallbackActive());
+
+		CitizenRenderCoordinator.onRenderersReloaded(null);
+
+		assertEquals(2, creations.get());
+		assertEquals("flywheel_instancing", CitizenRenderCoordinator.backendName());
+		assertEquals("auto", CitizenRenderCoordinator.requestedBackendName());
+		assertFalse(CitizenRenderCoordinator.isCompatibilityFallbackActive());
+	}
+
+	@Test
+	void autoKeepsCpuWhenTheFlywheelBackendCannotBeCreated() {
+		CitizenRenderCoordinator.setFlywheelBackendFactoryForTests(
+				() -> {
+					throw new IllegalStateException("injected Flywheel construction failure");
+				});
+
+		assertFalse(CitizenRenderCoordinator.useAutoBackend());
+		assertEquals("cpu_batch", CitizenRenderCoordinator.backendName());
+		assertEquals("auto", CitizenRenderCoordinator.requestedBackendName());
+		assertTrue(CitizenRenderCoordinator.isCompatibilityFallbackActive());
+	}
+
+	@Test
+	void explicitCpuSelectionCancelsPendingAutoRestore() {
+		TrackingBackend unavailable = new TrackingBackend("flywheel_instancing", false, false);
+		TrackingBackend unexpectedRestore = new TrackingBackend("flywheel_instancing", true, true);
 		AtomicInteger creations = new AtomicInteger();
 		CitizenRenderCoordinator.setFlywheelBackendFactoryForTests(
 				() -> creations.getAndIncrement() == 0 ? unavailable : unexpectedRestore);
 
-		assertFalse(CitizenRenderCoordinator.useFlywheelPocBackend());
+		assertFalse(CitizenRenderCoordinator.useAutoBackend());
 		assertTrue(CitizenRenderCoordinator.useCpuBackend());
 		CitizenRenderCoordinator.onRenderersReloaded(null);
 
@@ -180,26 +226,44 @@ class CitizenRenderCoordinatorTest {
 	}
 
 	@Test
-	void m3HealthFallbackKeepsTheRequestForTheNextRendererReload() {
-		TrackingBackend activeM3 = new TrackingBackend("flywheel_m3_instancing", true, true);
-		TrackingBackend restoredM3 = new TrackingBackend("flywheel_m3_instancing", true, true);
+	void explicitCpuSelectionCancelsPendingFlywheelRestore() {
+		TrackingBackend unavailable = new TrackingBackend("flywheel_instancing", false, false);
+		TrackingBackend unexpectedRestore = new TrackingBackend("flywheel_instancing", true, true);
 		AtomicInteger creations = new AtomicInteger();
 		CitizenRenderCoordinator.setFlywheelBackendFactoryForTests(
-				() -> creations.getAndIncrement() == 0 ? activeM3 : restoredM3);
+				() -> creations.getAndIncrement() == 0 ? unavailable : unexpectedRestore);
 
-		assertTrue(CitizenRenderCoordinator.useFlywheelPocBackend());
-		activeM3.healthy = false;
+		assertFalse(CitizenRenderCoordinator.useFlywheelBackend());
+		assertTrue(CitizenRenderCoordinator.useCpuBackend());
+		CitizenRenderCoordinator.onRenderersReloaded(null);
+
+		assertEquals(1, creations.get());
+		assertEquals("cpu_batch", CitizenRenderCoordinator.backendName());
+		assertEquals("cpu_batch", CitizenRenderCoordinator.requestedBackendName());
+		assertFalse(unexpectedRestore.initialized);
+	}
+
+	@Test
+	void flywheelHealthFallbackKeepsTheRequestForTheNextRendererReload() {
+		TrackingBackend activeFlywheel = new TrackingBackend("flywheel_instancing", true, true);
+		TrackingBackend restoredFlywheel = new TrackingBackend("flywheel_instancing", true, true);
+		AtomicInteger creations = new AtomicInteger();
+		CitizenRenderCoordinator.setFlywheelBackendFactoryForTests(
+				() -> creations.getAndIncrement() == 0 ? activeFlywheel : restoredFlywheel);
+
+		assertTrue(CitizenRenderCoordinator.useFlywheelBackend());
+		activeFlywheel.healthy = false;
 		CitizenRenderCoordinator.onResourceReload();
 
-		assertTrue(activeM3.closed);
+		assertTrue(activeFlywheel.closed);
 		assertEquals("cpu_batch", CitizenRenderCoordinator.backendName());
-		assertEquals("flywheel_m3_instancing", CitizenRenderCoordinator.requestedBackendName());
+		assertEquals("flywheel_instancing", CitizenRenderCoordinator.requestedBackendName());
 
 		CitizenRenderCoordinator.onRenderersReloaded(null);
 
 		assertEquals(2, creations.get());
-		assertEquals("flywheel_m3_instancing", CitizenRenderCoordinator.backendName());
-		assertFalse(restoredM3.closed);
+		assertEquals("flywheel_instancing", CitizenRenderCoordinator.backendName());
+		assertFalse(restoredFlywheel.closed);
 	}
 
 	@Test

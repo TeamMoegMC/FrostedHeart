@@ -33,7 +33,7 @@ import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.client.event.RenderLevelStageEvent;
 
 /**
- * M3 Flywheel backend. Network snapshots are uploaded once and interpolated,
+ * Flywheel instancing backend. Network snapshots are uploaded once and interpolated,
  * extrapolated, oriented, and animated by the citizen vertex shader.
  */
 final class FlywheelCitizenBackend implements CitizenRenderBackend, InstancingEngine.OriginShiftListener {
@@ -68,7 +68,7 @@ final class FlywheelCitizenBackend implements CitizenRenderBackend, InstancingEn
 
 	@Override
 	public String name() {
-		return "flywheel_m3_instancing";
+		return "flywheel_instancing";
 	}
 
 	@Override

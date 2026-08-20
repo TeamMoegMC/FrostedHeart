@@ -39,15 +39,16 @@ public final class CitizenRenderCoordinator {
 
 	private static final Logger LOGGER = LogManager.getLogger("FrostedHeart/CitizenRender");
 	private static CitizenRenderBackend backend = new CpuBatchCitizenBackend();
-	private static BackendPreference requestedBackend = BackendPreference.CPU_BATCH;
+	private static BackendPreference requestedBackend = BackendPreference.AUTO;
 	private static Supplier<CitizenRenderBackend> flywheelBackendFactory = FlywheelCitizenBackend::new;
 	private static ClientLevel lastClientLevel;
-	/** Client-only batch LOD state shared by CPU and M3; never synchronized. */
+	/** Client-only batch LOD state shared by CPU and Flywheel; never synchronized. */
 	private static final Int2ObjectOpenHashMap<CitizenRenderOwner> BATCH_OWNERS = new Int2ObjectOpenHashMap<>();
 
 	private enum BackendPreference {
+		AUTO("auto"),
 		CPU_BATCH("cpu_batch"),
-		FLYWHEEL_M3("flywheel_m3_instancing");
+		FLYWHEEL("flywheel_instancing");
 
 		private final String backendName;
 
@@ -223,8 +224,15 @@ public final class CitizenRenderCoordinator {
 	}
 
 	static boolean isCompatibilityFallbackActive() {
-		return requestedBackend == BackendPreference.FLYWHEEL_M3
+		return requestedBackend != BackendPreference.CPU_BATCH
 				&& backend instanceof CpuBatchCitizenBackend;
+	}
+
+	static boolean useAutoBackend() {
+		requestedBackend = BackendPreference.AUTO;
+		if (BackendPreference.FLYWHEEL.backendName.equals(backend.name()))
+			return true;
+		return trySwitchToFlywheelBackend("AUTO selection");
 	}
 
 	static boolean useCpuBackend() {
@@ -232,11 +240,11 @@ public final class CitizenRenderCoordinator {
 		return switchBackend(new CpuBatchCitizenBackend());
 	}
 
-	static boolean useFlywheelPocBackend() {
-		requestedBackend = BackendPreference.FLYWHEEL_M3;
-		if (BackendPreference.FLYWHEEL_M3.backendName.equals(backend.name()))
+	static boolean useFlywheelBackend() {
+		requestedBackend = BackendPreference.FLYWHEEL;
+		if (BackendPreference.FLYWHEEL.backendName.equals(backend.name()))
 			return true;
-		return switchBackend(flywheelBackendFactory.get());
+		return trySwitchToFlywheelBackend("explicit Flywheel selection");
 	}
 
 	static boolean switchBackend(CitizenRenderBackend candidate) {
@@ -267,7 +275,7 @@ public final class CitizenRenderCoordinator {
 	}
 
 	static void resetBackendForTests() {
-		requestedBackend = BackendPreference.CPU_BATCH;
+		requestedBackend = BackendPreference.AUTO;
 		flywheelBackendFactory = FlywheelCitizenBackend::new;
 		BATCH_OWNERS.clear();
 		switchBackend(new CpuBatchCitizenBackend());
@@ -278,12 +286,28 @@ public final class CitizenRenderCoordinator {
 	}
 
 	private static void restoreRequestedBackend(String trigger) {
-		if (requestedBackend != BackendPreference.FLYWHEEL_M3
+		if (requestedBackend == BackendPreference.CPU_BATCH
 				|| !(backend instanceof CpuBatchCitizenBackend))
 			return;
-		if (switchBackend(flywheelBackendFactory.get()))
+		if (trySwitchToFlywheelBackend(trigger))
 			LOGGER.info("Restored requested citizen render backend {} after {}",
 					backend.name(), trigger);
+		else
+			LOGGER.info("Citizen render backend remains cpu_batch after {}; "
+					+ "requested={} will retry on a later renderer reload",
+					trigger, requestedBackend.backendName);
+	}
+
+	private static boolean trySwitchToFlywheelBackend(String trigger) {
+		CitizenRenderBackend candidate;
+		try {
+			candidate = flywheelBackendFactory.get();
+		} catch (RuntimeException exception) {
+			LOGGER.error("Failed to create requested citizen Flywheel backend during {}; keeping {}",
+					trigger, backend.name(), exception);
+			return false;
+		}
+		return switchBackend(candidate);
 	}
 
 	private static void ensureHealthyBackend() {

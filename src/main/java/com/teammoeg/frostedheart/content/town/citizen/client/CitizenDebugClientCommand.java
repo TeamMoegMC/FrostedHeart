@@ -49,9 +49,9 @@ public final class CitizenDebugClientCommand {
 						.then(literal("reset").executes(CitizenDebugClientCommand::resetMetrics)))
 				.then(literal("backend")
 						.then(literal("status").executes(CitizenDebugClientCommand::showBackendStatus))
+						.then(literal("auto").executes(CitizenDebugClientCommand::useAutoBackend))
 						.then(literal("cpu_batch").executes(CitizenDebugClientCommand::useCpuBackend))
-						.then(literal("flywheel_m3").executes(CitizenDebugClientCommand::useFlywheelPocBackend))
-						.then(literal("flywheel_poc").executes(CitizenDebugClientCommand::useFlywheelPocBackend)))
+						.then(literal("flywheel").executes(CitizenDebugClientCommand::useFlywheelBackend)))
 				.then(literal("overlay")
 						.then(bool("enabled").executes(CitizenDebugClientCommand::setOverlay)))
 				.then(literal("benchmark")
@@ -99,11 +99,21 @@ public final class CitizenDebugClientCommand {
 		return Command.SINGLE_SUCCESS;
 	}
 
-	private static int useFlywheelPocBackend(CommandContext<CommandSourceStack> context) {
-		if (!CitizenRenderCoordinator.useFlywheelPocBackend()) {
+	private static int useAutoBackend(CommandContext<CommandSourceStack> context) {
+		boolean usingFlywheel = CitizenRenderCoordinator.useAutoBackend();
+		CitizenRenderMetrics.reset();
+		CitizenDebugOverlay.invalidate();
+		send(context, "Citizen render backend set to auto; active="
+				+ CitizenRenderCoordinator.backendName()
+				+ (usingFlywheel ? "" : "; Flywheel INSTANCING will be retried after renderer reloads"));
+		return Command.SINGLE_SUCCESS;
+	}
+
+	private static int useFlywheelBackend(CommandContext<CommandSourceStack> context) {
+		if (!CitizenRenderCoordinator.useFlywheelBackend()) {
 			CitizenRenderMetrics.reset();
 			CitizenDebugOverlay.invalidate();
-			send(context, "Citizen render backend requested flywheel_m3_instancing; active="
+			send(context, "Citizen render backend requested flywheel_instancing; active="
 					+ CitizenRenderCoordinator.backendName()
 					+ " until Flywheel INSTANCING becomes available; renderer reloads retry automatically");
 			return Command.SINGLE_SUCCESS;
