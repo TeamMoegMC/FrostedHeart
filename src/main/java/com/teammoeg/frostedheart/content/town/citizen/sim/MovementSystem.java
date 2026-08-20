@@ -51,9 +51,9 @@ public final class MovementSystem {
 	private final IntArrayList neighborBuf = new IntArrayList(32);
 
 	/**
-	 * 对所有活跃居民执行移动积分（遍历调度器全部容器）。
+	 * 对所有活跃居民执行移动积分（按容器消费活跃稳定 ID）。
 	 * <p>
-	 * Integrates movement for all active citizens (over every scheduler container).
+	 * Integrates movement for all active citizens using per-container active stable IDs.
 	 *
 	 * @param sched 调度器 / the scheduler
 	 * @param level 维度 / the level
@@ -63,17 +63,26 @@ public final class MovementSystem {
         boolean doConform = gameTime % 5 == 0;   // 每 5 tick 站立居民贴地
         boolean doSeparation = (gameTime & 1) == 0; // 每 2 tick 计算分离力
 
-        for (CitizenContainer c : sched.containers()) {
-            CitizenSim sim = c.sim();
-            int n = sim.size();
+		for (int containerIndex = 0; containerIndex < sched.containers().size(); containerIndex++) {
+			CitizenContainer c = sched.containers().get(containerIndex);
+			CitizenSim sim = c.sim();
+			IntArrayList activeIds = sched.activeIds(containerIndex);
 			boolean persistedChanged = false;
-            for (int i = 0; i < n; i++) {
-                if (!sched.isActive(c, i)) {
-                    // 未激活 = 本 tick 冻结，移动类状态视同停步
-                    if (CitizenState.MOVING[sim.state[i]])
-                        sim.halt[i] = 1;
-                    continue;
-                }
+			for (int k = 0; k < activeIds.size();) {
+				int i = sim.indexOf(activeIds.getInt(k));
+				if (i < 0) {
+					activeIds.removeInt(k);
+					continue;
+				}
+				if (!sched.isActive(c, i)) {
+					// 未激活 = 本 tick 冻结，移动类状态视同停步
+					int state = sim.state[i] & 0xFF;
+					if (state < CitizenState.STATE_COUNT && CitizenState.MOVING[state])
+						sim.halt[i] = 1;
+					activeIds.removeInt(k);
+					continue;
+				}
+				k++;
 				if (!CitizenPresence.movementIntegrated(sim.state[i])) {
 					sim.halt[i] = 0;
 					continue;

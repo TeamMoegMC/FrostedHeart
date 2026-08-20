@@ -20,6 +20,7 @@
 package com.teammoeg.frostedheart.content.town.citizen.sync;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.Iterator;
@@ -108,10 +109,16 @@ public final class SyncEngine {
 	private final IntOpenHashSet pendingAppearance = new IntOpenHashSet();
 	/** 本 flush 周期内"脏且到期"的居民 id / Dirty-and-due ids in the current flush */
 	private final IntOpenHashSet due = new IntOpenHashSet();
+	/** Unique IDs tracked by at least one player during the current flush. */
+	private final IntOpenHashSet trackedUnion = new IntOpenHashSet();
 	/** IDs included in a packet after sendPlayer returned normally during this flush. */
 	private final IntOpenHashSet handedOffToAnyPlayer = new IntOpenHashSet();
+	/** Reused coarse AOI candidate buffer. */
+	private final IntArrayList visibilityCandidates = new IntArrayList();
 	private int[] selectionHeapIds = new int[0];
 	private long[] selectionHeapRanks = new long[0];
+	private int[] playerBlockXs = new int[0];
+	private int[] playerBlockZs = new int[0];
 	private int selectionHeapSize;
 	private boolean aoiRefreshRequested = true;
 	private CitizenSimScheduler activeScheduler;
@@ -151,6 +158,7 @@ public final class SyncEngine {
 				engine.prepareSelectionScratch();
 				if (engine.activeLevel == null || engine.activeScheduler == null || perPlayer == 0)
 					continue;
+				engine.activeScheduler.ensureVisibilityIndex();
 				for (ServerPlayer player : engine.activeLevel.players())
 					engine.collectPlayerCandidates(player, perPlayer, candidateEngines,
 							candidatePlayers, candidateIds, candidateRanks);
@@ -260,11 +268,15 @@ public final class SyncEngine {
 	 */
 	public void notifyHidden(int citizenId) {
 		pendingHidden.add(citizenId);
+		if (activeScheduler != null)
+			activeScheduler.invalidateVisibilityIndex();
 	}
 
 	/** Queues a sleep/wake snapshot that bypasses normal distance throttling. */
 	public void notifyImmediate(int citizenId) {
 		pendingImmediate.add(citizenId);
+		if (activeScheduler != null)
+			activeScheduler.invalidateVisibilityIndex();
 	}
 
 	/** Queues a low-frequency visual metadata update, currently the Resident age group. */
@@ -332,25 +344,29 @@ public final class SyncEngine {
 		IntOpenHashSet old = tracked.get(player);
 		ensureSelectionHeap(limit);
 		selectionHeapSize = 0;
-		for (CitizenContainer c : activeScheduler.containers()) {
-			CitizenSim sim = c.sim();
-			for (int i = 0; i < sim.size(); i++) {
-				if (!CitizenPresence.presentationEligible(sim, i))
-					continue;
-				long dx = (sim.px[i] >> 10) - pbx;
-				long dz = (sim.pz[i] >> 10) - pbz;
-				long distance2 = dx * dx + dz * dz;
-				if (distance2 > aoi2)
-					continue;
-				int id = sim.id[i];
-				int distanceQ = (int) (Math.sqrt(distance2) * 16.0);
-				if (old != null && old.contains(id))
-					distanceQ = Math.max(0, distanceQ - RETAIN_ADVANTAGE_Q);
-				long rank = id == interactingId
-						? Long.MIN_VALUE | (id & 0xFFFFFFFFL)
-						: ((long) distanceQ << 32) | (id & 0xFFFFFFFFL);
-				offerSelection(id, rank, limit);
-			}
+		visibilityCandidates.clear();
+		activeScheduler.grid.queryVisible(pbx, pbz, AOI_RADIUS, visibilityCandidates);
+		for (int candidate = 0; candidate < visibilityCandidates.size(); candidate++) {
+			int id = visibilityCandidates.getInt(candidate);
+			CitizenContainer container = activeScheduler.findById(id);
+			if (container == null)
+				continue;
+			CitizenSim sim = container.sim();
+			int i = sim.indexOf(id);
+			if (i < 0 || !CitizenPresence.presentationEligible(sim, i))
+				continue;
+			long dx = (sim.px[i] >> 10) - pbx;
+			long dz = (sim.pz[i] >> 10) - pbz;
+			long distance2 = dx * dx + dz * dz;
+			if (distance2 > aoi2)
+				continue;
+			int distanceQ = (int) (Math.sqrt(distance2) * 16.0);
+			if (old != null && old.contains(id))
+				distanceQ = Math.max(0, distanceQ - RETAIN_ADVANTAGE_Q);
+			long rank = id == interactingId
+					? Long.MIN_VALUE | (id & 0xFFFFFFFFL)
+					: ((long) distanceQ << 32) | (id & 0xFFFFFFFFL);
+			offerSelection(id, rank, limit);
 		}
 		for (int i = 0; i < selectionHeapSize; i++) {
 			candidateEngines.add(this);
@@ -488,49 +504,50 @@ public final class SyncEngine {
 
 	private void flushDeltas(CitizenSimScheduler sched, List<ServerPlayer> players, long gameTime) {
 		due.clear();
+		trackedUnion.clear();
 		handedOffToAnyPlayer.clear();
 		long aoi2 = (long) AOI_RADIUS * AOI_RADIUS;
 
-        // 缓存玩家坐标，避免循环中重复调用
-        int playerCount = players.size();
-        int[] pxs = new int[playerCount];
-        int[] pzs = new int[playerCount];
-        for (int j = 0; j < playerCount; j++) {
-            ServerPlayer p = players.get(j);
-            pxs[j] = p.getBlockX();
-            pzs[j] = p.getBlockZ();
-        }
+		// 缓存玩家坐标并构建 tracked union；数组只增长，不在每次 flush 分配。
+		int playerCount = players.size();
+		ensurePlayerCapacity(playerCount);
+		for (int j = 0; j < playerCount; j++) {
+			ServerPlayer p = players.get(j);
+			playerBlockXs[j] = p.getBlockX();
+			playerBlockZs[j] = p.getBlockZ();
+			IntOpenHashSet playerTracked = tracked.get(p);
+			if (playerTracked != null)
+				trackedUnion.addAll(playerTracked);
+		}
 
-		// 遍历全部容器收集"脏且到期"条目（跨容器共享规范模型，id 全局唯一）
-		for (CitizenContainer c : sched.containers()) {
-			CitizenSim sim = c.sim();
-			int n = sim.size();
-			for (int i = 0; i < n; i++) {
-				// 最近观察者距离（未刷新 AOI 的间隙期也近似正确）
-				if (!CitizenPresence.presentationEligible(sim, i))
-					continue;
-				long minDist2 = Long.MAX_VALUE;
-                for (int j = 0; j < playerCount; j++) {
-                    long dx = (sim.px[i] >> 10) - pxs[j];
-                    long dz = (sim.pz[i] >> 10) - pzs[j];
-                    long d2 = dx * dx + dz * dz;
-                    if (d2 < minDist2) minDist2 = d2;
-                }
-                
-				if (minDist2 > aoi2)
-					continue;
-				int interval = tierInterval(minDist2);
-				if (!isDirty(sim, i, gameTime, interval))
-					continue;
-				// halt 上升沿（走→停）绕过档位限频：停步信号每晚一个档位，
-				// 客户端就多外推一段再被回拉（驻留抽搐的直接成因），必须抢发。
-				boolean haltEdge = sim.halt[i] != 0 && sim.shalt[i] == 0;
-				// 按 stick 间隔判断（替代原 (gameTime+id) % interval 写法——
-				// 后者在外层每 4 tick 执行下，3/4 的居民仅 id%4==0 的能通过过滤，永远收不到增量包）
-				if (!haltEdge && gameTime - sim.stick[i] < interval)
-					continue;
-				due.add(sim.id[i]);
+		// 只检查至少被一名玩家追踪的 id；最近距离仍对全部玩家求值，保持原分频语义。
+		for (int id : trackedUnion) {
+			CitizenContainer container = sched.findById(id);
+			if (container == null)
+				continue;
+			CitizenSim sim = container.sim();
+			int i = sim.indexOf(id);
+			if (i < 0 || !CitizenPresence.presentationEligible(sim, i))
+				continue;
+			long minDist2 = Long.MAX_VALUE;
+			for (int j = 0; j < playerCount; j++) {
+				long dx = (sim.px[i] >> 10) - playerBlockXs[j];
+				long dz = (sim.pz[i] >> 10) - playerBlockZs[j];
+				long d2 = dx * dx + dz * dz;
+				if (d2 < minDist2)
+					minDist2 = d2;
 			}
+			if (minDist2 > aoi2)
+				continue;
+			int interval = tierInterval(minDist2);
+			if (!isDirty(sim, i, gameTime, interval))
+				continue;
+			// halt 上升沿（走→停）绕过档位限频：停步信号每晚一个档位，
+			// 客户端就多外推一段再被回拉（驻留抽搐的直接成因），必须抢发。
+			boolean haltEdge = sim.halt[i] != 0 && sim.shalt[i] == 0;
+			if (!haltEdge && gameTime - sim.stick[i] < interval)
+				continue;
+			due.add(id);
 		}
 		if (!pendingImmediate.isEmpty()) {
 			due.addAll(pendingImmediate);
@@ -619,6 +636,14 @@ public final class SyncEngine {
 			sim.shalt[i] = sim.halt[i];
 			sim.stick[i] = gameTime;
 		}
+	}
+
+	private void ensurePlayerCapacity(int playerCount) {
+		if (playerBlockXs.length >= playerCount)
+			return;
+		int capacity = Math.max(playerCount, Math.max(4, playerBlockXs.length * 2));
+		playerBlockXs = Arrays.copyOf(playerBlockXs, capacity);
+		playerBlockZs = Arrays.copyOf(playerBlockZs, capacity);
 	}
 
 	/**

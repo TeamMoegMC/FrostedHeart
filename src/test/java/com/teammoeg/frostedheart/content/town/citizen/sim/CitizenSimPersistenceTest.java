@@ -167,9 +167,12 @@ class CitizenSimPersistenceTest {
 
     @Test
     void transientHomeLayoutSurvivesGrowthAndSwapRemoveButIsNotPersisted() {
+        assertEquals(16, new TownSimData().sim().id.length);
         CitizenSim sim = new CitizenSim(1);
+		assertEquals(16, sim.id.length);
         for (int id = 1; id <= 17; id++)
             sim.add(id, id << 10, 0, 0);
+		assertEquals(32, sim.id.length);
         int tail = sim.indexOf(17);
         sim.homePos[tail] = 123456789L;
 		sim.homeSlot[tail] = 11;

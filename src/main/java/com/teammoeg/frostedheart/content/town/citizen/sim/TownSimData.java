@@ -76,7 +76,7 @@ import net.minecraft.world.level.block.state.properties.BedPart;
 public class TownSimData implements CitizenContainer, ITownResidentListener {
 
 	/** 模拟核心数据（SoA 紧排布局） / Core simulation data (SoA layout) */
-	public final CitizenSim sim = new CitizenSim(64);
+	public final CitizenSim sim = new CitizenSim(16);
 
 	/**
 	 * FH 交易数据（懒创建；null parent 构造，policytype 为 null → 空政策快照）。

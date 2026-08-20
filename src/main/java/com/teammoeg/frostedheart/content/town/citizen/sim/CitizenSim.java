@@ -33,12 +33,14 @@ import net.minecraft.nbt.CompoundTag;
  * 居民模拟核心数据，SoA（Structure-of-Arrays）紧排布局。
  * 位置使用 1/1024 方块精度的定点数；索引仅在运行期有效，
  * 删除采用"末尾交换"策略 O(1) 完成，外部引用一律使用稳定 id。
- * 一万居民的热数据约 600KB，顺序扫描对 CPU 缓存友好，几乎无 GC 压力。
+ * 当前 17 个 int、5 个 long 和 7 个 byte 字段合计 115 B/capacity slot
+ * （不含数组头和 idToIndex），顺序扫描对 CPU 缓存友好，几乎无 GC 压力。
  * <p>
  * Core citizen simulation data in Structure-of-Arrays layout.
  * Positions are fixed-point at 1/1024 block precision. Indices are runtime-only;
  * removal is O(1) swap-remove, external references must use the stable id.
- * Hot data for 10k citizens is ~600KB, cache-friendly and nearly GC-free.
+ * The current primitive arrays use 115 bytes per capacity slot, excluding
+ * array headers and idToIndex; scans remain cache-friendly and nearly GC-free.
  */
 public final class CitizenSim {
 	/** Sleeping citizen is anchored to a currently verified bed head. */

@@ -3,7 +3,7 @@
 - Status: `Transitional`
 - Last verified: `2026-08-20`
 - Scope: `居民服务端模拟、睡眠展示、AOI 预算、同步、客户端缓存与渲染`
-- Code anchors: `CitizenSim`, `CitizenPresence`, `TownSimData.onSleepEntered`, `SyncEngine`, `ClientCitizen`, `FakeCitizenManager`, `CitizenRenderCoordinator`, `CitizenRenderBackend`, `CpuBatchCitizenBackend`, `FlywheelCitizenBackend`, `CitizenInstanceData`, `CitizenInstanceType`, `CitizenFlywheelModels`, `assets/frostedheart/flywheel/shaders/citizen.vert`, `ClientCitizenRenderer`, `CitizenClientBenchmark`, `CitizenRenderMetrics`, `FHConfig.SERVER.TOWN`
+- Code anchors: `CitizenSim`, `CitizenSimScheduler.refreshRegistry`, `CitizenSimScheduler.rebuildActiveIds`, `BehaviorSystem.tick`, `MovementSystem.tickAll`, `SpatialGrid.rebuildVisibility`, `SpatialGrid.queryVisible`, `CitizenPresence`, `TownSimData.onSleepEntered`, `SyncEngine.collectPlayerCandidates`, `SyncEngine.flushDeltas`, `ClientCitizen`, `FakeCitizenManager`, `CitizenRenderCoordinator`, `CitizenRenderBackend`, `CpuBatchCitizenBackend`, `FlywheelCitizenBackend`, `CitizenInstanceData`, `CitizenInstanceType`, `CitizenFlywheelModels`, `assets/frostedheart/flywheel/shaders/citizen.vert`, `ClientCitizenRenderer`, `CitizenClientBenchmark`, `CitizenRenderMetrics`, `FHConfig.SERVER.TOWN`
 
 > 适用环境：Minecraft 1.20.1 / Forge 47.3.0 / Java 17（本仓库 Frosted Heart）
 > 目标规模：单机/联机下 **数千至上万** 个有独立行为的城镇居民，服务端近零实体开销，客户端流畅可见。
@@ -21,11 +21,12 @@
 │   │                     居民增删由城镇事件直接驱动（无周期性对账同步器）        │
 │   ├── UnmanagedCitizenData (SavedData, per-level) 命令生成的未托管居民+id分配  │
 │   ├── CitizenSim        SoA 紧排数组存储（id/位置/速度/状态/目标/需求）        │
-│   ├── BehaviorSystem    轻量状态机（工作/吃饭/睡觉/闲逛），纯整数运算          │
+│   ├── active stable IDs 每 20t 按容器重建，只驱动玩家附近的运行期条目          │
+│   ├── BehaviorSystem    消费 active IDs 的轻量状态机，按 id%20 分帧            │
 │   ├── NavSystem         分层寻路：城镇路网图 + 局部流场(Flow Field)            │
 │   │                      └── 异步线程池执行 BFS/路径请求，主线程消费结果        │
-│   ├── SpatialGrid       空间哈希网格（跨容器共享，条目存稳定 id）：邻居/分离   │
-│   └── SyncEngine        AOI 兴趣管理 + 脏标记增量快照 + 带宽预算分包           │
+│   ├── SpatialGrid       2 格邻居网格 + 16 格 AOI 粗网格，均存稳定 id           │
+│   └── SyncEngine        粗桶候选+精确 AOI；tracked union 脏检查与预算分包      │
 │                                                                               │
 └───────────────────────────────┬───────────────────────────────────────────────┘
                                  │ SimpleChannel（chorda CBaseNetwork）
@@ -121,44 +122,43 @@ public final class CitizenSim {
 - **稀疏扩展**：名字、皮肤种子、对话状态等冷数据放 `Int2ObjectOpenHashMap<CitizenProfile>`，不污染热循环。
 - 依赖已有 `fastutil`（Forge 自带 shaded / 直接可引），避免装箱。
 
-**内存估算**：1 万居民 × 约 60 字节热数据 ≈ **600 KB**，加上稀疏档案约 2–3 MB。服务端“近零开销”由此而来。
+**内存口径**：当前 `CitizenSim` 有 17 个 `int[]`、5 个 `long[]` 和 7 个 `byte[]`，合计 **115 B/capacity slot**。1 万个已分配槽位的原始数组元素约 **1.10 MiB**；该数字不含 29 个数组对象头、`idToIndex`、容器对象、容量余量和权威 `Resident`。`TownSimData` 与 `UnmanagedCitizenData` 初始容量为 16，达到上限后按 2 倍扩容。
 
 ---
 
 ## 3. 模拟调度：分帧 + 活跃度 LOD
 
-万级单位绝不能每 tick 全量更新。用两级手段：
+万级总人口不能每 tick 全量扫描。当前运行期以活跃稳定 ID 列表和行为分片控制热路径：
 
 ### 3.1 分帧（Time Slicing）
 
-每个居民出生时分配 `tickPhase = id % SLICE`，`SLICE = 20` 意味着**每单位 1Hz 逻辑频率**，每 tick 只扫描 `1/20` 的居民做行为决策：
+`SLICE = 20`，`BehaviorSystem.tick` 以 `stableId % SLICE` 决定居民回合，意味着每个活跃居民以 **1Hz** 做一次行为决策。调度器每 20 tick 重建与 `containers` 顺序对齐的 `IntArrayList` 活跃 ID 列表；行为和移动消费该列表，不扫描非活跃行。列表保存稳定 ID，并在消费时用 `CitizenSim.indexOf` 解析当前行，避免 swap-remove 后误用旧索引。
 
 ```java
 public void serverTick(ServerLevel level) {
     long gameTime = level.getGameTime();
-    int slice = (int) (gameTime % SLICE);          // 本 tick 负责的分片
-    for (int i = 0; i < sim.size(); i++) {
-        if (sim.tickPhase[i] != slice) continue;   // 不是本单位的回合，跳过
-        behavior.tick(level, i);                   // 1Hz 行为决策
+    if (gameTime % 20 == 0) {
+        refreshActivity(level);
+        refreshRegistry(level);                    // 双缓冲 registry 完整构建后交换
+        rebuildActiveIds();
     }
-    nav.consumeResults(level);                     // 消费异步寻路结果
-    movement.tickAll(level, sim);                  // 移动积分是全量但极廉价（见 §5）
-    sync.flush(gameTime);                          // 发送增量快照
+    behavior.tick(this, level, (int) (gameTime % 20), gameTime);
+    movement.tickAll(this, level, gameTime);
+    sync.flush(this, level, gameTime);             // 发送增量快照
 }
 ```
 
-- 1 万居民 → 每 tick 只跑 **500 个**行为决策，单次决策是纯整数运算（< 1μs），合计 **< 0.5 ms**。
-- 行为 1Hz 完全够用：人走路速度下，1 秒才移动约 4 格，决策延迟不可感知。
+- 行为候选复杂度为 `O(active citizens)`，实际决策约为活跃人口的 `1/20`；移动候选同样只随活跃人口增长。
+- `refreshRegistry` 复用 active/scratch 两套 `List` 和 primitive map/set；完整构建下一代注册表后才交换引用，避免每秒创建重建集合或发布半成品。
 
 ### 3.2 活跃度 LOD（关键）
 
 | 层级 | 条件 | 行为频率 | 移动 |
 |------|------|----------|------|
-| ACTIVE | 所在区块被加载且有玩家在 128 格内 | 1Hz | 连续积分，参与分离 |
-| WARM | 区块已加载但无玩家附近 | 0.2Hz（每 5 秒） | 大步长瞬移插值 |
-| COLD | 区块未加载 | 0.02Hz 或按需 | 只推进需求/经济数值，不动位置 |
+| ACTIVE | 当前 2 格 cell 位于任一玩家 128 格范围（另有 2 格缓冲） | 1Hz | 每 tick 积分；清醒居民参与分离 |
+| INACTIVE | 不在 active cells | 不进入行为热循环 | 冻结；移动状态写 `halt=1` |
 
-活跃度用 `homeChunk` + Forge 的 `ChunkWatchEvent`/`ServerChunkCache` 判断；COLD 单位重激活时做一次“追赶结算”（按流逝时间折算需求变化），避免卡顿尖峰。
+`CitizenSimScheduler.refreshActivity` 每 20 tick 依据当前玩家位置重建 `activeCells`，随后 `rebuildActiveIds` 扫描一次注册人口。居民在两次刷新之间自行走出 active cell 时，`MovementSystem` 的防御检查会立即移除该 ID 并置 halt；玩家移动造成的新活跃区域在下一次既有 20 tick 刷新生效。经济和每日结算仍由城镇权威模型负责，本层没有另设 WARM/COLD 追赶模拟。
 
 ---
 
@@ -226,14 +226,15 @@ public final class FlowField {
 
 ### 5.3 第三层：分离力（碰撞）
 
-单位间不互相推挤物理碰撞，只做**视觉分离**：用 `SpatialGrid`（cell = 2 格）查半径 1.5 格内邻居，叠加一个微弱的排斥向量到速度上。每 tick 每 ACTIVE 单位一次网格查询，网格本身用 `Long2ObjectOpenHashMap<IntArrayList>` + 每 tick 增量重建活跃区。
+单位间不互相推挤物理碰撞，只做**视觉分离**：用 `SpatialGrid`（cell = 2 格）查半径 1.5 格内邻居，叠加一个微弱的排斥向量到速度上。每 tick 每 ACTIVE 单位一次网格查询，邻居网格使用 `Long2ObjectOpenHashMap<IntArrayList>` 并每 5 tick 从活跃且空间可见的居民重建，桶列表循环复用。
 
-### 5.4 移动积分（每 tick 全量，但极廉价）
+### 5.4 移动积分（每 tick 仅活跃居民）
 
 ```java
 void tickAll() {
-    for (int i = 0; i < size; i++) {
-        if (navRef[i] == 0) continue;               // 静止，零成本跳过
+    for (int id : activeIds) {
+        int i = sim.indexOf(id);                    // swap-remove 后重新解析
+        if (i < 0 || !isActive(i)) continue;
         int dir = currentField(i).sampleDir(px[i] >> 10, pz[i] >> 10);
         vx[i] = DIR_X[dir]; vz[i] = DIR_Z[dir];     // 查表，无浮点
         px[i] += vx[i]; pz[i] += vz[i];             // 定点加法
@@ -243,7 +244,7 @@ void tickAll() {
 }
 ```
 
-1 万单位全量积分 ≈ 一次连续数组扫描，**< 0.3 ms**。
+该路径复杂度由总人口的 `O(total)` 降为 `O(active)`；实际毫秒数必须用目标服务器的 `spark`/JFR 基线验证，本文不声明未经测量的固定耗时。
 
 ---
 
@@ -264,6 +265,7 @@ void tickAll() {
 
 `SyncEngine` 以每个在线玩家为中心、固定 96 格平面半径维护展示集合；每 20 tick 或服务端配置热变更时统一重选：
 
+- `SpatialGrid.rebuildVisibility` 每轮选择前把全部合法状态居民登记到 16 格粗桶，包含睡眠居民；`queryVisible` 只生成附近桶候选并多取一圈 halo。`collectPlayerCandidates` 随后按当前状态、有效床标记和当前坐标执行精确 96 格圆形判定，粗桶不会改变最终展示语义。
 - `FHConfig.SERVER.TOWN.maxVisibleCitizensPerPlayer`：默认 `1024`，范围 `0..4096`，严格限制单个玩家的 `tracked` 集合和 `ClientCitizenCache`。
 - `FHConfig.SERVER.TOWN.maxVisibleCitizensPerServer`：默认 `8192`，范围 `0..65536`，严格限制服务器全部玩家、全部维度的追踪关系总数。同一居民被两名玩家看到会占两个名额，因为客户端缓存和渲染成本实际发生两次。
 - 清醒居民与“已验证并定位到有效床头”的 `SLEEP` 居民共享预算；无床、床失效或区块不可验证的睡眠居民不进入候选集。
@@ -282,6 +284,7 @@ void tickAll() {
 - **误差驱动脏标记**：服务端镜像客户端 16 向外推模型；状态、方向、halt 变化或位置误差超过 `0.2` 格才到期发送，移动心跳按 4/8/20 tick 距离档位重锚。
 - **多包分片**：`SyncEngine` 先为每个玩家收集全部仍被追踪且到期的 chunk groups，再由 `CitizenDeltaPacketBatcher.forEachPacket` 按 `MAX_ENTRIES_PER_PACKET=240` 逐包产出并立即发送；跨越 240 的单个 chunk group 会被切分，未跨界的 group 直接复用，只有切片需要复制条目引用。生产路径不保留完整 packet 外层集合，也不能丢弃尾部居民。
 - **规范状态提交**：共享 Dead Reckoning canonical 只在包含该 ID 的 packet 调用 `FHNetwork.INSTANCE.sendPlayer` 并正常返回后推进；这表示本地网络 API 交付，不是客户端 ACK。`due` 中没有交给任何玩家的 ID 不会被伪记为已发送。
+- **增量候选**：`flushDeltas` 先合并所有玩家的 `tracked` 集合，再仅检查唯一 tracked ID；距离档位仍对本维度全部在线玩家求最近距离，最终按各玩家 tracked 集合组包，因此 canonical、分频和交付语义不变。
 - **离散切换**：入睡、醒来和有效床位置刷新进入 `pendingImmediate`，在下一次 4 tick flush 绕过距离限频；无效床直接进入 `pendingHidden`。
 - **年龄外观**：`TownSimData` 把权威 `Resident.age` 镜像到 `CitizenSim.presentationFlags` 的 2 个瞬态位；初次进入 AOI 时随 `S2CCitizenSpawnPacket` 下发。幼儿成长为儿童、儿童成长为成人时，`SyncEngine.pendingAppearance` 对已追踪 id 重发同一种 spawn 条目；`ClientCitizenCache.applySpawn` 只原位更新年龄，不替换双快照、位置、朝向或行为状态。移动批包不增加年龄字段。
 - **静止零带宽**：睡眠与到岗停止居民完成状态切换后不再发送移动心跳。
@@ -382,7 +385,7 @@ public final class ClientCitizen {
 3. 流场共享寻路，禁绝逐单位 A*。
 4. 方向/三角函数全部查表。
 5. 网络只发 dirty + 速度外推，快照 5Hz。
-6. 发包对象池（`FriendlyByteBuf` 复用、避免每包 new byte[]）。
+6. 仅复用不逃逸当前调用的 primitive scratch；packet-owned list/`FriendlyByteBuf` 只有在 profile 证明为热点且确认异步编码生命周期后才能池化。
 7. 异步寻路线程池，主线程只消费结果。
 8. 渲染实例化 + 距离 LOD + 预烘焙动画。
 9. 每 tick 时间片哨兵：单次 tick 超预算自动降低本 tick 处理量，绝不卡服。
