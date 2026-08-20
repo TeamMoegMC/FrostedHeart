@@ -1,0 +1,123 @@
+/*
+ * Copyright (c) 2026 TeamMoeg
+ *
+ * This file is part of Frosted Heart.
+ *
+ * Frosted Heart is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, version 3.
+ */
+
+package com.teammoeg.frostedresearch.gui.archive;
+
+import com.teammoeg.chorda.client.CInputHelper.Cursor;
+import com.teammoeg.chorda.client.RenderingHint;
+import com.teammoeg.chorda.client.cui.base.MouseButton;
+import com.teammoeg.chorda.client.cui.base.TooltipBuilder;
+import com.teammoeg.chorda.client.cui.base.UIElement;
+import com.teammoeg.chorda.client.icon.CIcons;
+import com.teammoeg.frostedresearch.gui.TechIcons;
+import com.teammoeg.frostedresearch.gui.archive.graph.ResearchTypeIdNormalizer;
+import com.teammoeg.frostedresearch.research.ResearchCategory;
+import net.minecraft.ChatFormatting;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.network.chat.Component;
+
+import java.util.Objects;
+
+/** Top-level research-field tabs following the original technology-tree layout. */
+final class ResearchFieldTabBar extends UIElement {
+    private static final int TAB_COUNT = ResearchCategory.values().length + 1;
+    private static final int MAX_TAB_WIDTH = 40;
+    private static final int ICON_SIZE = 16;
+
+    private final ResearchArchiveLayer archive;
+    private final ResearchWorkspaceState state;
+
+    ResearchFieldTabBar(ResearchArchiveLayer parent, ResearchWorkspaceState state) {
+        super(parent);
+        this.archive = parent;
+        this.state = Objects.requireNonNull(state, "state");
+    }
+
+    @Override
+    public void render(GuiGraphics graphics, int x, int y, int width, int height, RenderingHint hint) {
+        graphics.fill(x, y, x + width, y + height, ResearchArchiveLayer.COLOR_PAPER_DARK);
+        graphics.fill(x, y + height - 1, x + width, y + height, ResearchArchiveLayer.COLOR_PANEL_DARK);
+
+        int tabWidth = tabWidth();
+        for (int index = 0; index < TAB_COUNT; index++) {
+            int tabX = x + index * tabWidth;
+            boolean selected = typeId(index).equals(state.researchTypeFilter());
+            if (selected) {
+                graphics.fill(tabX, y, tabX + tabWidth, y + height - 1, ResearchArchiveLayer.COLOR_PAPER);
+                int highlightWidth = Math.min(30, tabWidth);
+                TechIcons.TAB_HL.draw(graphics,
+                        tabX + (tabWidth - highlightWidth) / 2, y, highlightWidth, 7);
+            }
+            int iconX = tabX + Math.max(1, (tabWidth - ICON_SIZE) / 2);
+            int iconY = y + (selected ? 5 : 8);
+            if (index == 0) {
+                TechIcons.INF.draw(graphics, iconX, iconY, ICON_SIZE, ICON_SIZE);
+            } else {
+                CIcons.getIcon(ResearchCategory.values()[index - 1].getIcon())
+                        .draw(graphics, iconX, iconY, ICON_SIZE, ICON_SIZE);
+            }
+        }
+
+        int labelX = x + TAB_COUNT * tabWidth + 7;
+        Component title = Component.translatable("gui.frostedresearch.archive.types");
+        if (labelX + getFont().width(title) <= x + width - 4) {
+            graphics.drawString(getFont(), title, labelX, y + 10,
+                    ResearchArchiveLayer.COLOR_MUTED_INK, false);
+        }
+    }
+
+    @Override
+    public boolean onMousePressed(MouseButton button) {
+        int index = tabAtMouse();
+        if (button != MouseButton.LEFT || index < 0) {
+            return false;
+        }
+        archive.setResearchTypeFilter(typeId(index));
+        return true;
+    }
+
+    @Override
+    public void getTooltip(TooltipBuilder tooltip) {
+        int index = tabAtMouse();
+        if (index < 0) {
+            return;
+        }
+        if (index == 0) {
+            tooltip.accept(Component.translatable("gui.frostedresearch.archive.all_types"));
+            return;
+        }
+        ResearchCategory category = ResearchCategory.values()[index - 1];
+        tooltip.accept(category.getName());
+        tooltip.accept(category.getDesc().copy().withStyle(ChatFormatting.GRAY));
+    }
+
+    @Override
+    public Cursor getCursor() {
+        return tabAtMouse() >= 0 ? Cursor.HAND : null;
+    }
+
+    private int tabAtMouse() {
+        if (!isMouseOver()) {
+            return -1;
+        }
+        int index = (int) getMouseX() / tabWidth();
+        return index >= 0 && index < TAB_COUNT ? index : -1;
+    }
+
+    private int tabWidth() {
+        return Math.max(1, Math.min(MAX_TAB_WIDTH, getWidth() / TAB_COUNT));
+    }
+
+    private static String typeId(int index) {
+        return index == 0
+                ? ResearchTypeIdNormalizer.ALL_TYPES
+                : ResearchTypeIdNormalizer.normalize(ResearchCategory.values()[index - 1]);
+    }
+}

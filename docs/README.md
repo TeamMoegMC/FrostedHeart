@@ -7,6 +7,7 @@ This directory explains implemented, player-facing game systems. Source, configu
 | Town management | [town/README.md](town/README.md) | Transitional |
 | Curiosity encounter | [boss/README.md](boss/README.md) | Transitional |
 | Nutrition | [nutrition/README.md](nutrition/README.md) | Current |
+| Frosted Research | [research/README.md](research/README.md) | Current |
 | Scenario font rendering | [scenario-font-rendering.md](scenario-font-rendering.md) | Current |
 
 `Current` means verified against implementation. `Partial` omits known areas. `Transitional` mixes verified material with legacy, experimental, or proposed content. [`deprecated/`](deprecated/) is historical only.

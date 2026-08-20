@@ -23,6 +23,7 @@ import java.util.function.Supplier;
 
 import com.teammoeg.chorda.network.CMessage;
 import com.teammoeg.frostedresearch.FHResearch;
+import com.teammoeg.frostedresearch.ResearchUtils;
 
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.network.NetworkEvent;
@@ -39,7 +40,10 @@ public class FHResearchSyncEndPacket implements CMessage {
     }
 
     public void handle(Supplier<NetworkEvent.Context> context) {
-        context.get().enqueueWork(FHResearch::endPacketInit);
+        context.get().enqueueWork(() -> {
+            FHResearch.endPacketInit();
+            ResearchUtils.notifyResearchDefinitionsChanged();
+        });
         context.get().setPacketHandled(true);
     }
 }

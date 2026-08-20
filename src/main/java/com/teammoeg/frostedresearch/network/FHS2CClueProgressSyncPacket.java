@@ -25,6 +25,7 @@ import com.teammoeg.chorda.dataholders.team.TeamDataHolder;
 import com.teammoeg.chorda.network.CMessage;
 import com.teammoeg.frostedresearch.FHResearch;
 import com.teammoeg.frostedresearch.FRSpecialDataTypes;
+import com.teammoeg.frostedresearch.ResearchUtils;
 import com.teammoeg.frostedresearch.api.ClientResearchDataAPI;
 import com.teammoeg.frostedresearch.research.Research;
 import com.teammoeg.frostedresearch.research.clues.Clue;
@@ -56,6 +57,7 @@ public record FHS2CClueProgressSyncPacket(boolean data, int id, int index) imple
             if (rch != null) {
                 Clue cl = rch.getClues().get(index);
                 ClientResearchDataAPI.getData().get().getData(id()).setClueTriggered(cl, data);
+                ResearchUtils.notifyClueProgressChanged(rch.getId(), cl.getNonce());
             }
 
         });

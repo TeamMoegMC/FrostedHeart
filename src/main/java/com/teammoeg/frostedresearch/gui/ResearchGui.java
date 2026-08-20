@@ -19,6 +19,15 @@
 
 package com.teammoeg.frostedresearch.gui;
 
-public interface ResearchGui {
+import javax.annotation.Nullable;
 
+/** Client research UI refresh contract. Definitions and progress have deliberately separate paths. */
+public interface ResearchGui {
+    void onResearchDefinitionsChanged();
+
+    void onResearchProgressChanged(String researchId);
+
+    void onActiveResearchChanged(@Nullable String researchId);
+
+    void onClueProgressChanged(String researchId, String clueNonce);
 }
