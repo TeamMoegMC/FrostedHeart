@@ -3,7 +3,7 @@
 > Status: Partial
 > Last verified: 2026-08-20
 > Scope: State ownership, daily lifecycle, building extension, and town-data synchronization
-> Code anchors: `TeamTownData`, `TeamTown`, `ITownBuilding.CODEC`, `DataSyncCache`, `TownTransportState`, `TownResourceUpdatePacket`
+> Code anchors: `TeamTownData`, `TeamTown`, `ITownBuilding.CODEC`, `DataSyncCache`, `TownTransportState`, `TownResourceUpdatePacket`, `TownVirtualResourcesPanel`
 
 This document records invariants that are easy to violate when extending the town system. Source remains authoritative; gameplay formulas and simulator behavior belong in [town-model.md](town-model.md), while citizen presence and movement belong in [hybrid-simulation-architecture.md](hybrid-simulation-architecture.md).
 
@@ -56,6 +56,12 @@ The station report is persisted and incrementally synchronized as part of its bu
 New or changed building and resident setters must return when the value is unchanged, then call `fireChange()` after a real change. Some legacy setters do not yet apply that guard. Resource updates receive additional value-level deduplication; buildings and residents do not.
 
 Client building screens resolve the synchronized snapshot through `AbstractTownBuildingBlockEntity.getTown()` and `CClientTeamDataManager`. They must not use server-only `CTeamDataManager`. Data panels should read current values through suppliers during rendering; data-change callbacks must not rebuild the content layer and discard scroll or selection state.
+
+The Mayor's Seal `TownVirtualResourcesTab` lists every `VirtualResourceType` and keeps specialized presentation in
+`TownVirtualResourcesPanel`. Warehouse capacity reads `MAX_CAPACITY`, `TeamTownResourceHolder#getOccupiedCapacity`, and
+their difference. Transport reads the authoritative `TRANSPORT_CAPACITY` resource plus the synchronized
+`TownTransportState.DailyReport`; reserved transport remains `0` until endpoint reservations are implemented. The tab
+uses the existing full town snapshot and `TownResourceUpdatePacket`, so it must not introduce a parallel request packet.
 
 ## Investigation Anchors
 

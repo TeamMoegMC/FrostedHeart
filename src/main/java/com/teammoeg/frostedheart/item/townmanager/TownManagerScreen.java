@@ -84,7 +84,7 @@ public class TownManagerScreen extends PrimaryLayer implements ITownDataUpdateLi
     public static final int CONTENT_Y = 6;
     public static final int CONTENT_WIDTH = FRAME_WIDTH - CONTENT_X * 2;
     public static final int CONTENT_HEIGHT = 204;
-    public static final int EVENTS_TAB = 7;
+    public static final int EVENTS_TAB = 8;
 
     private int activeTab = 0;
     private final List<TownManagerTab> tabs = new ArrayList<>();
@@ -100,6 +100,7 @@ public class TownManagerScreen extends PrimaryLayer implements ITownDataUpdateLi
         tabs.add(new TownOverviewTab(this));
         tabs.add(new TownResidentsTab(this));
         tabs.add(new TownBuildingsTab(this));
+        tabs.add(new TownVirtualResourcesTab(this));
         tabs.add(new TownStaffingTab(this));
         tabs.add(new TownHousingTab(this));
         tabs.add(new TownPoliciesTab(this));
@@ -224,7 +225,7 @@ public class TownManagerScreen extends PrimaryLayer implements ITownDataUpdateLi
 
     /**
      * 城镇数据变化时无需重建内容：所有面板（TownOverviewTab / TownResidentsPanel /
-     * TownBuildingsPanel / TownStatisticsPanel）在 render() 阶段通过 Supplier 从
+     * TownBuildingsPanel / TownVirtualResourcesPanel / TownStatisticsPanel）在 render() 阶段通过 Supplier 从
      * 客户端城镇快照实时取值，每帧都会渲染最新数据。若在此处调用
      * {@code contentLayer.refresh()}，clearElement() 会销毁全部子元素并以默认状态
      * 重建，导致滚动位置、选中的建筑/居民等瞬时 UI 状态被重置（例如建筑详情
@@ -234,7 +235,7 @@ public class TownManagerScreen extends PrimaryLayer implements ITownDataUpdateLi
      * client snapshot via a Supplier during render(), so content stays fresh each
      * frame. Calling refresh() here would clearElement() and rebuild all children
      * with default state, resetting transient UI state such as scroll offsets and
-     * the selected building/resident.
+     * the selected building, resident, or virtual resource.
      */
     @Override
     public void onBuildingsChanged() {

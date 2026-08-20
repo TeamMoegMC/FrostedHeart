@@ -19,6 +19,8 @@
   `TownTransportState` 汇总日报。
 - 当前没有物流接口、运力占用登记、有效传输速率或运力不足视觉状态。
 - `TeamTownResourceHolder.occupiedCapacity` 已用于仓库物品容量，不能复用其名称或语义表示运力占用。
+- 镇长印章已有 `TownVirtualResourcesTab`，能够显示当前总运力和日报中的占用、剩余、缺口及有效速率比例；
+  消费方实现后必须让该页读取实时接口 Map 汇总，而不能继续把晨间日报当作实时登记表。
 
 货运站里程碑 B 的每日 service 重建、货运站生产和城镇汇总日报已经完成；本计划在现有
 `TownTransportState` 基础上增加接口 Map 和运行规则。

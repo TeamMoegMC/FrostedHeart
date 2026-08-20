@@ -264,12 +264,13 @@ town.getActionExecutorHandler().execute(
 
 ### 7.4 镇长印章
 
-建筑实现后会自动出现在 `TownBuildingsPanel` 列表和 `TownStaffingPlan` 管理界面。还需：
+货运站已出现在 `TownBuildingsPanel` 和 `TownStaffingPlan` 管理界面。建筑详情显示面积、体积、员工数、单站
+上次计划/实际产出、当日城镇总运力、已占用运力和停产原因。
 
-- 增加 `gui.frostedheart.town_manager.building.TransportStationBuilding` 名称；
-- 在 `TownBuildingsPanel#detailLines` 增加货运站分支；
-- 显示面积、体积和员工数；
-- 显示单站上次计划/实际产出、当日城镇总运力、已占用运力和停产原因。
+`TownVirtualResourcesTab` 另提供不依赖具体方块位置的城镇级入口。其“运力”详情从
+`resources[TRANSPORT_CAPACITY]` 和 `TownTransportState.DailyReport` 显示总运力、已占用、剩余、缺口与有效
+传输比例；在后续运力使用方实现前，已占用量仍为 `0`。“仓库容量”详情同时显示总容量、
+`TeamTownResourceHolder.occupiedCapacity`、剩余、缺口和使用率。
 
 ## 8. 注册、资源与本地化
 

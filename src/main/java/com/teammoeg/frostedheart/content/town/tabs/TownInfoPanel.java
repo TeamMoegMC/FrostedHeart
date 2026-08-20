@@ -80,6 +80,7 @@ public class TownInfoPanel extends UIElement {
     private static final int MIN_THUMB_HEIGHT = 10;
 
     private final Supplier<List<Row>> rowSource;
+    private final boolean drawFrame;
     private int scrollStart;
     private boolean draggingScrollbar;
 
@@ -95,10 +96,24 @@ public class TownInfoPanel extends UIElement {
             UIElement parent, int x, int y, int width, int height,
             Supplier<List<Row>> rowSource
     ) {
+        this(parent, x, y, width, height, rowSource, true);
+    }
+
+    public TownInfoPanel(
+            UIElement parent, int x, int y, int width, int height,
+            Supplier<List<Row>> rowSource, boolean drawFrame
+    ) {
         super(parent);
         this.rowSource = rowSource;
+        this.drawFrame = drawFrame;
         setPos(x, y);
         setSize(width, height);
+    }
+
+    /** Returns the panel to its first row after its owning view changes context. */
+    public void resetScroll() {
+        scrollStart = 0;
+        draggingScrollbar = false;
     }
 
     @Override
@@ -108,7 +123,7 @@ public class TownInfoPanel extends UIElement {
     ) {
         Font font = Minecraft.getInstance().font;
         List<VisualRow> rows = visualRows(font, width);
-        drawPanel(graphics, x, y, width, height);
+        if (drawFrame) drawPanel(graphics, x, y, width, height);
 
         int visible = visibleRows();
         int maxScroll = Math.max(0, rows.size() - visible);

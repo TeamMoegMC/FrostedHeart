@@ -1672,6 +1672,27 @@ T1 燃料总 process tick 定义为：
 
 “城镇近况”按决策顺序显示当前活动警告、人口、食物与 T1 燃料储备及每日趋势、塔开关、实际供热和模式。塔的超载损耗不再显示孤立百分比：零损耗显示“完好”，关闭超载后的非零值显示“恢复中”，开启超载时显示“损耗中”，并用十格颜色条表达程度。生命和精神分别显示平均状态与“较弱居民”状态条；玩家界面不暴露 `P10` 术语或假设玩家知道满值为 100。“数据统计”含“居民”“营养”和“生存”三个内部视图；居民与营养图都用“较弱居民”替代统计术语，生存温度图通过 `ITownTemperatureBuilding` 遍历所有支持温度的城镇建筑并只画一条最低温度曲线。新增“事件记录”页把实时警告置顶，并按最新在前列出保留历史中的阈值事件。
 
+“虚拟资源”主页签由 `TownVirtualResourcesTab` 注册，在内部使用与居民/建筑页一致的左侧选择器和右侧详情。
+左侧从 `VirtualResourceType.values()` 构造，因此每种虚拟资源都有入口；`MAX_CAPACITY` 和
+`TRANSPORT_CAPACITY` 使用专用详情，其他类型使用显示当前数量、service 属性、仓库占用属性和逐等级数量的
+通用详情。
+
+仓库容量详情的单位沿用 `TeamTownResourceHolder` 的 town-capacity unit：
+
+`C_available = max(0, C_max - C_occupied)`，
+
+`C_shortfall = max(0, C_occupied - C_max)`。
+
+其中 `C_max = resources[MAX_CAPACITY, level 0]`，`C_occupied = TeamTownResourceHolder.occupiedCapacity`。界面同时
+显示使用率 `C_occupied / C_max`；总容量为零时不执行除零，并用“暂无容量”或“超出容量”状态表达。
+
+运力详情的单位为 transport-capacity/day。当前总运力读取
+`resources[TRANSPORT_CAPACITY, level 0]`，已占用运力读取同步的
+`TownTransportState.DailyReport.reservedCapacity`，剩余与缺口使用同一容量公式。有效传输比例显示为
+`reserved > 0 ? min(1, total / reserved) : 1`。运力使用方尚未实现时 `reservedCapacity` 为 `0`；本页不会凭空
+创建接口登记或改变结算结果。完整城镇同步和 `TownResourceUpdatePacket` 已覆盖总量、仓库占用量和运力日报，
+因此该页不增加独立网络请求。
+
 城镇近况顶部名称和居民详情顶部姓/名现在是服务端权威的内联文本输入。城镇名与居民名最多分别为 64/32 字符；城镇名和居民“名”不能为空，居民“姓”可以为空字符串。客户端请求不携带城镇标识，服务端始终限定在发包玩家所属队伍，并验证居民 UUID 确实存在于该城镇后才修改。名称变化通过轻量城镇名包或既有居民增量同步返回所有在线队员。
 
 建筑详情中，住宅显示有效温度、最近食物满足度、舒适度及面积/体积/温度失败；狩猎基地显示有效温度、最近计划/实际执行次数和当前停工原因。该阶段没有修改任何城镇结算数值，也没有添加 HUD、声音、聊天提醒或自动控制。

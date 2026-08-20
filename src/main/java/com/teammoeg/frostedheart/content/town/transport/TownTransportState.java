@@ -32,6 +32,10 @@ public final class TownTransportState {
             totalCapacity = sanitize(totalCapacity);
             reservedCapacity = sanitize(reservedCapacity);
         }
+
+        private static double sanitize(double value) {
+            return Double.isFinite(value) ? Math.max(0.0, value) : 0.0;
+        }
     }
 
     public static final Codec<TownTransportState> CODEC = RecordCodecBuilder.create(instance -> instance.group(
@@ -55,9 +59,5 @@ public final class TownTransportState {
         if (next.equals(this.dailyReport)) return false;
         this.dailyReport = next;
         return true;
-    }
-
-    private static double sanitize(double value) {
-        return Double.isFinite(value) ? Math.max(0.0, value) : 0.0;
     }
 }
