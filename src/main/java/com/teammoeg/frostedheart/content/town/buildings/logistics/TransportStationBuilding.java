@@ -214,7 +214,7 @@ public class TransportStationBuilding extends AbstractTownResidentWorkBuilding {
                                 ResourceActionMode.ATTEMPT));
         double added = actionResult.modifiedAmount();
         if (added > TeamTownResourceHolder.DELTA) {
-            grantDailyTransportProficiency(workingResidents);
+            recordCompletedTransportWork(workingResidents);
         }
         setDailyReport(new TransportStationDailyReport(
                 true, result.workerCount(), result.totalProductivity(),
@@ -314,10 +314,15 @@ public class TransportStationBuilding extends AbstractTownResidentWorkBuilding {
                 config.maximumResidentProductivity.get());
     }
 
-    private static void grantDailyTransportProficiency(List<Resident> workingResidents) {
+    private static void recordCompletedTransportWork(List<Resident> workingResidents) {
+        FHConfig.Server.Town.TransportStation transport =
+                FHConfig.SERVER.TOWN.TRANSPORT_STATION;
         FHConfig.Server.Town.ResidentProgression progression =
                 FHConfig.SERVER.TOWN.RESIDENT_PROGRESSION;
         for (Resident resident : workingResidents) {
+            resident.recordDailyActivity(
+                    transport.physicalActivity.get(),
+                    transport.learningActivity.get());
             resident.gainDailyWorkProficiency(
                     TransportStationBuilding.class,
                     progression.proficiencyGrowthAtZeroPerWorkday.get(),

@@ -163,7 +163,10 @@ public record TownModelParameters(
                         Defaults.TRANSPORT_STATION_MAXIMUM_PROFICIENCY,
                         Defaults.TRANSPORT_STATION_BONUS_AT_MAXIMUM_PROFICIENCY,
                         Defaults.TRANSPORT_STATION_MINIMUM_PRODUCTIVITY,
-                        Defaults.TRANSPORT_STATION_MAXIMUM_PRODUCTIVITY));
+                        Defaults.TRANSPORT_STATION_MAXIMUM_PRODUCTIVITY),
+                new ResidentActivity(
+                        Defaults.TRANSPORT_STATION_PHYSICAL_ACTIVITY,
+                        Defaults.TRANSPORT_STATION_LEARNING_ACTIVITY));
     }
 
     /**
@@ -492,8 +495,24 @@ public record TownModelParameters(
             int minimumWorkerSlots,
             int minimumFloorAreaBlocks,
             int minimumInteriorVolumeBlocks,
-            ResidentProductivityParameters productivity
+            ResidentProductivityParameters productivity,
+            ResidentActivity activity
     ) {
+        public TransportStationParameters(
+                double capacityPerStandardWorkerDay,
+                double floorBlocksPerWorkerSlot,
+                int minimumWorkerSlots,
+                int minimumFloorAreaBlocks,
+                int minimumInteriorVolumeBlocks,
+                ResidentProductivityParameters productivity
+        ) {
+            this(capacityPerStandardWorkerDay, floorBlocksPerWorkerSlot,
+                    minimumWorkerSlots, minimumFloorAreaBlocks,
+                    minimumInteriorVolumeBlocks, productivity,
+                    new ResidentActivity(
+                            Defaults.TRANSPORT_STATION_PHYSICAL_ACTIVITY,
+                            Defaults.TRANSPORT_STATION_LEARNING_ACTIVITY));
+        }
     }
 
     public record HousingParameters(
@@ -942,6 +961,8 @@ public record TownModelParameters(
         public static final int TRANSPORT_STATION_MINIMUM_FLOOR_AREA_BLOCKS = 4;
         public static final int TRANSPORT_STATION_MINIMUM_INTERIOR_VOLUME_BLOCKS = 8;
         public static final double TRANSPORT_STATION_CAPACITY_PER_STANDARD_WORKER_DAY = 64.0;
+        public static final double TRANSPORT_STATION_PHYSICAL_ACTIVITY = 1.0;
+        public static final double TRANSPORT_STATION_LEARNING_ACTIVITY = 0.25;
         public static final double TRANSPORT_STATION_HEALTH_WEIGHT = 35.0;
         public static final double TRANSPORT_STATION_MENTAL_WEIGHT = 15.0;
         public static final double TRANSPORT_STATION_STRENGTH_WEIGHT = 30.0;

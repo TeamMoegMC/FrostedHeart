@@ -66,5 +66,9 @@ class TransportStationConfigTest {
                 config.strengthWeight.get());
         assertEquals(TownModelParameters.Defaults.TRANSPORT_STATION_INTELLIGENCE_WEIGHT,
                 config.intelligenceWeight.get());
+        assertEquals(TownModelParameters.Defaults.TRANSPORT_STATION_PHYSICAL_ACTIVITY,
+                config.physicalActivity.get());
+        assertEquals(TownModelParameters.Defaults.TRANSPORT_STATION_LEARNING_ACTIVITY,
+                config.learningActivity.get());
     }
 }

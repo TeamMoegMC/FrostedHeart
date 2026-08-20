@@ -144,6 +144,8 @@
 | `minimumInteriorVolumeBlocks` | `8` | 小于该体积时不可工作 |
 | `floorBlocksPerWorkerSlot` | `4.0` | 每个岗位需要的有效地板面积 |
 | `minimumWorkerSlots` | `1` | 合法结构至少提供的岗位数 |
+| `physicalActivity` | `1.0` | 完成工作日后记录的体力活动 |
+| `learningActivity` | `0.25` | 完成工作日后记录的学习活动 |
 
 建议岗位公式与现有基地一致：
 
@@ -197,6 +199,8 @@ producedCapacity = totalProductivity * 64
 
 标准工人（四项属性均为 `50`、运输熟练度为 `0`）每日生产 `64` 运力；满属性且满熟练度时每日生产
 `147.2` 运力。参数必须进入 `TownModelParameters.Defaults` 与服务端配置，不能散落在 Building 或 Screen 中。
+货运站实际增加运力超过 `TeamTownResourceHolder.DELTA` 时，为当日参与生产的居民记录默认活动向量
+`(physical=1.0, learning=0.25)` 并增加运输熟练度；不可工作、无有效员工、零产出或实际增加量为零时两者都不发生。
 
 `TRANSPORT_CAPACITY` 是不消耗仓库容量、不会在运输中扣减、每个城镇结算日重新建立的 service。晨间必须在
 任何货运站工作前将其归零，再由所有可工作货运站分别通过以下 Action 加回当日产出：
@@ -360,7 +364,7 @@ production、forecast、produced capacity、stop reason 等键已加入。英文
 - `TransportStationStaffingTest`：自动加入岗位计划、目标人数受 `maxResidents` 限制、不可工作时容量为 0。
 - 扩展 `TownBuildingRemovalTest`：拆除后居民保留但 `workPos` 和建筑名册被清理。
 - `TransportStationDailyModelTest`：标准/满熟练度产出、属性权重、零配置和异常输入。
-- `TeamTownTransportSettlementTest`：单/多工人、多货运站、晨间归零、Action 实际修改量、熟练度、停产原因、
+- `TeamTownTransportSettlementTest`：单/多工人、多货运站、晨间归零、Action 实际修改量、活动、熟练度、停产原因、
   城镇汇总和重复空结算同步守卫。
 - `TransportStationForecastTest`：预测与结算共用合格工人及公式，空名册和不可工作原因。
 - `TransportStationBuildingCodecTest`、`TownTransportStateTest`、`TownResourceUpdatePacketTest`：单站/城镇日报的
@@ -390,6 +394,7 @@ git diff --check
 ## 12. 已冻结的 H03 决策
 
 - 每标准工人日生产 `64` 运力。
+- 完成工作日记录 `(physical=1.0, learning=0.25)`，无实际运力产出时不记录活动。
 - 健康、精神、力量、智力权重依次为 `35 / 15 / 30 / 20`。
 - 属性生产力范围为 `0.5～1.5`，满熟练度加成为 `0.8`，最终生产力范围为 `0.5～2.3`。
 - 运力不被运输消耗；每次晨间城镇结算先归零，再由货运站重新建立，不跨日囤积。

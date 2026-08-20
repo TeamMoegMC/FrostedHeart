@@ -90,12 +90,17 @@ class TownStageZeroAuditTest {
         Map<String, TownStageZeroAudit.ParameterValue> byName = values.stream()
                 .collect(Collectors.toMap(TownStageZeroAudit.ParameterValue::name, value -> value));
 
-        assertEquals(15, values.size());
+        assertEquals(17, values.size());
         assertEquals(64.0,
                 byName.get("transportStation.capacityPerStandardWorkerDay").value());
         assertEquals("transport-capacity/SWE/day",
                 byName.get("transportStation.capacityPerStandardWorkerDay").unit());
         assertEquals(35.0, byName.get("transportStation.productivity.healthWeight").value());
+        assertEquals(1.0, byName.get("transportStation.physicalActivity").value());
+        assertEquals("fraction", byName.get("transportStation.physicalActivity").unit());
+        assertEquals(0.25, byName.get("transportStation.learningActivity").value());
+        assertTrue(byName.get("transportStation.learningActivity")
+                .sourceSymbol().contains("FHConfig.SERVER.TOWN.TRANSPORT_STATION"));
         assertTrue(byName.get("transportStation.productivity.maximumProductivity")
                 .sourceSymbol().contains("FHConfig.SERVER.TOWN.TRANSPORT_STATION"));
 

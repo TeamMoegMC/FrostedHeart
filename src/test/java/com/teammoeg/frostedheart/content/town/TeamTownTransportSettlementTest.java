@@ -12,6 +12,7 @@ import com.teammoeg.frostedheart.content.town.building.ITownBuilding;
 import com.teammoeg.frostedheart.content.town.building.TownProductionStopReason;
 import com.teammoeg.frostedheart.content.town.buildings.logistics.TransportStationBuilding;
 import com.teammoeg.frostedheart.content.town.resident.Resident;
+import com.teammoeg.frostedheart.content.town.resident.ResidentActivity;
 import com.teammoeg.frostedheart.content.town.resource.ITownResourceKey;
 import com.teammoeg.frostedheart.content.town.resource.TeamTownResourceHolder;
 import com.teammoeg.frostedheart.content.town.resource.VirtualResourceType;
@@ -122,6 +123,11 @@ class TeamTownTransportSettlementTest {
                 firstWorker.getWorkProficiency(TransportStationBuilding.class), EPSILON);
         assertEquals(expectedGrowth,
                 secondWorker.getWorkProficiency(TransportStationBuilding.class), EPSILON);
+        ResidentActivity expectedActivity = new ResidentActivity(
+                FHConfig.SERVER.TOWN.TRANSPORT_STATION.physicalActivity.get(),
+                FHConfig.SERVER.TOWN.TRANSPORT_STATION.learningActivity.get());
+        assertEquals(expectedActivity, firstWorker.getDailyActivity());
+        assertEquals(expectedActivity, secondWorker.getDailyActivity());
 
         firstStation.clearResidents();
         secondStation.clearResidents();
@@ -154,6 +160,7 @@ class TeamTownTransportSettlementTest {
                 station.getDailyReport().stopReason());
         assertEquals(proficiencyBefore,
                 worker.getWorkProficiency(TransportStationBuilding.class), EPSILON);
+        assertEquals(ResidentActivity.NONE, worker.getDailyActivity());
     }
 
     @Test
@@ -179,6 +186,7 @@ class TeamTownTransportSettlementTest {
                     station.getDailyReport().stopReason());
             assertEquals(0.0,
                     worker.getWorkProficiency(TransportStationBuilding.class), EPSILON);
+            assertEquals(ResidentActivity.NONE, worker.getDailyActivity());
         } finally {
             config.transportCapacityPerStandardWorkerDay.set(previousOutput);
         }

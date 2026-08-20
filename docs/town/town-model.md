@@ -1065,7 +1065,7 @@ attribute = clamp[0,100](center + 100 × spread × (mean(u)-0.5))
 - TWR `biome_mine.js` 中 `fossil_deposits` 权重。
 - TWR `generator_efficiency_1/2.json` 研究加成。
 - 对 Java 控制的参数，记录 `TownModelParameters.Defaults -> FHConfig` 的完整映射；固定游戏单位单独标为 `minecraft-unit`。
-- 货运站的 5 个结构/产量参数、10 个生产力参数，以及
+- 货运站的 5 个结构/产量参数、2 个完成工作活动参数、10 个生产力参数，以及
   `TransportStationDailyModel`、`TownTransportCapacityModel` 的源码哈希。
 - FH 五个居民食物等级 Tag，以及八个生/熟肉 `diet_override` 营养 recipe。
 
@@ -1785,7 +1785,7 @@ Stage 3/4 JSON 新增：
 
 四行可配置权重矩阵把当前满足度映射为生命、精神、力量和智力支持。每行运行时把负值当零并归一化，全零回退默认行。生命/精神营养倍率分别为 `0.25 + 0.75Q_H` 与 `0.35 + 0.65Q_M`。
 
-力量和智力只读取餐后当前支持度，不再保存长期 EMA、个人潜力或营养上限。`ResidentAttributeModel.settleDailyAttribute` 统一执行“正向成长 - 营养不足衰减 - 老年基础衰退”：年龄提供基础活动量，建筑只有实际完成工作才补充活动；低于维护阈值后按 `D^1.5 × attribute/100` 开启营养衰减。老人仍能靠营养和活动抵消年龄衰退，没有力量下限。生产和岗位评分直接使用存储力量/智力，不再计算有效智力。完整公式和默认参数见营养 living doc。
+力量和智力只读取餐后当前支持度，不再保存长期 EMA、个人潜力或营养上限。`ResidentAttributeModel.settleDailyAttribute` 统一执行“正向成长 - 营养不足衰减 - 老年基础衰退”：年龄提供基础活动量，采矿、狩猎和货运站只有实际完成工作才补充活动；三者默认活动均为 `(1.0, 0.25)`。低于维护阈值后按 `D^1.5 × attribute/100` 开启营养衰减。老人仍能靠营养和活动抵消年龄衰退，没有力量下限。生产和岗位评分直接使用存储力量/智力，不再计算有效智力。完整公式和默认参数见营养 living doc。
 
 ### 23.2 住宅计划与每日入住排序
 

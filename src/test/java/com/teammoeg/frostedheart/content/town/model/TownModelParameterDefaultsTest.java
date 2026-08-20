@@ -92,6 +92,10 @@ class TownModelParameterDefaultsTest {
                 parameters.transportStation().floorBlocksPerWorkerSlot(), EPSILON);
         assertEquals(TownModelParameters.Defaults.TRANSPORT_STATION_HEALTH_WEIGHT,
                 parameters.transportStation().productivity().healthWeight(), EPSILON);
+        assertEquals(TownModelParameters.Defaults.TRANSPORT_STATION_PHYSICAL_ACTIVITY,
+                parameters.transportStation().activity().physical(), EPSILON);
+        assertEquals(TownModelParameters.Defaults.TRANSPORT_STATION_LEARNING_ACTIVITY,
+                parameters.transportStation().activity().learning(), EPSILON);
         assertEquals(1.0,
                 parameters.transportStation().productivity().standardWorkerEquivalent(), EPSILON);
         assertEquals(TownModelParameters.Defaults.TOWN_OBSERVATION_HISTORY_DAYS,

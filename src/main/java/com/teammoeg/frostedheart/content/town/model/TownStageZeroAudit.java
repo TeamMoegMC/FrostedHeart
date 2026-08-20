@@ -434,6 +434,14 @@ public final class TownStageZeroAudit {
                 transport.minimumInteriorVolumeBlocks(), "block3", source,
                 "TRANSPORT_STATION_MINIMUM_INTERIOR_VOLUME_BLOCKS",
                 "TRANSPORT_STATION.minimumInteriorVolumeBlocks");
+        addShared(values, "transportStation.physicalActivity",
+                transport.activity().physical(), "fraction", source,
+                "TRANSPORT_STATION_PHYSICAL_ACTIVITY",
+                "TRANSPORT_STATION.physicalActivity");
+        addShared(values, "transportStation.learningActivity",
+                transport.activity().learning(), "fraction", source,
+                "TRANSPORT_STATION_LEARNING_ACTIVITY",
+                "TRANSPORT_STATION.learningActivity");
         addProductivity(values, "transportStation.productivity", transport.productivity(), source);
         return List.copyOf(values);
     }

@@ -1700,9 +1700,21 @@ public class FHConfig {
 				public final ForgeConfigSpec.DoubleValue mentalWeight;
 				public final ForgeConfigSpec.DoubleValue strengthWeight;
 				public final ForgeConfigSpec.DoubleValue intelligenceWeight;
+				public final ForgeConfigSpec.DoubleValue physicalActivity;
+				public final ForgeConfigSpec.DoubleValue learningActivity;
 
 				TransportStation(ForgeConfigSpec.Builder builder) {
 					builder.push("Transport Station");
+					physicalActivity = builder
+							.comment("Physical growth activity recorded after a completed transport-station workday.")
+							.defineInRange("physicalActivity",
+									TownModelParameters.Defaults.TRANSPORT_STATION_PHYSICAL_ACTIVITY,
+									0d, 1d);
+					learningActivity = builder
+							.comment("Learning growth activity recorded after a completed transport-station workday.")
+							.defineInRange("learningActivity",
+									TownModelParameters.Defaults.TRANSPORT_STATION_LEARNING_ACTIVITY,
+									0d, 1d);
 					floorBlocksPerWorkerSlot = builder
 							.comment("Effective floor area required for one transport-station worker slot, in blocks per worker.")
 							.defineInRange("floorBlocksPerWorkerSlot",
