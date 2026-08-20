@@ -12,6 +12,7 @@ import com.teammoeg.chorda.io.CodecUtil;
 import com.teammoeg.frostedheart.content.town.block.OccupiedVolume;
 import com.teammoeg.frostedheart.content.town.building.AbstractTownBuilding;
 import com.teammoeg.frostedheart.content.town.building.ITownBuilding;
+import com.teammoeg.frostedheart.content.town.building.TownProductionStopReason;
 import com.teammoeg.frostedheart.content.town.buildings.house.HouseBuilding;
 import com.teammoeg.frostedheart.content.town.buildings.hunting.HuntingBaseBuilding;
 import com.teammoeg.frostedheart.content.town.buildings.mine.MineBaseBuilding;
@@ -54,6 +55,7 @@ class TransportStationBuildingCodecTest {
         assertEquals(0, first.getMaxResidents());
         assertFalse(first.isInitialized());
         assertEquals(List.of(), first.getResidentsID().stream().toList());
+        assertEquals(TransportStationBuilding.TransportStationDailyReport.EMPTY, first.getDailyReport());
     }
 
     @Test
@@ -66,7 +68,10 @@ class TransportStationBuildingCodecTest {
         TransportStationBuilding source = new TransportStationBuilding(
                 new BlockPos(4, 64, -2), true, false, true,
                 occupiedVolume,
-                List.of(firstResident, secondResident), 24, 72, 6);
+                List.of(firstResident, secondResident), 24, 72, 6,
+                new TransportStationBuilding.TransportStationDailyReport(
+                        true, 2, 2.5, 160.0, 160.0,
+                        TownProductionStopReason.NONE));
 
         Tag concreteTag = TransportStationBuilding.CODEC.encodeStart(NbtOps.INSTANCE, source)
                 .result().orElseThrow();
@@ -125,5 +130,6 @@ class TransportStationBuildingCodecTest {
         assertEquals(expected.getArea(), actual.getArea());
         assertEquals(expected.getVolume(), actual.getVolume());
         assertEquals(expected.getMaxResidents(), actual.getMaxResidents());
+        assertEquals(expected.getDailyReport(), actual.getDailyReport());
     }
 }

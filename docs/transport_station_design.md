@@ -1,6 +1,15 @@
 # 货运站（Transport Station）设计与实施计划
 
-> 文档状态：设计稿，不包含功能代码修改。
+> 文档状态：实施中；截至 T14，建筑基础、服务端运力日结、生产界面、模拟参数、审计来源、自动化回归和
+> H04 游戏内验收已完成；后续运力使用方仍未实现。
+>
+> 最近验证：2026-08-20。
+>
+> 范围：货运站建筑、城镇运力生产、持久化与后续实施计划。
+>
+> 代码锚点：`TransportStationBuilding`、`TransportStationDailyModel`、`TownTransportCapacityModel`、
+> `TownModelParameters.TransportStationParameters`、`TownTransportState`、
+> `TeamTownData#buildingsWork`、`VirtualResourceType.TRANSPORT_CAPACITY`。
 >
 > 固定命名：Java 类前缀 `TransportStation`；注册名 `transport_station`；英文显示名
 > `Transport Station`；中文显示名 `货运站`。
@@ -52,10 +61,10 @@
 |---|---|---|
 | `TransportStationBlock` | `AbstractTownBuildingBlock` + `CEntityBlock<TransportStationBlockEntity>` | 放置、交互、创建方块实体 |
 | `TransportStationBlockEntity` | `AbstractTownBuildingBlockEntity<TransportStationBuilding>` + `MenuProvider` | 解析所属城镇、扫描结构、打开菜单 |
-| `TransportStationBuilding` | `AbstractTownResidentWorkBuilding` | 可持久化的城镇建筑状态、岗位评分、未来每日生产 |
+| `TransportStationBuilding` | `AbstractTownResidentWorkBuilding` | 可持久化的城镇建筑状态、岗位评分和每日生产 |
 | `TransportStationBlockScanner` | `BuildingBlockScanner` | 封闭空间扫描；为后续货运设施统计预留扩展点 |
 | `TransportStationMenu` | `CBlockEntityMenu<TransportStationBlockEntity>` | 向界面提供建筑、城镇和居民快照 |
-| `TransportStationScreen` | `StandardTownBuildingScreen<TransportStationMenu>` | 概览、员工，第二阶段再增加生产页 |
+| `TransportStationScreen` | `StandardTownBuildingScreen<TransportStationMenu>` | 概览、员工和生产页 |
 
 首期的 `TransportStationBlockScanner` 可以只包装通用扫描器，但必须保持无额外状态；如果实现时确定长期不会有
 货运站专属结构元素，也可以直接使用 `BuildingBlockScanner`，避免保留空抽象。
@@ -84,9 +93,9 @@
 
 `residentsID` 编码时建议按 UUID 排序后输出，以获得稳定的存档和测试结果；解码时仍转为 `HashSet`。
 
-### 4.2 第二阶段新增字段
+### 4.2 第二阶段字段（已实现）
 
-正式生产运力时再加入带默认值的 `dailyReport`，至少记录：
+单站 `dailyReport` 使用带默认值的 Codec 字段，记录：
 
 - 是否已有结算数据；
 - 当日有效工人数和总生产力；
@@ -95,11 +104,16 @@
 
 新增 Codec 字段必须使用 `optionalFieldOf`，保证第一阶段存档可直接升级。
 
+城镇汇总日报不归属于任意一座 `TransportStationBuilding`。它由城镇级
+`TownTransportState` 维护，至少记录当日城镇总运力和已占用运力；当前里程碑 B 尚无运力使用方，
+所以已占用运力固定为 `0`。后续接口登记、比例限速和汇总提示见
+[`plans/2026-08-20_16-53-08_transport-capacity-consumers.md`](../plans/2026-08-20_16-53-08_transport-capacity-consumers.md)。
+
 ### 4.3 拆除语义
 
 - 居民岗位清理由 `AbstractTownResidentWorkBuilding#onRemoved` 和
   `TeamTown.removeTownBlock` 的统一路径负责，不在方块类中重复清理。
-- 已经生产并存入城镇资源池的运力不因货运站拆除而追回，语义与已入库物资一致。
+- 运力按城镇结算日重建。当天拆除货运站不追回已经建立的当日运力，下一次晨间结算不再计入该站产出。
 - 方块实体拆除必须继续走 `AbstractTownBuildingBlockEntity#onRemoved`；不能直接修改建筑 Map。
 
 ## 5. 结构扫描与岗位
@@ -139,8 +153,8 @@ effectiveFloorArea = spaceRating * area
 maxResidents = max(minimumWorkerSlots, floor(effectiveFloorArea / floorBlocksPerWorkerSlot))
 ```
 
-`isBuildingWorkable()` 应在基类条件之外检查最小面积和最小体积。上述默认值只是与现有狩猎基地保持一致的
-初始基线，第二阶段数值测试后再调整。
+`isBuildingWorkable()` 在基类条件之外检查最小面积和最小体积。上述默认值是当前货运站的首版配置基线，
+并由 `TownModelParameters.Defaults` 与 `FHConfig` 共享。
 
 ### 5.3 岗位分配
 
@@ -148,29 +162,44 @@ maxResidents = max(minimumWorkerSlots, floor(effectiveFloorArea / floorBlocksPer
 `getResidentPriority()`；玩家队列顺序和保障人数决定建筑间优先关系，`getResidentScore(Resident)` 只负责在同一
 货运站候选居民中排序。
 
-第一阶段没有生产公式时，`getResidentScore` 可返回有限的固定值 `0.0`，使岗位链路可验证但不伪造生产力。
-第二阶段必须改为独立、可测试的生产力公式，并将运输熟练度键固定为
+当前 `getResidentScore` 使用独立、可测试的生产力公式，并将运输熟练度键固定为
 `TransportStationBuilding.class.getSimpleName()`，与现有 `Resident` 熟练度存储方式一致。
 
 ## 6. 每日工作与运力生产
 
-### 6.1 第一阶段
+### 6.1 第一阶段（已完成）
 
-`work(ITownWithBuildings, ServerLevel)` 返回 `false` 且不修改资源。返回值当前不会影响
-`TeamTownData#buildingsWork` 对其他建筑的结算，但 `false` 能准确表示本阶段没有完成生产。
+建筑基础阶段已完成；生产前的结构检查、岗位名册和 `isBuildingWorkable()` 仍由建筑自身负责。
 
-### 6.2 第二阶段
+### 6.2 第二阶段（已完成）
 
-生产逻辑应拆到 Forge 无关的 `TransportStationDailyModel`，Building 只负责收集输入和执行资源 Action。推荐公式形状：
+生产逻辑应拆到 Forge 无关的 `TransportStationDailyModel`，Building 只负责收集输入和执行资源 Action。H03
+冻结的首版参数为：
+
+| 参数 | 首版值 |
+|---|---:|
+| 标准工日产出 | `64` 运力/标准工人日 |
+| 健康/精神/力量/智力权重 | `35 / 15 / 30 / 20` |
+| 属性为 0/100 时的生产力 | `0.5 / 1.5` |
+| 最大运输熟练度 | `100` |
+| 满熟练度加成 | `0.8` |
+| 最低/最高最终生产力 | `0.5 / 2.3` |
+| 无工人被动产出 | `0` |
+
+沿用共享熟练度每日成长曲线。权重按总和归一化，当前恰好合计 `100`。生产公式为：
 
 ```text
-residentProductivity = f(居民属性, 运输熟练度)
+weightedAttribute = health * 0.35 + mental * 0.15 + strength * 0.30 + intelligence * 0.20
+residentProductivity = clamp(0.5 + weightedAttribute / 100 + 0.8 * proficiency / 100, 0.5, 2.3)
 totalProductivity = sum(所有当日驻站且合格居民的 residentProductivity)
-producedCapacity = totalProductivity * transportCapacityPerStandardWorkerDay
+producedCapacity = totalProductivity * 64
 ```
 
-具体属性权重、标准工日产出和熟练度增益必须进入 `TownModelParameters.Defaults` 与服务端配置，不能散落在
-Building 或 Screen 中。产出统一通过：
+标准工人（四项属性均为 `50`、运输熟练度为 `0`）每日生产 `64` 运力；满属性且满熟练度时每日生产
+`147.2` 运力。参数必须进入 `TownModelParameters.Defaults` 与服务端配置，不能散落在 Building 或 Screen 中。
+
+`TRANSPORT_CAPACITY` 是不消耗仓库容量、不会在运输中扣减、每个城镇结算日重新建立的 service。晨间必须在
+任何货运站工作前将其归零，再由所有可工作货运站分别通过以下 Action 加回当日产出：
 
 ```java
 town.getActionExecutorHandler().execute(
@@ -183,8 +212,9 @@ town.getActionExecutorHandler().execute(
 );
 ```
 
-不要直接调用 `TeamTownResourceHolder` 的 unsafe 方法。运力不占仓库容量且当前没有上限，所以第二阶段还需明确
-是否允许无限跨日囤积；若要限制库存，应新增显式规则，而不是复用 `MAX_CAPACITY`。
+不要直接调用 `TeamTownResourceHolder` 的 unsafe 方法。`VirtualResourceType.TRANSPORT_CAPACITY` 已设为
+`isService=true`，并由 `TeamTownData#buildingsWork` 在逐建筑生产前调用 `resetAllServices()`；所有货运站完成
+生产后，城镇再写入汇总日报。运力不会跨日囤积，也不存在运输任务扣减。
 
 ## 7. 方块、菜单与界面
 
@@ -213,14 +243,20 @@ town.getActionExecutorHandler().execute(
 
 ### 7.3 Screen
 
-第一阶段提供两个页签：
+当前提供三个页签：
 
 - **概览**：可工作状态、失败原因、员工数/上限、面积、体积；使用 `TownInfoPanel` 和现有
   `MineBaseScreen` 行构造工具。
-- **员工**：使用 `TownWorkforcePanel`；第一阶段贡献显示为 0，第二阶段接入真实评分、预计贡献和熟练度增长。
+- **员工**：使用 `TownWorkforcePanel`，显示真实个人生产力、预计每日运力贡献和熟练度成长。
+- **生产**：显示下次结算预测、单站最近结算的计划/实际运力，以及城镇日报中的总运力和已占用运力。
 
-第二阶段增加**生产**页签，展示下一次结算预测和上次结算日报。所有面板通过 Supplier 每帧读取客户端城镇
-快照；收到增量包时不重建 Screen，因此无需新增网络包。
+预测由 `TransportStationBuilding#getForecast(TeamTown)` 计算，和实际结算共用人员筛选与
+`TransportStationDailyModel` 输入。城镇汇总值读取 `TownTransportState`；在后续运力使用方实现前，占用量显示为
+`0`。所有面板通过 Supplier 每帧读取客户端城镇快照；收到增量包时不重建 Screen，因此无需新增重复数据通道。
+
+居民在创建和旧存档解码时由 `Resident#initializeMissingWorkProficiencies` 补齐
+`TransportStationBuilding` 熟练度键。因此预测与实际结算读取同一已持久化熟练度，不会在客户端界面首次打开时
+随机生成不同值。
 
 ### 7.4 镇长印章
 
@@ -228,8 +264,8 @@ town.getActionExecutorHandler().execute(
 
 - 增加 `gui.frostedheart.town_manager.building.TransportStationBuilding` 名称；
 - 在 `TownBuildingsPanel#detailLines` 增加货运站分支；
-- 第一阶段显示面积、体积和员工数；
-- 第二阶段增加上次产出、当前城镇运力库存和停产原因。
+- 显示面积、体积和员工数；
+- 显示单站上次计划/实际产出、当日城镇总运力、已占用运力和停产原因。
 
 ## 8. 注册、资源与本地化
 
@@ -270,7 +306,7 @@ gui.frostedheart.transport_station.workers
 gui.frostedheart.transport_station.transport_proficiency
 ```
 
-第二阶段再增加 production、forecast、produced capacity、stop reason 等键。英文值使用本需求指定的
+production、forecast、produced capacity、stop reason 等键已加入。英文值使用本需求指定的
 `Transport Station`；中文核心名称统一使用“货运站”。
 
 ## 9. 兼容性与风险
@@ -282,6 +318,10 @@ gui.frostedheart.transport_station.transport_proficiency
 4. **岗位系统不要走旧接口**：实现 `getResidentScore`，但不实现已废弃的 `getResidentPriority`。
 5. **结构失效不应保留可用岗位**：当日规划以 `isBuildingWorkable` 为准；界面仍可显示扫描得到的物理上限。
 6. **资源素材是完成条件**：只有 Java 注册而没有纹理、模型和 loot table 不算可交付建筑。
+7. **运力是城镇 service，不是建筑库存**：先统一归零、再执行全部货运站生产、最后生成城镇汇总日报；不能让
+   单座建筑按迭代顺序写入城镇最终总量。
+8. **状态所有权必须分层**：单站产出日报属于 `TransportStationBuilding`；城镇总运力与占用汇总属于
+   `TownTransportState`。接口 Map 和实际限速属于后续使用方计划。
 
 ## 10. 实施计划
 
@@ -301,13 +341,15 @@ gui.frostedheart.transport_station.transport_proficiency
 
 ### 里程碑 B：城镇运力生产
 
-- [ ] 确定属性权重、熟练度曲线、标准工日产出和是否允许无限囤积。
-- [ ] 新增 `TransportStationDailyModel` 及纯逻辑测试。
-- [ ] 通过 Action 系统生产 `TRANSPORT_CAPACITY`。
-- [ ] 增加运输熟练度成长、预测、日报和生产页。
-- [ ] 将关键数值加入城镇模拟/审计参数来源。
+- [x] 确定属性权重、熟练度曲线、标准工日产出和每日重建语义。
+- [x] 新增 `TransportStationDailyModel` 及纯逻辑测试。
+- [x] 将 `TRANSPORT_CAPACITY` 接入晨间 service 重建，并通过 Action 系统生产。
+- [x] 增加运输熟练度成长、单站日报、城镇汇总日报、持久化与增量同步。
+- [x] 增加预测、生产页和镇长印章生产详情。
+- [x] 将关键数值加入城镇模拟/审计参数来源。
 
-完成标准：同一输入产生确定的日结结果；无工人或建筑不可工作时不产出；资源增量同步、存档和界面一致。
+完成标准：同一输入产生确定的日结结果；无工人或建筑不可工作时不产出；运力不会跨日累积；资源增量同步、
+存档、城镇汇总日报和界面一致。
 
 ## 11. 验证计划
 
@@ -317,7 +359,12 @@ gui.frostedheart.transport_station.transport_proficiency
 - `TransportStationBuildingChangeTest`：重复设置相同扫描结果不会重复触发 `fireChange()`。
 - `TransportStationStaffingTest`：自动加入岗位计划、目标人数受 `maxResidents` 限制、不可工作时容量为 0。
 - 扩展 `TownBuildingRemovalTest`：拆除后居民保留但 `workPos` 和建筑名册被清理。
-- 第二阶段增加 `TransportStationDailyModelTest` 与资源 Action 集成测试。
+- `TransportStationDailyModelTest`：标准/满熟练度产出、属性权重、零配置和异常输入。
+- `TeamTownTransportSettlementTest`：单/多工人、多货运站、晨间归零、Action 实际修改量、熟练度、停产原因、
+  城镇汇总和重复空结算同步守卫。
+- `TransportStationForecastTest`：预测与结算共用合格工人及公式，空名册和不可工作原因。
+- `TransportStationBuildingCodecTest`、`TownTransportStateTest`、`TownResourceUpdatePacketTest`：单站/城镇日报的
+  旧存档兼容、持久化和增量包往返。
 
 ### 命令验证
 
@@ -338,12 +385,12 @@ git diff --check
 4. 岗位队列可调整货运站顺序和保障人数，晨间分配稳定。
 5. 打开自身界面和镇长印章时，中英文名称、数值和失败原因正确。
 6. 拆除核心后立即注销，旧菜单不能恢复已拆建筑。
-7. 第二阶段验证每日产出、无工人停产、存档与资源同步。
+7. 第二阶段验证每日先归零后产出、无工人停产、多站汇总、城镇日报、存档与资源同步。
 
-## 12. 实施前需确认
+## 12. 已冻结的 H03 决策
 
-以下问题不阻塞里程碑 A，但必须在里程碑 B 前确定：
-
-- 哪些居民属性影响运输生产力，以及各自权重。
-- 每标准工人日生产多少城镇运力，1 点城镇运力代表多少运输能力。
-- 城镇运力是否允许无限跨日囤积，或需要衰减/上限。
+- 每标准工人日生产 `64` 运力。
+- 健康、精神、力量、智力权重依次为 `35 / 15 / 30 / 20`。
+- 属性生产力范围为 `0.5～1.5`，满熟练度加成为 `0.8`，最终生产力范围为 `0.5～2.3`。
+- 运力不被运输消耗；每次晨间城镇结算先归零，再由货运站重新建立，不跨日囤积。
+- 城镇汇总日报记录总运力和已占用运力；占用登记与限速由后续使用方计划实现。

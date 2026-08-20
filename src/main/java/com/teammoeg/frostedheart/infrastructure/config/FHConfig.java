@@ -1599,6 +1599,17 @@ public class FHConfig {
 				public final ForgeConfigSpec.IntValue minimumWorkerSlots;
 				public final ForgeConfigSpec.IntValue minimumFloorAreaBlocks;
 				public final ForgeConfigSpec.IntValue minimumInteriorVolumeBlocks;
+				public final ForgeConfigSpec.DoubleValue transportCapacityPerStandardWorkerDay;
+				public final ForgeConfigSpec.DoubleValue productivityAtAttributeZero;
+				public final ForgeConfigSpec.DoubleValue productivityAtAttributeHundred;
+				public final ForgeConfigSpec.DoubleValue maximumProficiency;
+				public final ForgeConfigSpec.DoubleValue bonusAtMaximumProficiency;
+				public final ForgeConfigSpec.DoubleValue minimumResidentProductivity;
+				public final ForgeConfigSpec.DoubleValue maximumResidentProductivity;
+				public final ForgeConfigSpec.DoubleValue healthWeight;
+				public final ForgeConfigSpec.DoubleValue mentalWeight;
+				public final ForgeConfigSpec.DoubleValue strengthWeight;
+				public final ForgeConfigSpec.DoubleValue intelligenceWeight;
 
 				TransportStation(ForgeConfigSpec.Builder builder) {
 					builder.push("Transport Station");
@@ -1622,7 +1633,67 @@ public class FHConfig {
 							.defineInRange("minimumInteriorVolumeBlocks",
 									TownModelParameters.Defaults.TRANSPORT_STATION_MINIMUM_INTERIOR_VOLUME_BLOCKS,
 									0, 1000000000);
+					transportCapacityPerStandardWorkerDay = builder
+							.comment("Transport capacity produced per standard worker per town day.")
+							.comment("A standard worker has all four attributes at 50 and zero transport proficiency.")
+							.comment("Transport capacity is rebuilt each morning and is not carried across town days.")
+							.defineInRange("transportCapacityPerStandardWorkerDay",
+									TownModelParameters.Defaults.TRANSPORT_STATION_CAPACITY_PER_STANDARD_WORKER_DAY,
+									0d, 1000000d);
+
+					builder.push("Resident Productivity");
+					productivityAtAttributeZero = builder
+							.comment("Relative transport productivity at weighted attribute 0 and proficiency 0.")
+							.defineInRange("productivityAtAttributeZero",
+									TownModelParameters.Defaults.TRANSPORT_STATION_PRODUCTIVITY_AT_ATTRIBUTE_ZERO,
+									0d, 100d);
+					productivityAtAttributeHundred = builder
+							.comment("Relative transport productivity at weighted attribute 100 and proficiency 0.")
+							.comment("Linear interpolation makes weighted attribute 50 equal 1.0 with the defaults.")
+							.defineInRange("productivityAtAttributeHundred",
+									TownModelParameters.Defaults.TRANSPORT_STATION_PRODUCTIVITY_AT_ATTRIBUTE_HUNDRED,
+									0d, 100d);
+					maximumProficiency = builder
+							.comment("Transport proficiency that grants the full configured productivity bonus.")
+							.defineInRange("maximumProficiency",
+									TownModelParameters.Defaults.TRANSPORT_STATION_MAXIMUM_PROFICIENCY,
+									1d, 100d);
+					bonusAtMaximumProficiency = builder
+							.comment("Additive relative productivity granted at maximum transport proficiency.")
+							.defineInRange("bonusAtMaximumProficiency",
+									TownModelParameters.Defaults.TRANSPORT_STATION_BONUS_AT_MAXIMUM_PROFICIENCY,
+									0d, 100d);
+					minimumResidentProductivity = builder
+							.comment("Minimum final transport productivity in standard-worker units.")
+							.defineInRange("minimumResidentProductivity",
+									TownModelParameters.Defaults.TRANSPORT_STATION_MINIMUM_PRODUCTIVITY,
+									0d, 100d);
+					maximumResidentProductivity = builder
+							.comment("Maximum final transport productivity in standard-worker units.")
+							.defineInRange("maximumResidentProductivity",
+									TownModelParameters.Defaults.TRANSPORT_STATION_MAXIMUM_PRODUCTIVITY,
+									0d, 100d);
 					builder.pop();
+
+					builder.push("Attribute Weights");
+					healthWeight = defineTransportAttributeWeight(builder, "healthWeight", "health",
+							TownModelParameters.Defaults.TRANSPORT_STATION_HEALTH_WEIGHT);
+					mentalWeight = defineTransportAttributeWeight(builder, "mentalWeight", "mental",
+							TownModelParameters.Defaults.TRANSPORT_STATION_MENTAL_WEIGHT);
+					strengthWeight = defineTransportAttributeWeight(builder, "strengthWeight", "strength",
+							TownModelParameters.Defaults.TRANSPORT_STATION_STRENGTH_WEIGHT);
+					intelligenceWeight = defineTransportAttributeWeight(builder, "intelligenceWeight", "intelligence",
+							TownModelParameters.Defaults.TRANSPORT_STATION_INTELLIGENCE_WEIGHT);
+					builder.pop();
+					builder.pop();
+				}
+
+				private static ForgeConfigSpec.DoubleValue defineTransportAttributeWeight(
+						ForgeConfigSpec.Builder builder, String key, String attributeName, double defaultValue) {
+					return builder
+							.comment("Relative dimensionless weight of " + attributeName + " in transport productivity.")
+							.comment("Weights are normalized by their sum; setting every weight to zero uses an equal-weight average.")
+							.defineInRange(key, defaultValue, 0d, 1000d);
 				}
 			}
 

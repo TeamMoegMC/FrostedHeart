@@ -10,8 +10,11 @@ import com.teammoeg.chorda.client.cui.base.UILayer;
 import com.teammoeg.chorda.client.icon.CIcons;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlocks;
 import com.teammoeg.frostedheart.content.town.StandardTownBuildingScreen;
+import com.teammoeg.frostedheart.content.town.TeamTown;
+import com.teammoeg.frostedheart.content.town.building.TownProductionStopReason;
 import com.teammoeg.frostedheart.content.town.buildings.mine.MineBaseScreen;
 import com.teammoeg.frostedheart.content.town.resident.Resident;
+import com.teammoeg.frostedheart.content.town.resident.ResidentAttributeModel;
 import com.teammoeg.frostedheart.content.town.tabs.AbstractTownTab;
 import com.teammoeg.frostedheart.content.town.tabs.TownInfoPanel;
 import com.teammoeg.frostedheart.content.town.tabs.TownWorkforcePanel;
@@ -23,10 +26,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Foundation-stage transport station screen.
- * <p>
- * The station has no daily output yet, so its workforce view intentionally
- * reports zero productivity, contribution, and proficiency gain.
+ * Transport-station overview, workforce, and daily production screen.
  */
 public class TransportStationScreen extends StandardTownBuildingScreen<TransportStationMenu> {
     public TransportStationScreen(TransportStationMenu menu) {
@@ -37,6 +37,7 @@ public class TransportStationScreen extends StandardTownBuildingScreen<Transport
     protected void initTabs() {
         addTab(new OverviewTab(this));
         addTab(new WorkersTab(this));
+        addTab(new ProductionTab(this));
     }
 
     private abstract static class TransportStationTab extends AbstractTownTab<TransportStationMenu> {
@@ -101,14 +102,40 @@ public class TransportStationScreen extends StandardTownBuildingScreen<Transport
                             .map(building -> building.canResidentWork(resident))
                             .orElse(false),
                     TransportStationScreen::transportProficiency,
-                    resident -> 0.0,
-                    resident -> 0.0,
-                    resident -> 0.0,
+                    resident -> getMenu().getBuilding()
+                            .map(building -> building.getResidentScore(resident))
+                            .orElse(0.0),
+                    resident -> getMenu().getBuilding()
+                            .map(building -> building.getResidentCapacityContribution(resident))
+                            .orElse(0.0),
+                    TransportStationScreen::dailyProficiencyGain,
                     Component.translatable("gui.frostedheart.transport_station.transport_proficiency"),
                     value -> Component.translatable(
                             "gui.frostedheart.transport_station.personal_contribution",
                             MineBaseScreen.two(value))
             ));
+        }
+    }
+
+    private static final class ProductionTab extends TransportStationTab {
+        private ProductionTab(TransportStationScreen screen) {
+            super(screen);
+        }
+
+        @Override
+        public CIcons.CIcon getContentIcon() {
+            return CIcons.getIcon(Items.CHEST_MINECART);
+        }
+
+        @Override
+        public Component getTitle() {
+            return Component.translatable("gui.frostedheart.transport_station.production");
+        }
+
+        @Override
+        public void build(UILayer layer) {
+            layer.add(new TownInfoPanel(layer, 8, 4, 160, 130,
+                    () -> productionRows(getMenu())));
         }
     }
 
@@ -141,7 +168,72 @@ public class TransportStationScreen extends StandardTownBuildingScreen<Transport
         return rows;
     }
 
+    private static List<TownInfoPanel.Row> productionRows(TransportStationMenu menu) {
+        TransportStationBuilding building = menu.getBuilding().orElse(null);
+        TeamTown town = menu.getTown().orElse(null);
+        if (building == null || town == null) return MineBaseScreen.missingBuildingRows();
+
+        List<TownInfoPanel.Row> rows = new ArrayList<>();
+        TransportStationBuilding.TransportStationForecast forecast = building.getForecast(town);
+        rows.add(MineBaseScreen.title("gui.frostedheart.town.next_settlement_forecast"));
+        rows.add(MineBaseScreen.text("gui.frostedheart.transport_station.eligible_workers",
+                forecast.workerCount()));
+        rows.add(MineBaseScreen.text("gui.frostedheart.transport_station.total_productivity",
+                MineBaseScreen.two(forecast.totalProductivity())));
+        rows.add(MineBaseScreen.text("gui.frostedheart.transport_station.planned_capacity",
+                MineBaseScreen.one(forecast.plannedCapacity())));
+        if (forecast.stopReason() != TownProductionStopReason.NONE) {
+            rows.add(MineBaseScreen.reason(forecast.stopReason()));
+        }
+
+        rows.add(TownInfoPanel.Row.empty());
+        rows.add(MineBaseScreen.title("gui.frostedheart.town.last_settlement"));
+        TransportStationBuilding.TransportStationDailyReport report = building.getDailyReport();
+        if (!report.hasData()) {
+            rows.add(TownInfoPanel.Row.colored(
+                    Component.translatable("gui.frostedheart.town.no_production_report"),
+                    0xFFAAAAAA));
+        } else {
+            rows.add(MineBaseScreen.text("gui.frostedheart.transport_station.eligible_workers",
+                    report.workerCount()));
+            rows.add(MineBaseScreen.text("gui.frostedheart.transport_station.total_productivity",
+                    MineBaseScreen.two(report.totalProductivity())));
+            rows.add(MineBaseScreen.text("gui.frostedheart.transport_station.planned_capacity",
+                    MineBaseScreen.one(report.plannedCapacity())));
+            rows.add(MineBaseScreen.text("gui.frostedheart.transport_station.actual_capacity",
+                    MineBaseScreen.one(report.addedCapacity())));
+            if (report.stopReason() != TownProductionStopReason.NONE) {
+                rows.add(MineBaseScreen.reason(report.stopReason()));
+            }
+        }
+
+        rows.add(TownInfoPanel.Row.empty());
+        rows.add(MineBaseScreen.title("gui.frostedheart.transport_station.town_transport"));
+        var townReport = town.getTransportState().getDailyReport();
+        if (!townReport.hasData()) {
+            rows.add(TownInfoPanel.Row.colored(
+                    Component.translatable("gui.frostedheart.town.no_production_report"),
+                    0xFFAAAAAA));
+        } else {
+            rows.add(MineBaseScreen.text("gui.frostedheart.transport_station.town_total_capacity",
+                    MineBaseScreen.one(townReport.totalCapacity())));
+            rows.add(MineBaseScreen.text("gui.frostedheart.transport_station.town_reserved_capacity",
+                    MineBaseScreen.one(townReport.reservedCapacity())));
+        }
+        return rows;
+    }
+
     private static double transportProficiency(Resident resident) {
-        return resident.getWorkProficiency().getDouble(TransportStationBuilding.class.getSimpleName());
+        return resident.getWorkProficiency(TransportStationBuilding.class);
+    }
+
+    private static double dailyProficiencyGain(Resident resident) {
+        FHConfig.Server.Town.ResidentProgression progression =
+                FHConfig.SERVER.TOWN.RESIDENT_PROGRESSION;
+        return ResidentAttributeModel.calculateDailyProficiencyGain(
+                resident.getWorkProficiency(TransportStationBuilding.class),
+                progression.proficiencyGrowthAtZeroPerWorkday.get(),
+                progression.minimumProficiencyGrowthPerWorkday.get(),
+                progression.maximumWorkProficiency.get());
     }
 }

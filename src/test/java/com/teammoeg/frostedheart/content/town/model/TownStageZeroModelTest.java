@@ -33,6 +33,8 @@ class TownStageZeroModelTest {
 
         assertEquals(1.0, metrics.miningStandardWorkerSwe(), EPSILON);
         assertEquals(1.0, metrics.huntingStandardWorkerSwe(), EPSILON);
+        assertEquals(1.0, metrics.transportStandardWorkerSwe(), EPSILON);
+        assertEquals(64.0, metrics.transportCapacityPerStandardWorkerDay(), EPSILON);
         assertEquals(1.1666667, metrics.coalPerMiningSweDay(), EPSILON);
         assertEquals(1.1973684, metrics.meatPerHuntingSweDay(), EPSILON);
         assertEquals(5.2070175, metrics.rawFoodUnitsPerHuntingSweDay(), EPSILON);

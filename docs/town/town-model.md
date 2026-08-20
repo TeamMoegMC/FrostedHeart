@@ -1,6 +1,7 @@
 # 城镇临界自给数值模型
 
-> 状态：阶段 0–4 已实现；阶段 5 及之后尚未开始。2026-08-14 已把玩家可控的工作建筑队列、保障人数和每日原子调度接入游戏与阶段 3/4 Java 模拟。阶段 4 直接复用游戏的普通长期气候事件、方块温度、T1 半径/温升、整数球体判定以及居民年龄/初始属性分布，把建筑内部体素平均温度送入阶段 3 多日闭环；T2、加热器、热惯性与 T1 随机爬升仍不进入模拟。
+> 状态：阶段 0–4 已实现；阶段 5 及之后尚未开始。最近验证：2026-08-20。货运站单日运力已进入
+> `TownModelParameters`、纯 Java 城镇汇总模型和阶段 0 审计；运力使用方和距离成本仍未进入模拟。
 >
 > 目标：把 FH/TWR 当前代码和数据中的城镇数值关系整理为一套可调用、可审计、可模拟的 Java 数学模型。本文是后续实现时的上下文基准。
 
@@ -972,6 +973,8 @@ attribute = clamp[0,100](center + 100 × spread × (mean(u)-0.5))
 - `ResidentParameters`：无家可归损伤、移除阈值、工作资格、熟练度上限与增长；其中 `ResidentAgingParameters` 包含全部 14 个年龄增长参数。
 - `MiningParameters`：每 SWE 产量、工位、连接半径和居民生产力。旧岗位优先级字段只为配置兼容保留，现行调度不读取。
 - `HuntingParameters`：每 SWE 掉落、被动掉落、carry、结构/温度门槛、工位、居民生产力和建筑评分权重。旧岗位优先级字段只为配置兼容保留，现行调度不读取。
+- `TransportStationParameters`：每 SWE 日产运力、结构/工位门槛和运输职业生产力。默认标准工人贡献
+  `1 SWE`，即 `64 transport-capacity/worker/day`。
 - `TerrainResourceParameters`：矿井区块矿物储量/恢复与 HUNT 面积储量/恢复。树木、研究点和废料资源不参与当前煤—肉闭环，暂未进入模型参数。
 - `GeneratorT1Parameters`：基础燃料时长倍率、普通/超载过程 tick 耗速、球形热场半径、每级温度和城镇更新间隔。
 
@@ -1019,7 +1022,7 @@ attribute = clamp[0,100](center + 100 × spread × (mean(u)-0.5))
 
 阶段 0–2 已建立不依赖 `Level`、NBT、方块实体或 Forge 注册表的纯 Java API：
 
-- `TownModelParameters`：目前聚合 T1、公共建筑评分、居民、住宅、采矿、狩猎、矿物/HUNT 地形资源与肉类食物参数。`Defaults` 是纳入范围内 FH Java 参数的唯一源码默认值来源，`GameUnits` 只保存不可调的 Minecraft 单位换算。
+- `TownModelParameters`：目前聚合 T1、公共建筑评分、居民、住宅、采矿、狩猎、货运站、矿物/HUNT 地形资源与肉类食物参数。`Defaults` 是纳入范围内 FH Java 参数的唯一源码默认值来源，`GameUnits` 只保存不可调的 Minecraft 单位换算。
 - `TownStageZeroModel.analyze(...)`：接受参数 records 和从数据文件解析出的矿权重、掉落条目、燃料时长，返回纯代数统计量。
 - `GeneratorFuelModel`：同时被 `GeneratorData` 与审计调用，包含有效时长、当前补料判定、理想燃料率和 20-tick 批处理燃料率。
 - `GeneratorHeatFieldModel`：同时被 `GeneratorData` 与审计调用，包含塔等级到球形半径和热场温度的映射。
@@ -1028,6 +1031,9 @@ attribute = clamp[0,100](center + 100 × spread × (mean(u)-0.5))
 - `ResidentDailyModel`：晨间无家可归/移除与工作资格的唯一纯函数实现。
 - `MiningDailyModel`：采矿 SWE 到总产量、矿物权重分配及无限迁矿区块计数；`MineBaseBuilding` 已直接调用。
 - `HuntingDailyModel`：期望掉落、整数结算、carry 和 HUNT 上限；`HuntingBaseBuilding.work/getForecast` 已直接调用。
+- `TransportStationDailyModel`：游戏与模拟共用的单站居民生产力和运力产出公式。
+- `TownTransportCapacityModel`：接受多个货运站及其工人快照，返回逐站结果和城镇总工人数、总 SWE、总运力；
+  只依赖纯 Java 模型，不读取 Forge、世界或 GUI 状态。
 - `TownFoodProcessingModel`：场景层的 `1 raw meat -> 1 cooked meat` 抽象吞吐；它不表示任何具体机器。
 - `TownFoodInventoryModel`：五级食物优先级、同级营养质量排序和小数物品消费；游戏侧 `TownFoodNutritionModel` 复用同一个质量函数。
 - `HouseDailyModel.evaluateSettlement`：一次住宅结算的需求、食物满足度、营养、温度、空间和舒适度；`HouseBuilding` 已直接调用。住宅容量也由该模型提供并由 `HouseBlockEntity` 调用。
@@ -1072,6 +1078,8 @@ attribute = clamp[0,100](center + 100 × spread × (mean(u)-0.5))
 - TWR `biome_mine.js` 中 `fossil_deposits` 权重。
 - TWR `generator_efficiency_1/2.json` 研究加成。
 - 对 Java 控制的参数，记录 `TownModelParameters.Defaults -> FHConfig` 的完整映射；固定游戏单位单独标为 `minecraft-unit`。
+- 货运站的 5 个结构/产量参数、10 个生产力参数，以及
+  `TransportStationDailyModel`、`TownTransportCapacityModel` 的源码哈希。
 - FH 五个居民食物等级 Tag，以及八个生/熟肉 `diet_override` 营养 recipe。
 
 群系温度在阶段 4 读取；`generator_heat_1` 与所有 T2 端点数据在阶段 5 读取。工具仍不读取 IE 焦炉和 Create 风扇配方，因为具体机器由场景中的每日加工能力替代。快照输入总数以每次 `audit` 输出为准，避免文档数字随数据文件变化而失真。
@@ -1099,6 +1107,7 @@ attribute = clamp[0,100](center + 100 × spread × (mean(u)-0.5))
 - `1 hunting SWE = 1.1973684 meat/day`
 - `1 hunting SWE = 5.2070175 raw food units/day`
 - `1 hunting SWE = 22.5596491 cooked food units/day`，前提是加工吞吐足够
+- `1 transport SWE = 64 transport capacity/day`
 - `1 resident = 6.5 food units/day`
 - T1、无研究、普通运行、直接烧煤：`21.4286 coal/day`
 - T1、无研究、普通运行、烧焦煤：`10.7143 coke/day`，即至少 `10.7143 raw coal/day`

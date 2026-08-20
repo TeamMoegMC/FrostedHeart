@@ -33,6 +33,7 @@ import com.teammoeg.frostedheart.content.town.resident.Resident;
 import com.teammoeg.frostedheart.content.town.resource.TeamTownResourceActionExecutorHandler;
 import com.teammoeg.frostedheart.content.town.resource.TeamTownResourceHolder;
 import com.teammoeg.frostedheart.content.town.terrainresource.TerrainResourceType;
+import com.teammoeg.frostedheart.content.town.transport.TownTransportState;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.player.Player;
@@ -393,6 +394,10 @@ public class TeamTown implements ITown, ITownWithResidents, ITownWithBuildings {
 
     public TeamTownResourceHolder getResourceHolder() {
         return data.resources;
+    }
+
+    public TownTransportState getTransportState() {
+        return data.getTransportState();
     }
 
     /**

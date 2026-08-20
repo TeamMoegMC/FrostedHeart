@@ -32,7 +32,7 @@ class TransportStationBuildingChangeTest {
     }
 
     @Test
-    void settersOnlyFireForNetChangesAndWorkIsInactiveDuringFoundationStage() {
+    void settersOnlyFireForNetChanges() {
         TransportStationBuilding building = new TransportStationBuilding(BlockPos.ZERO);
         AtomicInteger changes = new AtomicInteger();
         building.setChangeEventListener(event -> changes.incrementAndGet());
@@ -46,7 +46,6 @@ class TransportStationBuildingChangeTest {
 
         assertEquals(3, changes.get());
         assertEquals(0.0, building.getResidentScore(null));
-        assertFalse(building.work(null, null));
     }
 
     @Test

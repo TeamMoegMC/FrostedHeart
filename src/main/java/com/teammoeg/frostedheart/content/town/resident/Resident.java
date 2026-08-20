@@ -27,6 +27,7 @@ import com.teammoeg.frostedheart.content.town.ITownWithResidents;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import com.teammoeg.frostedheart.content.town.building.ITownResidentWorkBuilding;
 import com.teammoeg.frostedheart.content.town.buildings.hunting.HuntingBaseBuilding;
+import com.teammoeg.frostedheart.content.town.buildings.logistics.TransportStationBuilding;
 import com.teammoeg.frostedheart.content.town.buildings.mine.MineBaseBuilding;
 import com.teammoeg.frostedheart.content.town.event.ITownResidentChangeEventListener;
 import com.teammoeg.frostedheart.content.town.event.TownResidentChangeEvent;
@@ -697,6 +698,9 @@ public class Resident {
         }
         if (!workProficiency.containsKey(MineBaseBuilding.class.getSimpleName())) {
             workProficiency.put(MineBaseBuilding.class.getSimpleName(), generateRandomProficiencyForAge());
+        }
+        if (!workProficiency.containsKey(TransportStationBuilding.class.getSimpleName())) {
+            workProficiency.put(TransportStationBuilding.class.getSimpleName(), generateRandomProficiencyForAge());
         }
     }
 

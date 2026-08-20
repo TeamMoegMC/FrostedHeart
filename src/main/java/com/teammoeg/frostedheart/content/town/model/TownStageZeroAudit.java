@@ -228,6 +228,8 @@ public final class TownStageZeroAudit {
         List<IdentifiedPath> inputs = List.of(
                 new IdentifiedPath("fh:town-model-parameters", paths.townModelParameters()),
                 new IdentifiedPath("fh:town-math-functions", paths.townMathFunctions()),
+                new IdentifiedPath("fh:town-transport-capacity-model", paths.townTransportCapacityModel()),
+                new IdentifiedPath("fh:transport-station-daily-model", paths.transportStationDailyModel()),
                 new IdentifiedPath("fh:house-daily-model", paths.houseDailyModel()),
                 new IdentifiedPath("fh:resident-daily-model", paths.residentDailyModel()),
                 new IdentifiedPath("fh:town-food-resource-amount", paths.townFoodResourceAmount()),
@@ -321,6 +323,7 @@ public final class TownStageZeroAudit {
         addProductivity(values, "mining.productivity", mining.productivity(), paths.townModelParameters());
         addHuntingParameters(values, hunting, paths.townModelParameters());
         addProductivity(values, "hunting.productivity", hunting.productivity(), paths.townModelParameters());
+        values.addAll(transportParameterValues(parameters, paths.townModelParameters()));
         addHousingParameters(values, parameters.housing(), paths.townModelParameters());
         addResidentParameters(values, parameters.residents(), paths.townModelParameters());
         addBuildingScoringParameters(values, parameters.buildingScoring(), paths.townModelParameters());
@@ -405,6 +408,36 @@ public final class TownStageZeroAudit {
         return List.copyOf(values);
     }
 
+    static List<ParameterValue> transportParameterValues(
+            TownModelParameters parameters,
+            Path source
+    ) {
+        List<ParameterValue> values = new ArrayList<>();
+        TownModelParameters.TransportStationParameters transport = parameters.transportStation();
+        addShared(values, "transportStation.capacityPerStandardWorkerDay",
+                transport.capacityPerStandardWorkerDay(), "transport-capacity/SWE/day", source,
+                "TRANSPORT_STATION_CAPACITY_PER_STANDARD_WORKER_DAY",
+                "TRANSPORT_STATION.transportCapacityPerStandardWorkerDay");
+        addShared(values, "transportStation.floorBlocksPerWorkerSlot",
+                transport.floorBlocksPerWorkerSlot(), "block2/worker", source,
+                "TRANSPORT_STATION_FLOOR_BLOCKS_PER_WORKER_SLOT",
+                "TRANSPORT_STATION.floorBlocksPerWorkerSlot");
+        addShared(values, "transportStation.minimumWorkerSlots",
+                transport.minimumWorkerSlots(), "worker", source,
+                "TRANSPORT_STATION_MINIMUM_WORKER_SLOTS",
+                "TRANSPORT_STATION.minimumWorkerSlots");
+        addShared(values, "transportStation.minimumFloorAreaBlocks",
+                transport.minimumFloorAreaBlocks(), "block2", source,
+                "TRANSPORT_STATION_MINIMUM_FLOOR_AREA_BLOCKS",
+                "TRANSPORT_STATION.minimumFloorAreaBlocks");
+        addShared(values, "transportStation.minimumInteriorVolumeBlocks",
+                transport.minimumInteriorVolumeBlocks(), "block3", source,
+                "TRANSPORT_STATION_MINIMUM_INTERIOR_VOLUME_BLOCKS",
+                "TRANSPORT_STATION.minimumInteriorVolumeBlocks");
+        addProductivity(values, "transportStation.productivity", transport.productivity(), source);
+        return List.copyOf(values);
+    }
+
     private static void addProductivity(
             List<ParameterValue> values,
             String prefix,
@@ -422,7 +455,16 @@ public final class TownStageZeroAudit {
         fields.put("bonusAtMaximumProficiency", productivity.bonusAtMaximumProficiency());
         fields.put("minimumProductivity", productivity.minimumProductivity());
         fields.put("maximumProductivity", productivity.maximumProductivity());
-        String configSection = prefix.startsWith("mining.") ? "MINING" : "HUNTING";
+        String configSection;
+        if (prefix.startsWith("mining.")) {
+            configSection = "MINING";
+        } else if (prefix.startsWith("hunting.")) {
+            configSection = "HUNTING";
+        } else if (prefix.startsWith("transportStation.")) {
+            configSection = "TRANSPORT_STATION";
+        } else {
+            throw new IllegalArgumentException("Unknown productivity prefix: " + prefix);
+        }
         fields.forEach((name, value) -> {
             String unit;
             if (name.endsWith("Weight")) {
@@ -929,6 +971,14 @@ public final class TownStageZeroAudit {
                 metric("huntingStandardWorkerSwe", value.huntingStandardWorkerSwe(), "SWE/worker",
                         "linearResidentProductivity([50,50,50,50], proficiency=0)",
                         "hunting.productivity.*"),
+                metric("transportStandardWorkerSwe", value.transportStandardWorkerSwe(), "SWE/worker",
+                        "linearResidentProductivity([50,50,50,50], proficiency=0)",
+                        "transportStation.productivity.*"),
+                metric("transportCapacityPerStandardWorkerDay",
+                        value.transportCapacityPerStandardWorkerDay(), "transport-capacity/worker/day",
+                        "capacity per SWE-day * standard worker SWE",
+                        "transportStation.capacityPerStandardWorkerDay",
+                        "transportStation.productivity.*"),
                 metric("coalPerMiningSweDay", value.coalPerMiningSweDay(), "coal/SWE/day",
                         "mining output per SWE-day * coal weight / total fossil-deposit weight",
                         "mining.baseOutputPerStandardWorkerDay", "mine.fossilDeposits.weight.*"),
@@ -1080,6 +1130,8 @@ public final class TownStageZeroAudit {
     private record InputPaths(
             Path townModelParameters,
             Path townMathFunctions,
+            Path townTransportCapacityModel,
+            Path transportStationDailyModel,
             Path houseDailyModel,
             Path residentDailyModel,
             Path townFoodResourceAmount,
@@ -1105,6 +1157,8 @@ public final class TownStageZeroAudit {
             return new InputPaths(
                     projectRoot.resolve("src/main/java/com/teammoeg/frostedheart/content/town/model/TownModelParameters.java"),
                     projectRoot.resolve("src/main/java/com/teammoeg/frostedheart/content/town/TownMathFunctions.java"),
+                    projectRoot.resolve("src/main/java/com/teammoeg/frostedheart/content/town/model/TownTransportCapacityModel.java"),
+                    projectRoot.resolve("src/main/java/com/teammoeg/frostedheart/content/town/buildings/logistics/TransportStationDailyModel.java"),
                     projectRoot.resolve("src/main/java/com/teammoeg/frostedheart/content/town/buildings/house/HouseDailyModel.java"),
                     projectRoot.resolve("src/main/java/com/teammoeg/frostedheart/content/town/resident/ResidentDailyModel.java"),
                     projectRoot.resolve("src/main/java/com/teammoeg/frostedheart/content/town/resource/TownFoodResourceAmount.java"),
@@ -1129,7 +1183,8 @@ public final class TownStageZeroAudit {
 
         void requireAll() throws IOException {
             for (Path path : List.of(
-                    townModelParameters, townMathFunctions, houseDailyModel, residentDailyModel,
+                    townModelParameters, townMathFunctions, townTransportCapacityModel,
+                    transportStationDailyModel, houseDailyModel, residentDailyModel,
                     townFoodResourceAmount,
                     generatorFuelModel, generatorHeatFieldModel, sphericalHeatFieldModel,
                     generatorData, climateCommonEvents, climateEventModel,
