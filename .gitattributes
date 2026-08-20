@@ -1,0 +1,2 @@
+# Forge data generation writes LF; keep generated resources stable on Windows.
+/src/generated/resources/** text eol=lf

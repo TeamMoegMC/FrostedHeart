@@ -70,7 +70,9 @@ class TownModelParameterDefaultsTest {
                 Path.of("src/main/java/com/teammoeg/frostedheart/content/town/buildings/house/HouseBuilding.java"),
                 Path.of("src/main/java/com/teammoeg/frostedheart/content/town/buildings/house/HouseBlockEntity.java"),
                 Path.of("src/main/java/com/teammoeg/frostedheart/content/town/buildings/mine/MineBaseBlockEntity.java"),
-                Path.of("src/main/java/com/teammoeg/frostedheart/content/town/buildings/hunting/HuntingBaseBlockEntity.java"))) {
+                Path.of("src/main/java/com/teammoeg/frostedheart/content/town/buildings/hunting/HuntingBaseBlockEntity.java"),
+                Path.of("src/main/java/com/teammoeg/frostedheart/content/town/buildings/logistics/TransportStationBuilding.java"),
+                Path.of("src/main/java/com/teammoeg/frostedheart/content/town/buildings/logistics/TransportStationBlockEntity.java"))) {
             assertRuntimeUsesConfig(runtimePath);
         }
 
@@ -84,6 +86,14 @@ class TownModelParameterDefaultsTest {
                 parameters.residents().homelessHealthLossPerDay(), EPSILON);
         assertEquals(TownModelParameters.Defaults.MINING_FLOOR_BLOCKS_PER_WORKER_SLOT,
                 parameters.mining().floorBlocksPerWorkerSlot(), EPSILON);
+        assertEquals(TownModelParameters.Defaults.TRANSPORT_STATION_CAPACITY_PER_STANDARD_WORKER_DAY,
+                parameters.transportStation().capacityPerStandardWorkerDay(), EPSILON);
+        assertEquals(TownModelParameters.Defaults.TRANSPORT_STATION_FLOOR_BLOCKS_PER_WORKER_SLOT,
+                parameters.transportStation().floorBlocksPerWorkerSlot(), EPSILON);
+        assertEquals(TownModelParameters.Defaults.TRANSPORT_STATION_HEALTH_WEIGHT,
+                parameters.transportStation().productivity().healthWeight(), EPSILON);
+        assertEquals(1.0,
+                parameters.transportStation().productivity().standardWorkerEquivalent(), EPSILON);
         assertEquals(TownModelParameters.Defaults.TOWN_OBSERVATION_HISTORY_DAYS,
                 parameters.observation().historyDays());
         assertEquals(90, parameters.observation().historyDays());

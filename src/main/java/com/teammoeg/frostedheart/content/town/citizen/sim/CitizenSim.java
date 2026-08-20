@@ -24,6 +24,8 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
+import com.teammoeg.frostedheart.content.town.resident.Resident;
+
 import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
 import net.minecraft.nbt.CompoundTag;
 
@@ -31,14 +33,20 @@ import net.minecraft.nbt.CompoundTag;
  * 居民模拟核心数据，SoA（Structure-of-Arrays）紧排布局。
  * 位置使用 1/1024 方块精度的定点数；索引仅在运行期有效，
  * 删除采用"末尾交换"策略 O(1) 完成，外部引用一律使用稳定 id。
- * 一万居民的热数据约 600KB，顺序扫描对 CPU 缓存友好，几乎无 GC 压力。
+ * 当前 17 个 int、5 个 long 和 7 个 byte 字段合计 115 B/capacity slot
+ * （不含数组头和 idToIndex），顺序扫描对 CPU 缓存友好，几乎无 GC 压力。
  * <p>
  * Core citizen simulation data in Structure-of-Arrays layout.
  * Positions are fixed-point at 1/1024 block precision. Indices are runtime-only;
  * removal is O(1) swap-remove, external references must use the stable id.
- * Hot data for 10k citizens is ~600KB, cache-friendly and nearly GC-free.
+ * The current primitive arrays use 115 bytes per capacity slot, excluding
+ * array headers and idToIndex; scans remain cache-friendly and nearly GC-free.
  */
 public final class CitizenSim {
+	/** Sleeping citizen is anchored to a currently verified bed head. */
+	public static final byte PRESENT_ON_VALID_BED = 1;
+	private static final int PRESENTATION_AGE_SHIFT = 1;
+	private static final int PRESENTATION_AGE_MASK = 0b110;
 	/** 瞬态完整住宅锚点缺失值 / Sentinel for a missing transient full home anchor. */
 	public static final long NO_HOME_POS = Long.MIN_VALUE;
 
@@ -68,14 +76,14 @@ public final class CitizenSim {
 	 * shared by bed assignment and collision-free exit placement.
 	 */
 	public int[] homeSlot;
+	/** Transient presentation bits: valid-bed state plus the Resident age group; never persisted. */
+	public byte[] presentationFlags;
 	/** 工作锚点（方块坐标），-1 = 无工作（命令生成/失业居民）；运行期数据，不落盘（重启后由人口对齐重建） / Work anchor (block coords), -1 = no job (command-spawned/unemployed); runtime-only, rebuilt by the population align after restart */
 	public int[] wx, wz;
 	/** 代表的城镇居民 UUID 两段（0/0 = 未托管的命令居民） / Town resident UUID halves (0/0 = unmanaged command citizen) */
 	public long[] uuidHi, uuidLo;
 	/** 当前移动目标（定点坐标） / Current movement target (fixed-point coordinates) */
-	public int[] tx, ty, tz;
-	/** 分帧相位：id % SLICE / Time-slicing phase: id % SLICE */
-	public byte[] tickPhase;
+	public int[] tx, tz;
 	/** Dead Reckoning 规范模型：上次广播的位置/方向/状态/时刻 / Dead-reckoning canonical model: last broadcast pos/dir/state/time */
 	public int[] sx, sy, sz;
 	public byte[] sstate;
@@ -113,14 +121,13 @@ public final class CitizenSim {
 		homeZ = new int[cap];
 		homePos = new long[cap];
 		homeSlot = new int[cap];
+		presentationFlags = new byte[cap];
 		wx = new int[cap];
 		wz = new int[cap];
 		uuidHi = new long[cap];
 		uuidLo = new long[cap];
 		tx = new int[cap];
-		ty = new int[cap];
 		tz = new int[cap];
-		tickPhase = new byte[cap];
 		sx = new int[cap];
 		sy = new int[cap];
 		sz = new int[cap];
@@ -147,14 +154,13 @@ public final class CitizenSim {
 		homeZ = Arrays.copyOf(homeZ, newCap);
 		homePos = Arrays.copyOf(homePos, newCap);
 		homeSlot = Arrays.copyOf(homeSlot, newCap);
+		presentationFlags = Arrays.copyOf(presentationFlags, newCap);
 		wx = Arrays.copyOf(wx, newCap);
 		wz = Arrays.copyOf(wz, newCap);
 		uuidHi = Arrays.copyOf(uuidHi, newCap);
 		uuidLo = Arrays.copyOf(uuidLo, newCap);
 		tx = Arrays.copyOf(tx, newCap);
-		ty = Arrays.copyOf(ty, newCap);
 		tz = Arrays.copyOf(tz, newCap);
-		tickPhase = Arrays.copyOf(tickPhase, newCap);
 		sx = Arrays.copyOf(sx, newCap);
 		sy = Arrays.copyOf(sy, newCap);
 		sz = Arrays.copyOf(sz, newCap);
@@ -178,10 +184,9 @@ public final class CitizenSim {
 	 * @param x 出生 X（定点） / spawn X (fixed-point)
 	 * @param y 出生 Y（定点） / spawn Y (fixed-point)
 	 * @param z 出生 Z（定点） / spawn Z (fixed-point)
-	 * @param phase 分帧相位 / time-slicing phase
 	 * @return 运行期索引 / runtime index
 	 */
-	public int add(int newId, int x, int y, int z, byte phase) {
+	public int add(int newId, int x, int y, int z) {
 		if (newId <= 0 || newId == Integer.MAX_VALUE)
 			throw new IllegalArgumentException("Invalid citizen id " + newId);
 		if (idToIndex.containsKey(newId))
@@ -197,17 +202,16 @@ public final class CitizenSim {
 		homeZ[i] = z >> 10;
 		homePos[i] = NO_HOME_POS;
 		homeSlot[i] = -1;
+		presentationFlags[i] = 0;
 		wx[i] = -1;
 		wz[i] = -1;
 		uuidHi[i] = 0;
 		uuidLo[i] = 0;
 		tx[i] = x;
-		ty[i] = y;
 		tz[i] = z;
 		dir[i] = 4; // 南（+Z），与旧 yaw=0 的默认朝向一致
         sdir[i] = 4;
         state[i] = CitizenState.IDLE;
-		tickPhase[i] = phase;
 		sx[i] = x;
 		sy[i] = y;
 		sz[i] = z;
@@ -221,6 +225,37 @@ public final class CitizenSim {
         halt[i] = 0;
         shalt[i] = 0;
 		return i;
+	}
+
+	/**
+	 * Compatibility overload accepting a legacy phase parameter.
+	 */
+	public int add(int newId, int x, int y, int z, byte phase) {
+		return add(newId, x, y, z);
+	}
+
+	/** Returns the mirrored Resident age used only for client presentation. */
+	public int presentationAge(int index) {
+		return switch ((presentationFlags[index] & PRESENTATION_AGE_MASK) >>> PRESENTATION_AGE_SHIFT) {
+			case 1 -> Resident.AGE_INFANT;
+			case 2 -> Resident.AGE_CHILD;
+			case 3 -> Resident.AGE_ELDER;
+			default -> Resident.AGE_ADULT;
+		};
+	}
+
+	/** Updates the transient age mirror and reports whether its visual value changed. */
+	public boolean setPresentationAge(int index, int age) {
+		int encoded = switch (age) {
+			case Resident.AGE_INFANT -> 1;
+			case Resident.AGE_CHILD -> 2;
+			case Resident.AGE_ELDER -> 3;
+			default -> 0;
+		};
+		byte previous = presentationFlags[index];
+		presentationFlags[index] = (byte) ((previous & ~PRESENTATION_AGE_MASK)
+				| (encoded << PRESENTATION_AGE_SHIFT));
+		return previous != presentationFlags[index];
 	}
 
 	/**
@@ -248,14 +283,13 @@ public final class CitizenSim {
 			homeZ[i] = homeZ[last];
 			homePos[i] = homePos[last];
 			homeSlot[i] = homeSlot[last];
+			presentationFlags[i] = presentationFlags[last];
 			wx[i] = wx[last];
 			wz[i] = wz[last];
 			uuidHi[i] = uuidHi[last];
 			uuidLo[i] = uuidLo[last];
 			tx[i] = tx[last];
-			ty[i] = ty[last];
 			tz[i] = tz[last];
-			tickPhase[i] = tickPhase[last];
 			sx[i] = sx[last];
 			sy[i] = sy[last];
 			sz[i] = sz[last];
@@ -285,12 +319,12 @@ public final class CitizenSim {
 	}
 
 	/**
-	 * 替换一个运行期会话 id，同时维护反向索引与分帧相位。仅用于跨容器 id
+	 * 替换一个运行期会话 id，同时维护反向索引。仅用于跨容器 id
 	 * 冲突恢复；位置、状态、目标和持久居民 UUID 均保持不变。
 	 * <p>
-	 * Replaces a runtime session id while maintaining the reverse index and
-	 * time-slice phase. Used only for cross-container collision recovery; all
-	 * position, state, target and durable resident UUID fields are preserved.
+	 * Replaces a runtime session id while maintaining the reverse index.
+	 * Used only for cross-container collision recovery; all position,
+	 * state, target and durable resident UUID fields are preserved.
 	 *
 	 * @param index 运行期索引 / runtime index
 	 * @param newId 新稳定 id / new stable id
@@ -308,7 +342,6 @@ public final class CitizenSim {
 			throw new IllegalArgumentException("Duplicate citizen id " + newId);
 		idToIndex.remove(oldId);
 		id[index] = newId;
-		tickPhase[index] = (byte) (newId % BehaviorSystem.SLICE);
 		idToIndex.put(newId, index);
 		return oldId;
 	}
@@ -373,14 +406,12 @@ public final class CitizenSim {
 		tag.putIntArray("py", Arrays.copyOf(py, size));
 		tag.putIntArray("pz", Arrays.copyOf(pz, size));
 		tag.putByteArray("dir", Arrays.copyOf(dir, size));
-        tag.putByteArray("sdir", Arrays.copyOf(sdir, size));
 		tag.putByteArray("state", Arrays.copyOf(state, size));
 		tag.putIntArray("homeX", Arrays.copyOf(homeX, size));
 		tag.putIntArray("homeZ", Arrays.copyOf(homeZ, size));
 		tag.putLongArray("uuidHi", Arrays.copyOf(uuidHi, size));
 		tag.putLongArray("uuidLo", Arrays.copyOf(uuidLo, size));
 		tag.putIntArray("tx", Arrays.copyOf(tx, size));
-		tag.putIntArray("ty", Arrays.copyOf(ty, size));
 		tag.putIntArray("tz", Arrays.copyOf(tz, size));
 		return tag;
 	}
@@ -410,7 +441,6 @@ public final class CitizenSim {
 		long[] auuidHi = tag.getLongArray("uuidHi");
 		long[] auuidLo = tag.getLongArray("uuidLo");
 		int[] atx = tag.getIntArray("tx");
-		int[] aty = tag.getIntArray("ty");
 		int[] atz = tag.getIntArray("tz");
 		// id/position are the minimum viable record. Clamp a corrupt declared
 		// size to the available core arrays; all remaining arrays are optional
@@ -435,7 +465,7 @@ public final class CitizenSim {
 				if (!managedIdentities.add(managedIdentity))
 					continue;
 			}
-			int i = sim.add(ids[k], apx[k], apy[k], apz[k], (byte) (ids[k] % 20));
+			int i = sim.add(ids[k], apx[k], apy[k], apz[k]);
 			if (k < adir.length)
 				sim.dir[i] = adir[k];
 			else if (k < ayaw.length)
@@ -465,8 +495,6 @@ public final class CitizenSim {
 			}
 			if (k < atx.length)
 				sim.tx[i] = atx[k];
-			if (k < aty.length)
-				sim.ty[i] = aty[k];
 			if (k < atz.length)
 				sim.tz[i] = atz[k];
 		}

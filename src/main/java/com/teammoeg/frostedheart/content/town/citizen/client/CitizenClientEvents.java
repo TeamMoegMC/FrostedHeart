@@ -19,15 +19,16 @@
 
 package com.teammoeg.frostedheart.content.town.citizen.client;
 
+import com.jozufozu.flywheel.event.ReloadRenderersEvent;
 import com.teammoeg.frostedheart.FHMain;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.world.level.Level;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.ClientPlayerNetworkEvent;
 import net.minecraftforge.client.event.InputEvent;
 import net.minecraftforge.client.event.RenderLevelStageEvent;
 import net.minecraftforge.event.TickEvent;
+import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
@@ -42,8 +43,6 @@ public final class CitizenClientEvents {
 
 	/** 交互选取距离（方块） / Interaction pick distance in blocks */
 	private static final double PICK_DIST = 4.5;
-	/** 上次记录的客户端维度实例（换维度清缓存的检测锚点）/ Last seen client level instance (dimension-switch detection anchor) */
-	private static Level lastClientLevel;
 
 	private CitizenClientEvents() {
 	}
@@ -58,7 +57,7 @@ public final class CitizenClientEvents {
 	@SubscribeEvent
 	public static void onRenderLevel(RenderLevelStageEvent event) {
 		if (event.getStage() == RenderLevelStageEvent.Stage.AFTER_ENTITIES)
-			ClientCitizenRenderer.render(event);
+			CitizenRenderCoordinator.render(event);
 	}
 
 	/**
@@ -75,18 +74,12 @@ public final class CitizenClientEvents {
 		Minecraft mc = Minecraft.getInstance();
 		if (mc.level == null || mc.player == null)
 			return;
-		// 换维度：per-level id 空间在客户端不得有重叠窗口——跨维度（新建 ClientLevel
-		// 实例）时立即清空旧维度残留（原为残留到重进世界），与服务端全量重生对齐。
-		// Dimension switch: the per-level id space must not overlap on the client —
-		// on a cross-dimension move (a new ClientLevel instance) the old dimension's
-		// leftovers are cleared immediately (previously lingering until re-login),
-		// aligned with the server-side full respawn.
-		if (lastClientLevel != null && lastClientLevel != mc.level) {
-			ClientCitizenCache.clear();
-			FakeCitizenManager.clearAll();
-		}
-		lastClientLevel = mc.level;
-		FakeCitizenManager.tick(mc);
+		CitizenRenderCoordinator.tick(mc);
+	}
+
+	@SubscribeEvent(priority = EventPriority.LOWEST)
+	public static void onFlywheelRenderersReloaded(ReloadRenderersEvent event) {
+		CitizenRenderCoordinator.onRenderersReloaded(event.getWorld());
 	}
 
 	/**
@@ -125,7 +118,6 @@ public final class CitizenClientEvents {
 	 */
 	@SubscribeEvent
 	public static void onLogout(ClientPlayerNetworkEvent.LoggingOut event) {
-		ClientCitizenCache.clear();
-		FakeCitizenManager.clearAll();
+		CitizenRenderCoordinator.clearWorld();
 	}
 }

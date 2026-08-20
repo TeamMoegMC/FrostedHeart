@@ -19,17 +19,13 @@
 
 package com.teammoeg.frostedheart.content.scenario.client.gui.layered.font;
 
-import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
-import java.util.function.BiConsumer;
 
 import com.google.gson.JsonObject;
 import it.unimi.dsi.fastutil.bytes.ByteArrayList;
 import it.unimi.dsi.fastutil.bytes.ByteList;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
 
 public class UnihexParser {
 	public static record OverrideRange(int from, int to, int left, int right) {
@@ -39,69 +35,65 @@ public class UnihexParser {
 
 	}
 
-	static void readFromStream(InputStream pStream, BiConsumer<Integer, GlyphData> pOutput, List<OverrideRange> overrides) throws IOException {
-		int i = 0;
-		ByteList bytelist = new ByteArrayList(128);
+	static void readFromStream(InputStream stream, UnihexGlyphStore.Builder output, List<OverrideRange> overrides) throws IOException {
+		int lineNumber = 0;
+		ByteList bytes = new ByteArrayList(128);
+		int[] rows = new int[UnihexGlyphStore.GLYPH_HEIGHT];
 
 		while (true) {
-			boolean flag = copyUntil(pStream, bytelist, 58);
-			int j = bytelist.size();
-			if (j == 0 && !flag) {
+			boolean foundColon = copyUntil(stream, bytes, ':');
+			int codePointDigits = bytes.size();
+			if (codePointDigits == 0 && !foundColon) {
 				return;
 			}
 
-			if (!flag || j != 4 && j != 5 && j != 6) {
-				throw new IllegalArgumentException("Invalid entry at line " + i + ": expected 4, 5 or 6 hex digits followed by a colon");
+			if (!foundColon || codePointDigits != 4 && codePointDigits != 5 && codePointDigits != 6) {
+				throw new IllegalArgumentException("Invalid entry at line " + lineNumber
+						+ ": expected 4, 5 or 6 hex digits followed by a colon");
 			}
 
-			int cp = 0;
-
-			for (int l = 0; l < j; ++l) {
-				cp = cp << 4 | decodeHex(i, bytelist.getByte(l));
+			int codePoint = 0;
+			for (int digit = 0; digit < codePointDigits; digit++) {
+				codePoint = codePoint << 4 | decodeHex(lineNumber, bytes.getByte(digit));
 			}
-			BufferedImage image;
-			bytelist.clear();
-			copyUntil(pStream, bytelist, 10);
-			int i1 = bytelist.size();
-			LineData unihexprovider$linedata1 = LineData.readn(i, bytelist, i1 / 4);
-			int pLeft = 0;
-			int pRight = 32 - (i1 / 4);
-			for (OverrideRange rov : overrides) {
-				if (cp <= rov.to && cp >= rov.from) {
-					pLeft = rov.left;
-					pRight = rov.right;
 
+			bytes.clear();
+			copyUntil(stream, bytes, '\n');
+			int bitWidth = switch (bytes.size()) {
+				case 32 -> 8;
+				case 64 -> 16;
+				case 96 -> 24;
+				case 128 -> 32;
+				default -> throw new IllegalArgumentException("Invalid entry at line " + lineNumber
+						+ ": expected 32, 64, 96 or 128 bitmap hex digits");
+			};
+			readRows(lineNumber, bytes, bitWidth, rows);
+
+			int left = 0;
+			int right = 32 - bitWidth;
+			for (OverrideRange override : overrides) {
+				if (codePoint >= override.from && codePoint <= override.to) {
+					left = override.left;
+					right = override.right;
 					break;
 				}
-
 			}
-			int width = pRight - pLeft + 1;
-			image = new BufferedImage(width, 16, BufferedImage.TYPE_INT_ARGB);
-			int ml = 32 - pLeft - 1;
-			int mr = 32 - pRight - 1;
-			for (int l = 0; l < 16; l++) {
-				for (int k = ml; k >= mr; --k) {
-					if (k < 32 && k >= 0) {
-						boolean isPixel = (unihexprovider$linedata1.line(l) >> k & 1) != 0;
-						image.setRGB(ml - k, l, isPixel ? 0xFFFFFFFF : 0x0);
-					} else {
-						image.setRGB(ml - k, l, 0x0);
-					}
-				}
-			}
-			GlyphData data = new GlyphData();
-			data.isUnicode = true;
-			data.height = 16;
-			data.width = width;
-			data.advance = width + 1;
-			data.image = image;
-			pOutput.accept(cp, data);
-			bytelist.clear();
+			output.add(codePoint, rows, left, right);
+			lineNumber++;
+			bytes.clear();
 		}
 	}
 
-	private static int decodeHex(int pLineNumber, ByteList pByteList, int pIndex) {
-		return decodeHex(pLineNumber, pByteList.getByte(pIndex));
+	private static void readRows(int lineNumber, ByteList bytes, int bitWidth, int[] rows) {
+		int digitsPerRow = bitWidth / 4;
+		int byteIndex = 0;
+		for (int row = 0; row < UnihexGlyphStore.GLYPH_HEIGHT; row++) {
+			int value = 0;
+			for (int digit = 0; digit < digitsPerRow; digit++) {
+				value = value << 4 | decodeHex(lineNumber, bytes.getByte(byteIndex++));
+			}
+			rows[row] = value << (Integer.SIZE - bitWidth);
+		}
 	}
 
 	private static int decodeHex(int pLineNumber, byte pData) {
@@ -168,42 +160,18 @@ public class UnihexParser {
 		return b0;
 	}
 
-	private static boolean copyUntil(InputStream pStream, ByteList pByteList, int p_285177_) throws IOException {
+	private static boolean copyUntil(InputStream stream, ByteList bytes, int delimiter) throws IOException {
 		while (true) {
-			int i = pStream.read();
-			if (i == -1) {
+			int next = stream.read();
+			if (next == -1) {
 				return false;
 			}
 
-			if (i == p_285177_) {
+			if (next == delimiter) {
 				return true;
 			}
 
-			pByteList.add((byte) i);
-		}
-	}
-
-	@OnlyIn(Dist.CLIENT)
-	private static record LineData(int[] contents, int bitWidth) {
-
-		public int line(int pIndex) {
-			return this.contents[pIndex];
-		}
-
-		static LineData readn(int pIndex, ByteList pByteList, int range) {
-			int[] aint = new int[16];
-			int j = 0;
-
-			for (int k = 0; k < 16; ++k) {
-				int lineValue = 0;
-				for (int i = 0; i < (range / 4); i++) {
-					lineValue <<= 4;
-					lineValue |= decodeHex(pIndex, pByteList, j++);
-				}
-				aint[k] = lineValue << 32 - range;
-			}
-
-			return new LineData(aint, range);
+			bytes.add((byte) next);
 		}
 	}
 

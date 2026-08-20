@@ -1,5 +1,10 @@
 # 城镇居民混合模拟架构（Hybrid Citizen Simulation）
 
+- Status: `Transitional`
+- Last verified: `2026-08-20`
+- Scope: `居民服务端模拟、睡眠展示、AOI 预算、同步、客户端缓存与渲染`
+- Code anchors: `CitizenSim`, `CitizenSimScheduler.refreshRegistry`, `CitizenSimScheduler.rebuildActiveIds`, `BehaviorSystem.tick`, `MovementSystem.tickAll`, `SpatialGrid.rebuildVisibility`, `SpatialGrid.queryVisible`, `CitizenPresence`, `TownSimData.onSleepEntered`, `SyncEngine.collectPlayerCandidates`, `SyncEngine.flushDeltas`, `ClientCitizen`, `FakeCitizenManager`, `CitizenRenderCoordinator`, `CitizenRenderBackend`, `CpuBatchCitizenBackend`, `FlywheelCitizenBackend`, `CitizenInstanceData`, `CitizenInstanceType`, `CitizenFlywheelModels`, `assets/frostedheart/flywheel/shaders/citizen.vert`, `ClientCitizenRenderer`, `CitizenClientBenchmark`, `CitizenRenderMetrics`, `FHConfig.SERVER.TOWN`
+
 > 适用环境：Minecraft 1.20.1 / Forge 47.3.0 / Java 17（本仓库 Frosted Heart）
 > 目标规模：单机/联机下 **数千至上万** 个有独立行为的城镇居民，服务端近零实体开销，客户端流畅可见。
 > 核心思想：**服务端纯数据模拟 + 客户端纯表现渲染，网络包同步，完全绕过 `Entity` 体系。**
@@ -16,11 +21,12 @@
 │   │                     居民增删由城镇事件直接驱动（无周期性对账同步器）        │
 │   ├── UnmanagedCitizenData (SavedData, per-level) 命令生成的未托管居民+id分配  │
 │   ├── CitizenSim        SoA 紧排数组存储（id/位置/速度/状态/目标/需求）        │
-│   ├── BehaviorSystem    轻量状态机（工作/吃饭/睡觉/闲逛），纯整数运算          │
+│   ├── active stable IDs 每 20t 按容器重建，只驱动玩家附近的运行期条目          │
+│   ├── BehaviorSystem    消费 active IDs 的轻量状态机，按 id%20 分帧            │
 │   ├── NavSystem         分层寻路：城镇路网图 + 局部流场(Flow Field)            │
 │   │                      └── 异步线程池执行 BFS/路径请求，主线程消费结果        │
-│   ├── SpatialGrid       空间哈希网格（跨容器共享，条目存稳定 id）：邻居/分离   │
-│   └── SyncEngine        AOI 兴趣管理 + 脏标记增量快照 + 带宽预算分包           │
+│   ├── SpatialGrid       2 格邻居网格 + 16 格 AOI 粗网格，均存稳定 id           │
+│   └── SyncEngine        粗桶候选+精确 AOI；tracked union 脏检查与预算分包      │
 │                                                                               │
 └───────────────────────────────┬───────────────────────────────────────────────┘
                                  │ SimpleChannel（chorda CBaseNetwork）
@@ -28,7 +34,9 @@
 ┌───────────────────────────────┴───────────────────────────────────────────────┐
 │                          客户端 (Logical Client)                              │
 │  ClientCitizenCache    id → 渲染状态（带双缓冲插值快照）                        │
-│  ClientCitizenRenderer 近处少量假实体 / 其余 Flywheel 实例化批渲染              │
+│  CitizenRenderCoordinator 统一 packet/tick/render/reload/clear 与 backend 所有权 │
+│   ├── CpuBatchCitizenBackend → AUTO 不可用时的低模与轮廓兼容回退              │
+│   └── FlywheelCitizenBackend → AUTO 首选 / 显式诊断的动态持久实例            │
 │  InteractionHooks      准星射线查空间网格 → C2S 交互请求 → 打开菜单             │
 │  （换维度时清空缓存，与服务端 per-level id 空间对齐）                          │
 └───────────────────────────────────────────────────────────────────────────────┘
@@ -44,7 +52,7 @@ frostedheart/content/town/citizen/
 ├── AITownData      独立 AI 镇（无队伍，居民+模拟自包含，implements ITownWithResidents）
 ├── AITownManager   AI 镇注册表 + 全局模拟存储（overworld SavedData "fh_ai_towns"）
 ├── nav/            寻路：TownRoadGraph, FlowField, NavJobExecutor
-├── sync/           同步：SyncEngine, CitizenAOI, 各 S2C/C2S 包
+├── sync/           同步：SyncEngine 与各 S2C/C2S 包
 ├── client/         客户端：ClientCitizenCache, ClientCitizenRenderer, FakeCitizenEntity
 └── data/           定义：CitizenType(Codec), JobDef 等 datapack 数据
 ```
@@ -114,44 +122,43 @@ public final class CitizenSim {
 - **稀疏扩展**：名字、皮肤种子、对话状态等冷数据放 `Int2ObjectOpenHashMap<CitizenProfile>`，不污染热循环。
 - 依赖已有 `fastutil`（Forge 自带 shaded / 直接可引），避免装箱。
 
-**内存估算**：1 万居民 × 约 60 字节热数据 ≈ **600 KB**，加上稀疏档案约 2–3 MB。服务端“近零开销”由此而来。
+**内存口径**：当前 `CitizenSim` 有 17 个 `int[]`、5 个 `long[]` 和 7 个 `byte[]`，合计 **115 B/capacity slot**。1 万个已分配槽位的原始数组元素约 **1.10 MiB**；该数字不含 29 个数组对象头、`idToIndex`、容器对象、容量余量和权威 `Resident`。`TownSimData` 与 `UnmanagedCitizenData` 初始容量为 16，达到上限后按 2 倍扩容。
 
 ---
 
 ## 3. 模拟调度：分帧 + 活跃度 LOD
 
-万级单位绝不能每 tick 全量更新。用两级手段：
+万级总人口不能每 tick 全量扫描。当前运行期以活跃稳定 ID 列表和行为分片控制热路径：
 
 ### 3.1 分帧（Time Slicing）
 
-每个居民出生时分配 `tickPhase = id % SLICE`，`SLICE = 20` 意味着**每单位 1Hz 逻辑频率**，每 tick 只扫描 `1/20` 的居民做行为决策：
+`SLICE = 20`，`BehaviorSystem.tick` 以 `stableId % SLICE` 决定居民回合，意味着每个活跃居民以 **1Hz** 做一次行为决策。调度器每 20 tick 重建与 `containers` 顺序对齐的 `IntArrayList` 活跃 ID 列表；行为和移动消费该列表，不扫描非活跃行。列表保存稳定 ID，并在消费时用 `CitizenSim.indexOf` 解析当前行，避免 swap-remove 后误用旧索引。
 
 ```java
 public void serverTick(ServerLevel level) {
     long gameTime = level.getGameTime();
-    int slice = (int) (gameTime % SLICE);          // 本 tick 负责的分片
-    for (int i = 0; i < sim.size(); i++) {
-        if (sim.tickPhase[i] != slice) continue;   // 不是本单位的回合，跳过
-        behavior.tick(level, i);                   // 1Hz 行为决策
+    if (gameTime % 20 == 0) {
+        refreshActivity(level);
+        refreshRegistry(level);                    // 双缓冲 registry 完整构建后交换
+        rebuildActiveIds();
     }
-    nav.consumeResults(level);                     // 消费异步寻路结果
-    movement.tickAll(level, sim);                  // 移动积分是全量但极廉价（见 §5）
-    sync.flush(gameTime);                          // 发送增量快照
+    behavior.tick(this, level, (int) (gameTime % 20), gameTime);
+    movement.tickAll(this, level, gameTime);
+    sync.flush(this, level, gameTime);             // 发送增量快照
 }
 ```
 
-- 1 万居民 → 每 tick 只跑 **500 个**行为决策，单次决策是纯整数运算（< 1μs），合计 **< 0.5 ms**。
-- 行为 1Hz 完全够用：人走路速度下，1 秒才移动约 4 格，决策延迟不可感知。
+- 行为候选复杂度为 `O(active citizens)`，实际决策约为活跃人口的 `1/20`；移动候选同样只随活跃人口增长。
+- `refreshRegistry` 复用 active/scratch 两套 `List` 和 primitive map/set；完整构建下一代注册表后才交换引用，避免每秒创建重建集合或发布半成品。
 
 ### 3.2 活跃度 LOD（关键）
 
 | 层级 | 条件 | 行为频率 | 移动 |
 |------|------|----------|------|
-| ACTIVE | 所在区块被加载且有玩家在 128 格内 | 1Hz | 连续积分，参与分离 |
-| WARM | 区块已加载但无玩家附近 | 0.2Hz（每 5 秒） | 大步长瞬移插值 |
-| COLD | 区块未加载 | 0.02Hz 或按需 | 只推进需求/经济数值，不动位置 |
+| ACTIVE | 当前 2 格 cell 位于任一玩家 128 格范围（另有 2 格缓冲） | 1Hz | 每 tick 积分；清醒居民参与分离 |
+| INACTIVE | 不在 active cells | 不进入行为热循环 | 冻结；移动状态写 `halt=1` |
 
-活跃度用 `homeChunk` + Forge 的 `ChunkWatchEvent`/`ServerChunkCache` 判断；COLD 单位重激活时做一次“追赶结算”（按流逝时间折算需求变化），避免卡顿尖峰。
+`CitizenSimScheduler.refreshActivity` 每 20 tick 依据当前玩家位置重建 `activeCells`，随后 `rebuildActiveIds` 扫描一次注册人口。居民在两次刷新之间自行走出 active cell 时，`MovementSystem` 的防御检查会立即移除该 ID 并置 halt；玩家移动造成的新活跃区域在下一次既有 20 tick 刷新生效。经济和每日结算仍由城镇权威模型负责，本层没有另设 WARM/COLD 追赶模拟。
 
 ---
 
@@ -219,14 +226,15 @@ public final class FlowField {
 
 ### 5.3 第三层：分离力（碰撞）
 
-单位间不互相推挤物理碰撞，只做**视觉分离**：用 `SpatialGrid`（cell = 2 格）查半径 1.5 格内邻居，叠加一个微弱的排斥向量到速度上。每 tick 每 ACTIVE 单位一次网格查询，网格本身用 `Long2ObjectOpenHashMap<IntArrayList>` + 每 tick 增量重建活跃区。
+单位间不互相推挤物理碰撞，只做**视觉分离**：用 `SpatialGrid`（cell = 2 格）查半径 1.5 格内邻居，叠加一个微弱的排斥向量到速度上。每 tick 每 ACTIVE 单位一次网格查询，邻居网格使用 `Long2ObjectOpenHashMap<IntArrayList>` 并每 5 tick 从活跃且空间可见的居民重建，桶列表循环复用。
 
-### 5.4 移动积分（每 tick 全量，但极廉价）
+### 5.4 移动积分（每 tick 仅活跃居民）
 
 ```java
 void tickAll() {
-    for (int i = 0; i < size; i++) {
-        if (navRef[i] == 0) continue;               // 静止，零成本跳过
+    for (int id : activeIds) {
+        int i = sim.indexOf(id);                    // swap-remove 后重新解析
+        if (i < 0 || !isActive(i)) continue;
         int dir = currentField(i).sampleDir(px[i] >> 10, pz[i] >> 10);
         vx[i] = DIR_X[dir]; vz[i] = DIR_Z[dir];     // 查表，无浮点
         px[i] += vx[i]; pz[i] += vz[i];             // 定点加法
@@ -236,7 +244,7 @@ void tickAll() {
 }
 ```
 
-1 万单位全量积分 ≈ 一次连续数组扫描，**< 0.3 ms**。
+该路径复杂度由总人口的 `O(total)` 降为 `O(active)`；实际毫秒数必须用目标服务器的 `spark`/JFR 基线验证，本文不声明未经测量的固定耗时。
 
 ---
 
@@ -255,23 +263,31 @@ void tickAll() {
 
 ### 7.1 AOI 兴趣管理
 
-`CitizenAOI` 以每个在线玩家为中心、半径 R（默认 96 格，可配置）维护可见居民集合：
+`SyncEngine` 以每个在线玩家为中心、固定 96 格平面半径维护展示集合；每 20 tick 或服务端配置热变更时统一重选：
 
-- 用 `SpatialGrid` 每 20 tick 刷新一次各玩家的可见集合，进出触发**全量包/移除包**。
-- 服务端只模拟可见区 + 其外一圈缓冲，客户端永远不知道 AOI 外有任何居民存在。
+- `SpatialGrid.rebuildVisibility` 每轮选择前把全部合法状态居民登记到 16 格粗桶，包含睡眠居民；`queryVisible` 只生成附近桶候选并多取一圈 halo。`collectPlayerCandidates` 随后按当前状态、有效床标记和当前坐标执行精确 96 格圆形判定，粗桶不会改变最终展示语义。
+- `FHConfig.SERVER.TOWN.maxVisibleCitizensPerPlayer`：默认 `1024`，范围 `0..4096`，严格限制单个玩家的 `tracked` 集合和 `ClientCitizenCache`。
+- `FHConfig.SERVER.TOWN.maxVisibleCitizensPerServer`：默认 `8192`，范围 `0..65536`，严格限制服务器全部玩家、全部维度的追踪关系总数。同一居民被两名玩家看到会占两个名额，因为客户端缓存和渲染成本实际发生两次。
+- 清醒居民与“已验证并定位到有效床头”的 `SLEEP` 居民共享预算；无床、床失效或区块不可验证的睡眠居民不进入候选集。
+- 每玩家先用定长最大堆选最近的 Top-K；当前打开 `TradeContainer` 的居民优先但仍占名额，已追踪居民具有 4 格保留优势，等距时按稳定 citizen id 决定，从而减少边界 spawn/despawn 抖动。
+- 服务器 tick 末尾再对各维度候选统一裁决总量预算，先发送 despawn 再发送 spawn，客户端应用包时也不会瞬时超过上限。
+- 任一上限为 `0` 时对应范围内不展示居民；真实人口、行为、床位、存档和每日结算不受展示预算影响。
 
 ### 7.2 三类包
 
 | 包 | 时机 | 内容 |
 |----|------|------|
-| `S2CCitizenSpawn` | 进入 AOI | id, 类型, 位置, yaw, state, 皮肤种子（全量，LZ4 前的原始约 20B/人） |
-| `S2CCitizenBatch` | 每 4 tick（5Hz） | 本批 dirty 单位的 `[varint id, int px, py, pz, short vx,vz, byte yaw, byte state]` ≈ 16B/人 |
-| `S2CCitizenEvent` | 状态切换即时 | id + 新 state（驱动动画切换/音效，低延迟） |
-| `S2CCitizenDespawn` | 离开 AOI | varint id 列表 |
+| `S2CCitizenSpawnPacket` | 进入预算集合；已追踪居民年龄组变化 | id、绝对定点位置、打包的 state+16向 dir+halt、年龄组、姓名 |
+| `S2CCitizenBatchPacket` | 每 4 tick（5Hz） | chunk 分组的局部量化位置、id、打包 state+dir+halt；单包最多 240 条，同一玩家一次 flush 可发多个包 |
+| `S2CCitizenDespawnPacket` | 离开预算、床失效或居民移除 | varint id 列表 |
 
-- **脏标记**：位置变化 < 0.5 格或状态不变的单位不进 Batch。静止的单位零带宽。
-- **带宽预算**：每玩家每 tick 最多发 N 字节（默认 8KB），超出按距离优先级截断，下 tick 补——近处优先。
-- **5Hz 快照 + 客户端外推**：客户端按 `pos + vel * dt` 外推，收到快照用 `lerp(0.3)` 收敛。万级单位下带宽 ≈ `可见数百人 × 16B × 5Hz ≈ 几十 KB/s`，可接受；若仍紧张，把位置差分化（varint delta 相对上次快照）可再砍一半。
+- **误差驱动脏标记**：服务端镜像客户端 16 向外推模型；状态、方向、halt 变化或位置误差超过 `0.2` 格才到期发送，移动心跳按 4/8/20 tick 距离档位重锚。
+- **多包分片**：`SyncEngine` 先为每个玩家收集全部仍被追踪且到期的 chunk groups，再由 `CitizenDeltaPacketBatcher.forEachPacket` 按 `MAX_ENTRIES_PER_PACKET=240` 逐包产出并立即发送；跨越 240 的单个 chunk group 会被切分，未跨界的 group 直接复用，只有切片需要复制条目引用。生产路径不保留完整 packet 外层集合，也不能丢弃尾部居民。
+- **规范状态提交**：共享 Dead Reckoning canonical 只在包含该 ID 的 packet 调用 `FHNetwork.INSTANCE.sendPlayer` 并正常返回后推进；这表示本地网络 API 交付，不是客户端 ACK。`due` 中没有交给任何玩家的 ID 不会被伪记为已发送。
+- **增量候选**：`flushDeltas` 先合并所有玩家的 `tracked` 集合，再仅检查唯一 tracked ID；距离档位仍对本维度全部在线玩家求最近距离，最终按各玩家 tracked 集合组包，因此 canonical、分频和交付语义不变。
+- **离散切换**：入睡、醒来和有效床位置刷新进入 `pendingImmediate`，在下一次 4 tick flush 绕过距离限频；无效床直接进入 `pendingHidden`。
+- **年龄外观**：`TownSimData` 把权威 `Resident.age` 镜像到 `CitizenSim.presentationFlags` 的 2 个瞬态位；初次进入 AOI 时随 `S2CCitizenSpawnPacket` 下发。幼儿成长为儿童、儿童成长为成人时，`SyncEngine.pendingAppearance` 对已追踪 id 重发同一种 spawn 条目；`ClientCitizenCache.applySpawn` 只原位更新年龄，不替换双快照、位置、朝向或行为状态。移动批包不增加年龄字段。
+- **静止零带宽**：睡眠与到岗停止居民完成状态切换后不再发送移动心跳。
 - 走现有 `chorda` 的 `CBaseNetwork`/SimpleChannel 封装，包体手写 `FriendlyByteBuf` 序列化，不走 NBT。
 
 ### 7.3 客户端缓存与插值
@@ -295,26 +311,33 @@ public final class ClientCitizen {
 }
 ```
 
-快照间隔 200ms，插值窗口固定滞后一个间隔（类似 Source 引擎 cl_interp），移动平滑且永不回退。
+普通移动快照使用按实测包间隔调整的插值窗口并在窗口后限时外推。进入或离开 `SLEEP` 时直接 snap 到床头或住宅出口，并重置插值窗口，避免穿墙滑动。
 
 ---
 
-## 8. 客户端渲染：假实体 vs 实例化
+## 8. 客户端渲染：假实体、CPU 批量与 Flywheel Instancing
 
 按**可见数量**选渲染路径，两者共存、按距离切换：
 
 | 路径 | 适用 | 做法 |
 |------|------|------|
-| **假实体** `FakeCitizenEntity` | 距玩家 < 24 格（通常 < 50 个） | 真正的 `Entity`（`canUpdate = false`、无 AI、无碰撞箱查询注册），用原版模型/动画管线，可互动高亮、名牌、阴影 |
-| **实例化批渲染** | 其余全部 | 本包已带 **Flywheel 0.6.11**（Create 依赖）：把居民模型做成 `InstancedModel`，一次 draw call 画几千个实例，每实例数据 = 变换矩阵 + 动画相位 + state |
-| **Billboard LOD** | > 64 格 | 一张图集 quad，近平面剔除 |
+| **假实体** `FakeCitizenEntity` | 清醒且入选详细 Top-K；16 格进入、20 格退出 | 无 AI 的客户端实体，由 `ClientCitizen` 驱动位置、朝向和步行动画；模型、阴影、碰撞箱与选取体积按年龄缩放；`FHConfig.CLIENT.maxDetailedCitizenEntities` 默认严格限制为 64，交易/准星目标优先 |
+| **批量低模** | 未由假实体接管的清醒居民：Body `<68` 格进入、`<=72` 格保持；睡眠同样适用 | 原版 `RenderType.entityCutoutNoCull` 绘制头、躯干、双臂、双腿；CPU/Flywheel 均按年龄缩放站立与睡眠模型，不创建假实体 |
+| **轮廓 LOD** | Billboard `>=68` 格至 `96` 格，具体 owner 由协调器迟滞保持 | 清醒使用身体+头部竖直 billboard，睡眠使用贴近床面的水平身体+头部 quad；两种后端均按年龄缩放 |
 
 要点：
 
-- **动画不做骨骼重算**：每个 state 预烘焙若干关键姿态矩阵，实例着色器按 `time * speed + phase(id)` 在两个姿态间插值（类似 Imposter/群演方案）。行走循环摆动在 shader 里做，CPU 零开销。
-- 渲染入口：`RenderLevelStageEvent`（AFTER_ENTITIES 阶段）提交 Flywheel 实例；假实体走原版实体渲染自然混入。
-- 距离切换带迟滞（22↔26 格）防抖。假实体的客户端位置由 `ClientCitizenCache` 驱动，`tick()` 空实现。
-- 光照：按所在方块 `level.getBrightness` 每 0.5s 采样一次写入实例属性。
+- `CitizenSkins` 按稳定 citizen id 确定性选择 Minecraft 1.20.1 内置的宽臂 `Makena`、`Efe`、`Noor`、`Kai`、`Ari`、`Zuri`、`Sunny` 皮肤；近景假实体和批量 LOD 共用该映射，跨 LOD、离线重进和重新生成均不换肤。资源直接引用 `textures/entity/player/wide/*.png`，模组不复制原版贴图。
+- 渲染入口是 `RenderLevelStageEvent.AFTER_ENTITIES`；每帧只遍历并剔除一次缓存，按七张皮肤写入七个复用 `BufferBuilder`，仅对本帧实际可见的皮肤提交，最多 7 次 draw call，不创建每帧居民分组集合。
+- 批量顶点使用 `RenderType.entityCutoutNoCull` 的 `DefaultVertexFormat.NEW_ENTITY`，同时提交皮肤 UV、`OverlayTexture.NO_OVERLAY`、居民位置的天空光/方块光和面法线。该 RenderType 的实体 shader 会实际采样 lightmap 并执行原版方向光计算；`POSITION_COLOR_TEX_LIGHTMAP` 的同名 `UV2` 在 Minecraft 1.20.1 对应片元 shader 中没有被采样，不能用于环境明暗。光照值缓存在 `ClientCitizen`：跨方块时立即重采样，静止时按 citizen id 错峰每 5–8 tick 刷新；采样复用单个 `MutableBlockPos`，避免逐帧对象分配。
+- `CitizenBatchRenderLayout` 是 CPU/Flywheel 的共享表现合同：定义六个 Body 部件、两个 Billboard quad、皮肤 UV、睡眠比例/锚点、四肢摆动符号，并预计算 256 向站立/睡眠模型轴。站立轴复现 `LivingEntityRenderer` 的 `scale(-1, -1, 1)` 约定，使皮肤局部 `-Z` 始终朝居民前方、局部 `-Y` 朝世界上方；睡眠时局部 `-Z` 朝上、局部 `-Y` 朝床头。每个面的世界法线再经过当前 `PoseStack` normal matrix 一次后复用于四个顶点，不产生逐顶点临时向量。
+- `ClientCitizen.modelScale()` 将 `AGE_INFANT`、`AGE_CHILD`、`AGE_ADULT/AGE_ELDER` 分别映射为 `0.4`、`0.5`、`1.0`。详细假实体、CPU Body/Billboard、Flywheel Body/Billboard、视锥 AABB、光照采样高度和准星选取共享该语义；年龄只影响表现，不改变 Citizen 行为、速度、LOD 距离或服务端碰撞。
+- 睡眠使用低矮 AABB 做视锥剔除，关闭行走起伏，并使用同步的床朝向而非客户端软转向。
+- `DetailedCitizenSelector` 通过复用的原始类型数组和最大堆执行稳定 Top-K；已接管居民按 4 格距离优势保留，等距按稳定 id。配置降低或设为 0 时，下一客户端 tick 立即释放超额代理，未入选居民仍由批量路径绘制。
+- `ClientCitizen` 缓存覆盖双快照与最大外推终点的扫掠 AABB；只在 spawn/网络快照时重建，渲染帧不再逐居民分配剔除对象。
+- `CitizenClientBenchmark` 通过 `/citizen_debug benchmark load <32|64|256|1024> <moving|sleeping>` 注入纯客户端确定性场景；高位 id 和按对象身份清理保证真实同步缓存不被覆盖。`CitizenRenderMetrics` 记录 backend 分类数量、光照采样、材质批次、实例脏字节与最近 256 帧 hook 耗时；Flywheel 引擎本身的 CPU/GPU 时间不在 hook 内，详细口径见 [citizen-rendering-at-scale.md](citizen-rendering-at-scale.md)。
+- `CitizenRenderCoordinator` 统一接管网络 spawn/update/despawn、benchmark 注入、客户端 tick/render、资源重载、Flywheel renderer 重载、切维度和退出清理。`CitizenRenderOwnership` 对每个 id 返回唯一的 `DETAILED_ENTITY`、`BODY_BATCH`、`BILLBOARD_BATCH` 或 `NONE`；启动默认 requested 为 `auto`。coordinator 分别记录 requested 与 active backend：新 backend 先初始化并从 cache 预热后再原子替换，非 CPU backend 故障、驱动不支持 instancing 或 Oculus shader pack 使 Flywheel 关闭实例化时，只有 active 临时回退 CPU；requested AUTO/Flywheel 保留，并在 `ReloadRenderersEvent` 中于 Flywheel 替换 `InstanceWorld` 后自动恢复。维度变化在健康检查前通过 `onClientLevelChanged` 重绑定，旧 manager 的失效句柄不会再调用 `delete()`。
+- `FlywheelCitizenBackend` 是 AUTO 首选、也可显式请求的动态实例 backend：七张皮肤分别共享 144 顶点 Body 与 8 顶点身体/头部 Billboard，每个批量居民一个 58 B `CitizenInstanceData`。CPU/Flywheel 都消费 `CitizenBatchRenderLayout`；累计步态 phase 属于 `ClientCitizen`，切换 backend、Body/Billboard 或重建 Flywheel 槽不会重置。`citizen.vert` 使用 Flywheel `uTime`，而 `FlywheelCitizenBackend` 写入时也必须取 `com.jozufozu.flywheel.util.AnimationTickHolder`，完成快照插值/限时外推和短路径朝向；四肢幅度按步速对齐原版 `walkAnimation`，并支持睡眠姿态。Body 在 `<68` 格进入并保持到 `72` 格，Billboard 最远 `96` 格；当前 owner 由 `CitizenRenderCoordinator` 共享给 CPU/Flywheel。它实现 `InstancingEngine.OriginShiftListener`：Flywheel 切换渲染原点并清空底层槽后，同帧从 cache 重新创建实例。它只接受 Flywheel `INSTANCING`，BATCHING/OFF、Oculus shader pack 或运行期故障时 active 回退 CPU；完整限制、命令和待完成的图形验收见 [citizen-rendering-at-scale.md](citizen-rendering-at-scale.md)。
 
 ---
 
@@ -322,8 +345,8 @@ public final class ClientCitizen {
 
 玩家右键一个“居民”时，无论它是假实体还是实例化画的：
 
-1. **选取**：客户端 raycast 先撞假实体；没撞到时，用客户端空间网格（同步时顺带维护）做射线-圆柱近似检测，拿到 `citizen id`。
-2. **请求**：发 `C2SCitizenInteract(id)`。服务端校验：id 存活、距离 < 8 格、所在维度一致。
+1. **选取**：客户端 raycast 先撞假实体；没撞到时，`ClientCitizenCache.pick` 线性扫描当前缓存并做射线-圆柱近似检测，拿到 `citizen id`。这是低频点击路径；若未来 profile 证明需要，再复用渲染 cell 做候选裁剪。
+2. **请求**：发 `C2SCitizenActionPacket(id, action)`。服务端校验：id 存活、属于该玩家当前 `tracked` 集合、状态允许交互且距离不超过 8 格。`SLEEP` 和预算隐藏居民都不可交互。
 3. **响应**：服务端按 id 取数据（对话/交易/雇佣），走现有 `CBaseMenu` 体系开 GUI——**菜单数据源是 CitizenSim，不是实体**，全部读写都在服务端权威数据上。
 4. 攻击/伤害同理：C2S 请求 → 服务端改数值 → 死亡即发 Despawn + 事件包（尸体表现纯客户端）。
 
@@ -337,6 +360,7 @@ public final class ClientCitizen {
 - 未托管容器 `UnmanagedCitizenData extends SavedData`（per-level，沿用旧文件名 `fh_citizen_sim`），采用同样的变更标脏语义；同时承载本维度稳定 id 分配器（nextId 持久化、永不复用）。首次接管会以本维度全部容器的最大现存 id 校准分配器；若坏档或不完整写盘已造成跨容器 id 冲突，只重分配冲突的会话 id，位置/状态/居民 UUID 保持不变。
 - 序列化按 SoA 数组直写 NBT `int[]/byte[]` 数组字段，遵循项目 Codec-first 约定可用 `Codec.INT_STREAM`/`BYTE_BUFFER`；1 万居民落盘 < 1MB，毫秒级。
 - 冷数据档案另存一个 compound。版本号字段预留迁移空间（参考仓库根 `NBT_MIGRATION_GUIDE.md`）。
+- `presentationFlags`、`homePos`、`homeSlot` 等展示数据是运行期瞬态 SoA 字段，不写入 NBT。`presentationFlags` bit 0 是每次住宅布局/床方块验证后重建的 `PRESENT_ON_VALID_BED`，bit 1..2 镜像 `Resident.age`；编码 `0/1/2/3` 分别表示成人/幼儿/儿童/老人，使旧存档和未托管居民的全零默认仍表现为成人。
 
 ---
 
@@ -352,7 +376,7 @@ public final class ClientCitizen {
 | 同步脏检查+打包 | 每 4 tick | ~0.2 ms（摊销） |
 | 寻路 | 异步线程 | 主线程 0 |
 
-**客户端（可见 500）：** Flywheel 1–3 个 draw call + 50 个假实体，GPU 端开销远低于 50 个原版村民实体。
+**客户端现状：** 清醒居民的原版质量代理默认严格限制为 64；启动 requested 为 AUTO，可用时由 Flywheel instancing 绘制其余低模/billboard，不支持 instancing 时由 CPU 每帧生成顶点。Flywheel backend 已完成动态实例代码、自动化，以及 1024 moving/sleeping 的所有权、稳态零脏写、F3+T 重建计数和基础画面实机验证。初次画面验收发现实例 Body 的固定摆动呈跑步，改为按实际位移对齐详细实体的原版步态后，实机复验已确认两层行走一致；68/72 格迟滞切换也没有重影、空帧或抖动。随后发现 Flywheel 原点切换会清空自定义实例槽，而旧逻辑仅改写已脱离槽表的数据，造成计数仍在但 Body 全部消失；现已改为监听清槽事件并整体重建，自动化和跨 100 格实机复验均已通过，Body 不再整体消失。原 Flywheel Billboard 缺少头部导致轮廓跳变，扩展为身体/头部双 quad 后，715 个远景 Billboard 的画面复验确认正常；CPU 回退现与 Flywheel 共用同一双 quad 布局。Flywheel 0.6.11 在 Oculus shader pack 开启时主动关闭实例化，Citizen 会保留 requested AUTO/Flywheel、临时以 CPU 绘制，并在关闭光影后的 renderer reload 自动恢复 Flywheel。GPU 预算与完整 Embeddium/Oculus 支持矩阵仍需作为发布验收项。
 
 **优化清单（按收益排序）：**
 
@@ -361,7 +385,7 @@ public final class ClientCitizen {
 3. 流场共享寻路，禁绝逐单位 A*。
 4. 方向/三角函数全部查表。
 5. 网络只发 dirty + 速度外推，快照 5Hz。
-6. 发包对象池（`FriendlyByteBuf` 复用、避免每包 new byte[]）。
+6. 仅复用不逃逸当前调用的 primitive scratch；packet-owned list/`FriendlyByteBuf` 只有在 profile 证明为热点且确认异步编码生命周期后才能池化。
 7. 异步寻路线程池，主线程只消费结果。
 8. 渲染实例化 + 距离 LOD + 预烘焙动画。
 9. 每 tick 时间片哨兵：单次 tick 超预算自动降低本 tick 处理量，绝不卡服。
@@ -375,7 +399,7 @@ public final class ClientCitizen {
 |------|------|------|
 | P1 | CitizenSim SoA + Manager(SavedData) + 分帧 tick + 状态机 | 服务端 1 万单位 tick < 1ms，无渲染 |
 | P2 | 同步三件套 + 客户端缓存插值 + Billboard 占位渲染 | 联机看到人群移动，带宽达标 |
-| P3 | Flywheel 实例化 + 假实体近距切换 + 动画状态机 | 帧率与 50 原版村民持平或更好 |
+| P3（进行中） | 已完成有硬上限的假实体 Top-K、稳态 AABB、确定性基准、backend/coordinator 边界、静态实例验证、Flywheel 动态实例/GPU 动画代码和基础实例生命周期计数实机验证；人工图形兼容与性能验收尚未完成，详见 [citizen-rendering-at-scale.md](citizen-rendering-at-scale.md) | 以 1000 人固定场景的 render-thread/GPU p95 预算验收 |
 | P4 | 路网图 + 流场 + 异步寻路 + 分离 | 下班潮千人同路不卡 |
 | P5 | 交互 RPC + 菜单接入 + 需求/经济低频系统 | 可对话、可交易、可雇佣 |
 
@@ -414,10 +438,10 @@ public final class ClientCitizen {
 
 ### 14.1 网络带宽（16B/人 → 约 5B/人）
 
-1. **Dead Reckoning（误差驱动同步，收益最大）**：服务端镜像运行与客户端完全一致的外推模型，仅当真实位置与外推位置误差超过阈值（约 0.3 格）才发包。匀速行走的居民全程零带宽，只有转向/停止/状态切换触发同步，实测可省 70–80% 的移动流量。
+1. **Dead Reckoning（误差驱动同步，收益最大）**：服务端镜像运行与客户端完全一致的外推模型，仅当真实位置与外推位置误差超过阈值（约 0.2 格）才发包。匀速行走的居民全程零带宽，只有转向/停止/状态切换触发同步，实测可省 70–80% 的移动流量。
 2. **区块相对坐标**：Batch 按 chunk 分组，包头发一次基准坐标，包内每人只发 chunk 内偏移（x/z 各 1B，1/16 格精度），位置字段 12B → 3B。
 3. **Varint 差分**：相对上一快照 zigzag varint 差分，慢速移动每字段 1–2B。
-4. **位打包**：state(3bit) + yaw(8bit) + 标志位合 2B；静止者只发 id + 事件。
+4. **位打包**：state(3bit) + 16 向 dir(4bit) + halt 标志位合 1B；静止者只发 id + 事件。
 5. **按距离分频**：近 10Hz / 中 5Hz / 远 2Hz / AOI 边缘 1Hz，与 Dead Reckoning 叠加。
 6. **强制合包**：一个 Batch 塞数百人，摊掉包头发与帧头固定开销；禁止一人一包。
 7. **视锥近似裁剪**：按玩家朝向粗算视锥，背后居民降频至 1–2Hz（不可完全停发，防止快速转身穿帮）。
@@ -426,10 +450,10 @@ public final class ClientCitizen {
 
 ### 14.2 客户端渲染（CPU 稳态每帧趋零）
 
-1. **矩阵缓存 + 脏更新**：实例数据（变换/光照/动画相位）存 SoA 渲染缓冲，仅快照到达或状态变化时更新对应槽位，每帧只做 buffer 上传，不重算矩阵。
-2. **GPU 骨骼动画**：骨骼矩阵烘成纹理（bone texture），vertex shader 按 `time + phase(id)` 采样插值，CPU 完全不参与动画。
-3. **单 Draw Call**：全类型烘入一张纹理图集/数组纹理，皮肤职业用 per-instance 属性切换，整个居民系统 1 次 draw call。
-4. **四级 LOD**：<24 格假实体 → 24–48 完整实例模型 → 48–80 低模（约 100 面）→ >80 格 billboard impostor。
+1. **快照 + 脏更新**：已实现的 58 B 实例数据只在快照、LOD 或光照值变化时更新对应实例；Flywheel 渲染原点变化会先清空底层槽，再从 cache 整体重建一次。普通 render frame 不重算居民矩阵或生成盒体顶点。
+2. **GPU 刚性部件动画**：六个盒体用静态 `partId` 驱动 vertex shader，不需要 bone texture；CPU 仅在快照到达时累计步态 phase，GPU 按实际快照位移/外推速度驱动反相四肢，频率与幅度对齐原版假实体且不增加整体 bob。
+3. **有限材质批次**：当前保留七张原版皮肤，Body/Billboard 各最多七个批次。只有 RenderDoc 证明这里是瓶颈后才增加 atlas/array texture，不以单 draw call 为先决条件。
+4. **当前 LOD**：详细假实体候选在 16 格进入、20 格退出且最多 64 个；未入选者使用共享的 68/72 格 Body 迟滞，`>72..<=96` 格稳定为 Billboard，回到 `<68` 格才恢复 Body。CPU/Flywheel 共用协调器中的 owner 状态，第三档低模只在 GPU profile 证明有必要时增加。
 5. **分级视锥剔除**：按空间网格 cell 剔除，一次测试剔除 16–64 实例。
 6. **光照摊销**：按 cell 采样亮度而非按人，每 tick 轮询刷新部分 cell。
 7. **阴影降级**：中远距实例关闭阴影投射或用贴地 blob shadow。

@@ -28,7 +28,10 @@ public enum TownProductionStopReason {
     NO_USABLE_MINES,
     TERRAIN_DEPLETED,
     MISSING_LOOT_TABLE,
-    ACCUMULATING;
+    ACCUMULATING,
+    BUILDING_UNWORKABLE,
+    OUTPUT_DISABLED,
+    RESOURCE_REJECTED;
 
     public static final Codec<TownProductionStopReason> CODEC = Codec.STRING.xmap(
             TownProductionStopReason::fromSerializedName,

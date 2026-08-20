@@ -83,6 +83,7 @@ public class FHConfig {
 		public final ForgeConfigSpec.BooleanValue enableKeyHints;
 		public final ForgeConfigSpec.ConfigValue<List<? extends String>> disabledHints;
 		public final ForgeConfigSpec.EnumValue<OverlayPositioner.All> hintPosition;
+		public final ForgeConfigSpec.IntValue maxDetailedCitizenEntities;
 
 		Client(ForgeConfigSpec.Builder builder) {
 			builder.push("Frosted HUD");
@@ -141,7 +142,12 @@ public class FHConfig {
 			builder.pop();
 			builder.pop();
 
-
+			builder.push("Citizen Rendering");
+			maxDetailedCitizenEntities = builder
+					.comment("Maximum awake citizens rendered through the vanilla-quality client entity path.")
+					.comment("Other visible citizens continue through the batched crowd renderer. Zero disables detailed citizen entities.")
+					.defineInRange("maxDetailedCitizenEntities", 64, 0, 128);
+			builder.pop();
 
 			builder.push("Frozen Effects");
 			enableFrozenOverlay = builder
@@ -632,6 +638,8 @@ public class FHConfig {
 			public final ForgeConfigSpec.BooleanValue enableTownTick;
 			public final ForgeConfigSpec.BooleanValue enableTownTickMorning;
 			public final ForgeConfigSpec.IntValue townUpdateIntervalGameTicks;
+			public final ForgeConfigSpec.IntValue maxVisibleCitizensPerPlayer;
+			public final ForgeConfigSpec.IntValue maxVisibleCitizensPerServer;
 
 			public static class Observation {
 				public final ForgeConfigSpec.IntValue historyDays;
@@ -1676,6 +1684,109 @@ public class FHConfig {
 						.defineInRange(key, defaultValue, 0d, 1000d);
 				}
 			}
+			public static class TransportStation {
+				public final ForgeConfigSpec.DoubleValue floorBlocksPerWorkerSlot;
+				public final ForgeConfigSpec.IntValue minimumWorkerSlots;
+				public final ForgeConfigSpec.IntValue minimumFloorAreaBlocks;
+				public final ForgeConfigSpec.IntValue minimumInteriorVolumeBlocks;
+				public final ForgeConfigSpec.DoubleValue transportCapacityPerStandardWorkerDay;
+				public final ForgeConfigSpec.DoubleValue productivityAtAttributeZero;
+				public final ForgeConfigSpec.DoubleValue productivityAtAttributeHundred;
+				public final ForgeConfigSpec.DoubleValue maximumProficiency;
+				public final ForgeConfigSpec.DoubleValue bonusAtMaximumProficiency;
+				public final ForgeConfigSpec.DoubleValue minimumResidentProductivity;
+				public final ForgeConfigSpec.DoubleValue maximumResidentProductivity;
+				public final ForgeConfigSpec.DoubleValue healthWeight;
+				public final ForgeConfigSpec.DoubleValue mentalWeight;
+				public final ForgeConfigSpec.DoubleValue strengthWeight;
+				public final ForgeConfigSpec.DoubleValue intelligenceWeight;
+
+				TransportStation(ForgeConfigSpec.Builder builder) {
+					builder.push("Transport Station");
+					floorBlocksPerWorkerSlot = builder
+							.comment("Effective floor area required for one transport-station worker slot, in blocks per worker.")
+							.defineInRange("floorBlocksPerWorkerSlot",
+									TownModelParameters.Defaults.TRANSPORT_STATION_FLOOR_BLOCKS_PER_WORKER_SLOT,
+									0.01d, 1000000d);
+					minimumWorkerSlots = builder
+							.comment("Minimum worker slots granted to every structurally valid transport station, in workers.")
+							.defineInRange("minimumWorkerSlots",
+									TownModelParameters.Defaults.TRANSPORT_STATION_MINIMUM_WORKER_SLOTS,
+									0, 4096);
+					minimumFloorAreaBlocks = builder
+							.comment("Minimum effective floor area required for a transport station, in blocks.")
+							.defineInRange("minimumFloorAreaBlocks",
+									TownModelParameters.Defaults.TRANSPORT_STATION_MINIMUM_FLOOR_AREA_BLOCKS,
+									0, 1000000);
+					minimumInteriorVolumeBlocks = builder
+							.comment("Minimum enclosed interior volume required for a transport station, in blocks.")
+							.defineInRange("minimumInteriorVolumeBlocks",
+									TownModelParameters.Defaults.TRANSPORT_STATION_MINIMUM_INTERIOR_VOLUME_BLOCKS,
+									0, 1000000000);
+					transportCapacityPerStandardWorkerDay = builder
+							.comment("Transport capacity produced per standard worker per town day.")
+							.comment("A standard worker has all four attributes at 50 and zero transport proficiency.")
+							.comment("Transport capacity is rebuilt each morning and is not carried across town days.")
+							.defineInRange("transportCapacityPerStandardWorkerDay",
+									TownModelParameters.Defaults.TRANSPORT_STATION_CAPACITY_PER_STANDARD_WORKER_DAY,
+									0d, 1000000d);
+
+					builder.push("Resident Productivity");
+					productivityAtAttributeZero = builder
+							.comment("Relative transport productivity at weighted attribute 0 and proficiency 0.")
+							.defineInRange("productivityAtAttributeZero",
+									TownModelParameters.Defaults.TRANSPORT_STATION_PRODUCTIVITY_AT_ATTRIBUTE_ZERO,
+									0d, 100d);
+					productivityAtAttributeHundred = builder
+							.comment("Relative transport productivity at weighted attribute 100 and proficiency 0.")
+							.comment("Linear interpolation makes weighted attribute 50 equal 1.0 with the defaults.")
+							.defineInRange("productivityAtAttributeHundred",
+									TownModelParameters.Defaults.TRANSPORT_STATION_PRODUCTIVITY_AT_ATTRIBUTE_HUNDRED,
+									0d, 100d);
+					maximumProficiency = builder
+							.comment("Transport proficiency that grants the full configured productivity bonus.")
+							.defineInRange("maximumProficiency",
+									TownModelParameters.Defaults.TRANSPORT_STATION_MAXIMUM_PROFICIENCY,
+									1d, 100d);
+					bonusAtMaximumProficiency = builder
+							.comment("Additive relative productivity granted at maximum transport proficiency.")
+							.defineInRange("bonusAtMaximumProficiency",
+									TownModelParameters.Defaults.TRANSPORT_STATION_BONUS_AT_MAXIMUM_PROFICIENCY,
+									0d, 100d);
+					minimumResidentProductivity = builder
+							.comment("Minimum final transport productivity in standard-worker units.")
+							.defineInRange("minimumResidentProductivity",
+									TownModelParameters.Defaults.TRANSPORT_STATION_MINIMUM_PRODUCTIVITY,
+									0d, 100d);
+					maximumResidentProductivity = builder
+							.comment("Maximum final transport productivity in standard-worker units.")
+							.defineInRange("maximumResidentProductivity",
+									TownModelParameters.Defaults.TRANSPORT_STATION_MAXIMUM_PRODUCTIVITY,
+									0d, 100d);
+					builder.pop();
+
+					builder.push("Attribute Weights");
+					healthWeight = defineTransportAttributeWeight(builder, "healthWeight", "health",
+							TownModelParameters.Defaults.TRANSPORT_STATION_HEALTH_WEIGHT);
+					mentalWeight = defineTransportAttributeWeight(builder, "mentalWeight", "mental",
+							TownModelParameters.Defaults.TRANSPORT_STATION_MENTAL_WEIGHT);
+					strengthWeight = defineTransportAttributeWeight(builder, "strengthWeight", "strength",
+							TownModelParameters.Defaults.TRANSPORT_STATION_STRENGTH_WEIGHT);
+					intelligenceWeight = defineTransportAttributeWeight(builder, "intelligenceWeight", "intelligence",
+							TownModelParameters.Defaults.TRANSPORT_STATION_INTELLIGENCE_WEIGHT);
+					builder.pop();
+					builder.pop();
+				}
+
+				private static ForgeConfigSpec.DoubleValue defineTransportAttributeWeight(
+						ForgeConfigSpec.Builder builder, String key, String attributeName, double defaultValue) {
+					return builder
+							.comment("Relative dimensionless weight of " + attributeName + " in transport productivity.")
+							.comment("Weights are normalized by their sum; setting every weight to zero uses an equal-weight average.")
+							.defineInRange(key, defaultValue, 0d, 1000d);
+				}
+			}
+
 			public static class Resource{
 				/**
 				 * @deprecated Use {@link #oreReservePerChunk}. Kept as a Java alias
@@ -1753,6 +1864,7 @@ public class FHConfig {
 			public final BuildingScoring BUILDING_SCORING;
 			public final GeneratorT1 GENERATOR_T1;
 			public final Mining MINING;
+			public final TransportStation TRANSPORT_STATION;
 			public final ResidentRules RESIDENT_RULES;
 			public final ResidentProgression RESIDENT_PROGRESSION;
 			public final ResidentGeneration RESIDENT_GENERATION;
@@ -1774,6 +1886,14 @@ public class FHConfig {
 				enableTownTickMorning = builder.comment("Enables town tick in the morning of each days.")
 					.comment("This tick includes the refresh of some town things, like house allocating, checking overlap of buildings, work assigning...")
 					.define("enableTownTickMorning", true);
+				maxVisibleCitizensPerPlayer = builder
+					.comment("Maximum citizens synchronized and rendered for one player across awake and valid-bed sleepers.")
+					.comment("Zero hides all citizens for every player.")
+					.defineInRange("maxVisibleCitizensPerPlayer", 1024, 0, 4096);
+				maxVisibleCitizensPerServer = builder
+					.comment("Maximum citizen render relations across all players and dimensions on this server.")
+					.comment("The same citizen visible to two players consumes two slots. Zero hides all citizens server-wide.")
+					.defineInRange("maxVisibleCitizensPerServer", 8192, 0, 65536);
 				GENERATOR_T1 = new GeneratorT1(builder);
 				OBSERVATION = new Observation(builder);
 				BUILDING_SCORING = new BuildingScoring(builder);
@@ -1785,6 +1905,7 @@ public class FHConfig {
 				RESIDENT_AGING = new ResidentAging(builder);
 				HUNTING = new Hunting(builder);
 				MINING = new Mining(builder);
+				TRANSPORT_STATION = new TransportStation(builder);
 				RESOURCE=new Resource(builder);
 				builder.pop();
 

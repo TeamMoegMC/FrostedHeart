@@ -19,34 +19,41 @@
 
 package com.teammoeg.frostedheart.content.town.citizen.client;
 
+import com.mojang.blaze3d.vertex.PoseStack;
 import com.teammoeg.frostedheart.content.town.citizen.FakeCitizenEntity;
 
-import net.minecraft.client.model.VillagerModel;
+import net.minecraft.client.model.PlayerModel;
 import net.minecraft.client.model.geom.ModelLayers;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.MobRenderer;
 import net.minecraft.resources.ResourceLocation;
 
 /**
- * 假居民渲染器：复用原版村民模型与流浪商人皮肤。
+ * 假居民渲染器：复用原版宽臂玩家模型与内置玩家皮肤。
  * 近距居民数量通常只有个位数到几十个，走标准实体渲染管线代价可忽略，
  * 换来的是完整的手臂/腿部行走摆动与原版光照。
  * <p>
- * Fake citizen renderer: reuses the vanilla villager model with the
- * wandering trader skin. Near-range citizens typically number in the single
+ * Fake citizen renderer: reuses the vanilla wide-arm player model with a
+ * deterministic built-in player skin. Near-range citizens typically number in the single
  * digits to dozens, so the standard entity render pipeline is negligible,
  * and in exchange we get full arm/leg walk animation and vanilla lighting.
  */
-public class FakeCitizenRenderer extends MobRenderer<FakeCitizenEntity, VillagerModel<FakeCitizenEntity>> {
-
-	private static final ResourceLocation SKIN = new ResourceLocation("textures/entity/wandering_trader.png");
+public class FakeCitizenRenderer extends MobRenderer<FakeCitizenEntity, PlayerModel<FakeCitizenEntity>> {
 
 	public FakeCitizenRenderer(EntityRendererProvider.Context ctx) {
-		super(ctx, new VillagerModel<>(ctx.bakeLayer(ModelLayers.WANDERING_TRADER)), 0.5F);
+		super(ctx, new PlayerModel<>(ctx.bakeLayer(ModelLayers.PLAYER), false), 0.5F);
 	}
 
 	@Override
 	public ResourceLocation getTextureLocation(FakeCitizenEntity entity) {
-		return SKIN;
+		return CitizenSkins.textureFor(entity.getCitizenId());
+	}
+
+	@Override
+	protected void scale(FakeCitizenEntity entity, PoseStack pose, float partialTick) {
+		float scale = entity.getModelScale();
+		if (scale != 1.0F)
+			pose.scale(scale, scale, scale);
+		this.shadowRadius = 0.5F * scale;
 	}
 }

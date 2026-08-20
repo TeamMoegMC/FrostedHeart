@@ -42,6 +42,10 @@ public final class TownStageZeroModel {
     ) {
         double miningStandardSwe = parameters.mining().productivity().standardWorkerEquivalent();
         double huntingStandardSwe = parameters.hunting().productivity().standardWorkerEquivalent();
+        double transportStandardSwe = parameters.transportStation().productivity()
+                .standardWorkerEquivalent();
+        double transportCapacityPerStandardWorkerDay =
+                parameters.transportStation().capacityPerStandardWorkerDay() * transportStandardSwe;
 
         double totalMineWeight = positiveSum(mineWeights, WeightedResource::weight);
         double coalWeight = mineWeights.stream()
@@ -107,6 +111,8 @@ public final class TownStageZeroModel {
         return new StageZeroMetrics(
                 miningStandardSwe,
                 huntingStandardSwe,
+                transportStandardSwe,
+                transportCapacityPerStandardWorkerDay,
                 coalFraction,
                 coalPerMiningSweDay,
                 meatPerRoll,
@@ -166,6 +172,8 @@ public final class TownStageZeroModel {
     public record StageZeroMetrics(
             double miningStandardWorkerSwe,
             double huntingStandardWorkerSwe,
+            double transportStandardWorkerSwe,
+            double transportCapacityPerStandardWorkerDay,
             double coalFractionOfMineOutput,
             double coalPerMiningSweDay,
             double meatPerHuntingRoll,

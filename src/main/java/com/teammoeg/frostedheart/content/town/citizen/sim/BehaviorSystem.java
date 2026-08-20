@@ -19,6 +19,7 @@
 
 package com.teammoeg.frostedheart.content.town.citizen.sim;
 
+import it.unimi.dsi.fastutil.ints.IntArrayList;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 
@@ -62,11 +63,10 @@ public final class BehaviorSystem {
 
 	/**
 	 * 处理本 tick 分片内所有活跃居民的行为决策。
-	 * 遍历调度器的全部容器（每镇一份模拟 + 未托管命令居民）。
+	 * 遍历调度器按容器维护的活跃稳定 ID，不扫描 cold rows。
 	 * <p>
-	 * Runs behavior decisions for all active citizens in this tick's slice,
-	 * iterating every container of the scheduler (one simulation per town plus
-	 * the unmanaged command citizens).
+	 * Runs behavior decisions for all active citizens in this tick's slice over
+	 * the scheduler's per-container active stable IDs, without scanning cold rows.
 	 *
 	 * @param sched 调度器 / the scheduler
 	 * @param level 维度 / the level
@@ -77,12 +77,17 @@ public final class BehaviorSystem {
 		long dayTime = level.getDayTime();
 		boolean night = isNight(dayTime);
 		boolean workTime = isWorkTime(dayTime);
-		for (CitizenContainer c : sched.containers()) {
+		for (int containerIndex = 0; containerIndex < sched.containers().size(); containerIndex++) {
+			CitizenContainer c = sched.containers().get(containerIndex);
 			CitizenSim sim = c.sim();
-			int n = sim.size();
+			IntArrayList activeIds = sched.activeIds(containerIndex);
 			boolean persistedChanged = false;
-			for (int i = 0; i < n; i++) {
-				if (sim.tickPhase[i] != slice)
+			for (int k = 0; k < activeIds.size(); k++) {
+				int citizenId = activeIds.getInt(k);
+				if ((citizenId % SLICE) != slice)
+					continue;
+				int i = sim.indexOf(citizenId);
+				if (i < 0)
 					continue;
 				if (!sched.isActive(c, i))
 					continue;
@@ -92,8 +97,13 @@ public final class BehaviorSystem {
 				int oldTargetX = sim.tx[i];
 				int oldTargetZ = sim.tz[i];
 				tickOne(c, sim, level, i, night, workTime, dayTime, gameTime);
-				if (oldState != CitizenState.SLEEP && sim.state[i] == CitizenState.SLEEP)
-					sched.sync.notifyHidden(sim.id[i]);
+				if (oldState != sim.state[i]
+						&& (oldState == CitizenState.SLEEP || sim.state[i] == CitizenState.SLEEP)) {
+					if (CitizenPresence.presentationEligible(sim, i))
+						sched.sync.notifyImmediate(sim.id[i]);
+					else
+						sched.sync.notifyHidden(sim.id[i]);
+				}
 				persistedChanged |= oldState != sim.state[i]
 						|| oldTargetX != sim.tx[i] || oldTargetZ != sim.tz[i];
 			}
@@ -191,7 +201,6 @@ public final class BehaviorSystem {
 		sim.sepZ[i] = 0;
 		container.onSleepEntered(i);
 		sim.tx[i] = sim.px[i];
-		sim.ty[i] = sim.py[i];
 		sim.tz[i] = sim.pz[i];
 		sim.bestDist2[i] = 0;
 	}

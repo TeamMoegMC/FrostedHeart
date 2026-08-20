@@ -32,6 +32,7 @@ import java.util.List;
 public record TownModelParameters(
         MiningParameters mining,
         HuntingParameters hunting,
+        TransportStationParameters transportStation,
         HousingParameters housing,
         ResidentParameters residents,
         BuildingScoringParameters buildingScoring,
@@ -43,6 +44,23 @@ public record TownModelParameters(
 ) {
     public TownModelParameters {
         meatFoods = List.copyOf(meatFoods);
+    }
+
+    /** Source-compatible constructor for callers created before transport-station parameters existed. */
+    public TownModelParameters(
+            MiningParameters mining,
+            HuntingParameters hunting,
+            HousingParameters housing,
+            ResidentParameters residents,
+            BuildingScoringParameters buildingScoring,
+            TerrainResourceParameters terrainResources,
+            GeneratorT1Parameters generatorT1,
+            ClimateParameters climate,
+            ObservationParameters observation,
+            List<MeatFoodParameters> meatFoods
+    ) {
+        this(mining, hunting, defaultTransportStationParameters(), housing, residents,
+                buildingScoring, terrainResources, generatorT1, climate, observation, meatFoods);
     }
 
     /** Source-compatible constructor for scenario tests created before observation parameters existed. */
@@ -57,7 +75,8 @@ public record TownModelParameters(
             ClimateParameters climate,
             List<MeatFoodParameters> meatFoods
     ) {
-        this(mining, hunting, housing, residents, buildingScoring, terrainResources,
+        this(mining, hunting, defaultTransportStationParameters(), housing, residents,
+                buildingScoring, terrainResources,
                 generatorT1, climate,
                 new ObservationParameters(Defaults.TOWN_OBSERVATION_HISTORY_DAYS,
                         Defaults.TOWN_OBSERVATION_RESERVE_WARNING_DAYS,
@@ -123,8 +142,28 @@ public record TownModelParameters(
                 oldResidents.aging(), tunedNutrition, oldResidents.residentialCareScoreBand(),
                 oldResidents.townPolicyCooldownDays());
         return new TownModelParameters(
-                mining, hunting, tunedHousing, tunedResidents, buildingScoring,
+                mining, hunting, transportStation, tunedHousing, tunedResidents, buildingScoring,
                 terrainResources, generatorT1, climate, observation, meatFoods);
+    }
+
+    private static TransportStationParameters defaultTransportStationParameters() {
+        return new TransportStationParameters(
+                Defaults.TRANSPORT_STATION_CAPACITY_PER_STANDARD_WORKER_DAY,
+                Defaults.TRANSPORT_STATION_FLOOR_BLOCKS_PER_WORKER_SLOT,
+                Defaults.TRANSPORT_STATION_MINIMUM_WORKER_SLOTS,
+                Defaults.TRANSPORT_STATION_MINIMUM_FLOOR_AREA_BLOCKS,
+                Defaults.TRANSPORT_STATION_MINIMUM_INTERIOR_VOLUME_BLOCKS,
+                new ResidentProductivityParameters(
+                        Defaults.TRANSPORT_STATION_HEALTH_WEIGHT,
+                        Defaults.TRANSPORT_STATION_MENTAL_WEIGHT,
+                        Defaults.TRANSPORT_STATION_STRENGTH_WEIGHT,
+                        Defaults.TRANSPORT_STATION_INTELLIGENCE_WEIGHT,
+                        Defaults.TRANSPORT_STATION_PRODUCTIVITY_AT_ATTRIBUTE_ZERO,
+                        Defaults.TRANSPORT_STATION_PRODUCTIVITY_AT_ATTRIBUTE_HUNDRED,
+                        Defaults.TRANSPORT_STATION_MAXIMUM_PROFICIENCY,
+                        Defaults.TRANSPORT_STATION_BONUS_AT_MAXIMUM_PROFICIENCY,
+                        Defaults.TRANSPORT_STATION_MINIMUM_PRODUCTIVITY,
+                        Defaults.TRANSPORT_STATION_MAXIMUM_PRODUCTIVITY));
     }
 
     /**
@@ -185,6 +224,7 @@ public record TownModelParameters(
                         new ResidentActivity(
                                 Defaults.HUNTING_PHYSICAL_ACTIVITY,
                                 Defaults.HUNTING_LEARNING_ACTIVITY)),
+                        defaultTransportStationParameters(),
                 new HousingParameters(
                         Defaults.HOUSING_FOOD_PER_RESIDENT_DAY,
                         Defaults.HOUSING_NUTRITION_REFERENCE_PER_FOOD_UNIT,
@@ -446,6 +486,16 @@ public record TownModelParameters(
         }
     }
 
+    public record TransportStationParameters(
+            double capacityPerStandardWorkerDay,
+            double floorBlocksPerWorkerSlot,
+            int minimumWorkerSlots,
+            int minimumFloorAreaBlocks,
+            int minimumInteriorVolumeBlocks,
+            ResidentProductivityParameters productivity
+    ) {
+    }
+
     public record HousingParameters(
             double foodConsumptionPerResidentDay,
             double nutritionReferencePerFoodUnit,
@@ -489,7 +539,7 @@ public record TownModelParameters(
     ) {
     }
 
-    /** Four-channel reserve, support, attribute, and meal-choice tuning. */
+    /** Four-channel reserve, recovery, growth, and meal-choice tuning. */
     public record ResidentNutritionParameters(
             double maximumReserve,
             double initialReserve,
@@ -887,6 +937,21 @@ public record TownModelParameters(
         public static final double MINING_FLOOR_BLOCKS_PER_WORKER_SLOT = 4.0;
         public static final int MINING_MINIMUM_WORKER_SLOTS = 1;
         public static final int MINING_CONNECTION_RADIUS_BLOCKS = 1024;
+        public static final double TRANSPORT_STATION_FLOOR_BLOCKS_PER_WORKER_SLOT = 4.0;
+        public static final int TRANSPORT_STATION_MINIMUM_WORKER_SLOTS = 1;
+        public static final int TRANSPORT_STATION_MINIMUM_FLOOR_AREA_BLOCKS = 4;
+        public static final int TRANSPORT_STATION_MINIMUM_INTERIOR_VOLUME_BLOCKS = 8;
+        public static final double TRANSPORT_STATION_CAPACITY_PER_STANDARD_WORKER_DAY = 64.0;
+        public static final double TRANSPORT_STATION_HEALTH_WEIGHT = 35.0;
+        public static final double TRANSPORT_STATION_MENTAL_WEIGHT = 15.0;
+        public static final double TRANSPORT_STATION_STRENGTH_WEIGHT = 30.0;
+        public static final double TRANSPORT_STATION_INTELLIGENCE_WEIGHT = 20.0;
+        public static final double TRANSPORT_STATION_PRODUCTIVITY_AT_ATTRIBUTE_ZERO = 0.5;
+        public static final double TRANSPORT_STATION_PRODUCTIVITY_AT_ATTRIBUTE_HUNDRED = 1.5;
+        public static final double TRANSPORT_STATION_MAXIMUM_PROFICIENCY = 100.0;
+        public static final double TRANSPORT_STATION_BONUS_AT_MAXIMUM_PROFICIENCY = 0.8;
+        public static final double TRANSPORT_STATION_MINIMUM_PRODUCTIVITY = 0.5;
+        public static final double TRANSPORT_STATION_MAXIMUM_PRODUCTIVITY = 2.3;
         public static final double MINING_HEALTH_WEIGHT = 30.0;
         public static final double MINING_MENTAL_WEIGHT = 10.0;
         public static final double MINING_STRENGTH_WEIGHT = 45.0;

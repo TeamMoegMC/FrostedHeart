@@ -26,7 +26,9 @@ import net.minecraft.network.protocol.game.ClientGamePacketListener;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EntityDimensions;
 import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.Pose;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.api.distmarker.Dist;
@@ -34,15 +36,18 @@ import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.network.NetworkHooks;
 
 /**
- * 假居民实体：仅存在于客户端的"代理傀儡"，为近距离（&lt; 24 格）居民提供
- * 真实的人形渲染与原版交互手感（准星高亮、点击判定）。
+ * 假居民实体：仅存在于客户端的"代理傀儡"，为近距离且入选详细展示预算的居民提供
+ * 真实的人形渲染与原版交互手感（准星高亮、点击判定）。候选 16 格进入、
+ * 20 格退出，实际数量由客户端 {@code maxDetailedCitizenEntities} 严格限制。
  * 它不参与任何服务端逻辑：无 AI、无寻路、无重力、无网络同步、不存档；
  * 位置与朝向由 FakeCitizenManager 每客户端 tick 按模拟缓存直接驱动。
  * 服务端完全不知道它的存在，因此零额外网络开销。
  * <p>
- * Fake citizen entity: a client-only proxy puppet giving near-range (&lt; 24
- * blocks) citizens real humanoid rendering and vanilla interaction feel
- * (crosshair highlight, click picking). It runs no server logic at all: no
+ * Fake citizen entity: a client-only proxy puppet giving selected near-range
+ * citizens real humanoid rendering and vanilla interaction feel (crosshair
+ * highlight and click picking). Candidates enter at 16 blocks, leave at 20,
+ * and are strictly bounded by the client
+ * {@code maxDetailedCitizenEntities} setting. It runs no server logic at all: no
  * AI, no pathfinding, no gravity, no network sync, no saving; position and
  * yaw are driven every client tick by FakeCitizenManager from the
  * simulation cache. The server never knows it exists, so it costs zero
@@ -52,6 +57,7 @@ public class FakeCitizenEntity extends Mob {
 
 	/** 关联的模拟居民稳定 id / Associated simulated citizen stable id */
 	private int citizenId = -1;
+	private float modelScale = 1.0F;
 
 	/**
 	 * 行走位移平滑值（FakeCitizenManager 每 tick 写入，一阶 EMA）。
@@ -80,6 +86,22 @@ public class FakeCitizenEntity extends Mob {
 
 	public void setCitizenId(int citizenId) {
 		this.citizenId = citizenId;
+	}
+
+	public float getModelScale() {
+		return modelScale;
+	}
+
+	public void setModelScale(float modelScale) {
+		if (this.modelScale == modelScale)
+			return;
+		this.modelScale = modelScale;
+		this.refreshDimensions();
+	}
+
+	@Override
+	public EntityDimensions getDimensions(Pose pose) {
+		return super.getDimensions(pose).scale(modelScale);
 	}
 
 	/**

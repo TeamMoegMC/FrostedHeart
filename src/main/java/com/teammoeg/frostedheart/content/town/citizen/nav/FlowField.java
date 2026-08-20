@@ -19,9 +19,9 @@
 
 package com.teammoeg.frostedheart.content.town.citizen.nav;
 
-import java.util.ArrayDeque;
 import java.util.Arrays;
 
+import it.unimi.dsi.fastutil.ints.IntArrayFIFOQueue;
 import com.teammoeg.frostedheart.content.town.citizen.sim.CitizenState;
 
 /**
@@ -81,12 +81,12 @@ public final class FlowField {
 		int originZ = targetZ - SIZE / 2;
 		short[] dist = new short[SIZE * SIZE];
 		Arrays.fill(dist, UNREACH);
-		ArrayDeque<Integer> queue = new ArrayDeque<>(256);
+		IntArrayFIFOQueue queue = new IntArrayFIFOQueue(256);
 		int startIdx = (SIZE / 2) * SIZE + SIZE / 2;
 		dist[startIdx] = 0;
-		queue.add(startIdx);
+		queue.enqueue(startIdx);
 		while (!queue.isEmpty()) {
-			int cur = queue.poll();
+			int cur = queue.dequeueInt();
 			int cx = cur % SIZE;
 			int cz = cur / SIZE;
 			short ch = heights[cur];
@@ -106,7 +106,7 @@ public final class FlowField {
 				if (ch != UNLOADED && Math.abs(nh - ch) > 1)
 					continue;
 				dist[nIdx] = (short) nd;
-				queue.add(nIdx);
+				queue.enqueue(nIdx);
 			}
 		}
 		return new FlowField(originX, originZ, targetX, targetZ, dist);

@@ -42,6 +42,7 @@ import com.teammoeg.frostedheart.content.steamenergy.steamcore.HalfShaftRenderer
 import com.teammoeg.frostedheart.content.steamenergy.steamcore.SteamCoreTileEntity;
 import com.teammoeg.frostedheart.content.town.buildings.house.HouseBlockEntity;
 import com.teammoeg.frostedheart.content.town.buildings.hunting.HuntingBaseBlockEntity;
+import com.teammoeg.frostedheart.content.town.buildings.logistics.TransportStationBlockEntity;
 import com.teammoeg.frostedheart.content.town.buildings.mine.MineBaseBlockEntity;
 import com.teammoeg.frostedheart.content.town.buildings.mine.MineBlockEntity;
 import com.teammoeg.frostedheart.content.town.buildings.warehouse.WarehouseBlockEntity;
@@ -153,6 +154,9 @@ public class FHBlockEntityTypes {
     );
     public static final RegistryObject<BlockEntityType<HuntingBaseBlockEntity>> HUNTING_BASE = REGISTER.register(
             "hunting_base", makeType(HuntingBaseBlockEntity::new, FHBlocks.HUNTING_BASE::get)
+    );
+    public static final RegistryObject<BlockEntityType<TransportStationBlockEntity>> TRANSPORT_STATION = REGISTER.register(
+            "transport_station", makeType(TransportStationBlockEntity::new, FHBlocks.TRANSPORT_STATION::get)
     );
 
     public static final RegistryObject<BlockEntityType<WardrobeBlockEntity>> WARDROBE = REGISTER.register(

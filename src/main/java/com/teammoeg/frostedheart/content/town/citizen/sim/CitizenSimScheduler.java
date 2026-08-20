@@ -57,7 +57,8 @@ import net.minecraft.world.level.levelgen.Heightmap;
  * tick 管线（与旧 per-dimension Manager 逐 tick 顺序一致）：
  * 活跃度刷新（20t）→ 容器注册表门控聚合（20t，只做维度激活/首次接管/维度变更
  * 检测与 registry diff despawn，**无对账**——居民增删由城镇事件直接驱动）→
- * 空间网格重建（5t）→ 行为分帧决策（1Hz/单位）→ 移动全量积分 → 网络增量同步。
+ * 活跃 ID 重建（20t）→ 空间网格重建（5t）→ 行为分帧决策（1Hz/单位）→
+ * 活跃居民移动积分 → 网络增量同步。
  * <p>
  * Per-level runtime scheduler (not persisted) driving every container in the
  * level — one simulation per town ({@link TownSimData}; player towns keyed by
@@ -97,6 +98,7 @@ public final class CitizenSimScheduler {
 	 */
 	public static void resetAll() {
 		BY_LEVEL.clear();
+		SyncEngine.resetServerVisibility();
 	}
 
 	/**
@@ -123,14 +125,26 @@ public final class CitizenSimScheduler {
 	private final BehaviorSystem behavior = new BehaviorSystem();
 	private final MovementSystem movement = new MovementSystem();
 
-	/** 本维度全部容器（每次 refreshRegistry 重建） / All containers in this level (rebuilt each refresh) */
+	/** 本维度全部容器 / All containers in this level. */
 	private List<CitizenContainer> containers = new ArrayList<>();
+	/** Reused next-generation container registry, swapped only after a complete rebuild. */
+	private List<CitizenContainer> containerScratch = new ArrayList<>();
 	/** 稳定 id → 容器（C2S 反查与 registry diff） / Stable id → container (C2S lookup & registry diff) */
 	private Int2ObjectOpenHashMap<CitizenContainer> byId = new Int2ObjectOpenHashMap<>();
+	/** Reused next-generation id registry, swapped only after a complete rebuild. */
+	private Int2ObjectOpenHashMap<CitizenContainer> byIdScratch = new Int2ObjectOpenHashMap<>();
+	/** Reused duplicate-detection set for registry rebuilds. */
+	private final IntOpenHashSet usedIdsScratch = new IntOpenHashSet();
+	/** Active stable IDs aligned by index with {@link #containers}. */
+	private final List<IntArrayList> activeIdsByContainer = new ArrayList<>();
+	/** Lists detached by container-registry shrink are retained for later reuse. */
+	private final List<IntArrayList> activeIdListPool = new ArrayList<>();
 	/** 未托管容器（懒加载，首次访问触发旧格式迁移） / Unmanaged container (lazy; first access migrates old format) */
 	private UnmanagedCitizenData unmanaged;
 	/** 首次注册表刷新时是否已用全部现存条目校准 id 分配器 / Whether the allocator was calibrated against all existing entries */
 	private boolean allocatorReconciled;
+	/** The coarse AOI index must be rebuilt before the next visibility selection. */
+	private boolean visibilityIndexDirty = true;
 
 	private CitizenSimScheduler() {
 	}
@@ -144,6 +158,11 @@ public final class CitizenSimScheduler {
 	 */
 	public List<CitizenContainer> containers() {
 		return containers;
+	}
+
+	/** Active stable IDs for the container at the same registry index. */
+	IntArrayList activeIds(int containerIndex) {
+		return activeIdsByContainer.get(containerIndex);
 	}
 
 	/**
@@ -254,6 +273,21 @@ public final class CitizenSimScheduler {
 	 */
 	void register(CitizenContainer container, int citizenId) {
 		byId.put(citizenId, container);
+		visibilityIndexDirty = true;
+		int containerIndex = containers.indexOf(container);
+		if (containerIndex < 0 || containerIndex >= activeIdsByContainer.size())
+			return;
+		CitizenSim sim = container.sim();
+		int index = sim.indexOf(citizenId);
+		if (index < 0)
+			return;
+		if (isActive(container, index)) {
+			IntArrayList activeIds = activeIdsByContainer.get(containerIndex);
+			if (!activeIds.contains(citizenId))
+				activeIds.add(citizenId);
+		} else {
+			markHaltedIfMoving(sim, index);
+		}
 	}
 
 	/**
@@ -288,6 +322,10 @@ public final class CitizenSimScheduler {
 			return;
 		if (byId.get(citizenId) == container)
 			byId.remove(citizenId);
+		int containerIndex = containers.indexOf(container);
+		if (containerIndex >= 0 && containerIndex < activeIdsByContainer.size())
+			activeIdsByContainer.get(containerIndex).rem(citizenId);
+		visibilityIndexDirty = true;
 		sync.notifyRemoved(citizenId);
 	}
 
@@ -312,12 +350,15 @@ public final class CitizenSimScheduler {
 		if (gameTime % 20 == 0) {
 			refreshActivity(level);
 			refreshRegistry(level);
+			rebuildActiveIds();
 		}
 		if (gameTime % 5 == 0)
 			grid.rebuild(containers, this::isSpatialPresent);
 		behavior.tick(this, level, (int) (gameTime % BehaviorSystem.SLICE), gameTime);
 		movement.tickAll(this, level, gameTime);
 		fields.tick(level, gameTime);
+		if (gameTime % SyncEngine.AOI_REFRESH == 0)
+			visibilityIndexDirty = true;
 		sync.flush(this, level, gameTime);
 	}
 
@@ -351,6 +392,52 @@ public final class CitizenSimScheduler {
 		return isActive(container, index) && CitizenPresence.spatialPresent(container.sim().state[index]);
 	}
 
+	/** Rebuilds the active stable-ID lists after the 20-tick activity/registry refresh. */
+	private void rebuildActiveIds() {
+		while (activeIdsByContainer.size() < containers.size()) {
+			IntArrayList list = activeIdListPool.isEmpty()
+					? new IntArrayList()
+					: activeIdListPool.remove(activeIdListPool.size() - 1);
+			activeIdsByContainer.add(list);
+		}
+		while (activeIdsByContainer.size() > containers.size()) {
+			IntArrayList list = activeIdsByContainer.remove(activeIdsByContainer.size() - 1);
+			list.clear();
+			activeIdListPool.add(list);
+		}
+		for (int containerIndex = 0; containerIndex < containers.size(); containerIndex++) {
+			CitizenContainer container = containers.get(containerIndex);
+			CitizenSim sim = container.sim();
+			IntArrayList activeIds = activeIdsByContainer.get(containerIndex);
+			activeIds.clear();
+			for (int i = 0; i < sim.size(); i++) {
+				if (isActive(container, i))
+					activeIds.add(sim.id[i]);
+				else
+					markHaltedIfMoving(sim, i);
+			}
+		}
+	}
+
+	private static void markHaltedIfMoving(CitizenSim sim, int index) {
+		int state = sim.state[index] & 0xFF;
+		if (state < CitizenState.STATE_COUNT && CitizenState.MOVING[state])
+			sim.halt[index] = 1;
+	}
+
+	/** Marks discontinuous population/position changes for the next AOI selection. */
+	public void invalidateVisibilityIndex() {
+		visibilityIndexDirty = true;
+	}
+
+	/** Rebuilds the coarse AOI index only when a server-wide selection will consume it. */
+	public void ensureVisibilityIndex() {
+		if (!visibilityIndexDirty)
+			return;
+		grid.rebuildVisibility(containers);
+		visibilityIndexDirty = false;
+	}
+
 	/**
 	 * 容器注册表门控聚合（20t，无对账）：
 	 * <ul>
@@ -370,10 +457,13 @@ public final class CitizenSimScheduler {
 	 */
 	private void refreshRegistry(ServerLevel level) {
 		reconcileAllocator(level);
-		List<CitizenContainer> newContainers = new ArrayList<>();
-		Int2ObjectOpenHashMap<CitizenContainer> newById = new Int2ObjectOpenHashMap<>();
+		List<CitizenContainer> newContainers = containerScratch;
+		Int2ObjectOpenHashMap<CitizenContainer> newById = byIdScratch;
+		IntOpenHashSet usedIds = usedIdsScratch;
+		newContainers.clear();
+		newById.clear();
+		usedIds.clear();
 		UnmanagedCitizenData unmanaged = getUnmanaged(level);
-		IntOpenHashSet usedIds = new IntOpenHashSet();
 		CitizenSim unmanagedSim = unmanaged.sim();
 		for (int i = 0; i < unmanagedSim.size(); i++)
 			usedIds.add(unmanagedSim.id[i]);
@@ -420,8 +510,13 @@ public final class CitizenSimScheduler {
 			if (!newById.containsKey(id))
 				sync.notifyRemoved(id);
 		}
+		List<CitizenContainer> oldContainers = containers;
+		Int2ObjectOpenHashMap<CitizenContainer> oldById = byId;
 		this.containers = newContainers;
 		this.byId = newById;
+		this.containerScratch = oldContainers;
+		this.byIdScratch = oldById;
+		this.visibilityIndexDirty = true;
 	}
 
 	/** 将 town 容器加入注册表；跨容器 id 冲突时仅换会话 id，不丢当前位置与状态。 */

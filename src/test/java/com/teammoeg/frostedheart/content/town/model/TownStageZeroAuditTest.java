@@ -24,10 +24,12 @@ import org.junit.jupiter.api.io.TempDir;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class TownStageZeroAuditTest {
     @Test
@@ -78,5 +80,42 @@ class TownStageZeroAuditTest {
         assertEquals(0.1,
                 TownStageZeroAudit.parseResearchStatBonus(research, "generator_effi"),
                 1.0e-12);
+    }
+
+    @Test
+    void transportParametersKeepValuesUnitsAndConfigSourcesInTheAuditSnapshot() {
+        List<TownStageZeroAudit.ParameterValue> values =
+                TownStageZeroAudit.transportParameterValues(
+                        TownModelParameters.currentDefaults(), Path.of("TownModelParameters.java"));
+        Map<String, TownStageZeroAudit.ParameterValue> byName = values.stream()
+                .collect(Collectors.toMap(TownStageZeroAudit.ParameterValue::name, value -> value));
+
+        assertEquals(15, values.size());
+        assertEquals(64.0,
+                byName.get("transportStation.capacityPerStandardWorkerDay").value());
+        assertEquals("transport-capacity/SWE/day",
+                byName.get("transportStation.capacityPerStandardWorkerDay").unit());
+        assertEquals(35.0, byName.get("transportStation.productivity.healthWeight").value());
+        assertTrue(byName.get("transportStation.productivity.maximumProductivity")
+                .sourceSymbol().contains("FHConfig.SERVER.TOWN.TRANSPORT_STATION"));
+
+        TownModelParameters defaults = TownModelParameters.currentDefaults();
+        TownModelParameters.TransportStationParameters transport = defaults.transportStation();
+        TownModelParameters tuned = new TownModelParameters(
+                defaults.mining(), defaults.hunting(),
+                new TownModelParameters.TransportStationParameters(
+                        80.0, transport.floorBlocksPerWorkerSlot(), transport.minimumWorkerSlots(),
+                        transport.minimumFloorAreaBlocks(), transport.minimumInteriorVolumeBlocks(),
+                        transport.productivity()),
+                defaults.housing(), defaults.residents(), defaults.buildingScoring(),
+                defaults.terrainResources(), defaults.generatorT1(), defaults.climate(),
+                defaults.observation(), defaults.meatFoods());
+        Map<String, TownStageZeroAudit.ParameterValue> tunedByName =
+                TownStageZeroAudit.transportParameterValues(tuned, Path.of("TownModelParameters.java"))
+                        .stream().collect(Collectors.toMap(
+                                TownStageZeroAudit.ParameterValue::name, value -> value));
+
+        assertEquals(80.0,
+                tunedByName.get("transportStation.capacityPerStandardWorkerDay").value());
     }
 }

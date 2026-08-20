@@ -13,7 +13,8 @@ package com.teammoeg.frostedheart.content.town.citizen.sim;
 /**
  * Defines which runtime systems should process each citizen state.
  * Sleeping remains behavior-scheduled so morning transitions still run, but
- * it has no movement, spatial-grid, or network presence.
+ * it has no movement or spatial-grid presence. Only sleepers anchored to a
+ * verified bed may enter the presentation budget.
  */
 public final class CitizenPresence {
 
@@ -35,8 +36,17 @@ public final class CitizenPresence {
 		return isValid(state) && state != CitizenState.SLEEP;
 	}
 
-	/** Whether clients may track, render, or interact with the citizen. */
-	public static boolean networkVisible(int state) {
+	/** Whether a citizen may be selected for synchronization and rendering. */
+	public static boolean presentationEligible(CitizenSim sim, int index) {
+		int state = sim.state[index] & 0xFF;
+		if (!isValid(state))
+			return false;
+		return state != CitizenState.SLEEP
+				|| (sim.presentationFlags[index] & CitizenSim.PRESENT_ON_VALID_BED) != 0;
+	}
+
+	/** Whether clients may perform actions against this behavior state. */
+	public static boolean interactionAllowed(int state) {
 		return isValid(state) && state != CitizenState.SLEEP;
 	}
 

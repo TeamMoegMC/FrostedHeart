@@ -89,6 +89,7 @@ import com.teammoeg.frostedheart.content.town.model.TownResidentCareModel;
 import com.teammoeg.frostedheart.content.town.resident.WanderingRefugee;
 import com.teammoeg.frostedheart.content.town.resource.TeamTownResourceHolder;
 import com.teammoeg.frostedheart.content.town.resource.VirtualResourceType;
+import com.teammoeg.frostedheart.content.town.transport.TownTransportState;
 import com.teammoeg.frostedheart.content.town.terrainresource.TerrainResourceType;
 import com.teammoeg.frostedheart.content.town.terrainresource.TerrainResourceData;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
@@ -160,6 +161,9 @@ public class TeamTownData implements SpecialData{
         CodecUtil.defaultSupply(CodecUtil.catchingCodec(TownPolicyState.CODEC), () -> TownPolicyState.DEFAULT)
         .fieldOf("policyState").forGetter(TeamTownData::getPolicyState),
 
+        CodecUtil.defaultSupply(CodecUtil.catchingCodec(TownTransportState.CODEC), TownTransportState::new)
+        .fieldOf("transportState").forGetter(TeamTownData::getTransportState),
+
         CodecUtil.defaultSupply(CodecUtil.catchingCodec(Codec.LONG), () -> -1L)
         .fieldOf("lastRefugeeSpawnDay").forGetter(o -> o.lastRefugeeSpawnDay)
 
@@ -219,6 +223,10 @@ public class TeamTownData implements SpecialData{
 
     /** Extensible, globally cooled-down town law selections. */
     private TownPolicyState policyState = TownPolicyState.DEFAULT;
+
+    /** Town-owned aggregate transport service state. */
+    @Getter
+    private TownTransportState transportState = new TownTransportState();
 
     /** Threshold events accumulated during the current daily settlement. */
     private transient final List<TownSignalEvent> pendingDailySignals = new ArrayList<>();
@@ -348,7 +356,7 @@ public class TeamTownData implements SpecialData{
      * @param staffingPlan 已保存的岗位计划；旧存档缺失时由 Codec 提供空计划
      * @param lastRefugeeSpawnDay 最近一次难民自然刷新所用的稳定世界日
      */
-    public TeamTownData(String name, TeamTownResourceHolder resources, Map<BlockPos, ITownBuilding> buildings, Map<UUID, Resident> residents, Map<TerrainResourceType, TerrainResourceData> terrainResource,int labour,int maxlabour, List<TownHistoryEntry> history, long townDay, TownStaffingPlan staffingPlan, TownHousingPlan housingPlan, TownPolicyState policyState, long lastRefugeeSpawnDay) {
+    public TeamTownData(String name, TeamTownResourceHolder resources, Map<BlockPos, ITownBuilding> buildings, Map<UUID, Resident> residents, Map<TerrainResourceType, TerrainResourceData> terrainResource,int labour,int maxlabour, List<TownHistoryEntry> history, long townDay, TownStaffingPlan staffingPlan, TownHousingPlan housingPlan, TownPolicyState policyState, TownTransportState transportState, long lastRefugeeSpawnDay) {
         super();
         this.history = new ArrayList<>(history);
         this.townDay = townDay >= 0L ? townDay : history.size();
@@ -368,7 +376,15 @@ public class TeamTownData implements SpecialData{
         this.housingPlan = housingPlan == null ? TownHousingPlan.EMPTY : housingPlan;
         normalizeHousingPlan();
         this.policyState = policyState == null ? TownPolicyState.DEFAULT : policyState;
+        this.transportState = transportState == null ? new TownTransportState() : transportState;
         this.lastRefugeeSpawnDay = lastRefugeeSpawnDay;
+    }
+
+    /** Source-compatible constructor for callers predating town transport state. */
+    public TeamTownData(String name, TeamTownResourceHolder resources, Map<BlockPos, ITownBuilding> buildings, Map<UUID, Resident> residents, Map<TerrainResourceType, TerrainResourceData> terrainResource,int labour,int maxlabour, List<TownHistoryEntry> history, long townDay, TownStaffingPlan staffingPlan, TownHousingPlan housingPlan, TownPolicyState policyState, long lastRefugeeSpawnDay) {
+        this(name, resources, buildings, residents, terrainResource, labour, maxlabour,
+                history, townDay, staffingPlan, housingPlan, policyState,
+                new TownTransportState(), lastRefugeeSpawnDay);
     }
 
     /** Source-compatible constructor for callers predating housing and policy plans. */
@@ -558,7 +574,7 @@ public class TeamTownData implements SpecialData{
             this.listenerInitialized = true;
         }
 
-        if(!dataSyncCache.changedResourceKey.isEmpty()){
+        if(dataSyncCache.hasChangedResources() || dataSyncCache.hasTransportStateChange()){
             Map<ITownResourceKey, Double> changedResource = new HashMap<>();
             for(ITownResourceKey resourceKey : this.dataSyncCache.drainChangedResources()){
                 double current = this.resources.get(resourceKey);
@@ -569,8 +585,12 @@ public class TeamTownData implements SpecialData{
                 }
                 changedResource.put(resourceKey, current);
             }
-            if(!changedResource.isEmpty()){
-                teamData.sendToOnline(FHNetwork.INSTANCE, new TownResourceUpdatePacket(changedResource, resources.getOccupiedCapacity()));
+            boolean transportStateChanged = dataSyncCache.drainTransportStateChange();
+            if(!changedResource.isEmpty() || transportStateChanged){
+                teamData.sendToOnline(FHNetwork.INSTANCE, new TownResourceUpdatePacket(
+                        changedResource,
+                        resources.getOccupiedCapacity(),
+                        transportState.getDailyReport()));
                 changedResource.forEach(this.dataSyncCache::markResourceSynced);
             }
         }
@@ -1423,11 +1443,12 @@ public class TeamTownData implements SpecialData{
     /**
      * execute work method of buildings.
      */
-    private void buildingsWork(ServerLevel world){
+    void buildingsWork(ServerLevel world){
         this.updateRadius();
         //updateAllBlocks(world);
 
         TeamTown teamTown = new TeamTown(this);
+        resources.resetAllServices();
         reloadMaxCapacity();
 
         buildings.values().stream()
@@ -1435,6 +1456,18 @@ public class TeamTownData implements SpecialData{
                 .filter(building -> !(building instanceof HouseBuilding))
                 .sorted(Comparator.comparingInt(AbstractTownBuilding::getWorkPriority).reversed())
                 .forEach(building -> building.work(teamTown,world));
+        finishDailyTransportSettlement();
+    }
+
+    /** Finalizes the aggregate report after every station has produced. */
+    void finishDailyTransportSettlement() {
+        double totalCapacity = resources.get(
+                VirtualResourceType.TRANSPORT_CAPACITY.generateAttribute(0));
+        TownTransportState.DailyReport report = new TownTransportState.DailyReport(
+                true, totalCapacity, 0.0);
+        if (transportState.setDailyReport(report)) {
+            dataSyncCache.markTransportStateChanged();
+        }
     }
 
     /**
@@ -1711,12 +1744,22 @@ public class TeamTownData implements SpecialData{
      * @param changes 发生变化的资源（key → 当前权威数量）
      * @param occupiedCapacity 服务端下发的最新已占用容量
      */
-    public void applyResourceUpdate(Map<ITownResourceKey, Double> changes, double occupiedCapacity) {
+    public void applyResourceUpdate(
+            Map<ITownResourceKey, Double> changes,
+            double occupiedCapacity,
+            TownTransportState.DailyReport transportDailyReport
+    ) {
         for (Map.Entry<ITownResourceKey, Double> entry : changes.entrySet()) {
             resources.applySyncEntry(entry.getKey(), entry.getValue());
         }
         resources.setOccupiedCapacity(occupiedCapacity);
+        transportState.setDailyReport(transportDailyReport);
         fireResourcesChanged();
+    }
+
+    /** Source-compatible client helper for callers predating transport reports. */
+    public void applyResourceUpdate(Map<ITownResourceKey, Double> changes, double occupiedCapacity) {
+        applyResourceUpdate(changes, occupiedCapacity, transportState.getDailyReport());
     }
 
     /** Client-side authoritative town-name update. */
@@ -1757,6 +1800,7 @@ public class TeamTownData implements SpecialData{
         private Set<ITownResourceKey> changedResourceKey = new HashSet<>();
         private Set<UUID> changedResidentUUID = new HashSet<>();
         private Set<BlockPos> changedBuildingPos = new HashSet<>();
+        private boolean transportStateChanged;
 
         /**
          * 上次已通过增量包同步给客户端的资源值快照（仅服务端维护）。
@@ -1850,11 +1894,30 @@ public class TeamTownData implements SpecialData{
             return out;
         }
 
+        public boolean hasChangedResources() {
+            return !changedResourceKey.isEmpty();
+        }
+
+        public void markTransportStateChanged() {
+            transportStateChanged = true;
+        }
+
+        public boolean hasTransportStateChange() {
+            return transportStateChanged;
+        }
+
+        public boolean drainTransportStateChange() {
+            boolean changed = transportStateChanged;
+            transportStateChanged = false;
+            return changed;
+        }
+
         /**
          * 是否还有未同步的脏数据。
          */
         public boolean hasChanges() {
-            return !changedBuildingPos.isEmpty() || !changedResidentUUID.isEmpty() || !changedResourceKey.isEmpty();
+            return !changedBuildingPos.isEmpty() || !changedResidentUUID.isEmpty()
+                    || !changedResourceKey.isEmpty() || transportStateChanged;
         }
 
         /**
@@ -1864,6 +1927,7 @@ public class TeamTownData implements SpecialData{
             changedBuildingPos.clear();
             changedResidentUUID.clear();
             changedResourceKey.clear();
+            transportStateChanged = false;
         }
 
 

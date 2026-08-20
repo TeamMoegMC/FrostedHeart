@@ -76,7 +76,7 @@ import net.minecraft.world.level.block.state.properties.BedPart;
 public class TownSimData implements CitizenContainer, ITownResidentListener {
 
 	/** 模拟核心数据（SoA 紧排布局） / Core simulation data (SoA layout) */
-	public final CitizenSim sim = new CitizenSim(64);
+	public final CitizenSim sim = new CitizenSim(16);
 
 	/**
 	 * FH 交易数据（懒创建；null parent 构造，policytype 为 null → 空政策快照）。
@@ -179,7 +179,7 @@ public class TownSimData implements CitizenContainer, ITownResidentListener {
 			return;
 		CitizenSim loaded = CitizenSim.load(simTag);
 		for (int k = 0; k < loaded.size(); k++) {
-			int i = sim.add(loaded.id[k], loaded.px[k], loaded.py[k], loaded.pz[k], loaded.tickPhase[k]);
+			int i = sim.add(loaded.id[k], loaded.px[k], loaded.py[k], loaded.pz[k]);
 			sim.dir[i] = loaded.dir[k];
             sim.sdir[i] = loaded.sdir[k];
 			sim.state[i] = loaded.state[k];
@@ -190,7 +190,6 @@ public class TownSimData implements CitizenContainer, ITownResidentListener {
 			sim.uuidHi[i] = loaded.uuidHi[k];
 			sim.uuidLo[i] = loaded.uuidLo[k];
 			sim.tx[i] = loaded.tx[k];
-			sim.ty[i] = loaded.ty[k];
 			sim.tz[i] = loaded.tz[k];
 		}
 	}
@@ -242,6 +241,7 @@ public class TownSimData implements CitizenContainer, ITownResidentListener {
 			sim.wx[idx] = work != null ? work.getX() : -1;
 			sim.wz[idx] = work != null ? work.getZ() : -1;
 			nameCache.put(sim.id[idx], resident.getFirstName() + " " + resident.getLastName());
+			syncPresentationAge(resident, idx);
 			if (!reconcilingResidents) {
 				rebuildBedAssignments(previousHome);
 				if (sim.homePos[idx] != previousHome)
@@ -260,6 +260,7 @@ public class TownSimData implements CitizenContainer, ITownResidentListener {
 				(byte) (id % BehaviorSystem.SLICE));
 		sim.uuidHi[i] = hi;
 		sim.uuidLo[i] = lo;
+		syncPresentationAge(resident, i);
 		sim.homeX[i] = anchor.getX();
 		sim.homeZ[i] = anchor.getZ();
 		sim.homePos[i] = fullHome;
@@ -550,6 +551,7 @@ public class TownSimData implements CitizenContainer, ITownResidentListener {
 					sim.wz[idx] = work != null ? work.getZ() : -1;
 					r.setSimId(sim.id[idx]);
 					nameCache.put(sim.id[idx], r.getFirstName() + " " + r.getLastName());
+					syncPresentationAge(r, idx);
 					if (persistedChanged)
 						markDirty();
 				}
@@ -571,6 +573,11 @@ public class TownSimData implements CitizenContainer, ITownResidentListener {
 		}
 		rebuildAllBedAssignments();
 		placePendingResidents(pendingPlacements, Math.floorDiv(level.getDayTime(), 24000L));
+	}
+
+	private void syncPresentationAge(Resident resident, int index) {
+		if (sim.setPresentationAge(index, resident.getAge()) && activeSched != null)
+			activeSched.sync.notifyAppearance(sim.id[index]);
 	}
 
 	/**
@@ -680,11 +687,11 @@ public class TownSimData implements CitizenContainer, ITownResidentListener {
 
 	private void prepareSleepingState(int index) {
 		sim.state[index] = CitizenState.SLEEP;
+		sim.presentationFlags[index] &= ~CitizenSim.PRESENT_ON_VALID_BED;
 		sim.halt[index] = 0;
 		sim.sepX[index] = 0;
 		sim.sepZ[index] = 0;
 		sim.tx[index] = sim.px[index];
-		sim.ty[index] = sim.py[index];
 		sim.tz[index] = sim.pz[index];
 		sim.stuckTick[index] = 0;
 		sim.bestDist2[index] = 0;
@@ -693,7 +700,6 @@ public class TownSimData implements CitizenContainer, ITownResidentListener {
 	private void refreshSleepingResident(int index) {
 		onSleepEntered(index);
 		sim.tx[index] = sim.px[index];
-		sim.ty[index] = sim.py[index];
 		sim.tz[index] = sim.pz[index];
 		sim.sepX[index] = 0;
 		sim.sepZ[index] = 0;
@@ -728,7 +734,6 @@ public class TownSimData implements CitizenContainer, ITownResidentListener {
 		sim.py[index] = exit.getY() << 10;
 		sim.pz[index] = (exit.getZ() << 10) + 512;
 		sim.tx[index] = sim.px[index];
-		sim.ty[index] = sim.py[index];
 		sim.tz[index] = sim.pz[index];
 		sim.sepX[index] = 0;
 		sim.sepZ[index] = 0;
@@ -775,19 +780,26 @@ public class TownSimData implements CitizenContainer, ITownResidentListener {
 			BlockState state = activeLevel.getBlockState(bed);
 			var facing = state.getValue(BedBlock.FACING);
 			sim.dir[index] = (byte) CitizenState.dirFromVector(facing.getStepX(), facing.getStepZ());
+			sim.presentationFlags[index] |= CitizenSim.PRESENT_ON_VALID_BED;
+			if (activeSched != null)
+				activeSched.sync.notifyImmediate(sim.id[index]);
 		} else {
+			sim.presentationFlags[index] &= ~CitizenSim.PRESENT_ON_VALID_BED;
 			BlockPos indoorFallback = BlockPos.of(homeEntrancePosition(index));
 			sim.px[index] = (indoorFallback.getX() << 10) + 512;
 			sim.py[index] = indoorFallback.getY() << 10;
 			sim.pz[index] = (indoorFallback.getZ() << 10) + 512;
+			if (activeSched != null)
+				activeSched.sync.notifyHidden(sim.id[index]);
 		}
-		if (activeSched != null)
-			activeSched.sync.notifyHidden(sim.id[index]);
 	}
 
 	@Override
 	public void onWake(ServerLevel level, int index, long worldDay) {
+		sim.presentationFlags[index] &= ~CitizenSim.PRESENT_ON_VALID_BED;
 		placeAtHomeExit(index, worldDay);
+		if (activeSched != null)
+			activeSched.sync.notifyImmediate(sim.id[index]);
 	}
 
 	@Override

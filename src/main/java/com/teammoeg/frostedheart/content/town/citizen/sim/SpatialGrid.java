@@ -35,7 +35,12 @@ import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
  */
 public final class SpatialGrid {
 
+	private static final int VISIBILITY_CELL_SHIFT = 4;
+	private static final int VISIBILITY_QUERY_HALO = 1;
 	private final Long2ObjectOpenHashMap<IntArrayList> cells = new Long2ObjectOpenHashMap<>();
+	private final List<IntArrayList> listPool = new java.util.ArrayList<>();
+	private final Long2ObjectOpenHashMap<IntArrayList> visibilityCells = new Long2ObjectOpenHashMap<>();
+	private final List<IntArrayList> visibilityListPool = new java.util.ArrayList<>();
 
 	/**
 	 * 计算方块坐标所属 cell 的打包键。
@@ -64,7 +69,7 @@ public final class SpatialGrid {
 	 * @param active 活跃度判定（按容器+索引） / activity predicate (by container + index)
 	 */
 	public void rebuild(List<CitizenContainer> containers, ActivityQuery active) {
-		cells.clear();
+		recycle(cells, listPool);
 		for (CitizenContainer c : containers) {
 			CitizenSim sim = c.sim();
 			int n = sim.size();
@@ -72,7 +77,12 @@ public final class SpatialGrid {
 				if (!active.isActive(c, i))
 					continue;
 				long key = cellKey(sim.px[i] >> 10, sim.pz[i] >> 10);
-				cells.computeIfAbsent(key, k -> new IntArrayList()).add(sim.id[i]);
+				IntArrayList list = cells.get(key);
+				if (list == null) {
+					list = listPool.isEmpty() ? new IntArrayList(4) : listPool.remove(listPool.size() - 1);
+					cells.put(key, list);
+				}
+				list.add(sim.id[i]);
 			}
 		}
 	}
@@ -95,6 +105,65 @@ public final class SpatialGrid {
 				if (list != null)
 					out.addAll(list);
 			}
+	}
+
+	/**
+	 * Rebuilds the coarse AOI index from all citizens with a valid runtime state.
+	 * Sleeping residents remain indexed; the synchronization layer performs the
+	 * authoritative valid-bed and exact-distance checks.
+	 */
+	public void rebuildVisibility(List<CitizenContainer> containers) {
+		recycle(visibilityCells, visibilityListPool);
+		for (CitizenContainer container : containers) {
+			CitizenSim sim = container.sim();
+			for (int i = 0; i < sim.size(); i++) {
+				if (!CitizenPresence.behaviorScheduled(sim.state[i] & 0xFF))
+					continue;
+				long key = visibilityCellKey(sim.px[i] >> 10, sim.pz[i] >> 10);
+				IntArrayList list = visibilityCells.get(key);
+				if (list == null) {
+					list = visibilityListPool.isEmpty()
+							? new IntArrayList(8)
+							: visibilityListPool.remove(visibilityListPool.size() - 1);
+					visibilityCells.put(key, list);
+				}
+				list.add(sim.id[i]);
+			}
+		}
+	}
+
+	/**
+	 * Collects coarse candidates around an AOI. One extra cell is queried on
+	 * every side so bounded movement between index rebuilds cannot create a
+	 * false negative; callers must still apply the exact circular distance.
+	 */
+	public void queryVisible(int blockX, int blockZ, int radius, IntArrayList out) {
+		int minCellX = ((blockX - radius) >> VISIBILITY_CELL_SHIFT) - VISIBILITY_QUERY_HALO;
+		int maxCellX = ((blockX + radius) >> VISIBILITY_CELL_SHIFT) + VISIBILITY_QUERY_HALO;
+		int minCellZ = ((blockZ - radius) >> VISIBILITY_CELL_SHIFT) - VISIBILITY_QUERY_HALO;
+		int maxCellZ = ((blockZ + radius) >> VISIBILITY_CELL_SHIFT) + VISIBILITY_QUERY_HALO;
+		for (int cellX = minCellX; cellX <= maxCellX; cellX++)
+			for (int cellZ = minCellZ; cellZ <= maxCellZ; cellZ++) {
+				IntArrayList list = visibilityCells.get(packCell(cellX, cellZ));
+				if (list != null)
+					out.addAll(list);
+			}
+	}
+
+	private static long visibilityCellKey(int blockX, int blockZ) {
+		return packCell(blockX >> VISIBILITY_CELL_SHIFT, blockZ >> VISIBILITY_CELL_SHIFT);
+	}
+
+	private static long packCell(int cellX, int cellZ) {
+		return ((long) cellX << 32) | (cellZ & 0xFFFFFFFFL);
+	}
+
+	private static void recycle(Long2ObjectOpenHashMap<IntArrayList> source, List<IntArrayList> pool) {
+		for (IntArrayList list : source.values()) {
+			list.clear();
+			pool.add(list);
+		}
+		source.clear();
 	}
 
 	/**
