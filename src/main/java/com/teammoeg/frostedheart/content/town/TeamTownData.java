@@ -77,10 +77,13 @@ import com.teammoeg.frostedheart.content.town.event.TownBuildingChangeEvent;
 import com.teammoeg.frostedheart.content.town.event.TownResidentChangeEvent;
 import com.teammoeg.frostedheart.content.town.event.TownResourceChangeEvent;
 import com.teammoeg.frostedheart.content.town.resident.Resident;
-import com.teammoeg.frostedheart.content.town.resident.ResidentAgingModel;
+import com.teammoeg.frostedheart.content.town.resident.ResidentActivity;
+import com.teammoeg.frostedheart.content.town.resident.ResidentAttributeChange;
+import com.teammoeg.frostedheart.content.town.resident.ResidentAttributeModel;
 import com.teammoeg.frostedheart.content.town.resident.ResidentGenerationModel;
 import com.teammoeg.frostedheart.content.town.resident.ResidentDailyModel;
 import com.teammoeg.frostedheart.content.town.resident.ResidentNutrition;
+import com.teammoeg.frostedheart.content.town.resident.ResidentNutritionSupportModel;
 import com.teammoeg.frostedheart.content.town.model.TownAssignmentModel;
 import com.teammoeg.frostedheart.content.town.model.TownResidentCareModel;
 import com.teammoeg.frostedheart.content.town.resident.WanderingRefugee;
@@ -683,7 +686,7 @@ public class TeamTownData implements SpecialData{
         residents.values().forEach(Resident::resetDailyProficiencyGrowth);
         this.buildingsWork(world);
         TownHousingMealService.settle(
-                town, getHousingPlan(), policyState.careLaw());
+                world, town, getHousingPlan(), policyState.careLaw(), nextTownDay());
         this.tickResidentsAging();
         this.tickResidentsMorning();
         this.recoverResources();
@@ -692,6 +695,10 @@ public class TeamTownData implements SpecialData{
         // 挂靠的居民模拟刷新锚点、清理无家条目（低频，跟随 town 生命周期，
         // 无需周期性对账；经单订阅监听器，与 DataSyncCache 钩子链无关）。
         this.fireMorningDone();
+    }
+
+    private long nextTownDay() {
+        return townDay < Long.MAX_VALUE ? townDay + 1L : Long.MAX_VALUE;
     }
 
     /**
@@ -931,44 +938,93 @@ public class TeamTownData implements SpecialData{
     }
 
     /**
-     * 每日老化结算：ageDays+1，幼儿/儿童达标后成长为下一个年龄组（属性保留），
-     * 各年龄组按配置每日增减属性并封顶。
+     * Settles daily strength/intelligence with the resident's pre-transition age,
+     * then advances age-days and applies infant/child age transitions.
      */
     private void tickResidentsAging() {
         ResidentAging aging = FHConfig.SERVER.TOWN.RESIDENT_AGING;
-        ResidentAgingModel.Parameters parameters =
-                new ResidentAgingModel.Parameters(
-                        aging.infantToChildDays.get(),
-                        aging.childToAdultDays.get(),
-                        aging.infantStrengthGainPerDay.get(),
-                        aging.infantIntelligenceGainPerDay.get(),
-                        aging.infantAttributeCap.get(),
-                        aging.childStrengthGainPerDay.get(),
-                        aging.childIntelligenceGainPerDay.get(),
-                        aging.childStrengthCap.get(),
-                        aging.childIntelligenceCap.get(),
-                        aging.adultStrengthGainPerDay.get(),
-                        aging.adultIntelligenceGainPerDay.get(),
-                        aging.adultAttributeCap.get(),
-                        aging.elderStrengthDecayPerDay.get(),
-                        aging.elderStrengthFloor.get());
-        FHConfig.Server.Town.Housing nutrition = FHConfig.SERVER.TOWN.HOUSING;
-        ResidentNutrition.Parameters nutritionParameters = new ResidentNutrition.Parameters(
-                nutrition.residentNutritionMaximumReserve.get(),
-                nutrition.residentNutritionHealthyReserve.get(),
-                nutrition.residentNutritionRecoveryDirectWeight.get(),
-                nutrition.residentNutritionRecoverySupportWeight.get(),
-                nutrition.residentNutritionDeficiencyGrowthFloor.get(),
-                nutrition.residentNutritionMaximumGrowthBonus.get());
+        FHConfig.Server.Town.Housing nutritionConfig = FHConfig.SERVER.TOWN.HOUSING;
+        ResidentNutritionSupportModel.Weights weights = Resident.nutritionSupportWeights();
         for (Resident resident : residents.values()) {
-            ResidentAgingModel.AgingResult result = ResidentAgingModel.settleDay(
-                    resident.getAge(), resident.getAgeDays(), resident.getStrength(),
-                    resident.getIntelligence(), resident.getNutrition(), parameters,
-                    nutritionParameters);
-            resident.setAgeDays(result.ageDays());
-            resident.setAge(result.age());
-            resident.setStrength(result.strength());
-            resident.setIntelligence(result.intelligence());
+            int growthAge = resident.getAge();
+            int nextAgeDays = Math.max(0, resident.getAgeDays()) + 1;
+            int nextAge = growthAge;
+            if (growthAge == Resident.AGE_INFANT
+                    && nextAgeDays >= aging.infantToChildDays.get()) {
+                nextAge = Resident.AGE_CHILD;
+            } else if (growthAge == Resident.AGE_CHILD
+                    && nextAgeDays >= aging.childToAdultDays.get()) {
+                nextAge = Resident.AGE_ADULT;
+            }
+
+            double baseActivity;
+            double strengthRate;
+            double intelligenceRate;
+            double strengthAgeCap;
+            double intelligenceAgeCap;
+            double strengthAgeDecay = 0.0;
+            double intelligenceAgeDecay = 0.0;
+            switch (growthAge) {
+                case Resident.AGE_INFANT -> {
+                    baseActivity = aging.infantBaseActivity.get();
+                    strengthRate = aging.infantStrengthGainPerDay.get();
+                    intelligenceRate = aging.infantIntelligenceGainPerDay.get();
+                    strengthAgeCap = aging.infantAttributeCap.get();
+                    intelligenceAgeCap = aging.infantAttributeCap.get();
+                }
+                case Resident.AGE_CHILD -> {
+                    baseActivity = aging.childBaseActivity.get();
+                    strengthRate = aging.childStrengthGainPerDay.get();
+                    intelligenceRate = aging.childIntelligenceGainPerDay.get();
+                    strengthAgeCap = aging.childStrengthCap.get();
+                    intelligenceAgeCap = aging.childIntelligenceCap.get();
+                }
+                case Resident.AGE_ADULT -> {
+                    baseActivity = aging.adultBaseActivity.get();
+                    strengthRate = aging.adultStrengthGainPerDay.get();
+                    intelligenceRate = aging.adultIntelligenceGainPerDay.get();
+                    strengthAgeCap = aging.adultAttributeCap.get();
+                    intelligenceAgeCap = aging.adultAttributeCap.get();
+                }
+                case Resident.AGE_ELDER -> {
+                    baseActivity = aging.elderBaseActivity.get();
+                    strengthRate = aging.elderStrengthGainPerDay.get();
+                    intelligenceRate = aging.elderIntelligenceGainPerDay.get();
+                    strengthAgeCap = 100.0;
+                    intelligenceAgeCap = 100.0;
+                    strengthAgeDecay = aging.elderStrengthAgeDecayPerDay.get();
+                    intelligenceAgeDecay = aging.elderIntelligenceAgeDecayPerDay.get();
+                }
+                default -> throw new IllegalArgumentException(
+                        "Unsupported resident age: " + growthAge);
+            }
+
+            ResidentNutritionSupportModel.Supports support =
+                    ResidentNutritionSupportModel.supports(
+                            ResidentNutritionSupportModel.satisfaction(
+                                    resident.getNutrition(),
+                                    nutritionConfig.residentNutritionHealthyReserve.get()),
+                            weights);
+            ResidentActivity activity = resident.getDailyActivity();
+            ResidentAttributeChange strengthChange = ResidentAttributeModel.settleDailyAttribute(
+                    resident.getStrength(), activity.physical(), baseActivity, support.strength(),
+                    strengthRate, strengthAgeCap,
+                    nutritionConfig.residentStrengthGrowthEfficiencyAtZeroSupport.get(),
+                    nutritionConfig.residentStrengthMaintenanceThreshold.get(),
+                    nutritionConfig.residentNutritionDeficiencyExponent.get(),
+                    nutritionConfig.residentStrengthDecayAtZeroSupport.get(), strengthAgeDecay);
+            ResidentAttributeChange intelligenceChange = ResidentAttributeModel.settleDailyAttribute(
+                    resident.getIntelligence(), activity.learning(), baseActivity, support.intelligence(),
+                    intelligenceRate, intelligenceAgeCap,
+                    nutritionConfig.residentIntelligenceGrowthEfficiencyAtZeroSupport.get(),
+                    nutritionConfig.residentIntelligenceMaintenanceThreshold.get(),
+                    nutritionConfig.residentNutritionDeficiencyExponent.get(),
+                    nutritionConfig.residentIntelligenceDecayAtZeroSupport.get(), intelligenceAgeDecay);
+            resident.setStrength(strengthChange.nextValue());
+            resident.setIntelligence(intelligenceChange.nextValue());
+            resident.setAgeDays(nextAgeDays);
+            resident.setAge(nextAge);
+            resident.recordNutritionAttributes(activity, strengthChange, intelligenceChange);
         }
     }
 

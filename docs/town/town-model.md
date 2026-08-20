@@ -807,12 +807,12 @@ C_b=\frac{w_TS_T+w_SS_{space,b}+w_DS_{decor,b}}{w_T+w_S+w_D}
 
 当三个权重之和为零时，当前纯函数退化为三项评分的算术平均。
 
-### 9.6 食物满足度与营养质量
+### 9.6 食物满足度与居民营养支持
 
 对住宅 `b` 的一次日结算定义：
 
 - \(n_b\)：住宅内居民数。
-- \(c_{food}\)：每居民每日食物需求，当前 `6.5`。
+- \(c_{food}\)：每居民每日食物需求，当前 `20`。
 - \(F_{required}=n_bc_{food}\)：住宅理论食物需求。
 - \(F_{consumed}\)：实际从城镇库存扣除的食物单位。
 - \(S_F\)：食物满足度。
@@ -825,27 +825,13 @@ S_F=
 \end{cases}
 \]
 
-再定义：
-
-- \(N_{sum}\)：被消费食物的营养值总和；每件食物的值来自 FH `NutritionRecipe.getNutritionValue()/4`。
-- \(n_{reference}\)：每食物单位达到满质量所需营养，当前 `7000`。
-- \(Q_N\)：营养质量，范围 `0..1`。
-- \(m_{nutrition,min}\)：零营养质量仍保留的恢复倍率，当前 `0.5`。
-- \(M_N\)：最终营养恢复倍率。
+住宅模型不再计算 `nutritionQuality` 或统一营养恢复倍率。住宅菜单把食物画像换算为每位居民的四项储备；当前储备除以健康线 `70` 后，通过可配置的四行权重矩阵分别得到生命、精神、力量和智力支持度。生命/精神营养倍率为：
 
 \[
-Q_N=
-\begin{cases}
-0,&F_{consumed}=0\\
-\operatorname{clamp}\left(\dfrac{N_{sum}/F_{consumed}}{n_{reference}},0,1\right),&F_{consumed}>0
-\end{cases}
+M_H=0.25+0.75Q_H,\qquad M_M=0.35+0.65Q_M
 \]
 
-\[
-M_N=m_{nutrition,min}+(1-m_{nutrition,min})Q_N
-\]
-
-熟肉相对生肉既会通过 \(F_x=H_x(1+2m_x)\) 提高食物单位产量，也可能通过营养配方提高 \(Q_N\) 和恢复速度。食物能量与营养质量仍是两条独立的轴。
+二者再分别乘以食物满足度、温度/舒适度和当前状态缺口。详细摄入、当前支持、属性日变化和住宅菜单算法见第 23 节及 [`docs/nutrition/nutrition-player-resident.md`](../nutrition/nutrition-player-resident.md)。
 
 ### 9.7 健康和精神变化
 
@@ -864,6 +850,7 @@ M_N=m_{nutrition,min}+(1-m_{nutrition,min})Q_N
 - \(L_{MT}\)：满温度压力时每日精神损失，当前 `5`。
 - \(R_H\)：健康为 0、其他条件完美时的最大每日恢复，当前 `2`。
 - \(R_M\)：精神为 0、其他条件完美时的最大每日恢复，当前 `1.5`。
+- \(M_H,M_M\)：当前四通道营养矩阵得到的生命/精神恢复倍率。
 
 缺粮压力与温度压力分别定义为：
 
@@ -881,12 +868,12 @@ S_T^{loss}=\left[\min\left(\frac{d_T}{D_T},1\right)\right]^{p_T}
 
 \[
 \Delta health_i=-L_HS_F^{loss}-L_{HT}S_T^{loss}
-+R_HS_FM_NS_T\left(1-\frac{health_i}{100}\right)
++R_HS_FM_HS_T\left(1-\frac{health_i}{100}\right)
 \]
 
 \[
 \Delta mental_i=-L_MS_F^{loss}-L_{MT}S_T^{loss}
-+R_MS_FM_NC_b\left(1-\frac{mental_i}{100}\right)
++R_MS_FM_MC_b\left(1-\frac{mental_i}{100}\right)
 \]
 
 结果限制在 `[0,100]`。
@@ -1519,10 +1506,10 @@ climate_min(f_cover) = 20 - 40 f_cover
 | 每执行掉落全熟食物量 | `每个独立单日样本全部肉做熟后的食物单位均值` | 理论 `19.3368421`；模拟 `19.22036 ± 0.21923 SE` |
 | 住宅容量 | `min(floor(spaceRating × area / floorBlocksPerResident), beds)` | 基准住宅 `2 residents` |
 | 住宅食物满足度 | `consumedFood / requiredFood`，限制在 `[0,1]` | 基准 `1.0` |
-| 住宅营养质量 | `(nutrition / consumedFood) / nutritionReference`，限制在 `[0,1]` | 基准熟鸡肉 `0.0649351` |
-| 居民日变化 | 第 9.7 节健康/精神公式 | 基准 `+0.53194 health`、`+0.32386 mental` |
-| 80% 食物控制响应 | `24°C`、满营养、健康/精神各 `50` | 食物压力 `0.04`；`+0.47921 health`、`+0.28657 mental` |
-| -10°C 温度控制响应 | 满食物/营养、健康/精神各 `50` | 温度压力 `0.25`；`-2.48293 health`、`-0.93637 mental` |
+| 居民营养支持 | 四通道当前满足度经可配置矩阵分别得到 `Q_H/Q_M/Q_S/Q_I` | 满营养时四项支持均为 `1` |
+| 居民日变化 | 第 9.7 节健康/精神公式 | 营养倍率由居民个人四通道状态决定 |
+| 80% 食物控制响应 | `24°C`、满营养、健康/精神各 `50` | 食物压力 `0.04`；具体净值由当前模型输出为准 |
+| -10°C 温度控制响应 | 满食物/营养、健康/精神各 `50` | 温度压力 `0.25`；具体净值由当前模型输出为准 |
 
 这里必须区分“每执行一次掉落”和“每 hunting SWE-day 长期期望”。标准猎人的单日整数结算是 `1 roll` 并留下 `1/6 carry`；长期代数仍是 `7/6 roll/SWE-day`，所以长期肉产率仍为 `1.1973684 meat/SWE-day`。阶段 2 不通过推进六日库存来伪造这个长期值。
 
@@ -1532,11 +1519,11 @@ climate_min(f_cover) = 20 - 40 f_cover
 
 ![阶段 1–2 住宅状态参数扫描](figures/town-model/stage12-house-response.png)
 
-住宅图现在验证了两项新规则，并保留一个尚未处理的营养结论：
+住宅图的旧数值来自标量营养模型，仅保留为历史图表。当前仍适用的结构结论是：
 
 1. `[0,40]°C` 是无直接温度压力区间。默认满压力距离 `20°C`、指数 `2`，所以 `-10°C` 和 `50°C` 都是 `0.25` 压力；在满食物、满营养、健康/精神各 `50` 的控制实验中，`-10°C` 变为 `-2.48293 health/day`、`-0.93637 mental/day`。`-20°C` 与 `60°C` 达到封顶压力，健康直接损失不再随更极端温度继续增长。
 2. 缺粮损失改为平方曲线后，净变化零点下降到健康满足度约 `0.70359`、精神满足度约 `0.70678`。同一控制实验中，`0.8` 食物满足度已是 `+0.47921 health/day`、`+0.28657 mental/day`；`0.4` 则迅速恶化为 `-2.48039 health/day`、`-1.55671 mental/day`。这实现了“小缺口可承受、严重缺粮很危险”，且完全缺粮的最大损失仍保持 `8/5`。
-3. 肉类营养质量远低于 `nutritionReferencePerFoodUnit=7000`。基准库存中熟鸡肉在同级内先于熟牛肉消耗，但仍只有 `Q_N=0.06494`，恢复倍率主要由最低保底 `0.5` 决定。这说明后续调参时必须同时检查“食物单位”和“营养参考值”，不能只提高肉产量。
+3. 当前不再存在住宅 `nutritionQuality`。肉类是否足够必须按四通道居民积分、住宅菜单和居民储备分别检查，不能用单一质量分替代。
 
 图表数据来自 Java 输出的 `mining-t1-sweep.csv`、`hunting-processing-sweep.csv`、`house-temperature-sweep.csv` 和 `house-food-sweep.csv`。后两者同时保存食物/温度压力、分项惩罚、总惩罚和恢复；Matplotlib 只负责展示，不重新计算游戏公式。
 
@@ -1775,31 +1762,21 @@ Stage 3/4 JSON 新增：
 
 ## 23. 居民营养、住宅照护与保障供餐
 
-2026-08-17 起，住宅不再独立从共享仓库中先到先得。城镇晨间先重建完整住房方案，再由 `TownHousingMealService` 对全部有房居民进行一次集中、逐人的供餐与疗养结算。住宅优先级同时控制优质食物流向、保障供餐次序和好住宅的入住次序。
+城镇晨间先重建完整住房方案，再由 `TownHousingMealService` 集中确定全体有房居民的口粮额度，并按 `TownHousingPlan` 顺序逐栋生成住宅菜单和结算疗养。住宅优先级同时控制优质食物流向、保障供餐次序和好住宅的入住次序；住宅不再各自运行互不协调的 `work()` 扣库逻辑。
 
 ### 23.1 四类持久营养储备
 
-每名居民保存四个无量纲储备：脂肪 `N_f`、碳水 `N_c`、蛋白质 `N_p` 与蔬菜 `N_v`。上限、健康基准、严重线和新居民初值分别由 `residentNutritionMaximumReserve / HealthyReserve / SevereReserve / InitialReserve` 控制；默认仍是 `100 / 70 / 20 / 70`。旧存档缺字段时使用 `70` 作为兼容回退。每日先从四项各扣除 `residentNutritionReserveLossPerDay`，再根据实际吃掉的物品对应 `NutritionRecipe` 分项补充：
+每名居民保存脂质、碳水、蛋白质和蔬果四项 `0..100` 储备。默认上限/健康线/严重线/初值为 `100/70/20/70`；每日先固定扣 `1`，再按住宅菜单实际摄入补充：
 
-`gain_x = residentNutritionGainAtReference × clamp(intake_x / reference_x, 0, residentNutritionMaximumCoverage)`。
+`coverage_x = clamp(points_x / 200, 0, 2)`，
 
-其中 `reference_x = 当日完整口粮食物单位 × nutritionReferencePerFoodUnit`。默认每日损耗和完整参考餐的增益都为 `10`，所以维持储备需要食物数量与营养构成同时达标。
+`gain_x = 2 × coverage_x`。
 
-定义单项可用度 `A_x = clamp(N_x / healthyReserve, 0, 1)`，脂肪/蛋白质支持度 `S = (A_f + A_p) / 2`，最低恢复倍率为 `m`。令直接与协同权重为 `w_d / w_s`（默认 `0.6 / 0.4`），则供给项为 `Q(A)=(w_d A + w_s A S)/(w_d+w_s)`，精神与健康倍率分别使用 `A_c` 与 `A_v`：
+`points_x` 只使用食物原版 hunger 与 `FoodNutritionResolver` 的百分比画像，不使用 saturation。满足度 `n_x = clamp(reserve_x / 70, 0, 1)`；`70..100` 只提供缓冲，不继续增强效果。
 
-`M_mental = m + (1-m) × Q(A_c)`，
+四行可配置权重矩阵把当前满足度映射为生命、精神、力量和智力支持。每行运行时把负值当零并归一化，全零回退默认行。生命/精神营养倍率分别为 `0.25 + 0.75Q_H` 与 `0.35 + 0.65Q_M`。
 
-`M_health = m + (1-m) × Q(A_v)`。
-
-因此碳水直接支持精神恢复，蔬菜直接支持健康恢复；脂肪和蛋白质只在相应直接营养存在时提供协同放大，不能独立产生恢复。缺粮和温度造成的直接损失不被这两个倍率抵消，倍率只作用于既有住宅恢复项。
-
-脂肪与蛋白质还缩放原有年龄成长量。对任一相关储备 `N`：
-
-`G(N) = g_floor + (1-g_floor)N/healthyReserve`，当 `N≤healthyReserve`；
-
-`G(N) = 1 + g_bonus(N-healthyReserve)/(maximumReserve-healthyReserve)`，当 `N>healthyReserve`。
-
-脂肪倍率作用于幼儿、儿童和成人原有智力成长；蛋白质倍率只作用于幼儿/儿童原有力量成长。它们不新增成长通道，也不改变年龄段属性上限。
+力量和智力只读取餐后当前支持度，不再保存长期 EMA、个人潜力或营养上限。`ResidentAttributeModel.settleDailyAttribute` 统一执行“正向成长 - 营养不足衰减 - 老年基础衰退”：年龄提供基础活动量，建筑只有实际完成工作才补充活动；低于维护阈值后按 `D^1.5 × attribute/100` 开启营养衰减。老人仍能靠营养和活动抵消年龄衰退，没有力量下限。生产和岗位评分直接使用存储力量/智力，不再计算有效智力。完整公式和默认参数见营养 living doc。
 
 ### 23.2 住宅计划与每日入住排序
 
@@ -1813,13 +1790,15 @@ Stage 3/4 JSON 新增：
 
 白天新招募居民只占用住宅队列中的第一个空床位，不触发全镇即时搬家；下一次晨间才进入完整照护排序。
 
-### 23.3 两轮保障供餐与食物质量
+### 23.3 两轮口粮额度与住宅优先菜单
 
 设完整口粮为 `F` 食物资源单位。第一轮按住宅队列顺序处理每栋住宅前 `min(保障人数, 实际住户数)` 名最需照护的居民，并依次尝试供给 `F`；粮食可能在某位保障对象处耗尽。第二轮把剩余粮食在所有非保障住户之间等额分享，每人最多再得到 `F`。这保证玩家明确指定的照护床位先吃饱，同时避免剩余粮食继续被高优先住宅独占。
 
-实际取物始终先比较居民食物 level 4→0。同一 level 内，将一份口粮分成 `residentNutritionMealSelectionChunks` 个选择片段（默认八个），每次根据领取者当前四项缺口、已选食物、健康/精神需要和年龄成长通道重新评分；三类需要的权重也分别由 `ChannelNeed / ConditionNeed / GrowthNeedUtilityWeight` 配置。健康与精神只放大仍有蔬菜/碳水缺口的通道，投影片段已补足该项后不会继续因为健康或精神未满而重复堆积同一种食物。最后用物品注册名与 NBT 稳定平局。仓库以精确小数资源量扣除物品，因此部分口粮不会因整件取整而系统性偏向先领取者。
+食物 level `4→0` 仍是绝对优先级。额度确定后，`ResidentPublicMenuModel.planInPriorityOrder` 按住宅队列逐栋规划菜单。每栋住宅把自己的获配食物量拆成默认八个片段；每片段只比较剩余库存中的最高可用等级，并模拟候选食物按本住宅居民额度比例分配后的 reserve gain，选择令该住宅相对健康线 `70` 的四通道总缺口下降最多者。平局由物品注册名和 NBT 稳定处理。前一栋住宅选定的物品立即从规划库存扣除，因此后续住宅只能选择剩余食物。
 
-住宅的旧 `DailyReport` 继续保存住户数、总食物满足度和汇总营养，供既有详情页与历史观测读取；真正的健康、精神和营养变化已经逐居民结算。
+同一住宅内所有获配居民得到相同食物构成比例，仅总量不同；不同住宅可以得到不同等级与构成。评分不读取健康、年龄或属性权重。游戏随后按住宅顺序执行实际仓库扣除，营养结算和菜单记录都使用资源执行器返回的 `modifiedAmount`，不使用可能与库存不一致的计划数量。
+
+住宅 `DailyReport` 除住户数、食物需求/消费、满足度、温度、空间、装饰和舒适度外，还保存最近一次 `DailyMeal`：结算日以及按完整物品 ID/NBT 聚合的实际小数数量。住宅界面的“今日餐食”页以物品格展示该列表，图标数量四舍五入为整数，悬浮提示显示权威小数值；`hasData=false` 表示从未记录，已记录但列表为空表示当日没有出餐。该字段随现有建筑 Codec 和增量建筑包同步，无独立网络通道。旧 `nutritionQuality` Codec 字段仍仅兼容读取，不参与任何决策或界面。
 
 ### 23.4 政策生效与玩家界面
 
@@ -1829,8 +1808,12 @@ Stage 3/4 JSON 新增：
 
 “数据统计”页增加独立“营养”视图。每次晨间结算结束后，`TownNutritionHistory` 为脂肪、碳水、蛋白质和蔬菜分别保存全镇平均值与线性插值得到的 P10；界面将后者称为“较弱居民”。四张固定 `[0,100]` 折线图同时标出健康基准 `70` 和严重缺乏线 `20`。旧历史快照没有营养字段时以 `available=false` 解码并显示为折线缺口，不能伪装成营养为零；从升级后的第一次结算开始积累真实趋势。
 
-Stage 3/4 长期模拟现在从食物 recipe 原样读取四个营养通道，逐居民执行损耗、按食物等级和个体需要选餐、恢复倍率与营养缩放成长；不再把四项平均成一个住宅质量标量。人口扫描的 `equilibriumWindowDays` 默认是末 30 日：先在每个 trial 内对“当日全镇居民平均属性”取末段时间均值，再跨 trial 报告 P05/P50/P95。`player-timeline-trials.csv` 保存健康、精神、力量、智力、四项营养的平均值/P10及严重人数；`event-raster.csv` 增加四种严重营养进入/恢复事件；`population.csv` 增加八项末段均衡分布。`Scripts/plot_town_stage4_resident_dynamics.py` 生成平均属性—时间、营养—时间、阈值事件—时间和均衡属性—人口四组图。
+Stage 3/4 长期模拟从食物 recipe 读取四通道原始值，经共享 `/400` 转换和 hunger 加权得到居民积分，并复用 `ResidentPublicMenuModel`、`ResidentNutritionSupportModel` 与 `ResidentAttributeModel`。当前模拟场景只有一栋抽象住宅，因此对菜单模型的一次调用等价于游戏中的单住宅菜单；它不模拟多住宅质量分层。模拟执行当前支持、实际活动、属性成长及营养/年龄衰退，不再把四项平均成住宅质量标量，也不维护 EMA、潜力或有效智力。人口扫描的 `equilibriumWindowDays` 默认是末 30 日：先在每个 trial 内对“当日全镇居民平均属性”取末段时间均值，再跨 trial 报告 P05/P50/P95。`player-timeline-trials.csv` 保存健康、精神、力量、智力、四项营养的平均值/P10及严重人数；`event-raster.csv` 增加四种严重营养进入/恢复事件；`population.csv` 增加八项末段均衡分布。`Scripts/plot_town_stage4_resident_dynamics.py` 生成平均属性—时间、营养—时间、阈值事件—时间和均衡属性—人口四组图。
 
-2026-08-17 的正式固定种子运行使用 `120 days × 1000 trials × 20 population points`，报告位于 `build/reports/town-model/simulations/stage4-t1-population-sweep-nutrition-1000`，四张图位于 `build/reports/town-model/figures/stage4-resident-dynamics-nutrition-1000`。24 人时间线中，四项营养均在第 5 日进入严重缺乏；末 30 日中位数约为脂肪 `0.30`、碳水 `0`、蛋白质 `1.84`、蔬菜 `0`。健康中位数在人口 `4..128` 约为 `47`，到 `160/180/200` 人降为 `44.6/41.6/37.8`。这说明当前肉食基准远不能维持四通道营养，属于后续食谱/参考值调参基线，不是目标平衡。此前的 Stage 3/4 概率和图片仍只保留为历史回归参照。
+以下 2026-08-17 与 2026-08-18 结果来自旧每日需求和旧配餐/成长模型，只保留为历史回归参照。2026-08-17 的正式固定种子运行使用 `120 days × 1000 trials × 20 population points`，报告位于 `build/reports/town-model/simulations/stage4-t1-population-sweep-nutrition-1000`，四张图位于 `build/reports/town-model/figures/stage4-resident-dynamics-nutrition-1000`。
 
-2026-08-18 的 50 人快速校准使用 `120 days × 100 paired trials`。仅把损耗/增益从 `10/10` 降到 `2/2` 时，纯捕猎仍在约第 35 日全体严重缺乏；使用 `loss=1`、`gain=2`、`reference=200` 后，肉食可以稳定脂肪/蛋白质，但没有输入的碳水/蔬菜仍在约第 50 日全体严重缺乏。最终候选额外为 50 人每日提供 `6.25` 个烤马铃薯（只读取现有 `16000` 碳水、`8000` 蔬菜 recipe），并把条件效用限制在仍有对应营养缺口时生效。末 30 日中位数为脂肪 `70.06`、碳水 `77.62`、蛋白质 `99.88`、蔬菜 `74.89`、健康 `51.50`、精神 `76.50`；第 120 日四项严重人数均为零。报告位于 `build/reports/town-model/simulations/stage4-t1-p50-round2-final-candidate`，对比图位于 `build/reports/town-model/figures/stage4-t1-p50-round2-comparison`。这些参数仍是模拟覆盖值，尚未替换 `TownModelParameters.Defaults` / `FHConfig` 默认值。
+2026-08-18 的 50 人快速校准使用 `120 days × 100 paired trials`，当时每日需求仍为 `6.5`。其 `reference=200/loss=1/gain=2` 和每日 `6.25` 个烤马铃薯结论不能外推到当前每日需求 `20`。
+
+2026-08-19 用当时的 EMA/潜力属性模型重新执行相同规模：纯捕猎场景食物潜在自给率 P50 为 `0.615`，马铃薯补给场景为 `0.651`；二者 `100%` trials 都出现缺粮，生存率分别为 `0%/6%`。报告位于 `build/reports/town-model/simulations/2026-08-19-nutrition-redesign-p50-baseline` 和 `...-p50-potato`。这说明原捕猎产能和 `6.25` 个/日的补给量在每日需求 `20` 下不闭环，后续应重做粮食经济标定，而不是回调营养单位掩盖缺口。
+
+2026-08-20 切换到当前简化属性模型后，用同一 50 人纯捕猎场景、seed 和 `120 days × 100 trials` 再运行，食物潜在自给率 P50 为 `0.630`，`100%` trials 仍缺粮且生存率仍为 `0%`。取消有效智力折扣使早期生产略升，但没有改变粮食闭环结论。报告位于 `build/reports/town-model/simulations/2026-08-20-resident-attribute-simplification-p50-baseline`。

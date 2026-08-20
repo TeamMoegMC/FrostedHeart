@@ -112,7 +112,7 @@ public class HealthCommonEvents {
 	@SubscribeEvent
 	public static void finishUsingItems(LivingEntityUseItemEvent.Finish event) {
 		DailyKitchen.tryGiveBenefits(event);
-		if (event.getEntity() instanceof Player player) {
+		if (event.getEntity() instanceof ServerPlayer player) {
 			NutritionCapability.getCapability(player).ifPresent(e -> e.eat(player, event.getItem()));
 			// 记录吃过的食物种类（仅可食用），供每日厨房次日生成"想吃的菜"。
 			// 流体容器（保温杯）经 FluidFoodHelper 解析为对应的汤碗后再记录。
@@ -121,7 +121,7 @@ public class HealthCommonEvents {
 			// wanted foods next morning. Fluid containers (thermos) are resolved to their
 			// soup bowl Item via FluidFoodHelper first. Server only: WANTED_FOOD is attached
 			// to ServerPlayer.
-			if (!player.level().isClientSide && player instanceof ServerPlayer) {
+			if (!player.level().isClientSide) {
 				FHCapabilities.WANTED_FOOD.getCapability(player).ifPresent(w -> w.addEatenFood(FluidFoodHelper.resolveFoodItem(event.getItem())));
 			}
 		}

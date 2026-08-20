@@ -72,29 +72,6 @@ public final class HouseDailyModel {
         return clamp(nonNegative(consumedFood) / safeRequiredFood, 0.0, 1.0);
     }
 
-    public static double calculateNutritionQuality(
-            double nutritionValue,
-            double consumedFood,
-            double nutritionReferencePerFoodUnit
-    ) {
-        double safeConsumedFood = nonNegative(consumedFood);
-        double safeReference = nonNegative(nutritionReferencePerFoodUnit);
-        if (safeConsumedFood <= 0.0 || safeReference <= 0.0) {
-            return 0.0;
-        }
-        double nutritionPerFoodUnit = nonNegative(nutritionValue) / safeConsumedFood;
-        return clamp(nutritionPerFoodUnit / safeReference, 0.0, 1.0);
-    }
-
-    public static double calculateNutritionRecoveryMultiplier(
-            double nutritionQuality,
-            double minimumNutritionRecoveryMultiplier
-    ) {
-        double quality = clampFinite(nutritionQuality, 0.0, 1.0, 0.0);
-        double minimum = clampFinite(minimumNutritionRecoveryMultiplier, 0.0, 1.0, 0.0);
-        return minimum + (1.0 - minimum) * quality;
-    }
-
     public static double calculateComfortRating(
             double temperatureRating,
             double spaceRating,
@@ -141,10 +118,6 @@ public final class HouseDailyModel {
         double foodRequired = residentCount * nonNegative(parameters.foodPerResidentDay());
         double foodConsumed = nonNegative(input.foodConsumed());
         double foodSatisfaction = calculateFoodSatisfaction(foodRequired, foodConsumed);
-        double nutritionQuality = calculateNutritionQuality(
-                input.nutritionValue(), foodConsumed, parameters.nutritionReferencePerFoodUnit());
-        double nutritionMultiplier = calculateNutritionRecoveryMultiplier(
-                nutritionQuality, parameters.minimumNutritionRecoveryMultiplier());
         double temperatureRating = TownMathFunctions.calculateTemperatureRating(
                 input.temperatureCelsius(),
                 parameters.comfortableTemperatureCelsius(),
@@ -171,29 +144,11 @@ public final class HouseDailyModel {
                 foodRequired,
                 foodConsumed,
                 foodSatisfaction,
-                nutritionQuality,
-                nutritionMultiplier,
                 input.temperatureCelsius(),
                 temperatureRating,
                 spaceRating,
                 clampFinite(input.decorationRating(), 0.0, 1.0, 0.0),
                 comfortRating);
-    }
-
-    public static ResidentEffects calculateResidentEffects(
-            double health,
-            double mental,
-            double foodSatisfaction,
-            double nutritionRecoveryMultiplier,
-            double effectiveTemperatureCelsius,
-            double temperatureRating,
-            double comfortRating,
-            ResidentEffectParameters parameters
-    ) {
-        return calculateResidentEffects(
-                health, mental, foodSatisfaction,
-                nutritionRecoveryMultiplier, nutritionRecoveryMultiplier,
-                effectiveTemperatureCelsius, temperatureRating, comfortRating, parameters);
     }
 
     public static ResidentEffects calculateResidentEffects(
@@ -344,7 +299,6 @@ public final class HouseDailyModel {
     public record SettlementInput(
             int residentCount,
             double foodConsumed,
-            double nutritionValue,
             double temperatureCelsius,
             int areaBlocks,
             int volumeBlocks,
@@ -354,8 +308,6 @@ public final class HouseDailyModel {
 
     public record SettlementParameters(
             double foodPerResidentDay,
-            double nutritionReferencePerFoodUnit,
-            double minimumNutritionRecoveryMultiplier,
             double comfortableTemperatureCelsius,
             double minimumTemperatureRating,
             double temperatureRatingSlopePerCelsius,
@@ -376,8 +328,6 @@ public final class HouseDailyModel {
             double foodRequired,
             double foodConsumed,
             double foodSatisfaction,
-            double nutritionQuality,
-            double nutritionRecoveryMultiplier,
             double effectiveTemperature,
             double temperatureRating,
             double spaceRating,

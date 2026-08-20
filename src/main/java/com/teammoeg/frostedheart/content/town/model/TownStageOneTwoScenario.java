@@ -105,9 +105,7 @@ public record TownStageOneTwoScenario(
                         List.of(-20.0, -15.0, -10.0, -5.0, 0.0, 5.0, 10.0, 14.0,
                                 18.0, 22.0, 24.0, 28.0, 34.0, 40.0, 45.0, 50.0, 55.0, 60.0)),
                 doubleList(diagnosticsJson, "foodSatisfaction",
-                        List.of(0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0)),
-                bounded(number(diagnosticsJson, "responseNutritionQuality", 1.0),
-                        0.0, 1.0, "diagnostics.responseNutritionQuality"));
+                        List.of(0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0)));
 
         return new TownStageOneTwoScenario(
                 schemaVersion, metadata, simulation, workers, hunting,
@@ -306,8 +304,7 @@ public record TownStageOneTwoScenario(
             List<Double> miningBaseOutputPerSweDay,
             List<Double> rawMeatProcessingCapacityPerDay,
             List<Double> houseTemperatureCelsius,
-            List<Double> foodSatisfaction,
-            double responseNutritionQuality
+            List<Double> foodSatisfaction
     ) {
         public Diagnostics {
             miningBaseOutputPerSweDay = List.copyOf(miningBaseOutputPerSweDay);

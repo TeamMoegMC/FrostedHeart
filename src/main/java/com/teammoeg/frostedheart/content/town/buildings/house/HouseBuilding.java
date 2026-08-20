@@ -24,10 +24,7 @@ import java.util.stream.Collectors;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
-import com.teammoeg.chorda.util.CDistHelper;
-import com.teammoeg.chorda.util.CUtils;
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.content.health.recipe.NutritionRecipe;
 import com.teammoeg.frostedheart.content.town.*;
 import com.teammoeg.frostedheart.content.town.block.OccupiedVolume;
 import com.teammoeg.frostedheart.content.town.building.AbstractTownBuilding;
@@ -35,18 +32,17 @@ import com.teammoeg.frostedheart.content.town.building.ITownResidentBuilding;
 import com.teammoeg.frostedheart.content.town.building.ITownTemperatureBuilding;
 import com.teammoeg.frostedheart.content.town.resident.Resident;
 import com.teammoeg.frostedheart.content.town.resident.ResidentNutrition;
+import com.teammoeg.frostedheart.content.town.resident.ResidentNutritionSupportModel;
 import com.teammoeg.frostedheart.content.town.resource.ItemResourceType;
 import com.teammoeg.frostedheart.content.town.resource.ItemStackResourceKey;
-import com.teammoeg.frostedheart.content.town.resource.TownFoodNutritionModel;
-import com.teammoeg.frostedheart.content.town.resource.action.*;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.UUIDUtil;
+import net.minecraft.core.registries.BuiltInRegistries;
 
 import lombok.Getter;
 
 import static com.teammoeg.frostedheart.content.town.ITown.DEBUG_MODE;
-import static com.teammoeg.frostedheart.content.town.resource.ItemResourceType.RESIDENT_FOOD_LEVEL;
 
 /**
  * 城镇住宅。
@@ -59,14 +55,60 @@ public class HouseBuilding extends AbstractTownBuilding implements ITownResident
             positions -> canonicalizeBedPositions(positions.toArray()),
             positions -> Arrays.stream(positions));
 
+    /** One actual item consumed by this house in the latest settlement. */
+    public record MealEntry(ItemStackResourceKey item, double amount) {
+        public static final Codec<MealEntry> CODEC = RecordCodecBuilder.create(t -> t.group(
+                ItemStackResourceKey.CODEC.fieldOf("item").forGetter(MealEntry::item),
+                Codec.DOUBLE.fieldOf("amount").forGetter(MealEntry::amount)
+        ).apply(t, MealEntry::new));
+
+        public MealEntry {
+            item = item == null ? new ItemStackResourceKey(net.minecraft.world.item.Items.AIR) : item;
+            amount = Double.isFinite(amount) ? Math.max(0.0, amount) : 0.0;
+        }
+    }
+
+    /** Latest authoritative house-menu result, including an explicitly empty served day. */
+    public record DailyMeal(boolean hasData, long settlementDay, List<MealEntry> entries) {
+        public static final DailyMeal EMPTY = new DailyMeal(false, -1L, List.of());
+        public static final Codec<DailyMeal> CODEC = RecordCodecBuilder.create(t -> t.group(
+                Codec.BOOL.optionalFieldOf("hasData", false).forGetter(DailyMeal::hasData),
+                Codec.LONG.optionalFieldOf("settlementDay", -1L).forGetter(DailyMeal::settlementDay),
+                MealEntry.CODEC.listOf().optionalFieldOf("entries", List.of())
+                        .forGetter(DailyMeal::entries)
+        ).apply(t, DailyMeal::new));
+
+        public DailyMeal {
+            settlementDay = Math.max(-1L, settlementDay);
+            Map<ItemStackResourceKey, Double> merged = new HashMap<>();
+            if (entries != null) {
+                for (MealEntry entry : entries) {
+                    if (entry == null || entry.item().isEmpty() || entry.amount() <= 1.0e-9) continue;
+                    merged.merge(entry.item(), entry.amount(), Double::sum);
+                }
+            }
+            entries = merged.entrySet().stream()
+                    .map(entry -> new MealEntry(entry.getKey(), entry.getValue()))
+                    .sorted(Comparator.comparing(entry -> stableMealItemKey(entry.item())))
+                    .toList();
+        }
+
+        /** Creates a served-day snapshot from actual resource-executor results. */
+        public static DailyMeal settled(long settlementDay, Map<ItemStackResourceKey, Double> items) {
+            List<MealEntry> entries = items == null ? List.of() : items.entrySet().stream()
+                    .map(entry -> new MealEntry(entry.getKey(), entry.getValue()))
+                    .toList();
+            return new DailyMeal(true, settlementDay, entries);
+        }
+    }
+
     public record DailyReport(
             boolean hasData,
             int residentCount,
             double foodRequired,
             double foodConsumed,
             double foodSatisfaction,
-            double nutritionQuality,
-            double nutritionRecoveryMultiplier,
+            DailyMeal meal,
             double effectiveTemperature,
             double temperatureRating,
             double spaceRating,
@@ -74,7 +116,8 @@ public class HouseBuilding extends AbstractTownBuilding implements ITownResident
             double comfortRating
     ) {
         public static final DailyReport EMPTY = new DailyReport(
-                false, 0, 0.0, 0.0, 1.0, 0.0, 0.0,
+                false, 0, 0.0, 0.0, 1.0,
+                DailyMeal.EMPTY,
                 0.0, 0.0, 0.0, 0.0, 0.0);
 
         public static final Codec<DailyReport> CODEC = RecordCodecBuilder.create(t -> t.group(
@@ -83,14 +126,24 @@ public class HouseBuilding extends AbstractTownBuilding implements ITownResident
                 Codec.DOUBLE.optionalFieldOf("foodRequired", 0.0).forGetter(DailyReport::foodRequired),
                 Codec.DOUBLE.optionalFieldOf("foodConsumed", 0.0).forGetter(DailyReport::foodConsumed),
                 Codec.DOUBLE.optionalFieldOf("foodSatisfaction", 1.0).forGetter(DailyReport::foodSatisfaction),
-                Codec.DOUBLE.optionalFieldOf("nutritionQuality", 0.0).forGetter(DailyReport::nutritionQuality),
-                Codec.DOUBLE.optionalFieldOf("nutritionRecoveryMultiplier", 0.0).forGetter(DailyReport::nutritionRecoveryMultiplier),
+                DailyMeal.CODEC.optionalFieldOf("meal", DailyMeal.EMPTY).forGetter(DailyReport::meal),
+                Codec.DOUBLE.optionalFieldOf("nutritionQuality", 0.0).forGetter(report -> 0.0),
+                Codec.DOUBLE.optionalFieldOf("nutritionRecoveryMultiplier", 1.0).forGetter(report -> 1.0),
                 Codec.DOUBLE.optionalFieldOf("effectiveTemperature", 0.0).forGetter(DailyReport::effectiveTemperature),
                 Codec.DOUBLE.optionalFieldOf("temperatureRating", 0.0).forGetter(DailyReport::temperatureRating),
                 Codec.DOUBLE.optionalFieldOf("spaceRating", 0.0).forGetter(DailyReport::spaceRating),
                 Codec.DOUBLE.optionalFieldOf("decorationRating", 0.0).forGetter(DailyReport::decorationRating),
                 Codec.DOUBLE.optionalFieldOf("comfortRating", 0.0).forGetter(DailyReport::comfortRating)
-        ).apply(t, DailyReport::new));
+        ).apply(t, (hasData, residentCount, foodRequired, foodConsumed, foodSatisfaction, meal,
+                    ignoredNutritionQuality, ignoredNutritionMultiplier, effectiveTemperature,
+                    temperatureRating, spaceRating, decorationRating, comfortRating) ->
+                new DailyReport(hasData, residentCount, foodRequired, foodConsumed,
+                        foodSatisfaction, meal, effectiveTemperature, temperatureRating,
+                        spaceRating, decorationRating, comfortRating)));
+
+        public DailyReport {
+            meal = meal == null ? DailyMeal.EMPTY : meal;
+        }
     }
 
     public static final Codec<HouseBuilding> CODEC = RecordCodecBuilder.create(t -> t.group(
@@ -377,75 +430,27 @@ public class HouseBuilding extends AbstractTownBuilding implements ITownResident
 
     @Override
     public boolean work(ITownWithBuildings buildingTown) {
-        if (!(buildingTown instanceof ITown town)) {
-            FHMain.LOGGER.error("HouseBuilding: town is not a complete town!");
-            return false;
-        }
-
-        Collection<Resident> residents = getResidents(town);
-        int residentNum = residents.size();
-        if (residentNum == 0) {
-            setDailyReport(createDailyReport(0, new FoodConsumption(0.0, 0.0)));
-            return true;
-        }
-
-        IActionExecutorHandler executorHandler = town.getActionExecutorHandler();
-        FHConfig.Server.Town.Housing config = FHConfig.SERVER.TOWN.HOUSING;
-        double foodRequired = residentNum * config.foodConsumptionPerResidentDay.get();
-        FoodConsumption consumption = consumeFoodAndComputeNutrition(executorHandler, foodRequired);
-        DailyReport report = createDailyReport(residentNum, consumption);
-        setDailyReport(report);
-
-        for (Resident resident : residents) {
-            applyResidentEffects(resident, calculateResidentEffects(resident, report));
-        }
+        // TownHousingMealService owns centralized rationing and ordered house menus.
         return true;
     }
 
-    /**
-     * 执行食物消耗动作，并累计所有消耗物品的营养值。
-     * @return 实际消耗的食物资源量和营养值总和
-     */
-    private FoodConsumption consumeFoodAndComputeNutrition(IActionExecutorHandler executorHandler, double toCost) {
-        TownResourceActions.TownResourceTypeCostAction action = new TownResourceActions.TownResourceTypeCostAction(
-                RESIDENT_FOOD_LEVEL, Math.max(0.0, toCost), 0, 4,
-                ResourceActionMode.MAXIMIZE, ResourceActionOrder.DESCENDING);
-        TownResourceActionResults.TownResourceTypeCostActionResult result = executorHandler.execute(action);
-
-        // 食谱表与方法内恒定（同一方法内 /reload 不会中途执行），提到循环外只重建一次
-        List<NutritionRecipe> recipes = CUtils.filterRecipes(CDistHelper.getRecipeManager(), NutritionRecipe.TYPE);
-
-        double foodConsumed = 0.0;
-        double nutritionSum = 0.0;
-        for (ITownResourceAttributeActionResult<?> detail : result.details()) {
-            if (detail instanceof TownResourceActionResults.ItemResourceAttributeCostActionResult itemResult) {
-                foodConsumed += itemResult.totalModifiedAmount();
-                for (Map.Entry<ItemStackResourceKey, Double> entry : itemResult.details().entrySet()) {
-                    ItemStackResourceKey key = entry.getKey();
-                    double amount = entry.getValue();
-                    nutritionSum += TownFoodNutritionModel.getNutritionPerItem(key, recipes) * amount;
-                }
-            }
-        }
-        return new FoodConsumption(foodConsumed, nutritionSum);
-    }
-
-    private DailyReport createDailyReport(int residentCount, FoodConsumption consumption) {
+    private DailyReport createDailyReport(
+            int residentCount,
+            FoodConsumption consumption,
+            DailyMeal meal
+    ) {
         FHConfig.Server.Town.Housing config = FHConfig.SERVER.TOWN.HOUSING;
         FHConfig.Server.Town.BuildingScoring scoring = FHConfig.SERVER.TOWN.BUILDING_SCORING;
         HouseDailyModel.SettlementReport modelReport = HouseDailyModel.evaluateSettlement(
                 new HouseDailyModel.SettlementInput(
                         residentCount,
                         consumption.foodConsumed(),
-                        consumption.nutritionValue(),
                         getEffectiveTemperature(),
                         area,
                         volume,
                         decorationRating),
                 new HouseDailyModel.SettlementParameters(
                         config.foodConsumptionPerResidentDay.get(),
-                        config.nutritionReferencePerFoodUnit.get(),
-                        config.minimumNutritionRecoveryMultiplier.get(),
                         scoring.comfortableTemperatureCelsius.get(),
                         scoring.minimumTemperatureRating.get(),
                         scoring.temperatureRatingSlope.get(),
@@ -464,8 +469,7 @@ public class HouseBuilding extends AbstractTownBuilding implements ITownResident
                 modelReport.foodRequired(),
                 modelReport.foodConsumed(),
                 modelReport.foodSatisfaction(),
-                modelReport.nutritionQuality(),
-                modelReport.nutritionRecoveryMultiplier(),
+                meal,
                 modelReport.effectiveTemperature(),
                 modelReport.temperatureRating(),
                 modelReport.spaceRating(),
@@ -487,15 +491,17 @@ public class HouseBuilding extends AbstractTownBuilding implements ITownResident
         FHConfig.Server.Town.Housing config = FHConfig.SERVER.TOWN.HOUSING;
         ResidentNutrition safeNutrition = nutrition == null
                 ? ResidentNutrition.DEFAULT_VALUE : nutrition;
-        ResidentNutrition.Parameters nutritionParameters = nutritionParameters(config);
+        ResidentNutritionSupportModel.Supports support =
+                ResidentNutritionSupportModel.supports(
+                        ResidentNutritionSupportModel.satisfaction(
+                                safeNutrition, config.residentNutritionHealthyReserve.get()),
+                        Resident.nutritionSupportWeights());
         HouseDailyModel.ResidentEffects effects = HouseDailyModel.calculateResidentEffects(
                 resident.getHealth(),
                 resident.getMental(),
                 foodSatisfaction,
-                safeNutrition.healthRecoveryMultiplier(
-                        config.minimumNutritionRecoveryMultiplier.get(), nutritionParameters),
-                safeNutrition.mentalRecoveryMultiplier(
-                        config.minimumNutritionRecoveryMultiplier.get(), nutritionParameters),
+                ResidentNutritionSupportModel.healthRecoveryMultiplier(support.health()),
+                ResidentNutritionSupportModel.mentalRecoveryMultiplier(support.mental()),
                 getEffectiveTemperature(),
                 getTemperatureRating(),
                 getComfortRating(),
@@ -512,6 +518,9 @@ public class HouseBuilding extends AbstractTownBuilding implements ITownResident
                         config.maximumHealthRecoveryPerResidentDay.get(),
                         config.maximumMentalRecoveryPerResidentDay.get()));
         applyResidentEffects(resident, effects);
+        resident.recordNutritionRecovery(
+                effects.healthRecovery(), effects.healthDelta(),
+                effects.mentalRecovery(), effects.mentalDelta());
         return effects;
     }
 
@@ -519,25 +528,27 @@ public class HouseBuilding extends AbstractTownBuilding implements ITownResident
     public void updateCentralDailyReport(
             int residentCount,
             double foodConsumed,
-            double nutritionValue
+            DailyMeal meal
     ) {
         setDailyReport(createDailyReport(
                 Math.max(0, residentCount),
-                new FoodConsumption(Math.max(0.0, foodConsumed),
-                        Math.max(0.0, nutritionValue))));
+                new FoodConsumption(Math.max(0.0, foodConsumed)),
+                meal == null ? DailyMeal.EMPTY : meal));
     }
 
     private HouseDailyModel.ResidentEffects calculateResidentEffects(Resident resident, DailyReport report) {
         FHConfig.Server.Town.Housing config = FHConfig.SERVER.TOWN.HOUSING;
-        ResidentNutrition.Parameters nutritionParameters = nutritionParameters(config);
+        ResidentNutritionSupportModel.Supports support =
+                ResidentNutritionSupportModel.supports(
+                        ResidentNutritionSupportModel.satisfaction(
+                                resident.getNutrition(), config.residentNutritionHealthyReserve.get()),
+                        Resident.nutritionSupportWeights());
         return HouseDailyModel.calculateResidentEffects(
                 resident.getHealth(),
                 resident.getMental(),
                 report.foodSatisfaction(),
-                resident.getNutrition().healthRecoveryMultiplier(
-                        config.minimumNutritionRecoveryMultiplier.get(), nutritionParameters),
-                resident.getNutrition().mentalRecoveryMultiplier(
-                        config.minimumNutritionRecoveryMultiplier.get(), nutritionParameters),
+                ResidentNutritionSupportModel.healthRecoveryMultiplier(support.health()),
+                ResidentNutritionSupportModel.mentalRecoveryMultiplier(support.mental()),
                 report.effectiveTemperature(),
                 report.temperatureRating(),
                 report.comfortRating(),
@@ -554,18 +565,6 @@ public class HouseBuilding extends AbstractTownBuilding implements ITownResident
                         config.maximumHealthRecoveryPerResidentDay.get(),
                         config.maximumMentalRecoveryPerResidentDay.get())
         );
-    }
-
-    private static ResidentNutrition.Parameters nutritionParameters(
-            FHConfig.Server.Town.Housing config
-    ) {
-        return new ResidentNutrition.Parameters(
-                config.residentNutritionMaximumReserve.get(),
-                config.residentNutritionHealthyReserve.get(),
-                config.residentNutritionRecoveryDirectWeight.get(),
-                config.residentNutritionRecoverySupportWeight.get(),
-                config.residentNutritionDeficiencyGrowthFloor.get(),
-                config.residentNutritionMaximumGrowthBonus.get());
     }
 
     public double getTemperatureRating() {
@@ -642,7 +641,12 @@ public class HouseBuilding extends AbstractTownBuilding implements ITownResident
         return Math.max(0.0, Math.min(100.0, value));
     }
 
-    private record FoodConsumption(double foodConsumed, double nutritionValue) {
+    private static String stableMealItemKey(ItemStackResourceKey item) {
+        String tag = item.getCompoundTag() == null ? "" : item.getCompoundTag().toString();
+        return BuiltInRegistries.ITEM.getKey(item.getItem()) + "|" + tag;
+    }
+
+    private record FoodConsumption(double foodConsumed) {
     }
 
     @Override

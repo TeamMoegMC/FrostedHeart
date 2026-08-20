@@ -20,16 +20,12 @@
 package com.teammoeg.frostedheart.content.health.recipe;
 
 import com.google.gson.JsonObject;
-import com.teammoeg.frostedheart.content.health.capability.ImmutableNutrition;
-import com.teammoeg.frostedheart.content.health.capability.Nutrition;
-import com.teammoeg.frostedheart.content.health.event.GatherFoodNutritionEvent;
 
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.GsonHelper;
 import net.minecraft.world.entity.player.Inventory;
-import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -38,15 +34,22 @@ import net.minecraft.world.item.crafting.Recipe;
 import net.minecraft.world.item.crafting.RecipeSerializer;
 import net.minecraft.world.item.crafting.RecipeType;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.RegistryObject;
 
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Generated static mapping from an item ingredient to legacy raw nutrition values.
+ *
+ * <p>This recipe is data storage, not a public nutrition model. Its four values intentionally
+ * remain on the generated-data scale so existing JSON and spreadsheet output stay unchanged.
+ * {@code FoodNutritionResolver} is responsible for selecting one matching recipe and converting
+ * these raw values to a {@code FoodNutritionProfile} percentage profile.</p>
+ */
 public class NutritionRecipe implements Recipe<Inventory> {
-    public final float fat,carbohydrate,protein,vegetable;
+    private final float fat,carbohydrate,protein,vegetable;
     protected final ResourceLocation id;
     protected final Ingredient ingredient;
 
@@ -155,47 +158,23 @@ public class NutritionRecipe implements Recipe<Inventory> {
         return TYPE.get();
     }
 
-    public static NutritionRecipe getRecipe(Level level, ItemStack itemStack) {
-        if (level != null) {
-            
-	        for (NutritionRecipe recipe : level.getRecipeManager().getAllRecipesFor(TYPE.get())) {
-	            if (recipe.conform(itemStack)) {
-	                return recipe;
-	            }
-	        }
-        }
-        return null;
+    /** @return raw fat value before the resolver's {@code /400} conversion */
+    public float rawFat() {
+        return fat;
     }
 
-    public static Nutrition getRecipeFromItem(Player player, ItemStack itemStack) {
-    	NutritionRecipe rcp=getRecipe(player.level(),itemStack);
-    	Nutrition value=Nutrition.ZERO;
-        if (rcp != null) {
-        	value=rcp.getNutrition();
-        }
-        return postEvent(value, player.level(), itemStack, player);
+    /** @return raw carbohydrate value before the resolver's {@code /400} conversion */
+    public float rawCarbohydrate() {
+        return carbohydrate;
+    }
 
+    /** @return raw protein value before the resolver's {@code /400} conversion */
+    public float rawProtein() {
+        return protein;
     }
-    public static Nutrition getRecipeFromItem(Level level, ItemStack itemStack) {
-    	NutritionRecipe rcp=getRecipe(level,itemStack);
-    	Nutrition value=Nutrition.ZERO;
-        if (rcp != null) {
-        	value=rcp.getNutrition();
-        }
-        
-        return postEvent(value, level, itemStack, null);
 
-    }
-    private static Nutrition postEvent(Nutrition value,Level level,ItemStack itemStack,Player player) {
-    	GatherFoodNutritionEvent event=new GatherFoodNutritionEvent(value, level, itemStack, player);
-    	if(MinecraftForge.EVENT_BUS.post(event))
-    		return null;
-    	if(event.isModified()) {
-    		return event.getForModify();
-    	}
-    	return value==Nutrition.ZERO?null:event.getOriginalValue();
-    }
-    public ImmutableNutrition getNutrition() {
-        return new ImmutableNutrition(fat,carbohydrate,protein,vegetable);
+    /** @return raw vegetable value before the resolver's {@code /400} conversion */
+    public float rawVegetable() {
+        return vegetable;
     }
 }

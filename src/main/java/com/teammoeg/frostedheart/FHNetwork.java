@@ -167,8 +167,6 @@ public class FHNetwork extends CBaseNetwork {
         registerMessage("water_level", PlayerWaterLevelSyncPacket.class);
         registerMessage("player_drink_water", PlayerDrinkWaterMessage.class);
 
-        // Nutrition
-        //registerMessage("nutrition", PlayerNutritionSyncPacket.class);
         registerMessage("open_nutrition", C2SOpenNutritionScreenMessage.class);
 
         // Infrared View

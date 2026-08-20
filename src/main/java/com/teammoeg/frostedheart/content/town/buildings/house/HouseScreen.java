@@ -60,6 +60,7 @@ public class HouseScreen extends AbstractTownWorkerBlockScreen<HouseMenu> {
     @Override
     protected void initTabs() {
         addTab(new OverviewTab(this));
+        addTab(new MealTab(this));
         addTab(new ResidentsTab(this));
     }
 
@@ -91,6 +92,37 @@ public class HouseScreen extends AbstractTownWorkerBlockScreen<HouseMenu> {
         @Override
         public void build(UILayer layer) {
             layer.add(new HouseOverviewElement(layer, 8, 4, getMenu()));
+        }
+    }
+
+    private static final class MealTab extends AbstractTownTab<HouseMenu> {
+        private MealTab(AbstractTownWorkerBlockScreen<HouseMenu> screen) {
+            super(screen);
+        }
+
+        @Override
+        public CIcons.CIcon getIcon() {
+            return INACTIVE_TAB;
+        }
+
+        @Override
+        public CIcons.CIcon getActiveIcon() {
+            return ACTIVE_TAB;
+        }
+
+        @Override
+        public CIcons.CIcon getContentIcon() {
+            return CIcons.getIcon(Items.BOWL);
+        }
+
+        @Override
+        public Component getTitle() {
+            return Component.translatable("gui.frostedheart.house.daily_meal");
+        }
+
+        @Override
+        public void build(UILayer layer) {
+            layer.add(new HouseMealElement(layer, 8, 4, getMenu()));
         }
     }
 

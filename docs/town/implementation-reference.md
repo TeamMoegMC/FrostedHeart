@@ -1,7 +1,7 @@
 # Town Implementation Reference
 
 > Status: Partial
-> Last verified: 2026-08-19
+> Last verified: 2026-08-20
 > Scope: State ownership, daily lifecycle, building extension, and town-data synchronization
 > Code anchors: `TeamTownData`, `TeamTown`, `ITownBuilding.CODEC`, `DataSyncCache`
 
@@ -22,7 +22,7 @@ Resource mutations use `TeamTownResourceActionExecutorHandler` and `TownResource
 1. Validate buildings and occupied-area overlap.
 2. Activate pending policy, apply daily nutrition loss, allocate housing, and assign work.
 3. Update refugees, mine links, and terrain resources.
-4. Run production buildings and centralized `TownHousingMealService` food settlement.
+4. Run production buildings, centralized ration allocation, and priority-ordered house menus through `TownHousingMealService`.
 5. Apply aging, recovery, resident exit, resource recovery, history, and signal events.
 
 Changing this order changes gameplay contracts and requires updates to tests, [town-model.md](town-model.md), and the development diary.

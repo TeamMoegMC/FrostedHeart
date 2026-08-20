@@ -25,6 +25,7 @@ import com.teammoeg.chorda.client.cui.base.UIElement;
 import com.teammoeg.frostedheart.content.town.buildings.hunting.HuntingBaseBuilding;
 import com.teammoeg.frostedheart.content.town.buildings.mine.MineBaseBuilding;
 import com.teammoeg.frostedheart.content.town.resident.Resident;
+import com.teammoeg.frostedheart.content.town.resident.ResidentNutritionExplanation;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import com.teammoeg.frostedheart.content.town.tabs.TownTextLayout;
 import net.minecraft.client.Minecraft;
@@ -181,6 +182,9 @@ final class HouseResidentPanel extends UIElement {
         lines.add(statLine("gui.frostedheart.town.nutrition_carbohydrate", resident.getNutrition().carbohydrate(), 100.0));
         lines.add(statLine("gui.frostedheart.town.nutrition_protein", resident.getNutrition().protein(), 100.0));
         lines.add(statLine("gui.frostedheart.town.nutrition_vegetable", resident.getNutrition().vegetable(), 100.0));
+        lines.add(DetailLine.EMPTY);
+        ResidentNutritionExplanation.lines(resident).forEach(component ->
+                lines.add(new DetailLine(component, 0xFFFFFFFF)));
         lines.add(DetailLine.EMPTY);
         lines.add(new DetailLine(
                 Component.translatable("gui.frostedheart.house.proficiency"),

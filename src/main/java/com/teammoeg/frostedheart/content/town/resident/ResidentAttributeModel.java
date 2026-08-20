@@ -23,7 +23,7 @@ import java.util.Objects;
 import java.util.function.DoubleSupplier;
 
 /**
- * Pure numerical model for fixed adult attributes and profession proficiency.
+ * Pure numerical authority for resident attributes and profession proficiency.
  */
 public final class ResidentAttributeModel {
     public static final double MIN_VALUE = 0.0;
@@ -131,6 +131,68 @@ public final class ResidentAttributeModel {
         double diminishingGrowth = safeGrowthAtZero * (1.0 - normalizedProficiency / safeMaximum);
         double gain = Math.max(safeMinimumGrowth, diminishingGrowth);
         return Math.min(gain, safeMaximum - normalizedProficiency);
+    }
+
+    /**
+     * Settles one day of strength or intelligence from current nutrition and activity.
+     *
+     * <p>Positive growth uses the age baseline plus the recorded activity's share of the remaining
+     * day. Nutrition below the maintenance threshold activates a separate nonlinear decay term.
+     * Elders may additionally receive a fixed age decay. The growth cap only stops positive growth;
+     * it never clips an already acquired attribute.</p>
+     *
+     * @param currentValue stored attribute before settlement, in {@code 0..100}
+     * @param recordedActivity completed physical or learning activity, in {@code 0..1}
+     * @param baseActivity age-specific activity available without recorded work, in {@code 0..1}
+     * @param nutritionSupport current strength or intelligence support, in {@code 0..1}
+     * @param growthRate daily rate at full activity, full nutrition, and attribute zero
+     * @param growthCap age-specific ceiling for positive growth
+     * @param growthEfficiencyAtZeroSupport retained growth-efficiency fraction at zero support
+     * @param maintenanceThreshold support below which nutrition decay activates
+     * @param deficiencyExponent exponent applied to normalized distance below the threshold
+     * @param decayAtZeroSupport maximum nutrition decay at support zero and attribute {@code 100}
+     * @param ageDecay fixed age decay applied after nutrition decay, normally nonzero only for elders
+     * @return clamped next value and a flat explanation of every transition component
+     */
+    public static ResidentAttributeChange settleDailyAttribute(
+            double currentValue,
+            double recordedActivity,
+            double baseActivity,
+            double nutritionSupport,
+            double growthRate,
+            double growthCap,
+            double growthEfficiencyAtZeroSupport,
+            double maintenanceThreshold,
+            double deficiencyExponent,
+            double decayAtZeroSupport,
+            double ageDecay
+    ) {
+        double current = clampFinite(currentValue, MIN_VALUE, MAX_VALUE, MIN_VALUE);
+        double activity = clampFinite(recordedActivity, 0.0, 1.0, 0.0);
+        double baseline = clampFinite(baseActivity, 0.0, 1.0, 0.0);
+        double effectiveActivity = baseline + (1.0 - baseline) * activity;
+        double support = clampFinite(nutritionSupport, 0.0, 1.0, 0.0);
+        double rate = Math.max(0.0, finiteOr(growthRate, 0.0));
+        double cap = clampFinite(growthCap, 0.0, MAX_VALUE, 0.0);
+        double zeroEfficiency = clampFinite(
+                growthEfficiencyAtZeroSupport, 0.0, 1.0, 0.0);
+        double growthEfficiency = zeroEfficiency + (1.0 - zeroEfficiency) * support;
+        double remaining = cap <= 0.0 ? 0.0 : Math.max(0.0, 1.0 - current / cap);
+        double growth = rate * effectiveActivity * growthEfficiency * remaining;
+        growth = Math.min(Math.max(0.0, cap - current), Math.max(0.0, growth));
+
+        double threshold = Math.max(0.0, finiteOr(maintenanceThreshold, 0.0));
+        double deficiency = threshold <= 0.0 || support >= threshold
+                ? 0.0 : (threshold - support) / threshold;
+        double exponent = Math.max(0.0, finiteOr(deficiencyExponent, 1.0));
+        double decay = Math.max(0.0, finiteOr(decayAtZeroSupport, 0.0))
+                * Math.pow(deficiency, exponent) * current / MAX_VALUE;
+        double safeAgeDecay = Math.max(0.0, finiteOr(ageDecay, 0.0));
+        double next = clampFinite(
+                current + growth - decay - safeAgeDecay,
+                MIN_VALUE, MAX_VALUE, MIN_VALUE);
+        return new ResidentAttributeChange(
+                next, effectiveActivity, growth, decay, safeAgeDecay, next - current);
     }
 
     private static double unitSample(DoubleSupplier randomDouble) {

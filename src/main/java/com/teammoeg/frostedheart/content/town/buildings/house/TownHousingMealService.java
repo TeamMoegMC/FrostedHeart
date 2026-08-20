@@ -6,9 +6,8 @@
 
 package com.teammoeg.frostedheart.content.town.buildings.house;
 
-import com.teammoeg.chorda.util.CDistHelper;
-import com.teammoeg.chorda.util.CUtils;
-import com.teammoeg.frostedheart.content.health.recipe.NutritionRecipe;
+import com.teammoeg.frostedheart.content.health.nutrition.FoodNutritionProfile;
+import com.teammoeg.frostedheart.content.health.nutrition.FoodNutritionResolver;
 import com.teammoeg.frostedheart.content.town.TeamTown;
 import com.teammoeg.frostedheart.content.town.TownCareLaw;
 import com.teammoeg.frostedheart.content.town.TownHousingPlan;
@@ -16,6 +15,7 @@ import com.teammoeg.frostedheart.content.town.model.TownFoodAllocationModel;
 import com.teammoeg.frostedheart.content.town.model.TownResidentCareModel;
 import com.teammoeg.frostedheart.content.town.resident.Resident;
 import com.teammoeg.frostedheart.content.town.resident.ResidentNutrition;
+import com.teammoeg.frostedheart.content.town.resident.ResidentPublicMenuModel;
 import com.teammoeg.frostedheart.content.town.resource.ItemResourceAttribute;
 import com.teammoeg.frostedheart.content.town.resource.ItemResourceType;
 import com.teammoeg.frostedheart.content.town.resource.ItemStackResourceKey;
@@ -25,8 +25,10 @@ import com.teammoeg.frostedheart.content.town.resource.action.ResourceActionType
 import com.teammoeg.frostedheart.content.town.resource.action.TownResourceActionResults;
 import com.teammoeg.frostedheart.content.town.resource.action.TownResourceActions;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
-import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.food.FoodProperties;
+import net.minecraft.world.item.ItemStack;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -37,7 +39,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-/** Executes one centralized, resident-specific town housing meal. */
+/** Executes centralized ration allocation followed by priority-ordered house menus. */
 public final class TownHousingMealService {
     private TownHousingMealService() {
     }
@@ -52,9 +54,11 @@ public final class TownHousingMealService {
     }
 
     public static Settlement settle(
+            ServerLevel world,
             TeamTown town,
             TownHousingPlan housingPlan,
-            TownCareLaw law
+            TownCareLaw law,
+            long settlementDay
     ) {
         FHConfig.Server.Town.Housing config = FHConfig.SERVER.TOWN.HOUSING;
         double ration = Math.max(0.0, config.foodConsumptionPerResidentDay.get());
@@ -72,17 +76,41 @@ public final class TownHousingMealService {
                 ration,
                 residents -> residents.stream().sorted(careOrder).toList());
 
-        List<NutritionRecipe> recipes = CUtils.filterRecipes(
-                CDistHelper.getRecipeManager(), NutritionRecipe.TYPE);
-        List<FoodCandidate> candidates = foodCandidates(holder, recipes);
+        List<FoodCandidate> candidates = foodCandidates(holder, world);
+        List<ResidentPublicMenuModel.Group<HouseBuilding>> menuGroups = households.stream()
+                .map(household -> menuGroup(household, rationPlan.allocations()))
+                .toList();
+        List<ResidentPublicMenuModel.Candidate<ItemStackResourceKey>> modelCandidates =
+                candidates.stream().map(FoodCandidate::asModelCandidate).toList();
+        List<ResidentPublicMenuModel.GroupPlan<HouseBuilding, ItemStackResourceKey>> plannedMenus =
+                ResidentPublicMenuModel.planInPriorityOrder(
+                        menuGroups, config.residentNutritionMealSelectionChunks.get(),
+                        modelCandidates, menuParameters(config));
+
+        Map<HouseBuilding, Menu> houseMenus = new LinkedHashMap<>();
         Map<Resident, Meal> meals = new LinkedHashMap<>();
-        for (Resident resident : recipientOrder(households, rationPlan, careOrder)) {
-            double allowance = rationPlan.allocations().getOrDefault(resident, 0.0);
-            meals.put(resident, consumeMeal(
-                    town, resident, allowance, ration, candidates));
+        Map<HouseBuilding, TownFoodAllocationModel.Household<Resident, HouseBuilding>> byHouse =
+                new HashMap<>();
+        households.forEach(household -> byHouse.put(household.house(), household));
+        for (ResidentPublicMenuModel.GroupPlan<HouseBuilding, ItemStackResourceKey> planned
+                : plannedMenus) {
+            HouseBuilding house = planned.key();
+            TownFoodAllocationModel.Household<Resident, HouseBuilding> household = byHouse.get(house);
+            if (household == null) continue;
+            double allocatedFood = allocatedFood(household, rationPlan.allocations());
+            Menu menu = consumeHouseMenu(
+                    town, planned.plan(), candidates, settlementDay);
+            houseMenus.put(house, menu);
+            for (Resident resident : household.residents()) {
+                double allowance = rationPlan.allocations().getOrDefault(resident, 0.0);
+                double share = allocatedFood <= TeamTownResourceHolder.DELTA
+                        ? 0.0 : allowance / allocatedFood;
+                meals.put(resident, new Meal(
+                        menu.foodUnits() * share, menu.nutrition().scale(share)));
+            }
         }
 
-        Map<BlockPos, HouseTotals> totals = new HashMap<>();
+        Set<Resident> settledResidents = new LinkedHashSet<>();
         int fullyFed = 0;
         int fulfilledGuarantees = 0;
         for (TownFoodAllocationModel.Household<Resident, HouseBuilding> household : households) {
@@ -91,11 +119,12 @@ public final class TownHousingMealService {
                 Meal meal = meals.getOrDefault(resident, Meal.EMPTY);
                 ResidentNutrition updated = resident.getNutrition().withMeal(
                         meal.nutrition(),
-                        ration * config.nutritionReferencePerFoodUnit.get(),
+					config.residentNutritionReferencePoints.get(),
                         config.residentNutritionGainAtReference.get(),
                         config.residentNutritionMaximumCoverage.get(),
                         config.residentNutritionMaximumReserve.get());
-                resident.setNutrition(updated);
+                resident.completeNutritionMeal(updated);
+                settledResidents.add(resident);
                 double satisfaction = ration <= 0.0 ? 1.0
                         : Math.max(0.0, Math.min(1.0, meal.foodUnits() / ration));
                 house.settleResident(resident, satisfaction, updated);
@@ -104,24 +133,29 @@ public final class TownHousingMealService {
                         && satisfaction >= 1.0 - TeamTownResourceHolder.DELTA) {
                     fulfilledGuarantees++;
                 }
-                totals.computeIfAbsent(house.getPos(), ignored -> new HouseTotals())
-                        .add(meal);
             }
+            Menu menu = houseMenus.getOrDefault(house, Menu.empty(settlementDay));
+            house.updateCentralDailyReport(
+                    household.residents().size(), menu.foodUnits(), menu.dailyMeal());
         }
-        for (TownFoodAllocationModel.Household<Resident, HouseBuilding> household : households) {
-            HouseTotals total = totals.getOrDefault(household.house().getPos(), new HouseTotals());
-            household.house().updateCentralDailyReport(
-                    household.residents().size(), total.food, total.scalarNutrition);
+        for (Resident resident : town.getAllResidents()) {
+            if (!settledResidents.contains(resident)) {
+                resident.completeNutritionMeal(resident.getNutrition());
+            }
         }
         town.getTownBuildings().values().stream()
                 .filter(value -> value instanceof HouseBuilding)
                 .map(value -> (HouseBuilding) value)
-                .filter(house -> totals.get(house.getPos()) == null)
-                .forEach(house -> house.updateCentralDailyReport(0, 0.0, 0.0));
+                .filter(house -> !houseMenus.containsKey(house))
+                .forEach(house -> house.updateCentralDailyReport(
+                        0, 0.0, HouseBuilding.DailyMeal.settled(settlementDay, Map.of())));
+
+        double consumedFood = houseMenus.values().stream()
+                .mapToDouble(Menu::foodUnits).sum();
 
         return new Settlement(
                 rationPlan.guaranteedResidents().size(), fulfilledGuarantees,
-                town.getAllResidents().size(), fullyFed, rationPlan.allocatedFood());
+                town.getAllResidents().size(), fullyFed, consumedFood);
     }
 
     private static Map<Resident, TownResidentCareModel.Need> assessResidents(TeamTown town) {
@@ -161,158 +195,105 @@ public final class TownHousingMealService {
         return result;
     }
 
-    private static List<Resident> recipientOrder(
-            List<TownFoodAllocationModel.Household<Resident, HouseBuilding>> households,
-            TownFoodAllocationModel.Plan<Resident> plan,
-            Comparator<Resident> careOrder
+    private static ResidentPublicMenuModel.Group<HouseBuilding> menuGroup(
+            TownFoodAllocationModel.Household<Resident, HouseBuilding> household,
+            Map<Resident, Double> allocations
     ) {
-        Set<Resident> result = new LinkedHashSet<>();
-        for (TownFoodAllocationModel.Household<Resident, HouseBuilding> household : households) {
-            household.residents().stream().filter(plan.guaranteedResidents()::contains)
-                    .sorted(careOrder).forEach(result::add);
-        }
-        for (TownFoodAllocationModel.Household<Resident, HouseBuilding> household : households) {
-            household.residents().stream().filter(r -> !plan.guaranteedResidents().contains(r))
-                    .sorted(careOrder).forEach(result::add);
-        }
-        return List.copyOf(result);
+        double allocatedFood = allocatedFood(household, allocations);
+        List<ResidentPublicMenuModel.Recipient> recipients = household.residents().stream()
+                .map(resident -> new ResidentPublicMenuModel.Recipient(
+                        resident.getNutrition(), allocatedFood <= TeamTownResourceHolder.DELTA
+                        ? 0.0 : allocations.getOrDefault(resident, 0.0) / allocatedFood))
+                .toList();
+        return new ResidentPublicMenuModel.Group<>(
+                household.house(), allocatedFood, recipients);
     }
 
-    private static List<FoodCandidate> foodCandidates(
-            TeamTownResourceHolder holder,
-            List<NutritionRecipe> recipes
+    private static double allocatedFood(
+            TownFoodAllocationModel.Household<Resident, HouseBuilding> household,
+            Map<Resident, Double> allocations
     ) {
+        return household.residents().stream()
+                .mapToDouble(resident -> Math.max(
+                        0.0, allocations.getOrDefault(resident, 0.0)))
+                .sum();
+    }
+
+	private static List<FoodCandidate> foodCandidates(
+			TeamTownResourceHolder holder,
+			ServerLevel world
+	) {
         Map<ItemStackResourceKey, FoodCandidate> byItem = new LinkedHashMap<>();
-        for (int level = ItemResourceType.RESIDENT_FOOD_LEVEL.getMaxLevel(); level >= 0; level--) {
-            int foodLevel = level;
+        for (int tier = ItemResourceType.RESIDENT_FOOD_LEVEL.getMaxLevel(); tier >= 0; tier--) {
+            int foodLevel = tier;
             ItemResourceAttribute attribute = ItemResourceType.RESIDENT_FOOD_LEVEL
-                    .generateAttribute(level);
+                    .generateAttribute(tier);
             for (Map.Entry<ItemStackResourceKey, Double> entry
                     : holder.getAllItemsByResourceAttribute(attribute).entrySet()) {
-                byItem.computeIfAbsent(entry.getKey(), item -> new FoodCandidate(
-                        item, foodLevel, entry.getValue(),
-                        TeamTownResourceHolder.getResourceAmount(item, attribute),
-                        nutrition(item, recipes), stableKey(item)));
+				byItem.computeIfAbsent(entry.getKey(), item -> createCandidate(
+						item, foodLevel, entry.getValue(),
+						TeamTownResourceHolder.getResourceAmount(item, attribute), world));
             }
         }
         return new ArrayList<>(byItem.values());
     }
 
-    private static Meal consumeMeal(
+    private static Menu consumeHouseMenu(
             TeamTown town,
-            Resident resident,
-            double allowance,
-            double fullRation,
-            List<FoodCandidate> candidates
+            ResidentPublicMenuModel.Plan<ItemStackResourceKey> plan,
+            List<FoodCandidate> candidates,
+            long settlementDay
     ) {
-        double remainingFood = Math.max(0.0, allowance);
-        int chunks = Math.max(1, FHConfig.SERVER.TOWN.HOUSING
-                .residentNutritionMealSelectionChunks.get());
-        double chunkSize = fullRation > 0.0 ? fullRation / chunks : remainingFood;
-        ResidentNutrition.NutritionIntake intake = ResidentNutrition.NutritionIntake.ZERO;
+        Map<ItemStackResourceKey, FoodCandidate> byItem = new HashMap<>();
+        candidates.forEach(candidate -> byItem.put(candidate.item, candidate));
         double consumed = 0.0;
-        while (remainingFood > TeamTownResourceHolder.DELTA) {
-            ResidentNutrition.NutritionIntake projectedIntake = intake;
-            FoodCandidate selected = candidates.stream()
-                    .filter(candidate -> candidate.itemAmount > TeamTownResourceHolder.DELTA)
-                    .filter(candidate -> candidate.foodUnitsPerItem > 0.0)
-                    .max(Comparator.comparingInt((FoodCandidate candidate) -> candidate.level)
-                            .thenComparingDouble(candidate -> foodUtility(
-                                    resident, candidate, projectedIntake, fullRation))
-                            .thenComparing(candidate -> candidate.stableKey,
-                                    Comparator.reverseOrder()))
-                    .orElse(null);
-            if (selected == null) break;
-            double requestedFood = Math.min(remainingFood, Math.max(chunkSize,
-                    TeamTownResourceHolder.DELTA));
-            double requestedItems = Math.min(selected.itemAmount,
-                    requestedFood / selected.foodUnitsPerItem);
+        ResidentNutrition.NutritionIntake intake = ResidentNutrition.NutritionIntake.ZERO;
+        Map<ItemStackResourceKey, Double> actualItems = new LinkedHashMap<>();
+        for (Map.Entry<ItemStackResourceKey, Double> entry : plan.itemAmounts().entrySet()) {
+            FoodCandidate candidate = byItem.get(entry.getKey());
+            if (candidate == null) continue;
             TownResourceActionResults.ItemResourceActionResult result =
                     town.getActionExecutorHandler().execute(
                             new TownResourceActions.ItemResourceAction(
-                                    selected.item.toItemStack(), ResourceActionType.COST,
-                                    requestedItems, ResourceActionMode.MAXIMIZE));
+                                    candidate.item.toItemStack(), ResourceActionType.COST,
+                                    entry.getValue(), ResourceActionMode.MAXIMIZE));
             double usedItems = Math.max(0.0, result.modifiedAmount());
-            if (usedItems <= TeamTownResourceHolder.DELTA) {
-                selected.itemAmount = 0.0;
-                continue;
-            }
-            selected.itemAmount -= usedItems;
-            double usedFood = usedItems * selected.foodUnitsPerItem;
-            consumed += usedFood;
-            remainingFood -= usedFood;
-            intake = intake.plus(selected.nutrition.scale(usedItems));
+            if (usedItems <= TeamTownResourceHolder.DELTA) continue;
+            actualItems.merge(candidate.item, usedItems, Double::sum);
+            consumed += usedItems * candidate.foodUnitsPerItem;
+            intake = intake.plus(candidate.nutritionPoints.scale(usedItems));
         }
-        return new Meal(consumed, intake);
+        return new Menu(
+                consumed, intake,
+                HouseBuilding.DailyMeal.settled(settlementDay, actualItems));
     }
 
-    private static double foodUtility(
-            Resident resident,
-            FoodCandidate candidate,
-            ResidentNutrition.NutritionIntake projected,
-            double fullRation
+    private static ResidentPublicMenuModel.Parameters menuParameters(
+            FHConfig.Server.Town.Housing config
     ) {
-        ResidentNutrition current = resident.getNutrition();
-        double reference = Math.max(1.0,
-                FHConfig.SERVER.TOWN.HOUSING.nutritionReferencePerFoodUnit.get());
-        double foodUnits = Math.max(TeamTownResourceHolder.DELTA,
-                candidate.foodUnitsPerItem);
-        ResidentNutrition.NutritionIntake perFood = candidate.nutrition.scale(1.0 / foodUnits);
-        double healthNeed = 1.0 - resident.getHealth() / 100.0;
-        double mentalNeed = 1.0 - resident.getMental() / 100.0;
-        double fatNeed = channelNeed(current.fat(), projected.fat(), reference, fullRation);
-        double carbohydrateNeed = channelNeed(
-                current.carbohydrate(), projected.carbohydrate(), reference, fullRation);
-        double proteinNeed = channelNeed(
-                current.protein(), projected.protein(), reference, fullRation);
-        double vegetableNeed = channelNeed(
-                current.vegetable(), projected.vegetable(), reference, fullRation);
-        double growthFat = resident.getAge() == Resident.AGE_ELDER ? 0.0 : fatNeed;
-        double growthProtein = resident.getAge() <= Resident.AGE_CHILD ? proteinNeed : 0.0;
-        FHConfig.Server.Town.Housing config = FHConfig.SERVER.TOWN.HOUSING;
-        double channelWeight = config.residentNutritionChannelNeedUtilityWeight.get();
-        double conditionWeight = config.residentNutritionConditionNeedUtilityWeight.get();
-        double growthWeight = config.residentNutritionGrowthNeedUtilityWeight.get();
-        return perFood.fat() * (channelWeight * fatNeed + growthWeight * growthFat)
-                + perFood.carbohydrate() * carbohydrateNeed
-                * (channelWeight + conditionWeight * mentalNeed)
-                + perFood.protein() * (channelWeight * proteinNeed
-                        + growthWeight * growthProtein)
-                + perFood.vegetable() * vegetableNeed
-                * (channelWeight + conditionWeight * healthNeed);
+        return new ResidentPublicMenuModel.Parameters(
+                config.residentNutritionReferencePoints.get(),
+                config.residentNutritionGainAtReference.get(),
+                config.residentNutritionMaximumCoverage.get(),
+                config.residentNutritionMaximumReserve.get(),
+                config.residentNutritionHealthyReserve.get());
     }
 
-    private static double channelNeed(
-            double reserve,
-            double projectedIntake,
-            double reference,
-            double fullRation
-    ) {
-        double projectedGain = FHConfig.SERVER.TOWN.HOUSING
-                .residentNutritionGainAtReference.get() * projectedIntake
-                / Math.max(reference * Math.max(fullRation, TeamTownResourceHolder.DELTA), 1.0);
-        double healthy = Math.max(0.001, FHConfig.SERVER.TOWN.HOUSING
-                .residentNutritionHealthyReserve.get());
-        return Math.max(0.0, healthy - reserve - projectedGain) / healthy;
-    }
-
-    private static ResidentNutrition.NutritionIntake nutrition(
-            ItemStackResourceKey item,
-            List<NutritionRecipe> recipes
-    ) {
-        double fat = 0.0;
-        double carbohydrate = 0.0;
-        double protein = 0.0;
-        double vegetable = 0.0;
-        for (NutritionRecipe recipe : recipes) {
-            if (recipe.conform(item.getItem())) {
-                fat += recipe.fat;
-                carbohydrate += recipe.carbohydrate;
-                protein += recipe.protein;
-                vegetable += recipe.vegetable;
-            }
-        }
-        return new ResidentNutrition.NutritionIntake(fat, carbohydrate, protein, vegetable);
+	private static FoodCandidate createCandidate(
+			ItemStackResourceKey item,
+			int level,
+			double itemAmount,
+			double foodUnitsPerItem,
+			ServerLevel world
+	) {
+		ItemStack stack = item.toItemStack();
+		FoodNutritionProfile profile = FoodNutritionResolver.resolve(world, stack);
+		FoodProperties food = stack.getFoodProperties(null);
+		double hunger = food == null ? 0.0 : Math.max(0, food.getNutrition());
+		ResidentNutrition.NutritionIntake points =
+				ResidentPublicMenuModel.nutritionPoints(profile, (int) hunger);
+		return new FoodCandidate(
+				item, level, itemAmount, foodUnitsPerItem, points, stableKey(item));
     }
 
     private static String stableKey(ItemStackResourceKey item) {
@@ -323,9 +304,9 @@ public final class TownHousingMealService {
     private static final class FoodCandidate {
         private final ItemStackResourceKey item;
         private final int level;
-        private double itemAmount;
+        private final double itemAmount;
         private final double foodUnitsPerItem;
-        private final ResidentNutrition.NutritionIntake nutrition;
+		private final ResidentNutrition.NutritionIntake nutritionPoints;
         private final String stableKey;
 
         private FoodCandidate(
@@ -333,35 +314,41 @@ public final class TownHousingMealService {
                 int level,
                 double itemAmount,
                 double foodUnitsPerItem,
-                ResidentNutrition.NutritionIntake nutrition,
+				ResidentNutrition.NutritionIntake nutritionPoints,
                 String stableKey
         ) {
             this.item = item;
             this.level = level;
             this.itemAmount = itemAmount;
             this.foodUnitsPerItem = foodUnitsPerItem;
-            this.nutrition = nutrition;
-            this.stableKey = stableKey;
+			this.nutritionPoints = nutritionPoints;
+			this.stableKey = stableKey;
+		}
+
+        private ResidentPublicMenuModel.Candidate<ItemStackResourceKey> asModelCandidate() {
+            return new ResidentPublicMenuModel.Candidate<>(
+                    item, stableKey, level, itemAmount, foodUnitsPerItem, nutritionPoints);
         }
+
     }
 
-    private record Meal(
+	private record Meal(
             double foodUnits,
             ResidentNutrition.NutritionIntake nutrition
     ) {
         private static final Meal EMPTY = new Meal(
                 0.0, ResidentNutrition.NutritionIntake.ZERO);
-    }
+	}
 
-    private static final class HouseTotals {
-        private double food;
-        private double scalarNutrition;
-
-        private void add(Meal meal) {
-            food += meal.foodUnits();
-            ResidentNutrition.NutritionIntake value = meal.nutrition();
-            scalarNutrition += (value.fat() + value.carbohydrate()
-                    + value.protein() + value.vegetable()) / 4.0;
+	private record Menu(
+			double foodUnits,
+			ResidentNutrition.NutritionIntake nutrition,
+            HouseBuilding.DailyMeal dailyMeal
+	) {
+        private static Menu empty(long settlementDay) {
+            return new Menu(
+                    0.0, ResidentNutrition.NutritionIntake.ZERO,
+                    HouseBuilding.DailyMeal.settled(settlementDay, Map.of()));
         }
     }
 

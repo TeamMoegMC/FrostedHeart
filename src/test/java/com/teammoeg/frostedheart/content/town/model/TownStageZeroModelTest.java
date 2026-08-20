@@ -37,13 +37,13 @@ class TownStageZeroModelTest {
         assertEquals(1.1973684, metrics.meatPerHuntingSweDay(), EPSILON);
         assertEquals(5.2070175, metrics.rawFoodUnitsPerHuntingSweDay(), EPSILON);
         assertEquals(22.5596491, metrics.cookedFoodUnitsPerHuntingSweDay(), EPSILON);
-        assertEquals(6.5, metrics.foodUnitsPerResidentDay(), EPSILON);
+        assertEquals(20.0, metrics.foodUnitsPerResidentDay(), EPSILON);
         assertEquals(21.4285714, metrics.idealTowerCoalPerActiveDay(), EPSILON);
         assertEquals(10.7142857, metrics.idealTowerCokePerActiveDay(), EPSILON);
         assertEquals(18.3673469, metrics.idealTowerMiningSweUsingCoal(), EPSILON);
         assertEquals(9.1836735, metrics.idealTowerMiningSweUsingCoke(), EPSILON);
-        assertEquals(1.2483154, metrics.rawDietHuntingSwePerResident(), EPSILON);
-        assertEquals(0.2881250, metrics.cookedDietHuntingSwePerResident(), EPSILON);
+        assertEquals(3.8409704, metrics.rawDietHuntingSwePerResident(), EPSILON);
+        assertEquals(0.8865386, metrics.cookedDietHuntingSwePerResident(), EPSILON);
         assertEquals(metrics.idealTowerCoalPerActiveDay(),
                 metrics.currentTownBatchTowerCoalPerActiveDay(), EPSILON);
         assertEquals(metrics.idealTowerCokePerActiveDay(),

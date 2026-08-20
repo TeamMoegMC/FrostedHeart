@@ -14,10 +14,11 @@ import com.teammoeg.frostedheart.content.climate.block.generator.GeneratorFuelMo
 import com.teammoeg.frostedheart.content.town.buildings.house.HouseDailyModel;
 import com.teammoeg.frostedheart.content.town.buildings.hunting.HuntingDailyModel;
 import com.teammoeg.frostedheart.content.town.buildings.mine.MiningDailyModel;
-import com.teammoeg.frostedheart.content.town.resident.ResidentAgingModel;
 import com.teammoeg.frostedheart.content.town.resident.ResidentAttributeModel;
 import com.teammoeg.frostedheart.content.town.resident.ResidentDailyModel;
 import com.teammoeg.frostedheart.content.town.resident.ResidentNutrition;
+import com.teammoeg.frostedheart.content.town.resident.ResidentNutritionSupportModel;
+import com.teammoeg.frostedheart.content.town.resident.ResidentPublicMenuModel;
 import com.teammoeg.frostedheart.content.town.resource.TownFoodInventoryModel;
 import com.teammoeg.frostedheart.content.town.resource.TownFoodProcessingModel;
 import com.teammoeg.frostedheart.content.town.resource.action.ResourceActionMode;
@@ -154,6 +155,7 @@ public final class TownStageThreeModel {
         TownModelParameters.ResidentNutritionParameters nutrition =
                 parameters.residents().nutrition();
         for (TownStageThreeState.ResidentState resident : state.residents()) {
+            resident.resetDailyActivity();
             resident.setNutrition(resident.nutrition().decay(
                     nutrition.reserveLossPerDay(), nutrition.maximumReserve()));
         }
@@ -185,16 +187,80 @@ public final class TownStageThreeModel {
             TownModelParameters parameters
     ) {
         TownModelParameters.ResidentParameters residentParameters = parameters.residents();
+        TownModelParameters.ResidentAgingParameters aging = residentParameters.aging();
+        TownModelParameters.ResidentNutritionParameters nutrition = residentParameters.nutrition();
         for (TownStageThreeState.ResidentState resident : state.residents()) {
-            ResidentAgingModel.AgingResult aging = ResidentAgingModel.settleDay(
-                    resident.age(), resident.ageDays(), resident.strength(),
-                    resident.intelligence(), resident.nutrition(),
-                    agingParameters(residentParameters.aging()),
-                    residentParameters.nutrition().formulas());
-            resident.setAge(aging.age());
-            resident.setAgeDays(aging.ageDays());
-            resident.setStrength(aging.strength());
-            resident.setIntelligence(aging.intelligence());
+            int growthAge = resident.age();
+            int nextDays = Math.max(0, resident.ageDays()) + 1;
+            int nextAge = growthAge;
+            if (growthAge == 0 && nextDays >= aging.infantToChildDays()) {
+                nextAge = 1;
+            } else if (growthAge == 1 && nextDays >= aging.childToAdultDays()) {
+                nextAge = 2;
+            }
+            double baseActivity;
+            double strengthRate;
+            double intelligenceRate;
+            double strengthCap;
+            double intelligenceCap;
+            double strengthAgeDecay = 0.0;
+            double intelligenceAgeDecay = 0.0;
+            switch (growthAge) {
+                case 0 -> {
+                    baseActivity = aging.infantBaseActivity();
+                    strengthRate = aging.infantStrengthGainPerDay();
+                    intelligenceRate = aging.infantIntelligenceGainPerDay();
+                    strengthCap = aging.infantAttributeCap();
+                    intelligenceCap = aging.infantAttributeCap();
+                }
+                case 1 -> {
+                    baseActivity = aging.childBaseActivity();
+                    strengthRate = aging.childStrengthGainPerDay();
+                    intelligenceRate = aging.childIntelligenceGainPerDay();
+                    strengthCap = aging.childStrengthCap();
+                    intelligenceCap = aging.childIntelligenceCap();
+                }
+                case 2 -> {
+                    baseActivity = aging.adultBaseActivity();
+                    strengthRate = aging.adultStrengthGainPerDay();
+                    intelligenceRate = aging.adultIntelligenceGainPerDay();
+                    strengthCap = aging.adultAttributeCap();
+                    intelligenceCap = aging.adultAttributeCap();
+                }
+                case 3 -> {
+                    baseActivity = aging.elderBaseActivity();
+                    strengthRate = aging.elderStrengthGainPerDay();
+                    intelligenceRate = aging.elderIntelligenceGainPerDay();
+                    strengthCap = 100.0;
+                    intelligenceCap = 100.0;
+                    strengthAgeDecay = aging.elderStrengthAgeDecayPerDay();
+                    intelligenceAgeDecay = aging.elderIntelligenceAgeDecayPerDay();
+                }
+                default -> throw new IllegalArgumentException(
+                        "Unsupported simulated resident age: " + growthAge);
+            }
+            ResidentNutritionSupportModel.Supports support =
+                    ResidentNutritionSupportModel.supports(
+                            ResidentNutritionSupportModel.satisfaction(
+                                    resident.nutrition(), nutrition.healthyReserve()),
+                            nutrition.supportWeights());
+            var activity = resident.dailyActivity();
+            var strengthChange = ResidentAttributeModel.settleDailyAttribute(
+                    resident.strength(), activity.physical(), baseActivity, support.strength(),
+                    strengthRate, strengthCap,
+                    nutrition.strengthGrowthEfficiencyAtZeroSupport(),
+                    nutrition.strengthMaintenanceThreshold(), nutrition.deficiencyExponent(),
+                    nutrition.strengthDecayAtZeroSupport(), strengthAgeDecay);
+            var intelligenceChange = ResidentAttributeModel.settleDailyAttribute(
+                    resident.intelligence(), activity.learning(), baseActivity,
+                    support.intelligence(), intelligenceRate, intelligenceCap,
+                    nutrition.intelligenceGrowthEfficiencyAtZeroSupport(),
+                    nutrition.intelligenceMaintenanceThreshold(), nutrition.deficiencyExponent(),
+                    nutrition.intelligenceDecayAtZeroSupport(), intelligenceAgeDecay);
+            resident.setStrength(strengthChange.nextValue());
+            resident.setIntelligence(intelligenceChange.nextValue());
+            resident.setAge(nextAge);
+            resident.setAgeDays(nextDays);
         }
     }
 
@@ -307,30 +373,40 @@ public final class TownStageThreeModel {
                     food.foodUnitsPerItem(), food.nutrition()));
             availableFood += item.getValue() * food.foodUnitsPerItem();
         }
-        double allowance = residents.isEmpty() ? 0.0
-                : Math.min(ration, availableFood / residents.size());
+        double allocatedFood = Math.min(requiredFood, availableFood);
         Map<TownStageThreeState.ResidentState, SimulationMeal> meals = new LinkedHashMap<>();
-        Map<String, Double> usedItems = new LinkedHashMap<>();
-        double consumedFood = 0.0;
-        ResidentNutrition.NutritionIntake totalNutrition =
-                ResidentNutrition.NutritionIntake.ZERO;
+        double residentShare = residents.isEmpty() ? 0.0 : 1.0 / residents.size();
+        List<ResidentPublicMenuModel.Candidate<String>> modelFoods = foods.stream()
+                .map(food -> new ResidentPublicMenuModel.Candidate<>(
+                        food.item, food.item, food.foodLevel, food.amountItems,
+                        food.foodUnitsPerItem, food.nutrition)).toList();
+        List<ResidentPublicMenuModel.Recipient> modelResidents = residents.stream()
+                .map(resident -> new ResidentPublicMenuModel.Recipient(
+                        resident.nutrition(), residentShare)).toList();
+        ResidentPublicMenuModel.Plan<String> menuPlan = ResidentPublicMenuModel.plan(
+                allocatedFood, nutrition.mealSelectionChunks(), modelFoods, modelResidents,
+                new ResidentPublicMenuModel.Parameters(
+                        housing.nutritionReferencePerFoodUnit(), nutrition.gainAtReference(),
+                        nutrition.maximumCoverage(), nutrition.maximumReserve(),
+                        nutrition.healthyReserve()));
+        Map<String, Double> usedItems = new LinkedHashMap<>(menuPlan.itemAmounts());
+        SimulationMeal publicMenu = new SimulationMeal(
+                menuPlan.foodUnits(), menuPlan.nutrition());
+        double consumedFood = publicMenu.foodUnits();
         for (TownStageThreeState.ResidentState resident : residents) {
-            SimulationMeal meal = consumeSimulationMeal(
-                    resident, allowance, ration, foods, housing, nutrition, usedItems);
+            SimulationMeal meal = new SimulationMeal(
+                    publicMenu.foodUnits() * residentShare,
+                    publicMenu.nutrition().scale(residentShare));
             meals.put(resident, meal);
-            consumedFood += meal.foodUnits();
-            totalNutrition = totalNutrition.plus(meal.nutrition());
         }
         for (Map.Entry<String, Double> use : usedItems.entrySet()) {
             state.cost(use.getKey(), use.getValue(), ResourceActionMode.MAXIMIZE);
             flows.add(new ResourceFlow(state.day(), "house", "consume", use.getKey(),
                     use.getValue(), use.getValue(), 0.0));
         }
-        double scalarNutrition = (totalNutrition.fat() + totalNutrition.carbohydrate()
-                + totalNutrition.protein() + totalNutrition.vegetable()) / 4.0;
         HouseDailyModel.SettlementReport report = HouseDailyModel.evaluateSettlement(
                 new HouseDailyModel.SettlementInput(
-                        residents.size(), consumedFood, scalarNutrition,
+                        residents.size(), consumedFood,
                         environment.houseTemperatureCelsius(),
                         scenario.house().areaBlocks(), scenario.house().volumeBlocks(),
                         scenario.house().decorationRating()),
@@ -338,18 +414,21 @@ public final class TownStageThreeModel {
         for (TownStageThreeState.ResidentState resident : residents) {
             SimulationMeal meal = meals.get(resident);
             ResidentNutrition updated = resident.nutrition().withMeal(
-                    meal.nutrition(), ration * housing.nutritionReferencePerFoodUnit(),
+                    meal.nutrition(), housing.nutritionReferencePerFoodUnit(),
                     nutrition.gainAtReference(), nutrition.maximumCoverage(),
                     nutrition.maximumReserve());
             resident.setNutrition(updated);
+            ResidentNutritionSupportModel.Supports support =
+                    ResidentNutritionSupportModel.supports(
+                            ResidentNutritionSupportModel.satisfaction(
+                                    updated, nutrition.healthyReserve()),
+                            nutrition.supportWeights());
             double satisfaction = ration <= 0.0 ? 1.0
                     : Math.max(0.0, Math.min(1.0, meal.foodUnits() / ration));
             HouseDailyModel.ResidentEffects effects = HouseDailyModel.calculateResidentEffects(
                     resident.health(), resident.mental(), satisfaction,
-                    updated.healthRecoveryMultiplier(
-                            housing.minimumNutritionRecoveryMultiplier(), nutrition.formulas()),
-                    updated.mentalRecoveryMultiplier(
-                            housing.minimumNutritionRecoveryMultiplier(), nutrition.formulas()),
+                    ResidentNutritionSupportModel.healthRecoveryMultiplier(support.health()),
+                    ResidentNutritionSupportModel.mentalRecoveryMultiplier(support.mental()),
                     report.effectiveTemperature(),
                     report.temperatureRating(), report.comfortRating(),
                     TownStageOneTwoTheory.residentEffectParameters(parameters));
@@ -375,97 +454,6 @@ public final class TownStageThreeModel {
                 .thenComparingDouble(resident -> resident.nutrition().minimum())
                 .thenComparingDouble(TownStageThreeState.ResidentState::mental)
                 .thenComparing(TownStageThreeState.ResidentState::id);
-    }
-
-    private static SimulationMeal consumeSimulationMeal(
-            TownStageThreeState.ResidentState resident,
-            double allowance,
-            double fullRation,
-            List<SimulationFoodCandidate> candidates,
-            TownModelParameters.HousingParameters housing,
-            TownModelParameters.ResidentNutritionParameters nutrition,
-            Map<String, Double> usedItems
-    ) {
-        double remaining = Math.max(0.0, allowance);
-        double chunk = fullRation > 0.0
-                ? fullRation / Math.max(1, nutrition.mealSelectionChunks()) : remaining;
-        double consumed = 0.0;
-        ResidentNutrition.NutritionIntake intake = ResidentNutrition.NutritionIntake.ZERO;
-        while (remaining > TownFoodInventoryModel.RESOURCE_EPSILON) {
-            ResidentNutrition.NutritionIntake projected = intake;
-            SimulationFoodCandidate selected = candidates.stream()
-                    .filter(candidate -> candidate.amountItems > TownFoodInventoryModel.RESOURCE_EPSILON)
-                    .filter(candidate -> candidate.foodUnitsPerItem > TownFoodInventoryModel.RESOURCE_EPSILON)
-                    .max(Comparator.comparingInt((SimulationFoodCandidate value) -> value.foodLevel)
-                            .thenComparingDouble(value -> simulationFoodUtility(
-                                    resident, value, projected, fullRation, housing, nutrition))
-                            .thenComparing(value -> value.item, Comparator.reverseOrder()))
-                    .orElse(null);
-            if (selected == null) break;
-            double requestedFood = Math.min(remaining,
-                    Math.max(chunk, TownFoodInventoryModel.RESOURCE_EPSILON));
-            double items = Math.min(selected.amountItems,
-                    requestedFood / selected.foodUnitsPerItem);
-            if (items <= TownFoodInventoryModel.RESOURCE_EPSILON) break;
-            selected.amountItems -= items;
-            usedItems.merge(selected.item, items, Double::sum);
-            double food = items * selected.foodUnitsPerItem;
-            consumed += food;
-            remaining -= food;
-            intake = intake.plus(selected.nutrition.scale(items));
-        }
-        return new SimulationMeal(consumed, intake);
-    }
-
-    private static double simulationFoodUtility(
-            TownStageThreeState.ResidentState resident,
-            SimulationFoodCandidate candidate,
-            ResidentNutrition.NutritionIntake projected,
-            double fullRation,
-            TownModelParameters.HousingParameters housing,
-            TownModelParameters.ResidentNutritionParameters parameters
-    ) {
-        double foodUnits = Math.max(TownFoodInventoryModel.RESOURCE_EPSILON,
-                candidate.foodUnitsPerItem);
-        ResidentNutrition.NutritionIntake perFood = candidate.nutrition.scale(1.0 / foodUnits);
-        ResidentNutrition current = resident.nutrition();
-        double reference = Math.max(1.0, housing.nutritionReferencePerFoodUnit());
-        double fatNeed = simulationChannelNeed(current.fat(), projected.fat(), reference,
-                fullRation, parameters);
-        double carbohydrateNeed = simulationChannelNeed(current.carbohydrate(),
-                projected.carbohydrate(), reference, fullRation, parameters);
-        double proteinNeed = simulationChannelNeed(current.protein(), projected.protein(),
-                reference, fullRation, parameters);
-        double vegetableNeed = simulationChannelNeed(current.vegetable(), projected.vegetable(),
-                reference, fullRation, parameters);
-        double healthNeed = 1.0 - resident.health() / 100.0;
-        double mentalNeed = 1.0 - resident.mental() / 100.0;
-        double growthFat = resident.age() == 3 ? 0.0 : fatNeed;
-        double growthProtein = resident.age() <= 1 ? proteinNeed : 0.0;
-        return perFood.fat() * (parameters.channelNeedUtilityWeight() * fatNeed
-                + parameters.growthNeedUtilityWeight() * growthFat)
-                + perFood.carbohydrate() * carbohydrateNeed
-                * (parameters.channelNeedUtilityWeight()
-                + parameters.conditionNeedUtilityWeight() * mentalNeed)
-                + perFood.protein() * (parameters.channelNeedUtilityWeight() * proteinNeed
-                + parameters.growthNeedUtilityWeight() * growthProtein)
-                + perFood.vegetable() * vegetableNeed
-                * (parameters.channelNeedUtilityWeight()
-                + parameters.conditionNeedUtilityWeight() * healthNeed);
-    }
-
-    private static double simulationChannelNeed(
-            double reserve,
-            double projectedIntake,
-            double reference,
-            double fullRation,
-            TownModelParameters.ResidentNutritionParameters parameters
-    ) {
-        double projectedGain = parameters.gainAtReference() * projectedIntake
-                / Math.max(reference * Math.max(fullRation,
-                TownFoodInventoryModel.RESOURCE_EPSILON), 1.0);
-        double healthy = Math.max(0.001, parameters.healthyReserve());
-        return Math.max(0.0, healthy - reserve - projectedGain) / healthy;
     }
 
     private record SimulationMeal(
@@ -494,6 +482,7 @@ public final class TownStageThreeModel {
             this.foodUnitsPerItem = Math.max(0.0, foodUnitsPerItem);
             this.nutrition = nutrition;
         }
+
     }
 
     private static MiningStep settleMine(
@@ -530,6 +519,7 @@ public final class TownStageThreeModel {
         }
         if (requested > TownFoodInventoryModel.RESOURCE_EPSILON) {
             for (TownStageThreeState.ResidentState worker : workers) {
+                worker.recordActivity(parameters.mining().activity());
                 worker.setMiningProficiency(growProficiency(worker.miningProficiency(), parameters));
             }
         }
@@ -586,6 +576,7 @@ public final class TownStageThreeModel {
         state.recordHuntingFood(potentialFood, acceptedFood);
         if (plan.hasWorkerOpportunity()) {
             for (TownStageThreeState.ResidentState worker : workers) {
+                worker.recordActivity(parameters.hunting().activity());
                 worker.setHuntingProficiency(growProficiency(worker.huntingProficiency(), parameters));
             }
         }
@@ -743,7 +734,7 @@ public final class TownStageThreeModel {
         TownStageThreeScenario.House house = scenario.house();
         HouseDailyModel.SettlementReport report = HouseDailyModel.evaluateSettlement(
                 new HouseDailyModel.SettlementInput(
-                        0, 0.0, 0.0, house.temperatureCelsius(),
+                        0, 0.0, house.temperatureCelsius(),
                         house.areaBlocks(), house.volumeBlocks(), house.decorationRating()),
                 TownStageOneTwoTheory.houseParameters(parameters));
         return HouseDailyModel.calculateCapacity(
@@ -792,19 +783,6 @@ public final class TownStageThreeModel {
                 proficiency, resident.proficiencyGrowthAtZeroPerWorkday(),
                 resident.minimumProficiencyGrowthPerWorkday(),
                 resident.maximumWorkProficiency());
-    }
-
-    private static ResidentAgingModel.Parameters agingParameters(
-            TownModelParameters.ResidentAgingParameters aging
-    ) {
-        return new ResidentAgingModel.Parameters(
-                aging.infantToChildDays(), aging.childToAdultDays(),
-                aging.infantStrengthGainPerDay(), aging.infantIntelligenceGainPerDay(),
-                aging.infantAttributeCap(), aging.childStrengthGainPerDay(),
-                aging.childIntelligenceGainPerDay(), aging.childStrengthCap(),
-                aging.childIntelligenceCap(), aging.adultStrengthGainPerDay(),
-                aging.adultIntelligenceGainPerDay(), aging.adultAttributeCap(),
-                aging.elderStrengthDecayPerDay(), aging.elderStrengthFloor());
     }
 
     private record HouseStep(double requiredFoodUnits, double consumedFoodUnits, double foodSatisfaction) {

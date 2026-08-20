@@ -58,7 +58,7 @@ public class NutritionCommand {
                             .then(Commands.argument("amount", FloatArgumentType.floatArg()).executes(ct -> {
                                 NutritionCapability.getCapability(ct.getSource().getPlayer()).ifPresent(data -> {
                                     float amount = ct.getArgument("amount", Float.class);
-                                    addNutrientValue(data, nutrient, ct.getSource().getPlayer(), amount);
+                                    addNutrientValue(data, nutrient, amount);
                                     ct.getSource().sendSuccess(() -> Components.str("Added " + amount + " to " + capitalize(nutrient)).withStyle(ChatFormatting.GREEN), false);
                                 });
                                 return Command.SINGLE_SUCCESS;
@@ -78,7 +78,7 @@ public class NutritionCommand {
                     // Fill Command
                     .then(Commands.literal("fill").executes(ct -> {
                         NutritionCapability.getCapability(ct.getSource().getPlayer()).ifPresent(data -> {
-                            setNutrientValue(data, nutrient, 10000.0f);
+							setNutrientValue(data, nutrient, 100.0f);
                             ct.getSource().sendSuccess(() -> Components.str(capitalize(nutrient) + " filled to max").withStyle(ChatFormatting.GREEN), false);
                         });
                         return Command.SINGLE_SUCCESS;
@@ -95,31 +95,31 @@ public class NutritionCommand {
     private static float getNutrientValue(NutritionCapability data, String nutrient) {
         switch (nutrient) {
             case "fat":
-                return data.get().getFat();
+                return data.get().fat();
             case "carbohydrate":
-                return data.get().getCarbohydrate();
+                return data.get().carbohydrate();
             case "protein":
-                return data.get().getProtein();
+                return data.get().protein();
             case "vegetable":
-                return data.get().getVegetable();
+                return data.get().vegetable();
             default:
                 return 0.0f;
         }
     }
 
-    private static void addNutrientValue(NutritionCapability data, String nutrient, net.minecraft.world.entity.player.Player player, float amount) {
+    private static void addNutrientValue(NutritionCapability data, String nutrient, float amount) {
         switch (nutrient) {
             case "fat":
-                data.addFat(player, amount);
+                data.addFat(amount);
                 break;
             case "carbohydrate":
-                data.addCarbohydrate(player, amount);
+                data.addCarbohydrate(amount);
                 break;
             case "protein":
-                data.addProtein(player, amount);
+                data.addProtein(amount);
                 break;
             case "vegetable":
-                data.addVegetable(player, amount);
+                data.addVegetable(amount);
                 break;
         }
     }

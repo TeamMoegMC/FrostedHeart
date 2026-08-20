@@ -141,6 +141,8 @@ public class FHMain {
 		// Config
 		LOGGER.info(COMMON_INIT, "Loading Config");
 		FHConfig.register();
+		mod.addListener(FHConfig::onConfigLoading);
+		mod.addListener(FHConfig::onConfigReloading);
 
 		// FH Remote Version Check
 		LOGGER.info(VERSION_CHECK, "Checking for updates");

@@ -261,6 +261,9 @@ public class MineBaseBuilding extends AbstractTownResidentWorkBuilding {
             FHConfig.Server.Town.ResidentProgression progression =
                     FHConfig.SERVER.TOWN.RESIDENT_PROGRESSION;
             for (Resident resident : workingResidents) {
+                resident.recordDailyActivity(
+                        FHConfig.SERVER.TOWN.MINING.physicalActivity.get(),
+                        FHConfig.SERVER.TOWN.MINING.learningActivity.get());
                 resident.gainDailyWorkProficiency(
                         MineBaseBuilding.class,
                         progression.proficiencyGrowthAtZeroPerWorkday.get(),

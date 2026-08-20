@@ -361,6 +361,9 @@ public class HuntingBaseBuilding extends AbstractTownResidentWorkBuilding implem
         FHConfig.Server.Town.ResidentProgression progression =
                 FHConfig.SERVER.TOWN.RESIDENT_PROGRESSION;
         for (Resident resident : workingResidents) {
+            resident.recordDailyActivity(
+                    FHConfig.SERVER.TOWN.HUNTING.physicalActivity.get(),
+                    FHConfig.SERVER.TOWN.HUNTING.learningActivity.get());
             resident.gainDailyWorkProficiency(
                     HuntingBaseBuilding.class,
                     progression.proficiencyGrowthAtZeroPerWorkday.get(),

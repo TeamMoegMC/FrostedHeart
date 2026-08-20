@@ -458,6 +458,10 @@ public final class TownStageZeroAudit {
                 "priority/worker", source, "MINING_ASSIGNMENT_PENALTY_PER_WORKER", "MINING.assignmentPenaltyPerWorker");
         addShared(values, "mining.assignmentFillRatioBonus", mining.assignmentFillRatioBonus(),
                 "priority", source, "MINING_ASSIGNMENT_FILL_RATIO_BONUS", "MINING.assignmentFillRatioBonus");
+        addShared(values, "mining.physicalActivity", mining.activity().physical(),
+                "fraction", source, "MINING_PHYSICAL_ACTIVITY", "MINING.physicalActivity");
+        addShared(values, "mining.learningActivity", mining.activity().learning(),
+                "fraction", source, "MINING_LEARNING_ACTIVITY", "MINING.learningActivity");
     }
 
     private static void addHuntingParameters(
@@ -495,6 +499,10 @@ public final class TownStageZeroAudit {
                 "priority", source, "HUNTING_ASSIGNMENT_FILL_RATIO_BONUS", "HUNTING.assignmentFillRatioBonus");
         addShared(values, "hunting.assignmentRatingMultiplier", hunting.assignmentRatingMultiplier(),
                 "priority/rating", source, "HUNTING_ASSIGNMENT_RATING_MULTIPLIER", "HUNTING.assignmentRatingMultiplier");
+        addShared(values, "hunting.physicalActivity", hunting.activity().physical(),
+                "fraction", source, "HUNTING_PHYSICAL_ACTIVITY", "HUNTING.physicalActivity");
+        addShared(values, "hunting.learningActivity", hunting.activity().learning(),
+                "fraction", source, "HUNTING_LEARNING_ACTIVITY", "HUNTING.learningActivity");
     }
 
     private static void addHousingParameters(
@@ -506,8 +514,6 @@ public final class TownStageZeroAudit {
                 "food-unit/resident/day", source, "HOUSING_FOOD_PER_RESIDENT_DAY", "HOUSING.foodConsumptionPerResidentDay");
         addShared(values, "housing.nutritionReferencePerFoodUnit", housing.nutritionReferencePerFoodUnit(),
                 "nutrition/food-unit", source, "HOUSING_NUTRITION_REFERENCE_PER_FOOD_UNIT", "HOUSING.nutritionReferencePerFoodUnit");
-        addShared(values, "housing.minimumNutritionRecoveryMultiplier", housing.minimumNutritionRecoveryMultiplier(),
-                "dimensionless", source, "HOUSING_MINIMUM_NUTRITION_RECOVERY_MULTIPLIER", "HOUSING.minimumNutritionRecoveryMultiplier");
         addShared(values, "housing.foodDeficitPenaltyExponent", housing.foodDeficitPenaltyExponent(),
                 "exponent", source, "HOUSING_FOOD_DEFICIT_PENALTY_EXPONENT", "HOUSING.foodDeficitPenaltyExponent");
         addShared(values, "housing.healthLossAtZeroFoodPerResidentDay", housing.healthLossAtZeroFoodPerResidentDay(),
@@ -648,6 +654,14 @@ public final class TownStageZeroAudit {
                 "day", source, "RESIDENT_INFANT_TO_CHILD_DAYS", "RESIDENT_AGING.infantToChildDays");
         addShared(values, "residents.aging.childToAdultDays", aging.childToAdultDays(),
                 "day", source, "RESIDENT_CHILD_TO_ADULT_DAYS", "RESIDENT_AGING.childToAdultDays");
+        addShared(values, "residents.aging.infantBaseActivity", aging.infantBaseActivity(),
+                "fraction", source, "RESIDENT_INFANT_BASE_ACTIVITY", "RESIDENT_AGING.infantBaseActivity");
+        addShared(values, "residents.aging.childBaseActivity", aging.childBaseActivity(),
+                "fraction", source, "RESIDENT_CHILD_BASE_ACTIVITY", "RESIDENT_AGING.childBaseActivity");
+        addShared(values, "residents.aging.adultBaseActivity", aging.adultBaseActivity(),
+                "fraction", source, "RESIDENT_ADULT_BASE_ACTIVITY", "RESIDENT_AGING.adultBaseActivity");
+        addShared(values, "residents.aging.elderBaseActivity", aging.elderBaseActivity(),
+                "fraction", source, "RESIDENT_ELDER_BASE_ACTIVITY", "RESIDENT_AGING.elderBaseActivity");
         addShared(values, "residents.aging.infantStrengthGainPerDay", aging.infantStrengthGainPerDay(),
                 "strength/day", source, "RESIDENT_INFANT_STRENGTH_GAIN_PER_DAY", "RESIDENT_AGING.infantStrengthGainPerDay");
         addShared(values, "residents.aging.infantIntelligenceGainPerDay", aging.infantIntelligenceGainPerDay(),
@@ -668,10 +682,14 @@ public final class TownStageZeroAudit {
                 "intelligence/day", source, "RESIDENT_ADULT_INTELLIGENCE_GAIN_PER_DAY", "RESIDENT_AGING.adultIntelligenceGainPerDay");
         addShared(values, "residents.aging.adultAttributeCap", aging.adultAttributeCap(),
                 "attribute", source, "RESIDENT_ADULT_ATTRIBUTE_CAP", "RESIDENT_AGING.adultAttributeCap");
-        addShared(values, "residents.aging.elderStrengthDecayPerDay", aging.elderStrengthDecayPerDay(),
-                "strength/day", source, "RESIDENT_ELDER_STRENGTH_DECAY_PER_DAY", "RESIDENT_AGING.elderStrengthDecayPerDay");
-        addShared(values, "residents.aging.elderStrengthFloor", aging.elderStrengthFloor(),
-                "strength", source, "RESIDENT_ELDER_STRENGTH_FLOOR", "RESIDENT_AGING.elderStrengthFloor");
+        addShared(values, "residents.aging.elderStrengthGainPerDay", aging.elderStrengthGainPerDay(),
+                "strength/day", source, "RESIDENT_ELDER_STRENGTH_GAIN_PER_DAY", "RESIDENT_AGING.elderStrengthGainPerDay");
+        addShared(values, "residents.aging.elderIntelligenceGainPerDay", aging.elderIntelligenceGainPerDay(),
+                "intelligence/day", source, "RESIDENT_ELDER_INTELLIGENCE_GAIN_PER_DAY", "RESIDENT_AGING.elderIntelligenceGainPerDay");
+        addShared(values, "residents.aging.elderStrengthAgeDecayPerDay", aging.elderStrengthAgeDecayPerDay(),
+                "strength/day", source, "RESIDENT_ELDER_STRENGTH_AGE_DECAY_PER_DAY", "RESIDENT_AGING.elderStrengthAgeDecayPerDay");
+        addShared(values, "residents.aging.elderIntelligenceAgeDecayPerDay", aging.elderIntelligenceAgeDecayPerDay(),
+                "intelligence/day", source, "RESIDENT_ELDER_INTELLIGENCE_AGE_DECAY_PER_DAY", "RESIDENT_AGING.elderIntelligenceAgeDecayPerDay");
         TownModelParameters.ResidentNutritionParameters nutrition = residents.nutrition();
         addShared(values, "residents.nutrition.maximumReserve", nutrition.maximumReserve(),
                 "nutrition", source, "RESIDENT_NUTRITION_MAXIMUM_RESERVE", "HOUSING.residentNutritionMaximumReserve");
@@ -687,22 +705,22 @@ public final class TownStageZeroAudit {
                 "nutrition", source, "RESIDENT_NUTRITION_GAIN_AT_REFERENCE", "HOUSING.residentNutritionGainAtReference");
         addShared(values, "residents.nutrition.maximumCoverage", nutrition.maximumCoverage(),
                 "coverage", source, "RESIDENT_NUTRITION_MAXIMUM_COVERAGE", "HOUSING.residentNutritionMaximumCoverage");
-        addShared(values, "residents.nutrition.recoveryDirectWeight", nutrition.recoveryDirectWeight(),
-                "relative-weight", source, "RESIDENT_NUTRITION_RECOVERY_DIRECT_WEIGHT", "HOUSING.residentNutritionRecoveryDirectWeight");
-        addShared(values, "residents.nutrition.recoverySupportWeight", nutrition.recoverySupportWeight(),
-                "relative-weight", source, "RESIDENT_NUTRITION_RECOVERY_SUPPORT_WEIGHT", "HOUSING.residentNutritionRecoverySupportWeight");
-        addShared(values, "residents.nutrition.deficiencyGrowthFloor", nutrition.deficiencyGrowthFloor(),
-                "multiplier", source, "RESIDENT_NUTRITION_DEFICIENCY_GROWTH_FLOOR", "HOUSING.residentNutritionDeficiencyGrowthFloor");
-        addShared(values, "residents.nutrition.maximumGrowthBonus", nutrition.maximumGrowthBonus(),
-                "multiplier", source, "RESIDENT_NUTRITION_MAXIMUM_GROWTH_BONUS", "HOUSING.residentNutritionMaximumGrowthBonus");
         addShared(values, "residents.nutrition.mealSelectionChunks", nutrition.mealSelectionChunks(),
                 "count", source, "RESIDENT_NUTRITION_MEAL_SELECTION_CHUNKS", "HOUSING.residentNutritionMealSelectionChunks");
-        addShared(values, "residents.nutrition.channelNeedUtilityWeight", nutrition.channelNeedUtilityWeight(),
-                "relative-weight", source, "RESIDENT_NUTRITION_CHANNEL_NEED_UTILITY_WEIGHT", "HOUSING.residentNutritionChannelNeedUtilityWeight");
-        addShared(values, "residents.nutrition.conditionNeedUtilityWeight", nutrition.conditionNeedUtilityWeight(),
-                "relative-weight", source, "RESIDENT_NUTRITION_CONDITION_NEED_UTILITY_WEIGHT", "HOUSING.residentNutritionConditionNeedUtilityWeight");
-        addShared(values, "residents.nutrition.growthNeedUtilityWeight", nutrition.growthNeedUtilityWeight(),
-                "relative-weight", source, "RESIDENT_NUTRITION_GROWTH_NEED_UTILITY_WEIGHT", "HOUSING.residentNutritionGrowthNeedUtilityWeight");
+        addShared(values, "residents.nutrition.strengthGrowthEfficiencyAtZeroSupport", nutrition.strengthGrowthEfficiencyAtZeroSupport(),
+                "fraction", source, "RESIDENT_STRENGTH_GROWTH_EFFICIENCY_AT_ZERO_SUPPORT", "HOUSING.residentStrengthGrowthEfficiencyAtZeroSupport");
+        addShared(values, "residents.nutrition.intelligenceGrowthEfficiencyAtZeroSupport", nutrition.intelligenceGrowthEfficiencyAtZeroSupport(),
+                "fraction", source, "RESIDENT_INTELLIGENCE_GROWTH_EFFICIENCY_AT_ZERO_SUPPORT", "HOUSING.residentIntelligenceGrowthEfficiencyAtZeroSupport");
+        addShared(values, "residents.nutrition.strengthMaintenanceThreshold", nutrition.strengthMaintenanceThreshold(),
+                "support", source, "RESIDENT_STRENGTH_MAINTENANCE_THRESHOLD", "HOUSING.residentStrengthMaintenanceThreshold");
+        addShared(values, "residents.nutrition.intelligenceMaintenanceThreshold", nutrition.intelligenceMaintenanceThreshold(),
+                "support", source, "RESIDENT_INTELLIGENCE_MAINTENANCE_THRESHOLD", "HOUSING.residentIntelligenceMaintenanceThreshold");
+        addShared(values, "residents.nutrition.deficiencyExponent", nutrition.deficiencyExponent(),
+                "exponent", source, "RESIDENT_NUTRITION_DEFICIENCY_EXPONENT", "HOUSING.residentNutritionDeficiencyExponent");
+        addShared(values, "residents.nutrition.strengthDecayAtZeroSupport", nutrition.strengthDecayAtZeroSupport(),
+                "strength/day", source, "RESIDENT_STRENGTH_DECAY_AT_ZERO_SUPPORT", "HOUSING.residentStrengthDecayAtZeroSupport");
+        addShared(values, "residents.nutrition.intelligenceDecayAtZeroSupport", nutrition.intelligenceDecayAtZeroSupport(),
+                "intelligence/day", source, "RESIDENT_INTELLIGENCE_DECAY_AT_ZERO_SUPPORT", "HOUSING.residentIntelligenceDecayAtZeroSupport");
         addShared(values, "residents.residentialCareScoreBand", residents.residentialCareScoreBand(),
                 "risk", source, "RESIDENTIAL_CARE_SCORE_BAND", "RESIDENT_RULES.residentialCareScoreBand");
         addShared(values, "residents.townPolicyCooldownDays", residents.townPolicyCooldownDays(),

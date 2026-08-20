@@ -10,6 +10,7 @@
 
 package com.teammoeg.frostedheart.content.town.model;
 
+import com.teammoeg.frostedheart.content.town.resident.ResidentNutrition;
 import org.junit.jupiter.api.Test;
 
 import java.nio.file.Path;
@@ -90,8 +91,8 @@ class TownStageFourModelTest {
         assertEquals(250.0, tuned.housing().nutritionReferencePerFoodUnit(), EPSILON);
         assertEquals(2.0, tuned.residents().nutrition().reserveLossPerDay(), EPSILON);
         assertEquals(2.0, tuned.residents().nutrition().gainAtReference(), EPSILON);
-        assertEquals(7000.0, defaults.housing().nutritionReferencePerFoodUnit(), EPSILON);
-        assertEquals(10.0, defaults.residents().nutrition().reserveLossPerDay(), EPSILON);
+        assertEquals(200.0, defaults.housing().nutritionReferencePerFoodUnit(), EPSILON);
+        assertEquals(1.0, defaults.residents().nutrition().reserveLossPerDay(), EPSILON);
     }
 
     @Test
@@ -107,8 +108,8 @@ class TownStageFourModelTest {
 
         assertEquals(2, potato.foodLevel());
         assertEquals(11.0, potato.foodUnitsPerItem(), EPSILON);
-        assertEquals(16_000.0, potato.nutrition().carbohydrate(), EPSILON);
-        assertEquals(8_000.0, potato.nutrition().vegetable(), EPSILON);
+        assertEquals(200.0, potato.nutrition().carbohydrate(), EPSILON);
+        assertEquals(100.0, potato.nutrition().vegetable(), EPSILON);
         TownStageFourScenario scaled = TownStageFourPopulationSweepSimulator.forPopulation(
                 scenario, 50, expanded, TownModelParameters.currentDefaults());
         assertEquals(6.25, scaled.town().warehouse().dailySupplies().stream()
@@ -124,7 +125,8 @@ class TownStageFourModelTest {
                 List.of(), List.of(), 1600, 3200, List.of(),
                 Map.of("minecraft:cooked_beef",
                         new TownStageOneTwoData.FoodDefinition(
-                                "minecraft:cooked_beef", 4, 20.8, 7000.0)),
+                                "minecraft:cooked_beef", 4, 20.8,
+                                new ResidentNutrition.NutritionIntake(0, 0, 480, 0))),
                 Map.of());
         TownModelParameters parameters = TownModelParameters.currentDefaults();
         TownStageFourScenario scaled = TownStageFourPopulationSweepSimulator.forPopulation(
@@ -189,14 +191,15 @@ class TownStageFourModelTest {
                 List.of(), List.of(), 1600, 3200, List.of(),
                 Map.of("minecraft:cooked_beef",
                         new TownStageOneTwoData.FoodDefinition(
-                                "minecraft:cooked_beef", 4, 20.8, 7000.0)),
+                                "minecraft:cooked_beef", 4, 20.8,
+                                new ResidentNutrition.NutritionIntake(0, 0, 480, 0))),
                 Map.of());
         TownModelParameters parameters = TownModelParameters.currentDefaults();
         TownStageFourScenario scenario = TownStageFourTensionModel.forCapacities(
                 base, 8, 4, data, parameters);
         TownStageThreeState state = TownStageThreeState.initial(
                 scenario.town(), parameters, new java.util.SplittableRandom(17L));
-        state.add("minecraft:cooked_beef", 10.0,
+        state.add("minecraft:cooked_beef", 1_000.0,
                 com.teammoeg.frostedheart.content.town.resource.action.ResourceActionMode.MAXIMIZE);
         state.add("immersiveengineering:coal_coke", 10.0,
                 com.teammoeg.frostedheart.content.town.resource.action.ResourceActionMode.MAXIMIZE);

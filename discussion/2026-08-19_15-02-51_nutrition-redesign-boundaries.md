@@ -174,3 +174,47 @@
 - 可接受的存档和数据包兼容成本。
 
 当上述七项边界形成共识后，应链接一份新的 `plans/` 实施计划；本帖继续保留为决策讨论记录。
+
+## 2026-08-19 19:52:32 +0800 - 实施结果
+
+- Author: `Codex; OpenAI implementation collaborator`
+- Status: `resolved`
+
+本轮采用方案 B：玩家与居民共享唯一的食物营养画像和 `FoodNutritionResolver`，但保留各自的实时/每日消费者模型。现有 `diet_override` 原始数据保持不变，四通道公开语义统一为 `clamp(raw / 400, 0, 100)`，动态 Caupona 食物也按实际 `ItemStack` 走同一入口。
+
+已接受并实现的其他边界如下：
+
+- 玩家与居民状态均以 `0..100` 表达；玩家只按实际恢复的 hunger 获得营养，并按 hunger 损失固定扣除。
+- 居民保留个人四通道储备，删除住宅 `nutritionQuality` 决策与显示，不增加昨日覆盖率。
+- 保留五级食物绝对优先级，改为全镇八片段公共菜单；居民共享食物构成，只按已确定额度缩放总量。
+- 当前与长期营养分别决定恢复、成长效率、力量/智力营养上限；训练或实际工作才产生成人成长，营养不会永久降低智力。
+- 生产、岗位评分和模拟预测使用有效智力，界面通过持久结算快照解释潜力、上限、成长和主要限制。
+
+实现与公式见[已完成计划](../plans/2026-08-19_18-23-50_nutrition-resident-attribute-redesign.md)和[当前营养文档](../docs/nutrition/nutrition-player-resident.md)。新默认每日需求 `20` 下，`50 residents x 120 days x 100 trials` 的旧狩猎闭环不再自给：纯狩猎食物方案 P50 自给率约 `0.615`、生存率 `0`；每日补充 `6.25` 个烤马铃薯后 P50 自给率约 `0.651`、生存率 `0.06`。这被记录为后续粮食生产平衡输入，不作为本次模型重构失败条件。
+
+## 2026-08-20 17:51:21 +0800 - 居民属性模型再次简化
+
+- Author: `Codex; OpenAI implementation collaborator`
+- Status: `resolved`
+
+后续讨论确认长期满足度 EMA、UUID 个人潜力、营养属性上限和有效智力没有提供足够独立的玩家语义，却显著增加了状态、持久化和每日顺序的复杂度，因此本轮全部删除。旧 `nutritionDevelopment` 存档字段被忽略，已有营养、力量和智力原样保留。
+
+力量与智力现在只读取餐后当前支持度，统一按“正向成长 - 营养不足衰减 - 老年基础衰退”每日结算。年龄提供 `1.0/0.7/0.3/0.1` 的基础活动，实际工作补足剩余活动；营养低于力量/智力维护线 `0.40/0.30` 后按 `D^1.5` 开启永久衰减。老人仍能通过良好营养和劳动/学习抵消固定衰退，不再有力量下限。力量权重改为蛋白/脂质/蔬果/碳水 `0.75/0.08/0.03/0.14`。
+
+生产、岗位评分和模拟预测重新直接使用存储智力。游戏和 Stage 3/4 共同调用 `ResidentAttributeModel.settleDailyAttribute`；持久快照只解释昨日活动、恢复、成长、营养衰减、年龄衰退和净变化，不参与以后计算。实现方案见[居民营养与属性成长模型简化重构](../plans/2026-08-20_17-31-55_resident-nutrition-attribute-simplification.md)，当前公式见[营养 living doc](../docs/nutrition/nutrition-player-resident.md)。
+
+## 2026-08-20 21:10:39 +0800 - 公共菜单改为住宅优先菜单
+
+- Author: `wyc; system designer`, `Codex; OpenAI implementation collaborator`
+- Status: `resolved`
+
+全镇单一构成与住宅法律的原始目的冲突：住宅法律先把需要照护的人安排进高优先级住宅，高优先级住宅也应当先取得更好的实际食物。因此保留全镇集中口粮额度计算，但把菜单改为按 `TownHousingPlan` 顺序逐栋生成。
+
+- 第一轮住宅保障和第二轮全镇等额分享继续决定每名居民吃多少；
+- 食物等级与剩余库存决定每栋住宅吃什么，高优先级住宅先选并占用库存；
+- 同一住宅的居民共享菜品构成，仅按各自额度缩放总量；不同住宅可以获得不同等级和构成；
+- 每栋住宅的营养评分只聚合本住宅居民的四通道缺口，不恢复逐居民贪心，也不恢复 `nutritionQuality`；
+- `HouseBuilding.DailyReport` 保存最近结算日实际扣除的物品 ID/NBT 和小数数量，住宅“今日餐食”页直接显示这些 `ItemStack`；
+- 菜单快照以资源执行器实际 `modifiedAmount` 为准，未结算与已结算但未出餐是两个不同状态。
+
+实现和验证见[住宅优先供餐与今日餐食展示计划](../plans/2026-08-20_20-56-26_house-priority-meals-and-menu-ui.md)及[当前营养文档](../docs/nutrition/nutrition-player-resident.md)。

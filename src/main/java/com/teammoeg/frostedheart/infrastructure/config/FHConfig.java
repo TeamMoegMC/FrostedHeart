@@ -24,12 +24,14 @@ import com.teammoeg.chorda.math.Colors;
 import com.teammoeg.frostedheart.content.climate.FHTemperatureDifficulty;
 import com.teammoeg.frostedheart.content.climate.gamedata.climate.ClimateEventModel;
 import com.teammoeg.frostedheart.content.climate.gamedata.climate.WorldClockSource;
+import com.teammoeg.frostedheart.content.health.nutrition.NutritionScaleMigration;
 import com.teammoeg.frostedheart.content.town.model.TownModelParameters;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.biome.Biomes;
 import net.minecraftforge.common.ForgeConfigSpec;
 import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.config.ModConfig;
+import net.minecraftforge.fml.event.config.ModConfigEvent;
 
 import java.time.MonthDay;
 import java.util.ArrayList;
@@ -537,6 +539,7 @@ public class FHConfig {
 		}
 
 		public static class Nutrition {
+			public final ForgeConfigSpec.IntValue nutritionScaleVersion;
 			public final ForgeConfigSpec.ConfigValue<Double> waterReducingRate;
 			public final ForgeConfigSpec.IntValue weaknessEffectAmplifier;
 			public final ForgeConfigSpec.BooleanValue resetWaterLevelInDeath;
@@ -545,6 +548,9 @@ public class FHConfig {
 
 			Nutrition(ForgeConfigSpec.Builder builder) {
 				builder.push("Water & Nutrition");
+				nutritionScaleVersion = builder
+					.comment("Nutrition percentage-scale config version. Updated automatically.")
+					.defineInRange("nutritionScaleVersion", 1, 1, 2);
 				waterReducingRate = builder.comment("finalReducingValue = basicValue * waterReducingRate.(DoubleValue)")
 					.defineInRange("waterReducingRate", 1.0D, 0d, 1000D);
 				weaknessEffectAmplifier = builder
@@ -552,10 +558,12 @@ public class FHConfig {
 					.defineInRange("weaknessEffectAmplifier", 0, -1, 999999);
 				resetWaterLevelInDeath = builder.comment("It decides if players' water level would reset in death.")
 					.define("resetWaterLevelInDeath", true);
-				nutritionConsumptionRate = builder.comment("The rate of nutrition consumption.")
-					.defineInRange("nutritionConsumptionRate", 0.0025, 0, 10);
-				nutritionGainRate = builder.comment("The rate of nutrition gain by eating food.")
-					.defineInRange("nutritionGainRate", 0.0025, 0, 100);
+				nutritionConsumptionRate = builder
+					.comment("State points lost per hunger point. Version 1 values are migrated once on load.")
+					.defineInRange("nutritionConsumptionRate", 0.0025, 0, 1000);
+				nutritionGainRate = builder
+					.comment("State points gained per effective hunger at a 100% food profile. Version 1 values are migrated once on load.")
+					.defineInRange("nutritionGainRate", 0.0025, 0, 40000);
 				builder.pop();
 
 			}
@@ -694,9 +702,9 @@ public class FHConfig {
 			}
 
 			public static class Housing {
+				public final ForgeConfigSpec.IntValue residentAttributeModelVersion;
 				public final ForgeConfigSpec.DoubleValue foodConsumptionPerResidentDay;
-				public final ForgeConfigSpec.DoubleValue nutritionReferencePerFoodUnit;
-				public final ForgeConfigSpec.DoubleValue minimumNutritionRecoveryMultiplier;
+				public final ForgeConfigSpec.DoubleValue residentNutritionReferencePoints;
 				public final ForgeConfigSpec.DoubleValue residentNutritionReserveLossPerDay;
 				public final ForgeConfigSpec.DoubleValue residentNutritionGainAtReference;
 				public final ForgeConfigSpec.DoubleValue residentNutritionMaximumCoverage;
@@ -704,14 +712,30 @@ public class FHConfig {
 				public final ForgeConfigSpec.DoubleValue residentNutritionInitialReserve;
 				public final ForgeConfigSpec.DoubleValue residentNutritionHealthyReserve;
 				public final ForgeConfigSpec.DoubleValue residentNutritionSevereReserve;
-				public final ForgeConfigSpec.DoubleValue residentNutritionRecoveryDirectWeight;
-				public final ForgeConfigSpec.DoubleValue residentNutritionRecoverySupportWeight;
-				public final ForgeConfigSpec.DoubleValue residentNutritionDeficiencyGrowthFloor;
-				public final ForgeConfigSpec.DoubleValue residentNutritionMaximumGrowthBonus;
 				public final ForgeConfigSpec.IntValue residentNutritionMealSelectionChunks;
-				public final ForgeConfigSpec.DoubleValue residentNutritionChannelNeedUtilityWeight;
-				public final ForgeConfigSpec.DoubleValue residentNutritionConditionNeedUtilityWeight;
-				public final ForgeConfigSpec.DoubleValue residentNutritionGrowthNeedUtilityWeight;
+				public final ForgeConfigSpec.DoubleValue residentStrengthGrowthEfficiencyAtZeroSupport;
+				public final ForgeConfigSpec.DoubleValue residentIntelligenceGrowthEfficiencyAtZeroSupport;
+				public final ForgeConfigSpec.DoubleValue residentStrengthMaintenanceThreshold;
+				public final ForgeConfigSpec.DoubleValue residentIntelligenceMaintenanceThreshold;
+				public final ForgeConfigSpec.DoubleValue residentNutritionDeficiencyExponent;
+				public final ForgeConfigSpec.DoubleValue residentStrengthDecayAtZeroSupport;
+				public final ForgeConfigSpec.DoubleValue residentIntelligenceDecayAtZeroSupport;
+				public final ForgeConfigSpec.DoubleValue residentNutritionHealthProteinWeight;
+				public final ForgeConfigSpec.DoubleValue residentNutritionHealthFatWeight;
+				public final ForgeConfigSpec.DoubleValue residentNutritionHealthVegetableWeight;
+				public final ForgeConfigSpec.DoubleValue residentNutritionHealthCarbohydrateWeight;
+				public final ForgeConfigSpec.DoubleValue residentNutritionMentalProteinWeight;
+				public final ForgeConfigSpec.DoubleValue residentNutritionMentalFatWeight;
+				public final ForgeConfigSpec.DoubleValue residentNutritionMentalVegetableWeight;
+				public final ForgeConfigSpec.DoubleValue residentNutritionMentalCarbohydrateWeight;
+				public final ForgeConfigSpec.DoubleValue residentNutritionStrengthProteinWeight;
+				public final ForgeConfigSpec.DoubleValue residentNutritionStrengthFatWeight;
+				public final ForgeConfigSpec.DoubleValue residentNutritionStrengthVegetableWeight;
+				public final ForgeConfigSpec.DoubleValue residentNutritionStrengthCarbohydrateWeight;
+				public final ForgeConfigSpec.DoubleValue residentNutritionIntelligenceProteinWeight;
+				public final ForgeConfigSpec.DoubleValue residentNutritionIntelligenceFatWeight;
+				public final ForgeConfigSpec.DoubleValue residentNutritionIntelligenceVegetableWeight;
+				public final ForgeConfigSpec.DoubleValue residentNutritionIntelligenceCarbohydrateWeight;
 				public final ForgeConfigSpec.DoubleValue foodDeficitPenaltyExponent;
 				public final ForgeConfigSpec.DoubleValue healthLossAtZeroFoodPerResidentDay;
 				public final ForgeConfigSpec.DoubleValue mentalLossAtZeroFoodPerResidentDay;
@@ -737,20 +761,18 @@ public class FHConfig {
 
 				Housing(ForgeConfigSpec.Builder builder) {
 					builder.push("Housing");
+					residentAttributeModelVersion = builder
+						.comment("Resident attribute-model config version. Updated automatically.")
+						.defineInRange("residentAttributeModelVersion", 1, 1, 2);
 					foodConsumptionPerResidentDay = builder
 						.comment("Food-resource units consumed per resident per Minecraft day.")
 						.defineInRange("foodConsumptionPerResidentDay",
 							TownModelParameters.Defaults.HOUSING_FOOD_PER_RESIDENT_DAY, 0d, 100d);
-					nutritionReferencePerFoodUnit = builder
-						.comment("Nutrition value per consumed food-resource unit that grants maximum food quality.")
-						.defineInRange("nutritionReferencePerFoodUnit",
+					residentNutritionReferencePoints = builder
+						.comment("Hunger-weighted nutrition percentage-points that grant one resident meal coverage unit.")
+						.defineInRange("residentNutritionReferencePoints",
 							TownModelParameters.Defaults.HOUSING_NUTRITION_REFERENCE_PER_FOOD_UNIT,
 							1d, 1000000d);
-					minimumNutritionRecoveryMultiplier = builder
-						.comment("Recovery multiplier provided by food with zero nutrition quality.")
-						.defineInRange("minimumNutritionRecoveryMultiplier",
-							TownModelParameters.Defaults.HOUSING_MINIMUM_NUTRITION_RECOVERY_MULTIPLIER,
-							0d, 1d);
 					residentNutritionReserveLossPerDay = builder
 						.comment("Points removed from each resident nutrition reserve before the daily meal.")
 						.defineInRange("residentNutritionReserveLossPerDay",
@@ -782,38 +804,58 @@ public class FHConfig {
 						.comment("A nutrition channel below this reserve emits a severe-deficiency threshold event.")
 						.defineInRange("residentNutritionSevereReserve",
 							TownModelParameters.Defaults.RESIDENT_NUTRITION_SEVERE_RESERVE, 0d, 100d);
-					residentNutritionRecoveryDirectWeight = builder
-						.comment("Weight of carbohydrate/vegetable alone in mental/health recovery nutrition supply.")
-						.defineInRange("residentNutritionRecoveryDirectWeight",
-							TownModelParameters.Defaults.RESIDENT_NUTRITION_RECOVERY_DIRECT_WEIGHT, 0d, 100d);
-					residentNutritionRecoverySupportWeight = builder
-						.comment("Weight of fat/protein-supported carbohydrate/vegetable recovery supply.")
-						.defineInRange("residentNutritionRecoverySupportWeight",
-							TownModelParameters.Defaults.RESIDENT_NUTRITION_RECOVERY_SUPPORT_WEIGHT, 0d, 100d);
-					residentNutritionDeficiencyGrowthFloor = builder
-						.comment("Strength/intelligence growth multiplier at zero relevant nutrition reserve.")
-						.defineInRange("residentNutritionDeficiencyGrowthFloor",
-							TownModelParameters.Defaults.RESIDENT_NUTRITION_DEFICIENCY_GROWTH_FLOOR, 0d, 1d);
-					residentNutritionMaximumGrowthBonus = builder
-						.comment("Maximum strength/intelligence growth bonus above the healthy reserve.")
-						.defineInRange("residentNutritionMaximumGrowthBonus",
-							TownModelParameters.Defaults.RESIDENT_NUTRITION_MAXIMUM_GROWTH_BONUS, 0d, 10d);
 					residentNutritionMealSelectionChunks = builder
-						.comment("Number of decisions used to compose each resident meal; more chunks improve dietary targeting.")
+						.comment("Number of decisions used to compose each house's daily menu.")
 						.defineInRange("residentNutritionMealSelectionChunks",
 							TownModelParameters.Defaults.RESIDENT_NUTRITION_MEAL_SELECTION_CHUNKS, 1, 128);
-					residentNutritionChannelNeedUtilityWeight = builder
-						.comment("Meal-selection weight for replenishing a deficient nutrition channel.")
-						.defineInRange("residentNutritionChannelNeedUtilityWeight",
-							TownModelParameters.Defaults.RESIDENT_NUTRITION_CHANNEL_NEED_UTILITY_WEIGHT, 0d, 100d);
-					residentNutritionConditionNeedUtilityWeight = builder
-						.comment("Meal-selection weight for carbohydrate mental need and vegetable health need.")
-						.defineInRange("residentNutritionConditionNeedUtilityWeight",
-							TownModelParameters.Defaults.RESIDENT_NUTRITION_CONDITION_NEED_UTILITY_WEIGHT, 0d, 100d);
-					residentNutritionGrowthNeedUtilityWeight = builder
-						.comment("Extra meal-selection weight for fat intelligence growth and child protein strength growth.")
-						.defineInRange("residentNutritionGrowthNeedUtilityWeight",
-							TownModelParameters.Defaults.RESIDENT_NUTRITION_GROWTH_NEED_UTILITY_WEIGHT, 0d, 100d);
+					residentStrengthGrowthEfficiencyAtZeroSupport = builder
+						.comment("Strength growth-efficiency fraction retained at zero nutrition support.")
+						.defineInRange("residentStrengthGrowthEfficiencyAtZeroSupport",
+							TownModelParameters.Defaults.RESIDENT_STRENGTH_GROWTH_EFFICIENCY_AT_ZERO_SUPPORT,
+							0d, 1d);
+					residentIntelligenceGrowthEfficiencyAtZeroSupport = builder
+						.comment("Intelligence growth-efficiency fraction retained at zero nutrition support.")
+						.defineInRange("residentIntelligenceGrowthEfficiencyAtZeroSupport",
+							TownModelParameters.Defaults.RESIDENT_INTELLIGENCE_GROWTH_EFFICIENCY_AT_ZERO_SUPPORT,
+							0d, 1d);
+					residentStrengthMaintenanceThreshold = builder
+						.comment("Strength support below which permanent nutrition decay activates.")
+						.defineInRange("residentStrengthMaintenanceThreshold",
+							TownModelParameters.Defaults.RESIDENT_STRENGTH_MAINTENANCE_THRESHOLD, 0d, 1d);
+					residentIntelligenceMaintenanceThreshold = builder
+						.comment("Intelligence support below which permanent nutrition decay activates.")
+						.defineInRange("residentIntelligenceMaintenanceThreshold",
+							TownModelParameters.Defaults.RESIDENT_INTELLIGENCE_MAINTENANCE_THRESHOLD, 0d, 1d);
+					residentNutritionDeficiencyExponent = builder
+						.comment("Exponent applied to normalized strength/intelligence support deficiency.")
+						.defineInRange("residentNutritionDeficiencyExponent",
+							TownModelParameters.Defaults.RESIDENT_NUTRITION_DEFICIENCY_EXPONENT, 0.01d, 100d);
+					residentStrengthDecayAtZeroSupport = builder
+						.comment("Maximum strength lost per day at support zero and strength 100.")
+						.defineInRange("residentStrengthDecayAtZeroSupport",
+							TownModelParameters.Defaults.RESIDENT_STRENGTH_DECAY_AT_ZERO_SUPPORT, 0d, 100d);
+					residentIntelligenceDecayAtZeroSupport = builder
+						.comment("Maximum intelligence lost per day at support zero and intelligence 100.")
+						.defineInRange("residentIntelligenceDecayAtZeroSupport",
+							TownModelParameters.Defaults.RESIDENT_INTELLIGENCE_DECAY_AT_ZERO_SUPPORT, 0d, 100d);
+					builder.push("Nutrition Support Weights");
+					residentNutritionHealthProteinWeight = supportWeight(builder, "healthProtein", 0.50);
+					residentNutritionHealthFatWeight = supportWeight(builder, "healthFat", 0.10);
+					residentNutritionHealthVegetableWeight = supportWeight(builder, "healthVegetable", 0.30);
+					residentNutritionHealthCarbohydrateWeight = supportWeight(builder, "healthCarbohydrate", 0.10);
+					residentNutritionMentalProteinWeight = supportWeight(builder, "mentalProtein", 0.10);
+					residentNutritionMentalFatWeight = supportWeight(builder, "mentalFat", 0.30);
+					residentNutritionMentalVegetableWeight = supportWeight(builder, "mentalVegetable", 0.20);
+					residentNutritionMentalCarbohydrateWeight = supportWeight(builder, "mentalCarbohydrate", 0.40);
+					residentNutritionStrengthProteinWeight = supportWeight(builder, "strengthProtein", 0.75);
+					residentNutritionStrengthFatWeight = supportWeight(builder, "strengthFat", 0.08);
+					residentNutritionStrengthVegetableWeight = supportWeight(builder, "strengthVegetable", 0.03);
+					residentNutritionStrengthCarbohydrateWeight = supportWeight(builder, "strengthCarbohydrate", 0.14);
+					residentNutritionIntelligenceProteinWeight = supportWeight(builder, "intelligenceProtein", 0.05);
+					residentNutritionIntelligenceFatWeight = supportWeight(builder, "intelligenceFat", 0.30);
+					residentNutritionIntelligenceVegetableWeight = supportWeight(builder, "intelligenceVegetable", 0.40);
+					residentNutritionIntelligenceCarbohydrateWeight = supportWeight(builder, "intelligenceCarbohydrate", 0.25);
+					builder.pop();
 					foodDeficitPenaltyExponent = builder
 						.comment("Exponent applied to the missing-food fraction before health and mental penalties.")
 						.defineInRange("foodDeficitPenaltyExponent",
@@ -938,6 +980,13 @@ public class FHConfig {
 							0.000001d, 1000000d);
 					builder.pop();
 					builder.pop();
+				}
+
+				private static ForgeConfigSpec.DoubleValue supportWeight(
+						ForgeConfigSpec.Builder builder, String key, double defaultValue) {
+					return builder.comment("Each support row is normalized at runtime.")
+						.comment("Negative configured values are treated as zero by the model.")
+						.defineInRange(key, defaultValue, -1000d, 1000d);
 				}
 			}
 
@@ -1234,6 +1283,10 @@ public class FHConfig {
 			public static class ResidentAging {
 				public final ForgeConfigSpec.IntValue infantToChildDays;
 				public final ForgeConfigSpec.IntValue childToAdultDays;
+				public final ForgeConfigSpec.DoubleValue infantBaseActivity;
+				public final ForgeConfigSpec.DoubleValue childBaseActivity;
+				public final ForgeConfigSpec.DoubleValue adultBaseActivity;
+				public final ForgeConfigSpec.DoubleValue elderBaseActivity;
 				public final ForgeConfigSpec.DoubleValue infantStrengthGainPerDay;
 				public final ForgeConfigSpec.DoubleValue infantIntelligenceGainPerDay;
 				public final ForgeConfigSpec.DoubleValue infantAttributeCap;
@@ -1244,8 +1297,10 @@ public class FHConfig {
 				public final ForgeConfigSpec.DoubleValue adultStrengthGainPerDay;
 				public final ForgeConfigSpec.DoubleValue adultIntelligenceGainPerDay;
 				public final ForgeConfigSpec.DoubleValue adultAttributeCap;
-				public final ForgeConfigSpec.DoubleValue elderStrengthDecayPerDay;
-				public final ForgeConfigSpec.DoubleValue elderStrengthFloor;
+				public final ForgeConfigSpec.DoubleValue elderStrengthGainPerDay;
+				public final ForgeConfigSpec.DoubleValue elderIntelligenceGainPerDay;
+				public final ForgeConfigSpec.DoubleValue elderStrengthAgeDecayPerDay;
+				public final ForgeConfigSpec.DoubleValue elderIntelligenceAgeDecayPerDay;
 
 				ResidentAging(ForgeConfigSpec.Builder builder) {
 					builder.push("Resident Aging");
@@ -1254,6 +1309,10 @@ public class FHConfig {
 					childToAdultDays = builder.comment("Age-days at which a child (1) grows into a young adult (2).")
 						.comment("Elders (3) never grow in this way; they only spawn naturally.")
 						.defineInRange("childToAdultDays", TownModelParameters.Defaults.RESIDENT_CHILD_TO_ADULT_DAYS, 1, 100);
+					infantBaseActivity = baseActivity(builder, "infantBaseActivity", "Infant natural-development activity.", TownModelParameters.Defaults.RESIDENT_INFANT_BASE_ACTIVITY);
+					childBaseActivity = baseActivity(builder, "childBaseActivity", "Child activity before completed work is added.", TownModelParameters.Defaults.RESIDENT_CHILD_BASE_ACTIVITY);
+					adultBaseActivity = baseActivity(builder, "adultBaseActivity", "Adult activity before completed work is added.", TownModelParameters.Defaults.RESIDENT_ADULT_BASE_ACTIVITY);
+					elderBaseActivity = baseActivity(builder, "elderBaseActivity", "Elder activity before completed work is added.", TownModelParameters.Defaults.RESIDENT_ELDER_BASE_ACTIVITY);
 					infantStrengthGainPerDay = builder.comment("Strength gained per day by infants (age 0).")
 						.defineInRange("infantStrengthGainPerDay", TownModelParameters.Defaults.RESIDENT_INFANT_STRENGTH_GAIN_PER_DAY, 0d, 100d);
 					infantIntelligenceGainPerDay = builder.comment("Intelligence gained per day by infants (age 0).")
@@ -1274,11 +1333,24 @@ public class FHConfig {
 						.defineInRange("adultIntelligenceGainPerDay", TownModelParameters.Defaults.RESIDENT_ADULT_INTELLIGENCE_GAIN_PER_DAY, 0d, 100d);
 					adultAttributeCap = builder.comment("Strength/intelligence cap for young adults (age 2).")
 						.defineInRange("adultAttributeCap", TownModelParameters.Defaults.RESIDENT_ADULT_ATTRIBUTE_CAP, 0d, 100d);
-					elderStrengthDecayPerDay = builder.comment("Strength lost per day by elders (age 3); decay never drops below the floor.")
-						.defineInRange("elderStrengthDecayPerDay", TownModelParameters.Defaults.RESIDENT_ELDER_STRENGTH_DECAY_PER_DAY, 0d, 100d);
-					elderStrengthFloor = builder.comment("Strength floor for elders (age 3).")
-						.defineInRange("elderStrengthFloor", TownModelParameters.Defaults.RESIDENT_ELDER_STRENGTH_FLOOR, 0d, 100d);
+					elderStrengthGainPerDay = builder.comment("Elder strength growth rate at full activity and support.")
+						.defineInRange("elderStrengthGainPerDay", TownModelParameters.Defaults.RESIDENT_ELDER_STRENGTH_GAIN_PER_DAY, 0d, 100d);
+					elderIntelligenceGainPerDay = builder.comment("Elder intelligence growth rate at full activity and support.")
+						.defineInRange("elderIntelligenceGainPerDay", TownModelParameters.Defaults.RESIDENT_ELDER_INTELLIGENCE_GAIN_PER_DAY, 0d, 100d);
+					elderStrengthAgeDecayPerDay = builder.comment("Fixed elder strength age decay applied after growth and nutrition decay.")
+						.defineInRange("elderStrengthAgeDecayPerDay", TownModelParameters.Defaults.RESIDENT_ELDER_STRENGTH_AGE_DECAY_PER_DAY, 0d, 100d);
+					elderIntelligenceAgeDecayPerDay = builder.comment("Fixed elder intelligence age decay applied after growth and nutrition decay.")
+						.defineInRange("elderIntelligenceAgeDecayPerDay", TownModelParameters.Defaults.RESIDENT_ELDER_INTELLIGENCE_AGE_DECAY_PER_DAY, 0d, 100d);
 					builder.pop();
+				}
+
+				private static ForgeConfigSpec.DoubleValue baseActivity(
+						ForgeConfigSpec.Builder builder,
+						String key,
+						String comment,
+						double defaultValue
+				) {
+					return builder.comment(comment).defineInRange(key, defaultValue, 0d, 1d);
 				}
 			}
 
@@ -1316,9 +1388,15 @@ public class FHConfig {
 				public final ForgeConfigSpec.DoubleValue heatConsumptionPerTick;
 				public final ForgeConfigSpec.DoubleValue heatTemperatureLevelScaleCelsius;
 				public final ForgeConfigSpec.DoubleValue minimumHeatingModifierCelsius;
+				public final ForgeConfigSpec.DoubleValue physicalActivity;
+				public final ForgeConfigSpec.DoubleValue learningActivity;
 
 				Hunting(ForgeConfigSpec.Builder builder) {
 					builder.push("Hunting");
+					physicalActivity = builder.comment("Physical growth activity recorded after a completed hunting workday.")
+						.defineInRange("physicalActivity", TownModelParameters.Defaults.HUNTING_PHYSICAL_ACTIVITY, 0d, 1d);
+					learningActivity = builder.comment("Learning growth activity recorded after a completed hunting workday.")
+						.defineInRange("learningActivity", TownModelParameters.Defaults.HUNTING_LEARNING_ACTIVITY, 0d, 1d);
 					expectedLootRollsPerStandardWorkerDay = builder
 						.comment("Long-run expected hunting-loot-table rolls per standard worker per Minecraft day.")
 						.comment("Fractional rolls are retained by each hunting base when fractional carry is enabled.")
@@ -1495,9 +1573,15 @@ public class FHConfig {
 				public final ForgeConfigSpec.DoubleValue assignmentBasePriority;
 				public final ForgeConfigSpec.DoubleValue assignmentPenaltyPerWorker;
 				public final ForgeConfigSpec.DoubleValue assignmentFillRatioBonus;
+				public final ForgeConfigSpec.DoubleValue physicalActivity;
+				public final ForgeConfigSpec.DoubleValue learningActivity;
 
 				Mining(ForgeConfigSpec.Builder builder) {
 					builder.push("Mining");
+					physicalActivity = builder.comment("Physical growth activity recorded after a completed mining workday.")
+						.defineInRange("physicalActivity", TownModelParameters.Defaults.MINING_PHYSICAL_ACTIVITY, 0d, 1d);
+					learningActivity = builder.comment("Learning growth activity recorded after a completed mining workday.")
+						.defineInRange("learningActivity", TownModelParameters.Defaults.MINING_LEARNING_ACTIVITY, 0d, 1d);
 					baseOutputPerStandardWorkerDay = builder
 						.comment("Base mining output in item units per standard worker per Minecraft day.")
 						.comment("A standard worker has all four attributes at 50 and zero mining proficiency.")
@@ -1944,6 +2028,52 @@ public class FHConfig {
 		ModLoadingContext.get().registerConfig(ModConfig.Type.CLIENT, FHConfig.CLIENT_CONFIG);
 		ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, FHConfig.COMMON_CONFIG);
 		ModLoadingContext.get().registerConfig(ModConfig.Type.SERVER, FHConfig.SERVER_CONFIG);
+	}
+
+	public static void onConfigLoading(ModConfigEvent.Loading event) {
+		migrateNutritionScale(event.getConfig());
+		migrateResidentAttributeModel(event.getConfig());
+	}
+
+	public static void onConfigReloading(ModConfigEvent.Reloading event) {
+		migrateNutritionScale(event.getConfig());
+		migrateResidentAttributeModel(event.getConfig());
+	}
+
+	private static void migrateNutritionScale(ModConfig config) {
+		if (config.getSpec() != SERVER_CONFIG || SERVER.NUTRITION.nutritionScaleVersion.get() >= 2) {
+			return;
+		}
+		NutritionScaleMigration.Rates rates = NutritionScaleMigration.fromVersionOne(
+				SERVER.NUTRITION.nutritionGainRate.get(),
+				SERVER.NUTRITION.nutritionConsumptionRate.get());
+		SERVER.NUTRITION.nutritionGainRate.set(rates.gainRate());
+		SERVER.NUTRITION.nutritionConsumptionRate.set(rates.consumptionRate());
+		SERVER.NUTRITION.nutritionScaleVersion.set(2);
+		config.save();
+	}
+
+	private static void migrateResidentAttributeModel(ModConfig config) {
+		Server.Town.Housing housing = SERVER.TOWN.HOUSING;
+		if (config.getSpec() != SERVER_CONFIG || housing.residentAttributeModelVersion.get() >= 2) {
+			return;
+		}
+		Server.Town.ResidentAging aging = SERVER.TOWN.RESIDENT_AGING;
+		housing.residentNutritionStrengthProteinWeight.set(0.75);
+		housing.residentNutritionStrengthFatWeight.set(0.08);
+		housing.residentNutritionStrengthVegetableWeight.set(0.03);
+		housing.residentNutritionStrengthCarbohydrateWeight.set(0.14);
+		aging.infantStrengthGainPerDay.set(
+			TownModelParameters.Defaults.RESIDENT_INFANT_STRENGTH_GAIN_PER_DAY);
+		aging.infantIntelligenceGainPerDay.set(
+			TownModelParameters.Defaults.RESIDENT_INFANT_INTELLIGENCE_GAIN_PER_DAY);
+		aging.childStrengthGainPerDay.set(
+			TownModelParameters.Defaults.RESIDENT_CHILD_STRENGTH_GAIN_PER_DAY);
+		aging.childIntelligenceGainPerDay.set(
+			TownModelParameters.Defaults.RESIDENT_CHILD_INTELLIGENCE_GAIN_PER_DAY);
+		aging.adultAttributeCap.set(TownModelParameters.Defaults.RESIDENT_ADULT_ATTRIBUTE_CAP);
+		housing.residentAttributeModelVersion.set(2);
+		config.save();
 	}
 
 	static final boolean specialDay = MonthDay.of(4, 1).equals(MonthDay.now());

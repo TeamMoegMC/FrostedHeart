@@ -9,16 +9,20 @@ package com.teammoeg.frostedheart.content.town.buildings.house;
 import com.google.gson.JsonParser;
 import com.mojang.serialization.JsonOps;
 import com.teammoeg.frostedheart.content.town.building.AbstractTownBuilding;
+import com.teammoeg.frostedheart.content.town.resource.ItemStackResourceKey;
 import net.minecraft.SharedConstants;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtOps;
 import net.minecraft.nbt.Tag;
 import net.minecraft.server.Bootstrap;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -47,7 +51,34 @@ class HouseBuildingLayoutCodecTest {
         assertEquals(0, first.getBedCount());
         assertEquals(0, second.getBedCount());
         assertFalse(first.hasEntrance());
+        assertFalse(first.getDailyReport().meal().hasData());
         assertThrows(IllegalStateException.class, first::getEntrancePositionLong);
+    }
+
+    @Test
+    void dailyMealRoundTripPreservesNbtFractionalAmountsAndEmptyServedDays() {
+        ItemStack ration = new ItemStack(Items.COOKED_BEEF);
+        ration.getOrCreateTag().putString("menuVariant", "test");
+        ItemStackResourceKey key = new ItemStackResourceKey(ration);
+        HouseBuilding.DailyMeal source = HouseBuilding.DailyMeal.settled(
+                17L, Map.of(key, 0.3125));
+
+        Tag encoded = HouseBuilding.DailyMeal.CODEC.encodeStart(NbtOps.INSTANCE, source)
+                .result().orElseThrow();
+        HouseBuilding.DailyMeal decoded = HouseBuilding.DailyMeal.CODEC
+                .parse(NbtOps.INSTANCE, encoded).result().orElseThrow();
+
+        assertTrue(decoded.hasData());
+        assertEquals(17L, decoded.settlementDay());
+        assertEquals(1, decoded.entries().size());
+        assertEquals(0.3125, decoded.entries().get(0).amount(), 1.0e-12);
+        assertEquals("test", decoded.entries().get(0).item().toItemStack()
+                .getTag().getString("menuVariant"));
+
+        HouseBuilding.DailyMeal empty = HouseBuilding.DailyMeal.settled(18L, Map.of());
+        assertTrue(empty.hasData());
+        assertTrue(empty.entries().isEmpty());
+        assertFalse(HouseBuilding.DailyMeal.EMPTY.hasData());
     }
 
     @Test

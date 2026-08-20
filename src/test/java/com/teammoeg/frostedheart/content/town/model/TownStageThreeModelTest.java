@@ -114,7 +114,7 @@ class TownStageThreeModelTest {
                 base.cokeRecipeProcessTicks(), base.meats(),
                 Map.of("cooked_beef", new TownStageOneTwoData.FoodDefinition(
                         "cooked_beef", 2, 20.8,
-                        new ResidentNutrition.NutritionIntake(0, 0, 6_000, 0))),
+                        new ResidentNutrition.NutritionIntake(0, 0, 480, 0))),
                 base.sourceFiles());
 
         TownStageThreeModel.settleDay(
@@ -122,11 +122,10 @@ class TownStageThreeModelTest {
                 new SplittableRandom(9L));
 
         ResidentNutrition result = state.residents().get(0).nutrition();
-        assertEquals(60.0, result.fat(), 1.0e-12);
-        assertEquals(60.0, result.carbohydrate(), 1.0e-12);
-        assertEquals(60.0, result.vegetable(), 1.0e-12);
-        assertEquals(60.0 + 10.0 * (6.5 / 20.8 * 6_000.0 / 45_500.0),
-                result.protein(), 1.0e-9);
+        assertEquals(69.0, result.fat(), 1.0e-12);
+        assertEquals(69.0, result.carbohydrate(), 1.0e-12);
+        assertEquals(69.0, result.vegetable(), 1.0e-12);
+        assertEquals(73.0, result.protein(), 1.0e-9);
     }
 
     @Test
@@ -146,9 +145,11 @@ class TownStageThreeModelTest {
                 base.mineWeights(), base.huntingLoot(), base.coalRecipeProcessTicks(),
                 base.cokeRecipeProcessTicks(), base.meats(),
                 Map.of(
-                        "beef", new TownStageOneTwoData.FoodDefinition("beef", 1, 0, 0),
+                        "beef", new TownStageOneTwoData.FoodDefinition(
+                                "beef", 1, 0, ResidentNutrition.NutritionIntake.ZERO),
                         "cooked_beef", new TownStageOneTwoData.FoodDefinition(
-                                "cooked_beef", 2, 20.8, 6_000)),
+                                "cooked_beef", 2, 20.8,
+                                new ResidentNutrition.NutritionIntake(0, 0, 480, 0))),
                 base.sourceFiles());
         TownStageThreeState state = TownStageThreeState.initial(scenario);
 
@@ -179,10 +180,10 @@ class TownStageThreeModelTest {
                 Map.of(
                         "fatty_meat", new TownStageOneTwoData.FoodDefinition(
                                 "fatty_meat", 2, 20.8,
-                                new ResidentNutrition.NutritionIntake(8_000, 0, 16_000, 0)),
+                                new ResidentNutrition.NutritionIntake(200, 0, 400, 0)),
                         "starchy_vegetable", new TownStageOneTwoData.FoodDefinition(
                                 "starchy_vegetable", 2, 11.0,
-                                new ResidentNutrition.NutritionIntake(0, 16_000, 0, 8_000))),
+                                new ResidentNutrition.NutritionIntake(0, 400, 0, 200))),
                 Map.of());
         TownStageThreeState state = TownStageThreeState.initial(scenario);
         TownModelParameters parameters = TownModelParameters.currentDefaults()
@@ -196,6 +197,25 @@ class TownStageThreeModelTest {
         assertTrue(nutrition.carbohydrate() > 69.0);
         assertTrue(nutrition.protein() > 69.0);
         assertTrue(nutrition.vegetable() > 69.0);
+    }
+
+    @Test
+    void ageTransitionDayUsesThePreviousAgeGrowthParameters() {
+        TownStageThreeScenario scenario = scenario(1, List.of("house", "mine", "hunt"));
+        TownStageThreeState state = TownStageThreeState.initial(scenario);
+        TownStageThreeState.ResidentState resident = state.residents().get(0);
+        resident.setAge(1);
+        resident.setAgeDays(59);
+        resident.setStrength(50.0);
+
+        TownStageThreeModel.settleDay(
+                state, scenario, data(), TownModelParameters.currentDefaults(),
+                new SplittableRandom(31L));
+
+        assertEquals(2, resident.age());
+        assertEquals(60, resident.ageDays());
+        assertTrue(resident.strength() > 50.0,
+                "The child-to-adult transition day must still settle child growth.");
     }
 
     private static TownStageThreeScenario scenario(int population, List<String> order) {
@@ -232,9 +252,12 @@ class TownStageThreeModelTest {
                 1_600, 3_200,
                 List.of(meat),
                 Map.of(
-                        "beef", new TownStageOneTwoData.FoodDefinition("beef", 1, 4.8, 3_000),
+                        "beef", new TownStageOneTwoData.FoodDefinition(
+                                "beef", 1, 4.8,
+                                new ResidentNutrition.NutritionIntake(0, 0, 120, 0)),
                         "cooked_beef", new TownStageOneTwoData.FoodDefinition(
-                                "cooked_beef", 2, 20.8, 6_000)),
+                                "cooked_beef", 2, 20.8,
+                                new ResidentNutrition.NutritionIntake(0, 0, 480, 0))),
                 Map.of());
     }
 }

@@ -13,6 +13,7 @@ package com.teammoeg.frostedheart.content.town.model;
 import com.teammoeg.frostedheart.content.town.resource.TownFoodInventoryModel;
 import com.teammoeg.frostedheart.content.town.resource.TownInventoryModel;
 import com.teammoeg.frostedheart.content.town.resource.action.ResourceActionMode;
+import com.teammoeg.frostedheart.content.town.resident.ResidentActivity;
 import com.teammoeg.frostedheart.content.town.resident.ResidentGenerationModel;
 import com.teammoeg.frostedheart.content.town.resident.ResidentNutrition;
 
@@ -337,6 +338,7 @@ public final class TownStageThreeState {
         private String homeId;
         private String workId;
         private ResidentNutrition nutrition;
+        private ResidentActivity dailyActivity = ResidentActivity.NONE;
 
         ResidentState(
                 String id,
@@ -378,6 +380,7 @@ public final class TownStageThreeState {
         public String homeId() { return homeId; }
         public String workId() { return workId; }
         public ResidentNutrition nutrition() { return nutrition; }
+        public ResidentActivity dailyActivity() { return dailyActivity; }
 
         public void setHealth(double value) { health = bounded(value); }
         public void setMental(double value) { mental = bounded(value); }
@@ -391,6 +394,12 @@ public final class TownStageThreeState {
         public void setWorkId(String value) { workId = value; }
         public void setNutrition(ResidentNutrition value) {
             nutrition = value == null ? ResidentNutrition.DEFAULT_VALUE : value;
+        }
+        public void recordActivity(ResidentActivity activity) {
+            dailyActivity = dailyActivity.max(activity);
+        }
+        public void resetDailyActivity() {
+            dailyActivity = ResidentActivity.NONE;
         }
 
         private static double bounded(double value) {

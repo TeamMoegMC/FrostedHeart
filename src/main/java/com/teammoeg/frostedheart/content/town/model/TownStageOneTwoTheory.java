@@ -177,8 +177,6 @@ public final class TownStageOneTwoTheory {
         TownModelParameters.SpaceRatingParameters space = parameters.buildingScoring().space();
         return new HouseDailyModel.SettlementParameters(
                 housing.foodConsumptionPerResidentDay(),
-                housing.nutritionReferencePerFoodUnit(),
-                housing.minimumNutritionRecoveryMultiplier(),
                 temperature.comfortableTemperatureCelsius(),
                 temperature.minimumRating(),
                 temperature.sigmoidSlopePerCelsius(),

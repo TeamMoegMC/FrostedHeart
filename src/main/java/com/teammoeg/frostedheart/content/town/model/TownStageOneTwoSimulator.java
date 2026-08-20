@@ -251,7 +251,6 @@ public final class TownStageOneTwoSimulator {
                 new HouseDailyModel.SettlementInput(
                         house.residentCount(),
                         consumption.consumedFoodUnits(),
-                        consumption.consumedNutrition(),
                         house.temperatureCelsius(),
                         house.areaBlocks(),
                         house.volumeBlocks(),
@@ -261,7 +260,8 @@ public final class TownStageOneTwoSimulator {
                 house.residentHealth(),
                 house.residentMental(),
                 settlement.foodSatisfaction(),
-                settlement.nutritionRecoveryMultiplier(),
+                1.0,
+                1.0,
                 settlement.effectiveTemperature(),
                 settlement.temperatureRating(),
                 settlement.comfortRating(),
@@ -386,9 +386,6 @@ public final class TownStageOneTwoSimulator {
         TownStageOneTwoScenario.House house = scenario.house();
         double requiredFood = house.residentCount()
                 * parameters.housing().foodConsumptionPerResidentDay();
-        double nutrition = requiredFood
-                * parameters.housing().nutritionReferencePerFoodUnit()
-                * scenario.diagnostics().responseNutritionQuality();
         try (BufferedWriter writer = Files.newBufferedWriter(path, StandardCharsets.UTF_8)) {
             writer.write("temperature_celsius,safe_minimum_temperature_celsius,"
                     + "safe_maximum_temperature_celsius,full_stress_distance_celsius,"
@@ -400,7 +397,7 @@ public final class TownStageOneTwoSimulator {
             for (double temperature : scenario.diagnostics().houseTemperatureCelsius()) {
                 HouseDailyModel.SettlementReport report = HouseDailyModel.evaluateSettlement(
                         new HouseDailyModel.SettlementInput(
-                                house.residentCount(), requiredFood, nutrition, temperature,
+                                house.residentCount(), requiredFood, temperature,
                                 house.areaBlocks(), house.volumeBlocks(), house.decorationRating()),
                         TownStageOneTwoTheory.houseParameters(parameters));
                 HouseDailyModel.ResidentEffects effects = controlledEffects(
@@ -439,16 +436,12 @@ public final class TownStageOneTwoSimulator {
                     + "theory_health_delta,simulation_health_delta,"
                     + "theory_mental_delta,simulation_mental_delta,food_stress,temperature_stress,"
                     + "health_food_penalty,health_temperature_penalty,health_total_penalty,health_recovery,"
-                    + "mental_food_penalty,mental_temperature_penalty,mental_total_penalty,mental_recovery,"
-                    + "nutrition_quality\n");
+                    + "mental_food_penalty,mental_temperature_penalty,mental_total_penalty,mental_recovery\n");
             for (double satisfaction : scenario.diagnostics().foodSatisfaction()) {
                 double consumed = requiredFood * satisfaction;
-                double nutrition = consumed
-                        * parameters.housing().nutritionReferencePerFoodUnit()
-                        * scenario.diagnostics().responseNutritionQuality();
                 HouseDailyModel.SettlementReport report = HouseDailyModel.evaluateSettlement(
                         new HouseDailyModel.SettlementInput(
-                                house.residentCount(), consumed, nutrition,
+                                house.residentCount(), consumed,
                                 house.temperatureCelsius(), house.areaBlocks(),
                                 house.volumeBlocks(), house.decorationRating()),
                         TownStageOneTwoTheory.houseParameters(parameters));
@@ -456,7 +449,7 @@ public final class TownStageOneTwoSimulator {
                         house, parameters, report);
                 writer.write(String.format(Locale.ROOT,
                         "%s,%.12f,%.12f,%.12f,%.12f,%.12f,%.12f,%.12f,"
-                                + "%.12f,%.12f,%.12f,%.12f,%.12f,%.12f,%.12f,%.12f,%.12f%n",
+                                + "%.12f,%.12f,%.12f,%.12f,%.12f,%.12f,%.12f,%.12f%n",
                         decimal(satisfaction), parameters.housing().foodDeficitPenaltyExponent(),
                         effects.healthDelta(), effects.healthDelta(),
                         effects.mentalDelta(), effects.mentalDelta(),
@@ -464,7 +457,7 @@ public final class TownStageOneTwoSimulator {
                         effects.healthFoodPenalty(), effects.healthTemperaturePenalty(),
                         effects.healthPenalty(), effects.healthRecovery(),
                         effects.mentalFoodPenalty(), effects.mentalTemperaturePenalty(),
-                        effects.mentalPenalty(), effects.mentalRecovery(), report.nutritionQuality()));
+                        effects.mentalPenalty(), effects.mentalRecovery()));
             }
         }
     }
@@ -476,7 +469,7 @@ public final class TownStageOneTwoSimulator {
     ) {
         return HouseDailyModel.calculateResidentEffects(
                 house.residentHealth(), house.residentMental(),
-                report.foodSatisfaction(), report.nutritionRecoveryMultiplier(),
+                report.foodSatisfaction(), 1.0, 1.0,
                 report.effectiveTemperature(), report.temperatureRating(), report.comfortRating(),
                 TownStageOneTwoTheory.residentEffectParameters(parameters));
     }

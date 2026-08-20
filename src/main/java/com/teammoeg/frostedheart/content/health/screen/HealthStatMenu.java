@@ -56,10 +56,10 @@ public class HealthStatMenu extends CBaseMenu {
 		
 		LazyOptional<NutritionCapability> nut_lo=NutritionCapability.getCapability(inventoryPlayer.player);
 		nut_lo.ifPresent(cap->{
-			fat.bind(()->cap.get().getFat()/10000);
-			protein.bind(()->cap.get().getProtein()/10000);
-			carbohydrate.bind(()->cap.get().getCarbohydrate()/10000);
-			vegetable.bind(()->cap.get().getVegetable()/10000);
+				fat.bind(()->cap.get().fat()/100);
+				protein.bind(()->cap.get().protein()/100);
+				carbohydrate.bind(()->cap.get().carbohydrate()/100);
+				vegetable.bind(()->cap.get().vegetable()/100);
 		});
 
 		LazyOptional<PlayerTemperatureData> temp_lo = PlayerTemperatureData.getCapability(inventoryPlayer.player);

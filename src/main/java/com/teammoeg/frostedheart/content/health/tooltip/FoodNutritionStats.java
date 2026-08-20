@@ -32,9 +32,8 @@ import com.google.common.cache.CacheBuilder;
 import com.simibubi.create.foundation.item.TooltipModifier;
 import com.teammoeg.chorda.text.Components;
 import com.teammoeg.frostedheart.content.climate.food.FoodTemperatureHandler;
-import com.teammoeg.frostedheart.content.health.capability.Nutrition;
-import com.teammoeg.frostedheart.content.health.capability.NutritionCapability;
-import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
+import com.teammoeg.frostedheart.content.health.nutrition.FoodNutritionProfile;
+import com.teammoeg.frostedheart.content.health.nutrition.FoodNutritionResolver;
 import com.teammoeg.frostedheart.util.Lang;
 import com.teammoeg.frostedheart.util.client.FineProgressBarBuilder;
 import com.teammoeg.frostedheart.util.client.KeyControlledDesc;
@@ -84,39 +83,42 @@ public class FoodNutritionStats implements TooltipModifier {
 
         if(player == null) return null;
         
-        Nutrition foodNutrition = NutritionCapability.getFoodNutrition(player, stack);
+		FoodNutritionProfile foodNutrition = FoodNutritionResolver.resolve(player.level(), stack);
 
-        if(foodNutrition!=null) {
-        	List<Component> list = new ArrayList<>();
+		if(!foodNutrition.isZero()) {
+			List<Component> list = new ArrayList<>();
             Lang.translate("tooltip", "nutrition")
                     .style(ChatFormatting.GRAY)
                     .addTo(list);
-            Nutrition nutrition = foodNutrition.mutableCopy().scale(1/foodNutrition.getNutritionValue());
+			float total = foodNutrition.total();
+			float fatShare = foodNutrition.fat() / total;
+			float proteinShare = foodNutrition.protein() / total;
+			float carbohydrateShare = foodNutrition.carbohydrate() / total;
+			float vegetableShare = foodNutrition.vegetable() / total;
             FineProgressBarBuilder builder=new FineProgressBarBuilder(PROGRESS_LENGTH);
             //list.add(Lang.str("\uF504").withStyle(FHTextIcon.applyFont(Style.EMPTY)));
-            if(nutrition.getFat()>0) {
-            	builder.addElement(FAT_COLOR, "\uF504",nutrition.getFat());
+			if(fatShare>0) {
+				builder.addElement(FAT_COLOR, "\uF504",fatShare);
             }
-            if(nutrition.getProtein()>0) {
-            	builder.addElement(PROTEIN_COLOR, "\uF505",nutrition.getProtein());
+			if(proteinShare>0) {
+				builder.addElement(PROTEIN_COLOR, "\uF505",proteinShare);
             }
-            if(nutrition.getCarbohydrate()>0) {
-            	builder.addElement(CARBOHYDRATE_COLOR, "\uF502",nutrition.getCarbohydrate());
+			if(carbohydrateShare>0) {
+				builder.addElement(CARBOHYDRATE_COLOR, "\uF502",carbohydrateShare);
             }
-            if(nutrition.getVegetable()>0) {
-            	builder.addElement(VEGETABLE_COLOR, "\uF503",nutrition.getVegetable());
+			if(vegetableShare>0) {
+				builder.addElement(VEGETABLE_COLOR, "\uF503",vegetableShare);
             }
             list.add(builder.build());
             list.add(Lang.gui("nutrition.max_level").component());
-            double gainLostRate=FHConfig.SERVER.NUTRITION.nutritionGainRate.get()/FHConfig.SERVER.NUTRITION.nutritionConsumptionRate.get()/10000;
-            if(foodNutrition.getFat()>0)
-            	list.add(Lang.gui("nutrition.fat").color(FAT_COLOR).space().percentage().number(foodNutrition.getFat()*gainLostRate).withStyle(ChatFormatting.GREEN).component());
-            if(foodNutrition.getProtein()>0)
-            	list.add(Lang.gui("nutrition.protein").color(PROTEIN_COLOR).space().percentage().number(foodNutrition.getProtein()*gainLostRate).withStyle(ChatFormatting.GREEN).component());
-            if(foodNutrition.getCarbohydrate()>0)
-            	list.add(Lang.gui("nutrition.carbohydrate").color(CARBOHYDRATE_COLOR).space().percentage().number(foodNutrition.getCarbohydrate()*gainLostRate).withStyle(ChatFormatting.GREEN).component());
-            if(foodNutrition.getVegetable()>0)
-            	list.add(Lang.gui("nutrition.vegetable").color(VEGETABLE_COLOR).space().percentage().number(foodNutrition.getVegetable()*gainLostRate).withStyle(ChatFormatting.GREEN).component());
+			if(foodNutrition.fat()>0)
+				list.add(Lang.gui("nutrition.fat").color(FAT_COLOR).space().percentage().number(foodNutrition.fat()/100).withStyle(ChatFormatting.GREEN).component());
+			if(foodNutrition.protein()>0)
+				list.add(Lang.gui("nutrition.protein").color(PROTEIN_COLOR).space().percentage().number(foodNutrition.protein()/100).withStyle(ChatFormatting.GREEN).component());
+			if(foodNutrition.carbohydrate()>0)
+				list.add(Lang.gui("nutrition.carbohydrate").color(CARBOHYDRATE_COLOR).space().percentage().number(foodNutrition.carbohydrate()/100).withStyle(ChatFormatting.GREEN).component());
+			if(foodNutrition.vegetable()>0)
+				list.add(Lang.gui("nutrition.vegetable").color(VEGETABLE_COLOR).space().percentage().number(foodNutrition.vegetable()/100).withStyle(ChatFormatting.GREEN).component());
             return list;
         }
         return null;

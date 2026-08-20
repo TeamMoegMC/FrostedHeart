@@ -39,6 +39,7 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.NbtOps;
 import net.minecraft.nbt.Tag;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.UUIDUtil;
@@ -76,10 +77,13 @@ public class Resident {
             Codec.INT.optionalFieldOf("age",AGE_ADULT).forGetter(o->o.age),
             Codec.INT.optionalFieldOf("ageDays",0).forGetter(o->o.ageDays),
             ResidentNutrition.CODEC.optionalFieldOf("nutrition", ResidentNutrition.DEFAULT_VALUE)
-                    .forGetter(o -> o.nutrition)
+                    .forGetter(o -> o.nutrition),
+            ResidentNutritionSnapshot.CODEC.optionalFieldOf(
+                    "nutritionSnapshot", ResidentNutritionSnapshot.EMPTY)
+                    .forGetter(o -> o.nutritionSnapshot)
 		).apply(t, Resident::new));
 
-    public Resident(String firstName, String lastName, UUID uuid, double health, double mental, double strength, double intelligence, int educationLevel, Map<String, Double> workProficiency, Optional<BlockPos> housePos, Optional<BlockPos> workPos, int age, int ageDays, ResidentNutrition nutrition) {
+    public Resident(String firstName, String lastName, UUID uuid, double health, double mental, double strength, double intelligence, int educationLevel, Map<String, Double> workProficiency, Optional<BlockPos> housePos, Optional<BlockPos> workPos, int age, int ageDays, ResidentNutrition nutrition, ResidentNutritionSnapshot nutritionSnapshot) {
         setFirstName(firstName);
         setLastName(lastName);
         setUuid(uuid);
@@ -98,6 +102,14 @@ public class Resident {
         initializeMissingWorkProficiencies();
         setHousePos(housePos.orElse(null));
         setWorkPos(workPos.orElse(null));
+        this.nutritionSnapshot = nutritionSnapshot == null
+                ? ResidentNutritionSnapshot.EMPTY : nutritionSnapshot;
+    }
+
+    public Resident(String firstName, String lastName, UUID uuid, double health, double mental, double strength, double intelligence, int educationLevel, Map<String, Double> workProficiency, Optional<BlockPos> housePos, Optional<BlockPos> workPos, int age, int ageDays, ResidentNutrition nutrition) {
+        this(firstName, lastName, uuid, health, mental, strength, intelligence,
+                educationLevel, workProficiency, housePos, workPos, age, ageDays,
+                nutrition, ResidentNutritionSnapshot.EMPTY);
     }
 
     /** Source-compatible persistent constructor used before resident nutrition existed. */
@@ -212,6 +224,7 @@ public class Resident {
     @Getter
     private final Object2DoubleOpenHashMap<String> workProficiency = new Object2DoubleOpenHashMap<>();
     private transient final Set<String> proficiencyGainedToday = new HashSet<>();
+    private transient ResidentActivity dailyActivity = ResidentActivity.NONE;
     //the pos of the HouseBlock that the resident is living in
     @Nullable
     @Getter
@@ -229,6 +242,8 @@ public class Resident {
     /** Four persistent resident nutrition reserves, normalized to 0..100. */
     @Getter
     private ResidentNutrition nutrition = ResidentNutrition.DEFAULT_VALUE;
+    @Getter
+    private ResidentNutritionSnapshot nutritionSnapshot = ResidentNutritionSnapshot.EMPTY;
 
     public Resident(String firstName, String lastName) {
         this(firstName, lastName, UUID.randomUUID());
@@ -353,6 +368,16 @@ public class Resident {
 
     public void resetDailyProficiencyGrowth() {
         proficiencyGainedToday.clear();
+        dailyActivity = ResidentActivity.NONE;
+    }
+
+    public void recordDailyActivity(double physical, double learning) {
+        dailyActivity = dailyActivity.max(
+                new ResidentActivity(physical, learning));
+    }
+
+    public ResidentActivity getDailyActivity() {
+        return dailyActivity;
     }
 
     public double addWorkProficiency(Class<? extends ITownResidentWorkBuilding> type, double amount){
@@ -404,6 +429,8 @@ public class Resident {
         data.putDouble("nutritionCarbohydrate", nutrition.carbohydrate());
         data.putDouble("nutritionProtein", nutrition.protein());
         data.putDouble("nutritionVegetable", nutrition.vegetable());
+        ResidentNutritionSnapshot.CODEC.encodeStart(NbtOps.INSTANCE, getNutritionSnapshot())
+                .result().ifPresent(tag -> data.put("nutritionSnapshot", tag));
         data.put("workProficiency", SerializeUtil.toNBTMap(workProficiency.entrySet(), (entry, compoundNBTBuilder) -> compoundNBTBuilder.putDouble(entry.getKey(), entry.getValue())));
         if (workPos != null) {
             data.putLong("workPos", workPos.asLong());
@@ -504,6 +531,13 @@ public class Resident {
         setIntelligence(rawIntelligence);
         setEducationLevel(rawEducationLevel);
         setNutrition(rawNutrition);
+        if (data.contains("nutritionSnapshot")) {
+            nutritionSnapshot = ResidentNutritionSnapshot.CODEC
+                    .parse(NbtOps.INSTANCE, data.get("nutritionSnapshot"))
+                    .result().orElse(ResidentNutritionSnapshot.EMPTY);
+        } else {
+            nutritionSnapshot = ResidentNutritionSnapshot.EMPTY;
+        }
 
         return null;
     }
@@ -538,6 +572,68 @@ public class Resident {
         if (Objects.equals(this.nutrition, safe)) return;
         this.nutrition = safe;
         fireChange();
+    }
+
+    /** Stores the post-meal reserve and starts a new explanatory daily snapshot. */
+    public void completeNutritionMeal(ResidentNutrition nutrition) {
+        setNutrition(nutrition);
+        FHConfig.Server.Town.Housing config = FHConfig.SERVER.TOWN.HOUSING;
+        nutritionSnapshot = ResidentNutritionSnapshot.afterMeal(
+                this.nutrition,
+                config.residentNutritionHealthyReserve.get(),
+                nutritionSupportWeights());
+        fireChange();
+    }
+
+    public void recordNutritionRecovery(
+            double healthRecovery,
+            double healthDelta,
+            double mentalRecovery,
+            double mentalDelta
+    ) {
+        nutritionSnapshot = safeNutritionSnapshot().withRecovery(
+                healthRecovery, healthDelta, mentalRecovery, mentalDelta);
+        fireChange();
+    }
+
+    /** Completes the daily snapshot with activity and the two flat attribute changes. */
+    public void recordNutritionAttributes(
+            ResidentActivity activity,
+            ResidentAttributeChange strengthChange,
+            ResidentAttributeChange intelligenceChange
+    ) {
+        nutritionSnapshot = safeNutritionSnapshot().withAttributes(
+                activity, strengthChange, intelligenceChange);
+        fireChange();
+    }
+
+    private ResidentNutritionSnapshot safeNutritionSnapshot() {
+        return nutritionSnapshot == null ? ResidentNutritionSnapshot.EMPTY : nutritionSnapshot;
+    }
+
+    public static ResidentNutritionSupportModel.Weights nutritionSupportWeights() {
+        FHConfig.Server.Town.Housing config = FHConfig.SERVER.TOWN.HOUSING;
+        return new ResidentNutritionSupportModel.Weights(
+                new ResidentNutritionSupportModel.WeightRow(
+                        config.residentNutritionHealthProteinWeight.get(),
+                        config.residentNutritionHealthFatWeight.get(),
+                        config.residentNutritionHealthVegetableWeight.get(),
+                        config.residentNutritionHealthCarbohydrateWeight.get()),
+                new ResidentNutritionSupportModel.WeightRow(
+                        config.residentNutritionMentalProteinWeight.get(),
+                        config.residentNutritionMentalFatWeight.get(),
+                        config.residentNutritionMentalVegetableWeight.get(),
+                        config.residentNutritionMentalCarbohydrateWeight.get()),
+                new ResidentNutritionSupportModel.WeightRow(
+                        config.residentNutritionStrengthProteinWeight.get(),
+                        config.residentNutritionStrengthFatWeight.get(),
+                        config.residentNutritionStrengthVegetableWeight.get(),
+                        config.residentNutritionStrengthCarbohydrateWeight.get()),
+                new ResidentNutritionSupportModel.WeightRow(
+                        config.residentNutritionIntelligenceProteinWeight.get(),
+                        config.residentNutritionIntelligenceFatWeight.get(),
+                        config.residentNutritionIntelligenceVegetableWeight.get(),
+                        config.residentNutritionIntelligenceCarbohydrateWeight.get()));
     }
 
     public void setHealth(double health) {
@@ -591,24 +687,6 @@ public class Resident {
         setStrength(Math.min(100, strength + amount));
     }
 
-    /**
-     * 每日属性成长：低于上限时按日增长量增加，封顶在 cap（≤100）。
-     */
-    public void growStrengthDaily(double gain, double cap) {
-        if (gain > 0 && this.strength < cap) {
-            setStrength(Math.min(cap, strength + gain));
-        }
-    }
-
-    /**
-     * 老人每日力量萎缩：不低于 floor。
-     */
-    public void decayStrengthDaily(double decay, double floor) {
-        if (decay > 0 && this.strength > floor) {
-            setStrength(Math.max(floor, strength - decay));
-        }
-    }
-
     public void setIntelligence(double intelligence) {
         if (intelligence < 0 || intelligence > 100) {
             throw new IllegalArgumentException("Intelligence must be between 0 and 100");
@@ -624,15 +702,6 @@ public class Resident {
 
     public void addIntelligence(double amount) {
         setIntelligence(Math.min(100, intelligence + amount));
-    }
-
-    /**
-     * 每日属性成长：低于上限时按日增长量增加，封顶在 cap（≤100）。
-     */
-    public void growIntelligenceDaily(double gain, double cap) {
-        if (gain > 0 && this.intelligence < cap) {
-            setIntelligence(Math.min(cap, intelligence + gain));
-        }
     }
 
     public void setEducationLevel(int educationLevel) {

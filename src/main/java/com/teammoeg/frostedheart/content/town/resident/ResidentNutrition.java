@@ -71,8 +71,8 @@ public record ResidentNutrition(
     }
 
     /**
-     * Applies an actual meal. Each intake value is raw FH recipe nutrition;
-     * {@code referencePerChannel} is the amount that grants one coverage unit.
+	 * Applies an actual meal. Each intake value is hunger-weighted nutrition
+	 * percentage-points; {@code referencePerChannel} grants one coverage unit.
      */
     public ResidentNutrition withMeal(
             NutritionIntake intake,
@@ -126,89 +126,6 @@ public record ResidentNutrition(
         return 1.0 - availability(minimum(), healthyReserve);
     }
 
-    /** Fat/protein only amplify recovery when the direct recovery nutrient exists. */
-    public double mentalRecoveryMultiplier(double minimumMultiplier) {
-        return recoveryMultiplier(
-                carbohydrateAvailability(), fatAvailability(), proteinAvailability(),
-                minimumMultiplier);
-    }
-
-    public double mentalRecoveryMultiplier(double minimumMultiplier, Parameters parameters) {
-        return recoveryMultiplier(
-                availability(carbohydrate, parameters.healthyReserve()),
-                availability(fat, parameters.healthyReserve()),
-                availability(protein, parameters.healthyReserve()), minimumMultiplier,
-                parameters.recoveryDirectWeight(), parameters.recoverySupportWeight());
-    }
-
-    /** Fat/protein only amplify recovery when the direct recovery nutrient exists. */
-    public double healthRecoveryMultiplier(double minimumMultiplier) {
-        return recoveryMultiplier(
-                vegetableAvailability(), fatAvailability(), proteinAvailability(),
-                minimumMultiplier);
-    }
-
-    public double healthRecoveryMultiplier(double minimumMultiplier, Parameters parameters) {
-        return recoveryMultiplier(
-                availability(vegetable, parameters.healthyReserve()),
-                availability(fat, parameters.healthyReserve()),
-                availability(protein, parameters.healthyReserve()), minimumMultiplier,
-                parameters.recoveryDirectWeight(), parameters.recoverySupportWeight());
-    }
-
-    /**
-     * Deficiency slows existing growth; reserves above the healthy line provide
-     * at most a 25% bonus. This never creates growth where the age model has none.
-     */
-    public static double growthMultiplier(double value) {
-        double safe = bounded(value);
-        if (safe <= HEALTHY) {
-            return 0.5 + 0.5 * safe / HEALTHY;
-        }
-        return 1.0 + 0.25 * (safe - HEALTHY) / (MAXIMUM - HEALTHY);
-    }
-
-    public static double growthMultiplier(double value, Parameters parameters) {
-        double maximum = Math.max(0.001, finiteOrZero(parameters.maximumReserve()));
-        double healthy = Math.max(0.001, Math.min(maximum, finiteOrZero(parameters.healthyReserve())));
-        double safe = Math.max(0.0, Math.min(maximum, finiteOrZero(value)));
-        double floor = Math.max(0.0, Math.min(1.0,
-                finiteOrZero(parameters.deficiencyGrowthFloor())));
-        if (safe <= healthy) {
-            return floor + (1.0 - floor) * safe / healthy;
-        }
-        double surplusRange = maximum - healthy;
-        return surplusRange <= 0.0 ? 1.0 : 1.0
-                + nonNegative(parameters.maximumGrowthBonus()) * (safe - healthy) / surplusRange;
-    }
-
-    private static double recoveryMultiplier(
-            double direct,
-            double fat,
-            double protein,
-            double minimumMultiplier
-    ) {
-        return recoveryMultiplier(direct, fat, protein, minimumMultiplier, 0.6, 0.4);
-    }
-
-    private static double recoveryMultiplier(
-            double direct,
-            double fat,
-            double protein,
-            double minimumMultiplier,
-            double directWeight,
-            double supportWeight
-    ) {
-        double minimum = Math.max(0.0, Math.min(1.0, finiteOrZero(minimumMultiplier)));
-        double support = (fat + protein) / 2.0;
-        double directPart = nonNegative(directWeight);
-        double supportPart = nonNegative(supportWeight);
-        double weight = directPart + supportPart;
-        double supplied = weight <= 0.0 ? 0.0
-                : (directPart * direct + supportPart * direct * support) / weight;
-        return minimum + (1.0 - minimum) * supplied;
-    }
-
     private static double availability(double value) {
         return Math.max(0.0, Math.min(1.0, bounded(value) / HEALTHY));
     }
@@ -249,6 +166,13 @@ public record ResidentNutrition(
     ) {
         public static final NutritionIntake ZERO = new NutritionIntake(0, 0, 0, 0);
 
+        public NutritionIntake {
+            fat = nonNegative(fat);
+            carbohydrate = nonNegative(carbohydrate);
+            protein = nonNegative(protein);
+            vegetable = nonNegative(vegetable);
+        }
+
         public NutritionIntake plus(NutritionIntake other) {
             return new NutritionIntake(
                     fat + other.fat,
@@ -262,16 +186,5 @@ public record ResidentNutrition(
             return new NutritionIntake(
                     fat * safe, carbohydrate * safe, protein * safe, vegetable * safe);
         }
-    }
-
-    /** Formula parameters supplied by FHConfig in gameplay and TownModelParameters in simulation. */
-    public record Parameters(
-            double maximumReserve,
-            double healthyReserve,
-            double recoveryDirectWeight,
-            double recoverySupportWeight,
-            double deficiencyGrowthFloor,
-            double maximumGrowthBonus
-    ) {
     }
 }

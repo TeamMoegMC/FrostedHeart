@@ -75,7 +75,6 @@ final class HouseOverviewElement extends BuildingInfoElement {
                 "gui.frostedheart.house.food_consumption",
                 decimal(report.foodConsumed()) + " / " + decimal(report.foodRequired())));
         lines.add(percent("gui.frostedheart.house.food_satisfaction", report.foodSatisfaction()));
-        lines.add(percent("gui.frostedheart.house.nutrition_quality", report.nutritionQuality()));
         lines.add(temperatureValue(report.effectiveTemperature()));
         lines.add(percent("gui.frostedheart.house.temperature_rating", report.temperatureRating()));
         lines.add(percent("gui.frostedheart.house.space_rating", report.spaceRating()));

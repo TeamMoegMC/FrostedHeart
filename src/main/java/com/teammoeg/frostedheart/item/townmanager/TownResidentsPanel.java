@@ -33,6 +33,7 @@ import com.teammoeg.frostedheart.content.town.TownNamingModel;
 import com.teammoeg.frostedheart.content.town.building.AbstractTownBuilding;
 import com.teammoeg.frostedheart.content.town.network.TownResidentNameEditRequestPacket;
 import com.teammoeg.frostedheart.content.town.resident.Resident;
+import com.teammoeg.frostedheart.content.town.resident.ResidentNutritionExplanation;
 import com.teammoeg.frostedheart.content.town.tabs.TownTextLayout;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
@@ -210,6 +211,9 @@ public class TownResidentsPanel extends UILayer {
         lines.add(stat("gui.frostedheart.town.nutrition_carbohydrate", resident.getNutrition().carbohydrate()));
         lines.add(stat("gui.frostedheart.town.nutrition_protein", resident.getNutrition().protein()));
         lines.add(stat("gui.frostedheart.town.nutrition_vegetable", resident.getNutrition().vegetable()));
+        lines.add(new Line(Component.empty(), 0xFFFFFFFF));
+        ResidentNutritionExplanation.lines(resident).forEach(component ->
+                lines.add(new Line(component, 0xFFFFFFFF)));
         lines.add(new Line(Component.translatable("gui.frostedheart.town_manager.education")
                 .append(Component.literal(": "))
                 .append(educationLevel(resident.getEducationLevel())), 0xFFFFFFFF));

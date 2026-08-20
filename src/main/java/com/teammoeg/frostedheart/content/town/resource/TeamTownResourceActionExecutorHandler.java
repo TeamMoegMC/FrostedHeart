@@ -19,14 +19,12 @@
 
 package com.teammoeg.frostedheart.content.town.resource;
 
-import com.teammoeg.chorda.util.CDistHelper;
-import com.teammoeg.chorda.util.CUtils;
-import com.teammoeg.frostedheart.content.health.recipe.NutritionRecipe;
 import com.teammoeg.frostedheart.content.town.resource.action.*;
 import net.minecraft.world.item.ItemStack;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -64,12 +62,7 @@ public class TeamTownResourceActionExecutorHandler extends AbstractActionExecuto
             Map<ItemStackResourceKey, Double> costDetail = new HashMap<>();
             Map<ItemStackResourceKey, Double> items = resourceHolder.getAllItemsByResourceAttribute(action.resourceToModify());
             List<ItemStackResourceKey> orderedItems = new ArrayList<>(items.keySet());
-            if (action.resourceToModify().getType() == ItemResourceType.RESIDENT_FOOD_LEVEL) {
-                List<NutritionRecipe> recipes = CUtils.filterRecipes(
-                        CDistHelper.getRecipeManager(), NutritionRecipe.TYPE);
-                orderedItems = TownFoodNutritionModel.orderByNutritionQuality(
-                        orderedItems, action.resourceToModify(), recipes);
-            }
+            orderedItems.sort(Comparator.comparing(ItemStackResourceKey::toString));
             for(ItemStackResourceKey itemStackResourceKey : orderedItems){
                 double itemResourceAmount = TeamTownResourceHolder.getResourceAmount(itemStackResourceKey, action.resourceToModify());
                 double itemLeft = resourceHolder.get(itemStackResourceKey);
