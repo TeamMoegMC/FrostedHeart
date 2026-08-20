@@ -19,6 +19,7 @@
 
 package com.teammoeg.frostedheart.content.town.citizen.client;
 
+import com.mojang.blaze3d.vertex.PoseStack;
 import com.teammoeg.frostedheart.content.town.citizen.FakeCitizenEntity;
 
 import net.minecraft.client.model.PlayerModel;
@@ -46,5 +47,13 @@ public class FakeCitizenRenderer extends MobRenderer<FakeCitizenEntity, PlayerMo
 	@Override
 	public ResourceLocation getTextureLocation(FakeCitizenEntity entity) {
 		return CitizenSkins.textureFor(entity.getCitizenId());
+	}
+
+	@Override
+	protected void scale(FakeCitizenEntity entity, PoseStack pose, float partialTick) {
+		float scale = entity.getModelScale();
+		if (scale != 1.0F)
+			pose.scale(scale, scale, scale);
+		this.shadowRadius = 0.5F * scale;
 	}
 }

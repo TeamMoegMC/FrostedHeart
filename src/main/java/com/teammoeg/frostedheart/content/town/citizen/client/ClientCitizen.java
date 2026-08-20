@@ -20,6 +20,7 @@
 package com.teammoeg.frostedheart.content.town.citizen.client;
 
 import com.teammoeg.frostedheart.content.town.citizen.sim.CitizenState;
+import com.teammoeg.frostedheart.content.town.resident.Resident;
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.phys.AABB;
 
@@ -55,6 +56,8 @@ public final class ClientCitizen {
     public final int id;
     /** 真实姓名（spawn 包同步，城镇托管居民）；空串 = 未托管，回退 CitizenNames 派生名 */
     public final String name;
+	/** Mirrored Resident age group used only for presentation. */
+	private byte age;
 
     /** 上一快照 / Previous snapshot */
     public double x0, y0, z0;
@@ -89,8 +92,13 @@ public final class ClientCitizen {
 	private boolean cullBoxDirty = true;
 
     ClientCitizen(int id, int px, int py, int pz, byte stateDir, String name) {
+		this(id, px, py, pz, stateDir, (byte) Resident.AGE_ADULT, name);
+	}
+
+	ClientCitizen(int id, int px, int py, int pz, byte stateDir, byte age, String name) {
         this.id = id;
         this.name = name == null ? "" : name;
+		setAge(age);
         this.x0 = this.x1 = px / 1024.0;
         this.y0 = this.y1 = py / 1024.0;
         this.z0 = this.z1 = pz / 1024.0;
@@ -103,6 +111,27 @@ public final class ClientCitizen {
         this.visYaw = CitizenState.DIR_TO_YAW[this.dir] & 0xFF;
         this.t0 = this.t1 = now();
     }
+
+	public int age() {
+		return age;
+	}
+
+	public float modelScale() {
+		return switch (age) {
+			case Resident.AGE_INFANT -> 0.4F;
+			case Resident.AGE_CHILD -> 0.5F;
+			default -> 1.0F;
+		};
+	}
+
+	void setAge(int age) {
+		byte normalized = (byte) (age >= Resident.AGE_INFANT && age <= Resident.AGE_ELDER
+				? age : Resident.AGE_ADULT);
+		if (this.age == normalized)
+			return;
+		this.age = normalized;
+		invalidateCullBox();
+	}
 
     /**
      * 快照到达：用当前渲染位置作为新插值起点，保证位置连续。
@@ -259,7 +288,7 @@ public final class ClientCitizen {
 
 	AABB cullingBox() {
 		if (cullBoxDirty) {
-			cullBox = createCullingBox(x0, y0, z0, x1, y1, z1, state & 0xFF, dir, halt);
+			cullBox = createCullingBox(x0, y0, z0, x1, y1, z1, state & 0xFF, dir, halt, modelScale());
 			cullBoxDirty = false;
 		}
 		return cullBox;
@@ -271,6 +300,11 @@ public final class ClientCitizen {
 
 	static AABB createCullingBox(double x0, double y0, double z0,
 			double x1, double y1, double z1, int state, int dir, boolean halt) {
+		return createCullingBox(x0, y0, z0, x1, y1, z1, state, dir, halt, 1.0f);
+	}
+
+	static AABB createCullingBox(double x0, double y0, double z0,
+			double x1, double y1, double z1, int state, int dir, boolean halt, float modelScale) {
 		double extrapolatedX = x1;
 		double extrapolatedZ = z1;
 		boolean moving = state < CitizenState.STATE_COUNT && CitizenState.MOVING[state] && !halt;
@@ -286,11 +320,12 @@ public final class ClientCitizen {
 		double minZ = Math.min(Math.min(z0, z1), extrapolatedZ);
 		double maxZ = Math.max(Math.max(z0, z1), extrapolatedZ);
 		if (state == CitizenState.SLEEP) {
-			return new AABB(minX - 1.35, minY + 0.45, minZ - 1.35,
-					maxX + 1.35, maxY + 0.95, maxZ + 1.35);
+			return new AABB(minX - 1.35 * modelScale, minY + 0.45, minZ - 1.35 * modelScale,
+					maxX + 1.35 * modelScale, maxY + 0.45 + 0.5 * modelScale,
+					maxZ + 1.35 * modelScale);
 		}
-		return new AABB(minX - 0.5, minY, minZ - 0.5,
-				maxX + 0.5, maxY + 2.0, maxZ + 0.5);
+		return new AABB(minX - 0.5 * modelScale, minY, minZ - 0.5 * modelScale,
+				maxX + 0.5 * modelScale, maxY + 2.0 * modelScale, maxZ + 0.5 * modelScale);
 	}
 
     // 当前游戏时间（秒），暂停时不增长。与全部秒制常量（EXTRAPOLATE_CLAMP=1.5、

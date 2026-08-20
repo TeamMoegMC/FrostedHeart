@@ -57,13 +57,16 @@ void vertex(inout Vertex v, Citizen citizen) {
     float part = floor(v.color.r * 255.0 + 0.5);
     bool sleeping = citizen.flags.y > 0.5;
     bool moving = citizen.flags.x > 0.5 || snapshotSpeed > 0.001;
+    float ageScale = citizen.flags.w < 0.5 ? 0.4
+        : (citizen.flags.w < 1.5 ? 0.5 : 1.0);
     v.color = vec4(1.0);
     v.light = citizen.light;
 
     if (part > 5.5) {
         if (sleeping) {
-            float lengthOffset = mix(0.38, -1.18, v.pos.y);
-            v.pos = base + right * (v.pos.x * 0.27) + forward * lengthOffset + vec3(0.0, 0.60, 0.0);
+            float lengthOffset = mix(0.38, -1.18, v.pos.y) * ageScale;
+            v.pos = base + right * (v.pos.x * 0.27 * ageScale)
+                + forward * lengthOffset + vec3(0.0, 0.60, 0.0);
             v.normal = vec3(0.0, 1.0, 0.0);
             v.texCoords.y = (part > 6.5 ? 0.375 : 0.8125) - v.texCoords.y;
         } else {
@@ -74,7 +77,8 @@ void vertex(inout Vertex v, Citizen citizen) {
             float rightLength = length(cameraRight);
             cameraRight = rightLength > 0.0001 ? cameraRight / rightLength : vec3(1.0, 0.0, 0.0);
             vec3 cameraUp = normalize(cross(facing, cameraRight));
-            v.pos = base + cameraRight * (v.pos.x * 0.30) + cameraUp * (v.pos.y * 1.80);
+            v.pos = base + cameraRight * (v.pos.x * 0.30 * ageScale)
+                + cameraUp * (v.pos.y * 1.80 * ageScale);
             v.normal = facing;
         }
         return;
@@ -94,12 +98,13 @@ void vertex(inout Vertex v, Citizen citizen) {
             pivot = vec3(part < 4.5 ? -0.125 : 0.125, -0.75, 0.0);
         citizenRotateX(localPos, localNormal, pivot, swing);
     }
+    localPos *= ageScale;
 
     if (sleeping) {
         float depth = part > 0.5 && part < 1.5 ? 0.5 : 0.25;
         v.pos = base + right * (localPos.x * CITIZEN_SLEEP_SCALE)
-            + forward * (CITIZEN_SLEEP_ORIGIN - localPos.y * CITIZEN_SLEEP_SCALE)
-            + vec3(0.0, CITIZEN_SLEEP_SURFACE_Y + depth * CITIZEN_SLEEP_SCALE * 0.5
+            + forward * (CITIZEN_SLEEP_ORIGIN * ageScale - localPos.y * CITIZEN_SLEEP_SCALE)
+            + vec3(0.0, CITIZEN_SLEEP_SURFACE_Y + depth * CITIZEN_SLEEP_SCALE * ageScale * 0.5
                 - localPos.z * CITIZEN_SLEEP_SCALE, 0.0);
         v.normal = normalize(right * localNormal.x - forward * localNormal.y
             - vec3(0.0, 1.0, 0.0) * localNormal.z);

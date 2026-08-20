@@ -54,11 +54,18 @@ public final class ClientCitizenCache {
 	 * <p>
 	 * Applies a spawn packet.
 	 *
-	 * @param entries 出生条目 / spawn entries
+	 * @param entry 出生或外观刷新条目 / spawn or appearance-refresh entry
+	 * @return 是否创建了新的客户端居民 / whether a new client citizen was created
 	 */
-	public static void applySpawn(List<S2CCitizenSpawnPacket.Entry> entries) {
-		for (S2CCitizenSpawnPacket.Entry e : entries)
-			CITIZENS.put(e.id(), new ClientCitizen(e.id(), e.px(), e.py(), e.pz(), e.stateDir(), e.name()));
+	public static boolean applySpawn(S2CCitizenSpawnPacket.Entry entry) {
+		ClientCitizen existing = CITIZENS.get(entry.id());
+		if (existing != null) {
+			existing.setAge(entry.age());
+			return false;
+		}
+		CITIZENS.put(entry.id(), new ClientCitizen(entry.id(), entry.px(), entry.py(), entry.pz(),
+				entry.stateDir(), entry.age(), entry.name()));
+		return true;
 	}
 
 	/**
@@ -168,8 +175,9 @@ public final class ClientCitizenCache {
 		double bestT = maxDist;
 		for (ClientCitizen c : CITIZENS.values()) {
 			double[] pos = c.renderPos();
+			double modelScale = c.modelScale();
 			double cx = pos[0] - eye.x;
-			double cy = pos[1] + 0.9 - eye.y;
+			double cy = pos[1] + 0.9 * modelScale - eye.y;
 			double cz = pos[2] - eye.z;
 			double t = cx * look.x + cy * look.y + cz * look.z;
 			if (t < 0 || t > bestT)
@@ -179,9 +187,9 @@ public final class ClientCitizenCache {
 			double closestZ = eye.z + look.z * t;
 			double dx = closestX - pos[0];
 			double dz = closestZ - pos[2];
-			if (dx * dx + dz * dz > 0.25)
+			if (dx * dx + dz * dz > 0.25 * modelScale * modelScale)
 				continue;
-			if (closestY < pos[1] - 0.2 || closestY > pos[1] + 2.0)
+			if (closestY < pos[1] - 0.2 * modelScale || closestY > pos[1] + 2.0 * modelScale)
 				continue;
 			bestId = c.id;
 			bestT = t;

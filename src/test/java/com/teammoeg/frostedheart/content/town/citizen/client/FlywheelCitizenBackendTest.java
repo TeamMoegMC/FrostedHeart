@@ -23,6 +23,7 @@ import com.jozufozu.flywheel.api.vertex.VertexList;
 import com.jozufozu.flywheel.backend.gl.buffer.VecBuffer;
 import com.jozufozu.flywheel.backend.instancing.instancing.InstancingEngine;
 import com.jozufozu.flywheel.core.model.Model;
+import com.teammoeg.frostedheart.content.town.resident.Resident;
 
 class FlywheelCitizenBackendTest {
 
@@ -176,7 +177,7 @@ class FlywheelCitizenBackendTest {
 		data.moving = 6;
 		data.sleeping = 7;
 		data.phase = 8;
-		data.reserved = 9;
+		data.age = (byte) Resident.AGE_CHILD;
 
 		ByteBuffer bytes = ByteBuffer.allocateDirect(FlywheelCitizenBackend.INSTANCE_STRIDE_BYTES)
 				.order(ByteOrder.nativeOrder());
@@ -191,7 +192,7 @@ class FlywheelCitizenBackendTest {
 		assertEquals(6, bytes.get(54));
 		assertEquals(7, bytes.get(55));
 		assertEquals(8, bytes.get(56));
-		assertEquals(9, bytes.get(57));
+		assertEquals(Resident.AGE_CHILD, bytes.get(57));
 	}
 
 	@Test
@@ -220,6 +221,8 @@ class FlywheelCitizenBackendTest {
 			assertFalse(shader.contains("uTime * 0.6"));
 			assertFalse(shader.contains("float bob ="));
 			assertTrue(shader.contains("part > 6.5 ? 0.375 : 0.8125"));
+			assertTrue(shader.contains("float ageScale = citizen.flags.w"));
+			assertTrue(shader.contains("localPos *= ageScale;"));
 			assertTrue(program.contains("frostedheart:citizen.vert"));
 		}
 	}

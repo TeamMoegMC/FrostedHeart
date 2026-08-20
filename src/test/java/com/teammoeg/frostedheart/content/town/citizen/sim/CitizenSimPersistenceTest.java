@@ -6,6 +6,7 @@
 
 package com.teammoeg.frostedheart.content.town.citizen.sim;
 
+import com.teammoeg.frostedheart.content.town.resident.Resident;
 import net.minecraft.nbt.CompoundTag;
 import org.junit.jupiter.api.Test;
 
@@ -186,7 +187,27 @@ class CitizenSimPersistenceTest {
         assertEquals(CitizenSim.NO_HOME_POS, decoded.homePos[restored]);
 		assertEquals(-1, decoded.homeSlot[restored]);
 		assertEquals(0, decoded.presentationFlags[restored]);
+		assertEquals(Resident.AGE_ADULT, decoded.presentationAge(restored));
     }
+
+	@Test
+	void transientAgeMirrorUsesTwoBitsAndPreservesOtherPresentationFlags() {
+		CitizenSim sim = new CitizenSim(1);
+		int index = sim.add(31, 0, 0, 0);
+
+		assertEquals(Resident.AGE_ADULT, sim.presentationAge(index));
+		sim.presentationFlags[index] |= CitizenSim.PRESENT_ON_VALID_BED;
+		assertTrue(sim.setPresentationAge(index, Resident.AGE_INFANT));
+		assertEquals(Resident.AGE_INFANT, sim.presentationAge(index));
+		assertTrue((sim.presentationFlags[index] & CitizenSim.PRESENT_ON_VALID_BED) != 0);
+		assertTrue(sim.setPresentationAge(index, Resident.AGE_CHILD));
+		assertEquals(Resident.AGE_CHILD, sim.presentationAge(index));
+		assertTrue(sim.setPresentationAge(index, Resident.AGE_ELDER));
+		assertEquals(Resident.AGE_ELDER, sim.presentationAge(index));
+		assertTrue(sim.setPresentationAge(index, Resident.AGE_ADULT));
+		assertEquals(Resident.AGE_ADULT, sim.presentationAge(index));
+		assertFalse(sim.setPresentationAge(index, 99));
+	}
 
     private static CitizenSim sampleSim() {
         CitizenSim sim = new CitizenSim(1);

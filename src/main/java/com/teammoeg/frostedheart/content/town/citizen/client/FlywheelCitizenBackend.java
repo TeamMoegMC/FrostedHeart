@@ -406,14 +406,14 @@ final class FlywheelCitizenBackend implements CitizenRenderBackend, InstancingEn
 		data.moving = (byte) (moving ? 1 : 0);
 		data.sleeping = (byte) ((citizen.state & 0xFF) == CitizenState.SLEEP ? 1 : 0);
 		data.phase = encodeWalkPhase(citizen.walkPhase());
-		data.reserved = 0;
+		data.age = (byte) citizen.age();
 	}
 
 	private boolean sampleLight(ClientCitizen citizen, CitizenInstanceData data, double[] pos, boolean force) {
 		long gameTime = level.getGameTime();
 		boolean sleeping = (citizen.state & 0xFF) == CitizenState.SLEEP;
 		int x = Mth.floor(pos[0]);
-		int y = Mth.floor(pos[1] + (sleeping ? SLEEP_LIGHT_Y : 1.0));
+		int y = Mth.floor(pos[1] + (sleeping ? SLEEP_LIGHT_Y : citizen.modelScale()));
 		int z = Mth.floor(pos[2]);
 		if (!force && x == citizen.lightBlockX && y == citizen.lightBlockY && z == citizen.lightBlockZ
 				&& gameTime < citizen.nextLightSampleTick)

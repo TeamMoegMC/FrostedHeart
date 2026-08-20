@@ -50,6 +50,17 @@ class ClientCitizenCullBoxTest {
 	}
 
 	@Test
+	void childBoundsScaleAroundTheStandingFeetAndSleepingBedSurface() {
+		AABB standing = ClientCitizen.createCullingBox(0.0, 0.0, 0.0,
+				0.0, 0.0, 0.0, CitizenState.IDLE, 0, false, 0.5F);
+		AABB sleeping = ClientCitizen.createCullingBox(0.0, 0.0, 0.0,
+				0.0, 0.0, 0.0, CitizenState.SLEEP, 0, true, 0.5F);
+
+		assertBox(standing, -0.25, 0.0, -0.25, 0.25, 1.0, 0.25);
+		assertBox(sleeping, -0.675, 0.45, -0.675, 0.675, 0.70, 0.675);
+	}
+
+	@Test
 	void snapshotUpdatesDeferCullBoxAllocationUntilCpuVisibilityRead() throws ReflectiveOperationException {
 		byte stateDir = CitizenState.packStateDir(CitizenState.WANDER, 0);
 		ClientCitizen citizen = new ClientCitizen(7, 0, 0, 0, stateDir, "");

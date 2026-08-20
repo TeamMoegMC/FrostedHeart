@@ -115,7 +115,7 @@ public final class FakeCitizenManager {
 			if (!DetailedCitizenSelector.isEligible(distance2, retained))
 				continue;
 			SELECTOR.addCandidate(citizen.id, distance2, retained);
-			double hitDistance = pickDistance(pos, eye, look, crosshairDistance);
+			double hitDistance = pickDistance(pos, citizen.modelScale(), eye, look, crosshairDistance);
 			if (hitDistance < crosshairDistance) {
 				crosshairDistance = hitDistance;
 				crosshairId = citizen.id;
@@ -157,6 +157,7 @@ public final class FakeCitizenManager {
 			}
 			ent = new FakeCitizenEntity(FHEntityTypes.FAKE_CITIZEN.get(), level);
 			ent.setCitizenId(c.id);
+			ent.setModelScale(c.modelScale());
 			ent.setId(-c.id - 1);
 			ent.setPos(pos[0], pos[1], pos[2]);
 			ent.xo = pos[0];
@@ -181,9 +182,10 @@ public final class FakeCitizenManager {
 		}
 	}
 
-	private static double pickDistance(double[] pos, Vec3 eye, Vector3f look, double maxDistance) {
+	private static double pickDistance(double[] pos, float modelScale, Vec3 eye, Vector3f look,
+			double maxDistance) {
 		double cx = pos[0] - eye.x;
-		double cy = pos[1] + 0.9 - eye.y;
+		double cy = pos[1] + 0.9 * modelScale - eye.y;
 		double cz = pos[2] - eye.z;
 		double t = cx * look.x + cy * look.y + cz * look.z;
 		if (t < 0 || t >= maxDistance)
@@ -193,7 +195,8 @@ public final class FakeCitizenManager {
 		double closestZ = eye.z + look.z * t;
 		double dx = closestX - pos[0];
 		double dz = closestZ - pos[2];
-		if (dx * dx + dz * dz > 0.25 || closestY < pos[1] - 0.2 || closestY > pos[1] + 2.0)
+		if (dx * dx + dz * dz > 0.25 * modelScale * modelScale
+				|| closestY < pos[1] - 0.2 * modelScale || closestY > pos[1] + 2.0 * modelScale)
 			return Double.POSITIVE_INFINITY;
 		return t;
 	}
@@ -209,6 +212,7 @@ public final class FakeCitizenManager {
 	 * @param pos 当前渲染位置 / current render position
 	 */
 	private static void drive(FakeCitizenEntity ent, ClientCitizen c, double[] pos) {
+		ent.setModelScale(c.modelScale());
 		double oldX = ent.getX();
 		double oldZ = ent.getZ();
 		ent.xo = oldX;

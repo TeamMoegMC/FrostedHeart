@@ -44,8 +44,8 @@ import net.minecraftforge.network.NetworkEvent;
  */
 public final class S2CCitizenSpawnPacket implements CMessage {
 
-	/** 出生条目 / Spawn entry */
-	public record Entry(int id, int px, int py, int pz, byte stateDir, String name) {
+	/** 出生条目；已追踪 id 可复用为低频外观刷新 / Spawn entry; tracked ids may reuse it for low-frequency appearance refreshes. */
+	public record Entry(int id, int px, int py, int pz, byte stateDir, byte age, String name) {
 	}
 
 	private final List<Entry> entries;
@@ -58,7 +58,7 @@ public final class S2CCitizenSpawnPacket implements CMessage {
 		int count = buf.readVarInt();
 		this.entries = new ArrayList<>(count);
 		for (int i = 0; i < count; i++)
-			entries.add(new Entry(buf.readVarInt(), buf.readInt(), buf.readInt(), buf.readInt(), buf.readByte(),
+			entries.add(new Entry(buf.readVarInt(), buf.readInt(), buf.readInt(), buf.readInt(), buf.readByte(), buf.readByte(),
 					buf.readUtf(64)));
 	}
 
@@ -71,6 +71,7 @@ public final class S2CCitizenSpawnPacket implements CMessage {
 			buf.writeInt(e.py());
 			buf.writeInt(e.pz());
 			buf.writeByte(e.stateDir());
+			buf.writeByte(e.age());
 			buf.writeUtf(e.name(), 64);
 		}
 	}

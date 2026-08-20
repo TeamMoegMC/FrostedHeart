@@ -104,6 +104,8 @@ public final class SyncEngine {
 	private final IntOpenHashSet pendingHidden = new IntOpenHashSet();
 	/** Discrete sleep/wake snapshots that bypass distance-tier throttling. */
 	private final IntOpenHashSet pendingImmediate = new IntOpenHashSet();
+	/** Low-frequency age changes for clients that already track the citizen. */
+	private final IntOpenHashSet pendingAppearance = new IntOpenHashSet();
 	/** 本 flush 周期内"脏且到期"的居民 id / Dirty-and-due ids in the current flush */
 	private final IntOpenHashSet due = new IntOpenHashSet();
 	/** IDs included in a packet after sendPlayer returned normally during this flush. */
@@ -265,6 +267,11 @@ public final class SyncEngine {
 		pendingImmediate.add(citizenId);
 	}
 
+	/** Queues a low-frequency visual metadata update, currently the Resident age group. */
+	public void notifyAppearance(int citizenId) {
+		pendingAppearance.add(citizenId);
+	}
+
 	/** Whether this player's authoritative presentation set contains the citizen. */
 	public boolean isTracked(ServerPlayer player, int citizenId) {
 		IntOpenHashSet ids = tracked.get(player);
@@ -293,9 +300,11 @@ public final class SyncEngine {
 			selectedScratch.clear();
 			pendingHidden.clear();
 			pendingImmediate.clear();
+			pendingAppearance.clear();
 			return;
 		}
 		drainHidden(players);
+		drainAppearance(players);
 		if (gameTime % AOI_REFRESH == 0)
 			aoiRefreshRequested = true;
 		if (gameTime % FLUSH_INTERVAL == 0)
@@ -410,21 +419,9 @@ public final class SyncEngine {
 		for (int id : selected) {
 			if (old.contains(id))
 				continue;
-			CitizenContainer c = activeScheduler.findById(id);
-			if (c == null)
-				continue;
-			CitizenSim sim = c.sim();
-			int index = sim.indexOf(id);
-			if (index < 0 || !CitizenPresence.presentationEligible(sim, index))
-				continue;
-			String name = c.getCitizenName(id);
-			if (name == null)
-				name = "";
-			byte stateDir = CitizenState.packStateDir(sim.state[index], sim.dir[index]);
-			if (sim.halt[index] != 0)
-				stateDir |= (byte) CitizenState.HALT_BIT;
-			spawns.add(new S2CCitizenSpawnPacket.Entry(id, sim.px[index], sim.py[index], sim.pz[index],
-					stateDir, name));
+			S2CCitizenSpawnPacket.Entry entry = createSpawnEntry(id);
+			if (entry != null)
+				spawns.add(entry);
 		}
 		// Despawn first so applying packets can never transiently exceed either cap.
 		if (!despawns.isEmpty())
@@ -450,6 +447,43 @@ public final class SyncEngine {
 				FHNetwork.INSTANCE.sendPlayer(player, new S2CCitizenDespawnPacket(despawns));
 		}
 		pendingHidden.clear();
+	}
+
+	private void drainAppearance(List<ServerPlayer> players) {
+		if (pendingAppearance.isEmpty())
+			return;
+		for (ServerPlayer player : players) {
+			IntOpenHashSet set = tracked.get(player);
+			if (set == null || set.isEmpty())
+				continue;
+			List<S2CCitizenSpawnPacket.Entry> updates = new ArrayList<>();
+			for (int id : pendingAppearance) {
+				if (!set.contains(id))
+					continue;
+				S2CCitizenSpawnPacket.Entry entry = createSpawnEntry(id);
+				if (entry != null)
+					updates.add(entry);
+			}
+			if (!updates.isEmpty())
+				FHNetwork.INSTANCE.sendPlayer(player, new S2CCitizenSpawnPacket(updates));
+		}
+		pendingAppearance.clear();
+	}
+
+	private S2CCitizenSpawnPacket.Entry createSpawnEntry(int id) {
+		CitizenContainer container = activeScheduler.findById(id);
+		if (container == null)
+			return null;
+		CitizenSim sim = container.sim();
+		int index = sim.indexOf(id);
+		if (index < 0 || !CitizenPresence.presentationEligible(sim, index))
+			return null;
+		String name = container.getCitizenName(id);
+		byte stateDir = CitizenState.packStateDir(sim.state[index], sim.dir[index]);
+		if (sim.halt[index] != 0)
+			stateDir |= (byte) CitizenState.HALT_BIT;
+		return new S2CCitizenSpawnPacket.Entry(id, sim.px[index], sim.py[index], sim.pz[index],
+				stateDir, (byte) sim.presentationAge(index), name == null ? "" : name);
 	}
 
 	private void flushDeltas(CitizenSimScheduler sched, List<ServerPlayer> players, long gameTime) {

@@ -33,5 +33,5 @@ final class CitizenInstanceData extends InstanceData {
 	byte moving;
 	byte sleeping;
 	byte phase;
-	byte reserved;
+	byte age;
 }

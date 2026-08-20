@@ -158,7 +158,7 @@ public final class ClientCitizenRenderer {
 				emitStandingPlayer(buf, mat, c, pos, timeSeconds);
 			} else {
 				billboardCount++;
-				emitStandingBillboard(buf, mat, left, up, look, pos);
+				emitStandingBillboard(buf, mat, left, up, look, c, pos);
 			}
 		}
 		pose.popPose();
@@ -183,7 +183,8 @@ public final class ClientCitizenRenderer {
 	private static int sampleLight(ClientCitizen citizen, double[] pos, boolean sleeping,
 			ClientLevel level, long gameTime) {
 		int x = Mth.floor(pos[0]);
-		int y = Mth.floor(pos[1] + (sleeping ? CitizenBatchRenderLayout.SLEEP_SURFACE_Y : 1.0));
+		int y = Mth.floor(pos[1] + (sleeping
+				? CitizenBatchRenderLayout.SLEEP_SURFACE_Y : citizen.modelScale()));
 		int z = Mth.floor(pos[2]);
 		if (x != citizen.lightBlockX || y != citizen.lightBlockY || z != citizen.lightBlockZ
 				|| gameTime >= citizen.nextLightSampleTick) {
@@ -203,15 +204,17 @@ public final class ClientCitizenRenderer {
 		int yaw = c.visualYaw();
 		CitizenBatchRenderLayout.Axes axes = CitizenBatchRenderLayout.standingAxes(yaw);
 		CitizenBatchRenderLayout.sampleBodyMotion(c, timeSeconds, BODY_MOTION);
+		float modelScale = c.modelScale();
 		for (int index = 0; index < CitizenBatchRenderLayout.bodyPartCount(); index++) {
 			CitizenBatchRenderLayout.BodyPart part = CitizenBatchRenderLayout.bodyPartAt(index);
 			standingPart(buf, mat, pos, axes, part,
-					CitizenBatchRenderLayout.limbAngle(part, BODY_MOTION));
+					CitizenBatchRenderLayout.limbAngle(part, BODY_MOTION), modelScale);
 		}
 	}
 
 	private static void standingPart(BufferBuilder buf, Matrix4f mat, double[] pos,
-			CitizenBatchRenderLayout.Axes axes, CitizenBatchRenderLayout.BodyPart part, float angle) {
+			CitizenBatchRenderLayout.Axes axes, CitizenBatchRenderLayout.BodyPart part, float angle,
+			float modelScale) {
 		float sin = Mth.sin(angle);
 		float cos = Mth.cos(angle);
 		float relativeY = part.centerY() - part.pivotY();
@@ -224,10 +227,10 @@ public final class ClientCitizenRenderer {
 		float backY = -axes.yY() * sin + axes.zY() * cos;
 		float backZ = -axes.yZ() * sin + axes.zZ() * cos;
 		addTexturedBox(buf, mat,
-				pos[0] + axes.xX() * part.sideOffset() + axes.yX() * modelY + axes.zX() * modelZ,
-				pos[1] + axes.xY() * part.sideOffset() + axes.yY() * modelY + axes.zY() * modelZ,
-				pos[2] + axes.xZ() * part.sideOffset() + axes.yZ() * modelY + axes.zZ() * modelZ,
-				part.width(), part.height(), part.depth(),
+				pos[0] + (axes.xX() * part.sideOffset() + axes.yX() * modelY + axes.zX() * modelZ) * modelScale,
+				pos[1] + (axes.xY() * part.sideOffset() + axes.yY() * modelY + axes.zY() * modelZ) * modelScale,
+				pos[2] + (axes.xZ() * part.sideOffset() + axes.yZ() * modelY + axes.zZ() * modelZ) * modelScale,
+				part.width() * modelScale, part.height() * modelScale, part.depth() * modelScale,
 				axes.xX(), axes.xY(), axes.xZ(),
 				upX, upY, upZ, backX, backY, backZ,
 				part.textureU(), part.textureV(), part.widthPixels(), part.heightPixels(), part.depthPixels());
@@ -236,25 +239,26 @@ public final class ClientCitizenRenderer {
 	private static void emitSleepingPlayer(BufferBuilder buf, Matrix4f mat, ClientCitizen c, double[] pos) {
 		int yaw = CitizenState.DIR_TO_YAW[c.dir & 15] & 0xFF;
 		CitizenBatchRenderLayout.Axes axes = CitizenBatchRenderLayout.sleepingAxes(yaw);
+		float modelScale = c.modelScale();
 		for (int index = 0; index < CitizenBatchRenderLayout.bodyPartCount(); index++)
-			sleepingPart(buf, mat, pos, axes, CitizenBatchRenderLayout.bodyPartAt(index));
+			sleepingPart(buf, mat, pos, axes, CitizenBatchRenderLayout.bodyPartAt(index), modelScale);
 	}
 
 	private static void sleepingPart(BufferBuilder buf, Matrix4f mat, double[] pos,
-			CitizenBatchRenderLayout.Axes axes, CitizenBatchRenderLayout.BodyPart part) {
+			CitizenBatchRenderLayout.Axes axes, CitizenBatchRenderLayout.BodyPart part, float modelScale) {
 		float forwardX = -axes.yX();
 		float forwardZ = -axes.yZ();
-		float scaledDepth = part.depth() * CitizenBatchRenderLayout.SLEEP_SCALE;
-		float lengthOffset = CitizenBatchRenderLayout.SLEEP_MODEL_ORIGIN
-				+ part.centerY() * CitizenBatchRenderLayout.SLEEP_SCALE;
+		float sleepScale = CitizenBatchRenderLayout.SLEEP_SCALE * modelScale;
+		float scaledDepth = part.depth() * sleepScale;
+		float lengthOffset = CitizenBatchRenderLayout.SLEEP_MODEL_ORIGIN * modelScale
+				+ part.centerY() * sleepScale;
 		addTexturedBox(buf, mat,
-				pos[0] + axes.xX() * part.sideOffset() * CitizenBatchRenderLayout.SLEEP_SCALE
+				pos[0] + axes.xX() * part.sideOffset() * sleepScale
 						+ forwardX * lengthOffset,
 				pos[1] + CitizenBatchRenderLayout.SLEEP_SURFACE_Y + scaledDepth * 0.5,
-				pos[2] + axes.xZ() * part.sideOffset() * CitizenBatchRenderLayout.SLEEP_SCALE
+				pos[2] + axes.xZ() * part.sideOffset() * sleepScale
 						+ forwardZ * lengthOffset,
-				part.width() * CitizenBatchRenderLayout.SLEEP_SCALE,
-				part.height() * CitizenBatchRenderLayout.SLEEP_SCALE, scaledDepth,
+				part.width() * sleepScale, part.height() * sleepScale, scaledDepth,
 				axes.xX(), axes.xY(), axes.xZ(),
 				axes.yX(), axes.yY(), axes.yZ(),
 				axes.zX(), axes.zY(), axes.zZ(),
@@ -262,17 +266,18 @@ public final class ClientCitizenRenderer {
 	}
 
 	private static void emitStandingBillboard(BufferBuilder buf, Matrix4f mat, Vector3f left, Vector3f up,
-			Vector3f look, double[] pos) {
+			Vector3f look, ClientCitizen citizen, double[] pos) {
+		float modelScale = citizen.modelScale();
 		for (int quadIndex = 0; quadIndex < CitizenBatchRenderLayout.billboardQuadCount(); quadIndex++)
 			emitStandingBillboardQuad(buf, mat, left, up, look, pos,
-					CitizenBatchRenderLayout.billboardQuadAt(quadIndex));
+					CitizenBatchRenderLayout.billboardQuadAt(quadIndex), modelScale);
 	}
 
 	private static void emitStandingBillboardQuad(BufferBuilder buf, Matrix4f mat, Vector3f left, Vector3f up,
-			Vector3f look, double[] pos, CitizenBatchRenderLayout.BillboardQuad quad) {
-		float halfWidth = CitizenBatchRenderLayout.standingBillboardHalfWidth(quad);
-		float bottom = CitizenBatchRenderLayout.standingBillboardY(quad.minY());
-		float top = CitizenBatchRenderLayout.standingBillboardY(quad.maxY());
+			Vector3f look, double[] pos, CitizenBatchRenderLayout.BillboardQuad quad, float modelScale) {
+		float halfWidth = CitizenBatchRenderLayout.standingBillboardHalfWidth(quad) * modelScale;
+		float bottom = CitizenBatchRenderLayout.standingBillboardY(quad.minY()) * modelScale;
+		float top = CitizenBatchRenderLayout.standingBillboardY(quad.maxY()) * modelScale;
 		double lx = left.x * halfWidth;
 		double ly = left.y * halfWidth;
 		double lz = left.z * halfWidth;
@@ -299,18 +304,19 @@ public final class ClientCitizenRenderer {
 		int yaw = CitizenState.DIR_TO_YAW[c.dir & 15] & 0xFF;
 		float fx = CitizenState.DIR_X_256[yaw] / 1024.0f;
 		float fz = CitizenState.DIR_Z_256[yaw] / 1024.0f;
+		float modelScale = c.modelScale();
 		for (int quadIndex = 0; quadIndex < CitizenBatchRenderLayout.billboardQuadCount(); quadIndex++)
 			emitSleepingBillboardQuad(buf, mat, pos, fx, fz,
-					CitizenBatchRenderLayout.billboardQuadAt(quadIndex));
+					CitizenBatchRenderLayout.billboardQuadAt(quadIndex), modelScale);
 	}
 
 	private static void emitSleepingBillboardQuad(BufferBuilder buf, Matrix4f mat, double[] pos,
-			float fx, float fz, CitizenBatchRenderLayout.BillboardQuad quad) {
-		float halfWidth = CitizenBatchRenderLayout.sleepingBillboardHalfWidth(quad);
+			float fx, float fz, CitizenBatchRenderLayout.BillboardQuad quad, float modelScale) {
+		float halfWidth = CitizenBatchRenderLayout.sleepingBillboardHalfWidth(quad) * modelScale;
 		float sx = -fz * halfWidth;
 		float sz = fx * halfWidth;
-		float frontLength = CitizenBatchRenderLayout.sleepingBillboardLength(quad.minY());
-		float backLength = CitizenBatchRenderLayout.sleepingBillboardLength(quad.maxY());
+		float frontLength = CitizenBatchRenderLayout.sleepingBillboardLength(quad.minY()) * modelScale;
+		float backLength = CitizenBatchRenderLayout.sleepingBillboardLength(quad.maxY()) * modelScale;
 		float frontX = (float) pos[0] + fx * frontLength;
 		float frontZ = (float) pos[2] + fz * frontLength;
 		float backX = (float) pos[0] + fx * backLength;

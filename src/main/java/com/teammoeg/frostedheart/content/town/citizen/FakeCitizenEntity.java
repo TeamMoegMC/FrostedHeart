@@ -26,7 +26,9 @@ import net.minecraft.network.protocol.game.ClientGamePacketListener;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EntityDimensions;
 import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.Pose;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.api.distmarker.Dist;
@@ -55,6 +57,7 @@ public class FakeCitizenEntity extends Mob {
 
 	/** 关联的模拟居民稳定 id / Associated simulated citizen stable id */
 	private int citizenId = -1;
+	private float modelScale = 1.0F;
 
 	/**
 	 * 行走位移平滑值（FakeCitizenManager 每 tick 写入，一阶 EMA）。
@@ -83,6 +86,22 @@ public class FakeCitizenEntity extends Mob {
 
 	public void setCitizenId(int citizenId) {
 		this.citizenId = citizenId;
+	}
+
+	public float getModelScale() {
+		return modelScale;
+	}
+
+	public void setModelScale(float modelScale) {
+		if (this.modelScale == modelScale)
+			return;
+		this.modelScale = modelScale;
+		this.refreshDimensions();
+	}
+
+	@Override
+	public EntityDimensions getDimensions(Pose pose) {
+		return super.getDimensions(pose).scale(modelScale);
 	}
 
 	/**

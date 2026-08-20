@@ -24,6 +24,8 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
+import com.teammoeg.frostedheart.content.town.resident.Resident;
+
 import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
 import net.minecraft.nbt.CompoundTag;
 
@@ -41,6 +43,8 @@ import net.minecraft.nbt.CompoundTag;
 public final class CitizenSim {
 	/** Sleeping citizen is anchored to a currently verified bed head. */
 	public static final byte PRESENT_ON_VALID_BED = 1;
+	private static final int PRESENTATION_AGE_SHIFT = 1;
+	private static final int PRESENTATION_AGE_MASK = 0b110;
 	/** 瞬态完整住宅锚点缺失值 / Sentinel for a missing transient full home anchor. */
 	public static final long NO_HOME_POS = Long.MIN_VALUE;
 
@@ -70,7 +74,7 @@ public final class CitizenSim {
 	 * shared by bed assignment and collision-free exit placement.
 	 */
 	public int[] homeSlot;
-	/** Transient presentation bits; never persisted. */
+	/** Transient presentation bits: valid-bed state plus the Resident age group; never persisted. */
 	public byte[] presentationFlags;
 	/** 工作锚点（方块坐标），-1 = 无工作（命令生成/失业居民）；运行期数据，不落盘（重启后由人口对齐重建） / Work anchor (block coords), -1 = no job (command-spawned/unemployed); runtime-only, rebuilt by the population align after restart */
 	public int[] wx, wz;
@@ -226,6 +230,30 @@ public final class CitizenSim {
 	 */
 	public int add(int newId, int x, int y, int z, byte phase) {
 		return add(newId, x, y, z);
+	}
+
+	/** Returns the mirrored Resident age used only for client presentation. */
+	public int presentationAge(int index) {
+		return switch ((presentationFlags[index] & PRESENTATION_AGE_MASK) >>> PRESENTATION_AGE_SHIFT) {
+			case 1 -> Resident.AGE_INFANT;
+			case 2 -> Resident.AGE_CHILD;
+			case 3 -> Resident.AGE_ELDER;
+			default -> Resident.AGE_ADULT;
+		};
+	}
+
+	/** Updates the transient age mirror and reports whether its visual value changed. */
+	public boolean setPresentationAge(int index, int age) {
+		int encoded = switch (age) {
+			case Resident.AGE_INFANT -> 1;
+			case Resident.AGE_CHILD -> 2;
+			case Resident.AGE_ELDER -> 3;
+			default -> 0;
+		};
+		byte previous = presentationFlags[index];
+		presentationFlags[index] = (byte) ((previous & ~PRESENTATION_AGE_MASK)
+				| (encoded << PRESENTATION_AGE_SHIFT));
+		return previous != presentationFlags[index];
 	}
 
 	/**

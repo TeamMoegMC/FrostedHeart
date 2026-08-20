@@ -241,6 +241,7 @@ public class TownSimData implements CitizenContainer, ITownResidentListener {
 			sim.wx[idx] = work != null ? work.getX() : -1;
 			sim.wz[idx] = work != null ? work.getZ() : -1;
 			nameCache.put(sim.id[idx], resident.getFirstName() + " " + resident.getLastName());
+			syncPresentationAge(resident, idx);
 			if (!reconcilingResidents) {
 				rebuildBedAssignments(previousHome);
 				if (sim.homePos[idx] != previousHome)
@@ -259,6 +260,7 @@ public class TownSimData implements CitizenContainer, ITownResidentListener {
 				(byte) (id % BehaviorSystem.SLICE));
 		sim.uuidHi[i] = hi;
 		sim.uuidLo[i] = lo;
+		syncPresentationAge(resident, i);
 		sim.homeX[i] = anchor.getX();
 		sim.homeZ[i] = anchor.getZ();
 		sim.homePos[i] = fullHome;
@@ -549,6 +551,7 @@ public class TownSimData implements CitizenContainer, ITownResidentListener {
 					sim.wz[idx] = work != null ? work.getZ() : -1;
 					r.setSimId(sim.id[idx]);
 					nameCache.put(sim.id[idx], r.getFirstName() + " " + r.getLastName());
+					syncPresentationAge(r, idx);
 					if (persistedChanged)
 						markDirty();
 				}
@@ -570,6 +573,11 @@ public class TownSimData implements CitizenContainer, ITownResidentListener {
 		}
 		rebuildAllBedAssignments();
 		placePendingResidents(pendingPlacements, Math.floorDiv(level.getDayTime(), 24000L));
+	}
+
+	private void syncPresentationAge(Resident resident, int index) {
+		if (sim.setPresentationAge(index, resident.getAge()) && activeSched != null)
+			activeSched.sync.notifyAppearance(sim.id[index]);
 	}
 
 	/**
@@ -679,7 +687,7 @@ public class TownSimData implements CitizenContainer, ITownResidentListener {
 
 	private void prepareSleepingState(int index) {
 		sim.state[index] = CitizenState.SLEEP;
-		sim.presentationFlags[index] = 0;
+		sim.presentationFlags[index] &= ~CitizenSim.PRESENT_ON_VALID_BED;
 		sim.halt[index] = 0;
 		sim.sepX[index] = 0;
 		sim.sepZ[index] = 0;

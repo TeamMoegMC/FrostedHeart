@@ -192,6 +192,7 @@ Body 与 Billboard 网格只上传一次。Flywheel 0.6.11 的 instancing 模型
 - 静止：部件不摆动；实例 Body 不增加详细假实体不存在的整体上下 bob。
 - `SLEEP`：整体旋转为水平姿态，不执行步行动画。
 - 朝向：使用客户端平滑后的 256 级视觉 yaw，不在 shader 中重新推导行为方向。
+- 年龄：幼儿、儿童、成人/老人分别使用 `0.4`、`0.5`、`1.0` 整体比例；站立与睡眠的 Body/Billboard 都以脚底或床面为固定基准缩放。CPU fallback 与详细假实体使用同一组比例。
 
 不需要 bone texture。当前只有 6 个刚性部件，按 `partId` 在 shader 中计算少量旋转比维护骨骼纹理更简单，也更容易兼容 Flywheel 0.6。
 
@@ -206,9 +207,11 @@ Body 与 Billboard 网格只上传一次。Flywheel 0.6.11 的 instancing 模型
 | `timing` | 8 B；Flywheel `uTime` 时钟下的开始 tick 与窗口长度 | 收包 |
 | `velocity` | 8 B；XZ 方块/tick，halt/静止时为 0 | 收包 |
 | `yaw` | 12 B；起始 8-bit yaw、短路径差值、开始 tick | 收包 |
-| `flags` | 4 B；moving、sleeping、量化累计步态 phase、保留位 | 创建、快照或状态变化 |
+| `flags` | 4 B；moving、sleeping、量化累计步态 phase、年龄组 | 创建、快照、状态或年龄变化 |
 
 render frame 只更新全局时间和摄像机 uniform；位置插值与动画在 GPU 完成。网络快照到达时只标脏对应槽位，不允许每帧把 1024 个实例全量重写。
+
+年龄复用 `flags` 原来的末尾保留字节，因此 `CitizenInstanceType.FORMAT` 仍为 `58 B`。年龄改变时只把既有实例标脏一次；不会扩展移动快照，也不会创建按年龄拆分的实例类型或渲染类。
 
 Flywheel timing contract: `FlywheelCitizenBackend.writeSnapshot` samples
 `com.jozufozu.flywheel.util.AnimationTickHolder.getRenderTime()`, the same

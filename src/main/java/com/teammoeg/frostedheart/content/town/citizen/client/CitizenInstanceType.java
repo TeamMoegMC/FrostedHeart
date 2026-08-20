@@ -75,7 +75,7 @@ final class CitizenInstanceType implements Instanced<CitizenInstanceData> {
 			buffer.put(data.moving);
 			buffer.put(data.sleeping);
 			buffer.put(data.phase);
-			buffer.put(data.reserved);
+			buffer.put(data.age);
 		}
 
 		@Override

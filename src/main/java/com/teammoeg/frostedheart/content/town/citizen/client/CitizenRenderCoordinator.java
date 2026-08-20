@@ -66,11 +66,15 @@ public final class CitizenRenderCoordinator {
 	}
 
 	public static void applySpawn(List<S2CCitizenSpawnPacket.Entry> entries) {
-		ClientCitizenCache.applySpawn(entries);
 		for (S2CCitizenSpawnPacket.Entry entry : entries) {
+			boolean added = ClientCitizenCache.applySpawn(entry);
 			ClientCitizen citizen = ClientCitizenCache.get(entry.id());
-			if (citizen != null)
-				notifyAdded(citizen);
+			if (citizen != null) {
+				if (added)
+					notifyAdded(citizen);
+				else
+					notifyUpdated(citizen);
+			}
 		}
 	}
 

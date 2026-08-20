@@ -10,6 +10,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.junit.jupiter.api.AfterEach;
@@ -17,6 +18,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import com.jozufozu.flywheel.event.ReloadRenderersEvent;
+import com.teammoeg.frostedheart.content.town.citizen.sim.CitizenState;
+import com.teammoeg.frostedheart.content.town.citizen.sync.S2CCitizenSpawnPacket;
+import com.teammoeg.frostedheart.content.town.resident.Resident;
 
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraftforge.client.event.RenderLevelStageEvent;
@@ -34,6 +38,27 @@ class CitizenRenderCoordinatorTest {
 	void restoreCpuBackend() {
 		ClientCitizenCache.clear();
 		CitizenRenderCoordinator.resetBackendForTests();
+	}
+
+	@Test
+	void repeatedSpawnUpdatesAgeWithoutReplacingClientState() {
+		byte stateDir = CitizenState.packStateDir(CitizenState.WANDER, 3);
+		ClientCitizenCache.applySpawn(new S2CCitizenSpawnPacket.Entry(
+				17, 1024, 2048, 3072, stateDir, (byte) Resident.AGE_CHILD, "Child"));
+		ClientCitizen citizen = ClientCitizenCache.get(17);
+
+		assertEquals(Resident.AGE_CHILD, citizen.age());
+		assertEquals(0.5F, citizen.modelScale());
+		ClientCitizenCache.applySpawn(new S2CCitizenSpawnPacket.Entry(
+				17, 9999, 9999, 9999, (byte) 0, (byte) Resident.AGE_INFANT, "Child"));
+
+		assertEquals(citizen, ClientCitizenCache.get(17));
+		assertEquals(Resident.AGE_INFANT, citizen.age());
+		assertEquals(0.4F, citizen.modelScale());
+		assertEquals(1.0, citizen.x1);
+		assertEquals(2.0, citizen.y1);
+		assertEquals(3.0, citizen.z1);
+		assertEquals(CitizenState.WANDER, citizen.state);
 	}
 
 	@Test

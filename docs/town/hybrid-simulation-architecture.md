@@ -275,7 +275,7 @@ void tickAll() {
 
 | 包 | 时机 | 内容 |
 |----|------|------|
-| `S2CCitizenSpawnPacket` | 进入预算集合 | id、绝对定点位置、打包的 state+16向 dir+halt、姓名 |
+| `S2CCitizenSpawnPacket` | 进入预算集合；已追踪居民年龄组变化 | id、绝对定点位置、打包的 state+16向 dir+halt、年龄组、姓名 |
 | `S2CCitizenBatchPacket` | 每 4 tick（5Hz） | chunk 分组的局部量化位置、id、打包 state+dir+halt；单包最多 240 条，同一玩家一次 flush 可发多个包 |
 | `S2CCitizenDespawnPacket` | 离开预算、床失效或居民移除 | varint id 列表 |
 
@@ -283,6 +283,7 @@ void tickAll() {
 - **多包分片**：`SyncEngine` 先为每个玩家收集全部仍被追踪且到期的 chunk groups，再由 `CitizenDeltaPacketBatcher.forEachPacket` 按 `MAX_ENTRIES_PER_PACKET=240` 逐包产出并立即发送；跨越 240 的单个 chunk group 会被切分，未跨界的 group 直接复用，只有切片需要复制条目引用。生产路径不保留完整 packet 外层集合，也不能丢弃尾部居民。
 - **规范状态提交**：共享 Dead Reckoning canonical 只在包含该 ID 的 packet 调用 `FHNetwork.INSTANCE.sendPlayer` 并正常返回后推进；这表示本地网络 API 交付，不是客户端 ACK。`due` 中没有交给任何玩家的 ID 不会被伪记为已发送。
 - **离散切换**：入睡、醒来和有效床位置刷新进入 `pendingImmediate`，在下一次 4 tick flush 绕过距离限频；无效床直接进入 `pendingHidden`。
+- **年龄外观**：`TownSimData` 把权威 `Resident.age` 镜像到 `CitizenSim.presentationFlags` 的 2 个瞬态位；初次进入 AOI 时随 `S2CCitizenSpawnPacket` 下发。幼儿成长为儿童、儿童成长为成人时，`SyncEngine.pendingAppearance` 对已追踪 id 重发同一种 spawn 条目；`ClientCitizenCache.applySpawn` 只原位更新年龄，不替换双快照、位置、朝向或行为状态。移动批包不增加年龄字段。
 - **静止零带宽**：睡眠与到岗停止居民完成状态切换后不再发送移动心跳。
 - 走现有 `chorda` 的 `CBaseNetwork`/SimpleChannel 封装，包体手写 `FriendlyByteBuf` 序列化，不走 NBT。
 
@@ -317,9 +318,9 @@ public final class ClientCitizen {
 
 | 路径 | 适用 | 做法 |
 |------|------|------|
-| **假实体** `FakeCitizenEntity` | 清醒且入选详细 Top-K；16 格进入、20 格退出 | 无 AI 的客户端实体，由 `ClientCitizen` 驱动位置、朝向和步行动画；`FHConfig.CLIENT.maxDetailedCitizenEntities` 默认严格限制为 64，交易/准星目标优先 |
-| **批量低模** | 未由假实体接管的清醒居民：Body `<68` 格进入、`<=72` 格保持；睡眠同样适用 | 原版 `RenderType.entityCutoutNoCull` 绘制 Steve 比例的头、躯干、双臂、双腿；睡眠模型沿床方向水平放置，不创建假实体 |
-| **轮廓 LOD** | Billboard `>=68` 格至 `96` 格，具体 owner 由协调器迟滞保持 | 清醒使用带皮肤躯干正面 UV 的竖直 billboard；睡眠使用贴近床面的水平纹理 quad |
+| **假实体** `FakeCitizenEntity` | 清醒且入选详细 Top-K；16 格进入、20 格退出 | 无 AI 的客户端实体，由 `ClientCitizen` 驱动位置、朝向和步行动画；模型、阴影、碰撞箱与选取体积按年龄缩放；`FHConfig.CLIENT.maxDetailedCitizenEntities` 默认严格限制为 64，交易/准星目标优先 |
+| **批量低模** | 未由假实体接管的清醒居民：Body `<68` 格进入、`<=72` 格保持；睡眠同样适用 | 原版 `RenderType.entityCutoutNoCull` 绘制头、躯干、双臂、双腿；CPU/Flywheel 均按年龄缩放站立与睡眠模型，不创建假实体 |
+| **轮廓 LOD** | Billboard `>=68` 格至 `96` 格，具体 owner 由协调器迟滞保持 | 清醒使用身体+头部竖直 billboard，睡眠使用贴近床面的水平身体+头部 quad；两种后端均按年龄缩放 |
 
 要点：
 
@@ -327,6 +328,7 @@ public final class ClientCitizen {
 - 渲染入口是 `RenderLevelStageEvent.AFTER_ENTITIES`；每帧只遍历并剔除一次缓存，按七张皮肤写入七个复用 `BufferBuilder`，仅对本帧实际可见的皮肤提交，最多 7 次 draw call，不创建每帧居民分组集合。
 - 批量顶点使用 `RenderType.entityCutoutNoCull` 的 `DefaultVertexFormat.NEW_ENTITY`，同时提交皮肤 UV、`OverlayTexture.NO_OVERLAY`、居民位置的天空光/方块光和面法线。该 RenderType 的实体 shader 会实际采样 lightmap 并执行原版方向光计算；`POSITION_COLOR_TEX_LIGHTMAP` 的同名 `UV2` 在 Minecraft 1.20.1 对应片元 shader 中没有被采样，不能用于环境明暗。光照值缓存在 `ClientCitizen`：跨方块时立即重采样，静止时按 citizen id 错峰每 5–8 tick 刷新；采样复用单个 `MutableBlockPos`，避免逐帧对象分配。
 - `CitizenBatchRenderLayout` 是 CPU/Flywheel 的共享表现合同：定义六个 Body 部件、两个 Billboard quad、皮肤 UV、睡眠比例/锚点、四肢摆动符号，并预计算 256 向站立/睡眠模型轴。站立轴复现 `LivingEntityRenderer` 的 `scale(-1, -1, 1)` 约定，使皮肤局部 `-Z` 始终朝居民前方、局部 `-Y` 朝世界上方；睡眠时局部 `-Z` 朝上、局部 `-Y` 朝床头。每个面的世界法线再经过当前 `PoseStack` normal matrix 一次后复用于四个顶点，不产生逐顶点临时向量。
+- `ClientCitizen.modelScale()` 将 `AGE_INFANT`、`AGE_CHILD`、`AGE_ADULT/AGE_ELDER` 分别映射为 `0.4`、`0.5`、`1.0`。详细假实体、CPU Body/Billboard、Flywheel Body/Billboard、视锥 AABB、光照采样高度和准星选取共享该语义；年龄只影响表现，不改变 Citizen 行为、速度、LOD 距离或服务端碰撞。
 - 睡眠使用低矮 AABB 做视锥剔除，关闭行走起伏，并使用同步的床朝向而非客户端软转向。
 - `DetailedCitizenSelector` 通过复用的原始类型数组和最大堆执行稳定 Top-K；已接管居民按 4 格距离优势保留，等距按稳定 id。配置降低或设为 0 时，下一客户端 tick 立即释放超额代理，未入选居民仍由批量路径绘制。
 - `ClientCitizen` 缓存覆盖双快照与最大外推终点的扫掠 AABB；只在 spawn/网络快照时重建，渲染帧不再逐居民分配剔除对象。
@@ -355,7 +357,7 @@ public final class ClientCitizen {
 - 未托管容器 `UnmanagedCitizenData extends SavedData`（per-level，沿用旧文件名 `fh_citizen_sim`），采用同样的变更标脏语义；同时承载本维度稳定 id 分配器（nextId 持久化、永不复用）。首次接管会以本维度全部容器的最大现存 id 校准分配器；若坏档或不完整写盘已造成跨容器 id 冲突，只重分配冲突的会话 id，位置/状态/居民 UUID 保持不变。
 - 序列化按 SoA 数组直写 NBT `int[]/byte[]` 数组字段，遵循项目 Codec-first 约定可用 `Codec.INT_STREAM`/`BYTE_BUFFER`；1 万居民落盘 < 1MB，毫秒级。
 - 冷数据档案另存一个 compound。版本号字段预留迁移空间（参考仓库根 `NBT_MIGRATION_GUIDE.md`）。
-- `presentationFlags`、`homePos`、`homeSlot` 等床位展示数据是运行期瞬态 SoA 字段；`PRESENT_ON_VALID_BED` 每次住宅布局/床方块验证后重建，不写入 NBT。
+- `presentationFlags`、`homePos`、`homeSlot` 等展示数据是运行期瞬态 SoA 字段，不写入 NBT。`presentationFlags` bit 0 是每次住宅布局/床方块验证后重建的 `PRESENT_ON_VALID_BED`，bit 1..2 镜像 `Resident.age`；编码 `0/1/2/3` 分别表示成人/幼儿/儿童/老人，使旧存档和未托管居民的全零默认仍表现为成人。
 
 ---
 
