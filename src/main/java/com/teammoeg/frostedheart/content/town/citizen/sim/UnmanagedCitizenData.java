@@ -50,7 +50,7 @@ public final class UnmanagedCitizenData extends SavedData implements CitizenCont
 
 	private static final String DATA_NAME = "fh_citizen_sim";
 
-	private final CitizenSim sim = new CitizenSim(64);
+	private final CitizenSim sim = new CitizenSim(16);
 	/** FH 交易数据（命令居民可交易）/ FH trade data (command citizens can trade) */
 	private final Int2ObjectOpenHashMap<FHVillagerData> tradeData = new Int2ObjectOpenHashMap<>();
 	/**

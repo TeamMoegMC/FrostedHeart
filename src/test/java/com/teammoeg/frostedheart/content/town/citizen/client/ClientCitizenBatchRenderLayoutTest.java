@@ -10,6 +10,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import org.junit.jupiter.api.Test;
 
+import com.teammoeg.frostedheart.content.town.citizen.sim.CitizenState;
+
 class ClientCitizenBatchRenderLayoutTest {
 
 	private static final float EPSILON = 0.001f;
@@ -32,6 +34,22 @@ class ClientCitizenBatchRenderLayoutTest {
 		assertSleepingAxes(192, 1.0f, 0.0f);
 		for (int yaw = 0; yaw < 256; yaw++)
 			assertOrthonormal(CitizenBatchRenderLayout.sleepingAxes(yaw));
+	}
+
+	@Test
+	void clientCitizenOwnsWalkPhaseAcrossBackendChanges() {
+		byte stateDir = CitizenState.packStateDir(CitizenState.WANDER, 0);
+		ClientCitizen citizen = new ClientCitizen(9, 0, 0, 0, stateDir, "");
+		float initial = citizen.walkPhase();
+		citizen.x0 = 1.0;
+		citizen.z0 = 2.0;
+		citizen.x1 = 4.0;
+		citizen.z1 = 6.0;
+
+		citizen.update(4 * CitizenState.FIXED_SCALE, 0, 6 * CitizenState.FIXED_SCALE, stateDir);
+
+		assertEquals(CitizenBatchRenderLayout.advanceWalkPhase(initial, 1.0, 2.0, 4.0, 6.0),
+				citizen.walkPhase(), EPSILON);
 	}
 
 	private static void assertStandingAxes(int yaw, float forwardX, float forwardZ) {

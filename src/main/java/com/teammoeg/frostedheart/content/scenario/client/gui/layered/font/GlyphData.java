@@ -24,107 +24,104 @@ import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
 
 public class GlyphData {
-	static GlyphData EMPTY=new GlyphData(0,0,7,9,5,0,1) {
+	static final GlyphData EMPTY = new GlyphData(0, 0, 7, 9, 5, 0, 1, false, null, -1);
 
-		@Override
-		public int renderFont(Graphics2D g2d, int x, int y, int hsize, int color) {
-			return (int) (advance * 1f / height * hsize);
-		}
-		
-	};
-	int width;
-	int height;
-	int x;
-	int y;
-	int advance;
-	int ascent;
-	float scale=1;
-	boolean hasAscent;
-	public boolean isUnicode=false;
-	BufferedImage image;
-	int cachedColor=0xFFFFFFFF;
-	BufferedImage chachedGraphics;
-	BufferedImage shadowGraphics;
-	public GlyphData(int x, int y, int width, int height, int i, int ascent,float scale) {
-		super();
+	private final int width;
+	private final int height;
+	private final int x;
+	private final int y;
+	private final int advance;
+	private final int ascent;
+	private final float scale;
+	private final boolean hasAscent;
+	private final boolean unicode;
+	private final BufferedImage image;
+	private final int cacheId;
+
+	private GlyphData(int x, int y, int width, int height, int advance, int ascent, float scale,
+			boolean unicode, BufferedImage image, int cacheId) {
 		this.width = width;
 		this.height = height;
 		this.x = x;
 		this.y = y;
-		advance = i;
+		this.advance = advance;
 		this.ascent = ascent;
-		hasAscent=true;
-		this.scale=scale;
+		this.hasAscent = ascent != 0;
+		this.scale = scale;
+		this.unicode = unicode;
+		this.image = image;
+		this.cacheId = cacheId;
 	}
 
-	public GlyphData(int x, int y) {
-		super();
-		this.x = x;
-		this.y = y;
+	static GlyphData bitmap(int cacheId, int x, int y, int width, int height, int advance, int ascent,
+			float scale, BufferedImage image) {
+		return new GlyphData(x, y, width, height, advance, ascent, scale, false, image, cacheId);
 	}
 
-	public GlyphData() {
+	static GlyphData legacyUnicode(int cacheId, int x, int y, byte packedSize, BufferedImage image) {
+		int left = (packedSize >> 4) & 15;
+		int width = (packedSize & 15) + 1 - left;
+		return new GlyphData(x + left, y, width, 16, width + 2, 0, 1, true, image, cacheId);
 	}
 
-	public int renderFont(Graphics2D g2d, int x, int y, int hsize,int color) {
-		Object originalHint=g2d.getRenderingHint(RenderingHints.KEY_INTERPOLATION);
-		if(!isUnicode)
-			g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
+	static GlyphData space(int cacheId, int advance) {
+		return new GlyphData(0, 0, 0, 16, advance, 0, 1, false, null, cacheId);
+	}
 
-		
-		int crx=this.x;
-		int cry=this.y;
-		BufferedImage currentImage=image;
-		if(image==null)
-			return (int) (advance * 1f / height * hsize);
-		if(color!=0xFFFFFFFF) {
-			if(color==0xFF000000) {
-				if(shadowGraphics==null) {
-					shadowGraphics=new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
-					for (int x0 = 0; x0 < width; x0++) {
-						for (int y0 = 0; y0 < height; y0++) {
-							int srgb = image.getRGB(x0+this.x, y0+this.y);
-							if ((srgb&0xFF000000) != 0) {
-								shadowGraphics.setRGB(x0, y0, color);
-							}
-						}
-					}
-				}
-				crx=cry=0;
-				currentImage=shadowGraphics;
-			}else if(color!=cachedColor) {
-				if(chachedGraphics==null) {
-					chachedGraphics=new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
-				}
-				for (int x0 = 0; x0 < width; x0++) {
-					for (int y0 = 0; y0 < height; y0++) {
-						int srgb = image.getRGB(x0+this.x, y0+this.y);
-						if ((srgb&0xFF000000) != 0) {
-							chachedGraphics.setRGB(x0, y0, color);
-						}
-					}
-				}
-				crx=cry=0;
-				currentImage=chachedGraphics;
-			}else {
-				crx=cry=0;
-				currentImage=chachedGraphics;
-			}
+	int renderFont(Graphics2D graphics, GlyphImageCache cache, int drawX, int drawY, int targetHeight, int color) {
+		Object originalHint = graphics.getRenderingHint(RenderingHints.KEY_INTERPOLATION);
+		if (!unicode) {
+			graphics.setRenderingHint(RenderingHints.KEY_INTERPOLATION,
+					RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
+		}
+		if (image == null) {
+			return scaledAdvance(targetHeight);
 		}
 
-		// AlphaComposite.
-		g2d.drawImage(currentImage, x, y, x + (int) (width * 1f / height * hsize*scale), y + (int)(hsize*scale),crx , cry, crx + width,
-				cry + height, null);
-		g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, originalHint);
-		return (int) (advance * 1f / height * hsize);
+		int sourceX = x;
+		int sourceY = y;
+		BufferedImage currentImage = image;
+		if (color != 0xFFFFFFFF) {
+			currentImage = cache.get(this, color);
+			sourceX = 0;
+			sourceY = 0;
+		}
+		graphics.drawImage(currentImage, drawX, drawY,
+				drawX + (int) (width * 1F / height * targetHeight * scale),
+				drawY + (int) (targetHeight * scale),
+				sourceX, sourceY, sourceX + width, sourceY + height, null);
+		if (!unicode) {
+			graphics.setRenderingHint(RenderingHints.KEY_INTERPOLATION, originalHint);
+		}
+		return scaledAdvance(targetHeight);
 	}
 
-	public void parseSize(byte data) {
-		int sx = (data >> 4) & 15;
-		x += sx;
-		width = (data & 15) + 1-sx;
-		height = 16;
-		advance = width+2;
+	BufferedImage createColoredImage(int color) {
+		BufferedImage colored = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+		for (int pixelX = 0; pixelX < width; pixelX++) {
+			for (int pixelY = 0; pixelY < height; pixelY++) {
+				if ((image.getRGB(pixelX + x, pixelY + y) & 0xFF000000) != 0) {
+					colored.setRGB(pixelX, pixelY, color);
+				}
+			}
+		}
+		return colored;
+	}
+
+	int scaledAdvance(int targetHeight) {
+		return (int) (advance * 1F / height * targetHeight);
+	}
+
+	int height() {
+		return height;
+	}
+
+	boolean isUnicode() {
+		return unicode;
+	}
+
+	int cacheId() {
+		return cacheId;
 	}
 
 	@Override

@@ -22,7 +22,7 @@ package com.teammoeg.frostedheart.content.town.citizen.sync;
 import java.util.function.Supplier;
 
 import com.teammoeg.chorda.network.CMessage;
-import com.teammoeg.frostedheart.content.town.citizen.client.ClientCitizenCache;
+import com.teammoeg.frostedheart.content.town.citizen.client.CitizenRenderCoordinator;
 
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
@@ -62,7 +62,7 @@ public final class S2CCitizenDespawnPacket implements CMessage {
 	@Override
 	public void handle(Supplier<NetworkEvent.Context> context) {
 		context.get().enqueueWork(
-				() -> DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> ClientCitizenCache.applyDespawn(ids)));
+				() -> DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> CitizenRenderCoordinator.applyDespawn(ids)));
 		context.get().setPacketHandled(true);
 	}
 }

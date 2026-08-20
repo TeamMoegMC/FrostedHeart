@@ -81,6 +81,7 @@ public class FHConfig {
 		public final ForgeConfigSpec.BooleanValue enableKeyHints;
 		public final ForgeConfigSpec.ConfigValue<List<? extends String>> disabledHints;
 		public final ForgeConfigSpec.EnumValue<OverlayPositioner.All> hintPosition;
+		public final ForgeConfigSpec.IntValue maxDetailedCitizenEntities;
 
 		Client(ForgeConfigSpec.Builder builder) {
 			builder.push("Frosted HUD");
@@ -139,7 +140,12 @@ public class FHConfig {
 			builder.pop();
 			builder.pop();
 
-
+			builder.push("Citizen Rendering");
+			maxDetailedCitizenEntities = builder
+					.comment("Maximum awake citizens rendered through the vanilla-quality client entity path.")
+					.comment("Other visible citizens continue through the batched crowd renderer. Zero disables detailed citizen entities.")
+					.defineInRange("maxDetailedCitizenEntities", 64, 0, 128);
+			builder.pop();
 
 			builder.push("Frozen Effects");
 			enableFrozenOverlay = builder

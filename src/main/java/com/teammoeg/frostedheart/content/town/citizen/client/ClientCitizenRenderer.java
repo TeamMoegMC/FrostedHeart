@@ -36,7 +36,6 @@ import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.core.BlockPos;
 import net.minecraft.util.Mth;
-import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.client.event.RenderLevelStageEvent;
 
@@ -51,14 +50,6 @@ import net.minecraftforge.client.event.RenderLevelStageEvent;
  */
 public final class ClientCitizenRenderer {
 
-	private static final double MAX_DIST2 = 96.0 * 96.0;
-	private static final double LOWPOLY_DIST2 = 64.0 * 64.0;
-	private static final double BILLBOARD_HALF_WIDTH = 0.3;
-	private static final double BILLBOARD_HEIGHT = 1.8;
-	private static final float BOB_AMP = 0.05f;
-	private static final double SLEEP_SURFACE_Y = 0.58;
-	private static final float SLEEP_SCALE = 0.8f;
-	private static final float SLEEP_MODEL_ORIGIN = -1.18f;
 	private static final int BUFFER_INITIAL_BYTES = 128 * 1024;
 	private static final float TEXTURE_SIZE = 64.0f;
 	private static final int LIGHT_SAMPLE_INTERVAL = 5;
@@ -67,9 +58,12 @@ public final class ClientCitizenRenderer {
 	private static final BufferBuilder[] SKIN_BUFFERS = createBuffers();
 	private static final boolean[] BUFFER_BEGUN = new boolean[CitizenSkins.count()];
 	private static final BlockPos.MutableBlockPos LIGHT_SAMPLE_POS = new BlockPos.MutableBlockPos();
+	private static final CitizenBatchRenderLayout.MotionSample BODY_MOTION =
+			new CitizenBatchRenderLayout.MotionSample();
 	/** Immediate-mode render-thread state applied while filling the current skin buffers. */
 	private static int currentPackedLight;
 	private static Matrix3f currentNormalMatrix;
+	private static int frameLightSamples;
 
 	private ClientCitizenRenderer() {
 	}
@@ -90,8 +84,13 @@ public final class ClientCitizenRenderer {
 
 	/** Render entry called at {@link RenderLevelStageEvent.Stage#AFTER_ENTITIES}. */
 	public static void render(RenderLevelStageEvent event) {
-		if (ClientCitizenCache.size() == 0)
+		long frameStart = System.nanoTime();
+		int cacheCount = ClientCitizenCache.size();
+		frameLightSamples = 0;
+		if (cacheCount == 0) {
+			recordMetrics(frameStart, 0, 0, 0, 0);
 			return;
+		}
 
 		Camera cam = event.getCamera();
 		Vec3 cp = cam.getPosition();
@@ -100,10 +99,16 @@ public final class ClientCitizenRenderer {
 		Vector3f look = cam.getLookVector();
 		Minecraft minecraft = Minecraft.getInstance();
 		ClientLevel level = minecraft.level;
-		if (level == null)
+		if (level == null) {
+			recordMetrics(frameStart, 0, 0, 0, 0);
 			return;
+		}
 		long gameTime = level.getGameTime();
-		float time = gameTime + event.getPartialTick();
+		double timeSeconds = (gameTime + event.getPartialTick()) / 20.0;
+		int frustumBatchCount = 0;
+		int bodyCount = 0;
+		int billboardCount = 0;
+		int drawCalls = 0;
 
 		PoseStack pose = event.getPoseStack();
 		pose.pushPose();
@@ -114,7 +119,7 @@ public final class ClientCitizenRenderer {
 		for (ClientCitizen c : ClientCitizenCache.values()) {
 			int state = (c.state & 0xFF) % CitizenState.STATE_COUNT;
 			boolean sleeping = state == CitizenState.SLEEP;
-			if (!sleeping && FakeCitizenManager.has(c.id))
+			if (CitizenRenderCoordinator.hasDetailedOwnership(c))
 				continue;
 
 			double[] pos = c.renderPos();
@@ -122,16 +127,16 @@ public final class ClientCitizenRenderer {
 			double dy = pos[1] - cp.y;
 			double dz = pos[2] - cp.z;
 			double d2 = dx * dx + dy * dy + dz * dz;
-			if (d2 > MAX_DIST2 || dx * look.x + dy * look.y + dz * look.z < -1.5)
+			CitizenRenderOwner owner = CitizenRenderCoordinator.batchOwnerFor(c, d2);
+			if (owner == CitizenRenderOwner.NONE || owner == CitizenRenderOwner.DETAILED_ENTITY)
 				continue;
 
-			AABB cullBox = sleeping
-					? new AABB(pos[0] - 1.35, pos[1] + 0.45, pos[2] - 1.35,
-							pos[0] + 1.35, pos[1] + 0.95, pos[2] + 1.35)
-					: new AABB(pos[0] - 0.5, pos[1], pos[2] - 0.5,
-							pos[0] + 0.5, pos[1] + 2.0, pos[2] + 0.5);
-			if (!event.getFrustum().isVisible(cullBox))
+			if (dx * look.x + dy * look.y + dz * look.z < -1.5)
 				continue;
+
+			if (!event.getFrustum().isVisible(c.cullingBox()))
+				continue;
+			frustumBatchCount++;
 
 			int skin = CitizenSkins.indexFor(c.id);
 			BufferBuilder buf = SKIN_BUFFERS[skin];
@@ -142,14 +147,19 @@ public final class ClientCitizenRenderer {
 			}
 			currentPackedLight = sampleLight(c, pos, sleeping, level, gameTime);
 
-			if (sleeping && d2 <= LOWPOLY_DIST2)
+			if (owner == CitizenRenderOwner.BODY_BATCH && sleeping) {
+				bodyCount++;
 				emitSleepingPlayer(buf, mat, c, pos);
-			else if (sleeping)
+			} else if (owner == CitizenRenderOwner.BILLBOARD_BATCH && sleeping) {
+				billboardCount++;
 				emitSleepingBillboard(buf, mat, c, pos);
-			else if (d2 <= LOWPOLY_DIST2)
-				emitStandingPlayer(buf, mat, c, pos, time);
-			else
-				emitStandingBillboard(buf, mat, left, up, look, pos);
+			} else if (owner == CitizenRenderOwner.BODY_BATCH) {
+				bodyCount++;
+				emitStandingPlayer(buf, mat, c, pos, timeSeconds);
+			} else {
+				billboardCount++;
+				emitStandingBillboard(buf, mat, left, up, look, c, pos);
+			}
 		}
 		pose.popPose();
 
@@ -158,13 +168,23 @@ public final class ClientCitizenRenderer {
 				continue;
 			SKIN_RENDER_TYPES[i].end(SKIN_BUFFERS[i], VertexSorting.DISTANCE_TO_ORIGIN);
 			BUFFER_BEGUN[i] = false;
+			drawCalls++;
 		}
+		recordMetrics(frameStart, frustumBatchCount, bodyCount, billboardCount, drawCalls);
+	}
+
+	private static void recordMetrics(long frameStart, int frustumBatchCount, int bodyCount,
+			int billboardCount, int drawCalls) {
+		CitizenRenderMetrics.recordFrame(System.nanoTime() - frameStart, ClientCitizenCache.size(),
+				FakeCitizenManager.activeCount(), frustumBatchCount, bodyCount, billboardCount,
+				drawCalls, frameLightSamples, 0L);
 	}
 
 	private static int sampleLight(ClientCitizen citizen, double[] pos, boolean sleeping,
 			ClientLevel level, long gameTime) {
 		int x = Mth.floor(pos[0]);
-		int y = Mth.floor(pos[1] + (sleeping ? SLEEP_SURFACE_Y : 1.0));
+		int y = Mth.floor(pos[1] + (sleeping
+				? CitizenBatchRenderLayout.SLEEP_SURFACE_Y : citizen.modelScale()));
 		int z = Mth.floor(pos[2]);
 		if (x != citizen.lightBlockX || y != citizen.lightBlockY || z != citizen.lightBlockZ
 				|| gameTime >= citizen.nextLightSampleTick) {
@@ -174,110 +194,139 @@ public final class ClientCitizenRenderer {
 			citizen.lightBlockY = y;
 			citizen.lightBlockZ = z;
 			citizen.nextLightSampleTick = gameTime + LIGHT_SAMPLE_INTERVAL + (citizen.id & 3);
+			frameLightSamples++;
 		}
 		return citizen.packedLight;
 	}
 
-	private static void emitStandingPlayer(BufferBuilder buf, Matrix4f mat, ClientCitizen c, double[] pos, float time) {
+	private static void emitStandingPlayer(BufferBuilder buf, Matrix4f mat, ClientCitizen c,
+			double[] pos, double timeSeconds) {
 		int yaw = c.visualYaw();
 		CitizenBatchRenderLayout.Axes axes = CitizenBatchRenderLayout.standingAxes(yaw);
-		float bob = c.isMoving() ? Mth.abs(Mth.sin(time * 0.6f + (c.id & 7) * 1.7f)) * BOB_AMP : 0.0f;
-		double y = pos[1] + bob;
-
-		standingPart(buf, mat, pos[0], y, pos[2], 0.0f, 0.75f, 0.5f, 0.75f, 0.25f,
-				axes, 16, 16, 8, 12, 4); // body
-		standingPart(buf, mat, pos[0], y, pos[2], 0.0f, 1.5f, 0.5f, 0.5f, 0.5f,
-				axes, 0, 0, 8, 8, 8); // head
-		standingPart(buf, mat, pos[0], y, pos[2], -0.375f, 0.75f, 0.25f, 0.75f, 0.25f,
-				axes, 40, 16, 4, 12, 4); // right arm
-		standingPart(buf, mat, pos[0], y, pos[2], 0.375f, 0.75f, 0.25f, 0.75f, 0.25f,
-				axes, 32, 48, 4, 12, 4); // left arm
-		standingPart(buf, mat, pos[0], y, pos[2], -0.125f, 0.0f, 0.25f, 0.75f, 0.25f,
-				axes, 0, 16, 4, 12, 4); // right leg
-		standingPart(buf, mat, pos[0], y, pos[2], 0.125f, 0.0f, 0.25f, 0.75f, 0.25f,
-				axes, 16, 48, 4, 12, 4); // left leg
+		CitizenBatchRenderLayout.sampleBodyMotion(c, timeSeconds, BODY_MOTION);
+		float modelScale = c.modelScale();
+		for (int index = 0; index < CitizenBatchRenderLayout.bodyPartCount(); index++) {
+			CitizenBatchRenderLayout.BodyPart part = CitizenBatchRenderLayout.bodyPartAt(index);
+			standingPart(buf, mat, pos, axes, part,
+					CitizenBatchRenderLayout.limbAngle(part, BODY_MOTION), modelScale);
+		}
 	}
 
-	private static void standingPart(BufferBuilder buf, Matrix4f mat, double x, double baseY, double z,
-			float sideOffset, float partBaseY, float width, float height, float depth,
-			CitizenBatchRenderLayout.Axes axes, int texU, int texV, int pixelW, int pixelH, int pixelD) {
+	private static void standingPart(BufferBuilder buf, Matrix4f mat, double[] pos,
+			CitizenBatchRenderLayout.Axes axes, CitizenBatchRenderLayout.BodyPart part, float angle,
+			float modelScale) {
+		float sin = Mth.sin(angle);
+		float cos = Mth.cos(angle);
+		float relativeY = part.centerY() - part.pivotY();
+		float modelY = -part.pivotY() - cos * relativeY;
+		float modelZ = -sin * relativeY;
+		float upX = axes.yX() * cos + axes.zX() * sin;
+		float upY = axes.yY() * cos + axes.zY() * sin;
+		float upZ = axes.yZ() * cos + axes.zZ() * sin;
+		float backX = -axes.yX() * sin + axes.zX() * cos;
+		float backY = -axes.yY() * sin + axes.zY() * cos;
+		float backZ = -axes.yZ() * sin + axes.zZ() * cos;
 		addTexturedBox(buf, mat,
-				x + axes.xX() * sideOffset, baseY + partBaseY + height * 0.5, z + axes.xZ() * sideOffset,
-				width, height, depth,
+				pos[0] + (axes.xX() * part.sideOffset() + axes.yX() * modelY + axes.zX() * modelZ) * modelScale,
+				pos[1] + (axes.xY() * part.sideOffset() + axes.yY() * modelY + axes.zY() * modelZ) * modelScale,
+				pos[2] + (axes.xZ() * part.sideOffset() + axes.yZ() * modelY + axes.zZ() * modelZ) * modelScale,
+				part.width() * modelScale, part.height() * modelScale, part.depth() * modelScale,
 				axes.xX(), axes.xY(), axes.xZ(),
-				axes.yX(), axes.yY(), axes.yZ(),
-				axes.zX(), axes.zY(), axes.zZ(),
-				texU, texV, pixelW, pixelH, pixelD);
+				upX, upY, upZ, backX, backY, backZ,
+				part.textureU(), part.textureV(), part.widthPixels(), part.heightPixels(), part.depthPixels());
 	}
 
 	private static void emitSleepingPlayer(BufferBuilder buf, Matrix4f mat, ClientCitizen c, double[] pos) {
 		int yaw = CitizenState.DIR_TO_YAW[c.dir & 15] & 0xFF;
 		CitizenBatchRenderLayout.Axes axes = CitizenBatchRenderLayout.sleepingAxes(yaw);
-		sleepingPart(buf, mat, pos, axes, 0.0f, 1.125f, 0.5f, 0.75f, 0.25f,
-				16, 16, 8, 12, 4);
-		sleepingPart(buf, mat, pos, axes, 0.0f, 1.75f, 0.5f, 0.5f, 0.5f,
-				0, 0, 8, 8, 8);
-		sleepingPart(buf, mat, pos, axes, -0.375f, 1.125f, 0.25f, 0.75f, 0.25f,
-				40, 16, 4, 12, 4);
-		sleepingPart(buf, mat, pos, axes, 0.375f, 1.125f, 0.25f, 0.75f, 0.25f,
-				32, 48, 4, 12, 4);
-		sleepingPart(buf, mat, pos, axes, -0.125f, 0.375f, 0.25f, 0.75f, 0.25f,
-				0, 16, 4, 12, 4);
-		sleepingPart(buf, mat, pos, axes, 0.125f, 0.375f, 0.25f, 0.75f, 0.25f,
-				16, 48, 4, 12, 4);
+		float modelScale = c.modelScale();
+		for (int index = 0; index < CitizenBatchRenderLayout.bodyPartCount(); index++)
+			sleepingPart(buf, mat, pos, axes, CitizenBatchRenderLayout.bodyPartAt(index), modelScale);
 	}
 
-	private static void sleepingPart(BufferBuilder buf, Matrix4f mat, double[] pos, CitizenBatchRenderLayout.Axes axes,
-			float sideOffset, float modelY, float width, float height, float depth,
-			int texU, int texV, int pixelW, int pixelH, int pixelD) {
+	private static void sleepingPart(BufferBuilder buf, Matrix4f mat, double[] pos,
+			CitizenBatchRenderLayout.Axes axes, CitizenBatchRenderLayout.BodyPart part, float modelScale) {
 		float forwardX = -axes.yX();
 		float forwardZ = -axes.yZ();
-		float scaledDepth = depth * SLEEP_SCALE;
-		float lengthOffset = SLEEP_MODEL_ORIGIN + modelY * SLEEP_SCALE;
+		float sleepScale = CitizenBatchRenderLayout.SLEEP_SCALE * modelScale;
+		float scaledDepth = part.depth() * sleepScale;
+		float lengthOffset = CitizenBatchRenderLayout.SLEEP_MODEL_ORIGIN * modelScale
+				+ part.centerY() * sleepScale;
 		addTexturedBox(buf, mat,
-				pos[0] + axes.xX() * sideOffset * SLEEP_SCALE + forwardX * lengthOffset,
-				pos[1] + SLEEP_SURFACE_Y + scaledDepth * 0.5,
-				pos[2] + axes.xZ() * sideOffset * SLEEP_SCALE + forwardZ * lengthOffset,
-				width * SLEEP_SCALE, height * SLEEP_SCALE, scaledDepth,
+				pos[0] + axes.xX() * part.sideOffset() * sleepScale
+						+ forwardX * lengthOffset,
+				pos[1] + CitizenBatchRenderLayout.SLEEP_SURFACE_Y + scaledDepth * 0.5,
+				pos[2] + axes.xZ() * part.sideOffset() * sleepScale
+						+ forwardZ * lengthOffset,
+				part.width() * sleepScale, part.height() * sleepScale, scaledDepth,
 				axes.xX(), axes.xY(), axes.xZ(),
 				axes.yX(), axes.yY(), axes.yZ(),
 				axes.zX(), axes.zY(), axes.zZ(),
-				texU, texV, pixelW, pixelH, pixelD);
+				part.textureU(), part.textureV(), part.widthPixels(), part.heightPixels(), part.depthPixels());
 	}
 
 	private static void emitStandingBillboard(BufferBuilder buf, Matrix4f mat, Vector3f left, Vector3f up,
-			Vector3f look, double[] pos) {
-		double lx = left.x * BILLBOARD_HALF_WIDTH;
-		double ly = left.y * BILLBOARD_HALF_WIDTH;
-		double lz = left.z * BILLBOARD_HALF_WIDTH;
-		double ux = up.x * BILLBOARD_HEIGHT;
-		double uy = up.y * BILLBOARD_HEIGHT;
-		double uz = up.z * BILLBOARD_HEIGHT;
+			Vector3f look, ClientCitizen citizen, double[] pos) {
+		float modelScale = citizen.modelScale();
+		for (int quadIndex = 0; quadIndex < CitizenBatchRenderLayout.billboardQuadCount(); quadIndex++)
+			emitStandingBillboardQuad(buf, mat, left, up, look, pos,
+					CitizenBatchRenderLayout.billboardQuadAt(quadIndex), modelScale);
+	}
+
+	private static void emitStandingBillboardQuad(BufferBuilder buf, Matrix4f mat, Vector3f left, Vector3f up,
+			Vector3f look, double[] pos, CitizenBatchRenderLayout.BillboardQuad quad, float modelScale) {
+		float halfWidth = CitizenBatchRenderLayout.standingBillboardHalfWidth(quad) * modelScale;
+		float bottom = CitizenBatchRenderLayout.standingBillboardY(quad.minY()) * modelScale;
+		float top = CitizenBatchRenderLayout.standingBillboardY(quad.maxY()) * modelScale;
+		double lx = left.x * halfWidth;
+		double ly = left.y * halfWidth;
+		double lz = left.z * halfWidth;
+		double bottomX = up.x * bottom;
+		double bottomY = up.y * bottom;
+		double bottomZ = up.z * bottom;
+		double topX = up.x * top;
+		double topY = up.y * top;
+		double topZ = up.z * top;
 		standingBillboardQuad(buf, mat,
-				(float) (pos[0] - lx), (float) (pos[1] - ly), (float) (pos[2] - lz),
-				(float) (pos[0] + lx), (float) (pos[1] + ly), (float) (pos[2] + lz),
-				(float) (pos[0] + lx + ux), (float) (pos[1] + ly + uy), (float) (pos[2] + lz + uz),
-				(float) (pos[0] - lx + ux), (float) (pos[1] - ly + uy), (float) (pos[2] - lz + uz),
+				(float) (pos[0] - lx + bottomX), (float) (pos[1] - ly + bottomY),
+				(float) (pos[2] - lz + bottomZ),
+				(float) (pos[0] + lx + bottomX), (float) (pos[1] + ly + bottomY),
+				(float) (pos[2] + lz + bottomZ),
+				(float) (pos[0] + lx + topX), (float) (pos[1] + ly + topY),
+				(float) (pos[2] + lz + topZ),
+				(float) (pos[0] - lx + topX), (float) (pos[1] - ly + topY),
+				(float) (pos[2] - lz + topZ),
 				-look.x, -look.y, -look.z,
-				20, 20, 28, 32);
+				quad.minU(), quad.minV(), quad.maxU(), quad.maxV());
 	}
 
 	private static void emitSleepingBillboard(BufferBuilder buf, Matrix4f mat, ClientCitizen c, double[] pos) {
 		int yaw = CitizenState.DIR_TO_YAW[c.dir & 15] & 0xFF;
 		float fx = CitizenState.DIR_X_256[yaw] / 1024.0f;
 		float fz = CitizenState.DIR_Z_256[yaw] / 1024.0f;
-		float sx = -fz * 0.27f;
-		float sz = fx * 0.27f;
-		float frontX = (float) pos[0] + fx * 0.38f;
-		float frontZ = (float) pos[2] + fz * 0.38f;
-		float backX = (float) pos[0] - fx * 1.18f;
-		float backZ = (float) pos[2] - fz * 1.18f;
-		float y = (float) (pos[1] + SLEEP_SURFACE_Y + 0.02);
+		float modelScale = c.modelScale();
+		for (int quadIndex = 0; quadIndex < CitizenBatchRenderLayout.billboardQuadCount(); quadIndex++)
+			emitSleepingBillboardQuad(buf, mat, pos, fx, fz,
+					CitizenBatchRenderLayout.billboardQuadAt(quadIndex), modelScale);
+	}
+
+	private static void emitSleepingBillboardQuad(BufferBuilder buf, Matrix4f mat, double[] pos,
+			float fx, float fz, CitizenBatchRenderLayout.BillboardQuad quad, float modelScale) {
+		float halfWidth = CitizenBatchRenderLayout.sleepingBillboardHalfWidth(quad) * modelScale;
+		float sx = -fz * halfWidth;
+		float sz = fx * halfWidth;
+		float frontLength = CitizenBatchRenderLayout.sleepingBillboardLength(quad.minY()) * modelScale;
+		float backLength = CitizenBatchRenderLayout.sleepingBillboardLength(quad.maxY()) * modelScale;
+		float frontX = (float) pos[0] + fx * frontLength;
+		float frontZ = (float) pos[2] + fz * frontLength;
+		float backX = (float) pos[0] + fx * backLength;
+		float backZ = (float) pos[2] + fz * backLength;
+		float y = (float) pos[1] + CitizenBatchRenderLayout.SLEEP_BILLBOARD_Y;
 		texturedQuad(buf, mat,
 				frontX + sx, y, frontZ + sz, frontX - sx, y, frontZ - sz,
 				backX - sx, y, backZ - sz, backX + sx, y, backZ + sz,
 				0, 1, 0,
-				20, 20, 28, 32);
+				quad.minU(), quad.minV(), quad.maxU(), quad.maxV());
 	}
 
 	/** Emits a box using the same six-face UV unfolding as vanilla ModelPart.Cube. */
