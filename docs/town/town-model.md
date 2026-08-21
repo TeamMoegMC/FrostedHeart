@@ -957,6 +957,8 @@ vitalOrNutrition = minimum + (maximum - minimum) * mean(u1, u2, u3, u4)
 
 `WanderingRefugee#initializeRandomGeneration` 在实体首次生成时同时确定年龄组和合法 `ageDays` 并持久化。塔批次显式调用它；原版自然生成和刷怪蛋路径由 `finalizeSpawn` 调用，因此两类普通难民在招募时都进入 `Resident#createRandomRecruit`，基础档案分布完全相同。寒流优质幸存者仍是塔刷新特有的后置天气修正，不属于普通基础分布。
 
+管理员命令 `/town residents add [count] [age] [first_name] [last_name]` 也使用 `Resident#createRandomRecruit`。四个位置参数均可从末尾省略：`count` 默认 `1` 且必须大于零，`age` 省略时按上述年龄权重逐人生成，姓名缺失的部分逐人从 `WanderingRefugee.FIRST_NAMES/LAST_NAMES` 随机选取。名和姓均显式提供时，批次序号会追加到名后（例如 `Ada 1 Lovelace`、`Ada 2 Lovelace`）。命令按顺序调用 `TeamTown#addResident`，首次因住宅容量不足而失败时停止，并回报请求数与实际成功数。
+
 这些生成上下界、教育权重、全零年龄权重的回退值以及寒流优质难民的 `30–40` 健康、`+15` 属性、`×1.5` 熟练度都已进入 `TownModelParameters.Defaults`。寒流健康范围运行时还会与普通生命 `[minimum,maximum]` 取交集，因此旧配置中的 `20` 不会突破普通难民最低生命。游戏侧只读 `FHConfig.SERVER.TOWN.RESIDENT_GENERATION` 与 `REFUGEE_SPAWN`，模拟侧只读 `TownModelParameters`；更改 Defaults 仍是默认平衡值的唯一入口。阶段 4 的固定初始城镇只使用普通难民分布，不额外假定多少人来自寒流。
 
 ## 10. 参数目录与配置归属
