@@ -528,7 +528,7 @@ record ResearchClueView(
 
 ### 专用画布
 
-`ResearchGraphViewport extends UIElement` 统一负责坐标换算、裁剪、批量绘制、可见性裁剪、命中测试、tooltip、`IDLE/PRESSED_NODE/PANNING` 指针状态以及 fit/focus 动画。节点不使用当前按下即点击的普通 `Button`。
+`ResearchGraphViewport extends PanZoomViewport` 复用 Chorda CUI 的二维 camera、空白/中键拖动、鼠标锚点缩放、坐标换算、矩形裁剪、可见性测试和 fit/center API。研究侧只保留图投影与布局、虚拟节点批量绘制、节点命中测试、tooltip、状态着色及每研究领域 camera 持久化。fit/focus 使用普通 CUI `Button`，大量研究节点仍是虚拟内容，避免每帧遍历完整子控件树。
 
 ### 增量刷新
 
@@ -739,4 +739,6 @@ interface ResearchGui {
 - `2026-08-21`: Player feedback revision completed. Research fields moved to original-style top icon tabs, search moved above the project index, normal mode now filters undiscovered definitions before projection, FTB-injected widgets are hidden in archive mode, and the dialog returned to the original `302 x 170` texture and render depth. Materials and all real clues are shown in `DETAIL`; `THEORY` retains a dedicated theoretical-clue view, and `EXPERIMENT` is an empty future integration boundary.
 - `2026-08-21`: Follow-up feedback revision completed. Research fields now share the exact top header with the archive title and drawing-desk action. Graph zoom reaches `15%`, node geometry scales without the former `54 x 24` floor, and fit-all centers the projected tree at `15%`. Icons and names are never skipped at low zoom; they retain `4px` and `0.25` scale minimums. FTB sidebar groups are suspended at their manager data source because `SidebarGroupGuiButton` bypasses native widget visibility, then restored on desk return or close.
 - `2026-08-21`: The project `DETAIL` checklist now includes theoretical `MinigameClue` rows as well as other real clues. `THEORY` remains a dedicated filtered view of those same theoretical clues, while `EXPERIMENT` remains empty for future town integration.
-- Remaining planned work: standalone read-only `BROWSE` entry, explicit status/reward filters, keyboard graph navigation, optional `display.layout` codec/editor integration, performance measurement, and in-game visual QA across GUI scales.
+- `2026-08-21`: Archive hot paths now cache project filtering/sorting, graph search matches, clue presentation, wrapped descriptions, and detail content metrics. Graph shape primitives are batched through CUI, orthogonal edges are viewport-clipped, fit/focus use CUI buttons, and unchanged drawing-desk ticks no longer relayout the archive.
+- `2026-08-21`: Map-style camera/input/clipping behavior was extracted into Chorda CUI `PanZoomViewport`. `ResearchGraphViewport` now consumes the shared viewport while retaining only research graph layout, projection, virtual nodes, hit testing, and presentation; future FTB-style maps can reuse the same pan/zoom foundation and override camera constraints for bounded worlds.
+- Remaining planned work: standalone read-only `BROWSE` entry, explicit status/reward filters, keyboard graph navigation, optional `display.layout` codec/editor integration, in-game JFR/Spark performance measurement, and visual QA across GUI scales.

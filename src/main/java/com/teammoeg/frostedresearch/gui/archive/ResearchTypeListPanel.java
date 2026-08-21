@@ -28,6 +28,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
+import java.util.Set;
 
 /** Compact searchable project index below the archive search box. */
 final class ResearchTypeListPanel extends UIElement {
@@ -37,6 +38,14 @@ final class ResearchTypeListPanel extends UIElement {
     private final ResearchWorkspaceState state;
     private final Runnable navigationChanged;
     private List<Research> definitions = List.of();
+    private List<Research> cachedVisibleResearches = List.of();
+    private String cachedFilter = "";
+    private String cachedQuery = "";
+    @Nullable
+    private String cachedCurrentResearchId;
+    private Set<String> cachedBookmarks = Set.of();
+    private boolean visibleResearchesDirty = true;
+    private int visibleResearchBuildCount;
 
     ResearchTypeListPanel(
             ResearchArchiveLayer parent,
@@ -49,15 +58,22 @@ final class ResearchTypeListPanel extends UIElement {
 
     void setDefinitions(List<Research> definitions) {
         this.definitions = List.copyOf(definitions);
+        invalidateVisibleResearches();
         clampScroll();
     }
 
     void onFilterChanged() {
+        invalidateVisibleResearches();
         clampScroll();
     }
 
     void onProgressChanged(@Nullable String researchId) {
-        // Progress is read live while rendering; only the ordering may change.
+        invalidateVisibleResearches();
+        clampScroll();
+    }
+
+    void onBookmarksChanged() {
+        invalidateVisibleResearches();
         clampScroll();
     }
 
@@ -82,12 +98,13 @@ final class ResearchTypeListPanel extends UIElement {
         int listTop = y + HEADER_HEIGHT;
         graphics.enableScissor(x + 1, listTop, x + width - 1, y + height - 1);
         List<Research> visible = visibleResearches();
+        Research hovered = isMouseOver() ? rowAtMouse(visible) : null;
         int scroll = state.typeListScroll(state.researchTypeFilter());
         int rowY = listTop - scroll;
         String currentId = currentResearchId();
         for (Research research : visible) {
             if (rowY + RESEARCH_ROW_HEIGHT >= listTop && rowY < y + height) {
-                drawResearchRow(graphics, research, currentId, x + 1, rowY, width - 2);
+                drawResearchRow(graphics, research, hovered, currentId, x + 1, rowY, width - 2);
             }
             rowY += RESEARCH_ROW_HEIGHT;
         }
@@ -97,6 +114,7 @@ final class ResearchTypeListPanel extends UIElement {
     private void drawResearchRow(
             GuiGraphics graphics,
             Research research,
+            @Nullable Research hovered,
             @Nullable String currentId,
             int x,
             int y,
@@ -106,7 +124,7 @@ final class ResearchTypeListPanel extends UIElement {
         boolean bookmarked = state.bookmarkedResearchIds().contains(research.getId());
         if (selected) {
             graphics.fill(x, y, x + width, y + RESEARCH_ROW_HEIGHT - 1, 0x55FFFFFF);
-        } else if (isMouseOver() && rowAtMouse() == research) {
+        } else if (hovered == research) {
             graphics.fill(x, y, x + width, y + RESEARCH_ROW_HEIGHT - 1, 0x22FFFFFF);
         }
         int statusColor = research.isCompleted()
@@ -137,6 +155,7 @@ final class ResearchTypeListPanel extends UIElement {
         if (button == MouseButton.RIGHT) {
             boolean bookmarked = state.bookmarkedResearchIds().contains(research.getId());
             state.setBookmarked(research.getId(), !bookmarked);
+            onBookmarksChanged();
             return true;
         }
         if (button == MouseButton.LEFT) {
@@ -179,6 +198,11 @@ final class ResearchTypeListPanel extends UIElement {
 
     @Nullable
     private Research rowAtMouse() {
+        return rowAtMouse(visibleResearches());
+    }
+
+    @Nullable
+    private Research rowAtMouse(List<Research> visible) {
         int listTop = HEADER_HEIGHT;
         int localY = (int) getMouseY();
         if (localY < listTop || localY >= getHeight()) {
@@ -186,7 +210,6 @@ final class ResearchTypeListPanel extends UIElement {
         }
         int index = (localY - listTop + state.typeListScroll(state.researchTypeFilter()))
                 / RESEARCH_ROW_HEIGHT;
-        List<Research> visible = visibleResearches();
         return index >= 0 && index < visible.size() ? visible.get(index) : null;
     }
 
@@ -194,6 +217,14 @@ final class ResearchTypeListPanel extends UIElement {
         String filter = state.researchTypeFilter();
         String query = state.searchQuery().toLowerCase(Locale.ROOT);
         String currentId = currentResearchId();
+        Set<String> bookmarks = state.bookmarkedResearchIds();
+        if (!visibleResearchesDirty
+                && cachedFilter.equals(filter)
+                && cachedQuery.equals(query)
+                && Objects.equals(cachedCurrentResearchId, currentId)
+                && cachedBookmarks.equals(bookmarks)) {
+            return cachedVisibleResearches;
+        }
         List<Research> visible = new ArrayList<>();
         for (Research research : definitions) {
             if (!ResearchTypeIdNormalizer.ALL_TYPES.equals(filter)
@@ -208,10 +239,21 @@ final class ResearchTypeListPanel extends UIElement {
             visible.add(research);
         }
         visible.sort(Comparator
-                .comparing((Research research) -> !state.bookmarkedResearchIds().contains(research.getId()))
+                .comparing((Research research) -> !bookmarks.contains(research.getId()))
                 .thenComparing(research -> !research.getId().equals(currentId))
                 .thenComparing(research -> research.getName().getString(), String.CASE_INSENSITIVE_ORDER));
-        return visible;
+        cachedVisibleResearches = List.copyOf(visible);
+        cachedFilter = filter;
+        cachedQuery = query;
+        cachedCurrentResearchId = currentId;
+        cachedBookmarks = Set.copyOf(bookmarks);
+        visibleResearchesDirty = false;
+        visibleResearchBuildCount++;
+        return cachedVisibleResearches;
+    }
+
+    private void invalidateVisibleResearches() {
+        visibleResearchesDirty = true;
     }
 
     private void clampScroll() {
@@ -227,5 +269,13 @@ final class ResearchTypeListPanel extends UIElement {
     private String currentResearchId() {
         Research current = ClientResearchDataAPI.getData().get().getCurrentResearch().get();
         return current == null ? null : current.getId();
+    }
+
+    List<Research> visibleResearchesForTest() {
+        return visibleResearches();
+    }
+
+    int visibleResearchBuildCountForTest() {
+        return visibleResearchBuildCount;
     }
 }

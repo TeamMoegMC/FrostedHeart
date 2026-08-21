@@ -3,7 +3,7 @@
 - Status: `Current`
 - Last verified: `2026-08-21`
 - Scope: Implemented research completion semantics, responsive drawing-desk archive, full graph, project dialog, clue routing, and refresh boundaries
-- Code anchors: `Research.CODEC`, `ResearchData#getTotalCommitted`, `ResearchData#canComplete`, `TeamResearchData#checkResearchComplete`, `Clue`, `DrawDeskScreen`, `ResearchArchiveLayer`, `ResearchGraphViewport`, `ResearchProjectSummaryPanel`, `ResearchProjectWorkspace`, `ResearchGui`, `ResearchClueViewFactory`, `ResearchGraphSnapshot`, `ResearchGraphProjection`, `ResearchGraphLayoutEngine`
+- Code anchors: `Research.CODEC`, `ResearchData#getTotalCommitted`, `ResearchData#canComplete`, `TeamResearchData#checkResearchComplete`, `Clue`, `DrawDeskScreen`, `ResearchArchiveLayer`, `PanZoomViewport`, `ResearchGraphViewport`, `ResearchProjectSummaryPanel`, `ResearchProjectWorkspace`, `ResearchGui`, `ResearchClueViewFactory`, `ResearchGraphSnapshot`, `ResearchGraphProjection`, `ResearchGraphLayoutEngine`
 
 ## Current Player Surface
 
@@ -98,9 +98,23 @@ The drawing-desk step is omitted for `BROWSE` context. Definition reconciliation
 
 `ResearchArchiveLayer` filters definitions before any archive component receives them. Outside editor mode, a research must be non-hidden and `isShowable()`, `isUnlocked()`, or `isCompleted()`; otherwise it is absent from the graph, index, selection reconciliation, search, tooltip, summary, and dialog. The player archive never creates anonymous unknown-project placeholders and never exposes internal research IDs in tooltips. Editor mode retains access to all definitions.
 
-`ResearchGraphViewport` renders the filtered snapshot and projection directly. Search highlights matching visible nodes by research ID or localized name and dims other nodes without changing coordinates.
+`ResearchGraphViewport extends PanZoomViewport` renders the filtered snapshot and projection directly. The Chorda CUI base owns the reusable two-dimensional camera, left/middle-button panning, pointer-anchored wheel zoom, fit/center operations, world/screen conversion, rectangular scissoring, visibility checks, and allocation-free axis-aligned segment clipping. The archive keeps only research-specific projection, layout, node virtualization and hit testing, status presentation, and per-research-type camera persistence. Search highlights matching visible nodes by research ID or localized name and dims other nodes without changing coordinates. Search changes rebuild only a cached ID match set; research-type changes rebuild the category projection.
 
 Current research definitions do not yet expose `display.layout`; `ResearchGraphSnapshot#fromResearches` therefore supplies `AUTO`. The model already accepts manual hints so a future optional codec field does not require a layout-engine rewrite.
+
+## Rendering And Derived-State Performance
+
+The archive deliberately reuses CUI where it removes shared control or rendering work without turning every domain object into a child widget:
+
+- `PanZoomViewport` is the shared CUI `UILayer` for map-style virtual canvases. It avoids the general `UILayer` stencil pass, scissors only virtual world content, leaves ordinary CUI children available for overlay controls, and exposes a camera-constraint hook for bounded maps.
+- `ResearchGraphViewport` subclasses that shared viewport; its fit and selected-node focus tools are CUI `Button` controls with framework-owned hit testing, tooltips, cursor state, and click feedback.
+- The graph's background, grid, clipped orthogonal edges, and visible node backgrounds are submitted through one `TesselateHelper.ShapeTesslator` buffer. Icons and names render in a second pass because textured drawing cannot occur while the shared shape buffer is open.
+- Horizontal and vertical edge segments are clamped to the viewport before vertices are appended. Nodes outside the viewport are excluded from both shape and content passes.
+- `ResearchTypeListPanel` remains a virtual row renderer because CUI traverses every child each frame. Its filtered/sorted definition list is cached by definition revision, type, search query, active research, and bookmarks, and its hovered row is calculated once per render.
+- `ResearchProjectWorkspace` caches clue presentation rows, detail/theory filtering, wrapped description lines, and content-height metrics for the selected research and dialog width. Definition, selected research, progress, active-research, clue-progress, and resize changes invalidate that presentation.
+- `DrawDeskScreen` still polls for delayed optional FTB widgets while the archive is open, but archive layout runs only when the scaled window dimensions or project-dialog visibility change, and already hidden native widget state is not rewritten.
+
+Graph layout, projection, node hit testing, low-zoom icon/text presentation, and virtual list rows remain archive-specific code. Converting all research nodes, map markers, or rows into CUI children would add full child traversal and transform work each frame without replacing the owning domain logic.
 
 ## Refresh Contract
 
@@ -125,7 +139,7 @@ The back order in drawing-desk context is project dialog, archive, drawing desk,
 
 ## Validation
 
-Tests under `src/test/java/com/teammoeg/frostedresearch` cover:
+Tests under `src/test/java/com/teammoeg/frostedresearch` and `src/test/java/com/teammoeg/chorda` cover:
 
 - unchanged `ResearchData#getTotalCommitted` and required-clue behavior;
 - per-type state retention and navigation back order;
@@ -133,6 +147,9 @@ Tests under `src/test/java/com/teammoeg/frostedresearch` cover:
 - normal/editor definition visibility and empty experiment-tab presentation;
 - deterministic layout under reversed registry order;
 - multi-node/self cycles, missing parents, manual-anchor preservation/conflicts;
-- hidden-node privacy, category alias normalization, and prerequisite context projection.
+- hidden-node privacy, category alias normalization, and prerequisite context projection;
+- project-list cache reuse and invalidation;
+- search updates not rebuilding graph projection;
+- shared camera sanitization, pointer-anchored zoom, left/middle-button panning, bounds fitting, coordinate conversion, visibility checks, and horizontal/vertical edge clipping.
 
-The CUI rendering and responsive geometry currently have compile and state-model coverage but still require in-game visual QA across GUI scales.
+The CUI rendering and responsive geometry have compile and state-model coverage. Runtime FPS, allocation, and draw-call improvements still require in-game JFR or Spark profiling plus visual QA across GUI scales.

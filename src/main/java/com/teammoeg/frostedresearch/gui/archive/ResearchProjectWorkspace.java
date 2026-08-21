@@ -56,6 +56,19 @@ final class ResearchProjectWorkspace extends UIElement {
     private final Runnable navigationChanged;
     private Map<String, Research> researchById = Map.of();
     private int scroll;
+    @Nullable
+    private String cachedPresentationResearchId;
+    private int cachedPresentationWidth = -1;
+    private boolean presentationDirty = true;
+    private List<ResearchClueView> cachedClueViews = List.of();
+    private List<ResearchClueView> cachedDetailViews = List.of();
+    private List<ResearchClueView> cachedTheoryViews = List.of();
+    private List<List<FormattedCharSequence>> cachedDescriptionLines = List.of();
+    private List<FormattedCharSequence> cachedExperimentLines = List.of();
+    private int cachedDetailCluesOffset;
+    private int cachedDetailContentHeight;
+    private int cachedTheoryContentHeight;
+    private int cachedExperimentContentHeight;
 
     ResearchProjectWorkspace(
             UIElement parent,
@@ -75,21 +88,25 @@ final class ResearchProjectWorkspace extends UIElement {
         definitions.forEach(research -> byId.put(research.getId(), research));
         researchById = Map.copyOf(byId);
         scroll = 0;
+        invalidatePresentation();
         retainSelectedClue();
     }
 
     void onProgressChanged(@Nullable String researchId) {
         if (researchId == null || researchId.equals(state.selectedResearchId())) {
+            invalidatePresentation();
             retainSelectedClue();
         }
     }
 
     void onActiveResearchChanged(@Nullable String researchId) {
+        invalidatePresentation();
         retainSelectedClue();
     }
 
     void onClueProgressChanged(String researchId, String clueNonce) {
         if (researchId.equals(state.selectedResearchId())) {
+            invalidatePresentation();
             retainSelectedClue();
         }
     }
@@ -121,6 +138,7 @@ final class ResearchProjectWorkspace extends UIElement {
             drawCloseButton(graphics, x, y, width);
             return;
         }
+        ensurePresentation(research);
         scroll = Math.min(scroll, maxScroll(research));
 
         research.getIcon().draw(graphics, x + 9, y + 9, 18, 18);
@@ -188,8 +206,11 @@ final class ResearchProjectWorkspace extends UIElement {
         graphics.drawString(getFont(), Component.translatable("gui.frostedresearch.archive.summary"),
                 x, y, ResearchArchiveLayer.COLOR_RED, false);
         y += 13;
-        for (Component paragraph : research.getDesc()) {
-            y = drawWrapped(graphics, paragraph, x, y, width, ResearchArchiveLayer.COLOR_INK);
+        for (List<FormattedCharSequence> paragraph : cachedDescriptionLines) {
+            for (FormattedCharSequence line : paragraph) {
+                graphics.drawString(getFont(), line, x, y, ResearchArchiveLayer.COLOR_INK, false);
+                y += 11;
+            }
             y += 5;
         }
 
@@ -198,8 +219,7 @@ final class ResearchProjectWorkspace extends UIElement {
             y = drawMaterials(graphics, research, x, y, width);
         }
 
-        List<ResearchClueView> detailViews = viewsForTab(
-                clueViews(research), ResearchWorkspaceState.ProjectTab.DETAIL);
+        List<ResearchClueView> detailViews = cachedDetailViews;
         if (!detailViews.isEmpty()) {
             y += 3;
             graphics.drawString(getFont(), Component.translatable("gui.frostedresearch.research.clues"),
@@ -231,8 +251,7 @@ final class ResearchProjectWorkspace extends UIElement {
     }
 
     private void drawClues(GuiGraphics graphics, Research research, int x, int y, int width) {
-        List<ResearchClueView> views = viewsForTab(
-                clueViews(research), ResearchWorkspaceState.ProjectTab.THEORY);
+        List<ResearchClueView> views = cachedTheoryViews;
         for (int index = 0; index < views.size(); index++) {
             ResearchClueView view = views.get(index);
             int rowY = y + index * CLUE_ROW_HEIGHT;
@@ -245,8 +264,10 @@ final class ResearchProjectWorkspace extends UIElement {
     }
 
     private void drawExperimentEmpty(GuiGraphics graphics, int x, int y, int width) {
-        drawWrapped(graphics, Component.translatable("gui.frostedresearch.archive.experiment_empty"),
-                x, y, width, ResearchArchiveLayer.COLOR_MUTED_INK);
+        for (FormattedCharSequence line : cachedExperimentLines) {
+            graphics.drawString(getFont(), line, x, y, ResearchArchiveLayer.COLOR_MUTED_INK, false);
+            y += 11;
+        }
     }
 
     private int drawMaterials(GuiGraphics graphics, Research research, int x, int y, int width) {
@@ -462,6 +483,7 @@ final class ResearchProjectWorkspace extends UIElement {
 
     @Nullable
     private ResearchClueView clueAtMouse(Research research) {
+        ensurePresentation(research);
         int localY = (int) getMouseY();
         ResearchWorkspaceState.ProjectTab tab = state.projectTab();
         if (tab == ResearchWorkspaceState.ProjectTab.EXPERIMENT) {
@@ -477,19 +499,9 @@ final class ResearchProjectWorkspace extends UIElement {
             return null;
         }
         int index = relativeY / CLUE_ROW_HEIGHT;
-        List<ResearchClueView> filtered = viewsForTab(clueViews(research), tab);
+        List<ResearchClueView> filtered = tab == ResearchWorkspaceState.ProjectTab.DETAIL
+                ? cachedDetailViews : cachedTheoryViews;
         return index < filtered.size() ? filtered.get(index) : null;
-    }
-
-    private List<ResearchClueView> clueViews(Research research) {
-        Research current = ClientResearchDataAPI.getData().get().getCurrentResearch().get();
-        return ResearchClueViewFactory.create(
-                research,
-                research.getData(),
-                new ResearchClueViewFactory.Context(
-                        openContext.mode(),
-                        current == null ? null : current.getId(),
-                        currentTheoryClueNonce(current)));
     }
 
     @Nullable
@@ -529,19 +541,8 @@ final class ResearchProjectWorkspace extends UIElement {
     }
 
     private int detailCluesOffset(Research research, int width) {
-        int offset = 14 + 25 + 13;
-        for (Component paragraph : research.getDesc()) {
-            offset += getFont().split(paragraph, width).size() * 11 + 5;
-        }
-        if (!research.getRequiredItems().isEmpty()) {
-            offset += 3 + materialsHeight(research, width);
-        }
-        List<ResearchClueView> detailViews = viewsForTab(
-                clueViews(research), ResearchWorkspaceState.ProjectTab.DETAIL);
-        if (!detailViews.isEmpty()) {
-            offset += 3 + 14;
-        }
-        return offset;
+        ensurePresentation(research);
+        return cachedDetailCluesOffset;
     }
 
     private static int materialsHeight(Research research, int width) {
@@ -556,42 +557,73 @@ final class ResearchProjectWorkspace extends UIElement {
     }
 
     private int contentHeight(Research research) {
+        ensurePresentation(research);
         return switch (state.projectTab()) {
-            case DETAIL -> {
-                int width = getWidth() - 20;
-                List<ResearchClueView> detailViews = viewsForTab(
-                        clueViews(research), ResearchWorkspaceState.ProjectTab.DETAIL);
-                int height = 8 + detailCluesOffset(research, width)
-                        + detailViews.size() * CLUE_ROW_HEIGHT;
-                if (!research.getEffects().isEmpty()) {
-                    height += 3 + 14;
-                    for (Effect effect : research.getEffects()) {
-                        if (!effect.isHidden()
-                                && (!research.isHideEffects() || research.isCompleted() || FHResearch.editor)) {
-                            height += 20;
-                        }
-                    }
-                }
-                yield height;
-            }
-            case THEORY -> {
-                int clueCount = viewsForTab(
-                        clueViews(research), ResearchWorkspaceState.ProjectTab.THEORY).size();
-                yield 5 + Math.max(11, clueCount * CLUE_ROW_HEIGHT);
-            }
-            case EXPERIMENT -> 10 + getFont().split(
-                    Component.translatable("gui.frostedresearch.archive.experiment_empty"),
-                    Math.max(1, getWidth() - 22)).size() * 11;
+            case DETAIL -> cachedDetailContentHeight;
+            case THEORY -> cachedTheoryContentHeight;
+            case EXPERIMENT -> cachedExperimentContentHeight;
         };
     }
 
-    private int drawWrapped(
-            GuiGraphics graphics, Component text, int x, int y, int width, int color) {
-        for (FormattedCharSequence line : getFont().split(text, width)) {
-            graphics.drawString(getFont(), line, x, y, color, false);
-            y += 11;
+    private void ensurePresentation(Research research) {
+        int width = Math.max(1, getWidth());
+        if (!presentationDirty
+                && research.getId().equals(cachedPresentationResearchId)
+                && cachedPresentationWidth == width) {
+            return;
         }
-        return y;
+
+        Research current = ClientResearchDataAPI.getData().get().getCurrentResearch().get();
+        cachedClueViews = ResearchClueViewFactory.create(
+                research,
+                research.getData(),
+                new ResearchClueViewFactory.Context(
+                        openContext.mode(),
+                        current == null ? null : current.getId(),
+                        currentTheoryClueNonce(current)));
+        cachedDetailViews = viewsForTab(cachedClueViews, ResearchWorkspaceState.ProjectTab.DETAIL);
+        cachedTheoryViews = viewsForTab(cachedClueViews, ResearchWorkspaceState.ProjectTab.THEORY);
+
+        int detailWidth = Math.max(1, width - 20);
+        List<List<FormattedCharSequence>> descriptionLines = new ArrayList<>(research.getDesc().size());
+        int detailOffset = 14 + 25 + 13;
+        for (Component paragraph : research.getDesc()) {
+            List<FormattedCharSequence> lines = List.copyOf(getFont().split(paragraph, detailWidth));
+            descriptionLines.add(lines);
+            detailOffset += lines.size() * 11 + 5;
+        }
+        cachedDescriptionLines = List.copyOf(descriptionLines);
+        if (!research.getRequiredItems().isEmpty()) {
+            detailOffset += 3 + materialsHeight(research, detailWidth);
+        }
+        if (!cachedDetailViews.isEmpty()) {
+            detailOffset += 3 + 14;
+        }
+        cachedDetailCluesOffset = detailOffset;
+
+        int detailHeight = 8 + detailOffset + cachedDetailViews.size() * CLUE_ROW_HEIGHT;
+        if (!research.getEffects().isEmpty()) {
+            detailHeight += 3 + 14;
+            for (Effect effect : research.getEffects()) {
+                if (!effect.isHidden()
+                        && (!research.isHideEffects() || research.isCompleted() || FHResearch.editor)) {
+                    detailHeight += 20;
+                }
+            }
+        }
+        cachedDetailContentHeight = detailHeight;
+        cachedTheoryContentHeight = 5 + Math.max(11, cachedTheoryViews.size() * CLUE_ROW_HEIGHT);
+        cachedExperimentLines = List.copyOf(getFont().split(
+                Component.translatable("gui.frostedresearch.archive.experiment_empty"),
+                Math.max(1, width - 22)));
+        cachedExperimentContentHeight = 10 + cachedExperimentLines.size() * 11;
+        cachedPresentationResearchId = research.getId();
+        cachedPresentationWidth = width;
+        presentationDirty = false;
+    }
+
+    private void invalidatePresentation() {
+        presentationDirty = true;
     }
 
     @Nullable

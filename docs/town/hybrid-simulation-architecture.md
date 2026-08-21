@@ -1,7 +1,7 @@
 # 城镇居民混合模拟架构（Hybrid Citizen Simulation）
 
 - Status: `Transitional`
-- Last verified: `2026-08-20`
+- Last verified: `2026-08-21`
 - Scope: `居民服务端模拟、睡眠展示、AOI 预算、同步、客户端缓存与渲染`
 - Code anchors: `CitizenSim`, `CitizenSimScheduler.refreshRegistry`, `CitizenSimScheduler.rebuildActiveIds`, `BehaviorSystem.tick`, `MovementSystem.tickAll`, `SpatialGrid.rebuildVisibility`, `SpatialGrid.queryVisible`, `CitizenPresence`, `TownSimData.onSleepEntered`, `SyncEngine.collectPlayerCandidates`, `SyncEngine.flushDeltas`, `ClientCitizen`, `FakeCitizenManager`, `CitizenRenderCoordinator`, `CitizenRenderBackend`, `CpuBatchCitizenBackend`, `FlywheelCitizenBackend`, `CitizenInstanceData`, `CitizenInstanceType`, `CitizenFlywheelModels`, `assets/frostedheart/flywheel/shaders/citizen.vert`, `ClientCitizenRenderer`, `CitizenClientBenchmark`, `CitizenRenderMetrics`, `FHConfig.SERVER.TOWN`
 
@@ -282,9 +282,10 @@ void tickAll() {
 | `S2CCitizenDespawnPacket` | 离开预算、床失效或居民移除 | varint id 列表 |
 
 - **误差驱动脏标记**：服务端镜像客户端 16 向外推模型；状态、方向、halt 变化或位置误差超过 `0.2` 格才到期发送，移动心跳按 4/8/20 tick 距离档位重锚。
-- **多包分片**：`SyncEngine` 先为每个玩家收集全部仍被追踪且到期的 chunk groups，再由 `CitizenDeltaPacketBatcher.forEachPacket` 按 `MAX_ENTRIES_PER_PACKET=240` 逐包产出并立即发送；跨越 240 的单个 chunk group 会被切分，未跨界的 group 直接复用，只有切片需要复制条目引用。生产路径不保留完整 packet 外层集合，也不能丢弃尾部居民。
+- **多包分片**：`SyncEngine` 先为每个玩家收集全部仍被追踪且到期的 chunk groups，再由 `CitizenDeltaPacketBatcher.forEachPacket` 按 `MAX_ENTRIES_PER_PACKET=240` 逐包产出并立即发送；跨越 240 的单个 chunk group 使用原 entries 的 `subList` 视图切分，未跨界的 group 直接复用，不复制条目引用。生产路径不保留完整 packet 外层集合，也不能丢弃尾部居民。
 - **规范状态提交**：共享 Dead Reckoning canonical 只在包含该 ID 的 packet 调用 `FHNetwork.INSTANCE.sendPlayer` 并正常返回后推进；这表示本地网络 API 交付，不是客户端 ACK。`due` 中没有交给任何玩家的 ID 不会被伪记为已发送。
-- **增量候选**：`flushDeltas` 先合并所有玩家的 `tracked` 集合，再仅检查唯一 tracked ID；距离档位仍对本维度全部在线玩家求最近距离，最终按各玩家 tracked 集合组包，因此 canonical、分频和交付语义不变。
+- **增量候选**：`flushDeltas` 先合并所有玩家的 `tracked` 集合，再仅检查唯一 tracked ID；距离档位仍对本维度全部在线玩家求最近距离。到期 ID 在该次扫描中解析为复用的 `ResolvedDelta`（持有 `CitizenSim`、index、chunk key 和一份不可变 `S2CCitizenBatchPacket.Entry`），各玩家只按自身 tracked set 过滤并共享该 Entry，组包和 canonical 回写不再重复 `findById`/`indexOf`。
+- **组包 scratch 生命周期**：per-player chunk map、chunk entry lists、group list 与已选 resolved list 按高水位复用。Forge 47.3.0 `SimpleChannel.send` 在 `FHNetwork.INSTANCE.sendPlayer` 返回前完成编码，因此只在 `CitizenDeltaPacketBatcher.forEachPacket` 返回后清空这些列表；packet 外层 list 和 `FriendlyByteBuf` 仍不池化。
 - **离散切换**：入睡、醒来和有效床位置刷新进入 `pendingImmediate`，在下一次 4 tick flush 绕过距离限频；无效床直接进入 `pendingHidden`。
 - **年龄外观**：`TownSimData` 把权威 `Resident.age` 镜像到 `CitizenSim.presentationFlags` 的 2 个瞬态位；初次进入 AOI 时随 `S2CCitizenSpawnPacket` 下发。幼儿成长为儿童、儿童成长为成人时，`SyncEngine.pendingAppearance` 对已追踪 id 重发同一种 spawn 条目；`ClientCitizenCache.applySpawn` 只原位更新年龄，不替换双快照、位置、朝向或行为状态。移动批包不增加年龄字段。
 - **静止零带宽**：睡眠与到岗停止居民完成状态切换后不再发送移动心跳。
@@ -311,7 +312,7 @@ public final class ClientCitizen {
 }
 ```
 
-普通移动快照使用按实测包间隔调整的插值窗口并在窗口后限时外推。进入或离开 `SLEEP` 时直接 snap 到床头或住宅出口，并重置插值窗口，避免穿墙滑动。
+普通移动快照使用按实测包间隔调整的插值窗口并在窗口后限时外推。进入或离开 `SLEEP` 时直接 snap 到床头或住宅出口，并重置插值窗口，避免穿墙滑动。`ClientCitizen.renderPos(double)` 与 `visualYaw(double)` 接受入口已解析的游戏时间；CPU render、Flywheel tick、详细假实体 tick 和单个移动批包各自只采样一次时钟，整批居民使用同一时刻。
 
 ---
 
@@ -336,7 +337,7 @@ public final class ClientCitizen {
 - `DetailedCitizenSelector` 通过复用的原始类型数组和最大堆执行稳定 Top-K；已接管居民按 4 格距离优势保留，等距按稳定 id。配置降低或设为 0 时，下一客户端 tick 立即释放超额代理，未入选居民仍由批量路径绘制。
 - `ClientCitizen` 缓存覆盖双快照与最大外推终点的扫掠 AABB；只在 spawn/网络快照时重建，渲染帧不再逐居民分配剔除对象。
 - `CitizenClientBenchmark` 通过 `/citizen_debug benchmark load <32|64|256|1024> <moving|sleeping>` 注入纯客户端确定性场景；高位 id 和按对象身份清理保证真实同步缓存不被覆盖。`CitizenRenderMetrics` 记录 backend 分类数量、光照采样、材质批次、实例脏字节与最近 256 帧 hook 耗时；Flywheel 引擎本身的 CPU/GPU 时间不在 hook 内，详细口径见 [citizen-rendering-at-scale.md](citizen-rendering-at-scale.md)。
-- `CitizenRenderCoordinator` 统一接管网络 spawn/update/despawn、benchmark 注入、客户端 tick/render、资源重载、Flywheel renderer 重载、切维度和退出清理。`CitizenRenderOwnership` 对每个 id 返回唯一的 `DETAILED_ENTITY`、`BODY_BATCH`、`BILLBOARD_BATCH` 或 `NONE`；启动默认 requested 为 `auto`。coordinator 分别记录 requested 与 active backend：新 backend 先初始化并从 cache 预热后再原子替换，非 CPU backend 故障、驱动不支持 instancing 或 Oculus shader pack 使 Flywheel 关闭实例化时，只有 active 临时回退 CPU；requested AUTO/Flywheel 保留，并在 `ReloadRenderersEvent` 中于 Flywheel 替换 `InstanceWorld` 后自动恢复。维度变化在健康检查前通过 `onClientLevelChanged` 重绑定，旧 manager 的失效句柄不会再调用 `delete()`。
+- `CitizenRenderCoordinator` 统一接管网络 spawn/update/despawn、benchmark 注入、客户端 tick/render、资源重载、Flywheel renderer 重载、切维度和退出清理。网络 Batch 由 cache 直接返回已更新对象，并保持“整批 cache 更新完成后再通知 backend”的两阶段顺序。`CitizenRenderOwnership` 对每个 id 返回唯一的 `DETAILED_ENTITY`、`BODY_BATCH`、`BILLBOARD_BATCH` 或 `NONE`；共享迟滞 map 只在 owner 实际切换时写入。启动默认 requested 为 `auto`。coordinator 分别记录 requested 与 active backend：新 backend 先初始化并从 cache 预热后再原子替换，非 CPU backend 故障、驱动不支持 instancing 或 Oculus shader pack 使 Flywheel 关闭实例化时，只有 active 临时回退 CPU；requested AUTO/Flywheel 保留，并在 `ReloadRenderersEvent` 中于 Flywheel 替换 `InstanceWorld` 后自动恢复。维度变化在健康检查前通过 `onClientLevelChanged` 重绑定，旧 manager 的失效句柄不会再调用 `delete()`。
 - `FlywheelCitizenBackend` 是 AUTO 首选、也可显式请求的动态实例 backend：七张皮肤分别共享 144 顶点 Body 与 8 顶点身体/头部 Billboard，每个批量居民一个 58 B `CitizenInstanceData`。CPU/Flywheel 都消费 `CitizenBatchRenderLayout`；累计步态 phase 属于 `ClientCitizen`，切换 backend、Body/Billboard 或重建 Flywheel 槽不会重置。`citizen.vert` 使用 Flywheel `uTime`，而 `FlywheelCitizenBackend` 写入时也必须取 `com.jozufozu.flywheel.util.AnimationTickHolder`，完成快照插值/限时外推和短路径朝向；四肢幅度按步速对齐原版 `walkAnimation`，并支持睡眠姿态。Body 在 `<68` 格进入并保持到 `72` 格，Billboard 最远 `96` 格；当前 owner 由 `CitizenRenderCoordinator` 共享给 CPU/Flywheel。它实现 `InstancingEngine.OriginShiftListener`：Flywheel 切换渲染原点并清空底层槽后，同帧从 cache 重新创建实例。它只接受 Flywheel `INSTANCING`，BATCHING/OFF、Oculus shader pack 或运行期故障时 active 回退 CPU；完整限制、命令和待完成的图形验收见 [citizen-rendering-at-scale.md](citizen-rendering-at-scale.md)。
 
 ---
@@ -385,7 +386,7 @@ public final class ClientCitizen {
 3. 流场共享寻路，禁绝逐单位 A*。
 4. 方向/三角函数全部查表。
 5. 网络只发 dirty + 速度外推，快照 5Hz。
-6. 仅复用不逃逸当前调用的 primitive scratch；packet-owned list/`FriendlyByteBuf` 只有在 profile 证明为热点且确认异步编码生命周期后才能池化。
+6. 仅复用不逃逸当前同步编码调用的 scratch；当前 `flushDeltas` 已复用 resolved、chunk map/list 和 group scratch，packet 外层 list/`FriendlyByteBuf` 不池化。若网络实现不再在 `sendPlayer` 返回前完成编码，必须撤销 chunk list 回收。
 7. 异步寻路线程池，主线程只消费结果。
 8. 渲染实例化 + 距离 LOD + 预烘焙动画。
 9. 每 tick 时间片哨兵：单次 tick 超预算自动降低本 tick 处理量，绝不卡服。

@@ -1,6 +1,7 @@
 /* Copyright (c) 2026 TeamMoeg */
 package com.teammoeg.frostedresearch.gui.archive;
 
+import com.teammoeg.chorda.client.cui.base.PanZoomViewport.Camera;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -16,20 +17,20 @@ class ResearchWorkspaceStateTest {
     void camerasAndListScrollAreRememberedPerNormalizedType() {
         ResearchWorkspaceState state = new ResearchWorkspaceState(ResearchOpenContext.browse());
 
-        state.setCamera("frostedheart:production", new ResearchWorkspaceState.Camera(12.0D, 30.0D, 4.0D));
+        state.setCamera("frostedheart:production", new Camera(12.0D, 30.0D, 4.0D));
         state.setTypeListScroll("production", 9);
 
-        assertEquals(new ResearchWorkspaceState.Camera(12.0D, 30.0D, ResearchWorkspaceState.MAX_ZOOM),
+        assertEquals(new Camera(12.0D, 30.0D, ResearchWorkspaceState.MAX_ZOOM),
                 state.camera("frostedresearch:production"));
         assertEquals(9, state.typeListScroll("frostedheart:production"));
-        assertEquals(ResearchWorkspaceState.Camera.DEFAULT, state.camera("frostedresearch:living"));
+        assertEquals(Camera.DEFAULT, state.camera("frostedresearch:living"));
     }
 
     @Test
     void overviewZoomClampsAtFifteenPercentWithoutDroppingContent() {
         ResearchWorkspaceState state = new ResearchWorkspaceState(ResearchOpenContext.browse());
 
-        state.setCamera("*", new ResearchWorkspaceState.Camera(0.0D, 0.0D, 0.001D));
+        state.setCamera("*", new Camera(0.0D, 0.0D, 0.001D));
 
         assertEquals(0.15D, ResearchWorkspaceState.MIN_ZOOM);
         assertEquals(ResearchWorkspaceState.MIN_ZOOM, state.camera("*").zoom());
@@ -112,13 +113,13 @@ class ResearchWorkspaceStateTest {
                 ResearchWorkspaceState.ProjectTab.DETAIL,
                 "clue"));
 
-        state.setCamera("production", new ResearchWorkspaceState.Camera(
+        state.setCamera("production", new Camera(
                 Double.NaN,
                 Double.POSITIVE_INFINITY,
                 Double.NEGATIVE_INFINITY));
         state.selectResearch(null);
 
-        assertEquals(ResearchWorkspaceState.Camera.DEFAULT, state.camera("production"));
+        assertEquals(Camera.DEFAULT, state.camera("production"));
         assertFalse(state.projectWorkspaceOpen());
         assertNull(state.selectedClueNonce());
     }

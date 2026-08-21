@@ -20,7 +20,6 @@
 package com.teammoeg.frostedheart.content.town.citizen.client;
 
 import java.util.Iterator;
-import java.util.Map;
 
 import com.teammoeg.frostedheart.bootstrap.common.FHEntityTypes;
 import com.teammoeg.frostedheart.content.town.citizen.FakeCitizenEntity;
@@ -28,6 +27,7 @@ import com.teammoeg.frostedheart.content.town.citizen.sim.CitizenState;
 import com.teammoeg.frostedheart.content.trade.gui.TradeContainer;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 
+import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import net.minecraft.client.Camera;
@@ -100,6 +100,7 @@ public final class FakeCitizenManager {
 		Camera camera = mc.gameRenderer.getMainCamera();
 		Vec3 eye = camera.getPosition();
 		Vector3f look = camera.getLookVector();
+		double now = ClientCitizen.currentTimeSeconds();
 		int crosshairId = -1;
 		double crosshairDistance = PICK_DIST;
 
@@ -107,7 +108,7 @@ public final class FakeCitizenManager {
 		for (ClientCitizen citizen : ClientCitizenCache.values()) {
 			if (citizen.state == CitizenState.SLEEP)
 				continue;
-			double[] pos = citizen.renderPos();
+			double[] pos = citizen.renderPos(now);
 			double dx = pos[0] - px;
 			double dz = pos[2] - pz;
 			double distance2 = dx * dx + dz * dz;
@@ -130,12 +131,13 @@ public final class FakeCitizenManager {
 
 		// Drop ownership before creating replacements. Every non-selected citizen
 		// remains visible through ClientCitizenRenderer in the same frame.
-		Iterator<Map.Entry<Integer, FakeCitizenEntity>> it = ACTIVE.entrySet().iterator();
+		Iterator<Int2ObjectMap.Entry<FakeCitizenEntity>> it = ACTIVE.int2ObjectEntrySet().fastIterator();
 		while (it.hasNext()) {
-			Map.Entry<Integer, FakeCitizenEntity> e = it.next();
+			Int2ObjectMap.Entry<FakeCitizenEntity> e = it.next();
 			FakeCitizenEntity ent = e.getValue();
-			ClientCitizen c = ClientCitizenCache.get(e.getKey());
-			boolean drop = !SELECTED.contains(e.getKey()) || c == null || c.state == CitizenState.SLEEP
+			int citizenId = e.getIntKey();
+			ClientCitizen c = ClientCitizenCache.get(citizenId);
+			boolean drop = !SELECTED.contains(citizenId) || c == null || c.state == CitizenState.SLEEP
 					|| ent.isRemoved() || ent.level() != level;
 			if (drop) {
 				// 走原版 despawn 路径：标记移除 + onClientRemoval，tickEntities 负责清理查找表
@@ -149,10 +151,10 @@ public final class FakeCitizenManager {
 			ClientCitizen c = ClientCitizenCache.get(citizenId);
 			if (c == null || c.state == CitizenState.SLEEP)
 				continue;
-			double[] pos = c.renderPos();
+			double[] pos = c.renderPos(now);
 			FakeCitizenEntity ent = ACTIVE.get(citizenId);
 			if (ent != null) {
-				drive(ent, c, pos);
+				drive(ent, c, pos, now);
 				continue;
 			}
 			ent = new FakeCitizenEntity(FHEntityTypes.FAKE_CITIZEN.get(), level);
@@ -168,7 +170,7 @@ public final class FakeCitizenManager {
 		// 视觉上就是假实体(spawn)时抽搐/旋转一次。统一用 wrapDegrees 折叠，并让旧值与新值一致。
 		// yawOf returns 0–360°, but vanilla setYRot/setYHeadRot/setYBodyRot wrap to ±180°.
 		// Without wrapping yRotO etc., render interpolation takes the long 0°→270° path → spawn twitch.
-		float yaw = Mth.wrapDegrees(yawOf(c));
+		float yaw = Mth.wrapDegrees(yawOf(c, now));
 		ent.setYRot(yaw);
 		ent.yRotO = yaw;
 		ent.setYHeadRot(yaw);
@@ -211,7 +213,7 @@ public final class FakeCitizenManager {
 	 * @param c 模拟缓存 / the simulation cache entry
 	 * @param pos 当前渲染位置 / current render position
 	 */
-	private static void drive(FakeCitizenEntity ent, ClientCitizen c, double[] pos) {
+	private static void drive(FakeCitizenEntity ent, ClientCitizen c, double[] pos, double now) {
 		ent.setModelScale(c.modelScale());
 		double oldX = ent.getX();
 		double oldZ = ent.getZ();
@@ -237,7 +239,7 @@ public final class FakeCitizenManager {
 		// the rate clamp is a backstop against extreme flips only. newYaw stays
 		// continuous (unwrapped) across the ±180° seam because vanilla renders the
 		// entity yaw with plain lerp — per-tick folding is what caused one-frame spins.
-		float targetYaw = Mth.wrapDegrees(yawOf(c));
+		float targetYaw = Mth.wrapDegrees(yawOf(c, now));
 		float curYaw = ent.getYRot();                // 上一 tick 渲染 yaw / last tick's yaw
 		// 短路径角差：落在 (-180,180] / shortest signed angular delta in (-180,180]
 		float delta = Mth.wrapDegrees(targetYaw - curYaw);
@@ -290,8 +292,8 @@ public final class FakeCitizenManager {
 	 * @param c 模拟缓存 / the simulation cache entry
 	 * @return 朝向角 / yaw in degrees
 	 */
-    private static float yawOf(ClientCitizen c) {
-        return c.visualYaw() * (360.0f / 256.0f);
+	private static float yawOf(ClientCitizen c, double now) {
+		return c.visualYaw(now) * (360.0f / 256.0f);
     }
 
 	/**

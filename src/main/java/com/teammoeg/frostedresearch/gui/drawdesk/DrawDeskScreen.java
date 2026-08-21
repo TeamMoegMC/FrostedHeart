@@ -59,6 +59,8 @@ public class DrawDeskScreen extends MenuPrimaryLayer<DrawDeskContainer> implemen
 	private List<Object> ftbSidebarGroups;
 	private boolean ftbSidebarResolved;
 	private boolean ftbSidebarHidden;
+	private int lastArchiveWidth = -1;
+	private int lastArchiveHeight = -1;
 
 	public DrawDeskScreen(DrawDeskContainer cx) {
 		super(cx);
@@ -157,8 +159,14 @@ public class DrawDeskScreen extends MenuPrimaryLayer<DrawDeskContainer> implemen
 		if (getWidth() != width || getHeight() != height) {
 			setSize(width, height);
 		}
-		archive.setPos(0, 0);
-		archive.resizeArchive(width, height);
+		if (archive.getX() != 0 || archive.getY() != 0) {
+			archive.setPos(0, 0);
+		}
+		if (lastArchiveWidth != width || lastArchiveHeight != height) {
+			archive.resizeArchive(width, height);
+			lastArchiveWidth = width;
+			lastArchiveHeight = height;
+		}
 	}
 
 	@Override
@@ -187,8 +195,12 @@ public class DrawDeskScreen extends MenuPrimaryLayer<DrawDeskContainer> implemen
 			if (child instanceof AbstractWidget widget) {
 				hiddenExternalWidgets.computeIfAbsent(
 						widget, ignored -> new WidgetState(widget.visible, widget.active));
-				widget.visible = false;
-				widget.active = false;
+				if (widget.visible) {
+					widget.visible = false;
+				}
+				if (widget.active) {
+					widget.active = false;
+				}
 			}
 		}
 		hideFtbSidebar();

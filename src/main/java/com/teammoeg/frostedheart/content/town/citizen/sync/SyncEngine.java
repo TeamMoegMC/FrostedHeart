@@ -107,22 +107,58 @@ public final class SyncEngine {
 	private final IntOpenHashSet pendingImmediate = new IntOpenHashSet();
 	/** Low-frequency age changes for clients that already track the citizen. */
 	private final IntOpenHashSet pendingAppearance = new IntOpenHashSet();
-	/** 本 flush 周期内"脏且到期"的居民 id / Dirty-and-due ids in the current flush */
-	private final IntOpenHashSet due = new IntOpenHashSet();
 	/** Unique IDs tracked by at least one player during the current flush. */
 	private final IntOpenHashSet trackedUnion = new IntOpenHashSet();
-	/** IDs included in a packet after sendPlayer returned normally during this flush. */
-	private final IntOpenHashSet handedOffToAnyPlayer = new IntOpenHashSet();
+	/** Resolved delta records grow to the high-water mark and are reused across flushes. */
+	private final List<ResolvedDelta> resolvedDeltaPool = new ArrayList<>();
+	private final List<ResolvedDelta> playerDeltaScratch = new ArrayList<>();
+	private final Long2ObjectOpenHashMap<List<S2CCitizenBatchPacket.Entry>> deltaByChunkScratch =
+			new Long2ObjectOpenHashMap<>();
+	private final List<List<S2CCitizenBatchPacket.Entry>> deltaEntryListPool = new ArrayList<>();
+	private final List<S2CCitizenBatchPacket.Group> deltaGroupsScratch = new ArrayList<>();
 	/** Reused coarse AOI candidate buffer. */
 	private final IntArrayList visibilityCandidates = new IntArrayList();
 	private int[] selectionHeapIds = new int[0];
 	private long[] selectionHeapRanks = new long[0];
 	private int[] playerBlockXs = new int[0];
 	private int[] playerBlockZs = new int[0];
+	private int resolvedDeltaCount;
+	private int deltaEntryListCount;
 	private int selectionHeapSize;
 	private boolean aoiRefreshRequested = true;
 	private CitizenSimScheduler activeScheduler;
 	private ServerLevel activeLevel;
+
+	private static final class ResolvedDelta {
+		private int id;
+		private CitizenSim sim;
+		private int index;
+		private long chunkKey;
+		private S2CCitizenBatchPacket.Entry entry;
+		private boolean handedOff;
+
+		private void prepare(int id, CitizenSim sim, int index) {
+			this.id = id;
+			this.sim = sim;
+			this.index = index;
+			int cx = sim.px[index] >> 14;
+			int cz = sim.pz[index] >> 14;
+			this.chunkKey = ((long) cx << 32) | (cz & 0xFFFFFFFFL);
+			int lx = (sim.px[index] - (cx << 14)) / S2CCitizenBatchPacket.LOCAL_QUANT;
+			int lz = (sim.pz[index] - (cz << 14)) / S2CCitizenBatchPacket.LOCAL_QUANT;
+			int ly = sim.py[index] >> 6;
+			byte stateDir = CitizenState.packStateDir(sim.state[index], sim.dir[index]);
+			if (sim.halt[index] != 0)
+				stateDir |= (byte) CitizenState.HALT_BIT;
+			this.entry = new S2CCitizenBatchPacket.Entry(id, lx, ly, lz, stateDir);
+			this.handedOff = false;
+		}
+
+		private void clear() {
+			sim = null;
+			entry = null;
+		}
+	}
 
 	/**
 	 * Resolves all dimension candidates together so the total cap is a real
@@ -503,9 +539,8 @@ public final class SyncEngine {
 	}
 
 	private void flushDeltas(CitizenSimScheduler sched, List<ServerPlayer> players, long gameTime) {
-		due.clear();
+		clearResolvedDeltas();
 		trackedUnion.clear();
-		handedOffToAnyPlayer.clear();
 		long aoi2 = (long) AOI_RADIUS * AOI_RADIUS;
 
 		// 缓存玩家坐标并构建 tracked union；数组只增长，不在每次 flush 分配。
@@ -520,7 +555,9 @@ public final class SyncEngine {
 				trackedUnion.addAll(playerTracked);
 		}
 
-		// 只检查至少被一名玩家追踪的 id；最近距离仍对全部玩家求值，保持原分频语义。
+		// Resolve each tracked id once. Immediate transitions bypass distance
+		// throttling; ordinary deltas retain the closest-player tier calculation.
+		boolean hasImmediate = !pendingImmediate.isEmpty();
 		for (int id : trackedUnion) {
 			CitizenContainer container = sched.findById(id);
 			if (container == null)
@@ -529,113 +566,119 @@ public final class SyncEngine {
 			int i = sim.indexOf(id);
 			if (i < 0 || !CitizenPresence.presentationEligible(sim, i))
 				continue;
-			long minDist2 = Long.MAX_VALUE;
-			for (int j = 0; j < playerCount; j++) {
-				long dx = (sim.px[i] >> 10) - playerBlockXs[j];
-				long dz = (sim.pz[i] >> 10) - playerBlockZs[j];
-				long d2 = dx * dx + dz * dz;
-				if (d2 < minDist2)
-					minDist2 = d2;
+			if (!hasImmediate || !pendingImmediate.contains(id)) {
+				long minDist2 = Long.MAX_VALUE;
+				for (int j = 0; j < playerCount; j++) {
+					long dx = (sim.px[i] >> 10) - playerBlockXs[j];
+					long dz = (sim.pz[i] >> 10) - playerBlockZs[j];
+					long d2 = dx * dx + dz * dz;
+					if (d2 < minDist2)
+						minDist2 = d2;
+				}
+				if (minDist2 > aoi2)
+					continue;
+				int interval = tierInterval(minDist2);
+				if (!isDirty(sim, i, gameTime, interval))
+					continue;
+				// halt 上升沿（走→停）绕过档位限频：停步信号每晚一个档位，
+				// 客户端就多外推一段再被回拉（驻留抽搐的直接成因），必须抢发。
+				boolean haltEdge = sim.halt[i] != 0 && sim.shalt[i] == 0;
+				if (!haltEdge && gameTime - sim.stick[i] < interval)
+					continue;
 			}
-			if (minDist2 > aoi2)
-				continue;
-			int interval = tierInterval(minDist2);
-			if (!isDirty(sim, i, gameTime, interval))
-				continue;
-			// halt 上升沿（走→停）绕过档位限频：停步信号每晚一个档位，
-			// 客户端就多外推一段再被回拉（驻留抽搐的直接成因），必须抢发。
-			boolean haltEdge = sim.halt[i] != 0 && sim.shalt[i] == 0;
-			if (!haltEdge && gameTime - sim.stick[i] < interval)
-				continue;
-			due.add(id);
+			acquireResolvedDelta().prepare(id, sim, i);
 		}
-		if (!pendingImmediate.isEmpty()) {
-			due.addAll(pendingImmediate);
-			pendingImmediate.clear();
-		}
-		// 广播移除
-		if (due.isEmpty())
+		pendingImmediate.clear();
+		if (resolvedDeltaCount == 0)
 			return;
-		// 按玩家组包：chunk 分组 + 条目上限。240 是单包上限，不是本 flush 截断点。
-		// Packet/canonical ordering:
-		// due -> per-player groups -> <=240 packet batches -> send -> handedOffToAnyPlayer -> canonical writeback
-		for (ServerPlayer p : players) {
-			IntOpenHashSet set = tracked.get(p);
-			if (set == null || set.isEmpty())
-				continue;
-			Long2ObjectOpenHashMap<List<S2CCitizenBatchPacket.Entry>> byChunk = new Long2ObjectOpenHashMap<>();
-			for (int id : set) {
-				if (!due.contains(id))
+		try {
+			// Resolved due -> per-player groups -> <=240 packets -> handed-off flag -> canonical writeback.
+			for (ServerPlayer player : players) {
+				IntOpenHashSet playerTracked = tracked.get(player);
+				if (playerTracked == null || playerTracked.isEmpty())
 					continue;
-				CitizenContainer c = sched.findById(id);
-				if (c == null)
-					continue;
-				CitizenSim sim = c.sim();
-				int i = sim.indexOf(id);
-				if (i < 0)
-					continue;
-				if (!CitizenPresence.presentationEligible(sim, i))
-					continue;
-				int cx = sim.px[i] >> 14; // 定点坐标 >> 14 = chunk 坐标
-				int cz = sim.pz[i] >> 14;
-				long key = ((long) cx << 32) | (cz & 0xFFFFFFFFL);
-				int lx = (sim.px[i] - (cx << 14)) / S2CCitizenBatchPacket.LOCAL_QUANT;
-				int lz = (sim.pz[i] - (cz << 14)) / S2CCitizenBatchPacket.LOCAL_QUANT;
-				int ly = sim.py[i] >> 6;
-				// state+dir 打包为一个同步字节（bit0-2 状态，bit3-6 方向，bit7 停步标记）：
-				// 16 向方向取代连续 yaw 后，状态与方向恒可合发，每条目恒定 6-8 字节。
-				// 停步位告知客户端"移动类状态但本 tick 未位移"，立即停止外推。
-				// state+dir packed into one sync byte (bits 0-2 state, bits 3-6 dir,
-				// bit 7 halt): constant 6-8 bytes per entry; the halt bit tells the
-				// client "MOVING-class state but no displacement this tick" so it
-				// stops extrapolating at once.
-				byte sd = CitizenState.packStateDir(sim.state[i], sim.dir[i]);
-				if (sim.halt[i] != 0)
-					sd |= (byte) CitizenState.HALT_BIT;
-				byChunk.computeIfAbsent(key, k -> new ArrayList<>()).add(new S2CCitizenBatchPacket.Entry(id, lx, ly,
-						lz, sd));
+				try {
+					for (int index = 0; index < resolvedDeltaCount; index++) {
+						ResolvedDelta delta = resolvedDeltaPool.get(index);
+						if (!playerTracked.contains(delta.id))
+							continue;
+						List<S2CCitizenBatchPacket.Entry> entries = deltaByChunkScratch.get(delta.chunkKey);
+						if (entries == null) {
+							entries = acquireDeltaEntryList();
+							deltaByChunkScratch.put(delta.chunkKey, entries);
+						}
+						entries.add(delta.entry);
+						playerDeltaScratch.add(delta);
+					}
+					if (deltaByChunkScratch.isEmpty())
+						continue;
+					for (Iterator<Long2ObjectOpenHashMap.Entry<List<S2CCitizenBatchPacket.Entry>>> it =
+							deltaByChunkScratch.long2ObjectEntrySet().fastIterator(); it.hasNext();) {
+						Long2ObjectOpenHashMap.Entry<List<S2CCitizenBatchPacket.Entry>> chunk = it.next();
+						long key = chunk.getLongKey();
+						deltaGroupsScratch.add(new S2CCitizenBatchPacket.Group(
+								(int) (key >> 32), (int) key, chunk.getValue()));
+					}
+					CitizenDeltaPacketBatcher.forEachPacket(deltaGroupsScratch, MAX_ENTRIES_PER_PACKET,
+							packetGroups -> FHNetwork.INSTANCE.sendPlayer(player,
+									new S2CCitizenBatchPacket(packetGroups)));
+					for (ResolvedDelta delta : playerDeltaScratch)
+						delta.handedOff = true;
+				} finally {
+					// Forge 47.3.0 SimpleChannel encodes before sendPlayer returns.
+					clearDeltaGroupingScratch();
+				}
 			}
-			if (byChunk.isEmpty())
-				continue;
-			List<S2CCitizenBatchPacket.Group> groups = new ArrayList<>(byChunk.size());
-			for (Iterator<Long2ObjectOpenHashMap.Entry<List<S2CCitizenBatchPacket.Entry>>> it = byChunk
-					.long2ObjectEntrySet().fastIterator(); it.hasNext();) {
-				Long2ObjectOpenHashMap.Entry<List<S2CCitizenBatchPacket.Entry>> e = it.next();
-				long key = e.getLongKey();
-				groups.add(new S2CCitizenBatchPacket.Group((int) (key >> 32), (int) key, e.getValue()));
+
+			// Delay canonical writeback until all packets have observed the previous
+			// canonical state, and update only entries sent to at least one player.
+			for (int index = 0; index < resolvedDeltaCount; index++) {
+				ResolvedDelta delta = resolvedDeltaPool.get(index);
+				if (!delta.handedOff)
+					continue;
+				CitizenSim sim = delta.sim;
+				int i = delta.index;
+				sim.sx[i] = sim.px[i];
+				sim.sy[i] = sim.py[i];
+				sim.sz[i] = sim.pz[i];
+				sim.sdir[i] = sim.dir[i];
+				sim.sstate[i] = sim.state[i];
+				sim.shalt[i] = sim.halt[i];
+				sim.stick[i] = gameTime;
 			}
-			CitizenDeltaPacketBatcher.forEachPacket(groups, MAX_ENTRIES_PER_PACKET, packetGroups -> {
-				FHNetwork.INSTANCE.sendPlayer(p, new S2CCitizenBatchPacket(packetGroups));
-				for (S2CCitizenBatchPacket.Group group : packetGroups)
-					for (S2CCitizenBatchPacket.Entry entry : group.entries())
-						handedOffToAnyPlayer.add(entry.id());
-			});
+		} finally {
+			clearDeltaGroupingScratch();
+			clearResolvedDeltas();
 		}
-		// 规范模型延后到本 flush 末尾统一回写：脏检测必须与"上一次发送"的规范值
-		// 比较；若在收集阶段就地更新，比较恒成立，dir/state 变化将永不触发补包
-		// （回归 A：曾表现为客户端朝向/状态冻结）。
-		// 与组包循环同模式：经 id 反查容器与索引（防御移除竞态）。
-		// Canonical model is written back at the END of the flush: the dirty check
-		// must compare against what was sent LAST flush; updating during collection
-		// made the comparison vacuously true, freezing client dir/state
-		// (regression A). Same id->container/index re-resolution as the packet-build
-		// loop (defensive against removal races).
-		for (int id : handedOffToAnyPlayer) {
-			CitizenContainer c = sched.findById(id);
-			if (c == null)
-				continue;
-			CitizenSim sim = c.sim();
-			int i = sim.indexOf(id);
-			if (i < 0)
-				continue;
-			sim.sx[i] = sim.px[i];
-			sim.sy[i] = sim.py[i];
-			sim.sz[i] = sim.pz[i];
-			sim.sdir[i] = sim.dir[i];
-			sim.sstate[i] = sim.state[i];
-			sim.shalt[i] = sim.halt[i];
-			sim.stick[i] = gameTime;
-		}
+	}
+
+	private ResolvedDelta acquireResolvedDelta() {
+		if (resolvedDeltaCount == resolvedDeltaPool.size())
+			resolvedDeltaPool.add(new ResolvedDelta());
+		return resolvedDeltaPool.get(resolvedDeltaCount++);
+	}
+
+	private List<S2CCitizenBatchPacket.Entry> acquireDeltaEntryList() {
+		if (deltaEntryListCount == deltaEntryListPool.size())
+			deltaEntryListPool.add(new ArrayList<>());
+		List<S2CCitizenBatchPacket.Entry> entries = deltaEntryListPool.get(deltaEntryListCount++);
+		entries.clear();
+		return entries;
+	}
+
+	private void clearDeltaGroupingScratch() {
+		deltaByChunkScratch.clear();
+		deltaGroupsScratch.clear();
+		playerDeltaScratch.clear();
+		for (int index = 0; index < deltaEntryListCount; index++)
+			deltaEntryListPool.get(index).clear();
+		deltaEntryListCount = 0;
+	}
+
+	private void clearResolvedDeltas() {
+		for (int index = 0; index < resolvedDeltaCount; index++)
+			resolvedDeltaPool.get(index).clear();
+		resolvedDeltaCount = 0;
 	}
 
 	private void ensurePlayerCapacity(int playerCount) {

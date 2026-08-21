@@ -49,6 +49,11 @@ public final class ClientCitizenCache {
 	private ClientCitizenCache() {
 	}
 
+	@FunctionalInterface
+	interface SpawnApplyListener {
+		void onApplied(ClientCitizen citizen, boolean added);
+	}
+
 	/**
 	 * 应用出生包。
 	 * <p>
@@ -58,13 +63,22 @@ public final class ClientCitizenCache {
 	 * @return 是否创建了新的客户端居民 / whether a new client citizen was created
 	 */
 	public static boolean applySpawn(S2CCitizenSpawnPacket.Entry entry) {
+		return applySpawn(entry, ClientCitizen.currentTimeSeconds(), null);
+	}
+
+	static boolean applySpawn(S2CCitizenSpawnPacket.Entry entry, double now, SpawnApplyListener listener) {
 		ClientCitizen existing = CITIZENS.get(entry.id());
 		if (existing != null) {
 			existing.setAge(entry.age());
+			if (listener != null)
+				listener.onApplied(existing, false);
 			return false;
 		}
-		CITIZENS.put(entry.id(), new ClientCitizen(entry.id(), entry.px(), entry.py(), entry.pz(),
-				entry.stateDir(), entry.age(), entry.name()));
+		ClientCitizen citizen = new ClientCitizen(entry.id(), entry.px(), entry.py(), entry.pz(),
+				entry.stateDir(), entry.age(), entry.name(), now);
+		CITIZENS.put(entry.id(), citizen);
+		if (listener != null)
+			listener.onApplied(citizen, true);
 		return true;
 	}
 
@@ -77,6 +91,11 @@ public final class ClientCitizenCache {
 	 * @param groups chunk 分组 / chunk groups
 	 */
     public static void applyBatch(List<S2CCitizenBatchPacket.Group> groups) {
+		applyBatch(groups, ClientCitizen.currentTimeSeconds(), null);
+	}
+
+	static void applyBatch(List<S2CCitizenBatchPacket.Group> groups, double now,
+			List<ClientCitizen> updatedCitizens) {
         for (S2CCitizenBatchPacket.Group g : groups) {
             int baseX = g.cx() << 14;
             int baseZ = g.cz() << 14;
@@ -87,7 +106,9 @@ public final class ClientCitizenCache {
                 int px = baseX + e.lx() * S2CCitizenBatchPacket.LOCAL_QUANT;
                 int py = e.ly() << 6;
                 int pz = baseZ + e.lz() * S2CCitizenBatchPacket.LOCAL_QUANT;
-                c.update(px, py, pz, e.stateDir());
+				c.update(px, py, pz, e.stateDir(), now);
+				if (updatedCitizens != null)
+					updatedCitizens.add(c);
             }
         }
     }
@@ -173,8 +194,9 @@ public final class ClientCitizenCache {
 		Vector3f look = cam.getLookVector();
 		int bestId = -1;
 		double bestT = maxDist;
+		double now = ClientCitizen.currentTimeSeconds();
 		for (ClientCitizen c : CITIZENS.values()) {
-			double[] pos = c.renderPos();
+			double[] pos = c.renderPos(now);
 			double modelScale = c.modelScale();
 			double cx = pos[0] - eye.x;
 			double cy = pos[1] + 0.9 * modelScale - eye.y;

@@ -106,14 +106,15 @@ final class FlywheelCitizenBackend implements CitizenRenderBackend, InstancingEn
 		if (minecraft.level != level)
 			throw new IllegalStateException("Flywheel citizen backend retained a stale client level");
 		Vec3 cameraPos = minecraft.gameRenderer.getMainCamera().getPosition();
-		ensureResources(cameraPos);
+		double now = ClientCitizen.currentTimeSeconds();
+		ensureResources(cameraPos, now);
 
 		Vec3i origin = materialManager.getOriginCoordinate();
 		if (origin.getX() != originX || origin.getY() != originY || origin.getZ() != originZ)
-			rebuildForOrigin(origin, cameraPos);
+			rebuildForOrigin(origin, cameraPos, now);
 
 		for (ClientCitizen citizen : ClientCitizenCache.values())
-			syncCitizen(citizen, cameraPos, false);
+			syncCitizen(citizen, cameraPos, false, false, now);
 	}
 
 	@Override
@@ -122,7 +123,7 @@ final class FlywheelCitizenBackend implements CitizenRenderBackend, InstancingEn
 		if (closed || materialManager == null || minecraft.level != level)
 			return;
 		rebuildForOrigin(materialManager.getOriginCoordinate(),
-				minecraft.gameRenderer.getMainCamera().getPosition());
+				minecraft.gameRenderer.getMainCamera().getPosition(), ClientCitizen.currentTimeSeconds());
 	}
 
 	@Override
@@ -174,7 +175,8 @@ final class FlywheelCitizenBackend implements CitizenRenderBackend, InstancingEn
 		if (Backend.getBackendType() != BackendType.INSTANCING || !Backend.canUseInstancing(level))
 			return false;
 		MaterialManager nextManager = InstancedRenderDispatcher.getEntities(level).materialManager;
-		rebuildForManager(nextManager, Minecraft.getInstance().gameRenderer.getMainCamera().getPosition());
+		rebuildForManager(nextManager, Minecraft.getInstance().gameRenderer.getMainCamera().getPosition(),
+				ClientCitizen.currentTimeSeconds());
 		rebuildRequested = false;
 		return true;
 	}
@@ -195,10 +197,10 @@ final class FlywheelCitizenBackend implements CitizenRenderBackend, InstancingEn
 		closed = true;
 	}
 
-	private void ensureResources(Vec3 cameraPos) {
+	private void ensureResources(Vec3 cameraPos, double now) {
 		InstanceManager<Entity> entityManager = InstancedRenderDispatcher.getEntities(level);
 		if (rebuildRequested || entityManager.materialManager != materialManager) {
-			rebuildForManager(entityManager.materialManager, cameraPos);
+			rebuildForManager(entityManager.materialManager, cameraPos, now);
 			rebuildRequested = false;
 		}
 	}
@@ -237,12 +239,12 @@ final class FlywheelCitizenBackend implements CitizenRenderBackend, InstancingEn
 	}
 
 	private void syncCitizen(ClientCitizen citizen, Vec3 cameraPos, boolean snapshotDirty) {
-		syncCitizen(citizen, cameraPos, snapshotDirty, false);
+		syncCitizen(citizen, cameraPos, snapshotDirty, false, ClientCitizen.currentTimeSeconds());
 	}
 
 	private void syncCitizen(ClientCitizen citizen, Vec3 cameraPos, boolean snapshotDirty,
-			boolean reuseCachedLight) {
-		double[] pos = citizen.renderPos();
+			boolean reuseCachedLight, double now) {
+		double[] pos = citizen.renderPos(now);
 		double dx = pos[0] - cameraPos.x;
 		double dy = pos[1] - cameraPos.y;
 		double dz = pos[2] - cameraPos.z;
@@ -257,13 +259,13 @@ final class FlywheelCitizenBackend implements CitizenRenderBackend, InstancingEn
 
 		if (entry == null || entry.owner != owner) {
 			removeEntry(citizen.id);
-			createEntry(citizen, owner, pos, reuseCachedLight);
+			createEntry(citizen, owner, pos, reuseCachedLight, now);
 			return;
 		}
 
 		boolean dirty = snapshotDirty;
 		if (snapshotDirty)
-			writeSnapshot(citizen, entry);
+			writeSnapshot(citizen, entry, now);
 		if (sampleLight(citizen, entry.data, pos, false))
 			dirty = true;
 		if (dirty)
@@ -271,7 +273,7 @@ final class FlywheelCitizenBackend implements CitizenRenderBackend, InstancingEn
 	}
 
 	private void createEntry(ClientCitizen citizen, CitizenRenderOwner owner, double[] pos,
-			boolean reuseCachedLight) {
+			boolean reuseCachedLight, double now) {
 		int skin = CitizenSkins.indexFor(citizen.id);
 		Instancer<CitizenInstanceData> instancer = owner == CitizenRenderOwner.BODY_BATCH
 				? bodyInstancers[skin] : billboardInstancers[skin];
@@ -279,7 +281,7 @@ final class FlywheelCitizenBackend implements CitizenRenderBackend, InstancingEn
 		Entry entry = new Entry(data, skin, owner);
 		entries.put(citizen.id, entry);
 		incrementCounts(entry);
-		writeSnapshot(citizen, entry);
+		writeSnapshot(citizen, entry, now);
 		if (reuseCachedLight && citizen.lightBlockX != Integer.MIN_VALUE)
 			writeCachedLight(citizen, data);
 		else
@@ -347,31 +349,31 @@ final class FlywheelCitizenBackend implements CitizenRenderBackend, InstancingEn
 		}
 	}
 
-	private void rebuildForOrigin(Vec3i origin, Vec3 cameraPos) {
+	private void rebuildForOrigin(Vec3i origin, Vec3 cameraPos, double now) {
 		// Flywheel clears every GPUInstancer slot before notifying origin listeners.
 		// InstanceData.markDirty() cannot reinsert those detached handles.
 		discardInvalidatedInstances();
 		originX = origin.getX();
 		originY = origin.getY();
 		originZ = origin.getZ();
-		recreateCachedCitizens(cameraPos);
+		recreateCachedCitizens(cameraPos, now);
 	}
 
-	private void rebuildForManager(MaterialManager nextManager, Vec3 cameraPos) {
+	private void rebuildForManager(MaterialManager nextManager, Vec3 cameraPos, double now) {
 		if (materialManager == nextManager)
 			releaseInstances();
 		else
 			discardInvalidatedInstances();
 		acquireResources(nextManager);
-		recreateCachedCitizens(cameraPos);
+		recreateCachedCitizens(cameraPos, now);
 	}
 
-	private void recreateCachedCitizens(Vec3 cameraPos) {
+	private void recreateCachedCitizens(Vec3 cameraPos, double now) {
 		for (ClientCitizen citizen : ClientCitizenCache.values())
-			syncCitizen(citizen, cameraPos, true, true);
+			syncCitizen(citizen, cameraPos, true, true, now);
 	}
 
-	private void writeSnapshot(ClientCitizen citizen, Entry entry) {
+	private void writeSnapshot(ClientCitizen citizen, Entry entry, double gameNow) {
 		CitizenInstanceData data = entry.data;
 		data.pos0X = (float) (citizen.x0 - originX);
 		data.pos0Y = (float) (citizen.y0 - originY);
@@ -380,7 +382,6 @@ final class FlywheelCitizenBackend implements CitizenRenderBackend, InstancingEn
 		data.pos1Y = (float) (citizen.y1 - originY);
 		data.pos1Z = (float) (citizen.z1 - originZ);
 
-		double gameNow = ClientCitizen.currentTimeSeconds();
 		// Keep snapshot timestamps in the same clock domain as shader uniform uTime.
 		float animationNow = AnimationTickHolder.getRenderTime();
 		data.snapshotTime = wrapAnimationTime(animationNow
@@ -398,7 +399,7 @@ final class FlywheelCitizenBackend implements CitizenRenderBackend, InstancingEn
 			data.velocityZ = 0.0f;
 		}
 
-		int yawStart = citizen.visualYaw();
+		int yawStart = citizen.visualYaw(gameNow);
 		int yawTarget = CitizenState.DIR_TO_YAW[citizen.dir & 15] & 0xFF;
 		data.yawStart = yawStart;
 		data.yawDelta = shortYawDelta(yawStart, yawTarget);

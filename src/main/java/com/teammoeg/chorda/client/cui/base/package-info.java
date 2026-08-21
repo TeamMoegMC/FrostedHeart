@@ -24,5 +24,7 @@
  * CUI base element package. Defines the core abstract classes and interfaces
  * of the CUI framework, including base UI elements, drawables, layout system,
  * and event handling.
+ *
+ * @see com.teammoeg.chorda.client.cui.base.PanZoomViewport
  */
 package com.teammoeg.chorda.client.cui.base;

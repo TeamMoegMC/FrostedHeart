@@ -10,6 +10,7 @@
 
 package com.teammoeg.frostedresearch.gui.archive;
 
+import com.teammoeg.chorda.client.cui.base.PanZoomViewport.Camera;
 import com.teammoeg.frostedresearch.gui.archive.graph.ResearchTypeIdNormalizer;
 
 import javax.annotation.Nullable;
@@ -156,7 +157,7 @@ public final class ResearchWorkspaceState {
     public void setCamera(String researchType, Camera camera) {
         cameraByResearchType.put(
                 ResearchTypeIdNormalizer.normalize(researchType),
-                Objects.requireNonNull(camera, "camera").clamped());
+                Objects.requireNonNull(camera, "camera").clamped(MIN_ZOOM, MAX_ZOOM));
     }
 
     public DrawDeskFocusTarget consumeDrawDeskFocusTarget() {
@@ -225,14 +226,4 @@ public final class ResearchWorkspaceState {
         THEORY_GAME
     }
 
-    public record Camera(double x, double y, double zoom) {
-        public static final Camera DEFAULT = new Camera(0.0D, 0.0D, 1.0D);
-
-        public Camera clamped() {
-            double safeX = Double.isFinite(x) ? x : 0.0D;
-            double safeY = Double.isFinite(y) ? y : 0.0D;
-            double safeZoom = Double.isFinite(zoom) ? zoom : 1.0D;
-            return new Camera(safeX, safeY, Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, safeZoom)));
-        }
-    }
 }

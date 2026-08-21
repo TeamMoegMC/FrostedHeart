@@ -62,6 +62,9 @@ public final class ResearchArchiveLayer extends UILayer {
     private long definitionRevision;
     private boolean definitionsInitialized;
     private Set<String> visibleDefinitionIds = Set.of();
+    private int lastLayoutWidth = -1;
+    private int lastLayoutHeight = -1;
+    private boolean lastLayoutWorkspaceOpen;
 
     public ResearchArchiveLayer(
             UIElement parent,
@@ -80,7 +83,7 @@ public final class ResearchArchiveLayer extends UILayer {
             public void onTextChanged() {
                 ResearchArchiveLayer.this.state.setSearchQuery(getText());
                 typeList.onFilterChanged();
-                graphViewport.onFilterChanged();
+                graphViewport.onSearchChanged();
             }
         };
         this.searchBox.setMaxLength(96);
@@ -117,6 +120,12 @@ public final class ResearchArchiveLayer extends UILayer {
         setSize(Math.max(280, width), Math.max(188, height));
         int safeWidth = getWidth();
         int safeHeight = getHeight();
+        boolean workspaceOpen = state.projectWorkspaceOpen();
+        if (lastLayoutWidth == safeWidth
+                && lastLayoutHeight == safeHeight
+                && lastLayoutWorkspaceOpen == workspaceOpen) {
+            return;
+        }
         fieldTabs.setPosAndSize(
                 HEADER_TITLE_WIDTH,
                 FIELD_TABS_Y,
@@ -132,14 +141,14 @@ public final class ResearchArchiveLayer extends UILayer {
         int graphX = typeList.getX() + typeList.getWidth() + 5;
         int summaryWidth = safeWidth >= 620 ? 176 : safeWidth < 340 ? 84 : 112;
         int graphWidth = Math.max(82, safeWidth - graphX - summaryWidth - 11);
-        graphViewport.setPosAndSize(graphX, contentTop, graphWidth, contentHeight);
+        graphViewport.resizeViewport(graphX, contentTop, graphWidth, contentHeight);
         projectSummary.setPosAndSize(
                 graphViewport.getX() + graphViewport.getWidth() + 5,
                 contentTop,
                 summaryWidth,
                 contentHeight);
 
-        if (state.projectWorkspaceOpen()) {
+        if (workspaceOpen) {
             int modalWidth = Math.min(302, safeWidth - 16);
             int modalHeight = Math.min(170, safeHeight - 16);
             projectWorkspace.setPosAndSize(
@@ -148,8 +157,11 @@ public final class ResearchArchiveLayer extends UILayer {
                     modalWidth,
                     modalHeight);
         }
-        projectWorkspace.setVisible(state.projectWorkspaceOpen());
-        projectWorkspace.setEnabled(state.projectWorkspaceOpen());
+        projectWorkspace.setVisible(workspaceOpen);
+        projectWorkspace.setEnabled(workspaceOpen);
+        lastLayoutWidth = safeWidth;
+        lastLayoutHeight = safeHeight;
+        lastLayoutWorkspaceOpen = workspaceOpen;
     }
 
     public void onResearchDefinitionsChanged() {
@@ -184,7 +196,7 @@ public final class ResearchArchiveLayer extends UILayer {
     void setResearchTypeFilter(String researchTypeId) {
         state.setResearchTypeFilter(researchTypeId);
         typeList.onFilterChanged();
-        graphViewport.onFilterChanged();
+        graphViewport.onResearchTypeChanged();
     }
 
     private void rebuildDefinitions() {

@@ -10,6 +10,7 @@
 
 package com.teammoeg.frostedheart.content.town.citizen.client;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Supplier;
@@ -44,6 +45,10 @@ public final class CitizenRenderCoordinator {
 	private static ClientLevel lastClientLevel;
 	/** Client-only batch LOD state shared by CPU and Flywheel; never synchronized. */
 	private static final Int2ObjectOpenHashMap<CitizenRenderOwner> BATCH_OWNERS = new Int2ObjectOpenHashMap<>();
+	/** Reused two-phase notification buffer; logical-client thread only. */
+	private static final List<ClientCitizen> UPDATED_CITIZENS = new ArrayList<>();
+	private static final ClientCitizenCache.SpawnApplyListener SPAWN_APPLY_LISTENER =
+			CitizenRenderCoordinator::notifySpawnApplied;
 
 	private enum BackendPreference {
 		AUTO("auto"),
@@ -66,27 +71,28 @@ public final class CitizenRenderCoordinator {
 	}
 
 	public static void applySpawn(List<S2CCitizenSpawnPacket.Entry> entries) {
+		double now = ClientCitizen.currentTimeSeconds();
 		for (S2CCitizenSpawnPacket.Entry entry : entries) {
-			boolean added = ClientCitizenCache.applySpawn(entry);
-			ClientCitizen citizen = ClientCitizenCache.get(entry.id());
-			if (citizen != null) {
-				if (added)
-					notifyAdded(citizen);
-				else
-					notifyUpdated(citizen);
-			}
+			ClientCitizenCache.applySpawn(entry, now, SPAWN_APPLY_LISTENER);
 		}
 	}
 
 	public static void applyBatch(List<S2CCitizenBatchPacket.Group> groups) {
-		ClientCitizenCache.applyBatch(groups);
-		for (S2CCitizenBatchPacket.Group group : groups) {
-			for (S2CCitizenBatchPacket.Entry entry : group.entries()) {
-				ClientCitizen citizen = ClientCitizenCache.get(entry.id());
-				if (citizen != null)
-					notifyUpdated(citizen);
-			}
+		UPDATED_CITIZENS.clear();
+		try {
+			ClientCitizenCache.applyBatch(groups, ClientCitizen.currentTimeSeconds(), UPDATED_CITIZENS);
+			for (ClientCitizen citizen : UPDATED_CITIZENS)
+				notifyUpdated(citizen);
+		} finally {
+			UPDATED_CITIZENS.clear();
 		}
+	}
+
+	private static void notifySpawnApplied(ClientCitizen citizen, boolean added) {
+		if (added)
+			notifyAdded(citizen);
+		else
+			notifyUpdated(citizen);
 	}
 
 	public static void applyDespawn(IntList ids) {
@@ -147,11 +153,14 @@ public final class CitizenRenderCoordinator {
 
 	static CitizenRenderOwner batchOwnerFor(ClientCitizen citizen, double distance2) {
 		boolean sleeping = (citizen.state & 0xFF) == CitizenState.SLEEP;
+		CitizenRenderOwner previous = BATCH_OWNERS.get(citizen.id);
 		CitizenRenderOwner owner = CitizenRenderOwnership.resolve(sleeping, false, distance2,
-				BATCH_OWNERS.get(citizen.id));
+				previous);
+		if (owner == previous)
+			return owner;
 		if (owner == CitizenRenderOwner.BODY_BATCH || owner == CitizenRenderOwner.BILLBOARD_BATCH)
 			BATCH_OWNERS.put(citizen.id, owner);
-		else
+		else if (previous != null)
 			BATCH_OWNERS.remove(citizen.id);
 		return owner;
 	}

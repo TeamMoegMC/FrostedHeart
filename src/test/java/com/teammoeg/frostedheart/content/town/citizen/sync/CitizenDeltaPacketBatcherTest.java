@@ -72,7 +72,7 @@ class CitizenDeltaPacketBatcherTest {
 	}
 
 	@Test
-	void reusesWholeGroupsAndCopiesOnlySplitFragments() {
+	void reusesWholeGroupsAndSlicesOnlySplitFragments() {
 		S2CCitizenBatchPacket.Group whole = group(4, 5, 100, 1);
 		List<List<S2CCitizenBatchPacket.Group>> wholePackets = collectPackets(List.of(whole), 240);
 		assertSame(whole, wholePackets.get(0).get(0));
@@ -81,6 +81,18 @@ class CitizenDeltaPacketBatcherTest {
 		List<List<S2CCitizenBatchPacket.Group>> splitPackets = collectPackets(List.of(split), 240);
 		assertNotSame(split, splitPackets.get(0).get(0));
 		assertNotSame(split, splitPackets.get(1).get(0));
+	}
+
+	@Test
+	void splitFragmentsRemainViewsOfTheSourceEntries() {
+		S2CCitizenBatchPacket.Group split = group(6, 7, 241, 1000);
+		List<List<S2CCitizenBatchPacket.Group>> packets = collectPackets(List.of(split), 240);
+		S2CCitizenBatchPacket.Entry replacement = new S2CCitizenBatchPacket.Entry(
+				9999, 1, 2, 3, (byte) 4);
+
+		split.entries().set(0, replacement);
+
+		assertSame(replacement, packets.get(0).get(0).entries().get(0));
 	}
 
 	private List<List<S2CCitizenBatchPacket.Group>> collectPackets(
