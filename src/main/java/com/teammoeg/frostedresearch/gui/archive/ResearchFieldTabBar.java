@@ -27,7 +27,8 @@ import java.util.Objects;
 
 /** Top-level research-field tabs following the original technology-tree layout. */
 final class ResearchFieldTabBar extends UIElement {
-    private static final int TAB_COUNT = ResearchCategory.values().length + 1;
+    private static final ResearchCategory[] CATEGORIES = ResearchCategory.values();
+    private static final int TAB_COUNT = CATEGORIES.length + 1;
     private static final int MAX_TAB_WIDTH = 40;
     private static final int ICON_SIZE = 16;
 
@@ -60,7 +61,7 @@ final class ResearchFieldTabBar extends UIElement {
             if (index == 0) {
                 TechIcons.INF.draw(graphics, iconX, iconY, ICON_SIZE, ICON_SIZE);
             } else {
-                CIcons.getIcon(ResearchCategory.values()[index - 1].getIcon())
+                CIcons.getIcon(CATEGORIES[index - 1].getIcon())
                         .draw(graphics, iconX, iconY, ICON_SIZE, ICON_SIZE);
             }
         }
@@ -93,7 +94,7 @@ final class ResearchFieldTabBar extends UIElement {
             tooltip.accept(Component.translatable("gui.frostedresearch.archive.all_types"));
             return;
         }
-        ResearchCategory category = ResearchCategory.values()[index - 1];
+        ResearchCategory category = CATEGORIES[index - 1];
         tooltip.accept(category.getName());
         tooltip.accept(category.getDesc().copy().withStyle(ChatFormatting.GRAY));
     }
@@ -118,6 +119,6 @@ final class ResearchFieldTabBar extends UIElement {
     private static String typeId(int index) {
         return index == 0
                 ? ResearchTypeIdNormalizer.ALL_TYPES
-                : ResearchTypeIdNormalizer.normalize(ResearchCategory.values()[index - 1]);
+                : ResearchTypeIdNormalizer.normalize(CATEGORIES[index - 1]);
     }
 }

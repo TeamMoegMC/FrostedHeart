@@ -137,6 +137,7 @@ public class TeamResearchData implements SpecialData {
 	 * The active research id.<br>
 	 */
 	int activeResearchId = -1;
+	private final Supplier<Research> currentResearchSupplier = this::getCurrentResearchValue;
 	/**
 	 * The variants.<br>
 	 */
@@ -443,7 +444,13 @@ public class TeamResearchData implements SpecialData {
 	 * @return current research<br>
 	 */
 	public Supplier<Research> getCurrentResearch() {
-		return () -> activeResearchId==-1?null:FHResearch.getResearch(activeResearchId);
+		return currentResearchSupplier;
+	}
+
+	/** Direct read-only access for hot client UI paths that do not need lazy lookup. */
+	@Nullable
+	public Research getCurrentResearchValue() {
+		return activeResearchId == -1 ? null : FHResearch.getResearch(activeResearchId);
 	}
 
 	@OnlyIn(Dist.CLIENT)

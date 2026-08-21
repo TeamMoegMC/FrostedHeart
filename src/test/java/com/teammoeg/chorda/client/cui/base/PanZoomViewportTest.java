@@ -45,6 +45,21 @@ class PanZoomViewportTest {
     }
 
     @Test
+    void nonZeroWheelInputIsConsumedAtBothZoomLimits() {
+        TestViewport viewport = viewport(0.1D, 2.0D, 200, 100);
+        viewport.setCamera(new PanZoomViewport.Camera(0.0D, 0.0D, 2.0D));
+        setMouseInside(viewport);
+
+        assertTrue(viewport.onMouseScrolled(1.0D));
+        assertCamera(0.0D, 0.0D, 2.0D, viewport.getCamera());
+
+        viewport.setCamera(new PanZoomViewport.Camera(0.0D, 0.0D, 0.1D));
+        assertTrue(viewport.onMouseScrolled(-1.0D));
+        assertCamera(0.0D, 0.0D, 0.1D, viewport.getCamera());
+        assertFalse(viewport.onMouseScrolled(0.0D));
+    }
+
+    @Test
     void leftAndMiddleMouseButtonsPanTheCamera() {
         TestViewport viewport = viewport(0.1D, 4.0D, 200, 100);
         viewport.setCamera(new PanZoomViewport.Camera(0.0D, 0.0D, 2.0D));

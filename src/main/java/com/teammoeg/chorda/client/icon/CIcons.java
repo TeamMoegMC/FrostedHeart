@@ -320,6 +320,12 @@ public class CIcons {
 			}
 		}
 		@Override
+		void drawBatched(CIconBatch batch, GuiGraphics graphics, int x, int y, int w, int h) {
+			if (!icons.isEmpty()) {
+				batch.draw(CMath.selectElementByTime(icons), x, y, w, h);
+			}
+		}
+		@Override
 		public boolean isEmpty() {
 			return icons.isEmpty()&&icons.stream().allMatch(CIcon::isEmpty);
 		}
@@ -351,6 +357,16 @@ public class CIcons {
 			if (small != null)
 				small.draw(ms, x + w / 2, y + h / 2, w / 2, h / 2);
 			ms.pose().popPose();
+		}
+		@Override
+		void drawBatched(CIconBatch batch, GuiGraphics graphics, int x, int y, int w, int h) {
+			batch.draw(large, x, y, w, h);
+			batch.pushZ(300);
+			try {
+				batch.draw(small, x + w / 2, y + h / 2, w / 2, h / 2);
+			} finally {
+				batch.popZ(300);
+			}
 		}
 		@Override
 		public boolean isEmpty() {
@@ -386,6 +402,16 @@ public class CIcons {
 		}
 
 		@Override
+		void drawBatched(CIconBatch batch, GuiGraphics graphics, int x, int y, int w, int h) {
+			CIcon icon = internals.get(name);
+			if (icon != null) {
+				batch.draw(icon, x, y, w, h);
+			} else {
+				super.drawBatched(batch, graphics, x, y, w, h);
+			}
+		}
+
+		@Override
 		public boolean isEmpty() {
 			return internals.get(name)==null;
 		}
@@ -413,6 +439,11 @@ public class CIcons {
 		}
 
 		public abstract void draw(GuiGraphics ms, int x, int y, int w, int h);
+
+		void drawBatched(CIconBatch batch, GuiGraphics graphics, int x, int y, int w, int h) {
+			batch.drawImmediately(this, graphics, x, y, w, h);
+		}
+
 		public abstract boolean isEmpty();
 	}
 
@@ -516,6 +547,10 @@ public class CIcons {
 			 */
 		}
 		@Override
+		void drawBatched(CIconBatch batch, GuiGraphics graphics, int x, int y, int w, int h) {
+			batch.submitItem(stack, x, y, w, h, 50);
+		}
+		@Override
 		public boolean isEmpty() {
 			return stack.isEmpty();
 		}
@@ -536,6 +571,9 @@ public class CIcons {
 
 		@Override
 		public void draw(GuiGraphics ms, int x, int y, int w, int h) {
+		}
+		@Override
+		void drawBatched(CIconBatch batch, GuiGraphics graphics, int x, int y, int w, int h) {
 		}
 		@Override
 		public boolean isEmpty() {

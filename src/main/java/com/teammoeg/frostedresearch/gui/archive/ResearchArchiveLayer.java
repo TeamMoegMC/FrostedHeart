@@ -53,6 +53,7 @@ public final class ResearchArchiveLayer extends UILayer {
     private final ResearchWorkspaceState state;
     private final ResearchNavigationController navigation;
     private final Runnable surfaceChanged;
+    private final ResearchArchiveViewCache viewCache;
     private final ResearchFieldTabBar fieldTabs;
     private final TextBox searchBox;
     private final ResearchTypeListPanel typeList;
@@ -77,6 +78,7 @@ public final class ResearchArchiveLayer extends UILayer {
         this.state = Objects.requireNonNull(state, "state");
         this.navigation = Objects.requireNonNull(navigation, "navigation");
         this.surfaceChanged = Objects.requireNonNull(surfaceChanged, "surfaceChanged");
+        this.viewCache = new ResearchArchiveViewCache();
         this.fieldTabs = new ResearchFieldTabBar(this, state);
         this.searchBox = new TextBox(this) {
             @Override
@@ -88,10 +90,11 @@ public final class ResearchArchiveLayer extends UILayer {
         };
         this.searchBox.setMaxLength(96);
         this.searchBox.ghostText = Component.translatable("gui.frostedresearch.archive.search").getString();
-        this.typeList = new ResearchTypeListPanel(this, state, this::onNavigationChanged);
-        this.graphViewport = new ResearchGraphViewport(this, state, navigation, this::onNavigationChanged);
+        this.typeList = new ResearchTypeListPanel(this, state, viewCache, this::onNavigationChanged);
+        this.graphViewport = new ResearchGraphViewport(
+                this, state, viewCache, navigation, this::onNavigationChanged);
         this.projectSummary = new ResearchProjectSummaryPanel(
-                this, state, navigation, this::onNavigationChanged);
+                this, state, viewCache, navigation, this::onNavigationChanged);
         this.projectWorkspace = new ResearchProjectWorkspace(
                 this, openContext, state, navigation, this::onNavigationChanged);
         this.searchBox.setText(state.searchQuery(), false);
@@ -157,6 +160,12 @@ public final class ResearchArchiveLayer extends UILayer {
                     modalWidth,
                     modalHeight);
         }
+        fieldTabs.setEnabled(!workspaceOpen);
+        searchBox.setEnabled(!workspaceOpen);
+        typeList.setEnabled(!workspaceOpen);
+        graphViewport.setEnabled(!workspaceOpen);
+        graphViewport.setVisible(!workspaceOpen);
+        projectSummary.setEnabled(!workspaceOpen);
         projectWorkspace.setVisible(workspaceOpen);
         projectWorkspace.setEnabled(workspaceOpen);
         lastLayoutWidth = safeWidth;
@@ -173,13 +182,15 @@ public final class ResearchArchiveLayer extends UILayer {
             rebuildDefinitions();
             return;
         }
+        viewCache.refreshStates();
         typeList.onProgressChanged(researchId);
         graphViewport.onProgressChanged(researchId);
         projectWorkspace.onProgressChanged(researchId);
     }
 
     public void onActiveResearchChanged(@Nullable String researchId) {
-        typeList.onProgressChanged(researchId);
+        viewCache.refreshStates();
+        typeList.onActiveResearchChanged();
         graphViewport.onProgressChanged(researchId);
         projectWorkspace.onActiveResearchChanged(researchId);
     }
@@ -220,6 +231,7 @@ public final class ResearchArchiveLayer extends UILayer {
                         .toList(),
                 currentResearchId,
                 firstVisibleResearchId);
+        viewCache.setDefinitions(definitions);
         typeList.setDefinitions(definitions);
         graphViewport.setDefinitions(definitions, ++definitionRevision);
         projectSummary.setDefinitions(definitions);
@@ -230,7 +242,7 @@ public final class ResearchArchiveLayer extends UILayer {
 
     @Nullable
     private String currentResearchId() {
-        Research current = ClientResearchDataAPI.getData().get().getCurrentResearch().get();
+        Research current = ClientResearchDataAPI.getData().get().getCurrentResearchValue();
         return current == null ? null : current.getId();
     }
 
@@ -291,6 +303,12 @@ public final class ResearchArchiveLayer extends UILayer {
 
     @Override
     public void drawBackground(GuiGraphics graphics, int x, int y, int width, int height, RenderingHint hint) {
+        if (viewCache.refreshLanguageIfNeeded()) {
+            searchBox.ghostText = Component.translatable("gui.frostedresearch.archive.search").getString();
+            typeList.onPresentationChanged();
+            graphViewport.onPresentationChanged();
+            projectSummary.onPresentationChanged();
+        }
         graphics.fill(x, y, x + width, y + height, COLOR_INK);
         graphics.fill(x + 1, y + 1, x + width - 1, y + HEADER_HEIGHT - 1, COLOR_PAPER);
         graphics.fill(x + 1, y + HEADER_HEIGHT - 1, x + width - 1, y + HEADER_HEIGHT, COLOR_RED);

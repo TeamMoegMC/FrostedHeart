@@ -105,7 +105,7 @@ public class CUIScreenWrapper extends Screen implements CUIScreen {
 
 	@Override
 	public boolean mouseDragged(double x, double y, int button, double dragX, double dragY) {
-		return primaryLayer.onMouseDragged(MouseButton.of(button), dragX-this.x, dragY-this.y) || super.mouseDragged(x, y, button, dragX, dragY);
+		return primaryLayer.onMouseDragged(MouseButton.of(button), dragX, dragY) || super.mouseDragged(x, y, button, dragX, dragY);
 	}
 
 	@Override

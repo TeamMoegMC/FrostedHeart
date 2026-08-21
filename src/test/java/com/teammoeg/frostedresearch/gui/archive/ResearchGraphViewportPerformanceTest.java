@@ -3,6 +3,7 @@ package com.teammoeg.frostedresearch.gui.archive;
 
 import com.teammoeg.frostedresearch.research.Research;
 import com.teammoeg.frostedresearch.research.ResearchCategory;
+import com.teammoeg.chorda.client.cui.base.PanZoomViewport.Camera;
 import net.minecraft.SharedConstants;
 import net.minecraft.server.Bootstrap;
 import org.junit.jupiter.api.BeforeAll;
@@ -34,6 +35,29 @@ class ResearchGraphViewportPerformanceTest {
         state.setResearchTypeFilter("frostedresearch:production");
         viewport.onResearchTypeChanged();
         assertEquals(2, viewport.projectionBuildCountForTest());
+    }
+
+    @Test
+    void definitionRefreshAndFieldSwitchPreserveSavedCameras() {
+        ResearchWorkspaceState state = new ResearchWorkspaceState(ResearchOpenContext.browse());
+        Camera allCamera = new Camera(74.0D, 53.0D, 0.63D);
+        Camera productionCamera = new Camera(31.0D, 28.0D, 0.48D);
+        state.setCamera("*", allCamera);
+        state.setCamera("frostedresearch:production", productionCamera);
+        ResearchGraphViewport viewport = new ResearchGraphViewport(null, state, navigation(), () -> { });
+        List<Research> definitions = List.of(research("alpha"), research("beta"));
+
+        viewport.setDefinitions(definitions, 1L);
+        assertEquals(allCamera, viewport.getCamera());
+        assertEquals(allCamera, state.camera("*"));
+
+        state.setResearchTypeFilter("frostedresearch:production");
+        viewport.onResearchTypeChanged();
+        assertEquals(productionCamera, viewport.getCamera());
+
+        viewport.setDefinitions(definitions, 2L);
+        assertEquals(productionCamera, viewport.getCamera());
+        assertEquals(productionCamera, state.camera("frostedresearch:production"));
     }
 
     private static Research research(String id) {

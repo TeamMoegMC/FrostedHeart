@@ -10,6 +10,8 @@ import net.minecraft.server.Bootstrap;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
+import java.lang.reflect.Field;
+
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -44,6 +46,34 @@ class ResearchArchiveLayerConstructionTest {
     @Test
     void editorArchiveIncludesAllDefinitions() {
         assertTrue(ResearchArchiveLayer.definitionVisible(true, true, false, false, false));
+    }
+
+    @Test
+    void openingProjectWorkspaceHidesAndDisablesGraphViewport() throws ReflectiveOperationException {
+        ResearchOpenContext context = ResearchOpenContext.drawingDesk(null);
+        ResearchWorkspaceState state = new ResearchWorkspaceState(context);
+        ResearchArchiveLayer layer = new ResearchArchiveLayer(
+                new TestParent(), context, state,
+                new StatefulResearchNavigationController(context, state, () -> { }), () -> { });
+
+        state.selectResearch("project");
+        state.setProjectWorkspaceOpen(true);
+        layer.resizeArchive(640, 360);
+        UIElement graphViewport = privateElement(layer, "graphViewport");
+        assertFalse(graphViewport.isVisible());
+        assertFalse(graphViewport.isEnabled());
+
+        state.setProjectWorkspaceOpen(false);
+        layer.resizeArchive(640, 360);
+        assertTrue(graphViewport.isVisible());
+        assertTrue(graphViewport.isEnabled());
+    }
+
+    private static UIElement privateElement(ResearchArchiveLayer layer, String fieldName)
+            throws ReflectiveOperationException {
+        Field field = ResearchArchiveLayer.class.getDeclaredField(fieldName);
+        field.setAccessible(true);
+        return (UIElement) field.get(layer);
     }
 
     private static final class TestParent extends UIElement {

@@ -192,14 +192,13 @@ public class PanZoomViewport extends UILayer {
                 newZoom), CameraChange.ZOOM);
     }
 
-    /** Applies wheel delta using the configured exponential zoom step. */
+    /** Applies and consumes a non-zero wheel delta using the configured exponential zoom step. */
     public final boolean zoomByWheel(double scroll, double localScreenX, double localScreenY) {
         if (scroll == 0.0D) {
             return false;
         }
-        Camera before = camera;
-        zoomAt(localScreenX, localScreenY, before.zoom() * Math.pow(zoomStep, scroll));
-        return !before.equals(camera);
+        zoomAt(localScreenX, localScreenY, camera.zoom() * Math.pow(zoomStep, scroll));
+        return true;
     }
 
     /** Converts a world X coordinate to a viewport-local screen coordinate. */

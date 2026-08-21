@@ -16,7 +16,6 @@ import com.teammoeg.chorda.client.cui.base.MouseButton;
 import com.teammoeg.chorda.client.cui.base.TooltipBuilder;
 import com.teammoeg.chorda.client.cui.base.UIElement;
 import com.teammoeg.frostedresearch.FHResearch;
-import com.teammoeg.frostedresearch.api.ClientResearchDataAPI;
 import com.teammoeg.frostedresearch.gui.archive.graph.ResearchTypeIdNormalizer;
 import com.teammoeg.frostedresearch.research.Research;
 import net.minecraft.client.gui.GuiGraphics;
@@ -36,7 +35,9 @@ final class ResearchTypeListPanel extends UIElement {
     private static final int RESEARCH_ROW_HEIGHT = 19;
 
     private final ResearchWorkspaceState state;
+    private final ResearchArchiveViewCache viewCache;
     private final Runnable navigationChanged;
+    private final boolean ownsViewCache;
     private List<Research> definitions = List.of();
     private List<Research> cachedVisibleResearches = List.of();
     private String cachedFilter = "";
@@ -51,13 +52,35 @@ final class ResearchTypeListPanel extends UIElement {
             ResearchArchiveLayer parent,
             ResearchWorkspaceState state,
             Runnable navigationChanged) {
+        this(parent, state, new ResearchArchiveViewCache(), navigationChanged, true);
+    }
+
+    ResearchTypeListPanel(
+            ResearchArchiveLayer parent,
+            ResearchWorkspaceState state,
+            ResearchArchiveViewCache viewCache,
+            Runnable navigationChanged) {
+        this(parent, state, viewCache, navigationChanged, false);
+    }
+
+    private ResearchTypeListPanel(
+            ResearchArchiveLayer parent,
+            ResearchWorkspaceState state,
+            ResearchArchiveViewCache viewCache,
+            Runnable navigationChanged,
+            boolean ownsViewCache) {
         super(parent);
         this.state = Objects.requireNonNull(state, "state");
+        this.viewCache = Objects.requireNonNull(viewCache, "viewCache");
         this.navigationChanged = Objects.requireNonNull(navigationChanged, "navigationChanged");
+        this.ownsViewCache = ownsViewCache;
     }
 
     void setDefinitions(List<Research> definitions) {
         this.definitions = List.copyOf(definitions);
+        if (ownsViewCache) {
+            viewCache.setDefinitions(definitions);
+        }
         invalidateVisibleResearches();
         clampScroll();
     }
@@ -68,6 +91,15 @@ final class ResearchTypeListPanel extends UIElement {
     }
 
     void onProgressChanged(@Nullable String researchId) {
+        // Row styles read the synchronized state snapshot; ordering is unchanged.
+    }
+
+    void onActiveResearchChanged() {
+        invalidateVisibleResearches();
+        clampScroll();
+    }
+
+    void onPresentationChanged() {
         invalidateVisibleResearches();
         clampScroll();
     }
@@ -100,12 +132,17 @@ final class ResearchTypeListPanel extends UIElement {
         List<Research> visible = visibleResearches();
         Research hovered = isMouseOver() ? rowAtMouse(visible) : null;
         int scroll = state.typeListScroll(state.researchTypeFilter());
-        int rowY = listTop - scroll;
+        int listHeight = Math.max(0, height - HEADER_HEIGHT);
+        int firstRow = Math.max(0, scroll / RESEARCH_ROW_HEIGHT);
+        int lastRowExclusive = Math.min(
+                visible.size(),
+                (scroll + listHeight + RESEARCH_ROW_HEIGHT - 1) / RESEARCH_ROW_HEIGHT);
+        int rowY = listTop + firstRow * RESEARCH_ROW_HEIGHT - scroll;
         String currentId = currentResearchId();
-        for (Research research : visible) {
-            if (rowY + RESEARCH_ROW_HEIGHT >= listTop && rowY < y + height) {
-                drawResearchRow(graphics, research, hovered, currentId, x + 1, rowY, width - 2);
-            }
+        Set<String> bookmarks = state.bookmarkedResearchIds();
+        for (int row = firstRow; row < lastRowExclusive; row++) {
+            Research research = visible.get(row);
+            drawResearchRow(graphics, research, hovered, currentId, bookmarks, x + 1, rowY, width - 2);
             rowY += RESEARCH_ROW_HEIGHT;
         }
         graphics.disableScissor();
@@ -116,28 +153,33 @@ final class ResearchTypeListPanel extends UIElement {
             Research research,
             @Nullable Research hovered,
             @Nullable String currentId,
+            Set<String> bookmarks,
             int x,
             int y,
             int width) {
         boolean selected = research.getId().equals(state.selectedResearchId());
         boolean active = research.getId().equals(currentId);
-        boolean bookmarked = state.bookmarkedResearchIds().contains(research.getId());
+        boolean bookmarked = bookmarks.contains(research.getId());
+        ResearchArchiveViewCache.View view = viewCache.view(research.getId());
+        if (view == null) {
+            return;
+        }
         if (selected) {
             graphics.fill(x, y, x + width, y + RESEARCH_ROW_HEIGHT - 1, 0x55FFFFFF);
         } else if (hovered == research) {
             graphics.fill(x, y, x + width, y + RESEARCH_ROW_HEIGHT - 1, 0x22FFFFFF);
         }
-        int statusColor = research.isCompleted()
+        int statusColor = view.completed()
                 ? ResearchArchiveLayer.COLOR_TEAL
                 : active ? ResearchArchiveLayer.COLOR_GOLD
-                : research.isUnlocked() ? ResearchArchiveLayer.COLOR_RED
+                : view.unlocked() ? ResearchArchiveLayer.COLOR_RED
                 : ResearchArchiveLayer.COLOR_MUTED_INK;
         graphics.fill(x + 4, y + 5, x + 8, y + 14, statusColor);
         if (bookmarked) {
             graphics.drawString(getFont(), "*", x + width - 9, y + 6,
                     ResearchArchiveLayer.COLOR_RED, false);
         }
-        String title = research.getName().getString();
+        String title = view.title();
         title = getFont().plainSubstrByWidth(title, width - (bookmarked ? 25 : 17));
         graphics.drawString(getFont(), title, x + 12, y + 6,
                 ResearchArchiveLayer.COLOR_INK, false);
@@ -183,7 +225,8 @@ final class ResearchTypeListPanel extends UIElement {
     public void getTooltip(TooltipBuilder tooltip) {
         Research research = rowAtMouse();
         if (research != null) {
-            tooltip.accept(research.getName());
+            ResearchArchiveViewCache.View view = viewCache.view(research.getId());
+            tooltip.accept(view == null ? research.getName() : view.name());
             if (FHResearch.editor) {
                 tooltip.accept(Component.literal(research.getId()));
             }
@@ -227,13 +270,16 @@ final class ResearchTypeListPanel extends UIElement {
         }
         List<Research> visible = new ArrayList<>();
         for (Research research : definitions) {
+            ResearchArchiveViewCache.View view = viewCache.view(research.getId());
+            if (view == null) {
+                continue;
+            }
             if (!ResearchTypeIdNormalizer.ALL_TYPES.equals(filter)
                     && !ResearchTypeIdNormalizer.normalize(research.getCategory()).equals(filter)) {
                 continue;
             }
             if (!query.isEmpty()
-                    && !research.getId().toLowerCase(Locale.ROOT).contains(query)
-                    && !research.getName().getString().toLowerCase(Locale.ROOT).contains(query)) {
+                    && !view.lowercaseSearchText().contains(query)) {
                 continue;
             }
             visible.add(research);
@@ -241,7 +287,7 @@ final class ResearchTypeListPanel extends UIElement {
         visible.sort(Comparator
                 .comparing((Research research) -> !bookmarks.contains(research.getId()))
                 .thenComparing(research -> !research.getId().equals(currentId))
-                .thenComparing(research -> research.getName().getString(), String.CASE_INSENSITIVE_ORDER));
+                .thenComparing(research -> viewCache.view(research.getId()).title(), String.CASE_INSENSITIVE_ORDER));
         cachedVisibleResearches = List.copyOf(visible);
         cachedFilter = filter;
         cachedQuery = query;
@@ -267,8 +313,7 @@ final class ResearchTypeListPanel extends UIElement {
 
     @Nullable
     private String currentResearchId() {
-        Research current = ClientResearchDataAPI.getData().get().getCurrentResearch().get();
-        return current == null ? null : current.getId();
+        return viewCache.activeResearchId();
     }
 
     List<Research> visibleResearchesForTest() {

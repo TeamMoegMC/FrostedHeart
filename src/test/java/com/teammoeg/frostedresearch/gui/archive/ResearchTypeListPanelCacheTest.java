@@ -42,10 +42,10 @@ class ResearchTypeListPanelCacheTest {
         assertEquals(3, panel.visibleResearchBuildCountForTest());
 
         panel.onProgressChanged(alpha.getId());
-        assertEquals(4, panel.visibleResearchBuildCountForTest());
+        assertEquals(3, panel.visibleResearchBuildCountForTest());
 
         panel.setDefinitions(List.of(alpha));
-        assertEquals(5, panel.visibleResearchBuildCountForTest());
+        assertEquals(4, panel.visibleResearchBuildCountForTest());
     }
 
     private static Research research(String id, ResearchCategory category) {
