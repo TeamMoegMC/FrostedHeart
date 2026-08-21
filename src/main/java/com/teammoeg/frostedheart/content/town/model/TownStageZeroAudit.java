@@ -665,10 +665,18 @@ public final class TownStageZeroAudit {
         addShared(values, "residents.minimumProficiencyGrowthPerWorkday", residents.minimumProficiencyGrowthPerWorkday(),
                 "proficiency-point/workday", source, "RESIDENT_MINIMUM_PROFICIENCY_GROWTH_PER_WORKDAY", "RESIDENT_PROGRESSION.minimumProficiencyGrowthPerWorkday");
         TownModelParameters.ResidentGenerationParameters generation = residents.generation();
-        addShared(values, "residents.generation.initialHealth", generation.initialHealth(),
-                "health", source, "RESIDENT_INITIAL_HEALTH", "RESIDENT_GENERATION.initialHealth");
-        addShared(values, "residents.generation.initialMental", generation.initialMental(),
-                "mental", source, "RESIDENT_INITIAL_MENTAL", "RESIDENT_GENERATION.initialMental");
+        addShared(values, "residents.generation.initialHealthMinimum", generation.initialHealthMinimum(),
+                "health", source, "RESIDENT_INITIAL_HEALTH_MINIMUM", "RESIDENT_GENERATION.initialHealthMinimum");
+        addShared(values, "residents.generation.initialHealthMaximum", generation.initialHealthMaximum(),
+                "health", source, "RESIDENT_INITIAL_HEALTH_MAXIMUM", "RESIDENT_GENERATION.initialHealthMaximum");
+        addShared(values, "residents.generation.initialMentalMinimum", generation.initialMentalMinimum(),
+                "mental", source, "RESIDENT_INITIAL_MENTAL_MINIMUM", "RESIDENT_GENERATION.initialMentalMinimum");
+        addShared(values, "residents.generation.initialMentalMaximum", generation.initialMentalMaximum(),
+                "mental", source, "RESIDENT_INITIAL_MENTAL_MAXIMUM", "RESIDENT_GENERATION.initialMentalMaximum");
+        addShared(values, "residents.generation.initialNutritionMinimum", generation.initialNutritionMinimum(),
+                "reserve", source, "RESIDENT_INITIAL_NUTRITION_MINIMUM", "RESIDENT_GENERATION.initialNutritionMinimum");
+        addShared(values, "residents.generation.initialNutritionMaximum", generation.initialNutritionMaximum(),
+                "reserve", source, "RESIDENT_INITIAL_NUTRITION_MAXIMUM", "RESIDENT_GENERATION.initialNutritionMaximum");
         addShared(values, "residents.generation.attributeSampleCount", generation.attributeSampleCount(),
                 "sample", source, "RESIDENT_ATTRIBUTE_SAMPLE_COUNT", "RESIDENT_GENERATION.attributeSampleCount");
         addShared(values, "residents.generation.infantStrengthCenter", generation.infantStrengthCenter(),
@@ -707,6 +715,18 @@ public final class TownStageZeroAudit {
                 "RESIDENT_AGE_WEIGHT_", "REFUGEE_SPAWN.weight");
         addAgeWeights(values, "residents.generation.fallbackAgeWeights", generation.fallbackAgeWeights(), source,
                 "RESIDENT_FALLBACK_AGE_WEIGHT_", "RESIDENT_GENERATION.fallbackWeight");
+        addShared(values, "residents.generation.educationWeightLevel0", generation.educationWeightLevel0(),
+                "weight", source, "RESIDENT_EDUCATION_WEIGHT_LEVEL_0", "RESIDENT_GENERATION.educationWeightLevel0");
+        addShared(values, "residents.generation.educationWeightLevel1", generation.educationWeightLevel1(),
+                "weight", source, "RESIDENT_EDUCATION_WEIGHT_LEVEL_1", "RESIDENT_GENERATION.educationWeightLevel1");
+        addShared(values, "residents.generation.educationWeightLevel2", generation.educationWeightLevel2(),
+                "weight", source, "RESIDENT_EDUCATION_WEIGHT_LEVEL_2", "RESIDENT_GENERATION.educationWeightLevel2");
+        addShared(values, "residents.generation.educationWeightLevel3", generation.educationWeightLevel3(),
+                "weight", source, "RESIDENT_EDUCATION_WEIGHT_LEVEL_3", "RESIDENT_GENERATION.educationWeightLevel3");
+        addShared(values, "residents.generation.educationWeightLevel4", generation.educationWeightLevel4(),
+                "weight", source, "RESIDENT_EDUCATION_WEIGHT_LEVEL_4", "RESIDENT_GENERATION.educationWeightLevel4");
+        addShared(values, "residents.generation.educationWeightLevel5", generation.educationWeightLevel5(),
+                "weight", source, "RESIDENT_EDUCATION_WEIGHT_LEVEL_5", "RESIDENT_GENERATION.educationWeightLevel5");
         addShared(values, "residents.generation.coldSurvivorHealthMinimum", generation.coldSurvivorHealthMinimum(),
                 "health", source, "RESIDENT_COLD_SURVIVOR_HEALTH_MINIMUM", "RESIDENT_GENERATION.coldSurvivorHealthMinimum");
         addShared(values, "residents.generation.coldSurvivorHealthMaximum", generation.coldSurvivorHealthMaximum(),

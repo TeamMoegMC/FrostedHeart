@@ -78,7 +78,54 @@ class ResidentGenerationModelTest {
                         >= parameters.elderMinimumInitialProficiency());
                 default -> throw new AssertionError("Unsupported generated age");
             }
+            assertTrue(resident.health() >= parameters.initialHealthMinimum());
+            assertTrue(resident.health() <= parameters.initialHealthMaximum());
+            assertTrue(resident.mental() >= parameters.initialMentalMinimum());
+            assertTrue(resident.mental() <= parameters.initialMentalMaximum());
+            assertTrue(resident.nutrition().minimum() >= parameters.initialNutritionMinimum());
+            assertTrue(resident.nutrition().fat() <= parameters.initialNutritionMaximum());
+            assertTrue(resident.nutrition().carbohydrate() <= parameters.initialNutritionMaximum());
+            assertTrue(resident.nutrition().protein() <= parameters.initialNutritionMaximum());
+            assertTrue(resident.nutrition().vegetable() <= parameters.initialNutritionMaximum());
+            assertTrue(resident.educationLevel() >= 0 && resident.educationLevel() <= 5);
         }
+    }
+
+    @Test
+    void vitalAndNutritionAveragesAreCenteredNearFifty() {
+        ResidentGenerationModel.Parameters parameters = parameters();
+        SplittableRandom random = new SplittableRandom(493L);
+        int samples = 100_000;
+        double health = 0.0;
+        double mental = 0.0;
+        double nutrition = 0.0;
+        for (int index = 0; index < samples; index++) {
+            ResidentGenerationModel.GeneratedResident resident = ResidentGenerationModel.generate(
+                    random::nextDouble, random::nextInt, parameters);
+            health += resident.health();
+            mental += resident.mental();
+            nutrition += resident.nutrition().fat();
+        }
+        assertEquals(50.0, health / samples, 0.1);
+        assertEquals(50.0, mental / samples, 0.1);
+        assertEquals(50.0, nutrition / samples, 0.1);
+    }
+
+    @Test
+    void educationWeightsProduceConfiguredFastDecay() {
+        ResidentGenerationModel.Parameters parameters = parameters();
+        SplittableRandom random = new SplittableRandom(821L);
+        int[] counts = new int[6];
+        int samples = 200_000;
+        for (int index = 0; index < samples; index++) {
+            counts[ResidentGenerationModel.pickEducationLevel(
+                    random::nextDouble, parameters.educationWeights())]++;
+        }
+        double[] fractions = new double[counts.length];
+        for (int index = 0; index < counts.length; index++) {
+            fractions[index] = (double) counts[index] / samples;
+        }
+        assertArrayEquals(new double[]{0.15, 0.50, 0.20, 0.10, 0.04, 0.01}, fractions, 0.003);
     }
 
     private static ResidentGenerationModel.Parameters parameters() {
@@ -87,7 +134,9 @@ class ResidentGenerationModelTest {
         TownModelParameters.ResidentGenerationParameters generation = residents.generation();
         TownModelParameters.ResidentAgingParameters aging = residents.aging();
         return new ResidentGenerationModel.Parameters(
-                generation.initialHealth(), generation.initialMental(),
+                generation.initialHealthMinimum(), generation.initialHealthMaximum(),
+                generation.initialMentalMinimum(), generation.initialMentalMaximum(),
+                generation.initialNutritionMinimum(), generation.initialNutritionMaximum(),
                 generation.attributeSampleCount(),
                 new ResidentGenerationModel.AttributeCenters(
                         generation.infantStrengthCenter(), generation.infantIntelligenceCenter()),
@@ -105,7 +154,11 @@ class ResidentGenerationModelTest {
                 generation.elderMaximumInitialProficiency(),
                 aging.infantToChildDays(), aging.childToAdultDays(),
                 generation.adultAgeRangeDaysExclusive(),
-                weights(generation.ageWeights()), weights(generation.fallbackAgeWeights()));
+                weights(generation.ageWeights()), weights(generation.fallbackAgeWeights()),
+                new ResidentGenerationModel.EducationWeights(
+                        generation.educationWeightLevel0(), generation.educationWeightLevel1(),
+                        generation.educationWeightLevel2(), generation.educationWeightLevel3(),
+                        generation.educationWeightLevel4(), generation.educationWeightLevel5()));
     }
 
     private static ResidentGenerationModel.AgeWeights weights(

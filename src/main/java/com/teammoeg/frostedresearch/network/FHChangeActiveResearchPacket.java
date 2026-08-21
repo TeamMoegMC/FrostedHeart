@@ -57,7 +57,8 @@ public class FHChangeActiveResearchPacket implements CMessage {
     public void handle(Supplier<NetworkEvent.Context> context) {
         context.get().enqueueWork(() -> {
             ClientResearchDataAPI.getData().get().setCurrentResearch(id);
-            ResearchUtils.refreshResearchGui();
+            Research current = ClientResearchDataAPI.getData().get().getCurrentResearch().get();
+            ResearchUtils.notifyActiveResearchChanged(current == null ? null : current.getId());
         });
         context.get().setPacketHandled(true);
     }

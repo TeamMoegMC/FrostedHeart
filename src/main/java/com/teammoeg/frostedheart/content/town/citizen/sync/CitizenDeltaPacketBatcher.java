@@ -41,7 +41,7 @@ final class CitizenDeltaPacketBatcher {
 					packet.add(group);
 				} else {
 					packet.add(new S2CCitizenBatchPacket.Group(group.cx(), group.cz(),
-							new ArrayList<>(entries.subList(offset, offset + take))));
+							entries.subList(offset, offset + take)));
 				}
 				offset += take;
 				packetSize += take;

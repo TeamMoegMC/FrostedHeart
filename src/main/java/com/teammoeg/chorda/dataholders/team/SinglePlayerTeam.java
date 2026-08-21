@@ -44,10 +44,16 @@ public record SinglePlayerTeam(UUID player) implements AbstractTeam {
 	 */
 	@Override
 	public Collection<ServerPlayer> getOnlineMembers() {
-		ServerPlayer s =getPlayer();
-		if(s!=null)
-		ImmutableList.of(s);
-		return ImmutableList.of();
+		return presentMember(getPlayer());
+	}
+
+	/**
+	 * 将可空的在线成员规范化为零个或一个元素的不可变集合。
+	 * <p>
+	 * Normalizes a nullable online member into an immutable zero-or-one element collection.
+	 */
+	static <T> Collection<T> presentMember(T member) {
+		return member == null ? ImmutableList.of() : ImmutableList.of(member);
 	}
 	/**
 	 * 获取与此团队关联的服务器玩家实例。

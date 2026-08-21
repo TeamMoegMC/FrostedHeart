@@ -47,7 +47,6 @@ import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
 import java.util.*;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 /**
@@ -391,8 +390,7 @@ public class Research implements FHRegisteredItem {
 
     @OnlyIn(Dist.CLIENT)
     public boolean isInProgress() {
-        Supplier<Research> r = ClientResearchDataAPI.getData().get().getCurrentResearch();
-        Research rs=r.get();
+        Research rs = ClientResearchDataAPI.getData().get().getCurrentResearchValue();
         if (rs!=null) {
             return rs.equals(this);
         }
@@ -493,7 +491,17 @@ public class Research implements FHRegisteredItem {
      * @return parents<br>
      */
     public Set<Research> getParents() {
-        return parents.stream().filter(Objects::nonNull).map(FHResearch::getResearch).filter(Objects::nonNull).collect(Collectors.toSet());
+        Set<Research> resolved = new HashSet<>(parents.size());
+        for (String parentId : parents) {
+            if (parentId == null) {
+                continue;
+            }
+            Research parent = FHResearch.getResearch(parentId);
+            if (parent != null) {
+                resolved.add(parent);
+            }
+        }
+        return resolved;
     }
 
     /**

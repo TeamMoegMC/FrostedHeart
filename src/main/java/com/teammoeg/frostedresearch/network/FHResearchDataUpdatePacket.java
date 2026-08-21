@@ -67,7 +67,7 @@ public record FHResearchDataUpdatePacket(Object rd, int id) implements CMessage 
             //System.out.println(old);
             old.read(rs, datax);
             //System.out.println(old);
-            ResearchUtils.refreshResearchGui();
+            ResearchUtils.notifyResearchProgressChanged(rs.getId());
             MinecraftForge.EVENT_BUS.post(new ClientResearchStatusEvent(rs, old.isCompleted(), status != old.isCompleted()));
 
 

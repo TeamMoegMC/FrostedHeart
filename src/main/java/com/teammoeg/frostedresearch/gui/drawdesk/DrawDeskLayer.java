@@ -31,6 +31,7 @@ import com.teammoeg.frostedresearch.ResearchHooks;
 import com.teammoeg.frostedresearch.api.ClientResearchDataAPI;
 import com.teammoeg.frostedresearch.blocks.DrawingDeskTileEntity;
 import com.teammoeg.frostedresearch.gui.tech.ResearchProgressPanel;
+import com.teammoeg.frostedresearch.gui.archive.ResearchWorkspaceState;
 import com.teammoeg.frostedresearch.network.FHDrawingDeskOperationPacket;
 import com.teammoeg.frostedresearch.network.FHResearchControlPacket;
 import com.teammoeg.frostedresearch.network.FHResearchControlPacket.Operator;
@@ -43,6 +44,9 @@ public class DrawDeskLayer extends UILayer {
 	MainGamePanel mgp;
 
 	boolean showHelp;
+	private ResearchWorkspaceState.DrawDeskFocusTarget focusTarget =
+		ResearchWorkspaceState.DrawDeskFocusTarget.NONE;
+	private int focusTicks;
 
 
 	public DrawDeskLayer(DrawDeskScreen p) {
@@ -137,6 +141,43 @@ public class DrawDeskLayer extends UILayer {
 			return true;
 		}
 		return super.onKeyPressed(keyCode, scanCode, modifier);
+	}
+
+	public void focusTarget(ResearchWorkspaceState.DrawDeskFocusTarget target) {
+		focusTarget = target;
+		focusTicks = target == ResearchWorkspaceState.DrawDeskFocusTarget.NONE ? 0 : 50;
+	}
+
+	@Override
+	public void tick() {
+		if (focusTicks > 0) {
+			focusTicks--;
+			if (focusTicks == 0) {
+				focusTarget = ResearchWorkspaceState.DrawDeskFocusTarget.NONE;
+			}
+		}
+		super.tick();
+	}
+
+	@Override
+	public void afterDrawElements(
+			GuiGraphics graphics, int parentX, int parentY, int contentX, int contentY, int width, int height) {
+		if (focusTicks <= 0) {
+			return;
+		}
+		if (focusTarget == ResearchWorkspaceState.DrawDeskFocusTarget.ITEM_EXAMINE) {
+			drawFocusFrame(graphics, parentX + 110, parentY + 89, 24, 42);
+		} else if (focusTarget == ResearchWorkspaceState.DrawDeskFocusTarget.THEORY_GAME) {
+			drawFocusFrame(graphics, parentX + 162, parentY + 22, 224, 170);
+		}
+	}
+
+	private static void drawFocusFrame(GuiGraphics graphics, int x, int y, int width, int height) {
+		int color = 0xFFE1B95B;
+		graphics.fill(x, y, x + width, y + 2, color);
+		graphics.fill(x, y + height - 2, x + width, y + height, color);
+		graphics.fill(x, y, x + 2, y + height, color);
+		graphics.fill(x + width - 2, y, x + width, y + height, color);
 	}
 
 	public void openHelp() {

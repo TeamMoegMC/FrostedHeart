@@ -33,19 +33,47 @@ public final class ResidentGenerationModel {
         Objects.requireNonNull(parameters);
         int age = pickAge(randomDouble, parameters.ageWeights(), parameters.fallbackAgeWeights());
         int ageDays = randomAgeDays(age, randomInt, parameters);
+        return generateForAge(randomDouble, age, ageDays, parameters);
+    }
+
+    public static GeneratedResident generateForAge(
+            DoubleSupplier randomDouble,
+            int age,
+            int ageDays,
+            Parameters parameters
+    ) {
+        Objects.requireNonNull(randomDouble);
+        Objects.requireNonNull(parameters);
         AttributeCenters centers = parameters.centers(age);
         double spread = age == Resident.AGE_ADULT
                 ? parameters.adultAttributeSpread() : parameters.nonAdultAttributeSpread();
+        double health = generateBoundedAverage(
+                randomDouble, parameters.initialHealthMinimum(),
+                parameters.initialHealthMaximum(), parameters.attributeSampleCount());
+        double mental = generateBoundedAverage(
+                randomDouble, parameters.initialMentalMinimum(),
+                parameters.initialMentalMaximum(), parameters.attributeSampleCount());
+        ResidentNutrition nutrition = new ResidentNutrition(
+                generateBoundedAverage(randomDouble, parameters.initialNutritionMinimum(),
+                        parameters.initialNutritionMaximum(), parameters.attributeSampleCount()),
+                generateBoundedAverage(randomDouble, parameters.initialNutritionMinimum(),
+                        parameters.initialNutritionMaximum(), parameters.attributeSampleCount()),
+                generateBoundedAverage(randomDouble, parameters.initialNutritionMinimum(),
+                        parameters.initialNutritionMaximum(), parameters.attributeSampleCount()),
+                generateBoundedAverage(randomDouble, parameters.initialNutritionMinimum(),
+                        parameters.initialNutritionMaximum(), parameters.attributeSampleCount()));
         double strength = ResidentAttributeModel.generateAttribute(
                 randomDouble, centers.strength(), spread, parameters.attributeSampleCount());
         double intelligence = ResidentAttributeModel.generateAttribute(
                 randomDouble, centers.intelligence(), spread, parameters.attributeSampleCount());
-        // Gameplay initializes hunting before mining; retain that order for paired-seed parity.
+        int educationLevel = pickEducationLevel(randomDouble, parameters.educationWeights());
+        // Gameplay initializes hunting, mining, then transport; retain that order for paired-seed parity.
         double hunting = generateProficiency(age, randomDouble, parameters);
         double mining = generateProficiency(age, randomDouble, parameters);
+        double transport = generateProficiency(age, randomDouble, parameters);
         return new GeneratedResident(
-                age, ageDays, parameters.initialHealth(), parameters.initialMental(),
-                strength, intelligence, mining, hunting);
+                age, Math.max(0, ageDays), health, mental, nutrition,
+                strength, intelligence, educationLevel, mining, hunting, transport);
     }
 
     public static int pickAge(
@@ -103,6 +131,40 @@ public final class ResidentGenerationModel {
         };
     }
 
+    public static double generateBoundedAverage(
+            DoubleSupplier randomDouble,
+            double firstBound,
+            double secondBound,
+            int sampleCount
+    ) {
+        Objects.requireNonNull(randomDouble);
+        double minimum = finiteOrZero(Math.min(firstBound, secondBound));
+        double maximum = finiteOrZero(Math.max(firstBound, secondBound));
+        int samples = Math.max(1, sampleCount);
+        double sum = 0.0;
+        for (int index = 0; index < samples; index++) {
+            sum += unitSample(randomDouble);
+        }
+        return minimum + (maximum - minimum) * sum / samples;
+    }
+
+    public static int pickEducationLevel(
+            DoubleSupplier randomDouble,
+            EducationWeights configured
+    ) {
+        Objects.requireNonNull(randomDouble);
+        EducationWeights weights = configured.nonNegative();
+        double total = weights.total();
+        if (total <= 0.0) return 1;
+        double roll = unitSample(randomDouble) * total;
+        for (int level = 0; level <= 5; level++) {
+            double weight = weights.at(level);
+            if (roll < weight) return level;
+            roll -= weight;
+        }
+        return 5;
+    }
+
     private static int boundedRandomInt(IntUnaryOperator randomInt, int bound) {
         int safeBound = Math.max(1, bound);
         int value = randomInt.applyAsInt(safeBound);
@@ -126,17 +188,50 @@ public final class ResidentGenerationModel {
             return infant + child + adult + elder;
         }
 
-        private static double finiteNonNegative(double value) {
-            return Double.isFinite(value) ? Math.max(0.0, value) : 0.0;
-        }
     }
 
     public record AttributeCenters(double strength, double intelligence) {
     }
 
+    public record EducationWeights(
+            double level0,
+            double level1,
+            double level2,
+            double level3,
+            double level4,
+            double level5
+    ) {
+        public EducationWeights nonNegative() {
+            return new EducationWeights(
+                    finiteNonNegative(level0), finiteNonNegative(level1),
+                    finiteNonNegative(level2), finiteNonNegative(level3),
+                    finiteNonNegative(level4), finiteNonNegative(level5));
+        }
+
+        public double total() {
+            return level0 + level1 + level2 + level3 + level4 + level5;
+        }
+
+        public double at(int level) {
+            return switch (level) {
+                case 0 -> level0;
+                case 1 -> level1;
+                case 2 -> level2;
+                case 3 -> level3;
+                case 4 -> level4;
+                case 5 -> level5;
+                default -> 0.0;
+            };
+        }
+    }
+
     public record Parameters(
-            double initialHealth,
-            double initialMental,
+            double initialHealthMinimum,
+            double initialHealthMaximum,
+            double initialMentalMinimum,
+            double initialMentalMaximum,
+            double initialNutritionMinimum,
+            double initialNutritionMaximum,
             int attributeSampleCount,
             AttributeCenters infantCenters,
             AttributeCenters childCenters,
@@ -153,7 +248,8 @@ public final class ResidentGenerationModel {
             int childToAdultDays,
             int adultAgeRangeDaysExclusive,
             AgeWeights ageWeights,
-            AgeWeights fallbackAgeWeights
+            AgeWeights fallbackAgeWeights,
+            EducationWeights educationWeights
     ) {
         public AttributeCenters centers(int age) {
             return switch (age) {
@@ -171,10 +267,22 @@ public final class ResidentGenerationModel {
             int ageDays,
             double health,
             double mental,
+            ResidentNutrition nutrition,
             double strength,
             double intelligence,
+            int educationLevel,
             double miningProficiency,
-            double huntingProficiency
+            double huntingProficiency,
+            double transportProficiency
     ) {
+    }
+
+
+    private static double finiteOrZero(double value) {
+        return Double.isFinite(value) ? value : 0.0;
+    }
+
+    private static double finiteNonNegative(double value) {
+        return Double.isFinite(value) ? Math.max(0.0, value) : 0.0;
     }
 }

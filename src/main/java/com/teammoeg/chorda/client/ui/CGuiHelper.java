@@ -83,6 +83,65 @@ import java.util.stream.Collectors;
  * rectangles, gradients, textures, and fluids.
  */
 public class CGuiHelper {
+	private static final Matrix4f BLOCK_ITEM_LIGHTING = new Matrix4f()
+			.rotationYXZ(1.0821041F, 3.2375858F, 0.0F)
+			.rotateYXZ((-(float) Math.PI / 8F), 2.3561945F, 0.0F);
+	private static final Matrix4f ITEM_MODEL_FLIP = new Matrix4f().scaling(1.0F, -1.0F, 1.0F);
+
+	/** Mutable request reused by ordered item-icon passes. */
+	public static final class ItemRenderRequest {
+		private ItemStack stack = ItemStack.EMPTY;
+		private int x;
+		private int y;
+		private int zIndex;
+		private float scaleX;
+		private float scaleY;
+		private BakedModel preparedModel;
+		private boolean flatLighting;
+
+		public void set(ItemStack stack, int x, int y, int zIndex, float scaleX, float scaleY) {
+			this.stack = stack;
+			this.x = x;
+			this.y = y;
+			this.zIndex = zIndex;
+			this.scaleX = scaleX;
+			this.scaleY = scaleY;
+			this.preparedModel = null;
+		}
+	}
+
+	/** Pure segment state used by the renderer and unit tests. */
+	public static final class ItemBatchPlanner {
+		public enum Transition {
+			START,
+			CONTINUE,
+			SWITCH
+		}
+
+		private boolean started;
+		private boolean flatLighting;
+
+		public ItemBatchPlanner() {
+		}
+
+		void reset() {
+			started = false;
+		}
+
+		public Transition accept(boolean nextFlatLighting) {
+			if (!started) {
+				started = true;
+				flatLighting = nextFlatLighting;
+				return Transition.START;
+			}
+			if (flatLighting == nextFlatLighting) {
+				return Transition.CONTINUE;
+			}
+			flatLighting = nextFlatLighting;
+			return Transition.SWITCH;
+		}
+	}
+
 	// hack to access render state protected members
 	public static class RenderStateAccess extends RenderStateShard {
 		public static RenderType.CompositeState getLineState(double width) {
@@ -162,39 +221,184 @@ public class CGuiHelper {
 			guiGraphics.renderItemDecorations(ClientUtils.getMc().font, stack, 0, 0, countReplacement);
 		guiGraphics.pose().popPose();
 	}
-	public static void drawItem(GuiGraphics guiGraphics, ItemStack stack, int x, int y, int zindex, boolean drawDecorations, @Nullable String countReplacement) {
+
+	/**
+	 * Draws ordered item requests using one buffer submission per contiguous
+	 * flat/block-lighting segment. The caller owns request storage and may reuse it.
+	 *
+	 * @return the number of forced buffer submissions
+	 */
+	public static int drawItems(GuiGraphics guiGraphics, List<ItemRenderRequest> requests, int requestCount) {
+		return drawItems(guiGraphics, requests, requestCount, new ItemBatchPlanner());
+	}
+
+	public static int drawItems(
+			GuiGraphics guiGraphics,
+			List<ItemRenderRequest> requests,
+			int requestCount,
+			ItemBatchPlanner planner) {
+		planner.reset();
+		boolean started = false;
+		int submissions = 0;
+		try {
+			int limit = Math.min(requestCount, requests.size());
+			for (int i = 0; i < limit; i++) {
+				ItemRenderRequest request = requests.get(i);
+				if (request.stack.isEmpty()) {
+					continue;
+				}
+				BakedModel model = ClientUtils.getMc().getItemRenderer().getModel(
+						request.stack, ClientUtils.getMc().level, ClientUtils.getMc().player, 0);
+				boolean nextFlatLighting = !model.usesBlockLight();
+				ItemBatchPlanner.Transition transition = planner.accept(nextFlatLighting);
+				if (transition == ItemBatchPlanner.Transition.START) {
+					guiGraphics.flush();
+					setupItemLighting(nextFlatLighting);
+					started = true;
+				} else if (transition == ItemBatchPlanner.Transition.SWITCH) {
+					guiGraphics.flush();
+					submissions++;
+					setupItemLighting(nextFlatLighting);
+				}
+				drawItemModel(guiGraphics, request, model);
+			}
+		} finally {
+			if (started) {
+				try {
+					guiGraphics.flush();
+					submissions++;
+				} finally {
+					Lighting.setupFor3DItems();
+				}
+			}
+		}
+		return submissions;
+	}
+
+	/**
+	 * Draws non-overlapping icon requests by explicit z layer and then lighting.
+	 * Submission order is retained inside each layer/lighting group.
+	 */
+	public static int drawItemsByLayerAndLighting(
+			GuiGraphics guiGraphics, List<ItemRenderRequest> requests, int requestCount) {
+		int limit = Math.min(requestCount, requests.size());
+		boolean hasItems = false;
+		for (int i = 0; i < limit; i++) {
+			ItemRenderRequest request = requests.get(i);
+			if (request.stack.isEmpty()) {
+				continue;
+			}
+			request.preparedModel = ClientUtils.getMc().getItemRenderer().getModel(
+					request.stack, ClientUtils.getMc().level, ClientUtils.getMc().player, 0);
+			request.flatLighting = !request.preparedModel.usesBlockLight();
+			hasItems = true;
+		}
+		if (!hasItems) {
+			return 0;
+		}
+
+		guiGraphics.flush();
+		int submissions = 0;
+		boolean lightingConfigured = false;
+		boolean groupPending = false;
+		long previousLayer = Long.MIN_VALUE;
+		try {
+			while (true) {
+				int nextLayer = Integer.MAX_VALUE;
+				boolean foundLayer = false;
+				for (int i = 0; i < limit; i++) {
+					ItemRenderRequest request = requests.get(i);
+					if (request.preparedModel != null
+							&& request.zIndex > previousLayer
+							&& request.zIndex < nextLayer) {
+						nextLayer = request.zIndex;
+						foundLayer = true;
+					}
+				}
+				if (!foundLayer) {
+					break;
+				}
+				for (int lightingGroup = 0; lightingGroup < 2; lightingGroup++) {
+					boolean flatLighting = lightingGroup == 0;
+					boolean groupStarted = false;
+					for (int i = 0; i < limit; i++) {
+						ItemRenderRequest request = requests.get(i);
+						if (request.preparedModel == null
+								|| request.zIndex != nextLayer
+								|| request.flatLighting != flatLighting) {
+							continue;
+						}
+						if (!groupStarted) {
+							setupItemLighting(flatLighting);
+							lightingConfigured = true;
+							groupPending = true;
+							groupStarted = true;
+						}
+						drawItemModel(guiGraphics, request, request.preparedModel);
+					}
+					if (groupStarted) {
+						groupPending = false;
+						guiGraphics.flush();
+						submissions++;
+					}
+				}
+				previousLayer = nextLayer;
+			}
+		} finally {
+			try {
+				if (groupPending) {
+					guiGraphics.flush();
+					submissions++;
+				}
+			} finally {
+				if (lightingConfigured) {
+					Lighting.setupFor3DItems();
+				}
+				for (int i = 0; i < limit; i++) {
+					requests.get(i).preparedModel = null;
+				}
+			}
+		}
+		return submissions;
+	}
+
+	private static void setupItemLighting(boolean flatLighting) {
+		if (flatLighting) {
+			Lighting.setupForFlatItems();
+		} else {
+			Lighting.setupLevel(BLOCK_ITEM_LIGHTING);
+		}
+	}
+
+	private static void drawItemModel(
+			GuiGraphics guiGraphics, ItemRenderRequest request, BakedModel model) {
 		guiGraphics.pose().pushPose();
-		guiGraphics.pose().translate(x, y, zindex + 150);
-		if (!stack.isEmpty()) {
-			BakedModel bakedmodel = ClientUtils.getMc().getItemRenderer().getModel(stack, ClientUtils.getMc().level,
-				ClientUtils.getMc().player, 0);
-			
-			boolean flag = !bakedmodel.usesBlockLight();
-			Matrix4f matrix4f = null;
-			if (!flag) {
-				matrix4f = new Matrix4f(guiGraphics.pose().last().pose()).rotationYXZ(1.0821041F, 3.2375858F, 0.0F).rotateYXZ((-(float) Math.PI / 8F), 2.3561945F, 0.0F);
-			}
+		try {
+			guiGraphics.pose().translate(request.x, request.y, request.zIndex + 150);
+			guiGraphics.pose().scale(request.scaleX, request.scaleY, request.scaleX);
 			guiGraphics.pose().pushPose();
-			guiGraphics.pose().translate(8f, 8f, 0f);
-
-			guiGraphics.pose().mulPoseMatrix((new Matrix4f()).scaling(1.0F, -1.0F, 1.0F));
-			guiGraphics.pose().scale(16.0F, 16.0F, 16.0F);
-
-			if (flag) {
-				Lighting.setupForFlatItems();
-			} else {
-				Lighting.setupLevel(matrix4f);
+			try {
+				guiGraphics.pose().translate(8.0F, 8.0F, 0.0F);
+				guiGraphics.pose().mulPoseMatrix(ITEM_MODEL_FLIP);
+				guiGraphics.pose().scale(16.0F, 16.0F, 16.0F);
+				ClientUtils.getMc().getItemRenderer().render(
+						request.stack,
+						ItemDisplayContext.GUI,
+						false,
+						guiGraphics.pose(),
+						guiGraphics.bufferSource(),
+						15728880,
+						OverlayTexture.NO_OVERLAY,
+						model);
+			} finally {
+				guiGraphics.pose().popPose();
 			}
-
-			ClientUtils.getMc().getItemRenderer().render(stack, ItemDisplayContext.GUI, false, guiGraphics.pose(),
-				guiGraphics.bufferSource(), 15728880, OverlayTexture.NO_OVERLAY, bakedmodel);
-			guiGraphics.flush();
-			Lighting.setupFor3DItems();
+		} finally {
 			guiGraphics.pose().popPose();
 		}
-		if (drawDecorations)
-			guiGraphics.renderItemDecorations(ClientUtils.getMc().font, stack, 0, 0, countReplacement);
-		guiGraphics.pose().popPose();
+	}
+	public static void drawItem(GuiGraphics guiGraphics, ItemStack stack, int x, int y, int zindex, boolean drawDecorations, @Nullable String countReplacement) {
+		drawItem(guiGraphics, stack, x, y, zindex, 1.0F, 1.0F, drawDecorations, countReplacement);
 	}
 
 	public static void drawItemWithReadableCount(GuiGraphics guiGraphics, ItemStack stack, int x, int y, int zindex,

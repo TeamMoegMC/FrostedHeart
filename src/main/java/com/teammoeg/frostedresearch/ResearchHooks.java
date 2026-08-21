@@ -200,13 +200,18 @@ public class ResearchHooks {
 	public static void kill(ServerPlayer s, LivingEntity e) {
 		TeamDataClosure<TeamResearchData> data = ResearchDataAPI.getData(s);
 		killClues.call(data.getId(), c -> {
-
-			if (data.get().isClueCompleted(c.research(), c.clue())) {
+			boolean alreadyCompleted = data.get().isClueCompleted(c.research(), c.clue());
+			boolean matchesKilledEntity = !alreadyCompleted && c.clue().isCompleted(data.get(), e);
+			if (shouldCompleteKillClue(alreadyCompleted, matchesKilledEntity)) {
 				data.get().setClueCompleted(data.team(), c.research(), c.clue(), true);
 				return true;
 			}
-			return false;
+			return alreadyCompleted;
 		});
+	}
+
+	static boolean shouldCompleteKillClue(boolean alreadyCompleted, boolean matchesKilledEntity) {
+		return !alreadyCompleted && matchesKilledEntity;
 	}
 
 	public static void reload() {

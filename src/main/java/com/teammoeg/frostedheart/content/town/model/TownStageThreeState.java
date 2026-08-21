@@ -92,7 +92,7 @@ public final class TownStageThreeState {
                         generated.health(), generated.mental(), generated.strength(),
                         generated.intelligence(), generated.miningProficiency(),
                         generated.huntingProficiency(), generated.age(), generated.ageDays(),
-                        HOUSE_ID, null, nutrition));
+                        HOUSE_ID, null, generated.nutrition()));
             } else {
                 residents.add(new ResidentState(
                         String.format("resident-%03d", index),
@@ -118,7 +118,9 @@ public final class TownStageThreeState {
         TownModelParameters.ResidentGenerationParameters generation = residents.generation();
         TownModelParameters.ResidentAgingParameters aging = residents.aging();
         return new ResidentGenerationModel.Parameters(
-                generation.initialHealth(), generation.initialMental(),
+                generation.initialHealthMinimum(), generation.initialHealthMaximum(),
+                generation.initialMentalMinimum(), generation.initialMentalMaximum(),
+                generation.initialNutritionMinimum(), generation.initialNutritionMaximum(),
                 generation.attributeSampleCount(),
                 new ResidentGenerationModel.AttributeCenters(
                         generation.infantStrengthCenter(), generation.infantIntelligenceCenter()),
@@ -136,7 +138,11 @@ public final class TownStageThreeState {
                 generation.elderMaximumInitialProficiency(),
                 aging.infantToChildDays(), aging.childToAdultDays(),
                 generation.adultAgeRangeDaysExclusive(),
-                ageWeights(generation.ageWeights()), ageWeights(generation.fallbackAgeWeights()));
+                ageWeights(generation.ageWeights()), ageWeights(generation.fallbackAgeWeights()),
+                new ResidentGenerationModel.EducationWeights(
+                        generation.educationWeightLevel0(), generation.educationWeightLevel1(),
+                        generation.educationWeightLevel2(), generation.educationWeightLevel3(),
+                        generation.educationWeightLevel4(), generation.educationWeightLevel5()));
     }
 
     private static ResidentGenerationModel.AgeWeights ageWeights(

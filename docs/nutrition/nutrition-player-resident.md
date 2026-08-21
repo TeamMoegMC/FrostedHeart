@@ -1,7 +1,7 @@
 # 玩家与居民营养系统
 
 - Status: `Current`
-- Last verified: `2026-08-20`
+- Last verified: `2026-08-21`
 - Scope: 玩家营养、统一食物画像、居民住宅菜单、当前营养支持、属性成长、持久化与界面
 - Primary code anchors: `FoodNutritionProfile`, `FoodNutritionResolver`, `GatherFoodNutritionEvent`, `PlayerNutritionState`, `NutritionCapability`, `ResidentNutrition`, `ResidentPublicMenuModel`, `TownHousingMealService`, `ResidentNutritionSupportModel`, `ResidentAttributeModel.settleDailyAttribute`, `ResidentNutritionSnapshot`, `TeamTownData.tickMorning`
 
@@ -152,6 +152,8 @@ old nutritionConsumptionRate * 100
 | `residentNutritionGainAtReference` | 2 | 每 coverage 的状态点 |
 | `residentNutritionMaximumCoverage` | 2 | 单餐单通道 coverage 上限 |
 | `residentNutritionMaximumReserve` | 100 | 单通道存储上限 |
+| `Resident Generation.initialNutritionMinimum` | 30 | 普通难民单通道初始生成下界 |
+| `Resident Generation.initialNutritionMaximum` | 70 | 普通难民单通道初始生成上界 |
 | `residentNutritionHealthyReserve` | 70 | 满满足度健康线 |
 | `residentNutritionSevereReserve` | 20 | 严重缺乏线 |
 | `residentNutritionMealSelectionChunks` | 8 | 每栋住宅菜单选择片段数 |
@@ -169,6 +171,8 @@ old nutritionConsumptionRate * 100
 -> 年龄转换与居民退出检查
 -> 保存结算快照与城镇统计
 ```
+
+普通难民招募和管理员居民指令不会再把四项储备统一设为 `residentNutritionInitialReserve`。四个通道各自独立取四个 `[0,1]` 均匀样本的平均值并映射到默认 `[30,70]`；因此期望值均为 `50`，但同一居民的四个通道通常不同。`residentNutritionInitialReserve` 继续服务于旧构造器、固定场景和兼容路径；Citizen/AI 调试构造器本轮未接入新招募模型。旧存档缺少营养字段时仍按 Codec/NBT 兼容默认 `70` 读取，不重新随机。
 
 无家可归居民也会发生营养储备衰减和属性结算，但不会从住宅口粮获得食物；其既有无家可归健康惩罚保持不变。
 

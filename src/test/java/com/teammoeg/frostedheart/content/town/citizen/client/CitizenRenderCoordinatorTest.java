@@ -19,6 +19,7 @@ import org.junit.jupiter.api.Test;
 
 import com.jozufozu.flywheel.event.ReloadRenderersEvent;
 import com.teammoeg.frostedheart.content.town.citizen.sim.CitizenState;
+import com.teammoeg.frostedheart.content.town.citizen.sync.S2CCitizenBatchPacket;
 import com.teammoeg.frostedheart.content.town.citizen.sync.S2CCitizenSpawnPacket;
 import com.teammoeg.frostedheart.content.town.resident.Resident;
 
@@ -59,6 +60,29 @@ class CitizenRenderCoordinatorTest {
 		assertEquals(2.0, citizen.y1);
 		assertEquals(3.0, citizen.z1);
 		assertEquals(CitizenState.WANDER, citizen.state);
+	}
+
+	@Test
+	void batchAppliesEveryCacheEntryBeforeBackendNotifications() {
+		TrackingBackend backend = new TrackingBackend("tracking", true, true);
+		assertTrue(CitizenRenderCoordinator.switchBackend(backend));
+		byte stateDir = CitizenState.packStateDir(CitizenState.IDLE, 0);
+		CitizenRenderCoordinator.applySpawn(List.of(
+				new S2CCitizenSpawnPacket.Entry(1, 0, 0, 0, stateDir,
+						(byte) Resident.AGE_ADULT, "One"),
+				new S2CCitizenSpawnPacket.Entry(2, 0, 0, 0, stateDir,
+						(byte) Resident.AGE_ADULT, "Two")));
+		assertEquals(2, backend.added);
+
+		backend.updateProbe = () -> {
+			assertEquals(1.0, ClientCitizenCache.get(1).x1);
+			assertEquals(2.0, ClientCitizenCache.get(2).x1);
+		};
+		CitizenRenderCoordinator.applyBatch(List.of(new S2CCitizenBatchPacket.Group(0, 0, List.of(
+				new S2CCitizenBatchPacket.Entry(1, 16, 0, 0, stateDir),
+				new S2CCitizenBatchPacket.Entry(2, 32, 0, 0, stateDir)))));
+
+		assertEquals(2, backend.updated);
 	}
 
 	@Test
@@ -335,6 +359,9 @@ class CitizenRenderCoordinatorTest {
 		private int reloads;
 		private int rendererReloads;
 		private int renders;
+		private int added;
+		private int updated;
+		private Runnable updateProbe;
 
 		private TrackingBackend(String name, boolean initializeResult, boolean healthy) {
 			this.name = name;
@@ -358,6 +385,18 @@ class CitizenRenderCoordinatorTest {
 			renders++;
 			if (throwOnRender)
 				throw new IllegalStateException("injected render failure");
+		}
+
+		@Override
+		public void onCitizenAdded(ClientCitizen citizen) {
+			added++;
+		}
+
+		@Override
+		public void onCitizenUpdated(ClientCitizen citizen) {
+			updated++;
+			if (updateProbe != null)
+				updateProbe.run();
 		}
 
 		@Override

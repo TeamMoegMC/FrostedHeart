@@ -254,6 +254,50 @@ public class Resident {
         this(firstName, lastName, UUID.randomUUID(), age, ageDays);
     }
 
+    /** Creates an ordinary recruit with the complete configured random profile. */
+    public static Resident createRandomRecruit(String firstName, String lastName) {
+        ResidentGenerationModel.Parameters parameters = generationParametersFromConfig();
+        ResidentGenerationModel.GeneratedResident generated = ResidentGenerationModel.generate(
+                CMath.RANDOM::nextDouble, CMath.RANDOM::nextInt, parameters);
+        return fromGenerated(firstName, lastName, generated);
+    }
+
+    /** Creates an ordinary recruit with a forced age group and a random legal age-day. */
+    public static Resident createRandomRecruit(String firstName, String lastName, int age) {
+        return createRandomRecruit(firstName, lastName, age, randomAgeDaysForAge(age));
+    }
+
+    /** Creates an ordinary recruit with a previously generated age and age-day. */
+    public static Resident createRandomRecruit(
+            String firstName,
+            String lastName,
+            int age,
+            int ageDays
+    ) {
+        ResidentGenerationModel.GeneratedResident generated =
+                ResidentGenerationModel.generateForAge(
+                        CMath.RANDOM::nextDouble, age, ageDays,
+                        generationParametersFromConfig());
+        return fromGenerated(firstName, lastName, generated);
+    }
+
+    private static Resident fromGenerated(
+            String firstName,
+            String lastName,
+            ResidentGenerationModel.GeneratedResident generated
+    ) {
+        Map<String, Double> proficiencies = Map.of(
+                HuntingBaseBuilding.class.getSimpleName(), generated.huntingProficiency(),
+                MineBaseBuilding.class.getSimpleName(), generated.miningProficiency(),
+                TransportStationBuilding.class.getSimpleName(), generated.transportProficiency());
+        return new Resident(
+                firstName, lastName, UUID.randomUUID(),
+                generated.health(), generated.mental(), generated.strength(), generated.intelligence(),
+                generated.educationLevel(), proficiencies, Optional.empty(), Optional.empty(),
+                generated.age(), generated.ageDays(), generated.nutrition(),
+                ResidentNutritionSnapshot.EMPTY);
+    }
+
     public Resident(String firstName, String lastName, UUID uuid, int age, int ageDays) {
         setFirstName(firstName);
         setLastName(lastName);
@@ -749,8 +793,10 @@ public class Resident {
         ResidentGenerationModel.AttributeCenters centers = parameters.centers(age);
         double spread = age == AGE_ADULT
                 ? parameters.adultAttributeSpread() : parameters.nonAdultAttributeSpread();
-        setHealth(parameters.initialHealth());
-        setMental(parameters.initialMental());
+        // Legacy constructors are retained for Citizen/AI debug paths; player recruitment
+        // uses createRandomRecruit and the complete heterogeneous profile.
+        setHealth(parameters.initialHealthMaximum());
+        setMental(parameters.initialMentalMaximum());
         setStrength(ResidentAttributeModel.generateAttribute(
                 CMath.RANDOM::nextDouble, centers.strength(), spread,
                 parameters.attributeSampleCount()));
@@ -800,6 +846,14 @@ public class Resident {
                 age, CMath.RANDOM::nextInt, generationParametersFromConfig());
     }
 
+    /** Picks an age group from the same weights used by tower-spawned refugees. */
+    public static int randomRecruitAge() {
+        ResidentGenerationModel.Parameters parameters = generationParametersFromConfig();
+        return ResidentGenerationModel.pickAge(
+                CMath.RANDOM::nextDouble,
+                parameters.ageWeights(), parameters.fallbackAgeWeights());
+    }
+
     /**
      * 年龄组对应的语言文件键，供 UI 显示年龄。
      */
@@ -819,12 +873,19 @@ public class Resident {
     public void applyColdSurvivorBuffs() {
         FHConfig.Server.Town.ResidentGeneration generation =
                 FHConfig.SERVER.TOWN.RESIDENT_GENERATION;
-        double minimumHealth = Math.min(
+        double ordinaryMinimum = Math.min(
+                generation.initialHealthMinimum.get(), generation.initialHealthMaximum.get());
+        double ordinaryMaximum = Math.max(
+                generation.initialHealthMinimum.get(), generation.initialHealthMaximum.get());
+        double configuredMinimum = Math.min(
                 generation.coldSurvivorHealthMinimum.get(),
                 generation.coldSurvivorHealthMaximum.get());
-        double maximumHealth = Math.max(
+        double configuredMaximum = Math.max(
                 generation.coldSurvivorHealthMinimum.get(),
                 generation.coldSurvivorHealthMaximum.get());
+        double minimumHealth = Math.max(ordinaryMinimum, Math.min(ordinaryMaximum, configuredMinimum));
+        double maximumHealth = Math.max(minimumHealth,
+                Math.max(ordinaryMinimum, Math.min(ordinaryMaximum, configuredMaximum)));
         setHealth(minimumHealth
                 + (maximumHealth - minimumHealth) * CMath.RANDOM.nextDouble());
         addStrength(generation.coldSurvivorAttributeBonus.get());
@@ -840,7 +901,9 @@ public class Resident {
         FHConfig.Server.Town.ResidentAging aging = FHConfig.SERVER.TOWN.RESIDENT_AGING;
         FHConfig.Server.Town.RefugeeSpawn spawn = FHConfig.SERVER.TOWN.REFUGEE_SPAWN;
         return new ResidentGenerationModel.Parameters(
-                generation.initialHealth.get(), generation.initialMental.get(),
+                generation.initialHealthMinimum.get(), generation.initialHealthMaximum.get(),
+                generation.initialMentalMinimum.get(), generation.initialMentalMaximum.get(),
+                generation.initialNutritionMinimum.get(), generation.initialNutritionMaximum.get(),
                 generation.attributeSampleCount.get(),
                 new ResidentGenerationModel.AttributeCenters(
                         generation.infantStrengthCenter.get(), generation.infantIntelligenceCenter.get()),
@@ -863,7 +926,11 @@ public class Resident {
                         spawn.weightAdult.get(), spawn.weightElder.get()),
                 new ResidentGenerationModel.AgeWeights(
                         generation.fallbackWeightInfant.get(), generation.fallbackWeightChild.get(),
-                        generation.fallbackWeightAdult.get(), generation.fallbackWeightElder.get()));
+                        generation.fallbackWeightAdult.get(), generation.fallbackWeightElder.get()),
+                new ResidentGenerationModel.EducationWeights(
+                        generation.educationWeightLevel0.get(), generation.educationWeightLevel1.get(),
+                        generation.educationWeightLevel2.get(), generation.educationWeightLevel3.get(),
+                        generation.educationWeightLevel4.get(), generation.educationWeightLevel5.get()));
     }
 
 }

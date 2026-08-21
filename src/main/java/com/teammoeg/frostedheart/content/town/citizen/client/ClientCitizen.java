@@ -96,6 +96,10 @@ public final class ClientCitizen {
 	}
 
 	ClientCitizen(int id, int px, int py, int pz, byte stateDir, byte age, String name) {
+		this(id, px, py, pz, stateDir, age, name, now());
+	}
+
+	ClientCitizen(int id, int px, int py, int pz, byte stateDir, byte age, String name, double now) {
         this.id = id;
         this.name = name == null ? "" : name;
 		setAge(age);
@@ -109,7 +113,7 @@ public final class ClientCitizen {
         // spawn 直接对齐目标朝向：该客户端没有任何历史朝向，"从旧方向过渡"
         // 的旧方向根本不存在，snap 不可感知且是唯一无争议的选择。
         this.visYaw = CitizenState.DIR_TO_YAW[this.dir] & 0xFF;
-        this.t0 = this.t1 = now();
+		this.t0 = this.t1 = now;
     }
 
 	public int age() {
@@ -141,7 +145,10 @@ public final class ClientCitizen {
      * @param stateDir 状态+方向打包字节
      */
     void update(int px, int py, int pz, byte stateDir) {
-        double now = now();
+		update(px, py, pz, stateDir, now());
+	}
+
+	void update(int px, int py, int pz, byte stateDir, double now) {
         advanceVisualYaw(now);
 		walkPhase = CitizenBatchRenderLayout.advanceWalkPhase(walkPhase, x0, z0, x1, z1);
         int newDir = CitizenState.unpackDir(stateDir);
@@ -162,7 +169,7 @@ public final class ClientCitizen {
 			invalidateCullBox();
             return;
         }
-        double[] cur = renderPos();
+		double[] cur = renderPos(now);
         double prevGap = now - this.t0;
         this.x0 = cur[0];
         this.y0 = cur[1];
@@ -206,7 +213,11 @@ public final class ClientCitizen {
      * 客户端卡顿时不积累偏差，恢复后自动补进度；误差单调收敛，不存在漂移。
      */
     public int visualYaw() {
-        return advanceVisualYaw(now());
+		return visualYaw(now());
+	}
+
+	int visualYaw(double now) {
+		return advanceVisualYaw(now);
     }
 
     private int advanceVisualYaw(double now) {
@@ -254,7 +265,10 @@ public final class ClientCitizen {
      * 计算当前渲染位置（插值 + 沿 16 向同步方向外推，与服务端规范模型严格同源）。
      */
     public double[] renderPos() {
-        double now = now();
+		return renderPos(now());
+	}
+
+	double[] renderPos(double now) {
         double interval = t1 - t0;
         if (interval < 0.05) interval = 0.05;
         else if (interval > 1.0) interval = 1.0;

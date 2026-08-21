@@ -40,6 +40,7 @@ import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.DifficultyInstance;
 import net.minecraft.stats.Stats;
 import net.minecraft.util.TimeUtil;
 import net.minecraft.util.valueproviders.UniformInt;
@@ -59,6 +60,7 @@ import net.minecraft.world.item.Items;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.item.trading.MerchantOffer;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.ServerLevelAccessor;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.fml.DistExecutor;
 import org.jetbrains.annotations.NotNull;
@@ -115,6 +117,8 @@ public class WanderingRefugee extends AbstractVillager implements NeutralMob, Vi
     @Nullable
     private UUID townOwner = null;
     private boolean coldSurvivor = false;
+    private int ageDays = 0;
+    private boolean generationInitialized = false;
     private int amountNeeded = 3 + (int) (getRandom().nextFloat() * 5);
     @Getter
     private String lastName = LAST_NAMES[(int) (Math.random() * LAST_NAMES.length)];
@@ -132,6 +136,33 @@ public class WanderingRefugee extends AbstractVillager implements NeutralMob, Vi
 
     public void setAgeGroup(int ageGroup) {
         this.entityData.set(AGE, ageGroup);
+    }
+
+    public int getAgeDays() {
+        return ageDays;
+    }
+
+    /** Assigns the same weighted age profile used by tower refugee batches. */
+    public void initializeRandomGeneration() {
+        int generatedAge = Resident.randomRecruitAge();
+        setAgeGroup(generatedAge);
+        ageDays = Resident.randomAgeDaysForAge(generatedAge);
+        generationInitialized = true;
+    }
+
+    @Override
+    public SpawnGroupData finalizeSpawn(
+            ServerLevelAccessor level,
+            DifficultyInstance difficulty,
+            MobSpawnType reason,
+            @Nullable SpawnGroupData spawnData,
+            @Nullable CompoundTag dataTag
+    ) {
+        SpawnGroupData result = super.finalizeSpawn(level, difficulty, reason, spawnData, dataTag);
+        if (!generationInitialized) {
+            initializeRandomGeneration();
+        }
+        return result;
     }
 
     /**
@@ -368,6 +399,8 @@ public class WanderingRefugee extends AbstractVillager implements NeutralMob, Vi
         pCompound.putString("lastName", this.lastName);
         pCompound.putString("firstName", this.firstName);
         pCompound.putInt("age", this.getAgeGroup());
+        pCompound.putInt("ageDays", this.ageDays);
+        pCompound.putBoolean("generationInitialized", this.generationInitialized);
         pCompound.putBoolean("townSpawned", this.townSpawned);
         pCompound.putInt("waitingDays", this.waitingDays);
         pCompound.putLong("lastWaitingCheckDay", this.lastWaitingCheckDay);
@@ -397,6 +430,15 @@ public class WanderingRefugee extends AbstractVillager implements NeutralMob, Vi
         }
         if ((pCompound.contains("age", Tag.TAG_INT))) {
             this.setAgeGroup(pCompound.getInt("age"));
+            generationInitialized = true;
+        }
+        if ((pCompound.contains("ageDays", Tag.TAG_INT))) {
+            ageDays = Math.max(0, pCompound.getInt("ageDays"));
+        } else if (generationInitialized) {
+            ageDays = Resident.randomAgeDaysForAge(this.getAgeGroup());
+        }
+        if ((pCompound.contains("generationInitialized", Tag.TAG_BYTE))) {
+            generationInitialized = pCompound.getBoolean("generationInitialized");
         }
         if ((pCompound.contains("townSpawned", Tag.TAG_BYTE))) {
             townSpawned = pCompound.getBoolean("townSpawned");

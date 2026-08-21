@@ -34,7 +34,7 @@ chorda/                          Root: Chorda.java (mod entry), ChordaConfig, Ch
 │       └── nonpresistent/       Transient/runtime-only capabilities
 ├── client/                      All client-side code
 │   ├── cui/                     CUI Framework - custom declarative UI system
-│   │   ├── base/                Core UI elements, drawables, layout
+│   │   ├── base/                Core UI elements, layout, reusable PanZoomViewport
 │   │   ├── category/            Tab/category browsing
 │   │   ├── contentpanel/        Scrollable content panels
 │   │   ├── editor/              In-game data editors

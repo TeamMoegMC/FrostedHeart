@@ -1,7 +1,7 @@
 # 千人同屏居民渲染技术方案
 
 - Status: `Transitional`（M0/M1/M2 与 Flywheel 动态实例代码已实现；1024 人所有权计数、稳态脏写、F3+T 重建、睡眠迁移、基础画面、步态一致性、68/72 格 LOD 迟滞、Flywheel 原点清槽重建和 Billboard 头部轮廓已通过实机验证；快照时钟已统一到 Flywheel `uTime`，相关回归测试通过，实际 1024 moving 抽动复测待完成；moving 快照的无用 CPU 视锥盒分配已由 JFR 定位并改为 Flywheel 路径零物化，自动化通过、重启后 JFR 对照待完成；维度/Flywheel renderer 重绑定、Oculus CPU 兼容回退、首选 Flywheel 自动恢复和双路径 Billboard 同源布局已有自动化覆盖，实机复测待完成；GPU 性能与完整 Oculus 矩阵仍待验收）
-- Last verified: `2026-08-20`
+- Last verified: `2026-08-21`
 - Scope: `客户端居民渲染、LOD、Flywheel 实例化、资源生命周期、性能验收与回退路径`
 - Current code anchors: `CitizenRenderCoordinator`, `CitizenRenderBackend`, `CpuBatchCitizenBackend`, `FlywheelCitizenBackend`, `CitizenInstanceData`, `CitizenInstanceType`, `CitizenFlywheelModels`, `CitizenBatchRenderLayout`, `assets/frostedheart/flywheel/shaders/citizen.vert`, `CitizenRenderOwnership`, `CitizenRenderOwner`, `ClientCitizenRenderer`, `FakeCitizenManager`, `DetailedCitizenSelector`, `CitizenClientBenchmark`, `CitizenBenchmarkLayout`, `CitizenRenderMetrics`, `CitizenDebugClientCommand`, `CitizenDebugOverlay`, `FakeCitizenRenderer`, `ClientCitizenCache`, `ClientCitizen`, `CitizenClientEvents`, `CitizenSkins`, `SyncEngine`, `CitizenDeltaPacketBatcher`, `FHConfig.CLIENT.maxDetailedCitizenEntities`, `FHConfig.SERVER.TOWN`
 
@@ -182,7 +182,7 @@ S2C spawn / batch / despawn
 | Body | 新进入 `<68` 格；已有 Body 保持到 `<=72` 格，且未被假实体接管 | 预烘焙 Steve 比例网格；站立/睡眠共用顶点，shader 按状态变换部件 |
 | Billboard | 新进入 `>=68` 格；已有 Billboard 保持到 `>=68` 格；最远 `96` 格 | 身体使用皮肤躯干正面 UV，头部使用头部正面 UV；站立时两个 quad 朝向摄像机，睡眠时共同转到床面 |
 
-CPU 批量与 Flywheel 使用同一个 68/72 格 Body 迟滞和 96 格 Billboard 上限；迟滞 owner 保存在 `CitizenRenderCoordinator`，切换 backend 时不重置，因此不会因为 backend 不同而改变居民的 LOD。切换时必须先让目标槽位 ready，再在同一帧撤销来源所有权；不能让假实体和实例同时显示，也不能产生空帧。只有 profile 证明 Body 顶点着色成为瓶颈后，才增加独立低模网格。
+CPU 批量与 Flywheel 使用同一个 68/72 格 Body 迟滞和 96 格 Billboard 上限；迟滞 owner 保存在 `CitizenRenderCoordinator`，切换 backend 时不重置，且只有 owner 真正变化时才写入 map，因此不会因为 backend 不同而改变居民的 LOD，也不在稳态 tick/frame 重写相同值。CPU render、Flywheel tick 与详细假实体 tick 各自在入口采样一次游戏时间，并通过 `ClientCitizen.renderPos(double)`/`visualYaw(double)` 传给本轮全部居民。切换时必须先让目标槽位 ready，再在同一帧撤销来源所有权；不能让假实体和实例同时显示，也不能产生空帧。只有 profile 证明 Body 顶点着色成为瓶颈后，才增加独立低模网格。
 
 ### 静态网格与 GPU 动画
 

@@ -122,7 +122,7 @@ public final class ClientCitizenRenderer {
 			if (CitizenRenderCoordinator.hasDetailedOwnership(c))
 				continue;
 
-			double[] pos = c.renderPos();
+			double[] pos = c.renderPos(timeSeconds);
 			double dx = pos[0] - cp.x;
 			double dy = pos[1] - cp.y;
 			double dz = pos[2] - cp.z;
@@ -201,7 +201,7 @@ public final class ClientCitizenRenderer {
 
 	private static void emitStandingPlayer(BufferBuilder buf, Matrix4f mat, ClientCitizen c,
 			double[] pos, double timeSeconds) {
-		int yaw = c.visualYaw();
+		int yaw = c.visualYaw(timeSeconds);
 		CitizenBatchRenderLayout.Axes axes = CitizenBatchRenderLayout.standingAxes(yaw);
 		CitizenBatchRenderLayout.sampleBodyMotion(c, timeSeconds, BODY_MOTION);
 		float modelScale = c.modelScale();

@@ -1147,8 +1147,12 @@ public class FHConfig {
 			}
 
 			public static class ResidentGeneration {
-				public final ForgeConfigSpec.DoubleValue initialHealth;
-				public final ForgeConfigSpec.DoubleValue initialMental;
+				public final ForgeConfigSpec.DoubleValue initialHealthMinimum;
+				public final ForgeConfigSpec.DoubleValue initialHealthMaximum;
+				public final ForgeConfigSpec.DoubleValue initialMentalMinimum;
+				public final ForgeConfigSpec.DoubleValue initialMentalMaximum;
+				public final ForgeConfigSpec.DoubleValue initialNutritionMinimum;
+				public final ForgeConfigSpec.DoubleValue initialNutritionMaximum;
 				public final ForgeConfigSpec.IntValue attributeSampleCount;
 				public final ForgeConfigSpec.DoubleValue infantStrengthCenter;
 				public final ForgeConfigSpec.DoubleValue infantIntelligenceCenter;
@@ -1170,6 +1174,12 @@ public class FHConfig {
 				public final ForgeConfigSpec.DoubleValue fallbackWeightChild;
 				public final ForgeConfigSpec.DoubleValue fallbackWeightAdult;
 				public final ForgeConfigSpec.DoubleValue fallbackWeightElder;
+				public final ForgeConfigSpec.DoubleValue educationWeightLevel0;
+				public final ForgeConfigSpec.DoubleValue educationWeightLevel1;
+				public final ForgeConfigSpec.DoubleValue educationWeightLevel2;
+				public final ForgeConfigSpec.DoubleValue educationWeightLevel3;
+				public final ForgeConfigSpec.DoubleValue educationWeightLevel4;
+				public final ForgeConfigSpec.DoubleValue educationWeightLevel5;
 				public final ForgeConfigSpec.DoubleValue coldSurvivorHealthMinimum;
 				public final ForgeConfigSpec.DoubleValue coldSurvivorHealthMaximum;
 				public final ForgeConfigSpec.DoubleValue coldSurvivorAttributeBonus;
@@ -1177,11 +1187,13 @@ public class FHConfig {
 
 				ResidentGeneration(ForgeConfigSpec.Builder builder) {
 					builder.push("Resident Generation");
-					initialHealth = builder.comment("Health assigned to an ordinary newly recruited resident.")
-						.defineInRange("initialHealth", TownModelParameters.Defaults.RESIDENT_INITIAL_HEALTH, 0d, 100d);
-					initialMental = builder.comment("Mental state assigned to an ordinary newly recruited resident.")
-						.defineInRange("initialMental", TownModelParameters.Defaults.RESIDENT_INITIAL_MENTAL, 0d, 100d);
-					attributeSampleCount = builder.comment("Uniform samples averaged for each initial strength/intelligence draw; larger values concentrate residents near the age-group center.")
+					initialHealthMinimum = attribute(builder, "initialHealthMinimum", "Minimum ordinary recruit health before averaging.", TownModelParameters.Defaults.RESIDENT_INITIAL_HEALTH_MINIMUM);
+					initialHealthMaximum = attribute(builder, "initialHealthMaximum", "Maximum ordinary recruit health before averaging.", TownModelParameters.Defaults.RESIDENT_INITIAL_HEALTH_MAXIMUM);
+					initialMentalMinimum = attribute(builder, "initialMentalMinimum", "Minimum ordinary recruit mental state before averaging.", TownModelParameters.Defaults.RESIDENT_INITIAL_MENTAL_MINIMUM);
+					initialMentalMaximum = attribute(builder, "initialMentalMaximum", "Maximum ordinary recruit mental state before averaging.", TownModelParameters.Defaults.RESIDENT_INITIAL_MENTAL_MAXIMUM);
+					initialNutritionMinimum = attribute(builder, "initialNutritionMinimum", "Minimum value used for each independently generated nutrition reserve.", TownModelParameters.Defaults.RESIDENT_INITIAL_NUTRITION_MINIMUM);
+					initialNutritionMaximum = attribute(builder, "initialNutritionMaximum", "Maximum value used for each independently generated nutrition reserve.", TownModelParameters.Defaults.RESIDENT_INITIAL_NUTRITION_MAXIMUM);
+					attributeSampleCount = builder.comment("Uniform samples averaged for each initial vital, nutrition, strength, and intelligence draw; larger values concentrate residents near the center.")
 						.defineInRange("attributeSampleCount", TownModelParameters.Defaults.RESIDENT_ATTRIBUTE_SAMPLE_COUNT, 1, 100);
 					infantStrengthCenter = attribute(builder, "infantStrengthCenter", "Infant initial strength distribution center.", TownModelParameters.Defaults.RESIDENT_INFANT_STRENGTH_CENTER);
 					infantIntelligenceCenter = attribute(builder, "infantIntelligenceCenter", "Infant initial intelligence distribution center.", TownModelParameters.Defaults.RESIDENT_INFANT_INTELLIGENCE_CENTER);
@@ -1206,6 +1218,12 @@ public class FHConfig {
 					fallbackWeightChild = weight(builder, "fallbackWeightChild", TownModelParameters.Defaults.RESIDENT_FALLBACK_AGE_WEIGHT_CHILD);
 					fallbackWeightAdult = weight(builder, "fallbackWeightAdult", TownModelParameters.Defaults.RESIDENT_FALLBACK_AGE_WEIGHT_ADULT);
 					fallbackWeightElder = weight(builder, "fallbackWeightElder", TownModelParameters.Defaults.RESIDENT_FALLBACK_AGE_WEIGHT_ELDER);
+					educationWeightLevel0 = educationWeight(builder, 0, TownModelParameters.Defaults.RESIDENT_EDUCATION_WEIGHT_LEVEL_0);
+					educationWeightLevel1 = educationWeight(builder, 1, TownModelParameters.Defaults.RESIDENT_EDUCATION_WEIGHT_LEVEL_1);
+					educationWeightLevel2 = educationWeight(builder, 2, TownModelParameters.Defaults.RESIDENT_EDUCATION_WEIGHT_LEVEL_2);
+					educationWeightLevel3 = educationWeight(builder, 3, TownModelParameters.Defaults.RESIDENT_EDUCATION_WEIGHT_LEVEL_3);
+					educationWeightLevel4 = educationWeight(builder, 4, TownModelParameters.Defaults.RESIDENT_EDUCATION_WEIGHT_LEVEL_4);
+					educationWeightLevel5 = educationWeight(builder, 5, TownModelParameters.Defaults.RESIDENT_EDUCATION_WEIGHT_LEVEL_5);
 					coldSurvivorHealthMinimum = attribute(builder, "coldSurvivorHealthMinimum", "Minimum health of a cold-current high-quality survivor.", TownModelParameters.Defaults.RESIDENT_COLD_SURVIVOR_HEALTH_MINIMUM);
 					coldSurvivorHealthMaximum = attribute(builder, "coldSurvivorHealthMaximum", "Maximum health of a cold-current high-quality survivor.", TownModelParameters.Defaults.RESIDENT_COLD_SURVIVOR_HEALTH_MAXIMUM);
 					coldSurvivorAttributeBonus = attribute(builder, "coldSurvivorAttributeBonus", "Strength and intelligence bonus of a cold-current high-quality survivor.", TownModelParameters.Defaults.RESIDENT_COLD_SURVIVOR_ATTRIBUTE_BONUS);
@@ -1225,6 +1243,11 @@ public class FHConfig {
 				private static ForgeConfigSpec.DoubleValue weight(ForgeConfigSpec.Builder builder, String key, double value) {
 					return builder.comment("Fallback age weight used only when all configured refugee age weights are zero.")
 						.defineInRange(key, value, 0d, 1000d);
+				}
+
+				private static ForgeConfigSpec.DoubleValue educationWeight(ForgeConfigSpec.Builder builder, int level, double value) {
+					return builder.comment("Relative probability weight for initial education level " + level + ".")
+						.defineInRange("educationWeightLevel" + level, value, 0d, 1000d);
 				}
 			}
 

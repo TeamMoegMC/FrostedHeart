@@ -26,10 +26,12 @@ import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.teammoeg.chorda.dataholders.team.CTeamDataManager;
+import com.teammoeg.chorda.math.CMath;
 import com.teammoeg.chorda.text.Components;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.town.TeamTown;
 import com.teammoeg.frostedheart.content.town.resident.Resident;
+import com.teammoeg.frostedheart.content.town.resident.WanderingRefugee;
 import com.teammoeg.frostedheart.content.town.resource.ITownResourceType;
 import com.teammoeg.frostedheart.content.town.resource.ItemResourceType;
 import com.teammoeg.frostedheart.content.town.resource.VirtualResourceAttribute;
@@ -37,6 +39,7 @@ import com.teammoeg.frostedheart.content.town.resource.VirtualResourceType;
 import com.teammoeg.frostedheart.content.town.resource.action.*;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
+import net.minecraft.commands.SharedSuggestionProvider;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.event.RegisterCommandsEvent;
@@ -44,6 +47,10 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
 import java.util.Arrays;
+import java.util.Objects;
+import java.util.function.IntFunction;
+import java.util.function.Predicate;
+import java.util.function.Supplier;
 import java.util.stream.IntStream;
 
 @Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE)
@@ -309,16 +316,7 @@ public class TownCommand {
                             return Command.SINGLE_SUCCESS;
                         });
 
-        LiteralArgumentBuilder<CommandSourceStack> addResident =
-                Commands.literal("add")
-                        .then(Commands.argument("first_name", StringArgumentType.string())
-                                .then(Commands.argument("last_name", StringArgumentType.string()).executes(ct -> {
-                                    TeamTown town = TeamTown.from(ct.getSource().getPlayerOrException());
-                                    town.addResident(new Resident(StringArgumentType.getString(ct, "first_name"), StringArgumentType.getString(ct, "last_name")));
-                                    ct.getSource().sendSuccess(()-> Components.str("Resident added"), true);
-                                    return Command.SINGLE_SUCCESS;
-                                }))
-                        );
+        LiteralArgumentBuilder<CommandSourceStack> addResident = residentAddCommand();
 
         LiteralArgumentBuilder<CommandSourceStack> listBlocks =
                 Commands.literal("list").executes(ct -> {
@@ -381,6 +379,139 @@ public class TownCommand {
                         .then(listBlocks)
                 )
         );
+    }
+
+    static LiteralArgumentBuilder<CommandSourceStack> residentAddCommand() {
+        return Commands.literal("add")
+                .executes(ct -> addRandomResidents(ct, 1, null, null, null))
+                .then(Commands.argument("count", IntegerArgumentType.integer(1))
+                        .executes(ct -> addRandomResidents(
+                                ct, IntegerArgumentType.getInteger(ct, "count"),
+                                null, null, null))
+                        .then(Commands.argument("age", StringArgumentType.word())
+                                .suggests((ct, builder) -> SharedSuggestionProvider.suggest(
+                                        new String[]{"infant", "child", "adult", "elder"}, builder))
+                                .executes(ct -> addRandomResidents(
+                                        ct, IntegerArgumentType.getInteger(ct, "count"),
+                                        StringArgumentType.getString(ct, "age"), null, null))
+                                .then(Commands.argument("first_name", StringArgumentType.string())
+                                        .executes(ct -> addRandomResidents(
+                                                ct, IntegerArgumentType.getInteger(ct, "count"),
+                                                StringArgumentType.getString(ct, "age"),
+                                                StringArgumentType.getString(ct, "first_name"), null))
+                                        .then(Commands.argument("last_name", StringArgumentType.string())
+                                                .executes(ct -> addRandomResidents(
+                                                        ct, IntegerArgumentType.getInteger(ct, "count"),
+                                                        StringArgumentType.getString(ct, "age"),
+                                                        StringArgumentType.getString(ct, "first_name"),
+                                                        StringArgumentType.getString(ct, "last_name")))))));
+    }
+
+    private static int addRandomResidents(
+            com.mojang.brigadier.context.CommandContext<CommandSourceStack> context,
+            int count,
+            String ageName,
+            String firstName,
+            String lastName
+    ) throws com.mojang.brigadier.exceptions.CommandSyntaxException {
+        TeamTown town = TeamTown.from(context.getSource().getPlayerOrException());
+        Integer age = ageName == null ? null : parseResidentAge(ageName);
+        if (age != null && age < 0) {
+            context.getSource().sendFailure(Component.literal(
+                    "Unknown age; expected infant, child, adult, or elder"));
+            return 0;
+        }
+
+        int added = addUntilRejected(count,
+                ordinal -> createRandomResident(firstName, lastName, age, ordinal),
+                town::addResident);
+        if (added == count) {
+            context.getSource().sendSuccess(
+                    () -> Components.str("Residents added: " + added), true);
+            return added;
+        }
+        String partialResult = "Residents added: " + added + " of " + count
+                + "; no available housing for the remaining " + (count - added);
+        if (added == 0) {
+            context.getSource().sendFailure(Component.literal(partialResult));
+            return 0;
+        }
+        context.getSource().sendSuccess(() -> Components.str(partialResult), true);
+        return added;
+    }
+
+    private static Resident createRandomResident(
+            String firstName,
+            String lastName,
+            Integer age,
+            int ordinal
+    ) {
+        ResidentName name = resolveResidentName(
+                firstName, lastName, ordinal,
+                TownCommand::randomFirstName, TownCommand::randomLastName);
+        if (age == null) {
+            return Resident.createRandomRecruit(name.firstName(), name.lastName());
+        }
+        return Resident.createRandomRecruit(name.firstName(), name.lastName(), age);
+    }
+
+    static ResidentName resolveResidentName(
+            String firstName,
+            String lastName,
+            int ordinal,
+            Supplier<String> randomFirstName,
+            Supplier<String> randomLastName
+    ) {
+        Objects.requireNonNull(randomFirstName);
+        Objects.requireNonNull(randomLastName);
+        boolean fixedFirstName = firstName != null;
+        boolean fixedLastName = lastName != null;
+        String resolvedFirstName = fixedFirstName ? firstName : randomFirstName.get();
+        if (fixedFirstName && fixedLastName) {
+            resolvedFirstName += " " + ordinal;
+        }
+        return new ResidentName(
+                resolvedFirstName,
+                fixedLastName ? lastName : randomLastName.get());
+    }
+
+    static <T> int addUntilRejected(
+            int count,
+            IntFunction<T> residentFactory,
+            Predicate<T> addResident
+    ) {
+        if (count < 1) throw new IllegalArgumentException("Resident count must be positive");
+        Objects.requireNonNull(residentFactory);
+        Objects.requireNonNull(addResident);
+        int added = 0;
+        for (int ordinal = 1; ordinal <= count; ordinal++) {
+            if (!addResident.test(residentFactory.apply(ordinal))) break;
+            added++;
+        }
+        return added;
+    }
+
+    private static String randomFirstName() {
+        return WanderingRefugee.FIRST_NAMES[
+                CMath.RANDOM.nextInt(WanderingRefugee.FIRST_NAMES.length)];
+    }
+
+    private static String randomLastName() {
+        return WanderingRefugee.LAST_NAMES[
+                CMath.RANDOM.nextInt(WanderingRefugee.LAST_NAMES.length)];
+    }
+
+    record ResidentName(String firstName, String lastName) {
+    }
+
+    static int parseResidentAge(String ageName) {
+        return switch (ageName.toLowerCase(java.util.Locale.ROOT)) {
+            case "infant" -> Resident.AGE_INFANT;
+            case "child" -> Resident.AGE_CHILD;
+            case "adult" -> Resident.AGE_ADULT;
+            case "elder" -> Resident.AGE_ELDER;
+            default -> -1;
+        };
     }
 
     private static int advanceTown(CommandSourceStack source, int repeats) {

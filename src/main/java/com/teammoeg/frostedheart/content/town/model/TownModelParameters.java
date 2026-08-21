@@ -295,8 +295,12 @@ public record TownModelParameters(
                         Defaults.RESIDENT_PROFICIENCY_GROWTH_AT_ZERO_PER_WORKDAY,
                         Defaults.RESIDENT_MINIMUM_PROFICIENCY_GROWTH_PER_WORKDAY,
                         new ResidentGenerationParameters(
-                                Defaults.RESIDENT_INITIAL_HEALTH,
-                                Defaults.RESIDENT_INITIAL_MENTAL,
+                                Defaults.RESIDENT_INITIAL_HEALTH_MINIMUM,
+                                Defaults.RESIDENT_INITIAL_HEALTH_MAXIMUM,
+                                Defaults.RESIDENT_INITIAL_MENTAL_MINIMUM,
+                                Defaults.RESIDENT_INITIAL_MENTAL_MAXIMUM,
+                                Defaults.RESIDENT_INITIAL_NUTRITION_MINIMUM,
+                                Defaults.RESIDENT_INITIAL_NUTRITION_MAXIMUM,
                                 Defaults.RESIDENT_ATTRIBUTE_SAMPLE_COUNT,
                                 Defaults.RESIDENT_INFANT_STRENGTH_CENTER,
                                 Defaults.RESIDENT_INFANT_INTELLIGENCE_CENTER,
@@ -324,6 +328,12 @@ public record TownModelParameters(
                                         Defaults.RESIDENT_FALLBACK_AGE_WEIGHT_CHILD,
                                         Defaults.RESIDENT_FALLBACK_AGE_WEIGHT_ADULT,
                                         Defaults.RESIDENT_FALLBACK_AGE_WEIGHT_ELDER),
+                                Defaults.RESIDENT_EDUCATION_WEIGHT_LEVEL_0,
+                                Defaults.RESIDENT_EDUCATION_WEIGHT_LEVEL_1,
+                                Defaults.RESIDENT_EDUCATION_WEIGHT_LEVEL_2,
+                                Defaults.RESIDENT_EDUCATION_WEIGHT_LEVEL_3,
+                                Defaults.RESIDENT_EDUCATION_WEIGHT_LEVEL_4,
+                                Defaults.RESIDENT_EDUCATION_WEIGHT_LEVEL_5,
                                 Defaults.RESIDENT_COLD_SURVIVOR_HEALTH_MINIMUM,
                                 Defaults.RESIDENT_COLD_SURVIVOR_HEALTH_MAXIMUM,
                                 Defaults.RESIDENT_COLD_SURVIVOR_ATTRIBUTE_BONUS,
@@ -610,8 +620,12 @@ public record TownModelParameters(
 
     /** Recruitment-time resident distribution currently used by gameplay. */
     public record ResidentGenerationParameters(
-            double initialHealth,
-            double initialMental,
+            double initialHealthMinimum,
+            double initialHealthMaximum,
+            double initialMentalMinimum,
+            double initialMentalMaximum,
+            double initialNutritionMinimum,
+            double initialNutritionMaximum,
             int attributeSampleCount,
             double infantStrengthCenter,
             double infantIntelligenceCenter,
@@ -631,6 +645,12 @@ public record TownModelParameters(
             int adultAgeRangeDaysExclusive,
             ResidentAgeWeightParameters ageWeights,
             ResidentAgeWeightParameters fallbackAgeWeights,
+            double educationWeightLevel0,
+            double educationWeightLevel1,
+            double educationWeightLevel2,
+            double educationWeightLevel3,
+            double educationWeightLevel4,
+            double educationWeightLevel5,
             double coldSurvivorHealthMinimum,
             double coldSurvivorHealthMaximum,
             double coldSurvivorAttributeBonus,
@@ -888,8 +908,12 @@ public record TownModelParameters(
         public static final double RESIDENT_MAXIMUM_WORK_PROFICIENCY = 100.0;
         public static final double RESIDENT_PROFICIENCY_GROWTH_AT_ZERO_PER_WORKDAY = 2.4;
         public static final double RESIDENT_MINIMUM_PROFICIENCY_GROWTH_PER_WORKDAY = 0.25;
-        public static final double RESIDENT_INITIAL_HEALTH = 50.0;
-        public static final double RESIDENT_INITIAL_MENTAL = 50.0;
+        public static final double RESIDENT_INITIAL_HEALTH_MINIMUM = 30.0;
+        public static final double RESIDENT_INITIAL_HEALTH_MAXIMUM = 70.0;
+        public static final double RESIDENT_INITIAL_MENTAL_MINIMUM = 30.0;
+        public static final double RESIDENT_INITIAL_MENTAL_MAXIMUM = 70.0;
+        public static final double RESIDENT_INITIAL_NUTRITION_MINIMUM = 30.0;
+        public static final double RESIDENT_INITIAL_NUTRITION_MAXIMUM = 70.0;
         public static final int RESIDENT_ATTRIBUTE_SAMPLE_COUNT = 4;
         public static final double RESIDENT_INFANT_STRENGTH_CENTER = 20.0;
         public static final double RESIDENT_INFANT_INTELLIGENCE_CENTER = 30.0;
@@ -915,7 +939,13 @@ public record TownModelParameters(
         public static final double RESIDENT_FALLBACK_AGE_WEIGHT_CHILD = 20.0;
         public static final double RESIDENT_FALLBACK_AGE_WEIGHT_ADULT = 50.0;
         public static final double RESIDENT_FALLBACK_AGE_WEIGHT_ELDER = 20.0;
-        public static final double RESIDENT_COLD_SURVIVOR_HEALTH_MINIMUM = 20.0;
+        public static final double RESIDENT_EDUCATION_WEIGHT_LEVEL_0 = 0.15;
+        public static final double RESIDENT_EDUCATION_WEIGHT_LEVEL_1 = 0.50;
+        public static final double RESIDENT_EDUCATION_WEIGHT_LEVEL_2 = 0.20;
+        public static final double RESIDENT_EDUCATION_WEIGHT_LEVEL_3 = 0.10;
+        public static final double RESIDENT_EDUCATION_WEIGHT_LEVEL_4 = 0.04;
+        public static final double RESIDENT_EDUCATION_WEIGHT_LEVEL_5 = 0.01;
+        public static final double RESIDENT_COLD_SURVIVOR_HEALTH_MINIMUM = 30.0;
         public static final double RESIDENT_COLD_SURVIVOR_HEALTH_MAXIMUM = 40.0;
         public static final double RESIDENT_COLD_SURVIVOR_ATTRIBUTE_BONUS = 15.0;
         public static final double RESIDENT_COLD_SURVIVOR_PROFICIENCY_MULTIPLIER = 1.5;
