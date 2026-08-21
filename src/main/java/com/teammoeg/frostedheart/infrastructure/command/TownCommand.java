@@ -37,6 +37,7 @@ import com.teammoeg.frostedheart.content.town.resource.VirtualResourceType;
 import com.teammoeg.frostedheart.content.town.resource.action.*;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
+import net.minecraft.commands.SharedSuggestionProvider;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.event.RegisterCommandsEvent;
@@ -312,12 +313,13 @@ public class TownCommand {
         LiteralArgumentBuilder<CommandSourceStack> addResident =
                 Commands.literal("add")
                         .then(Commands.argument("first_name", StringArgumentType.string())
-                                .then(Commands.argument("last_name", StringArgumentType.string()).executes(ct -> {
-                                    TeamTown town = TeamTown.from(ct.getSource().getPlayerOrException());
-                                    town.addResident(new Resident(StringArgumentType.getString(ct, "first_name"), StringArgumentType.getString(ct, "last_name")));
-                                    ct.getSource().sendSuccess(()-> Components.str("Resident added"), true);
-                                    return Command.SINGLE_SUCCESS;
-                                }))
+                                .then(Commands.argument("last_name", StringArgumentType.string())
+                                        .executes(ct -> addRandomResident(ct, null))
+                                        .then(Commands.argument("age", StringArgumentType.word())
+                                                .suggests((ct, builder) -> SharedSuggestionProvider.suggest(
+                                                        new String[]{"infant", "child", "adult", "elder"}, builder))
+                                                .executes(ct -> addRandomResident(
+                                                        ct, StringArgumentType.getString(ct, "age")))))
                         );
 
         LiteralArgumentBuilder<CommandSourceStack> listBlocks =
@@ -381,6 +383,43 @@ public class TownCommand {
                         .then(listBlocks)
                 )
         );
+    }
+
+    private static int addRandomResident(
+            com.mojang.brigadier.context.CommandContext<CommandSourceStack> context,
+            String ageName
+    ) throws com.mojang.brigadier.exceptions.CommandSyntaxException {
+        TeamTown town = TeamTown.from(context.getSource().getPlayerOrException());
+        String firstName = StringArgumentType.getString(context, "first_name");
+        String lastName = StringArgumentType.getString(context, "last_name");
+        Resident resident;
+        if (ageName == null) {
+            resident = Resident.createRandomRecruit(firstName, lastName);
+        } else {
+            int age = parseResidentAge(ageName);
+            if (age < 0) {
+                context.getSource().sendFailure(Component.literal(
+                        "Unknown age; expected infant, child, adult, or elder"));
+                return 0;
+            }
+            resident = Resident.createRandomRecruit(firstName, lastName, age);
+        }
+        if (!town.addResident(resident)) {
+            context.getSource().sendFailure(Component.literal("Resident not added: no available housing"));
+            return 0;
+        }
+        context.getSource().sendSuccess(() -> Components.str("Resident added"), true);
+        return Command.SINGLE_SUCCESS;
+    }
+
+    static int parseResidentAge(String ageName) {
+        return switch (ageName.toLowerCase(java.util.Locale.ROOT)) {
+            case "infant" -> Resident.AGE_INFANT;
+            case "child" -> Resident.AGE_CHILD;
+            case "adult" -> Resident.AGE_ADULT;
+            case "elder" -> Resident.AGE_ELDER;
+            default -> -1;
+        };
     }
 
     private static int advanceTown(CommandSourceStack source, int repeats) {

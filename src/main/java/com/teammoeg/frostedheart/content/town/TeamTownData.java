@@ -80,7 +80,6 @@ import com.teammoeg.frostedheart.content.town.resident.Resident;
 import com.teammoeg.frostedheart.content.town.resident.ResidentActivity;
 import com.teammoeg.frostedheart.content.town.resident.ResidentAttributeChange;
 import com.teammoeg.frostedheart.content.town.resident.ResidentAttributeModel;
-import com.teammoeg.frostedheart.content.town.resident.ResidentGenerationModel;
 import com.teammoeg.frostedheart.content.town.resident.ResidentDailyModel;
 import com.teammoeg.frostedheart.content.town.resident.ResidentNutrition;
 import com.teammoeg.frostedheart.content.town.resident.ResidentNutritionSupportModel;
@@ -1130,7 +1129,7 @@ public class TeamTownData implements SpecialData{
             if (pos == null) continue;
             WanderingRefugee refugee = FHEntityTypes.WANDERING_REFUGEE.get().create(world);
             if (refugee == null) continue;
-            refugee.setAgeGroup(pickAgeByWeight());
+            refugee.initializeRandomGeneration();
             refugee.markTownSpawned(teamData.getId());
             if (weather == RefugeeSpawnWeather.COLD && CMath.RANDOM.nextDouble() < config.coldQualityChance.get()) {
                 refugee.setColdSurvivor(true);
@@ -1145,23 +1144,6 @@ public class TeamTownData implements SpecialData{
             }
         }
         return spawned;
-    }
-
-    /**
-     * 按配置权重轮盘随机一个年龄组。
-     */
-    private int pickAgeByWeight() {
-        RefugeeSpawn config = FHConfig.SERVER.TOWN.REFUGEE_SPAWN;
-        FHConfig.Server.Town.ResidentGeneration fallback =
-                FHConfig.SERVER.TOWN.RESIDENT_GENERATION;
-        return ResidentGenerationModel.pickAge(
-                CMath.RANDOM::nextDouble,
-                new ResidentGenerationModel.AgeWeights(
-                        config.weightInfant.get(), config.weightChild.get(),
-                        config.weightAdult.get(), config.weightElder.get()),
-                new ResidentGenerationModel.AgeWeights(
-                        fallback.fallbackWeightInfant.get(), fallback.fallbackWeightChild.get(),
-                        fallback.fallbackWeightAdult.get(), fallback.fallbackWeightElder.get()));
     }
 
     /**

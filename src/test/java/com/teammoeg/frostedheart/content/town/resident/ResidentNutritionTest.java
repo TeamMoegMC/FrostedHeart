@@ -36,6 +36,30 @@ class ResidentNutritionTest {
     }
 
     @Test
+    void randomRecruitUsesHeterogeneousVitalNutritionAndEducationBounds() {
+        for (int index = 0; index < 1_000; index++) {
+            Resident resident = Resident.createRandomRecruit("Random", "Recruit");
+            assertTrue(resident.getHealth() >= 30.0 && resident.getHealth() <= 70.0);
+            assertTrue(resident.getMental() >= 30.0 && resident.getMental() <= 70.0);
+            assertTrue(resident.getNutrition().minimum() >= 30.0);
+            assertTrue(resident.getNutrition().fat() <= 70.0);
+            assertTrue(resident.getNutrition().carbohydrate() <= 70.0);
+            assertTrue(resident.getNutrition().protein() <= 70.0);
+            assertTrue(resident.getNutrition().vegetable() <= 70.0);
+            assertTrue(resident.getEducationLevel() >= 0 && resident.getEducationLevel() <= 5);
+        }
+    }
+
+    @Test
+    void coldSurvivorCannotBreakOrdinaryHealthBounds() {
+        for (int index = 0; index < 500; index++) {
+            Resident resident = Resident.createRandomRecruit("Cold", "Survivor");
+            resident.applyColdSurvivorBuffs();
+            assertTrue(resident.getHealth() >= 30.0 && resident.getHealth() <= 40.0);
+        }
+    }
+
+    @Test
     void legacyResidentIgnoresRemovedNutritionDevelopmentState() {
         String json = """
                 {"firstName":"Legacy","lastName":"Resident",

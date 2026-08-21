@@ -79,8 +79,9 @@ public class WanderingRefugeeRecruitMessage implements CMessage {
                         player.displayClientMessage(Component.translatable("message.frostedheart.wandering_refugee.not_yours"), false);
                     } else{
                         TeamTown town = TeamTown.from(player);
-                        Resident resident = new Resident(refugee.getFirstName(), refugee.getLastName(),
-                                refugee.getAgeGroup(), Resident.randomAgeDaysForAge(refugee.getAgeGroup()));
+                        Resident resident = Resident.createRandomRecruit(
+                                refugee.getFirstName(), refugee.getLastName(),
+                                refugee.getAgeGroup(), refugee.getAgeDays());
                         if (refugee.isColdSurvivor()) {
                             resident.applyColdSurvivorBuffs();
                         }
