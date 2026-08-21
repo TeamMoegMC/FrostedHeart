@@ -36,6 +36,7 @@ import com.teammoeg.frostedheart.content.town.network.TownResidentUpdatePacket;
 import com.teammoeg.frostedheart.content.town.network.TownResourceUpdatePacket;
 import com.teammoeg.frostedheart.content.town.network.TownHistoryUpdatePacket;
 import com.teammoeg.frostedheart.content.town.network.TownSignalNotificationPacket;
+import com.teammoeg.frostedheart.content.town.network.TownTransportShortageNotificationPacket;
 import com.teammoeg.frostedheart.content.town.network.TownPolicyStateUpdatePacket;
 import com.teammoeg.frostedheart.content.town.observation.TownObservationModel;
 import com.teammoeg.frostedheart.content.town.observation.TownNutritionHistory;
@@ -90,6 +91,9 @@ import com.teammoeg.frostedheart.content.town.resident.WanderingRefugee;
 import com.teammoeg.frostedheart.content.town.resource.TeamTownResourceHolder;
 import com.teammoeg.frostedheart.content.town.resource.VirtualResourceType;
 import com.teammoeg.frostedheart.content.town.transport.TownTransportState;
+import com.teammoeg.frostedheart.content.town.transport.TownTransportSnapshot;
+import com.teammoeg.frostedheart.content.town.transport.TownTransportShortageNotice;
+import com.teammoeg.frostedheart.content.town.transport.TownTransportShortageNotificationModel;
 import com.teammoeg.frostedheart.content.town.terrainresource.TerrainResourceType;
 import com.teammoeg.frostedheart.content.town.terrainresource.TerrainResourceData;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
@@ -234,9 +238,14 @@ public class TeamTownData implements SpecialData{
     private transient final List<TownSignalEvent> pendingTownTipSignals = new ArrayList<>();
     /** Tower notifications emitted by the immediate/debounce state machine. */
     private transient final List<TownSignalNotice> pendingTowerTipSignals = new ArrayList<>();
+    /** Morning transport shortages waiting for the shared per-tick notification flush. */
+    private transient final List<TownTransportShortageNotice> pendingTransportShortageTips =
+            new ArrayList<>();
     /** Last per-second service state; null until the first generator observation. */
     private transient Boolean lastObservedTowerActive;
     private transient TownTowerTipThrottle.State towerTipState = TownTowerTipThrottle.INITIAL;
+    private transient TownTransportShortageNotificationModel.State transportShortageTipState =
+            TownTransportShortageNotificationModel.INITIAL;
     private transient long nextTownTipNotificationId;
     /**
      * 上一次日结算后的保障岗位缺口，仅用于识别“出现缺口/完全恢复”的状态穿越。
@@ -574,6 +583,10 @@ public class TeamTownData implements SpecialData{
             this.listenerInitialized = true;
         }
 
+        // Persisted reservation capacities are derived caches. Rebuild them before
+        // the first incremental flush and after server-config formula changes.
+        new TeamTown(this).getTransportSummary();
+
         if(dataSyncCache.hasChangedResources() || dataSyncCache.hasTransportStateChange()){
             Map<ITownResourceKey, Double> changedResource = new HashMap<>();
             for(ITownResourceKey resourceKey : this.dataSyncCache.drainChangedResources()){
@@ -590,7 +603,9 @@ public class TeamTownData implements SpecialData{
                 teamData.sendToOnline(FHNetwork.INSTANCE, new TownResourceUpdatePacket(
                         changedResource,
                         resources.getOccupiedCapacity(),
-                        transportState.getDailyReport()));
+                        TownTransportSnapshot.from(
+                                resources.get(VirtualResourceType.TRANSPORT_CAPACITY.generateAttribute(0)),
+                                transportState)));
                 changedResource.forEach(this.dataSyncCache::markResourceSynced);
             }
         }
@@ -681,6 +696,17 @@ public class TeamTownData implements SpecialData{
                 teamData.sendToOnline(FHNetwork.INSTANCE, new TownSignalNotificationPacket(
                         ++nextTownTipNotificationId, compacted));
             }
+        }
+        while (!pendingTransportShortageTips.isEmpty()) {
+            int packetSize = Math.min(
+                    pendingTransportShortageTips.size(),
+                    TownTransportShortageNotificationPacket.MAX_NOTICES);
+            List<TownTransportShortageNotice> packetNotices = List.copyOf(
+                    pendingTransportShortageTips.subList(0, packetSize));
+            pendingTransportShortageTips.subList(0, packetSize).clear();
+            teamData.sendToOnline(FHNetwork.INSTANCE,
+                    new TownTransportShortageNotificationPacket(
+                            ++nextTownTipNotificationId, packetNotices));
         }
     }
 
@@ -1463,11 +1489,20 @@ public class TeamTownData implements SpecialData{
     void finishDailyTransportSettlement() {
         double totalCapacity = resources.get(
                 VirtualResourceType.TRANSPORT_CAPACITY.generateAttribute(0));
+        double reservedCapacity = transportState.getReservedTransportCapacity();
         TownTransportState.DailyReport report = new TownTransportState.DailyReport(
-                true, totalCapacity, 0.0);
+                true, totalCapacity, reservedCapacity);
         if (transportState.setDailyReport(report)) {
             dataSyncCache.markTransportStateChanged();
         }
+        TownTransportShortageNotificationModel.Result shortage =
+                TownTransportShortageNotificationModel.onMorningSettlement(
+                        transportShortageTipState,
+                        nextTownDay(),
+                        totalCapacity,
+                        reservedCapacity);
+        transportShortageTipState = shortage.state();
+        shortage.notice().ifPresent(pendingTransportShortageTips::add);
     }
 
     /**
@@ -1747,19 +1782,33 @@ public class TeamTownData implements SpecialData{
     public void applyResourceUpdate(
             Map<ITownResourceKey, Double> changes,
             double occupiedCapacity,
-            TownTransportState.DailyReport transportDailyReport
+            TownTransportSnapshot transportSnapshot
     ) {
         for (Map.Entry<ITownResourceKey, Double> entry : changes.entrySet()) {
             resources.applySyncEntry(entry.getKey(), entry.getValue());
         }
         resources.setOccupiedCapacity(occupiedCapacity);
-        transportState.setDailyReport(transportDailyReport);
+        transportState.applySnapshot(transportSnapshot);
         fireResourcesChanged();
+    }
+
+    /** Source-compatible client helper for callers predating transport snapshots. */
+    public void applyResourceUpdate(
+            Map<ITownResourceKey, Double> changes,
+            double occupiedCapacity,
+            TownTransportState.DailyReport transportDailyReport
+    ) {
+        applyResourceUpdate(changes, occupiedCapacity,
+                new TownTransportSnapshot(transportDailyReport,
+                        resources.get(VirtualResourceType.TRANSPORT_CAPACITY.generateAttribute(0)), List.of()));
     }
 
     /** Source-compatible client helper for callers predating transport reports. */
     public void applyResourceUpdate(Map<ITownResourceKey, Double> changes, double occupiedCapacity) {
-        applyResourceUpdate(changes, occupiedCapacity, transportState.getDailyReport());
+        applyResourceUpdate(changes, occupiedCapacity,
+                TownTransportSnapshot.from(
+                        resources.get(VirtualResourceType.TRANSPORT_CAPACITY.generateAttribute(0)),
+                        transportState));
     }
 
     /** Client-side authoritative town-name update. */

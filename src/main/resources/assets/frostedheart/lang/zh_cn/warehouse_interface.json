@@ -12,5 +12,17 @@
   "gui.frostedheart.warehouse_interface.redstone_mode.high": "红石：有信号",
   "gui.frostedheart.warehouse_interface.redstone_mode.high.tooltip": "仅当接收到红石信号时从城镇仓库补货",
   "gui.frostedheart.warehouse_interface.redstone_mode.low": "红石：无信号",
-  "gui.frostedheart.warehouse_interface.redstone_mode.low.tooltip": "仅当没有红石信号时从城镇仓库补货"
+  "gui.frostedheart.warehouse_interface.redstone_mode.low.tooltip": "仅当没有红石信号时从城镇仓库补货",
+  "gui.frostedheart.warehouse_interface.rate": "速率/秒",
+  "gui.frostedheart.warehouse_interface.apply": "设置",
+  "gui.frostedheart.warehouse_interface.transport.active": "运力已启用",
+  "gui.frostedheart.warehouse_interface.transport.throttled": "全镇运力短缺",
+  "gui.frostedheart.warehouse_interface.transport.disabled": "运力已禁用",
+  "gui.frostedheart.warehouse_interface.transport.rate_increase_rejected": "运力不足，无法上调",
+  "gui.frostedheart.warehouse_interface.transport.invalid_request": "速率请求无效",
+  "gui.frostedheart.warehouse_interface.transport.current_rate": "当前物品传输速率：%s 物品/秒",
+  "gui.frostedheart.warehouse_interface.transport.reserved": "占用运力：%s",
+  "gui.frostedheart.warehouse_interface.transport.town_available": "剩余可用运力：%s",
+  "gui.frostedheart.warehouse_interface.transport.town_total": "总运力：%s",
+  "message.frostedheart.warehouse_interface.transport.new_endpoint_rejected": "运力不足，无法新增；接口速率已设为 0"
 }

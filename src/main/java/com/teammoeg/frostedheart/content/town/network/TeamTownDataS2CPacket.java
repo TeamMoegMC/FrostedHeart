@@ -14,7 +14,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
- *
  */
 
 package com.teammoeg.frostedheart.content.town.network;
@@ -23,55 +22,71 @@ import java.util.function.Supplier;
 
 import com.teammoeg.chorda.dataholders.team.CClientTeamDataManager;
 import com.teammoeg.chorda.dataholders.team.CTeamDataManager;
+import com.teammoeg.chorda.io.CodecUtil;
 import com.teammoeg.chorda.io.codec.DataOps;
 import com.teammoeg.chorda.io.codec.ObjectWriter;
 import com.teammoeg.chorda.network.CMessage;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.bootstrap.common.FHSpecialDataTypes;
-
 import com.teammoeg.frostedheart.content.town.TeamTownData;
-import net.minecraft.world.entity.player.Player;
+import com.teammoeg.frostedheart.content.town.transport.TownTransportSnapshot;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.network.NetworkEvent;
 
 public class TeamTownDataS2CPacket implements CMessage {
-	Object data;
+    private final Object data;
+    private final TownTransportSnapshot transportSnapshot;
 
     public TeamTownDataS2CPacket(Player player) {
-    	this(CTeamDataManager.get(player).getData(FHSpecialDataTypes.TOWN_DATA));
+        this(CTeamDataManager.get(player).getData(FHSpecialDataTypes.TOWN_DATA));
     }
 
-	public TeamTownDataS2CPacket(FriendlyByteBuf buffer) {
-		data=ObjectWriter.readObject(buffer);
-	}
-
-	public TeamTownDataS2CPacket(TeamTownData townData) {
-		try {
-			data= FHSpecialDataTypes.TOWN_DATA.saveData(DataOps.COMPRESSED, townData);
-			// 全量包只单播给当前玩家，但资源值级去重基线是全队共享的：若按当前值重建基线，
-			// 会吞掉窗口内（已标记未 flush）的资源增量，导致其他在线玩家丢失该变更。
-			// 因此只清空基线，使下一轮 flush 对所有脏资源键强制发包（双向安全）。序列化失败则不重置。
-			townData.markFullSynced();
-		} catch (Exception e) {
-			FHMain.LOGGER.error("Failed to save town data when syncing town data", e);
-		}
+    public TeamTownDataS2CPacket(FriendlyByteBuf buffer) {
+        data = ObjectWriter.readObject(buffer);
+        transportSnapshot = CodecUtil.decodeOrThrow(TownTransportSnapshot.CODEC.decode(
+                DataOps.COMPRESSED, ObjectWriter.readObject(buffer)));
     }
+
+    public TeamTownDataS2CPacket(TeamTownData townData) {
+        Object encodedData = null;
+        TownTransportSnapshot snapshot = TownTransportSnapshot.EMPTY;
+        try {
+            snapshot = townData.createTeamTown().getTransportSnapshot();
+            encodedData = FHSpecialDataTypes.TOWN_DATA.saveData(DataOps.COMPRESSED, townData);
+            // A full sync is unicast, but the dirty-resource baseline is team-wide. Clearing it
+            // forces the next flush to retain changes that were marked before this packet.
+            townData.markFullSynced();
+        } catch (Exception exception) {
+            FHMain.LOGGER.error("Failed to save town data when syncing town data", exception);
+        }
+        data = encodedData;
+        transportSnapshot = snapshot;
+    }
+
+    TeamTownData decodeTownData() throws Exception {
+        TeamTownData townData = FHSpecialDataTypes.TOWN_DATA.loadData(DataOps.COMPRESSED, data);
+        townData.getTransportState().applySnapshot(transportSnapshot);
+        return townData;
+    }
+
     @Override
     public void handle(Supplier<NetworkEvent.Context> context) {
-		context.get().enqueueWork(() -> {
-			try {
-				CClientTeamDataManager.INSTANCE.getInstance().setData(FHSpecialDataTypes.TOWN_DATA, FHSpecialDataTypes.TOWN_DATA.loadData(DataOps.COMPRESSED, data));
-				// 全量包会替换客户端 TeamTownData 实例；通知打开中的 GUI 立即刷新到最新快照。
-				TeamTownData.fireClientDataChanged();
-			} catch (Exception e) {
-				FHMain.LOGGER.error("Failed to load data when syncing town data", e);
-			}
-		});
+        context.get().enqueueWork(() -> {
+            try {
+                CClientTeamDataManager.INSTANCE.getInstance().setData(
+                        FHSpecialDataTypes.TOWN_DATA, decodeTownData());
+                TeamTownData.fireClientDataChanged();
+            } catch (Exception exception) {
+                FHMain.LOGGER.error("Failed to load data when syncing town data", exception);
+            }
+        });
         context.get().setPacketHandled(true);
     }
 
-	@Override
-	public void encode(FriendlyByteBuf buffer) {
-		ObjectWriter.writeObject(buffer, data);
-	}
+    @Override
+    public void encode(FriendlyByteBuf buffer) {
+        ObjectWriter.writeObject(buffer, data);
+        CodecUtil.writeCodec(buffer, TownTransportSnapshot.CODEC, transportSnapshot);
+    }
 }

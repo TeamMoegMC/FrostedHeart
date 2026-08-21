@@ -37,6 +37,7 @@ public final class TownVirtualResourcesTab extends TownManagerTab {
                 layer,
                 TownManagerScreen.CONTENT_X,
                 TownManagerScreen.CONTENT_Y,
-                screen::getTown));
+                screen::getTown,
+                screen.getInitialVirtualResource()));
     }
 }
