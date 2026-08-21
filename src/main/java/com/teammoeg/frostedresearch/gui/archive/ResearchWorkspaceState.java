@@ -39,6 +39,7 @@ public final class ResearchWorkspaceState {
     private boolean projectWorkspaceOpen;
     private ProjectTab projectTab = ProjectTab.DETAIL;
     private final Set<String> bookmarkedResearchIds = new LinkedHashSet<>();
+    private final Set<String> bookmarkedResearchIdsView = Collections.unmodifiableSet(bookmarkedResearchIds);
     private boolean typeListExpanded = true;
     private final Map<String, Integer> typeListScrollByType = new HashMap<>();
     private final Map<String, Camera> cameraByResearchType = new HashMap<>();
@@ -123,7 +124,7 @@ public final class ResearchWorkspaceState {
     }
 
     public Set<String> bookmarkedResearchIds() {
-        return Collections.unmodifiableSet(bookmarkedResearchIds);
+        return bookmarkedResearchIdsView;
     }
 
     public void setBookmarked(String researchId, boolean bookmarked) {
@@ -152,6 +153,10 @@ public final class ResearchWorkspaceState {
 
     public Camera camera(String researchType) {
         return cameraByResearchType.getOrDefault(ResearchTypeIdNormalizer.normalize(researchType), Camera.DEFAULT);
+    }
+
+    public boolean hasCamera(String researchType) {
+        return cameraByResearchType.containsKey(ResearchTypeIdNormalizer.normalize(researchType));
     }
 
     public void setCamera(String researchType, Camera camera) {

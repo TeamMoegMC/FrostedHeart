@@ -250,9 +250,9 @@ public class SurroundingTemperatureSimulator {
                 // Math.floor 是 JIT 内在函数（roundsd 硬件取整 + cvttsd2si），无分支；
                 // 旧写法 "int 截断 + 条件递减" 是数据依赖分支，粒子方向各异导致约半数误预测。
                 // 两者逐点等价（含 -0.0 与负值边界；世界坐标远小于 int 溢出阈）。
-                int bx = (int) Math.floor(dx);
-                int by = (int) Math.floor(dy);
-                int bz = (int) Math.floor(dz);
+                int bx = Mth.floor(dx);
+                int by = Mth.floor(dy);
+                int bz = Mth.floor(dz);
 
                 // ---- SoA 缓存查找 ----
                 //坐标范围 [-16,16) 映射到 [0,32) 再编码为一维索引。

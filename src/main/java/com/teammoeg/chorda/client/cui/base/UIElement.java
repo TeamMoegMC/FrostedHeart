@@ -107,7 +107,6 @@ public class UIElement {
      * 设置/获取元素的可见性。
      * 通过 setVisible(boolean) / isVisible() 方法访问。
      */
-    @Setter
     @Getter
     private boolean visible=true;
 
@@ -127,6 +126,13 @@ public class UIElement {
     public UIElement(UIElement parent) {
         this.parent = parent;
         //CUIDebugHelper.registerUIObject(this);
+    }
+
+    public void setVisible(boolean visible) {
+        this.visible = visible;
+        if (!visible) {
+            isMouseOver = false;
+        }
     }
 
     // ==================== 层级与位置相关方法 ====================

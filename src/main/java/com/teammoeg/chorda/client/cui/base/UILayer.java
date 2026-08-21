@@ -380,7 +380,11 @@ public abstract class UILayer extends UIElement {
 	}
 	@Override
 	public void updateRenderInfo(int x,int y,double mx, double my, float pt) {
-    	if(transform!=null) {
+		if (!isVisible()) {
+			isMouseOver = false;
+			return;
+		}
+		if(transform!=null) {
     		float dx=x+width*transformOrigin.x;
     		float dy=y+height*transformOrigin.y;
     		Matrix4f m4f=new Matrix4f();
@@ -396,7 +400,9 @@ public abstract class UILayer extends UIElement {
     	}
 		super.updateRenderInfo(x,y,mx, my, pt);
 		for(UIElement elm:elements) {
-			elm.updateRenderInfo(x+offsetX+this.getX(),y+offsetY+this.getY(),mx,my, pt);
+			if (elm.isVisible()) {
+				elm.updateRenderInfo(x+offsetX+this.getX(),y+offsetY+this.getY(),mx,my, pt);
+			}
 		}
 	}
 	private static Vector3d unprojectScreenToPlane(double screenX, double screenY,int z,Matrix4f mvp) {
@@ -448,9 +454,15 @@ public abstract class UILayer extends UIElement {
 
 	@Override
 	public void updateMouseOver() {
+		if (!isVisible()) {
+			isMouseOver = false;
+			return;
+		}
 		super.updateMouseOver();
 		for (UIElement element : elements) {
-			element.updateMouseOver();
+			if (element.isVisible()) {
+				element.updateMouseOver();
+			}
 		}
 	}
 
@@ -656,7 +668,7 @@ public abstract class UILayer extends UIElement {
 
 	public boolean isMouseOverAnyWidget() {
 		for (UIElement element : elements) {
-			if (element.isMouseOver()) {
+			if (element.isVisible() && element.isMouseOver()) {
 				return true;
 			}
 		}

@@ -17,9 +17,12 @@ class ResearchWorkspaceStateTest {
     void camerasAndListScrollAreRememberedPerNormalizedType() {
         ResearchWorkspaceState state = new ResearchWorkspaceState(ResearchOpenContext.browse());
 
+        assertFalse(state.hasCamera("frostedheart:production"));
         state.setCamera("frostedheart:production", new Camera(12.0D, 30.0D, 4.0D));
         state.setTypeListScroll("production", 9);
 
+        assertTrue(state.hasCamera("frostedresearch:production"));
+        assertFalse(state.hasCamera("frostedresearch:living"));
         assertEquals(new Camera(12.0D, 30.0D, ResearchWorkspaceState.MAX_ZOOM),
                 state.camera("frostedresearch:production"));
         assertEquals(9, state.typeListScroll("frostedheart:production"));
