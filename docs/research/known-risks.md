@@ -3,7 +3,7 @@
 - Status: `Current`
 - Last verified: `2026-08-21`
 - Scope: Source-confirmed defects, unsafe compatibility contracts, behavioral limitations, and missing validation; this is not an exhaustive security audit
-- Code anchors: [`ResearchHooks#kill`](../../src/main/java/com/teammoeg/frostedresearch/ResearchHooks.java), [`SinglePlayerTeam#getOnlineMembers`](../../src/main/java/com/teammoeg/chorda/dataholders/team/SinglePlayerTeam.java), [`FHDrawingDeskOperationPacket#handle`](../../src/main/java/com/teammoeg/frostedresearch/network/FHDrawingDeskOperationPacket.java), [`TeamResearchData#resetData`](../../src/main/java/com/teammoeg/frostedresearch/data/TeamResearchData.java), [`FHResearchDataSyncPacket#handle`](../../src/main/java/com/teammoeg/frostedresearch/network/FHResearchDataSyncPacket.java), [`TickListenerClue#initListener`](../../src/main/java/com/teammoeg/frostedresearch/research/clues/TickListenerClue.java), [`ResearchData#getProgress`](../../src/main/java/com/teammoeg/frostedresearch/data/ResearchData.java), [`ResearchDataAPI#putVariantLong`](../../src/main/java/com/teammoeg/frostedresearch/api/ResearchDataAPI.java)
+- Code anchors: [`FHDrawingDeskOperationPacket#handle`](../../src/main/java/com/teammoeg/frostedresearch/network/FHDrawingDeskOperationPacket.java), [`TeamResearchData#resetData`](../../src/main/java/com/teammoeg/frostedresearch/data/TeamResearchData.java), [`FHResearchDataSyncPacket#handle`](../../src/main/java/com/teammoeg/frostedresearch/network/FHResearchDataSyncPacket.java), [`TickListenerClue#initListener`](../../src/main/java/com/teammoeg/frostedresearch/research/clues/TickListenerClue.java), [`ResearchData#getProgress`](../../src/main/java/com/teammoeg/frostedresearch/data/ResearchData.java), [`ResearchDataAPI#putVariantLong`](../../src/main/java/com/teammoeg/frostedresearch/api/ResearchDataAPI.java)
 
 ## How To Read This Document
 
@@ -16,13 +16,11 @@
 
 | Priority | Kind | Source fact | Consequence |
 |---|---|---|---|
-| P0 | confirmed defect | `SinglePlayerTeam#getOnlineMembers` constructs `ImmutableList.of(player)` but does not return it, then always returns an empty list | without FTB Teams, team broadcasts used by incremental research updates have no online recipients; direct login full sync can mask the problem until progress changes |
-| P0 | confirmed defect | `ResearchHooks#kill` calls `setClueCompleted` only when `isClueCompleted` is already true and never evaluates the killed entity through `KillClue` | an unfinished built-in kill clue cannot complete from the normal kill hook |
 | P1 | confirmed authorization gap | `FHDrawingDeskOperationPacket#handle` accepts an arbitrary loaded desk position in the sender's dimension and checks neither open menu, distance, nor desk owner | a crafted packet can operate a desk the sender could not normally open, consume its resources, or submit its examine item using the sender's team state |
 | P1 | confirmed state-reversal gap | `TeamResearchData#resetData` clears project flags/maps but does not immediately revoke unlock caches, subtract `EffectStats`, reset repeat level, or clear a matching current ID | administrative reset is not a true rollback; cache behavior can change after reconstruction, and re-completion can duplicate additive stats |
 | P1 | confirmed initialization defect | `Research#doIndex` can initialize an `always` listener with null team; current listener implementations dereference the team | a definition using `always: true` can fail during definition indexing/load |
 
-The current development catalogue contains three `kill` clues in `animal_cage.json`, so the kill-hook defect affects shipped content rather than only an unused type. The same catalogue contains no `always: true` listener, making the null-team defect latent until such a definition is introduced.
+The current development catalogue contains no `always: true` listener, making the null-team defect latent until such a definition is introduced.
 
 ## Identity, Definition, And Math Risks
 
@@ -73,8 +71,10 @@ The current development catalogue contains three `kill` clues in `animal_cage.js
 
 ## Test Coverage Present
 
-Tests under `src/test/java/com/teammoeg/frostedresearch` currently cover:
+Relevant unit tests currently cover:
 
+- online/offline member collection for the no-FTB `SinglePlayerTeam` fallback;
+- the kill-clue decision for matching, mismatched, and already-completed inputs;
 - experiment-point and required-clue completion behavior;
 - archive construction, per-category state, and navigation back order;
 - clue sorting, synthetic point presentation, tab classification, and read-only destinations;
@@ -91,7 +91,7 @@ There are no focused automated tests for:
 - Chorda team NBT round trips and definition-registry mismatch recovery;
 - packet encode/decode/order mismatch, malformed IDs/indices, or no-FTB incremental delivery;
 - reset/re-completion effect idempotence;
-- kill and always-listener clues;
+- full server-event/listener lifecycle for kill clues and any `always` listener;
 - drawing-desk C2S authorization, real CUI input/rendering, or full-sync archive refresh;
 - FTB sidebar resource reload behavior;
 - startup matrices with JEI/Create/IE absent;
@@ -99,7 +99,7 @@ There are no focused automated tests for:
 
 ## Recommended Verification Order
 
-1. Add regression tests for `SinglePlayerTeam#getOnlineMembers` and kill-clue completion.
+1. Add integrated server tests for no-FTB packet delivery and the complete kill-listener event lifecycle.
 2. Reproduce and constrain drawing-desk packets with two players and two team-owned desks.
 3. Define reset semantics, then test effect/variant idempotence before changing the implementation.
 4. Add catalogue validation for IDs, nonces, parents, cycles, numeric ranges, and minigame levels.

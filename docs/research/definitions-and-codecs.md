@@ -105,13 +105,13 @@ The system is therefore a directed graph by convention, not a schema-enforced DA
 | `item` | `item` ingredient/count; optional `consume=false` | drawing-desk submission against the current active research; may consume the matched stack |
 | `game` | required integer `level` | drawing-desk card game completion at a sufficient level |
 | `advancement` | `advancement`; optional `criterion=""`; listener `always` | advancement/criterion listener |
-| `kill` | `entity`; listener `always` | intended entity-kill listener |
+| `kill` | `entity`; listener `always` | completes when the team listener receives a kill whose entity type matches `entity` |
 
 `MinigameClue#setLevel` clamps to `0..3`, but codec construction assigns the decoded value directly. JSON levels outside that interval therefore bypass the setter clamp.
 
 `ListenerClue` has its own base codec in which `required`, `value`, and `always` are required JSON fields. This differs from the ordinary clue base where `required` defaults to false. In current code, `always: true` initialization passes a null team to listeners whose implementations dereference the team; see [known-risks.md](known-risks.md).
 
-The current kill hook also contains a confirmed inverted completion check, so built-in kill clues do not complete from their normal kill event. Treat `kill` definitions as nonfunctional until that defect is fixed.
+`ResearchHooks#kill` ignores already-completed clues, evaluates the killed entity through `KillClue#isCompleted`, and marks/removes the matching team listener after completion. The current development catalogue's three `animal_cage.json` kill clues therefore use the normal server kill-event path.
 
 ## Effect Base Schema
 
@@ -196,7 +196,7 @@ Before deploying a definition change:
 4. Resolve every parent ID and verify the whole catalogue is acyclic.
 5. Keep contribution values intentional; normally use `0..1` and ensure their sum reflects the desired point shortcut.
 6. Avoid `always: true` listener clues until their null-team initialization path is fixed and tested.
-7. Do not rely on kill clues until `ResearchHooks#kill` is corrected.
+7. Test kill clues with both matching and non-matching entity types when changing listener routing.
 8. Treat command effects as privileged server configuration.
 9. Update companion-pack definitions/translations together, then test an existing world as well as a new world.
 10. Test definition login sync and an already-open archive after `/reload`.
