@@ -1,7 +1,7 @@
 # Research State, Persistence, And Synchronization
 
 - Status: `Current`
-- Last verified: `2026-08-21`
+- Last verified: `2026-08-22`
 - Scope: Team and per-research structures, formulas, transitions, insight, saved files, definition registry, packet model, and reload behavior
 - Code anchors: [`TeamResearchData`](../../src/main/java/com/teammoeg/frostedresearch/data/TeamResearchData.java), [`ResearchData`](../../src/main/java/com/teammoeg/frostedresearch/data/ResearchData.java), [`ClueData`](../../src/main/java/com/teammoeg/frostedresearch/data/ClueData.java), [`FRNetwork`](../../src/main/java/com/teammoeg/frostedresearch/FRNetwork.java), [`ResearchCommonEvents`](../../src/main/java/com/teammoeg/frostedresearch/handler/ResearchCommonEvents.java)
 
@@ -124,14 +124,18 @@ There can be many activated/paused projects but only one `activeResearchId` curr
 
 ## Reset Semantics
 
-Reset is not an undo of completion effects. `TeamResearchData#resetData` calls `ResearchData#reset`, which clears the project's active/finished/committed state and clue/effect maps, but current code does not:
+`TeamResearchData#resetData` is the administrative rollback path. It:
 
-- revoke already populated unlock caches immediately; a later team-data rebuild will derive them again from the now-cleared grant state and may remove them;
-- subtract numeric variants previously added by `EffectStats`;
-- clear the team's `activeResearchId` if it points at the reset project;
-- reset the infinite `level` counter.
+- invokes `Effect#revoke` for every effect whose current grant flag is recorded and for every completed infinite iteration represented by `level`; additive `EffectStats` reversal is multiplied by that application count;
+- clears active/finished/committed state and clue/effect maps;
+- clears `activeResearchId` when it selects the reset project and ends its non-always listeners;
+- resets the infinite `level` counter to `0`;
+- replays every other completed-and-granted research into the derived unlock lists, restoring overlapping unlocks after the target effect removes its entries without clearing unrelated retained rewards;
+- sends effect revocations, an exact variants snapshot when needed, and the reset project state to online team members.
 
-Completing the reset project again can therefore add a stats effect again. Unlock behavior can also differ before and after the next team-data reconstruction. `ResearchData#setFinished(false)` similarly clears clue completion but does not fully rewind committed points or effects. Administrative commands need to account for these semantics.
+`EffectStats` and research-derived recipe/block/multiblock/category unlocks are reversible. Set-like effects need only one removal even after repeated infinite iterations; additive effects override `Effect#revoke(TeamResearchData, int)` to reverse every recorded application. Item stacks, experience already awarded, and command side effects cannot be recovered reliably and their `revoke` implementations are intentionally no-ops. Reset also does not infer refunds for activation ingredients or `usedInsightLevel`; those costs are aggregate team state rather than per-iteration ledgers. Clearing an effect flag permits the effect to be granted again if the project is recompleted.
+
+Infinite-research iteration rollover deliberately uses `TeamResearchData#resetForRepeat`, not the administrative path. It clears the just-finished iteration's progress/grant flags while retaining its awarded effects and current repeat level so `grantEffects` can increment that level. `ResearchData#setFinished(false)` remains a lower-level partial mutation and is not equivalent to either reset workflow.
 
 ## Insight Model
 

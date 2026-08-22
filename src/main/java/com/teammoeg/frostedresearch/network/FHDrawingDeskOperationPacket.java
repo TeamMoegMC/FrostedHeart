@@ -19,18 +19,20 @@
 
 package com.teammoeg.frostedresearch.network;
 
-import java.util.Objects;
 import java.util.function.Supplier;
 
+import com.teammoeg.chorda.dataholders.team.CTeamDataManager;
+import com.teammoeg.chorda.dataholders.team.TeamDataHolder;
 import com.teammoeg.chorda.network.CMessage;
-import com.teammoeg.chorda.util.CUtils;
 import com.teammoeg.frostedresearch.blocks.DrawingDeskTileEntity;
+import com.teammoeg.frostedresearch.gui.drawdesk.DrawDeskContainer;
 import com.teammoeg.frostedresearch.gui.drawdesk.game.CardPos;
+import com.teammoeg.frostedresearch.mixinutil.IOwnerTile;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.network.NetworkEvent;
 
 // send when data update
@@ -94,34 +96,58 @@ public class FHDrawingDeskOperationPacket implements CMessage {
 
     public void handle(Supplier<NetworkEvent.Context> context) {
         context.get().enqueueWork(() -> {
-            ServerLevel world = Objects.requireNonNull(context.get().getSender()).serverLevel();
-            BlockEntity tile = CUtils.getExistingTileEntity(world, pos);
-            if (tile instanceof DrawingDeskTileEntity) {
-                // ResearchGame rg = ((DrawingDeskTileEntity) tile).getGame();
-                boolean flag = true;
-                switch (op) {
-                    case 0:
-                        ((DrawingDeskTileEntity) tile).initGame(context.get().getSender());
-                        break;
-                    case 1:
-                        flag = ((DrawingDeskTileEntity) tile).tryCombine(context.get().getSender(), pos1, null);
-                        break;
-                    case 2:
-                        flag = ((DrawingDeskTileEntity) tile).tryCombine(context.get().getSender(), pos1, pos2);
-                        break;
-                    case 3:
-                        ((DrawingDeskTileEntity) tile).submitItem(context.get().getSender());
-                        break;
-                }
-                if (flag) {
-                    ((DrawingDeskTileEntity) tile).updateGame(context.get().getSender());
-                    tile.setChanged();
-                    ((DrawingDeskTileEntity) tile).syncData();
-                }
-            }
+            ServerPlayer sender = context.get().getSender();
+            if (sender == null || !isOperationShapeValid(op, pos1, pos2)) return;
+            DrawingDeskTileEntity tile = getAuthorizedTile(sender);
+            if (tile == null) return;
 
-            //ClientUtils.refreshResearchGui();
+            boolean changed = true;
+            switch (op) {
+                case 0 -> tile.initGame(sender);
+                case 1 -> changed = tile.tryCombine(sender, pos1, null);
+                case 2 -> changed = tile.tryCombine(sender, pos1, pos2);
+                case 3 -> tile.submitItem(sender);
+                default -> changed = false;
+            }
+            if (changed) {
+                tile.updateGame(sender);
+                tile.setChanged();
+                tile.syncData();
+            }
         });
         context.get().setPacketHandled(true);
+    }
+
+    private DrawingDeskTileEntity getAuthorizedTile(ServerPlayer sender) {
+        if (!(sender.containerMenu instanceof DrawDeskContainer menu)) return null;
+        DrawingDeskTileEntity tile = menu.getBlock();
+        TeamDataHolder team = CTeamDataManager.get(sender);
+        boolean sameMenuTile = tile != null && tile.getBlockPos().equals(pos);
+        boolean loadedTile = sameMenuTile && !tile.isRemoved()
+                && sender.serverLevel().getBlockEntity(pos) == tile;
+        boolean sameLevel = sameMenuTile && tile.getLevel() == sender.serverLevel();
+        boolean withinRange = sameMenuTile
+                && sender.distanceToSqr(Vec3.atCenterOf(pos)) <= 64.0D;
+        boolean ownerMatches = team != null && sameMenuTile
+                && team.getId().equals(IOwnerTile.getOwner(tile));
+        return passesAuthorizationChecks(sameMenuTile, loadedTile, sameLevel, withinRange, ownerMatches)
+                ? tile
+                : null;
+    }
+
+    static boolean passesAuthorizationChecks(boolean sameMenuTile, boolean loadedTile,
+                                               boolean sameLevel, boolean withinRange,
+                                               boolean ownerMatches) {
+        return sameMenuTile && loadedTile && sameLevel && withinRange && ownerMatches;
+    }
+
+    static boolean isOperationShapeValid(byte operation, CardPos first, CardPos second) {
+        return switch (operation) {
+            case 0, 3 -> first == null && second == null;
+            case 1 -> first != null && first.isWithinBoard() && second == null;
+            case 2 -> first != null && first.isWithinBoard()
+                    && second != null && second.isWithinBoard();
+            default -> false;
+        };
     }
 }

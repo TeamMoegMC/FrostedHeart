@@ -1,7 +1,7 @@
 # Research Definitions And Codecs
 
 - Status: `Current`
-- Last verified: `2026-08-21`
+- Last verified: `2026-08-22`
 - Scope: Definition sources, JSON schema, graph rules, clues, effects, localization, stable identifiers, reload, and editor behavior
 - Code anchors: [`FHResearch#loadAll/#init`](../../src/main/java/com/teammoeg/frostedresearch/FHResearch.java), [`FHRegistry`](../../src/main/java/com/teammoeg/frostedresearch/FHRegistry.java), [`Research.CODEC`](../../src/main/java/com/teammoeg/frostedresearch/research/Research.java), [`ResearchCategory.CODEC`](../../src/main/java/com/teammoeg/frostedresearch/research/ResearchCategory.java), [`Clue.CODEC`](../../src/main/java/com/teammoeg/frostedresearch/research/clues/Clue.java), [`Effect.CODEC`](../../src/main/java/com/teammoeg/frostedresearch/research/effects/Effect.java)
 
@@ -109,7 +109,7 @@ The system is therefore a directed graph by convention, not a schema-enforced DA
 
 `MinigameClue#setLevel` clamps to `0..3`, but codec construction assigns the decoded value directly. JSON levels outside that interval therefore bypass the setter clamp.
 
-`ListenerClue` has its own base codec in which `required`, `value`, and `always` are required JSON fields. This differs from the ordinary clue base where `required` defaults to false. In current code, `always: true` initialization passes a null team to listeners whose implementations dereference the team; see [known-risks.md](known-risks.md).
+`ListenerClue` has its own base codec in which `required`, `value`, and `always` are required JSON fields. This differs from the ordinary clue base where `required` defaults to false. `always: false` listeners are registered only while their research is current for a team. `always: true` listeners are registered during definition indexing with a null team ID, which `ResearchHooks.ListenerList` interprets as global scope: the listener is considered for every team event and its own clue-completion state prevents duplicate completion.
 
 `ResearchHooks#kill` ignores already-completed clues, evaluates the killed entity through `KillClue#isCompleted`, and marks/removes the matching team listener after completion. The current development catalogue's three `animal_cage.json` kill clues therefore use the normal server kill-event path.
 
@@ -195,7 +195,7 @@ Before deploying a definition change:
 3. Use unique clue/effect IDs inside each research.
 4. Resolve every parent ID and verify the whole catalogue is acyclic.
 5. Keep contribution values intentional; normally use `0..1` and ensure their sum reflects the desired point shortcut.
-6. Avoid `always: true` listener clues until their null-team initialization path is fixed and tested.
+6. Treat `always: true` as a global listener and test its real advancement/kill event path before deployment; use `always: false` when the clue should run only while its project is selected.
 7. Test kill clues with both matching and non-matching entity types when changing listener routing.
 8. Treat command effects as privileged server configuration.
 9. Update companion-pack definitions/translations together, then test an existing world as well as a new world.

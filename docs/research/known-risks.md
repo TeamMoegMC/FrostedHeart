@@ -1,7 +1,7 @@
 # Research System Known Risks And Validation Gaps
 
 - Status: `Current`
-- Last verified: `2026-08-21`
+- Last verified: `2026-08-22`
 - Scope: Source-confirmed defects, unsafe compatibility contracts, behavioral limitations, and missing validation; this is not an exhaustive security audit
 - Code anchors: [`FHDrawingDeskOperationPacket#handle`](../../src/main/java/com/teammoeg/frostedresearch/network/FHDrawingDeskOperationPacket.java), [`TeamResearchData#resetData`](../../src/main/java/com/teammoeg/frostedresearch/data/TeamResearchData.java), [`FHResearchDataSyncPacket#handle`](../../src/main/java/com/teammoeg/frostedresearch/network/FHResearchDataSyncPacket.java), [`TickListenerClue#initListener`](../../src/main/java/com/teammoeg/frostedresearch/research/clues/TickListenerClue.java), [`ResearchData#getProgress`](../../src/main/java/com/teammoeg/frostedresearch/data/ResearchData.java), [`ResearchDataAPI#putVariantLong`](../../src/main/java/com/teammoeg/frostedresearch/api/ResearchDataAPI.java)
 
@@ -12,15 +12,15 @@
 - **Validation gap** means source suggests a risk, but the actual failure needs a focused runtime/compatibility test.
 - Priority describes likely impact to this system, not a project-wide release decision.
 
-## Highest-Priority Confirmed Defects
+## Recently Resolved High-Priority Defects
 
-| Priority | Kind | Source fact | Consequence |
+| Resolved | Former risk | Current contract | Validation |
 |---|---|---|---|
-| P1 | confirmed authorization gap | `FHDrawingDeskOperationPacket#handle` accepts an arbitrary loaded desk position in the sender's dimension and checks neither open menu, distance, nor desk owner | a crafted packet can operate a desk the sender could not normally open, consume its resources, or submit its examine item using the sender's team state |
-| P1 | confirmed state-reversal gap | `TeamResearchData#resetData` clears project flags/maps but does not immediately revoke unlock caches, subtract `EffectStats`, reset repeat level, or clear a matching current ID | administrative reset is not a true rollback; cache behavior can change after reconstruction, and re-completion can duplicate additive stats |
-| P1 | confirmed initialization defect | `Research#doIndex` can initialize an `always` listener with null team; current listener implementations dereference the team | a definition using `always: true` can fail during definition indexing/load |
+| 2026-08-22 | drawing-desk C2S authorization gap | `FHDrawingDeskOperationPacket#handle` now requires the sender's open `DrawDeskContainer` to reference the same loaded tile in the same level, within 8 blocks, owned by the sender's current team; operation/card-coordinate shapes are also validated | `FHDrawingDeskOperationPacketTest` covers the authorization predicate, operation shapes, and hostile coordinates |
+| 2026-08-22 | incomplete administrative rollback | `TeamResearchData#resetData` now revokes current and repeat-level-recorded reversible effects, clears matching current selection, resets repeat level, restores overlapping unlocks from remaining grants, and synchronizes effect/variant/project state; infinite iteration rollover uses a separate non-revoking path | `TeamResearchDataResetTest` covers accumulated stat reversal, state/level reset, and reward-preserving infinite rollover |
+| 2026-08-22 | `always` listener null-team initialization crash | tick and kill listener registration treats a null team as global scope, matching `ResearchHooks.ListenerList`; null-scope removal is also supported | `AlwaysListenerClueTest` covers global registration, cross-team dispatch, and removal for both listener families |
 
-The current development catalogue contains no `always: true` listener, making the null-team defect latent until such a definition is introduced.
+The current development catalogue still contains no `always: true` listener, so its complete advancement/kill event behavior should also be verified in an integrated server before deploying the first such definition.
 
 ## Identity, Definition, And Math Risks
 
@@ -75,6 +75,9 @@ Relevant unit tests currently cover:
 
 - online/offline member collection for the no-FTB `SinglePlayerTeam` fallback;
 - the kill-clue decision for matching, mismatched, and already-completed inputs;
+- drawing-desk operation authorization predicates, operation shapes, and malformed card coordinates;
+- administrative reset of project state, repeat level, and additive stats, plus reward-preserving infinite rollover;
+- global null-team registration/dispatch/removal for `always` tick and kill listeners;
 - experiment-point and required-clue completion behavior;
 - archive construction, per-category state, and navigation back order;
 - clue sorting, synthetic point presentation, tab classification, and read-only destinations;
@@ -90,20 +93,19 @@ There are no focused automated tests for:
 - stable registry migration across rename/delete/reorder scenarios;
 - Chorda team NBT round trips and definition-registry mismatch recovery;
 - packet encode/decode/order mismatch, malformed IDs/indices, or no-FTB incremental delivery;
-- reset/re-completion effect idempotence;
-- full server-event/listener lifecycle for kill clues and any `always` listener;
-- drawing-desk C2S authorization, real CUI input/rendering, or full-sync archive refresh;
+- shared-unlock overlap and irreversible reward behavior across reset/re-completion on an integrated server;
+- full server-event/listener lifecycle for kill clues and an `always` listener backed by a real advancement/entity event;
+- drawing-desk authorization with real menus/two teams, real CUI input/rendering, or full-sync archive refresh;
 - FTB sidebar resource reload behavior;
 - startup matrices with JEI/Create/IE absent;
 - cross-system variant type and reset behavior.
 
 ## Recommended Verification Order
 
-1. Add integrated server tests for no-FTB packet delivery and the complete kill-listener event lifecycle.
-2. Reproduce and constrain drawing-desk packets with two players and two team-owned desks.
-3. Define reset semantics, then test effect/variant idempotence before changing the implementation.
-4. Add catalogue validation for IDs, nonces, parents, cycles, numeric ranges, and minigame levels.
-5. Test saved-world migrations with rename, deletion, insertion, and clue/effect reorder.
-6. Open the archive, trigger a team-change/full reload, and verify discovery/layout refresh.
-7. Run client/server startup matrices with optional integrations absent one at a time.
-8. Exercise GUI scales and FTB sidebar resource reload in game.
+1. Add integrated server tests for no-FTB packet delivery and the complete kill/always-listener event lifecycle.
+2. Exercise the drawing-desk authorization and reset/re-completion contracts with two players, two teams, overlapping unlock effects, and player-bound rewards.
+3. Add catalogue validation for IDs, nonces, parents, cycles, numeric ranges, and minigame levels.
+4. Test saved-world migrations with rename, deletion, insertion, and clue/effect reorder.
+5. Open the archive, trigger a team-change/full reload, and verify discovery/layout refresh.
+6. Run client/server startup matrices with optional integrations absent one at a time.
+7. Exercise GUI scales and FTB sidebar resource reload in game.

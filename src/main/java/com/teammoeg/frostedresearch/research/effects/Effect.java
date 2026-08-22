@@ -291,6 +291,16 @@ public abstract class Effect {
      */
     public abstract void revoke(TeamResearchData team);
 
+    /**
+     * Revokes this effect after it has been applied one or more times. Most
+     * unlock effects are set-like, so one revocation is sufficient. Additive
+     * effects must override this method to account for every application.
+     */
+    public void revoke(TeamResearchData team, int applications) {
+        if (applications > 0)
+            revoke(team);
+    }
+
     public static record BaseData(String name, List<String> tooltip, CIcon icon, String nonce, boolean hidden) {
 
         public BaseData(String name, List<String> tooltip, Optional<CIcon> icon, String nonce, boolean hidden) {

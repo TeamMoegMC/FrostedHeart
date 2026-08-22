@@ -295,6 +295,8 @@ public class ResearchHooks {
 	public static void tick(ServerPlayer s) {
 		TeamDataClosure<TeamResearchData> data = ResearchDataAPI.getData(s);
 		tickClues.call(data.team().getId(), e -> {
+			if (data.get().isClueCompleted(e.research(), e.clue()))
+				return true;
 			if (e.clue().isCompleted(data.get(), s)) {
 				data.get().setClueCompleted(data.team(), e.research(), e.clue(), true);
 				return true;
@@ -413,7 +415,7 @@ public class ResearchHooks {
 						return cl.add(t);
 				}
 			} else
-				this.removeIf(cl -> cl.getListener() == c);
+				this.removeIf(cl -> cl.getListener().equals(c));
 			return super.add(new ListenerInfo<>(c, t));
 		}
 

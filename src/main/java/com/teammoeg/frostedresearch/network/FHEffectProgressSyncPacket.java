@@ -64,6 +64,8 @@ public record FHEffectProgressSyncPacket(boolean data, int id, int index) implem
                 e.revoke(trd.get());
             
             trd.get().getData(r).setEffectGranted(e, data);
+            if (!data)
+                trd.get().restoreGrantedUnlocks(null);
             ResearchUtils.notifyResearchProgressChanged(r.getId());
         });
         context.get().setPacketHandled(true);
