@@ -19,6 +19,7 @@
 
 package com.teammoeg.frostedresearch.data;
 
+import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.HashMap;
 import java.util.IdentityHashMap;
@@ -375,7 +376,7 @@ public class TeamResearchData implements SpecialData {
 		}
 		if (rs.isInfinite() && granted) {
 			int lvl = rd.getLevel();
-			this.resetData(holder, rs);
+			this.resetForRepeat(holder, rs);
 			rd.setLevel(lvl + 1);
 		}
 
@@ -567,27 +568,61 @@ public class TeamResearchData implements SpecialData {
 	}
 
 	/**
-	 * Reset data.
+	 * Administratively resets a research and revokes the reversible state derived
+	 * from its granted effects. Player-bound rewards (items, experience and
+	 * commands) cannot be clawed back by the research system.
 	 *
-	 * @param r the r<br>
+	 * @param team team owning the data, or {@code null} on the client
+	 * @param r research to reset
 	 */
 	public void resetData(TeamDataHolder team, Research r) {
+		if (r == null)
+			return;
 		ResearchData rd = getData(r);
-		rd.reset();
-
-		/*
-		 * int i=0; for (Clue c : r.getClues()) { if(team!=null) { c.end(team, r);
-		 * sendClueProgressPacket(team,r, i++, false); } } i=0; for (Effect e :
-		 * r.getEffects()) { //e.revoke(this); if (team!=null) {
-		 * sendEffectProgressPacket(team,r, i++, false); } }
-		 */
-		if (team != null) {
-			for (Clue c : r.getClues()) {
-				c.end(team, r);
+		List<Integer> grantedEffects = new ArrayList<>();
+		int completedIterations = r.isInfinite() ? Math.max(0, rd.getLevel()) : 0;
+		for (int i = 0; i < r.getEffects().size(); i++) {
+			Effect effect = r.getEffects().get(i);
+			int applications = completedIterations + (rd.isEffectGranted(effect) ? 1 : 0);
+			if (applications > 0) {
+				grantedEffects.add(i);
+				effect.revoke(this, applications);
 			}
-			this.sendResearchProgressPacket(team, r);
 		}
 
+		int researchId = FHResearch.researches.getIntId(r);
+		boolean wasCurrent = researchId >= 0 && activeResearchId == researchId;
+		if (wasCurrent)
+			clearCurrentResearch(team, team != null);
+		else if (team != null)
+			for (Clue c : r.getClues())
+				c.end(team, r);
+
+		rd.reset();
+		rd.setLevel(0);
+		restoreGrantedUnlocks(team);
+
+		if (team != null) {
+			for (int effectIndex : grantedEffects)
+				this.sendEffectProgressPacket(team, r, effectIndex, false);
+			if (!grantedEffects.isEmpty())
+				this.sendVariantPacket(team);
+			this.sendResearchProgressPacket(team, r);
+		}
+	}
+
+	/**
+	 * Clears one completed iteration of an infinite research without revoking the
+	 * rewards that iteration already granted.
+	 */
+	void resetForRepeat(TeamDataHolder team, Research r) {
+		ResearchData rd = getData(r);
+		rd.reset();
+		if (team != null) {
+			for (Clue c : r.getClues())
+				c.end(team, r);
+			this.sendResearchProgressPacket(team, r);
+		}
 	}
 
 	public void sendUpdate(TeamDataHolder team) {
@@ -735,14 +770,7 @@ public class TeamResearchData implements SpecialData {
 	}
 
 	public void initResearch(TeamDataHolder team) {
-		for (Research r : FHResearch.getAllResearch()) {
-			ResearchData rd = getData(r);
-			if (rd.isCompleted()) {
-				for (Effect e : r.getEffects())
-					if(rd.isEffectGranted(e))
-						e.grant(team, this, null, true);
-			}
-		}
+		restoreGrantedUnlocks(team);
 
 		if (activeResearchId != -1) {
 			Research r = FHResearch.researches.get(activeResearchId);
@@ -757,6 +785,24 @@ public class TeamResearchData implements SpecialData {
 
 		}
 		MinecraftForge.EVENT_BUS.post(new ResearchDataLoadedEvent(team,this));
+	}
+
+	/**
+	 * Re-applies authoritative granted effects to the derived unlock lists. This
+	 * restores entries shared by multiple researches after one effect is revoked
+	 * without clearing unrelated or retained infinite-research rewards. Effects
+	 * loaded with {@code isload=true} do not replay player-bound rewards or
+	 * numerical stat changes.
+	 */
+	public void restoreGrantedUnlocks(TeamDataHolder team) {
+		for (Research r : FHResearch.getAllResearch()) {
+			ResearchData rd = getData(r);
+			if (rd.isCompleted()) {
+				for (Effect e : r.getEffects())
+					if(rd.isEffectGranted(e))
+						e.grant(team, this, null, true);
+			}
+		}
 	}
 
 	public void putVariantDouble(String name, double val) {

@@ -45,9 +45,13 @@ public class CardPos {
 	public static CardPos valueOf(int x, int y) {
 		int i = x + 1;
 		int j = y + 1;
-		if (i < cache.length && i >= 0 && j < cache[x].length && j >= 0)
+		if (i < cache.length && i >= 0 && j < cache[i].length && j >= 0)
 			return cache[i][j];
 		return new CardPos(x, y);
+	}
+
+	public boolean isWithinBoard() {
+		return x >= 0 && x < 9 && y >= 0 && y < 9;
 	}
 
 	public static CardPos valueOf(FriendlyByteBuf pb) {

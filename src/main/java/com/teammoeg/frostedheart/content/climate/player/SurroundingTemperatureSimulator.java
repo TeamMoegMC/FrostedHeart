@@ -516,7 +516,6 @@ public class SurroundingTemperatureSimulator {
         if (vz > 0) {
             double t = (bz - sz) / vz;
             if (t > tMax) {
-                tMax = t;
                 result = Direction.NORTH;
             }
         } else if (vz < 0) {

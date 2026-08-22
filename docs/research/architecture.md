@@ -1,7 +1,7 @@
 # Research System Architecture
 
 - Status: `Current`
-- Last verified: `2026-08-21`
+- Last verified: `2026-08-22`
 - Scope: Runtime ownership, subsystem boundaries, lifecycle, and the shortest path through the implementation
 - Code anchors: [`FRMain`](../../src/main/java/com/teammoeg/frostedresearch/FRMain.java), [`FRContents`](../../src/main/java/com/teammoeg/frostedresearch/FRContents.java), [`FRSpecialDataTypes`](../../src/main/java/com/teammoeg/frostedresearch/FRSpecialDataTypes.java), [`FHResearch`](../../src/main/java/com/teammoeg/frostedresearch/FHResearch.java), [`FHRegistry`](../../src/main/java/com/teammoeg/frostedresearch/FHRegistry.java), [`ResearchCommonEvents`](../../src/main/java/com/teammoeg/frostedresearch/handler/ResearchCommonEvents.java), [`ResearchHooks`](../../src/main/java/com/teammoeg/frostedresearch/ResearchHooks.java), [`ResearchDataAPI`](../../src/main/java/com/teammoeg/frostedresearch/api/ResearchDataAPI.java)
 
@@ -118,7 +118,7 @@ The common player flow is:
 - The server owns definitions after load, team progress, costs, clue completion, experiment points, effects, and commands.
 - The client owns archive presentation state only. `ResearchWorkspaceState` is scoped to one screen instance and is not persisted across reopening.
 - Definitions and console-command effects are trusted administrator/modpack configuration, not untrusted player input.
-- Player C2S packets are untrusted input. Most research-control paths re-check game rules; the drawing-desk operation path currently lacks equivalent session/distance/ownership checks. See [known-risks.md](known-risks.md).
+- Player C2S packets are untrusted input. Research-control paths re-check game rules; drawing-desk operations additionally bind the packet to the sender's open menu, loaded tile, level, distance, team owner, operation shape, and `9 x 9` board bounds.
 - Research data belongs to a Chorda team, not a player capability. With FTB Teams present, membership selects the team holder; otherwise Chorda supplies a single-player fallback team.
 
 ## Extension Boundaries

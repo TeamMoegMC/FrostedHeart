@@ -1,7 +1,7 @@
 # Research Gameplay And Integrations
 
 - Status: `Current`
-- Last verified: `2026-08-21`
+- Last verified: `2026-08-22`
 - Scope: Player entry points, drawing-desk operations, experiment/insight sources, unlock enforcement, variants, APIs, events, commands, and compatibility modules
 - Code anchors: [`DrawingDeskBlock`](../../src/main/java/com/teammoeg/frostedresearch/blocks/DrawingDeskBlock.java), [`DrawingDeskTileEntity`](../../src/main/java/com/teammoeg/frostedresearch/blocks/DrawingDeskTileEntity.java), [`DrawDeskContainer`](../../src/main/java/com/teammoeg/frostedresearch/gui/drawdesk/DrawDeskContainer.java), [`ResearchHooks`](../../src/main/java/com/teammoeg/frostedresearch/ResearchHooks.java), [`MechCalcTileEntity`](../../src/main/java/com/teammoeg/frostedresearch/blocks/MechCalcTileEntity.java), [`ResearchDataAPI`](../../src/main/java/com/teammoeg/frostedresearch/api/ResearchDataAPI.java), [`ResearchCommand`](../../src/main/java/com/teammoeg/frostedresearch/ResearchCommand.java), [`JEICompat`](../../src/main/java/com/teammoeg/frostedresearch/compat/JEICompat.java)
 
@@ -54,7 +54,7 @@ The client sends `FHDrawingDeskOperationPacket` operations against the desk's `B
 
 `ClientResearchGame` performs interaction/display checks but does not authoritatively advance the game. `DrawingDeskTileEntity` owns game state, consumes paper/pen durability, checks matches, synchronizes its NBT, and completes a `MinigameClue` on success.
 
-The packet handler currently checks only that the supplied position resolves to a `DrawingDeskTileEntity` in the sender's dimension. It does not re-check that the sender has that desk menu open, is nearby, or owns the desk. The block-open checks above therefore do not protect the packet endpoint; see [known-risks.md](known-risks.md).
+The packet endpoint treats its position and card coordinates as untrusted. Before executing an operation, `FHDrawingDeskOperationPacket#handle` requires the sender's current menu to be a `DrawDeskContainer` bound to that exact loaded tile, in the sender's server level, no farther than 8 blocks from the tile center, with an `IOwnerTile` owner equal to the sender's current Chorda team UUID. Operations `0` and `3` accept no card positions, operation `1` accepts exactly one, and operation `2` exactly two; every supplied position must be inside the `9 x 9` board.
 
 ## Theory Card Game
 
@@ -213,7 +213,7 @@ info <research-id>
 get <research-id> <field>
 ```
 
-`complete` bypasses normal materials, insight, parents, points, and clues; `complete all` skips definitions marked locked/incompletable. `reset` has the non-revocation behavior described in [state-persistence-and-sync.md](state-persistence-and-sync.md). `transfer` delegates Chorda team data transfer and operates on team UUIDs, not research IDs.
+`complete` bypasses normal materials, insight, parents, points, and clues; `complete all` skips definitions marked locked/incompletable. `reset` rolls back recorded reversible effects, selection, progress, and repeat level, but cannot recover already-issued item/experience/command rewards or infer activation-cost refunds; see [state-persistence-and-sync.md](state-persistence-and-sync.md). `transfer` delegates Chorda team data transfer and operates on team UUIDs, not research IDs.
 
 The valid names are `/research edit true` or `/frostedheart research edit true`; the shorter historical `/frostedheart edit true` is not registered by current code.
 
