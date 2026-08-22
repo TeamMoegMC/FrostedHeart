@@ -11,6 +11,8 @@ import com.teammoeg.frostedheart.content.town.resource.ITownResourceKey;
 import com.teammoeg.frostedheart.content.town.resource.TeamTownResourceHolder;
 import com.teammoeg.frostedheart.content.town.resource.VirtualResourceType;
 import com.teammoeg.frostedheart.content.town.transport.*;
+import com.teammoeg.frostedheart.content.town.block.OccupiedVolume;
+import com.teammoeg.frostedheart.content.town.buildings.warehouse.WarehouseBuilding;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import net.minecraft.SharedConstants;
 import net.minecraft.core.BlockPos;
@@ -32,6 +34,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class TeamTownTransportReservationTest {
     private static final double EPSILON = 1.0e-9;
+    private static final BlockPos WAREHOUSE_POS = new BlockPos(8, 64, 0);
 
     @BeforeAll
     static void bootstrapMinecraftRegistries() {
@@ -49,14 +52,14 @@ class TeamTownTransportReservationTest {
         TransportEndpointId endpoint = endpoint(0);
 
         TransportReservationResult created = town.registerOrUpdateTransportEndpoint(
-                request(endpoint, 20, 8.0));
+                request(endpoint, 20));
         assertEquals(TransportReservationDecision.ACCEPTED, created.decision());
         TransportReservation beforeFailure = created.reservationAfter().orElseThrow();
         assertEquals(28.0, beforeFailure.reservedTransportCapacity(), EPSILON);
 
         data.getDataSyncCache().clearChanged();
         TransportReservationResult rejected = town.registerOrUpdateTransportEndpoint(
-                request(endpoint, 100, 8.0));
+                request(endpoint, 100));
         TransportReservation afterFailure = rejected.reservationAfter().orElseThrow();
         assertEquals(TransportReservationDecision.INSUFFICIENT_CAPACITY, rejected.decision());
         assertEquals(beforeFailure, afterFailure);
@@ -67,7 +70,7 @@ class TeamTownTransportReservationTest {
 
         data.getDataSyncCache().clearChanged();
         TransportReservationResult confirmed = town.registerOrUpdateTransportEndpoint(
-                request(endpoint, 20, 8.0));
+                request(endpoint, 20));
         assertEquals(TransportReservationDecision.ACCEPTED, confirmed.decision());
         assertEquals(beforeFailure, confirmed.reservationAfter().orElseThrow());
         assertEquals(TransportAdmissionStatus.ACTIVE,
@@ -82,7 +85,7 @@ class TeamTownTransportReservationTest {
         TransportEndpointId endpoint = endpoint(0);
 
         TransportReservationResult result = town.registerOrUpdateTransportEndpoint(
-                request(endpoint, 20, 8.0));
+                request(endpoint, 20));
 
         assertEquals(TransportReservationDecision.INSUFFICIENT_CAPACITY, result.decision());
         TransportReservation rejected = town.getTransportReservation(endpoint).orElseThrow();
@@ -97,17 +100,21 @@ class TeamTownTransportReservationTest {
         TeamTownData data = townData(30.0);
         TeamTown town = data.createTeamTown();
         TransportEndpointId endpoint = endpoint(0);
-        GlobalPos core = request(endpoint, 20, 8.0).boundWarehouseCorePos();
-        town.registerOrUpdateTransportEndpoint(request(endpoint, 20, 8.0));
+        town.registerOrUpdateTransportEndpoint(request(endpoint, 20));
 
-        TransportReservationResult refreshed = town.refreshTransportEndpointMetric(endpoint, core, 64.0);
+        BlockPos farWarehouse = new BlockPos(64, 64, 0);
+        data.buildings.put(farWarehouse, warehouse(farWarehouse, 3_000.0));
+        data.markWarehouseTopologyDirty();
+        town.prepareWarehouseTopology(Level.OVERWORLD);
+
+        TransportReservationResult refreshed = town.refreshTransportEndpointMetric(endpoint);
         assertEquals(TransportReservationDecision.ACCEPTED, refreshed.decision());
-        assertEquals(84.0, refreshed.reservationAfter().orElseThrow().reservedTransportCapacity(), EPSILON);
-        assertEquals(54.0, refreshed.townSummaryAfter().shortfall(), EPSILON);
-        assertEquals(30.0 / 84.0, refreshed.townSummaryAfter().effectiveRateScale(), EPSILON);
+        assertEquals(70.0, refreshed.reservationAfter().orElseThrow().reservedTransportCapacity(), EPSILON);
+        assertEquals(40.0, refreshed.townSummaryAfter().shortfall(), EPSILON);
+        assertEquals(30.0 / 70.0, refreshed.townSummaryAfter().effectiveRateScale(), EPSILON);
 
         TransportReservationResult disabled = town.registerOrUpdateTransportEndpoint(
-                request(endpoint, 0, 64.0));
+                request(endpoint, 0));
         assertEquals(TransportAdmissionStatus.DISABLED,
                 disabled.reservationAfter().orElseThrow().admissionStatus());
         assertEquals(0.0, disabled.townSummaryAfter().reservedCapacity());
@@ -122,57 +129,79 @@ class TeamTownTransportReservationTest {
     }
 
     @Test
-    void identityMismatchIsRejectedAndEquivalentRequestDoesNotMarkDirty() {
+    void requestDerivesMetricAndEquivalentRequestDoesNotMarkDirty() {
         TeamTownData data = townData(100.0);
         TeamTown town = data.createTeamTown();
         TransportEndpointId endpoint = endpoint(0);
-        TransportEndpointRequest request = request(endpoint, 20, 8.0);
+        TransportEndpointRequest request = request(endpoint, 20);
         town.registerOrUpdateTransportEndpoint(request);
         data.getDataSyncCache().clearChanged();
 
         town.registerOrUpdateTransportEndpoint(request);
         assertFalse(data.getDataSyncCache().hasTransportStateChange());
 
-        TransportEndpointRequest rebound = new TransportEndpointRequest(
-                endpoint, TransportEndpointKind.WAREHOUSE_INTERFACE,
-                GlobalPos.of(Level.OVERWORLD, new BlockPos(99, 64, 99)), 20, 8.0);
-        assertEquals(TransportReservationDecision.INVALID_BINDING,
-                town.registerOrUpdateTransportEndpoint(rebound).decision());
-        assertEquals(request.boundWarehouseCorePos(),
-                town.getTransportReservation(endpoint).orElseThrow().boundWarehouseCorePos());
+        assertEquals(8.0, town.getTransportReservation(endpoint).orElseThrow().scaleMetric(), EPSILON);
     }
 
     @Test
-    void multipleWarehousesShareCapacityAndRecoverWithoutRewritingReservations() {
+    void endpointRemovalDoesNotAffectOtherTownOwnedInterfaces() {
         TeamTownData data = townData(100.0);
         TeamTown town = data.createTeamTown();
-        GlobalPos firstCore = GlobalPos.of(Level.OVERWORLD, new BlockPos(10, 64, 10));
-        GlobalPos secondCore = GlobalPos.of(Level.OVERWORLD, new BlockPos(30, 64, 30));
         TransportEndpointId first = endpoint(0);
         TransportEndpointId second = endpoint(1);
         TransportEndpointId third = endpoint(2);
 
-        town.registerOrUpdateTransportEndpoint(request(first, firstCore, 20, 8.0));
-        town.registerOrUpdateTransportEndpoint(request(second, firstCore, 20, 8.0));
-        town.registerOrUpdateTransportEndpoint(request(third, secondCore, 20, 2.0));
-        assertEquals(78.0, town.getTransportSummary().reservedCapacity(), EPSILON);
+        town.registerOrUpdateTransportEndpoint(request(first, 20));
+        town.registerOrUpdateTransportEndpoint(request(second, 20));
+        town.registerOrUpdateTransportEndpoint(request(third, 20));
+        assertEquals(81.0, town.getTransportSummary().reservedCapacity(), EPSILON);
 
         data.createTeamTown().getResourceHolder().applySyncEntry(
-                VirtualResourceType.TRANSPORT_CAPACITY.generateAttribute(0), 39.0);
+                VirtualResourceType.TRANSPORT_CAPACITY.generateAttribute(0), 40.5);
         assertEquals(0.5, town.getTransportSummary().effectiveRateScale(), EPSILON);
         assertEquals(20, town.getTransportReservation(first).orElseThrow().rateItemsPerSecond());
 
         data.createTeamTown().getResourceHolder().applySyncEntry(
                 VirtualResourceType.TRANSPORT_CAPACITY.generateAttribute(0), 100.0);
         assertEquals(1.0, town.getTransportSummary().effectiveRateScale(), EPSILON);
-        assertEquals(TransportReservationDecision.ACCEPTED,
-                town.refreshTransportEndpointMetric(first, firstCore, 1.0).decision());
-        assertEquals(71.0, town.getTransportSummary().reservedCapacity(), EPSILON);
+        town.unregisterTransportEndpoint(first);
+        assertEquals(List.of(second, third), new ArrayList<>(town.getTransportReservations().keySet()));
+        assertEquals(53.0, town.getTransportSummary().reservedCapacity(), EPSILON);
+    }
 
-        assertEquals(2, town.unregisterTransportEndpointsBoundTo(firstCore));
-        assertEquals(Map.of(third, town.getTransportReservation(third).orElseThrow()),
-                town.getTransportReservations());
-        assertEquals(22.0, town.getTransportSummary().reservedCapacity(), EPSILON);
+    @Test
+    void unavailableTopologyPreservesExistingRateButNewEndpointStartsAtZero() {
+        TeamTownData data = townData(100.0);
+        TeamTown town = data.createTeamTown();
+        TransportEndpointId existing = endpoint(0);
+        town.registerOrUpdateTransportEndpoint(request(existing, 20));
+
+        data.buildings.clear();
+        data.markWarehouseTopologyDirty();
+        town.prepareWarehouseTopology(Level.OVERWORLD);
+        TransportReservationResult unavailable = town.refreshTransportEndpointMetric(existing);
+        assertEquals(TransportAdmissionStatus.UNAVAILABLE,
+                unavailable.reservationAfter().orElseThrow().admissionStatus());
+        assertEquals(20, unavailable.reservationAfter().orElseThrow().rateItemsPerSecond());
+        assertEquals(0.0, unavailable.townSummaryAfter().reservedCapacity(), EPSILON);
+        assertEquals(TransportReservationDecision.INVALID_BINDING,
+                town.registerOrUpdateTransportEndpoint(request(existing, 30)).decision());
+
+        TransportEndpointId addedWithoutWarehouse = endpoint(1);
+        TransportReservationResult created = town.registerOrUpdateTransportEndpoint(
+                request(addedWithoutWarehouse, 20));
+        assertEquals(TransportReservationDecision.ACCEPTED, created.decision());
+        assertEquals(TransportAdmissionStatus.UNAVAILABLE,
+                created.reservationAfter().orElseThrow().admissionStatus());
+        assertEquals(0, created.reservationAfter().orElseThrow().rateItemsPerSecond());
+
+        data.buildings.put(WAREHOUSE_POS, warehouse(WAREHOUSE_POS, 1_000.0));
+        data.markWarehouseTopologyDirty();
+        town.prepareWarehouseTopology(Level.OVERWORLD);
+        TransportReservationResult restored = town.refreshTransportEndpointMetric(existing);
+        assertEquals(TransportAdmissionStatus.ACTIVE,
+                restored.reservationAfter().orElseThrow().admissionStatus());
+        assertEquals(28.0, restored.reservationAfter().orElseThrow().reservedTransportCapacity(), EPSILON);
     }
 
     @Test
@@ -180,12 +209,11 @@ class TeamTownTransportReservationTest {
         TeamTownData data = townData(1_000_000.0);
         TeamTown town = data.createTeamTown();
         List<TransportEndpointId> endpoints = new ArrayList<>(TownTransportSnapshot.MAX_RESERVATIONS);
-        GlobalPos core = GlobalPos.of(Level.OVERWORLD, new BlockPos(10, 64, 10));
         for (int index = 0; index < TownTransportSnapshot.MAX_RESERVATIONS; index++) {
             TransportEndpointId endpoint = endpoint(index);
             endpoints.add(endpoint);
             data.getTransportState().replaceReservation(endpoint, new TransportReservation(
-                    TransportEndpointKind.WAREHOUSE_INTERFACE, core,
+                    TransportEndpointKind.WAREHOUSE_INTERFACE,
                     20, 8.0, 28.0, TransportAdmissionStatus.ACTIVE));
         }
         assertEquals(114_688.0, town.getTransportSummary().reservedCapacity(), EPSILON);
@@ -204,28 +232,27 @@ class TeamTownTransportReservationTest {
     }
 
     private static TeamTownData townData(double capacity) {
-        return new TeamTownData(
+        TeamTownData data = new TeamTownData(
                 "Reservation Test",
                 new TeamTownResourceHolder(Map.<ITownResourceKey, Double>of(
                         VirtualResourceType.TRANSPORT_CAPACITY.generateAttribute(0), capacity)),
-                Map.of(), Map.of(), Map.of(), 0, 0, List.of(), TownStaffingPlan.EMPTY, -1L);
+                Map.of(WAREHOUSE_POS, warehouse(WAREHOUSE_POS, 1_000.0)),
+                Map.of(), Map.of(), 0, 0, List.of(), TownStaffingPlan.EMPTY, -1L);
+        data.createTeamTown().prepareWarehouseTopology(Level.OVERWORLD);
+        return data;
     }
 
     private static TransportEndpointId endpoint(int x) {
         return new TransportEndpointId(GlobalPos.of(Level.OVERWORLD, new BlockPos(x, 64, 0)));
     }
 
-    private static TransportEndpointRequest request(TransportEndpointId endpoint, int rate, double metric) {
-        return request(endpoint, GlobalPos.of(Level.OVERWORLD, new BlockPos(10, 64, 10)), rate, metric);
+    private static WarehouseBuilding warehouse(BlockPos pos, double capacity) {
+        return new WarehouseBuilding(pos, true, OccupiedVolume.EMPTY, true,
+                false, capacity, 1, 1, 0);
     }
 
-    private static TransportEndpointRequest request(
-            TransportEndpointId endpoint,
-            GlobalPos core,
-            int rate,
-            double metric
-    ) {
+    private static TransportEndpointRequest request(TransportEndpointId endpoint, int rate) {
         return new TransportEndpointRequest(
-                endpoint, TransportEndpointKind.WAREHOUSE_INTERFACE, core, rate, metric);
+                endpoint, TransportEndpointKind.WAREHOUSE_INTERFACE, rate);
     }
 }

@@ -62,11 +62,14 @@ class TeamTownDataS2CPacketTest {
                 GlobalPos.of(Level.OVERWORLD, new BlockPos(1, 64, 1)));
         TransportReservation reservation = new TransportReservation(
                 TransportEndpointKind.WAREHOUSE_INTERFACE,
-                GlobalPos.of(Level.OVERWORLD, new BlockPos(10, 64, 10)),
                 20, 8.0, 28.0, TransportAdmissionStatus.ACTIVE);
-        source.getTransportState().replaceReservation(endpoint, reservation);
-        source.getTransportState().setDailyReport(
-                new TownTransportState.DailyReport(true, 64.0, 28.0));
+        TownTransportSnapshot fullSnapshot = new TownTransportSnapshot(
+                new TownTransportState.DailyReport(true, 64.0, 28.0),
+                64.0,
+                1,
+                0.05,
+                List.of(new TownTransportState.ReservationEntry(endpoint, reservation)));
+        source.getTransportState().applySnapshot(fullSnapshot);
 
         Object persisted = FHSpecialDataTypes.TOWN_DATA.saveData(DataOps.COMPRESSED, source);
         TeamTownData persistenceOnly = FHSpecialDataTypes.TOWN_DATA.loadData(DataOps.COMPRESSED, persisted);
@@ -88,6 +91,9 @@ class TeamTownDataS2CPacketTest {
             assertEquals(reservation, decoded.getTransportState().getReservation(endpoint));
             assertEquals(new TownTransportState.DailyReport(true, 64.0, 28.0),
                     decoded.getTransportState().getDailyReport());
+            assertEquals(1, decoded.getTransportState().getEffectiveWarehouseCount());
+            assertEquals(0.05,
+                    decoded.getTransportState().getWarehouseDistanceCostPerBlock(), EPSILON);
         } finally {
             encoded.release();
             reencoded.release();
@@ -104,11 +110,15 @@ class TeamTownDataS2CPacketTest {
                 0, 0, List.of(), TownStaffingPlan.EMPTY, -1L);
         TransportEndpointId endpoint = new TransportEndpointId(
                 GlobalPos.of(Level.OVERWORLD, new BlockPos(1, 64, 1)));
-        GlobalPos core = GlobalPos.of(Level.OVERWORLD, new BlockPos(10, 64, 10));
         TransportReservation fullReservation = new TransportReservation(
-                TransportEndpointKind.WAREHOUSE_INTERFACE, core,
+                TransportEndpointKind.WAREHOUSE_INTERFACE,
                 20, 8.0, 28.0, TransportAdmissionStatus.ACTIVE);
-        source.getTransportState().replaceReservation(endpoint, fullReservation);
+        source.getTransportState().applySnapshot(new TownTransportSnapshot(
+                TownTransportState.DailyReport.EMPTY,
+                64.0,
+                1,
+                0.05,
+                List.of(new TownTransportState.ReservationEntry(endpoint, fullReservation))));
 
         FriendlyByteBuf fullBytes = new FriendlyByteBuf(Unpooled.buffer());
         FriendlyByteBuf incrementalBytes = new FriendlyByteBuf(Unpooled.buffer());
@@ -118,13 +128,18 @@ class TeamTownDataS2CPacketTest {
             TeamTownData clientData = new TeamTownDataS2CPacket(fullBytes).decodeTownData();
             assertEquals(28.0, clientData.getTransportState().getReservedTransportCapacity(), EPSILON);
             assertEquals(fullReservation, clientData.getTransportState().getReservation(endpoint));
+            assertEquals(1, clientData.getTransportState().getEffectiveWarehouseCount());
+            assertEquals(0.05,
+                    clientData.getTransportState().getWarehouseDistanceCostPerBlock(), EPSILON);
 
             TransportReservation incrementalReservation = new TransportReservation(
-                    TransportEndpointKind.WAREHOUSE_INTERFACE, core,
+                    TransportEndpointKind.WAREHOUSE_INTERFACE,
                     40, 8.0, 56.0, TransportAdmissionStatus.ACTIVE);
             TownTransportSnapshot incrementalSnapshot = new TownTransportSnapshot(
                     new TownTransportState.DailyReport(true, 128.0, 56.0),
                     128.0,
+                    3,
+                    0.075,
                     List.of(new TownTransportState.ReservationEntry(endpoint, incrementalReservation)));
             new TownResourceUpdatePacket(
                     Map.of(capacityKey, 128.0), 17.0, incrementalSnapshot).encode(incrementalBytes);
@@ -135,11 +150,13 @@ class TeamTownDataS2CPacketTest {
             assertEquals(56.0, clientData.getTransportState().getReservedTransportCapacity(), EPSILON);
             assertEquals(incrementalReservation, clientData.getTransportState().getReservation(endpoint));
             assertEquals(incrementalSnapshot.dailyReport(), clientData.getTransportState().getDailyReport());
+            assertEquals(3, clientData.getTransportState().getEffectiveWarehouseCount());
+            assertEquals(0.075,
+                    clientData.getTransportState().getWarehouseDistanceCostPerBlock(), EPSILON);
 
             source.createTeamTown().getResourceHolder().applySyncEntry(capacityKey, 128.0);
             source.createTeamTown().getResourceHolder().setOccupiedCapacity(17.0);
-            source.getTransportState().replaceReservation(endpoint, incrementalReservation);
-            source.getTransportState().setDailyReport(incrementalSnapshot.dailyReport());
+            source.getTransportState().applySnapshot(incrementalSnapshot);
             new TeamTownDataS2CPacket(source).encode(replacementFullBytes);
             clientData = new TeamTownDataS2CPacket(replacementFullBytes).decodeTownData();
 
@@ -148,6 +165,9 @@ class TeamTownDataS2CPacketTest {
             assertEquals(56.0, clientData.getTransportState().getReservedTransportCapacity(), EPSILON);
             assertEquals(incrementalReservation, clientData.getTransportState().getReservation(endpoint));
             assertEquals(incrementalSnapshot.dailyReport(), clientData.getTransportState().getDailyReport());
+            assertEquals(3, clientData.getTransportState().getEffectiveWarehouseCount());
+            assertEquals(0.075,
+                    clientData.getTransportState().getWarehouseDistanceCostPerBlock(), EPSILON);
         } finally {
             fullBytes.release();
             incrementalBytes.release();

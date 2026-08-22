@@ -93,15 +93,27 @@ import com.teammoeg.frostedheart.content.town.transport.TownTransportState;
 import com.teammoeg.frostedheart.content.town.transport.TownTransportSnapshot;
 import com.teammoeg.frostedheart.content.town.transport.TownTransportShortageNotice;
 import com.teammoeg.frostedheart.content.town.transport.TownTransportShortageNotificationModel;
+import com.teammoeg.frostedheart.content.town.transport.TransportAdmissionStatus;
+import com.teammoeg.frostedheart.content.town.transport.TransportConsumerParameters;
+import com.teammoeg.frostedheart.content.town.transport.TransportEndpointId;
+import com.teammoeg.frostedheart.content.town.transport.TransportEndpointKind;
+import com.teammoeg.frostedheart.content.town.transport.TransportReservation;
+import com.teammoeg.frostedheart.content.town.transport.TransportReservationModel;
+import com.teammoeg.frostedheart.content.town.transport.WarehouseTopologyEntry;
+import com.teammoeg.frostedheart.content.town.transport.WarehouseTopologyListener;
+import com.teammoeg.frostedheart.content.town.transport.WarehouseTopologySnapshot;
 import com.teammoeg.frostedheart.content.town.terrainresource.TerrainResourceType;
 import com.teammoeg.frostedheart.content.town.terrainresource.TerrainResourceData;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig.Server.Town.RefugeeSpawn;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig.Server.Town.ResidentAging;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.GlobalPos;
 import net.minecraft.core.UUIDUtil;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.ChunkPos;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.Heightmap;
@@ -230,6 +242,17 @@ public class TeamTownData implements SpecialData{
     /** Town-owned aggregate transport service state. */
     @Getter
     private TownTransportState transportState = new TownTransportState();
+
+    private transient boolean warehouseTopologyDirty = true;
+    private transient boolean warehouseTopologyInitialized;
+    private transient boolean warehouseTopologyRefreshInProgress;
+    private transient WarehouseTopologySnapshot appliedWarehouseTopology =
+            WarehouseTopologySnapshot.UNAVAILABLE;
+    private transient final Map<GlobalPos, WarehouseTopologyListener> loadedWarehouseAutomationDevices =
+            new HashMap<>();
+    private transient long warehouseTopologyBuildCount;
+    private transient long warehouseEndpointRecomputeCount;
+    private transient long warehouseListenerNotificationCount;
 
     /** Threshold events accumulated during the current daily settlement. */
     private transient final List<TownSignalEvent> pendingDailySignals = new ArrayList<>();
@@ -474,6 +497,154 @@ public class TeamTownData implements SpecialData{
         return TeamTown.create(this);
     }
 
+    public static ResourceKey<Level> resolveTownDimension(TeamDataHolder teamData) {
+        if (teamData == null) {
+            return null;
+        }
+        return teamData.getOptional(FHSpecialDataTypes.GENERATOR_DATA)
+                .map(generator -> generator.dimension)
+                .orElse(null);
+    }
+
+    WarehouseTopologySnapshot getAppliedWarehouseTopology() {
+        return appliedWarehouseTopology;
+    }
+
+    void markWarehouseTopologyDirty() {
+        warehouseTopologyDirty = true;
+    }
+
+    void registerWarehouseTopologyListener(
+            GlobalPos devicePos,
+            WarehouseTopologyListener listener
+    ) {
+        loadedWarehouseAutomationDevices.put(
+                Objects.requireNonNull(devicePos, "devicePos"),
+                Objects.requireNonNull(listener, "listener"));
+    }
+
+    void unregisterWarehouseTopologyListener(
+            GlobalPos devicePos,
+            WarehouseTopologyListener listener
+    ) {
+        if (devicePos != null && listener != null) {
+            loadedWarehouseAutomationDevices.remove(devicePos, listener);
+        }
+    }
+
+    WarehouseTopologySnapshot refreshWarehouseTopologyIfDirty(
+            TransportConsumerParameters parameters,
+            ResourceKey<Level> authoritativeTownDimension
+    ) {
+        Objects.requireNonNull(parameters, "parameters");
+        if (warehouseTopologyRefreshInProgress) {
+            return appliedWarehouseTopology;
+        }
+        if (warehouseTopologyInitialized
+                && Objects.equals(appliedWarehouseTopology.townDimension(), authoritativeTownDimension)
+                && !warehouseTopologyDirty) {
+            return appliedWarehouseTopology;
+        }
+
+        warehouseTopologyRefreshInProgress = true;
+        try {
+            warehouseTopologyBuildCount++;
+            List<WarehouseTopologyEntry> entries = buildings.values().stream()
+                    .filter(WarehouseBuilding.class::isInstance)
+                    .map(WarehouseBuilding.class::cast)
+                    .filter(WarehouseBuilding::isBuildingWorkable)
+                    .filter(warehouse -> Double.isFinite(warehouse.getCapacity())
+                            && warehouse.getCapacity() > 0.0)
+                    .map(warehouse -> new WarehouseTopologyEntry(
+                            warehouse.getPos(), warehouse.getCapacity()))
+                    .sorted(WarehouseTopologyEntry.CORE_POS_ORDER)
+                    .toList();
+            WarehouseTopologySnapshot candidate = WarehouseTopologySnapshot.of(
+                    authoritativeTownDimension, entries);
+            warehouseTopologyDirty = false;
+            if (warehouseTopologyInitialized && candidate.equals(appliedWarehouseTopology)) {
+                return appliedWarehouseTopology;
+            }
+
+            appliedWarehouseTopology = candidate;
+            warehouseTopologyInitialized = true;
+            Map<TransportEndpointId, TransportReservation> replacements = new TreeMap<>(
+                    TransportEndpointId.STABLE_COMPARATOR);
+            for (Map.Entry<TransportEndpointId, TransportReservation> entry
+                    : transportState.getReservations().entrySet()) {
+                if (entry.getValue().endpointKind() != TransportEndpointKind.WAREHOUSE_INTERFACE) {
+                    continue;
+                }
+                warehouseEndpointRecomputeCount++;
+                replacements.put(entry.getKey(), reservationForTopology(
+                        entry.getKey(), entry.getValue(), candidate, parameters));
+            }
+            if (transportState.replaceReservations(replacements, parameters)) {
+                dataSyncCache.markTransportStateChanged();
+            }
+
+            List<WarehouseTopologyListener> listeners = List.copyOf(
+                    loadedWarehouseAutomationDevices.values());
+            for (WarehouseTopologyListener listener : listeners) {
+                try {
+                    listener.onWarehouseTopologyChanged(candidate);
+                    warehouseListenerNotificationCount++;
+                } catch (RuntimeException exception) {
+                    FHMain.LOGGER.warn("Warehouse topology listener failed for town {}.",
+                            name, exception);
+                }
+            }
+            return candidate;
+        } finally {
+            warehouseTopologyRefreshInProgress = false;
+        }
+    }
+
+    private static TransportReservation reservationForTopology(
+            TransportEndpointId endpointId,
+            TransportReservation old,
+            WarehouseTopologySnapshot topology,
+            TransportConsumerParameters parameters
+    ) {
+        if (!topology.isUsable()
+                || !endpointId.endpointPos().dimension().equals(topology.townDimension())) {
+            return unavailableReservation(old);
+        }
+        double metric = TransportReservationModel.warehouseWeightedDistance(
+                endpointId.endpointPos().pos(), topology.entries());
+        if (!TransportReservationModel.isFiniteNonNegative(metric)) {
+            return unavailableReservation(old);
+        }
+        if (old.rateItemsPerSecond() == 0) {
+            return new TransportReservation(old.endpointKind(), 0, metric, 0.0,
+                    TransportAdmissionStatus.DISABLED);
+        }
+        double reserved = TransportReservationModel.capacityForStoredRate(
+                old.endpointKind(), old.rateItemsPerSecond(), metric, parameters);
+        if (!TransportReservationModel.isFiniteNonNegative(reserved)) {
+            return unavailableReservation(old);
+        }
+        return new TransportReservation(old.endpointKind(), old.rateItemsPerSecond(),
+                metric, reserved, TransportAdmissionStatus.ACTIVE);
+    }
+
+    private static TransportReservation unavailableReservation(TransportReservation old) {
+        return new TransportReservation(old.endpointKind(), old.rateItemsPerSecond(),
+                0.0, 0.0, TransportAdmissionStatus.UNAVAILABLE);
+    }
+
+    long getWarehouseTopologyBuildCount() {
+        return warehouseTopologyBuildCount;
+    }
+
+    long getWarehouseEndpointRecomputeCount() {
+        return warehouseEndpointRecomputeCount;
+    }
+
+    long getWarehouseListenerNotificationCount() {
+        return warehouseListenerNotificationCount;
+    }
+
     /**
      * Returns the current logical client's synchronized town snapshot, if the
      * initial full synchronization has arrived.
@@ -582,9 +753,12 @@ public class TeamTownData implements SpecialData{
             this.listenerInitialized = true;
         }
 
+        // Apply topology facts before transport state can be drained to clients.
+        TeamTown town = new TeamTown(this);
+        town.prepareWarehouseTopology(resolveTownDimension(teamData));
         // Persisted reservation capacities are derived caches. Rebuild them before
         // the first incremental flush and after server-config formula changes.
-        new TeamTown(this).getTransportSummary();
+        town.getTransportSummary();
 
         if(dataSyncCache.hasChangedResources() || dataSyncCache.hasTransportStateChange()){
             Map<ITownResourceKey, Double> changedResource = new HashMap<>();
@@ -602,9 +776,7 @@ public class TeamTownData implements SpecialData{
                 teamData.sendToOnline(FHNetwork.INSTANCE, new TownResourceUpdatePacket(
                         changedResource,
                         resources.getOccupiedCapacity(),
-                        TownTransportSnapshot.from(
-                                resources.get(VirtualResourceType.TRANSPORT_CAPACITY.generateAttribute(0)),
-                                transportState)));
+                        createTransportSnapshot()));
                 changedResource.forEach(this.dataSyncCache::markResourceSynced);
             }
         }
@@ -1774,6 +1946,25 @@ public class TeamTownData implements SpecialData{
         fireResourcesChanged();
     }
 
+    public TownTransportSnapshot createTransportSnapshot() {
+        double totalCapacity = resources.get(
+                VirtualResourceType.TRANSPORT_CAPACITY.generateAttribute(0));
+        if (!warehouseTopologyInitialized) {
+            return TownTransportSnapshot.from(totalCapacity, transportState);
+        }
+        double distanceCost = transportState.getWarehouseDistanceCostPerBlock();
+        try {
+            distanceCost = FHConfig.SERVER.TOWN.TRANSPORT_CONSUMERS
+                    .warehouseDistanceCostPerBlock.get();
+        } catch (IllegalArgumentException | IllegalStateException ignored) {
+        }
+        return TownTransportSnapshot.from(
+                totalCapacity,
+                transportState,
+                appliedWarehouseTopology.entries().size(),
+                distanceCost);
+    }
+
     /** Source-compatible client helper for callers predating transport snapshots. */
     public void applyResourceUpdate(
             Map<ITownResourceKey, Double> changes,
@@ -1965,6 +2156,7 @@ public class TeamTownData implements SpecialData{
 
         @Override
         public void onBuildingChange(TownBuildingChangeEvent event) {
+            markWarehouseTopologyDirty();
             this.addChanged(event.changedBuildingPos);
         }
 

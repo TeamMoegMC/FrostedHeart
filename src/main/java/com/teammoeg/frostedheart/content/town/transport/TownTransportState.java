@@ -84,11 +84,19 @@ public final class TownTransportState {
         public <T> DataResult<Pair<List<ReservationEntry>, T>> decode(
                 com.mojang.serialization.DynamicOps<T> ops, T input
         ) {
-            DataResult<Pair<List<ReservationEntry>, T>> decoded = delegate.decode(ops, input);
-            Pair<List<ReservationEntry>, T> recovered = decoded.resultOrPartial(message ->
-                    FHMain.LOGGER.warn("Discarding invalid transport reservation entries: {}", message))
-                    .orElseGet(() -> Pair.of(List.of(), input));
-            return DataResult.success(recovered);
+            List<T> encodedEntries = ops.getStream(input)
+                    .resultOrPartial(message -> FHMain.LOGGER.warn(
+                            "Discarding invalid transport reservation list: {}", message))
+                    .map(stream -> stream.toList())
+                    .orElse(List.of());
+            List<ReservationEntry> validEntries = new ArrayList<>(encodedEntries.size());
+            for (T encodedEntry : encodedEntries) {
+                ReservationEntry.CODEC.parse(ops, encodedEntry)
+                        .resultOrPartial(message -> FHMain.LOGGER.warn(
+                                "Discarding invalid transport reservation entry: {}", message))
+                        .ifPresent(validEntries::add);
+            }
+            return DataResult.success(Pair.of(List.copyOf(validEntries), ops.empty()));
         }
     };
 
@@ -105,6 +113,10 @@ public final class TownTransportState {
             new TreeMap<>(TransportEndpointId.STABLE_COMPARATOR);
     private double reservedTransportCapacity;
     private transient TransportConsumerParameters appliedParameters;
+    @Getter
+    private transient int effectiveWarehouseCount;
+    @Getter
+    private transient double warehouseDistanceCostPerBlock;
 
     public TownTransportState() {
     }
@@ -155,6 +167,46 @@ public final class TownTransportState {
                 previous == null ? 0.0 : previous.reservedTransportCapacity(),
                 reservation.reservedTransportCapacity());
         return !reservation.equals(previous);
+    }
+
+    /**
+     * Applies one authoritative fact refresh atomically and rebuilds the cached
+     * aggregate once. Keys not present in {@code replacements} are untouched.
+     */
+    public boolean replaceReservations(
+            Map<TransportEndpointId, TransportReservation> replacements
+    ) {
+        if (replacements == null || replacements.isEmpty()) {
+            return false;
+        }
+        boolean changed = false;
+        Map<TransportEndpointId, TransportReservation> sorted = new TreeMap<>(
+                TransportEndpointId.STABLE_COMPARATOR);
+        replacements.forEach((endpointId, reservation) -> {
+            sorted.put(Objects.requireNonNull(endpointId, "endpointId"),
+                    Objects.requireNonNull(reservation, "reservation"));
+        });
+        for (Map.Entry<TransportEndpointId, TransportReservation> entry : sorted.entrySet()) {
+            TransportReservation previous = reservations.put(entry.getKey(), entry.getValue());
+            changed |= !entry.getValue().equals(previous);
+        }
+        if (changed) {
+            reservedTransportCapacity = sumReservedCapacity(reservations.values());
+        }
+        return changed;
+    }
+
+    /** Batch replacement variant that also records the formula snapshot used. */
+    public boolean replaceReservations(
+            Map<TransportEndpointId, TransportReservation> replacements,
+            TransportConsumerParameters parameters
+    ) {
+        Objects.requireNonNull(parameters, "parameters");
+        boolean coversAllReservations = replacements != null
+                && replacements.keySet().containsAll(reservations.keySet());
+        boolean changed = replaceReservations(replacements);
+        appliedParameters = coversAllReservations ? parameters : null;
+        return changed;
     }
 
     /** Internal authority hook used by TeamTown. */
@@ -229,11 +281,17 @@ public final class TownTransportState {
         for (ReservationEntry entry : next.reservations()) {
             replacement.put(entry.endpointId(), entry.reservation());
         }
-        boolean changed = !dailyReport.equals(next.dailyReport()) || !reservations.equals(replacement);
+        boolean changed = !dailyReport.equals(next.dailyReport())
+                || !reservations.equals(replacement)
+                || effectiveWarehouseCount != next.effectiveWarehouseCount()
+                || Double.compare(warehouseDistanceCostPerBlock,
+                next.warehouseDistanceCostPerBlock()) != 0;
         dailyReport = next.dailyReport();
         reservations.clear();
         reservations.putAll(replacement);
         reservedTransportCapacity = sumReservedCapacity(reservations.values());
+        effectiveWarehouseCount = next.effectiveWarehouseCount();
+        warehouseDistanceCostPerBlock = next.warehouseDistanceCostPerBlock();
         appliedParameters = null;
         return changed;
     }

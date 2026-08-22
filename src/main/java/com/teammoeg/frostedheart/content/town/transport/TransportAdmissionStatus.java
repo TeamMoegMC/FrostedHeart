@@ -18,7 +18,8 @@ import java.util.Arrays;
 /** Stable persisted state of one admitted endpoint. */
 public enum TransportAdmissionStatus {
     ACTIVE,
-    DISABLED;
+    DISABLED,
+    UNAVAILABLE;
 
     public static final Codec<TransportAdmissionStatus> CODEC = Codec.STRING.comapFlatMap(
             value -> Arrays.stream(values())

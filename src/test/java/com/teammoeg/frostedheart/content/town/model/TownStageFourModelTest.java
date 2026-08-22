@@ -115,7 +115,7 @@ class TownStageFourModelTest {
         assertEquals(20, transportConsumers.get("defaultRateItemsPerSecond").getAsInt());
         assertEquals(1, transportConsumers.get("minimumRateItemsPerSecond").getAsInt());
         assertEquals(1280, transportConsumers.get("maximumRateItemsPerSecond").getAsInt());
-        assertEquals(0.05, transportConsumers.get("warehouseScaleCostPerMetric").getAsDouble(), EPSILON);
+        assertEquals(0.05, transportConsumers.get("warehouseDistanceCostPerBlock").getAsDouble(), EPSILON);
     }
 
     @Test

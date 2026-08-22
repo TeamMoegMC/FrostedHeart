@@ -279,6 +279,9 @@ public final class TownVirtualResourcesPanel extends UILayer {
             rows.add(status("available", 0xFF55FF55));
         }
         rows.add(section("transport_realtime", 0xFFFFAA00));
+        rows.add(TownInfoPanel.Row.text(Component.translatable(
+                "gui.frostedheart.town_manager.virtual_resource.transport_effective_warehouses",
+                snapshot.effectiveWarehouseCount())));
         rows.add(amount("transport_total", summary.totalCapacity(), 0xFFFFFFFF));
         rows.add(amount(
                 "transport_reserved",
@@ -332,17 +335,18 @@ public final class TownVirtualResourcesPanel extends UILayer {
                     "gui.frostedheart.town_manager.virtual_resource.transport_endpoint",
                     endpointKind(reservation.endpointKind()),
                     formatPosition(entry.endpointId().endpointPos())), 0xFFFFFFFF));
-            rows.add(TownInfoPanel.Row.colored(Component.translatable(
-                    "gui.frostedheart.town_manager.virtual_resource.transport_binding",
-                    formatPosition(reservation.boundWarehouseCorePos())), 0xFFAAAAAA));
             rows.add(TownInfoPanel.Row.text(Component.translatable(
                     "gui.frostedheart.town_manager.virtual_resource.transport_endpoint_rate",
                     reservation.rateItemsPerSecond(),
                     formatNumber(reservation.rateItemsPerSecond()
                             * summary.effectiveRateScale()))));
             rows.add(TownInfoPanel.Row.colored(Component.translatable(
+                    "gui.frostedheart.town_manager.virtual_resource.transport_endpoint_distance",
+                    warehouseDistance(reservation),
+                    distanceFactor(reservation, snapshot.warehouseDistanceCostPerBlock())),
+                    0xFFAAAAAA));
+            rows.add(TownInfoPanel.Row.colored(Component.translatable(
                     "gui.frostedheart.town_manager.virtual_resource.transport_endpoint_metrics",
-                    distanceFactor(reservation),
                     formatNumber(reservation.reservedTransportCapacity()),
                     admissionStatus(reservation.admissionStatus(), shortage)),
                     0xFFAAAAAA));
@@ -382,12 +386,23 @@ public final class TownVirtualResourcesPanel extends UILayer {
                         + state);
     }
 
-    private static String distanceFactor(TransportReservation reservation) {
-        if (reservation.rateItemsPerSecond() <= 0) {
+    private static String warehouseDistance(TransportReservation reservation) {
+        if (reservation.admissionStatus() == TransportAdmissionStatus.UNAVAILABLE) {
             return "-";
         }
-        return formatNumber(
-                reservation.reservedTransportCapacity() / reservation.rateItemsPerSecond());
+        return formatNumber(reservation.scaleMetric());
+    }
+
+    private static String distanceFactor(
+            TransportReservation reservation,
+            double warehouseDistanceCostPerBlock
+    ) {
+        if (reservation.admissionStatus() == TransportAdmissionStatus.UNAVAILABLE) {
+            return "-";
+        }
+        double factor = 1.0 + warehouseDistanceCostPerBlock * reservation.scaleMetric();
+        return TransportReservationModel.isFiniteNonNegative(factor)
+                ? formatNumber(factor) : "-";
     }
 
     private static String formatPosition(GlobalPos globalPos) {

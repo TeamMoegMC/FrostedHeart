@@ -1698,24 +1698,34 @@ T1 燃料总 process tick 定义为：
 其中 `C_max = resources[MAX_CAPACITY, level 0]`，`C_occupied = TeamTownResourceHolder.occupiedCapacity`。界面同时
 显示使用率 `C_occupied / C_max`；总容量为零时不执行除零，并用“暂无容量”或“超出容量”状态表达。
 
-运力是每日重建但不在搬运时消耗的 transport-capacity service。`1` 运力表示零规模成本下支持
-`1 item/s` 的设置传输速率。仓库接口已经接受的设置速率 `R` 单位是 `items/s`，默认 `20`，有效非零范围默认
-`1..1280`，其中 `0` 表示禁用。设仓库有效体积为 `V` blocks，则：
+运力是每日重建但不在搬运时消耗的 transport-capacity service。`1` 运力表示零距离成本下支持
+`1 item/s` 的设置传输速率。仓库接口可以放在城镇所在维度的任意位置，并由首次交互的本队玩家认领；接口自身
+`GlobalPos` 是预约端点，不再绑定或保存某座仓库核心。已经接受的设置速率 `R` 单位是 `items/s`，默认 `20`，有效
+非零范围默认 `1..1280`，其中 `0` 表示禁用。
+
+只统计同城镇中 `isBuildingWorkable()` 且容量 `W_i` 为有限正数的仓库。设接口与第 `i` 座仓库核心的三维曼哈顿距离为
+`D_i` blocks，则容量加权平均距离 `D_eff`、距离因子 `F` 和名义占用 `C_reserved` 为：
 
 ```text
-M = sqrt(V)
-F = 1 + 0.05 * M
+D_i = |x_e - x_i| + |y_e - y_i| + |z_e - z_i|
+D_eff = sum(W_i * D_i) / sum(W_i)
+F = 1 + k_d * D_eff
 C_reserved = R * F
 ```
 
-`M` 是仓库规模指标，`0.05` 来自
-`FHConfig.SERVER.TOWN.TRANSPORT_CONSUMERS.warehouseScaleCostPerMetric`。占用不做令牌量化或向上取整；持久化只保存
-kind、单一 `rateItemsPerSecond`、规模指标、绑定核心和准入状态，派生占用按当前参数重算。只有离散准入边界使用
+`k_d` 默认 `0.05 运力/(item/s)/block`，来自
+`FHConfig.SERVER.TOWN.TRANSPORT_CONSUMERS.warehouseDistanceCostPerBlock`。实现按最大容量归一化权重后求和，数学结果与上式
+相同，同时降低极大容量值的中间溢出风险；仓库顺序不影响结果。没有有效仓库、城镇维度未知、接口跨维度或计算得到
+非有限值时，预约进入 `UNAVAILABLE`：保留唯一的设置速率，但派生距离和占用归零，实际传输停止。仓库恢复后由城镇拓扑
+事实刷新直接恢复为 `ACTIVE` 或零速率的 `DISABLED`，不重新做玩家调速准入。
+
+占用不做令牌量化或向上取整；持久化只保存 kind、单一 `rateItemsPerSecond`、当前派生距离指标和准入状态，
+`reservedTransportCapacity` 只进入权威网络快照并按当前参数重算。只有离散准入边界使用
 `TransportReservationModel` 的 `8 ULP` 比较，tick 搬运预算不使用该容差。
 
 这四项消费者默认值属于 Forge 无关的 `TownModelParameters.transportConsumers` 输入。`TownStageZeroAudit` 输出值、单位和
 `FHConfig.SERVER.TOWN.TRANSPORT_CONSUMERS` 来源符号；`TownStageFourSimulator.Summary.parameters` 将同一参数快照写入
-`summary.json`，因此模拟结果可以追踪默认设置速率、最小/最大速率和仓库规模成本，纯模拟层不依赖方块实体或网络包。
+`summary.json`，因此模拟结果可以追踪默认设置速率、最小/最大速率和仓库距离成本，纯模拟层不依赖方块实体或网络包。
 
 当全镇总运力 `T` 低于名义占用 `C` 时，不取消预约或改变设置速率，而是所有活动端点使用统一比例：
 
@@ -1725,18 +1735,23 @@ R_effective = R * S
 ```
 
 已有接口尝试上调但无法准入时，城镇预约、占用和同步脏状态均保持不变，接口菜单回到原设置值并显示瞬时失败提示。
-新接口以默认速率准入失败时仍保留逻辑绑定，但预约为 `rateItemsPerSecond = 0`、占用 `0`、状态 `DISABLED`；只有明确的
+新接口以默认速率准入失败时仍保留城镇归属，但预约为 `rateItemsPerSecond = 0`、占用 `0`、状态 `DISABLED`；只有明确的
 放置者会收到新增失败提示，后台扫描和区块加载不会广播。接口菜单显示当前有效物品传输速率（低于设置速率时为红色）、
 占用运力、剩余可用运力和总运力，不显示原始规模指标。速率输入的最大值由服务端通过
 `WarehouseInterfaceTransportView.maximumRateItemsPerSecond` 同步，默认范围为 `0..1280`；超过最大值的数字不会进入
 输入框。菜单不再提供固定速率快捷按钮，在速率框上滚轮会立即提交调整，无修饰键、Shift、Ctrl、Shift+Ctrl 的每格
 步长依次为 `1`、`8`、`16`、`64 items/s`，结果限制在 `0..maximumRateItemsPerSecond`。
 
+`TeamTownData` 用 transient `WarehouseTopologySnapshot` 保存按核心坐标稳定排序的 `(corePos, capacityWeight)`；建筑
+添加、移除或事实字段变化只标记 dirty，下一次 prepare 原子重建并一次性重算全部接口预约、标记 transport dirty，随后
+通知已加载的接口和仓库库存发信器。快照无净变化时不遍历端点，也不通知设备。仓库结构扫描不再发现、发布或拥有接口/
+发信器；拆除某座仓库不会删除任一设备，拆除设备自身才注销接口预约或释放发信器 Watcher。
+
 `TownTransportState.DailyReport` 是晨间历史快照；`TownTransportSnapshot` 才是当天调速、扩建、拆除后的实时列表和
 汇总。仓库接口菜单与镇长印章运力详情都读取实时 snapshot 派生视图；镇长印章把晨间日报单独显示在实时汇总之后，
-设备详情位于最底部并默认收起，展开后分别标注接口坐标与绑定仓库核心坐标。详情显示设置速率、实际有效速率、
-占用运力和状态；非零速率的距离因子由服务端 snapshot 中的 `C_reserved / R` 得到，不使用客户端配置重算，也不显示
-原始 `scaleMetric`。`TeamTownDataS2CPacket` 与 `TownResourceUpdatePacket` 都显式携带同一结构的权威 snapshot；全量包
+设备详情位于最底部并默认收起，展开后标注接口自身坐标、设置速率、实际有效速率、容量加权平均距离、距离因子、
+占用运力和状态；不可用时距离与因子显示为 `-`。距离系数和有效仓库数由服务端 snapshot 显式同步，客户端不读取本地
+服务端配置重算。`TeamTownDataS2CPacket` 与 `TownResourceUpdatePacket` 都显式携带同一结构的权威 snapshot；全量包
 先解码持久化数据、应用 snapshot，再替换客户端实例，因此持久化 Codec 省略的派生占用不会在登录、换维度或打开印章
 时变为零。
 

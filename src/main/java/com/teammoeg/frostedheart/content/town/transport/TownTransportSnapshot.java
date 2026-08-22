@@ -19,16 +19,22 @@ import java.util.Set;
 public record TownTransportSnapshot(
         TownTransportState.DailyReport dailyReport,
         double totalCapacity,
+        int effectiveWarehouseCount,
+        double warehouseDistanceCostPerBlock,
         List<TownTransportState.ReservationEntry> reservations
 ) {
     public static final int MAX_RESERVATIONS = 4096;
     public static final TownTransportSnapshot EMPTY = new TownTransportSnapshot(
-            TownTransportState.DailyReport.EMPTY, 0.0, List.of());
+            TownTransportState.DailyReport.EMPTY, 0.0, 0, 0.0, List.of());
 
     private static final Codec<TownTransportSnapshot> RAW_CODEC = RecordCodecBuilder.create(instance -> instance.group(
             TownTransportState.DailyReport.CODEC.fieldOf("dailyReport")
                     .forGetter(TownTransportSnapshot::dailyReport),
             Codec.DOUBLE.fieldOf("totalCapacity").forGetter(TownTransportSnapshot::totalCapacity),
+            Codec.INT.fieldOf("effectiveWarehouseCount")
+                    .forGetter(TownTransportSnapshot::effectiveWarehouseCount),
+            Codec.DOUBLE.fieldOf("warehouseDistanceCostPerBlock")
+                    .forGetter(TownTransportSnapshot::warehouseDistanceCostPerBlock),
             TownTransportState.ReservationEntry.SNAPSHOT_CODEC.listOf().fieldOf("reservations")
                     .forGetter(TownTransportSnapshot::reservations)
     ).apply(instance, TownTransportSnapshot::new));
@@ -47,11 +53,37 @@ public record TownTransportSnapshot(
         reservations = List.copyOf(sorted);
     }
 
+    public TownTransportSnapshot(
+            TownTransportState.DailyReport dailyReport,
+            double totalCapacity,
+            List<TownTransportState.ReservationEntry> reservations
+    ) {
+        this(dailyReport, totalCapacity, 0, 0.0, reservations);
+    }
+
     public static TownTransportSnapshot from(double totalCapacity, TownTransportState state) {
         if (state == null) {
             return EMPTY;
         }
-        return new TownTransportSnapshot(state.getDailyReport(), totalCapacity, state.getSnapshotEntries());
+        return new TownTransportSnapshot(
+                state.getDailyReport(), totalCapacity,
+                state.getEffectiveWarehouseCount(), state.getWarehouseDistanceCostPerBlock(),
+                state.getSnapshotEntries());
+    }
+
+    public static TownTransportSnapshot from(
+            double totalCapacity,
+            TownTransportState state,
+            int effectiveWarehouseCount,
+            double warehouseDistanceCostPerBlock
+    ) {
+        if (state == null) {
+            return EMPTY;
+        }
+        return new TownTransportSnapshot(
+                state.getDailyReport(), totalCapacity,
+                effectiveWarehouseCount, warehouseDistanceCostPerBlock,
+                state.getSnapshotEntries());
     }
 
     public TownTransportSummary summary() {
@@ -61,6 +93,14 @@ public record TownTransportSnapshot(
     private static DataResult<TownTransportSnapshot> validate(TownTransportSnapshot snapshot) {
         if (!TransportReservationModel.isFiniteNonNegative(snapshot.totalCapacity)) {
             return DataResult.error(() -> "Transport snapshot total capacity must be finite and non-negative.");
+        }
+        if (snapshot.effectiveWarehouseCount < 0) {
+            return DataResult.error(() -> "Transport snapshot warehouse count must be non-negative.");
+        }
+        if (!TransportReservationModel.isFiniteNonNegative(
+                snapshot.warehouseDistanceCostPerBlock)) {
+            return DataResult.error(() ->
+                    "Transport snapshot warehouse distance cost must be finite and non-negative.");
         }
         if (snapshot.reservations.size() > MAX_RESERVATIONS) {
             return DataResult.error(() -> "Transport snapshot exceeds " + MAX_RESERVATIONS + " reservations.");

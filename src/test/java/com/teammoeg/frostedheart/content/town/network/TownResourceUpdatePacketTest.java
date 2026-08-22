@@ -54,6 +54,8 @@ class TownResourceUpdatePacketTest {
                 new TownTransportSnapshot(
                         new TownTransportState.DailyReport(true, 128.0, 0.0),
                         128.0,
+                        3,
+                        0.05,
                         List.of()));
         FriendlyByteBuf encoded = new FriendlyByteBuf(Unpooled.buffer());
         FriendlyByteBuf reencoded = new FriendlyByteBuf(Unpooled.buffer());
@@ -82,11 +84,12 @@ class TownResourceUpdatePacketTest {
                 GlobalPos.of(Level.OVERWORLD, new BlockPos(1, 64, 1)));
         TransportReservation reservation = new TransportReservation(
                 TransportEndpointKind.WAREHOUSE_INTERFACE,
-                GlobalPos.of(Level.OVERWORLD, new BlockPos(10, 64, 10)),
                 20, 8.0, 28.0, TransportAdmissionStatus.ACTIVE);
         TownTransportSnapshot snapshot = new TownTransportSnapshot(
                 new TownTransportState.DailyReport(true, 64.0, 28.0),
                 64.0,
+                2,
+                0.075,
                 List.of(new TownTransportState.ReservationEntry(endpoint, reservation)));
         AtomicInteger callbacks = new AtomicInteger();
         AtomicReference<List<Double>> observed = new AtomicReference<>();
@@ -111,5 +114,8 @@ class TownResourceUpdatePacketTest {
         assertEquals(1, callbacks.get());
         assertEquals(List.of(64.0, 17.0, 28.0), observed.get());
         assertEquals(reservation, town.getTransportState().getReservation(endpoint));
+        assertEquals(2, town.getTransportState().getEffectiveWarehouseCount());
+        assertEquals(0.075, town.getTransportState().getWarehouseDistanceCostPerBlock());
+        assertEquals(snapshot, town.getTransportSnapshot());
     }
 }

@@ -26,6 +26,7 @@ public record WarehouseInterfaceTransportView(
         int maximumRateItemsPerSecond,
         double effectiveRateItemsPerSecond,
         double reservedCapacity,
+        double distanceFactor,
         double townTotalCapacity,
         double townRemainingCapacity
 ) {
@@ -40,6 +41,7 @@ public record WarehouseInterfaceTransportView(
                     .forGetter(WarehouseInterfaceTransportView::maximumRateItemsPerSecond),
             Codec.DOUBLE.fieldOf("effectiveRateItemsPerSecond").forGetter(WarehouseInterfaceTransportView::effectiveRateItemsPerSecond),
             Codec.DOUBLE.fieldOf("reservedCapacity").forGetter(WarehouseInterfaceTransportView::reservedCapacity),
+            Codec.DOUBLE.fieldOf("distanceFactor").forGetter(WarehouseInterfaceTransportView::distanceFactor),
             Codec.DOUBLE.fieldOf("townTotalCapacity").forGetter(WarehouseInterfaceTransportView::townTotalCapacity),
             Codec.DOUBLE.fieldOf("townRemainingCapacity").forGetter(WarehouseInterfaceTransportView::townRemainingCapacity)
     ).apply(instance, WarehouseInterfaceTransportView::new));
@@ -65,7 +67,8 @@ public record WarehouseInterfaceTransportView(
             TransportReservationDecision decision
     ) {
         return from(connectionStatus, reservation, summary, decision,
-                TownModelParameters.Defaults.TRANSPORT_CONSUMER_MAXIMUM_RATE_ITEMS_PER_SECOND);
+                TownModelParameters.Defaults.TRANSPORT_CONSUMER_MAXIMUM_RATE_ITEMS_PER_SECOND,
+                TownModelParameters.Defaults.TRANSPORT_CONSUMER_WAREHOUSE_DISTANCE_COST_PER_BLOCK);
     }
 
     public static WarehouseInterfaceTransportView from(
@@ -74,6 +77,19 @@ public record WarehouseInterfaceTransportView(
             TownTransportSummary summary,
             TransportReservationDecision decision,
             int maximumRateItemsPerSecond
+    ) {
+        return from(connectionStatus, reservation, summary, decision,
+                maximumRateItemsPerSecond,
+                TownModelParameters.Defaults.TRANSPORT_CONSUMER_WAREHOUSE_DISTANCE_COST_PER_BLOCK);
+    }
+
+    public static WarehouseInterfaceTransportView from(
+            int connectionStatus,
+            Optional<TransportReservation> reservation,
+            TownTransportSummary summary,
+            TransportReservationDecision decision,
+            int maximumRateItemsPerSecond,
+            double warehouseDistanceCostPerBlock
     ) {
         TownTransportSummary safeSummary = summary == null
                 ? new TownTransportSummary(0.0, 0.0, 0.0, 0.0, 1.0)
@@ -87,6 +103,8 @@ public record WarehouseInterfaceTransportView(
             status = WarehouseInterfaceTransportStatus.WAREHOUSE_UNAVAILABLE;
         } else if (value == null) {
             status = WarehouseInterfaceTransportStatus.DISABLED;
+        } else if (value.admissionStatus() == TransportAdmissionStatus.UNAVAILABLE) {
+            status = WarehouseInterfaceTransportStatus.WAREHOUSE_UNAVAILABLE;
         } else if (value.admissionStatus() == TransportAdmissionStatus.DISABLED) {
             status = WarehouseInterfaceTransportStatus.DISABLED;
         } else if (TransportReservationModel.meaningfullyGreater(
@@ -96,13 +114,21 @@ public record WarehouseInterfaceTransportView(
             status = WarehouseInterfaceTransportStatus.ACTIVE;
         }
         int rate = value == null ? 0 : value.rateItemsPerSecond();
+        double distanceFactor = value == null
+                || value.admissionStatus() == TransportAdmissionStatus.UNAVAILABLE
+                ? 0.0
+                : 1.0 + warehouseDistanceCostPerBlock * value.scaleMetric();
         return new WarehouseInterfaceTransportView(
                 status,
                 decision == null ? TransportReservationDecision.INVALID_BINDING : decision,
                 rate,
                 maximumRateItemsPerSecond,
-                rate * safeSummary.effectiveRateScale(),
+                status == WarehouseInterfaceTransportStatus.ACTIVE
+                        || status == WarehouseInterfaceTransportStatus.THROTTLED
+                        ? rate * safeSummary.effectiveRateScale()
+                        : 0.0,
                 value == null ? 0.0 : value.reservedTransportCapacity(),
+                distanceFactor,
                 safeSummary.totalCapacity(),
                 safeSummary.remainingRegistrableCapacity());
     }
@@ -116,7 +142,7 @@ public record WarehouseInterfaceTransportView(
         return new WarehouseInterfaceTransportView(
                 WarehouseInterfaceTransportStatus.UNBOUND,
                 TransportReservationDecision.INVALID_BINDING,
-                0, maximumRateItemsPerSecond, 0.0, 0.0, 0.0, 0.0);
+                0, maximumRateItemsPerSecond, 0.0, 0.0, 0.0, 0.0, 0.0);
     }
 
     private boolean isValid() {
@@ -124,6 +150,7 @@ public record WarehouseInterfaceTransportView(
                 && rateItemsPerSecond >= 0
                 && TransportReservationModel.isFiniteNonNegative(effectiveRateItemsPerSecond)
                 && TransportReservationModel.isFiniteNonNegative(reservedCapacity)
+                && TransportReservationModel.isFiniteNonNegative(distanceFactor)
                 && TransportReservationModel.isFiniteNonNegative(townTotalCapacity)
                 && TransportReservationModel.isFiniteNonNegative(townRemainingCapacity)
                 && !TransportReservationModel.meaningfullyGreater(

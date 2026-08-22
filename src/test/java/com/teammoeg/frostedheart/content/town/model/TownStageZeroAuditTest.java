@@ -107,7 +107,8 @@ class TownStageZeroAuditTest {
                 byName.get("transportConsumers.defaultRateItemsPerSecond").value());
         assertEquals("items/s",
                 byName.get("transportConsumers.maximumRateItemsPerSecond").unit());
-        assertTrue(byName.get("transportConsumers.warehouseScaleCostPerMetric")
+        assertEquals("1/block", byName.get("transportConsumers.warehouseDistanceCostPerBlock").unit());
+        assertTrue(byName.get("transportConsumers.warehouseDistanceCostPerBlock")
                 .sourceSymbol().contains("FHConfig.SERVER.TOWN.TRANSPORT_CONSUMERS"));
 
         TownModelParameters defaults = TownModelParameters.currentDefaults();

@@ -82,8 +82,14 @@ public class CodecUtil {
 	 */
 	public static class DispatchNameCodecBuilder<A>{
 		Map<Class<? extends A>,String> classes=new LinkedHashMap<>();
-		Map<String,Codec<? extends A>> codecs=new LinkedHashMap<>();
+		Map<String,Supplier<? extends Codec<? extends A>>> codecs=new LinkedHashMap<>();
 		public <T extends A> DispatchNameCodecBuilder<A> type(String type,Class<T> clazz,Codec<T> codec){
+			classes.put(clazz, type);
+			codecs.put(type, () -> codec);
+			return this;
+		}
+		public <T extends A> DispatchNameCodecBuilder<A> typeLazy(String type, Class<T> clazz,
+				Supplier<? extends Codec<T>> codec) {
 			classes.put(clazz, type);
 			codecs.put(type, codec);
 			return this;
@@ -91,20 +97,22 @@ public class CodecUtil {
 		public <T extends A> DispatchNameCodecBuilder<A> type(Class<T> clazz,Codec<T> codec){
 			String type="n"+classes.size();
 			classes.put(clazz, type);
-			codecs.put(type, codec);
+			codecs.put(type, () -> codec);
 			return this;
 		}
 		public Codec<A> buildByName(){
-			return Codec.STRING.dispatch(o->ImmutableMap.copyOf(classes).get(o.getClass()), ImmutableMap.copyOf(codecs)::get);
+			Map<String, Supplier<? extends Codec<? extends A>>> codecs = ImmutableMap.copyOf(this.codecs);
+			return Codec.STRING.dispatch(o->ImmutableMap.copyOf(classes).get(o.getClass()), key -> codecs.get(key).get());
 		}
 		public Codec<A> buildByInt(){
 			List<Class<? extends A>> classes=new ArrayList<>();
-			List<Codec<? extends A>> codecs=new ArrayList<>();
+			List<Supplier<? extends Codec<? extends A>>> codecs=new ArrayList<>();
 			for(Entry<Class<? extends A>, String> name:this.classes.entrySet()) {
 				classes.add(name.getKey());
 				codecs.add(this.codecs.get(name.getValue()));
 			}
-			return Codec.INT.dispatch(o->ImmutableList.copyOf(classes).indexOf(o.getClass()), ImmutableList.copyOf(codecs)::get);
+			List<Supplier<? extends Codec<? extends A>>> immutableCodecs = ImmutableList.copyOf(codecs);
+			return Codec.INT.dispatch(o->ImmutableList.copyOf(classes).indexOf(o.getClass()), index -> immutableCodecs.get(index).get());
 		}
 		/**
 		 * 编码时始终按类型名称（字符串key）分发，解码时优先按名称解析，失败则回退到旧版整数索引。

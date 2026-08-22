@@ -7,7 +7,10 @@
 package com.teammoeg.frostedheart.content.town.transport;
 
 import com.teammoeg.frostedheart.content.town.model.TownModelParameters;
+import net.minecraft.core.BlockPos;
 import org.junit.jupiter.api.Test;
+
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -20,21 +23,62 @@ class TransportReservationModelTest {
             TownModelParameters.currentDefaults().transportConsumers();
 
     @Test
-    void warehouseScaleAndCapacityFollowTheFrozenFormula() {
-        assertEquals(0.0, TransportReservationModel.warehouseScaleMetric(0.0));
-        assertEquals(1.0, TransportReservationModel.warehouseScaleMetric(1.0));
-        assertEquals(8.0, TransportReservationModel.warehouseScaleMetric(64.0));
-        assertEquals(Math.sqrt(512.0), TransportReservationModel.warehouseScaleMetric(512.0), EPSILON);
+    void warehouseDistanceAndCapacityFollowTheFrozenFormula() {
+        BlockPos endpoint = BlockPos.ZERO;
+        List<WarehouseTopologyEntry> warehouses = List.of(
+                new WarehouseTopologyEntry(new BlockPos(10, 0, 0), 1_000.0),
+                new WarehouseTopologyEntry(new BlockPos(50, 0, 0), 3_000.0));
 
-        assertEquals(1.4, TransportReservationModel.warehouseScaleFactor(8.0, PARAMETERS), EPSILON);
+        assertEquals(40.0, TransportReservationModel.warehouseWeightedDistance(endpoint, warehouses), EPSILON);
+        assertEquals(40.0, TransportReservationModel.warehouseWeightedDistance(endpoint,
+                List.of(warehouses.get(1), warehouses.get(0))), EPSILON);
+        assertEquals(40.0, TransportReservationModel.warehouseWeightedDistance(endpoint, List.of(
+                new WarehouseTopologyEntry(new BlockPos(10, 0, 0), 10.0),
+                new WarehouseTopologyEntry(new BlockPos(50, 0, 0), 30.0))), EPSILON);
+        assertEquals(7.0, TransportReservationModel.warehouseWeightedDistance(
+                new BlockPos(3, 4, 0), List.of(new WarehouseTopologyEntry(BlockPos.ZERO, 1.0))), EPSILON);
+
+        assertEquals(3.0, TransportReservationModel.warehouseDistanceFactor(40.0, PARAMETERS), EPSILON);
         assertEquals(28.0, TransportReservationModel.requiredCapacity(
                 TransportEndpointKind.WAREHOUSE_INTERFACE, 20, 8.0, PARAMETERS), EPSILON);
-        assertEquals(1280.0 * (1.0 + 0.05 * Math.sqrt(512.0)),
+        assertEquals(1280.0 * (1.0 + 0.05 * 40.0),
                 TransportReservationModel.requiredCapacity(
-                        TransportEndpointKind.WAREHOUSE_INTERFACE, 1280, Math.sqrt(512.0), PARAMETERS),
+                        TransportEndpointKind.WAREHOUSE_INTERFACE, 1280, 40.0, PARAMETERS),
                 EPSILON);
         assertEquals(0.0, TransportReservationModel.requiredCapacity(
                 TransportEndpointKind.WAREHOUSE_INTERFACE, 0, 8.0, PARAMETERS));
+    }
+
+    @Test
+    void weightedDistanceAvoidsCoordinateAndRawWeightOverflow() {
+        long maximumManhattanDistance = 3L * ((long) Integer.MAX_VALUE - Integer.MIN_VALUE);
+        assertEquals((double) maximumManhattanDistance,
+                TransportReservationModel.warehouseWeightedDistance(
+                        new BlockPos(Integer.MIN_VALUE, Integer.MIN_VALUE, Integer.MIN_VALUE),
+                        List.of(new WarehouseTopologyEntry(
+                                new BlockPos(Integer.MAX_VALUE, Integer.MAX_VALUE, Integer.MAX_VALUE),
+                                Double.MAX_VALUE))), EPSILON);
+
+        assertEquals(20.0, TransportReservationModel.warehouseWeightedDistance(BlockPos.ZERO, List.of(
+                new WarehouseTopologyEntry(new BlockPos(10, 0, 0), Double.MAX_VALUE),
+                new WarehouseTopologyEntry(new BlockPos(40, 0, 0), Double.MAX_VALUE / 2.0))), EPSILON);
+    }
+
+    @Test
+    void weightedDistanceRejectsUndefinedInputsAndCopiesMutablePositions() {
+        assertTrue(Double.isNaN(TransportReservationModel.warehouseWeightedDistance(BlockPos.ZERO, List.of())));
+        assertTrue(Double.isNaN(TransportReservationModel.warehouseWeightedDistance(null, List.of(
+                new WarehouseTopologyEntry(BlockPos.ZERO, 1.0)))));
+        assertTrue(Double.isNaN(TransportReservationModel.warehouseWeightedDistance(BlockPos.ZERO, List.of(
+                new WarehouseTopologyEntry(BlockPos.ZERO, 0.0)))));
+        assertTrue(Double.isNaN(TransportReservationModel.warehouseWeightedDistance(BlockPos.ZERO, List.of(
+                new WarehouseTopologyEntry(BlockPos.ZERO, Double.NaN)))));
+
+        BlockPos.MutableBlockPos mutable = new BlockPos.MutableBlockPos(10, 0, 0);
+        WarehouseTopologyEntry entry = new WarehouseTopologyEntry(mutable, 1.0);
+        mutable.set(100, 0, 0);
+        assertEquals(10.0, TransportReservationModel.warehouseWeightedDistance(
+                BlockPos.ZERO, List.of(entry)), EPSILON);
     }
 
     @Test
@@ -50,8 +94,6 @@ class TransportReservationModelTest {
         assertThrows(IllegalArgumentException.class,
                 () -> new TransportConsumerParameters(20, 1, 1280, Double.NaN));
 
-        assertTrue(Double.isNaN(TransportReservationModel.warehouseScaleMetric(-1.0)));
-        assertTrue(Double.isNaN(TransportReservationModel.warehouseScaleMetric(Double.POSITIVE_INFINITY)));
         assertTrue(Double.isNaN(TransportReservationModel.requiredCapacity(
                 TransportEndpointKind.WAREHOUSE_INTERFACE, -1, 1.0, PARAMETERS)));
         assertTrue(Double.isNaN(TransportReservationModel.requiredCapacity(

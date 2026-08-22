@@ -37,7 +37,6 @@ class WarehouseInterfaceTransportViewTest {
     void viewCarriesServerDerivedReservationAndTownValuesThroughCodec() {
         TransportReservation reservation = new TransportReservation(
                 TransportEndpointKind.WAREHOUSE_INTERFACE,
-                GlobalPos.of(Level.OVERWORLD, new BlockPos(10, 64, 10)),
                 20, 8.0, 28.0, TransportAdmissionStatus.ACTIVE);
         WarehouseInterfaceTransportView view = WarehouseInterfaceTransportView.from(
                 WarehouseInterfaceBlockEntity.STATUS_WORKING,
@@ -55,6 +54,7 @@ class WarehouseInterfaceTransportViewTest {
         assertEquals(20, decoded.rateItemsPerSecond());
         assertEquals(640, decoded.maximumRateItemsPerSecond());
         assertEquals(10.0, decoded.effectiveRateItemsPerSecond(), 1.0e-9);
+        assertEquals(1.4, decoded.distanceFactor(), 1.0e-9);
         assertEquals("20", WarehouseInterfaceScreen.rateInputText(decoded));
         assertTrue(decoded.isRateLimited());
     }
@@ -64,7 +64,7 @@ class WarehouseInterfaceTransportViewTest {
         WarehouseInterfaceTransportView invalid = new WarehouseInterfaceTransportView(
                 WarehouseInterfaceTransportStatus.ACTIVE,
                 TransportReservationDecision.ACCEPTED,
-                20, 1280, Double.NaN, 0.0, 0.0, 0.0);
+                20, 1280, Double.NaN, 0.0, 1.0, 0.0, 0.0);
 
         assertTrue(WarehouseInterfaceTransportView.CODEC
                 .encodeStart(JsonOps.INSTANCE, invalid).error().isPresent());
@@ -75,7 +75,7 @@ class WarehouseInterfaceTransportViewTest {
         WarehouseInterfaceTransportView view = new WarehouseInterfaceTransportView(
                 WarehouseInterfaceTransportStatus.ACTIVE,
                 TransportReservationDecision.ACCEPTED,
-                1280, 640, 1280.0, 1280.0, 2000.0, 720.0);
+                1280, 640, 1280.0, 1280.0, 1.0, 2000.0, 720.0);
 
         var encoded = WarehouseInterfaceTransportView.CODEC
                 .encodeStart(JsonOps.INSTANCE, view).result().orElseThrow();
@@ -88,7 +88,6 @@ class WarehouseInterfaceTransportViewTest {
     void activeReservationBecomesThrottledWhenTownSupplyFalls() {
         TransportReservation reservation = new TransportReservation(
                 TransportEndpointKind.WAREHOUSE_INTERFACE,
-                GlobalPos.of(Level.OVERWORLD, new BlockPos(10, 64, 10)),
                 20, 8.0, 28.0, TransportAdmissionStatus.ACTIVE);
 
         WarehouseInterfaceTransportView view = WarehouseInterfaceTransportView.from(
@@ -107,9 +106,7 @@ class WarehouseInterfaceTransportViewTest {
     void restoredSupplyReturnsToTheAcceptedRateWithoutChangingTheInputValue() {
         TransportReservation reservation = new TransportReservation(
                 TransportEndpointKind.WAREHOUSE_INTERFACE,
-                GlobalPos.of(Level.OVERWORLD, new BlockPos(10, 64, 10)),
                 20, 8.0, 28.0, TransportAdmissionStatus.ACTIVE);
-
         WarehouseInterfaceTransportView view = WarehouseInterfaceTransportView.from(
                 WarehouseInterfaceBlockEntity.STATUS_WORKING,
                 Optional.of(reservation),
@@ -121,6 +118,26 @@ class WarehouseInterfaceTransportViewTest {
         assertEquals(20.0, view.effectiveRateItemsPerSecond(), 1.0e-9);
         assertEquals("20", WarehouseInterfaceScreen.rateInputText(view));
         assertFalse(view.isRateLimited());
+    }
+
+    @Test
+    void unavailableReservationHasNoEffectiveRateOrReservedCapacity() {
+        TransportReservation reservation = new TransportReservation(
+                TransportEndpointKind.WAREHOUSE_INTERFACE,
+                20, 0.0, 0.0, TransportAdmissionStatus.UNAVAILABLE);
+
+        WarehouseInterfaceTransportView view = WarehouseInterfaceTransportView.from(
+                WarehouseInterfaceBlockEntity.STATUS_WORKING,
+                Optional.of(reservation),
+                new TownTransportSummary(100.0, 0.0, 100.0, 0.0, 1.0),
+                TransportReservationDecision.ACCEPTED);
+
+        assertEquals(WarehouseInterfaceTransportStatus.WAREHOUSE_UNAVAILABLE, view.status());
+        assertEquals(20, view.rateItemsPerSecond());
+        assertEquals(0.0, view.effectiveRateItemsPerSecond(), 1.0e-9);
+        assertEquals(0.0, view.reservedCapacity(), 1.0e-9);
+        assertEquals(0.0, view.distanceFactor(), 1.0e-9);
+        assertTrue(view.isRateLimited());
     }
 
     @Test

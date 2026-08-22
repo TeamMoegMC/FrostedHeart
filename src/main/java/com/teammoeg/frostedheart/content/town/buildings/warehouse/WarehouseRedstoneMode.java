@@ -20,13 +20,13 @@
 package com.teammoeg.frostedheart.content.town.buildings.warehouse;
 
 /**
- * 仓库墙体设备共用的红石模式。
+ * 城镇仓库自动化设备共用的红石模式。
  * <p>
  * 仓库发信器使用 {@link #HIGH_SIGNAL} / {@link #LOW_SIGNAL} 决定何时发出红石信号
  * （分别对应"存量 ≥ 阈值"与"存量 < 阈值"，与 AE2 发信器一致）；
  * 仓库接口使用全部三个值决定何时允许从城镇仓库补货输出。
  * <p>
- * Shared redstone mode for warehouse wall devices.
+ * Shared redstone mode for town-owned warehouse automation devices.
  * <p>
  * The warehouse level emitter uses {@link #HIGH_SIGNAL} / {@link #LOW_SIGNAL} to decide when to
  * emit a redstone signal (stock at or above threshold / stock below threshold, mirroring the AE2

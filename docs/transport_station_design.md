@@ -273,7 +273,9 @@ Screen，因此无需新增重复数据通道。
 `resources[TRANSPORT_CAPACITY]` 和 `TownTransportState.DailyReport` 显示总运力、已占用、剩余、缺口与有效
 传输比例。全量 `TeamTownDataS2CPacket` 和增量 `TownResourceUpdatePacket` 都携带权威
 `TownTransportSnapshot`，因此实时占用不会从省略派生值的持久化 Codec 错误重算为 `0`。设备详情位于汇总和晨间报告
-之后、默认收起；展开后按稳定端点顺序显示接口坐标、绑定仓库核心、设置/有效速率、距离因子、占用运力和状态。
+之后、默认收起；展开后按稳定端点顺序显示接口坐标、设置/有效速率、全镇有效仓库容量加权平均曼哈顿距离、距离因子、
+占用运力和状态。仓库接口与仓库库存发信器都是城镇级设备，可放在城镇维度内任意位置；它们不属于某座仓库，也不进入
+仓库墙面扫描结果。接口预约只以接口自身 `GlobalPos` 为端点；发信器只监听城镇库存并输出红石，不占用运力。
 “仓库容量”详情同时显示总容量、`TeamTownResourceHolder.occupiedCapacity`、剩余、缺口和使用率。
 
 ## 8. 注册、资源与本地化

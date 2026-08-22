@@ -103,9 +103,11 @@ class TownTransportStateTest {
         TransportEndpointId endpoint = endpoint(8, 64, 4);
         TransportReservation active = reservation(20, 8.0, 28.0, TransportAdmissionStatus.ACTIVE);
         TransportReservation disabled = reservation(0, 0.0, 0.0, TransportAdmissionStatus.DISABLED);
+        TransportReservation unavailable = reservation(20, 0.0, 0.0, TransportAdmissionStatus.UNAVAILABLE);
         TownTransportState source = new TownTransportState(TownTransportState.DailyReport.EMPTY, Map.of(
                 endpoint, active,
-                endpoint(0, 64, 0), disabled));
+                endpoint(0, 64, 0), disabled,
+                endpoint(1, 64, 0), unavailable));
 
         var encoded = TownTransportState.CODEC.encodeStart(JsonOps.INSTANCE, source)
                 .result().orElseThrow();
@@ -113,15 +115,54 @@ class TownTransportStateTest {
         assertTrue(encoded.toString().contains("rateItemsPerSecond"));
         assertFalse(encoded.toString().contains("requestedRateItemsPerSecond"));
         assertFalse(encoded.toString().contains("activeRateItemsPerSecond"));
+        assertFalse(encoded.toString().contains("boundWarehouseCorePos"));
         TownTransportState decoded = TownTransportState.CODEC.parse(JsonOps.INSTANCE, encoded)
                 .result().orElseThrow();
 
-        assertEquals(2, decoded.getReservations().size());
+        assertEquals(3, decoded.getReservations().size());
         assertEquals(0.0, decoded.getReservation(endpoint).reservedTransportCapacity());
         assertTrue(decoded.recalculateReservedCapacities(
                 TownModelParameters.currentDefaults().transportConsumers()));
         assertEquals(28.0, decoded.getReservation(endpoint).reservedTransportCapacity());
         assertEquals(28.0, decoded.getReservedTransportCapacity());
+        assertEquals(0.0, decoded.getReservation(endpoint(1, 64, 0)).reservedTransportCapacity());
+    }
+
+    @Test
+    void reservationStateInvariantsRejectAmbiguousCombinations() {
+        assertThrows(IllegalArgumentException.class, () -> reservation(
+                0, 1.0, 0.0, TransportAdmissionStatus.ACTIVE));
+        assertThrows(IllegalArgumentException.class, () -> reservation(
+                1, 1.0, 0.0, TransportAdmissionStatus.DISABLED));
+        assertThrows(IllegalArgumentException.class, () -> reservation(
+                0, 1.0, 1.0, TransportAdmissionStatus.DISABLED));
+        assertThrows(IllegalArgumentException.class, () -> reservation(
+                20, 1.0, 0.0, TransportAdmissionStatus.UNAVAILABLE));
+        assertThrows(IllegalArgumentException.class, () -> reservation(
+                20, 0.0, 1.0, TransportAdmissionStatus.UNAVAILABLE));
+
+        TransportReservation unavailable = reservation(
+                2_000, 0.0, 0.0, TransportAdmissionStatus.UNAVAILABLE);
+        assertEquals(2_000, unavailable.rateItemsPerSecond());
+        assertEquals(0.0, unavailable.recalculateReservedCapacity(
+                TownModelParameters.currentDefaults().transportConsumers()).reservedTransportCapacity());
+    }
+
+    @Test
+    void unknownAdmissionStatusDropsOnlyTheDamagedEntry() {
+        TransportEndpointId damagedEndpoint = endpoint(0, 64, 0);
+        TransportEndpointId validEndpoint = endpoint(1, 64, 0);
+        JsonObject damaged = encodedEntry(damagedEndpoint,
+                reservation(20, 1.0, 0.0, TransportAdmissionStatus.ACTIVE));
+        damaged.getAsJsonObject("reservation").addProperty("admissionStatus", "UNKNOWN");
+        JsonArray entries = new JsonArray();
+        entries.add(damaged);
+        entries.add(encodedEntry(validEndpoint,
+                reservation(0, 1.0, 0.0, TransportAdmissionStatus.DISABLED)));
+
+        TownTransportState decoded = TownTransportState.CODEC.parse(
+                JsonOps.INSTANCE, stateJson(entries)).result().orElseThrow();
+        assertEquals(Map.of(validEndpoint, decoded.getReservation(validEndpoint)), decoded.getReservations());
     }
 
     @Test
@@ -187,7 +228,6 @@ class TownTransportStateTest {
             TransportAdmissionStatus status
     ) {
         return new TransportReservation(TransportEndpointKind.WAREHOUSE_INTERFACE,
-                GlobalPos.of(Level.OVERWORLD, new BlockPos(100, 64, 100)),
                 rate, scaleMetric, reservedCapacity, status);
     }
 
