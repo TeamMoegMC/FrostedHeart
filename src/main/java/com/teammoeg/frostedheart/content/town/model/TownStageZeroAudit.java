@@ -25,6 +25,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.teammoeg.frostedheart.content.climate.block.generator.GeneratorFuelModel;
+import com.teammoeg.frostedheart.content.town.transport.TransportConsumerParameters;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -414,6 +415,7 @@ public final class TownStageZeroAudit {
     ) {
         List<ParameterValue> values = new ArrayList<>();
         TownModelParameters.TransportStationParameters transport = parameters.transportStation();
+        TransportConsumerParameters consumers = parameters.transportConsumers();
         addShared(values, "transportStation.capacityPerStandardWorkerDay",
                 transport.capacityPerStandardWorkerDay(), "transport-capacity/SWE/day", source,
                 "TRANSPORT_STATION_CAPACITY_PER_STANDARD_WORKER_DAY",
@@ -443,6 +445,22 @@ public final class TownStageZeroAudit {
                 "TRANSPORT_STATION_LEARNING_ACTIVITY",
                 "TRANSPORT_STATION.learningActivity");
         addProductivity(values, "transportStation.productivity", transport.productivity(), source);
+        addShared(values, "transportConsumers.defaultRateItemsPerSecond",
+                consumers.defaultRateItemsPerSecond(), "items/s", source,
+                "TRANSPORT_CONSUMER_DEFAULT_RATE_ITEMS_PER_SECOND",
+                "TRANSPORT_CONSUMERS.defaultRateItemsPerSecond");
+        addShared(values, "transportConsumers.minimumRateItemsPerSecond",
+                consumers.minimumRateItemsPerSecond(), "items/s", source,
+                "TRANSPORT_CONSUMER_MINIMUM_RATE_ITEMS_PER_SECOND",
+                "TRANSPORT_CONSUMERS.minimumRateItemsPerSecond");
+        addShared(values, "transportConsumers.maximumRateItemsPerSecond",
+                consumers.maximumRateItemsPerSecond(), "items/s", source,
+                "TRANSPORT_CONSUMER_MAXIMUM_RATE_ITEMS_PER_SECOND",
+                "TRANSPORT_CONSUMERS.maximumRateItemsPerSecond");
+        addShared(values, "transportConsumers.warehouseScaleCostPerMetric",
+                consumers.warehouseScaleCostPerMetric(), "capacity/(items/s*sqrt(block3))", source,
+                "TRANSPORT_CONSUMER_WAREHOUSE_SCALE_COST_PER_METRIC",
+                "TRANSPORT_CONSUMERS.warehouseScaleCostPerMetric");
         return List.copyOf(values);
     }
 

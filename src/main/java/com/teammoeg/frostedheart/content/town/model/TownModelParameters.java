@@ -21,6 +21,7 @@ package com.teammoeg.frostedheart.content.town.model;
 import com.teammoeg.frostedheart.content.town.TownMathFunctions;
 import com.teammoeg.frostedheart.content.town.resident.ResidentActivity;
 import com.teammoeg.frostedheart.content.town.resident.ResidentNutritionSupportModel;
+import com.teammoeg.frostedheart.content.town.transport.TransportConsumerParameters;
 
 import java.util.List;
 
@@ -33,6 +34,7 @@ public record TownModelParameters(
         MiningParameters mining,
         HuntingParameters hunting,
         TransportStationParameters transportStation,
+        TransportConsumerParameters transportConsumers,
         HousingParameters housing,
         ResidentParameters residents,
         BuildingScoringParameters buildingScoring,
@@ -44,6 +46,24 @@ public record TownModelParameters(
 ) {
     public TownModelParameters {
         meatFoods = List.copyOf(meatFoods);
+    }
+
+    /** Source-compatible constructor for callers created before transport consumers existed. */
+    public TownModelParameters(
+            MiningParameters mining,
+            HuntingParameters hunting,
+            TransportStationParameters transportStation,
+            HousingParameters housing,
+            ResidentParameters residents,
+            BuildingScoringParameters buildingScoring,
+            TerrainResourceParameters terrainResources,
+            GeneratorT1Parameters generatorT1,
+            ClimateParameters climate,
+            ObservationParameters observation,
+            List<MeatFoodParameters> meatFoods
+    ) {
+        this(mining, hunting, transportStation, defaultTransportConsumerParameters(), housing, residents,
+                buildingScoring, terrainResources, generatorT1, climate, observation, meatFoods);
     }
 
     /** Source-compatible constructor for callers created before transport-station parameters existed. */
@@ -59,7 +79,7 @@ public record TownModelParameters(
             ObservationParameters observation,
             List<MeatFoodParameters> meatFoods
     ) {
-        this(mining, hunting, defaultTransportStationParameters(), housing, residents,
+        this(mining, hunting, defaultTransportStationParameters(), defaultTransportConsumerParameters(), housing, residents,
                 buildingScoring, terrainResources, generatorT1, climate, observation, meatFoods);
     }
 
@@ -75,7 +95,7 @@ public record TownModelParameters(
             ClimateParameters climate,
             List<MeatFoodParameters> meatFoods
     ) {
-        this(mining, hunting, defaultTransportStationParameters(), housing, residents,
+        this(mining, hunting, defaultTransportStationParameters(), defaultTransportConsumerParameters(), housing, residents,
                 buildingScoring, terrainResources,
                 generatorT1, climate,
                 new ObservationParameters(Defaults.TOWN_OBSERVATION_HISTORY_DAYS,
@@ -142,7 +162,7 @@ public record TownModelParameters(
                 oldResidents.aging(), tunedNutrition, oldResidents.residentialCareScoreBand(),
                 oldResidents.townPolicyCooldownDays());
         return new TownModelParameters(
-                mining, hunting, transportStation, tunedHousing, tunedResidents, buildingScoring,
+                mining, hunting, transportStation, transportConsumers, tunedHousing, tunedResidents, buildingScoring,
                 terrainResources, generatorT1, climate, observation, meatFoods);
     }
 
@@ -166,7 +186,15 @@ public record TownModelParameters(
                         Defaults.TRANSPORT_STATION_MAXIMUM_PRODUCTIVITY),
                 new ResidentActivity(
                         Defaults.TRANSPORT_STATION_PHYSICAL_ACTIVITY,
-                        Defaults.TRANSPORT_STATION_LEARNING_ACTIVITY));
+                Defaults.TRANSPORT_STATION_LEARNING_ACTIVITY));
+    }
+
+    private static TransportConsumerParameters defaultTransportConsumerParameters() {
+        return new TransportConsumerParameters(
+                Defaults.TRANSPORT_CONSUMER_DEFAULT_RATE_ITEMS_PER_SECOND,
+                Defaults.TRANSPORT_CONSUMER_MINIMUM_RATE_ITEMS_PER_SECOND,
+                Defaults.TRANSPORT_CONSUMER_MAXIMUM_RATE_ITEMS_PER_SECOND,
+                Defaults.TRANSPORT_CONSUMER_WAREHOUSE_SCALE_COST_PER_METRIC);
     }
 
     /**
@@ -228,6 +256,7 @@ public record TownModelParameters(
                                 Defaults.HUNTING_PHYSICAL_ACTIVITY,
                                 Defaults.HUNTING_LEARNING_ACTIVITY)),
                         defaultTransportStationParameters(),
+                        defaultTransportConsumerParameters(),
                 new HousingParameters(
                         Defaults.HOUSING_FOOD_PER_RESIDENT_DAY,
                         Defaults.HOUSING_NUTRITION_REFERENCE_PER_FOOD_UNIT,
@@ -1003,6 +1032,10 @@ public record TownModelParameters(
         public static final double TRANSPORT_STATION_BONUS_AT_MAXIMUM_PROFICIENCY = 0.8;
         public static final double TRANSPORT_STATION_MINIMUM_PRODUCTIVITY = 0.5;
         public static final double TRANSPORT_STATION_MAXIMUM_PRODUCTIVITY = 2.3;
+        public static final int TRANSPORT_CONSUMER_DEFAULT_RATE_ITEMS_PER_SECOND = 20;
+        public static final int TRANSPORT_CONSUMER_MINIMUM_RATE_ITEMS_PER_SECOND = 1;
+        public static final int TRANSPORT_CONSUMER_MAXIMUM_RATE_ITEMS_PER_SECOND = 1280;
+        public static final double TRANSPORT_CONSUMER_WAREHOUSE_SCALE_COST_PER_METRIC = 0.05;
         public static final double MINING_HEALTH_WEIGHT = 30.0;
         public static final double MINING_MENTAL_WEIGHT = 10.0;
         public static final double MINING_STRENGTH_WEIGHT = 45.0;

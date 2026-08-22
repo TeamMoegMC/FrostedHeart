@@ -10,6 +10,9 @@
 
 package com.teammoeg.frostedheart.content.town.model;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import com.teammoeg.frostedheart.content.town.resident.ResidentNutrition;
 import org.junit.jupiter.api.Test;
 
@@ -20,6 +23,7 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertSame;
 
 class TownStageFourModelTest {
     private static final double EPSILON = 1.0e-9;
@@ -93,6 +97,25 @@ class TownStageFourModelTest {
         assertEquals(2.0, tuned.residents().nutrition().gainAtReference(), EPSILON);
         assertEquals(200.0, defaults.housing().nutritionReferencePerFoodUnit(), EPSILON);
         assertEquals(1.0, defaults.residents().nutrition().reserveLossPerDay(), EPSILON);
+    }
+
+    @Test
+    void stageFourSummaryTracesTransportConsumerInputsInItsJsonOutput() {
+        TownModelParameters parameters = TownModelParameters.currentDefaults();
+        TownStageFourSimulator.Summary summary = new TownStageFourSimulator.Summary(
+                2, 4, "transport-parameter-trace", null,
+                1, 1, 0L, List.of(), parameters, Map.of(),
+                null, null, 0, null, null);
+
+        assertSame(parameters, summary.parameters());
+        JsonObject transportConsumers = JsonParser.parseString(new Gson().toJson(summary))
+                .getAsJsonObject()
+                .getAsJsonObject("parameters")
+                .getAsJsonObject("transportConsumers");
+        assertEquals(20, transportConsumers.get("defaultRateItemsPerSecond").getAsInt());
+        assertEquals(1, transportConsumers.get("minimumRateItemsPerSecond").getAsInt());
+        assertEquals(1280, transportConsumers.get("maximumRateItemsPerSecond").getAsInt());
+        assertEquals(0.05, transportConsumers.get("warehouseScaleCostPerMetric").getAsDouble(), EPSILON);
     }
 
     @Test

@@ -1,0 +1,12 @@
+{
+  "parent": "minecraft:block/cube",
+  "textures": {
+    "particle": "frostedheart:block/warehouse",
+    "down": "frostedheart:block/warehouse",
+    "up": "frostedheart:block/warehouse",
+    "north": "minecraft:block/redstone_lamp_on",
+    "south": "frostedheart:block/warehouse",
+    "west": "frostedheart:block/warehouse",
+    "east": "frostedheart:block/warehouse"
+  }
+}

@@ -1822,6 +1822,38 @@ public class FHConfig {
 				}
 			}
 
+			public static class TransportConsumers {
+				public final ForgeConfigSpec.IntValue defaultRateItemsPerSecond;
+				public final ForgeConfigSpec.IntValue minimumRateItemsPerSecond;
+				public final ForgeConfigSpec.IntValue maximumRateItemsPerSecond;
+				public final ForgeConfigSpec.DoubleValue warehouseScaleCostPerMetric;
+
+				TransportConsumers(ForgeConfigSpec.Builder builder) {
+					builder.push("Transport Consumers");
+					defaultRateItemsPerSecond = builder
+							.comment("Default item transfer rate for a newly bound transport consumer, in items per second.")
+							.defineInRange("defaultRateItemsPerSecond",
+									TownModelParameters.Defaults.TRANSPORT_CONSUMER_DEFAULT_RATE_ITEMS_PER_SECOND,
+									0, 1_000_000);
+					minimumRateItemsPerSecond = builder
+							.comment("Smallest non-zero transport-consumer rate, in items per second. Zero disables a consumer.")
+							.defineInRange("minimumRateItemsPerSecond",
+									TownModelParameters.Defaults.TRANSPORT_CONSUMER_MINIMUM_RATE_ITEMS_PER_SECOND,
+									1, 1_000_000);
+					maximumRateItemsPerSecond = builder
+							.comment("Maximum transport-consumer rate, in items per second.")
+							.defineInRange("maximumRateItemsPerSecond",
+									TownModelParameters.Defaults.TRANSPORT_CONSUMER_MAXIMUM_RATE_ITEMS_PER_SECOND,
+									1, 1_000_000);
+					warehouseScaleCostPerMetric = builder
+							.comment("Additional capacity multiplier per sqrt(warehouse interior volume).")
+							.defineInRange("warehouseScaleCostPerMetric",
+									TownModelParameters.Defaults.TRANSPORT_CONSUMER_WAREHOUSE_SCALE_COST_PER_METRIC,
+									0d, 1_000_000d);
+					builder.pop();
+				}
+			}
+
 			public static class Resource{
 				/**
 				 * @deprecated Use {@link #oreReservePerChunk}. Kept as a Java alias
@@ -1900,6 +1932,7 @@ public class FHConfig {
 			public final GeneratorT1 GENERATOR_T1;
 			public final Mining MINING;
 			public final TransportStation TRANSPORT_STATION;
+			public final TransportConsumers TRANSPORT_CONSUMERS;
 			public final ResidentRules RESIDENT_RULES;
 			public final ResidentProgression RESIDENT_PROGRESSION;
 			public final ResidentGeneration RESIDENT_GENERATION;
@@ -1941,6 +1974,7 @@ public class FHConfig {
 				HUNTING = new Hunting(builder);
 				MINING = new Mining(builder);
 				TRANSPORT_STATION = new TransportStation(builder);
+				TRANSPORT_CONSUMERS = new TransportConsumers(builder);
 				RESOURCE=new Resource(builder);
 				builder.pop();
 

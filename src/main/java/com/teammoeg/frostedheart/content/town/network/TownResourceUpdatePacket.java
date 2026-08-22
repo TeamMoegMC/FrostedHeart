@@ -11,6 +11,7 @@ import com.teammoeg.chorda.network.CMessage;
 import com.teammoeg.frostedheart.bootstrap.common.FHSpecialDataTypes;
 import com.teammoeg.frostedheart.content.town.TeamTownData;
 import com.teammoeg.frostedheart.content.town.resource.ITownResourceKey;
+import com.teammoeg.frostedheart.content.town.transport.TownTransportSnapshot;
 import com.teammoeg.frostedheart.content.town.transport.TownTransportState;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.network.NetworkEvent;
@@ -22,18 +23,28 @@ import net.minecraftforge.network.NetworkEvent;
 public class TownResourceUpdatePacket implements CMessage {
     private final Map<ITownResourceKey, Double> changes;
     private final double occupiedCapacity;
-    private final TownTransportState.DailyReport transportDailyReport;
+    private final TownTransportSnapshot transportSnapshot;
 
+    public TownResourceUpdatePacket(
+            Map<ITownResourceKey, Double> changes,
+            double occupiedCapacity,
+            TownTransportSnapshot transportSnapshot
+    ) {
+        this.changes = changes;
+        this.occupiedCapacity = occupiedCapacity;
+        this.transportSnapshot = transportSnapshot == null ? TownTransportSnapshot.EMPTY : transportSnapshot;
+    }
+
+    /** Source-compatible constructor for callers predating live reservation snapshots. */
     public TownResourceUpdatePacket(
             Map<ITownResourceKey, Double> changes,
             double occupiedCapacity,
             TownTransportState.DailyReport transportDailyReport
     ) {
-        this.changes = changes;
-        this.occupiedCapacity = occupiedCapacity;
-        this.transportDailyReport = transportDailyReport == null
-                ? TownTransportState.DailyReport.EMPTY
-                : transportDailyReport;
+        this(changes, occupiedCapacity, new TownTransportSnapshot(
+                transportDailyReport,
+                transportDailyReport == null ? 0.0 : transportDailyReport.totalCapacity(),
+                List.of()));
     }
 
     public TownResourceUpdatePacket(FriendlyByteBuf buffer) {
@@ -44,8 +55,8 @@ public class TownResourceUpdatePacket implements CMessage {
         // Read occupied capacity
         this.occupiedCapacity = buffer.readDouble();
         Object reportData = ObjectWriter.readObject(buffer);
-        this.transportDailyReport = CodecUtil.decodeOrThrow(
-                TownTransportState.DailyReport.CODEC.decode(DataOps.COMPRESSED, reportData));
+        this.transportSnapshot = CodecUtil.decodeOrThrow(
+                TownTransportSnapshot.CODEC.decode(DataOps.COMPRESSED, reportData));
     }
 
     @Override
@@ -56,7 +67,7 @@ public class TownResourceUpdatePacket implements CMessage {
             FriendlyByteBuf::writeDouble);
         // Write occupied capacity
         buffer.writeDouble(occupiedCapacity);
-        CodecUtil.writeCodec(buffer, TownTransportState.DailyReport.CODEC, transportDailyReport);
+        CodecUtil.writeCodec(buffer, TownTransportSnapshot.CODEC, transportSnapshot);
     }
 
     @Override
@@ -64,9 +75,12 @@ public class TownResourceUpdatePacket implements CMessage {
         context.get().enqueueWork(() -> {
             CClientTeamDataManager.INSTANCE.getInstance()
                 .getOptional(FHSpecialDataTypes.TOWN_DATA)
-                .ifPresent(townData -> townData.applyResourceUpdate(
-                        changes, occupiedCapacity, transportDailyReport));
+                .ifPresent(this::applyTo);
         });
         context.get().setPacketHandled(true);
+    }
+
+    void applyTo(TeamTownData townData) {
+        townData.applyResourceUpdate(changes, occupiedCapacity, transportSnapshot);
     }
 }

@@ -21,7 +21,14 @@ import com.teammoeg.frostedheart.content.town.resource.TeamTownResourceHolder;
 import com.teammoeg.frostedheart.content.town.resource.VirtualResourceType;
 import com.teammoeg.frostedheart.content.town.tabs.TownInfoPanel;
 import com.teammoeg.frostedheart.content.town.tabs.TownTextLayout;
+import com.teammoeg.frostedheart.content.town.transport.TownTransportSnapshot;
+import com.teammoeg.frostedheart.content.town.transport.TownTransportSummary;
 import com.teammoeg.frostedheart.content.town.transport.TownTransportState;
+import com.teammoeg.frostedheart.content.town.transport.TransportAdmissionStatus;
+import com.teammoeg.frostedheart.content.town.transport.TransportEndpointKind;
+import com.teammoeg.frostedheart.content.town.transport.TransportReservation;
+import com.teammoeg.frostedheart.content.town.transport.TransportReservationModel;
+import net.minecraft.core.GlobalPos;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
@@ -52,15 +59,23 @@ public final class TownVirtualResourcesPanel extends UILayer {
 
     private final Supplier<TeamTown> townSource;
     private final TownInfoPanel detailPanel;
+    private final TransportDetailsState transportDetails = new TransportDetailsState();
     private VirtualResourceType selectedType;
     private int listScroll;
 
     public TownVirtualResourcesPanel(
             UIElement parent, int x, int y, Supplier<TeamTown> townSource
     ) {
+        this(parent, x, y, townSource, firstType());
+    }
+
+    public TownVirtualResourcesPanel(
+            UIElement parent, int x, int y, Supplier<TeamTown> townSource,
+            @Nullable VirtualResourceType initialType
+    ) {
         super(parent);
         this.townSource = townSource;
-        this.selectedType = firstType();
+        this.selectedType = initialType;
         setPos(x, y);
         setSize(WIDTH, HEIGHT);
         setScissorEnabled(false);
@@ -240,47 +255,146 @@ public final class TownVirtualResourcesPanel extends UILayer {
         return rows;
     }
 
-    private static List<TownInfoPanel.Row> transportRows(TeamTown town) {
+    private List<TownInfoPanel.Row> transportRows(TeamTown town) {
         TeamTownResourceHolder resources = town.getResourceHolder();
-        double total = resources.get(VirtualResourceType.TRANSPORT_CAPACITY);
-        TownTransportState.DailyReport report = town.getTransportState().getDailyReport();
-        if (!report.hasData()) {
-            return List.of(
-                    status("awaiting_settlement", 0xFFAAAAAA),
-                    amount("transport_total", total, 0xFFFFFFFF),
-                    TownInfoPanel.Row.colored(
-                            Component.translatable(
-                                    "gui.frostedheart.town_manager.daily_data_unavailable"),
-                            0xFF777777));
-        }
+        TownTransportSnapshot snapshot = TownTransportSnapshot.from(
+                resources.get(VirtualResourceType.TRANSPORT_CAPACITY),
+                town.getTransportState());
+        return transportRows(snapshot, transportDetails);
+    }
 
-        TownVirtualResourceMetrics.CapacityBreakdown capacity =
-                TownVirtualResourceMetrics.capacity(total, report.reservedCapacity());
+    static List<TownInfoPanel.Row> transportRows(
+            TownTransportSnapshot snapshot,
+            TransportDetailsState details
+    ) {
+        TownTransportSummary summary = snapshot.summary();
         List<TownInfoPanel.Row> rows = new ArrayList<>();
-        if (capacity.overcommitted()) {
+        boolean shortage = TransportReservationModel.meaningfullyGreater(
+                summary.reservedCapacity(), summary.totalCapacity());
+        if (shortage) {
             rows.add(status("shortage", 0xFFFF5555));
-        } else if (capacity.total() <= TeamTownResourceHolder.DELTA) {
+        } else if (summary.totalCapacity() <= TeamTownResourceHolder.DELTA) {
             rows.add(status("no_capacity", 0xFFFFAA00));
         } else {
             rows.add(status("available", 0xFF55FF55));
         }
-        rows.add(amount("transport_total", capacity.total(), 0xFFFFFFFF));
+        rows.add(section("transport_realtime", 0xFFFFAA00));
+        rows.add(amount("transport_total", summary.totalCapacity(), 0xFFFFFFFF));
         rows.add(amount(
                 "transport_reserved",
-                capacity.used(),
-                capacity.overcommitted() ? 0xFFFF5555 : 0xFFFFFFFF));
+                summary.reservedCapacity(),
+                shortage ? 0xFFFF5555 : 0xFFFFFFFF));
         rows.add(amount(
                 "transport_available",
-                capacity.available(),
-                capacity.overcommitted() ? 0xFFFF5555 : 0xFF55FF55));
-        if (capacity.overcommitted()) {
-            rows.add(amount("capacity_shortfall", capacity.shortfall(), 0xFFFF5555));
+                summary.remainingRegistrableCapacity(),
+                shortage ? 0xFFFF5555 : 0xFF55FF55));
+        if (shortage) {
+            rows.add(amount("capacity_shortfall", summary.shortfall(), 0xFFFF5555));
         }
         rows.add(percent(
                 "transport_effective_rate",
-                capacity.effectiveRateScale(),
-                capacity.overcommitted() ? 0xFFFFAA00 : 0xFF55FF55));
+                summary.effectiveRateScale(),
+                shortage ? 0xFFFFAA00 : 0xFF55FF55));
+        rows.add(TownInfoPanel.Row.empty());
+        rows.add(section("transport_daily_report", 0xFFFFAA00));
+        TownTransportState.DailyReport report = snapshot.dailyReport();
+        if (!report.hasData()) {
+            rows.add(TownInfoPanel.Row.colored(
+                    Component.translatable("gui.frostedheart.town_manager.daily_data_unavailable"),
+                    0xFF777777));
+        } else {
+            TownVirtualResourceMetrics.CapacityBreakdown daily =
+                    TownVirtualResourceMetrics.capacity(report.totalCapacity(), report.reservedCapacity());
+            rows.add(amount("transport_daily_total", daily.total(), 0xFFAAAAAA));
+            rows.add(amount("transport_daily_reserved", daily.used(), 0xFFAAAAAA));
+            rows.add(percent("transport_daily_effective_rate", daily.effectiveRateScale(),
+                    daily.overcommitted() ? 0xFFFFAA00 : 0xFFAAAAAA));
+        }
+
+        rows.add(TownInfoPanel.Row.empty());
+        Component detailsControl = details.expanded()
+                ? Component.translatable(
+                "gui.frostedheart.town_manager.virtual_resource.transport_details_collapse")
+                : Component.translatable(
+                "gui.frostedheart.town_manager.virtual_resource.transport_details_expand",
+                snapshot.reservations().size());
+        rows.add(TownInfoPanel.Row.clickable(
+                detailsControl,
+                0xFF55FFFF,
+                details::toggle));
+        if (!details.expanded()) {
+            return rows;
+        }
+
+        for (TownTransportState.ReservationEntry entry : snapshot.reservations()) {
+            TransportReservation reservation = entry.reservation();
+            rows.add(TownInfoPanel.Row.colored(Component.translatable(
+                    "gui.frostedheart.town_manager.virtual_resource.transport_endpoint",
+                    endpointKind(reservation.endpointKind()),
+                    formatPosition(entry.endpointId().endpointPos())), 0xFFFFFFFF));
+            rows.add(TownInfoPanel.Row.colored(Component.translatable(
+                    "gui.frostedheart.town_manager.virtual_resource.transport_binding",
+                    formatPosition(reservation.boundWarehouseCorePos())), 0xFFAAAAAA));
+            rows.add(TownInfoPanel.Row.text(Component.translatable(
+                    "gui.frostedheart.town_manager.virtual_resource.transport_endpoint_rate",
+                    reservation.rateItemsPerSecond(),
+                    formatNumber(reservation.rateItemsPerSecond()
+                            * summary.effectiveRateScale()))));
+            rows.add(TownInfoPanel.Row.colored(Component.translatable(
+                    "gui.frostedheart.town_manager.virtual_resource.transport_endpoint_metrics",
+                    distanceFactor(reservation),
+                    formatNumber(reservation.reservedTransportCapacity()),
+                    admissionStatus(reservation.admissionStatus(), shortage)),
+                    0xFFAAAAAA));
+        }
         return rows;
+    }
+
+    static final class TransportDetailsState {
+        private boolean expanded;
+
+        boolean expanded() {
+            return expanded;
+        }
+
+        void toggle() {
+            expanded = !expanded;
+        }
+    }
+
+    private static TownInfoPanel.Row section(String key, int color) {
+        return TownInfoPanel.Row.colored(Component.translatable(
+                "gui.frostedheart.town_manager.virtual_resource." + key), color);
+    }
+
+    private static Component endpointKind(TransportEndpointKind kind) {
+        return Component.translatable(
+                "gui.frostedheart.town_manager.virtual_resource.transport_endpoint_kind."
+                        + kind.name().toLowerCase(Locale.ROOT));
+    }
+
+    private static Component admissionStatus(TransportAdmissionStatus status, boolean shortage) {
+        String state = status == TransportAdmissionStatus.ACTIVE && shortage
+                ? "throttled"
+                : status.name().toLowerCase(Locale.ROOT);
+        return Component.translatable(
+                "gui.frostedheart.town_manager.virtual_resource.transport_admission."
+                        + state);
+    }
+
+    private static String distanceFactor(TransportReservation reservation) {
+        if (reservation.rateItemsPerSecond() <= 0) {
+            return "-";
+        }
+        return formatNumber(
+                reservation.reservedTransportCapacity() / reservation.rateItemsPerSecond());
+    }
+
+    private static String formatPosition(GlobalPos globalPos) {
+        return globalPos.dimension().location() + " "
+                + globalPos.pos().getX() + ", "
+                + globalPos.pos().getY() + ", "
+                + globalPos.pos().getZ();
     }
 
     private static TownInfoPanel.Row status(String valueKey, int color) {

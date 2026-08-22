@@ -25,6 +25,8 @@ import com.teammoeg.frostedheart.content.town.block.AbstractTownBuildingBlockEnt
 import com.teammoeg.frostedheart.content.town.block.blockscanner.AbstractBlockScanner;
 import com.teammoeg.frostedheart.content.town.block.blockscanner.FloorBlockScanner;
 import com.teammoeg.frostedheart.content.town.building.AbstractTownBuilding;
+import com.teammoeg.frostedheart.content.town.transport.TransportEndpointId;
+import net.minecraft.core.GlobalPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.world.MenuProvider;
@@ -124,6 +126,12 @@ public class WarehouseBlockEntity extends AbstractTownBuildingBlockEntity<Wareho
 
         Set<BlockPos> previous = building.replaceInterfaces(accepted);
         previous.removeAll(accepted);
+        for (BlockPos interfacePos : accepted) {
+            if (level.getBlockEntity(interfacePos) instanceof WarehouseInterfaceBlockEntity warehouseInterface) {
+                warehouseInterface.ensureWatcherAndRefresh();
+            }
+        }
+        unregisterRemovedInterfaces(previous);
         for (BlockPos removedPos : previous) {
             if (level.isLoaded(removedPos)
                     && level.getBlockEntity(removedPos) instanceof WarehouseInterfaceBlockEntity warehouseInterface) {
@@ -161,11 +169,22 @@ public class WarehouseBlockEntity extends AbstractTownBuildingBlockEntity<Wareho
         if (level == null || townProvider == null) {
             return;
         }
+        unregisterRemovedInterfaces(previous);
         for (BlockPos interfacePos : previous) {
             if (level.isLoaded(interfacePos)
                     && level.getBlockEntity(interfacePos) instanceof WarehouseInterfaceBlockEntity warehouseInterface) {
                 warehouseInterface.unbindIfBoundTo(townProvider, worldPosition);
             }
+        }
+    }
+
+    private void unregisterRemovedInterfaces(Set<BlockPos> removedPositions) {
+        if (level == null || townProvider == null || !(townProvider.getTown() instanceof TeamTown teamTown)) {
+            return;
+        }
+        for (BlockPos removedPos : removedPositions) {
+            teamTown.unregisterTransportEndpoint(new TransportEndpointId(
+                    GlobalPos.of(level.dimension(), removedPos)));
         }
     }
 

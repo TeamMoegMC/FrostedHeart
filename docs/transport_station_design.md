@@ -1,15 +1,15 @@
 # 货运站（Transport Station）设计与实施计划
 
-> 文档状态：实施中；截至 T14，建筑基础、服务端运力日结、生产界面、模拟参数、审计来源、自动化回归和
-> H04 游戏内验收已完成；后续运力使用方仍未实现。
+> 文档状态：当前；货运站生产和首个仓库接口运力消费者均已实现，本文描述现行行为。
 >
-> 最近验证：2026-08-20。
+> 最近验证：2026-08-22。
 >
 > 范围：货运站建筑、城镇运力生产、持久化与后续实施计划。
 >
 > 代码锚点：`TransportStationBuilding`、`TransportStationDailyModel`、`TownTransportCapacityModel`、
 > `TownModelParameters.TransportStationParameters`、`TownTransportState`、
-> `TeamTownData#buildingsWork`、`VirtualResourceType.TRANSPORT_CAPACITY`。
+> `TeamTownData#buildingsWork`、`VirtualResourceType.TRANSPORT_CAPACITY`、`WarehouseInterfaceBlockEntity`、
+> `WarehouseInterfaceMenu`、`TownTransportSnapshot`、`TownVirtualResourcesPanel`。
 >
 > 固定命名：Java 类前缀 `TransportStation`；注册名 `transport_station`；英文显示名
 > `Transport Station`；中文显示名 `货运站`。
@@ -105,8 +105,9 @@
 新增 Codec 字段必须使用 `optionalFieldOf`，保证第一阶段存档可直接升级。
 
 城镇汇总日报不归属于任意一座 `TransportStationBuilding`。它由城镇级
-`TownTransportState` 维护，至少记录当日城镇总运力和已占用运力；当前里程碑 B 尚无运力使用方，
-所以已占用运力固定为 `0`。后续接口登记、比例限速和汇总提示见
+`TownTransportState` 维护，记录当日城镇总运力、实时仓库接口预约和晨间占用快照。接口登记、比例限速和后续汇总提示见
+[`docs/town/implementation-reference.md`](town/implementation-reference.md) 和
+[`docs/town/town-model.md`](town/town-model.md)。已完成工作的实施记录保留在
 [`plans/2026-08-20_16-53-08_transport-capacity-consumers.md`](../plans/2026-08-20_16-53-08_transport-capacity-consumers.md)。
 
 ### 4.3 拆除语义
@@ -255,8 +256,9 @@ town.getActionExecutorHandler().execute(
 - **生产**：显示下次结算预测、单站最近结算的计划/实际运力，以及城镇日报中的总运力和已占用运力。
 
 预测由 `TransportStationBuilding#getForecast(TeamTown)` 计算，和实际结算共用人员筛选与
-`TransportStationDailyModel` 输入。城镇汇总值读取 `TownTransportState`；在后续运力使用方实现前，占用量显示为
-`0`。所有面板通过 Supplier 每帧读取客户端城镇快照；收到增量包时不重建 Screen，因此无需新增重复数据通道。
+`TransportStationDailyModel` 输入。城镇汇总值读取 `TownTransportState.DailyReport`；该报告的占用量现在来自晨间
+结算时的实时预约，但当天调速不会反写历史日报。所有面板通过 Supplier 每帧读取客户端城镇快照；收到增量包时不重建
+Screen，因此无需新增重复数据通道。
 
 居民在创建和旧存档解码时由 `Resident#initializeMissingWorkProficiencies` 补齐
 `TransportStationBuilding` 熟练度键。因此预测与实际结算读取同一已持久化熟练度，不会在客户端界面首次打开时
@@ -269,8 +271,10 @@ town.getActionExecutorHandler().execute(
 
 `TownVirtualResourcesTab` 另提供不依赖具体方块位置的城镇级入口。其“运力”详情从
 `resources[TRANSPORT_CAPACITY]` 和 `TownTransportState.DailyReport` 显示总运力、已占用、剩余、缺口与有效
-传输比例；在后续运力使用方实现前，已占用量仍为 `0`。“仓库容量”详情同时显示总容量、
-`TeamTownResourceHolder.occupiedCapacity`、剩余、缺口和使用率。
+传输比例。全量 `TeamTownDataS2CPacket` 和增量 `TownResourceUpdatePacket` 都携带权威
+`TownTransportSnapshot`，因此实时占用不会从省略派生值的持久化 Codec 错误重算为 `0`。设备详情位于汇总和晨间报告
+之后、默认收起；展开后按稳定端点顺序显示接口坐标、绑定仓库核心、设置/有效速率、距离因子、占用运力和状态。
+“仓库容量”详情同时显示总容量、`TeamTownResourceHolder.occupiedCapacity`、剩余、缺口和使用率。
 
 ## 8. 注册、资源与本地化
 
@@ -325,8 +329,8 @@ production、forecast、produced capacity、stop reason 等键已加入。英文
 6. **资源素材是完成条件**：只有 Java 注册而没有纹理、模型和 loot table 不算可交付建筑。
 7. **运力是城镇 service，不是建筑库存**：先统一归零、再执行全部货运站生产、最后生成城镇汇总日报；不能让
    单座建筑按迭代顺序写入城镇最终总量。
-8. **状态所有权必须分层**：单站产出日报属于 `TransportStationBuilding`；城镇总运力与占用汇总属于
-   `TownTransportState`。接口 Map 和实际限速属于后续使用方计划。
+8. **状态所有权必须分层**：单站产出日报属于 `TransportStationBuilding`；城镇总运力、占用汇总和接口预约属于
+   `TownTransportState`。实际接口搬运由 `WarehouseInterfaceBlockEntity` 读取预约后限速，不写回单站状态。
 
 ## 10. 实施计划
 
@@ -399,4 +403,5 @@ git diff --check
 - 健康、精神、力量、智力权重依次为 `35 / 15 / 30 / 20`。
 - 属性生产力范围为 `0.5～1.5`，满熟练度加成为 `0.8`，最终生产力范围为 `0.5～2.3`。
 - 运力不被运输消耗；每次晨间城镇结算先归零，再由货运站重新建立，不跨日囤积。
-- 城镇汇总日报记录总运力和已占用运力；占用登记与限速由后续使用方计划实现。
+- 城镇汇总日报记录晨间总运力和已占用运力；仓库接口登记、限速、镇长印章实时明细、有限方块状态与每日短缺 Tip
+  已由消费者计划 T03-T11 实现。

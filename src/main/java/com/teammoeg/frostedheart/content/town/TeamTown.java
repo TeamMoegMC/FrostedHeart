@@ -32,9 +32,12 @@ import com.teammoeg.frostedheart.content.town.buildings.warehouse.WarehouseBuild
 import com.teammoeg.frostedheart.content.town.resident.Resident;
 import com.teammoeg.frostedheart.content.town.resource.TeamTownResourceActionExecutorHandler;
 import com.teammoeg.frostedheart.content.town.resource.TeamTownResourceHolder;
+import com.teammoeg.frostedheart.content.town.resource.VirtualResourceType;
 import com.teammoeg.frostedheart.content.town.terrainresource.TerrainResourceType;
-import com.teammoeg.frostedheart.content.town.transport.TownTransportState;
+import com.teammoeg.frostedheart.content.town.transport.*;
+import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.GlobalPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.ChunkPos;
@@ -143,6 +146,14 @@ public class TeamTown implements ITown, ITownWithResidents, ITownWithBuildings {
         AbstractTownBuilding building = data.buildings.get(pos);
         if (building == null) {
             return;
+        }
+
+        if (building instanceof WarehouseBuilding warehouse) {
+            if (level != null) {
+                unregisterTransportEndpointsBoundTo(GlobalPos.of(level.dimension(), pos));
+            } else {
+                unregisterTransportEndpointsBoundTo(pos);
+            }
         }
 
         if (level != null && building instanceof WarehouseBuilding warehouse) {
@@ -398,6 +409,208 @@ public class TeamTown implements ITown, ITownWithResidents, ITownWithBuildings {
 
     public TownTransportState getTransportState() {
         return data.getTransportState();
+    }
+
+    public TownTransportSummary getTransportSummary() {
+        prepareTransportState();
+        return TownTransportSummary.from(getCurrentTransportCapacity(), data.getTransportState());
+    }
+
+    public Map<TransportEndpointId, TransportReservation> getTransportReservations() {
+        prepareTransportState();
+        return data.getTransportState().getReservations();
+    }
+
+    public Optional<TransportReservation> getTransportReservation(TransportEndpointId endpointId) {
+        prepareTransportState();
+        return Optional.ofNullable(data.getTransportState().getReservation(endpointId));
+    }
+
+    public TownTransportSnapshot getTransportSnapshot() {
+        prepareTransportState();
+        return TownTransportSnapshot.from(getCurrentTransportCapacity(), data.getTransportState());
+    }
+
+    public TransportReservationResult registerOrUpdateTransportEndpoint(TransportEndpointRequest request) {
+        Optional<TransportConsumerParameters> parametersResult = currentTransportParameters();
+        if (request == null || parametersResult.isEmpty()) {
+            return result(TransportReservationDecision.INVALID_REQUEST, null, 0.0);
+        }
+        TransportConsumerParameters parameters = parametersResult.get();
+        prepareTransportState(parameters);
+        TransportReservation old = data.getTransportState().getReservation(request.endpointId());
+
+        if (!request.endpointId().endpointPos().dimension().equals(request.boundWarehouseCorePos().dimension())
+                || old != null && (old.endpointKind() != request.endpointKind()
+                || !old.boundWarehouseCorePos().equals(request.boundWarehouseCorePos()))) {
+            return result(TransportReservationDecision.INVALID_BINDING, old, 0.0);
+        }
+        if (!parameters.isRateValid(request.rateItemsPerSecond())
+                || !TransportReservationModel.isFiniteNonNegative(request.scaleMetric())) {
+            return result(TransportReservationDecision.INVALID_REQUEST, old, 0.0);
+        }
+
+        int rate = request.rateItemsPerSecond();
+        if (rate == 0) {
+            TransportReservation disabled = new TransportReservation(
+                    request.endpointKind(), request.boundWarehouseCorePos(),
+                    0, request.scaleMetric(), 0.0, TransportAdmissionStatus.DISABLED);
+            replaceAndMark(request.endpointId(), disabled);
+            return result(TransportReservationDecision.ACCEPTED, disabled, 0.0);
+        }
+
+        double candidateReserved = TransportReservationModel.requiredCapacity(
+                request.endpointKind(), rate, request.scaleMetric(), parameters);
+        if (!TransportReservationModel.isFiniteNonNegative(candidateReserved)) {
+            return result(TransportReservationDecision.INVALID_REQUEST, old, 0.0);
+        }
+        double oldReserved = old == null ? 0.0 : old.reservedTransportCapacity();
+        TransportReservationModel.AdmissionEvaluation admission = TransportReservationModel.evaluateAdmission(
+                getCurrentTransportCapacity(), data.getTransportState().getReservedTransportCapacity(),
+                oldReserved, candidateReserved);
+        if (!admission.valid()) {
+            return result(TransportReservationDecision.INVALID_REQUEST, old, 0.0);
+        }
+
+        if (admission.accepted()) {
+            TransportReservation accepted = new TransportReservation(
+                    request.endpointKind(), request.boundWarehouseCorePos(),
+                    rate, request.scaleMetric(), candidateReserved,
+                    TransportAdmissionStatus.ACTIVE);
+            replaceAndMark(request.endpointId(), accepted);
+            return result(TransportReservationDecision.ACCEPTED, accepted,
+                    admission.requiredAdditionalCapacity());
+        }
+
+        if (old == null) {
+            TransportReservation disabled = new TransportReservation(
+                    request.endpointKind(), request.boundWarehouseCorePos(),
+                    0, request.scaleMetric(), 0.0, TransportAdmissionStatus.DISABLED);
+            replaceAndMark(request.endpointId(), disabled);
+            return result(TransportReservationDecision.INSUFFICIENT_CAPACITY, disabled,
+                    admission.requiredAdditionalCapacity());
+        }
+        return result(TransportReservationDecision.INSUFFICIENT_CAPACITY, old,
+                admission.requiredAdditionalCapacity());
+    }
+
+    public TransportReservationResult refreshTransportEndpointMetric(
+            TransportEndpointId endpointId,
+            GlobalPos boundWarehouseCorePos,
+            double scaleMetric
+    ) {
+        Optional<TransportConsumerParameters> parametersResult = currentTransportParameters();
+        if (endpointId == null || boundWarehouseCorePos == null || parametersResult.isEmpty()) {
+            return result(TransportReservationDecision.INVALID_REQUEST, null, 0.0);
+        }
+        TransportConsumerParameters parameters = parametersResult.get();
+        prepareTransportState(parameters);
+        TransportReservation old = data.getTransportState().getReservation(endpointId);
+        if (old == null || !old.boundWarehouseCorePos().equals(boundWarehouseCorePos)) {
+            return result(TransportReservationDecision.INVALID_BINDING, old, 0.0);
+        }
+        if (!TransportReservationModel.isFiniteNonNegative(scaleMetric)) {
+            return result(TransportReservationDecision.INVALID_REQUEST, old, 0.0);
+        }
+        double refreshedCapacity = TransportReservationModel.capacityForStoredRate(
+                old.endpointKind(), old.rateItemsPerSecond(), scaleMetric, parameters);
+        if (!TransportReservationModel.isFiniteNonNegative(refreshedCapacity)) {
+            return result(TransportReservationDecision.INVALID_REQUEST, old, 0.0);
+        }
+        TransportReservation refreshed = new TransportReservation(
+                old.endpointKind(), old.boundWarehouseCorePos(),
+                old.rateItemsPerSecond(), scaleMetric, refreshedCapacity, old.admissionStatus());
+        replaceAndMark(endpointId, refreshed);
+        return result(TransportReservationDecision.ACCEPTED, refreshed, 0.0);
+    }
+
+    public TransportReservationResult unregisterTransportEndpoint(TransportEndpointId endpointId) {
+        prepareTransportState();
+        if (endpointId == null) {
+            return result(TransportReservationDecision.INVALID_REQUEST, null, 0.0);
+        }
+        if (data.getTransportState().removeReservation(endpointId)) {
+            data.getDataSyncCache().markTransportStateChanged();
+        }
+        return result(TransportReservationDecision.ACCEPTED, null, 0.0);
+    }
+
+    /** Releases every endpoint logically owned by one warehouse core, including unloaded interfaces. */
+    public int unregisterTransportEndpointsBoundTo(GlobalPos boundWarehouseCorePos) {
+        if (boundWarehouseCorePos == null) {
+            return 0;
+        }
+        return unregisterTransportEndpointsMatching(reservation ->
+                reservation.boundWarehouseCorePos().equals(boundWarehouseCorePos));
+    }
+
+    /** Dimension-agnostic fallback for repair/removal paths that have no loaded level. */
+    public int unregisterTransportEndpointsBoundTo(BlockPos boundWarehouseCorePos) {
+        if (boundWarehouseCorePos == null) {
+            return 0;
+        }
+        return unregisterTransportEndpointsMatching(reservation ->
+                reservation.boundWarehouseCorePos().pos().equals(boundWarehouseCorePos));
+    }
+
+    private int unregisterTransportEndpointsMatching(
+            java.util.function.Predicate<TransportReservation> predicate
+    ) {
+        prepareTransportState();
+        List<TransportEndpointId> endpoints = data.getTransportState().getReservations().entrySet().stream()
+                .filter(entry -> predicate.test(entry.getValue()))
+                .map(Map.Entry::getKey)
+                .toList();
+        for (TransportEndpointId endpoint : endpoints) {
+            data.getTransportState().removeReservation(endpoint);
+        }
+        if (!endpoints.isEmpty()) {
+            data.getDataSyncCache().markTransportStateChanged();
+        }
+        return endpoints.size();
+    }
+
+    private void replaceAndMark(TransportEndpointId endpointId, TransportReservation reservation) {
+        if (data.getTransportState().replaceReservation(endpointId, reservation)) {
+            data.getDataSyncCache().markTransportStateChanged();
+        }
+    }
+
+    private TransportReservationResult result(
+            TransportReservationDecision decision,
+            TransportReservation reservation,
+            double requiredAdditionalCapacity
+    ) {
+        return new TransportReservationResult(decision, Optional.ofNullable(reservation),
+                TownTransportSummary.from(getCurrentTransportCapacity(), data.getTransportState()),
+                requiredAdditionalCapacity);
+    }
+
+    private double getCurrentTransportCapacity() {
+        return data.resources.get(VirtualResourceType.TRANSPORT_CAPACITY.generateAttribute(0));
+    }
+
+    private void prepareTransportState() {
+        currentTransportParameters().ifPresent(this::prepareTransportState);
+    }
+
+    private void prepareTransportState(TransportConsumerParameters parameters) {
+        if (data.getTransportState().recalculateReservedCapacities(parameters)) {
+            data.getDataSyncCache().markTransportStateChanged();
+        }
+    }
+
+    private static Optional<TransportConsumerParameters> currentTransportParameters() {
+        FHConfig.Server.Town.TransportConsumers config = FHConfig.SERVER.TOWN.TRANSPORT_CONSUMERS;
+        try {
+            return Optional.of(new TransportConsumerParameters(
+                    config.defaultRateItemsPerSecond.get(),
+                    config.minimumRateItemsPerSecond.get(),
+                    config.maximumRateItemsPerSecond.get(),
+                    config.warehouseScaleCostPerMetric.get()));
+        } catch (IllegalArgumentException exception) {
+            return Optional.empty();
+        }
     }
 
     /**

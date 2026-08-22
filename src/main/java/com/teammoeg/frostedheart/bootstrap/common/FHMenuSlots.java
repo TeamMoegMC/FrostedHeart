@@ -30,6 +30,7 @@ import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.robotics.logistics.Filter;
 import com.teammoeg.frostedheart.content.town.buildings.warehouse.SimpleItemKey;
 import com.teammoeg.frostedheart.content.town.buildings.warehouse.WarehouseInterfaceTarget;
+import com.teammoeg.frostedheart.content.town.buildings.warehouse.WarehouseInterfaceTransportView;
 
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -41,6 +42,8 @@ public class FHMenuSlots {
 			CCustomMenuSlot.Encoders.codec(WarehouseInterfaceTarget.CODEC);
 	public static final NetworkEncoder<SimpleItemKey> SIMPLE_ITEM_KEY_ENCODER =
 			CCustomMenuSlot.Encoders.codec(SimpleItemKey.CODEC);
+	public static final NetworkEncoder<WarehouseInterfaceTransportView> WAREHOUSE_INTERFACE_TRANSPORT_VIEW_ENCODER =
+			CCustomMenuSlot.Encoders.codec(WarehouseInterfaceTransportView.CODEC);
 	public static final OtherDataSlotEncoder<Filter> FILTER_ENCODER_SLOT=new OtherDataSlotEncoder<>(){
 
 		@Override
@@ -95,6 +98,23 @@ public class FHMenuSlots {
 					return SIMPLE_ITEM_KEY_ENCODER;
 				}
 			};
+	public static final OtherDataSlotEncoder<WarehouseInterfaceTransportView>
+			WAREHOUSE_INTERFACE_TRANSPORT_VIEW_ENCODER_SLOT = new OtherDataSlotEncoder<>() {
+				@Override
+				public WarehouseInterfaceTransportView copy(WarehouseInterfaceTransportView data) {
+					return data;
+				}
+
+				@Override
+				public WarehouseInterfaceTransportView getDefault() {
+					return WarehouseInterfaceTransportView.EMPTY;
+				}
+
+				@Override
+				public NetworkEncoder<WarehouseInterfaceTransportView> getEncoder() {
+					return WAREHOUSE_INTERFACE_TRANSPORT_VIEW_ENCODER;
+				}
+			};
 	public FHMenuSlots() {
 	}
 
@@ -103,5 +123,6 @@ public class FHMenuSlots {
 		event.getRegistry().register(FILTER_ENCODER);
 		event.getRegistry().register(WAREHOUSE_INTERFACE_TARGET_ENCODER);
 		event.getRegistry().register(SIMPLE_ITEM_KEY_ENCODER);
+		event.getRegistry().register(WAREHOUSE_INTERFACE_TRANSPORT_VIEW_ENCODER);
 	}
 }

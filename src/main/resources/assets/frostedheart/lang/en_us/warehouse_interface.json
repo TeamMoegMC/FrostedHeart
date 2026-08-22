@@ -11,5 +11,17 @@
   "gui.frostedheart.warehouse_interface.redstone_mode.high": "RS: High",
   "gui.frostedheart.warehouse_interface.redstone_mode.high.tooltip": "Restocks from the town warehouse only while powered by redstone",
   "gui.frostedheart.warehouse_interface.redstone_mode.low": "RS: Low",
-  "gui.frostedheart.warehouse_interface.redstone_mode.low.tooltip": "Restocks from the town warehouse only while not powered by redstone"
+  "gui.frostedheart.warehouse_interface.redstone_mode.low.tooltip": "Restocks from the town warehouse only while not powered by redstone",
+  "gui.frostedheart.warehouse_interface.rate": "Rate/s",
+  "gui.frostedheart.warehouse_interface.apply": "Set",
+  "gui.frostedheart.warehouse_interface.transport.active": "Transport active",
+  "gui.frostedheart.warehouse_interface.transport.throttled": "Town transport shortage",
+  "gui.frostedheart.warehouse_interface.transport.disabled": "Transport disabled",
+  "gui.frostedheart.warehouse_interface.transport.rate_increase_rejected": "Transport full: rate unchanged",
+  "gui.frostedheart.warehouse_interface.transport.invalid_request": "Invalid rate request",
+  "gui.frostedheart.warehouse_interface.transport.current_rate": "Item transfer: %s items/s",
+  "gui.frostedheart.warehouse_interface.transport.reserved": "Transport reserved: %s",
+  "gui.frostedheart.warehouse_interface.transport.town_available": "Available transport: %s",
+  "gui.frostedheart.warehouse_interface.transport.town_total": "Total transport: %s",
+  "message.frostedheart.warehouse_interface.transport.new_endpoint_rejected": "Insufficient transport capacity; interface added at rate 0"
 }

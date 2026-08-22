@@ -96,6 +96,14 @@ class TownModelParameterDefaultsTest {
                 parameters.transportStation().activity().physical(), EPSILON);
         assertEquals(TownModelParameters.Defaults.TRANSPORT_STATION_LEARNING_ACTIVITY,
                 parameters.transportStation().activity().learning(), EPSILON);
+        assertEquals(TownModelParameters.Defaults.TRANSPORT_CONSUMER_DEFAULT_RATE_ITEMS_PER_SECOND,
+                parameters.transportConsumers().defaultRateItemsPerSecond());
+        assertEquals(TownModelParameters.Defaults.TRANSPORT_CONSUMER_MINIMUM_RATE_ITEMS_PER_SECOND,
+                parameters.transportConsumers().minimumRateItemsPerSecond());
+        assertEquals(TownModelParameters.Defaults.TRANSPORT_CONSUMER_MAXIMUM_RATE_ITEMS_PER_SECOND,
+                parameters.transportConsumers().maximumRateItemsPerSecond());
+        assertEquals(TownModelParameters.Defaults.TRANSPORT_CONSUMER_WAREHOUSE_SCALE_COST_PER_METRIC,
+                parameters.transportConsumers().warehouseScaleCostPerMetric(), EPSILON);
         assertEquals(1.0,
                 parameters.transportStation().productivity().standardWorkerEquivalent(), EPSILON);
         assertEquals(TownModelParameters.Defaults.TOWN_OBSERVATION_HISTORY_DAYS,
