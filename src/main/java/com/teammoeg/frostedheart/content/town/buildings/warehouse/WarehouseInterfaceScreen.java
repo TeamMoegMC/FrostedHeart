@@ -120,13 +120,10 @@ public class WarehouseInterfaceScreen extends MenuPrimaryLayer<WarehouseInterfac
                         format(view.reservedCapacity())),
                 x + 8, y + 103, 0x404040, false);
         graphics.drawString(getFont(), Component.translatable(
-                        "gui.frostedheart.warehouse_interface.transport.town_available",
-                        format(view.townRemainingCapacity())),
-                x + 8, y + 113, 0x404040, false);
-        graphics.drawString(getFont(), Component.translatable(
-                        "gui.frostedheart.warehouse_interface.transport.town_total",
+                        "gui.frostedheart.warehouse_interface.transport.town_capacity",
+                        format(view.townRemainingCapacity()),
                         format(view.townTotalCapacity())),
-                x + 8, y + 123, 0x404040, false);
+                x + 8, y + 113, 0x404040, false);
     }
 
     private Component statusComponent(WarehouseInterfaceTransportView view) {

@@ -11,6 +11,7 @@ import com.teammoeg.frostedheart.content.town.block.OccupiedVolume;
 import com.teammoeg.frostedheart.content.town.building.ITownBuilding;
 import com.teammoeg.frostedheart.content.town.building.TownProductionStopReason;
 import com.teammoeg.frostedheart.content.town.buildings.logistics.TransportStationBuilding;
+import com.teammoeg.frostedheart.content.town.buildings.warehouse.WarehouseBuilding;
 import com.teammoeg.frostedheart.content.town.resident.Resident;
 import com.teammoeg.frostedheart.content.town.resident.ResidentActivity;
 import com.teammoeg.frostedheart.content.town.resource.ITownResourceKey;
@@ -222,9 +223,14 @@ class TeamTownTransportSettlementTest {
         TeamTown town = data.createTeamTown();
         TransportEndpointId endpoint = new TransportEndpointId(
                 GlobalPos.of(Level.OVERWORLD, new BlockPos(4, 64, 4)));
+        BlockPos warehousePos = new BlockPos(8, 64, 8);
+        data.buildings.put(warehousePos, new WarehouseBuilding(
+                warehousePos, true, OccupiedVolume.EMPTY, true,
+                false, 1_000.0, 1, 1, 0));
+        data.markWarehouseTopologyDirty();
+        town.prepareWarehouseTopology(Level.OVERWORLD);
         town.registerOrUpdateTransportEndpoint(new TransportEndpointRequest(
-                endpoint, TransportEndpointKind.WAREHOUSE_INTERFACE,
-                GlobalPos.of(Level.OVERWORLD, new BlockPos(8, 64, 8)), 20, 8.0));
+                endpoint, TransportEndpointKind.WAREHOUSE_INTERFACE, 20));
 
         data.buildingsWork(null);
 

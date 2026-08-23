@@ -23,12 +23,9 @@ import com.teammoeg.chorda.block.entity.CBlockEntity;
 import com.teammoeg.chorda.block.entity.CTickableBlockEntity;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
-import com.teammoeg.frostedheart.content.town.ITown;
-import com.teammoeg.frostedheart.content.town.ITownWithBuildings;
 import com.teammoeg.frostedheart.content.town.ITownWithResources;
 import com.teammoeg.frostedheart.content.town.TeamTown;
 import com.teammoeg.frostedheart.content.town.building.AbstractTownBuilding;
-import com.teammoeg.frostedheart.content.town.provider.ITownProviderSerializable;
 import com.teammoeg.frostedheart.content.town.provider.TeamTownProvider;
 import com.teammoeg.frostedheart.content.town.resource.TeamTownResourceActionExecutorHandler;
 import com.teammoeg.frostedheart.content.town.resource.TeamTownResourceHolder;
@@ -40,10 +37,11 @@ import com.teammoeg.frostedheart.content.town.transport.TransportEndpointKind;
 import com.teammoeg.frostedheart.content.town.transport.TransportEndpointRequest;
 import com.teammoeg.frostedheart.content.town.transport.TransportReservation;
 import com.teammoeg.frostedheart.content.town.transport.TransportReservationDecision;
-import com.teammoeg.frostedheart.content.town.transport.TransportReservationModel;
 import com.teammoeg.frostedheart.content.town.transport.TransportReservationResult;
 import com.teammoeg.frostedheart.content.town.transport.TownTransportSummary;
 import com.teammoeg.frostedheart.content.town.transport.TransportTransferBudget;
+import com.teammoeg.frostedheart.content.town.transport.WarehouseTopologyListener;
+import com.teammoeg.frostedheart.content.town.transport.WarehouseTopologySnapshot;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -72,12 +70,11 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Arrays;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 
 public class WarehouseInterfaceBlockEntity extends CBlockEntity implements CTickableBlockEntity, MenuProvider,
-        IWarehouseStockWatcherNode {
+        IWarehouseStockWatcherNode, WarehouseTopologyListener {
 
     public static final int SLOT_COUNT = 9;
     public static final int STATUS_UNBOUND = 0;
@@ -102,8 +99,8 @@ public class WarehouseInterfaceBlockEntity extends CBlockEntity implements CTick
     private final LazyOptional<IItemHandler> inventoryCapability = LazyOptional.of(() -> inventory);
     private final WarehouseInterfaceTarget[] targets = new WarehouseInterfaceTarget[SLOT_COUNT];
 
-    private ITownProviderSerializable<? extends ITownWithBuildings> townProvider;
-    private BlockPos warehousePos;
+    private TeamTownProvider townProvider;
+    private transient TeamTown topologyListenerTown;
     private int connectionStatus = STATUS_UNBOUND;
 
     // 仓库库存监听 Watcher
@@ -135,14 +132,46 @@ public class WarehouseInterfaceBlockEntity extends CBlockEntity implements CTick
         return redstoneMode;
     }
 
+    TeamTownProvider getTownProvider() {
+        return townProvider;
+    }
+
+    public boolean claimOrAuthorize(ServerPlayer player) {
+        TownWarehouseDeviceAccess.ClaimResult result =
+                TownWarehouseDeviceAccess.claimOrAuthorize(player, this, townProvider);
+        if (!result.allowed()) {
+            return false;
+        }
+        boolean claimed = townProvider == null;
+        townProvider = result.provider();
+        if (claimed) {
+            connectionStatus = STATUS_UNAVAILABLE;
+            setChanged();
+        }
+        registerTopologyListener();
+        ensureWatcherAndRefresh();
+        updateTransportBlockState();
+        return true;
+    }
+
     public WarehouseInterfaceTransportView getTransportView() {
         int maximumRateItemsPerSecond = FHConfig.SERVER.TOWN.TRANSPORT_CONSUMERS
                 .maximumRateItemsPerSecond.get();
-        Optional<BindingContext> binding = resolveBinding(false);
-        if (binding.isEmpty() || !(binding.get().town() instanceof TeamTown teamTown)) {
-            return WarehouseInterfaceTransportView.empty(maximumRateItemsPerSecond);
+        double warehouseDistanceCostPerBlock = FHConfig.SERVER.TOWN.TRANSPORT_CONSUMERS
+                .warehouseDistanceCostPerBlock.get();
+        Optional<TeamTown> binding = resolveTown();
+        if (binding.isEmpty()) {
+            if (townProvider == null) {
+                return WarehouseInterfaceTransportView.empty(maximumRateItemsPerSecond);
+            }
+            return WarehouseInterfaceTransportView.from(
+                    STATUS_UNAVAILABLE, Optional.empty(),
+                    new TownTransportSummary(0.0, 0.0, 0.0, 0.0, 1.0),
+                    lastTransportDecision, maximumRateItemsPerSecond,
+                    warehouseDistanceCostPerBlock);
         }
-        int effectiveConnectionStatus = binding.get().warehouse().isBuildingWorkable()
+        TeamTown teamTown = binding.get();
+        int effectiveConnectionStatus = teamTown.getWarehouseTopology().isUsable()
                 ? STATUS_WORKING : STATUS_UNAVAILABLE;
         Optional<TransportReservation> reservation = teamTown.getTransportReservation(endpointId());
         return WarehouseInterfaceTransportView.from(
@@ -150,27 +179,29 @@ public class WarehouseInterfaceBlockEntity extends CBlockEntity implements CTick
                 reservation,
                 teamTown.getTransportSummary(),
                 lastTransportDecision,
-                maximumRateItemsPerSecond);
+                maximumRateItemsPerSecond,
+                warehouseDistanceCostPerBlock);
     }
 
     /** Applies a client rate request only after rebuilding every authoritative input on the server. */
     public TransportReservationDecision setTransportRate(Player player, int rateItemsPerSecond) {
-        if (level == null || level.isClientSide || player == null || player.level() != level
-                || player.distanceToSqr(worldPosition.getX() + 0.5, worldPosition.getY() + 0.5,
-                worldPosition.getZ() + 0.5) > 64.0
-                || level.getBlockEntity(worldPosition) != this
-                || !(townProvider instanceof TeamTownProvider teamProvider)
-                || !teamProvider.ownsTeam(player)) {
+        if (!(player instanceof ServerPlayer serverPlayer)
+                || !claimOrAuthorize(serverPlayer)) {
             return recordTransportDecision(TransportReservationDecision.INVALID_BINDING);
         }
-        Optional<BindingContext> binding = resolveBinding(false);
-        if (binding.isEmpty() || !(binding.get().town() instanceof TeamTown teamTown)) {
+        int minimum = FHConfig.SERVER.TOWN.TRANSPORT_CONSUMERS.minimumRateItemsPerSecond.get();
+        int maximum = FHConfig.SERVER.TOWN.TRANSPORT_CONSUMERS.maximumRateItemsPerSecond.get();
+        if (rateItemsPerSecond != 0
+                && (rateItemsPerSecond < minimum || rateItemsPerSecond > maximum)) {
+            return recordTransportDecision(TransportReservationDecision.INVALID_REQUEST);
+        }
+        Optional<TeamTown> binding = resolveTown();
+        if (binding.isEmpty()) {
             return recordTransportDecision(TransportReservationDecision.INVALID_BINDING);
         }
-        double scaleMetric = TransportReservationModel.warehouseScaleMetric(binding.get().warehouse().getVolume());
+        TeamTown teamTown = binding.get();
         TransportReservationResult result = teamTown.registerOrUpdateTransportEndpoint(new TransportEndpointRequest(
-                endpointId(), TransportEndpointKind.WAREHOUSE_INTERFACE, boundWarehouseCorePos(),
-                rateItemsPerSecond, scaleMetric));
+                endpointId(), TransportEndpointKind.WAREHOUSE_INTERFACE, rateItemsPerSecond));
         recordTransportDecision(result.decision());
         if (result.reservationAfter().map(TransportReservation::rateItemsPerSecond).orElse(0) == 0) {
             transferBudget.reset();
@@ -290,103 +321,64 @@ public class WarehouseInterfaceBlockEntity extends CBlockEntity implements CTick
         return slot >= 0 && slot < SLOT_COUNT;
     }
 
-    /**
-     * Claims this interface for a warehouse. A still-valid binding owned by a
-     * different warehouse is never stolen.
-     */
-    public boolean tryBind(ITownProviderSerializable<? extends ITownWithBuildings> provider, BlockPos newWarehousePos) {
-        if (provider == null || newWarehousePos == null) {
-            return false;
-        }
-        if (isBoundTo(provider, newWarehousePos)) {
-            this.townProvider = provider;
-            resolveBinding(false).ifPresent(this::ensureTransportReservation);
-            ensureWatcherAndRefresh();
-            return true;
-        }
-        if (warehousePos != null && resolveBinding(false).isPresent()) {
-            return false;
-        }
-
-        // 清除旧绑定（含 Watcher）
-        clearBinding();
-
-        this.townProvider = provider;
-        this.warehousePos = newWarehousePos.immutable();
-        this.connectionStatus = STATUS_UNAVAILABLE;
-        this.needsBalance = true;
-        if (level != null) {
-            setChanged();
-        }
-        // 注册 Watcher
-        ensureWatcherAndRefresh();
-        return true;
+    private Optional<TeamTown> resolveTown() {
+        return TownWarehouseDeviceAccess.resolveTown(townProvider, level);
     }
 
-    public void unbindIfBoundTo(ITownProviderSerializable<? extends ITownWithBuildings> provider, BlockPos oldWarehousePos) {
-        if (isBoundTo(provider, oldWarehousePos)) {
-            clearBinding();
-        }
-    }
-
-    void unbindIfBoundTo(WarehouseBuilding warehouse) {
-        if (warehousePos == null || !warehousePos.equals(warehouse.getPos()) || townProvider == null) {
+    private void registerTopologyListener() {
+        if (level == null || level.isClientSide || townProvider == null) {
             return;
         }
-        ITownWithBuildings town = townProvider.getTown();
-        if (town != null && town.getTownBuilding(warehousePos).orElse(null) == warehouse) {
-            clearBinding();
-        }
-    }
-
-    private boolean isBoundTo(ITownProviderSerializable<? extends ITownWithBuildings> provider, BlockPos candidatePos) {
-        return warehousePos != null
-                && warehousePos.equals(candidatePos)
-                && townProvider != null
-                && Objects.equals(townProvider.toNBT(), provider.toNBT());
-    }
-
-    private Optional<BindingContext> resolveBinding(boolean clearWhenInvalid) {
-        if (townProvider == null || warehousePos == null) {
-            return Optional.empty();
-        }
-
-        ITownWithBuildings town = townProvider.getTown();
-        if (town == null) {
-            return invalidBinding(clearWhenInvalid);
-        }
-        Optional<AbstractTownBuilding> building = town.getTownBuilding(warehousePos);
-        if (building.isEmpty() || !(building.get() instanceof WarehouseBuilding warehouse)
-                || !warehouse.containsInterface(worldPosition)) {
-            return invalidBinding(clearWhenInvalid);
-        }
-
-        if (level != null && level.isLoaded(warehousePos)) {
-            BlockEntity core = level.getBlockEntity(warehousePos);
-            if (!(core instanceof WarehouseBlockEntity)) {
-                return invalidBinding(clearWhenInvalid);
+        resolveTown().ifPresent(town -> {
+            if (topologyListenerTown != null) {
+                topologyListenerTown.unregisterWarehouseTopologyListener(
+                        GlobalPos.of(level.dimension(), worldPosition), this);
             }
-        }
-        return Optional.of(new BindingContext(town, warehouse));
+            town.registerWarehouseTopologyListener(
+                    GlobalPos.of(level.dimension(), worldPosition), this);
+            topologyListenerTown = town;
+        });
     }
 
-    private Optional<BindingContext> invalidBinding(boolean clearWhenInvalid) {
-        if (clearWhenInvalid) {
-            clearBinding();
+    private void unregisterTopologyListener() {
+        if (topologyListenerTown != null && level != null) {
+            topologyListenerTown.unregisterWarehouseTopologyListener(
+                    GlobalPos.of(level.dimension(), worldPosition), this);
         }
-        return Optional.empty();
+        topologyListenerTown = null;
+    }
+
+    @Override
+    public void onWarehouseTopologyChanged(WarehouseTopologySnapshot snapshot) {
+        if (level == null || level.isClientSide) {
+            return;
+        }
+        if (!snapshot.isUsable() || !level.dimension().equals(snapshot.townDimension())) {
+            if (watcher != null) {
+                watcher.reset();
+                watcher = null;
+            }
+            connectionStatus = STATUS_UNAVAILABLE;
+            transferBudget.reset();
+            needsBalance = false;
+        } else {
+            resolveTown().ifPresent(this::ensureTransportReservation);
+            ensureWatcherAndRefresh();
+            needsBalance = true;
+        }
+        updateTransportBlockState();
     }
 
     private void clearBinding() {
         unregisterTransportReservation();
+        unregisterTopologyListener();
         // 清理 Watcher
         if (watcher != null) {
             watcher.reset();
             watcher = null;
         }
-        boolean changed = townProvider != null || warehousePos != null;
+        boolean changed = townProvider != null;
         townProvider = null;
-        warehousePos = null;
         connectionStatus = STATUS_UNBOUND;
         transferBudget.reset();
         recordTransportDecision(TransportReservationDecision.INVALID_BINDING);
@@ -429,7 +421,7 @@ public class WarehouseInterfaceBlockEntity extends CBlockEntity implements CTick
      * 标记需要执行库存平衡。外部事件（库存变化、红石变化、目标改变、物品推送）均调用此方法。
      */
     public void markNeedsBalance() {
-        if (resolveBinding(false).map(ctx -> !ctx.warehouse().isBuildingWorkable()).orElse(true)) {
+        if (resolveTown().map(town -> !town.getWarehouseTopology().isUsable()).orElse(true)) {
             return;
         }
 
@@ -444,21 +436,20 @@ public class WarehouseInterfaceBlockEntity extends CBlockEntity implements CTick
         if (level == null || level.isClientSide) {
             return;
         }
-        Optional<BindingContext> binding = resolveBinding(true);
+        Optional<TeamTown> binding = resolveTown();
         if (binding.isEmpty()) {
-            connectionStatus = STATUS_UNBOUND;
+            connectionStatus = townProvider == null ? STATUS_UNBOUND : STATUS_UNAVAILABLE;
+            transferBudget.reset();
             return;
         }
-
-        BindingContext context = binding.get();
-        ensureTransportReservation(context);
-        if (!(context.town() instanceof TeamTown teamTown)
-                || !(context.town() instanceof ITownWithResources resourceTown)
-                || !context.warehouse().isBuildingWorkable()) {
+        TeamTown teamTown = binding.get();
+        ensureTransportReservation(teamTown);
+        if (!teamTown.getWarehouseTopology().isUsable()) {
             connectionStatus = STATUS_UNAVAILABLE;
             transferBudget.reset();
             return;
         }
+        ITownWithResources resourceTown = teamTown;
 
         connectionStatus = STATUS_WORKING;
         boolean hasDemand = hasBalanceDemand();
@@ -469,7 +460,7 @@ public class WarehouseInterfaceBlockEntity extends CBlockEntity implements CTick
 
         Optional<TransportReservation> reservation = teamTown.getTransportReservation(endpointId());
         if (reservation.isEmpty()
-                || !reservation.get().boundWarehouseCorePos().equals(boundWarehouseCorePos())
+                || reservation.get().admissionStatus() != com.teammoeg.frostedheart.content.town.transport.TransportAdmissionStatus.ACTIVE
                 || reservation.get().rateItemsPerSecond() == 0) {
             transferBudget.reset();
             return;
@@ -519,14 +510,15 @@ public class WarehouseInterfaceBlockEntity extends CBlockEntity implements CTick
     public void ensureWatcherAndRefresh() {
         if (watcher != null|| level == null || level.isClientSide) return;
 
-        Optional<BindingContext> binding = resolveBinding(false);
+        Optional<TeamTown> binding = resolveTown();
         if (binding.isEmpty()) return;
-        BindingContext ctx = binding.get();
-        ensureTransportReservation(ctx);
-        if (!(ctx.town() instanceof ITownWithResources resourceTown) || !ctx.warehouse().isBuildingWorkable()) {
+        TeamTown teamTown = binding.get();
+        ensureTransportReservation(teamTown);
+        if (!teamTown.getWarehouseTopology().isUsable()) {
             connectionStatus = STATUS_UNAVAILABLE;
             return;
         }
+        ITownWithResources resourceTown = teamTown;
 
         TeamTownResourceHolder holder = ((TeamTownResourceActionExecutorHandler) resourceTown.getActionExecutorHandler()).resourceHolder;
 
@@ -560,6 +552,7 @@ public class WarehouseInterfaceBlockEntity extends CBlockEntity implements CTick
     public void onLoad() {
         super.onLoad();
         if (level != null && !level.isClientSide) {
+            registerTopologyListener();
             ensureWatcherAndRefresh();
             updateTransportBlockState();
         }
@@ -586,6 +579,7 @@ public class WarehouseInterfaceBlockEntity extends CBlockEntity implements CTick
     @Override
     public void onRemoved() {
         if (level != null && !level.isClientSide) {
+            unregisterTopologyListener();
             if (level.getBlockState(worldPosition).getBlock() instanceof WarehouseInterfaceBlock) {
                 // 区块卸载：只清理 Watcher，保留绑定和库存（库存随方块保存）
                 if (watcher != null) {
@@ -599,7 +593,6 @@ public class WarehouseInterfaceBlockEntity extends CBlockEntity implements CTick
                     watcher.reset();
                     watcher = null;
                 }
-                resolveBinding(false).ifPresent(context -> context.warehouse().removeInterface(worldPosition));
                 clearBinding(); // 注意 clearBinding 中也会 reset watcher，但此时已为 null，安全
                 // 掉落物品
                 for (int slot = 0; slot < SLOT_COUNT; slot++) {
@@ -651,24 +644,8 @@ public class WarehouseInterfaceBlockEntity extends CBlockEntity implements CTick
             }
         }
 
-        townProvider = null;
-        warehousePos = null;
-        if (nbt.contains("townProvider") && nbt.contains("warehousePos")) {
-            ITownProviderSerializable<? extends ITown> rawProvider =
-                    ITownProviderSerializable.fromNBT(nbt.getCompound("townProvider"));
-            if (rawProvider != null && ITownWithBuildings.class.isAssignableFrom(rawProvider.getTownType())) {
-                // The runtime type check above guarantees this provider supplies a town with buildings.
-                townProvider = castTownProvider(rawProvider);
-                warehousePos = BlockPos.of(nbt.getLong("warehousePos"));
-            }
-        }
-        connectionStatus = warehousePos == null ? STATUS_UNBOUND : STATUS_UNAVAILABLE;
-    }
-
-    @SuppressWarnings("unchecked")
-    private static ITownProviderSerializable<? extends ITownWithBuildings> castTownProvider(
-            ITownProviderSerializable<? extends ITown> provider) {
-        return (ITownProviderSerializable<? extends ITownWithBuildings>) provider;
+        townProvider = TownWarehouseDeviceAccess.readProvider(nbt);
+        connectionStatus = townProvider == null ? STATUS_UNBOUND : STATUS_UNAVAILABLE;
     }
 
     @Override
@@ -691,10 +668,7 @@ public class WarehouseInterfaceBlockEntity extends CBlockEntity implements CTick
         }
         nbt.put("targets", targetList);
 
-        if (townProvider != null && warehousePos != null) {
-            nbt.put("townProvider", townProvider.toNBT());
-            nbt.putLong("warehousePos", warehousePos.asLong());
-        }
+        TownWarehouseDeviceAccess.writeProvider(nbt, townProvider);
     }
 
     @Override
@@ -710,9 +684,6 @@ public class WarehouseInterfaceBlockEntity extends CBlockEntity implements CTick
         return Component.translatable("container.frostedheart.warehouse_interface");
     }
 
-    private record BindingContext(ITownWithBuildings town, WarehouseBuilding warehouse) {
-    }
-
     record BalanceResult(int movedItems, boolean hasRemainingWork) {
     }
 
@@ -720,22 +691,14 @@ public class WarehouseInterfaceBlockEntity extends CBlockEntity implements CTick
         return new TransportEndpointId(GlobalPos.of(level.dimension(), worldPosition));
     }
 
-    private GlobalPos boundWarehouseCorePos() {
-        return GlobalPos.of(level.dimension(), warehousePos);
-    }
-
-    private void ensureTransportReservation(BindingContext context) {
-        if (level == null || level.isClientSide || !(context.town() instanceof TeamTown teamTown)
-                || context.warehouse().getVolume() < 0) {
+    private void ensureTransportReservation(TeamTown teamTown) {
+        if (level == null || level.isClientSide || teamTown == null) {
             return;
         }
         TransportEndpointId endpointId = endpointId();
-        GlobalPos corePos = boundWarehouseCorePos();
-        double scaleMetric = TransportReservationModel.warehouseScaleMetric(context.warehouse().getVolume());
         Optional<TransportReservation> existing = teamTown.getTransportReservation(endpointId);
         if (existing.isPresent()
-                && (existing.get().endpointKind() != TransportEndpointKind.WAREHOUSE_INTERFACE
-                || !existing.get().boundWarehouseCorePos().equals(corePos))) {
+                && existing.get().endpointKind() != TransportEndpointKind.WAREHOUSE_INTERFACE) {
             teamTown.unregisterTransportEndpoint(endpointId);
             existing = Optional.empty();
         }
@@ -743,7 +706,7 @@ public class WarehouseInterfaceBlockEntity extends CBlockEntity implements CTick
             int defaultRate = FHConfig.SERVER.TOWN.TRANSPORT_CONSUMERS
                     .defaultRateItemsPerSecond.get();
             TransportReservationResult result = teamTown.registerOrUpdateTransportEndpoint(new TransportEndpointRequest(
-                    endpointId, TransportEndpointKind.WAREHOUSE_INTERFACE, corePos, defaultRate, scaleMetric));
+                    endpointId, TransportEndpointKind.WAREHOUSE_INTERFACE, defaultRate));
             admissionNoticeResolved = true;
             newEndpointAdmissionFailed = result.decision() == TransportReservationDecision.INSUFFICIENT_CAPACITY;
             if (newEndpointAdmissionFailed) {
@@ -756,9 +719,8 @@ public class WarehouseInterfaceBlockEntity extends CBlockEntity implements CTick
             admissionNoticeResolved = true;
             pendingAdmissionNoticePlayer = null;
             newEndpointAdmissionFailed = false;
-            if (Double.compare(existing.get().scaleMetric(), scaleMetric) != 0) {
-                TransportReservationResult result = teamTown.refreshTransportEndpointMetric(
-                        endpointId, corePos, scaleMetric);
+            TransportReservationResult result = teamTown.refreshTransportEndpointMetric(endpointId);
+            if (result.decision() != TransportReservationDecision.ACCEPTED) {
                 recordTransportDecision(result.decision());
             } else if (lastTransportDecision == TransportReservationDecision.INVALID_BINDING) {
                 recordTransportDecision(TransportReservationDecision.ACCEPTED);
@@ -767,9 +729,8 @@ public class WarehouseInterfaceBlockEntity extends CBlockEntity implements CTick
     }
 
     private void unregisterTransportReservation() {
-        if (level != null && !level.isClientSide && townProvider != null
-                && townProvider.getTown() instanceof TeamTown teamTown) {
-            teamTown.unregisterTransportEndpoint(endpointId());
+        if (level != null && !level.isClientSide && townProvider != null) {
+            resolveTown().ifPresent(town -> town.unregisterTransportEndpoint(endpointId()));
         }
     }
 }

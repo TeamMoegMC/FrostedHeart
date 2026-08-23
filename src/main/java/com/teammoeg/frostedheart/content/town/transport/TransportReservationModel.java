@@ -10,6 +10,12 @@
 
 package com.teammoeg.frostedheart.content.town.transport;
 
+import net.minecraft.core.BlockPos;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+
 /** Forge-independent formulas and comparison rules for transport-capacity reservations. */
 public final class TransportReservationModel {
     private static final int COMPARISON_ULPS = 8;
@@ -17,18 +23,55 @@ public final class TransportReservationModel {
     private TransportReservationModel() {
     }
 
-    public static double warehouseScaleMetric(double warehouseVolume) {
-        if (!Double.isFinite(warehouseVolume) || warehouseVolume < 0.0) {
+    public static double warehouseWeightedDistance(
+            BlockPos endpointPos,
+            Collection<WarehouseTopologyEntry> warehouses
+    ) {
+        if (endpointPos == null || warehouses == null || warehouses.isEmpty()) {
             return Double.NaN;
         }
-        return Math.sqrt(warehouseVolume);
+        List<WarehouseTopologyEntry> sorted = new ArrayList<>(warehouses.size());
+        double maximumWeight = 0.0;
+        for (WarehouseTopologyEntry warehouse : warehouses) {
+            if (warehouse == null || !Double.isFinite(warehouse.capacityWeight())
+                    || warehouse.capacityWeight() <= 0.0) {
+                return Double.NaN;
+            }
+            sorted.add(warehouse);
+            maximumWeight = Math.max(maximumWeight, warehouse.capacityWeight());
+        }
+        if (!Double.isFinite(maximumWeight) || maximumWeight <= 0.0) {
+            return Double.NaN;
+        }
+        sorted.sort(WarehouseTopologyEntry.CORE_POS_ORDER);
+
+        double numerator = 0.0;
+        double denominator = 0.0;
+        for (WarehouseTopologyEntry warehouse : sorted) {
+            BlockPos corePos = warehouse.corePos();
+            long dx = Math.abs((long) endpointPos.getX() - corePos.getX());
+            long dy = Math.abs((long) endpointPos.getY() - corePos.getY());
+            long dz = Math.abs((long) endpointPos.getZ() - corePos.getZ());
+            double distance = (double) (dx + dy + dz);
+            double normalizedWeight = warehouse.capacityWeight() / maximumWeight;
+            numerator += normalizedWeight * distance;
+            denominator += normalizedWeight;
+            if (!isFiniteNonNegative(numerator) || !isFiniteNonNegative(denominator)) {
+                return Double.NaN;
+            }
+        }
+        if (denominator <= 0.0) {
+            return Double.NaN;
+        }
+        double result = numerator / denominator;
+        return isFiniteNonNegative(result) ? result : Double.NaN;
     }
 
-    public static double warehouseScaleFactor(double scaleMetric, TransportConsumerParameters parameters) {
+    public static double warehouseDistanceFactor(double scaleMetric, TransportConsumerParameters parameters) {
         if (!isFiniteNonNegative(scaleMetric) || parameters == null) {
             return Double.NaN;
         }
-        double factor = 1.0 + parameters.warehouseScaleCostPerMetric() * scaleMetric;
+        double factor = 1.0 + parameters.warehouseDistanceCostPerBlock() * scaleMetric;
         return isFiniteNonNegative(factor) ? factor : Double.NaN;
     }
 
@@ -62,7 +105,7 @@ public final class TransportReservationModel {
             return 0.0;
         }
         double factor = switch (endpointKind) {
-            case WAREHOUSE_INTERFACE -> warehouseScaleFactor(scaleMetric, parameters);
+            case WAREHOUSE_INTERFACE -> warehouseDistanceFactor(scaleMetric, parameters);
         };
         if (!isFiniteNonNegative(factor)) {
             return Double.NaN;

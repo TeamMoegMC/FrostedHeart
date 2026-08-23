@@ -25,8 +25,6 @@ import com.teammoeg.frostedheart.content.town.block.AbstractTownBuildingBlockEnt
 import com.teammoeg.frostedheart.content.town.block.blockscanner.AbstractBlockScanner;
 import com.teammoeg.frostedheart.content.town.block.blockscanner.FloorBlockScanner;
 import com.teammoeg.frostedheart.content.town.building.AbstractTownBuilding;
-import com.teammoeg.frostedheart.content.town.transport.TransportEndpointId;
-import net.minecraft.core.GlobalPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.world.MenuProvider;
@@ -40,8 +38,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Objects;
-import java.util.LinkedHashSet;
-import java.util.Set;
 
 public class WarehouseBlockEntity extends AbstractTownBuildingBlockEntity<WarehouseBuilding> implements MenuProvider {
 
@@ -51,37 +47,22 @@ public class WarehouseBlockEntity extends AbstractTownBuildingBlockEntity<Wareho
 
     @Override
     public void refresh(@NotNull WarehouseBuilding building) {
-        boolean wasWorkableBefore = building.isBuildingWorkable();
         super.refresh(building);
         ITownWithBuildings buildingTown = this.getTown();
         if(buildingTown instanceof TeamTown teamTown){
             teamTown.getTownData().ifPresent(TeamTownData::reloadMaxCapacity);
         }
 
-        if (!wasWorkableBefore && building.isBuildingWorkable() && level != null) {
-            for (BlockPos emitterPos : building.getEmitterPositions()) {
-                if (level.isLoaded(emitterPos) && level.getBlockEntity(emitterPos) instanceof WarehouseLevelEmitterBlockEntity emitter) {
-                    emitter.ensureWatcherAndRefresh();
-                }
-            }
-            for (BlockPos interfacePos : building.getInterfacePositions()) {
-                if (level.isLoaded(interfacePos) && level.getBlockEntity(interfacePos) instanceof WarehouseInterfaceBlockEntity iface) {
-                    iface.ensureWatcherAndRefresh();
-                }
-            }
-        }
     }
 
     public boolean scanStructure(WarehouseBuilding building){
         BlockPos warehousePos = this.getBlockPos();
         BlockPos doorPos = AbstractBlockScanner.getDoorAdjacent(level, warehousePos);
         if (doorPos == null) {
-            clearWallDevices(building);
             return false;
         }
         BlockPos floorBelowDoor = AbstractBlockScanner.getBlockBelow(Objects.requireNonNull(level), (pos)->!(Objects.requireNonNull(level).getBlockState(pos).is(BlockTags.DOORS)), doorPos);//找到门下面垫的的那个方块
         if (floorBelowDoor == null) {
-            clearWallDevices(building);
             return false;
         }
         for (Direction direction : AbstractBlockScanner.PLANE_DIRECTIONS) {
@@ -100,110 +81,11 @@ public class WarehouseBlockEntity extends AbstractTownBuildingBlockEntity<Wareho
                 building.setDecorationAmount(scanner.decorations.values().stream().mapToInt(Integer::intValue).sum());
 
                 building.setCapacity(building.getArea() * Math.pow(building.getVolume() * 0.02 / building.getArea(), 0.9) * 1980 + building.getDecorationAmount() * 512);
-            	building.setOccupiedVolume(scanner.getOccupiedVolume());
-                publishInterfaces(building, scanner.getWallInterfacePositions());
-                publishEmitters(building, scanner.getWallEmitterPositions());
+                building.setOccupiedVolume(scanner.getOccupiedVolume());
                 return true;
             }
         }
-        clearWallDevices(building);
         return false;
-    }
-
-    private void publishInterfaces(WarehouseBuilding building, Set<BlockPos> discovered) {
-        if (level == null || townProvider == null) {
-            clearInterfaces(building);
-            return;
-        }
-
-        Set<BlockPos> accepted = new LinkedHashSet<>();
-        for (BlockPos interfacePos : discovered) {
-            if (level.getBlockEntity(interfacePos) instanceof WarehouseInterfaceBlockEntity warehouseInterface
-                    && warehouseInterface.tryBind(townProvider, worldPosition)) {
-                accepted.add(interfacePos.immutable());
-            }
-        }
-
-        Set<BlockPos> previous = building.replaceInterfaces(accepted);
-        previous.removeAll(accepted);
-        for (BlockPos interfacePos : accepted) {
-            if (level.getBlockEntity(interfacePos) instanceof WarehouseInterfaceBlockEntity warehouseInterface) {
-                warehouseInterface.ensureWatcherAndRefresh();
-            }
-        }
-        unregisterRemovedInterfaces(previous);
-        for (BlockPos removedPos : previous) {
-            if (level.isLoaded(removedPos)
-                    && level.getBlockEntity(removedPos) instanceof WarehouseInterfaceBlockEntity warehouseInterface) {
-                warehouseInterface.unbindIfBoundTo(townProvider, worldPosition);
-            }
-        }
-    }
-
-    private void publishEmitters(WarehouseBuilding building, Set<BlockPos> discovered) {
-        if (level == null || townProvider == null) {
-            clearEmitters(building);
-            return;
-        }
-
-        Set<BlockPos> accepted = new LinkedHashSet<>();
-        for (BlockPos emitterPos : discovered) {
-            if (level.getBlockEntity(emitterPos) instanceof WarehouseLevelEmitterBlockEntity levelEmitter
-                    && levelEmitter.tryBind(townProvider, worldPosition)) {
-                accepted.add(emitterPos.immutable());
-            }
-        }
-
-        Set<BlockPos> previous = building.replaceEmitters(accepted);
-        previous.removeAll(accepted);
-        for (BlockPos removedPos : previous) {
-            if (level.isLoaded(removedPos)
-                    && level.getBlockEntity(removedPos) instanceof WarehouseLevelEmitterBlockEntity levelEmitter) {
-                levelEmitter.unbindIfBoundTo(townProvider, worldPosition);
-            }
-        }
-    }
-
-    private void clearInterfaces(WarehouseBuilding building) {
-        Set<BlockPos> previous = building.replaceInterfaces(Set.of());
-        if (level == null || townProvider == null) {
-            return;
-        }
-        unregisterRemovedInterfaces(previous);
-        for (BlockPos interfacePos : previous) {
-            if (level.isLoaded(interfacePos)
-                    && level.getBlockEntity(interfacePos) instanceof WarehouseInterfaceBlockEntity warehouseInterface) {
-                warehouseInterface.unbindIfBoundTo(townProvider, worldPosition);
-            }
-        }
-    }
-
-    private void unregisterRemovedInterfaces(Set<BlockPos> removedPositions) {
-        if (level == null || townProvider == null || !(townProvider.getTown() instanceof TeamTown teamTown)) {
-            return;
-        }
-        for (BlockPos removedPos : removedPositions) {
-            teamTown.unregisterTransportEndpoint(new TransportEndpointId(
-                    GlobalPos.of(level.dimension(), removedPos)));
-        }
-    }
-
-    private void clearEmitters(WarehouseBuilding building) {
-        Set<BlockPos> previous = building.replaceEmitters(Set.of());
-        if (level == null || townProvider == null) {
-            return;
-        }
-        for (BlockPos emitterPos : previous) {
-            if (level.isLoaded(emitterPos)
-                    && level.getBlockEntity(emitterPos) instanceof WarehouseLevelEmitterBlockEntity levelEmitter) {
-                levelEmitter.unbindIfBoundTo(townProvider, worldPosition);
-            }
-        }
-    }
-
-    private void clearWallDevices(WarehouseBuilding building) {
-        clearInterfaces(building);
-        clearEmitters(building);
     }
 
 

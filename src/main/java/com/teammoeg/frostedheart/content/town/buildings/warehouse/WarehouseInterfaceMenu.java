@@ -155,7 +155,13 @@ public class WarehouseInterfaceMenu extends CBlockEntityMenu<WarehouseInterfaceB
                 }
             }
             case CMD_CLEAR_TARGET -> blockEntity.setTarget(slot, null);
-            case CMD_SET_AMOUNT -> blockEntity.setTargetAmount(slot, state);
+            case CMD_SET_AMOUNT -> {
+                WarehouseInterfaceTarget target = blockEntity.getTarget(slot);
+                if (target != null && state >= 1
+                        && state <= target.key().toStack(1).getMaxStackSize()) {
+                    blockEntity.setTargetAmount(slot, state);
+                }
+            }
             default -> {
                 return;
             }
@@ -163,14 +169,12 @@ public class WarehouseInterfaceMenu extends CBlockEntityMenu<WarehouseInterfaceB
     }
 
     private boolean isCommandContextValid() {
-        return menuPlayer != null
-                && !menuPlayer.level().isClientSide
-                && blockEntity.getLevel() == menuPlayer.level()
-                && !blockEntity.isRemoved()
-                && blockEntity.getLevel().getBlockEntity(blockEntity.getBlockPos()) == blockEntity
-                && menuPlayer.distanceToSqr(
-                blockEntity.getBlockPos().getX() + 0.5,
-                blockEntity.getBlockPos().getY() + 0.5,
-                blockEntity.getBlockPos().getZ() + 0.5) <= 64.0;
+        return TownWarehouseDeviceAccess.isMenuAccessValid(
+                menuPlayer, blockEntity, blockEntity.getTownProvider(), this);
+    }
+
+    @Override
+    public boolean stillValid(Player player) {
+        return player == menuPlayer && isCommandContextValid();
     }
 }

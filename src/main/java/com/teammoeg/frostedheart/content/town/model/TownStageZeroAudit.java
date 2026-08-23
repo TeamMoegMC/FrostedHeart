@@ -457,10 +457,10 @@ public final class TownStageZeroAudit {
                 consumers.maximumRateItemsPerSecond(), "items/s", source,
                 "TRANSPORT_CONSUMER_MAXIMUM_RATE_ITEMS_PER_SECOND",
                 "TRANSPORT_CONSUMERS.maximumRateItemsPerSecond");
-        addShared(values, "transportConsumers.warehouseScaleCostPerMetric",
-                consumers.warehouseScaleCostPerMetric(), "capacity/(items/s*sqrt(block3))", source,
-                "TRANSPORT_CONSUMER_WAREHOUSE_SCALE_COST_PER_METRIC",
-                "TRANSPORT_CONSUMERS.warehouseScaleCostPerMetric");
+        addShared(values, "transportConsumers.warehouseDistanceCostPerBlock",
+                consumers.warehouseDistanceCostPerBlock(), "1/block", source,
+                "TRANSPORT_CONSUMER_WAREHOUSE_DISTANCE_COST_PER_BLOCK",
+                "TRANSPORT_CONSUMERS.warehouseDistanceCostPerBlock");
         return List.copyOf(values);
     }
 

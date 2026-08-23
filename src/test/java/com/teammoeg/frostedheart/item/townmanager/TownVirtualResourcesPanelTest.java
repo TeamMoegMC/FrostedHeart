@@ -60,14 +60,24 @@ class TownVirtualResourcesPanelTest {
         assertTrue(((String) contents(endpointRows.get(0)).getArgs()[1]).contains("1, 64, 0"));
         assertTrue(((String) contents(endpointRows.get(1)).getArgs()[1]).contains("5, 64, 0"));
 
+        TownInfoPanel.Row warehouseCount = row(
+                expanded, PREFIX + "transport_effective_warehouses");
+        assertEquals(2, contents(warehouseCount).getArgs()[0]);
+
+        List<TownInfoPanel.Row> distances = expanded.stream()
+                .filter(value -> key(value).equals(PREFIX + "transport_endpoint_distance"))
+                .toList();
+        assertEquals("8", contents(distances.get(0)).getArgs()[0]);
+        assertEquals("1.4", contents(distances.get(0)).getArgs()[1]);
+
         List<TownInfoPanel.Row> metrics = expanded.stream()
                 .filter(value -> key(value).equals(PREFIX + "transport_endpoint_metrics"))
                 .toList();
-        assertEquals("1.4", contents(metrics.get(0)).getArgs()[0]);
-        assertEquals("1.4", contents(metrics.get(1)).getArgs()[0]);
+        assertEquals("28", contents(metrics.get(0)).getArgs()[0]);
+        assertEquals("28", contents(metrics.get(1)).getArgs()[0]);
         assertEquals(PREFIX + "transport_admission.throttled",
                 ((TranslatableContents) ((net.minecraft.network.chat.Component)
-                        contents(metrics.get(0)).getArgs()[2]).getContents()).getKey());
+                        contents(metrics.get(0)).getArgs()[1]).getContents()).getKey());
 
         TownInfoPanel.Row collapse = row(expanded, PREFIX + "transport_details_collapse");
         collapse.clickAction().run();
@@ -78,6 +88,8 @@ class TownVirtualResourcesPanelTest {
         return new TownTransportSnapshot(
                 new TownTransportState.DailyReport(true, 64.0, 56.0),
                 totalCapacity,
+                2,
+                0.05,
                 List.of(entry(5), entry(1)));
     }
 
@@ -86,7 +98,6 @@ class TownVirtualResourcesPanelTest {
                 GlobalPos.of(Level.OVERWORLD, new BlockPos(x, 64, 0)));
         TransportReservation reservation = new TransportReservation(
                 TransportEndpointKind.WAREHOUSE_INTERFACE,
-                GlobalPos.of(Level.OVERWORLD, new BlockPos(100 + x, 64, 0)),
                 20, 8.0, 28.0, TransportAdmissionStatus.ACTIVE);
         return new TownTransportState.ReservationEntry(endpoint, reservation);
     }

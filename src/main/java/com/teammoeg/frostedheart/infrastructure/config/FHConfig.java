@@ -1826,7 +1826,7 @@ public class FHConfig {
 				public final ForgeConfigSpec.IntValue defaultRateItemsPerSecond;
 				public final ForgeConfigSpec.IntValue minimumRateItemsPerSecond;
 				public final ForgeConfigSpec.IntValue maximumRateItemsPerSecond;
-				public final ForgeConfigSpec.DoubleValue warehouseScaleCostPerMetric;
+				public final ForgeConfigSpec.DoubleValue warehouseDistanceCostPerBlock;
 
 				TransportConsumers(ForgeConfigSpec.Builder builder) {
 					builder.push("Transport Consumers");
@@ -1845,10 +1845,10 @@ public class FHConfig {
 							.defineInRange("maximumRateItemsPerSecond",
 									TownModelParameters.Defaults.TRANSPORT_CONSUMER_MAXIMUM_RATE_ITEMS_PER_SECOND,
 									1, 1_000_000);
-					warehouseScaleCostPerMetric = builder
-							.comment("Additional capacity multiplier per sqrt(warehouse interior volume).")
-							.defineInRange("warehouseScaleCostPerMetric",
-									TownModelParameters.Defaults.TRANSPORT_CONSUMER_WAREHOUSE_SCALE_COST_PER_METRIC,
+					warehouseDistanceCostPerBlock = builder
+							.comment("Additional transport-capacity multiplier per block of capacity-weighted warehouse distance.")
+							.defineInRange("warehouseDistanceCostPerBlock",
+									TownModelParameters.Defaults.TRANSPORT_CONSUMER_WAREHOUSE_DISTANCE_COST_PER_BLOCK,
 									0d, 1_000_000d);
 					builder.pop();
 				}

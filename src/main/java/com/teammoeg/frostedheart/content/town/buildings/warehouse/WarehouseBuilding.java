@@ -31,13 +31,6 @@ import com.teammoeg.frostedheart.content.town.resource.action.ResourceActionType
 import com.teammoeg.frostedheart.content.town.resource.action.TownResourceActions;
 
 import net.minecraft.core.BlockPos;
-import net.minecraft.server.level.ServerLevel;
-
-import java.util.Collection;
-import java.util.Collections;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
 
 public class WarehouseBuilding extends AbstractTownBuilding {
 	public static final Codec<WarehouseBuilding> CODEC = RecordCodecBuilder.create(t -> t.group(
@@ -49,11 +42,7 @@ public class WarehouseBuilding extends AbstractTownBuilding {
 					Codec.DOUBLE.optionalFieldOf("capacity",0D).forGetter(o -> o.getCapacity()),
 					Codec.INT.optionalFieldOf("area",0).forGetter(o -> o.getArea()),
 					Codec.INT.optionalFieldOf("volume",0).forGetter(o -> o.getVolume()),
-                    Codec.INT.optionalFieldOf("decorationAmount",0).forGetter(o -> o.getDecorationAmount()),
-                    BlockPos.CODEC.listOf().optionalFieldOf("interfaces", List.of())
-                            .forGetter(o -> List.copyOf(o.interfacePositions)),
-                    BlockPos.CODEC.listOf().optionalFieldOf("emitters", List.of())
-                            .forGetter(o -> List.copyOf(o.emitterPositions))
+                    Codec.INT.optionalFieldOf("decorationAmount",0).forGetter(o -> o.getDecorationAmount())
 			)
 			.apply(t, WarehouseBuilding::new));
 
@@ -62,8 +51,6 @@ public class WarehouseBuilding extends AbstractTownBuilding {
     private double capacity;//该仓库的最大容量
     @Getter
     private int decorationAmount;
-    private final Set<BlockPos> interfacePositions = new LinkedHashSet<>();
-    private final Set<BlockPos> emitterPositions = new LinkedHashSet<>();
 
     public void setVolume(int volume) { if (this.volume == volume) return; this.volume = volume; fireChange(); }
     public void setArea(int area) { if (this.area == area) return; this.area = area; fireChange(); }
@@ -85,20 +72,6 @@ public class WarehouseBuilding extends AbstractTownBuilding {
      */
     public WarehouseBuilding(BlockPos pos, boolean isStructureValid, OccupiedVolume occupiedVolume, boolean initialized,
                              boolean occupiedAreaOverlapped, double capacity, int area, int volume, int decorationAmount) {
-        this(pos, isStructureValid, occupiedVolume, initialized, occupiedAreaOverlapped, capacity, area, volume, decorationAmount, List.of(), List.of());
-    }
-
-    public WarehouseBuilding(BlockPos pos, boolean isStructureValid, OccupiedVolume occupiedVolume, boolean initialized,
-                             boolean occupiedAreaOverlapped, double capacity,
-                             int area, int volume, int decorationAmount, List<BlockPos> interfacePositions) {
-        this(pos, isStructureValid, occupiedVolume, initialized, occupiedAreaOverlapped, capacity, area, volume,
-                decorationAmount, interfacePositions, List.of());
-    }
-
-    public WarehouseBuilding(BlockPos pos, boolean isStructureValid, OccupiedVolume occupiedVolume, boolean initialized,
-                             boolean occupiedAreaOverlapped, double capacity,
-                             int area, int volume, int decorationAmount, List<BlockPos> interfacePositions,
-                             List<BlockPos> emitterPositions) {
         super(pos);
         this.setIsStructureValid(isStructureValid);
         this.setOccupiedVolume(occupiedVolume);
@@ -108,8 +81,6 @@ public class WarehouseBuilding extends AbstractTownBuilding {
         this.setArea(area);
         this.setVolume(volume);
         this.setDecorationAmount(decorationAmount);
-        replaceInterfaces(interfacePositions);
-        replaceEmitters(emitterPositions);
     }
 
 	/**
@@ -136,64 +107,4 @@ public class WarehouseBuilding extends AbstractTownBuilding {
 	public double getCapacity() {
 		return capacity;
 	}
-
-    public Set<BlockPos> getInterfacePositions() {
-        return Collections.unmodifiableSet(interfacePositions);
-    }
-
-    public boolean containsInterface(BlockPos interfacePos) {
-        return interfacePositions.contains(interfacePos);
-    }
-
-    public Set<BlockPos> replaceInterfaces(Collection<BlockPos> positions) {
-        Set<BlockPos> previous = new LinkedHashSet<>(interfacePositions);
-        interfacePositions.clear();
-        positions.stream().map(BlockPos::immutable).forEach(interfacePositions::add);
-        return previous;
-    }
-
-    public boolean removeInterface(BlockPos interfacePos) {
-        return interfacePositions.remove(interfacePos);
-    }
-
-    public Set<BlockPos> getEmitterPositions() {
-        return Collections.unmodifiableSet(emitterPositions);
-    }
-
-    public boolean containsEmitter(BlockPos emitterPos) {
-        return emitterPositions.contains(emitterPos);
-    }
-
-    public Set<BlockPos> replaceEmitters(Collection<BlockPos> positions) {
-        Set<BlockPos> previous = new LinkedHashSet<>(emitterPositions);
-        emitterPositions.clear();
-        positions.stream().map(BlockPos::immutable).forEach(emitterPositions::add);
-        return previous;
-    }
-
-    public boolean removeEmitter(BlockPos emitterPos) {
-        return emitterPositions.remove(emitterPos);
-    }
-
-    /**
-     * Releases watcher-backed devices that are currently loaded before this
-     * logical warehouse is detached from the town. Unloaded devices validate
-     * the missing warehouse mapping when they next load and stay inoperable.
-     */
-    public void unbindLoadedDevices(ServerLevel level) {
-        for (BlockPos interfacePos : interfacePositions) {
-            if (level.isLoaded(interfacePos)
-                    && level.getBlockEntity(interfacePos) instanceof WarehouseInterfaceBlockEntity warehouseInterface) {
-                warehouseInterface.unbindIfBoundTo(this);
-            }
-        }
-        for (BlockPos emitterPos : emitterPositions) {
-            if (level.isLoaded(emitterPos)
-                    && level.getBlockEntity(emitterPos) instanceof WarehouseLevelEmitterBlockEntity levelEmitter) {
-                levelEmitter.unbindIfBoundTo(this);
-            }
-        }
-        replaceInterfaces(Set.of());
-        replaceEmitters(Set.of());
-    }
 }

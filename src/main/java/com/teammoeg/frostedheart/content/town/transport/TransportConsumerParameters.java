@@ -15,7 +15,7 @@ public record TransportConsumerParameters(
         int defaultRateItemsPerSecond,
         int minimumRateItemsPerSecond,
         int maximumRateItemsPerSecond,
-        double warehouseScaleCostPerMetric
+        double warehouseDistanceCostPerBlock
 ) {
     public TransportConsumerParameters {
         if (defaultRateItemsPerSecond < 0) {
@@ -30,8 +30,8 @@ public record TransportConsumerParameters(
         if (defaultRateItemsPerSecond > maximumRateItemsPerSecond) {
             throw new IllegalArgumentException("defaultRateItemsPerSecond exceeds the maximum.");
         }
-        if (!Double.isFinite(warehouseScaleCostPerMetric) || warehouseScaleCostPerMetric < 0.0) {
-            throw new IllegalArgumentException("warehouseScaleCostPerMetric must be finite and non-negative.");
+        if (!Double.isFinite(warehouseDistanceCostPerBlock) || warehouseDistanceCostPerBlock < 0.0) {
+            throw new IllegalArgumentException("warehouseDistanceCostPerBlock must be finite and non-negative.");
         }
     }
 

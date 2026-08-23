@@ -34,8 +34,9 @@ class WarehouseInterfaceFeedbackResourcesTest {
             "transport_details_expand",
             "transport_details_collapse",
             "transport_endpoint",
-            "transport_binding",
+            "transport_effective_warehouses",
             "transport_endpoint_rate",
+            "transport_endpoint_distance",
             "transport_endpoint_metrics",
             "transport_endpoint_kind.warehouse_interface",
             "transport_admission.active",
@@ -49,8 +50,7 @@ class WarehouseInterfaceFeedbackResourcesTest {
             "invalid_request",
             "current_rate",
             "reserved",
-            "town_available",
-            "town_total");
+            "town_capacity");
 
     @Test
     void blockstateCoversEveryFacingAndFiniteVisualState() {

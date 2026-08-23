@@ -20,37 +20,36 @@
 package com.teammoeg.frostedheart.content.town.buildings.warehouse;
 
 import com.teammoeg.chorda.block.entity.CBlockEntity;
-import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
-import com.teammoeg.frostedheart.content.town.ITown;
-import com.teammoeg.frostedheart.content.town.ITownWithBuildings;
 import com.teammoeg.frostedheart.content.town.ITownWithResources;
-import com.teammoeg.frostedheart.content.town.building.AbstractTownBuilding;
-import com.teammoeg.frostedheart.content.town.provider.ITownProviderSerializable;
+import com.teammoeg.frostedheart.content.town.TeamTown;
+import com.teammoeg.frostedheart.content.town.provider.TeamTownProvider;
 import com.teammoeg.frostedheart.content.town.resource.TeamTownResourceActionExecutorHandler;
 import com.teammoeg.frostedheart.content.town.resource.TeamTownResourceHolder;
 import com.teammoeg.frostedheart.content.town.resource.action.TownResourceActions;
 import com.teammoeg.frostedheart.content.town.resource.watcher.IWarehouseStockWatcher;
 import com.teammoeg.frostedheart.content.town.resource.watcher.IWarehouseStockWatcherNode;
+import com.teammoeg.frostedheart.content.town.transport.WarehouseTopologyListener;
+import com.teammoeg.frostedheart.content.town.transport.WarehouseTopologySnapshot;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.core.GlobalPos;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.NbtOps;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.MenuProvider;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Objects;
 import java.util.Optional;
 
 /**
- * 仓库发信器：绑定到仓库墙体，监测城镇仓库中某种物品（NBT 精确匹配）的存量，
+ * 仓库发信器：归属于一个城镇，监测城镇仓库中某种物品（NBT 精确匹配）的存量，
  * 并按阈值与模式输出红石信号
  * <ul>
  *     <li>{@link WarehouseRedstoneMode#HIGH_SIGNAL}：存量大于等于阈值时输出 15 级信号</li>
@@ -58,13 +57,14 @@ import java.util.Optional;
  * </ul>
  * 与仓库接口的红石控制模式配合，即可实现"发信器控制的仓库输出"。
  * <p>
- * Warehouse level emitter: binds to a warehouse wall, watches the stock of one item
+ * Warehouse level emitter: belongs to one town and watches the stock of one item
  * (exact NBT match) in the town warehouse, and emits a redstone signal according to a
  * configurable threshold and mode, mirroring the AE2 level emitter. Combined with the
  * warehouse interface's redstone control mode it enables level-emitter-controlled
  * warehouse output.
  */
-public class WarehouseLevelEmitterBlockEntity extends CBlockEntity implements IWarehouseStockWatcherNode, MenuProvider {
+public class WarehouseLevelEmitterBlockEntity extends CBlockEntity implements IWarehouseStockWatcherNode,
+        MenuProvider, WarehouseTopologyListener {
     public static final int STATUS_UNBOUND = 0;
     public static final int STATUS_UNAVAILABLE = 1;
     public static final int STATUS_WORKING = 2;
@@ -76,8 +76,8 @@ public class WarehouseLevelEmitterBlockEntity extends CBlockEntity implements IW
     private long lastKnownStock;
     private boolean emitterOn;
 
-    private ITownProviderSerializable<? extends ITownWithBuildings> townProvider;
-    private BlockPos warehousePos;
+    private TeamTownProvider townProvider;
+    private transient TeamTown topologyListenerTown;
     private int connectionStatus = STATUS_UNBOUND;
     // 由资源持有者分配的 watcher，用于精准订阅物品数量变化
     @Nullable
@@ -114,6 +114,27 @@ public class WarehouseLevelEmitterBlockEntity extends CBlockEntity implements IW
         return connectionStatus;
     }
 
+    TeamTownProvider getTownProvider() {
+        return townProvider;
+    }
+
+    public boolean claimOrAuthorize(ServerPlayer player) {
+        TownWarehouseDeviceAccess.ClaimResult result =
+                TownWarehouseDeviceAccess.claimOrAuthorize(player, this, townProvider);
+        if (!result.allowed()) {
+            return false;
+        }
+        boolean claimed = townProvider == null;
+        townProvider = result.provider();
+        if (claimed) {
+            connectionStatus = STATUS_UNAVAILABLE;
+            setChanged();
+        }
+        registerTopologyListener();
+        ensureWatcherAndRefresh();
+        return true;
+    }
+
 
     // ---------- IWarehouseStockWatcherNode 实现 ----------
 
@@ -139,22 +160,17 @@ public class WarehouseLevelEmitterBlockEntity extends CBlockEntity implements IW
     @Override
     public void onStockChange(SimpleItemKey item, long newAmount) {
         if (level == null || level.isClientSide) return;
-        if (resolveBinding(false).map(ctx -> !ctx.warehouse().isBuildingWorkable()).orElse(true)) {
-            // 建筑无效，强制关闭
+        if (resolveTown().map(town -> !town.getWarehouseTopology().isUsable()).orElse(true)) {
             setEmitterOn(false, lastKnownStock);
             return;
         }
         lastKnownStock = newAmount;
-        boolean on = (mode == WarehouseRedstoneMode.LOW_SIGNAL) == (newAmount < threshold);
+        boolean on = shouldEmit(mode, newAmount, threshold);
         setEmitterOn(on, newAmount);
     }
 
     private void configureWatcher() {
-        if (watcher == null) return;
-        watcher.reset();
-        if (filter != null) {
-            watcher.addWatch(filter);
-        }
+        WarehouseLevelEmitterModel.configureWatcher(watcher, filter);
     }
     public void setFilterFromStack(ItemStack stack) {
         if (!stack.isEmpty()) {
@@ -178,104 +194,61 @@ public class WarehouseLevelEmitterBlockEntity extends CBlockEntity implements IW
         }
     }
 
-    // ---------- 绑定管理 ----------
-
-    /**
-     * Claims this emitter for a warehouse. A still-valid binding owned by a
-     * different warehouse is never stolen.
-     */
-    public boolean tryBind(ITownProviderSerializable<? extends ITownWithBuildings> provider, BlockPos newWarehousePos) {
-        if (provider == null || newWarehousePos == null) {
-            return false;
-        }
-        if (isBoundTo(provider, newWarehousePos)) {
-            this.townProvider = provider;
-            return true;
-        }
-        if (warehousePos != null && resolveBinding(false).isPresent()) {
-            // 旧绑定仍有效，不抢夺
-            return false;
-        }
-
-        // 清理旧绑定（包括旧的 watcher）
-        clearBinding();
-
-        this.townProvider = provider;
-        this.warehousePos = newWarehousePos.immutable();
-        this.connectionStatus = STATUS_UNAVAILABLE;
-        if (level != null) {
-            setChanged();
-        }
-
-        // 获取新的 watcher 并配置
-        ensureWatcherAndRefresh();
-        return true;
+    private Optional<TeamTown> resolveTown() {
+        return TownWarehouseDeviceAccess.resolveTown(townProvider, level);
     }
 
-    public void unbindIfBoundTo(ITownProviderSerializable<? extends ITownWithBuildings> provider, BlockPos oldWarehousePos) {
-        if (isBoundTo(provider, oldWarehousePos)) {
-            clearBinding();
-        }
-    }
-
-    void unbindIfBoundTo(WarehouseBuilding warehouse) {
-        if (warehousePos == null || !warehousePos.equals(warehouse.getPos()) || townProvider == null) {
+    private void registerTopologyListener() {
+        if (level == null || level.isClientSide || townProvider == null) {
             return;
         }
-        ITownWithBuildings town = townProvider.getTown();
-        if (town != null && town.getTownBuilding(warehousePos).orElse(null) == warehouse) {
-            clearBinding();
-        }
-    }
-
-    private boolean isBoundTo(ITownProviderSerializable<? extends ITownWithBuildings> provider, BlockPos candidatePos) {
-        return warehousePos != null
-                && warehousePos.equals(candidatePos)
-                && townProvider != null
-                && Objects.equals(townProvider.toNBT(), provider.toNBT());
-    }
-
-    private Optional<BindingContext> resolveBinding(boolean clearWhenInvalid) {
-        if (townProvider == null || warehousePos == null) {
-            return Optional.empty();
-        }
-
-        ITownWithBuildings town = townProvider.getTown();
-        if (town == null) {
-            return invalidBinding(clearWhenInvalid);
-        }
-        Optional<AbstractTownBuilding> building = town.getTownBuilding(warehousePos);
-        if (building.isEmpty() || !(building.get() instanceof WarehouseBuilding warehouse)
-                || !warehouse.containsEmitter(worldPosition)) {
-            return invalidBinding(clearWhenInvalid);
-        }
-
-        if (level != null && level.isLoaded(warehousePos)) {
-            BlockEntity core = level.getBlockEntity(warehousePos);
-            if (!(core instanceof WarehouseBlockEntity)) {
-                return invalidBinding(clearWhenInvalid);
+        resolveTown().ifPresent(town -> {
+            if (topologyListenerTown != null) {
+                topologyListenerTown.unregisterWarehouseTopologyListener(
+                        GlobalPos.of(level.dimension(), worldPosition), this);
             }
-        }
-        return Optional.of(new BindingContext(town, warehouse));
+            town.registerWarehouseTopologyListener(
+                    GlobalPos.of(level.dimension(), worldPosition), this);
+            topologyListenerTown = town;
+        });
     }
 
-    private Optional<BindingContext> invalidBinding(boolean clearWhenInvalid) {
-        if (clearWhenInvalid) {
-            clearBinding();
+    private void unregisterTopologyListener() {
+        if (topologyListenerTown != null && level != null) {
+            topologyListenerTown.unregisterWarehouseTopologyListener(
+                    GlobalPos.of(level.dimension(), worldPosition), this);
         }
-        return Optional.empty();
+        topologyListenerTown = null;
+    }
+
+    @Override
+    public void onWarehouseTopologyChanged(WarehouseTopologySnapshot snapshot) {
+        if (level == null || level.isClientSide) {
+            return;
+        }
+        if (!snapshot.isUsable() || !level.dimension().equals(snapshot.townDimension())) {
+            if (watcher != null) {
+                watcher.reset();
+                watcher = null;
+            }
+            connectionStatus = STATUS_UNAVAILABLE;
+            setEmitterOn(false, 0);
+            return;
+        }
+        ensureWatcherAndRefresh();
+        refreshState();
     }
 
     private void clearBinding() {
+        unregisterTopologyListener();
         // 释放 watcher，它会自动从资源持有者的索引中清除
         if (watcher != null) {
             watcher.reset();
             watcher = null;
         }
 
-        boolean changed = townProvider != null || warehousePos != null;
+        boolean changed = townProvider != null;
         townProvider = null;
-        warehousePos = null;
         connectionStatus = STATUS_UNBOUND;
         if (changed && level != null) {
             setChanged();
@@ -288,19 +261,19 @@ public class WarehouseLevelEmitterBlockEntity extends CBlockEntity implements IW
     public void ensureWatcherAndRefresh() {
         if (watcher != null || level == null || level.isClientSide) return;
 
-        Optional<BindingContext> binding = resolveBinding(false);
+        Optional<TeamTown> binding = resolveTown();
         if (binding.isEmpty()) {
-            connectionStatus = STATUS_UNBOUND;
+            connectionStatus = townProvider == null ? STATUS_UNBOUND : STATUS_UNAVAILABLE;
             setEmitterOn(false, 0);
             return;
         }
-
-        BindingContext ctx = binding.get();
-        if (!(ctx.town() instanceof ITownWithResources resourceTown)) {
+        TeamTown teamTown = binding.get();
+        if (!teamTown.getWarehouseTopology().isUsable()) {
             connectionStatus = STATUS_UNAVAILABLE;
             setEmitterOn(false, 0);
             return;
         }
+        ITownWithResources resourceTown = teamTown;
 
         TeamTownResourceHolder holder = ((TeamTownResourceActionExecutorHandler) resourceTown.getActionExecutorHandler()).resourceHolder;
 
@@ -315,20 +288,19 @@ public class WarehouseLevelEmitterBlockEntity extends CBlockEntity implements IW
     private void refreshState() {
         if (level == null || level.isClientSide) return;
 
-        Optional<BindingContext> binding = resolveBinding(true);
+        Optional<TeamTown> binding = resolveTown();
         if (binding.isEmpty()) {
-            connectionStatus = STATUS_UNBOUND;
+            connectionStatus = townProvider == null ? STATUS_UNBOUND : STATUS_UNAVAILABLE;
             setEmitterOn(false, 0);
             return;
         }
-
-        BindingContext ctx = binding.get();
-        if (!(ctx.town() instanceof ITownWithResources resourceTown)
-                || !ctx.warehouse().isBuildingWorkable()) {
+        TeamTown teamTown = binding.get();
+        if (!teamTown.getWarehouseTopology().isUsable()) {
             connectionStatus = STATUS_UNAVAILABLE;
             setEmitterOn(false, 0);
             return;
         }
+        ITownWithResources resourceTown = teamTown;
 
         connectionStatus = STATUS_WORKING;
         if (filter == null) {
@@ -337,18 +309,25 @@ public class WarehouseLevelEmitterBlockEntity extends CBlockEntity implements IW
         }
 
         long stock = (long) TownResourceActions.get(resourceTown.getActionExecutorHandler(), filter.toStack(1));
-        boolean on = (mode == WarehouseRedstoneMode.LOW_SIGNAL) == (stock < threshold);
+        boolean on = shouldEmit(mode, stock, threshold);
         setEmitterOn(on, stock);
     }
 
+    static boolean shouldEmit(WarehouseRedstoneMode mode, long stock, int threshold) {
+        return WarehouseLevelEmitterModel.shouldEmit(mode, stock, threshold);
+    }
+
     private void setEmitterOn(boolean on, long stock) {
-        this.lastKnownStock = stock;
-        if (on == this.emitterOn) {
+        WarehouseLevelEmitterModel.StateChange change =
+                WarehouseLevelEmitterModel.compareState(
+                        lastKnownStock, emitterOn, stock, on);
+        if (!change.changed()) {
             return;
         }
+        this.lastKnownStock = stock;
         this.emitterOn = on;
         setChanged();
-        if (level != null) {
+        if (change.outputChanged() && level != null) {
             level.updateNeighborsAt(worldPosition, getBlockState().getBlock());
             Direction facing = getBlockState().getValue(WarehouseLevelEmitterBlock.FACING);
             level.updateNeighborsAt(worldPosition.relative(facing), getBlockState().getBlock());
@@ -361,6 +340,7 @@ public class WarehouseLevelEmitterBlockEntity extends CBlockEntity implements IW
     public void onLoad() {
         super.onLoad();
         if (level != null && !level.isClientSide) {
+            registerTopologyListener();
             // 方块加载时（无论是首次放置还是 chunk 重载），重新连接 watcher
             // 城镇资源常驻，Watcher 机制会自动同步最新库存
             ensureWatcherAndRefresh();
@@ -370,6 +350,7 @@ public class WarehouseLevelEmitterBlockEntity extends CBlockEntity implements IW
     @Override
     public void onRemoved() {
         if (level != null && !level.isClientSide) {
+            unregisterTopologyListener();
             if (level.getBlockState(worldPosition).getBlock() instanceof WarehouseLevelEmitterBlock) {
                 // 区块卸载：仅释放 Watcher，保留绑定，onLoad 会重建
                 if (watcher != null) {
@@ -382,10 +363,9 @@ public class WarehouseLevelEmitterBlockEntity extends CBlockEntity implements IW
                     watcher.reset();
                     watcher = null;
                 }
-                resolveBinding(false).ifPresent(context -> context.warehouse().removeEmitter(worldPosition));
                 townProvider = null;
-                warehousePos = null;
                 connectionStatus = STATUS_UNBOUND;
+                setEmitterOn(false, 0);
             }
         }
         super.onRemoved();
@@ -396,55 +376,22 @@ public class WarehouseLevelEmitterBlockEntity extends CBlockEntity implements IW
 
     @Override
     public void readCustomNBT(CompoundTag nbt, boolean descPacket) {
-        filter = null;
-        if (nbt.contains("filter")) {
-            SimpleItemKey.CODEC.parse(NbtOps.INSTANCE, nbt.get("filter"))
-                    .resultOrPartial(message -> FHMain.LOGGER.warn("Failed to read warehouse level emitter filter: {}", message))
-                    .ifPresent(parsed -> filter = parsed);
-        }
-        threshold = Math.max(1, nbt.getInt("threshold"));
-        mode = WarehouseRedstoneMode.byOrdinal(nbt.getInt("redstoneMode"), WarehouseRedstoneMode.HIGH_SIGNAL);
-        if (mode == WarehouseRedstoneMode.IGNORE) {
-            mode = WarehouseRedstoneMode.HIGH_SIGNAL;
-        }
-        lastKnownStock = nbt.getLong("lastKnownStock");
-        emitterOn = nbt.getBoolean("emitterOn");
-
-        townProvider = null;
-        warehousePos = null;
-        if (nbt.contains("townProvider") && nbt.contains("warehousePos")) {
-            ITownProviderSerializable<? extends ITown> rawProvider =
-                    ITownProviderSerializable.fromNBT(nbt.getCompound("townProvider"));
-            if (rawProvider != null && ITownWithBuildings.class.isAssignableFrom(rawProvider.getTownType())) {
-                townProvider = castTownProvider(rawProvider);
-                warehousePos = BlockPos.of(nbt.getLong("warehousePos"));
-            }
-        }
-        connectionStatus = warehousePos == null ? STATUS_UNBOUND : STATUS_UNAVAILABLE;
-    }
-
-    @SuppressWarnings("unchecked")
-    private static ITownProviderSerializable<? extends ITownWithBuildings> castTownProvider(
-            ITownProviderSerializable<? extends ITown> provider) {
-        return (ITownProviderSerializable<? extends ITownWithBuildings>) provider;
+        WarehouseLevelEmitterPersistence.State state =
+                WarehouseLevelEmitterPersistence.read(nbt);
+        filter = state.filter();
+        threshold = state.threshold();
+        mode = state.mode();
+        lastKnownStock = state.lastKnownStock();
+        emitterOn = state.emitterOn();
+        townProvider = state.townProvider();
+        connectionStatus = townProvider == null ? STATUS_UNBOUND : STATUS_UNAVAILABLE;
     }
 
     @Override
     public void writeCustomNBT(CompoundTag nbt, boolean descPacket) {
-        if (filter != null) {
-            SimpleItemKey.CODEC.encodeStart(NbtOps.INSTANCE, filter)
-                    .resultOrPartial(message -> FHMain.LOGGER.warn("Failed to write warehouse level emitter filter: {}", message))
-                    .ifPresent(encoded -> nbt.put("filter", encoded));
-        }
-        nbt.putInt("threshold", threshold);
-        nbt.putInt("redstoneMode", mode.ordinal());
-        nbt.putLong("lastKnownStock", lastKnownStock);
-        nbt.putBoolean("emitterOn", emitterOn);
-
-        if (townProvider != null && warehousePos != null) {
-            nbt.put("townProvider", townProvider.toNBT());
-            nbt.putLong("warehousePos", warehousePos.asLong());
-        }
+        WarehouseLevelEmitterPersistence.write(nbt,
+                new WarehouseLevelEmitterPersistence.State(
+                        filter, threshold, mode, lastKnownStock, emitterOn, townProvider));
     }
 
     @Override
@@ -457,6 +404,4 @@ public class WarehouseLevelEmitterBlockEntity extends CBlockEntity implements IW
         return Component.translatable("container.frostedheart.warehouse_level_emitter");
     }
 
-    private record BindingContext(ITownWithBuildings town, WarehouseBuilding warehouse) {
-    }
 }

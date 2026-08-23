@@ -12,17 +12,14 @@ package com.teammoeg.frostedheart.content.town.transport;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
-import net.minecraft.core.GlobalPos;
-
 import java.util.Objects;
 
 /**
  * Server-owned reservation state. Its map key owns the consumer block position;
- * {@code boundWarehouseCorePos} identifies the warehouse that supplies its scale metric.
+ * distance metrics and reserved capacity are derived by the town authority.
  */
 public record TransportReservation(
         TransportEndpointKind endpointKind,
-        GlobalPos boundWarehouseCorePos,
         int rateItemsPerSecond,
         double scaleMetric,
         double reservedTransportCapacity,
@@ -31,7 +28,6 @@ public record TransportReservation(
     /** Codec intentionally excludes the derived reserved capacity cache. */
     public static final Codec<TransportReservation> CODEC = RecordCodecBuilder.create(instance -> instance.group(
             TransportEndpointKind.CODEC.fieldOf("endpointKind").forGetter(TransportReservation::endpointKind),
-            GlobalPos.CODEC.fieldOf("boundWarehouseCorePos").forGetter(TransportReservation::boundWarehouseCorePos),
             Codec.INT.fieldOf("rateItemsPerSecond").forGetter(TransportReservation::rateItemsPerSecond),
             Codec.DOUBLE.fieldOf("scaleMetric").forGetter(TransportReservation::scaleMetric),
             TransportAdmissionStatus.CODEC.fieldOf("admissionStatus").forGetter(TransportReservation::admissionStatus)
@@ -40,7 +36,6 @@ public record TransportReservation(
     /** Network snapshot codec includes the server-derived capacity cache. */
     public static final Codec<TransportReservation> SNAPSHOT_CODEC = RecordCodecBuilder.create(instance -> instance.group(
             TransportEndpointKind.CODEC.fieldOf("endpointKind").forGetter(TransportReservation::endpointKind),
-            GlobalPos.CODEC.fieldOf("boundWarehouseCorePos").forGetter(TransportReservation::boundWarehouseCorePos),
             Codec.INT.fieldOf("rateItemsPerSecond").forGetter(TransportReservation::rateItemsPerSecond),
             Codec.DOUBLE.fieldOf("scaleMetric").forGetter(TransportReservation::scaleMetric),
             Codec.DOUBLE.fieldOf("reservedTransportCapacity").forGetter(TransportReservation::reservedTransportCapacity),
@@ -49,7 +44,6 @@ public record TransportReservation(
 
     public TransportReservation {
         Objects.requireNonNull(endpointKind, "endpointKind");
-        Objects.requireNonNull(boundWarehouseCorePos, "boundWarehouseCorePos");
         Objects.requireNonNull(admissionStatus, "admissionStatus");
         if (rateItemsPerSecond < 0) {
             throw new IllegalArgumentException("Transport reservation rate must be non-negative.");
@@ -65,31 +59,36 @@ public record TransportReservation(
                 && rateItemsPerSecond != 0) {
             throw new IllegalArgumentException("DISABLED reservations must have a zero rate.");
         }
+        if (admissionStatus == TransportAdmissionStatus.DISABLED
+                && Double.compare(reservedTransportCapacity, 0.0) != 0) {
+            throw new IllegalArgumentException("DISABLED reservations cannot reserve capacity.");
+        }
+        if (admissionStatus == TransportAdmissionStatus.UNAVAILABLE
+                && (Double.compare(scaleMetric, 0.0) != 0
+                || Double.compare(reservedTransportCapacity, 0.0) != 0)) {
+            throw new IllegalArgumentException("UNAVAILABLE reservations require zero derived metrics.");
+        }
     }
 
     public static TransportReservation fromPersisted(
             TransportEndpointKind endpointKind,
-            GlobalPos boundWarehouseCorePos,
             int rateItemsPerSecond,
             double scaleMetric,
             TransportAdmissionStatus admissionStatus
     ) {
-        return new TransportReservation(endpointKind, boundWarehouseCorePos,
-                rateItemsPerSecond, scaleMetric, 0.0, admissionStatus);
-    }
-
-    public boolean hasValidRateInputs(TransportConsumerParameters parameters) {
-        return parameters != null
-                && parameters.isRateValid(rateItemsPerSecond);
+        return new TransportReservation(endpointKind, rateItemsPerSecond,
+                scaleMetric, 0.0, admissionStatus);
     }
 
     public TransportReservation recalculateReservedCapacity(TransportConsumerParameters parameters) {
-        double recalculated = TransportReservationModel.capacityForStoredRate(
-                endpointKind, rateItemsPerSecond, scaleMetric, parameters);
+        double recalculated = admissionStatus == TransportAdmissionStatus.ACTIVE
+                ? TransportReservationModel.capacityForStoredRate(
+                endpointKind, rateItemsPerSecond, scaleMetric, parameters)
+                : 0.0;
         if (!TransportReservationModel.isFiniteNonNegative(recalculated)) {
             throw new IllegalArgumentException("Reservation cannot be recalculated with the supplied parameters.");
         }
-        return new TransportReservation(endpointKind, boundWarehouseCorePos,
-                rateItemsPerSecond, scaleMetric, recalculated, admissionStatus);
+        return new TransportReservation(endpointKind, rateItemsPerSecond,
+                scaleMetric, recalculated, admissionStatus);
     }
 }
