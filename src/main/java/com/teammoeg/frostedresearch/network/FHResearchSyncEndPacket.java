@@ -41,8 +41,9 @@ public class FHResearchSyncEndPacket implements CMessage {
 
     public void handle(Supplier<NetworkEvent.Context> context) {
         context.get().enqueueWork(() -> {
-            FHResearch.endPacketInit();
-            ResearchUtils.notifyResearchDefinitionsChanged();
+            if (FHResearch.endPacketInit()) {
+                ResearchUtils.notifyResearchDefinitionsChanged();
+            }
         });
         context.get().setPacketHandled(true);
     }

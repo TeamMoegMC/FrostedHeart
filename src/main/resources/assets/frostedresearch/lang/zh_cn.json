@@ -156,5 +156,7 @@
   "gui.frostedresearch.effect.stats.vlg_relationship": "难民关系",
   "gui.frostedresearch.effect.stats.vlg_forgive": "难民忘记了你",
   "gui.frostedresearch.effect.stats.has_forecast": "拥有天气预报",
-  "gui.frostedresearch.effect.stats.overdrive_recover": "过载恢复"
+  "gui.frostedresearch.effect.stats.overdrive_recover": "过载恢复",
+  "gui.frostedresearch.catalog_error.title": "研究目录无效",
+  "gui.frostedresearch.catalog_error.message": "已安全取消世界启动，存档未被打开。共发现 %s 个问题。首个问题：%s。完整诊断已写入 latest.log。"
 }

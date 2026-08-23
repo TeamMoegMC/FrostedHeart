@@ -27,14 +27,17 @@ import com.teammoeg.chorda.block.CEntityBlock;
 import com.teammoeg.chorda.block.CKineticBlock;
 import com.teammoeg.chorda.creativeTab.CreativeTabItemHelper;
 import com.teammoeg.chorda.creativeTab.ICreativeModeTabItem;
+import com.teammoeg.chorda.dataholders.team.CTeamDataManager;
 import com.teammoeg.chorda.text.Components;
 import com.teammoeg.chorda.util.CUtils;
 import com.teammoeg.frostedresearch.FRContents;
+import com.teammoeg.frostedresearch.mixinutil.IOwnerTile;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Direction.Axis;
 import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.LivingEntity;
@@ -117,6 +120,11 @@ public class MechCalcBlock extends CKineticBlock implements CEntityBlock<MechCal
         }
 
         super.setPlacedBy(worldIn, pos, state, placer, stack);
+
+		if (!worldIn.isClientSide && placer instanceof ServerPlayer player && !(player instanceof FakePlayer)) {
+			IOwnerTile.trySetOwner(
+					CUtils.getExistingTileEntity(worldIn, pos), CTeamDataManager.get(player).getId());
+		}
 
     }
 

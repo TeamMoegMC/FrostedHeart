@@ -31,7 +31,7 @@ import net.minecraft.network.chat.Component;
 public class MinigameClue extends CustomClue {
     public static final MapCodec<MinigameClue> CODEC = RecordCodecBuilder.mapCodec(t -> t.group(
             Clue.BASE_CODEC.forGetter(o -> o.getData()),
-            Codec.INT.fieldOf("level").forGetter(o -> o.level)
+            Codec.intRange(0, 3).fieldOf("level").forGetter(o -> o.level)
     ).apply(t, MinigameClue::new));
     int level = 0;
 

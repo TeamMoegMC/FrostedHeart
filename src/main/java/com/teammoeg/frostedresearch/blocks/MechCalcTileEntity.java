@@ -26,10 +26,12 @@ import com.simibubi.create.content.kinetics.base.IRotate;
 import com.simibubi.create.content.kinetics.base.KineticBlockEntity;
 import com.teammoeg.chorda.block.entity.CTickableBlockEntity;
 import com.teammoeg.chorda.dataholders.team.TeamDataClosure;
+import com.teammoeg.chorda.dataholders.team.CTeamDataManager;
 import com.teammoeg.frostedresearch.Lang;
 import com.teammoeg.frostedresearch.FRContents;
 import com.teammoeg.frostedresearch.api.ResearchDataAPI;
 import com.teammoeg.frostedresearch.data.TeamResearchData;
+import com.teammoeg.frostedresearch.mixinutil.IOwnerTile;
 
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
@@ -38,9 +40,11 @@ import net.minecraft.core.Direction.Axis;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.sounds.SoundSource;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.Mth;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
+import net.minecraftforge.common.util.FakePlayer;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraftforge.api.distmarker.Dist;
@@ -124,8 +128,8 @@ public class MechCalcTileEntity extends KineticBlockEntity implements IHaveGoggl
     }
 
     public InteractionResult onClick(Player pe) {
-        if (!pe.level().isClientSide) {
-            TeamDataClosure<TeamResearchData> trd = ResearchDataAPI.getData(pe);
+        if (!pe.level().isClientSide && pe instanceof ServerPlayer serverPlayer && canAccess(serverPlayer)) {
+            TeamDataClosure<TeamResearchData> trd = ResearchDataAPI.getData(serverPlayer);
             currentPoints = (int) trd.get().doResearch(trd.team(), currentPoints);
             updatePoints();
         }
@@ -201,15 +205,30 @@ public class MechCalcTileEntity extends KineticBlockEntity implements IHaveGoggl
     }
 
 	@Override
-	public int fetchPoint(int max) {
-		int ret=currentPoints;
-		currentPoints=0;
+	public int fetchPoint(ServerPlayer player, int max) {
+		if (max <= 0 || !canAccess(player)) return 0;
+		int ret = Math.min(max, currentPoints);
+		currentPoints -= ret;
 		updatePoints();
 		return ret;
 	}
 
 	@Override
-	public int getFetchablePoints() {
-		return currentPoints;
+	public int getFetchablePoints(ServerPlayer player) {
+		return canAccess(player) ? currentPoints : 0;
+	}
+
+	private boolean canAccess(ServerPlayer player) {
+		if (player instanceof FakePlayer) return false;
+		var team = CTeamDataManager.get(player);
+		if (team == null) return false;
+		java.util.UUID owner = IOwnerTile.getOwner(this);
+		if (owner == null) {
+			IOwnerTile.trySetOwner(this, team.getId());
+			owner = IOwnerTile.getOwner(this);
+			setChanged();
+			notifyUpdate();
+		}
+		return team.getId().equals(owner);
 	}
 }

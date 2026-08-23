@@ -21,38 +21,38 @@ package com.teammoeg.frostedresearch.network;
 
 import java.util.function.Supplier;
 
-import com.teammoeg.chorda.io.CodecUtil;
-import com.teammoeg.chorda.io.codec.DataOps;
-import com.teammoeg.chorda.io.codec.ObjectWriter;
 import com.teammoeg.chorda.network.CMessage;
 import com.teammoeg.frostedresearch.FHResearch;
 import com.teammoeg.frostedresearch.research.Research;
 
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.network.NetworkEvent;
 
 // send when player join
-public record FHResearchSyncPacket(Object data, String key) implements CMessage {
+public record FHResearchSyncPacket(CompoundTag data, String key) implements CMessage {
     public FHResearchSyncPacket(Research r) {
-        this(CodecUtil.encodeOrThrow(Research.CODEC.encodeStart(DataOps.COMPRESSED, r)), r.getId());
+        this(ResearchNetworkCodec.encode(Research.CODEC, r), r.getId());
 
     }
 
     public FHResearchSyncPacket(FriendlyByteBuf buffer) {
-        this(ObjectWriter.readObject(buffer), buffer.readUtf());
+        this(ResearchNetworkCodec.readPayload(buffer, "research definition"),
+                ResearchNetworkCodec.readId(buffer, "research definition id"));
     }
 
     public void encode(FriendlyByteBuf buffer) {
-        ObjectWriter.writeObject(buffer, data);
+        buffer.writeNbt(data);
         // LogUtils.getLogger().debug("Encoded research "+key+":"+data);
-        buffer.writeUtf(key);
+        buffer.writeUtf(key, ResearchNetworkCodec.MAX_ID_LENGTH);
     }
 
     public void handle(Supplier<NetworkEvent.Context> context) {
 
         context.get().enqueueWork(() -> {
             // LogUtils.getLogger().debug("Decoded research "+key+":"+data);
-            FHResearch.readOne(key, CodecUtil.decodeOrThrow(Research.CODEC.decode(DataOps.COMPRESSED, data)));
+            Research decoded = ResearchNetworkCodec.decode(Research.CODEC, data, "research definition " + key);
+            if (decoded != null && key != null) FHResearch.readOne(key, decoded);
         });
         context.get().setPacketHandled(true);
     }

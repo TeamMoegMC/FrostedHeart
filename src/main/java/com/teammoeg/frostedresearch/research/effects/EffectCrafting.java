@@ -33,7 +33,7 @@ import com.teammoeg.chorda.util.CDistHelper;
 import com.teammoeg.frostedresearch.Lang;
 import com.teammoeg.frostedresearch.FRMain;
 import com.teammoeg.frostedresearch.ResearchHooks;
-import com.teammoeg.frostedresearch.compat.JEICompat;
+import com.teammoeg.frostedresearch.compat.ResearchJeiBridge;
 import com.teammoeg.frostedresearch.data.ResearchData;
 import com.teammoeg.frostedresearch.data.TeamResearchData;
 
@@ -183,7 +183,7 @@ public class EffectCrafting extends Effect {
     public void onClick(ResearchData parent) {
         if (!parent.isEffectGranted(this)) return;
         if (ingredient != null)
-            JEICompat.showJEIFor(CMath.selectElementByTime(ingredient.getItems()));
+            ResearchJeiBridge.showRecipes(CMath.selectElementByTime(ingredient.getItems()));
     }
 
     @Override

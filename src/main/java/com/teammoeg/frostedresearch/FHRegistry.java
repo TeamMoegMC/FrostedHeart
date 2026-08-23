@@ -331,8 +331,8 @@ public class FHRegistry<T extends FHRegisteredItem> implements Iterable<T> {
     }
 
     public void runIfPresent(int id, Consumer<T> in) {
-        if (items.size() >= id) {
-            T t = items.get(id - 1);
+        if (id >= 0 && id < items.size()) {
+            T t = items.get(id);
             if (t != null)
                 in.accept(t);
             return;

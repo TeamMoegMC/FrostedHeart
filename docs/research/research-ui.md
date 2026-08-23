@@ -1,7 +1,7 @@
 # Research Progress And UI
 
 - Status: `Current`
-- Last verified: `2026-08-21`
+- Last verified: `2026-08-23`
 - Scope: Implemented research completion semantics, responsive drawing-desk archive, full graph, project dialog, clue routing, and refresh boundaries
 - Code anchors: [`Research`](../../src/main/java/com/teammoeg/frostedresearch/research/Research.java), [`ResearchData`](../../src/main/java/com/teammoeg/frostedresearch/data/ResearchData.java), [`TeamResearchData`](../../src/main/java/com/teammoeg/frostedresearch/data/TeamResearchData.java), [`DrawDeskScreen`](../../src/main/java/com/teammoeg/frostedresearch/gui/drawdesk/DrawDeskScreen.java), [`ResearchArchiveLayer`](../../src/main/java/com/teammoeg/frostedresearch/gui/archive/ResearchArchiveLayer.java), [`ResearchArchiveViewCache`](../../src/main/java/com/teammoeg/frostedresearch/gui/archive/ResearchArchiveViewCache.java), [`ResearchGraphViewport`](../../src/main/java/com/teammoeg/frostedresearch/gui/archive/ResearchGraphViewport.java), [`ResearchProjectWorkspace`](../../src/main/java/com/teammoeg/frostedresearch/gui/archive/ResearchProjectWorkspace.java), [`ResearchGraphLayoutEngine`](../../src/main/java/com/teammoeg/frostedresearch/gui/archive/graph/ResearchGraphLayoutEngine.java), [`CIconBatch`](../../src/main/java/com/teammoeg/chorda/client/icon/CIconBatch.java), `PanZoomViewport`, `UILayer`
 
@@ -21,9 +21,9 @@ Clicking a row in the left index changes selection and the concise summary only.
 
 At archive widths of at least `620`, the index/summary widths are `142/176`; below that they are `92/112`, and below `340` they are `72/84`. The graph consumes the remaining center width. The project dialog follows the original `ResearchDetailPanel` and `TechIcons.DIALOG` size of `302 x 170`, shrinking only when the archive cannot provide an `8` pixel safe margin. Its `z=600` render transform keeps graph items below the dialog, and its dimming mask uses the archive's actual render origin and full dimensions.
 
-Graph zoom is clamped to `0.15-1.75`. Node bounds scale directly with zoom instead of retaining a `54 x 24` pixel floor. `fitToVisible` centers the complete projected graph and sets zoom to the same `15%` lower bound. Node content is never disabled by a zoom threshold: research icons retain a `4` pixel minimum and names retain a `0.25` text-scale minimum.
+Graph zoom is clamped to `0.15-1.75`. Node bounds scale directly with zoom instead of retaining a `54 x 24` pixel floor. `fitToVisible` measures the actual projected node bounds, computes the largest scale that fits both axes inside a `24` screen-pixel viewport margin, and clamps it to the same zoom limits. Node content is never disabled by a zoom threshold: research icons retain a `4` pixel minimum and names retain a `0.25` text-scale minimum.
 
-While the archive is active, `DrawDeskScreen` temporarily hides native `AbstractWidget` children injected into `CUIMenuScreenWrapper`. FTB's `SidebarGroupGuiButton` overrides the native render path and ignores `visible/active`, so the archive also uses reflection to move groups out of `SidebarButtonManager` and attempts to restore a saved set when returning to the drawing desk or closing the screen. Repeated archive ticks catch delayed widget injection. This is best-effort compatibility: if FTB repopulates groups while the archive is open, the current implementation can overwrite its saved set, so resource-reload restoration still needs in-game verification.
+While the archive is active, `DrawDeskScreen` temporarily makes native `AbstractWidget` children inactive and invisible, suppressing their normal input. FTB's `SidebarGroupGuiButton` overrides the native render path and ignores `visible/active`, so an optional `@Pseudo` client mixin cancels that render override while the archive is open. No FTB group collection is removed, cached, or restored; closing the archive naturally reveals FTB's current state, including changes made during a resource reload.
 
 ## Progress And Completion
 
@@ -84,7 +84,7 @@ The drawing-desk step is omitted for `BROWSE` context. Definition reconciliation
 
 ## Graph Foundation
 
-`ResearchGraphSnapshot#fromResearches` copies IDs, normalized categories, parent IDs, derived child IDs, hidden state, and display-only layout hints into stable ID order. `ResearchGraphProjection#forResearchType` excludes `hidden` nodes and edges, keeps current-type nodes as primary, and retains visible ancestors as low-priority prerequisite context. Projection never changes coordinates.
+`ResearchGraphSnapshot#fromResearches` copies IDs, normalized categories, parent IDs, derived child IDs, effective visibility state, and display-only layout hints into stable ID order. `ResearchGraphProjection#forResearchType` excludes hidden nodes and edges in normal mode, keeps current-type nodes as primary, and retains visible ancestors as low-priority prerequisite context. Editor snapshots explicitly reveal hidden definitions so projection, layout, node rendering, and edge rendering include the complete graph. Projection never changes coordinates.
 
 `ResearchGraphLayoutEngine` is a deterministic definition-time layout pass:
 
@@ -98,7 +98,7 @@ The drawing-desk step is omitted for `BROWSE` context. Definition reconciliation
 
 `ResearchArchiveLayer` filters definitions before archive components receive them. Outside editor mode, a research must be non-hidden and `isShowable()`, `isUnlocked()`, or `isCompleted()`; otherwise it is absent from the graph, index, selection reconciliation, search, tooltip, summary, and dialog. The player archive never creates anonymous unknown-project placeholders and never exposes internal research IDs in tooltips.
 
-Editor mode passes all definitions into the archive's index/summary/dialog path, including hidden definitions. It does **not** expose hidden nodes in the graph: `ResearchGraphSnapshot` preserves `hidden=true`, and both projection/layout exclude those nodes. “Editor access to all definitions” therefore applies to list/detail navigation, not the visual graph.
+Editor mode passes all definitions into the archive's index, summary, dialog, graph snapshot, projection, layout, and render paths. Hidden research and its incident edges are visible only there. Normal mode continues to exclude hidden definitions before graph, index, search, tooltip, selection, and detail construction, so synchronized hidden IDs are not exposed through the player UI.
 
 `ResearchGraphViewport extends PanZoomViewport` renders the filtered snapshot and projection directly. The Chorda CUI base owns the reusable two-dimensional camera, left/middle-button panning, pointer-anchored wheel zoom, fit/center operations, world/screen conversion, rectangular scissoring, visibility checks, and allocation-free axis-aligned segment clipping. The archive keeps only research-specific projection, layout, node virtualization and hit testing, status presentation, and per-research-type camera persistence. Search highlights matching visible nodes by research ID or cached localized name and dims other nodes without changing coordinates. Search and progress changes update node styles without rebuilding the category projection or graph layout; research-type changes rebuild the projection while retaining saved cameras.
 
@@ -131,7 +131,7 @@ Graph layout, projection, node hit testing, low-zoom icon/text presentation, and
 
 `ResearchArchiveLayer#onResearchDefinitionsChanged` always rebuilds the graph snapshot and layout. Research- and clue-progress notifications first compare the player-visible definition ID set; they rebuild only when discovery or completion changes that set. Other progress, active-research, and clue notifications are read by the affected index, node, summary, or dialog presentation without resetting selection, camera, zoom, filter, bookmarks, or list scroll.
 
-The full-state `FHResearchDataSyncPacket` is an exception: it replaces client `TeamResearchData` and rebuilds derived state/JEI, but does not call any `ResearchUtils.notify...` archive hook. After a team change or `/reload` while the archive is open, live-read values may update but discovery-dependent definition sets, layout, and selection reconciliation can remain stale until another notification or screen reopen. This notification gap is source-confirmed; its exact visual impact still requires an in-game reproduction.
+Full-state `FHResearchDataSyncPacket` replacement calls the dedicated `ResearchUtils#notifyResearchDataReplaced` hook after rebuilding client derived state. The open archive rebuilds visible definitions, graph/layout, and all state-derived presentation caches in one refresh. A still-valid research type, filter, search, and camera remain; an invalid selection is cleared/reconciled.
 
 ## Drawing-Desk Routing And Actions
 

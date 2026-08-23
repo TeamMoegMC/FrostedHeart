@@ -22,6 +22,7 @@ package com.teammoeg.frostedresearch.gui.drawdesk;
 import com.teammoeg.chorda.client.CInputHelper;
 import com.teammoeg.chorda.client.cui.base.MenuPrimaryLayer;
 import com.teammoeg.chorda.client.cui.base.UIElement;
+import com.teammoeg.chorda.client.cui.screenadapter.CUIScreen;
 import com.teammoeg.frostedresearch.blocks.DrawingDeskTileEntity;
 import com.teammoeg.frostedresearch.data.ClientResearchData;
 import com.teammoeg.frostedresearch.gui.DrawDeskTheme;
@@ -37,9 +38,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.screens.Screen;
 
-import java.util.ArrayList;
 import java.util.IdentityHashMap;
-import java.util.List;
 import java.util.Map;
 
 public class DrawDeskScreen extends MenuPrimaryLayer<DrawDeskContainer> implements ResearchGui {
@@ -54,11 +53,6 @@ public class DrawDeskScreen extends MenuPrimaryLayer<DrawDeskContainer> implemen
 	@Nullable
 	private ResearchArchiveLayer archive;
 	private final Map<AbstractWidget, WidgetState> hiddenExternalWidgets = new IdentityHashMap<>();
-	private final List<Object> hiddenFtbSidebarGroups = new ArrayList<>();
-	@Nullable
-	private List<Object> ftbSidebarGroups;
-	private boolean ftbSidebarResolved;
-	private boolean ftbSidebarHidden;
 	private int lastArchiveWidth = -1;
 	private int lastArchiveHeight = -1;
 
@@ -203,7 +197,6 @@ public class DrawDeskScreen extends MenuPrimaryLayer<DrawDeskContainer> implemen
 				}
 			}
 		}
-		hideFtbSidebar();
 	}
 
 	private void restoreExternalWidgets() {
@@ -212,58 +205,14 @@ public class DrawDeskScreen extends MenuPrimaryLayer<DrawDeskContainer> implemen
 			widget.active = original.active();
 		});
 		hiddenExternalWidgets.clear();
-		restoreFtbSidebar();
 	}
 
-	private void hideFtbSidebar() {
-		List<Object> groups = ftbSidebarGroups();
-		if (groups == null) {
-			return;
-		}
-		if (!groups.isEmpty()) {
-			hiddenFtbSidebarGroups.clear();
-			hiddenFtbSidebarGroups.addAll(groups);
-			groups.clear();
-		}
-		ftbSidebarHidden = true;
-	}
-
-	private void restoreFtbSidebar() {
-		if (!ftbSidebarHidden) {
-			return;
-		}
-		List<Object> groups = ftbSidebarGroups();
-		if (groups == null) {
-			return;
-		}
-		if (groups.isEmpty()) {
-			groups.addAll(hiddenFtbSidebarGroups);
-		}
-		hiddenFtbSidebarGroups.clear();
-		ftbSidebarHidden = false;
-	}
-
-	@Nullable
-	@SuppressWarnings("unchecked")
-	private List<Object> ftbSidebarGroups() {
-		if (ftbSidebarResolved) {
-			return ftbSidebarGroups;
-		}
-		ftbSidebarResolved = true;
-		try {
-			Class<?> managerClass = Class.forName(
-					"dev.ftb.mods.ftblibrary.sidebar.SidebarButtonManager",
-					false,
-					DrawDeskScreen.class.getClassLoader());
-			Object manager = managerClass.getField("INSTANCE").get(null);
-			Object groups = managerClass.getMethod("getGroups").invoke(manager);
-			if (groups instanceof List<?> list) {
-				ftbSidebarGroups = (List<Object>) list;
-			}
-		} catch (ReflectiveOperationException | LinkageError ignored) {
-			// FTB Library is optional; an absent or incompatible sidebar is safe to ignore.
-		}
-		return ftbSidebarGroups;
+	/** Safe query used by the optional FTB sidebar render hook. */
+	public static boolean isResearchArchiveOpen() {
+		Screen current = Minecraft.getInstance().screen;
+		return current instanceof CUIScreen cui
+				&& cui.getPrimaryLayer() instanceof DrawDeskScreen desk
+				&& desk.workspaceState.surface() == ResearchWorkspaceState.Surface.RESEARCH_ARCHIVE;
 	}
 
 	@Override
@@ -294,6 +243,13 @@ public class DrawDeskScreen extends MenuPrimaryLayer<DrawDeskContainer> implemen
 	public void onResearchDefinitionsChanged() {
 		if (archive != null) {
 			archive.onResearchDefinitionsChanged();
+		}
+	}
+
+	@Override
+	public void onResearchDataReplaced() {
+		if (archive != null) {
+			archive.onResearchDataReplaced();
 		}
 	}
 

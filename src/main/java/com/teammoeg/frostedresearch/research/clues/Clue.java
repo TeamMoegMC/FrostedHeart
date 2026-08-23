@@ -31,6 +31,9 @@ import com.teammoeg.frostedresearch.research.Research;
 import net.minecraft.network.chat.Component;
 
 import java.util.UUID;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.function.Supplier;
 
 /**
@@ -46,7 +49,9 @@ public abstract class Clue {
                     Codec.STRING.optionalFieldOf("hint","").forGetter(o -> o.hint),
                     Codec.STRING.fieldOf("id").forGetter(o -> o.nonce),
                     Codec.BOOL.optionalFieldOf("required",false).forGetter(o -> o.required),
-                    Codec.FLOAT.fieldOf("value").forGetter(o -> o.contribution)).apply(t, BaseData::new));
+                    Codec.FLOAT.fieldOf("value").forGetter(o -> o.contribution),
+                    Codec.list(Codec.STRING).optionalFieldOf("legacyIds", List.of()).forGetter(o -> o.legacyIds)
+            ).apply(t, BaseData::new));
     private static TypedCodecRegistry<Clue> registry = new TypedCodecRegistry<>();
     public final static Codec<Clue> CODEC = registry.codec();
 
@@ -69,6 +74,7 @@ public abstract class Clue {
    
   
     boolean required = false;
+    List<String> legacyIds = new ArrayList<>();
     ClueClosure cache;
     public Clue() {
         this.nonce = Long.toHexString(UUID.randomUUID().getMostSignificantBits());
@@ -81,6 +87,7 @@ public abstract class Clue {
         this.nonce = data.nonce;
         this.required = data.required;
         this.contribution = data.contribution;
+        this.legacyIds.addAll(data.legacyIds);
     }
 
 
@@ -113,7 +120,7 @@ public abstract class Clue {
     }
 
     public BaseData getData() {
-        return new BaseData(name, desc, hint, nonce, required, contribution);
+        return new BaseData(name, desc, hint, nonce, required, contribution, legacyIds);
     }
 
     /**
@@ -162,6 +169,10 @@ public abstract class Clue {
         return nonce;
     }
 
+    public List<String> getLegacyIds() {
+        return Collections.unmodifiableList(legacyIds);
+    }
+
     public void setNonce(String text) {
         this.nonce = text;
 
@@ -198,8 +209,14 @@ public abstract class Clue {
         String hint = "";
         String nonce;
         boolean required = false;
+        List<String> legacyIds = new ArrayList<>();
 
         public BaseData(String name, String desc, String hint, String nonce, boolean required, float contribution) {
+            this(name, desc, hint, nonce, required, contribution, List.of());
+        }
+
+        public BaseData(String name, String desc, String hint, String nonce, boolean required, float contribution,
+                        List<String> legacyIds) {
             super();
             this.name = name;
             this.desc = desc;
@@ -207,6 +224,7 @@ public abstract class Clue {
             this.nonce = nonce;
             this.required = required;
             this.contribution = contribution;
+            this.legacyIds.addAll(legacyIds);
         }
     }
 

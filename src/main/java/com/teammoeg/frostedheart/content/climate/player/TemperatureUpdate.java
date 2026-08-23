@@ -552,7 +552,10 @@ public class TemperatureUpdate {
     }
 
     public static void shutdown() {
-        threadingPool.close();
+        TemperatureThreadingPool pool = threadingPool;
         threadingPool = null;
+        if (pool != null) {
+            pool.close();
+        }
     }
 }

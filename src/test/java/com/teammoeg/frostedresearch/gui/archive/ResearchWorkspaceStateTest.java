@@ -2,6 +2,8 @@
 package com.teammoeg.frostedresearch.gui.archive;
 
 import com.teammoeg.chorda.client.cui.base.PanZoomViewport.Camera;
+import com.teammoeg.chorda.client.cui.base.PanZoomViewport;
+import com.teammoeg.chorda.client.cui.base.PanZoomViewport.WorldBounds;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -42,6 +44,26 @@ class ResearchWorkspaceStateTest {
         assertEquals(4, ResearchGraphViewport.scaledNodeIconLength(ResearchWorkspaceState.MIN_ZOOM));
         assertEquals(0.25F, ResearchGraphViewport.nodeTextScale(ResearchWorkspaceState.MIN_ZOOM));
         assertEquals(0.55F, ResearchGraphViewport.nodeTextScale(0.55D));
+    }
+
+    @Test
+    void fitUsesRealBoundsPaddingAndBothZoomClamps() {
+        PanZoomViewport viewport = new PanZoomViewport(
+                null, ResearchWorkspaceState.MIN_ZOOM, ResearchWorkspaceState.MAX_ZOOM);
+        viewport.setPosAndSize(0, 0, 400, 300);
+
+        assertTrue(viewport.fitToBounds(new WorldBounds(10, 20, 110, 70), 24));
+        assertEquals(60.0D, viewport.getCamera().x());
+        assertEquals(45.0D, viewport.getCamera().y());
+        assertEquals(ResearchWorkspaceState.MAX_ZOOM, viewport.getCamera().zoom());
+
+        assertTrue(viewport.fitToBounds(new WorldBounds(0, 0, 10_000, 10_000), 24));
+        assertEquals(ResearchWorkspaceState.MIN_ZOOM, viewport.getCamera().zoom());
+
+        assertTrue(viewport.fitToBounds(new WorldBounds(0, 0, 704, 126), 24));
+        assertEquals(0.5D, viewport.getCamera().zoom(), 0.000001D);
+        assertEquals(24.0D, viewport.worldToLocalX(0), 0.000001D);
+        assertEquals(376.0D, viewport.worldToLocalX(704), 0.000001D);
     }
 
     @Test

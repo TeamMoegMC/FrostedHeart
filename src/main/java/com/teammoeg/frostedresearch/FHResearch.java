@@ -30,13 +30,15 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import com.mojang.serialization.JsonOps;
+import com.teammoeg.chorda.dataholders.team.CTeamDataManager;
 import com.teammoeg.chorda.io.CodecUtil;
 import com.teammoeg.chorda.io.FileUtil;
 import com.teammoeg.chorda.io.codec.DataOps;
 import com.teammoeg.chorda.io.codec.ObjectWriter;
 import com.teammoeg.chorda.util.CDistHelper;
-import com.teammoeg.frostedresearch.compat.JEICompat;
+import com.teammoeg.frostedresearch.compat.ResearchJeiBridge;
 import com.teammoeg.frostedresearch.data.ClientResearchData;
+import com.teammoeg.frostedresearch.data.TeamResearchData;
 import com.teammoeg.frostedresearch.events.ResearchLoadEvent;
 import com.teammoeg.frostedresearch.network.FHResearchRegistrtySyncPacket;
 import com.teammoeg.frostedresearch.network.FHResearchSyncEndPacket;
@@ -74,6 +76,9 @@ public class FHResearch {
      * Cache for all Researches.
      */
     private static Lazy<List<Research>> allResearches = Lazy.of(() -> researches.all());
+    private static boolean legacyRegistrySnapshotLoaded;
+    private static CompoundTag pendingRegistrySync;
+    private static final List<Research> pendingResearchSync = new ArrayList<>();
 
     public static void clearAll() {
         //clues.clear();
@@ -188,55 +193,41 @@ public class FHResearch {
      * Initialization steps after Research data is loaded.
      */
     public static void init() {
-        ClientResearchData.last = null;
-        ResearchHooks.reload();
-        // No need to clear all as data manager would handle this.
-
-        // FHResearch.clearAll();
-        prepareReload();
-        MinecraftForge.EVENT_BUS.post(new ResearchLoadEvent.Pre());
-        loadAll();
-        MinecraftForge.EVENT_BUS.post(new ResearchLoadEvent.Post());
-        finishReload();
-        MinecraftForge.EVENT_BUS.post(new ResearchLoadEvent.Finish());
-        // FHResearch.saveAll();
+        ResearchCatalog.Candidate candidate = ResearchCatalog.load(catalogDirectory());
+        installCatalog(candidate.definitions(), null);
     }
 
     public static void initFromRegistry(CompoundTag data) {
-        ClientResearchData.last = null;
-        ResearchHooks.reload();
-
-        // no need
-        FHResearch.clearAll();
-        prepareReload();
-        //clearCache();
-        MinecraftForge.EVENT_BUS.post(new ResearchLoadEvent.Pre());
-        FHResearch.load(data);
+        pendingRegistrySync = data.copy();
+        pendingResearchSync.clear();
     }
 
-    public static void endPacketInit() {
-        MinecraftForge.EVENT_BUS.post(new ResearchLoadEvent.Post());
-        finishReload();
-        MinecraftForge.EVENT_BUS.post(new ResearchLoadEvent.Finish());
-        DistExecutor.safeRunWhenOn(Dist.CLIENT, () -> JEICompat::addInfo);
+    public static boolean endPacketInit() {
+        List<String> diagnostics = ResearchCatalog.validate(pendingResearchSync);
+        if (!diagnostics.isEmpty() || pendingRegistrySync == null) {
+            FRMain.LOGGER.error("Rejected invalid staged research catalogue sync:\n - {}",
+                    String.join("\n - ", diagnostics.isEmpty()
+                            ? List.of("missing registry start packet") : diagnostics));
+            pendingResearchSync.clear();
+            pendingRegistrySync = null;
+            return false;
+        }
+        CompoundTag registry = pendingRegistrySync;
+        List<Research> definitions = List.copyOf(pendingResearchSync);
+        pendingResearchSync.clear();
+        pendingRegistrySync = null;
+
+        installCatalog(definitions, registry);
+        legacyRegistrySnapshotLoaded = true;
+        DistExecutor.safeRunWhenOn(Dist.CLIENT, () -> ResearchJeiBridge::addInfo);
         DistExecutor.safeRunWhenOn(Dist.CLIENT, () -> ResearchHooks::reloadEditor);
+        return true;
     }
 
     public static void initFromPacket(CompoundTag data, List<Research> rs) {
-        ClientResearchData.last = null;
-        ResearchHooks.reload();
-        // no need
-        FHResearch.clearAll();
-        prepareReload();
-        MinecraftForge.EVENT_BUS.post(new ResearchLoadEvent.Pre());
-        FHResearch.load(data);
-        readAll(rs);
-        MinecraftForge.EVENT_BUS.post(new ResearchLoadEvent.Post());
-        finishReload();
-        MinecraftForge.EVENT_BUS.post(new ResearchLoadEvent.Finish());
-        DistExecutor.safeRunWhenOn(Dist.CLIENT, () -> JEICompat::addInfo);
-        DistExecutor.safeRunWhenOn(Dist.CLIENT, () -> ResearchHooks::reloadEditor);
-        // FHResearch.saveAll();
+        initFromRegistry(data);
+        pendingResearchSync.addAll(rs);
+        endPacketInit();
     }
 
     public static boolean isEditor() {
@@ -285,29 +276,7 @@ public class FHResearch {
      * Load all Research from config JSON
      */
     public static void loadAll() {
-        File folder = FMLPaths.CONFIGDIR.get().toFile();
-        File rf = new File(folder, "fhresearches");
-        rf.mkdirs();
-        JsonParser jp = new JsonParser();
-        FRMain.LOGGER.info("loading research from files...");
-        for (File f : rf.listFiles((dir, name) -> name.endsWith(".json"))) {
-            try {
-                JsonElement je = jp.parse(FileUtil.readString(f));
-                if (je.isJsonObject()) {
-                    String id = f.getName();
-                    id = id.substring(0, id.length() - 5);
-                    Research r = Research.CODEC.parse(JsonOps.INSTANCE, je).resultOrPartial(FRMain.LOGGER::error).orElse(null);
-                    if (r != null) {
-                        r.setId(id);
-                        researches.register(r);
-                    }
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-                FRMain.LOGGER.warn("Cannot load research " + f.getName() + ": " + e.getMessage());
-            }
-
-        }
+        installCatalog(ResearchCatalog.load(catalogDirectory()).definitions(), null);
     }
 
     public static void main(String[] args) {
@@ -361,17 +330,11 @@ public class FHResearch {
 
     public static void readOne(String key, Research r) {
         r.setId(key);
-        r.packetInit();
-        researches.register(r);
-        clearCache();
+        pendingResearchSync.add(r);
     }
 
     public static void readAll(List<Research> rss) {
-
-        for (Research r : rss) {
-            r.packetInit();
-            researches.register(r);
-        }
+        pendingResearchSync.addAll(rss);
     }
 
     // register for after init
@@ -382,13 +345,9 @@ public class FHResearch {
 
     // called after reload
     public static void reindex() {
-        try {
-            allResearches.get().forEach(Research::doReindex);
-            allResearches.get().forEach(Research::doIndex);
-            DistExecutor.safeRunWhenOn(Dist.CLIENT, ()->JEICompat::syncJEI);
-        } catch (Throwable t) {
-            t.printStackTrace();
-        }
+        allResearches.get().forEach(Research::doReindex);
+        allResearches.get().forEach(Research::doIndex);
+        DistExecutor.safeRunWhenOn(Dist.CLIENT, ()->ResearchJeiBridge::sync);
     }
 
     public static CompoundTag save(CompoundTag cnbt) {
@@ -444,9 +403,11 @@ public class FHResearch {
         Path local = CDistHelper.getServer().getWorldPath(dataFolder);
         File regfile = new File(local.toFile().getParentFile(), "fhregistries.dat");
         FHResearch.clearAll();
+        legacyRegistrySnapshotLoaded = false;
         if (regfile.exists()) {
             try {
                 FHResearch.load(NbtIo.readCompressed(regfile));
+                legacyRegistrySnapshotLoaded = true;
                 FRMain.LOGGER.info("Research registries loaded.");
             } catch (IOException e) {
                 e.printStackTrace();
@@ -466,6 +427,72 @@ public class FHResearch {
         } catch (IOException e2) {
             FRMain.LOGGER.error("Cannot read editor status");
             e2.printStackTrace();
+        }
+    }
+
+    private static Path catalogDirectory() {
+        return FMLPaths.CONFIGDIR.get().resolve("fhresearches");
+    }
+
+    /** Resolve a legacy numeric active slot only when a real world snapshot was loaded. */
+    public static String resolveLegacyResearchId(int id) {
+        if (!legacyRegistrySnapshotLoaded) {
+            return null;
+        }
+        return researches.getStrId(id);
+    }
+
+    /** Reload config transactionally, preserving the last known-good catalogue on failure. */
+    public static boolean reloadCatalog() {
+        try {
+            ResearchCatalog.Candidate candidate = ResearchCatalog.load(catalogDirectory());
+            installCatalog(candidate.definitions(), null);
+            return true;
+        } catch (ResearchCatalog.ValidationException e) {
+            FRMain.LOGGER.error(e.getMessage());
+            return false;
+        } catch (RuntimeException e) {
+            FRMain.LOGGER.error("Research catalogue reload failed; restored the previous catalogue", e);
+            return false;
+        }
+    }
+
+    private static void installCatalog(List<Research> definitions, CompoundTag registrySnapshot) {
+        FHRegistry<Research> previous = researches;
+        FHRegistry<Research> replacement = new FHRegistry<>();
+        if (registrySnapshot == null) {
+            replacement.deserialize(previous.serialize());
+        } else {
+            replacement.deserialize(registrySnapshot.getList("researches", Tag.TAG_STRING));
+        }
+        for (Research research : definitions) {
+            research.packetInit();
+            replacement.register(research);
+        }
+
+        ClientResearchData.last = null;
+        ResearchHooks.reload();
+        try {
+            MinecraftForge.EVENT_BUS.post(new ResearchLoadEvent.Pre());
+            researches = replacement;
+            clearCache();
+            MinecraftForge.EVENT_BUS.post(new ResearchLoadEvent.Post());
+            finishReload();
+            MinecraftForge.EVENT_BUS.post(new ResearchLoadEvent.Finish());
+        } catch (RuntimeException | Error failure) {
+            ResearchHooks.reload();
+            researches = previous;
+            clearCache();
+            try {
+                finishReload();
+                if (CDistHelper.getServer() != null && CTeamDataManager.INSTANCE != null) {
+                    CTeamDataManager.INSTANCE.forAllData(
+                            FRSpecialDataTypes.RESEARCH_DATA, TeamResearchData::initResearch);
+                }
+            } catch (RuntimeException | Error restoreFailure) {
+                failure.addSuppressed(restoreFailure);
+            }
+            throw failure;
         }
     }
 

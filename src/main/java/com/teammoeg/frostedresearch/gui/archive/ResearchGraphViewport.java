@@ -167,7 +167,7 @@ final class ResearchGraphViewport extends PanZoomViewport {
         if (ownsViewCache) {
             viewCache.setDefinitions(definitions);
         }
-        snapshot = ResearchGraphSnapshot.fromResearches(definitions, revision);
+        snapshot = ResearchGraphSnapshot.fromResearches(definitions, revision, FHResearch.editor);
         layout = layoutEngine.layout(snapshot);
         rebuildProjection();
         rebuildSearchMatches();
@@ -227,7 +227,7 @@ final class ResearchGraphViewport extends PanZoomViewport {
         for (String id : projection.visibleNodeIds()) {
             ResearchGraphLayout.NodePosition position = layout.positions().get(id);
             ResearchArchiveViewCache.View view = viewCache.view(id);
-            if (position != null && view != null && !view.research().isHidden()) {
+            if (position != null && view != null && (FHResearch.editor || !view.research().isHidden())) {
                 nodes.add(new NodeRenderSource(
                         id, view, position, projection.contextNodeIds().contains(id)));
             }
@@ -588,7 +588,7 @@ final class ResearchGraphViewport extends PanZoomViewport {
         if (!Double.isFinite(minX)) {
             return;
         }
-        centerOn(new WorldBounds(minX, minY, maxX, maxY), ResearchWorkspaceState.MIN_ZOOM);
+        fitToBounds(new WorldBounds(minX, minY, maxX, maxY), 24);
         state.setCamera(state.researchTypeFilter(), getCamera());
         fittedResearchTypes.add(state.researchTypeFilter());
     }

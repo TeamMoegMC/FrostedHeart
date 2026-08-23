@@ -52,7 +52,7 @@ public class CrafterPatternInventoryMixin implements IOwnerTile{
     @Inject(at=@At("TAIL"),method="recalculateOutput",remap=false)
 	public void fh$recalculateOutput(@Nullable Level level,CallbackInfo cbi)
 	{
-        if (level.isClientSide) {
+        if (level != null && level.isClientSide) {
             if (!ResearchHooks.canUseRecipe(recipe))
             	removeRecipe();
         } else if (!ResearchHooks.canUseRecipe(owner, recipe))

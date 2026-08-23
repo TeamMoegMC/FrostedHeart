@@ -69,18 +69,24 @@ public class FHDrawingDeskOperationPacket implements CMessage {
     }
 
     public FHDrawingDeskOperationPacket(FriendlyByteBuf buffer) {
-        pos = buffer.readBlockPos();
-        op = buffer.readByte();
-        if (op < 3) {
-            if (op > 0)
-                pos1 = CardPos.valueOf(buffer);
-            else
-                pos1 = null;
-            if (op > 1)
-                pos2 = CardPos.valueOf(buffer);
-            else
-                pos2 = null;
-        } else pos1 = pos2 = null;
+        this(decode(buffer));
+    }
+
+    private FHDrawingDeskOperationPacket(Decoded decoded) {
+        this(decoded.pos(), decoded.operation(), decoded.first(), decoded.second());
+    }
+
+    private static Decoded decode(FriendlyByteBuf buffer) {
+        try {
+            BlockPos pos = buffer.readBlockPos();
+            byte operation = buffer.readByte();
+            CardPos first = operation > 0 && operation < 3 ? CardPos.valueOf(buffer) : null;
+            CardPos second = operation > 1 && operation < 3 ? CardPos.valueOf(buffer) : null;
+            return new Decoded(pos, operation, first, second);
+        } catch (RuntimeException e) {
+            ResearchNetworkCodec.reject("drawing desk: truncated operation");
+            return new Decoded(BlockPos.ZERO, (byte) -1, null, null);
+        }
     }
 
     public void encode(FriendlyByteBuf buffer) {
@@ -149,5 +155,8 @@ public class FHDrawingDeskOperationPacket implements CMessage {
                     && second != null && second.isWithinBoard();
             default -> false;
         };
+    }
+
+    private record Decoded(BlockPos pos, byte operation, CardPos first, CardPos second) {
     }
 }

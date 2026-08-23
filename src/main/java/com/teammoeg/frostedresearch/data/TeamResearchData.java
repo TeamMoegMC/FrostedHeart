@@ -30,12 +30,12 @@ import java.util.function.Supplier;
 
 import javax.annotation.Nullable;
 
+import com.mojang.datafixers.util.Either;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.chorda.dataholders.SpecialData;
 import com.teammoeg.chorda.dataholders.SpecialDataHolder;
 import com.teammoeg.chorda.dataholders.team.TeamDataHolder;
-import com.teammoeg.chorda.io.CodecUtil;
 import com.teammoeg.chorda.util.RecipeUtils;
 import com.teammoeg.frostedresearch.FHResearch;
 import com.teammoeg.frostedresearch.FRMain;
@@ -74,13 +74,17 @@ import net.minecraftforge.common.MinecraftForge;
 public class TeamResearchData implements SpecialData {
 
 	public static final double GROWTH_RATE_MULTIPLIER = 8;
+	public static final int CURRENT_SCHEMA_VERSION = 2;
+	private static final Codec<Either<Integer, String>> ACTIVE_ID_CODEC = Codec.either(Codec.INT, Codec.STRING);
 	public static final Codec<TeamResearchData> CODEC = RecordCodecBuilder.create(t -> t.group(
+		Codec.INT.optionalFieldOf("schemaVersion", 0).forGetter(o -> CURRENT_SCHEMA_VERSION),
 		CompoundTag.CODEC.fieldOf("vars").forGetter(o -> o.variants),
 		Codec.unboundedMap(Codec.STRING, ResearchData.CODEC).fieldOf("researches").forGetter(o -> o.rdata),
-		Codec.INT.optionalFieldOf("active",-1).forGetter(o -> o.activeResearchId),
+		ACTIVE_ID_CODEC.optionalFieldOf("active", Either.right("")).forGetter(
+				o -> Either.right(o.activeResearchId == null ? "" : o.activeResearchId)),
 		Codec.INT.optionalFieldOf("insight",0).forGetter(o -> o.insight),
 		Codec.INT.optionalFieldOf("usedInsightLevel",0).forGetter(o -> o.usedInsightLevel),
-		ExtraCodecs.BIT_SET.optionalFieldOf("visitedArea").forGetter(o->Optional.of(o.visitedArea))// ,
+		ExtraCodecs.BIT_SET.optionalFieldOf("visitedArea").forGetter(o->Optional.of(o.visitedArea))
 	// BlockUnlockList.CODEC.optionalFieldOf("blockUnlockList", new
 	// BlockUnlockList()).forGetter(o -> o.block),
 	// RecipeUnlockList.CODEC.optionalFieldOf("recipeUnlockList", new
@@ -90,21 +94,7 @@ public class TeamResearchData implements SpecialData {
 	// CategoryUnlockList.CODEC.optionalFieldOf("categoryUnlockList", new
 	// CategoryUnlockList()).forGetter(o -> o.categories)
 	).apply(t, TeamResearchData::new));
-	public static final Codec<TeamResearchData> NETWORK_CODEC = RecordCodecBuilder.create(t -> t.group(
-		CompoundTag.CODEC.fieldOf("vars").forGetter(o -> o.variants),
-		CodecUtil.discreteList(ResearchData.CODEC).fieldOf("researches").forGetter(o -> FHResearch.researches.toList(o.rdata)),
-		Codec.INT.optionalFieldOf("active",-1).forGetter(o -> o.activeResearchId),
-		Codec.INT.optionalFieldOf("insight",0).forGetter(o -> o.insight),
-		Codec.INT.optionalFieldOf("usedInsightLevel",0).forGetter(o -> o.usedInsightLevel)// ,
-	// BlockUnlockList.CODEC.optionalFieldOf("blockUnlockList", new
-	// BlockUnlockList()).forGetter(o -> o.block),
-	// RecipeUnlockList.CODEC.optionalFieldOf("recipeUnlockList", new
-	// RecipeUnlockList()).forGetter(o -> o.crafting),
-	// MultiblockUnlockList.CODEC.optionalFieldOf("multiblockUnlockList", new
-	// MultiblockUnlockList()).forGetter(o -> o.building),
-	// CategoryUnlockList.CODEC.optionalFieldOf("categoryUnlockList", new
-	// CategoryUnlockList()).forGetter(o -> o.categories)
-	).apply(t, TeamResearchData::new));
+	public static final Codec<TeamResearchData> NETWORK_CODEC = CODEC;
 	public final Map<UnlockListType<?>,UnlockList<?>> unlocklists=new IdentityHashMap<>(10);
 
 	/**
@@ -137,7 +127,8 @@ public class TeamResearchData implements SpecialData {
 	/**
 	 * The active research id.<br>
 	 */
-	int activeResearchId = -1;
+	@Nullable
+	String activeResearchId;
 	private final Supplier<Research> currentResearchSupplier = this::getCurrentResearchValue;
 	/**
 	 * The variants.<br>
@@ -156,12 +147,17 @@ public class TeamResearchData implements SpecialData {
 		this();
 	}
 
-	public TeamResearchData(CompoundTag variants, Map<String, ResearchData> rdata, int activeResearchId,
-		int insight, int usedInsightLevel,Optional<BitSet> visited) {
+	public TeamResearchData(int schemaVersion, CompoundTag variants, Map<String, ResearchData> rdata,
+		Either<Integer, String> activeResearchId, int insight, int usedInsightLevel, Optional<BitSet> visited) {
 		this();
 		this.rdata.clear();
 		this.rdata.putAll(rdata);
-		this.activeResearchId = activeResearchId;
+		this.activeResearchId = activeResearchId.map(FHResearch::resolveLegacyResearchId,
+				id -> id == null || id.isBlank() ? null : id);
+		if (activeResearchId.left().isPresent() && this.activeResearchId == null) {
+			FRMain.LOGGER.warn("Could not migrate legacy active research slot {}; current selection was cleared",
+					activeResearchId.left().get());
+		}
 		this.insight = insight;
 		this.insightLevel = computeLevelFromInsight(insight);
 		this.usedInsightLevel = usedInsightLevel;
@@ -171,12 +167,18 @@ public class TeamResearchData implements SpecialData {
 
 	}
 
+	/** Legacy constructor retained for tests and source compatibility. */
+	public TeamResearchData(CompoundTag variants, Map<String, ResearchData> rdata, int activeResearchId,
+		int insight, int usedInsightLevel, Optional<BitSet> visited) {
+		this(0, variants, rdata, Either.left(activeResearchId), insight, usedInsightLevel, visited);
+	}
+
 	public TeamResearchData(CompoundTag variants, List<ResearchData> rdata, int activeResearchId,
 		int insight, int usedInsightLevel) {
 		this();
 		this.rdata.clear();
 		FHResearch.researches.fromList(rdata, this.rdata::put);
-		this.activeResearchId = activeResearchId;
+		this.activeResearchId = FHResearch.resolveLegacyResearchId(activeResearchId);
 		this.insight = insight;
 		this.insightLevel = computeLevelFromInsight(insight);
 		this.usedInsightLevel = usedInsightLevel;
@@ -221,9 +223,9 @@ public class TeamResearchData implements SpecialData {
 	 * @param sync send update packet
 	 */
 	public void clearCurrentResearch(TeamDataHolder team, boolean sync) {
-		if (activeResearchId == -1) return;
-		Research r = FHResearch.researches.get(activeResearchId);
-		activeResearchId = -1;
+		if (activeResearchId == null) return;
+		Research r = FHResearch.getResearch(activeResearchId);
+		activeResearchId = null;
 		if (r != null)
 			if (team != null) {
 				for (Clue c : r.getClues())
@@ -240,8 +242,8 @@ public class TeamResearchData implements SpecialData {
 	 */
 	@OnlyIn(Dist.CLIENT)
 	public void clearCurrentResearch(Research r) {
-		if (activeResearchId == FHResearch.researches.getIntId(r))
-			activeResearchId = -1;
+		if (r != null && r.getId().equals(activeResearchId))
+			activeResearchId = null;
 	}
 
 	/**
@@ -259,7 +261,12 @@ public class TeamResearchData implements SpecialData {
 		return points;
 	}
 	public long doResearch(TeamDataHolder team,Research r, long points) {
-		
+		if (points < 0) {
+			throw new IllegalArgumentException("Research points cannot be negative: " + points);
+		}
+		if (points == 0) {
+			return 0;
+		}
 		ResearchData rd = this.getData(r);
 		if (!rd.active || rd.finished)
 			return points;
@@ -340,7 +347,8 @@ public class TeamResearchData implements SpecialData {
 		}
 		if (rd.getTotalCommitted(r) >= r.getRequiredPoints() && flag) {
 			this.setResearchFinished(team, r, true);
-			this.clearCurrentResearch(team, true);
+			if (r.getId().equals(activeResearchId))
+				this.clearCurrentResearch(team, true);
 			return true;
 		}
 		return false;
@@ -394,7 +402,9 @@ public class TeamResearchData implements SpecialData {
 		}
 	}
 	private void sendClueProgressPacket(TeamDataHolder team, Research par, int clue, boolean trig) {
-		team.sendToOnline(FRNetwork.INSTANCE,new FHS2CClueProgressSyncPacket(trig, FHResearch.researches.getIntId(par), clue));
+		if (clue >= 0 && clue < par.getClues().size())
+			team.sendToOnline(FRNetwork.INSTANCE,
+					new FHS2CClueProgressSyncPacket(trig, par.getId(), par.getClues().get(clue).getNonce()));
 	}
 
 	/**
@@ -405,8 +415,11 @@ public class TeamResearchData implements SpecialData {
 	 * @param team the team<br>
 	 */
 	private void sendEffectProgressPacket(TeamDataHolder team, Research par, int effect, boolean trig) {
-		FHEffectProgressSyncPacket packet = new FHEffectProgressSyncPacket(trig, FHResearch.researches.getIntId(par), effect);
-		team.sendToOnline(FRNetwork.INSTANCE,packet);
+		if (effect >= 0 && effect < par.getEffects().size()) {
+			FHEffectProgressSyncPacket packet = new FHEffectProgressSyncPacket(
+					trig, par.getId(), par.getEffects().get(effect).getNonce());
+			team.sendToOnline(FRNetwork.INSTANCE,packet);
+		}
 	}
 
 	private void annouceResearchComplete(TeamDataHolder team, Research par) {
@@ -451,12 +464,12 @@ public class TeamResearchData implements SpecialData {
 	/** Direct read-only access for hot client UI paths that do not need lazy lookup. */
 	@Nullable
 	public Research getCurrentResearchValue() {
-		return activeResearchId == -1 ? null : FHResearch.getResearch(activeResearchId);
+		return activeResearchId == null ? null : FHResearch.getResearch(activeResearchId);
 	}
 
 	@OnlyIn(Dist.CLIENT)
-	public void setCurrentResearch(int id) {
-		this.activeResearchId = id;
+	public void setCurrentResearch(@Nullable String id) {
+		this.activeResearchId = id == null || id.isBlank() || FHResearch.getResearch(id) == null ? null : id;
 	}
 
 	/**
@@ -590,8 +603,7 @@ public class TeamResearchData implements SpecialData {
 			}
 		}
 
-		int researchId = FHResearch.researches.getIntId(r);
-		boolean wasCurrent = researchId >= 0 && activeResearchId == researchId;
+		boolean wasCurrent = r.getId().equals(activeResearchId);
 		if (wasCurrent)
 			clearCurrentResearch(team, team != null);
 		else if (team != null)
@@ -638,12 +650,11 @@ public class TeamResearchData implements SpecialData {
 	 */
 	public void setCurrentResearch(TeamDataHolder team, Research r) {
 		ResearchData rd = this.getData(r);
-		int index = FHResearch.researches.getIntId(r);
 		if (rd.active && !rd.finished) {
-			if (this.activeResearchId != index) {
-				if (this.activeResearchId != -1)
+			if (!r.getId().equals(this.activeResearchId)) {
+				if (this.activeResearchId != null)
 					clearCurrentResearch(team, false);
-				this.activeResearchId = index;
+				this.activeResearchId = r.getId();
 				FHChangeActiveResearchPacket packet = new FHChangeActiveResearchPacket(r);
 				team.sendToOnline(FRNetwork.INSTANCE,packet);
 				for (Clue c : r.getClues())
@@ -770,21 +781,99 @@ public class TeamResearchData implements SpecialData {
 	}
 
 	public void initResearch(TeamDataHolder team) {
+		reconcileDefinitions();
+		unlocklists.values().forEach(UnlockList::clear);
 		restoreGrantedUnlocks(team);
 
-		if (activeResearchId != -1) {
-			Research r = FHResearch.researches.get(activeResearchId);
+		if (activeResearchId != null) {
+			Research r = FHResearch.getResearch(activeResearchId);
 			if(r!=null) {
 				ResearchData rd = getData(r);
 				for (Clue c : r.getClues())
 					if(!rd.isClueTriggered(c))
 						c.start(team, r);
 			}else {
-				activeResearchId=-1;
+				activeResearchId=null;
 			}
 
 		}
 		MinecraftForge.EVENT_BUS.post(new ResearchDataLoadedEvent(team,this));
+	}
+
+	/** Applies explicit definition aliases without deleting unknown/orphaned records. */
+	public void reconcileDefinitions() {
+		for (Research research : FHResearch.getAllResearch()) {
+			ResearchData data = rdata.get(research.getId());
+			if (data != null) {
+				for (String legacyId : research.getLegacyIds()) {
+					if (rdata.containsKey(legacyId)) {
+						FRMain.LOGGER.warn("Research {} and legacy id {} both have persisted data; keeping {} authoritative and preserving {} as an orphan",
+								research.getId(), legacyId, research.getId(), legacyId);
+					}
+				}
+			}
+			if (data == null) {
+				for (String legacyId : research.getLegacyIds()) {
+					ResearchData legacy = rdata.get(legacyId);
+					if (legacy != null) {
+						rdata.remove(legacyId);
+						rdata.put(research.getId(), legacy);
+						data = legacy;
+						FRMain.LOGGER.info("Migrated research data {} to {}", legacyId, research.getId());
+						break;
+					}
+				}
+			}
+			if (data == null) {
+				continue;
+			}
+			for (Clue clue : research.getClues()) {
+				migrateAlias(data.getClueData(), clue.getNonce(), clue.getLegacyIds(),
+						research.getId() + "/clue");
+			}
+			for (Effect effect : research.getEffects()) {
+				migrateAlias(data.getEffectData(), effect.getNonce(), effect.getLegacyIds(),
+						research.getId() + "/effect");
+			}
+		}
+		if (activeResearchId != null) {
+			Research active = FHResearch.getResearch(activeResearchId);
+			if (active == null) {
+				for (Research research : FHResearch.getAllResearch()) {
+					if (research.getLegacyIds().contains(activeResearchId)) {
+						activeResearchId = research.getId();
+						active = research;
+						break;
+					}
+				}
+				if (active == null) {
+					FRMain.LOGGER.warn("Active research {} no longer exists; current selection was cleared", activeResearchId);
+					activeResearchId = null;
+				}
+			}
+		}
+	}
+
+	private static <T> void migrateAlias(
+			Map<String, T> values, String canonical, List<String> aliases, String scope) {
+		if (values.containsKey(canonical)) {
+			for (String alias : aliases) {
+				if (values.containsKey(alias)) {
+					FRMain.LOGGER.warn("{} {} and legacy id {} both have persisted data; keeping {} authoritative and preserving {} as an orphan",
+							scope, canonical, alias, canonical, alias);
+				}
+			}
+			return;
+		}
+		for (String alias : aliases) {
+			T value = values.get(alias);
+			if (value != null) {
+				values.remove(alias);
+				values.put(canonical, value);
+				FRMain.LOGGER.info("Migrated {} data {} to {}", scope, alias, canonical);
+				return;
+			}
+		}
 	}
 
 	/**

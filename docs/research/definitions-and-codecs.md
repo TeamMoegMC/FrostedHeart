@@ -1,9 +1,9 @@
 # Research Definitions And Codecs
 
 - Status: `Current`
-- Last verified: `2026-08-22`
+- Last verified: `2026-08-23`
 - Scope: Definition sources, JSON schema, graph rules, clues, effects, localization, stable identifiers, reload, and editor behavior
-- Code anchors: [`FHResearch#loadAll/#init`](../../src/main/java/com/teammoeg/frostedresearch/FHResearch.java), [`FHRegistry`](../../src/main/java/com/teammoeg/frostedresearch/FHRegistry.java), [`Research.CODEC`](../../src/main/java/com/teammoeg/frostedresearch/research/Research.java), [`ResearchCategory.CODEC`](../../src/main/java/com/teammoeg/frostedresearch/research/ResearchCategory.java), [`Clue.CODEC`](../../src/main/java/com/teammoeg/frostedresearch/research/clues/Clue.java), [`Effect.CODEC`](../../src/main/java/com/teammoeg/frostedresearch/research/effects/Effect.java)
+- Code anchors: [`FHResearch#init/#reloadCatalog`](../../src/main/java/com/teammoeg/frostedresearch/FHResearch.java), [`ResearchCatalog`](../../src/main/java/com/teammoeg/frostedresearch/ResearchCatalog.java), [`ResearchCatalogPreflight`](../../src/main/java/com/teammoeg/frostedresearch/ResearchCatalogPreflight.java), [`FHRegistry`](../../src/main/java/com/teammoeg/frostedresearch/FHRegistry.java), [`Research.CODEC`](../../src/main/java/com/teammoeg/frostedresearch/research/Research.java), [`ResearchCategory.CODEC`](../../src/main/java/com/teammoeg/frostedresearch/research/ResearchCategory.java), [`Clue.CODEC`](../../src/main/java/com/teammoeg/frostedresearch/research/clues/Clue.java), [`Effect.CODEC`](../../src/main/java/com/teammoeg/frostedresearch/research/effects/Effect.java)
 
 ## Where Definitions Come From
 
@@ -18,11 +18,19 @@ The server reads every direct child matching `*.json` in:
 This loader is configuration-based, not datapack-based:
 
 - the mod's `src/main/resources/data/frostedresearch/` contains ordinary recipes and loot tables, not research definitions;
-- the development `run/config/fhresearches/` directory contains a working catalogue but is not tracked by this Git repository;
+- the development `run/config/fhresearches/` directory may contain a local working catalogue but is not a production fallback;
 - the companion modpack currently supplies 81 definitions under its `config/fhresearches/`;
 - most definition translations in that pack live under `kubejs/assets/twr_researches/lang/`.
 
-A standalone server therefore needs the config catalogue in addition to this mod JAR. Missing config files do not fall back to bundled definitions.
+A standalone server therefore needs the complete config catalogue in addition to this mod JAR. Missing or empty config does not fall back to bundled definitions and now aborts world startup. The production companion pack is the only authoritative catalogue distribution.
+
+### Local full-pack client runs
+
+`run/config/fhresearches/` may reference registry entries supplied by companion-pack mods and KubeJS. The `runClient` classpath therefore obtains Immersive Industry, Stone Age, Charcoal Pit, and KubeJS from CurseMaven using pinned project/file IDs. Production JARs should not be copied into `run/mods/`: raw KubeJS binaries are not remapped for the named development environment and fail during Mixin application.
+
+KubeJS also requires Rhino and Architectury. Rhino is resolved from Latvian Mods Maven and Architectury from its existing repository; these are hard libraries rather than KubeJS addons. No KubeJS Create, KubeJS Immersive Engineering, LootJS, or PonderJS runtime is included. The local `run/kubejs/` input keeps only `startup_scripts/src/registries/item.js`, which registers the item IDs used while decoding the production research catalogue without running companion recipes, client behavior, or server behavior.
+
+Stone Age 1.6.8 uses a `DistExecutor.safeRunForDist` lambda shape that Forge rejects only in a non-production environment. `ExampleModMixin` redirects that proxy selection to `unsafeRunForDist`; the selected client/server proxy and production sided behavior remain the same, while the development-only referent validator is bypassed.
 
 ## Research JSON Schema
 
@@ -32,7 +40,8 @@ The effective schema from `Research.CODEC` is:
 |---|---|---:|---|---|
 | `icon` | `CIcon` | no | no-op icon | archive icon |
 | `category` | research category | yes | — | one of the five fixed fields |
-| `parents` | string array | no | `[]` | all resolvable parents must be finished before activation |
+| `parents` | string array | no | `[]` | every validated parent must be finished before activation |
+| `legacyIds` | string array | no | `[]` | previous research IDs accepted only while migrating saved data |
 | `clues` | clue array | no | `[]` | contribution and required-gate definitions |
 | `ingredients` | ingredient/count array | no | `[]` | activation material cost |
 | `effects` | effect array | no | absent/empty | completion rewards and unlock declarations |
@@ -48,7 +57,7 @@ The effective schema from `Research.CODEC` is:
 | `points` | integer | **yes** | — | required experiment points |
 | `insight` | integer | no | `1` | insight-level activation cost |
 
-Although the Java member holding required points is initialized to `1000`, `Research.CODEC` makes `points` mandatory. Omitting it from JSON is a decode error, not a `1000` default. The codec does not enforce positive points, nonnegative insight, nonnegative clue values, or bounded clue contributions.
+Although the Java member holding required points is initialized to `1000`, `Research.CODEC` makes `points` mandatory. Omitting it from JSON is a decode error, not a `1000` default. Whole-catalogue validation additionally requires `points > 0`, `insight >= 0`, and positive ingredient counts.
 
 The boolean flags are top-level fields. There is no nested `flags` object.
 
@@ -68,18 +77,19 @@ For compatibility, the codec also accepts the legacy namespace `frostedheart:<to
 
 ## Graph Semantics
 
-`Research.parents` is a `HashSet<String>`. During `FHResearch#reindex`/`Research#doIndex`, each resolvable parent receives the research in its derived `children` set. `children` is not serialized.
+`Research.parents` is a `HashSet<String>`. During `FHResearch#reindex`/`Research#doIndex`, every validated parent receives the research in its derived `children` set. `children` is not serialized.
 
 Runtime semantics are:
 
-- activation is unlocked only when every **resolvable** parent is completed;
+- activation is unlocked only when every parent is completed;
 - a root research has no parents and is unlocked;
 - `isShowable` exposes roots and projects for which at least one parent has become visible/unlocked, subject to hidden/editor UI rules;
-- a missing parent ID is silently omitted by `getParents`, so a project whose parents are all missing behaves like a root for unlocking;
-- no server-side validation rejects missing parents or cycles;
-- the archive graph separately diagnoses missing-parent edges and strongly connected cycles so it can still lay out malformed definitions.
+- blank, missing, self-referential, and cyclic parents are rejected before the candidate catalogue can be installed;
+- the archive graph retains defensive missing-edge/cycle diagnostics for tests and locally constructed models, but production definitions cannot reach that state.
 
-The system is therefore a directed graph by convention, not a schema-enforced DAG.
+The installed production catalogue is therefore a validated directed acyclic graph.
+
+The companion definitions `coke_oven`, `mechanical_bellows`, `storage_drawers`, and `tetra` explicitly declare `"parents": []`. They are independent roots; the deleted `workbench` ID is not treated as an optional or implicit prerequisite.
 
 ## Clue Base Schema
 
@@ -89,13 +99,14 @@ The system is therefore a directed graph by convention, not a schema-enforced DA
 |---|---|---:|---|---|
 | `type` | string discriminator | yes | — | selects the concrete clue codec |
 | `id` | string | yes | — | clue nonce; persistence, localization, and delta-sync identity |
+| `legacyIds` | string array | no | `[]` | previous clue nonces accepted only for saved-data migration within this research |
 | `name` | string | no | `""` | label override |
 | `desc` | string | no | `""` | description override |
 | `hint` | string | no | `""` | hint override |
 | `required` | boolean | no in base codec | `false` | must be completed before the research can finish |
 | `value` | float | yes | — | dimensionless contribution fraction |
 
-`required` and `value` are independent. A required clue with `value: 0` is a pure completion gate; a non-required clue may still contribute points. Contributions are summed, including negative or greater-than-one values, because the codec performs no range validation.
+`required` and `value` are independent. A required clue with `value: 0` is a pure completion gate; a non-required clue may still contribute points. The catalogue validator requires every contribution to be finite and within `[0,1]`.
 
 ### Built-In Clue Types
 
@@ -107,7 +118,7 @@ The system is therefore a directed graph by convention, not a schema-enforced DA
 | `advancement` | `advancement`; optional `criterion=""`; listener `always` | advancement/criterion listener |
 | `kill` | `entity`; listener `always` | completes when the team listener receives a kill whose entity type matches `entity` |
 
-`MinigameClue#setLevel` clamps to `0..3`, but codec construction assigns the decoded value directly. JSON levels outside that interval therefore bypass the setter clamp.
+`MinigameClue` decodes through `Codec.intRange(0, 3)`, and catalogue validation repeats that invariant before installation.
 
 `ListenerClue` has its own base codec in which `required`, `value`, and `always` are required JSON fields. This differs from the ordinary clue base where `required` defaults to false. `always: false` listeners are registered only while their research is current for a team. `always: true` listeners are registered during definition indexing with a null team ID, which `ResearchHooks.ListenerList` interprets as global scope: the listener is considered for every team event and its own clue-completion state prevents duplicate completion.
 
@@ -121,6 +132,7 @@ The system is therefore a directed graph by convention, not a schema-enforced DA
 |---|---|---:|---|---|
 | `type` | string discriminator | yes | — | selects the effect codec |
 | `id` | string | yes | — | effect nonce; saved grant identity and delta-sync identity |
+| `legacyIds` | string array | no | `[]` | previous effect nonces accepted only for saved-data migration within this research |
 | `name` | string | no | `""` | display label |
 | `tooltip` | string array | no | `[]` | descriptive lines |
 | `icon` | `CIcon` | no | none | presentation icon |
@@ -158,45 +170,66 @@ Research/effect helpers similarly derive keys from the research ID and nonce whe
 
 The mod JAR currently provides `en_us` and `zh_cn` base language resources and five category icons. The companion pack owns much of the research-specific text, so definition changes may require edits in the companion repository after reading its `AGENTS.md`.
 
-## Stable Identity And Ordering Contract
+## Stable Identity And Migration Contract
 
-Four identifiers or orderings affect saved/networked meaning:
+Runtime persistence and network state use the following stable identities:
 
-| Element | Durable identity | Additional wire identity | Unsafe change |
+| Element | Formal identity | Migration declaration | Scope |
 |---|---|---|---|
-| research | filename/string ID | persistent integer slot | rename/reuse without migration |
-| parent | research string ID | — | rename without updating every child |
-| clue | `id` nonce | list index in delta/full network data | rename, duplicate, or reorder |
-| effect | `id` nonce | list index in delta/full network data | rename, duplicate, or reorder |
+| research | filename/string ID | top-level `legacyIds` | whole catalogue |
+| parent | research string ID | update the parent reference to the new formal ID | whole catalogue |
+| clue | `id` nonce | clue `legacyIds` | one research |
+| effect | `id` nonce | effect `legacyIds` | one research |
 
-Persistent `ResearchData` maps clue/effect state by nonce, but packets compress it into definition-order lists. Both stable unique nonces **and** stable ordering matter. There is no schema version or migration layer that translates old IDs/orderings.
+Aliases never become new persistent keys. During team-data reconciliation, a legacy record moves only when the formal key is absent. If both exist, the formal record wins and the legacy record remains unchanged as an orphan with a warning; records for deleted definitions are also preserved as orphans. Reordering definitions, clues, or effects no longer changes saved or network meaning.
 
-`FHRegistry` preserves research string-to-integer slots across restarts. A removed definition leaves a null/tombstone slot so later numeric IDs do not shift. `prepareReload` clears live objects while retaining those names; `clear` discards the mapping. `Research#setNewId` and editor deletion reset affected team data rather than migrate it.
+`fhregistries.dat` and `FHRegistry` retain historical name/slot ordering only to translate a schema-0/1 integer `active` value. They are no longer authoritative for current persistence or packet identity. A missing snapshot, out-of-range slot, or slot whose definition was deleted clears only the current selection and logs a migration diagnostic.
+
+## Whole-Catalogue Validation
+
+`ResearchCatalog#load` sorts direct `*.json` children by filename, parses all files into a candidate, aggregates diagnostics, and installs nothing until the whole candidate is valid. Validation rejects:
+
+- a missing or empty directory;
+- blank, over-128-character, or conflicting formal IDs and `legacyIds` in their scopes;
+- blank, missing, self-referential, or cyclic parents;
+- non-positive research points, negative insight, and non-positive research/item-clue counts;
+- non-finite or out-of-range `[0,1]` clue contributions;
+- minigame levels outside `0..3`.
+
+`./gradlew validateResearchCatalog -PresearchCatalogDir=<path>` performs the registry-independent catalogue preflight used for external pack CI. Actual Forge startup then runs the full production codecs and the same runtime invariants after all required registries are available.
 
 ## Load, Reload, And Editor Lifecycle
+
+For a local world, `MinecraftResearchCatalogPreflightMixin` first validates the catalogue at `Minecraft#doWorldLoad` before the integrated-server thread exists. An invalid candidate is logged in full, the pending world resources and level lock are closed, and an error screen returns the player to the title screen. This prevents vanilla's pre-level loading loop from waiting forever for a chunk-progress listener that an aborted server never created. It does not replace server authority.
 
 At server startup `FHResearch#load`:
 
 1. reads the saved research name-slot list from `fhregistries.dat` when present;
-2. loads and decodes config JSON;
-3. installs definitions back into their historical slots or appends new slots;
-4. derives children, initializes clues/effects, populates global lock declarations, and emits load events.
+2. builds a filename-sorted candidate from all config JSON;
+3. aggregates codec and graph/value/identity diagnostics;
+4. aborts startup on any diagnostic, or atomically installs, reindexes, populates global lock declarations, and emits load events.
+
+The early-shutdown path is also defensive: `MinecraftServerMixin#saveAllChunks` does not emit custom save events or dereference an absent overworld, and `TemperatureUpdate#shutdown` is idempotent when climate initialization never ran.
+
+During `/reload`, candidate parsing and validation happen before `ResearchHooks.reload` or registry mutation. Failure logs the aggregated diagnostics and keeps the previous catalogue, listeners, and team data. Success stops old listeners, installs the candidate, reconciles every loaded team's aliases/orphans, rebuilds derived unlocks/listeners, sends definitions, and then sends full team state.
+
+The client likewise stages the registry start plus every `FHResearchSyncPacket`. Only a valid `FHResearchSyncEndPacket` swaps the complete client catalogue; malformed/incomplete definition streams leave the previous UI definitions intact.
 
 `ResearchLoadEvent.Pre`, `.Post`, and `.Finish` bracket definition processing. `PopulateUnlockListEvent` lets integrations contribute lock declarations.
 
-The permission-level-2 edit command toggles editor state stored in `fheditor.dat`. Editor save operations write config JSON. The editor is operational tooling, not a compatibility migration facility: rename/delete operations can discard progress, and the archive graph still excludes hidden nodes even though editor lists and details can access them.
+The permission-level-2 edit command toggles editor state stored in `fheditor.dat`. Editor save operations write config JSON. The editor is operational tooling, not an automatic migration author: planned renames must declare `legacyIds`. Editor graph snapshots, projection, layout, nodes, and edges include hidden research; normal mode excludes it.
 
 ## Authoring Checklist
 
 Before deploying a definition change:
 
-1. Keep existing research filenames, clue IDs, effect IDs, clue order, and effect order unless a migration has been designed.
+1. Keep existing research filenames and clue/effect IDs at no more than 128 characters, or declare the previous identity exactly once in `legacyIds`; ordering may change safely.
 2. Give every research a positive `points` value and every insight cost a nonnegative value.
 3. Use unique clue/effect IDs inside each research.
-4. Resolve every parent ID and verify the whole catalogue is acyclic.
+4. Resolve every parent ID and keep the whole catalogue acyclic; the production loader enforces both.
 5. Keep contribution values intentional; normally use `0..1` and ensure their sum reflects the desired point shortcut.
 6. Treat `always: true` as a global listener and test its real advancement/kill event path before deployment; use `always: false` when the clue should run only while its project is selected.
 7. Test kill clues with both matching and non-matching entity types when changing listener routing.
 8. Treat command effects as privileged server configuration.
-9. Update companion-pack definitions/translations together, then test an existing world as well as a new world.
+9. Update companion-pack definitions/translations together, run `validateResearchCatalog`, then test an existing world as well as a new world.
 10. Test definition login sync and an already-open archive after `/reload`.

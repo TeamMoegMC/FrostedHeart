@@ -32,7 +32,9 @@ public record FHInsightSyncPacket(int insight,int insightLevel,int usedInsightLe
 
 
     public FHInsightSyncPacket(FriendlyByteBuf buffer) {
-        this(buffer.readVarInt(),buffer.readVarInt(),buffer.readVarInt());
+        this(ResearchNetworkCodec.readNonNegativeVarInt(buffer, "insight"),
+                ResearchNetworkCodec.readNonNegativeVarInt(buffer, "insight level"),
+                ResearchNetworkCodec.readNonNegativeVarInt(buffer, "used insight level"));
 
     }
 
@@ -47,6 +49,10 @@ public record FHInsightSyncPacket(int insight,int insightLevel,int usedInsightLe
     @Override
     public void handle(Supplier<NetworkEvent.Context> context) {
     	context.get().enqueueWork(()->{
+			if (insight < 0 || insightLevel < 0 || usedInsightLevel < 0 || usedInsightLevel > insightLevel) {
+				ResearchNetworkCodec.reject("insight sync: invalid numerical state");
+				return;
+			}
     		TeamResearchData clientData = ClientResearchDataAPI.getData().get();
         	clientData.updateInsight(this.insight,this.insightLevel,this.usedInsightLevel);
     	});

@@ -22,7 +22,7 @@ package com.teammoeg.frostedresearch.network;
 import java.util.function.Supplier;
 
 import com.teammoeg.chorda.dataholders.team.TeamDataHolder;
-import com.teammoeg.chorda.network.NBTMessage;
+import com.teammoeg.chorda.network.CMessage;
 import com.teammoeg.frostedresearch.FRSpecialDataTypes;
 import com.teammoeg.frostedresearch.api.ClientResearchDataAPI;
 
@@ -31,22 +31,34 @@ import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.network.NetworkEvent;
 
 // send when player join
-public class FHResearchAttributeSyncPacket extends NBTMessage {
+public class FHResearchAttributeSyncPacket implements CMessage {
+    private final CompoundTag data;
 
     public FHResearchAttributeSyncPacket(CompoundTag data) {
-        super(data.copy());
+        this.data = data.copy();
     }
 
     public FHResearchAttributeSyncPacket(FriendlyByteBuf buffer) {
-        super(buffer);
+        data = ResearchNetworkCodec.readPayload(buffer, "research attributes");
     }
 
     public FHResearchAttributeSyncPacket(TeamDataHolder team) {
-        super(team.getData(FRSpecialDataTypes.RESEARCH_DATA).getVariants().copy());
+        data = team.getData(FRSpecialDataTypes.RESEARCH_DATA).getVariants().copy();
+    }
+
+    @Override
+    public void encode(FriendlyByteBuf buffer) {
+        buffer.writeNbt(data);
     }
 
     public void handle(Supplier<NetworkEvent.Context> context) {
-        context.get().enqueueWork(() -> ClientResearchDataAPI.getData().get().setVariants(this.getTag()));
+        context.get().enqueueWork(() -> {
+            if (data == null) {
+                ResearchNetworkCodec.reject("research attributes: missing payload");
+                return;
+            }
+            ClientResearchDataAPI.getData().get().setVariants(data);
+        });
         context.get().setPacketHandled(true);
     }
 }

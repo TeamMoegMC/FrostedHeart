@@ -1,111 +1,84 @@
 # Research System Known Risks And Validation Gaps
 
 - Status: `Current`
-- Last verified: `2026-08-22`
-- Scope: Source-confirmed defects, unsafe compatibility contracts, behavioral limitations, and missing validation; this is not an exhaustive security audit
-- Code anchors: [`FHDrawingDeskOperationPacket#handle`](../../src/main/java/com/teammoeg/frostedresearch/network/FHDrawingDeskOperationPacket.java), [`TeamResearchData#resetData`](../../src/main/java/com/teammoeg/frostedresearch/data/TeamResearchData.java), [`FHResearchDataSyncPacket#handle`](../../src/main/java/com/teammoeg/frostedresearch/network/FHResearchDataSyncPacket.java), [`TickListenerClue#initListener`](../../src/main/java/com/teammoeg/frostedresearch/research/clues/TickListenerClue.java), [`ResearchData#getProgress`](../../src/main/java/com/teammoeg/frostedresearch/data/ResearchData.java), [`ResearchDataAPI#putVariantLong`](../../src/main/java/com/teammoeg/frostedresearch/api/ResearchDataAPI.java)
+- Last verified: `2026-08-23`
+- Scope: Resolution status for the 2026-08-22 source audit, supported boundaries, and remaining integrated/manual validation
+- Code anchors: [`ResearchCatalog`](../../src/main/java/com/teammoeg/frostedresearch/ResearchCatalog.java), [`FHResearch#reloadCatalog`](../../src/main/java/com/teammoeg/frostedresearch/FHResearch.java), [`TeamResearchData#reconcileDefinitions`](../../src/main/java/com/teammoeg/frostedresearch/data/TeamResearchData.java), [`ResearchNetworkCodec`](../../src/main/java/com/teammoeg/frostedresearch/network/ResearchNetworkCodec.java), [`ResearchHooks`](../../src/main/java/com/teammoeg/frostedresearch/ResearchHooks.java), [`MechCalcTileEntity`](../../src/main/java/com/teammoeg/frostedresearch/blocks/MechCalcTileEntity.java), [`ResearchGraphViewport`](../../src/main/java/com/teammoeg/frostedresearch/gui/archive/ResearchGraphViewport.java)
 
-## How To Read This Document
+## Current Assessment
 
-- **Confirmed defect** means the current source has a directly identifiable incorrect/contradictory control path.
-- **Fragile contract** means behavior works only while undocumented identity/order/context assumptions hold.
-- **Validation gap** means source suggests a risk, but the actual failure needs a focused runtime/compatibility test.
-- Priority describes likely impact to this system, not a project-wide release decision.
+All defects, fragile identity contracts, and code-level validation gaps recorded in the previous version of this document have been addressed. The remaining items below are explicit feature boundaries or integrated/manual QA still required before release; they are not silently treated as implemented behavior.
 
-## Recently Resolved High-Priority Defects
+Create and Immersive Engineering are required by the Frosted Heart product. Missing-Create/missing-IE startup combinations are intentionally outside scope. BROWSE and EXPERIMENT remain future UI/system features and receive no new entry point or data model in this work.
 
-| Resolved | Former risk | Current contract | Validation |
+## Resolved Definition, Identity, And Math Risks
+
+| Resolved | Former risk | Current contract | Automated evidence |
 |---|---|---|---|
-| 2026-08-22 | drawing-desk C2S authorization gap | `FHDrawingDeskOperationPacket#handle` now requires the sender's open `DrawDeskContainer` to reference the same loaded tile in the same level, within 8 blocks, owned by the sender's current team; operation/card-coordinate shapes are also validated | `FHDrawingDeskOperationPacketTest` covers the authorization predicate, operation shapes, and hostile coordinates |
-| 2026-08-22 | incomplete administrative rollback | `TeamResearchData#resetData` now revokes current and repeat-level-recorded reversible effects, clears matching current selection, resets repeat level, restores overlapping unlocks from remaining grants, and synchronizes effect/variant/project state; infinite iteration rollover uses a separate non-revoking path | `TeamResearchDataResetTest` covers accumulated stat reversal, state/level reset, and reward-preserving infinite rollover |
-| 2026-08-22 | `always` listener null-team initialization crash | tick and kill listener registration treats a null team as global scope, matching `ResearchHooks.ListenerList`; null-scope removal is also supported | `AlwaysListenerClueTest` covers global registration, cross-team dispatch, and removal for both listener families |
+| 2026-08-23 | partial catalogue mutation, missing parents/cycles, invalid values and duplicate IDs | `ResearchCatalog` parses filename-sorted candidates and aggregates codec, identity, parent/DAG, point/insight/count, clue contribution, and minigame diagnostics before installation | `ResearchCatalogPreflightTest`; external catalogue validation task |
+| 2026-08-23 | invalid local catalogue threw before the chunk-progress listener existed, leaving `Minecraft#doWorldLoad` in its wait loop | local worlds run the full catalogue preflight before the integrated-server thread; rejection closes pending resources and shows a localized error screen; partial-start save and climate shutdown paths are null-safe | Mixin target/refmap validation during `compileJava`; invalid-catalogue in-game regression scenario |
+| 2026-08-23 | active/project/clue/effect meaning depended on registry/list order | current persistence and packets use research string IDs and clue/effect nonces; order may change safely | `TeamResearchDataMigrationTest`, `ResearchNetworkPacketTest` |
+| 2026-08-23 | no rename/delete migration contract | optional `legacyIds` migrate only into an absent formal key; canonical conflicts and deleted records remain preserved orphans with diagnostics | `TeamResearchDataMigrationTest` |
+| 2026-08-23 | old integer active selection could silently retarget | schema `2` saves string active IDs; legacy integers resolve only through a real `fhregistries.dat` snapshot and otherwise clear only selection | migration tests plus defensive constructor paths |
+| 2026-08-23 | integer progress, negative commits, overflow and non-finite progress | committed points are `long`; negative persisted values normalize to zero; negative API input throws; zero is inert; arithmetic is overflow-safe and progress finite in `[0,1]` | `ResearchDataBehaviorTest` |
+| 2026-08-23 | `FHRegistry#runIfPresent(int)` used one-based subtraction | lookup is zero-based with complete bounds checks | `FHRegistryTest` |
+| 2026-08-23 | string `putVariantLong` wrote a double | all long overloads write `LongTag` without precision loss above `2^53` | `ResearchDataAPITest` |
 
-The current development catalogue still contains no `always: true` listener, so its complete advancement/kill event behavior should also be verified in an integrated server before deploying the first such definition.
+## Resolved Persistence And Network Risks
 
-## Identity, Definition, And Math Risks
-
-| Priority | Kind | Source fact | Consequence |
+| Resolved | Former risk | Current contract | Automated evidence |
 |---|---|---|---|
-| P1 | fragile contract | persistent state keys research/clue/effect data by string/nonce, while active IDs and packets also use registry/list indices | renames, duplicate nonces, or clue/effect reorder can lose or misapply progress without a migration |
-| P1 | fragile contract | missing parent IDs are filtered out; cycles are not rejected by runtime definitions | a typo can remove an intended prerequisite; cycles can create projects that cannot be normally unlocked |
-| P1 | validation gap | codecs accept zero/negative points, negative insight costs, and arbitrary clue contribution values | progress can be negative or NaN/infinite; completion thresholds can be bypassed or become impossible |
-| P2 | confirmed API edge | `ResearchData#commitPoints` returns a negative input unchanged instead of rejecting it; it does not mutate `committed` because only a positive `tocommit` is applied | callers can propagate a nonsensical negative remainder even though saved progress is not reduced by this method |
-| P2 | confirmed validation gap | `MinigameClue` codec construction bypasses the setter's `0..3` clamp | invalid JSON may index outside `GenerateInfo.all` during game start |
-| P2 | fragile contract | config definitions are not bundled/tracked in this repository and registry snapshots store names only | a mod-only deployment or incomplete world migration can retain progress slots without usable definitions |
-| P2 | confirmed inconsistency | `FHRegistry#runIfPresent(int)` uses `id - 1` while ordinary registry access is zero-based; no current callers were found | a future caller can resolve the previous slot or index `-1` |
+| 2026-08-23 | full/delta payloads used registry order, list indices and effect `BitSet` | full and incremental state are string/nonce-keyed maps or fields | codec, migration, and packet tests |
+| 2026-08-23 | custom clue NBT disappeared on the wire | `ClueData` network encoding includes the full custom `CompoundTag` | `ResearchDataBehaviorTest`, `ResearchNetworkPacketTest` |
+| 2026-08-23 | malformed/stale packets dereferenced invalid targets | bounded IDs/NBT plus enum/value/target validation discard bad input with rate-limited diagnostics | `ResearchNetworkPacketTest` |
+| 2026-08-23 | client could display a partially received catalogue | definition packets stage until end-of-transfer whole-catalogue validation succeeds | staged `FHResearch` client lifecycle |
+| 2026-08-23 | full team replacement left an open archive stale | dedicated replacement notification rebuilds visibility, graph/layout, and state caches while retaining valid navigation/camera state | archive state/visibility tests and notification path |
+| 2026-08-23 | completing a bound non-current research cleared the current project | completion clears selection only when the completed formal ID equals the active ID | `TeamResearchData#checkResearchComplete` guard |
 
-## Persistence And Synchronization Risks
+The new binary packet format is intentionally incompatible with older clients. `FRNetwork` requires an exact mod version, so mixed versions are rejected during the Forge channel handshake rather than accepted with ambiguous state.
 
-| Priority | Kind | Source fact | Consequence |
+## Resolved Gameplay And Integration Risks
+
+| Resolved | Former risk | Current contract | Automated evidence |
 |---|---|---|---|
-| P1 | confirmed notification gap | full `FHResearchDataSyncPacket` replaces client team data but emits no `ResearchUtils` archive refresh notification | an already-open archive may retain an old discovered-definition set/layout/selection after team change or reload until another event/reopen |
-| P1 | fragile contract | clue/effect full and delta network data is definition-order based | a server/client catalogue mismatch can attach progress to the wrong clue/effect |
-| P2 | confirmed robustness gap | several client delta handlers dereference research and list indices without null/bounds checks | stale or mismatched packets can throw on the client instead of being discarded |
-| P2 | confirmed data-loss boundary | `ClueData` network compression omits optional custom NBT `data` | a future custom clue using this payload cannot expect it on the client |
-| P2 | confirmed semantic issue | effect bitset read logic compares against `BitSet.size()` (storage capacity) rather than a logical definition count | the code relies on out-of-range `BitSet#get` returning false; behavior is obscure and easy to break when refactored |
-| P2 | migration risk | active research persists as an integer registry slot while bodies live in separate config files | losing/replacing `fhregistries.dat` can make a saved current ID refer to another definition |
-| P2 | confirmed selection side effect | normal `checkResearchComplete` unconditionally clears the team's current selection after any project completes | completing a non-current project through a bound rubbing can pause an unrelated current project |
+| 2026-08-23 | calculator points could be redirected across teams and extraction ignored `max` | placement/first-real-interaction establishes persistent team owner; FakePlayer/cross-team access fails; bounded extraction retains the remainder | `ResearchGameTests` Forge GameTest |
+| 2026-08-23 | machine APIs could bypass ownership | `ComputeMachine` query/extraction requires `ServerPlayer`; click and rubbing use the same authorization | full and no-FTB/no-JEI GameTest runs |
+| 2026-08-23 | static Create owner leaked across executions | actual Create recipe execution is wrapped in nested, exception-safe `ThreadLocal` owner context | nested/exception/double-thread `ResearchHooksTest`; successful mixin startup |
+| 2026-08-23 | absent/fake/ownerless automation could pass locked content | player paths use current real-player team; machine paths use persisted owner; locked content fails closed without a valid authority | entry-point source audit and GameTest |
+| 2026-08-23 | every nonempty item appeared examinable | side-effect-free eligibility exactly models unfinished item clue, valid rubbing, or inspiration actions | UI predicate and server submission now share the same conditions |
+| 2026-08-23 | duplicate/dead Frosted Research FTB event bridge | only Chorda forwards FTB team create/change/delete/transfer events; Frosted Research consumes the Chorda event | no-FTB startup plus Chorda bridge source contract |
+| 2026-08-23 | ordinary research code loaded JEI/FTB client classes when absent | neutral JEI bridge, class-gated FTB mixins, and optional pseudo sidebar mixin isolate optional dependencies | `runGameTestServer -PwithoutFtb -PwithoutJei` |
+| 2026-08-23 | advancement/kill/`always` listeners could leak, duplicate, or cross team boundaries across reload/removal | team listeners use exact team IDs, `always` remains global per triggering team, and reload/removal rebuilds from a cleared listener registry | two-team real-event lifecycle assertions in `ResearchGameTests` |
+| 2026-08-23 | reset/recompletion and non-current completion could revoke or clear unrelated state | reversible effects are revoked through their effect contract, orphan progress survives removal, and only the exactly current completion clears selection | `TeamResearchDataResetTest` plus real team-data assertions in `ResearchGameTests` |
 
-## Gameplay And Integration Risks
+## Resolved Client/UI Risks
 
-| Priority | Kind | Source fact | Consequence |
+| Resolved | Former risk | Current contract | Automated evidence |
 |---|---|---|---|
-| P1 | validation gap | `frostedresearch.mixins.json` is `required: true` and names Create/IE targets, while those mods are declared optional | startup without either optional mod must be tested; loaded-mod conditional registration alone does not prove safe absence |
-| P2 | confirmed ownership gap | `MechCalcTileEntity#onClick` assigns cached points to the clicker's team and does not check a persisted owner | any player who can interact with the machine can redirect its accumulated work |
-| P2 | confirmed API-contract defect | `MechCalcTileEntity#fetchPoint(int max)` ignores `max` and empties the cache | callers expecting bounded extraction receive all points |
-| P2 | fragile context | Create mechanical crafting uses static `ResearchHooks.te` as part of owner context | nested/concurrent/unbalanced hooks may leak owner context between checks; needs focused execution-path testing |
-| P2 | confirmed broad UI predicate | `ResearchHooks#canExamine` returns true for every nonempty item | UI can advertise examinability even when submission performs no action |
-| P2 | design boundary | block and recipe hooks cover selected interaction/crafting paths, not every automation/capability path | a new machine or alternate execution route can bypass research unless explicitly integrated |
-| P2 | confirmed type defect | `ResearchDataAPI#putVariantLong(ServerPlayer, String, long)` uses `putDouble` | raw callers receive the wrong NBT numeric type |
-| P2 | compatibility gap | `FTBTeamsEvents#init` has its team-event registrations commented out | do not rely on that class for synchronization; current behavior depends on Chorda team events instead |
+| 2026-08-23 | hidden research disappeared from the editor graph | editor visibility is carried from snapshot through projection/layout and node/edge rendering; normal privacy remains unchanged | `ResearchGraphVisibilityTest` |
+| 2026-08-23 | fit always selected minimum zoom | actual visible bounds are fit to both axes with `24px` padding, clamped to `0.15..1.75` | shared viewport tests and implementation |
+| 2026-08-23 | reflection removed/restored FTB sidebar groups | native widgets are disabled while open and an optional pseudo mixin cancels FTB's visibility-ignoring render; no FTB collection is mutated | full/no-FTB startup; in-game reload QA remains below |
 
-## Client/UI Limits
+## Remaining Supported-Boundary Work
 
-| Priority | Kind | Source fact | Consequence |
+| Priority | Kind | Boundary | Acceptance |
 |---|---|---|---|
-| P2 | confirmed editor omission | editor filtering passes hidden definitions to lists/details, but graph snapshot/projection/layout still exclude hidden nodes | hidden projects can be inspected through editor list/detail but cannot be seen in the graph |
-| P2 | validation gap | FTB sidebar hiding/restoration uses reflection and can overwrite its cached group set when groups repopulate | behavior is best-effort across FTB Library resource reloads and requires in-game QA |
-| P2 | UX limitation | `fitToVisible` centers bounds at the fixed minimum zoom `0.15` instead of computing a bounds-to-viewport scale | “fit” may leave small graphs unnecessarily tiny or large graphs partially outside the ideal view |
-| P3 | intended boundary | `ResearchOpenContext.BROWSE` exists in state/tests but has no production screen/entry | no standalone read-only research browser is currently player-accessible |
-| P3 | intended boundary | `EXPERIMENT` tab has no records; future town-system integration is not implemented | the tab is an empty extension boundary, not missing synchronized experiment data |
+| P2 | planned audit | Unknown third-party machines and capability/recipe execution paths are not automatically intercepted by the owner contract | complete [`2026-08-23_00-27-05_research-third-party-automation-ownership-audit.md`](../../plans/2026-08-23_00-27-05_research-third-party-automation-ownership-audit.md), inventory every installed automation path, add owner/no-owner tests, and document each explicit integration or accepted bypass |
+| P2 | integrated QA | Drawing-desk menu/CUI authorization, full-state team switching, overlapping/non-reversible/infinite reward reset/recompletion, and malicious coordinate scenarios still need the two-client matrix | unauthorized operations cause no state change or disconnect; authorized state refreshes immediately; retained rewards neither duplicate nor disappear |
+| P2 | visual QA | FTB sidebar suppression during resource reload and GUI-scale `1/2/4` graph fit require a real client | sidebar never renders/clicks while open and naturally reflects current FTB state after close; all nodes retain the required margin |
+| P3 | future feature | `ResearchOpenContext.BROWSE` has state-model support but no production screen/entry | design and implement separately if a standalone read-only browser is approved |
+| P3 | future feature | `EXPERIMENT` is an empty tab reserved for future town/research integration | define its authoritative records and lifecycle in a separate design/plan before implementation |
 
-## Test Coverage Present
+## Validation Commands
 
-Relevant unit tests currently cover:
+The maintained automated baseline is:
 
-- online/offline member collection for the no-FTB `SinglePlayerTeam` fallback;
-- the kill-clue decision for matching, mismatched, and already-completed inputs;
-- drawing-desk operation authorization predicates, operation shapes, and malformed card coordinates;
-- administrative reset of project state, repeat level, and additive stats, plus reward-preserving infinite rollover;
-- global null-team registration/dispatch/removal for `always` tick and kill listeners;
-- experiment-point and required-clue completion behavior;
-- archive construction, per-category state, and navigation back order;
-- clue sorting, synthetic point presentation, tab classification, and read-only destinations;
-- normal/editor definition filtering at the archive boundary;
-- deterministic graph layout, cycles, missing parents, manual anchors/conflicts;
-- hidden-node graph privacy, category aliases, and ancestor context projection.
+```text
+./gradlew test
+./gradlew runGameTestServer
+./gradlew runGameTestServer -PwithoutFtb -PwithoutJei
+./gradlew validateResearchCatalog -PresearchCatalogDir=<companion>/config/fhresearches
+git diff --check
+```
 
-## Important Gaps
-
-There are no focused automated tests for:
-
-- research/clue/effect JSON round trips, invalid schema, or catalogue-wide graph validation;
-- stable registry migration across rename/delete/reorder scenarios;
-- Chorda team NBT round trips and definition-registry mismatch recovery;
-- packet encode/decode/order mismatch, malformed IDs/indices, or no-FTB incremental delivery;
-- shared-unlock overlap and irreversible reward behavior across reset/re-completion on an integrated server;
-- full server-event/listener lifecycle for kill clues and an `always` listener backed by a real advancement/entity event;
-- drawing-desk authorization with real menus/two teams, real CUI input/rendering, or full-sync archive refresh;
-- FTB sidebar resource reload behavior;
-- startup matrices with JEI/Create/IE absent;
-- cross-system variant type and reset behavior.
-
-## Recommended Verification Order
-
-1. Add integrated server tests for no-FTB packet delivery and the complete kill/always-listener event lifecycle.
-2. Exercise the drawing-desk authorization and reset/re-completion contracts with two players, two teams, overlapping unlock effects, and player-bound rewards.
-3. Add catalogue validation for IDs, nonces, parents, cycles, numeric ranges, and minigame levels.
-4. Test saved-world migrations with rename, deletion, insertion, and clue/effect reorder.
-5. Open the archive, trigger a team-change/full reload, and verify discovery/layout refresh.
-6. Run client/server startup matrices with optional integrations absent one at a time.
-7. Exercise GUI scales and FTB sidebar resource reload in game.
+Use a disposable world for the remaining migration and multiplayer matrix. Do not run destructive migration scenarios against a production world.

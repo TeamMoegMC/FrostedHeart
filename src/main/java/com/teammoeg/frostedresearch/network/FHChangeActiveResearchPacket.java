@@ -32,31 +32,35 @@ import net.minecraftforge.network.NetworkEvent;
 
 // send when data update
 public class FHChangeActiveResearchPacket implements CMessage {
-    private final int id;
+    private final String id;
 
     public FHChangeActiveResearchPacket() {
-        this.id = -1;
+        this.id = "";
     }
 
-    public FHChangeActiveResearchPacket(int rid) {
-        this.id = rid;
+    public FHChangeActiveResearchPacket(String rid) {
+        this.id = rid == null ? "" : rid;
     }
 
     public FHChangeActiveResearchPacket(FriendlyByteBuf buffer) {
-        id = buffer.readVarInt();
+        id = ResearchNetworkCodec.readOptionalId(buffer, "active research");
     }
 
     public FHChangeActiveResearchPacket(Research rs) {
-        this.id = FHResearch.researches.getIntId(rs);
+        this.id = rs.getId();
     }
 
     public void encode(FriendlyByteBuf buffer) {
-        buffer.writeVarInt(id);
+        buffer.writeUtf(id, ResearchNetworkCodec.MAX_ID_LENGTH);
     }
 
     public void handle(Supplier<NetworkEvent.Context> context) {
         context.get().enqueueWork(() -> {
-            ClientResearchDataAPI.getData().get().setCurrentResearch(id);
+            if (!id.isBlank() && FHResearch.getResearch(id) == null) {
+                ResearchNetworkCodec.reject("active research: unknown target " + id);
+                return;
+            }
+            ClientResearchDataAPI.getData().get().setCurrentResearch(id.isBlank() ? null : id);
             Research current = ClientResearchDataAPI.getData().get().getCurrentResearch().get();
             ResearchUtils.notifyActiveResearchChanged(current == null ? null : current.getId());
         });

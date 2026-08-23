@@ -25,6 +25,10 @@ import javax.annotation.Nullable;
 public interface ResearchGui {
     void onResearchDefinitionsChanged();
 
+    default void onResearchDataReplaced() {
+        onResearchDefinitionsChanged();
+    }
+
     void onResearchProgressChanged(String researchId);
 
     void onActiveResearchChanged(@Nullable String researchId);

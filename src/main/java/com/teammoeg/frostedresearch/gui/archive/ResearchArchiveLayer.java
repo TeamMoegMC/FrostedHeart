@@ -177,6 +177,10 @@ public final class ResearchArchiveLayer extends UILayer {
         rebuildDefinitions();
     }
 
+    public void onResearchDataReplaced() {
+        rebuildDefinitions();
+    }
+
     public void onResearchProgressChanged(@Nullable String researchId) {
         if (!visibleDefinitionIds.equals(currentVisibleDefinitionIds())) {
             rebuildDefinitions();

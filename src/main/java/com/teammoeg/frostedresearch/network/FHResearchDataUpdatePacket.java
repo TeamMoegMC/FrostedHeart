@@ -21,54 +21,57 @@ package com.teammoeg.frostedresearch.network;
 
 import java.util.function.Supplier;
 
-import com.teammoeg.chorda.io.CodecUtil;
-import com.teammoeg.chorda.io.codec.DataOps;
-import com.teammoeg.chorda.io.codec.ObjectWriter;
 import com.teammoeg.chorda.network.CMessage;
 import com.teammoeg.frostedresearch.FHResearch;
+import com.teammoeg.frostedresearch.FRMain;
 import com.teammoeg.frostedresearch.ResearchUtils;
 import com.teammoeg.frostedresearch.data.ResearchData;
-import com.teammoeg.frostedresearch.data.ResearchData.ResearchDataPacket;
 import com.teammoeg.frostedresearch.events.ClientResearchStatusEvent;
 import com.teammoeg.frostedresearch.research.Research;
 
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.network.NetworkEvent;
 
 // send when data update
-public record FHResearchDataUpdatePacket(Object rd, int id) implements CMessage {
+public record FHResearchDataUpdatePacket(CompoundTag rd, String researchId) implements CMessage {
 
 
     public FHResearchDataUpdatePacket(FriendlyByteBuf buffer) {
-        this(ObjectWriter.readObject(buffer), buffer.readVarInt());
+        this(ResearchNetworkCodec.readPayload(buffer, "research update"),
+                ResearchNetworkCodec.readId(buffer, "research update target"));
     }
 
     public FHResearchDataUpdatePacket(Research rs, ResearchData rd) {
-        this(CodecUtil.encodeOrThrow(ResearchData.NETWORK_CODEC.encodeStart(DataOps.COMPRESSED, rd.write(rs))), FHResearch.researches.getIntId(rs));
+        this(ResearchNetworkCodec.encode(ResearchData.NETWORK_CODEC, rd), rs.getId());
                                                  
     }
 
     public void encode(FriendlyByteBuf buffer) {
-        ObjectWriter.writeObject(buffer, rd);
-        buffer.writeVarInt(id);
+        buffer.writeNbt(rd);
+        buffer.writeUtf(researchId, ResearchNetworkCodec.MAX_ID_LENGTH);
     }
 
     public void handle(Supplier<NetworkEvent.Context> context) {
         context.get().enqueueWork(() -> {
-            Research rs = FHResearch.researches.get(id);
-            //System.out.println(FHResearch.researches);
-            //System.out.println(id);
-            //System.out.println(rd);
-            //System.out.println(rs);
-            ResearchData old = rs.getData();
-            ResearchDataPacket datax = CodecUtil.decodeOrThrow(ResearchData.NETWORK_CODEC.decode(DataOps.COMPRESSED, rd));
-            boolean status = old.isCompleted();
-            //System.out.println(old);
-            old.read(rs, datax);
-            //System.out.println(old);
-            ResearchUtils.notifyResearchProgressChanged(rs.getId());
-            MinecraftForge.EVENT_BUS.post(new ClientResearchStatusEvent(rs, old.isCompleted(), status != old.isCompleted()));
+            try {
+                Research rs = FHResearch.getResearch(researchId);
+                if (rs == null) {
+                    ResearchNetworkCodec.reject("research update: unknown target " + researchId);
+                    return;
+                }
+                ResearchData datax = ResearchNetworkCodec.decode(
+                        ResearchData.NETWORK_CODEC, rd, "research update " + researchId);
+                if (datax == null) return;
+                ResearchData old = rs.getData();
+                boolean status = old.isCompleted();
+                old.copyFrom(datax);
+                ResearchUtils.notifyResearchProgressChanged(rs.getId());
+                MinecraftForge.EVENT_BUS.post(new ClientResearchStatusEvent(rs, old.isCompleted(), status != old.isCompleted()));
+            } catch (RuntimeException e) {
+                FRMain.LOGGER.warn("Discarded malformed research update for {}", researchId, e);
+            }
 
 
         });

@@ -121,7 +121,7 @@ public class GeneratorScreen<R extends GeneratorState, T extends GeneratorLogic<
 			if (!menu.validStructure.getValue()) {
 				Vec3i v3i = menu.getNextLevelMultiblock().getSize(Minecraft.getInstance().level);
 				costStr.add(Lang.translateGui("generator.no_enough_space", v3i.getX(), v3i.getY(), v3i.getZ()));
-			} else if (!ResearchHooks.hasMultiblock(null, menu.getNextLevelMultiblock())) {
+			} else if (!ResearchHooks.hasMultiblock(menu.getNextLevelMultiblock())) {
 				costStr.add(Lang.translateGui("generator.incomplete_research"));
 			} else {
 				costStr.add(Lang.translateGui("generator.upgrade_material"));

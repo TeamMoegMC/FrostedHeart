@@ -1,7 +1,7 @@
 # Research Gameplay And Integrations
 
 - Status: `Current`
-- Last verified: `2026-08-22`
+- Last verified: `2026-08-23`
 - Scope: Player entry points, drawing-desk operations, experiment/insight sources, unlock enforcement, variants, APIs, events, commands, and compatibility modules
 - Code anchors: [`DrawingDeskBlock`](../../src/main/java/com/teammoeg/frostedresearch/blocks/DrawingDeskBlock.java), [`DrawingDeskTileEntity`](../../src/main/java/com/teammoeg/frostedresearch/blocks/DrawingDeskTileEntity.java), [`DrawDeskContainer`](../../src/main/java/com/teammoeg/frostedresearch/gui/drawdesk/DrawDeskContainer.java), [`ResearchHooks`](../../src/main/java/com/teammoeg/frostedresearch/ResearchHooks.java), [`MechCalcTileEntity`](../../src/main/java/com/teammoeg/frostedresearch/blocks/MechCalcTileEntity.java), [`ResearchDataAPI`](../../src/main/java/com/teammoeg/frostedresearch/api/ResearchDataAPI.java), [`ResearchCommand`](../../src/main/java/com/teammoeg/frostedresearch/ResearchCommand.java), [`JEICompat`](../../src/main/java/com/teammoeg/frostedresearch/compat/JEICompat.java)
 
@@ -78,7 +78,7 @@ The built-in recipe JSON shape is:
 }
 ```
 
-The code indexes `GenerateInfo.all[level]`; although the normal design range is `0..3`, definition codec loading does not clamp it. Out-of-range levels can fail at game initialization.
+The code indexes `GenerateInfo.all[level]`; both the codec and whole-catalogue validator enforce the supported `0..3` range before a definition can be installed.
 
 ## Examine-Slot Submission
 
@@ -101,7 +101,7 @@ An inspiration recipe uses:
 }
 ```
 
-`ResearchHooks#canExamine` returns true for every nonempty stack, regardless of whether a clue or recipe can consume it. Treat it as a UI permissiveness check, not proof that submission will do work.
+`ResearchHooks#canExamine` is the side-effect-free model shared by the button affordance and server action rules. It returns true only for an unfinished matching item clue, an unbound rubbing tool with a current research, a bound positive-point rubbing whose target is active and unfinished, or a matching inspiration recipe. Ordinary items and invalid/empty rubbings therefore do not enable the button or send an operation packet.
 
 ## Mechanical Calculator
 
@@ -117,7 +117,9 @@ When Create is loaded, `frostedresearch:mechanical_calculator` produces cached e
 
 Each server tick adds the integer absolute speed to `process`. When it reaches `6400`, the machine resets process and adds `20` cached points. Clicking transfers as many cached points as the current research accepts through `TeamResearchData#doResearch`, leaving any unused amount in the machine.
 
-`RubbingTool` can instead extract points through the `ComputeMachine` interface. `MechCalcTileEntity#fetchPoint(int max)` currently ignores `max` and empties the entire cache, so callers must not assume the parameter limits extraction. The calculator has no persisted team owner check on click; points go to the clicking player's current team research.
+The calculator records the placing real player's current team in the existing `IOwnerTile` NBT. A legacy ownerless calculator is claimed by the first direct or rubbing interaction from a real `ServerPlayer`. Fake players never claim or extract, and another team cannot replace the owner, redirect direct-click progress, inspect the extractable balance, or remove cached points.
+
+`RubbingTool` extracts through the player-authorized `ComputeMachine` interface. `fetchPoint(ServerPlayer,max)` returns zero for `max <= 0` or an unauthorized player; otherwise it removes exactly `min(max,currentPoints)`. The current rubbing workflow waits for at least `100` authorized points and extracts exactly `100`, retaining any excess machine cache.
 
 ## Unlock Model
 
@@ -130,18 +132,29 @@ Unlock enforcement is a two-index model:
 
 The four built-in types are `BLOCK_UNLOCK_LIST`, `RECIPE_UNLOCK_LIST`, `MULTIBLOCK_UNLOCK_LIST`, and `CATEGORY_UNLOCK_LIST`. `EffectUse`, `EffectCrafting`, `EffectBuilding`, and `EffectShowCategory` declare and then grant the matching entries.
 
+### Execution Ownership Contract
+
+All current enforcement entry points resolve authority through one of two contexts:
+
+- player paths use the real player's current Chorda team; a null player or `FakePlayer` fails closed for restricted content;
+- machine paths use a persisted owner UUID; a null/unknown owner may execute unrestricted content but fails closed for research-restricted content.
+
+This is an integration contract, not a global interception mechanism. Every recipe executor, formation path, or automation mod still needs an explicit call site.
+
 ### Enforcement Sites
 
 | Resource | Enforcement path | Important boundary |
 |---|---|---|
 | block use | Forge `PlayerInteractEvent.RightClickBlock` via `ResearchHooks#canUseBlock` | restricts right-click interaction, not placement, breaking, capability access, or every automation path |
-| vanilla crafting | `RecipeManager`/result-container mixins and crafting-player context | targets crafting recipes; depends on a valid player context |
-| Create mechanical crafting | Create recipe-grid mixins and owner UUID | uses the owner added through `IOwnerTile`; static `ResearchHooks.te` is part of the current context bridge |
-| IE multiblocks | multiblock formation event/mixins and owner UUID | checks team multiblock unlock |
-| IE assembler | pattern/recipe owner path | checks recipe unlock for the owning team |
+| vanilla crafting | `RecipeManager`/result-container mixins and crafting-player context | absent/fake player fails closed for locked recipes |
+| campfire | player passed into the real campfire placement recipe path | follows the same player-team rule |
+| Create mechanical crafting | `MechanicalCrafterBlockEntityMixin` scopes persisted owner around `tryToApplyRecipe`; recipe-grid and recipe `matches` read it | nested, exception-safe `ThreadLocal`; ownerless locked recipes fail closed |
+| IE multiblocks | player formation event plus persisted owner UUID for machine/server checks | FakePlayer formation is rejected; ownerless locked targets fail closed |
+| IE assembler | persisted pattern owner on server, client team only for preview | checks recipe unlock for the owning team |
+| generator upgrade | generator state's persisted owner | client preview uses local team; server mutation uses owner and fails closed |
 | JEI | `JEICompat#syncJEI` | presentation only: hides recipes/categories and shows research information |
 
-The system is not a universal authorization layer. A new crafting machine, automated placer, alternate recipe executor, or direct capability path must opt into these contracts if research should restrict it.
+The system is not a universal authorization layer. A new crafting machine, automated placer, alternate recipe executor, or direct capability path must opt into these contracts if research should restrict it. The outstanding third-party-machine audit is tracked in `plans/`; current code does not claim unknown paths are covered automatically.
 
 ## Stats And Cross-System Variants
 
@@ -165,7 +178,7 @@ The enum `ResearchVariant` documents common tokens but does not constrain `Effec
 | `max_energy` | enum token present; no current repository consumer found |
 | `max_energy_multiplier` | enum token present; no current repository consumer found |
 
-Other systems may also read raw string keys. Because the NBT is mutable and untyped, a key's numeric type and additive semantics are part of the integration contract. Resetting research does not subtract previous stats additions.
+Other systems may also read raw string keys. Because the NBT is mutable and untyped, a key's numeric type and additive semantics are part of the integration contract. Administrative reset reverses recorded `EffectStats` applications, including completed infinite iterations. Load replay does not add them again because the exact typed NBT is already persisted.
 
 ## Public APIs
 
@@ -182,7 +195,7 @@ Callers should note:
 
 - `getVariants` returns the mutable underlying `CompoundTag`, not a defensive copy;
 - mutations through the raw tag require an explicit sync;
-- `putVariantLong(ServerPlayer, String, long)` currently writes a double tag instead of a long tag;
+- both typed and raw-string `putVariantLong` overloads write `LongTag`, including values above `2^53`, and variant snapshots preserve that type through save/sync/reset;
 - `TeamResearchManager` is presently an empty placeholder, not a service layer.
 
 ## Events
@@ -223,12 +236,12 @@ The valid names are `/research edit true` or `/frostedheart research edit true`;
 |---|---|---|
 | JEI | plugin UID `frostedresearch:jei_plugin` | hides locked recipes/categories, supplies research info and tooltips, resyncs on relevant effect progress |
 | FTB Quests | reward type `frostedheart:insight` | claiming directly adds insight to the player's team |
-| FTB Teams | Chorda team backend | progress follows team holder; legacy `FTBTeamsEvents` subscriptions are currently commented out, while Chorda team-change events provide the live sync path |
+| FTB Teams | Chorda team backend | Chorda's event bridge is the sole contract for join, leave, creation/deletion, ownership transfer, data transfer, and `PlayerTeamChangedEvent`; Frosted Research has no duplicate FTB event registration |
 | Tetra | crafting requirement `frostedheart:research` | JSON field `research`; calls `ResearchDataAPI.isResearchComplete` |
-| Create | conditional calculator, stress registration, mechanical-crafting mixins | produces points and gates owner-team recipes |
-| Immersive Engineering | event/mixin hooks | gates owner-team multiblock formation and assembler recipes |
+| Create | calculator, stress registration, mechanical-crafting mixins | required by the product; produces points and gates owner-team recipes |
+| Immersive Engineering | event/mixin hooks | required by the product; gates player/team multiblock formation and owner-team assembler recipes |
 
-The code imports JEI classes directly and uses an annotated plugin. Create/IE classes also appear in a Mixin configuration marked `required: true` even though their mod dependencies are declared optional. Supported absence combinations need startup testing; do not infer robust optionality only from loaded-mod checks.
+Ordinary research code accesses JEI through `ResearchJeiBridge`, so no-JEI startup does not load the annotated plugin class. FTB-specific mixins are gated by class presence and the sidebar mixin is `@Pseudo`. The Forge GameTest run supports `-PwithoutJei -PwithoutFtb`; both that combination and the full runtime have passed dedicated-server startup plus the calculator, listener lifecycle, orphan, non-current completion, and reversible-effect tests. Create and IE remain required in the product and their absence is outside the supported matrix.
 
 ## Adding A New Integration
 

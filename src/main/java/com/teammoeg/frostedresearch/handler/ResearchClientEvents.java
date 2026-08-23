@@ -21,7 +21,7 @@ package com.teammoeg.frostedresearch.handler;
 
 import com.teammoeg.chorda.client.ClientUtils;
 import com.teammoeg.frostedresearch.FRMain;
-import com.teammoeg.frostedresearch.compat.JEICompat;
+import com.teammoeg.frostedresearch.compat.ResearchJeiBridge;
 import com.teammoeg.frostedresearch.events.ClientResearchStatusEvent;
 import com.teammoeg.frostedresearch.gui.InsightOverlay;
 import com.teammoeg.frostedresearch.gui.ResearchToast;
@@ -48,7 +48,7 @@ public class ResearchClientEvents {
         }
         for (Effect e : event.getResearch().getEffects())
             if (e instanceof EffectCrafting || e instanceof EffectShowCategory) {
-                JEICompat.syncJEI();
+                ResearchJeiBridge.sync();
                 return;
             }
     }

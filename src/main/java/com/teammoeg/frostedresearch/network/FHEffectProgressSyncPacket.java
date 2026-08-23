@@ -36,27 +36,39 @@ import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.network.NetworkEvent;
 
 // send when player join
-public record FHEffectProgressSyncPacket(boolean data, int id, int index) implements CMessage {
+public record FHEffectProgressSyncPacket(boolean data, String researchId, String effectId) implements CMessage {
 
     public FHEffectProgressSyncPacket(FriendlyByteBuf buffer) {
-        this(buffer.readBoolean(), buffer.readVarInt(), buffer.readVarInt());
+        this(buffer.isReadable() && buffer.readBoolean(),
+                ResearchNetworkCodec.readId(buffer, "effect progress research"),
+                ResearchNetworkCodec.readId(buffer, "effect progress effect"));
     }
 
     public FHEffectProgressSyncPacket(TeamDataHolder team, Research rs, Effect eff) {
-        this(team.getData(FRSpecialDataTypes.RESEARCH_DATA).isEffectGranted(rs, eff), FHResearch.researches.getIntId(rs), rs.getEffects().indexOf(eff));
+        this(team.getData(FRSpecialDataTypes.RESEARCH_DATA).isEffectGranted(rs, eff), rs.getId(), eff.getNonce());
     }
 
 
     public void encode(FriendlyByteBuf buffer) {
         buffer.writeBoolean(data);
-        buffer.writeVarInt(id);
-        buffer.writeVarInt(index);
+        buffer.writeUtf(researchId, ResearchNetworkCodec.MAX_ID_LENGTH);
+        buffer.writeUtf(effectId, ResearchNetworkCodec.MAX_ID_LENGTH);
     }
 
     public void handle(Supplier<NetworkEvent.Context> context) {
         context.get().enqueueWork(() -> {
-            Research r = FHResearch.getResearch(id);
-            Effect e = r.getEffects().get(index);
+            Research r = FHResearch.getResearch(researchId);
+            if (r == null) {
+                ResearchNetworkCodec.reject("effect progress: unknown research " + researchId);
+                return;
+            }
+            Effect e = r.getEffects().stream()
+                    .filter(candidate -> candidate.getNonce().equals(effectId))
+                    .findFirst().orElse(null);
+            if (e == null) {
+                ResearchNetworkCodec.reject("effect progress: unknown effect " + researchId + "/" + effectId);
+                return;
+            }
             TeamDataClosure<TeamResearchData> trd = ClientResearchDataAPI.getData();
             if (data)
                 e.grant(null, trd.get(), null, false);

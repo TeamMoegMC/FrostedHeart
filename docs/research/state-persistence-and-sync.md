@@ -1,9 +1,9 @@
 # Research State, Persistence, And Synchronization
 
 - Status: `Current`
-- Last verified: `2026-08-22`
+- Last verified: `2026-08-23`
 - Scope: Team and per-research structures, formulas, transitions, insight, saved files, definition registry, packet model, and reload behavior
-- Code anchors: [`TeamResearchData`](../../src/main/java/com/teammoeg/frostedresearch/data/TeamResearchData.java), [`ResearchData`](../../src/main/java/com/teammoeg/frostedresearch/data/ResearchData.java), [`ClueData`](../../src/main/java/com/teammoeg/frostedresearch/data/ClueData.java), [`FRNetwork`](../../src/main/java/com/teammoeg/frostedresearch/FRNetwork.java), [`ResearchCommonEvents`](../../src/main/java/com/teammoeg/frostedresearch/handler/ResearchCommonEvents.java)
+- Code anchors: [`TeamResearchData`](../../src/main/java/com/teammoeg/frostedresearch/data/TeamResearchData.java), [`ResearchData`](../../src/main/java/com/teammoeg/frostedresearch/data/ResearchData.java), [`ClueData`](../../src/main/java/com/teammoeg/frostedresearch/data/ClueData.java), [`ResearchNetworkCodec`](../../src/main/java/com/teammoeg/frostedresearch/network/ResearchNetworkCodec.java), [`FRNetwork`](../../src/main/java/com/teammoeg/frostedresearch/FRNetwork.java), [`ResearchCommonEvents`](../../src/main/java/com/teammoeg/frostedresearch/handler/ResearchCommonEvents.java)
 
 ## State Hierarchy
 
@@ -12,13 +12,14 @@ Research progress is team data:
 ```text
 TeamDataHolder
 └── data.research: TeamResearchData
+    ├── schemaVersion: 2
     ├── variants: CompoundTag
     ├── researches: Map<research string ID, ResearchData>
     │   └── ResearchData
     │       ├── active / finished / level / committed
     │       ├── clueData: Map<clue nonce, ClueData>
     │       └── effectData: Map<effect nonce, boolean>
-    ├── activeResearchId: stable registry integer, or -1
+    ├── activeResearchId: research string ID, or absent/empty
     ├── insight / usedInsightLevel
     └── visitedArea: BitSet
 ```
@@ -34,34 +35,35 @@ When FTB Teams is absent, `SinglePlayerTeam#getOnlineMembers` returns the associ
 | `active` | boolean | `false` | activation cost has been paid; the project can be selected/resumed |
 | `finished` | boolean | `false` | completion was reached |
 | `level` | integer | `0` | repeat count for infinite research |
-| `committed` | integer in codec | `0` | direct experiment points |
+| `committed` | signed 64-bit integer in codec | `0` | direct experiment points; negative legacy values normalize to zero |
 | `clueData` | map by clue nonce | empty | completed flag plus optional custom NBT |
 | `effectData` | map by effect nonce | empty | whether each effect has been granted/claimed |
 
 `ResearchData.EMPTY` is a defensive sentinel returned for absent data in some read paths. It must not be treated as a mutable project record.
 
-`ClueData` persists `completed` and optional `CompoundTag data`. Its compressed/network branch serializes only `completed`; custom clue payload NBT is therefore server/save-only with the current codec. Built-in clues do not currently use that payload.
+`ClueData` persists and synchronizes both `completed` and its optional full `CompoundTag data`; custom clue payloads therefore round-trip without a server/client format split.
 
 ## `TeamResearchData`: One Team
 
 | Field | Persisted | Full client sync | Meaning |
 |---|---:|---:|---|
+| `schemaVersion` | yes | yes | current value `2`; distinguishes the string-active format |
 | `variants` | yes | yes | arbitrary typed NBT attributes written mainly by `EffectStats` |
-| `researches` | yes, string-key map | yes, registry-aligned list | all materialized per-project states |
-| `activeResearchId` | yes | yes | current research registry slot; `-1` means none |
+| `researches` | yes, string-key map | yes, string-key map | all materialized per-project states, including preserved orphans |
+| `activeResearchId` | yes, string | yes, string | current formal research ID; empty means none |
 | `insight` | yes | yes | total insight points earned |
 | `usedInsightLevel` | yes | yes | levels already spent on activation |
 | `insightLevel` | no | no | calculated from `insight` |
 | `visitedArea` | yes | **no** | server-only exploration-sector bitset |
 
-The full network codec changes `researches` from a string-keyed map to a list aligned with `FHResearch.researches`. It intentionally omits `visitedArea`.
+The full network codec uses the same stable string-keyed project, clue-nonce, and effect-nonce maps as persistence. It intentionally omits `visitedArea`.
 
 ## Experiment-Point Formula
 
 Define:
 
-- `P`: research `points`, integer required experiment points;
-- `D`: `ResearchData.committed`, directly submitted integer points;
+- `P`: research `points`, positive integer required experiment points;
+- `D`: `ResearchData.committed`, nonnegative 64-bit directly submitted points;
 - `c_i`: dimensionless `Clue.value` for each completed clue;
 - `C = Σ c_i`: total completed clue contribution.
 
@@ -74,9 +76,11 @@ else:
     effective = min(D + trunc(C * P), P)
 ```
 
-For ordinary nonnegative contributions, Java's integer conversion is equivalent to `floor`. The `0.999` threshold avoids floating-point error when contributions are intended to sum to one.
+For validated nonnegative contributions, Java's integer conversion is equivalent to `floor`. The `0.999` threshold avoids floating-point error when contributions are intended to sum to one. Intermediate addition saturates instead of overflowing, and the final effective value is clamped to `[0,P]`.
 
-`ResearchData#getProgress` returns `effective / P`. The implementation does not validate `P > 0`, clamp `D` at zero, clamp individual `c_i`, or lower-bound `effective`. Malformed/API-provided values can therefore produce negative progress, overlarge intermediate values, or division by zero/NaN.
+`ResearchData#getProgress` returns a finite fraction in `[0,1]`. Catalogue installation guarantees `P > 0`; the method still defensively returns zero for a non-positive target. Historical progress greater than a newly reduced `P` remains stored and reports `1.0` rather than being truncated.
+
+`ResearchData#commitPoints` and `TeamResearchData#doResearch` throw `IllegalArgumentException` for negative input. Zero is a no-op. Positive input uses subtraction-before-addition to avoid overflow and returns the unused remainder.
 
 ## Completion Rule
 
@@ -176,12 +180,18 @@ Two independent persistence systems must remain consistent:
 
 | File/data | Typical location | Contents |
 |---|---|---|
-| definition config | `<server>/config/fhresearches/*.json` | current research bodies |
-| registry snapshot | `<world>/fhregistries.dat` | NBT string list `researches`, preserving string ID to integer slot |
+| definition config | `<server>/config/fhresearches/*.json` | complete current research catalogue; supplied only by the companion pack in production |
+| registry snapshot | `<world>/fhregistries.dat` | historical NBT string list used only to migrate old integer `active` values |
 | editor state | `<world>/fheditor.dat` | global editor flag |
 | team state | `<world>/chorda_data/<internal-team-UUID>.nbt` | compressed Chorda holder with `data.research` |
 
-The registry snapshot does not store definitions. Restoring a world without the matching config catalogue preserves names/slots but cannot reconstruct parents, clues, effects, or display data. Conversely, copying config without `fhregistries.dat` can assign a different numeric order, which matters to active IDs and packets.
+The registry snapshot does not store definitions. Restoring a world without the complete config catalogue aborts startup. Current saves and packets no longer depend on registry order; losing the snapshot only prevents translation of a schema-0/1 integer active selection and does not remove any other progress.
+
+## Schema And Alias Migration
+
+`TeamResearchData.CURRENT_SCHEMA_VERSION` is `2`. Decode accepts both old integer and new string `active` values; new saves write only a string. An old integer resolves through the historical `fhregistries.dat` order. A missing snapshot, invalid slot, or deleted target clears the selection and logs a warning while preserving every research record.
+
+Definitions can declare `legacyIds` for a renamed research, clue, or effect. `TeamResearchData#reconcileDefinitions` moves a legacy record only when the new formal key does not already exist. If both keys exist, the formal value remains authoritative and the old value is preserved as an orphan with a warning. Unknown/deleted research, clue, and effect entries continue to serialize unchanged but do not unlock, listen, complete, or grant effects.
 
 ## Team Load Reconstruction
 
@@ -189,8 +199,8 @@ On `TeamLoadedEvent` and `TeamCreatedEvent`, `TeamResearchData#initResearch`:
 
 1. walks saved project/effect state;
 2. replays already-granted effects in load mode so team unlock lists are reconstructed without giving player rewards or adding stats again;
-3. restarts the current research's unfinished clue listeners when its registry slot still resolves;
-4. clears an unresolvable current slot;
+3. restarts the current research's unfinished clue listeners when its string ID still resolves;
+4. clears an unresolvable current ID without deleting other records;
 5. posts `ResearchDataLoadedEvent`.
 
 Global lock declarations are separately rebuilt from every loaded effect during catalogue indexing. Therefore lock lists are best understood as derived indices:
@@ -206,12 +216,12 @@ saved effectData says team received effect
 
 Login/reload sends definitions before progress:
 
-1. `FHResearchRegistrtySyncPacket` (`research_registry`) sends the string slot list, including stable ordering;
-2. one `FHResearchSyncPacket` (`research_sync`) sends each `Research.CODEC` body and string key;
-3. `FHResearchSyncEndPacket` (`research_sync_end`) finalizes/reindexes the client catalogue and notifies definition listeners;
-4. `FHResearchDataSyncPacket` (`research_data`) sends the full team mirror.
+1. `FHResearchRegistrtySyncPacket` (`research_registry`) starts a staged definition transfer and carries the legacy slot snapshot;
+2. one `FHResearchSyncPacket` (`research_sync`) sends each bounded NBT `Research.CODEC` body and formal string key;
+3. `FHResearchSyncEndPacket` (`research_sync_end`) validates the complete staged candidate, atomically replaces/reindexes it only on success, and notifies definition listeners;
+4. `FHResearchDataSyncPacket` (`research_data`) sends the string-keyed full team mirror.
 
-This ordering is mandatory because team/network payloads refer to registry integer IDs and clue/effect list indices.
+This ordering ensures UI definitions are complete before state is applied. Team/network meaning itself no longer depends on definition ordering.
 
 ## Runtime Packets
 
@@ -219,33 +229,33 @@ This ordering is mandatory because team/network payloads refer to registry integ
 
 | Message ID | Direction by use | Payload/purpose |
 |---|---|---|
-| `research_registry` | S2C | stable definition slot names |
-| `research_sync` | S2C | one research definition |
+| `research_registry` | S2C | begin staged definitions plus legacy slot names |
+| `research_sync` | S2C | one definition by bounded formal string ID |
 | `research_sync_end` | S2C | finish definition indexing |
-| `research_data` | S2C | full `TeamResearchData.NETWORK_CODEC` |
-| `research_data_update` | S2C | one `ResearchData` by numeric research ID |
-| `research_clue` | S2C | one clue Boolean by numeric research ID and clue list index |
-| `research_effect` | S2C | one effect Boolean by numeric research ID and effect list index |
+| `research_data` | S2C | full string/nonce-keyed `TeamResearchData.NETWORK_CODEC` |
+| `research_data_update` | S2C | one `ResearchData` by research string ID |
+| `research_clue` | S2C | one clue Boolean by research string ID and clue nonce |
+| `research_effect` | S2C | one effect Boolean by research string ID and effect nonce |
 | `research_attribute` | S2C | variants NBT |
-| `research_select` | S2C | current numeric research ID |
+| `research_select` | S2C | current research string ID or empty |
 | `research_insight` | S2C | insight/used-level values |
 | `research_control` | C2S | activate, start, or pause research |
 | `effect_trigger` | C2S | claim pending player effects |
 | `research_drawdesk` | C2S | drawing-desk game/item operation at a block position |
 
-Handlers enqueue work onto the game thread. Incremental clue/effect packets trade resilience for size: they use list indices rather than nonces. A server/client definition mismatch or reordered list can apply a Boolean to the wrong logical entry. Several client handlers also assume a valid research and in-range index rather than rejecting malformed/stale packets.
+Handlers enqueue work onto the game thread. Research IDs and nonces are bounded to `128` UTF-8 characters. Codec payloads use bounded NBT envelopes; decoders validate enum ordinals, nonnegative numeric state, target existence, truncation, and malformed/oversized input. Unknown or stale targets are discarded with rate-limited diagnostics rather than dereferenced. This protocol is intentionally binary-incompatible with older clients; the network channel's exact-version handshake rejects those clients before play.
 
 ## Full Versus Incremental Client Refresh
 
 Incremental progress, active, clue, and effect handlers call the corresponding `ResearchUtils.notify...` hook used by the open archive. Definition-sync completion also notifies it.
 
-`FHResearchDataSyncPacket#handle` is different: it replaces the complete client team value and rebuilds derived client state/JEI, but does not emit an archive definition/progress notification. After a full sync caused by team change or reload, components that read state every render can show new numbers, while discovery-dependent visible sets/layout/selection may remain stale until another refresh or screen reopen. This is a confirmed notification gap; the exact in-game presentation impact still needs a reproduction test.
+`FHResearchDataSyncPacket#handle` atomically replaces the complete client team value, rebuilds derived unlocks/JEI, and emits `ResearchUtils#notifyResearchDataReplaced`. An open archive then rebuilds its visible-definition set, layout, and presentation caches; valid category/filter/camera state is retained, while a removed or newly hidden selection is reconciled to a valid target.
 
 ## Compatibility Rules For Saved Worlds
 
-- Move `fhregistries.dat`, the complete `config/fhresearches` catalogue, and Chorda team data together when migrating a world.
-- Never reuse a deleted research's numeric slot/name for a different meaning.
-- Preserve research string IDs and all clue/effect nonces.
-- Preserve clue/effect list ordering across server and client.
+- Move the complete `config/fhresearches` catalogue and Chorda team data together when migrating a world; also move `fhregistries.dat` until every old integer active selection has been resaved as schema `2`.
+- Never reuse a deleted formal ID for a different meaning.
+- Preserve research string IDs and clue/effect nonces, or declare explicit, conflict-free `legacyIds` for one migration.
+- Definition, clue, and effect ordering may change without changing saved/network identity.
 - Back up before editor rename/delete, reset, complete-all, or data transfer commands.
 - Test both login and `/reload`, including players whose archive is already open.

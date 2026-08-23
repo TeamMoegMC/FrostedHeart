@@ -26,7 +26,7 @@ import com.teammoeg.chorda.client.cui.base.MouseButton;
 import com.teammoeg.chorda.client.cui.base.TooltipBuilder;
 import com.teammoeg.chorda.client.cui.base.UIElement;
 import com.teammoeg.chorda.client.ui.CGuiHelper;
-import com.teammoeg.frostedresearch.compat.JEICompat;
+import com.teammoeg.frostedresearch.compat.ResearchJeiBridge;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
@@ -63,7 +63,7 @@ public class RequirementSlot extends UIElement {
 		if (isMouseOver()) {
 			if (isEnabled()) {
 				// TODO edit ingredient
-				JEICompat.showJEIFor(i[(int) ((System.currentTimeMillis() / 1000) % i.length)]);
+				ResearchJeiBridge.showRecipes(i[(int) ((System.currentTimeMillis() / 1000) % i.length)]);
 			}
 
 			return true;

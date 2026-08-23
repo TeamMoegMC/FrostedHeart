@@ -121,8 +121,11 @@ gradle-app.setting
 
 **/build/
 
-# Common working directory
-run/
+# Common working directory; keep pack-owned KubeJS sources versioned.
+run/*
+!run/kubejs/
+!run/kubejs/**
+run-gametest/
 
 # Avoid ignoring Gradle wrapper jar file (.jar files are usually ignored)
 !gradle-wrapper.jar
@@ -141,3 +144,6 @@ run/
 /usernamecache.json
 
 .claude/
+/run/kubejs/config/
+/run/kubejs/client_scripts/
+/run/kubejs/README.txt

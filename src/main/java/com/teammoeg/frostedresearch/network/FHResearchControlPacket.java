@@ -35,30 +35,35 @@ import net.minecraftforge.network.NetworkEvent;
 
 public class FHResearchControlPacket implements CMessage {
     public final Operator status;
-    private final int researchID;
+    private final String researchID;
     public FHResearchControlPacket(Operator status, Research research) {
         super();
         this.status = status;
-        this.researchID = FHResearch.researches.getIntId(research);
+        this.researchID = research.getId();
     }
 
 
     public FHResearchControlPacket(FriendlyByteBuf buffer) {
-        researchID = buffer.readVarInt();
-        status = Operator.values()[buffer.readByte()];
+        researchID = ResearchNetworkCodec.readId(buffer, "research control target");
+        int ordinal = buffer.isReadable() ? buffer.readUnsignedByte() : 255;
+        status = ordinal < Operator.values().length ? Operator.values()[ordinal] : null;
     }
 
     public void encode(FriendlyByteBuf buffer) {
-        buffer.writeVarInt(researchID);
-        buffer.writeByte(status.ordinal());
+        buffer.writeUtf(researchID, ResearchNetworkCodec.MAX_ID_LENGTH);
+        buffer.writeByte(status == null ? 255 : status.ordinal());
     }
 
     public void handle(Supplier<NetworkEvent.Context> context) {
 
         context.get().enqueueWork(() -> {
-            Research r = FHResearch.researches.get(researchID);
-            if (r == null) return;
+            Research r = FHResearch.getResearch(researchID);
+            if (r == null || status == null) {
+                ResearchNetworkCodec.reject("research control: invalid target or operation");
+                return;
+            }
             ServerPlayer spe = context.get().getSender();
+            if (spe == null) return;
             TeamDataClosure<TeamResearchData> trd = ResearchDataAPI.getData(spe);
             switch (status) {
                 case COMMIT_ITEM:

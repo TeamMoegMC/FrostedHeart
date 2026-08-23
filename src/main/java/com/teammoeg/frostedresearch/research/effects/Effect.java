@@ -62,7 +62,9 @@ public abstract class Effect {
                     Codec.list(Codec.STRING).optionalFieldOf("tooltip", Arrays.asList()).forGetter(o -> o.tooltip),
                     CIcons.CODEC.optionalFieldOf("icon").forGetter(o -> Optional.ofNullable(o.icon)),
                     Codec.STRING.fieldOf("id").forGetter(o -> o.nonce),
-                    Codec.BOOL.optionalFieldOf("hidden", false).forGetter(o -> o.hidden)).apply(t, BaseData::new));
+                    Codec.BOOL.optionalFieldOf("hidden", false).forGetter(o -> o.hidden),
+                    Codec.list(Codec.STRING).optionalFieldOf("legacyIds", List.of()).forGetter(o -> o.legacyIds)
+            ).apply(t, BaseData::new));
     private static TypedCodecRegistry<Effect> registry = new TypedCodecRegistry<>();
     public static final Codec<Effect> CODEC = registry.codec();
 
@@ -83,6 +85,7 @@ public abstract class Effect {
     CIcon icon;
     String nonce;
     boolean hidden;
+    List<String> legacyIds = new ArrayList<>();
 
     /**
      * Instantiates a new Effect.<br>
@@ -102,6 +105,7 @@ public abstract class Effect {
         icon = data.icon;
         nonce = data.nonce;
         hidden = data.hidden;
+        legacyIds.addAll(data.legacyIds);
     }
 
     /**
@@ -159,7 +163,7 @@ public abstract class Effect {
     }
 
     public BaseData getBaseData() {
-        BaseData bd = new BaseData(name, tooltip, icon, nonce, hidden);
+        BaseData bd = new BaseData(name, tooltip, icon, nonce, hidden, legacyIds);
 //    	System.out.println(bd);
         return bd;
     }
@@ -233,6 +237,10 @@ public abstract class Effect {
         return nonce;
     }
 
+    public List<String> getLegacyIds() {
+        return List.copyOf(legacyIds);
+    }
+
     public void setNonce(String text) {
         this.nonce = text;
     }
@@ -301,10 +309,20 @@ public abstract class Effect {
             revoke(team);
     }
 
-    public static record BaseData(String name, List<String> tooltip, CIcon icon, String nonce, boolean hidden) {
+    public static record BaseData(String name, List<String> tooltip, CIcon icon, String nonce, boolean hidden,
+                                  List<String> legacyIds) {
+
+        public BaseData(String name, List<String> tooltip, CIcon icon, String nonce, boolean hidden) {
+            this(name, tooltip, icon, nonce, hidden, List.of());
+        }
 
         public BaseData(String name, List<String> tooltip, Optional<CIcon> icon, String nonce, boolean hidden) {
-            this(name, tooltip, icon.orElse(null), nonce, hidden);
+            this(name, tooltip, icon.orElse(null), nonce, hidden, List.of());
+        }
+
+        public BaseData(String name, List<String> tooltip, Optional<CIcon> icon, String nonce, boolean hidden,
+                        List<String> legacyIds) {
+            this(name, tooltip, icon.orElse(null), nonce, hidden, List.copyOf(legacyIds));
         }
 
     }

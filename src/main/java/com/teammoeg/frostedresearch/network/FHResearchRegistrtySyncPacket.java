@@ -21,7 +21,7 @@ package com.teammoeg.frostedresearch.network;
 
 import java.util.function.Supplier;
 
-import com.teammoeg.chorda.network.NBTMessage;
+import com.teammoeg.chorda.network.CMessage;
 import com.teammoeg.frostedresearch.FHResearch;
 
 import net.minecraft.nbt.CompoundTag;
@@ -29,19 +29,31 @@ import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.network.NetworkEvent;
 
 // send when player join
-public class FHResearchRegistrtySyncPacket extends NBTMessage {
+public class FHResearchRegistrtySyncPacket implements CMessage {
+    private final CompoundTag data;
 
     public FHResearchRegistrtySyncPacket() {
-        super(FHResearch.save(new CompoundTag()));
+        data = FHResearch.save(new CompoundTag());
 
     }
 
     public FHResearchRegistrtySyncPacket(FriendlyByteBuf buffer) {
-        super(buffer);
+        data = ResearchNetworkCodec.readPayload(buffer, "research registry");
+    }
+
+    @Override
+    public void encode(FriendlyByteBuf buffer) {
+        buffer.writeNbt(data);
     }
 
     public void handle(Supplier<NetworkEvent.Context> context) {
-        context.get().enqueueWork(() -> FHResearch.initFromRegistry(this.getTag()));
+        context.get().enqueueWork(() -> {
+            if (data == null) {
+                ResearchNetworkCodec.reject("research registry: missing payload");
+                return;
+            }
+            FHResearch.initFromRegistry(data);
+        });
         context.get().setPacketHandled(true);
     }
 }

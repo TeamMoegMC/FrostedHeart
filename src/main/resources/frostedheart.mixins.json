@@ -87,6 +87,7 @@
     "minecraft.trade.ResetProfession_DisableVanillaProfession",
     "minecraft.trade.VillagerMixin",
     "registrate.RegistrateBlockLootTablesMixin_RemoveExisted",
+    "stoneage.ExampleModMixin",
     "tetra.MixinToolbeltInventory"
   ],
   "client": [
