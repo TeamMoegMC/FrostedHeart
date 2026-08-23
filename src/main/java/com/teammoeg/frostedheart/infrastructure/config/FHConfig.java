@@ -19,6 +19,7 @@
 
 package com.teammoeg.frostedheart.infrastructure.config;
 
+import com.electronwill.nightconfig.core.file.CommentedFileConfig;
 import com.teammoeg.chorda.client.cui.screenadapter.OverlayPositioner;
 import com.teammoeg.chorda.math.Colors;
 import com.teammoeg.frostedheart.content.climate.FHTemperatureDifficulty;
@@ -2221,18 +2222,29 @@ public class FHConfig {
 	}
 
 	public static void onConfigLoading(ModConfigEvent.Loading event) {
-		migrateNutritionScale(event.getConfig());
-		migrateResidentAttributeModel(event.getConfig());
+		migratePersistentServerConfig(event.getConfig());
 	}
 
 	public static void onConfigReloading(ModConfigEvent.Reloading event) {
-		migrateNutritionScale(event.getConfig());
-		migrateResidentAttributeModel(event.getConfig());
+		migratePersistentServerConfig(event.getConfig());
 	}
 
-	private static void migrateNutritionScale(ModConfig config) {
-		if (config.getSpec() != SERVER_CONFIG || SERVER.NUTRITION.nutritionScaleVersion.get() >= 2) {
+	private static void migratePersistentServerConfig(ModConfig config) {
+		if (config.getType() != ModConfig.Type.SERVER
+				|| config.getSpec() != SERVER_CONFIG
+				|| !ConfigMigrationSupport.isPersistent(config.getConfigData())) {
 			return;
+		}
+		boolean changed = migrateNutritionScale();
+		changed |= migrateResidentAttributeModel();
+		if (changed) {
+			((CommentedFileConfig) config.getConfigData()).save();
+		}
+	}
+
+	private static boolean migrateNutritionScale() {
+		if (SERVER.NUTRITION.nutritionScaleVersion.get() >= 2) {
+			return false;
 		}
 		NutritionScaleMigration.Rates rates = NutritionScaleMigration.fromVersionOne(
 				SERVER.NUTRITION.nutritionGainRate.get(),
@@ -2240,13 +2252,13 @@ public class FHConfig {
 		SERVER.NUTRITION.nutritionGainRate.set(rates.gainRate());
 		SERVER.NUTRITION.nutritionConsumptionRate.set(rates.consumptionRate());
 		SERVER.NUTRITION.nutritionScaleVersion.set(2);
-		config.save();
+		return true;
 	}
 
-	private static void migrateResidentAttributeModel(ModConfig config) {
+	private static boolean migrateResidentAttributeModel() {
 		Server.Town.Housing housing = SERVER.TOWN.HOUSING;
-		if (config.getSpec() != SERVER_CONFIG || housing.residentAttributeModelVersion.get() >= 2) {
-			return;
+		if (housing.residentAttributeModelVersion.get() >= 2) {
+			return false;
 		}
 		Server.Town.ResidentAging aging = SERVER.TOWN.RESIDENT_AGING;
 		housing.residentNutritionStrengthProteinWeight.set(0.75);
@@ -2263,7 +2275,7 @@ public class FHConfig {
 			TownModelParameters.Defaults.RESIDENT_CHILD_INTELLIGENCE_GAIN_PER_DAY);
 		aging.adultAttributeCap.set(TownModelParameters.Defaults.RESIDENT_ADULT_ATTRIBUTE_CAP);
 		housing.residentAttributeModelVersion.set(2);
-		config.save();
+		return true;
 	}
 
 	static final boolean specialDay = MonthDay.of(4, 1).equals(MonthDay.now());
