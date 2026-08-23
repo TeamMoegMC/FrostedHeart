@@ -48,6 +48,10 @@ public final class ResearchArchiveLayer extends UILayer {
     static final int HEADER_ACTION_WIDTH = 76;
     static final int FIELD_TABS_Y = 2;
     static final int CONTENT_TOP = HEADER_HEIGHT + 4;
+    private static final Component ARCHIVE_TITLE =
+            Component.translatable("gui.frostedresearch.archive.title");
+    private static final Component DRAWING_DESK =
+            Component.translatable("gui.frostedresearch.archive.drawing_desk");
 
     private final ResearchOpenContext openContext;
     private final ResearchWorkspaceState state;
@@ -62,10 +66,10 @@ public final class ResearchArchiveLayer extends UILayer {
     private final ResearchProjectWorkspace projectWorkspace;
     private long definitionRevision;
     private boolean definitionsInitialized;
+    private boolean definitionEditorMode = FHResearch.editor;
     private Set<String> visibleDefinitionIds = Set.of();
-    private int lastLayoutWidth = -1;
-    private int lastLayoutHeight = -1;
-    private boolean lastLayoutWorkspaceOpen;
+    @Nullable
+    private ArchiveLayoutKey layoutKey;
 
     public ResearchArchiveLayer(
             UIElement parent,
@@ -96,7 +100,7 @@ public final class ResearchArchiveLayer extends UILayer {
         this.projectSummary = new ResearchProjectSummaryPanel(
                 this, state, viewCache, navigation, this::onNavigationChanged);
         this.projectWorkspace = new ResearchProjectWorkspace(
-                this, openContext, state, navigation, this::onNavigationChanged);
+                this, openContext, state, viewCache, navigation, this::onNavigationChanged);
         this.searchBox.setText(state.searchQuery(), false);
         setScissorEnabled(false);
     }
@@ -120,15 +124,13 @@ public final class ResearchArchiveLayer extends UILayer {
     }
 
     public void resizeArchive(int width, int height) {
-        setSize(Math.max(280, width), Math.max(188, height));
-        int safeWidth = getWidth();
-        int safeHeight = getHeight();
+        int safeWidth = Math.max(280, width);
+        int safeHeight = Math.max(188, height);
         boolean workspaceOpen = state.projectWorkspaceOpen();
-        if (lastLayoutWidth == safeWidth
-                && lastLayoutHeight == safeHeight
-                && lastLayoutWorkspaceOpen == workspaceOpen) {
+        if (layoutKey != null && layoutKey.matches(safeWidth, safeHeight, workspaceOpen)) {
             return;
         }
+        setSize(safeWidth, safeHeight);
         fieldTabs.setPosAndSize(
                 HEADER_TITLE_WIDTH,
                 FIELD_TABS_Y,
@@ -168,9 +170,7 @@ public final class ResearchArchiveLayer extends UILayer {
         projectSummary.setEnabled(!workspaceOpen);
         projectWorkspace.setVisible(workspaceOpen);
         projectWorkspace.setEnabled(workspaceOpen);
-        lastLayoutWidth = safeWidth;
-        lastLayoutHeight = safeHeight;
-        lastLayoutWorkspaceOpen = workspaceOpen;
+        layoutKey = new ArchiveLayoutKey(safeWidth, safeHeight, workspaceOpen);
     }
 
     public void onResearchDefinitionsChanged() {
@@ -204,6 +204,7 @@ public final class ResearchArchiveLayer extends UILayer {
             rebuildDefinitions();
             return;
         }
+        viewCache.refreshStates();
         graphViewport.onProgressChanged(researchId);
         projectWorkspace.onClueProgressChanged(researchId, clueNonce);
     }
@@ -214,9 +215,18 @@ public final class ResearchArchiveLayer extends UILayer {
         graphViewport.onResearchTypeChanged();
     }
 
+    boolean refreshEditorModeIfNeeded() {
+        if (!definitionsInitialized || definitionEditorMode == FHResearch.editor) {
+            return false;
+        }
+        rebuildDefinitions();
+        return true;
+    }
+
     private void rebuildDefinitions() {
+        boolean editorMode = FHResearch.editor;
         List<Research> definitions = FHResearch.getAllResearch().stream()
-                .filter(ResearchArchiveLayer::isDefinitionVisible)
+                .filter(research -> isDefinitionVisible(research, editorMode))
                 .toList();
         visibleDefinitionIds = definitions.stream()
                 .map(Research::getId)
@@ -240,6 +250,7 @@ public final class ResearchArchiveLayer extends UILayer {
         graphViewport.setDefinitions(definitions, ++definitionRevision);
         projectSummary.setDefinitions(definitions);
         projectWorkspace.setDefinitions(definitions);
+        definitionEditorMode = editorMode;
         definitionsInitialized = true;
         resizeArchive(getWidth(), getHeight());
     }
@@ -307,6 +318,7 @@ public final class ResearchArchiveLayer extends UILayer {
 
     @Override
     public void drawBackground(GuiGraphics graphics, int x, int y, int width, int height, RenderingHint hint) {
+        refreshEditorModeIfNeeded();
         if (viewCache.refreshLanguageIfNeeded()) {
             searchBox.ghostText = Component.translatable("gui.frostedresearch.archive.search").getString();
             typeList.onPresentationChanged();
@@ -316,15 +328,13 @@ public final class ResearchArchiveLayer extends UILayer {
         graphics.fill(x, y, x + width, y + height, COLOR_INK);
         graphics.fill(x + 1, y + 1, x + width - 1, y + HEADER_HEIGHT - 1, COLOR_PAPER);
         graphics.fill(x + 1, y + HEADER_HEIGHT - 1, x + width - 1, y + HEADER_HEIGHT, COLOR_RED);
-        graphics.drawString(getFont(), Component.translatable("gui.frostedresearch.archive.title"),
-                x + 10, y + 10, COLOR_INK, false);
+        graphics.drawString(getFont(), ARCHIVE_TITLE, x + 10, y + 10, COLOR_INK, false);
         int actionX = x + width - HEADER_ACTION_WIDTH;
         boolean hovered = getMouseY() <= HEADER_HEIGHT
                 && getMouseX() >= width - HEADER_ACTION_WIDTH;
         graphics.fill(actionX, y + 5, x + width - 6, y + 25, hovered ? COLOR_RED : COLOR_TEAL);
-        Component action = Component.translatable("gui.frostedresearch.archive.drawing_desk");
-        int textX = actionX + Math.max(4, (70 - getFont().width(action)) / 2);
-        graphics.drawString(getFont(), action, textX, y + 11, 0xFFF8F1DE, false);
+        int textX = actionX + Math.max(4, (70 - getFont().width(DRAWING_DESK)) / 2);
+        graphics.drawString(getFont(), DRAWING_DESK, textX, y + 11, 0xFFF8F1DE, false);
     }
 
     static boolean canReveal(Research research) {
@@ -332,8 +342,12 @@ public final class ResearchArchiveLayer extends UILayer {
     }
 
     static boolean isDefinitionVisible(Research research) {
+        return isDefinitionVisible(research, FHResearch.editor);
+    }
+
+    private static boolean isDefinitionVisible(Research research, boolean editor) {
         return definitionVisible(
-                FHResearch.editor,
+                editor,
                 research.isHidden(),
                 research.isShowable(),
                 research.isUnlocked(),
@@ -346,9 +360,18 @@ public final class ResearchArchiveLayer extends UILayer {
     }
 
     private Set<String> currentVisibleDefinitionIds() {
+        boolean editorMode = FHResearch.editor;
         return FHResearch.getAllResearch().stream()
-                .filter(ResearchArchiveLayer::isDefinitionVisible)
+                .filter(research -> isDefinitionVisible(research, editorMode))
                 .map(Research::getId)
                 .collect(Collectors.toUnmodifiableSet());
+    }
+
+    private record ArchiveLayoutKey(int width, int height, boolean workspaceOpen) {
+        private boolean matches(int currentWidth, int currentHeight, boolean currentWorkspaceOpen) {
+            return width == currentWidth
+                    && height == currentHeight
+                    && workspaceOpen == currentWorkspaceOpen;
+        }
     }
 }

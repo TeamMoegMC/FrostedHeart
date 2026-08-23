@@ -1,7 +1,7 @@
 # 数据、生命周期与集成边界
 
 - Status: `Current`
-- Last verified: `2026-08-22`
+- Last verified: `2026-08-24`
 - Scope: 温度数据配方、缓存、能力、持久化、tick 阶段、网络、配置、命令、性能入口和测试覆盖
 - Primary code anchors: `FHRecipes`, `FHRecipeCachingReloadListener`, `FHCapabilities`, `ClimateCommonEvents`, `FHServerEvents`, `ServerLevelMixin_TemperatureUpdate`, `FHNetwork`, `FHConfig.SERVER.CLIMATE`, `FHConfig.SERVER.SIMULATION`
 
@@ -65,7 +65,7 @@ dimension id -> world temperature
 | State owner | Registration/attachment | Persistence | Current contents |
 |---|---|---|---|
 | `WorldClimate` | `FHCapabilities.CLIMATE_DATA`; 挂到所有非 fixed-time `Level` | NBT capability | 逻辑时钟、日缓存、白幕、初始化标志；不保存长期事件轨道本身 |
-| `PlayerTemperatureData` | `FHCapabilities.PLAYER_TEMP`; 挂到非 FakePlayer | NBT capability | 五部位体温/体感/衣物、核心与环境数据、采样结果、可选难度 |
+| `PlayerTemperatureData` | `FHCapabilities.PLAYER_TEMP`; 挂到非 FakePlayer | NBT capability | 五部位体温/体感/衣物、核心与环境数据、采样结果、可选难度；另有不写 NBT 的每玩家 rain/thunder 渲染插值状态 |
 | `ChunkHeatData` | `FHCapabilities.CHUNK_HEAT`; 挂到服务端非空 `LevelChunk` | Codec capability | 复制到该区块的 `IHeatArea` 列表 |
 | `HeatEndpoint` | `FHCapabilities.HEAT_EP`; 由具体方块实体或多方块状态暴露 | NBT capability | heat 缓冲、流量、温度等级、优先级和显示统计 |
 | item heat | `FHCapabilities.ITEM_HEAT`; 由具体物品暴露 | transient capability | 穿戴/充能设备自己的 heat storage |
@@ -112,13 +112,14 @@ ServerStopped
 |---|---|---|
 | `body_data` / `FHBodyDataSyncPacket` | S2C；当前每个玩家 START tick | 玩家核心前值/当前值、环境温度和总体验温 |
 | `climate_data` / `FHClimatePacket` | S2C；登录、换维度、气候小时变化及部分事件 | 当前天气/预报所需气候数据 |
+| Vanilla `ClientboundGameEventPacket` weather events | S2C；初始化及每玩家局部天气强度变化 | 把当前位置的全局/白幕 `ClimateType` 转成连接独有的 rain/thunder 强度，直接驱动客户端天气渲染 |
 | `temperature_display` / `FHTemperatureDisplayPacket` | S2C；工具或提示调用 | 格式化的温度数值显示 |
 | `soil_thermometer_request/update` | C2S/S2C；温度镜查看方块 | 服务端 `WorldTemperature.block` 查询结果 |
 | `infrared_view_c2s/s2c` | C2S/S2C；红外视图按区块请求 | 指定区块范围内的热区形状 |
 | `notify_chunk_heat_update` | S2C；热区新增、删除或校验变化 | 令客户端丢弃并重新请求对应区块红外数据 |
 | `heat_endpoint` and heat-network request/response | 双向按 GUI/调试需求 | 端点统计与热网拓扑显示；不是世界温度同步 |
 
-世界/方块/空气温度不做连续状态广播；需要显示时由服务端查询或由客户端结合已同步数据渲染。`FHBodyDataSyncPacket` 的发送频率高于默认主体计算频率，见玩家文档的同步约束。
+世界/方块/空气温度不做连续状态广播；需要显示时由服务端查询或由客户端结合已同步数据渲染。`FHBodyDataSyncPacket` 的发送频率高于默认主体计算频率，见玩家文档的同步约束。暴风雪与白幕画面不读取 `FHClimatePacket`：`ServerLevelMixin_WeatherCycle` 和 `PlayerTemperatureData.advanceWeatherCycle` 每 tick 通过 Vanilla weather events 单独同步，完整链路见 [weather-rendering.md](weather-rendering.md)。
 
 ## 6. 高影响配置及实际语义
 
@@ -187,13 +188,17 @@ ServerStopped
 | 世界温度查询 | 维度、群系、recipe 和热区查询均有快速重载/缓存 | `WorldTemperature.air` 每次仍取气候、热区并生成高斯噪声；缓存失效与 `/reload` 不完整 |
 | 热区维护 | 热源复制到覆盖区块，查询只扫描当前位置区块；约每 200 ticks 分散校验 | 大半径热源会加载并写入全部覆盖区块；无空间索引或距离衰减；变更会发红外失效包 |
 | 玩家同步 | packet 只含四个聚合字段 | 当前每玩家每 tick 发送，即使默认每 20 ticks 才更新主体值 |
+| 局部天气同步 | 每玩家只保存两个强度并仅在变化时发送 | 5 秒天气过渡期间每玩家每 tick 最多发送 rain/thunder 两个强度包；与小时级 `FHClimatePacket` 独立 |
+| 天气客户端渲染 | 复用 Vanilla 降水批次并以配置半径限制 | 默认暴风雪半径 `15`，方形循环最多 961 columns/frame；fancy graphics 下额外地面粒子满强度最多 200 次尝试/tick |
 | 热网 | 网络重建延迟合并；端点按优先队列分配 | DFS 拓扑与每 tick 分配独立于世界热区；无统一 profiler/benchmark 覆盖 |
 
 后续性能重构应分别测量这些路径，不宜用单个“温度 tick”指标掩盖玩家采样、区块 random tick、热区维护和热网分配的不同扩展维度。
 
 ## 9. 现有自动化验证
 
-当前与温度核心模型直接相关的单元测试为：
+新热学架构目前只有 gated Phase 0 reference/probe，代码位于 `content.climate.thermal.phase0`。`PhaseZeroThermalRouting` 把 `LEGACY` 保持为唯一 `GameplayAuthority`，即使请求 `V1_PRODUCTION` 也不会启用生产路径；`LevelChunkSectionMixin_Phase0aMutationProbe` 仅在 `runGameTestServer` 设置 `frostedheart.phase0aMutationProbe=true` 时应用。它们不改变现有温度查询、存档、配置、网络或玩家玩法行为。
+
+当前与温度核心模型直接相关的自动化测试为：
 
 | Test | Locked behavior |
 |---|---|
@@ -203,5 +208,7 @@ ServerStopped
 | `GeneratorHeatFieldModelTest` | 能量塔等级到半径/温度映射 |
 | `GeneratorFuelModelTest` | 燃料 process ticks 与批量推进 |
 | `SurroundingTemperatureSimulatorCacheTest` | 空碰撞热源的缓存/采样规则 |
+| `thermal.phase0.reference.*`（`22` 条 JUnit） | 秒/tick 单位、`H/C/P/G`、source 精确积分、解析交换、LOD/geometry 能量账本、workload 分类和 legacy/shadow routing |
+| `FrostedHeartPhase0aGameTests`（`5` 条 Forge GameTest） | 低层 section mutation、流体与门类、递归写入、活塞、generation/publication、raw palette 检测和 synthetic dynamic exclusion |
 
-尚无直接自动化覆盖：完整玩家五部位推进、异步结果时序、配置键冲突、recipe `/reload` 后世界/群系缓存、实际 `ServerLevel.tickChunk` Mixin 等价性、`ChunkHeatData` 负值聚合、热网多 provider/consumer tick，以及网络发送频率。这些是开始引入对流、热容、物理功率前应补齐的回归边界。
+尚无直接自动化覆盖：完整玩家五部位推进、异步结果时序、配置键冲突、recipe `/reload` 后世界/群系缓存、实际 `ServerLevel.tickChunk` Mixin 等价性、`ChunkHeatData` 负值聚合、热网多 provider/consumer tick、网络发送频率、真实 Create assemble/move/disassemble、chunk manager 实际 unload/reload，以及目标模组 writer adapters。Phase 0b 也尚未完成固定硬件下的多人 JFR/JMH、retained heap 和 workload threshold。这些仍是 production thermal integration 的显式 gate。

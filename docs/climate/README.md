@@ -5,11 +5,12 @@
 | Document | Scope | Status |
 |---|---|---|
 | [world-climate-and-temperature.md](world-climate-and-temperature.md) | 逻辑气候时钟、事件轨道、世界/空气/方块温度公式、局部热区 | Current |
+| [weather-rendering.md](weather-rendering.md) | 暴风雪与白幕的空间状态、每玩家天气同步、降水/雾/粒子/声音渲染及优化边界 | Current |
 | [player-temperature.md](player-temperature.md) | 周围环境采样、玩家分部位体温、衣物、设备、食物、效果与同步 | Current |
 | [heat-production-and-network.md](heat-production-and-network.md) | 能量塔、热网、散热器、蒸汽喷泉及现有 heat/power 语义 | Current |
 | [data-lifecycle-and-integration.md](data-lifecycle-and-integration.md) | 数据入口、能力、持久化、网络、配置、命令、消费者与验证 | Current |
 
-Primary anchors: `WorldClimate`, `WorldClockSource`, `WorldTemperature`, `BlockTemperatureModel`, `ChunkHeatData`, `SurroundingTemperatureSimulator`, `TemperatureUpdate`, `PlayerTemperatureData`, `GeneratorData`, `HeatEndpoint`, `HeatNetwork`, `FHConfig.SERVER.CLIMATE`, `FHConfig.SERVER.SIMULATION`.
+Primary anchors: `WorldClimate`, `WhiteCurtainInfo`, `ServerLevelMixin_WeatherCycle`, `LevelRendererMixin`, `FogModification`, `WorldClockSource`, `WorldTemperature`, `BlockTemperatureModel`, `ChunkHeatData`, `SurroundingTemperatureSimulator`, `TemperatureUpdate`, `PlayerTemperatureData`, `GeneratorData`, `HeatEndpoint`, `HeatNetwork`, `FHConfig.SERVER.CLIMATE`, `FHConfig.SERVER.SIMULATION`.
 
 ## 系统地图
 
@@ -59,6 +60,6 @@ GeneratorData --> HeatEndpoint --> HeatNetwork --> radiator/fountain buffers
 
 ## 阅读顺序
 
-先读世界气候与温度公式，再读玩家体温。需要研究供热设备或功率时读热网文档；准备修改配置、持久化、数据包或性能路径时再读数据与生命周期文档。
+先读世界气候与温度公式；准备优化暴风雪或白幕画面时读天气渲染文档，再读玩家体温。需要研究供热设备或功率时读热网文档；准备修改配置、持久化、数据包或性能路径时再读数据与生命周期文档。
 
 城镇建筑如何抽样和使用方块温度见 [town/town-model.md](../town/town-model.md)。Curiosity 的相关材料状态为 Transitional，涉及负热区的叙述必须以本目录记录的实际 `ChunkHeatData` 聚合规则为准。

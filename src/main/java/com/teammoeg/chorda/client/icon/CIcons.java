@@ -462,6 +462,10 @@ public class CIcons {
 		public abstract void tesselate(TextureTesselator tex, GuiGraphics ms, int x,int y,int w,int h);
 		public abstract ResourceLocation getTexture();
 		@Override
+		void drawBatched(CIconBatch batch, GuiGraphics graphics, int x, int y, int w, int h) {
+			batch.submitTexture(this, x, y, w, h);
+		}
+		@Override
 		public boolean isEmpty() {
 			return false;
 		}

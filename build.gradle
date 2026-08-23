@@ -124,7 +124,8 @@ minecraft {
             workingDirectory project.file('run-gametest')
             property 'mixin.env.remapRefMap', 'true'
             property 'mixin.env.refMapRemappingFile', "${buildDir}/createSrgToMcp/output.srg"
-            property 'forge.enabledGameTestNamespaces', 'frostedresearch'
+            property 'forge.enabledGameTestNamespaces', 'frostedresearch,frostedheart'
+            property 'frostedheart.phase0aMutationProbe', 'true'
             property 'forge.logging.console.level', 'info'
             arg "-mixin.config=frostedheart.mixins.json"
             arg "-mixin.config=frostedresearch.mixins.json"
@@ -323,7 +324,7 @@ dependencies {
     clientRuntimeOnly fg.deobf("curse.maven:kubejs-238086:5853326")
     // KubeJS hard dependencies; these are libraries, not KubeJS addons.
     clientRuntimeOnly fg.deobf("dev.latvian.mods:rhino-forge:2001.2.3-build.6")
-    clientRuntimeOnly fg.deobf("dev.architectury:architectury-forge:${architectury_version}")
+    runtimeOnly fg.deobf("dev.architectury:architectury-forge:${architectury_version}")
 
     // IE
     implementation fg.deobf("blusunrize.immersiveengineering:ImmersiveEngineering:${ie_version}")
