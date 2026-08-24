@@ -1,8 +1,8 @@
 # Frosted Heart — Sparse Thermal Runtime V1 工程实现规格
 
 - Time: `2026-08-22 16:47:30 +08:00`
-- Last revised: `2026-08-24 04:50:44 +08:00`
-- Authors: `Codex; OpenAI; main engineering agent`; independent reviews by `minecraft_geometry_review` and `thermal_runtime_review`; Phase 0 implementation with `phase0a_mutation_spike` (`gpt-5.6-sol`, `ultra`)
+- Last revised: `2026-08-24 07:00:53 +08:00`
+- Authors: `Codex; OpenAI; main engineering agent`; independent reviews by `minecraft_geometry_review` and `thermal_runtime_review`; Phase 0 implementation with `phase0a_mutation_spike`, `phase0_writer_census`, and `phase0_enabled_mod_census` (`gpt-5.6-sol`, `ultra`)
 - Status: `in-progress`
 - Implementation gate: `Phase 0 and gated prototypes only; Minecraft integration not yet approved`
 - Scope: `Frosted Heart 气候、世界温度、玩家环境采样、解析控制场、局部热源、材料相变、地热、消费者迁移与多人服务器运行时`
@@ -47,7 +47,7 @@
 | 未定义规则的 `4x4` face aperture 转换 | ✗ | 使用坐标压缩或保守微体素补集；整块 quarter-face 确认开放才置 bit | 11、12、Phase A |
 | 多 local air regions 与 census-derived `Rmax` | ✓ 有条件 | 保留；signature ID、region count 的 packed width 同样由 census 决定 | 10..14 |
 | Door/Trapdoor/FenceGate 统一成 `GateOperator` | ✗ | 它们走 state/fluid resolve + Brick rebuild；Gate 只用于非拓扑可调 `G` | 15 |
-| moving piston/Create contraption 精细热拓扑 | ✗ | piston 走动态 unresolved；Create 使用 section-indexed conservative exclusion AABB | 10、41、Phase F |
+| moving piston/Create contraption 精细热拓扑 | ✗ | moving piston 走动态 unresolved；Create contraption 组装后不属于静态 `Level` 方块网格，移动期固定按空气且不建 exclusion，只捕获 assemble/disassemble 的世界方块变化 | 10、41、Phase F |
 | V1 只给 AIR 建 volumetric mesh | ✓ | fluid/solid 仍进入 geometry/contact/boundary，不建立 fluid volume solver | 16 |
 | geometry trivial 即可 coarse merge | ✗ | 还必须通过 source/boundary/gradient/error estimator 与迟滞 | 8、19 |
 | V1 强制 2:1 AMR balance | ✗ | 用对齐的 `FacePatchIterator` 直接处理 16-to-4 与 8-to-4 | 20..22 |
@@ -715,7 +715,9 @@ UNRESOLVED / CONSERVATIVE_UNSUPPORTED
 
 单点 mutation 的 invalidation 不能把 `NEIGHBOR_26` 错算成只读 `27` 个位置：该 mutation 可影响 `3^3` 个 resolver center，而重新解析这些 center 的 union read closure 可达 `5^3 = 125` 个位置。`4^3` Brick cold build 在同类 mask 下的 union snapshot 最多为带一格 halo 的 `6^3 = 216` 个位置。预算按去重后的实际 snapshot read 计数。
 
-以下动态几何不进入 V1 精细 resolved topology：moving piston 的瞬态 BlockEntity shape、Create contraption 内部 block topology、任意 BlockEntity NBT 驱动的 shape。静态 piston base/head BlockState 正常解析；moving piston 使用 `UNRESOLVED_DYNAMIC`。Create compat 只维护 section-indexed conservative exclusion AABB，移动时使相交 `4^3` Brick unresolved，并在 assemble/move/disassemble 时失效旧/新覆盖；它不尝试逐 contraption block 求热。忽略移动实体并把原位置当空气会产生 false opening，因此不是合法 fallback。
+以下动态几何不进入 V1 精细 resolved topology：moving piston 的瞬态 BlockEntity shape、Create contraption 内部 block topology、任意 BlockEntity NBT 驱动的 shape。静态 piston base/head BlockState 正常解析；moving piston 使用 `UNRESOLVED_DYNAMIC`。
+
+Create 采用明确的静态世界网格语义：assemble 把原位置方块移出 `Level`，按普通 `block -> air` mutation 处理；contraption 作为实体移动期间固定按空气，不进入热几何、不维护 AABB exclusion、不携带 V1 热状态；disassemble 在目标位置按普通 `air -> block` mutation 处理。目标位置的新空气/材料状态继续服从第 40 节 geometry ingress/egress 合同。不得为 Create movement 增加专用 adapter 或 Mixin。
 
 Airflow、接触和辐射必须分别解析。例如 waterlogged partial block 可以同时具有受限空气 aperture、fluid/material contact 与不同的辐射遮挡；任何一个 channel 不得从另一个 channel 的 mask 隐式推导。
 
@@ -2110,7 +2112,9 @@ IdentityHashMap<LevelChunkSection, LoadedSectionOwner>
 
 owner 保存 dimension、section world coordinate、chunk generation 和 active thermal/radiation interest。mapped section 的每次实际 old/new change 都转换为 world position；unmapped ProtoChunk/worldgen write 产生零 thermal work，等 LevelChunk load/admission 时以 snapshot 为准。Unload 必须先使 publication/transport generation 失效，再撤销 owner mapping。
 
-若 mapped section 在非 main thread 被写入，hook 不读取 World、不运行 resolver，只原子 bump live revision 并设置 `FULL_GEOMETRY_RESYNC_REQUIRED`，由下一 main tick bounded resnapshot。直接改 `PalettedContainer` 的 writer 会绕过该 hook；已知 runtime writer 必须调用 compat adapter，debug/compat probe 对 active Page 做有预算 fingerprint 以发现 bypass 并置 sticky resync。若目标模组集合仍存在无法捕获的 loaded-world writer，Minecraft integration gate 不通过。
+若 mapped section 在非 main thread 被写入，hook 不读取 World、不运行 resolver，只原子 bump live revision 并设置 `FULL_GEOMETRY_RESYNC_REQUIRED`，由下一 main tick bounded resnapshot。直接改 `PalettedContainer` 的 writer 会绕过该 hook；冻结的常见路径中，已知 raw writer 必须调用显式 adapter，fingerprint 只保留给 GameTest/人工 debug，不进入 production 周期扫描。整个 `LevelChunkSection` identity 替换还会让 owner/fingerprint 留在旧对象上，必须显式 rebind owner 并对新 section 做 full resnapshot。热学读取依赖的 biome container 也需要独立 revision/resnapshot；block-state fingerprint 不能检测原始 biome data 替换。Phase 0a 不再枚举所有 enabled mod 作为 gate；未知第三方 bypass 在复现玩家报告后增加专用 adapter。
+
+`/resetchunks` 调查结论保留为延期兼容说明，不属于 Phase 0a 或当前 production integration gate。该命令用 writable `ImposterProtoChunk` 包装同一个已加载 `LevelChunk`，原地重跑 BIOMES/NOISE 等阶段而不产生 unload/load lifecycle；以后若正式支持，必须一次性拒绝旧 chunk/Page publication、抑制逐方块 thermal delta，刷新后丢弃旧 compiled geometry、biome snapshot 和旧 thermal Page，仅在仍有 interest 时懒重建，绝不保留已经被刷新区块对应的旧热状态。`FastNoiseEngine` 的低层 raw block/biome 通知只作为 loaded-owner 诊断兜底；普通 unmapped worldgen 始终产生零 thermal work。
 
 正常 main-thread path 已知：
 
@@ -2145,7 +2149,7 @@ coalesce。
 
 对 contextual resolver，单点 mutation 还必须通过反向 `DependencyOffsetMask` 找到所有受影响 resolver center；这些 center 可以跨 Brick、ChunkSection 或 chunk。只允许读取 mask union closure 内已加载的 snapshot，不能为完成 batch 加载邻区块。
 
-Create compat 另外把 contraption AABB 按 section 建索引，只对与 active/witness Page 相交的 `4^3` Bricks 发布 `UNRESOLVED_DYNAMIC` exclusion；移动时 old/new AABB 使用同一 effective tick/watermark。Vanilla moving piston、递归 `onRemove/onPlace` 写入以及 raw palette bypass 必须进入 Phase 0/Phase F GameTest coverage matrix。
+Create 不发布移动期 geometry event：assemble 的 world removal 与 disassemble 的 world placement 必须通过同一个五参数 section hook，移动实体本身按空气且不产生 delta。Vanilla moving piston、递归 `onRemove/onPlace` 写入、whole-section replacement，以及 Frosted Heart 已知 raw block/biome container bypass 必须进入 Phase 0/Phase F common-path coverage matrix；`/resetchunks` 仅在以后决定正式支持该管理命令时另加 operation-level adapter。
 
 ### 41.1 Geometry mutation 的保守时间语义
 
@@ -4087,10 +4091,10 @@ Phase 0 分成两个都必须通过的子门；`0a` 只验证 Minecraft mutation
 
 | 子门 | 状态 | 已有可执行证据 | 尚未通过的 gate |
 |---|---|---|---|
-| `0a` mutation/lifecycle | `partial` | GameTest-only 五参数 section hook、loaded-section owner map、generation/revision/publication token、tick coalesce/watermark、off-thread/raw-bypass sticky resync、section-indexed dynamic exclusion；默认完整模组集下 `5` 条 Phase 0a GameTest 通过 | 真实 Create assemble/move/disassemble、chunk manager 实际 unload/reload、目标模组 writer adapter、周期 fingerprint 的覆盖率和成本 |
-| `0b` units/reference/workloads | `partial` | Java 17 reference contracts、`22` 条 JUnit、`14` 个 workload descriptors；覆盖 tick-to-second、`H=C(T-Tref)`、`integral(P dt)`、解析 pair/boundary、pure-LOD 与 geometry ingress/egress、typical/stress 判定、legacy/shadow routing | 固定硬件与模组列表的 legacy baseline、多人 JFR/JMH、retained heap、真实 workload threshold、四候选同输入竞争基准 |
+| `0a` mutation/lifecycle | `complete (common-path scope)` | GameTest-only 五参数 section hook、loaded-section owner map、generation/revision/publication token、tick coalesce/watermark、off-thread/raw-bypass sticky resync；`DebugCommand restore_backup` whole-section rebind、raw block/biome distinct resnapshot reason、section/generation/requiredRevision-bound `ResyncToken` ACK 与 replacement-identity unload cleanup 已实现；真实 ticket load/unload/reload 与 Create assemble `block -> air`、移动期零 delta、disassemble `air -> block` 已通过；`8` 条 Phase 0a GameTest 与 `16` 条 writer/adapter JUnit 已通过 | 无；21-runtime 穷举调查和旧断言保留为非执行注释，未知第三方 bypass 按玩家报告补 adapter；`/resetchunks` 是延期管理命令兼容项，不是 gate |
+| `0b` units/reference/workloads | `partial` | Java 17 reference contracts、`28` 条 JUnit、`14` 个 workload descriptors；覆盖 tick-to-second、`H=C(T-Tref)`、`integral(P dt)`、解析 pair/boundary、pure-LOD 与 geometry ingress/egress、typical/stress 判定、legacy/shadow routing，以及 benchmark evidence provenance；另有首轮本机 `ChunkHeatData` JMH/JFR、allocation 与隔离 retained-object-graph 微基线 | 生产模组列表中的 1/10/50/100 玩家 legacy server baseline、玩家采样 main/worker 分位数、整服 retained heap、作物/城镇/forced-random-tick/网络调用量、真实 workload threshold、四候选同输入竞争基准 |
 
-`partial` 不是 gate 通过。当前代码只提供 reference/harness 与 GameTest probe；`PhaseZeroThermalRouting` 仍令 legacy 成为唯一 gameplay authority，`V1_PRODUCTION` 请求也只能得到非生产 shadow 判定。Phase A 以后可以继续写受闸门约束的纯原型，但不得开始 production Minecraft integration。
+`0a` 已按冻结的常见路径范围通过，`0b` 仍是 `partial`。当前代码只提供 reference/harness 与 GameTest probe；`PhaseZeroThermalRouting` 仍令 legacy 成为唯一 gameplay authority，`V1_PRODUCTION` 请求也只能得到非生产 shadow 判定。Phase A 以后可以继续写受闸门约束的纯原型，但在 `0b` 通过前不得开始 production Minecraft integration。
 
 #### Phase 0a — Mutation / Lifecycle GameTest Spike
 
@@ -4130,16 +4134,40 @@ water flow + waterlogged BlockState/FluidState delta
 Door two halves across y=15/16 with one sealed watermark
 Trapdoor + FenceGate state changes
 moving piston extend/retract
-Create assemble/move/disassemble dynamic exclusion
+Create assemble: payload `block -> air`
+Create movement: no thermal geometry delta; moving entity is air
+Create disassemble: destination `air -> block`
 recursive onRemove/onPlace mutation
 unmapped worldgen section write
 unload followed by stale old section identity write/publication
 raw PalettedContainer bypass detection and sticky recovery
+raw block/biome container notifier with distinct sticky reason
+whole-section identity replacement owner rebind + unload cleanup
+stale R1 resync ACK cannot clear a newer R2 requirement
 ```
 
-每条测试都必须断言 delta 次数、owner/generation、effective tick、watermark、是否允许 worker publication，以及“无主动 chunk load”。如果 raw palette bypass 或 modded write path 无法由低层 hook、compat adapter 或 bounded active-page probe 捕获，Minecraft integration 保持 `✗`，先补 adapter，不把缺口推给用户重启或手工清缓存。
+每条测试都必须断言 delta 次数、owner/generation、effective tick、watermark、是否允许 worker publication，以及“无主动 chunk load”。冻结 common-path 范围内的 raw bypass 必须由低层 hook 或显式 adapter 捕获；active-page fingerprint 只用于 GameTest/人工 debug。未知第三方 writer 不做预防性穷举，出现可复现玩家报告后再补专用 adapter。
 
 #### Phase 0b — Units / Reference / Workload Acceptance
+
+##### 2026-08-24 本机 legacy 微基线（非 acceptance completion）
+
+第一轮可重复证据已经落地到 `src/jmh/java/com/teammoeg/frostedheart/content/climate/thermal/benchmark` 和 Gradle 任务 `thermalLegacyBaseline`。环境清单冻结为 Windows 11、Oracle JDK `17.0.12`、G1、`-Xms2G -Xmx2G`、24 logical processors、`16,898,166,784 B` physical memory；该进程使用 JMH main runtime classpath，不等价于生产 modpack server。原始 `environment.json`、JMH JSON/text、JFR 和 retained-size JSON 生成到 `build/reports/thermal-phase0b/`，构建目录清理后可由任务重建。
+
+`ChunkHeatData.queryAdjust` 的首轮结果为：
+
+| adjusters | hit average | miss average | `gc.alloc.rate.norm` | isolated retained graph |
+|---:|---:|---:|---:|---:|
+| `0` | `0.606 +/- 0.005 ns/op`（empty fast path） | 同一路径 | `0 B/op` | `72 B` |
+| `1` | `3.177 +/- 0.036 ns/op` | `2.684 +/- 0.251 ns/op` | `0 B/op` | `240 B` |
+| `10` | `21.134 +/- 0.463 ns/op` | `13.948 +/- 0.756 ns/op` | `0 B/op` | `1,032 B` |
+| `100` | `198.132 +/- 3.970 ns/op` | `135.606 +/- 14.312 ns/op` | `0 B/op` | `9,912 B` |
+
+解释边界：查询仍是 `O(adjusters in chunk)` 线性扫描；当前调用立即消费 `HeatQueryResult` 字段，因此 HotSpot 能标量替换 record，JMH 测量期没有 per-op allocation 或 GC。retained 值是孤立 fixture 的 JOL object-graph 估算，不含 class metadata/shared statics，也不能直接乘成整服内存，因为一个世界热源会复制进多个覆盖区块。15 秒诊断 JFR（约 `1.32 MB`）包含 `737` 个 execution samples；其整段 GC 还包括 Minecraft bootstrap 和 JMH 准备工作，不能归因给查询，查询测量窗口以 JMH GC profiler 的 `0 B/op`/`0` GC 为准。
+
+同轮 harness calibration 测得解析 fixed-boundary/pair exchange 为 `14.18/16.37 ns/op`、`0 B/op`；synthetic `4^3` Brick 的 all-air/solid-wall compile 为 `35.58/26.86 us/op`、约 `7,688/6,120 B/op`。Brick 结果只有单 fork 且置信区间较宽，只证明 harness 可执行并暴露 allocation，不作为 Phase A 或 V1 性能门槛。
+
+这轮数据只能冻结一个 legacy microbaseline，不能生成 `ThermalBenchmarkEvidence` 的 measured pass/fail，也不能在四候选尚未实现时做伪比较。Phase 0b 继续保持 `partial`。
 
 在写新 runtime 前锁定：
 
@@ -4201,6 +4229,10 @@ Phase 0 必须同时执行附录 A、B、C：复测现有粒子采样、`ChunkHe
 
 ### Phase A — Synthetic Geometry Kernel + Forge Resolver Census
 
+#### Phase A 实施快照 — 2026-08-24
+
+状态为 `in-progress`。首个 pure-Java correctness slice 已实现 conservative `4x4` face raster、bounded complement components、`int` region IDs、`4^3` Brick component compiler、flattened component spans 与 face ports，并有 `16` 条 JUnit fixture/property tests。尚未实现 Forge `BlockState + FluidState` resolver census、真实 shape adapter、完整 fixture matrix、dependency-mask closure 测量、JMH/JFR/JOL 或 production wiring，因此 Phase A 不能标为完成。
+
 先实现不依赖 Minecraft `World` 的 synthetic kernel：
 
 ```text
@@ -4234,7 +4266,8 @@ pane/fence local-region separation
 synthetic waterlogged partial shapes
 synthetic SELF_ONLY / NEIGHBOR_6 / NEIGHBOR_26 closure
 Forge unloaded dependency boundary → UNRESOLVED without chunk load
-Forge moving piston/Create/BlockEntity dynamic exclusion classification
+Forge moving piston/BlockEntity dynamic exclusion classification
+Create moving contraption ignored-as-air classification
 1×1 shaft
 2×2 tunnel
 snow layer
@@ -4465,7 +4498,8 @@ dependency-mask invalidation
 geometryRevision
 coarse invalidation
 dirty interface immediate disable
-section-indexed Create/moving-piston dynamic exclusion
+section-indexed moving-piston/unsupported dynamic geometry exclusion
+Create assemble/disassemble endpoint mutation capture; no movement exclusion
 tick-end sealed mutation/source ordering
 per-stream sequence/watermarks
 PublishedGeometryPage
@@ -5048,8 +5082,12 @@ waterlogged slab/stair/fence
 → airflow aperture, material/fluid contact and radiation occlusion
    are independently correct
 
-moving piston / Create contraption / BlockEntity-driven shape
+moving piston / BlockEntity-driven shape
 → section-indexed conservative dynamic exclusion, no entity/BE read from worker
+
+Create contraption
+→ assemble removal and disassemble placement use world mutation capture;
+  moving entity is air and emits no thermal geometry delta
 
 1×1 shaft survives
 
@@ -5360,7 +5398,7 @@ missed cadence必须把超出验证范围的dt交给thermal kernel
 
 | Code path / realistic failure | Runtime containment | Required test | Observable result |
 |---|---|---|---|
-| low-level hook 漏掉 raw palette/modded write | active-page fingerprint/debug probe 或 compat adapter 置 sticky resync；未证明覆盖前不批准 integration | Phase 0a raw bypass + modded adapter GameTest | hook coverage report、raw-bypass metric、Page stale flag |
+| common-path low-level hook 漏掉已知 raw write | 显式 adapter 置 sticky resync；fingerprint 只用于 GameTest/人工 debug；未知第三方路径按复现报告补 adapter | Phase 0a raw bypass + known adapter GameTest | hook coverage report、raw-bypass metric、Page stale flag |
 | contextual resolver 在 chunk 边界缺少依赖，或尝试读 mask 外位置 | 返回 `UNRESOLVED`，禁用不确定 transport，不加载 chunk | unloaded boundary + out-of-mask fixture | query flag、unresolved resolver metric；不是 silent opening |
 | conservative raster 把局部缝隙误判为整 tile opening | tile 不能完整证明为空时保持 closed/unsupported | randomized AABB union property test | unsupported/signature metric；不出现 false opening |
 | Door 两半跨 Page，只有一个 delta 先到 worker | shared sealed watermark 阻止 solve/publication；相关 interface 保持 disabled | same-tick cross-Section Door test | stale/fallback flag 与 watermark lag |
@@ -6024,7 +6062,7 @@ retained thermal state 不按世界冰雪总体积、作物总数或普通 passi
 15. 首版 unload 以 signed environment exchange 结算 transient `H` 对玩法是否可接受；若不可接受，后续 persistence 的容量和恢复误差合同是什么？
 16. 已启用 vanilla/modded BlockState + FluidState 的 local-air-region census 是什么，生产 `Rmax` 应取多少，哪些 signature 会进入 unsupported fallback？
 17. `SELF_ONLY / NEIGHBOR_6 / NEIGHBOR_26` 各自覆盖哪些方块；`5^3` mutation closure、`6^3` cold-build halo 在真实基地的 resolver read p95/p99 是多少？
-18. 哪些 moving piston、Create contraption、entity 或 BlockEntity-driven shape 必须保持 V1 dynamic boundary exclusion，玩家可见误差是否需要专门 profile？
+18. 哪些 moving piston、entity 或 BlockEntity-driven shape 必须保持 V1 dynamic boundary exclusion，玩家可见误差是否需要专门 profile？Create 已冻结为移动期按空气，不进入此参数研究。
 19. source-heavy benchmark 是否证明 V2 需要“单 node + fixed boundary”的 source-sleep prototype；若需要，其 fixed-point epsilon、mandatory revalidation 和正常 boundary exchange 账本如何定义？
 20. source resync 的 per-binding history 应保留多少 segment/多少 tick，才能让 `SOURCE_RESYNC_LOSS` 在压力测试中接近零且内存有界？
 21. compiler-emitted query dependency footprint 的 retained bytes、rebuild cost 与减少的 Page fallback 比率，是否足以支持 V2 重新评审 fine publication reuse？V1 答案固定为否。
@@ -6048,10 +6086,11 @@ retained thermal state 不按世界冰雪总体积、作物总数或普通 passi
 
 ### E.3 Outcome
 
-`2026-08-24` Phase 0 首轮结果为 `partial`，计划状态转为 `in-progress`：
+`2026-08-24` Phase 0 当前为 `0a complete / 0b partial`，Phase A 为 `in-progress`：
 
-- `0a` 已证明五参数 `LevelChunkSection#setBlockState(..., boolean)` 能捕获当前 GameTest 中的 `setBlockAndUpdate`、直接 chunk/section write、water flow/waterlogged、Door/Trapdoor/FenceGate、递归 Sponge 写入和 moving piston；unmapped worldgen、off-thread sticky resync、raw palette fingerprint、generation/publication rejection 与 synthetic dynamic exclusion 合同也已执行。它没有证明真实 Create 路径或真实 chunk-manager unload/reload，因此不能标为通过。
-- `0b` 已把 SI 单位、source 积分、解析交换、迁移账本、workload 分类和 legacy/shadow route 变成 `22` 条可执行 JUnit，并列出 `14` 个 workload descriptor。它没有取得固定环境下的 legacy/候选 profiler、JFR/JMH、retained-memory 和多人数据，因此 acceptance gate 仍未冻结。
-- Java 17 定向 JUnit、`compileJava` 以及默认完整模组集 Forge GameTest 均通过；GameTest 总计 `6/6` required，其中 `5` 条属于 Phase 0a。Architectury 的 dev runtime scope 已覆盖 dedicated GameTest 所需的 FTB/Item Filters 依赖。
+- `0a` 已证明五参数 `LevelChunkSection#setBlockState(..., boolean)` 能捕获 common-path GameTest 中的 `setBlockAndUpdate`、直接 chunk/section write、water flow/waterlogged、Door/Trapdoor/FenceGate、递归 Sponge 写入和 moving piston；unmapped worldgen、off-thread sticky resync、raw palette debug fingerprint、generation/publication rejection、synthetic dynamic exclusion 与真实 ticket load/unload/reload 也已执行。真实 Create bearing 已证明 assemble 产生 `stone -> air`、移动期不产生热几何 delta、disassemble 在目标位置产生 `air -> stone`，因此 Create 不需要移动 adapter 或 exclusion。`DebugCommand restore_backup` 现已显式作废旧 section owner、在同一 chunk generation 下绑定 replacement identity，并要求 ACK 前 full resnapshot；raw block/biome container notifier 也有独立 sticky reason。resync 开始时捕获 section identity、lifecycle generation、required revision 与 reason，ACK 只 CAS 清除同一个 requirement，旧 R1 重建不能清除期间产生的 R2。21-runtime 穷举清单与旧断言仅以注释保存，不参与 gate；`/resetchunks` 是延期管理命令兼容项，若以后支持则丢弃整区旧 thermal Page 并懒重建。按这一冻结范围，`0a` 已通过。
+- `0b` 已把 SI 单位、source 积分、解析交换、迁移账本、workload 分类、legacy/shadow route 和 benchmark-evidence provenance 变成 `28` 条可执行 JUnit，并列出 `14` 个 workload descriptor；首轮 Java 17 本机 legacy query JMH/JFR、allocation 和隔离 retained-object-graph 也已取得。该微基线不含生产模组列表、玩家采样、整服 retained heap 或多人 workload，四候选也尚无可执行实现，因此 acceptance gate 仍未冻结。
+- Phase A 已有 conservative raster/component decomposition 与 `4^3` Brick compiler 的首个 pure-Java slice，共 `16` 条 JUnit；Forge resolver census、真实 shape adapter、完整 fixtures 和性能/内存证据仍未完成。
+- Java 17 温度定向 JUnit `60/60`、`compileJava` 以及 Forge GameTest 均通过；GameTest 总计 `9/9` required，其中 `8` 条属于 Phase 0a。common-path census 合并后的最终全量复跑结果以本轮 diary 为准。Architectury 的 dev runtime scope 已覆盖 dedicated GameTest 所需的 FTB/Item Filters 依赖。
 
-下一步补真实 Create 和 chunk lifecycle GameTest、目标模组 writer census/adapter，并执行附录 C 的固定环境测量与四候选竞争基准。FarField holdout、publication/mailbox、global memory admission 与完整 Minecraft GameTest gate 通过前，不接 production runtime；shadow workload 全部通过前不替换玩法路径。
+下一步把 legacy microbaseline 扩到生产模组列表的 `SurroundingTemperatureSimulator` main-thread snapshot/worker 分段、1/10/50/100 玩家、作物/城镇/forced-random-tick/网络调用量和整服 retained heap，再实现并执行四候选同输入竞争基准以完成 `0b`；Phase A 同时继续 Forge resolver census、真实 shape adapter 与 fixture matrix。FarField holdout、publication/mailbox、global memory admission 与后续 Minecraft integration gate 通过前，不接 production runtime；shadow workload 全部通过前不替换玩法路径。

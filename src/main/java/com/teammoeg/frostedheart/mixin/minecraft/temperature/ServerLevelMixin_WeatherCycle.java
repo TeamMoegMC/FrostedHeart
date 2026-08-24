@@ -25,16 +25,13 @@ import net.minecraft.network.protocol.game.ClientboundGameEventPacket;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.Mth;
 import net.minecraft.util.profiling.ProfilerFiller;
-import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.GameRules;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.dimension.DimensionType;
 import net.minecraft.world.level.storage.ServerLevelData;
 import net.minecraft.world.level.storage.WritableLevelData;
-import net.minecraftforge.common.util.LazyOptional;
 
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -43,7 +40,6 @@ import org.spongepowered.asm.mixin.Shadow;
 
 import com.teammoeg.frostedheart.content.climate.gamedata.climate.ClimateType;
 import com.teammoeg.frostedheart.content.climate.gamedata.climate.WorldClimate;
-import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData;
 
 import java.util.function.Supplier;
 /**
@@ -110,7 +106,7 @@ public abstract class ServerLevelMixin_WeatherCycle extends Level {
         // 'thundering' is replaced by our BlizzardRenderer
         ClimateType climate=WorldClimate.getClimate(this);
         boolean climateBlizzard = climate.isBlizzard();
-        boolean climateSnowing = climate.isBlizzard() || climateBlizzard;
+        boolean climateSnowing = climate.isSnowyOrBlizzard();
 
 
         // To make vanilla weather commands work, we still implement the following
@@ -176,15 +172,6 @@ public abstract class ServerLevelMixin_WeatherCycle extends Level {
         }*/
 
         // Vanilla 1.20 Code End
-        for(Player sps:this.players()) {
-        	if(sps instanceof ServerPlayer sp) {
-        		LazyOptional<PlayerTemperatureData> ptd=PlayerTemperatureData.getCapability(sp);
-        		if(ptd.isPresent()) {
-        			ptd.resolve().get().advanceWeatherCycle(sp, (ServerLevel)(Object)this);
-        		}
-        	}
-        		
-        }
     }
 
 }

@@ -1,11 +1,11 @@
 # 服务端低开销的真实白幕空间渲染计划
 
 - Time: `2026-08-24 04:25:01 +08:00`
-- Last revised: `2026-08-24 04:48:35 +08:00`
-- Authors: `Codex; OpenAI GPT-5; architecture and implementation planning`
-- Status: `ready`
+- Last revised: `2026-08-24 08:05:33 +08:00`
+- Authors: `Codex; OpenAI GPT-5; architecture and implementation planning`、`Codex subagent; OpenAI gpt-5.6-sol ultra; V2 handoff performance review`
+- Status: `in-progress`
 - Scope: `com.teammoeg.frostedheart.content.climate.gamedata.climate`、`content.climate.network`、`content.climate.render`、天气相关 Mixin、客户端天气配置与资源
-- Related: [`docs/climate/weather-rendering.md`](../docs/climate/weather-rendering.md)、[`docs/climate/world-climate-and-temperature.md`](../docs/climate/world-climate-and-temperature.md)、[`docs/climate/data-lifecycle-and-integration.md`](../docs/climate/data-lifecycle-and-integration.md)、`WhiteCurtainInfo`、`WorldClimate`、`FHClimatePacket`、`PlayerTemperatureData.advanceWeatherCycle`、`LevelRendererMixin`、`FogModification`
+- Related: [`V2 电影级渲染计划`](2026-08-24_05-08-24_white-curtain-v2-cinematic-rendering.md)、[`docs/climate/weather-rendering.md`](../docs/climate/weather-rendering.md)、[`docs/climate/world-climate-and-temperature.md`](../docs/climate/world-climate-and-temperature.md)、[`docs/climate/data-lifecycle-and-integration.md`](../docs/climate/data-lifecycle-and-integration.md)、`WhiteCurtainInfo`、`WorldClimate`、`FHClimatePacket`、`PlayerTemperatureData.advanceWeatherCycle`、`LevelRendererMixin`、`FogModification`
 
 ## Goal
 
@@ -29,7 +29,7 @@
 | 稳定白幕视觉包 | `0 packets/player/second` |
 | 白幕创建/清除/自然结束 | 每次状态变化向维度玩家发送 `1` 个完整 snapshot；不按白幕逐包发送 |
 | 登录/换维度 | `1` 个完整 snapshot，空列表也显式替换客户端旧状态 |
-| 周期校时 | 复用已有 `FHClimatePacket.sec`；不增加新的周期包 |
+| 周期校时 | 复用已有 `FHClimatePacket.sec + clockDayTime`；小时变化照常发送，昼夜时钟大跳在下一次一秒调度复用同包；不增加新 packet 类型或稳定频率 |
 | 单个 descriptor 编码体积 | 目标 `< 1 KiB`；记录实际值，不为几十字节差异复制第二套序列化协议 |
 | 常态服务端视觉计算 | `0`；客户端画质、粒子数和白幕切片数不得进入服务端代码 |
 | Vanilla 兼容检查 | 最多 `1 sample/player/second`，只在离散天气类型变化时发包 |
@@ -40,8 +40,8 @@
 | Metric | Required target |
 |---|---|
 | `ClientWeatherState.tick` CPU | 初始目标 P95 `<= 0.25 ms/client tick`；包括时钟、候选白幕和近场采样网格更新 |
-| 天气 render-thread CPU | 初始目标 P95 `<= 0.75 ms/frame`；包括插值、可见几何准备和 draw submission，不含 GPU 等待 |
-| 天气 GPU | 同场景 median 不高于当前 `blizzardDensity=15`；P95 增量 `<= 1 ms`，Embeddium/Oculus 分别验收 |
+| 天气 render-thread CPU | P95 目标 `<= min(0.5, 0.05 * 1000 / targetFps) ms`，绝对硬门 `<= 0.75 ms/frame`；不含 GPU 等待 |
+| 天气 GPU | 同场景 median 不高于当前 `blizzardDensity=15`；P95 目标 `<= min(1.0, 0.08 * 1000 / targetFps) ms`，Embeddium/Oculus 分别验收 |
 | Weather draw submissions | 远景墙、空间降雪和近景风吹雪合计不超过 `3` 个主要批次/frame |
 | 稳定帧分配 | 预热后目标 `0 B/frame`；不按雪花、采样点、切片或 descriptor 创建 Java 对象 |
 | 客户端增量工作集 | descriptor、双采样网格、地形缓存、顶点缓冲和新增天气纹理合计目标 `<= 8 MiB` |
@@ -50,7 +50,9 @@
 | 画质降级语义 | 只降低切片/雪花/地形采样密度，不删除前沿、白化、风向或声音层 |
 | 空间连续性 | 跨 chunk 不发生一帧从晴朗跳到满白；保持约 `5s` 的进入/退出缓动 |
 
-CPU、GPU 和 allocation 必须分开记录；总 FPS 只能作为玩家体验结果，不能代替归因。若 Phase 0 证明当前帧成本或 packet 基线与文档估算不同，以实测数据更新预算后再进入实现，不根据绝对 FPS 猜测优化结果，也不得只提高预算来让实现过关。
+`targetFps` 取玩家当前有效 FPS cap，没有 cap 时取显示器刷新率。V1 GPU 目标因此在 60/144/240 Hz 分别约为 `1.0/0.56/0.33 ms`，render-thread CPU 目标约为 `0.5/0.35/0.21 ms`。玩家明确选择固定 Fast/Fancy 或 `COMPATIBILITY`；V1 不根据硬件自动改变 backend，也不因为检测到高端 GPU 而突破工作上限。
+
+CPU、GPU 和 allocation 必须分开记录；总 FPS 只能作为玩家体验结果，不能代替归因。若 Phase 0 证明当前帧成本或 packet 基线与文档估算不同，以实测数据更新实现和 work caps 后再进入下一阶段，不根据绝对 FPS 猜测优化结果，也不得只提高预算来让实现过关。
 
 ### Initial Client Work Caps
 
@@ -58,12 +60,12 @@ CPU、GPU 和 allocation 必须分开记录；总 FPS 只能作为玩家体验�
 
 | Work | Fast | Fancy | Hard rule |
 |---|---:|---:|---|
-| 近场世界对齐采样间距 | `4 blocks` | `2 blocks` | 网格覆盖当前天气半径并保留一格插值边界 |
+| 近场世界对齐采样间距 | `8 blocks` | `4 blocks` | 固定 `9x9 / 17x17` 网格，各为 `81/289` cells |
 | 可见降雪 column/quad | `<= 256` | `<= 1024` | Fancy 上限覆盖当前 `blizzardDensity=15` 的 `31 x 31` 数量级 |
 | 远景墙 depth slices | `4` | `8` | 发布版本硬上限 `12`；不得用层数替代纹理细节 |
-| 单白幕横向 segments | `<= 24` | `<= 48` | 只对可见宽度细分，屏外段不提交 |
-| 地面 impact 粒子 | `<= 8/tick` | `<= 24/tick` | 尊重 Vanilla particle status；近景飞雪不走粒子对象系统 |
-| 地形/天空暴露刷新 | `<= 16 samples/tick` | `<= 32 samples/tick` | 未完成刷新时复用旧值并淡入，不能在一帧补齐造成尖峰 |
+| 单白幕横向 segments | `<= 16` | `<= 32` | 与全局 slice 预算合成 `64/256 wall quads/frame` 硬上限 |
+| 地面 impact/terrain query | `<= 12/tick` | `<= 32/tick` | 尊重 Vanilla particle status；近景飞雪不走粒子对象系统 |
+| 相机天空暴露 | `1 canSeeSky/tick` | `1 canSeeSky/tick` | 复用 `MutableBlockPos`，以 `0.15/tick` 平滑；不是逐列 terrain/depth 模型 |
 
 Fast/Fancy 只选择稳定的离散 profile，不在第一版根据瞬时 FPS 自动来回切换。动态自适应容易产生画质泵动和不可复现的 profile，等固定 profile 达标后再单独评估。
 
@@ -230,7 +232,7 @@ list<WhiteCurtainDescriptor>
 
 The packet always replaces the dimension snapshot atomically. It is sent on login, dimension change, respawn, successful add, clear and natural prune. `FHClimatePacket` continues to provide the hourly `sec` correction; both packet handlers update the one clock anchor inside `ClientWeatherState`. Do not add a timer or a separate `ClientClimateClock` service.
 
-The anchor stores `(serverClimateSeconds, clientLevelGameTimeAtReceipt)`. One client-tick estimate is derived from the level clock, and render time adds only the current partial tick. Corrections are bounded and consumed over several ticks; snapshot replacement and time correction must not invalidate geometry when only the analytic front offset changed.
+Both packets carry `(serverClimateSeconds, serverClockDayTime)`. The client advances only from `level.getDayTime()`: `doDaylightCycle=false` therefore freezes the wall. Normal small deltas advance analytically; sleep or command discontinuities are ignored locally until the existing climate packet re-anchors them, independent of packet ordering. Corrections below `5 logical seconds` replace the remaining error and consume at most `0.10 seconds/client tick`; larger errors re-anchor immediately. Render time adds partial-tick motion only after a normal one-tick daylight advance.
 
 The packet handler must discard a snapshot for a dimension other than the currently loaded client level. Decode failure keeps the last valid snapshot and records a bounded diagnostic rather than replacing the client state with an empty list.
 
@@ -243,15 +245,16 @@ packet/client level change
        -> bump snapshotGeneration
 
 client tick, exactly once
-  -> estimate climate seconds from shared anchor
-  -> prefilter snapshot -> near candidates + visible-wall candidates
+  -> advance climate seconds from shared dayTime anchor
+  -> compatibility: stop here and invalidate the old spatial grid
+  -> spatial: prefilter snapshot -> near candidates + visible-wall candidates
   -> if camera crossed grid cell or phase changed:
        fill CURRENT primitive weather grid from near candidates
        keep PREVIOUS grid for interpolation
   -> refresh <= profile terrain/exposure sample budget
   -> update one looping weather sound
 
-RenderTickEvent.START, exactly once/frame
+LevelRenderer.renderLevel HEAD, after Camera.setup, exactly once rendered world frame
   -> ClientWeatherFrame.begin(camera, partialTick, profile)
        -> interpolate camera and grid values
        -> decide CUSTOM / WALL_ONLY / FALLBACK ownership
@@ -269,9 +272,9 @@ The grid is world-aligned so camera movement inside one cell does not force a re
 | `ClientWeatherState` | current-dimension snapshot, clock anchor, prepared `VisualKernel[]`, candidate indices, previous/current primitive grids, terrain/exposure refresh budget | OpenGL calls, per-frame object creation or a second forecast copy |
 | `ClientWeatherFrame` | reusable frame-local primitives, interpolated camera sample, active profile and ownership enum | mutate snapshot/grid, traverse descriptors or query chunks |
 | `SpatialWeatherRenderer` | wall and snow passes, persistent CPU/GPU buffers, render-state restoration | gameplay sampling, packet handling, Minecraft `Particle` objects for flying flakes |
-| existing `FHClientEvents` | call state tick at `ClientTickEvent.START` and frame begin at `RenderTickEvent.START` | contain weather math, geometry or a second lifecycle state |
+| existing `FHClientEvents` | call state tick at `ClientTickEvent.START`, sample one `canSeeSky`, drive sound lifecycle | contain weather math, geometry or a second lifecycle state |
 | existing `FogModification` | apply frame camera sample to Vanilla fog when CUSTOM ownership allows it | wall/grid sampling, its own clock or `Util.getMillis()` transition state |
-| `LevelRendererMixin` | Vanilla cancel/fallback bridge and bounded ground impacts during migration | prepare frames, become a second renderer or own weather truth |
+| `LevelRendererMixin` | begin the render frame with the setup current Camera; Vanilla cancel/fallback bridge; consume tick ownership for bounded ground impacts | traverse descriptors, become a second renderer or own weather truth |
 
 Keep these as ordinary client-owned instances scoped to the loaded level/session, not mutable public statics spread across render hooks. Existing `ClientClimateData` remains static only for compatibility with its current consumers; the new local weather state exposes one lifecycle-controlled access point.
 
@@ -316,7 +319,7 @@ Fallback mode
   current Vanilla/Mixin rendering continues
 ```
 
-The ownership decision is made once per frame and shared by precipitation, fog and ground-particle emission. Sound uses the corresponding tick ownership from the same state. No component independently guesses whether Vanilla or custom rendering is active. Forge `RenderTickEvent.START` prepares the frame before weather and fog callbacks; a missing/invalid frame selects fallback without partially executing custom passes.
+Render precipitation and fog share one current-camera frame ownership frozen after `Camera.setup`. `tickRain`, ground impacts and sound consume the state tick's own camera sample/ownership, so minimized, paused, first-frame and teleport paths never read a stale render frame. Custom precipitation ownership is derived from the unattenuated previous/current grid footprint, while indoor exposure only scales effects; shelter must never hand work back to the legacy `tickRain` path or hide a snow band that is visible just beyond the camera. No component independently samples descriptors or guesses the weather source. A missing/invalid render frame selects fallback without partially executing custom passes.
 
 ## Implementation Steps
 
@@ -348,9 +351,9 @@ Exit condition: no client rendering changes; old save fixtures load; current ser
 1. Register `FHWhiteCurtainSnapshotPacket` next to `FHClimatePacket` using descriptor codec data, not a second hand-maintained field list.
 2. Add `WorldClimate.syncWhiteCurtains(ServerLevel)` and call it from every mutation path: command add/clear, login, dimension change, respawn and natural prune.
 3. Add one `ClientWeatherState`, keyed by the current dimension, that owns the clock anchor, immutable descriptor snapshot, snapshot generation, prepared `VisualKernel[]` and fixed-capacity previous/current primitive grids. It continues to read global climate/wind from existing `ClientClimateData` rather than copying forecast state.
-4. Anchor with snapshot and `FHClimatePacket.sec`, estimate from client level game time, and consume bounded forward/backward corrections over several client ticks instead of snapping the rendered phase. Query time once per tick and once per render frame, never per sample.
+4. Anchor snapshot and `FHClimatePacket` with both `sec` and the authoritative `WorldClockSource` dayTime. Advance from client `level.getDayTime`, freeze with `doDaylightCycle=false`, replace repeated small corrections, and immediately re-anchor large discontinuities. Query time once per tick and read one scalar per render frame, never per sample.
 5. During snapshot replacement, call `WhiteCurtainFieldModel.prepareVisual` once per descriptor. Normal ticks perform an allocation-free linear prefilter over `VisualKernel[]` into reusable candidate index arrays; they never query polymorphic event/codec structures.
-6. Add `ClientWeatherFrame`, prepared from a `RenderTickEvent.START` handler in existing `FHClientEvents` exactly once per frame. `ClientTickEvent.START` calls the state tick. The frame references the shared grid, interpolates by partial tick, selects the fixed Fast/Fancy profile and publishes one ownership result without adding a new `GameRenderer` Mixin.
+6. Add `ClientWeatherFrame`, prepared from the existing `LevelRendererMixin.renderLevel` HEAD after `Camera.setup`, exactly once per rendered world frame. `ClientTickEvent.START` calls the state tick and publishes separate tick ownership. The frame references the shared grid, interpolates by partial tick, selects the fixed Fast/Fancy profile and publishes one render ownership result without a new `GameRenderer` Mixin.
 7. Clear logical state on disconnect and level unload while reusing buffers where safe. A snapshot received before the target client level exists may occupy one bounded pending slot and is applied only when that exact dimension loads; mismatched late packets are discarded. A null level/camera skips work and publishes fallback; a paused integrated client freezes the last completed frame without advancing tick work. Neither path may expose a half-replaced snapshot.
 8. Add a development debug renderer for affected corridor bounds, direction, active front, grid cells, candidate counts, sampled intensities and current work caps; it must be disabled by default and excluded from release measurements.
 9. Measure packet encoding size and snapshot-prepare time for `0/1/8/32` curtains; confirm no packet is sent and no descriptor array is rebuilt while descriptors only advance through time.
@@ -373,11 +376,11 @@ Exit condition: outside players can see and hear an approaching front; entering/
 ### Phase 4: Spatial Snow And Render Ownership Transfer
 
 1. Add the spatial snow pass to `SpatialWeatherRenderer` with one reusable column/flake buffer. Each rendered column bilinearly reads the shared grid at its world coordinate; no column or flake calls `WhiteCurtainFieldModel` or walks descriptor lists.
-2. Preserve global snow by treating `ClientClimateData.climate` as a uniform base field and local white curtains as a stronger spatial overlay.
+2. Preserve global snow by treating `ClientClimateData.globalClimate` as a uniform base field and local white curtains as a stronger spatial overlay; player-local merged `climate` must not fill the whole grid.
 3. Render near-camera wind flakes as deterministic slots in the same reusable weather buffer, not Minecraft `Particle` objects. Apply wind direction to inclination and UV motion. Only bounded ground impacts reuse `FHParticleTypes.SNOW` and respect `ParticleStatus` plus the profile cap.
 4. Implement the Initial Client Work Caps as explicit immutable Fast/Fancy profiles selected only when settings change. Both retain wall, fog, wind and precipitation; they differ only in spacing, slices, segment/flake caps and terrain refresh budget.
 5. Add a single ownership result to `ClientWeatherFrame`. When custom FH weather owns precipitation, cancel Vanilla `renderSnowAndRain`; otherwise execute the current fallback unchanged. Wall-only and custom-snow modes are explicit enum states, not combinations of booleans.
-6. Prevent duplicate fog, wind and ground particles by gating the existing `LevelRendererMixin` and `FogModification` branches with that same result. The tick side consumes the last completed ownership, never a half-built render frame.
+6. Prevent duplicate fog, wind and ground particles by gating render paths with frame ownership and tick paths with the tick camera ownership from the same state/grid. Tick code never consumes a render frame.
 7. Restore all `RenderSystem`, light layer, pose and buffer state in `finally`, including empty/cull/error paths. A custom-pass exception quarantines custom ownership for the rest of that level session and returns to fallback without retrying every frame.
 8. Measure each budget separately: state tick CPU, render-thread CPU, GPU, allocations, working set, descriptor/field evaluations, heightmap reads, quads and batches. Compare the same camera recording against current Fast/Fancy and `blizzardDensity=15`.
 
@@ -510,7 +513,7 @@ No planned silent path may both lack a test and lack recovery. Malformed client 
 10. Indoors reduces camera whiteout and sound exposure without changing authoritative outdoor climate/temperature at that coordinate.
 11. Global snow, global blizzard, local curtain, Vanilla fallback and supported shader environments do not produce double precipitation, fog or sound.
 12. `ClientWeatherState.tick` and render-thread CPU remain within their separate P95 budgets; a `144+ FPS` run proves descriptor filtering and grid fill remain tick-scaled.
-13. Fancy weather GPU median is no worse than current `blizzardDensity=15` and its P95 increment remains `<= 1 ms` in both no-shader and supported Oculus scenarios.
+13. Fancy weather GPU median is no worse than current `blizzardDensity=15`，P95 满足 `min(1.0, 0.08 * 1000 / targetFps) ms`；render-thread CPU P95 满足 `min(0.5, 0.05 * 1000 / targetFps) ms` 且绝对不超过 `0.75 ms`，无 shader 和 supported Oculus 分别验收。
 14. Stable camera/weather records `0 B/frame` after warmup, no descriptor/geometry rebuild, no full terrain rescan and no per-flake/column Java allocation.
 15. Fast/Fancy obey their slice, segment, quad, particle and terrain-query caps; `32` offscreen descriptors add only one prefilter scan and no grid evaluation or draw work.
 16. The client weather incremental working set remains `<= 8 MiB`; dimension switches and repeated snapshots do not grow retained memory.
@@ -518,6 +521,32 @@ No planned silent path may both lack a test and lack recovery. Malformed client 
 18. Fast mode retains the visible front, spatial snow gradient, whiteout, wind direction and weather sound; only density and sampling resolution may differ.
 19. All pure model, codec, cache, packet, state, grid, counter and ownership tests pass; full `gradlew.bat test` and `git diff --check` pass.
 20. Living documentation, config descriptions, CPU/GPU/allocation evidence and completion diary describe the shipped path rather than this intended plan.
+
+## V2 Handoff Contract
+
+V1 必须把天气表现实现为可替换的客户端 backend，而不是把状态采样、GL 调用和 Mixin ownership 焊在一起。V1 发布时至少保留：
+
+```text
+ClientWeatherState / ClientWeatherFrame
+                 |
+        WeatherRenderBackend
+          /               \
+ COMPATIBILITY         SPATIAL_V1
+ Vanilla fallback      V1 wall + snow
+
+future, same contract: CINEMATIC_V2
+```
+
+交接边界：
+
+1. `ClientWeatherState` 继续唯一拥有 snapshot、时钟锚点、`VisualKernel[]`、候选和双近场网格。
+2. `ClientWeatherFrame` 每帧只冻结一次，并额外提供固定容量、只读的 visible-volume primitive view；它由现有 visible-wall candidates 派生，不为 V2 再扫 snapshot。
+3. backend 生命周期至少覆盖 begin-frame、opaque 后的大气阶段、现有天气阶段、resize、resource reload 和 close。所有 hook 委托同一个 coordinator。
+4. V1 的 `SPATIAL_V1` 和 `COMPATIBILITY` 必须在 V2 完成后继续存在；性能策略不自动改变玩家 backend，只有 V2 无法正确渲染的功能故障才恢复到 V1，不能让 shader 或 depth 错误造成黑屏。
+5. V2 不得修改 V1 的服务端 descriptor、packet、时钟、gameplay sampler 或稳定期网络预算。需要改变这些契约时必须先回到本计划重新验证，而不是在 renderer 中旁路。
+6. V1 首次完成时默认 backend 为 `SPATIAL_V1`。V2 的详细低分辨率体积、时域、深度合成、性能控制和发布 gate 只属于独立的 [`V2 电影级渲染计划`](2026-08-24_05-08-24_white-curtain-v2-cinematic-rendering.md)，不进入 V1 验收范围。
+
+这个边界只提前引入一个真实的替换点，不要求 V1 创建 framebuffer、history、Oculus depth provider 或 V2 shader。V1 仍按本计划的 `<= 8 MiB`、GPU P95 `8%` 帧预算（最高 `1 ms`）和固定 Fast/Fancy profile 独立验收。
 
 ## NOT In Scope
 
@@ -607,4 +636,24 @@ Do not copy the full plan into source comments. Comments must explain invariants
 
 ## Outcome
 
-Not implemented. Record final classes, compatibility decisions, measured budgets, removed legacy paths and any deferred shader-specific work here when execution finishes.
+V1 主体已实现，但尚未通过完整运行时性能与兼容验收，因此本计划保持 `in-progress`。
+
+已完成：
+
+- `WhiteCurtainDescriptor` / `WhiteCurtainFieldModel` 抽取，旧 `area`、`move`、`climate` 和 `whiteCurtainInfos` 存档 contract 保持；区块玩法采样与旧语义一致。
+- `WorldClimate` generation + 精确相位 cache expiry；add、clear、load、自然 prune 立即失效。
+- `FHWhiteCurtainSnapshotPacket`、登录/换维度/所有重生（含末地通关）/创建/清除/自然结束同步；snapshot 和 `FHClimatePacket` 同步 `sec + clockDayTime`，小时与昼夜大跳复用现有气候包。
+- `ClientWeatherState.tickClock` 在所有玩家模式下推进常数成本的 dayTime 锚点，Compatibility 不做候选/网格工作且使旧网格失效；切回 V1 不会等待下一次小时包或先显示旧前沿。空间路径包含 descriptor 预计算、每 tick 活动前沿候选排序、固定容量双网格、未衰减网格天气足迹、tick camera sample/ownership 和五通道 precipitation sampler；`ClientWeatherFrame` 使用 `Camera.setup` 后相机发布 `CUSTOM/WALL_ONLY/FALLBACK` render ownership。室内 exposure 只衰减表现，不会把工作交回旧 `tickRain`；玩家在前沿外也能看到网格内逼近的雪带。
+- `SPATIAL_V1_FAST`、`SPATIAL_V1_FANCY` 和 `COMPATIBILITY` 固定玩家选择；`SpatialWeatherRenderer` 的有界墙、雪柱、地面粒子、共享雾和单 loop 风声。render pass 精确恢复进入时的 shader、texture 0 和 shader color，并声明 `AFTER_WEATHER` 的 depth/blend/cull canonical 后置状态；Oculus GL capture 仍是发布门。
+- 每玩家 Vanilla bridge 的调度、capability 解析和局部采样均降为最多每秒一次，状态不变零包；自定义 renderer 功能故障按维度隔离到 compatibility，不做 FPS 驱动自动换档。
+- 雪量与白化相位统一 `5 logical seconds` 平滑；低成本室内模型每 tick 只做一次眼位 `canSeeSky`，统一衰减近场雪、雾、风与声音；风声以非零初始音量启动。
+- 活动墙按前沿距离稳定排序，Fast/Fancy 最近 `4/8` 个候选公平分配全局 slice 预算，不再由 snapshot 首项吃满全部 quads。
+- 修复首次人工穿越发现的 V1 表现回归：墙体不再把仅约 `0.8%` 像素不透明的 Vanilla `snow.png` 当连续幕布，而使用一张可平铺的致密 `white_curtain.png`；仍复用原 wall batch 和 `64/256` quad 上限，不增加 pass/draw。近场雪柱以世界单元而不是逐方块相机原点锚定，并使用基于单元 hash 的固定偏移；Fast 相机移动一格不再让全部 `256` 列换奇偶格，跨 `2-block` 单元只在径向淡出外圈换入一排。
+- `38` 条 V1 定向 JUnit 已通过；Java 17 全量结果为 `588 tests, 0 failures, 0 errors`。
+
+未完成：
+
+- 进入实际世界后观察/穿越白幕、Fast/Fancy/Compatibility 切换、登录/换维度/清除/末地返回和异常注入的人工 smoke matrix；当前只完成到主菜单启动。
+- 固定轨迹下 server tick/JFR、packet bytes、client tick、render-thread、GPU P50/P95/P99、稳态 allocation、retained memory 和 `30/60/144+ FPS` profile。
+- Embeddium/Oculus、无 shader、4K、低端硬件和多人 opposite-side 兼容/性能验收。
+- 墙体已按固定 segment 做距离裁剪并使用 level build height 的 camera-relative 垂直坐标，但真实 frustum/屏幕区间裁剪、地形贴合、持久 VBO/复用 staging buffer 和 V2 backend 生命周期交接仍未实现。空批走 `endOrDiscardIfEmpty()`；非空 `Tesselator.end()` 仍会创建 batch 包装，`0 B/frame` 尚未达成。V1 墙仍是有界透明 geometry，不是电影级体积天气。

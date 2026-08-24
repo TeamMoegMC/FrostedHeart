@@ -1,14 +1,19 @@
 /* Copyright (c) 2026 TeamMoeg */
 package com.teammoeg.frostedheart.content.climate.thermal.phase0.mutation;
 
+import com.simibubi.create.AllBlocks;
+import com.simibubi.create.content.contraptions.ControlledContraptionEntity;
+import com.simibubi.create.content.contraptions.bearing.MechanicalBearingBlockEntity;
 import com.teammoeg.frostedheart.FHMain;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.core.SectionPos;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.gametest.framework.BeforeBatch;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.TicketType;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.DoorBlock;
@@ -26,6 +31,7 @@ import net.minecraft.world.phys.AABB;
 import net.minecraftforge.gametest.GameTestHolder;
 import net.minecraftforge.gametest.PrefixGameTestTemplate;
 
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -37,6 +43,8 @@ import java.util.concurrent.atomic.AtomicReference;
 public final class FrostedHeartPhase0aGameTests {
     private static final String BATCH = "frostedheart_phase0a_mutation";
     private static final String TEMPLATE = "phase0a_empty";
+    private static final TicketType<ChunkPos> CHUNK_LIFECYCLE_TICKET = TicketType.create(
+            "frostedheart_phase0a_lifecycle", Comparator.comparingLong(ChunkPos::toLong));
 
     private FrostedHeartPhase0aGameTests() {
     }
@@ -144,11 +152,11 @@ public final class FrostedHeartPhase0aGameTests {
         BlockPos protoBlock = new BlockPos(
                 protoPos.getMinBlockX(), level.getMinBuildHeight(), protoPos.getMinBlockZ());
         LevelChunkSection protoSection = proto.getSection(proto.getSectionIndex(protoBlock.getY()));
-        long unmappedBefore = Phase0aMutationProbe.unmappedWrites();
+        long unmappedBefore = Phase0aMutationProbe.unmappedWrites(protoSection);
         long cursor = Phase0aMutationProbe.deltaCursor();
         proto.setBlockState(protoBlock, Blocks.STONE.defaultBlockState(), false);
         Phase0aMutationProbe.sealLevel(level);
-        helper.assertTrue(Phase0aMutationProbe.unmappedWrites() == unmappedBefore + 1,
+        helper.assertTrue(Phase0aMutationProbe.unmappedWrites(protoSection) == unmappedBefore + 1,
                 "an unmapped ProtoChunk write must be observed as worldgen-only");
         helper.assertTrue(Phase0aMutationProbe.ownerFor(protoSection) == null,
                 "ProtoChunk section must not acquire a loaded-world owner");
@@ -190,13 +198,14 @@ public final class FrostedHeartPhase0aGameTests {
                 "mapped off-thread write must set FULL_GEOMETRY_RESYNC_REQUIRED");
         helper.assertTrue(!Phase0aMutationProbe.acceptsPublication(beforeAsync),
                 "pre-write revision publication must be rejected");
-        helper.assertTrue(Phase0aMutationProbe.acknowledgeFullGeometryResync(section, generation),
+        helper.assertTrue(Phase0aMutationProbe.acknowledgeFullGeometryResync(
+                        Phase0aMutationProbe.beginFullGeometryResync(section)),
                 "main-thread resnapshot ACK must clear the matching sticky generation");
 
-        long hookCallsBeforeRaw = Phase0aMutationProbe.hookCalls();
+        long mappedWritesBeforeRaw = owner.mainThreadMutationCount();
         long rawBefore = Phase0aMutationProbe.rawBypassDetections();
         section.getStates().set(2, 2, 2, Blocks.GLASS.defaultBlockState());
-        helper.assertTrue(Phase0aMutationProbe.hookCalls() == hookCallsBeforeRaw,
+        helper.assertTrue(owner.mainThreadMutationCount() == mappedWritesBeforeRaw,
                 "PalettedContainer#set must demonstrably bypass the section hook");
         Phase0aMutationProbe.FingerprintScanResult scan = Phase0aMutationProbe.scanFingerprint(section);
         helper.assertTrue(scan.scannedSections() == 1 && scan.mismatches() == 1,
@@ -205,10 +214,20 @@ public final class FrostedHeartPhase0aGameTests {
                         && owner.fullGeometryResyncRequired()
                         && owner.resyncReason() == Phase0aMutationProbe.ResyncReason.RAW_PALETTE_BYPASS,
                 "raw bypass must remain sticky until a bounded resnapshot ACK");
+        Phase0aMutationProbe.ResyncToken staleResync =
+                Phase0aMutationProbe.beginFullGeometryResync(section);
+        Phase0aMutationProbe.onRawBlockContainerReplaced(section);
+        helper.assertTrue(!Phase0aMutationProbe.acknowledgeFullGeometryResync(staleResync)
+                        && owner.fullGeometryResyncRequired(),
+                "an ACK for R1 must not clear a newer R2 resync requirement");
+
         section.getStates().set(2, 2, 2, Blocks.AIR.defaultBlockState());
         section.recalcBlockCounts();
-        helper.assertTrue(Phase0aMutationProbe.acknowledgeFullGeometryResync(section, generation),
-                "raw bypass recovery ACK must accept the live generation");
+        Phase0aMutationProbe.ResyncToken currentResync =
+                Phase0aMutationProbe.beginFullGeometryResync(section);
+        helper.assertTrue(currentResync.requiredRevision() > staleResync.requiredRevision()
+                        && Phase0aMutationProbe.acknowledgeFullGeometryResync(currentResync),
+                "only the current section/generation/revision resync token may ACK recovery");
 
         Phase0aMutationProbe.PublicationToken oldPublication = Phase0aMutationProbe.capturePublication(section);
         Phase0aMutationProbe.unregisterLoadedChunk(level, synthetic);
@@ -232,6 +251,149 @@ public final class FrostedHeartPhase0aGameTests {
                 "old incarnation must stay rejected while the new incarnation can publish");
         Phase0aMutationProbe.unregisterLoadedChunk(level, replacement);
         helper.succeed();
+    }
+
+    @GameTest(template = TEMPLATE, batch = BATCH, timeoutTicks = 40)
+    public static void explicitContainerAndSectionReplacementAdapters(GameTestHelper helper) {
+        ServerLevel level = helper.getLevel();
+        ChunkPos anchor = new ChunkPos(helper.absolutePos(new BlockPos(1, 1, 1)));
+        ChunkPos syntheticPos = new ChunkPos(anchor.x + 20_000, anchor.z + 20_000);
+        LevelChunk synthetic = new LevelChunk(level, syntheticPos);
+        long generation = Phase0aMutationProbe.registerLoadedChunk(level, synthetic);
+        LevelChunkSection originalSection = synthetic.getSection(0);
+        Phase0aMutationProbe.LoadedSectionOwner originalOwner =
+                Phase0aMutationProbe.ownerFor(originalSection);
+        helper.assertTrue(originalOwner != null, "synthetic section must start mapped");
+        Phase0aMutationProbe.setFingerprintInterest(originalSection, true);
+
+        Phase0aMutationProbe.PublicationToken beforeBlockReplacement =
+                Phase0aMutationProbe.capturePublication(originalSection);
+        long blockReplacementBefore = Phase0aMutationProbe.rawBlockContainerReplacements();
+        originalSection.getStates().set(1, 1, 1, Blocks.GLASS.defaultBlockState());
+        originalSection.recalcBlockCounts();
+        Phase0aMutationProbe.onRawBlockContainerReplaced(originalSection);
+        helper.assertTrue(Phase0aMutationProbe.rawBlockContainerReplacements() == blockReplacementBefore + 1
+                        && originalOwner.fullGeometryResyncRequired()
+                        && originalOwner.resyncReason()
+                        == Phase0aMutationProbe.ResyncReason.RAW_BLOCK_CONTAINER_REPLACED,
+                "raw block-container replacement must install its distinct sticky resnapshot reason");
+        helper.assertTrue(!Phase0aMutationProbe.acceptsPublication(beforeBlockReplacement),
+                "publication captured before block-container replacement must be rejected");
+        helper.assertTrue(Phase0aMutationProbe.acknowledgeFullGeometryResync(
+                        Phase0aMutationProbe.beginFullGeometryResync(originalSection)),
+                "block-container resnapshot ACK must accept the live generation");
+
+        Phase0aMutationProbe.PublicationToken beforeBiomeReplacement =
+                Phase0aMutationProbe.capturePublication(originalSection);
+        long biomeReplacementBefore = Phase0aMutationProbe.rawBiomeContainerReplacements();
+        Phase0aMutationProbe.onRawBiomeContainerReplaced(originalSection);
+        helper.assertTrue(Phase0aMutationProbe.rawBiomeContainerReplacements() == biomeReplacementBefore + 1
+                        && originalOwner.fullGeometryResyncRequired()
+                        && originalOwner.resyncReason()
+                        == Phase0aMutationProbe.ResyncReason.RAW_BIOME_CONTAINER_REPLACED,
+                "raw biome-container replacement must invalidate temperature input independently");
+        helper.assertTrue(!Phase0aMutationProbe.acceptsPublication(beforeBiomeReplacement),
+                "publication captured before biome replacement must be rejected");
+        helper.assertTrue(Phase0aMutationProbe.acknowledgeFullGeometryResync(
+                        Phase0aMutationProbe.beginFullGeometryResync(originalSection)),
+                "biome resnapshot ACK must accept the live generation");
+
+        Phase0aMutationProbe.PublicationToken beforeIdentityReplacement =
+                Phase0aMutationProbe.capturePublication(originalSection);
+        LevelChunk donor = new LevelChunk(level, new ChunkPos(syntheticPos.x + 1, syntheticPos.z));
+        LevelChunkSection replacementSection = donor.getSection(0);
+        helper.assertTrue(replacementSection != originalSection,
+                "whole-section test requires a distinct replacement identity");
+        synthetic.getSections()[0] = replacementSection;
+        long identityReplacementBefore = Phase0aMutationProbe.sectionIdentityReplacements();
+        Phase0aMutationProbe.onSectionIdentityReplaced(
+                level, synthetic, 0, originalSection, replacementSection);
+
+        Phase0aMutationProbe.LoadedSectionOwner replacementOwner =
+                Phase0aMutationProbe.ownerFor(replacementSection);
+        helper.assertTrue(Phase0aMutationProbe.sectionIdentityReplacements() == identityReplacementBefore + 1,
+                "whole-section adapter must record one mapped replacement");
+        helper.assertTrue(!originalOwner.isValid() && Phase0aMutationProbe.ownerFor(originalSection) == null,
+                "whole-section replacement must invalidate and detach the old identity first");
+        helper.assertTrue(replacementOwner != null
+                        && replacementOwner.isValid()
+                        && replacementOwner.lifecycleGeneration() == generation
+                        && replacementOwner.sectionX() == syntheticPos.x
+                        && replacementOwner.sectionY() == synthetic.getSectionYFromSectionIndex(0)
+                        && replacementOwner.sectionZ() == syntheticPos.z,
+                "replacement identity must inherit the chunk coordinates and lifecycle generation");
+        helper.assertTrue(replacementOwner.fullGeometryResyncRequired()
+                        && replacementOwner.resyncReason()
+                        == Phase0aMutationProbe.ResyncReason.SECTION_IDENTITY_REPLACED,
+                "replacement identity must remain unpublished until a full section resnapshot");
+        helper.assertTrue(!Phase0aMutationProbe.acceptsPublication(beforeIdentityReplacement),
+                "publication captured from the old identity must stay rejected");
+        Phase0aMutationProbe.PublicationToken replacementPublication =
+                Phase0aMutationProbe.capturePublication(replacementSection);
+        helper.assertTrue(!Phase0aMutationProbe.acceptsPublication(replacementPublication),
+                "replacement publication must be rejected before resnapshot ACK");
+        helper.assertTrue(Phase0aMutationProbe.acknowledgeFullGeometryResync(
+                                Phase0aMutationProbe.beginFullGeometryResync(replacementSection))
+                        && Phase0aMutationProbe.acceptsPublication(replacementPublication),
+                "matching ACK must enable publication for the rebound identity");
+        Phase0aMutationProbe.FingerprintScanResult replacementScan =
+                Phase0aMutationProbe.scanFingerprint(replacementSection);
+        helper.assertTrue(replacementScan.scannedSections() == 1 && replacementScan.mismatches() == 0,
+                "replacement identity must retain active fingerprint interest after ACK");
+
+        Phase0aMutationProbe.unregisterLoadedChunk(level, synthetic);
+        helper.assertTrue(!replacementOwner.isValid()
+                        && Phase0aMutationProbe.ownerFor(replacementSection) == null,
+                "unload must remove the stored replacement identity without leaking its owner");
+        helper.succeed();
+    }
+
+    @GameTest(template = TEMPLATE, batch = BATCH, timeoutTicks = 600)
+    public static void realChunkManagerUnloadReloadInvalidatesOldGeneration(GameTestHelper helper) {
+        ServerLevel level = helper.getLevel();
+        ChunkPos anchor = new ChunkPos(helper.absolutePos(new BlockPos(1, 1, 1)));
+        ChunkPos remote = new ChunkPos(anchor.x + 4096, anchor.z + 4096);
+        helper.assertTrue(level.getChunkSource().getChunkNow(remote.x, remote.z) == null,
+                "remote lifecycle-test chunk must start outside all existing tickets");
+
+        Phase0aMutationEvents.LifecycleObservation beforeLoad =
+                Phase0aMutationEvents.lifecycleObservation(level, remote);
+        level.getChunkSource().addRegionTicket(CHUNK_LIFECYCLE_TICKET, remote, 0, remote);
+
+        LevelChunk firstChunk;
+        LevelChunkSection firstSection;
+        Phase0aMutationProbe.LoadedSectionOwner firstOwner;
+        long firstGeneration;
+        Phase0aMutationProbe.PublicationToken firstPublication;
+        Phase0aMutationEvents.LifecycleObservation afterLoad;
+        try {
+            firstChunk = level.getChunk(remote.x, remote.z);
+            firstSection = firstChunk.getSection(
+                    firstChunk.getSectionIndex(level.getMinBuildHeight()));
+            firstOwner = Phase0aMutationProbe.ownerFor(firstSection);
+            helper.assertTrue(firstOwner != null && firstOwner.isValid(),
+                    "real ChunkEvent.Load must identity-map the loaded section");
+            firstGeneration = firstOwner.lifecycleGeneration();
+            firstPublication = Phase0aMutationProbe.capturePublication(firstSection);
+            afterLoad = Phase0aMutationEvents.lifecycleObservation(level, remote);
+            helper.assertTrue(afterLoad.loadBeforeSequence() > beforeLoad.loadAfterSequence()
+                            && afterLoad.loadAfterSequence() > afterLoad.loadBeforeSequence()
+                            && afterLoad.loadedChunkIdentity() == System.identityHashCode(firstChunk),
+                    "the real Forge ChunkEvent.Load path must surround probe registration");
+        } finally {
+            level.getChunkSource().removeRegionTicket(CHUNK_LIFECYCLE_TICKET, remote, 0, remote);
+        }
+        pollForRealChunkUnload(
+                helper,
+                level,
+                remote,
+                firstChunk,
+                firstSection,
+                firstOwner,
+                firstGeneration,
+                firstPublication,
+                afterLoad,
+                500);
     }
 
     @GameTest(template = TEMPLATE, batch = BATCH, timeoutTicks = 50)
@@ -315,6 +477,74 @@ public final class FrostedHeartPhase0aGameTests {
         });
     }
 
+    @GameTest(template = TEMPLATE, batch = BATCH, timeoutTicks = 80)
+    public static void realCreateAssembleAndDisassembleReachSectionHook(GameTestHelper helper) {
+        ServerLevel level = helper.getLevel();
+        BlockPos bearingPos = helper.absolutePos(new BlockPos(1, 4, 10));
+        BlockPos payloadPos = bearingPos.east();
+        BlockPos movedPayloadPos = payloadPos.offset(17, 0, 0);
+        assertMapped(helper, payloadPos);
+        assertMapped(helper, movedPayloadPos);
+
+        BlockState bearingState = AllBlocks.MECHANICAL_BEARING.getDefaultState()
+                .setValue(BlockStateProperties.FACING, Direction.EAST);
+        level.setBlock(bearingPos, bearingState, 3);
+        level.setBlock(payloadPos, Blocks.STONE.defaultBlockState(), 3);
+
+        helper.runAfterDelay(1, () -> {
+            helper.assertTrue(level.getBlockEntity(bearingPos) instanceof MechanicalBearingBlockEntity,
+                    "the real Create mechanical bearing block entity must exist");
+            MechanicalBearingBlockEntity bearing =
+                    (MechanicalBearingBlockEntity) level.getBlockEntity(bearingPos);
+            long assembleCursor = Phase0aMutationProbe.deltaCursor();
+            bearing.assemble();
+            ControlledContraptionEntity contraption = bearing.getMovedContraption();
+            helper.assertTrue(contraption != null && contraption.isAlive(),
+                    "MechanicalBearingBlockEntity#assemble must create a live controlled contraption");
+            helper.assertTrue(level.getBlockState(payloadPos).isAir(),
+                    "real Create assembly must remove the payload from the world");
+            Phase0aMutationProbe.sealLevel(level);
+            List<Phase0aMutationProbe.MutationDelta> assembleDeltas =
+                    Phase0aMutationProbe.sealedDeltasAfter(assembleCursor).stream()
+                            .filter(delta -> delta.worldPos().equals(payloadPos))
+                            .toList();
+            helper.assertTrue(assembleDeltas.size() == 1,
+                    "Create assembly must emit one coalesced world-removal delta for the payload");
+            Phase0aMutationProbe.MutationDelta removed = assembleDeltas.get(0);
+            helper.assertTrue(removed.oldState().is(Blocks.STONE) && removed.newState().isAir(),
+                    "Create assembly must report the payload transition from stone to air");
+            assertLiveDelta(helper, removed);
+
+            long moveCursor = Phase0aMutationProbe.deltaCursor();
+            contraption.move(17.0D, 0.0D, 0.0D);
+            Phase0aMutationProbe.sealLevel(level);
+            helper.assertTrue(Phase0aMutationProbe.sealedDeltasAfter(moveCursor).stream()
+                            .noneMatch(delta -> delta.worldPos().equals(payloadPos)
+                                    || delta.worldPos().equals(movedPayloadPos)),
+                    "a moving contraption is intentionally treated as air and emits no world geometry delta");
+
+            long disassembleCursor = Phase0aMutationProbe.deltaCursor();
+            bearing.disassemble();
+            Phase0aMutationProbe.sealLevel(level);
+            List<Phase0aMutationProbe.MutationDelta> disassembleDeltas =
+                    Phase0aMutationProbe.sealedDeltasAfter(disassembleCursor).stream()
+                            .filter(delta -> delta.worldPos().equals(movedPayloadPos))
+                            .toList();
+            helper.assertTrue(disassembleDeltas.size() == 1,
+                    "Create disassembly must emit one coalesced world-placement delta for the payload");
+            Phase0aMutationProbe.MutationDelta placed = disassembleDeltas.get(0);
+            helper.assertTrue(placed.oldState().isAir() && placed.newState().is(Blocks.STONE),
+                    "Create disassembly must report the moved payload transition from air to stone");
+            assertLiveDelta(helper, placed);
+            helper.assertTrue(bearing.getMovedContraption() == null && contraption.isRemoved(),
+                    "real Create disassembly must detach and remove the contraption entity");
+            helper.assertTrue(level.getBlockState(payloadPos).isAir()
+                            && level.getBlockState(movedPayloadPos).is(Blocks.STONE),
+                    "real disassembly must place the payload at its moved world position");
+            helper.succeed();
+        });
+    }
+
     @GameTest(template = TEMPLATE, batch = BATCH, timeoutTicks = 20)
     public static void sectionIndexedDynamicExclusionContract(GameTestHelper helper) {
         ServerLevel level = helper.getLevel();
@@ -364,6 +594,81 @@ public final class FrostedHeartPhase0aGameTests {
                                 == Phase0aDynamicExclusionIndex.ExclusionState.UNRESOLVED_DYNAMIC,
                 "an omitted oldBounds snapshot must not leave a stale dynamic exclusion indexed");
         helper.succeed();
+    }
+
+    private static void pollForRealChunkUnload(
+            GameTestHelper helper,
+            ServerLevel level,
+            ChunkPos remote,
+            LevelChunk firstChunk,
+            LevelChunkSection firstSection,
+            Phase0aMutationProbe.LoadedSectionOwner firstOwner,
+            long firstGeneration,
+            Phase0aMutationProbe.PublicationToken firstPublication,
+            Phase0aMutationEvents.LifecycleObservation afterLoad,
+            int attemptsRemaining) {
+        Phase0aMutationEvents.LifecycleObservation observation =
+                Phase0aMutationEvents.lifecycleObservation(level, remote);
+        boolean chunkManagerReleased = level.getChunkSource().getChunkNow(remote.x, remote.z) == null;
+        boolean forgeUnloadCompleted = observation.unloadBeforeSequence() > afterLoad.loadAfterSequence()
+                && observation.unloadAfterSequence() > observation.unloadBeforeSequence()
+                && observation.unloadedChunkIdentity() == System.identityHashCode(firstChunk);
+        if (!chunkManagerReleased || !forgeUnloadCompleted) {
+            helper.assertTrue(attemptsRemaining > 0,
+                    "remote chunk did not complete real ticket-driven unload within 500 ticks: "
+                            + remote + ", managerReleased=" + chunkManagerReleased
+                            + ", unloadBefore=" + observation.unloadBeforeSequence()
+                            + ", unloadAfter=" + observation.unloadAfterSequence());
+            helper.runAfterDelay(1, () -> pollForRealChunkUnload(
+                    helper,
+                    level,
+                    remote,
+                    firstChunk,
+                    firstSection,
+                    firstOwner,
+                    firstGeneration,
+                    firstPublication,
+                    afterLoad,
+                    attemptsRemaining - 1));
+            return;
+        }
+
+        helper.assertTrue(!firstOwner.isValid() && Phase0aMutationProbe.ownerFor(firstSection) == null,
+                "real ChunkEvent.Unload must invalidate the generation and remove the section identity");
+        helper.assertTrue(!Phase0aMutationProbe.acceptsPublication(firstPublication),
+                "publication captured before real unload must be rejected");
+        long staleBefore = Phase0aMutationProbe.staleWrites();
+        firstSection.setBlockState(0, 0, 0, Blocks.STONE.defaultBlockState(), false);
+        helper.assertTrue(Phase0aMutationProbe.staleWrites() == staleBefore + 1,
+                "a write through the actually unloaded section must be rejected as stale");
+
+        Phase0aMutationEvents.LifecycleObservation beforeReload = observation;
+        level.getChunkSource().addRegionTicket(CHUNK_LIFECYCLE_TICKET, remote, 0, remote);
+        try {
+            LevelChunk reloadedChunk = level.getChunk(remote.x, remote.z);
+            LevelChunkSection reloadedSection = reloadedChunk.getSection(
+                    reloadedChunk.getSectionIndex(level.getMinBuildHeight()));
+            Phase0aMutationProbe.LoadedSectionOwner reloadedOwner =
+                    Phase0aMutationProbe.ownerFor(reloadedSection);
+            helper.assertTrue(reloadedOwner != null
+                            && reloadedOwner.isValid()
+                            && reloadedOwner.lifecycleGeneration() > firstGeneration,
+                    "ticket-driven reload must create a strictly newer live generation");
+
+            Phase0aMutationEvents.LifecycleObservation afterReload =
+                    Phase0aMutationEvents.lifecycleObservation(level, remote);
+            helper.assertTrue(afterReload.loadBeforeSequence() > beforeReload.unloadAfterSequence()
+                            && afterReload.loadAfterSequence() > afterReload.loadBeforeSequence()
+                            && afterReload.loadedChunkIdentity() == System.identityHashCode(reloadedChunk),
+                    "the reload must traverse a second real Forge ChunkEvent.Load callback");
+            helper.assertTrue(!Phase0aMutationProbe.acceptsPublication(firstPublication)
+                            && Phase0aMutationProbe.acceptsPublication(
+                                    Phase0aMutationProbe.capturePublication(reloadedSection)),
+                    "the old publication must stay rejected while the reloaded generation can publish");
+            helper.succeed();
+        } finally {
+            level.getChunkSource().removeRegionTicket(CHUNK_LIFECYCLE_TICKET, remote, 0, remote);
+        }
     }
 
     private static AABB sectionBox(

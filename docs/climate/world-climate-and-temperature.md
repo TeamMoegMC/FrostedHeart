@@ -1,9 +1,9 @@
 # 世界气候与环境温度
 
 - Status: `Current`
-- Last verified: `2026-08-22`
+- Last verified: `2026-08-24`
 - Scope: 逻辑气候时钟、长期事件、局部白幕、世界温度分层、局部热区、方块状态消费者
-- Primary code anchors: `WorldClockSource`, `WorldClimate`, `ClimateEventModel`, `ClimateEventTrack`, `InterpolationClimateEvent`, `WhiteCurtainInfo`, `WorldTemperature`, `BlockTemperatureModel`, `ChunkHeatData`, `IHeatArea`
+- Primary code anchors: `WorldClockSource`, `WorldClimate`, `ClimateEventModel`, `ClimateEventTrack`, `InterpolationClimateEvent`, `WhiteCurtainDescriptor`, `WhiteCurtainFieldModel`, `WhiteCurtainInfo`, `WorldTemperature`, `BlockTemperatureModel`, `ChunkHeatData`, `IHeatArea`
 
 本文只描述当前源码行为。所有温度若无特别说明均为摄氏度；“修正”表示摄氏度增量。
 
@@ -11,7 +11,7 @@
 
 `ClimateCommonEvents.attachToWorld` 给所有 `dimensionType().hasFixedTime() == false` 的维度挂载 `FHCapabilities.CLIMATE_DATA`。初始预设事件只在主世界创建，但能力本身不限于主世界。
 
-`WorldClockSource` 使用独立于直接 `/time set` 和睡眠跳时的逻辑秒数：
+`WorldClockSource` 从 Minecraft `dayTime` 派生逻辑秒数，并显式吸收 `/time` 与睡眠跳时：
 
 ```text
 1 logical second = 20 game ticks
@@ -20,7 +20,7 @@
 1 climate month  = 30 climate days
 ```
 
-每个服务端维度 tick 的 START 阶段先调用 `WorldClimate.updateClock`。时间向后跳时，`WorldClockSource.update` 把它解释为跨到下一日相同日内时刻。每 20 game ticks 调用一次 `updateCache` 和 `trimTempEventStream`；只有逻辑小时变化时才切换小时缓存、清理白幕区块缓存、更新预报并向该维度玩家发送 `FHClimatePacket`。
+每个服务端维度 tick 的 START 阶段先调用 `WorldClimate.updateClock`。`dayTime` 停止时逻辑时钟也停止；时间向后跳时，`WorldClockSource.elapsedDayTimeTicks` 把它解释为跨到下一日相同日内时刻。每 20 game ticks 调用一次 `updateCache` 和 `trimTempEventStream`：每次都会检查并移除已经完全结束的白幕；逻辑小时变化时切换小时缓存并更新预报。小时变化或 `WorldClockSource.update` 检出的 `>20 dayTime ticks` 大跳都会向该维度玩家发送一次现有 `FHClimatePacket`，供客户端按同源 `clockDayTime` 重锚。
 
 `WorldClimate.DAY_CACHE_LENGTH` 为 `8`。内部 `dailyTempData` 保留前一日、当前日和未来日队列，并按 `populateDays` 的 `size <= DAY_CACHE_LENGTH` 条件填充。温度在同一气候小时内不插值更新，查询值整小时保持不变。
 
@@ -77,14 +77,14 @@ wind = clamp(0.5 * baseWind + 0.5 * previousWind + gaussian(0,3), 0, 100)
 
 这里使用新建的 `java.util.Random`，不使用世界种子，因此风噪声不具备固定种子复现性。生成一日的 24 个小时都传入上一日最后一小时风速，而不是逐小时把本日上一小时结果继续传递。
 
-`WhiteCurtainInfo` 是按区块移动的局部 blizzard 事件。传播延迟为每区块 `6` 个气候小时。查询某区块时：
+`WhiteCurtainDescriptor` 保存矩形走廊、水平传播方向和局部 `ClimateEvent`；`WhiteCurtainInfo` 是保留预报缓存和旧 Codec 外形的运行时包装器。`WhiteCurtainFieldModel` 统一计算四方向传播，延迟为每区块 `6` 个气候小时，即 `300 logical seconds/chunk`。查询某区块时：
 
 ```text
 local climate type = merge(global type, white-curtain type)
 local climate temp = min(global temp, white-curtain temp)
 ```
 
-相交白幕不会被创建。白幕在事件结束并完全越过影响矩形后移除。
+相交白幕不会被创建，含末端区块也不能与另一走廊共享。白幕在事件结束并完全越过影响矩形后移除。区块结果继续按整气候小时采样；`WorldClimate.whitecurtainCache` 会在该区块下一玩法相位精确过期，并在创建、清除、载入和自然移除时通过 generation 立即失效。`getTemp(BlockPos)` 的 cache hit 直接从 block 坐标计算 packed chunk key，只在 miss 时构造 `ChunkPos`。客户端连续视觉场不反向参与这里的温度、作物或玩法查询，具体见 [weather-rendering.md](weather-rendering.md)。
 
 ## 4. 世界温度分层
 

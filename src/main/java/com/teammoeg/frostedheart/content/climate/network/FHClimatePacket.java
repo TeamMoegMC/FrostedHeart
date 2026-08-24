@@ -21,29 +21,38 @@ package com.teammoeg.frostedheart.content.climate.network;
 
 import java.util.function.Supplier;
 
+import com.teammoeg.chorda.client.ClientUtils;
 import com.teammoeg.chorda.io.SerializeUtil;
 import com.teammoeg.chorda.network.CMessage;
 import com.teammoeg.frostedheart.content.climate.ClientClimateData;
 import com.teammoeg.frostedheart.content.climate.gamedata.climate.ClimateType;
 import com.teammoeg.frostedheart.content.climate.gamedata.climate.ForecastFrame;
 import com.teammoeg.frostedheart.content.climate.gamedata.climate.WorldClimate;
+import com.teammoeg.frostedheart.content.climate.render.weather.ClientWeatherState;
 
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.ChunkPos;
+import net.minecraft.world.level.Level;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.network.NetworkEvent;
 
 public class FHClimatePacket implements CMessage {
     private final short[] data;
     private final long sec;
+    private final long clockDayTime;
     private final ClimateType climate;
+    private final ClimateType globalClimate;
     private final int wind;
     private final float humidity;
 
     public FHClimatePacket() {
         data = new short[0];
         sec = 0;
+        clockDayTime = 0;
         climate = ClimateType.NONE;
+        globalClimate = ClimateType.NONE;
         wind = 0;
         humidity = 0;
     }
@@ -51,7 +60,9 @@ public class FHClimatePacket implements CMessage {
     private FHClimatePacket(FriendlyByteBuf buffer) {
         data = SerializeUtil.readShortArray(buffer);
         sec = buffer.readVarLong();
+        clockDayTime = buffer.readVarLong();
         climate = ClimateType.values()[buffer.readByte() & 0xff];
+        globalClimate = ClimateType.values()[buffer.readByte() & 0xff];
         wind = buffer.readVarInt();
         humidity = buffer.readFloat();
     }
@@ -60,14 +71,18 @@ public class FHClimatePacket implements CMessage {
     	if(climateData==null) {
     		data = new short[0];
             sec = 0;
+            clockDayTime = 0;
             climate = ClimateType.NONE;
+            globalClimate = ClimateType.NONE;
             wind = 0;
             humidity = 0;
     	}else {
     		ChunkPos pos=new ChunkPos(p.blockPosition());
 	        data = climateData.getForecastFrames(pos);
 	        sec = climateData.getSec();
+            clockDayTime = climateData.getClockDayTime();
 	        climate = climateData.getClimate(pos);
+	        globalClimate = climateData.getGlobalClimate();
             wind = climateData.getWind();
             humidity = climateData.getHumidity();
     	}
@@ -77,13 +92,19 @@ public class FHClimatePacket implements CMessage {
 	public void encode(FriendlyByteBuf buffer) {
         SerializeUtil.writeShortArray(buffer, data);
         buffer.writeVarLong(sec);
+        buffer.writeVarLong(clockDayTime);
         buffer.writeByte((byte) climate.ordinal());
+        buffer.writeByte((byte) globalClimate.ordinal());
         buffer.writeVarInt(wind);
         buffer.writeFloat(humidity);
     }
 
     public void handle(Supplier<NetworkEvent.Context> context) {
         context.get().enqueueWork(() -> {
+            Level level = DistExecutor.safeCallWhenOn(Dist.CLIENT, () -> ClientUtils::getWorld);
+            if (level != null) {
+                ClientWeatherState.INSTANCE.correctClock(sec, clockDayTime, level.getDayTime());
+            }
             // Update client-side nbt
             if (data.length == 0) {
                 ClientClimateData.clear();
@@ -98,6 +119,7 @@ public class FHClimatePacket implements CMessage {
             }
             ClientClimateData.lastClimate = ClientClimateData.climate;
             ClientClimateData.climate = climate;
+            ClientClimateData.globalClimate = globalClimate;
 
             ClientClimateData.secs = sec;
             ClientClimateData.wind = wind;

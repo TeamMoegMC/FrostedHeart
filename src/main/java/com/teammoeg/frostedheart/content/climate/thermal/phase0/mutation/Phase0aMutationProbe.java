@@ -39,6 +39,9 @@ public final class Phase0aMutationProbe {
     private static final AtomicLong STALE_WRITES = new AtomicLong();
     private static final AtomicLong OFF_THREAD_WRITES = new AtomicLong();
     private static final AtomicLong RAW_BYPASS_DETECTIONS = new AtomicLong();
+    private static final AtomicLong RAW_BLOCK_CONTAINER_REPLACEMENTS = new AtomicLong();
+    private static final AtomicLong RAW_BIOME_CONTAINER_REPLACEMENTS = new AtomicLong();
+    private static final AtomicLong SECTION_IDENTITY_REPLACEMENTS = new AtomicLong();
     private static final AtomicLong LIFECYCLE_THREAD_VIOLATIONS = new AtomicLong();
 
     // These collections are deliberately main-thread-owned. Off-thread hooks only touch the attached owner atomics.
@@ -63,9 +66,11 @@ public final class Phase0aMutationProbe {
         }
 
         HOOK_CALLS.incrementAndGet();
-        LoadedSectionOwner attached = attachment(section).frostedheart$getPhase0aOwner();
+        Phase0aSectionAttachment sectionAttachment = attachment(section);
+        LoadedSectionOwner attached = sectionAttachment.frostedheart$getPhase0aOwner();
         if (attached == null) {
             UNMAPPED_WRITES.incrementAndGet();
+            sectionAttachment.frostedheart$incrementPhase0aUnmappedWrites();
             return;
         }
         if (!attached.isValid()) {
@@ -95,6 +100,89 @@ public final class Phase0aMutationProbe {
                 SectionPos.sectionToBlockCoord(mapped.sectionY()) + y,
                 SectionPos.sectionToBlockCoord(mapped.sectionZ()) + z);
         dimension.record(section, mapped, worldPos, oldState, newState, revision, dimension.level.getGameTime());
+    }
+
+    /** Explicit adapter for writers that replace a mapped section's raw block container data. */
+    public static void onRawBlockContainerReplaced(LevelChunkSection section) {
+        if (!ENABLED) {
+            return;
+        }
+        LoadedSectionOwner owner = attachedOwnerForAdapter(section);
+        if (owner != null) {
+            RAW_BLOCK_CONTAINER_REPLACEMENTS.incrementAndGet();
+            owner.requireFullResync(ResyncReason.RAW_BLOCK_CONTAINER_REPLACED);
+        }
+    }
+
+    /** Explicit adapter for writers that replace biome data used by natural-temperature queries. */
+    public static void onRawBiomeContainerReplaced(LevelChunkSection section) {
+        if (!ENABLED) {
+            return;
+        }
+        LoadedSectionOwner owner = attachedOwnerForAdapter(section);
+        if (owner != null) {
+            RAW_BIOME_CONTAINER_REPLACEMENTS.incrementAndGet();
+            owner.requireFullResync(ResyncReason.RAW_BIOME_CONTAINER_REPLACED);
+        }
+    }
+
+    /**
+     * Rebinds ownership after a loaded chunk replaces one entry in its section array.
+     * The caller must invoke this on the server thread immediately after installing the replacement.
+     */
+    public static void onSectionIdentityReplaced(
+            ServerLevel level,
+            LevelChunk chunk,
+            int sectionIndex,
+            LevelChunkSection previousSection,
+            LevelChunkSection reportedReplacement) {
+        if (!ENABLED || previousSection == reportedReplacement) {
+            return;
+        }
+        requireMainThread(level);
+        if (sectionIndex < 0 || sectionIndex >= chunk.getSections().length) {
+            return;
+        }
+
+        ChunkKey key = new ChunkKey(level.dimension(), chunk.getPos().toLong());
+        LoadedChunkOwner chunkOwner = CHUNK_OWNERS.get(key);
+        if (chunkOwner == null || chunkOwner.chunk != chunk) {
+            return;
+        }
+
+        LevelChunkSection replacement = chunk.getSections()[sectionIndex];
+        LevelChunkSection trackedSection = chunkOwner.sectionIdentities[sectionIndex];
+        LoadedSectionOwner trackedOwner = chunkOwner.sections[sectionIndex];
+        if (replacement == trackedSection) {
+            return;
+        }
+        boolean fingerprintInterest = trackedOwner.fingerprintActive();
+
+        // Revoke the old identity before exposing the replacement to publication checks.
+        trackedOwner.invalidate();
+        SECTION_OWNERS.remove(trackedSection, trackedOwner);
+
+        LoadedSectionOwner conflictingOwner = SECTION_OWNERS.get(replacement);
+        if (conflictingOwner != null) {
+            conflictingOwner.invalidate();
+            SECTION_OWNERS.remove(replacement, conflictingOwner);
+        }
+
+        LoadedSectionOwner replacementOwner = new LoadedSectionOwner(
+                level.dimension(),
+                chunk.getPos().x,
+                chunk.getSectionYFromSectionIndex(sectionIndex),
+                chunk.getPos().z,
+                chunkOwner.generation,
+                Thread.currentThread());
+        if (fingerprintInterest) {
+            replacementOwner.activateFingerprint(computeFingerprint(replacement));
+        }
+        replacementOwner.requireFullResync(ResyncReason.SECTION_IDENTITY_REPLACED);
+        chunkOwner.replaceSection(sectionIndex, replacement, replacementOwner);
+        SECTION_OWNERS.put(replacement, replacementOwner);
+        attachment(replacement).frostedheart$setPhase0aOwner(replacementOwner);
+        SECTION_IDENTITY_REPLACEMENTS.incrementAndGet();
     }
 
     static void onChunkLoad(ServerLevel level, LevelChunk chunk) {
@@ -134,9 +222,10 @@ public final class Phase0aMutationProbe {
             throw new IllegalStateException("Phase 0a dimension identity changed without server-stop cleanup");
         }
 
-        List<LoadedSectionOwner> sections = new ArrayList<>(chunk.getSections().length);
+        LevelChunkSection[] sectionIdentities = chunk.getSections().clone();
+        LoadedSectionOwner[] sections = new LoadedSectionOwner[sectionIdentities.length];
         for (int index = 0; index < chunk.getSections().length; index++) {
-            LevelChunkSection section = chunk.getSections()[index];
+            LevelChunkSection section = sectionIdentities[index];
             LoadedSectionOwner previous = SECTION_OWNERS.get(section);
             if (previous != null && previous.isValid()) {
                 previous.invalidate();
@@ -150,9 +239,9 @@ public final class Phase0aMutationProbe {
                     Thread.currentThread());
             SECTION_OWNERS.put(section, owner);
             attachment(section).frostedheart$setPhase0aOwner(owner);
-            sections.add(owner);
+            sections[index] = owner;
         }
-        CHUNK_OWNERS.put(key, new LoadedChunkOwner(chunk, generation, sections));
+        CHUNK_OWNERS.put(key, new LoadedChunkOwner(chunk, generation, sectionIdentities, sections));
         return generation;
     }
 
@@ -167,9 +256,8 @@ public final class Phase0aMutationProbe {
         // Generation/publication validity is revoked before the authoritative identity map is changed.
         owner.invalidate();
         CHUNK_OWNERS.remove(key);
-        LevelChunkSection[] sections = chunk.getSections();
-        for (int index = 0; index < sections.length; index++) {
-            SECTION_OWNERS.remove(sections[index], owner.sections.get(index));
+        for (int index = 0; index < owner.sectionIdentities.length; index++) {
+            SECTION_OWNERS.remove(owner.sectionIdentities[index], owner.sections[index]);
         }
     }
 
@@ -266,15 +354,37 @@ public final class Phase0aMutationProbe {
         return new FingerprintScanResult(scanned, mismatches);
     }
 
-    static boolean acknowledgeFullGeometryResync(LevelChunkSection section, long generation) {
+    static ResyncToken beginFullGeometryResync(LevelChunkSection section) {
         LoadedSectionOwner owner = ownerFor(section);
-        if (owner == null || !owner.isValid() || owner.lifecycleGeneration() != generation) {
+        if (owner == null || !owner.isValid()) {
+            return null;
+        }
+        ResyncRequirement requirement = owner.resyncRequirement();
+        return requirement == null ? null : new ResyncToken(
+                section,
+                owner.lifecycleGeneration(),
+                requirement.requiredRevision(),
+                requirement.reason());
+    }
+
+    static boolean acknowledgeFullGeometryResync(ResyncToken token) {
+        Objects.requireNonNull(token, "token");
+        LoadedSectionOwner owner = ownerFor(token.section());
+        if (owner == null
+                || !owner.isValid()
+                || owner.lifecycleGeneration() != token.lifecycleGeneration()) {
+            return false;
+        }
+        ResyncRequirement requirement = owner.resyncRequirement();
+        if (requirement == null
+                || requirement.requiredRevision() != token.requiredRevision()
+                || requirement.reason() != token.reason()
+                || !owner.clearFullResync(requirement)) {
             return false;
         }
         if (owner.fingerprintActive()) {
-            owner.replaceExpectedFingerprint(computeFingerprint(section));
+            owner.replaceExpectedFingerprint(computeFingerprint(token.section()));
         }
-        owner.clearFullResync();
         return true;
     }
 
@@ -306,6 +416,9 @@ public final class Phase0aMutationProbe {
         STALE_WRITES.set(0);
         OFF_THREAD_WRITES.set(0);
         RAW_BYPASS_DETECTIONS.set(0);
+        RAW_BLOCK_CONTAINER_REPLACEMENTS.set(0);
+        RAW_BIOME_CONTAINER_REPLACEMENTS.set(0);
+        SECTION_IDENTITY_REPLACEMENTS.set(0);
         LIFECYCLE_THREAD_VIOLATIONS.set(0);
     }
 
@@ -315,6 +428,10 @@ public final class Phase0aMutationProbe {
 
     static long unmappedWrites() {
         return UNMAPPED_WRITES.get();
+    }
+
+    static long unmappedWrites(LevelChunkSection section) {
+        return attachment(section).frostedheart$getPhase0aUnmappedWrites();
     }
 
     static long staleWrites() {
@@ -327,6 +444,18 @@ public final class Phase0aMutationProbe {
 
     static long rawBypassDetections() {
         return RAW_BYPASS_DETECTIONS.get();
+    }
+
+    static long rawBlockContainerReplacements() {
+        return RAW_BLOCK_CONTAINER_REPLACEMENTS.get();
+    }
+
+    static long rawBiomeContainerReplacements() {
+        return RAW_BIOME_CONTAINER_REPLACEMENTS.get();
+    }
+
+    static long sectionIdentityReplacements() {
+        return SECTION_IDENTITY_REPLACEMENTS.get();
     }
 
     static long lifecycleThreadViolations() {
@@ -344,10 +473,28 @@ public final class Phase0aMutationProbe {
 
     private static void invalidateAndRemove(LoadedChunkOwner owner) {
         owner.invalidate();
-        LevelChunkSection[] sections = owner.chunk.getSections();
-        for (int index = 0; index < sections.length; index++) {
-            SECTION_OWNERS.remove(sections[index], owner.sections.get(index));
+        for (int index = 0; index < owner.sectionIdentities.length; index++) {
+            SECTION_OWNERS.remove(owner.sectionIdentities[index], owner.sections[index]);
         }
+    }
+
+    private static LoadedSectionOwner attachedOwnerForAdapter(LevelChunkSection section) {
+        LoadedSectionOwner attached = attachment(section).frostedheart$getPhase0aOwner();
+        if (attached == null) {
+            return null;
+        }
+        if (!attached.isValid()) {
+            STALE_WRITES.incrementAndGet();
+            return null;
+        }
+        if (Thread.currentThread() == attached.mainThread()) {
+            LoadedSectionOwner mapped = SECTION_OWNERS.get(section);
+            if (mapped != attached || !mapped.isValid()) {
+                STALE_WRITES.incrementAndGet();
+                return null;
+            }
+        }
+        return attached;
     }
 
     private static Phase0aSectionAttachment attachment(LevelChunkSection section) {
@@ -404,7 +551,13 @@ public final class Phase0aMutationProbe {
     public enum ResyncReason {
         OFF_THREAD_WRITE,
         RAW_PALETTE_BYPASS,
+        RAW_BLOCK_CONTAINER_REPLACED,
+        RAW_BIOME_CONTAINER_REPLACED,
+        SECTION_IDENTITY_REPLACED,
         OWNER_STATE_MISSING
+    }
+
+    private record ResyncRequirement(ResyncReason reason, long requiredRevision) {
     }
 
     public static final class LoadedSectionOwner {
@@ -416,8 +569,7 @@ public final class Phase0aMutationProbe {
         private final Thread mainThread;
         private final AtomicLong liveRevision = new AtomicLong();
         private final AtomicBoolean valid = new AtomicBoolean(true);
-        private final AtomicBoolean fullGeometryResyncRequired = new AtomicBoolean();
-        private final AtomicReference<ResyncReason> resyncReason = new AtomicReference<>();
+        private final AtomicReference<ResyncRequirement> resyncRequirement = new AtomicReference<>();
         private final AtomicLong mainThreadMutationCount = new AtomicLong();
         private final AtomicLong expectedFingerprint = new AtomicLong();
         private volatile boolean fingerprintActive;
@@ -466,11 +618,12 @@ public final class Phase0aMutationProbe {
         }
 
         public boolean fullGeometryResyncRequired() {
-            return fullGeometryResyncRequired.get();
+            return resyncRequirement.get() != null;
         }
 
         public ResyncReason resyncReason() {
-            return resyncReason.get();
+            ResyncRequirement requirement = resyncRequirement.get();
+            return requirement == null ? null : requirement.reason();
         }
 
         private Thread mainThread() {
@@ -494,14 +647,17 @@ public final class Phase0aMutationProbe {
         }
 
         private void requireFullResync(ResyncReason reason) {
-            liveRevision.incrementAndGet();
-            fullGeometryResyncRequired.set(true);
-            resyncReason.set(reason);
+            long revision = liveRevision.incrementAndGet();
+            resyncRequirement.getAndUpdate(current -> new ResyncRequirement(
+                    current == null ? reason : current.reason(), revision));
         }
 
-        private void clearFullResync() {
-            fullGeometryResyncRequired.set(false);
-            resyncReason.set(null);
+        private ResyncRequirement resyncRequirement() {
+            return resyncRequirement.get();
+        }
+
+        private boolean clearFullResync(ResyncRequirement requirement) {
+            return resyncRequirement.compareAndSet(requirement, null);
         }
 
         private void invalidate() {
@@ -541,6 +697,17 @@ public final class Phase0aMutationProbe {
 
     public record PublicationToken(
             LevelChunkSection section, long lifecycleGeneration, long liveRevision) {
+    }
+
+    public record ResyncToken(
+            LevelChunkSection section,
+            long lifecycleGeneration,
+            long requiredRevision,
+            ResyncReason reason) {
+        public ResyncToken {
+            Objects.requireNonNull(section, "section");
+            Objects.requireNonNull(reason, "reason");
+        }
     }
 
     public record FingerprintScanResult(int scannedSections, int mismatches) {
@@ -653,12 +820,24 @@ public final class Phase0aMutationProbe {
     private static final class LoadedChunkOwner {
         private final LevelChunk chunk;
         private final long generation;
-        private final List<LoadedSectionOwner> sections;
+        private final LevelChunkSection[] sectionIdentities;
+        private final LoadedSectionOwner[] sections;
 
-        private LoadedChunkOwner(LevelChunk chunk, long generation, List<LoadedSectionOwner> sections) {
+        private LoadedChunkOwner(
+                LevelChunk chunk,
+                long generation,
+                LevelChunkSection[] sectionIdentities,
+                LoadedSectionOwner[] sections) {
             this.chunk = chunk;
             this.generation = generation;
+            this.sectionIdentities = sectionIdentities;
             this.sections = sections;
+        }
+
+        private void replaceSection(
+                int sectionIndex, LevelChunkSection section, LoadedSectionOwner owner) {
+            sectionIdentities[sectionIndex] = section;
+            sections[sectionIndex] = owner;
         }
 
         private void invalidate() {

@@ -1,7 +1,7 @@
 # Research Definitions And Codecs
 
 - Status: `Current`
-- Last verified: `2026-08-23`
+- Last verified: `2026-08-24`
 - Scope: Definition sources, JSON schema, graph rules, clues, effects, localization, stable identifiers, reload, and editor behavior
 - Code anchors: [`FHResearch#init/#reloadCatalog`](../../src/main/java/com/teammoeg/frostedresearch/FHResearch.java), [`ResearchCatalog`](../../src/main/java/com/teammoeg/frostedresearch/ResearchCatalog.java), [`ResearchCatalogPreflight`](../../src/main/java/com/teammoeg/frostedresearch/ResearchCatalogPreflight.java), [`FHRegistry`](../../src/main/java/com/teammoeg/frostedresearch/FHRegistry.java), [`Research.CODEC`](../../src/main/java/com/teammoeg/frostedresearch/research/Research.java), [`ResearchCategory.CODEC`](../../src/main/java/com/teammoeg/frostedresearch/research/ResearchCategory.java), [`Clue.CODEC`](../../src/main/java/com/teammoeg/frostedresearch/research/clues/Clue.java), [`Effect.CODEC`](../../src/main/java/com/teammoeg/frostedresearch/research/effects/Effect.java)
 
@@ -89,7 +89,7 @@ Runtime semantics are:
 
 The installed production catalogue is therefore a validated directed acyclic graph.
 
-The companion definitions `coke_oven`, `mechanical_bellows`, `storage_drawers`, and `tetra` explicitly declare `"parents": []`. They are independent roots; the deleted `workbench` ID is not treated as an optional or implicit prerequisite.
+The companion and development definitions `coke_oven`, `mechanical_bellows`, `storage_drawers`, and `tetra` explicitly declare `"parents": []`. They are independent roots; the deleted `workbench` ID is not treated as an optional or implicit prerequisite.
 
 ## Clue Base Schema
 

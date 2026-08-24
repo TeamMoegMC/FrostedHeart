@@ -43,6 +43,7 @@ import com.teammoeg.caupona.data.recipes.FoodValueRecipe;
 import com.teammoeg.chorda.io.FileUtil;
 import com.teammoeg.chorda.text.Components;
 import com.teammoeg.chorda.util.CRegistryHelper;
+import com.teammoeg.frostedheart.content.climate.thermal.phase0.mutation.Phase0aMutationProbe;
 import com.teammoeg.frostedheart.content.world.FHFeatures;
 import com.teammoeg.frostedheart.util.mixin.SeedSetable;
 import com.teammoeg.frostedresearch.FHResearch;
@@ -227,8 +228,11 @@ public class DebugCommand {
 					ServerGamePacketListenerImpl impl;
 					// 在这里放置你的读取代码
 					LevelChunkSection levelchunksection = new LevelChunkSection(palettedcontainer, palettedcontainerro);
-					boolean flag = chunk.getSections()[secIdx].hasOnlyAir();
+					LevelChunkSection previousSection = chunk.getSections()[secIdx];
+					boolean flag = previousSection.hasOnlyAir();
 					chunk.getSections()[secIdx] = levelchunksection;
+					Phase0aMutationProbe.onSectionIdentityReplaced(
+							spe.serverLevel(), chunk, secIdx, previousSection, levelchunksection);
 					chunk.setUnsaved(true);
 
 					for (int y = 0; y < 16; y++) {

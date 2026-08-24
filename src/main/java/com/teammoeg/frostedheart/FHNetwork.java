@@ -92,6 +92,7 @@ public class FHNetwork extends CBaseNetwork {
         //registerMessage("temperature_data", FHDatapackSyncPacket.class);
 
         registerMessage("climate_data", FHClimatePacket.class);
+        registerMessage("white_curtain_snapshot", FHWhiteCurtainSnapshotPacket.class);
         registerMessage("temperature_display", FHTemperatureDisplayPacket.class);
         registerMessage("open_clothes", C2SOpenClothesScreenMessage.class);
 

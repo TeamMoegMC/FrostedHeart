@@ -2,254 +2,243 @@
 
 - Status: `Current`
 - Last verified: `2026-08-24`
-- Scope: 暴风雪、普通降雪、白幕局部天气从服务端气候状态到客户端降水、雾、粒子和声音的现役实现
-- Primary code anchors: `WorldClimate`, `WhiteCurtainInfo`, `ServerLevelMixin_WeatherCycle`, `PlayerTemperatureData.advanceWeatherCycle`, `PlayerListMixin`, `LevelRendererMixin`, `FogModification`, `FHClimatePacket`, `BlizzardRenderer`
+- Scope: 普通降雪、暴风雪与局部白幕从服务端权威状态到 V1 客户端空间重建、降水、雾、地面粒子和声音的现役实现
+- Primary code anchors: `WhiteCurtainDescriptor`, `WhiteCurtainFieldModel`, `WhiteCurtainInfo`, `WorldClimate`, `FHWhiteCurtainSnapshotPacket`, `FHClimatePacket`, `ClientWeatherState`, `ClientWeatherFrame`, `SpatialWeatherRenderer`, `WeatherSoundLoop`, `WeatherRenderingMode`, `PlayerWeatherCompatibilityModel`, `LevelRendererMixin`, `FogModification`, `FHClientEvents`
 
-本文只描述当前已经执行的天气视觉链路。世界气候事件的生成与温度公式见 [world-climate-and-temperature.md](world-climate-and-temperature.md)，能力、存档和通用网络生命周期见 [data-lifecycle-and-integration.md](data-lifecycle-and-integration.md)。
+本文只描述当前已经执行的 V1 链路。气候事件和温度公式见 [world-climate-and-temperature.md](world-climate-and-temperature.md)，生命周期和 packet 总表见 [data-lifecycle-and-integration.md](data-lifecycle-and-integration.md)。V2 电影级体积天气仍是未实现计划，不属于当前运行时。
 
-## 1. 当前结论
+## 1. 当前架构
 
-当前没有独立的“白幕渲染器”，也没有正在执行的自定义暴风雪几何渲染器。现役方案是：
-
-1. `WorldClimate` 在服务端合成全局气候和玩家所在区块的白幕局部气候。
-2. `PlayerTemperatureData` 把每位玩家的局部 `ClimateType` 平滑转换成该连接独有的 Vanilla `rainLevel` / `thunderLevel`。
-3. 服务端用 `ClientboundGameEventPacket` 把这两个强度发给客户端。
-4. 客户端继续调用 Vanilla `LevelRenderer.renderSnowAndRain` 和 `LevelRenderer.tickRain`，`LevelRendererMixin` 修改其降水类型、纹理、光照、半径、落地点粒子和声音。
-5. `FogModification` 根据同一组 Vanilla rain/thunder 状态修改雾颜色和近远平面。
-
-因此，“暴风雪”和“白幕”不是两套渲染技术。暴风雪是一种局部或全局 `ClimateType`，白幕是让该气候沿区块走廊传播的服务端空间模型；二者最终共用同一套客户端天气渲染。
+V1 已经把玩法权威与视觉表现分开。服务端只保存稀疏白幕描述并计算玩家、作物和温度所需的区块级结果；客户端从同一描述连续重建近场天气，不接收雪花、雾、网格、逐帧强度或移动前沿坐标。
 
 ```text
-long-term ClimateEventTrack -------------------------+
-                                                     |
-WhiteCurtainInfo(position-shifted local event) --+   |
-                                                 v   v
-                                     WorldClimate.getClimate(playerChunk)
-                                                     |
-                         ServerLevelMixin_WeatherCycle, every server tick
-                                                     |
-                         PlayerTemperatureData.advanceWeatherCycle
-                         rainLevel / thunderLevel += or -= 0.01
-                                                     |
-                  ClientboundGameEventPacket, per player connection
-                                                     |
-                                      ClientLevel weather state
-                        +----------------------------+------------------+
-                        |                            |                  |
-           renderSnowAndRain + Mixin      tickRain + Mixin     ViewportEvent
-           precipitation sheets          particles/sounds     fog color/range
+ServerLevel / WorldClimate
+  WhiteCurtainDescriptor[] + logical climate clock
+           |
+           +--> WhiteCurtainFieldModel.sampleGameplay
+           |      authoritative chunk climate/temperature/forecast
+           |
+           +--> FHWhiteCurtainSnapshotPacket (state changes only)
+           +--> FHClimatePacket (existing hourly clock/global climate)
+                         |
+                         v
+ClientWeatherState
+  prepared VisualKernel[]
+  dayTime clock + bounded correction/discontinuity re-anchor
+  once-per-tick candidate filter
+  previous/current fixed weather grids
+  tick camera sample + tick precipitation ownership
+                         |
+              +----------+-----------+
+              |                      |
+              v                      v
+ClientWeatherFrame              WeatherSoundLoop / tickRain
+current-camera render owner     shared tick sample
+     +-------------------+
+     |                   |
+SpatialWeatherRenderer  FogModification
+wall + snow columns     shared frame sample
+     |
+LevelRendererMixin cancels Vanilla precipitation only for CUSTOM
 
-WorldClimate -- FHClimatePacket, hourly/login/dimension --> ClientClimateData
-                                                             |
-                                                             +--> HUD/forecast
-                                                                  not rendering
+PlayerWeatherCompatibilityModel
+  authoritative local ClimateType -> low-frequency Vanilla rain/thunder
+  retained for compatibility and fallback
 ```
 
-## 2. 服务端气候与白幕空间模型
+`BlizzardRenderer` 仍在源码中，但没有现役调用。V1 使用 `SpatialWeatherRenderer`；旧的注释式 `renderSnowAndRain` 接入已从 `LevelRendererMixin` 删除。
 
-### 2.1 全局气候和局部气候
+## 2. 服务端权威模型
 
-`WorldClimate.getGlobalClimate()` 返回当前小时的全局 `ClimateType`。`WorldClimate.getClimate(ChunkPos)` 先查询白幕，再通过 `ClimateType.merge` 与全局气候合并：`BLIZZARD` 的优先级最高，其次是 `SNOW_BLIZZARD`、`SNOW`，然后是其他天气。局部温度则取全局与白幕结果的较低值。
+### 2.1 Descriptor 与存档兼容
 
-白幕只保存在服务端 `WorldClimate.whitecurtains` 中；客户端没有白幕区域、方向或前沿几何。`WorldClimate` 作为 `FHCapabilities.CLIMATE_DATA` 附着在非 fixed-time 的 `Level`，并把白幕以 NBT 键 `whiteCurtainInfos` 持久化。
+`WhiteCurtainDescriptor` 是一个白幕的稀疏权威数据：
 
-### 2.2 `WhiteCurtainInfo` 如何产生移动天气
-
-`/climate white_curtain add [pos]` 调用 `WorldClimate.addWhiteCurtain`：
-
-- `InterpolationClimateEvent.getBlizzardClimateEvent` 生成一条时长在 `[2, 7)` 游戏日的寒潮/暴风雪事件，随后带 `[1, 3)` 游戏日平静期。
-- 随机选择 `NORTH`、`SOUTH`、`WEST` 或 `EAST` 方向。
-- `WhiteCurtainInfo.generateArea` 生成一个按区块计的矩形走廊。横向两侧各随机扩展 4-9 chunks；一端随机扩展 6-11 chunks，另一端在容纳整个事件传播所需的长度上再随机增加 0-7 chunks。
-- 新白幕只要与已有白幕矩形相交就拒绝加入。
-
-矩形不是一个同时激活的天气区。每个区块根据它到传播起始边的 `getDelta` 获得时间偏移：
-
-```text
-HOURS_PER_CHUNK   = 6 game hours
-SECONDS_PER_CHUNK = 300 logical seconds
-localEventTime    = WorldClimate seconds - deltaChunks * 300
-```
-
-正常 20 TPS、未跳时钟时，一个游戏日为 1200 秒，一个白幕相位每 5 分钟向前推进一格区块。玩家所在区块只是对同一条 `ClimateEvent` 读取不同相位，所以能依次经历 `SNOW_BLIZZARD`、`BLIZZARD` 和结束后的平静段。
-
-`getSnowRect`、`getBlizzardRect` 和 `getPartialRect` 可以计算理论前沿矩形，但当前没有运行时消费者；渲染、温度和预报都通过逐区块的 `getClimate` / `getFrames` 查询。
-
-### 2.3 白幕缓存和刷新粒度
-
-`WorldClimate.whitecurtainCache` 以 packed `ChunkPos` 缓存 `ClimateResult`。`WorldClimate.updateCache` 每秒被检查，但只在全局气候小时变化时清空该缓存；一个气候小时为 50 秒。
-
-这带来两个当前语义：
-
-- 白幕事件本身可以从任意秒开始，但局部气候缓存只按全局小时失效，因此相位变化最多可延迟到下一个全局小时边界。
-- `addWhiteCurtain` 和 `clearWhiteCurtain` 不清空 `whitecurtainCache`。已查询区块中的新增或清除效果可能继续使用旧值，直到下次小时刷新。
-
-过期白幕也只在小时刷新时由 `whitecurtains.removeIf(WhiteCurtainInfo::isInvalid)` 清理。
-
-## 3. 从局部气候到客户端天气状态
-
-### 3.1 全局 Vanilla 天气桥
-
-`ServerLevelMixin_WeatherCycle` 完全覆写 `ServerLevel.advanceWeatherCycle`，并把 `resetWeatherCycle` 覆写为空，所以睡眠不会重置天气。该方法只在 `doWeatherCycle=true` 且维度有 skylight 时继续执行。
-
-它先把全局 `ClimateType` 转换为服务端 `ServerLevelData.isRaining/isThundering`，再以每 tick `0.01` 更新世界级 `rainLevel` 和 `thunderLevel`。Vanilla `/weather` 的 clear/rain/thunder 计时器仍能覆盖这一步的全局布尔值。
-
-当前源码中的：
-
-```java
-boolean climateBlizzard = climate.isBlizzard();
-boolean climateSnowing = climate.isBlizzard() || climateBlizzard;
-```
-
-两个条件实际相同。因此没有 Vanilla 命令覆盖时，服务端世界级 `isRaining` 只会为 `BLIZZARD` 打开，普通 `SNOW` 和 `SNOW_BLIZZARD` 不会打开它。这与变量名和注释表达的意图不同，但属于当前实际行为。
-
-世界级 rain/thunder 广播代码已被注释。真正驱动各客户端的是随后对每位 `ServerPlayer` 调用的局部天气桥。
-
-### 3.2 每玩家局部插值与发包
-
-`PlayerTemperatureData` 持有未写入其 NBT 的运行时字段 `oRainLevel`、`rainLevel`、`oThunderLevel`、`thunderLevel`。`advanceWeatherCycle` 每个服务端 tick 查询玩家当前 `ChunkPos` 的 `WorldClimate.getClimate`：
-
-- `BLIZZARD`: `rainLevel` 和 `thunderLevel` 各增加 `0.01`。
-- `SNOW` / `SNOW_BLIZZARD`: `rainLevel` 增加、`thunderLevel` 减少，各 `0.01`。
-- 其他天气: 两者都减少 `0.01`。
-- 所有值限制在 `[0, 1]`。
-
-只要值变化，就分别发送 `RAIN_LEVEL_CHANGE` 和 `THUNDER_LEVEL_CHANGE`。`rainLevel` 穿过 `0.2` 时再发送 `START_RAINING` 或 `STOP_RAINING`，并重发两种强度。完整的 0 到 1 过渡需要 100 ticks，即正常 TPS 下约 5 秒；开始/停止布尔状态约在过渡 1 秒后翻转。
-
-这使同一维度中的两名玩家可以收到不同的天气画面，也使白幕的区块级骤变在视觉强度上具有约 5 秒缓动。代价是过渡期间每位玩家每 tick 最多常规发送两个天气强度包。
-
-`PlayerListMixin` 在 `PlayerList.sendLevelInfo` 中拦截 Vanilla 初始天气片段，改由 `PlayerTemperatureData.sendInitWeather` 发送初值。该方法只有在全局与局部天气相同时才复制世界级强度；玩家首次连接在局部白幕而全局晴朗时，会从默认零值开始由后续 tick 渐入。
-
-如果 `doWeatherCycle=false` 或维度没有 skylight，`ServerLevelMixin_WeatherCycle` 会在调用每玩家更新前返回，客户端最后收到的局部天气状态可能保持不变。
-
-### 3.3 `FHClimatePacket` 不驱动渲染
-
-`FHClimatePacket` 携带玩家当前位置的 `ClimateType`、40 个 `ForecastFrame`、逻辑时钟、风速和湿度，在登录、换维度、重生及气候小时变化时更新 `ClientClimateData`。当前渲染类不读取 `ClientClimateData`；它用于 HUD、预报和其他玩法消费者。
-
-因此玩家移动跨越白幕边界时：
-
-- rain/thunder 视觉状态可在下一个服务端天气 tick 开始变化；
-- HUD 中的当前气候和白幕预报通常要等下一次小时包才刷新。
-
-## 4. 客户端现役渲染路径
-
-### 4.1 Vanilla 降水几何与 `LevelRendererMixin`
-
-`LevelRendererMixin` 以 priority `1` 注册到 `LevelRenderer`。它没有取消 `renderSnowAndRain`，而是在方法内部修改四处行为：
-
-| Hook | `weatherRenderChanges=true` 时的行为 | 关闭主开关时 |
+| Field | Type | Meaning |
 |---|---|---|
-| `Biome.getPrecipitationAt` redirect | 对所有查询返回 `RAIN` | 使用群系原结果 |
-| `LevelRenderer.getLightColor` redirect | 用 Vanilla 雪的启发式提高两个 light 分量 | 原 packed light |
-| `BufferBuilder.begin` inject | 把 shader texture 设为 `minecraft:textures/environment/snow.png` | 保留 Vanilla texture |
-| render radius constant modify | 见下文；不受该开关控制 | 仍然修改 |
+| `area` | `Rect`，单位 chunks | 白幕可传播的矩形走廊 |
+| `move` | 水平 `Direction` | `NORTH/SOUTH/WEST/EAST` 传播方向 |
+| `climate` | `ClimateEvent` | 温度与 `ClimateType` 的时间曲线 |
 
-所以默认画面本质上是“Vanilla 雨路径的几何和 UV 动画 + Vanilla 雪纹理 + 增亮光照”，不是自定义雪花网格。强制返回 `RAIN` 也意味着降水片本身不再按每列群系的 `NONE/SNOW/RAIN` 结果过滤；地面粒子、风和雾仍各自检查 `Biome.coldEnoughToSnow`，几条视觉支路的空间条件并不一致。
+`WhiteCurtainInfo.CODEC` 通过 `xmap` 包装 `WhiteCurtainDescriptor.CODEC`，仍使用旧 NBT 字段 `area`、`move`、`climate`；`WorldClimate` 的列表键仍为 `whiteCurtainInfos`。旧存档不需要迁移命令。`WhiteCurtainInfo` 继续拥有预报缓存，实际空间公式委托给 `WhiteCurtainFieldModel`。
 
-`snowDensity` 和 `blizzardDensity` 名为 density，实际替换的是 Vanilla 方形降水采样的半径常量。两种图形质量的原始常量都会被替换，因此默认配置下 fast/fancy 不再改变半径：
+### 2.2 玩法传播公式
 
-| 状态 | Radius `r` | 方形列数 `(2r+1)^2` |
-|---|---:|---:|
-| Vanilla fast | `5` | `121` |
-| Vanilla fancy | `10` | `441` |
-| FH normal snow default | `10` | `441` |
-| FH blizzard default | `15` | `961` |
-
-半径选择只读取客户端 `level.isThundering()`。渲染循环不会逐列查询 `WorldClimate` 或白幕区域；整个相机周围方形区域共享玩家连接当前的 rain/thunder 状态。因此玩家无法在远处看见白幕前沿，也无法在渲染半径内看到一侧晴、一侧暴风雪的空间边界。
-
-### 4.2 `tickRain` 的地面粒子和声音
-
-`LevelRendererMixin.addExtraSnowParticlesAndSounds` 注入 `LevelRenderer.tickRain` 的 HEAD，之后 Vanilla 方法仍会继续执行。
-
-每个客户端 tick 的尝试数为：
+源常量与单位：
 
 ```text
-particleAttempts = floor(100 * rainStrength^2)
-particleAttempts *= 2
-DECREASED particle setting: particleAttempts /= 2
+HOURS_PER_CHUNK   = 6 climate hours/chunk
+SECONDS_PER_CHUNK = 300 logical seconds/chunk
+deltaSeconds      = deltaChunks * 300
+localSeconds      = climateSeconds - deltaSeconds
+gameplayHour      = trunc((localSeconds - event.startTime) / 50)
 ```
 
-满强度、fancy graphics 时最多为 200 次，`DECREASED` 为 100 次；fast graphics 会先把 `rainStrength` 减半，因此对应上界约为 50 和 24 次。`MINIMAL` 会在找到第一个合格生成点后退出。这里无 `isThundering` 条件，“乘 2”同时作用于普通雪和暴风雪。每次尝试会随机取相机水平 21x21 blocks 内的位置，并查询 motion-blocking heightmap、群系；满足冷到可下雪和相机高度范围后，还会查询碰撞形状与流体高度，在表面生成 `frostedheart:snow`，热表面则生成 smoke。`SnowParticle` 继承 `WaterDropParticle`，使用 `assets/frostedheart/particles/snow.json` 中的四张 sprite。
+`deltaChunks` 从传播起始边计算；四个方向保持旧 `WhiteCurtainInfo.getDelta` 语义。`sampleGameplay` 仍按整气候小时读取事件，因此服务器玩法结果没有改成连续插值。`WorldClimate.getClimate(ChunkPos)` 把白幕类型与全局类型合并，温度查询取全局与白幕温度的较低值。
 
-声音分为两条：
+`WorldClimate.whitecurtainCache` 的 entry 现在保存 `ClimateResult`、`validUntilSeconds` 和 `whiteCurtainGeneration`。缓存精确失效到该区块的下一玩法相位，而不再只能等待全局小时边界。以下操作会立即增加 generation 并清缓存：
 
-- `snowSounds=false` 通过持续把 `rainSoundTime` 设为 `-1` 抑制雨雪落地声；开启时本注入会播放低音量的 Vanilla rain/rain-above 声音。
-- `windSounds=true` 时，只在相机位置天空光大于 3、客户端正在下雨且群系足够冷时播放 `frostedheart:wind`。普通雪间隔约 120-149 ticks，暴风雪约 60-79 ticks；暴风雪音量乘 2，镜头在流体内时降低 pitch。
+- 成功添加白幕；
+- 清除白幕；
+- NBT 载入；
+- 每秒检查发现白幕已完全结束并自然移除。
 
-粒子与声音逻辑都不读取 `weatherRenderChanges`。主视觉开关关闭后，它们仍由各自配置继续运行。
-
-### 4.3 雾颜色和可见距离
-
-`FogModification` 通过 client-side Forge event subscriber 监听 `ViewportEvent.ComputeFogColor` 和 `ViewportEvent.RenderFog`。它同样不读取 `weatherRenderChanges`。
-
-相机不在流体中，且 `level.isRaining()` 且相机所在群系 `coldEnoughToSnow` 时：
+创建仍拒绝与现有白幕走廊相交。自然结束条件为：
 
 ```text
-expectedFogDensity = clampMap(skyLight, 0..15, 0..0.5)
-if level.isThundering(): expectedFogDensity *= 2
+event.calmEndTime + maxDeltaChunks * 300 < climateSeconds
 ```
 
-此处天空光越强，雾目标越强；室内低天空光会降低雾，而不是增加遮蔽。`prevFogDensity` 使用 `Util.getMillis` 的真实毫秒差插值，增强速率是减弱速率的 4 倍。相机进入任意流体时状态重置；换世界时没有显式重置钩子。
+### 2.3 视觉采样
 
-有雾时，颜色在 `fogColorDay=0xbfbfd8` 与 `fogColorNight=0x0c0c19` 之间按太阳角度插值。近远平面使用：
+`WhiteCurtainFieldModel.prepareVisual` 在 snapshot 替换时把事件按小时预计算为 `VisualKernel`，包括走廊边界、方向、相位数组、首尾降雪小时和稳定 seed。客户端使用 block 坐标连续计算传播延迟：
 
 ```text
-scaledDelta   = 1 - (1 - prevFogDensity)^2
-farPlaneScale = lerp(scaledDelta, 1, fogDensity)
-nearScale     = lerp(scaledDelta, 1, 0.3 * fogDensity)
+continuousChunk = (blockCoordinate - 8) / 16
+localSeconds    = climateSeconds - continuousDeltaChunks * 300
 ```
 
-默认 `fogDensity=0.1`，满暴风雪目标下远平面缩至原值 `0.1`，近平面缩至 `0.03`。处理器随后 cancel `RenderFog`，所以其他雾修改器的组合顺序需要在实际模组环境中验证。
+区块中心与服务端玩法相位一致；走廊边缘按 profile 平滑，雪量和白化相位都在相位切换后用 `WhiteCurtainVisualProfile.phaseTransitionSeconds=5` 做 `5 logical seconds` 平滑，不改变服务端整小时玩法结果。视觉结果写入调用者复用的 `MutableVisualWeatherSample`，包含 `snowIntensity`、`whiteoutIntensity`、`windIntensity`、风向和 `visibilityBlocks`。
 
-## 5. 未接入或无效的渲染代码
+## 3. 网络与客户端时钟
 
-### 5.1 `BlizzardRenderer` 当前不执行
+### 3.1 白幕 snapshot
 
-`BlizzardRenderer` 中存在 `render` 和 `renderBlizzard` 两套直接构建 `PARTICLE` quads 的实现，但仓库中唯一调用位于 `LevelRendererMixin.inject$renderWeather` 的整段注释代码中。当前没有构造 `BlizzardRenderer`，`flakeDensity`、`flakeSize` 和预计算数组也没有运行时消费者。
+`FHWhiteCurtainSnapshotPacket` 的 payload 是：
 
-这部分代码不应作为当前性能基线，也不应被误认为白幕渲染。若未来重新接入，需要先决定它是替换还是叠加 Vanilla 路径，并重新核对 shader、buffer、light layer 和 render state 的所有权。
+```text
+dimension ResourceKey
+climateSeconds VarLong
+clockDayTime VarLong
+List<WhiteCurtainDescriptor> encoded through NBT Codec
+```
 
-### 5.2 `skyRenderChanges` 当前没有运行时效果
+发送时机：玩家登录、换维度、所有重生路径（包括末地通关返回）、成功创建、清除以及自然结束。空列表也会发送，以原子替换旧维度状态。稳定移动只由客户端时钟重建，白幕专用网络成本是 `0 packets/player/second`。snapshot 和原有 `FHClimatePacket` 各增加一个 `clockDayTime VarLong`，没有新增周期 packet 类型。
 
-`DimensionSpecialEffectsMixin` 的源码会在 Overworld 冷群系中把 `getSunriseColor` 返回值改为 `null`，但它未列入 `frostedheart.mixins.json` 的 `client` 数组，因此不会加载。客户端配置 `skyRenderChanges` 当前没有生效的消费者。
+解码失败时 packet 被标为无效，客户端保留最后一个有效 snapshot；诊断日志全进程最多输出 4 次。packet 在客户端线程应用，维度不匹配时拒绝；目标 level 尚未存在时只保留一个 bounded pending snapshot。
 
-即使将该 Mixin 注册，其源码也只检查冷群系，不检查 rain/thunder，实际作用会是始终隐藏所有 Overworld 冷群系的日出/日落颜色，而非仅在雪暴时隐藏。
+### 3.2 全局与局部气候
 
-## 6. 配置实际作用域
+`FHClimatePacket.climate` 仍是玩家所在区块的全局/白幕合并结果，供现有 HUD 和预报使用。新增的 `globalClimate` 只表示 `WorldClimate.getGlobalClimate()`，作为客户端天气网格底色，避免把玩家当前位置的局部白幕错误铺满整个近场网格。
 
-配置位于客户端 Frosted Heart config 的 `Weather` 分组。
+`WorldClockSource` 的唯一时间源是服务端 `dayTime`。`FHWhiteCurtainSnapshotPacket` 和 `FHClimatePacket` 同步同一对 `(sec, clockDayTime)`；客户端不再用持续增长的 `gameTime` 推动白幕。正常 client tick 只接受 `0..20` 的前向 `dayTime` 增量，关闭 `doDaylightCycle` 时增量为零；睡眠或 `/time` 的大跳由服务端在下一次一秒气候调度时复用 `FHClimatePacket` 重锚，客户端不会把同一跳变重复应用。
 
-| Anchor | Default | 当前实际作用 |
+```text
+normal tick: tickClimateSeconds += dayTimeDelta / 20
+normal frame: frameSeconds = tickClimateSeconds + partialTick / 20
+frozen/jump frame: frameSeconds = tickClimateSeconds
+```
+
+校时误差 `<5 logical seconds` 时，每个 client tick 最多修正 `0.10 logical seconds`，新观测会替换而不是累加未完成误差；误差 `>=5 seconds` 时立即重锚。小时变化照常发包，`WorldClockSource.update` 检出大跳时也会在下一次 `20-tick` 调度复用一次现有气候包。`ClientWeatherState.tickClock` 在 Compatibility 和空间模式都只推进这些标量；候选预筛和网格填充只在空间模式执行，因此玩家切回 V1 时不会读取停止期间的旧前沿，也不会为 Compatibility 支付场采样成本。每帧只读取标量，工作量不随显示刷新率增加。
+
+### 3.3 Vanilla 兼容桥
+
+`ClimateCommonEvents.onServerTick` 的现有 `gameTime % 20 == 0` 分支每玩家解析一次 capability，并把已经取得的 `WorldClimate` 和 `player.chunkPosition()` 交给 `PlayerTemperatureData.advanceWeatherCycle`。外层调用、capability 解析和气候采样都不超过 `1/player/second`。类型不变时不发包；发生 `clear/snow/blizzard` 离散变化时，`PlayerWeatherCompatibilityModel` 才发送有限的 Vanilla `ClientboundGameEventPacket`：
+
+| Local climate | raining | thundering | rain strength | thunder strength |
+|---|---:|---:|---:|---:|
+| clear | false | false | `0.0` | `0.0` |
+| snow / snow-blizzard | true | false | `0.8` | `0.0` |
+| blizzard | true | true | `0.8` | `0.8` |
+
+这条桥用于 `COMPATIBILITY`、其他模组观察到的 Vanilla 天气状态以及自定义 renderer 故障恢复；它不再承担逐 tick 视觉渐变。
+
+## 4. 客户端状态与固定工作量
+
+`WeatherRenderingMode` 是玩家固定选择，不根据 FPS 自动改变：
+
+| Mode | Behavior |
+|---|---|
+| `COMPATIBILITY` | Vanilla precipitation 加现有 Mixin 修饰 |
+| `SPATIAL_V1_FAST` | V1 固定 Fast profile；默认值 |
+| `SPATIAL_V1_FANCY` | V1 固定 Fancy profile |
+
+`ClientWeatherState.tick` 每 client tick 至多执行一次：
+
+1. 应用匹配维度的 pending snapshot 和有界时钟修正。
+2. 对所有 descriptor 做一次距离/相位预筛；活动前沿 `512 blocks` 内的 wall candidates 按前沿到相机距离稳定排序，近场半径只保留会影响网格的 candidates。
+3. 交换固定容量 previous/current grid backing arrays。
+4. 只让近场 candidates 填充 world-aligned grid；发布复用的 tick camera sample 和 tick ownership。renderer、雾、声音和地面效果之后都不遍历 descriptor。
+
+| V1 profile | Grid | Field cells/tick | Near prefilter radius | Wall slices | Wall segments | Snow columns/frame | Terrain queries/tick |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| Fast | `9x9`, spacing `8 blocks` | `81` | `48 blocks` | `4` | `16` | `<=256` | `<=12` |
+| Fancy | `17x17`, spacing `4 blocks` | `289` | `56 blocks` | `8` | `32` | `<=1024` | `<=32` |
+
+每个 grid cell 复用六个 `float[]` 字段，前后两张网格在 tick 间交换。完整 camera/fog sample 使用六通道；雪柱使用不计算 `visibility` 的五通道专用 sampler；声音直接复用 tick camera sample。采样使用空间双线性插值，再按 `partialTick` 在 previous/current grid 间插值。屏外 descriptor 只付一次预筛，不触发 field evaluation 或 draw work。
+
+## 5. 每帧 Ownership 与渲染
+
+`LevelRendererMixin` 在 `LevelRenderer.renderLevel` 的 `HEAD` 使用 `Camera.setup` 后的当前相机和 `partialTick` 冻结帧，避免 `RenderTickEvent.START` 读取上一帧相机。`ClientWeatherFrame` 每个实际世界渲染帧只选择一次：
+
+| Ownership | Condition | Precipitation owner |
+|---|---|---|
+| `CUSTOM` | 未衰减的 previous/current 近场网格内存在 `snowIntensity` 或 `whiteoutIntensity > 0.01` | V1；frame owner 取消 `renderSnowAndRain`；tick owner 取消 `tickRain`；相机尚未穿过前沿时也能画出逼近的空间雪带 |
+| `WALL_ONLY` | 近场网格无降雪足迹，但附近存在 wall candidate | Vanilla 保留；V1 只画远处墙 |
+| `FALLBACK` | compatibility、无有效 grid、无可见天气或 renderer 已隔离 | Vanilla |
+
+### 5.1 风暴墙与近场降雪
+
+`SpatialWeatherRenderer` 在 `RenderLevelStageEvent.Stage.AFTER_WEATHER` 提交有界 geometry；墙使用 `assets/frostedheart/textures/environment/white_curtain.png`，近场 streak 继续使用 Minecraft `textures/environment/snow.png`：
+
+- 风暴墙沿 `VisualKernel.leadingSnowDeltaChunks` 移动；Fast/Fancy 分别最多选择最近 `4/8` 个活动前沿，按墙公平分配全局 `4/8` 个 slice，最终仍是 `64/256 wall quads` 上限，远 descriptor 不会按 snapshot 顺序饿死近墙。距离裁剪逐固定 segment 计算，超宽走廊不会再因整墙中心过远而误删近端；垂直顶点使用 level build height 的 camera-relative 坐标。
+- 专用 `64x256 RGBA` 墙纹理具有连续雪雾 alpha，而不是原版雪纹理的稀疏 flake atlas。每层顶点 alpha 为 `a = (0.24 + 0.30s)d`：`s` 是 `[0,1]` 的 slice fade，`d` 是 `[0,1]` 的距离 fade；不同 slice 使用确定性的 UV 偏移，横向 UV 按每 `24 blocks` 一次平铺，纵向按世界 Y 每 `32 blocks` 一次平铺并连续滚动。Fast 的完整四层在满距离权重下由资源回归测试约束为合成 opacity `>=0.55`。这没有新增墙 pass、draw、quad 或 shader。
+- 近场雪柱使用固定 `16x16 @ 2-block spacing` 或 `32x32 @ 1-block spacing` 网格。设间距为 `p blocks`、边长为 `N`，起始单元是 `c0 = floor(floor(cameraCoord) / p) - N/2`；每列位置由世界单元坐标和固定 hash 决定，并加入范围 `[-0.28p, 0.28p]` 的确定性水平偏移。因此相机在同一单元内移动不会改变任何雪柱位置，跨单元时只有径向淡出区的一排退出、另一排进入，不再整体换奇偶格。每列仍只采样共享天气 grid，不查询 descriptor 或地形，并按局部风向/风强倾斜 streak。
+- `tickGroundEffects` 只查询 `Heightmap.Types.MOTION_BLOCKING`，Fast/Fancy 最多 `12/32` 次每 tick；Vanilla `DECREASED` 粒子选项减半，`MINIMAL` 禁用。
+- 没有逐雪花对象、逐列 descriptor 扫描、自定义 framebuffer、compute shader 或客户端 worker thread。
+
+渲染 pass 在进入时保存 shader、texture unit 0 和 shader color，并在 `finally` 精确恢复；同时把 `AFTER_WEATHER` 的 canonical 后置状态恢复为 depth test/write 开、cull 开、blend 关和默认 blend func。V1 不修改 viewport、scissor、blend equation 或 depth func。若自定义 pass 抛出运行时异常，会释放仍打开的 `BufferBuilder`、隔离当前维度，并从下一帧统一切回 compatibility ownership 和声音；不会因为测得 FPS 较低而自动换档。正常、空批和异常出口仍必须在无 shader/Oculus 的运行时 GL capture 中验证，当前自动化测试不能证明驱动状态。
+
+### 5.2 雾与声音
+
+`FogModification` 在 `CUSTOM` 下直接读取同一帧 `cameraSample`，不再独立计算白幕位置或时钟。非 custom 模式继续按 Vanilla rain/thunder 使用旧的平滑雾逻辑。`fogDensity`、`fogColorDay` 和 `fogColorNight` 仍控制最终雾强度与颜色。
+
+`WeatherSoundLoop` 最多持有一个非定位循环 `frostedheart:wind`，每 tick 直接读取已经做过室内暴露衰减的 tick camera sample 并平滑音量/音调。室内 exposure 只衰减效果，不改变 custom ownership，因此不会在屋内重新启用旧 `tickRain` 工作。新 loop 以首个非零目标音量提交，避免声音引擎拒绝零音量实例。禁用空间模式、`windSounds=false`、卸载世界或进入 renderer 隔离状态会停止循环。Compatibility 继续使用 `LevelRendererMixin.tickRain` 的旧雪声/风声逻辑。
+
+## 6. 配置
+
+配置路径是 Forge client config 的 `Weather` 分组：
+
+| Java anchor | Default | Current meaning |
 |---|---:|---|
-| `weatherRenderChanges` | `true` | 只控制降水类型强制、光照增亮和雪纹理替换 |
-| `snowDensity` | `10` | 普通雪 `renderSnowAndRain` 半径，范围 `1..15` |
-| `blizzardDensity` | `15` | thunder/暴风雪半径，范围 `1..15` |
-| `snowSounds` | `true` | 雨雪落地声音 |
-| `windSounds` | `true` | 冷群系露天风声 |
-| `fogDensity` | `0.1` | 满雾时近远平面的目标比例，范围 `0..1` |
-| `fogColorDay` | `0xbfbfd8` | 日间雪雾 RGB |
-| `fogColorNight` | `0x0c0c19` | 夜间雪雾 RGB |
-| `skyRenderChanges` | `true` | 当前无运行时效果，Mixin 未注册 |
+| `weatherRenderChanges` | `true` | 总开关；false 强制 compatibility ownership，并停止 V1 loop |
+| `weatherRenderingMode` | `SPATIAL_V1_FAST` | 玩家固定 backend/profile；不按 FPS 自动改变 |
+| `fogDensity` | `0.1`, range `[0,1]` | 雾距离缩放强度 |
+| `fogColorDay` / `fogColorNight` | `0xbfbfd8` / `0x0c0c19` | 雪天气雾色 |
+| `snowDensity` / `blizzardDensity` | `10` / `15`, range `[1,15]` | 只影响 compatibility 的 Vanilla column 半径，不改变 V1 caps |
+| `snowSounds` | `true` | compatibility 的地面雪声 |
+| `windSounds` | `true` | V1 循环风声以及 compatibility 暴风雪风声 |
 
-这些开关不是一个统一的天气渲染 feature gate。测试“关闭 Frosted Heart 天气渲染”时必须分别核对降水半径、粒子、声音、雾和天空，而不能只切换 `weatherRenderChanges`。
+Fast/Fancy 不读取 Vanilla graphics 的 fast/fancy 状态；这是为了让玩家选择可复现的固定工作上限。Minecraft 自带 particle status 仍约束 V1 地面粒子。
 
-## 7. 优化前应测量的边界
+## 7. 生命周期
 
-| Path | 扩展维度 | 当前默认暴风雪上界或频率 | 建议观测点 |
-|---|---|---|---|
-| `renderSnowAndRain` | 客户端每帧、半径平方 | `r=15`, 961 columns/frame | CPU render section、GPU draw、height/biome/light 查询、shader/mod compatibility |
-| injected `tickRain` | 客户端每 tick、强度平方 | fancy graphics 下最多 200 random attempts/tick at strength 1 | heightmap、collision shape、粒子创建、Vanilla 后续工作是否重复 |
-| fog events | 客户端每帧 | 两个 viewport callbacks | cancel/组合顺序、真实帧时间、可见距离稳定性 |
-| per-player weather bridge | 服务端每 tick、在线玩家数 | 过渡时最多 2 个常规强度包/player/tick | `WorldClimate.getClimate`、packet count/bytes、边界来回移动 |
-| white curtain cache | 查询区块数、每小时失效 | packed chunk lookup；每 50 秒全清 | cache size/hit rate、add/clear 延迟、跨小时尖峰 |
-| `FHClimatePacket` | 每小时、在线玩家数 | 40 forecast frames/player | 与渲染包分开统计，避免把 HUD 同步归入天气几何 |
+| Event | V1 action |
+|---|---|
+| Client login | reset state/frame/renderer quarantine/sound；等待 snapshot |
+| Snapshot for loaded dimension | prepare immutable descriptor list and `VisualKernel[]`，原子替换 |
+| Snapshot before level | 保存一个 pending slot，匹配维度首 tick 应用 |
+| Dimension mismatch | 拒绝旧维度 packet；tick 清空旧 kernels/grid |
+| Level unload | reset state/frame/quarantine and stop loop |
+| Resource/config mode change | 下一 client tick/frame 读取固定选择；不需要重建服务端状态 |
+| Render exception | 当前维度 session quarantine；下一帧 compatibility |
 
-开始重构前，应至少锁定以下可见行为：普通雪/暴风雪的 5 秒强度过渡、两名玩家处于白幕内外时的独立画面、快/高画质半径、室内外雾、跨流体相机、降水声音以及白幕跨区块移动。当前 `src/test` 没有覆盖 `WhiteCurtainInfo`、天气包插值、`LevelRendererMixin`、`FogModification` 或 `BlizzardRenderer`；现有行为主要依赖集成烟测和性能采样。
+## 8. 性能边界与验证状态
 
-## 8. 已确认的架构约束
+代码已经建立工作量硬上限，但 CPU/GPU 数字必须来自真实客户端 profile，不能从上限反推：
 
-- 白幕是服务端局部气候模型，不是客户端空间特效；客户端看不到天气墙的位置或方向。
-- 所有现役视觉消费者共享 Vanilla rain/thunder 两个标量，但它们的群系、配置和强度条件不统一。
-- `snowDensity` / `blizzardDensity` 控制半径而非同面积内的粒子密度，是当前最直接的平方级渲染成本控制点。
-- 服务端每玩家发包实现了局部天气，但把视觉平滑、网络频率和 Vanilla 天气状态绑在同一个 `PlayerTemperatureData` 状态机中。
-- HUD/预报同步和天气渲染同步是两条独立网络链路，刷新粒度分别为小时级和 tick 级。
-- `BlizzardRenderer`、白幕矩形计算以及未注册的天空 Mixin 都不是现役渲染路径，优化工作应先从 Vanilla Mixin、`tickRain`、雾和每玩家天气包开始。
+- 服务端没有按渲染距离、雪柱、墙切片或客户端画质扩展的视觉工作。
+- 稳定白幕没有专用周期 packet；现有小时 `FHClimatePacket` 同时校时。
+- Fast/Fancy grid、wall、snow column 和 terrain query 上限由 enum 固定。
+- 专用墙纹理替换只改变现有 wall batch 的 texture binding；雪柱世界锚定只改变现有列坐标生成。两者均不增加服务端工作、packet、field sample、quad 上限或 draw 数。
+- snapshot 替换会分配 descriptor list、kernel phase arrays 和 candidate arrays；状态、sample 和 grid 数组在稳定 tick/frame 复用。空批使用 `BufferBuilder.endOrDiscardIfEmpty()`，但非空 `Tesselator.end()` 仍会为 wall/snow batch 生成 `DrawState/RenderedBuffer` 包装，因此不能宣称已经达到 `0 B/frame`；JFR 后若不达门，需改持久 VBO/复用 staging buffer，而不是只凭数组复用通过验收。
+- 当前墙已做活动前沿距离排序、公平 slice 和逐 segment 半径裁剪，但还没有真实 frustum/屏幕区间裁剪、持久墙 VBO 或地形贴合；这些仍是 V1 profile/release gate。
+- 当前没有完成 30/60/144+ FPS、1080p/1440p/4K、Embeddium/Oculus 和低端 GPU 的 render-thread/GPU P95 测量，因此计划中的毫秒门仍是 release gate，不是已达成结果。
+
+现有 V1 定向 JUnit 共 `38` 条，覆盖旧 Codec fixture、四方向传播、玩法等价、含末端边界、`5s` 雪/白化过渡、cache add/clear/prune、snapshot `0/1/8/32` round-trip 与 malformed payload、dayTime freeze/前后跳/重复校时、Compatibility 1000-tick 时钟连续性、候选排序、屏外工作量、双网格/专用 sampler、室内与前沿外 ownership、墙段距离、固定 caps、正负坐标雪柱锚定、墙纹理覆盖/接缝/合成 opacity 和 Vanilla compatibility 映射。Java 17 全量结果为 `588 tests, 0 failures, 0 errors`。
+
+## 9. V1 表现边界与 V2
+
+V1 已经是“真实空间白幕”的工程底座：远处存在会移动的致密纹理墙，玩家穿越时降雪、白化、雾和风声按位置连续变化，两名玩家可从同一 descriptor 得到不同局部画面。每 client tick 只用一个复用 `MutableBlockPos` 在玩家眼位执行一次 `canSeeSky`，并以 `0.15/tick` 平滑成 `cameraExposure`，统一衰减近场雪、雾、风和声音；远墙仍可从室内看见。这是低成本单点、二值 shelter 模型，不是逐列、多射线或 depth-aware 室内遮蔽。当前墙仍是有界半透明 geometry，没有地形吞没、体积云底、光照消光或 temporal history。
+
+这些效果属于未实现的 [`V2 电影级渲染计划`](../../plans/2026-08-24_05-08-24_white-curtain-v2-cinematic-rendering.md)。V2 必须复用 V1 descriptor、时钟、候选和网格，保持服务端与稳定网络相对 V1 零增量；V1 的实现状态、未完成 profile 和验收项记录在 [`V1 工程计划`](../../plans/2026-08-24_04-25-01_white-curtain-server-efficient-spatial-rendering.md)。

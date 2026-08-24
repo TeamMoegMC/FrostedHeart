@@ -29,6 +29,7 @@ import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
 import com.teammoeg.frostedheart.content.climate.event.ClimateCommonEvents;
 import com.teammoeg.frostedheart.content.climate.gamedata.climate.DayClimateData.HourData;
 import com.teammoeg.frostedheart.content.climate.network.FHClimatePacket;
+import com.teammoeg.frostedheart.content.climate.network.FHWhiteCurtainSnapshotPacket;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import lombok.Setter;
 import net.minecraft.core.BlockPos;
@@ -98,7 +99,9 @@ public class WorldClimate implements NBTSerializable {
     protected long lasthour = -1;
     protected int hourInDay = 0;
     protected DayClimateData daycache;
-    protected Long2ObjectOpenHashMap<ClimateResult> whitecurtainCache=new Long2ObjectOpenHashMap<>();
+    protected Long2ObjectOpenHashMap<WhiteCurtainCacheEntry> whitecurtainCache=new Long2ObjectOpenHashMap<>();
+    protected long whiteCurtainGeneration;
+    private boolean clockDiscontinuityPending;
     protected long lastday = -1;
     private boolean isInitialEventAdded;
     @Setter
@@ -488,9 +491,13 @@ public class WorldClimate implements NBTSerializable {
         return getCapability(world).map(t->t.getClimate(pos).isBlizzard()).orElse(false);
     }
     public WorldClimate() {
+        this(FHConfig.SERVER.CLIMATE.longTermTrackCount.get());
+    }
+
+    WorldClimate(int trackCount) {
         clockSource = new WorldClockSource();
         dailyTempData = new LinkedList<>();
-        for(int i = 0; i < FHConfig.SERVER.CLIMATE.longTermTrackCount.get(); i++)
+        for(int i = 0; i < trackCount; i++)
         	tracks.add(new ClimateEventTrack());
     }
 
@@ -633,6 +640,9 @@ public class WorldClimate implements NBTSerializable {
     public long getSec() {
         return clockSource.getTimeSecs();
     }
+    public long getClockDayTime() {
+        return clockSource.getSourceDayTime();
+    }
     public ClimateResult getClimateOfWhiteCurtain(ChunkPos pos) {
     	for(WhiteCurtainInfo wci:whitecurtains) {
     		if(wci.isAffected(pos)) {
@@ -641,14 +651,36 @@ public class WorldClimate implements NBTSerializable {
     	}
     	return ClimateResult.EMPTY;
     }
+    private ClimateResult getCachedClimateOfWhiteCurtain(ChunkPos pos) {
+        return getCachedClimateOfWhiteCurtain(pos.x, pos.z);
+    }
+    private ClimateResult getCachedClimateOfWhiteCurtain(int chunkX, int chunkZ) {
+        long now = getSec();
+        long key = ChunkPos.asLong(chunkX, chunkZ);
+        WhiteCurtainCacheEntry cached = whitecurtainCache.get(key);
+        if (cached != null && cached.generation == whiteCurtainGeneration && now < cached.validUntilSeconds) {
+            return cached.climate;
+        }
+        ChunkPos pos = new ChunkPos(chunkX, chunkZ);
+        ClimateResult climate = ClimateResult.EMPTY;
+        long validUntil = Long.MAX_VALUE;
+        for (WhiteCurtainInfo curtain : whitecurtains) {
+            if (curtain.isAffected(pos)) {
+                climate = WhiteCurtainFieldModel.sampleGameplay(curtain.descriptor(), now, pos);
+                validUntil = WhiteCurtainFieldModel.nextGameplayTransition(curtain.descriptor(), now, pos);
+                break;
+            }
+        }
+        whitecurtainCache.put(key, new WhiteCurtainCacheEntry(climate, validUntil, whiteCurtainGeneration));
+        return climate;
+    }
     public ClimateType getClimate(ChunkPos pos) {
-
-		ClimateResult cr=whitecurtainCache.computeIfAbsent(pos.toLong(), l -> getClimateOfWhiteCurtain(new ChunkPos(l)));
+		ClimateResult cr=getCachedClimateOfWhiteCurtain(pos);
         return cr.climate().merge(this.getHourData().getType());
     }
     public float getTemp(BlockPos pos) {
     	if(daycache!=null) {
-    		ClimateResult cr=whitecurtainCache.computeIfAbsent(ChunkPos.asLong(pos.getX()>>4,pos.getZ()>>4), l -> getClimateOfWhiteCurtain(new ChunkPos(l)));
+			ClimateResult cr = getCachedClimateOfWhiteCurtain(pos.getX() >> 4, pos.getZ() >> 4);
     		return Math.min(daycache.getTemp(hourInDay), cr.temperature());
     	}
     	return 0;
@@ -749,7 +781,40 @@ public class WorldClimate implements NBTSerializable {
     		track.tempEventStreamTrim(this.clockSource.getTimeSecs() - 1200);
     }
     public void clearWhiteCurtain() {
-    	whitecurtains.clear();
+		if (!whitecurtains.isEmpty()) {
+			whitecurtains.clear();
+			invalidateWhiteCurtainCache();
+		}
+    }
+
+    public boolean clearWhiteCurtain(ServerLevel level) {
+        if (whitecurtains.isEmpty()) {
+            return false;
+        }
+        clearWhiteCurtain();
+        syncWhiteCurtains(level);
+        return true;
+    }
+
+    private void invalidateWhiteCurtainCache() {
+        whiteCurtainGeneration++;
+        whitecurtainCache.clear();
+    }
+
+    boolean pruneInvalidWhiteCurtains(long climateSeconds) {
+        if (!whitecurtains.removeIf(t -> t.isInvalid(climateSeconds))) {
+            return false;
+        }
+        invalidateWhiteCurtainCache();
+        return true;
+    }
+
+    public long getWhiteCurtainGeneration() {
+        return whiteCurtainGeneration;
+    }
+
+    public List<WhiteCurtainDescriptor> getWhiteCurtainDescriptors() {
+        return whitecurtains.stream().map(WhiteCurtainInfo::descriptor).toList();
     }
     /**
      * Check and refresh whole cache.
@@ -761,7 +826,11 @@ public class WorldClimate implements NBTSerializable {
     public void updateCache(ServerLevel serverWorld) {
         long hours = clockSource.getHours();
         final long secs = clockSource.getTimeSecs();
-        if (hours != lasthour) {
+        if (pruneInvalidWhiteCurtains(secs)) {
+            syncWhiteCurtains(serverWorld);
+        }
+        boolean hourChanged = hours != lasthour;
+        if (hourChanged) {
             long date = clockSource.getDate();
             if (date != lastday) {
                 updateDayCache(date);
@@ -770,12 +839,14 @@ public class WorldClimate implements NBTSerializable {
             whitecurtainCache.clear();
             if(forecast.shouldUpdateNewFrames(hours))
             	forecast.updateFrames(hours,this.getFrames());
-            whitecurtains.removeIf(t->t.isInvalid(secs));
-            // Send to client if hour increases
-            for(ServerPlayer p:serverWorld.players())
-            	FHNetwork.INSTANCE.send(PacketDistributor.PLAYER.with(()->p), new FHClimatePacket(this,p));
-            
         }
+        if (hourChanged || clockDiscontinuityPending) {
+            for (ServerPlayer player : serverWorld.players()) {
+                FHNetwork.INSTANCE.send(PacketDistributor.PLAYER.with(() -> player),
+                        new FHClimatePacket(this, player));
+            }
+        }
+        clockDiscontinuityPending = false;
     }
 
     /* Serialization */
@@ -787,7 +858,7 @@ public class WorldClimate implements NBTSerializable {
      * @param serverWorld must be server side.
      */
     public void updateClock(ServerLevel serverWorld) {
-        this.clockSource.update(serverWorld);
+        clockDiscontinuityPending |= this.clockSource.update(serverWorld);
     }
 
     /**
@@ -839,6 +910,7 @@ public class WorldClimate implements NBTSerializable {
         dailyTempData.addAll(CodecUtil.fromNBTList(nbt.getList("hourlyTempStream", Tag.TAG_COMPOUND), DayClimateData.CODEC));
         whitecurtains.clear();
         whitecurtains.addAll(CodecUtil.fromNBTList(nbt.getList("whiteCurtainInfos", Tag.TAG_COMPOUND), WhiteCurtainInfo.CODEC));
+        invalidateWhiteCurtainCache();
         setInitialEventAdded(nbt.getBoolean("isInitialEventAdded"));
         readCache();
 	}
@@ -871,12 +943,32 @@ public class WorldClimate implements NBTSerializable {
 	}
 	public boolean addWhiteCurtain(RandomSource rs,BlockPos center) {
 		WhiteCurtainInfo wci=WhiteCurtainInfo.generateWhiteCurtain(rs, clockSource.getTimeSecs(), center);
+		return tryAddWhiteCurtain(wci);
+	}
+
+	public boolean addWhiteCurtain(ServerLevel level, BlockPos center) {
+		boolean added = addWhiteCurtain(level.random, center);
+		if (added) {
+			syncWhiteCurtains(level);
+		}
+		return added;
+	}
+
+	public void syncWhiteCurtains(ServerLevel level) {
+		FHWhiteCurtainSnapshotPacket snapshot = new FHWhiteCurtainSnapshotPacket(this, level);
+		for (ServerPlayer player : level.players()) {
+			FHNetwork.INSTANCE.sendPlayer(player, snapshot);
+		}
+	}
+
+	boolean tryAddWhiteCurtain(WhiteCurtainInfo wci) {
 		for(WhiteCurtainInfo wcie:whitecurtains) {
-			if(wcie.isIntersected(wci.affectedArea)){
+			if(wcie.isIntersected(wci.descriptor().affectedArea())){
 				return false;
 			}
 		}
 		this.whitecurtains.add(wci);
+		invalidateWhiteCurtainCache();
 		return true;
 	}
 
@@ -887,10 +979,13 @@ public class WorldClimate implements NBTSerializable {
 
     public float getTemp(ChunkPos cp) {
         if(daycache!=null) {
-            ClimateResult cr=whitecurtainCache.computeIfAbsent(cp.toLong(), l -> getClimateOfWhiteCurtain(new ChunkPos(l)));
+            ClimateResult cr=getCachedClimateOfWhiteCurtain(cp);
             return Math.min(daycache.getTemp(hourInDay), cr.temperature());
         }
         return 0;
+    }
+
+    private record WhiteCurtainCacheEntry(ClimateResult climate, long validUntilSeconds, long generation) {
     }
 
 }

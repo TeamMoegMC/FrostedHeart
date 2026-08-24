@@ -11,10 +11,14 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
+import java.util.concurrent.atomic.AtomicLong;
+
 @Mixin(LevelChunkSection.class)
 public abstract class LevelChunkSectionMixin_Phase0aMutationProbe implements Phase0aSectionAttachment {
     @Unique
     private volatile Phase0aMutationProbe.LoadedSectionOwner frostedheart$phase0aOwner;
+    @Unique
+    private final AtomicLong frostedheart$phase0aUnmappedWrites = new AtomicLong();
 
     @Override
     public Phase0aMutationProbe.LoadedSectionOwner frostedheart$getPhase0aOwner() {
@@ -24,6 +28,16 @@ public abstract class LevelChunkSectionMixin_Phase0aMutationProbe implements Pha
     @Override
     public void frostedheart$setPhase0aOwner(Phase0aMutationProbe.LoadedSectionOwner owner) {
         this.frostedheart$phase0aOwner = owner;
+    }
+
+    @Override
+    public long frostedheart$incrementPhase0aUnmappedWrites() {
+        return frostedheart$phase0aUnmappedWrites.incrementAndGet();
+    }
+
+    @Override
+    public long frostedheart$getPhase0aUnmappedWrites() {
+        return frostedheart$phase0aUnmappedWrites.get();
     }
 
     @Inject(
