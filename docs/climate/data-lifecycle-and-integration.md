@@ -207,7 +207,7 @@ V1 白幕稳定移动不发送 snapshot 或逐帧强度。`FHClimatePacket` 现�
 
 ## 9. 现有自动化验证
 
-新热学架构目前只有 gated Phase 0 reference/probe，代码位于 `content.climate.thermal.phase0`。`PhaseZeroThermalRouting` 把 `LEGACY` 保持为唯一 `GameplayAuthority`，即使请求 `V1_PRODUCTION` 也不会启用生产路径；`LevelChunkSectionMixin_Phase0aMutationProbe` 仅在 `runGameTestServer` 设置 `frostedheart.phase0aMutationProbe=true` 时应用。它们不改变现有温度查询、存档、配置、网络或玩家玩法行为。
+新热学架构目前包含 gated Phase 0 reference/probe，以及尚未接 production 的 Phase A geometry/profile prototype，代码分别位于 `content.climate.thermal.phase0`、`content.climate.thermal.geometry` 和 `content.climate.thermal.profile`。`PhaseZeroThermalRouting` 把 `LEGACY` 保持为唯一 `GameplayAuthority`，即使请求 `V1_PRODUCTION` 也不会启用生产路径；`LevelChunkSectionMixin_Phase0aMutationProbe` 仅在 `runGameTestServer` 设置 `frostedheart.phase0aMutationProbe=true` 时应用。Phase A resolver/census 同样只用于 correctness 和 Forge fixture，不改变现有温度查询、存档、配置、网络或玩家玩法行为。
 
 当前与温度核心模型直接相关的自动化测试为：
 
@@ -222,10 +222,11 @@ V1 白幕稳定移动不发送 snapshot 或逐帧强度。`FHClimatePacket` 现�
 | 白幕 V1 定向测试（`34` 条 JUnit） | 旧存档 Codec、四方向玩法/连续视觉场、含末端边界、`5s` 相位平滑、精确 cache 失效、snapshot、dayTime freeze/jump/correction、Compatibility 长时钟、候选排序/双网格/专用 sampler、室内/前沿外 tick/frame ownership、墙段距离、固定 caps 和 Vanilla compatibility 映射 |
 | `thermal.phase0.reference.*`（`28` 条 JUnit） | 秒/tick 单位、`H/C/P/G`、source 精确积分、解析交换、LOD/geometry 能量账本、workload 分类、legacy/shadow routing，以及 benchmark evidence provenance 合同 |
 | `thermal.phase0.mutation.*`（`16` 条 JUnit） | Vanilla/Forge/Create/Frosted Heart 常见 writer census、capture route、同 tick 归一化、重复/断裂检测、mapped/unmapped 分流、显式 resync adapter 和延期项不参与 gate |
-| `thermal.geometry.*`（`16` 条 JUnit） | conservative `4x4` face raster、bounded air components、无 false opening property、`4^3` Brick component/face-port compiler 和 unsupported fallback |
+| `thermal.geometry.*` / `thermal.profile.*`（`40` 条 JUnit） | conservative `4x4` face raster、bounded air components、无 false opening property、`4^3` Brick compiler、27-bit dependency mask、snapshot sentinel/audit、`int` signature registry、真实 `VoxelShape` adapter、generic state-static resolver 和 conservative fluid fallback |
 | `FrostedHeartPhase0aGameTests`（`8` 条 Forge GameTest） | 低层 section mutation、流体与门类、递归写入、活塞、generation/publication、raw palette 检测、raw block/biome 与 whole-section replacement adapter、synthetic dynamic exclusion、真实 ticket load/unload/reload，以及真实 Create assemble/move/disassemble 世界写入 |
+| Phase A Forge GameTest（`5` 条） | air/solid/slab/stairs/Door/Trapdoor/fence/pane/snow/waterlogged fixture、bounded/missing/unloaded snapshot、远端 no-load、piston dynamic exclusion，以及启用 registry resolver census |
 
-完整 Forge GameTest run 当前为 `9/9` required，其中 `8` 条属于 Phase 0a。真实 Create bearing 测试冻结的语义是：assemble 捕获 `stone -> air`；contraption 移动期间按空气处理且不产生热几何 delta；disassemble 在目标位置捕获 `air -> stone`。因此当前方案没有 Create movement adapter、Mixin 或 AABB exclusion。真实 chunk lifecycle 测试通过 region ticket 驱动 load -> unload -> reload，并验证旧 section identity、generation 和 publication 被拒绝。
+完整 Forge GameTest run 当前为 `15/15` required，其中 `8` 条属于 Phase 0a、`5` 条属于 Phase A。Phase A census 枚举 `84,147` 个启用 BlockState，全部 `82,198` 个 `hasDynamicShape() == false` 状态解析为 `259` 个唯一 geometry signatures；最大观测 local-region count 为 `4`。这仍是 neutral-metadata、一次性的 geometry census，不是 production runtime 性能或物理 profile 证据。真实 Create bearing 测试冻结的语义是：assemble 捕获 `stone -> air`；contraption 移动期间按空气处理且不产生热几何 delta；disassemble 在目标位置捕获 `air -> stone`。因此当前方案没有 Create movement adapter、Mixin 或 AABB exclusion。真实 chunk lifecycle 测试通过 region ticket 驱动 load -> unload -> reload，并验证旧 section identity、generation 和 publication 被拒绝。
 
 Phase 0a 现按冻结的常见路径范围完成：Vanilla/Forge 常规 setter、流体、门、活塞、递归 mutation、Create assemble/disassemble，以及 Frosted Heart 已知 direct bypass。`DebugCommand restore_backup` 已执行 owner rebind + full resnapshot；FastNoise raw block/biome 通知只在 section 已有 loaded owner 时置 distinct sticky resync，普通 unmapped worldgen 产生零 thermal work。resync ACK 携带开始重建时的 section identity、lifecycle generation、required revision 和 reason；旧 R1 token 不能清除重建期间产生的 R2 requirement。fingerprint 只用于 GameTest/人工 debug，不做 production 周期扫描。原 21-runtime 穷举清单与断言保留为非执行注释，不是 gate；未知第三方 bypass 在玩家报告可复现后补专用 adapter。`/resetchunks` 同样是延期兼容项，不是当前 gate；以后若支持，应丢弃刷新区块的整份旧 thermal Page 并按 interest 懒重建，而不是保留旧状态。
 

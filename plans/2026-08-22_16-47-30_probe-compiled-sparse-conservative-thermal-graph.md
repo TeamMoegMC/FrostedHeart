@@ -43,7 +43,7 @@
 | 原型前冻结全部 packed SoA 宽度和 arena size class | ✗ | correctness 先用 primitive `int/double` arrays；JOL/JFR/JMH 后再冻结 packing | 6、10、13、76 |
 | `BlockState + FluidState` resolved signature | ✓ | 主线程解析，worker 只接收 immutable primitive IDs | 10、41、61 |
 | collision shape 同时作为 airflow/contact/radiation 真值 | ✗ | 三个独立 resolver channel，各自 profile、mask 与 fallback | 10、11 |
-| 任意 state/shape 自动泛化成可通风 topology | ✗ | 仅显式 profile、static allowlist 或有界 contextual resolver；其余 observable unsupported | 10、11 |
+| 任意 state/shape 自动泛化成可通风 topology | ✗ | `hasDynamicShape == false` 的 state 走统一 state-static resolver；动态 shape 仅允许显式 profile/override 或有界 contextual resolver，其余 observable unsupported | 10、11 |
 | 未定义规则的 `4x4` face aperture 转换 | ✗ | 使用坐标压缩或保守微体素补集；整块 quarter-face 确认开放才置 bit | 11、12、Phase A |
 | 多 local air regions 与 census-derived `Rmax` | ✓ 有条件 | 保留；signature ID、region count 的 packed width 同样由 census 决定 | 10..14 |
 | Door/Trapdoor/FenceGate 统一成 `GateOperator` | ✗ | 它们走 state/fluid resolve + Brick rebuild；Gate 只用于非拓扑可调 `G` | 15 |
@@ -667,13 +667,13 @@ Solver 不直接处理 Minecraft `VoxelShape`，也不假设 Minecraft 提供统
 
 ```text
 1. explicit thermal profile
-2. allowlisted state-static resolver
+2. generic state-static resolver
    - state.hasDynamicShape() == false
    - fixed CollisionContext.empty()
 3. declared DependencyOffsetMask contextual resolver
 ```
 
-Door、Trapdoor 和绝大多数 FenceGate 的 stored state 已包含 open/facing/hinge 等必要属性，可以走 `SELF_ONLY` state geometry；少数 modded shape 才注册 contextual resolver。无法证明 state-static、依赖 BlockEntity/entity/collision context 或超出声明 mask 的输出进入 `CONSERVATIVE_UNSUPPORTED`。Worker 只接收 resolved signature ID，不能读取 `Level`、邻域、BlockEntity 或 context-sensitive callback。
+Door、Trapdoor 和绝大多数 FenceGate 的 stored state 已包含 open/facing/hinge 等必要属性，可以走 `SELF_ONLY` state geometry。V1 对所有 `hasDynamicShape() == false` 的 Vanilla/modded state 使用同一 generic resolver，不做逐模组 allowlist 或专用适配；只有实际需要纠正玩法语义时才通过保留的 explicit override/contextual registration 接口接入。动态 shape 若没有显式 profile/override 或有界 contextual resolver，或其输出依赖 BlockEntity/entity/collision context、超出声明 mask，则进入 `CONSERVATIVE_UNSUPPORTED`。Worker 只接收 resolved signature ID，不能读取 `Level`、邻域、BlockEntity 或 context-sensitive callback。
 
 逻辑合同：
 
@@ -4231,7 +4231,11 @@ Phase 0 必须同时执行附录 A、B、C：复测现有粒子采样、`ChunkHe
 
 #### Phase A 实施快照 — 2026-08-24
 
-状态为 `in-progress`。首个 pure-Java correctness slice 已实现 conservative `4x4` face raster、bounded complement components、`int` region IDs、`4^3` Brick component compiler、flattened component spans 与 face ports，并有 `16` 条 JUnit fixture/property tests。尚未实现 Forge `BlockState + FluidState` resolver census、真实 shape adapter、完整 fixture matrix、dependency-mask closure 测量、JMH/JFR/JOL 或 production wiring，因此 Phase A 不能标为完成。
+状态为 `in-progress`。现已实现 conservative `4x4` face raster、bounded complement components、`int` region/signature IDs、`4^3` Brick component compiler、flattened component spans 与 face ports；另有 `DependencyOffsetMask`、immutable loaded-only `ResolverBlockView`、resolution status/reason、signature registry、真实 `VoxelShape` adapter 与 generic state-static resolver。Phase A geometry/profile JUnit 为 `40/40`，全量 thermal JUnit 为 `84/84`；Forge GameTest 新增 `4` 条 geometry fixture 和 `1` 条 resolver census，总 run 为 `15/15` required。
+
+2026-08-24 的启用 registry census 枚举 `2,392` 个 Block、`84,147` 个 BlockState：全部 `82,198` 个 `hasDynamicShape() == false` 状态经统一 resolver 成功解析，去重为 `259` 个 geometry signature；观测最大 local-air-region count 为 `4`。其余 `1,949` 个 dynamic states 中，`12` 个 moving-piston state 为 `UNRESOLVED_DYNAMIC`，`1,937` 个为 `DYNAMIC_SHAPE_UNSUPPORTED`。该 geometry-only census 使用 neutral metadata，耗时 `326,079,500 ns`，是一次性 Forge GameTest 诊断，不是 reload peak 或每 tick 性能结论。报告位于 `build/reports/thermal-phase-a/resolver-census.json`。
+
+真实 GameTest 已覆盖 air、solid、slab、stairs、Door、Trapdoor、fence、pane、snow layer、waterlogged partial、static piston base/head、moving piston、完整 `NEIGHBOR_26`、越界/missing sentinel 和远端 unloaded dependency；远端 capture 前后均未加载 chunk。pure-Java closure tests 固定 `27` affected centers、`5^3 = 125` mutation read closure 与 `6^3 = 216` cold-Brick halo，registry 测试证明 correctness ID 可超过 `65,535`。尚未完成 physical explicit profile、已注册 contextual resolver 的真实 output census（当前 `contextualOutputCount = 0`）、datapack reload peak、JMH/JFR/JOL 与 production wiring，因此不得据观测最大值 `4` 提前冻结 `Rmax` 或窄化字段，Phase A 仍不能标为完成。
 
 先实现不依赖 Minecraft `World` 的 synthetic kernel：
 
@@ -4247,7 +4251,7 @@ non-topological GateOperator fixture
 int correctness IDs throughout
 ```
 
-随后用只在 main thread 运行的 Forge census adapter 枚举实际启用的 `BlockState + FluidState`，验证三类合法 resolver：explicit thermal profile、allowlisted state-static resolver、declared dependency-mask contextual resolver。记录 state 数、signature 数、context output 数、最大 local region 数、unsupported 数和 datapack reload 峰值；在 census 通过前不得把 ID/region count 窄化为 `short`/`byte`。
+随后用只在 main thread 运行的 Forge census adapter 枚举实际启用的 `BlockState + FluidState`，验证三类合法 resolver：explicit thermal profile/override、generic state-static resolver、declared dependency-mask contextual resolver。generic state-static 路径统一接受 `hasDynamicShape() == false` 的状态，不做逐模组兼容审查。记录 state 数、signature 数、context output 数、最大 local region 数、unsupported 数和 datapack reload 峰值；在 census 通过前不得把 ID/region count 窄化为 `short`/`byte`。
 
 Fixtures：
 
@@ -6089,8 +6093,8 @@ retained thermal state 不按世界冰雪总体积、作物总数或普通 passi
 `2026-08-24` Phase 0 当前为 `0a complete / 0b partial`，Phase A 为 `in-progress`：
 
 - `0a` 已证明五参数 `LevelChunkSection#setBlockState(..., boolean)` 能捕获 common-path GameTest 中的 `setBlockAndUpdate`、直接 chunk/section write、water flow/waterlogged、Door/Trapdoor/FenceGate、递归 Sponge 写入和 moving piston；unmapped worldgen、off-thread sticky resync、raw palette debug fingerprint、generation/publication rejection、synthetic dynamic exclusion 与真实 ticket load/unload/reload 也已执行。真实 Create bearing 已证明 assemble 产生 `stone -> air`、移动期不产生热几何 delta、disassemble 在目标位置产生 `air -> stone`，因此 Create 不需要移动 adapter 或 exclusion。`DebugCommand restore_backup` 现已显式作废旧 section owner、在同一 chunk generation 下绑定 replacement identity，并要求 ACK 前 full resnapshot；raw block/biome container notifier 也有独立 sticky reason。resync 开始时捕获 section identity、lifecycle generation、required revision 与 reason，ACK 只 CAS 清除同一个 requirement，旧 R1 重建不能清除期间产生的 R2。21-runtime 穷举清单与旧断言仅以注释保存，不参与 gate；`/resetchunks` 是延期管理命令兼容项，若以后支持则丢弃整区旧 thermal Page 并懒重建。按这一冻结范围，`0a` 已通过。
-- `0b` 已把 SI 单位、source 积分、解析交换、迁移账本、workload 分类、legacy/shadow route 和 benchmark-evidence provenance 变成 `28` 条可执行 JUnit，并列出 `14` 个 workload descriptor；首轮 Java 17 本机 legacy query JMH/JFR、allocation 和隔离 retained-object-graph 也已取得。该微基线不含生产模组列表、玩家采样、整服 retained heap 或多人 workload，四候选也尚无可执行实现，因此 acceptance gate 仍未冻结。
-- Phase A 已有 conservative raster/component decomposition 与 `4^3` Brick compiler 的首个 pure-Java slice，共 `16` 条 JUnit；Forge resolver census、真实 shape adapter、完整 fixtures 和性能/内存证据仍未完成。
-- Java 17 温度定向 JUnit `60/60`、`compileJava` 以及 Forge GameTest 均通过；GameTest 总计 `9/9` required，其中 `8` 条属于 Phase 0a。common-path census 合并后的最终全量复跑结果以本轮 diary 为准。Architectury 的 dev runtime scope 已覆盖 dedicated GameTest 所需的 FTB/Item Filters 依赖。
+- `0b` 已把 SI 单位、source 积分、解析交换、迁移账本、workload 分类、legacy/shadow route 和 benchmark-evidence provenance 变成 `28` 条可执行 JUnit，并列出 `14` 个 workload descriptor；首轮 Java 17 本机 legacy query JMH/JFR、allocation、隔离 retained-object-graph 与一次 Forge GameTest player-constructor capture 也已取得。Forge diagnostic 同时记录 legacy constructor 会把远端缺失的 `4/4` footprint chunks 同步加载；这里只保留事实，不继续优化旧 sampler。该证据仍不含生产模组列表的多人 workload 或整服 retained heap，四候选也尚无完整可执行实现，因此 acceptance gate 仍未冻结。
+- Phase A 已实现 conservative geometry/Brick kernel、bounded dependency/snapshot core、真实 `VoxelShape` adapter、generic state-static resolver、loaded-only capture、Vanilla common fixtures 与启用 registry census。`84,147` states 中 `82,198` 个 static states 全部 resolved，得到 `259` 个唯一 geometry signatures，最大观测 local regions 为 `4`；dynamic states 保持显式 unsupported/unresolved。physical/contextual output census、reload peak、性能/内存证据和 production wiring 仍未完成。
+- Java 17 温度定向 JUnit `84/84`、`compileJava` 以及 Forge GameTest 均通过；GameTest 总计 `15/15` required，其中 Phase 0a `8` 条、Phase A `5` 条。common-path census 合并后的最终全量复跑结果以本轮 diary 和 `build/reports/thermal-phase-a/resolver-census.json` 为准。Architectury 的 dev runtime scope 已覆盖 dedicated GameTest 所需的 FTB/Item Filters 依赖。
 
-下一步把 legacy microbaseline 扩到生产模组列表的 `SurroundingTemperatureSimulator` main-thread snapshot/worker 分段、1/10/50/100 玩家、作物/城镇/forced-random-tick/网络调用量和整服 retained heap，再实现并执行四候选同输入竞争基准以完成 `0b`；Phase A 同时继续 Forge resolver census、真实 shape adapter 与 fixture matrix。FarField holdout、publication/mailbox、global memory admission 与后续 Minecraft integration gate 通过前，不接 production runtime；shadow workload 全部通过前不替换玩法路径。
+下一步优先继续 Phase A 的 physical explicit profile、registered contextual resolver output census、reload peak 与 resolver/Brick 性能内存证据；`0b` 的 production-like 多人/整服基线仍作为独立 backlog 保持 `partial`，不再对 legacy sampler 做额外热点优化。FarField holdout、publication/mailbox、global memory admission 与后续 Minecraft integration gate 通过前，不接 production runtime；shadow workload 全部通过前不替换玩法路径。

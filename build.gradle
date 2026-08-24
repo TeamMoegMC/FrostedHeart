@@ -129,6 +129,8 @@ minecraft {
             property 'frostedheart.phase0aMutationProbe', 'true'
             property 'frostedheart.phase0bPlayerCaptureReport',
                     file("${buildDir}/reports/thermal-phase0b/legacy-player-sampling-forge-capture.json").absolutePath
+            property 'frostedheart.phaseAResolverCensusReport',
+                    file("${buildDir}/reports/thermal-phase-a/resolver-census.json").absolutePath
             property 'forge.logging.console.level', 'info'
             arg "-mixin.config=frostedheart.mixins.json"
             arg "-mixin.config=frostedresearch.mixins.json"
