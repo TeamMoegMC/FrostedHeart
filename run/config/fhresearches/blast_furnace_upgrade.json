@@ -1,0 +1,60 @@
+{
+  "icon": {
+    "type": "combined",
+    "base": "frostedheart:cast_iron_ingot",
+    "small": "create:smart_chute"
+  },
+  "category": "frostedheart:production",
+  "parents": [
+    "crucible"
+  ],
+  "clues": [
+    {
+      "type": "game",
+      "value": 0.6,
+      "id": "309a1cdd00054398",
+      "required": true,
+      "level": 1
+    },
+    {
+      "type": "item",
+      "value": 0.25,
+      "id": "8cb6f537c2e74b2b",
+      "item": {
+        "count": 32,
+        "base_ingredient": {
+          "tag": "forge:plates/steel"
+        }
+      }
+    }
+  ],
+  "ingredients": [
+    {
+      "count": 4,
+      "base_ingredient": {
+        "tag": "forge:plates/steel"
+      }
+    },
+    {
+      "count": 4,
+      "base_ingredient": {
+        "item": "immersiveengineering:blastbrick"
+      }
+    }
+  ],
+  "effects": [
+    {
+      "type": "multiblock",
+      "icon": "immersiveengineering:advanced_blast_furnace",
+      "id": "e0f18345940740b9",
+      "multiblock": "immersiveengineering:multiblocks/improved_blast_furnace"
+    },
+    {
+      "type": "recipe",
+      "id": "6b44c4c45ae54c3e",
+      "item": "immersiveengineering:blastbrick_reinforced"
+    }
+  ],
+  "points": 6000,
+  "showAltDesc": true
+}

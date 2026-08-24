@@ -339,6 +339,7 @@ public class ResearchHooks {
 	}
 
 	public static void tick(ServerPlayer s) {
+		if (tickClues.isEmpty()) return;
 		TeamDataClosure<TeamResearchData> data = ResearchDataAPI.getData(s);
 		tickClues.call(data.team().getId(), e -> {
 			if (data.get().isClueCompleted(e.research(), e.clue()))

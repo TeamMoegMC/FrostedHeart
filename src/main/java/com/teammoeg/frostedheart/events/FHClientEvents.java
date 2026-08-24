@@ -37,6 +37,11 @@ import com.teammoeg.frostedheart.compat.create.GoggleInfoOutlineHandler;
 import com.teammoeg.frostedheart.content.climate.network.C2SOpenClothesScreenMessage;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData;
 import com.teammoeg.frostedheart.content.climate.render.InfraredViewRenderer;
+import com.teammoeg.frostedheart.content.climate.render.weather.ClientWeatherFrame;
+import com.teammoeg.frostedheart.content.climate.render.weather.ClientWeatherState;
+import com.teammoeg.frostedheart.content.climate.render.weather.WeatherRenderingMode;
+import com.teammoeg.frostedheart.content.climate.render.weather.SpatialWeatherRenderer;
+import com.teammoeg.frostedheart.content.climate.render.weather.WeatherSoundLoop;
 import com.teammoeg.frostedheart.content.health.network.C2SOpenNutritionScreenMessage;
 import com.teammoeg.frostedheart.content.health.screen.HealthStatScreen;
 import com.teammoeg.frostedheart.content.scenario.client.ClientScene;
@@ -63,6 +68,7 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.TitleScreen;
 import net.minecraft.client.player.Input;
 import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
@@ -97,6 +103,7 @@ import java.util.List;
 
 @Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE, value = Dist.CLIENT)
 public class FHClientEvents {
+    private static final BlockPos.MutableBlockPos WEATHER_EXPOSURE_POS = new BlockPos.MutableBlockPos();
 
     @SuppressWarnings({"unchecked", "deprecation"})
     @SubscribeEvent
@@ -210,6 +217,10 @@ public class FHClientEvents {
 
     @SubscribeEvent
     public static void fireLogin(ClientPlayerNetworkEvent.LoggingIn event) {
+        ClientWeatherState.INSTANCE.reset();
+        ClientWeatherFrame.INSTANCE.invalidate();
+        SpatialWeatherRenderer.INSTANCE.reset();
+        WeatherSoundLoop.INSTANCE.stop(Minecraft.getInstance());
         DistExecutor.safeRunWhenOn(Dist.CLIENT, () -> CClientTeamDataManager.INSTANCE::reset);
         // TODO: temporary fix for client not sending ready packet
         ClientScene.INSTANCE = new ClientScene();
@@ -372,9 +383,26 @@ public class FHClientEvents {
     public static void tickClient(ClientTickEvent event) {
         if (event.phase == Phase.START) {
             InfraredViewRenderer.clientTick();
-            Minecraft mc = ClientUtils.getMc();
-            Player pe = ClientUtils.getPlayer();
-            if (mc.level != null) {
+	            Minecraft mc = ClientUtils.getMc();
+	            Player pe = ClientUtils.getPlayer();
+	            if (mc.level != null) {
+	            WeatherRenderingMode weatherMode = FHConfig.CLIENT.weatherRenderChanges.get()
+	                    ? FHConfig.CLIENT.weatherRenderingMode.get()
+	                    : WeatherRenderingMode.COMPATIBILITY;
+	            boolean spatialAvailable = weatherMode.isSpatial()
+	                    && !SpatialWeatherRenderer.INSTANCE.isQuarantined(mc.level.dimension());
+	            if (spatialAvailable && mc.player != null) {
+	                WEATHER_EXPOSURE_POS.set(mc.player.getX(), mc.player.getEyeY(), mc.player.getZ());
+	                ClientWeatherState.INSTANCE.tick(
+	                        mc.level.dimension(), mc.level.getDayTime(), mc.player.getX(), mc.player.getZ(),
+	                        com.teammoeg.frostedheart.content.climate.ClientClimateData.globalClimate,
+	                        com.teammoeg.frostedheart.content.climate.ClientClimateData.wind,
+	                        weatherMode.profile(), mc.level.canSeeSky(WEATHER_EXPOSURE_POS));
+	            } else {
+	                ClientWeatherState.INSTANCE.tickClock(mc.level.dimension(), mc.level.getDayTime());
+	                ClientWeatherState.INSTANCE.disableSpatialTick();
+	            }
+	            WeatherSoundLoop.INSTANCE.tick(mc, spatialAvailable && FHConfig.CLIENT.windSounds.get());
                 if (ClientScene.INSTANCE != null)
                     ClientScene.INSTANCE.tick(mc);
 	            PlayerTemperatureData.getCapability(pe).ifPresent(t -> {
@@ -406,6 +434,19 @@ public class FHClientEvents {
     public static void unloadWorld(LevelEvent.Unload event) {
         ClientUtils.DoApplyGammaValue = false;
         MouseCaptureUtil.stopMouseCapture();
+        if (event.getLevel().isClientSide()) {
+            ClientWeatherState.INSTANCE.reset();
+            ClientWeatherFrame.INSTANCE.invalidate();
+            SpatialWeatherRenderer.INSTANCE.reset();
+            WeatherSoundLoop.INSTANCE.stop(Minecraft.getInstance());
+        }
+    }
+
+    @SubscribeEvent
+    public static void renderSpatialWeather(RenderLevelStageEvent event) {
+        if (event.getStage() == RenderLevelStageEvent.Stage.AFTER_WEATHER) {
+            SpatialWeatherRenderer.INSTANCE.render(event);
+        }
     }
 
     /*

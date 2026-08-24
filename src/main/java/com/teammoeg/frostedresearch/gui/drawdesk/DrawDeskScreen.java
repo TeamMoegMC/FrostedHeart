@@ -53,8 +53,6 @@ public class DrawDeskScreen extends MenuPrimaryLayer<DrawDeskContainer> implemen
 	@Nullable
 	private ResearchArchiveLayer archive;
 	private final Map<AbstractWidget, WidgetState> hiddenExternalWidgets = new IdentityHashMap<>();
-	private int lastArchiveWidth = -1;
-	private int lastArchiveHeight = -1;
 
 	public DrawDeskScreen(DrawDeskContainer cx) {
 		super(cx);
@@ -156,11 +154,7 @@ public class DrawDeskScreen extends MenuPrimaryLayer<DrawDeskContainer> implemen
 		if (archive.getX() != 0 || archive.getY() != 0) {
 			archive.setPos(0, 0);
 		}
-		if (lastArchiveWidth != width || lastArchiveHeight != height) {
-			archive.resizeArchive(width, height);
-			lastArchiveWidth = width;
-			lastArchiveHeight = height;
-		}
+		archive.resizeArchive(width, height);
 	}
 
 	@Override

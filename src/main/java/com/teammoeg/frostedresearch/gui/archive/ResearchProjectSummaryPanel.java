@@ -27,15 +27,30 @@ import java.util.Objects;
 
 /** Always-visible, deliberately terse summary of the selected project. */
 final class ResearchProjectSummaryPanel extends UIElement {
+    private static final Component SELECT_PROJECT =
+            Component.translatable("gui.frostedresearch.archive.select_project");
+    private static final Component COMPLETED =
+            Component.translatable("gui.frostedresearch.archive.completed");
+    private static final Component IN_PROGRESS =
+            Component.translatable("gui.frostedresearch.research.in_progress");
+    private static final Component CAN_RESEARCH =
+            Component.translatable("gui.frostedresearch.research.can_research");
+    private static final Component LOCKED =
+            Component.translatable("gui.frostedresearch.archive.locked");
+    private static final Component OPEN_DETAILS =
+            Component.translatable("gui.frostedresearch.archive.open_details");
+
     private final ResearchWorkspaceState state;
     private final ResearchArchiveViewCache viewCache;
     private final ResearchNavigationController navigation;
     private final Runnable navigationChanged;
-    private SummaryRenderData renderData;
-    private String cachedResearchId;
-    private int cachedWidth = -1;
-    private long cachedPresentationRevision = -1L;
-    private long cachedStateRevision = -1L;
+    @Nullable
+    private SummaryCacheKey summaryCacheKey;
+    @Nullable
+    private SummaryRenderData cachedSummary;
+    private List<FormattedCharSequence> cachedEmptyLines = List.of();
+    @Nullable
+    private TextWrapCacheKey emptyTextCacheKey;
 
     ResearchProjectSummaryPanel(
             UIElement parent,
@@ -62,11 +77,14 @@ final class ResearchProjectSummaryPanel extends UIElement {
     public void render(GuiGraphics graphics, int x, int y, int width, int height, RenderingHint hint) {
         graphics.fill(x, y, x + width, y + height, ResearchArchiveLayer.COLOR_PANEL);
         graphics.fill(x, y, x + 1, y + height, ResearchArchiveLayer.COLOR_PANEL_DARK);
-        SummaryRenderData data = renderData(width);
+        SummaryRenderData data = summaryForWidth(width);
         if (data == null) {
-            Component empty = Component.translatable("gui.frostedresearch.archive.select_project");
-            drawWrapped(graphics, empty, x + 9, y + 12, width - 18,
-                    ResearchArchiveLayer.COLOR_MUTED_INK, 3);
+            int lineY = y + 12;
+            for (FormattedCharSequence line : emptyLines(width - 18)) {
+                graphics.drawString(getFont(), line, x + 9, lineY,
+                        ResearchArchiveLayer.COLOR_MUTED_INK, false);
+                lineY += 11;
+            }
             return;
         }
 
@@ -94,8 +112,8 @@ final class ResearchProjectSummaryPanel extends UIElement {
         int buttonY = y + height - 27;
         graphics.fill(x + 8, buttonY, x + width - 8, y + height - 7,
                 ResearchArchiveLayer.COLOR_TEAL);
-        int detailsX = x + Math.max(10, (width - getFont().width(data.detailsText)) / 2);
-        graphics.drawString(getFont(), data.detailsText, detailsX, buttonY + 6, 0xFFF8F1DE, false);
+        graphics.drawString(getFont(), data.detailsText, x + data.detailsXOffset,
+                buttonY + 6, 0xFFF8F1DE, false);
     }
 
     @Override
@@ -117,32 +135,13 @@ final class ResearchProjectSummaryPanel extends UIElement {
     public void getTooltip(TooltipBuilder tooltip) {
         Research research = selectedResearch();
         if (research != null && getMouseY() >= getHeight() - 27) {
-            tooltip.accept(Component.translatable("gui.frostedresearch.archive.open_details"));
+            tooltip.accept(OPEN_DETAILS);
         }
     }
 
     @Override
     public Cursor getCursor() {
         return selectedResearch() != null && getMouseY() >= getHeight() - 27 ? Cursor.HAND : null;
-    }
-
-    private int drawWrapped(
-            GuiGraphics graphics,
-            Component text,
-            int x,
-            int y,
-            int width,
-            int color,
-            int maxLines) {
-        int count = 0;
-        for (FormattedCharSequence line : getFont().split(text, width)) {
-            if (count++ >= maxLines) {
-                break;
-            }
-            graphics.drawString(getFont(), line, x, y, color, false);
-            y += 11;
-        }
-        return y;
     }
 
     @Nullable
@@ -152,33 +151,31 @@ final class ResearchProjectSummaryPanel extends UIElement {
     }
 
     @Nullable
-    private SummaryRenderData renderData(int width) {
+    private SummaryRenderData summaryForWidth(int width) {
         String selectedId = state.selectedResearchId();
-        if (renderData != null
-                && Objects.equals(cachedResearchId, selectedId)
-                && cachedWidth == width
-                && cachedPresentationRevision == viewCache.presentationRevision()
-                && cachedStateRevision == viewCache.stateRevision()) {
-            return renderData;
+        long presentationRevision = viewCache.presentationRevision();
+        long stateRevision = viewCache.stateRevision();
+        if (summaryCacheKey != null
+                && summaryCacheKey.matches(selectedId, width, presentationRevision, stateRevision)) {
+            return cachedSummary;
         }
-        cachedResearchId = selectedId;
-        cachedWidth = width;
-        cachedPresentationRevision = viewCache.presentationRevision();
-        cachedStateRevision = viewCache.stateRevision();
+        summaryCacheKey = new SummaryCacheKey(
+                selectedId, width, presentationRevision, stateRevision);
         ResearchArchiveViewCache.View view = viewCache.view(selectedId);
         if (view == null) {
-            renderData = null;
+            cachedSummary = null;
             return null;
         }
-        String title = getFont().plainSubstrByWidth(view.title(), width - 43);
-        String category = getFont().plainSubstrByWidth(view.categoryTitle(), width - 43);
+        int headerWidth = Math.max(1, width - 43);
+        String title = getFont().plainSubstrByWidth(view.title(), headerWidth);
+        String category = getFont().plainSubstrByWidth(view.categoryTitle(), headerWidth);
         Component status = view.completed()
-                ? Component.translatable("gui.frostedresearch.archive.completed")
+                ? COMPLETED
                 : view.active()
-                ? Component.translatable("gui.frostedresearch.research.in_progress")
+                ? IN_PROGRESS
                 : view.unlocked()
-                ? Component.translatable("gui.frostedresearch.research.can_research")
-                : Component.translatable("gui.frostedresearch.archive.locked");
+                ? CAN_RESEARCH
+                : LOCKED;
         int statusColor = view.completed() ? ResearchArchiveLayer.COLOR_TEAL
                 : view.active() ? ResearchArchiveLayer.COLOR_GOLD
                 : view.unlocked() ? ResearchArchiveLayer.COLOR_RED
@@ -186,24 +183,70 @@ final class ResearchProjectSummaryPanel extends UIElement {
         List<FormattedCharSequence> descriptionLines = new ArrayList<>(4);
         List<Component> descriptions = view.research().getDesc();
         if (!descriptions.isEmpty()) {
-            for (FormattedCharSequence line : getFont().split(descriptions.get(0), width - 18)) {
+            for (FormattedCharSequence line : getFont().split(
+                    descriptions.get(0), Math.max(1, width - 18))) {
                 if (descriptionLines.size() == 4) {
                     break;
                 }
                 descriptionLines.add(line);
             }
         }
-        Component details = Component.translatable("gui.frostedresearch.archive.open_details");
-        String detailsText = getFont().plainSubstrByWidth(details.getString(), Math.max(8, width - 20));
-        renderData = new SummaryRenderData(
-                view, title, category, status, statusColor, List.copyOf(descriptionLines), detailsText);
-        return renderData;
+        String detailsText = getFont().plainSubstrByWidth(
+                OPEN_DETAILS.getString(), Math.max(8, width - 20));
+        int detailsXOffset = Math.max(10, (width - getFont().width(detailsText)) / 2);
+        cachedSummary = new SummaryRenderData(
+                view, title, category, status, statusColor,
+                List.copyOf(descriptionLines), detailsText, detailsXOffset);
+        return cachedSummary;
+    }
+
+    private List<FormattedCharSequence> emptyLines(int width) {
+        int safeWidth = Math.max(1, width);
+        long presentationRevision = viewCache.presentationRevision();
+        if (emptyTextCacheKey != null
+                && emptyTextCacheKey.matches(safeWidth, presentationRevision)) {
+            return cachedEmptyLines;
+        }
+        List<FormattedCharSequence> lines = new ArrayList<>(3);
+        for (FormattedCharSequence line : getFont().split(SELECT_PROJECT, safeWidth)) {
+            if (lines.size() == 3) {
+                break;
+            }
+            lines.add(line);
+        }
+        cachedEmptyLines = List.copyOf(lines);
+        emptyTextCacheKey = new TextWrapCacheKey(safeWidth, presentationRevision);
+        return cachedEmptyLines;
     }
 
     private void invalidateRenderData() {
-        cachedPresentationRevision = -1L;
-        cachedStateRevision = -1L;
-        renderData = null;
+        summaryCacheKey = null;
+        cachedSummary = null;
+        emptyTextCacheKey = null;
+    }
+
+    private record SummaryCacheKey(
+            @Nullable String researchId,
+            int width,
+            long presentationRevision,
+            long stateRevision) {
+
+        private boolean matches(
+                @Nullable String selectedResearchId,
+                int currentWidth,
+                long currentPresentationRevision,
+                long currentStateRevision) {
+            return Objects.equals(researchId, selectedResearchId)
+                    && width == currentWidth
+                    && presentationRevision == currentPresentationRevision
+                    && stateRevision == currentStateRevision;
+        }
+    }
+
+    private record TextWrapCacheKey(int width, long presentationRevision) {
+        private boolean matches(int currentWidth, long currentPresentationRevision) {
+            return width == currentWidth && presentationRevision == currentPresentationRevision;
+        }
     }
 
     private record SummaryRenderData(
@@ -213,6 +256,7 @@ final class ResearchProjectSummaryPanel extends UIElement {
             Component status,
             int statusColor,
             List<FormattedCharSequence> descriptionLines,
-            String detailsText) {
+            String detailsText,
+            int detailsXOffset) {
     }
 }

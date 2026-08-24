@@ -6,7 +6,6 @@ import java.util.LinkedList;
 import java.util.List;
 
 import com.mojang.serialization.Codec;
-import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.chorda.math.BaseRandomSource;
 import com.teammoeg.chorda.math.Rect;
 
@@ -19,33 +18,30 @@ import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.ChunkPos;
 
 public class WhiteCurtainInfo {
-	public static final Codec<WhiteCurtainInfo> CODEC=RecordCodecBuilder.create(t->t.group(
-		Rect.CODEC.fieldOf("area").forGetter(o->o.affectedArea),
-		Direction.CODEC.fieldOf("move").forGetter(o->o.moveDirection),
-		ClimateEventTrack.CODEC.fieldOf("climate").forGetter(o->o.climate)
-		).apply(t,WhiteCurtainInfo::new));
+	public static final Codec<WhiteCurtainInfo> CODEC = WhiteCurtainDescriptor.CODEC
+		.xmap(WhiteCurtainInfo::new, WhiteCurtainInfo::descriptor);
 	public static final Codec<List<WhiteCurtainInfo>> LIST_CODEC=Codec.list(CODEC);
-	Rect affectedArea;
+	private final WhiteCurtainDescriptor descriptor;
 	long snowStartHours=-1;
 	long blizzardStartHours=-1;
 	long snowEndHours=-1;
 	long blizzardEndHours=-1;
-	ClimateEvent climate;
-	Direction moveDirection;
 	protected LinkedList<DayClimateData> dailyTempData;
 	public List<WeatherForecast> forecastCache=new ArrayList<>();
 	public WhiteCurtainInfo(Rect affectedArea,Direction moveDirection,ClimateEvent event) {
+		this(new WhiteCurtainDescriptor(affectedArea, moveDirection, event));
+	}
+	public WhiteCurtainInfo(WhiteCurtainDescriptor descriptor) {
+		this.descriptor = descriptor;
 		dailyTempData=new LinkedList<>();
-		climate=event;
-		this.moveDirection=moveDirection;
-		this.affectedArea=affectedArea;
+		ClimateEvent climate = descriptor.climate();
 		long emitHour=(climate.getCalmEndTime()-climate.getStartTime())/50;
 		long startTime=climate.getStartTime();
 		long emitDays=Mth.ceil(emitHour/24f);
 		for(long i=0;i<emitDays;i++) {
 			dailyTempData.add(new DayClimateData());
 		}
-		for(long i=0;i<getMaxDelta();i++) {
+		for(long i=0;i<=getMaxDelta();i++) {
 			forecastCache.add(new WeatherForecast());
 		}
 		
@@ -64,75 +60,65 @@ public class WhiteCurtainInfo {
 			}
 		}
 	}
+	public WhiteCurtainDescriptor descriptor() {
+		return descriptor;
+	}
 
     public List<ForecastFrame> getFrames(WorldClimate climate,long delta){
     	return WeatherForecast.getFrames(getFutureClimateIterator(climate,delta),ClimateResult.EMPTY, (int) (120 - delta%3));
     }
 	public boolean isAffected(ChunkPos pos) {
-		return affectedArea.inRange(pos.x, pos.z);
+		return WhiteCurtainFieldModel.isAffected(descriptor, pos);
 	}
 	public boolean isIntersected(Rect rect) {
-		return affectedArea.intersects(rect);
+		return WhiteCurtainFieldModel.isIntersected(descriptor, rect);
 	}
-	private static final long HOURS_PER_CHUNK=6;
-	private static final long SECONDS_PER_CHUNK=(long) (WorldClockSource.secondsPerDay/(24f/HOURS_PER_CHUNK));
 	public static long getSecondsPerChunk() {
-		return SECONDS_PER_CHUNK;
+		return WhiteCurtainFieldModel.SECONDS_PER_CHUNK;
 	}
 	public static long getHoursPerChunk() {
-		return HOURS_PER_CHUNK;
+		return WhiteCurtainFieldModel.HOURS_PER_CHUNK;
 	}
 	public long getDeltaTime(ChunkPos pos) {
-		return getDelta(pos)*getSecondsPerChunk();
+		return WhiteCurtainFieldModel.deltaSeconds(descriptor, pos);
 	}
 	public long getDelta(ChunkPos pos) {
-		switch(moveDirection){
-		case NORTH:return (affectedArea.getY2()-pos.z);
-		case SOUTH:return (pos.z-affectedArea.getY());
-		case WEST:return (affectedArea.getX2()-pos.x);
-		case EAST:return (pos.x-affectedArea.getX());
-		}
-		return 0;
+		return WhiteCurtainFieldModel.deltaChunks(descriptor, pos);
 	}
 	public long getMaxDeltaTime() {
-		return getMaxDelta()*getSecondsPerChunk();
+		return WhiteCurtainFieldModel.maxDeltaSeconds(descriptor);
 	}
 	public int getMaxDelta() {
-		switch(moveDirection){
-		case NORTH:
-		case SOUTH:return (affectedArea.getH());
-		case WEST:
-		case EAST:return (affectedArea.getW());
-		}
-		return 0;
+		return WhiteCurtainFieldModel.maxDeltaChunks(descriptor);
 	}
 	public boolean isInvalid(long dtime) {
-		return climate.getCalmEndTime()+getMaxDeltaTime()<dtime;
+		return WhiteCurtainFieldModel.isInvalid(descriptor, dtime);
 	}
 	public Rect getSnowRect(long dtime) {
-		long climatestartEndpoint=(dtime-getMaxDeltaTime()-climate.getStartTime())/50;
+		long climatestartEndpoint=(dtime-getMaxDeltaTime()-descriptor.climate().getStartTime())/50;
 		int chunkStart=Mth.ceil((snowStartHours-climatestartEndpoint)*1f/getHoursPerChunk());
 		int chunkEnd=Mth.floor((snowEndHours-climatestartEndpoint)*1f/getHoursPerChunk());
-		return getPartialRect(chunkStart,chunkEnd).and(affectedArea);
+		return getPartialRect(chunkStart,chunkEnd).and(descriptor.affectedArea());
 	}
 	public Rect getBlizzardRect(long dtime) {
-		long climatestartEndpoint=(dtime-getMaxDeltaTime()-climate.getStartTime())/50;
+		long climatestartEndpoint=(dtime-getMaxDeltaTime()-descriptor.climate().getStartTime())/50;
 		int chunkStart=Mth.ceil((blizzardStartHours-climatestartEndpoint)*1f/getHoursPerChunk());
 		int chunkEnd=Mth.floor((blizzardEndHours-climatestartEndpoint)*1f/getHoursPerChunk());
-		return getPartialRect(chunkStart,chunkEnd).and(affectedArea);
+		return getPartialRect(chunkStart,chunkEnd).and(descriptor.affectedArea());
 	}
 	public Rect getPartialRect(int chunkStart,int chunkEnd) {
 		int chunkLen=chunkEnd-chunkStart;
-		switch(moveDirection) {
-		case NORTH:return new Rect(affectedArea.getX(),affectedArea.getY()+chunkStart,affectedArea.getW(),chunkLen);
-		case SOUTH:return new Rect(affectedArea.getX(),affectedArea.getY2()-chunkEnd,affectedArea.getW(),chunkLen);
-		case WEST:return new Rect(affectedArea.getX()+chunkStart,affectedArea.getY(),chunkLen,affectedArea.getH());
-		case EAST:return new Rect(affectedArea.getX2()-chunkEnd,affectedArea.getY(),chunkLen,affectedArea.getH());
+		Rect area = descriptor.affectedArea();
+		switch(descriptor.moveDirection()) {
+		case NORTH:return new Rect(area.getX(),area.getY()+chunkStart,area.getW(),chunkLen);
+		case SOUTH:return new Rect(area.getX(),area.getY2()-chunkEnd,area.getW(),chunkLen);
+		case WEST:return new Rect(area.getX()+chunkStart,area.getY(),chunkLen,area.getH());
+		case EAST:return new Rect(area.getX2()-chunkEnd,area.getY(),chunkLen,area.getH());
 		}
 		return Rect.NONE;
 	}
 	public short[] getFrames(WorldClimate wclimate,long seconds,ChunkPos pos) {
-		long dtime=(seconds-getDeltaTime(pos)-climate.getStartTime())/50;
+		long dtime=(seconds-getDeltaTime(pos)-descriptor.climate().getStartTime())/50;
 		WeatherForecast fcc=forecastCache.get((int) getDelta(pos));
 		if(fcc.shouldUpdateNewFrames(seconds/50))
 			fcc.updateFrames(seconds/50, this.getFrames(wclimate,dtime));
@@ -140,10 +126,11 @@ public class WhiteCurtainInfo {
 	}
 	@Override
 	public String toString() {
-		return "[affectedArea=" + affectedArea + ", climate=" + climate + ", moveDirection=" + moveDirection + "]";
+		return descriptor.toString();
 	}
 
 	public ClimateResult getClimate(long dtime) {
+		ClimateEvent climate = descriptor.climate();
 		if(dtime>climate.getCalmEndTime())
 			return ClimateResult.EMPTY;
 		long emitHour=(dtime-climate.getStartTime())/50;
@@ -159,7 +146,7 @@ public class WhiteCurtainInfo {
 		return getClimate(sec,pos).temperature();
 	}
 	public ClimateResult getClimate(long sec,ChunkPos pos) {
-		return getClimate(sec-getDeltaTime(pos));
+		return WhiteCurtainFieldModel.sampleGameplay(descriptor, sec, pos);
 	}
     public Iterable<ClimateResult> getFutureClimateIterator(long thours) {
     	thours--;

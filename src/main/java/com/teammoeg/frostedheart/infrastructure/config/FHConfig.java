@@ -23,6 +23,7 @@ import com.electronwill.nightconfig.core.file.CommentedFileConfig;
 import com.teammoeg.chorda.client.cui.screenadapter.OverlayPositioner;
 import com.teammoeg.chorda.math.Colors;
 import com.teammoeg.frostedheart.content.climate.FHTemperatureDifficulty;
+import com.teammoeg.frostedheart.content.climate.render.weather.WeatherRenderingMode;
 import com.teammoeg.frostedheart.content.climate.gamedata.climate.ClimateEventModel;
 import com.teammoeg.frostedheart.content.climate.gamedata.climate.WorldClockSource;
 import com.teammoeg.frostedheart.content.health.nutrition.NutritionScaleMigration;
@@ -68,6 +69,7 @@ public class FHConfig {
 		public final ForgeConfigSpec.IntValue fogColorDay;
 		public final ForgeConfigSpec.IntValue fogColorNight;
 		public final ForgeConfigSpec.BooleanValue weatherRenderChanges;
+		public final ForgeConfigSpec.EnumValue<WeatherRenderingMode> weatherRenderingMode;
 		public final ForgeConfigSpec.IntValue snowDensity;
 		public final ForgeConfigSpec.IntValue blizzardDensity;
 		public final ForgeConfigSpec.BooleanValue snowSounds;
@@ -179,6 +181,9 @@ public class FHConfig {
 			builder.push("Weather");
 			weatherRenderChanges = builder.comment("Enables weather rendering changes.")
 				.define("weatherRenderChanges", true);
+			weatherRenderingMode = builder
+				.comment("Selects the fixed weather renderer. This choice is never changed automatically from measured FPS.")
+				.defineEnum("weatherRenderingMode", WeatherRenderingMode.SPATIAL_V1_FAST);
 			fogDensity = builder.comment("How dense the fog effect during a snowstorm is.")
 				.defineInRange("fogDensity", 0.1, 0, 1);
 			fogColorDay = builder.comment("This is the fog color during the day. It must be an RGB hex string.")

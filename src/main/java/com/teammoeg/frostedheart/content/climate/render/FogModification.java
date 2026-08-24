@@ -21,6 +21,7 @@ package com.teammoeg.frostedheart.content.climate.render;
 
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
+import com.teammoeg.frostedheart.content.climate.render.weather.ClientWeatherFrame;
 
 import net.minecraft.Util;
 import net.minecraft.client.Camera;
@@ -79,25 +80,33 @@ public class FogModification {
         Camera camera = event.getCamera();
         Entity var3 = camera.getEntity();
         if (var3 instanceof Player player) {
-            long thisTick = Util.getMillis();
-            boolean firstTick = prevFogTick == -1L;
-            float deltaTick = firstTick ? 1.0E10F : (float)(thisTick - prevFogTick) * 1.5E-4F;
-            prevFogTick = thisTick;
             float expectedFogDensity = 0.0F;
-            Level level = player.level();
-            Biome biome = (Biome)level.getBiome(camera.getBlockPosition()).value();
-            if (level.isRaining() && biome.coldEnoughToSnow(camera.getBlockPosition())) {
-                int light = level.getBrightness(LightLayer.SKY, BlockPos.containing(player.getEyePosition()));
-                expectedFogDensity = Mth.clampedMap((float)light, 0.0F, 15.0F, 0.0F, 0.5F);
-                if (level.isThundering()) {
-                    expectedFogDensity *= 2F;
+            ClientWeatherFrame weatherFrame = ClientWeatherFrame.INSTANCE;
+            if (weatherFrame.valid() && weatherFrame.ownership() == ClientWeatherFrame.Ownership.CUSTOM) {
+                expectedFogDensity = Math.max(weatherFrame.cameraSample().whiteoutIntensity,
+                        weatherFrame.cameraSample().snowIntensity * 0.2F);
+                prevFogDensity = expectedFogDensity;
+                prevFogTick = -1L;
+            } else {
+                long thisTick = Util.getMillis();
+                boolean firstTick = prevFogTick == -1L;
+                float deltaTick = firstTick ? 1.0E10F : (float)(thisTick - prevFogTick) * 1.5E-4F;
+                prevFogTick = thisTick;
+                Level level = player.level();
+                Biome biome = level.getBiome(camera.getBlockPosition()).value();
+                if (level.isRaining() && biome.coldEnoughToSnow(camera.getBlockPosition())) {
+                    int light = level.getBrightness(LightLayer.SKY, BlockPos.containing(player.getEyePosition()));
+                    expectedFogDensity = Mth.clampedMap((float)light, 0.0F, 15.0F, 0.0F, 0.5F);
+                    if (level.isThundering()) {
+                        expectedFogDensity *= 2F;
+                    }
                 }
-            }
 
-            if (expectedFogDensity > prevFogDensity) {
-                prevFogDensity = Math.min(prevFogDensity + 4.0F * deltaTick, expectedFogDensity);
-            } else if (expectedFogDensity < prevFogDensity) {
-                prevFogDensity = Math.max(prevFogDensity - deltaTick, expectedFogDensity);
+                if (expectedFogDensity > prevFogDensity) {
+                    prevFogDensity = Math.min(prevFogDensity + 4.0F * deltaTick, expectedFogDensity);
+                } else if (expectedFogDensity < prevFogDensity) {
+                    prevFogDensity = Math.max(prevFogDensity - deltaTick, expectedFogDensity);
+                }
             }
 
             if (camera.getFluidInCamera() != FogType.NONE) {

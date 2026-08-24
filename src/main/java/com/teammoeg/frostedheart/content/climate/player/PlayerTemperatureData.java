@@ -433,80 +433,46 @@ public class PlayerTemperatureData implements NBTSerializable {
 		WorldClimate wc = WorldClimate.get(level);
 		ClimateType climate = level.isThundering() ? ClimateType.BLIZZARD : (level.isRaining() ? ClimateType.SNOW : ClimateType.NONE);
 		if (wc != null) {
-			ChunkPos pos = new ChunkPos(sp.blockPosition());
-			ClimateType globalClimate = wc.getGlobalClimate();
-			ClimateType localClimate = wc.getClimate(pos);
-			if (globalClimate == localClimate) {
-				this.thunderLevel = level.thunderLevel;
-				this.rainLevel = level.rainLevel;
-			}else {
-				if(climate.isSnowyOrBlizzard()) {
-					this.rainLevel = 0.8f;
-					if(climate.isBlizzard())
-						this.thunderLevel = 0.8f;
-				}
-			}
-			climate = localClimate;
+			climate = wc.getClimate(new ChunkPos(sp.blockPosition()));
 		}
-		if (this.rainLevel>0.2) {
+		PlayerWeatherCompatibilityModel.VanillaWeatherState state =
+				PlayerWeatherCompatibilityModel.fromClimate(climate);
+		this.rainLevel = state.rainStrength();
+		this.thunderLevel = state.thunderStrength();
+		this.oRainLevel = rainLevel;
+		this.oThunderLevel = thunderLevel;
+		this.lastClimate = climate;
+		if (state.raining()) {
 			sp.connection.send(new ClientboundGameEventPacket(ClientboundGameEventPacket.START_RAINING, 0.0F));
-			sp.connection.send(new ClientboundGameEventPacket(ClientboundGameEventPacket.RAIN_LEVEL_CHANGE, rainLevel));
-			sp.connection.send(new ClientboundGameEventPacket(ClientboundGameEventPacket.THUNDER_LEVEL_CHANGE, thunderLevel));
+		} else {
+			sp.connection.send(new ClientboundGameEventPacket(ClientboundGameEventPacket.STOP_RAINING, 0.0F));
 		}
+		sp.connection.send(new ClientboundGameEventPacket(ClientboundGameEventPacket.RAIN_LEVEL_CHANGE, rainLevel));
+		sp.connection.send(new ClientboundGameEventPacket(ClientboundGameEventPacket.THUNDER_LEVEL_CHANGE, thunderLevel));
 	}
 
-	public void advanceWeatherCycle(ServerPlayer sp,ServerLevel level) {
-		WorldClimate wc = WorldClimate.get(level);
-		ClimateType climate = level.isThundering() ? ClimateType.BLIZZARD : (level.isRaining() ? ClimateType.SNOW : ClimateType.NONE);
-		boolean isBeforeRaining=this.rainLevel>0.2f;
-		if (wc != null) {
-			ChunkPos pos = new ChunkPos(sp.blockPosition());
-			ClimateType globalClimate = wc.getGlobalClimate();
-			ClimateType localClimate = wc.getClimate(pos);
-			this.oThunderLevel = this.thunderLevel;
-			this.oRainLevel = this.rainLevel;
-			climate = localClimate;
-			/*if (globalClimate == localClimate) {
-				this.thunderLevel = level.thunderLevel;
-				this.rainLevel = level.rainLevel;
-			} else */{
-
-				if (localClimate.isBlizzard()) {
-					this.thunderLevel += 0.01F;
-				} else {
-					this.thunderLevel -= 0.01F;
-				}
-
-				this.thunderLevel = Mth.clamp(this.thunderLevel, 0.0F, 1.0F);
-
-				if (localClimate.isSnowyOrBlizzard()) {
-					this.rainLevel += 0.01F;
-				} else {
-					this.rainLevel -= 0.01F;
-				}
-
-				this.rainLevel = Mth.clamp(this.rainLevel, 0.0F, 1.0F);
-			}
+	public void advanceWeatherCycle(ServerPlayer sp, ClimateType climate) {
+		if (climate == lastClimate) {
+			return;
 		}
-		boolean isAfterRaining=this.rainLevel>0.2f;
-
-		if (this.oRainLevel != this.rainLevel) {
-			sp.connection.send(new ClientboundGameEventPacket(ClientboundGameEventPacket.RAIN_LEVEL_CHANGE, this.rainLevel));
+		PlayerWeatherCompatibilityModel.VanillaWeatherState previous =
+				PlayerWeatherCompatibilityModel.fromClimate(lastClimate);
+		PlayerWeatherCompatibilityModel.VanillaWeatherState next =
+				PlayerWeatherCompatibilityModel.fromClimate(climate);
+		this.oRainLevel = this.rainLevel;
+		this.oThunderLevel = this.thunderLevel;
+		this.rainLevel = next.rainStrength();
+		this.thunderLevel = next.thunderStrength();
+		if (previous.raining() != next.raining()) {
+			sp.connection.send(new ClientboundGameEventPacket(
+					next.raining() ? ClientboundGameEventPacket.START_RAINING : ClientboundGameEventPacket.STOP_RAINING,
+					0.0F));
 		}
-
-		if (this.oThunderLevel != this.thunderLevel) {
-			sp.connection.send(new ClientboundGameEventPacket(ClientboundGameEventPacket.THUNDER_LEVEL_CHANGE, this.thunderLevel));
+		if (oRainLevel != rainLevel) {
+			sp.connection.send(new ClientboundGameEventPacket(ClientboundGameEventPacket.RAIN_LEVEL_CHANGE, rainLevel));
 		}
-		
-		if (isBeforeRaining != isAfterRaining) {
-			if (isBeforeRaining) {
-				sp.connection.send(new ClientboundGameEventPacket(ClientboundGameEventPacket.STOP_RAINING, 0.0F));
-			} else {
-				sp.connection.send(new ClientboundGameEventPacket(ClientboundGameEventPacket.START_RAINING, 0.0F));
-			}
-
-			sp.connection.send(new ClientboundGameEventPacket(ClientboundGameEventPacket.RAIN_LEVEL_CHANGE, this.rainLevel));
-			sp.connection.send(new ClientboundGameEventPacket(ClientboundGameEventPacket.THUNDER_LEVEL_CHANGE, this.thunderLevel));
+		if (oThunderLevel != thunderLevel) {
+			sp.connection.send(new ClientboundGameEventPacket(ClientboundGameEventPacket.THUNDER_LEVEL_CHANGE, thunderLevel));
 		}
 		lastClimate = climate;
 	}

@@ -150,14 +150,27 @@ public class FHResearch {
     }
 
     public static List<Research> getResearchesForRender(ResearchCategory cate, boolean showLocked) {
-        List<Research> all = getAllResearch();
+        List<Research> sameCategory = getAllResearch().stream()
+                .filter(research -> research.getCategory() == cate)
+                .toList();
+        return getResearchesForRender(sameCategory, showLocked);
+    }
+
+    /**
+     * Orders the supplied research definitions with the legacy client project-list grouping.
+     * Input iteration order is retained inside each status group except completed projects with
+     * unclaimed rewards, whose legacy front insertion reverses their relative order.
+     *
+     * @param definitions definitions already selected for the target surface
+     * @param showLocked whether hidden and undiscovered definitions are appended
+     * @return a newly allocated ordered list
+     */
+    public static List<Research> getResearchesForRender(Iterable<Research> definitions, boolean showLocked) {
         ArrayList<Research> locked = new ArrayList<>();
         ArrayList<Research> available = new ArrayList<>();
         ArrayList<Research> unlocked = new ArrayList<>();
         ArrayList<Research> showed = new ArrayList<>();
-        for (Research r : all) {
-            if (r.getCategory() != cate)
-                continue;
+        for (Research r : definitions) {
             if (r.isHidden()) {
                 locked.add(r);
                 continue;

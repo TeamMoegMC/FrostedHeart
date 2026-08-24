@@ -1,0 +1,37 @@
+{
+  "icon": "create:wrench",
+  "category": "frostedheart:ars",
+  "parents": [
+    "transmission_machinery"
+  ],
+  "clues": [
+    {
+      "type": "game",
+      "value": 1.0,
+      "id": "502a0efe53d1437c",
+      "level": 0
+    }
+  ],
+  "ingredients": [
+    {
+      "count": 2,
+      "base_ingredient": {
+        "tag": "the_winter_rescue:cogwheels"
+      }
+    }
+  ],
+  "effects": [
+    {
+      "type": "recipe",
+      "id": "2f4271397c284cd4",
+      "item": "create:wrench"
+    },
+    {
+      "type": "recipe",
+      "id": "ec34cd963df643f8",
+      "item": "create:goggles"
+    }
+  ],
+  "points": 1250,
+  "showAltDesc": true
+}

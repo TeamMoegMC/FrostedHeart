@@ -1,0 +1,74 @@
+{
+  "icon": "create:deployer",
+  "category": "frostedheart:production",
+  "parents": [
+    "electromagnetics"
+  ],
+  "clues": [
+    {
+      "type": "game",
+      "value": 0.6,
+      "id": "fcc284f00d824e5a",
+      "required": true,
+      "level": 1
+    },
+    {
+      "type": "game",
+      "value": 0.15,
+      "id": "804e4d61fc2c486c",
+      "level": 1
+    },
+    {
+      "type": "item",
+      "value": 0.2,
+      "id": "e9143e3c11864ef3",
+      "item": {
+        "count": 32,
+        "base_ingredient": {
+          "item": "immersiveengineering:wirecoil_copper"
+        }
+      },
+      "consume": true
+    }
+  ],
+  "ingredients": [
+    {
+      "item": "create:copper_sheet"
+    },
+    {
+      "count": 4,
+      "base_ingredient": {
+        "item": "immersiveengineering:wirecoil_copper"
+      }
+    }
+  ],
+  "effects": [
+    {
+      "type": "recipe",
+      "id": "ebf7580a48194e65",
+      "item": "immersiveengineering:circuit_board"
+    },
+    {
+      "type": "recipe",
+      "id": "5d98e60b4c0a4a10",
+      "item": "kubejs:servo_core"
+    },
+    {
+      "type": "recipe",
+      "id": "8cc0c4845a954c69",
+      "item": "immersiveengineering:capacitor_lv"
+    },
+    {
+      "type": "recipe",
+      "id": "5df1607b7c14456c",
+      "item": "immersiveengineering:capacitor_mv"
+    },
+    {
+      "type": "recipe",
+      "id": "7bdd67523c464d94",
+      "item": "immersiveengineering:capacitor_hv"
+    }
+  ],
+  "points": 3500,
+  "showAltDesc": true
+}

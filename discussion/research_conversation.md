@@ -2817,3 +2817,2392 @@ ExperimentCapabilitySystem
 
 1. **主张必须是一等对象，证据必须连接到主张，而不是直接修改真假值。**
 2. **研究流程必须由当前未满足的认识义务编译产生，而不是预先写成状态机。**
+
+
+你目前这套系统距离在具体的Minecraft里面实现还差很多更具体的东西，游戏里我们整合包主要有一个能获取指定位置方块温度的API，背后是一套世界内的温度缓存系统，你不需要在乎细节。然后城镇系统主要是由城镇方块来处理，都是基于team的虚拟towndata，背后按照需要的时间尺度走tick，然后城镇数据里还有resident居民数据，有力量、智力、教育等级等属性（也可以加新的），然后每天会分配居民到各个城镇方块对应的建筑（玩家自己搭建，我们有一套封闭空间检测系统，你不需要在乎细节），然后进行工作，产出到仓库（一个特定建筑），然后有住宅建筑，会从仓库消耗，大概就是这样，然后会有随机属性难民刷新，玩家可以选择招募，这个你可以考虑是知识传播的重点因素，因为难民刷新是唯一的产生新随机性的地方，我们的设定里难民肯定携带者很多知识，另外就是难民在各种地方工作的时候肯定也会产生你说的各种观察，目前我们工作比较少，主要是狩猎建筑，矿场建筑，还有货运站（负责物流）。其实物流的倒是很有用因为物流的居民会和玩家工厂交互很多，虽然他们不是真的交互（只是类似AE2那样，和仓库通讯，有接口和p2p等），但是依旧是观察机器等的主要来源。当然狩猎和矿场也是，是外出探索，肯定会发现新东西和现象。然后是科技方块主要是基于机械动力的机器（这些都可以被抽象为BlockEntity），还有沉浸工程的多方块设备（内部有state和logic，可理解为多方块的BE)，以及虚拟化的用于加热的能量塔设备、城镇建筑（可理解为更加自由的多方块BE），这三类东西其实本质上都可以理解为“机器”，这些主要分为供能（应力或者电，机械动力主要是应力能量，沉浸工程是电力能量，城镇建筑是连着的虚拟居民和一个物资存储系统的）和消耗能量。目前某种意义上我们所有的研究在游戏中的完成之后，都可被想象成为了实现很多Effect，第一类effect是使用禁止性的。比如研究完成之前禁止合成某东西，禁止使用某方块。第二类effect更自由，可以叫stats effect，背后是我们为每个玩家队伍/城镇存储的是一系列key-value数据，叫variants，存储的数据可以被stats effect更新，数据本身可以是数字，也可以是boolean等，也可以更复杂，但游戏中其他系统如上面说的能量塔设备背后其实也是一个teamdata，它就可以从team调取这个背后的variant，然后取值。举个例子一个能量塔热效率研究就可以更新这个效率variant数值从0到0.1，然后能量塔的logic部分就可以具体去用这个新的variant真正实现这个效率升级。这个只是例子，其他的比如说你说的燃烧室什么的，本质上也都是BE，所以也可以implement一个IOwnerTile接口，用于获取team，然后就能被研究上锁或者获取variant。然后多方块MB的话就可以实现IOwnerState之类的，本质上都是获取team。
+
+当然了我所说的这一切都可以尝试修改，而且目前的研究系统非常原始，每个effect都是绑定一个具体的research，这和我们的设想完全不同，我只是提供一些context，以及具体游戏中的应用场景。你接下来思考的时候也一定要开始思考具体的架构。
+
+开始思考。
+
+
+你给出的这些现有系统，已经足以把研究系统从抽象设计推进到一套具体架构。现在最需要做的，不是先实现一个“万能知识图数据库”，而是先建立一条稳定的数据管线：
+
+> **机器、城镇建筑和居民产生结构化信号；观察者把其中一部分信号转化为观察；观察进入队伍知识图；知识图生成研究问题与研究义务；玩家完成义务后形成发现或工程标准；最后再把这些知识成果投影成现有的使用限制和 variants。**
+
+我建议把整体拆成六层：
+
+```text
+┌────────────────────────────────────────────┐
+│ 1. 世界运行层                               │
+│ BE、IE多方块、能量塔、城镇建筑、居民工作     │
+└──────────────────┬─────────────────────────┘
+                   │ 产生结构化运行信号
+                   ▼
+┌────────────────────────────────────────────┐
+│ 2. 观察层                                   │
+│ 居民观察、物流检查、仪器记录、实验监控       │
+└──────────────────┬─────────────────────────┘
+                   │ 生成Observation
+                   ▼
+┌────────────────────────────────────────────┐
+│ 3. 队伍认识层                               │
+│ Claim、Evidence、Idea、Hypothesis、Finding  │
+└──────────────────┬─────────────────────────┘
+                   │ 编译当前知识缺口
+                   ▼
+┌────────────────────────────────────────────┐
+│ 4. 研究工作流层                             │
+│ 当前问题、研究义务、实验计划、线性时间线     │
+└──────────────────┬─────────────────────────┘
+                   │ 形成稳定知识资产
+                   ▼
+┌────────────────────────────────────────────┐
+│ 5. 知识成果层                               │
+│ Finding、Procedure、DesignStandard          │
+└──────────────────┬─────────────────────────┘
+                   │ 投影
+                   ▼
+┌────────────────────────────────────────────┐
+│ 6. 游戏效果层                               │
+│ 禁止/允许使用、配方解锁、variant贡献         │
+└────────────────────────────────────────────┘
+```
+
+这里有一个必须先明确的边界：
+
+> 我们可以不再手写“研究路线”，但仍然需要给世界系统做一次性的“研究语义标注”。
+
+系统不可能自动从一个陌生BlockEntity的Java代码中理解：
+
+* 哪个字段代表输入；
+* 哪个字段代表产出；
+* 哪个字段代表电力或应力供应；
+* 哪些状态能被观察；
+* 哪些变量可以被玩家主动改变；
+* 哪些变化具有研究意义。
+
+但我们不需要为每项研究写路线。我们只需要为每类机器声明一次它拥有哪些语义变量和能力，之后许多研究都可以围绕这些变量自动产生。
+
+---
+
+# 一、首先建立统一的“研究对象”抽象
+
+你描述的三类系统：
+
+* 机械动力BlockEntity；
+* 沉浸工程多方块的state或logic；
+* 虚拟能量塔和城镇建筑；
+
+从研究系统的角度确实应该统一视为一种东西：
+
+> **能够接收输入、依赖支持条件、产生输出、具有运行状态，并处于某种环境中的研究对象。**
+
+可以定义统一引用：
+
+```java
+public sealed interface ResearchSubjectRef
+        permits BlockSubjectRef,
+                MultiblockSubjectRef,
+                TownBuildingSubjectRef {
+
+    TeamId owner();
+    ResourceLocation profileId();
+}
+```
+
+具体类型：
+
+```java
+public record BlockSubjectRef(
+        TeamId owner,
+        ResourceKey<Level> dimension,
+        BlockPos pos,
+        UUID instanceId,
+        ResourceLocation profileId
+) implements ResearchSubjectRef {
+}
+
+public record MultiblockSubjectRef(
+        TeamId owner,
+        ResourceKey<Level> dimension,
+        BlockPos masterPos,
+        UUID instanceId,
+        ResourceLocation profileId
+) implements ResearchSubjectRef {
+}
+
+public record TownBuildingSubjectRef(
+        TeamId owner,
+        UUID buildingId,
+        ResourceLocation profileId
+) implements ResearchSubjectRef {
+}
+```
+
+这里最好给BE和多方块实例一个持久化UUID。仅使用坐标不够，因为玩家拆掉机器后在同一位置重新放置，它在纵向研究记录中应当是一个新实例。
+
+## 不要求所有第三方BE直接实现接口
+
+自己的BE可以实现：
+
+```java
+public interface IOwnedResearchSubject extends IOwnerTile {
+    ResearchSubjectRef getResearchSubjectRef();
+}
+```
+
+但对于机械动力和沉浸工程，不建议到处Mixin接口。更适合使用适配器注册表：
+
+```java
+public interface ResearchSubjectAdapter<T> {
+
+    ResourceLocation profileId();
+
+    boolean supports(T subject);
+
+    ResearchSubjectRef getSubjectRef(T subject);
+
+    TeamId getOwner(T subject);
+
+    void collectSignals(
+            T subject,
+            ObservationRequest request,
+            ResearchSignalSink sink
+    );
+
+    Set<ResearchCapability> getCapabilities(T subject);
+}
+```
+
+注册方式可以是：
+
+```java
+ResearchSubjectAdapters.register(
+        someCreateBlockEntityType,
+        new CreateMachineResearchAdapter()
+);
+
+ResearchSubjectAdapters.register(
+        someIEMultiblockDefinition,
+        new IEMultiblockResearchAdapter()
+);
+```
+
+自研的能量塔和城镇建筑则直接提供适配器。
+
+这样研究系统永远不直接依赖具体机器类，只依赖：
+
+```text
+ResearchSubjectRef
+ResearchSubjectProfile
+ResearchSubjectAdapter
+```
+
+---
+
+# 二、所有机器统一暴露“过程语义”
+
+机器差异很大，但运行过程大体都可以抽象成：
+
+```text
+输入
+  ├── 材料
+  ├── 电力
+  ├── 应力
+  ├── 劳动力
+  └── 时间
+
+支持条件
+  ├── 温度
+  ├── 房间环境
+  ├── 维护状态
+  ├── 物流可用性
+  └── 操作者能力
+
+运行状态
+  ├── 正常
+  ├── 空闲
+  ├── 缺料
+  ├── 能量不足
+  ├── 堵塞
+  └── 故障
+
+输出
+  ├── 物品
+  ├── 热量
+  ├── 服务
+  ├── 运输能力
+  └── 副产物
+```
+
+为每类机器定义一个研究档案：
+
+```java
+public record ResearchSubjectProfile(
+        ResourceLocation id,
+        Set<VariableDefinition<?>> observableVariables,
+        Set<VariableDefinition<?>> controllableVariables,
+        Set<CapabilityKey> capabilities,
+        Set<OperationalChannelDefinition> channels,
+        Set<ResourceLocation> tags
+) {
+}
+```
+
+例如机械动力机器可以暴露：
+
+```text
+输入：
+- item_input_rate
+- rotational_speed
+- stress_capacity
+- stress_consumption
+
+输出：
+- item_output_rate
+
+状态：
+- running
+- overstressed
+- stalled
+- recipe_active
+
+环境：
+- ambient_temperature
+```
+
+沉浸工程机器可以暴露：
+
+```text
+输入：
+- electric_input
+- material_input
+
+输出：
+- material_output
+- heat_output
+
+状态：
+- active
+- recipe_progress
+- internal_energy
+- failure_state
+```
+
+城镇建筑可以暴露：
+
+```text
+输入：
+- assigned_residents
+- labor_strength
+- material_input
+- warehouse_availability
+
+输出：
+- daily_production
+- injury_count
+- trip_duration
+
+环境：
+- building_temperature
+- exterior_temperature
+```
+
+这让许多通用研究规则可以跨系统工作。例如：
+
+```text
+支持条件不变，但产出下降
+→ 产生性能异常想法
+
+温度下降与故障重复共现
+→ 产生低温相关想法
+
+投入相同，但不同建筑产出不同
+→ 产生差异原因问题
+
+材料充足但机器持续空闲
+→ 产生物流、能量或控制异常问题
+```
+
+---
+
+# 三、温度API应成为通用上下文，而不是某个研究专用接口
+
+你们已经有指定方块位置温度API，这非常适合成为研究系统最早落地的环境变量。
+
+不要让每个BE自己调用温度API。可以统一做一个上下文增强器：
+
+```java
+public interface ResearchContextEnricher {
+    void enrich(
+            ResearchSubjectRef subject,
+            MutableResearchContext context
+    );
+}
+```
+
+其中一个实现：
+
+```java
+public final class SpatialTemperatureEnricher
+        implements ResearchContextEnricher {
+
+    @Override
+    public void enrich(
+            ResearchSubjectRef subject,
+            MutableResearchContext context
+    ) {
+        subject.anchorPosition().ifPresent(anchor -> {
+            double temperature =
+                    temperatureApi.getTemperature(
+                            anchor.level(),
+                            anchor.pos()
+                    );
+
+            context.put(
+                    ResearchVariables.AMBIENT_TEMPERATURE,
+                    temperature
+            );
+        });
+    }
+}
+```
+
+于是所有有空间位置的研究对象，自动携带：
+
+```text
+ambient_temperature
+dimension
+position
+room_id
+building_id
+time_of_day
+weather_context
+```
+
+城镇建筑可以定义多个采样点：
+
+* 建筑中心；
+* 工作区；
+* 外墙附近；
+* 室外入口。
+
+第一版只取建筑锚点即可，不必一开始就做复杂空间平均。
+
+---
+
+# 四、机器不能直接写入知识图，而应先产生“研究信号”
+
+这是非常重要的架构约束。
+
+错误方式是：
+
+```java
+if (temperature < -10 && efficiency < 0.7) {
+    teamResearchGraph.addIdea(...);
+}
+```
+
+这样每个机器都在实现自己的研究逻辑，最终又会回到手写路线。
+
+正确方式是机器只报告：
+
+```text
+我现在输入了多少；
+我现在产出了多少；
+我的能量供应是什么；
+我的运行状态是什么；
+我所在位置温度是多少。
+```
+
+统一信号结构：
+
+```java
+public record ResearchSignal(
+        ResearchSubjectRef subject,
+        long gameTime,
+        SignalSource source,
+        Map<VariableKey<?>, SampleValue<?>> values,
+        Set<ResourceLocation> eventTags
+) {
+}
+```
+
+例如能量塔一天结束时发出：
+
+```text
+subject = 热能塔#17
+input_fuel = 120
+heat_output = 8400
+operating_hours = 20
+ambient_temperature = -22
+state = ACTIVE
+```
+
+机械动力机器可能发出：
+
+```text
+subject = 粉碎机#4
+rotational_speed = 64
+stress_capacity = 1024
+stress_consumption = 512
+input_count = 64
+output_count = 48
+stall_count = 3
+ambient_temperature = -18
+```
+
+这只是**潜在可观察信号**，并不等于城镇已经知道这些信息。
+
+---
+
+# 五、在“机器信号”和“知识观察”之间增加观察门
+
+如果所有机器信息自动进入知识图，居民、物流、仪器和实验室都失去意义。
+
+所以数据流应该是：
+
+```text
+机器运行信号
+    ↓
+ObservationGate
+    ↓
+真正被观察到的记录
+```
+
+观察来源可以分为：
+
+```java
+public enum ObservationChannel {
+    INCIDENT,               // 明显事故
+    RESIDENT_WORK_REPORT,   // 普通工作报告
+    LOGISTICS_INSPECTION,   // 物流居民检查
+    MANUAL_PLAYER_RECORD,   // 玩家手动记录
+    SENSOR_MONITORING,      // 仪器监测
+    EXPERIMENT_TRACE        // 正式实验
+}
+```
+
+同一个机器信号，通过不同渠道会产生不同质量的观察。
+
+例如：
+
+| 渠道     | 玩家得到的信息             |
+| ------ | ------------------- |
+| 普通工人报告 | “这台机器今天经常卡住。”       |
+| 物流居民检查 | “输入供应正常，但产出低于平日。”   |
+| 受教育技术员 | “应力供应稳定，机器仍出现三次停转。” |
+| 仪器监测   | 完整转速、应力、温度和产出时间序列   |
+| 正式实验   | 带控制组、干预记录和有效性判断的数据  |
+
+观察记录：
+
+```java
+public record ObservationRecord(
+        ObservationId id,
+        ResearchSubjectRef subject,
+        long startTime,
+        long endTime,
+        ObservationChannel channel,
+        Optional<ResidentId> observer,
+        Map<VariableKey<?>, ObservedValue<?>> values,
+        ResearchContext context,
+        ObservationQuality quality,
+        Provenance provenance
+) {
+}
+```
+
+质量不应只是一个总百分比，可以拆成：
+
+```java
+public record ObservationQuality(
+        PrecisionLevel precision,
+        CompletenessLevel completeness,
+        ReliabilityLevel reliability,
+        boolean instrumented,
+        boolean continuous
+) {
+}
+```
+
+---
+
+# 六、物流建筑会成为机器观察系统的核心
+
+你提到物流居民虽然不真正跑到机器旁边，但会通过类似AE2的接口、仓库通讯和P2P与玩家工厂交互。
+
+这反而非常适合研究系统。
+
+物流建筑可以把连接的机器接口视为它的“观察范围”：
+
+```text
+物流建筑
+  ├── 连接机器A
+  ├── 连接机器B
+  ├── 连接仓库C
+  └── 连接能量塔D
+```
+
+每日物流工作结束时，物流建筑可以生成一个虚拟工作报告：
+
+```java
+public interface JobObservationProvider {
+
+    void generateWorkObservations(
+            WorkShiftContext context,
+            ObservationSink sink
+    );
+}
+```
+
+物流建筑的实现可以分析：
+
+```text
+机器请求了什么；
+实际供应了多少；
+机器输出了多少；
+机器是否因为输入不足停机；
+机器是否在供应充足时仍然低产；
+不同时间段输入输出是否异常；
+接口是否重复堵塞；
+机器所在位置温度如何。
+```
+
+由此可以产生非常有价值的观察：
+
+```text
+“粉碎机的原料供应一直充足，但近三天产量下降。”
+
+“南侧机器收到的应力供应没有变化，但停转次数增加。”
+
+“两个相同机器使用同一仓库供料，室外机器效率明显更低。”
+
+“能量塔燃料消耗保持不变，但热量输出在低温天气下降。”
+```
+
+物流居民的属性可以影响他们能看到什么：
+
+* 智力高：能发现多变量之间的关联；
+* 教育高：能产生定量报告；
+* 相关经验：能识别特定机器异常；
+* 观察力高：能发现不明显的反复故障；
+* 沟通能力高：报告更完整。
+
+物流建筑不需要真的模拟居民访问每台机器，只需要：
+
+```text
+物流接口连接关系
+＋
+机器适配器提供的数据
+＋
+居民工作上下文
+```
+
+---
+
+# 七、狩猎和矿场应当产出“现场观察”，而不只是资源
+
+狩猎和矿场本身就是野外研究入口。
+
+每日工作结果除了物资产出，还可以生成一份 `ExpeditionReport`：
+
+```java
+public record ExpeditionReport(
+        ResourceLocation expeditionType,
+        List<ResidentId> residents,
+        ResearchContext environment,
+        Map<ResourceLocation, Integer> yields,
+        List<FieldIncident> incidents,
+        List<FieldObservation> observations
+) {
+}
+```
+
+狩猎可以产生：
+
+```text
+低温下动物活动减少；
+某种动物更常出现在热源附近；
+猎物脂肪厚度变化；
+工具在极寒中更容易损坏；
+居民在某类衣物下受伤更少；
+某个区域存在异常温度。
+```
+
+矿场可以产生：
+
+```text
+某种矿层温度异常；
+低温时工具损耗增加；
+某种材料在冷热变化后开裂；
+矿井深度与温度变化；
+运输时间与矿物损耗关系；
+某种设备在地下运行更稳定。
+```
+
+这些报告首先是观察，不直接解锁研究。
+
+---
+
+# 八、居民属性应当影响“能做什么”，而不是研究点速度
+
+现有属性可以这样使用：
+
+| 属性   | 研究系统中的作用                  |
+| ---- | ------------------------- |
+| 智力   | 假设搜索深度、能同时处理的变量数量、跨观察关联能力 |
+| 教育等级 | 定量表达、正式实验设计、计算方法和仪器使用     |
+| 力量   | 搭建重型装置、危险现场实验、长时间野外工作     |
+| 工作岗位 | 决定能接触哪些对象和观察渠道            |
+
+建议额外增加的不是一堆数值条，而是两个数值和一组标签。
+
+## 1. 观察力
+
+决定居民能否把潜在信号注意为观察。
+
+```java
+int observation;
+```
+
+## 2. 沟通能力
+
+决定私人知识和工作经验能否被完整地表达给团队。
+
+```java
+int communication;
+```
+
+## 3. 经历标签
+
+比单纯的“机械知识等级37”更适合难民系统。
+
+```text
+former_machinist
+former_miner
+railway_dispatcher
+field_medic
+teacher
+boiler_operator
+electrician
+hunter
+warehouse_clerk
+```
+
+经历标签负责授予特定知识包和识别规则。
+
+---
+
+# 九、难民应携带“私人知识包”，而不是直接携带科技解锁
+
+难民是整个系统中最适合承担知识随机性的部分。
+
+每次难民生成时，从其背景原型中生成若干私人知识包：
+
+```java
+public record ResidentKnowledgePacket(
+        ResourceLocation id,
+        Set<ConceptKey> knownConcepts,
+        Set<MechanismSchemaKey> mechanismSchemas,
+        Set<ProcedureKey> knownProcedures,
+        Set<RecognitionRuleKey> recognitionRules,
+        List<TestimonyTemplate> testimonies
+) {
+}
+```
+
+知识包可以分成五类。
+
+## 概念知识
+
+居民知道某种概念存在：
+
+```text
+空气流量
+润滑黏度
+烟囱倒灌
+材料疲劳
+控制变量
+热交换
+```
+
+## 机制模式
+
+居民知道一种通用解释方式：
+
+```text
+温度下降
+→ 液体黏度增加
+→ 机械阻力增加
+
+堵塞增加
+→ 有效截面积减少
+→ 流量下降
+```
+
+## 程序知识
+
+居民知道如何做某件事：
+
+```text
+校准流量计
+检查轴承
+设计对照实验
+记录燃料批次
+维护高压设备
+```
+
+## 案例记忆
+
+居民曾经见过某种现象：
+
+```text
+“以前铁路转辙器在湿雪天会冻住。”
+
+“旧工厂的锅炉开门后火焰会恢复。”
+
+“某些油在严寒中会变得像蜡。”
+```
+
+这些是带来源的证词，不是已确认发现。
+
+## 工程设计模式
+
+居民知道一种可能的解决路线：
+
+```text
+加热进气格栅
+机械刮冰
+废热回流
+双层保温
+旁路阀
+```
+
+同样不能直接解锁最终机器，只能提供原型候选。
+
+---
+
+# 十、私人知识不会自动成为城镇知识
+
+难民加入后，应当拥有：
+
+```java
+ResidentKnowledgeState privateKnowledge;
+```
+
+队伍拥有：
+
+```java
+TeamEpistemicState publicKnowledge;
+```
+
+两者不能直接合并。
+
+私人知识通过以下行为外部化：
+
+```text
+与玩家交谈；
+在相关建筑中工作；
+在研究所参与讨论；
+看到能够唤起其经验的异常；
+教授其他居民；
+撰写记录；
+参加实验设计。
+```
+
+例如一个前锅炉工在物流站看到：
+
+```text
+机器输入正常；
+产出下降；
+打开维护门后短暂恢复；
+温度很低。
+```
+
+他的私人知识包中有：
+
+```text
+“开门恢复可能意味着进气不足。”
+```
+
+于是产生：
+
+```text
+TestimonyEvidence：
+罗伯特认为机器可能缺乏空气供应。
+
+CandidateHypothesis：
+进气受阻导致输出下降。
+```
+
+如果他从未参与相关工作，也没有被安排到研究所，这个知识可能永远不会被团队发现。
+
+这样难民就不是随机属性劳动力，而是真正改变研究空间的人。
+
+---
+
+# 十一、建议让研究系统本身尽量确定性
+
+你说难民刷新是主要的新随机性来源，这非常适合这套设计。
+
+可以让：
+
+```text
+难民携带什么知识
+→ 随机
+
+世界里实际发生了什么
+→ 由模拟决定
+
+居民在已知信息下能否识别现象
+→ 由属性和规则决定
+
+系统生成哪些想法
+→ 由图模式确定
+
+实验结果
+→ 由世界状态决定
+
+结论如何更新
+→ 由证据规则确定
+```
+
+研究中尽量不要使用：
+
+```text
+本次实验有35%概率成功。
+```
+
+而应使用：
+
+```text
+居民教育不足，因此无法形成定量方案；
+缺少流量计，因此只能观察火焰状态；
+供能中断，因此实验数据无效；
+控制组燃料来源不同，因此无法区分解释。
+```
+
+即使需要轻微随机性，也可以使用居民和日期种子保证可重现，而不是暗骰科研结果。
+
+---
+
+# 十二、知识图应该作为队伍数据的子模块
+
+可以直接在现有的 `TeamTownData` 中加入：
+
+```java
+public final class TeamResearchData {
+
+    private final ObservationStore observations;
+    private final EpistemicGraph graph;
+    private final InquiryManager inquiries;
+    private final KnowledgeAssetStore assets;
+    private final ResidentKnowledgeIndex residentKnowledge;
+    private final ResearchEffectLedger effectLedger;
+    private final ResearchEventLog eventLog;
+}
+```
+
+或者单独保存为team keyed SavedData，再由TownData引用。逻辑上它仍然是队伍级的。
+
+## 不建议一开始使用真正的图数据库
+
+Minecraft存档中用普通Map和索引就足够。
+
+```java
+public final class EpistemicGraph {
+
+    private final Map<ClaimId, ClaimRecord> claims;
+    private final Map<EvidenceId, EvidenceRecord> evidence;
+    private final Map<JustificationId, JustificationRecord> justifications;
+
+    private final Map<PredicateKey, Set<ClaimId>> claimsByPredicate;
+    private final Map<ConceptKey, Set<ClaimId>> claimsByConcept;
+    private final Map<ResearchSubjectRef, Set<EvidenceId>> evidenceBySubject;
+}
+```
+
+逻辑上它是一张超图，物理实现上只是：
+
+```text
+Claim表
+Evidence表
+Justification表
+若干反向索引
+```
+
+---
+
+# 十三、知识图中的核心不是“事实”，而是主张
+
+```java
+public record ClaimKey(
+        PredicateKey predicate,
+        Map<RoleKey, TermRef> arguments,
+        Scope scope
+) {
+}
+```
+
+例如：
+
+```text
+predicate:
+DECREASES
+
+arguments:
+cause = intake_icing
+effect = airflow
+
+scope:
+ambient_temperature < 0
+humidity = HIGH
+subject_profile = open_air_intake
+```
+
+运行时记录：
+
+```java
+public final class ClaimRecord {
+
+    private final ClaimId id;
+    private final ClaimKey key;
+
+    private ClaimKind kind;
+    private ClaimStatus status;
+
+    private final Set<JustificationId> supporting;
+    private final Set<JustificationId> attacking;
+}
+```
+
+状态可以是：
+
+```java
+public enum ClaimStatus {
+    PROPOSED,
+    SUPPORTED,
+    CONTESTED,
+    ACCEPTED,
+    REJECTED,
+    SUSPENDED
+}
+```
+
+它不能只是一个概率数字。
+
+---
+
+# 十四、观察如何自然变成“想法”
+
+完整处理链建议是：
+
+```text
+ResearchSignal
+    ↓
+ObservationGate
+    ↓
+ObservationRecord
+    ↓
+ObservationAggregator
+    ↓
+PhenomenonSummary
+    ↓
+IdeaRuleEngine
+    ↓
+IdeaCandidate
+```
+
+## ObservationAggregator
+
+不要把机器每tick的数据永久存入图。
+
+普通观察只保留聚合结果：
+
+```java
+public record PhenomenonSummary(
+        ResourceLocation subjectProfile,
+        VariableKey<?> targetVariable,
+        ContextBucket context,
+        int sampleCount,
+        SummaryStatistics statistics,
+        Set<ObservationId> representativeObservations
+) {
+}
+```
+
+例如：
+
+```text
+能量塔
+温度区间：-25到-15
+平均燃料输入：120
+平均热量输出：8300
+样本数：5天
+```
+
+以及：
+
+```text
+能量塔
+温度区间：0到10
+平均燃料输入：121
+平均热量输出：9500
+样本数：6天
+```
+
+然后通用规则发现：
+
+```text
+输入基本一致；
+产出显著不同；
+主要上下文差异是温度；
+当前没有已接受解释。
+```
+
+生成：
+
+```text
+Idea：
+环境温度是否影响能量塔的热量输出？
+```
+
+## 变量需要声明比较语义
+
+每个变量定义：
+
+```java
+public record VariableDefinition<T>(
+        VariableKey<T> key,
+        Codec<T> codec,
+        ValueComparator<T> comparator,
+        ValueBucketer<T> bucketer,
+        Tolerance<T> meaningfulDifference
+) {
+}
+```
+
+否则系统不知道：
+
+```text
+温度差1度是否重要；
+产量差1个是否重要；
+运行状态之间如何比较；
+两个物品类型是否相同。
+```
+
+---
+
+# 十五、想法生成规则应当是通用图规则
+
+第一版只需要少量强规则。
+
+## 性能异常
+
+```text
+输入和支持条件基本相同；
+输出明显变化；
+存在一个或少数上下文差异；
+没有已有解释。
+```
+
+生成：
+
+```text
+什么因素导致了输出变化？
+```
+
+## 环境相关性
+
+```text
+某故障在特定温度区间反复出现；
+在其他温度区间很少出现。
+```
+
+生成：
+
+```text
+温度是否与该故障有关？
+```
+
+## 同型对象差异
+
+```text
+两个同类型机器；
+输入相同；
+一个正常，一个异常。
+```
+
+生成：
+
+```text
+两台机器之间的什么差异造成了结果不同？
+```
+
+## 预测偏差
+
+```text
+已有知识预测产量X；
+实际结果明显偏离。
+```
+
+生成：
+
+```text
+当前模型漏掉了什么因素？
+```
+
+## 证词冲突
+
+```text
+两个居民对同一现象提出不同解释。
+```
+
+生成争议研究。
+
+## 城镇目标缺口
+
+```text
+城镇需要某性能；
+现有机器无法满足；
+存在可能相关的知识。
+```
+
+生成工程研究。
+
+规则接口：
+
+```java
+public interface IdeaGenerationRule {
+
+    Stream<IdeaCandidate> evaluate(
+            GraphDelta delta,
+            TeamResearchContext context
+    );
+}
+```
+
+每次只处理新增数据附近的局部图，不扫描全图。
+
+---
+
+# 十六、假设生成依赖“机制模式库”
+
+系统不能从一句“输出降低”凭空生成合理因果解释。
+
+它需要一套通用机制模式：
+
+```java
+public record MechanismSchema(
+        MechanismSchemaKey key,
+        TypedGraphPattern pattern,
+        Set<ConceptKey> requiredConcepts,
+        Set<ProcedureKey> requiredProcedures,
+        PredictionGenerator predictionGenerator
+) {
+}
+```
+
+例如：
+
+```text
+阻塞机制：
+阻塞量增加
+→ 有效通道面积减少
+→ 流量下降
+```
+
+```text
+资源不足机制：
+输入供应下降
+→ 运行时间下降
+→ 产出下降
+```
+
+```text
+热损失机制：
+内外温差增加
+＋ 保温不足
+→ 热损失增加
+→ 有效热输出下降
+```
+
+```text
+技能不足机制：
+操作者能力不足
+→ 错误率增加
+→ 产出或可靠性下降
+```
+
+当当前问题是：
+
+```text
+为什么低温时热输出下降？
+```
+
+系统会在团队目前可用的机制模式中搜索：
+
+* 外部热损失；
+* 燃料状态变化；
+* 管道结冰；
+* 物流供应不足；
+* 测量误差；
+* 操作人员低温影响。
+
+其中一些可能是真的，一些可能是错误解释。
+
+候选假设生成器不能读取隐藏世界机制，只能使用：
+
+```text
+团队已知概念；
+居民携带的机制模式；
+已有观察；
+机器公开的可观察变量；
+相关旧发现。
+```
+
+---
+
+# 十七、研究流程具体表现为“研究义务”
+
+底层不要保存：
+
+```java
+stage = THEORY;
+progress = 0.73;
+```
+
+而要保存：
+
+```java
+public record ResearchObligation(
+        ObligationId id,
+        ObligationType type,
+        RequirementExpression completionCondition,
+        Set<ObligationId> dependencies,
+        List<ResearchActionOption> availableActions,
+        String reasonTemplate
+) {
+}
+```
+
+义务类型可以包括：
+
+```java
+public enum ObligationType {
+    CHARACTERIZE_PHENOMENON,
+    FORMALIZE_VARIABLE,
+    GENERATE_ALTERNATIVE_HYPOTHESES,
+    DERIVE_PREDICTION,
+    IDENTIFY_CONFOUNDERS,
+    ACQUIRE_MEASUREMENT_CAPABILITY,
+    DESIGN_EXPERIMENT,
+    PREPARE_APPARATUS,
+    ASSIGN_RESEARCHERS,
+    RUN_EXPERIMENT,
+    ANALYZE_RESULT,
+    REPLICATE_RESULT,
+    DEFINE_SCOPE,
+    REVIEW_FINDING,
+    BUILD_PROTOTYPE,
+    FIELD_TEST_PROTOTYPE,
+    STANDARDIZE_DESIGN
+}
+```
+
+每当知识图变化，工作流编译器重新计算：
+
+```java
+List<ResearchObligation> obligations =
+        workflowCompiler.compile(
+                inquiry,
+                teamResearchData,
+                townCapabilities
+        );
+```
+
+然后取当前依赖已满足的最前沿义务：
+
+```text
+当前主要任务：
+排除“燃料供应不足”这一替代解释。
+
+原因：
+物流记录显示总供应量正常，但尚未确认实验期间持续稳定。
+
+可用行动：
+- 安排物流居民进行专门监控；
+- 安装持续输入记录器；
+- 从仓库预留固定批次燃料。
+```
+
+玩家看到的线性阶段由当前义务分类：
+
+```text
+当前义务是提出假设
+→ 理论阶段
+
+当前义务是准备装置
+→ 实验准备阶段
+
+当前义务是解释结果
+→ 分析阶段
+
+当前义务是现场测试
+→ 工程原型阶段
+```
+
+因此“阶段”是界面投影，不是底层状态机。
+
+---
+
+# 十八、研究所中的居民执行具体任务，而不是产生研究点
+
+研究所可以是现有城镇建筑体系中的一种建筑。
+
+每天分配居民后，研究所获得的是一组可执行劳动能力：
+
+```text
+理论讨论；
+档案整理；
+定量计算；
+实验设计；
+实验值班；
+结果复核；
+知识教学。
+```
+
+具体任务例如：
+
+```java
+public record ResearchTask(
+        ResourceLocation type,
+        InquiryId inquiry,
+        Set<ResidentRequirement> residentRequirements,
+        Set<FacilityRequirement> facilityRequirements,
+        Duration workDuration,
+        ResearchTaskResultGenerator resultGenerator
+) {
+}
+```
+
+例如“把观察正式定义成热效率”：
+
+```text
+要求：
+教育等级达到某阈值；
+知道输入能量和输出热量概念；
+拥有计算设施。
+
+结果：
+生成变量定义：
+thermal_efficiency = heat_output / fuel_input
+```
+
+“提出替代假设”：
+
+```text
+要求：
+至少一名高智力居民；
+团队拥有两个以上相关机制模式；
+进行一次研究讨论。
+
+结果：
+生成若干候选假设。
+```
+
+“复核实验”：
+
+```text
+要求：
+另一名未参与原实验的受教育居民；
+完整实验日志；
+研究所档案设施。
+
+结果：
+识别遗漏控制变量，或者提高证据可靠性。
+```
+
+这些任务可以需要一天或数天，但其结果是明确结构，而不是加进度条。
+
+---
+
+# 十九、实验在Minecraft里需要一个实际锚点
+
+我建议增加一个具体的：
+
+> **实验控制台BlockEntity**
+
+它不是固定多方块实验室，而是一个用于声明实验、链接机器、记录数据和验证条件的控制器。
+
+控制台实现：
+
+```java
+public final class ExperimentControllerBlockEntity
+        extends BlockEntity
+        implements IOwnerTile {
+
+    private InquiryId activeInquiry;
+    private ExperimentPlan activePlan;
+    private ExperimentRun currentRun;
+
+    private final Set<ResearchSubjectRef> linkedSubjects;
+    private final Set<InstrumentRef> linkedInstruments;
+}
+```
+
+玩家可以通过工具或P2P链接：
+
+* 机械动力机器；
+* IE多方块主节点；
+* 能量塔；
+* 仓库接口；
+* 温度采样点；
+* 控制组设备；
+* 实验组设备。
+
+利用现有封闭空间检测，可以判断控制台是否位于研究所或实验室建筑内，但不要强制固定房间形状。
+
+---
+
+# 二十、实验计划的具体数据结构
+
+```java
+public record ExperimentPlan(
+        ExperimentPlanId id,
+        InquiryId inquiry,
+        Set<ClaimId> targetHypotheses,
+        List<ExperimentalGroup> groups,
+        List<InterventionSpec> interventions,
+        List<ControlSpec> controls,
+        List<MeasurementSpec> measurements,
+        List<ResourceFlowRequirement> supplies,
+        StaffingRequirement staffing,
+        ExperimentClock clock,
+        StopCondition stopCondition
+) {
+}
+```
+
+实验组：
+
+```java
+public record ExperimentalGroup(
+        String name,
+        Set<ResearchSubjectRef> subjects,
+        Map<VariableKey<?>, TargetValue<?>> treatment
+) {
+}
+```
+
+干预：
+
+```java
+public record InterventionSpec(
+        VariableKey<?> variable,
+        ExperimentalGroupId group,
+        TargetValue<?> target
+) {
+}
+```
+
+控制变量：
+
+```java
+public sealed interface ControlSpec {
+
+    record KeepWithinRange(
+            VariableKey<Double> variable,
+            double minimum,
+            double maximum
+    ) implements ControlSpec {
+    }
+
+    record MatchBetweenGroups(
+            VariableKey<?> variable,
+            Tolerance<?> tolerance
+    ) implements ControlSpec {
+    }
+
+    record MonitorOnly(
+            VariableKey<?> variable
+    ) implements ControlSpec {
+    }
+}
+```
+
+测量要求：
+
+```java
+public record MeasurementSpec(
+        VariableKey<?> variable,
+        SamplingInterval interval,
+        PrecisionLevel minimumPrecision
+) {
+}
+```
+
+时钟尺度：
+
+```java
+public enum ExperimentClock {
+    GAME_TICK,
+    SECOND,
+    MINUTE,
+    WORK_SHIFT,
+    DAY
+}
+```
+
+这样BE实验可以秒级采样，城镇建筑实验则按工作班次或天采样。
+
+---
+
+# 二十一、实验装置检查是“能力约束”，不是蓝图检查
+
+系统生成：
+
+```text
+需要：
+- 两个同类热能塔或两个可比较运行阶段；
+- 能改变其中一组保温状态；
+- 能测量燃料输入；
+- 能测量热量输出；
+- 能记录环境温度；
+- 能保持相同负载；
+- 能保证燃料供应不中断；
+- 至少一名实验值班居民。
+```
+
+世界中的设施提供能力：
+
+```java
+public record ResearchCapability(
+        CapabilityKey key,
+        Optional<VariableKey<?>> variable,
+        CapabilityQuality quality
+) {
+}
+```
+
+例如：
+
+```text
+能量塔适配器：
+MEASURE(fuel_input)
+MEASURE(heat_output)
+CONTROL(insulation_mode)
+
+温度API采样点：
+MEASURE(ambient_temperature)
+
+仓库接口：
+HOLD(material_supply)
+
+物流居民：
+MONITOR(material_flow)
+
+研究居民：
+LOG_EXPERIMENT
+```
+
+只要：
+
+```text
+装置能力集合 ⊇ 实验需求能力集合
+```
+
+实验就能开始。
+
+玩家如何搭建、机器放在哪里、使用哪种物流线路，都由玩家决定。
+
+---
+
+# 二十二、实验结果由实际运行轨迹决定
+
+实验开始后，只对被链接对象进行高频记录。
+
+```java
+public record ExperimentRun(
+        ExperimentRunId id,
+        ExperimentPlanId plan,
+        long startTime,
+        long endTime,
+        Map<ExperimentalGroupId, GroupTrace> traces,
+        List<ExperimentIncident> incidents,
+        ExperimentValidity validity
+) {
+}
+```
+
+有效性检查：
+
+```text
+干预是否真的达到目标；
+输入是否持续稳定；
+应力或电力是否中断；
+温度是否超出计划范围；
+居民是否完成值班；
+测量是否缺失；
+实验组与控制组是否可比较；
+是否发生非计划故障。
+```
+
+输出不是：
+
+```text
+实验失败。
+```
+
+而是：
+
+```text
+本次实验不能区分两种假设。
+
+原因：
+控制组燃料供应在第3小时中断；
+实验组运行时间比控制组少17分钟；
+环境温度在实验中升高8度。
+```
+
+或者：
+
+```text
+结果支持“外部热损失”假设。
+
+依据：
+实验组增加保温后，
+燃料输入基本不变，
+热量输出提高，
+且变化发生在保温干预之后。
+```
+
+这些结果被写回知识图，成为新的证据。
+
+---
+
+# 二十三、发现和工程成果必须分开
+
+建议定义三种稳定成果。
+
+## Finding：发现
+
+表示城镇接受了某种规律：
+
+```text
+低温环境下，能量塔外壳热损失增加。
+```
+
+## Procedure：程序知识
+
+表示城镇掌握了方法：
+
+```text
+如何测量热能塔输入输出；
+如何校准热量记录器；
+如何进行对照运行。
+```
+
+## DesignStandard：工程标准
+
+表示某种设计已经通过原型和现场验证：
+
+```text
+热能塔双层保温结构V1。
+```
+
+只有工程标准应该直接产生大部分机器效率加成和正式使用解锁。
+
+合理流程是：
+
+```text
+发现热损失规律
+    ↓
+允许设计保温原型
+    ↓
+在实验环境测试
+    ↓
+在真实城镇现场运行
+    ↓
+形成标准化设计
+    ↓
+正式应用variant效果
+```
+
+这样科研不会直接魔法式提高机器效率。
+
+---
+
+# 二十四、最终效果不能再绑定研究ID
+
+当前系统可能是：
+
+```text
+Research A完成
+→ Effect A执行
+```
+
+应该改成：
+
+```text
+知识图满足某个条件
+→ 生成稳定知识资产
+→ 知识资产触发效果规则
+```
+
+需要一个中间层：
+
+```java
+public record KnowledgeAsset(
+        KnowledgeAssetKey key,
+        KnowledgeAssetType type,
+        Provenance provenance
+) {
+}
+```
+
+类型：
+
+```java
+public enum KnowledgeAssetType {
+    FINDING,
+    PROCEDURE,
+    DESIGN_STANDARD
+}
+```
+
+这些资产拥有稳定ID，例如：
+
+```text
+winterrescue:finding/external_temperature_increases_heat_loss
+winterrescue:procedure/controlled_thermal_test
+winterrescue:design/heat_tower_insulation_v1
+```
+
+这看上去也有ID，但它和旧research ID有本质区别：
+
+```text
+旧Research ID：
+代表一条固定路线。
+
+KnowledgeAsset ID：
+代表一个稳定语义结果。
+```
+
+任意研究问题、任意观察路线、任意假设迭代，只要最终形成相同结果，都可以生成同一个KnowledgeAsset。
+
+一项研究也可能生成多个资产。
+
+---
+
+# 二十五、用“发现解析器”把开放图谱转成稳定资产
+
+机器代码不能直接查询一整张开放知识图。所以需要解析器：
+
+```java
+public interface KnowledgeAssetResolver {
+
+    Stream<KnowledgeAsset> resolve(
+            GraphDelta delta,
+            TeamEpistemicState state
+    );
+}
+```
+
+例如：
+
+```text
+匹配条件：
+存在一个已接受主张：
+
+外部温差增加
+→ 热量损失增加
+
+作用对象：
+热能塔外壳
+
+证据条件：
+至少一次有效干预实验；
+至少一次重复验证；
+不存在未解决的强反证。
+
+输出：
+FindingAsset:
+external_temperature_increases_heat_loss
+```
+
+这样最终效果仍然是可控的，但通往它的路线不是固定的。
+
+---
+
+# 二十六、将现有variants升级成类型安全的“效果投影”
+
+你们已经有team级key-value variants，这很适合作为下游投影，不需要推翻。
+
+但最好从任意字符串和强制类型转换，升级为：
+
+```java
+public final class VariantKey<T> {
+
+    private final ResourceLocation id;
+    private final Codec<T> codec;
+    private final T defaultValue;
+    private final VariantAggregator<T> aggregator;
+}
+```
+
+例如：
+
+```java
+public static final VariantKey<Double> HEAT_TOWER_EFFICIENCY =
+        VariantKey.doubleKey(
+                id("heat_tower_efficiency"),
+                0.0,
+                DoubleAggregator.ADDITIVE
+        );
+```
+
+效果不要直接修改一次数值，而是增加一个带来源的贡献：
+
+```java
+public record VariantContribution<T>(
+        ResourceLocation contributionId,
+        KnowledgeAssetKey source,
+        VariantKey<T> target,
+        VariantOperation operation,
+        T value
+) {
+}
+```
+
+例如：
+
+```text
+contributionId:
+winterrescue:heat_tower_insulation_v1_efficiency
+
+source:
+winterrescue:design/heat_tower_insulation_v1
+
+target:
+winterrescue:heat_tower_efficiency
+
+operation:
+ADD
+
+value:
+0.10
+```
+
+最终值：
+
+```text
+基础值
+＋ 所有ADD贡献
+× 所有MULTIPLY贡献
+再进行clamp
+```
+
+这样效果是幂等的，不会因为加载存档、重复解析图谱而多加一次。
+
+---
+
+# 二十七、BE只访问编译后的队伍投影
+
+不要让每台机器每tick查询知识图。
+
+图变化后，生成一个缓存：
+
+```java
+public final class TeamResearchProjection {
+
+    private final Set<ActionKey> unlockedActions;
+    private final Set<KnowledgeAssetKey> assets;
+    private final Map<VariantKey<?>, Object> resolvedVariants;
+}
+```
+
+机器运行时只做O(1)查询：
+
+```java
+TeamResearchProjection projection =
+        researchService.getProjection(teamId);
+
+double bonus =
+        projection.getVariant(
+                ResearchVariants.HEAT_TOWER_EFFICIENCY
+        );
+```
+
+使用限制：
+
+```java
+if (!projection.can(
+        ResearchActions.USE_ADVANCED_HEAT_EXCHANGER
+)) {
+    return AccessResult.DENIED;
+}
+```
+
+这适用于：
+
+* 合成配方；
+* 方块交互；
+* 多方块启动；
+* 特殊维护功能；
+* 原型模式；
+* stats读取。
+
+---
+
+# 二十八、使用权限建议分成三档
+
+科学发现不应立刻允许无限批量制造。
+
+```java
+public enum TechnologyAccess {
+    FORBIDDEN,
+    PROTOTYPE_ONLY,
+    STANDARDIZED
+}
+```
+
+## FORBIDDEN
+
+尚未掌握必要知识，不能制造或使用。
+
+## PROTOTYPE_ONLY
+
+已经掌握原理，可以在以下情况下使用：
+
+```text
+位于研究实验；
+被实验控制台链接；
+数量受限；
+需要高教育居民；
+维护成本高；
+可能产生故障。
+```
+
+## STANDARDIZED
+
+完成现场试验和标准化后：
+
+```text
+普通合成解锁；
+正常使用；
+居民可以自动维护；
+正式variant效果生效。
+```
+
+这正好把你之前不确定的工程原型阶段嵌入现有禁止性Effect体系。
+
+---
+
+# 二十九、具体例子：能量塔热效率研究
+
+假设能量塔适配器暴露：
+
+```text
+fuel_input
+heat_output
+operating_time
+load
+maintenance_state
+ambient_temperature
+```
+
+物流建筑连接到能量塔。
+
+## 第一天到第五天
+
+物流居民产生报告：
+
+```text
+燃料供应稳定；
+负载基本相同；
+严寒日的热输出低于普通天气。
+```
+
+观察聚合器发现：
+
+```text
+输入近似相同；
+输出差异明显；
+温度是主要上下文差异。
+```
+
+生成想法：
+
+> 为什么低温天气中能量塔消耗相同燃料，却输出更少热量？
+
+## 候选假设
+
+团队已有知识和难民知识生成：
+
+```text
+H1：低温改变了燃料状态。
+H2：内外温差增加了外壳热损失。
+H3：低温导致物流供应出现间歇中断。
+H4：热量记录方式在低温下存在误差。
+```
+
+其中一个新难民拥有：
+
+```text
+former_heating_engineer
+heat_transfer_schema
+insulation_procedure
+```
+
+他在研究讨论中提出H2。
+
+## 当前义务
+
+工作流编译器发现：
+
+```text
+尚未证明燃料供应在整个运行期间持续稳定。
+```
+
+显示：
+
+> 安排物流居民连续监控能量塔燃料输入。
+
+完成后排除H3。
+
+下一项义务：
+
+> 设计能够区分燃料状态变化和外壳热损失的实验。
+
+## 实验方案
+
+系统生成需求：
+
+```text
+保持相同燃料来源；
+保持相同负载；
+记录环境温度；
+记录燃料输入；
+记录热量输出；
+改变外壳保温条件；
+连续运行指定时间。
+```
+
+玩家可以：
+
+* 建两个可比较的能量塔；
+* 或让同一个塔在两个相近天气阶段运行；
+* 给其中一组增加临时保温原型。
+
+## 实验结果
+
+若保温组在相同输入下输出提高：
+
+```text
+支持H2；
+反驳H1作为主要解释；
+产生新问题：保温材料长期耐久性如何？
+```
+
+形成：
+
+```text
+Finding：
+较大内外温差会增加能量塔外壳热损失。
+```
+
+随后开放保温原型。
+
+现场测试验证：
+
+```text
+提高热输出；
+未造成过热；
+维护成本可接受；
+普通居民可以维护。
+```
+
+最终形成：
+
+```text
+DesignStandard：
+heat_tower_insulation_v1
+```
+
+效果规则：
+
+```text
+heat_tower_efficiency += 0.10
+```
+
+能量塔logic继续按照你们现有方式读取team variant。
+
+---
+
+# 三十、一个必须避免的设计问题
+
+假如当前能量塔逻辑是：
+
+```text
+基础效率固定；
+研究完成后variant直接从0变成0.1；
+此前世界中完全没有温度相关热损失。
+```
+
+那么它不能被包装成“玩家发现低温热损失”，因为世界此前没有这个现象。
+
+这种情况应该被定义成纯工程研究：
+
+```text
+城镇提出提高热效率需求；
+团队使用已有热学知识设计改进；
+制造保温原型；
+测试后形成标准。
+```
+
+而真正的科学发现必须对应世界中已经存在、可以观察和干预的机制。
+
+因此研究可以分为：
+
+```text
+发现型：
+世界里已经存在机制，玩家逐渐认识它。
+
+工程型：
+玩家根据已有发现设计尚不存在的解决方案。
+
+混合型：
+发现一个机制，然后围绕它进行工程开发。
+```
+
+这一区分会决定整套系统是否真实可信。
+
+---
+
+# 三十一、tick与性能架构
+
+不要让知识图每tick扫描所有机器。
+
+建议的调度：
+
+```text
+每tick：
+只记录正在运行的正式实验对象。
+
+每20tick或操作周期：
+机器适配器刷新短期运行窗口。
+
+每游戏小时：
+压缩普通机器运行摘要。
+
+每工作班次或每日：
+生成物流、矿场、狩猎和城镇建筑报告；
+运行居民知识识别；
+执行研究任务；
+处理知识传播。
+
+每次新增重要Observation或Claim：
+局部运行图规则；
+重新编译受影响的Inquiry；
+重新计算知识资产与效果投影。
+```
+
+普通机器运行记录只保留聚合值。
+
+正式实验保留完整时间序列，实验完成后再压缩为：
+
+```text
+数据摘要；
+有效性结果；
+代表性曲线；
+原始数据哈希或归档引用。
+```
+
+---
+
+# 三十二、研究事件日志仍然必须保留
+
+每个队伍维护：
+
+```java
+public record ResearchEvent(
+        long sequence,
+        long gameTime,
+        ResearchEventType type,
+        Optional<InquiryId> inquiry,
+        EventPayload payload
+) {
+}
+```
+
+例如：
+
+```text
+#102 物流居民报告能量塔低温输出下降
+#103 系统形成温度相关想法
+#104 难民工程师提出热损失解释
+#105 研究团队定义热效率变量
+#106 物流监控排除供应不足
+#107 实验计划建立
+#108 第一次实验因负载变化作废
+#109 第二次实验支持热损失假设
+#110 形成暂定发现
+#111 保温原型现场测试开始
+#112 形成标准化设计
+```
+
+玩家看到的线性研究历程主要来自这条事件日志。
+
+图负责“现在知道什么”，日志负责“我们是怎么走到这里的”。
+
+---
+
+# 三十三、推荐模块划分
+
+```text
+research.api
+  ResearchSubjectRef
+  ResearchSubjectAdapter
+  ResearchSignal
+  VariableKey
+  ResearchCapability
+
+research.integration
+  CreateResearchAdapters
+  IEResearchAdapters
+  TownBuildingResearchAdapters
+  TemperatureContextEnricher
+  OwnershipResolver
+
+research.observation
+  ObservationGate
+  ObservationRecord
+  ObservationAggregator
+  PhenomenonSummary
+  JobObservationProvider
+
+research.resident
+  ResidentKnowledgeState
+  ResidentKnowledgePacket
+  RecognitionRule
+  KnowledgeTeaching
+  ResearchTaskAssignment
+
+research.graph
+  ClaimRecord
+  EvidenceRecord
+  JustificationRecord
+  EpistemicGraph
+  GraphDelta
+  TruthMaintenance
+
+research.reasoning
+  IdeaGenerationRule
+  MechanismSchema
+  HypothesisGenerator
+  KnowledgeGapDetector
+
+research.inquiry
+  InquiryWorkspace
+  ResearchObligation
+  WorkflowCompiler
+  ResearchAction
+
+research.experiment
+  ExperimentController
+  ExperimentPlan
+  ExperimentRun
+  CapabilityValidator
+  ResultInterpreter
+
+research.knowledge
+  KnowledgeAsset
+  KnowledgeAssetResolver
+  Finding
+  Procedure
+  DesignStandard
+
+research.effect
+  TeamResearchProjection
+  VariantKey
+  VariantContribution
+  AccessRule
+  EffectLedger
+
+research.storage
+  TeamResearchData
+  ResearchEventLog
+  ObservationArchive
+```
+
+---
+
+# 三十四、最适合的第一条垂直切片
+
+第一版不要同时接入所有机器。
+
+我建议只贯通这五样东西：
+
+```text
+温度API
+＋
+一个虚拟能量塔
+＋
+物流建筑
+＋
+一个携带热学知识的难民
+＋
+热效率variant
+```
+
+完整目标是：
+
+1. 能量塔适配器产生输入、输出、温度信号；
+2. 物流居民每天形成观察；
+3. 不同温度下的异常自动产生想法；
+4. 难民知识包提供一个新的机制假设；
+5. 研究所生成具体研究义务；
+6. 玩家用实验控制台链接能量塔；
+7. 实验记录实际运行条件；
+8. 证据支持或反驳假设；
+9. 形成Finding；
+10. 解锁原型；
+11. 现场测试形成DesignStandard；
+12. DesignStandard触发`heat_efficiency += 0.1`；
+13. 能量塔logic继续读取原有team variant。
+
+这条链一旦打通，就证明：
+
+* 世界能够产生观察；
+* 难民能够传播知识；
+* 图谱能够形成研究问题；
+* 非线性数据能够编译成线性任务；
+* 实验能够在Minecraft世界内运行；
+* 最终成果能够作用到现有机器系统；
+* effect已经不再依赖固定research ID。
+
+---
+
+# 三十五、这版架构最核心的七条原则
+
+1. **所有研究数据属于team，居民拥有私人知识覆盖层。**
+2. **机器只产生语义信号，不直接产生研究或知识。**
+3. **没有居民、仪器或实验，就没有正式观察，避免全知视角。**
+4. **研究路线运行时生成，但变量、机制模式和最终效果端点需要一次性定义。**
+5. **研究项目是知识图的临时工作区，研究阶段是当前义务的界面投影。**
+6. **发现、程序和工程标准是稳定知识资产；游戏系统只依赖这些资产和编译后的variants。**
+7. **科学发现改变玩家认知，工程标准才通常改变机器性能。**
+
+从工程优先级上看，最先应该实现的不是假设生成器，而是这四个底座：
+
+```text
+统一ResearchSubject适配层
+ResearchSignal → Observation管线
+TeamResearchData与事件日志
+KnowledgeAsset → Effect/Variant投影
+```
+
+这四块一旦稳定，上层的想法、假设、实验和NPC知识传播才能真正落在现有Minecraft系统上，而不会再次退化成另一套固定研究树。

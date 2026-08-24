@@ -79,9 +79,6 @@ public class SurroundingTemperatureSimulator {
         // 位置缓存：32^3 = 32768 个槽位，覆盖 [-16,16) 三个轴
         final byte[] cellKind = new byte[CACHE_SIZE];
         final float[] cellTemp = new float[CACHE_SIZE];
-
-        //优化：预计算高度图（32×32 = 1024 个 int）
-        final int[] topYCache = new int[CACHE_DIM * CACHE_DIM];
     }
 
     // ======================== 静态常量 ========================
@@ -155,15 +152,32 @@ public class SurroundingTemperatureSimulator {
 
     // ======================== 实例字段 ========================
 
-    @SuppressWarnings("unchecked")
-    public PalettedContainer<BlockState>[] sections = new PalettedContainer[8];
-    public Heightmap[] maps = new Heightmap[4];
+    private final PalettedContainer<BlockState>[] sections;
+    private final int[] topYSnapshot;
 
     private final int ox, oy, oz; // origin 坐标（int 缓存，避免反复 getX/Y/Z）
     private final FastRandom rnd;  // 无锁随机数（xoroshiro128+，见内部类注释）
 
+    /** Opaque, owned input copied before an asynchronous simulation is submitted. */
+    static final class PreparedInput {
+        private final PalettedContainer<BlockState>[] sections;
+        private final int[] topY;
+
+        private PreparedInput(PalettedContainer<BlockState>[] sections, int[] topY) {
+            if (sections == null || sections.length != 8) {
+                throw new IllegalArgumentException("sections must contain exactly eight entries");
+            }
+            if (topY == null || topY.length != CACHE_DIM * CACHE_DIM) {
+                throw new IllegalArgumentException("topY must contain exactly 1024 entries");
+            }
+            this.sections = sections;
+            this.topY = topY;
+        }
+    }
+
     // ======================== 构造器 ========================
 
+    @SuppressWarnings("unchecked")
     public SurroundingTemperatureSimulator(ServerLevel world, double sx, double sy, double sz,
                                            boolean threadSafe) {
         int sourceX = Mth.floor(sx), sourceY = Mth.floor(sy), sourceZ = Mth.floor(sz);
@@ -182,6 +196,8 @@ public class SurroundingTemperatureSimulator {
         oy = origin.getY();
         oz = origin.getZ();
 
+        PalettedContainer<BlockState>[] capturedSections = new PalettedContainer[8];
+        Heightmap[] capturedMaps = new Heightmap[4];
         int i = 0;
         for (int x = chunkOffsetW; x <= chunkOffsetW + 1; x++)
             for (int z = chunkOffsetN; z <= chunkOffsetN + 1; z++) {
@@ -191,24 +207,77 @@ public class SurroundingTemperatureSimulator {
                 int index1 = index0 + 1;
                 // 触发 heightmap 初始化
                 cnk.getHeight(Types.MOTION_BLOCKING_NO_LEAVES, 0, 0);
-                maps[i / 2] = cnk.getOrCreateHeightmapUnprimed(Types.MOTION_BLOCKING_NO_LEAVES);
+                capturedMaps[i / 2] =
+                        cnk.getOrCreateHeightmapUnprimed(Types.MOTION_BLOCKING_NO_LEAVES);
                 if (index0 >= 0 && index0 < maxIndex)
-                    sections[i] = cnk.getSection(index0).getStates();
+                    capturedSections[i] = cnk.getSection(index0).getStates();
                 if (index1 >= 0 && index1 < maxIndex)
-                    sections[i + 1] = cnk.getSection(index1).getStates();
+                    capturedSections[i + 1] = cnk.getSection(index1).getStates();
                 i += 2;
             }
 
-        // 异步路径：复制 PalettedContainer 快照避免线程竞争
-        // 注意：Heightmap 未复制，是原代码的已知局限
+        int[] capturedTopY = captureTopY(capturedMaps);
         if (threadSafe) {
-            for (int j = 0; j < sections.length; j++)
-                if (sections[j] != null)
-                    sections[j] = sections[j].copy();
+            PreparedInput input = prepareForWorker(capturedSections, capturedTopY);
+            sections = input.sections;
+            topYSnapshot = input.topY;
+        } else {
+            sections = capturedSections;
+            topYSnapshot = capturedTopY;
         }
 
         rnd = new FastRandom(
                 BlockPos.asLong(sourceX, sourceY, sourceZ) ^ (world.getGameTime() >> 6));
+    }
+
+    SurroundingTemperatureSimulator(
+            PreparedInput input,
+            int originX,
+            int originY,
+            int originZ,
+            long seed
+    ) {
+        sections = input.sections;
+        topYSnapshot = input.topY;
+        ox = originX;
+        oy = originY;
+        oz = originZ;
+        rnd = new FastRandom(seed);
+    }
+
+    @SuppressWarnings("unchecked")
+    static PreparedInput prepareForWorker(
+            PalettedContainer<BlockState>[] sourceSections,
+            int[] sourceTopY
+    ) {
+        if (sourceSections == null || sourceSections.length != 8) {
+            throw new IllegalArgumentException("sourceSections must contain exactly eight entries");
+        }
+        if (sourceTopY == null || sourceTopY.length != CACHE_DIM * CACHE_DIM) {
+            throw new IllegalArgumentException("sourceTopY must contain exactly 1024 entries");
+        }
+        PalettedContainer<BlockState>[] copiedSections = new PalettedContainer[8];
+        for (int index = 0; index < sourceSections.length; index++) {
+            PalettedContainer<BlockState> section = sourceSections[index];
+            if (section != null) {
+                copiedSections[index] = section.copy();
+            }
+        }
+        return new PreparedInput(copiedSections, sourceTopY.clone());
+    }
+
+    private static int[] captureTopY(Heightmap[] maps) {
+        int[] result = new int[CACHE_DIM * CACHE_DIM];
+        for (int px = 0; px < CACHE_DIM; px++) {
+            int mapX = (px >>> 4) << 1;
+            int x = px & 15;
+            int rowBase = px << 5;
+            for (int pz = 0; pz < CACHE_DIM; pz++) {
+                int mapIndex = mapX | (pz >>> 4);
+                result[rowBase | pz] = maps[mapIndex].getFirstAvailable(x, pz & 15);
+            }
+        }
+        return result;
     }
 
     // ======================== 核心模拟 ========================
@@ -220,16 +289,13 @@ public class SurroundingTemperatureSimulator {
         final float[] cellTemp = buf.cellTemp;
         Arrays.fill(cellKind, (byte) 0);
 
-        //预计算高度图
-        fillTopYCache(buf.topYCache);
-
         float heat = 0f, minTemp = 0f, maxTemp = 0f;
         // 风力改 int 计数（断开 float 累加的 3-4 周期串行依赖链）：
         // 2f/0.5f 均为 2 的幂且计数恒 < 2^24，末尾 2f*windStrong + 0.5f*windWeak
         // 与逐步 float 累加逐 bit 等价。
         int windStrong = 0, windWeak = 0;
         // 局部变量缓存，JIT 优化更友好
-        final int[] topYCache = buf.topYCache;
+        final int[] topYCache = topYSnapshot;
 
         // ★ 粒子外层 / 轮次内层（loop interchange）：
         // 每个粒子的轨迹完全独立（粒子间无交互），交换循环顺序是安全的。
@@ -554,22 +620,6 @@ public class SurroundingTemperatureSimulator {
         PalettedContainer<BlockState> current = sections[i];
         if (current == null) return Blocks.AIR.defaultBlockState();
         return current.get(x & 15, y & 15, z & 15);
-    }
-
-    /**
-     * 预计算当前 32×32 区域内的 topY。
-     * 坐标覆盖相对 origin 的 [-16,16) × [-16,16)。
-     */
-    private void fillTopYCache(int[] topYCache) {
-        for (int px = 0; px < CACHE_DIM; px++) {
-            int mapX = (px >>> 4) << 1;
-            int x = px & 15;
-            int rowBase = px << 5;
-            for (int pz = 0; pz < CACHE_DIM; pz++) {
-                int mapIndex = mapX | (pz >>> 4);
-                topYCache[rowBase | pz] = maps[mapIndex].getFirstAvailable(x, pz & 15);
-            }
-        }
     }
 
     // ======================== 生命周期管理 ========================

@@ -111,17 +111,17 @@ public class ClimateCommand {
                 });
         LiteralArgumentBuilder<CommandSourceStack> whitecurtain = Commands.literal("white_curtain")
         	.then(Commands.literal("clear") .executes((ct) -> {
-        		WorldClimate.get(ct.getSource().getLevel()).clearWhiteCurtain();
+			WorldClimate.get(ct.getSource().getLevel()).clearWhiteCurtain(ct.getSource().getLevel());
         		ct.getSource().sendSuccess(()-> Components.str("Succeed!").withStyle(ChatFormatting.GREEN), false);
                 return Command.SINGLE_SUCCESS;
             })).then(Commands.literal("add").executes((ct) -> {
-        		if(WorldClimate.get(ct.getSource().getLevel()).addWhiteCurtain(ct.getSource().getLevel().random,CUtils.vec2Pos(ct.getSource().getPosition())))
+			if(WorldClimate.get(ct.getSource().getLevel()).addWhiteCurtain(ct.getSource().getLevel(),CUtils.vec2Pos(ct.getSource().getPosition())))
         			ct.getSource().sendSuccess(()-> Components.str("Succeed!").withStyle(ChatFormatting.GREEN), false);
         		else
         			ct.getSource().sendFailure(Components.str("Error: overlap found"));
                 return Command.SINGLE_SUCCESS;
             }).then(Commands.argument("pos", BlockPosArgument.blockPos()).executes((ct) -> {
-        		if(WorldClimate.get(ct.getSource().getLevel()).addWhiteCurtain(ct.getSource().getLevel().random,BlockPosArgument.getBlockPos(ct, "pos")))
+			if(WorldClimate.get(ct.getSource().getLevel()).addWhiteCurtain(ct.getSource().getLevel(),BlockPosArgument.getBlockPos(ct, "pos")))
         			ct.getSource().sendSuccess(()-> Components.str("Succeed!").withStyle(ChatFormatting.GREEN), false);
          		else
          			ct.getSource().sendFailure(Components.str("Error: overlap found"));

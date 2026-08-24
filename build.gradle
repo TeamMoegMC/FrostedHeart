@@ -3,6 +3,7 @@
 plugins {
 //    id "architectury-plugin" version "3.4-SNAPSHOT"
 //    id "dev.architectury.loom" version "1.2-SNAPSHOT"
+	id 'me.champeau.jmh' version '0.7.3'
 	id "com.diffplug.eclipse.apt" version "4.2.0"
 	id 'com.matthewprenger.cursegradle' version '1.4.0'
     id 'net.minecraftforge.gradle' version "${forgegradle_version}"
@@ -124,7 +125,12 @@ minecraft {
             workingDirectory project.file('run-gametest')
             property 'mixin.env.remapRefMap', 'true'
             property 'mixin.env.refMapRemappingFile', "${buildDir}/createSrgToMcp/output.srg"
-            property 'forge.enabledGameTestNamespaces', 'frostedresearch'
+            property 'forge.enabledGameTestNamespaces', 'frostedresearch,frostedheart'
+            property 'frostedheart.phase0aMutationProbe', 'true'
+            property 'frostedheart.phase0bPlayerCaptureReport',
+                    file("${buildDir}/reports/thermal-phase0b/legacy-player-sampling-forge-capture.json").absolutePath
+            property 'frostedheart.phaseAResolverCensusReport',
+                    file("${buildDir}/reports/thermal-phase-a/resolver-census.json").absolutePath
             property 'forge.logging.console.level', 'info'
             arg "-mixin.config=frostedheart.mixins.json"
             arg "-mixin.config=frostedresearch.mixins.json"
@@ -313,6 +319,8 @@ dependencies {
     testAnnotationProcessor 'org.projectlombok:lombok:1.18.36'
     testImplementation 'org.junit.jupiter:junit-jupiter:5.10.2'
 
+    jmhImplementation 'org.openjdk.jol:jol-core:0.17'
+
     minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
 //    implementation fileTree(include: ['*.jar'], dir: 'libs')
 
@@ -323,7 +331,7 @@ dependencies {
     clientRuntimeOnly fg.deobf("curse.maven:kubejs-238086:5853326")
     // KubeJS hard dependencies; these are libraries, not KubeJS addons.
     clientRuntimeOnly fg.deobf("dev.latvian.mods:rhino-forge:2001.2.3-build.6")
-    clientRuntimeOnly fg.deobf("dev.architectury:architectury-forge:${architectury_version}")
+    runtimeOnly fg.deobf("dev.architectury:architectury-forge:${architectury_version}")
 
     // IE
     implementation fg.deobf("blusunrize.immersiveengineering:ImmersiveEngineering:${ie_version}")
@@ -428,6 +436,419 @@ dependencies {
 
 tasks.named('test', Test) {
     useJUnitPlatform()
+}
+
+def thermalPhase0bReportDir = file("${buildDir}/reports/thermal-phase0b")
+def thermalPlayerSamplingForgeCaptureFile =
+        file("${thermalPhase0bReportDir}/legacy-player-sampling-forge-capture.json")
+def thermalBenchmarkJava = javaToolchains.launcherFor {
+    languageVersion = JavaLanguageVersion.of(17)
+}
+
+tasks.register('thermalLegacyPlayerSamplingForgeCapture') {
+    group = 'verification'
+    description = 'Runs Forge GameTests and verifies the real-world legacy player capture report.'
+    dependsOn tasks.named('runGameTestServer')
+    inputs.file thermalPlayerSamplingForgeCaptureFile
+    doLast {
+        if (!thermalPlayerSamplingForgeCaptureFile.isFile()) {
+            throw new GradleException(
+                    "Forge player capture report is missing: ${thermalPlayerSamplingForgeCaptureFile}")
+        }
+        def report = new groovy.json.JsonSlurper().parse(thermalPlayerSamplingForgeCaptureFile)
+        def loadedCapture = report.loadedFootprintCapture
+        def loadProbe = report.unloadedFootprintProbe
+        if (loadedCapture?.loadedBefore != 4 || loadedCapture?.loadedAfter != 4) {
+            throw new GradleException('Forge player capture did not measure a loaded four-chunk footprint')
+        }
+        if (!(loadProbe?.constructorTriggeredLoads instanceof Number)
+                || loadProbe.constructorTriggeredLoads.intValue() <= 0) {
+            throw new GradleException(
+                    'Forge player capture did not record legacy active chunk loading')
+        }
+        ['threadSafeFalse', 'threadSafeTrue'].each { mode ->
+            ['p50Ns', 'p95Ns', 'p99Ns', 'maxNs'].each { percentile ->
+                def value = loadedCapture[mode]?.getAt(percentile)
+                if (!(value instanceof Number) || value.longValue() <= 0L) {
+                    throw new GradleException(
+                            "Forge player capture has invalid ${mode}.${percentile}: ${value}")
+                }
+            }
+        }
+    }
+    outputs.upToDateWhen { false }
+}
+
+jmh {
+    jmhVersion = '1.37'
+    includes = ['com\\.teammoeg\\.frostedheart\\.content\\.climate\\.thermal\\.benchmark\\..*']
+    warmupIterations = 3
+    iterations = 5
+    fork = 1
+    timeOnIteration = '1s'
+    benchmarkMode = ['avgt']
+    timeUnit = 'ns'
+    profilers = ['gc']
+    resultFormat = 'JSON'
+    resultsFile = file("${thermalPhase0bReportDir}/legacy-jmh.json")
+    humanOutputFile = file("${thermalPhase0bReportDir}/legacy-jmh.txt")
+    jvm = thermalBenchmarkJava.get().executablePath.asFile.absolutePath
+    jvmArgs = ['-Xms2G', '-Xmx2G', '-XX:+UseG1GC']
+    zip64 = true
+}
+
+def thermalJmhRuntimeClasspath = files(
+        layout.buildDirectory.dir('jmh-generated-classes'),
+        layout.buildDirectory.dir('jmh-generated-resources'),
+        sourceSets.jmh.runtimeClasspath
+)
+
+tasks.register('thermalLegacyJmh', JavaExec) {
+    group = 'verification'
+    description = 'Runs the Phase 0b legacy thermal microbaseline with allocation profiling.'
+    dependsOn tasks.named('jmhCompileGeneratedClasses')
+    javaLauncher = thermalBenchmarkJava
+    classpath = thermalJmhRuntimeClasspath
+    mainClass = 'org.openjdk.jmh.Main'
+    args 'com.teammoeg.frostedheart.content.climate.thermal.benchmark.(LegacyChunkHeatBenchmark|ThermalReferenceCalibrationBenchmark|ComponentBrickCompilerBenchmark).*',
+            '-wi', '3', '-i', '5', '-w', '1s', '-r', '1s', '-f', '1',
+            '-prof', 'gc', '-foe', 'true',
+            '-jvmArgs', '-Xms2G -Xmx2G -XX:+UseG1GC',
+            '-rf', 'json', '-rff', file("${thermalPhase0bReportDir}/legacy-jmh.json").absolutePath,
+            '-o', file("${thermalPhase0bReportDir}/legacy-jmh.txt").absolutePath
+    doFirst {
+        thermalPhase0bReportDir.mkdirs()
+        [file("${thermalPhase0bReportDir}/legacy-jmh.json"),
+         file("${thermalPhase0bReportDir}/legacy-jmh.txt")].each { output ->
+            if (output.exists() && !output.delete()) {
+                throw new GradleException("Could not replace generated benchmark artifact: ${output}")
+            }
+        }
+    }
+    doLast {
+        def results = new groovy.json.JsonSlurper().parse(
+                file("${thermalPhase0bReportDir}/legacy-jmh.json"))
+        def resultKeys = results.collect { result ->
+            def benchmarkName = result.benchmark.tokenize('.').last()
+            def adjusterCount = result.params?.adjusterCount ?: '-'
+            "${benchmarkName}:${adjusterCount}"
+        }.toSet()
+        def requiredKeys = [
+                'queryEmpty:-',
+                'queryHit:1', 'queryHit:10', 'queryHit:100',
+                'queryMiss:1', 'queryMiss:10', 'queryMiss:100'
+        ] as Set
+        def missingKeys = requiredKeys - resultKeys
+        if (!missingKeys.isEmpty()) {
+            throw new GradleException("Thermal JMH result is incomplete; missing ${missingKeys}")
+        }
+        def invalidScores = results.findAll { result ->
+            def score = result.primaryMetric?.score
+            !(score instanceof Number) || !Double.isFinite(score.doubleValue())
+        }
+        if (!invalidScores.isEmpty()) {
+            throw new GradleException('Thermal JMH result contains non-finite primary scores')
+        }
+    }
+    outputs.upToDateWhen { false }
+}
+
+tasks.named('jmh').configure {
+    group = 'verification'
+    description = 'Delegates to the Forge-classpath Phase 0b legacy baseline bundle.'
+    enabled = false
+    setDependsOn(['thermalLegacyBaseline'])
+}
+
+def thermalPlayerSamplingJmhFile =
+        file("${thermalPhase0bReportDir}/legacy-player-sampling-jmh.json")
+def thermalPlayerSamplingJmhHumanFile =
+        file("${thermalPhase0bReportDir}/legacy-player-sampling-jmh.txt")
+
+tasks.register('thermalLegacyPlayerSamplingJmh', JavaExec) {
+    group = 'verification'
+    description = 'Measures prepared legacy player snapshots and worker simulation sample times.'
+    dependsOn tasks.named('jmhCompileGeneratedClasses')
+    javaLauncher = thermalBenchmarkJava
+    classpath = thermalJmhRuntimeClasspath
+    mainClass = 'org.openjdk.jmh.Main'
+    args 'com.teammoeg.frostedheart.content.climate.thermal.benchmark.LegacyPlayerSamplingBenchmark.*',
+            '-wi', '3', '-i', '5', '-w', '1s', '-r', '1s', '-f', '2',
+            '-prof', 'gc', '-foe', 'true',
+            '-jvmArgs', '-Xms2G -Xmx2G -XX:+UseG1GC',
+            '-rf', 'json', '-rff', thermalPlayerSamplingJmhFile.absolutePath,
+            '-o', thermalPlayerSamplingJmhHumanFile.absolutePath
+    doFirst {
+        thermalPhase0bReportDir.mkdirs()
+        [thermalPlayerSamplingJmhFile, thermalPlayerSamplingJmhHumanFile].each { output ->
+            if (output.exists() && !output.delete()) {
+                throw new GradleException("Could not replace generated benchmark artifact: ${output}")
+            }
+        }
+    }
+    doLast {
+        def results = new groovy.json.JsonSlurper().parse(thermalPlayerSamplingJmhFile)
+        def keys = results.collect { result ->
+            def method = result.benchmark.tokenize('.').last()
+            def fixture = result.params?.fixture ?: '-'
+            def cacheMode = result.params?.cacheMode ?: '-'
+            "${method}:${fixture}:${cacheMode}"
+        }.toSet()
+        def requiredKeys = [
+                'snapshotCopy:all_air:-', 'snapshotCopy:room:-',
+                'simulateWorker:all_air:hot', 'simulateWorker:all_air:cold',
+                'simulateWorker:room:hot', 'simulateWorker:room:cold'
+        ] as Set
+        def missingKeys = requiredKeys - keys
+        if (!missingKeys.isEmpty()) {
+            throw new GradleException(
+                    "Legacy player sampling JMH result is incomplete; missing ${missingKeys}")
+        }
+        def invalidScores = results.findAll { result ->
+            def score = result.primaryMetric?.score
+            !(score instanceof Number) || !Double.isFinite(score.doubleValue())
+        }
+        if (!invalidScores.isEmpty()) {
+            throw new GradleException(
+                    'Legacy player sampling JMH result contains non-finite primary scores')
+        }
+    }
+    outputs.upToDateWhen { false }
+}
+
+def thermalJfrFile = file("${thermalPhase0bReportDir}/legacy-query-diagnostic.jfr")
+def thermalJfrResultFile = file("${thermalPhase0bReportDir}/legacy-query-jfr-jmh.json")
+def thermalJfrHumanFile = file("${thermalPhase0bReportDir}/legacy-query-jfr-jmh.txt")
+
+tasks.register('thermalLegacyJfr', JavaExec) {
+    group = 'verification'
+    description = 'Captures a diagnostic JFR for populated legacy ChunkHeatData queries.'
+    dependsOn tasks.named('jmhCompileGeneratedClasses')
+    javaLauncher = thermalBenchmarkJava
+    classpath = thermalJmhRuntimeClasspath
+    mainClass = 'org.openjdk.jmh.Main'
+    jvmArgs '-Xms2G', '-Xmx2G', '-XX:+UseG1GC',
+            "-XX:StartFlightRecording=filename=${thermalJfrFile.absolutePath.replace('\\', '/')},settings=profile,dumponexit=true"
+    args 'com.teammoeg.frostedheart.content.climate.thermal.benchmark.LegacyChunkHeatBenchmark.query(Hit|Miss)',
+            '-wi', '2', '-i', '3', '-w', '500ms', '-r', '500ms', '-f', '0',
+            '-p', 'adjusterCount=10,100', '-prof', 'gc', '-foe', 'true',
+            '-rf', 'json', '-rff', thermalJfrResultFile.absolutePath,
+            '-o', thermalJfrHumanFile.absolutePath
+    doFirst {
+        thermalPhase0bReportDir.mkdirs()
+        [thermalJfrFile, thermalJfrResultFile, thermalJfrHumanFile].each { output ->
+            if (output.exists() && !output.delete()) {
+                throw new GradleException("Could not replace generated benchmark artifact: ${output}")
+            }
+        }
+    }
+    outputs.upToDateWhen { false }
+}
+
+def thermalPlayerSamplingJfrFile =
+        file("${thermalPhase0bReportDir}/legacy-player-sampling-diagnostic.jfr")
+def thermalPlayerSamplingJfrResultFile =
+        file("${thermalPhase0bReportDir}/legacy-player-sampling-jfr-jmh.json")
+def thermalPlayerSamplingJfrHumanFile =
+        file("${thermalPhase0bReportDir}/legacy-player-sampling-jfr-jmh.txt")
+
+tasks.register('thermalLegacyPlayerSamplingJfr', JavaExec) {
+    group = 'verification'
+    description = 'Captures a diagnostic JFR for prepared legacy player worker simulation.'
+    dependsOn tasks.named('jmhCompileGeneratedClasses')
+    javaLauncher = thermalBenchmarkJava
+    classpath = thermalJmhRuntimeClasspath
+    mainClass = 'org.openjdk.jmh.Main'
+    jvmArgs '-Xms2G', '-Xmx2G', '-XX:+UseG1GC',
+            "-XX:StartFlightRecording=filename=${thermalPlayerSamplingJfrFile.absolutePath.replace('\\', '/')},settings=profile,dumponexit=true"
+    args 'com.teammoeg.frostedheart.content.climate.thermal.benchmark.LegacyPlayerSamplingBenchmark.simulateWorker',
+            '-wi', '1', '-i', '2', '-w', '500ms', '-r', '500ms', '-f', '0',
+            '-p', 'fixture=room', '-p', 'cacheMode=hot',
+            '-prof', 'gc', '-foe', 'true',
+            '-rf', 'json', '-rff', thermalPlayerSamplingJfrResultFile.absolutePath,
+            '-o', thermalPlayerSamplingJfrHumanFile.absolutePath
+    doFirst {
+        thermalPhase0bReportDir.mkdirs()
+        [thermalPlayerSamplingJfrFile,
+         thermalPlayerSamplingJfrResultFile,
+         thermalPlayerSamplingJfrHumanFile].each { output ->
+            if (output.exists() && !output.delete()) {
+                throw new GradleException("Could not replace generated benchmark artifact: ${output}")
+            }
+        }
+    }
+    outputs.upToDateWhen { false }
+}
+
+def thermalRetainedFile = file("${thermalPhase0bReportDir}/legacy-retained-heap.json")
+
+tasks.register('thermalLegacyRetainedHeap', JavaExec) {
+    group = 'verification'
+    description = 'Measures retained object graphs for legacy ChunkHeatData fixtures.'
+    dependsOn tasks.named('jmhClasses')
+    javaLauncher = thermalBenchmarkJava
+    classpath = sourceSets.jmh.runtimeClasspath
+    mainClass = 'com.teammoeg.frostedheart.content.climate.thermal.benchmark.LegacyChunkHeatRetainedSize'
+    args thermalRetainedFile.absolutePath
+    jvmArgs '-Xms512M', '-Xmx512M', '-Djdk.attach.allowAttachSelf=true'
+    doFirst {
+        thermalPhase0bReportDir.mkdirs()
+        if (thermalRetainedFile.exists() && !thermalRetainedFile.delete()) {
+            throw new GradleException("Could not replace generated benchmark artifact: ${thermalRetainedFile}")
+        }
+    }
+}
+
+def thermalPlayerSamplingRetainedFile =
+        file("${thermalPhase0bReportDir}/legacy-player-sampling-retained-heap.json")
+
+tasks.register('thermalLegacyPlayerSamplingRetainedHeap', JavaExec) {
+    group = 'verification'
+    description = 'Measures exclusive retained graphs for synthetic legacy player snapshots.'
+    dependsOn tasks.named('jmhClasses')
+    javaLauncher = thermalBenchmarkJava
+    classpath = sourceSets.jmh.runtimeClasspath
+    mainClass = 'com.teammoeg.frostedheart.content.climate.thermal.benchmark.LegacyPlayerSamplingRetainedSize'
+    args thermalPlayerSamplingRetainedFile.absolutePath
+    jvmArgs '-Xms1G', '-Xmx1G', '-Djdk.attach.allowAttachSelf=true',
+            '-Djol.magicFieldOffset=true'
+    doFirst {
+        thermalPhase0bReportDir.mkdirs()
+        if (thermalPlayerSamplingRetainedFile.exists()
+                && !thermalPlayerSamplingRetainedFile.delete()) {
+            throw new GradleException(
+                    "Could not replace generated benchmark artifact: ${thermalPlayerSamplingRetainedFile}")
+        }
+    }
+}
+
+def thermalEnvironmentFile = file("${thermalPhase0bReportDir}/environment.json")
+
+tasks.register('thermalBenchmarkEnvironmentManifest') {
+    group = 'verification'
+    description = 'Writes the frozen local environment for Phase 0b benchmark evidence.'
+    outputs.file thermalEnvironmentFile
+    doLast {
+        thermalPhase0bReportDir.mkdirs()
+        def operatingSystem = java.lang.management.ManagementFactory.operatingSystemMXBean
+        def physicalMemoryBytes = operatingSystem instanceof com.sun.management.OperatingSystemMXBean
+                ? operatingSystem.totalMemorySize
+                : -1L
+        def revisionOutput = new ByteArrayOutputStream()
+        def revisionResult = exec {
+            commandLine 'git', 'rev-parse', 'HEAD'
+            standardOutput = revisionOutput
+            errorOutput = new ByteArrayOutputStream()
+            ignoreExitValue = true
+        }
+        def dirtyOutput = new ByteArrayOutputStream()
+        exec {
+            commandLine 'git', 'status', '--porcelain'
+            standardOutput = dirtyOutput
+            errorOutput = new ByteArrayOutputStream()
+            ignoreExitValue = true
+        }
+        def launcher = thermalBenchmarkJava.get()
+        def manifest = [
+                schemaVersion: 1,
+                evidenceScope: 'legacy-microbaseline-not-phase0b-acceptance',
+                generatedAt: java.time.OffsetDateTime.now().toString(),
+                source: [
+                        revision: revisionResult.exitValue == 0
+                                ? revisionOutput.toString('UTF-8').trim()
+                                : 'unknown',
+                        dirtyWorktree: !dirtyOutput.toString('UTF-8').isBlank()
+                ],
+                hardware: [
+                        processorIdentifier: System.getenv('PROCESSOR_IDENTIFIER') ?: 'unknown',
+                        logicalProcessors: Runtime.runtime.availableProcessors(),
+                        physicalMemoryBytes: physicalMemoryBytes,
+                        architecture: System.getProperty('os.arch')
+                ],
+                operatingSystem: [
+                        name: System.getProperty('os.name'),
+                        version: System.getProperty('os.version')
+                ],
+                benchmarkJvm: [
+                        executable: launcher.executablePath.asFile.absolutePath,
+                        vendor: launcher.metadata.vendor.toString(),
+                        version: launcher.metadata.javaRuntimeVersion.toString(),
+                        vmVersion: launcher.metadata.jvmVersion,
+                        heap: '-Xms2G -Xmx2G',
+                        collector: 'G1'
+                ],
+                game: [
+                        minecraft: minecraft_version,
+                        forge: forge_version,
+                        modSet: 'JMH main runtime classpath; not the production modpack',
+                        viewDistanceChunks: 'not-applicable-to-microbenchmark',
+                        simulationDistanceChunks: 'not-applicable-to-microbenchmark',
+                        randomTickSpeed: 'not-applicable-to-microbenchmark'
+                ],
+                harness: [
+                        jmh: '1.37',
+                        jmhPlugin: '0.7.3',
+                        warmupIterations: 3,
+                        measurementIterations: 5,
+                        iterationSeconds: 1,
+                        legacyQueryForks: 1,
+                        legacyPlayerSamplingForks: 2,
+                        profiler: 'gc'
+                ],
+                limitations: [
+                        'Legacy microbenchmark plus one Forge GameTest capture diagnostic; no production-like multiplayer server workload.',
+                        'Player snapshotCopy is synthetic section-copy cost; worker samples start from prepared input and do not measure ServerLevel or chunk access.',
+                        'The Forge capture report measures full construction over one loaded room and separately observes absent-footprint chunk loads.',
+                        'Reference and geometry benchmarks calibrate the harness and are not V1 candidate evidence.',
+                        'JFR task is diagnostic and deliberately runs without a JMH fork; primary timings come from legacy-jmh.json.'
+                ]
+        ]
+        thermalEnvironmentFile.text = groovy.json.JsonOutput.prettyPrint(
+                groovy.json.JsonOutput.toJson(manifest)) + System.lineSeparator()
+    }
+}
+
+tasks.register('thermalLegacyBaseline') {
+    group = 'verification'
+    description = 'Produces the first local Phase 0b legacy microbaseline evidence bundle.'
+    dependsOn tasks.named('thermalBenchmarkEnvironmentManifest')
+    dependsOn tasks.named('thermalLegacyPlayerSamplingForgeCapture')
+    dependsOn tasks.named('thermalLegacyJmh')
+    dependsOn tasks.named('thermalLegacyPlayerSamplingJmh')
+    dependsOn tasks.named('thermalLegacyJfr')
+    dependsOn tasks.named('thermalLegacyPlayerSamplingJfr')
+    dependsOn tasks.named('thermalLegacyRetainedHeap')
+    dependsOn tasks.named('thermalLegacyPlayerSamplingRetainedHeap')
+}
+
+tasks.named('thermalLegacyPlayerSamplingJmh').configure {
+    mustRunAfter tasks.named('thermalLegacyJmh')
+}
+
+tasks.named('thermalLegacyJmh').configure {
+    mustRunAfter tasks.named('thermalLegacyPlayerSamplingForgeCapture')
+}
+
+tasks.named('thermalLegacyJfr').configure {
+    mustRunAfter tasks.named('thermalLegacyPlayerSamplingJmh')
+}
+
+tasks.named('thermalLegacyPlayerSamplingJfr').configure {
+    mustRunAfter tasks.named('thermalLegacyJfr')
+}
+
+tasks.named('thermalLegacyRetainedHeap').configure {
+    mustRunAfter tasks.named('thermalLegacyPlayerSamplingJfr')
+}
+
+tasks.named('thermalLegacyPlayerSamplingRetainedHeap').configure {
+    mustRunAfter tasks.named('thermalLegacyRetainedHeap')
+}
+
+gradle.projectsEvaluated {
+    tasks.named('jmh').configure {
+        setDependsOn([tasks.named('thermalLegacyBaseline')])
+    }
 }
 
 tasks.register('runTownSimulation', JavaExec) {
