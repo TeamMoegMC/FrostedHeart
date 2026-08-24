@@ -1,0 +1,12 @@
+{
+  "parent": "minecraft:block/cube",
+  "textures": {
+    "particle": "frostedheart:block/transport_station",
+    "down": "frostedheart:block/transport_station",
+    "up": "frostedheart:block/transport_station",
+    "north": "frostedheart:block/bidirectional_logistics_terminal_front",
+    "south": "frostedheart:block/transport_station",
+    "west": "frostedheart:block/transport_station",
+    "east": "frostedheart:block/transport_station"
+  }
+}

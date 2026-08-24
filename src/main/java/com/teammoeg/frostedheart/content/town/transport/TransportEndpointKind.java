@@ -17,7 +17,9 @@ import java.util.Arrays;
 
 /** Identifies how an endpoint supplies its scale metric and moves items. */
 public enum TransportEndpointKind {
-    WAREHOUSE_INTERFACE;
+    WAREHOUSE_INTERFACE,
+    /** One sender-owned reservation for a direct, same-dimension P2P link. */
+    P2P_DIRECT_LINK;
 
     public static final Codec<TransportEndpointKind> CODEC = Codec.STRING.comapFlatMap(
             value -> Arrays.stream(values())

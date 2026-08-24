@@ -104,10 +104,14 @@ class TownTransportStateTest {
         TransportReservation active = reservation(20, 8.0, 28.0, TransportAdmissionStatus.ACTIVE);
         TransportReservation disabled = reservation(0, 0.0, 0.0, TransportAdmissionStatus.DISABLED);
         TransportReservation unavailable = reservation(20, 0.0, 0.0, TransportAdmissionStatus.UNAVAILABLE);
+        TransportReservation paused = reservation(
+                TransportEndpointKind.P2P_DIRECT_LINK,
+                20, 8.0, 0.0, TransportAdmissionStatus.REDSTONE_PAUSED);
         TownTransportState source = new TownTransportState(TownTransportState.DailyReport.EMPTY, Map.of(
                 endpoint, active,
                 endpoint(0, 64, 0), disabled,
-                endpoint(1, 64, 0), unavailable));
+                endpoint(1, 64, 0), unavailable,
+                endpoint(2, 64, 0), paused));
 
         var encoded = TownTransportState.CODEC.encodeStart(JsonOps.INSTANCE, source)
                 .result().orElseThrow();
@@ -119,13 +123,18 @@ class TownTransportStateTest {
         TownTransportState decoded = TownTransportState.CODEC.parse(JsonOps.INSTANCE, encoded)
                 .result().orElseThrow();
 
-        assertEquals(3, decoded.getReservations().size());
+        assertEquals(4, decoded.getReservations().size());
         assertEquals(0.0, decoded.getReservation(endpoint).reservedTransportCapacity());
         assertTrue(decoded.recalculateReservedCapacities(
                 TownModelParameters.currentDefaults().transportConsumers()));
         assertEquals(28.0, decoded.getReservation(endpoint).reservedTransportCapacity());
         assertEquals(28.0, decoded.getReservedTransportCapacity());
         assertEquals(0.0, decoded.getReservation(endpoint(1, 64, 0)).reservedTransportCapacity());
+        TransportReservation decodedPaused = decoded.getReservation(endpoint(2, 64, 0));
+        assertEquals(TransportAdmissionStatus.REDSTONE_PAUSED, decodedPaused.admissionStatus());
+        assertEquals(20, decodedPaused.rateItemsPerSecond());
+        assertEquals(8.0, decodedPaused.scaleMetric());
+        assertEquals(0.0, decodedPaused.reservedTransportCapacity());
     }
 
     @Test
@@ -140,6 +149,15 @@ class TownTransportStateTest {
                 20, 1.0, 0.0, TransportAdmissionStatus.UNAVAILABLE));
         assertThrows(IllegalArgumentException.class, () -> reservation(
                 20, 0.0, 1.0, TransportAdmissionStatus.UNAVAILABLE));
+        assertThrows(IllegalArgumentException.class, () -> reservation(
+                TransportEndpointKind.P2P_DIRECT_LINK,
+                0, 8.0, 0.0, TransportAdmissionStatus.REDSTONE_PAUSED));
+        assertThrows(IllegalArgumentException.class, () -> reservation(
+                TransportEndpointKind.P2P_DIRECT_LINK,
+                20, 8.0, 1.0, TransportAdmissionStatus.REDSTONE_PAUSED));
+        assertThrows(IllegalArgumentException.class, () -> reservation(
+                TransportEndpointKind.WAREHOUSE_INTERFACE,
+                20, 8.0, 0.0, TransportAdmissionStatus.REDSTONE_PAUSED));
 
         TransportReservation unavailable = reservation(
                 2_000, 0.0, 0.0, TransportAdmissionStatus.UNAVAILABLE);
@@ -212,7 +230,8 @@ class TownTransportStateTest {
         assertEquals(2, state.getReservations().size());
         assertEquals(1821.4, state.getReservedTransportCapacity(), 1.0e-9);
 
-        TransportConsumerParameters changedFactor = new TransportConsumerParameters(20, 1, 1280, 0.1);
+        TransportConsumerParameters changedFactor = new TransportConsumerParameters(
+                20, 1, 1280, 0.1, 0.05);
         assertTrue(state.recalculateReservedCapacities(changedFactor));
         assertEquals(2341.8, state.getReservedTransportCapacity(), 1.0e-9);
     }
@@ -227,7 +246,18 @@ class TownTransportStateTest {
             double reservedCapacity,
             TransportAdmissionStatus status
     ) {
-        return new TransportReservation(TransportEndpointKind.WAREHOUSE_INTERFACE,
+        return reservation(TransportEndpointKind.WAREHOUSE_INTERFACE,
+                rate, scaleMetric, reservedCapacity, status);
+    }
+
+    private static TransportReservation reservation(
+            TransportEndpointKind kind,
+            int rate,
+            double scaleMetric,
+            double reservedCapacity,
+            TransportAdmissionStatus status
+    ) {
+        return new TransportReservation(kind,
                 rate, scaleMetric, reservedCapacity, status);
     }
 

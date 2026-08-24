@@ -67,6 +67,8 @@ import com.teammoeg.frostedheart.content.town.buildings.mine.MineBlock;
 import com.teammoeg.frostedheart.content.town.buildings.warehouse.WarehouseBlock;
 import com.teammoeg.frostedheart.content.town.buildings.warehouse.WarehouseInterfaceBlock;
 import com.teammoeg.frostedheart.content.town.buildings.warehouse.WarehouseLevelEmitterBlock;
+import com.teammoeg.frostedheart.content.town.transport.P2PTerminalRole;
+import com.teammoeg.frostedheart.content.town.transport.device.P2PTerminalBlock;
 import com.teammoeg.frostedheart.content.utility.gunpowderbarrel.GunpowderBarrelBlock;
 import com.teammoeg.frostedheart.content.utility.gunpowderbarrel.GunpowderBarrelItem;
 import com.teammoeg.frostedheart.content.utility.incinerator.GasVentBlock;
@@ -2280,6 +2282,42 @@ public class FHBlocks {
                     .model(existingItemModel())
                     .build()
                     .lang("Warehouse Level Emitter")
+                    .register();
+
+    public static final BlockEntry<P2PTerminalBlock> SHIPPING_TERMINAL =
+            REGISTRATE.block("shipping_terminal",
+                            properties -> new P2PTerminalBlock(properties,
+                                    P2PTerminalRole.SHIPPING))
+                    .initialProperties(() -> Blocks.IRON_BLOCK)
+                    .tag(FHTags.Blocks.TOWN_WALLS.tag)
+                    .tag(FHTags.Blocks.METAL_MACHINES.tag)
+                    .blockstate(FHBlockStateGen.existed())
+                    .item().model(existingItemModel()).build()
+                    .lang("Shipping Terminal")
+                    .register();
+
+    public static final BlockEntry<P2PTerminalBlock> RECEIVING_TERMINAL =
+            REGISTRATE.block("receiving_terminal",
+                            properties -> new P2PTerminalBlock(properties,
+                                    P2PTerminalRole.RECEIVING))
+                    .initialProperties(() -> Blocks.IRON_BLOCK)
+                    .tag(FHTags.Blocks.TOWN_WALLS.tag)
+                    .tag(FHTags.Blocks.METAL_MACHINES.tag)
+                    .blockstate(FHBlockStateGen.existed())
+                    .item().model(existingItemModel()).build()
+                    .lang("Receiving Terminal")
+                    .register();
+
+    public static final BlockEntry<P2PTerminalBlock> BIDIRECTIONAL_LOGISTICS_TERMINAL =
+            REGISTRATE.block("bidirectional_logistics_terminal",
+                            properties -> new P2PTerminalBlock(properties,
+                                    P2PTerminalRole.BIDIRECTIONAL))
+                    .initialProperties(() -> Blocks.IRON_BLOCK)
+                    .tag(FHTags.Blocks.TOWN_WALLS.tag)
+                    .tag(FHTags.Blocks.METAL_MACHINES.tag)
+                    .blockstate(FHBlockStateGen.existed())
+                    .item().model(existingItemModel()).build()
+                    .lang("Bidirectional Logistics Terminal")
                     .register();
 
     public static final BlockEntry<MineBlock> MINE = REGISTRATE.block("mine", MineBlock::new)

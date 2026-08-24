@@ -1,0 +1,10 @@
+{
+  "variants": {
+    "facing=north": { "model": "frostedheart:block/bidirectional_logistics_terminal" },
+    "facing=east": { "model": "frostedheart:block/bidirectional_logistics_terminal", "y": 90 },
+    "facing=south": { "model": "frostedheart:block/bidirectional_logistics_terminal", "y": 180 },
+    "facing=west": { "model": "frostedheart:block/bidirectional_logistics_terminal", "y": 270 },
+    "facing=up": { "model": "frostedheart:block/bidirectional_logistics_terminal", "x": 270 },
+    "facing=down": { "model": "frostedheart:block/bidirectional_logistics_terminal", "x": 90 }
+  }
+}

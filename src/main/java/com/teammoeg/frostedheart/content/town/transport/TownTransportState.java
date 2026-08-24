@@ -209,6 +209,29 @@ public final class TownTransportState {
         return changed;
     }
 
+    /** Atomically replaces the complete authoritative reservation map. */
+    public boolean replaceAllReservations(
+            Map<TransportEndpointId, TransportReservation> replacements,
+            TransportConsumerParameters parameters
+    ) {
+        Objects.requireNonNull(parameters, "parameters");
+        Map<TransportEndpointId, TransportReservation> sorted = new TreeMap<>(
+                TransportEndpointId.STABLE_COMPARATOR);
+        if (replacements != null) {
+            replacements.forEach((endpointId, reservation) -> sorted.put(
+                    Objects.requireNonNull(endpointId, "endpointId"),
+                    Objects.requireNonNull(reservation, "reservation")));
+        }
+        boolean changed = !reservations.equals(sorted);
+        if (changed) {
+            reservations.clear();
+            reservations.putAll(sorted);
+            reservedTransportCapacity = sumReservedCapacity(reservations.values());
+        }
+        appliedParameters = parameters;
+        return changed;
+    }
+
     /** Internal authority hook used by TeamTown. */
     public boolean removeReservation(TransportEndpointId endpointId) {
         if (endpointId == null) {

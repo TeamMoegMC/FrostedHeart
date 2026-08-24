@@ -66,7 +66,7 @@ public class TeamTownDataS2CPacket implements CMessage {
 
     TeamTownData decodeTownData() throws Exception {
         TeamTownData townData = FHSpecialDataTypes.TOWN_DATA.loadData(DataOps.COMPRESSED, data);
-        townData.getTransportState().applySnapshot(transportSnapshot);
+        townData.applyTransportSnapshot(transportSnapshot);
         return townData;
     }
 

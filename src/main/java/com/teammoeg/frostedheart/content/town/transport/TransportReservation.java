@@ -52,8 +52,10 @@ public record TransportReservation(
                 || !TransportReservationModel.isFiniteNonNegative(reservedTransportCapacity)) {
             throw new IllegalArgumentException("Transport reservation metrics must be finite and non-negative.");
         }
-        if (admissionStatus == TransportAdmissionStatus.ACTIVE && rateItemsPerSecond == 0) {
-            throw new IllegalArgumentException("ACTIVE reservations require a non-zero rate.");
+        if ((admissionStatus == TransportAdmissionStatus.ACTIVE
+                || admissionStatus == TransportAdmissionStatus.REDSTONE_PAUSED)
+                && rateItemsPerSecond == 0) {
+            throw new IllegalArgumentException("ACTIVE and REDSTONE_PAUSED reservations require a non-zero rate.");
         }
         if (admissionStatus == TransportAdmissionStatus.DISABLED
                 && rateItemsPerSecond != 0) {
@@ -62,6 +64,14 @@ public record TransportReservation(
         if (admissionStatus == TransportAdmissionStatus.DISABLED
                 && Double.compare(reservedTransportCapacity, 0.0) != 0) {
             throw new IllegalArgumentException("DISABLED reservations cannot reserve capacity.");
+        }
+        if (admissionStatus == TransportAdmissionStatus.REDSTONE_PAUSED
+                && endpointKind != TransportEndpointKind.P2P_DIRECT_LINK) {
+            throw new IllegalArgumentException("REDSTONE_PAUSED is only valid for P2P direct links.");
+        }
+        if (admissionStatus == TransportAdmissionStatus.REDSTONE_PAUSED
+                && Double.compare(reservedTransportCapacity, 0.0) != 0) {
+            throw new IllegalArgumentException("REDSTONE_PAUSED reservations cannot reserve capacity.");
         }
         if (admissionStatus == TransportAdmissionStatus.UNAVAILABLE
                 && (Double.compare(scaleMetric, 0.0) != 0

@@ -256,10 +256,7 @@ public final class TownVirtualResourcesPanel extends UILayer {
     }
 
     private List<TownInfoPanel.Row> transportRows(TeamTown town) {
-        TeamTownResourceHolder resources = town.getResourceHolder();
-        TownTransportSnapshot snapshot = TownTransportSnapshot.from(
-                resources.get(VirtualResourceType.TRANSPORT_CAPACITY),
-                town.getTransportState());
+        TownTransportSnapshot snapshot = town.getTransportSnapshot();
         return transportRows(snapshot, transportDetails);
     }
 
@@ -343,7 +340,7 @@ public final class TownVirtualResourcesPanel extends UILayer {
             rows.add(TownInfoPanel.Row.colored(Component.translatable(
                     "gui.frostedheart.town_manager.virtual_resource.transport_endpoint_distance",
                     warehouseDistance(reservation),
-                    distanceFactor(reservation, snapshot.warehouseDistanceCostPerBlock())),
+                    distanceFactor(reservation, snapshot)),
                     0xFFAAAAAA));
             rows.add(TownInfoPanel.Row.colored(Component.translatable(
                     "gui.frostedheart.town_manager.virtual_resource.transport_endpoint_metrics",
@@ -395,12 +392,15 @@ public final class TownVirtualResourcesPanel extends UILayer {
 
     private static String distanceFactor(
             TransportReservation reservation,
-            double warehouseDistanceCostPerBlock
+            TownTransportSnapshot snapshot
     ) {
         if (reservation.admissionStatus() == TransportAdmissionStatus.UNAVAILABLE) {
             return "-";
         }
-        double factor = 1.0 + warehouseDistanceCostPerBlock * reservation.scaleMetric();
+        double costPerBlock = reservation.endpointKind() == TransportEndpointKind.P2P_DIRECT_LINK
+                ? snapshot.p2pDistanceCostPerBlock()
+                : snapshot.warehouseDistanceCostPerBlock();
+        double factor = 1.0 + costPerBlock * reservation.scaleMetric();
         return TransportReservationModel.isFiniteNonNegative(factor)
                 ? formatNumber(factor) : "-";
     }

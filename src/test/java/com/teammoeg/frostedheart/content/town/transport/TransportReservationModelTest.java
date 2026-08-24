@@ -6,8 +6,12 @@
 
 package com.teammoeg.frostedheart.content.town.transport;
 
+import com.google.gson.JsonPrimitive;
+import com.mojang.serialization.JsonOps;
 import com.teammoeg.frostedheart.content.town.model.TownModelParameters;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.GlobalPos;
+import net.minecraft.world.level.Level;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -50,6 +54,42 @@ class TransportReservationModelTest {
     }
 
     @Test
+    void p2pDirectDistanceAndCapacityFollowTheFrozenFormula() {
+        GlobalPos sender = GlobalPos.of(Level.OVERWORLD, new BlockPos(1, 2, 3));
+        GlobalPos receiver = GlobalPos.of(Level.OVERWORLD, new BlockPos(-4, 12, -2));
+
+        assertEquals(0.0, TransportReservationModel.p2pManhattanDistance(sender, sender));
+        assertEquals(20.0, TransportReservationModel.p2pManhattanDistance(sender, receiver));
+        assertEquals(2.0, TransportReservationModel.p2pDistanceFactor(20.0, PARAMETERS), EPSILON);
+        assertEquals(40.0, TransportReservationModel.requiredCapacity(
+                TransportEndpointKind.P2P_DIRECT_LINK, 20, 20.0, PARAMETERS), EPSILON);
+        assertEquals(1280.0 * (1.0 + 0.05 * 40.0),
+                TransportReservationModel.requiredCapacity(
+                        TransportEndpointKind.P2P_DIRECT_LINK, 1280, 40.0, PARAMETERS),
+                EPSILON);
+
+        double forward = TransportReservationModel.requiredCapacity(
+                TransportEndpointKind.P2P_DIRECT_LINK, 20, 20.0, PARAMETERS);
+        double reverse = TransportReservationModel.requiredCapacity(
+                TransportEndpointKind.P2P_DIRECT_LINK, 20, 20.0, PARAMETERS);
+        assertEquals(80.0, forward + reverse, EPSILON);
+    }
+
+    @Test
+    void p2pKindCodecIsStableAndRejectsUnknownNames() {
+        JsonPrimitive encoded = TransportEndpointKind.CODEC.encodeStart(
+                JsonOps.INSTANCE, TransportEndpointKind.P2P_DIRECT_LINK)
+                .result().orElseThrow().getAsJsonPrimitive();
+
+        assertEquals("P2P_DIRECT_LINK", encoded.getAsString());
+        assertEquals(TransportEndpointKind.P2P_DIRECT_LINK,
+                TransportEndpointKind.CODEC.parse(JsonOps.INSTANCE, encoded)
+                        .result().orElseThrow());
+        assertTrue(TransportEndpointKind.CODEC.parse(
+                JsonOps.INSTANCE, new JsonPrimitive("P2P_UNKNOWN")).error().isPresent());
+    }
+
+    @Test
     void weightedDistanceAvoidsCoordinateAndRawWeightOverflow() {
         long maximumManhattanDistance = 3L * ((long) Integer.MAX_VALUE - Integer.MIN_VALUE);
         assertEquals((double) maximumManhattanDistance,
@@ -62,6 +102,14 @@ class TransportReservationModelTest {
         assertEquals(20.0, TransportReservationModel.warehouseWeightedDistance(BlockPos.ZERO, List.of(
                 new WarehouseTopologyEntry(new BlockPos(10, 0, 0), Double.MAX_VALUE),
                 new WarehouseTopologyEntry(new BlockPos(40, 0, 0), Double.MAX_VALUE / 2.0))), EPSILON);
+
+        assertEquals((double) maximumManhattanDistance,
+                TransportReservationModel.p2pManhattanDistance(
+                        GlobalPos.of(Level.OVERWORLD,
+                                new BlockPos(Integer.MIN_VALUE, Integer.MIN_VALUE, Integer.MIN_VALUE)),
+                        GlobalPos.of(Level.OVERWORLD,
+                                new BlockPos(Integer.MAX_VALUE, Integer.MAX_VALUE, Integer.MAX_VALUE))),
+                EPSILON);
     }
 
     @Test
@@ -73,6 +121,11 @@ class TransportReservationModelTest {
                 new WarehouseTopologyEntry(BlockPos.ZERO, 0.0)))));
         assertTrue(Double.isNaN(TransportReservationModel.warehouseWeightedDistance(BlockPos.ZERO, List.of(
                 new WarehouseTopologyEntry(BlockPos.ZERO, Double.NaN)))));
+        assertTrue(Double.isNaN(TransportReservationModel.p2pManhattanDistance(null,
+                GlobalPos.of(Level.OVERWORLD, BlockPos.ZERO))));
+        assertTrue(Double.isNaN(TransportReservationModel.p2pManhattanDistance(
+                GlobalPos.of(Level.OVERWORLD, BlockPos.ZERO),
+                GlobalPos.of(Level.NETHER, BlockPos.ZERO))));
 
         BlockPos.MutableBlockPos mutable = new BlockPos.MutableBlockPos(10, 0, 0);
         WarehouseTopologyEntry entry = new WarehouseTopologyEntry(mutable, 1.0);
@@ -84,15 +137,17 @@ class TransportReservationModelTest {
     @Test
     void invalidParametersAndMathProduceInvalidCapacityRatherThanAReservation() {
         assertThrows(IllegalArgumentException.class,
-                () -> new TransportConsumerParameters(-1, 1, 1280, 0.05));
+                () -> new TransportConsumerParameters(-1, 1, 1280, 0.05, 0.05));
         assertThrows(IllegalArgumentException.class,
-                () -> new TransportConsumerParameters(20, 0, 1280, 0.05));
+                () -> new TransportConsumerParameters(20, 0, 1280, 0.05, 0.05));
         assertThrows(IllegalArgumentException.class,
-                () -> new TransportConsumerParameters(20, 2, 1, 0.05));
+                () -> new TransportConsumerParameters(20, 2, 1, 0.05, 0.05));
         assertThrows(IllegalArgumentException.class,
-                () -> new TransportConsumerParameters(20, 1, 10, 0.05));
+                () -> new TransportConsumerParameters(20, 1, 10, 0.05, 0.05));
         assertThrows(IllegalArgumentException.class,
-                () -> new TransportConsumerParameters(20, 1, 1280, Double.NaN));
+                () -> new TransportConsumerParameters(20, 1, 1280, Double.NaN, 0.05));
+        assertThrows(IllegalArgumentException.class,
+                () -> new TransportConsumerParameters(20, 1, 1280, 0.05, Double.NaN));
 
         assertTrue(Double.isNaN(TransportReservationModel.requiredCapacity(
                 TransportEndpointKind.WAREHOUSE_INTERFACE, -1, 1.0, PARAMETERS)));
@@ -102,6 +157,8 @@ class TransportReservationModelTest {
                 TransportEndpointKind.WAREHOUSE_INTERFACE, 20, -1.0, PARAMETERS)));
         assertTrue(Double.isNaN(TransportReservationModel.requiredCapacity(
                 TransportEndpointKind.WAREHOUSE_INTERFACE, 1280, Double.MAX_VALUE, PARAMETERS)));
+        assertTrue(Double.isNaN(TransportReservationModel.requiredCapacity(
+                TransportEndpointKind.P2P_DIRECT_LINK, 1280, Double.MAX_VALUE, PARAMETERS)));
     }
 
     @Test
