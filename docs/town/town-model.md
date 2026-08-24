@@ -1849,9 +1849,11 @@ Tip 的颜色和自动关闭时间由批次最高严重度决定：信息为青�
 Stage 3/4 JSON 新增：
 
 ```json
-"staffing": {
-  "queue": ["mine", "hunt"],
-  "targets": { "mine": 0, "hunt": 0 }
+{
+  "staffing": {
+    "queue": ["mine", "hunt"],
+    "targets": { "mine": 0, "hunt": 0 }
+  }
 }
 ```
 
