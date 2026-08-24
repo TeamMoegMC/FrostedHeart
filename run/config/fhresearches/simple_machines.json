@@ -1,0 +1,61 @@
+{
+  "icon": {
+    "type": "combined",
+    "base": "create:millstone",
+    "small": "create:encased_fan"
+  },
+  "category": "frostedheart:production",
+  "parents": [
+    "blast_furnace"
+  ],
+  "clues": [
+    {
+      "type": "game",
+      "value": 0.5,
+      "id": "934e81ca10ef487a",
+      "required": true,
+      "level": 0
+    },
+    {
+      "type": "item",
+      "value": 0.25,
+      "id": "8512fdd888294123",
+      "item": {
+        "count": 4,
+        "base_ingredient": {
+          "item": "frostedheart:cast_iron_ingot"
+        }
+      }
+    },
+    {
+      "type": "item",
+      "value": 0.25,
+      "id": "28a84ca3f12e4f8c",
+      "item": {
+        "item": "create:propeller"
+      }
+    }
+  ],
+  "ingredients": [
+    {
+      "item": "stone_age:millstone"
+    },
+    {
+      "tag": "forge:plates/iron"
+    }
+  ],
+  "effects": [
+    {
+      "type": "recipe",
+      "id": "dc0086f2b0a04669",
+      "item": "create:millstone"
+    },
+    {
+      "type": "recipe",
+      "id": "3d71b57970614d47",
+      "item": "create:encased_fan"
+    }
+  ],
+  "points": 1750,
+  "showAltDesc": true
+}

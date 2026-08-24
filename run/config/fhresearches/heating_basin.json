@@ -1,0 +1,109 @@
+{
+  "showAltDesc": true,
+  "points": 4000,
+  "insight": 1,
+  "clues": [
+    {
+      "type": "game",
+      "id": "dad9034ff1445e3",
+      "required": true,
+      "value": 0.75,
+      "level": 1
+    },
+    {
+      "type": "game",
+      "id": "7a9c4e0b7c434689",
+      "value": 0.2,
+      "level": 1
+    },
+    {
+      "type": "item",
+      "id": "2865c93b47a84575",
+      "value": 0.125,
+      "consume": true,
+      "item": {
+        "base_ingredient": {
+          "tag": "forge:plates/constantan"
+        },
+        "count": 30
+      }
+    }
+  ],
+  "ingredients": [
+    {
+      "base_ingredient": {
+        "item": "frostedheart:cast_iron_sheet"
+      },
+      "count": 5
+    },
+    {
+      "base_ingredient": {
+        "tag": "forge:plates/constantan"
+      },
+      "count": 5
+    },
+    {
+      "base_ingredient": {
+        "item": "minecraft:lava_bucket"
+      },
+      "count": 1
+    },
+    {
+      "base_ingredient": {
+        "item": "minecraft:magma_block"
+      },
+      "count": 1
+    }
+  ],
+  "effects": [
+    {
+      "type": "recipe",
+      "item": {
+        "item": "create:blaze_burner"
+      },
+      "id": "687b592d2b5c41df"
+    },
+    {
+      "type": "item",
+      "id": "d82f6ca75174f52",
+      "rewards": [
+        {
+          "id": "minecraft:bucket",
+          "Count": 1
+        }
+      ]
+    },
+    {
+      "type": "item",
+      "id": "93d5392ed4154245",
+      "rewards": [
+        {
+          "id": "frostedheart:cooled_magma_block",
+          "Count": 1
+        }
+      ]
+    }
+  ],
+  "icon": {
+    "type": "combined",
+    "base": {
+      "type": "item",
+      "item": {
+        "id": "create:basin",
+        "Count": 1
+      }
+    },
+    "small": {
+      "type": "item",
+      "item": {
+        "id": "minecraft:campfire",
+        "Count": 1
+      }
+    }
+  },
+  "category": "frostedresearch:production",
+  "parents": [
+    "mechanical_crafter",
+    "mechanical_calculator"
+  ]
+}

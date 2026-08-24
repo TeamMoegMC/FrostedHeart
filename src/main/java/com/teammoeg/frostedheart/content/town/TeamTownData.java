@@ -90,6 +90,8 @@ import com.teammoeg.frostedheart.content.town.resident.WanderingRefugee;
 import com.teammoeg.frostedheart.content.town.resource.TeamTownResourceHolder;
 import com.teammoeg.frostedheart.content.town.resource.VirtualResourceType;
 import com.teammoeg.frostedheart.content.town.transport.TownTransportState;
+import com.teammoeg.frostedheart.content.town.transport.P2PBindingState;
+import com.teammoeg.frostedheart.content.town.transport.device.P2PFilterSummaryState;
 import com.teammoeg.frostedheart.content.town.transport.TownTransportSnapshot;
 import com.teammoeg.frostedheart.content.town.transport.TownTransportShortageNotice;
 import com.teammoeg.frostedheart.content.town.transport.TownTransportShortageNotificationModel;
@@ -179,6 +181,13 @@ public class TeamTownData implements SpecialData{
         CodecUtil.defaultSupply(CodecUtil.catchingCodec(TownTransportState.CODEC), TownTransportState::new)
         .fieldOf("transportState").forGetter(TeamTownData::getTransportState),
 
+        CodecUtil.defaultSupply(CodecUtil.catchingCodec(P2PBindingState.CODEC), () -> P2PBindingState.EMPTY)
+        .fieldOf("p2pBindingState").forGetter(TeamTownData::getP2PBindingState),
+
+        CodecUtil.defaultSupply(CodecUtil.catchingCodec(P2PFilterSummaryState.CODEC),
+                () -> P2PFilterSummaryState.EMPTY)
+        .fieldOf("p2pFilterSummaryState").forGetter(TeamTownData::getP2PFilterSummaryState),
+
         CodecUtil.defaultSupply(CodecUtil.catchingCodec(Codec.LONG), () -> -1L)
         .fieldOf("lastRefugeeSpawnDay").forGetter(o -> o.lastRefugeeSpawnDay)
 
@@ -242,6 +251,15 @@ public class TeamTownData implements SpecialData{
     /** Town-owned aggregate transport service state. */
     @Getter
     private TownTransportState transportState = new TownTransportState();
+
+    /** Town-owned authority for P2P connection relationships and indexes. */
+    private P2PBindingState p2pBindingState = P2PBindingState.EMPTY;
+
+    /** Persistent endpoint filter summaries for unloaded-peer inspection and network snapshots. */
+    private P2PFilterSummaryState p2pFilterSummaryState = P2PFilterSummaryState.EMPTY;
+
+    private transient P2PBindingState reconciledP2PBindingState;
+    private transient TransportConsumerParameters reconciledP2PParameters;
 
     private transient boolean warehouseTopologyDirty = true;
     private transient boolean warehouseTopologyInitialized;
@@ -387,7 +405,7 @@ public class TeamTownData implements SpecialData{
      * @param staffingPlan 已保存的岗位计划；旧存档缺失时由 Codec 提供空计划
      * @param lastRefugeeSpawnDay 最近一次难民自然刷新所用的稳定世界日
      */
-    public TeamTownData(String name, TeamTownResourceHolder resources, Map<BlockPos, ITownBuilding> buildings, Map<UUID, Resident> residents, Map<TerrainResourceType, TerrainResourceData> terrainResource,int labour,int maxlabour, List<TownHistoryEntry> history, long townDay, TownStaffingPlan staffingPlan, TownHousingPlan housingPlan, TownPolicyState policyState, TownTransportState transportState, long lastRefugeeSpawnDay) {
+    public TeamTownData(String name, TeamTownResourceHolder resources, Map<BlockPos, ITownBuilding> buildings, Map<UUID, Resident> residents, Map<TerrainResourceType, TerrainResourceData> terrainResource,int labour,int maxlabour, List<TownHistoryEntry> history, long townDay, TownStaffingPlan staffingPlan, TownHousingPlan housingPlan, TownPolicyState policyState, TownTransportState transportState, P2PBindingState p2pBindingState, P2PFilterSummaryState p2pFilterSummaryState, long lastRefugeeSpawnDay) {
         super();
         this.history = new ArrayList<>(history);
         this.townDay = townDay >= 0L ? townDay : history.size();
@@ -408,7 +426,26 @@ public class TeamTownData implements SpecialData{
         normalizeHousingPlan();
         this.policyState = policyState == null ? TownPolicyState.DEFAULT : policyState;
         this.transportState = transportState == null ? new TownTransportState() : transportState;
+        this.p2pBindingState = p2pBindingState == null ? P2PBindingState.EMPTY : p2pBindingState;
+        this.p2pFilterSummaryState = p2pFilterSummaryState == null
+                ? P2PFilterSummaryState.EMPTY : p2pFilterSummaryState;
         this.lastRefugeeSpawnDay = lastRefugeeSpawnDay;
+    }
+
+    /** Source-compatible constructor for callers predating P2P filter summaries. */
+    public TeamTownData(String name, TeamTownResourceHolder resources, Map<BlockPos, ITownBuilding> buildings, Map<UUID, Resident> residents, Map<TerrainResourceType, TerrainResourceData> terrainResource,int labour,int maxlabour, List<TownHistoryEntry> history, long townDay, TownStaffingPlan staffingPlan, TownHousingPlan housingPlan, TownPolicyState policyState, TownTransportState transportState, P2PBindingState p2pBindingState, long lastRefugeeSpawnDay) {
+        this(name, resources, buildings, residents, terrainResource, labour, maxlabour,
+                history, townDay, staffingPlan, housingPlan, policyState,
+                transportState, p2pBindingState, P2PFilterSummaryState.EMPTY,
+                lastRefugeeSpawnDay);
+    }
+
+    /** Source-compatible constructor for callers predating P2P binding state. */
+    public TeamTownData(String name, TeamTownResourceHolder resources, Map<BlockPos, ITownBuilding> buildings, Map<UUID, Resident> residents, Map<TerrainResourceType, TerrainResourceData> terrainResource,int labour,int maxlabour, List<TownHistoryEntry> history, long townDay, TownStaffingPlan staffingPlan, TownHousingPlan housingPlan, TownPolicyState policyState, TownTransportState transportState, long lastRefugeeSpawnDay) {
+        this(name, resources, buildings, residents, terrainResource, labour, maxlabour,
+                history, townDay, staffingPlan, housingPlan, policyState,
+                transportState, P2PBindingState.EMPTY, P2PFilterSummaryState.EMPTY,
+                lastRefugeeSpawnDay);
     }
 
     /** Source-compatible constructor for callers predating town transport state. */
@@ -495,6 +532,34 @@ public class TeamTownData implements SpecialData{
      */
     public TeamTown createTeamTown() {
         return TeamTown.create(this);
+    }
+
+    public P2PBindingState getP2PBindingState() {
+        return p2pBindingState;
+    }
+
+    void setP2PBindingState(P2PBindingState state) {
+        p2pBindingState = state == null ? P2PBindingState.EMPTY : state;
+        reconciledP2PBindingState = null;
+        reconciledP2PParameters = null;
+    }
+
+    public P2PFilterSummaryState getP2PFilterSummaryState() {
+        return p2pFilterSummaryState;
+    }
+
+    void setP2PFilterSummaryState(P2PFilterSummaryState state) {
+        p2pFilterSummaryState = state == null ? P2PFilterSummaryState.EMPTY : state;
+    }
+
+    boolean isP2PTransportReconciled(TransportConsumerParameters parameters) {
+        return p2pBindingState == reconciledP2PBindingState
+                && Objects.equals(parameters, reconciledP2PParameters);
+    }
+
+    void markP2PTransportReconciled(TransportConsumerParameters parameters) {
+        reconciledP2PBindingState = p2pBindingState;
+        reconciledP2PParameters = parameters;
     }
 
     public static ResourceKey<Level> resolveTownDimension(TeamDataHolder teamData) {
@@ -1942,15 +2007,27 @@ public class TeamTownData implements SpecialData{
             resources.applySyncEntry(entry.getKey(), entry.getValue());
         }
         resources.setOccupiedCapacity(occupiedCapacity);
-        transportState.applySnapshot(transportSnapshot);
+        applyTransportSnapshot(transportSnapshot);
         fireResourcesChanged();
+    }
+
+    public void applyTransportSnapshot(TownTransportSnapshot transportSnapshot) {
+        TownTransportSnapshot snapshot = transportSnapshot == null
+                ? TownTransportSnapshot.EMPTY : transportSnapshot;
+        transportState.applySnapshot(snapshot);
+        setP2PBindingState(snapshot.p2pBindingState());
+        setP2PFilterSummaryState(snapshot.p2pFilterSummaryState());
     }
 
     public TownTransportSnapshot createTransportSnapshot() {
         double totalCapacity = resources.get(
                 VirtualResourceType.TRANSPORT_CAPACITY.generateAttribute(0));
         if (!warehouseTopologyInitialized) {
-            return TownTransportSnapshot.from(totalCapacity, transportState);
+            return TownTransportSnapshot.from(totalCapacity, transportState,
+                    transportState.getEffectiveWarehouseCount(),
+                    transportState.getWarehouseDistanceCostPerBlock(),
+                    currentP2PDistanceCost(),
+                    p2pBindingState, p2pFilterSummaryState);
         }
         double distanceCost = transportState.getWarehouseDistanceCostPerBlock();
         try {
@@ -1962,7 +2039,19 @@ public class TeamTownData implements SpecialData{
                 totalCapacity,
                 transportState,
                 appliedWarehouseTopology.entries().size(),
-                distanceCost);
+                distanceCost,
+                currentP2PDistanceCost(),
+                p2pBindingState,
+                p2pFilterSummaryState);
+    }
+
+    private static double currentP2PDistanceCost() {
+        try {
+            return FHConfig.SERVER.TOWN.TRANSPORT_CONSUMERS.p2pDistanceCostPerBlock.get();
+        } catch (IllegalArgumentException | IllegalStateException ignored) {
+            return com.teammoeg.frostedheart.content.town.model.TownModelParameters.Defaults
+                    .TRANSPORT_CONSUMER_P2P_DISTANCE_COST_PER_BLOCK;
+        }
     }
 
     /** Source-compatible client helper for callers predating transport snapshots. */

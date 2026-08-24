@@ -11,6 +11,7 @@
 package com.teammoeg.frostedheart.content.town.transport;
 
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.GlobalPos;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -49,10 +50,7 @@ public final class TransportReservationModel {
         double denominator = 0.0;
         for (WarehouseTopologyEntry warehouse : sorted) {
             BlockPos corePos = warehouse.corePos();
-            long dx = Math.abs((long) endpointPos.getX() - corePos.getX());
-            long dy = Math.abs((long) endpointPos.getY() - corePos.getY());
-            long dz = Math.abs((long) endpointPos.getZ() - corePos.getZ());
-            double distance = (double) (dx + dy + dz);
+            double distance = manhattanDistance(endpointPos, corePos);
             double normalizedWeight = warehouse.capacityWeight() / maximumWeight;
             numerator += normalizedWeight * distance;
             denominator += normalizedWeight;
@@ -72,6 +70,22 @@ public final class TransportReservationModel {
             return Double.NaN;
         }
         double factor = 1.0 + parameters.warehouseDistanceCostPerBlock() * scaleMetric;
+        return isFiniteNonNegative(factor) ? factor : Double.NaN;
+    }
+
+    public static double p2pManhattanDistance(GlobalPos sender, GlobalPos receiver) {
+        if (sender == null || receiver == null
+                || !sender.dimension().equals(receiver.dimension())) {
+            return Double.NaN;
+        }
+        return manhattanDistance(sender.pos(), receiver.pos());
+    }
+
+    public static double p2pDistanceFactor(double scaleMetric, TransportConsumerParameters parameters) {
+        if (!isFiniteNonNegative(scaleMetric) || parameters == null) {
+            return Double.NaN;
+        }
+        double factor = 1.0 + parameters.p2pDistanceCostPerBlock() * scaleMetric;
         return isFiniteNonNegative(factor) ? factor : Double.NaN;
     }
 
@@ -106,6 +120,7 @@ public final class TransportReservationModel {
         }
         double factor = switch (endpointKind) {
             case WAREHOUSE_INTERFACE -> warehouseDistanceFactor(scaleMetric, parameters);
+            case P2P_DIRECT_LINK -> p2pDistanceFactor(scaleMetric, parameters);
         };
         if (!isFiniteNonNegative(factor)) {
             return Double.NaN;
@@ -178,6 +193,13 @@ public final class TransportReservationModel {
 
     public static boolean isFiniteNonNegative(double value) {
         return Double.isFinite(value) && value >= 0.0;
+    }
+
+    private static double manhattanDistance(BlockPos first, BlockPos second) {
+        long dx = Math.abs((long) first.getX() - second.getX());
+        long dy = Math.abs((long) first.getY() - second.getY());
+        long dz = Math.abs((long) first.getZ() - second.getZ());
+        return (double) (dx + dy + dz);
     }
 
     public record AdmissionEvaluation(

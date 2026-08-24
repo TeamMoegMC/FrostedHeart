@@ -1,0 +1,52 @@
+{
+  "icon": "create:crushed_raw_lead",
+  "category": "frostedheart:production",
+  "parents": [
+    "mechanical_crafter",
+    "mechanical_calculator"
+  ],
+  "clues": [
+    {
+      "type": "game",
+      "value": 0.6,
+      "id": "a2eef0a3915341bd",
+      "required": true,
+      "level": 1
+    },
+    {
+      "type": "game",
+      "value": 0.2,
+      "id": "68321e95321b4456",
+      "level": 1
+    },
+    {
+      "type": "item",
+      "value": 0.175,
+      "id": "153d8d1b66784e95",
+      "item": {
+        "count": 20,
+        "base_ingredient": {
+          "tag": "forge:ingots/cast_iron"
+        }
+      },
+      "consume": true
+    }
+  ],
+  "ingredients": [
+    {
+      "count": 4,
+      "base_ingredient": {
+        "tag": "forge:ingots/cast_iron"
+      }
+    }
+  ],
+  "effects": [
+    {
+      "type": "recipe",
+      "id": "e2a9deee8e04a59",
+      "item": "create:crushing_wheel"
+    }
+  ],
+  "points": 4000,
+  "showAltDesc": true
+}

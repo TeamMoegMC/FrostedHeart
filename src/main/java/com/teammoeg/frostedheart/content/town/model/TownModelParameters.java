@@ -194,7 +194,8 @@ public record TownModelParameters(
                 Defaults.TRANSPORT_CONSUMER_DEFAULT_RATE_ITEMS_PER_SECOND,
                 Defaults.TRANSPORT_CONSUMER_MINIMUM_RATE_ITEMS_PER_SECOND,
                 Defaults.TRANSPORT_CONSUMER_MAXIMUM_RATE_ITEMS_PER_SECOND,
-                Defaults.TRANSPORT_CONSUMER_WAREHOUSE_DISTANCE_COST_PER_BLOCK);
+                Defaults.TRANSPORT_CONSUMER_WAREHOUSE_DISTANCE_COST_PER_BLOCK,
+                Defaults.TRANSPORT_CONSUMER_P2P_DISTANCE_COST_PER_BLOCK);
     }
 
     /**
@@ -1036,6 +1037,7 @@ public record TownModelParameters(
         public static final int TRANSPORT_CONSUMER_MINIMUM_RATE_ITEMS_PER_SECOND = 1;
         public static final int TRANSPORT_CONSUMER_MAXIMUM_RATE_ITEMS_PER_SECOND = 1280;
         public static final double TRANSPORT_CONSUMER_WAREHOUSE_DISTANCE_COST_PER_BLOCK = 0.05;
+        public static final double TRANSPORT_CONSUMER_P2P_DISTANCE_COST_PER_BLOCK = 0.05;
         public static final double MINING_HEALTH_WEIGHT = 30.0;
         public static final double MINING_MENTAL_WEIGHT = 10.0;
         public static final double MINING_STRENGTH_WEIGHT = 45.0;

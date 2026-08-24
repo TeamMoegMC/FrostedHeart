@@ -31,6 +31,7 @@ import com.teammoeg.frostedheart.content.agriculture.Fertilizer;
 import com.teammoeg.frostedheart.content.health.food.CannedFoodItem;
 import com.teammoeg.frostedheart.content.health.food.FHSoupItem;
 import com.teammoeg.frostedheart.content.steamenergy.debug.HeatDebugItem;
+import com.teammoeg.frostedheart.content.town.transport.device.FreightRouteCardItem;
 import com.teammoeg.frostedheart.content.utility.*;
 import com.teammoeg.frostedheart.content.utility.handstoves.CoalHandStove;
 import com.teammoeg.frostedheart.content.utility.heatervest.HeaterVestItem;
@@ -1398,6 +1399,12 @@ thinner.png
             .properties(p -> p.stacksTo(1))
             .model(FHBlockStateGen.existingItemModel())
             .lang("Mayor's Seal")
+            .register();
+    public static final ItemEntry<FreightRouteCardItem> FREIGHT_ROUTE_CARD = REGISTRATE
+            .item("freight_route_card", FreightRouteCardItem::new)
+            .properties(properties -> properties.stacksTo(1))
+            .model(FHBlockStateGen.existingItemModel())
+            .lang("Freight Route Card")
             .register();
 
 

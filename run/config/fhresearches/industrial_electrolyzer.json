@@ -1,0 +1,64 @@
+{
+  "showAltDesc": true,
+  "points": 8000,
+  "insight": 2,
+  "name": "@",
+  "clues": [
+    {
+      "type": "game",
+      "id": "c9ab5f35c66e4d15",
+      "required": true,
+      "value": 0.3,
+      "level": 1
+    },
+    {
+      "type": "game",
+      "id": "b7dde65c53414fe1",
+      "value": 0.2,
+      "level": 1
+    }
+  ],
+  "ingredients": [
+    {
+      "base_ingredient": {
+        "item": "immersiveengineering:dust_hop_graphite"
+      },
+      "count": 4
+    },
+    {
+      "base_ingredient": {
+        "item": "kubejs:servo_core"
+      },
+      "count": 1
+    }
+  ],
+  "effects": [
+    {
+      "type": "multiblock",
+      "icon": {
+        "type": "item",
+        "item": {
+          "id": "immersiveindustry:industrial_electrolyzer",
+          "Count": 1
+        }
+      },
+      "id": "8eb48e58afd24a02",
+      "multiblock": "immersiveindustry:multiblocks/industrial_electrolyzer"
+    }
+  ],
+  "icon": {
+    "type": "item",
+    "item": {
+      "id": "immersiveengineering:graphite_electrode",
+      "Count": 1,
+      "tag": {
+        "graphDmg": 0
+      }
+    }
+  },
+  "category": "frostedresearch:ars",
+  "parents": [
+    "metal_press",
+    "squeezer"
+  ]
+}

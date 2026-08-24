@@ -1,0 +1,60 @@
+{
+  "showAltDesc": true,
+  "points": 800,
+  "insight": 1,
+  "clues": [
+    {
+      "type": "item",
+      "id": "2bca44f6f387479f",
+      "value": 0.5,
+      "item": {
+        "base_ingredient": {
+          "tag": "forge:plates/bronze"
+        },
+        "count": 1
+      }
+    },
+    {
+      "type": "item",
+      "id": "af99accd2d29459c",
+      "value": 0.5,
+      "item": {
+        "count": 4,
+        "base_ingredient": {
+          "item": "minecraft:brick"
+        }
+      }
+    }
+  ],
+  "ingredients": [
+    {
+      "base_ingredient": {
+        "item": "charcoal_pit:ceramic_pot"
+      },
+      "count": 1
+    },
+    {
+      "base_ingredient": {
+        "tag": "forge:clay"
+      },
+      "count": 1
+    }
+  ],
+  "effects": [
+    {
+      "type": "multiblock",
+      "icon": "immersiveengineering:alloy_smelter",
+      "id": "1bb68ce233ef4f21",
+      "multiblock": "immersiveengineering:multiblocks/alloy_smelter"
+    },
+    {
+      "type": "recipe",
+      "item": {
+        "item": "immersiveengineering:alloybrick"
+      },
+      "id": "350c485a4b92425c"
+    }
+  ],
+  "icon": "frostedheart:bronze_ingot",
+  "category": "frostedheart:production"
+}

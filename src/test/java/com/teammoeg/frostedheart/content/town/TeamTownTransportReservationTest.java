@@ -144,6 +144,80 @@ class TeamTownTransportReservationTest {
     }
 
     @Test
+    void p2pKindCannotEnterTheWarehouseSpecificRegistrationPath() {
+        TeamTownData data = townData(100.0);
+        TeamTown town = data.createTeamTown();
+        TransportEndpointId endpoint = endpoint(0);
+
+        TransportReservationResult result = town.registerOrUpdateTransportEndpoint(
+                new TransportEndpointRequest(endpoint,
+                        TransportEndpointKind.P2P_DIRECT_LINK, 20));
+
+        assertEquals(TransportReservationDecision.INVALID_BINDING, result.decision());
+        assertTrue(result.reservationAfter().isEmpty());
+        assertTrue(town.getTransportReservation(endpoint).isEmpty());
+        assertEquals(0.0, town.getTransportSummary().reservedCapacity(), EPSILON);
+    }
+
+    @Test
+    void explicitWarehouseEntryPreservesLegacyRegistrationContract() {
+        TeamTownData data = townData(100.0);
+        TeamTown town = data.createTeamTown();
+        TransportEndpointId endpoint = endpoint(0);
+
+        TransportReservationResult result = town.registerOrUpdateWarehouseInterface(
+                request(endpoint, 20));
+
+        assertEquals(TransportReservationDecision.ACCEPTED, result.decision());
+        assertEquals(8.0, result.reservationAfter().orElseThrow().scaleMetric(), EPSILON);
+        assertEquals(28.0, result.reservationAfter().orElseThrow()
+                .reservedTransportCapacity(), EPSILON);
+        assertEquals(result.reservationAfter(), town.getTransportReservation(endpoint));
+    }
+
+    @Test
+    void p2pAdmissionUsesDirectEndpointFactsWithoutMutatingTownState() {
+        TeamTownData data = townData(100.0);
+        data.buildings.clear();
+        data.markWarehouseTopologyDirty();
+        data.createTeamTown().prepareWarehouseTopology(Level.OVERWORLD);
+        TeamTown town = data.createTeamTown();
+        GlobalPos sender = GlobalPos.of(Level.OVERWORLD, new BlockPos(0, 64, 0));
+        GlobalPos receiver = GlobalPos.of(Level.OVERWORLD, new BlockPos(10, 70, -4));
+
+        TeamTown.ResolvedTransportAdmission admission = town.evaluateP2PTransportAdmission(
+                sender, receiver, 20);
+
+        assertEquals(TransportReservationDecision.ACCEPTED, admission.decision());
+        TransportReservation candidate = admission.acceptedReservation().orElseThrow();
+        assertEquals(TransportEndpointKind.P2P_DIRECT_LINK, candidate.endpointKind());
+        assertEquals(20.0, candidate.scaleMetric(), EPSILON);
+        assertEquals(40.0, candidate.reservedTransportCapacity(), EPSILON);
+        assertTrue(town.getTransportReservations().isEmpty(),
+                "fact evaluation must not create a binding or reservation");
+        assertFalse(data.getDataSyncCache().hasTransportStateChange());
+    }
+
+    @Test
+    void invalidOrRejectedP2pAdmissionNeverPersistsAnUnboundTarget() {
+        TeamTownData data = townData(10.0);
+        TeamTown town = data.createTeamTown();
+        GlobalPos sender = GlobalPos.of(Level.OVERWORLD, new BlockPos(0, 64, 0));
+
+        TeamTown.ResolvedTransportAdmission crossDimension = town.evaluateP2PTransportAdmission(
+                sender, GlobalPos.of(Level.NETHER, new BlockPos(0, 64, 0)), 20);
+        assertEquals(TransportReservationDecision.INVALID_BINDING, crossDimension.decision());
+
+        TeamTown.ResolvedTransportAdmission insufficient = town.evaluateP2PTransportAdmission(
+                sender, GlobalPos.of(Level.OVERWORLD, new BlockPos(10, 64, 0)), 20);
+        assertEquals(TransportReservationDecision.INSUFFICIENT_CAPACITY,
+                insufficient.decision());
+        assertTrue(insufficient.acceptedReservation().isEmpty());
+        assertTrue(town.getTransportReservations().isEmpty());
+        assertFalse(data.getDataSyncCache().hasTransportStateChange());
+    }
+
+    @Test
     void endpointRemovalDoesNotAffectOtherTownOwnedInterfaces() {
         TeamTownData data = townData(100.0);
         TeamTown town = data.createTeamTown();

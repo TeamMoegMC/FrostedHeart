@@ -370,6 +370,7 @@ dependencies {
     compileOnly fg.deobf("dev.ftb.mods:ftb-teams-forge:${ftb_teams_version}")
     compileOnly fg.deobf("dev.ftb.mods:ftb-chunks-forge:${ftb_chunks_version}")
     if (includeFtbRuntime) {
+        implementation fg.deobf("dev.architectury:architectury-forge:${architectury_version}")
         implementation fg.deobf("dev.ftb.mods:ftb-library-forge:${ftb_library_version}")
         implementation fg.deobf("dev.ftb.mods:ftb-teams-forge:${ftb_teams_version}")
         implementation fg.deobf("dev.ftb.mods:ftb-chunks-forge:${ftb_chunks_version}")

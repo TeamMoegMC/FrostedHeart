@@ -1833,6 +1833,7 @@ public class FHConfig {
 				public final ForgeConfigSpec.IntValue minimumRateItemsPerSecond;
 				public final ForgeConfigSpec.IntValue maximumRateItemsPerSecond;
 				public final ForgeConfigSpec.DoubleValue warehouseDistanceCostPerBlock;
+				public final ForgeConfigSpec.DoubleValue p2pDistanceCostPerBlock;
 
 				TransportConsumers(ForgeConfigSpec.Builder builder) {
 					builder.push("Transport Consumers");
@@ -1855,6 +1856,11 @@ public class FHConfig {
 							.comment("Additional transport-capacity multiplier per block of capacity-weighted warehouse distance.")
 							.defineInRange("warehouseDistanceCostPerBlock",
 									TownModelParameters.Defaults.TRANSPORT_CONSUMER_WAREHOUSE_DISTANCE_COST_PER_BLOCK,
+									0d, 1_000_000d);
+					p2pDistanceCostPerBlock = builder
+							.comment("Additional transport-capacity multiplier per block of direct P2P Manhattan distance.")
+							.defineInRange("p2pDistanceCostPerBlock",
+									TownModelParameters.Defaults.TRANSPORT_CONSUMER_P2P_DISTANCE_COST_PER_BLOCK,
 									0d, 1_000_000d);
 					builder.pop();
 				}

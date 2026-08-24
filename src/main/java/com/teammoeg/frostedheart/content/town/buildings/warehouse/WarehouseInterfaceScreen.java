@@ -28,6 +28,7 @@ import com.teammoeg.chorda.client.cui.base.TooltipBuilder;
 import com.teammoeg.chorda.client.cui.base.UIElement;
 import com.teammoeg.chorda.client.cui.base.Verifiers;
 import com.teammoeg.chorda.client.cui.widgets.TextBox;
+import com.teammoeg.frostedheart.content.town.transport.TransportRateScroll;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
@@ -153,13 +154,7 @@ public class WarehouseInterfaceScreen extends MenuPrimaryLayer<WarehouseInterfac
     }
 
     static int rateScrollIncrement(boolean shiftDown, boolean ctrlDown) {
-        if (shiftDown && ctrlDown) {
-            return 64;
-        }
-        if (ctrlDown) {
-            return 16;
-        }
-        return shiftDown ? 8 : 1;
+        return TransportRateScroll.increment(shiftDown, ctrlDown);
     }
 
     static int adjustRateForScroll(
@@ -169,9 +164,8 @@ public class WarehouseInterfaceScreen extends MenuPrimaryLayer<WarehouseInterfac
             boolean ctrlDown,
             int maximumRate
     ) {
-        long adjusted = (long) currentRate
-                + (long) scrollSteps * rateScrollIncrement(shiftDown, ctrlDown);
-        return (int) Math.max(0L, Math.min(maximumRate, adjusted));
+        return TransportRateScroll.adjust(
+                currentRate, scrollSteps, shiftDown, ctrlDown, maximumRate);
     }
 
     static boolean exceedsMaximumRate(String text, int maximumRate) {
@@ -183,14 +177,7 @@ public class WarehouseInterfaceScreen extends MenuPrimaryLayer<WarehouseInterfac
     }
 
     static int rateForScroll(String text, int acceptedRate, int maximumRate) {
-        try {
-            int parsed = Integer.parseInt(text);
-            if (parsed >= 0 && parsed <= maximumRate) {
-                return parsed;
-            }
-        } catch (NumberFormatException ignored) {
-        }
-        return Math.max(0, Math.min(maximumRate, acceptedRate));
+        return TransportRateScroll.rateForScroll(text, acceptedRate, maximumRate);
     }
 
     private void submitRateInput() {

@@ -36,6 +36,8 @@ import com.teammoeg.frostedheart.content.town.buildings.warehouse.WarehouseInter
 import com.teammoeg.frostedheart.content.town.buildings.warehouse.WarehouseInterfaceMenu;
 import com.teammoeg.frostedheart.content.town.buildings.warehouse.WarehouseLevelEmitterBlockEntity;
 import com.teammoeg.frostedheart.content.town.buildings.warehouse.WarehouseLevelEmitterMenu;
+import com.teammoeg.frostedheart.content.town.transport.device.P2PTerminalBlockEntity;
+import com.teammoeg.frostedheart.content.town.transport.device.P2PTerminalMenu;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
 
@@ -126,6 +128,8 @@ public class FHMenuTypes {
 			register(WarehouseInterfaceBlockEntity.class, "warehouse_interface", WarehouseInterfaceMenu::new);
 	public static final RegistryObject<MenuType<WarehouseLevelEmitterMenu>> WAREHOUSE_LEVEL_EMITTER =
 			register(WarehouseLevelEmitterBlockEntity.class, "warehouse_level_emitter", WarehouseLevelEmitterMenu::new);
+	public static final RegistryObject<MenuType<P2PTerminalMenu>> P2P_TERMINAL =
+			register(P2PTerminalBlockEntity.class, "p2p_terminal", P2PTerminalMenu::new);
 
 	@SuppressWarnings("unchecked")
 	public static <T extends AbstractContainerMenu, BE extends BlockEntity> RegistryObject<MenuType<T>> register(Class<BE> BEClass, String name, BEMenuFactory<T, BE> factory) {

@@ -1,7 +1,7 @@
 # 城镇临界自给数值模型
 
-> 状态：阶段 0–4 已实现；阶段 5 及之后尚未开始。最近验证：2026-08-22。货运站单日运力与仓库接口
-> 消费参数已进入 `TownModelParameters` 和阶段 0 审计；仓库接口运行时消费已实现，但尚未进入阶段模拟。
+> 状态：阶段 0–4 已实现；阶段 5 及之后尚未开始。最近验证：2026-08-24。货运站单日运力、仓库接口
+> 与 P2P 消费参数已进入 `TownModelParameters` 和阶段 0 审计；仓库接口与 P2P 运行时消费均已实现，但尚未进入阶段模拟。
 >
 > 目标：把 FH/TWR 当前代码和数据中的城镇数值关系整理为一套可调用、可审计、可模拟的 Java 数学模型。本文是后续实现时的上下文基准。
 
@@ -1719,13 +1719,29 @@ C_reserved = R * F
 非有限值时，预约进入 `UNAVAILABLE`：保留唯一的设置速率，但派生距离和占用归零，实际传输停止。仓库恢复后由城镇拓扑
 事实刷新直接恢复为 `ACTIVE` 或零速率的 `DISABLED`，不重新做玩家调速准入。
 
+P2P 直连运行时使用同一纯模型。`TransportReservationModel#p2pManhattanDistance` 仅接受同维度的两个
+`GlobalPos`，并以三轴绝对差之和得到 `D_p2p`；跨维度或缺失端点返回无效结果。`P2P_DIRECT_LINK` 的纯占用公式为：
+
+```text
+F_p2p = 1 + k_p2p * D_p2p
+C_reserved,p2p = R * F_p2p
+```
+
+`k_p2p` 默认 `0.05 运力/(item/s)/block`，独立来自
+`FHConfig.SERVER.TOWN.TRANSPORT_CONSUMERS.p2pDistanceCostPerBlock`，不会因调整仓库加权距离系数而改变。纯状态
+`REDSTONE_PAUSED` 保留非零设置速率和已解析距离，但强制预约占用为 `0`；它既不是零速率 `DISABLED`，也不是事实缺失的
+`UNAVAILABLE`。`TeamTown#bindOrRebindP2PTerminals` 从城镇级 `P2PBindingState` 的双方位置派生距离并原子提交预约；仓库
+接口的 `registerOrUpdateTransportEndpoint` 仍明确拒绝 `P2P_DIRECT_LINK`。设备、过滤、传输与生命周期见
+[p2p-logistics.md](p2p-logistics.md)。
+
 占用不做令牌量化或向上取整；持久化只保存 kind、单一 `rateItemsPerSecond`、当前派生距离指标和准入状态，
 `reservedTransportCapacity` 只进入权威网络快照并按当前参数重算。只有离散准入边界使用
 `TransportReservationModel` 的 `8 ULP` 比较，tick 搬运预算不使用该容差。
 
-这四项消费者默认值属于 Forge 无关的 `TownModelParameters.transportConsumers` 输入。`TownStageZeroAudit` 输出值、单位和
+这五项消费者默认值属于 Forge 无关的 `TownModelParameters.transportConsumers` 输入。`TownStageZeroAudit` 输出值、单位和
 `FHConfig.SERVER.TOWN.TRANSPORT_CONSUMERS` 来源符号；`TownStageFourSimulator.Summary.parameters` 将同一参数快照写入
-`summary.json`，因此模拟结果可以追踪默认设置速率、最小/最大速率和仓库距离成本，纯模拟层不依赖方块实体或网络包。
+`summary.json`，因此模拟结果可以追踪默认设置速率、最小/最大速率、仓库距离成本和 P2P 直连距离成本，纯模拟层不依赖
+方块实体或网络包。
 
 当全镇总运力 `T` 低于名义占用 `C` 时，不取消预约或改变设置速率，而是所有活动端点使用统一比例：
 
@@ -1833,9 +1849,11 @@ Tip 的颜色和自动关闭时间由批次最高严重度决定：信息为青�
 Stage 3/4 JSON 新增：
 
 ```json
-"staffing": {
-  "queue": ["mine", "hunt"],
-  "targets": { "mine": 0, "hunt": 0 }
+{
+  "staffing": {
+    "queue": ["mine", "hunt"],
+    "targets": { "mine": 0, "hunt": 0 }
+  }
 }
 ```
 

@@ -19,6 +19,7 @@ import java.util.Arrays;
 public enum TransportAdmissionStatus {
     ACTIVE,
     DISABLED,
+    REDSTONE_PAUSED,
     UNAVAILABLE;
 
     public static final Codec<TransportAdmissionStatus> CODEC = Codec.STRING.comapFlatMap(

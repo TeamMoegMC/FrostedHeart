@@ -461,6 +461,10 @@ public final class TownStageZeroAudit {
                 consumers.warehouseDistanceCostPerBlock(), "1/block", source,
                 "TRANSPORT_CONSUMER_WAREHOUSE_DISTANCE_COST_PER_BLOCK",
                 "TRANSPORT_CONSUMERS.warehouseDistanceCostPerBlock");
+        addShared(values, "transportConsumers.p2pDistanceCostPerBlock",
+                consumers.p2pDistanceCostPerBlock(), "1/block", source,
+                "TRANSPORT_CONSUMER_P2P_DISTANCE_COST_PER_BLOCK",
+                "TRANSPORT_CONSUMERS.p2pDistanceCostPerBlock");
         return List.copyOf(values);
     }
 

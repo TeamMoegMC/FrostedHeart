@@ -1,0 +1,60 @@
+{
+  "showAltDesc": true,
+  "points": 2750,
+  "insight": 1,
+  "clues": [
+    {
+      "type": "game",
+      "id": "ab30808e515f4c1e",
+      "required": true,
+      "value": 0.35,
+      "level": 1
+    },
+    {
+      "type": "game",
+      "id": "905ab398f8264628",
+      "value": 0.25,
+      "level": 1
+    }
+  ],
+  "ingredients": [
+    {
+      "base_ingredient": {
+        "tag": "forge:plates/copper"
+      },
+      "count": 1
+    },
+    {
+      "base_ingredient": {
+        "tag": "forge:plates/steel"
+      },
+      "count": 1
+    },
+    {
+      "base_ingredient": {
+        "item": "minecraft:leather"
+      },
+      "count": 1
+    }
+  ],
+  "effects": [
+    {
+      "type": "recipe",
+      "item": {
+        "item": "frostedheart:heater_vest"
+      },
+      "id": "eede9e221b03433f"
+    }
+  ],
+  "icon": {
+    "type": "item",
+    "item": {
+      "id": "frostedheart:heater_vest",
+      "Count": 1
+    }
+  },
+  "category": "frostedresearch:living",
+  "parents": [
+    "generator_T2"
+  ]
+}

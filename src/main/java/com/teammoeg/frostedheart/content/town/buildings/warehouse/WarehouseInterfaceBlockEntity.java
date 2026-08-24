@@ -200,7 +200,7 @@ public class WarehouseInterfaceBlockEntity extends CBlockEntity implements CTick
             return recordTransportDecision(TransportReservationDecision.INVALID_BINDING);
         }
         TeamTown teamTown = binding.get();
-        TransportReservationResult result = teamTown.registerOrUpdateTransportEndpoint(new TransportEndpointRequest(
+        TransportReservationResult result = teamTown.registerOrUpdateWarehouseInterface(new TransportEndpointRequest(
                 endpointId(), TransportEndpointKind.WAREHOUSE_INTERFACE, rateItemsPerSecond));
         recordTransportDecision(result.decision());
         if (result.reservationAfter().map(TransportReservation::rateItemsPerSecond).orElse(0) == 0) {
@@ -705,7 +705,7 @@ public class WarehouseInterfaceBlockEntity extends CBlockEntity implements CTick
         if (existing.isEmpty()) {
             int defaultRate = FHConfig.SERVER.TOWN.TRANSPORT_CONSUMERS
                     .defaultRateItemsPerSecond.get();
-            TransportReservationResult result = teamTown.registerOrUpdateTransportEndpoint(new TransportEndpointRequest(
+            TransportReservationResult result = teamTown.registerOrUpdateWarehouseInterface(new TransportEndpointRequest(
                     endpointId, TransportEndpointKind.WAREHOUSE_INTERFACE, defaultRate));
             admissionNoticeResolved = true;
             newEndpointAdmissionFailed = result.decision() == TransportReservationDecision.INSUFFICIENT_CAPACITY;
@@ -719,7 +719,7 @@ public class WarehouseInterfaceBlockEntity extends CBlockEntity implements CTick
             admissionNoticeResolved = true;
             pendingAdmissionNoticePlayer = null;
             newEndpointAdmissionFailed = false;
-            TransportReservationResult result = teamTown.refreshTransportEndpointMetric(endpointId);
+            TransportReservationResult result = teamTown.refreshWarehouseInterfaceMetric(endpointId);
             if (result.decision() != TransportReservationDecision.ACCEPTED) {
                 recordTransportDecision(result.decision());
             } else if (lastTransportDecision == TransportReservationDecision.INVALID_BINDING) {

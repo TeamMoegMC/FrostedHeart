@@ -1,0 +1,45 @@
+{
+  "showAltDesc": true,
+  "points": 500,
+  "insight": 1,
+  "clues": [
+    {
+      "type": "item",
+      "id": "7d438a01c77f4067",
+      "required": true,
+      "value": 1.0,
+      "item": {
+        "tag": "forge:ingots/copper"
+      }
+    }
+  ],
+  "ingredients": [
+    {
+      "count": 16,
+      "base_ingredient": {
+        "tag": "forge:stone"
+      }
+    }
+  ],
+  "effects": [
+    {
+      "type": "recipe",
+      "item": {
+        "item": "frostedheart:copper_pro_pick"
+      },
+      "icon": {
+        "type": "combined",
+        "base": {
+          "type": "ingredient",
+          "ingredient": {
+            "item": "frostedheart:copper_pro_pick"
+          }
+        },
+        "small": "minecraft:crafting_table"
+      },
+      "id": "e1b61496f49f4857"
+    }
+  ],
+  "icon": "frostedheart:copper_pro_pick",
+  "category": "frostedheart:exploration"
+}

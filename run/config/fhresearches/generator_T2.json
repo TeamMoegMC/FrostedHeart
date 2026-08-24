@@ -1,0 +1,111 @@
+{
+  "showAltDesc": true,
+  "hideEffects": true,
+  "points": 6000,
+  "insight": 1,
+  "clues": [
+    {
+      "type": "game",
+      "id": "2b01f07328d74ae1",
+      "required": true,
+      "value": 0.35,
+      "level": 1
+    },
+    {
+      "type": "game",
+      "id": "8dbe4afe4c9412a",
+      "value": 0.25,
+      "level": 1
+    },
+    {
+      "type": "game",
+      "id": "baa56071bf5f4adf",
+      "value": 0.15,
+      "level": 1
+    },
+    {
+      "type": "item",
+      "id": "501e511b94e247d5",
+      "value": 0.25,
+      "consume": true,
+      "item": {
+        "base_ingredient": {
+          "item": "frostedheart:invar_block"
+        },
+        "count": 8
+      }
+    }
+  ],
+  "ingredients": [
+    {
+      "base_ingredient": {
+        "item": "frostedheart:invar_sheet"
+      },
+      "count": 4
+    },
+    {
+      "base_ingredient": {
+        "item": "steampowered:cast_iron_boiler"
+      },
+      "count": 1
+    },
+    {
+      "base_ingredient": {
+        "item": "steampowered:cast_iron_burner"
+      },
+      "count": 1
+    },
+    {
+      "base_ingredient": {
+        "item": "create:mechanical_pump"
+      },
+      "count": 1
+    }
+  ],
+  "effects": [
+    {
+      "type": "multiblock",
+      "icon": {
+        "type": "item",
+        "item": {
+          "id": "frostedheart:generator_t2",
+          "Count": 1
+        }
+      },
+      "id": "5c48befb1df4af1",
+      "name": "@",
+      "tooltip": [
+        "@",
+        "@"
+      ],
+      "multiblock": "frostedheart:multiblocks/generator_t2"
+    },
+    {
+      "type": "recipe",
+      "item": {
+        "item": "frostedheart:heat_pipe"
+      },
+      "id": "2416a9bba39e4e5e"
+    },
+    {
+      "type": "recipe",
+      "item": {
+        "item": "frostedheart:charger"
+      },
+      "id": "ac97c8c704e24f71"
+    }
+  ],
+  "icon": {
+    "type": "item",
+    "item": {
+      "id": "frostedheart:generator_t2",
+      "Count": 1
+    }
+  },
+  "category": "frostedresearch:rescue",
+  "parents": [
+    "generator_T1",
+    "steam_powerd",
+    "blast_furnace"
+  ]
+}

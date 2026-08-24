@@ -1,0 +1,48 @@
+{
+  "icon": {
+    "type": "combined",
+    "base": "minecraft:stripped_birch_log",
+    "small": "create:mechanical_saw"
+  },
+  "category": "frostedheart:production",
+  "parents": [
+    "simple_machines"
+  ],
+  "clues": [
+    {
+      "type": "game",
+      "value": 0.5,
+      "id": "556440486f0e4c91",
+      "required": true,
+      "level": 1
+    },
+    {
+      "type": "item",
+      "value": 0.5,
+      "id": "ac56e12c56774da1",
+      "item": {
+        "item": "minecraft:stonecutter"
+      }
+    }
+  ],
+  "ingredients": [
+    {
+      "tag": "forge:plates/iron"
+    },
+    {
+      "count": 2,
+      "base_ingredient": {
+        "item": "create:shaft"
+      }
+    }
+  ],
+  "effects": [
+    {
+      "type": "recipe",
+      "id": "68704f366ba4fcd",
+      "item": "create:mechanical_saw"
+    }
+  ],
+  "points": 1000,
+  "showAltDesc": true
+}

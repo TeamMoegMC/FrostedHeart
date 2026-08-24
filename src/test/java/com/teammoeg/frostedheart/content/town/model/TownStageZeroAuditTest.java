@@ -90,7 +90,7 @@ class TownStageZeroAuditTest {
         Map<String, TownStageZeroAudit.ParameterValue> byName = values.stream()
                 .collect(Collectors.toMap(TownStageZeroAudit.ParameterValue::name, value -> value));
 
-        assertEquals(21, values.size());
+        assertEquals(22, values.size());
         assertEquals(64.0,
                 byName.get("transportStation.capacityPerStandardWorkerDay").value());
         assertEquals("transport-capacity/SWE/day",
@@ -109,6 +109,9 @@ class TownStageZeroAuditTest {
                 byName.get("transportConsumers.maximumRateItemsPerSecond").unit());
         assertEquals("1/block", byName.get("transportConsumers.warehouseDistanceCostPerBlock").unit());
         assertTrue(byName.get("transportConsumers.warehouseDistanceCostPerBlock")
+                .sourceSymbol().contains("FHConfig.SERVER.TOWN.TRANSPORT_CONSUMERS"));
+        assertEquals("1/block", byName.get("transportConsumers.p2pDistanceCostPerBlock").unit());
+        assertTrue(byName.get("transportConsumers.p2pDistanceCostPerBlock")
                 .sourceSymbol().contains("FHConfig.SERVER.TOWN.TRANSPORT_CONSUMERS"));
 
         TownModelParameters defaults = TownModelParameters.currentDefaults();

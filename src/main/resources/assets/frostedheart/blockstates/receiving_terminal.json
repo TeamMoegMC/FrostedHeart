@@ -1,0 +1,10 @@
+{
+  "variants": {
+    "facing=north": { "model": "frostedheart:block/receiving_terminal" },
+    "facing=east": { "model": "frostedheart:block/receiving_terminal", "y": 90 },
+    "facing=south": { "model": "frostedheart:block/receiving_terminal", "y": 180 },
+    "facing=west": { "model": "frostedheart:block/receiving_terminal", "y": 270 },
+    "facing=up": { "model": "frostedheart:block/receiving_terminal", "x": 270 },
+    "facing=down": { "model": "frostedheart:block/receiving_terminal", "x": 90 }
+  }
+}
