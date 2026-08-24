@@ -1,0 +1,66 @@
+{
+  "points": 8000,
+  "insight": 2,
+  "name": "@",
+  "clues": [
+    {
+      "type": "game",
+      "id": "a50d196403124d6c",
+      "required": true,
+      "value": 0.5,
+      "level": 1
+    },
+    {
+      "type": "item",
+      "id": "b1bd5b88122747cd",
+      "value": 0.2,
+      "consume": true,
+      "item": {
+        "base_ingredient": {
+          "item": "kubejs:servo_core"
+        },
+        "count": 5
+      }
+    }
+  ],
+  "ingredients": [
+    {
+      "base_ingredient": {
+        "item": "frostedheart:duralumin_sheet"
+      },
+      "count": 16
+    },
+    {
+      "base_ingredient": {
+        "item": "immersiveengineering:component_steel"
+      },
+      "count": 16
+    },
+    {
+      "base_ingredient": {
+        "item": "kubejs:servo_core"
+      },
+      "count": 1
+    }
+  ],
+  "effects": [
+    {
+      "type": "recipe",
+      "item": {
+        "item": "immersiveengineering:heavy_engineering"
+      },
+      "id": "dcd78218d6cd44f6"
+    }
+  ],
+  "icon": {
+    "type": "item",
+    "item": {
+      "id": "immersiveengineering:heavy_engineering",
+      "Count": 1
+    }
+  },
+  "category": "frostedresearch:production",
+  "parents": [
+    "industrial_electrolyzer"
+  ]
+}

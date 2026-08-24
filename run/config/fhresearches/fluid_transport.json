@@ -1,0 +1,55 @@
+{
+  "icon": "create:fluid_pipe",
+  "category": "frostedheart:production",
+  "parents": [
+    "transmission_machinery"
+  ],
+  "clues": [
+    {
+      "type": "game",
+      "value": 0.5,
+      "id": "38eede3f9a0e4996",
+      "required": true,
+      "level": 0
+    },
+    {
+      "type": "item",
+      "value": 0.5,
+      "id": "dd7c07ca7b0845d0",
+      "item": {
+        "item": "minecraft:water_bucket"
+      },
+      "consume": true
+    }
+  ],
+  "ingredients": [
+    {
+      "count": 2,
+      "base_ingredient": {
+        "tag": "forge:plates/copper"
+      }
+    },
+    {
+      "tag": "the_winter_rescue:cogwheels"
+    }
+  ],
+  "effects": [
+    {
+      "type": "recipe",
+      "id": "bb870b08370d472f",
+      "item": "create:fluid_pipe"
+    },
+    {
+      "type": "recipe",
+      "id": "9bb14fc7e47640d6",
+      "item": "create:mechanical_pump"
+    },
+    {
+      "type": "recipe",
+      "id": "31145c0bc7d4435b",
+      "item": "create:fluid_tank"
+    }
+  ],
+  "points": 1200,
+  "showAltDesc": true
+}

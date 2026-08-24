@@ -1,0 +1,49 @@
+{
+  "infinite": true,
+  "points": 2000,
+  "insight": 1,
+  "name": "@",
+  "clues": [
+    {
+      "type": "game",
+      "id": "d21c70fc7a8145ae",
+      "required": true,
+      "value": 0.85,
+      "level": 1
+    }
+  ],
+  "ingredients": [
+    {
+      "base_ingredient": {
+        "item": "minecraft:paper"
+      },
+      "count": 1
+    }
+  ],
+  "effects": [
+    {
+      "type": "experience",
+      "id": "b2cfb1fd0c1a4da5",
+      "experience": 250
+    }
+  ],
+  "icon": {
+    "type": "combined",
+    "base": {
+      "type": "item",
+      "item": {
+        "id": "minecraft:experience_bottle",
+        "Count": 1
+      }
+    },
+    "small": {
+      "type": "internal",
+      "name": "inf"
+    }
+  },
+  "category": "frostedresearch:ars",
+  "parents": [
+    "enchantment_table",
+    "mechanical_calculator"
+  ]
+}
