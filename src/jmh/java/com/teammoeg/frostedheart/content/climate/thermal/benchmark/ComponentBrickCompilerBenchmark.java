@@ -30,7 +30,7 @@ import java.util.concurrent.TimeUnit;
 @OutputTimeUnit(TimeUnit.MICROSECONDS)
 @State(Scope.Benchmark)
 public class ComponentBrickCompilerBenchmark {
-    @Param({"all_air", "solid_wall"})
+    @Param({"all_air", "solid_wall", "split_regions"})
     public String pattern;
 
     private List<ConservativeAirGeometry.Resolution> blockGeometry;
@@ -50,6 +50,14 @@ public class ComponentBrickCompilerBenchmark {
                     blockGeometry.set(ComponentBrickCompiler.blockIndex(1, y, z), solid);
                 }
             }
+        } else if ("split_regions".equals(pattern)) {
+            ConservativeAirGeometry.Resolution split = ConservativeAirGeometry.resolve(
+                    List.of(new ConservativeAirGeometry.UnitBox(
+                            0.49D, 0.0D, 0.0D, 0.51D, 1.0D, 1.0D)),
+                    4);
+            Collections.fill(blockGeometry, split);
+        } else if (!"all_air".equals(pattern)) {
+            throw new IllegalArgumentException("unknown pattern " + pattern);
         }
         generation = 1;
     }

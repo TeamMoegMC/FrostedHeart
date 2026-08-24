@@ -24,6 +24,7 @@ import java.util.Set;
  * deliberately insufficient: a run is measured only when every required
  * artifact and its frozen environment are present.
  */
+/** Test-only evidence-envelope model; benchmark tasks do not report through it. */
 public final class ThermalBenchmarkEvidence {
     private ThermalBenchmarkEvidence() {
     }

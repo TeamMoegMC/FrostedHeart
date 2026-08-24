@@ -29,9 +29,6 @@ import java.util.Set;
 
 public class FrostedHeartMixinPlugin implements IMixinConfigPlugin, MixinPluginShared {
 
-    private static final String PHASE_0A_SECTION_MIXIN =
-            "com.teammoeg.frostedheart.mixin.minecraft.temperature.LevelChunkSectionMixin_Phase0aMutationProbe";
-
     @Override
     public void onLoad(String mixinPackage) {
 
@@ -44,9 +41,6 @@ public class FrostedHeartMixinPlugin implements IMixinConfigPlugin, MixinPluginS
 
     @Override
     public boolean shouldApplyMixin(String targetClassName, String mixinClassName) {
-        if (PHASE_0A_SECTION_MIXIN.equals(mixinClassName)) {
-            return Boolean.getBoolean("frostedheart.phase0aMutationProbe");
-        }
         if (mixinClassName.contains("com.teammoeg.frostedheart.mixin.oculus")) {
             return IS_OCULUS_LOAD;
         }

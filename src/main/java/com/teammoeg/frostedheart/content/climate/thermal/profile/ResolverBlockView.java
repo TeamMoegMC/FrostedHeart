@@ -125,6 +125,11 @@ public final class ResolverBlockView<B, F> {
             return status;
         }
 
+        /** Main-thread capture code may inspect a present cell before choosing its resolver. */
+        public Optional<StateAndFluid<B, F>> value() {
+            return Optional.ofNullable(value);
+        }
+
         private Lookup<B, F> toLookup() {
             return new Lookup<>(status, Optional.ofNullable(value));
         }

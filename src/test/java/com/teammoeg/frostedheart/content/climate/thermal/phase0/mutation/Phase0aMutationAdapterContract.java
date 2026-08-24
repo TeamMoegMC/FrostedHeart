@@ -18,7 +18,7 @@ import java.util.Objects;
 import java.util.Set;
 
 /**
- * Pure-Java normalization contract for future Phase 0a writer adapters and fixtures.
+ * Test-only normalization model retained for the Phase 0a writer fixtures.
  *
  * <p>The current Minecraft probe does not dispatch through this class. It freezes how an adapter
  * must identify its writer/capture point, how same-tick observations coalesce, and which anomalies

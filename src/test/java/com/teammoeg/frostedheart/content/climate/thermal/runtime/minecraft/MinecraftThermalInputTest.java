@@ -1,0 +1,136 @@
+/*
+ * Copyright (c) 2026 TeamMoeg
+ *
+ * This file is part of Frosted Heart.
+ *
+ * Frosted Heart is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, version 3.
+ */
+
+package com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft;
+
+import com.teammoeg.frostedheart.content.climate.thermal.mesh.ThermalPage;
+import com.teammoeg.frostedheart.content.climate.thermal.geometry.GeometryDeltaRing;
+import com.teammoeg.frostedheart.content.climate.thermal.profile.ThermalResolution;
+import com.teammoeg.frostedheart.content.climate.thermal.profile.ThermalSignatureResolution;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+class MinecraftThermalInputTest {
+    @Test
+    void resolvedInputRingPreservesPrimitiveEnvelopeAndDoesNotConsumeOnOverflow() {
+        ResolvedGeometryInputRing ring = new ResolvedGeometryInputRing(1);
+        assertTrue(ring.offerResolvedCenter(
+                17L,
+                3L,
+                5L,
+                20L,
+                0x123,
+                ThermalSignatureResolution.resolved(9)));
+        assertFalse(ring.offerResolvedCenter(
+                18L,
+                4L,
+                6L,
+                20L,
+                0x124,
+                ThermalSignatureResolution.resolved(10)));
+        assertEquals(1L, ring.latestOfferedWatermark());
+
+        ResolvedGeometryInputRing.MutableInput out =
+                new ResolvedGeometryInputRing.MutableInput();
+        assertTrue(ring.poll(out));
+        assertEquals(
+                ResolvedGeometryInputRing.Kind.RESOLVED_CENTER,
+                out.kind());
+        assertEquals(1L, out.watermark());
+        assertEquals(17L, out.sectionKey());
+        assertEquals(3L, out.lifecycleGeneration());
+        assertEquals(5L, out.geometryRevision());
+        assertEquals(20L, out.effectiveTick());
+        assertEquals(0x123, out.blockIndex());
+        assertEquals(ThermalResolution.Status.RESOLVED, out.status());
+        assertEquals(ThermalResolution.Reason.NONE, out.reason());
+        assertEquals(9, out.signatureId());
+        assertFalse(ring.poll(out));
+
+        int[] fullSnapshot = new int[ResolvedGeometryInputRing.BLOCKS_PER_PAGE];
+        fullSnapshot[17] = 23;
+        assertTrue(ring.offerFullResync(
+                17L,
+                3L,
+                7L,
+                21L,
+                ThermalPage.GeometryResyncReason.RING_OVERFLOW,
+                fullSnapshot));
+        fullSnapshot[17] = 99;
+        assertEquals(2L, ring.latestOfferedWatermark());
+        assertTrue(ring.poll(out));
+        assertEquals(
+                ResolvedGeometryInputRing.Kind.FULL_RESYNC_REQUIRED,
+                out.kind());
+        assertEquals(-1, out.blockIndex());
+        assertEquals(ThermalPage.GeometryResyncReason.RING_OVERFLOW,
+                out.geometryResyncReason());
+        assertEquals(23, out.fullPageSignatureIds()[17]);
+    }
+
+    @Test
+    void ringRejectsInvalidPrimitiveCoordinates() {
+        ResolvedGeometryInputRing ring = new ResolvedGeometryInputRing(1);
+        assertThrows(IllegalArgumentException.class, () -> ring.offerResolvedCenter(
+                1L,
+                1L,
+                1L,
+                1L,
+                4096,
+                ThermalSignatureResolution.resolved(0)));
+    }
+
+    @Test
+    void fullSnapshotsHaveAnIndependentBoundAndRecoverAfterConsumption() {
+        ResolvedGeometryInputRing ring = new ResolvedGeometryInputRing(4, 1);
+        int[] snapshot = new int[ResolvedGeometryInputRing.BLOCKS_PER_PAGE];
+        assertTrue(ring.offerFullResync(
+                1L, 1L, 1L, 1L,
+                ThermalPage.GeometryResyncReason.EXPLICIT_INVALIDATION,
+                snapshot));
+        assertFalse(ring.canOfferFullResync());
+        assertFalse(ring.offerFullResync(
+                2L, 1L, 1L, 1L,
+                ThermalPage.GeometryResyncReason.EXPLICIT_INVALIDATION,
+                snapshot));
+        assertEquals(1, ring.fullSnapshotCount());
+
+        assertTrue(ring.poll(new ResolvedGeometryInputRing.MutableInput()));
+        assertEquals(0, ring.fullSnapshotCount());
+        assertTrue(ring.canOfferFullResync());
+    }
+
+    @Test
+    void sealedCutLeavesFutureResolvedAndDeltaEntriesQueued() {
+        ResolvedGeometryInputRing resolved = new ResolvedGeometryInputRing(2);
+        assertTrue(resolved.offerResolvedCenter(
+                1L, 1L, 1L, 5L, 0, ThermalSignatureResolution.resolved(0)));
+        assertTrue(resolved.offerResolvedCenter(
+                1L, 1L, 2L, 6L, 1, ThermalSignatureResolution.resolved(0)));
+        ResolvedGeometryInputRing.MutableInput input =
+                new ResolvedGeometryInputRing.MutableInput();
+        assertTrue(resolved.pollThroughWatermark(1L, input));
+        assertFalse(resolved.pollThroughWatermark(1L, input));
+        assertEquals(1, resolved.size());
+
+        GeometryDeltaRing deltas = new GeometryDeltaRing(2);
+        assertTrue(deltas.offer(1L, 1L, 1L, 5L, 0, 1L));
+        assertTrue(deltas.offer(1L, 1L, 2L, 6L, 0, 2L));
+        GeometryDeltaRing.MutableGeometryDelta delta =
+                new GeometryDeltaRing.MutableGeometryDelta();
+        assertTrue(deltas.pollThroughTick(5L, delta));
+        assertFalse(deltas.pollThroughTick(5L, delta));
+        assertEquals(1, deltas.size());
+    }
+}

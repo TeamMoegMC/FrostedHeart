@@ -208,6 +208,27 @@ public final class ComponentBrickCompiler {
             );
         }
 
+        public ConservativeAirGeometry.Face facePortFace(int portIndex) {
+            requireIndex("portIndex", portIndex, facePortCount());
+            return ConservativeAirGeometry.Face.values()[
+                    Byte.toUnsignedInt(facePortFace[portIndex])];
+        }
+
+        public int facePortBlockSlot(int portIndex) {
+            requireIndex("portIndex", portIndex, facePortCount());
+            return Byte.toUnsignedInt(facePortBlockSlot[portIndex]);
+        }
+
+        public int facePortComponentId(int portIndex) {
+            requireIndex("portIndex", portIndex, facePortCount());
+            return facePortComponent[portIndex];
+        }
+
+        public int facePortApertureMask(int portIndex) {
+            requireIndex("portIndex", portIndex, facePortCount());
+            return facePortAperture[portIndex];
+        }
+
         public int facePortCount(ConservativeAirGeometry.Face face) {
             if (face == null) {
                 throw new IllegalArgumentException("face is required");

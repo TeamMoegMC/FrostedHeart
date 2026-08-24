@@ -6,6 +6,7 @@
 package com.teammoeg.frostedheart.util;
 
 import com.teammoeg.frostedheart.content.climate.thermal.phase0.mutation.Phase0aMutationProbe;
+import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.MinecraftThermalInput;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
 import net.minecraft.core.QuartPos;
@@ -130,6 +131,7 @@ public final class FastNoiseEngine {
                 LevelChunkSection section = chunk.getSection(i);
                 fastSections[i].finish(section);
                 Phase0aMutationProbe.onRawBlockContainerReplaced(section);
+                MinecraftThermalInput.onRawBlockContainerReplaced(section);
             }
         }
 

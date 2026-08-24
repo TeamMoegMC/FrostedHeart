@@ -44,6 +44,7 @@ import com.teammoeg.chorda.io.FileUtil;
 import com.teammoeg.chorda.text.Components;
 import com.teammoeg.chorda.util.CRegistryHelper;
 import com.teammoeg.frostedheart.content.climate.thermal.phase0.mutation.Phase0aMutationProbe;
+import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.MinecraftThermalInput;
 import com.teammoeg.frostedheart.content.world.FHFeatures;
 import com.teammoeg.frostedheart.util.mixin.SeedSetable;
 import com.teammoeg.frostedresearch.FHResearch;
@@ -233,6 +234,8 @@ public class DebugCommand {
 					chunk.getSections()[secIdx] = levelchunksection;
 					Phase0aMutationProbe.onSectionIdentityReplaced(
 							spe.serverLevel(), chunk, secIdx, previousSection, levelchunksection);
+					MinecraftThermalInput.onSectionIdentityReplaced(
+							spe.serverLevel(), chunk, secIdx, previousSection);
 					chunk.setUnsaved(true);
 
 					for (int y = 0; y < 16; y++) {

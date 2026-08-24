@@ -1,9 +1,9 @@
 # 产热设备与热网
 
 - Status: `Current`
-- Last verified: `2026-08-22`
+- Last verified: `2026-08-25`
 - Scope: T1/T2 能量塔、局部热区写入、`HeatEndpoint`/`HeatNetwork`、散热器、蒸汽喷泉、穿戴设备
-- Primary code anchors: `GeneratorData`, `GeneratorLogic`, `GeneratorState`, `GeneratorHeatFieldModel`, `HeatingLogic`, `HeatingState`, `T2GeneratorLogic`, `HeatEndpoint`, `HeatNetwork`, `RadiatorLogic`, `RadiatorState`, `FountainTileEntity`
+- Primary code anchors: `GeneratorData`, `GeneratorLogic`, `GeneratorState`, `GeneratorHeatFieldModel`, `HeatingLogic`, `HeatingState`, `T2GeneratorLogic`, `HeatEndpoint`, `HeatNetwork`, `RadiatorLogic`, `RadiatorState`, `FountainTileEntity`, `MinecraftPhysicalSourceProfile`, `MinecraftPhysicalSourceManager`, `MinecraftThermalInput.enablePhysicalSources`
 
 ## 1. 三种“热”不是同一种量
 
@@ -166,7 +166,22 @@ item storage/fuel -> addEffectiveTemperature(bodyPart, delta)
 
 手炉主要加手或躯干，加热背心加躯干，蒸汽瓶从 `ITEM_HEAT` 抽取并按设备自己的比例换成 effective temperature。该路径不经过 `HeatNetwork`、不写世界热区，也没有统一的 heat unit 到摄氏度换算。
 
-## 9. 当前建模边界
+## 9. Dormant 物理 source shadow
+
+新热学 runtime 现有两种冻结的 `POWER_SOURCE` profile，但它们只在调用方显式执行 `MinecraftThermalInput.enablePhysicalSources(maximumColdSourcePages)` 后创建，仍不参与 gameplay query，也不替代本页第 2..7 节的 legacy 行为：
+
+| Profile | SI power | Ports | 缺失端口 |
+|---|---:|---|---|
+| Campfire | `1,000 W` | `80%` 向上表面空气对流；`20%` radiation declared loss | 堵塞对流进入 declared loss；unloaded/unresolved 进入 `DEGRADED_LOSS` |
+| Generator | `10,000 W * TLevel` | `70%` exhaust 空气对流；`10%` internal heat；`20%` radiation declared loss | 堵塞 exhaust 进入 internal heat；unloaded/unresolved 进入 `DEGRADED_LOSS` |
+
+这里的 Generator 只读取 `GeneratorState.getTempLevel()` 和活动状态来形成独立 SI profile；它不把 `GeneratorData.power`、`HeatEndpoint.heat` 或现有 heat unit 重新解释为 J/W。radiation 在 Phase J receiver service 完成前只进入可计量 declared loss，不会同时注入空气和玩家。
+
+空气端口按声明的 block face 解析 published topology 中唯一接触的 air component，不使用最近 cell。无空气是 blocked；包含 unresolved topology 或一个面接触多个无法由单端口唯一表达的 component 时走 degraded loss。source 自己可在已加载 chunk 内申请有硬上限的 cold Page interest；预算不足不会积累以后突然释放的 energy debt。Page mutation、unload 或 topology replacement 会先在旧 binding 精确结算到事件 tick，再切换 sink/binding；post-preapply 安装竞争则完成一个无 transport 的 unresolved epoch，下一 frame 重建。
+
+Campfire 通过放置/section mutation/chunk block-entity load 观察，Generator 由 `GeneratorLogic` tick 直接报告并在 multiblock disassemble 时移除。正常玩法不构造 `MinecraftThermalInput`，所以这些 hook 只有一次 active-input/null 检查，不会产生第二份世界加热结果。
+
+## 10. 当前建模边界
 
 后续增加物理功率、热容或对流前，需要保留或显式迁移以下现有玩法事实：
 

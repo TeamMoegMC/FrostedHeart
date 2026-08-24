@@ -10,7 +10,7 @@
 
 package com.teammoeg.frostedheart.content.climate.thermal.phase0.reference;
 
-/** Non-production routing contract used while the new runtime remains behind Phase gates. */
+/** Test-only routing assertion used while no V1 production runtime exists. */
 public final class PhaseZeroThermalRouting {
     public static final RequestedMode DEFAULT_MODE = RequestedMode.LEGACY;
 

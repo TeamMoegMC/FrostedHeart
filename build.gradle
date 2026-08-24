@@ -196,6 +196,10 @@ tasks.matching { it.name == 'runGameTestServer' }.configureEach {
     dependsOn tasks.named('prepareResearchGameTestCatalog')
 }
 
+tasks.matching { it.name == 'downloadMcpConfig' }.configureEach {
+    onlyIf { !gradle.startParameter.offline }
+}
+
 mixin {
     add sourceSets.main, "chorda.refmap.json"
 }
@@ -501,6 +505,211 @@ def thermalJmhRuntimeClasspath = files(
         layout.buildDirectory.dir('jmh-generated-resources'),
         sourceSets.jmh.runtimeClasspath
 )
+
+def thermalPhaseAReportDir = file("${buildDir}/reports/thermal-phase-a")
+def thermalPhaseAJmhFile = file("${thermalPhaseAReportDir}/geometry-jmh.json")
+def thermalPhaseAJmhHumanFile = file("${thermalPhaseAReportDir}/geometry-jmh.txt")
+def thermalPhaseARetainedFile = file("${thermalPhaseAReportDir}/retained-size.json")
+def thermalPhaseACensusFile = file("${thermalPhaseAReportDir}/resolver-census.json")
+def thermalPhaseAJfrFile = file("${thermalPhaseAReportDir}/geometry-diagnostic.jfr")
+def thermalPhaseAJfrResultFile = file("${thermalPhaseAReportDir}/geometry-jfr-jmh.json")
+def thermalPhaseAJfrHumanFile = file("${thermalPhaseAReportDir}/geometry-jfr-jmh.txt")
+def thermalPhaseAEnvironmentFile = file("${thermalPhaseAReportDir}/environment.json")
+
+def validateThermalPhaseAJmhReport = {
+    def results = new groovy.json.JsonSlurper().parse(thermalPhaseAJmhFile)
+    def benchmarkMethods = results.collect { it.benchmark.tokenize('.').last() }.toSet()
+    def requiredMethods = ['resolveDispatched', 'compileBrick'] as Set
+    def missingMethods = requiredMethods - benchmarkMethods
+    if (!missingMethods.isEmpty()) {
+        throw new GradleException("Phase A JMH result is incomplete; missing ${missingMethods}")
+    }
+    def invalidScores = results.findAll { result ->
+        def score = result.primaryMetric?.score
+        !(score instanceof Number) || !Double.isFinite(score.doubleValue())
+    }
+    if (!invalidScores.isEmpty()) {
+        throw new GradleException('Phase A JMH result contains non-finite primary scores')
+    }
+    def sampleResults = results.findAll { it.mode == 'sample' }
+    def missingPercentiles = sampleResults.findAll { result ->
+        def percentiles = result.primaryMetric?.scorePercentiles
+        ['95.0', '99.0'].any { percentile ->
+            def value = percentiles?.get(percentile)
+            !(value instanceof Number) || !Double.isFinite(value.doubleValue())
+        }
+    }
+    if (sampleResults.isEmpty() || !missingPercentiles.isEmpty()) {
+        throw new GradleException('Phase A JMH result is missing finite p95/p99 samples')
+    }
+}
+
+tasks.register('thermalPhaseAEnvironmentManifest') {
+    group = 'verification'
+    description = 'Writes the local environment and scope for Phase A evidence.'
+    outputs.file thermalPhaseAEnvironmentFile
+    doLast {
+        thermalPhaseAReportDir.mkdirs()
+        def operatingSystem = java.lang.management.ManagementFactory.operatingSystemMXBean
+        def physicalMemoryBytes = operatingSystem instanceof com.sun.management.OperatingSystemMXBean
+                ? operatingSystem.totalMemorySize
+                : -1L
+        def revisionOutput = new ByteArrayOutputStream()
+        def revisionResult = exec {
+            commandLine 'git', 'rev-parse', 'HEAD'
+            standardOutput = revisionOutput
+            errorOutput = new ByteArrayOutputStream()
+            ignoreExitValue = true
+        }
+        def launcher = thermalBenchmarkJava.get()
+        def manifest = [
+                schemaVersion: 1,
+                evidenceScope: 'phase-a-local-correctness-prototype',
+                generatedAt: java.time.OffsetDateTime.now().toString(),
+                sourceRevision: revisionResult.exitValue == 0
+                        ? revisionOutput.toString('UTF-8').trim()
+                        : 'unknown',
+                hardware: [
+                        processorIdentifier: System.getenv('PROCESSOR_IDENTIFIER') ?: 'unknown',
+                        logicalProcessors: Runtime.runtime.availableProcessors(),
+                        physicalMemoryBytes: physicalMemoryBytes,
+                        architecture: System.getProperty('os.arch')
+                ],
+                operatingSystem: [
+                        name: System.getProperty('os.name'),
+                        version: System.getProperty('os.version')
+                ],
+                benchmarkJvm: [
+                        vendor: launcher.metadata.vendor.toString(),
+                        version: launcher.metadata.javaRuntimeVersion.toString(),
+                        vmVersion: launcher.metadata.jvmVersion,
+                        heap: '-Xms2G -Xmx2G',
+                        collector: 'G1'
+                ],
+                game: [minecraft: minecraft_version, forge: forge_version],
+                harness: [
+                        jmh: '1.37',
+                        warmupIterations: 2,
+                        measurementIterations: 4,
+                        iterationMillis: 500,
+                        forks: 1,
+                        modes: ['avgt', 'sample'],
+                        profiler: 'gc'
+                ],
+                limitations: [
+                        'Resolver snapshots are prebuilt; chunk capture is measured separately by Forge fixtures.',
+                        'JOL measures the object-heavy correctness layout, not final packed production arenas.',
+                        'This is local prototype evidence, not a production multiplayer server profile.'
+                ]
+        ]
+        thermalPhaseAEnvironmentFile.text = groovy.json.JsonOutput.prettyPrint(
+                groovy.json.JsonOutput.toJson(manifest)) + System.lineSeparator()
+    }
+}
+
+tasks.register('thermalPhaseAJmh', JavaExec) {
+    group = 'verification'
+    description = 'Measures Phase A state resolution and Brick compilation timing/allocation.'
+    dependsOn tasks.named('jmhCompileGeneratedClasses')
+    javaLauncher = thermalBenchmarkJava
+    classpath = thermalJmhRuntimeClasspath
+    mainClass = 'org.openjdk.jmh.Main'
+    args 'com.teammoeg.frostedheart.content.climate.thermal.benchmark.(PhaseAResolverBenchmark|ComponentBrickCompilerBenchmark).*',
+            '-wi', '2', '-i', '4', '-w', '500ms', '-r', '500ms', '-f', '1',
+            '-bm', 'avgt,sample', '-prof', 'gc', '-foe', 'true',
+            '-jvmArgs', '-Xms2G -Xmx2G -XX:+UseG1GC',
+            '-rf', 'json', '-rff', thermalPhaseAJmhFile.absolutePath,
+            '-o', thermalPhaseAJmhHumanFile.absolutePath
+    doFirst {
+        thermalPhaseAReportDir.mkdirs()
+        [thermalPhaseAJmhFile, thermalPhaseAJmhHumanFile].each { output ->
+            if (output.exists() && !output.delete()) {
+                throw new GradleException("Could not replace generated benchmark artifact: ${output}")
+            }
+        }
+    }
+    doLast {
+        validateThermalPhaseAJmhReport()
+    }
+    outputs.upToDateWhen { false }
+}
+
+tasks.register('thermalPhaseAValidateJmhReport') {
+    group = 'verification'
+    description = 'Validates an existing Phase A JMH JSON report without rerunning benchmarks.'
+    inputs.file thermalPhaseAJmhFile
+    doLast {
+        validateThermalPhaseAJmhReport()
+    }
+}
+
+tasks.register('thermalPhaseAJfr', JavaExec) {
+    group = 'verification'
+    description = 'Captures a diagnostic JFR for Phase A resolver and Brick compilation.'
+    dependsOn tasks.named('jmhCompileGeneratedClasses')
+    javaLauncher = thermalBenchmarkJava
+    classpath = thermalJmhRuntimeClasspath
+    mainClass = 'org.openjdk.jmh.Main'
+    jvmArgs '-Xms2G', '-Xmx2G', '-XX:+UseG1GC',
+            "-XX:StartFlightRecording=filename=${thermalPhaseAJfrFile.absolutePath.replace('\\', '/')},settings=profile,dumponexit=true"
+    args 'com.teammoeg.frostedheart.content.climate.thermal.benchmark.(PhaseAResolverBenchmark.resolveDispatched|ComponentBrickCompilerBenchmark.compileBrick)',
+            '-wi', '1', '-i', '2', '-w', '500ms', '-r', '500ms', '-f', '0',
+            '-bm', 'avgt', '-prof', 'gc', '-foe', 'true',
+            '-rf', 'json', '-rff', thermalPhaseAJfrResultFile.absolutePath,
+            '-o', thermalPhaseAJfrHumanFile.absolutePath
+    doFirst {
+        thermalPhaseAReportDir.mkdirs()
+        [thermalPhaseAJfrFile, thermalPhaseAJfrResultFile, thermalPhaseAJfrHumanFile].each { output ->
+            if (output.exists() && !output.delete()) {
+                throw new GradleException("Could not replace generated benchmark artifact: ${output}")
+            }
+        }
+    }
+    outputs.upToDateWhen { false }
+}
+
+tasks.register('thermalPhaseARetainedHeap', JavaExec) {
+    group = 'verification'
+    description = 'Measures retained Phase A correctness registries and compiled Bricks.'
+    dependsOn tasks.named('jmhClasses')
+    dependsOn tasks.named('runGameTestServer')
+    javaLauncher = thermalBenchmarkJava
+    classpath = sourceSets.jmh.runtimeClasspath
+    mainClass = 'com.teammoeg.frostedheart.content.climate.thermal.benchmark.PhaseARetainedSize'
+    args thermalPhaseARetainedFile.absolutePath, thermalPhaseACensusFile.absolutePath
+    inputs.file thermalPhaseACensusFile
+    jvmArgs '-Xms512M', '-Xmx512M', '-Djdk.attach.allowAttachSelf=true',
+            '-Djol.magicFieldOffset=true'
+    doFirst {
+        thermalPhaseAReportDir.mkdirs()
+        if (thermalPhaseARetainedFile.exists() && !thermalPhaseARetainedFile.delete()) {
+            throw new GradleException(
+                    "Could not replace generated benchmark artifact: ${thermalPhaseARetainedFile}")
+        }
+    }
+}
+
+tasks.register('thermalPhaseAEvidence') {
+    group = 'verification'
+    description = 'Produces the local Phase A timing, allocation, JFR, and retained-size evidence.'
+    dependsOn tasks.named('thermalPhaseAJmh')
+    dependsOn tasks.named('thermalPhaseAValidateJmhReport')
+    dependsOn tasks.named('thermalPhaseAJfr')
+    dependsOn tasks.named('thermalPhaseARetainedHeap')
+    dependsOn tasks.named('thermalPhaseAEnvironmentManifest')
+}
+
+tasks.named('thermalPhaseAJfr').configure {
+    mustRunAfter tasks.named('thermalPhaseAJmh')
+}
+
+tasks.named('thermalPhaseAValidateJmhReport').configure {
+    mustRunAfter tasks.named('thermalPhaseAJmh')
+}
+
+tasks.named('thermalPhaseARetainedHeap').configure {
+    mustRunAfter tasks.named('thermalPhaseAJfr')
+}
 
 tasks.register('thermalLegacyJmh', JavaExec) {
     group = 'verification'

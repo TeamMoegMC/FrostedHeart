@@ -27,7 +27,6 @@ import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.chunk.LevelChunkSection;
 import net.minecraft.world.level.chunk.ProtoChunk;
 import net.minecraft.world.level.chunk.UpgradeData;
-import net.minecraft.world.phys.AABB;
 import net.minecraftforge.gametest.GameTestHolder;
 import net.minecraftforge.gametest.PrefixGameTestTemplate;
 
@@ -545,6 +544,8 @@ public final class FrostedHeartPhase0aGameTests {
         });
     }
 
+    /* Historical prototype only. Moving structures are air while moving, so
+     * production geometry does not maintain a dynamic exclusion index.
     @GameTest(template = TEMPLATE, batch = BATCH, timeoutTicks = 20)
     public static void sectionIndexedDynamicExclusionContract(GameTestHelper helper) {
         ServerLevel level = helper.getLevel();
@@ -595,6 +596,7 @@ public final class FrostedHeartPhase0aGameTests {
                 "an omitted oldBounds snapshot must not leave a stale dynamic exclusion indexed");
         helper.succeed();
     }
+    */
 
     private static void pollForRealChunkUnload(
             GameTestHelper helper,
@@ -671,6 +673,7 @@ public final class FrostedHeartPhase0aGameTests {
         }
     }
 
+    /* Used only by the commented dynamic-exclusion prototype above.
     private static AABB sectionBox(
             Phase0aDynamicExclusionIndex.SectionKey section, double minOffset, double maxOffset) {
         double x = SectionPos.sectionToBlockCoord(section.sectionX());
@@ -680,6 +683,7 @@ public final class FrostedHeartPhase0aGameTests {
                 x + minOffset, y + minOffset, z + minOffset,
                 x + maxOffset, y + maxOffset, z + maxOffset);
     }
+    */
 
     private static Map<BlockPos, Phase0aMutationProbe.MutationDelta> deltasByPosition(
             GameTestHelper helper,

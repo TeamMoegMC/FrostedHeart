@@ -24,6 +24,7 @@ import java.util.Optional;
 
 import com.teammoeg.chorda.multiblock.CMultiblockHelper;
 import com.teammoeg.chorda.util.CUtils;
+import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.MinecraftThermalInput;
 
 import blusunrize.immersiveengineering.api.multiblocks.TemplateMultiblock;
 import blusunrize.immersiveengineering.api.multiblocks.blocks.env.IMultiblockContext;
@@ -33,6 +34,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Vec3i;
 import net.minecraft.network.protocol.game.ClientboundExplodePacket;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.RandomSource;
@@ -150,6 +152,18 @@ public abstract class GeneratorLogic<T extends GeneratorLogic<T, ?>, R extends G
 		// Tick the GeneratorData
 		state.tickData(ctx.getLevel().getRawLevel(), CMultiblockHelper.getAbsoluteMaster(ctx));
 		boolean isActive = data.map(t -> t.isActive).orElse(false);
+		Level sourceLevel = ctx.getLevel().getRawLevel();
+		if (sourceLevel instanceof ServerLevel serverLevel) {
+			int masterY = CMultiblockHelper.getMultiblock(ctx).masterPosInMB().getY();
+			BlockPos sourcePosition = CMultiblockHelper.getAbsoluteMaster(ctx).below(masterY);
+			BlockPos exhaustTarget = sourcePosition.above(CMultiblockHelper.getSize(ctx).getY());
+			MinecraftThermalInput.onGeneratorTick(
+					serverLevel,
+					sourcePosition,
+					exhaustTarget,
+					state.getTempLevel(),
+					isActive);
+		}
 
 		// If newly broken, start exploding for 100 ticks
 		boolean isBroken = data.map(t -> t.isBroken).orElse(false);

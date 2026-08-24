@@ -3,6 +3,8 @@ package com.teammoeg.frostedheart.mixin.minecraft.temperature;
 
 import com.teammoeg.frostedheart.content.climate.thermal.phase0.mutation.Phase0aMutationProbe;
 import com.teammoeg.frostedheart.content.climate.thermal.phase0.mutation.Phase0aSectionAttachment;
+import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.MinecraftThermalInput;
+import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.MinecraftThermalSectionAttachment;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.LevelChunkSection;
 import org.spongepowered.asm.mixin.Mixin;
@@ -14,11 +16,14 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import java.util.concurrent.atomic.AtomicLong;
 
 @Mixin(LevelChunkSection.class)
-public abstract class LevelChunkSectionMixin_Phase0aMutationProbe implements Phase0aSectionAttachment {
+public abstract class LevelChunkSectionMixin_Phase0aMutationProbe
+        implements Phase0aSectionAttachment, MinecraftThermalSectionAttachment {
     @Unique
     private volatile Phase0aMutationProbe.LoadedSectionOwner frostedheart$phase0aOwner;
     @Unique
-    private final AtomicLong frostedheart$phase0aUnmappedWrites = new AtomicLong();
+    private AtomicLong frostedheart$phase0aUnmappedWrites;
+    @Unique
+    private volatile MinecraftThermalInput.SectionOwner frostedheart$thermalInputOwner;
 
     @Override
     public Phase0aMutationProbe.LoadedSectionOwner frostedheart$getPhase0aOwner() {
@@ -32,12 +37,33 @@ public abstract class LevelChunkSectionMixin_Phase0aMutationProbe implements Pha
 
     @Override
     public long frostedheart$incrementPhase0aUnmappedWrites() {
-        return frostedheart$phase0aUnmappedWrites.incrementAndGet();
+        AtomicLong counter = frostedheart$phase0aUnmappedWrites;
+        if (counter == null) {
+            synchronized (this) {
+                counter = frostedheart$phase0aUnmappedWrites;
+                if (counter == null) {
+                    counter = new AtomicLong();
+                    frostedheart$phase0aUnmappedWrites = counter;
+                }
+            }
+        }
+        return counter.incrementAndGet();
     }
 
     @Override
     public long frostedheart$getPhase0aUnmappedWrites() {
-        return frostedheart$phase0aUnmappedWrites.get();
+        AtomicLong counter = frostedheart$phase0aUnmappedWrites;
+        return counter == null ? 0L : counter.get();
+    }
+
+    @Override
+    public MinecraftThermalInput.SectionOwner frostedheart$getThermalInputOwner() {
+        return frostedheart$thermalInputOwner;
+    }
+
+    @Override
+    public void frostedheart$setThermalInputOwner(MinecraftThermalInput.SectionOwner owner) {
+        frostedheart$thermalInputOwner = owner;
     }
 
     @Inject(
@@ -47,7 +73,7 @@ public abstract class LevelChunkSectionMixin_Phase0aMutationProbe implements Pha
     private void frostedheart$observePhase0aMutation(
             int x, int y, int z, BlockState newState, boolean useLocks,
             CallbackInfoReturnable<BlockState> callback) {
-        Phase0aMutationProbe.onSectionSetBlockState(
+        MinecraftThermalInput.onSectionSetBlockState(
                 (LevelChunkSection) (Object) this, x, y, z, callback.getReturnValue(), newState);
     }
 }

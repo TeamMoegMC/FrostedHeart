@@ -13,8 +13,8 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Snapshot-only contract for Create/other moving geometry. Integration must pass
- * main-thread-captured AABBs; workers consume only section-indexed exclusions.
+ * Historical test-only dynamic-exclusion prototype. Production treats moving
+ * structures as air and does not use this index.
  */
 public final class Phase0aDynamicExclusionIndex {
     private final int maxInterestedSections;

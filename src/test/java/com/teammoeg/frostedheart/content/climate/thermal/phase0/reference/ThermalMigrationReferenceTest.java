@@ -96,6 +96,37 @@ class ThermalMigrationReferenceTest {
     }
 
     @Test
+    void completeAirRemovalAndCreationUseSignedGeometryLedgers() {
+        ThermalMigrationReference.GeometryMigration removed =
+                ThermalMigrationReference.migrateGeometry(
+                        new double[]{-20.0},
+                        new double[]{10.0},
+                        new double[]{},
+                        new double[][]{{}},
+                        new double[]{},
+                        0.0
+                );
+        assertArrayEquals(new double[]{}, removed.newEnthalpiesJ(), EPSILON);
+        assertEquals(0.0, removed.geometryIngressJ(), EPSILON);
+        assertEquals(-20.0, removed.geometryEgressJ(), EPSILON);
+        assertEquals(0.0, removed.residualJ(), EPSILON);
+
+        ThermalMigrationReference.GeometryMigration created =
+                ThermalMigrationReference.migrateGeometry(
+                        new double[]{},
+                        new double[]{},
+                        new double[]{10.0},
+                        new double[][]{},
+                        new double[]{5.0},
+                        0.0
+                );
+        assertArrayEquals(new double[]{50.0}, created.newEnthalpiesJ(), EPSILON);
+        assertEquals(50.0, created.geometryIngressJ(), EPSILON);
+        assertEquals(0.0, created.geometryEgressJ(), EPSILON);
+        assertEquals(0.0, created.residualJ(), EPSILON);
+    }
+
+    @Test
     void invalidCapacityChangesCannotMasqueradeAsPureLodOrOverlap() {
         assertThrows(
                 IllegalArgumentException.class,

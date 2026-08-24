@@ -21,11 +21,13 @@ package com.teammoeg.frostedheart.content.climate.block.generator;
 
 import com.teammoeg.chorda.multiblock.CMultiblock;
 import com.teammoeg.frostedheart.content.climate.gamedata.chunkheat.ChunkHeatData;
+import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.MinecraftThermalInput;
 
 import blusunrize.immersiveengineering.api.multiblocks.blocks.MultiblockRegistration;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
 
 public abstract class HeatingMultiblock extends CMultiblock {
@@ -37,7 +39,12 @@ public abstract class HeatingMultiblock extends CMultiblock {
     @Override
     public void disassemble(Level world, BlockPos origin, boolean mirrored, Direction clickDirectionAtCreation) {
     	BlockPos master = this.getMasterFromOriginOffset();
-        ChunkHeatData.removeTempAdjust(world, getMasterPos(origin,mirrored,clickDirectionAtCreation).below(master.getY()));
+        BlockPos sourcePosition = getMasterPos(
+                origin, mirrored, clickDirectionAtCreation).below(master.getY());
+        if (world instanceof ServerLevel serverLevel) {
+            MinecraftThermalInput.onGeneratorRemoved(serverLevel, sourcePosition);
+        }
+        ChunkHeatData.removeTempAdjust(world, sourcePosition);
         super.disassemble(world, origin, mirrored, clickDirectionAtCreation);
     }
 
