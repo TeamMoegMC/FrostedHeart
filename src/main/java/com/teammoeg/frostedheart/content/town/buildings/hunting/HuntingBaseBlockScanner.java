@@ -47,7 +47,7 @@ public class HuntingBaseBlockScanner extends BuildingBlockScanner {
     @Override
     protected void processBuildingAirBlock(BlockPos pos) {
         thermalProjection.include(pos);
-        temperature += WorldTemperature.block(world, pos);
+        temperature += WorldTemperature.naturalBlock(world, pos);
     }
 
 

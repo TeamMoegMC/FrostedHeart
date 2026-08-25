@@ -153,6 +153,29 @@ class StateStaticThermalResolverTest {
         assertEquals(7, signature.flags());
     }
 
+    @Test
+    void geometryAwareClassifierReusesTheConservativeMaterialMask() {
+        StateStaticThermalResolver resolver =
+                StateStaticThermalResolver.withMaterialMask(
+                        8,
+                        (blockState, fluidState, materialMask) ->
+                                new StateStaticThermalResolver.SignatureMetadata(
+                                        0,
+                                        Long.bitCount(materialMask),
+                                        materialMask == -1L ? 1 : 2,
+                                        0, 0, 0, 0));
+
+        ResolvedThermalSignature stone = resolved(resolver.resolve(
+                Blocks.STONE.defaultBlockState(), Fluids.EMPTY.defaultFluidState()));
+        ResolvedThermalSignature slab = resolved(resolver.resolve(
+                Blocks.OAK_SLAB.defaultBlockState(), Fluids.EMPTY.defaultFluidState()));
+
+        assertEquals(64, stone.materialProfileId());
+        assertEquals(1, stone.materialContactPatternId());
+        assertEquals(32, slab.materialProfileId());
+        assertEquals(2, slab.materialContactPatternId());
+    }
+
     private static ResolvedThermalSignature resolved(
             ThermalResolution<ResolvedThermalSignature> result
     ) {

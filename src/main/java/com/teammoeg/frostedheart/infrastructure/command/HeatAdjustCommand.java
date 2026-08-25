@@ -19,17 +19,19 @@
 
 package com.teammoeg.frostedheart.infrastructure.command;
 
-import java.util.Collection;
+import java.util.List;
 
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
-import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
+import com.mojang.brigadier.context.CommandContext;
 import com.teammoeg.chorda.text.Components;
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.content.climate.gamedata.chunkheat.ChunkHeatData;
-import com.teammoeg.frostedheart.content.climate.gamedata.chunkheat.IHeatArea;
+import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.MinecraftThermalInput;
+import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.MinecraftThermalInput.AnalyticCombineMode;
+import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.MinecraftThermalInput.AnalyticField;
+import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.MinecraftThermalInput.AnalyticShape;
 
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
@@ -38,7 +40,6 @@ import net.minecraft.core.BlockPos;
 import net.minecraftforge.event.RegisterCommandsEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.server.command.EnumArgument;
 
 @Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public class HeatAdjustCommand {
@@ -48,67 +49,66 @@ public class HeatAdjustCommand {
         // Remove
         LiteralArgumentBuilder<CommandSourceStack> remove = Commands.literal("remove")
                 .then(Commands.argument("position", BlockPosArgument.blockPos()).executes((ct) -> {
-                    ChunkHeatData.removeTempAdjust(ct.getSource().getLevel(), BlockPosArgument.getBlockPos(ct, "position"));
+                    BlockPos position = BlockPosArgument.getBlockPos(ct, "position");
+                    MinecraftThermalInput.removeGameplayAnalyticField(
+                            ct.getSource().getLevel(), position.asLong());
                     return Command.SINGLE_SUCCESS;
                 }));
 
         // Set
         LiteralArgumentBuilder<CommandSourceStack> add = Commands.literal("set")
                 .then(Commands.argument("position", BlockPosArgument.blockPos()).executes((ct) -> {
-                    ChunkHeatData.removeTempAdjust(ct.getSource().getLevel(), BlockPosArgument.getBlockPos(ct, "position"));
+                    BlockPos position = BlockPosArgument.getBlockPos(ct, "position");
+                    MinecraftThermalInput.removeGameplayAnalyticField(
+                            ct.getSource().getLevel(), position.asLong());
                     return Command.SINGLE_SUCCESS;
-                }).then(Commands.argument("range", IntegerArgumentType.integer())
+                }).then(Commands.argument("range", IntegerArgumentType.integer(1))
                         .then(Commands.argument("temperature", IntegerArgumentType.integer()).executes((ct) -> {
-                            ChunkHeatData.addCubicTempAdjust(ct.getSource().getLevel(),
-                                    BlockPosArgument.getBlockPos(ct, "position"),
-                                    IntegerArgumentType.getInteger(ct, "range"),
-                                    IntegerArgumentType.getInteger(ct, "temperature"));
+                            upsertField(ct, AnalyticShape.CUBE, 0, 0);
                             return Command.SINGLE_SUCCESS;
                         })
                         .then(Commands.literal("sphere").executes((ct) -> {
-                            ChunkHeatData.addSphereTempAdjust(ct.getSource().getLevel(),
-                                    BlockPosArgument.getBlockPos(ct, "position"),
-                                    IntegerArgumentType.getInteger(ct, "range"),
-                                    IntegerArgumentType.getInteger(ct, "temperature"));
+                            upsertField(ct, AnalyticShape.SPHERE, 0, 0);
                             return Command.SINGLE_SUCCESS;
                         }))
-                        .then(Commands.argument("top", IntegerArgumentType.integer()).suggests((ct,sb)->sb.suggest(2).buildFuture())
-                        		.then(Commands.argument("bottom", IntegerArgumentType.integer()).suggests((ct,sb)->sb.suggest(2).buildFuture())
+                        .then(Commands.argument("top", IntegerArgumentType.integer(0)).suggests((ct,sb)->sb.suggest(2).buildFuture())
+								.then(Commands.argument("bottom", IntegerArgumentType.integer(0)).suggests((ct,sb)->sb.suggest(2).buildFuture())
                         		.executes(ct->{
-                        		 ChunkHeatData.addPillarTempAdjust(ct.getSource().getLevel(),
-	                                     BlockPosArgument.getBlockPos(ct, "position"),
-	                                     IntegerArgumentType.getInteger(ct, "range"),
-	                                     
-	                                     IntegerArgumentType.getInteger(ct, "top"),
-	                                     IntegerArgumentType.getInteger(ct, "bottom"),
-	                                     IntegerArgumentType.getInteger(ct, "temperature"));
+                             upsertField(
+                                     ct,
+                                     AnalyticShape.PILLAR,
+                                     IntegerArgumentType.getInteger(ct, "top"),
+                                     IntegerArgumentType.getInteger(ct, "bottom"));
                              return Command.SINGLE_SUCCESS;
                         }))))));
 
         // Get
         LiteralArgumentBuilder<CommandSourceStack> get = Commands.literal("get")
                 .executes((ct) -> {
-                    Collection<IHeatArea> adjs = ChunkHeatData.getAdjust(ct.getSource().getLevel(), ct.getSource().getPlayerOrException().blockPosition());
-                    if (adjs.isEmpty()) {
+                    BlockPos position = ct.getSource().getPlayerOrException().blockPosition();
+                    List<AnalyticField> fields = MinecraftThermalInput.gameplayAnalyticFieldsAt(
+                            ct.getSource().getLevel(), position);
+                    if (fields.isEmpty()) {
                         ct.getSource().sendSuccess(()-> Components.str("No Active Adjust!"), true);
                     } else {
                         ct.getSource().sendSuccess(()-> Components.str("Active Adjusts:"), true);
-                        BlockPos pos=new BlockPos((int)ct.getSource().getPosition().x,(int)ct.getSource().getPosition().y,(int)ct.getSource().getPosition().z);
-                        for (IHeatArea adj : adjs) {
-                            ct.getSource().sendSuccess(()-> Components.str("center:" + adj.getCenter() + ",radius:" + adj.getRadius() + ",temperature:" + adj.getValueAt(pos)), true);
+                        for (AnalyticField field : fields) {
+                            sendField(ct.getSource(), field);
                         }
                     }
                     return Command.SINGLE_SUCCESS;
                 })
                 .then(Commands.argument("position", BlockPosArgument.blockPos())
                         .executes((ct) -> {
-                            Collection<IHeatArea> adjs = ChunkHeatData.getAdjust(ct.getSource().getLevel(), BlockPosArgument.getBlockPos(ct, "position"));
-                            if (adjs.isEmpty()) {
+                            BlockPos position = BlockPosArgument.getBlockPos(ct, "position");
+                            List<AnalyticField> fields = MinecraftThermalInput.gameplayAnalyticFieldsAt(
+                                    ct.getSource().getLevel(), position);
+                            if (fields.isEmpty()) {
                                 ct.getSource().sendSuccess(()-> Components.str("No Active Adjust!"), true);
                             } else {
                                 ct.getSource().sendSuccess(()-> Components.str("Active Adjusts:"), true);
-                                for (IHeatArea adj : adjs) {
-                                    ct.getSource().sendSuccess(()-> Components.str("center:" + adj.getCenter() + ",radius:" + adj.getRadius() + ",temperature:" + adj.getValueAt(BlockPosArgument.getBlockPos(ct, "position"))), true);
+                                for (AnalyticField field : fields) {
+                                    sendField(ct.getSource(), field);
                                 }
                             }
                             return Command.SINGLE_SUCCESS;
@@ -120,5 +120,43 @@ public class HeatAdjustCommand {
 
         // simple alias to skip modid
         dispatcher.register(Commands.literal("heat_adjust").requires(s -> s.hasPermission(2)).then(add).then(get).then(remove));
+    }
+
+    private static void upsertField(
+            CommandContext<CommandSourceStack> context,
+            AnalyticShape shape,
+            int upperExtent,
+            int lowerExtent
+    ) {
+        CommandSourceStack source = context.getSource();
+        BlockPos position = BlockPosArgument.getBlockPos(context, "position");
+        int range = IntegerArgumentType.getInteger(context, "range");
+        int temperature = IntegerArgumentType.getInteger(context, "temperature");
+        MinecraftThermalInput.upsertGameplayAnalyticField(
+                source.getLevel(),
+                new AnalyticField(
+                        position.asLong(),
+                        0,
+                        AnalyticCombineMode.OVERRIDE,
+                        shape,
+                        position.getX() + 0.5D,
+                        position.getY() + 0.5D,
+                        position.getZ() + 0.5D,
+                        range,
+                        upperExtent,
+                        lowerExtent,
+                        temperature));
+    }
+
+    private static void sendField(CommandSourceStack source, AnalyticField field) {
+        BlockPos center = BlockPos.containing(
+                field.centerX(), field.centerY(), field.centerZ());
+        source.sendSuccess(
+                () -> Components.str(
+                        "center:" + center
+                                + ",shape:" + field.shape().name().toLowerCase()
+                                + ",radius:" + field.radius()
+                                + ",temperature:" + field.temperatureC()),
+                true);
     }
 }

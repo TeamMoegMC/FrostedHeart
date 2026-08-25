@@ -45,6 +45,7 @@ public final class StateStaticThermalResolver
 
     private final int maximumRegions;
     private final StateStaticProfileClassifier profileClassifier;
+    private final StateStaticGeometryProfileClassifier geometryProfileClassifier;
 
     public StateStaticThermalResolver(
             int maximumRegions,
@@ -55,6 +56,20 @@ public final class StateStaticThermalResolver
         }
         this.maximumRegions = maximumRegions;
         this.profileClassifier = Objects.requireNonNull(profileClassifier, "profileClassifier");
+        this.geometryProfileClassifier = null;
+    }
+
+    private StateStaticThermalResolver(
+            int maximumRegions,
+            StateStaticGeometryProfileClassifier geometryProfileClassifier
+    ) {
+        if (maximumRegions <= 0) {
+            throw new IllegalArgumentException("maximumRegions must be positive");
+        }
+        this.maximumRegions = maximumRegions;
+        this.profileClassifier = null;
+        this.geometryProfileClassifier = Objects.requireNonNull(
+                geometryProfileClassifier, "geometryProfileClassifier");
     }
 
     /**
@@ -66,6 +81,17 @@ public final class StateStaticThermalResolver
                 maximumRegions,
                 (blockState, fluidState) -> GEOMETRY_ONLY_NEUTRAL
         );
+    }
+
+    /**
+     * Builds a state-static resolver whose metadata classifier can reuse the
+     * conservative material mask already produced by the geometry pass.
+     */
+    public static StateStaticThermalResolver withMaterialMask(
+            int maximumRegions,
+            StateStaticGeometryProfileClassifier profileClassifier
+    ) {
+        return new StateStaticThermalResolver(maximumRegions, profileClassifier);
     }
 
     @Override
@@ -141,7 +167,12 @@ public final class StateStaticThermalResolver
 
         SignatureMetadata metadata;
         try {
-            metadata = profileClassifier.classify(blockState, fluidState);
+            metadata = geometryProfileClassifier == null
+                    ? profileClassifier.classify(blockState, fluidState)
+                    : geometryProfileClassifier.classify(
+                            blockState,
+                            fluidState,
+                            ~geometry.provenAirMicrocellMask());
         } catch (RuntimeException ignored) {
             return ThermalResolution.unsupported(
                     ThermalResolution.Reason.INVALID_RESOLVER_OUTPUT);
@@ -213,6 +244,15 @@ public final class StateStaticThermalResolver
     @FunctionalInterface
     public interface StateStaticProfileClassifier {
         SignatureMetadata classify(BlockState blockState, FluidState fluidState);
+    }
+
+    /** Supplies metadata using the geometry pass's block-local material mask. */
+    @FunctionalInterface
+    public interface StateStaticGeometryProfileClassifier {
+        SignatureMetadata classify(
+                BlockState blockState,
+                FluidState fluidState,
+                long materialMicrocellMask);
     }
 
     /** Immutable non-geometric fields used to finish one resolved signature. */

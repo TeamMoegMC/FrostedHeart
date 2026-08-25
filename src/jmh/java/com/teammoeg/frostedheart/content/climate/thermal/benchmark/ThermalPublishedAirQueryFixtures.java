@@ -29,7 +29,7 @@ import net.minecraft.core.SectionPos;
 import java.util.List;
 
 /** Synthetic hot-query fixtures using the production Page/runtime/publication owners. */
-final class ThermalShadowQueryFixtures {
+final class ThermalPublishedAirQueryFixtures {
     static final long DIMENSION_GENERATION = 9L;
     static final long GEOMETRY_REVISION = 0L;
     static final long TOPOLOGY_GENERATION = 1L;
@@ -39,7 +39,7 @@ final class ThermalShadowQueryFixtures {
     static final int MAXIMUM_PUBLICATION_AGE_TICKS = 40;
     private static final int SECTION_Y = 4;
 
-    private ThermalShadowQueryFixtures() {
+    private ThermalPublishedAirQueryFixtures() {
     }
 
     static Fixture create(int receiverCount, String layoutName) {

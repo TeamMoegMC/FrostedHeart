@@ -28,8 +28,8 @@ import com.teammoeg.frostedheart.bootstrap.common.FHAttributes;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlocks;
 import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
-import com.teammoeg.frostedheart.content.climate.gamedata.chunkheat.ChunkHeatData;
 import com.teammoeg.frostedheart.content.climate.render.TemperatureGoogleRenderer;
+import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.MinecraftThermalInput;
 import com.teammoeg.frostedheart.content.steamenergy.HeatEndpoint;
 import com.teammoeg.frostedheart.content.steamenergy.HeatNetwork;
 import com.teammoeg.frostedheart.content.steamenergy.HeatNetworkProvider;
@@ -38,6 +38,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.tags.FluidTags;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
@@ -65,8 +66,6 @@ public class FountainTileEntity extends CBlockEntity implements CTickableBlockEn
     private float power = 0;
     private boolean refilling = false;
     private int height = 0;
-    private int heatRange = 0;
-    private boolean heatAdjusted = false;
     private float lastTemp;
 
     public FountainTileEntity(BlockPos pos, BlockState state) {
@@ -90,7 +89,6 @@ public class FountainTileEntity extends CBlockEntity implements CTickableBlockEn
         power = nbt.getFloat("power");
         refilling = nbt.getBoolean("refilling");
         height = nbt.getInt("height");
-        heatAdjusted = nbt.getBoolean("heatAdjusted");
         lastTemp = nbt.getFloat("lastTemp");
     }
 
@@ -139,7 +137,7 @@ public class FountainTileEntity extends CBlockEntity implements CTickableBlockEn
             if (height > 0 && power > 0) {
             	power--;
                 setChanged();
-                adjustHeat(getRange());
+                publishHeat();
 
                 for (Player p : this.getLevel().players()) {
                     removeWarmth((ServerPlayer) p);
@@ -233,18 +231,19 @@ public class FountainTileEntity extends CBlockEntity implements CTickableBlockEn
         nbt.putFloat("power", power);
         nbt.putBoolean("refilling", refilling);
         nbt.putInt("height", height);
-        nbt.putBoolean("heatAdjusted", heatAdjusted);
+        nbt.putFloat("lastTemp", lastTemp);
     }
 
-    private void adjustHeat(int range) {
-        float networkTemp = network.getTempLevel();
-        if (lastTemp == networkTemp && heatAdjusted && range == heatRange) return;
-
-        lastTemp = networkTemp;
-
-        removeHeat();
-        ChunkHeatData.addPillarTempAdjust(level, worldPosition, (heatRange = range), height + 1, 1, (int) lastTemp * 15);
-        heatAdjusted = true;
+    private void publishHeat() {
+        lastTemp = network.getTempLevel();
+        if (level instanceof ServerLevel serverLevel) {
+            MinecraftThermalInput.onFountainTick(
+                    serverLevel,
+                    worldPosition,
+                    worldPosition.above(height + 1),
+                    lastTemp,
+                    true);
+        }
     }
 
     public void refill() {
@@ -270,9 +269,9 @@ public class FountainTileEntity extends CBlockEntity implements CTickableBlockEn
     }
 
     private void removeHeat() {
-    	if(heatAdjusted)
-    		ChunkHeatData.removeTempAdjust(level, worldPosition);
-        heatAdjusted = false;
+        if (level instanceof ServerLevel serverLevel) {
+            MinecraftThermalInput.onPhysicalSourceRemoved(serverLevel, worldPosition);
+        }
     }
 	@Override
 	public void invalidateCaps() {

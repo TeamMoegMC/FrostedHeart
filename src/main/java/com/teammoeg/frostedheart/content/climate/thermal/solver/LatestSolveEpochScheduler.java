@@ -25,6 +25,7 @@ public final class LatestSolveEpochScheduler {
     private InputWatermarks lastCompletedWatermarks;
     private long nextEpochId = 1L;
     private SealedInputFrame latestFrame;
+    private boolean latestFrameUrgent;
     private SolveEpoch inFlight;
 
     public LatestSolveEpochScheduler(
@@ -64,6 +65,11 @@ public final class LatestSolveEpochScheduler {
     }
 
     public SealResult sealLatest(SealedInputFrame frame) {
+        return sealLatest(frame, false);
+    }
+
+    /** Seals a frame that may bypass the normal cadence after an input event. */
+    public SealResult sealLatest(SealedInputFrame frame, boolean urgent) {
         Objects.requireNonNull(frame, "frame");
         if (frame.dimensionGeneration() != dimensionGeneration) {
             return SealResult.GENERATION_MISMATCH;
@@ -83,6 +89,7 @@ public final class LatestSolveEpochScheduler {
             }
         }
         if (latestFrame != null && latestFrame.equals(frame)) {
+            latestFrameUrgent |= urgent;
             return SealResult.DUPLICATE;
         }
         if (latestFrame == null
@@ -91,6 +98,7 @@ public final class LatestSolveEpochScheduler {
             return SealResult.DUPLICATE;
         }
         latestFrame = frame;
+        latestFrameUrgent |= urgent;
         return SealResult.ACCEPTED;
     }
 
@@ -112,7 +120,9 @@ public final class LatestSolveEpochScheduler {
         if (deltaTicks == 0L && !watermarkAdvance) {
             return false;
         }
-        return deltaTicks == 0L || deltaTicks >= timePolicy.uniformStepTicks();
+        return latestFrameUrgent
+                || deltaTicks == 0L
+                || deltaTicks >= timePolicy.uniformStepTicks();
     }
 
     /** Completion remains pending until every sealed input cut is applied. */
@@ -134,6 +144,11 @@ public final class LatestSolveEpochScheduler {
         lastCompletedTargetTick = epoch.targetTick();
         lastCompletedWatermarks = appliedWatermarks;
         inFlight = null;
+        if (latestFrame != null
+                && latestFrame.effectiveTick() == epoch.targetTick()
+                && latestFrame.watermarks().equals(epoch.sealedWatermarks())) {
+            latestFrameUrgent = false;
+        }
         return CompletionResult.COMPLETED;
     }
 

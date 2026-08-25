@@ -17,7 +17,7 @@ import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 
-/** Frozen physical defaults used only by the explicitly enabled shadow runtime. */
+/** Frozen physical defaults used by the Minecraft thermal runtime. */
 public record MinecraftPhysicalSourceProfile(
         int profileId,
         double ratedPowerW,
@@ -56,6 +56,35 @@ public record MinecraftPhysicalSourceProfile(
                                     ConservativeAirGeometry.Face.NEGATIVE_Y),
                             Port.internalHeat(1, SourceChannel.CONTACT, 0.1D),
                             Port.declaredLoss(2, SourceChannel.RADIATION, 0.2D)
+                    },
+                    0.5D, 0.5D, 0.5D, 1.0D);
+
+    public static final MinecraftPhysicalSourceProfile FOUNTAIN =
+            new MinecraftPhysicalSourceProfile(
+                    3,
+                    2_000.0D,
+                    MissingPortPolicy.EXPLICIT_LOSS,
+                    new Port[]{
+                            Port.airFace(
+                                    0, SourceChannel.CONVECTION, 0.9D,
+                                    0, 0, 0,
+                                    ConservativeAirGeometry.Face.NEGATIVE_Y),
+                            Port.declaredLoss(1, SourceChannel.RADIATION, 0.1D)
+                    },
+                    0.5D, 0.5D, 0.5D, 1.0D);
+
+    public static final MinecraftPhysicalSourceProfile RADIATOR =
+            new MinecraftPhysicalSourceProfile(
+                    4,
+                    4_000.0D,
+                    MissingPortPolicy.INTERNAL_HEAT,
+                    new Port[]{
+                            Port.airFace(
+                                    0, SourceChannel.CONVECTION, 0.8D,
+                                    0, 0, 0,
+                                    ConservativeAirGeometry.Face.NEGATIVE_Y),
+                            Port.internalHeat(1, SourceChannel.CONTACT, 0.1D),
+                            Port.declaredLoss(2, SourceChannel.RADIATION, 0.1D)
                     },
                     0.5D, 0.5D, 0.5D, 1.0D);
 

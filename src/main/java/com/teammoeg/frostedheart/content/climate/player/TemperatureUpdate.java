@@ -293,14 +293,8 @@ public class TemperatureUpdate {
                     double heatExchangeTempConstant = FHConfig.SERVER.CLIMATE.heatExchangeTempConstant.get();
 
                     // Compute environment
-                    float legacyRawEnvironment =
-                            TemperatureComputation.environment(player, data);
-                    float rawenvtemp = (float) (
-                            MinecraftThermalInput.gameplayPlayerEnvironment(
-                                    player,
-                                    legacyRawEnvironment + 37.0D,
-                                    GAMEPLAY_ENVIRONMENT_SAMPLE)
-                                    - 37.0D);
+                    float rawenvtemp = TemperatureComputation.environment(
+                            player, data, GAMEPLAY_ENVIRONMENT_SAMPLE);
 
                     /* ENVIRONMENT TEMPERATURE COMPUTATION ENDS */
 

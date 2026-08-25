@@ -1352,7 +1352,7 @@ Java 模拟不生成 HTML，也不依赖 Python、Pandas、SciPy 或绘图库。
 
 - `ClimateEventModel`：普通长期冷/暖事件的整数选择、冷峰权重、持续时间、前置时间、平静期、Gaussian 扰动和零端点导数 Hermite 插值。`InterpolationClimateEvent` 直接调用它。
 - `BlockTemperatureModel`：`alpha(y)`、自然方块温度和当前 `min(nature + k_heat H, H)` 热场上限；默认 `k_heat=2.0`。`WorldTemperature.block` 及其快速路径直接调用它。
-- `SphericalHeatFieldModel`：整数坐标球体的边界包含判定和精确体素计数。`SphereHeatArea.isEffective` 直接调用它。
+- `SphericalHeatFieldModel`：位于 `content.climate.thermal.field` 的纯整数格点球体工具，供城镇模型计算边界包含与精确体素数；它不注册世界热场。
 - `GeneratorHeatFieldModel`：阶段 0 已抽取的等级到半径/温升公式继续同时服务运行时和模拟器。
 - `HuntingDailyModel.calculateCapacity`：狩猎基地扫描时的有效面积到岗位容量公式由游戏与模拟共享。
 

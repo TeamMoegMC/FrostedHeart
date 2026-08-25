@@ -3,8 +3,6 @@ package com.teammoeg.frostedheart.mixin.minecraft.temperature;
 
 import com.teammoeg.frostedheart.content.climate.thermal.phase0.mutation.Phase0aMutationProbe;
 import com.teammoeg.frostedheart.content.climate.thermal.phase0.mutation.Phase0aSectionAttachment;
-import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.MinecraftThermalInput;
-import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.MinecraftThermalSectionAttachment;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.LevelChunkSection;
 import org.spongepowered.asm.mixin.Mixin;
@@ -17,13 +15,11 @@ import java.util.concurrent.atomic.AtomicLong;
 
 @Mixin(LevelChunkSection.class)
 public abstract class LevelChunkSectionMixin_Phase0aMutationProbe
-        implements Phase0aSectionAttachment, MinecraftThermalSectionAttachment {
+        implements Phase0aSectionAttachment {
     @Unique
     private volatile Phase0aMutationProbe.LoadedSectionOwner frostedheart$phase0aOwner;
     @Unique
     private AtomicLong frostedheart$phase0aUnmappedWrites;
-    @Unique
-    private volatile MinecraftThermalInput.SectionOwner frostedheart$thermalInputOwner;
 
     @Override
     public Phase0aMutationProbe.LoadedSectionOwner frostedheart$getPhase0aOwner() {
@@ -56,16 +52,6 @@ public abstract class LevelChunkSectionMixin_Phase0aMutationProbe
         return counter == null ? 0L : counter.get();
     }
 
-    @Override
-    public MinecraftThermalInput.SectionOwner frostedheart$getThermalInputOwner() {
-        return frostedheart$thermalInputOwner;
-    }
-
-    @Override
-    public void frostedheart$setThermalInputOwner(MinecraftThermalInput.SectionOwner owner) {
-        frostedheart$thermalInputOwner = owner;
-    }
-
     @Inject(
             method = "setBlockState(IIILnet/minecraft/world/level/block/state/BlockState;Z)Lnet/minecraft/world/level/block/state/BlockState;",
             at = @At("RETURN")
@@ -73,7 +59,8 @@ public abstract class LevelChunkSectionMixin_Phase0aMutationProbe
     private void frostedheart$observePhase0aMutation(
             int x, int y, int z, BlockState newState, boolean useLocks,
             CallbackInfoReturnable<BlockState> callback) {
-        MinecraftThermalInput.onSectionSetBlockState(
-                (LevelChunkSection) (Object) this, x, y, z, callback.getReturnValue(), newState);
+        Phase0aMutationProbe.onSectionSetBlockState(
+                (LevelChunkSection) (Object) this,
+                x, y, z, callback.getReturnValue(), newState);
     }
 }

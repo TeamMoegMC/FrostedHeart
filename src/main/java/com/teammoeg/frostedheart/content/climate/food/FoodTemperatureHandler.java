@@ -66,7 +66,6 @@ public class FoodTemperatureHandler {
             if (inv.isEmpty())
                 return;
 
-//            float posTemp = ChunkHeatData.getTemperature(player.level(), player.blockPosition());
             float envTemp = PlayerTemperatureData.getCapability(player).map(PlayerTemperatureData::getEnvTemp).orElse(0F);
 
             final List<NonNullList<ItemStack>> compartments = ImmutableList.of(inv.items, inv.armor, inv.offhand);

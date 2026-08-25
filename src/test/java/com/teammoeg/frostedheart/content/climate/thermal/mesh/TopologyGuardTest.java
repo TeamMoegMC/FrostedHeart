@@ -35,7 +35,7 @@ class TopologyGuardTest {
                 FarFieldProfileRegistry.empty());
         TopologyGuard.Decision unresolved = TopologyGuard.classify(
                 TopologyGuard.Evidence.open(
-                        false, true, true, true, true, 4, key()),
+                        false, true, true, true, key()),
                 NOMINAL,
                 registry(approvedProfile()));
 
@@ -49,10 +49,10 @@ class TopologyGuardTest {
     }
 
     @Test
-    void localOpeningWithoutLoadedOnlyOutdoorProofRemainsContinuation() {
+    void nonSkyOpeningRemainsContinuationWithoutDirectionHeuristics() {
         TopologyGuard.Decision decision = TopologyGuard.classify(
                 TopologyGuard.Evidence.open(
-                        true, true, true, false, true, 1, key()),
+                        true, true, true, false, key()),
                 NOMINAL,
                 registry(approvedProfile()));
 
@@ -152,7 +152,7 @@ class TopologyGuardTest {
 
     private static TopologyGuard.Evidence outdoorEvidence() {
         return TopologyGuard.Evidence.open(
-                true, true, true, true, false, 1, key());
+                true, true, true, true, key());
     }
 
     private static FarFieldProfileRegistry registry(

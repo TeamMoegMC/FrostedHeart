@@ -28,6 +28,7 @@ import com.teammoeg.frostedheart.bootstrap.common.FHMobEffects;
 import com.teammoeg.frostedheart.bootstrap.reference.FHDamageSources;
 import com.teammoeg.frostedheart.compat.curios.CuriosCompat;
 import com.teammoeg.frostedheart.content.climate.WorldTemperature;
+import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.MinecraftThermalInput;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerPlayer;
@@ -78,13 +79,20 @@ public class TemperatureComputation {
     }
 
     //returns 37-based 
-    protected static float environment(ServerPlayer player, PlayerTemperatureData data) {
+    protected static float environment(
+            ServerPlayer player,
+            PlayerTemperatureData data,
+            MinecraftThermalInput.MutableEnvironmentSample thermalSample
+    ) {
         // World Temp: Dimension, Biome, Climate, Time, heat adjusts
         Level world = player.level();
         BlockPos pos = new BlockPos((int) player.getX(), (int) player.getEyeY(), (int) player.getZ());
         // We use 37C based temperature here.
         // The base temperature means around -10C, which becomes -47C.
-        float envtemp = WorldTemperature.air(world, pos) - 37F; // 37-based
+        float envtemp = (float) MinecraftThermalInput.gameplayPlayerEnvironment(
+                player,
+                WorldTemperature.naturalAir(world, pos),
+                thermalSample) - 37F; // 37-based
 
         // Surrounding block temperature.
         // We calculate the block temperature using a separate pool.

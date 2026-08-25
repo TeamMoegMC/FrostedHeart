@@ -102,6 +102,8 @@ class MinecraftMaterialBoundaryTest {
         fillXPlane(snapshot, 8, CAPACITIVE);
         try (Fixture fixture = Fixture.create(snapshot)) {
             fixture.applyTopology(5L, 1L);
+            assertEquals(256, materialPoleCount(fixture.arena),
+                    "one wall block must own one pole shared by its exposed faces");
             forEachLiveAir(fixture.arena, slot -> fixture.arena.setEnthalpyJ(
                     slot, fixture.arena.capacityJPerK(slot) * 100.0D));
 
@@ -141,6 +143,35 @@ class MinecraftMaterialBoundaryTest {
             assertEquals(DimensionThermalRuntime.RunStatus.COMPLETED,
                     fixture.runtime.runOne().status());
         }
+    }
+
+    @Test
+    void oneBlockCapacitiveWallTransfersThroughItsSharedBlockPole() {
+        int[] snapshot = allAir();
+        fillXPlane(snapshot, 8, CAPACITIVE);
+        try (Fixture fixture = Fixture.create(snapshot)) {
+            fixture.applyTopology(5L, 1L);
+            setSeparatedAirTemperatures(fixture.arena, 8.0D, 9.0D);
+
+            assertEquals(DimensionThermalRuntime.RunStatus.COMPLETED,
+                    fixture.runtime.runOne().status());
+            assertEquals(DimensionThermalRuntime.RunStatus.COMPLETED,
+                    fixture.runtime.runOne().status());
+
+            assertTrue(airEnthalpyRightOf(fixture.arena, 9.0D) > 0.0D,
+                    "the shared wall pole must carry heat between opposite faces");
+            assertEquals(256, materialPoleCount(fixture.arena));
+        }
+    }
+
+    @Test
+    void gameplaySurfaceCanInitializeAtItsPageNaturalTemperature() {
+        MaterialBoundaryRegistry.Profile profile =
+                MaterialBoundaryRegistry.Profile
+                        .capacitiveSurfaceAtNaturalTemperature(5, 1.0D, 2.0D);
+
+        assertEquals(-24.5D,
+                profile.poleInitialTemperatureC(100, -24.5D), 0.0D);
     }
 
     @Test

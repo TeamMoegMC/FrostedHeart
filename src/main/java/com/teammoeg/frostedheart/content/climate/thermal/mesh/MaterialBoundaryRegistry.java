@@ -66,8 +66,9 @@ public final class MaterialBoundaryRegistry {
     }
 
     /**
-     * Conductances and capacities are specified per full block face. Partial
-     * 4x4 contacts scale them by represented area.
+     * Conductances and capacities are specified per full exposed block face.
+     * Partial 4x4 contacts scale them by represented area; all exposed faces
+     * of one block share the same capacitive pole.
      */
     public record Profile(
             int id,
@@ -80,6 +81,7 @@ public final class MaterialBoundaryRegistry {
             double initialTemperatureC,
             double naturalTemperatureAtY0C,
             double geothermalGradientCPerBlock,
+            boolean initializeAtNaturalTemperature,
             double transitionTemperatureC,
             double transitionEnergyJPerUnit,
             TransitionMutationPolicy transitionMutationPolicy,
@@ -111,6 +113,7 @@ public final class MaterialBoundaryRegistry {
                     requireZero("deepCapacityJPerK", deepCapacityJPerK);
                     requireZero("naturalConductanceWPerK", naturalConductanceWPerK);
                     requireZero("geothermalGradientCPerBlock", geothermalGradientCPerBlock);
+                    requireExplicitInitialTemperature(initializeAtNaturalTemperature);
                     requireNoTransition(
                             transitionEnergyJPerUnit,
                             transitionMutationPolicy,
@@ -128,6 +131,7 @@ public final class MaterialBoundaryRegistry {
                             transitionAction);
                 }
                 case NATURAL_ROCK -> {
+                    requireExplicitInitialTemperature(initializeAtNaturalTemperature);
                     requirePositiveFinite("surfaceCapacityJPerK", surfaceCapacityJPerK);
                     requirePositiveFinite("deepConductanceWPerK", deepConductanceWPerK);
                     if (deepCapacityJPerK > 0.0D) {
@@ -147,6 +151,7 @@ public final class MaterialBoundaryRegistry {
                     requireZero("deepCapacityJPerK", deepCapacityJPerK);
                     requireZero("naturalConductanceWPerK", naturalConductanceWPerK);
                     requireZero("geothermalGradientCPerBlock", geothermalGradientCPerBlock);
+                    requireExplicitInitialTemperature(initializeAtNaturalTemperature);
                     requirePositiveFinite(
                             "transitionEnergyJPerUnit", transitionEnergyJPerUnit);
                     if (transitionMutationPolicy == TransitionMutationPolicy.NONE
@@ -163,7 +168,7 @@ public final class MaterialBoundaryRegistry {
                     id, Model.STATELESS_CONDUCTANCE, wallConductanceWPerK,
                     0.0D, 0.0D, 0.0D, 0.0D,
                     0.0D, 0.0D, 0.0D,
-                    0.0D, 0.0D,
+                    false, 0.0D, 0.0D,
                     TransitionMutationPolicy.NONE, TransitionAction.NONE);
         }
 
@@ -177,7 +182,21 @@ public final class MaterialBoundaryRegistry {
                     id, Model.CAPACITIVE_SURFACE, faceConductanceWPerK,
                     surfaceCapacityJPerK, 0.0D, 0.0D, 0.0D,
                     initialTemperatureC, 0.0D, 0.0D,
-                    0.0D, 0.0D,
+                    false, 0.0D, 0.0D,
+                    TransitionMutationPolicy.NONE, TransitionAction.NONE);
+        }
+
+        /** Creates a gameplay surface initialized from its Page's natural air. */
+        public static Profile capacitiveSurfaceAtNaturalTemperature(
+                int id,
+                double faceConductanceWPerK,
+                double surfaceCapacityJPerK
+        ) {
+            return new Profile(
+                    id, Model.CAPACITIVE_SURFACE, faceConductanceWPerK,
+                    surfaceCapacityJPerK, 0.0D, 0.0D, 0.0D,
+                    0.0D, 0.0D, 0.0D,
+                    true, 0.0D, 0.0D,
                     TransitionMutationPolicy.NONE, TransitionAction.NONE);
         }
 
@@ -197,7 +216,7 @@ public final class MaterialBoundaryRegistry {
                     deepCapacityJPerK, naturalConductanceWPerK,
                     naturalTemperatureAtY0C, naturalTemperatureAtY0C,
                     geothermalGradientCPerBlock,
-                    0.0D, 0.0D,
+                    false, 0.0D, 0.0D,
                     TransitionMutationPolicy.NONE, TransitionAction.NONE);
         }
 
@@ -213,7 +232,7 @@ public final class MaterialBoundaryRegistry {
                     id, Model.PHASE_RESERVOIR, faceConductanceWPerK,
                     0.0D, 0.0D, 0.0D, 0.0D,
                     transitionTemperatureC, 0.0D, 0.0D,
-                    transitionTemperatureC, transitionEnergyJPerUnit,
+                    false, transitionTemperatureC, transitionEnergyJPerUnit,
                     mutationPolicy, transitionAction);
         }
 
@@ -224,10 +243,16 @@ public final class MaterialBoundaryRegistry {
             return temperature;
         }
 
-        public double poleInitialTemperatureC(int blockY) {
+        public double poleInitialTemperatureC(
+                int blockY,
+                double pageNaturalTemperatureC
+        ) {
+            requireFinite("pageNaturalTemperatureC", pageNaturalTemperatureC);
             return model == Model.NATURAL_ROCK
                     ? naturalTemperatureC(blockY)
-                    : initialTemperatureC;
+                    : initializeAtNaturalTemperature
+                            ? pageNaturalTemperatureC
+                            : initialTemperatureC;
         }
     }
 
@@ -309,6 +334,13 @@ public final class MaterialBoundaryRegistry {
     private static void requireZero(String name, double value) {
         if (value != 0.0D) {
             throw new IllegalArgumentException(name + " must be zero for this material model");
+        }
+    }
+
+    private static void requireExplicitInitialTemperature(boolean initializeAtNatural) {
+        if (initializeAtNatural) {
+            throw new IllegalArgumentException(
+                    "natural Page initialization is only valid for capacitive surfaces");
         }
     }
 

@@ -38,7 +38,6 @@ import com.teammoeg.frostedheart.content.climate.data.ArmorTempData;
 import com.teammoeg.frostedheart.content.climate.data.PlantTempData;
 import com.teammoeg.frostedheart.content.climate.data.PlantTemperature;
 import com.teammoeg.frostedheart.content.climate.food.FoodTemperatureHandler;
-import com.teammoeg.frostedheart.content.climate.gamedata.chunkheat.ChunkHeatData;
 import com.teammoeg.frostedheart.content.climate.gamedata.climate.ClimateType;
 import com.teammoeg.frostedheart.content.climate.gamedata.climate.WorldClimate;
 import com.teammoeg.frostedheart.content.climate.network.FHClimatePacket;
@@ -53,7 +52,6 @@ import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import com.teammoeg.frostedheart.mixin.minecraft.temperature.ServerLevelMixin_PlaceExtraSnow;
 import net.minecraft.core.BlockPos;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.server.level.ChunkHolder;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.tags.BlockTags;
@@ -67,7 +65,6 @@ import net.minecraft.world.entity.ai.attributes.AttributeModifier.Operation;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.LightLayer;
@@ -79,7 +76,6 @@ import net.minecraft.world.level.block.FarmBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.chunk.ChunkAccess;
-import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.dimension.BuiltinDimensionTypes;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraftforge.common.util.FakePlayer;
@@ -102,7 +98,6 @@ import net.minecraftforge.items.ItemStackHandler;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.Optional;
 import java.util.function.Supplier;
 
 import static com.teammoeg.frostedheart.content.climate.WorldTemperature.SNOW_REACHES_GROUND;
@@ -141,17 +136,6 @@ public class ClimateCommonEvents {
          * CurioCapabilityProvider(()->new ArmorTempCurios(amd,event.getObject())));
          * }
          */
-    }
-
-    @SubscribeEvent
-    public static void attachToChunk(AttachCapabilitiesEvent<LevelChunk> event) {
-        if (!event.getObject().isEmpty()) {
-            Level world = event.getObject().getLevel();
-            if (!world.isClientSide) {
-                event.addCapability(new ResourceLocation(FHMain.MODID, "chunk_data"),
-                        FHCapabilities.CHUNK_HEAT.provider());
-            }
-        }
     }
 
     @SubscribeEvent
@@ -399,17 +383,6 @@ public class ClimateCommonEvents {
                                 : climateData.getClimate(player.chunkPosition());
                         PlayerTemperatureData.getCapability(player).ifPresent(
                                 data -> data.advanceWeatherCycle(player, climate));
-                    }
-
-                }
-                for (ChunkHolder lc : serverWorld.getChunkSource().chunkMap.getChunks()) {
-                    ChunkPos cp = lc.getPos();
-                    //Distribute heat validate ticks
-                    if ((serverWorld.getGameTime() + (cp.x % 100 + cp.z % 100)) % 200 == 0) {
-                        Optional<ChunkHeatData> chd = ChunkHeatData.get(world, cp);
-                        if (chd.isPresent()) {
-                            chd.get().revalidateHeatSources(world, cp);
-                        }
                     }
 
                 }

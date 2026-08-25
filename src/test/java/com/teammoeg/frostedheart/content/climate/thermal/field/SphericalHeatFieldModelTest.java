@@ -8,7 +8,7 @@
  * the Free Software Foundation, version 3.
  */
 
-package com.teammoeg.frostedheart.content.climate.gamedata.chunkheat;
+package com.teammoeg.frostedheart.content.climate.thermal.field;
 
 import org.junit.jupiter.api.Test;
 

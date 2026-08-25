@@ -27,8 +27,10 @@ import blusunrize.immersiveengineering.api.multiblocks.blocks.util.ShapeType;
 import com.teammoeg.chorda.multiblock.CMultiblockHelper;
 import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
 import com.teammoeg.frostedheart.content.climate.block.generator.HeatingLogic;
+import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.MinecraftThermalInput;
 import com.teammoeg.frostedheart.util.client.FHClientUtils;
 import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
@@ -57,6 +59,17 @@ public class RadiatorLogic extends HeatingLogic<RadiatorLogic, RadiatorState> {
             state.setTempLevel(0);
             state.setRangeLevel(0);
             hasFuel = false;
+        }
+        Level level = ctx.getLevel().getRawLevel();
+        if (level instanceof ServerLevel serverLevel) {
+            int masterY = CMultiblockHelper.getMultiblock(ctx).masterPosInMB().getY();
+            BlockPos sourcePosition = CMultiblockHelper.getAbsoluteMaster(ctx).below(masterY);
+            MinecraftThermalInput.onRadiatorTick(
+                    serverLevel,
+                    sourcePosition,
+                    sourcePosition.above(2),
+                    state.getTempLevel(),
+                    hasFuel);
         }
         return hasFuel;
     }

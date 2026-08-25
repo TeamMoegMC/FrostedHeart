@@ -1,9 +1,9 @@
 # 世界气候与环境温度
 
 - Status: `Current`
-- Last verified: `2026-08-25`
-- Scope: 逻辑气候时钟、长期事件、局部白幕、世界温度分层、局部热区、方块状态消费者
-- Primary code anchors: `WorldClockSource`, `WorldClimate`, `ClimateEventModel`, `ClimateEventTrack`, `InterpolationClimateEvent`, `WhiteCurtainDescriptor`, `WhiteCurtainFieldModel`, `WhiteCurtainInfo`, `WorldTemperature`, `BlockTemperatureModel`, `ChunkHeatData`, `IHeatArea`, `MinecraftThermalInput.gameplayCropEnvironment`, `MinecraftThermalInput.CropShadowSnapshot`, `TownThermalProjection`, `MinecraftThermalInput.gameplayTownEnvironment`, `MinecraftThermalInput.TownShadowSnapshot`
+- Last verified: `2026-08-26`
+- Scope: 逻辑气候时钟、长期事件、局部白幕、自然/mesh/analytic 温度合成、方块状态消费者
+- Primary code anchors: `WorldClockSource`, `WorldClimate`, `ClimateEventModel`, `ClimateEventTrack`, `InterpolationClimateEvent`, `WhiteCurtainDescriptor`, `WhiteCurtainFieldModel`, `WhiteCurtainInfo`, `WorldTemperature`, `BlockTemperatureModel`, `MinecraftThermalInput.AnalyticField`, `MinecraftThermalInput.gameplayPassiveEnvironment`, `MinecraftThermalInput.gameplayCropEnvironment`, `TownThermalProjection`, `MinecraftThermalInput.gameplayTownEnvironment`
 
 本文只描述当前源码行为。所有温度若无特别说明均为摄氏度；“修正”表示摄氏度增量。
 
@@ -128,73 +128,89 @@ alpha_block(y) = 0                         , y <= stoneInterface
 T_natural = D + B + A + alpha_block * C
 ```
 
-设 `H` 为当前位置所有有效 `ChunkHeatData` 热区的最大值，默认 `blockHeatApplicationMultiplier k=2`，方块最终温度为：
-
-```text
-T_block = T_natural                              , T_natural > H
-        = min(T_natural + k * H, H)              , T_natural <= H
-T_block = max(absoluteZeroCelsius, T_block)
-```
-
-因此热区值在方块模型中同时是升温输入和温度上限，不是简单的 `T_natural + H`，也不是能量。例：默认参数下 `T_natural=-15,H=10` 得到 `5`；`T_natural=-10,H=10` 得到 `10`；`T_natural=12,H=10` 保持 `12`。
-
-`blockWithHeatData` 和 `blockWithHeatQuery` 是方块随机更新热路径的等价快速入口：调用者预先取得区块热数据或一次性热区查询，避免重复能力/区块查找。
+`WorldTemperature.naturalBlock` 返回上述自然值。`WorldTemperature.block` 随后调用
+`MinecraftThermalInput.gameplayPassiveEnvironment`：revision-valid mesh publication 命中时以 published
+air 替换局部自然值；否则保留 natural backend；最后应用 analytic control fields。该 passive 查询不会
+创建 Page，也不会加载区块。旧 `blockHeatApplicationMultiplier` 仍保留为配置兼容项，但当前生产
+合成不再把任何局部场送进旧 `BlockTemperatureModel` 热区公式。
 
 ## 6. 空气温度
 
-`WorldTemperature.air` 使用另一套当前公式：
+`WorldTemperature.air` 的 natural fallback 使用另一套公式：
 
 ```text
 alpha_air(y) = 0                              , y <= 0
              = (y / 63)                       , 0 < y <= 63
              = 1                              , y > 63
 
-T_air = max(absoluteZero,
-            D + B + A + alpha_air * C + H + gaussian(0,0.3))
+T_natural_air_query = max(absoluteZero,
+                          D + B + A + alpha_air * C + gaussian(0,0.3))
 ```
+
+`WorldTemperature.naturalAir` 使用同一个 `alpha_air`，但明确排除 mesh、analytic fields
+和随机扰动：
+
+```text
+T_natural_air = max(absoluteZero, D + B + A + alpha_air * C)
+```
+
+新热学 runtime 在 Page admission 时以 section 中心的 `T_natural_air` 初始化空气并作为
+FarField 外部温度。每 `200` ticks 最多刷新一次已 admission
+Page，背景变化达到 `0.25 degC` 才替换 sweep，几何和已有 cell enthalpy 不重建。
 
 空气公式有三个必须保留的当前差异：
 
 - `alpha_air` 使用 `WorldTemperature.SEA_LEVEL=63` 和 `STONE_INTERFACE_LEVEL=0` 硬编码常量，不读取对应服务端配置；
 - 气候最大影响为 `1.0`，而方块默认最大影响为 `0.5`；
-- 热区 `H` 直接相加，没有方块模型的倍增与上限规则。
+- `WorldTemperature.air` 的 fallback 有 `0.3degC` 高斯扰动，`naturalAir` 和 FarField 没有。
 
 每次服务端空气温度查询还会从世界随机源加入标准差 `0.3` 的高斯扰动，所以相同位置连续查询不保证相同结果。
 
-## 7. 局部热区存储与聚合
+当前 gameplay runtime 为各维度安装同一空气 open-space FarField 阻抗，维度只改变
+`T_natural_air`。Page capture 还封存每个 XZ 列首个天空暴露 local Y；拓扑编译把 Air-Air pair
+连通的 component 聚合；只有真实天空暴露能批准完整 FarField，开放方向数量不再作为室外
+证明。玩家或物理热源直接 admission 的地下 Page 会沿开放面额外 capture 一层已经加载的
+相邻 Page，自动 continuation 每维度最多 `64` Page，且不会递归扩张或加载 chunk。剩余非天空
+边缘保持 degraded，但在 approved profile 校准域内会按真实 microface 面积、风力以及
+`1 / (1 + 16)` 距离因子获得弱 `ThermalSweep.BoundaryOperation`，避免长隧道末端成为完全
+绝热边界。全局风力把 calm 导纳连续缩放到 `1.0..1.8` 倍；近似 continuation 不会被标记为
+完整室外闭合。
 
-`ChunkHeatData` 挂载在服务端非空 `LevelChunk`，通过 Codec 持久化。每个热源以中心 `BlockPos` 为键复制到它覆盖的所有区块：
+## 7. Analytic control fields
 
-| Type | Inclusion test | Value distribution |
-|---|---|---|
-| `CubicHeatArea` | 三轴到中心距离都不超过半径 | 区域内常量 |
-| `PillarHeatArea` | XZ 圆柱半径内且 Y 在上下界内 | 区域内常量 |
-| `SphereHeatArea` | 整数方块坐标距离平方不超过半径平方 | 区域内常量 |
+`MinecraftThermalInput` 每个维度只保存一份按 `(combineMode, priority, fieldId)` 排序的
+`AnalyticField` 列表。field 可为 `CUBE`、`PILLAR` 或 `SPHERE`，不会复制到覆盖区块、不会挂
+capability、不会创建 Page，也不参与 `H/C/P/G` 守恒账本。相同 `fieldId` 的更新原位替换定义。
 
-所有形状都没有距离衰减。`getAdditionTemperatureAtBlock` 和 `queryAdjust` 从 `0` 开始，只在 `value > currentMax` 时替换：
+合成发生在 natural/mesh 选择之后，固定顺序为：
 
 ```text
-H = max(0, all effective area values)
+OVERRIDE -> MAX_HEAT -> MIN_COOL -> ADD_DELTA
 ```
 
-因此当前负值热区会被识别为 `hasActiveAdjust=true`，但其温度贡献仍为 `0`；它不能降低 `WorldTemperature.air` 或 `block`。这是当前实现事实，也是后续设计制冷热区时必须显式处理的兼容边界。
+同一 mode 内再按 priority 和 field ID 排序。Curiosity 冷场使用 `ADD_DELTA`，`/heat_adjust`
+创建运行期 `OVERRIDE` field。控制场当前不跨服务器重启持久化；Curiosity 由实体状态在载入后
+重新报告。红外请求直接从 analytic list 和 physical source manager 生成一次性 shader payload，
+不维护客户端对应的区块热区副本。
 
-添加或删除热区会加载涉及的区块、标记区块未保存并通知追踪玩家刷新红外视图。`ClimateCommonEvents` 每 tick 遍历已加载 `ChunkHolder`，每个区块按坐标错峰约每 `200` ticks 调用 `revalidateHeatSources`，从源区块修正或删除过期副本。
+Campfire、Generator 和蒸汽喷泉不是 analytic field；它们由
+`MinecraftPhysicalSourceManager` 注册为显式功率 source，进入 mesh 与直接辐射路径。
+`ChunkHeatData`、`IHeatArea`、chunk capability、周期 revalidation 和旧失效包均已删除。
 
 ## 8. 主要消费者
 
-`WorldTemperature.block` 或其快速重载目前驱动：
+`WorldTemperature.block` 及同一 compositor 目前驱动：
 
 - `ServerLevelMixin_TemperatureUpdate` 中的水冻结、冰/流体/其他 `StateTransitionData` 状态变化；
 - `PlantTempData` 的施肥、生长、生存和死亡检查；
 - 动物、蜂巢、村民交易、战利品条件和温度探针；
 - 城镇住宅和狩猎建筑的内部体素温度扫描。`MineBlockScanner` 中的旧温度累积当前没有生产调用者，`MineBaseBlockScanner` 不计算温度。
 
-`WorldTemperature.air` 主要供玩家环境温度、降雪判断及显示工具使用。玩家周围方块热源不是从 `T_block` 反推，而由独立的 `BlockTempData` 粒子采样进入玩家管线，见 [player-temperature.md](player-temperature.md)。
+`WorldTemperature.air` 主要供被动环境查询、降雪判断及显示工具使用。玩家体温路径直接消费 sparse publication、analytic field 和物理辐射；旧 `BlockTempData` 粒子采样当前不再调度，见 [player-temperature.md](player-temperature.md)。
 
-Phase K 现在在 `WorldTemperature.checkPlantStatus` 真正需要温度的三条路径上调用 `MinecraftThermalInput.gameplayCropEnvironment`。已有 Air Mesh publication 命中时，返回的空气温度直接进入施肥、生长、生存和死亡阈值；无 active runtime、无 Page、无空气 component、stale 或超龄 publication 时使用同次 legacy block temperature。天气先行决定植物状态时不发起 thermal query。该 passive 路径不会创建 Page、Brick、Cell 或 Interest，`CropShadowSnapshot` 继续记录 legacy/new 差异供校准。
+`WorldTemperature.checkPlantStatus` 真正需要温度的路径调用 `MinecraftThermalInput.gameplayCropEnvironment`。已有 Air Mesh publication 命中时，返回的空气温度直接进入施肥、生长、生存和死亡阈值；无 active runtime、无 Page、无空气 component、stale 或超龄 publication 时使用 natural block temperature，再合成 analytic field。天气先行决定植物状态时不发起 thermal query。该 passive 路径不会创建 Page、Brick、Cell 或 Interest。
 
-住宅与狩猎基地扫描器访问内部空气时同步把坐标压缩成 `TownThermalProjection` 的 `4×4×4` weighted groups；成功扫描后每组只查询一个已有 publication。全部 group 命中时，新加权空气平均值直接写入建筑温度并驱动评分与日结算；任一 group miss 时整体回退同次 legacy 全体素平均，避免混合两套不完整区域。该路径没有第二次房间/体素遍历，不保留 mesh lease，miss 也不能 admission。矿井基地当前没有温度工作条件，因此未增加虚构的 mine consumer。
+住宅与狩猎基地扫描器访问内部空气时同步把坐标压缩成 `TownThermalProjection` 的 `4×4×4` weighted groups；成功扫描后每组只查询一个已有 publication。全部 group 命中时，新加权空气平均值直接写入建筑温度并驱动评分与日结算；任一 group miss 时整体回退同次 natural 全体素平均，并按 representative group 合成 analytic field，避免混合两套不完整区域。该路径没有第二次房间/体素遍历，不保留 mesh lease，miss 也不能 admission。矿井基地当前没有温度工作条件，因此未增加虚构的 mine consumer。
 
 ## 9. 持久化与当前约束
 

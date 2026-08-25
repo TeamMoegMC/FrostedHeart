@@ -138,6 +138,38 @@ class DimensionThermalRuntimeTest {
     }
 
     @Test
+    void stableUnresolvedTopologyCanSleepUntilNewEvidenceArrives() {
+        Fixture fixture = fixture(1, limits(8, 8, 8, 2), false);
+        fixture.runtime().sealFrame(new SealedInputFrame(
+                5L, 9L, InputWatermarks.ZERO));
+        assertFalse(fixture.runtime().runOne().sleeping());
+        fixture.runtime().sealFrame(new SealedInputFrame(
+                10L, 9L, InputWatermarks.ZERO));
+
+        assertTrue(fixture.runtime().runOne().sleeping());
+        assertFalse(fixture.runtime().topologyResolved());
+    }
+
+    @Test
+    void publicationGrowsToCoverArenaAdmissionBeforePublishing() {
+        Fixture fixture = fixture(1, limits(8, 8, 8, 2));
+        fixture.arena().allocatePageCells(
+                1,
+                1,
+                new ThermalCellArena.CellSpec[]{new ThermalCellArena.CellSpec(
+                        4, 0, 0, 4, 0, 0, 100.0D)},
+                new double[]{0.0D});
+        assertEquals(1, fixture.publication().capacity());
+        fixture.runtime().sealFrame(new SealedInputFrame(
+                5L, 9L, InputWatermarks.ZERO));
+
+        DimensionThermalRuntime.RunReport report = fixture.runtime().runOne();
+
+        assertTrue(report.published());
+        assertTrue(fixture.publication().capacity() >= fixture.arena().highWaterMark());
+    }
+
+    @Test
     void hardWorkCapRefusesAnOversizedCompleteSweep() {
         Fixture fixture = fixture(2, limits(1, 8, 8, 2));
         fixture.runtime().sealFrame(new SealedInputFrame(
@@ -225,6 +257,14 @@ class DimensionThermalRuntimeTest {
             int cellCount,
             DimensionThermalRuntime.Limits limits
     ) {
+        return fixture(cellCount, limits, true);
+    }
+
+    private static Fixture fixture(
+            int cellCount,
+            DimensionThermalRuntime.Limits limits,
+            boolean topologyResolved
+    ) {
         ThermalCellArena.CellSpec[] cells = new ThermalCellArena.CellSpec[cellCount];
         double[] enthalpies = new double[cellCount];
         for (int slot = 0; slot < cellCount; slot++) {
@@ -257,7 +297,7 @@ class DimensionThermalRuntimeTest {
                 InputWatermarks.ZERO,
                 1L,
                 1L,
-                true,
+                topologyResolved,
                 new ThermalTimePolicy(5L, 20L, 2),
                 arena,
                 sources,

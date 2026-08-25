@@ -12,7 +12,7 @@ package com.teammoeg.frostedheart.content.town.model;
 
 import com.teammoeg.frostedheart.content.climate.BlockTemperatureModel;
 import com.teammoeg.frostedheart.content.climate.block.generator.GeneratorHeatFieldModel;
-import com.teammoeg.frostedheart.content.climate.gamedata.chunkheat.SphericalHeatFieldModel;
+import com.teammoeg.frostedheart.content.climate.thermal.field.SphericalHeatFieldModel;
 import com.teammoeg.frostedheart.content.climate.gamedata.climate.ClimateEventModel;
 import com.teammoeg.frostedheart.content.climate.gamedata.climate.WorldClockSource;
 import com.teammoeg.frostedheart.content.town.TownMathFunctions;

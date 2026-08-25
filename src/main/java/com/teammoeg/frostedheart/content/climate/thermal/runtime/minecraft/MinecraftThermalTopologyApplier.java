@@ -17,11 +17,13 @@ import com.teammoeg.frostedheart.content.climate.thermal.geometry.GeometrySummar
 import com.teammoeg.frostedheart.content.climate.thermal.geometry.GeometrySummaryCache;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.ArenaSpan;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.FacePatchIterator;
+import com.teammoeg.frostedheart.content.climate.thermal.mesh.FarFieldProfileRegistry;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.GeometryMigrationLedger;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.ImplicitAirAdjacency;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.MaterialBoundaryRegistry;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.ThermalCellArena;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.ThermalPage;
+import com.teammoeg.frostedheart.content.climate.thermal.mesh.TopologyGuard;
 import com.teammoeg.frostedheart.content.climate.thermal.profile.LocalAirRegionPattern;
 import com.teammoeg.frostedheart.content.climate.thermal.profile.ResolvedThermalSignature;
 import com.teammoeg.frostedheart.content.climate.thermal.profile.ThermalResolution;
@@ -46,7 +48,7 @@ import java.util.Objects;
 
 /**
  * Concrete logical-writer bridge from PR8 primitive geometry inputs to the
- * authoritative arena and one replacement sweep. It is opt-in shadow code;
+ * authoritative arena and one replacement sweep. It is explicitly enabled;
  * normal gameplay never constructs it.
  */
 public final class MinecraftThermalTopologyApplier {
@@ -56,6 +58,8 @@ public final class MinecraftThermalTopologyApplier {
     private static final int MICROCELLS_PER_BLOCK = ConservativeAirGeometry.MICROCELL_COUNT;
     private static final int INITIAL_ALL_AIR = -2;
     private static final int UNRESOLVED_SIGNATURE = -1;
+    private static final int SKY_EXPOSURE_COLUMNS = 16 * 16;
+    private static final byte[] NO_SKY_EXPOSURE = noSkyExposure();
     private static final long FULL_MICROCELL_MASK = -1L;
     private static final ConservativeAirGeometry.Resolution FULL_AIR =
             new ConservativeAirGeometry.Resolution(
@@ -81,6 +85,7 @@ public final class MinecraftThermalTopologyApplier {
     private final ResolvedGeometryInputRing resolvedInputs;
     private final Parameters parameters;
     private final MaterialBoundaryRegistry materialBoundaries;
+    private final FarFieldSettings farFieldSettings;
     private final PhaseTransitionRuntime phaseTransitions;
     private final SignatureGeometry initialAllAirGeometry;
     private final SignatureGeometry[] signatureGeometryById;
@@ -91,6 +96,7 @@ public final class MinecraftThermalTopologyApplier {
     private final List<RetiredSpan> spansAwaitingSweep = new ArrayList<>();
 
     private boolean topologyDirty;
+    private double farFieldConductanceScale = 1.0D;
     private long publicationEpoch;
     private int nextPageSlot;
 
@@ -102,7 +108,7 @@ public final class MinecraftThermalTopologyApplier {
             Parameters parameters
     ) {
         this(runtime, signatures, geometryDeltas, resolvedInputs, parameters,
-                MaterialBoundaryRegistry.empty());
+                MaterialBoundaryRegistry.empty(), FarFieldSettings.disabled());
     }
 
     public MinecraftThermalTopologyApplier(
@@ -113,6 +119,19 @@ public final class MinecraftThermalTopologyApplier {
             Parameters parameters,
             MaterialBoundaryRegistry materialBoundaries
     ) {
+        this(runtime, signatures, geometryDeltas, resolvedInputs, parameters,
+                materialBoundaries, FarFieldSettings.disabled());
+    }
+
+    public MinecraftThermalTopologyApplier(
+            DimensionThermalRuntime runtime,
+            ThermalSignatureRegistry signatures,
+            GeometryDeltaRing geometryDeltas,
+            ResolvedGeometryInputRing resolvedInputs,
+            Parameters parameters,
+            MaterialBoundaryRegistry materialBoundaries,
+            FarFieldSettings farFieldSettings
+    ) {
         this.runtime = Objects.requireNonNull(runtime, "runtime");
         this.arena = runtime.thermalCellArena();
         this.signatures = Objects.requireNonNull(signatures, "signatures");
@@ -121,6 +140,8 @@ public final class MinecraftThermalTopologyApplier {
         this.parameters = Objects.requireNonNull(parameters, "parameters");
         this.materialBoundaries = Objects.requireNonNull(
                 materialBoundaries, "materialBoundaries");
+        this.farFieldSettings = Objects.requireNonNull(
+                farFieldSettings, "farFieldSettings");
         this.phaseTransitions = new PhaseTransitionRuntime(
                 arena,
                 parameters.phaseRequestCapacity(),
@@ -131,6 +152,52 @@ public final class MinecraftThermalTopologyApplier {
         for (int signatureId = 0; signatureId < signatureGeometryById.length; signatureId++) {
             signatureGeometryById[signatureId] = convertSignature(
                     signatures.signature(signatureId).orElseThrow());
+        }
+    }
+
+    /** Immutable Minecraft-side policy for the already calibrated open-space profile. */
+    public record FarFieldSettings(
+            FarFieldProfileRegistry profiles,
+            boolean naturalEnvironment,
+            FarFieldProfileRegistry.EnvironmentClass environmentClass,
+            FarFieldProfileRegistry.WindBucket windBucket,
+            double calibrationSourcePowerW,
+            double referenceOpeningAreaBlocksSquared,
+            double continuationDistanceBlocks
+    ) {
+        public FarFieldSettings {
+            Objects.requireNonNull(profiles, "profiles");
+            Objects.requireNonNull(environmentClass, "environmentClass");
+            Objects.requireNonNull(windBucket, "windBucket");
+            requireNonNegativeFinite(
+                    "calibrationSourcePowerW", calibrationSourcePowerW);
+            requirePositiveFinite(
+                    "referenceOpeningAreaBlocksSquared",
+                    referenceOpeningAreaBlocksSquared);
+            requirePositiveFinite(
+                    "continuationDistanceBlocks", continuationDistanceBlocks);
+        }
+
+        public static FarFieldSettings disabled() {
+            return new FarFieldSettings(
+                    FarFieldProfileRegistry.empty(),
+                    false,
+                    FarFieldProfileRegistry.EnvironmentClass.CUSTOM_NATURAL,
+                    FarFieldProfileRegistry.WindBucket.CALM,
+                    0.0D,
+                    1.0D,
+                    16.0D);
+        }
+
+        private FarFieldProfileRegistry.Key openSpaceKey() {
+            return new FarFieldProfileRegistry.Key(
+                    0,
+                    FarFieldProfileRegistry.OpeningClass.MULTI_FACE,
+                    2,
+                    FarFieldProfileRegistry.Orientation.HORIZONTAL,
+                    windBucket,
+                    environmentClass,
+                    FarFieldProfileRegistry.TopologyClass.OPEN_SPACE);
         }
     }
 
@@ -226,6 +293,105 @@ public final class MinecraftThermalTopologyApplier {
 
     public synchronized GeometryMigrationLedger.Snapshot migrationSnapshot() {
         return migrationLedger.snapshot();
+    }
+
+    synchronized int stagedSignaturePageCount() {
+        int count = 0;
+        for (PageState state : pages.values()) {
+            if (state.desiredSignatureIds != null) {
+                count++;
+            }
+        }
+        return count;
+    }
+
+    /** Updates only the fixed external temperature; geometry remains unchanged. */
+    public synchronized boolean updateNaturalTemperature(
+            ThermalPage page,
+            double naturalTemperatureC,
+            double minimumChangeC
+    ) {
+        Objects.requireNonNull(page, "page");
+        requireFinite("naturalTemperatureC", naturalTemperatureC);
+        requireNonNegativeFinite("minimumChangeC", minimumChangeC);
+        PageState state = pagesByPage.get(page);
+        if (state == null
+                || Math.abs(state.naturalTemperatureC - naturalTemperatureC)
+                < minimumChangeC) {
+            return false;
+        }
+        state.naturalTemperatureC = naturalTemperatureC;
+        topologyDirty = true;
+        return true;
+    }
+
+    /** Replaces the main-thread heightmap cut used as cheap outdoor proof. */
+    public synchronized boolean updateSkyExposure(
+            ThermalPage page,
+            byte[] firstExposedLocalY
+    ) {
+        Objects.requireNonNull(page, "page");
+        byte[] normalized = normalizedSkyExposure(firstExposedLocalY);
+        PageState state = pagesByPage.get(page);
+        if (state == null || Arrays.equals(state.firstExposedLocalY, normalized)) {
+            return false;
+        }
+        state.firstExposedLocalY = normalized;
+        topologyDirty = true;
+        return true;
+    }
+
+    /** Updates the global weather multiplier without changing geometry. */
+    public synchronized boolean updateFarFieldConductanceScale(
+            double conductanceScale,
+            double minimumChange
+    ) {
+        requirePositiveFinite("conductanceScale", conductanceScale);
+        requireNonNegativeFinite("minimumChange", minimumChange);
+        if (Math.abs(farFieldConductanceScale - conductanceScale) < minimumChange) {
+            return false;
+        }
+        farFieldConductanceScale = conductanceScale;
+        topologyDirty = true;
+        return true;
+    }
+
+    /** Returns non-sky open Page faces that need one loaded continuation Page. */
+    synchronized int continuationFaceMask(ThermalPage page) {
+        Objects.requireNonNull(page, "page");
+        PageState state = pagesByPage.get(page);
+        if (state == null || state.retirementChunkWatermark != Long.MAX_VALUE) {
+            return 0;
+        }
+        int[] signatureIds = state.dirty
+                ? state.desiredSignatureIds
+                : state.appliedSignatureIds;
+        int result = 0;
+        for (ConservativeAirGeometry.Face face : ConservativeAirGeometry.Face.values()) {
+            boolean continuation = false;
+            for (int localY = 0; localY < 16 && !continuation; localY++) {
+                for (int localZ = 0; localZ < 16 && !continuation; localZ++) {
+                    for (int localX = 0; localX < 16; localX++) {
+                        if (!onFace(localX, localY, localZ, face)
+                                || localY >= Byte.toUnsignedInt(state.firstExposedLocalY[
+                                        (localZ << 4) | localX])) {
+                            continue;
+                        }
+                        SignatureGeometry geometry = signatureGeometry(
+                                signatureIds[blockIndex(localX, localY, localZ)]);
+                        if (geometry.resolved
+                                && geometry.geometry.combinedFaceMask(face) != 0) {
+                            continuation = true;
+                            break;
+                        }
+                    }
+                }
+            }
+            if (continuation) {
+                result |= 1 << face.ordinal();
+            }
+        }
+        return result;
     }
 
     MaterialBoundaryRegistry.Profile materialProfile(int profileId) {
@@ -326,7 +492,8 @@ public final class MinecraftThermalTopologyApplier {
                 pageSlot,
                 lifecycleGeneration,
                 admissionChunkWatermark,
-                page.coverageSnapshot());
+                page.coverageSnapshot(),
+                parameters.initialAirTemperatureC());
         pages.put(identity, state);
         pagesByPage.put(page, state);
         topologyDirty = true;
@@ -339,9 +506,26 @@ public final class MinecraftThermalTopologyApplier {
             long admissionChunkWatermark,
             int[] signatureIds
     ) {
+        return registerCapturedPage(
+                sectionKey,
+                lifecycleGeneration,
+                admissionChunkWatermark,
+                signatureIds,
+                parameters.initialAirTemperatureC());
+    }
+
+    /** Captures one Page with its local natural-air boundary temperature. */
+    public synchronized ThermalPage registerCapturedPage(
+            long sectionKey,
+            long lifecycleGeneration,
+            long admissionChunkWatermark,
+            int[] signatureIds,
+            double naturalTemperatureC
+    ) {
         if (lifecycleGeneration < 0L || admissionChunkWatermark < 0L) {
             throw new IllegalArgumentException("captured Page generations are invalid");
         }
+        requireFinite("naturalTemperatureC", naturalTemperatureC);
         if (signatureIds == null || signatureIds.length != BLOCKS_PER_PAGE) {
             throw new IllegalArgumentException("captured Page requires 4096 signature IDs");
         }
@@ -365,7 +549,7 @@ public final class MinecraftThermalTopologyApplier {
                         parameters.airMediumId(),
                         parameters.cellFlags(),
                         parameters.effectiveAirCapacityJPerBlockK())},
-                parameters.initialAirTemperatureC(),
+                naturalTemperatureC,
                 parameters.referenceTemperatureC());
         ThermalPage page = ThermalPage.allAir(
                 sectionKey, lifecycleGeneration, provisional.firstSlot(),
@@ -375,7 +559,8 @@ public final class MinecraftThermalTopologyApplier {
                 pageSlot,
                 generation,
                 admissionChunkWatermark,
-                page.coverageSnapshot());
+                page.coverageSnapshot(),
+                naturalTemperatureC);
         state.desiredSignatureIds = normalizedSignatureCut(signatureIds);
         state.desiredGeometryRevision = page.liveGeometryRevision();
         state.dirty = true;
@@ -604,6 +789,34 @@ public final class MinecraftThermalTopologyApplier {
             }
 
             int retiredPages = queueRetirements(frame.watermarks().chunk());
+            boolean requiresTopologyCompilation = topologyDirty || retiredPages != 0;
+            if (!requiresTopologyCompilation) {
+                DimensionThermalRuntime.AcknowledgeResult acknowledged;
+                try {
+                    acknowledged = runtime.finishTopologyUpdate(
+                            frame.dimensionGeneration(),
+                            frame.watermarks(),
+                            Math.max(runtime.geometryRevision(), frame.watermarks().geometry()),
+                            runtime.topologyGeneration(),
+                            runtime.topologyResolved(),
+                            null);
+                } finally {
+                    writerOwned = false;
+                }
+                return new ApplyReport(
+                        acknowledged == DimensionThermalRuntime.AcknowledgeResult.APPLIED
+                                ? ApplyStatus.APPLIED
+                                : acknowledged == DimensionThermalRuntime.AcknowledgeResult.DUPLICATE
+                                        ? ApplyStatus.DUPLICATE
+                                        : ApplyStatus.ACK_REJECTED,
+                        drained.resolvedInputs,
+                        drained.geometryDeltas,
+                        0,
+                        0,
+                        0,
+                        runtime.topologyResolved(),
+                        acknowledged);
+            }
             int rebuiltPages = 0;
             try {
                 for (PageState state : active) {
@@ -625,7 +838,7 @@ public final class MinecraftThermalTopologyApplier {
                 publicationEpoch = nextPublicationEpoch;
 
                 CompiledTopology compiled = compileTopology(active, activeBySection);
-                boolean topologyResolved = topologyResolved(active, activeBySection);
+                boolean topologyResolved = topologyResolved(active, compiled);
                 ThermalSweep replacementSweep = new ThermalSweep(
                         arena,
                         compiled.pairs(),
@@ -634,11 +847,10 @@ public final class MinecraftThermalTopologyApplier {
                         compiled.phaseOperations(),
                         parameters.buoyancyParameters());
 
-                boolean topologyChanged = topologyDirty || rebuiltPages != 0 || retiredPages != 0;
                 long nextGeometryRevision = Math.max(
                         runtime.geometryRevision(), frame.watermarks().geometry());
-                long nextTopologyGeneration = runtime.topologyGeneration()
-                        + (topologyChanged ? 1L : 0L);
+                long nextTopologyGeneration = Math.incrementExact(
+                        runtime.topologyGeneration());
                 DimensionThermalRuntime.AcknowledgeResult acknowledged;
                 try {
                     acknowledged = runtime.finishTopologyUpdate(
@@ -770,6 +982,7 @@ public final class MinecraftThermalTopologyApplier {
                     state.desiredGeometryRevision, input.geometryRevision());
             state.dirty = true;
             state.materialDependencyChanged = true;
+            topologyDirty = true;
             if (input.kind() == ResolvedGeometryInputRing.Kind.FULL_RESYNC_REQUIRED) {
                 int[] snapshot = input.fullPageSignatureIds();
                 if (snapshot == null
@@ -791,6 +1004,7 @@ public final class MinecraftThermalTopologyApplier {
                         input.geometryResyncReason());
                 continue;
             }
+            ensureDesiredSignatureIds(state);
             state.desiredSignatureIds[input.blockIndex()] =
                     input.status() == ThermalResolution.Status.RESOLVED
                             && signatures.signature(input.signatureId()).isPresent()
@@ -810,6 +1024,8 @@ public final class MinecraftThermalTopologyApplier {
                         state.desiredGeometryRevision, delta.geometryRevision());
                 state.dirty = true;
                 state.materialDependencyChanged = true;
+                ensureDesiredSignatureIds(state);
+                topologyDirty = true;
             }
         }
         return new DrainResult(resolvedCount, deltaCount);
@@ -880,7 +1096,8 @@ public final class MinecraftThermalTopologyApplier {
 
         migrationLedger.record(migration);
         queueRelease(state.pageSlot, state.lifecycleGeneration, oldSpan);
-        state.appliedSignatureIds = state.desiredSignatureIds.clone();
+        state.appliedSignatureIds = state.desiredSignatureIds;
+        state.desiredSignatureIds = null;
         state.appliedCoverageRefs = coverage.clone();
         state.appliedMixedGeometry = build.mixedGeometry.clone();
         state.appliedMaterialPoleSlots = Map.copyOf(materialPoleSlots);
@@ -1059,8 +1276,7 @@ public final class MinecraftThermalTopologyApplier {
                                         continue;
                                     }
                                     MaterialSurfaceKey key = new MaterialSurfaceKey(
-                                            blockX, blockY, blockZ, face,
-                                            interfacePlane(face, microX, microY, microZ));
+                                            blockX, blockY, blockZ);
                                     MutableMaterialSurface surface = surfaces.computeIfAbsent(
                                             key,
                                             ignored -> new MutableMaterialSurface(
@@ -1093,7 +1309,8 @@ public final class MinecraftThermalTopologyApplier {
                             mutable.key, ThermalCellArena.MaterialPoleDepth.SURFACE),
                     mutable.profile,
                     ThermalCellArena.MaterialPoleDepth.SURFACE,
-                    mutable.profile.surfaceCapacityJPerK() * area);
+                    mutable.profile.surfaceCapacityJPerK() * area,
+                    state.naturalTemperatureC);
             if (mutable.profile.model() == MaterialBoundaryRegistry.Model.NATURAL_ROCK
                     && mutable.profile.deepCapacityJPerK() > 0.0D) {
                 addMaterialPole(
@@ -1102,7 +1319,8 @@ public final class MinecraftThermalTopologyApplier {
                                 mutable.key, ThermalCellArena.MaterialPoleDepth.DEEP),
                         mutable.profile,
                         ThermalCellArena.MaterialPoleDepth.DEEP,
-                        mutable.profile.deepCapacityJPerK() * area);
+                        mutable.profile.deepCapacityJPerK() * area,
+                        state.naturalTemperatureC);
             }
         }
         for (MutablePhaseReservoir mutable : phases.values()) {
@@ -1211,7 +1429,8 @@ public final class MinecraftThermalTopologyApplier {
             MaterialPoleKey key,
             MaterialBoundaryRegistry.Profile profile,
             ThermalCellArena.MaterialPoleDepth depth,
-            double capacityJPerK
+            double capacityJPerK,
+            double pageNaturalTemperatureC
     ) {
         if (!Double.isFinite(capacityJPerK) || capacityJPerK <= 0.0D) {
             throw new IllegalStateException("compiled material pole capacity is invalid");
@@ -1224,7 +1443,8 @@ public final class MinecraftThermalTopologyApplier {
                 profile.id(),
                 depth,
                 capacityJPerK,
-                profile.poleInitialTemperatureC(key.surface().blockY())));
+                profile.poleInitialTemperatureC(
+                        key.surface().blockY(), pageNaturalTemperatureC)));
     }
 
     private AirMicrocell adjacentAirMicrocell(
@@ -1312,22 +1532,6 @@ public final class MinecraftThermalTopologyApplier {
                 blockX, blockY, blockZ,
                 (microY << 4) | (microZ << 2) | microX,
                 component);
-    }
-
-    private static int interfacePlane(
-            ConservativeAirGeometry.Face face,
-            int microX,
-            int microY,
-            int microZ
-    ) {
-        return switch (face) {
-            case NEGATIVE_X -> microX;
-            case POSITIVE_X -> microX + 1;
-            case NEGATIVE_Y -> microY;
-            case POSITIVE_Y -> microY + 1;
-            case NEGATIVE_Z -> microZ;
-            case POSITIVE_Z -> microZ + 1;
-        };
     }
 
     private int[] buildCoverage(
@@ -1434,7 +1638,7 @@ public final class MinecraftThermalTopologyApplier {
         }
         double[] newCapacities = new double[newSpan.count()];
         double[] initialTemperatures = new double[newSpan.count()];
-        Arrays.fill(initialTemperatures, parameters.initialAirTemperatureC());
+        Arrays.fill(initialTemperatures, state.naturalTemperatureC);
         for (int offset = 0; offset < newSpan.count(); offset++) {
             newCapacities[offset] = arena.capacityJPerK(newSpan.firstSlot() + offset);
         }
@@ -1622,6 +1826,9 @@ public final class MinecraftThermalTopologyApplier {
         Map<Long, Double> materialConductance = new LinkedHashMap<>();
         List<ThermalSweep.BoundaryOperation> boundaries = new ArrayList<>();
         List<ThermalSweep.PhaseOperation> phaseOperations = new ArrayList<>();
+        FarFieldCompilation farField = compileFarField(
+                active, activeBySection, pairs);
+        boundaries.addAll(farField.boundaries());
 
         for (PageState state : active) {
             for (StatelessBridge bridge : state.appliedStatelessBridges) {
@@ -1701,7 +1908,11 @@ public final class MinecraftThermalTopologyApplier {
             pairs.add(ThermalSweep.PairOperation.fixed(
                     first, second, entry.getValue()));
         }
-        return new CompiledTopology(pairs, boundaries, phaseOperations);
+        return new CompiledTopology(
+                pairs,
+                boundaries,
+                phaseOperations,
+                farField.allOpenFrontiersResolved());
     }
 
     private int airCellForMicrocell(
@@ -1795,54 +2006,260 @@ public final class MinecraftThermalTopologyApplier {
         return operations;
     }
 
-    private boolean topologyResolved(
+    private FarFieldCompilation compileFarField(
             List<PageState> active,
-            Map<Long, PageState> activeBySection
+            Map<Long, PageState> activeBySection,
+            List<ThermalSweep.PairOperation> airPairs
     ) {
+        int capacity = arena.highWaterMark();
+        int[] parent = new int[capacity];
+        int[] openPatchCount = new int[capacity];
+        boolean[] skyExposed = new boolean[capacity];
+        double[] naturalTemperatureC = new double[capacity];
+        Arrays.fill(parent, ThermalCellArena.NO_SLOT);
+        Arrays.fill(naturalTemperatureC, Double.NaN);
+
         for (PageState state : active) {
-            if (state.unresolvedTopology) {
-                return false;
+            ArenaSpan span = state.page.cellSpan();
+            for (int slot = span.firstSlot(); slot < span.endSlotExclusive(); slot++) {
+                if (arena.isLive(slot)
+                        && !arena.isMaterialPole(slot)
+                        && !arena.isPhaseReservoir(slot)) {
+                    parent[slot] = slot;
+                }
             }
+        }
+        for (ThermalSweep.PairOperation pair : airPairs) {
+            union(parent, pair.cellA(), pair.cellB());
+        }
+
+        boolean allFrontierPatchesMapped = true;
+        for (PageState state : active) {
             int sectionX = SectionPos.x(state.page.sectionKey());
             int sectionY = SectionPos.y(state.page.sectionKey());
             int sectionZ = SectionPos.z(state.page.sectionKey());
             for (ConservativeAirGeometry.Face face : ConservativeAirGeometry.Face.values()) {
-                int neighborX = sectionX + (face == ConservativeAirGeometry.Face.NEGATIVE_X ? -1
-                        : face == ConservativeAirGeometry.Face.POSITIVE_X ? 1 : 0);
-                int neighborY = sectionY + (face == ConservativeAirGeometry.Face.NEGATIVE_Y ? -1
-                        : face == ConservativeAirGeometry.Face.POSITIVE_Y ? 1 : 0);
-                int neighborZ = sectionZ + (face == ConservativeAirGeometry.Face.NEGATIVE_Z ? -1
-                        : face == ConservativeAirGeometry.Face.POSITIVE_Z ? 1 : 0);
-                if (!activeBySection.containsKey(SectionPos.asLong(
-                        neighborX, neighborY, neighborZ))
-                        && pageHasOpenFace(state, face)) {
-                    return false;
+                long neighborKey = neighborSectionKey(sectionX, sectionY, sectionZ, face);
+                if (!activeBySection.containsKey(neighborKey)) {
+                    allFrontierPatchesMapped &= collectOpenFrontierPatches(
+                            state,
+                            face,
+                            openPatchCount,
+                            skyExposed,
+                            naturalTemperatureC);
                 }
             }
         }
-        return true;
+
+        int[] componentOpenPatchCount = new int[capacity];
+        boolean[] componentSkyExposed = new boolean[capacity];
+        double[] componentMaximumDeltaC = new double[capacity];
+        for (int slot = 0; slot < capacity; slot++) {
+            if (openPatchCount[slot] == 0) {
+                continue;
+            }
+            int root = find(parent, slot);
+            componentOpenPatchCount[root] += openPatchCount[slot];
+            componentSkyExposed[root] |= skyExposed[slot];
+            componentMaximumDeltaC[root] = Math.max(
+                    componentMaximumDeltaC[root],
+                    Math.abs(arena.temperatureC(
+                            slot, parameters.referenceTemperatureC())
+                            - naturalTemperatureC[slot]));
+        }
+
+        TopologyGuard.Decision[] decisions = new TopologyGuard.Decision[capacity];
+        FarFieldProfileRegistry.Profile[] continuationProfiles =
+                new FarFieldProfileRegistry.Profile[capacity];
+        boolean allResolved = allFrontierPatchesMapped;
+        FarFieldProfileRegistry.Key profileKey = farFieldSettings.openSpaceKey();
+        for (int root = 0; root < capacity; root++) {
+            if (componentOpenPatchCount[root] == 0) {
+                continue;
+            }
+            TopologyGuard.OperatingPoint operatingPoint = new TopologyGuard.OperatingPoint(
+                    farFieldSettings.calibrationSourcePowerW(),
+                    componentMaximumDeltaC[root]);
+            TopologyGuard.Decision decision = TopologyGuard.classify(
+                    TopologyGuard.Evidence.open(
+                            true,
+                            true,
+                            farFieldSettings.naturalEnvironment(),
+                            componentSkyExposed[root],
+                            profileKey),
+                    operatingPoint,
+                    farFieldSettings.profiles());
+            decisions[root] = decision;
+            if (decision.frontierClass()
+                    == TopologyGuard.FrontierClass.OPEN_CONTINUATION) {
+                continuationProfiles[root] = applicableFarFieldProfile(
+                        profileKey, operatingPoint);
+            }
+            allResolved &= decision.frontierClass()
+                    == TopologyGuard.FrontierClass.OPEN_AMBIENT;
+        }
+
+        List<ThermalSweep.BoundaryOperation> boundaries = new ArrayList<>();
+        double patchesPerReferenceArea = 16.0D
+                * farFieldSettings.referenceOpeningAreaBlocksSquared();
+        for (int slot = 0; slot < capacity; slot++) {
+            if (openPatchCount[slot] == 0) {
+                continue;
+            }
+            int root = find(parent, slot);
+            TopologyGuard.Decision decision = decisions[root];
+            if (decision == null) {
+                allResolved = false;
+                continue;
+            }
+            double areaScale = farFieldConductanceScale
+                    * openPatchCount[slot] / patchesPerReferenceArea;
+            if (decision.frontierClass() == TopologyGuard.FrontierClass.OPEN_AMBIENT) {
+                decision.boundaryOperation(slot, naturalTemperatureC[slot], areaScale)
+                        .ifPresent(boundaries::add);
+                continue;
+            }
+            if (decision.frontierClass()
+                    != TopologyGuard.FrontierClass.OPEN_CONTINUATION) {
+                continue;
+            }
+            FarFieldProfileRegistry.Profile profile = continuationProfiles[root];
+            if (profile != null) {
+                boundaries.add(new ThermalSweep.BoundaryOperation(
+                        slot,
+                        naturalTemperatureC[slot],
+                        profile.conductanceWPerK() * areaScale
+                                / (1.0D + farFieldSettings.continuationDistanceBlocks())));
+            }
+        }
+        return new FarFieldCompilation(boundaries, allResolved);
     }
 
-    private boolean pageHasOpenFace(
-            PageState state,
-            ConservativeAirGeometry.Face face
+    private FarFieldProfileRegistry.Profile applicableFarFieldProfile(
+            FarFieldProfileRegistry.Key key,
+            TopologyGuard.OperatingPoint operatingPoint
     ) {
+        FarFieldProfileRegistry.Profile profile =
+                farFieldSettings.profiles().profile(key).orElse(null);
+        return profile != null
+                && profile.approval()
+                == FarFieldProfileRegistry.Approval.APPROVED_STATIC_IMPEDANCE
+                && profile.domain().contains(
+                operatingPoint.absoluteSourcePowerW(),
+                operatingPoint.absoluteLocalNaturalDeltaC())
+                ? profile
+                : null;
+    }
+
+    private boolean collectOpenFrontierPatches(
+            PageState state,
+            ConservativeAirGeometry.Face face,
+            int[] openPatchCount,
+            boolean[] skyExposed,
+            double[] naturalTemperatureC
+    ) {
+        boolean allMapped = true;
         for (int localY = 0; localY < 16; localY++) {
             for (int localZ = 0; localZ < 16; localZ++) {
                 for (int localX = 0; localX < 16; localX++) {
                     if (!onFace(localX, localY, localZ, face)) {
                         continue;
                     }
+                    int pageBlock = blockIndex(localX, localY, localZ);
                     SignatureGeometry geometry = signatureGeometry(
-                            state.appliedSignatureIds[blockIndex(localX, localY, localZ)]);
-                    if (geometry.resolved
-                            && geometry.geometry.combinedFaceMask(face) != 0) {
-                        return true;
+                            state.appliedSignatureIds[pageBlock]);
+                    if (!geometry.resolved) {
+                        continue;
+                    }
+                    int aperture = geometry.geometry.combinedFaceMask(face);
+                    for (int patch = 0; patch < 16; patch++) {
+                        if ((aperture & (1 << patch)) == 0) {
+                            continue;
+                        }
+                        int slot = cellForMicrocell(
+                                state.appliedSignatureIds,
+                                state.appliedCoverageRefs,
+                                state.appliedMixedGeometry,
+                                pageBlock,
+                                faceMicrocell(face, patch & 3, patch >>> 2));
+                        if (slot == ThermalCellArena.NO_SLOT) {
+                            allMapped = false;
+                            continue;
+                        }
+                        openPatchCount[slot]++;
+                        int skyCutoff = Byte.toUnsignedInt(state.firstExposedLocalY[
+                                (localZ << 4) | localX]);
+                        skyExposed[slot] |= localY >= skyCutoff;
+                        naturalTemperatureC[slot] = state.naturalTemperatureC;
                     }
                 }
             }
         }
-        return false;
+        return allMapped;
+    }
+
+    private static long neighborSectionKey(
+            int sectionX,
+            int sectionY,
+            int sectionZ,
+            ConservativeAirGeometry.Face face
+    ) {
+        return SectionPos.asLong(
+                sectionX + switch (face) {
+                    case NEGATIVE_X -> -1;
+                    case POSITIVE_X -> 1;
+                    default -> 0;
+                },
+                sectionY + switch (face) {
+                    case NEGATIVE_Y -> -1;
+                    case POSITIVE_Y -> 1;
+                    default -> 0;
+                },
+                sectionZ + switch (face) {
+                    case NEGATIVE_Z -> -1;
+                    case POSITIVE_Z -> 1;
+                    default -> 0;
+                });
+    }
+
+    private static void union(int[] parent, int first, int second) {
+        int firstRoot = find(parent, first);
+        int secondRoot = find(parent, second);
+        if (firstRoot != secondRoot) {
+            if (firstRoot < secondRoot) {
+                parent[secondRoot] = firstRoot;
+            } else {
+                parent[firstRoot] = secondRoot;
+            }
+        }
+    }
+
+    private static int find(int[] parent, int slot) {
+        if (slot < 0 || slot >= parent.length || parent[slot] == ThermalCellArena.NO_SLOT) {
+            throw new LatestFrameException();
+        }
+        int root = slot;
+        while (parent[root] != root) {
+            root = parent[root];
+        }
+        while (parent[slot] != slot) {
+            int next = parent[slot];
+            parent[slot] = root;
+            slot = next;
+        }
+        return root;
+    }
+
+    private boolean topologyResolved(
+            List<PageState> active,
+            CompiledTopology compiled
+    ) {
+        for (PageState state : active) {
+            if (state.unresolvedTopology) {
+                return false;
+            }
+        }
+        return compiled.allOpenFrontiersResolved();
     }
 
     private int queueRetirements(long chunkWatermark) {
@@ -1920,9 +2337,11 @@ public final class MinecraftThermalTopologyApplier {
                         + Math.abs(candidateZ - SectionPos.z(changed));
                 if (distance == 1) {
                     candidate.dirty = true;
+                    ensureDesiredSignatureIds(candidate);
                     candidate.desiredGeometryRevision = Math.max(
                             candidate.desiredGeometryRevision,
                             candidate.page.liveGeometryRevision());
+                    topologyDirty = true;
                     break;
                 }
             }
@@ -1948,6 +2367,12 @@ public final class MinecraftThermalTopologyApplier {
             }
         }
         return bySection;
+    }
+
+    private static void ensureDesiredSignatureIds(PageState state) {
+        if (state.desiredSignatureIds == null) {
+            state.desiredSignatureIds = state.appliedSignatureIds.clone();
+        }
     }
 
     private static ImplicitAirAdjacency.PageView pageView(PageState state) {
@@ -2024,6 +2449,36 @@ public final class MinecraftThermalTopologyApplier {
         }
     }
 
+    private static void requireNonNegativeFinite(String name, double value) {
+        if (!Double.isFinite(value) || value < 0.0D) {
+            throw new IllegalArgumentException(
+                    name + " must be finite and non-negative");
+        }
+    }
+
+    private static byte[] normalizedSkyExposure(byte[] firstExposedLocalY) {
+        if (firstExposedLocalY == null
+                || firstExposedLocalY.length != SKY_EXPOSURE_COLUMNS) {
+            throw new IllegalArgumentException(
+                    "sky exposure requires one cutoff for each Page column");
+        }
+        byte[] normalized = firstExposedLocalY.clone();
+        for (byte cutoff : normalized) {
+            int localY = Byte.toUnsignedInt(cutoff);
+            if (localY > 16) {
+                throw new IllegalArgumentException(
+                        "sky exposure cutoffs must be in [0, 16]");
+            }
+        }
+        return normalized;
+    }
+
+    private static byte[] noSkyExposure() {
+        byte[] cutoffs = new byte[SKY_EXPOSURE_COLUMNS];
+        Arrays.fill(cutoffs, (byte) 16);
+        return cutoffs;
+    }
+
     private record PageIdentity(long sectionKey, long lifecycleGeneration) {
     }
 
@@ -2036,7 +2491,14 @@ public final class MinecraftThermalTopologyApplier {
     private record CompiledTopology(
             List<ThermalSweep.PairOperation> pairs,
             List<ThermalSweep.BoundaryOperation> boundaries,
-            List<ThermalSweep.PhaseOperation> phaseOperations
+            List<ThermalSweep.PhaseOperation> phaseOperations,
+            boolean allOpenFrontiersResolved
+    ) {
+    }
+
+    private record FarFieldCompilation(
+            List<ThermalSweep.BoundaryOperation> boundaries,
+            boolean allOpenFrontiersResolved
     ) {
     }
 
@@ -2070,16 +2532,8 @@ public final class MinecraftThermalTopologyApplier {
     private record MaterialSurfaceKey(
             int blockX,
             int blockY,
-            int blockZ,
-            ConservativeAirGeometry.Face face,
-            int interfacePlane
+            int blockZ
     ) {
-        private MaterialSurfaceKey {
-            Objects.requireNonNull(face, "face");
-            if (interfacePlane < 0 || interfacePlane > 4) {
-                throw new IllegalArgumentException("material interface plane is out of bounds");
-            }
-        }
     }
 
     private record MaterialPoleKey(
@@ -2216,8 +2670,10 @@ public final class MinecraftThermalTopologyApplier {
         private final int pageSlot;
         private final int lifecycleGeneration;
         private final long admissionChunkWatermark;
+        private double naturalTemperatureC;
+        private byte[] firstExposedLocalY = NO_SKY_EXPOSURE;
         private int[] appliedSignatureIds = new int[BLOCKS_PER_PAGE];
-        private int[] desiredSignatureIds = new int[BLOCKS_PER_PAGE];
+        private int[] desiredSignatureIds;
         private int[] appliedCoverageRefs;
         private ComponentBrickCompiler.CompiledBrick[] appliedMixedGeometry =
                 new ComponentBrickCompiler.CompiledBrick[ThermalPage.BASE_BRICK_COUNT];
@@ -2239,15 +2695,16 @@ public final class MinecraftThermalTopologyApplier {
                 int pageSlot,
                 int lifecycleGeneration,
                 long admissionChunkWatermark,
-                int[] initialCoverage
+                int[] initialCoverage,
+                double naturalTemperatureC
         ) {
             this.page = page;
             this.pageSlot = pageSlot;
             this.lifecycleGeneration = lifecycleGeneration;
             this.admissionChunkWatermark = admissionChunkWatermark;
+            this.naturalTemperatureC = naturalTemperatureC;
             this.appliedCoverageRefs = initialCoverage;
             Arrays.fill(appliedSignatureIds, INITIAL_ALL_AIR);
-            Arrays.fill(desiredSignatureIds, INITIAL_ALL_AIR);
         }
 
         private boolean hasCurrentResyncSnapshot() {

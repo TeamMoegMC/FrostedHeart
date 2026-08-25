@@ -8,9 +8,9 @@
  * the Free Software Foundation, version 3.
  */
 
-package com.teammoeg.frostedheart.content.climate.gamedata.chunkheat;
+package com.teammoeg.frostedheart.content.climate.thermal.field;
 
-/** Integer-lattice spherical heat-field geometry shared by game and simulator. */
+/** Integer-lattice spherical field geometry shared by game and simulator. */
 public final class SphericalHeatFieldModel {
     private SphericalHeatFieldModel() {
     }
@@ -50,8 +50,7 @@ public final class SphericalHeatFieldModel {
 
     /**
      * Largest centered footprint whose every voxel in {@code interiorHeight}
-     * consecutive layers is inside the sphere. This is a geometric upper bound,
-     * not a buildable floor plan: walls, tower blocks, access and furniture are excluded.
+     * consecutive layers is inside the sphere.
      */
     public static long centeredFootprintUpperBound(int radius, int interiorHeight) {
         if (radius < 0 || interiorHeight <= 0) return 0L;

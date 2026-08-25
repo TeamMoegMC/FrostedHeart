@@ -21,8 +21,7 @@ package com.teammoeg.frostedheart.content.climate;
 
 import java.util.EnumSet;
 
-import com.teammoeg.frostedheart.content.climate.gamedata.chunkheat.ChunkHeatData;
-import com.teammoeg.frostedheart.content.climate.gamedata.chunkheat.IHeatArea;
+import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.MinecraftThermalInput;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.Mob;
@@ -31,9 +30,11 @@ import net.minecraft.world.entity.ai.goal.Goal;
  * AI Goal for animals/residents attracted by heat field
  * */
 public class AttractedByGeneratorGoal extends Goal {
+	private static final double SEARCH_RADIUS_BLOCKS = 32.0D;
 	protected final Mob animal;
 	private final double speedModifier;
 	private int inAreaTicks;
+	private BlockPos target;
 	public AttractedByGeneratorGoal(Mob pAnimal, double pSpeedModifier) {
 		this.animal = pAnimal;
 		this.speedModifier = pSpeedModifier;
@@ -45,29 +46,27 @@ public class AttractedByGeneratorGoal extends Goal {
 	 * necessary for execution in this method as well.
 	 */
 	public boolean canUse() {
-		if (ChunkHeatData.hasActiveAdjust(animal.level(), animal.blockPosition())) {
-			return false;
-		} else if (ChunkHeatData.hasAdjust(animal.level(), animal.blockPosition())) {
-			return true;
-		}
-		return false;
+		target = findTarget();
+		return target != null;
 	}
 
 	/**
 	 * Returns whether an in-progress EntityAIBase should continue executing
 	 */
 	public boolean canContinueToUse() {
-		if (ChunkHeatData.hasActiveAdjust(animal.level(), animal.blockPosition())) {
+		target = findTarget();
+		if (target == null) {
+			return false;
+		}
+		if (target.distSqr(animal.blockPosition()) <= 4.0D) {
 			inAreaTicks++;
 			if(inAreaTicks>30) {
 				inAreaTicks=0;
 				return false;
 			}
 			return true;
-		} else if (ChunkHeatData.hasAdjust(animal.level(), animal.blockPosition())) {
-			return true;
 		}
-		return false;
+		return true;
 	}
 
 	/**
@@ -76,22 +75,27 @@ public class AttractedByGeneratorGoal extends Goal {
 	 */
 	public void stop() {
 		inAreaTicks=0;
+		target=null;
 	}
 
 	/**
 	 * Keep ticking a continuous task that has already been started
 	 */
 	public void tick() {
-		IHeatArea adjust=ChunkHeatData.getNearestAdjust(animal.level(), animal.blockPosition());
-		if(adjust!=null) {
-			BlockPos pos = adjust.getCenter();
-			if(pos.distSqr(animal.blockPosition())<=4) {
+		if(target!=null) {
+			if(target.distSqr(animal.blockPosition())<=4) {
 				inAreaTicks=30;
 				this.animal.getNavigation().stop();
 			}else
-				this.animal.getNavigation().moveTo(pos.getX(), pos.getY(), pos.getZ(), adjust.isEffective(animal.blockPosition())?this.speedModifier*0.5:this.speedModifier);
+				this.animal.getNavigation().moveTo(
+						target.getX(), target.getY(), target.getZ(), this.speedModifier);
 			
 		}
+	}
+
+	private BlockPos findTarget() {
+		return MinecraftThermalInput.nearestGameplayGenerator(
+				animal.level(), animal.blockPosition(), SEARCH_RADIUS_BLOCKS);
 	}
 
 }

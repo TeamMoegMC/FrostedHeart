@@ -29,7 +29,6 @@ import javax.annotation.Nullable;
 import com.teammoeg.frostedheart.content.climate.data.BiomeTempData;
 import com.teammoeg.frostedheart.content.climate.data.PlantTemperature;
 import com.teammoeg.frostedheart.content.climate.data.PlantTemperature.TemperatureType;
-import com.teammoeg.frostedheart.content.climate.gamedata.chunkheat.ChunkHeatData;
 import com.teammoeg.frostedheart.content.climate.gamedata.climate.WorldClimate;
 import com.teammoeg.frostedheart.content.climate.data.PlantTempData;
 import com.teammoeg.frostedheart.content.climate.data.WorldTempData;
@@ -57,15 +56,13 @@ import net.minecraft.world.level.levelgen.Heightmap;
  *
  * Methods here are cheap, so you can call them tick wise frequently.
  *
- * <p>There are 4 types of temperature:
+ * <p>There are 3 natural inputs plus composed local thermal state:
  *
  * <p>1. Dimension temperature: The temperature of the world defined by datapack. This is fixed on registry.
  *
  * <p>2. Biome temperature: The temperature of the biome defined by datapack. This is fixed on registry.
  *
  * <p>3. Climate temperature: The temperature of the climate. This is dynamic, see {@link WorldClimate}.
- *
- * <p>4. Heat adjusts: The temperature of the heat source or sink. This is dynamic, see {@link ChunkHeatData}.
  *
  * <p>You can access these temperature by calling the methods in this class.
  *
@@ -75,10 +72,9 @@ import net.minecraft.world.level.levelgen.Heightmap;
  *         <li>{@link #dimension(LevelReader)}: Get Dimension temperature.</li>
  *         <li>{@link #biome(LevelReader, BlockPos)}: Get Biome temperature.</li>
  *         <li>{@link #climate(LevelReader)}: Get Climate temperature.</li>
- *         <li>{@link #base(LevelReader, BlockPos)}: Get World temperature without heat adjusts.</li>
- *         <li>{@link #heat(LevelReader, BlockPos)}: Get Heat adjusts temperature.</li>
- *         <li>{@link #block(LevelReader, BlockPos)}: Get World temperature with heat adjusts. USE THIS!</li>
- *         <li>{@link #air(LevelReader, BlockPos)}: Get Air temperature with heat adjusts.</li>
+ *         <li>{@link #base(LevelReader, BlockPos)}: Get the natural world base.</li>
+ *         <li>{@link #block(LevelReader, BlockPos)}: Get composed block-local temperature.</li>
+ *         <li>{@link #air(LevelReader, BlockPos)}: Get composed air temperature.</li>
  *         <li>{@link #isBlizzard(LevelReader)}: Check if it is blizzard.</li>
  *         <li>{@link #wind(LevelReader)}: Get wind speed.</li>
  *         <li>{@link #clear()}: Clear cache.</li>
@@ -373,18 +369,6 @@ public class WorldTemperature {
         return dimension(w) + biome(w, pos) + altitude(w, pos) + climate(w,pos);
     }
 
-    /**
-     * Get heat adjust (from heating device) temperature adjustment.
-     *
-     * Called to get temperature when a world context is available.
-     * on server, will either query capability falling back to cache, or query
-     * provider to generate the data.
-     * This value is dynamic in game.
-     */
-    public static float heat(LevelReader world, BlockPos pos) {
-        return ChunkHeatData.get(world, new ChunkPos(pos)).map(t -> t.getAdditionTemperatureAtBlock(world, pos)).orElse(0f);
-    }
-
     public static float gaussian(LevelReader world, float mean, float std) {
         if (world instanceof Level level) {
             return (float) (level.getRandom().nextGaussian() * std + mean);
@@ -404,12 +388,28 @@ public class WorldTemperature {
      * This value is dynamic in game.
      */
     public static float block(LevelReader world, BlockPos pos) {
+        float natural = naturalBlock(world, pos);
+        return (float) MinecraftThermalInput.gameplayPassiveEnvironment(
+                world, pos, natural);
+    }
+
+    /** Natural block background without local fields or sparse-mesh state. */
+    public static float naturalBlock(LevelReader world, BlockPos pos) {
+        return naturalBlock(world, pos, climate(world, pos));
+    }
+
+    /** Natural block background reusing a caller-cached climate value. */
+    public static float naturalBlock(
+            LevelReader world,
+            BlockPos pos,
+            float climateBase
+    ) {
         return BlockTemperatureModel.blockTemperature(
                 pos.getY(), FHConfig.SERVER.CLIMATE.climateStoneInterfaceLevel.get(),
                 FHConfig.SERVER.CLIMATE.climateSeaLevel.get(),
                 FHConfig.SERVER.CLIMATE.blockMaximumClimateAffection.get().floatValue(),
-                dimension(world), biome(world, pos), altitude(world, pos), climate(world, pos),
-                heat(world, pos),
+                dimension(world), biome(world, pos), altitude(world, pos), climateBase,
+                0.0F,
                 FHConfig.SERVER.CLIMATE.blockHeatApplicationMultiplier.get().floatValue(),
                 FHConfig.SERVER.CLIMATE.absoluteZeroCelsius.get().floatValue());
     }
@@ -426,6 +426,27 @@ public class WorldTemperature {
      * This value is dynamic in game.
      */
     public static float air(LevelReader world, BlockPos pos) {
+        float natural = Math.max(
+                FHConfig.SERVER.CLIMATE.absoluteZeroCelsius.get().floatValue(),
+                naturalAirUnclamped(world, pos) + gaussian(world, 0, 0.3F));
+        double composed = MinecraftThermalInput.gameplayPassiveEnvironment(
+                world, pos, natural);
+        return (float) Math.max(
+                FHConfig.SERVER.CLIMATE.absoluteZeroCelsius.get().floatValue(),
+                composed);
+    }
+
+    /**
+     * Returns the natural air background without local heat fields or random
+     * sampling noise. The thermal runtime uses this as its external boundary.
+     */
+    public static float naturalAir(LevelReader world, BlockPos pos) {
+        return Math.max(
+                FHConfig.SERVER.CLIMATE.absoluteZeroCelsius.get().floatValue(),
+                naturalAirUnclamped(world, pos));
+    }
+
+    private static float naturalAirUnclamped(LevelReader world, BlockPos pos) {
         int y = pos.getY();
 
         float climateAirAffection;
@@ -442,10 +463,8 @@ public class WorldTemperature {
             climateAirAffection = 0.0F;
         }
 
-        float result = dimension(world) + biome(world, pos) + altitude(world, pos) +
-                climate(world,pos) * climateAirAffection + heat(world,pos) + gaussian(world, 0, 0.3F);
-
-        return Math.max(FHConfig.SERVER.CLIMATE.absoluteZeroCelsius.get().floatValue(), result);
+        return dimension(world) + biome(world, pos) + altitude(world, pos) +
+                climate(world,pos) * climateAirAffection;
     }
 
     /**
@@ -568,7 +587,7 @@ public class WorldTemperature {
                 return data.willDie() ? PlantStatus.WILL_DIE : PlantStatus.CAN_SURVIVE;
             }
         }
-        float blockTemp = block(level, pos);
+        float blockTemp = naturalBlock(level, pos);
         blockTemp = (float) MinecraftThermalInput.gameplayCropEnvironment(
                 level, pos, blockTemp);
         if (data.isValidTemperature(TemperatureType.BONEMEAL, blockTemp)) {
@@ -636,7 +655,7 @@ public class WorldTemperature {
                     return data.willDie() ? PlantStatus.WILL_DIE : PlantStatus.CAN_SURVIVE;
                 }
             }
-            float blockTemp = block(level, pos);
+            float blockTemp = naturalBlock(level, pos);
             blockTemp = (float) MinecraftThermalInput.gameplayCropEnvironment(
                     level, pos, blockTemp);
             if (data.isValidTemperature(TemperatureType.BONEMEAL, blockTemp)) {
@@ -647,41 +666,5 @@ public class WorldTemperature {
             }
             return PlantStatus.CAN_SURVIVE;
         }
-    }
-
-
-    //热点代码优化
-    public static float blockWithHeatData(LevelReader world, BlockPos pos, @Nullable ChunkHeatData heatData, float climateBase) {
-        return blockWithHeat(world, pos, heat(world, pos, heatData), climateBase);
-    }
-
-    public static float blockWithHeatQuery(LevelReader world, BlockPos pos, ChunkHeatData.HeatQueryResult heatQuery, float climateBase) {
-        return blockWithHeat(world, pos, heatQuery.additionTemperature(), climateBase);
-    }
-
-    /**
-     * Shared implementation for block temperature calculation when the additional
-     * heat contribution is already known.
-     *
-     * Result = Dimension + Biome + Altitude + Climate + HeatAdjusts.
-     */
-    private static float blockWithHeat(LevelReader world, BlockPos pos, float heat, float climateBase) {
-        return BlockTemperatureModel.blockTemperature(
-                pos.getY(), FHConfig.SERVER.CLIMATE.climateStoneInterfaceLevel.get(),
-                FHConfig.SERVER.CLIMATE.climateSeaLevel.get(),
-                FHConfig.SERVER.CLIMATE.blockMaximumClimateAffection.get().floatValue(),
-                dimension(world), biome(world, pos), altitude(world, pos), climateBase,
-                heat, FHConfig.SERVER.CLIMATE.blockHeatApplicationMultiplier.get().floatValue(),
-                FHConfig.SERVER.CLIMATE.absoluteZeroCelsius.get().floatValue());
-    }
-
-    /**
-     * Fast overload for heat contribution when chunk heat data has already been
-     * fetched by the caller.
-     *
-     * Returns 0 when data is null.
-     */
-    public static float heat(LevelReader world, BlockPos pos, @Nullable ChunkHeatData heatData) {
-        return ChunkHeatData.getAdditionTemperatureAtBlock(heatData, world, pos);
     }
 }

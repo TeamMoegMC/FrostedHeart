@@ -1,21 +1,22 @@
 # 产热设备与热网
 
 - Status: `Current`
-- Last verified: `2026-08-25`
-- Scope: T1/T2 能量塔、局部热区写入、`HeatEndpoint`/`HeatNetwork`、散热器、蒸汽喷泉、穿戴设备
-- Primary code anchors: `GeneratorData`, `GeneratorLogic`, `GeneratorState`, `GeneratorHeatFieldModel`, `HeatingLogic`, `HeatingState`, `T2GeneratorLogic`, `HeatEndpoint`, `HeatNetwork`, `RadiatorLogic`, `RadiatorState`, `FountainTileEntity`, `MinecraftPhysicalSourceProfile`, `MinecraftPhysicalSourceManager`, `MaterialBoundaryRegistry`, `PhaseTransitionRuntime`, `MinecraftPhaseTransitionHandler`, `MinecraftThermalInput.enablePhysicalSources`, `MinecraftThermalInput.sampleMachineEnvironment`, `MinecraftThermalInput.observeRegisteredMachineEnvironment`
+- Last verified: `2026-08-26`
+- Scope: T1/T2 能量塔、物理 source、`HeatEndpoint`/`HeatNetwork`、散热器、蒸汽喷泉、穿戴设备
+- Primary code anchors: `GeneratorData`, `GeneratorLogic`, `GeneratorState`, `GeneratorHeatFieldModel`, `HeatingLogic`, `HeatingState`, `T2GeneratorLogic`, `HeatEndpoint`, `HeatNetwork`, `RadiatorLogic`, `RadiatorState`, `FountainTileEntity`, `MinecraftPhysicalSourceProfile`, `MinecraftPhysicalSourceManager`, `MaterialBoundaryRegistry`, `PhaseTransitionRuntime`, `MinecraftPhaseTransitionHandler`, `MinecraftThermalInput.enablePhysicalSources`
 
-## 1. 三种“热”不是同一种量
+## 1. 各层“热”不是同一种量
 
-当前代码包含三条彼此耦合但单位不同的产热路径：
+当前代码包含数条彼此耦合但单位不同的产热路径：
 
 | Layer | State | Current semantics |
 |---|---|---|
-| 世界热区 | `ChunkHeatData` / `IHeatArea.value` | 直接影响空气或方块温度公式的空间温度控制值 |
+| 物理环境 source | `MinecraftPhysicalSourceProfile.ratedPowerW` / `ThermalSourceTimeline` | 通过 profile 把设备等级映射为 `W`，注入 mesh 与 radiation |
+| 解析控制场 | `MinecraftThermalInput.AnalyticField` | Boss/管理员的非守恒绝对温度或增量，不用于设备 |
 | 热网 | `HeatEndpoint.heat`, `maxIntake`, `maxOutput` | 每 tick 存取的任意 heat unit 缓冲和流量限额 |
 | 玩家设备 | `BodyHeatingCapability` / item heat storage | 直接改变玩家部位 effective temperature，不经过世界热区 |
 
-`GeneratorData.power` 会复制到 T2 的 `HeatEndpoint.heat`，但没有物理单位换算。热网的 `tempLevel` 又独立于 heat 数量传递给散热器，再由散热器换算成摄氏度热区。现有变量名中的 `power` 有时表示库存，有时表示每 tick 输入/输出显示；都不能直接解释为瓦特。
+`GeneratorData.power` 会复制到 T2 的 `HeatEndpoint.heat`，但没有物理单位换算。热网的 `tempLevel` 独立于 heat 数量传递给散热器和喷泉，再由各自 profile 映射为物理 source 功率。现有变量名中的 `power` 有时表示库存，有时表示每 tick 输入/输出显示；只有 profile 输出才是瓦特。
 
 ## 2. 能量塔燃料与等级
 
@@ -43,11 +44,11 @@ max RLevel = 1 + steamLevel
 
 超载每 tick 增加过载进度，同时平时按研究倍率恢复；达到 `240400` 时塔损坏并进入爆炸表现倒计时。该机制与热力学能量无关。
 
-## 3. 能量塔世界热区
+## 3. 能量塔物理 source
 
-`HeatingLogic.tickServer` 每 tick 依次结算燃料、更新等级、检测半径/温度变化并维护球形热区。热区中心是多方块绝对 master 向下移动 `masterYPosInMB`。
+`GeneratorLogic.tickFuel` 每 tick 结算燃料和等级，然后用多方块底部 source position、顶部 exhaust target、`TLevel` 与 active 状态调用 `MinecraftThermalInput.onGeneratorTick`。运行时只保留一个 `MinecraftPhysicalSourceManager.LiveSource`；停机更新 enabled，解体按 source position 移除。
 
-T1/T2 共用 `GeneratorHeatFieldModel`：
+`GeneratorHeatFieldModel` 仍提供 UI/城镇模型的旧半径与温度等级换算：
 
 ```text
 RLevel <= 0 : radius = 0
@@ -57,11 +58,11 @@ RLevel > 1 : radius = floor(baseRadius + (RLevel - 1) * radiusPerLevel)
 heatFieldTemperature = floor(TLevel * temperaturePerLevelCelsius)
 ```
 
-默认 `baseRadius=16`、`radiusPerLevel=8`、`temperaturePerLevelCelsius=10`。因此等级 `1` 产生半径 `16`、热区值 `10degC` 的整数格点球；等级 `2` 产生半径 `24`、热区值 `20degC`。只有半径和温度都大于零时写入热区，否则删除。
+默认 `baseRadius=16`、`radiusPerLevel=8`、`temperaturePerLevelCelsius=10`，但这些值不再创建世界恒温球。当前生产环境 source 为 `10,000 W * TLevel`：`70%` 注入 exhaust 空气、`10%` 进入 internal heat、`20%` 作为 radiation channel。
 
-热区内部值恒定，没有径向衰减，也不消耗 `GeneratorData.power`。T1 即使没有热网也直接维护该球形热区。T2 在此基础上额外提供热网端点。
+T1 即使没有热网也能由燃料状态报告物理 source；T2 额外提供热网端点。`RLevel` 当前仍影响 UI/城镇范围模型，但不复制场或扩大 source registry；玩家可见传播由 mesh、FarField 和固定上限的 `16` 格直接辐射查询决定。
 
-城镇批处理调用 `GeneratorData.townTick` 时会按城镇更新间隔批量推进同一燃料/等级状态，并直接维护同一个球形热区；`townProcessedTicks` 暂时阻止方块 tick 重复推进和重复写场。
+城镇批处理调用 `GeneratorData.townTick` 时按城镇更新间隔批量推进同一燃料/等级状态；它不直接写世界温度。已装配多方块的正常 server tick 是物理 source 的唯一设备报告路径。
 
 ## 4. HeatEndpoint 状态
 
@@ -120,7 +121,7 @@ HeatingState range/temp levels = GeneratorData R/T levels
 
 `GeneratorData.tickFuelProcess` 又使用 `lastPower` 计算当前补充需求并在方法末尾重置部分状态。因而塔内 `power`、端点缓冲、网络先取后写和城镇批处理存在明确的 tick 顺序耦合；不能只凭字段名把它简化成稳定的“输入功率”。现有 [town/town-model.md](../town/town-model.md) 也把 T2 时序夹具列为单独验证边界。
 
-## 7. 热网到世界热区的消费者
+## 7. 热网到物理 source 的消费者
 
 ### 7.1 散热器
 
@@ -129,32 +130,17 @@ HeatingState range/temp levels = GeneratorData R/T levels
 - 成功时 active，`tempLevel=rangeLevel=endpoint.tempLevel`；
 - 失败时 inactive，两个等级归零。
 
-散热器继承 `HeatingLogic`，所以把等级转换为球形世界热区：
-
-```text
-radius(level <= 1) = floor(8 * level)
-radius(level > 1)  = floor(8 + 8 * (level - 1))
-temperature        = floor(10 * level)
-```
-
-等级 `1` 即半径 `8`、热区值 `10degC`。虽然 `RadiatorState` 仍定义上下范围方法，当前 `HeatingLogic` 已改用球体而不是柱体，这两个垂直范围不参与世界场。
+散热器成功扣热时直接报告 `4,000 W * tempLevel` 的 physical source：`80%` 向顶部空气对流、`10%` internal heat、`10%` radiation；扣热失败时报告 disabled。`RadiatorState` 的旧 range/up/down 方法只保留显示与状态兼容，不参与环境 source 定义。
 
 ### 7.2 蒸汽喷泉
 
-`FountainTileEntity` 使用 `HeatEndpoint.consumer(10,1)`。补充阶段从端点请求热，把实际值乘 `0.8` 存入自己的 `power`；工作时每 tick 消耗 `1 power`。它创建柱形 `ChunkHeatData`：
+`FountainTileEntity` 使用 `HeatEndpoint.consumer(10,1)`。补充阶段从端点请求热，把实际值乘 `0.8` 存入自己的 `power`；工作时每 tick 消耗 `1 power`，并从喷嘴顶部报告 `2,000 W * tempLevel` 的 physical source：`90%` 空气对流、`10%` radiation。喷泉停止或移除时按方块位置移除 source。
 
-```text
-radius = structure range
-upper = nozzle height + 1
-lower = 1
-temperature = floor(endpoint.tempLevel) * 15
-```
-
-喷泉同时给水中的玩家施加 warmth/sauna 相邻效果。其世界热区和玩家效果是两条并行路径。
+喷泉同时给水中的玩家施加 warmth/sauna 相邻效果。物理环境 source 和玩家效果是两条并行路径。
 
 ### 7.3 其他热网设备
 
-充能器、热孵化器、创意热源和部分城镇建筑也使用 `HeatEndpoint`，但并非都创建 `ChunkHeatData`。只有显式调用 `ChunkHeatData.add*TempAdjust` 或继承当前 `HeatingLogic` 的设备才改变世界温度。
+充能器、热孵化器、创意热源和部分城镇建筑也使用 `HeatEndpoint`，但不会自动成为环境 source。当前只有 Campfire、Generator、散热器和喷泉显式接入 `MinecraftPhysicalSourceManager`。
 
 ## 8. 穿戴设备路径
 
@@ -168,18 +154,20 @@ item storage/fuel -> addEffectiveTemperature(bodyPart, delta)
 
 ## 9. 玩家测试路径中的物理 source
 
-新热学 runtime 有两种冻结的 `POWER_SOURCE` profile。首次玩家温度查询创建 runtime 时会调用 `MinecraftThermalInput.enablePhysicalSources(64)`，所以它们参与当前玩家空气与辐射实机测试；本页第 2..7 节的 legacy 热网、HU 缓冲和非玩家消费者行为仍未替换：
+新热学 runtime 有四种 production `POWER_SOURCE` profile。首次玩家温度查询创建 runtime 时会调用 `MinecraftThermalInput.enablePhysicalSources(64)`；热网 HU 缓冲仍保留原玩法语义，但环境输出只走下列物理 profile：
 
 | Profile | SI power | Ports | 缺失端口 |
 |---|---:|---|---|
 | Campfire | `8,000 W` | `6,400 W (80%)` 向上表面空气对流；`1,600 W (20%)` radiation declared loss | 堵塞对流进入 declared loss；unloaded/unresolved 进入 `DEGRADED_LOSS` |
 | Generator | `10,000 W * TLevel` | `70%` exhaust 空气对流；`10%` internal heat；`20%` radiation declared loss | 堵塞 exhaust 进入 internal heat；unloaded/unresolved 进入 `DEGRADED_LOSS` |
+| Radiator | `4,000 W * tempLevel` | `80%` 顶部空气对流；`10%` internal heat；`10%` radiation | 堵塞端口进入 internal heat |
+| Fountain | `2,000 W * tempLevel` | `90%` 喷嘴顶部空气对流；`10%` radiation | 缺失端口作为 explicit loss |
 
-这里的 Generator 只读取 `GeneratorState.getTempLevel()` 和活动状态来形成独立 SI profile；它不把 `GeneratorData.power`、`HeatEndpoint.heat` 或现有 heat unit 重新解释为 J/W。Phase J 用同一个 source lifecycle 和 radiation port share 建立只读 receiver index；source ledger 中这部分仍只结算一次 declared ambient loss，不会因玩家采样次数再次扣除或注入。
+这些 adapter 只读取设备已有温度等级和活动状态；不把 `GeneratorData.power`、`HeatEndpoint.heat` 或现有 heat unit 重新解释为 J/W。直接辐射用同一个 source lifecycle 和 radiation port share 建立只读 receiver index；source ledger 中功率仍只结算一次，不会因玩家采样次数再次扣除或注入。
 
 空气端口按声明的 block face 解析 published topology 中唯一接触的 air component，不使用最近 cell。无空气是 blocked；包含 unresolved topology 或一个面接触多个无法由单端口唯一表达的 component 时走 degraded loss。source 自己可在已加载 chunk 内申请有硬上限的 cold Page interest；预算不足不会积累以后突然释放的 energy debt。Page mutation、unload 或 topology replacement 会先在旧 binding 精确结算到事件 tick，再切换 sink/binding；post-preapply 安装竞争则完成一个无 transport 的 unresolved epoch，下一 frame 重建。
 
-Campfire 的 `8,000 W` 是恢复密闭小屋取暖体验的暂定玩法校准值，不改变 `80/20` 功率分配、遮挡、能量记账或相变合同。Campfire 通过放置/section mutation/chunk block-entity load 观察，Generator 由 `GeneratorLogic` tick 直接报告并在 multiblock disassemble 时移除。玩家首次温度查询前这些 hook 仍只有一次 active-input/null 检查；runtime 建立后它们只更新这一份 physical source ownership，不产生第二份新架构 source ledger。
+Campfire 的 `8,000 W` 是恢复密闭小屋取暖体验的暂定玩法校准值。Campfire 通过放置/section mutation/chunk block-entity load 观察；三种机器由各自 tick 直接报告并在 block entity/multiblock 移除时清理。玩家首次温度查询前这些 hook 只有一次 active-input/null 检查；runtime 建立后只更新这一份 physical source ownership。
 
 ## 10. 材料边界与物态转换
 
@@ -202,7 +190,7 @@ phase reservoir 只吸收高于 transition temperature 的空气显热，达到 
 
 ## 11. 玩家直接辐射
 
-首次玩家温度查询建立 runtime 后会以有界生产参数调用 `MinecraftThermalInput.tryEnableRadiation`。Campfire 与 Generator 的 radiation profile 都是总功率的 `20%`，分别从冻结的方块内 origin 发出，V1 directional upper bound 为 `1`。`RadiationService.samplePlayer` 返回 feet/torso/head 三个确定 receiver point 的平均 radiant flux，单位为 `W/m²`：
+首次玩家温度查询建立 runtime 后会以有界生产参数调用 `MinecraftThermalInput.tryEnableRadiation`。四种 source 的 radiation share 分别为 Campfire/Generator `20%`、Radiator/Fountain `10%`，均从 profile 冻结 origin 发出，V1 directional upper bound 为 `1`。`RadiationService.samplePlayer` 返回 feet/torso/head 三个确定 receiver point 的平均 radiant flux，单位为 `W/m²`：
 
 ```text
 q = Prad / (4 * pi * max(r², rMin²))
@@ -212,23 +200,20 @@ q = Prad / (4 * pi * max(r², rMin²))
 
 该查询只读取 source 的当前辐射功率，重复调用不改变 `ThermalSourceTimeline`、source accumulator 或 declared-loss ledger。`TemperatureComputation.radiantBodyTemperatureDelta` 将辐照度乘 `0.7 m²` 有效投影面积、`0.8` 吸收率和本轮秒数，再除以 `5,000 J/K` 有效热容，结果进入原五部位体温链；同一 flux 另除以 `6 W/m²/K` 形成 `totalFeelTemp` 的等效辐射体感，不重复增加身体能量。材料吸收/融雪 radiation 没有实现，也不会由 player query 次数间接发生；这些 profile 与身体换算仍需多人 workload 和玩法校准。
 
-## 12. Dormant machine environment shadow
+## 12. 普通机器环境温度接入状态
 
 机器不会因为存在 BlockEntity、热网端点或每 tick 运行就自动成为 thermal node。当前冻结角色为：普通机器 `NONE`，显式环境敏感机器 `QUERY_ONLY`，废热设备 `POWER_SOURCE`，自带过热储能的设备才可能是 `MACHINE_CAPACITY`，固定环境条件才是 `BOUNDARY`。Generator 已由第 9 节的 concrete `POWER_SOURCE` adapter 覆盖，不能再注册为 `QUERY_ONLY` 并重复观察。
 
-`MinecraftThermalInput.sampleMachineEnvironment` 只读取调用者明确给出的 receiver point 所在既有 Page/publication。它与 player query 复用同一个 exact mixed-Brick air lookup，但不自动执行 player radiation，也不扫描机器、读取 BlockEntity、创建 Page/Brick/Cell/Interest、修改 `ThermalSourceTimeline`，或写 `HeatEndpoint`/`HeatNetwork`。无 Page、无 air component、geometry/publication stale 或 publication miss 时返回 flags，由现有机器逻辑继续使用自己的 legacy fallback。
-
-当前源码没有一个普通机器实际读取 `WorldTemperature.air/block`，所以本阶段只提供 `observeRegisteredMachineEnvironment` 这一显式 shadow 接口和 `MachineShadowSnapshot`，没有接到无关机器上。将来出现真实环境敏感 consumer 时，应在它原有 cadence 上调用并传入 legacy ambient result；在 calibration gate 通过前仍不得让 shadow result 掌权。
+当前源码没有普通机器实际读取 `WorldTemperature.air/block`，因此不保留没有调用者的 machine query、observer 或比较快照。将来出现真实环境敏感 consumer 时，应在该机器已有 cadence 和明确 receiver point 上直接增加窄查询入口，并在 Page/publication miss 时使用 natural backend；不能扫描全部 BlockEntity，也不能把 Generator 重复注册为 `QUERY_ONLY`。
 
 ## 13. 当前建模边界
 
 后续增加物理功率、热容或对流前，需要保留或显式迁移以下现有玩法事实：
 
-- 热网 heat 数量决定设备能运行多久，`tempLevel` 独立决定生成热区的温度和半径；
+- 热网 heat 数量决定设备能运行多久，`tempLevel` 独立决定设备 profile 的 source 功率；
 - 多 provider 温度等级取最大值，低温大流量不会稀释高温小流量；
-- 热区是无衰减的恒温控制场，不随覆盖体积增加而提高消耗；
 - 热网没有管损，距离只影响排序；
-- T1 直接生成世界热区，不需要热网 power；
+- T1 直接报告物理 source，不需要热网 power；
 - 玩家设备直接改 effective temperature，与世界产热和热网库存相互独立。
 
 因此，现有 `heat`、`power`、`temperature` 字段不能在不定义迁移规则的情况下合并为同一个守恒量。

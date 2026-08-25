@@ -35,7 +35,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-/** Main-thread producer for the two frozen Minecraft physical source profiles. */
+/** Main-thread producer for the Minecraft physical source profiles. */
 public final class MinecraftPhysicalSourceManager implements AutoCloseable {
     private final MinecraftThermalInput input;
     private final ThermalSourceTimeline timeline;
@@ -88,6 +88,38 @@ public final class MinecraftPhysicalSourceManager implements AutoCloseable {
                 active);
     }
 
+    public void observeFountain(
+            BlockPos sourcePosition,
+            BlockPos steamTarget,
+            double thermalLevel,
+            boolean active
+    ) {
+        requireOpen();
+        observe(
+                sourcePosition.asLong(),
+                sourcePosition,
+                steamTarget,
+                MinecraftPhysicalSourceProfile.FOUNTAIN,
+                MinecraftPhysicalSourceProfile.FOUNTAIN.powerForLevel(thermalLevel),
+                active);
+    }
+
+    public void observeRadiator(
+            BlockPos sourcePosition,
+            BlockPos exhaustTarget,
+            double thermalLevel,
+            boolean active
+    ) {
+        requireOpen();
+        observe(
+                sourcePosition.asLong(),
+                sourcePosition,
+                exhaustTarget,
+                MinecraftPhysicalSourceProfile.RADIATOR,
+                MinecraftPhysicalSourceProfile.RADIATOR.powerForLevel(thermalLevel),
+                active);
+    }
+
     public void removeSource(BlockPos sourcePosition) {
         requireOpen();
         LiveSource source = sources.get(sourcePosition.asLong());
@@ -95,6 +127,7 @@ public final class MinecraftPhysicalSourceManager implements AutoCloseable {
             source.present = false;
             input.removeRadiationSource(source.sourceId);
             dirtySources.add(source.sourceId);
+            input.requestUrgentSolve();
         }
     }
 
@@ -286,6 +319,66 @@ public final class MinecraftPhysicalSourceManager implements AutoCloseable {
         return sources.size();
     }
 
+    BlockPos nearestEnabledGenerator(BlockPos position, double maximumDistanceSqr) {
+        requireOpen();
+        BlockPos nearest = null;
+        double nearestDistanceSqr = maximumDistanceSqr;
+        for (LiveSource source : sources.values()) {
+            if (!source.present
+                    || !source.desiredEnabled
+                    || source.desiredPowerW <= 0.0D
+                    || source.profile != MinecraftPhysicalSourceProfile.GENERATOR) {
+                continue;
+            }
+            double distanceSqr = position.distSqr(source.sourcePosition);
+            if (distanceSqr <= nearestDistanceSqr) {
+                nearestDistanceSqr = distanceSqr;
+                nearest = source.sourcePosition;
+            }
+        }
+        return nearest;
+    }
+
+    int appendInfraredFields(
+            float[] output,
+            int count,
+            int maximumFields,
+            int minimumX,
+            int maximumX,
+            int minimumZ,
+            int maximumZ
+    ) {
+        requireOpen();
+        for (LiveSource source : sources.values()) {
+            if (count >= maximumFields) {
+                break;
+            }
+            BlockPos position = source.sourcePosition;
+            if (!source.present
+                    || !source.desiredEnabled
+                    || source.desiredPowerW <= 0.0D
+                    || position.getX() < minimumX
+                    || position.getX() > maximumX
+                    || position.getZ() < minimumZ
+                    || position.getZ() > maximumZ) {
+                continue;
+            }
+            int offset = count * 8;
+            output[offset] = position.getX() + 0.5F;
+            output[offset + 1] = position.getY() + 0.5F;
+            output[offset + 2] = position.getZ() + 0.5F;
+            output[offset + 3] = 2.0F;
+            output[offset + 4] = (float) Math.min(
+                    20.0D,
+                    10.0D * source.desiredPowerW / source.profile.ratedPowerW());
+            output[offset + 5] = 16.0F;
+            output[offset + 6] = 0.0F;
+            output[offset + 7] = 0.0F;
+            count++;
+        }
+        return count;
+    }
+
     void replayRadiationSources() {
         requireOpen();
         for (LiveSource source : sources.values()) {
@@ -347,6 +440,7 @@ public final class MinecraftPhysicalSourceManager implements AutoCloseable {
         if (changed) {
             syncRadiationSource(source);
             dirtySources.add(sourceId);
+            input.requestUrgentSolve();
         }
     }
 

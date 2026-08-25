@@ -21,7 +21,6 @@ package com.teammoeg.frostedheart.content.climate.block.generator;
 
 import com.teammoeg.chorda.dataholders.SpecialDataHolder;
 import com.teammoeg.chorda.multiblock.CMultiblockHelper;
-import com.teammoeg.frostedheart.content.climate.gamedata.chunkheat.ChunkHeatData;
 
 import blusunrize.immersiveengineering.api.multiblocks.blocks.component.IClientTickableComponent;
 import blusunrize.immersiveengineering.api.multiblocks.blocks.component.IServerTickableComponent;
@@ -61,24 +60,6 @@ public abstract class HeatingLogic<T extends HeatingLogic<T, ?>, R extends Heati
         if (activeBeforeTick != isActive) {
             state.setActive(isActive);
             this.onActiveStateChange(ctx, isActive);
-        }
-
-        // Update the heat area
-        if (state.shouldUpdateAdjust()) {
-            BlockPos pos =  CMultiblockHelper.getMultiblock(ctx).masterPosInMB();
-            int masterYPosInMB = pos.getY();
-//            FHMain.LOGGER.debug("masterPosInMB " + pos);
-            if (state.getRadius() > 0 && state.getTempMod() > 0) {
-//                ChunkHeatData.addPillarTempAdjust(ctx.getLevel().getRawLevel(), CMultiblockHelper.getAbsoluteMaster(ctx), state.getRadius(), state.getUpwardRange(),
-//                        state.getDownwardRange(), state.getTempMod());
-                ChunkHeatData.addSphereTempAdjust(ctx.getLevel().getRawLevel(), CMultiblockHelper.getAbsoluteMaster(ctx).below(masterYPosInMB), state.getRadius(), state.getTempMod());
-            } else {
-                ChunkHeatData.removeTempAdjust(ctx.getLevel().getRawLevel(), CMultiblockHelper.getAbsoluteMaster(ctx).below(masterYPosInMB));
-            }
-        }
-        // If active, mark for update
-        else if (isActive) {
-            state.shouldUpdateAdjust();
         }
 
         // Mark the master dirty

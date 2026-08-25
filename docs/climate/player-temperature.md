@@ -1,9 +1,9 @@
 # 玩家体温系统
 
 - Status: `Current`
-- Last verified: `2026-08-25`
+- Last verified: `2026-08-26`
 - Scope: 玩家周围方块采样、环境温度、衣物与介质换热、分部位体温、设备/食物、状态效果、持久化和同步
-- Primary code anchors: `TemperatureUpdate`, `TemperatureComputation`, `TemperatureThreadingPool`, `SurroundingTemperatureSimulator`, `CachedBlockTempInfo`, `PlayerTemperatureData`, `BodyPartData`, `ClothData`, `HeatingDeviceContext`, `BodyHeatingCapability`, `FoodTemperatureHandler`, `FHBodyDataSyncPacket`, `FrostedHud.renderTemperature`, `MinecraftThermalInput.gameplayPlayerEnvironment`, `MinecraftThermalInput.samplePlayerEnvironment`, `MinecraftThermalInput.MutableEnvironmentSample`, `MinecraftThermalInput.PlayerShadowSnapshot`, `MinecraftThermalInput.ShadowRuntimeSnapshot`
+- Primary code anchors: `TemperatureUpdate`, `TemperatureComputation`, `TemperatureThreadingPool`, `SurroundingTemperatureSimulator`, `CachedBlockTempInfo`, `PlayerTemperatureData`, `BodyPartData`, `ClothData`, `HeatingDeviceContext`, `BodyHeatingCapability`, `FoodTemperatureHandler`, `FHBodyDataSyncPacket`, `FrostedHud.renderTemperature`, `MinecraftThermalInput.gameplayPlayerEnvironment`, `MinecraftThermalInput.samplePlayerEnvironment`, `MinecraftThermalInput.MutableEnvironmentSample`
 
 ## 1. 数值基准
 
@@ -158,7 +158,7 @@ heatExchange = (effective - body) * unit / heatExchangeTempConstant
 | `hard` | `0.5` |
 | `hardcore` | `0` |
 
-头、躯干和腿可通过消耗饱食度/饮水能力进行额外恒温，手脚不能。设备的 `BodyHeatingCapability.tickHeating` 在环境交换后直接修改各部位 effective temperature；手炉、加热背心、加热垫、蒸汽瓶等都走这条接口，不创建世界热区。
+头、躯干和腿可通过消耗饱食度/饮水能力进行额外恒温，手脚不能。设备的 `BodyHeatingCapability.tickHeating` 在环境交换后直接修改各部位 effective temperature；手炉、加热背心、加热垫、蒸汽瓶等都走这条接口，不创建 analytic field 或 physical environment source。
 
 五个部位及权重如下：
 
@@ -213,9 +213,9 @@ heatExchange = (effective - body) * unit / heatExchangeTempConstant
 
 ## 10. 新热学运行时的玩家空气与辐射接线
 
-`TemperatureUpdate.updateTemperature` 现在通过 `MinecraftThermalInput.gameplayPlayerEnvironment` 使用新运行时已经发布的空气温度和同一次查询得到的直接辐射，并继续复用原有环境属性、衣物、五部位体温、效果、伤害和同步链。首次查询会为该 `ServerLevel` 建立现有 runtime，并 capture 玩家眼睛所在 section；首个 publication 尚未完成、Page 无空气或 publication 失效时才返回本次 `TemperatureComputation.environment` 旧空气值。`PlayerShadowSnapshot` 仍记录两种空气温度的差异。为避免双重采样，旧 `SurroundingTemperatureSimulator` 的玩家调度块暂时保留为注释。
+`TemperatureUpdate.updateTemperature` 通过 `MinecraftThermalInput.gameplayPlayerEnvironment` 使用运行时已经发布的空气温度、analytic control fields 和同一次查询得到的直接辐射，并继续复用环境属性、衣物、五部位体温、效果、伤害和同步链。首次查询会为该 `ServerLevel` 建立 runtime，并 capture 玩家眼睛所在 section；首个 publication 尚未完成、Page 无空气或 publication 失效时返回本次 `WorldTemperature.naturalAir` 值，再合成 analytic field。运行时不保留双后端误差快照，`SurroundingTemperatureSimulator` 不再参与玩家调度。
 
-`samplePlayerEnvironment` 本身仍是 main-thread、caller-owned mutable result 路径。空气温度取已 admission 的 Page：规则 Brick 直接使用 coverage ref，mixed Brick 按 `4x4x4` microcell 解析真实 component；随后通过 `DimensionThermalRuntime.tryReadPublishedCell` 同时校验 dimension generation、geometry revision、topology generation 和 publication seqlock。默认玩家查询拒绝超过 `40` ticks 的 publication。只有外层 `gameplayPlayerEnvironment` 会在玩家 section 缺失时对已加载 chunk 做一次完整 Page capture；底层 sample、机器、作物和城镇 query 仍不会加载区块或自动 admission。
+`samplePlayerEnvironment` 本身仍是 main-thread、caller-owned mutable result 路径。空气温度取已 admission 的 Page：规则 Brick 直接使用 coverage ref，mixed Brick 按 `4x4x4` microcell 解析真实 component；随后通过 `DimensionThermalRuntime.tryReadPublishedCell` 同时校验 dimension generation、geometry revision、topology generation 和 publication seqlock。默认玩家查询拒绝超过 `40` ticks 的 publication。只有外层 `gameplayPlayerEnvironment` 会在玩家 section 缺失时对已加载 chunk 做一次完整 Page capture；底层 player/crop/town sample 不会加载区块或自动 admission。
 
 HUD 不是另一个 thermal query consumer。服务端仍由 `TemperatureUpdate` 更新 `PlayerTemperatureData`，所以新空气温度会沿原 `FHBodyDataSyncPacket` 进入客户端；温度球读取 `getTotalFeelTemp()`，预报栏读取 `getEnvTemp()`，冷热条与遮罩读取客户端平滑后的核心体温。HUD 不会额外查询一次 thermal runtime。
 

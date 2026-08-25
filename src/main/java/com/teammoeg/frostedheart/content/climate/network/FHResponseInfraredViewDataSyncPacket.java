@@ -19,13 +19,11 @@
 
 package com.teammoeg.frostedheart.content.climate.network;
 
-import java.util.List;
 import java.util.function.Supplier;
 
 import com.lowdragmc.lowdraglib.LDLib;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.teammoeg.chorda.network.CMessage;
-import com.teammoeg.frostedheart.content.climate.gamedata.chunkheat.IHeatArea;
 import com.teammoeg.frostedheart.content.climate.render.InfraredViewRenderer;
 
 import net.minecraft.network.FriendlyByteBuf;
@@ -37,16 +35,11 @@ public class FHResponseInfraredViewDataSyncPacket implements CMessage {
     private final ChunkPos chunkPos;
     private final int[] data;
 
-    public FHResponseInfraredViewDataSyncPacket(ChunkPos chunkPos, List<IHeatArea> heatAreas) {
+    public FHResponseInfraredViewDataSyncPacket(ChunkPos chunkPos, float[] fields) {
         this.chunkPos = chunkPos;
-        data = new int[heatAreas.size() * 8];
-        var index = 0;
-        for (var heatArea: heatAreas) {
-            for (float value : heatArea.getStructData()) {
-                // we convert float to int for better serialization
-                int intBits = Float.floatToIntBits(value);
-                data[index++] = intBits;
-            }
+        data = new int[fields.length];
+        for (int index = 0; index < fields.length; index++) {
+            data[index] = Float.floatToIntBits(fields[index]);
         }
     }
 

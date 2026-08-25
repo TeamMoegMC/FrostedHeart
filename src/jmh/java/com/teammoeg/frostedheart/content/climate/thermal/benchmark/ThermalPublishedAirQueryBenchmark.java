@@ -26,7 +26,7 @@ import java.util.concurrent.TimeUnit;
 /** Measures one sequential main-thread-style batch; scores are per batch. */
 @BenchmarkMode(Mode.SampleTime)
 @OutputTimeUnit(TimeUnit.MICROSECONDS)
-public class ThermalShadowQueryBenchmark {
+public class ThermalPublishedAirQueryBenchmark {
     @State(Scope.Thread)
     public static class QueryState {
         @Param({"1", "10", "50", "100"})
@@ -35,11 +35,11 @@ public class ThermalShadowQueryBenchmark {
         @Param({"shared_page", "distributed_pages"})
         public String layout;
 
-        private ThermalShadowQueryFixtures.Fixture fixture;
+        private ThermalPublishedAirQueryFixtures.Fixture fixture;
 
         @Setup(Level.Trial)
         public void setup() {
-            fixture = ThermalShadowQueryFixtures.create(receiverCount, layout);
+            fixture = ThermalPublishedAirQueryFixtures.create(receiverCount, layout);
             fixture.queryBatch();
         }
 

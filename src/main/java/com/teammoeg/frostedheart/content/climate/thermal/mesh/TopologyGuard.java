@@ -50,16 +50,10 @@ public final class TopologyGuard {
             boolean loadedOnlyEvidence,
             boolean naturalEnvironment,
             boolean skyExposed,
-            boolean coarseOpeningKnown,
-            int localOpenDirectionCount,
             FarFieldProfileRegistry.Key profileKey
     ) {
         public Evidence {
             Objects.requireNonNull(surfaceKind, "surfaceKind");
-            if (localOpenDirectionCount < 0 || localOpenDirectionCount > 6) {
-                throw new IllegalArgumentException(
-                        "localOpenDirectionCount must be in [0, 6]");
-            }
             if (surfaceKind == SurfaceKind.OPEN && profileKey == null) {
                 throw new IllegalArgumentException("open evidence requires a profile key");
             }
@@ -71,7 +65,7 @@ public final class TopologyGuard {
         public static Evidence material() {
             return new Evidence(
                     SurfaceKind.MATERIAL, true, true, false,
-                    false, false, 0, null);
+                    false, null);
         }
 
         public static Evidence open(
@@ -79,8 +73,6 @@ public final class TopologyGuard {
                 boolean loadedOnlyEvidence,
                 boolean naturalEnvironment,
                 boolean skyExposed,
-                boolean coarseOpeningKnown,
-                int localOpenDirectionCount,
                 FarFieldProfileRegistry.Key profileKey
         ) {
             return new Evidence(
@@ -89,16 +81,13 @@ public final class TopologyGuard {
                     loadedOnlyEvidence,
                     naturalEnvironment,
                     skyExposed,
-                    coarseOpeningKnown,
-                    localOpenDirectionCount,
                     profileKey);
         }
 
         private boolean hasCheapOutdoorProof() {
             return loadedOnlyEvidence
                     && naturalEnvironment
-                    && (skyExposed
-                    || (coarseOpeningKnown && localOpenDirectionCount >= 2));
+                    && skyExposed;
         }
     }
 
@@ -138,12 +127,24 @@ public final class TopologyGuard {
                 int cell,
                 double naturalTemperatureC
         ) {
+            return boundaryOperation(cell, naturalTemperatureC, 1.0D);
+        }
+
+        /** Distributes one calibrated aggregate impedance over its open area. */
+        public Optional<ThermalSweep.BoundaryOperation> boundaryOperation(
+                int cell,
+                double naturalTemperatureC,
+                double conductanceScale
+        ) {
             if (cell < 0) {
                 throw new IllegalArgumentException("cell must be non-negative");
             }
             requireFinite("naturalTemperatureC", naturalTemperatureC);
+            requireNonNegativeFinite("conductanceScale", conductanceScale);
             return farFieldProfile.map(profile -> new ThermalSweep.BoundaryOperation(
-                    cell, naturalTemperatureC, profile.conductanceWPerK()));
+                    cell,
+                    naturalTemperatureC,
+                    profile.conductanceWPerK() * conductanceScale));
         }
     }
 

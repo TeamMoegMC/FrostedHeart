@@ -712,56 +712,6 @@ tasks.named('thermalPhaseARetainedHeap').configure {
     mustRunAfter tasks.named('thermalPhaseAJfr')
 }
 
-tasks.register('thermalLegacyJmh', JavaExec) {
-    group = 'verification'
-    description = 'Runs the Phase 0b legacy thermal microbaseline with allocation profiling.'
-    dependsOn tasks.named('jmhCompileGeneratedClasses')
-    javaLauncher = thermalBenchmarkJava
-    classpath = thermalJmhRuntimeClasspath
-    mainClass = 'org.openjdk.jmh.Main'
-    args 'com.teammoeg.frostedheart.content.climate.thermal.benchmark.(LegacyChunkHeatBenchmark|ThermalReferenceCalibrationBenchmark|ComponentBrickCompilerBenchmark).*',
-            '-wi', '3', '-i', '5', '-w', '1s', '-r', '1s', '-f', '1',
-            '-prof', 'gc', '-foe', 'true',
-            '-jvmArgs', '-Xms2G -Xmx2G -XX:+UseG1GC',
-            '-rf', 'json', '-rff', file("${thermalPhase0bReportDir}/legacy-jmh.json").absolutePath,
-            '-o', file("${thermalPhase0bReportDir}/legacy-jmh.txt").absolutePath
-    doFirst {
-        thermalPhase0bReportDir.mkdirs()
-        [file("${thermalPhase0bReportDir}/legacy-jmh.json"),
-         file("${thermalPhase0bReportDir}/legacy-jmh.txt")].each { output ->
-            if (output.exists() && !output.delete()) {
-                throw new GradleException("Could not replace generated benchmark artifact: ${output}")
-            }
-        }
-    }
-    doLast {
-        def results = new groovy.json.JsonSlurper().parse(
-                file("${thermalPhase0bReportDir}/legacy-jmh.json"))
-        def resultKeys = results.collect { result ->
-            def benchmarkName = result.benchmark.tokenize('.').last()
-            def adjusterCount = result.params?.adjusterCount ?: '-'
-            "${benchmarkName}:${adjusterCount}"
-        }.toSet()
-        def requiredKeys = [
-                'queryEmpty:-',
-                'queryHit:1', 'queryHit:10', 'queryHit:100',
-                'queryMiss:1', 'queryMiss:10', 'queryMiss:100'
-        ] as Set
-        def missingKeys = requiredKeys - resultKeys
-        if (!missingKeys.isEmpty()) {
-            throw new GradleException("Thermal JMH result is incomplete; missing ${missingKeys}")
-        }
-        def invalidScores = results.findAll { result ->
-            def score = result.primaryMetric?.score
-            !(score instanceof Number) || !Double.isFinite(score.doubleValue())
-        }
-        if (!invalidScores.isEmpty()) {
-            throw new GradleException('Thermal JMH result contains non-finite primary scores')
-        }
-    }
-    outputs.upToDateWhen { false }
-}
-
 tasks.named('jmh').configure {
     group = 'verification'
     description = 'Delegates to the Forge-classpath Phase 0b legacy baseline bundle.'
@@ -825,35 +775,6 @@ tasks.register('thermalLegacyPlayerSamplingJmh', JavaExec) {
     outputs.upToDateWhen { false }
 }
 
-def thermalJfrFile = file("${thermalPhase0bReportDir}/legacy-query-diagnostic.jfr")
-def thermalJfrResultFile = file("${thermalPhase0bReportDir}/legacy-query-jfr-jmh.json")
-def thermalJfrHumanFile = file("${thermalPhase0bReportDir}/legacy-query-jfr-jmh.txt")
-
-tasks.register('thermalLegacyJfr', JavaExec) {
-    group = 'verification'
-    description = 'Captures a diagnostic JFR for populated legacy ChunkHeatData queries.'
-    dependsOn tasks.named('jmhCompileGeneratedClasses')
-    javaLauncher = thermalBenchmarkJava
-    classpath = thermalJmhRuntimeClasspath
-    mainClass = 'org.openjdk.jmh.Main'
-    jvmArgs '-Xms2G', '-Xmx2G', '-XX:+UseG1GC',
-            "-XX:StartFlightRecording=filename=${thermalJfrFile.absolutePath.replace('\\', '/')},settings=profile,dumponexit=true"
-    args 'com.teammoeg.frostedheart.content.climate.thermal.benchmark.LegacyChunkHeatBenchmark.query(Hit|Miss)',
-            '-wi', '2', '-i', '3', '-w', '500ms', '-r', '500ms', '-f', '0',
-            '-p', 'adjusterCount=10,100', '-prof', 'gc', '-foe', 'true',
-            '-rf', 'json', '-rff', thermalJfrResultFile.absolutePath,
-            '-o', thermalJfrHumanFile.absolutePath
-    doFirst {
-        thermalPhase0bReportDir.mkdirs()
-        [thermalJfrFile, thermalJfrResultFile, thermalJfrHumanFile].each { output ->
-            if (output.exists() && !output.delete()) {
-                throw new GradleException("Could not replace generated benchmark artifact: ${output}")
-            }
-        }
-    }
-    outputs.upToDateWhen { false }
-}
-
 def thermalPlayerSamplingJfrFile =
         file("${thermalPhase0bReportDir}/legacy-player-sampling-diagnostic.jfr")
 def thermalPlayerSamplingJfrResultFile =
@@ -887,25 +808,6 @@ tasks.register('thermalLegacyPlayerSamplingJfr', JavaExec) {
         }
     }
     outputs.upToDateWhen { false }
-}
-
-def thermalRetainedFile = file("${thermalPhase0bReportDir}/legacy-retained-heap.json")
-
-tasks.register('thermalLegacyRetainedHeap', JavaExec) {
-    group = 'verification'
-    description = 'Measures retained object graphs for legacy ChunkHeatData fixtures.'
-    dependsOn tasks.named('jmhClasses')
-    javaLauncher = thermalBenchmarkJava
-    classpath = sourceSets.jmh.runtimeClasspath
-    mainClass = 'com.teammoeg.frostedheart.content.climate.thermal.benchmark.LegacyChunkHeatRetainedSize'
-    args thermalRetainedFile.absolutePath
-    jvmArgs '-Xms512M', '-Xmx512M', '-Djdk.attach.allowAttachSelf=true'
-    doFirst {
-        thermalPhase0bReportDir.mkdirs()
-        if (thermalRetainedFile.exists() && !thermalRetainedFile.delete()) {
-            throw new GradleException("Could not replace generated benchmark artifact: ${thermalRetainedFile}")
-        }
-    }
 }
 
 def thermalPlayerSamplingRetainedFile =
@@ -1022,36 +924,21 @@ tasks.register('thermalLegacyBaseline') {
     description = 'Produces the first local Phase 0b legacy microbaseline evidence bundle.'
     dependsOn tasks.named('thermalBenchmarkEnvironmentManifest')
     dependsOn tasks.named('thermalLegacyPlayerSamplingForgeCapture')
-    dependsOn tasks.named('thermalLegacyJmh')
     dependsOn tasks.named('thermalLegacyPlayerSamplingJmh')
-    dependsOn tasks.named('thermalLegacyJfr')
     dependsOn tasks.named('thermalLegacyPlayerSamplingJfr')
-    dependsOn tasks.named('thermalLegacyRetainedHeap')
     dependsOn tasks.named('thermalLegacyPlayerSamplingRetainedHeap')
 }
 
 tasks.named('thermalLegacyPlayerSamplingJmh').configure {
-    mustRunAfter tasks.named('thermalLegacyJmh')
-}
-
-tasks.named('thermalLegacyJmh').configure {
     mustRunAfter tasks.named('thermalLegacyPlayerSamplingForgeCapture')
 }
 
-tasks.named('thermalLegacyJfr').configure {
+tasks.named('thermalLegacyPlayerSamplingJfr').configure {
     mustRunAfter tasks.named('thermalLegacyPlayerSamplingJmh')
 }
 
-tasks.named('thermalLegacyPlayerSamplingJfr').configure {
-    mustRunAfter tasks.named('thermalLegacyJfr')
-}
-
-tasks.named('thermalLegacyRetainedHeap').configure {
-    mustRunAfter tasks.named('thermalLegacyPlayerSamplingJfr')
-}
-
 tasks.named('thermalLegacyPlayerSamplingRetainedHeap').configure {
-    mustRunAfter tasks.named('thermalLegacyRetainedHeap')
+    mustRunAfter tasks.named('thermalLegacyPlayerSamplingJfr')
 }
 
 gradle.projectsEvaluated {
@@ -1061,14 +948,14 @@ gradle.projectsEvaluated {
 }
 
 def thermalPhaseLReportDir = file("${buildDir}/reports/thermal-phase-l")
-def thermalPhaseLQueryJmhFile = file("${thermalPhaseLReportDir}/shadow-query-jmh.json")
-def thermalPhaseLQueryJmhHumanFile = file("${thermalPhaseLReportDir}/shadow-query-jmh.txt")
-def thermalPhaseLQueryJfrFile = file("${thermalPhaseLReportDir}/shadow-query-diagnostic.jfr")
+def thermalPhaseLQueryJmhFile = file("${thermalPhaseLReportDir}/published-air-query-jmh.json")
+def thermalPhaseLQueryJmhHumanFile = file("${thermalPhaseLReportDir}/published-air-query-jmh.txt")
+def thermalPhaseLQueryJfrFile = file("${thermalPhaseLReportDir}/published-air-query-diagnostic.jfr")
 def thermalPhaseLQueryJfrResultFile =
-        file("${thermalPhaseLReportDir}/shadow-query-jfr-jmh.json")
+        file("${thermalPhaseLReportDir}/published-air-query-jfr-jmh.json")
 def thermalPhaseLQueryJfrHumanFile =
-        file("${thermalPhaseLReportDir}/shadow-query-jfr-jmh.txt")
-def thermalPhaseLRetainedFile = file("${thermalPhaseLReportDir}/shadow-query-retained.json")
+        file("${thermalPhaseLReportDir}/published-air-query-jfr-jmh.txt")
+def thermalPhaseLRetainedFile = file("${thermalPhaseLReportDir}/published-air-query-retained.json")
 def thermalPhaseLEnvironmentFile = file("${thermalPhaseLReportDir}/environment.json")
 
 tasks.register('thermalPhaseLQueryJmh', JavaExec) {
@@ -1078,7 +965,7 @@ tasks.register('thermalPhaseLQueryJmh', JavaExec) {
     javaLauncher = thermalBenchmarkJava
     classpath = thermalJmhRuntimeClasspath
     mainClass = 'org.openjdk.jmh.Main'
-    args 'com.teammoeg.frostedheart.content.climate.thermal.benchmark.ThermalShadowQueryBenchmark.queryPublishedAirBatch',
+    args 'com.teammoeg.frostedheart.content.climate.thermal.benchmark.ThermalPublishedAirQueryBenchmark.queryPublishedAirBatch',
             '-wi', '3', '-i', '5', '-w', '1s', '-r', '1s', '-f', '2',
             '-prof', 'gc', '-foe', 'true',
             '-jvmArgs', '-Xms2G -Xmx2G -XX:+UseG1GC',
@@ -1131,7 +1018,7 @@ tasks.register('thermalPhaseLQueryJfr', JavaExec) {
     mainClass = 'org.openjdk.jmh.Main'
     jvmArgs '-Xms2G', '-Xmx2G', '-XX:+UseG1GC',
             "-XX:StartFlightRecording=filename=${thermalPhaseLQueryJfrFile.absolutePath.replace('\\', '/')},settings=profile,dumponexit=true"
-    args 'com.teammoeg.frostedheart.content.climate.thermal.benchmark.ThermalShadowQueryBenchmark.queryPublishedAirBatch',
+    args 'com.teammoeg.frostedheart.content.climate.thermal.benchmark.ThermalPublishedAirQueryBenchmark.queryPublishedAirBatch',
             '-wi', '1', '-i', '2', '-w', '500ms', '-r', '500ms', '-f', '0',
             '-p', 'layout=distributed_pages', '-p', 'receiverCount=100',
             '-prof', 'gc', '-foe', 'true',
@@ -1156,7 +1043,7 @@ tasks.register('thermalPhaseLQueryRetainedHeap', JavaExec) {
     dependsOn tasks.named('jmhClasses')
     javaLauncher = thermalBenchmarkJava
     classpath = sourceSets.jmh.runtimeClasspath
-    mainClass = 'com.teammoeg.frostedheart.content.climate.thermal.benchmark.ThermalShadowQueryRetainedSize'
+    mainClass = 'com.teammoeg.frostedheart.content.climate.thermal.benchmark.ThermalPublishedAirQueryRetainedSize'
     args thermalPhaseLRetainedFile.absolutePath
     jvmArgs '-Xms1G', '-Xmx1G', '-Djdk.attach.allowAttachSelf=true',
             '-Djol.magicFieldOffset=true'
@@ -1182,7 +1069,7 @@ tasks.register('thermalPhaseLEnvironmentManifest') {
         def launcher = thermalBenchmarkJava.get()
         def manifest = [
                 schemaVersion: 1,
-                evidenceScope: 'synthetic-shadow-query-diagnostic-not-phase-l-acceptance',
+                evidenceScope: 'synthetic-published-air-query-diagnostic-not-phase-l-acceptance',
                 generatedAt: java.time.OffsetDateTime.now().toString(),
                 hardware: [
                         processorIdentifier: System.getenv('PROCESSOR_IDENTIFIER') ?: 'unknown',
@@ -1291,7 +1178,18 @@ tasks.processResources {
     from( tasks.joinLang.buildDir){ into 'assets/frostedheart/lang/'}
     from( tasks.zipUnifont.buildDir){ into 'assets/frostedheart/font/'}
 }
+def thermalVerificationJarExcludes = [
+        'com/teammoeg/frostedheart/content/climate/thermal/phase0/reference/**',
+        'com/teammoeg/frostedheart/content/climate/thermal/phase0/benchmark/**',
+        'com/teammoeg/frostedheart/content/climate/thermal/phase0/mutation/Phase0aMutationEvents*',
+        'com/teammoeg/frostedheart/content/climate/thermal/phase0/mutation/Phase0aMutationWriterCensus*',
+        'com/teammoeg/frostedheart/content/climate/thermal/phase0/mutation/FrostedHeartPhase0aGameTests*',
+        'com/teammoeg/frostedheart/content/climate/thermal/profile/minecraft/FrostedHeartPhaseA*GameTests*',
+        'com/teammoeg/frostedheart/content/climate/thermal/runtime/minecraft/FrostedHeartMinecraftThermalInputGameTests*'
+]
+
 jar {
+    exclude thermalVerificationJarExcludes
     manifest {
         attributes([
                 "Specification-Title"     : "Frosted Heart",
@@ -1314,6 +1212,7 @@ task sourcesJar(type: Jar, dependsOn: classes) {
 
 task deobfJar(type: Jar) {
     from sourceSets.main.output
+    exclude thermalVerificationJarExcludes
     archiveClassifier.set('deobf')
 }
 

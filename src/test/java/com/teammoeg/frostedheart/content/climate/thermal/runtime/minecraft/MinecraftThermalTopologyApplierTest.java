@@ -14,6 +14,8 @@ import com.teammoeg.frostedheart.content.climate.thermal.geometry.ConservativeAi
 import com.teammoeg.frostedheart.content.climate.thermal.geometry.GeometryDeltaRing;
 import com.teammoeg.frostedheart.content.climate.thermal.geometry.GeometrySummary;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.ArenaSpan;
+import com.teammoeg.frostedheart.content.climate.thermal.mesh.FarFieldProfileRegistry;
+import com.teammoeg.frostedheart.content.climate.thermal.mesh.MaterialBoundaryRegistry;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.ThermalCellArena;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.ThermalPage;
 import com.teammoeg.frostedheart.content.climate.thermal.profile.ResolvedThermalSignature;
@@ -108,6 +110,20 @@ class MinecraftThermalTopologyApplierTest {
                     fixture.page.geometrySummary(0).kind());
             assertFalse((fixture.page.mixedBrickMask() & 1L) != 0L);
             assertEquals(63, fixture.arena.liveCellCount());
+        }
+    }
+
+    @Test
+    void stablePageReleasesItsDesiredSignatureCutAfterCommit() {
+        try (Fixture fixture = fixture(16)) {
+            assertEquals(0, fixture.applier.stagedSignaturePageCount());
+            fixture.applier.apply(fixture.seal(5L, 1L));
+            assertEquals(0, fixture.applier.stagedSignaturePageCount());
+
+            mutate(fixture, 0, 0, 0, 10L);
+            fixture.applier.apply(fixture.seal(10L, 1L));
+
+            assertEquals(0, fixture.applier.stagedSignaturePageCount());
         }
     }
 
@@ -214,6 +230,54 @@ class MinecraftThermalTopologyApplierTest {
         }
     }
 
+    @Test
+    void approvedOpenFrontierCompilesAreaScaledFarFieldBoundary() {
+        try (Fixture fixture = fixture(16, farFieldSettings())) {
+            fixture.applier.updateSkyExposure(fixture.page, fullSkyExposure());
+            fixture.arena.setEnthalpyJ(
+                    0,
+                    20.0D * fixture.arena.capacityJPerK(0));
+            double before = fixture.arena.enthalpyJ(0);
+
+            MinecraftThermalTopologyApplier.ApplyReport applied =
+                    fixture.applier.apply(fixture.seal(5L, 1L));
+
+            assertTrue(applied.topologyResolved());
+            assertEquals(1, fixture.runtime.sweepBoundaryOperationCount());
+            assertEquals(DimensionThermalRuntime.RunStatus.COMPLETED,
+                    fixture.runtime.runOne().status());
+            assertTrue(fixture.arena.enthalpyJ(0) < before);
+
+            fixture.arena.setEnthalpyJ(0, 0.0D);
+            assertTrue(fixture.applier.updateNaturalTemperature(
+                    fixture.page, 10.0D, 0.25D));
+            assertTrue(fixture.applier.apply(fixture.seal(10L, 1L))
+                    .topologyResolved());
+            assertEquals(DimensionThermalRuntime.RunStatus.COMPLETED,
+                    fixture.runtime.runOne().status());
+            assertTrue(fixture.arena.enthalpyJ(0) > 0.0D);
+
+            MinecraftThermalTopologyApplier.ApplyReport unchanged =
+                    fixture.applier.apply(fixture.seal(15L, 1L));
+            assertEquals(0, unchanged.pairOperations());
+            assertEquals(1, fixture.runtime.sweepBoundaryOperationCount());
+            assertEquals(DimensionThermalRuntime.RunStatus.COMPLETED,
+                    fixture.runtime.runOne().status());
+        }
+    }
+
+    @Test
+    void undergroundFrontierGetsWeakBoundaryButRemainsDegraded() {
+        try (Fixture fixture = fixture(16, farFieldSettings())) {
+            MinecraftThermalTopologyApplier.ApplyReport applied =
+                    fixture.applier.apply(fixture.seal(5L, 1L));
+
+            assertFalse(applied.topologyResolved());
+            assertEquals(1, fixture.runtime.sweepBoundaryOperationCount());
+            assertEquals(0b11_1111, fixture.applier.continuationFaceMask(fixture.page));
+        }
+    }
+
     private static void mutate(
             Fixture fixture,
             int localX,
@@ -233,6 +297,15 @@ class MinecraftThermalTopologyApplierTest {
     }
 
     private static Fixture fixture(int resolvedCapacity) {
+        return fixture(
+                resolvedCapacity,
+                MinecraftThermalTopologyApplier.FarFieldSettings.disabled());
+    }
+
+    private static Fixture fixture(
+            int resolvedCapacity,
+            MinecraftThermalTopologyApplier.FarFieldSettings farFieldSettings
+    ) {
         long sectionKey = SectionPos.asLong(0, 0, 0);
         ThermalCellArena arena = new ThermalCellArena(1);
         ArenaSpan initial = arena.allocatePageCells(
@@ -276,7 +349,7 @@ class MinecraftThermalTopologyApplierTest {
                 sweep,
                 publication,
                 0.0D,
-                new DimensionThermalRuntime.Limits(256, 1024, 0, 3, 1.0e-9D));
+                new DimensionThermalRuntime.Limits(256, 1024, 1024, 3, 1.0e-9D));
         ThermalSignatureRegistry.Builder signatureBuilder = ThermalSignatureRegistry.builder();
         signatureBuilder.intern(SOLID);
         ThermalSignatureRegistry signatures = signatureBuilder.build();
@@ -298,10 +371,42 @@ class MinecraftThermalTopologyApplierTest {
                         1.0D,
                         0.25D,
                         false,
-                        new BuoyancyConductance.Parameters(1.0D, 1.0D, 1.0D)));
+                        new BuoyancyConductance.Parameters(1.0D, 1.0D, 1.0D)),
+                MaterialBoundaryRegistry.empty(),
+                farFieldSettings);
         applier.registerAllAirPage(page, 1L);
         return new Fixture(
                 arena, page, runtime, sources, geometryDeltas, resolvedInputs, applier);
+    }
+
+    private static MinecraftThermalTopologyApplier.FarFieldSettings farFieldSettings() {
+        FarFieldProfileRegistry.Key key = new FarFieldProfileRegistry.Key(
+                0,
+                FarFieldProfileRegistry.OpeningClass.MULTI_FACE,
+                2,
+                FarFieldProfileRegistry.Orientation.HORIZONTAL,
+                FarFieldProfileRegistry.WindBucket.CALM,
+                FarFieldProfileRegistry.EnvironmentClass.OVERWORLD_OUTDOOR,
+                FarFieldProfileRegistry.TopologyClass.OPEN_SPACE);
+        FarFieldProfileRegistry.Profile profile = new FarFieldProfileRegistry.Profile(
+                key,
+                10.0D,
+                new FarFieldProfileRegistry.ApplicabilityDomain(100.0D, 100.0D),
+                new FarFieldProfileRegistry.ErrorEnvelope(
+                        0.0D, 0.0D, false, 0.0D, 0.0D, 0.0D),
+                FarFieldProfileRegistry.Approval.APPROVED_STATIC_IMPEDANCE);
+        return new MinecraftThermalTopologyApplier.FarFieldSettings(
+                new FarFieldProfileRegistry(List.of(profile)),
+                true,
+                FarFieldProfileRegistry.EnvironmentClass.OVERWORLD_OUTDOOR,
+                FarFieldProfileRegistry.WindBucket.CALM,
+                100.0D,
+                32.0D,
+                16.0D);
+    }
+
+    private static byte[] fullSkyExposure() {
+        return new byte[16 * 16];
     }
 
     private static double totalEnthalpy(ThermalCellArena arena) {

@@ -44,6 +44,7 @@ import net.minecraftforge.gametest.GameTestHolder;
 import net.minecraftforge.gametest.PrefixGameTestTemplate;
 
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @GameTestHolder(FHMain.MODID)
 @PrefixGameTestTemplate(false)
@@ -88,7 +89,11 @@ public final class FrostedHeartMinecraftThermalInputGameTests {
                  16,
                  16)) {
             input.enableTopologyApplication(topologyParameters());
-            input.enableShadowDispatch(coordinator, Runnable::run);
+            AtomicInteger dispatchSubmissions = new AtomicInteger();
+            input.enableDispatch(coordinator, command -> {
+                dispatchSubmissions.incrementAndGet();
+                command.run();
+            });
             ThermalPage page = input.admitAllAirPage(chunk, sectionIndex, 0, 0);
             helper.assertTrue(page != null, "all-air admission must create one Page");
 
@@ -111,18 +116,15 @@ public final class FrostedHeartMinecraftThermalInputGameTests {
                     "the sealed geometry watermark must cover the primitive result");
             helper.assertTrue(sealed.frame().watermarks().profile() == 1L,
                     "the frame must carry the frozen profile-table cut");
-            MinecraftThermalTopologyApplier.ApplyReport applied =
-                    input.latestShadowReport().topology();
-            helper.assertTrue(
-                    applied.status() == MinecraftThermalTopologyApplier.ApplyStatus.APPLIED,
-                    "the explicit topology applier must commit the primitive frame");
+            helper.assertTrue(dispatchSubmissions.get() == 1,
+                    "the configured dispatch executor must receive the sealed frame");
             int changedBase = com.teammoeg.frostedheart.content.climate.thermal.geometry
                     .GeometrySummaryCache.baseIndex(localX, localY, localZ);
             helper.assertTrue(page.geometrySummary(changedBase).kind()
                             == com.teammoeg.frostedheart.content.climate.thermal.geometry.GeometrySummary.Kind.MIXED,
                     "one stone in an all-air Brick must install compiled mixed coverage");
             helper.assertTrue(runtime.lastCompletedTargetTick() == level.getGameTime(),
-                    "shadow dispatch must run the admitted epoch on the coordinator");
+                    "dispatch must run the admitted epoch on the coordinator");
 
             MinecraftThermalInput.MutableEnvironmentSample playerSample =
                     new MinecraftThermalInput.MutableEnvironmentSample();
@@ -167,59 +169,11 @@ public final class FrostedHeartMinecraftThermalInputGameTests {
                             & MinecraftThermalInput.QUERY_PUBLICATION_STALE) != 0,
                     "an over-age publication must use explicit fallback");
 
-            double enthalpyBeforeMachineQueries = totalEnthalpy(
+            double enthalpyBeforePassiveQueries = totalEnthalpy(
                     runtime.thermalCellArena());
-            InputWatermarks watermarksBeforeMachineQueries = runtime.appliedWatermarks();
-            long completedTickBeforeMachineQueries = runtime.lastCompletedTargetTick();
-            int admittedBeforeMachineQueries = input.admittedPageCount();
-            MinecraftThermalInput.MutableEnvironmentSample machineSample =
-                    new MinecraftThermalInput.MutableEnvironmentSample();
-            input.sampleMachineEnvironment(
-                    sampleX, position.getY() + 1.5D, sampleZ,
-                    level.getGameTime(), 40, machineSample);
-            helper.assertTrue(machineSample.airAvailable()
-                            && close(machineSample.airTemperatureC(), 0.0D)
-                            && machineSample.radiantFluxWPerM2() == 0.0D
-                            && (machineSample.flags()
-                            & MinecraftThermalInput.QUERY_RADIATION_UNAVAILABLE) == 0,
-                    "a QUERY_ONLY machine must read published air without player radiation");
-
-            MinecraftThermalInput.observeRegisteredMachineEnvironment(
-                    level, position.above(), 5.0D);
-            MinecraftThermalInput.MachineShadowSnapshot observedMachine =
-                    input.machineShadowSnapshot();
-            helper.assertTrue(observedMachine.comparisons() == 1L
-                            && close(observedMachine.meanAbsoluteErrorC(), 5.0D),
-                    "an explicitly registered machine may record a bounded shadow comparison");
-
-            for (int index = 0; index < 64; index++) {
-                input.sampleMachineEnvironment(
-                        sampleX + 32.0D + index * 16.0D,
-                        position.getY() + 1.5D,
-                        sampleZ,
-                        level.getGameTime(), 40, machineSample);
-            }
-            helper.assertTrue(!machineSample.airAvailable()
-                            && (machineSample.flags()
-                            & MinecraftThermalInput.QUERY_NO_PAGE) != 0
-                            && input.admittedPageCount() == admittedBeforeMachineQueries,
-                    "passive machine count must not create Page interest");
-
-            input.sampleMachineEnvironment(
-                    sampleX, position.getY() + 1.5D, sampleZ,
-                    level.getGameTime() + 41L, 40, machineSample);
-            helper.assertTrue(!machineSample.airAvailable()
-                            && (machineSample.flags()
-                            & MinecraftThermalInput.QUERY_PUBLICATION_STALE) != 0,
-                    "a machine must fall back from an over-age publication");
-            helper.assertTrue(close(
-                            totalEnthalpy(runtime.thermalCellArena()),
-                            enthalpyBeforeMachineQueries)
-                            && runtime.appliedWatermarks().equals(
-                            watermarksBeforeMachineQueries)
-                            && runtime.lastCompletedTargetTick()
-                            == completedTickBeforeMachineQueries,
-                    "machine observation must not mutate thermal energy or runtime state");
+            InputWatermarks watermarksBeforePassiveQueries = runtime.appliedWatermarks();
+            long completedTickBeforePassiveQueries = runtime.lastCompletedTargetTick();
+            int admittedBeforePassiveQueries = input.admittedPageCount();
 
             BlockPos cropPosition = position.above();
             int arenaHighWaterBeforeCropQueries =
@@ -257,11 +211,7 @@ public final class FrostedHeartMinecraftThermalInputGameTests {
                                     1,
                                     15),
                             5.0F);
-            MinecraftThermalInput.CropShadowSnapshot observedCrop =
-                    input.cropShadowSnapshot();
-            helper.assertTrue(cropStatus == WorldTemperature.PlantStatus.CAN_SURVIVE
-                            && observedCrop.comparisons() == 1L
-                            && close(observedCrop.meanAbsoluteErrorC(), 5.0D),
+            helper.assertTrue(cropStatus == WorldTemperature.PlantStatus.CAN_SURVIVE,
                     "the real plant-status path must use published 0 C, not legacy 5 C");
 
             TownThermalProjection townProjection = new TownThermalProjection();
@@ -271,15 +221,7 @@ public final class FrostedHeartMinecraftThermalInputGameTests {
             double gameplayTownTemperatureC =
                     MinecraftThermalInput.gameplayTownEnvironment(
                             level, townProjection, 5.0D);
-            MinecraftThermalInput.TownShadowSnapshot observedTown =
-                    input.townShadowSnapshot();
-            helper.assertTrue(close(gameplayTownTemperatureC, 0.0D)
-                            && observedTown.queryCalls() == 1L
-                            && observedTown.groupLookups() == 1L
-                            && observedTown.comparisons() == 1L
-                            && observedTown.latestGroupCount() == 1
-                            && observedTown.latestVoxelCount() == 2
-                            && close(observedTown.meanAbsoluteErrorC(), 5.0D),
+            helper.assertTrue(close(gameplayTownTemperatureC, 0.0D),
                     "a complete town projection must use one published weighted Brick value");
 
             TownThermalProjection missingTownProjection =
@@ -297,13 +239,13 @@ public final class FrostedHeartMinecraftThermalInputGameTests {
             helper.assertTrue(!townSample.airAvailable()
                             && (townSample.flags()
                             & MinecraftThermalInput.QUERY_NO_PAGE) != 0
-                            && input.admittedPageCount() == admittedBeforeMachineQueries
+                            && input.admittedPageCount() == admittedBeforePassiveQueries
                             && runtime.thermalCellArena().highWaterMark()
                             == arenaHighWaterBeforeCropQueries
                             && runtime.thermalCellArena().liveCellCount()
                             == liveCellsBeforeCropQueries
                             && close(totalEnthalpy(runtime.thermalCellArena()),
-                            enthalpyBeforeMachineQueries),
+                            enthalpyBeforePassiveQueries),
                     "4,096 passive town groups must not create or retain thermal state");
 
             for (int index = 0; index < 10_000; index++) {
@@ -316,42 +258,18 @@ public final class FrostedHeartMinecraftThermalInputGameTests {
             helper.assertTrue(!cropSample.airAvailable()
                             && (cropSample.flags()
                             & MinecraftThermalInput.QUERY_NO_PAGE) != 0
-                            && input.admittedPageCount() == admittedBeforeMachineQueries
+                            && input.admittedPageCount() == admittedBeforePassiveQueries
                             && runtime.thermalCellArena().highWaterMark()
                             == arenaHighWaterBeforeCropQueries
                             && runtime.thermalCellArena().liveCellCount()
                             == liveCellsBeforeCropQueries
                             && close(totalEnthalpy(runtime.thermalCellArena()),
-                            enthalpyBeforeMachineQueries),
+                            enthalpyBeforePassiveQueries)
+                            && runtime.appliedWatermarks().equals(
+                            watermarksBeforePassiveQueries)
+                            && runtime.lastCompletedTargetTick()
+                            == completedTickBeforePassiveQueries,
                     "10,000 passive crop misses must not retain thermal state");
-
-            MinecraftThermalInput.ShadowRuntimeSnapshot shadow =
-                    input.shadowRuntimeSnapshot();
-            helper.assertTrue(shadow.admittedPageCount() == 1
-                            && shadow.mixedBrickCount() == 1L
-                            && shadow.runtime().liveCellCount() > 0,
-                    "shadow diagnostics must expose the admitted mixed topology footprint");
-            helper.assertTrue(shadow.publishedAirLookups()
-                            == shadow.publishedAirHits() + shadow.publishedAirMisses()
-                            && shadow.noPageLookups() >= 14_000L
-                            && shadow.noAirComponentLookups() >= 1L
-                            && shadow.stalePublicationLookups() >= 2L,
-                    "shadow diagnostics must attribute passive lookup fallbacks by reason");
-            helper.assertTrue(shadow.publicationAgeSamples() > 0L
-                            && shadow.meanPublicationAgeTicks() >= 0.0D
-                            && shadow.maximumPublicationAgeTicks() >= 41L,
-                    "shadow diagnostics must retain publication age evidence");
-            helper.assertTrue(shadow.sealCalls() == 1L
-                            && shadow.workerFrames() == 1L
-                            && shadow.executorRejectedSubmissions() == 0L
-                            && shadow.latestDispatch() != null
-                            && shadow.latestDispatch().solve() != null,
-                    "shadow diagnostics must retain the actual dispatched solve report");
-            helper.assertTrue(shadow.player().queryCalls() == 4L
-                            && shadow.machine().comparisons() == 1L
-                            && shadow.crop().comparisons() == 1L
-                            && shadow.town().comparisons() == 1L,
-                    "one snapshot must combine all real Phase K consumer evidence");
 
             MinecraftThermalInput.onRawBlockContainerReplaced(section);
             MinecraftThermalInput.SealReport resynced = input.sealTick(level.getGameTime());
@@ -359,9 +277,8 @@ public final class FrostedHeartMinecraftThermalInputGameTests {
                     "raw replacement must capture one complete Page resnapshot");
             helper.assertTrue(!page.fullGeometryResyncRequired(),
                     "the matching 4096-block snapshot must clear the sticky requirement");
-            helper.assertTrue(input.latestShadowReport().topology().status()
-                            == MinecraftThermalTopologyApplier.ApplyStatus.APPLIED,
-                    "the full Page resnapshot must rebuild and commit through shadow dispatch");
+            helper.assertTrue(dispatchSubmissions.get() == 2,
+                    "the full Page resnapshot must rebuild through dispatch");
 
             MinecraftThermalInput.onChunkUnload(level, chunk);
             helper.assertTrue(input.admittedPageCount() == 0,
@@ -369,6 +286,137 @@ public final class FrostedHeartMinecraftThermalInputGameTests {
             setDirect(section, position, Blocks.AIR.defaultBlockState());
             helper.assertTrue(input.resolvedInputs().size() == 0,
                     "the detached section must return to the null-owner fast path");
+        }
+        helper.succeed();
+    }
+
+    @GameTest(template = TEMPLATE, batch = BATCH, timeoutTicks = 40)
+    public static void analyticFieldsComposeAfterMeshWithoutCreatingPages(
+            GameTestHelper helper
+    ) {
+        ServerLevel level = helper.getLevel();
+        BlockPos anchor = helper.absolutePos(new BlockPos(2, 3, 2));
+        LevelChunk chunk = level.getChunkAt(anchor);
+        int sectionIndex = allAirSectionIndex(chunk);
+        int sectionY = chunk.getSectionYFromSectionIndex(sectionIndex);
+        BlockPos receiver = new BlockPos(
+                anchor.getX(), SectionPos.sectionToBlockCoord(sectionY) + 4, anchor.getZ());
+        long initialTick = level.getGameTime();
+
+        DimensionThermalRuntime runtime = runtime(
+                initialTick, chunk.getPos().x, sectionY, chunk.getPos().z);
+        ThermalRuntimeCoordinator coordinator = coordinator();
+        try (runtime; coordinator; MinecraftThermalInput input = new MinecraftThermalInput(
+                level,
+                9L,
+                runtime,
+                ThermalSignatureResolverDispatcher.builder(
+                        StateStaticThermalResolver.geometryOnly(
+                                ConservativeAirGeometry.MICROCELL_COUNT))
+                        .build(),
+                signatureRegistry(),
+                1L,
+                16,
+                16)) {
+            input.enableTopologyApplication(topologyParameters());
+            input.enableDispatch(coordinator, Runnable::run);
+            input.upsertAnalyticField(new MinecraftThermalInput.AnalyticField(
+                    1L, 0,
+                    MinecraftThermalInput.AnalyticCombineMode.OVERRIDE,
+                    receiver.getX() + 0.5D,
+                    receiver.getY() + 0.5D,
+                    receiver.getZ() + 0.5D,
+                    4.0D,
+                    5.0D));
+            input.upsertAnalyticField(new MinecraftThermalInput.AnalyticField(
+                    2L, 0,
+                    MinecraftThermalInput.AnalyticCombineMode.MAX_HEAT,
+                    receiver.getX() + 0.5D,
+                    receiver.getY() + 0.5D,
+                    receiver.getZ() + 0.5D,
+                    4.0D,
+                    10.0D));
+            input.upsertAnalyticField(new MinecraftThermalInput.AnalyticField(
+                    3L, 0,
+                    MinecraftThermalInput.AnalyticCombineMode.MIN_COOL,
+                    receiver.getX() + 0.5D,
+                    receiver.getY() + 0.5D,
+                    receiver.getZ() + 0.5D,
+                    4.0D,
+                    -5.0D));
+            input.upsertAnalyticField(new MinecraftThermalInput.AnalyticField(
+                    4L, 0,
+                    MinecraftThermalInput.AnalyticCombineMode.ADD_DELTA,
+                    receiver.getX() + 0.5D,
+                    receiver.getY() + 0.5D,
+                    receiver.getZ() + 0.5D,
+                    4.0D,
+                    2.0D));
+            helper.assertTrue(input.admittedPageCount() == 0,
+                    "analytic fields must not create sparse-mesh interest");
+
+            helper.assertTrue(
+                    input.admitAllAirPage(chunk, sectionIndex, 0, 0) != null,
+                    "the compositor test must have one published all-air Page");
+            input.sealTick(initialTick);
+            MinecraftThermalInput.MutableEnvironmentSample sample =
+                    new MinecraftThermalInput.MutableEnvironmentSample();
+            input.sampleCropEnvironment(
+                    receiver.getX(), receiver.getY(), receiver.getZ(),
+                    initialTick, 40, sample);
+            helper.assertTrue(
+                    sample.airAvailable()
+                            && close(sample.airTemperatureC(), -3.0D)
+                            && (sample.flags()
+                            & MinecraftThermalInput.QUERY_ANALYTIC_FIELD_APPLIED) != 0,
+                    "OVERRIDE -> MAX_HEAT -> MIN_COOL -> ADD_DELTA must follow mesh");
+            helper.assertTrue(input.analyticFieldCount() == 4,
+                    "the backend must retain one definition per field");
+        }
+        helper.succeed();
+    }
+
+    @GameTest(template = TEMPLATE, batch = BATCH, timeoutTicks = 40)
+    public static void undergroundAdmissionAddsOnlyOneLoadedContinuationLayer(
+            GameTestHelper helper
+    ) {
+        ServerLevel level = helper.getLevel();
+        BlockPos anchor = helper.absolutePos(new BlockPos(2, 3, 2));
+        LevelChunk chunk = level.getChunkAt(anchor);
+        int sectionIndex = boundedAllAirSectionIndex(chunk);
+        int sectionY = chunk.getSectionYFromSectionIndex(sectionIndex);
+        int centerX = SectionPos.sectionToBlockCoord(chunk.getPos().x) + 8;
+        int centerZ = SectionPos.sectionToBlockCoord(chunk.getPos().z) + 8;
+        BlockPos target = new BlockPos(
+                centerX, SectionPos.sectionToBlockCoord(sectionY) + 8, centerZ);
+        BlockPos roof = new BlockPos(
+                centerX, SectionPos.sectionToBlockCoord(sectionY) + 17, centerZ);
+        level.setBlockAndUpdate(roof, Blocks.STONE.defaultBlockState());
+
+        DimensionThermalRuntime runtime = runtime(
+                level.getGameTime(), chunk.getPos().x, sectionY, chunk.getPos().z);
+        try (runtime; MinecraftThermalInput input = new MinecraftThermalInput(
+                level,
+                9L,
+                runtime,
+                ThermalSignatureResolverDispatcher.builder(
+                        StateStaticThermalResolver.geometryOnly(
+                                ConservativeAirGeometry.MICROCELL_COUNT))
+                        .build(),
+                signatureRegistry(),
+                1L,
+                32,
+                32)) {
+            input.enableTopologyApplication(topologyParameters());
+
+            helper.assertTrue(input.retainPhysicalSourcePage(target, 4),
+                    "the loaded underground source Page must be admitted");
+            int admittedPages = input.admittedPageCount();
+            helper.assertTrue(admittedPages >= 2 && admittedPages <= 7,
+                    "one direct Page must add loaded face continuations without recursion; got "
+                            + admittedPages);
+        } finally {
+            level.setBlockAndUpdate(roof, Blocks.AIR.defaultBlockState());
         }
         helper.succeed();
     }
@@ -426,7 +474,7 @@ public final class FrostedHeartMinecraftThermalInputGameTests {
     }
 
     @GameTest(template = TEMPLATE, batch = BATCH, timeoutTicks = 40)
-    public static void campfireAndGeneratorEnterTheDormantPhysicalLedger(
+    public static void allDeviceHeatEntersThePhysicalLedgerOnce(
             GameTestHelper helper
     ) {
         ServerLevel level = helper.getLevel();
@@ -438,6 +486,8 @@ public final class FrostedHeartMinecraftThermalInputGameTests {
                 anchor.getX(), SectionPos.sectionToBlockCoord(sectionY) + 4, anchor.getZ());
         BlockPos campfire = target.below();
         BlockPos generator = target.offset(3, -3, 0);
+        BlockPos fountain = target.offset(-3, -2, 0);
+        BlockPos radiator = target.offset(0, -2, 3);
         long initialTick = level.getGameTime();
 
         DimensionThermalRuntime runtime = runtime(
@@ -457,7 +507,7 @@ public final class FrostedHeartMinecraftThermalInputGameTests {
                 32)) {
             input.enableTopologyApplication(topologyParameters());
             MinecraftPhysicalSourceManager sources = input.enablePhysicalSources(4);
-            input.enableShadowDispatch(coordinator, Runnable::run);
+            input.enableDispatch(coordinator, Runnable::run);
             helper.assertTrue(
                     input.admitAllAirPage(chunk, sectionIndex, 0, 0) != null,
                     "the source target Page must be admitted");
@@ -465,14 +515,18 @@ public final class FrostedHeartMinecraftThermalInputGameTests {
             input.sealTick(initialTick);
             sources.observeCampfire(campfire, true);
             sources.observeGenerator(generator, target, 2.0D, true);
+            sources.observeFountain(fountain, target, 2.0D, true);
+            sources.observeRadiator(radiator, target, 2.0D, true);
             input.sealTick(initialTick);
             input.sealTick(initialTick + 20L);
             runtime.sourceTimeline().snapshotAtCursor(campfire.asLong());
             runtime.sourceTimeline().snapshotAtCursor(generator.asLong());
+            runtime.sourceTimeline().snapshotAtCursor(fountain.asLong());
+            runtime.sourceTimeline().snapshotAtCursor(radiator.asLong());
 
             double airEnthalpyJ = totalEnthalpy(runtime.thermalCellArena());
-            helper.assertTrue(close(airEnthalpyJ, 20_400.0D),
-                    "one second must route 6,400 J + 14,000 J into air; actual="
+            helper.assertTrue(close(airEnthalpyJ, 30_400.0D),
+                    "one second must route each device's convection share once; actual="
                             + airEnthalpyJ + " J");
             helper.assertTrue(close(runtime.sourceTimeline().routedEnergyJ(
                             campfire.asLong(), SourceBinding.Kind.DECLARED_LOSS), 1_600.0D),
@@ -483,6 +537,17 @@ public final class FrostedHeartMinecraftThermalInputGameTests {
             helper.assertTrue(close(runtime.sourceTimeline().routedEnergyJ(
                             generator.asLong(), SourceBinding.Kind.DECLARED_LOSS), 4_000.0D),
                     "generator radiation must remain a declared Phase J loss");
+            helper.assertTrue(close(runtime.sourceTimeline().routedEnergyJ(
+                            fountain.asLong(), SourceBinding.Kind.DECLARED_LOSS), 400.0D),
+                    "fountain radiation must remain a declared Phase J loss");
+            helper.assertTrue(close(runtime.sourceTimeline().routedEnergyJ(
+                            radiator.asLong(), SourceBinding.Kind.INTERNAL_RESERVOIR), 800.0D),
+                    "radiator contact heat must remain in its internal reservoir");
+            helper.assertTrue(close(runtime.sourceTimeline().routedEnergyJ(
+                            radiator.asLong(), SourceBinding.Kind.DECLARED_LOSS), 800.0D),
+                    "radiator radiation must remain a declared Phase J loss");
+            helper.assertTrue(sources.sourceCount() == 4,
+                    "each physical producer must have exactly one source identity");
         }
         helper.succeed();
     }
@@ -521,7 +586,7 @@ public final class FrostedHeartMinecraftThermalInputGameTests {
                 32)) {
             input.enableTopologyApplication(topologyParameters());
             MinecraftPhysicalSourceManager sources = input.enablePhysicalSources(4);
-            input.enableShadowDispatch(coordinator, Runnable::run);
+            input.enableDispatch(coordinator, Runnable::run);
             helper.assertTrue(
                     input.admitAllAirPage(chunk, sectionIndex, 0, 0) != null,
                     "the source target Page must be admitted");
@@ -672,6 +737,16 @@ public final class FrostedHeartMinecraftThermalInputGameTests {
             }
         }
         throw new IllegalStateException("GameTest chunk has no all-air section metadata proof");
+    }
+
+    private static int boundedAllAirSectionIndex(LevelChunk chunk) {
+        for (int index = 1; index < chunk.getSections().length - 1; index++) {
+            if (chunk.getSections()[index].hasOnlyAir()) {
+                return index;
+            }
+        }
+        throw new IllegalStateException(
+                "GameTest chunk has no vertically bounded all-air section");
     }
 
     private static ThermalSignatureResolver<BlockState, FluidState> neighborAwareResolver() {

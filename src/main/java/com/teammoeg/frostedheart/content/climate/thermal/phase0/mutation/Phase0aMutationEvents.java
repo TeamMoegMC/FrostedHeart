@@ -2,14 +2,12 @@
 package com.teammoeg.frostedheart.content.climate.thermal.phase0.mutation;
 
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.MinecraftThermalInput;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraftforge.event.TickEvent;
-import net.minecraftforge.event.level.BlockEvent;
 import net.minecraftforge.event.level.ChunkEvent;
 import net.minecraftforge.event.server.ServerStoppedEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -33,7 +31,6 @@ public final class Phase0aMutationEvents {
     public static void onChunkLoad(ChunkEvent.Load event) {
         if (event.getLevel() instanceof ServerLevel level
                 && event.getChunk() instanceof LevelChunk chunk) {
-            MinecraftThermalInput.onChunkLoad(level, chunk);
             if (!Phase0aMutationProbe.isEnabled()) {
                 return;
             }
@@ -50,7 +47,6 @@ public final class Phase0aMutationEvents {
     public static void onChunkUnload(ChunkEvent.Unload event) {
         if (event.getLevel() instanceof ServerLevel level
                 && event.getChunk() instanceof LevelChunk chunk) {
-            MinecraftThermalInput.onChunkUnload(level, chunk);
             if (!Phase0aMutationProbe.isEnabled()) {
                 return;
             }
@@ -64,22 +60,10 @@ public final class Phase0aMutationEvents {
     }
 
     @SubscribeEvent
-    public static void onBlockPlaced(BlockEvent.EntityPlaceEvent event) {
-        if (event.getLevel() instanceof ServerLevel level) {
-            MinecraftThermalInput.onPotentialPhysicalSourcePlaced(
-                    level,
-                    event.getPos(),
-                    event.getBlockSnapshot().getReplacedBlock(),
-                    event.getPlacedBlock());
-        }
-    }
-
-    @SubscribeEvent
     public static void onLevelTick(TickEvent.LevelTickEvent event) {
         if (event.side == LogicalSide.SERVER
                 && event.phase == TickEvent.Phase.END
                 && event.level instanceof ServerLevel level) {
-            MinecraftThermalInput.sealActiveLevel(level);
             if (Phase0aMutationProbe.isEnabled()) {
                 Phase0aMutationProbe.sealLevel(level);
             }
@@ -88,7 +72,6 @@ public final class Phase0aMutationEvents {
 
     @SubscribeEvent
     public static void onServerStopped(ServerStoppedEvent event) {
-        MinecraftThermalInput.closeAll();
         if (Phase0aMutationProbe.isEnabled()) {
             Phase0aMutationProbe.clearAfterServerStop();
             synchronized (LIFECYCLE_OBSERVATIONS) {

@@ -21,8 +21,8 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-public final class ThermalShadowQueryRetainedSize {
-    private ThermalShadowQueryRetainedSize() {
+public final class ThermalPublishedAirQueryRetainedSize {
+    private ThermalPublishedAirQueryRetainedSize() {
     }
 
     public static void main(String[] args) throws IOException {
@@ -32,8 +32,8 @@ public final class ThermalShadowQueryRetainedSize {
         JsonArray fixtures = new JsonArray();
         for (String layout : new String[]{"shared_page", "distributed_pages"}) {
             for (int receiverCount : new int[]{1, 10, 50, 100}) {
-                try (ThermalShadowQueryFixtures.Fixture fixture =
-                             ThermalShadowQueryFixtures.create(receiverCount, layout)) {
+                try (ThermalPublishedAirQueryFixtures.Fixture fixture =
+                             ThermalPublishedAirQueryFixtures.create(receiverCount, layout)) {
                     double checksum = fixture.queryBatch();
                     GraphLayout graph = GraphLayout.parseInstance(fixture.retainedGraphRoot());
                     DimensionThermalRuntime.Diagnostics diagnostics = fixture.diagnostics();
@@ -56,7 +56,7 @@ public final class ThermalShadowQueryRetainedSize {
         JsonObject report = new JsonObject();
         report.addProperty("schemaVersion", 1);
         report.addProperty("evidenceScope",
-                "synthetic-shadow-query-retained-diagnostic-not-phase-l-acceptance");
+                "synthetic-published-air-query-retained-diagnostic-not-phase-l-acceptance");
         report.addProperty("measurement",
                 "JOL object graph of production ThermalPage, arena, runtime, and publication owners");
         report.add("fixtures", fixtures);

@@ -176,7 +176,7 @@ public final class DimensionThermalRuntime implements AutoCloseable {
         }
     }
 
-    /** Stable, non-blocking diagnostic cut for the shadow runtime. */
+    /** Stable, non-blocking diagnostic cut for the dimension runtime. */
     public record Diagnostics(
             boolean writerBusy,
             boolean unloaded,
@@ -319,8 +319,9 @@ public final class DimensionThermalRuntime implements AutoCloseable {
     }
 
     /**
-     * Installs one arena-bound sweep and advances all non-source inputs as one
-     * logical-writer transaction.
+     * Advances all non-source inputs as one logical-writer transaction. A
+     * {@code null} replacement retains the installed sweep when topology did
+     * not change.
      */
     public synchronized AcknowledgeResult finishTopologyUpdate(
             long appliedDimensionGeneration,
@@ -341,8 +342,7 @@ public final class DimensionThermalRuntime implements AutoCloseable {
                 return AcknowledgeResult.GENERATION_MISMATCH;
             }
             Objects.requireNonNull(acknowledgedWatermarks, "acknowledgedWatermarks");
-            Objects.requireNonNull(replacementSweep, "replacementSweep");
-            if (!replacementSweep.targets(arena)) {
+            if (replacementSweep != null && !replacementSweep.targets(arena)) {
                 throw new IllegalArgumentException("replacement sweep must own the runtime arena");
             }
             if (!acknowledgedWatermarks.coversNonSourceStreams(appliedWatermarks)) {
@@ -357,7 +357,9 @@ public final class DimensionThermalRuntime implements AutoCloseable {
                     || acknowledgedGeometryRevision != geometryRevision
                     || acknowledgedTopologyGeneration != topologyGeneration
                     || acknowledgedTopologyResolved != topologyResolved;
-            sweep = replacementSweep;
+            if (replacementSweep != null) {
+                sweep = replacementSweep;
+            }
             if (!changed) {
                 return AcknowledgeResult.DUPLICATE;
             }
@@ -434,10 +436,18 @@ public final class DimensionThermalRuntime implements AutoCloseable {
     public synchronized LatestSolveEpochScheduler.SealResult sealFrame(
             SealedInputFrame frame
     ) {
+        return sealFrame(frame, false);
+    }
+
+    /** Seals a frame, allowing concrete input events to bypass steady cadence. */
+    public synchronized LatestSolveEpochScheduler.SealResult sealFrame(
+            SealedInputFrame frame,
+            boolean urgent
+    ) {
         if (unloaded) {
             return LatestSolveEpochScheduler.SealResult.GENERATION_MISMATCH;
         }
-        LatestSolveEpochScheduler.SealResult result = scheduler.sealLatest(frame);
+        LatestSolveEpochScheduler.SealResult result = scheduler.sealLatest(frame, urgent);
         if (result == LatestSolveEpochScheduler.SealResult.ACCEPTED) {
             if (!frame.watermarks().equals(latestSealedWatermarks)) {
                 wakeLocked();
@@ -701,7 +711,9 @@ public final class DimensionThermalRuntime implements AutoCloseable {
             updateSleepStateLocked(step);
             nowSleeping = sleeping;
         }
-        boolean published = publication.publish(
+        boolean publicationReady = publication.tryEnsureCapacity(
+                arena.highWaterMark());
+        boolean published = publicationReady && publication.publish(
                 arena,
                 referenceTemperatureC,
                 dimensionGeneration,
@@ -731,7 +743,6 @@ public final class DimensionThermalRuntime implements AutoCloseable {
                 && step.timeStatus() == ThermalStepPlan.Status.NORMAL
                 && appliedWatermarks.equals(step.appliedWatermarks())
                 && scheduler.pendingTargetCount() == 0
-                && topologyResolved
                 && !sources.hasActivePowerOrPendingEnergy()
                 && sweep.maxTemperatureResidualC(referenceTemperatureC)
                         <= limits.sleepResidualEpsilonC();

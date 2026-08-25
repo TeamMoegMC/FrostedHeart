@@ -56,6 +56,28 @@ class MinecraftPhysicalSourceProfileTest {
     }
 
     @Test
+    void fountainAndRadiatorUseOnlyPhysicalPowerPartitions() {
+        MinecraftPhysicalSourceProfile fountain =
+                MinecraftPhysicalSourceProfile.FOUNTAIN;
+        MinecraftPhysicalSourceProfile.Port[] fountainPorts = fountain.ports();
+        assertEquals(4_000.0D, fountain.powerForLevel(2.0D));
+        assertEquals(0.9D, fountainPorts[0].powerShare());
+        assertEquals(0.1D, fountainPorts[1].powerShare());
+
+        MinecraftPhysicalSourceProfile radiator =
+                MinecraftPhysicalSourceProfile.RADIATOR;
+        MinecraftPhysicalSourceProfile.Port[] radiatorPorts = radiator.ports();
+        assertEquals(8_000.0D, radiator.powerForLevel(2.0D));
+        assertEquals(0.8D, radiatorPorts[0].powerShare());
+        assertEquals(0.1D, radiatorPorts[1].powerShare());
+        assertEquals(MinecraftPhysicalSourceProfile.PortKind.INTERNAL_HEAT,
+                radiatorPorts[1].kind());
+        assertEquals(0.1D, radiatorPorts[2].powerShare());
+        assertEquals(MinecraftPhysicalSourceProfile.PortKind.DECLARED_LOSS,
+                radiatorPorts[2].kind());
+    }
+
+    @Test
     void profileRejectsAnIncompletePowerPartition() {
         assertThrows(IllegalArgumentException.class, () ->
                 new MinecraftPhysicalSourceProfile(

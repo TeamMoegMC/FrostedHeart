@@ -116,6 +116,20 @@ class SolveEpochContractTest {
     }
 
     @Test
+    void urgentInputFrameBypassesSteadyCadence() {
+        LatestSolveEpochScheduler scheduler = new LatestSolveEpochScheduler(
+                7L, 100L, InputWatermarks.ZERO, POLICY);
+        SealedInputFrame urgent = new SealedInputFrame(
+                101L, 7L, new InputWatermarks(1L, 0L, 0L, 0L, 0L));
+
+        assertEquals(LatestSolveEpochScheduler.SealResult.ACCEPTED,
+                scheduler.sealLatest(urgent, true));
+        SolveEpoch epoch = scheduler.tryStartLatest().orElseThrow();
+        assertEquals(100L, epoch.previousTick());
+        assertEquals(101L, epoch.targetTick());
+    }
+
+    @Test
     void invalidEpochAndWatermarkDomainsAreRejectedAtSealConstruction() {
         assertThrows(IllegalArgumentException.class,
                 () -> new InputWatermarks(-1L, 0L, 0L, 0L, 0L));

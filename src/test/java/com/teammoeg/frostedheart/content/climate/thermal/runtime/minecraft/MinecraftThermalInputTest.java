@@ -14,6 +14,10 @@ import com.teammoeg.frostedheart.content.climate.thermal.mesh.ThermalPage;
 import com.teammoeg.frostedheart.content.climate.thermal.geometry.GeometryDeltaRing;
 import com.teammoeg.frostedheart.content.climate.thermal.profile.ThermalResolution;
 import com.teammoeg.frostedheart.content.climate.thermal.profile.ThermalSignatureResolution;
+import net.minecraft.SharedConstants;
+import net.minecraft.server.Bootstrap;
+import net.minecraft.world.level.block.Blocks;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -22,6 +26,18 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class MinecraftThermalInputTest {
+    @BeforeAll
+    static void bootstrapMinecraft() {
+        SharedConstants.tryDetectVersion();
+        Bootstrap.bootStrap();
+    }
+
+    @Test
+    void airNaturallyHasNoGameplayMaterial() {
+        assertEquals(null, MinecraftThermalInput.classifyGameplayMaterial(
+                Blocks.AIR.defaultBlockState()));
+    }
+
     @Test
     void resolvedInputRingPreservesPrimitiveEnvelopeAndDoesNotConsumeOnOverflow() {
         ResolvedGeometryInputRing ring = new ResolvedGeometryInputRing(1);

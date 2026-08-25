@@ -29,8 +29,9 @@ import com.teammoeg.frostedheart.bootstrap.common.FHEntityTypes;
 import com.teammoeg.frostedheart.bootstrap.common.FHItems;
 import com.teammoeg.frostedheart.bootstrap.reference.FHSoundEvents;
 import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
-import com.teammoeg.frostedheart.content.climate.gamedata.chunkheat.ChunkHeatData;
-import com.teammoeg.frostedheart.content.climate.gamedata.chunkheat.SphereHeatArea;
+import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.MinecraftThermalInput;
+import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.MinecraftThermalInput.AnalyticCombineMode;
+import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.MinecraftThermalInput.AnalyticField;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig.Server.Curiosity;
 
@@ -87,7 +88,7 @@ import net.minecraftforge.fml.DistExecutor;
  * <p>
  * "Curiosity of the Deep Frostland": the crawling nanite cluster boss. A
  * single-entity multi-phase state machine drives the whole fight; the cold
- * field is a negative {@link SphereHeatArea} so the mod's temperature system
+ * field is a non-conservative analytic control field so the temperature system
  * handles the threat and the player's hot drinks / heating backpack / heat
  * sources handle the counterplay. The exposed core can only be dispersed by
  * fire. See docs/boss/curiosity-boss-design.md.
@@ -362,7 +363,8 @@ public class CuriosityEntity extends Monster {
     @Override
     public void onRemovedFromWorld() {
         if (!this.level().isClientSide && this.level() instanceof ServerLevel sl && this.arenaCenter != null) {
-            ChunkHeatData.removeTempAdjust(sl, this.arenaCenter);
+            MinecraftThermalInput.removeGameplayAnalyticField(
+                    sl, this.arenaCenter.asLong());
         }
         super.onRemovedFromWorld();
     }
@@ -754,13 +756,23 @@ public class CuriosityEntity extends Monster {
         int base = (this.phase == CuriosityPhase.MAZE || this.phase == CuriosityPhase.EXPOSED)
                 ? config.coldTier2.get() : config.coldTier1.get();
         int tier = Math.max(config.coldCap.get(), base + this.round * config.coldPerRound.get());
-        ChunkHeatData.addTempAdjust(sl, new SphereHeatArea(this.arenaCenter, config.arenaRadius.get(), tier));
-        this.coldApplied = true;
+        this.coldApplied = MinecraftThermalInput.upsertGameplayAnalyticField(
+                sl,
+                new AnalyticField(
+                        this.arenaCenter.asLong(),
+                        0,
+                        AnalyticCombineMode.ADD_DELTA,
+                        this.arenaCenter.getX() + 0.5D,
+                        this.arenaCenter.getY() + 0.5D,
+                        this.arenaCenter.getZ() + 0.5D,
+                        config.arenaRadius.get(),
+                        tier));
     }
 
     private void removeColdField(ServerLevel sl) {
         if (this.arenaCenter == null) return;
-        ChunkHeatData.removeTempAdjust(sl, this.arenaCenter);
+        MinecraftThermalInput.removeGameplayAnalyticField(
+                sl, this.arenaCenter.asLong());
         this.coldApplied = false;
     }
 

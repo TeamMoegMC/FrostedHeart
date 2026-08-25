@@ -91,21 +91,24 @@
 
 ### 4.1 冷场实现
 
-复用既有 `ChunkHeatData` 热区系统，放置**负值**球形热区作为「冷场」：
+冷场直接注册为新 thermal compositor 的**负值球形 analytic field**：
 
 ```java
 // 激活：服务器端
-ChunkHeatData.addTempAdjust(level, new SphereHeatArea(arenaCenter, R, -coldTier));
+MinecraftThermalInput.upsertGameplayAnalyticField(level,
+    new AnalyticField(arenaCenter.asLong(), 0, ADD_DELTA,
+        arenaCenter.getX() + 0.5, arenaCenter.getY() + 0.5, arenaCenter.getZ() + 0.5,
+        R, coldTier));
 // 清理（RESET / DISPERSED / onRemovedFromWorld）
-ChunkHeatData.removeTempAdjust(level, arenaCenter);
+MinecraftThermalInput.removeGameplayAnalyticField(level, arenaCenter.asLong());
 ```
 
-- 冷场自动流入 `WorldTemperature.air/block` → `SurroundingTemperatureSimulator` → 玩家体温，
-  **不需要改动任何温度管线**。
+- 冷场在 natural/mesh 之后由 `ADD_DELTA` 合成，自动流入 `WorldTemperature.air/block`、玩家、
+  作物、状态转换和 town consumer。
 - 设定诠释（§1.1）：冷场 = 集群把场地热量搬运进冻土深处（温度流动的控制），实现上即一个
   负值热区，无新机制。
-- 生成器热场已有同款先例：`HeatingLogic.addSphereTempAdjust(...)`（`climate/block/generator`）。
-- 红外视野（InfraredView）会自动把冷场渲染出来，等于免费获得「冷域可视化」。
+- Generator、Campfire、散热器和喷泉走守恒 physical source；冷场明确是 Boss 控制场，不伪装成功率设备。
+- 红外视野从 analytic field/physical source 的即时快照渲染冷域，不维护区块副本。
 
 ### 4.2 反制关系：环境侧与身体侧（关键依据）
 
@@ -118,10 +121,9 @@ ChunkHeatData.removeTempAdjust(level, arenaCenter);
 
 反制因此分两条路径，机制完全不同：
 
-- **环境侧（世界热场）**：只有能量塔/加热器这类**放置式设备**才会生成正值热区
-  （`HeatingLogic.addSphereTempAdjust`）。`ChunkHeatData.getAdditionTemperatureAtBlock` 对重叠
-  热区**取最大值**（`tmp > ret`），正值热区与冷场重叠时环境温度被抬回正值——热源从环境侧
-  抵消冷场。
+- **环境侧（物理 source）**：能量塔、Campfire、散热器和喷泉先通过 mesh/辐射提高局部环境；
+  Boss 的负 `ADD_DELTA` 随后叠加。设备功率足够时可以从环境侧抵消冷场，但不会绕过 source
+  功率、遮挡和 FarField 账本。
 - **身体侧（玩家随身装备）**：热水（`ITempAdjustFood`）、加热背包等加热设备
   （`HeatingDeviceContext`）**提高体温**；衣物（`ClothData`）**降低导热系数**。它们**不产生
   任何世界热场**，而是在环境温度不变的情况下抬高体感温度，从而压低/消除低体温症伤害。
@@ -130,7 +132,7 @@ ChunkHeatData.removeTempAdjust(level, arenaCenter);
 两者在体感温度处汇合——这正是「喝口热水，或是开启加热背包」能撑住、而跑出冷场半径即可
 脱险的设计依据。冷场半径外环境不受影响，天然形成「场地内骤冷」的边界。
 
-结论：**不需要新温度机制**，只需一个负值 `SphereHeatArea`；两类反制手段均复用现有系统。
+结论：冷场只需要一份负值 `AnalyticField`；设备反制继续使用现有 physical source，随身装备继续使用 body heating。
 
 ### 4.3 降温阶梯
 
@@ -253,7 +255,7 @@ ChunkHeatData.removeTempAdjust(level, arenaCenter);
   OGA 开源，sounds.json 已有 stream 条目）；若 `ServerBossEvent` 的 Boss 音乐为硬编码原版
   曲目，则自实现 Boss 音乐 `SoundInstance`（参照 `MinecartBossMusicSoundInstance`），开关
   由 `bossMusic` 配置控制，状态随实体数据同步。
-- 冷场数据走既有 `ChunkHeatData` 同步通道（`FHNotifyChunkHeatUpdatePacket`），零新增网络代码。
+- 冷场不单独同步；红外的现有请求/响应包按需读取当前 analytic field 快照。
 
 ## 9. 持久化与异常恢复
 
@@ -367,5 +369,5 @@ oreFrostDropCount=24, oreFrostDropXp=50, bossMusic=true
    `DamageTypeTags.IS_FIRE`）；另支持打火石/火焰弹右键直接点燃核心。
    **掉落保护**：矿霜球掉落物设为火焰免疫，岩浆/火矢击杀不会烧毁战利品。
 
-> 注：本文档为设计稿，实现时如遇上述源码事实变化（如 `ChunkHeatData` 叠加规则调整），以代码
+> 注：本文档为设计稿，实现时如遇上述源码事实变化（如 analytic 合成顺序调整），以代码
 > 为准并同步修订本文。

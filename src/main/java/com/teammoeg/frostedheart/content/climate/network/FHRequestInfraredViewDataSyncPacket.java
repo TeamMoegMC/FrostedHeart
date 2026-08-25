@@ -19,21 +19,14 @@
 
 package com.teammoeg.frostedheart.content.climate.network;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashMap;
 import java.util.function.Supplier;
 
 import com.teammoeg.chorda.network.CMessage;
 import com.teammoeg.frostedheart.FHNetwork;
-import com.teammoeg.frostedheart.content.climate.gamedata.chunkheat.ChunkHeatData;
-import com.teammoeg.frostedheart.content.climate.gamedata.chunkheat.IHeatArea;
+import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.MinecraftThermalInput;
 
-import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.world.level.ChunkPos;
-import net.minecraft.world.level.LevelReader;
 import net.minecraftforge.network.NetworkEvent;
 
 
@@ -67,24 +60,13 @@ public class FHRequestInfraredViewDataSyncPacket implements CMessage {
                     // make sure the chunk is loaded and the radius is not too large
                     return;
                 }
-                var heatAreas = new HashMap<BlockPos, IHeatArea>();
-                for (int chunkOffsetX = -chunkRadius; chunkOffsetX <= chunkRadius; chunkOffsetX++) {
-                    for (int chunkOffsetZ = -chunkRadius; chunkOffsetZ <= chunkRadius; chunkOffsetZ++) {
-                        for (var heatArea : getChunkAdjust(player.level(),
-                                new ChunkPos(chunkPos.x + chunkOffsetX, chunkPos.z + chunkOffsetZ))) {
-                            heatAreas.put(heatArea.getCenter(), heatArea);
-                        }
-                    }
-                }
-                var heatAreaList = new ArrayList<>(heatAreas.values());
-
-                FHNetwork.INSTANCE.sendPlayer(player, new FHResponseInfraredViewDataSyncPacket(chunkPos, heatAreaList));
+                float[] fields = MinecraftThermalInput.gameplayInfraredFields(
+                        player.serverLevel(), chunkPos, chunkRadius, 512);
+                FHNetwork.INSTANCE.sendPlayer(
+                        player,
+                        new FHResponseInfraredViewDataSyncPacket(chunkPos, fields));
             }
         });
         context.get().setPacketHandled(true);
-    }
-
-    public static Collection<IHeatArea> getChunkAdjust(LevelReader world, ChunkPos chunkPos) {
-        return new ArrayList<>(ChunkHeatData.get(world, chunkPos).map(ChunkHeatData::getAdjusters).orElseGet(Arrays::asList));
     }
 }
