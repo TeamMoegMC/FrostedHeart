@@ -70,7 +70,6 @@
     "minecraft.temperature.IceBlockMixin_Melt",
     "minecraft.temperature.LavaFluidMixin",
     "minecraft.temperature.LevelChunkSectionMixin_ThermalInput",
-    "minecraft.temperature.LevelChunkSectionMixin_Phase0aMutationProbe",
     "minecraft.temperature.MagmaBlockMixin",
     "minecraft.temperature.MooshroomMixin",
     "minecraft.temperature.MushroomBlockMixin",

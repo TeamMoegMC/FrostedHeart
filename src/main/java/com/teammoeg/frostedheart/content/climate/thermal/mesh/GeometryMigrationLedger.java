@@ -227,15 +227,12 @@ public final class GeometryMigrationLedger {
             throw new IllegalArgumentException("sparse overlap arrays do not cover overlapCount");
         }
 
-        double[] oldTemperatureOffsets = new double[oldCapacitiesJPerK.length];
         double[] rowOverlap = new double[oldCapacitiesJPerK.length];
         double[] columnOverlap = new double[newCapacitiesJPerK.length];
-        double[] newEnthalpies = new double[newCapacitiesJPerK.length];
+        double[] overlapEnthalpies = new double[newCapacitiesJPerK.length];
         for (int oldIndex = 0; oldIndex < oldCapacitiesJPerK.length; oldIndex++) {
             requireFinite("old enthalpy", oldEnthalpiesJ[oldIndex]);
             requirePositive("old capacity", oldCapacitiesJPerK[oldIndex]);
-            oldTemperatureOffsets[oldIndex] =
-                    oldEnthalpiesJ[oldIndex] / oldCapacitiesJPerK[oldIndex];
         }
         for (int entry = 0; entry < overlapCount; entry++) {
             int oldIndex = overlapOldIndices[entry];
@@ -250,34 +247,84 @@ public final class GeometryMigrationLedger {
                     "old overlap row capacity", rowOverlap[oldIndex], overlap);
             columnOverlap[newIndex] = finiteSum(
                     "new overlap column capacity", columnOverlap[newIndex], overlap);
-            newEnthalpies[newIndex] = finiteSum(
+            overlapEnthalpies[newIndex] = finiteSum(
                     "overlap enthalpy",
-                    newEnthalpies[newIndex],
+                    overlapEnthalpies[newIndex],
                     finiteProduct("overlap enthalpy contribution",
-                            overlap, oldTemperatureOffsets[oldIndex]));
+                            overlap,
+                            oldEnthalpiesJ[oldIndex] / oldCapacitiesJPerK[oldIndex]));
+        }
+        return calculateAggregatedGeometryMigration(
+                oldEnthalpiesJ,
+                oldCapacitiesJPerK,
+                newCapacitiesJPerK,
+                rowOverlap,
+                columnOverlap,
+                overlapEnthalpies,
+                newAirInitialTemperaturesC,
+                referenceTemperatureC);
+    }
+
+    /**
+     * Calculates a migration from caller-aggregated overlap rows, columns, and
+     * enthalpy contributions. This avoids retaining one tuple per microcell.
+     */
+    public static MigrationResult calculateAggregatedGeometryMigration(
+            double[] oldEnthalpiesJ,
+            double[] oldCapacitiesJPerK,
+            double[] newCapacitiesJPerK,
+            double[] oldOverlapCapacitiesJPerK,
+            double[] newOverlapCapacitiesJPerK,
+            double[] newOverlapEnthalpiesJ,
+            double[] newAirInitialTemperaturesC,
+            double referenceTemperatureC
+    ) {
+        requireArray("oldEnthalpiesJ", oldEnthalpiesJ);
+        requireArray("oldCapacitiesJPerK", oldCapacitiesJPerK);
+        requireArray("newCapacitiesJPerK", newCapacitiesJPerK);
+        requireArray("oldOverlapCapacitiesJPerK", oldOverlapCapacitiesJPerK);
+        requireArray("newOverlapCapacitiesJPerK", newOverlapCapacitiesJPerK);
+        requireArray("newOverlapEnthalpiesJ", newOverlapEnthalpiesJ);
+        requireArray("newAirInitialTemperaturesC", newAirInitialTemperaturesC);
+        requireFinite("referenceTemperatureC", referenceTemperatureC);
+        if (oldEnthalpiesJ.length != oldCapacitiesJPerK.length
+                || oldEnthalpiesJ.length != oldOverlapCapacitiesJPerK.length) {
+            throw new IllegalArgumentException("old migration arrays must have equal lengths");
+        }
+        if (newCapacitiesJPerK.length != newOverlapCapacitiesJPerK.length
+                || newCapacitiesJPerK.length != newOverlapEnthalpiesJ.length
+                || newCapacitiesJPerK.length != newAirInitialTemperaturesC.length) {
+            throw new IllegalArgumentException("new migration arrays must have equal lengths");
         }
 
         double geometryEgress = 0.0D;
         for (int oldIndex = 0; oldIndex < oldCapacitiesJPerK.length; oldIndex++) {
-            requireNotAboveCapacity(
-                    "old overlap row", rowOverlap[oldIndex], oldCapacitiesJPerK[oldIndex]);
-            double removedCapacity = nonNegativeRemainder(
-                    oldCapacitiesJPerK[oldIndex], rowOverlap[oldIndex]);
+            double oldEnthalpy = oldEnthalpiesJ[oldIndex];
+            double oldCapacity = oldCapacitiesJPerK[oldIndex];
+            double overlapCapacity = oldOverlapCapacitiesJPerK[oldIndex];
+            requireFinite("old enthalpy", oldEnthalpy);
+            requirePositive("old capacity", oldCapacity);
+            requireNonNegative("old overlap row capacity", overlapCapacity);
+            requireNotAboveCapacity("old overlap row", overlapCapacity, oldCapacity);
+            double removedCapacity = nonNegativeRemainder(oldCapacity, overlapCapacity);
             geometryEgress = finiteSum(
                     "geometry egress",
                     geometryEgress,
                     finiteProduct("geometry egress contribution",
-                            removedCapacity, oldTemperatureOffsets[oldIndex]));
+                            removedCapacity, oldEnthalpy / oldCapacity));
         }
 
         double geometryIngress = 0.0D;
+        double[] newEnthalpies = newOverlapEnthalpiesJ.clone();
         for (int newIndex = 0; newIndex < newCapacitiesJPerK.length; newIndex++) {
-            requirePositive("new capacity", newCapacitiesJPerK[newIndex]);
+            double newCapacity = newCapacitiesJPerK[newIndex];
+            double overlapCapacity = newOverlapCapacitiesJPerK[newIndex];
+            requirePositive("new capacity", newCapacity);
+            requireNonNegative("new overlap column capacity", overlapCapacity);
+            requireFinite("overlap enthalpy", newEnthalpies[newIndex]);
             requireFinite("new air initial temperature", newAirInitialTemperaturesC[newIndex]);
-            requireNotAboveCapacity(
-                    "new overlap column", columnOverlap[newIndex], newCapacitiesJPerK[newIndex]);
-            double addedCapacity = nonNegativeRemainder(
-                    newCapacitiesJPerK[newIndex], columnOverlap[newIndex]);
+            requireNotAboveCapacity("new overlap column", overlapCapacity, newCapacity);
+            double addedCapacity = nonNegativeRemainder(newCapacity, overlapCapacity);
             double ingress = finiteProduct(
                     "new-air ingress",
                     addedCapacity,
@@ -286,6 +333,7 @@ public final class GeometryMigrationLedger {
             newEnthalpies[newIndex] = finiteSum(
                     "new enthalpy", newEnthalpies[newIndex], ingress);
         }
+
         double oldTotal = sumPossiblyEmpty(oldEnthalpiesJ);
         double newTotal = sumPossiblyEmpty(newEnthalpies);
         double residual = finiteDifference(

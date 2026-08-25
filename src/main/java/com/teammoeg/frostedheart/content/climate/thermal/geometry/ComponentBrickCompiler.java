@@ -201,7 +201,8 @@ public final class ComponentBrickCompiler {
         public FacePort facePort(int portIndex) {
             requireIndex("portIndex", portIndex, facePortCount());
             return new FacePort(
-                    ConservativeAirGeometry.Face.values()[Byte.toUnsignedInt(facePortFace[portIndex])],
+                    ConservativeAirGeometry.Face.fromOrdinal(
+                            Byte.toUnsignedInt(facePortFace[portIndex])),
                     Byte.toUnsignedInt(facePortBlockSlot[portIndex]),
                     facePortComponent[portIndex],
                     facePortAperture[portIndex]
@@ -210,8 +211,8 @@ public final class ComponentBrickCompiler {
 
         public ConservativeAirGeometry.Face facePortFace(int portIndex) {
             requireIndex("portIndex", portIndex, facePortCount());
-            return ConservativeAirGeometry.Face.values()[
-                    Byte.toUnsignedInt(facePortFace[portIndex])];
+            return ConservativeAirGeometry.Face.fromOrdinal(
+                    Byte.toUnsignedInt(facePortFace[portIndex]));
         }
 
         public int facePortBlockSlot(int portIndex) {
@@ -317,7 +318,7 @@ public final class ComponentBrickCompiler {
                 centroidZ
         );
 
-        int maximumPorts = Math.multiplyExact(atomCount, ConservativeAirGeometry.Face.values().length);
+        int maximumPorts = Math.multiplyExact(atomCount, ConservativeAirGeometry.Face.COUNT);
         byte[] portFace = new byte[maximumPorts];
         byte[] portBlockSlot = new byte[maximumPorts];
         int[] portComponent = new int[maximumPorts];

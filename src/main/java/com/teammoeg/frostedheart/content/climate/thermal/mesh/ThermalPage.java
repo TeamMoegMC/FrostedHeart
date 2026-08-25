@@ -293,6 +293,50 @@ public final class ThermalPage {
         return true;
     }
 
+    /** Atomically installs one or more rebuilt width-4 Bricks from one revision cut. */
+    public synchronized boolean tryInstallBrickBuilds(
+            long capturedGeometryRevision,
+            long rebuiltBrickMask,
+            int[] supportRefs,
+            GeometrySummary[] baseSummaries
+    ) {
+        if (rebuiltBrickMask == 0L
+                || supportRefs == null || supportRefs.length != BASE_BRICK_COUNT
+                || baseSummaries == null || baseSummaries.length != BASE_BRICK_COUNT) {
+            throw new IllegalArgumentException("Brick build payload is incomplete");
+        }
+        if (resyncRequirement.get() != null
+                || coverageRepartitionRequired
+                || liveGeometryRevision.get() != capturedGeometryRevision
+                || (dirtyBrickMask & rebuiltBrickMask) != rebuiltBrickMask) {
+            return false;
+        }
+        long remaining = rebuiltBrickMask;
+        while (remaining != 0L) {
+            int baseIndex = Long.numberOfTrailingZeros(remaining);
+            int supportRef = supportRefs[baseIndex];
+            GeometrySummary summary = baseSummaries[baseIndex];
+            if (summary == null || summary.kind() == GeometrySummary.Kind.UNKNOWN
+                    || (supportRef < 0
+                    && supportRef != NO_COVERAGE)) {
+                throw new IllegalArgumentException("rebuilt Brick state is invalid");
+            }
+            coverageRefs[baseIndex] = supportRef;
+            coverageWidths[baseIndex] = 4;
+            geometrySummaries.setBaseSummary(baseIndex, summary);
+            long brickBit = 1L << baseIndex;
+            if (summary.kind() == GeometrySummary.Kind.MIXED) {
+                mixedBrickMask |= brickBit;
+            } else {
+                mixedBrickMask &= ~brickBit;
+            }
+            remaining &= remaining - 1L;
+        }
+        dirtyBrickMask &= ~rebuiltBrickMask;
+        topologyGeneration++;
+        return true;
+    }
+
     /** Installs a complete worker geometry result only against its exact live revision. */
     public synchronized boolean tryInstallGeometryBuild(
             long capturedGeometryRevision,

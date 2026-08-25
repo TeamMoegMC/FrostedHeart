@@ -128,6 +128,31 @@ class MinecraftThermalTopologyApplierTest {
     }
 
     @Test
+    void laterMutationReplacesOnlyItsFourCubedBrickFragment() {
+        try (Fixture fixture = fixture(32)) {
+            mutate(fixture, 0, 0, 0, 5L);
+            assertEquals(
+                    MinecraftThermalTopologyApplier.ApplyStatus.APPLIED,
+                    fixture.applier.apply(fixture.seal(5L, 1L)).status());
+
+            int changedSupport = fixture.page.coverageRefAtBase(0);
+            int stableSupport = fixture.page.coverageRefAtBase(1);
+            fixture.arena.setEnthalpyJ(stableSupport, 17.0D);
+
+            mutate(fixture, 1, 0, 0, 10L);
+            assertEquals(
+                    MinecraftThermalTopologyApplier.ApplyStatus.APPLIED,
+                    fixture.applier.apply(fixture.seal(10L, 1L)).status());
+
+            assertFalse(fixture.arena.isLive(changedSupport));
+            assertTrue(fixture.arena.isLive(stableSupport));
+            assertEquals(stableSupport, fixture.page.coverageRefAtBase(1));
+            assertEquals(17.0D, fixture.arena.enthalpyJ(stableSupport), 0.0D);
+            assertTrue(fixture.page.coverageRefAtBase(0) != changedSupport);
+        }
+    }
+
+    @Test
     void affectedSourceFrameCompletesDegradedThenRebindsBeforeReplacement() {
         try (Fixture sourceFixture = fixture(8)) {
             sourceFixture.sources.offerRegister(

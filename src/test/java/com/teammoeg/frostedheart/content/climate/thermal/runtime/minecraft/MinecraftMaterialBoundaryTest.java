@@ -97,6 +97,25 @@ class MinecraftMaterialBoundaryTest {
     }
 
     @Test
+    void adjacentDirtyPagesReadTheCutCommittedEarlierInTheSameBatch() {
+        int[] first = allAir();
+        int[] second = allAir();
+        setBlock(first, 15, 8, 8, CAPACITIVE);
+        setBlock(second, 0, 8, 8, CAPACITIVE);
+
+        try (Fixture fixture = Fixture.create(first)) {
+            ThermalPage adjacent = fixture.applier.registerCapturedPage(
+                    SectionPos.asLong(1, 0, 0), 1L, 1L, second);
+            adjacent.sealGeometryDeltas(fixture.geometryDeltas);
+
+            fixture.applyTopology(5L, 1L);
+
+            assertEquals(0, fixture.applier.stagedSignaturePageCount());
+            assertEquals(2, materialPoleCount(fixture.arena));
+        }
+    }
+
+    @Test
     void capacitiveSurfaceStoresReleasesMigratesAndUnloadsWithItsPage() {
         int[] snapshot = allAir();
         fillXPlane(snapshot, 8, CAPACITIVE);
@@ -155,6 +174,7 @@ class MinecraftMaterialBoundaryTest {
 
             assertEquals(DimensionThermalRuntime.RunStatus.COMPLETED,
                     fixture.runtime.runOne().status());
+            fixture.applyTopology(10L, 1L);
             assertEquals(DimensionThermalRuntime.RunStatus.COMPLETED,
                     fixture.runtime.runOne().status());
 
@@ -213,6 +233,12 @@ class MinecraftMaterialBoundaryTest {
             fixture.applyTopology(5L, 1L);
             assertEquals(1, phaseReservoirCount(fixture.arena));
             assertTrue(fixture.runtime.sweepPhaseOperationCount() > 0);
+            assertTrue(fixture.applier.hasAppliedPhaseCandidate(
+                    fixture.page, 1, 1, 1, PHASE));
+            assertTrue(fixture.applier.hasAppliedPhaseCandidate(
+                    fixture.page, 2, 1, 1, PHASE));
+            assertFalse(fixture.applier.hasAppliedPhaseCandidate(
+                    fixture.page, 3, 1, 1, PHASE));
             forEachLiveAir(fixture.arena, slot -> fixture.arena.setEnthalpyJ(
                     slot, fixture.arena.capacityJPerK(slot) * 100.0D));
 

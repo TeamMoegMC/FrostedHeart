@@ -41,9 +41,6 @@ public class FrostedHeartMixinPlugin implements IMixinConfigPlugin, MixinPluginS
 
     @Override
     public boolean shouldApplyMixin(String targetClassName, String mixinClassName) {
-        if (mixinClassName.endsWith("LevelChunkSectionMixin_Phase0aMutationProbe")) {
-            return Boolean.getBoolean("frostedheart.phase0aMutationProbe");
-        }
         if (mixinClassName.contains("com.teammoeg.frostedheart.mixin.oculus")) {
             return IS_OCULUS_LOAD;
         }

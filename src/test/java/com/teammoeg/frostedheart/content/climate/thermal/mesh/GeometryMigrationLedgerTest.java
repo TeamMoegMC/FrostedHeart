@@ -108,4 +108,31 @@ class GeometryMigrationLedgerTest {
         assertEquals(dense.residualJ(), sparse.residualJ(), EPSILON);
     }
 
+    @Test
+    void aggregatedMigrationMatchesTheDenseReference() {
+        GeometryMigrationLedger.MigrationResult dense =
+                GeometryMigrationLedger.calculateGeometryMigration(
+                        new double[]{20.0D, -30.0D},
+                        new double[]{10.0D, 20.0D},
+                        new double[]{15.0D, 15.0D},
+                        new double[][]{{10.0D, 0.0D}, {5.0D, 15.0D}},
+                        new double[]{4.0D, 4.0D},
+                        0.0D);
+        GeometryMigrationLedger.MigrationResult aggregated =
+                GeometryMigrationLedger.calculateAggregatedGeometryMigration(
+                        new double[]{20.0D, -30.0D},
+                        new double[]{10.0D, 20.0D},
+                        new double[]{15.0D, 15.0D},
+                        new double[]{10.0D, 20.0D},
+                        new double[]{15.0D, 15.0D},
+                        new double[]{12.5D, -22.5D},
+                        new double[]{4.0D, 4.0D},
+                        0.0D);
+
+        assertArrayEquals(dense.newEnthalpiesJ(), aggregated.newEnthalpiesJ(), EPSILON);
+        assertEquals(dense.geometryIngressJ(), aggregated.geometryIngressJ(), EPSILON);
+        assertEquals(dense.geometryEgressJ(), aggregated.geometryEgressJ(), EPSILON);
+        assertEquals(dense.residualJ(), aggregated.residualJ(), EPSILON);
+    }
+
 }

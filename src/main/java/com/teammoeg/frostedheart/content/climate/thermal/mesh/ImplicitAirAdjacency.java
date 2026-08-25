@@ -13,11 +13,11 @@ package com.teammoeg.frostedheart.content.climate.thermal.mesh;
 import com.teammoeg.frostedheart.content.climate.thermal.geometry.ComponentBrickCompiler;
 import com.teammoeg.frostedheart.content.climate.thermal.geometry.ConservativeAirGeometry;
 import com.teammoeg.frostedheart.content.climate.thermal.solver.ThermalSweep;
+import it.unimi.dsi.fastutil.longs.Long2ObjectLinkedOpenHashMap;
+import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Compiles regular and mixed Air-Air interfaces from published Page coverage.
@@ -26,6 +26,7 @@ import java.util.Map;
  */
 public final class ImplicitAirAdjacency {
     private static final double APERTURE_BIT_AREA = 1.0D / 16.0D;
+    private static final FacePatchIterator.Axis[] AXES = FacePatchIterator.Axis.values();
 
     private ImplicitAirAdjacency() {
     }
@@ -110,6 +111,22 @@ public final class ImplicitAirAdjacency {
             double minimumMixedFaceDistanceBlocks,
             boolean applyBuoyancy
     ) {
+        return compileOwnedPairs(
+                owner, neighbors, arena, -1L,
+                effectiveMixingWPerBlockK,
+                minimumMixedFaceDistanceBlocks,
+                applyBuoyancy);
+    }
+
+    private static CompiledPairs compileOwnedPairs(
+            PageView owner,
+            PositiveNeighbors neighbors,
+            ThermalCellArena arena,
+            long baseBrickMask,
+            double effectiveMixingWPerBlockK,
+            double minimumMixedFaceDistanceBlocks,
+            boolean applyBuoyancy
+    ) {
         if (owner == null || neighbors == null || arena == null) {
             throw new IllegalArgumentException("owner, neighbors, and arena are required");
         }
@@ -125,9 +142,9 @@ public final class ImplicitAirAdjacency {
             return new CompiledPairs(List.of(), 0.0D, 0, 0, false);
         }
 
-        boolean[] neighborAvailable = new boolean[FacePatchIterator.Axis.values().length];
+        boolean[] neighborAvailable = new boolean[AXES.length];
         int unavailablePositivePages = 0;
-        for (FacePatchIterator.Axis axis : FacePatchIterator.Axis.values()) {
+        for (FacePatchIterator.Axis axis : AXES) {
             PageView neighbor = neighbors.forAxis(axis);
             if (neighbor == null) {
                 continue;
@@ -140,35 +157,14 @@ public final class ImplicitAirAdjacency {
             }
         }
 
-        Map<Long, PairAccumulator> pairs = new LinkedHashMap<>();
-        ArenaSpan ownerCells = owner.page().cellSpan();
-        for (int slot = ownerCells.firstSlot(); slot < ownerCells.endSlotExclusive(); slot++) {
-            if (arena.isMaterialPole(slot) || arena.isPhaseReservoir(slot)) {
-                continue;
-            }
-            requireOwnedCell(owner, arena, slot);
-            int negativeSupport = arena.supportRef(slot);
-            if (negativeSupport != slot) {
-                continue;
-            }
-            for (FacePatchIterator.Axis axis : FacePatchIterator.Axis.values()) {
-                PageView positivePage = positivePageForSupportFace(
-                        owner, neighbors, neighborAvailable, arena, negativeSupport, axis);
-                if (positivePage == null) {
-                    continue;
-                }
-                int[] positiveSupports = collectPositiveSupports(
-                        positivePage, arena, negativeSupport, axis);
-                for (int positiveSupport : positiveSupports) {
-                    compileInterface(
-                            arena,
-                            negativeSupport,
-                            positiveSupport,
-                            axis,
-                            minimumMixedFaceDistanceBlocks,
-                            pairs);
-                }
-            }
+        Long2ObjectMap<PairAccumulator> pairs = new Long2ObjectLinkedOpenHashMap<>();
+        long remaining = baseBrickMask;
+        while (remaining != 0L) {
+            int baseIndex = Long.numberOfTrailingZeros(remaining);
+            compileBaseBrick(
+                    owner, neighbors, neighborAvailable, arena, baseIndex,
+                    minimumMixedFaceDistanceBlocks, pairs);
+            remaining &= remaining - 1L;
         }
 
         List<ThermalSweep.PairOperation> operations = new ArrayList<>(pairs.size());
@@ -201,13 +197,79 @@ public final class ImplicitAirAdjacency {
                 unavailablePositivePages, true);
     }
 
+    /** Compiles only interfaces owned by one 4-cubed base Brick. */
+    public static CompiledPairs compileOwnedBrickPairs(
+            PageView owner,
+            PositiveNeighbors neighbors,
+            ThermalCellArena arena,
+            int baseBrickIndex,
+            double effectiveMixingWPerBlockK,
+            double minimumMixedFaceDistanceBlocks,
+            boolean applyBuoyancy
+    ) {
+        if (baseBrickIndex < 0 || baseBrickIndex >= ThermalPage.BASE_BRICK_COUNT) {
+            throw new IllegalArgumentException("baseBrickIndex must be within [0, 63]");
+        }
+        return compileOwnedPairs(
+                owner, neighbors, arena, 1L << baseBrickIndex,
+                effectiveMixingWPerBlockK,
+                minimumMixedFaceDistanceBlocks,
+                applyBuoyancy);
+    }
+
+    private static void compileBaseBrick(
+            PageView owner,
+            PositiveNeighbors neighbors,
+            boolean[] neighborAvailable,
+            ThermalCellArena arena,
+            int baseIndex,
+            double minimumMixedFaceDistanceBlocks,
+            Long2ObjectMap<PairAccumulator> pairs
+    ) {
+        int brickX = baseIndex & 3;
+        int brickZ = (baseIndex >>> 2) & 3;
+        int brickY = (baseIndex >>> 4) & 3;
+        ThermalPage.MutableCoverageQuery query = new ThermalPage.MutableCoverageQuery();
+        if (!owner.page().tryQueryPublishedCoverage(
+                brickX << 2, brickY << 2, brickZ << 2, query)) {
+            throw new IllegalStateException("Page publication changed during pair compilation");
+        }
+        int negativeSupport = query.coverageRef();
+        if (negativeSupport == ThermalPage.NO_COVERAGE) {
+            return;
+        }
+        requireOwnedCell(owner, arena, negativeSupport);
+        if (arena.supportRef(negativeSupport) != negativeSupport) {
+            throw new IllegalStateException("published coverage does not reference a support");
+        }
+        if (arena.minimumX(negativeSupport) != owner.worldMinX() + (brickX << 2)
+                || arena.minimumY(negativeSupport) != owner.worldMinY() + (brickY << 2)
+                || arena.minimumZ(negativeSupport) != owner.worldMinZ() + (brickZ << 2)) {
+            return;
+        }
+        for (FacePatchIterator.Axis axis : AXES) {
+            PageView positivePage = positivePageForSupportFace(
+                    owner, neighbors, neighborAvailable, arena, negativeSupport, axis);
+            if (positivePage == null) {
+                continue;
+            }
+            int[] positiveSupports = collectPositiveSupports(
+                    positivePage, arena, negativeSupport, axis);
+            for (int positiveSupport : positiveSupports) {
+                compileInterface(
+                        arena, negativeSupport, positiveSupport, axis,
+                        minimumMixedFaceDistanceBlocks, pairs);
+            }
+        }
+    }
+
     private static void compileInterface(
             ThermalCellArena arena,
             int negativeSupport,
             int positiveSupport,
             FacePatchIterator.Axis axis,
             double minimumMixedDistance,
-            Map<Long, PairAccumulator> pairs
+            Long2ObjectMap<PairAccumulator> pairs
     ) {
         boolean negativeMixed = arena.isMixedSupport(negativeSupport);
         boolean positiveMixed = arena.isMixedSupport(positiveSupport);
@@ -253,7 +315,7 @@ public final class ImplicitAirAdjacency {
             int positiveSupport,
             FacePatchIterator.Axis axis,
             double minimumMixedDistance,
-            Map<Long, PairAccumulator> pairs
+            Long2ObjectMap<PairAccumulator> pairs
     ) {
         ComponentBrickCompiler.CompiledBrick negative = arena.mixedGeometry(negativeSupport);
         ComponentBrickCompiler.CompiledBrick positive = arena.mixedGeometry(positiveSupport);
@@ -294,7 +356,7 @@ public final class ImplicitAirAdjacency {
             double openArea,
             double minimumMixedDistance,
             boolean mixed,
-            Map<Long, PairAccumulator> pairs
+            Long2ObjectMap<PairAccumulator> pairs
     ) {
         if (!Double.isFinite(openArea) || openArea <= 0.0D) {
             throw new IllegalStateException("Air-Air open area must be finite and positive");

@@ -34,7 +34,21 @@ public final class ConservativeAirGeometry {
         NEGATIVE_Y,
         POSITIVE_Y,
         NEGATIVE_Z,
-        POSITIVE_Z
+        POSITIVE_Z;
+
+        public static final int COUNT = 6;
+
+        public static Face fromOrdinal(int ordinal) {
+            return switch (ordinal) {
+                case 0 -> NEGATIVE_X;
+                case 1 -> POSITIVE_X;
+                case 2 -> NEGATIVE_Y;
+                case 3 -> POSITIVE_Y;
+                case 4 -> NEGATIVE_Z;
+                case 5 -> POSITIVE_Z;
+                default -> throw new IllegalArgumentException("face ordinal is out of bounds");
+            };
+        }
     }
 
     public enum Status {
@@ -153,7 +167,8 @@ public final class ConservativeAirGeometry {
 
         public int componentAt(int x, int y, int z) {
             long target = bit(x, y, z);
-            for (AirComponent component : components) {
+            for (int index = 0, size = components.size(); index < size; index++) {
+                AirComponent component = components.get(index);
                 if ((component.microcellMask() & target) != 0L) {
                     return component.id();
                 }
@@ -163,16 +178,16 @@ public final class ConservativeAirGeometry {
 
         public int combinedFaceMask(Face face) {
             int mask = 0;
-            for (AirComponent component : components) {
-                mask |= component.faceMask(face);
+            for (int index = 0, size = components.size(); index < size; index++) {
+                mask |= components.get(index).faceMask(face);
             }
             return mask;
         }
 
         public long provenAirMicrocellMask() {
             long mask = 0L;
-            for (AirComponent component : components) {
-                mask |= component.microcellMask();
+            for (int index = 0, size = components.size(); index < size; index++) {
+                mask |= components.get(index).microcellMask();
             }
             return mask;
         }
@@ -185,7 +200,8 @@ public final class ConservativeAirGeometry {
         if (maximumRegions <= 0) {
             throw new IllegalArgumentException("maximumRegions must be positive");
         }
-        for (UnitBox blocker : blockers) {
+        for (int index = 0, size = blockers.size(); index < size; index++) {
+            UnitBox blocker = blockers.get(index);
             if (blocker == null) {
                 throw new IllegalArgumentException("blockers must not contain null");
             }
@@ -337,7 +353,8 @@ public final class ConservativeAirGeometry {
         double maxX = minX + MICROCELL_SIZE;
         double maxY = minY + MICROCELL_SIZE;
         double maxZ = minZ + MICROCELL_SIZE;
-        for (UnitBox blocker : blockers) {
+        for (int index = 0, size = blockers.size(); index < size; index++) {
+            UnitBox blocker = blockers.get(index);
             if (blocker.maxX() > minX && blocker.minX() < maxX
                     && blocker.maxY() > minY && blocker.minY() < maxY
                     && blocker.maxZ() > minZ && blocker.minZ() < maxZ) {
