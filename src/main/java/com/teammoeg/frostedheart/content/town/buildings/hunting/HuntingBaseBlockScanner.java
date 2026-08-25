@@ -21,6 +21,8 @@ package com.teammoeg.frostedheart.content.town.buildings.hunting;
 
 import com.teammoeg.chorda.util.CRegistryHelper;
 import com.teammoeg.frostedheart.content.climate.WorldTemperature;
+import com.teammoeg.frostedheart.content.climate.thermal.consumer.TownThermalProjection;
+import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.MinecraftThermalInput;
 import com.teammoeg.frostedheart.content.town.block.blockscanner.BuildingBlockScanner;
 import lombok.Getter;
 import net.minecraft.world.level.block.state.BlockState;
@@ -33,6 +35,8 @@ import java.util.Objects;
 @Getter
 public class HuntingBaseBlockScanner extends BuildingBlockScanner {
     public int tanningRackNum = 0;
+    public final TownThermalProjection thermalProjection =
+            new TownThermalProjection();
     public double temperature;
 
 
@@ -42,6 +46,7 @@ public class HuntingBaseBlockScanner extends BuildingBlockScanner {
 
     @Override
     protected void processBuildingAirBlock(BlockPos pos) {
+        thermalProjection.include(pos);
         temperature += WorldTemperature.block(world, pos);
     }
 
@@ -57,6 +62,8 @@ public class HuntingBaseBlockScanner extends BuildingBlockScanner {
         super.scan();
         if(this.isValid){
             this.temperature /= this.volume;
+            this.temperature = MinecraftThermalInput.gameplayTownEnvironment(
+                    world, thermalProjection, temperature);
             return true;
         }else{
             this.temperature = 0;

@@ -1,9 +1,9 @@
 # 世界气候与环境温度
 
 - Status: `Current`
-- Last verified: `2026-08-24`
+- Last verified: `2026-08-25`
 - Scope: 逻辑气候时钟、长期事件、局部白幕、世界温度分层、局部热区、方块状态消费者
-- Primary code anchors: `WorldClockSource`, `WorldClimate`, `ClimateEventModel`, `ClimateEventTrack`, `InterpolationClimateEvent`, `WhiteCurtainDescriptor`, `WhiteCurtainFieldModel`, `WhiteCurtainInfo`, `WorldTemperature`, `BlockTemperatureModel`, `ChunkHeatData`, `IHeatArea`
+- Primary code anchors: `WorldClockSource`, `WorldClimate`, `ClimateEventModel`, `ClimateEventTrack`, `InterpolationClimateEvent`, `WhiteCurtainDescriptor`, `WhiteCurtainFieldModel`, `WhiteCurtainInfo`, `WorldTemperature`, `BlockTemperatureModel`, `ChunkHeatData`, `IHeatArea`, `MinecraftThermalInput.gameplayCropEnvironment`, `MinecraftThermalInput.CropShadowSnapshot`, `TownThermalProjection`, `MinecraftThermalInput.gameplayTownEnvironment`, `MinecraftThermalInput.TownShadowSnapshot`
 
 本文只描述当前源码行为。所有温度若无特别说明均为摄氏度；“修正”表示摄氏度增量。
 
@@ -188,9 +188,13 @@ H = max(0, all effective area values)
 - `ServerLevelMixin_TemperatureUpdate` 中的水冻结、冰/流体/其他 `StateTransitionData` 状态变化；
 - `PlantTempData` 的施肥、生长、生存和死亡检查；
 - 动物、蜂巢、村民交易、战利品条件和温度探针；
-- 城镇住宅、矿井和狩猎建筑的内部体素温度扫描。
+- 城镇住宅和狩猎建筑的内部体素温度扫描。`MineBlockScanner` 中的旧温度累积当前没有生产调用者，`MineBaseBlockScanner` 不计算温度。
 
 `WorldTemperature.air` 主要供玩家环境温度、降雪判断及显示工具使用。玩家周围方块热源不是从 `T_block` 反推，而由独立的 `BlockTempData` 粒子采样进入玩家管线，见 [player-temperature.md](player-temperature.md)。
+
+Phase K 现在在 `WorldTemperature.checkPlantStatus` 真正需要温度的三条路径上调用 `MinecraftThermalInput.gameplayCropEnvironment`。已有 Air Mesh publication 命中时，返回的空气温度直接进入施肥、生长、生存和死亡阈值；无 active runtime、无 Page、无空气 component、stale 或超龄 publication 时使用同次 legacy block temperature。天气先行决定植物状态时不发起 thermal query。该 passive 路径不会创建 Page、Brick、Cell 或 Interest，`CropShadowSnapshot` 继续记录 legacy/new 差异供校准。
+
+住宅与狩猎基地扫描器访问内部空气时同步把坐标压缩成 `TownThermalProjection` 的 `4×4×4` weighted groups；成功扫描后每组只查询一个已有 publication。全部 group 命中时，新加权空气平均值直接写入建筑温度并驱动评分与日结算；任一 group miss 时整体回退同次 legacy 全体素平均，避免混合两套不完整区域。该路径没有第二次房间/体素遍历，不保留 mesh lease，miss 也不能 admission。矿井基地当前没有温度工作条件，因此未增加虚构的 mine consumer。
 
 ## 9. 持久化与当前约束
 

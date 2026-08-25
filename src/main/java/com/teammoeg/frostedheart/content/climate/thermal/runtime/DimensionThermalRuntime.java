@@ -176,6 +176,29 @@ public final class DimensionThermalRuntime implements AutoCloseable {
         }
     }
 
+    /** Stable, non-blocking diagnostic cut for the shadow runtime. */
+    public record Diagnostics(
+            boolean writerBusy,
+            boolean unloaded,
+            boolean failureLatched,
+            boolean sleeping,
+            long lastCompletedTargetTick,
+            InputWatermarks appliedWatermarks,
+            InputWatermarks latestSealedWatermarks,
+            long geometryRevision,
+            long topologyGeneration,
+            boolean topologyResolved,
+            int arenaCapacity,
+            int arenaHighWaterMark,
+            int liveCellCount,
+            int pairOperationCount,
+            int boundaryOperationCount,
+            int phaseOperationCount,
+            int publicationCapacity,
+            long publicationReservedBytes
+    ) {
+    }
+
     public long runtimeId() {
         return runtimeId;
     }
@@ -220,6 +243,53 @@ public final class DimensionThermalRuntime implements AutoCloseable {
         return arena;
     }
 
+    /**
+     * Never waits for the logical writer. Mutable arena/sweep counts are
+     * unavailable while a worker owns them, rather than being read racy.
+     */
+    public synchronized Diagnostics diagnostics() {
+        boolean busy = logicalWriterOwned;
+        return new Diagnostics(
+                busy,
+                unloaded,
+                failureLatched,
+                sleeping,
+                scheduler.lastCompletedTargetTick(),
+                appliedWatermarks,
+                latestSealedWatermarks,
+                geometryRevision,
+                topologyGeneration,
+                topologyResolved,
+                busy ? -1 : arena.capacity(),
+                busy ? -1 : arena.highWaterMark(),
+                busy ? -1 : arena.liveCellCount(),
+                busy ? -1 : sweep.pairOperationCount(),
+                busy ? -1 : sweep.boundaryOperationCount(),
+                busy ? -1 : sweep.phaseOperationCount(),
+                publication.capacity(),
+                publication.reservedBytes());
+    }
+
+    /**
+     * Reads one cell only when the publication still matches the runtime's
+     * complete dimension topology cut. Callers must also resolve the slot from
+     * current published Page geometry before entering this method.
+     */
+    public synchronized boolean tryReadPublishedCell(
+            int arenaSlot,
+            QueryPublication.MutableSample out
+    ) {
+        Objects.requireNonNull(out, "out");
+        if (arenaSlot < 0 || unloaded || failureLatched || logicalWriterOwned) {
+            return false;
+        }
+        return publication.tryRead(
+                arenaSlot, dimensionGeneration, geometryRevision, out)
+                && out.lifecycleGeneration() == dimensionGeneration
+                && out.geometryRevision() == geometryRevision
+                && out.topologyGeneration() == topologyGeneration;
+    }
+
     /** Checks only bindings that can keep one concrete arena span alive. */
     public boolean sourceTopologyReferences(ArenaSpan span) {
         Objects.requireNonNull(span, "span");
@@ -229,6 +299,14 @@ public final class DimensionThermalRuntime implements AutoCloseable {
 
     public synchronized int sweepPairOperationCount() {
         return sweep.pairOperationCount();
+    }
+
+    public synchronized int sweepBoundaryOperationCount() {
+        return sweep.boundaryOperationCount();
+    }
+
+    public synchronized int sweepPhaseOperationCount() {
+        return sweep.phaseOperationCount();
     }
 
     /** Acquires the same logical writer used by {@link #runOne()}. */
@@ -644,7 +722,8 @@ public final class DimensionThermalRuntime implements AutoCloseable {
     private boolean workWithinLimits() {
         return arena.liveCellCount() <= limits.maxActiveCells()
                 && sweep.pairOperationCount() <= limits.maxPairOperations()
-                && sweep.boundaryOperationCount() <= limits.maxBoundaryOperations();
+                && sweep.boundaryOperationCount() + sweep.phaseOperationCount()
+                <= limits.maxBoundaryOperations();
     }
 
     private void updateSleepStateLocked(ThermalStepExecutor.Report step) {

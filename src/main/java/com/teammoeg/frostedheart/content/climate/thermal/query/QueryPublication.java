@@ -78,11 +78,11 @@ public final class QueryPublication implements AutoCloseable {
                 2L * (Double.BYTES + Integer.BYTES + Integer.BYTES));
     }
 
-    public int capacity() {
+    public synchronized int capacity() {
         return capacity;
     }
 
-    public long reservedBytes() {
+    public synchronized long reservedBytes() {
         return reservation.bytes();
     }
 

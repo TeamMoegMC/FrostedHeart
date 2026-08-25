@@ -1,9 +1,9 @@
 # 玩家体温系统
 
 - Status: `Current`
-- Last verified: `2026-08-22`
+- Last verified: `2026-08-25`
 - Scope: 玩家周围方块采样、环境温度、衣物与介质换热、分部位体温、设备/食物、状态效果、持久化和同步
-- Primary code anchors: `TemperatureUpdate`, `TemperatureComputation`, `TemperatureThreadingPool`, `SurroundingTemperatureSimulator`, `CachedBlockTempInfo`, `PlayerTemperatureData`, `BodyPartData`, `ClothData`, `HeatingDeviceContext`, `BodyHeatingCapability`, `FoodTemperatureHandler`
+- Primary code anchors: `TemperatureUpdate`, `TemperatureComputation`, `TemperatureThreadingPool`, `SurroundingTemperatureSimulator`, `CachedBlockTempInfo`, `PlayerTemperatureData`, `BodyPartData`, `ClothData`, `HeatingDeviceContext`, `BodyHeatingCapability`, `FoodTemperatureHandler`, `FHBodyDataSyncPacket`, `FrostedHud.renderTemperature`, `MinecraftThermalInput.gameplayPlayerEnvironment`, `MinecraftThermalInput.samplePlayerEnvironment`, `MinecraftThermalInput.MutableEnvironmentSample`, `MinecraftThermalInput.PlayerShadowSnapshot`, `MinecraftThermalInput.ShadowRuntimeSnapshot`
 
 ## 1. 数值基准
 
@@ -210,3 +210,23 @@ heatExchange = (effective - body) * unit / heatExchangeTempConstant
 - 玩家周围采样没有专门的基准测试夹具，现有测试只锁定空碰撞热源的缓存规则。
 
 这些条目是当前源码事实，不是本文建议的新玩法。
+
+## 10. 新热学运行时的玩家空气与辐射接线
+
+`TemperatureUpdate.updateTemperature` 现在通过 `MinecraftThermalInput.gameplayPlayerEnvironment` 使用新运行时已经发布的空气温度和同一次查询得到的直接辐射，并继续复用原有环境属性、衣物、五部位体温、效果、伤害和同步链。首次查询会为该 `ServerLevel` 建立现有 runtime，并 capture 玩家眼睛所在 section；首个 publication 尚未完成、Page 无空气或 publication 失效时才返回本次 `TemperatureComputation.environment` 旧空气值。`PlayerShadowSnapshot` 仍记录两种空气温度的差异。为避免双重采样，旧 `SurroundingTemperatureSimulator` 的玩家调度块暂时保留为注释。
+
+`samplePlayerEnvironment` 本身仍是 main-thread、caller-owned mutable result 路径。空气温度取已 admission 的 Page：规则 Brick 直接使用 coverage ref，mixed Brick 按 `4x4x4` microcell 解析真实 component；随后通过 `DimensionThermalRuntime.tryReadPublishedCell` 同时校验 dimension generation、geometry revision、topology generation 和 publication seqlock。默认玩家查询拒绝超过 `40` ticks 的 publication。只有外层 `gameplayPlayerEnvironment` 会在玩家 section 缺失时对已加载 chunk 做一次完整 Page capture；底层 sample、机器、作物和城镇 query 仍不会加载区块或自动 admission。
+
+HUD 不是另一个 thermal query consumer。服务端仍由 `TemperatureUpdate` 更新 `PlayerTemperatureData`，所以新空气温度会沿原 `FHBodyDataSyncPacket` 进入客户端；温度球读取 `getTotalFeelTemp()`，预报栏读取 `getEnvTemp()`，冷热条与遮罩读取客户端平滑后的核心体温。HUD 不会额外查询一次 thermal runtime。
+
+同一 caller-owned 结果保留 `airTemperatureC`、`radiantFluxWPerM2`、`surfaceFluxW`、`mediumId`、`confidence`、`sampleTick`、cell flags 和 query flags。实机 runtime 自动启用 Campfire/Generator physical sources 与 Phase J receiver service。生产遮挡直接读取已加载 section 中的 `BlockState`：`hasDynamicShape=true` 按空气，自动信任的静态状态只用 `BlockState.canOcclude()` 判断透明或整块不透明；不经过热签名 resolver、不创建位置对象、不栅格化部分形状，也不复用 collision/airflow/contact mask。
+
+玩家仍按现有 `temperatureUpdateIntervalTicks` cadence 查询。三个身体高度的平均辐照度 `q` 以 `W/m²` 返回，并按下式转换为本轮统一的身体部位温升，而不是直接当作摄氏度：
+
+```text
+absorbedEnergyJ = q * 0.7 m² * 0.8 * (updateIntervalTicks / 20 s)
+bodyDeltaC = absorbedEnergyJ / 5,000 J/K
+feelingDeltaC = q * 0.8 / (6 W/m²/K)
+```
+
+`0.7 m²` 是有效投影面积，`0.8` 是吸收率，`5,000 J/K` 是用于现有玩法响应时间尺度的暴露组织有效热容；`6 W/m²/K` 是线性化辐射换热系数，用于已有 `totalFeelTemp`/温度球的即时体感显示，不再次增加身体能量。body delta 进入五部位体温、恒温判断和现有效果；墙体遮挡使 `q=0`，因此身体与体感两路都消失。服务使用 `16` 格范围、`0.1 W/m²` cutoff、每玩家最多 `8` 个候选和 `24` 条射线，普通单篝火为每次更新 `3` 条射线；LOS witness 命中时不读取世界。每维度最坏保留预算约 `729,408 B`。材料吸收/融雪 radiation 与 surface compositor 仍未实现，数值仍需实机玩法校准。

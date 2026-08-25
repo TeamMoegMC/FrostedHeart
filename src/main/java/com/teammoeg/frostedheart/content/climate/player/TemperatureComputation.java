@@ -44,6 +44,39 @@ import java.util.UUID;
 
 public class TemperatureComputation {
     public static final UUID ENV_TEMP_ATTRIBUTE_UUID = UUID.fromString("95c1eab4-8f3a-4878-aaa7-a86722cdfb07");
+    private static final double PLAYER_RADIATION_PROJECTED_AREA_M2 = 0.7D;
+    private static final double PLAYER_RADIATION_ABSORPTIVITY = 0.8D;
+    private static final double PLAYER_RADIATION_EFFECTIVE_HEAT_CAPACITY_J_PER_C = 5_000.0D;
+    private static final double PLAYER_RADIATION_TRANSFER_W_PER_M2_K = 6.0D;
+
+    /** Converts W/m2 into the uniform body-part delta for one update interval. */
+    static float radiantBodyTemperatureDelta(
+            double radiantFluxWPerM2,
+            int updateIntervalTicks
+    ) {
+        if (!(radiantFluxWPerM2 > 0.0D) || !Double.isFinite(radiantFluxWPerM2)
+                || updateIntervalTicks <= 0) {
+            return 0.0F;
+        }
+        double seconds = updateIntervalTicks / 20.0D;
+        double absorbedEnergyJ = radiantFluxWPerM2
+                * PLAYER_RADIATION_PROJECTED_AREA_M2
+                * PLAYER_RADIATION_ABSORPTIVITY
+                * seconds;
+        return (float) (absorbedEnergyJ
+                / PLAYER_RADIATION_EFFECTIVE_HEAT_CAPACITY_J_PER_C);
+    }
+
+    /** Converts absorbed irradiance into the HUD's equivalent radiant temperature. */
+    static float radiantFeelingTemperatureDelta(double radiantFluxWPerM2) {
+        if (!(radiantFluxWPerM2 > 0.0D) || !Double.isFinite(radiantFluxWPerM2)) {
+            return 0.0F;
+        }
+        return (float) (radiantFluxWPerM2
+                * PLAYER_RADIATION_ABSORPTIVITY
+                / PLAYER_RADIATION_TRANSFER_W_PER_M2_K);
+    }
+
     //returns 37-based 
     protected static float environment(ServerPlayer player, PlayerTemperatureData data) {
         // World Temp: Dimension, Biome, Climate, Time, heat adjusts

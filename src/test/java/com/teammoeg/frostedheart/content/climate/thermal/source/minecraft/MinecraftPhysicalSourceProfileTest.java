@@ -19,12 +19,12 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class MinecraftPhysicalSourceProfileTest {
     @Test
-    void campfireFreezesOneKilowattWithExplicitBlockedConvectionLoss() {
+    void campfireUsesEightKilowattsWithExplicitBlockedConvectionLoss() {
         MinecraftPhysicalSourceProfile profile =
                 MinecraftPhysicalSourceProfile.CAMPFIRE;
         MinecraftPhysicalSourceProfile.Port[] ports = profile.ports();
 
-        assertEquals(1_000.0D, profile.ratedPowerW());
+        assertEquals(8_000.0D, profile.ratedPowerW());
         assertEquals(
                 MinecraftPhysicalSourceProfile.MissingPortPolicy.EXPLICIT_LOSS,
                 profile.missingPortPolicy());

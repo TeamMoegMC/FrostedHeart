@@ -22,14 +22,18 @@ public record MinecraftPhysicalSourceProfile(
         int profileId,
         double ratedPowerW,
         MissingPortPolicy missingPortPolicy,
-        Port[] ports
+        Port[] ports,
+        double radiationOffsetX,
+        double radiationOffsetY,
+        double radiationOffsetZ,
+        double radiationDirectionalUpperBound
 ) {
     private static final double SHARE_TOLERANCE = 1.0e-12D;
 
     public static final MinecraftPhysicalSourceProfile CAMPFIRE =
             new MinecraftPhysicalSourceProfile(
                     1,
-                    1_000.0D,
+                    8_000.0D,
                     MissingPortPolicy.EXPLICIT_LOSS,
                     new Port[]{
                             Port.airFace(
@@ -37,7 +41,8 @@ public record MinecraftPhysicalSourceProfile(
                                     0, 1, 0,
                                     ConservativeAirGeometry.Face.NEGATIVE_Y),
                             Port.declaredLoss(1, SourceChannel.RADIATION, 0.2D)
-                    });
+                    },
+                    0.5D, 0.75D, 0.5D, 1.0D);
 
     public static final MinecraftPhysicalSourceProfile GENERATOR =
             new MinecraftPhysicalSourceProfile(
@@ -51,7 +56,18 @@ public record MinecraftPhysicalSourceProfile(
                                     ConservativeAirGeometry.Face.NEGATIVE_Y),
                             Port.internalHeat(1, SourceChannel.CONTACT, 0.1D),
                             Port.declaredLoss(2, SourceChannel.RADIATION, 0.2D)
-                    });
+                    },
+                    0.5D, 0.5D, 0.5D, 1.0D);
+
+    public MinecraftPhysicalSourceProfile(
+            int profileId,
+            double ratedPowerW,
+            MissingPortPolicy missingPortPolicy,
+            Port[] ports
+    ) {
+        this(profileId, ratedPowerW, missingPortPolicy, ports,
+                0.5D, 0.5D, 0.5D, 1.0D);
+    }
 
     public MinecraftPhysicalSourceProfile {
         if (profileId < 0) {
@@ -59,6 +75,16 @@ public record MinecraftPhysicalSourceProfile(
         }
         if (!Double.isFinite(ratedPowerW) || ratedPowerW < 0.0D) {
             throw new IllegalArgumentException("ratedPowerW must be finite and non-negative");
+        }
+        if (!Double.isFinite(radiationOffsetX)
+                || !Double.isFinite(radiationOffsetY)
+                || !Double.isFinite(radiationOffsetZ)) {
+            throw new IllegalArgumentException("radiation origin offsets must be finite");
+        }
+        if (!Double.isFinite(radiationDirectionalUpperBound)
+                || radiationDirectionalUpperBound <= 0.0D) {
+            throw new IllegalArgumentException(
+                    "radiationDirectionalUpperBound must be finite and positive");
         }
         Objects.requireNonNull(missingPortPolicy, "missingPortPolicy");
         ports = Objects.requireNonNull(ports, "ports").clone();
@@ -93,6 +119,19 @@ public record MinecraftPhysicalSourceProfile(
             throw new ArithmeticException("physical source power exceeded the finite domain");
         }
         return power == 0.0D ? 0.0D : power;
+    }
+
+    public double radiativePowerW(double totalPowerW) {
+        if (!Double.isFinite(totalPowerW) || totalPowerW < 0.0D) {
+            throw new IllegalArgumentException("totalPowerW must be finite and non-negative");
+        }
+        double share = 0.0D;
+        for (Port port : ports) {
+            if (port.channel() == SourceChannel.RADIATION) {
+                share += port.powerShare();
+            }
+        }
+        return totalPowerW * share;
     }
 
     public enum MissingPortPolicy {

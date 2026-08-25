@@ -15,7 +15,7 @@ import com.teammoeg.frostedheart.content.climate.thermal.geometry.ComponentBrick
 import java.util.Arrays;
 
 /**
- * Primitive structure-of-arrays storage for regular 4/8/16 air cells.
+ * Primitive structure-of-arrays storage for air cells and sparse material poles.
  *
  * <p>The arena is owned by one logical thermal writer. A Page owns one dense
  * {@link ArenaSpan}; a LOD replacement allocates a second dense span and keeps
@@ -28,6 +28,12 @@ public final class ThermalCellArena {
     private static final byte LIVE = 1;
     private static final byte REGULAR_CELL = 0;
     private static final byte MIXED_COMPONENT = 1;
+    private static final byte MATERIAL_SURFACE = 2;
+    private static final byte MATERIAL_DEEP = 3;
+    private static final byte PHASE_RESERVOIR = 4;
+    private static final byte PHASE_REQUEST_IDLE = 0;
+    private static final byte PHASE_REQUEST_RETRY = 1;
+    private static final byte PHASE_REQUEST_ENQUEUED = 2;
     private static final double CAPACITY_RELATIVE_TOLERANCE = 1.0e-10D;
 
     private double[] enthalpyJ;
@@ -44,6 +50,13 @@ public final class ThermalCellArena {
     private byte[] cellKinds;
     private int[] mixedComponentIds;
     private ComponentBrickCompiler.CompiledBrick[] mixedBrickGeometries;
+    private long[] phaseCandidateMasks;
+    private double[] phaseTransitionTemperaturesC;
+    private double[] phaseTransitionEnergyJPerUnit;
+    private double[] phaseReservedEnergyJ;
+    private long[] phaseRequestSequences;
+    private byte[] phaseRequestCandidateBits;
+    private byte[] phaseRequestStates;
     private byte[] allocationState;
 
     private int highWaterMark;
@@ -67,6 +80,13 @@ public final class ThermalCellArena {
         cellKinds = new byte[initialCapacity];
         mixedComponentIds = new int[initialCapacity];
         mixedBrickGeometries = new ComponentBrickCompiler.CompiledBrick[initialCapacity];
+        phaseCandidateMasks = new long[initialCapacity];
+        phaseTransitionTemperaturesC = new double[initialCapacity];
+        phaseTransitionEnergyJPerUnit = new double[initialCapacity];
+        phaseReservedEnergyJ = new double[initialCapacity];
+        phaseRequestSequences = new long[initialCapacity];
+        phaseRequestCandidateBits = new byte[initialCapacity];
+        phaseRequestStates = new byte[initialCapacity];
         allocationState = new byte[initialCapacity];
         Arrays.fill(pageSlots, NO_SLOT);
         Arrays.fill(supportRefs, NO_SLOT);
@@ -168,11 +188,56 @@ public final class ThermalCellArena {
             double initialTemperatureC,
             double referenceTemperatureC
     ) {
+        return allocatePageCells(
+                pageSlot,
+                lifecycleGeneration,
+                regularCells,
+                mixedBricks,
+                new MaterialPoleSpec[0],
+                initialTemperatureC,
+                referenceTemperatureC);
+    }
+
+    /** Allocates air cells and sparse material poles in one Page-owned span. */
+    public PageAllocation allocatePageCells(
+            int pageSlot,
+            int lifecycleGeneration,
+            CellSpec[] regularCells,
+            MixedBrickSpec[] mixedBricks,
+            MaterialPoleSpec[] materialPoles,
+            double initialTemperatureC,
+            double referenceTemperatureC
+    ) {
+        return allocatePageCells(
+                pageSlot,
+                lifecycleGeneration,
+                regularCells,
+                mixedBricks,
+                materialPoles,
+                new PhaseReservoirSpec[0],
+                initialTemperatureC,
+                referenceTemperatureC);
+    }
+
+    /** Allocates all air, material, and Brick-local phase state for one Page. */
+    public PageAllocation allocatePageCells(
+            int pageSlot,
+            int lifecycleGeneration,
+            CellSpec[] regularCells,
+            MixedBrickSpec[] mixedBricks,
+            MaterialPoleSpec[] materialPoles,
+            PhaseReservoirSpec[] phaseReservoirs,
+            double initialTemperatureC,
+            double referenceTemperatureC
+    ) {
         requireLifecycleGeneration(lifecycleGeneration);
         requireFinite("initialTemperatureC", initialTemperatureC);
         requireFinite("referenceTemperatureC", referenceTemperatureC);
         CellSpec[] regular = validateLayout(pageSlot, regularCells);
         MixedBrickSpec[] mixed = validateMixedLayout(pageSlot, regular, mixedBricks);
+        MaterialPoleSpec[] materials = validateMaterialLayout(
+                pageSlot, regular, mixed, materialPoles);
+        PhaseReservoirSpec[] phases = validatePhaseLayout(pageSlot, phaseReservoirs);
         double temperatureOffset = initialTemperatureC - referenceTemperatureC;
         requireFinite("initial temperature offset", temperatureOffset);
 
@@ -180,8 +245,11 @@ public final class ThermalCellArena {
         for (MixedBrickSpec brick : mixed) {
             totalCells = Math.addExact(totalCells, brick.geometry().componentCount());
         }
+        totalCells = Math.addExact(totalCells, materials.length);
+        totalCells = Math.addExact(totalCells, phases.length);
         if (totalCells == 0) {
-            return new PageAllocation(ArenaSpan.EMPTY, new int[0]);
+            return new PageAllocation(
+                    ArenaSpan.EMPTY, new int[0], new int[0], new int[0]);
         }
 
         int firstSlot = findFreeSpan(totalCells);
@@ -210,9 +278,32 @@ public final class ThermalCellArena {
                         finiteProduct("initial enthalpy", capacity, temperatureOffset));
             }
         }
+        int[] materialPoleSlots = new int[materials.length];
+        for (int materialIndex = 0; materialIndex < materials.length; materialIndex++) {
+            MaterialPoleSpec material = materials[materialIndex];
+            materialPoleSlots[materialIndex] = write;
+            double materialOffset = material.initialTemperatureC() - referenceTemperatureC;
+            requireFinite("initial material temperature offset", materialOffset);
+            writeMaterialPole(
+                    write++, pageSlot, lifecycleGeneration, material,
+                    finiteProduct(
+                            "initial material enthalpy",
+                            material.capacityJPerK(),
+                            materialOffset));
+        }
+        int[] phaseReservoirSlots = new int[phases.length];
+        for (int phaseIndex = 0; phaseIndex < phases.length; phaseIndex++) {
+            phaseReservoirSlots[phaseIndex] = write;
+            writePhaseReservoir(
+                    write++, pageSlot, lifecycleGeneration, phases[phaseIndex]);
+        }
         highWaterMark = Math.max(highWaterMark, required);
         liveCellCount = Math.addExact(liveCellCount, totalCells);
-        return new PageAllocation(new ArenaSpan(firstSlot, totalCells), mixedSupportRefs);
+        return new PageAllocation(
+                new ArenaSpan(firstSlot, totalCells),
+                mixedSupportRefs,
+                materialPoleSlots,
+                phaseReservoirSlots);
     }
 
     /**
@@ -390,6 +481,9 @@ public final class ThermalCellArena {
     public double temperatureC(int slot, double referenceTemperatureC) {
         requireFinite("referenceTemperatureC", referenceTemperatureC);
         requireLiveSlot(slot);
+        if (cellKinds[slot] == PHASE_RESERVOIR) {
+            return phaseTransitionTemperaturesC[slot];
+        }
         double temperature = referenceTemperatureC + enthalpyJ[slot] / capacityJPerK[slot];
         requireFinite("cell temperature", temperature);
         return temperature;
@@ -473,6 +567,12 @@ public final class ThermalCellArena {
 
     public int widthBlocks(int slot) {
         requireLiveSlot(slot);
+        if (isMaterialKind(cellKinds[slot])) {
+            return 1;
+        }
+        if (cellKinds[slot] == PHASE_RESERVOIR) {
+            return 4;
+        }
         return widthForLevel(levels[slot]);
     }
 
@@ -484,6 +584,154 @@ public final class ThermalCellArena {
     public boolean isMixedComponent(int slot) {
         requireLiveSlot(slot);
         return cellKinds[slot] == MIXED_COMPONENT;
+    }
+
+    public boolean isMaterialPole(int slot) {
+        requireLiveSlot(slot);
+        return isMaterialKind(cellKinds[slot]);
+    }
+
+    public MaterialPoleDepth materialPoleDepth(int slot) {
+        requireLiveSlot(slot);
+        return switch (cellKinds[slot]) {
+            case MATERIAL_SURFACE -> MaterialPoleDepth.SURFACE;
+            case MATERIAL_DEEP -> MaterialPoleDepth.DEEP;
+            default -> throw new IllegalArgumentException("slot is not a material pole: " + slot);
+        };
+    }
+
+    public int materialProfileId(int slot) {
+        if (!isMaterialPole(slot)) {
+            throw new IllegalArgumentException("slot is not a material pole: " + slot);
+        }
+        return mediumIds[slot];
+    }
+
+    public boolean isPhaseReservoir(int slot) {
+        requireLiveSlot(slot);
+        return cellKinds[slot] == PHASE_RESERVOIR;
+    }
+
+    public int phaseProfileId(int slot) {
+        requirePhaseReservoir(slot);
+        return mediumIds[slot];
+    }
+
+    public long phaseCandidateMask(int slot) {
+        requirePhaseReservoir(slot);
+        return phaseCandidateMasks[slot];
+    }
+
+    public double phaseTransitionTemperatureC(int slot) {
+        requirePhaseReservoir(slot);
+        return phaseTransitionTemperaturesC[slot];
+    }
+
+    public double phaseTransitionEnergyJPerUnit(int slot) {
+        requirePhaseReservoir(slot);
+        return phaseTransitionEnergyJPerUnit[slot];
+    }
+
+    public double phaseReservedEnergyJ(int slot) {
+        requirePhaseReservoir(slot);
+        return phaseReservedEnergyJ[slot];
+    }
+
+    public double phaseAvailableEnergyJ(int slot) {
+        requirePhaseReservoir(slot);
+        return enthalpyJ[slot] - phaseReservedEnergyJ[slot];
+    }
+
+    public double phaseMaximumEnergyJ(int slot) {
+        requirePhaseReservoir(slot);
+        return Long.bitCount(phaseCandidateMasks[slot])
+                * phaseTransitionEnergyJPerUnit[slot];
+    }
+
+    public boolean phaseRequestOutstanding(int slot) {
+        requirePhaseReservoir(slot);
+        return phaseRequestStates[slot] != PHASE_REQUEST_IDLE;
+    }
+
+    public boolean phaseRequestNeedsOffer(int slot) {
+        requirePhaseReservoir(slot);
+        return phaseRequestStates[slot] == PHASE_REQUEST_RETRY;
+    }
+
+    public long phaseRequestSequence(int slot) {
+        requirePhaseReservoir(slot);
+        return phaseRequestSequences[slot];
+    }
+
+    public int phaseRequestCandidateBit(int slot) {
+        requirePhaseReservoir(slot);
+        return phaseRequestStates[slot] == PHASE_REQUEST_IDLE
+                ? -1 : Byte.toUnsignedInt(phaseRequestCandidateBits[slot]);
+    }
+
+    public void beginPhaseRequest(
+            int slot,
+            long requestSequence,
+            int candidateBit
+    ) {
+        requirePhaseReservoir(slot);
+        if (phaseRequestStates[slot] != PHASE_REQUEST_IDLE
+                || requestSequence <= phaseRequestSequences[slot]
+                || candidateBit < 0 || candidateBit >= Long.SIZE
+                || (phaseCandidateMasks[slot] & (1L << candidateBit)) == 0L
+                || phaseAvailableEnergyJ(slot) + 1.0e-12D
+                < phaseTransitionEnergyJPerUnit[slot]) {
+            throw new IllegalStateException("phase request cannot be reserved");
+        }
+        phaseReservedEnergyJ[slot] = phaseTransitionEnergyJPerUnit[slot];
+        phaseRequestSequences[slot] = requestSequence;
+        phaseRequestCandidateBits[slot] = (byte) candidateBit;
+        phaseRequestStates[slot] = PHASE_REQUEST_RETRY;
+    }
+
+    public void markPhaseRequestEnqueued(int slot, long requestSequence) {
+        requireCurrentPhaseRequest(slot, requestSequence);
+        phaseRequestStates[slot] = PHASE_REQUEST_ENQUEUED;
+    }
+
+    public void retryPhaseRequest(int slot, long requestSequence) {
+        requireCurrentPhaseRequest(slot, requestSequence);
+        phaseRequestStates[slot] = PHASE_REQUEST_RETRY;
+    }
+
+    public double completePhaseRequest(
+            int slot,
+            long requestSequence,
+            boolean mutationApplied
+    ) {
+        requireCurrentPhaseRequest(slot, requestSequence);
+        double reserved = phaseReservedEnergyJ[slot];
+        if (mutationApplied) {
+            double next = enthalpyJ[slot] - reserved;
+            if (!Double.isFinite(next) || next < -1.0e-9D) {
+                throw new IllegalStateException("phase completion exceeds stored energy");
+            }
+            enthalpyJ[slot] = Math.max(0.0D, next);
+        }
+        phaseReservedEnergyJ[slot] = 0.0D;
+        phaseRequestCandidateBits[slot] = 0;
+        phaseRequestStates[slot] = PHASE_REQUEST_IDLE;
+        return mutationApplied ? reserved : 0.0D;
+    }
+
+    public void copyPhaseRequestState(int oldSlot, int newSlot) {
+        requirePhaseReservoir(oldSlot);
+        requirePhaseReservoir(newSlot);
+        if (phaseProfileId(oldSlot) != phaseProfileId(newSlot)
+                || minimumX[oldSlot] != minimumX[newSlot]
+                || minimumY[oldSlot] != minimumY[newSlot]
+                || minimumZ[oldSlot] != minimumZ[newSlot]) {
+            throw new IllegalArgumentException("phase reservoir ownership key changed");
+        }
+        phaseReservedEnergyJ[newSlot] = phaseReservedEnergyJ[oldSlot];
+        phaseRequestSequences[newSlot] = phaseRequestSequences[oldSlot];
+        phaseRequestCandidateBits[newSlot] = phaseRequestCandidateBits[oldSlot];
+        phaseRequestStates[newSlot] = phaseRequestStates[oldSlot];
     }
 
     public boolean isMixedSupport(int supportRef) {
@@ -513,6 +761,9 @@ public final class ThermalCellArena {
 
     public double centerX(int slot) {
         requireLiveSlot(slot);
+        if (isMaterialKind(cellKinds[slot])) {
+            return minimumX[slot] + 0.5D;
+        }
         if (cellKinds[slot] == REGULAR_CELL) {
             return minimumX[slot] + widthBlocks(slot) * 0.5D;
         }
@@ -522,6 +773,9 @@ public final class ThermalCellArena {
 
     public double centerY(int slot) {
         requireLiveSlot(slot);
+        if (isMaterialKind(cellKinds[slot])) {
+            return minimumY[slot] + 0.5D;
+        }
         if (cellKinds[slot] == REGULAR_CELL) {
             return minimumY[slot] + widthBlocks(slot) * 0.5D;
         }
@@ -531,6 +785,9 @@ public final class ThermalCellArena {
 
     public double centerZ(int slot) {
         requireLiveSlot(slot);
+        if (isMaterialKind(cellKinds[slot])) {
+            return minimumZ[slot] + 0.5D;
+        }
         if (cellKinds[slot] == REGULAR_CELL) {
             return minimumZ[slot] + widthBlocks(slot) * 0.5D;
         }
@@ -725,6 +982,64 @@ public final class ThermalCellArena {
         return mixed;
     }
 
+    private static MaterialPoleSpec[] validateMaterialLayout(
+            int pageSlot,
+            CellSpec[] regular,
+            MixedBrickSpec[] mixed,
+            MaterialPoleSpec[] materialPoles
+    ) {
+        if (pageSlot < 0) {
+            throw new IllegalArgumentException("pageSlot must be non-negative");
+        }
+        if (materialPoles == null) {
+            throw new IllegalArgumentException("materialPoles are required");
+        }
+        MaterialPoleSpec[] materials = materialPoles.clone();
+        for (MaterialPoleSpec material : materials) {
+            if (material == null) {
+                throw new IllegalArgumentException("material pole specification is required");
+            }
+        }
+        if (materials.length == 0) {
+            return materials;
+        }
+
+        int anchorX = regular.length != 0 ? regular[0].minX()
+                : mixed.length != 0 ? mixed[0].minX() : materials[0].blockX();
+        int anchorY = regular.length != 0 ? regular[0].minY()
+                : mixed.length != 0 ? mixed[0].minY() : materials[0].blockY();
+        int anchorZ = regular.length != 0 ? regular[0].minZ()
+                : mixed.length != 0 ? mixed[0].minZ() : materials[0].blockZ();
+        int sectionX = Math.floorDiv(anchorX, 16);
+        int sectionY = Math.floorDiv(anchorY, 16);
+        int sectionZ = Math.floorDiv(anchorZ, 16);
+        for (MaterialPoleSpec material : materials) {
+            if (Math.floorDiv(material.blockX(), 16) != sectionX
+                    || Math.floorDiv(material.blockY(), 16) != sectionY
+                    || Math.floorDiv(material.blockZ(), 16) != sectionZ) {
+                throw new IllegalArgumentException(
+                        "all material poles must belong to the Page section");
+            }
+        }
+        return materials;
+    }
+
+    private static PhaseReservoirSpec[] validatePhaseLayout(
+            int pageSlot,
+            PhaseReservoirSpec[] phaseReservoirs
+    ) {
+        if (pageSlot < 0 || phaseReservoirs == null) {
+            throw new IllegalArgumentException("Page and phase reservoir layout are required");
+        }
+        PhaseReservoirSpec[] phases = phaseReservoirs.clone();
+        for (PhaseReservoirSpec phase : phases) {
+            if (phase == null) {
+                throw new IllegalArgumentException("phase reservoir specification is required");
+            }
+        }
+        return phases;
+    }
+
     private static CellSpec[] validateReplacementCells(CellSpec[] cells) {
         if (cells == null) {
             throw new IllegalArgumentException("replacement cells are required");
@@ -880,6 +1195,15 @@ public final class ThermalCellArena {
         cellKinds = Arrays.copyOf(cellKinds, grown);
         mixedComponentIds = Arrays.copyOf(mixedComponentIds, grown);
         mixedBrickGeometries = Arrays.copyOf(mixedBrickGeometries, grown);
+        phaseCandidateMasks = Arrays.copyOf(phaseCandidateMasks, grown);
+        phaseTransitionTemperaturesC = Arrays.copyOf(
+                phaseTransitionTemperaturesC, grown);
+        phaseTransitionEnergyJPerUnit = Arrays.copyOf(
+                phaseTransitionEnergyJPerUnit, grown);
+        phaseReservedEnergyJ = Arrays.copyOf(phaseReservedEnergyJ, grown);
+        phaseRequestSequences = Arrays.copyOf(phaseRequestSequences, grown);
+        phaseRequestCandidateBits = Arrays.copyOf(phaseRequestCandidateBits, grown);
+        phaseRequestStates = Arrays.copyOf(phaseRequestStates, grown);
         allocationState = Arrays.copyOf(allocationState, grown);
         Arrays.fill(pageSlots, oldCapacity, grown, NO_SLOT);
         Arrays.fill(supportRefs, oldCapacity, grown, NO_SLOT);
@@ -907,6 +1231,13 @@ public final class ThermalCellArena {
             cellKinds[slot] = REGULAR_CELL;
             mixedComponentIds[slot] = NO_SLOT;
             mixedBrickGeometries[slot] = null;
+            phaseCandidateMasks[slot] = 0L;
+            phaseTransitionTemperaturesC[slot] = 0.0D;
+            phaseTransitionEnergyJPerUnit[slot] = 0.0D;
+            phaseReservedEnergyJ[slot] = 0.0D;
+            phaseRequestSequences[slot] = 0L;
+            phaseRequestCandidateBits[slot] = 0;
+            phaseRequestStates[slot] = PHASE_REQUEST_IDLE;
         }
         liveCellCount -= span.count();
         while (highWaterMark > 0 && allocationState[highWaterMark - 1] == FREE) {
@@ -949,6 +1280,21 @@ public final class ThermalCellArena {
         requireLiveSlot(slot);
         if (cellKinds[slot] != MIXED_COMPONENT) {
             throw new IllegalArgumentException("slot is not a mixed component: " + slot);
+        }
+    }
+
+    private void requirePhaseReservoir(int slot) {
+        requireLiveSlot(slot);
+        if (cellKinds[slot] != PHASE_RESERVOIR) {
+            throw new IllegalArgumentException("slot is not a phase reservoir: " + slot);
+        }
+    }
+
+    private void requireCurrentPhaseRequest(int slot, long requestSequence) {
+        requirePhaseReservoir(slot);
+        if (phaseRequestStates[slot] == PHASE_REQUEST_IDLE
+                || phaseRequestSequences[slot] != requestSequence) {
+            throw new IllegalStateException("phase request is not current");
         }
     }
 
@@ -1000,6 +1346,61 @@ public final class ThermalCellArena {
         cellFlags[slot] = (byte) brick.flags();
         cellKinds[slot] = MIXED_COMPONENT;
         mixedComponentIds[slot] = componentId;
+    }
+
+    private void writeMaterialPole(
+            int slot,
+            int pageSlot,
+            int lifecycleGeneration,
+            MaterialPoleSpec material,
+            double initialEnthalpyJ
+    ) {
+        allocationState[slot] = LIVE;
+        enthalpyJ[slot] = initialEnthalpyJ;
+        capacityJPerK[slot] = material.capacityJPerK();
+        pageSlots[slot] = pageSlot;
+        lifecycleGenerations[slot] = lifecycleGeneration;
+        supportRefs[slot] = slot;
+        minimumX[slot] = material.blockX();
+        minimumY[slot] = material.blockY();
+        minimumZ[slot] = material.blockZ();
+        mediumIds[slot] = material.materialProfileId();
+        levels[slot] = 0;
+        cellFlags[slot] = 0;
+        cellKinds[slot] = material.depth() == MaterialPoleDepth.SURFACE
+                ? MATERIAL_SURFACE : MATERIAL_DEEP;
+        mixedComponentIds[slot] = NO_SLOT;
+        mixedBrickGeometries[slot] = null;
+    }
+
+    private void writePhaseReservoir(
+            int slot,
+            int pageSlot,
+            int lifecycleGeneration,
+            PhaseReservoirSpec phase
+    ) {
+        allocationState[slot] = LIVE;
+        enthalpyJ[slot] = 0.0D;
+        capacityJPerK[slot] = phase.transitionEnergyJPerUnit();
+        pageSlots[slot] = pageSlot;
+        lifecycleGenerations[slot] = lifecycleGeneration;
+        supportRefs[slot] = slot;
+        minimumX[slot] = phase.brickMinX();
+        minimumY[slot] = phase.brickMinY();
+        minimumZ[slot] = phase.brickMinZ();
+        mediumIds[slot] = phase.materialProfileId();
+        levels[slot] = levelForWidth(4);
+        cellFlags[slot] = 0;
+        cellKinds[slot] = PHASE_RESERVOIR;
+        mixedComponentIds[slot] = NO_SLOT;
+        mixedBrickGeometries[slot] = null;
+        phaseCandidateMasks[slot] = phase.candidateMask();
+        phaseTransitionTemperaturesC[slot] = phase.transitionTemperatureC();
+        phaseTransitionEnergyJPerUnit[slot] = phase.transitionEnergyJPerUnit();
+        phaseReservedEnergyJ[slot] = 0.0D;
+        phaseRequestSequences[slot] = 0L;
+        phaseRequestCandidateBits[slot] = 0;
+        phaseRequestStates[slot] = PHASE_REQUEST_IDLE;
     }
 
     private static void requireSlotInSpan(String name, int slot, ArenaSpan span) {
@@ -1163,17 +1564,92 @@ public final class ThermalCellArena {
     ) {
     }
 
-    public record PageAllocation(ArenaSpan cellSpan, int[] mixedSupportRefs) {
+    public record PageAllocation(
+            ArenaSpan cellSpan,
+            int[] mixedSupportRefs,
+            int[] materialPoleSlots,
+            int[] phaseReservoirSlots
+    ) {
         public PageAllocation {
-            if (cellSpan == null || mixedSupportRefs == null) {
+            if (cellSpan == null || mixedSupportRefs == null
+                    || materialPoleSlots == null || phaseReservoirSlots == null) {
                 throw new IllegalArgumentException("Page allocation fields are required");
             }
             mixedSupportRefs = mixedSupportRefs.clone();
+            materialPoleSlots = materialPoleSlots.clone();
+            phaseReservoirSlots = phaseReservoirSlots.clone();
         }
 
         @Override
         public int[] mixedSupportRefs() {
             return mixedSupportRefs.clone();
+        }
+
+        @Override
+        public int[] materialPoleSlots() {
+            return materialPoleSlots.clone();
+        }
+
+        @Override
+        public int[] phaseReservoirSlots() {
+            return phaseReservoirSlots.clone();
+        }
+    }
+
+    public enum MaterialPoleDepth {
+        SURFACE,
+        DEEP
+    }
+
+    public record MaterialPoleSpec(
+            int blockX,
+            int blockY,
+            int blockZ,
+            int materialProfileId,
+            MaterialPoleDepth depth,
+            double capacityJPerK,
+            double initialTemperatureC
+    ) {
+        public MaterialPoleSpec {
+            if (materialProfileId <= 0) {
+                throw new IllegalArgumentException("materialProfileId must be positive");
+            }
+            if (depth == null) {
+                throw new IllegalArgumentException("material pole depth is required");
+            }
+            if (!Double.isFinite(capacityJPerK) || capacityJPerK <= 0.0D) {
+                throw new IllegalArgumentException(
+                        "material pole capacity must be finite and positive");
+            }
+            requireFinite("initialTemperatureC", initialTemperatureC);
+        }
+    }
+
+    public record PhaseReservoirSpec(
+            int brickMinX,
+            int brickMinY,
+            int brickMinZ,
+            int materialProfileId,
+            long candidateMask,
+            double transitionTemperatureC,
+            double transitionEnergyJPerUnit
+    ) {
+        public PhaseReservoirSpec {
+            if ((Math.floorMod(brickMinX, 4)
+                    | Math.floorMod(brickMinY, 4)
+                    | Math.floorMod(brickMinZ, 4)) != 0) {
+                throw new IllegalArgumentException("phase reservoir must align to a 4-block Brick");
+            }
+            if (materialProfileId <= 0 || candidateMask == 0L) {
+                throw new IllegalArgumentException(
+                        "phase reservoir profile and candidate mask are required");
+            }
+            requireFinite("transitionTemperatureC", transitionTemperatureC);
+            if (!Double.isFinite(transitionEnergyJPerUnit)
+                    || transitionEnergyJPerUnit <= 0.0D) {
+                throw new IllegalArgumentException(
+                        "transitionEnergyJPerUnit must be finite and positive");
+            }
         }
     }
 
@@ -1382,5 +1858,9 @@ public final class ThermalCellArena {
 
     private static boolean contains(ArenaSpan span, int slot) {
         return slot >= span.firstSlot() && slot < span.endSlotExclusive();
+    }
+
+    private static boolean isMaterialKind(byte kind) {
+        return kind == MATERIAL_SURFACE || kind == MATERIAL_DEEP;
     }
 }

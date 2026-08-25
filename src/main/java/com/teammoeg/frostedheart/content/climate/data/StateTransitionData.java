@@ -70,6 +70,19 @@ public record StateTransitionData(BlockState block,boolean ignoreState, Physical
                                   float freezeTemp, float meltTemp,
                                   float condenseTemp, float evaporateTemp,
                                   int heatCapacity, boolean willTransit){
+
+    /** The first configured transition stage reached while heating this state. */
+    public record HeatingTransition(
+            float temperatureC,
+            PhysicalState targetState,
+            BlockState targetBlock
+    ) {
+        public HeatingTransition {
+            if (!Float.isFinite(temperatureC) || targetState == null || targetBlock == null) {
+                throw new IllegalArgumentException("heating transition fields are invalid");
+            }
+        }
+    }
 	
     public static final Codec<StateTransitionData> CODEC= RecordCodecBuilder.create(t->t.group(
     		BlockState.CODEC.optionalFieldOf("block").forGetter(o->Optional.ofNullable(o.block)),
@@ -98,6 +111,56 @@ public record StateTransitionData(BlockState block,boolean ignoreState, Physical
     @Nullable
     public static StateTransitionData getData(BlockState block) {
         return CACHE.get(block);
+    }
+
+    /**
+     * Returns the first hot-side stage at its onset temperature. A later stage
+     * is compiled from the replacement BlockState, so each stage accounts for
+     * its own latent energy. Equal solid thresholds keep the legacy gas-first
+     * priority.
+     */
+    @Nullable
+    public HeatingTransition heatingTransition(BlockState currentState) {
+        if (currentState == null) {
+            return null;
+        }
+        return switch (state) {
+            case SOLID -> earlier(
+                    candidate(evaporateTemp, PhysicalState.GAS, gas, currentState),
+                    candidate(meltTemp, PhysicalState.LIQUID, liquid, currentState));
+            case LIQUID -> candidate(
+                    evaporateTemp, PhysicalState.GAS, gas, currentState);
+            case GAS -> null;
+        };
+    }
+
+    @Nullable
+    private static HeatingTransition candidate(
+            float temperatureC,
+            PhysicalState targetState,
+            BlockState targetBlock,
+            BlockState currentState
+    ) {
+        if (!Float.isFinite(temperatureC)
+                || targetBlock == null
+                || targetBlock == currentState) {
+            return null;
+        }
+        return new HeatingTransition(temperatureC, targetState, targetBlock);
+    }
+
+    @Nullable
+    private static HeatingTransition earlier(
+            HeatingTransition priority,
+            HeatingTransition fallback
+    ) {
+        if (priority == null) {
+            return fallback;
+        }
+        if (fallback == null || priority.temperatureC() <= fallback.temperatureC()) {
+            return priority;
+        }
+        return fallback;
     }
     public Stream<Pair<BlockState,StateTransitionData>> getStates(){
     	if(!ignoreState)

@@ -166,6 +166,51 @@ class DimensionThermalRuntimeTest {
         assertFalse(fixture.publication().tryRead(0, 9L, 1L, out));
     }
 
+    @Test
+    void productionReaderRejectsAFormerPublicationAfterTopologyAdvance() {
+        Fixture fixture = fixture(1, limits(8, 8, 8, 2));
+        fixture.runtime().sealFrame(new SealedInputFrame(
+                5L, 9L, InputWatermarks.ZERO));
+        assertTrue(fixture.runtime().runOne().published());
+
+        QueryPublication.MutableSample out = new QueryPublication.MutableSample();
+        assertTrue(fixture.runtime().tryReadPublishedCell(0, out));
+        assertEquals(5L, out.sampleTick());
+
+        InputWatermarks changed = new InputWatermarks(1L, 0L, 0L, 0L, 0L);
+        assertEquals(DimensionThermalRuntime.AcknowledgeResult.APPLIED,
+                fixture.runtime().acknowledgeNonSourceInputs(
+                        9L, changed, 2L, 2L, true));
+        assertFalse(fixture.runtime().tryReadPublishedCell(0, out));
+    }
+
+    @Test
+    void diagnosticsNeverReadMutableArenaStateWhileTheWriterIsOwned() {
+        Fixture fixture = fixture(2, limits(8, 8, 8, 2));
+
+        DimensionThermalRuntime.Diagnostics idle = fixture.runtime().diagnostics();
+        assertFalse(idle.writerBusy());
+        assertEquals(2, idle.arenaHighWaterMark());
+        assertEquals(2, idle.liveCellCount());
+        assertTrue(idle.publicationReservedBytes() > 0L);
+
+        assertTrue(fixture.runtime().tryBeginTopologyUpdate());
+        try {
+            DimensionThermalRuntime.Diagnostics busy = fixture.runtime().diagnostics();
+            assertTrue(busy.writerBusy());
+            assertEquals(-1, busy.arenaCapacity());
+            assertEquals(-1, busy.arenaHighWaterMark());
+            assertEquals(-1, busy.liveCellCount());
+            assertEquals(-1, busy.pairOperationCount());
+            assertEquals(-1, busy.boundaryOperationCount());
+            assertEquals(-1, busy.phaseOperationCount());
+        } finally {
+            fixture.runtime().cancelTopologyUpdate();
+        }
+
+        assertFalse(fixture.runtime().diagnostics().writerBusy());
+    }
+
     private static DimensionThermalRuntime.Limits limits(
             int cells,
             int pairs,

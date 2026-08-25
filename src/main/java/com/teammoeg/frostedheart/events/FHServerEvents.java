@@ -25,6 +25,7 @@ import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.clusterserver.AuthConfig;
 import com.teammoeg.frostedheart.content.climate.player.SurroundingTemperatureSimulator;
 import com.teammoeg.frostedheart.content.climate.player.TemperatureUpdate;
+import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.MinecraftThermalInput;
 import com.teammoeg.frostedheart.restarter.TssapProtocolHandler;
 
 import net.minecraftforge.api.distmarker.Dist;
@@ -87,7 +88,7 @@ public class FHServerEvents {
 	 */
 	@SubscribeEvent
 	public static void serverStarted(final ServerStartedEvent event) {
-
+		MinecraftThermalInput.prepareGameplayProfiles();
 	}
 
 	/**

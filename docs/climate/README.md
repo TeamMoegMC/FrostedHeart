@@ -54,9 +54,11 @@ GeneratorData --> HeatEndpoint --> HeatNetwork --> radiator/fountain buffers
 
 ## 当前物理边界
 
-当前实现没有统一的能量守恒模型，也没有材料热容、质量、导热率场、相变潜热或以时间为分母的物理功率。`PlantTempData.heat_capacity` 和 `StateTransitionData.heatCapacity` 是随机状态变化的等待因子，不是热容。
+当前新热学 runtime 已对 admitted Page 内的空气、物理 source 与受热物态转换执行能量记账，但旧热网、热区和大部分材料仍不是统一 SI 模型。`PlantTempData.heat_capacity` 和 `StateTransitionData.heatCapacity` 原始语义仍是随机状态变化的等待因子，不是热容；热侧 profile 只把后者作为相对能量倍率。
 
 `SurroundingTemperatureSimulator` 会让热源对向下运动的采样轨迹权重较低、冷源对向上运动的轨迹权重较低，以近似“热上升、冷下沉”；它不保存流体速度、密度或热量，也不在方块间推进对流状态。因此后续研究对流、热容或功率时，应以这些现有玩法输出作为兼容边界，而不是把现有同名字段直接解释为物理量。
+
+当前玩家实机测试路径已暂时停止调度这套旧周边方块采样，改由 `MinecraftThermalInput.gameplayPlayerEnvironment` 的 Page publication 与有界直接辐射查询驱动原有体温和 HUD 下游；旧空气公式只在首个 publication 未完成或 query 明确 miss 时兜底。作物和住宅/狩猎建筑也会在已有 publication 完整命中时使用新空气温度，miss 或 town partial coverage 时整体回退原方块温度。普通机器没有现存温度消费者。admitted Page 中具有保守材料接触面的 `StateTransitionData` 热侧转换由 phase reservoir 接管；Page 外、无材料 mask、动态形状及冻结/凝结方向继续使用旧随机转换。
 
 ## 阅读顺序
 

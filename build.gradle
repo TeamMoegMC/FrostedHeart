@@ -1060,6 +1060,176 @@ gradle.projectsEvaluated {
     }
 }
 
+def thermalPhaseLReportDir = file("${buildDir}/reports/thermal-phase-l")
+def thermalPhaseLQueryJmhFile = file("${thermalPhaseLReportDir}/shadow-query-jmh.json")
+def thermalPhaseLQueryJmhHumanFile = file("${thermalPhaseLReportDir}/shadow-query-jmh.txt")
+def thermalPhaseLQueryJfrFile = file("${thermalPhaseLReportDir}/shadow-query-diagnostic.jfr")
+def thermalPhaseLQueryJfrResultFile =
+        file("${thermalPhaseLReportDir}/shadow-query-jfr-jmh.json")
+def thermalPhaseLQueryJfrHumanFile =
+        file("${thermalPhaseLReportDir}/shadow-query-jfr-jmh.txt")
+def thermalPhaseLRetainedFile = file("${thermalPhaseLReportDir}/shadow-query-retained.json")
+def thermalPhaseLEnvironmentFile = file("${thermalPhaseLReportDir}/environment.json")
+
+tasks.register('thermalPhaseLQueryJmh', JavaExec) {
+    group = 'verification'
+    description = 'Measures synthetic Phase L published-air query batches for 1/10/50/100 receivers.'
+    dependsOn tasks.named('jmhCompileGeneratedClasses')
+    javaLauncher = thermalBenchmarkJava
+    classpath = thermalJmhRuntimeClasspath
+    mainClass = 'org.openjdk.jmh.Main'
+    args 'com.teammoeg.frostedheart.content.climate.thermal.benchmark.ThermalShadowQueryBenchmark.queryPublishedAirBatch',
+            '-wi', '3', '-i', '5', '-w', '1s', '-r', '1s', '-f', '2',
+            '-prof', 'gc', '-foe', 'true',
+            '-jvmArgs', '-Xms2G -Xmx2G -XX:+UseG1GC',
+            '-rf', 'json', '-rff', thermalPhaseLQueryJmhFile.absolutePath,
+            '-o', thermalPhaseLQueryJmhHumanFile.absolutePath
+    doFirst {
+        thermalPhaseLReportDir.mkdirs()
+        [thermalPhaseLQueryJmhFile, thermalPhaseLQueryJmhHumanFile].each { output ->
+            if (output.exists() && !output.delete()) {
+                throw new GradleException("Could not replace generated benchmark artifact: ${output}")
+            }
+        }
+    }
+    doLast {
+        def results = new groovy.json.JsonSlurper().parse(thermalPhaseLQueryJmhFile)
+        def keys = results.collect { result ->
+            "${result.params?.layout}:${result.params?.receiverCount}"
+        }.toSet()
+        def requiredKeys = ['shared_page', 'distributed_pages'].collectMany { layout ->
+            ['1', '10', '50', '100'].collect { receiverCount ->
+                "${layout}:${receiverCount}"
+            }
+        }.toSet()
+        def missingKeys = requiredKeys - keys
+        if (!missingKeys.isEmpty()) {
+            throw new GradleException(
+                    "Phase L query JMH result is incomplete; missing ${missingKeys}")
+        }
+        def invalid = results.findAll { result ->
+            def score = result.primaryMetric?.score
+            def allocation = result.secondaryMetrics?.get('gc.alloc.rate.norm')?.score
+            !(score instanceof Number) || !Double.isFinite(score.doubleValue())
+                    || !(allocation instanceof Number)
+                    || !Double.isFinite(allocation.doubleValue())
+        }
+        if (!invalid.isEmpty()) {
+            throw new GradleException(
+                    'Phase L query JMH result contains invalid latency or allocation scores')
+        }
+    }
+    outputs.upToDateWhen { false }
+}
+
+tasks.register('thermalPhaseLQueryJfr', JavaExec) {
+    group = 'verification'
+    description = 'Captures a diagnostic JFR for a synthetic distributed 100-receiver query batch.'
+    dependsOn tasks.named('jmhCompileGeneratedClasses')
+    javaLauncher = thermalBenchmarkJava
+    classpath = thermalJmhRuntimeClasspath
+    mainClass = 'org.openjdk.jmh.Main'
+    jvmArgs '-Xms2G', '-Xmx2G', '-XX:+UseG1GC',
+            "-XX:StartFlightRecording=filename=${thermalPhaseLQueryJfrFile.absolutePath.replace('\\', '/')},settings=profile,dumponexit=true"
+    args 'com.teammoeg.frostedheart.content.climate.thermal.benchmark.ThermalShadowQueryBenchmark.queryPublishedAirBatch',
+            '-wi', '1', '-i', '2', '-w', '500ms', '-r', '500ms', '-f', '0',
+            '-p', 'layout=distributed_pages', '-p', 'receiverCount=100',
+            '-prof', 'gc', '-foe', 'true',
+            '-rf', 'json', '-rff', thermalPhaseLQueryJfrResultFile.absolutePath,
+            '-o', thermalPhaseLQueryJfrHumanFile.absolutePath
+    doFirst {
+        thermalPhaseLReportDir.mkdirs()
+        [thermalPhaseLQueryJfrFile,
+         thermalPhaseLQueryJfrResultFile,
+         thermalPhaseLQueryJfrHumanFile].each { output ->
+            if (output.exists() && !output.delete()) {
+                throw new GradleException("Could not replace generated benchmark artifact: ${output}")
+            }
+        }
+    }
+    outputs.upToDateWhen { false }
+}
+
+tasks.register('thermalPhaseLQueryRetainedHeap', JavaExec) {
+    group = 'verification'
+    description = 'Measures synthetic retained graphs for shared and distributed Phase L query fixtures.'
+    dependsOn tasks.named('jmhClasses')
+    javaLauncher = thermalBenchmarkJava
+    classpath = sourceSets.jmh.runtimeClasspath
+    mainClass = 'com.teammoeg.frostedheart.content.climate.thermal.benchmark.ThermalShadowQueryRetainedSize'
+    args thermalPhaseLRetainedFile.absolutePath
+    jvmArgs '-Xms1G', '-Xmx1G', '-Djdk.attach.allowAttachSelf=true',
+            '-Djol.magicFieldOffset=true'
+    doFirst {
+        thermalPhaseLReportDir.mkdirs()
+        if (thermalPhaseLRetainedFile.exists() && !thermalPhaseLRetainedFile.delete()) {
+            throw new GradleException(
+                    "Could not replace generated benchmark artifact: ${thermalPhaseLRetainedFile}")
+        }
+    }
+}
+
+tasks.register('thermalPhaseLEnvironmentManifest') {
+    group = 'verification'
+    description = 'Writes the local environment and limitations for Phase L synthetic diagnostics.'
+    outputs.file thermalPhaseLEnvironmentFile
+    doLast {
+        thermalPhaseLReportDir.mkdirs()
+        def operatingSystem = java.lang.management.ManagementFactory.operatingSystemMXBean
+        def physicalMemoryBytes = operatingSystem instanceof com.sun.management.OperatingSystemMXBean
+                ? operatingSystem.totalMemorySize
+                : -1L
+        def launcher = thermalBenchmarkJava.get()
+        def manifest = [
+                schemaVersion: 1,
+                evidenceScope: 'synthetic-shadow-query-diagnostic-not-phase-l-acceptance',
+                generatedAt: java.time.OffsetDateTime.now().toString(),
+                hardware: [
+                        processorIdentifier: System.getenv('PROCESSOR_IDENTIFIER') ?: 'unknown',
+                        logicalProcessors: Runtime.runtime.availableProcessors(),
+                        physicalMemoryBytes: physicalMemoryBytes,
+                        architecture: System.getProperty('os.arch')
+                ],
+                operatingSystem: [
+                        name: System.getProperty('os.name'),
+                        version: System.getProperty('os.version')
+                ],
+                benchmarkJvm: [
+                        vendor: launcher.metadata.vendor.toString(),
+                        version: launcher.metadata.javaRuntimeVersion.toString(),
+                        heap: '-Xms2G -Xmx2G',
+                        collector: 'G1'
+                ],
+                harness: [
+                        jmh: '1.37',
+                        receiverCounts: [1, 10, 50, 100],
+                        layouts: ['shared_page', 'distributed_pages'],
+                        scoreUnit: 'microseconds per sequential query batch',
+                        profiler: 'gc',
+                        retainedEstimator: 'JOL GraphLayout'
+                ],
+                limitations: [
+                        'Synthetic hot-query diagnostic; receiver labels are not real ServerPlayer instances.',
+                        'No ServerLevel, modpack workload, TPS, chunk lifecycle, topology rebuild, worker solve, or radiation receiver cache.',
+                        'Shared-page and distributed-page fixtures measure query and retained-state slopes only.',
+                        'JFR is diagnostic and runs without a JMH fork; forked JMH JSON remains the timing source.',
+                        'This bundle cannot approve Phase L or switch gameplay authority.'
+                ]
+        ]
+        thermalPhaseLEnvironmentFile.text = groovy.json.JsonOutput.prettyPrint(
+                groovy.json.JsonOutput.toJson(manifest)) + System.lineSeparator()
+    }
+}
+
+tasks.register('thermalPhaseLQueryDiagnostics') {
+    group = 'verification'
+    description = 'Produces synthetic Phase L query JMH, JFR, retained-size, and environment artifacts.'
+    dependsOn tasks.named('thermalPhaseLQueryJmh')
+    dependsOn tasks.named('thermalPhaseLQueryJfr')
+    dependsOn tasks.named('thermalPhaseLQueryRetainedHeap')
+    dependsOn tasks.named('thermalPhaseLEnvironmentManifest')
+}
+
 tasks.register('runTownSimulation', JavaExec) {
     group = 'frostedheart'
     description = 'Runs the incremental Java town numerical model command-line tool.'

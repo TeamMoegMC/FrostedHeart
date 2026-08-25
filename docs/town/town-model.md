@@ -1,6 +1,6 @@
 # 城镇临界自给数值模型
 
-> 状态：阶段 0–4 已实现；阶段 5 及之后尚未开始。最近验证：2026-08-24。货运站单日运力、仓库接口
+> 状态：阶段 0–4 已实现；阶段 5 及之后尚未开始。最近验证：2026-08-25。货运站单日运力、仓库接口
 > 与 P2P 消费参数已进入 `TownModelParameters` 和阶段 0 审计；仓库接口与 P2P 运行时消费均已实现，但尚未进入阶段模拟。
 >
 > 目标：把 FH/TWR 当前代码和数据中的城镇数值关系整理为一套可调用、可审计、可模拟的 Java 数学模型。本文是后续实现时的上下文基准。
@@ -216,6 +216,8 @@ T_{building,b,h}=\frac{1}{|V_b|}\sum_{v\in V_b}T_{block,v,h}
 \]
 
 这里的 \(|V_b|\) 就是扫描器记录的内部体积。它是离散空气方块数量，不是连续几何球体积。
+
+Phase K 在同一次 `BuildingBlockScanner` 遍历中顺带生成 `TownThermalProjection`：每个 world-aligned `4×4×4` base Brick 保存一个确定的真实内部空气代表点和体素权重；扫描成功后，`HouseBlockScanner` 与 `HuntingBaseBlockScanner` 通过 `MinecraftThermalInput.gameplayTownEnvironment` 各组只读一次已有 Air Mesh publication。所有 group 命中时，新加权平均驱动住宅和狩猎基地的温度、评分与日结算；部分或全部 miss 时整体回退上式 legacy 平均值。它不重新扫描房间、不保存逐体素位置、不创建 Page/Brick/Cell/Interest，也不持有 mesh lease。`MineBaseBlockScanner` 当前不产出 gameplay 温度，停用的 `MineBlockScanner` 也没有重新启用。
 
 ## 5. 能量塔、燃料过程 tick 与 T2 热网
 

@@ -29,6 +29,7 @@ import com.teammoeg.frostedheart.content.climate.data.PlantTempData;
 import com.teammoeg.frostedheart.content.climate.data.StateTransitionData;
 import com.teammoeg.frostedheart.content.climate.gamedata.chunkheat.ChunkHeatData;
 import com.teammoeg.frostedheart.content.climate.gamedata.climate.WorldClimate;
+import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.MinecraftThermalInput;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import net.minecraft.core.*;
 import net.minecraft.core.particles.ParticleTypes;
@@ -410,11 +411,17 @@ public abstract class ServerLevelMixin_TemperatureUpdate
         final PhysicalState sourceState = std.state();
         PhysicalState targetState = sourceState; // Default to current state
         BlockState targetBlock = currentState;   // Default to current block
+        boolean thermalOwnsHeating = MinecraftThermalInput.ownsGameplayHeatingTransition(
+                level, pos, currentState, std);
 
         switch (sourceState)
         {
             case SOLID:
             {
+                if (thermalOwnsHeating)
+                {
+                    break;
+                }
                 // To save performance, we only focus on blocks that player cares more about,
                 // otherwise we reduce transition rate
                 boolean shouldDoAdjust = level.random.nextInt(ambientBlockStateUpdateDivisor) == 0
@@ -442,6 +449,10 @@ public abstract class ServerLevelMixin_TemperatureUpdate
                 {
                     targetState = PhysicalState.SOLID;
                     targetBlock = std.solid();
+                }
+                else if (thermalOwnsHeating)
+                {
+                    break;
                 }
                 else
                 {

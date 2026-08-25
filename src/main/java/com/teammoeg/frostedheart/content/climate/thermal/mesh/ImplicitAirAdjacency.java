@@ -143,6 +143,9 @@ public final class ImplicitAirAdjacency {
         Map<Long, PairAccumulator> pairs = new LinkedHashMap<>();
         ArenaSpan ownerCells = owner.page().cellSpan();
         for (int slot = ownerCells.firstSlot(); slot < ownerCells.endSlotExclusive(); slot++) {
+            if (arena.isMaterialPole(slot) || arena.isPhaseReservoir(slot)) {
+                continue;
+            }
             requireOwnedCell(owner, arena, slot);
             int negativeSupport = arena.supportRef(slot);
             if (negativeSupport != slot) {

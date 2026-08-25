@@ -21,6 +21,8 @@ package com.teammoeg.frostedheart.content.town.buildings.house;
 
 import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
 import com.teammoeg.frostedheart.content.climate.WorldTemperature;
+import com.teammoeg.frostedheart.content.climate.thermal.consumer.TownThermalProjection;
+import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.MinecraftThermalInput;
 import com.teammoeg.chorda.util.CRegistryHelper;
 import com.teammoeg.frostedheart.content.town.block.blockscanner.*;
 
@@ -41,6 +43,8 @@ import static blusunrize.immersiveengineering.api.utils.SafeChunkUtils.getBlockS
 public class HouseBlockScanner extends BuildingBlockScanner {
     public final Map<String/*block.getName()*/, Integer> decorations = new HashMap<>();
     public final List<BlockPos> beds = new ArrayList<>();
+    public final TownThermalProjection thermalProjection =
+            new TownThermalProjection();
     public double temperature = 0;//average temperature
 
     public HouseBlockScanner(Level world, BlockPos startPos) {
@@ -67,6 +71,7 @@ public class HouseBlockScanner extends BuildingBlockScanner {
 
     @Override
     protected void processBuildingAirBlock(BlockPos pos) {
+        thermalProjection.include(pos);
         temperature += WorldTemperature.block(world, pos);
     }
 
@@ -75,6 +80,8 @@ public class HouseBlockScanner extends BuildingBlockScanner {
         super.scan();
         if(this.isValid){
             this.temperature /= this.volume;
+            this.temperature = MinecraftThermalInput.gameplayTownEnvironment(
+                    world, thermalProjection, temperature);
             return true;
         }else{
             this.temperature = 0;

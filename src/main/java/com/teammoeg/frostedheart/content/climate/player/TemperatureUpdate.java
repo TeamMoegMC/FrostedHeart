@@ -29,6 +29,7 @@ import com.teammoeg.frostedheart.content.climate.WorldTemperature;
 import com.teammoeg.frostedheart.content.climate.gamedata.climate.WorldClimate;
 import com.teammoeg.frostedheart.content.climate.network.FHBodyDataSyncPacket;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData.BodyPart;
+import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.MinecraftThermalInput;
 import com.teammoeg.frostedheart.content.water.capability.WaterLevelCapability;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 
@@ -64,6 +65,9 @@ public class TemperatureUpdate {
     public static final int MAX_BODY_TEMP_CHANGE = FHConfig.SERVER.maxBodyTempChange.get();*/
 
     public static TemperatureThreadingPool threadingPool;
+    private static final MinecraftThermalInput.MutableEnvironmentSample
+            GAMEPLAY_ENVIRONMENT_SAMPLE =
+            new MinecraftThermalInput.MutableEnvironmentSample();
     /**
      * Perform temperature effect
      *
@@ -263,15 +267,19 @@ public class TemperatureUpdate {
                 // ConfigValue.get() 为 spec 值表查询：同一 tick 内配置恒定，hoist 到局部变量（跨 tick 仍每次重读）
                 int temperatureUpdateIntervalTicks = FHConfig.SERVER.CLIMATE.temperatureUpdateIntervalTicks.get();
 
-                // Interval-based Environment Temperature Update: 20 ticks by default.
-                data.tick();
-                if (data.updateInterval <= 0) {
-                    // Multithreaded Environment Simulation
-                    if (threadingPool.tryCommitWork(player)) {
-                        int envTempUpdateIntervalTicks = FHConfig.SERVER.CLIMATE.envTempUpdateIntervalTicks.get();
-                        data.updateInterval = envTempUpdateIntervalTicks;
-                    }
-                }
+                /*
+                 * The legacy surrounding-block sampler is temporarily disabled
+                 * while the thermal Page publication drives the player test.
+                 * Keep this block in place so the legacy path can be restored
+                 * without reconstructing its scheduling contract.
+                 */
+//                data.tick();
+//                if (data.updateInterval <= 0) {
+//                    if (threadingPool.tryCommitWork(player)) {
+//                        int envTempUpdateIntervalTicks = FHConfig.SERVER.CLIMATE.envTempUpdateIntervalTicks.get();
+//                        data.updateInterval = envTempUpdateIntervalTicks;
+//                    }
+//                }
 
                 /* MULTI-THREADED SURROUNDING BLOCK TEMPERATURE SIMULATION ENDS */
 
@@ -285,7 +293,14 @@ public class TemperatureUpdate {
                     double heatExchangeTempConstant = FHConfig.SERVER.CLIMATE.heatExchangeTempConstant.get();
 
                     // Compute environment
-                    float rawenvtemp = TemperatureComputation.environment(player, data);
+                    float legacyRawEnvironment =
+                            TemperatureComputation.environment(player, data);
+                    float rawenvtemp = (float) (
+                            MinecraftThermalInput.gameplayPlayerEnvironment(
+                                    player,
+                                    legacyRawEnvironment + 37.0D,
+                                    GAMEPLAY_ENVIRONMENT_SAMPLE)
+                                    - 37.0D);
 
                     /* ENVIRONMENT TEMPERATURE COMPUTATION ENDS */
 
@@ -294,6 +309,13 @@ public class TemperatureUpdate {
                     // Temporary storage context handled in each update cycle
                     HeatingDeviceContext ctx = new HeatingDeviceContext(player);
                     if (!player.hasEffect(FHMobEffects.INSULATION.get()) && !player.getAbilities().invulnerable) {
+                        float radiantBodyTemperatureDelta =
+                                TemperatureComputation.radiantBodyTemperatureDelta(
+                                        GAMEPLAY_ENVIRONMENT_SAMPLE.radiantFluxWPerM2(),
+                                        temperatureUpdateIntervalTicks);
+                        float radiantFeelingTemperatureDelta =
+                                TemperatureComputation.radiantFeelingTemperatureDelta(
+                                        GAMEPLAY_ENVIRONMENT_SAMPLE.radiantFluxWPerM2());
                         // Store environment temperature in attribute
                         AttributeInstance envTempAttribute = player.getAttribute(FHAttributes.ENV_TEMPERATURE.get());
                         if (envTempAttribute != null) {
@@ -436,7 +458,8 @@ public class TemperatureUpdate {
                             if(selfHeatRate>0&&part.canGenerateHeat()) {
                             	// homeostasis only happens when deviation is negative even after heat exchange and movement
                                 // Note 0Y here represents the normal body temperature of 37C
-                                final float deviation = 0 + (pbTemp + heatExchangedUnits + movementHeatedUnits);
+                                final float deviation = pbTemp + heatExchangedUnits
+                                        + movementHeatedUnits + radiantBodyTemperatureDelta;
                                 // We apply additional units based on a deviation need, exhausting more food
 	                            if (deviation < -0.1 && player.getFoodData().getFoodLevel() > 0) {
 	                                if (deviation > -0.5) {
@@ -464,7 +487,8 @@ public class TemperatureUpdate {
 	                            }
                             }
                             //simple interpolation of temperature display
-                            pctx.setFeelTemperature(fullEffectiveTemp);
+                            pctx.setFeelTemperature(
+                                    fullEffectiveTemp + radiantFeelingTemperatureDelta);
                            
                             /*
                             FHMain.LOGGER.debug("Deviation: " + deviation);
@@ -476,7 +500,8 @@ public class TemperatureUpdate {
                             // Apply all to pbTemp
                             pbTemp += heatExchangedUnits;
 
-                            pbTemp += movementHeatedUnits + homeostasisUnits;
+                            pbTemp += movementHeatedUnits + homeostasisUnits
+                                    + radiantBodyTemperatureDelta;
                            
 
                             // FHMain.LOGGER.debug("pbTemp: " + pbTemp);

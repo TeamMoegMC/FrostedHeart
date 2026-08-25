@@ -93,6 +93,7 @@ public final class MinecraftPhysicalSourceManager implements AutoCloseable {
         LiveSource source = sources.get(sourcePosition.asLong());
         if (source != null) {
             source.present = false;
+            input.removeRadiationSource(source.sourceId);
             dirtySources.add(source.sourceId);
         }
     }
@@ -158,6 +159,7 @@ public final class MinecraftPhysicalSourceManager implements AutoCloseable {
             if ((source.sourcePosition.getX() >> 4) == chunkX
                     && (source.sourcePosition.getZ() >> 4) == chunkZ) {
                 source.present = false;
+                input.removeRadiationSource(source.sourceId);
                 dirtySources.add(source.sourceId);
             }
         }
@@ -183,6 +185,7 @@ public final class MinecraftPhysicalSourceManager implements AutoCloseable {
                 continue;
             }
             if (!source.present) {
+                input.removeRadiationSource(source.sourceId);
                 if (!source.registered
                         || timeline.offerUnload(
                                 source.sourceId,
@@ -207,6 +210,7 @@ public final class MinecraftPhysicalSourceManager implements AutoCloseable {
                 source.registrationStale = false;
                 source.lifecycleGeneration = nextLifecycleGeneration();
                 source.offeredBindings = null;
+                syncRadiationSource(source);
             }
 
             retainTargets(source);
@@ -282,12 +286,24 @@ public final class MinecraftPhysicalSourceManager implements AutoCloseable {
         return sources.size();
     }
 
+    void replayRadiationSources() {
+        requireOpen();
+        for (LiveSource source : sources.values()) {
+            if (source.present) {
+                syncRadiationSource(source);
+            }
+        }
+    }
+
     @Override
     public void close() {
         if (closed) {
             return;
         }
         closed = true;
+        for (long sourceId : sources.keySet()) {
+            input.removeRadiationSource(sourceId);
+        }
         sources.clear();
         sourcesByTargetSection.clear();
         dirtySources.clear();
@@ -329,8 +345,19 @@ public final class MinecraftPhysicalSourceManager implements AutoCloseable {
         source.desiredPowerW = powerW;
         source.desiredEnabled = enabled;
         if (changed) {
+            syncRadiationSource(source);
             dirtySources.add(sourceId);
         }
+    }
+
+    private void syncRadiationSource(LiveSource source) {
+        input.upsertRadiationSource(
+                source.sourceId,
+                source.lifecycleGeneration,
+                source.sourcePosition,
+                source.profile,
+                source.desiredPowerW,
+                source.desiredEnabled);
     }
 
     private void retainTargets(LiveSource source) {

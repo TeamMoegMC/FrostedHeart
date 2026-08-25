@@ -33,6 +33,7 @@ import com.teammoeg.frostedheart.content.climate.gamedata.chunkheat.ChunkHeatDat
 import com.teammoeg.frostedheart.content.climate.gamedata.climate.WorldClimate;
 import com.teammoeg.frostedheart.content.climate.data.PlantTempData;
 import com.teammoeg.frostedheart.content.climate.data.WorldTempData;
+import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.MinecraftThermalInput;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 
 import it.unimi.dsi.fastutil.objects.Object2FloatOpenHashMap;
@@ -568,6 +569,8 @@ public class WorldTemperature {
             }
         }
         float blockTemp = block(level, pos);
+        blockTemp = (float) MinecraftThermalInput.gameplayCropEnvironment(
+                level, pos, blockTemp);
         if (data.isValidTemperature(TemperatureType.BONEMEAL, blockTemp)) {
             return PlantStatus.CAN_FERTILIZE;
         }
@@ -592,7 +595,6 @@ public class WorldTemperature {
         if (data == null) {
             return PlantStatus.NOT_PLANT;
         }
-       
         if(openToAir(level,pos)) {
         	 ChunkPos cpos=new ChunkPos(pos);
             if (WorldTemperature.isBlizzard(level,cpos)&&data.blizzardVulnerable()) {
@@ -602,6 +604,8 @@ public class WorldTemperature {
                 return data.willDie() ? PlantStatus.WILL_DIE : PlantStatus.CAN_SURVIVE;
             }
         }
+        blockTemp = (float) MinecraftThermalInput.gameplayCropEnvironment(
+                level, pos, blockTemp);
         if (data.isValidTemperature(TemperatureType.BONEMEAL, blockTemp)) {
             return PlantStatus.CAN_FERTILIZE;
         }
@@ -633,6 +637,8 @@ public class WorldTemperature {
                 }
             }
             float blockTemp = block(level, pos);
+            blockTemp = (float) MinecraftThermalInput.gameplayCropEnvironment(
+                    level, pos, blockTemp);
             if (data.isValidTemperature(TemperatureType.BONEMEAL, blockTemp)) {
                 return PlantStatus.CAN_FERTILIZE;
             }

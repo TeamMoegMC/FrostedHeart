@@ -33,6 +33,12 @@ public final class ThermalSweep {
     private final int[] boundaryGeneration;
     private final double[] boundaryTemperature;
     private final double[] boundaryConductance;
+    private final PhaseTransitionRuntime phaseRuntime;
+    private final int[] phaseAirCell;
+    private final int[] phaseAirGeneration;
+    private final int[] phaseReservoirCell;
+    private final int[] phaseReservoirGeneration;
+    private final double[] phaseConductance;
     private final int[] stateSlots;
     private final BuoyancyConductance.Parameters buoyancyParameters;
     private final BuoyancyConductance.MutableResult buoyancyScratch =
@@ -46,6 +52,23 @@ public final class ThermalSweep {
             ThermalCellArena arena,
             List<PairOperation> pairOperations,
             List<BoundaryOperation> boundaryOperations,
+            BuoyancyConductance.Parameters buoyancyParameters
+    ) {
+        this(
+                arena,
+                pairOperations,
+                boundaryOperations,
+                null,
+                List.of(),
+                buoyancyParameters);
+    }
+
+    public ThermalSweep(
+            ThermalCellArena arena,
+            List<PairOperation> pairOperations,
+            List<BoundaryOperation> boundaryOperations,
+            PhaseTransitionRuntime phaseRuntime,
+            List<PhaseOperation> phaseOperations,
             BuoyancyConductance.Parameters buoyancyParameters
     ) {
         this.arena = Objects.requireNonNull(arena, "arena");
@@ -98,6 +121,35 @@ public final class ThermalSweep {
             boundaryGeneration[index] = arena.lifecycleGeneration(operation.cell());
             boundaryTemperature[index] = operation.boundaryTemperatureC();
             boundaryConductance[index] = operation.conductanceWPerK();
+        }
+        Objects.requireNonNull(phaseOperations, "phaseOperations");
+        if (!phaseOperations.isEmpty()
+                && (phaseRuntime == null || !phaseRuntime.targets(arena))) {
+            throw new IllegalArgumentException(
+                    "phase operations require the arena's phase runtime");
+        }
+        this.phaseRuntime = phaseRuntime;
+        phaseAirCell = new int[phaseOperations.size()];
+        phaseAirGeneration = new int[phaseOperations.size()];
+        phaseReservoirCell = new int[phaseOperations.size()];
+        phaseReservoirGeneration = new int[phaseOperations.size()];
+        phaseConductance = new double[phaseOperations.size()];
+        for (int index = 0; index < phaseOperations.size(); index++) {
+            PhaseOperation operation = Objects.requireNonNull(
+                    phaseOperations.get(index), "phaseOperations contains null");
+            requireLiveCell(operation.airCell());
+            requireLiveCell(operation.phaseReservoir());
+            if (arena.isPhaseReservoir(operation.airCell())
+                    || !arena.isPhaseReservoir(operation.phaseReservoir())) {
+                throw new IllegalArgumentException(
+                        "phase operation must connect air to a phase reservoir");
+            }
+            phaseAirCell[index] = operation.airCell();
+            phaseAirGeneration[index] = arena.lifecycleGeneration(operation.airCell());
+            phaseReservoirCell[index] = operation.phaseReservoir();
+            phaseReservoirGeneration[index] = arena.lifecycleGeneration(
+                    operation.phaseReservoir());
+            phaseConductance[index] = operation.conductanceWPerK();
         }
         stateSlots = collectStateSlots();
     }
@@ -155,6 +207,20 @@ public final class ThermalSweep {
         }
     }
 
+    public record PhaseOperation(
+            int airCell,
+            int phaseReservoir,
+            double conductanceWPerK
+    ) {
+        public PhaseOperation {
+            if (airCell < 0 || phaseReservoir < 0) {
+                throw new IllegalArgumentException(
+                        "phase operation cell indices must be non-negative");
+            }
+            requireNonNegativeFinite("conductanceWPerK", conductanceWPerK);
+        }
+    }
+
     public enum Direction {
         FORWARD,
         REVERSE;
@@ -170,6 +236,7 @@ public final class ThermalSweep {
             Direction direction,
             int appliedPairs,
             int appliedBoundaries,
+            int appliedPhaseContacts,
             int numericDegradedOperations,
             double initialEnthalpyJ,
             double finalEnthalpyJ,
@@ -224,7 +291,9 @@ public final class ThermalSweep {
             applyBoundariesForward(
                     arena, referenceTemperatureC,
                     dtSeconds, counts);
+            applyPhaseContactsForward(referenceTemperatureC, dtSeconds, counts);
         } else {
+            applyPhaseContactsReverse(referenceTemperatureC, dtSeconds, counts);
             applyPairsReverse(
                     arena, referenceTemperatureC,
                     epoch, dtSeconds, counts);
@@ -238,6 +307,7 @@ public final class ThermalSweep {
                 direction,
                 counts.appliedPairs,
                 counts.appliedBoundaries,
+                counts.appliedPhaseContacts,
                 counts.numericDegraded,
                 initialEnthalpy,
                 finalEnthalpy,
@@ -374,6 +444,44 @@ public final class ThermalSweep {
         counts.appliedBoundaries++;
     }
 
+    private void applyPhaseContactsForward(
+            double referenceTemperatureC,
+            double dtSeconds,
+            MutableCounts counts
+    ) {
+        for (int index = 0; index < phaseAirCell.length; index++) {
+            applyPhaseContact(index, referenceTemperatureC, dtSeconds, counts);
+        }
+    }
+
+    private void applyPhaseContactsReverse(
+            double referenceTemperatureC,
+            double dtSeconds,
+            MutableCounts counts
+    ) {
+        for (int index = phaseAirCell.length - 1; index >= 0; index--) {
+            applyPhaseContact(index, referenceTemperatureC, dtSeconds, counts);
+        }
+    }
+
+    private void applyPhaseContact(
+            int index,
+            double referenceTemperatureC,
+            double dtSeconds,
+            MutableCounts counts
+    ) {
+        if (!phaseRuntime.applyContact(
+                phaseAirCell[index],
+                phaseReservoirCell[index],
+                phaseConductance[index],
+                referenceTemperatureC,
+                dtSeconds)) {
+            counts.numericDegraded++;
+            return;
+        }
+        counts.appliedPhaseContacts++;
+    }
+
     public boolean targets(ThermalCellArena candidate) {
         return arena == candidate;
     }
@@ -384,6 +492,10 @@ public final class ThermalSweep {
 
     public int boundaryOperationCount() {
         return boundaryCell.length;
+    }
+
+    public int phaseOperationCount() {
+        return phaseAirCell.length;
     }
 
     public int stateCellCount() {
@@ -424,6 +536,18 @@ public final class ThermalSweep {
                     residual,
                     Math.abs(temperature - boundaryTemperature[index]));
         }
+        for (int index = 0; index < phaseAirCell.length; index++) {
+            double temperature = arena.temperatureC(
+                    phaseAirCell[index], referenceTemperatureC);
+            if (!Double.isFinite(temperature)) {
+                return Double.POSITIVE_INFINITY;
+            }
+            residual = Math.max(
+                    residual,
+                    Math.max(0.0D,
+                            temperature - arena.phaseTransitionTemperatureC(
+                                    phaseReservoirCell[index])));
+        }
         return residual;
     }
 
@@ -441,6 +565,11 @@ public final class ThermalSweep {
         }
         for (int index = 0; index < boundaryCell.length; index++) {
             requireCurrentCell(boundaryCell[index], boundaryGeneration[index]);
+        }
+        for (int index = 0; index < phaseAirCell.length; index++) {
+            requireCurrentCell(phaseAirCell[index], phaseAirGeneration[index]);
+            requireCurrentCell(
+                    phaseReservoirCell[index], phaseReservoirGeneration[index]);
         }
     }
 
@@ -467,6 +596,16 @@ public final class ThermalSweep {
         for (int slot : boundaryCell) {
             if (!present[slot]) {
                 present[slot] = true;
+                count++;
+            }
+        }
+        for (int index = 0; index < phaseAirCell.length; index++) {
+            if (!present[phaseAirCell[index]]) {
+                present[phaseAirCell[index]] = true;
+                count++;
+            }
+            if (!present[phaseReservoirCell[index]]) {
+                present[phaseReservoirCell[index]] = true;
                 count++;
             }
         }
@@ -520,6 +659,7 @@ public final class ThermalSweep {
     private static final class MutableCounts {
         private int appliedPairs;
         private int appliedBoundaries;
+        private int appliedPhaseContacts;
         private int numericDegraded;
         private double boundaryEnergyJ;
         private double boundaryEnergyCompensation;

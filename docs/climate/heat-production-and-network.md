@@ -3,7 +3,7 @@
 - Status: `Current`
 - Last verified: `2026-08-25`
 - Scope: T1/T2 能量塔、局部热区写入、`HeatEndpoint`/`HeatNetwork`、散热器、蒸汽喷泉、穿戴设备
-- Primary code anchors: `GeneratorData`, `GeneratorLogic`, `GeneratorState`, `GeneratorHeatFieldModel`, `HeatingLogic`, `HeatingState`, `T2GeneratorLogic`, `HeatEndpoint`, `HeatNetwork`, `RadiatorLogic`, `RadiatorState`, `FountainTileEntity`, `MinecraftPhysicalSourceProfile`, `MinecraftPhysicalSourceManager`, `MinecraftThermalInput.enablePhysicalSources`
+- Primary code anchors: `GeneratorData`, `GeneratorLogic`, `GeneratorState`, `GeneratorHeatFieldModel`, `HeatingLogic`, `HeatingState`, `T2GeneratorLogic`, `HeatEndpoint`, `HeatNetwork`, `RadiatorLogic`, `RadiatorState`, `FountainTileEntity`, `MinecraftPhysicalSourceProfile`, `MinecraftPhysicalSourceManager`, `MaterialBoundaryRegistry`, `PhaseTransitionRuntime`, `MinecraftPhaseTransitionHandler`, `MinecraftThermalInput.enablePhysicalSources`, `MinecraftThermalInput.sampleMachineEnvironment`, `MinecraftThermalInput.observeRegisteredMachineEnvironment`
 
 ## 1. 三种“热”不是同一种量
 
@@ -166,22 +166,61 @@ item storage/fuel -> addEffectiveTemperature(bodyPart, delta)
 
 手炉主要加手或躯干，加热背心加躯干，蒸汽瓶从 `ITEM_HEAT` 抽取并按设备自己的比例换成 effective temperature。该路径不经过 `HeatNetwork`、不写世界热区，也没有统一的 heat unit 到摄氏度换算。
 
-## 9. Dormant 物理 source shadow
+## 9. 玩家测试路径中的物理 source
 
-新热学 runtime 现有两种冻结的 `POWER_SOURCE` profile，但它们只在调用方显式执行 `MinecraftThermalInput.enablePhysicalSources(maximumColdSourcePages)` 后创建，仍不参与 gameplay query，也不替代本页第 2..7 节的 legacy 行为：
+新热学 runtime 有两种冻结的 `POWER_SOURCE` profile。首次玩家温度查询创建 runtime 时会调用 `MinecraftThermalInput.enablePhysicalSources(64)`，所以它们参与当前玩家空气与辐射实机测试；本页第 2..7 节的 legacy 热网、HU 缓冲和非玩家消费者行为仍未替换：
 
 | Profile | SI power | Ports | 缺失端口 |
 |---|---:|---|---|
-| Campfire | `1,000 W` | `80%` 向上表面空气对流；`20%` radiation declared loss | 堵塞对流进入 declared loss；unloaded/unresolved 进入 `DEGRADED_LOSS` |
+| Campfire | `8,000 W` | `6,400 W (80%)` 向上表面空气对流；`1,600 W (20%)` radiation declared loss | 堵塞对流进入 declared loss；unloaded/unresolved 进入 `DEGRADED_LOSS` |
 | Generator | `10,000 W * TLevel` | `70%` exhaust 空气对流；`10%` internal heat；`20%` radiation declared loss | 堵塞 exhaust 进入 internal heat；unloaded/unresolved 进入 `DEGRADED_LOSS` |
 
-这里的 Generator 只读取 `GeneratorState.getTempLevel()` 和活动状态来形成独立 SI profile；它不把 `GeneratorData.power`、`HeatEndpoint.heat` 或现有 heat unit 重新解释为 J/W。radiation 在 Phase J receiver service 完成前只进入可计量 declared loss，不会同时注入空气和玩家。
+这里的 Generator 只读取 `GeneratorState.getTempLevel()` 和活动状态来形成独立 SI profile；它不把 `GeneratorData.power`、`HeatEndpoint.heat` 或现有 heat unit 重新解释为 J/W。Phase J 用同一个 source lifecycle 和 radiation port share 建立只读 receiver index；source ledger 中这部分仍只结算一次 declared ambient loss，不会因玩家采样次数再次扣除或注入。
 
 空气端口按声明的 block face 解析 published topology 中唯一接触的 air component，不使用最近 cell。无空气是 blocked；包含 unresolved topology 或一个面接触多个无法由单端口唯一表达的 component 时走 degraded loss。source 自己可在已加载 chunk 内申请有硬上限的 cold Page interest；预算不足不会积累以后突然释放的 energy debt。Page mutation、unload 或 topology replacement 会先在旧 binding 精确结算到事件 tick，再切换 sink/binding；post-preapply 安装竞争则完成一个无 transport 的 unresolved epoch，下一 frame 重建。
 
-Campfire 通过放置/section mutation/chunk block-entity load 观察，Generator 由 `GeneratorLogic` tick 直接报告并在 multiblock disassemble 时移除。正常玩法不构造 `MinecraftThermalInput`，所以这些 hook 只有一次 active-input/null 检查，不会产生第二份世界加热结果。
+Campfire 的 `8,000 W` 是恢复密闭小屋取暖体验的暂定玩法校准值，不改变 `80/20` 功率分配、遮挡、能量记账或相变合同。Campfire 通过放置/section mutation/chunk block-entity load 观察，Generator 由 `GeneratorLogic` tick 直接报告并在 multiblock disassemble 时移除。玩家首次温度查询前这些 hook 仍只有一次 active-input/null 检查；runtime 建立后它们只更新这一份 physical source ownership，不产生第二份新架构 source ledger。
 
-## 10. 当前建模边界
+## 10. 材料边界与物态转换
+
+`MaterialBoundaryRegistry` 是显式传给 `MinecraftThermalInput.enableTopologyApplication` 的 immutable 参数切片；测试可继续使用空 registry overload，gameplay runtime 则安装由 `StateTransitionData` cache 一次编译出的热侧 phase profiles。profile 的 `G` 单位为 `W/K` per full block face，surface/deep `C` 为 `J/K` per full block face，实际 `4x4` material contact 按面积缩放。`STATELESS_CONDUCTANCE`、`CAPACITIVE_SURFACE` 与 `NATURAL_ROCK` 尚未定义 gameplay profile，仍为 dormant。
+
+| Model | Runtime relation | State |
+|---|---|---|
+| `STATELESS_CONDUCTANCE` | 仅当一个完整 barrier block 的同轴两侧都确认是空气时生成 `Air A <-> Gwall <-> Air B` | 不分配 solid node；两个及以上 solid block 不 shortcut |
+| `CAPACITIVE_SURFACE` | `Air <-> Gsurface <-> Surface H/C` | 只为暴露 material interface 创建 surface pole，可存放并释放墙体余热 |
+| `NATURAL_ROCK` | `Air <-> Surface H/C <-> optional Deep H/C <-> fixed natural boundary` | 只为暴露深岩创建；温度使用 `Trock(y) = Trock(0) - gradient * y`，不直接按 Y 修改空气 |
+| `PHASE_RESERVOIR` | `Air <-> Gphase <-> Brick-local latent H` | 同一 `4x4x4` Brick/profile 的暴露候选共享一个潜热账户；不建立逐雪块节点或全局 SnowPatch |
+
+surface/deep pole、phase reservoir 与空气 cell 共用同一个 `ThermalCellArena` 权威和 Page span。拓扑重建按 material block/face/quarter-plane/depth 或 phase Brick/profile key 迁移 `H`；卸载 Page 时一起释放。contact mask 与 proven-air mask 冲突、缺少 profile 或缺少 contact pattern 时保持 unresolved，不从 collision shape 猜测材料。
+
+phase reservoir 只吸收高于 transition temperature 的空气显热，达到 `transitionEnergyJPerUnit` 后预留一个可见转换单位，并通过固定容量 request/ACK bridge 请求主线程修改方块。gameplay 编译器复用旧 recipe 的 `block/ignoreState`、热侧阈值、三相目标与 `will_transit`；较低阈值先执行，replacement `BlockState` 再形成下一阶段，同阈值时保留旧实现的 gas 优先级。主线程再次验证 loaded chunk、Page generation、当前 profile、精确 `4x4x4` material-air microface 和当前 recipe，再应用原目标 `BlockState`，因此冰和高温材料的中间状态链不会被跳过。成功 ACK 才从 reservoir 扣除预留能量并计入 committed latent-energy ledger；`BlockTags.ICE` 在 `FHTags.Biomes.ICE_DO_NOT_SMELT` 群系内暂缓 mutation 且不扣潜热。
+
+旧 `heat_capacity` 仍不是 `J/K`。gameplay profile 暂按 `transitionEnergyJPerUnit = 38,000 J * heat_capacity` 保留相对快慢，并统一使用 `20 W/K` full-face conductance；这是按默认 random tick speed `3`、直接热区绕过 ambient divisor 时约 `68 s` 的 `heat_capacity=1` 基准做的首轮玩法换算，后续实机校准可以调整两个常量，但不能把旧整数重新解释成物理热容。`RESPECT_RANDOM_TICK_SPEED` 当前只保留 `randomTickSpeed=0` 停止自动 mutation 的语义，不按 gamerule 数值缩放能量速度。
+
+只有 `hasDynamicShape=false`、热侧目标有效且保守几何存在非空气 material mask 的状态进入 registry。旧随机转换仅在对应 Page 已安装该候选时跳过热侧分支；冻结、凝结、Page 外状态、无接触 mask 和动态形状继续走旧逻辑。datapack `/reload` 会关闭旧 profile cut，下一次 gameplay query 按新 recipe cache 懒重建，稳定 tick 不扫描 recipe。
+
+## 11. 玩家直接辐射
+
+首次玩家温度查询建立 runtime 后会以有界生产参数调用 `MinecraftThermalInput.tryEnableRadiation`。Campfire 与 Generator 的 radiation profile 都是总功率的 `20%`，分别从冻结的方块内 origin 发出，V1 directional upper bound 为 `1`。`RadiationService.samplePlayer` 返回 feet/torso/head 三个确定 receiver point 的平均 radiant flux，单位为 `W/m²`：
+
+```text
+q = Prad / (4 * pi * max(r², rMin²))
+```
+
+候选只来自 source 原点附近的 packed section buckets。当前生产参数为 `16` 格范围、`0.1 W/m²` cutoff、`64` 次 candidate visit、top `8`、最多 `24` 条射线和每条 `256` 个 quarter-block DDA step。遮挡通道独立于 collision shape、Air Mesh 和 material contact：loaded-only DDA 直接读取 section 内的 `BlockState`，`hasDynamicShape=true` 按空气，其余状态仅按 `BlockState.canOcclude()` 判断透明或整块不透明；不经过热签名 resolver。DDA 遇到墙返回零贡献，遇到 unloaded/unresolved 或预算耗尽返回较低 confidence/flags，绝不加载 chunk。receiver/source/section witness cache 有固定容量并由独立 section revision 失效；cache hit 不读取 world。
+
+该查询只读取 source 的当前辐射功率，重复调用不改变 `ThermalSourceTimeline`、source accumulator 或 declared-loss ledger。`TemperatureComputation.radiantBodyTemperatureDelta` 将辐照度乘 `0.7 m²` 有效投影面积、`0.8` 吸收率和本轮秒数，再除以 `5,000 J/K` 有效热容，结果进入原五部位体温链；同一 flux 另除以 `6 W/m²/K` 形成 `totalFeelTemp` 的等效辐射体感，不重复增加身体能量。材料吸收/融雪 radiation 没有实现，也不会由 player query 次数间接发生；这些 profile 与身体换算仍需多人 workload 和玩法校准。
+
+## 12. Dormant machine environment shadow
+
+机器不会因为存在 BlockEntity、热网端点或每 tick 运行就自动成为 thermal node。当前冻结角色为：普通机器 `NONE`，显式环境敏感机器 `QUERY_ONLY`，废热设备 `POWER_SOURCE`，自带过热储能的设备才可能是 `MACHINE_CAPACITY`，固定环境条件才是 `BOUNDARY`。Generator 已由第 9 节的 concrete `POWER_SOURCE` adapter 覆盖，不能再注册为 `QUERY_ONLY` 并重复观察。
+
+`MinecraftThermalInput.sampleMachineEnvironment` 只读取调用者明确给出的 receiver point 所在既有 Page/publication。它与 player query 复用同一个 exact mixed-Brick air lookup，但不自动执行 player radiation，也不扫描机器、读取 BlockEntity、创建 Page/Brick/Cell/Interest、修改 `ThermalSourceTimeline`，或写 `HeatEndpoint`/`HeatNetwork`。无 Page、无 air component、geometry/publication stale 或 publication miss 时返回 flags，由现有机器逻辑继续使用自己的 legacy fallback。
+
+当前源码没有一个普通机器实际读取 `WorldTemperature.air/block`，所以本阶段只提供 `observeRegisteredMachineEnvironment` 这一显式 shadow 接口和 `MachineShadowSnapshot`，没有接到无关机器上。将来出现真实环境敏感 consumer 时，应在它原有 cadence 上调用并传入 legacy ambient result；在 calibration gate 通过前仍不得让 shadow result 掌权。
+
+## 13. 当前建模边界
 
 后续增加物理功率、热容或对流前，需要保留或显式迁移以下现有玩法事实：
 
