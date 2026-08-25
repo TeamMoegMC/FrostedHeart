@@ -15,6 +15,7 @@ import net.minecraft.SharedConstants;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.GlobalPos;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.Bootstrap;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -214,12 +215,11 @@ class P2PTerminalResourcesTest {
                 .selectedEndpoint().orElseThrow());
         assertEquals(1, stack.getTag().getInt("CustomModelData"));
 
-        UUID connectionId = new UUID(4L, 7L);
-        FreightRouteCardItem.setState(stack, P2PRouteCardState.connected(connectionId));
-        assertEquals(connectionId, FreightRouteCardItem.getState(stack)
-                .connectionId().orElseThrow());
-        assertTrue(FreightRouteCardItem.getState(stack).selectedEndpoint().isEmpty());
-        assertFalse(stack.getTag().contains("CustomModelData"));
+        CompoundTag legacyState = new CompoundTag();
+        legacyState.putUUID("connectionId", new UUID(4L, 7L));
+        stack.getOrCreateTag().put("p2pRoute", legacyState);
+        stack.getTag().remove("CustomModelData");
+        assertEquals(P2PRouteCardState.EMPTY, FreightRouteCardItem.getState(stack));
 
         FreightRouteCardItem.setState(stack, P2PRouteCardState.EMPTY);
         assertEquals(P2PRouteCardState.EMPTY, FreightRouteCardItem.getState(stack));

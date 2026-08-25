@@ -129,6 +129,33 @@ public final class P2PBindingState {
         return connectionIdsByEndpoint.getOrDefault(endpoint, Set.of());
     }
 
+    public Optional<UUID> connectionIdBetween(
+            P2PTerminalEndpoint first,
+            P2PTerminalEndpoint second
+    ) {
+        if (first == null || second == null || first.pos().equals(second.pos())) {
+            return Optional.empty();
+        }
+        Set<UUID> secondConnections = connectionIdsAt(second.pos());
+        return connectionIdsAt(first.pos()).stream()
+                .filter(secondConnections::contains)
+                .filter(connectionId -> connection(connectionId)
+                        .map(bindings -> bindings.stream().allMatch(binding ->
+                                endpointMatchesEither(binding.sender(), first, second)
+                                        && endpointMatchesEither(
+                                                binding.receiver(), first, second)))
+                        .orElse(false))
+                .findFirst();
+    }
+
+    private static boolean endpointMatchesEither(
+            P2PTerminalEndpoint endpoint,
+            P2PTerminalEndpoint first,
+            P2PTerminalEndpoint second
+    ) {
+        return endpoint.equals(first) || endpoint.equals(second);
+    }
+
     public BindingPlan planConnection(
             P2PTerminalEndpoint first,
             P2PTerminalEndpoint second,

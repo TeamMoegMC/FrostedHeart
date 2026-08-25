@@ -123,17 +123,31 @@ class P2PBindingStateTest {
     }
 
     @Test
-    void routeCardStateKeepsSelectionAndConnectionMutuallyExclusive() {
+    void routeCardStateOnlyPersistsThePendingEndpoint() {
         P2PRouteCardState selected = P2PRouteCardState.selected(
                 endpoint(P2PTerminalRole.SHIPPING, 0));
-        P2PRouteCardState connected = P2PRouteCardState.connected(uuid(1));
 
         assertTrue(selected.selectedEndpoint().isPresent());
-        assertTrue(selected.connectionId().isEmpty());
-        assertTrue(connected.selectedEndpoint().isEmpty());
-        assertEquals(uuid(1), connected.connectionId().orElseThrow());
-        assertThrows(IllegalArgumentException.class, () -> new P2PRouteCardState(
-                selected.selectedEndpoint(), connected.connectionId()));
+        JsonElement encoded = P2PRouteCardState.CODEC.encodeStart(
+                JsonOps.INSTANCE, selected).result().orElseThrow();
+        assertFalse(encoded.getAsJsonObject().has("connectionId"));
+    }
+
+    @Test
+    void connectionLookupMatchesOnlyTheExactPairInEitherOrder() {
+        P2PTerminalEndpoint sender = endpoint(P2PTerminalRole.SHIPPING, 0);
+        P2PTerminalEndpoint receiver = endpoint(P2PTerminalRole.RECEIVING, 1);
+        P2PTerminalEndpoint otherReceiver = endpoint(P2PTerminalRole.RECEIVING, 2);
+        UUID connectionId = uuid(1);
+        P2PBindingState state = P2PBindingState.EMPTY.apply(
+                P2PBindingState.EMPTY.planConnection(
+                        sender, receiver, 20, connectionId));
+
+        assertEquals(connectionId,
+                state.connectionIdBetween(sender, receiver).orElseThrow());
+        assertEquals(connectionId,
+                state.connectionIdBetween(receiver, sender).orElseThrow());
+        assertTrue(state.connectionIdBetween(sender, otherReceiver).isEmpty());
     }
 
     private static void assertDirections(
