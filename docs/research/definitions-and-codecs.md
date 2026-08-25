@@ -1,9 +1,9 @@
 # Research Definitions And Codecs
 
 - Status: `Current`
-- Last verified: `2026-08-24`
-- Scope: Definition sources, JSON schema, graph rules, clues, effects, localization, stable identifiers, reload, and editor behavior
-- Code anchors: [`FHResearch#init/#reloadCatalog`](../../src/main/java/com/teammoeg/frostedresearch/FHResearch.java), [`ResearchCatalog`](../../src/main/java/com/teammoeg/frostedresearch/ResearchCatalog.java), [`ResearchCatalogPreflight`](../../src/main/java/com/teammoeg/frostedresearch/ResearchCatalogPreflight.java), [`FHRegistry`](../../src/main/java/com/teammoeg/frostedresearch/FHRegistry.java), [`Research.CODEC`](../../src/main/java/com/teammoeg/frostedresearch/research/Research.java), [`ResearchCategory.CODEC`](../../src/main/java/com/teammoeg/frostedresearch/research/ResearchCategory.java), [`Clue.CODEC`](../../src/main/java/com/teammoeg/frostedresearch/research/clues/Clue.java), [`Effect.CODEC`](../../src/main/java/com/teammoeg/frostedresearch/research/effects/Effect.java)
+- Last verified: `2026-08-25`
+- Scope: Legacy definitions plus V2 Phase 1 result/profile datapack schema, stable identities, validation, and reload
+- Code anchors: [`FHResearch#init/#reloadCatalog`](../../src/main/java/com/teammoeg/frostedresearch/FHResearch.java), [`ResearchCatalog`](../../src/main/java/com/teammoeg/frostedresearch/ResearchCatalog.java), [`ResearchResult`](../../src/main/java/com/teammoeg/frostedresearch/knowledge/ResearchResult.java), [`ResearchResultCatalogLoader`](../../src/main/java/com/teammoeg/frostedresearch/knowledge/ResearchResultCatalogLoader.java), [`Research.CODEC`](../../src/main/java/com/teammoeg/frostedresearch/research/Research.java), [`Effect.CODEC`](../../src/main/java/com/teammoeg/frostedresearch/research/effects/Effect.java)
 
 ## Where Definitions Come From
 
@@ -15,7 +15,7 @@ The server reads every direct child matching `*.json` in:
 
 `FHResearch#loadAll` uses the file basename without `.json` as the research's string ID. The ID is not a JSON field. For example, `generator_efficiency_1.json` defines research ID `generator_efficiency_1`.
 
-This loader is configuration-based, not datapack-based:
+The playable legacy loader is configuration-based, not datapack-based:
 
 - the mod's `src/main/resources/data/frostedresearch/` contains ordinary recipes and loot tables, not research definitions;
 - the development `run/config/fhresearches/` directory may contain a local working catalogue but is not a production fallback;
@@ -31,6 +31,31 @@ A standalone server therefore needs the complete config catalogue in addition to
 KubeJS also requires Rhino and Architectury. Rhino is resolved from Latvian Mods Maven and Architectury from its existing repository; these are hard libraries rather than KubeJS addons. No KubeJS Create, KubeJS Immersive Engineering, LootJS, or PonderJS runtime is included. The local `run/kubejs/` input keeps only `startup_scripts/src/registries/item.js`, which registers the item IDs used while decoding the production research catalogue without running companion recipes, client behavior, or server behavior.
 
 Stone Age 1.6.8 uses a `DistExecutor.safeRunForDist` lambda shape that Forge rejects only in a non-production environment. `ExampleModMixin` redirects that proxy selection to `unsafeRunForDist`; the selected client/server proxy and production sided behavior remain the same, while the development-only referent validator is bypassed.
+
+## V2 Phase 1 Datapack Result Schema
+
+V2 result declarations are a separate, implemented datapack slice:
+
+```text
+data/<namespace>/frostedresearch/topics/<path>.json
+data/<namespace>/frostedresearch/prototypes/<path>.json
+```
+
+Topics require `format: 3`; Phase 1 decodes optional `presentation`, typed `results`, and ordinary item `rewards`. Prototype declarations require `format: 1` and a positive integer `revision`. Unknown future workflow/profile fields are tolerated but have no current semantics. Empty result directories are valid and the mod currently bundles no formal topic.
+
+`ResearchResult.CODEC` dispatches by a stable string `type` and preserves raw `ResourceLocation` values:
+
+| `type` | Fields | Validation |
+|---|---|---|
+| `finding` | `id`, optional `views` | structural only; view-handler validation is deferred |
+| `design` | `id`, `recipes` | nonempty; recipes must exist |
+| `construction` | `id`, `multiblocks` | nonempty; multiblocks must exist; rejects `usable_blocks` |
+| `procedure` | `id`, `usable_blocks` | nonempty; blocks must exist; rejects `multiblocks` |
+| `prototype` | `id`, `profile` | referenced prototype declaration must exist |
+
+Result IDs are globally unique across the effective topic catalogue. Loader diagnostics also cover duplicate target IDs, missing reward items, non-positive reward counts, wrong formats/revisions, and overlong stable IDs. A valid candidate atomically replaces `ResearchResultCatalog.Snapshot` and increments its revision. Any diagnostic retains the last-known-good snapshot.
+
+See [results-and-access.md](results-and-access.md) for runtime projection and legacy coexistence.
 
 ## Research JSON Schema
 

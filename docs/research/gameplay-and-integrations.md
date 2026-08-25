@@ -1,9 +1,9 @@
 # Research Gameplay And Integrations
 
 - Status: `Current`
-- Last verified: `2026-08-23`
-- Scope: Player entry points, drawing-desk operations, experiment/insight sources, unlock enforcement, variants, APIs, events, commands, and compatibility modules
-- Code anchors: [`DrawingDeskBlock`](../../src/main/java/com/teammoeg/frostedresearch/blocks/DrawingDeskBlock.java), [`DrawingDeskTileEntity`](../../src/main/java/com/teammoeg/frostedresearch/blocks/DrawingDeskTileEntity.java), [`DrawDeskContainer`](../../src/main/java/com/teammoeg/frostedresearch/gui/drawdesk/DrawDeskContainer.java), [`ResearchHooks`](../../src/main/java/com/teammoeg/frostedresearch/ResearchHooks.java), [`MechCalcTileEntity`](../../src/main/java/com/teammoeg/frostedresearch/blocks/MechCalcTileEntity.java), [`ResearchDataAPI`](../../src/main/java/com/teammoeg/frostedresearch/api/ResearchDataAPI.java), [`ResearchCommand`](../../src/main/java/com/teammoeg/frostedresearch/ResearchCommand.java), [`JEICompat`](../../src/main/java/com/teammoeg/frostedresearch/compat/JEICompat.java)
+- Last verified: `2026-08-25`
+- Scope: Player entry points, legacy progression, V2 result command/prototype shell, unified unlock enforcement, APIs, events, commands, and compatibility modules
+- Code anchors: [`ResearchHooks`](../../src/main/java/com/teammoeg/frostedresearch/ResearchHooks.java), [`TechnologyAccessResolver`](../../src/main/java/com/teammoeg/frostedresearch/knowledge/TechnologyAccessResolver.java), [`TeamResearchService`](../../src/main/java/com/teammoeg/frostedresearch/api/TeamResearchService.java), [`UpgradePrototypeItem`](../../src/main/java/com/teammoeg/frostedresearch/item/UpgradePrototypeItem.java), [`ResearchCommand`](../../src/main/java/com/teammoeg/frostedresearch/ResearchCommand.java), [`JEICompat`](../../src/main/java/com/teammoeg/frostedresearch/compat/JEICompat.java)
 
 ## Player-Facing Loop
 
@@ -121,16 +121,19 @@ The calculator records the placing real player's current team in the existing `I
 
 `RubbingTool` extracts through the player-authorized `ComputeMachine` interface. `fetchPoint(ServerPlayer,max)` returns zero for `max <= 0` or an unauthorized player; otherwise it removes exactly `min(max,currentPoints)`. The current rubbing workflow waits for at least `100` authorized points and extracts exactly `100`, retaining any excess machine cache.
 
-## Unlock Model
+## Unified Unlock Model
 
-Unlock enforcement is a two-index model:
+Legacy definitions still populate global and per-team unlock lists, but execution now consumes `TechnologyAccessProjection`, which combines those lists' authority with V2 results while retaining source identity:
 
-| Index | Populated from | Question answered |
+| Channel | Managed by | Valid team sources |
 |---|---|---|
-| global `ResearchHooks` lock list | every loaded definition effect | “Is this object research-controlled at all?” |
-| per-team unlock list | granted effect state replayed into `TeamResearchData` | “Has this team received the object?” |
+| recipe | V2 Design targets plus legacy `EffectCrafting` declarations | acquired Design or completed/granted recipe effect |
+| multiblock formation | V2 Construction targets plus legacy `EffectBuilding` declarations | acquired Construction or completed/granted building effect |
+| right-click block use | V2 Procedure targets plus legacy `EffectUse` declarations | acquired Procedure or completed/granted use effect |
 
-The four built-in types are `BLOCK_UNLOCK_LIST`, `RECIPE_UNLOCK_LIST`, `MULTIBLOCK_UNLOCK_LIST`, and `CATEGORY_UNLOCK_LIST`. `EffectUse`, `EffectCrafting`, `EffectBuilding`, and `EffectShowCategory` declare and then grant the matching entries.
+The access rule remains default-open: a target absent from both the V2 managed universe and the matching legacy lock list is available. A managed target needs at least one source. Category locking remains legacy-only through `CATEGORY_UNLOCK_LIST`.
+
+`AccessDecision` preserves all current provenance. V2 sources identify topic, result type, and result ID. Legacy sources identify research ID and effect nonce and are rebuilt from completed plus granted `effectData`, not guessed from source-less unlock sets.
 
 ### Execution Ownership Contract
 
@@ -152,7 +155,7 @@ This is an integration contract, not a global interception mechanism. Every reci
 | IE multiblocks | player formation event plus persisted owner UUID for machine/server checks | FakePlayer formation is rejected; ownerless locked targets fail closed |
 | IE assembler | persisted pattern owner on server, client team only for preview | checks recipe unlock for the owning team |
 | generator upgrade | generator state's persisted owner | client preview uses local team; server mutation uses owner and fails closed |
-| JEI | `JEICompat#syncJEI` | presentation only: hides recipes/categories and shows research information |
+| JEI | `ResearchJeiBridge#sync` / `JEICompat#syncJEI` | presentation only: schedules visibility changes on the client main thread and matches runtime entries by stable recipe ID, including after grant/revoke |
 
 The system is not a universal authorization layer. A new crafting machine, automated placer, alternate recipe executor, or direct capability path must opt into these contracts if research should restrict it. The outstanding third-party-machine audit is tracked in `plans/`; current code does not claim unknown paths are covered automatically.
 
@@ -191,12 +194,19 @@ Other systems may also read raw string keys. Because the NBT is mutable and unty
 
 `ClientResearchDataAPI` exposes the local Chorda mirror. The older `ClientResearchData.last` field is only a legacy UI selection cache, not authoritative progress.
 
+V2 Phase 1 adds:
+
+- `KnowledgeDataAPI` / `ClientKnowledgeDataAPI` for independent team knowledge and the atomic client projection mirror;
+- `TechnologyAccessResolver#hasFinding`, `#isRecipeUnlocked`, `#canFormMultiblock`, and `#canUseBlock` as the narrow Boolean adapters;
+- `TeamResearchService#grantResult` as the mutation/fabrication boundary;
+- `TeamResearchManager#grantResult` as a compatibility facade rather than a mutable store.
+
 Callers should note:
 
 - `getVariants` returns the mutable underlying `CompoundTag`, not a defensive copy;
 - mutations through the raw tag require an explicit sync;
 - both typed and raw-string `putVariantLong` overloads write `LongTag`, including values above `2^53`, and variant snapshots preserve that type through save/sync/reset;
-- `TeamResearchManager` is presently an empty placeholder, not a service layer.
+- `TeamResearchManager` is a compatibility facade; new result mutations belong in `TeamResearchService`.
 
 ## Events
 
@@ -224,9 +234,17 @@ attribute <name>|all|set <name> <nbt>
 reset <research-id>|all
 info <research-id>
 get <research-id> <field>
+result grant|revoke|info <result-resource-id>
+<online-player> result grant|revoke|info <result-resource-id>
 ```
 
 `complete` bypasses normal materials, insight, parents, points, and clues; `complete all` skips definitions marked locked/incompletable. `reset` rolls back recorded reversible effects, selection, progress, and repeat level, but cannot recover already-issued item/experience/command rewards or infer activation-cost refunds; see [state-persistence-and-sync.md](state-persistence-and-sync.md). `transfer` delegates Chorda team data transfer and operates on team UUIDs, not research IDs.
+
+Without a player argument, `result` operates on the command source's team. `/research <online-player> result ...` instead resolves that player's current Chorda team; the same shape is available under the `/frostedheart research` alias.
+
+`result grant` accepts only a result in the current V2 snapshot. Finding, Design, Construction, and Procedure acquire an idempotent team ID. Prototype creates a non-stackable `frostedresearch:upgrade_prototype` for the affected player with frozen profile revision, a new serial UUID, and that player's current team UUID, then uses Forge's existing inventory-or-nearby-drop delivery helper. It does not issue the topic's ordinary rewards.
+
+`result revoke` idempotently removes a Finding, Design, Construction, or Procedure ID and sends a full projection refresh. It can remove retained orphan IDs even when their catalogue definition is absent. Prototype revoke is rejected because Prototype authority is the physical item, not team knowledge. `result info` reports the affected team, catalogue topic/type/payload, acquisition categories, orphan status, and prototype profile revision without mutating state. Suggestions include both current catalogue results and the affected team's orphan IDs.
 
 The valid names are `/research edit true` or `/frostedheart research edit true`; the shorter historical `/frostedheart edit true` is not registered by current code.
 

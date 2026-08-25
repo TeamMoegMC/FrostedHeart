@@ -25,6 +25,7 @@ import com.teammoeg.frostedresearch.FRMain;
 import com.teammoeg.frostedresearch.Lang;
 import com.teammoeg.frostedresearch.ResearchHooks;
 import com.teammoeg.frostedresearch.UnlockList;
+import com.teammoeg.frostedresearch.api.ClientKnowledgeDataAPI;
 import com.teammoeg.frostedresearch.api.ClientResearchDataAPI;
 import com.teammoeg.frostedresearch.research.Research;
 import com.teammoeg.frostedresearch.research.effects.Effect;
@@ -57,7 +58,6 @@ import net.minecraft.world.item.crafting.RecipeManager;
 import javax.annotation.Nullable;
 import java.util.*;
 import java.util.Map.Entry;
-import java.util.function.Function;
 import java.util.stream.Stream;
 @JeiPlugin
 public class JEICompat implements IModPlugin {
@@ -66,7 +66,12 @@ public class JEICompat implements IModPlugin {
 
     public static IJeiRuntime jei;
 
-    static Map<Object,Set<RecipeType<?>>> types = new IdentityHashMap<>(3000);
+    /**
+     * JEI may wrap or replace the recipe objects supplied by Minecraft. Keep the
+     * actual JEI registrations indexed by the stable recipe id instead of relying
+     * on object identity when access changes at runtime.
+     */
+    private static final Map<ResourceLocation, List<RegisteredRecipe>> registeredRecipes = new LinkedHashMap<>();
 
 
     private static boolean cachedInfoAdd = false;
@@ -75,6 +80,7 @@ public class JEICompat implements IModPlugin {
 
     public static Map<ItemStack, List<IJeiIngredientInfoRecipe>> infos = new HashMap<>();
     public static Map<ItemStack, Map<String, Component>> research = new HashMap<>();
+    private static Map<ResourceLocation, Recipe<?>> lastManagedRecipes = new LinkedHashMap<>();
 
     public static void addInfo() {
         if (man == null) {
@@ -88,7 +94,7 @@ public class JEICompat implements IModPlugin {
 
         // 使用 Map 去重，对每个不同的输出 ItemStack 只创建一个信息配方
         Map<ItemStack, List<IJeiIngredientInfoRecipe>> newInfos = new HashMap<>();
-        for (Recipe<?> i : ResearchHooks.getLockList(ResearchHooks.RECIPE_UNLOCK_LIST)) {
+        for (Recipe<?> i : managedRecipes()) {
             ItemStack out = RecipeUtil.getResultItem(i);
             if (out != null && !out.isEmpty()) {
                 newInfos.computeIfAbsent(out.copy(), stack -> {
@@ -113,11 +119,12 @@ public class JEICompat implements IModPlugin {
     public static void resetRuntime() {
         man = null;
         jei = null;
+        registeredRecipes.clear();
+        lastManagedRecipes.clear();
     }
 
     public static void scheduleSyncJEI() {
-        //cachedInfoAdd=true;
-        Minecraft.getInstance().executeBlocking(JEICompat::syncJEI);
+        Minecraft.getInstance().execute(JEICompat::syncJEI);
     }
 
     public static void showJEICategory(ResourceLocation rl) {
@@ -136,38 +143,30 @@ public class JEICompat implements IModPlugin {
         if (cachedInfoAdd)
             addInfo();
 
+        Map<ResourceLocation, Recipe<?>> currentManagedRecipes = managedRecipesById();
+        Map<ResourceLocation, Recipe<?>> recipesToRefresh = new LinkedHashMap<>(lastManagedRecipes);
+        recipesToRefresh.putAll(currentManagedRecipes);
         Map<ItemStack, Boolean> stackLockedStatus = new HashMap<>(); // true=锁定, false=解锁
-        UnlockList<Recipe> unlockList = ClientResearchDataAPI.getData().get().getUnlockList(ResearchHooks.RECIPE_UNLOCK_LIST);
+        for (Recipe<?> i : recipesToRefresh.values()) {
+            boolean currentlyManaged = currentManagedRecipes.containsKey(i.getId());
+            boolean locked = currentlyManaged
+                    && !ClientKnowledgeDataAPI.technologyProjection().recipe(i.getId()).allowed();
+            updateRecipeVisibility(i.getId(), locked);
 
-        for (Recipe<?> i : ResearchHooks.getLockList(ResearchHooks.RECIPE_UNLOCK_LIST)) {
             ItemStack out = RecipeUtil.getResultItem(i);
             if (out == null || out.isEmpty()) continue;
 
-            Set<RecipeType<?>> type = types.get(i);
-            if (type != null) {
-                for (RecipeType<?> rl : type) {
-                    try {
-                        if (!unlockList.has(i)) {
-                            man.hideRecipes((RecipeType) rl, Collections.singletonList(i));
-                        } else {
-                            man.unhideRecipes((RecipeType) rl, Collections.singletonList(i));
-                        }
-                    } catch (Exception ex) {
-                        FRMain.LOGGER.error("Error hiding recipe", ex);
-                    }
-                }
-            }
-
             // 记录对应 ItemStack 的锁定状态（若有解锁的配方，则整体视为解锁）
-            boolean locked = !unlockList.has(i);
-            stackLockedStatus.merge(out.copy(), locked, (oldVal, newVal) -> oldVal && newVal);
+            if (currentlyManaged)
+                stackLockedStatus.merge(out.copy(), locked, (oldVal, newVal) -> oldVal && newVal);
         }
+        lastManagedRecipes = currentManagedRecipes;
 
         // 根据 ItemStack 控制提示的显隐
         for (Entry<ItemStack, List<IJeiIngredientInfoRecipe>> entry : infos.entrySet()) {
             Boolean locked = stackLockedStatus.get(entry.getKey());
-            // 如果该 ItemStack 对应的所有配方都被锁定，或没有找到状态（不在表中），则显示提示
-            if (locked == null || locked) {
+            // 仅在该输出仍受管理且所有已管理配方均锁定时显示提示。
+            if (Boolean.TRUE.equals(locked)) {
                 man.unhideRecipes(RecipeTypes.INFORMATION, entry.getValue());
             } else {
                 man.hideRecipes(RecipeTypes.INFORMATION, entry.getValue());
@@ -207,6 +206,25 @@ public class JEICompat implements IModPlugin {
         }
     }
 
+    private static List<Recipe<?>> managedRecipes() {
+        return new ArrayList<>(managedRecipesById().values());
+    }
+
+    private static Map<ResourceLocation, Recipe<?>> managedRecipesById() {
+        Map<ResourceLocation, Recipe<?>> managed = new LinkedHashMap<>();
+        for (Recipe<?> recipe : ResearchHooks.getLockList(ResearchHooks.RECIPE_UNLOCK_LIST)) {
+            managed.put(recipe.getId(), recipe);
+        }
+        RecipeManager recipes = Minecraft.getInstance().level == null
+                ? null : Minecraft.getInstance().level.getRecipeManager();
+        if (recipes != null) {
+            for (ResourceLocation id : ClientKnowledgeDataAPI.technologyProjection().managedRecipes()) {
+                recipes.byKey(id).ifPresent(recipe -> managed.put(id, recipe));
+            }
+        }
+        return managed;
+    }
+
     @Override
     public ResourceLocation getPluginUid() {
         return new ResourceLocation(FRMain.MODID, "jei_plugin");
@@ -215,7 +233,7 @@ public class JEICompat implements IModPlugin {
     public void onRuntimeAvailable(IJeiRuntime jeiRuntime) {
         man = jeiRuntime.getRecipeManager();
         jei = jeiRuntime;
-        generateRecipeType();
+        indexRegisteredRecipes();
         syncJEI();
         // man.hideRecipeCategory(RecipeTypes.BLASTING);
         // man.hideRecipeCategory(RecipeTypes.SMOKING);
@@ -223,13 +241,35 @@ public class JEICompat implements IModPlugin {
 
 
     }
-    public void generateRecipeType() {
-        Function<? super Object, ? extends Set<RecipeType<?>>> creator=o->new HashSet<>();
-        Function<? super Object,Set<RecipeType<?>>> getter=o->types.computeIfAbsent((Object)o, creator);
-        man.createRecipeCategoryLookup().includeHidden().get().forEach(t->{
-        	man.createRecipeLookup(t.getRecipeType()).includeHidden().get().map(getter).forEach(o->o.add(t.getRecipeType()));
-        	
-        });;
+    private static void indexRegisteredRecipes() {
+        registeredRecipes.clear();
+        man.createRecipeCategoryLookup().includeHidden().get().forEach(category -> {
+            RecipeType<?> type = category.getRecipeType();
+            man.createRecipeLookup(type).includeHidden().get().forEach(recipe -> {
+                if (recipe instanceof Recipe<?> minecraftRecipe) {
+                    registeredRecipes.computeIfAbsent(minecraftRecipe.getId(), ignored -> new ArrayList<>())
+                            .add(new RegisteredRecipe(type, recipe));
+                }
+            });
+        });
+    }
+
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    private static void updateRecipeVisibility(ResourceLocation recipeId, boolean hidden) {
+        for (RegisteredRecipe registered : registeredRecipes.getOrDefault(recipeId, List.of())) {
+            try {
+                if (hidden) {
+                    man.hideRecipes((RecipeType) registered.type(), Collections.singletonList(registered.recipe()));
+                } else {
+                    man.unhideRecipes((RecipeType) registered.type(), Collections.singletonList(registered.recipe()));
+                }
+            } catch (RuntimeException exception) {
+                FRMain.LOGGER.error("Error updating JEI visibility for recipe {}", recipeId, exception);
+            }
+        }
+    }
+
+    private record RegisteredRecipe(RecipeType<?> type, Object recipe) {
     }
     @Override
     public void registerCategories(IRecipeCategoryRegistration registration) {

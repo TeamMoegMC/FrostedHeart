@@ -19,6 +19,23 @@
 
 package com.teammoeg.frostedresearch.api;
 
-public record TeamResearchManager() {
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerPlayer;
 
+/** Compatibility facade. New writes belong in {@link TeamResearchService}. */
+public final class TeamResearchManager {
+    private TeamResearchManager() {
+    }
+
+    public static TeamResearchService.GrantResult grantResult(ServerPlayer player, ResourceLocation resultId) {
+        return TeamResearchService.grantResult(player, resultId);
+    }
+
+    public static TeamResearchService.RevokeResult revokeResult(ServerPlayer player, ResourceLocation resultId) {
+        return TeamResearchService.revokeResult(player, resultId);
+    }
+
+    public static TeamResearchService.ResultInfo resultInfo(ServerPlayer player, ResourceLocation resultId) {
+        return TeamResearchService.resultInfo(player, resultId);
+    }
 }

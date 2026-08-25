@@ -158,5 +158,10 @@
   "gui.frostedresearch.effect.stats.has_forecast": "拥有天气预报",
   "gui.frostedresearch.effect.stats.overdrive_recover": "过载恢复",
   "gui.frostedresearch.catalog_error.title": "研究目录无效",
-  "gui.frostedresearch.catalog_error.message": "已安全取消世界启动，存档未被打开。共发现 %s 个问题。首个问题：%s。完整诊断已写入 latest.log。"
+  "gui.frostedresearch.catalog_error.message": "已安全取消世界启动，存档未被打开。共发现 %s 个问题。首个问题：%s。完整诊断已写入 latest.log。",
+  "item.frostedresearch.upgrade_prototype": "升级原型",
+  "tooltip.frostedresearch.prototype.invalid": "未初始化的原型外壳",
+  "tooltip.frostedresearch.prototype.profile": "配置：%s",
+  "tooltip.frostedresearch.prototype.revision": "配置修订：%s",
+  "tooltip.frostedresearch.prototype.serial": "序列号：%s"
 }

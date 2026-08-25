@@ -25,6 +25,7 @@ import com.teammoeg.frostedresearch.network.FHDrawingDeskOperationPacket;
 import com.teammoeg.frostedresearch.network.FHEffectProgressSyncPacket;
 import com.teammoeg.frostedresearch.network.FHEffectTriggerPacket;
 import com.teammoeg.frostedresearch.network.FHInsightSyncPacket;
+import com.teammoeg.frostedresearch.network.FHKnowledgeDataSyncPacket;
 import com.teammoeg.frostedresearch.network.FHResearchAttributeSyncPacket;
 import com.teammoeg.frostedresearch.network.FHResearchControlPacket;
 import com.teammoeg.frostedresearch.network.FHResearchDataSyncPacket;
@@ -48,6 +49,7 @@ public class FRNetwork extends CBaseNetwork {
         registerMessage("research_sync", FHResearchSyncPacket.class);
         registerMessage("research_sync_end", FHResearchSyncEndPacket.class);
         registerMessage("research_data", FHResearchDataSyncPacket.class);
+        registerMessage("knowledge_data", FHKnowledgeDataSyncPacket.class);
         registerMessage("research_data_update", FHResearchDataUpdatePacket.class);
         registerMessage("research_clue", FHS2CClueProgressSyncPacket.class);
         registerMessage("research_attribute", FHResearchAttributeSyncPacket.class);

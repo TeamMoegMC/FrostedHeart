@@ -14,7 +14,7 @@ public final class ResearchJeiBridge {
     }
 
     public static void sync() {
-        if (CompatModule.isJeiLoaded()) JEICompat.syncJEI();
+        if (CompatModule.isJeiLoaded()) JEICompat.scheduleSyncJEI();
     }
 
     public static void addInfo() {

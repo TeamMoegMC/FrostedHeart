@@ -1,6 +1,8 @@
 /* Copyright (c) 2026 TeamMoeg */
 package com.teammoeg.frostedresearch;
 
+import blusunrize.immersiveengineering.api.multiblocks.MultiblockHandler;
+import blusunrize.immersiveengineering.api.multiblocks.MultiblockHandler.IMultiblock;
 import com.mojang.authlib.GameProfile;
 import com.teammoeg.chorda.dataholders.team.CTeamDataManager;
 import com.teammoeg.chorda.dataholders.team.SinglePlayerTeamAPIProvider;
@@ -8,9 +10,17 @@ import com.teammoeg.chorda.dataholders.team.TeamDataClosure;
 import com.teammoeg.chorda.dataholders.team.TeamsAPI;
 import com.teammoeg.chorda.dataholders.team.TeamsAPIProvider;
 import com.teammoeg.frostedresearch.api.ResearchDataAPI;
+import com.teammoeg.frostedresearch.api.TeamResearchService;
 import com.teammoeg.frostedresearch.blocks.MechCalcTileEntity;
+import com.teammoeg.frostedresearch.data.TeamKnowledgeData;
 import com.teammoeg.frostedresearch.data.TeamResearchData;
 import com.teammoeg.frostedresearch.handler.ResearchCommonEvents;
+import com.teammoeg.frostedresearch.item.UpgradePrototypeItem;
+import com.teammoeg.frostedresearch.knowledge.PrototypeProfileDefinition;
+import com.teammoeg.frostedresearch.knowledge.ResearchResult;
+import com.teammoeg.frostedresearch.knowledge.ResearchResultCatalog;
+import com.teammoeg.frostedresearch.knowledge.ResearchTopicDefinition;
+import com.teammoeg.frostedresearch.knowledge.TechnologyAccessResolver;
 import com.teammoeg.frostedresearch.mixinutil.IOwnerTile;
 import com.teammoeg.frostedresearch.research.Research;
 import com.teammoeg.frostedresearch.research.clues.Clue;
@@ -21,11 +31,21 @@ import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.item.crafting.Recipe;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.common.util.FakePlayerFactory;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
+import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.gametest.GameTestHolder;
 import net.minecraftforge.gametest.PrefixGameTestTemplate;
 import net.minecraftforge.fml.loading.FMLPaths;
@@ -33,6 +53,8 @@ import net.minecraftforge.fml.loading.FMLPaths;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @GameTestHolder(FRMain.MODID)
@@ -76,12 +98,142 @@ public final class ResearchGameTests {
                     "a different team must not extract the cache");
             helper.assertTrue(calculator.getFetchablePoints(owner) == 45,
                     "denied extraction must leave the cache unchanged");
+            verifyPhaseOneResultAccess(helper, owner);
             verifyInvalidCatalogReloadPreservesLiveDefinitions(helper);
             verifyListenerAndEffectLifecycle(helper, owner, otherTeam);
             helper.succeed();
         } finally {
             TeamsAPI.register(previousProvider);
         }
+    }
+
+    private static void verifyPhaseOneResultAccess(GameTestHelper helper, ServerPlayer player) {
+        ResearchResultCatalog.Snapshot previous = ResearchResultCatalog.current();
+        ResourceLocation recipeId = new ResourceLocation("minecraft", "stick");
+        ResourceLocation multiblockId = new ResourceLocation(
+                "immersiveengineering", "multiblocks/blast_furnace");
+        ResourceLocation blockId = FRContents.Blocks.MECHANICAL_CALCULATOR.getId();
+        ResourceLocation topicId = new ResourceLocation(FRMain.MODID, "gametest/results");
+        ResourceLocation findingId = new ResourceLocation(FRMain.MODID, "gametest/finding");
+        ResourceLocation designId = new ResourceLocation(FRMain.MODID, "gametest/design");
+        ResourceLocation constructionId = new ResourceLocation(FRMain.MODID, "gametest/construction");
+        ResourceLocation procedureId = new ResourceLocation(FRMain.MODID, "gametest/procedure");
+        ResourceLocation prototypeId = new ResourceLocation(FRMain.MODID, "gametest/prototype");
+        ResourceLocation profileId = new ResourceLocation(FRMain.MODID, "gametest/profile");
+
+        Recipe<?> recipe = helper.getLevel().getRecipeManager().byKey(recipeId).orElse(null);
+        IMultiblock multiblock = MultiblockHandler.getByUniqueName(multiblockId);
+        Block usableBlock = FRContents.Blocks.MECHANICAL_CALCULATOR.get();
+        helper.assertTrue(recipe != null, "the real vanilla stick recipe must exist");
+        helper.assertTrue(multiblock != null, "the real IE blast furnace multiblock must exist");
+
+        ResearchTopicDefinition topic = new ResearchTopicDefinition(3,
+                ResearchTopicDefinition.Presentation.EMPTY,
+                List.of(
+                        new ResearchResult.Finding(findingId, List.of()),
+                        new ResearchResult.Design(designId, List.of(recipeId)),
+                        new ResearchResult.Construction(constructionId, List.of(multiblockId)),
+                        new ResearchResult.Procedure(procedureId, List.of(blockId)),
+                        new ResearchResult.Prototype(prototypeId, profileId)),
+                List.of());
+        try {
+            ResearchResultCatalog.install(new ResearchResultCatalog.Candidate(
+                    Map.of(topicId, topic), Map.of(profileId, new PrototypeProfileDefinition(1, 7))));
+
+            helper.assertTrue(!ResearchHooks.canUseRecipe(player, recipe),
+                    "an acquired-source-free managed recipe must be locked");
+            helper.assertTrue(!ResearchHooks.canFormMultiblock(player, multiblock),
+                    "an acquired-source-free managed multiblock must be locked");
+            PlayerInteractEvent.RightClickBlock lockedUse = rightClick(player, helper, usableBlock);
+            ResearchCommonEvents.canUseBlock(lockedUse);
+            helper.assertTrue(lockedUse.getUseBlock() == net.minecraftforge.eventbus.api.Event.Result.DENY,
+                    "the real RightClickBlock handler must deny an acquired-source-free managed block");
+
+            helper.assertTrue(TeamResearchService.grantResult(player, findingId).status()
+                            == TeamResearchService.Status.ACQUIRED,
+                    "a Finding must be acquired through TeamResearchService");
+            UUID teamId = com.teammoeg.frostedresearch.api.KnowledgeDataAPI.getData(player).team().getId();
+            helper.assertTrue(TechnologyAccessResolver.hasFinding(teamId, findingId),
+                    "the acquired Finding must enter KnowledgeProjection");
+            helper.assertTrue(!ResearchHooks.canUseRecipe(player, recipe)
+                            && !ResearchHooks.canFormMultiblock(player, multiblock),
+                    "a Finding must not change technology access");
+
+            helper.assertTrue(TeamResearchService.grantResult(player, designId).status()
+                            == TeamResearchService.Status.ACQUIRED,
+                    "a Design must be acquired through TeamResearchService");
+            helper.assertTrue(ResearchHooks.canUseRecipe(player, recipe)
+                            && !ResearchHooks.canFormMultiblock(player, multiblock),
+                    "a Design must unlock only its real recipe channel");
+            helper.assertTrue(TeamResearchService.grantResult(player, designId).status()
+                            == TeamResearchService.Status.ALREADY_ACQUIRED,
+                    "a repeated Design grant must be idempotent");
+
+            helper.assertTrue(TeamResearchService.grantResult(player, constructionId).status()
+                            == TeamResearchService.Status.ACQUIRED,
+                    "a Construction must be acquired through TeamResearchService");
+            helper.assertTrue(ResearchHooks.canFormMultiblock(player, multiblock),
+                    "a Construction must unlock the real IE formation channel");
+
+            helper.assertTrue(TeamResearchService.grantResult(player, procedureId).status()
+                            == TeamResearchService.Status.ACQUIRED,
+                    "a Procedure must be acquired through TeamResearchService");
+            PlayerInteractEvent.RightClickBlock allowedUse = rightClick(player, helper, usableBlock);
+            ResearchCommonEvents.canUseBlock(allowedUse);
+            helper.assertTrue(allowedUse.getUseBlock() != net.minecraftforge.eventbus.api.Event.Result.DENY,
+                    "the acquired Procedure must pass the real RightClickBlock handler");
+
+            fillInventory(player);
+            int nearbyBefore = nearbyPrototypeDrops(helper, player).size();
+            TeamResearchService.GrantResult firstPrototype = TeamResearchService.grantResult(player, prototypeId);
+            TeamResearchService.GrantResult secondPrototype = TeamResearchService.grantResult(player, prototypeId);
+            helper.assertTrue(firstPrototype.status() == TeamResearchService.Status.FABRICATED
+                            && secondPrototype.status() == TeamResearchService.Status.FABRICATED,
+                    "a Prototype result must fabricate on every grant");
+            helper.assertTrue(firstPrototype.prototype() != null && secondPrototype.prototype() != null
+                            && !firstPrototype.prototype().serial().equals(secondPrototype.prototype().serial()),
+                    "fabricated prototypes must have distinct serials");
+            helper.assertTrue(firstPrototype.prototype().profile().equals(profileId)
+                            && firstPrototype.prototype().profileRevision() == 7
+                            && firstPrototype.prototype().ownerTeam().equals(teamId),
+                    "fabrication must freeze profile, revision, and owner team");
+            helper.assertTrue(nearbyPrototypeDrops(helper, player).size() >= nearbyBefore + 2,
+                    "full-inventory prototype delivery must drop both physical items nearby");
+
+            TeamKnowledgeData data = com.teammoeg.frostedresearch.api.KnowledgeDataAPI.getData(player).get();
+            helper.assertTrue(data.findingIds().contains(findingId)
+                            && data.designIds().contains(designId)
+                            && data.constructionIds().contains(constructionId)
+                            && data.procedureIds().contains(procedureId),
+                    "team authority must contain exactly the four acquirable result categories");
+        } finally {
+            ResearchResultCatalog.install(new ResearchResultCatalog.Candidate(
+                    previous.topics(), previous.profiles()));
+            player.getInventory().clearContent();
+        }
+    }
+
+    private static PlayerInteractEvent.RightClickBlock rightClick(
+            ServerPlayer player, GameTestHelper helper, Block block) {
+        BlockPos pos = new BlockPos(2, 1, 1);
+        helper.setBlock(pos, block);
+        BlockPos absolutePos = helper.absolutePos(pos);
+        BlockHitResult hit = new BlockHitResult(Vec3.atCenterOf(absolutePos),
+                net.minecraft.core.Direction.UP, absolutePos, false);
+        return new PlayerInteractEvent.RightClickBlock(
+                player, InteractionHand.MAIN_HAND, absolutePos, hit);
+    }
+
+    private static void fillInventory(ServerPlayer player) {
+        for (int slot = 0; slot < player.getInventory().items.size(); slot++) {
+            player.getInventory().items.set(slot, new ItemStack(Items.COBBLESTONE, 64));
+        }
+    }
+
+    private static List<ItemEntity> nearbyPrototypeDrops(GameTestHelper helper, ServerPlayer player) {
+        return helper.getLevel().getEntitiesOfClass(ItemEntity.class,
+                new AABB(player.blockPosition()).inflate(4), entity ->
+                        entity.getItem().getItem() instanceof UpgradePrototypeItem);
     }
 
     private static void verifyListenerAndEffectLifecycle(
@@ -148,12 +300,33 @@ public final class ResearchGameTests {
                     "effect research must complete through the real team data path");
             helper.assertTrue(ownerData.get().getVariants().getDouble("gametest_stat") == 5.0D,
                     "completion must grant the reversible stat effect");
+            Recipe<?> legacyRecipe = helper.getLevel().getRecipeManager()
+                    .byKey(new ResourceLocation("minecraft", "stick")).orElseThrow();
+            IMultiblock legacyMultiblock = MultiblockHandler.getByUniqueName(new ResourceLocation(
+                    "immersiveengineering", "multiblocks/blast_furnace"));
+            var legacyProjection = TechnologyAccessResolver.project(ownerData.team());
+            helper.assertTrue(legacyProjection.recipe(legacyRecipe.getId()).allowed()
+                            && legacyProjection.recipe(legacyRecipe.getId()).sources().stream()
+                                    .allMatch(com.teammoeg.frostedresearch.knowledge.AccessSource.LegacySource.class::isInstance),
+                    "EffectCrafting must project only as a legacy recipe entitlement");
+            helper.assertTrue(legacyProjection.multiblock(legacyMultiblock.getUniqueName()).allowed()
+                            && legacyProjection.multiblock(legacyMultiblock.getUniqueName()).sources().stream()
+                                    .allMatch(com.teammoeg.frostedresearch.knowledge.AccessSource.LegacySource.class::isInstance),
+                    "EffectBuilding must project only as a legacy Construction entitlement");
+            helper.assertTrue(legacyProjection.block(FRContents.Blocks.MECHANICAL_CALCULATOR.getId()).allowed()
+                            && legacyProjection.block(FRContents.Blocks.MECHANICAL_CALCULATOR.getId()).sources().stream()
+                                    .allMatch(com.teammoeg.frostedresearch.knowledge.AccessSource.LegacySource.class::isInstance),
+                    "EffectUse must project only as a legacy Procedure entitlement");
             helper.assertTrue(ownerData.get().getCurrentResearchValue() == listeners,
                     "completing a non-current research must preserve the current selection");
             ownerData.get().resetData(ownerData.team(), effectReset);
             helper.assertTrue(ownerData.get().getVariants().getDouble("gametest_stat") == 0.0D
                             && !ownerData.get().getData(effectReset).isCompleted(),
                     "research reset must revoke the reversible effect");
+            helper.assertTrue(!ResearchHooks.canUseRecipe(owner, legacyRecipe)
+                            && !ResearchHooks.canFormMultiblock(owner, legacyMultiblock)
+                            && !ResearchHooks.canUseBlock(owner, FRContents.Blocks.MECHANICAL_CALCULATOR.get()),
+                    "legacy reset must remove all three matching entitlement sources");
 
             helper.assertTrue(FHResearch.reloadCatalog(),
                     "reloading the same listener catalogue must succeed");
@@ -231,7 +404,10 @@ public final class ResearchGameTests {
                   "clues":[],
                   "ingredients":[],
                   "effects":[
-                    {"type":"stats","id":"stats","vars":"gametest_stat","val":5.0,"percent":false}
+                    {"type":"stats","id":"stats","vars":"gametest_stat","val":5.0,"percent":false},
+                    {"type":"recipe","id":"recipe","recipes":["minecraft:stick"]},
+                    {"type":"multiblock","id":"construction","multiblock":"immersiveengineering:multiblocks/blast_furnace"},
+                    {"type":"use","id":"procedure","blocks":["frostedresearch:mechanical_calculator"]}
                   ],
                   "points":100,
                   "insight":0

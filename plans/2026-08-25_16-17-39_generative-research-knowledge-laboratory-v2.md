@@ -3,8 +3,8 @@
 - Time: 2026-08-25 16:17:39 +0800
 - Updated: 2026-08-25
 - Authors: Codex（OpenAI，系统、玩法与工程架构）；项目所有者提供目标、批评与取舍
-- Status: draft；本次版本取代本文件先前关于 DesignStandard、CapabilityManifest 和 ApplicationRule 的方案
-- Scope: FrostedResearch、观察与想法、证据板、居民讨论/计算/实验、实验台、四种研究成果、通用原型升级、数据包创作、旧研究兼容
+- Status: in-progress；Phase 1 五类成果基础层已于 2026-08-25 实现，Phase 2–6 待继续
+- Scope: FrostedResearch、观察与想法、证据板、居民讨论/计算/实验、实验台、五种研究成果、通用原型升级、数据包创作、旧研究兼容
 - Related: [研究讨论](../discussion/research_conversation.md)、[V0](2026-08-25_10-30-52_player-interactive-generative-research-system-v0.md)、[V1](2026-08-25_10-30-52_player-interactive-generative-research-system-v1.md)、[现有研究文档](../docs/research/README.md)
 
 ## 结论
@@ -13,25 +13,26 @@ V2 保留此前已经成立的研究过程：
 
 > 世界、人物和城镇提供记录；证据板帮助玩家汇聚灵感；居民可以讨论、计算和做实验；玩家在实验台周围搭建真实空间并决定是否接受结果。
 
-但研究成果回到当前游戏已经使用的语言。MVP 只有四种：
+但研究成果回到当前游戏已经使用的语言。MVP 只有五种：
 
 | 成果 | 玩家完成研究后得到什么 | 与旧系统的关系 |
 |---|---|---|
 | Finding（发现） | 一条能在档案、观察、提示或对话中使用的世界认识 | 唯一新增的知识成果 |
 | Design（设计） | 明确列出的新配方 | 取代新内容中的 recipe Effect |
-| Procedure（方法） | 明确列出的多方块成型权或方块使用权 | 取代新内容中的 multiblock / use Effect |
+| Construction（建造） | 明确列出的多方块成型权 | 取代新内容中的 multiblock Effect |
+| Procedure（方法） | 明确列出的方块右键使用权 | 取代新内容中的 use Effect |
 | Prototype（原型） | 一件有来源和 serial 的实体试作品；安装后只影响该设备 | 唯一新增的工程成果 |
 
-不在 MVP 中建立 DesignStandard，不要求 Design 再搭配“制造 Procedure”，也不把成型方法拆成结构规格、施工方法和应用规则。一个研究可以同时产生多个成果。简易高炉本来就同时解锁耐火砖配方和高炉成型，V2 仍然一次给出 Design + Procedure。
+不在 MVP 中建立 DesignStandard，不要求 Design 再搭配“制造 Procedure”，也不把 Construction 继续拆成结构规格、施工方法和应用规则。一个研究可以同时产生多个成果。简易高炉本来就同时解锁耐火砖配方和高炉成型，V2 仍然一次给出 Design + Construction。
 
-研究过程中的“观察方法、讨论方式、计算方式和实验步骤”统一叫 Protocol。Procedure 只保留玩家能直接理解的含义：学会搭建或使用某个东西。
+研究过程中的“观察方法、讨论方式、计算方式和实验步骤”统一叫 Protocol。Construction 只表示学会形成明确多方块；Procedure 只表示学会右键使用明确方块。
 
 首批内容不再用白幕、水相变或一套完整 T1 工业线证明整个系统。它从五项现有研究开始：
 
 1. 岩石的性质：以 Finding 为主；
-2. 简易高炉：以 Procedure 为主，同时保留耐火砖 Design；
+2. 简易高炉：以 Construction 为主，同时保留耐火砖 Design；
 3. 进阶真菌养殖：以 Design 为主；
-4. 能量核心再利用：展示一项研究同时产生 Design、Procedure 和普通物品奖励；
+4. 能量核心再利用：展示一项研究同时产生 Design、Construction 和普通物品奖励；
 5. 能量塔效率提升 1：以 Prototype 为主。
 
 这五项覆盖自然观察、现场调查、材料试验、生物培养、居民计算、工程台架和真实设备安装，同时不要求先发明新的世界主题。
@@ -40,7 +41,7 @@ V2 保留此前已经成立的研究过程：
 
 1. **研究过程比进度条重要。** 玩家做的是记录、连接、询问、委托、搭建、运行和判断，不是往研究点池里填数字。
 2. **成果必须立即可解释。** 玩家能用一句话回答“我知道了什么”“我会搭什么”“我能造什么”“我手里多了什么”。
-3. **不强制所有研究从玩家自己的 Idea 开始。** 难民、居民、遗迹、任务和器物可以直接带来 Idea、Finding、Design、Procedure 或 Prototype。
+3. **不强制所有研究从玩家自己的 Idea 开始。** 难民、居民、遗迹、任务和器物可以直接带来 Idea、Finding、Design、Construction、Procedure 或 Prototype。
 4. **居民不是灵感生成器。** 讨论、计算、实验是三种平级劳动，都占用居民、材料和时间。
 5. **实验仍然是真实 Minecraft 活动。** 玩家要放实验台、准备样品、满足环境和装置要求；数学与采样细节由 Protocol、居民或机械计算器处理。
 6. **不是所有研究都需要实验室。** 岩石调查可以靠现场记录与计算；高炉和真菌研究需要实验台；塔升级还需要安装到真实设备试用。
@@ -59,7 +60,8 @@ V2 保留此前已经成立的研究过程：
 | 实验 | 在实验台及其周围真实完成的一次试验 | 准备、运行、封存 |
 | 发现 | 团队现在能够使用的一条世界认识 | 查看、识别、引用 |
 | 设计 | 一张已经能够照着制造的配方 | 在 JEI 查看、合成 |
-| 方法 | 已经学会的搭建或使用办法 | 成型、右键使用 |
+| 建造 | 已经学会的明确多方块成型办法 | 成型 |
+| 方法 | 已经学会的明确方块使用办法 | 右键使用 |
 | 原型 | 一件尚未量产、但可以真实安装试用的物品 | 安装、拆除、继续观察 |
 
 “证据”“候选解释”和“实验建议”可以出现在界面文本里，但不要求玩家理解 Claim、Obligation、revision 或 ApplicationRule。
@@ -79,13 +81,14 @@ flowchart LR
     E --> I
     I --> F["Finding"]
     I --> G["Design"]
+    I --> C2["Construction"]
     I --> P["Procedure"]
     I --> O["Prototype"]
     O --> H["真实设备安装与试用"]
     H --> I
 ~~~
 
-这不是固定顺序。一个完整难民手册可以直接给 Design 或 Procedure；一件遗迹原型可以直接拿去安装；岩石调查可以没有正式实验；一项工程研究也可以同时给 Design 和 Procedure。
+这不是固定顺序。一个完整难民手册可以直接给 Design、Construction 或 Procedure；一件遗迹原型可以直接拿去安装；岩石调查可以没有正式实验；一项工程研究也可以同时给 Design 和 Construction。
 
 工作页在任何时刻只展示：
 
@@ -108,6 +111,7 @@ Observation
 Idea
 Finding
 Design
+Construction
 Procedure
 Prototype
 ~~~
@@ -120,12 +124,12 @@ Prototype
 |---|---|---|
 | 玩家亲历 | 发现矿石、使用菌床、看到塔燃料下降、拾到核心 | Observation、Idea seed |
 | 主动记录或取样 | 对方块、设备、样品或地点使用笔记/工具 | Observation、specimen ref |
-| 未招募难民 | 交谈、展示相关物品、交换知识 | Idea、Finding、Design、Procedure，少量情况下给 Prototype |
+| 未招募难民 | 交谈、展示相关物品、交换知识 | Idea、Finding、Design、Construction、Procedure，少量情况下给 Prototype |
 | 已招募居民 | 岗位报告、访谈、研究所劳动 | Observation、讨论纪要、计算报告、实验记录 |
 | 城镇岗位 | 矿场、食物、物流、锅炉或塔运行的压缩报告 | Observation、问题报告 |
 | 遗迹与任务 | 旧图纸、操作手册、损坏器件、船上档案 | 任意成熟度知识或普通物品 |
 
-难民不在入队时把全部知识自动并入团队。玩家必须交谈、让其进入相关岗位、邀请其参加讨论，或接受其教学。若难民已经掌握完整 Procedure 或 Design，玩家可以直接获得它，不必把已有知识重新演一遍发现流程。
+难民不在入队时把全部知识自动并入团队。玩家必须交谈、让其进入相关岗位、邀请其参加讨论，或接受其教学。若难民已经掌握完整 Construction、Procedure 或 Design，玩家可以直接获得它，不必把已有知识重新演一遍发现流程。
 
 当前招募会创建新的 Resident UUID，因此实现时必须把难民 NBT 中的稳定 person knowledge 在招募成功事务内显式转移；失败时不删除、不重抽。
 
@@ -150,7 +154,7 @@ Prototype
 
 纸牌局不会生成隐藏真理。topic 只在当前证据支持的 IdeaCandidate 中揭示 1–3 张想法卡。玩家点击“记下这个想法”后才创建研究；若相同 Idea 已存在，新记录只补充来源。
 
-难民、居民、文献或器物直接给出的 Idea 可以跳过纸牌局。直接给出的 Finding、Design、Procedure 或 Prototype 则可以跳过整个想法阶段。
+难民、居民、文献或器物直接给出的 Idea 可以跳过纸牌局。直接给出的 Finding、Design、Construction、Procedure 或 Prototype 则可以跳过整个想法阶段。
 
 ## 研究工作页与最小缺口编译
 
@@ -264,9 +268,9 @@ Protocol 是研究过程定义，例如：
 - 给能量核心做低功率通电检查；
 - 比较塔改装前后的有效运行时间与燃料装入记录。
 
-Procedure 是最终成果，只表示玩家已经学会形成某个多方块或使用某个方块。二者不共用数据类型。
+Construction 与 Procedure 都是最终成果：Construction 只表示玩家已经学会形成某个多方块，Procedure 只表示玩家已经学会右键使用某个方块。二者不共用数据类型，也都不与 Protocol 共用数据类型。
 
-## 四种成果与三条直接消费路径
+## 五种成果与三条直接消费路径
 
 ### Finding
 
@@ -289,16 +293,17 @@ Design 不再要求另一份“制造 Procedure”。如果一个研究产出培
 
 新内容必须使用稳定 recipe ID，不能再按输出物模糊地锁住未来所有同输出配方。旧 EffectCrafting 的动态行为只在 legacy 兼容层保留。
 
+### Construction
+
+Construction 就是一组非空、明确的可形成多方块 ID。团队取得 Construction 后，对应权限立即进入 TechnologyAccessProjection。
+
+Construction 不表示结构规格层、居民施工熟练度或设备数值。简易高炉 Construction 就是“可以形成 IE 简易高炉”。
+
 ### Procedure
 
-Procedure 就是一组明确的：
+Procedure 就是一组非空、明确的可右键使用方块 ID。团队取得 Procedure 后，对应权限立即进入 TechnologyAccessProjection。
 
-- 可形成多方块 ID；
-- 可使用方块 ID。
-
-团队取得 Procedure 后，对应权限立即进入 TechnologyAccessProjection。
-
-Procedure 不表示实验步骤、维修手册或居民熟练度，也不提供效率加成。简易高炉 Procedure 就是“可以形成 IE 简易高炉”；机械计算器 Procedure 就可以是“可以右键使用机械计算器”。
+Procedure 不表示实验步骤、维修手册或居民熟练度，也不提供效率加成。机械计算器 Procedure 就可以是“可以右键使用机械计算器”。
 
 ### Prototype
 
@@ -325,7 +330,7 @@ Prototype 不进入全队技术权限。只有它真实安装到兼容设备后�
 
 简易高炉
 → Design：高炉砖配方
-→ Procedure：形成 IE 简易高炉
+→ Construction：形成 IE 简易高炉
 
 进阶真菌养殖
 → Design：培养箱配方
@@ -333,7 +338,7 @@ Prototype 不进入全队技术权限。只有它真实安装到兼容设备后�
 
 能量核心再利用
 → Design：T1 核心配方
-→ Procedure：形成 T1 能量塔
+→ Construction：形成 T1 能量塔
 → 普通奖励：能量核心
 
 能量塔效率提升 1
@@ -344,12 +349,12 @@ Prototype 不进入全队技术权限。只有它真实安装到兼容设备后�
 
 ### 三类投影到底投影什么
 
-投影只是由权威数据重建的查询结果，不是第四种知识，也不是成果之间的转换。
+投影只是由权威数据重建的查询结果，不是第六种成果，也不是成果之间的转换。
 
 | 内部读模型 | 输入 | 输出 | 消费者 |
 |---|---|---|---|
 | KnowledgeProjection | 团队已经取得的 Finding、Finding scope、当前被观察对象 | 当前可显示的档案、识别、提示和对话条目 | 笔记、档案、HUD、居民报告、剧情 |
-| TechnologyAccessProjection | 团队已经取得的 Design、Procedure，以及 legacy 权限 | unlockedRecipeIds、formableMultiblockIds、usableBlockIds | JEI、配方执行、多方块形成、RightClickBlock |
+| TechnologyAccessProjection | 团队已经取得的 Design、Construction、Procedure，以及 legacy 权限 | unlockedRecipeIds、formableMultiblockIds、usableBlockIds | JEI、配方执行、多方块形成、RightClickBlock |
 | InstalledContributionSnapshot | 某个 host 里真实安装的 Prototype 和该 host 当前状态 | 这台设备当前生效的类型化局部贡献 | T1、以后实现升级接口的设备 |
 
 最窄查询接口是：
@@ -363,7 +368,7 @@ resolveInstalledContributions(host)
 
 每个答案附带来源 ID，方便 UI 显示“来自：进阶真菌养殖”或“来自：已安装的受控进气原型”。除此之外不需要 CapabilityManifest、ApplicationRule、RuntimeApplicationSnapshot 或 AppliedProcedureBinding。
 
-## 四种最小研究与一个复合案例
+## 五种成果的最小研究与一个复合案例
 
 以下不是概念示例，而是 V2 的首批可玩内容。每项都从当前 research JSON、现有物品和现有 Effect 出发。
 
@@ -413,7 +418,7 @@ resolveInstalledContributions(host)
 
 若难民直接给 Finding，玩家可以立即看懂相应记录；若只给一张岩样记录，仍需证据板或现场比较。Finding 和铜探矿镐 Design 是同一研究的两个并列结果，不是 Finding 自动变成配方。
 
-### B. Procedure：简易高炉
+### B. Construction：简易高炉
 
 #### 当前基础
 
@@ -427,7 +432,7 @@ resolveInstalledContributions(host)
 1. 玩家得到耐火砖并记录它在普通炉火中的表现；
 2. 玩家需要处理因瓦或更高温材料，但现有炉具能力不足；
 3. 铁匠/冶炼工居民提交高温冶炼需求；
-4. 有冶炼背景的难民可以直接给“怎样垒简易高炉”的 Procedure，或给一份缺少高炉砖配方的残页。
+4. 有冶炼背景的难民可以直接给“怎样垒简易高炉”的 Construction，或给一份缺少高炉砖配方的残页。
 
 证据板把“高温需求”“耐火砖”“火黏土”连起来，生成 Idea：
 
@@ -440,17 +445,17 @@ resolveInstalledContributions(host)
 3. 玩家短时值守，或让一名冶炼工居民工作一个班次；
 4. 加热 Protocol 记录真实供热是否持续、样品是否放对、耗材是否完整；内部规格和结构推导交给居民计算；
 5. 结果卡写“这组材料可用于高温炉体”或“供热中断，暂时无法判断”；
-6. 玩家接受结果后一次取得高炉砖 Design 与简易高炉 Procedure。
+6. 玩家接受结果后一次取得高炉砖 Design 与简易高炉 Construction。
 
 首版并不声称 FrostedHeart 已有通用材料耐久模拟。这是一个作者定义的工程材料试验，使用真实样品、热源、时间和耗材；若以后实现材料退化接口，再由同一 Protocol provider 读取更丰富的世界事实。
 
 #### 直接结果
 
 - Design：高炉砖精确 recipe ID；
-- Procedure：immersiveengineering:multiblocks/blast_furnace 的 formation；
+- Construction：immersiveengineering:multiblocks/blast_furnace 的 formation；
 - 不新增“操作高炉”的限制，因为当前旧研究也没有 use/operation effect。
 
-如果难民只给 Procedure，玩家会知道怎样成型，但仍可能缺少高炉砖 Design。这种缺口来自知识来源确实残缺，不是系统强制把一项完整研究拆碎。
+如果难民只给 Construction，玩家会知道怎样成型，但仍可能缺少高炉砖 Design。这种缺口来自知识来源确实残缺，不是系统强制把一项完整研究拆碎。
 
 ### C. Design：进阶真菌养殖
 
@@ -564,11 +569,11 @@ Prototype 的 +0.1 是作者定义的工程效果，不是假装由玩家从数�
 #### 直接结果
 
 - Design：generator_core_t1 的精确 recipe ID；
-- Procedure：frostedheart:multiblocks/generator 的 formation；
+- Construction：frostedheart:multiblocks/generator 的 formation；
 - 普通奖励：energy_core；
 - energy_core 本身不叫 Prototype，因为它没有 serial、兼容升级位和安装后局部贡献。
 
-这个案例证明：Design 和 Procedure 不需要再被拆成规格、制造法、施工法和应用规则。一项完整研究可以直接同时给出两个权限。
+这个案例证明：Design 和 Construction 不需要再被拆成规格、制造法、施工法和应用规则。一项完整研究可以直接同时给出两个权限。
 
 ## 通用研究升级 GUI
 
@@ -615,7 +620,7 @@ topic 负责：
 - 证据板能揭示哪些 IdeaCandidate；
 - 可选择哪些讨论、计算、现场调查或实验 Protocol；
 - 哪个注册 resolver 判断结果可领取；
-- 直接给哪些 Finding、Design、Procedure 或 Prototype；
+- 直接给哪些 Finding、Design、Construction、Procedure 或 Prototype；
 - 仍需保留哪些普通物品奖励；
 - 与哪个 raw legacy ID 对应。
 
@@ -702,12 +707,11 @@ twr:research/copper_pro_pick 是迁移时应建立的稳定配方 ID 示例；�
       ]
     },
     {
-      "type": "procedure",
+      "type": "construction",
       "id": "frostedheart:form_simple_blast_furnace",
       "multiblocks": [
         "immersiveengineering:multiblocks/blast_furnace"
-      ],
-      "usable_blocks": []
+      ]
     }
   ]
 }
@@ -789,7 +793,7 @@ twr:research/copper_pro_pick 是迁移时应建立的稳定配方 ID 示例；�
 
 | 角色 | 负责什么 |
 |---|---|
-| 普通内容作者 | 组合已注册 idea source、Protocol、resolver、四种 result、普通奖励、材料和文本 |
+| 普通内容作者 | 组合已注册 idea source、Protocol、resolver、五种 result、普通奖励、材料和文本 |
 | 资源/叙事作者 | 翻译、证据牌面、难民背景、遗迹文本、报告文本、Prototype overlay |
 | Java/集成作者 | 实现世界 observation provider、CalculationProfile、ExperimentProfile、apparatus adapter、Finding view、升级 host/effect handler |
 
@@ -801,7 +805,8 @@ catalog reload 一次性校验：
 
 - result ID 与引用是否存在；
 - Design 是否只引用明确 recipe ID；
-- Procedure 的 multiblock 和 block 是否存在且有服务端拦截点；
+- Construction 的 multiblock 是否存在且有服务端拦截点；
+- Procedure 的 usable block 是否存在且有服务端拦截点；
 - Finding 的 view handler 是否存在；
 - Prototype 的 host、socket、BOM、effect handler、metric 和单位是否存在；
 - experiment 的槽位数是否超过固定上限；
@@ -819,7 +824,7 @@ schema 禁止 progress、points、team/player UUID、任意 Java/NBT path、任�
 ~~~mermaid
 flowchart TB
     S["世界 / 难民 / 居民 / 任务 / 器物"] --> O["KnowledgeSource 与 Observation adapters"]
-    O --> G["TeamKnowledgeData：记录、想法、工作制品、四种成果 ID"]
+    O --> G["TeamKnowledgeData：记录、想法、工作制品、四类团队成果 ID"]
     G --> N["NeedCompiler + ActionResolver"]
     N --> W["研究工作页"]
     W --> L["讨论 / 计算 / 实验 Protocol"]
@@ -842,6 +847,7 @@ TeamKnowledgeData
   workArtifacts
   acquiredFindingIds
   acquiredDesignIds
+  acquiredConstructionIds
   acquiredProcedureIds
   prototypePlacementIndex
 
@@ -875,6 +881,7 @@ SealExperiment
 AttachWorkArtifact
 AcceptFinding
 AcceptDesign
+AcceptConstruction
 AcceptProcedure
 FabricatePrototype
 InstallPrototype
@@ -916,7 +923,7 @@ TechnologyAccessResolver
 
 1. DrawingDeskTileEntity 当前把 ResearchGame 完成提交为 MinigameClue。V2 保留棋盘，新增 finishInspirationSession 产出 IdeaCandidate；旧 research 继续走原 clue executor。
 2. MechCalcTileEntity 当前生产 points。新路径只执行具体 CalculationWorkOrder；Create 缺席时居民路径仍可用。
-3. ITownBuilding.CODEC 当前固定分派六类建筑。MVP 在旧类型之后追加 researchInstitute 并验证旧名字和整数顺序，不在此计划中先重构全部城镇 building registry。
+3. ITownBuilding.CODEC 当前使用 `buildByNameWithLegacyInt()`：新存档按名称分派，新类型可插入任意位置；MVP 新增 researchInstitute 时只需验证名称 round-trip 与旧整数解码回归，不再维持虚假的新增顺序约束。
 4. BuildingBlockScanner / ConfinedSpaceScanner 可作为封闭实验空间基础，但必须有 bounded scan、明确 interior anchor 和缓存；露天调查使用独立 field protocol。
 5. Resident 当前没有私人知识字段；使用独立 PersonKnowledgeOverlay，并处理难民招募换 UUID。
 6. ProspectorPick / GeologistsHammer 已有真实附近矿物扫描；岩石研究复用抽出的 OreProspectingModel，不虚构地层性质。
@@ -932,8 +939,8 @@ TechnologyAccessResolver
 | 旧数据 | 新查询中的来源 | 不自动生成 |
 |---|---|---|
 | EffectCrafting | legacy recipe entitlement，与 Design recipe IDs 合并 | Design、Finding |
-| EffectBuilding | legacy multiblock entitlement，与 Procedure 合并 | Procedure 资产、Finding |
-| EffectUse | legacy usable-block entitlement，与 Procedure 合并 | 完整机器操作知识 |
+| EffectBuilding | legacy multiblock entitlement，与 Construction 合并 | Construction 资产、Finding |
+| EffectUse | legacy usable-block entitlement，与 Procedure 合并 | Procedure 资产、完整机器操作知识 |
 | EffectStats | LegacyTeamModifier，旧消费者迁移前继续兼容 | Prototype |
 | EffectItem / experience / command | 旧 executor 按 effectData 幂等发放 | Prototype 或知识成果 |
 | 直接 research-ID gate | 原 adapter 或显式 legacy entitlement | Finding |
@@ -953,9 +960,9 @@ TechnologyAccessResolver
 | 旧研究 | V2 明确结果 |
 |---|---|
 | geology_understanding | Finding + 铜探矿镐 Design |
-| blast_furnace | 高炉砖 Design + 高炉成型 Procedure |
+| blast_furnace | 高炉砖 Design + 高炉成型 Construction |
 | incubator | 培养箱 Design + 原普通物品奖励 |
-| generator_T1 | 核心 Design + T1 成型 Procedure + 原普通物品奖励 |
+| generator_T1 | 核心 Design + T1 成型 Construction + 原普通物品奖励 |
 | generator_efficiency_1 | 新档走实体 Prototype；旧档保留并去重 legacy +0.1 |
 
 ## 实施顺序
@@ -963,21 +970,24 @@ TechnologyAccessResolver
 ### Phase 0：纸面验证五项研究
 
 - 为五项研究各画一张从 Idea 来源到结果卡的可点击流程；
-- 验证四个结果词是否无需解释即可理解；
+- 验证五个结果词是否无需解释即可理解；
 - 为每项列出现有 world fact、需要新增的 observation/provider 和不允许声称的机制；
 - 冻结实验台准备屏的信息结构，不冻结复杂 schema。
 
 验收：玩家能够复述每项研究为什么开始、下一步做什么、最终得到什么。
 
-### Phase 1：四种结果和三类直接查询
+### Phase 1：五种结果和三类直接查询（已完成基础层）
 
-- 在 TeamKnowledgeData 中加入 Finding、Design、Procedure 的 acquired ID；
-- 实现四种 result codec 和独立普通 rewards；
-- 实现 KnowledgeProjection、TechnologyAccessProjection 与最小四个查询；
-- Design 直接驱动 recipe ID；Procedure 直接驱动 multiblock/use；
-- 建 legacy entitlement 合并和来源 trace。
+- [x] 在独立 `frostedresearch:knowledge` TeamKnowledgeData 中加入 Finding、Design、Construction、Procedure 的 acquired ID；
+- [x] 实现五种 result codec、最小 topic/profile datapack loader 和独立普通 rewards 定义；
+- [x] 实现不可变单调 revision catalog、候选聚合诊断与 last-known-good reload；
+- [x] 实现 KnowledgeProjection、TechnologyAccessProjection、managed universe、来源 trace 与最小四个查询；
+- [x] Design 直接驱动 recipe ID；Construction 直接驱动 multiblock；Procedure 直接驱动 usable block；
+- [x] 合并 EffectCrafting / EffectBuilding / EffectUse legacy entitlement，并从已完成且 effect 已 grant 的权威状态重建来源；
+- [x] 实现全量 knowledge snapshot、登录/换队/grant/reload 同步以及 JEI 刷新；
+- [x] 实现 `upgrade_prototype` 实体壳、冻结 profile revision/serial/owner team，以及管理员 grant/revoke/info 命令和可选在线玩家团队目标。
 
-验收：用开发命令授予四种结果时，Finding 只改变信息，Design 只开放精确配方，Procedure 只开放精确成型/使用，Prototype 仍是一件实体。
+验收：用开发命令授予五种结果时，Finding 只改变信息，Design 只开放精确配方，Construction 只开放精确成型，Procedure 只开放精确方块使用，Prototype 每次制造一件新 serial 的实体；revoke 可移除四种团队成果及 orphan 历史，info 可检查定义与团队状态，命令可显式选择在线玩家所属团队。Phase 1 未新增正式 topic，具体内容纵切从 Phase 2 开始。
 
 ### Phase 2：证据板与岩石 Finding
 
@@ -994,7 +1004,7 @@ TechnologyAccessResolver
 - 增加 researchInstitute 的最小 staffing、讨论/计算/实验队列和一人一日一单；
 - 实现 experiment_table、固定槽位、封闭空间检查和基础加热/记录 apparatus；
 - 实现高炉材料试验和真菌培养试验；
-- 打通 Design 配方与 Procedure formation 的真实执行端；
+- 打通 Design 配方与 Construction formation 的真实执行端；
 - 保留 Incubator 普通物品奖励。
 
 验收：两项研究都消耗实际样品、设施、居民或玩家时间；高炉一次给两个结果，培养箱一次给配方，玩家不填写公式。
@@ -1004,7 +1014,7 @@ TechnologyAccessResolver
 - 把任务/飞船档案接成稳定 KnowledgeOffer；
 - 实现核心低功率台架和居民材料/接线计算；
 - 给 generator_core_t1 配方建立稳定 ID；
-- 一次授予 Design + Procedure + 普通 energy_core 奖励；
+- 一次授予 Design + Construction + 普通 energy_core 奖励；
 - 不把普通核心标成 Prototype。
 
 验收：该研究完整保留当前配方、成型和物品回报，同时不引入标准化层。
@@ -1037,7 +1047,8 @@ TechnologyAccessResolver
 - 实验需要真实空间、装置和样品，但玩家不填写数学表；
 - Finding 有明确的信息反馈；
 - Design 立即开放明确配方；
-- Procedure 立即开放明确成型或使用；
+- Construction 立即开放明确成型；
+- Procedure 立即开放明确方块使用；
 - Prototype 是实体，只有安装后影响目标设备；
 - 简易高炉和能量核心再利用可以一次给多个结果。
 
@@ -1046,7 +1057,8 @@ TechnologyAccessResolver
 - 普通作者用一份 topic JSON 能定义 Idea 来源、Protocol、resolver 和 results；
 - 普通作者不需要理解能力清单、应用规则或标准化状态机；
 - 新 Design 只引用稳定 recipe ID；
-- 新 Procedure 只引用实际存在且已接服务端检查的 multiblock/block；
+- 新 Construction 只引用实际存在且已接服务端检查的 multiblock；
+- 新 Procedure 只引用实际存在且已接服务端检查的 usable block；
 - Prototype profile 明确 BOM、host、socket、外观和类型化安装效果；
 - 所有错误在 reload 时一次给出，上一份 catalog 继续运行。
 
@@ -1056,7 +1068,7 @@ TechnologyAccessResolver
 - projection 可以从结果 ID、legacy 权限和 host 实体重建；
 - 旧 effectData 不重复发奖；
 - JEI 与真实执行使用同一 recipe query；
-- multiblock formation 与 block use 使用同一 Procedure query；
+- multiblock formation 与 block use 分别使用 Construction / Procedure query，但共享同一 TechnologyAccessResolver；
 - 新设备数值不写 team-wide variant；
 - catalog reload 不改变已经存在的 Prototype serial 和效果 revision。
 
@@ -1065,7 +1077,7 @@ TechnologyAccessResolver
 - 不在 MVP 中实现 DesignStandard；
 - 不实现 CapabilityManifest、ApplicationRule 或多层资格编译；
 - 不把制造配方拆成 Design + 制造 Procedure；
-- 不把多方块拆成结构规格 + 施工 Procedure；
+- 不把 Construction 再拆成结构规格 + 施工 Procedure；
 - 不让 Procedure 提供运行数值；
 - 不把普通 item reward 叫 Prototype；
 - 不要求每项研究都有讨论、计算和实验三步；
@@ -1076,6 +1088,6 @@ TechnologyAccessResolver
 
 ## Outcome
 
-Status: draft。
+Status: in-progress。
 
-本版已经把成果层收缩为 Finding、Design、Procedure、Prototype，并用五项现有研究给出确切的 Idea 来源、玩家动作、居民劳动、实验需求和直接结果。下一步是 Phase 0 的五张可点击流程稿；任何新增后台类型都必须先证明它能让这五项研究更清楚或更可玩，否则不进入 MVP。
+Phase 1 已完成五类成果基础层：Finding、Design、Construction、Procedure、Prototype；其中 Construction 独占多方块成型权，Procedure 独占方块右键使用权。已实现结果/目录、团队权威、物理 Prototype 壳、统一投影与 legacy 来源、执行端/JEI 适配和全量同步，但没有新增正式 topic、改动 companion 配方或迁移五项旧研究。下一步从 Phase 0 流程稿与 Phase 2 岩石 Finding 纵切继续；任何新增后台类型都必须先证明它能让这五项研究更清楚或更可玩，否则不进入 MVP。

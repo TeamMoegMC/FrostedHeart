@@ -1,15 +1,19 @@
 # Research System Known Risks And Validation Gaps
 
 - Status: `Current`
-- Last verified: `2026-08-23`
-- Scope: Resolution status for the 2026-08-22 source audit, supported boundaries, and remaining integrated/manual validation
-- Code anchors: [`ResearchCatalog`](../../src/main/java/com/teammoeg/frostedresearch/ResearchCatalog.java), [`FHResearch#reloadCatalog`](../../src/main/java/com/teammoeg/frostedresearch/FHResearch.java), [`TeamResearchData#reconcileDefinitions`](../../src/main/java/com/teammoeg/frostedresearch/data/TeamResearchData.java), [`ResearchNetworkCodec`](../../src/main/java/com/teammoeg/frostedresearch/network/ResearchNetworkCodec.java), [`ResearchHooks`](../../src/main/java/com/teammoeg/frostedresearch/ResearchHooks.java), [`MechCalcTileEntity`](../../src/main/java/com/teammoeg/frostedresearch/blocks/MechCalcTileEntity.java), [`ResearchGraphViewport`](../../src/main/java/com/teammoeg/frostedresearch/gui/archive/ResearchGraphViewport.java)
+- Last verified: `2026-08-25`
+- Scope: Resolved legacy issues, implemented V2 Phase 1 boundaries, and remaining integrated/manual validation
+- Code anchors: [`ResearchCatalog`](../../src/main/java/com/teammoeg/frostedresearch/ResearchCatalog.java), [`ResearchResultCatalog`](../../src/main/java/com/teammoeg/frostedresearch/knowledge/ResearchResultCatalog.java), [`TeamKnowledgeData`](../../src/main/java/com/teammoeg/frostedresearch/data/TeamKnowledgeData.java), [`TechnologyAccessResolver`](../../src/main/java/com/teammoeg/frostedresearch/knowledge/TechnologyAccessResolver.java), [`ResearchHooks`](../../src/main/java/com/teammoeg/frostedresearch/ResearchHooks.java)
 
 ## Current Assessment
 
 All defects, fragile identity contracts, and code-level validation gaps recorded in the previous version of this document have been addressed. The remaining items below are explicit feature boundaries or integrated/manual QA still required before release; they are not silently treated as implemented behavior.
 
 Create and Immersive Engineering are required by the Frosted Heart product. Missing-Create/missing-IE startup combinations are intentionally outside scope. BROWSE and EXPERIMENT remain future UI/system features and receive no new entry point or data model in this work.
+
+V2 Phase 1 is deliberately foundation-only. The five result codecs, minimal result/profile datapack loader, independent acquired-ID authority, unified projections, provenance, full snapshot, administrator result command, and physical Prototype shell are implemented. No formal topics, player workflow, Finding view handler, prototype host/socket/contribution model, or content migration is implemented. The companion pack and all 81 legacy definitions remain unchanged.
+
+Construction and Procedure have distinct contracts: Construction is only a multiblock formation entitlement; Procedure is only a right-click block entitlement. Existing `EffectBuilding` and `EffectUse` project into those respective channels without becoming new result assets.
 
 ## Resolved Definition, Identity, And Math Risks
 
@@ -68,6 +72,9 @@ The new binary packet format is intentionally incompatible with older clients. `
 | P2 | visual QA | FTB sidebar suppression during resource reload and GUI-scale `1/2/4` graph fit require a real client | sidebar never renders/clicks while open and naturally reflects current FTB state after close; all nodes retain the required margin |
 | P3 | future feature | `ResearchOpenContext.BROWSE` has state-model support but no production screen/entry | design and implement separately if a standalone read-only browser is approved |
 | P3 | future feature | `EXPERIMENT` is an empty tab reserved for future town/research integration | define its authoritative records and lifecycle in a separate design/plan before implementation |
+| P2 | planned content | V2 has no bundled topic and current companion KubeJS target recipes still need stable explicit IDs | implement the Phase 2–4 vertical slices without changing the Phase 1 result/access contracts |
+| P2 | integrated QA | full knowledge snapshot login/team-switch/reload plus new-result and legacy-overlap access needs real-client and dedicated-server coverage | the client projection, recipe execution, IE formation, RightClickBlock and JEI agree after every full replacement |
+| P5 | future feature | `upgrade_prototype` is identity-only and cannot install or contribute | implement profile semantics, fabrication workflow, host storage, sockets, deduplication and host-aware resolver before exposing installation |
 
 ## Validation Commands
 

@@ -37,12 +37,17 @@ import com.teammoeg.chorda.util.CDistHelper;
 import com.teammoeg.chorda.util.CRegistryHelper;
 import com.teammoeg.chorda.util.CUtils;
 import com.teammoeg.frostedresearch.api.ClientResearchDataAPI;
+import com.teammoeg.frostedresearch.api.ClientKnowledgeDataAPI;
 import com.teammoeg.frostedresearch.api.ResearchDataAPI;
 import com.teammoeg.frostedresearch.blocks.RubbingTool;
 import com.teammoeg.frostedresearch.data.TeamResearchData;
 import com.teammoeg.frostedresearch.data.UnlockListType;
 import com.teammoeg.frostedresearch.events.PopulateUnlockListEvent;
 import com.teammoeg.frostedresearch.recipe.InspireRecipe;
+import com.teammoeg.frostedresearch.api.TeamResearchService;
+import com.teammoeg.frostedresearch.knowledge.ResearchResultCatalog;
+import com.teammoeg.frostedresearch.knowledge.ResearchResultCatalogLoader;
+import com.teammoeg.frostedresearch.knowledge.TechnologyAccessResolver;
 import com.teammoeg.frostedresearch.research.Research;
 import com.teammoeg.frostedresearch.research.clues.Clue;
 import com.teammoeg.frostedresearch.research.clues.ClueClosure;
@@ -58,16 +63,19 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.Recipe;
+import net.minecraft.world.item.crafting.RecipeManager;
 import net.minecraft.world.level.block.Block;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.util.FakePlayer;
 import net.minecraftforge.network.PacketDistributor;
+import net.minecraftforge.registries.ForgeRegistries;
 
 public class ResearchHooks {
 	public final static Map<UnlockListType<?>,UnlockList<?>> locklists=new IdentityHashMap<>(10);
@@ -118,40 +126,34 @@ public class ResearchHooks {
 	}
 
 	public static boolean canUseBlock(Player player, Block b) {
-		if (getLockList(BLOCK_UNLOCK_LIST).has(b)) {
-			if (player instanceof FakePlayer) return false;
-			if (player.getCommandSenderWorld().isClientSide)
-				return ClientResearchDataAPI.getData().get().getUnlockList(ResearchHooks.BLOCK_UNLOCK_LIST).has(b);
-			return ResearchDataAPI.getData(player).get().getUnlockList(ResearchHooks.BLOCK_UNLOCK_LIST).has(b);
+		ResourceLocation id = ForgeRegistries.BLOCKS.getKey(b);
+		if (id == null) return true;
+		if (player.getCommandSenderWorld().isClientSide) {
+			return ClientKnowledgeDataAPI.technologyProjection().block(id).allowed();
 		}
-		return true;
-
+		if (player instanceof FakePlayer) {
+			return TechnologyAccessResolver.projection(null).block(id).allowed();
+		}
+		return TechnologyAccessResolver.project(ResearchDataAPI.getData(player).team()).block(id).allowed();
 	}
 
 	public static boolean canUseRecipe(Recipe<?> r) {
-		if (getLockList(RECIPE_UNLOCK_LIST).has(r)) {
-			return ClientResearchDataAPI.getData().get().getUnlockList(ResearchHooks.RECIPE_UNLOCK_LIST).has(r);
-		}
-		return true;
+		return r == null || ClientKnowledgeDataAPI.technologyProjection().recipe(r.getId()).allowed();
 	}
 
 	public static boolean canUseRecipe(Player s, Recipe<?> r) {
-		if (getLockList(RECIPE_UNLOCK_LIST).has(r)) {
-			if (s == null || s instanceof FakePlayer)
-				return false;
-			if (s.getCommandSenderWorld().isClientSide)
-				return ClientResearchDataAPI.getData().get().getUnlockList(ResearchHooks.RECIPE_UNLOCK_LIST).has(r);
-			return ResearchDataAPI.getData(s).get().getUnlockList(ResearchHooks.RECIPE_UNLOCK_LIST).has(r);
+		if (r == null) return true;
+		if (s != null && s.getCommandSenderWorld().isClientSide) {
+			return ClientKnowledgeDataAPI.technologyProjection().recipe(r.getId()).allowed();
 		}
-		return true;
+		if (s == null || s instanceof FakePlayer) {
+			return TechnologyAccessResolver.projection(null).recipe(r.getId()).allowed();
+		}
+		return TechnologyAccessResolver.project(ResearchDataAPI.getData(s).team()).recipe(r.getId()).allowed();
 	}
 
 	public static boolean canUseRecipe(UUID team, Recipe<?> r) {
-		if (getLockList(RECIPE_UNLOCK_LIST).has(r)) {
-			if (team == null) return false;
-			return ResearchDataAPI.getData(team).map(t -> t.get().getUnlockList(ResearchHooks.RECIPE_UNLOCK_LIST).has(r)).orElse(false);
-		}
-		return true;
+		return r == null || TechnologyAccessResolver.projection(team).recipe(r.getId()).allowed();
 	}
 
 	/** Runs one machine recipe lookup with a nested, exception-safe owner context. */
@@ -262,19 +264,23 @@ public class ResearchHooks {
 
 	/** Server-side machine authorization. Ownerless machines fail closed for locked multiblocks. */
 	public static boolean hasMultiblock(UUID owner, IETemplateMultiblock mb) {
-		if (!getLockList(MULTIBLOCK_UNLOCK_LIST).has(mb)) return true;
-		if (owner == null) return false;
-		return ResearchDataAPI.getData(owner)
-				.map(t -> t.get().getUnlockList(ResearchHooks.MULTIBLOCK_UNLOCK_LIST).has(mb))
-				.orElse(false);
+		return mb == null || TechnologyAccessResolver.projection(owner).multiblock(mb.getUniqueName()).allowed();
 	}
 
 	/** Client-only preview authorization for player-facing screens. */
 	@OnlyIn(Dist.CLIENT)
 	public static boolean hasMultiblock(IETemplateMultiblock mb) {
-		return !getLockList(MULTIBLOCK_UNLOCK_LIST).has(mb)
-				|| ClientResearchDataAPI.getData().get()
-						.getUnlockList(ResearchHooks.MULTIBLOCK_UNLOCK_LIST).has(mb);
+		return mb == null || ClientKnowledgeDataAPI.technologyProjection().multiblock(mb.getUniqueName()).allowed();
+	}
+
+	public static boolean canFormMultiblock(Player player, IMultiblock multiblock) {
+		if (multiblock == null) return true;
+		if (player.getCommandSenderWorld().isClientSide) {
+			return ClientKnowledgeDataAPI.technologyProjection()
+					.multiblock(multiblock.getUniqueName()).allowed();
+		}
+		return TechnologyAccessResolver.project(ResearchDataAPI.getData(player).team())
+				.multiblock(multiblock.getUniqueName()).allowed();
 	}
 
 	@OnlyIn(Dist.CLIENT)
@@ -283,16 +289,39 @@ public class ResearchHooks {
 			FHResearch.editor = false;
 	}
 
-	public static void ServerReload() {
+	public static void ServerReload(ResourceManager resources, RecipeManager recipes) {
+		try {
+			ResearchResultCatalog.Snapshot installed = ResearchResultCatalog.install(
+					ResearchResultCatalogLoader.load(resources, recipes));
+			FRMain.LOGGER.info("Installed research result catalogue revision {} ({} topics, {} results, {} prototype profiles)",
+					installed.revision(), installed.topics().size(), installed.results().size(), installed.profiles().size());
+		} catch (ResearchResultCatalog.ValidationException invalid) {
+			FRMain.LOGGER.error("Research result reload rejected; keeping catalogue revision {}",
+					ResearchResultCatalog.current().revision());
+			invalid.diagnostics().forEach(diagnostic -> FRMain.LOGGER.error(" - {}", diagnostic));
+		} catch (RuntimeException invalid) {
+			FRMain.LOGGER.error("Research result reload rejected; keeping catalogue revision {}",
+					ResearchResultCatalog.current().revision(), invalid);
+		}
 		if (CTeamDataManager.INSTANCE == null) return;
 		FRMain.LOGGER.info("reloading research system");
 		if (!FHResearch.reloadCatalog()) {
 			FRMain.LOGGER.error("Research reload rejected; the previous catalogue remains active");
+			syncKnowledgeSnapshots();
 			return;
 		}
 		CTeamDataManager.INSTANCE.forAllData(FRSpecialDataTypes.RESEARCH_DATA, TeamResearchData::initResearch);
 		FHResearch.sendSyncPacket(PacketDistributor.ALL.noArg());
 		CTeamDataManager.INSTANCE.forAllData(FRSpecialDataTypes.RESEARCH_DATA, TeamResearchData::sendUpdate);
+		syncKnowledgeSnapshots();
+	}
+
+	private static void syncKnowledgeSnapshots() {
+		CTeamDataManager.INSTANCE.forAllData(FRSpecialDataTypes.RESEARCH_DATA,
+				(ignored, team) -> {
+					team.getData(FRSpecialDataTypes.KNOWLEDGE_DATA);
+					TeamResearchService.sync(team);
+				});
 	}
 	public static void onAreaVisited(ServerPlayer s,int index) {
 		TeamDataClosure<TeamResearchData> trd = ResearchDataAPI.getData(s);

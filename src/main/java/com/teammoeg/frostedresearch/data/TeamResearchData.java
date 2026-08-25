@@ -51,9 +51,13 @@ import com.teammoeg.frostedresearch.network.FHResearchAttributeSyncPacket;
 import com.teammoeg.frostedresearch.network.FHResearchDataSyncPacket;
 import com.teammoeg.frostedresearch.network.FHResearchDataUpdatePacket;
 import com.teammoeg.frostedresearch.network.FHS2CClueProgressSyncPacket;
+import com.teammoeg.frostedresearch.api.TeamResearchService;
 import com.teammoeg.frostedresearch.research.Research;
 import com.teammoeg.frostedresearch.research.clues.Clue;
 import com.teammoeg.frostedresearch.research.effects.Effect;
+import com.teammoeg.frostedresearch.research.effects.EffectBuilding;
+import com.teammoeg.frostedresearch.research.effects.EffectCrafting;
+import com.teammoeg.frostedresearch.research.effects.EffectUse;
 
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerPlayer;
@@ -487,6 +491,12 @@ public class TeamResearchData implements SpecialData {
 		return rnd;
 	}
 
+	/** Read-only lookup used by projections that must not create empty history records. */
+	public Optional<ResearchData> getExistingData(Research research) {
+		if (research == null) return Optional.empty();
+		return Optional.ofNullable(rdata.get(research.getId()));
+	}
+
 	/**
 	 * Get research data.
 	 *
@@ -555,6 +565,8 @@ public class TeamResearchData implements SpecialData {
 			if(e.grant(team, this, player, false)) {
 				this.setEffectGranted(r, e, true);
 				sendEffectProgressPacket(team, r, r.getEffects().indexOf(e), true);
+				if (team != null && (e instanceof EffectCrafting || e instanceof EffectBuilding || e instanceof EffectUse))
+					TeamResearchService.sync(team);
 			}
 		}
 	}
@@ -620,6 +632,7 @@ public class TeamResearchData implements SpecialData {
 			if (!grantedEffects.isEmpty())
 				this.sendVariantPacket(team);
 			this.sendResearchProgressPacket(team, r);
+			TeamResearchService.sync(team);
 		}
 	}
 

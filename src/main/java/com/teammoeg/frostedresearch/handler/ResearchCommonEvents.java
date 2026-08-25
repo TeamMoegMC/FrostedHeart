@@ -37,6 +37,7 @@ import com.teammoeg.frostedresearch.ResearchHooks.MultiblockUnlockList;
 import com.teammoeg.frostedresearch.ResearchHooks.RecipeUnlockList;
 import com.teammoeg.frostedresearch.api.ClientResearchDataAPI;
 import com.teammoeg.frostedresearch.api.ResearchDataAPI;
+import com.teammoeg.frostedresearch.api.TeamResearchService;
 import com.teammoeg.frostedresearch.compat.ResearchJeiBridge;
 import com.teammoeg.frostedresearch.events.DrawDeskOpenEvent;
 import com.teammoeg.frostedresearch.events.PopulateUnlockListEvent;
@@ -74,6 +75,7 @@ public class ResearchCommonEvents {
     @SubscribeEvent
     public static void syncDataChangeTeam(PlayerTeamChangedEvent event) {
     	FRNetwork.INSTANCE.sendPlayer(event.player,new FHResearchDataSyncPacket(ResearchDataAPI.getData(event.player).get()));
+        TeamResearchService.sync(ResearchDataAPI.getData(event.player).team());
     }
 
     @SubscribeEvent
@@ -91,6 +93,7 @@ public class ResearchCommonEvents {
 			FHResearch.sendSyncPacket(currentPlayer);
 			FRNetwork.INSTANCE.send(currentPlayer,
 					new FHResearchDataSyncPacket(ResearchDataAPI.getData((ServerPlayer) event.getEntity()).get()));
+			TeamResearchService.sync(ResearchDataAPI.getData((ServerPlayer) event.getEntity()).team());
 		}
 	}
     @SubscribeEvent
@@ -110,18 +113,9 @@ public class ResearchCommonEvents {
             event.setCanceled(true);
             return;
         }
-        if (ResearchHooks.getLockList(ResearchHooks.MULTIBLOCK_UNLOCK_LIST).has(event.getMultiblock()))
-            if (event.getEntity().getCommandSenderWorld().isClientSide) {
-                if (!ClientResearchDataAPI.getData().get().getUnlockList(ResearchHooks.MULTIBLOCK_UNLOCK_LIST).has(event.getMultiblock())) {
-                    event.setCanceled(true);
-                }
-            } else {
-                if (!ResearchDataAPI.getData(event.getEntity()).get().getUnlockList(ResearchHooks.MULTIBLOCK_UNLOCK_LIST).has(event.getMultiblock())) {
-                    //event.getEntity().sendStatusMessage(GuiUtils.translateMessage("research.multiblock.cannot_build"), true);
-                    event.setCanceled(true);
-                }
-
-            }
+        if (!ResearchHooks.canFormMultiblock(event.getEntity(), event.getMultiblock())) {
+            event.setCanceled(true);
+        }
     }
 
     @SubscribeEvent
@@ -129,7 +123,8 @@ public class ResearchCommonEvents {
         if (!ResearchHooks.canUseBlock(event.getEntity(), event.getLevel().getBlockState(event.getHitVec().getBlockPos()).getBlock())) {
             event.setUseBlock(Event.Result.DENY);
 
-            event.getEntity().displayClientMessage(Lang.translateMessage("research.cannot_use_block"), true);
+            if (!(event.getEntity() instanceof ServerPlayer serverPlayer) || serverPlayer.connection != null)
+                event.getEntity().displayClientMessage(Lang.translateMessage("research.cannot_use_block"), true);
         }
 
     }
@@ -175,7 +170,7 @@ public class ResearchCommonEvents {
 
 	@SubscribeEvent
 	public static void addReloadListenersLowest(AddReloadListenerEvent event) {
-		event.addListener(new ServerReloadListener());
+		event.addListener(new ServerReloadListener(event.getServerResources().getRecipeManager()));
 	}
    /* @SubscribeEvent
     public static void checkSleep(SleepingTimeCheckEvent event) {
