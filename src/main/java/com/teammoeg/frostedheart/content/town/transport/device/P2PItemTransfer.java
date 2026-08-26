@@ -30,15 +30,12 @@ public final class P2PItemTransfer {
         Objects.requireNonNull(remainderSink, "remainderSink");
         int remainingBudget = Math.max(0, itemBudget);
         int moved = 0;
-        boolean foundEligible = false;
-        boolean targetAcceptedSimulation = false;
 
         for (int slot = 0; slot < source.getSlots() && remainingBudget > 0; slot++) {
             ItemStack visible = source.getStackInSlot(slot);
             if (visible.isEmpty() || !filter.test(visible)) {
                 continue;
             }
-            foundEligible = true;
             int requested = Math.min(remainingBudget, visible.getCount());
             ItemStack simulatedExtraction = source.extractItem(slot, requested, true);
             if (simulatedExtraction.isEmpty() || !filter.test(simulatedExtraction)) {
@@ -50,7 +47,6 @@ public final class P2PItemTransfer {
             if (simulatedAccepted <= 0) {
                 continue;
             }
-            targetAcceptedSimulation = true;
 
             ItemStack extracted = source.extractItem(slot, simulatedAccepted, false);
             if (extracted.isEmpty()) {
@@ -66,11 +62,11 @@ public final class P2PItemTransfer {
                 ItemStack notRestored = source.insertItem(slot, actualRemainder, false);
                 if (!notRestored.isEmpty()) {
                     remainderSink.retain(notRestored.copy());
-                    return new Result(moved, foundEligible, targetAcceptedSimulation, true);
+                    return new Result(moved, true);
                 }
             }
         }
-        return new Result(moved, foundEligible, targetAcceptedSimulation, false);
+        return new Result(moved, false);
     }
 
     private static ItemStack insert(IItemHandler target, ItemStack stack, boolean simulate) {
@@ -89,12 +85,7 @@ public final class P2PItemTransfer {
 
     public record Result(
             int movedItems,
-            boolean foundEligibleSource,
-            boolean targetAcceptedSimulation,
             boolean retainedRecoveryStack
     ) {
-        public boolean shouldCooldown() {
-            return movedItems == 0 && (foundEligibleSource || !targetAcceptedSimulation);
-        }
     }
 }

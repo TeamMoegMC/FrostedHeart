@@ -61,7 +61,6 @@ import java.util.function.Predicate;
 public class P2PTerminalBlockEntity extends CBlockEntity
         implements CTickableBlockEntity, MenuProvider {
     private static final double MAX_ACCESS_DISTANCE_SQUARED = 64.0;
-    private static final int FAILURE_COOLDOWN_TICKS = 5;
     private static final int TRANSFER_VISUAL_TICKS = 4;
     private static final int RECEIVER_CONTAINER_PROBE_INTERVAL_TICKS = 20;
 
@@ -73,7 +72,6 @@ public class P2PTerminalBlockEntity extends CBlockEntity
     private LazyOptional<IItemHandler> externalInventoryCapability = LazyOptional.empty();
     private final TransportTransferBudget transferBudget = new TransportTransferBudget();
     private ItemStack recoveryStack = ItemStack.EMPTY;
-    private int failureCooldown;
     private int transferVisualTicks;
     private int receiverContainerProbeTicks;
     private boolean receiverContainerUnavailable;
@@ -185,8 +183,10 @@ public class P2PTerminalBlockEntity extends CBlockEntity
             return false;
         }
         (sending ? sendFilter : receiveFilter).setEntry(slot, template);
-        failureCooldown = 0;
         setChanged();
+        if (level != null) {
+            transferBudget.wake(level.getGameTime());
+        }
         publishFilterSummary();
         return true;
     }
@@ -201,8 +201,10 @@ public class P2PTerminalBlockEntity extends CBlockEntity
         } else {
             filter.setWhitelist(!filter.isWhitelist());
         }
-        failureCooldown = 0;
         setChanged();
+        if (level != null) {
+            transferBudget.wake(level.getGameTime());
+        }
         publishFilterSummary();
         return true;
     }
@@ -218,8 +220,10 @@ public class P2PTerminalBlockEntity extends CBlockEntity
                 endpointFact().pos(), rateItemsPerSecond);
         lastDecision = result.decision();
         requiredAdditionalCapacity = result.requiredAdditionalCapacity();
-        failureCooldown = 0;
         setChanged();
+        if (level != null) {
+            transferBudget.wake(level.getGameTime());
+        }
         return result;
     }
 
@@ -235,8 +239,10 @@ public class P2PTerminalBlockEntity extends CBlockEntity
         P2PBindingResult result = townResult.get().unbindP2PConnection(connectionId);
         lastDecision = result.decision();
         requiredAdditionalCapacity = result.requiredAdditionalCapacity();
-        failureCooldown = 0;
         setChanged();
+        if (level != null) {
+            transferBudget.wake(level.getGameTime());
+        }
         return result;
     }
 
@@ -313,8 +319,11 @@ public class P2PTerminalBlockEntity extends CBlockEntity
         boolean next = level.hasNeighborSignal(worldPosition);
         if (next != redstonePowered) {
             redstonePowered = next;
-            failureCooldown = 0;
-            transferBudget.reset();
+            if (next) {
+                transferBudget.pause(level.getGameTime());
+            } else {
+                transferBudget.wake(level.getGameTime());
+            }
             setChanged();
         }
         serverTick(false);
@@ -348,9 +357,6 @@ public class P2PTerminalBlockEntity extends CBlockEntity
         refreshReceiverContainerFact(bindings);
 
         if (allowTransfer) {
-            if (failureCooldown > 0) {
-                failureCooldown--;
-            }
             if (transferVisualTicks > 0) {
                 transferVisualTicks--;
             }
@@ -362,15 +368,36 @@ public class P2PTerminalBlockEntity extends CBlockEntity
     private void performOutgoingTransfer(TeamTown town, P2PBindingState bindings) {
         GlobalPos localPos = endpointFact().pos();
         P2PDirectedBinding binding = bindings.outgoing(localPos).orElse(null);
-        if (binding == null || binding.rateItemsPerSecond() <= 0 || binding.redstonePaused()) {
+        if (binding == null || binding.rateItemsPerSecond() <= 0) {
             transferBudget.reset();
             peerUnavailable = false;
+            return;
+        }
+        if (binding.redstonePaused()) {
+            transferBudget.pause(level.getGameTime());
+            peerUnavailable = false;
+            return;
+        }
+        transferBudget.configure(binding.rateItemsPerSecond());
+        TransportReservation reservation = town.getTransportReservation(
+                binding.sender().transportEndpointId()).orElse(null);
+        if (reservation == null || reservation.admissionStatus() != TransportAdmissionStatus.ACTIVE
+                || reservation.rateItemsPerSecond() <= 0) {
+            transferBudget.reset();
+            peerUnavailable = false;
+            return;
+        }
+        double effectiveRate = binding.rateItemsPerSecond()
+                * town.getTransportSummary().effectiveRateScale();
+        long gameTime = level.getGameTime();
+        int budget = transferBudget.beginAttempt(gameTime, effectiveRate);
+        if (budget <= 0) {
             return;
         }
         Optional<P2PTerminalBlockEntity> targetTerminalResult = loadedTerminal(
                 binding.receiver(), true);
         if (targetTerminalResult.isEmpty()) {
-            transferBudget.reset();
+            transferBudget.defer(gameTime);
             if (isEndpointChunkLoaded(binding.receiver())) {
                 town.unbindP2PConnection(binding.connectionId());
                 peerUnavailable = false;
@@ -380,26 +407,20 @@ public class P2PTerminalBlockEntity extends CBlockEntity
             return;
         }
         P2PTerminalBlockEntity targetTerminal = targetTerminalResult.get();
-        List<P2PDirectedBinding> incoming = bindings.incoming(binding.receiver().pos());
-        if (!P2PFairTransferScheduler.isSenderTurn(
-                incoming, localPos, level.getGameTime())) {
-            peerUnavailable = false;
-            return;
-        }
         Optional<IItemHandler> sourceResult = resolveP2PSourceHandler();
         if (sourceResult.isEmpty()) {
-            transferBudget.reset();
+            transferBudget.recordFailure(gameTime);
             peerUnavailable = false;
             return;
         }
         if (targetTerminal.receiverContainerUnavailable) {
-            transferBudget.reset();
+            transferBudget.recordFailure(gameTime);
             peerUnavailable = false;
             return;
         }
         Optional<IItemHandler> targetResult = targetTerminal.resolveP2PTargetHandler();
         if (targetResult.isEmpty()) {
-            transferBudget.reset();
+            transferBudget.recordFailure(gameTime);
             if (targetTerminal.getRole() == P2PTerminalRole.RECEIVING) {
                 targetTerminal.recordReceiverContainerUnavailable(true);
                 peerUnavailable = false;
@@ -414,50 +435,22 @@ public class P2PTerminalBlockEntity extends CBlockEntity
         IItemHandler source = sourceResult.get();
         IItemHandler target = targetResult.get();
         if (!recoveryStack.isEmpty() && !returnRecoveryTo(source)) {
+            transferBudget.recordFailure(gameTime);
             peerUnavailable = false;
             return;
         }
         Predicate<ItemStack> combinedFilter = stack -> sendFilter.matches(stack)
                 && targetTerminal.receiveFilter.matches(stack);
-        if (failureCooldown > 0) {
-            peerUnavailable = false;
-            return;
-        }
         sourceScanCount++;
-        boolean demand = hasTransferDemand(source, target, combinedFilter);
-        if (!demand) {
-            failureCooldown = FAILURE_COOLDOWN_TICKS;
-            peerUnavailable = false;
-            return;
-        }
-
-        TransportReservation reservation = town.getTransportReservation(
-                binding.sender().transportEndpointId()).orElse(null);
-        if (reservation == null || reservation.admissionStatus() != TransportAdmissionStatus.ACTIVE) {
-            transferBudget.reset();
-            return;
-        }
-        TownTransportSummary summary = town.getTransportSummary();
-        double effectiveRate = binding.rateItemsPerSecond() * summary.effectiveRateScale();
-        int sourceCount = Math.max(1, incoming.size());
-        double scheduledRate = effectiveRate * sourceCount;
-        if (!Double.isFinite(scheduledRate)) {
-            transferBudget.reset();
-            return;
-        }
         transferVisualTicks = TRANSFER_VISUAL_TICKS;
         targetTerminal.transferVisualTicks = TRANSFER_VISUAL_TICKS;
-        int budget = transferBudget.beginTick(scheduledRate, true);
-        if (budget <= 0) {
-            peerUnavailable = false;
-            return;
-        }
         P2PItemTransfer.Result result = P2PItemTransfer.move(
                 source, target, combinedFilter, budget, this::retainRecovery);
         if (result.movedItems() > 0) {
+            transferBudget.recordSuccess(result.movedItems(), gameTime);
             targetTerminal.setChanged();
-        } else if (result.shouldCooldown()) {
-            failureCooldown = FAILURE_COOLDOWN_TICKS;
+        } else {
+            transferBudget.recordFailure(gameTime);
         }
         peerUnavailable = false;
     }
@@ -580,32 +573,6 @@ public class P2PTerminalBlockEntity extends CBlockEntity
         buffer.setLocks(incoming && !outgoing, outgoing && !incoming);
     }
 
-    private static boolean hasTransferDemand(
-            IItemHandler source,
-            IItemHandler target,
-            Predicate<ItemStack> filter
-    ) {
-        for (int sourceSlot = 0; sourceSlot < source.getSlots(); sourceSlot++) {
-            ItemStack visible = source.getStackInSlot(sourceSlot);
-            if (visible.isEmpty() || !filter.test(visible)) {
-                continue;
-            }
-            ItemStack extracted = source.extractItem(sourceSlot, 1, true);
-            if (extracted.isEmpty()) {
-                continue;
-            }
-            ItemStack remainder = extracted;
-            for (int targetSlot = 0; targetSlot < target.getSlots()
-                    && !remainder.isEmpty(); targetSlot++) {
-                remainder = target.insertItem(targetSlot, remainder, true);
-            }
-            if (remainder.isEmpty()) {
-                return true;
-            }
-        }
-        return false;
-    }
-
     private boolean returnRecoveryTo(IItemHandler source) {
         ItemStack remainder = recoveryStack;
         for (int slot = 0; slot < source.getSlots() && !remainder.isEmpty(); slot++) {
@@ -631,8 +598,10 @@ public class P2PTerminalBlockEntity extends CBlockEntity
     }
 
     private void onBufferChanged() {
-        failureCooldown = 0;
         setChanged();
+        if (level != null) {
+            transferBudget.wake(level.getGameTime());
+        }
     }
 
     private void publishFilterSummary() {

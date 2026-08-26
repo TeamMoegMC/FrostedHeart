@@ -1,7 +1,7 @@
 # Town Implementation Reference
 
 > Status: Partial
-> Last verified: 2026-08-24
+> Last verified: 2026-08-26
 > Scope: State ownership, daily lifecycle, building extension, transport reservations, and town-data synchronization
 > Code anchors: `TeamTownData`, `TeamTown`, `ITownBuilding.CODEC`, `DataSyncCache`, `TownTransportState`, `TownTransportSnapshot`, `TransportReservationModel`, `TransportEndpointKind`, `TransportAdmissionStatus`, `TownResourceUpdatePacket`, `WarehouseInterfaceBlockEntity`, `WarehouseInterfaceTransportView`
 
@@ -56,7 +56,7 @@ P2P bindings use a separate authority path: `TeamTown#bindOrRebindP2PTerminals`,
 
 `WarehouseLevelEmitterBlockEntity` is not a transport endpoint and consumes no transport capacity. While loaded and its town has usable warehouse topology, it owns one exact-item `TownResourceWatcher`; filter changes reset and recreate that watcher. It compares the watched long stock against a normalized threshold (`>= 1`) in the selected `WarehouseRedstoneMode`, emits either `0` or `15`, and notifies neighbors only when the output bit changes. Stock-only changes still persist/synchronize state but do not cause neighbor-update storms. Unavailable topology immediately resets the watcher and output; recovery recreates it and refreshes current stock. Menu display saturates long stock at `Integer.MAX_VALUE` instead of overflowing.
 
-The interface's `TransportTransferBudget` keeps only a runtime decimal remainder in `[0, 1)` item. When demand exists, each server tick adds `effectiveRate / 20` and floors one shared budget. `WarehouseInterfaceTransfer` applies that budget to exports before restocking, caps every `ItemStackAction`, and deducts only the action result's actual item count. Unused whole-item budget is discarded; the remainder is never serialized.
+`TransportTransferBudget` is a runtime-only state machine shared by warehouse interfaces and P2P senders. The configured rate sets the base attempt interval: `1..32 items/s` → 20 ticks, `33..64` → 10, `65..128` → 5, `129..640` → 2, and `641..1280` → 1. The first attempt after initialization or reset also waits for that base interval. The effective town-scaled rate only generates fractional tokens, capped at one second of effective capacity (at most 64 items). A real zero-move attempt doubles the current interval up to 80 ticks; a move of at least one item halves it back toward base. The first success after backoff clears remaining tokens. `pause` clears offline allowance while preserving the schedule; `defer` additionally schedules the next probe at the current interval and is used when a P2P receiver is not loaded. No scheduling state is persisted. Each warehouse interface and each P2P sender owns one budget instance. `WarehouseInterfaceTransfer` applies the returned budget to exports before restocking, caps every `ItemStackAction`, and deducts only the action result's actual item count.
 
 ## Adding A Building
 

@@ -52,6 +52,24 @@ class WarehouseInterfaceBalanceTest {
     }
 
     @Test
+    void allSlotsShareOneRunBudgetAndNeverExceedSixtyFour() {
+        ItemStackHandler inventory = new ItemStackHandler(WarehouseInterfaceBlockEntity.SLOT_COUNT);
+        WarehouseInterfaceTarget[] targets = new WarehouseInterfaceTarget[WarehouseInterfaceBlockEntity.SLOT_COUNT];
+        for (int slot = 0; slot < WarehouseInterfaceBlockEntity.SLOT_COUNT; slot++) {
+            inventory.setStackInSlot(slot, new ItemStack(Items.COBBLESTONE, 64));
+        }
+        RecordingItemHandler handler = new RecordingItemHandler(Integer.MAX_VALUE);
+
+        WarehouseInterfaceTransfer.Result result = WarehouseInterfaceTransfer.balance(
+                access(inventory), targets, false, handler, 64);
+
+        assertEquals(64, result.movedItems());
+        assertEquals(0, inventory.getStackInSlot(0).getCount());
+        assertEquals(64, inventory.getStackInSlot(1).getCount());
+        assertTrue(result.hasRemainingWork());
+    }
+
+    @Test
     void partialActionSuccessOnlyConsumesActuallyMovedBudgetAndItems() {
         ItemStackHandler inventory = new ItemStackHandler(WarehouseInterfaceBlockEntity.SLOT_COUNT);
         WarehouseInterfaceTarget[] targets = new WarehouseInterfaceTarget[WarehouseInterfaceBlockEntity.SLOT_COUNT];
