@@ -2,6 +2,8 @@ package com.teammoeg.frostedheart.content.town.block.blockscanner;
 
 import java.util.*;
 
+import javax.annotation.Nullable;
+
 import com.teammoeg.frostedheart.content.town.block.blockscanner.AbstractWorld.BlockType;
 
 import net.minecraft.core.BlockPos;
@@ -13,22 +15,27 @@ public class RoomPathfinder {
     private static final int MAX_XZ_DISTANCE = 16;
     private static final int MAX_Y_DISTANCE = 32;
     public static class OccupiedCell implements Iterable<MutableBlockPos>{
-    	BlockPos pos;
-    	int y;
-		public OccupiedCell(BlockPos pos, int y) {
-			super();
+    	final BlockPos pos;
+    	final int height;
+    	final int reachableHeight;
+		public OccupiedCell(BlockPos pos, int height) {
+			this(pos,height,2);
+		}
+		public OccupiedCell(BlockPos pos, int height, int reachableHeight) {
+
 			this.pos = pos;
-			this.y = y;
+			this.height = height;
+			this.reachableHeight=reachableHeight;
 		}
 		public BlockPos getPos() {
 			return pos;
 		}
-		public int getY() {
-			return y;
+		public int height() {
+			return height;
 		}
 		@Override
 		public int hashCode() {
-			return Objects.hash(pos, y);
+			return Objects.hash(pos, height);
 		}
 		@Override
 		public boolean equals(Object obj) {
@@ -36,7 +43,7 @@ public class RoomPathfinder {
 			if (obj == null) return false;
 			if (getClass() != obj.getClass()) return false;
 			OccupiedCell other = (OccupiedCell) obj;
-			return Objects.equals(pos, other.pos) && y == other.y;
+			return Objects.equals(pos, other.pos) && height == other.height;
 		}
 		@Override
 		public Iterator<MutableBlockPos> iterator() {
@@ -45,7 +52,7 @@ public class RoomPathfinder {
 				MutableBlockPos mbp=new MutableBlockPos();
 				@Override
 				public boolean hasNext() {
-					return cy<y;
+					return cy<height;
 				}
 
 				@Override
@@ -56,9 +63,30 @@ public class RoomPathfinder {
 				
 			};
 		}
+		private Iterable<MutableBlockPos> reachableIterator;
+		public Iterable<MutableBlockPos> reachableIterable() {
+			if(reachableIterator==null) {
+				reachableIterator=()->new Iterator<>() {
+					int cy=0;
+					MutableBlockPos mbp=new MutableBlockPos();
+					@Override
+					public boolean hasNext() {
+						return cy<reachableHeight;
+					}
+
+					@Override
+					public MutableBlockPos next() {
+						mbp.setWithOffset(pos, 0, cy, 0);
+						return mbp;
+					}
+					
+				};
+			}
+			return reachableIterator;
+		}
 		@Override
 		public String toString() {
-			return "OccupiedCell [pos=" + pos + ", y=" + y + "]";
+			return "OccupiedCell [pos=" + pos + ", height=" + height + "]";
 		}
     }
     /**
@@ -80,7 +108,8 @@ public class RoomPathfinder {
 		}
     }
 
-    public ReachabilityResult findReachable(AbstractWorld world, BlockPos start) {
+    @Nullable
+    public static ReachabilityResult findReachable(AbstractWorld world, BlockPos start) {
         Set<BlockPos> reachable = new HashSet<>();
         Set<BlockPos> occupiedCells = new HashSet<>();
 
@@ -124,7 +153,7 @@ public class RoomPathfinder {
     /**
      * 判断角色脚底在 foot 处时是否合法。
      */
-    public boolean canStandAt(AbstractWorld world, BlockPos foot) {
+    public static boolean canStandAt(AbstractWorld world, BlockPos foot) {
         BlockType footType = world.getBlockType(foot);
         BlockType headType = world.getBlockType(foot.above());
 
@@ -132,24 +161,24 @@ public class RoomPathfinder {
             return false;
         }
 
-        if (footType == BlockType.STAIR || headType == BlockType.STAIR) {
+        if (footType == BlockType.LADDER || headType == BlockType.LADDER) {
             return true;
         }
 
         BlockType belowType = world.getBlockType(foot.below());
-        return belowType == BlockType.WALL || belowType == BlockType.STAIR;
+        return belowType != BlockType.AIR ;
     }
 
-    public boolean isOnStair(AbstractWorld world, BlockPos foot) {
+    public static boolean isOnStair(AbstractWorld world, BlockPos foot) {
         BlockType footType = world.getBlockType(foot);
         BlockType headType = world.getBlockType(foot.above());
-        return footType == BlockType.STAIR || headType == BlockType.STAIR;
+        return footType == BlockType.LADDER || headType == BlockType.LADDER;
     }
 
     /**
      * 生成某个可达脚底位置的相邻可达脚底位置
      */
-    private List<BlockPos> getNeighbors(AbstractWorld world, BlockPos start, BlockPos foot) {
+    private static List<BlockPos> getNeighbors(AbstractWorld world, BlockPos start, BlockPos foot) {
         LinkedHashSet<BlockPos> result = new LinkedHashSet<>();
         BlockPos.MutableBlockPos mbp=new MutableBlockPos();
         // 水平移动（含高度差 -1, 0, +1）
@@ -160,6 +189,7 @@ public class RoomPathfinder {
             	mbp.setY(y+dy);
                 if (canStandAt(world, mbp)) {
                     result.add(mbp.immutable());
+                    break;
                 }
             }
         }
@@ -181,7 +211,7 @@ public class RoomPathfinder {
         return new ArrayList<>(result);
     }
 
-    private boolean isWithinRange(BlockPos start, BlockPos pos) {
+    private static boolean isWithinRange(BlockPos start, BlockPos pos) {
         return Math.abs(pos.getX() - start.getX()) <= MAX_XZ_DISTANCE &&
                Math.abs(pos.getZ() - start.getZ()) <= MAX_XZ_DISTANCE &&
                Math.abs(pos.getY() - start.getY()) <= MAX_Y_DISTANCE;
@@ -192,28 +222,38 @@ public class RoomPathfinder {
      * 占据格子范围：从 foot.y+1 开始，向上直到第一个实体方块（WALL/STAIR）下方的格子；
      * 若没有实体方块，则直到 start.y + MAX_Y_DISTANCE（包含该高度）
      */
-    private void addOccupiedCells(AbstractWorld world, BlockPos start, BlockPos foot, Set<BlockPos> occupied,Set<OccupiedCell> occupiedSegs) {
-        int ceilingY = start.getY() + MAX_Y_DISTANCE; // 判定区域顶部
+    private static void addOccupiedCells(AbstractWorld world, BlockPos start, BlockPos foot, Set<BlockPos> occupied,Set<OccupiedCell> occupiedSegs) {
+        int ceilingY = Math.min(start.getY() + MAX_Y_DISTANCE, world.getMaxY(foot)); // 判定区域顶部
         BlockPos.MutableBlockPos mbp=new MutableBlockPos();
         mbp.set(foot);
+        boolean isLadder= isOnStair(world,mbp);
+        int reachableY=foot.getY()+2;
         for (int y = foot.getY() + 1; y <= ceilingY; y++) {
             mbp.setY(y);
             BlockType type = world.getBlockType(mbp);
-
-            if (type == BlockType.WALL || type == BlockType.STAIR) {
+            if(type == BlockType.LADDER) {
+            	if(isLadder)
+            		reachableY=y;
+            	else
+            		break;
+            }else if(isLadder) {
+            	isLadder=false;
+            }
+            
+            if (type == BlockType.WALL) {
                 // 遇到天花板，停止（不包含该实体方块）
                 break;
             }
             occupied.add(mbp.immutable());
         }
-        occupiedSegs.add(new OccupiedCell(foot,mbp.getY()-foot.getY()-1));
+        occupiedSegs.add(new OccupiedCell(foot,mbp.getY()-foot.getY(),reachableY-foot.getY()));
 
     }
 
     /**
      * 基于占据格子计算邻居格子（6方向相邻，排除占据格子自身，限制在搜索范围内）
      */
-    private Set<BlockPos> computeNeighborCells(Set<BlockPos> occupiedCells, BlockPos start) {
+    private static Set<BlockPos> computeNeighborCells(Set<BlockPos> occupiedCells, BlockPos start) {
         Set<BlockPos> neighbors = new HashSet<>();
 
         for (BlockPos cell : occupiedCells) {
