@@ -1,7 +1,7 @@
 # 玩家体温系统
 
 - Status: `Current`
-- Last verified: `2026-08-26`
+- Last verified: `2026-08-27`
 - Scope: 玩家周围方块采样、环境温度、衣物与介质换热、分部位体温、设备/食物、状态效果、持久化和同步
 - Primary code anchors: `TemperatureUpdate`, `TemperatureComputation`, `TemperatureThreadingPool`, `SurroundingTemperatureSimulator`, `CachedBlockTempInfo`, `PlayerTemperatureData`, `BodyPartData`, `ClothData`, `HeatingDeviceContext`, `BodyHeatingCapability`, `FoodTemperatureHandler`, `FHBodyDataSyncPacket`, `FrostedHud.renderTemperature`, `MinecraftThermalInput.gameplayPlayerEnvironment`, `MinecraftThermalInput.samplePlayerEnvironment`, `MinecraftThermalInput.MutableEnvironmentSample`
 
@@ -28,9 +28,8 @@
 
 ```text
 every player tick
-  PlayerTemperatureData.tick() decrements environment-task cooldown
-  if cooldown <= 0: tryCommitWork(player)
   every temperatureUpdateIntervalTicks (default 20):
+    query MinecraftThermalInput.gameplayPlayerEnvironment
     compute raw environment offset
     compute clothing/effective temperatures
     apply equipment heating
@@ -38,19 +37,19 @@ every player tick
   send FHBodyDataSyncPacket
 ```
 
-环境采样成功提交后，冷却设为 `envTempUpdateIntervalTicks`，默认 `20`。若异步任务仍在队列，提交失败且冷却保持不大于零，后续 tick 会继续尝试。
+旧 `PlayerTemperatureData.tick()`/`TemperatureThreadingPool.tryCommitWork` 调度块已注释。`envTempUpdateIntervalTicks` 不再控制当前玩家环境查询；查询与主体换热共用 `temperatureUpdateIntervalTicks`。
 
 服务端 END 阶段每 `temperatureUpdateIntervalTicks` 执行一次 `regulateTemperature`，按部位体温添加效果并按体感温度检查直接冷热伤害。创造、旁观或无敌玩家跳过这部分，但 START 阶段环境/数据同步仍会进入能力逻辑。
 
-`FHServerEvents.serverTick` 在服务端 tick START 收割已完成的异步结果；服务器启动前创建线程池，完全停止后关闭。`envTempThreadCount=0` 时仍走同一模拟器，但在主线程同步计算。
+`FHServerEvents` 中旧线程池的创建、逐 tick 收割和关闭调用均已注释，服务器启动也不再调用 `SurroundingTemperatureSimulator.init()`。`TemperatureThreadingPool` 与模拟器源码暂时保留，但不属于当前执行链；`envTempThreadCount` 当前没有运行时消费者。
 
-## 3. 周围方块蒙特卡洛采样
+## 3. 已停用的周围方块蒙特卡洛采样
 
-`SurroundingTemperatureSimulator` 的构造必须在游戏线程执行。它围绕玩家位置读取一个 `32 x 32 x 32` 方块窗口：四个相邻区块、两个相邻 section，共八个 `PalettedContainer<BlockState>`，另取四张 `MOTION_BLOCKING_NO_LEAVES` 高度图。异步模式复制方块状态容器；高度图仍引用世界对象，没有复制。
+以下内容描述仍保留在源码中的旧实现，不代表当前玩家温度执行路径。`SurroundingTemperatureSimulator` 原要求在游戏线程构造，并围绕玩家位置读取一个 `32 x 32 x 32` 方块窗口：四个相邻区块、两个相邻 section，共八个 `PalettedContainer<BlockState>`，另取四张 `MOTION_BLOCKING_NO_LEAVES` 高度图。异步模式复制方块状态容器；高度图仍引用世界对象，没有复制。
 
 默认模拟参数来自 `FHConfig.SERVER.SIMULATION`：
 
-| Parameter | Default | Current role |
+| Parameter | Default | Retained legacy role |
 |---|---:|---|
 | `simulationRange` | `8` | 选择快照原点时的半径，配置上限也是 `8` |
 | `simulationDivision` | `10` | 单位球速度方向的格点细分，粒子数近似按立方增长 |

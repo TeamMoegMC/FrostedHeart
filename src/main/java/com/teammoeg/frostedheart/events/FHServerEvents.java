@@ -51,13 +51,13 @@ public class FHServerEvents {
 	public static void serverLevelSave(final ServerLevelDataSaveEvent event) {
 	}
 
-	@SubscribeEvent
-	public static void serverTick(final ServerTickEvent event) {
-		if (event.phase == Phase.START) {
-			if(TemperatureUpdate.threadingPool!=null)
-				TemperatureUpdate.threadingPool.tick();
-		}
-	}
+	// Legacy TemperatureThreadingPool polling is disabled while thermal Page
+	// publications own player environment sampling.
+	// @SubscribeEvent
+	// public static void serverTick(final ServerTickEvent event) {
+	// 	if (event.phase == Phase.START && TemperatureUpdate.threadingPool != null)
+	// 		TemperatureUpdate.threadingPool.tick();
+	// }
 
 	// Server Lifecycle Events
 	/**
@@ -66,8 +66,10 @@ public class FHServerEvents {
 	 */
 	@SubscribeEvent
 	public static void serverAboutToStart(final ServerAboutToStartEvent event) {
-		SurroundingTemperatureSimulator.init();
-		TemperatureUpdate.init();
+		// Keep the legacy sampler and TemperatureThreadingPool code available for now,
+		// but do not initialize either dormant path.
+		// SurroundingTemperatureSimulator.init();
+		// TemperatureUpdate.init();
 		if(FMLEnvironment.dist==Dist.DEDICATED_SERVER) {
 			TssapProtocolHandler.serverPrepareUpdateReminder();
 			AuthConfig.reload();
@@ -106,6 +108,6 @@ public class FHServerEvents {
 	@SubscribeEvent
 	public static void serverStopped(final ServerStoppedEvent event) {
 		CTeamDataManager.INSTANCE = null;
-		TemperatureUpdate.shutdown();
+		// TemperatureUpdate.shutdown(); // TemperatureThreadingPool is not initialized.
 	}
 }

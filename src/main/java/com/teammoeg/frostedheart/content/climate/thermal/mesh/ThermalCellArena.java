@@ -13,6 +13,9 @@ package com.teammoeg.frostedheart.content.climate.thermal.mesh;
 import com.teammoeg.frostedheart.content.climate.thermal.geometry.ComponentBrickCompiler;
 
 import java.util.Arrays;
+import java.util.Map;
+import java.util.TreeMap;
+import java.util.TreeSet;
 
 /**
  * Primitive structure-of-arrays storage for air cells and sparse material poles.
@@ -56,6 +59,9 @@ public final class ThermalCellArena {
     private byte[] phaseRequestCandidateBits;
     private byte[] phaseRequestStates;
     private byte[] allocationState;
+    private final TreeMap<Integer, Integer> freeSpansByStart = new TreeMap<>();
+    private final TreeMap<Integer, TreeSet<Integer>> freeSpanStartsByLength =
+            new TreeMap<>();
 
     private int highWaterMark;
     private int liveCellCount;
@@ -223,6 +229,76 @@ public final class ThermalCellArena {
         double result = enthalpyJ[slot] + deltaJ;
         requireFinite("updated enthalpy", result);
         enthalpyJ[slot] = result;
+    }
+
+    /** Reusable rollback storage for one solver substep. */
+    public static final class MutationCheckpoint {
+        private double[] enthalpyJ = new double[0];
+        private double[] phaseReservedEnergyJ = new double[0];
+        private long[] phaseRequestSequences = new long[0];
+        private byte[] phaseRequestCandidateBits = new byte[0];
+        private byte[] phaseRequestStates = new byte[0];
+        private boolean active;
+
+        private void ensureCapacity(int required) {
+            if (required <= enthalpyJ.length) {
+                return;
+            }
+            int capacity = Math.max(16, enthalpyJ.length);
+            while (capacity < required) {
+                capacity = Math.max(required, capacity + (capacity >>> 1));
+            }
+            enthalpyJ = Arrays.copyOf(enthalpyJ, capacity);
+            phaseReservedEnergyJ = Arrays.copyOf(
+                    phaseReservedEnergyJ, capacity);
+            phaseRequestSequences = Arrays.copyOf(
+                    phaseRequestSequences, capacity);
+            phaseRequestCandidateBits = Arrays.copyOf(
+                    phaseRequestCandidateBits, capacity);
+            phaseRequestStates = Arrays.copyOf(phaseRequestStates, capacity);
+        }
+    }
+
+    public void beginMutationCheckpoint(MutationCheckpoint checkpoint) {
+        if (checkpoint == null || checkpoint.active) {
+            throw new IllegalStateException("arena mutation checkpoint is already active");
+        }
+        checkpoint.ensureCapacity(highWaterMark);
+        checkpoint.active = true;
+    }
+
+    /** Captures one preflighted live slot and returns its current enthalpy. */
+    public double captureMutationState(int slot, MutationCheckpoint checkpoint) {
+        requireActiveCheckpoint(checkpoint);
+        requireLiveSlot(slot);
+        checkpoint.enthalpyJ[slot] = enthalpyJ[slot];
+        if (cellKinds[slot] == PHASE_RESERVOIR) {
+            checkpoint.phaseReservedEnergyJ[slot] = phaseReservedEnergyJ[slot];
+            checkpoint.phaseRequestSequences[slot] = phaseRequestSequences[slot];
+            checkpoint.phaseRequestCandidateBits[slot] =
+                    phaseRequestCandidateBits[slot];
+            checkpoint.phaseRequestStates[slot] = phaseRequestStates[slot];
+        }
+        return enthalpyJ[slot];
+    }
+
+    /** Restores one slot captured by the current solver substep. */
+    public void restoreMutationState(int slot, MutationCheckpoint checkpoint) {
+        requireActiveCheckpoint(checkpoint);
+        requireLiveSlot(slot);
+        enthalpyJ[slot] = checkpoint.enthalpyJ[slot];
+        if (cellKinds[slot] == PHASE_RESERVOIR) {
+            phaseReservedEnergyJ[slot] = checkpoint.phaseReservedEnergyJ[slot];
+            phaseRequestSequences[slot] = checkpoint.phaseRequestSequences[slot];
+            phaseRequestCandidateBits[slot] =
+                    checkpoint.phaseRequestCandidateBits[slot];
+            phaseRequestStates[slot] = checkpoint.phaseRequestStates[slot];
+        }
+    }
+
+    public void endMutationCheckpoint(MutationCheckpoint checkpoint) {
+        requireActiveCheckpoint(checkpoint);
+        checkpoint.active = false;
     }
 
     public int pageSlot(int slot) {
@@ -692,22 +768,72 @@ public final class ThermalCellArena {
     }
 
     private int findFreeSpan(int count) {
-        int runStart = 0;
-        int runLength = 0;
-        for (int slot = 0; slot < highWaterMark; slot++) {
-            if (allocationState[slot] == FREE) {
-                if (runLength == 0) {
-                    runStart = slot;
-                }
-                runLength++;
-                if (runLength == count) {
-                    return runStart;
-                }
-            } else {
-                runLength = 0;
+        Map.Entry<Integer, TreeSet<Integer>> fit =
+                freeSpanStartsByLength.ceilingEntry(count);
+        if (fit == null) {
+            return highWaterMark;
+        }
+        int spanLength = fit.getKey();
+        int firstSlot = fit.getValue().first();
+        removeFreeSpan(firstSlot, spanLength);
+        if (spanLength > count) {
+            addFreeSpan(firstSlot + count, spanLength - count);
+        }
+        return firstSlot;
+    }
+
+    private void addFreeSpan(int firstSlot, int count) {
+        if (count <= 0 || firstSlot < 0
+                || firstSlot + count > highWaterMark) {
+            throw new IllegalArgumentException("free arena span is invalid");
+        }
+        int mergedFirst = firstSlot;
+        int mergedCount = count;
+        Map.Entry<Integer, Integer> lower = freeSpansByStart.floorEntry(firstSlot);
+        if (lower != null) {
+            int lowerEnd = Math.addExact(lower.getKey(), lower.getValue());
+            if (lowerEnd > firstSlot) {
+                throw new IllegalStateException("free arena spans overlap");
+            }
+            if (lowerEnd == firstSlot) {
+                mergedFirst = lower.getKey();
+                mergedCount = Math.addExact(mergedCount, lower.getValue());
+                removeFreeSpan(lower.getKey(), lower.getValue());
             }
         }
-        return highWaterMark;
+        Map.Entry<Integer, Integer> higher =
+                freeSpansByStart.ceilingEntry(mergedFirst);
+        int mergedEnd = Math.addExact(mergedFirst, mergedCount);
+        if (higher != null) {
+            if (higher.getKey() < mergedEnd) {
+                throw new IllegalStateException("free arena spans overlap");
+            }
+            if (higher.getKey() == mergedEnd) {
+                mergedCount = Math.addExact(mergedCount, higher.getValue());
+                removeFreeSpan(higher.getKey(), higher.getValue());
+                mergedEnd = Math.addExact(mergedFirst, mergedCount);
+            }
+        }
+        if (mergedEnd == highWaterMark) {
+            highWaterMark = mergedFirst;
+            return;
+        }
+        freeSpansByStart.put(mergedFirst, mergedCount);
+        freeSpanStartsByLength
+                .computeIfAbsent(mergedCount, ignored -> new TreeSet<>())
+                .add(mergedFirst);
+    }
+
+    private void removeFreeSpan(int firstSlot, int count) {
+        Integer removed = freeSpansByStart.remove(firstSlot);
+        TreeSet<Integer> starts = freeSpanStartsByLength.get(count);
+        if (removed == null || removed != count || starts == null
+                || !starts.remove(firstSlot)) {
+            throw new IllegalStateException("free arena span index is inconsistent");
+        }
+        if (starts.isEmpty()) {
+            freeSpanStartsByLength.remove(count);
+        }
     }
 
     private void ensureCapacity(int requiredCapacity) {
@@ -784,14 +910,18 @@ public final class ThermalCellArena {
             phaseRequestStates[slot] = PHASE_REQUEST_IDLE;
         }
         liveCellCount -= span.count();
-        while (highWaterMark > 0 && allocationState[highWaterMark - 1] == FREE) {
-            highWaterMark--;
-        }
+        addFreeSpan(span.firstSlot(), span.count());
     }
 
     private void requireLiveSlot(int slot) {
         if (!isLive(slot)) {
             throw new IllegalArgumentException("cell slot is not live: " + slot);
+        }
+    }
+
+    private static void requireActiveCheckpoint(MutationCheckpoint checkpoint) {
+        if (checkpoint == null || !checkpoint.active) {
+            throw new IllegalStateException("arena mutation checkpoint is not active");
         }
     }
 

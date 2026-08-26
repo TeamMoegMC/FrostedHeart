@@ -1,7 +1,7 @@
 # 世界气候与环境温度
 
 - Status: `Current`
-- Last verified: `2026-08-26`
+- Last verified: `2026-08-27`
 - Scope: 逻辑气候时钟、长期事件、局部白幕、自然/mesh/analytic 温度合成、方块状态消费者
 - Primary code anchors: `WorldClockSource`, `WorldClimate`, `ClimateEventModel`, `ClimateEventTrack`, `InterpolationClimateEvent`, `WhiteCurtainDescriptor`, `WhiteCurtainFieldModel`, `WhiteCurtainInfo`, `WorldTemperature`, `BlockTemperatureModel`, `MinecraftThermalInput.AnalyticField`, `MinecraftThermalInput.gameplayPassiveEnvironment`, `MinecraftThermalInput.gameplayCropEnvironment`, `TownThermalProjection`, `MinecraftThermalInput.gameplayTownEnvironment`
 
@@ -155,8 +155,14 @@ T_natural_air = max(absoluteZero, D + B + A + alpha_air * C)
 ```
 
 新热学 runtime 在 Page admission 时以 section 中心的 `T_natural_air` 初始化空气并作为
-FarField 外部温度。每 `200` ticks 最多刷新一次已 admission
-Page，背景变化达到 `0.25 degC` 才替换 sweep，几何和已有 cell enthalpy 不重建。
+FarField 外部温度。已 admission Page 按 section hash 错峰排入刷新队列，同一 Page 两次刷新
+至少间隔 `200` ticks，每 tick 最多出队处理 `16` 个到期项；已 withdraw 或 generation
+不匹配的 stale 项同样占用该预算且不再持有 `ThermalPage` 引用，积压时会继续顺延。背景变化达到
+`0.25 degC` 才局部替换受影响 component 的 FarField boundary，几何、coverage slot、Air
+adjacency、component membership 和已有 cell enthalpy 都不重建。全维度风力仍每 `200` ticks
+采样一次，只遍历现有 component 的开放成员并更新 FarField conductance。天空截面不做周期全
+Page 重采样：方块 mutation 在 heightmap 更新完成后于 tick-end 合并查询实际变化的 XZ 列，
+每 tick 最多处理 `64` 列；积压列留到后续 tick，并只重编该列穿过的 Brick open fragment。
 
 空气公式有三个必须保留的当前差异：
 

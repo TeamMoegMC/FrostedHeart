@@ -86,6 +86,10 @@ public final class ThermalSourceTimeline {
         return appliedWatermark;
     }
 
+    public long cursorTick() {
+        return cursorTick;
+    }
+
     /** Conservative sleep gate for continuous power and pending impulses. */
     public boolean hasActivePowerOrPendingEnergy() {
         return accumulators.hasActivePowerOrPendingEnergy();
@@ -211,7 +215,8 @@ public final class ThermalSourceTimeline {
             return false;
         }
         if (epoch.dimensionGeneration() != dimensionGeneration
-                || epoch.previousTick() != cursorTick
+                || cursorTick < epoch.previousTick()
+                || cursorTick > epoch.targetTick()
                 || epoch.sourceWatermark() < appliedWatermark) {
             return false;
         }
@@ -227,7 +232,9 @@ public final class ThermalSourceTimeline {
             long expectedWatermark = appliedWatermark + offset + 1L;
             if (command == null
                     || eventWatermarks[slot] != expectedWatermark
-                    || command.effectiveTick() < epoch.previousTick()
+                    || command.effectiveTick() < cursorTick
+                    || (cursorTick > epoch.previousTick()
+                        && command.effectiveTick() == cursorTick)
                     || command.effectiveTick() > epoch.targetTick()) {
                 return false;
             }
@@ -247,12 +254,13 @@ public final class ThermalSourceTimeline {
         if (preAppliedEpochId >= 0L || !isReady(epoch)) {
             throw new IllegalStateException("source epoch is not ready for topology settlement");
         }
-        double energy = apply(epoch, epoch.previousTick(), epoch.previousTick());
-        if (epoch.targetTick() != epoch.previousTick()) {
+        long fromTick = cursorTick;
+        double energy = apply(epoch, fromTick, fromTick);
+        if (epoch.targetTick() != fromTick) {
             energy = finiteSum(
                     "topology source settlement",
                     energy,
-                    apply(epoch, epoch.previousTick(), epoch.targetTick()));
+                    apply(epoch, fromTick, epoch.targetTick()));
         }
         preAppliedEpochId = epoch.epochId();
         preAppliedEnergyJ = energy;

@@ -87,6 +87,13 @@ public final class ThermalStepExecutor {
             );
         }
 
+        ThermalSweep.Direction direction = ThermalSweep.Direction.forEpoch(epoch);
+        try {
+            airSweep.preflight(referenceTemperatureC, epoch, direction);
+        } catch (RuntimeException failure) {
+            throw ExecutionFailure.preflight(epoch.previousTick(), failure);
+        }
+
         boolean sourcePreApplied = sources.isPreApplied(epoch);
         double sourceApplied = sourcePreApplied
                 ? sources.preAppliedEnergyJ(epoch)
@@ -94,15 +101,11 @@ public final class ThermalStepExecutor {
         double compensation = 0.0D;
         int executedTransport = 0;
         boolean numericDegraded = false;
-        long sourceCursor = sourcePreApplied
-                ? epoch.targetTick()
-                : epoch.previousTick();
+        long sourceCursor = sources.cursorTick();
         double cutEnergy = sourcePreApplied
+                || sourceCursor != epoch.previousTick()
                 ? 0.0D
-                : sources.apply(
-                        epoch,
-                        epoch.previousTick(),
-                        epoch.previousTick());
+                : sources.apply(epoch, sourceCursor, sourceCursor);
         if (!Double.isFinite(cutEnergy)) {
             return numericDegraded(
                     plan, 0, 0.0D, actualAppliedWatermarks(
@@ -114,9 +117,16 @@ public final class ThermalStepExecutor {
         for (int index = 0; index < plan.substepCount(); index++) {
             long fromTick = plan.substepStartTick(index);
             long toTick = plan.substepEndTick(index);
-            double sourceEnergy = sourcePreApplied
-                    ? 0.0D
-                    : sources.apply(epoch, fromTick, toTick);
+            double sourceEnergy;
+            if (sourcePreApplied || sourceCursor >= toTick) {
+                sourceEnergy = 0.0D;
+            } else if (sourceCursor == fromTick) {
+                sourceEnergy = sources.apply(epoch, fromTick, toTick);
+                sourceCursor = toTick;
+            } else {
+                throw new IllegalStateException(
+                        "source cursor does not match the transport retry interval");
+            }
             if (!Double.isFinite(sourceEnergy)) {
                 return numericDegraded(
                         plan, executedTransport, sourceApplied,
@@ -132,17 +142,19 @@ public final class ThermalStepExecutor {
             compensation = (next - sourceApplied) - adjusted;
             sourceApplied = next;
             double dtSeconds = plan.substepDtSeconds(index);
-            ThermalSweep.Result sweepResult = airSweep.apply(
-                    referenceTemperatureC,
-                    epoch,
-                    dtSeconds,
-                    ThermalSweep.Direction.forEpoch(epoch)
-            );
+            ThermalSweep.Result sweepResult;
+            try {
+                sweepResult = airSweep.applyAfterPreflight(
+                        referenceTemperatureC,
+                        epoch,
+                        dtSeconds,
+                        direction
+                );
+            } catch (RuntimeException failure) {
+                throw ExecutionFailure.rolledBackSubstep(fromTick, failure);
+            }
             numericDegraded |= sweepResult.numericDegradedOperations() != 0;
             executedTransport++;
-            if (!sourcePreApplied) {
-                sourceCursor = toTick;
-            }
         }
 
         if (sourceCursor < epoch.targetTick()) {
@@ -203,5 +215,46 @@ public final class ThermalStepExecutor {
         return appliedWatermarks == null
                 ? null
                 : appliedWatermarks.withSource(sources.appliedWatermark());
+    }
+
+    /** Carries the exact safe continuation boundary after a transport failure. */
+    public static final class ExecutionFailure extends RuntimeException {
+        private final long retryFromTick;
+        private final boolean failedBeforeMutation;
+
+        private ExecutionFailure(
+                long retryFromTick,
+                boolean failedBeforeMutation,
+                RuntimeException cause
+        ) {
+            super(failedBeforeMutation
+                    ? "thermal transport preflight failed"
+                    : "thermal transport substep failed and was rolled back",
+                    cause);
+            this.retryFromTick = retryFromTick;
+            this.failedBeforeMutation = failedBeforeMutation;
+        }
+
+        private static ExecutionFailure preflight(
+                long retryFromTick,
+                RuntimeException cause
+        ) {
+            return new ExecutionFailure(retryFromTick, true, cause);
+        }
+
+        private static ExecutionFailure rolledBackSubstep(
+                long retryFromTick,
+                RuntimeException cause
+        ) {
+            return new ExecutionFailure(retryFromTick, false, cause);
+        }
+
+        public long retryFromTick() {
+            return retryFromTick;
+        }
+
+        public boolean failedBeforeMutation() {
+            return failedBeforeMutation;
+        }
     }
 }

@@ -16,6 +16,7 @@ import com.teammoeg.frostedheart.content.climate.thermal.solver.BuoyancyConducta
 import com.teammoeg.frostedheart.content.climate.thermal.solver.InputWatermarks;
 import com.teammoeg.frostedheart.content.climate.thermal.solver.LatestSolveEpochScheduler;
 import com.teammoeg.frostedheart.content.climate.thermal.solver.SealedInputFrame;
+import com.teammoeg.frostedheart.content.climate.thermal.solver.ThermalStepExecutor;
 import com.teammoeg.frostedheart.content.climate.thermal.solver.ThermalSweep;
 import com.teammoeg.frostedheart.content.climate.thermal.solver.ThermalSweepFragments;
 import com.teammoeg.frostedheart.content.climate.thermal.solver.ThermalTimePolicy;
@@ -177,6 +178,12 @@ class DimensionThermalRuntimeTest {
         fixture.runtime().runOne();
 
         assertEquals(0L, fixture.runtime().lastCompletedTargetTick());
+        assertTrue(fixture.runtime().inFlightTopologyRecoveryRequired());
+        RuntimeException failure = fixture.runtime().consumeFailureForRecovery();
+        assertTrue(failure instanceof DimensionThermalRuntime.WorkLimitExceededException);
+        assertEquals(
+                new SealedInputFrame(5L, 9L, InputWatermarks.ZERO),
+                fixture.runtime().inFlightFrame().orElseThrow());
         QueryPublication.MutableSample out = new QueryPublication.MutableSample();
         assertFalse(fixture.publication().tryRead(0, 9L, 1L, out));
     }
@@ -210,6 +217,122 @@ class DimensionThermalRuntimeTest {
                 acknowledge(fixture.runtime(),
                         9L, changed, 2L, 2L, true));
         assertFalse(fixture.runtime().tryReadPublishedCell(0, out));
+    }
+
+    @Test
+    void failedSweepInvalidatesPublicationAndRetriesWithoutReapplyingSources() {
+        ThermalCellArena arena = new ThermalCellArena(1);
+        ThermalCellArena.PageAllocation allocation = arena.allocatePageCells(
+                0,
+                1,
+                new ThermalCellArena.CellSpec[]{new ThermalCellArena.CellSpec(
+                        0, 0, 0, 0, 0, 100.0D)},
+                new ThermalCellArena.MixedBrickSpec[0],
+                new ThermalCellArena.MaterialPoleSpec[0],
+                new ThermalCellArena.PhaseReservoirSpec[0],
+                0.0D,
+                0.0D);
+        NodePowerAccumulatorArena accumulators = new NodePowerAccumulatorArena(0);
+        ThermalSourceTimeline sources = new ThermalSourceTimeline(
+                9L,
+                0L,
+                16,
+                new ThermalSourceRegistry(1, 2, accumulators),
+                arena);
+        ThermalSweepFragments.Builder failingBuilder = ThermalSweepFragments.builder(
+                arena,
+                null,
+                new BuoyancyConductance.Parameters(1.0D, 1.0D, 1.0D),
+                0);
+        failingBuilder.setFarBoundary(0, 0.0D, 1.0D);
+        ThermalMemoryBudget server = new ThermalMemoryBudget(1_000_000L, 0L);
+        QueryPublication publication = QueryPublication.tryCreate(
+                server.createDimensionBudget(1_000_000L, 0L), 1);
+        assertNotNull(publication);
+        DimensionThermalRuntime runtime = new DimensionThermalRuntime(
+                9L,
+                0L,
+                InputWatermarks.ZERO,
+                1L,
+                1L,
+                true,
+                new ThermalTimePolicy(5L, 20L, 2),
+                arena,
+                sources,
+                failingBuilder.build(),
+                publication,
+                0.0D,
+                limits(8, 8, 8, 2));
+
+        runtime.sealFrame(new SealedInputFrame(5L, 9L, InputWatermarks.ZERO));
+        runtime.runOne();
+        QueryPublication.MutableSample out = new QueryPublication.MutableSample();
+        assertTrue(publication.tryRead(0, 9L, 1L, out));
+
+        long sourceWatermark = sources.offerRegister(
+                7L,
+                1,
+                ThermalSourceMode.POWER_SOURCE,
+                20.0D,
+                true,
+                5L,
+                new EmissionPort[]{EmissionPort.of(
+                        0, 1.0D, SourceBinding.declaredLoss(1L))});
+        arena.releasePageCells(0, 1, allocation.cellSpan());
+        runtime.sealFrame(new SealedInputFrame(
+                45L, 9L, InputWatermarks.ZERO.withSource(sourceWatermark)));
+        runtime.runOne();
+
+        assertFalse(publication.tryRead(0, 9L, 1L, out));
+        assertEquals(5L, sources.cursorTick());
+        assertFalse(runtime.tryBeginTopologyUpdate());
+        long reboundWatermark = sources.offerRebind(
+                7L, 0, SourceBinding.declaredLoss(2L), 50L);
+        SealedInputFrame newerFrame = new SealedInputFrame(
+                50L,
+                9L,
+                InputWatermarks.ZERO.withSource(reboundWatermark));
+        assertEquals(
+                LatestSolveEpochScheduler.SealResult.ACCEPTED,
+                runtime.sealFrame(newerFrame));
+        RuntimeException failure = runtime.consumeFailureForRecovery();
+        assertNotNull(failure);
+        assertTrue(failure instanceof ThermalStepExecutor.ExecutionFailure);
+        assertTrue(((ThermalStepExecutor.ExecutionFailure) failure)
+                .failedBeforeMutation());
+        assertEquals(
+                new SealedInputFrame(
+                        45L,
+                        9L,
+                        InputWatermarks.ZERO.withSource(sourceWatermark)),
+                runtime.inFlightFrame().orElseThrow());
+        assertTrue(runtime.tryBeginTopologyUpdate());
+        ThermalSweep replacement = ThermalSweepFragments.builder(
+                arena,
+                null,
+                new BuoyancyConductance.Parameters(1.0D, 1.0D, 1.0D),
+                0).build();
+        assertEquals(DimensionThermalRuntime.AcknowledgeResult.APPLIED,
+                runtime.finishTopologyUpdate(
+                        9L,
+                        InputWatermarks.ZERO,
+                        2L,
+                        2L,
+                        true,
+                        replacement));
+        runtime.completeInFlightTopologyRecovery();
+
+        runtime.runOne();
+
+        assertEquals(45L, runtime.lastCompletedTargetTick());
+        assertEquals(45L, sources.cursorTick());
+        assertEquals(40.0D, sources.routedEnergyJ(
+                7L, SourceBinding.Kind.DECLARED_LOSS), EPSILON);
+
+        runtime.runOne();
+        assertEquals(50L, runtime.lastCompletedTargetTick());
+        assertEquals(45.0D, sources.routedEnergyJ(
+                7L, SourceBinding.Kind.DECLARED_LOSS), EPSILON);
     }
 
     private static DimensionThermalRuntime.Limits limits(

@@ -16,7 +16,7 @@ import java.util.Objects;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
- * Bounded worker/main-thread bridge for Brick-local latent-energy reservoirs.
+ * Bounded solve/main-thread handoff for Brick-local latent-energy reservoirs.
  * Reservoir authority stays in {@link ThermalCellArena}; the two rings only
  * transport one outstanding mutation request and its outcome.
  */
@@ -38,6 +38,9 @@ public final class PhaseTransitionRuntime {
 
     private long nextRequestSequence;
     private long appliedAckWatermark;
+    private long checkpointNextRequestSequence;
+    private long checkpointRequestWriteSequence;
+    private boolean substepTransactionActive;
 
     public PhaseTransitionRuntime(
             ThermalCellArena arena,
@@ -101,7 +104,7 @@ public final class PhaseTransitionRuntime {
         return true;
     }
 
-    /** Worker-side ACK application covered by one sealed transition watermark. */
+    /** Solve-side ACK application covered by one sealed transition watermark. */
     public int applyAcksThrough(long maximumWatermark) {
         if (maximumWatermark < appliedAckWatermark) {
             throw new IllegalArgumentException("phase ACK watermark regressed");
@@ -160,6 +163,33 @@ public final class PhaseTransitionRuntime {
         return acks.latestOfferedWatermark();
     }
 
+    void beginSubstepTransaction() {
+        if (substepTransactionActive) {
+            throw new IllegalStateException("phase substep transaction is already active");
+        }
+        checkpointNextRequestSequence = nextRequestSequence;
+        checkpointRequestWriteSequence = requests.writeSequence();
+        substepTransactionActive = true;
+    }
+
+    void commitSubstepTransaction() {
+        requireSubstepTransaction();
+        substepTransactionActive = false;
+    }
+
+    void rollbackSubstepTransaction() {
+        requireSubstepTransaction();
+        nextRequestSequence = checkpointNextRequestSequence;
+        requests.rewindWriteSequence(checkpointRequestWriteSequence);
+        substepTransactionActive = false;
+    }
+
+    private void requireSubstepTransaction() {
+        if (!substepTransactionActive) {
+            throw new IllegalStateException("phase substep transaction is not active");
+        }
+    }
+
     private void reserveOrRetry(int phaseSlot) {
         if (!arena.phaseRequestOutstanding(phaseSlot)) {
             double unitEnergy = arena.phaseTransitionEnergyJPerUnit(phaseSlot);
@@ -213,7 +243,7 @@ public final class PhaseTransitionRuntime {
                 && arena.phaseProfileId(slot) == profileId;
     }
 
-    /** Caller-owned request transported from worker to main. */
+    /** Caller-owned request transported from the solve phase to mutation handling. */
     public static final class MutableRequest {
         private int fastSlot;
         private int lifecycleGeneration;
@@ -352,6 +382,20 @@ public final class PhaseTransitionRuntime {
                     requestSequences[index]);
             readSequence.lazySet(read + 1L);
             return true;
+        }
+
+        private long writeSequence() {
+            return writeSequence.get();
+        }
+
+        private void rewindWriteSequence(long checkpoint) {
+            long read = readSequence.get();
+            long write = writeSequence.get();
+            if (checkpoint < read || checkpoint > write) {
+                throw new IllegalStateException(
+                        "phase request ring changed during a solver substep");
+            }
+            writeSequence.set(checkpoint);
         }
     }
 

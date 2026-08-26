@@ -42,9 +42,10 @@ final class MinecraftPhysicalSourceManager implements AutoCloseable {
     private final int maximumColdSourcePages;
     private final Map<Long, LiveSource> sources = new HashMap<>();
     private final LinkedHashSet<Long> dirtySources = new LinkedHashSet<>();
+    private final Map<Long, LinkedHashSet<Long>> sourcesByTargetSection =
+            new HashMap<>();
 
     private int nextLifecycleGeneration = 1;
-    private long observedTopologyGeneration = -1L;
     private boolean closed;
 
     MinecraftPhysicalSourceManager(
@@ -152,19 +153,37 @@ final class MinecraftPhysicalSourceManager implements AutoCloseable {
         }
     }
 
-    void onPageInvalidated() {
-        dirtySources.addAll(sources.keySet());
+    void onPageInvalidated(long sectionKey) {
+        markTargetSectionDirty(sectionKey);
+    }
+
+    void onPageCommitted(long sectionKey) {
+        markTargetSectionDirty(sectionKey);
     }
 
     void onPageWithdrawn(long sectionKey) {
-        for (LiveSource source : sources.values()) {
-            source.retainedSections.remove(sectionKey);
+        LinkedHashSet<Long> affected = sourcesByTargetSection.get(sectionKey);
+        if (affected == null) {
+            return;
         }
-        dirtySources.addAll(sources.keySet());
+        for (long sourceId : affected) {
+            LiveSource source = sources.get(sourceId);
+            if (source != null) {
+                source.retainedSections.remove(sectionKey);
+                dirtySources.add(sourceId);
+            }
+        }
     }
 
     void onChunkLoad(LevelChunk chunk) {
-        dirtySources.addAll(sources.keySet());
+        for (int sectionIndex = 0;
+             sectionIndex < chunk.getSections().length;
+             sectionIndex++) {
+            markTargetSectionDirty(SectionPos.asLong(
+                    chunk.getPos().x,
+                    chunk.getSectionYFromSectionIndex(sectionIndex),
+                    chunk.getPos().z));
+        }
         for (BlockEntity blockEntity : chunk.getBlockEntities().values()) {
             if (blockEntity instanceof CampfireBlockEntity) {
                 BlockState state = blockEntity.getBlockState();
@@ -191,11 +210,6 @@ final class MinecraftPhysicalSourceManager implements AutoCloseable {
 
     void flush(long effectiveTick) {
         requireOpen();
-        long topologyGeneration = input.topologyGeneration();
-        if (topologyGeneration != observedTopologyGeneration) {
-            observedTopologyGeneration = topologyGeneration;
-            dirtySources.addAll(sources.keySet());
-        }
         if (dirtySources.isEmpty()) {
             return;
         }
@@ -215,6 +229,7 @@ final class MinecraftPhysicalSourceManager implements AutoCloseable {
                                 source.lifecycleGeneration,
                                 effectiveTick) != ThermalSourceTimeline.OFFER_REJECTED) {
                     releaseTargets(source);
+                    unindexTargetSections(source);
                     sources.remove(sourceId);
                     dirtySources.remove(sourceId);
                 }
@@ -382,6 +397,7 @@ final class MinecraftPhysicalSourceManager implements AutoCloseable {
         }
         sources.clear();
         dirtySources.clear();
+        sourcesByTargetSection.clear();
     }
 
     private void observe(
@@ -402,12 +418,15 @@ final class MinecraftPhysicalSourceManager implements AutoCloseable {
                     portAnchor.immutable(),
                     profile);
             sources.put(sourceId, source);
+            indexTargetSections(source);
         } else if (!source.profile.equals(profile)
                 || !source.portAnchor.equals(portAnchor)) {
             changed = true;
             releaseTargets(source);
+            unindexTargetSections(source);
             source.portAnchor = portAnchor.immutable();
             source.profile = profile;
+            indexTargetSections(source);
             source.registrationStale = source.registered;
         }
         changed |= !source.present
@@ -452,6 +471,40 @@ final class MinecraftPhysicalSourceManager implements AutoCloseable {
             input.releasePhysicalSourcePage(sectionKey);
         }
         source.retainedSections.clear();
+    }
+
+    private void indexTargetSections(LiveSource source) {
+        for (Port port : source.profile.ports()) {
+            if (port.kind() != PortKind.AIR_FACE) {
+                continue;
+            }
+            long sectionKey = sectionKey(target(source, port));
+            if (source.targetSections.add(sectionKey)) {
+                sourcesByTargetSection
+                        .computeIfAbsent(sectionKey, ignored -> new LinkedHashSet<>())
+                        .add(source.sourceId);
+            }
+        }
+    }
+
+    private void unindexTargetSections(LiveSource source) {
+        for (long sectionKey : source.targetSections) {
+            LinkedHashSet<Long> indexed = sourcesByTargetSection.get(sectionKey);
+            if (indexed != null) {
+                indexed.remove(source.sourceId);
+                if (indexed.isEmpty()) {
+                    sourcesByTargetSection.remove(sectionKey);
+                }
+            }
+        }
+        source.targetSections.clear();
+    }
+
+    private void markTargetSectionDirty(long sectionKey) {
+        LinkedHashSet<Long> affected = sourcesByTargetSection.get(sectionKey);
+        if (affected != null) {
+            dirtySources.addAll(affected);
+        }
     }
 
     private SourceBinding[] resolveBindings(LiveSource source) {
@@ -553,6 +606,7 @@ final class MinecraftPhysicalSourceManager implements AutoCloseable {
         private BlockPos portAnchor;
         private MinecraftPhysicalSourceProfile profile;
         private final Set<Long> retainedSections = new HashSet<>();
+        private final Set<Long> targetSections = new HashSet<>();
         private boolean present;
         private boolean registered;
         private boolean registrationStale;

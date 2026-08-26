@@ -27,9 +27,9 @@ import java.util.Objects;
 import java.util.Optional;
 
 /**
- * Single logical writer for one dimension lifecycle. Main-thread sealing and
- * acknowledgement are brief synchronized updates; source integration, sweep,
- * and publication remain worker-owned.
+ * Server-main-thread owner for one dimension lifecycle. Sealing, topology
+ * acknowledgement, source integration, sweep, and publication all execute
+ * synchronously behind one logical-writer gate.
  */
 public final class DimensionThermalRuntime implements AutoCloseable {
     private final long dimensionGeneration;
@@ -50,7 +50,10 @@ public final class DimensionThermalRuntime implements AutoCloseable {
     private int stableEpochCount;
     private boolean sleeping;
     private boolean unloaded;
-    private boolean failureLatched;
+    private RuntimeException recoverableFailure;
+    private RecoveryKind inFlightRecoveryKind = RecoveryKind.NONE;
+    private boolean recoverySweepInstalled;
+    private boolean workLimitSuppressed;
     private boolean logicalWriterOwned;
 
     public DimensionThermalRuntime(
@@ -126,7 +129,7 @@ public final class DimensionThermalRuntime implements AutoCloseable {
 
     public enum AcknowledgeResult {
         APPLIED,
-        DUPLICATE,
+        TOPOLOGY_UNCHANGED,
         GENERATION_MISMATCH,
         WATERMARK_REGRESSION,
         REVISION_REGRESSION,
@@ -139,6 +142,12 @@ public final class DimensionThermalRuntime implements AutoCloseable {
         INPUTS_PENDING,
         FRAME_MISMATCH,
         UNAVAILABLE
+    }
+
+    public enum RecoveryKind {
+        NONE,
+        TOPOLOGY,
+        WORK_LIMIT
     }
 
     public long dimensionGeneration() {
@@ -169,6 +178,26 @@ public final class DimensionThermalRuntime implements AutoCloseable {
         return topologyResolved;
     }
 
+    /** Returns the exact sealed frame owned by the current in-flight epoch. */
+    public synchronized Optional<SealedInputFrame> inFlightFrame() {
+        return scheduler.inFlight().map(epoch -> new SealedInputFrame(
+                epoch.targetTick(),
+                epoch.dimensionGeneration(),
+                epoch.sealedWatermarks()));
+    }
+
+    public synchronized boolean inFlightTopologyRecoveryRequired() {
+        return inFlightRecoveryKind != RecoveryKind.NONE;
+    }
+
+    public synchronized RecoveryKind inFlightRecoveryKind() {
+        return inFlightRecoveryKind;
+    }
+
+    public synchronized boolean workLimitSuppressed() {
+        return workLimitSuppressed;
+    }
+
     public ThermalCellArena thermalCellArena() {
         return arena;
     }
@@ -183,7 +212,8 @@ public final class DimensionThermalRuntime implements AutoCloseable {
             QueryPublication.MutableSample out
     ) {
         Objects.requireNonNull(out, "out");
-        if (arenaSlot < 0 || unloaded || failureLatched || logicalWriterOwned) {
+        if (arenaSlot < 0 || unloaded || recoverableFailure != null
+                || workLimitSuppressed || logicalWriterOwned) {
             return false;
         }
         return publication.tryRead(
@@ -202,7 +232,7 @@ public final class DimensionThermalRuntime implements AutoCloseable {
 
     /** Acquires the same logical writer used by {@link #runOne()}. */
     public synchronized boolean tryBeginTopologyUpdate() {
-        if (unloaded || failureLatched || logicalWriterOwned) {
+        if (unloaded || recoverableFailure != null || logicalWriterOwned) {
             return false;
         }
         logicalWriterOwned = true;
@@ -251,9 +281,10 @@ public final class DimensionThermalRuntime implements AutoCloseable {
             if (replacementSweep != null) {
                 replacementSweep.commitPendingFragmentPatch();
                 sweep = replacementSweep;
+                workLimitSuppressed = false;
             }
             if (!changed) {
-                return AcknowledgeResult.DUPLICATE;
+                return AcknowledgeResult.TOPOLOGY_UNCHANGED;
             }
             appliedWatermarks = new InputWatermarks(
                     acknowledgedWatermarks.geometry(),
@@ -292,7 +323,7 @@ public final class DimensionThermalRuntime implements AutoCloseable {
             SealedInputFrame frame
     ) {
         Objects.requireNonNull(frame, "frame");
-        if (!logicalWriterOwned || unloaded || failureLatched) {
+        if (!logicalWriterOwned || unloaded || recoverableFailure != null) {
             return SourceTopologyBarrierStatus.UNAVAILABLE;
         }
         Optional<SolveEpoch> candidate = scheduler.inFlight();
@@ -316,6 +347,34 @@ public final class DimensionThermalRuntime implements AutoCloseable {
         }
         sources.preApplyForTopology(epoch);
         return SourceTopologyBarrierStatus.APPLIED;
+    }
+
+    /** Settles the exact old epoch without consulting or starting a newer frame. */
+    public synchronized SourceTopologyBarrierStatus preApplySourcesForInFlight() {
+        if (!logicalWriterOwned || unloaded || recoverableFailure != null) {
+            return SourceTopologyBarrierStatus.UNAVAILABLE;
+        }
+        Optional<SolveEpoch> candidate = scheduler.inFlight();
+        if (candidate.isEmpty()) {
+            return SourceTopologyBarrierStatus.INPUTS_PENDING;
+        }
+        SolveEpoch epoch = candidate.orElseThrow();
+        if (sources.isPreApplied(epoch)) {
+            return SourceTopologyBarrierStatus.ALREADY_APPLIED;
+        }
+        if (!sources.isReady(epoch)) {
+            return SourceTopologyBarrierStatus.INPUTS_PENDING;
+        }
+        sources.preApplyForTopology(epoch);
+        return SourceTopologyBarrierStatus.APPLIED;
+    }
+
+    /** Called after an old epoch has been isolated from pending topology work. */
+    public synchronized void completeInFlightTopologyRecovery() {
+        workLimitSuppressed = inFlightRecoveryKind == RecoveryKind.WORK_LIMIT;
+        inFlightRecoveryKind = RecoveryKind.NONE;
+        recoverySweepInstalled = true;
+        wakeLocked();
     }
 
     public synchronized LatestSolveEpochScheduler.SealResult sealFrame(
@@ -369,7 +428,7 @@ public final class DimensionThermalRuntime implements AutoCloseable {
             if (unloaded) {
                 return;
             }
-            if (failureLatched) {
+            if (recoverableFailure != null) {
                 return;
             }
             Optional<SolveEpoch> candidate = scheduler.inFlight();
@@ -388,7 +447,13 @@ public final class DimensionThermalRuntime implements AutoCloseable {
                             scheduler.lastCompletedWatermarks());
         }
 
-        if (!workWithinLimits()) {
+        if (!recoverySweepInstalled && !workLimitSuppressed
+                && !workWithinLimits()) {
+            failEpoch(epoch, new WorkLimitExceededException(
+                    arena.liveCellCount(),
+                    sweep.pairOperationCount(),
+                    sweep.boundaryOperationCount() + sweep.phaseOperationCount(),
+                    limits));
             return;
         }
         if (!epoch.nonSourceInputsSatisfiedBy(dimensionGeneration, acknowledged)
@@ -411,13 +476,47 @@ public final class DimensionThermalRuntime implements AutoCloseable {
                     acknowledgedGeometryRevision,
                     acknowledgedTopologyGeneration);
         } catch (RuntimeException exception) {
-            synchronized (this) {
-                failureLatched = true;
-                sleeping = false;
-                stableEpochCount = 0;
-            }
-            publication.invalidate();
+            failEpoch(epoch, exception);
         }
+    }
+
+    private void failEpoch(SolveEpoch epoch, RuntimeException exception) {
+        synchronized (this) {
+            recoverableFailure = exception;
+            inFlightRecoveryKind = exception instanceof WorkLimitExceededException
+                    ? RecoveryKind.WORK_LIMIT
+                    : RecoveryKind.TOPOLOGY;
+            sleeping = false;
+            stableEpochCount = 0;
+            recoverFailedEpochLocked(epoch, exception);
+        }
+        publication.invalidate();
+    }
+
+    /**
+     * Transfers one synchronous solve failure to the lifecycle owner and
+     * reopens the logical writer for an isolated in-flight recovery.
+     */
+    public synchronized RuntimeException consumeFailureForRecovery() {
+        RuntimeException failure = recoverableFailure;
+        if (failure == null) {
+            return null;
+        }
+        recoverableFailure = null;
+        wakeLocked();
+        return failure;
+    }
+
+    private void recoverFailedEpochLocked(
+            SolveEpoch epoch,
+            RuntimeException failure
+    ) {
+        long retryFromTick = failure instanceof ThermalStepExecutor.ExecutionFailure step
+                ? step.retryFromTick()
+                : Math.max(
+                        epoch.previousTick(),
+                        Math.min(epoch.targetTick(), sources.cursorTick()));
+        scheduler.retryInFlightFrom(retryFromTick);
     }
 
     /** Main-thread unload invalidates publication before stale work can commit. */
@@ -452,6 +551,7 @@ public final class DimensionThermalRuntime implements AutoCloseable {
         }
         InputWatermarks actualApplied = acknowledged.withSource(
                 sources.appliedWatermark());
+        boolean suppressPublication;
         synchronized (this) {
             if (unloaded) {
                 return;
@@ -464,13 +564,17 @@ public final class DimensionThermalRuntime implements AutoCloseable {
             appliedWatermarks = mergeAppliedWatermarks(
                     appliedWatermarks, actualApplied);
             sources.completePreApplied(epoch);
+            recoverySweepInstalled = false;
+            suppressPublication = workLimitSuppressed;
         }
-        publication.republishUnchanged(
-                dimensionGeneration,
-                acknowledgedGeometryRevision,
-                acknowledgedTopologyGeneration,
-                epoch.epochId(),
-                epoch.targetTick());
+        if (!suppressPublication) {
+            publication.republishUnchanged(
+                    dimensionGeneration,
+                    acknowledgedGeometryRevision,
+                    acknowledgedTopologyGeneration,
+                    epoch.epochId(),
+                    epoch.targetTick());
+        }
     }
 
     private void runActiveEpoch(
@@ -492,6 +596,7 @@ public final class DimensionThermalRuntime implements AutoCloseable {
             return;
         }
 
+        boolean suppressPublication;
         synchronized (this) {
             if (unloaded) {
                 return;
@@ -504,7 +609,12 @@ public final class DimensionThermalRuntime implements AutoCloseable {
             appliedWatermarks = mergeAppliedWatermarks(
                     appliedWatermarks, step.appliedWatermarks());
             sources.completePreApplied(epoch);
+            recoverySweepInstalled = false;
             updateSleepStateLocked(step);
+            suppressPublication = workLimitSuppressed;
+        }
+        if (suppressPublication) {
+            return;
         }
         boolean publicationReady = publication.tryEnsureCapacity(
                 arena.highWaterMark());
@@ -560,5 +670,22 @@ public final class DimensionThermalRuntime implements AutoCloseable {
                 Math.max(current.chunk(), completed.chunk()),
                 Math.max(current.profile(), completed.profile()),
                 Math.max(current.transitionAck(), completed.transitionAck()));
+    }
+
+    /** Bounded-work refusal reported through the same recoverable lifecycle. */
+    public static final class WorkLimitExceededException extends RuntimeException {
+        private WorkLimitExceededException(
+                int activeCells,
+                int pairOperations,
+                int boundaryOperations,
+                Limits limits
+        ) {
+            super("thermal work set exceeds configured limits: cells="
+                    + activeCells + "/" + limits.maxActiveCells()
+                    + ", pairs=" + pairOperations + "/"
+                    + limits.maxPairOperations()
+                    + ", boundaries=" + boundaryOperations + "/"
+                    + limits.maxBoundaryOperations());
+        }
     }
 }

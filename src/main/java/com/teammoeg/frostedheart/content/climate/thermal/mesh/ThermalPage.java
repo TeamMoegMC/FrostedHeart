@@ -112,6 +112,37 @@ public final class ThermalPage {
         return true;
     }
 
+    /**
+     * Resolves the installed geometry while the topology logical writer is held.
+     * Unlike the public query path, this does not require the geometry to have
+     * been published to gameplay readers yet.
+     */
+    public synchronized boolean tryQueryInstalledCoverage(
+            int localX,
+            int localY,
+            int localZ,
+            MutableCoverageQuery result
+    ) {
+        if (result == null) {
+            throw new IllegalArgumentException("result is required");
+        }
+        int baseIndex = GeometrySummaryCache.baseIndex(localX, localY, localZ);
+        if (resyncRequirement.get() != null || dirtyBrickMask != 0L) {
+            result.invalidate(sectionKey, lifecycleGeneration, liveGeometryRevision.get());
+            return false;
+        }
+        result.set(
+                sectionKey,
+                lifecycleGeneration,
+                baseIndex,
+                coverageRefs[baseIndex],
+                liveGeometryRevision.get(),
+                topologyGeneration,
+                publishedSolveEpoch
+        );
+        return true;
+    }
+
     public synchronized GeometrySummary geometrySummary(int summaryIndex) {
         return geometrySummaries.summary(summaryIndex);
     }
@@ -272,7 +303,7 @@ public final class ThermalPage {
         return true;
     }
 
-    /** Installs a complete worker geometry result only against its exact live revision. */
+    /** Installs a complete geometry build only against its exact live revision. */
     public synchronized boolean tryInstallGeometryBuild(
             long capturedGeometryRevision,
             FullGeometryState state

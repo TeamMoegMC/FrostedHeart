@@ -40,6 +40,10 @@ public final class ThermalSweep {
         return fragments.beginPatch();
     }
 
+    public int fragmentCount() {
+        return fragments.fragmentCount();
+    }
+
     public ThermalSweep withFragmentPatch(ThermalSweepFragments.Patch patch) {
         if (patch == null || pendingFragmentPatch != null) {
             throw new IllegalStateException("fragment patch cannot target this sweep");
@@ -172,7 +176,28 @@ public final class ThermalSweep {
             double dtSeconds,
             Direction direction
     ) {
-        return fragments.apply(
+        preflight(referenceTemperatureC, epoch, direction);
+        return applyAfterPreflight(
+                referenceTemperatureC, epoch, dtSeconds, direction);
+    }
+
+    /** Validates every endpoint before source or transport state is mutated. */
+    void preflight(
+            double referenceTemperatureC,
+            SolveEpoch epoch,
+            Direction direction
+    ) {
+        fragments.preflight(referenceTemperatureC, epoch, direction);
+    }
+
+    /** Executes after one logical-writer preflight for the whole time plan. */
+    Result applyAfterPreflight(
+            double referenceTemperatureC,
+            SolveEpoch epoch,
+            double dtSeconds,
+            Direction direction
+    ) {
+        return fragments.applyAfterPreflight(
                 referenceTemperatureC, epoch, dtSeconds, direction);
     }
 

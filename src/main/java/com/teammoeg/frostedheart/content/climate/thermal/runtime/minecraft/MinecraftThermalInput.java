@@ -46,6 +46,8 @@ import com.teammoeg.frostedheart.content.climate.thermal.source.ThermalSourceReg
 import com.teammoeg.frostedheart.content.climate.thermal.source.ThermalSourceTimeline;
 import com.teammoeg.frostedheart.content.climate.thermal.source.minecraft.MinecraftPhysicalSourceProfile;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.longs.LongIterator;
+import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.SectionPos;
 import net.minecraft.server.level.ServerLevel;
@@ -80,9 +82,9 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.OptionalInt;
+import java.util.PriorityQueue;
 import java.util.Set;
-import java.util.concurrent.Executor;
-import java.util.concurrent.RejectedExecutionException;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -94,7 +96,7 @@ import java.util.concurrent.atomic.AtomicLong;
  *   owner lookup -> page invalidation -> loaded-only resolve -> primitive event
  * tick end
  *   seal page deltas -> seal five stream watermarks
- *   -> serial dispatch executor -> topology -> dimension runtime
+ *   -> synchronous topology commit -> dimension runtime
  * </pre>
  *
  * <p>Tests may construct this class explicitly. Normal gameplay starts it on
@@ -129,6 +131,8 @@ public final class MinecraftThermalInput implements AutoCloseable {
     private static final int MAXIMUM_LOADED_CONTINUATION_PAGES = 64;
     private static final double FAR_FIELD_WIND_REBUILD_DELTA = 0.05D;
     private static final long NATURAL_TEMPERATURE_REFRESH_TICKS = 200L;
+    private static final int MAXIMUM_NATURAL_TEMPERATURE_REFRESHES_PER_TICK = 16;
+    private static final int MAXIMUM_SKY_COLUMN_REFRESHES_PER_TICK = 64;
     private static final double NATURAL_TEMPERATURE_REBUILD_DELTA_C = 0.25D;
     private static final FarFieldProfileRegistry GAMEPLAY_FAR_FIELDS =
             createGameplayFarFields();
@@ -301,6 +305,11 @@ public final class MinecraftThermalInput implements AutoCloseable {
                             field.combineMode().ordinal())
                     .thenComparingInt(AnalyticField::priority)
                     .thenComparingLong(AnalyticField::fieldId);
+    static final Comparator<PageEnvironmentRefresh> PAGE_REFRESH_ORDER =
+            Comparator.comparingLong((PageEnvironmentRefresh refresh) ->
+                            refresh.dueTick)
+                    .thenComparingLong(refresh -> refresh.sectionKey)
+                    .thenComparingLong(refresh -> refresh.lifecycleGeneration);
 
     private static FarFieldProfileRegistry createGameplayFarFields() {
         List<FarFieldProfileRegistry.Profile> profiles = new ArrayList<>(
@@ -336,7 +345,18 @@ public final class MinecraftThermalInput implements AutoCloseable {
     private final Map<Long, SectionOwner> ownersBySectionKey = new HashMap<>();
     private final IdentityHashMap<LevelChunkSection, SectionOwner> ownersByIdentity =
             new IdentityHashMap<>();
+    private final Set<SectionOwner> deferredDirtyOwners =
+            ConcurrentHashMap.newKeySet();
+    private final Set<Long> deferredInvalidatedSourceSections =
+            ConcurrentHashMap.newKeySet();
     private final IdentityHashMap<ThermalPage, Boolean> dirtyPages = new IdentityHashMap<>();
+    private final LongOpenHashSet dirtySkyColumns = new LongOpenHashSet();
+    private final long[] dirtySkyColumnRefreshScratch =
+            new long[MAXIMUM_SKY_COLUMN_REFRESHES_PER_TICK];
+    private final PriorityQueue<PageEnvironmentRefresh> pageEnvironmentRefreshes =
+            new PriorityQueue<>(PAGE_REFRESH_ORDER);
+    private final PageEnvironmentRefresh[] duePageEnvironmentRefreshScratch =
+            new PageEnvironmentRefresh[MAXIMUM_NATURAL_TEMPERATURE_REFRESHES_PER_TICK];
     private final AtomicBoolean fullResyncRetryPending = new AtomicBoolean();
     private final AtomicBoolean urgentSolvePending = new AtomicBoolean(true);
     private final AtomicLong geometryRebuildDeadlineTick =
@@ -357,13 +377,15 @@ public final class MinecraftThermalInput implements AutoCloseable {
             new MutableEnvironmentSample();
     private final BlockPos.MutableBlockPos townNaturalPositionScratch =
             new BlockPos.MutableBlockPos();
+    private final BlockPos.MutableBlockPos naturalTemperaturePositionScratch =
+            new BlockPos.MutableBlockPos();
 
     private long chunkWatermark;
     private final long profileWatermark;
     private long transitionAckWatermark;
     private long lastSealedTick;
     private long releasedGeometryWatermark;
-    private long nextNaturalTemperatureRefreshTick;
+    private long nextFarFieldWindRefreshTick;
     private long drainedDeferredBlockMutationRevision;
     private volatile boolean closed;
     private MinecraftThermalTopologyApplier topologyApplier;
@@ -375,7 +397,7 @@ public final class MinecraftThermalInput implements AutoCloseable {
     private MinecraftPhysicalSourceManager physicalSources;
     private MinecraftRadiationOcclusion radiationOcclusion;
     private RadiationService radiation;
-    private Executor dispatchExecutor;
+    private boolean dispatchEnabled;
 
     public MinecraftThermalInput(
             ServerLevel level,
@@ -413,7 +435,7 @@ public final class MinecraftThermalInput implements AutoCloseable {
         }
         lastSealedTick = runtime.lastCompletedTargetTick();
         releasedGeometryWatermark = runtime.appliedWatermarks().geometry();
-        nextNaturalTemperatureRefreshTick = lastSealedTick;
+        nextFarFieldWindRefreshTick = lastSealedTick;
     }
 
     public boolean withdrawPage(long sectionKey) {
@@ -462,6 +484,8 @@ public final class MinecraftThermalInput implements AutoCloseable {
             drainDeferredBlockMutations(effectiveTick);
         }
         if (physicalSources != null) {
+            drainDeferredSourceInvalidations();
+            drainCommittedSourceBindingSections();
             physicalSources.flush(effectiveTick);
         }
         if (releaseGeometry && fullResyncRetryPending.getAndSet(false)) {
@@ -513,7 +537,7 @@ public final class MinecraftThermalInput implements AutoCloseable {
                 releasedGeometryWatermark = watermarks.geometry();
             }
         }
-        if (dispatchExecutor != null
+        if (dispatchEnabled
                 && (result == LatestSolveEpochScheduler.SealResult.ACCEPTED
                 || result == LatestSolveEpochScheduler.SealResult.DUPLICATE)) {
             submitDispatch(frame);
@@ -524,10 +548,19 @@ public final class MinecraftThermalInput implements AutoCloseable {
     private void sealGameplayTick(long effectiveTick) {
         requireMainThread();
         requireOpen();
+        if (refreshDirtySkyExposureColumns()) {
+            requestUrgentSolve();
+        }
         if (refreshNaturalTemperatures(effectiveTick)) {
             requestUrgentSolve();
         }
         if (processPhaseTransitions()) {
+            requestUrgentSolve();
+        }
+        if (drainCommittedSourceBindingSections()) {
+            requestUrgentSolve();
+        }
+        if (drainDeferredSourceInvalidations()) {
             requestUrgentSolve();
         }
 
@@ -613,22 +646,18 @@ public final class MinecraftThermalInput implements AutoCloseable {
         maximumPhaseMutationsPerTick = parameters.maximumPhaseMutationsPerTick();
     }
 
-    /**
-     * Connects tick sealing to one serial execution boundary. Tasks for this
-     * input must execute in submission order and without overlap.
-     */
-    public void enableDispatch(Executor serialExecutor) {
+    /** Enables the main-thread topology and solve dispatch used by gameplay. */
+    public void enableSynchronousDispatch() {
         requireMainThread();
         requireOpen();
-        Objects.requireNonNull(serialExecutor, "serialExecutor");
         if (topologyApplier == null) {
             throw new IllegalStateException(
                     "topology application must be enabled before dispatch");
         }
-        if (dispatchExecutor != null) {
+        if (dispatchEnabled) {
             throw new IllegalStateException("Minecraft thermal dispatch is enabled");
         }
-        dispatchExecutor = serialExecutor;
+        dispatchEnabled = true;
     }
 
     /** Enables the two frozen physical source producers without gameplay authority. */
@@ -676,8 +705,8 @@ public final class MinecraftThermalInput implements AutoCloseable {
     }
 
     /**
-     * Reads an already-admitted player environment without waiting for a
-     * worker, loading a chunk, or creating Page interest.
+     * Reads an already-admitted player environment without running a solve,
+     * loading a chunk, or creating Page interest.
      */
     public void samplePlayerEnvironment(
             long receiverKey,
@@ -1474,6 +1503,7 @@ public final class MinecraftThermalInput implements AutoCloseable {
                 naturalAirTemperature(sectionKey));
         topologyApplier.updateSkyExposure(page, captureSkyExposure(sectionKey, chunk));
         pages.put(sectionKey, page);
+        scheduleNaturalTemperatureRefresh(page, level.getGameTime());
         adjustWitnesses(sectionX, sectionY, sectionZ, 1);
         refreshNearbyOwnerPageViews(sectionX, sectionY, sectionZ);
         requestUrgentSolve();
@@ -1850,9 +1880,7 @@ public final class MinecraftThermalInput implements AutoCloseable {
             ACTIVE_BY_LEVEL.remove(level, this);
             anyActive = !ACTIVE_BY_LEVEL.isEmpty();
         }
-        if (dispatchExecutor != null) {
-            runtime.close();
-        }
+        runtime.close();
         for (SectionOwner owner : new ArrayList<>(ownersByIdentity.values())) {
             detach(owner);
         }
@@ -1861,6 +1889,12 @@ public final class MinecraftThermalInput implements AutoCloseable {
         witnessRefCounts.clear();
         radiationTrackedSections.clear();
         dirtyPages.clear();
+        deferredDirtyOwners.clear();
+        deferredInvalidatedSourceSections.clear();
+        synchronized (dirtySkyColumns) {
+            dirtySkyColumns.clear();
+        }
+        pageEnvironmentRefreshes.clear();
     }
 
     private static synchronized MinecraftThermalInput startGameplayInput(
@@ -1960,7 +1994,7 @@ public final class MinecraftThermalInput implements AutoCloseable {
                         "Thermal radiation memory admission was refused for {}",
                         level.dimension().location());
             }
-            input.enableDispatch(Runnable::run);
+            input.enableSynchronousDispatch();
             return input;
         } catch (RuntimeException exception) {
             if (input != null) {
@@ -2348,9 +2382,18 @@ public final class MinecraftThermalInput implements AutoCloseable {
         }
     }
 
+    public static void closeActiveLevel(ServerLevel level) {
+        MinecraftThermalInput input = active(level);
+        if (input != null) {
+            input.close();
+        }
+    }
+
     public static void onRawBlockContainerReplaced(LevelChunkSection section) {
         SectionOwner owner = attachment(section).frostedheart$getThermalInputOwner();
         if (owner != null) {
+            owner.input.queueSkyExposureChunkColumns(
+                    owner.sectionX, owner.sectionZ);
             if (owner.input.radiationOcclusion != null) {
                 owner.input.radiationOcclusion.onSectionMutation(
                         owner.sectionX, owner.sectionY, owner.sectionZ);
@@ -2448,6 +2491,8 @@ public final class MinecraftThermalInput implements AutoCloseable {
                 chunk,
                 sectionIndex,
                 sectionY);
+        input.queueSkyExposureChunkColumns(
+                chunk.getPos().x, chunk.getPos().z);
     }
 
     private void recordMutation(
@@ -2469,6 +2514,7 @@ public final class MinecraftThermalInput implements AutoCloseable {
                         owner.sectionX, owner.sectionY, owner.sectionZ);
             }
             owner.recordDeferredBlockMutation(localX, localY, localZ);
+            deferredDirtyOwners.add(owner);
             deferredBlockMutationRevision.incrementAndGet();
             return;
         }
@@ -2480,6 +2526,7 @@ public final class MinecraftThermalInput implements AutoCloseable {
         int worldY = SectionPos.sectionToBlockCoord(owner.sectionY) + localY;
         int worldZ = SectionPos.sectionToBlockCoord(owner.sectionZ) + localZ;
         long effectiveTick = level.getGameTime();
+        queueSkyExposureColumn(worldX, worldZ);
         if (physicalSources != null) {
             physicalSources.onBlockMutation(
                     new BlockPos(worldX, worldY, worldZ), oldState, newState);
@@ -2502,7 +2549,10 @@ public final class MinecraftThermalInput implements AutoCloseable {
         if (capturedRevision == drainedDeferredBlockMutationRevision) {
             return;
         }
-        for (SectionOwner owner : ownersByIdentity.values()) {
+        for (SectionOwner owner : deferredDirtyOwners) {
+            if (!deferredDirtyOwners.remove(owner)) {
+                continue;
+            }
             long[] dirtyBlocks = owner.takeDeferredBlockMutations();
             if (dirtyBlocks == null || !owner.valid
                     || ownersByIdentity.get(owner.section) != owner) {
@@ -2529,6 +2579,7 @@ public final class MinecraftThermalInput implements AutoCloseable {
                                 new BlockPos(worldX, worldY, worldZ),
                                 owner.section.getBlockState(localX, localY, localZ));
                     }
+                    refreshSkyExposureColumn(worldX, worldZ);
                     recordGeometryMutation(worldX, worldY, worldZ, effectiveTick);
                     remaining &= remaining - 1L;
                 }
@@ -2592,7 +2643,7 @@ public final class MinecraftThermalInput implements AutoCloseable {
                             effectiveTick,
                             geometryDeltas);
                     if (physicalSources != null) {
-                        physicalSources.onPageInvalidated();
+                        physicalSources.onPageInvalidated(page.sectionKey());
                     }
                     dirtyPages.put(page, Boolean.TRUE);
                     if (mutation.fullResyncRequired()) {
@@ -2725,11 +2776,11 @@ public final class MinecraftThermalInput implements AutoCloseable {
     }
 
     private double naturalAirTemperature(long sectionKey) {
-        BlockPos center = new BlockPos(
+        naturalTemperaturePositionScratch.set(
                 SectionPos.sectionToBlockCoord(SectionPos.x(sectionKey)) + 8,
                 SectionPos.sectionToBlockCoord(SectionPos.y(sectionKey)) + 8,
                 SectionPos.sectionToBlockCoord(SectionPos.z(sectionKey)) + 8);
-        return WorldTemperature.naturalAir(level, center);
+        return WorldTemperature.naturalAir(level, naturalTemperaturePositionScratch);
     }
 
     private byte[] captureSkyExposure(long sectionKey, LevelChunk chunk) {
@@ -2756,31 +2807,148 @@ public final class MinecraftThermalInput implements AutoCloseable {
         return firstExposedLocalY;
     }
 
-    private boolean refreshNaturalTemperatures(long effectiveTick) {
-        if (topologyApplier == null
-                || effectiveTick < nextNaturalTemperatureRefreshTick) {
+    private boolean refreshSkyExposureColumn(int worldX, int worldZ) {
+        int sectionX = SectionPos.blockToSectionCoord(worldX);
+        int sectionZ = SectionPos.blockToSectionCoord(worldZ);
+        LevelChunk chunk = level.getChunkSource().getChunkNow(sectionX, sectionZ);
+        if (chunk == null) {
             return false;
         }
-        nextNaturalTemperatureRefreshTick = effectiveTick
-                + NATURAL_TEMPERATURE_REFRESH_TICKS;
-        double windScale = 1.0D + GAMEPLAY_FAR_FIELD_WIND_GAIN
-                * Math.max(0, Math.min(100, WorldTemperature.wind(level))) / 100.0D;
-        boolean changed = topologyApplier.updateFarFieldConductanceScale(
-                windScale, FAR_FIELD_WIND_REBUILD_DELTA);
-        for (ThermalPage page : pages.values()) {
+        int firstExposedY = chunk.getHeight(
+                Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, worldX, worldZ);
+        int localX = SectionPos.sectionRelative(worldX);
+        int localZ = SectionPos.sectionRelative(worldZ);
+        boolean changed = false;
+        for (int sectionIndex = 0;
+             sectionIndex < chunk.getSections().length;
+             sectionIndex++) {
+            int sectionY = chunk.getSectionYFromSectionIndex(sectionIndex);
+            ThermalPage page = pages.get(SectionPos.asLong(
+                    sectionX, sectionY, sectionZ));
+            if (page == null) {
+                continue;
+            }
+            int localFirstExposedY = Math.max(0, Math.min(
+                    16, firstExposedY - SectionPos.sectionToBlockCoord(sectionY)));
+            changed |= topologyApplier.updateSkyExposureColumn(
+                    page, localX, localZ, localFirstExposedY);
+        }
+        return changed;
+    }
+
+    private void queueSkyExposureColumn(int worldX, int worldZ) {
+        long column = ((long) worldX << 32)
+                | Integer.toUnsignedLong(worldZ);
+        synchronized (dirtySkyColumns) {
+            dirtySkyColumns.add(column);
+        }
+    }
+
+    private void queueSkyExposureChunkColumns(int sectionX, int sectionZ) {
+        int minimumX = SectionPos.sectionToBlockCoord(sectionX);
+        int minimumZ = SectionPos.sectionToBlockCoord(sectionZ);
+        synchronized (dirtySkyColumns) {
+            for (int localZ = 0; localZ < 16; localZ++) {
+                for (int localX = 0; localX < 16; localX++) {
+                    long column = ((long) (minimumX + localX) << 32)
+                            | Integer.toUnsignedLong(minimumZ + localZ);
+                    dirtySkyColumns.add(column);
+                }
+            }
+        }
+    }
+
+    private boolean refreshDirtySkyExposureColumns() {
+        int count = 0;
+        synchronized (dirtySkyColumns) {
+            if (dirtySkyColumns.isEmpty()) {
+                return false;
+            }
+            LongIterator columns = dirtySkyColumns.iterator();
+            while (count < MAXIMUM_SKY_COLUMN_REFRESHES_PER_TICK
+                    && columns.hasNext()) {
+                dirtySkyColumnRefreshScratch[count++] = columns.nextLong();
+                columns.remove();
+            }
+        }
+        boolean changed = false;
+        for (int index = 0; index < count; index++) {
+            long column = dirtySkyColumnRefreshScratch[index];
+            changed |= refreshSkyExposureColumn(
+                    (int) (column >> 32), (int) column);
+        }
+        return changed;
+    }
+
+    private boolean refreshNaturalTemperatures(long effectiveTick) {
+        if (topologyApplier == null) {
+            return false;
+        }
+        boolean changed = false;
+        if (effectiveTick >= nextFarFieldWindRefreshTick) {
+            nextFarFieldWindRefreshTick = effectiveTick
+                    + NATURAL_TEMPERATURE_REFRESH_TICKS;
+            double windScale = 1.0D + GAMEPLAY_FAR_FIELD_WIND_GAIN
+                    * Math.max(0, Math.min(100, WorldTemperature.wind(level))) / 100.0D;
+            changed = topologyApplier.updateFarFieldConductanceScale(
+                    windScale, FAR_FIELD_WIND_REBUILD_DELTA);
+        }
+        int dueCount = pollDuePageEnvironmentRefreshes(
+                pageEnvironmentRefreshes,
+                effectiveTick,
+                duePageEnvironmentRefreshScratch);
+        for (int index = 0; index < dueCount; index++) {
+            PageEnvironmentRefresh refresh = duePageEnvironmentRefreshScratch[index];
+            duePageEnvironmentRefreshScratch[index] = null;
+            ThermalPage page = pages.get(refresh.sectionKey);
+            if (page == null
+                    || page.lifecycleGeneration() != refresh.lifecycleGeneration) {
+                continue;
+            }
             changed |= topologyApplier.updateNaturalTemperature(
                     page,
                     naturalAirTemperature(page.sectionKey()),
                     NATURAL_TEMPERATURE_REBUILD_DELTA_C);
-            LevelChunk chunk = level.getChunkSource().getChunkNow(
-                    SectionPos.x(page.sectionKey()),
-                    SectionPos.z(page.sectionKey()));
-            if (chunk != null) {
-                changed |= topologyApplier.updateSkyExposure(
-                        page, captureSkyExposure(page.sectionKey(), chunk));
-            }
+            refresh.dueTick = effectiveTick + NATURAL_TEMPERATURE_REFRESH_TICKS;
+            pageEnvironmentRefreshes.add(refresh);
         }
         return changed;
+    }
+
+    static int pollDuePageEnvironmentRefreshes(
+            PriorityQueue<PageEnvironmentRefresh> queue,
+            long effectiveTick,
+            PageEnvironmentRefresh[] target
+    ) {
+        Objects.requireNonNull(queue, "queue");
+        Objects.requireNonNull(target, "target");
+        int count = 0;
+        while (count < target.length) {
+            PageEnvironmentRefresh refresh = queue.peek();
+            if (refresh == null || refresh.dueTick > effectiveTick) {
+                break;
+            }
+            target[count++] = queue.remove();
+        }
+        return count;
+    }
+
+    private void scheduleNaturalTemperatureRefresh(
+            ThermalPage page,
+            long effectiveTick
+    ) {
+        long mixed = page.sectionKey();
+        mixed ^= mixed >>> 33;
+        mixed *= 0xff51afd7ed558ccdl;
+        mixed ^= mixed >>> 33;
+        mixed *= 0xc4ceb9fe1a85ec53l;
+        mixed ^= mixed >>> 33;
+        long offset = 1L + Math.floorMod(
+                mixed, NATURAL_TEMPERATURE_REFRESH_TICKS);
+        pageEnvironmentRefreshes.add(new PageEnvironmentRefresh(
+                page.sectionKey(),
+                page.lifecycleGeneration(),
+                effectiveTick + offset));
     }
 
     private static FarFieldProfileRegistry.EnvironmentClass farFieldEnvironment(
@@ -2921,6 +3089,7 @@ public final class MinecraftThermalInput implements AutoCloseable {
 
     private void detach(SectionOwner owner) {
         owner.valid = false;
+        deferredDirtyOwners.remove(owner);
         ownersBySectionKey.remove(owner.sectionKey, owner);
         ownersByIdentity.remove(owner.section, owner);
         MinecraftThermalSectionAttachment attachment = attachment(owner.section);
@@ -3006,25 +3175,139 @@ public final class MinecraftThermalInput implements AutoCloseable {
         if (closed) {
             return;
         }
-        try {
-            dispatchExecutor.execute(() -> dispatchSealedFrame(frame));
-        } catch (RejectedExecutionException exception) {
-            urgentSolvePending.set(true);
-        }
+        dispatchSealedFrame(frame);
     }
 
     private void dispatchSealedFrame(SealedInputFrame frame) {
         if (closed) {
             return;
         }
-        MinecraftThermalTopologyApplier.ApplyStatus status =
-                topologyApplier.apply(frame);
-        if (status != MinecraftThermalTopologyApplier.ApplyStatus.APPLIED
-                && status != MinecraftThermalTopologyApplier.ApplyStatus.DUPLICATE) {
+        if (!recoverOlderInFlightEpoch(frame)) {
             urgentSolvePending.set(true);
             return;
         }
+        MinecraftThermalTopologyApplier.ApplyStatus status;
+        try {
+            status = topologyApplier.apply(frame);
+        } catch (RuntimeException failure) {
+            FHMain.LOGGER.error(
+                    "Thermal topology update failed for {}; scheduling a complete rebuild",
+                    level.dimension().location(),
+                    failure);
+            topologyApplier.requestFullTopologyRecovery();
+            urgentSolvePending.set(true);
+            return;
+        }
+        if (status != MinecraftThermalTopologyApplier.ApplyStatus.APPLIED
+                && status != MinecraftThermalTopologyApplier.ApplyStatus.TOPOLOGY_UNCHANGED) {
+            urgentSolvePending.set(true);
+            return;
+        }
+        if (drainCommittedSourceBindingSections()) {
+            urgentSolvePending.set(true);
+        }
         runtime.runOne();
+        consumeSolveFailure();
+    }
+
+    /** Completes one old epoch before any newer input ring cut is drained. */
+    private boolean recoverOlderInFlightEpoch(SealedInputFrame frame) {
+        Optional<SealedInputFrame> inFlight = runtime.inFlightFrame();
+        if (inFlight.isEmpty()) {
+            return true;
+        }
+        boolean differentFrame = !inFlight.orElseThrow().equals(frame);
+        if (!runtime.inFlightTopologyRecoveryRequired() && !differentFrame) {
+            return true;
+        }
+
+        if (!runtime.inFlightTopologyRecoveryRequired()) {
+            runtime.runOne();
+            consumeSolveFailure();
+            inFlight = runtime.inFlightFrame();
+            if (inFlight.isEmpty()) {
+                return true;
+            }
+        }
+
+        MinecraftThermalTopologyApplier.ApplyStatus recovery;
+        try {
+            recovery = topologyApplier.recoverInFlightEpoch();
+        } catch (RuntimeException failure) {
+            FHMain.LOGGER.error(
+                    "Thermal in-flight recovery failed for {}; retrying without draining the latest frame",
+                    level.dimension().location(),
+                    failure);
+            topologyApplier.requestFullTopologyRecovery();
+            return false;
+        }
+        if (recovery != MinecraftThermalTopologyApplier.ApplyStatus.APPLIED
+                && recovery != MinecraftThermalTopologyApplier.ApplyStatus.TOPOLOGY_UNCHANGED) {
+            return false;
+        }
+        boolean sourceBindingsInvalidated = drainCommittedSourceBindingSections();
+        if (sourceBindingsInvalidated) {
+            urgentSolvePending.set(true);
+        }
+        runtime.runOne();
+        consumeSolveFailure();
+        return runtime.inFlightFrame().isEmpty() && !sourceBindingsInvalidated;
+    }
+
+    private void consumeSolveFailure() {
+        RuntimeException failure = runtime.consumeFailureForRecovery();
+        if (failure == null) {
+            return;
+        }
+        if (failure instanceof DimensionThermalRuntime.WorkLimitExceededException) {
+            FHMain.LOGGER.warn(
+                    "Thermal work limit reached for {}; suppressing mesh publication until topology input changes the work set: {}",
+                    level.dimension().location(),
+                    failure.getMessage());
+        } else {
+            FHMain.LOGGER.error(
+                    "Thermal solve failed for {}; scheduling isolated in-flight topology recovery",
+                    level.dimension().location(),
+                    failure);
+        }
+        topologyApplier.requestFullTopologyRecovery();
+        urgentSolvePending.set(true);
+    }
+
+    private void invalidatePhysicalSourcesForPage(long sectionKey) {
+        if (physicalSources == null) {
+            return;
+        }
+        if (Thread.currentThread() == mainThread) {
+            physicalSources.onPageInvalidated(sectionKey);
+            return;
+        }
+        deferredInvalidatedSourceSections.add(sectionKey);
+    }
+
+    private boolean drainDeferredSourceInvalidations() {
+        if (physicalSources == null || deferredInvalidatedSourceSections.isEmpty()) {
+            return false;
+        }
+        boolean invalidated = false;
+        for (long sectionKey : deferredInvalidatedSourceSections) {
+            if (deferredInvalidatedSourceSections.remove(sectionKey)) {
+                physicalSources.onPageInvalidated(sectionKey);
+                invalidated = true;
+            }
+        }
+        return invalidated;
+    }
+
+    private boolean drainCommittedSourceBindingSections() {
+        if (physicalSources == null || topologyApplier == null) {
+            return false;
+        }
+        long[] sections = topologyApplier.drainCommittedSourceBindingSections();
+        for (long sectionKey : sections) {
+            physicalSources.onPageCommitted(sectionKey);
+        }
+        return sections.length != 0;
     }
 
     private void requireOpen() {
@@ -3223,6 +3506,7 @@ public final class MinecraftThermalInput implements AutoCloseable {
                     input.level.getGameTime(), Math::min);
             for (ThermalPage page : affectedPages) {
                 page.requireFullGeometryResync(reason);
+                input.invalidatePhysicalSourcesForPage(page.sectionKey());
                 if (Thread.currentThread() == input.mainThread) {
                     input.dirtyPages.put(page, Boolean.TRUE);
                 }
@@ -3230,6 +3514,22 @@ public final class MinecraftThermalInput implements AutoCloseable {
             if (Thread.currentThread() != input.mainThread) {
                 input.fullResyncRetryPending.set(true);
             }
+        }
+    }
+
+    static final class PageEnvironmentRefresh {
+        private final long sectionKey;
+        private final long lifecycleGeneration;
+        private long dueTick;
+
+        PageEnvironmentRefresh(
+                long sectionKey,
+                long lifecycleGeneration,
+                long dueTick
+        ) {
+            this.sectionKey = sectionKey;
+            this.lifecycleGeneration = lifecycleGeneration;
+            this.dueTick = dueTick;
         }
     }
 

@@ -34,6 +34,8 @@ public final class ThermalSweepFragments {
     private final PairFragment[] materialPairs;
     private final BoundaryFragment[] materialBoundaries;
     private final PhaseFragment[] phases;
+    private int[] fragmentOrder;
+    private int[] fragmentRank;
     private final Long2ObjectOpenHashMap<MaterialEdge> materialEdges =
             new Long2ObjectOpenHashMap<>();
     private int[] farGeneration = new int[0];
@@ -54,6 +56,8 @@ public final class ThermalSweepFragments {
             new ThermalExchangeKernel.MutablePairResult();
     private final ThermalExchangeKernel.MutableBoundaryResult boundaryScratch =
             new ThermalExchangeKernel.MutableBoundaryResult();
+    private final ThermalCellArena.MutationCheckpoint mutationCheckpoint =
+            new ThermalCellArena.MutationCheckpoint();
 
     private ThermalSweepFragments(Builder builder) {
         arena = builder.arena;
@@ -63,6 +67,8 @@ public final class ThermalSweepFragments {
         materialPairs = builder.materialPairs;
         materialBoundaries = builder.materialBoundaries;
         phases = builder.phases;
+        fragmentOrder = builder.fragmentOrder;
+        fragmentRank = buildFragmentRank(fragmentOrder, airPairs.length);
         ensureSlotCapacity(arena.highWaterMark());
 
         for (PairFragment fragment : airPairs) {
@@ -108,46 +114,94 @@ public final class ThermalSweepFragments {
         return arena;
     }
 
+    int fragmentCount() {
+        return airPairs.length;
+    }
+
     public ThermalSweep.Result apply(
             double referenceTemperatureC,
             SolveEpoch epoch,
             double dtSeconds,
             ThermalSweep.Direction direction
     ) {
+        preflight(referenceTemperatureC, epoch, direction);
+        return applyAfterPreflight(
+                referenceTemperatureC, epoch, dtSeconds, direction);
+    }
+
+    void preflight(
+            double referenceTemperatureC,
+            SolveEpoch epoch,
+            ThermalSweep.Direction direction
+    ) {
         Objects.requireNonNull(epoch, "epoch");
         Objects.requireNonNull(direction, "direction");
         requireFinite("referenceTemperatureC", referenceTemperatureC);
-        requireNonNegativeFinite("dtSeconds", dtSeconds);
         requireCurrentTargets();
+    }
 
-        double initialEnthalpy = compensatedStateSum();
-        MutableCounts counts = new MutableCounts();
-        if (direction == ThermalSweep.Direction.FORWARD) {
-            applyAirPairsForward(referenceTemperatureC, epoch, dtSeconds, counts);
-            applyMaterialPairsForward(referenceTemperatureC, epoch, dtSeconds, counts);
-            applyFarBoundariesForward(referenceTemperatureC, dtSeconds, counts);
-            applyMaterialBoundariesForward(referenceTemperatureC, dtSeconds, counts);
-            applyPhasesForward(referenceTemperatureC, dtSeconds, counts);
-        } else {
-            applyPhasesReverse(referenceTemperatureC, dtSeconds, counts);
-            applyMaterialPairsReverse(referenceTemperatureC, epoch, dtSeconds, counts);
-            applyAirPairsReverse(referenceTemperatureC, epoch, dtSeconds, counts);
-            applyMaterialBoundariesReverse(referenceTemperatureC, dtSeconds, counts);
-            applyFarBoundariesReverse(referenceTemperatureC, dtSeconds, counts);
+    ThermalSweep.Result applyAfterPreflight(
+            double referenceTemperatureC,
+            SolveEpoch epoch,
+            double dtSeconds,
+            ThermalSweep.Direction direction
+    ) {
+        requireNonNegativeFinite("dtSeconds", dtSeconds);
+
+        arena.beginMutationCheckpoint(mutationCheckpoint);
+        double initialEnthalpy;
+        try {
+            initialEnthalpy = compensatedStateSum(true);
+        } catch (RuntimeException failure) {
+            arena.endMutationCheckpoint(mutationCheckpoint);
+            throw failure;
         }
-        double finalEnthalpy = compensatedStateSum();
-        double residual = finalEnthalpy
-                - (initialEnthalpy + counts.boundaryEnergyJ);
-        return new ThermalSweep.Result(
-                direction,
-                counts.appliedPairs,
-                counts.appliedBoundaries,
-                counts.appliedPhases,
-                counts.numericDegraded,
-                initialEnthalpy,
-                finalEnthalpy,
-                counts.boundaryEnergyJ,
-                residual);
+        boolean phaseTransactionActive = false;
+        try {
+            if (phaseRuntime != null) {
+                phaseRuntime.beginSubstepTransaction();
+                phaseTransactionActive = true;
+            }
+            MutableCounts counts = new MutableCounts();
+            if (direction == ThermalSweep.Direction.FORWARD) {
+                applyAirPairsForward(referenceTemperatureC, epoch, dtSeconds, counts);
+                applyMaterialPairsForward(referenceTemperatureC, epoch, dtSeconds, counts);
+                applyFarBoundariesForward(referenceTemperatureC, dtSeconds, counts);
+                applyMaterialBoundariesForward(referenceTemperatureC, dtSeconds, counts);
+                applyPhasesForward(referenceTemperatureC, dtSeconds, counts);
+            } else {
+                applyPhasesReverse(referenceTemperatureC, dtSeconds, counts);
+                applyMaterialPairsReverse(referenceTemperatureC, epoch, dtSeconds, counts);
+                applyAirPairsReverse(referenceTemperatureC, epoch, dtSeconds, counts);
+                applyMaterialBoundariesReverse(referenceTemperatureC, dtSeconds, counts);
+                applyFarBoundariesReverse(referenceTemperatureC, dtSeconds, counts);
+            }
+            double finalEnthalpy = compensatedStateSum(false);
+            double residual = finalEnthalpy
+                    - (initialEnthalpy + counts.boundaryEnergyJ);
+            if (phaseRuntime != null) {
+                phaseRuntime.commitSubstepTransaction();
+                phaseTransactionActive = false;
+            }
+            arena.endMutationCheckpoint(mutationCheckpoint);
+            return new ThermalSweep.Result(
+                    direction,
+                    counts.appliedPairs,
+                    counts.appliedBoundaries,
+                    counts.appliedPhases,
+                    counts.numericDegraded,
+                    initialEnthalpy,
+                    finalEnthalpy,
+                    counts.boundaryEnergyJ,
+                    residual);
+        } catch (RuntimeException failure) {
+            if (phaseTransactionActive) {
+                phaseRuntime.rollbackSubstepTransaction();
+            }
+            restoreMutationState();
+            arena.endMutationCheckpoint(mutationCheckpoint);
+            throw failure;
+        }
     }
 
     public int pairOperationCount() {
@@ -223,8 +277,8 @@ public final class ThermalSweepFragments {
             double dtSeconds,
             MutableCounts counts
     ) {
-        for (PairFragment fragment : airPairs) {
-            applyPairFragment(fragment, false, false,
+        for (int fragment : fragmentOrder) {
+            applyPairFragment(airPairs[fragment], false, false,
                     referenceTemperatureC, epoch, dtSeconds, counts);
         }
     }
@@ -235,8 +289,8 @@ public final class ThermalSweepFragments {
             double dtSeconds,
             MutableCounts counts
     ) {
-        for (int index = airPairs.length - 1; index >= 0; index--) {
-            applyPairFragment(airPairs[index], false, true,
+        for (int index = fragmentOrder.length - 1; index >= 0; index--) {
+            applyPairFragment(airPairs[fragmentOrder[index]], false, true,
                     referenceTemperatureC, epoch, dtSeconds, counts);
         }
     }
@@ -247,8 +301,8 @@ public final class ThermalSweepFragments {
             double dtSeconds,
             MutableCounts counts
     ) {
-        for (PairFragment fragment : materialPairs) {
-            applyPairFragment(fragment, true, false,
+        for (int fragment : fragmentOrder) {
+            applyPairFragment(materialPairs[fragment], true, false,
                     referenceTemperatureC, epoch, dtSeconds, counts);
         }
     }
@@ -259,8 +313,8 @@ public final class ThermalSweepFragments {
             double dtSeconds,
             MutableCounts counts
     ) {
-        for (int index = materialPairs.length - 1; index >= 0; index--) {
-            applyPairFragment(materialPairs[index], true, true,
+        for (int index = fragmentOrder.length - 1; index >= 0; index--) {
+            applyPairFragment(materialPairs[fragmentOrder[index]], true, true,
                     referenceTemperatureC, epoch, dtSeconds, counts);
         }
     }
@@ -364,8 +418,8 @@ public final class ThermalSweepFragments {
             double dtSeconds,
             MutableCounts counts
     ) {
-        for (BoundaryFragment fragment : materialBoundaries) {
-            applyBoundaryFragment(fragment, false,
+        for (int fragment : fragmentOrder) {
+            applyBoundaryFragment(materialBoundaries[fragment], false,
                     referenceTemperatureC, dtSeconds, counts);
         }
     }
@@ -375,9 +429,9 @@ public final class ThermalSweepFragments {
             double dtSeconds,
             MutableCounts counts
     ) {
-        for (int index = materialBoundaries.length - 1; index >= 0; index--) {
+        for (int index = fragmentOrder.length - 1; index >= 0; index--) {
             applyBoundaryFragment(
-                    materialBoundaries[index], true,
+                    materialBoundaries[fragmentOrder[index]], true,
                     referenceTemperatureC, dtSeconds, counts);
         }
     }
@@ -433,9 +487,10 @@ public final class ThermalSweepFragments {
             double dtSeconds,
             MutableCounts counts
     ) {
-        for (PhaseFragment fragment : phases) {
+        for (int fragment : fragmentOrder) {
             applyPhaseFragment(
-                    fragment, false, referenceTemperatureC, dtSeconds, counts);
+                    phases[fragment], false,
+                    referenceTemperatureC, dtSeconds, counts);
         }
     }
 
@@ -444,9 +499,9 @@ public final class ThermalSweepFragments {
             double dtSeconds,
             MutableCounts counts
     ) {
-        for (int index = phases.length - 1; index >= 0; index--) {
+        for (int index = fragmentOrder.length - 1; index >= 0; index--) {
             applyPhaseFragment(
-                    phases[index], true,
+                    phases[fragmentOrder[index]], true,
                     referenceTemperatureC, dtSeconds, counts);
         }
     }
@@ -562,6 +617,10 @@ public final class ThermalSweepFragments {
     }
 
     private double compensatedStateSum() {
+        return compensatedStateSum(false);
+    }
+
+    private double compensatedStateSum(boolean captureMutationState) {
         double sum = 0.0D;
         double compensation = 0.0D;
         for (int wordIndex = 0; wordIndex < statePresent.length; wordIndex++) {
@@ -569,7 +628,10 @@ public final class ThermalSweepFragments {
             while (remaining != 0L) {
                 int bit = Long.numberOfTrailingZeros(remaining);
                 int slot = (wordIndex << 6) + bit;
-                double adjusted = arena.enthalpyJ(slot) - compensation;
+                double enthalpy = captureMutationState
+                        ? arena.captureMutationState(slot, mutationCheckpoint)
+                        : arena.enthalpyJ(slot);
+                double adjusted = enthalpy - compensation;
                 double next = sum + adjusted;
                 compensation = (next - sum) - adjusted;
                 sum = next;
@@ -579,12 +641,36 @@ public final class ThermalSweepFragments {
         return sum;
     }
 
+    private void restoreMutationState() {
+        for (int wordIndex = 0; wordIndex < statePresent.length; wordIndex++) {
+            long remaining = statePresent[wordIndex];
+            while (remaining != 0L) {
+                int bit = Long.numberOfTrailingZeros(remaining);
+                arena.restoreMutationState(
+                        (wordIndex << 6) + bit, mutationCheckpoint);
+                remaining &= remaining - 1L;
+            }
+        }
+    }
+
     private void commit(Patch patch) {
         if (patch.owner != this || patch.committed || patch.baseVersion != version) {
             throw new IllegalStateException("fragment patch is stale or already committed");
         }
-        ensureSlotCapacity(arena.highWaterMark());
         LongOpenHashSet affectedMaterialEdges = new LongOpenHashSet();
+        for (FragmentReplacement<PairFragment> replacement
+                : patch.materialPairReplacements.values()) {
+            collectMaterialKeys(
+                    materialPairs[replacement.index], affectedMaterialEdges);
+            collectMaterialKeys(replacement.fragment, affectedMaterialEdges);
+        }
+        validatePatch(patch, affectedMaterialEdges);
+        ensureSlotCapacity(arena.highWaterMark());
+
+        if (patch.fragmentOrder != null) {
+            fragmentOrder = patch.fragmentOrder;
+            fragmentRank = buildFragmentRank(fragmentOrder, airPairs.length);
+        }
 
         for (FragmentReplacement<PairFragment> replacement
                 : patch.airReplacements.values()) {
@@ -596,12 +682,6 @@ public final class ThermalSweepFragments {
             addPairStateReferences(replacement.fragment);
         }
 
-        for (FragmentReplacement<PairFragment> replacement
-                : patch.materialPairReplacements.values()) {
-            PairFragment old = materialPairs[replacement.index];
-            collectMaterialKeys(old, affectedMaterialEdges);
-            collectMaterialKeys(replacement.fragment, affectedMaterialEdges);
-        }
         removeEffectiveMaterialStateReferences(affectedMaterialEdges);
         for (FragmentReplacement<PairFragment> replacement
                 : patch.materialPairReplacements.values()) {
@@ -636,6 +716,113 @@ public final class ThermalSweepFragments {
         }
         patch.committed = true;
         version++;
+    }
+
+    private void validatePatch(
+            Patch patch,
+            LongOpenHashSet affectedMaterialEdges
+    ) {
+        long nextAirPairCount = airPairCount;
+        for (FragmentReplacement<PairFragment> replacement
+                : patch.airReplacements.values()) {
+            requireCurrent(replacement.fragment);
+            nextAirPairCount = Math.addExact(
+                    Math.subtractExact(
+                            nextAirPairCount,
+                            airPairs[replacement.index].size()),
+                    replacement.fragment.size());
+        }
+        requireIntCount("air pair", nextAirPairCount);
+
+        for (FragmentReplacement<PairFragment> replacement
+                : patch.materialPairReplacements.values()) {
+            requireCurrent(replacement.fragment);
+        }
+        validateMaterialAggregates(patch, affectedMaterialEdges);
+
+        long nextBoundaryCount = materialBoundaryCount;
+        for (FragmentReplacement<BoundaryFragment> replacement
+                : patch.boundaryReplacements.values()) {
+            requireCurrent(replacement.fragment);
+            nextBoundaryCount = Math.addExact(
+                    Math.subtractExact(
+                            nextBoundaryCount,
+                            materialBoundaries[replacement.index].size()),
+                    replacement.fragment.size());
+        }
+        requireIntCount("material boundary", nextBoundaryCount);
+
+        long nextPhaseCount = phaseCount;
+        for (FragmentReplacement<PhaseFragment> replacement
+                : patch.phaseReplacements.values()) {
+            requireCurrent(replacement.fragment);
+            nextPhaseCount = Math.addExact(
+                    Math.subtractExact(
+                            nextPhaseCount,
+                            phases[replacement.index].size()),
+                    replacement.fragment.size());
+        }
+        requireIntCount("phase", nextPhaseCount);
+
+        long nextFarBoundaryCount = farBoundaryCount;
+        for (FarBoundary boundary : patch.farReplacements.values()) {
+            boolean oldPresent = boundary.slot < farGeneration.length
+                    && bitPresent(farPresent, boundary.slot);
+            if (boundary.present && !arena.isLive(boundary.slot)) {
+                throw new IllegalArgumentException(
+                        "far-field boundary references a non-live slot: "
+                                + boundary.slot);
+            }
+            if (oldPresent != boundary.present) {
+                nextFarBoundaryCount += boundary.present ? 1L : -1L;
+            }
+        }
+        requireIntCount("far-field boundary", nextFarBoundaryCount);
+    }
+
+    private void validateMaterialAggregates(
+            Patch patch,
+            LongOpenHashSet affectedMaterialEdges
+    ) {
+        for (long key : affectedMaterialEdges) {
+            double conductance = 0.0D;
+            int contributions = 0;
+            MaterialEdge current = materialEdges.get(key);
+            if (current != null) {
+                for (Contribution contribution : current.contributions) {
+                    if (!patch.materialPairReplacements.containsKey(
+                            contribution.fragmentIndex)) {
+                        conductance += contribution.fragment.conductance[
+                                contribution.operation];
+                        contributions++;
+                    }
+                }
+            }
+            for (FragmentReplacement<PairFragment> replacement
+                    : patch.materialPairReplacements.values()) {
+                PairFragment fragment = replacement.fragment;
+                for (int operation = 0;
+                     operation < fragment.size();
+                     operation++) {
+                    if (pairKey(fragment.first[operation], fragment.second[operation])
+                            == key) {
+                        conductance += fragment.conductance[operation];
+                        contributions++;
+                    }
+                }
+            }
+            if (contributions != 0
+                    && (!Double.isFinite(conductance) || conductance <= 0.0D)) {
+                throw new IllegalStateException(
+                        "compiled material conductance is invalid");
+            }
+        }
+    }
+
+    private static void requireIntCount(String name, long count) {
+        if (count < 0L || count > Integer.MAX_VALUE) {
+            throw new IllegalStateException(name + " count is out of bounds");
+        }
     }
 
     private void setFarBoundary(int slot, FarBoundary boundary) {
@@ -708,7 +895,7 @@ public final class ThermalSweepFragments {
             }
             edge.contributions.sort(Comparator
                     .comparingInt((Contribution contribution) ->
-                            contribution.fragmentIndex)
+                            fragmentRank[contribution.fragmentIndex])
                     .thenComparingInt(contribution -> contribution.operation));
             double conductance = 0.0D;
             for (Contribution contribution : edge.contributions) {
@@ -831,6 +1018,21 @@ public final class ThermalSweepFragments {
         return capacity;
     }
 
+    private static int[] buildFragmentRank(int[] order, int fragmentCount) {
+        int[] rank = new int[fragmentCount];
+        Arrays.fill(rank, Integer.MAX_VALUE);
+        for (int index = 0; index < order.length; index++) {
+            int fragment = order[index];
+            if (fragment < 0 || fragment >= fragmentCount
+                    || rank[fragment] != Integer.MAX_VALUE) {
+                throw new IllegalArgumentException(
+                        "fragment traversal order is invalid");
+            }
+            rank[fragment] = index;
+        }
+        return rank;
+    }
+
     private static double temperatureC(
             double enthalpy,
             double capacity,
@@ -864,6 +1066,7 @@ public final class ThermalSweepFragments {
         private final PhaseFragment[] phases;
         private final Int2ObjectOpenHashMap<FarBoundary> farBoundaries =
                 new Int2ObjectOpenHashMap<>();
+        private int[] fragmentOrder;
         private boolean built;
 
         private Builder(
@@ -889,6 +1092,16 @@ public final class ThermalSweepFragments {
                 materialBoundaries[index] = BoundaryFragment.empty();
                 phases[index] = PhaseFragment.empty();
             }
+            fragmentOrder = new int[fragmentCount];
+            for (int index = 0; index < fragmentCount; index++) {
+                fragmentOrder[index] = index;
+            }
+        }
+
+        public void setFragmentOrder(int[] order) {
+            requireOpen();
+            fragmentOrder = Objects.requireNonNull(order, "order").clone();
+            buildFragmentRank(fragmentOrder, airPairs.length);
         }
 
         public void setAirPairs(int fragment, List<ThermalSweep.PairOperation> operations) {
@@ -944,6 +1157,7 @@ public final class ThermalSweepFragments {
                 phaseReplacements = new Int2ObjectOpenHashMap<>();
         private final Int2ObjectOpenHashMap<FarBoundary> farReplacements =
                 new Int2ObjectOpenHashMap<>();
+        private int[] fragmentOrder;
         private boolean committed;
 
         private Patch(ThermalSweepFragments owner, long baseVersion) {
@@ -994,6 +1208,12 @@ public final class ThermalSweepFragments {
                 throw new IllegalArgumentException("slot must be non-negative");
             }
             farReplacements.put(slot, FarBoundary.absent(slot));
+        }
+
+        public void replaceFragmentOrder(int[] order) {
+            requireOpen();
+            fragmentOrder = Objects.requireNonNull(order, "order").clone();
+            buildFragmentRank(fragmentOrder, owner.airPairs.length);
         }
 
         void commit() {

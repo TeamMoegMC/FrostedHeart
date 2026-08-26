@@ -7,6 +7,7 @@ import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.level.BlockEvent;
 import net.minecraftforge.event.level.ChunkEvent;
+import net.minecraftforge.event.level.LevelEvent;
 import net.minecraftforge.event.server.ServerStoppedEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.LogicalSide;
@@ -31,6 +32,13 @@ public final class MinecraftThermalEvents {
         if (event.getLevel() instanceof ServerLevel level
                 && event.getChunk() instanceof LevelChunk chunk) {
             MinecraftThermalInput.onChunkUnload(level, chunk);
+        }
+    }
+
+    @SubscribeEvent
+    public static void onLevelUnload(LevelEvent.Unload event) {
+        if (event.getLevel() instanceof ServerLevel level) {
+            MinecraftThermalInput.closeActiveLevel(level);
         }
     }
 

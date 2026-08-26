@@ -15,7 +15,7 @@ import java.util.Objects;
 /**
  * Extension point for explicit profile overrides and bounded contextual
  * resolvers. Minecraft integration invokes {@link #resolveSnapshot} only on
- * the main thread; workers receive only the resulting primitive signature ID.
+ * the main thread; topology compilation receives only the primitive signature ID.
  */
 public interface ThermalSignatureResolver<B, F> {
     /** Stable, deterministic registration ID. */

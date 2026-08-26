@@ -19,7 +19,7 @@ import java.util.Arrays;
  *
  * <p>Source events settle an affected node to their authoritative tick before
  * changing its aggregate power. A solve drains one exact {@code integral(Pdt)}
- * value regardless of worker cadence.</p>
+ * value regardless of solve cadence.</p>
  */
 public final class NodePowerAccumulatorArena {
     public static final int NO_ACCUMULATOR = -1;

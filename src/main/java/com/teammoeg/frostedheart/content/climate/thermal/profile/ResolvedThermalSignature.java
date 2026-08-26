@@ -13,7 +13,7 @@ package com.teammoeg.frostedheart.content.climate.thermal.profile;
 import java.util.List;
 
 /**
- * Minecraft-free signature payload interned on the main thread. Airflow,
+ * Minecraft-free signature payload interned and consumed on the main thread. Airflow,
  * material contact, and radiation remain independent channels.
  */
 public record ResolvedThermalSignature(

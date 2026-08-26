@@ -641,7 +641,7 @@ class MinecraftMaterialBoundaryTest {
                     || sealed == LatestSolveEpochScheduler.SealResult.DUPLICATE);
             MinecraftThermalTopologyApplier.ApplyStatus status = applier.apply(frame);
             assertTrue(status == MinecraftThermalTopologyApplier.ApplyStatus.APPLIED
-                            || status == MinecraftThermalTopologyApplier.ApplyStatus.DUPLICATE,
+                            || status == MinecraftThermalTopologyApplier.ApplyStatus.TOPOLOGY_UNCHANGED,
                     "material topology frame must install");
         }
 

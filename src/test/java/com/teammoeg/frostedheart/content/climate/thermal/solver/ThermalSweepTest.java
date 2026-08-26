@@ -224,6 +224,31 @@ class ThermalSweepTest {
         assertEquals(22.0D, arena.enthalpyJ(first + 1), EPSILON);
     }
 
+    @Test
+    void invalidFarBoundaryRejectsPatchBeforeReplacingAirPairs() {
+        ThermalCellArena arena = arena(
+                new double[]{10_000.0D, 0.0D},
+                new double[]{1_000.0D, 1_000.0D});
+        ThermalSweep sweep = airSweep(
+                arena,
+                List.of(ThermalSweep.PairOperation.fixed(0, 1, 10.0D)),
+                List.of(),
+                NEUTRAL_BUOYANCY);
+        ThermalSweepFragments.Patch patch = sweep.beginFragmentPatch();
+        patch.replaceAirPairs(0, List.of());
+        patch.setFarBoundary(10_000, 0.0D, 1.0D);
+        ThermalSweep pending = sweep.withFragmentPatch(patch);
+
+        assertThrows(IllegalArgumentException.class,
+                pending::commitPendingFragmentPatch);
+        assertEquals(1, sweep.pairOperationCount());
+
+        ThermalSweep.Result result = sweep.apply(0.0D, epoch(1L));
+        assertEquals(1, result.appliedPairs());
+        assertTrue(arena.enthalpyJ(0) < 10_000.0D);
+        assertTrue(arena.enthalpyJ(1) > 0.0D);
+    }
+
     private static ThermalSweep airSweep(
             ThermalCellArena arena,
             List<ThermalSweep.PairOperation> pairs,

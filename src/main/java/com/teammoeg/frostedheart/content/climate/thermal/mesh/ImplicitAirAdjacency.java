@@ -108,6 +108,42 @@ public final class ImplicitAirAdjacency {
             double minimumMixedFaceDistanceBlocks,
             boolean applyBuoyancy
     ) {
+        return compileOwnedBrickPairs(
+                owner, neighbors, arena, baseBrickIndex,
+                effectiveMixingWPerBlockK,
+                minimumMixedFaceDistanceBlocks,
+                applyBuoyancy,
+                true);
+    }
+
+    /** Compiles against writer-owned installed geometry before gameplay publication. */
+    public static CompiledPairs compileOwnedBrickPairsInstalled(
+            PageView owner,
+            PositiveNeighbors neighbors,
+            ThermalCellArena arena,
+            int baseBrickIndex,
+            double effectiveMixingWPerBlockK,
+            double minimumMixedFaceDistanceBlocks,
+            boolean applyBuoyancy
+    ) {
+        return compileOwnedBrickPairs(
+                owner, neighbors, arena, baseBrickIndex,
+                effectiveMixingWPerBlockK,
+                minimumMixedFaceDistanceBlocks,
+                applyBuoyancy,
+                false);
+    }
+
+    private static CompiledPairs compileOwnedBrickPairs(
+            PageView owner,
+            PositiveNeighbors neighbors,
+            ThermalCellArena arena,
+            int baseBrickIndex,
+            double effectiveMixingWPerBlockK,
+            double minimumMixedFaceDistanceBlocks,
+            boolean applyBuoyancy,
+            boolean requirePublished
+    ) {
         if (owner == null || neighbors == null || arena == null) {
             throw new IllegalArgumentException("owner, neighbors, and arena are required");
         }
@@ -122,7 +158,7 @@ public final class ImplicitAirAdjacency {
         validatePositiveNeighbor(owner, neighbors.positiveZ(), Axis.Z);
 
         ThermalPage.MutableCoverageQuery ownerProbe = new ThermalPage.MutableCoverageQuery();
-        if (!owner.page().tryQueryPublishedCoverage(0, 0, 0, ownerProbe)) {
+        if (!tryQueryCoverage(owner, 0, 0, 0, ownerProbe, requirePublished)) {
             return new CompiledPairs(List.of(), 0.0D, 0, 0, false);
         }
 
@@ -134,7 +170,8 @@ public final class ImplicitAirAdjacency {
                 continue;
             }
             ThermalPage.MutableCoverageQuery probe = new ThermalPage.MutableCoverageQuery();
-            boolean available = neighbor.page().tryQueryPublishedCoverage(0, 0, 0, probe);
+            boolean available = tryQueryCoverage(
+                    neighbor, 0, 0, 0, probe, requirePublished);
             neighborAvailable[axis.ordinal()] = available;
             if (!available) {
                 unavailablePositivePages++;
@@ -144,7 +181,7 @@ public final class ImplicitAirAdjacency {
         Long2ObjectMap<PairAccumulator> pairs = new Long2ObjectLinkedOpenHashMap<>();
         compileBaseBrick(
                 owner, neighbors, neighborAvailable, arena, baseBrickIndex,
-                minimumMixedFaceDistanceBlocks, pairs);
+                minimumMixedFaceDistanceBlocks, pairs, requirePublished);
 
         List<ThermalSweep.PairOperation> operations = new ArrayList<>(pairs.size());
         double totalArea = 0.0D;
@@ -183,14 +220,16 @@ public final class ImplicitAirAdjacency {
             ThermalCellArena arena,
             int baseIndex,
             double minimumMixedFaceDistanceBlocks,
-            Long2ObjectMap<PairAccumulator> pairs
+            Long2ObjectMap<PairAccumulator> pairs,
+            boolean requirePublished
     ) {
         int brickX = baseIndex & 3;
         int brickZ = (baseIndex >>> 2) & 3;
         int brickY = (baseIndex >>> 4) & 3;
         ThermalPage.MutableCoverageQuery query = new ThermalPage.MutableCoverageQuery();
-        if (!owner.page().tryQueryPublishedCoverage(
-                brickX << 2, brickY << 2, brickZ << 2, query)) {
+        if (!tryQueryCoverage(
+                owner, brickX << 2, brickY << 2, brickZ << 2,
+                query, requirePublished)) {
             throw new IllegalStateException("Page publication changed during pair compilation");
         }
         int negativeSupport = query.coverageRef();
@@ -213,7 +252,7 @@ public final class ImplicitAirAdjacency {
                 continue;
             }
             int[] positiveSupports = collectPositiveSupports(
-                    positivePage, arena, negativeSupport, axis);
+                    positivePage, arena, negativeSupport, axis, requirePublished);
             for (int positiveSupport : positiveSupports) {
                 compileInterface(
                         arena, negativeSupport, positiveSupport, axis,
@@ -354,7 +393,8 @@ public final class ImplicitAirAdjacency {
             PageView positivePage,
             ThermalCellArena arena,
             int negativeSupport,
-            Axis axis
+            Axis axis,
+            boolean requirePublished
     ) {
         int width = supportWidth(arena, negativeSupport);
         int[] unique = new int[16];
@@ -366,8 +406,9 @@ public final class ImplicitAirAdjacency {
                 int localX = sample.x() - positivePage.worldMinX();
                 int localY = sample.y() - positivePage.worldMinY();
                 int localZ = sample.z() - positivePage.worldMinZ();
-                if (!positivePage.page().tryQueryPublishedCoverage(
-                        localX, localY, localZ, query)) {
+                if (!tryQueryCoverage(
+                        positivePage, localX, localY, localZ,
+                        query, requirePublished)) {
                     throw new IllegalStateException(
                             "Page publication changed during pair compilation");
                 }
@@ -383,6 +424,21 @@ public final class ImplicitAirAdjacency {
             }
         }
         return java.util.Arrays.copyOf(unique, uniqueCount);
+    }
+
+    private static boolean tryQueryCoverage(
+            PageView page,
+            int localX,
+            int localY,
+            int localZ,
+            ThermalPage.MutableCoverageQuery query,
+            boolean requirePublished
+    ) {
+        return requirePublished
+                ? page.page().tryQueryPublishedCoverage(
+                        localX, localY, localZ, query)
+                : page.page().tryQueryInstalledCoverage(
+                        localX, localY, localZ, query);
     }
 
     private static void requireCoverageSupport(

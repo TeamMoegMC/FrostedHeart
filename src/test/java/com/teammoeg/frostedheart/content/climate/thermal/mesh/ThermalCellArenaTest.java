@@ -135,6 +135,72 @@ class ThermalCellArenaTest {
         assertEquals(15.0D, arena.enthalpyJ(span.firstSlot()), EPSILON);
     }
 
+    @Test
+    void fragmentedArenaUsesBestFitSpansWithoutGrowingHighWater() {
+        ThermalCellArena arena = new ThermalCellArena(0);
+        ArenaSpan small = allocateRegularSpan(arena, 0, 1, 3);
+        allocateRegularSpan(arena, 1, 2, 1);
+        ArenaSpan large = allocateRegularSpan(arena, 2, 3, 5);
+        allocateRegularSpan(arena, 3, 4, 1);
+        assertEquals(10, arena.highWaterMark());
+
+        arena.releasePageCells(0, 1, small);
+        arena.releasePageCells(2, 3, large);
+
+        ArenaSpan four = allocateRegularSpan(arena, 4, 5, 4);
+        ArenaSpan three = allocateRegularSpan(arena, 5, 6, 3);
+        assertEquals(4, four.firstSlot());
+        assertEquals(0, three.firstSlot());
+        assertEquals(10, arena.highWaterMark());
+    }
+
+    @Test
+    void adjacentFreeSpansCoalesceAndTrimTheArenaTail() {
+        ThermalCellArena arena = new ThermalCellArena(0);
+        ArenaSpan first = allocateRegularSpan(arena, 0, 1, 2);
+        ArenaSpan middle = allocateRegularSpan(arena, 1, 2, 2);
+        ArenaSpan tail = allocateRegularSpan(arena, 2, 3, 2);
+        assertEquals(6, arena.highWaterMark());
+
+        arena.releasePageCells(1, 2, middle);
+        arena.releasePageCells(0, 1, first);
+        ArenaSpan replacement = allocateRegularSpan(arena, 3, 4, 3);
+        assertEquals(0, replacement.firstSlot());
+        assertEquals(6, arena.highWaterMark());
+
+        arena.releasePageCells(2, 3, tail);
+        assertEquals(3, arena.highWaterMark());
+        arena.releasePageCells(3, 4, replacement);
+        assertEquals(0, arena.highWaterMark());
+        assertEquals(0, arena.liveCellCount());
+    }
+
+    private static ArenaSpan allocateRegularSpan(
+            ThermalCellArena arena,
+            int pageSlot,
+            int lifecycleGeneration,
+            int count
+    ) {
+        ThermalCellArena.CellSpec[] cells = new ThermalCellArena.CellSpec[count];
+        for (int index = 0; index < count; index++) {
+            cells[index] = regularCell(
+                    (index & 3) << 2,
+                    ((index >>> 4) & 3) << 2,
+                    ((index >>> 2) & 3) << 2,
+                    0,
+                    0);
+        }
+        return arena.allocatePageCells(
+                pageSlot,
+                lifecycleGeneration,
+                cells,
+                new ThermalCellArena.MixedBrickSpec[0],
+                new ThermalCellArena.MaterialPoleSpec[0],
+                new ThermalCellArena.PhaseReservoirSpec[0],
+                0.0D,
+                0.0D).cellSpan();
+    }
+
     private static ThermalCellArena.CellSpec regularCell(
             int x, int y, int z, int medium, int flags
     ) {

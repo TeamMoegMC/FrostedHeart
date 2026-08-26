@@ -50,7 +50,6 @@ import net.minecraftforge.gametest.PrefixGameTestTemplate;
 
 import java.util.List;
 import java.util.UUID;
-import java.util.concurrent.atomic.AtomicInteger;
 
 @GameTestHolder(FHMain.MODID)
 @PrefixGameTestTemplate(false)
@@ -59,6 +58,7 @@ public final class FrostedHeartMinecraftThermalInputGameTests {
     private static final String MUTATION_BATCH = BATCH + "_mutation";
     private static final String NEIGHBOR_BATCH = BATCH + "_neighbor";
     private static final String SOURCE_BATCH = BATCH + "_source";
+    private static final String SOURCE_RESYNC_BATCH = BATCH + "_source_resync";
     private static final String SINK_BATCH = BATCH + "_sink";
     private static final String TEMPLATE = "phase0a_empty";
     private static final ResolvedThermalSignature SOLID_SIGNATURE =
@@ -165,11 +165,7 @@ public final class FrostedHeartMinecraftThermalInputGameTests {
                  16,
                  16)) {
             input.enableTopologyApplication(topologyParameters());
-            AtomicInteger dispatchSubmissions = new AtomicInteger();
-            input.enableDispatch(command -> {
-                dispatchSubmissions.incrementAndGet();
-                command.run();
-            });
+            input.enableSynchronousDispatch();
             helper.assertTrue(input.retainPhysicalSourcePage(position, 4),
                     "the real source-interest path must admit the target Page");
             MinecraftThermalInput.sealActiveLevel(level);
@@ -179,10 +175,8 @@ public final class FrostedHeartMinecraftThermalInputGameTests {
                     "the admitted Page cut must reach the runtime through gameplay sealing");
             helper.assertTrue(runtime.appliedWatermarks().profile() == 1L,
                     "the frame must carry the frozen profile-table cut");
-            helper.assertTrue(dispatchSubmissions.get() == 1,
-                    "the configured dispatch executor must receive the sealed frame");
             helper.assertTrue(runtime.lastCompletedTargetTick() == level.getGameTime(),
-                    "dispatch must run the admitted epoch on the coordinator");
+                    "synchronous dispatch must run the admitted epoch on the main thread");
 
             MinecraftThermalInput.MutableEnvironmentSample playerSample =
                     new MinecraftThermalInput.MutableEnvironmentSample();
@@ -327,10 +321,12 @@ public final class FrostedHeartMinecraftThermalInputGameTests {
                             == completedTickBeforePassiveQueries,
                     "10,000 passive crop misses must not retain thermal state");
 
+            long geometryBeforeResnapshot = runtime.appliedWatermarks().geometry();
             MinecraftThermalInput.onRawBlockContainerReplaced(section);
             MinecraftThermalInput.sealActiveLevel(level);
-            helper.assertTrue(dispatchSubmissions.get() == 2,
-                    "the full Page resnapshot must rebuild through dispatch");
+            helper.assertTrue(runtime.appliedWatermarks().geometry()
+                            > geometryBeforeResnapshot,
+                    "the full Page resnapshot must rebuild through synchronous dispatch");
 
             long geometryBeforeDetach = runtime.appliedWatermarks().geometry();
             MinecraftThermalInput.onChunkUnload(level, chunk);
@@ -368,7 +364,7 @@ public final class FrostedHeartMinecraftThermalInputGameTests {
                 16);
         try {
             input.enableTopologyApplication(topologyParameters());
-            input.enableDispatch(Runnable::run);
+            input.enableSynchronousDispatch();
             helper.assertTrue(input.retainPhysicalSourcePage(position, 4),
                     "the real source-interest path must admit the target Page");
             MinecraftThermalInput.sealActiveLevel(level);
@@ -455,7 +451,7 @@ public final class FrostedHeartMinecraftThermalInputGameTests {
                 16,
                 16)) {
             input.enableTopologyApplication(topologyParameters());
-            input.enableDispatch(Runnable::run);
+            input.enableSynchronousDispatch();
             input.upsertAnalyticField(new MinecraftThermalInput.AnalyticField(
                     1L, 0,
                     MinecraftThermalInput.AnalyticCombineMode.OVERRIDE,
@@ -541,7 +537,7 @@ public final class FrostedHeartMinecraftThermalInputGameTests {
                 32,
                 32)) {
             input.enableTopologyApplication(topologyParameters());
-            input.enableDispatch(Runnable::run);
+            input.enableSynchronousDispatch();
 
             helper.assertTrue(input.retainPhysicalSourcePage(target, 4),
                     "the loaded underground source Page must be admitted");
@@ -595,7 +591,7 @@ public final class FrostedHeartMinecraftThermalInputGameTests {
                 16);
         try {
             input.enableTopologyApplication(topologyParameters());
-            input.enableDispatch(Runnable::run);
+            input.enableSynchronousDispatch();
             helper.assertTrue(input.retainPhysicalSourcePage(center, 4),
                     "the real source-interest path must admit the target Page");
             MinecraftThermalInput.sealActiveLevel(level);
@@ -672,7 +668,7 @@ public final class FrostedHeartMinecraftThermalInputGameTests {
         try {
             input.enableTopologyApplication(topologyParameters());
             input.enablePhysicalSources(4);
-            input.enableDispatch(Runnable::run);
+            input.enableSynchronousDispatch();
             helper.assertTrue(
                     input.retainPhysicalSourcePage(target, 4),
                     "the source target Page must use the real interest path");
@@ -741,6 +737,98 @@ public final class FrostedHeartMinecraftThermalInputGameTests {
         });
     }
 
+    @GameTest(template = TEMPLATE, batch = SOURCE_RESYNC_BATCH, timeoutTicks = 60)
+    public static void rawFullResyncRebindsLivePhysicalSource(
+            GameTestHelper helper
+    ) {
+        ServerLevel level = helper.getLevel();
+        BlockPos anchor = helper.absolutePos(new BlockPos(2, 3, 2));
+        LevelChunk chunk = level.getChunkAt(anchor);
+        int sectionIndex = allAirSectionIndex(chunk);
+        LevelChunkSection section = chunk.getSections()[sectionIndex];
+        int sectionY = chunk.getSectionYFromSectionIndex(sectionIndex);
+        BlockPos target = new BlockPos(
+                anchor.getX(), SectionPos.sectionToBlockCoord(sectionY) + 4, anchor.getZ());
+        BlockPos changed = target.offset((target.getX() & 3) == 3 ? -1 : 1, 0, 0);
+        BlockPos generator = target.below(3);
+        long initialTick = level.getGameTime();
+
+        DimensionThermalRuntime runtime = runtime(initialTick);
+        MinecraftThermalInput input = new MinecraftThermalInput(
+                level,
+                9L,
+                runtime,
+                ThermalSignatureResolverDispatcher.builder(
+                        StateStaticThermalResolver.geometryOnly(
+                                ConservativeAirGeometry.MICROCELL_COUNT))
+                        .build(),
+                signatureRegistry(),
+                1L,
+                32,
+                32);
+        try {
+            input.enableTopologyApplication(topologyParameters());
+            input.enablePhysicalSources(4);
+            input.enableSynchronousDispatch();
+            helper.assertTrue(input.retainPhysicalSourcePage(target, 4),
+                    "the source target Page must be admitted before raw resync");
+            MinecraftThermalInput.onGeneratorTick(
+                    level, generator, target, 1.0D, true);
+        } catch (RuntimeException | Error exception) {
+            input.close();
+            throw exception;
+        }
+
+        double[] energyBeforeResync = {Double.NaN};
+        helper.runAfterDelay(12L, () -> {
+            try {
+                energyBeforeResync[0] = routedEnergy(
+                        runtime, generator, SourceBinding.Kind.THERMAL_NODE);
+                helper.assertTrue(energyBeforeResync[0] > 0.0D,
+                        "the source must bind before its target Page is invalidated");
+                section.getStates().getAndSetUnchecked(
+                        SectionPos.sectionRelative(changed.getX()),
+                        SectionPos.sectionRelative(changed.getY()),
+                        SectionPos.sectionRelative(changed.getZ()),
+                        Blocks.STONE.defaultBlockState());
+                MinecraftThermalInput.onRawBlockContainerReplaced(section);
+            } catch (RuntimeException | Error exception) {
+                input.close();
+                throw exception;
+            }
+        });
+
+        helper.runAfterDelay(35L, () -> {
+            try {
+                double energyAfterResync = routedEnergy(
+                        runtime, generator, SourceBinding.Kind.THERMAL_NODE);
+                helper.assertTrue(energyAfterResync > energyBeforeResync[0],
+                        "full-resync must rebind the source and keep integrating energy");
+                MinecraftThermalInput.MutableEnvironmentSample sample =
+                        new MinecraftThermalInput.MutableEnvironmentSample();
+                input.samplePlayerEnvironment(
+                        501L,
+                        1,
+                        target.getX() + 0.5D,
+                        target.getY(),
+                        target.getY() + 1.5D,
+                        target.getZ() + 0.5D,
+                        level.getGameTime(),
+                        40,
+                        sample);
+                helper.assertTrue(sample.airAvailable()
+                                && (sample.flags()
+                                & (MinecraftThermalInput.QUERY_STALE_GEOMETRY
+                                | MinecraftThermalInput.QUERY_PUBLICATION_MISS
+                                | MinecraftThermalInput.QUERY_PUBLICATION_STALE)) == 0,
+                        "raw full-resync must return the Page to current publication");
+            } finally {
+                input.close();
+            }
+            helper.succeed();
+        });
+    }
+
     @GameTest(template = TEMPLATE, batch = SINK_BATCH, timeoutTicks = 40)
     public static void blockedAndUnresolvedPortsUseTheirDeclaredSinks(
             GameTestHelper helper
@@ -776,7 +864,7 @@ public final class FrostedHeartMinecraftThermalInputGameTests {
         try {
             input.enableTopologyApplication(topologyParameters());
             input.enablePhysicalSources(4);
-            input.enableDispatch(Runnable::run);
+            input.enableSynchronousDispatch();
             helper.assertTrue(
                     input.retainPhysicalSourcePage(blockedTarget, 4),
                     "the source target Page must use the real interest path");

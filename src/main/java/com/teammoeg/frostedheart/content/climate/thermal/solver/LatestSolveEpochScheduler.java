@@ -156,6 +156,26 @@ public final class LatestSolveEpochScheduler {
         return Optional.ofNullable(inFlight);
     }
 
+    /** Retains one failed epoch while restarting at its failed transport interval. */
+    public boolean retryInFlightFrom(long retryFromTick) {
+        if (inFlight == null) {
+            return false;
+        }
+        if (retryFromTick < inFlight.previousTick()
+                || retryFromTick > inFlight.targetTick()) {
+            throw new IllegalArgumentException(
+                    "retry tick is outside the in-flight epoch");
+        }
+        inFlight = new SolveEpoch(
+                retryFromTick,
+                inFlight.targetTick(),
+                inFlight.epochId(),
+                inFlight.dimensionGeneration(),
+                inFlight.sealedWatermarks());
+        latestFrameUrgent = true;
+        return true;
+    }
+
     /** A latest-only scheduler has either zero or one coalesced pending target. */
     public int pendingTargetCount() {
         if (latestFrame == null) {

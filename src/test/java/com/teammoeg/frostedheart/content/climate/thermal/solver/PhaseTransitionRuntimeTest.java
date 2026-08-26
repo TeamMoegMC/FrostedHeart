@@ -127,6 +127,39 @@ class PhaseTransitionRuntimeTest {
         assertEquals(0.0D, fixture.arena.enthalpyJ(replacementPhase), EPSILON);
     }
 
+    @Test
+    void solverSubstepRollbackRestoresEnergyPhaseStateAndRequestRing() {
+        Fixture fixture = fixture(2, 2, 1L, 50.0D);
+        int air = fixture.airSlots[0];
+        int phase = fixture.phaseSlots[0];
+        fixture.arena.setEnthalpyJ(air, 1_000.0D);
+        ThermalCellArena.MutationCheckpoint checkpoint =
+                new ThermalCellArena.MutationCheckpoint();
+        fixture.arena.beginMutationCheckpoint(checkpoint);
+        fixture.arena.captureMutationState(air, checkpoint);
+        fixture.arena.captureMutationState(phase, checkpoint);
+        fixture.runtime.beginSubstepTransaction();
+
+        assertTrue(fixture.runtime.applyContact(
+                air, phase, 100.0D, 0.0D, 1.0D));
+        assertTrue(fixture.arena.phaseRequestOutstanding(phase));
+        fixture.runtime.rollbackSubstepTransaction();
+        fixture.arena.restoreMutationState(air, checkpoint);
+        fixture.arena.restoreMutationState(phase, checkpoint);
+        fixture.arena.endMutationCheckpoint(checkpoint);
+
+        assertEquals(1_000.0D, fixture.arena.enthalpyJ(air), EPSILON);
+        assertEquals(0.0D, fixture.arena.enthalpyJ(phase), EPSILON);
+        assertFalse(fixture.arena.phaseRequestOutstanding(phase));
+        assertFalse(fixture.runtime.pollRequest(
+                new PhaseTransitionRuntime.MutableRequest()));
+
+        assertTrue(fixture.runtime.applyContact(
+                air, phase, 100.0D, 0.0D, 1.0D));
+        assertTrue(fixture.runtime.pollRequest(
+                new PhaseTransitionRuntime.MutableRequest()));
+    }
+
     private static Fixture fixture(
             int requestCapacity,
             int ackCapacity,

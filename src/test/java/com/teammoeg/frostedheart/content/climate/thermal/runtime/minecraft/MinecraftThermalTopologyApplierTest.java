@@ -43,6 +43,7 @@ import org.junit.jupiter.api.Test;
 import java.util.Arrays;
 import java.util.List;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -89,6 +90,34 @@ class MinecraftThermalTopologyApplierTest {
             assertEquals(0, fixture.arena.liveCellCount());
             fixture.runtime.runOne();
             assertEquals(10L, fixture.runtime.lastCompletedTargetTick());
+        }
+    }
+
+    @Test
+    void retiredPageSlotIsReusedByTheNextLocalAdmission() {
+        try (Fixture fixture = fixture(16)) {
+            assertEquals(
+                    MinecraftThermalTopologyApplier.ApplyStatus.APPLIED,
+                    fixture.applier.apply(fixture.seal(5L, 1L)));
+            int originalSupport = coverageAt(fixture.page, 0);
+            assertEquals(0, fixture.arena.pageSlot(originalSupport));
+
+            fixture.applier.retirePage(fixture.page, 2L);
+            assertEquals(
+                    MinecraftThermalTopologyApplier.ApplyStatus.APPLIED,
+                    fixture.applier.apply(fixture.seal(10L, 2L)));
+            assertFalse(fixture.arena.isLive(originalSupport));
+
+            int[] airPage = new int[ResolvedGeometryInputRing.BLOCKS_PER_PAGE];
+            Arrays.fill(airPage, 1);
+            ThermalPage replacement = fixture.applier.registerCapturedPage(
+                    SectionPos.asLong(1, 0, 0), 2L, 3L, airPage);
+            assertEquals(
+                    MinecraftThermalTopologyApplier.ApplyStatus.APPLIED,
+                    fixture.applier.apply(fixture.seal(15L, 3L)));
+
+            assertEquals(0, fixture.arena.pageSlot(coverageAt(replacement, 0)));
+            assertTrue(replacement.publishedGeometryIsCurrent());
         }
     }
 
@@ -166,6 +195,28 @@ class MinecraftThermalTopologyApplierTest {
     }
 
     @Test
+    void unchangedMutationAgainstNewerLiveRevisionRequestsLatestFrame() {
+        try (Fixture fixture = fixture(32)) {
+            mutateTo(fixture, 0, 0, 0, 5L, 0);
+            assertEquals(
+                    MinecraftThermalTopologyApplier.ApplyStatus.APPLIED,
+                    fixture.applier.apply(fixture.seal(5L, 1L)));
+
+            mutateTo(fixture, 0, 0, 0, 10L, 1);
+            mutateTo(fixture, 0, 0, 0, 10L, 0);
+            SealedInputFrame staleFrame = fixture.seal(10L, 1L);
+            mutateTo(fixture, 0, 0, 0, 11L, 1);
+
+            assertEquals(
+                    MinecraftThermalTopologyApplier.ApplyStatus.LATEST_FRAME_REQUIRED,
+                    fixture.applier.apply(staleFrame));
+            assertEquals(
+                    MinecraftThermalTopologyApplier.ApplyStatus.APPLIED,
+                    fixture.applier.apply(fixture.seal(11L, 1L)));
+        }
+    }
+
+    @Test
     void localMutationDoesNotRevisitAnUnrelatedAirComponent() {
         try (Fixture fixture = fixture(64)) {
             int[] distantAir = new int[ResolvedGeometryInputRing.BLOCKS_PER_PAGE];
@@ -186,6 +237,37 @@ class MinecraftThermalTopologyApplierTest {
                     applied);
             assertEquals(stableSupport, coverageAt(distant, 0));
             assertEquals(19.0D, fixture.arena.enthalpyJ(stableSupport), 0.0D);
+        }
+    }
+
+    @Test
+    void sourceBindingNotificationsCoverAdmissionsThenOnlyChangedSections() {
+        try (Fixture fixture = fixture(64)) {
+            long distantSection = SectionPos.asLong(2, 0, 0);
+            int[] distantAir = new int[ResolvedGeometryInputRing.BLOCKS_PER_PAGE];
+            Arrays.fill(distantAir, 1);
+            fixture.applier.registerCapturedPage(
+                    distantSection, 2L, 1L, distantAir);
+
+            assertEquals(
+                    MinecraftThermalTopologyApplier.ApplyStatus.APPLIED,
+                    fixture.applier.apply(fixture.seal(5L, 1L)));
+            long[] admissions =
+                    fixture.applier.drainCommittedSourceBindingSections();
+            Arrays.sort(admissions);
+            long[] expectedAdmissions = {
+                    fixture.page.sectionKey(), distantSection
+            };
+            Arrays.sort(expectedAdmissions);
+            assertArrayEquals(expectedAdmissions, admissions);
+
+            mutate(fixture, 0, 0, 0, 10L);
+            assertEquals(
+                    MinecraftThermalTopologyApplier.ApplyStatus.APPLIED,
+                    fixture.applier.apply(fixture.seal(10L, 1L)));
+            assertArrayEquals(
+                    new long[]{fixture.page.sectionKey()},
+                    fixture.applier.drainCommittedSourceBindingSections());
         }
     }
 
@@ -252,6 +334,9 @@ class MinecraftThermalTopologyApplierTest {
             assertEquals(
                     MinecraftThermalTopologyApplier.ApplyStatus.APPLIED,
                     deferred);
+            assertArrayEquals(
+                    new long[]{sourceFixture.page.sectionKey()},
+                    sourceFixture.applier.drainCommittedSourceBindingSections());
             assertFalse(sourceFixture.runtime.topologyResolved());
             assertTrue(sourceFixture.arena.isLive(sourceSlot));
             assertFalse(sourceFixture.page.publishedGeometryIsCurrent());
@@ -272,6 +357,85 @@ class MinecraftThermalTopologyApplierTest {
                     totalEnthalpy(sourceFixture.arena), 1.0e-12D);
             assertEquals(2.5D, sourceFixture.sources.routedEnergyJ(
                     1L, SourceBinding.Kind.THERMAL_NODE), 1.0e-12D);
+        }
+    }
+
+    @Test
+    void hardCappedEpochCompletesBeforeNewerRetirementFrameIsApplied() {
+        try (Fixture fixture = fixtureWithCellLimit(16, 32)) {
+            SealedInputFrame cappedFrame = fixture.seal(5L, 1L);
+            assertEquals(
+                    MinecraftThermalTopologyApplier.ApplyStatus.APPLIED,
+                    fixture.applier.apply(cappedFrame));
+
+            fixture.runtime.runOne();
+            RuntimeException failure = fixture.runtime.consumeFailureForRecovery();
+            assertTrue(failure
+                    instanceof DimensionThermalRuntime.WorkLimitExceededException);
+            assertEquals(cappedFrame, fixture.runtime.inFlightFrame().orElseThrow());
+
+            fixture.applier.retirePage(fixture.page, 2L);
+            SealedInputFrame retirementFrame = fixture.seal(10L, 2L);
+            assertEquals(cappedFrame, fixture.runtime.inFlightFrame().orElseThrow());
+
+            assertEquals(
+                    MinecraftThermalTopologyApplier.ApplyStatus.APPLIED,
+                    fixture.applier.recoverInFlightEpoch());
+            assertArrayEquals(
+                    new long[]{fixture.page.sectionKey()},
+                    fixture.applier.drainCommittedSourceBindingSections());
+            fixture.runtime.runOne();
+            assertEquals(5L, fixture.runtime.lastCompletedTargetTick());
+            assertTrue(fixture.runtime.inFlightFrame().isEmpty());
+
+            assertEquals(
+                    MinecraftThermalTopologyApplier.ApplyStatus.APPLIED,
+                    fixture.applier.apply(retirementFrame));
+            fixture.runtime.runOne();
+            assertEquals(10L, fixture.runtime.lastCompletedTargetTick());
+            assertEquals(0, fixture.arena.liveCellCount());
+        }
+    }
+
+    @Test
+    void sustainedHardCapStaysSuppressedUntilTopologyActuallyChanges() {
+        try (Fixture fixture = fixtureWithCellLimit(16, 32)) {
+            SealedInputFrame cappedFrame = fixture.seal(5L, 1L);
+            assertEquals(
+                    MinecraftThermalTopologyApplier.ApplyStatus.APPLIED,
+                    fixture.applier.apply(cappedFrame));
+            fixture.runtime.runOne();
+            assertTrue(fixture.runtime.consumeFailureForRecovery()
+                    instanceof DimensionThermalRuntime.WorkLimitExceededException);
+
+            assertEquals(
+                    MinecraftThermalTopologyApplier.ApplyStatus.APPLIED,
+                    fixture.applier.recoverInFlightEpoch());
+            fixture.applier.drainCommittedSourceBindingSections();
+            fixture.runtime.runOne();
+            assertEquals(5L, fixture.runtime.lastCompletedTargetTick());
+            assertTrue(fixture.runtime.workLimitSuppressed());
+            assertEquals(
+                    MinecraftThermalTopologyApplier.PortResolutionStatus
+                            .TOPOLOGY_UNAVAILABLE,
+                    fixture.applier.resolveAirFacePort(
+                            0, 0, 0,
+                            ConservativeAirGeometry.Face.POSITIVE_X).status());
+            long suppressedTopologyGeneration =
+                    fixture.runtime.topologyGeneration();
+
+            SealedInputFrame unchangedFrame = fixture.seal(10L, 1L);
+            assertEquals(
+                    MinecraftThermalTopologyApplier.ApplyStatus.TOPOLOGY_UNCHANGED,
+                    fixture.applier.apply(unchangedFrame));
+            assertEquals(suppressedTopologyGeneration,
+                    fixture.runtime.topologyGeneration());
+            fixture.runtime.runOne();
+
+            assertEquals(10L, fixture.runtime.lastCompletedTargetTick());
+            assertTrue(fixture.runtime.workLimitSuppressed());
+            assertFalse(fixture.runtime.inFlightTopologyRecoveryRequired());
+            assertFalse(fixture.runtime.inFlightFrame().isPresent());
         }
     }
 
@@ -422,8 +586,54 @@ class MinecraftThermalTopologyApplierTest {
             MinecraftThermalTopologyApplier.ApplyStatus unchanged =
                     fixture.applier.apply(fixture.seal(20L, 1L));
             assertTrue(unchanged == MinecraftThermalTopologyApplier.ApplyStatus.APPLIED
-                    || unchanged == MinecraftThermalTopologyApplier.ApplyStatus.DUPLICATE);
+                    || unchanged == MinecraftThermalTopologyApplier.ApplyStatus.TOPOLOGY_UNCHANGED);
             fixture.runtime.runOne();
+        }
+    }
+
+    @Test
+    void environmentPatchesKeepCoverageAndDoNotRequestSourceRebinds() {
+        try (Fixture fixture = fixture(16, farFieldSettings())) {
+            fixture.applier.updateSkyExposure(fixture.page, fullSkyExposure());
+            assertEquals(
+                    MinecraftThermalTopologyApplier.ApplyStatus.APPLIED,
+                    fixture.applier.apply(fixture.seal(5L, 1L)));
+            fixture.runtime.runOne();
+            fixture.applier.drainCommittedSourceBindingSections();
+            int installedSupport = coverageAt(fixture.page, 0);
+
+            assertTrue(fixture.applier.updateNaturalTemperature(
+                    fixture.page, 10.0D, 0.25D));
+            assertEquals(
+                    MinecraftThermalTopologyApplier.ApplyStatus.APPLIED,
+                    fixture.applier.apply(fixture.seal(10L, 1L)));
+            fixture.runtime.runOne();
+            assertEquals(installedSupport, coverageAt(fixture.page, 0));
+            assertArrayEquals(new long[0],
+                    fixture.applier.drainCommittedSourceBindingSections());
+
+            byte[] buried = new byte[16 * 16];
+            Arrays.fill(buried, (byte) 16);
+            assertTrue(fixture.applier.updateSkyExposure(
+                    fixture.page, buried));
+            assertEquals(
+                    MinecraftThermalTopologyApplier.ApplyStatus.APPLIED,
+                    fixture.applier.apply(fixture.seal(15L, 1L)));
+            fixture.runtime.runOne();
+            assertFalse(fixture.runtime.topologyResolved());
+            assertEquals(installedSupport, coverageAt(fixture.page, 0));
+            assertArrayEquals(new long[0],
+                    fixture.applier.drainCommittedSourceBindingSections());
+
+            assertTrue(fixture.applier.updateFarFieldConductanceScale(
+                    2.0D, 0.01D));
+            assertEquals(
+                    MinecraftThermalTopologyApplier.ApplyStatus.APPLIED,
+                    fixture.applier.apply(fixture.seal(20L, 1L)));
+            fixture.runtime.runOne();
+            assertEquals(installedSupport, coverageAt(fixture.page, 0));
+            assertArrayEquals(new long[0],
+                    fixture.applier.drainCommittedSourceBindingSections());
         }
     }
 
@@ -497,6 +707,24 @@ class MinecraftThermalTopologyApplierTest {
             int resolvedCapacity,
             MinecraftThermalTopologyApplier.FarFieldSettings farFieldSettings
     ) {
+        return fixture(resolvedCapacity, farFieldSettings, 256);
+    }
+
+    private static Fixture fixtureWithCellLimit(
+            int resolvedCapacity,
+            int maximumActiveCells
+    ) {
+        return fixture(
+                resolvedCapacity,
+                MinecraftThermalTopologyApplier.FarFieldSettings.disabled(),
+                maximumActiveCells);
+    }
+
+    private static Fixture fixture(
+            int resolvedCapacity,
+            MinecraftThermalTopologyApplier.FarFieldSettings farFieldSettings,
+            int maximumActiveCells
+    ) {
         long sectionKey = SectionPos.asLong(0, 0, 0);
         ThermalCellArena arena = new ThermalCellArena(1);
         NodePowerAccumulatorArena accumulators = new NodePowerAccumulatorArena(8);
@@ -529,7 +757,8 @@ class MinecraftThermalTopologyApplierTest {
                 sweep,
                 publication,
                 0.0D,
-                new DimensionThermalRuntime.Limits(256, 1024, 1024, 3, 1.0e-9D));
+                new DimensionThermalRuntime.Limits(
+                        maximumActiveCells, 1024, 1024, 3, 1.0e-9D));
         ThermalSignatureRegistry.Builder signatureBuilder = ThermalSignatureRegistry.builder();
         signatureBuilder.intern(SOLID);
         signatureBuilder.intern(AIR);

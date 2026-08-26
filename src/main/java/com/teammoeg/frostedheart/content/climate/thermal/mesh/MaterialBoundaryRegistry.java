@@ -17,7 +17,7 @@ import java.util.Objects;
 import java.util.Optional;
 
 /**
- * Immutable worker-safe material parameters and contact masks. ID zero is the
+ * Immutable solve-safe material parameters and contact masks. ID zero is the
  * reserved "no material boundary" value carried by geometry-only signatures.
  */
 public final class MaterialBoundaryRegistry {
