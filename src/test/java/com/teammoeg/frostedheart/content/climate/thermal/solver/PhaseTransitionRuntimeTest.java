@@ -33,12 +33,14 @@ class PhaseTransitionRuntimeTest {
         assertEquals(initial, totalEnergy(fixture), EPSILON);
         assertEquals(100.0D, fixture.arena.enthalpyJ(fixture.phaseSlots[0]), EPSILON);
         assertEquals(50.0D,
-                fixture.arena.phaseReservedEnergyJ(fixture.phaseSlots[0]), EPSILON);
+                fixture.arena.phaseAvailableEnergyJ(fixture.phaseSlots[0]), EPSILON);
 
         PhaseTransitionRuntime.MutableRequest request =
                 new PhaseTransitionRuntime.MutableRequest();
         assertTrue(fixture.runtime.pollRequest(request));
-        assertEquals(0, request.candidateBit());
+        assertEquals(0, request.blockX());
+        assertEquals(0, request.blockY());
+        assertEquals(0, request.blockZ());
         assertFalse(fixture.runtime.pollRequest(
                 new PhaseTransitionRuntime.MutableRequest()));
 
@@ -46,11 +48,8 @@ class PhaseTransitionRuntimeTest {
         assertEquals(1L, fixture.runtime.latestOfferedAckWatermark());
         assertEquals(1, fixture.runtime.applyAcksThrough(1L));
         assertEquals(50.0D, fixture.arena.enthalpyJ(fixture.phaseSlots[0]), EPSILON);
-        assertEquals(50.0D, fixture.runtime.committedTransitionEnergyJ(), EPSILON);
         assertFalse(fixture.arena.phaseRequestOutstanding(fixture.phaseSlots[0]));
-        assertEquals(initial,
-                totalEnergy(fixture) + fixture.runtime.committedTransitionEnergyJ(),
-                EPSILON);
+        assertEquals(50.0D, initial - totalEnergy(fixture), EPSILON);
     }
 
     @Test
@@ -85,7 +84,6 @@ class PhaseTransitionRuntimeTest {
         assertTrue(fixture.runtime.applyContact(
                 fixture.airSlots[1], fixture.phaseSlots[1],
                 100.0D, 0.0D, 1.0D));
-        assertTrue(fixture.runtime.requestRetryCount() > 0L);
 
         PhaseTransitionRuntime.MutableRequest first =
                 new PhaseTransitionRuntime.MutableRequest();
@@ -99,12 +97,13 @@ class PhaseTransitionRuntimeTest {
 
         fixture.runtime.submitAck(first, PhaseTransitionRuntime.AckOutcome.APPLIED);
         fixture.runtime.submitAck(second, PhaseTransitionRuntime.AckOutcome.APPLIED);
-        assertTrue(fixture.runtime.ackRetryCount() > 0L);
         assertEquals(1, fixture.runtime.applyAcksThrough(1L));
         assertEquals(1, fixture.runtime.flushPendingAcks());
         assertEquals(2L, fixture.runtime.latestOfferedAckWatermark());
         assertEquals(1, fixture.runtime.applyAcksThrough(2L));
-        assertEquals(20.0D, fixture.runtime.committedTransitionEnergyJ(), EPSILON);
+        assertEquals(0.0D, fixture.arena.enthalpyJ(fixture.phaseSlots[0]), EPSILON);
+        assertEquals(0.0D, fixture.arena.enthalpyJ(fixture.phaseSlots[1]), EPSILON);
+        assertEquals(1_980.0D, totalEnergy(fixture), EPSILON);
     }
 
     @Test
@@ -126,7 +125,6 @@ class PhaseTransitionRuntimeTest {
         assertEquals(1, fixture.runtime.applyAcksThrough(1L));
 
         assertEquals(0.0D, fixture.arena.enthalpyJ(replacementPhase), EPSILON);
-        assertEquals(0.0D, fixture.runtime.committedTransitionEnergyJ(), EPSILON);
     }
 
     private static Fixture fixture(
@@ -198,9 +196,9 @@ class PhaseTransitionRuntimeTest {
                 generation,
                 new ThermalCellArena.CellSpec[] {
                         new ThermalCellArena.CellSpec(
-                                8, 0, 0, 4, 0, 0, 10.0D),
+                                8, 0, 0, 0, 0, 10.0D),
                         new ThermalCellArena.CellSpec(
-                                12, 0, 0, 4, 0, 0, 10.0D)
+                                12, 0, 0, 0, 0, 10.0D)
                 },
                 new ThermalCellArena.MixedBrickSpec[0],
                 new ThermalCellArena.MaterialPoleSpec[0],

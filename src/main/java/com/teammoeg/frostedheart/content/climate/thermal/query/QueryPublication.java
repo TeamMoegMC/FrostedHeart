@@ -69,7 +69,7 @@ public final class QueryPublication implements AutoCloseable {
                 : new QueryPublication(dimensionBudget, capacity, reservation);
     }
 
-    public static long projectedPayloadBytes(int capacity) {
+    private static long projectedPayloadBytes(int capacity) {
         if (capacity <= 0) {
             throw new IllegalArgumentException("capacity must be positive");
         }
@@ -80,14 +80,6 @@ public final class QueryPublication implements AutoCloseable {
 
     public synchronized int capacity() {
         return capacity;
-    }
-
-    public synchronized long reservedBytes() {
-        return reservation.bytes();
-    }
-
-    public long publicationVersion() {
-        return publicationVersion;
     }
 
     /**
@@ -297,12 +289,13 @@ public final class QueryPublication implements AutoCloseable {
 
     @Override
     public synchronized void close() {
-        if (reservation.released()) {
+        if (reservation == null) {
             return;
         }
         acceptingPublications = false;
         invalidateLocked();
         reservation.close();
+        reservation = null;
     }
 
     private boolean beginWrite() {

@@ -12,11 +12,9 @@ package com.teammoeg.frostedheart.content.climate.thermal.source;
 
 import java.util.Objects;
 
-/** Immutable source-port definition used at registry and resync boundaries. */
+/** Immutable source-port definition compiled into the packed source registry. */
 public record EmissionPort(
         int portId,
-        int portRevision,
-        SourceChannel channel,
         double powerShare,
         SourceBinding binding
 ) {
@@ -24,10 +22,6 @@ public record EmissionPort(
         if (portId < 0) {
             throw new IllegalArgumentException("portId must be non-negative");
         }
-        if (portRevision < 0) {
-            throw new IllegalArgumentException("portRevision must be non-negative");
-        }
-        Objects.requireNonNull(channel, "channel");
         if (!Double.isFinite(powerShare) || powerShare < 0.0D || powerShare > 1.0D) {
             throw new IllegalArgumentException("powerShare must be finite and in [0, 1]");
         }
@@ -36,20 +30,9 @@ public record EmissionPort(
 
     public static EmissionPort of(
             int portId,
-            SourceChannel channel,
             double powerShare,
             SourceBinding binding
     ) {
-        return new EmissionPort(portId, 1, channel, powerShare, binding);
-    }
-
-    public EmissionPort rebound(SourceBinding newBinding) {
-        return new EmissionPort(
-                portId,
-                Math.incrementExact(portRevision),
-                channel,
-                powerShare,
-                newBinding
-        );
+        return new EmissionPort(portId, powerShare, binding);
     }
 }

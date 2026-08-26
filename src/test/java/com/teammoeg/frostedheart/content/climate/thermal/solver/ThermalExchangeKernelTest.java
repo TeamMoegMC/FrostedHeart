@@ -30,7 +30,7 @@ class ThermalExchangeKernelTest {
         double conductance = 10.0D;
         double dtSeconds = 5.0D;
 
-        ThermalExchangeKernel.PairResult result = ThermalExchangeKernel.exchangePair(
+        ThermalExchangeKernel.MutablePairResult result = exchangePair(
                 enthalpyA,
                 capacityA,
                 enthalpyB,
@@ -45,7 +45,7 @@ class ThermalExchangeKernelTest {
                 * (enthalpyA / capacityA - enthalpyB / capacityB);
 
         assertEquals(ThermalExchangeKernel.Status.APPLIED, result.status());
-        assertEquals(expectedFromAToB, result.energyFromAToBJ(), EPSILON);
+        assertEquals(expectedFromAToB, enthalpyA - result.enthalpyAJ(), EPSILON);
         assertEquals(enthalpyA + enthalpyB,
                 result.enthalpyAJ() + result.enthalpyBJ(), EPSILON);
     }
@@ -57,8 +57,8 @@ class ThermalExchangeKernelTest {
         double initialTemperatureC = 0.0D;
         double enthalpy = capacity * (initialTemperatureC - referenceTemperatureC);
 
-        ThermalExchangeKernel.BoundaryResult result =
-                ThermalExchangeKernel.exchangeFixedBoundary(
+        ThermalExchangeKernel.MutableBoundaryResult result =
+                exchangeFixedBoundary(
                         enthalpy,
                         capacity,
                         referenceTemperatureC,
@@ -91,9 +91,9 @@ class ThermalExchangeKernelTest {
             double conductance = Math.pow(10.0D, random.nextDouble(-4.0D, 6.0D));
             double dtSeconds = random.nextDouble(0.0D, 10.0D);
 
-            ThermalExchangeKernel.PairResult forward = ThermalExchangeKernel.exchangePair(
+            ThermalExchangeKernel.MutablePairResult forward = exchangePair(
                     enthalpyA, capacityA, enthalpyB, capacityB, conductance, dtSeconds);
-            ThermalExchangeKernel.PairResult swapped = ThermalExchangeKernel.exchangePair(
+            ThermalExchangeKernel.MutablePairResult swapped = exchangePair(
                     enthalpyB, capacityB, enthalpyA, capacityA, conductance, dtSeconds);
 
             assertEquals(ThermalExchangeKernel.Status.APPLIED, forward.status());
@@ -103,37 +103,14 @@ class ThermalExchangeKernelTest {
                     forward.enthalpyAJ() + forward.enthalpyBJ(), scale * 2.0e-15D);
             assertEquals(forward.enthalpyAJ(), swapped.enthalpyBJ(), scale * 2.0e-15D);
             assertEquals(forward.enthalpyBJ(), swapped.enthalpyAJ(), scale * 2.0e-15D);
-            assertEquals(forward.energyFromAToBJ(),
-                    -swapped.energyFromAToBJ(), scale * 2.0e-15D);
+            assertEquals(enthalpyA - forward.enthalpyAJ(),
+                    -(enthalpyB - swapped.enthalpyAJ()), scale * 2.0e-15D);
         }
     }
 
     @Test
-    void differentEpochsNeverExchange() {
-        SolveEpoch epochA = epoch(0L, 5L, 1L);
-        SolveEpoch epochB = epoch(0L, 5L, 2L);
-
-        ThermalExchangeKernel.PairResult result = ThermalExchangeKernel.exchangePair(
-                10_000.0D,
-                1_000.0D,
-                epochA,
-                -5_000.0D,
-                500.0D,
-                epochB,
-                100.0D,
-                0.25D
-        );
-
-        assertEquals(ThermalExchangeKernel.Status.EPOCH_MISMATCH, result.status());
-        assertFalse(result.applied());
-        assertEquals(10_000.0D, result.enthalpyAJ());
-        assertEquals(-5_000.0D, result.enthalpyBJ());
-        assertEquals(0.0D, result.energyFromAToBJ());
-    }
-
-    @Test
     void extremeExponentSaturatesWithoutOvershootOrNan() {
-        ThermalExchangeKernel.PairResult pair = ThermalExchangeKernel.exchangePair(
+        ThermalExchangeKernel.MutablePairResult pair = exchangePair(
                 0.0D,
                 Double.MIN_NORMAL,
                 1.0D,
@@ -141,8 +118,8 @@ class ThermalExchangeKernelTest {
                 Double.MAX_VALUE,
                 Double.MAX_VALUE
         );
-        ThermalExchangeKernel.BoundaryResult boundary =
-                ThermalExchangeKernel.exchangeFixedBoundary(
+        ThermalExchangeKernel.MutableBoundaryResult boundary =
+                exchangeFixedBoundary(
                         0.0D,
                         1.0D,
                         0.0D,
@@ -167,8 +144,8 @@ class ThermalExchangeKernelTest {
         assertDegradedPair(Double.NaN, 1.0D, 0.0D, 1.0D, 1.0D, 1.0D);
         assertDegradedPair(0.0D, 1.0D, 0.0D, 1.0D, 1.0D, Double.NaN);
 
-        ThermalExchangeKernel.BoundaryResult boundary =
-                ThermalExchangeKernel.exchangeFixedBoundary(
+        ThermalExchangeKernel.MutableBoundaryResult boundary =
+                exchangeFixedBoundary(
                         12.0D, 0.0D, 0.0D, 10.0D, 1.0D, 1.0D);
         assertEquals(ThermalExchangeKernel.Status.NUMERIC_DEGRADED, boundary.status());
         assertEquals(12.0D, boundary.enthalpyJ());
@@ -183,7 +160,7 @@ class ThermalExchangeKernelTest {
             double conductance,
             double dtSeconds
     ) {
-        ThermalExchangeKernel.PairResult result = ThermalExchangeKernel.exchangePair(
+        ThermalExchangeKernel.MutablePairResult result = exchangePair(
                 enthalpyA,
                 capacityA,
                 enthalpyB,
@@ -193,10 +170,39 @@ class ThermalExchangeKernelTest {
         );
         assertEquals(ThermalExchangeKernel.Status.NUMERIC_DEGRADED, result.status());
         assertFalse(result.applied());
-        assertEquals(0.0D, result.energyFromAToBJ());
+        assertEquals(enthalpyA, result.enthalpyAJ());
+        assertEquals(enthalpyB, result.enthalpyBJ());
     }
 
-    private static SolveEpoch epoch(long previousTick, long targetTick, long id) {
-        return new SolveEpoch(previousTick, targetTick, id, 3L, InputWatermarks.ZERO);
+    private static ThermalExchangeKernel.MutablePairResult exchangePair(
+            double enthalpyA,
+            double capacityA,
+            double enthalpyB,
+            double capacityB,
+            double conductance,
+            double dtSeconds
+    ) {
+        ThermalExchangeKernel.MutablePairResult result =
+                new ThermalExchangeKernel.MutablePairResult();
+        ThermalExchangeKernel.exchangePairInto(
+                enthalpyA, capacityA, enthalpyB, capacityB,
+                conductance, dtSeconds, result);
+        return result;
+    }
+
+    private static ThermalExchangeKernel.MutableBoundaryResult exchangeFixedBoundary(
+            double enthalpy,
+            double capacity,
+            double referenceTemperature,
+            double boundaryTemperature,
+            double conductance,
+            double dtSeconds
+    ) {
+        ThermalExchangeKernel.MutableBoundaryResult result =
+                new ThermalExchangeKernel.MutableBoundaryResult();
+        ThermalExchangeKernel.exchangeFixedBoundaryInto(
+                enthalpy, capacity, referenceTemperature, boundaryTemperature,
+                conductance, dtSeconds, result);
+        return result;
     }
 }

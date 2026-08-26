@@ -42,14 +42,14 @@ class ThermalSignatureRegistryTest {
     }
 
     @Test
-    void resolutionStatesAndReasonsSurviveRegistryInterning() {
+    void resolutionStatesAndReasonsRemainIndependentOfRegistryIds() {
         ThermalSignatureRegistry.Builder builder = ThermalSignatureRegistry.builder();
 
-        ThermalSignatureResolution resolved = builder.internResolution(
-                ThermalResolution.resolved(signature(1, 2, 0)));
-        ThermalSignatureResolution unloaded = builder.internResolution(
+        ThermalSignatureResolution resolved = ThermalSignatureResolution.resolved(
+                builder.intern(signature(1, 2, 0)));
+        ThermalSignatureResolution unloaded = ThermalSignatureResolution.failure(
                 ThermalResolution.unresolved(ThermalResolution.Reason.DEPENDENCY_UNLOADED));
-        ThermalSignatureResolution unsupported = builder.internResolution(
+        ThermalSignatureResolution unsupported = ThermalSignatureResolution.failure(
                 ThermalResolution.unsupported(ThermalResolution.Reason.NOT_REGISTERED));
 
         assertTrue(resolved.isResolved());

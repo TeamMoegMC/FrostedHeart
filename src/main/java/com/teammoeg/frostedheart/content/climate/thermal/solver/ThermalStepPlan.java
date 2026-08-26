@@ -74,24 +74,12 @@ public final class ThermalStepPlan {
         return substepTicks(index) / SolveEpoch.TICKS_PER_SECOND;
     }
 
-    public long coveredTransportTicks() {
-        long covered = 0L;
-        for (int index = 0; index < substepStarts.length; index++) {
-            covered += substepTicks(index);
-        }
-        return covered;
-    }
-
     public long skippedTransportTicks() {
         return skippedTransportTicks;
     }
 
     public long skippedPhaseTicks() {
         return skippedPhaseTicks;
-    }
-
-    public long sourceCoverageTicks() {
-        return epoch.durationTicks();
     }
 
     private void validate() {

@@ -120,10 +120,7 @@ class MinecraftThermalInputTest {
                 2L, 1L, 1L, 1L,
                 ThermalPage.GeometryResyncReason.EXPLICIT_INVALIDATION,
                 snapshot));
-        assertEquals(1, ring.fullSnapshotCount());
-
         assertTrue(ring.poll(new ResolvedGeometryInputRing.MutableInput()));
-        assertEquals(0, ring.fullSnapshotCount());
         assertTrue(ring.canOfferFullResync());
     }
 
@@ -138,15 +135,21 @@ class MinecraftThermalInputTest {
                 new ResolvedGeometryInputRing.MutableInput();
         assertTrue(resolved.pollThroughWatermark(1L, input));
         assertFalse(resolved.pollThroughWatermark(1L, input));
-        assertEquals(1, resolved.size());
+        assertTrue(resolved.poll(input));
+        assertEquals(2L, input.watermark());
+        assertEquals(2L, input.geometryRevision());
+        assertFalse(resolved.poll(input));
 
         GeometryDeltaRing deltas = new GeometryDeltaRing(2);
-        assertTrue(deltas.offer(1L, 1L, 1L, 5L, 0, 1L));
-        assertTrue(deltas.offer(1L, 1L, 2L, 6L, 0, 2L));
+        assertTrue(deltas.offer(1L, 1L, 1L, 5L, 0));
+        assertTrue(deltas.offer(1L, 1L, 2L, 6L, 0));
         GeometryDeltaRing.MutableGeometryDelta delta =
                 new GeometryDeltaRing.MutableGeometryDelta();
         assertTrue(deltas.pollThroughTick(5L, delta));
         assertFalse(deltas.pollThroughTick(5L, delta));
-        assertEquals(1, deltas.size());
+        assertTrue(deltas.poll(delta));
+        assertEquals(2L, delta.geometryRevision());
+        assertEquals(6L, delta.effectiveTick());
+        assertFalse(deltas.poll(delta));
     }
 }

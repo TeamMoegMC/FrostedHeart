@@ -42,7 +42,7 @@ class DependencyOffsetMaskTest {
     }
 
     @Test
-    void explicitMaskAddsSelfAndHasStableRoundTrip() {
+    void explicitMaskAddsSelfAndRejectsOutOfRangeOffsets() {
         DependencyOffsetMask mask = DependencyOffsetMask.explicit(
                 new DependencyOffsetMask.Offset(1, 0, 0),
                 new DependencyOffsetMask.Offset(0, -1, 1)
@@ -50,17 +50,6 @@ class DependencyOffsetMaskTest {
 
         assertEquals(3, mask.offsetCount());
         assertTrue(mask.contains(DependencyOffsetMask.SELF));
-        assertEquals(mask, DependencyOffsetMask.fromEncodedBits(mask.encodedBits()));
-        assertEquals(DependencyOffsetMask.explicit(
-                        new DependencyOffsetMask.Offset(-1, 0, 0),
-                        new DependencyOffsetMask.Offset(0, 1, -1)),
-                mask.reversed());
-
-        int selfBit = DependencyOffsetMask.SELF_ONLY.encodedBits();
-        assertThrows(IllegalArgumentException.class,
-                () -> DependencyOffsetMask.fromEncodedBits(selfBit | (1 << 30)));
-        assertThrows(IllegalArgumentException.class,
-                () -> DependencyOffsetMask.fromEncodedBits(1));
         assertThrows(IllegalArgumentException.class,
                 () -> new DependencyOffsetMask.Offset(2, 0, 0));
     }

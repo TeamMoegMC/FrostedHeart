@@ -44,8 +44,6 @@ class QueryPublicationTest {
         assertEquals(13L, out.topologyGeneration());
         assertEquals(17L, out.solveEpoch());
         assertEquals(20L, out.sampleTick());
-        assertEquals(0L, publication.publicationVersion() & 1L);
-
         assertFalse(publication.tryRead(1, 7L, 12L, out));
         assertFalse(out.valid());
         publication.close();
@@ -56,14 +54,11 @@ class QueryPublicationTest {
         ThermalCellArena arena = arena(1, 10.0D);
         QueryPublication publication = publication(1, 1_000L);
         publication.publish(arena, 0.0D, 1L, 2L, 3L, 4L, 5L, 0, 1);
-        long before = publication.publicationVersion();
-
         assertTrue(publication.republishUnchanged(1L, 2L, 3L, 5L, 10L));
         QueryPublication.MutableSample out = new QueryPublication.MutableSample();
         assertTrue(publication.tryRead(0, 1L, 2L, out));
         assertEquals(5L, out.solveEpoch());
         assertEquals(10L, out.sampleTick());
-        assertEquals(before + 2L, publication.publicationVersion());
         publication.close();
     }
 
@@ -80,9 +75,10 @@ class QueryPublicationTest {
         assertEquals(1, publication.capacity());
         QueryPublication.MutableSample out = new QueryPublication.MutableSample();
         assertTrue(publication.tryRead(0, 1L, 1L, out));
-        assertEquals(QueryPublication.projectedPayloadBytes(1), dimension.usedBytes());
         publication.close();
-        assertEquals(0L, server.usedBytes());
+        QueryPublication replacement = QueryPublication.tryCreate(dimension, 1);
+        assertNotNull(replacement);
+        replacement.close();
     }
 
     @Test
@@ -138,7 +134,6 @@ class QueryPublicationTest {
         if (failure.get() != null) {
             throw new AssertionError("concurrent publication failed", failure.get());
         }
-        assertEquals(0L, publication.publicationVersion() & 1L);
         publication.close();
     }
 
@@ -152,13 +147,20 @@ class QueryPublicationTest {
 
     private static ThermalCellArena arena(int cellCount, double capacity) {
         ThermalCellArena.CellSpec[] cells = new ThermalCellArena.CellSpec[cellCount];
-        double[] enthalpies = new double[cellCount];
         for (int slot = 0; slot < cellCount; slot++) {
             cells[slot] = new ThermalCellArena.CellSpec(
-                    slot * 4, 0, 0, 4, 0, 0, capacity);
+                    slot * 4, 0, 0, 0, 0, capacity);
         }
         ThermalCellArena arena = new ThermalCellArena(cellCount);
-        arena.allocatePageCells(0, 1, cells, enthalpies);
+        arena.allocatePageCells(
+                0,
+                1,
+                cells,
+                new ThermalCellArena.MixedBrickSpec[0],
+                new ThermalCellArena.MaterialPoleSpec[0],
+                new ThermalCellArena.PhaseReservoirSpec[0],
+                0.0D,
+                0.0D);
         return arena;
     }
 }

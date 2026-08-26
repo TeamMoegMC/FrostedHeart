@@ -21,14 +21,13 @@ import java.util.Objects;
  * least a function of its own block and fluid state.
  */
 public final class DependencyOffsetMask {
-    public static final int OFFSETS_PER_AXIS = 3;
     public static final int MAXIMUM_OFFSET_COUNT = 27;
     private static final int VALID_BITS = (1 << MAXIMUM_OFFSET_COUNT) - 1;
 
     public static final Offset SELF = new Offset(0, 0, 0);
     public static final DependencyOffsetMask SELF_ONLY = explicit(List.of());
     public static final DependencyOffsetMask NEIGHBOR_6 = createNeighbor6();
-    public static final DependencyOffsetMask NEIGHBOR_26 = fromEncodedBits(VALID_BITS);
+    public static final DependencyOffsetMask NEIGHBOR_26 = new DependencyOffsetMask(VALID_BITS);
 
     private final int encodedBits;
     private final List<Offset> offsets;
@@ -65,17 +64,6 @@ public final class DependencyOffsetMask {
         return new DependencyOffsetMask(bits);
     }
 
-    /** Restores the stable 27-bit representation while preserving the mandatory SELF invariant. */
-    public static DependencyOffsetMask fromEncodedBits(int encodedBits) {
-        if ((encodedBits & ~VALID_BITS) != 0) {
-            throw new IllegalArgumentException("dependency mask contains bits outside the 3x3x3 cube");
-        }
-        if ((encodedBits & bit(SELF)) == 0) {
-            throw new IllegalArgumentException("dependency mask must contain SELF");
-        }
-        return new DependencyOffsetMask(encodedBits);
-    }
-
     public boolean contains(Offset offset) {
         Objects.requireNonNull(offset, "offset");
         return (encodedBits & bit(offset)) != 0;
@@ -95,22 +83,6 @@ public final class DependencyOffsetMask {
     /** Returns offsets in stable y/z/x bit order. */
     public List<Offset> offsets() {
         return offsets;
-    }
-
-    public int encodedBits() {
-        return encodedBits;
-    }
-
-    /**
-     * Returns the reverse dependency footprint used to find resolver centers
-     * affected by a mutation at the origin.
-     */
-    public DependencyOffsetMask reversed() {
-        int reversedBits = 0;
-        for (Offset offset : offsets) {
-            reversedBits |= bit(offset.negated());
-        }
-        return fromEncodedBits(reversedBits);
     }
 
     @Override
@@ -154,10 +126,6 @@ public final class DependencyOffsetMask {
             if (!isInRange(x, y, z)) {
                 throw new IllegalArgumentException("dependency offset must be inside [-1, 1]^3");
             }
-        }
-
-        public Offset negated() {
-            return new Offset(-x, -y, -z);
         }
 
         static boolean isInRange(int x, int y, int z) {

@@ -50,10 +50,6 @@ public final class TownThermalProjection {
         voxelCount++;
     }
 
-    public int groupCount() {
-        return packedGroups.size();
-    }
-
     public int voxelCount() {
         return voxelCount;
     }

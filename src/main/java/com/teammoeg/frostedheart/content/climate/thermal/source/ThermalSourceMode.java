@@ -10,16 +10,8 @@
 
 package com.teammoeg.frostedheart.content.climate.thermal.source;
 
-/** Frozen source modes; only physical modes participate in the energy ledger. */
+/** Physical source modes accepted by the thermal source registry. */
 public enum ThermalSourceMode {
     POWER_SOURCE,
-    BOUNDARY,
-    IMPULSE,
-    ANALYTIC_CONTROL,
-    LEGACY_CONTROL,
-    BODY_DEVICE;
-
-    public boolean usesPhysicalEnergyLedger() {
-        return this == POWER_SOURCE || this == IMPULSE;
-    }
+    IMPULSE
 }

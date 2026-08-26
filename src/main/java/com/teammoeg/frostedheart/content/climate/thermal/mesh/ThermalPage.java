@@ -27,12 +27,10 @@ import java.util.concurrent.atomic.AtomicReference;
 public final class ThermalPage {
     public static final int BASE_BRICK_COUNT = 64;
     public static final int NO_COVERAGE = -1;
-    public static final int FULL_GEOMETRY_RESYNC_REQUIRED = 1;
 
     private final long sectionKey;
     private final long lifecycleGeneration;
     private final int[] coverageRefs = new int[BASE_BRICK_COUNT];
-    private final byte[] coverageWidths = new byte[BASE_BRICK_COUNT];
     private final long[] latestBrickMutationRevisions = new long[BASE_BRICK_COUNT];
     private final GeometrySummaryCache geometrySummaries = new GeometrySummaryCache();
     private final GeometryDeltaCoalescer deltaCoalescer = new GeometryDeltaCoalescer();
@@ -41,9 +39,7 @@ public final class ThermalPage {
 
     private long mixedBrickMask;
     private long dirtyBrickMask;
-    private boolean coverageRepartitionRequired;
     private long topologyGeneration;
-    private ArenaSpan cellSpan = ArenaSpan.EMPTY;
     private volatile long publishedGeometryRevision = -1L;
     private volatile long publishedTopologyGeneration = -1L;
     private volatile long publishedSolveEpoch = -1L;
@@ -55,19 +51,6 @@ public final class ThermalPage {
         this.sectionKey = sectionKey;
         this.lifecycleGeneration = lifecycleGeneration;
         Arrays.fill(coverageRefs, NO_COVERAGE);
-    }
-
-    /** Builds a page directly from Minecraft's cheap empty-section proof. */
-    public static ThermalPage allAir(
-            long sectionKey,
-            long lifecycleGeneration,
-            int supportRef,
-            int airMediumId
-    ) {
-        ThermalPage page = new ThermalPage(sectionKey, lifecycleGeneration);
-        page.installInitialGeometry(FullGeometryState.uniformAllAir(
-                supportRef, airMediumId, new ArenaSpan(supportRef, 1)));
-        return page;
     }
 
     public long sectionKey() {
@@ -94,26 +77,8 @@ public final class ThermalPage {
         return publishedTopologyGeneration;
     }
 
-    public synchronized int coverageRefAtBase(int baseIndex) {
-        requireBaseIndex(baseIndex);
-        return coverageRefs[baseIndex];
-    }
-
-    public synchronized int coverageRefAtBlock(int localX, int localY, int localZ) {
-        return coverageRefs[GeometrySummaryCache.baseIndex(localX, localY, localZ)];
-    }
-
-    public synchronized int coverageWidthAtBase(int baseIndex) {
-        requireBaseIndex(baseIndex);
-        return Byte.toUnsignedInt(coverageWidths[baseIndex]);
-    }
-
     public synchronized int[] coverageSnapshot() {
         return coverageRefs.clone();
-    }
-
-    public synchronized byte[] coverageWidthSnapshot() {
-        return coverageWidths.clone();
     }
 
     /**
@@ -140,7 +105,6 @@ public final class ThermalPage {
                 lifecycleGeneration,
                 baseIndex,
                 coverageRefs[baseIndex],
-                Byte.toUnsignedInt(coverageWidths[baseIndex]),
                 publishedGeometryRevision,
                 publishedTopologyGeneration,
                 publishedSolveEpoch
@@ -156,22 +120,10 @@ public final class ThermalPage {
         return mixedBrickMask;
     }
 
-    public synchronized long dirtyBrickMask() {
-        return dirtyBrickMask;
-    }
-
-    public synchronized int dirtyBrickCount() {
-        return Long.bitCount(dirtyBrickMask);
-    }
-
-    public synchronized boolean coverageRepartitionRequired() {
-        return coverageRepartitionRequired;
-    }
-
     /**
      * Records one block/fluid geometry mutation and immediately makes any old
-     * publication stale. The returned Brick is materialized only once; repeated
-     * same-tick changes are merged by the page-local coalescer.
+     * publication stale. Repeated same-tick changes to the same Brick are
+     * merged by the page-local coalescer.
      */
     public synchronized MutationObservation recordGeometryMutation(
             int localX,
@@ -187,34 +139,25 @@ public final class ThermalPage {
             throw new IllegalArgumentException("effectiveTick must be non-negative");
         }
         int baseIndex = GeometrySummaryCache.baseIndex(localX, localY, localZ);
-        int brickVoxelIndex = GeometrySummaryCache.brickVoxelIndex(localX, localY, localZ);
         long revision = liveGeometryRevision.incrementAndGet();
         latestBrickMutationRevisions[baseIndex] = revision;
 
         long brickBit = 1L << baseIndex;
-        boolean materializedBrick = (mixedBrickMask & brickBit) == 0L;
-        boolean invalidatedCoarseSupport = Byte.toUnsignedInt(coverageWidths[baseIndex]) > 4;
-        mixedBrickMask |= brickBit;
         dirtyBrickMask |= brickBit;
         coverageRefs[baseIndex] = NO_COVERAGE;
-        coverageWidths[baseIndex] = 0;
-        coverageRepartitionRequired |= invalidatedCoarseSupport;
         geometrySummaries.invalidateBaseBrick(baseIndex);
 
         ResyncRequirement existingResync = resyncRequirement.get();
         if (existingResync != null) {
             advanceResyncRequirement(existingResync.reason(), revision);
             deltaCoalescer.reset();
-            return new MutationObservation(
-                    revision, baseIndex, invalidatedCoarseSupport,
-                    materializedBrick, false, true);
+            return new MutationObservation(revision, baseIndex, false, true);
         }
 
         GeometryDeltaCoalescer.RecordResult coalesced = deltaCoalescer.record(
                 sectionKey,
                 lifecycleGeneration,
                 baseIndex,
-                brickVoxelIndex,
                 revision,
                 effectiveTick,
                 ring
@@ -229,8 +172,6 @@ public final class ThermalPage {
         return new MutationObservation(
                 revision,
                 baseIndex,
-                invalidatedCoarseSupport,
-                materializedBrick,
                 !coalesced.firstChangeForBrick(),
                 fullGeometryResyncRequired()
         );
@@ -244,8 +185,7 @@ public final class ThermalPage {
             throw new IllegalArgumentException("ring is required");
         }
         if (resyncRequirement.get() != null) {
-            int dropped = deltaCoalescer.pendingBrickCount();
-            deltaCoalescer.reset();
+            int dropped = deltaCoalescer.reset();
             return new GeometryDeltaCoalescer.SealResult(0, dropped, dropped != 0);
         }
         GeometryDeltaCoalescer.SealResult result = deltaCoalescer.sealTo(
@@ -259,40 +199,6 @@ public final class ThermalPage {
         return result;
     }
 
-    /**
-     * Installs one rebuilt 4-cubed Brick when its old coverage was already fine.
-     * Coarse invalidation requires a complete repartition through tryInstallGeometryBuild.
-     */
-    public synchronized boolean acknowledgeBrickRebuild(
-            int baseIndex,
-            long capturedBrickRevision,
-            int supportRef,
-            GeometrySummary summary
-    ) {
-        requireBaseIndex(baseIndex);
-        requireSupportRef(supportRef);
-        if (summary == null || summary.kind() == GeometrySummary.Kind.UNKNOWN) {
-            throw new IllegalArgumentException("rebuilt Brick summary must be known");
-        }
-        if (resyncRequirement.get() != null
-                || coverageRepartitionRequired
-                || latestBrickMutationRevisions[baseIndex] != capturedBrickRevision) {
-            return false;
-        }
-        coverageRefs[baseIndex] = supportRef;
-        coverageWidths[baseIndex] = 4;
-        geometrySummaries.setBaseSummary(baseIndex, summary);
-        long brickBit = 1L << baseIndex;
-        dirtyBrickMask &= ~brickBit;
-        if (summary.kind() == GeometrySummary.Kind.MIXED) {
-            mixedBrickMask |= brickBit;
-        } else {
-            mixedBrickMask &= ~brickBit;
-        }
-        topologyGeneration++;
-        return true;
-    }
-
     /** Atomically installs one or more rebuilt width-4 Bricks from one revision cut. */
     public synchronized boolean tryInstallBrickBuilds(
             long capturedGeometryRevision,
@@ -300,40 +206,69 @@ public final class ThermalPage {
             int[] supportRefs,
             GeometrySummary[] baseSummaries
     ) {
-        if (rebuiltBrickMask == 0L
-                || supportRefs == null || supportRefs.length != BASE_BRICK_COUNT
-                || baseSummaries == null || baseSummaries.length != BASE_BRICK_COUNT) {
-            throw new IllegalArgumentException("Brick build payload is incomplete");
-        }
+        requireBrickBuildPayload(rebuiltBrickMask, supportRefs, baseSummaries);
         if (resyncRequirement.get() != null
-                || coverageRepartitionRequired
                 || liveGeometryRevision.get() != capturedGeometryRevision
                 || (dirtyBrickMask & rebuiltBrickMask) != rebuiltBrickMask) {
             return false;
         }
-        long remaining = rebuiltBrickMask;
-        while (remaining != 0L) {
-            int baseIndex = Long.numberOfTrailingZeros(remaining);
-            int supportRef = supportRefs[baseIndex];
-            GeometrySummary summary = baseSummaries[baseIndex];
-            if (summary == null || summary.kind() == GeometrySummary.Kind.UNKNOWN
-                    || (supportRef < 0
-                    && supportRef != NO_COVERAGE)) {
-                throw new IllegalArgumentException("rebuilt Brick state is invalid");
-            }
-            coverageRefs[baseIndex] = supportRef;
-            coverageWidths[baseIndex] = 4;
-            geometrySummaries.setBaseSummary(baseIndex, summary);
-            long brickBit = 1L << baseIndex;
-            if (summary.kind() == GeometrySummary.Kind.MIXED) {
-                mixedBrickMask |= brickBit;
-            } else {
-                mixedBrickMask &= ~brickBit;
-            }
-            remaining &= remaining - 1L;
-        }
+        installBrickBuildPayload(rebuiltBrickMask, supportRefs, baseSummaries);
         dirtyBrickMask &= ~rebuiltBrickMask;
         topologyGeneration++;
+        return true;
+    }
+
+    /**
+     * Restores Brick coverage invalidated by mutations whose final compiled
+     * topology is identical to the installed topology. No topology generation
+     * is advanced because no arena cell or adjacency changed.
+     */
+    public synchronized boolean tryAcknowledgeUnchangedBricks(
+            long capturedGeometryRevision,
+            long unchangedBrickMask,
+            int[] supportRefs,
+            GeometrySummary[] baseSummaries
+    ) {
+        requireBrickBuildPayload(unchangedBrickMask, supportRefs, baseSummaries);
+        if (resyncRequirement.get() != null
+                || liveGeometryRevision.get() != capturedGeometryRevision
+                || (dirtyBrickMask & unchangedBrickMask) != unchangedBrickMask) {
+            return false;
+        }
+        installBrickBuildPayload(unchangedBrickMask, supportRefs, baseSummaries);
+        dirtyBrickMask &= ~unchangedBrickMask;
+        return true;
+    }
+
+    /** Installs only changed width-4 Bricks and clears one exact full-resync token. */
+    public synchronized boolean tryInstallBrickFullGeometryResync(
+            GeometryResyncToken token,
+            long rebuiltBrickMask,
+            int[] supportRefs,
+            GeometrySummary[] baseSummaries
+    ) {
+        requireBrickBuildPayload(rebuiltBrickMask, supportRefs, baseSummaries);
+        ResyncRequirement current = matchingResyncRequirement(token);
+        if (current == null || !resyncRequirement.compareAndSet(current, null)) {
+            return false;
+        }
+        installBrickBuildPayload(rebuiltBrickMask, supportRefs, baseSummaries);
+        dirtyBrickMask = 0L;
+        deltaCoalescer.reset();
+        topologyGeneration++;
+        return true;
+    }
+
+    /** Clears one exact full-resync token whose snapshot matches current topology. */
+    public synchronized boolean tryAcknowledgeUnchangedFullGeometryResync(
+            GeometryResyncToken token
+    ) {
+        ResyncRequirement current = matchingResyncRequirement(token);
+        if (current == null || !resyncRequirement.compareAndSet(current, null)) {
+            return false;
+        }
+        dirtyBrickMask = 0L;
+        deltaCoalescer.reset();
         return true;
     }
 
@@ -407,6 +342,66 @@ public final class ThermalPage {
         return true;
     }
 
+    private ResyncRequirement matchingResyncRequirement(GeometryResyncToken token) {
+        if (token == null
+                || token.sectionKey() != sectionKey
+                || token.lifecycleGeneration() != lifecycleGeneration) {
+            return null;
+        }
+        ResyncRequirement current = resyncRequirement.get();
+        return current != null
+                && current.requiredRevision() == token.requiredRevision()
+                && current.reason() == token.reason()
+                && liveGeometryRevision.get() == token.requiredRevision()
+                ? current
+                : null;
+    }
+
+    private static void requireBrickBuildPayload(
+            long rebuiltBrickMask,
+            int[] supportRefs,
+            GeometrySummary[] baseSummaries
+    ) {
+        if (rebuiltBrickMask == 0L
+                || supportRefs == null || supportRefs.length != BASE_BRICK_COUNT
+                || baseSummaries == null || baseSummaries.length != BASE_BRICK_COUNT) {
+            throw new IllegalArgumentException("Brick build payload is incomplete");
+        }
+        long remaining = rebuiltBrickMask;
+        while (remaining != 0L) {
+            int baseIndex = Long.numberOfTrailingZeros(remaining);
+            int supportRef = supportRefs[baseIndex];
+            GeometrySummary summary = baseSummaries[baseIndex];
+            if (summary == null || summary.kind() == GeometrySummary.Kind.UNKNOWN
+                    || (supportRef < 0 && supportRef != NO_COVERAGE)) {
+                throw new IllegalArgumentException("rebuilt Brick state is invalid");
+            }
+            remaining &= remaining - 1L;
+        }
+    }
+
+    private void installBrickBuildPayload(
+            long rebuiltBrickMask,
+            int[] supportRefs,
+            GeometrySummary[] baseSummaries
+    ) {
+        long remaining = rebuiltBrickMask;
+        while (remaining != 0L) {
+            int baseIndex = Long.numberOfTrailingZeros(remaining);
+            int supportRef = supportRefs[baseIndex];
+            GeometrySummary summary = baseSummaries[baseIndex];
+            coverageRefs[baseIndex] = supportRef;
+            geometrySummaries.setBaseSummary(baseIndex, summary);
+            long brickBit = 1L << baseIndex;
+            if (summary.kind() == GeometrySummary.Kind.MIXED) {
+                mixedBrickMask |= brickBit;
+            } else {
+                mixedBrickMask &= ~brickBit;
+            }
+            remaining &= remaining - 1L;
+        }
+    }
+
     /** Publishes only a complete, current topology identity. */
     public synchronized boolean tryPublishGeometry(
             long capturedGeometryRevision,
@@ -417,7 +412,6 @@ public final class ThermalPage {
             throw new IllegalArgumentException("solveEpoch must be non-negative");
         }
         if (resyncRequirement.get() != null
-                || coverageRepartitionRequired
                 || dirtyBrickMask != 0L
                 || liveGeometryRevision.get() != capturedGeometryRevision
                 || topologyGeneration != capturedTopologyGeneration) {
@@ -435,7 +429,6 @@ public final class ThermalPage {
 
     private boolean publishedGeometryIsCurrentLocked() {
         return resyncRequirement.get() == null
-                && !coverageRepartitionRequired
                 && dirtyBrickMask == 0L
                 && publishedGeometryRevision == liveGeometryRevision.get()
                 && publishedTopologyGeneration == topologyGeneration;
@@ -445,36 +438,11 @@ public final class ThermalPage {
         return publishedSolveEpoch;
     }
 
-    public synchronized ArenaSpan cellSpan() {
-        return cellSpan;
-    }
-
-    public synchronized void setCellSpan(ArenaSpan cellSpan) {
-        if (cellSpan == null) {
-            throw new IllegalArgumentException("cellSpan is required");
-        }
-        this.cellSpan = cellSpan;
-    }
-
-    public int flags() {
-        return fullGeometryResyncRequired() ? FULL_GEOMETRY_RESYNC_REQUIRED : 0;
-    }
-
-    private synchronized void installInitialGeometry(FullGeometryState state) {
-        if (topologyGeneration != 0L || liveGeometryRevision.get() != 0L) {
-            throw new IllegalStateException("initial geometry can only be installed once");
-        }
-        installGeometryState(state);
-    }
-
     private void installGeometryState(FullGeometryState state) {
         System.arraycopy(state.coverageRefs, 0, coverageRefs, 0, BASE_BRICK_COUNT);
-        System.arraycopy(state.coverageWidths, 0, coverageWidths, 0, BASE_BRICK_COUNT);
         geometrySummaries.replaceAll(state.summaries);
         mixedBrickMask = state.mixedBrickMask;
         dirtyBrickMask = 0L;
-        coverageRepartitionRequired = false;
-        cellSpan = state.cellSpan;
         Arrays.fill(latestBrickMutationRevisions, 0L);
         topologyGeneration++;
     }
@@ -500,7 +468,6 @@ public final class ThermalPage {
 
     public enum GeometryResyncReason {
         RING_OVERFLOW,
-        OFF_THREAD_MUTATION,
         OUT_OF_ORDER_MUTATION,
         SECTION_REPLACED,
         EXPLICIT_INVALIDATION
@@ -509,8 +476,6 @@ public final class ThermalPage {
     public record MutationObservation(
             long geometryRevision,
             int baseBrickIndex,
-            boolean coarseSupportInvalidated,
-            boolean materializedBrick,
             boolean coalescedWithExistingBrickDelta,
             boolean fullResyncRequired
     ) {
@@ -523,7 +488,6 @@ public final class ThermalPage {
         private long lifecycleGeneration;
         private int baseBrickIndex = -1;
         private int coverageRef = NO_COVERAGE;
-        private int coverageWidth;
         private long geometryRevision = -1L;
         private long topologyGeneration = -1L;
         private long solveEpoch = -1L;
@@ -548,10 +512,6 @@ public final class ThermalPage {
             return coverageRef;
         }
 
-        public int coverageWidth() {
-            return coverageWidth;
-        }
-
         public long geometryRevision() {
             return geometryRevision;
         }
@@ -569,7 +529,6 @@ public final class ThermalPage {
                 long lifecycleGeneration,
                 int baseBrickIndex,
                 int coverageRef,
-                int coverageWidth,
                 long geometryRevision,
                 long topologyGeneration,
                 long solveEpoch
@@ -579,7 +538,6 @@ public final class ThermalPage {
             this.lifecycleGeneration = lifecycleGeneration;
             this.baseBrickIndex = baseBrickIndex;
             this.coverageRef = coverageRef;
-            this.coverageWidth = coverageWidth;
             this.geometryRevision = geometryRevision;
             this.topologyGeneration = topologyGeneration;
             this.solveEpoch = solveEpoch;
@@ -595,7 +553,6 @@ public final class ThermalPage {
             this.lifecycleGeneration = lifecycleGeneration;
             baseBrickIndex = -1;
             coverageRef = NO_COVERAGE;
-            coverageWidth = 0;
             geometryRevision = liveGeometryRevision;
             topologyGeneration = -1L;
             solveEpoch = -1L;
@@ -618,77 +575,28 @@ public final class ThermalPage {
     /** Immutable complete geometry install payload. */
     public static final class FullGeometryState {
         private final int[] coverageRefs;
-        private final byte[] coverageWidths;
         private final GeometrySummary[] summaries;
         private final long mixedBrickMask;
-        private final ArenaSpan cellSpan;
 
         public FullGeometryState(
                 int[] coverageRefs,
-                byte[] coverageWidths,
                 GeometrySummary[] summaries,
-                long mixedBrickMask,
-                ArenaSpan cellSpan
+                long mixedBrickMask
         ) {
-            if (coverageRefs == null || coverageRefs.length != BASE_BRICK_COUNT
-                    || coverageWidths == null || coverageWidths.length != BASE_BRICK_COUNT) {
-                throw new IllegalArgumentException("coverage arrays must contain exactly 64 entries");
+            if (coverageRefs == null || coverageRefs.length != BASE_BRICK_COUNT) {
+                throw new IllegalArgumentException("coverage must contain exactly 64 entries");
             }
-            if (summaries == null || summaries.length != GeometrySummaryCache.SUMMARY_COUNT) {
-                throw new IllegalArgumentException("summaries must contain exactly 73 entries");
-            }
-            if (cellSpan == null) {
-                throw new IllegalArgumentException("cellSpan is required");
+            if (summaries == null || summaries.length != BASE_BRICK_COUNT) {
+                throw new IllegalArgumentException("summaries must contain exactly 64 entries");
             }
             this.coverageRefs = coverageRefs.clone();
-            this.coverageWidths = coverageWidths.clone();
             this.summaries = summaries.clone();
             this.mixedBrickMask = mixedBrickMask;
-            this.cellSpan = cellSpan;
             validateStableState();
-        }
-
-        public static FullGeometryState uniformAllAir(
-                int supportRef,
-                int airMediumId,
-                ArenaSpan cellSpan
-        ) {
-            requireSupportRef(supportRef);
-            int[] refs = new int[BASE_BRICK_COUNT];
-            byte[] widths = new byte[BASE_BRICK_COUNT];
-            GeometrySummary[] summaries = new GeometrySummary[GeometrySummaryCache.SUMMARY_COUNT];
-            Arrays.fill(refs, supportRef);
-            Arrays.fill(widths, (byte) 16);
-            Arrays.fill(summaries, GeometrySummary.singleAir(airMediumId));
-            return new FullGeometryState(refs, widths, summaries, 0L, cellSpan);
-        }
-
-        public int[] coverageRefs() {
-            return coverageRefs.clone();
-        }
-
-        public byte[] coverageWidths() {
-            return coverageWidths.clone();
-        }
-
-        public GeometrySummary[] summaries() {
-            return summaries.clone();
-        }
-
-        public long mixedBrickMask() {
-            return mixedBrickMask;
-        }
-
-        public ArenaSpan cellSpan() {
-            return cellSpan;
         }
 
         private void validateStableState() {
             for (int baseIndex = 0; baseIndex < BASE_BRICK_COUNT; baseIndex++) {
-                int width = Byte.toUnsignedInt(coverageWidths[baseIndex]);
-                if (width != 4 && width != 8 && width != 16) {
-                    throw new IllegalArgumentException("coverage width must be 4, 8, or 16");
-                }
                 if (summaries[baseIndex] == null
                         || summaries[baseIndex].kind() == GeometrySummary.Kind.UNKNOWN) {
                     throw new IllegalArgumentException("stable base summaries must be known");
@@ -700,43 +608,12 @@ public final class ThermalPage {
                 }
                 boolean noAir = summaries[baseIndex].kind() == GeometrySummary.Kind.NO_AIR;
                 if (noAir) {
-                    if (coverageRefs[baseIndex] != NO_COVERAGE || width != 4) {
+                    if (coverageRefs[baseIndex] != NO_COVERAGE) {
                         throw new IllegalArgumentException(
-                                "no-air base Bricks must use width-4 NO_COVERAGE");
+                                "no-air base Bricks must use NO_COVERAGE");
                     }
                 } else {
                     requireSupportRef(coverageRefs[baseIndex]);
-                }
-                validateCoverageGroup(baseIndex, width);
-            }
-            for (GeometrySummary summary : summaries) {
-                if (summary == null || summary.kind() == GeometrySummary.Kind.UNKNOWN) {
-                    throw new IllegalArgumentException("stable summaries must all be known");
-                }
-            }
-        }
-
-        private void validateCoverageGroup(int baseIndex, int width) {
-            int bricksPerAxis = width >>> 2;
-            int brickX = baseIndex & 3;
-            int brickZ = (baseIndex >>> 2) & 3;
-            int brickY = (baseIndex >>> 4) & 3;
-            int originX = (brickX / bricksPerAxis) * bricksPerAxis;
-            int originZ = (brickZ / bricksPerAxis) * bricksPerAxis;
-            int originY = (brickY / bricksPerAxis) * bricksPerAxis;
-            int expectedRef = coverageRefs[baseIndex];
-            for (int y = 0; y < bricksPerAxis; y++) {
-                for (int z = 0; z < bricksPerAxis; z++) {
-                    for (int x = 0; x < bricksPerAxis; x++) {
-                        int other = (originX + x)
-                                | ((originZ + z) << 2)
-                                | ((originY + y) << 4);
-                        if (coverageRefs[other] != expectedRef
-                                || Byte.toUnsignedInt(coverageWidths[other]) != width) {
-                            throw new IllegalArgumentException(
-                                    "coverage entries must form aligned 4/8/16 support groups");
-                        }
-                    }
                 }
             }
         }

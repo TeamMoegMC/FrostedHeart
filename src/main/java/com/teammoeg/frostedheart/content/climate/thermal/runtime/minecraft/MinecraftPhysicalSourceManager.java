@@ -36,12 +36,11 @@ import java.util.Map;
 import java.util.Set;
 
 /** Main-thread producer for the Minecraft physical source profiles. */
-public final class MinecraftPhysicalSourceManager implements AutoCloseable {
+final class MinecraftPhysicalSourceManager implements AutoCloseable {
     private final MinecraftThermalInput input;
     private final ThermalSourceTimeline timeline;
     private final int maximumColdSourcePages;
     private final Map<Long, LiveSource> sources = new HashMap<>();
-    private final Map<Long, Set<Long>> sourcesByTargetSection = new HashMap<>();
     private final LinkedHashSet<Long> dirtySources = new LinkedHashSet<>();
 
     private int nextLifecycleGeneration = 1;
@@ -61,7 +60,7 @@ public final class MinecraftPhysicalSourceManager implements AutoCloseable {
         this.maximumColdSourcePages = maximumColdSourcePages;
     }
 
-    public void observeCampfire(BlockPos position, boolean lit) {
+    private void observeCampfire(BlockPos position, boolean lit) {
         requireOpen();
         observe(
                 position.asLong(),
@@ -72,7 +71,7 @@ public final class MinecraftPhysicalSourceManager implements AutoCloseable {
                 lit);
     }
 
-    public void observeGenerator(
+    void observeGenerator(
             BlockPos sourcePosition,
             BlockPos exhaustTarget,
             double thermalLevel,
@@ -88,7 +87,7 @@ public final class MinecraftPhysicalSourceManager implements AutoCloseable {
                 active);
     }
 
-    public void observeFountain(
+    void observeFountain(
             BlockPos sourcePosition,
             BlockPos steamTarget,
             double thermalLevel,
@@ -104,7 +103,7 @@ public final class MinecraftPhysicalSourceManager implements AutoCloseable {
                 active);
     }
 
-    public void observeRadiator(
+    void observeRadiator(
             BlockPos sourcePosition,
             BlockPos exhaustTarget,
             double thermalLevel,
@@ -120,7 +119,7 @@ public final class MinecraftPhysicalSourceManager implements AutoCloseable {
                 active);
     }
 
-    public void removeSource(BlockPos sourcePosition) {
+    void removeSource(BlockPos sourcePosition) {
         requireOpen();
         LiveSource source = sources.get(sourcePosition.asLong());
         if (source != null) {
@@ -145,36 +144,27 @@ public final class MinecraftPhysicalSourceManager implements AutoCloseable {
         }
     }
 
-    void onPageInvalidated(long sectionKey) {
-        Set<Long> affected = sourcesByTargetSection.get(sectionKey);
-        if (affected != null) {
-            dirtySources.addAll(affected);
+    void resyncBlock(BlockPos position, BlockState currentState) {
+        if (isCampfire(currentState)) {
+            observeCampfire(position, currentState.getValue(CampfireBlock.LIT));
+        } else {
+            removeSource(position);
         }
+    }
+
+    void onPageInvalidated() {
+        dirtySources.addAll(sources.keySet());
     }
 
     void onPageWithdrawn(long sectionKey) {
-        Set<Long> affected = sourcesByTargetSection.get(sectionKey);
-        if (affected == null) {
-            return;
+        for (LiveSource source : sources.values()) {
+            source.retainedSections.remove(sectionKey);
         }
-        for (long sourceId : affected) {
-            LiveSource source = sources.get(sourceId);
-            if (source != null) {
-                source.retainedSections.remove(sectionKey);
-                dirtySources.add(sourceId);
-            }
-        }
+        dirtySources.addAll(sources.keySet());
     }
 
     void onChunkLoad(LevelChunk chunk) {
-        int chunkX = chunk.getPos().x;
-        int chunkZ = chunk.getPos().z;
-        for (Map.Entry<Long, Set<Long>> entry : sourcesByTargetSection.entrySet()) {
-            long sectionKey = entry.getKey();
-            if (SectionPos.x(sectionKey) == chunkX && SectionPos.z(sectionKey) == chunkZ) {
-                dirtySources.addAll(entry.getValue());
-            }
-        }
+        dirtySources.addAll(sources.keySet());
         for (BlockEntity blockEntity : chunk.getBlockEntities().values()) {
             if (blockEntity instanceof CampfireBlockEntity) {
                 BlockState state = blockEntity.getBlockState();
@@ -225,7 +215,6 @@ public final class MinecraftPhysicalSourceManager implements AutoCloseable {
                                 source.lifecycleGeneration,
                                 effectiveTick) != ThermalSourceTimeline.OFFER_REJECTED) {
                     releaseTargets(source);
-                    unindexTargets(source);
                     sources.remove(sourceId);
                     dirtySources.remove(sourceId);
                 }
@@ -252,8 +241,6 @@ public final class MinecraftPhysicalSourceManager implements AutoCloseable {
                 EmissionPort[] ports = emissionPorts(source.profile, bindings);
                 long offered = timeline.offerRegister(
                         source.sourceId,
-                        source.sourcePosition.asLong(),
-                        source.profile.profileId(),
                         source.lifecycleGeneration,
                         ThermalSourceMode.POWER_SOURCE,
                         source.desiredPowerW,
@@ -313,10 +300,6 @@ public final class MinecraftPhysicalSourceManager implements AutoCloseable {
                 dirtySources.remove(sourceId);
             }
         }
-    }
-
-    public int sourceCount() {
-        return sources.size();
     }
 
     BlockPos nearestEnabledGenerator(BlockPos position, double maximumDistanceSqr) {
@@ -398,7 +381,6 @@ public final class MinecraftPhysicalSourceManager implements AutoCloseable {
             input.removeRadiationSource(sourceId);
         }
         sources.clear();
-        sourcesByTargetSection.clear();
         dirtySources.clear();
     }
 
@@ -420,16 +402,13 @@ public final class MinecraftPhysicalSourceManager implements AutoCloseable {
                     portAnchor.immutable(),
                     profile);
             sources.put(sourceId, source);
-            indexTargets(source);
         } else if (!source.profile.equals(profile)
                 || !source.portAnchor.equals(portAnchor)) {
             changed = true;
             releaseTargets(source);
-            unindexTargets(source);
             source.portAnchor = portAnchor.immutable();
             source.profile = profile;
             source.registrationStale = source.registered;
-            indexTargets(source);
         }
         changed |= !source.present
                 || Double.compare(source.desiredPowerW, powerW) != 0
@@ -531,27 +510,9 @@ public final class MinecraftPhysicalSourceManager implements AutoCloseable {
         for (int index = 0; index < profilePorts.length; index++) {
             Port port = profilePorts[index];
             result[index] = EmissionPort.of(
-                    port.portId(), port.channel(), port.powerShare(), bindings[index]);
+                    port.portId(), port.powerShare(), bindings[index]);
         }
         return result;
-    }
-
-    private void indexTargets(LiveSource source) {
-        for (Port port : source.profile.ports()) {
-            if (port.kind() == PortKind.AIR_FACE) {
-                long sectionKey = sectionKey(target(source, port));
-                sourcesByTargetSection
-                        .computeIfAbsent(sectionKey, ignored -> new HashSet<>())
-                        .add(source.sourceId);
-            }
-        }
-    }
-
-    private void unindexTargets(LiveSource source) {
-        for (Set<Long> indexed : sourcesByTargetSection.values()) {
-            indexed.remove(source.sourceId);
-        }
-        sourcesByTargetSection.values().removeIf(Set::isEmpty);
     }
 
     private static BlockPos target(LiveSource source, Port port) {

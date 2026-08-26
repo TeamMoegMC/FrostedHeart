@@ -219,7 +219,7 @@ heatExchange = (effective - body) * unit / heatExchangeTempConstant
 
 HUD 不是另一个 thermal query consumer。服务端仍由 `TemperatureUpdate` 更新 `PlayerTemperatureData`，所以新空气温度会沿原 `FHBodyDataSyncPacket` 进入客户端；温度球读取 `getTotalFeelTemp()`，预报栏读取 `getEnvTemp()`，冷热条与遮罩读取客户端平滑后的核心体温。HUD 不会额外查询一次 thermal runtime。
 
-同一 caller-owned 结果保留 `airTemperatureC`、`radiantFluxWPerM2`、`surfaceFluxW`、`mediumId`、`confidence`、`sampleTick`、cell flags 和 query flags。实机 runtime 自动启用 Campfire/Generator physical sources 与 Phase J receiver service。生产遮挡直接读取已加载 section 中的 `BlockState`：`hasDynamicShape=true` 按空气，自动信任的静态状态只用 `BlockState.canOcclude()` 判断透明或整块不透明；不经过热签名 resolver、不创建位置对象、不栅格化部分形状，也不复用 collision/airflow/contact mask。
+同一 caller-owned 结果保留 `airTemperatureC`、`radiantFluxWPerM2`、`mediumId`、`confidence`、`sampleTick`、cell flags 和 query flags。实机 runtime 自动启用 Campfire/Generator physical sources 与 Phase J receiver service。生产遮挡直接读取已加载 section 中的 `BlockState`：`hasDynamicShape=true` 按空气，自动信任的静态状态只用 `BlockState.canOcclude()` 判断透明或整块不透明；不经过热签名 resolver、不创建位置对象、不栅格化部分形状，也不复用 collision/airflow/contact mask。
 
 玩家仍按现有 `temperatureUpdateIntervalTicks` cadence 查询。三个身体高度的平均辐照度 `q` 以 `W/m²` 返回，并按下式转换为本轮统一的身体部位温升，而不是直接当作摄氏度：
 

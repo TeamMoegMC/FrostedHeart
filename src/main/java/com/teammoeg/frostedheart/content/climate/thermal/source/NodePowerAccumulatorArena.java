@@ -56,10 +56,6 @@ public final class NodePowerAccumulatorArena {
         allocateTable(tableCapacityFor(storageCapacity));
     }
 
-    public int accumulatorCount() {
-        return accumulatorCount;
-    }
-
     /** Returns whether a solve would receive continuous or already-integrated energy. */
     public boolean hasActivePowerOrPendingEnergy() {
         for (int slot = 0; slot < accumulatorCount; slot++) {
@@ -112,7 +108,7 @@ public final class NodePowerAccumulatorArena {
         currentPowerW[accumulatorSlot] = canonicalZero(updated);
     }
 
-    /** Adds a signed instantaneous energy event after settling prior power. */
+    /** Settles continuous power first, then adds signed event energy. */
     public void addImpulseAt(int accumulatorSlot, long eventTick, double energyJ) {
         requireFinite("energyJ", energyJ);
         settleTo(accumulatorSlot, eventTick);
@@ -140,45 +136,6 @@ public final class NodePowerAccumulatorArena {
         addPending(accumulatorSlot, energyJ);
         lastIntegralTicks[accumulatorSlot] = targetTick;
         return energyJ;
-    }
-
-    /** Settles and transfers ownership of all pending energy to the caller. */
-    public double drainPendingEnergyTo(int accumulatorSlot, long targetTick) {
-        settleTo(accumulatorSlot, targetTick);
-        double drained = pendingEnergyJ[accumulatorSlot];
-        pendingEnergyJ[accumulatorSlot] = 0.0D;
-        pendingCompensationJ[accumulatorSlot] = 0.0D;
-        return canonicalZero(drained);
-    }
-
-    /** Drains each node once; this is the stable solver-facing source traversal. */
-    public double drainAllPendingEnergyTo(long targetTick, NodeEnergyConsumer consumer) {
-        if (consumer == null) {
-            throw new IllegalArgumentException("consumer is required");
-        }
-        double total = 0.0D;
-        double compensation = 0.0D;
-        for (int slot = 0; slot < accumulatorCount; slot++) {
-            settleTo(slot, targetTick);
-            double energyJ = pendingEnergyJ[slot];
-            if (energyJ == 0.0D) {
-                continue;
-            }
-            double adjusted = energyJ - compensation;
-            double updated = total + adjusted;
-            requireFiniteResult("drained source energy", updated);
-            consumer.accept(
-                    slot,
-                    nodeIds[slot],
-                    lifecycleGenerations[slot],
-                    energyJ
-            );
-            pendingEnergyJ[slot] = 0.0D;
-            pendingCompensationJ[slot] = 0.0D;
-            compensation = (updated - total) - adjusted;
-            total = updated;
-        }
-        return canonicalZero(total);
     }
 
     /** Drains directly into the authoritative cell arena used by transport. */
@@ -217,31 +174,6 @@ public final class NodePowerAccumulatorArena {
             total = updated;
         }
         return canonicalZero(total);
-    }
-
-    public long nodeId(int accumulatorSlot) {
-        requireSlot(accumulatorSlot);
-        return nodeIds[accumulatorSlot];
-    }
-
-    public int lifecycleGeneration(int accumulatorSlot) {
-        requireSlot(accumulatorSlot);
-        return lifecycleGenerations[accumulatorSlot];
-    }
-
-    public double currentPowerW(int accumulatorSlot) {
-        requireSlot(accumulatorSlot);
-        return currentPowerW[accumulatorSlot];
-    }
-
-    public double pendingEnergyJ(int accumulatorSlot) {
-        requireSlot(accumulatorSlot);
-        return pendingEnergyJ[accumulatorSlot];
-    }
-
-    public long lastIntegralTick(int accumulatorSlot) {
-        requireSlot(accumulatorSlot);
-        return lastIntegralTicks[accumulatorSlot];
     }
 
     private void addPending(int slot, double energyJ) {
@@ -360,14 +292,4 @@ public final class NodePowerAccumulatorArena {
         return value == 0.0D ? 0.0D : value;
     }
 
-    @FunctionalInterface
-    public interface NodeEnergyConsumer {
-        /** Must return only after the destination owns the complete energy value. */
-        void accept(
-                int accumulatorSlot,
-                long nodeId,
-                int lifecycleGeneration,
-                double signedEnergyJ
-        );
-    }
 }

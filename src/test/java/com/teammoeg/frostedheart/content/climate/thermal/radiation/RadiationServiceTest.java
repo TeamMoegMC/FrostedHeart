@@ -37,23 +37,16 @@ class RadiationServiceTest {
             expected += 200.0D / (4.0D * Math.PI * (16.0D + dy * dy)) / 3.0D;
         }
         assertEquals(expected, first.radiantFluxWPerM2(), 1.0e-12D);
-        assertEquals(3, first.retraces());
-        assertEquals(0, first.cacheHits());
 
         RadiationService.MutableSample repeated = new RadiationService.MutableSample();
         service.samplePlayer(9L, 1, 4.5D, 0.0D, 0.5D, repeated);
         assertEquals(expected, repeated.radiantFluxWPerM2(), 1.0e-12D);
-        assertEquals(3, repeated.cacheHits());
-        assertEquals(0, repeated.retraces());
         assertEquals(3, tracer.traces);
-        assertEquals(1, service.sourceCount());
 
         assertTrue(service.upsertSource(7L, 1, 0.5D, 1.0D, 0.5D, 400.0D, 1.0D));
         RadiationService.MutableSample updated = new RadiationService.MutableSample();
         service.samplePlayer(9L, 1, 4.5D, 0.0D, 0.5D, updated);
         assertEquals(expected * 2.0D, updated.radiantFluxWPerM2(), 1.0e-12D);
-        assertEquals(0, updated.cacheHits());
-        assertEquals(3, updated.retraces());
         assertEquals(6, tracer.traces);
 
         assertTrue(service.removeSource(7L));
@@ -63,7 +56,6 @@ class RadiationServiceTest {
                 new RadiationService.MutableSample();
         service.samplePlayer(10L, 1, 0.5D, -0.8D, 0.5D, verticalBoundary);
         assertTrue(verticalBoundary.radiantFluxWPerM2() > 0.0D);
-        assertEquals(1, verticalBoundary.selectedCandidates());
         service.close();
     }
 
@@ -83,7 +75,6 @@ class RadiationServiceTest {
             tracer.revision++;
             service.samplePlayer(2L, 1, 3.5D, 0.0D, 0.5D, sample);
             assertEquals(0.0D, sample.radiantFluxWPerM2());
-            assertEquals(3, sample.retraces());
             assertEquals(6, tracer.traces);
         }
     }
@@ -100,8 +91,7 @@ class RadiationServiceTest {
             RadiationService.MutableSample sample = new RadiationService.MutableSample();
             service.samplePlayer(3L, 1, 4.5D, 0.0D, 0.5D, sample);
 
-            assertEquals(1, sample.selectedCandidates());
-            assertEquals(1, sample.raysTraced());
+            assertEquals(1, tracer.traces);
             assertTrue((sample.flags() & RadiationService.RADIATION_BUDGET_LIMITED) != 0);
             assertEquals(0.5F, sample.confidence());
         }
@@ -124,16 +114,17 @@ class RadiationServiceTest {
         RadiationService service = RadiationService.tryCreate(
                 parameters, tracer, admittedBudget);
         assertNotNull(service);
-        assertEquals(bytes, service.reservedBytes());
         assertTrue(service.upsertSource(1L, 1, 0.0D, 0.0D, 0.0D, 1.0D, 1.0D));
         assertFalse(service.upsertSource(2L, 1, 1.0D, 0.0D, 0.0D, 1.0D, 1.0D));
-        assertEquals(1L, service.sourceAdmissionRefusals());
         RadiationService.MutableSample limited = new RadiationService.MutableSample();
         service.samplePlayer(4L, 1, 2.0D, 0.0D, 0.0D, limited);
         assertTrue((limited.flags() & RadiationService.RADIATION_BUDGET_LIMITED) != 0);
         assertEquals(0.5F, limited.confidence());
         service.close();
-        assertEquals(0L, admittedBudget.usedBytes());
+        ThermalMemoryBudget.Reservation releasedBacking = admittedBudget.tryReserve(
+                ThermalMemoryBudget.AllocationClass.OPTIONAL, bytes);
+        assertNotNull(releasedBacking);
+        releasedBacking.close();
     }
 
     @Test

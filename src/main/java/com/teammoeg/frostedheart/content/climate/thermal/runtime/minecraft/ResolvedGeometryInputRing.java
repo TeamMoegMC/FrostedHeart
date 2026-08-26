@@ -81,17 +81,8 @@ public final class ResolvedGeometryInputRing {
         fullPageSignatureIds = new int[capacity][];
     }
 
-    public int size() {
-        return (int) Math.min(capacity,
-                Math.max(0L, writeSequence.get() - readSequence.get()));
-    }
-
     public long latestOfferedWatermark() {
         return nextWatermark;
-    }
-
-    public int fullSnapshotCount() {
-        return fullSnapshotCount.get();
     }
 
     public boolean canOfferFullResync() {

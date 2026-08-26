@@ -131,10 +131,6 @@ public final class ConservativeAirGeometry {
             };
         }
 
-        public double provenAirVolume() {
-            return microcellCount / (double) MICROCELL_COUNT;
-        }
-
         public boolean contains(int x, int y, int z) {
             return (microcellMask & bit(x, y, z)) != 0L;
         }

@@ -17,6 +17,7 @@ import com.teammoeg.frostedheart.content.climate.thermal.solver.SolveEpoch;
 import com.teammoeg.frostedheart.content.climate.thermal.solver.ThermalStepExecutor;
 import com.teammoeg.frostedheart.content.climate.thermal.solver.ThermalStepPlan;
 import com.teammoeg.frostedheart.content.climate.thermal.solver.ThermalSweep;
+import com.teammoeg.frostedheart.content.climate.thermal.solver.ThermalSweepFragments;
 import com.teammoeg.frostedheart.content.climate.thermal.solver.ThermalTimePolicy;
 import org.junit.jupiter.api.Test;
 
@@ -30,17 +31,12 @@ class SourceSolverIntegrationTest {
     private static final double EPSILON = 1.0e-9D;
     @Test
     void degradedTimeAppliesTheCompleteSealedSourceTimelineOnce() {
-        Fixture fixture = fixture(3);
+        Fixture fixture = fixture(2);
         ThermalSourceTimeline timeline = fixture.timeline();
         timeline.offerRegister(
-                100L, 0L, 1, 1, ThermalSourceMode.POWER_SOURCE,
+                100L, 1, ThermalSourceMode.POWER_SOURCE,
                 100.0D, true, 0L,
                 new EmissionPort[]{nodePort(1, 0L, 1)});
-        timeline.offerRegister(
-                101L, 0L, 2, 1, ThermalSourceMode.IMPULSE,
-                0.0D, true, 0L,
-                new EmissionPort[]{nodePort(2, 2L, 1)});
-        timeline.offerImpulse(101L, 2, 30.0D, 12L);
         long sealedSourceWatermark = timeline.offerRebind(
                 100L, 1, SourceBinding.thermalNode(1L, 1), 15L);
 
@@ -52,16 +48,12 @@ class SourceSolverIntegrationTest {
         assertEquals(ThermalStepPlan.Status.TIME_DEGRADED, report.timeStatus());
         assertEquals(15L, report.skippedTransportTicks());
         assertEquals(15L, report.skippedPhaseTicks());
-        assertEquals(205.0D, report.sourceAppliedJ(), EPSILON);
+        assertEquals(175.0D, report.sourceAppliedJ(), EPSILON);
         assertEquals(75.0D, fixture.arena().enthalpyJ(0), EPSILON);
         assertEquals(100.0D, fixture.arena().enthalpyJ(1), EPSILON);
-        assertEquals(30.0D, fixture.arena().enthalpyJ(2), EPSILON);
-        assertEquals(35L, timeline.cursorTick());
         assertEquals(sealedSourceWatermark, timeline.appliedWatermark());
-        assertEquals(175.0D,
-                timeline.snapshotAtCursor(100L).cumulativeEmittedEnergyJ(), EPSILON);
-        assertEquals(30.0D,
-                timeline.snapshotAtCursor(101L).cumulativeEmittedEnergyJ(), EPSILON);
+        assertEquals(175.0D, timeline.routedEnergyJ(
+                100L, SourceBinding.Kind.THERMAL_NODE), EPSILON);
     }
 
     @Test
@@ -72,21 +64,21 @@ class SourceSolverIntegrationTest {
                 1L,
                 0L,
                 8,
-                new ThermalSourceRegistry(0, 1, 8, nodes),
+                new ThermalSourceRegistry(0, 1, nodes),
                 arena
         );
         long sourceWatermark = timeline.offerRegister(
-                150L, 0L, 1, 1, ThermalSourceMode.POWER_SOURCE,
+                150L, 1, ThermalSourceMode.POWER_SOURCE,
                 200.0D, true, 0L,
                 new EmissionPort[]{nodePort(1, 0L, 1)});
         ThermalStepPlan plan = new ThermalTimePolicy(5L, 10L, 1)
                 .plan(epoch(0L, 10L, 1L, sourceWatermark));
-        ThermalSweep sweep = new ThermalSweep(
-                arena,
-                List.of(ThermalSweep.PairOperation.fixed(0, 1, 10.0D)),
-                List.of(),
-                new BuoyancyConductance.Parameters(1.0D, 1.0D, 1.0D)
-        );
+        ThermalSweepFragments.Builder sweepBuilder = ThermalSweepFragments.builder(
+                arena, null,
+                new BuoyancyConductance.Parameters(1.0D, 1.0D, 1.0D), 1);
+        sweepBuilder.setAirPairs(
+                0, List.of(ThermalSweep.PairOperation.fixed(0, 1, 10.0D)));
+        ThermalSweep sweep = sweepBuilder.build();
 
         ThermalStepExecutor.Report report = ThermalStepExecutor.execute(
                 plan,
@@ -111,7 +103,7 @@ class SourceSolverIntegrationTest {
         Fixture fixture = fixture(1);
         ThermalSourceTimeline timeline = fixture.timeline();
         long availableWatermark = timeline.offerRegister(
-                200L, 0L, 1, 1, ThermalSourceMode.POWER_SOURCE,
+                200L, 1, ThermalSourceMode.POWER_SOURCE,
                 100.0D, true, 0L,
                 new EmissionPort[]{nodePort(1, 0L, 1)});
         SolveEpoch epoch = epoch(0L, 5L, 1L, availableWatermark + 1L);
@@ -121,9 +113,6 @@ class SourceSolverIntegrationTest {
 
         assertEquals(ThermalStepExecutor.Status.INPUTS_PENDING, report.status());
         assertEquals(0L, timeline.appliedWatermark());
-        assertEquals(0L, timeline.cursorTick());
-        assertEquals(0, timeline.sourceCount());
-        assertEquals(1, timeline.queuedEventCount());
         assertEquals(0.0D, report.sourceAppliedJ(), EPSILON);
         assertEquals(0.0D, fixture.arena().enthalpyJ(0), EPSILON);
         assertEquals(0L, report.appliedWatermarks().source());
@@ -134,7 +123,7 @@ class SourceSolverIntegrationTest {
         Fixture fixture = fixture(1);
         ThermalSourceTimeline timeline = fixture.timeline();
         long registrationWatermark = timeline.offerRegister(
-                300L, 0L, 1, 1, ThermalSourceMode.POWER_SOURCE,
+                300L, 1, ThermalSourceMode.POWER_SOURCE,
                 100.0D, true, 0L,
                 new EmissionPort[]{nodePort(1, 0L, 1)});
         long futureWatermark = timeline.offerPowerChange(300L, 200.0D, 40L);
@@ -145,9 +134,6 @@ class SourceSolverIntegrationTest {
         assertEquals(ThermalStepExecutor.Status.COMPLETED, first.status());
         assertEquals(100.0D, first.sourceAppliedJ(), EPSILON);
         assertEquals(registrationWatermark, timeline.appliedWatermark());
-        assertEquals(20L, timeline.cursorTick());
-        assertEquals(1, timeline.queuedEventCount());
-
         ThermalStepExecutor.Report second = execute(
                 new ThermalTimePolicy(5L, 20L, 1)
                         .plan(epoch(20L, 40L, 2L, futureWatermark)), fixture);
@@ -155,31 +141,30 @@ class SourceSolverIntegrationTest {
         assertEquals(100.0D, second.sourceAppliedJ(), EPSILON);
         assertEquals(200.0D, fixture.arena().enthalpyJ(0), EPSILON);
         assertEquals(futureWatermark, timeline.appliedWatermark());
-        assertEquals(0, timeline.queuedEventCount());
     }
 
     @Test
-    void sameTickCommandsFollowWatermarkOrderAcrossRebind() {
+    void signedImpulsesUseTheBindingAtTheirEventOrder() {
         Fixture fixture = fixture(2);
         ThermalSourceTimeline timeline = fixture.timeline();
         timeline.offerRegister(
-                400L, 0L, 1, 1, ThermalSourceMode.IMPULSE,
+                400L, 1, ThermalSourceMode.IMPULSE,
                 0.0D, true, 0L,
                 new EmissionPort[]{nodePort(7, 0L, 1)});
         timeline.offerImpulse(400L, 7, 10.0D, 10L);
         timeline.offerRebind(
                 400L, 7, SourceBinding.thermalNode(1L, 1), 10L);
         long sealedSourceWatermark = timeline.offerImpulse(
-                400L, 7, 20.0D, 10L);
+                400L, 7, -20.0D, 10L);
 
         ThermalStepExecutor.Report report = execute(
                 new ThermalTimePolicy(5L, 10L, 1)
                         .plan(epoch(0L, 10L, 1L, sealedSourceWatermark)), fixture);
 
         assertEquals(ThermalStepExecutor.Status.COMPLETED, report.status());
-        assertEquals(30.0D, report.sourceAppliedJ(), EPSILON);
+        assertEquals(-10.0D, report.sourceAppliedJ(), EPSILON);
         assertEquals(10.0D, fixture.arena().enthalpyJ(0), EPSILON);
-        assertEquals(20.0D, fixture.arena().enthalpyJ(1), EPSILON);
+        assertEquals(-20.0D, fixture.arena().enthalpyJ(1), EPSILON);
     }
 
     @Test
@@ -190,11 +175,11 @@ class SourceSolverIntegrationTest {
                 1L,
                 0L,
                 1,
-                new ThermalSourceRegistry(0, 1, 8, nodes),
+                new ThermalSourceRegistry(0, 1, nodes),
                 arena
         );
         long registrationWatermark = timeline.offerRegister(
-                500L, 0L, 1, 1, ThermalSourceMode.POWER_SOURCE,
+                500L, 1, ThermalSourceMode.POWER_SOURCE,
                 100.0D, true, 0L,
                 new EmissionPort[]{nodePort(1, 0L, 1)});
 
@@ -227,7 +212,7 @@ class SourceSolverIntegrationTest {
                 0L,
                 8,
                 new ThermalSourceRegistry(
-                        0, 1, 8, new NodePowerAccumulatorArena(0)),
+                        0, 1, new NodePowerAccumulatorArena(0)),
                 sourceArena);
         ThermalStepPlan plan = new ThermalTimePolicy(5L, 10L, 1)
                 .plan(epoch(0L, 0L, 1L, 0L));
@@ -246,7 +231,7 @@ class SourceSolverIntegrationTest {
     private static Fixture fixture(int cellCount) {
         ThermalCellArena arena = arena(cellCount);
         NodePowerAccumulatorArena nodes = new NodePowerAccumulatorArena(0);
-        ThermalSourceRegistry registry = new ThermalSourceRegistry(0, 2, 16, nodes);
+        ThermalSourceRegistry registry = new ThermalSourceRegistry(0, 2, nodes);
         return new Fixture(arena, new ThermalSourceTimeline(
                 1L,
                 0L,
@@ -278,19 +263,28 @@ class SourceSolverIntegrationTest {
                     (slot & 3) * 4,
                     ((slot >>> 4) & 3) * 4,
                     ((slot >>> 2) & 3) * 4,
-                    4, 0, 0, 100.0D);
+                    0, 0, 100.0D);
         }
         ThermalCellArena arena = new ThermalCellArena(0);
-        arena.allocatePageCells(0, 1, cells, enthalpies);
+        ThermalCellArena.PageAllocation allocation = arena.allocatePageCells(
+                0,
+                1,
+                cells,
+                new ThermalCellArena.MixedBrickSpec[0],
+                new ThermalCellArena.MaterialPoleSpec[0],
+                new ThermalCellArena.PhaseReservoirSpec[0],
+                0.0D,
+                0.0D);
+        for (int index = 0; index < enthalpies.length; index++) {
+            arena.setEnthalpyJ(allocation.cellSpan().firstSlot() + index, enthalpies[index]);
+        }
         return arena;
     }
 
     private static ThermalSweep emptySweep(ThermalCellArena arena) {
-        return new ThermalSweep(
-                arena,
-                List.of(),
-                List.of(),
-                new BuoyancyConductance.Parameters(1.0D, 1.0D, 1.0D));
+        return ThermalSweepFragments.builder(
+                arena, null,
+                new BuoyancyConductance.Parameters(1.0D, 1.0D, 1.0D), 0).build();
     }
 
     private static SolveEpoch epoch(
@@ -311,7 +305,6 @@ class SourceSolverIntegrationTest {
     private static EmissionPort nodePort(int portId, long nodeId, int generation) {
         return EmissionPort.of(
                 portId,
-                SourceChannel.CONVECTION,
                 1.0D,
                 SourceBinding.thermalNode(nodeId, generation)
         );

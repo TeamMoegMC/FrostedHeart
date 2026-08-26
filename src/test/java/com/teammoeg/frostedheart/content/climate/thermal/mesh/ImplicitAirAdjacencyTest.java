@@ -19,6 +19,7 @@ import com.teammoeg.frostedheart.content.climate.thermal.solver.BuoyancyConducta
 import com.teammoeg.frostedheart.content.climate.thermal.solver.InputWatermarks;
 import com.teammoeg.frostedheart.content.climate.thermal.solver.SolveEpoch;
 import com.teammoeg.frostedheart.content.climate.thermal.solver.ThermalSweep;
+import com.teammoeg.frostedheart.content.climate.thermal.solver.ThermalSweepFragments;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
@@ -37,16 +38,18 @@ class ImplicitAirAdjacencyTest {
     private static final double MINIMUM_MIXED_DISTANCE = 0.1D;
     private static final BuoyancyConductance.Parameters NEUTRAL_BUOYANCY =
             new BuoyancyConductance.Parameters(1.0D, 1.0D, 1.0D);
+    private static final ImplicitAirAdjacency.PositiveNeighbors NO_POSITIVE_NEIGHBORS =
+            new ImplicitAirAdjacency.PositiveNeighbors(null, null, null);
 
     @Test
     void finePageCompilesAllInternalFacesWithoutPersistingEdges() {
         ThermalCellArena arena = new ThermalCellArena(0);
         PageFixture page = regularPage(
                 arena, 0, 0, 0, 0,
-                uniformCells(0, 0, 0, 16, 4), true);
+                uniformCells(0, 0, 0, 16), true);
 
         ImplicitAirAdjacency.CompiledPairs result = compile(
-                page.view(), ImplicitAirAdjacency.PositiveNeighbors.none(), arena);
+                page.view(), NO_POSITIVE_NEIGHBORS, arena);
 
         assertTrue(result.ownerPublicationCurrent());
         assertEquals(144, result.operations().size());
@@ -57,14 +60,14 @@ class ImplicitAirAdjacencyTest {
     }
 
     @Test
-    void negativePageOwnsSixteenToFourCrossPagePairsExactlyOnce() {
+    void negativePageOwnsCrossPagePairsExactlyOnce() {
         ThermalCellArena arena = new ThermalCellArena(0);
         PageFixture negative = regularPage(
                 arena, 0, 0, 0, 0,
-                uniformCells(0, 0, 0, 16, 16), true);
+                uniformCells(0, 0, 0, 16), true);
         PageFixture positive = regularPage(
                 arena, 1, 16, 0, 0,
-                uniformCells(16, 0, 0, 16, 4), true);
+                uniformCells(16, 0, 0, 16), true);
 
         ImplicitAirAdjacency.CompiledPairs result = compile(
                 negative.view(),
@@ -72,31 +75,10 @@ class ImplicitAirAdjacencyTest {
                         positive.view(), null, null),
                 arena);
 
-        assertEquals(16, result.operations().size());
-        assertEquals(256.0D, result.totalOpenAreaBlocksSquared(), EPSILON);
+        assertEquals(160, result.operations().size());
+        assertEquals(2_560.0D, result.totalOpenAreaBlocksSquared(), EPSILON);
         for (ThermalSweep.PairOperation operation : result.operations()) {
-            assertEquals(1.6D, operation.baseConductanceWPerK(), EPSILON);
-        }
-    }
-
-    @Test
-    void coarseEightCellFindsFourFineNeighborsOnOneInternalFace() {
-        ThermalCellArena arena = new ThermalCellArena(0);
-        PageFixture page = regularPage(
-                arena, 0, 0, 0, 0, oneCoarseOctantAndFineRemainder(), true);
-        int coarseSlot = page.span().firstSlot();
-
-        ImplicitAirAdjacency.CompiledPairs result = compile(
-                page.view(), ImplicitAirAdjacency.PositiveNeighbors.none(), arena);
-        List<ThermalSweep.PairOperation> positiveX = result.operations().stream()
-                .filter(operation -> operation.cellA() == coarseSlot)
-                .filter(operation -> arena.minimumX(operation.cellB()) == 8)
-                .toList();
-
-        assertEquals(4, positiveX.size());
-        for (ThermalSweep.PairOperation operation : positiveX) {
-            assertEquals(16.0D / 6.0D,
-                    operation.baseConductanceWPerK(), EPSILON);
+            assertEquals(4.0D, operation.baseConductanceWPerK(), EPSILON);
         }
     }
 
@@ -105,10 +87,10 @@ class ImplicitAirAdjacencyTest {
         ThermalCellArena arena = new ThermalCellArena(0);
         PageFixture owner = regularPage(
                 arena, 0, 0, 0, 0,
-                uniformCells(0, 0, 0, 16, 16), true);
+                uniformCells(0, 0, 0, 16), true);
         PageFixture neighbor = regularPage(
                 arena, 1, 16, 0, 0,
-                uniformCells(16, 0, 0, 16, 16), true);
+                uniformCells(16, 0, 0, 16), true);
         neighbor.page().recordGeometryMutation(
                 0, 0, 0, 1L, new GeometryDeltaRing(1));
 
@@ -118,13 +100,14 @@ class ImplicitAirAdjacencyTest {
                         neighbor.view(), null, null),
                 arena);
         assertTrue(frontier.ownerPublicationCurrent());
-        assertEquals(0, frontier.operations().size());
+        assertEquals(144, frontier.operations().size());
+        assertEquals(2_304.0D, frontier.totalOpenAreaBlocksSquared(), EPSILON);
         assertEquals(1, frontier.unavailablePositivePages());
 
         owner.page().recordGeometryMutation(
                 0, 0, 0, 2L, new GeometryDeltaRing(1));
         ImplicitAirAdjacency.CompiledPairs staleOwner = compile(
-                owner.view(), ImplicitAirAdjacency.PositiveNeighbors.none(), arena);
+                owner.view(), NO_POSITIVE_NEIGHBORS, arena);
         assertFalse(staleOwner.ownerPublicationCurrent());
         assertEquals(0, staleOwner.operations().size());
     }
@@ -139,7 +122,7 @@ class ImplicitAirAdjacencyTest {
         int mixedCell = arena.mixedComponentSlot(page.mixedSupportRefs()[0], 0);
 
         ImplicitAirAdjacency.CompiledPairs result = compile(
-                page.view(), ImplicitAirAdjacency.PositiveNeighbors.none(), arena);
+                page.view(), NO_POSITIVE_NEIGHBORS, arena);
         ThermalSweep.PairOperation pair = result.operations().stream()
                 .filter(operation -> operation.cellB() == mixedCell)
                 .findFirst()
@@ -164,7 +147,7 @@ class ImplicitAirAdjacencyTest {
         arena.setEnthalpyJ(left, 100.0D);
 
         ImplicitAirAdjacency.CompiledPairs result = compile(
-                page.view(), ImplicitAirAdjacency.PositiveNeighbors.none(), arena);
+                page.view(), NO_POSITIVE_NEIGHBORS, arena);
         ThermalSweep.PairOperation mixedPair = result.operations().stream()
                 .filter(operation -> operation.cellA() == left && operation.cellB() == right)
                 .findFirst()
@@ -173,8 +156,10 @@ class ImplicitAirAdjacencyTest {
         assertEquals(0.25D, mixedPair.baseConductanceWPerK(), EPSILON);
 
         double before = sumLiveEnthalpy(arena);
-        ThermalSweep sweep = new ThermalSweep(
-                arena, result.operations(), List.of(), NEUTRAL_BUOYANCY);
+        ThermalSweepFragments.Builder sweepBuilder = ThermalSweepFragments.builder(
+                arena, null, NEUTRAL_BUOYANCY, 1);
+        sweepBuilder.setAirPairs(0, result.operations());
+        ThermalSweep sweep = sweepBuilder.build();
         ThermalSweep.Result sweepResult = sweep.apply(
                 0.0D,
                 new SolveEpoch(0L, 1L, 1L, 1L, InputWatermarks.ZERO));
@@ -194,7 +179,7 @@ class ImplicitAirAdjacencyTest {
                         ConservativeAirGeometry.Face.NEGATIVE_X, 2, 1)));
 
         ImplicitAirAdjacency.CompiledPairs result = compile(
-                page.view(), ImplicitAirAdjacency.PositiveNeighbors.none(), arena);
+                page.view(), NO_POSITIVE_NEIGHBORS, arena);
 
         assertEquals(0, result.mixedPairCount());
     }
@@ -204,10 +189,10 @@ class ImplicitAirAdjacencyTest {
         ThermalCellArena arena = new ThermalCellArena(0);
         PageFixture owner = regularPage(
                 arena, 0, 0, 0, 0,
-                uniformCells(0, 0, 0, 16, 16), true);
+                uniformCells(0, 0, 0, 16), true);
         PageFixture wrongNeighbor = regularPage(
                 arena, 1, 32, 0, 0,
-                uniformCells(32, 0, 0, 16, 16), true);
+                uniformCells(32, 0, 0, 16), true);
 
         assertThrows(IllegalArgumentException.class, () ->
                 new ImplicitAirAdjacency.PageView(owner.page(), 0, 4, 0, 0));
@@ -221,28 +206,24 @@ class ImplicitAirAdjacencyTest {
     @Test
     void publishedCoverageCannotReferenceAnotherPagesArenaSupport() {
         ThermalCellArena arena = new ThermalCellArena(0);
-        ArenaSpan ownerCells = arena.allocatePageCells(
-                0,
-                1,
-                uniformCells(0, 0, 0, 16, 4),
-                0.0D,
-                0.0D);
         ArenaSpan foreign = arena.allocatePageCells(
                 1,
                 1,
-                uniformCells(16, 0, 0, 16, 16),
+                uniformCells(16, 0, 0, 16),
+                new ThermalCellArena.MixedBrickSpec[0],
+                new ThermalCellArena.MaterialPoleSpec[0],
+                new ThermalCellArena.PhaseReservoirSpec[0],
                 0.0D,
-                0.0D);
+                0.0D).cellSpan();
         ThermalPage corrupt = new ThermalPage(300L, 1L);
         assertTrue(corrupt.tryInstallGeometryBuild(
                 0L,
-                ThermalPage.FullGeometryState.uniformAllAir(
-                        foreign.firstSlot(), 0, ownerCells)));
+                regularAirState(arena, foreign, 16, 0, 0)));
         assertTrue(corrupt.tryPublishGeometry(0L, corrupt.topologyGeneration(), 0L));
 
         assertThrows(IllegalStateException.class, () -> compile(
                 new ImplicitAirAdjacency.PageView(corrupt, 0, 0, 0, 0),
-                ImplicitAirAdjacency.PositiveNeighbors.none(),
+                NO_POSITIVE_NEIGHBORS,
                 arena));
     }
 
@@ -251,13 +232,37 @@ class ImplicitAirAdjacencyTest {
             ImplicitAirAdjacency.PositiveNeighbors neighbors,
             ThermalCellArena arena
     ) {
-        return ImplicitAirAdjacency.compileOwnedPairs(
-                owner,
-                neighbors,
-                arena,
-                MIXING_W_PER_BLOCK_K,
-                MINIMUM_MIXED_DISTANCE,
-                false);
+        List<ThermalSweep.PairOperation> operations = new ArrayList<>();
+        double totalOpenArea = 0.0D;
+        int mixedPairCount = 0;
+        int unavailablePositivePages = 0;
+        boolean ownerPublicationCurrent = true;
+        for (int baseBrickIndex = 0;
+             baseBrickIndex < ThermalPage.BASE_BRICK_COUNT;
+             baseBrickIndex++) {
+            ImplicitAirAdjacency.CompiledPairs brick =
+                    ImplicitAirAdjacency.compileOwnedBrickPairs(
+                            owner,
+                            neighbors,
+                            arena,
+                            baseBrickIndex,
+                            MIXING_W_PER_BLOCK_K,
+                            MINIMUM_MIXED_DISTANCE,
+                            false);
+            operations.addAll(brick.operations());
+            totalOpenArea += brick.totalOpenAreaBlocksSquared();
+            mixedPairCount += brick.mixedPairCount();
+            unavailablePositivePages = Math.max(
+                    unavailablePositivePages,
+                    brick.unavailablePositivePages());
+            ownerPublicationCurrent &= brick.ownerPublicationCurrent();
+        }
+        return new ImplicitAirAdjacency.CompiledPairs(
+                operations,
+                totalOpenArea,
+                mixedPairCount,
+                unavailablePositivePages,
+                ownerPublicationCurrent);
     }
 
     private static PageFixture regularPage(
@@ -270,7 +275,14 @@ class ImplicitAirAdjacencyTest {
             boolean publish
     ) {
         ArenaSpan span = arena.allocatePageCells(
-                pageSlot, 1, cells, 0.0D, 0.0D);
+                pageSlot,
+                1,
+                cells,
+                new ThermalCellArena.MixedBrickSpec[0],
+                new ThermalCellArena.MaterialPoleSpec[0],
+                new ThermalCellArena.PhaseReservoirSpec[0],
+                0.0D,
+                0.0D).cellSpan();
         ThermalPage page = new ThermalPage(100L + pageSlot, 1L);
         assertTrue(page.tryInstallGeometryBuild(
                 0L, regularAirState(arena, span, minX, minY, minZ)));
@@ -314,8 +326,7 @@ class ImplicitAirAdjacencyTest {
                 regular.add(cell(
                         baseWorldX(baseIndex),
                         baseWorldY(baseIndex),
-                        baseWorldZ(baseIndex),
-                        4));
+                        baseWorldZ(baseIndex)));
             }
         }
 
@@ -324,13 +335,14 @@ class ImplicitAirAdjacencyTest {
                 1,
                 regular.toArray(ThermalCellArena.CellSpec[]::new),
                 specs,
+                new ThermalCellArena.MaterialPoleSpec[0],
+                new ThermalCellArena.PhaseReservoirSpec[0],
                 0.0D,
                 0.0D);
         int[] mixedSupports = allocation.mixedSupportRefs();
         int[] refs = new int[ThermalPage.BASE_BRICK_COUNT];
-        byte[] widths = new byte[ThermalPage.BASE_BRICK_COUNT];
         GeometrySummary[] summaries =
-                new GeometrySummary[GeometrySummaryCache.SUMMARY_COUNT];
+                new GeometrySummary[GeometrySummaryCache.BASE_SUMMARY_COUNT];
         Arrays.fill(summaries, GeometrySummary.singleAir(0));
         long mixedMask = 0L;
         for (int baseIndex = 0; baseIndex < ThermalPage.BASE_BRICK_COUNT; baseIndex++) {
@@ -343,7 +355,6 @@ class ImplicitAirAdjacencyTest {
                             baseWorldX(baseIndex),
                             baseWorldY(baseIndex),
                             baseWorldZ(baseIndex));
-            widths[baseIndex] = 4;
             if (mixedIndex >= 0) {
                 mixedMask |= 1L << baseIndex;
                 summaries[baseIndex] = GeometrySummary.mixed(
@@ -353,10 +364,8 @@ class ImplicitAirAdjacencyTest {
         ThermalPage page = new ThermalPage(100L, 1L);
         assertTrue(page.tryInstallGeometryBuild(0L, new ThermalPage.FullGeometryState(
                 refs,
-                widths,
                 summaries,
-                mixedMask,
-                allocation.cellSpan())));
+                mixedMask)));
         assertTrue(page.tryPublishGeometry(0L, page.topologyGeneration(), 0L));
         return new PageFixture(
                 page,
@@ -369,30 +378,13 @@ class ImplicitAirAdjacencyTest {
             int minX,
             int minY,
             int minZ,
-            int parentWidth,
-            int childWidth
+            int parentWidth
     ) {
         List<ThermalCellArena.CellSpec> cells = new ArrayList<>();
-        for (int y = 0; y < parentWidth; y += childWidth) {
-            for (int z = 0; z < parentWidth; z += childWidth) {
-                for (int x = 0; x < parentWidth; x += childWidth) {
-                    cells.add(cell(minX + x, minY + y, minZ + z, childWidth));
-                }
-            }
-        }
-        return cells.toArray(ThermalCellArena.CellSpec[]::new);
-    }
-
-    private static ThermalCellArena.CellSpec[] oneCoarseOctantAndFineRemainder() {
-        List<ThermalCellArena.CellSpec> cells = new ArrayList<>();
-        cells.add(cell(0, 0, 0, 8));
-        for (int y = 0; y < 16; y += 4) {
-            for (int z = 0; z < 16; z += 4) {
-                for (int x = 0; x < 16; x += 4) {
-                    if (x < 8 && y < 8 && z < 8) {
-                        continue;
-                    }
-                    cells.add(cell(x, y, z, 4));
+        for (int y = 0; y < parentWidth; y += 4) {
+            for (int z = 0; z < parentWidth; z += 4) {
+                for (int x = 0; x < parentWidth; x += 4) {
+                    cells.add(cell(minX + x, minY + y, minZ + z));
                 }
             }
         }
@@ -402,14 +394,12 @@ class ImplicitAirAdjacencyTest {
     private static ThermalCellArena.CellSpec cell(
             int minX,
             int minY,
-            int minZ,
-            int width
+            int minZ
     ) {
         return ThermalCellArena.CellSpec.regularAir(
                 minX,
                 minY,
                 minZ,
-                width,
                 0,
                 0,
                 AIR_CAPACITY_DENSITY);
@@ -423,19 +413,17 @@ class ImplicitAirAdjacencyTest {
             int pageMinZ
     ) {
         int[] refs = new int[ThermalPage.BASE_BRICK_COUNT];
-        byte[] widths = new byte[ThermalPage.BASE_BRICK_COUNT];
         for (int baseIndex = 0; baseIndex < ThermalPage.BASE_BRICK_COUNT; baseIndex++) {
             int worldX = pageMinX + baseWorldX(baseIndex);
             int worldY = pageMinY + baseWorldY(baseIndex);
             int worldZ = pageMinZ + baseWorldZ(baseIndex);
             int slot = cellCovering(arena, span, worldX, worldY, worldZ);
             refs[baseIndex] = slot;
-            widths[baseIndex] = (byte) arena.widthBlocks(slot);
         }
         GeometrySummary[] summaries =
-                new GeometrySummary[GeometrySummaryCache.SUMMARY_COUNT];
+                new GeometrySummary[GeometrySummaryCache.BASE_SUMMARY_COUNT];
         Arrays.fill(summaries, GeometrySummary.singleAir(0));
-        return new ThermalPage.FullGeometryState(refs, widths, summaries, 0L, span);
+        return new ThermalPage.FullGeometryState(refs, summaries, 0L);
     }
 
     private static int cellCovering(
@@ -446,14 +434,16 @@ class ImplicitAirAdjacencyTest {
             int worldZ
     ) {
         for (int slot = span.firstSlot(); slot < span.endSlotExclusive(); slot++) {
-            int width = arena.widthBlocks(slot);
-            if (arena.isRegularCell(slot)
+            if (arena.isLive(slot)
+                    && !arena.isMixedComponent(slot)
+                    && !arena.isMaterialPole(slot)
+                    && !arena.isPhaseReservoir(slot)
                     && worldX >= arena.minimumX(slot)
-                    && worldX < arena.minimumX(slot) + width
+                    && worldX < arena.minimumX(slot) + 4
                     && worldY >= arena.minimumY(slot)
-                    && worldY < arena.minimumY(slot) + width
+                    && worldY < arena.minimumY(slot) + 4
                     && worldZ >= arena.minimumZ(slot)
-                    && worldZ < arena.minimumZ(slot) + width) {
+                    && worldZ < arena.minimumZ(slot) + 4) {
                 return slot;
             }
         }
@@ -472,7 +462,7 @@ class ImplicitAirAdjacencyTest {
                 ComponentBrickCompiler.blockIndex(blockX, 1, 1),
                 singleMicrocell(microX, apertureY, apertureZ));
         ComponentBrickCompiler.Compilation compilation =
-                ComponentBrickCompiler.compile(blocks, 4, 0);
+                ComponentBrickCompiler.compile(blocks, 4);
         assertEquals(ComponentBrickCompiler.Status.RESOLVED, compilation.status());
         return compilation.brick().orElseThrow();
     }

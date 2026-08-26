@@ -163,29 +163,6 @@ public final class MaterialBoundaryRegistry {
             }
         }
 
-        public static Profile stateless(int id, double wallConductanceWPerK) {
-            return new Profile(
-                    id, Model.STATELESS_CONDUCTANCE, wallConductanceWPerK,
-                    0.0D, 0.0D, 0.0D, 0.0D,
-                    0.0D, 0.0D, 0.0D,
-                    false, 0.0D, 0.0D,
-                    TransitionMutationPolicy.NONE, TransitionAction.NONE);
-        }
-
-        public static Profile capacitiveSurface(
-                int id,
-                double faceConductanceWPerK,
-                double surfaceCapacityJPerK,
-                double initialTemperatureC
-        ) {
-            return new Profile(
-                    id, Model.CAPACITIVE_SURFACE, faceConductanceWPerK,
-                    surfaceCapacityJPerK, 0.0D, 0.0D, 0.0D,
-                    initialTemperatureC, 0.0D, 0.0D,
-                    false, 0.0D, 0.0D,
-                    TransitionMutationPolicy.NONE, TransitionAction.NONE);
-        }
-
         /** Creates a gameplay surface initialized from its Page's natural air. */
         public static Profile capacitiveSurfaceAtNaturalTemperature(
                 int id,
@@ -197,26 +174,6 @@ public final class MaterialBoundaryRegistry {
                     surfaceCapacityJPerK, 0.0D, 0.0D, 0.0D,
                     0.0D, 0.0D, 0.0D,
                     true, 0.0D, 0.0D,
-                    TransitionMutationPolicy.NONE, TransitionAction.NONE);
-        }
-
-        public static Profile naturalRock(
-                int id,
-                double faceConductanceWPerK,
-                double surfaceCapacityJPerK,
-                double deepConductanceWPerK,
-                double deepCapacityJPerK,
-                double naturalConductanceWPerK,
-                double naturalTemperatureAtY0C,
-                double geothermalGradientCPerBlock
-        ) {
-            return new Profile(
-                    id, Model.NATURAL_ROCK, faceConductanceWPerK,
-                    surfaceCapacityJPerK, deepConductanceWPerK,
-                    deepCapacityJPerK, naturalConductanceWPerK,
-                    naturalTemperatureAtY0C, naturalTemperatureAtY0C,
-                    geothermalGradientCPerBlock,
-                    false, 0.0D, 0.0D,
                     TransitionMutationPolicy.NONE, TransitionAction.NONE);
         }
 
@@ -287,16 +244,6 @@ public final class MaterialBoundaryRegistry {
 
     public int contactPatternCount() {
         return contactPatterns.size();
-    }
-
-    public int phaseProfileCount() {
-        int count = 0;
-        for (Profile profile : profiles.values()) {
-            if (profile.model() == Model.PHASE_RESERVOIR) {
-                count++;
-            }
-        }
-        return count;
     }
 
     private static Map<Integer, Profile> indexProfiles(List<Profile> values) {

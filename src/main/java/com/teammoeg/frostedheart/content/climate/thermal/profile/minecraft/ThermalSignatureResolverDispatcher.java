@@ -14,8 +14,6 @@ import com.teammoeg.frostedheart.content.climate.thermal.profile.DependencyOffse
 import com.teammoeg.frostedheart.content.climate.thermal.profile.ResolvedThermalSignature;
 import com.teammoeg.frostedheart.content.climate.thermal.profile.ResolverBlockView;
 import com.teammoeg.frostedheart.content.climate.thermal.profile.ThermalResolution;
-import com.teammoeg.frostedheart.content.climate.thermal.profile.ThermalSignatureRegistry;
-import com.teammoeg.frostedheart.content.climate.thermal.profile.ThermalSignatureResolution;
 import com.teammoeg.frostedheart.content.climate.thermal.profile.ThermalSignatureResolver;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.block.Block;
@@ -25,7 +23,6 @@ import net.minecraft.world.level.material.FluidState;
 
 import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.TreeMap;
@@ -41,18 +38,15 @@ public final class ThermalSignatureResolverDispatcher {
     private final RegisteredResolver genericStateStatic;
     private final Map<Block, RegisteredResolver> explicitOverrides;
     private final Map<Block, RegisteredResolver> contextualResolvers;
-    private final List<String> resolverIds;
 
     private ThermalSignatureResolverDispatcher(
             RegisteredResolver genericStateStatic,
             Map<Block, RegisteredResolver> explicitOverrides,
-            Map<Block, RegisteredResolver> contextualResolvers,
-            List<String> resolverIds
+            Map<Block, RegisteredResolver> contextualResolvers
     ) {
         this.genericStateStatic = genericStateStatic;
         this.explicitOverrides = Map.copyOf(explicitOverrides);
         this.contextualResolvers = Map.copyOf(contextualResolvers);
-        this.resolverIds = List.copyOf(resolverIds);
     }
 
     public static Builder builder(StateStaticThermalResolver genericStateStatic) {
@@ -80,19 +74,6 @@ public final class ThermalSignatureResolverDispatcher {
         }
 
         return DispatchPlan.unregistered(ThermalResolution.Reason.NOT_REGISTERED);
-    }
-
-    /** Canonical resolver IDs in deterministic lexical order. */
-    public List<String> resolverIds() {
-        return resolverIds;
-    }
-
-    public int explicitOverrideCount() {
-        return explicitOverrides.size();
-    }
-
-    public int contextualResolverCount() {
-        return contextualResolvers.size();
     }
 
     public enum Route {
@@ -168,10 +149,6 @@ public final class ThermalSignatureResolverDispatcher {
             return maxOutputRegions;
         }
 
-        public boolean isRegistered() {
-            return resolver != null;
-        }
-
         /** Resolves through the audited snapshot API without interning a signature. */
         public ThermalResolution<ResolvedThermalSignature> resolve(
                 ResolverBlockView<BlockState, FluidState> snapshot
@@ -182,14 +159,6 @@ public final class ThermalSignatureResolverDispatcher {
                     : resolver.resolveSnapshot(snapshot);
         }
 
-        /** Resolves through the audited snapshot API and publishes only an int signature ID. */
-        public ThermalSignatureResolution resolveAndIntern(
-                ResolverBlockView<BlockState, FluidState> snapshot,
-                ThermalSignatureRegistry.Builder signatureRegistry
-        ) {
-            Objects.requireNonNull(signatureRegistry, "signatureRegistry");
-            return signatureRegistry.internResolution(resolve(snapshot));
-        }
     }
 
     /** Builder is main-thread confined; built dispatchers are immutable snapshots. */
@@ -238,8 +207,7 @@ public final class ThermalSignatureResolverDispatcher {
             return new ThermalSignatureResolverDispatcher(
                     genericStateStatic,
                     explicitOverrides,
-                    contextualResolvers,
-                    List.copyOf(resolversById.keySet())
+                    contextualResolvers
             );
         }
 

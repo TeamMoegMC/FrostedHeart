@@ -31,7 +31,6 @@ class ConservativeAirGeometryTest {
         assertEquals(1, resolution.components().size());
         ConservativeAirGeometry.AirComponent component = resolution.components().get(0);
         assertEquals(64, component.microcellCount());
-        assertEquals(1.0D, component.provenAirVolume());
         for (ConservativeAirGeometry.Face face : ConservativeAirGeometry.Face.values()) {
             assertEquals(ConservativeAirGeometry.FULL_FACE_MASK, component.faceMask(face));
         }

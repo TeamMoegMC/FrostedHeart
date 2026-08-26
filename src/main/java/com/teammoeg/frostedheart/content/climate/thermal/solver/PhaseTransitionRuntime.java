@@ -38,9 +38,6 @@ public final class PhaseTransitionRuntime {
 
     private long nextRequestSequence;
     private long appliedAckWatermark;
-    private long requestRetryCount;
-    private long ackRetryCount;
-    private double committedTransitionEnergyJ;
 
     public PhaseTransitionRuntime(
             ThermalCellArena arena,
@@ -118,12 +115,10 @@ public final class PhaseTransitionRuntime {
                 if (ack.outcome == AckOutcome.RETRY) {
                     arena.retryPhaseRequest(slot, ack.requestSequence);
                 } else {
-                    double committed = arena.completePhaseRequest(
+                    arena.completePhaseRequest(
                             slot,
                             ack.requestSequence,
                             ack.outcome == AckOutcome.APPLIED);
-                    committedTransitionEnergyJ = finiteSum(
-                            committedTransitionEnergyJ, committed);
                 }
             }
             appliedAckWatermark = ack.watermark;
@@ -154,7 +149,6 @@ public final class PhaseTransitionRuntime {
         if (!pendingAcks.retain(request, outcome)) {
             throw new IllegalStateException("phase ACK sticky table exhausted");
         }
-        ackRetryCount++;
     }
 
     /** Main-thread retry of retained ACK outcomes. */
@@ -164,22 +158,6 @@ public final class PhaseTransitionRuntime {
 
     public long latestOfferedAckWatermark() {
         return acks.latestOfferedWatermark();
-    }
-
-    public long appliedAckWatermark() {
-        return appliedAckWatermark;
-    }
-
-    public long requestRetryCount() {
-        return requestRetryCount;
-    }
-
-    public long ackRetryCount() {
-        return ackRetryCount;
-    }
-
-    public double committedTransitionEnergyJ() {
-        return committedTransitionEnergyJ;
     }
 
     private void reserveOrRetry(int phaseSlot) {
@@ -201,8 +179,6 @@ public final class PhaseTransitionRuntime {
         if (requests.offer(arena, phaseSlot)) {
             arena.markPhaseRequestEnqueued(
                     phaseSlot, arena.phaseRequestSequence(phaseSlot));
-        } else {
-            requestRetryCount++;
         }
     }
 
@@ -237,14 +213,6 @@ public final class PhaseTransitionRuntime {
                 && arena.phaseProfileId(slot) == profileId;
     }
 
-    private static double finiteSum(double first, double second) {
-        double result = first + second;
-        if (!Double.isFinite(result)) {
-            throw new IllegalStateException("phase energy ledger is not finite");
-        }
-        return result;
-    }
-
     /** Caller-owned request transported from worker to main. */
     public static final class MutableRequest {
         private int fastSlot;
@@ -255,10 +223,6 @@ public final class PhaseTransitionRuntime {
         private int profileId;
         private int candidateBit;
         private long requestSequence;
-
-        public int fastSlot() {
-            return fastSlot;
-        }
 
         public int lifecycleGeneration() {
             return lifecycleGeneration;
@@ -280,10 +244,6 @@ public final class PhaseTransitionRuntime {
             return profileId;
         }
 
-        public int candidateBit() {
-            return candidateBit;
-        }
-
         public int blockX() {
             return brickMinX + (candidateBit & 3);
         }
@@ -294,10 +254,6 @@ public final class PhaseTransitionRuntime {
 
         public int blockZ() {
             return brickMinZ + ((candidateBit >>> 2) & 3);
-        }
-
-        public long requestSequence() {
-            return requestSequence;
         }
 
         private void set(

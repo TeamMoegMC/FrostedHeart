@@ -75,16 +75,6 @@ public final class ThermalSignatureRegistry {
             return id;
         }
 
-        public ThermalSignatureResolution internResolution(
-                ThermalResolution<ResolvedThermalSignature> resolution
-        ) {
-            Objects.requireNonNull(resolution, "resolution");
-            if (!resolution.isResolved()) {
-                return ThermalSignatureResolution.failure(resolution);
-            }
-            return ThermalSignatureResolution.resolved(intern(resolution.value().orElseThrow()));
-        }
-
         public int signatureCount() {
             return signatures.size();
         }

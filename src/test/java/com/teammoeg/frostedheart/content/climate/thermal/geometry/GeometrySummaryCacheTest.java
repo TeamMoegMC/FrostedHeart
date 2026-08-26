@@ -17,49 +17,28 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class GeometrySummaryCacheTest {
     @Test
-    void fixedLayoutContainsSixtyFourBricksEightOctantsAndOneSection() {
-        assertEquals(73, GeometrySummaryCache.SUMMARY_COUNT);
+    void fixedLayoutContainsSixtyFourBrickSummaries() {
+        assertEquals(64, GeometrySummaryCache.BASE_SUMMARY_COUNT);
         assertEquals(0, GeometrySummaryCache.baseIndex(0, 0, 0));
         assertEquals(1, GeometrySummaryCache.baseIndex(4, 0, 0));
         assertEquals(4, GeometrySummaryCache.baseIndex(0, 0, 4));
         assertEquals(16, GeometrySummaryCache.baseIndex(0, 4, 0));
         assertEquals(63, GeometrySummaryCache.baseIndex(15, 15, 15));
-        assertEquals(0, GeometrySummaryCache.octantIndexForBase(0));
-        assertEquals(7, GeometrySummaryCache.octantIndexForBase(63));
-        assertEquals(63, GeometrySummaryCache.brickVoxelIndex(3, 3, 3));
     }
 
     @Test
-    void cheapAllAirProofAndTargetedInvalidationMaintainCachedAncestors() {
+    void targetedInvalidationChangesOnlyOneBrick() {
         GeometrySummaryCache cache = new GeometrySummaryCache();
-        cache.installAllAirProof(7);
-
-        for (int index = 0; index < GeometrySummaryCache.SUMMARY_COUNT; index++) {
-            assertEquals(GeometrySummary.singleAir(7), cache.summary(index));
+        for (int index = 0; index < GeometrySummaryCache.BASE_SUMMARY_COUNT; index++) {
+            cache.setBaseSummary(index, GeometrySummary.singleAir(7));
         }
 
         cache.invalidateBaseBrick(63);
 
-        assertEquals(GeometrySummary.Kind.UNKNOWN, cache.baseSummary(63).kind());
-        assertEquals(GeometrySummary.Kind.UNKNOWN, cache.octantSummary(7).kind());
-        assertEquals(GeometrySummary.Kind.UNKNOWN, cache.sectionSummary().kind());
-        assertEquals(GeometrySummary.singleAir(7), cache.baseSummary(62));
-        assertEquals(GeometrySummary.singleAir(7), cache.octantSummary(0));
-
+        assertEquals(GeometrySummary.Kind.UNKNOWN, cache.summary(63).kind());
+        assertEquals(GeometrySummary.singleAir(7), cache.summary(62));
         cache.setBaseSummary(63, GeometrySummary.singleAir(7));
-        assertEquals(GeometrySummary.singleAir(7), cache.octantSummary(7));
-        assertEquals(GeometrySummary.singleAir(7), cache.sectionSummary());
-    }
-
-    @Test
-    void incompatibleChildPreventsCoarseHomogeneousProof() {
-        GeometrySummaryCache cache = new GeometrySummaryCache();
-        cache.installAllAirProof(1);
-
-        cache.setBaseSummary(0, GeometrySummary.singleMedium(2));
-
-        assertEquals(GeometrySummary.Kind.MIXED, cache.octantSummary(0).kind());
-        assertEquals(GeometrySummary.Kind.MIXED, cache.sectionSummary().kind());
+        assertEquals(GeometrySummary.singleAir(7), cache.summary(63));
     }
 
     @Test

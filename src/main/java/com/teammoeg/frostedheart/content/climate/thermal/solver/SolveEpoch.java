@@ -61,25 +61,7 @@ public record SolveEpoch(
         return durationTicks() / TICKS_PER_SECOND;
     }
 
-    /** Spatially adjacent cells may exchange only when this identity matches. */
-    public boolean sameThermalInterval(SolveEpoch other) {
-        return other != null
-                && previousTick == other.previousTick
-                && targetTick == other.targetTick
-                && epochId == other.epochId
-                && dimensionGeneration == other.dimensionGeneration;
-    }
-
-    public boolean inputsSatisfiedBy(
-            long appliedDimensionGeneration,
-            InputWatermarks appliedWatermarks
-    ) {
-        return appliedDimensionGeneration == dimensionGeneration
-                && appliedWatermarks != null
-                && appliedWatermarks.covers(sealedWatermarks);
-    }
-
-    /** Checks streams that must already be applied before source replay starts. */
+    /** Checks streams that must already be applied before source integration starts. */
     public boolean nonSourceInputsSatisfiedBy(
             long appliedDimensionGeneration,
             InputWatermarks appliedWatermarks
@@ -89,23 +71,7 @@ public record SolveEpoch(
                 && appliedWatermarks.coversNonSourceStreams(sealedWatermarks);
     }
 
-    public long geometryWatermark() {
-        return sealedWatermarks.geometry();
-    }
-
     public long sourceWatermark() {
         return sealedWatermarks.source();
-    }
-
-    public long chunkWatermark() {
-        return sealedWatermarks.chunk();
-    }
-
-    public long profileWatermark() {
-        return sealedWatermarks.profile();
-    }
-
-    public long transitionAckWatermark() {
-        return sealedWatermarks.transitionAck();
     }
 }

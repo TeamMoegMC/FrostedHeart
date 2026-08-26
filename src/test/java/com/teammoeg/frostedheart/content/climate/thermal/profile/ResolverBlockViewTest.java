@@ -17,7 +17,6 @@ import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -51,15 +50,7 @@ class ResolverBlockViewTest {
                 access.lookup(NORTH).status());
         assertEquals(ResolverBlockView.LookupStatus.OUTSIDE_DECLARED_MASK,
                 access.lookup(2, 0, 0).status());
-        assertEquals(1, snapshot.presentCellCount());
-        assertFalse(snapshot.isComplete());
-        assertEquals(3, access.uniqueReadCount());
-        assertEquals(java.util.Set.of(DependencyOffsetMask.SELF, EAST, WEST),
-                access.uniqueReads());
         access.lookup(EAST);
-        assertEquals(3, access.uniqueReadCount());
-        assertThrows(UnsupportedOperationException.class,
-                () -> access.uniqueReads().add(NORTH));
     }
 
     @Test
@@ -136,9 +127,11 @@ class ResolverBlockViewTest {
         ResolverBlockView<String, String> snapshot = ResolverBlockView.snapshot(
                 DependencyOffsetMask.NEIGHBOR_6, cells);
 
-        assertTrue(snapshot.isComplete());
-        assertEquals(7, snapshot.presentCellCount());
-        assertTrue(snapshot.openAccess().firstFailure().isEmpty());
+        ResolverBlockView.Access<String, String> access = snapshot.openAccess();
+        for (DependencyOffsetMask.Offset offset : DependencyOffsetMask.NEIGHBOR_6.offsets()) {
+            assertEquals(ResolverBlockView.LookupStatus.PRESENT, access.lookup(offset).status());
+        }
+        assertTrue(access.normalize(ThermalResolution.resolved("complete")).isResolved());
     }
 
     private static ThermalSignatureResolver<String, String> resolver(

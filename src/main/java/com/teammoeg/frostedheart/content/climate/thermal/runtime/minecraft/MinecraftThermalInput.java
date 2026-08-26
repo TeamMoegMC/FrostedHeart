@@ -33,13 +33,13 @@ import com.teammoeg.frostedheart.content.climate.thermal.query.QueryPublication;
 import com.teammoeg.frostedheart.content.climate.thermal.radiation.RadiationService;
 import com.teammoeg.frostedheart.content.climate.thermal.runtime.DimensionThermalRuntime;
 import com.teammoeg.frostedheart.content.climate.thermal.runtime.ThermalMemoryBudget;
-import com.teammoeg.frostedheart.content.climate.thermal.runtime.ThermalRuntimeCoordinator;
 import com.teammoeg.frostedheart.content.climate.thermal.solver.BuoyancyConductance;
 import com.teammoeg.frostedheart.content.climate.thermal.solver.InputWatermarks;
 import com.teammoeg.frostedheart.content.climate.thermal.solver.LatestSolveEpochScheduler;
 import com.teammoeg.frostedheart.content.climate.thermal.solver.PhaseTransitionRuntime;
 import com.teammoeg.frostedheart.content.climate.thermal.solver.SealedInputFrame;
 import com.teammoeg.frostedheart.content.climate.thermal.solver.ThermalSweep;
+import com.teammoeg.frostedheart.content.climate.thermal.solver.ThermalSweepFragments;
 import com.teammoeg.frostedheart.content.climate.thermal.solver.ThermalTimePolicy;
 import com.teammoeg.frostedheart.content.climate.thermal.source.NodePowerAccumulatorArena;
 import com.teammoeg.frostedheart.content.climate.thermal.source.ThermalSourceRegistry;
@@ -94,7 +94,7 @@ import java.util.concurrent.atomic.AtomicLong;
  *   owner lookup -> page invalidation -> loaded-only resolve -> primitive event
  * tick end
  *   seal page deltas -> seal five stream watermarks
- *   -> dispatch executor -> topology -> coordinator
+ *   -> serial dispatch executor -> topology -> dimension runtime
  * </pre>
  *
  * <p>Tests may construct this class explicitly. Normal gameplay starts it on
@@ -111,12 +111,13 @@ public final class MinecraftThermalInput implements AutoCloseable {
     public static final int QUERY_RADIATION_UNAVAILABLE = 1 << 6;
     public static final int QUERY_RADIATION_BUDGET_LIMITED = 1 << 7;
     public static final int QUERY_RADIATION_UNRESOLVED = 1 << 8;
-    public static final int QUERY_SURFACE_UNAVAILABLE = 1 << 9;
     public static final int QUERY_PARTIAL_REGION = 1 << 10;
     public static final int QUERY_ANALYTIC_FIELD_APPLIED = 1 << 11;
     private static final int MAX_PUBLICATION_AGE_TICKS = 40;
     private static final long GAMEPLAY_SOLVE_INTERVAL_TICKS = 5L;
     private static final long GEOMETRY_REBUILD_DELAY_TICKS = 5L;
+    private static final int DEFERRED_BLOCK_WORD_COUNT =
+            ResolvedGeometryInputRing.BLOCKS_PER_PAGE / Long.SIZE;
     private static final int GAMEPLAY_INITIAL_PUBLICATION_CAPACITY = 256;
     private static final int GAMEPLAY_MAX_ACTIVE_CELLS = 65_536;
     private static final double GAMEPLAY_PHASE_FACE_CONDUCTANCE_W_PER_K = 20.0D;
@@ -150,7 +151,6 @@ public final class MinecraftThermalInput implements AutoCloseable {
             MaterialBoundaryRegistry.empty();
     private static Map<BlockState, Integer> gameplayPhaseProfileIds = Map.of();
     private static long gameplayProfileWatermark;
-    private static ThermalRuntimeCoordinator gameplayCoordinator;
     private static final int WITNESS_RADIUS_SECTIONS = 1;
     private static final int[][] PHASE_NEIGHBOR_OFFSETS = {
             {-1, 0, 0}, {1, 0, 0},
@@ -308,26 +308,11 @@ public final class MinecraftThermalInput implements AutoCloseable {
         for (FarFieldProfileRegistry.EnvironmentClass environment
                 : FarFieldProfileRegistry.EnvironmentClass.values()) {
             profiles.add(new FarFieldProfileRegistry.Profile(
-                    new FarFieldProfileRegistry.Key(
-                            0,
-                            FarFieldProfileRegistry.OpeningClass.MULTI_FACE,
-                            2,
-                            FarFieldProfileRegistry.Orientation.HORIZONTAL,
-                            FarFieldProfileRegistry.WindBucket.CALM,
-                            environment,
-                            FarFieldProfileRegistry.TopologyClass.OPEN_SPACE),
+                    environment,
                     7_747.2298793470545D,
                     new FarFieldProfileRegistry.ApplicabilityDomain(
                             GAMEPLAY_FAR_FIELD_CALIBRATION_POWER_W,
-                            129.16666666663735D),
-                    new FarFieldProfileRegistry.ErrorEnvelope(
-                            0.16517194488763387D,
-                            0.2366395779158843D,
-                            false,
-                            -136_677.9249348715D,
-                            -136_677.9249348715D,
-                            4.129298622190845D),
-                    FarFieldProfileRegistry.Approval.APPROVED_STATIC_IMPEDANCE));
+                            129.16666666663735D)));
         }
         return new FarFieldProfileRegistry(profiles);
     }
@@ -352,10 +337,11 @@ public final class MinecraftThermalInput implements AutoCloseable {
     private final IdentityHashMap<LevelChunkSection, SectionOwner> ownersByIdentity =
             new IdentityHashMap<>();
     private final IdentityHashMap<ThermalPage, Boolean> dirtyPages = new IdentityHashMap<>();
-    private final AtomicBoolean offThreadResyncPending = new AtomicBoolean();
+    private final AtomicBoolean fullResyncRetryPending = new AtomicBoolean();
     private final AtomicBoolean urgentSolvePending = new AtomicBoolean(true);
     private final AtomicLong geometryRebuildDeadlineTick =
             new AtomicLong(Long.MAX_VALUE);
+    private final AtomicLong deferredBlockMutationRevision = new AtomicLong();
     private final AtomicLong nextSectionGeneration = new AtomicLong();
     private final ThermalPage.MutableCoverageQuery environmentCoverageScratch =
             new ThermalPage.MutableCoverageQuery();
@@ -378,6 +364,7 @@ public final class MinecraftThermalInput implements AutoCloseable {
     private long lastSealedTick;
     private long releasedGeometryWatermark;
     private long nextNaturalTemperatureRefreshTick;
+    private long drainedDeferredBlockMutationRevision;
     private volatile boolean closed;
     private MinecraftThermalTopologyApplier topologyApplier;
     private MinecraftPhaseTransitionHandler customPhaseTransitionHandler =
@@ -388,7 +375,6 @@ public final class MinecraftThermalInput implements AutoCloseable {
     private MinecraftPhysicalSourceManager physicalSources;
     private MinecraftRadiationOcclusion radiationOcclusion;
     private RadiationService radiation;
-    private ThermalRuntimeCoordinator dispatchCoordinator;
     private Executor dispatchExecutor;
 
     public MinecraftThermalInput(
@@ -430,47 +416,6 @@ public final class MinecraftThermalInput implements AutoCloseable {
         nextNaturalTemperatureRefreshTick = lastSealedTick;
     }
 
-    /**
-     * Admits one section only when Minecraft already proves it contains air.
-     * No cold scan or chunk load is performed.
-     */
-    public ThermalPage admitAllAirPage(
-            LevelChunk chunk,
-            int sectionIndex,
-            int supportRef,
-            int airMediumId
-    ) {
-        requireMainThread();
-        requireOpen();
-        Objects.requireNonNull(chunk, "chunk");
-        if (chunk.getLevel() != level
-                || sectionIndex < 0
-                || sectionIndex >= chunk.getSections().length) {
-            throw new IllegalArgumentException("chunk section does not belong to this level");
-        }
-        LevelChunkSection section = chunk.getSections()[sectionIndex];
-        if (!section.hasOnlyAir()) {
-            return null;
-        }
-        int sectionY = chunk.getSectionYFromSectionIndex(sectionIndex);
-        long sectionKey = SectionPos.asLong(chunk.getPos().x, sectionY, chunk.getPos().z);
-        if (pages.containsKey(sectionKey)) {
-            throw new IllegalStateException("thermal page is already admitted");
-        }
-        long lifecycleGeneration = nextSectionGeneration.incrementAndGet();
-        ThermalPage page = ThermalPage.allAir(
-                sectionKey, lifecycleGeneration, supportRef, airMediumId);
-        pages.put(sectionKey, page);
-        adjustWitnesses(chunk.getPos().x, sectionY, chunk.getPos().z, 1);
-        refreshNearbyOwnerPageViews(chunk.getPos().x, sectionY, chunk.getPos().z);
-        chunkWatermark = Math.incrementExact(chunkWatermark);
-        if (topologyApplier != null) {
-            topologyApplier.registerAllAirPage(page, chunkWatermark);
-        }
-        requestUrgentSolve();
-        return page;
-    }
-
     public boolean withdrawPage(long sectionKey) {
         requireMainThread();
         requireOpen();
@@ -498,18 +443,7 @@ public final class MinecraftThermalInput implements AutoCloseable {
         return true;
     }
 
-    /** Freezes the current main-thread cut and offers it to the PR7 runtime. */
-    public SealReport sealTick(long effectiveTick) {
-        SealReport report = sealTick(effectiveTick, false, false, true);
-        if (report.runtimeResult() == LatestSolveEpochScheduler.SealResult.ACCEPTED
-                || report.runtimeResult()
-                == LatestSolveEpochScheduler.SealResult.DUPLICATE) {
-            geometryRebuildDeadlineTick.set(Long.MAX_VALUE);
-        }
-        return report;
-    }
-
-    private SealReport sealTick(
+    private LatestSolveEpochScheduler.SealResult sealTick(
             long effectiveTick,
             boolean urgent,
             boolean mainThreadInputsPrepared,
@@ -524,23 +458,24 @@ public final class MinecraftThermalInput implements AutoCloseable {
             refreshNaturalTemperatures(effectiveTick);
             processPhaseTransitions();
         }
+        if (releaseGeometry) {
+            drainDeferredBlockMutations(effectiveTick);
+        }
         if (physicalSources != null) {
             physicalSources.flush(effectiveTick);
         }
-        if (releaseGeometry && offThreadResyncPending.getAndSet(false)) {
+        if (releaseGeometry && fullResyncRetryPending.getAndSet(false)) {
             for (ThermalPage page : pages.values()) {
-                dirtyPages.put(page, Boolean.TRUE);
+                if (page.fullGeometryResyncRequired()) {
+                    dirtyPages.put(page, Boolean.TRUE);
+                }
             }
         }
 
-        int sealedDeltas = 0;
-        int resyncPages = 0;
         if (releaseGeometry) {
             for (ThermalPage page : List.copyOf(dirtyPages.keySet())) {
-                var sealed = page.sealGeometryDeltas(geometryDeltas);
-                sealedDeltas += sealed.offeredDeltas();
+                page.sealGeometryDeltas(geometryDeltas);
                 if (page.fullGeometryResyncRequired()) {
-                    resyncPages++;
                     ThermalPage.GeometryResyncToken token = page.beginFullGeometryResync();
                     if (token != null) {
                         if (!resolvedInputs.canOfferFullResync()
@@ -551,7 +486,7 @@ public final class MinecraftThermalInput implements AutoCloseable {
                                         effectiveTick,
                                         token.reason(),
                                         captureFullPageSnapshot(page))) {
-                            offThreadResyncPending.set(true);
+                            fullResyncRetryPending.set(true);
                         }
                     }
                 }
@@ -578,12 +513,12 @@ public final class MinecraftThermalInput implements AutoCloseable {
                 releasedGeometryWatermark = watermarks.geometry();
             }
         }
-        if (dispatchCoordinator != null
+        if (dispatchExecutor != null
                 && (result == LatestSolveEpochScheduler.SealResult.ACCEPTED
                 || result == LatestSolveEpochScheduler.SealResult.DUPLICATE)) {
             submitDispatch(frame);
         }
-        return new SealReport(frame, result, sealedDeltas, resyncPages);
+        return result;
     }
 
     private void sealGameplayTick(long effectiveTick) {
@@ -603,12 +538,15 @@ public final class MinecraftThermalInput implements AutoCloseable {
                 || effectiveTick - lastSealedTick < GAMEPLAY_SOLVE_INTERVAL_TICKS)) {
             return;
         }
-        SealReport report = sealTick(effectiveTick, urgent, true, geometryDue);
-        boolean accepted = report.runtimeResult()
-                == LatestSolveEpochScheduler.SealResult.ACCEPTED
-                || report.runtimeResult() == LatestSolveEpochScheduler.SealResult.DUPLICATE;
+        LatestSolveEpochScheduler.SealResult result =
+                sealTick(effectiveTick, urgent, true, geometryDue);
+        boolean accepted = result == LatestSolveEpochScheduler.SealResult.ACCEPTED
+                || result == LatestSolveEpochScheduler.SealResult.DUPLICATE;
         if (geometryDue && accepted) {
-            geometryRebuildDeadlineTick.compareAndSet(geometryDeadline, Long.MAX_VALUE);
+            if (geometryRebuildDeadlineTick.compareAndSet(
+                    geometryDeadline, Long.MAX_VALUE)) {
+                reschedulePendingGeometry(effectiveTick);
+            }
         }
         if (!accepted && urgent) {
             urgentSolvePending.set(true);
@@ -620,47 +558,27 @@ public final class MinecraftThermalInput implements AutoCloseable {
         geometryRebuildDeadlineTick.accumulateAndGet(deadline, Math::min);
     }
 
+    private void reschedulePendingGeometry(long effectiveTick) {
+        if (fullResyncRetryPending.get()
+                || deferredBlockMutationRevision.get()
+                != drainedDeferredBlockMutationRevision) {
+            scheduleGeometryRebuild(effectiveTick);
+        }
+    }
+
     void requestUrgentSolve() {
         urgentSolvePending.set(true);
-    }
-
-    public GeometryDeltaRing geometryDeltas() {
-        return geometryDeltas;
-    }
-
-    public ResolvedGeometryInputRing resolvedInputs() {
-        return resolvedInputs;
     }
 
     /** Enables the concrete applier without changing tick-end or gameplay authority. */
     public void enableTopologyApplication(
             MinecraftThermalTopologyApplier.Parameters parameters
     ) {
-        enableTopologyApplication(parameters, MaterialBoundaryRegistry.empty());
-    }
-
-    /** Enables topology plus one immutable worker-safe material profile cut. */
-    public void enableTopologyApplication(
-            MinecraftThermalTopologyApplier.Parameters parameters,
-            MaterialBoundaryRegistry materialBoundaries
-    ) {
         enableTopologyApplication(
                 parameters,
-                materialBoundaries,
-                MinecraftPhaseTransitionHandler.rejectCustomActions());
-    }
-
-    /** Enables built-in snow/ice mutations plus one optional modded handler. */
-    public void enableTopologyApplication(
-            MinecraftThermalTopologyApplier.Parameters parameters,
-            MaterialBoundaryRegistry materialBoundaries,
-            MinecraftPhaseTransitionHandler customPhaseTransitionHandler
-    ) {
-        enableTopologyApplication(
-                parameters,
-                materialBoundaries,
+                MaterialBoundaryRegistry.empty(),
                 MinecraftThermalTopologyApplier.FarFieldSettings.disabled(),
-                customPhaseTransitionHandler);
+                MinecraftPhaseTransitionHandler.rejectCustomActions());
     }
 
     /** Enables calibrated open-space FarField boundaries. */
@@ -693,40 +611,28 @@ public final class MinecraftThermalInput implements AutoCloseable {
         this.customPhaseTransitionHandler = Objects.requireNonNull(
                 customPhaseTransitionHandler, "customPhaseTransitionHandler");
         maximumPhaseMutationsPerTick = parameters.maximumPhaseMutationsPerTick();
-        for (ThermalPage page : pages.values()) {
-            topologyApplier.registerAllAirPage(page, chunkWatermark);
-        }
     }
 
     /**
-     * Connects tick sealing to the shared coordinator. The executor is the
-     * scheduling boundary for a future worker connection; it must execute tasks
-     * serially, in submission order, and without overlap for this input.
+     * Connects tick sealing to one serial execution boundary. Tasks for this
+     * input must execute in submission order and without overlap.
      */
-    public void enableDispatch(
-            ThermalRuntimeCoordinator coordinator,
-            Executor serialExecutor
-    ) {
+    public void enableDispatch(Executor serialExecutor) {
         requireMainThread();
         requireOpen();
-        Objects.requireNonNull(coordinator, "coordinator");
         Objects.requireNonNull(serialExecutor, "serialExecutor");
         if (topologyApplier == null) {
             throw new IllegalStateException(
                     "topology application must be enabled before dispatch");
         }
-        if (dispatchCoordinator != null) {
+        if (dispatchExecutor != null) {
             throw new IllegalStateException("Minecraft thermal dispatch is enabled");
         }
-        if (!coordinator.register(runtime)) {
-            throw new IllegalStateException("dimension runtime could not be registered");
-        }
-        dispatchCoordinator = coordinator;
         dispatchExecutor = serialExecutor;
     }
 
     /** Enables the two frozen physical source producers without gameplay authority. */
-    public MinecraftPhysicalSourceManager enablePhysicalSources(
+    void enablePhysicalSources(
             int maximumColdSourcePages
     ) {
         requireMainThread();
@@ -740,7 +646,6 @@ public final class MinecraftThermalInput implements AutoCloseable {
         }
         physicalSources = new MinecraftPhysicalSourceManager(
                 this, runtime.sourceTimeline(), maximumColdSourcePages);
-        return physicalSources;
     }
 
     /** Enables the optional, read-only Phase J receiver service. */
@@ -768,28 +673,6 @@ public final class MinecraftThermalInput implements AutoCloseable {
             physicalSources.replayRadiationSources();
         }
         return true;
-    }
-
-    public void sampleRadiation(
-            long receiverKey,
-            int receiverGeneration,
-            double receiverX,
-            double receiverFeetY,
-            double receiverZ,
-            RadiationService.MutableSample out
-    ) {
-        requireMainThread();
-        requireOpen();
-        if (radiation == null) {
-            throw new IllegalStateException("Minecraft radiation is disabled");
-        }
-        radiation.samplePlayer(
-                receiverKey,
-                receiverGeneration,
-                receiverX,
-                receiverFeetY,
-                receiverZ,
-                out);
     }
 
     /**
@@ -1249,11 +1132,6 @@ public final class MinecraftThermalInput implements AutoCloseable {
                 : weightedTemperatureC / totalWeight;
     }
 
-    public int radiationSourceCount() {
-        requireMainThread();
-        return radiation == null ? 0 : radiation.sourceCount();
-    }
-
     public static boolean upsertGameplayAnalyticField(
             ServerLevel level,
             AnalyticField field
@@ -1355,11 +1233,6 @@ public final class MinecraftThermalInput implements AutoCloseable {
         return analyticFields.removeIf(field -> field.fieldId() == fieldId);
     }
 
-    public int analyticFieldCount() {
-        requireMainThread();
-        return analyticFields.size();
-    }
-
     /** Builds the existing infrared shader payload from the two live backends. */
     public static float[] gameplayInfraredFields(
             ServerLevel level,
@@ -1439,28 +1312,6 @@ public final class MinecraftThermalInput implements AutoCloseable {
                         maximumDistanceBlocks * maximumDistanceBlocks);
     }
 
-
-    /** Explicit manual path used when automatic dispatch is disabled. */
-    public MinecraftThermalTopologyApplier.ApplyReport applyTopology(
-            SealedInputFrame frame
-    ) {
-        requireMainThread();
-        requireOpen();
-        if (topologyApplier == null) {
-            throw new IllegalStateException("Minecraft thermal topology application is disabled");
-        }
-        return topologyApplier.apply(frame);
-    }
-
-    public int admittedPageCount() {
-        requireMainThread();
-        return pages.size();
-    }
-
-    public int witnessedSectionCount() {
-        requireMainThread();
-        return ownersBySectionKey.size();
-    }
 
     long topologyGeneration() {
         return runtime.topologyGeneration();
@@ -1610,7 +1461,8 @@ public final class MinecraftThermalInput implements AutoCloseable {
         if (sectionIndex < 0 || sectionIndex >= chunk.getSections().length) {
             return null;
         }
-        int[] signatureCut = captureFullPageSnapshot(sectionKey);
+        int[] signatureCut = captureFullPageSnapshot(
+                sectionKey, chunk.getSections()[sectionIndex]);
         long lifecycleGeneration = nextSectionGeneration.incrementAndGet();
         long admissionWatermark = Math.incrementExact(chunkWatermark);
         chunkWatermark = admissionWatermark;
@@ -1685,16 +1537,6 @@ public final class MinecraftThermalInput implements AutoCloseable {
                     case POSITIVE_Z -> 1;
                     default -> 0;
                 });
-    }
-
-    public long chunkWatermark() {
-        requireMainThread();
-        return chunkWatermark;
-    }
-
-    public double committedPhaseTransitionEnergyJ() {
-        requireMainThread();
-        return topologyApplier == null ? 0.0D : topologyApplier.committedPhaseEnergyJ();
     }
 
     private boolean processPhaseTransitions() {
@@ -1991,15 +1833,6 @@ public final class MinecraftThermalInput implements AutoCloseable {
         };
     }
 
-    /** Records a completed main-thread transition outcome without applying it. */
-    public void advanceTransitionAckWatermark(long watermark) {
-        requireMainThread();
-        if (watermark < transitionAckWatermark) {
-            throw new IllegalArgumentException("transition ACK watermark regressed");
-        }
-        transitionAckWatermark = watermark;
-    }
-
     @Override
     public void close() {
         requireMainThread();
@@ -2017,8 +1850,8 @@ public final class MinecraftThermalInput implements AutoCloseable {
             ACTIVE_BY_LEVEL.remove(level, this);
             anyActive = !ACTIVE_BY_LEVEL.isEmpty();
         }
-        if (dispatchCoordinator != null) {
-            dispatchCoordinator.unload(runtime.runtimeId(), dimensionGeneration);
+        if (dispatchExecutor != null) {
+            runtime.close();
         }
         for (SectionOwner owner : new ArrayList<>(ownersByIdentity.values())) {
             detach(owner);
@@ -2042,19 +1875,6 @@ public final class MinecraftThermalInput implements AutoCloseable {
         MinecraftThermalInput input = null;
         try {
             prepareGameplayProfiles();
-            if (gameplayCoordinator == null) {
-                gameplayCoordinator = ThermalRuntimeCoordinator.tryCreate(
-                        GAMEPLAY_MEMORY_BUDGET,
-                        16,
-                        16,
-                        2,
-                        20L,
-                        4);
-            }
-            if (gameplayCoordinator == null) {
-                return null;
-            }
-
             long generation = NEXT_GAMEPLAY_RUNTIME_ID.getAndIncrement();
             long initialTick = level.getGameTime();
             ThermalCellArena arena = new ThermalCellArena(256);
@@ -2064,12 +1884,12 @@ public final class MinecraftThermalInput implements AutoCloseable {
                     generation,
                     initialTick,
                     4_096,
-                    new ThermalSourceRegistry(64, 3, 64, accumulators),
+                    new ThermalSourceRegistry(64, 3, accumulators),
                     arena);
             BuoyancyConductance.Parameters buoyancy =
                     new BuoyancyConductance.Parameters(0.25D, 4.0D, 10.0D);
-            ThermalSweep sweep = new ThermalSweep(
-                    arena, List.of(), List.of(), buoyancy);
+            ThermalSweep sweep = ThermalSweepFragments.builder(
+                    arena, null, buoyancy, 0).build();
             QueryPublication publication = QueryPublication.tryCreate(
                     GAMEPLAY_MEMORY_BUDGET.createDimensionBudget(
                             16L * 1024L * 1024L,
@@ -2079,7 +1899,6 @@ public final class MinecraftThermalInput implements AutoCloseable {
                 return null;
             }
             runtime = new DimensionThermalRuntime(
-                    generation,
                     generation,
                     initialTick,
                     InputWatermarks.ZERO,
@@ -2127,7 +1946,6 @@ public final class MinecraftThermalInput implements AutoCloseable {
                             GAMEPLAY_FAR_FIELDS,
                             true,
                             farFieldEnvironment(level),
-                            FarFieldProfileRegistry.WindBucket.CALM,
                             GAMEPLAY_FAR_FIELD_CALIBRATION_POWER_W,
                             GAMEPLAY_FAR_FIELD_REFERENCE_AREA_BLOCKS_SQUARED,
                             GAMEPLAY_CONTINUATION_DISTANCE_BLOCKS));
@@ -2142,13 +1960,13 @@ public final class MinecraftThermalInput implements AutoCloseable {
                         "Thermal radiation memory admission was refused for {}",
                         level.dimension().location());
             }
-            input.enableDispatch(gameplayCoordinator, Runnable::run);
+            input.enableDispatch(Runnable::run);
             return input;
         } catch (RuntimeException exception) {
             if (input != null) {
                 input.close();
             }
-            if (runtime != null) {
+            else if (runtime != null) {
                 runtime.close();
             }
             FHMain.LOGGER.error(
@@ -2522,17 +2340,11 @@ public final class MinecraftThermalInput implements AutoCloseable {
 
     public static void closeAll() {
         List<MinecraftThermalInput> active;
-        ThermalRuntimeCoordinator coordinator;
         synchronized (ACTIVE_BY_LEVEL) {
             active = List.copyOf(ACTIVE_BY_LEVEL.values());
-            coordinator = gameplayCoordinator;
-            gameplayCoordinator = null;
         }
         for (MinecraftThermalInput input : active) {
             input.close();
-        }
-        if (coordinator != null) {
-            coordinator.close();
         }
     }
 
@@ -2656,8 +2468,8 @@ public final class MinecraftThermalInput implements AutoCloseable {
                 radiationOcclusion.onSectionMutation(
                         owner.sectionX, owner.sectionY, owner.sectionZ);
             }
-            owner.invalidateAffectedPages(ThermalPage.GeometryResyncReason.OFF_THREAD_MUTATION);
-            offThreadResyncPending.set(true);
+            owner.recordDeferredBlockMutation(localX, localY, localZ);
+            deferredBlockMutationRevision.incrementAndGet();
             return;
         }
         if (ownersByIdentity.get(owner.section) != owner) {
@@ -2682,6 +2494,56 @@ public final class MinecraftThermalInput implements AutoCloseable {
             radiationOcclusion.onSectionMutation(
                     owner.sectionX, owner.sectionY, owner.sectionZ);
         }
+        recordGeometryMutation(worldX, worldY, worldZ, effectiveTick);
+    }
+
+    private void drainDeferredBlockMutations(long effectiveTick) {
+        long capturedRevision = deferredBlockMutationRevision.get();
+        if (capturedRevision == drainedDeferredBlockMutationRevision) {
+            return;
+        }
+        for (SectionOwner owner : ownersByIdentity.values()) {
+            long[] dirtyBlocks = owner.takeDeferredBlockMutations();
+            if (dirtyBlocks == null || !owner.valid
+                    || ownersByIdentity.get(owner.section) != owner) {
+                continue;
+            }
+            int sectionMinX = SectionPos.sectionToBlockCoord(owner.sectionX);
+            int sectionMinY = SectionPos.sectionToBlockCoord(owner.sectionY);
+            int sectionMinZ = SectionPos.sectionToBlockCoord(owner.sectionZ);
+            long dirtyWords = dirtyBlocks[DEFERRED_BLOCK_WORD_COUNT];
+            while (dirtyWords != 0L) {
+                int wordIndex = Long.numberOfTrailingZeros(dirtyWords);
+                long remaining = dirtyBlocks[wordIndex];
+                while (remaining != 0L) {
+                    int packedIndex = (wordIndex << 6)
+                            + Long.numberOfTrailingZeros(remaining);
+                    int localX = packedIndex & 15;
+                    int localZ = (packedIndex >>> 4) & 15;
+                    int localY = (packedIndex >>> 8) & 15;
+                    int worldX = sectionMinX + localX;
+                    int worldY = sectionMinY + localY;
+                    int worldZ = sectionMinZ + localZ;
+                    if (physicalSources != null) {
+                        physicalSources.resyncBlock(
+                                new BlockPos(worldX, worldY, worldZ),
+                                owner.section.getBlockState(localX, localY, localZ));
+                    }
+                    recordGeometryMutation(worldX, worldY, worldZ, effectiveTick);
+                    remaining &= remaining - 1L;
+                }
+                dirtyWords &= dirtyWords - 1L;
+            }
+        }
+        drainedDeferredBlockMutationRevision = capturedRevision;
+    }
+
+    private void recordGeometryMutation(
+            int worldX,
+            int worldY,
+            int worldZ,
+            long effectiveTick
+    ) {
         LoadedCube cube = new LoadedCube(level, worldX, worldY, worldZ);
 
         for (int dy = -1; dy <= 1; dy++) {
@@ -2730,7 +2592,7 @@ public final class MinecraftThermalInput implements AutoCloseable {
                             effectiveTick,
                             geometryDeltas);
                     if (physicalSources != null) {
-                        physicalSources.onPageInvalidated(page.sectionKey());
+                        physicalSources.onPageInvalidated();
                     }
                     dirtyPages.put(page, Boolean.TRUE);
                     if (mutation.fullResyncRequired()) {
@@ -2745,7 +2607,7 @@ public final class MinecraftThermalInput implements AutoCloseable {
                             resolution)) {
                         page.requireFullGeometryResync(
                                 ThermalPage.GeometryResyncReason.RING_OVERFLOW);
-                        offThreadResyncPending.set(true);
+                        fullResyncRetryPending.set(true);
                     }
                 }
             }
@@ -2793,15 +2655,21 @@ public final class MinecraftThermalInput implements AutoCloseable {
 
     /** Captures one complete loaded-only Page cut without retaining a World view. */
     private int[] captureFullPageSnapshot(ThermalPage page) {
-        return captureFullPageSnapshot(page.sectionKey());
+        SectionOwner owner = ownersBySectionKey.get(page.sectionKey());
+        return captureFullPageSnapshot(
+                page.sectionKey(), owner == null ? null : owner.section);
     }
 
-    private int[] captureFullPageSnapshot(long sectionKey) {
+    private int[] captureFullPageSnapshot(
+            long sectionKey,
+            LevelChunkSection section
+    ) {
         LoadedSectionSnapshot snapshot = new LoadedSectionSnapshot(
                 level,
                 SectionPos.sectionToBlockCoord(SectionPos.x(sectionKey)),
                 SectionPos.sectionToBlockCoord(SectionPos.y(sectionKey)),
-                SectionPos.sectionToBlockCoord(SectionPos.z(sectionKey)));
+                SectionPos.sectionToBlockCoord(SectionPos.z(sectionKey)),
+                section);
         int[] signatureIds = new int[ResolvedGeometryInputRing.BLOCKS_PER_PAGE];
         for (int localY = 0; localY < 16; localY++) {
             for (int localZ = 0; localZ < 16; localZ++) {
@@ -3141,8 +3009,7 @@ public final class MinecraftThermalInput implements AutoCloseable {
         try {
             dispatchExecutor.execute(() -> dispatchSealedFrame(frame));
         } catch (RejectedExecutionException exception) {
-            // A saturated future executor must not strand an already sealed tick.
-            dispatchSealedFrame(frame);
+            urgentSolvePending.set(true);
         }
     }
 
@@ -3150,20 +3017,14 @@ public final class MinecraftThermalInput implements AutoCloseable {
         if (closed) {
             return;
         }
-        MinecraftThermalTopologyApplier.ApplyReport topology =
+        MinecraftThermalTopologyApplier.ApplyStatus status =
                 topologyApplier.apply(frame);
-        if (!topology.readyForSolve()) {
+        if (status != MinecraftThermalTopologyApplier.ApplyStatus.APPLIED
+                && status != MinecraftThermalTopologyApplier.ApplyStatus.DUPLICATE) {
+            urgentSolvePending.set(true);
             return;
         }
-        dispatchCoordinator.request(
-                runtime.runtimeId(),
-                dimensionGeneration,
-                false,
-                frame.effectiveTick());
-        while (dispatchCoordinator.runNext(frame.effectiveTick()).status()
-                == ThermalRuntimeCoordinator.DispatchStatus.EXECUTED) {
-            // Drain the coordinator on the caller-provided serial executor.
-        }
+        runtime.runOne();
     }
 
     private void requireOpen() {
@@ -3183,7 +3044,6 @@ public final class MinecraftThermalInput implements AutoCloseable {
         private boolean airAvailable;
         private double airTemperatureC = Double.NaN;
         private double radiantFluxWPerM2;
-        private double surfaceFluxW;
         private int mediumId = -1;
         private float confidence;
         private long sampleTick = -1L;
@@ -3204,10 +3064,6 @@ public final class MinecraftThermalInput implements AutoCloseable {
 
         public double radiantFluxWPerM2() {
             return radiantFluxWPerM2;
-        }
-
-        public double surfaceFluxW() {
-            return surfaceFluxW;
         }
 
         public int mediumId() {
@@ -3234,12 +3090,11 @@ public final class MinecraftThermalInput implements AutoCloseable {
             airAvailable = false;
             airTemperatureC = Double.NaN;
             radiantFluxWPerM2 = 0.0D;
-            surfaceFluxW = 0.0D;
             mediumId = -1;
             confidence = 0.0F;
             sampleTick = -1L;
             cellFlags = 0;
-            flags = QUERY_SURFACE_UNAVAILABLE;
+            flags = 0;
         }
 
         private void setAir(
@@ -3293,14 +3148,6 @@ public final class MinecraftThermalInput implements AutoCloseable {
         }
     }
 
-    public record SealReport(
-            SealedInputFrame frame,
-            LatestSolveEpochScheduler.SealResult runtimeResult,
-            int sealedGeometryDeltas,
-            int fullResyncPages
-    ) {
-    }
-
     /** Attached owner is a concrete route, not a generic resolver callback. */
     public static final class SectionOwner {
         private final MinecraftThermalInput input;
@@ -3312,6 +3159,7 @@ public final class MinecraftThermalInput implements AutoCloseable {
         private final long lifecycleGeneration;
         private volatile ThermalPage[] affectedPages = new ThermalPage[0];
         private volatile boolean valid = true;
+        private long[] deferredBlockMutations;
 
         private SectionOwner(
                 MinecraftThermalInput input,
@@ -3342,6 +3190,33 @@ public final class MinecraftThermalInput implements AutoCloseable {
             return valid;
         }
 
+        private synchronized void recordDeferredBlockMutation(
+                int localX,
+                int localY,
+                int localZ
+        ) {
+            if (!valid) {
+                return;
+            }
+            if ((localX | localY | localZ) < 0
+                    || localX >= 16 || localY >= 16 || localZ >= 16) {
+                return;
+            }
+            if (deferredBlockMutations == null) {
+                deferredBlockMutations = new long[DEFERRED_BLOCK_WORD_COUNT + 1];
+            }
+            int index = blockIndex(localX, localY, localZ);
+            int wordIndex = index >>> 6;
+            deferredBlockMutations[wordIndex] |= 1L << (index & 63);
+            deferredBlockMutations[DEFERRED_BLOCK_WORD_COUNT] |= 1L << wordIndex;
+        }
+
+        private synchronized long[] takeDeferredBlockMutations() {
+            long[] result = deferredBlockMutations;
+            deferredBlockMutations = null;
+            return result;
+        }
+
         private void invalidateAffectedPages(ThermalPage.GeometryResyncReason reason) {
             input.requestUrgentSolve();
             input.geometryRebuildDeadlineTick.accumulateAndGet(
@@ -3353,7 +3228,7 @@ public final class MinecraftThermalInput implements AutoCloseable {
                 }
             }
             if (Thread.currentThread() != input.mainThread) {
-                input.offThreadResyncPending.set(true);
+                input.fullResyncRetryPending.set(true);
             }
         }
     }
@@ -3426,6 +3301,7 @@ public final class MinecraftThermalInput implements AutoCloseable {
         private final int sectionMinX;
         private final int sectionMinY;
         private final int sectionMinZ;
+        private final LevelChunkSection section;
         private final ResolverBlockView.SnapshotCell<BlockState, FluidState>[] cells;
 
         @SuppressWarnings("unchecked")
@@ -3433,12 +3309,14 @@ public final class MinecraftThermalInput implements AutoCloseable {
                 ServerLevel level,
                 int sectionMinX,
                 int sectionMinY,
-                int sectionMinZ
+                int sectionMinZ,
+                LevelChunkSection section
         ) {
             this.level = level;
             this.sectionMinX = sectionMinX;
             this.sectionMinY = sectionMinY;
             this.sectionMinZ = sectionMinZ;
+            this.section = section;
             this.cells = new ResolverBlockView.SnapshotCell[WIDTH * WIDTH * WIDTH];
         }
 
@@ -3457,6 +3335,17 @@ public final class MinecraftThermalInput implements AutoCloseable {
             ResolverBlockView.SnapshotCell<BlockState, FluidState> cached = cells[index];
             if (cached != null) {
                 return cached;
+            }
+            if (section != null
+                    && localX >= 0 && localX < 16
+                    && localY >= 0 && localY < 16
+                    && localZ >= 0 && localZ < 16) {
+                BlockState state = section.getBlockState(localX, localY, localZ);
+                ResolverBlockView.SnapshotCell<BlockState, FluidState> captured =
+                        ResolverBlockView.SnapshotCell.present(
+                                state, state.getFluidState());
+                cells[index] = captured;
+                return captured;
             }
             BlockPos position = new BlockPos(
                     sectionMinX + localX,

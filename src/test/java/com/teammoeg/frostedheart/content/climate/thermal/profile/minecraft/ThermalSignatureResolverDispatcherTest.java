@@ -88,11 +88,15 @@ class ThermalSignatureResolverDispatcherTest {
                 unsupported.route());
 
         ThermalSignatureRegistry.Builder signatures = ThermalSignatureRegistry.builder();
-        ThermalSignatureResolution explicitResolution = explicit.resolveAndIntern(
-                selfView(explicit.dependencyMask(), Blocks.STONE.defaultBlockState()), signatures);
-        generic.resolveAndIntern(
-                selfView(generic.dependencyMask(), Blocks.OAK_SLAB.defaultBlockState()), signatures);
-        ThermalSignatureResolution unsupportedResolution = unsupported.resolveAndIntern(
+        ThermalSignatureResolution explicitResolution = intern(
+                explicit,
+                selfView(explicit.dependencyMask(), Blocks.STONE.defaultBlockState()),
+                signatures);
+        intern(generic,
+                selfView(generic.dependencyMask(), Blocks.OAK_SLAB.defaultBlockState()),
+                signatures);
+        ThermalSignatureResolution unsupportedResolution = intern(
+                unsupported,
                 selfView(unsupported.dependencyMask(), Blocks.BAMBOO.defaultBlockState()),
                 signatures);
 
@@ -103,7 +107,6 @@ class ThermalSignatureResolverDispatcherTest {
                 unsupportedResolution.status());
         assertEquals(ThermalResolution.Reason.NOT_REGISTERED,
                 unsupportedResolution.reason());
-        assertFalse(unsupported.isRegistered());
     }
 
     @Test
@@ -122,12 +125,12 @@ class ThermalSignatureResolverDispatcherTest {
                         .build();
         ThermalSignatureResolverDispatcher.DispatchPlan plan =
                 dispatcher.plan(Blocks.MOVING_PISTON.defaultBlockState());
-        ThermalSignatureResolution result = plan.resolveAndIntern(
+        ThermalSignatureResolution result = intern(
+                plan,
                 selfView(plan.dependencyMask(), Blocks.MOVING_PISTON.defaultBlockState()),
                 ThermalSignatureRegistry.builder());
 
         assertEquals(ThermalSignatureResolverDispatcher.Route.UNREGISTERED, plan.route());
-        assertFalse(plan.isRegistered());
         assertEquals(ThermalResolution.Status.UNRESOLVED, result.status());
         assertEquals(ThermalResolution.Reason.UNRESOLVED_DYNAMIC, result.reason());
         assertEquals(ThermalSignatureResolution.NO_SIGNATURE_ID, result.signatureId());
@@ -161,13 +164,6 @@ class ThermalSignatureResolverDispatcherTest {
         ThermalSignatureResolverDispatcher frozen = builder.build();
         builder.registerExplicitProfile(Blocks.DIRT, "test:later_profile", signature(2));
 
-        assertEquals(List.of(
-                        StateStaticThermalResolver.RESOLVER_ID,
-                        "test:a_profile",
-                        "test:z_context"),
-                frozen.resolverIds());
-        assertEquals(1, frozen.explicitOverrideCount());
-        assertEquals(2, frozen.contextualResolverCount());
         assertEquals(ThermalSignatureResolverDispatcher.Route.GENERIC_STATE_STATIC,
                 frozen.plan(Blocks.DIRT.defaultBlockState()).route());
     }
@@ -209,7 +205,8 @@ class ThermalSignatureResolverDispatcherTest {
                         .build();
         ThermalSignatureResolverDispatcher.DispatchPlan plan =
                 dispatcher.plan(Blocks.BAMBOO.defaultBlockState());
-        ThermalSignatureResolution result = plan.resolveAndIntern(
+        ThermalSignatureResolution result = intern(
+                plan,
                 selfView(plan.dependencyMask(), Blocks.BAMBOO.defaultBlockState()),
                 ThermalSignatureRegistry.builder());
 
@@ -243,28 +240,28 @@ class ThermalSignatureResolverDispatcherTest {
                 dispatcher.plan(Blocks.BAMBOO.defaultBlockState());
         ThermalSignatureRegistry.Builder signatures = ThermalSignatureRegistry.builder();
 
-        ThermalSignatureResolution first = plan.resolveAndIntern(
+        ThermalSignatureResolution first = intern(plan,
                 contextualView(plan.dependencyMask(),
                         ResolverBlockView.SnapshotCell.present(
                                 Blocks.STONE.defaultBlockState(),
                                 Blocks.STONE.defaultBlockState().getFluidState())),
                 signatures);
-        ThermalSignatureResolution duplicate = plan.resolveAndIntern(
+        ThermalSignatureResolution duplicate = intern(plan,
                 contextualView(plan.dependencyMask(),
                         ResolverBlockView.SnapshotCell.present(
                                 Blocks.STONE.defaultBlockState(),
                                 Blocks.STONE.defaultBlockState().getFluidState())),
                 signatures);
-        ThermalSignatureResolution missing = plan.resolveAndIntern(
+        ThermalSignatureResolution missing = intern(plan,
                 ResolverBlockView.snapshot(
                         plan.dependencyMask(),
                         Map.of(DependencyOffsetMask.SELF,
                                 present(Blocks.BAMBOO.defaultBlockState()))),
                 signatures);
-        ThermalSignatureResolution unloaded = plan.resolveAndIntern(
+        ThermalSignatureResolution unloaded = intern(plan,
                 contextualView(plan.dependencyMask(), ResolverBlockView.SnapshotCell.unloaded()),
                 signatures);
-        ThermalSignatureResolution outsideMask = plan.resolveAndIntern(
+        ThermalSignatureResolution outsideMask = intern(plan,
                 contextualView(plan.dependencyMask(),
                         ResolverBlockView.SnapshotCell.present(
                                 Blocks.GOLD_BLOCK.defaultBlockState(),
@@ -297,6 +294,18 @@ class ThermalSignatureResolverDispatcherTest {
                 maxOutputRegions,
                 view -> ThermalResolution.resolved(signature(404))
         );
+    }
+
+    private static ThermalSignatureResolution intern(
+            ThermalSignatureResolverDispatcher.DispatchPlan plan,
+            ResolverBlockView<BlockState, FluidState> view,
+            ThermalSignatureRegistry.Builder signatures
+    ) {
+        ThermalResolution<ResolvedThermalSignature> resolution = plan.resolve(view);
+        return resolution.isResolved()
+                ? ThermalSignatureResolution.resolved(
+                        signatures.intern(resolution.value().orElseThrow()))
+                : ThermalSignatureResolution.failure(resolution);
     }
 
     private static ResolverBlockView<BlockState, FluidState> selfView(

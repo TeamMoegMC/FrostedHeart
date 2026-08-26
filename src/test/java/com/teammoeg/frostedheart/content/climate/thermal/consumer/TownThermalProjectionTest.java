@@ -24,7 +24,7 @@ class TownThermalProjectionTest {
         projection.include(new BlockPos(0, 0, 0));
 
         assertEquals(3, projection.voxelCount());
-        assertEquals(2, projection.groupCount());
+        assertEquals(2, projection.groupKeys().length);
 
         long negativeBrick = BlockPos.asLong(-4, -4, -4);
         assertEquals(2, projection.weight(negativeBrick));

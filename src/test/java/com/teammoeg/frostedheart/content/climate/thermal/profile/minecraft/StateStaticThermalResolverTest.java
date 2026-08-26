@@ -17,8 +17,10 @@ import net.minecraft.SharedConstants;
 import net.minecraft.server.Bootstrap;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.DoorBlock;
+import net.minecraft.world.level.block.SnowLayerBlock;
 import net.minecraft.world.level.block.TrapDoorBlock;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.material.Fluids;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -47,13 +49,29 @@ class StateStaticThermalResolverTest {
                 Blocks.OAK_SLAB.defaultBlockState(),
                 Fluids.EMPTY.defaultFluidState()));
         ResolvedThermalSignature fence = resolved(resolver.resolve(
-                Blocks.OAK_FENCE.defaultBlockState(),
+                Blocks.OAK_FENCE.defaultBlockState()
+                        .setValue(BlockStateProperties.NORTH, true)
+                        .setValue(BlockStateProperties.SOUTH, true),
+                Fluids.EMPTY.defaultFluidState()));
+        ResolvedThermalSignature stairs = resolved(resolver.resolve(
+                Blocks.OAK_STAIRS.defaultBlockState(),
+                Fluids.EMPTY.defaultFluidState()));
+        ResolvedThermalSignature pane = resolved(resolver.resolve(
+                Blocks.GLASS_PANE.defaultBlockState()
+                        .setValue(BlockStateProperties.NORTH, true)
+                        .setValue(BlockStateProperties.SOUTH, true),
+                Fluids.EMPTY.defaultFluidState()));
+        ResolvedThermalSignature snow = resolved(resolver.resolve(
+                Blocks.SNOW.defaultBlockState().setValue(SnowLayerBlock.LAYERS, 1),
                 Fluids.EMPTY.defaultFluidState()));
 
         assertEquals(64, provenAirMicrocells(air));
         assertEquals(0, stone.localAirRegionCount());
         assertEquals(32, provenAirMicrocells(slab));
-        assertEquals(48, provenAirMicrocells(fence));
+        assertEquals(16, provenAirMicrocells(stairs));
+        assertEquals(2, fence.localAirRegionCount());
+        assertEquals(2, pane.localAirRegionCount());
+        assertEquals(64, provenAirMicrocells(snow));
     }
 
     @Test

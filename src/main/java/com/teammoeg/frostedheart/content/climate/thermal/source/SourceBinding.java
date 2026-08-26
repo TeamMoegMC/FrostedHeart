@@ -53,12 +53,6 @@ public record SourceBinding(Kind kind, long targetId, int lifecycleGeneration) {
         return kind == Kind.THERMAL_NODE;
     }
 
-    public boolean isExplicitSink() {
-        return kind == Kind.INTERNAL_RESERVOIR
-                || kind == Kind.DECLARED_LOSS
-                || kind == Kind.DEGRADED_LOSS;
-    }
-
     public enum Kind {
         THERMAL_NODE,
         INTERNAL_RESERVOIR,

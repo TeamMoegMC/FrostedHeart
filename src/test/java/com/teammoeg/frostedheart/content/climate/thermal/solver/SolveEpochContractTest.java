@@ -31,9 +31,8 @@ class SolveEpochContractTest {
 
         assertFalse(behind.covers(sealed));
         assertTrue(ahead.covers(sealed));
-        assertFalse(epoch.inputsSatisfiedBy(11L, ahead));
-        assertFalse(epoch.inputsSatisfiedBy(12L, behind));
-        assertTrue(epoch.inputsSatisfiedBy(12L, ahead));
+        assertFalse(behind.covers(epoch.sealedWatermarks()));
+        assertTrue(ahead.covers(epoch.sealedWatermarks()));
         assertEquals(0.25D, epoch.dtSeconds());
     }
 

@@ -195,8 +195,7 @@ public final class RadiationService implements AutoCloseable {
             out.finish(
                     0.0D,
                     sourceLimited ? 0.5F : 1.0F,
-                    sourceLimited ? RADIATION_BUDGET_LIMITED : 0,
-                    0, 0, 0, 0, 0);
+                    sourceLimited ? RADIATION_BUDGET_LIMITED : 0);
             return;
         }
 
@@ -268,8 +267,6 @@ public final class RadiationService implements AutoCloseable {
 
         double totalFlux = 0.0D;
         int rays = 0;
-        int cacheHits = 0;
-        int retraces = 0;
         boolean rayLimited = false;
         boolean unresolved = false;
         rayLoop:
@@ -296,7 +293,6 @@ public final class RadiationService implements AutoCloseable {
                 if (witness >= 0 && cache.revisionsMatch(witness, tracer)) {
                     status = cache.status(witness);
                     cache.touch(witness, sampleSequence);
-                    cacheHits++;
                 } else {
                     traceScratch.clear();
                     tracer.trace(
@@ -315,7 +311,6 @@ public final class RadiationService implements AutoCloseable {
                             quarterZ,
                             traceScratch,
                             sampleSequence);
-                    retraces++;
                 }
                 if (status == TraceStatus.VISIBLE) {
                     double dx = receiverX - source.originX;
@@ -347,29 +342,8 @@ public final class RadiationService implements AutoCloseable {
         out.finish(
                 totalFlux,
                 confidence,
-                flags,
-                candidateVisits,
-                candidateCount,
-                rays,
-                cacheHits,
-                retraces);
+                flags);
         sampleSequence = Math.incrementExact(sampleSequence);
-    }
-
-    public int sourceCount() {
-        return sources.size();
-    }
-
-    public int receiverCacheCount() {
-        return receiverCaches.size();
-    }
-
-    public long sourceAdmissionRefusals() {
-        return sourceAdmissionRefusals;
-    }
-
-    public long reservedBytes() {
-        return reservation.bytes();
     }
 
     @Override
@@ -604,15 +578,6 @@ public final class RadiationService implements AutoCloseable {
             }
         }
 
-        public static Parameters v1Defaults() {
-            return new Parameters(
-                    256, 2_048, 64,
-                    256, 16, 48,
-                    16, 512,
-                    32.0D, 0.05D, 0.5D,
-                    0.1D, 0.9D, 1.62D);
-        }
-
         double maximumRangeBlocksSquared() {
             return maximumRangeBlocks * maximumRangeBlocks;
         }
@@ -713,11 +678,6 @@ public final class RadiationService implements AutoCloseable {
         private double radiantFluxWPerM2;
         private float confidence;
         private int flags;
-        private int candidateVisits;
-        private int selectedCandidates;
-        private int raysTraced;
-        private int cacheHits;
-        private int retraces;
 
         public double radiantFluxWPerM2() {
             return radiantFluxWPerM2;
@@ -731,55 +691,20 @@ public final class RadiationService implements AutoCloseable {
             return flags;
         }
 
-        public int candidateVisits() {
-            return candidateVisits;
-        }
-
-        public int selectedCandidates() {
-            return selectedCandidates;
-        }
-
-        public int raysTraced() {
-            return raysTraced;
-        }
-
-        public int cacheHits() {
-            return cacheHits;
-        }
-
-        public int retraces() {
-            return retraces;
-        }
-
         private void clear() {
             radiantFluxWPerM2 = 0.0D;
             confidence = 0.0F;
             flags = 0;
-            candidateVisits = 0;
-            selectedCandidates = 0;
-            raysTraced = 0;
-            cacheHits = 0;
-            retraces = 0;
         }
 
         private void finish(
                 double nextFlux,
                 float nextConfidence,
-                int nextFlags,
-                int nextCandidateVisits,
-                int nextSelectedCandidates,
-                int nextRaysTraced,
-                int nextCacheHits,
-                int nextRetraces
+                int nextFlags
         ) {
             radiantFluxWPerM2 = nextFlux;
             confidence = nextConfidence;
             flags = nextFlags;
-            candidateVisits = nextCandidateVisits;
-            selectedCandidates = nextSelectedCandidates;
-            raysTraced = nextRaysTraced;
-            cacheHits = nextCacheHits;
-            retraces = nextRetraces;
         }
     }
 

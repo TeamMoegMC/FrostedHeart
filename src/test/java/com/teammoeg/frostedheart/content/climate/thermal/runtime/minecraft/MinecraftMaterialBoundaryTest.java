@@ -28,6 +28,7 @@ import com.teammoeg.frostedheart.content.climate.thermal.solver.LatestSolveEpoch
 import com.teammoeg.frostedheart.content.climate.thermal.solver.PhaseTransitionRuntime;
 import com.teammoeg.frostedheart.content.climate.thermal.solver.SealedInputFrame;
 import com.teammoeg.frostedheart.content.climate.thermal.solver.ThermalSweep;
+import com.teammoeg.frostedheart.content.climate.thermal.solver.ThermalSweepFragments;
 import com.teammoeg.frostedheart.content.climate.thermal.solver.ThermalTimePolicy;
 import com.teammoeg.frostedheart.content.climate.thermal.source.NodePowerAccumulatorArena;
 import com.teammoeg.frostedheart.content.climate.thermal.source.ThermalSourceRegistry;
@@ -81,10 +82,8 @@ class MinecraftMaterialBoundaryTest {
             setSeparatedAirTemperatures(thin.arena, 8.0D, 9.0D);
             setSeparatedAirTemperatures(thick.arena, 7.0D, 9.0D);
 
-            assertEquals(DimensionThermalRuntime.RunStatus.COMPLETED,
-                    thin.runtime.runOne().status());
-            assertEquals(DimensionThermalRuntime.RunStatus.COMPLETED,
-                    thick.runtime.runOne().status());
+            thin.runtime.runOne();
+            thick.runtime.runOne();
 
             assertTrue(airEnthalpyRightOf(thin.arena, 9.0D) > 0.0D,
                     "a confirmed one-block wall must transfer through its stateless G");
@@ -110,7 +109,6 @@ class MinecraftMaterialBoundaryTest {
 
             fixture.applyTopology(5L, 1L);
 
-            assertEquals(0, fixture.applier.stagedSignaturePageCount());
             assertEquals(2, materialPoleCount(fixture.arena));
         }
     }
@@ -126,8 +124,7 @@ class MinecraftMaterialBoundaryTest {
             forEachLiveAir(fixture.arena, slot -> fixture.arena.setEnthalpyJ(
                     slot, fixture.arena.capacityJPerK(slot) * 100.0D));
 
-            assertEquals(DimensionThermalRuntime.RunStatus.COMPLETED,
-                    fixture.runtime.runOne().status());
+            fixture.runtime.runOne();
             double stored = materialEnthalpy(fixture.arena);
             assertTrue(stored > 0.0D, "the wall surface must retain residual heat");
 
@@ -144,13 +141,9 @@ class MinecraftMaterialBoundaryTest {
 
             assertEquals(stored, materialEnthalpy(fixture.arena), 1.0e-9D,
                     "stable surface/deep keys must preserve authoritative H on rebuild");
-            assertTrue(
-                    fixture.applier.migrationSnapshot().residualWithin(1.0e-8D),
-                    fixture.applier.migrationSnapshot().toString());
 
             forEachLiveAir(fixture.arena, slot -> fixture.arena.setEnthalpyJ(slot, 0.0D));
-            assertEquals(DimensionThermalRuntime.RunStatus.COMPLETED,
-                    fixture.runtime.runOne().status());
+            fixture.runtime.runOne();
             assertTrue(materialEnthalpy(fixture.arena) < stored,
                     "a warm surface must release heat back to colder air");
             assertTrue(airEnthalpy(fixture.arena) > 0.0D);
@@ -159,8 +152,40 @@ class MinecraftMaterialBoundaryTest {
             fixture.applyTopology(15L, 2L);
             assertEquals(0, fixture.arena.liveCellCount(),
                     "Page retirement must release its material poles with the air span");
-            assertEquals(DimensionThermalRuntime.RunStatus.COMPLETED,
-                    fixture.runtime.runOne().status());
+            fixture.runtime.runOne();
+        }
+    }
+
+    @Test
+    void repeatedCapacitiveBrickRebuildPreservesSurvivingPoleStateAndTopology() {
+        int[] snapshot = allAir();
+        setBlock(snapshot, 1, 1, 1, CAPACITIVE);
+        setBlock(snapshot, 2, 1, 1, CAPACITIVE);
+        try (Fixture fixture = Fixture.create(snapshot)) {
+            fixture.applyTopology(5L, 1L);
+            assertEquals(2, materialPoleCount(fixture.arena));
+            fixture.arena.setEnthalpyJ(
+                    materialPoleAt(fixture.arena, 2, 1, 1), 37.0D);
+
+            fixture.mutate(1, 1, 1, AIR, 10L);
+            fixture.applyTopology(10L, 1L);
+
+            assertEquals(1, materialPoleCount(fixture.arena));
+            assertEquals(37.0D,
+                    fixture.arena.enthalpyJ(
+                            materialPoleAt(fixture.arena, 2, 1, 1)),
+                    1.0e-12D);
+            double survivingTemperatureC = fixture.arena.temperatureC(
+                    materialPoleAt(fixture.arena, 2, 1, 1), 0.0D);
+
+            fixture.mutate(1, 1, 1, CAPACITIVE, 15L);
+            fixture.applyTopology(15L, 1L);
+
+            assertEquals(2, materialPoleCount(fixture.arena));
+            assertEquals(survivingTemperatureC,
+                    fixture.arena.temperatureC(
+                            materialPoleAt(fixture.arena, 2, 1, 1), 0.0D),
+                    1.0e-12D);
         }
     }
 
@@ -172,11 +197,9 @@ class MinecraftMaterialBoundaryTest {
             fixture.applyTopology(5L, 1L);
             setSeparatedAirTemperatures(fixture.arena, 8.0D, 9.0D);
 
-            assertEquals(DimensionThermalRuntime.RunStatus.COMPLETED,
-                    fixture.runtime.runOne().status());
+            fixture.runtime.runOne();
             fixture.applyTopology(10L, 1L);
-            assertEquals(DimensionThermalRuntime.RunStatus.COMPLETED,
-                    fixture.runtime.runOne().status());
+            fixture.runtime.runOne();
 
             assertTrue(airEnthalpyRightOf(fixture.arena, 9.0D) > 0.0D,
                     "the shared wall pole must carry heat between opposite faces");
@@ -207,20 +230,15 @@ class MinecraftMaterialBoundaryTest {
             buried.applyTopology(5L, 1L);
 
             assertTrue(materialPoleCount(exposed.arena) > 0);
-            assertTrue(deepPoleCount(exposed.arena) > 0);
-            assertTrue(exposed.runtime.sweepBoundaryOperationCount() > 0,
-                    "exposed rock must compile a deep natural boundary");
             assertEquals(0, materialPoleCount(buried.arena),
                     "unexposed mountain volume must not receive material nodes");
-            assertEquals(0, buried.runtime.sweepBoundaryOperationCount(),
-                    "geothermal heat must not enter a page without exposed deep rock");
 
-            assertEquals(DimensionThermalRuntime.RunStatus.COMPLETED,
-                    exposed.runtime.runOne().status());
+            exposed.runtime.runOne();
             assertTrue(airEnthalpy(exposed.arena) > 0.0D,
                     "natural rock must warm air through surface/deep material exchange");
-            assertEquals(DimensionThermalRuntime.RunStatus.COMPLETED,
-                    buried.runtime.runOne().status());
+            buried.runtime.runOne();
+            assertEquals(0.0D, airEnthalpy(buried.arena), 0.0D,
+                    "geothermal heat must not enter a page without exposed deep rock");
         }
     }
 
@@ -232,7 +250,6 @@ class MinecraftMaterialBoundaryTest {
         try (Fixture fixture = Fixture.create(snapshot)) {
             fixture.applyTopology(5L, 1L);
             assertEquals(1, phaseReservoirCount(fixture.arena));
-            assertTrue(fixture.runtime.sweepPhaseOperationCount() > 0);
             assertTrue(fixture.applier.hasAppliedPhaseCandidate(
                     fixture.page, 1, 1, 1, PHASE));
             assertTrue(fixture.applier.hasAppliedPhaseCandidate(
@@ -242,12 +259,11 @@ class MinecraftMaterialBoundaryTest {
             forEachLiveAir(fixture.arena, slot -> fixture.arena.setEnthalpyJ(
                     slot, fixture.arena.capacityJPerK(slot) * 100.0D));
 
-            assertEquals(DimensionThermalRuntime.RunStatus.COMPLETED,
-                    fixture.runtime.runOne().status());
+            fixture.runtime.runOne();
             int oldPhaseSlot = firstPhaseReservoir(fixture.arena);
             assertEquals(100.0D, fixture.arena.enthalpyJ(oldPhaseSlot), 1.0e-9D);
             assertEquals(50.0D,
-                    fixture.arena.phaseReservedEnergyJ(oldPhaseSlot), 1.0e-9D);
+                    fixture.arena.phaseAvailableEnergyJ(oldPhaseSlot), 1.0e-9D);
 
             PhaseTransitionRuntime.MutableRequest request =
                     new PhaseTransitionRuntime.MutableRequest();
@@ -273,11 +289,25 @@ class MinecraftMaterialBoundaryTest {
             assertEquals(1, phaseReservoirCount(fixture.arena));
             assertEquals(50.0D,
                     fixture.arena.enthalpyJ(migratedPhaseSlot), 1.0e-8D);
-            assertEquals(50.0D,
-                    fixture.applier.committedPhaseEnergyJ(), 1.0e-9D);
             assertEquals(1L << ((1 << 4) | (1 << 2) | 2),
                     fixture.arena.phaseCandidateMask(migratedPhaseSlot));
             assertFalse(fixture.arena.phaseRequestOutstanding(migratedPhaseSlot));
+
+            fixture.mutate(1, 1, 1, PHASE, 15L);
+            fixture.applyTopology(15L, 1L);
+
+            int rebuiltPhaseSlot = firstPhaseReservoir(fixture.arena);
+            assertEquals(1, phaseReservoirCount(fixture.arena));
+            assertEquals(50.0D,
+                    fixture.arena.enthalpyJ(rebuiltPhaseSlot), 1.0e-8D);
+            assertEquals(
+                    (1L << ((1 << 4) | (1 << 2) | 1))
+                            | (1L << ((1 << 4) | (1 << 2) | 2)),
+                    fixture.arena.phaseCandidateMask(rebuiltPhaseSlot));
+            assertTrue(fixture.applier.hasAppliedPhaseCandidate(
+                    fixture.page, 1, 1, 1, PHASE));
+            assertTrue(fixture.applier.hasAppliedPhaseCandidate(
+                    fixture.page, 2, 1, 1, PHASE));
         }
     }
 
@@ -332,18 +362,27 @@ class MinecraftMaterialBoundaryTest {
     private static MaterialBoundaryRegistry materialRegistry() {
         return new MaterialBoundaryRegistry(
                 List.of(
-                        MaterialBoundaryRegistry.Profile.stateless(STATELESS, 8.0D),
-                        MaterialBoundaryRegistry.Profile.capacitiveSurface(
-                                CAPACITIVE, 8.0D, 20.0D, 0.0D),
-                        MaterialBoundaryRegistry.Profile.naturalRock(
+                        new MaterialBoundaryRegistry.Profile(
+                                STATELESS,
+                                MaterialBoundaryRegistry.Model.STATELESS_CONDUCTANCE,
+                                8.0D, 0.0D, 0.0D, 0.0D, 0.0D,
+                                0.0D, 0.0D, 0.0D, false, 0.0D, 0.0D,
+                                MaterialBoundaryRegistry.TransitionMutationPolicy.NONE,
+                                MaterialBoundaryRegistry.TransitionAction.NONE),
+                        new MaterialBoundaryRegistry.Profile(
+                                CAPACITIVE,
+                                MaterialBoundaryRegistry.Model.CAPACITIVE_SURFACE,
+                                8.0D, 20.0D, 0.0D, 0.0D, 0.0D,
+                                0.0D, 0.0D, 0.0D, false, 0.0D, 0.0D,
+                                MaterialBoundaryRegistry.TransitionMutationPolicy.NONE,
+                                MaterialBoundaryRegistry.TransitionAction.NONE),
+                        new MaterialBoundaryRegistry.Profile(
                                 NATURAL_ROCK,
-                                8.0D,
-                                20.0D,
-                                4.0D,
-                                40.0D,
-                                2.0D,
-                                100.0D,
-                                0.5D),
+                                MaterialBoundaryRegistry.Model.NATURAL_ROCK,
+                                8.0D, 20.0D, 4.0D, 40.0D, 2.0D,
+                                100.0D, 100.0D, 0.5D, false, 0.0D, 0.0D,
+                                MaterialBoundaryRegistry.TransitionMutationPolicy.NONE,
+                                MaterialBoundaryRegistry.TransitionAction.NONE),
                         MaterialBoundaryRegistry.Profile.phaseReservoir(
                                 PHASE,
                                 100.0D,
@@ -445,16 +484,22 @@ class MinecraftMaterialBoundaryTest {
         return count;
     }
 
-    private static int deepPoleCount(ThermalCellArena arena) {
-        int count = 0;
+    private static int materialPoleAt(
+            ThermalCellArena arena,
+            int blockX,
+            int blockY,
+            int blockZ
+    ) {
         for (int slot = 0; slot < arena.highWaterMark(); slot++) {
-            if (arena.isLive(slot) && arena.isMaterialPole(slot)
-                    && arena.materialPoleDepth(slot)
-                    == ThermalCellArena.MaterialPoleDepth.DEEP) {
-                count++;
+            if (arena.isLive(slot)
+                    && arena.isMaterialPole(slot)
+                    && arena.minimumX(slot) == blockX
+                    && arena.minimumY(slot) == blockY
+                    && arena.minimumZ(slot) == blockZ) {
+                return slot;
             }
         }
-        return count;
+        throw new AssertionError("material pole was not allocated");
     }
 
     private static int phaseReservoirCount(ThermalCellArena arena) {
@@ -523,13 +568,11 @@ class MinecraftMaterialBoundaryTest {
                     DIMENSION_GENERATION,
                     0L,
                     16,
-                    new ThermalSourceRegistry(8, 2, 16, accumulators),
+                    new ThermalSourceRegistry(8, 2, accumulators),
                     arena);
-            ThermalSweep sweep = new ThermalSweep(
-                    arena,
-                    List.of(),
-                    List.of(),
-                    new BuoyancyConductance.Parameters(1.0D, 1.0D, 1.0D));
+            ThermalSweep sweep = ThermalSweepFragments.builder(
+                    arena, null,
+                    new BuoyancyConductance.Parameters(1.0D, 1.0D, 1.0D), 0).build();
             ThermalMemoryBudget budget = new ThermalMemoryBudget(20_000_000L, 0L);
             QueryPublication publication = QueryPublication.tryCreate(
                     budget.createDimensionBudget(20_000_000L, 0L),
@@ -538,7 +581,6 @@ class MinecraftMaterialBoundaryTest {
                 throw new IllegalStateException("material test publication admission failed");
             }
             DimensionThermalRuntime runtime = new DimensionThermalRuntime(
-                    200L,
                     DIMENSION_GENERATION,
                     0L,
                     InputWatermarks.ZERO,
@@ -597,8 +639,28 @@ class MinecraftMaterialBoundaryTest {
             LatestSolveEpochScheduler.SealResult sealed = runtime.sealFrame(frame);
             assertTrue(sealed == LatestSolveEpochScheduler.SealResult.ACCEPTED
                     || sealed == LatestSolveEpochScheduler.SealResult.DUPLICATE);
-            MinecraftThermalTopologyApplier.ApplyReport report = applier.apply(frame);
-            assertTrue(report.readyForSolve(), "material topology frame must install");
+            MinecraftThermalTopologyApplier.ApplyStatus status = applier.apply(frame);
+            assertTrue(status == MinecraftThermalTopologyApplier.ApplyStatus.APPLIED
+                            || status == MinecraftThermalTopologyApplier.ApplyStatus.DUPLICATE,
+                    "material topology frame must install");
+        }
+
+        private void mutate(
+                int localX,
+                int localY,
+                int localZ,
+                int signatureId,
+                long tick
+        ) {
+            ThermalPage.MutationObservation mutation = page.recordGeometryMutation(
+                    localX, localY, localZ, tick, geometryDeltas);
+            assertTrue(resolvedInputs.offerResolvedCenter(
+                    page.sectionKey(),
+                    page.lifecycleGeneration(),
+                    mutation.geometryRevision(),
+                    tick,
+                    (localY << 8) | (localZ << 4) | localX,
+                    ThermalSignatureResolution.resolved(signatureId)));
         }
 
         @Override

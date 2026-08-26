@@ -11,7 +11,7 @@
 package com.teammoeg.frostedheart.content.climate.thermal.geometry;
 
 /**
- * Cold/debug view of one cached 4, 8, or 16 block geometry summary.
+ * Cold/debug view of one cached 4-cubed Brick geometry summary.
  * Runtime storage is primitive and owned by {@link GeometrySummaryCache}.
  */
 public record GeometrySummary(Kind kind, int mediumId, int topologyFlags) {
@@ -30,12 +30,6 @@ public record GeometrySummary(Kind kind, int mediumId, int topologyFlags) {
             | PHASE_STATE
             | SOURCE_CORE
             | UNRESOLVED_TOPOLOGY;
-    private static final int COARSE_MERGE_BLOCKERS = INTERNAL_GATE
-            | MATERIAL_INTERFACE
-            | PHASE_STATE
-            | SOURCE_CORE
-            | UNRESOLVED_TOPOLOGY;
-
     public GeometrySummary {
         if (kind == null) {
             throw new IllegalArgumentException("kind is required");
@@ -43,7 +37,7 @@ public record GeometrySummary(Kind kind, int mediumId, int topologyFlags) {
         if ((topologyFlags & ~KNOWN_FLAGS) != 0) {
             throw new IllegalArgumentException("topologyFlags contains unknown bits");
         }
-        boolean carriesMedium = kind == Kind.SINGLE_AIR || kind == Kind.SINGLE_MEDIUM;
+        boolean carriesMedium = kind == Kind.SINGLE_AIR;
         if (carriesMedium != (mediumId >= 0)) {
             throw new IllegalArgumentException(
                     "only single-medium summaries carry a non-negative medium ID");
@@ -54,16 +48,8 @@ public record GeometrySummary(Kind kind, int mediumId, int topologyFlags) {
         }
     }
 
-    public static GeometrySummary unknown() {
-        return new GeometrySummary(Kind.UNKNOWN, NO_MEDIUM, 0);
-    }
-
     public static GeometrySummary singleAir(int mediumId) {
         return new GeometrySummary(Kind.SINGLE_AIR, mediumId, SINGLE_CONNECTED_COMPONENT);
-    }
-
-    public static GeometrySummary singleMedium(int mediumId) {
-        return new GeometrySummary(Kind.SINGLE_MEDIUM, mediumId, SINGLE_CONNECTED_COMPONENT);
     }
 
     public static GeometrySummary noAir(int topologyFlags) {
@@ -74,16 +60,10 @@ public record GeometrySummary(Kind kind, int mediumId, int topologyFlags) {
         return new GeometrySummary(Kind.MIXED, NO_MEDIUM, topologyFlags);
     }
 
-    public boolean canParticipateInCoarseMerge() {
-        return (kind == Kind.SINGLE_AIR || kind == Kind.SINGLE_MEDIUM)
-                && (topologyFlags & COARSE_MERGE_BLOCKERS) == 0;
-    }
-
     public enum Kind {
         UNKNOWN,
         NO_AIR,
         SINGLE_AIR,
-        SINGLE_MEDIUM,
         MIXED
     }
 }

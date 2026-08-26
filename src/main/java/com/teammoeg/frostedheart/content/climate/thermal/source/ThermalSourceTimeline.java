@@ -65,7 +65,7 @@ public final class ThermalSourceTimeline {
             throw new IllegalArgumentException("eventCapacity must be positive");
         }
         this.registry = Objects.requireNonNull(registry, "registry");
-        if (registry.sourceCount() != 0 || registry.latestEventWatermark() != 0L) {
+        if (registry.sourceCount() != 0) {
             throw new IllegalArgumentException("source timeline requires a fresh registry");
         }
         this.dimensionGeneration = dimensionGeneration;
@@ -78,29 +78,12 @@ public final class ThermalSourceTimeline {
         this.cursorTick = initialTick;
     }
 
-    public int capacity() {
-        return capacity;
-    }
-
-    public int queuedEventCount() {
-        long size = writeSequence.get() - readSequence.get();
-        return (int) Math.min(capacity, Math.max(0L, size));
-    }
-
     public long latestOfferedWatermark() {
         return nextOfferedWatermark;
     }
 
     public long appliedWatermark() {
         return appliedWatermark;
-    }
-
-    public long cursorTick() {
-        return cursorTick;
-    }
-
-    public int sourceCount() {
-        return registry.sourceCount();
     }
 
     /** Conservative sleep gate for continuous power and pending impulses. */
@@ -133,18 +116,12 @@ public final class ThermalSourceTimeline {
         return false;
     }
 
-    public SourceResyncSnapshot snapshotAtCursor(long sourceId) {
-        return registry.snapshotAt(sourceId, cursorTick);
-    }
-
     public double routedEnergyJ(long sourceId, SourceBinding.Kind kind) {
-        return registry.routedEnergyJ(sourceId, kind);
+        return registry.routedEnergyJAt(sourceId, kind, cursorTick);
     }
 
     public long offerRegister(
             long sourceId,
-            long packedPosition,
-            int profileId,
             int lifecycleGeneration,
             ThermalSourceMode mode,
             double powerW,
@@ -154,8 +131,6 @@ public final class ThermalSourceTimeline {
     ) {
         return offer(new RegisterCommand(
                 sourceId,
-                packedPosition,
-                profileId,
                 lifecycleGeneration,
                 mode,
                 powerW,
@@ -189,14 +164,6 @@ public final class ThermalSourceTimeline {
             long effectiveTick
     ) {
         return offer(new ImpulseCommand(sourceId, portId, signedEnergyJ, effectiveTick));
-    }
-
-    public long offerColdRoute(
-            long sourceId,
-            SourceBinding sink,
-            long effectiveTick
-    ) {
-        return offer(new ColdRouteCommand(sourceId, sink, effectiveTick));
     }
 
     public long offerUnload(
@@ -385,8 +352,6 @@ public final class ThermalSourceTimeline {
 
     private record RegisterCommand(
             long sourceId,
-            long packedPosition,
-            int profileId,
             int lifecycleGeneration,
             ThermalSourceMode mode,
             double powerW,
@@ -404,8 +369,6 @@ public final class ThermalSourceTimeline {
         public void apply(ThermalSourceRegistry registry) {
             registry.registerSource(
                     sourceId,
-                    packedPosition,
-                    profileId,
                     lifecycleGeneration,
                     mode,
                     powerW,
@@ -497,21 +460,6 @@ public final class ThermalSourceTimeline {
         @Override
         public void apply(ThermalSourceRegistry registry) {
             registry.applyImpulse(sourceId, portId, signedEnergyJ, effectiveTick);
-        }
-    }
-
-    private record ColdRouteCommand(
-            long sourceId,
-            SourceBinding sink,
-            long effectiveTick
-    ) implements SourceCommand {
-        private ColdRouteCommand {
-            Objects.requireNonNull(sink, "sink");
-        }
-
-        @Override
-        public void apply(ThermalSourceRegistry registry) {
-            registry.routeColdSourceTo(sourceId, sink, effectiveTick);
         }
     }
 

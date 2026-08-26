@@ -16,14 +16,12 @@ import com.teammoeg.frostedheart.content.climate.thermal.geometry.GeometryDeltaR
 import com.teammoeg.frostedheart.content.climate.thermal.geometry.GeometrySummary;
 import com.teammoeg.frostedheart.content.climate.thermal.geometry.GeometrySummaryCache;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.ArenaSpan;
-import com.teammoeg.frostedheart.content.climate.thermal.mesh.FacePatchIterator;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.FarFieldProfileRegistry;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.GeometryMigrationLedger;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.ImplicitAirAdjacency;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.MaterialBoundaryRegistry;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.ThermalCellArena;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.ThermalPage;
-import com.teammoeg.frostedheart.content.climate.thermal.mesh.TopologyGuard;
 import com.teammoeg.frostedheart.content.climate.thermal.profile.LocalAirRegionPattern;
 import com.teammoeg.frostedheart.content.climate.thermal.profile.ResolvedThermalSignature;
 import com.teammoeg.frostedheart.content.climate.thermal.profile.ThermalResolution;
@@ -33,16 +31,19 @@ import com.teammoeg.frostedheart.content.climate.thermal.solver.BuoyancyConducta
 import com.teammoeg.frostedheart.content.climate.thermal.solver.PhaseTransitionRuntime;
 import com.teammoeg.frostedheart.content.climate.thermal.solver.SealedInputFrame;
 import com.teammoeg.frostedheart.content.climate.thermal.solver.ThermalSweep;
+import com.teammoeg.frostedheart.content.climate.thermal.solver.ThermalSweepFragments;
 import com.teammoeg.frostedheart.content.climate.thermal.source.SourceBinding;
-import it.unimi.dsi.fastutil.longs.Long2DoubleLinkedOpenHashMap;
-import it.unimi.dsi.fastutil.longs.Long2DoubleMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.ints.IntArrayList;
+import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import net.minecraft.core.SectionPos;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
@@ -93,13 +94,19 @@ public final class MinecraftThermalTopologyApplier {
     private final PhaseTransitionRuntime phaseTransitions;
     private final SignatureGeometry initialAllAirGeometry;
     private final SignatureGeometry[] signatureGeometryById;
-    private final GeometryMigrationLedger migrationLedger = new GeometryMigrationLedger();
     private final Map<PageIdentity, PageState> pages = new LinkedHashMap<>();
     private final IdentityHashMap<ThermalPage, PageState> pagesByPage =
             new IdentityHashMap<>();
     private final List<RetiredSpan> spansAwaitingSweep = new ArrayList<>();
+    private final IncrementalAirGraph incrementalAirGraph = new IncrementalAirGraph();
+    private final IdentityHashMap<PageState, Boolean> dirtyPages =
+            new IdentityHashMap<>();
+    private List<PageState> installedActivePages = List.of();
+    private Long2ObjectMap<PageState> installedActiveBySection =
+            new Long2ObjectOpenHashMap<>();
 
-    private boolean topologyDirty;
+    private boolean fullTopologyCompilationRequired = true;
+    private ThermalSweep installedFragmentSweep;
     private double farFieldConductanceScale = 1.0D;
     private long publicationEpoch;
     private int nextPageSlot;
@@ -164,7 +171,6 @@ public final class MinecraftThermalTopologyApplier {
             FarFieldProfileRegistry profiles,
             boolean naturalEnvironment,
             FarFieldProfileRegistry.EnvironmentClass environmentClass,
-            FarFieldProfileRegistry.WindBucket windBucket,
             double calibrationSourcePowerW,
             double referenceOpeningAreaBlocksSquared,
             double continuationDistanceBlocks
@@ -172,7 +178,6 @@ public final class MinecraftThermalTopologyApplier {
         public FarFieldSettings {
             Objects.requireNonNull(profiles, "profiles");
             Objects.requireNonNull(environmentClass, "environmentClass");
-            Objects.requireNonNull(windBucket, "windBucket");
             requireNonNegativeFinite(
                     "calibrationSourcePowerW", calibrationSourcePowerW);
             requirePositiveFinite(
@@ -187,21 +192,9 @@ public final class MinecraftThermalTopologyApplier {
                     FarFieldProfileRegistry.empty(),
                     false,
                     FarFieldProfileRegistry.EnvironmentClass.CUSTOM_NATURAL,
-                    FarFieldProfileRegistry.WindBucket.CALM,
                     0.0D,
                     1.0D,
                     16.0D);
-        }
-
-        private FarFieldProfileRegistry.Key openSpaceKey() {
-            return new FarFieldProfileRegistry.Key(
-                    0,
-                    FarFieldProfileRegistry.OpeningClass.MULTI_FACE,
-                    2,
-                    FarFieldProfileRegistry.Orientation.HORIZONTAL,
-                    windBucket,
-                    environmentClass,
-                    FarFieldProfileRegistry.TopologyClass.OPEN_SPACE);
         }
     }
 
@@ -266,47 +259,11 @@ public final class MinecraftThermalTopologyApplier {
         APPLIED,
         DUPLICATE,
         WRITER_BUSY,
-        SOURCE_REBIND_REQUIRED,
         SOURCE_INPUTS_PENDING,
         FULL_RESYNC_SNAPSHOT_REQUIRED,
         LATEST_FRAME_REQUIRED,
         GENERATION_MISMATCH,
         ACK_REJECTED
-    }
-
-    public record ApplyReport(
-            ApplyStatus status,
-            int consumedResolvedInputs,
-            int consumedGeometryDeltas,
-            int rebuiltPages,
-            int retiredPages,
-            int pairOperations,
-            boolean topologyResolved,
-            DimensionThermalRuntime.AcknowledgeResult acknowledgeResult
-    ) {
-        private static ApplyReport pending(ApplyStatus status) {
-            return new ApplyReport(status, 0, 0, 0, 0, 0, false, null);
-        }
-
-        public boolean readyForSolve() {
-            return acknowledgeResult == DimensionThermalRuntime.AcknowledgeResult.APPLIED
-                    || acknowledgeResult
-                    == DimensionThermalRuntime.AcknowledgeResult.DUPLICATE;
-        }
-    }
-
-    public synchronized GeometryMigrationLedger.Snapshot migrationSnapshot() {
-        return migrationLedger.snapshot();
-    }
-
-    synchronized int stagedSignaturePageCount() {
-        int count = 0;
-        for (PageState state : pages.values()) {
-            if (state.desiredSignatureIds != null) {
-                count++;
-            }
-        }
-        return count;
     }
 
     /** Updates only the fixed external temperature; geometry remains unchanged. */
@@ -325,7 +282,7 @@ public final class MinecraftThermalTopologyApplier {
             return false;
         }
         state.naturalTemperatureC = naturalTemperatureC;
-        topologyDirty = true;
+        fullTopologyCompilationRequired = true;
         return true;
     }
 
@@ -341,7 +298,7 @@ public final class MinecraftThermalTopologyApplier {
             return false;
         }
         state.firstExposedLocalY = normalized;
-        topologyDirty = true;
+        fullTopologyCompilationRequired = true;
         return true;
     }
 
@@ -356,7 +313,7 @@ public final class MinecraftThermalTopologyApplier {
             return false;
         }
         farFieldConductanceScale = conductanceScale;
-        topologyDirty = true;
+        fullTopologyCompilationRequired = true;
         return true;
     }
 
@@ -377,21 +334,22 @@ public final class MinecraftThermalTopologyApplier {
             ConservativeAirGeometry.Face face =
                     ConservativeAirGeometry.Face.fromOrdinal(faceOrdinal);
             boolean continuation = false;
-            for (int localY = 0; localY < 16 && !continuation; localY++) {
-                for (int localZ = 0; localZ < 16 && !continuation; localZ++) {
-                    for (int localX = 0; localX < 16; localX++) {
-                        if (!onFace(localX, localY, localZ, face)
-                                || localY >= Byte.toUnsignedInt(state.firstExposedLocalY[
-                                        (localZ << 4) | localX])) {
-                            continue;
-                        }
-                        SignatureGeometry geometry = signatureGeometry(
-                                signatureIds[blockIndex(localX, localY, localZ)]);
-                        if (geometry.resolved
-                                && geometry.geometry.combinedFaceMask(face) != 0) {
-                            continuation = true;
-                            break;
-                        }
+            for (int v = 0; v < 16 && !continuation; v++) {
+                for (int u = 0; u < 16; u++) {
+                    int pageBlock = faceBlockIndex(face, u, v);
+                    int localX = pageBlock & 15;
+                    int localZ = (pageBlock >>> 4) & 15;
+                    int localY = (pageBlock >>> 8) & 15;
+                    if (localY >= Byte.toUnsignedInt(state.firstExposedLocalY[
+                            (localZ << 4) | localX])) {
+                        continue;
+                    }
+                    SignatureGeometry geometry = signatureGeometry(
+                            signatureIds[pageBlock]);
+                    if (geometry.resolved
+                            && geometry.geometry.combinedFaceMask(face) != 0) {
+                        continuation = true;
+                        break;
                     }
                 }
             }
@@ -426,7 +384,11 @@ public final class MinecraftThermalTopologyApplier {
                 Math.floorDiv(blockY, 4) * 4,
                 Math.floorDiv(blockZ, 4) * 4,
                 materialProfileId);
-        Integer slot = state.appliedPhaseReservoirSlots.get(key);
+        int baseIndex = GeometrySummaryCache.baseIndex(
+                SectionPos.sectionRelative(blockX),
+                SectionPos.sectionRelative(blockY),
+                SectionPos.sectionRelative(blockZ));
+        Integer slot = state.appliedPhaseReservoirSlotFragments[baseIndex].get(key);
         if (slot == null
                 || !arena.isLive(slot)
                 || !arena.isPhaseReservoir(slot)
@@ -462,53 +424,7 @@ public final class MinecraftThermalTopologyApplier {
         return phaseTransitions.latestOfferedAckWatermark();
     }
 
-    double committedPhaseEnergyJ() {
-        return phaseTransitions.committedTransitionEnergyJ();
-    }
-
-    public synchronized void registerAllAirPage(
-            ThermalPage page,
-            long admissionChunkWatermark
-    ) {
-        Objects.requireNonNull(page, "page");
-        if (admissionChunkWatermark < 0L) {
-            throw new IllegalArgumentException("admission chunk watermark must be non-negative");
-        }
-        int lifecycleGeneration = Math.toIntExact(page.lifecycleGeneration());
-        ArenaSpan span = page.cellSpan();
-        if (span.count() == 0) {
-            throw new IllegalArgumentException("all-air admission must own an arena cell");
-        }
-        int pageSlot = arena.pageSlot(span.firstSlot());
-        if (pageSlot == Integer.MAX_VALUE) {
-            nextPageSlot = Integer.MAX_VALUE;
-        } else {
-            nextPageSlot = Math.max(nextPageSlot, pageSlot + 1);
-        }
-        for (int slot = span.firstSlot(); slot < span.endSlotExclusive(); slot++) {
-            if (arena.pageSlot(slot) != pageSlot
-                    || arena.lifecycleGeneration(slot) != lifecycleGeneration) {
-                throw new IllegalArgumentException("Page and arena ownership disagree");
-            }
-        }
-        PageIdentity identity = new PageIdentity(page.sectionKey(), page.lifecycleGeneration());
-        if (pages.containsKey(identity)) {
-            throw new IllegalStateException("thermal Page is already registered with the applier");
-        }
-        PageState state = new PageState(
-                page,
-                pageSlot,
-                lifecycleGeneration,
-                admissionChunkWatermark,
-                page.coverageSnapshot(),
-                parameters.initialAirTemperatureC());
-        state.materialDirtyBrickMask = 0L;
-        pages.put(identity, state);
-        pagesByPage.put(page, state);
-        topologyDirty = true;
-    }
-
-    /** Creates a provisional unpublished Page from one loaded main-thread snapshot. */
+    /** Creates an empty unpublished Page from one loaded main-thread snapshot. */
     public synchronized ThermalPage registerCapturedPage(
             long sectionKey,
             long lifecycleGeneration,
@@ -544,39 +460,21 @@ public final class MinecraftThermalTopologyApplier {
         }
         int pageSlot = nextPageSlot++;
         int generation = Math.toIntExact(lifecycleGeneration);
-        int minX = SectionPos.sectionToBlockCoord(SectionPos.x(sectionKey));
-        int minY = SectionPos.sectionToBlockCoord(SectionPos.y(sectionKey));
-        int minZ = SectionPos.sectionToBlockCoord(SectionPos.z(sectionKey));
-        ArenaSpan provisional = arena.allocatePageCells(
-                pageSlot,
-                generation,
-                new ThermalCellArena.CellSpec[]{ThermalCellArena.CellSpec.regularAir(
-                        minX,
-                        minY,
-                        minZ,
-                        16,
-                        parameters.airMediumId(),
-                        parameters.cellFlags(),
-                        parameters.effectiveAirCapacityJPerBlockK())},
-                naturalTemperatureC,
-                parameters.referenceTemperatureC());
-        ThermalPage page = ThermalPage.allAir(
-                sectionKey, lifecycleGeneration, provisional.firstSlot(),
-                parameters.airMediumId());
+        ThermalPage page = new ThermalPage(sectionKey, lifecycleGeneration);
         PageState state = new PageState(
                 page,
                 pageSlot,
                 generation,
                 admissionChunkWatermark,
-                page.coverageSnapshot(),
                 naturalTemperatureC);
         state.desiredSignatureIds = normalizedSignatureCut(signatureIds);
         state.desiredGeometryRevision = page.liveGeometryRevision();
         state.desiredBrickMask = -1L;
         state.dirty = true;
+        dirtyPages.put(state, Boolean.TRUE);
         pages.put(identity, state);
         pagesByPage.put(page, state);
-        topologyDirty = true;
+        fullTopologyCompilationRequired = true;
         return page;
     }
 
@@ -592,14 +490,7 @@ public final class MinecraftThermalTopologyApplier {
                 SectionPos.blockToSectionCoord(blockX),
                 SectionPos.blockToSectionCoord(blockY),
                 SectionPos.blockToSectionCoord(blockZ));
-        PageState state = null;
-        for (PageState candidate : pages.values()) {
-            if (candidate.page.sectionKey() == sectionKey
-                    && candidate.retirementChunkWatermark == Long.MAX_VALUE) {
-                state = candidate;
-                break;
-            }
-        }
+        PageState state = installedActiveBySection.get(sectionKey);
         if (state == null
                 || state.dirty
                 || state.page.fullGeometryResyncRequired()
@@ -728,24 +619,25 @@ public final class MinecraftThermalTopologyApplier {
         state.retirementChunkWatermark = Math.min(
                 state.retirementChunkWatermark, retirementChunkWatermark);
         state.materialDependencyChanged = true;
-        topologyDirty = true;
+        fullTopologyCompilationRequired = true;
     }
 
-    public synchronized ApplyReport apply(SealedInputFrame frame) {
+    public synchronized ApplyStatus apply(SealedInputFrame frame) {
         Objects.requireNonNull(frame, "frame");
         if (frame.dimensionGeneration() != runtime.dimensionGeneration()) {
-            return ApplyReport.pending(ApplyStatus.GENERATION_MISMATCH);
+            return ApplyStatus.GENERATION_MISMATCH;
         }
         if (!runtime.tryBeginTopologyUpdate()) {
-            return ApplyReport.pending(ApplyStatus.WRITER_BUSY);
+            return ApplyStatus.WRITER_BUSY;
         }
         boolean writerOwned = true;
         boolean sourceCutPreApplied = false;
         try {
             phaseTransitions.applyAcksThrough(
                     frame.watermarks().transitionAck());
-            DrainResult drained = drain(frame);
-            boolean requiresTopologyCompilation = topologyDirty
+            drain(frame);
+            boolean requiresTopologyCompilation = fullTopologyCompilationRequired
+                    || !dirtyPages.isEmpty()
                     || hasPendingRetirements(frame.watermarks().chunk());
             if (!requiresTopologyCompilation) {
                 DimensionThermalRuntime.AcknowledgeResult acknowledged;
@@ -760,88 +652,87 @@ public final class MinecraftThermalTopologyApplier {
                 } finally {
                     writerOwned = false;
                 }
-                return new ApplyReport(
-                        acknowledged == DimensionThermalRuntime.AcknowledgeResult.APPLIED
-                                ? ApplyStatus.APPLIED
-                                : acknowledged == DimensionThermalRuntime.AcknowledgeResult.DUPLICATE
-                                        ? ApplyStatus.DUPLICATE
-                                        : ApplyStatus.ACK_REJECTED,
-                        drained.resolvedInputs,
-                        drained.geometryDeltas,
-                        0,
-                        0,
-                        0,
-                        runtime.topologyResolved(),
-                        acknowledged);
+                return statusOf(acknowledged);
             }
 
-            List<PageState> active = activePages(frame.watermarks().chunk());
-            Long2ObjectMap<PageState> activeBySection = indexActivePages(active);
-            propagateMaterialDependencyDirtiness(
-                    frame.watermarks().chunk(), activeBySection);
-            for (PageState state : active) {
+            boolean fullCompilation = fullTopologyCompilationRequired
+                    || installedFragmentSweep == null;
+            List<PageState> active = fullCompilation
+                    ? activePages(frame.watermarks().chunk())
+                    : installedActivePages;
+            Long2ObjectMap<PageState> activeBySection = fullCompilation
+                    ? indexActivePages(active)
+                    : installedActiveBySection;
+            if (fullCompilation) {
+                propagateMaterialDependencyDirtiness(
+                        frame.watermarks().chunk(), activeBySection);
+            }
+            Iterable<PageState> geometryWork = fullCompilation
+                    ? active
+                    : List.copyOf(dirtyPages.keySet());
+            cancelUnchangedBrickMutations(geometryWork);
+            for (PageState state : geometryWork) {
                 if (state.page.fullGeometryResyncRequired()
                         && !state.hasCurrentResyncSnapshot()) {
-                    return new ApplyReport(
-                            ApplyStatus.FULL_RESYNC_SNAPSHOT_REQUIRED,
-                            drained.resolvedInputs,
-                            drained.geometryDeltas,
-                            0, 0, 0, false, null);
+                    return ApplyStatus.FULL_RESYNC_SNAPSHOT_REQUIRED;
                 }
                 if (state.dirty && state.desiredGeometryRevision
                         != state.page.liveGeometryRevision()) {
-                    return new ApplyReport(
-                            ApplyStatus.LATEST_FRAME_REQUIRED,
-                            drained.resolvedInputs,
-                        drained.geometryDeltas,
-                        0, 0, 0, false, null);
+                    return ApplyStatus.LATEST_FRAME_REQUIRED;
                 }
             }
-            if (referencesAffectedSource(active, frame.watermarks().chunk())) {
-                DimensionThermalRuntime.SourceTopologyBarrierReport barrier =
+            List<PageState> sourceWork = fullCompilation
+                    ? active
+                    : List.copyOf(dirtyPages.keySet());
+            if (referencesAffectedSource(
+                    sourceWork, frame.watermarks().chunk(), fullCompilation)) {
+                DimensionThermalRuntime.SourceTopologyBarrierStatus barrier =
                         runtime.preApplySourcesForTopology(frame);
-                if (barrier.status()
+                if (barrier
                         == DimensionThermalRuntime.SourceTopologyBarrierStatus.INPUTS_PENDING
-                        || barrier.status()
+                        || barrier
                         == DimensionThermalRuntime.SourceTopologyBarrierStatus.FRAME_MISMATCH
-                        || barrier.status()
+                        || barrier
                         == DimensionThermalRuntime.SourceTopologyBarrierStatus.UNAVAILABLE) {
-                    return new ApplyReport(
-                            ApplyStatus.SOURCE_INPUTS_PENDING,
-                            drained.resolvedInputs,
-                            drained.geometryDeltas,
-                            0, 0, 0, false, null);
+                    return ApplyStatus.SOURCE_INPUTS_PENDING;
                 }
                 sourceCutPreApplied = true;
-                if (referencesAffectedSource(active, frame.watermarks().chunk())) {
+                if (referencesAffectedSource(
+                        sourceWork, frame.watermarks().chunk(), fullCompilation)) {
                     DimensionThermalRuntime.AcknowledgeResult acknowledged;
                     try {
                         acknowledged = finishDeferredTopologyFrame(frame);
                     } finally {
                         writerOwned = false;
                     }
-                    return deferredReport(
-                            ApplyStatus.SOURCE_REBIND_REQUIRED,
-                            drained,
-                            0,
-                            0,
-                            acknowledged);
+                    return statusOf(acknowledged);
                 }
             }
 
-            int retiredPages = queueRetirements(frame.watermarks().chunk());
-            int rebuiltPages = 0;
+            if (fullCompilation) {
+                queueRetirements(frame.watermarks().chunk());
+            }
             try {
-                for (PageState state : active) {
+                for (PageState state : geometryWork) {
                     if (state.dirty) {
                         rebuildPage(state, activeBySection);
-                        rebuiltPages++;
                     }
                 }
-                rebuildDirtyMaterials(active, activeBySection);
+                rebuildDirtyMaterials(
+                        fullCompilation
+                                ? active
+                                : List.copyOf(dirtyPages.keySet()),
+                        activeBySection);
 
                 long nextPublicationEpoch = Math.incrementExact(publicationEpoch);
-                for (PageState state : active) {
+                Iterable<PageState> publicationWork = fullCompilation
+                        ? active : List.copyOf(dirtyPages.keySet());
+                for (PageState state : publicationWork) {
+                    if (!fullCompilation
+                            && state.page.publishedGeometryRevision()
+                            == state.page.liveGeometryRevision()) {
+                        continue;
+                    }
                     if (!state.page.tryPublishGeometry(
                             state.page.liveGeometryRevision(),
                             state.page.topologyGeneration(),
@@ -850,17 +741,35 @@ public final class MinecraftThermalTopologyApplier {
                     }
                 }
                 publicationEpoch = nextPublicationEpoch;
-                rebuildDirtyPairFragments(active, activeBySection);
+                rebuildDirtyPairFragments(
+                        fullCompilation
+                                ? active
+                                : List.copyOf(dirtyPages.keySet()),
+                        activeBySection);
 
-                CompiledTopology compiled = compileTopology(active, activeBySection);
-                boolean topologyResolved = topologyResolved(active, compiled);
-                ThermalSweep replacementSweep = new ThermalSweep(
-                        arena,
-                        compiled.pairs(),
-                        compiled.boundaries(),
-                        phaseTransitions,
-                        compiled.phaseOperations(),
-                        parameters.buoyancyParameters());
+                if (!fullCompilation && !hasIncrementalTopologyChanges()) {
+                    long nextGeometryRevision = Math.max(
+                            runtime.geometryRevision(), frame.watermarks().geometry());
+                    DimensionThermalRuntime.AcknowledgeResult acknowledged;
+                    try {
+                        acknowledged = runtime.finishTopologyUpdate(
+                                frame.dimensionGeneration(),
+                                frame.watermarks(),
+                                nextGeometryRevision,
+                                runtime.topologyGeneration(),
+                                runtime.topologyResolved(),
+                                null);
+                    } finally {
+                        writerOwned = false;
+                    }
+                    clearIncrementalUpdateState();
+                    return statusOf(acknowledged);
+                }
+
+                CompiledTopology compiled = fullCompilation
+                        ? compileTopology(active, activeBySection)
+                        : compileIncrementalTopology(activeBySection);
+                boolean topologyResolved = compiled.allOpenFrontiersResolved();
 
                 long nextGeometryRevision = Math.max(
                         runtime.geometryRevision(), frame.watermarks().geometry());
@@ -874,40 +783,31 @@ public final class MinecraftThermalTopologyApplier {
                             nextGeometryRevision,
                             nextTopologyGeneration,
                             topologyResolved,
-                            replacementSweep);
+                            compiled.sweep());
                 } finally {
                     writerOwned = false;
                 }
                 if (acknowledged != DimensionThermalRuntime.AcknowledgeResult.APPLIED
                         && acknowledged != DimensionThermalRuntime.AcknowledgeResult.DUPLICATE) {
-                    return new ApplyReport(
-                            ApplyStatus.ACK_REJECTED,
-                            drained.resolvedInputs,
-                            drained.geometryDeltas,
-                            rebuiltPages,
-                            retiredPages,
-                            compiled.pairs().size(),
-                            topologyResolved,
-                            acknowledged);
+                    return ApplyStatus.ACK_REJECTED;
+                }
+
+                installedFragmentSweep = compiled.sweep();
+                fullTopologyCompilationRequired = false;
+                if (fullCompilation) {
+                    installedActivePages = List.copyOf(active);
+                    installedActiveBySection = activeBySection;
                 }
 
                 releaseCommittedSpans();
-                removeRetiredPages(frame.watermarks().chunk());
-                for (PageState state : pages.values()) {
-                    state.materialDependencyChanged = false;
+                if (fullCompilation) {
+                    removeRetiredPages(frame.watermarks().chunk());
+                    for (PageState state : pages.values()) {
+                        state.materialDependencyChanged = false;
+                    }
                 }
-                topologyDirty = false;
-                return new ApplyReport(
-                        acknowledged == DimensionThermalRuntime.AcknowledgeResult.APPLIED
-                                ? ApplyStatus.APPLIED
-                                : ApplyStatus.DUPLICATE,
-                        drained.resolvedInputs,
-                        drained.geometryDeltas,
-                        rebuiltPages,
-                        retiredPages,
-                        compiled.pairs().size(),
-                        topologyResolved,
-                        acknowledged);
+                clearIncrementalUpdateState();
+                return statusOf(acknowledged);
             } catch (LatestFrameException exception) {
                 if (sourceCutPreApplied) {
                     DimensionThermalRuntime.AcknowledgeResult acknowledged;
@@ -920,24 +820,13 @@ public final class MinecraftThermalTopologyApplier {
                             || acknowledged
                             == DimensionThermalRuntime.AcknowledgeResult.DUPLICATE) {
                         releaseCommittedSpans();
-                        removeRetiredPages(frame.watermarks().chunk());
+                        if (fullCompilation) {
+                            removeRetiredPages(frame.watermarks().chunk());
+                        }
                     }
-                    return deferredReport(
-                            ApplyStatus.LATEST_FRAME_REQUIRED,
-                            drained,
-                            rebuiltPages,
-                            retiredPages,
-                            acknowledged);
+                    return statusOf(acknowledged);
                 }
-                return new ApplyReport(
-                        ApplyStatus.LATEST_FRAME_REQUIRED,
-                        drained.resolvedInputs,
-                        drained.geometryDeltas,
-                        rebuiltPages,
-                        retiredPages,
-                        0,
-                        false,
-                        null);
+                return ApplyStatus.LATEST_FRAME_REQUIRED;
             }
         } finally {
             if (writerOwned) {
@@ -949,45 +838,35 @@ public final class MinecraftThermalTopologyApplier {
     private DimensionThermalRuntime.AcknowledgeResult finishDeferredTopologyFrame(
             SealedInputFrame frame
     ) {
-        ThermalSweep disabledSweep = new ThermalSweep(
-                arena,
-                List.of(),
-                List.of(),
-                parameters.buoyancyParameters());
-        return runtime.finishTopologyUpdate(
+        ThermalSweep disabledSweep = ThermalSweepFragments.builder(
+                arena, null, parameters.buoyancyParameters(), 0).build();
+        DimensionThermalRuntime.AcknowledgeResult result = runtime.finishTopologyUpdate(
                 frame.dimensionGeneration(),
                 frame.watermarks(),
                 Math.max(runtime.geometryRevision(), frame.watermarks().geometry()),
                 Math.incrementExact(runtime.topologyGeneration()),
                 false,
                 disabledSweep);
+        installedFragmentSweep = null;
+        fullTopologyCompilationRequired = true;
+        return result;
     }
 
-    private static ApplyReport deferredReport(
-            ApplyStatus status,
-            DrainResult drained,
-            int rebuiltPages,
-            int retiredPages,
-            DimensionThermalRuntime.AcknowledgeResult acknowledged
+    private static ApplyStatus statusOf(
+            DimensionThermalRuntime.AcknowledgeResult result
     ) {
-        return new ApplyReport(
-                status,
-                drained.resolvedInputs,
-                drained.geometryDeltas,
-                rebuiltPages,
-                retiredPages,
-                0,
-                false,
-                acknowledged);
+        return switch (result) {
+            case APPLIED -> ApplyStatus.APPLIED;
+            case DUPLICATE -> ApplyStatus.DUPLICATE;
+            default -> ApplyStatus.ACK_REJECTED;
+        };
     }
 
-    private DrainResult drain(SealedInputFrame frame) {
-        int resolvedCount = 0;
+    private void drain(SealedInputFrame frame) {
         ResolvedGeometryInputRing.MutableInput input =
                 new ResolvedGeometryInputRing.MutableInput();
         while (resolvedInputs.pollThroughWatermark(
                 frame.watermarks().geometry(), input)) {
-            resolvedCount++;
             PageState state = pages.get(new PageIdentity(
                     input.sectionKey(), input.lifecycleGeneration()));
             if (state == null) {
@@ -995,8 +874,6 @@ public final class MinecraftThermalTopologyApplier {
             }
             state.desiredGeometryRevision = Math.max(
                     state.desiredGeometryRevision, input.geometryRevision());
-            state.dirty = true;
-            topologyDirty = true;
             if (input.kind() == ResolvedGeometryInputRing.Kind.FULL_RESYNC_REQUIRED) {
                 int[] snapshot = input.fullPageSignatureIds();
                 if (snapshot == null
@@ -1004,21 +881,48 @@ public final class MinecraftThermalTopologyApplier {
                     throw new IllegalStateException(
                             "full resync input is missing its Page snapshot");
                 }
+                long changedBrickMask = 0L;
                 for (int index = 0; index < snapshot.length; index++) {
                     int signatureId = snapshot[index];
                     if (signatureId < 0 || signatures.signature(signatureId).isEmpty()) {
                         snapshot[index] = UNRESOLVED_SIGNATURE;
                     }
+                    if (!sameTopologySignature(
+                            state.appliedSignatureIds[index], snapshot[index])) {
+                        changedBrickMask |= 1L << baseIndexForBlockIndex(index);
+                    }
                 }
+                ThermalPage.GeometryResyncToken token =
+                        new ThermalPage.GeometryResyncToken(
+                                input.sectionKey(),
+                                input.lifecycleGeneration(),
+                                input.geometryRevision(),
+                                input.geometryResyncReason());
+                if (changedBrickMask == 0L
+                        && state.fragmented
+                        && state.page.tryAcknowledgeUnchangedFullGeometryResync(token)) {
+                    state.appliedSignatureIds = snapshot;
+                    state.desiredSignatureIds = null;
+                    state.desiredBrickMask = 0L;
+                    state.pendingResyncToken = null;
+                    state.dirty = false;
+                    if (!state.page.tryPublishGeometry(
+                            state.page.liveGeometryRevision(),
+                            state.page.topologyGeneration(),
+                            state.page.publishedSolveEpoch())) {
+                        dirtyPages.put(state, Boolean.TRUE);
+                    }
+                    continue;
+                }
+                state.dirty = true;
+                dirtyPages.put(state, Boolean.TRUE);
                 state.desiredSignatureIds = snapshot;
-                state.desiredBrickMask = -1L;
-                state.pendingResyncToken = new ThermalPage.GeometryResyncToken(
-                        input.sectionKey(),
-                        input.lifecycleGeneration(),
-                        input.geometryRevision(),
-                        input.geometryResyncReason());
+                state.desiredBrickMask = changedBrickMask;
+                state.pendingResyncToken = token;
                 continue;
             }
+            state.dirty = true;
+            dirtyPages.put(state, Boolean.TRUE);
             ensureDesiredSignatureIds(state);
             state.desiredSignatureIds[input.blockIndex()] =
                     input.status() == ThermalResolution.Status.RESOLVED
@@ -1028,34 +932,40 @@ public final class MinecraftThermalTopologyApplier {
             state.desiredBrickMask |= 1L << baseIndexForBlockIndex(input.blockIndex());
         }
 
-        int deltaCount = 0;
         GeometryDeltaRing.MutableGeometryDelta delta =
                 new GeometryDeltaRing.MutableGeometryDelta();
         while (geometryDeltas.pollThroughTick(frame.effectiveTick(), delta)) {
-            deltaCount++;
             PageState state = pages.get(new PageIdentity(
                     delta.sectionKey(), delta.lifecycleGeneration()));
             if (state != null) {
                 state.desiredGeometryRevision = Math.max(
                         state.desiredGeometryRevision, delta.geometryRevision());
                 state.dirty = true;
+                dirtyPages.put(state, Boolean.TRUE);
                 state.desiredBrickMask |= 1L << delta.baseBrickIndex();
                 ensureDesiredSignatureIds(state);
-                topologyDirty = true;
             }
         }
-        return new DrainResult(resolvedCount, deltaCount);
     }
 
     private void rebuildPage(
             PageState state,
             Long2ObjectMap<PageState> activeBySection
     ) {
-        boolean fullBuild = !state.fragmented
-                || state.pendingResyncToken != null
-                || state.page.coverageRepartitionRequired();
+        state.lastUnresolvedTopology = state.unresolvedTopology;
+        boolean fullBuild = !state.fragmented;
         long brickMask = fullBuild ? -1L : state.desiredBrickMask;
         if (brickMask == 0L) {
+            if (state.pendingResyncToken != null) {
+                if (!state.page.tryAcknowledgeUnchangedFullGeometryResync(
+                        state.pendingResyncToken)) {
+                    throw new LatestFrameException();
+                }
+                state.appliedSignatureIds = state.desiredSignatureIds;
+                state.desiredSignatureIds = null;
+                state.desiredBrickMask = 0L;
+                state.pendingResyncToken = null;
+            }
             state.dirty = false;
             return;
         }
@@ -1082,21 +992,21 @@ public final class MinecraftThermalTopologyApplier {
         for (int baseIndex = 0; baseIndex < ThermalPage.BASE_BRICK_COUNT; baseIndex++) {
             nextBaseSummaries[baseIndex] = state.page.geometrySummary(baseIndex);
         }
-        Map<MaterialPoleKey, Integer> nextMaterialSlots = fullBuild
-                ? new LinkedHashMap<>()
-                : new LinkedHashMap<>(state.appliedMaterialPoleSlots);
-        Map<PhaseReservoirKey, Integer> nextPhaseSlots = fullBuild
-                ? new LinkedHashMap<>()
-                : new LinkedHashMap<>(state.appliedPhaseReservoirSlots);
-        List<MaterialSurface> nextMaterialSurfaces = fullBuild
-                ? new ArrayList<>()
-                : new ArrayList<>(state.appliedMaterialSurfaces);
-        List<PhaseSurface> nextPhaseSurfaces = fullBuild
-                ? new ArrayList<>()
-                : new ArrayList<>(state.appliedPhaseReservoirs);
-        List<StatelessBridge> nextStatelessBridges = fullBuild
-                ? new ArrayList<>()
-                : new ArrayList<>(state.appliedStatelessBridges);
+        Map<MaterialPoleKey, Integer>[] nextMaterialSlots = fullBuild
+                ? emptyMapFragmentArray()
+                : state.appliedMaterialPoleSlotFragments.clone();
+        Map<PhaseReservoirKey, Integer>[] nextPhaseSlots = fullBuild
+                ? emptyMapFragmentArray()
+                : state.appliedPhaseReservoirSlotFragments.clone();
+        List<MaterialSurface>[] nextMaterialSurfaces = fullBuild
+                ? emptyFragmentArray()
+                : state.appliedMaterialSurfaceFragments.clone();
+        List<PhaseSurface>[] nextPhaseSurfaces = fullBuild
+                ? emptyFragmentArray()
+                : state.appliedPhaseReservoirFragments.clone();
+        List<StatelessBridge>[] nextStatelessBridges = fullBuild
+                ? emptyFragmentArray()
+                : state.appliedStatelessBridgeFragments.clone();
         PageBuild[] builds = new PageBuild[ThermalPage.BASE_BRICK_COUNT];
         List<ArenaSpan> allocated = new ArrayList<>(Long.bitCount(brickMask));
         GeometryMigrationLedger.MigrationResult migration;
@@ -1131,49 +1041,54 @@ public final class MinecraftThermalTopologyApplier {
                 nextMixed[baseIndex] = build.mixedGeometry[baseIndex];
                 nextBaseSummaries[baseIndex] = build.baseSummaries[baseIndex];
 
-                removeBrickMaterialState(
-                        state, baseIndex, nextMaterialSlots, nextPhaseSlots,
-                        nextMaterialSurfaces, nextPhaseSurfaces, nextStatelessBridges);
-                nextMaterialSlots.putAll(buildMaterialPoleSlots(build, allocation));
-                nextPhaseSlots.putAll(buildPhaseReservoirSlots(build, allocation));
-                nextMaterialSurfaces.addAll(build.materialSurfaces);
-                nextPhaseSurfaces.addAll(build.phaseSurfaces);
-                nextStatelessBridges.addAll(build.statelessBridges);
+                nextMaterialSlots[baseIndex] = immutableMapPreservingOrder(
+                        buildMaterialPoleSlots(build, allocation));
+                nextPhaseSlots[baseIndex] = immutableMapPreservingOrder(
+                        buildPhaseReservoirSlots(build, allocation));
+                nextMaterialSurfaces[baseIndex] = List.copyOf(build.materialSurfaces);
+                nextPhaseSurfaces[baseIndex] = List.copyOf(build.phaseSurfaces);
+                nextStatelessBridges[baseIndex] = List.copyOf(build.statelessBridges);
                 remaining &= remaining - 1L;
             }
 
             int[] oldSlots = collectFragmentSlots(oldFirst, oldCount, brickMask);
             int[] newSlots = collectFragmentSlots(nextFirst, nextCount, brickMask);
+            state.lastRemovedAirSlots = filterAirSlots(oldSlots);
+            state.lastAddedAirSlots = filterAirSlots(newSlots);
             migration = calculateFragmentMigration(
                     state, oldSlots, newSlots, nextCoverage, nextMixed,
-                    nextMaterialSlots, nextPhaseSlots, brickMask);
+                    nextMaterialSlots, nextPhaseSlots,
+                    brickMask);
             double[] enthalpies = migration.newEnthalpiesJ();
             for (int index = 0; index < newSlots.length; index++) {
                 arena.setEnthalpyJ(newSlots[index], enthalpies[index]);
             }
-            migratePhaseRequestState(state, nextPhaseSlots);
+            migratePhaseRequestState(
+                    state, nextPhaseSlots, brickMask);
 
             boolean installed;
             if (fullBuild) {
-                GeometrySummaryCache summaries = new GeometrySummaryCache();
                 long mixedMask = 0L;
-                byte[] widths = new byte[ThermalPage.BASE_BRICK_COUNT];
-                Arrays.fill(widths, (byte) 4);
                 for (int baseIndex = 0;
                      baseIndex < ThermalPage.BASE_BRICK_COUNT;
                      baseIndex++) {
-                    summaries.setBaseSummary(baseIndex, nextBaseSummaries[baseIndex]);
                     if (nextMixed[baseIndex] != null) {
                         mixedMask |= 1L << baseIndex;
                     }
                 }
                 ThermalPage.FullGeometryState geometry = new ThermalPage.FullGeometryState(
-                        nextCoverage, widths, summaries.snapshot(), mixedMask, ArenaSpan.EMPTY);
+                        nextCoverage, nextBaseSummaries, mixedMask);
                 installed = state.pendingResyncToken == null
                         ? state.page.tryInstallGeometryBuild(
                                 state.desiredGeometryRevision, geometry)
                         : state.page.tryInstallFullGeometryResync(
                                 state.pendingResyncToken, geometry);
+            } else if (state.pendingResyncToken != null) {
+                installed = state.page.tryInstallBrickFullGeometryResync(
+                        state.pendingResyncToken,
+                        brickMask,
+                        nextCoverage,
+                        nextBaseSummaries);
             } else {
                 installed = state.page.tryInstallBrickBuilds(
                         state.desiredGeometryRevision,
@@ -1194,7 +1109,6 @@ public final class MinecraftThermalTopologyApplier {
             throw exception;
         }
 
-        migrationLedger.record(migration);
         queueFragmentReleases(state, oldFirst, oldCount, brickMask);
         System.arraycopy(nextFirst, 0, state.fragmentFirst, 0, nextFirst.length);
         System.arraycopy(nextCount, 0, state.fragmentCount, 0, nextCount.length);
@@ -1203,11 +1117,12 @@ public final class MinecraftThermalTopologyApplier {
         state.desiredSignatureIds = null;
         state.appliedCoverageRefs = nextCoverage;
         state.appliedMixedGeometry = nextMixed;
-        state.appliedMaterialPoleSlots = Map.copyOf(nextMaterialSlots);
-        state.appliedMaterialSurfaces = List.copyOf(nextMaterialSurfaces);
-        state.appliedPhaseReservoirSlots = Map.copyOf(nextPhaseSlots);
-        state.appliedPhaseReservoirs = List.copyOf(nextPhaseSurfaces);
-        state.appliedStatelessBridges = List.copyOf(nextStatelessBridges);
+        state.appliedBaseSummaries = nextBaseSummaries;
+        state.appliedMaterialPoleSlotFragments = nextMaterialSlots;
+        state.appliedMaterialSurfaceFragments = nextMaterialSurfaces;
+        state.appliedPhaseReservoirSlotFragments = nextPhaseSlots;
+        state.appliedPhaseReservoirFragments = nextPhaseSurfaces;
+        state.appliedStatelessBridgeFragments = nextStatelessBridges;
         long remaining = brickMask;
         while (remaining != 0L) {
             int baseIndex = Long.numberOfTrailingZeros(remaining);
@@ -1218,10 +1133,91 @@ public final class MinecraftThermalTopologyApplier {
             remaining &= remaining - 1L;
         }
         state.materialDirtyBrickMask &= ~brickMask;
+        state.lastRebuiltGeometryBrickMask |= brickMask;
+        state.lastRebuiltMaterialBrickMask |= brickMask;
         state.unresolvedTopology = anyUnresolved(state.unresolvedBricks);
         state.desiredBrickMask = 0L;
         state.pendingResyncToken = null;
         state.dirty = false;
+    }
+
+    private void cancelUnchangedBrickMutations(Iterable<PageState> active) {
+        for (PageState state : active) {
+            if (!state.dirty
+                    || !state.fragmented
+                    || state.pendingResyncToken != null) {
+                continue;
+            }
+            long unchanged = 0L;
+            long remaining = state.desiredBrickMask;
+            while (remaining != 0L) {
+                int baseIndex = Long.numberOfTrailingZeros(remaining);
+                if (brickTopologyUnchanged(state, baseIndex)) {
+                    unchanged |= 1L << baseIndex;
+                }
+                remaining &= remaining - 1L;
+            }
+            if (unchanged == 0L) {
+                continue;
+            }
+            if (!state.page.tryAcknowledgeUnchangedBricks(
+                    state.desiredGeometryRevision,
+                    unchanged,
+                    state.appliedCoverageRefs,
+                    state.appliedBaseSummaries)) {
+                throw new LatestFrameException();
+            }
+            copyBrickSignatures(
+                    state.desiredSignatureIds,
+                    state.appliedSignatureIds,
+                    unchanged);
+            state.desiredBrickMask &= ~unchanged;
+            if (state.desiredBrickMask == 0L) {
+                state.desiredSignatureIds = null;
+                state.pendingResyncToken = null;
+                state.dirty = false;
+            }
+        }
+    }
+
+    private boolean brickTopologyUnchanged(PageState state, int baseIndex) {
+        int minX = (baseIndex & 3) << 2;
+        int minZ = ((baseIndex >>> 2) & 3) << 2;
+        int minY = ((baseIndex >>> 4) & 3) << 2;
+        for (int localY = minY; localY < minY + 4; localY++) {
+            for (int localZ = minZ; localZ < minZ + 4; localZ++) {
+                for (int localX = minX; localX < minX + 4; localX++) {
+                    int block = blockIndex(localX, localY, localZ);
+                    if (!sameTopologySignature(
+                            state.appliedSignatureIds[block],
+                            state.desiredSignatureIds[block])) {
+                        return false;
+                    }
+                }
+            }
+        }
+        return true;
+    }
+
+    private static void copyBrickSignatures(
+            int[] source,
+            int[] target,
+            long brickMask
+    ) {
+        long remaining = brickMask;
+        while (remaining != 0L) {
+            int baseIndex = Long.numberOfTrailingZeros(remaining);
+            int minX = (baseIndex & 3) << 2;
+            int minZ = ((baseIndex >>> 2) & 3) << 2;
+            int minY = ((baseIndex >>> 4) & 3) << 2;
+            for (int localY = minY; localY < minY + 4; localY++) {
+                for (int localZ = minZ; localZ < minZ + 4; localZ++) {
+                    int first = blockIndex(minX, localY, localZ);
+                    System.arraycopy(source, first, target, first, 4);
+                }
+            }
+            remaining &= remaining - 1L;
+        }
     }
 
     private PageBuild compileBrick(
@@ -1233,7 +1229,6 @@ public final class MinecraftThermalTopologyApplier {
         int sectionMinX = SectionPos.sectionToBlockCoord(SectionPos.x(state.page.sectionKey()));
         int sectionMinY = SectionPos.sectionToBlockCoord(SectionPos.y(state.page.sectionKey()));
         int sectionMinZ = SectionPos.sectionToBlockCoord(SectionPos.z(state.page.sectionKey()));
-        int compilerGeneration = Math.toIntExact(state.page.topologyGeneration() + 1L);
         int[] signatureIds = buildSignatureIds(state);
         int brickX = baseIndex & 3;
         int brickZ = (baseIndex >>> 2) & 3;
@@ -1289,12 +1284,12 @@ public final class MinecraftThermalTopologyApplier {
         } else if (fullAir && provenAirMicrocells == 64 * MICROCELLS_PER_BLOCK) {
             build.regularOrdinal[baseIndex] = 0;
             build.regularCells.add(ThermalCellArena.CellSpec.regularAir(
-                    minX, minY, minZ, 4, mediumId, parameters.cellFlags(),
+                    minX, minY, minZ, mediumId, parameters.cellFlags(),
                     parameters.effectiveAirCapacityJPerBlockK()));
             build.baseSummaries[baseIndex] = GeometrySummary.singleAir(mediumId);
         } else {
             ComponentBrickCompiler.Compilation compiled = ComponentBrickCompiler.compile(
-                    geometry, parameters.maximumRegionsPerBlock(), compilerGeneration);
+                    geometry, parameters.maximumRegionsPerBlock());
             if (compiled.status() != ComponentBrickCompiler.Status.RESOLVED
                     || compiled.brick().orElseThrow().componentCount() == 0) {
                 build.setNoAir(baseIndex, true);
@@ -1308,7 +1303,6 @@ public final class MinecraftThermalTopologyApplier {
                 build.mixedGeometry[baseIndex] = brick;
                 build.baseSummaries[baseIndex] = GeometrySummary.mixed(
                         GeometrySummary.MATERIAL_INTERFACE);
-                build.mixedBrickMask = 1L << baseIndex;
             }
         }
         compileMaterialBoundaries(state, activeBySection, build);
@@ -1504,19 +1498,19 @@ public final class MinecraftThermalTopologyApplier {
             Long2ObjectMap<PageState> activeBySection,
             PageBuild build
     ) {
-        for (FacePatchIterator.Axis axis : FacePatchIterator.Axis.values()) {
+        for (ImplicitAirAdjacency.Axis axis : ImplicitAirAdjacency.Axis.values()) {
             for (int v = 0; v < 4; v++) {
                 for (int u = 0; u < 4; u++) {
                     AirMicrocell negative;
                     AirMicrocell positive;
-                    if (axis == FacePatchIterator.Axis.X) {
+                    if (axis == ImplicitAirAdjacency.Axis.X) {
                         negative = airMicrocellIfPresent(
                                 blockX - 1, blockY, blockZ,
                                 3, v, u, activeBySection, true);
                         positive = airMicrocellIfPresent(
                                 blockX + 1, blockY, blockZ,
                                 0, v, u, activeBySection, true);
-                    } else if (axis == FacePatchIterator.Axis.Y) {
+                    } else if (axis == ImplicitAirAdjacency.Axis.Y) {
                         negative = airMicrocellIfPresent(
                                 blockX, blockY - 1, blockZ,
                                 u, 3, v, activeBySection, true);
@@ -1708,22 +1702,23 @@ public final class MinecraftThermalTopologyApplier {
 
     private boolean referencesAffectedSource(
             List<PageState> active,
-            long chunkWatermark
+            long chunkWatermark,
+            boolean includeRetirements
     ) {
         for (PageState state : active) {
             long dirtyMask = state.dirty
-                    ? (!state.fragmented || state.page.coverageRepartitionRequired()
-                            ? -1L
-                            : state.desiredBrickMask)
+                    ? (!state.fragmented ? -1L : state.desiredBrickMask)
                     : 0L;
             if (dirtyMask != 0L && fragmentsReferenceSource(state, dirtyMask)) {
                 return true;
             }
         }
-        for (PageState state : pages.values()) {
-            if (state.retirementChunkWatermark <= chunkWatermark
-                    && fragmentsReferenceSource(state, -1L)) {
-                return true;
+        if (includeRetirements) {
+            for (PageState state : pages.values()) {
+                if (state.retirementChunkWatermark <= chunkWatermark
+                        && fragmentsReferenceSource(state, -1L)) {
+                    return true;
+                }
             }
         }
         for (RetiredSpan retired : spansAwaitingSweep) {
@@ -1758,51 +1753,6 @@ public final class MinecraftThermalTopologyApplier {
         return normalized;
     }
 
-    private void removeBrickMaterialState(
-            PageState state,
-            int baseIndex,
-            Map<MaterialPoleKey, Integer> materialSlots,
-            Map<PhaseReservoirKey, Integer> phaseSlots,
-            List<MaterialSurface> materialSurfaces,
-            List<PhaseSurface> phaseSurfaces,
-            List<StatelessBridge> statelessBridges
-    ) {
-        materialSlots.keySet().removeIf(key -> belongsToBrick(
-                state, baseIndex,
-                key.surface().blockX(), key.surface().blockY(), key.surface().blockZ()));
-        phaseSlots.keySet().removeIf(key -> belongsToBrick(
-                state, baseIndex, key.brickMinX(), key.brickMinY(), key.brickMinZ()));
-        materialSurfaces.removeIf(surface -> belongsToBrick(
-                state, baseIndex,
-                surface.key().blockX(), surface.key().blockY(), surface.key().blockZ()));
-        phaseSurfaces.removeIf(surface -> belongsToBrick(
-                state, baseIndex,
-                surface.key().brickMinX(),
-                surface.key().brickMinY(),
-                surface.key().brickMinZ()));
-        statelessBridges.removeIf(bridge -> belongsToBrick(
-                state, baseIndex,
-                bridge.owner().blockX(), bridge.owner().blockY(), bridge.owner().blockZ()));
-    }
-
-    private static boolean belongsToBrick(
-            PageState state,
-            int baseIndex,
-            int blockX,
-            int blockY,
-            int blockZ
-    ) {
-        long sectionKey = SectionPos.asLong(
-                SectionPos.blockToSectionCoord(blockX),
-                SectionPos.blockToSectionCoord(blockY),
-                SectionPos.blockToSectionCoord(blockZ));
-        return sectionKey == state.page.sectionKey()
-                && GeometrySummaryCache.baseIndex(
-                        SectionPos.sectionRelative(blockX),
-                        SectionPos.sectionRelative(blockY),
-                        SectionPos.sectionRelative(blockZ)) == baseIndex;
-    }
-
     private static int[] collectFragmentSlots(
             int[] first,
             int[] count,
@@ -1828,14 +1778,35 @@ public final class MinecraftThermalTopologyApplier {
         return slots;
     }
 
+    private int[] filterAirSlots(int[] slots) {
+        int count = 0;
+        for (int slot : slots) {
+            if (arena.isLive(slot)
+                    && !arena.isMaterialPole(slot)
+                    && !arena.isPhaseReservoir(slot)) {
+                count++;
+            }
+        }
+        int[] air = new int[count];
+        int write = 0;
+        for (int slot : slots) {
+            if (arena.isLive(slot)
+                    && !arena.isMaterialPole(slot)
+                    && !arena.isPhaseReservoir(slot)) {
+                air[write++] = slot;
+            }
+        }
+        return air;
+    }
+
     private GeometryMigrationLedger.MigrationResult calculateFragmentMigration(
             PageState state,
             int[] oldSlots,
             int[] newSlots,
             int[] newCoverage,
             ComponentBrickCompiler.CompiledBrick[] newMixedGeometry,
-            Map<MaterialPoleKey, Integer> newMaterialPoleSlots,
-            Map<PhaseReservoirKey, Integer> newPhaseReservoirSlots,
+            Map<MaterialPoleKey, Integer>[] newMaterialPoleSlots,
+            Map<PhaseReservoirKey, Integer>[] newPhaseReservoirSlots,
             long brickMask
     ) {
         double[] oldEnthalpies = new double[oldSlots.length];
@@ -1910,25 +1881,39 @@ public final class MinecraftThermalTopologyApplier {
             }
             remaining &= remaining - 1L;
         }
-        for (Map.Entry<MaterialPoleKey, Integer> entry :
-                newMaterialPoleSlots.entrySet()) {
-            Integer oldSlot = state.appliedMaterialPoleSlots.get(entry.getKey());
-            if (oldSlot != null) {
-                accumulateCellMigration(
-                        oldIndices, newIndices, oldSlot, entry.getValue(),
-                        oldTemperatureOffsets, oldOverlapCapacities,
-                        newOverlapCapacities, newOverlapEnthalpies);
+        remaining = brickMask;
+        while (remaining != 0L) {
+            int baseIndex = Long.numberOfTrailingZeros(remaining);
+            Map<MaterialPoleKey, Integer> oldFragment =
+                    state.appliedMaterialPoleSlotFragments[baseIndex];
+            for (Map.Entry<MaterialPoleKey, Integer> entry :
+                    newMaterialPoleSlots[baseIndex].entrySet()) {
+                Integer oldSlot = oldFragment.get(entry.getKey());
+                if (oldSlot != null) {
+                    accumulateCellMigration(
+                            oldIndices, newIndices, oldSlot, entry.getValue(),
+                            oldTemperatureOffsets, oldOverlapCapacities,
+                            newOverlapCapacities, newOverlapEnthalpies);
+                }
             }
+            remaining &= remaining - 1L;
         }
-        for (Map.Entry<PhaseReservoirKey, Integer> entry :
-                newPhaseReservoirSlots.entrySet()) {
-            Integer oldSlot = state.appliedPhaseReservoirSlots.get(entry.getKey());
-            if (oldSlot != null) {
-                accumulateCellMigration(
-                        oldIndices, newIndices, oldSlot, entry.getValue(),
-                        oldTemperatureOffsets, oldOverlapCapacities,
-                        newOverlapCapacities, newOverlapEnthalpies);
+        remaining = brickMask;
+        while (remaining != 0L) {
+            int baseIndex = Long.numberOfTrailingZeros(remaining);
+            Map<PhaseReservoirKey, Integer> oldFragment =
+                    state.appliedPhaseReservoirSlotFragments[baseIndex];
+            for (Map.Entry<PhaseReservoirKey, Integer> entry :
+                    newPhaseReservoirSlots[baseIndex].entrySet()) {
+                Integer oldSlot = oldFragment.get(entry.getKey());
+                if (oldSlot != null) {
+                    accumulateCellMigration(
+                            oldIndices, newIndices, oldSlot, entry.getValue(),
+                            oldTemperatureOffsets, oldOverlapCapacities,
+                            newOverlapCapacities, newOverlapEnthalpies);
+                }
             }
+            remaining &= remaining - 1L;
         }
         return GeometryMigrationLedger.calculateAggregatedGeometryMigration(
                 oldEnthalpies,
@@ -2009,16 +1994,24 @@ public final class MinecraftThermalTopologyApplier {
 
     private void migratePhaseRequestState(
             PageState state,
-            Map<PhaseReservoirKey, Integer> newPhaseReservoirSlots
+            Map<PhaseReservoirKey, Integer>[] newPhaseReservoirSlots,
+            long brickMask
     ) {
-        for (Map.Entry<PhaseReservoirKey, Integer> entry :
-                newPhaseReservoirSlots.entrySet()) {
-            Integer oldSlot = state.appliedPhaseReservoirSlots.get(entry.getKey());
-            if (oldSlot != null
-                    && oldSlot.intValue() != entry.getValue().intValue()
-                    && arena.phaseRequestOutstanding(oldSlot)) {
-                arena.copyPhaseRequestState(oldSlot, entry.getValue());
+        long remaining = brickMask;
+        while (remaining != 0L) {
+            int baseIndex = Long.numberOfTrailingZeros(remaining);
+            Map<PhaseReservoirKey, Integer> oldFragment =
+                    state.appliedPhaseReservoirSlotFragments[baseIndex];
+            for (Map.Entry<PhaseReservoirKey, Integer> entry :
+                    newPhaseReservoirSlots[baseIndex].entrySet()) {
+                Integer oldSlot = oldFragment.get(entry.getKey());
+                if (oldSlot != null
+                        && oldSlot.intValue() != entry.getValue().intValue()
+                        && arena.phaseRequestOutstanding(oldSlot)) {
+                    arena.copyPhaseRequestState(oldSlot, entry.getValue());
+                }
             }
+            remaining &= remaining - 1L;
         }
     }
 
@@ -2069,6 +2062,12 @@ public final class MinecraftThermalTopologyApplier {
         return signatureGeometryById[signatureId];
     }
 
+    private boolean sameTopologySignature(int firstSignatureId, int secondSignatureId) {
+        return firstSignatureId == secondSignatureId
+                || signatureGeometry(firstSignatureId).equals(
+                        signatureGeometry(secondSignatureId));
+    }
+
     private static int[] buildSignatureIds(PageState state) {
         return state.desiredSignatureIds != null
                 ? state.desiredSignatureIds
@@ -2109,97 +2108,183 @@ public final class MinecraftThermalTopologyApplier {
             List<PageState> active,
             Long2ObjectMap<PageState> activeBySection
     ) {
-        List<ThermalSweep.PairOperation> pairs = compilePairs(active);
-        Long2DoubleMap materialConductance = new Long2DoubleLinkedOpenHashMap();
+        sortActivePages(active);
+        int fragmentCount = Math.multiplyExact(
+                active.size(), ThermalPage.BASE_BRICK_COUNT);
+        ThermalSweepFragments.Builder sweep = ThermalSweepFragments.builder(
+                arena,
+                phaseTransitions,
+                parameters.buoyancyParameters(),
+                fragmentCount);
+        for (int pageIndex = 0; pageIndex < active.size(); pageIndex++) {
+            PageState state = active.get(pageIndex);
+            state.sweepFragmentOffset = pageIndex * ThermalPage.BASE_BRICK_COUNT;
+            for (int baseIndex = 0;
+                 baseIndex < ThermalPage.BASE_BRICK_COUNT;
+                 baseIndex++) {
+                int fragment = state.sweepFragmentOffset + baseIndex;
+                sweep.setAirPairs(fragment, state.airPairFragments[baseIndex]);
+                CompiledMaterialFragment material = compileMaterialFragment(
+                        state, baseIndex, activeBySection);
+                sweep.setMaterial(
+                        fragment,
+                        material.pairs,
+                        material.boundaries,
+                        material.phases);
+            }
+        }
+        boolean allOpenFrontiersResolved = incrementalAirGraph.rebuildFull(
+                active, activeBySection, sweep);
+        return new CompiledTopology(
+                sweep.build(),
+                allOpenFrontiersResolved);
+    }
+
+    private CompiledTopology compileIncrementalTopology(
+            Long2ObjectMap<PageState> activeBySection
+    ) {
+        ThermalSweepFragments.Patch patch =
+                installedFragmentSweep.beginFragmentPatch();
+        for (PageState state : dirtyPages.keySet()) {
+            long remaining = state.lastRebuiltPairBrickMask;
+            while (remaining != 0L) {
+                int baseIndex = Long.numberOfTrailingZeros(remaining);
+                patch.replaceAirPairs(
+                        state.sweepFragmentOffset + baseIndex,
+                        state.airPairFragments[baseIndex]);
+                remaining &= remaining - 1L;
+            }
+        }
+
+        for (PageState state : dirtyPages.keySet()) {
+            long remaining = state.lastRebuiltMaterialBrickMask;
+            if (remaining == 0L) {
+                continue;
+            }
+            while (remaining != 0L) {
+                int baseIndex = Long.numberOfTrailingZeros(remaining);
+                CompiledMaterialFragment material = compileMaterialFragment(
+                        state, baseIndex, activeBySection);
+                patch.replaceMaterial(
+                        state.sweepFragmentOffset + baseIndex,
+                        material.pairs,
+                        material.boundaries,
+                        material.phases);
+                remaining &= remaining - 1L;
+            }
+        }
+        boolean allResolved = incrementalAirGraph.patch(activeBySection, patch);
+        return new CompiledTopology(
+                installedFragmentSweep.withFragmentPatch(patch), allResolved);
+    }
+
+    private void clearIncrementalUpdateState() {
+        for (PageState state : dirtyPages.keySet()) {
+            state.lastRebuiltGeometryBrickMask = 0L;
+            state.lastRebuiltPairBrickMask = 0L;
+            state.lastRebuiltMaterialBrickMask = 0L;
+            state.lastRemovedAirSlots = new int[0];
+            state.lastAddedAirSlots = new int[0];
+            state.lastUnresolvedTopology = state.unresolvedTopology;
+        }
+        dirtyPages.clear();
+    }
+
+    private boolean hasIncrementalTopologyChanges() {
+        for (PageState state : dirtyPages.keySet()) {
+            if (state.lastRebuiltGeometryBrickMask != 0L
+                    || state.lastRebuiltPairBrickMask != 0L
+                    || state.lastRebuiltMaterialBrickMask != 0L) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private CompiledMaterialFragment compileMaterialFragment(
+            PageState state,
+            int baseIndex,
+            Long2ObjectMap<PageState> activeBySection
+    ) {
+        List<ThermalSweep.PairOperation> pairs = new ArrayList<>();
         List<ThermalSweep.BoundaryOperation> boundaries = new ArrayList<>();
-        List<ThermalSweep.PhaseOperation> phaseOperations = new ArrayList<>();
-        FarFieldCompilation farField = compileFarField(
-                active, activeBySection, pairs);
-        boundaries.addAll(farField.boundaries());
-
-        for (PageState state : active) {
-            for (StatelessBridge bridge : state.appliedStatelessBridges) {
-                int negative = airCellForMicrocell(bridge.negativeAir(), activeBySection);
-                int positive = airCellForMicrocell(bridge.positiveAir(), activeBySection);
-                addFixedConductance(
-                        materialConductance,
-                        negative,
-                        positive,
-                        bridge.conductanceWPerK());
+        List<ThermalSweep.PhaseOperation> phases = new ArrayList<>();
+        for (StatelessBridge bridge
+                : state.appliedStatelessBridgeFragments[baseIndex]) {
+            int negative = airCellForMicrocell(
+                    bridge.negativeAir(), activeBySection);
+            int positive = airCellForMicrocell(
+                    bridge.positiveAir(), activeBySection);
+            if (negative != positive) {
+                pairs.add(ThermalSweep.PairOperation.fixed(
+                        negative, positive, bridge.conductanceWPerK()));
             }
-            for (MaterialSurface surface : state.appliedMaterialSurfaces) {
-                Integer surfaceSlot = state.appliedMaterialPoleSlots.get(
-                        new MaterialPoleKey(
-                                surface.key(), ThermalCellArena.MaterialPoleDepth.SURFACE));
-                if (surfaceSlot == null) {
-                    throw new LatestFrameException();
-                }
-                double patchConductance =
-                        surface.profile().faceConductanceWPerK() / 16.0D;
-                for (MaterialContact contact : surface.airContacts()) {
-                    addFixedConductance(
-                            materialConductance,
-                            airCellForMicrocell(contact.air(), activeBySection),
-                            surfaceSlot,
-                            patchConductance * contact.patchCount());
-                }
-
-                if (surface.profile().model()
-                        != MaterialBoundaryRegistry.Model.NATURAL_ROCK) {
-                    continue;
-                }
-                double naturalTemperature = surface.profile().naturalTemperatureC(
-                        surface.key().blockY());
-                Integer deepSlot = state.appliedMaterialPoleSlots.get(
-                        new MaterialPoleKey(
-                                surface.key(), ThermalCellArena.MaterialPoleDepth.DEEP));
-                if (deepSlot == null) {
-                    boundaries.add(new ThermalSweep.BoundaryOperation(
-                            surfaceSlot,
-                            naturalTemperature,
-                            surface.profile().deepConductanceWPerK()
-                                    * surface.areaBlocksSquared()));
-                } else {
-                    addFixedConductance(
-                            materialConductance,
-                            surfaceSlot,
-                            deepSlot,
-                            surface.profile().deepConductanceWPerK()
-                                    * surface.areaBlocksSquared());
-                    boundaries.add(new ThermalSweep.BoundaryOperation(
-                            deepSlot,
-                            naturalTemperature,
-                            surface.profile().naturalConductanceWPerK()
-                                    * surface.areaBlocksSquared()));
-                }
+        }
+        Map<MaterialPoleKey, Integer> materialSlots =
+                state.appliedMaterialPoleSlotFragments[baseIndex];
+        for (MaterialSurface surface
+                : state.appliedMaterialSurfaceFragments[baseIndex]) {
+            Integer surfaceSlot = materialSlots.get(new MaterialPoleKey(
+                    surface.key(), ThermalCellArena.MaterialPoleDepth.SURFACE));
+            if (surfaceSlot == null) {
+                throw new LatestFrameException();
             }
-            for (PhaseSurface phase : state.appliedPhaseReservoirs) {
-                Integer phaseSlot = state.appliedPhaseReservoirSlots.get(phase.key());
-                if (phaseSlot == null) {
-                    throw new LatestFrameException();
-                }
-                double patchConductance =
-                        phase.profile().faceConductanceWPerK() / 16.0D;
-                for (MaterialContact contact : phase.airContacts()) {
-                    phaseOperations.add(new ThermalSweep.PhaseOperation(
-                            airCellForMicrocell(contact.air(), activeBySection),
-                            phaseSlot,
+            double patchConductance =
+                    surface.profile().faceConductanceWPerK() / 16.0D;
+            for (MaterialContact contact : surface.airContacts()) {
+                int air = airCellForMicrocell(contact.air(), activeBySection);
+                if (air != surfaceSlot) {
+                    pairs.add(ThermalSweep.PairOperation.fixed(
+                            air,
+                            surfaceSlot,
                             patchConductance * contact.patchCount()));
                 }
             }
+            if (surface.profile().model()
+                    != MaterialBoundaryRegistry.Model.NATURAL_ROCK) {
+                continue;
+            }
+            double naturalTemperature = surface.profile().naturalTemperatureC(
+                    surface.key().blockY());
+            Integer deepSlot = materialSlots.get(new MaterialPoleKey(
+                    surface.key(), ThermalCellArena.MaterialPoleDepth.DEEP));
+            if (deepSlot == null) {
+                boundaries.add(new ThermalSweep.BoundaryOperation(
+                        surfaceSlot,
+                        naturalTemperature,
+                        surface.profile().deepConductanceWPerK()
+                                * surface.areaBlocksSquared()));
+            } else {
+                pairs.add(ThermalSweep.PairOperation.fixed(
+                        surfaceSlot,
+                        deepSlot,
+                        surface.profile().deepConductanceWPerK()
+                                * surface.areaBlocksSquared()));
+                boundaries.add(new ThermalSweep.BoundaryOperation(
+                        deepSlot,
+                        naturalTemperature,
+                        surface.profile().naturalConductanceWPerK()
+                                * surface.areaBlocksSquared()));
+            }
         }
-
-        for (Long2DoubleMap.Entry entry : materialConductance.long2DoubleEntrySet()) {
-            int first = (int) (entry.getLongKey() >>> 32);
-            int second = (int) entry.getLongKey();
-            pairs.add(ThermalSweep.PairOperation.fixed(
-                    first, second, entry.getDoubleValue()));
+        Map<PhaseReservoirKey, Integer> phaseSlots =
+                state.appliedPhaseReservoirSlotFragments[baseIndex];
+        for (PhaseSurface phase
+                : state.appliedPhaseReservoirFragments[baseIndex]) {
+            Integer phaseSlot = phaseSlots.get(phase.key());
+            if (phaseSlot == null) {
+                throw new LatestFrameException();
+            }
+            double patchConductance =
+                    phase.profile().faceConductanceWPerK() / 16.0D;
+            for (MaterialContact contact : phase.airContacts()) {
+                phases.add(new ThermalSweep.PhaseOperation(
+                        airCellForMicrocell(contact.air(), activeBySection),
+                        phaseSlot,
+                        patchConductance * contact.patchCount()));
+            }
         }
-        return new CompiledTopology(
-                pairs,
-                boundaries,
-                phaseOperations,
-                farField.allOpenFrontiersResolved());
+        return new CompiledMaterialFragment(pairs, boundaries, phases);
     }
 
     private int airCellForMicrocell(
@@ -2230,239 +2315,26 @@ public final class MinecraftThermalTopologyApplier {
         return slot;
     }
 
-    private static void addFixedConductance(
-            Long2DoubleMap conductances,
-            int first,
-            int second,
-            double conductanceWPerK
-    ) {
-        if (first == second) {
-            return;
-        }
-        if (!Double.isFinite(conductanceWPerK) || conductanceWPerK <= 0.0D) {
-            throw new IllegalStateException("compiled material conductance is invalid");
-        }
-        int low = Math.min(first, second);
-        int high = Math.max(first, second);
-        long key = ((long) low << 32) | (high & 0xffff_ffffL);
-        double sum = conductances.get(key) + conductanceWPerK;
-        if (!Double.isFinite(sum)) {
-            throw new IllegalStateException("material conductance sum is not finite");
-        }
-        conductances.put(key, sum);
-    }
-
-    private List<ThermalSweep.PairOperation> compilePairs(List<PageState> active) {
+    private static void sortActivePages(List<PageState> active) {
         active.sort(Comparator
                 .comparingInt((PageState state) -> SectionPos.x(state.page.sectionKey()))
                 .thenComparingInt(state -> SectionPos.y(state.page.sectionKey()))
                 .thenComparingInt(state -> SectionPos.z(state.page.sectionKey())));
-        List<ThermalSweep.PairOperation> operations = new ArrayList<>();
-        for (PageState state : active) {
-            for (List<ThermalSweep.PairOperation> fragment : state.airPairFragments) {
-                operations.addAll(fragment);
-            }
-        }
-        return operations;
-    }
-
-    private FarFieldCompilation compileFarField(
-            List<PageState> active,
-            Long2ObjectMap<PageState> activeBySection,
-            List<ThermalSweep.PairOperation> airPairs
-    ) {
-        int capacity = arena.highWaterMark();
-        int[] parent = new int[capacity];
-        int[] openPatchCount = new int[capacity];
-        boolean[] skyExposed = new boolean[capacity];
-        double[] naturalTemperatureC = new double[capacity];
-        Arrays.fill(parent, ThermalCellArena.NO_SLOT);
-        Arrays.fill(naturalTemperatureC, Double.NaN);
-
-        boolean[] activePageSlots = new boolean[nextPageSlot];
-        for (PageState state : active) {
-            activePageSlots[state.pageSlot] = true;
-        }
-        for (int slot = 0; slot < capacity; slot++) {
-            if (arena.isLive(slot)
-                    && arena.pageSlot(slot) < activePageSlots.length
-                    && activePageSlots[arena.pageSlot(slot)]
-                    && !arena.isMaterialPole(slot)
-                    && !arena.isPhaseReservoir(slot)) {
-                parent[slot] = slot;
-            }
-        }
-        for (ThermalSweep.PairOperation pair : airPairs) {
-            union(parent, pair.cellA(), pair.cellB());
-        }
-
-        boolean allFrontierPatchesMapped = true;
-        for (PageState state : active) {
-            int sectionX = SectionPos.x(state.page.sectionKey());
-            int sectionY = SectionPos.y(state.page.sectionKey());
-            int sectionZ = SectionPos.z(state.page.sectionKey());
-            for (int faceOrdinal = 0;
-                 faceOrdinal < ConservativeAirGeometry.Face.COUNT;
-                 faceOrdinal++) {
-                ConservativeAirGeometry.Face face =
-                        ConservativeAirGeometry.Face.fromOrdinal(faceOrdinal);
-                long neighborKey = neighborSectionKey(sectionX, sectionY, sectionZ, face);
-                if (!activeBySection.containsKey(neighborKey)) {
-                    allFrontierPatchesMapped &= collectOpenFrontierPatches(
-                            state,
-                            face,
-                            openPatchCount,
-                            skyExposed,
-                            naturalTemperatureC);
-                }
-            }
-        }
-
-        int[] componentOpenPatchCount = new int[capacity];
-        boolean[] componentSkyExposed = new boolean[capacity];
-        double[] componentMaximumDeltaC = new double[capacity];
-        for (int slot = 0; slot < capacity; slot++) {
-            if (openPatchCount[slot] == 0) {
-                continue;
-            }
-            int root = find(parent, slot);
-            componentOpenPatchCount[root] += openPatchCount[slot];
-            componentSkyExposed[root] |= skyExposed[slot];
-            componentMaximumDeltaC[root] = Math.max(
-                    componentMaximumDeltaC[root],
-                    Math.abs(arena.temperatureC(
-                            slot, parameters.referenceTemperatureC())
-                            - naturalTemperatureC[slot]));
-        }
-
-        TopologyGuard.Decision[] decisions = new TopologyGuard.Decision[capacity];
-        FarFieldProfileRegistry.Profile[] continuationProfiles =
-                new FarFieldProfileRegistry.Profile[capacity];
-        boolean allResolved = allFrontierPatchesMapped;
-        FarFieldProfileRegistry.Key profileKey = farFieldSettings.openSpaceKey();
-        for (int root = 0; root < capacity; root++) {
-            if (componentOpenPatchCount[root] == 0) {
-                continue;
-            }
-            TopologyGuard.OperatingPoint operatingPoint = new TopologyGuard.OperatingPoint(
-                    farFieldSettings.calibrationSourcePowerW(),
-                    componentMaximumDeltaC[root]);
-            TopologyGuard.Decision decision = TopologyGuard.classify(
-                    TopologyGuard.Evidence.open(
-                            true,
-                            true,
-                            farFieldSettings.naturalEnvironment(),
-                            componentSkyExposed[root],
-                            profileKey),
-                    operatingPoint,
-                    farFieldSettings.profiles());
-            decisions[root] = decision;
-            if (decision.frontierClass()
-                    == TopologyGuard.FrontierClass.OPEN_CONTINUATION) {
-                continuationProfiles[root] = applicableFarFieldProfile(
-                        profileKey, operatingPoint);
-            }
-            allResolved &= decision.frontierClass()
-                    == TopologyGuard.FrontierClass.OPEN_AMBIENT;
-        }
-
-        List<ThermalSweep.BoundaryOperation> boundaries = new ArrayList<>();
-        double patchesPerReferenceArea = 16.0D
-                * farFieldSettings.referenceOpeningAreaBlocksSquared();
-        for (int slot = 0; slot < capacity; slot++) {
-            if (openPatchCount[slot] == 0) {
-                continue;
-            }
-            int root = find(parent, slot);
-            TopologyGuard.Decision decision = decisions[root];
-            if (decision == null) {
-                allResolved = false;
-                continue;
-            }
-            double areaScale = farFieldConductanceScale
-                    * openPatchCount[slot] / patchesPerReferenceArea;
-            if (decision.frontierClass() == TopologyGuard.FrontierClass.OPEN_AMBIENT) {
-                decision.boundaryOperation(slot, naturalTemperatureC[slot], areaScale)
-                        .ifPresent(boundaries::add);
-                continue;
-            }
-            if (decision.frontierClass()
-                    != TopologyGuard.FrontierClass.OPEN_CONTINUATION) {
-                continue;
-            }
-            FarFieldProfileRegistry.Profile profile = continuationProfiles[root];
-            if (profile != null) {
-                boundaries.add(new ThermalSweep.BoundaryOperation(
-                        slot,
-                        naturalTemperatureC[slot],
-                        profile.conductanceWPerK() * areaScale
-                                / (1.0D + farFieldSettings.continuationDistanceBlocks())));
-            }
-        }
-        return new FarFieldCompilation(boundaries, allResolved);
     }
 
     private FarFieldProfileRegistry.Profile applicableFarFieldProfile(
-            FarFieldProfileRegistry.Key key,
-            TopologyGuard.OperatingPoint operatingPoint
+            double absoluteSourcePowerW,
+            double absoluteLocalNaturalDeltaC
     ) {
         FarFieldProfileRegistry.Profile profile =
-                farFieldSettings.profiles().profile(key).orElse(null);
+                farFieldSettings.profiles().profile(
+                        farFieldSettings.environmentClass()).orElse(null);
         return profile != null
-                && profile.approval()
-                == FarFieldProfileRegistry.Approval.APPROVED_STATIC_IMPEDANCE
                 && profile.domain().contains(
-                operatingPoint.absoluteSourcePowerW(),
-                operatingPoint.absoluteLocalNaturalDeltaC())
+                        absoluteSourcePowerW,
+                        absoluteLocalNaturalDeltaC)
                 ? profile
                 : null;
-    }
-
-    private boolean collectOpenFrontierPatches(
-            PageState state,
-            ConservativeAirGeometry.Face face,
-            int[] openPatchCount,
-            boolean[] skyExposed,
-            double[] naturalTemperatureC
-    ) {
-        boolean allMapped = true;
-        for (int localY = 0; localY < 16; localY++) {
-            for (int localZ = 0; localZ < 16; localZ++) {
-                for (int localX = 0; localX < 16; localX++) {
-                    if (!onFace(localX, localY, localZ, face)) {
-                        continue;
-                    }
-                    int pageBlock = blockIndex(localX, localY, localZ);
-                    SignatureGeometry geometry = signatureGeometry(
-                            state.appliedSignatureIds[pageBlock]);
-                    if (!geometry.resolved) {
-                        continue;
-                    }
-                    int aperture = geometry.geometry.combinedFaceMask(face);
-                    for (int patch = 0; patch < 16; patch++) {
-                        if ((aperture & (1 << patch)) == 0) {
-                            continue;
-                        }
-                        int slot = cellForMicrocell(
-                                state.appliedSignatureIds,
-                                state.appliedCoverageRefs,
-                                state.appliedMixedGeometry,
-                                pageBlock,
-                                faceMicrocell(face, patch & 3, patch >>> 2));
-                        if (slot == ThermalCellArena.NO_SLOT) {
-                            allMapped = false;
-                            continue;
-                        }
-                        openPatchCount[slot]++;
-                        int skyCutoff = Byte.toUnsignedInt(state.firstExposedLocalY[
-                                (localZ << 4) | localX]);
-                        skyExposed[slot] |= localY >= skyCutoff;
-                        naturalTemperatureC[slot] = state.naturalTemperatureC;
-                    }
-                }
-            }
-        }
-        return allMapped;
     }
 
     private static long neighborSectionKey(
@@ -2489,44 +2361,104 @@ public final class MinecraftThermalTopologyApplier {
                 });
     }
 
-    private static void union(int[] parent, int first, int second) {
-        int firstRoot = find(parent, first);
-        int secondRoot = find(parent, second);
-        if (firstRoot != secondRoot) {
-            if (firstRoot < secondRoot) {
-                parent[secondRoot] = firstRoot;
-            } else {
-                parent[firstRoot] = secondRoot;
-            }
-        }
-    }
-
-    private static int find(int[] parent, int slot) {
-        if (slot < 0 || slot >= parent.length || parent[slot] == ThermalCellArena.NO_SLOT) {
-            throw new LatestFrameException();
-        }
-        int root = slot;
-        while (parent[root] != root) {
-            root = parent[root];
-        }
-        while (parent[slot] != slot) {
-            int next = parent[slot];
-            parent[slot] = root;
-            slot = next;
-        }
-        return root;
-    }
-
-    private boolean topologyResolved(
-            List<PageState> active,
-            CompiledTopology compiled
+    private OpenPatchFragment compileOpenPatchFragment(
+            PageState state,
+            int baseIndex,
+            Long2ObjectMap<PageState> activeBySection
     ) {
-        for (PageState state : active) {
-            if (state.unresolvedTopology) {
-                return false;
+        int brickX = baseIndex & 3;
+        int brickZ = (baseIndex >>> 2) & 3;
+        int brickY = (baseIndex >>> 4) & 3;
+        int sectionX = SectionPos.x(state.page.sectionKey());
+        int sectionY = SectionPos.y(state.page.sectionKey());
+        int sectionZ = SectionPos.z(state.page.sectionKey());
+        Int2IntOpenHashMap counts = new Int2IntOpenHashMap();
+        IntOpenHashSet sky = new IntOpenHashSet();
+        int unmapped = 0;
+        for (int faceOrdinal = 0;
+             faceOrdinal < ConservativeAirGeometry.Face.COUNT;
+             faceOrdinal++) {
+            ConservativeAirGeometry.Face face =
+                    ConservativeAirGeometry.Face.fromOrdinal(faceOrdinal);
+            boolean ownsPageFace = switch (face) {
+                case NEGATIVE_X -> brickX == 0;
+                case POSITIVE_X -> brickX == 3;
+                case NEGATIVE_Y -> brickY == 0;
+                case POSITIVE_Y -> brickY == 3;
+                case NEGATIVE_Z -> brickZ == 0;
+                case POSITIVE_Z -> brickZ == 3;
+            };
+            if (!ownsPageFace || activeBySection.containsKey(
+                    neighborSectionKey(sectionX, sectionY, sectionZ, face))) {
+                continue;
+            }
+            int minX = brickX << 2;
+            int minY = brickY << 2;
+            int minZ = brickZ << 2;
+            for (int localY = minY; localY < minY + 4; localY++) {
+                for (int localZ = minZ; localZ < minZ + 4; localZ++) {
+                    for (int localX = minX; localX < minX + 4; localX++) {
+                        if (!blockTouchesFace(localX, localY, localZ, face)) {
+                            continue;
+                        }
+                        int pageBlock = blockIndex(localX, localY, localZ);
+                        SignatureGeometry geometry = signatureGeometry(
+                                state.appliedSignatureIds[pageBlock]);
+                        if (!geometry.resolved) {
+                            continue;
+                        }
+                        int aperture = geometry.geometry.combinedFaceMask(face);
+                        for (int patch = 0; patch < 16; patch++) {
+                            if ((aperture & (1 << patch)) == 0) {
+                                continue;
+                            }
+                            int slot = cellForMicrocell(
+                                    state.appliedSignatureIds,
+                                    state.appliedCoverageRefs,
+                                    state.appliedMixedGeometry,
+                                    pageBlock,
+                                    faceMicrocell(face, patch & 3, patch >>> 2));
+                            if (slot == ThermalCellArena.NO_SLOT) {
+                                unmapped++;
+                                continue;
+                            }
+                            counts.addTo(slot, 1);
+                            int skyCutoff = Byte.toUnsignedInt(
+                                    state.firstExposedLocalY[(localZ << 4) | localX]);
+                            if (localY >= skyCutoff) {
+                                sky.add(slot);
+                            }
+                        }
+                    }
+                }
             }
         }
-        return compiled.allOpenFrontiersResolved();
+        int[] slots = counts.keySet().toIntArray();
+        Arrays.sort(slots);
+        int[] patchCounts = new int[slots.length];
+        boolean[] skyExposed = new boolean[slots.length];
+        for (int index = 0; index < slots.length; index++) {
+            patchCounts[index] = counts.get(slots[index]);
+            skyExposed[index] = sky.contains(slots[index]);
+        }
+        return new OpenPatchFragment(
+                slots, patchCounts, skyExposed, unmapped);
+    }
+
+    private static boolean blockTouchesFace(
+            int localX,
+            int localY,
+            int localZ,
+            ConservativeAirGeometry.Face face
+    ) {
+        return switch (face) {
+            case NEGATIVE_X -> localX == 0;
+            case POSITIVE_X -> localX == 15;
+            case NEGATIVE_Y -> localY == 0;
+            case POSITIVE_Y -> localY == 15;
+            case NEGATIVE_Z -> localZ == 0;
+            case POSITIVE_Z -> localZ == 15;
+        };
     }
 
     private int queueRetirements(long chunkWatermark) {
@@ -2587,6 +2519,7 @@ public final class MinecraftThermalTopologyApplier {
             Long2ObjectMap<PageState> activeBySection
     ) {
         state.pairDirtyBrickMask |= 1L << baseIndex;
+        dirtyPages.put(state, Boolean.TRUE);
         markNeighborBrick(activeBySection, state, baseIndex, -1, 0, 0, true);
         markNeighborBrick(activeBySection, state, baseIndex, 0, -1, 0, true);
         markNeighborBrick(activeBySection, state, baseIndex, 0, 0, -1, true);
@@ -2605,7 +2538,7 @@ public final class MinecraftThermalTopologyApplier {
         markNeighborBrick(activeBySection, state, baseIndex, 0, 0, 1, false);
     }
 
-    private static void markNeighborBrick(
+    private void markNeighborBrick(
             Long2ObjectMap<PageState> activeBySection,
             PageState owner,
             int baseIndex,
@@ -2633,14 +2566,23 @@ public final class MinecraftThermalTopologyApplier {
                 SectionPos.sectionRelative(worldY),
                 SectionPos.sectionRelative(worldZ));
         if (pair) {
+            int supportRef = target.appliedCoverageRefs[targetBase];
+            if (supportRef != ThermalPage.NO_COVERAGE && arena.isLive(supportRef)) {
+                targetBase = GeometrySummaryCache.baseIndex(
+                        SectionPos.sectionRelative(arena.minimumX(supportRef)),
+                        SectionPos.sectionRelative(arena.minimumY(supportRef)),
+                        SectionPos.sectionRelative(arena.minimumZ(supportRef)));
+            }
             target.pairDirtyBrickMask |= 1L << targetBase;
+            dirtyPages.put(target, Boolean.TRUE);
         } else {
             target.materialDirtyBrickMask |= 1L << targetBase;
+            dirtyPages.put(target, Boolean.TRUE);
         }
     }
 
     private void rebuildDirtyMaterials(
-            List<PageState> active,
+            Iterable<PageState> active,
             Long2ObjectMap<PageState> activeBySection
     ) {
         for (PageState state : active) {
@@ -2648,52 +2590,30 @@ public final class MinecraftThermalTopologyApplier {
             if (dirty == 0L) {
                 continue;
             }
-            List<MaterialSurface> materialSurfaces =
-                    new ArrayList<>(state.appliedMaterialSurfaces);
-            List<PhaseSurface> phaseSurfaces =
-                    new ArrayList<>(state.appliedPhaseReservoirs);
-            List<StatelessBridge> statelessBridges =
-                    new ArrayList<>(state.appliedStatelessBridges);
+            List<MaterialSurface>[] materialSurfaces =
+                    state.appliedMaterialSurfaceFragments.clone();
+            List<PhaseSurface>[] phaseSurfaces =
+                    state.appliedPhaseReservoirFragments.clone();
+            List<StatelessBridge>[] statelessBridges =
+                    state.appliedStatelessBridgeFragments.clone();
             long remaining = dirty;
             while (remaining != 0L) {
                 int baseIndex = Long.numberOfTrailingZeros(remaining);
                 PageBuild build = new PageBuild();
                 collectMaterialCandidates(state, baseIndex, build);
                 compileMaterialBoundaries(state, activeBySection, build);
-                removeBrickMaterialDescriptions(
-                        state, baseIndex,
-                        materialSurfaces, phaseSurfaces, statelessBridges);
-                requireMaterialSlots(state, build);
-                materialSurfaces.addAll(build.materialSurfaces);
-                phaseSurfaces.addAll(build.phaseSurfaces);
-                statelessBridges.addAll(build.statelessBridges);
+                requireMaterialSlots(state, baseIndex, build);
+                materialSurfaces[baseIndex] = List.copyOf(build.materialSurfaces);
+                phaseSurfaces[baseIndex] = List.copyOf(build.phaseSurfaces);
+                statelessBridges[baseIndex] = List.copyOf(build.statelessBridges);
                 remaining &= remaining - 1L;
             }
-            state.appliedMaterialSurfaces = List.copyOf(materialSurfaces);
-            state.appliedPhaseReservoirs = List.copyOf(phaseSurfaces);
-            state.appliedStatelessBridges = List.copyOf(statelessBridges);
+            state.appliedMaterialSurfaceFragments = materialSurfaces;
+            state.appliedPhaseReservoirFragments = phaseSurfaces;
+            state.appliedStatelessBridgeFragments = statelessBridges;
             state.materialDirtyBrickMask = 0L;
+            state.lastRebuiltMaterialBrickMask |= dirty;
         }
-    }
-
-    private void removeBrickMaterialDescriptions(
-            PageState state,
-            int baseIndex,
-            List<MaterialSurface> materialSurfaces,
-            List<PhaseSurface> phaseSurfaces,
-            List<StatelessBridge> statelessBridges
-    ) {
-        materialSurfaces.removeIf(surface -> belongsToBrick(
-                state, baseIndex,
-                surface.key().blockX(), surface.key().blockY(), surface.key().blockZ()));
-        phaseSurfaces.removeIf(surface -> belongsToBrick(
-                state, baseIndex,
-                surface.key().brickMinX(),
-                surface.key().brickMinY(),
-                surface.key().brickMinZ()));
-        statelessBridges.removeIf(bridge -> belongsToBrick(
-                state, baseIndex,
-                bridge.owner().blockX(), bridge.owner().blockY(), bridge.owner().blockZ()));
     }
 
     private void collectMaterialCandidates(
@@ -2721,21 +2641,29 @@ public final class MinecraftThermalTopologyApplier {
         }
     }
 
-    private static void requireMaterialSlots(PageState state, PageBuild build) {
+    private static void requireMaterialSlots(
+            PageState state,
+            int baseIndex,
+            PageBuild build
+    ) {
+        Map<MaterialPoleKey, Integer> materialSlots =
+                state.appliedMaterialPoleSlotFragments[baseIndex];
         for (MaterialPoleKey key : build.materialPoleKeys) {
-            if (!state.appliedMaterialPoleSlots.containsKey(key)) {
+            if (!materialSlots.containsKey(key)) {
                 throw new LatestFrameException();
             }
         }
+        Map<PhaseReservoirKey, Integer> phaseSlots =
+                state.appliedPhaseReservoirSlotFragments[baseIndex];
         for (PhaseReservoirKey key : build.phaseReservoirKeys) {
-            if (!state.appliedPhaseReservoirSlots.containsKey(key)) {
+            if (!phaseSlots.containsKey(key)) {
                 throw new LatestFrameException();
             }
         }
     }
 
     private void rebuildDirtyPairFragments(
-            List<PageState> active,
+            Iterable<PageState> active,
             Long2ObjectMap<PageState> activeBySection
     ) {
         for (PageState state : active) {
@@ -2743,6 +2671,7 @@ public final class MinecraftThermalTopologyApplier {
             if (remaining == 0L) {
                 continue;
             }
+            long rebuiltMask = remaining;
             int sectionX = SectionPos.x(state.page.sectionKey());
             int sectionY = SectionPos.y(state.page.sectionKey());
             int sectionZ = SectionPos.z(state.page.sectionKey());
@@ -2774,6 +2703,7 @@ public final class MinecraftThermalTopologyApplier {
                 remaining &= remaining - 1L;
             }
             state.pairDirtyBrickMask = 0L;
+            state.lastRebuiltPairBrickMask |= rebuiltMask;
         }
     }
 
@@ -2867,19 +2797,18 @@ public final class MinecraftThermalTopologyApplier {
                 SectionPos.sectionToBlockCoord(SectionPos.z(sectionKey)));
     }
 
-    private static boolean onFace(
-            int x,
-            int y,
-            int z,
-            ConservativeAirGeometry.Face face
+    private static int faceBlockIndex(
+            ConservativeAirGeometry.Face face,
+            int u,
+            int v
     ) {
         return switch (face) {
-            case NEGATIVE_X -> x == 0;
-            case POSITIVE_X -> x == 15;
-            case NEGATIVE_Y -> y == 0;
-            case POSITIVE_Y -> y == 15;
-            case NEGATIVE_Z -> z == 0;
-            case POSITIVE_Z -> z == 15;
+            case NEGATIVE_X -> blockIndex(0, v, u);
+            case POSITIVE_X -> blockIndex(15, v, u);
+            case NEGATIVE_Y -> blockIndex(u, 0, v);
+            case POSITIVE_Y -> blockIndex(u, 15, v);
+            case NEGATIVE_Z -> blockIndex(u, v, 0);
+            case POSITIVE_Z -> blockIndex(u, v, 15);
         };
     }
 
@@ -2964,26 +2893,45 @@ public final class MinecraftThermalTopologyApplier {
         return cutoffs;
     }
 
-    private record PageIdentity(long sectionKey, long lifecycleGeneration) {
+    @SuppressWarnings("unchecked")
+    private static <T> List<T>[] emptyFragmentArray() {
+        List<T>[] fragments = (List<T>[]) new List<?>[ThermalPage.BASE_BRICK_COUNT];
+        Arrays.fill(fragments, List.of());
+        return fragments;
     }
 
-    private record DrainResult(int resolvedInputs, int geometryDeltas) {
+    @SuppressWarnings("unchecked")
+    private static <K> Map<K, Integer>[] emptyMapFragmentArray() {
+        Map<K, Integer>[] fragments =
+                (Map<K, Integer>[]) new Map<?, ?>[ThermalPage.BASE_BRICK_COUNT];
+        Arrays.fill(fragments, Map.of());
+        return fragments;
+    }
+
+    private static <K> Map<K, Integer> immutableMapPreservingOrder(
+            Map<K, Integer> source
+    ) {
+        return source.isEmpty()
+                ? Map.of()
+                : Collections.unmodifiableMap(new LinkedHashMap<>(source));
+    }
+
+    private record PageIdentity(long sectionKey, long lifecycleGeneration) {
     }
 
     private record RetiredSpan(int pageSlot, int lifecycleGeneration, ArenaSpan span) {
     }
 
     private record CompiledTopology(
-            List<ThermalSweep.PairOperation> pairs,
-            List<ThermalSweep.BoundaryOperation> boundaries,
-            List<ThermalSweep.PhaseOperation> phaseOperations,
+            ThermalSweep sweep,
             boolean allOpenFrontiersResolved
     ) {
     }
 
-    private record FarFieldCompilation(
+    private record CompiledMaterialFragment(
+            List<ThermalSweep.PairOperation> pairs,
             List<ThermalSweep.BoundaryOperation> boundaries,
-            boolean allOpenFrontiersResolved
+            List<ThermalSweep.PhaseOperation> phases
     ) {
     }
 
@@ -3155,6 +3103,526 @@ public final class MinecraftThermalTopologyApplier {
                 new SignatureGeometry(false, -1, -1, -1, null);
     }
 
+    private final class IncrementalAirGraph {
+        private boolean[] active = new boolean[0];
+        private int[] adjacencyHead = new int[0];
+        private int[] componentBySlot = new int[0];
+        private int[] openPatchCount = new int[0];
+        private boolean[] skyExposed = new boolean[0];
+        private double[] naturalTemperatureByPage = new double[0];
+        private int[] edgeA = new int[16];
+        private int[] edgeB = new int[16];
+        private int[] edgeNextA = new int[16];
+        private int[] edgeNextB = new int[16];
+        private boolean[] edgeLive = new boolean[16];
+        private int edgeHighWater;
+        private int freeEdge = -1;
+        private int[][] fragmentEdges = new int[0][];
+        private final Int2ObjectOpenHashMap<AirComponent> components =
+                new Int2ObjectOpenHashMap<>();
+        private int unresolvedComponents;
+        private int unresolvedPages;
+        private int unmappedPatches;
+
+        private boolean rebuildFull(
+                List<PageState> activePages,
+                Long2ObjectMap<PageState> activeBySection,
+                ThermalSweepFragments.Builder sweep
+        ) {
+            int capacity = arena.highWaterMark();
+            ensureNodeCapacity(capacity);
+            ensurePageCapacity(nextPageSlot);
+            Arrays.fill(active, 0, capacity, false);
+            Arrays.fill(adjacencyHead, 0, capacity, -1);
+            Arrays.fill(componentBySlot, 0, capacity, -1);
+            Arrays.fill(openPatchCount, 0, capacity, 0);
+            Arrays.fill(skyExposed, 0, capacity, false);
+            Arrays.fill(naturalTemperatureByPage, 0, nextPageSlot, Double.NaN);
+            Arrays.fill(edgeLive, 0, edgeHighWater, false);
+            edgeHighWater = 0;
+            freeEdge = -1;
+            components.clear();
+            unresolvedComponents = 0;
+            unresolvedPages = 0;
+            unmappedPatches = 0;
+            fragmentEdges = new int[Math.multiplyExact(
+                    activePages.size(), ThermalPage.BASE_BRICK_COUNT)][];
+
+            for (PageState state : activePages) {
+                naturalTemperatureByPage[state.pageSlot] = state.naturalTemperatureC;
+                if (state.unresolvedTopology) {
+                    unresolvedPages++;
+                }
+                for (int baseIndex = 0;
+                     baseIndex < ThermalPage.BASE_BRICK_COUNT;
+                     baseIndex++) {
+                    int first = state.fragmentFirst[baseIndex];
+                    int end = first + state.fragmentCount[baseIndex];
+                    for (int slot = first; slot < end; slot++) {
+                        if (arena.isLive(slot)
+                                && !arena.isMaterialPole(slot)
+                                && !arena.isPhaseReservoir(slot)) {
+                            active[slot] = true;
+                        }
+                    }
+                }
+            }
+            for (PageState state : activePages) {
+                for (int baseIndex = 0;
+                     baseIndex < ThermalPage.BASE_BRICK_COUNT;
+                     baseIndex++) {
+                    installPairFragment(
+                            state.sweepFragmentOffset + baseIndex,
+                            state.airPairFragments[baseIndex]);
+                    OpenPatchFragment fragment = compileOpenPatchFragment(
+                            state, baseIndex, activeBySection);
+                    state.openUnmappedPatches[baseIndex] =
+                            fragment.unmappedPatches();
+                    addOpenFragment(fragment);
+                }
+            }
+            for (int slot = 0; slot < capacity; slot++) {
+                if (active[slot] && componentBySlot[slot] == -1) {
+                    AirComponent component = buildComponent(slot);
+                    components.put(component.id, component);
+                    if (component.unresolved) {
+                        unresolvedComponents++;
+                    }
+                    emitComponent(component, sweep);
+                }
+            }
+            return allResolved();
+        }
+
+        private boolean patch(
+                Long2ObjectMap<PageState> activeBySection,
+                ThermalSweepFragments.Patch sweep
+        ) {
+            ensureNodeCapacity(arena.highWaterMark());
+            IntOpenHashSet affectedComponentIds = new IntOpenHashSet();
+            IntArrayList seeds = new IntArrayList();
+
+            for (PageState state : dirtyPages.keySet()) {
+                if (state.lastRebuiltGeometryBrickMask == 0L) {
+                    continue;
+                }
+                if (state.lastUnresolvedTopology != state.unresolvedTopology) {
+                    unresolvedPages += state.unresolvedTopology ? 1 : -1;
+                }
+                for (int slot : state.lastRemovedAirSlots) {
+                    collectComponent(slot, affectedComponentIds);
+                }
+            }
+            for (PageState state : dirtyPages.keySet()) {
+                long remaining = state.lastRebuiltPairBrickMask;
+                while (remaining != 0L) {
+                    int baseIndex = Long.numberOfTrailingZeros(remaining);
+                    int fragment = state.sweepFragmentOffset + baseIndex;
+                    int[] oldEdges = fragmentEdges[fragment];
+                    if (oldEdges != null) {
+                        for (int edge : oldEdges) {
+                            collectComponent(edgeA[edge], affectedComponentIds);
+                            collectComponent(edgeB[edge], affectedComponentIds);
+                        }
+                    }
+                    for (ThermalSweep.PairOperation operation
+                            : state.airPairFragments[baseIndex]) {
+                        collectComponent(operation.cellA(), affectedComponentIds);
+                        collectComponent(operation.cellB(), affectedComponentIds);
+                    }
+                    remaining &= remaining - 1L;
+                }
+            }
+            for (int componentId : affectedComponentIds) {
+                AirComponent component = components.remove(componentId);
+                if (component == null) {
+                    continue;
+                }
+                if (component.unresolved) {
+                    unresolvedComponents--;
+                }
+                for (int slot : component.members) {
+                    sweep.clearFarBoundary(slot);
+                    if (active[slot]) {
+                        componentBySlot[slot] = -1;
+                        seeds.add(slot);
+                    }
+                }
+            }
+
+            for (PageState state : dirtyPages.keySet()) {
+                long remaining = state.lastRebuiltPairBrickMask;
+                while (remaining != 0L) {
+                    int baseIndex = Long.numberOfTrailingZeros(remaining);
+                    removePairFragment(state.sweepFragmentOffset + baseIndex);
+                    remaining &= remaining - 1L;
+                }
+            }
+            for (PageState state : dirtyPages.keySet()) {
+                long remaining = state.lastRebuiltGeometryBrickMask;
+                while (remaining != 0L) {
+                    int baseIndex = Long.numberOfTrailingZeros(remaining);
+                    unmappedPatches -= state.openUnmappedPatches[baseIndex];
+                    state.openUnmappedPatches[baseIndex] = 0;
+                    remaining &= remaining - 1L;
+                }
+                for (int slot : state.lastRemovedAirSlots) {
+                    if (slot < active.length) {
+                        if (adjacencyHead[slot] != -1) {
+                            throw new IllegalStateException(
+                                    "removed air cell still owns adjacency: " + slot);
+                        }
+                        active[slot] = false;
+                        componentBySlot[slot] = -1;
+                        openPatchCount[slot] = 0;
+                        skyExposed[slot] = false;
+                    }
+                }
+                for (int slot : state.lastAddedAirSlots) {
+                    active[slot] = true;
+                    adjacencyHead[slot] = -1;
+                    componentBySlot[slot] = -1;
+                    openPatchCount[slot] = 0;
+                    skyExposed[slot] = false;
+                    seeds.add(slot);
+                }
+                remaining = state.lastRebuiltGeometryBrickMask;
+                while (remaining != 0L) {
+                    int baseIndex = Long.numberOfTrailingZeros(remaining);
+                    OpenPatchFragment next = compileOpenPatchFragment(
+                            state, baseIndex, activeBySection);
+                    state.openUnmappedPatches[baseIndex] =
+                            next.unmappedPatches();
+                    addOpenFragment(next);
+                    remaining &= remaining - 1L;
+                }
+            }
+            for (PageState state : dirtyPages.keySet()) {
+                long remaining = state.lastRebuiltPairBrickMask;
+                while (remaining != 0L) {
+                    int baseIndex = Long.numberOfTrailingZeros(remaining);
+                    installPairFragment(
+                            state.sweepFragmentOffset + baseIndex,
+                            state.airPairFragments[baseIndex]);
+                    remaining &= remaining - 1L;
+                }
+            }
+
+            for (int index = 0; index < seeds.size(); index++) {
+                int slot = seeds.getInt(index);
+                if (!active[slot] || componentBySlot[slot] != -1) {
+                    continue;
+                }
+                AirComponent component = buildComponent(slot);
+                components.put(component.id, component);
+                if (component.unresolved) {
+                    unresolvedComponents++;
+                }
+                emitComponent(component, sweep);
+            }
+            return allResolved();
+        }
+
+        private void collectComponent(int slot, IntOpenHashSet target) {
+            if (slot >= 0 && slot < componentBySlot.length
+                    && active[slot] && componentBySlot[slot] >= 0) {
+                target.add(componentBySlot[slot]);
+            }
+        }
+
+        private void addOpenFragment(OpenPatchFragment fragment) {
+            unmappedPatches = Math.addExact(
+                    unmappedPatches, fragment.unmappedPatches);
+            for (int index = 0; index < fragment.slots.length; index++) {
+                int slot = fragment.slots[index];
+                if (!active[slot]) {
+                    throw new IllegalStateException(
+                            "open patch references an inactive air cell: " + slot);
+                }
+                openPatchCount[slot] = Math.addExact(
+                        openPatchCount[slot], fragment.patchCounts[index]);
+                skyExposed[slot] |= fragment.skyExposed[index];
+            }
+        }
+
+        private AirComponent buildComponent(int start) {
+            IntArrayList queue = new IntArrayList();
+            IntArrayList members = new IntArrayList();
+            queue.add(start);
+            componentBySlot[start] = -2;
+            int minimumSlot = start;
+            for (int read = 0; read < queue.size(); read++) {
+                int slot = queue.getInt(read);
+                members.add(slot);
+                minimumSlot = Math.min(minimumSlot, slot);
+                for (int edge = adjacencyHead[slot]; edge != -1;
+                     edge = nextEdge(edge, slot)) {
+                    if (!edgeLive[edge]) {
+                        continue;
+                    }
+                    int neighbor = edgeA[edge] == slot ? edgeB[edge] : edgeA[edge];
+                    if (active[neighbor] && componentBySlot[neighbor] == -1) {
+                        componentBySlot[neighbor] = -2;
+                        queue.add(neighbor);
+                    }
+                }
+            }
+            int[] componentMembers = members.toIntArray();
+            int totalOpenPatches = 0;
+            boolean componentSkyExposed = false;
+            double maximumDeltaC = 0.0D;
+            for (int slot : componentMembers) {
+                componentBySlot[slot] = minimumSlot;
+                if (openPatchCount[slot] == 0) {
+                    continue;
+                }
+                totalOpenPatches = Math.addExact(
+                        totalOpenPatches, openPatchCount[slot]);
+                componentSkyExposed |= skyExposed[slot];
+                maximumDeltaC = Math.max(
+                        maximumDeltaC,
+                        Math.abs(arena.temperatureC(
+                                slot, parameters.referenceTemperatureC())
+                                - naturalTemperature(slot)));
+            }
+            if (totalOpenPatches == 0) {
+                return new AirComponent(
+                        minimumSlot, componentMembers, null, false, false);
+            }
+            FarFieldProfileRegistry.Profile profile = applicableFarFieldProfile(
+                    farFieldSettings.calibrationSourcePowerW(), maximumDeltaC);
+            boolean ambient = farFieldSettings.naturalEnvironment()
+                    && componentSkyExposed
+                    && profile != null;
+            return new AirComponent(
+                    minimumSlot,
+                    componentMembers,
+                    profile,
+                    ambient,
+                    !ambient);
+        }
+
+        private void emitComponent(
+                AirComponent component,
+                ThermalSweepFragments.Builder sweep
+        ) {
+            for (int slot : component.members) {
+                BoundaryValue boundary = boundaryValue(component, slot);
+                if (boundary != null) {
+                    sweep.setFarBoundary(
+                            slot, naturalTemperature(slot), boundary.conductance);
+                }
+            }
+        }
+
+        private void emitComponent(
+                AirComponent component,
+                ThermalSweepFragments.Patch sweep
+        ) {
+            for (int slot : component.members) {
+                BoundaryValue boundary = boundaryValue(component, slot);
+                if (boundary != null) {
+                    sweep.setFarBoundary(
+                            slot, naturalTemperature(slot), boundary.conductance);
+                }
+            }
+        }
+
+        private BoundaryValue boundaryValue(AirComponent component, int slot) {
+            if (openPatchCount[slot] == 0 || component.profile == null) {
+                return null;
+            }
+            double areaScale = farFieldConductanceScale
+                    * openPatchCount[slot]
+                    / (16.0D
+                    * farFieldSettings.referenceOpeningAreaBlocksSquared());
+            double continuationScale = component.ambient
+                    ? 1.0D
+                    : 1.0D / (1.0D
+                    + farFieldSettings.continuationDistanceBlocks());
+            return new BoundaryValue(
+                    component.profile.conductanceWPerK()
+                            * areaScale
+                            * continuationScale);
+        }
+
+        private void installPairFragment(
+                int fragment,
+                List<ThermalSweep.PairOperation> operations
+        ) {
+            int[] edges = new int[operations.size()];
+            for (int index = 0; index < operations.size(); index++) {
+                ThermalSweep.PairOperation operation = operations.get(index);
+                edges[index] = addEdge(operation.cellA(), operation.cellB());
+            }
+            fragmentEdges[fragment] = edges;
+        }
+
+        private void removePairFragment(int fragment) {
+            int[] edges = fragmentEdges[fragment];
+            if (edges != null) {
+                for (int edge : edges) {
+                    removeEdge(edge);
+                }
+            }
+            fragmentEdges[fragment] = null;
+        }
+
+        private int addEdge(int first, int second) {
+            if (first < 0 || second < 0
+                    || first >= active.length || second >= active.length
+                    || !active[first] || !active[second] || first == second) {
+                throw new IllegalStateException("air adjacency references invalid cells");
+            }
+            int edge;
+            if (freeEdge != -1) {
+                edge = freeEdge;
+                freeEdge = edgeNextA[edge];
+            } else {
+                edge = edgeHighWater++;
+                ensureEdgeCapacity(edgeHighWater);
+            }
+            edgeA[edge] = first;
+            edgeB[edge] = second;
+            edgeNextA[edge] = adjacencyHead[first];
+            edgeNextB[edge] = adjacencyHead[second];
+            adjacencyHead[first] = edge;
+            adjacencyHead[second] = edge;
+            edgeLive[edge] = true;
+            return edge;
+        }
+
+        private void removeEdge(int edge) {
+            if (edge < 0 || edge >= edgeHighWater || !edgeLive[edge]) {
+                throw new IllegalStateException("air adjacency edge is stale");
+            }
+            unlinkEdge(edgeA[edge], edge);
+            unlinkEdge(edgeB[edge], edge);
+            edgeLive[edge] = false;
+            edgeA[edge] = -1;
+            edgeB[edge] = -1;
+            edgeNextA[edge] = freeEdge;
+            edgeNextB[edge] = -1;
+            freeEdge = edge;
+        }
+
+        private void unlinkEdge(int slot, int target) {
+            int previous = -1;
+            for (int edge = adjacencyHead[slot]; edge != -1;
+                 edge = nextEdge(edge, slot)) {
+                if (edge == target) {
+                    int next = nextEdge(edge, slot);
+                    if (previous == -1) {
+                        adjacencyHead[slot] = next;
+                    } else {
+                        setNextEdge(previous, slot, next);
+                    }
+                    return;
+                }
+                previous = edge;
+            }
+            throw new IllegalStateException("air adjacency edge owner is missing");
+        }
+
+        private int nextEdge(int edge, int slot) {
+            return edgeA[edge] == slot ? edgeNextA[edge] : edgeNextB[edge];
+        }
+
+        private void setNextEdge(int edge, int slot, int next) {
+            if (edgeA[edge] == slot) {
+                edgeNextA[edge] = next;
+            } else if (edgeB[edge] == slot) {
+                edgeNextB[edge] = next;
+            } else {
+                throw new IllegalStateException("air adjacency owner is invalid");
+            }
+        }
+
+        private boolean allResolved() {
+            return unresolvedPages == 0
+                    && unresolvedComponents == 0
+                    && unmappedPatches == 0;
+        }
+
+        private void ensureNodeCapacity(int required) {
+            if (required <= active.length) {
+                return;
+            }
+            int old = active.length;
+            int capacity = graphCapacity(old, required);
+            active = Arrays.copyOf(active, capacity);
+            adjacencyHead = Arrays.copyOf(adjacencyHead, capacity);
+            componentBySlot = Arrays.copyOf(componentBySlot, capacity);
+            openPatchCount = Arrays.copyOf(openPatchCount, capacity);
+            skyExposed = Arrays.copyOf(skyExposed, capacity);
+            Arrays.fill(adjacencyHead, old, capacity, -1);
+            Arrays.fill(componentBySlot, old, capacity, -1);
+        }
+
+        private void ensurePageCapacity(int required) {
+            if (required <= naturalTemperatureByPage.length) {
+                return;
+            }
+            int old = naturalTemperatureByPage.length;
+            naturalTemperatureByPage = Arrays.copyOf(
+                    naturalTemperatureByPage, graphCapacity(old, required));
+            Arrays.fill(
+                    naturalTemperatureByPage,
+                    old,
+                    naturalTemperatureByPage.length,
+                    Double.NaN);
+        }
+
+        private double naturalTemperature(int slot) {
+            int pageSlot = arena.pageSlot(slot);
+            if (pageSlot < 0 || pageSlot >= naturalTemperatureByPage.length) {
+                throw new IllegalStateException(
+                        "air cell does not own a natural-temperature Page");
+            }
+            return naturalTemperatureByPage[pageSlot];
+        }
+
+        private void ensureEdgeCapacity(int required) {
+            if (required <= edgeA.length) {
+                return;
+            }
+            int capacity = graphCapacity(edgeA.length, required);
+            edgeA = Arrays.copyOf(edgeA, capacity);
+            edgeB = Arrays.copyOf(edgeB, capacity);
+            edgeNextA = Arrays.copyOf(edgeNextA, capacity);
+            edgeNextB = Arrays.copyOf(edgeNextB, capacity);
+            edgeLive = Arrays.copyOf(edgeLive, capacity);
+        }
+
+        private int graphCapacity(int current, int required) {
+            int capacity = Math.max(16, current);
+            while (capacity < required) {
+                capacity = Math.max(required, capacity + (capacity >>> 1));
+            }
+            return capacity;
+        }
+    }
+
+    private record AirComponent(
+            int id,
+            int[] members,
+            FarFieldProfileRegistry.Profile profile,
+            boolean ambient,
+            boolean unresolved
+    ) {
+    }
+
+    private record BoundaryValue(double conductance) {
+    }
+
+    private record OpenPatchFragment(
+            int[] slots,
+            int[] patchCounts,
+            boolean[] skyExposed,
+            int unmappedPatches
+    ) {
+    }
+
     private static final class PageState {
         private final ThermalPage page;
         private final int pageSlot;
@@ -3165,13 +3633,20 @@ public final class MinecraftThermalTopologyApplier {
         private int[] appliedSignatureIds = new int[BLOCKS_PER_PAGE];
         private int[] desiredSignatureIds;
         private int[] appliedCoverageRefs;
+        private GeometrySummary[] appliedBaseSummaries =
+                new GeometrySummary[ThermalPage.BASE_BRICK_COUNT];
         private ComponentBrickCompiler.CompiledBrick[] appliedMixedGeometry =
                 new ComponentBrickCompiler.CompiledBrick[ThermalPage.BASE_BRICK_COUNT];
-        private Map<MaterialPoleKey, Integer> appliedMaterialPoleSlots = Map.of();
-        private List<MaterialSurface> appliedMaterialSurfaces = List.of();
-        private Map<PhaseReservoirKey, Integer> appliedPhaseReservoirSlots = Map.of();
-        private List<PhaseSurface> appliedPhaseReservoirs = List.of();
-        private List<StatelessBridge> appliedStatelessBridges = List.of();
+        private Map<MaterialPoleKey, Integer>[] appliedMaterialPoleSlotFragments =
+                emptyMapFragmentArray();
+        private List<MaterialSurface>[] appliedMaterialSurfaceFragments =
+                emptyFragmentArray();
+        private Map<PhaseReservoirKey, Integer>[] appliedPhaseReservoirSlotFragments =
+                emptyMapFragmentArray();
+        private List<PhaseSurface>[] appliedPhaseReservoirFragments =
+                emptyFragmentArray();
+        private List<StatelessBridge>[] appliedStatelessBridgeFragments =
+                emptyFragmentArray();
         private final int[] fragmentFirst = new int[ThermalPage.BASE_BRICK_COUNT];
         private final int[] fragmentCount = new int[ThermalPage.BASE_BRICK_COUNT];
         @SuppressWarnings("unchecked")
@@ -3180,6 +3655,8 @@ public final class MinecraftThermalTopologyApplier {
                         ThermalPage.BASE_BRICK_COUNT];
         private final boolean[] unresolvedBricks =
                 new boolean[ThermalPage.BASE_BRICK_COUNT];
+        private final int[] openUnmappedPatches =
+                new int[ThermalPage.BASE_BRICK_COUNT];
         private long retirementChunkWatermark = Long.MAX_VALUE;
         private long desiredGeometryRevision;
         private long desiredBrickMask;
@@ -3191,13 +3668,19 @@ public final class MinecraftThermalTopologyApplier {
         private boolean unresolvedTopology;
         private boolean retirementQueued;
         private boolean materialDependencyChanged = true;
+        private int sweepFragmentOffset = -1;
+        private boolean lastUnresolvedTopology;
+        private long lastRebuiltGeometryBrickMask;
+        private long lastRebuiltPairBrickMask;
+        private long lastRebuiltMaterialBrickMask;
+        private int[] lastRemovedAirSlots = new int[0];
+        private int[] lastAddedAirSlots = new int[0];
 
         private PageState(
                 ThermalPage page,
                 int pageSlot,
                 int lifecycleGeneration,
                 long admissionChunkWatermark,
-                int[] initialCoverage,
                 double naturalTemperatureC
         ) {
             this.page = page;
@@ -3205,14 +3688,14 @@ public final class MinecraftThermalTopologyApplier {
             this.lifecycleGeneration = lifecycleGeneration;
             this.admissionChunkWatermark = admissionChunkWatermark;
             this.naturalTemperatureC = naturalTemperatureC;
-            this.appliedCoverageRefs = initialCoverage;
+            this.appliedCoverageRefs = page.coverageSnapshot();
+            for (int baseIndex = 0;
+                 baseIndex < ThermalPage.BASE_BRICK_COUNT;
+                 baseIndex++) {
+                appliedBaseSummaries[baseIndex] = page.geometrySummary(baseIndex);
+            }
             Arrays.fill(appliedSignatureIds, INITIAL_ALL_AIR);
             Arrays.fill(airPairFragments, List.of());
-            ArenaSpan initialSpan = page.cellSpan();
-            if (initialSpan.count() != 0) {
-                fragmentFirst[0] = initialSpan.firstSlot();
-                fragmentCount[0] = initialSpan.count();
-            }
         }
 
         private boolean hasCurrentResyncSnapshot() {
@@ -3245,7 +3728,6 @@ public final class MinecraftThermalTopologyApplier {
                 new ComponentBrickCompiler.CompiledBrick[ThermalPage.BASE_BRICK_COUNT];
         private final int[] materialCandidateBlocks = new int[64];
         private int materialCandidateCount;
-        private long mixedBrickMask;
         private boolean unresolvedTopology;
 
         private PageBuild() {

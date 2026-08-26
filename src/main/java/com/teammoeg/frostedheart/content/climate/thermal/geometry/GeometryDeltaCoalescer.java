@@ -10,13 +10,10 @@
 
 package com.teammoeg.frostedheart.content.climate.thermal.geometry;
 
-import java.util.Arrays;
-
 /** Main-thread, page-local coalescer that emits at most one delta per Brick per tick. */
 public final class GeometryDeltaCoalescer {
     private static final long NO_PENDING_TICK = Long.MIN_VALUE;
 
-    private final long[] changedVoxelMasks = new long[GeometrySummaryCache.BASE_SUMMARY_COUNT];
     private final long[] latestBrickRevisions = new long[GeometrySummaryCache.BASE_SUMMARY_COUNT];
     private long pendingTick = NO_PENDING_TICK;
     private long pendingBrickMask;
@@ -25,15 +22,11 @@ public final class GeometryDeltaCoalescer {
             long sectionKey,
             long lifecycleGeneration,
             int baseBrickIndex,
-            int brickVoxelIndex,
             long geometryRevision,
             long effectiveTick,
             GeometryDeltaRing ring
     ) {
         requireBaseBrickIndex(baseBrickIndex);
-        if (brickVoxelIndex < 0 || brickVoxelIndex >= 64) {
-            throw new IllegalArgumentException("brickVoxelIndex must be within [0, 63]");
-        }
         if (geometryRevision <= 0L) {
             throw new IllegalArgumentException("geometryRevision must be positive");
         }
@@ -57,7 +50,6 @@ public final class GeometryDeltaCoalescer {
         long brickBit = 1L << baseBrickIndex;
         boolean firstChangeForBrick = (pendingBrickMask & brickBit) == 0L;
         pendingBrickMask |= brickBit;
-        changedVoxelMasks[baseBrickIndex] |= 1L << brickVoxelIndex;
         latestBrickRevisions[baseBrickIndex] = geometryRevision;
         return new RecordResult(firstChangeForBrick, automaticSeal, outOfOrder);
     }
@@ -89,8 +81,7 @@ public final class GeometryDeltaCoalescer {
                     lifecycleGeneration,
                     latestBrickRevisions[brickIndex],
                     pendingTick,
-                    brickIndex,
-                    changedVoxelMasks[brickIndex]
+                    brickIndex
             );
             if (!accepted) {
                 int dropped = Long.bitCount(remaining);
@@ -104,15 +95,11 @@ public final class GeometryDeltaCoalescer {
         return new SealResult(offered, 0, false);
     }
 
-    public int pendingBrickCount() {
-        return Long.bitCount(pendingBrickMask);
-    }
-
-    public void reset() {
-        Arrays.fill(changedVoxelMasks, 0L);
-        Arrays.fill(latestBrickRevisions, 0L);
+    public int reset() {
+        int discardedBricks = Long.bitCount(pendingBrickMask);
         pendingBrickMask = 0L;
         pendingTick = NO_PENDING_TICK;
+        return discardedBricks;
     }
 
     public record RecordResult(

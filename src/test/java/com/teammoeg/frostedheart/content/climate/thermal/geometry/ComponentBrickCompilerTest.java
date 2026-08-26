@@ -24,10 +24,8 @@ class ComponentBrickCompilerTest {
     @Test
     void fullAirBrickCompilesToOneComponentAndNinetySixPorts() {
         ComponentBrickCompiler.CompiledBrick brick = resolved(compile(
-                repeated(air()), 4, 7));
+                repeated(air()), 4));
 
-        assertEquals(7, brick.generation());
-        assertEquals(64, brick.atomCount());
         assertEquals(1, brick.componentCount());
         assertEquals(64.0D, brick.componentVolume(0), 1.0e-12D);
         assertEquals(2.0D, brick.componentCentroidX(0), 1.0e-12D);
@@ -35,21 +33,26 @@ class ComponentBrickCompilerTest {
         assertEquals(2.0D, brick.componentCentroidZ(0), 1.0e-12D);
         assertEquals(96, brick.facePortCount());
         for (ConservativeAirGeometry.Face face : ConservativeAirGeometry.Face.values()) {
-            assertEquals(16, brick.facePortCount(face));
+            int count = 0;
+            for (int port = 0; port < brick.facePortCount(); port++) {
+                if (brick.facePortFace(port) == face) {
+                    count++;
+                }
+            }
+            assertEquals(16, count);
         }
         for (int port = 0; port < brick.facePortCount(); port++) {
             assertEquals(ConservativeAirGeometry.FULL_FACE_MASK,
-                    brick.facePort(port).apertureMask());
-            assertEquals(0, brick.facePort(port).compiledComponentId());
+                    brick.facePortApertureMask(port));
+            assertEquals(0, brick.facePortComponentId(port));
         }
     }
 
     @Test
     void fullSolidBrickHasNoAtomsComponentsOrPorts() {
         ComponentBrickCompiler.CompiledBrick brick = resolved(compile(
-                repeated(solid()), 4, 0));
+                repeated(solid()), 4));
 
-        assertEquals(0, brick.atomCount());
         assertEquals(0, brick.componentCount());
         assertEquals(0, brick.facePortCount());
         assertEquals(-1, brick.compiledComponentAt(0, 0));
@@ -64,7 +67,7 @@ class ComponentBrickCompilerTest {
             }
         }
 
-        ComponentBrickCompiler.CompiledBrick brick = resolved(compile(blocks, 4, 3));
+        ComponentBrickCompiler.CompiledBrick brick = resolved(compile(blocks, 4));
         int left = brick.compiledComponentAt(ComponentBrickCompiler.blockIndex(0, 0, 0), 0);
         int right = brick.compiledComponentAt(ComponentBrickCompiler.blockIndex(2, 0, 0), 0);
 
@@ -82,14 +85,14 @@ class ComponentBrickCompilerTest {
         nonOverlapping.set(ComponentBrickCompiler.blockIndex(0, 0, 0), singleMicrocell(3, 0, 0));
         nonOverlapping.set(ComponentBrickCompiler.blockIndex(1, 0, 0), singleMicrocell(0, 1, 0));
 
-        ComponentBrickCompiler.CompiledBrick separated = resolved(compile(nonOverlapping, 4, 0));
+        ComponentBrickCompiler.CompiledBrick separated = resolved(compile(nonOverlapping, 4));
         assertEquals(2, separated.componentCount());
 
         List<ConservativeAirGeometry.Resolution> overlapping = repeated(solid());
         overlapping.set(ComponentBrickCompiler.blockIndex(0, 0, 0), singleMicrocell(3, 0, 0));
         overlapping.set(ComponentBrickCompiler.blockIndex(1, 0, 0), singleMicrocell(0, 0, 0));
 
-        ComponentBrickCompiler.CompiledBrick joined = resolved(compile(overlapping, 4, 0));
+        ComponentBrickCompiler.CompiledBrick joined = resolved(compile(overlapping, 4));
         assertEquals(1, joined.componentCount());
         assertEquals(2.0D / 64.0D, joined.componentVolume(0), 1.0e-12D);
         assertEquals(1.0D, joined.componentCentroidX(0), 1.0e-12D);
@@ -100,17 +103,17 @@ class ComponentBrickCompilerTest {
         List<ConservativeAirGeometry.Resolution> blocks = repeated(solid());
         blocks.set(ComponentBrickCompiler.blockIndex(0, 2, 3), singleMicrocell(0, 2, 3));
 
-        ComponentBrickCompiler.CompiledBrick brick = resolved(compile(blocks, 4, 0));
+        ComponentBrickCompiler.CompiledBrick brick = resolved(compile(blocks, 4));
 
         assertEquals(2, brick.facePortCount());
-        ComponentBrickCompiler.FacePort negativeX = findPort(
+        int negativeX = findPort(
                 brick, ConservativeAirGeometry.Face.NEGATIVE_X);
-        ComponentBrickCompiler.FacePort positiveZ = findPort(
+        int positiveZ = findPort(
                 brick, ConservativeAirGeometry.Face.POSITIVE_Z);
-        assertEquals(11, negativeX.blockFaceSlot());
-        assertEquals(1 << 11, negativeX.apertureMask());
-        assertEquals(8, positiveZ.blockFaceSlot());
-        assertEquals(1 << 8, positiveZ.apertureMask());
+        assertEquals(11, brick.facePortBlockSlot(negativeX));
+        assertEquals(1 << 11, brick.facePortApertureMask(negativeX));
+        assertEquals(8, brick.facePortBlockSlot(positiveZ));
+        assertEquals(1 << 8, brick.facePortApertureMask(positiveZ));
     }
 
     @Test
@@ -121,7 +124,7 @@ class ComponentBrickCompilerTest {
         unsupportedBlocks.set(9, ConservativeAirGeometry.resolve(List.of(slab), 1));
 
         ComponentBrickCompiler.Compilation unsupportedInput =
-                compile(unsupportedBlocks, 4, 0);
+                compile(unsupportedBlocks, 4);
         assertEquals(ComponentBrickCompiler.Status.CONSERVATIVE_UNSUPPORTED,
                 unsupportedInput.status());
         assertEquals(ComponentBrickCompiler.UnsupportedReason.BLOCK_INPUT_UNSUPPORTED,
@@ -130,7 +133,7 @@ class ComponentBrickCompilerTest {
 
         List<ConservativeAirGeometry.Resolution> twoRegions = repeated(air());
         twoRegions.set(12, ConservativeAirGeometry.resolve(List.of(slab), 4));
-        ComponentBrickCompiler.Compilation regionOverflow = compile(twoRegions, 1, 0);
+        ComponentBrickCompiler.Compilation regionOverflow = compile(twoRegions, 1);
         assertEquals(ComponentBrickCompiler.UnsupportedReason.REGION_LIMIT_EXCEEDED,
                 regionOverflow.unsupportedReason());
         assertEquals(12, regionOverflow.unsupportedBlockIndex());
@@ -139,19 +142,18 @@ class ComponentBrickCompilerTest {
     @Test
     void invalidBrickInputsAreRejected() {
         assertThrows(IllegalArgumentException.class, () ->
-                ComponentBrickCompiler.compile(List.of(), 1, 0));
+                ComponentBrickCompiler.compile(List.of(), 1));
         assertThrows(IllegalArgumentException.class, () ->
-                ComponentBrickCompiler.compile(repeated(air()), 0, 0));
+                ComponentBrickCompiler.compile(repeated(air()), 0));
         assertThrows(IllegalArgumentException.class, () ->
                 ComponentBrickCompiler.blockIndex(4, 0, 0));
     }
 
     private static ComponentBrickCompiler.Compilation compile(
             List<ConservativeAirGeometry.Resolution> blocks,
-            int maximumRegionsPerBlock,
-            int generation
+            int maximumRegionsPerBlock
     ) {
-        return ComponentBrickCompiler.compile(blocks, maximumRegionsPerBlock, generation);
+        return ComponentBrickCompiler.compile(blocks, maximumRegionsPerBlock);
     }
 
     private static ComponentBrickCompiler.CompiledBrick resolved(
@@ -198,14 +200,13 @@ class ComponentBrickCompilerTest {
                 (x + 1) * size, (y + 1) * size, (z + 1) * size);
     }
 
-    private static ComponentBrickCompiler.FacePort findPort(
+    private static int findPort(
             ComponentBrickCompiler.CompiledBrick brick,
             ConservativeAirGeometry.Face face
     ) {
         for (int port = 0; port < brick.facePortCount(); port++) {
-            ComponentBrickCompiler.FacePort candidate = brick.facePort(port);
-            if (candidate.face() == face) {
-                return candidate;
+            if (brick.facePortFace(port) == face) {
+                return port;
             }
         }
         throw new AssertionError("missing face port " + face);

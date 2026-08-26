@@ -18,8 +18,6 @@ public record ThermalTimePolicy(
         long maxSolveDeltaTicks,
         int maxDegradedSubsteps
 ) {
-    public static final long INITIAL_UNIFORM_STEP_TICKS = 5L;
-
     public ThermalTimePolicy {
         if (uniformStepTicks <= 0L) {
             throw new IllegalArgumentException("uniformStepTicks must be positive");

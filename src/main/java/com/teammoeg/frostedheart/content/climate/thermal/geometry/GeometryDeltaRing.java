@@ -23,7 +23,6 @@ public final class GeometryDeltaRing {
     private final long[] geometryRevisions;
     private final long[] effectiveTicks;
     private final int[] baseBrickIndices;
-    private final long[] changedVoxelMasks;
     private final AtomicLong readSequence = new AtomicLong();
     private final AtomicLong writeSequence = new AtomicLong();
 
@@ -37,34 +36,11 @@ public final class GeometryDeltaRing {
         geometryRevisions = new long[capacity];
         effectiveTicks = new long[capacity];
         baseBrickIndices = new int[capacity];
-        changedVoxelMasks = new long[capacity];
-    }
-
-    public int capacity() {
-        return capacity;
-    }
-
-    public int size() {
-        long size = writeSequence.get() - readSequence.get();
-        return (int) Math.min(capacity, Math.max(0L, size));
     }
 
     public int remainingCapacity() {
-        return capacity - size();
-    }
-
-    public boolean offer(GeometryDelta delta) {
-        if (delta == null) {
-            throw new IllegalArgumentException("delta is required");
-        }
-        return offer(
-                delta.sectionKey(),
-                delta.lifecycleGeneration(),
-                delta.geometryRevision(),
-                delta.effectiveTick(),
-                delta.baseBrickIndex(),
-                delta.changedVoxelMask()
-        );
+        long size = writeSequence.get() - readSequence.get();
+        return capacity - (int) Math.min(capacity, Math.max(0L, size));
     }
 
     public boolean offer(
@@ -72,11 +48,9 @@ public final class GeometryDeltaRing {
             long lifecycleGeneration,
             long geometryRevision,
             long effectiveTick,
-            int baseBrickIndex,
-            long changedVoxelMask
+            int baseBrickIndex
     ) {
-        validate(lifecycleGeneration, geometryRevision, effectiveTick,
-                baseBrickIndex, changedVoxelMask);
+        validate(lifecycleGeneration, geometryRevision, effectiveTick, baseBrickIndex);
         long write = writeSequence.get();
         if (write - readSequence.get() >= capacity) {
             return false;
@@ -87,7 +61,6 @@ public final class GeometryDeltaRing {
         geometryRevisions[slot] = geometryRevision;
         effectiveTicks[slot] = effectiveTick;
         baseBrickIndices[slot] = baseBrickIndex;
-        changedVoxelMasks[slot] = changedVoxelMask;
         writeSequence.lazySet(write + 1L);
         return true;
     }
@@ -107,8 +80,7 @@ public final class GeometryDeltaRing {
                 lifecycleGenerations[slot],
                 geometryRevisions[slot],
                 effectiveTicks[slot],
-                baseBrickIndices[slot],
-                changedVoxelMasks[slot]
+                baseBrickIndices[slot]
         );
         readSequence.lazySet(read + 1L);
         return true;
@@ -130,18 +102,11 @@ public final class GeometryDeltaRing {
         return poll(target);
     }
 
-    /** Cold/debug convenience wrapper. */
-    public GeometryDelta poll() {
-        MutableGeometryDelta target = new MutableGeometryDelta();
-        return poll(target) ? target.snapshot() : null;
-    }
-
     private static void validate(
             long lifecycleGeneration,
             long geometryRevision,
             long effectiveTick,
-            int baseBrickIndex,
-            long changedVoxelMask
+            int baseBrickIndex
     ) {
         if (lifecycleGeneration < 0L) {
             throw new IllegalArgumentException("lifecycleGeneration must be non-negative");
@@ -155,9 +120,6 @@ public final class GeometryDeltaRing {
         if (baseBrickIndex < 0 || baseBrickIndex >= GeometrySummaryCache.BASE_SUMMARY_COUNT) {
             throw new IllegalArgumentException("baseBrickIndex must be within [0, 63]");
         }
-        if (changedVoxelMask == 0L) {
-            throw new IllegalArgumentException("changedVoxelMask must not be empty");
-        }
     }
 
     public static final class MutableGeometryDelta {
@@ -166,7 +128,6 @@ public final class GeometryDeltaRing {
         private long geometryRevision;
         private long effectiveTick;
         private int baseBrickIndex;
-        private long changedVoxelMask;
 
         public long sectionKey() {
             return sectionKey;
@@ -188,35 +149,18 @@ public final class GeometryDeltaRing {
             return baseBrickIndex;
         }
 
-        public long changedVoxelMask() {
-            return changedVoxelMask;
-        }
-
-        public GeometryDelta snapshot() {
-            return new GeometryDelta(
-                    sectionKey,
-                    lifecycleGeneration,
-                    geometryRevision,
-                    effectiveTick,
-                    baseBrickIndex,
-                    changedVoxelMask
-            );
-        }
-
         private void set(
                 long sectionKey,
                 long lifecycleGeneration,
                 long geometryRevision,
                 long effectiveTick,
-                int baseBrickIndex,
-                long changedVoxelMask
+                int baseBrickIndex
         ) {
             this.sectionKey = sectionKey;
             this.lifecycleGeneration = lifecycleGeneration;
             this.geometryRevision = geometryRevision;
             this.effectiveTick = effectiveTick;
             this.baseBrickIndex = baseBrickIndex;
-            this.changedVoxelMask = changedVoxelMask;
         }
     }
 }

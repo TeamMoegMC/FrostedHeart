@@ -12,146 +12,47 @@ package com.teammoeg.frostedheart.content.climate.thermal.solver;
 
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.ThermalCellArena;
 
-import java.util.List;
 import java.util.Objects;
 
 /**
- * A frozen sequential pair/boundary sweep over authoritative arena state.
- * Instances are single-writer and reuse mutable kernel scratch on the hot path.
+ * Single-writer solve facade over one Brick-addressable primitive layout.
  */
 public final class ThermalSweep {
-    private final ThermalCellArena arena;
-    private final int[] pairA;
-    private final int[] pairB;
-    private final int[] pairGenerationA;
-    private final int[] pairGenerationB;
-    private final double[] pairConductance;
-    private final double[] pairCenterYA;
-    private final double[] pairCenterYB;
-    private final boolean[] pairUsesBuoyancy;
-    private final int[] boundaryCell;
-    private final int[] boundaryGeneration;
-    private final double[] boundaryTemperature;
-    private final double[] boundaryConductance;
-    private final PhaseTransitionRuntime phaseRuntime;
-    private final int[] phaseAirCell;
-    private final int[] phaseAirGeneration;
-    private final int[] phaseReservoirCell;
-    private final int[] phaseReservoirGeneration;
-    private final double[] phaseConductance;
-    private final int[] stateSlots;
-    private final BuoyancyConductance.Parameters buoyancyParameters;
-    private final BuoyancyConductance.MutableResult buoyancyScratch =
-            new BuoyancyConductance.MutableResult();
-    private final ThermalExchangeKernel.MutablePairResult pairScratch =
-            new ThermalExchangeKernel.MutablePairResult();
-    private final ThermalExchangeKernel.MutableBoundaryResult boundaryScratch =
-            new ThermalExchangeKernel.MutableBoundaryResult();
+    private final ThermalSweepFragments fragments;
+    private ThermalSweepFragments.Patch pendingFragmentPatch;
 
-    public ThermalSweep(
-            ThermalCellArena arena,
-            List<PairOperation> pairOperations,
-            List<BoundaryOperation> boundaryOperations,
-            BuoyancyConductance.Parameters buoyancyParameters
+    private ThermalSweep(
+            ThermalSweepFragments fragments,
+            ThermalSweepFragments.Patch pendingFragmentPatch
     ) {
-        this(
-                arena,
-                pairOperations,
-                boundaryOperations,
-                null,
-                List.of(),
-                buoyancyParameters);
+        this.fragments = Objects.requireNonNull(fragments, "fragments");
+        this.pendingFragmentPatch = pendingFragmentPatch;
     }
 
-    public ThermalSweep(
-            ThermalCellArena arena,
-            List<PairOperation> pairOperations,
-            List<BoundaryOperation> boundaryOperations,
-            PhaseTransitionRuntime phaseRuntime,
-            List<PhaseOperation> phaseOperations,
-            BuoyancyConductance.Parameters buoyancyParameters
-    ) {
-        this.arena = Objects.requireNonNull(arena, "arena");
-        this.buoyancyParameters = Objects.requireNonNull(
-                buoyancyParameters,
-                "buoyancyParameters"
-        );
+    static ThermalSweep fragmented(ThermalSweepFragments fragments) {
+        return new ThermalSweep(fragments, null);
+    }
 
-        Objects.requireNonNull(pairOperations, "pairOperations");
-        pairA = new int[pairOperations.size()];
-        pairB = new int[pairOperations.size()];
-        pairGenerationA = new int[pairOperations.size()];
-        pairGenerationB = new int[pairOperations.size()];
-        pairConductance = new double[pairOperations.size()];
-        pairCenterYA = new double[pairOperations.size()];
-        pairCenterYB = new double[pairOperations.size()];
-        pairUsesBuoyancy = new boolean[pairOperations.size()];
-        for (int index = 0; index < pairOperations.size(); index++) {
-            PairOperation operation = Objects.requireNonNull(
-                    pairOperations.get(index),
-                    "pairOperations contains null"
-            );
-            requireLiveCell(operation.cellA());
-            requireLiveCell(operation.cellB());
-            if (operation.cellA() == operation.cellB()) {
-                throw new IllegalArgumentException("a pair must contain two different cells");
-            }
-            pairA[index] = operation.cellA();
-            pairB[index] = operation.cellB();
-            pairGenerationA[index] = arena.lifecycleGeneration(operation.cellA());
-            pairGenerationB[index] = arena.lifecycleGeneration(operation.cellB());
-            pairConductance[index] = operation.baseConductanceWPerK();
-            pairCenterYA[index] = operation.centerYA();
-            pairCenterYB[index] = operation.centerYB();
-            pairUsesBuoyancy[index] = operation.applyBuoyancy();
+    public ThermalSweepFragments.Patch beginFragmentPatch() {
+        if (pendingFragmentPatch != null) {
+            throw new IllegalStateException("sweep already has a pending fragment patch");
         }
+        return fragments.beginPatch();
+    }
 
-        Objects.requireNonNull(boundaryOperations, "boundaryOperations");
-        boundaryCell = new int[boundaryOperations.size()];
-        boundaryGeneration = new int[boundaryOperations.size()];
-        boundaryTemperature = new double[boundaryOperations.size()];
-        boundaryConductance = new double[boundaryOperations.size()];
-        for (int index = 0; index < boundaryOperations.size(); index++) {
-            BoundaryOperation operation = Objects.requireNonNull(
-                    boundaryOperations.get(index),
-                    "boundaryOperations contains null"
-            );
-            requireLiveCell(operation.cell());
-            boundaryCell[index] = operation.cell();
-            boundaryGeneration[index] = arena.lifecycleGeneration(operation.cell());
-            boundaryTemperature[index] = operation.boundaryTemperatureC();
-            boundaryConductance[index] = operation.conductanceWPerK();
+    public ThermalSweep withFragmentPatch(ThermalSweepFragments.Patch patch) {
+        if (patch == null || pendingFragmentPatch != null) {
+            throw new IllegalStateException("fragment patch cannot target this sweep");
         }
-        Objects.requireNonNull(phaseOperations, "phaseOperations");
-        if (!phaseOperations.isEmpty()
-                && (phaseRuntime == null || !phaseRuntime.targets(arena))) {
-            throw new IllegalArgumentException(
-                    "phase operations require the arena's phase runtime");
+        return new ThermalSweep(fragments, patch);
+    }
+
+    /** Called only by the runtime while it owns the logical writer. */
+    public void commitPendingFragmentPatch() {
+        if (pendingFragmentPatch != null) {
+            pendingFragmentPatch.commit();
+            pendingFragmentPatch = null;
         }
-        this.phaseRuntime = phaseRuntime;
-        phaseAirCell = new int[phaseOperations.size()];
-        phaseAirGeneration = new int[phaseOperations.size()];
-        phaseReservoirCell = new int[phaseOperations.size()];
-        phaseReservoirGeneration = new int[phaseOperations.size()];
-        phaseConductance = new double[phaseOperations.size()];
-        for (int index = 0; index < phaseOperations.size(); index++) {
-            PhaseOperation operation = Objects.requireNonNull(
-                    phaseOperations.get(index), "phaseOperations contains null");
-            requireLiveCell(operation.airCell());
-            requireLiveCell(operation.phaseReservoir());
-            if (arena.isPhaseReservoir(operation.airCell())
-                    || !arena.isPhaseReservoir(operation.phaseReservoir())) {
-                throw new IllegalArgumentException(
-                        "phase operation must connect air to a phase reservoir");
-            }
-            phaseAirCell[index] = operation.airCell();
-            phaseAirGeneration[index] = arena.lifecycleGeneration(operation.airCell());
-            phaseReservoirCell[index] = operation.phaseReservoir();
-            phaseReservoirGeneration[index] = arena.lifecycleGeneration(
-                    operation.phaseReservoir());
-            phaseConductance[index] = operation.conductanceWPerK();
-        }
-        stateSlots = collectStateSlots();
     }
 
     /** Operations must already be in canonical spatial order. */
@@ -165,9 +66,11 @@ public final class ThermalSweep {
     ) {
         public PairOperation {
             if (cellA < 0 || cellB < 0) {
-                throw new IllegalArgumentException("pair cell indices must be non-negative");
+                throw new IllegalArgumentException(
+                        "pair cell indices must be non-negative");
             }
-            requireNonNegativeFinite("baseConductanceWPerK", baseConductanceWPerK);
+            requireNonNegativeFinite(
+                    "baseConductanceWPerK", baseConductanceWPerK);
             requireFinite("centerYA", centerYA);
             requireFinite("centerYB", centerYB);
         }
@@ -189,7 +92,8 @@ public final class ThermalSweep {
                 double centerYB
         ) {
             return new PairOperation(
-                    cellA, cellB, baseConductanceWPerK, centerYA, centerYB, true);
+                    cellA, cellB, baseConductanceWPerK,
+                    centerYA, centerYB, true);
         }
     }
 
@@ -200,7 +104,8 @@ public final class ThermalSweep {
     ) {
         public BoundaryOperation {
             if (cell < 0) {
-                throw new IllegalArgumentException("boundary cell index must be non-negative");
+                throw new IllegalArgumentException(
+                        "boundary cell index must be non-negative");
             }
             requireFinite("boundaryTemperatureC", boundaryTemperatureC);
             requireNonNegativeFinite("conductanceWPerK", conductanceWPerK);
@@ -249,11 +154,7 @@ public final class ThermalSweep {
             double referenceTemperatureC,
             SolveEpoch epoch
     ) {
-        return apply(
-                referenceTemperatureC,
-                epoch,
-                Direction.forEpoch(epoch)
-        );
+        return apply(referenceTemperatureC, epoch, Direction.forEpoch(epoch));
     }
 
     public Result apply(
@@ -261,12 +162,7 @@ public final class ThermalSweep {
             SolveEpoch epoch,
             Direction direction
     ) {
-        return apply(
-                referenceTemperatureC,
-                epoch,
-                epoch.dtSeconds(),
-                direction
-        );
+        return apply(referenceTemperatureC, epoch, epoch.dtSeconds(), direction);
     }
 
     /** Applies one time-plan substep; the caller supplies its bounded seconds value. */
@@ -276,372 +172,33 @@ public final class ThermalSweep {
             double dtSeconds,
             Direction direction
     ) {
-        Objects.requireNonNull(epoch, "epoch");
-        Objects.requireNonNull(direction, "direction");
-        requireCurrentTargets();
-        requireFinite("referenceTemperatureC", referenceTemperatureC);
-        requireNonNegativeFinite("dtSeconds", dtSeconds);
-
-        double initialEnthalpy = compensatedSum(arena, stateSlots);
-        MutableCounts counts = new MutableCounts();
-        if (direction == Direction.FORWARD) {
-            applyPairsForward(
-                    arena, referenceTemperatureC,
-                    epoch, dtSeconds, counts);
-            applyBoundariesForward(
-                    arena, referenceTemperatureC,
-                    dtSeconds, counts);
-            applyPhaseContactsForward(referenceTemperatureC, dtSeconds, counts);
-        } else {
-            applyPhaseContactsReverse(referenceTemperatureC, dtSeconds, counts);
-            applyPairsReverse(
-                    arena, referenceTemperatureC,
-                    epoch, dtSeconds, counts);
-            applyBoundariesReverse(
-                    arena, referenceTemperatureC,
-                    dtSeconds, counts);
-        }
-        double finalEnthalpy = compensatedSum(arena, stateSlots);
-        double residual = finalEnthalpy - (initialEnthalpy + counts.boundaryEnergyJ);
-        return new Result(
-                direction,
-                counts.appliedPairs,
-                counts.appliedBoundaries,
-                counts.appliedPhaseContacts,
-                counts.numericDegraded,
-                initialEnthalpy,
-                finalEnthalpy,
-                counts.boundaryEnergyJ,
-                residual
-        );
-    }
-
-    private void applyPairsForward(
-            ThermalCellArena arena,
-            double referenceTemperature,
-            SolveEpoch epoch,
-            double dtSeconds,
-            MutableCounts counts
-    ) {
-        for (int index = 0; index < pairA.length; index++) {
-            applyPair(index, arena, referenceTemperature,
-                    epoch, dtSeconds, counts);
-        }
-    }
-
-    private void applyPairsReverse(
-            ThermalCellArena arena,
-            double referenceTemperature,
-            SolveEpoch epoch,
-            double dtSeconds,
-            MutableCounts counts
-    ) {
-        for (int index = pairA.length - 1; index >= 0; index--) {
-            applyPair(index, arena, referenceTemperature,
-                    epoch, dtSeconds, counts);
-        }
-    }
-
-    private void applyPair(
-            int operation,
-            ThermalCellArena arena,
-            double referenceTemperature,
-            SolveEpoch epoch,
-            double dtSeconds,
-            MutableCounts counts
-    ) {
-        int first = pairA[operation];
-        int second = pairB[operation];
-        double conductance = pairConductance[operation];
-        if (pairUsesBuoyancy[operation]) {
-            double temperatureA = temperatureC(
-                    arena.enthalpyJ(first), arena.capacityJPerK(first), referenceTemperature);
-            double temperatureB = temperatureC(
-                    arena.enthalpyJ(second), arena.capacityJPerK(second), referenceTemperature);
-            BuoyancyConductance.evaluateInto(
-                    conductance,
-                    temperatureA,
-                    pairCenterYA[operation],
-                    temperatureB,
-                    pairCenterYB[operation],
-                    buoyancyParameters,
-                    buoyancyScratch
-            );
-            if (!buoyancyScratch.applied()) {
-                counts.numericDegraded++;
-                return;
-            }
-            conductance = buoyancyScratch.conductanceWPerK();
-        }
-
-        ThermalExchangeKernel.exchangePairInto(
-                arena.enthalpyJ(first),
-                arena.capacityJPerK(first),
-                epoch,
-                arena.enthalpyJ(second),
-                arena.capacityJPerK(second),
-                epoch,
-                conductance,
-                dtSeconds,
-                pairScratch
-        );
-        if (!pairScratch.applied()) {
-            counts.numericDegraded++;
-            return;
-        }
-        arena.setEnthalpyJ(first, pairScratch.enthalpyAJ());
-        arena.setEnthalpyJ(second, pairScratch.enthalpyBJ());
-        counts.appliedPairs++;
-    }
-
-    private void applyBoundariesForward(
-            ThermalCellArena arena,
-            double referenceTemperature,
-            double dtSeconds,
-            MutableCounts counts
-    ) {
-        for (int index = 0; index < boundaryCell.length; index++) {
-            applyBoundary(index, arena, referenceTemperature,
-                    dtSeconds, counts);
-        }
-    }
-
-    private void applyBoundariesReverse(
-            ThermalCellArena arena,
-            double referenceTemperature,
-            double dtSeconds,
-            MutableCounts counts
-    ) {
-        for (int index = boundaryCell.length - 1; index >= 0; index--) {
-            applyBoundary(index, arena, referenceTemperature,
-                    dtSeconds, counts);
-        }
-    }
-
-    private void applyBoundary(
-            int operation,
-            ThermalCellArena arena,
-            double referenceTemperature,
-            double dtSeconds,
-            MutableCounts counts
-    ) {
-        int cell = boundaryCell[operation];
-        ThermalExchangeKernel.exchangeFixedBoundaryInto(
-                arena.enthalpyJ(cell),
-                arena.capacityJPerK(cell),
-                referenceTemperature,
-                boundaryTemperature[operation],
-                boundaryConductance[operation],
-                dtSeconds,
-                boundaryScratch
-        );
-        if (!boundaryScratch.applied()) {
-            counts.numericDegraded++;
-            return;
-        }
-        arena.setEnthalpyJ(cell, boundaryScratch.enthalpyJ());
-        counts.addBoundaryEnergy(boundaryScratch.energyFromBoundaryJ());
-        counts.appliedBoundaries++;
-    }
-
-    private void applyPhaseContactsForward(
-            double referenceTemperatureC,
-            double dtSeconds,
-            MutableCounts counts
-    ) {
-        for (int index = 0; index < phaseAirCell.length; index++) {
-            applyPhaseContact(index, referenceTemperatureC, dtSeconds, counts);
-        }
-    }
-
-    private void applyPhaseContactsReverse(
-            double referenceTemperatureC,
-            double dtSeconds,
-            MutableCounts counts
-    ) {
-        for (int index = phaseAirCell.length - 1; index >= 0; index--) {
-            applyPhaseContact(index, referenceTemperatureC, dtSeconds, counts);
-        }
-    }
-
-    private void applyPhaseContact(
-            int index,
-            double referenceTemperatureC,
-            double dtSeconds,
-            MutableCounts counts
-    ) {
-        if (!phaseRuntime.applyContact(
-                phaseAirCell[index],
-                phaseReservoirCell[index],
-                phaseConductance[index],
-                referenceTemperatureC,
-                dtSeconds)) {
-            counts.numericDegraded++;
-            return;
-        }
-        counts.appliedPhaseContacts++;
+        return fragments.apply(
+                referenceTemperatureC, epoch, dtSeconds, direction);
     }
 
     public boolean targets(ThermalCellArena candidate) {
-        return arena == candidate;
+        return fragments.arena() == candidate;
     }
 
     public int pairOperationCount() {
-        return pairA.length;
+        return fragments.pairOperationCount();
     }
 
     public int boundaryOperationCount() {
-        return boundaryCell.length;
+        return fragments.boundaryOperationCount();
     }
 
     public int phaseOperationCount() {
-        return phaseAirCell.length;
+        return fragments.phaseOperationCount();
     }
 
     public int stateCellCount() {
-        return stateSlots.length;
+        return fragments.stateCellCount();
     }
 
-    /**
-     * Largest current temperature difference across a compiled pair or fixed
-     * boundary. A non-finite cell state is never eligible for sleep.
-     */
+    /** Largest current temperature difference across any compiled operator. */
     public double maxTemperatureResidualC(double referenceTemperatureC) {
-        requireCurrentTargets();
-        requireFinite("referenceTemperatureC", referenceTemperatureC);
-        double residual = 0.0D;
-        for (int index = 0; index < pairA.length; index++) {
-            double temperatureA = temperatureC(
-                    arena.enthalpyJ(pairA[index]),
-                    arena.capacityJPerK(pairA[index]),
-                    referenceTemperatureC);
-            double temperatureB = temperatureC(
-                    arena.enthalpyJ(pairB[index]),
-                    arena.capacityJPerK(pairB[index]),
-                    referenceTemperatureC);
-            if (!Double.isFinite(temperatureA) || !Double.isFinite(temperatureB)) {
-                return Double.POSITIVE_INFINITY;
-            }
-            residual = Math.max(residual, Math.abs(temperatureA - temperatureB));
-        }
-        for (int index = 0; index < boundaryCell.length; index++) {
-            double temperature = temperatureC(
-                    arena.enthalpyJ(boundaryCell[index]),
-                    arena.capacityJPerK(boundaryCell[index]),
-                    referenceTemperatureC);
-            if (!Double.isFinite(temperature)) {
-                return Double.POSITIVE_INFINITY;
-            }
-            residual = Math.max(
-                    residual,
-                    Math.abs(temperature - boundaryTemperature[index]));
-        }
-        for (int index = 0; index < phaseAirCell.length; index++) {
-            double temperature = arena.temperatureC(
-                    phaseAirCell[index], referenceTemperatureC);
-            if (!Double.isFinite(temperature)) {
-                return Double.POSITIVE_INFINITY;
-            }
-            residual = Math.max(
-                    residual,
-                    Math.max(0.0D,
-                            temperature - arena.phaseTransitionTemperatureC(
-                                    phaseReservoirCell[index])));
-        }
-        return residual;
-    }
-
-    private void requireLiveCell(int cell) {
-        if (!arena.isLive(cell)) {
-            throw new IllegalArgumentException(
-                    "operation references a non-live arena slot: " + cell);
-        }
-    }
-
-    private void requireCurrentTargets() {
-        for (int index = 0; index < pairA.length; index++) {
-            requireCurrentCell(pairA[index], pairGenerationA[index]);
-            requireCurrentCell(pairB[index], pairGenerationB[index]);
-        }
-        for (int index = 0; index < boundaryCell.length; index++) {
-            requireCurrentCell(boundaryCell[index], boundaryGeneration[index]);
-        }
-        for (int index = 0; index < phaseAirCell.length; index++) {
-            requireCurrentCell(phaseAirCell[index], phaseAirGeneration[index]);
-            requireCurrentCell(
-                    phaseReservoirCell[index], phaseReservoirGeneration[index]);
-        }
-    }
-
-    private void requireCurrentCell(int slot, int generation) {
-        if (!arena.isLive(slot) || arena.lifecycleGeneration(slot) != generation) {
-            throw new IllegalStateException(
-                    "compiled sweep references a stale arena slot: " + slot);
-        }
-    }
-
-    private int[] collectStateSlots() {
-        boolean[] present = new boolean[arena.highWaterMark()];
-        int count = 0;
-        for (int index = 0; index < pairA.length; index++) {
-            if (!present[pairA[index]]) {
-                present[pairA[index]] = true;
-                count++;
-            }
-            if (!present[pairB[index]]) {
-                present[pairB[index]] = true;
-                count++;
-            }
-        }
-        for (int slot : boundaryCell) {
-            if (!present[slot]) {
-                present[slot] = true;
-                count++;
-            }
-        }
-        for (int index = 0; index < phaseAirCell.length; index++) {
-            if (!present[phaseAirCell[index]]) {
-                present[phaseAirCell[index]] = true;
-                count++;
-            }
-            if (!present[phaseReservoirCell[index]]) {
-                present[phaseReservoirCell[index]] = true;
-                count++;
-            }
-        }
-        int[] slots = new int[count];
-        int write = 0;
-        for (int slot = 0; slot < present.length; slot++) {
-            if (present[slot]) {
-                slots[write++] = slot;
-            }
-        }
-        return slots;
-    }
-
-    private static double temperatureC(
-            double enthalpy,
-            double capacity,
-            double referenceTemperature
-    ) {
-        if (!Double.isFinite(enthalpy)
-                || !Double.isFinite(capacity)
-                || capacity <= 0.0D) {
-            return Double.NaN;
-        }
-        return referenceTemperature + enthalpy / capacity;
-    }
-
-    private static double compensatedSum(ThermalCellArena arena, int[] slots) {
-        double sum = 0.0D;
-        double compensation = 0.0D;
-        for (int slot : slots) {
-            double adjusted = arena.enthalpyJ(slot) - compensation;
-            double next = sum + adjusted;
-            compensation = (next - sum) - adjusted;
-            sum = next;
-        }
-        return sum;
+        return fragments.maxTemperatureResidualC(referenceTemperatureC);
     }
 
     private static void requireFinite(String name, double value) {
@@ -652,23 +209,8 @@ public final class ThermalSweep {
 
     private static void requireNonNegativeFinite(String name, double value) {
         if (!Double.isFinite(value) || value < 0.0D) {
-            throw new IllegalArgumentException(name + " must be finite and non-negative");
-        }
-    }
-
-    private static final class MutableCounts {
-        private int appliedPairs;
-        private int appliedBoundaries;
-        private int appliedPhaseContacts;
-        private int numericDegraded;
-        private double boundaryEnergyJ;
-        private double boundaryEnergyCompensation;
-
-        private void addBoundaryEnergy(double energyJ) {
-            double adjusted = energyJ - boundaryEnergyCompensation;
-            double next = boundaryEnergyJ + adjusted;
-            boundaryEnergyCompensation = (next - boundaryEnergyJ) - adjusted;
-            boundaryEnergyJ = next;
+            throw new IllegalArgumentException(
+                    name + " must be finite and non-negative");
         }
     }
 }

@@ -19,31 +19,7 @@ public final class ThermalExchangeKernel {
 
     public enum Status {
         APPLIED,
-        EPOCH_MISMATCH,
         NUMERIC_DEGRADED
-    }
-
-    /** Positive {@code energyFromAToBJ} moves enthalpy from A to B. */
-    public record PairResult(
-            Status status,
-            double enthalpyAJ,
-            double enthalpyBJ,
-            double energyFromAToBJ
-    ) {
-        public boolean applied() {
-            return status == Status.APPLIED;
-        }
-    }
-
-    /** Positive {@code energyFromBoundaryJ} moves enthalpy into the cell. */
-    public record BoundaryResult(
-            Status status,
-            double enthalpyJ,
-            double energyFromBoundaryJ
-    ) {
-        public boolean applied() {
-            return status == Status.APPLIED;
-        }
     }
 
     /** Caller-owned pair result for allocation-free sweep execution. */
@@ -51,7 +27,6 @@ public final class ThermalExchangeKernel {
         private Status status = Status.NUMERIC_DEGRADED;
         private double enthalpyAJ;
         private double enthalpyBJ;
-        private double energyFromAToBJ;
 
         public Status status() {
             return status;
@@ -69,25 +44,16 @@ public final class ThermalExchangeKernel {
             return enthalpyBJ;
         }
 
-        public double energyFromAToBJ() {
-            return energyFromAToBJ;
-        }
-
         private void set(
                 Status nextStatus,
                 double nextEnthalpyA,
-                double nextEnthalpyB,
-                double nextEnergyFromAToB
+                double nextEnthalpyB
         ) {
             status = nextStatus;
             enthalpyAJ = nextEnthalpyA;
             enthalpyBJ = nextEnthalpyB;
-            energyFromAToBJ = nextEnergyFromAToB;
         }
 
-        private PairResult snapshot() {
-            return new PairResult(status, enthalpyAJ, enthalpyBJ, energyFromAToBJ);
-        }
     }
 
     /** Caller-owned boundary result for allocation-free sweep execution. */
@@ -122,88 +88,6 @@ public final class ThermalExchangeKernel {
             energyFromBoundaryJ = nextEnergyFromBoundary;
         }
 
-        private BoundaryResult snapshot() {
-            return new BoundaryResult(status, enthalpyJ, energyFromBoundaryJ);
-        }
-    }
-
-    public static PairResult exchangePair(
-            double enthalpyAJ,
-            double capacityAJPerK,
-            SolveEpoch epochA,
-            double enthalpyBJ,
-            double capacityBJPerK,
-            SolveEpoch epochB,
-            double conductanceWPerK,
-            double dtSeconds
-    ) {
-        MutablePairResult result = new MutablePairResult();
-        exchangePairInto(
-                enthalpyAJ,
-                capacityAJPerK,
-                epochA,
-                enthalpyBJ,
-                capacityBJPerK,
-                epochB,
-                conductanceWPerK,
-                dtSeconds,
-                result
-        );
-        return result.snapshot();
-    }
-
-    public static Status exchangePairInto(
-            double enthalpyAJ,
-            double capacityAJPerK,
-            SolveEpoch epochA,
-            double enthalpyBJ,
-            double capacityBJPerK,
-            SolveEpoch epochB,
-            double conductanceWPerK,
-            double dtSeconds,
-            MutablePairResult result
-    ) {
-        Objects.requireNonNull(result, "result");
-        if (epochA == null || !epochA.sameThermalInterval(epochB)) {
-            result.set(
-                    Status.EPOCH_MISMATCH,
-                    enthalpyAJ,
-                    enthalpyBJ,
-                    0.0D
-            );
-            return Status.EPOCH_MISMATCH;
-        }
-        return exchangePairInto(
-                enthalpyAJ,
-                capacityAJPerK,
-                enthalpyBJ,
-                capacityBJPerK,
-                conductanceWPerK,
-                dtSeconds,
-                result
-        );
-    }
-
-    /** Exact solution for one isolated pair over {@code dtSeconds}. */
-    public static PairResult exchangePair(
-            double enthalpyAJ,
-            double capacityAJPerK,
-            double enthalpyBJ,
-            double capacityBJPerK,
-            double conductanceWPerK,
-            double dtSeconds
-    ) {
-        MutablePairResult result = new MutablePairResult();
-        exchangePairInto(
-                enthalpyAJ,
-                capacityAJPerK,
-                enthalpyBJ,
-                capacityBJPerK,
-                conductanceWPerK,
-                dtSeconds,
-                result
-        );
-        return result.snapshot();
     }
 
     public static Status exchangePairInto(
@@ -231,7 +115,7 @@ public final class ThermalExchangeKernel {
             return degradedPair(enthalpyAJ, enthalpyBJ, result);
         }
         if (conductanceWPerK == 0.0D || dtSeconds == 0.0D) {
-            result.set(Status.APPLIED, enthalpyAJ, enthalpyBJ, 0.0D);
+            result.set(Status.APPLIED, enthalpyAJ, enthalpyBJ);
             return Status.APPLIED;
         }
 
@@ -254,30 +138,8 @@ public final class ThermalExchangeKernel {
         if (!finite(nextA) || !finite(nextB)) {
             return degradedPair(enthalpyAJ, enthalpyBJ, result);
         }
-        result.set(Status.APPLIED, nextA, nextB, energyFromAToB);
+        result.set(Status.APPLIED, nextA, nextB);
         return Status.APPLIED;
-    }
-
-    /** Exact solution for one cell against an infinite fixed-temperature boundary. */
-    public static BoundaryResult exchangeFixedBoundary(
-            double enthalpyJ,
-            double capacityJPerK,
-            double referenceTemperatureC,
-            double boundaryTemperatureC,
-            double conductanceWPerK,
-            double dtSeconds
-    ) {
-        MutableBoundaryResult result = new MutableBoundaryResult();
-        exchangeFixedBoundaryInto(
-                enthalpyJ,
-                capacityJPerK,
-                referenceTemperatureC,
-                boundaryTemperatureC,
-                conductanceWPerK,
-                dtSeconds,
-                result
-        );
-        return result.snapshot();
     }
 
     public static Status exchangeFixedBoundaryInto(
@@ -368,7 +230,7 @@ public final class ThermalExchangeKernel {
             double enthalpyB,
             MutablePairResult result
     ) {
-        result.set(Status.NUMERIC_DEGRADED, enthalpyA, enthalpyB, 0.0D);
+        result.set(Status.NUMERIC_DEGRADED, enthalpyA, enthalpyB);
         return Status.NUMERIC_DEGRADED;
     }
 

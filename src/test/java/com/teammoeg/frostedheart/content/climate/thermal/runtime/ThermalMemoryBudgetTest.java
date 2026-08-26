@@ -12,11 +12,8 @@ package com.teammoeg.frostedheart.content.climate.thermal.runtime;
 
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class ThermalMemoryBudgetTest {
     @Test
@@ -34,13 +31,16 @@ class ThermalMemoryBudgetTest {
                 ThermalMemoryBudget.AllocationClass.OPTIONAL, 1L));
         assertNull(dimension.tryReserve(
                 ThermalMemoryBudget.AllocationClass.CRITICAL, 1L));
-        assertEquals(80L, dimension.usedBytes());
-        assertEquals(80L, server.usedBytes());
-
         critical.close();
         optional.close();
-        assertEquals(0L, dimension.usedBytes());
-        assertEquals(0L, server.usedBytes());
+        ThermalMemoryBudget.Reservation criticalAgain = dimension.tryReserve(
+                ThermalMemoryBudget.AllocationClass.CRITICAL, 20L);
+        ThermalMemoryBudget.Reservation optionalAgain = dimension.tryReserve(
+                ThermalMemoryBudget.AllocationClass.OPTIONAL, 60L);
+        assertNotNull(criticalAgain);
+        assertNotNull(optionalAgain);
+        criticalAgain.close();
+        optionalAgain.close();
     }
 
     @Test
@@ -57,8 +57,6 @@ class ThermalMemoryBudgetTest {
         ThermalMemoryBudget.Reservation secondUse = second.tryReserve(
                 ThermalMemoryBudget.AllocationClass.OPTIONAL, 20L);
         assertNotNull(secondUse);
-        assertEquals(90L, server.optionalUsedBytes());
-
         firstUse.close();
         secondUse.close();
     }
@@ -86,12 +84,13 @@ class ThermalMemoryBudgetTest {
         ThermalMemoryBudget.Reservation reservation = budget.tryReserve(
                 ThermalMemoryBudget.AllocationClass.CRITICAL, 8L);
         assertNotNull(reservation);
-        assertFalse(reservation.released());
-
         reservation.close();
         reservation.close();
-
-        assertTrue(reservation.released());
-        assertEquals(0L, budget.usedBytes());
+        assertNull(budget.tryReserve(
+                ThermalMemoryBudget.AllocationClass.CRITICAL, 40L));
+        ThermalMemoryBudget.Reservation fullBudget = budget.tryReserve(
+                ThermalMemoryBudget.AllocationClass.CRITICAL, 32L);
+        assertNotNull(fullBudget);
+        fullBudget.close();
     }
 }

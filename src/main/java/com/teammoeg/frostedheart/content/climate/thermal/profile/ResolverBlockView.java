@@ -10,13 +10,10 @@
 
 package com.teammoeg.frostedheart.content.climate.thermal.profile;
 
-import java.util.Collections;
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.Set;
 
 /**
  * Immutable view over already-captured block and fluid states. This type has
@@ -56,20 +53,6 @@ public final class ResolverBlockView<B, F> {
 
     public DependencyOffsetMask dependencyMask() {
         return dependencyMask;
-    }
-
-    public int presentCellCount() {
-        int count = 0;
-        for (SnapshotCell<B, F> cell : cells.values()) {
-            if (cell.status() == LookupStatus.PRESENT) {
-                count++;
-            }
-        }
-        return count;
-    }
-
-    public boolean isComplete() {
-        return presentCellCount() == dependencyMask.offsetCount();
     }
 
     /** Creates a stateful access audit over this immutable snapshot. */
@@ -176,7 +159,6 @@ public final class ResolverBlockView<B, F> {
      */
     public static final class Access<B, F> {
         private final ResolverBlockView<B, F> snapshot;
-        private final Set<DependencyOffsetMask.Offset> uniqueReads = new LinkedHashSet<>();
         private ThermalResolution.Reason firstFailure;
 
         private Access(ResolverBlockView<B, F> snapshot) {
@@ -193,21 +175,9 @@ public final class ResolverBlockView<B, F> {
         }
 
         public Lookup<B, F> lookup(int x, int y, int z) {
-            if (snapshot.dependencyMask().contains(x, y, z)) {
-                uniqueReads.add(new DependencyOffsetMask.Offset(x, y, z));
-            }
             Lookup<B, F> lookup = snapshot.lookup(x, y, z);
             remember(lookup.asResolution().reason());
             return lookup;
-        }
-
-        /** Declared snapshot offsets read so far, in first-read order. */
-        public Set<DependencyOffsetMask.Offset> uniqueReads() {
-            return Collections.unmodifiableSet(new LinkedHashSet<>(uniqueReads));
-        }
-
-        public int uniqueReadCount() {
-            return uniqueReads.size();
         }
 
         /** Block entities are deliberately absent from a V1 resolver snapshot. */
@@ -224,10 +194,6 @@ public final class ResolverBlockView<B, F> {
         public ThermalResolution<Void> entityContext() {
             remember(ThermalResolution.Reason.ENTITY_CONTEXT_DEPENDENT);
             return ThermalResolution.unsupported(ThermalResolution.Reason.ENTITY_CONTEXT_DEPENDENT);
-        }
-
-        public Optional<ThermalResolution.Reason> firstFailure() {
-            return Optional.ofNullable(firstFailure);
         }
 
         /** Applies retained access failures before a resolver result is published. */

@@ -85,44 +85,6 @@ public final class ThermalMemoryBudget {
         }
     }
 
-    public long limitBytes() {
-        return limitBytes;
-    }
-
-    public long criticalReserveBytes() {
-        return criticalReserveBytes;
-    }
-
-    public long usedBytes() {
-        synchronized (lock) {
-            return criticalUsedBytes + optionalUsedBytes;
-        }
-    }
-
-    public long criticalUsedBytes() {
-        synchronized (lock) {
-            return criticalUsedBytes;
-        }
-    }
-
-    public long optionalUsedBytes() {
-        synchronized (lock) {
-            return optionalUsedBytes;
-        }
-    }
-
-    public long remainingBytes(AllocationClass allocationClass) {
-        if (allocationClass == null) {
-            throw new IllegalArgumentException("allocationClass is required");
-        }
-        synchronized (lock) {
-            long local = remainingHere(allocationClass);
-            return parent == null
-                    ? local
-                    : Math.min(local, parent.remainingHere(allocationClass));
-        }
-    }
-
     private boolean canAdmitHere(AllocationClass allocationClass, long bytes) {
         return bytes <= remainingHere(allocationClass);
     }
@@ -175,20 +137,6 @@ public final class ThermalMemoryBudget {
             this.owner = owner;
             this.allocationClass = allocationClass;
             this.bytes = bytes;
-        }
-
-        public long bytes() {
-            return bytes;
-        }
-
-        public AllocationClass allocationClass() {
-            return allocationClass;
-        }
-
-        public boolean released() {
-            synchronized (owner.lock) {
-                return released;
-            }
         }
 
         @Override
