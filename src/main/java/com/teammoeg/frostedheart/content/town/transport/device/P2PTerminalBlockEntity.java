@@ -61,7 +61,7 @@ import java.util.function.Predicate;
 public class P2PTerminalBlockEntity extends CBlockEntity
         implements CTickableBlockEntity, MenuProvider {
     private static final double MAX_ACCESS_DISTANCE_SQUARED = 64.0;
-    private static final int TRANSFER_VISUAL_TICKS = 4;
+    private static final int MIN_TRANSFER_VISUAL_TICKS = 20;
     private static final int RECEIVER_CONTAINER_PROBE_INTERVAL_TICKS = 20;
 
     private TeamTownProvider townProvider;
@@ -442,12 +442,14 @@ public class P2PTerminalBlockEntity extends CBlockEntity
         Predicate<ItemStack> combinedFilter = stack -> sendFilter.matches(stack)
                 && targetTerminal.receiveFilter.matches(stack);
         sourceScanCount++;
-        transferVisualTicks = TRANSFER_VISUAL_TICKS;
-        targetTerminal.transferVisualTicks = TRANSFER_VISUAL_TICKS;
         P2PItemTransfer.Result result = P2PItemTransfer.move(
                 source, target, combinedFilter, budget, this::retainRecovery);
         if (result.movedItems() > 0) {
             transferBudget.recordSuccess(result.movedItems(), gameTime);
+            int visualTicks = transferVisualTicksForInterval(
+                    transferBudget.currentIntervalTicks());
+            transferVisualTicks = visualTicks;
+            targetTerminal.transferVisualTicks = visualTicks;
             targetTerminal.setChanged();
         } else {
             transferBudget.recordFailure(gameTime);
@@ -717,6 +719,10 @@ public class P2PTerminalBlockEntity extends CBlockEntity
         return transferring
                 ? P2PTerminalVisualState.TRANSFERRING
                 : P2PTerminalVisualState.IDLE;
+    }
+
+    static int transferVisualTicksForInterval(int currentIntervalTicks) {
+        return Math.max(MIN_TRANSFER_VISUAL_TICKS, currentIntervalTicks * 2);
     }
 
     long getSourceScanCount() {
