@@ -38,8 +38,14 @@ import com.teammoeg.frostedresearch.network.FHResearchControlPacket.Operator;
 import com.teammoeg.frostedresearch.research.Research;
 
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.network.chat.Component;
 
 public class DrawDeskLayer extends UILayer {
+	static final int KNOWLEDGE_BUTTON_X = 77;
+	static final int KNOWLEDGE_BUTTON_Y = 68;
+	static final int KNOWLEDGE_BUTTON_WIDTH = 50;
+	static final int KNOWLEDGE_BUTTON_HEIGHT = 19;
+
 	DrawDeskScreen dd;
 	MainGamePanel mgp;
 
@@ -79,6 +85,17 @@ public class DrawDeskLayer extends UILayer {
 		techTree.setPosAndSize(16, 68, 36, 19);
 
 		add(techTree);
+		com.teammoeg.chorda.client.cui.widgets.TextButton knowledge =
+			com.teammoeg.chorda.client.cui.widgets.TextButton.create(this,
+				net.minecraft.network.chat.Component.translatable("gui.frostedresearch.knowledge.open_short"),
+				com.teammoeg.chorda.client.icon.CIcons.nop(), ignored -> dd.showKnowledgeLab(),
+				net.minecraft.network.chat.Component.translatable("gui.frostedresearch.knowledge.open"));
+		knowledge.setPosAndSize(
+			KNOWLEDGE_BUTTON_X,
+			KNOWLEDGE_BUTTON_Y,
+			KNOWLEDGE_BUTTON_WIDTH,
+			KNOWLEDGE_BUTTON_HEIGHT);
+		add(knowledge);
 		Button techStop = new Button(this, DrawDeskIcons.STOP) {
 
 			@Override
@@ -135,6 +152,14 @@ public class DrawDeskLayer extends UILayer {
 	@Override
 	public void drawBackground(GuiGraphics matrixStack, int x, int y, int w, int h, RenderingHint hint) {
 		DrawDeskIcons.Background.draw(matrixStack, x, y, w, h);
+		if (dd.getTile().getGamePurpose() == DrawingDeskTileEntity.GamePurpose.V2_INSPIRATION) {
+			Component session = Component.translatable("gui.frostedresearch.knowledge.active_session",
+					dd.getTile().getPinnedEvidence().size());
+			int bannerWidth = Math.min(142, getFont().width(session) + 10);
+			matrixStack.fill(x + 14, y + 5, x + 14 + bannerWidth, y + 18, 0xFFD0C29E);
+			matrixStack.drawString(getFont(), getFont().plainSubstrByWidth(session.getString(), bannerWidth - 8),
+					x + 18, y + 8, 0xFF3F756D, false);
+		}
 	}
 
 	@Override

@@ -216,6 +216,7 @@ public final class ResearchWorkspaceState {
 
     public enum Surface {
         RESEARCH_ARCHIVE,
+        KNOWLEDGE_LAB,
         DRAWING_DESK
     }
 

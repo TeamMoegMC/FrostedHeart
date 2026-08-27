@@ -20,6 +20,7 @@
 package com.teammoeg.frostedheart.content.town.citizen.sync;
 
 import java.util.function.Supplier;
+import java.util.UUID;
 
 import com.teammoeg.chorda.dataholders.team.CTeamDataManager;
 import com.teammoeg.chorda.dataholders.team.TeamDataHolder;
@@ -32,7 +33,9 @@ import com.teammoeg.frostedheart.content.town.citizen.sim.CitizenContainer;
 import com.teammoeg.frostedheart.content.town.citizen.sim.CitizenPresence;
 import com.teammoeg.frostedheart.content.town.citizen.sim.CitizenSim;
 import com.teammoeg.frostedheart.content.town.citizen.sim.CitizenSimScheduler;
+import com.teammoeg.frostedheart.content.town.resident.PersonKnowledgeDialogue;
 import com.teammoeg.frostedheart.content.town.resident.Resident;
+import com.teammoeg.frostedresearch.knowledge.PersonKnowledgeOverlay;
 
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.FriendlyByteBuf;
@@ -66,6 +69,8 @@ public final class C2SCitizenActionPacket implements CMessage {
 	public static final byte TRADE = 1;
 	/** 招募 / Recruit */
 	public static final byte RECRUIT = 2;
+	/** 询问持久化背景经验 / Ask about persistent background experience. */
+	public static final byte ASK_EXPERIENCE = 3;
 
 	/** 最大交互距离（方块） / Max interaction distance in blocks */
 	private static final double MAX_DIST = 8.0;
@@ -121,11 +126,24 @@ public final class C2SCitizenActionPacket implements CMessage {
 			// 交易：FH Trade 系统入口（居民无实体，data 用 null parent 构造；policytype=null → 空政策快照，仅接通接口）
 			case TRADE -> TradeHandler.openTradeScreen(sender, c.getTradeData(citizenId));
 			case RECRUIT -> handleRecruit(sender, level, sched, c, i);
+			case ASK_EXPERIENCE -> handleExperience(sender, sim, i);
 			default -> {
 			}
 			}
 		});
 		ctx.setPacketHandled(true);
+	}
+
+	private void handleExperience(ServerPlayer sender, CitizenSim sim, int index) {
+		if (CTeamDataManager.get(sender) == null) {
+			sender.displayClientMessage(Component.translatable("message.frostedheart.citizen.need_team"), false);
+			return;
+		}
+		UUID residentId = new UUID(sim.uuidHi[index], sim.uuidLo[index]);
+		Resident resident = TeamTown.from(sender).getResident(residentId).orElse(null);
+		PersonKnowledgeOverlay overlay = resident != null && resident.getSimId() == citizenId
+				? resident.getKnowledgeOverlay() : PersonKnowledgeOverlay.UNINITIALIZED;
+		PersonKnowledgeDialogue.shareFirst(sender, overlay, "person:" + residentId);
 	}
 
 	/**

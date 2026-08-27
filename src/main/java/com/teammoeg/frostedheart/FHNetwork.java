@@ -52,6 +52,7 @@ import com.teammoeg.frostedheart.content.town.network.TownPolicyEditRequestPacke
 import com.teammoeg.frostedheart.content.town.network.TownPolicyStateUpdatePacket;
 import com.teammoeg.frostedheart.content.town.network.WanderingRefugeeOpenTradeGUIMessage;
 import com.teammoeg.frostedheart.content.town.network.WanderingRefugeeRecruitMessage;
+import com.teammoeg.frostedheart.content.town.network.WanderingRefugeeKnowledgeMessage;
 import com.teammoeg.frostedheart.content.town.network.WarehouseInteractPacket;
 import com.teammoeg.frostedheart.content.town.network.WarehouseUpdatePacket;
 import com.teammoeg.frostedheart.content.trade.network.BargainRequestPacket;
@@ -144,6 +145,7 @@ public class FHNetwork extends CBaseNetwork {
         registerMessage("town_policy_state_update", TownPolicyStateUpdatePacket.class);
         registerMessage("wandering_refugee_open_trade_gui", WanderingRefugeeOpenTradeGUIMessage.class);
         registerMessage("wandering_refugee_recruit", WanderingRefugeeRecruitMessage.class);
+        registerMessage("wandering_refugee_knowledge", WanderingRefugeeKnowledgeMessage.class);
         registerMessage("warehouse_c2s_interact_packet", WarehouseInteractPacket.class);
         registerMessage("warehouse_update_packet", WarehouseUpdatePacket.class);
 

@@ -1,17 +1,17 @@
 # Research System Known Risks And Validation Gaps
 
 - Status: `Current`
-- Last verified: `2026-08-25`
-- Scope: Resolved legacy issues, implemented V2 Phase 1 boundaries, and remaining integrated/manual validation
+- Last verified: `2026-08-27`
+- Scope: Resolved legacy issues, implemented V2 Phase 2 boundaries, and remaining integrated/manual validation
 - Code anchors: [`ResearchCatalog`](../../src/main/java/com/teammoeg/frostedresearch/ResearchCatalog.java), [`ResearchResultCatalog`](../../src/main/java/com/teammoeg/frostedresearch/knowledge/ResearchResultCatalog.java), [`TeamKnowledgeData`](../../src/main/java/com/teammoeg/frostedresearch/data/TeamKnowledgeData.java), [`TechnologyAccessResolver`](../../src/main/java/com/teammoeg/frostedresearch/knowledge/TechnologyAccessResolver.java), [`ResearchHooks`](../../src/main/java/com/teammoeg/frostedresearch/ResearchHooks.java)
 
 ## Current Assessment
 
-All defects, fragile identity contracts, and code-level validation gaps recorded in the previous version of this document have been addressed. The remaining items below are explicit feature boundaries or integrated/manual QA still required before release; they are not silently treated as implemented behavior.
+The legacy hardening items recorded before Phase 2 remain resolved. The rapid Phase 2 generalization has completed its serial compile, unit, GameTest, build, and catalogue-preflight baseline, but not the restarted-client portion of the matrix. This document therefore distinguishes server/automated evidence from presentation and live synchronization behavior that still needs client re-verification.
 
 Create and Immersive Engineering are required by the Frosted Heart product. Missing-Create/missing-IE startup combinations are intentionally outside scope. BROWSE and EXPERIMENT remain future UI/system features and receive no new entry point or data model in this work.
 
-V2 Phase 1 is deliberately foundation-only. The five result codecs, minimal result/profile datapack loader, independent acquired-ID authority, unified projections, provenance, full snapshot, administrator result command, and physical Prototype shell are implemented. No formal topics, player workflow, Finding view handler, prototype host/socket/contribution model, or content migration is implemented. The companion pack and all 81 legacy definitions remain unchanged.
+V2 Phase 2 now includes timed block/living-entity records with retained context, provider enrichment, evidence pins, hidden inspiration candidates, executable Idea/protocol/resolution/Finding-view handlers, a three-page full team-knowledge presentation, generic person-package dialogue, and the bundled `the_winter_rescue:geology_understanding` content plugin. Prototype host/socket/contribution behavior and resident computation remain later phases. The companion pack's 81 legacy definitions remain unchanged.
 
 Construction and Procedure have distinct contracts: Construction is only a multiblock formation entitlement; Procedure is only a right-click block entitlement. Existing `EffectBuilding` and `EffectUse` project into those respective channels without becoming new result assets.
 
@@ -63,6 +63,19 @@ The new binary packet format is intentionally incompatible with older clients. `
 | 2026-08-23 | fit always selected minimum zoom | actual visible bounds are fit to both axes with `24px` padding, clamped to `0.15..1.75` | shared viewport tests and implementation |
 | 2026-08-23 | reflection removed/restored FTB sidebar groups | native widgets are disabled while open and an optional pseudo mixin cancels FTB's visibility-ignoring render; no FTB collection is mutated | full/no-FTB startup; in-game reload QA remains below |
 
+## Phase 2 Rapid-Iteration Boundaries
+
+| State | Boundary | Consequence / next evidence |
+|---|---|---|
+| source fix, client recheck pending | the earlier `FHKnowledgeDataSyncPacket` used a Forge safe-referent lambda that rejected the client installer; it now dispatches to `ClientKnowledgeSnapshotHandler` with `DistExecutor.unsafeRunWhenOn` | restart the development client and prove the already-saved records appear after login and after `/reload` |
+| implemented, integrated recheck pending | an invalid Phase 1 smoke topic in the current debug world referenced the unregistered `frostedresearch_test:smoke_view`; that reference has been removed from the test fixture and current debug-world mirror | confirm `catalogRevision > 0` and the bundled geology topic installs in the same world without deleting its saved knowledge |
+| local full projection, server paging later | `KnowledgeLabProjection` sends every client-safe observation, Idea, artifact and acquired result in the full team snapshot; the three archive pages scroll locally and preserve explicit orphan rows, but there is not yet a server cursor/search protocol for very large histories | current teams can inspect their complete synchronized history; add bounded server paging before observation counts make full snapshots materially expensive |
+| intentionally minimal | the evidence board does not yet have a typed, extensible `EvidenceRelation` engine for contradictions, repeated sources, or context comparisons | registered Idea handlers remain authoritative; add neutral relation cards when a second context-heavy content fixture needs them |
+| capture field selection is profile-based | the notebook currently cycles `STANDARD`, `COMPACT`, and `ENVIRONMENT` retained-field profiles and automatically saves successful captures; it has no context-chip editor or save/discard draft screen yet | use the three profiles to validate the context contract, then add per-capture chips/draft review without changing Idea semantics |
+| compatibility coupling remains | `KnowledgeRecord` and `ObservationProvider.Contribution` still type sealed facts as `OreProspectingModel.Snapshot`, and `TeamResearchService` retains geology aliases/wrappers for existing callers | the executable workflow and UI are generic, but Frosted Research's model package is not yet completely independent of Frosted Heart geology types |
+| intentionally small content catalogue | `PersonKnowledgePackageCatalog` is a generic registration surface and Frosted Heart's integration registers prospecting/cold-weather content, but dialogue currently shares the first available package and only prospecting emits a research offer | the common dialogue/persistence/recruitment path is reusable; data-authored multi-offer choice remains future iteration |
+| automated baseline passed, client pending | the serial compile, full unit suite, normal and no-FTB/no-JEI GameTest runs, build, and 81-definition catalogue preflight pass after the three-page/context refactor; the normal server run reports `18` required tests passed and the optional-dependency run exits successfully | keep Phase 2 in progress until the restarted-client acceptance below proves the presentation/sync path |
+
 ## Remaining Supported-Boundary Work
 
 | Priority | Kind | Boundary | Acceptance |
@@ -72,7 +85,8 @@ The new binary packet format is intentionally incompatible with older clients. `
 | P2 | visual QA | FTB sidebar suppression during resource reload and GUI-scale `1/2/4` graph fit require a real client | sidebar never renders/clicks while open and naturally reflects current FTB state after close; all nodes retain the required margin |
 | P3 | future feature | `ResearchOpenContext.BROWSE` has state-model support but no production screen/entry | design and implement separately if a standalone read-only browser is approved |
 | P3 | future feature | `EXPERIMENT` is an empty tab reserved for future town/research integration | define its authoritative records and lifecycle in a separate design/plan before implementation |
-| P2 | planned content | V2 has no bundled topic and current companion KubeJS target recipes still need stable explicit IDs | implement the Phase 2–4 vertical slices without changing the Phase 1 result/access contracts |
+| P3 | planned content | geology is the only bundled topic; resident calculation and institute/experiment workflows are not implemented | implement the Phase 3 vertical slices without changing the Phase 1–2 result/access contracts |
+| P2 | client acceptance | timed block/entity capture, profile switching, the three archive pages, free laboratory/card navigation, direct Idea creation, lightweight geology theory, neutral empty-person dialogue, and Finding/Design reveal have not yet been rechecked together after the latest refactor | complete the manual loop in a restarted development client and record the result in a later diary entry |
 | P2 | integrated QA | full knowledge snapshot login/team-switch/reload plus new-result and legacy-overlap access needs real-client and dedicated-server coverage | the client projection, recipe execution, IE formation, RightClickBlock and JEI agree after every full replacement |
 | P5 | future feature | `upgrade_prototype` is identity-only and cannot install or contribute | implement profile semantics, fabrication workflow, host storage, sockets, deduplication and host-aware resolver before exposing installation |
 
@@ -81,10 +95,11 @@ The new binary packet format is intentionally incompatible with older clients. `
 The maintained automated baseline is:
 
 ```text
-./gradlew test
-./gradlew runGameTestServer
-./gradlew runGameTestServer -PwithoutFtb -PwithoutJei
-./gradlew validateResearchCatalog -PresearchCatalogDir=<companion>/config/fhresearches
+./gradlew --no-daemon clean compileJava compileTestJava
+./gradlew --no-daemon test
+./gradlew --no-daemon runGameTestServer
+./gradlew --no-daemon runGameTestServer -PwithoutFtb -PwithoutJei
+./gradlew --no-daemon build validateResearchCatalog
 git diff --check
 ```
 

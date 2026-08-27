@@ -38,7 +38,11 @@ class KnowledgeSyncSnapshotTest {
                 Map.of(recipe, List.of(source(ResearchResult.ResultType.DESIGN, design))),
                 Map.of(multiblock, List.of(source(ResearchResult.ResultType.CONSTRUCTION, construction))),
                 Map.of(block, List.of(source(ResearchResult.ResultType.PROCEDURE, procedure))));
-        KnowledgeSyncSnapshot original = new KnowledgeSyncSnapshot(42, teamData, knowledge, technology);
+        KnowledgeLabProjection laboratory = new KnowledgeLabProjection(List.of(), List.of(), List.of(), List.of(
+                new KnowledgeLabProjection.ResultSummary(ResearchResult.ResultType.DESIGN, design,
+                        java.util.Optional.empty(), List.of(recipe), true)));
+        KnowledgeSyncSnapshot original = new KnowledgeSyncSnapshot(42, teamData, knowledge,
+                laboratory, technology);
 
         Tag encoded = KnowledgeSyncSnapshot.CODEC.encodeStart(NbtOps.INSTANCE, original)
                 .getOrThrow(false, message -> { throw new AssertionError(message); });
@@ -51,6 +55,7 @@ class KnowledgeSyncSnapshotTest {
         assertEquals(teamData.constructionIds(), decoded.teamData().constructionIds());
         assertEquals(teamData.procedureIds(), decoded.teamData().procedureIds());
         assertTrue(decoded.knowledge().hasFinding(finding));
+        assertEquals(laboratory, decoded.laboratory());
         assertEquals(List.of(findingSource), List.of(decoded.knowledge().finding(finding).source()));
         assertTrue(decoded.technology().recipe(recipe).allowed());
         assertTrue(decoded.technology().multiblock(multiblock).allowed());

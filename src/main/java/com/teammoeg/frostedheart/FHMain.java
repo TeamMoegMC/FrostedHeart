@@ -159,6 +159,8 @@ public class FHMain {
 		// Init
 		LOGGER.info(COMMON_INIT, "Initializing " + MODNAME);
 		FHTags.init();
+		com.teammoeg.frostedheart.content.utility.oredetect.GeologyResearchIntegration.register();
+		com.teammoeg.frostedheart.content.town.resident.PersonKnowledgeIntegration.register();
 		FHItems.init();
 		FHProps.init();
 		FHBlocks.init();

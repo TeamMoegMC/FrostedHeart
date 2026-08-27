@@ -100,6 +100,16 @@ public final class CitizenMenuClient {
 			}
 		};
 
+		var knowledge = new TextButton(DialogueOverlay.INSTANCE,
+				Component.translatable("gui.frostedheart.person_knowledge.talk_button"),
+				FlatIcon.PIN.toCIcon()) {
+			@Override
+			public void onClicked(MouseButton button) {
+				FHNetwork.INSTANCE.sendToServer(new C2SCitizenActionPacket(
+						citizenId, C2SCitizenActionPacket.ASK_EXPERIENCE));
+			}
+		};
+
 		// 招募按钮：禁用时显示"无空余房屋"提示（与难民招募同款交互）
 		var recruit = new TextButton(DialogueOverlay.INSTANCE,
 				Component.translatable("gui.frostedheart.citizen.recruit_button"),
@@ -118,6 +128,6 @@ public final class CitizenMenuClient {
 		};
 		recruit.setEnabled(WanderingRefugeeClientHelper.canAddResident());
 
-		DialogueScreen.open(true, nameLabel, trade, chat, recruit);
+		DialogueScreen.open(true, nameLabel, trade, chat, knowledge, recruit);
 	}
 }

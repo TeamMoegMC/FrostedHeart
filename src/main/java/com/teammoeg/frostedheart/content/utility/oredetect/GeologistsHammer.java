@@ -20,7 +20,7 @@
 package com.teammoeg.frostedheart.content.utility.oredetect;
 
 
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map.Entry;
 import java.util.Random;
 
@@ -64,23 +64,14 @@ public class GeologistsHammer extends FHLeveledTool {
                 Random rnd = new Random(BlockPos.asLong(x, y, z) ^ 0xebd763e5b71a0128L);//randomize
                 //This is predictable, but not any big problem. Cheaters can use x-ray or other things rather then hacking in this.
                 if (rnd.nextInt((int) (20 * corr)) != 0) {//mistaken rate 5%
-                    BlockPos.MutableBlockPos mutable = new BlockPos.MutableBlockPos(x, y, z);
-                    BlockState ore;
-                    HashMap<String, Integer> founded = new HashMap<>();
-
                     int hrange = getHorizonalRange(is);
                     int vrange = getVerticalRange(is);
-                    for (int x2 = -hrange; x2 < hrange; x2++)
-                        for (int y2 = - vrange; y2 < vrange; y2++)
-                            for (int z2 = -hrange; z2 < hrange; z2++) {
-                                int BlockX = x + x2;
-                                int BlockY = y + y2;
-                                int BlockZ = z + z2;
-                                ore = world.getBlockState(mutable.set(BlockX, BlockY, BlockZ));
-                                if (ore.is(otag)) {
-                                    founded.merge(ore.getBlock().getDescriptionId(), 1, Integer::sum);
-                                }
-                            }
+                    OreProspectingModel.Snapshot snapshot = OreProspectingModel.scan(world, blockpos, hrange, vrange);
+                    LinkedHashMap<String, Integer> founded = new LinkedHashMap<>();
+                    snapshot.mineralCounts().forEach((blockId, value) -> {
+                        Block block = net.minecraftforge.registries.ForgeRegistries.BLOCKS.getValue(blockId);
+                        if (block != null) founded.put(block.getDescriptionId(), value);
+                    });
                     if (!founded.isEmpty()) {
                         int count = 0;
                         MutableComponent s = Lang.translateMessage("vein_size.found");

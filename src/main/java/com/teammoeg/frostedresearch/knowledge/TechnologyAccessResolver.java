@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.Optional;
 
 /** Builds the sole access read model consumed by gameplay, machines and JEI. */
 public final class TechnologyAccessResolver {
@@ -43,7 +44,60 @@ public final class TechnologyAccessResolver {
                 findings.add(new KnowledgeProjection.FindingEntry(finding.id(), finding.views(), source));
             }
         }
-        return new KnowledgeProjection(findings);
+        List<KnowledgeProjection.ObservationSummary> observations = data.observations().stream().map(record -> {
+            List<ResourceLocation> annotations = ResearchWorkflowRegistry.observationAnnotations(data, record);
+            return new KnowledgeProjection.ObservationSummary(record.id(), record.kindId(), record.dimension(),
+                    record.position(), record.subject(), record.stateProperties(), record.contextFacts(), record.publicFacets(),
+                    record.channels(), record.lastObserved(), annotations);
+        }).toList();
+        List<KnowledgeProjection.IdeaSummary> ideas = data.ideas().stream()
+                .map(idea -> new KnowledgeProjection.IdeaSummary(idea.id(), idea.topicId(), idea.ideaId(),
+                        topicDeclaresIdea(catalog.topics().get(idea.topicId()), idea.ideaId())
+                                ? idea.state() : IdeaRecord.State.ORPHAN,
+                        idea.sources().size(), idea.evidence().size())).toList();
+        List<KnowledgeProjection.ComparisonSummary> comparisons = data.comparisons().stream()
+                .map(report -> new KnowledgeProjection.ComparisonSummary(report.id(), report.topicId(),
+                        report.outcome(), report.createdAt())).toList();
+        List<ActionCard> actions = ResearchWorkflowRegistry.actionCards(data);
+        return new KnowledgeProjection(findings, observations, ideas, comparisons, actions);
+    }
+
+    /** Builds the complete, client-safe archive projection used by the three Knowledge Lab pages. */
+    public static KnowledgeLabProjection projectKnowledgeLab(TeamKnowledgeData data,
+            KnowledgeProjection ambient) {
+        List<KnowledgeLabProjection.ResultSummary> results = new ArrayList<>();
+        appendResultSummaries(results, data.findingIds(), ResearchResult.ResultType.FINDING);
+        appendResultSummaries(results, data.designIds(), ResearchResult.ResultType.DESIGN);
+        appendResultSummaries(results, data.constructionIds(), ResearchResult.ResultType.CONSTRUCTION);
+        appendResultSummaries(results, data.procedureIds(), ResearchResult.ResultType.PROCEDURE);
+        results.sort(java.util.Comparator.comparing((KnowledgeLabProjection.ResultSummary value) -> value.type().ordinal())
+                .thenComparing(value -> value.id().toString()));
+        return new KnowledgeLabProjection(ambient.observations(), ambient.ideas(), ambient.comparisons(), results);
+    }
+
+    private static void appendResultSummaries(List<KnowledgeLabProjection.ResultSummary> output,
+            Set<ResourceLocation> acquiredIds, ResearchResult.ResultType persistedType) {
+        ResearchResultCatalog.Snapshot catalog = ResearchResultCatalog.current();
+        for (ResourceLocation id : acquiredIds) {
+            ResearchResultCatalog.ResultEntry entry = catalog.result(id);
+            if (entry == null) {
+                output.add(new KnowledgeLabProjection.ResultSummary(
+                        persistedType, id, Optional.empty(), List.of(), true));
+                continue;
+            }
+            ResearchResult result = entry.result();
+            output.add(new KnowledgeLabProjection.ResultSummary(result.type(), result.id(),
+                    Optional.of(entry.topicId()), resultTargets(result), false));
+        }
+    }
+
+    private static List<ResourceLocation> resultTargets(ResearchResult result) {
+        if (result instanceof ResearchResult.Finding finding) return finding.views();
+        if (result instanceof ResearchResult.Design design) return design.recipes();
+        if (result instanceof ResearchResult.Construction construction) return construction.multiblocks();
+        if (result instanceof ResearchResult.Procedure procedure) return procedure.usableBlocks();
+        if (result instanceof ResearchResult.Prototype prototype) return List.of(prototype.profile());
+        return List.of();
     }
 
     public static TechnologyAccessProjection project(TeamDataHolder team) {
@@ -149,6 +203,12 @@ public final class TechnologyAccessResolver {
 
     private static AccessSource.ResultSource resultSource(ResearchResultCatalog.ResultEntry entry) {
         return new AccessSource.ResultSource(entry.topicId(), entry.result().type(), entry.result().id());
+    }
+
+    private static boolean topicDeclaresIdea(ResearchTopicDefinition topic, ResourceLocation ideaId) {
+        return topic != null && (topic.ideaSources().stream().anyMatch(source -> source.idea().equals(ideaId))
+                || topic.inspiration().map(value -> value.idea().equals(ideaId)).orElse(false)
+                || topic.resolution().map(value -> value.idea().equals(ideaId)).orElse(false));
     }
 
     private static void add(Map<ResourceLocation, List<AccessSource>> sources,

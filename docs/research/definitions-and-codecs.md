@@ -1,9 +1,9 @@
 # Research Definitions And Codecs
 
 - Status: `Current`
-- Last verified: `2026-08-25`
-- Scope: Legacy definitions plus V2 Phase 1 result/profile datapack schema, stable identities, validation, and reload
-- Code anchors: [`FHResearch#init/#reloadCatalog`](../../src/main/java/com/teammoeg/frostedresearch/FHResearch.java), [`ResearchCatalog`](../../src/main/java/com/teammoeg/frostedresearch/ResearchCatalog.java), [`ResearchResult`](../../src/main/java/com/teammoeg/frostedresearch/knowledge/ResearchResult.java), [`ResearchResultCatalogLoader`](../../src/main/java/com/teammoeg/frostedresearch/knowledge/ResearchResultCatalogLoader.java), [`Research.CODEC`](../../src/main/java/com/teammoeg/frostedresearch/research/Research.java), [`Effect.CODEC`](../../src/main/java/com/teammoeg/frostedresearch/research/effects/Effect.java)
+- Last verified: `2026-08-26`
+- Scope: Legacy definitions plus V2 Phase 2 topic workflow/result/profile datapack schema, stable identities, validation, and reload
+- Code anchors: [`FHResearch#init/#reloadCatalog`](../../src/main/java/com/teammoeg/frostedresearch/FHResearch.java), [`ResearchCatalog`](../../src/main/java/com/teammoeg/frostedresearch/ResearchCatalog.java), [`ResearchTopicDefinition`](../../src/main/java/com/teammoeg/frostedresearch/knowledge/ResearchTopicDefinition.java), [`ResearchWorkflowRegistry`](../../src/main/java/com/teammoeg/frostedresearch/knowledge/ResearchWorkflowRegistry.java), [`ResearchResultCatalogLoader`](../../src/main/java/com/teammoeg/frostedresearch/knowledge/ResearchResultCatalogLoader.java), [`ResearchResult`](../../src/main/java/com/teammoeg/frostedresearch/knowledge/ResearchResult.java)
 
 ## Where Definitions Come From
 
@@ -32,7 +32,7 @@ KubeJS also requires Rhino and Architectury. Rhino is resolved from Latvian Mods
 
 Stone Age 1.6.8 uses a `DistExecutor.safeRunForDist` lambda shape that Forge rejects only in a non-production environment. `ExampleModMixin` redirects that proxy selection to `unsafeRunForDist`; the selected client/server proxy and production sided behavior remain the same, while the development-only referent validator is bypassed.
 
-## V2 Phase 1 Datapack Result Schema
+## V2 Datapack Topic And Result Schema
 
 V2 result declarations are a separate, implemented datapack slice:
 
@@ -41,13 +41,19 @@ data/<namespace>/frostedresearch/topics/<path>.json
 data/<namespace>/frostedresearch/prototypes/<path>.json
 ```
 
-Topics require `format: 3`; Phase 1 decodes optional `presentation`, typed `results`, and ordinary item `rewards`. Prototype declarations require `format: 1` and a positive integer `revision`. Unknown future workflow/profile fields are tolerated but have no current semantics. Empty result directories are valid and the mod currently bundles no formal topic.
+Topics require `format: 3`. In addition to optional `presentation`, typed `results`, and ordinary item `rewards`, Phase 2 decodes `legacy`, `idea_sources`, `inspiration`, `protocols`, and `resolution`. Prototype declarations require `format: 1` and a positive integer `revision`. The mod datapack bundles `the_winter_rescue:geology_understanding` with `legacy.mode = coexist` and its two stable recipes; the companion pack mirrors those resources.
+
+Workflow references are closed registries rather than reflective Java/NBT paths. `ResearchWorkflowRegistry` owns executable `IdeaSourceHandler`, inspiration-provider ID, `ProtocolHandler`, `ResolutionHandler`, and `FindingViewHandler` registrations. The core currently registers the generic `frostedresearch:record_pair`, `frostedresearch:compare_records`, `frostedresearch:comparison_resolution`, and `frostedresearch:archive` fixture handlers. Frosted Heart's `GeologyResearchIntegration` separately registers `frostedheart:field_evidence`, `frostedheart:person_experience`, `frostedheart:manual_field_comparison`, `frostedheart:field_comparison_resolution`, `frostedheart:geology_archive`, and `frostedheart:prospecting_report_detail`.
+
+`ResearchResultCatalogLoader` verifies every referenced provider/resolver/view, nonempty and recognized comparison outcome, required block tag, resolution result ID, and exact result target. Required block tags are checked against the current reload's `ResourceManager` resources rather than the not-yet-bound runtime tag collection. A Design still names exact recipe IDs, including `the_winter_rescue:research/copper_pro_pick`. Any workflow or result diagnostic rejects the whole candidate and retains the previous `ResearchResultCatalog.Snapshot`.
+
+The topic declaration is server execution data, not a pre-discovery task list. `ResearchWorkflowRegistry#findCandidates` evaluates loaded topic definitions against already archived records but returns nothing to the worksheet until a registered pattern matches; action cards are compiled only from persisted `IdeaRecord` values. Consequently topic names, target results, and protocol actions are not projected merely because the catalogue contains a topic.
 
 `ResearchResult.CODEC` dispatches by a stable string `type` and preserves raw `ResourceLocation` values:
 
 | `type` | Fields | Validation |
 |---|---|---|
-| `finding` | `id`, optional `views` | structural only; view-handler validation is deferred |
+| `finding` | `id`, optional `views` | every view must name a registered `FindingViewHandler` |
 | `design` | `id`, `recipes` | nonempty; recipes must exist |
 | `construction` | `id`, `multiblocks` | nonempty; multiblocks must exist; rejects `usable_blocks` |
 | `procedure` | `id`, `usable_blocks` | nonempty; blocks must exist; rejects `multiblocks` |

@@ -1,13 +1,13 @@
 # Research System Architecture
 
 - Status: `Current`
-- Last verified: `2026-08-25`
-- Scope: Runtime ownership, legacy progression, V2 Phase 1 result/access foundation, lifecycle, and the shortest path through the implementation
-- Code anchors: [`FRSpecialDataTypes`](../../src/main/java/com/teammoeg/frostedresearch/FRSpecialDataTypes.java), [`FHResearch`](../../src/main/java/com/teammoeg/frostedresearch/FHResearch.java), [`ResearchResultCatalog`](../../src/main/java/com/teammoeg/frostedresearch/knowledge/ResearchResultCatalog.java), [`TeamResearchData`](../../src/main/java/com/teammoeg/frostedresearch/data/TeamResearchData.java), [`TeamKnowledgeData`](../../src/main/java/com/teammoeg/frostedresearch/data/TeamKnowledgeData.java), [`TechnologyAccessResolver`](../../src/main/java/com/teammoeg/frostedresearch/knowledge/TechnologyAccessResolver.java), [`ResearchHooks`](../../src/main/java/com/teammoeg/frostedresearch/ResearchHooks.java)
+- Last verified: `2026-08-27`
+- Scope: Runtime ownership, legacy progression, V2 Phase 2 knowledge/result workflow, lifecycle, and the shortest path through the implementation
+- Code anchors: [`FRSpecialDataTypes`](../../src/main/java/com/teammoeg/frostedresearch/FRSpecialDataTypes.java), [`ResearchResultCatalog`](../../src/main/java/com/teammoeg/frostedresearch/knowledge/ResearchResultCatalog.java), [`ResearchWorkflowRegistry`](../../src/main/java/com/teammoeg/frostedresearch/knowledge/ResearchWorkflowRegistry.java), [`ObservationProviderRegistry`](../../src/main/java/com/teammoeg/frostedresearch/knowledge/observation/ObservationProviderRegistry.java), [`TeamKnowledgeData`](../../src/main/java/com/teammoeg/frostedresearch/data/TeamKnowledgeData.java), [`TeamResearchService`](../../src/main/java/com/teammoeg/frostedresearch/api/TeamResearchService.java), [`TechnologyAccessResolver`](../../src/main/java/com/teammoeg/frostedresearch/knowledge/TechnologyAccessResolver.java)
 
 ## One-Sentence Model
 
-A server retains the legacy `Research` graph and its `TeamResearchData`, while V2 Phase 1 independently compiles five typed datapack results into a revisioned snapshot and stores four acquireable result-ID sets in `TeamKnowledgeData`; `TechnologyAccessResolver` combines both authorities into the one default-open projection consumed by gameplay and JEI.
+A server retains the legacy `Research` graph and its `TeamResearchData`, while V2 records topic-free observations and runs data-authored topics through registered idea, protocol, resolution, and Finding-view handlers; schema-2 `TeamKnowledgeData` owns the resulting observations, ideas, reports, and four acquireable result-ID sets, and `TechnologyAccessResolver` combines both authorities into the one default-open access projection consumed by gameplay and JEI.
 
 ## Ownership Layers
 
@@ -26,19 +26,19 @@ flowchart LR
     Packets --> Client["Chorda client team mirror\narchive and drawing-desk UI"]
 ```
 
-There are three different kinds of data. Keeping them separate is the most important architectural rule:
+The system separates definition, authority, projection, and physical-item facts. Keeping them separate is the most important architectural rule:
 
 | Layer | Owner | Examples | Persistence |
 |---|---|---|---|
 | Definition | `FHResearch.researches` | parents, clues, effects, costs, flags, migration aliases | JSON in server `config/fhresearches`; old name-to-slot snapshot remains only for legacy active-ID migration |
 | Authoritative progress | team `TeamResearchData` | string-keyed active project, long committed points, nonce-keyed clues/effects, insight, variants | versioned Chorda team NBT |
 | Derived/cache/client state | unlock lists, graph layout, `ResearchWorkspaceState` | locked recipe sets, UI selection, camera, search, bookmarks | rebuilt or transient; not durable team truth |
-| V2 result definitions | `ResearchResultCatalog.Snapshot` | topic ownership, five typed results, prototype profile revision, managed targets | effective datapack JSON; immutable in memory with monotonic revision |
-| V2 team authority | team `TeamKnowledgeData` | acquired Finding, Design, Construction, and Procedure IDs, including orphans | schema-1 Chorda team NBT |
-| V2 projection | `KnowledgeProjection`, `TechnologyAccessProjection` | active finding views and access decisions with provenance | rebuilt and sent in a full S2C snapshot; not durable truth |
+| V2 workflow/result definitions | `ResearchResultCatalog.Snapshot` plus `ResearchWorkflowRegistry` | topic declarations, executable handler IDs, five typed results, prototype profile revision, managed targets | effective datapack JSON plus startup-registered handlers; immutable catalogue snapshot with monotonic revision |
+| V2 team authority | team `TeamKnowledgeData` | observations, ideas, comparison artifacts, and acquired Finding, Design, Construction, and Procedure IDs, including orphans | schema-2 Chorda team NBT |
+| V2 projection | `KnowledgeProjection`, `KnowledgeLabProjection`, `TechnologyAccessProjection` | ambient actions/views, complete safe archive, and access decisions with provenance | rebuilt and sent in a full S2C snapshot; not durable truth |
 | Prototype fact | `upgrade_prototype` ItemStack | profile, frozen revision, serial, owner team | namespaced item NBT; never an acquired team ID |
 
-The client must not invent a second progression model. It reads a synchronized Chorda team mirror through `ClientResearchDataAPI` and sends intent packets for server validation.
+The client must not invent a second progression model. Legacy UI reads the synchronized Chorda team mirror through `ClientResearchDataAPI`; V2 UI reads the atomically replaced `ClientKnowledgeDataAPI` snapshot. Both send intents for server validation.
 
 ## Module Bootstrapping
 
@@ -70,11 +70,12 @@ Important registry IDs include:
 | `research.clues` | polymorphic prerequisites and contribution triggers | `Clue`, `ListenerClue`, concrete clue classes |
 | `research.effects` | polymorphic rewards and derived unlock state | `Effect`, concrete effect classes |
 | `data` | team/project state, formulas, persistence codecs, public enum tokens | `TeamResearchData`, `ResearchData`, `ClueData`, `ResearchVariant` |
-| `knowledge` | V2 result codecs, minimal datapack catalogue, projections, provenance and resolver | `ResearchResult`, `ResearchResultCatalogLoader`, `TechnologyAccessResolver` |
+| `knowledge` | V2 observation/idea/workflow models, executable handler registry, result codecs, datapack catalogue, projections, provenance and access resolver | `KnowledgeRecord`, `ResearchWorkflowRegistry`, `ResearchResultCatalogLoader`, `TechnologyAccessResolver` |
+| `knowledge.observation` | topic-free observation contexts, provider enrichment, semantic deduplication, and the generic block fallback | `ObservationProviderRegistry`, `ObservationProvider`, `GenericBlockObservationProvider` |
 | `network` | definition, full-state, delta-state, and player-intent messages | `FRNetwork`, packet classes |
 | `handler` and `events` | Forge lifecycle, trigger routing, locks, reload and team events | `FHServerEvents`, `ResearchCommonEvents`, `ResearchHooks` |
 | `blocks`, `item`, `recipe` | drawing desk, calculator, tools, paper/inspiration recipes | `DrawingDeskTileEntity`, `MechanicalCalculatorTileEntity`, `RubbingTool` |
-| `gui` | drawing-desk screen, archive, graph, project workspace | `DrawDeskScreen`, `ResearchArchiveLayer` |
+| `gui` | drawing-desk screen, legacy archive/graph, and V2 Knowledge Laboratory | `DrawDeskScreen`, `ResearchArchiveLayer`, `KnowledgeLabLayer` |
 | `api` | team-data lookup, mutation service and client/server helper boundary | `ResearchDataAPI`, `KnowledgeDataAPI`, `TeamResearchService` |
 | `compat` | JEI, FTB Quests/Teams, Tetra, Create and IE integration | each compat package |
 | `number` | unfinished/unused number-resource abstraction | do not assume it drives current progression |
@@ -106,7 +107,26 @@ sequenceDiagram
     Chorda->>Team: save team NBT
 ```
 
-Legacy research JSON is deliberately outside the vanilla datapack resource tree. In parallel, V2 Phase 1 now reads `data/<namespace>/frostedresearch/topics/<path>.json` and `.../prototypes/<path>.json`; an empty V2 directory is valid. A V2 candidate is installed only after aggregate validation, and an invalid candidate retains the previous result snapshot. This does not change the companion pack's role as the sole production source of the current playable legacy catalogue, and Phase 1 ships no formal topic content.
+Legacy research JSON is deliberately outside the vanilla datapack resource tree. In parallel, V2 reads `data/<namespace>/frostedresearch/topics/<path>.json` and `.../prototypes/<path>.json`; an empty V2 directory is valid. A V2 candidate is installed only after aggregate validation, and an invalid candidate retains the previous result snapshot. The mod datapack bundles the Phase 2 `the_winter_rescue:geology_understanding` topic and its stable recipes, while the companion pack remains the production source of the playable legacy catalogue and mirrors the Phase 2 resources.
+
+## V2 Discovery And Research Flow
+
+```mermaid
+flowchart LR
+    Observe["Observation channel"] --> Provider["ObservationProviderRegistry\ngeneric fallback + domain enrichment"]
+    Provider --> Record["topic-free KnowledgeRecord"]
+    Record --> Board["drawing-desk pins"]
+    Board --> Match["registered IdeaSourceHandler"]
+    Match --> Hidden["server-side candidate"]
+    Hidden --> Game["V2 inspiration card game"]
+    Game --> Idea["one rule: record Idea\nmultiple rules: player chooses"]
+    Idea --> Method["registered ProtocolHandler"]
+    Method --> Work["optional artifact + Idea state"]
+    Work --> Resolve["registered ResolutionHandler"]
+    Resolve --> Results["Finding / Design / Construction / Procedure"]
+```
+
+The notebook chooses an observation channel and retained context fields, not a topic. A forty-tick capture creates a topic-free block or entity record. `ObservationProviderRegistry` always has a generic block fallback and selects the highest-priority provider that supports the context; Frosted Heart registers geology enrichment from `GeologyResearchIntegration`. Before an `IdeaRecord` exists, `ResearchWorkflowRegistry#findCandidates` evaluates each registered rule against arbitrary pinned subsets and returns at most three table matches. Completing inspiration records a sole revalidated match immediately; multiple matches require a choice. Only persisted Ideas cause `ResearchWorkflowRegistry#actionCards` to expose post-Idea work. A protocol execution may append a method artifact or only advance Idea state. `TeamResearchService` remains the shared mutation and execution boundary; topic-specific evidence selection and outcome rules live in registered handlers.
 
 ## Runtime Control Flow
 
@@ -140,6 +160,9 @@ Supported extension points are narrower than the package structure may suggest:
 - add clue/effect codecs through their typed registries before definitions load;
 - read/write team state through `ResearchDataAPI` and listen to research events;
 - declare new research JSON in server configuration and translations in resource assets;
+- register bounded V2 observation providers, idea-source handlers, protocol handlers, resolution handlers, and Finding-view handlers before the datapack catalogue validates;
+- register domain-neutral person-knowledge package definitions in `PersonKnowledgePackageCatalog`; content integrations own their package IDs, roll ranges, replies, and optional offers;
+- declare V2 topics that reference those stable handler IDs instead of reading arbitrary Java fields or NBT;
 - add enforcement for a new game system by using global lock lists plus team unlock lists, or by consuming a variant.
 
-There is still no datapack replacement for the playable legacy research graph or general-purpose `Requirement` hierarchy. The implemented V2 loader compiles only `format`, `presentation`, `results`, ordinary rewards, and prototype identity/revision; future workflow fields are tolerated but have no Phase 1 meaning. See [results-and-access.md](results-and-access.md) for the exact boundary.
+There is still no datapack replacement for the playable legacy research graph or general-purpose arbitrary-script `Requirement` hierarchy. The V2 loader compiles the bounded `legacy`, `idea_sources`, `inspiration`, `protocols`, `resolution`, results/rewards, and prototype identity/revision fields; executable meaning comes only from registered handlers. See [results-and-access.md](results-and-access.md) for the exact boundary.

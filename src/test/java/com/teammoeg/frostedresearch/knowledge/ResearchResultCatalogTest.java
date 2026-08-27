@@ -1,8 +1,11 @@
 package com.teammoeg.frostedresearch.knowledge;
 
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.SharedConstants;
+import net.minecraft.server.Bootstrap;
 import net.minecraft.world.item.crafting.RecipeManager;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
@@ -10,6 +13,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -17,6 +21,13 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class ResearchResultCatalogTest {
+    @BeforeAll
+    static void bootstrap() {
+        SharedConstants.tryDetectVersion();
+        Bootstrap.bootStrap();
+        com.teammoeg.frostedheart.content.utility.oredetect.GeologyResearchIntegration.register();
+    }
+
     @AfterEach
     void clear() {
         ResearchResultCatalog.clearForTests();
@@ -89,6 +100,31 @@ class ResearchResultCatalogTest {
         assertFalse(diagnostics.isEmpty());
         assertSame(good, ResearchResultCatalog.current());
         assertEquals(id("finding"), good.result(id("finding")).result().id());
+    }
+
+    @Test
+    void workflowTagsValidateAgainstCurrentReloadResourceUniverse() {
+        ResourceLocation stone = new ResourceLocation("forge", "stone");
+        ResearchTopicDefinition topic = new ResearchTopicDefinition(
+                3,
+                ResearchTopicDefinition.Presentation.EMPTY,
+                List.of(new ResearchResult.Finding(id("finding"), List.of())),
+                List.of(),
+                ResearchTopicDefinition.Legacy.NONE,
+                List.of(new ResearchTopicDefinition.IdeaSource(
+                        new ResourceLocation("frostedheart", "field_evidence"), id("idea"), List.of(stone))),
+                Optional.empty(),
+                List.of(),
+                Optional.empty());
+        List<String> accepted = new ArrayList<>();
+        ResearchResultCatalogLoader.validate(
+                Map.of(id("topic"), topic), Map.of(), new RecipeManager(), accepted, Set.of(stone));
+        assertFalse(accepted.stream().anyMatch(message -> message.contains("unknown block tag")));
+
+        List<String> rejected = new ArrayList<>();
+        ResearchResultCatalogLoader.validate(
+                Map.of(id("topic"), topic), Map.of(), new RecipeManager(), rejected, Set.of());
+        assertTrue(rejected.stream().anyMatch(message -> message.contains("unknown block tag forge:stone")));
     }
 
     private static ResearchTopicDefinition topic(ResearchResult result) {

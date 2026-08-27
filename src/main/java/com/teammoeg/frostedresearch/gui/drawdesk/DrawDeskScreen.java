@@ -32,6 +32,7 @@ import com.teammoeg.frostedresearch.gui.archive.ResearchNavigationController;
 import com.teammoeg.frostedresearch.gui.archive.ResearchOpenContext;
 import com.teammoeg.frostedresearch.gui.archive.ResearchWorkspaceState;
 import com.teammoeg.frostedresearch.gui.archive.StatefulResearchNavigationController;
+import com.teammoeg.frostedresearch.gui.knowledge.KnowledgeLabLayer;
 
 import javax.annotation.Nullable;
 import net.minecraft.client.Minecraft;
@@ -52,6 +53,8 @@ public class DrawDeskScreen extends MenuPrimaryLayer<DrawDeskContainer> implemen
 	private final ResearchNavigationController navigation;
 	@Nullable
 	private ResearchArchiveLayer archive;
+	@Nullable
+	private KnowledgeLabLayer knowledgeLab;
 	private final Map<AbstractWidget, WidgetState> hiddenExternalWidgets = new IdentityHashMap<>();
 
 	public DrawDeskScreen(DrawDeskContainer cx) {
@@ -72,6 +75,7 @@ public class DrawDeskScreen extends MenuPrimaryLayer<DrawDeskContainer> implemen
 		if (archive != null) {
 			add(archive);
 		}
+		if (knowledgeLab != null) add(knowledgeLab);
 	}
 
 	@Override
@@ -113,6 +117,21 @@ public class DrawDeskScreen extends MenuPrimaryLayer<DrawDeskContainer> implemen
 		applyWorkspaceSurface();
 	}
 
+	public void showKnowledgeLab() {
+		workspaceState.setSurface(ResearchWorkspaceState.Surface.KNOWLEDGE_LAB);
+		if (knowledgeLab == null) {
+			knowledgeLab = new KnowledgeLabLayer(this, this, this::hideTechTree);
+			refreshElements();
+		}
+		applyWorkspaceSurface();
+	}
+
+	/** Reveals a newly synchronized V2 card game and rebuilds its derived widgets. */
+	public void showInspirationGame() {
+		p.mgp.refresh();
+		hideTechTree();
+	}
+
 	private void ensureArchive() {
 		if (archive != null) {
 			return;
@@ -124,14 +143,19 @@ public class DrawDeskScreen extends MenuPrimaryLayer<DrawDeskContainer> implemen
 
 	private void applyWorkspaceSurface() {
 		boolean showArchive = workspaceState.surface() == ResearchWorkspaceState.Surface.RESEARCH_ARCHIVE;
+		boolean showKnowledge = workspaceState.surface() == ResearchWorkspaceState.Surface.KNOWLEDGE_LAB;
 		if (archive != null) {
 			archive.setVisible(showArchive);
 			archive.setEnabled(showArchive);
 		}
-		p.setVisible(!showArchive);
-		p.setEnabled(!showArchive);
-		menu.setSlotVisible(!showArchive);
-		if (showArchive) {
+		if (knowledgeLab != null) {
+			knowledgeLab.setVisible(showKnowledge);
+			knowledgeLab.setEnabled(showKnowledge);
+		}
+		p.setVisible(!showArchive && !showKnowledge);
+		p.setEnabled(!showArchive && !showKnowledge);
+		menu.setSlotVisible(!showArchive && !showKnowledge);
+		if (showArchive || showKnowledge) {
 			resizeArchiveToWindow();
 			hideExternalWidgets();
 		} else {
@@ -143,7 +167,7 @@ public class DrawDeskScreen extends MenuPrimaryLayer<DrawDeskContainer> implemen
 	}
 
 	private void resizeArchiveToWindow() {
-		if (archive == null) {
+		if (archive == null && knowledgeLab == null) {
 			return;
 		}
 		int width = Math.max(280, Minecraft.getInstance().getWindow().getGuiScaledWidth() - ARCHIVE_MARGIN * 2);
@@ -151,19 +175,23 @@ public class DrawDeskScreen extends MenuPrimaryLayer<DrawDeskContainer> implemen
 		if (getWidth() != width || getHeight() != height) {
 			setSize(width, height);
 		}
-		if (archive.getX() != 0 || archive.getY() != 0) {
+		if (archive != null && (archive.getX() != 0 || archive.getY() != 0)) {
 			archive.setPos(0, 0);
 		}
-		archive.resizeArchive(width, height);
+		if (archive != null) archive.resizeArchive(width, height);
+		if (knowledgeLab != null) {
+			knowledgeLab.setPos(0, 0);
+			knowledgeLab.resizeLab(width, height);
+		}
 	}
 
 	@Override
 	public void tick() {
-		if (workspaceState.surface() == ResearchWorkspaceState.Surface.RESEARCH_ARCHIVE) {
+		if (workspaceState.surface() != ResearchWorkspaceState.Surface.DRAWING_DESK) {
 			resizeArchiveToWindow();
 		}
 		super.tick();
-		if (workspaceState.surface() == ResearchWorkspaceState.Surface.RESEARCH_ARCHIVE) {
+		if (workspaceState.surface() != ResearchWorkspaceState.Surface.DRAWING_DESK) {
 			hideExternalWidgets();
 		}
 	}
@@ -206,11 +234,15 @@ public class DrawDeskScreen extends MenuPrimaryLayer<DrawDeskContainer> implemen
 		Screen current = Minecraft.getInstance().screen;
 		return current instanceof CUIScreen cui
 				&& cui.getPrimaryLayer() instanceof DrawDeskScreen desk
-				&& desk.workspaceState.surface() == ResearchWorkspaceState.Surface.RESEARCH_ARCHIVE;
+				&& desk.workspaceState.surface() != ResearchWorkspaceState.Surface.DRAWING_DESK;
 	}
 
 	@Override
 	public void back() {
+		if (workspaceState.surface() == ResearchWorkspaceState.Surface.KNOWLEDGE_LAB) {
+			hideTechTree();
+			return;
+		}
 		if (navigation.back()) {
 			applyWorkspaceSurface();
 			return;
@@ -224,7 +256,11 @@ public class DrawDeskScreen extends MenuPrimaryLayer<DrawDeskContainer> implemen
 			return true;
 		}
 		if (CInputHelper.isEsc(keyCode)
-				&& workspaceState.surface() == ResearchWorkspaceState.Surface.RESEARCH_ARCHIVE) {
+				&& workspaceState.surface() != ResearchWorkspaceState.Surface.DRAWING_DESK) {
+			if (workspaceState.surface() == ResearchWorkspaceState.Surface.KNOWLEDGE_LAB) {
+				hideTechTree();
+				return true;
+			}
 			if (navigation.back()) {
 				applyWorkspaceSurface();
 				return true;

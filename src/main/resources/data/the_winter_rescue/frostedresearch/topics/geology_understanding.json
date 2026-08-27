@@ -1,0 +1,62 @@
+{
+  "format": 3,
+  "presentation": {},
+  "legacy": {
+    "mode": "coexist"
+  },
+  "idea_sources": [
+    {
+      "provider": "frostedheart:field_evidence",
+      "idea": "frostedheart:rock_and_ore_signs",
+      "required_tags": [
+        "forge:ores",
+        "forge:stone"
+      ]
+    },
+    {
+      "provider": "frostedheart:person_experience",
+      "idea": "frostedheart:rock_and_ore_signs"
+    }
+  ],
+  "inspiration": {
+    "provider": "frostedheart:drawing_desk",
+    "idea": "frostedheart:rock_and_ore_signs",
+    "paper_level": 0
+  },
+  "protocols": [
+    {
+      "id": "frostedheart:compare_rock_samples",
+      "resolver": "frostedheart:manual_field_comparison",
+      "outcomes": [
+        "match",
+        "no_match",
+        "insufficient"
+      ]
+    }
+  ],
+  "resolution": {
+    "resolver": "frostedheart:field_comparison_resolution",
+    "idea": "frostedheart:rock_and_ore_signs",
+    "results": [
+      "frostedheart:prospecting_signs_indicate_nearby_ore",
+      "frostedheart:copper_prospecting_pick"
+    ]
+  },
+  "results": [
+    {
+      "type": "finding",
+      "id": "frostedheart:prospecting_signs_indicate_nearby_ore",
+      "views": [
+        "frostedheart:geology_archive",
+        "frostedheart:prospecting_report_detail"
+      ]
+    },
+    {
+      "type": "design",
+      "id": "frostedheart:copper_prospecting_pick",
+      "recipes": [
+        "the_winter_rescue:research/copper_pro_pick"
+      ]
+    }
+  ]
+}

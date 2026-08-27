@@ -31,6 +31,7 @@ import com.teammoeg.frostedheart.content.town.buildings.logistics.TransportStati
 import com.teammoeg.frostedheart.content.town.buildings.mine.MineBaseBuilding;
 import com.teammoeg.frostedheart.content.town.event.ITownResidentChangeEventListener;
 import com.teammoeg.frostedheart.content.town.event.TownResidentChangeEvent;
+import com.teammoeg.frostedresearch.knowledge.PersonKnowledgeOverlay;
 import com.teammoeg.chorda.io.CodecUtil;
 import com.teammoeg.chorda.io.SerializeUtil;
 import com.teammoeg.chorda.math.CMath;
@@ -81,10 +82,12 @@ public class Resident {
                     .forGetter(o -> o.nutrition),
             ResidentNutritionSnapshot.CODEC.optionalFieldOf(
                     "nutritionSnapshot", ResidentNutritionSnapshot.EMPTY)
-                    .forGetter(o -> o.nutritionSnapshot)
+                    .forGetter(o -> o.nutritionSnapshot),
+            PersonKnowledgeOverlay.CODEC.optionalFieldOf("knowledgeOverlay", PersonKnowledgeOverlay.UNINITIALIZED)
+                    .forGetter(o -> o.knowledgeOverlay)
 		).apply(t, Resident::new));
 
-    public Resident(String firstName, String lastName, UUID uuid, double health, double mental, double strength, double intelligence, int educationLevel, Map<String, Double> workProficiency, Optional<BlockPos> housePos, Optional<BlockPos> workPos, int age, int ageDays, ResidentNutrition nutrition, ResidentNutritionSnapshot nutritionSnapshot) {
+    public Resident(String firstName, String lastName, UUID uuid, double health, double mental, double strength, double intelligence, int educationLevel, Map<String, Double> workProficiency, Optional<BlockPos> housePos, Optional<BlockPos> workPos, int age, int ageDays, ResidentNutrition nutrition, ResidentNutritionSnapshot nutritionSnapshot, PersonKnowledgeOverlay knowledgeOverlay) {
         setFirstName(firstName);
         setLastName(lastName);
         setUuid(uuid);
@@ -105,6 +108,13 @@ public class Resident {
         setWorkPos(workPos.orElse(null));
         this.nutritionSnapshot = nutritionSnapshot == null
                 ? ResidentNutritionSnapshot.EMPTY : nutritionSnapshot;
+        this.knowledgeOverlay = knowledgeOverlay == null ? PersonKnowledgeOverlay.UNINITIALIZED : knowledgeOverlay;
+    }
+
+    public Resident(String firstName, String lastName, UUID uuid, double health, double mental, double strength, double intelligence, int educationLevel, Map<String, Double> workProficiency, Optional<BlockPos> housePos, Optional<BlockPos> workPos, int age, int ageDays, ResidentNutrition nutrition, ResidentNutritionSnapshot nutritionSnapshot) {
+        this(firstName, lastName, uuid, health, mental, strength, intelligence, educationLevel,
+                workProficiency, housePos, workPos, age, ageDays, nutrition, nutritionSnapshot,
+                PersonKnowledgeOverlay.UNINITIALIZED);
     }
 
     public Resident(String firstName, String lastName, UUID uuid, double health, double mental, double strength, double intelligence, int educationLevel, Map<String, Double> workProficiency, Optional<BlockPos> housePos, Optional<BlockPos> workPos, int age, int ageDays, ResidentNutrition nutrition) {
@@ -245,6 +255,16 @@ public class Resident {
     private ResidentNutrition nutrition = ResidentNutrition.DEFAULT_VALUE;
     @Getter
     private ResidentNutritionSnapshot nutritionSnapshot = ResidentNutritionSnapshot.EMPTY;
+    @Getter
+    private PersonKnowledgeOverlay knowledgeOverlay = PersonKnowledgeOverlay.UNINITIALIZED;
+
+    public void setKnowledgeOverlay(PersonKnowledgeOverlay knowledgeOverlay) {
+        PersonKnowledgeOverlay replacement = knowledgeOverlay == null
+                ? PersonKnowledgeOverlay.UNINITIALIZED : knowledgeOverlay;
+        if (Objects.equals(this.knowledgeOverlay, replacement)) return;
+        this.knowledgeOverlay = replacement;
+        fireChange();
+    }
 
     public Resident(String firstName, String lastName) {
         this(firstName, lastName, UUID.randomUUID());

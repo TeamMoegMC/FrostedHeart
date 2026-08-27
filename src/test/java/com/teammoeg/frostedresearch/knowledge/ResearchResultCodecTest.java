@@ -8,10 +8,15 @@ import net.minecraft.server.Bootstrap;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class ResearchResultCodecTest {
@@ -70,6 +75,47 @@ class ResearchResultCodecTest {
                 .getOrThrow(false, message -> { throw new AssertionError(message); }));
     }
 
+    @Test
+    void phaseTwoWorkflowFieldsDecodeWithStableReferences() {
+        JsonElement topicJson = JsonParser.parseString("""
+                {"format":3,"legacy":{"mode":"coexist"},
+                 "idea_sources":[{"provider":"frostedheart:field_evidence","idea":"test:idea","required_tags":["forge:stone"]}],
+                 "inspiration":{"provider":"frostedheart:drawing_desk","idea":"test:idea","paper_level":0},
+                 "protocols":[{"id":"test:compare","resolver":"frostedheart:manual_field_comparison","outcomes":["match","no_match","insufficient"]}],
+                 "resolution":{"resolver":"frostedheart:field_comparison_resolution","idea":"test:idea","results":["test:finding"]},
+                 "results":[{"type":"finding","id":"test:finding","views":["frostedheart:geology_archive"]}]}
+                """);
+        ResearchTopicDefinition topic = ResearchTopicDefinition.CODEC.parse(JsonOps.INSTANCE, topicJson)
+                .getOrThrow(false, message -> { throw new AssertionError(message); });
+        assertEquals(ResearchTopicDefinition.Legacy.Mode.COEXIST, topic.legacy().mode());
+        assertEquals(new net.minecraft.resources.ResourceLocation("test", "idea"), topic.ideaSources().get(0).idea());
+        assertEquals(List.of("match", "no_match", "insufficient"), topic.protocols().get(0).outcomes());
+        assertEquals(List.of(new net.minecraft.resources.ResourceLocation("test", "finding")),
+                topic.resolution().orElseThrow().results());
+    }
+
+    @Test
+    void bundledGeologyTopicReferencesBundledStableRecipes() {
+        ResearchTopicDefinition topic = ResearchTopicDefinition.CODEC.parse(JsonOps.INSTANCE, readResource(
+                        "/data/the_winter_rescue/frostedresearch/topics/geology_understanding.json"))
+                .getOrThrow(false, message -> { throw new AssertionError(message); });
+        ResearchResult.Design design = topic.results().stream()
+                .filter(ResearchResult.Design.class::isInstance)
+                .map(ResearchResult.Design.class::cast)
+                .findFirst()
+                .orElseThrow();
+        assertEquals(List.of(new net.minecraft.resources.ResourceLocation(
+                "the_winter_rescue", "research/copper_pro_pick")), design.recipes());
+        assertRecipeResult(
+                "/data/the_winter_rescue/recipes/research/copper_pro_pick.json",
+                "minecraft:crafting_shaped",
+                "frostedheart:copper_pro_pick");
+        assertRecipeResult(
+                "/data/the_winter_rescue/recipes/research/research_notebook.json",
+                "minecraft:crafting_shapeless",
+                "frostedresearch:research_notebook");
+    }
+
     private static void assertRoundTrip(String json, Class<? extends ResearchResult> expectedType) {
         ResearchResult decoded = parse(json).getOrThrow(false, message -> { throw new AssertionError(message); });
         assertInstanceOf(expectedType, decoded);
@@ -82,5 +128,21 @@ class ResearchResultCodecTest {
 
     private static com.mojang.serialization.DataResult<ResearchResult> parse(String json) {
         return ResearchResult.CODEC.parse(JsonOps.INSTANCE, JsonParser.parseString(json));
+    }
+
+    private static void assertRecipeResult(String path, String type, String item) {
+        var recipe = readResource(path).getAsJsonObject();
+        assertEquals(type, recipe.get("type").getAsString());
+        assertEquals(item, recipe.getAsJsonObject("result").get("item").getAsString());
+    }
+
+    private static JsonElement readResource(String path) {
+        InputStream stream = ResearchResultCodecTest.class.getResourceAsStream(path);
+        assertNotNull(stream, () -> "missing test resource " + path);
+        try (InputStreamReader reader = new InputStreamReader(stream, StandardCharsets.UTF_8)) {
+            return JsonParser.parseReader(reader);
+        } catch (IOException exception) {
+            throw new AssertionError("failed to read " + path, exception);
+        }
     }
 }

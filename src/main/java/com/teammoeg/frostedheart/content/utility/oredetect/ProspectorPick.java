@@ -20,7 +20,7 @@
 package com.teammoeg.frostedheart.content.utility.oredetect;
 
 
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Random;
 
@@ -61,28 +61,18 @@ public class ProspectorPick extends FHLeveledTool {
                 //This is predictable, but not any big problem. Cheaters can use x-ray or other things rather then hacking in this.
                 float corr = getCorrectness(is);
                 if (rnd.nextInt((int) (10 * corr)) != 0) {//mistaken rate 10%
-                    BlockPos.MutableBlockPos mutable = new BlockPos.MutableBlockPos(x, y, z);
-                    BlockState ore;
-                    HashMap<String, Integer> founded = new HashMap<>();
-                    int rseed = 0;
                     int hrange = getHorizonalRange(is);
                     int vrange = getVerticalRange(is);
-                    for (int x2 = -hrange; x2 < hrange; x2++)
-                        for (int y2 = -vrange; y2 < vrange; y2++)
-                            for (int z2 = -hrange; z2 < hrange; z2++) {
-                                int BlockX = x + x2;
-                                int BlockY = y + y2;
-                                int BlockZ = z + z2;
-                                ore = world.getBlockState(mutable.set(BlockX, BlockY, BlockZ));
-                                if (ore.is(FHTags.Blocks.ORES.tag)) {
-                                    founded.merge(ore.getBlock().getDescriptionId(), 1, Integer::sum);
-                                    rseed++;
-                                }
-                            }
+                    OreProspectingModel.Snapshot snapshot = OreProspectingModel.scan(world, blockpos, hrange, vrange);
+                    Map<String, Integer> founded = new LinkedHashMap<>();
+                    snapshot.mineralCounts().forEach((blockId, count) -> {
+                        Block block = net.minecraftforge.registries.ForgeRegistries.BLOCKS.getValue(blockId);
+                        if (block != null) founded.put(block.getDescriptionId(), count);
+                    });
 
                     if (!founded.isEmpty()) {
                         int cnt = founded.values().stream().reduce(0, Integer::sum);
-                        rseed = rnd.nextInt(cnt);
+                        int rseed = rnd.nextInt(cnt);
                         String ore_name = null;
                         int count = 0;
                         for (Map.Entry<String, Integer> me : founded.entrySet()) {

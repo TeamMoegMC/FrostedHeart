@@ -39,6 +39,7 @@ import com.teammoeg.frostedresearch.blocks.MechCalcTileEntity;
 import com.teammoeg.frostedresearch.blocks.RubbingTool;
 import com.teammoeg.frostedresearch.gui.drawdesk.DrawDeskContainer;
 import com.teammoeg.frostedresearch.item.FRBaseItem;
+import com.teammoeg.frostedresearch.item.ResearchNotebookItem;
 import com.teammoeg.frostedresearch.item.UpgradePrototypeItem;
 import com.teammoeg.frostedresearch.recipe.InspireRecipe;
 import com.teammoeg.frostedresearch.recipe.ResearchPaperRecipe;
@@ -117,6 +118,8 @@ public class FRContents {
 		public static RegistryObject<FRBaseItem> intelligence = REGISTER.register("intelligence", () -> new FRBaseItem(new Item.Properties()));
 		public static final RegistryObject<UpgradePrototypeItem> UPGRADE_PROTOTYPE = REGISTER.register(
 			"upgrade_prototype", () -> new UpgradePrototypeItem(new Item.Properties().stacksTo(1)));
+		public static final RegistryObject<ResearchNotebookItem> RESEARCH_NOTEBOOK = REGISTER.register(
+			"research_notebook", () -> new ResearchNotebookItem(new Item.Properties().stacksTo(1)));
 	}
 
 	public static class BlockEntityTypes {

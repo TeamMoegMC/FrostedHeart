@@ -11,6 +11,7 @@ import com.teammoeg.frostedheart.content.town.TeamTownData;
 import com.teammoeg.frostedheart.content.town.event.ITownDataUpdateListener;
 import com.teammoeg.frostedheart.content.town.network.WanderingRefugeeOpenTradeGUIMessage;
 import com.teammoeg.frostedheart.content.town.network.WanderingRefugeeRecruitMessage;
+import com.teammoeg.frostedheart.content.town.network.WanderingRefugeeKnowledgeMessage;
 import com.teammoeg.frostedheart.content.ui.dialogue.DialogueOverlay;
 import com.teammoeg.frostedheart.content.ui.dialogue.DialogueScreen;
 import net.minecraft.network.chat.Component;
@@ -63,6 +64,15 @@ public class WanderingRefugeeClientHelper {
         boolean canRecruit = canAddResident();
         recruit.setEnabled(canRecruit);
 
+        var knowledge = new TextButton(DialogueOverlay.INSTANCE,
+                Component.translatable("gui.frostedheart.person_knowledge.talk_button"),
+                FlatIcon.INFO.toCIcon()) {
+            @Override
+            public void onClicked(MouseButton button) {
+                FHNetwork.INSTANCE.sendToServer(new WanderingRefugeeKnowledgeMessage(entity.getId()));
+            }
+        };
+
         // 注册城镇数据增量监听：建筑/居民变化（新建房屋、居民死亡释放槽位等）时刷新招募可用状态。
         // 复用与城镇 GUI 相同的 addClientListener/removeClientListener 机制；监听在对话关闭
         // （DialogueOverlay 被禁用）时自我移除。
@@ -108,7 +118,7 @@ public class WanderingRefugeeClientHelper {
             refreshListener = null;
         };
 
-        DialogueScreen.open(true, trade, recruit);
+        DialogueScreen.open(true, trade, knowledge, recruit);
 //        Minecraft.getInstance().setScreen(new WanderingRefugeeScreen(entity));
     }
 

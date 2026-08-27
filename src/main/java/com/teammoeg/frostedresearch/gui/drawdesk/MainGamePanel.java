@@ -186,11 +186,13 @@ class MainGamePanel extends UILayer {
 	public void render(GuiGraphics matrixStack, int x, int y, int w, int h, RenderingHint hint) {
 		
 		super.render(matrixStack, x, y, w, h, hint);
+		DrawingDeskTileEntity tile = ot.dd.getTile();
 		if (lstatus != 0) {
 			DrawDeskIcons.DIALOG_FRAME.draw(matrixStack, x + 7, y + 53, 137, 52);
 			status.render(matrixStack, x + status.getX(), y + status.getY(), status.getWidth(), status.getHeight(), hint);
 		}
-		if (ResearchHooks.fetchGameLevel() == -1) {
+		if (ResearchHooks.fetchGameLevel() == -1
+				&& tile.getGamePurpose() != DrawingDeskTileEntity.GamePurpose.V2_INSPIRATION) {
 			if (lstatus != 4) {
 				status.setText(Lang.translateGui("minigame.no_clue"));
 				status.setPosAndSize(22, 54, 108, 50);
@@ -207,7 +209,6 @@ class MainGamePanel extends UILayer {
 		 * status.setText(Lang.translateGui("minigame.tired_to_research"));
 		 * status.setPosAndSize(22, 54, 108, 50); lstatus = 1; } return; }
 		 */
-		DrawingDeskTileEntity tile = ot.dd.getTile();
 		if (!tile.isInkSatisfied(reset.isMouseOver() ? 5 : 1)) {
 			if (lstatus != 2) {
 				status.setText(Lang.translateGui("minigame.no_ink"));

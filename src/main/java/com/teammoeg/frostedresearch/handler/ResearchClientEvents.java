@@ -21,15 +21,19 @@ package com.teammoeg.frostedresearch.handler;
 
 import com.teammoeg.chorda.client.ClientUtils;
 import com.teammoeg.frostedresearch.FRMain;
+import com.teammoeg.frostedresearch.api.ClientKnowledgeDataAPI;
 import com.teammoeg.frostedresearch.compat.ResearchJeiBridge;
 import com.teammoeg.frostedresearch.events.ClientResearchStatusEvent;
 import com.teammoeg.frostedresearch.gui.InsightOverlay;
 import com.teammoeg.frostedresearch.gui.ResearchToast;
+import com.teammoeg.frostedresearch.item.ResearchNotebookItem;
 import com.teammoeg.frostedresearch.research.effects.Effect;
 import com.teammoeg.frostedresearch.research.effects.EffectCrafting;
 import com.teammoeg.frostedresearch.research.effects.EffectShowCategory;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.ClientPlayerNetworkEvent;
+import net.minecraftforge.client.event.RenderGuiOverlayEvent;
+import net.minecraftforge.client.gui.overlay.VanillaGuiOverlay;
 import net.minecraftforge.event.TickEvent.ClientTickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -60,8 +64,36 @@ public class ResearchClientEvents {
     }
     @SubscribeEvent
     public static void fireLogin(ClientPlayerNetworkEvent.LoggingIn event) {
+        ClientKnowledgeDataAPI.reset();
         if(InsightOverlay.INSTANCE!=null)
         	InsightOverlay.INSTANCE.reset();
 
+    }
+    @SubscribeEvent
+    public static void fireLogout(ClientPlayerNetworkEvent.LoggingOut event) {
+        ClientKnowledgeDataAPI.reset();
+    }
+
+    /** Visible capture feedback; archiving still happens only after the server finishes the use. */
+    @SubscribeEvent
+    public static void renderNotebookCapture(RenderGuiOverlayEvent.Post event) {
+        if (event.getOverlay() != VanillaGuiOverlay.HOTBAR.type()) return;
+        net.minecraft.client.Minecraft minecraft = net.minecraft.client.Minecraft.getInstance();
+        if (minecraft.player == null || !minecraft.player.isUsingItem()
+                || !(minecraft.player.getUseItem().getItem() instanceof ResearchNotebookItem)) return;
+        int elapsed = ResearchNotebookItem.CAPTURE_TICKS - minecraft.player.getUseItemRemainingTicks();
+        float progress = net.minecraft.util.Mth.clamp(
+                (elapsed + event.getPartialTick()) / ResearchNotebookItem.CAPTURE_TICKS, 0.0F, 1.0F);
+        int width = 92;
+        int left = (event.getWindow().getGuiScaledWidth() - width) / 2;
+        int top = event.getWindow().getGuiScaledHeight() - 48;
+        event.getGuiGraphics().fill(left, top, left + width, top + 8, 0xCC27231D);
+        event.getGuiGraphics().fill(left + 1, top + 1,
+                left + 1 + Math.round((width - 2) * progress), top + 7, 0xFF3F756D);
+        net.minecraft.network.chat.Component label = net.minecraft.network.chat.Component.translatable(
+                "gui.frostedresearch.notebook.capturing");
+        event.getGuiGraphics().drawString(minecraft.font, label,
+                (event.getWindow().getGuiScaledWidth() - minecraft.font.width(label)) / 2,
+                top - 11, 0xFFFFFFFF, true);
     }
 }

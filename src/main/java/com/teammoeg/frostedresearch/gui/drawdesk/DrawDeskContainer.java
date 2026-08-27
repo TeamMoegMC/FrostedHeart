@@ -28,6 +28,8 @@ import com.teammoeg.frostedresearch.blocks.DrawingDeskTileEntity;
 import net.minecraft.world.entity.player.Inventory;
 
 public class DrawDeskContainer extends CBlockEntityMenu<DrawingDeskTileEntity> {
+	static final int PLAYER_INVENTORY_TOP = 93;
+
 	public DrawDeskContainer(int id, Inventory inventoryPlayer, DrawingDeskTileEntity tile) {
 		super(FRContents.MenuTypes.DRAW_DESK.get(), tile, id, inventoryPlayer.player, 3);
 		this.addSlot(new CUISlotItemHandler(tile.getInventory(), DrawingDeskTileEntity.PAPER_SLOT, 114, 161));
@@ -39,7 +41,8 @@ public class DrawDeskContainer extends CBlockEntityMenu<DrawingDeskTileEntity> {
 				posi += 27;
 			else
 				posi -= 9;
-			addSlot(new CUISlot(inventoryPlayer, i, 10 + (posi % 6) * 17, 93 + (posi / 6) * 17));
+			addSlot(new CUISlot(inventoryPlayer, i, 10 + (posi % 6) * 17,
+				PLAYER_INVENTORY_TOP + (posi / 6) * 17));
 		}
 		// this.inventorySlots.get(0).set
 

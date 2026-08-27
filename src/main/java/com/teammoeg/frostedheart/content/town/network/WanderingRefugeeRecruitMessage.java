@@ -82,6 +82,7 @@ public class WanderingRefugeeRecruitMessage implements CMessage {
                         Resident resident = Resident.createRandomRecruit(
                                 refugee.getFirstName(), refugee.getLastName(),
                                 refugee.getAgeGroup(), refugee.getAgeDays());
+                        resident.setKnowledgeOverlay(refugee.getKnowledgeOverlay());
                         if (refugee.isColdSurvivor()) {
                             resident.applyColdSurvivorBuffs();
                         }

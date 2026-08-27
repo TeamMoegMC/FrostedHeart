@@ -20,7 +20,10 @@ import com.teammoeg.frostedresearch.knowledge.PrototypeProfileDefinition;
 import com.teammoeg.frostedresearch.knowledge.ResearchResult;
 import com.teammoeg.frostedresearch.knowledge.ResearchResultCatalog;
 import com.teammoeg.frostedresearch.knowledge.ResearchTopicDefinition;
+import com.teammoeg.frostedresearch.knowledge.KnowledgeRecord;
+import com.teammoeg.frostedresearch.knowledge.FieldComparisonArtifact;
 import com.teammoeg.frostedresearch.knowledge.TechnologyAccessResolver;
+import com.teammoeg.frostedheart.content.utility.oredetect.OreProspectingModel;
 import com.teammoeg.frostedresearch.mixinutil.IOwnerTile;
 import com.teammoeg.frostedresearch.research.Research;
 import com.teammoeg.frostedresearch.research.clues.Clue;
@@ -39,6 +42,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.crafting.Recipe;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
@@ -55,6 +59,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 @GameTestHolder(FRMain.MODID)
@@ -99,11 +105,84 @@ public final class ResearchGameTests {
             helper.assertTrue(calculator.getFetchablePoints(owner) == 45,
                     "denied extraction must leave the cache unchanged");
             verifyPhaseOneResultAccess(helper, owner);
+            verifyPhaseTwoRockAndOreLoop(helper, owner);
             verifyInvalidCatalogReloadPreservesLiveDefinitions(helper);
             verifyListenerAndEffectLifecycle(helper, owner, otherTeam);
             helper.succeed();
         } finally {
             TeamsAPI.register(previousProvider);
+        }
+    }
+
+    private static void verifyPhaseTwoRockAndOreLoop(GameTestHelper helper, ServerPlayer player) {
+        ResearchResultCatalog.Snapshot previous = ResearchResultCatalog.current();
+        ResourceLocation recipeId = new ResourceLocation("minecraft", "stick");
+        ResearchTopicDefinition topic = new ResearchTopicDefinition(3,
+                ResearchTopicDefinition.Presentation.EMPTY,
+                List.of(
+                        new ResearchResult.Finding(TeamResearchService.ROCK_FINDING, List.of(
+                                new ResourceLocation("frostedheart", "geology_archive"),
+                                new ResourceLocation("frostedheart", "prospecting_report_detail"))),
+                        new ResearchResult.Design(TeamResearchService.COPPER_PICK_DESIGN, List.of(recipeId))),
+                List.of(), ResearchTopicDefinition.Legacy.NONE, List.of(), Optional.empty(),
+                List.of(new ResearchTopicDefinition.Protocol(
+                        new ResourceLocation("frostedheart", "compare_rock_samples"),
+                        new ResourceLocation("frostedheart", "manual_field_comparison"),
+                        List.of("match", "no_match", "insufficient"))),
+                Optional.of(new ResearchTopicDefinition.Resolution(
+                        new ResourceLocation("frostedheart", "field_comparison_resolution"),
+                        TeamResearchService.ROCK_IDEA,
+                        List.of(TeamResearchService.ROCK_FINDING, TeamResearchService.COPPER_PICK_DESIGN))));
+        try {
+            ResearchResultCatalog.install(new ResearchResultCatalog.Candidate(
+                    Map.of(TeamResearchService.ROCK_TOPIC, topic), Map.of()));
+            ResourceLocation dimension = helper.getLevel().dimension().location();
+            ResourceLocation copper = new ResourceLocation("minecraft", "copper_ore");
+            ResourceLocation stone = new ResourceLocation("minecraft", "stone");
+            UUID observer = player.getUUID();
+            KnowledgeRecord outcrop = KnowledgeRecord.create(KnowledgeRecord.Type.COPPER_OUTCROP,
+                    dimension, new BlockPos(0, 2, 0), copper, 1, observer, Optional.empty());
+            KnowledgeRecord nearby = KnowledgeRecord.create(KnowledgeRecord.Type.ROCK_SAMPLE,
+                    dimension, new BlockPos(0, 2, 0), stone, 2, observer,
+                    Optional.of(new OreProspectingModel.Snapshot(Map.of(copper, 3))));
+            KnowledgeRecord control = KnowledgeRecord.create(KnowledgeRecord.Type.ROCK_SAMPLE,
+                    dimension, new BlockPos(32, 2, 0), stone, 3, observer,
+                    Optional.of(OreProspectingModel.Snapshot.EMPTY));
+            helper.assertTrue(TeamResearchService.archiveObservation(player, outcrop),
+                    "the field notebook path must archive the copper outcrop");
+            helper.assertTrue(TeamResearchService.archiveObservation(player, nearby)
+                            && TeamResearchService.archiveObservation(player, control),
+                    "the field notebook path must archive nearby and control samples");
+            helper.assertTrue(TeamResearchService.recordIdea(player, TeamResearchService.ROCK_TOPIC,
+                            TeamResearchService.ROCK_IDEA, "gametest:inspiration",
+                            Set.of(outcrop.id(), nearby.id())),
+                    "completed V2 inspiration must record the candidate idea");
+            helper.assertTrue(TeamResearchService.executeProtocolAction(player, TeamResearchService.ROCK_TOPIC,
+                            new ResourceLocation("frostedheart", "compare_rock_samples")),
+                    "one lightweight theory step must complete from the recorded ore and stone");
+            helper.assertTrue(TeamResearchService.acceptTopicResults(player, TeamResearchService.ROCK_TOPIC),
+                    "the completed elementary theory must resolve the topic without a control sample or MATCH gate");
+            TeamKnowledgeData data = com.teammoeg.frostedresearch.api.KnowledgeDataAPI.getData(player).get();
+            helper.assertTrue(data.hasFinding(TeamResearchService.ROCK_FINDING)
+                            && data.hasDesign(TeamResearchService.COPPER_PICK_DESIGN),
+                    "resolution must atomically acquire Finding and Design");
+            var projection = TechnologyAccessResolver.projectKnowledge(data);
+            helper.assertTrue(projection.observations().stream().anyMatch(summary ->
+                            summary.id().equals(nearby.id())
+                                    && summary.annotations().contains(
+                                            com.teammoeg.frostedheart.content.utility.oredetect.GeologyResearchIntegration.TRACE_PRESENT))
+                            && projection.observations().stream().anyMatch(summary ->
+                            summary.id().equals(control.id())
+                                    && summary.annotations().contains(
+                                            com.teammoeg.frostedheart.content.utility.oredetect.GeologyResearchIntegration.TRACE_ABSENT)),
+                    "Finding must reveal only coarse interpretable signs for rock samples");
+            ResearchResultCatalog.install(new ResearchResultCatalog.Candidate(Map.of(), Map.of()));
+            helper.assertTrue(data.idea(TeamResearchService.ROCK_TOPIC, TeamResearchService.ROCK_IDEA).isPresent()
+                            && data.hasFinding(TeamResearchService.ROCK_FINDING),
+                    "missing topic definitions must retain orphan history");
+        } finally {
+            ResearchResultCatalog.install(new ResearchResultCatalog.Candidate(
+                    previous.topics(), previous.profiles()));
         }
     }
 

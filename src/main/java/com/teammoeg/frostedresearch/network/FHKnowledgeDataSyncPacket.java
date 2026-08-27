@@ -1,14 +1,10 @@
 /* Copyright (c) 2026 TeamMoeg */
 package com.teammoeg.frostedresearch.network;
 
-import com.teammoeg.chorda.dataholders.team.CClientTeamDataManager;
 import com.teammoeg.chorda.dataholders.team.TeamDataHolder;
 import com.teammoeg.chorda.network.CMessage;
-import com.teammoeg.frostedresearch.FRMain;
-import com.teammoeg.frostedresearch.FRSpecialDataTypes;
-import com.teammoeg.frostedresearch.api.ClientKnowledgeDataAPI;
-import com.teammoeg.frostedresearch.compat.ResearchJeiBridge;
 import com.teammoeg.frostedresearch.knowledge.KnowledgeSyncSnapshot;
+import com.teammoeg.frostedresearch.network.client.ClientKnowledgeSnapshotHandler;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.api.distmarker.Dist;
@@ -40,20 +36,14 @@ public final class FHKnowledgeDataSyncPacket implements CMessage {
             KnowledgeSyncSnapshot snapshot = ResearchNetworkCodec.decode(
                     KnowledgeSyncSnapshot.CODEC, payload, "knowledge snapshot");
             if (snapshot != null) {
-                DistExecutor.safeRunWhenOn(Dist.CLIENT, () -> () -> installClient(snapshot));
+                // A packet snapshot is runtime data, so the runnable must capture it. Forge's
+                // safe referent API only accepts a parameterless method reference and rejects
+                // such a capture in development. Keep the physical-side boundary here and all
+                // client installation code in the dedicated client-only handler.
+                DistExecutor.unsafeRunWhenOn(Dist.CLIENT,
+                        () -> () -> ClientKnowledgeSnapshotHandler.install(snapshot));
             }
         });
         context.get().setPacketHandled(true);
-    }
-
-    private static void installClient(KnowledgeSyncSnapshot snapshot) {
-        try {
-            CClientTeamDataManager.INSTANCE.getInstance().setData(
-                    FRSpecialDataTypes.KNOWLEDGE_DATA, snapshot.teamData());
-            ClientKnowledgeDataAPI.install(snapshot.catalogRevision(), snapshot.knowledge(), snapshot.technology());
-            ResearchJeiBridge.sync();
-        } catch (RuntimeException exception) {
-            FRMain.LOGGER.error("Failed to install knowledge snapshot", exception);
-        }
     }
 }

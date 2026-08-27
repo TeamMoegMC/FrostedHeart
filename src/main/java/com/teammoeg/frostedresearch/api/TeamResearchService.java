@@ -8,15 +8,27 @@ import com.teammoeg.frostedresearch.FRNetwork;
 import com.teammoeg.frostedresearch.data.TeamKnowledgeData;
 import com.teammoeg.frostedresearch.item.UpgradePrototypeItem;
 import com.teammoeg.frostedresearch.knowledge.PrototypeProfileDefinition;
+import com.teammoeg.frostedresearch.knowledge.ActionCard;
+import com.teammoeg.frostedresearch.knowledge.FieldComparisonArtifact;
+import com.teammoeg.frostedresearch.knowledge.IdeaRecord;
+import com.teammoeg.frostedresearch.knowledge.IdeaCandidate;
+import com.teammoeg.frostedresearch.knowledge.KnowledgeOffer;
+import com.teammoeg.frostedresearch.knowledge.KnowledgeRecord;
+import com.teammoeg.frostedresearch.knowledge.ProtocolHandler;
 import com.teammoeg.frostedresearch.knowledge.ResearchResult;
 import com.teammoeg.frostedresearch.knowledge.ResearchResultCatalog;
+import com.teammoeg.frostedresearch.knowledge.ResearchTopicDefinition;
+import com.teammoeg.frostedresearch.knowledge.ResearchWorkflowRegistry;
 import com.teammoeg.frostedresearch.network.FHKnowledgeDataSyncPacket;
+import com.teammoeg.frostedheart.content.utility.oredetect.GeologyResearchIntegration;
+import com.teammoeg.frostedheart.content.utility.oredetect.OreProspectingModel;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.items.ItemHandlerHelper;
 
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.Set;
@@ -24,7 +36,189 @@ import java.util.UUID;
 
 /** Sole mutation service for Phase 1 team results and prototype fabrication. */
 public final class TeamResearchService {
+    /** Compatibility aliases; executable geology behavior lives in the Frosted Heart integration. */
+    public static final ResourceLocation ROCK_TOPIC = GeologyResearchIntegration.TOPIC;
+    public static final ResourceLocation ROCK_IDEA = GeologyResearchIntegration.IDEA;
+    public static final ResourceLocation ROCK_FINDING = GeologyResearchIntegration.FINDING;
+    public static final ResourceLocation COPPER_PICK_DESIGN = GeologyResearchIntegration.COPPER_PICK_DESIGN;
     private TeamResearchService() {
+    }
+
+    public static boolean archiveObservation(ServerPlayer player, KnowledgeRecord record) {
+        TeamDataClosure<TeamKnowledgeData> closure = KnowledgeDataAPI.getData(player);
+        boolean changed = closure.get().archiveObservation(record);
+        if (changed) sync(closure.team());
+        return changed;
+    }
+
+    public static boolean recordIdea(ServerPlayer player, ResourceLocation topicId, ResourceLocation ideaId,
+            String source, Set<UUID> evidence) {
+        TeamDataClosure<TeamKnowledgeData> closure = KnowledgeDataAPI.getData(player);
+        IdeaRecord candidate = IdeaRecord.create(topicId, ideaId, source, evidence,
+                player.serverLevel().getGameTime());
+        ResearchTopicDefinition topic = ResearchResultCatalog.current().topics().get(topicId);
+        if (topic == null || !declaresIdea(topic, ideaId)) {
+            candidate = candidate.withState(IdeaRecord.State.ORPHAN,
+                    player.serverLevel().getGameTime());
+        }
+        boolean changed = closure.get().recordIdea(candidate);
+        if (changed) sync(closure.team());
+        return changed;
+    }
+
+    public static boolean acceptKnowledgeOffer(ServerPlayer player, KnowledgeOffer offer) {
+        return recordIdea(player, offer.topicId(), offer.ideaId(), offer.source(), Set.of());
+    }
+
+    public static List<IdeaCandidate> findIdeaCandidates(TeamKnowledgeData data, Set<UUID> evidence) {
+        return ResearchWorkflowRegistry.findCandidates(data, evidence);
+    }
+
+    public static List<ActionCard> actionCards(TeamKnowledgeData data) {
+        return ResearchWorkflowRegistry.actionCards(data);
+    }
+
+    /** Compatibility overload retained while callers move to the all-open-ideas projection. */
+    public static List<ActionCard> actionCards(TeamKnowledgeData data, ResourceLocation topicId) {
+        return actionCards(data).stream().filter(card -> card.topicId().equals(topicId)).toList();
+    }
+
+    public static Optional<FieldComparisonArtifact> executeProtocol(ServerPlayer player,
+            ResourceLocation topicId, ResourceLocation protocolId) {
+        return executeProtocolInternal(player, topicId, protocolId)
+                .flatMap(ProtocolHandler.Execution::artifact);
+    }
+
+    /** Executes a registered method even when that method produces no comparison artifact. */
+    public static boolean executeProtocolAction(ServerPlayer player,
+            ResourceLocation topicId, ResourceLocation protocolId) {
+        return executeProtocolInternal(player, topicId, protocolId).isPresent();
+    }
+
+    private static Optional<ProtocolHandler.Execution> executeProtocolInternal(ServerPlayer player,
+            ResourceLocation topicId, ResourceLocation protocolId) {
+        TeamDataClosure<TeamKnowledgeData> closure = KnowledgeDataAPI.getData(player);
+        TeamKnowledgeData data = closure.get();
+        ResearchTopicDefinition topic = ResearchResultCatalog.current().topics().get(topicId);
+        if (topic == null) return Optional.empty();
+        ResearchTopicDefinition.Protocol protocol = topic.protocols().stream()
+                .filter(value -> value.id().equals(protocolId)).findFirst().orElse(null);
+        if (protocol == null) return Optional.empty();
+        ProtocolHandler handler = ResearchWorkflowRegistry.protocol(protocol.resolver());
+        if (handler == null) return Optional.empty();
+        IdeaRecord idea = data.ideas().stream().filter(value -> value.topicId().equals(topicId))
+                .filter(value -> value.state() != IdeaRecord.State.RESOLVED
+                        && value.state() != IdeaRecord.State.ORPHAN).findFirst().orElse(null);
+        if (idea == null) return Optional.empty();
+        Optional<ProtocolHandler.Execution> result = handler.execute(player, topicId, topic, protocol, data, idea);
+        if (result.isEmpty()) return Optional.empty();
+        boolean changed = result.get().artifact().map(data::appendComparison).orElse(false);
+        IdeaRecord updatedIdea = result.get().attachedEvidence().isEmpty() ? idea
+                : idea.withEvidence(result.get().attachedEvidence(), player.serverLevel().getGameTime());
+        if (result.get().ideaReady()) {
+            updatedIdea = updatedIdea.withState(IdeaRecord.State.READY,
+                    player.serverLevel().getGameTime());
+        }
+        changed |= data.updateIdea(updatedIdea);
+        if (changed) sync(closure.team());
+        return changed ? result : Optional.empty();
+    }
+
+    public static Optional<FieldComparisonArtifact> executeNextProtocol(ServerPlayer player) {
+        TeamKnowledgeData data = KnowledgeDataAPI.getData(player).get();
+        for (ActionCard action : actionCards(data)) {
+            Optional<FieldComparisonArtifact> result = executeProtocol(player, action.topicId(), action.protocolId());
+            if (result.isPresent()) return result;
+        }
+        return Optional.empty();
+    }
+
+    public static Optional<FieldComparisonArtifact> compareRockSamples(ServerPlayer player) {
+        return executeProtocol(player, ROCK_TOPIC, new ResourceLocation("frostedheart", "compare_rock_samples"));
+    }
+
+    public static boolean acceptTopicResults(ServerPlayer player, ResourceLocation topicId) {
+        TeamDataClosure<TeamKnowledgeData> closure = KnowledgeDataAPI.getData(player);
+        TeamKnowledgeData data = closure.get();
+        ResearchTopicDefinition topicDefinition = ResearchResultCatalog.current().topics().get(topicId);
+        if (topicDefinition == null || topicDefinition.resolution().isEmpty()) return false;
+        ResearchTopicDefinition.Resolution resolution = topicDefinition.resolution().get();
+        Optional<IdeaRecord> idea = data.idea(topicId, resolution.idea());
+        com.teammoeg.frostedresearch.knowledge.ResolutionHandler resolver =
+                ResearchWorkflowRegistry.resolution(resolution.resolver());
+        if (idea.isEmpty() || resolver == null
+                || !resolver.canResolve(topicId, topicDefinition, resolution, data, idea.get())) return false;
+        ResearchTopicDefinitionAccess topic = topicResults(topicId);
+        if (topic.results().isEmpty()) return false;
+        boolean changed = false;
+        for (ResearchResult result : topic.results()) {
+            if (result instanceof ResearchResult.Finding) changed |= data.acquireFinding(result.id());
+            else if (result instanceof ResearchResult.Design) changed |= data.acquireDesign(result.id());
+            else if (result instanceof ResearchResult.Construction) changed |= data.acquireConstruction(result.id());
+            else if (result instanceof ResearchResult.Procedure) changed |= data.acquireProcedure(result.id());
+        }
+        changed |= data.updateIdea(idea.get().withState(IdeaRecord.State.RESOLVED,
+                player.serverLevel().getGameTime()));
+        if (changed) sync(closure.team());
+        return true;
+    }
+
+    public static boolean acceptNextReadyTopicResults(ServerPlayer player) {
+        TeamKnowledgeData data = KnowledgeDataAPI.getData(player).get();
+        return data.ideas().stream().filter(idea -> idea.state() == IdeaRecord.State.READY)
+                .map(IdeaRecord::topicId).distinct().anyMatch(topic -> acceptTopicResults(player, topic));
+    }
+
+    private static ResearchTopicDefinitionAccess topicResults(ResourceLocation topicId) {
+        com.teammoeg.frostedresearch.knowledge.ResearchTopicDefinition topic =
+                ResearchResultCatalog.current().topics().get(topicId);
+        if (topic == null || topic.resolution().isEmpty()) return new ResearchTopicDefinitionAccess(List.of());
+        Set<ResourceLocation> resolvedIds = Set.copyOf(topic.resolution().get().results());
+        return new ResearchTopicDefinitionAccess(topic.results().stream()
+                .filter(result -> resolvedIds.contains(result.id())).toList());
+    }
+
+    private static boolean declaresIdea(ResearchTopicDefinition topic, ResourceLocation ideaId) {
+        return topic.ideaSources().stream().anyMatch(source -> source.idea().equals(ideaId))
+                || topic.inspiration().map(value -> value.idea().equals(ideaId)).orElse(false)
+                || topic.resolution().map(value -> value.idea().equals(ideaId)).orElse(false);
+    }
+
+    public static EvidenceSelection selectRockEvidence(TeamKnowledgeData data) {
+        return selectRockEvidence(data, data.observations().stream().map(KnowledgeRecord::id)
+                .collect(java.util.stream.Collectors.toSet()));
+    }
+
+    public static EvidenceSelection selectRockEvidence(TeamKnowledgeData data, Set<UUID> allowedIds) {
+        GeologyResearchIntegration.EvidenceSelection selection =
+                GeologyResearchIntegration.selectEvidence(data, allowedIds, true);
+        return new EvidenceSelection(selection.outcrop(), selection.nearby(), selection.control());
+    }
+
+    public static FieldComparisonArtifact.Outcome compareSamples(KnowledgeRecord nearby, KnowledgeRecord control) {
+        return GeologyResearchIntegration.compareSamples(nearby, control);
+    }
+
+    public static FieldComparisonArtifact.Outcome compareSignals(Boolean nearbyCopper, Boolean controlCopper) {
+        return GeologyResearchIntegration.compareSignals(nearbyCopper, controlCopper);
+    }
+
+    public static boolean hasCopper(OreProspectingModel.Snapshot snapshot) {
+        return GeologyResearchIntegration.hasCopper(snapshot);
+    }
+
+    public record EvidenceSelection(Optional<KnowledgeRecord> outcrop,
+            Optional<KnowledgeRecord> nearby, Optional<KnowledgeRecord> control) {
+        public Set<UUID> ids() {
+            Set<UUID> ids = new LinkedHashSet<>();
+            outcrop.ifPresent(record -> ids.add(record.id()));
+            nearby.ifPresent(record -> ids.add(record.id()));
+            control.ifPresent(record -> ids.add(record.id()));
+            return Set.copyOf(ids);
+        }
+    }
+
+    private record ResearchTopicDefinitionAccess(List<ResearchResult> results) {
     }
 
     public static GrantResult grantResult(ServerPlayer player, ResourceLocation resultId) {

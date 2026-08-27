@@ -1,9 +1,9 @@
 # Research Gameplay And Integrations
 
 - Status: `Current`
-- Last verified: `2026-08-25`
-- Scope: Player entry points, legacy progression, V2 result command/prototype shell, unified unlock enforcement, APIs, events, commands, and compatibility modules
-- Code anchors: [`ResearchHooks`](../../src/main/java/com/teammoeg/frostedresearch/ResearchHooks.java), [`TechnologyAccessResolver`](../../src/main/java/com/teammoeg/frostedresearch/knowledge/TechnologyAccessResolver.java), [`TeamResearchService`](../../src/main/java/com/teammoeg/frostedresearch/api/TeamResearchService.java), [`UpgradePrototypeItem`](../../src/main/java/com/teammoeg/frostedresearch/item/UpgradePrototypeItem.java), [`ResearchCommand`](../../src/main/java/com/teammoeg/frostedresearch/ResearchCommand.java), [`JEICompat`](../../src/main/java/com/teammoeg/frostedresearch/compat/JEICompat.java)
+- Last verified: `2026-08-27`
+- Scope: Player entry points, legacy progression, the Phase 2 knowledge-laboratory loop, V2 results/prototypes, unified unlock enforcement, APIs, events, commands, and compatibility modules
+- Code anchors: [`ResearchNotebookItem`](../../src/main/java/com/teammoeg/frostedresearch/item/ResearchNotebookItem.java), [`ObservationProviderRegistry`](../../src/main/java/com/teammoeg/frostedresearch/knowledge/observation/ObservationProviderRegistry.java), [`ResearchWorkflowRegistry`](../../src/main/java/com/teammoeg/frostedresearch/knowledge/ResearchWorkflowRegistry.java), [`TeamResearchService`](../../src/main/java/com/teammoeg/frostedresearch/api/TeamResearchService.java), [`GeologyResearchIntegration`](../../src/main/java/com/teammoeg/frostedheart/content/utility/oredetect/GeologyResearchIntegration.java), [`PersonKnowledgeIntegration`](../../src/main/java/com/teammoeg/frostedheart/content/town/resident/PersonKnowledgeIntegration.java), [`TechnologyAccessResolver`](../../src/main/java/com/teammoeg/frostedresearch/knowledge/TechnologyAccessResolver.java)
 
 ## Player-Facing Loop
 
@@ -18,6 +18,30 @@ The implemented loop is:
 7. Use the resulting recipe, block, multiblock, JEI-category, generator, forecast, or villager behavior.
 
 The archive is a view/controller over this loop. Detailed layout and navigation behavior live in [research-ui.md](research-ui.md).
+
+## Phase 2 Observation, Discovery, And Research Loop
+
+`frostedresearch:research_notebook` is a non-stackable early observation tool, not a topic selector. Using it on a block or living entity begins a `40` tick (`2 s`) capture; releasing early records nothing, and a HUD bar shows progress. The resulting `ObservationContext` can retain location, game/day time and a derived dawn/day/dusk/night period, biome, vanilla weather, visible block state, and provider measurements. Sneak-use in air cycles `STANDARD`, `COMPACT`, and `ENVIRONMENT` field sets. `ENVIRONMENT` includes block temperature when the player also carries a soil thermometer. `ObservationProviderRegistry` selects the highest-priority provider that supports a block context; its catch-all `GenericBlockObservationProvider` makes every block recordable even when no content topic recognizes it, while the entity fallback archives type and entity UUID. Generic block observations deduplicate by kind, dimension, exact position, subject, and retained visible state, then merge observers and observation time.
+
+Providers may enrich the same public record contract with a specialized kind, facets, deduplication policy, or sealed server fact. Frosted Heart registers `GeologyBlockObservationProvider`: any `forge:ores` block and any `forge:stone` block receive stable geology facets and a `16³` cell semantic key; stone also seals `OreProspectingModel.scan(level, position, 4, 3)`. Its scan volume is half-open, with horizontal offsets `[-4,4)` and vertical offsets `[-3,3)`. Those mineral counts remain server-only. The prospector pick and geologist's hammer use the same read-only model but keep their own durability, noise, and player feedback.
+
+At the drawing desk, the Knowledge Laboratory accepts at most five record pins. Starting “Organize” asks every loaded topic's registered direct Idea rule to match any subset of those pins; no match consumes no paper or ink. One or more matches consume one compatible level-0 paper and five pen uses, then run the existing card game as `DrawingDeskTileEntity.GamePurpose.V2_INSPIRATION`. The synchronized `DrawingDeskTileEntity.InspirationStatus` explains a no-match, missing-paper, or missing-ink rejection without naming the hidden topic. The active evidence set is frozen while the game runs. Players can move freely between the card board and laboratory, whose controls display the same session and offer an explicit cancel. Candidates are revalidated after completion; a single surviving match immediately persists or merges its `IdeaRecord`, while two or three surviving matches ask the player to choose. `LEGACY_CLUE` games still use `GamePurpose.LEGACY_CLUE` and call `ResearchHooks.commitGameLevel` unchanged.
+
+Only persisted ideas compile action cards. `ResearchWorkflowRegistry#actionCards` asks registered protocol handlers for unfinished ideas and projects at most three actions. An `ActionCard` names its topic, protocol, presentation action, and whether it is executable; clicking it sends that exact topic/protocol pair. `ProtocolHandler.Execution` may append a comparison artifact or complete a lightweight theory without fabricating one, then attaches evidence and updates Idea state. The registered resolution handler decides whether result acceptance is legal.
+
+The first geology fixture is intentionally elementary: any recorded stone plus any recorded ore can produce `frostedheart:rock_and_ore_signs`, regardless of distance, order, extra pins, or mineral scan contents. After the card game records that Idea, one “develop a simple theory from the notes” action moves it to review, and acceptance grants the existing Finding and copper-prospecting-pick Design. Nearby/control samples and `MATCH / NO_MATCH / INSUFFICIENT` are no longer gates for this introductory topic; old comparison artifacts remain readable history.
+
+## Bundled Geology Content Plugin
+
+`GeologyResearchIntegration` is Frosted Heart content layered on those generic interfaces. Its field-evidence pattern reads only public facets and can reveal `frostedheart:rock_and_ore_signs` from any recorded `forge:ores` block plus any recorded `forge:stone` block. It does not inspect distance, order, a fixed pin count, or the sealed mineral snapshot. The topic definition retains its earlier comparison protocol identifiers during rapid iteration, but the registered runtime handler now interprets that method as the single lightweight theory action and produces no new `FieldComparisonArtifact`; artifacts already saved by earlier builds remain readable history.
+
+Accepting the ready geology Idea atomically acquires `frostedheart:prospecting_signs_indicate_nearby_ore` and `frostedheart:copper_prospecting_pick`. The registered `frostedheart:prospecting_report_detail` Finding view may then annotate a rock-sample summary with `frostedheart:ore_trace_present` or `frostedheart:ore_trace_absent`; it still does not expose mineral counts. The copper prospector's pick retains its more detailed immediate result, so the Finding and tool do not replace each other.
+
+## Person Knowledge Packages
+
+Refugee and simulated-resident dialogue uses the domain-neutral “Talk about your experience” action and `PersonKnowledgeDialogue#shareFirst`. `PersonKnowledgePackageCatalog` is a generic ordered registration surface; Frosted Heart's `PersonKnowledgeIntegration` registers the current content packages during bootstrap. `PersonKnowledgeOverlay` persists a one-time background roll and a set of package IDs, including a successfully initialized empty set. Adult and elder refugees receive `frostedheart:prospecting_experience` on rolls `0..9`, `frostedheart:cold_weather_experience` on `10..19`, and no current package on the remaining rolls; other ages receive none. A package definition determines its reply and optional `KnowledgeOffer`: prospecting experience merges the geology Idea but does not complete its comparison, while cold-weather experience is currently conversation-only. An empty person gives a domain-neutral no-experience reply rather than guessing that the player asked about prospecting.
+
+Recruitment copies the overlay to the new `Resident` before `TeamTown#addResident`. A failed insertion does not mutate or discard the refugee; a successful resident retains the same initialized package set and can use the shared dialogue path without rerolling.
 
 ## Drawing Desk Entry
 
@@ -51,10 +75,16 @@ The client sends `FHDrawingDeskOperationPacket` operations against the desk's `B
 | `1` | flip/select one card position |
 | `2` | try to combine two card positions |
 | `3` | submit the examine-slot item |
+| `4` | match current pins and initialize a V2 inspiration game |
+| `5` | toggle one synchronized observation UUID in the five desk-local pins |
+| `6` | clear the desk-local knowledge session |
+| `7` | revalidate and record candidate index `0..2` |
+| `8` | execute the exact topic/protocol pair named by a currently executable action card |
+| `9` | accept the first ready topic resolution |
 
 `ClientResearchGame` performs interaction/display checks but does not authoritatively advance the game. `DrawingDeskTileEntity` owns game state, consumes paper/pen durability, checks matches, synchronizes its NBT, and completes a `MinigameClue` on success.
 
-The packet endpoint treats its position and card coordinates as untrusted. Before executing an operation, `FHDrawingDeskOperationPacket#handle` requires the sender's current menu to be a `DrawDeskContainer` bound to that exact loaded tile, in the sender's server level, no farther than 8 blocks from the tile center, with an `IOwnerTile` owner equal to the sender's current Chorda team UUID. Operations `0` and `3` accept no card positions, operation `1` accepts exactly one, and operation `2` exactly two; every supplied position must be inside the `9 x 9` board.
+The packet endpoint treats its position, card coordinates, record UUID, candidate index, topic ID, and protocol ID as untrusted. Before executing an operation, `FHDrawingDeskOperationPacket#handle` requires the sender's current menu to be a `DrawDeskContainer` bound to that exact loaded tile, in the sender's server level, no farther than 8 blocks from the tile center, with an `IOwnerTile` owner equal to the sender's current Chorda team UUID. Every operation has a fixed payload shape; card positions must be inside the `9 x 9` board, pin UUIDs must resolve in the sender's team knowledge, candidate indices are limited to `0..2` and revalidated against the current pins, and protocol execution re-resolves the named topic/protocol/Idea/handler on the server.
 
 ## Theory Card Game
 
@@ -194,11 +224,11 @@ Other systems may also read raw string keys. Because the NBT is mutable and unty
 
 `ClientResearchDataAPI` exposes the local Chorda mirror. The older `ClientResearchData.last` field is only a legacy UI selection cache, not authoritative progress.
 
-V2 Phase 1 adds:
+V2 adds:
 
 - `KnowledgeDataAPI` / `ClientKnowledgeDataAPI` for independent team knowledge and the atomic client projection mirror;
 - `TechnologyAccessResolver#hasFinding`, `#isRecipeUnlocked`, `#canFormMultiblock`, and `#canUseBlock` as the narrow Boolean adapters;
-- `TeamResearchService#grantResult` as the mutation/fabrication boundary;
+- `TeamResearchService` as the observation/Idea/protocol/resolution/result mutation boundary;
 - `TeamResearchManager#grantResult` as a compatibility facade rather than a mutable store.
 
 Callers should note:

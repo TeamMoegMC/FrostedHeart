@@ -22,6 +22,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Predicate;
 
 /** Reads and validates the result-bearing slice of datapack research topics. */
 public final class ResearchResultCatalogLoader {
@@ -35,7 +36,8 @@ public final class ResearchResultCatalogLoader {
         List<String> diagnostics = new ArrayList<>();
         Map<ResourceLocation, PrototypeProfileDefinition> profiles = decodeProfiles(resources, diagnostics);
         Map<ResourceLocation, ResearchTopicDefinition> topics = decodeTopics(resources, diagnostics);
-        validate(topics, profiles, recipes, diagnostics);
+        Set<ResourceLocation> blockTags = listDefinitionIds(resources, "tags/blocks");
+        validate(topics, profiles, recipes, diagnostics, blockTags::contains);
         diagnostics.sort(String::compareTo);
         if (!diagnostics.isEmpty()) throw new ResearchResultCatalog.ValidationException(diagnostics);
         return new ResearchResultCatalog.Candidate(topics, profiles);
@@ -91,6 +93,15 @@ public final class ResearchResultCatalogLoader {
         return new ResourceLocation(resourceId.getNamespace(), relative);
     }
 
+    private static Set<ResourceLocation> listDefinitionIds(ResourceManager resources, String directory) {
+        Set<ResourceLocation> ids = new LinkedHashSet<>();
+        resources.listResources(directory, id -> id.getPath().endsWith(".json")).keySet().stream()
+                .sorted(Comparator.comparing(ResourceLocation::toString))
+                .map(id -> definitionId(id, directory))
+                .forEach(ids::add);
+        return Set.copyOf(ids);
+    }
+
     private static void validateExclusiveFields(ResourceLocation topicId, JsonElement json, List<String> diagnostics) {
         if (!json.isJsonObject()) return;
         JsonElement results = json.getAsJsonObject().get("results");
@@ -112,6 +123,22 @@ public final class ResearchResultCatalogLoader {
     static void validate(Map<ResourceLocation, ResearchTopicDefinition> topics,
             Map<ResourceLocation, PrototypeProfileDefinition> profiles,
             RecipeManager recipes, List<String> diagnostics) {
+        validate(topics, profiles, recipes, diagnostics, tag -> {
+            net.minecraft.tags.TagKey<net.minecraft.world.level.block.Block> key =
+                    net.minecraft.tags.BlockTags.create(tag);
+            return ForgeRegistries.BLOCKS.tags().isKnownTagName(key);
+        });
+    }
+
+    static void validate(Map<ResourceLocation, ResearchTopicDefinition> topics,
+            Map<ResourceLocation, PrototypeProfileDefinition> profiles,
+            RecipeManager recipes, List<String> diagnostics, Set<ResourceLocation> knownBlockTags) {
+        validate(topics, profiles, recipes, diagnostics, knownBlockTags::contains);
+    }
+
+    private static void validate(Map<ResourceLocation, ResearchTopicDefinition> topics,
+            Map<ResourceLocation, PrototypeProfileDefinition> profiles,
+            RecipeManager recipes, List<String> diagnostics, Predicate<ResourceLocation> knownBlockTag) {
         Map<ResourceLocation, ResourceLocation> resultOwners = new HashMap<>();
         profiles.forEach((id, profile) -> {
             if (profile.format() != PrototypeProfileDefinition.CURRENT_FORMAT) {
@@ -129,6 +156,7 @@ public final class ResearchResultCatalogLoader {
                 }
                 if (reward.count() <= 0) diagnostics.add(topicId + ": reward count must be positive");
             }
+            validateWorkflow(topicId, topic, diagnostics, knownBlockTag);
             for (ResearchResult result : topic.results()) {
                 ResourceLocation previous = resultOwners.putIfAbsent(result.id(), topicId);
                 if (previous != null) {
@@ -140,6 +168,57 @@ public final class ResearchResultCatalogLoader {
                 validateResult(topicId, result, profiles, recipes, diagnostics);
             }
         });
+    }
+
+    private static void validateWorkflow(ResourceLocation topicId, ResearchTopicDefinition topic,
+            List<String> diagnostics, Predicate<ResourceLocation> knownBlockTag) {
+        Set<ResourceLocation> resultIds = topic.results().stream().map(ResearchResult::id)
+                .collect(java.util.stream.Collectors.toSet());
+        for (ResearchTopicDefinition.IdeaSource source : topic.ideaSources()) {
+            if (!ResearchWorkflowRegistry.hasIdeaSource(source.provider())) {
+                diagnostics.add(topicId + ": unknown idea provider " + source.provider());
+            }
+            for (ResourceLocation tag : source.requiredTags()) {
+                if (!knownBlockTag.test(tag)) {
+                    diagnostics.add(topicId + ": unknown block tag " + tag);
+                }
+            }
+        }
+        topic.inspiration().ifPresent(inspiration -> {
+            if (!ResearchWorkflowRegistry.hasInspirationProvider(inspiration.provider())) {
+                diagnostics.add(topicId + ": unknown inspiration provider " + inspiration.provider());
+            }
+            if (inspiration.paperLevel() < 0) diagnostics.add(topicId + ": paper_level must not be negative");
+        });
+        for (ResearchTopicDefinition.Protocol protocol : topic.protocols()) {
+            if (!ResearchWorkflowRegistry.hasProtocol(protocol.resolver())) {
+                diagnostics.add(topicId + ": unknown protocol resolver " + protocol.resolver());
+            }
+            if (protocol.outcomes().isEmpty()) diagnostics.add(topicId + ": protocol outcomes must not be empty");
+            for (String outcome : protocol.outcomes()) {
+                if (!ResearchWorkflowRegistry.COMPARISON_OUTCOMES.contains(outcome)) {
+                    diagnostics.add(topicId + ": unknown protocol outcome " + outcome);
+                }
+            }
+        }
+        topic.resolution().ifPresent(resolution -> {
+            if (!ResearchWorkflowRegistry.hasResolution(resolution.resolver())) {
+                diagnostics.add(topicId + ": unknown resolution resolver " + resolution.resolver());
+            }
+            if (resolution.results().isEmpty()) diagnostics.add(topicId + ": resolution results must not be empty");
+            for (ResourceLocation result : resolution.results()) {
+                if (!resultIds.contains(result)) diagnostics.add(topicId + ": resolution references unknown result " + result);
+            }
+        });
+        for (ResearchResult result : topic.results()) {
+            if (result instanceof ResearchResult.Finding finding) {
+                for (ResourceLocation view : finding.views()) {
+                    if (!ResearchWorkflowRegistry.hasFindingView(view)) {
+                        diagnostics.add(topicId + "/" + result.id() + ": unknown finding view " + view);
+                    }
+                }
+            }
+        }
     }
 
     private static void validateResult(ResourceLocation topicId, ResearchResult result,

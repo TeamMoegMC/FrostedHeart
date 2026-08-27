@@ -1,6 +1,7 @@
 package com.teammoeg.frostedresearch.network;
 
 import com.teammoeg.frostedresearch.gui.drawdesk.game.CardPos;
+import net.minecraft.resources.ResourceLocation;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -27,17 +28,40 @@ class FHDrawingDeskOperationPacketTest {
     void operationShapeRejectsMissingOrOutOfBoundsCardPositions() {
         CardPos valid = CardPos.valueOf(0, 8);
         CardPos invalid = CardPos.valueOf(-1, 9);
+        ResourceLocation topic = new ResourceLocation("test", "topic");
+        ResourceLocation protocol = new ResourceLocation("test", "protocol");
 
         assertTrue(FHDrawingDeskOperationPacket.isOperationShapeValid((byte) 0, null, null));
         assertTrue(FHDrawingDeskOperationPacket.isOperationShapeValid((byte) 1, valid, null));
         assertTrue(FHDrawingDeskOperationPacket.isOperationShapeValid((byte) 2, valid, valid));
         assertTrue(FHDrawingDeskOperationPacket.isOperationShapeValid((byte) 3, null, null));
+        assertTrue(FHDrawingDeskOperationPacket.isOperationShapeValid((byte) 4, null, null));
+        assertTrue(FHDrawingDeskOperationPacket.isOperationShapeValid((byte) 5, null, null,
+                java.util.UUID.randomUUID()));
+        assertTrue(FHDrawingDeskOperationPacket.isOperationShapeValid((byte) 6, null, null));
+        assertTrue(FHDrawingDeskOperationPacket.isOperationShapeValid(
+                (byte) 7, null, null, null, 0));
+        assertTrue(FHDrawingDeskOperationPacket.isOperationShapeValid(
+                (byte) 7, null, null, null, 2));
+        assertTrue(FHDrawingDeskOperationPacket.isOperationShapeValid(
+                (byte) 8, null, null, null, 0, topic, protocol));
+        assertTrue(FHDrawingDeskOperationPacket.isOperationShapeValid((byte) 9, null, null));
 
         assertFalse(FHDrawingDeskOperationPacket.isOperationShapeValid((byte) 1, null, null));
         assertFalse(FHDrawingDeskOperationPacket.isOperationShapeValid((byte) 1, invalid, null));
         assertFalse(FHDrawingDeskOperationPacket.isOperationShapeValid((byte) 2, valid, invalid));
         assertFalse(FHDrawingDeskOperationPacket.isOperationShapeValid((byte) 3, valid, null));
-        assertFalse(FHDrawingDeskOperationPacket.isOperationShapeValid((byte) 4, null, null));
+        assertFalse(FHDrawingDeskOperationPacket.isOperationShapeValid((byte) 5, null, null));
+        assertFalse(FHDrawingDeskOperationPacket.isOperationShapeValid(
+                (byte) 7, null, null, null, -1));
+        assertFalse(FHDrawingDeskOperationPacket.isOperationShapeValid(
+                (byte) 7, null, null, null, 3));
+        assertFalse(FHDrawingDeskOperationPacket.isOperationShapeValid(
+                (byte) 7, null, null, java.util.UUID.randomUUID(), 0));
+        assertFalse(FHDrawingDeskOperationPacket.isOperationShapeValid((byte) 8, null, null));
+        assertFalse(FHDrawingDeskOperationPacket.isOperationShapeValid(
+                (byte) 8, null, null, null, 0, topic, null));
+        assertFalse(FHDrawingDeskOperationPacket.isOperationShapeValid((byte) 10, null, null));
     }
 
     @Test

@@ -1,0 +1,20 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "pattern": [
+    "ABA",
+    " B ",
+    " B "
+  ],
+  "key": {
+    "A": {
+      "tag": "forge:ingots/copper"
+    },
+    "B": {
+      "tag": "forge:rods/wooden"
+    }
+  },
+  "result": {
+    "item": "frostedheart:copper_pro_pick"
+  }
+}

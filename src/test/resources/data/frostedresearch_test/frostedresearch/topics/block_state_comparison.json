@@ -1,0 +1,42 @@
+{
+  "format": 3,
+  "presentation": {},
+  "idea_sources": [
+    {
+      "provider": "frostedresearch:record_pair",
+      "idea": "frostedresearch_test:block_state_question"
+    }
+  ],
+  "inspiration": {
+    "provider": "frostedresearch:drawing_desk",
+    "idea": "frostedresearch_test:block_state_question",
+    "paper_level": 0
+  },
+  "protocols": [
+    {
+      "id": "frostedresearch_test:compare_block_states",
+      "resolver": "frostedresearch:compare_records",
+      "outcomes": [
+        "match",
+        "no_match",
+        "insufficient"
+      ]
+    }
+  ],
+  "resolution": {
+    "resolver": "frostedresearch:comparison_resolution",
+    "idea": "frostedresearch_test:block_state_question",
+    "results": [
+      "frostedresearch_test:block_state_finding"
+    ]
+  },
+  "results": [
+    {
+      "type": "finding",
+      "id": "frostedresearch_test:block_state_finding",
+      "views": [
+        "frostedresearch:archive"
+      ]
+    }
+  ]
+}

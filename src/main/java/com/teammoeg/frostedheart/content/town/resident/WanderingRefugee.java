@@ -30,10 +30,12 @@ import com.teammoeg.frostedheart.content.climate.WorldTemperature;
 import com.teammoeg.frostedheart.content.climate.gamedata.climate.WorldClimate;
 import com.teammoeg.frostedheart.content.trade.*;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
+import com.teammoeg.frostedresearch.knowledge.PersonKnowledgeOverlay;
 
 import lombok.Getter;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
+import net.minecraft.nbt.NbtOps;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
@@ -119,6 +121,7 @@ public class WanderingRefugee extends AbstractVillager implements NeutralMob, Vi
     private boolean coldSurvivor = false;
     private int ageDays = 0;
     private boolean generationInitialized = false;
+    private PersonKnowledgeOverlay knowledgeOverlay = PersonKnowledgeOverlay.UNINITIALIZED;
     private int amountNeeded = 3 + (int) (getRandom().nextFloat() * 5);
     @Getter
     private String lastName = LAST_NAMES[(int) (Math.random() * LAST_NAMES.length)];
@@ -148,6 +151,16 @@ public class WanderingRefugee extends AbstractVillager implements NeutralMob, Vi
         setAgeGroup(generatedAge);
         ageDays = Resident.randomAgeDaysForAge(generatedAge);
         generationInitialized = true;
+        initializeKnowledgeOverlay(getRandom().nextInt(100));
+    }
+
+    private void initializeKnowledgeOverlay(int roll) {
+        boolean eligible = getAgeGroup() == Resident.AGE_ADULT || getAgeGroup() == Resident.AGE_ELDER;
+        knowledgeOverlay = knowledgeOverlay.initializeIfNeeded(eligible, roll);
+    }
+
+    public PersonKnowledgeOverlay getKnowledgeOverlay() {
+        return knowledgeOverlay;
     }
 
     @Override
@@ -408,6 +421,8 @@ public class WanderingRefugee extends AbstractVillager implements NeutralMob, Vi
             pCompound.putUUID("townOwner", this.townOwner);
         }
         pCompound.putBoolean("coldSurvivor", this.coldSurvivor);
+        PersonKnowledgeOverlay.CODEC.encodeStart(NbtOps.INSTANCE, knowledgeOverlay)
+                .result().ifPresent(tag -> pCompound.put("knowledgeOverlay", tag));
         CompoundTag cnbt = new CompoundTag();
         fh$data.serialize(cnbt);
         pCompound.put("fhdata", cnbt);
@@ -455,6 +470,13 @@ public class WanderingRefugee extends AbstractVillager implements NeutralMob, Vi
         }
         if ((pCompound.contains("coldSurvivor", Tag.TAG_BYTE))) {
             coldSurvivor = pCompound.getBoolean("coldSurvivor");
+        }
+        if (pCompound.contains("knowledgeOverlay", Tag.TAG_COMPOUND)) {
+            knowledgeOverlay = PersonKnowledgeOverlay.CODEC.parse(NbtOps.INSTANCE,
+                    pCompound.get("knowledgeOverlay")).result().orElse(PersonKnowledgeOverlay.UNINITIALIZED);
+        }
+        if (!knowledgeOverlay.initialized()) {
+            initializeKnowledgeOverlay(getUUID().hashCode());
         }
         if ((pCompound.contains("fhdata", Tag.TAG_COMPOUND))) {
             fh$data.deserialize(pCompound.getCompound("fhdata"));

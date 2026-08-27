@@ -3,10 +3,7 @@
   "results": [
     {
       "type": "finding",
-      "id": "frostedresearch_test:smoke_finding",
-      "views": [
-        "frostedresearch_test:smoke_view"
-      ]
+      "id": "frostedresearch_test:smoke_finding"
     },
     {
       "type": "design",
