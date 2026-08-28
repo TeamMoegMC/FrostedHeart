@@ -29,6 +29,7 @@ import com.teammoeg.frostedheart.bootstrap.reference.FHDamageSources;
 import com.teammoeg.frostedheart.compat.curios.CuriosCompat;
 import com.teammoeg.frostedheart.content.climate.WorldTemperature;
 import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.MinecraftThermalInput;
+import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.ThermalEnvironmentSample;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerPlayer;
@@ -82,7 +83,7 @@ public class TemperatureComputation {
     protected static float environment(
             ServerPlayer player,
             PlayerTemperatureData data,
-            MinecraftThermalInput.MutableEnvironmentSample thermalSample
+            ThermalEnvironmentSample thermalSample
     ) {
         // World Temp: Dimension, Biome, Climate, Time, heat adjusts
         Level world = player.level();
@@ -94,10 +95,8 @@ public class TemperatureComputation {
                 WorldTemperature.naturalAir(world, pos),
                 thermalSample) - 37F; // 37-based
 
-        // Surrounding block temperature.
-        // We calculate the block temperature using a separate pool.
-        // See blockTemp usage for more details.
-        // This shift ranges a lot.
+        // The legacy surrounding-block sampler is disabled; blockTemp is
+        // retained as the player's local insulation input.
         float bt = data.blockTemp;
         envtemp += bt;
 

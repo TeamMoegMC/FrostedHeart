@@ -1,0 +1,50 @@
+/* Copyright (c) 2026 TeamMoeg */
+package com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft;
+
+import com.teammoeg.frostedheart.content.climate.thermal.ThermalTestFixtures;
+import com.teammoeg.frostedheart.content.climate.thermal.mesh.ThermalPageHandle;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+class DimensionInputAccumulatorTest {
+    @Test
+    void environmentUpdatesCoalesceByPageAndColumnBeforeSeal() {
+        DimensionInputAccumulator accumulator =
+                new DimensionInputAccumulator(1L, 0L);
+        ThermalPageHandle page = new ThermalPageHandle(0L, 1L);
+        accumulator.updateNaturalTemperature(page, 5.0D);
+        accumulator.updateNaturalTemperature(page, 6.0D);
+        accumulator.updateSkyColumn(page, 4, 10);
+        accumulator.updateSkyColumn(page, 4, 12);
+
+        ThermalInputBatch batch = accumulator.seal(20L);
+
+        assertEquals(1, batch.environmentUpdates().length);
+        ThermalInputBatch.PageEnvironmentUpdate update =
+                batch.environmentUpdates()[0];
+        assertEquals(6.0D, update.naturalTemperatureC());
+        assertEquals(1, update.skyColumns().length);
+        assertEquals(4, update.skyColumns()[0]);
+        assertEquals(12, update.firstExposedLocalY()[0]);
+    }
+
+    @Test
+    void unsealedAdmissionIsCancelledWhenItsPageRetires() {
+        DimensionInputAccumulator accumulator =
+                new DimensionInputAccumulator(1L, 0L);
+        ThermalPageHandle page = new ThermalPageHandle(0L, 1L);
+        accumulator.admit(
+                page,
+                0L,
+                ThermalTestFixtures.filledPageSignatures(0),
+                0.0D,
+                new byte[256]);
+        accumulator.retire(page);
+
+        ThermalInputBatch batch = accumulator.seal(20L);
+
+        assertEquals(0, batch.admissions().length);
+        assertEquals(0, batch.retirements().length);
+    }
+}

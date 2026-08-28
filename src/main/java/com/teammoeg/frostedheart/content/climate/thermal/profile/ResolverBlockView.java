@@ -10,111 +10,85 @@
 
 package com.teammoeg.frostedheart.content.climate.thermal.profile;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 
 /**
- * Immutable view over already-captured block and fluid states. This type has
- * no World, chunk, callback, or Supplier reference, so a resolver lookup can
- * never trigger a chunk load. Use a fresh {@link Access} for each resolution
- * to retain and normalize sentinel accesses.
+ * Allocation-free synchronous view over main-thread-captured dependency
+ * states. One Scratch owns 27 reusable lookup slots.
  */
 public final class ResolverBlockView<B, F> {
-    private final DependencyOffsetMask dependencyMask;
-    private final Map<DependencyOffsetMask.Offset, SnapshotCell<B, F>> cells;
+    private static final int CELL_COUNT =
+            DependencyOffsetMask.MAXIMUM_OFFSET_COUNT;
+    private DependencyOffsetMask dependencyMask =
+            DependencyOffsetMask.SELF_ONLY;
+    private final Lookup<B, F>[] cells;
+    private final Access<B, F> access = new Access<>(this);
 
-    private ResolverBlockView(
-            DependencyOffsetMask dependencyMask,
-            Map<DependencyOffsetMask.Offset, SnapshotCell<B, F>> cells
-    ) {
-        this.dependencyMask = dependencyMask;
-        this.cells = cells;
-    }
-
-    /**
-     * Copies only declared cells from a loaded-only union snapshot. Missing
-     * declared entries become explicit {@link LookupStatus#MISSING} sentinels.
-     */
-    public static <B, F> ResolverBlockView<B, F> snapshot(
-            DependencyOffsetMask dependencyMask,
-            Map<DependencyOffsetMask.Offset, SnapshotCell<B, F>> unionSnapshot
-    ) {
-        Objects.requireNonNull(dependencyMask, "dependencyMask");
-        Objects.requireNonNull(unionSnapshot, "unionSnapshot");
-        Map<DependencyOffsetMask.Offset, SnapshotCell<B, F>> copied = new LinkedHashMap<>();
-        for (DependencyOffsetMask.Offset offset : dependencyMask.offsets()) {
-            SnapshotCell<B, F> cell = unionSnapshot.get(offset);
-            copied.put(offset, cell == null ? SnapshotCell.missing() : cell);
+    @SuppressWarnings("unchecked")
+    private ResolverBlockView() {
+        cells = new Lookup[CELL_COUNT];
+        for (int index = 0; index < cells.length; index++) {
+            cells[index] = new Lookup<>();
         }
-        return new ResolverBlockView<>(dependencyMask, Map.copyOf(copied));
     }
 
     public DependencyOffsetMask dependencyMask() {
         return dependencyMask;
     }
 
-    /** Creates a stateful access audit over this immutable snapshot. */
     public Access<B, F> openAccess() {
-        return new Access<>(this);
+        access.reset();
+        return access;
     }
 
     private Lookup<B, F> lookup(int x, int y, int z) {
-        if (!DependencyOffsetMask.Offset.isInRange(x, y, z)) {
-            return Lookup.outsideDeclaredMask();
+        if (!DependencyOffsetMask.Offset.isInRange(x, y, z)
+                || !dependencyMask.contains(x, y, z)) {
+            return Lookup.outside();
         }
-        DependencyOffsetMask.Offset offset = new DependencyOffsetMask.Offset(x, y, z);
-        if (!dependencyMask.contains(offset)) {
-            return Lookup.outsideDeclaredMask();
-        }
-        return cells.get(offset).toLookup();
+        return cells[cellIndex(x, y, z)];
     }
 
-    /** Immutable block/fluid pair captured by the main thread. */
-    public record StateAndFluid<B, F>(B blockState, F fluidState) {
-        public StateAndFluid {
-            Objects.requireNonNull(blockState, "blockState");
-            Objects.requireNonNull(fluidState, "fluidState");
-        }
+    private static int cellIndex(int x, int y, int z) {
+        return ((y + 1) * 9) + ((z + 1) * 3) + x + 1;
     }
 
-    /** One input cell in a loaded-only union snapshot. */
-    public static final class SnapshotCell<B, F> {
-        private final LookupStatus status;
-        private final StateAndFluid<B, F> value;
+    /** Main-thread scratch borrowed for one synchronous resolver call. */
+    public static final class Scratch<B, F> {
+        private final ResolverBlockView<B, F> view =
+                new ResolverBlockView<>();
 
-        private SnapshotCell(LookupStatus status, StateAndFluid<B, F> value) {
-            this.status = status;
-            this.value = value;
+        public ResolverBlockView<B, F> begin(DependencyOffsetMask mask) {
+            view.dependencyMask = Objects.requireNonNull(mask, "mask");
+            return view;
         }
 
-        public static <B, F> SnapshotCell<B, F> present(B blockState, F fluidState) {
-            return new SnapshotCell<>(
-                    LookupStatus.PRESENT,
-                    new StateAndFluid<>(blockState, fluidState)
-            );
+        public void putPresent(int x, int y, int z, B blockState, F fluidState) {
+            requireOffset(x, y, z);
+            view.cells[cellIndex(x, y, z)].setPresent(
+                    blockState, fluidState);
         }
 
-        public static <B, F> SnapshotCell<B, F> unloaded() {
-            return new SnapshotCell<>(LookupStatus.UNLOADED, null);
+        public void putUnavailable(
+                int x,
+                int y,
+                int z,
+                LookupStatus status
+        ) {
+            requireOffset(x, y, z);
+            if (status == LookupStatus.PRESENT
+                    || status == LookupStatus.OUTSIDE_DECLARED_MASK) {
+                throw new IllegalArgumentException(
+                        "unavailable lookup status is invalid");
+            }
+            view.cells[cellIndex(x, y, z)].setUnavailable(status);
         }
 
-        public static <B, F> SnapshotCell<B, F> missing() {
-            return new SnapshotCell<>(LookupStatus.MISSING, null);
-        }
-
-        public LookupStatus status() {
-            return status;
-        }
-
-        /** Main-thread capture code may inspect a present cell before choosing its resolver. */
-        public Optional<StateAndFluid<B, F>> value() {
-            return Optional.ofNullable(value);
-        }
-
-        private Lookup<B, F> toLookup() {
-            return new Lookup<>(status, Optional.ofNullable(value));
+        private static void requireOffset(int x, int y, int z) {
+            if (!DependencyOffsetMask.Offset.isInRange(x, y, z)) {
+                throw new IllegalArgumentException(
+                        "capture offset is outside [-1, 1]^3");
+            }
         }
     }
 
@@ -125,44 +99,87 @@ public final class ResolverBlockView<B, F> {
         OUTSIDE_DECLARED_MASK
     }
 
-    /** Sentinel-bearing lookup result; unavailable states never use null values. */
-    public record Lookup<B, F>(LookupStatus status, Optional<StateAndFluid<B, F>> value) {
-        public Lookup {
-            Objects.requireNonNull(status, "status");
-            Objects.requireNonNull(value, "value");
-            if ((status == LookupStatus.PRESENT) != value.isPresent()) {
-                throw new IllegalArgumentException("only PRESENT lookup may contain state data");
+    /** Reused scalar lookup; valid only until its Scratch is written again. */
+    public static final class Lookup<B, F> {
+        private static final Lookup<?, ?> OUTSIDE = new Lookup<>(
+                LookupStatus.OUTSIDE_DECLARED_MASK);
+        private LookupStatus status;
+        private B blockState;
+        private F fluidState;
+
+        private Lookup() {
+            this(LookupStatus.MISSING);
+        }
+
+        private Lookup(LookupStatus status) {
+            this.status = status;
+        }
+
+        private void setPresent(B blockState, F fluidState) {
+            this.status = LookupStatus.PRESENT;
+            this.blockState = Objects.requireNonNull(
+                    blockState, "blockState");
+            this.fluidState = Objects.requireNonNull(
+                    fluidState, "fluidState");
+        }
+
+        private void setUnavailable(LookupStatus status) {
+            this.status = status;
+            blockState = null;
+            fluidState = null;
+        }
+
+        public LookupStatus status() {
+            return status;
+        }
+
+        public B blockState() {
+            requirePresent();
+            return blockState;
+        }
+
+        public F fluidState() {
+            requirePresent();
+            return fluidState;
+        }
+
+        public ThermalResolution.Reason reason() {
+            return switch (status) {
+                case PRESENT -> ThermalResolution.Reason.NONE;
+                case UNLOADED ->
+                        ThermalResolution.Reason.DEPENDENCY_UNLOADED;
+                case MISSING ->
+                        ThermalResolution.Reason.SNAPSHOT_DATA_MISSING;
+                case OUTSIDE_DECLARED_MASK ->
+                        ThermalResolution.Reason
+                                .DEPENDENCY_OUTSIDE_DECLARED_MASK;
+            };
+        }
+
+        private void requirePresent() {
+            if (status != LookupStatus.PRESENT) {
+                throw new IllegalStateException(
+                        "unavailable dependency has no state");
             }
         }
 
-        private static <B, F> Lookup<B, F> outsideDeclaredMask() {
-            return new Lookup<>(LookupStatus.OUTSIDE_DECLARED_MASK, Optional.empty());
-        }
-
-        public ThermalResolution<StateAndFluid<B, F>> asResolution() {
-            return switch (status) {
-                case PRESENT -> ThermalResolution.resolved(value.orElseThrow());
-                case UNLOADED -> ThermalResolution.unresolved(
-                        ThermalResolution.Reason.DEPENDENCY_UNLOADED);
-                case MISSING -> ThermalResolution.unresolved(
-                        ThermalResolution.Reason.SNAPSHOT_DATA_MISSING);
-                case OUTSIDE_DECLARED_MASK -> ThermalResolution.unresolved(
-                        ThermalResolution.Reason.DEPENDENCY_OUTSIDE_DECLARED_MASK);
-            };
+        @SuppressWarnings("unchecked")
+        private static <B, F> Lookup<B, F> outside() {
+            return (Lookup<B, F>) OUTSIDE;
         }
     }
 
-    /**
-     * Per-resolution access audit. It remembers sentinel/forbidden reads so a
-     * resolver cannot accidentally publish a resolved opening after ignoring
-     * an unavailable dependency.
-     */
+    /** Access audit that normalizes unavailable dependency reads. */
     public static final class Access<B, F> {
         private final ResolverBlockView<B, F> snapshot;
         private ThermalResolution.Reason firstFailure;
 
         private Access(ResolverBlockView<B, F> snapshot) {
             this.snapshot = snapshot;
+        }
+
+        private void reset() {
+            firstFailure = null;
         }
 
         public DependencyOffsetMask dependencyMask() {
@@ -176,33 +193,33 @@ public final class ResolverBlockView<B, F> {
 
         public Lookup<B, F> lookup(int x, int y, int z) {
             Lookup<B, F> lookup = snapshot.lookup(x, y, z);
-            remember(lookup.asResolution().reason());
+            remember(lookup.reason());
             return lookup;
         }
 
-        /** Block entities are deliberately absent from a V1 resolver snapshot. */
         public ThermalResolution<Void> blockEntity(int x, int y, int z) {
             Lookup<B, F> dependency = lookup(x, y, z);
             if (dependency.status() != LookupStatus.PRESENT) {
                 return ThermalResolution.failure(firstFailure);
             }
             remember(ThermalResolution.Reason.BLOCK_ENTITY_DEPENDENT);
-            return ThermalResolution.unsupported(ThermalResolution.Reason.BLOCK_ENTITY_DEPENDENT);
+            return ThermalResolution.unsupported(
+                    ThermalResolution.Reason.BLOCK_ENTITY_DEPENDENT);
         }
 
-        /** Entity/collision context is deliberately absent from a V1 resolver snapshot. */
         public ThermalResolution<Void> entityContext() {
             remember(ThermalResolution.Reason.ENTITY_CONTEXT_DEPENDENT);
-            return ThermalResolution.unsupported(ThermalResolution.Reason.ENTITY_CONTEXT_DEPENDENT);
+            return ThermalResolution.unsupported(
+                    ThermalResolution.Reason.ENTITY_CONTEXT_DEPENDENT);
         }
 
-        /** Applies retained access failures before a resolver result is published. */
-        public <T> ThermalResolution<T> normalize(ThermalResolution<T> resolverResult) {
+        public <T> ThermalResolution<T> normalize(
+                ThermalResolution<T> resolverResult
+        ) {
             Objects.requireNonNull(resolverResult, "resolverResult");
-            if (firstFailure == null) {
-                return resolverResult;
-            }
-            return ThermalResolution.failure(firstFailure);
+            return firstFailure == null
+                    ? resolverResult
+                    : ThermalResolution.failure(firstFailure);
         }
 
         private void remember(ThermalResolution.Reason reason) {
@@ -210,8 +227,11 @@ public final class ResolverBlockView<B, F> {
                 return;
             }
             if (firstFailure == null
-                    || firstFailure.expectedStatus() == ThermalResolution.Status.UNRESOLVED
-                    && reason.expectedStatus() == ThermalResolution.Status.CONSERVATIVE_UNSUPPORTED) {
+                    || firstFailure.expectedStatus()
+                            == ThermalResolution.Status.UNRESOLVED
+                    && reason.expectedStatus()
+                            == ThermalResolution.Status
+                                    .CONSERVATIVE_UNSUPPORTED) {
                 firstFailure = reason;
             }
         }

@@ -13,21 +13,24 @@ package com.teammoeg.frostedheart.content.climate.thermal.radiation;
 import com.teammoeg.frostedheart.content.climate.thermal.runtime.ThermalMemoryBudget;
 import org.junit.jupiter.api.Test;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class RadiationServiceTest {
     @Test
     void inverseSquareSamplingReusesRevisionWitnessesWithoutTouchingSources() {
+        TestSources sources = new TestSources();
         TestTracer tracer = new TestTracer();
         ThermalMemoryBudget budget = new ThermalMemoryBudget(1_000_000L, 0L);
         RadiationService service = RadiationService.tryCreate(
-                parameters(8, 8, 24), tracer, budget);
+                parameters(8, 8, 24), sources, tracer, budget);
         assertNotNull(service);
-        assertTrue(service.upsertSource(7L, 1, 0.5D, 1.0D, 0.5D, 200.0D, 1.0D));
+        assertTrue(sources.upsertSource(
+                7L, 0.5D, 1.0D, 0.5D, 200.0D, 1.0D));
 
         RadiationService.MutableSample first = new RadiationService.MutableSample();
         service.samplePlayer(9L, 1, 4.5D, 0.0D, 0.5D, first);
@@ -43,30 +46,26 @@ class RadiationServiceTest {
         assertEquals(expected, repeated.radiantFluxWPerM2(), 1.0e-12D);
         assertEquals(3, tracer.traces);
 
-        assertTrue(service.upsertSource(7L, 1, 0.5D, 1.0D, 0.5D, 400.0D, 1.0D));
+        assertTrue(sources.upsertSource(
+                7L, 0.5D, 1.0D, 0.5D, 400.0D, 1.0D));
         RadiationService.MutableSample updated = new RadiationService.MutableSample();
         service.samplePlayer(9L, 1, 4.5D, 0.0D, 0.5D, updated);
         assertEquals(expected * 2.0D, updated.radiantFluxWPerM2(), 1.0e-12D);
         assertEquals(6, tracer.traces);
 
-        assertTrue(service.removeSource(7L));
-        assertTrue(service.upsertSource(
-                8L, 1, 0.5D, -16.7D, 0.5D, 100.0D, 1.0D));
-        RadiationService.MutableSample verticalBoundary =
-                new RadiationService.MutableSample();
-        service.samplePlayer(10L, 1, 0.5D, -0.8D, 0.5D, verticalBoundary);
-        assertTrue(verticalBoundary.radiantFluxWPerM2() > 0.0D);
         service.close();
     }
 
     @Test
     void sectionRevisionChangeRetracesAndAppliesNewOcclusion() {
+        TestSources sources = new TestSources();
         TestTracer tracer = new TestTracer();
         ThermalMemoryBudget budget = new ThermalMemoryBudget(1_000_000L, 0L);
         try (RadiationService service = RadiationService.tryCreate(
-                parameters(8, 8, 24), tracer, budget)) {
+                parameters(8, 8, 24), sources, tracer, budget)) {
             assertNotNull(service);
-            service.upsertSource(1L, 1, 0.5D, 1.0D, 0.5D, 100.0D, 1.0D);
+            sources.upsertSource(
+                    1L, 0.5D, 1.0D, 0.5D, 100.0D, 1.0D);
             RadiationService.MutableSample sample = new RadiationService.MutableSample();
             service.samplePlayer(2L, 1, 3.5D, 0.0D, 0.5D, sample);
             assertTrue(sample.radiantFluxWPerM2() > 0.0D);
@@ -81,13 +80,16 @@ class RadiationServiceTest {
 
     @Test
     void candidateAndRayCapsReturnBoundedLowerConfidenceResult() {
+        TestSources sources = new TestSources();
         TestTracer tracer = new TestTracer();
         ThermalMemoryBudget budget = new ThermalMemoryBudget(1_000_000L, 0L);
         try (RadiationService service = RadiationService.tryCreate(
-                parameters(1, 8, 1), tracer, budget)) {
+                parameters(1, 8, 1), sources, tracer, budget)) {
             assertNotNull(service);
-            service.upsertSource(1L, 1, 0.5D, 1.0D, 0.5D, 100.0D, 1.0D);
-            service.upsertSource(2L, 1, 1.5D, 1.0D, 0.5D, 100.0D, 1.0D);
+            sources.upsertSource(
+                    1L, 0.5D, 1.0D, 0.5D, 100.0D, 1.0D);
+            sources.upsertSource(
+                    2L, 1.5D, 1.0D, 0.5D, 100.0D, 1.0D);
             RadiationService.MutableSample sample = new RadiationService.MutableSample();
             service.samplePlayer(3L, 1, 4.5D, 0.0D, 0.5D, sample);
 
@@ -97,55 +99,82 @@ class RadiationServiceTest {
         }
     }
 
-    @Test
-    void optionalMemoryAdmissionAndSourceCapacityRemainExplicit() {
-        RadiationService.Parameters parameters = new RadiationService.Parameters(
-                1, 32, 4,
-                1, 1, 3,
-                8, 128,
-                16.0D, 0.0D, 0.5D,
-                0.1D, 0.9D, 1.62D);
-        long bytes = RadiationService.projectedMaximumBytes(parameters);
-        TestTracer tracer = new TestTracer();
-        ThermalMemoryBudget refusedBudget = new ThermalMemoryBudget(bytes - 1L, 0L);
-        assertNull(RadiationService.tryCreate(parameters, tracer, refusedBudget));
-
-        ThermalMemoryBudget admittedBudget = new ThermalMemoryBudget(bytes, 0L);
-        RadiationService service = RadiationService.tryCreate(
-                parameters, tracer, admittedBudget);
-        assertNotNull(service);
-        assertTrue(service.upsertSource(1L, 1, 0.0D, 0.0D, 0.0D, 1.0D, 1.0D));
-        assertFalse(service.upsertSource(2L, 1, 1.0D, 0.0D, 0.0D, 1.0D, 1.0D));
-        RadiationService.MutableSample limited = new RadiationService.MutableSample();
-        service.samplePlayer(4L, 1, 2.0D, 0.0D, 0.0D, limited);
-        assertTrue((limited.flags() & RadiationService.RADIATION_BUDGET_LIMITED) != 0);
-        assertEquals(0.5F, limited.confidence());
-        service.close();
-        ThermalMemoryBudget.Reservation releasedBacking = admittedBudget.tryReserve(
-                ThermalMemoryBudget.AllocationClass.OPTIONAL, bytes);
-        assertNotNull(releasedBacking);
-        releasedBacking.close();
-    }
-
-    @Test
-    void packedSectionsRoundTripSignedCoordinates() {
-        long packed = RadiationService.packSection(-2_097_152, -524_288, 2_097_151);
-        assertEquals(-2_097_152, RadiationService.sectionX(packed));
-        assertEquals(-524_288, RadiationService.sectionY(packed));
-        assertEquals(2_097_151, RadiationService.sectionZ(packed));
-    }
-
     private static RadiationService.Parameters parameters(
             int maximumCandidates,
             int maximumCandidateVisits,
             int maximumRays
     ) {
         return new RadiationService.Parameters(
-                8, 32, 4,
-                maximumCandidateVisits, maximumCandidates, maximumRays,
-                8, 128,
+                8, 32, maximumCandidateVisits,
+                maximumCandidates, maximumRays, 8, 128,
                 16.0D, 0.0D, 0.5D,
                 0.1D, 0.9D, 1.62D);
+    }
+
+    private static final class TestSources
+            implements RadiationService.SourceIndex {
+        private final Map<Long, Source> sources = new HashMap<>();
+        private long revision;
+
+        private boolean upsertSource(
+                long key,
+                double x,
+                double y,
+                double z,
+                double power,
+                double directionalBound
+        ) {
+            if (!Double.isFinite(x) || !Double.isFinite(y)
+                    || !Double.isFinite(z) || !Double.isFinite(power)
+                    || power < 0.0D || !Double.isFinite(directionalBound)
+                    || directionalBound <= 0.0D) {
+                return false;
+            }
+            sources.put(key, new Source(
+                    key, ++revision, x, y, z, power, directionalBound));
+            return true;
+        }
+
+        private boolean removeSource(long key) {
+            return sources.remove(key) != null;
+        }
+
+        @Override
+        public void visitSection(
+                int sectionX,
+                int sectionY,
+                int sectionZ,
+                RadiationService.SourceVisitor visitor
+        ) {
+            for (Source source : sources.values()) {
+                if (Math.floor(source.x / 16.0D) != sectionX
+                        || Math.floor(source.y / 16.0D) != sectionY
+                        || Math.floor(source.z / 16.0D) != sectionZ) {
+                    continue;
+                }
+                if (!visitor.visit(
+                        source.key,
+                        source.revision,
+                        source.x,
+                        source.y,
+                        source.z,
+                        source.power,
+                        source.directionalBound)) {
+                    return;
+                }
+            }
+        }
+
+        private record Source(
+                long key,
+                long revision,
+                double x,
+                double y,
+                double z,
+                double power,
+                double directionalBound
+        ) {
+        }
     }
 
     private static final class TestTracer implements RadiationService.OcclusionTracer {

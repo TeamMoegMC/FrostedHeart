@@ -13,31 +13,22 @@ package com.teammoeg.frostedheart.content.climate.thermal.query;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.ThermalCellArena;
 import com.teammoeg.frostedheart.content.climate.thermal.runtime.ThermalMemoryBudget;
 
-/**
- * Preallocated lock-free thermal projection guarded by a monotonic seqlock.
- * The single dimension writer publishes; query threads only read stable
- * primitive values into caller-owned output.
- */
+/** Flat arena-slot double buffer written by one dimension worker. */
 public final class QueryPublication implements AutoCloseable {
-    public static final int NOT_LIVE = 1;
-
     private final ThermalMemoryBudget budget;
     private double[][] temperaturesC;
     private int[][] mediumIds;
     private int[][] cellFlags;
+    private int[][] slotGenerations;
     private ThermalMemoryBudget.Reservation reservation;
 
     private int capacity;
     private boolean acceptingPublications = true;
     private boolean valid;
     private int publishedBufferIndex = -1;
-    private long lifecycleGeneration = -1L;
-    private long geometryRevision = -1L;
     private long topologyGeneration = -1L;
-    private long solveEpoch = -1L;
     private long sampleTick = -1L;
-    private int slotStart;
-    private int slotCount;
+    private boolean topologyResolved;
     private volatile long publicationVersion;
 
     private QueryPublication(
@@ -48,12 +39,10 @@ public final class QueryPublication implements AutoCloseable {
         this.budget = budget;
         this.capacity = capacity;
         this.reservation = reservation;
-        this.temperaturesC = new double[2][capacity];
-        this.mediumIds = new int[2][capacity];
-        this.cellFlags = new int[2][capacity];
+        allocateBuffers(capacity);
     }
 
-    /** Returns null when the complete double buffer cannot be admitted. */
+    /** Returns {@code null} when the complete double buffer cannot be admitted. */
     public static QueryPublication tryCreate(
             ThermalMemoryBudget dimensionBudget,
             int capacity
@@ -75,78 +64,84 @@ public final class QueryPublication implements AutoCloseable {
         }
         return Math.multiplyExact(
                 capacity,
-                2L * (Double.BYTES + Integer.BYTES + Integer.BYTES));
+                2L * (Double.BYTES + 3L * Integer.BYTES));
     }
 
-    public synchronized int capacity() {
-        return capacity;
-    }
-
-    /**
-     * Admits and allocates complete replacement buffers before invalidating
-     * and releasing the old backing storage.
-     */
-    public synchronized boolean tryEnsureCapacity(int requiredCapacity) {
+    /** Geometrically grows the slot-addressed backing before a topology commit. */
+    public synchronized boolean tryEnsureCapacity(
+            int requiredCapacity,
+            int maximumCapacity
+    ) {
+        if (maximumCapacity < requiredCapacity) {
+            return false;
+        }
         if (requiredCapacity <= capacity) {
             return true;
         }
         if (!acceptingPublications) {
             return false;
         }
-        int newCapacity = Math.max(requiredCapacity, Math.multiplyExact(capacity, 2));
-        ThermalMemoryBudget.Reservation newReservation = budget.tryReserve(
+        int doubled = Math.multiplyExact(capacity, 2);
+        int nextCapacity = Math.min(
+                maximumCapacity, Math.max(requiredCapacity, doubled));
+        ThermalMemoryBudget.Reservation nextReservation = budget.tryReserve(
                 ThermalMemoryBudget.AllocationClass.OPTIONAL,
-                projectedPayloadBytes(newCapacity));
-        if (newReservation == null) {
+                projectedPayloadBytes(nextCapacity));
+        if (nextReservation == null) {
             return false;
         }
 
-        double[][] newTemperatures = new double[2][newCapacity];
-        int[][] newMediumIds = new int[2][newCapacity];
-        int[][] newCellFlags = new int[2][newCapacity];
+        double[][] nextTemperatures = new double[2][nextCapacity];
+        int[][] nextMediumIds = new int[2][nextCapacity];
+        int[][] nextCellFlags = new int[2][nextCapacity];
+        int[][] nextSlotGenerations = new int[2][nextCapacity];
+        if (valid && publishedBufferIndex >= 0) {
+            System.arraycopy(
+                    temperaturesC[publishedBufferIndex], 0,
+                    nextTemperatures[publishedBufferIndex], 0, capacity);
+            System.arraycopy(
+                    mediumIds[publishedBufferIndex], 0,
+                    nextMediumIds[publishedBufferIndex], 0, capacity);
+            System.arraycopy(
+                    cellFlags[publishedBufferIndex], 0,
+                    nextCellFlags[publishedBufferIndex], 0, capacity);
+            System.arraycopy(
+                    slotGenerations[publishedBufferIndex], 0,
+                    nextSlotGenerations[publishedBufferIndex], 0, capacity);
+        }
         if (!beginWrite()) {
-            newReservation.close();
+            nextReservation.close();
             return false;
         }
-        ThermalMemoryBudget.Reservation oldReservation = reservation;
-        temperaturesC = newTemperatures;
-        mediumIds = newMediumIds;
-        cellFlags = newCellFlags;
-        capacity = newCapacity;
-        reservation = newReservation;
-        clearEnvelope();
+        ThermalMemoryBudget.Reservation previous = reservation;
+        temperaturesC = nextTemperatures;
+        mediumIds = nextMediumIds;
+        cellFlags = nextCellFlags;
+        slotGenerations = nextSlotGenerations;
+        capacity = nextCapacity;
+        reservation = nextReservation;
         endWrite();
-        oldReservation.close();
+        previous.close();
         return true;
     }
 
-    /** Copies a query-only projection from the authoritative H/C arena. */
+    /** Writes every live arena slot exactly once into the inactive buffer. */
     public synchronized boolean publish(
             ThermalCellArena arena,
             double referenceTemperatureC,
-            long lifecycleGeneration,
-            long geometryRevision,
             long topologyGeneration,
-            long solveEpoch,
-            long sampleTick,
-            int slotStart,
-            int slotCount
+            boolean topologyResolved,
+            long sampleTick
     ) {
         if (arena == null) {
             throw new IllegalArgumentException("arena is required");
         }
         requireFinite("referenceTemperatureC", referenceTemperatureC);
-        requireNonNegative("lifecycleGeneration", lifecycleGeneration);
-        requireNonNegative("geometryRevision", geometryRevision);
         requireNonNegative("topologyGeneration", topologyGeneration);
-        requireNonNegative("solveEpoch", solveEpoch);
         requireNonNegative("sampleTick", sampleTick);
-        if (slotStart < 0 || slotCount < 0
-                || slotStart > arena.highWaterMark() - slotCount
-                || slotCount > capacity) {
-            throw new IllegalArgumentException("published arena span is invalid");
-        }
-        if (!acceptingPublications || !beginWrite()) {
+        if (arena.highWaterMark() > capacity
+                || !acceptingPublications
+                || !beginWrite()) {
             return false;
         }
 
@@ -154,66 +149,54 @@ public final class QueryPublication implements AutoCloseable {
         double[] targetTemperatures = temperaturesC[targetBuffer];
         int[] targetMediumIds = mediumIds[targetBuffer];
         int[] targetFlags = cellFlags[targetBuffer];
-        for (int offset = 0; offset < slotCount; offset++) {
-            int arenaSlot = slotStart + offset;
-            if (arena.isLive(arenaSlot)) {
-                targetTemperatures[offset] = arena.temperatureC(
-                        arenaSlot, referenceTemperatureC);
-                targetMediumIds[offset] = arena.mediumId(arenaSlot);
-                targetFlags[offset] = arena.flags(arenaSlot);
-            } else {
-                targetTemperatures[offset] = Double.NaN;
-                targetMediumIds[offset] = -1;
-                targetFlags[offset] = NOT_LIVE;
-            }
+        int[] targetGenerations = slotGenerations[targetBuffer];
+        for (int slot = arena.nextLiveSlot(0);
+             slot >= 0;
+             slot = arena.nextLiveSlot(slot + 1)) {
+            targetTemperatures[slot] = arena.temperatureC(
+                    slot, referenceTemperatureC);
+            targetMediumIds[slot] = arena.mediumId(slot);
+            targetFlags[slot] = arena.flags(slot);
+            targetGenerations[slot] = arena.lifecycleGeneration(slot);
         }
-        this.lifecycleGeneration = lifecycleGeneration;
-        this.geometryRevision = geometryRevision;
         this.topologyGeneration = topologyGeneration;
-        this.solveEpoch = solveEpoch;
+        this.topologyResolved = topologyResolved;
         this.sampleTick = sampleTick;
-        this.slotStart = slotStart;
-        this.slotCount = slotCount;
-        this.publishedBufferIndex = targetBuffer;
-        this.valid = true;
+        publishedBufferIndex = targetBuffer;
+        valid = true;
         endWrite();
         return true;
     }
 
-    /** Advances an unchanged sleeping publication without copying its values. */
+    /** Advances an unchanged sleeping publication without copying slot values. */
     public synchronized boolean republishUnchanged(
-            long lifecycleGeneration,
-            long geometryRevision,
             long topologyGeneration,
-            long solveEpoch,
             long sampleTick
     ) {
-        requireNonNegative("lifecycleGeneration", lifecycleGeneration);
-        requireNonNegative("geometryRevision", geometryRevision);
         requireNonNegative("topologyGeneration", topologyGeneration);
-        requireNonNegative("solveEpoch", solveEpoch);
         requireNonNegative("sampleTick", sampleTick);
         if (!acceptingPublications
                 || !valid
-                || this.lifecycleGeneration != lifecycleGeneration
-                || this.geometryRevision != geometryRevision
                 || this.topologyGeneration != topologyGeneration
                 || !beginWrite()) {
             return false;
         }
-        this.solveEpoch = solveEpoch;
         this.sampleTick = sampleTick;
         endWrite();
         return true;
     }
 
-    /** One initial attempt plus one retry, then deterministic caller fallback. */
+    /** Allocation-free O(1) slot lookup with one seqlock retry. */
     public boolean tryRead(
             int arenaSlot,
-            long expectedLifecycleGeneration,
-            long expectedGeometryRevision,
+            int expectedSlotGeneration,
+            long minimumTopologyGeneration,
             MutableSample out
     ) {
+        if (arenaSlot < 0 || expectedSlotGeneration < 0
+                || minimumTopologyGeneration < 0L) {
+            throw new IllegalArgumentException("query identity is invalid");
+        }
         if (out == null) {
             throw new IllegalArgumentException("out is required");
         }
@@ -223,45 +206,37 @@ public final class QueryPublication implements AutoCloseable {
             if ((firstVersion & 1L) != 0L) {
                 continue;
             }
-
             boolean readValid = valid;
-            long readLifecycle = lifecycleGeneration;
-            long readGeometry = geometryRevision;
-            long readTopology = topologyGeneration;
-            long readEpoch = solveEpoch;
-            long readSampleTick = sampleTick;
-            int readStart = slotStart;
-            int readCount = slotCount;
             int readBuffer = publishedBufferIndex;
-            int offset = arenaSlot - readStart;
+            int readCapacity = capacity;
+            long readTopology = topologyGeneration;
+            boolean readTopologyResolved = topologyResolved;
+            long readSampleTick = sampleTick;
             if (!readValid
-                    || readLifecycle != expectedLifecycleGeneration
-                    || readGeometry != expectedGeometryRevision
+                    || arenaSlot >= readCapacity
                     || readBuffer < 0
-                    || offset < 0
-                    || offset >= readCount) {
+                    || readTopology < minimumTopologyGeneration) {
                 if (firstVersion == publicationVersion) {
                     return false;
                 }
                 continue;
             }
-
-            double temperature = temperaturesC[readBuffer][offset];
-            int medium = mediumIds[readBuffer][offset];
-            int flags = cellFlags[readBuffer][offset];
+            int generation = slotGenerations[readBuffer][arenaSlot];
+            double temperature = temperaturesC[readBuffer][arenaSlot];
+            int medium = mediumIds[readBuffer][arenaSlot];
+            int flags = cellFlags[readBuffer][arenaSlot];
             long secondVersion = publicationVersion;
             if (firstVersion == secondVersion && (secondVersion & 1L) == 0L) {
-                if (!Double.isFinite(temperature) || medium < 0) {
+                if (generation != expectedSlotGeneration
+                        || !Double.isFinite(temperature)
+                        || medium < 0) {
                     return false;
                 }
                 out.set(
                         temperature,
                         medium,
                         flags,
-                        readLifecycle,
-                        readGeometry,
-                        readTopology,
-                        readEpoch,
+                        readTopologyResolved,
                         readSampleTick);
                 return true;
             }
@@ -269,22 +244,11 @@ public final class QueryPublication implements AutoCloseable {
         return false;
     }
 
-    /** Permanently rejects this lifecycle and invalidates all old readers. */
-    public synchronized void retire() {
-        acceptingPublications = false;
-        invalidateLocked();
-    }
-
-    public synchronized void invalidate() {
-        invalidateLocked();
-    }
-
     private void invalidateLocked() {
-        if (!beginWrite()) {
-            return;
+        if (beginWrite()) {
+            clearEnvelope();
+            endWrite();
         }
-        clearEnvelope();
-        endWrite();
     }
 
     @Override
@@ -296,6 +260,13 @@ public final class QueryPublication implements AutoCloseable {
         invalidateLocked();
         reservation.close();
         reservation = null;
+    }
+
+    private void allocateBuffers(int size) {
+        temperaturesC = new double[2][size];
+        mediumIds = new int[2][size];
+        cellFlags = new int[2][size];
+        slotGenerations = new int[2][size];
     }
 
     private boolean beginWrite() {
@@ -317,13 +288,9 @@ public final class QueryPublication implements AutoCloseable {
     private void clearEnvelope() {
         valid = false;
         publishedBufferIndex = -1;
-        lifecycleGeneration = -1L;
-        geometryRevision = -1L;
         topologyGeneration = -1L;
-        solveEpoch = -1L;
+        topologyResolved = false;
         sampleTick = -1L;
-        slotStart = 0;
-        slotCount = 0;
     }
 
     private static void requireNonNegative(String name, long value) {
@@ -339,82 +306,37 @@ public final class QueryPublication implements AutoCloseable {
     }
 
     public static final class MutableSample {
-        private boolean valid;
         private double temperatureC;
         private int mediumId;
         private int flags;
-        private long lifecycleGeneration;
-        private long geometryRevision;
-        private long topologyGeneration;
-        private long solveEpoch;
+        private boolean topologyResolved;
         private long sampleTick;
 
-        public boolean valid() {
-            return valid;
-        }
-
-        public double temperatureC() {
-            return temperatureC;
-        }
-
-        public int mediumId() {
-            return mediumId;
-        }
-
-        public int flags() {
-            return flags;
-        }
-
-        public long lifecycleGeneration() {
-            return lifecycleGeneration;
-        }
-
-        public long geometryRevision() {
-            return geometryRevision;
-        }
-
-        public long topologyGeneration() {
-            return topologyGeneration;
-        }
-
-        public long solveEpoch() {
-            return solveEpoch;
-        }
-
-        public long sampleTick() {
-            return sampleTick;
-        }
+        public double temperatureC() { return temperatureC; }
+        public int mediumId() { return mediumId; }
+        public int flags() { return flags; }
+        public boolean topologyResolved() { return topologyResolved; }
+        public long sampleTick() { return sampleTick; }
 
         private void set(
                 double temperatureC,
                 int mediumId,
                 int flags,
-                long lifecycleGeneration,
-                long geometryRevision,
-                long topologyGeneration,
-                long solveEpoch,
+                boolean topologyResolved,
                 long sampleTick
         ) {
-            this.valid = true;
             this.temperatureC = temperatureC;
             this.mediumId = mediumId;
             this.flags = flags;
-            this.lifecycleGeneration = lifecycleGeneration;
-            this.geometryRevision = geometryRevision;
-            this.topologyGeneration = topologyGeneration;
-            this.solveEpoch = solveEpoch;
+            this.topologyResolved = topologyResolved;
             this.sampleTick = sampleTick;
         }
 
         private void clear() {
-            valid = false;
             temperatureC = Double.NaN;
             mediumId = -1;
             flags = 0;
-            lifecycleGeneration = -1L;
-            geometryRevision = -1L;
-            topologyGeneration = -1L;
-            solveEpoch = -1L;
+            topologyResolved = false;
             sampleTick = -1L;
         }
     }

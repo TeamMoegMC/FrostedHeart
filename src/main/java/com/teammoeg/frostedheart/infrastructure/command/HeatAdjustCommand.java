@@ -29,9 +29,9 @@ import com.mojang.brigadier.context.CommandContext;
 import com.teammoeg.chorda.text.Components;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.MinecraftThermalInput;
-import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.MinecraftThermalInput.AnalyticCombineMode;
-import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.MinecraftThermalInput.AnalyticField;
-import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.MinecraftThermalInput.AnalyticShape;
+import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.ThermalAnalyticField;
+import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.ThermalAnalyticField.CombineMode;
+import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.ThermalAnalyticField.Shape;
 
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
@@ -64,11 +64,11 @@ public class HeatAdjustCommand {
                     return Command.SINGLE_SUCCESS;
                 }).then(Commands.argument("range", IntegerArgumentType.integer(1))
                         .then(Commands.argument("temperature", IntegerArgumentType.integer()).executes((ct) -> {
-                            upsertField(ct, AnalyticShape.CUBE, 0, 0);
+                            upsertField(ct, Shape.CUBE, 0, 0);
                             return Command.SINGLE_SUCCESS;
                         })
                         .then(Commands.literal("sphere").executes((ct) -> {
-                            upsertField(ct, AnalyticShape.SPHERE, 0, 0);
+                            upsertField(ct, Shape.SPHERE, 0, 0);
                             return Command.SINGLE_SUCCESS;
                         }))
                         .then(Commands.argument("top", IntegerArgumentType.integer(0)).suggests((ct,sb)->sb.suggest(2).buildFuture())
@@ -76,7 +76,7 @@ public class HeatAdjustCommand {
                         		.executes(ct->{
                              upsertField(
                                      ct,
-                                     AnalyticShape.PILLAR,
+                                     Shape.PILLAR,
                                      IntegerArgumentType.getInteger(ct, "top"),
                                      IntegerArgumentType.getInteger(ct, "bottom"));
                              return Command.SINGLE_SUCCESS;
@@ -86,13 +86,13 @@ public class HeatAdjustCommand {
         LiteralArgumentBuilder<CommandSourceStack> get = Commands.literal("get")
                 .executes((ct) -> {
                     BlockPos position = ct.getSource().getPlayerOrException().blockPosition();
-                    List<AnalyticField> fields = MinecraftThermalInput.gameplayAnalyticFieldsAt(
+                    List<ThermalAnalyticField> fields = MinecraftThermalInput.gameplayAnalyticFieldsAt(
                             ct.getSource().getLevel(), position);
                     if (fields.isEmpty()) {
                         ct.getSource().sendSuccess(()-> Components.str("No Active Adjust!"), true);
                     } else {
                         ct.getSource().sendSuccess(()-> Components.str("Active Adjusts:"), true);
-                        for (AnalyticField field : fields) {
+                        for (ThermalAnalyticField field : fields) {
                             sendField(ct.getSource(), field);
                         }
                     }
@@ -101,13 +101,13 @@ public class HeatAdjustCommand {
                 .then(Commands.argument("position", BlockPosArgument.blockPos())
                         .executes((ct) -> {
                             BlockPos position = BlockPosArgument.getBlockPos(ct, "position");
-                            List<AnalyticField> fields = MinecraftThermalInput.gameplayAnalyticFieldsAt(
+                            List<ThermalAnalyticField> fields = MinecraftThermalInput.gameplayAnalyticFieldsAt(
                                     ct.getSource().getLevel(), position);
                             if (fields.isEmpty()) {
                                 ct.getSource().sendSuccess(()-> Components.str("No Active Adjust!"), true);
                             } else {
                                 ct.getSource().sendSuccess(()-> Components.str("Active Adjusts:"), true);
-                                for (AnalyticField field : fields) {
+                                for (ThermalAnalyticField field : fields) {
                                     sendField(ct.getSource(), field);
                                 }
                             }
@@ -124,7 +124,7 @@ public class HeatAdjustCommand {
 
     private static void upsertField(
             CommandContext<CommandSourceStack> context,
-            AnalyticShape shape,
+            Shape shape,
             int upperExtent,
             int lowerExtent
     ) {
@@ -134,10 +134,10 @@ public class HeatAdjustCommand {
         int temperature = IntegerArgumentType.getInteger(context, "temperature");
         MinecraftThermalInput.upsertGameplayAnalyticField(
                 source.getLevel(),
-                new AnalyticField(
+                new ThermalAnalyticField(
                         position.asLong(),
                         0,
-                        AnalyticCombineMode.OVERRIDE,
+                        CombineMode.OVERRIDE,
                         shape,
                         position.getX() + 0.5D,
                         position.getY() + 0.5D,
@@ -148,7 +148,10 @@ public class HeatAdjustCommand {
                         temperature));
     }
 
-    private static void sendField(CommandSourceStack source, AnalyticField field) {
+    private static void sendField(
+            CommandSourceStack source,
+            ThermalAnalyticField field
+    ) {
         BlockPos center = BlockPos.containing(
                 field.centerX(), field.centerY(), field.centerZ());
         source.sendSuccess(

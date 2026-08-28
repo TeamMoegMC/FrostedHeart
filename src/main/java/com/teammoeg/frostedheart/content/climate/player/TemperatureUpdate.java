@@ -30,6 +30,7 @@ import com.teammoeg.frostedheart.content.climate.gamedata.climate.WorldClimate;
 import com.teammoeg.frostedheart.content.climate.network.FHBodyDataSyncPacket;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData.BodyPart;
 import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.MinecraftThermalInput;
+import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.ThermalEnvironmentSample;
 import com.teammoeg.frostedheart.content.water.capability.WaterLevelCapability;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 
@@ -64,10 +65,9 @@ public class TemperatureUpdate {
     public static final int MIN_BODY_TEMP_CHANGE = FHConfig.SERVER.minBodyTempChange.get();
     public static final int MAX_BODY_TEMP_CHANGE = FHConfig.SERVER.maxBodyTempChange.get();*/
 
-    public static TemperatureThreadingPool threadingPool;
-    private static final MinecraftThermalInput.MutableEnvironmentSample
+    private static final ThermalEnvironmentSample
             GAMEPLAY_ENVIRONMENT_SAMPLE =
-            new MinecraftThermalInput.MutableEnvironmentSample();
+            new ThermalEnvironmentSample();
     /**
      * Perform temperature effect
      *
@@ -84,7 +84,8 @@ public class TemperatureUpdate {
 
                 // ConfigValue.get() 为 spec 值表查询：同一 tick 内配置恒定，hoist 到局部变量
                 int temperatureUpdateIntervalTicks = FHConfig.SERVER.CLIMATE.temperatureUpdateIntervalTicks.get();
-                if (player.tickCount % temperatureUpdateIntervalTicks != 0) {
+                if (!shouldUpdatePlayer(
+                        player, temperatureUpdateIntervalTicks)) {
                     return;
                 }
 
@@ -262,29 +263,12 @@ public class TemperatureUpdate {
             // Fetch the player temperature data
             PlayerTemperatureData.getCapability(player).ifPresent((data) -> {
 
-                /* MULTI-THREADED SURROUNDING BLOCK TEMPERATURE SIMULATION STARTS */
-
                 // ConfigValue.get() 为 spec 值表查询：同一 tick 内配置恒定，hoist 到局部变量（跨 tick 仍每次重读）
                 int temperatureUpdateIntervalTicks = FHConfig.SERVER.CLIMATE.temperatureUpdateIntervalTicks.get();
 
-                /*
-                 * The legacy surrounding-block sampler is temporarily disabled
-                 * while the thermal Page publication drives the player test.
-                 * Keep this block in place so the legacy path can be restored
-                 * without reconstructing its scheduling contract.
-                 */
-//                data.tick();
-//                if (data.updateInterval <= 0) {
-//                    if (threadingPool.tryCommitWork(player)) {
-//                        int envTempUpdateIntervalTicks = FHConfig.SERVER.CLIMATE.envTempUpdateIntervalTicks.get();
-//                        data.updateInterval = envTempUpdateIntervalTicks;
-//                    }
-//                }
-
-                /* MULTI-THREADED SURROUNDING BLOCK TEMPERATURE SIMULATION ENDS */
-
                 // Rest of update logic is handled every second.
-                if (player.tickCount % temperatureUpdateIntervalTicks == 0) {
+                if (shouldUpdatePlayer(
+                        player, temperatureUpdateIntervalTicks)) {
 
                     /* ENVIRONMENT TEMPERATURE COMPUTATION STARTS */
 
@@ -566,15 +550,16 @@ public class TemperatureUpdate {
         }
     }
 
-    public static void init() {
-        threadingPool = new TemperatureThreadingPool(FHConfig.SERVER.CLIMATE.envTempThreadCount.get());
+    private static boolean shouldUpdatePlayer(
+            ServerPlayer player,
+            int intervalTicks
+    ) {
+        if (intervalTicks <= 0) return false;
+        long mixed = player.getUUID().getMostSignificantBits()
+                ^ Long.rotateLeft(
+                        player.getUUID().getLeastSignificantBits(), 17);
+        return Math.floorMod(player.tickCount, intervalTicks)
+                == Math.floorMod(mixed, intervalTicks);
     }
 
-    public static void shutdown() {
-        TemperatureThreadingPool pool = threadingPool;
-        threadingPool = null;
-        if (pool != null) {
-            pool.close();
-        }
-    }
 }

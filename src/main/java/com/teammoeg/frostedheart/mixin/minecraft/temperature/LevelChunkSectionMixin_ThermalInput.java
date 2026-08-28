@@ -2,6 +2,7 @@
 package com.teammoeg.frostedheart.mixin.minecraft.temperature;
 
 import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.MinecraftThermalInput;
+import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.MinecraftPageManager;
 import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.MinecraftThermalSectionAttachment;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.LevelChunkSection;
@@ -15,15 +16,17 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 public abstract class LevelChunkSectionMixin_ThermalInput
         implements MinecraftThermalSectionAttachment {
     @Unique
-    private volatile MinecraftThermalInput.SectionOwner frostedheart$thermalInputOwner;
+    private volatile MinecraftPageManager.SectionOwner frostedheart$thermalInputOwner;
 
     @Override
-    public MinecraftThermalInput.SectionOwner frostedheart$getThermalInputOwner() {
+    public MinecraftPageManager.SectionOwner frostedheart$getThermalInputOwner() {
         return frostedheart$thermalInputOwner;
     }
 
     @Override
-    public void frostedheart$setThermalInputOwner(MinecraftThermalInput.SectionOwner owner) {
+    public void frostedheart$setThermalInputOwner(
+            MinecraftPageManager.SectionOwner owner
+    ) {
         frostedheart$thermalInputOwner = owner;
     }
 

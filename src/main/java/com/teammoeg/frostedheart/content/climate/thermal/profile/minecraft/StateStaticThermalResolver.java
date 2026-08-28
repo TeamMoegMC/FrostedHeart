@@ -28,7 +28,6 @@ import net.minecraft.world.phys.shapes.VoxelShape;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 
 /**
@@ -114,14 +113,12 @@ public final class StateStaticThermalResolver
             ResolverBlockView.Access<BlockState, FluidState> view
     ) {
         Objects.requireNonNull(view, "view");
-        ThermalResolution<ResolverBlockView.StateAndFluid<BlockState, FluidState>> self =
-                view.lookup(DependencyOffsetMask.SELF).asResolution();
-        if (!self.isResolved()) {
+        ResolverBlockView.Lookup<BlockState, FluidState> self =
+                view.lookup(DependencyOffsetMask.SELF);
+        if (self.status() != ResolverBlockView.LookupStatus.PRESENT) {
             return ThermalResolution.failure(self.reason());
         }
-        ResolverBlockView.StateAndFluid<BlockState, FluidState> stateAndFluid =
-                self.value().orElseThrow();
-        return resolvePresent(stateAndFluid.blockState(), stateAndFluid.fluidState());
+        return resolvePresent(self.blockState(), self.fluidState());
     }
 
     /** Convenience entry point for a main-thread census of one captured state pair. */
@@ -129,14 +126,9 @@ public final class StateStaticThermalResolver
             BlockState blockState,
             FluidState fluidState
     ) {
-        ResolverBlockView<BlockState, FluidState> snapshot = ResolverBlockView.snapshot(
-                DependencyOffsetMask.SELF_ONLY,
-                Map.of(
-                        DependencyOffsetMask.SELF,
-                        ResolverBlockView.SnapshotCell.present(blockState, fluidState)
-                )
-        );
-        return resolveSnapshot(snapshot);
+        return resolvePresent(
+                Objects.requireNonNull(blockState, "blockState"),
+                Objects.requireNonNull(fluidState, "fluidState"));
     }
 
     private ThermalResolution<ResolvedThermalSignature> resolvePresent(
@@ -158,7 +150,7 @@ public final class StateStaticThermalResolver
         }
 
         ConservativeAirGeometry.Resolution geometry = ConservativeAirGeometry.resolve(
-                blockers.value().orElseThrow(),
+                blockers.value(),
                 maximumRegions
         );
         if (geometry.status() == ConservativeAirGeometry.Status.CONSERVATIVE_UNSUPPORTED) {

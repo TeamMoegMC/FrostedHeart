@@ -1,169 +1,115 @@
-/*
- * Copyright (c) 2026 TeamMoeg
- *
- * This file is part of Frosted Heart.
- *
- * Frosted Heart is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, version 3.
- */
-
+/* Copyright (c) 2026 TeamMoeg */
 package com.teammoeg.frostedheart.content.climate.thermal.mesh;
 
-import com.teammoeg.frostedheart.content.climate.thermal.geometry.GeometryDeltaCoalescer;
-import com.teammoeg.frostedheart.content.climate.thermal.geometry.GeometryDeltaRing;
-import com.teammoeg.frostedheart.content.climate.thermal.geometry.GeometrySummary;
+import com.teammoeg.frostedheart.content.climate.thermal.ThermalTestFixtures;
+import com.teammoeg.frostedheart.content.climate.thermal.profile.ThermalSignatureRegistry;
 import org.junit.jupiter.api.Test;
+
+import java.util.Arrays;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class ThermalPageTest {
     @Test
-    void mutationInvalidatesOnlyItsInstalledBrick() {
-        ThermalPage page = installedPage(17L, 3L, 100);
-        GeometryDeltaRing ring = new GeometryDeltaRing(4);
-        assertTrue(page.tryPublishGeometry(0L, page.topologyGeneration(), 0L));
+    void mutationInvalidatesTheOldPublicationUntilMatchingRevisionCommits() {
+        ThermalPageHandle page = new ThermalPageHandle(11L, 3L);
+        PageSignatures signatures =
+                ThermalTestFixtures.filledPageSignatures(0);
+        page.publish(publication(0L, 1L, signatures, 7, 4));
+        assertEquals(7, page.currentPublication()
+                .brickAt(0, 0, 0).coverageSlot());
 
-        ThermalPage.MutationObservation mutation =
-                page.recordGeometryMutation(1, 2, 3, 20L, ring);
+        assertEquals(1L, page.beginGeometryMutation());
+        assertNull(page.currentPublication());
 
-        assertEquals(1L, mutation.geometryRevision());
-        assertEquals(0, mutation.baseBrickIndex());
-        assertFalse(mutation.coalescedWithExistingBrickDelta());
-        assertFalse(mutation.fullResyncRequired());
-        assertEquals(ThermalPage.NO_COVERAGE, coverageAt(page, 0));
-        assertEquals(101, coverageAt(page, 1));
-        assertFalse(page.publishedGeometryIsCurrent());
-
-        GeometryDeltaCoalescer.SealResult sealed = page.sealGeometryDeltas(ring);
-        assertEquals(1, sealed.offeredDeltas());
-        GeometryDeltaRing.MutableGeometryDelta delta =
-                new GeometryDeltaRing.MutableGeometryDelta();
-        assertTrue(ring.poll(delta));
-        assertEquals(0, delta.baseBrickIndex());
-        assertFalse(ring.poll(delta));
+        PagePublication current = publication(
+                1L, 2L, signatures, 9, 5);
+        page.publish(current);
+        assertSame(current, page.currentPublication());
     }
 
     @Test
-    void twentySameTickMutationsInOneBrickProduceOneRebuildDelta() {
-        ThermalPage page = installedPage(18L, 4L, 200);
-        GeometryDeltaRing ring = new GeometryDeltaRing(2);
+    void fullResyncAckRequiresExactLifecycleRevisionAndReason() {
+        ThermalPageHandle page = new ThermalPageHandle(13L, 4L);
+        page.requireFullGeometryResync(
+                ThermalPageHandle.GeometryResyncReason.SECTION_REPLACED);
+        ThermalPageHandle.GeometryResyncToken stale =
+                page.pendingFullGeometryResync();
+        page.requireFullGeometryResync(
+                ThermalPageHandle.GeometryResyncReason.EXPLICIT_INVALIDATION);
 
-        for (int voxel = 0; voxel < 20; voxel++) {
-            int localX = voxel & 3;
-            int localZ = (voxel >>> 2) & 3;
-            int localY = (voxel >>> 4) & 3;
-            ThermalPage.MutationObservation mutation =
-                    page.recordGeometryMutation(localX, localY, localZ, 30L, ring);
-            assertEquals(voxel != 0, mutation.coalescedWithExistingBrickDelta());
-        }
-
-        assertEquals(20L, page.liveGeometryRevision());
-        assertEquals(ThermalPage.NO_COVERAGE, coverageAt(page, 0));
-        assertEquals(201, coverageAt(page, 1));
-        GeometryDeltaCoalescer.SealResult sealed = page.sealGeometryDeltas(ring);
-        assertEquals(1, sealed.offeredDeltas());
-        assertFalse(sealed.overflowed());
-        GeometryDeltaRing.MutableGeometryDelta delta =
-                new GeometryDeltaRing.MutableGeometryDelta();
-        assertTrue(ring.poll(delta));
-        assertEquals(20L, delta.geometryRevision());
-        assertEquals(0, delta.baseBrickIndex());
+        assertFalse(page.acknowledgeFullGeometryResync(stale));
+        ThermalPageHandle.GeometryResyncToken current =
+                page.pendingFullGeometryResync();
+        assertTrue(page.acknowledgeFullGeometryResync(current));
+        assertNull(page.pendingFullGeometryResync());
     }
 
     @Test
-    void ringOverflowCreatesStickyResyncAndRejectsStaleAcknowledgement() {
-        ThermalPage page = installedPage(19L, 5L, 300);
-        GeometryDeltaRing ring = new GeometryDeltaRing(1);
-        page.recordGeometryMutation(0, 0, 0, 40L, ring);
-        page.recordGeometryMutation(4, 0, 0, 40L, ring);
+    void PageSignaturesReplaceOnlyNamedBrickPayloads() {
+        PageSignatures original =
+                ThermalTestFixtures.filledPageSignatures(1);
+        int[] changed = new int[PageSignatures.ENTRIES_PER_BRICK];
+        Arrays.fill(changed, 2);
 
-        GeometryDeltaCoalescer.SealResult sealed = page.sealGeometryDeltas(ring);
+        PageSignatures replacement = original.withBricks(
+                new int[]{5}, new int[][]{changed});
 
-        assertTrue(sealed.overflowed());
-        assertEquals(2, sealed.droppedDeltas());
-        assertTrue(page.fullGeometryResyncRequired());
-        ThermalPage.GeometryResyncToken staleToken = page.beginFullGeometryResync();
-        assertNotNull(staleToken);
-
-        page.requireFullGeometryResync(ThermalPage.GeometryResyncReason.EXPLICIT_INVALIDATION);
-        ThermalPage.FullGeometryState rebuilt = state(400, -1);
-        assertFalse(page.tryInstallFullGeometryResync(staleToken, rebuilt));
-        ThermalPage.GeometryResyncToken currentToken = page.beginFullGeometryResync();
-        assertNotNull(currentToken);
-        assertTrue(page.tryInstallFullGeometryResync(currentToken, rebuilt));
-        assertFalse(page.fullGeometryResyncRequired());
-        assertEquals(400, coverageAt(page, 0));
+        assertSame(original.brickPayload(4), replacement.brickPayload(4));
+        assertEquals(2, replacement.get((1 << 2) | (1 << 6)));
+        assertEquals(1, original.get((1 << 2) | (1 << 6)));
     }
 
     @Test
-    void rebuiltBrickRestoresCoverageAndMixedState() {
-        ThermalPage page = installedPage(20L, 6L, 400);
-        GeometryDeltaRing ring = new GeometryDeltaRing(2);
-        ThermalPage.MutationObservation mutation =
-                page.recordGeometryMutation(0, 0, 0, 50L, ring);
-        page.sealGeometryDeltas(ring);
+    void publicationResolvesAirPointAndPhaseCandidateWithoutSearch() {
+        ThermalSignatureRegistry.Builder registry =
+                ThermalSignatureRegistry.builder();
+        int signatureId = registry.intern(
+                ThermalTestFixtures.fullAirSignature());
+        PageSignatures signatures =
+                ThermalTestFixtures.filledPageSignatures(signatureId);
+        PagePublication.Brick[] bricks = emptyBricks();
+        bricks[0] = new PagePublication.Brick(
+                12,
+                8,
+                signatures.brickPayload(0),
+                null,
+                PagePublication.PhaseCandidates.owned(
+                        new int[]{6}, new long[]{1L << 21}));
+        PagePublication publication = PagePublication.owned(0L, 1L, bricks);
 
-        int[] coverage = page.coverageSnapshot();
-        GeometrySummary[] summaries = new GeometrySummary[ThermalPage.BASE_BRICK_COUNT];
-        coverage[0] = 500;
-        summaries[0] = GeometrySummary.mixed(GeometrySummary.MATERIAL_INTERFACE);
-        assertTrue(page.tryInstallBrickBuilds(
-                mutation.geometryRevision(), 1L, coverage, summaries));
-        assertEquals(500, coverageAt(page, 0));
-        assertEquals(1L, page.mixedBrickMask());
-        assertTrue(page.tryPublishGeometry(
-                page.liveGeometryRevision(), page.topologyGeneration(), 0L));
+        assertEquals(12, publication.resolveAirPoint(
+                1, 1, 1, 63, registry.build()));
+        assertTrue(publication.hasPhaseCandidate(1, 1, 1, 6));
+        assertFalse(publication.hasPhaseCandidate(1, 1, 1, 7));
     }
 
-    @Test
-    void publishedCoverageQueryClearsOnMutation() {
-        ThermalPage page = installedPage(22L, 8L, 700);
-        ThermalPage.MutableCoverageQuery query = new ThermalPage.MutableCoverageQuery();
-
-        assertFalse(page.tryQueryPublishedCoverage(15, 15, 15, query));
-        assertTrue(page.tryPublishGeometry(0L, page.topologyGeneration(), 9L));
-        assertTrue(page.tryQueryPublishedCoverage(15, 15, 15, query));
-        assertEquals(63, query.baseBrickIndex());
-        assertEquals(763, query.coverageRef());
-        assertEquals(0L, query.geometryRevision());
-        assertEquals(9L, query.solveEpoch());
-
-        page.recordGeometryMutation(15, 15, 15, 60L, new GeometryDeltaRing(1));
-        assertFalse(page.tryQueryPublishedCoverage(15, 15, 15, query));
-        assertFalse(query.valid());
-        assertEquals(ThermalPage.NO_COVERAGE, query.coverageRef());
-        assertEquals(1L, query.geometryRevision());
-        assertThrows(IllegalArgumentException.class, () ->
-                page.tryQueryPublishedCoverage(16, 0, 0, query));
+    private static PagePublication publication(
+            long geometryRevision,
+            long topologyGeneration,
+            PageSignatures signatures,
+            int coverage,
+            int generation
+    ) {
+        PagePublication.Brick[] bricks = emptyBricks();
+        bricks[0] = new PagePublication.Brick(
+                coverage,
+                generation,
+                signatures.brickPayload(0),
+                null,
+                PagePublication.PhaseCandidates.EMPTY);
+        return PagePublication.owned(
+                geometryRevision, topologyGeneration, bricks);
     }
 
-    private static ThermalPage installedPage(long sectionKey, long generation, int firstRef) {
-        ThermalPage page = new ThermalPage(sectionKey, generation);
-        assertTrue(page.tryInstallGeometryBuild(0L, state(firstRef, -1)));
-        return page;
-    }
-
-    private static int coverageAt(ThermalPage page, int baseIndex) {
-        return page.coverageSnapshot()[baseIndex];
-    }
-
-    private static ThermalPage.FullGeometryState state(int firstRef, int mixedBrick) {
-        int[] refs = new int[ThermalPage.BASE_BRICK_COUNT];
-        GeometrySummary[] summaries = new GeometrySummary[ThermalPage.BASE_BRICK_COUNT];
-        for (int baseIndex = 0; baseIndex < ThermalPage.BASE_BRICK_COUNT; baseIndex++) {
-            refs[baseIndex] = firstRef + baseIndex;
-            summaries[baseIndex] = baseIndex == mixedBrick
-                    ? GeometrySummary.mixed(GeometrySummary.MATERIAL_INTERFACE)
-                    : GeometrySummary.singleAir(0);
-        }
-        return new ThermalPage.FullGeometryState(
-                refs,
-                summaries,
-                mixedBrick < 0 ? 0L : 1L << mixedBrick);
+    private static PagePublication.Brick[] emptyBricks() {
+        PagePublication.Brick[] bricks =
+                new PagePublication.Brick[ThermalPageHandle.BASE_BRICK_COUNT];
+        Arrays.fill(bricks, PagePublication.Brick.EMPTY);
+        return bricks;
     }
 }

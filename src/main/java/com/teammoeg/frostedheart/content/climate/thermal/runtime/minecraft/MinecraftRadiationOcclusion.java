@@ -27,7 +27,6 @@ import java.util.Objects;
 final class MinecraftRadiationOcclusion implements RadiationService.OcclusionTracer {
     private static final double TIE_EPSILON = 1.0e-12D;
 
-    private final MinecraftThermalInput input;
     private final ServerLevel level;
     private final int maximumTrackedSections;
     private final Long2LongOpenHashMap sectionRevisions =
@@ -39,11 +38,9 @@ final class MinecraftRadiationOcclusion implements RadiationService.OcclusionTra
     private BlockStatus cachedBlockStatus = BlockStatus.UNRESOLVED;
 
     MinecraftRadiationOcclusion(
-            MinecraftThermalInput input,
             ServerLevel level,
             int maximumTrackedSections
     ) {
-        this.input = Objects.requireNonNull(input, "input");
         this.level = Objects.requireNonNull(level, "level");
         if (maximumTrackedSections <= 0) {
             throw new IllegalArgumentException("maximumTrackedSections must be positive");
@@ -178,7 +175,6 @@ final class MinecraftRadiationOcclusion implements RadiationService.OcclusionTra
                 || !result.addSection(sectionKey, revision)) {
             return TraceStatus.BUDGET_LIMITED;
         }
-        input.retainRadiationSection(sectionKey);
         return isRecordedLoaded(sectionKey) ? null : TraceStatus.UNRESOLVED;
     }
 

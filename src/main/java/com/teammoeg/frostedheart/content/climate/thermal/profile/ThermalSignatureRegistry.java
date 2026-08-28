@@ -11,17 +11,17 @@
 package com.teammoeg.frostedheart.content.climate.thermal.profile;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
-import java.util.OptionalInt;
 
 /** Immutable, dense int-ID table of deduplicated resolved thermal signatures. */
 public final class ThermalSignatureRegistry {
     private final List<ResolvedThermalSignature> signatures;
     private final Map<ResolvedThermalSignature, Integer> idsBySignature;
+    private final byte[] componentOrdinal;
 
     private ThermalSignatureRegistry(List<ResolvedThermalSignature> signatures) {
         this.signatures = List.copyOf(signatures);
@@ -33,6 +33,27 @@ public final class ThermalSignatureRegistry {
             }
         }
         this.idsBySignature = Map.copyOf(ids);
+        componentOrdinal = new byte[signatures.size() * 64];
+        Arrays.fill(componentOrdinal, (byte) 0xff);
+        for (int signatureId = 0;
+             signatureId < signatures.size();
+             signatureId++) {
+            for (LocalAirRegionPattern region
+                    : signatures.get(signatureId).airRegions()) {
+                if (region.localRegionId() < 0
+                        || region.localRegionId() >= 0xff) {
+                    throw new IllegalArgumentException(
+                            "signature Air region does not fit one byte");
+                }
+                long remaining = region.provenAirMicrocellMask();
+                while (remaining != 0L) {
+                    int microcell = Long.numberOfTrailingZeros(remaining);
+                    componentOrdinal[signatureId * 64 + microcell] =
+                            (byte) region.localRegionId();
+                    remaining &= remaining - 1L;
+                }
+            }
+        }
     }
 
     public static Builder builder() {
@@ -43,16 +64,26 @@ public final class ThermalSignatureRegistry {
         return signatures.size();
     }
 
-    public Optional<ResolvedThermalSignature> signature(int signatureId) {
-        if (signatureId < 0 || signatureId >= signatures.size()) {
-            return Optional.empty();
-        }
-        return Optional.of(signatures.get(signatureId));
+    public ResolvedThermalSignature signatureOrNull(int signatureId) {
+        return signatureId < 0 || signatureId >= signatures.size()
+                ? null : signatures.get(signatureId);
     }
 
-    public OptionalInt idOf(ResolvedThermalSignature signature) {
+    public int idOrDefault(
+            ResolvedThermalSignature signature,
+            int fallback
+    ) {
         Integer id = idsBySignature.get(Objects.requireNonNull(signature, "signature"));
-        return id == null ? OptionalInt.empty() : OptionalInt.of(id);
+        return id == null ? fallback : id;
+    }
+
+    public int componentOrdinal(int signatureId, int microcell) {
+        if (signatureId < 0 || signatureId >= signatures.size()
+                || microcell < 0 || microcell >= 64) {
+            return 0xff;
+        }
+        return Byte.toUnsignedInt(
+                componentOrdinal[signatureId * 64 + microcell]);
     }
 
     /**
@@ -73,10 +104,6 @@ public final class ThermalSignatureRegistry {
             signatures.add(signature);
             idsBySignature.put(signature, id);
             return id;
-        }
-
-        public int signatureCount() {
-            return signatures.size();
         }
 
         public ThermalSignatureRegistry build() {

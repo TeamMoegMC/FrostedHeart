@@ -1,69 +1,56 @@
-/*
- * Copyright (c) 2026 TeamMoeg
- *
- * This file is part of Frosted Heart.
- *
- * Frosted Heart is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, version 3.
- */
-
+/* Copyright (c) 2026 TeamMoeg */
 package com.teammoeg.frostedheart.content.climate.thermal.source;
 
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.ThermalCellArena;
+import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;
 
 import java.util.Arrays;
 
-/**
- * Primitive, node-keyed power accumulator.
- *
- * <p>Source events settle an affected node to their authoritative tick before
- * changing its aggregate power. A solve drains one exact {@code integral(Pdt)}
- * value regardless of solve cadence.</p>
- */
+/** Recyclable primitive node-power ledger with O(active nodes) delivery. */
 public final class NodePowerAccumulatorArena {
-    public static final int NO_ACCUMULATOR = -1;
+    private static final int NO_ACCUMULATOR = -1;
 
     private static final double TICKS_PER_SECOND = 20.0D;
-    private static final byte EMPTY = 0;
-    private static final byte OCCUPIED = 1;
-
     private long[] nodeIds;
     private int[] lifecycleGenerations;
     private double[] currentPowerW;
     private double[] pendingEnergyJ;
     private double[] pendingCompensationJ;
     private long[] lastIntegralTicks;
-    private int accumulatorCount;
+    private int[] bindingReferences;
+    private int[] nextFree;
+    private int[] activePrevious;
+    private int[] activeNext;
+    private byte[] occupied;
+    private byte[] active;
 
-    private long[] tableNodeIds;
-    private int[] tableGenerations;
-    private int[] tableSlots;
-    private byte[] tableStates;
-    private int resizeThreshold;
+    private final Long2IntOpenHashMap slotsByNode;
+
+    private int highWaterMark;
+    private int liveCount;
+    private int freeHead = NO_ACCUMULATOR;
+    private int activeHead = NO_ACCUMULATOR;
+    private int activeTail = NO_ACCUMULATOR;
 
     public NodePowerAccumulatorArena(int initialCapacity) {
         if (initialCapacity < 0) {
             throw new IllegalArgumentException("initialCapacity must be non-negative");
         }
-        int storageCapacity = Math.max(1, initialCapacity);
-        nodeIds = new long[storageCapacity];
-        lifecycleGenerations = new int[storageCapacity];
-        currentPowerW = new double[storageCapacity];
-        pendingEnergyJ = new double[storageCapacity];
-        pendingCompensationJ = new double[storageCapacity];
-        lastIntegralTicks = new long[storageCapacity];
-        allocateTable(tableCapacityFor(storageCapacity));
+        allocateStorage(Math.max(1, initialCapacity));
+        slotsByNode = new Long2IntOpenHashMap(Math.max(1, initialCapacity));
+        slotsByNode.defaultReturnValue(NO_ACCUMULATOR);
     }
 
-    /** Returns whether a solve would receive continuous or already-integrated energy. */
     public boolean hasActivePowerOrPendingEnergy() {
-        for (int slot = 0; slot < accumulatorCount; slot++) {
-            if (currentPowerW[slot] != 0.0D || pendingEnergyJ[slot] != 0.0D) {
-                return true;
-            }
+        return activeHead != NO_ACCUMULATOR;
+    }
+
+    public void reserveAdditional(int additional) {
+        if (additional < 0) {
+            throw new IllegalArgumentException("additional accumulator count is negative");
         }
-        return false;
+        int required = Math.addExact(liveCount, additional);
+        ensureStorage(required);
     }
 
     public int ensureNode(long nodeId, int lifecycleGeneration, long initialTick) {
@@ -73,53 +60,74 @@ public final class NodePowerAccumulatorArena {
         if (existing != NO_ACCUMULATOR) {
             return existing;
         }
-        if (accumulatorCount >= resizeThreshold) {
-            rehash(tableStates.length << 1);
-        }
-        ensureStorage(accumulatorCount + 1);
-        int slot = accumulatorCount++;
+        int slot = allocateSlot();
         nodeIds[slot] = nodeId;
         lifecycleGenerations[slot] = lifecycleGeneration;
         lastIntegralTicks[slot] = initialTick;
-        insertTable(nodeId, lifecycleGeneration, slot);
+        occupied[slot] = 1;
+        liveCount++;
+        slotsByNode.put(key(nodeId, lifecycleGeneration), slot);
         return slot;
     }
 
     public int findNode(long nodeId, int lifecycleGeneration) {
         requireGeneration(lifecycleGeneration);
-        int mask = tableStates.length - 1;
-        int index = hash(nodeId, lifecycleGeneration) & mask;
-        while (tableStates[index] != EMPTY) {
-            if (tableNodeIds[index] == nodeId
-                    && tableGenerations[index] == lifecycleGeneration) {
-                return tableSlots[index];
-            }
-            index = (index + 1) & mask;
+        return slotsByNode.get(key(nodeId, lifecycleGeneration));
+    }
+
+    public void retainBinding(
+            long nodeId,
+            int lifecycleGeneration,
+            long eventTick
+    ) {
+        int slot = ensureNode(nodeId, lifecycleGeneration, eventTick);
+        settleTo(slot, eventTick);
+        bindingReferences[slot] = Math.incrementExact(bindingReferences[slot]);
+    }
+
+    public void releaseBinding(
+            long nodeId,
+            int lifecycleGeneration,
+            long eventTick
+    ) {
+        int slot = findNode(nodeId, lifecycleGeneration);
+        if (slot == NO_ACCUMULATOR || bindingReferences[slot] <= 0) {
+            throw new IllegalStateException("thermal node binding reference underflow");
         }
-        return NO_ACCUMULATOR;
+        settleTo(slot, eventTick);
+        bindingReferences[slot]--;
+        reclaimIfIdle(slot);
     }
 
-    /** Settles to {@code eventTick}, then changes the aggregate node power. */
-    public void changePowerAt(int accumulatorSlot, long eventTick, double deltaPowerW) {
+    public boolean referencesNode(long nodeId, int lifecycleGeneration) {
+        int slot = findNode(nodeId, lifecycleGeneration);
+        return slot != NO_ACCUMULATOR
+                && (bindingReferences[slot] != 0
+                || currentPowerW[slot] != 0.0D
+                || pendingEnergyJ[slot] != 0.0D);
+    }
+
+    public void changePowerAt(int slot, long eventTick, double deltaPowerW) {
         requireFinite("deltaPowerW", deltaPowerW);
-        settleTo(accumulatorSlot, eventTick);
-        double updated = currentPowerW[accumulatorSlot] + deltaPowerW;
+        settleTo(slot, eventTick);
+        double updated = currentPowerW[slot] + deltaPowerW;
         requireFiniteResult("aggregate node power", updated);
-        currentPowerW[accumulatorSlot] = canonicalZero(updated);
+        currentPowerW[slot] = canonicalZero(updated);
+        refreshActive(slot);
+        reclaimIfIdle(slot);
     }
 
-    /** Settles continuous power first, then adds signed event energy. */
-    public void addImpulseAt(int accumulatorSlot, long eventTick, double energyJ) {
+    public void addImpulseAt(int slot, long eventTick, double energyJ) {
         requireFinite("energyJ", energyJ);
-        settleTo(accumulatorSlot, eventTick);
-        addPending(accumulatorSlot, energyJ);
+        settleTo(slot, eventTick);
+        addPending(slot, energyJ);
+        refreshActive(slot);
     }
 
-    /** Integrates current power to the requested tick without draining energy. */
-    public double settleTo(int accumulatorSlot, long targetTick) {
-        requireSlot(accumulatorSlot);
+    public double settleTo(int slot, long targetTick) {
+        requireSlot(slot);
         requireTick("targetTick", targetTick);
-        long previousTick = lastIntegralTicks[accumulatorSlot];
+        long previousTick = lastIntegralTicks[slot];
         if (targetTick < previousTick) {
             throw new IllegalArgumentException(
                     "targetTick precedes node integral tick: "
@@ -130,50 +138,65 @@ public final class NodePowerAccumulatorArena {
         }
         double energyJ = finiteProduct(
                 "integrated node energy",
-                currentPowerW[accumulatorSlot],
-                (targetTick - previousTick) / TICKS_PER_SECOND
-        );
-        addPending(accumulatorSlot, energyJ);
-        lastIntegralTicks[accumulatorSlot] = targetTick;
+                currentPowerW[slot],
+                (targetTick - previousTick) / TICKS_PER_SECOND);
+        addPending(slot, energyJ);
+        lastIntegralTicks[slot] = targetTick;
+        refreshActive(slot);
         return energyJ;
     }
 
-    /** Drains directly into the authoritative cell arena used by transport. */
-    public double drainAllPendingEnergyTo(
+    public void drainAllPendingEnergyTo(
             long targetTick,
             ThermalCellArena destination
     ) {
         if (destination == null) {
             throw new IllegalArgumentException("destination arena is required");
         }
-        for (int slot = 0; slot < accumulatorCount; slot++) {
+        int slot = activeHead;
+        while (slot != NO_ACCUMULATOR) {
+            int next = activeNext[slot];
             settleTo(slot, targetTick);
             double energyJ = pendingEnergyJ[slot];
-            if (energyJ == 0.0D) {
-                continue;
+            if (energyJ != 0.0D) {
+                destination.addNodeEnthalpyJ(
+                        nodeIds[slot], lifecycleGenerations[slot], energyJ);
+                pendingEnergyJ[slot] = 0.0D;
+                pendingCompensationJ[slot] = 0.0D;
             }
-            destination.requireNodeEnthalpyWrite(
-                    nodeIds[slot], lifecycleGenerations[slot], energyJ);
+            refreshActive(slot);
+            reclaimIfIdle(slot);
+            slot = next;
         }
+    }
 
-        double total = 0.0D;
-        double compensation = 0.0D;
-        for (int slot = 0; slot < accumulatorCount; slot++) {
-            double energyJ = pendingEnergyJ[slot];
-            if (energyJ == 0.0D) {
-                continue;
-            }
-            double adjusted = energyJ - compensation;
-            double updated = total + adjusted;
-            requireFiniteResult("drained source energy", updated);
-            destination.addNodeEnthalpyJ(
-                    nodeIds[slot], lifecycleGenerations[slot], energyJ);
-            pendingEnergyJ[slot] = 0.0D;
-            pendingCompensationJ[slot] = 0.0D;
-            compensation = (updated - total) - adjusted;
-            total = updated;
+    private int allocateSlot() {
+        if (freeHead != NO_ACCUMULATOR) {
+            int slot = freeHead;
+            freeHead = nextFree[slot];
+            nextFree[slot] = NO_ACCUMULATOR;
+            return slot;
         }
-        return canonicalZero(total);
+        ensureStorage(highWaterMark + 1);
+        return highWaterMark++;
+    }
+
+    private void reclaimIfIdle(int slot) {
+        if (occupied[slot] == 0
+                || bindingReferences[slot] != 0
+                || currentPowerW[slot] != 0.0D
+                || pendingEnergyJ[slot] != 0.0D) {
+            return;
+        }
+        deactivate(slot);
+        slotsByNode.remove(key(nodeIds[slot], lifecycleGenerations[slot]));
+        occupied[slot] = 0;
+        nodeIds[slot] = 0L;
+        lifecycleGenerations[slot] = 0;
+        lastIntegralTicks[slot] = 0L;
+        nextFree[slot] = freeHead;
+        freeHead = slot;
+        liveCount--;
     }
 
     private void addPending(int slot, double energyJ) {
@@ -184,82 +207,102 @@ public final class NodePowerAccumulatorArena {
         pendingEnergyJ[slot] = canonicalZero(updated);
     }
 
-    private void ensureStorage(int requiredCapacity) {
-        if (requiredCapacity <= nodeIds.length) {
+    private void refreshActive(int slot) {
+        boolean shouldBeActive = currentPowerW[slot] != 0.0D
+                || pendingEnergyJ[slot] != 0.0D;
+        if (shouldBeActive && active[slot] == 0) {
+            active[slot] = 1;
+            activePrevious[slot] = activeTail;
+            activeNext[slot] = NO_ACCUMULATOR;
+            if (activeTail == NO_ACCUMULATOR) {
+                activeHead = slot;
+            } else {
+                activeNext[activeTail] = slot;
+            }
+            activeTail = slot;
+        } else if (!shouldBeActive) {
+            deactivate(slot);
+        }
+    }
+
+    private void deactivate(int slot) {
+        if (active[slot] == 0) {
             return;
         }
-        int newCapacity = Math.max(requiredCapacity, nodeIds.length << 1);
-        nodeIds = Arrays.copyOf(nodeIds, newCapacity);
-        lifecycleGenerations = Arrays.copyOf(lifecycleGenerations, newCapacity);
-        currentPowerW = Arrays.copyOf(currentPowerW, newCapacity);
-        pendingEnergyJ = Arrays.copyOf(pendingEnergyJ, newCapacity);
-        pendingCompensationJ = Arrays.copyOf(pendingCompensationJ, newCapacity);
-        lastIntegralTicks = Arrays.copyOf(lastIntegralTicks, newCapacity);
-    }
-
-    private void allocateTable(int capacity) {
-        tableNodeIds = new long[capacity];
-        tableGenerations = new int[capacity];
-        tableSlots = new int[capacity];
-        tableStates = new byte[capacity];
-        resizeThreshold = Math.max(1, (int) (capacity * 0.6D));
-    }
-
-    private void rehash(int requestedCapacity) {
-        long[] oldNodeIds = tableNodeIds;
-        int[] oldGenerations = tableGenerations;
-        int[] oldSlots = tableSlots;
-        byte[] oldStates = tableStates;
-        allocateTable(nextPowerOfTwo(requestedCapacity));
-        for (int index = 0; index < oldStates.length; index++) {
-            if (oldStates[index] == OCCUPIED) {
-                insertTable(oldNodeIds[index], oldGenerations[index], oldSlots[index]);
-            }
+        int previous = activePrevious[slot];
+        int next = activeNext[slot];
+        if (previous == NO_ACCUMULATOR) {
+            activeHead = next;
+        } else {
+            activeNext[previous] = next;
         }
+        if (next == NO_ACCUMULATOR) {
+            activeTail = previous;
+        } else {
+            activePrevious[next] = previous;
+        }
+        active[slot] = 0;
+        activePrevious[slot] = NO_ACCUMULATOR;
+        activeNext[slot] = NO_ACCUMULATOR;
     }
 
-    private void insertTable(long nodeId, int lifecycleGeneration, int slot) {
-        int mask = tableStates.length - 1;
-        int index = hash(nodeId, lifecycleGeneration) & mask;
-        while (tableStates[index] == OCCUPIED) {
-            index = (index + 1) & mask;
+    private void allocateStorage(int capacity) {
+        nodeIds = new long[capacity];
+        lifecycleGenerations = new int[capacity];
+        currentPowerW = new double[capacity];
+        pendingEnergyJ = new double[capacity];
+        pendingCompensationJ = new double[capacity];
+        lastIntegralTicks = new long[capacity];
+        bindingReferences = new int[capacity];
+        nextFree = new int[capacity];
+        activePrevious = new int[capacity];
+        activeNext = new int[capacity];
+        occupied = new byte[capacity];
+        active = new byte[capacity];
+        Arrays.fill(nextFree, NO_ACCUMULATOR);
+        Arrays.fill(activePrevious, NO_ACCUMULATOR);
+        Arrays.fill(activeNext, NO_ACCUMULATOR);
+    }
+
+    private void ensureStorage(int required) {
+        if (required <= nodeIds.length) {
+            return;
         }
-        tableStates[index] = OCCUPIED;
-        tableNodeIds[index] = nodeId;
-        tableGenerations[index] = lifecycleGeneration;
-        tableSlots[index] = slot;
+        int old = nodeIds.length;
+        int capacity = Math.max(required, old + Math.max(8, old >>> 1));
+        nodeIds = Arrays.copyOf(nodeIds, capacity);
+        lifecycleGenerations = Arrays.copyOf(lifecycleGenerations, capacity);
+        currentPowerW = Arrays.copyOf(currentPowerW, capacity);
+        pendingEnergyJ = Arrays.copyOf(pendingEnergyJ, capacity);
+        pendingCompensationJ = Arrays.copyOf(pendingCompensationJ, capacity);
+        lastIntegralTicks = Arrays.copyOf(lastIntegralTicks, capacity);
+        bindingReferences = Arrays.copyOf(bindingReferences, capacity);
+        nextFree = Arrays.copyOf(nextFree, capacity);
+        activePrevious = Arrays.copyOf(activePrevious, capacity);
+        activeNext = Arrays.copyOf(activeNext, capacity);
+        occupied = Arrays.copyOf(occupied, capacity);
+        active = Arrays.copyOf(active, capacity);
+        Arrays.fill(nextFree, old, capacity, NO_ACCUMULATOR);
+        Arrays.fill(activePrevious, old, capacity, NO_ACCUMULATOR);
+        Arrays.fill(activeNext, old, capacity, NO_ACCUMULATOR);
     }
 
     private void requireSlot(int slot) {
-        if (slot < 0 || slot >= accumulatorCount) {
+        if (slot < 0 || slot >= highWaterMark || occupied[slot] == 0) {
             throw new IllegalArgumentException("invalid accumulator slot: " + slot);
         }
     }
 
-    private static int tableCapacityFor(int expectedEntries) {
-        return nextPowerOfTwo(Math.max(4, (int) Math.ceil(expectedEntries / 0.6D)));
-    }
-
-    private static int nextPowerOfTwo(int value) {
-        int highest = Integer.highestOneBit(Math.max(2, value - 1));
-        if (highest >= 1 << 29) {
-            throw new IllegalArgumentException("node accumulator table is too large");
+    private static long key(long nodeId, int generation) {
+        if (nodeId < 0L || nodeId > Integer.MAX_VALUE) {
+            throw new IllegalArgumentException(
+                    "thermal node ID must be an arena slot");
         }
-        return highest << 1;
+        return (long) generation << 32 | nodeId;
     }
 
-    private static int hash(long nodeId, int lifecycleGeneration) {
-        long mixed = nodeId ^ (0x9E3779B97F4A7C15L * lifecycleGeneration);
-        mixed ^= mixed >>> 30;
-        mixed *= 0xBF58476D1CE4E5B9L;
-        mixed ^= mixed >>> 27;
-        mixed *= 0x94D049BB133111EBL;
-        mixed ^= mixed >>> 31;
-        return (int) mixed;
-    }
-
-    private static void requireGeneration(int lifecycleGeneration) {
-        if (lifecycleGeneration < 0) {
+    private static void requireGeneration(int generation) {
+        if (generation < 0) {
             throw new IllegalArgumentException("lifecycleGeneration must be non-negative");
         }
     }
@@ -291,5 +334,4 @@ public final class NodePowerAccumulatorArena {
     private static double canonicalZero(double value) {
         return value == 0.0D ? 0.0D : value;
     }
-
 }

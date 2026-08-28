@@ -73,7 +73,7 @@ public final class DependencyOffsetMask {
         if (!Offset.isInRange(x, y, z)) {
             return false;
         }
-        return contains(new Offset(x, y, z));
+        return (encodedBits & bit(x, y, z)) != 0;
     }
 
     public int offsetCount() {
@@ -116,7 +116,11 @@ public final class DependencyOffsetMask {
     }
 
     private static int bit(Offset offset) {
-        int index = ((offset.y() + 1) * 9) + ((offset.z() + 1) * 3) + offset.x() + 1;
+        return bit(offset.x(), offset.y(), offset.z());
+    }
+
+    private static int bit(int x, int y, int z) {
+        int index = ((y + 1) * 9) + ((z + 1) * 3) + x + 1;
         return 1 << index;
     }
 

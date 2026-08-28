@@ -198,7 +198,7 @@ class StateStaticThermalResolverTest {
             ThermalResolution<ResolvedThermalSignature> result
     ) {
         assertEquals(ThermalResolution.Status.RESOLVED, result.status());
-        return result.value().orElseThrow();
+        return result.value();
     }
 
     private static int provenAirMicrocells(ResolvedThermalSignature signature) {

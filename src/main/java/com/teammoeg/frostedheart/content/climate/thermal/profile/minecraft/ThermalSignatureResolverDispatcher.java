@@ -33,7 +33,11 @@ import java.util.TreeMap;
  * policy: every non-dynamic state uses the same generic resolver.
  */
 public final class ThermalSignatureResolverDispatcher {
-    public static final String UNREGISTERED_RESOLVER_ID = "frostedheart:not_registered";
+    private static final DispatchPlan DYNAMIC_UNRESOLVED =
+            DispatchPlan.unregistered(
+                    ThermalResolution.Reason.UNRESOLVED_DYNAMIC);
+    private static final DispatchPlan NOT_REGISTERED =
+            DispatchPlan.unregistered(ThermalResolution.Reason.NOT_REGISTERED);
 
     private final RegisteredResolver genericStateStatic;
     private final Map<Block, RegisteredResolver> explicitOverrides;
@@ -59,28 +63,20 @@ public final class ThermalSignatureResolverDispatcher {
         Block block = targetState.getBlock();
 
         if (targetState.is(Blocks.MOVING_PISTON)) {
-            return DispatchPlan.unregistered(ThermalResolution.Reason.UNRESOLVED_DYNAMIC);
+            return DYNAMIC_UNRESOLVED;
         }
         RegisteredResolver explicit = explicitOverrides.get(block);
         if (explicit != null) {
-            return DispatchPlan.registered(Route.EXPLICIT_OVERRIDE, explicit);
+            return explicit.plan;
         }
         if (!block.hasDynamicShape()) {
-            return DispatchPlan.registered(Route.GENERIC_STATE_STATIC, genericStateStatic);
+            return genericStateStatic.plan;
         }
         RegisteredResolver contextual = contextualResolvers.get(block);
         if (contextual != null) {
-            return DispatchPlan.registered(Route.CONTEXTUAL, contextual);
+            return contextual.plan;
         }
-
-        return DispatchPlan.unregistered(ThermalResolution.Reason.NOT_REGISTERED);
-    }
-
-    public enum Route {
-        EXPLICIT_OVERRIDE,
-        GENERIC_STATE_STATIC,
-        CONTEXTUAL,
-        UNREGISTERED
+        return NOT_REGISTERED;
     }
 
     /**
@@ -88,35 +84,23 @@ public final class ThermalSignatureResolverDispatcher {
      * {@link #dependencyMask()} and then resolves and interns on the main thread.
      */
     public static final class DispatchPlan {
-        private final Route route;
-        private final String resolverId;
         private final DependencyOffsetMask dependencyMask;
-        private final int maxOutputRegions;
         private final RegisteredResolver resolver;
         private final ThermalResolution.Reason unregisteredReason;
 
         private DispatchPlan(
-                Route route,
-                String resolverId,
                 DependencyOffsetMask dependencyMask,
-                int maxOutputRegions,
                 RegisteredResolver resolver,
                 ThermalResolution.Reason unregisteredReason
         ) {
-            this.route = route;
-            this.resolverId = resolverId;
             this.dependencyMask = dependencyMask;
-            this.maxOutputRegions = maxOutputRegions;
             this.resolver = resolver;
             this.unregisteredReason = unregisteredReason;
         }
 
-        private static DispatchPlan registered(Route route, RegisteredResolver resolver) {
+        private static DispatchPlan registered(RegisteredResolver resolver) {
             return new DispatchPlan(
-                    route,
-                    resolver.resolverId(),
                     resolver.dependencyMask(),
-                    resolver.maxOutputRegions(),
                     resolver,
                     null
             );
@@ -124,29 +108,14 @@ public final class ThermalSignatureResolverDispatcher {
 
         private static DispatchPlan unregistered(ThermalResolution.Reason reason) {
             return new DispatchPlan(
-                    Route.UNREGISTERED,
-                    UNREGISTERED_RESOLVER_ID,
                     DependencyOffsetMask.SELF_ONLY,
-                    0,
                     null,
                     reason
             );
         }
 
-        public Route route() {
-            return route;
-        }
-
-        public String resolverId() {
-            return resolverId;
-        }
-
         public DependencyOffsetMask dependencyMask() {
             return dependencyMask;
-        }
-
-        public int maxOutputRegions() {
-            return maxOutputRegions;
         }
 
         /** Resolves through the audited snapshot API without interning a signature. */
@@ -285,6 +254,7 @@ public final class ThermalSignatureResolverDispatcher {
         private final DependencyOffsetMask dependencyMask;
         private final int maxOutputRegions;
         private final ThermalSignatureResolver<BlockState, FluidState> delegate;
+        private final DispatchPlan plan;
 
         private RegisteredResolver(
                 String resolverId,
@@ -296,6 +266,7 @@ public final class ThermalSignatureResolverDispatcher {
             this.dependencyMask = dependencyMask;
             this.maxOutputRegions = maxOutputRegions;
             this.delegate = delegate;
+            plan = DispatchPlan.registered(this);
         }
 
         @Override
@@ -350,9 +321,9 @@ public final class ThermalSignatureResolverDispatcher {
         public ThermalResolution<ResolvedThermalSignature> resolve(
                 ResolverBlockView.Access<BlockState, FluidState> view
         ) {
-            ThermalResolution<ResolverBlockView.StateAndFluid<BlockState, FluidState>> self =
-                    view.lookup(DependencyOffsetMask.SELF).asResolution();
-            if (!self.isResolved()) {
+            ResolverBlockView.Lookup<BlockState, FluidState> self =
+                    view.lookup(DependencyOffsetMask.SELF);
+            if (self.status() != ResolverBlockView.LookupStatus.PRESENT) {
                 return ThermalResolution.failure(self.reason());
             }
             return ThermalResolution.resolved(signature);

@@ -12,45 +12,62 @@ package com.teammoeg.frostedheart.content.climate.thermal.solver;
 
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.ThermalCellArena;
 
+import java.util.Arrays;
 import java.util.Objects;
-import java.util.concurrent.atomic.AtomicLong;
 
-/**
- * Bounded solve/main-thread handoff for Brick-local latent-energy reservoirs.
- * Reservoir authority stays in {@link ThermalCellArena}; the two rings only
- * transport one outstanding mutation request and its outcome.
- */
+/** Worker-owned latent-energy reservoirs with batch-based main-thread handoff. */
 public final class PhaseTransitionRuntime {
-    private static final AckOutcome[] ACK_OUTCOMES = AckOutcome.values();
-
+    private static final Request[] NO_REQUESTS = new Request[0];
     public enum AckOutcome {
         APPLIED,
         REJECTED,
         RETRY
     }
 
+    /** Immutable worker-to-main request transported in a completion. */
+    public record Request(
+            int fastSlot,
+            int lifecycleGeneration,
+            int brickMinX,
+            int brickMinY,
+            int brickMinZ,
+            int profileId,
+            int candidateBit,
+            long requestSequence
+    ) {
+        public Request {
+            if (fastSlot < 0 || lifecycleGeneration < 0 || profileId < 0
+                    || candidateBit < 0 || candidateBit >= 64
+                    || requestSequence <= 0L) {
+                throw new IllegalArgumentException("phase request identity is invalid");
+            }
+        }
+
+        public int blockX() {
+            return brickMinX + (candidateBit & 3);
+        }
+
+        public int blockY() {
+            return brickMinY + (candidateBit >>> 4);
+        }
+
+        public int blockZ() {
+            return brickMinZ + ((candidateBit >>> 2) & 3);
+        }
+    }
+
     private final ThermalCellArena arena;
-    private final RequestRing requests;
-    private final AckRing acks;
-    private final PendingAckTable pendingAcks;
+    private final RequestQueue requests;
+    private final ReservoirIndex reservoirs;
     private final ThermalExchangeKernel.MutableBoundaryResult boundaryScratch =
             new ThermalExchangeKernel.MutableBoundaryResult();
 
     private long nextRequestSequence;
-    private long appliedAckWatermark;
-    private long checkpointNextRequestSequence;
-    private long checkpointRequestWriteSequence;
-    private boolean substepTransactionActive;
 
-    public PhaseTransitionRuntime(
-            ThermalCellArena arena,
-            int requestCapacity,
-            int ackCapacity
-    ) {
+    public PhaseTransitionRuntime(ThermalCellArena arena, int requestCapacity) {
         this.arena = Objects.requireNonNull(arena, "arena");
-        requests = new RequestRing(requestCapacity);
-        acks = new AckRing(ackCapacity);
-        pendingAcks = new PendingAckTable(requestCapacity);
+        requests = new RequestQueue(requestCapacity);
+        reservoirs = new ReservoirIndex(Math.max(4, requestCapacity));
     }
 
     public boolean targets(ThermalCellArena candidate) {
@@ -104,89 +121,67 @@ public final class PhaseTransitionRuntime {
         return true;
     }
 
-    /** Solve-side ACK application covered by one sealed transition watermark. */
-    public int applyAcksThrough(long maximumWatermark) {
-        if (maximumWatermark < appliedAckWatermark) {
-            throw new IllegalArgumentException("phase ACK watermark regressed");
-        }
-        int applied = 0;
-        MutableAck ack = new MutableAck();
-        while (acks.pollThrough(maximumWatermark, ack)) {
-            int slot = findReservoir(ack);
-            if (slot >= 0 && arena.phaseRequestOutstanding(slot)
-                    && arena.phaseRequestSequence(slot) == ack.requestSequence) {
-                if (ack.outcome == AckOutcome.RETRY) {
-                    arena.retryPhaseRequest(slot, ack.requestSequence);
-                } else {
-                    arena.completePhaseRequest(
-                            slot,
-                            ack.requestSequence,
-                            ack.outcome == AckOutcome.APPLIED);
-                }
-            }
-            appliedAckWatermark = ack.watermark;
-            applied++;
-        }
-        return applied;
-    }
-
-    /** Main-thread allocation-free request poll. */
-    public boolean pollRequest(MutableRequest target) {
-        return requests.poll(Objects.requireNonNull(target, "target"));
-    }
-
-    public boolean canAcceptAck() {
-        return acks.canOffer() || pendingAcks.hasFreeSlot();
-    }
-
-    /**
-     * Main-thread outcome submission. A full ACK ring retains the outcome in a
-     * fixed per-request table until a later flush succeeds.
-     */
-    public void submitAck(MutableRequest request, AckOutcome outcome) {
+    /** Applies one exactly-once request acknowledgement from an ordered batch. */
+    public boolean applyAck(Request request, AckOutcome outcome) {
         Objects.requireNonNull(request, "request");
         Objects.requireNonNull(outcome, "outcome");
-        if (acks.offer(request, outcome)) {
-            return;
+        int slot = findReservoir(request);
+        if (slot < 0 || !arena.phaseRequestOutstanding(slot)
+                || arena.phaseRequestSequence(slot) != request.requestSequence()) {
+            return false;
         }
-        if (!pendingAcks.retain(request, outcome)) {
-            throw new IllegalStateException("phase ACK sticky table exhausted");
+        if (outcome == AckOutcome.RETRY) {
+            arena.retryPhaseRequest(slot, request.requestSequence());
+        } else {
+            arena.completePhaseRequest(
+                    slot,
+                    request.requestSequence(),
+                    outcome == AckOutcome.APPLIED);
         }
+        return true;
     }
 
-    /** Main-thread retry of retained ACK outcomes. */
-    public int flushPendingAcks() {
-        return pendingAcks.flushInto(acks);
-    }
-
-    public long latestOfferedAckWatermark() {
-        return acks.latestOfferedWatermark();
-    }
-
-    void beginSubstepTransaction() {
-        if (substepTransactionActive) {
-            throw new IllegalStateException("phase substep transaction is already active");
+    /** Drains at most {@code maximum} requests into an immutable completion. */
+    public Request[] drainRequests(int maximum) {
+        if (maximum < 0) {
+            throw new IllegalArgumentException("phase request drain limit is negative");
         }
-        checkpointNextRequestSequence = nextRequestSequence;
-        checkpointRequestWriteSequence = requests.writeSequence();
-        substepTransactionActive = true;
+        int count = Math.min(maximum, requests.size());
+        if (count == 0) {
+            return NO_REQUESTS;
+        }
+        Request[] result = new Request[count];
+        for (int index = 0; index < result.length; index++) {
+            result[index] = requests.poll();
+        }
+        return result;
     }
 
-    void commitSubstepTransaction() {
-        requireSubstepTransaction();
-        substepTransactionActive = false;
+    public void reserveReservoirChanges(int additionalReservoirs) {
+        reservoirs.reserve(additionalReservoirs);
     }
 
-    void rollbackSubstepTransaction() {
-        requireSubstepTransaction();
-        nextRequestSequence = checkpointNextRequestSequence;
-        requests.rewindWriteSequence(checkpointRequestWriteSequence);
-        substepTransactionActive = false;
+    public void registerReservoir(int slot) {
+        if (!arena.isLive(slot) || !arena.isPhaseReservoir(slot)) {
+            throw new IllegalArgumentException("phase reservoir slot is invalid");
+        }
+        reservoirs.put(
+                arena.lifecycleGeneration(slot),
+                arena.minimum(slot, 0),
+                arena.minimum(slot, 1),
+                arena.minimum(slot, 2),
+                arena.phaseProfileId(slot),
+                slot);
     }
 
-    private void requireSubstepTransaction() {
-        if (!substepTransactionActive) {
-            throw new IllegalStateException("phase substep transaction is not active");
+    public void unregisterReservoir(int slot) {
+        if (arena.isLive(slot) && arena.isPhaseReservoir(slot)) {
+            reservoirs.remove(
+                    arena.lifecycleGeneration(slot),
+                    arena.minimum(slot, 0),
+                    arena.minimum(slot, 1),
+                    arena.minimum(slot, 2),
+                    arena.phaseProfileId(slot));
         }
     }
 
@@ -212,18 +207,22 @@ public final class PhaseTransitionRuntime {
         }
     }
 
-    private int findReservoir(MutableAck ack) {
-        if (matches(ack.fastSlot, ack.lifecycleGeneration, ack.brickMinX,
-                ack.brickMinY, ack.brickMinZ, ack.profileId)) {
-            return ack.fastSlot;
+    private int findReservoir(Request request) {
+        if (matches(
+                request.fastSlot(),
+                request.lifecycleGeneration(),
+                request.brickMinX(),
+                request.brickMinY(),
+                request.brickMinZ(),
+                request.profileId())) {
+            return request.fastSlot();
         }
-        for (int slot = 0; slot < arena.highWaterMark(); slot++) {
-            if (matches(slot, ack.lifecycleGeneration, ack.brickMinX,
-                    ack.brickMinY, ack.brickMinZ, ack.profileId)) {
-                return slot;
-            }
-        }
-        return -1;
+        return reservoirs.find(
+                request.lifecycleGeneration(),
+                request.brickMinX(),
+                request.brickMinY(),
+                request.brickMinZ(),
+                request.profileId());
     }
 
     private boolean matches(
@@ -237,89 +236,178 @@ public final class PhaseTransitionRuntime {
         return arena.isLive(slot)
                 && arena.isPhaseReservoir(slot)
                 && arena.lifecycleGeneration(slot) == lifecycleGeneration
-                && arena.minimumX(slot) == brickMinX
-                && arena.minimumY(slot) == brickMinY
-                && arena.minimumZ(slot) == brickMinZ
+                && arena.minimum(slot, 0) == brickMinX
+                && arena.minimum(slot, 1) == brickMinY
+                && arena.minimum(slot, 2) == brickMinZ
                 && arena.phaseProfileId(slot) == profileId;
     }
 
-    /** Caller-owned request transported from the solve phase to mutation handling. */
-    public static final class MutableRequest {
-        private int fastSlot;
-        private int lifecycleGeneration;
-        private int brickMinX;
-        private int brickMinY;
-        private int brickMinZ;
-        private int profileId;
-        private int candidateBit;
-        private long requestSequence;
+    private static final class ReservoirIndex {
+        private static final byte EMPTY = 0;
+        private static final byte OCCUPIED = 1;
+        private static final byte DELETED = 2;
 
-        public int lifecycleGeneration() {
-            return lifecycleGeneration;
+        private int[] generations;
+        private int[] minX;
+        private int[] minY;
+        private int[] minZ;
+        private int[] profileIds;
+        private int[] slots;
+        private byte[] states;
+        private int size;
+        private int used;
+        private int resizeThreshold;
+
+        private ReservoirIndex(int expected) {
+            allocate(tableCapacity(expected));
         }
 
-        public int brickMinX() {
-            return brickMinX;
+        private void reserve(int additional) {
+            if (additional < 0) {
+                throw new IllegalArgumentException("reservoir reserve count is negative");
+            }
+            int required = Math.addExact(size, additional);
+            if (required > resizeThreshold) {
+                rehash(tableCapacity(required));
+            } else if (used + additional > resizeThreshold) {
+                rehash(states.length);
+            }
         }
 
-        public int brickMinY() {
-            return brickMinY;
+        private int find(int generation, int x, int y, int z, int profileId) {
+            int mask = states.length - 1;
+            int index = hash(generation, x, y, z, profileId) & mask;
+            while (states[index] != EMPTY) {
+                if (states[index] == OCCUPIED
+                        && matches(index, generation, x, y, z, profileId)) {
+                    return slots[index];
+                }
+                index = index + 1 & mask;
+            }
+            return -1;
         }
 
-        public int brickMinZ() {
-            return brickMinZ;
-        }
-
-        public int profileId() {
-            return profileId;
-        }
-
-        public int blockX() {
-            return brickMinX + (candidateBit & 3);
-        }
-
-        public int blockY() {
-            return brickMinY + (candidateBit >>> 4);
-        }
-
-        public int blockZ() {
-            return brickMinZ + ((candidateBit >>> 2) & 3);
-        }
-
-        private void set(
-                int nextFastSlot,
-                int nextLifecycleGeneration,
-                int nextBrickMinX,
-                int nextBrickMinY,
-                int nextBrickMinZ,
-                int nextProfileId,
-                int nextCandidateBit,
-                long nextRequestSequence
+        private void put(
+                int generation,
+                int x,
+                int y,
+                int z,
+                int profileId,
+                int slot
         ) {
-            fastSlot = nextFastSlot;
-            lifecycleGeneration = nextLifecycleGeneration;
-            brickMinX = nextBrickMinX;
-            brickMinY = nextBrickMinY;
-            brickMinZ = nextBrickMinZ;
-            profileId = nextProfileId;
-            candidateBit = nextCandidateBit;
-            requestSequence = nextRequestSequence;
+            int mask = states.length - 1;
+            int index = hash(generation, x, y, z, profileId) & mask;
+            int deleted = -1;
+            while (states[index] != EMPTY) {
+                if (states[index] == OCCUPIED
+                        && matches(index, generation, x, y, z, profileId)) {
+                    slots[index] = slot;
+                    return;
+                }
+                if (states[index] == DELETED && deleted < 0) {
+                    deleted = index;
+                }
+                index = index + 1 & mask;
+            }
+            int destination = deleted >= 0 ? deleted : index;
+            if (states[destination] == EMPTY) {
+                if (used >= resizeThreshold) {
+                    throw new IllegalStateException(
+                            "phase reservoir index capacity was not reserved");
+                }
+                used++;
+            }
+            states[destination] = OCCUPIED;
+            generations[destination] = generation;
+            minX[destination] = x;
+            minY[destination] = y;
+            minZ[destination] = z;
+            profileIds[destination] = profileId;
+            slots[destination] = slot;
+            size++;
+        }
+
+        private void remove(int generation, int x, int y, int z, int profileId) {
+            int mask = states.length - 1;
+            int index = hash(generation, x, y, z, profileId) & mask;
+            while (states[index] != EMPTY) {
+                if (states[index] == OCCUPIED
+                        && matches(index, generation, x, y, z, profileId)) {
+                    states[index] = DELETED;
+                    slots[index] = -1;
+                    size--;
+                    return;
+                }
+                index = index + 1 & mask;
+            }
+        }
+
+        private boolean matches(
+                int index,
+                int generation,
+                int x,
+                int y,
+                int z,
+                int profileId
+        ) {
+            return generations[index] == generation
+                    && minX[index] == x
+                    && minY[index] == y
+                    && minZ[index] == z
+                    && profileIds[index] == profileId;
+        }
+
+        private void allocate(int capacity) {
+            generations = new int[capacity];
+            minX = new int[capacity];
+            minY = new int[capacity];
+            minZ = new int[capacity];
+            profileIds = new int[capacity];
+            slots = new int[capacity];
+            states = new byte[capacity];
+            resizeThreshold = Math.max(1, (int) (capacity * 0.6D));
+            size = 0;
+            used = 0;
+        }
+
+        private void rehash(int capacity) {
+            int[] oldGenerations = generations;
+            int[] oldX = minX;
+            int[] oldY = minY;
+            int[] oldZ = minZ;
+            int[] oldProfiles = profileIds;
+            int[] oldSlots = slots;
+            byte[] oldStates = states;
+            allocate(capacity);
+            for (int index = 0; index < oldStates.length; index++) {
+                if (oldStates[index] == OCCUPIED) {
+                    put(
+                            oldGenerations[index], oldX[index], oldY[index],
+                            oldZ[index], oldProfiles[index], oldSlots[index]);
+                }
+            }
+        }
+
+        private static int tableCapacity(int expected) {
+            int required = Math.max(4, (int) Math.ceil(expected / 0.6D));
+            int highest = Integer.highestOneBit(required - 1);
+            if (highest >= 1 << 29) {
+                throw new IllegalArgumentException("phase reservoir index is too large");
+            }
+            return highest << 1;
+        }
+
+        private static int hash(int generation, int x, int y, int z, int profileId) {
+            int hash = generation * 0x9E3779B9;
+            hash = Integer.rotateLeft(hash ^ x, 7) * 0x85EBCA6B;
+            hash = Integer.rotateLeft(hash ^ y, 11) * 0xC2B2AE35;
+            hash = Integer.rotateLeft(hash ^ z, 13) * 0x27D4EB2D;
+            return hash ^ profileId * 0x165667B1;
         }
     }
 
-    private static final class MutableAck {
-        private long watermark;
-        private int fastSlot;
-        private int lifecycleGeneration;
-        private int brickMinX;
-        private int brickMinY;
-        private int brickMinZ;
-        private int profileId;
-        private long requestSequence;
-        private AckOutcome outcome;
-    }
-
-    private static final class RequestRing {
+    /** Worker-only bounded FIFO. Completion draining never overlaps a substep. */
+    private static final class RequestQueue {
         private final int capacity;
         private final int[] fastSlots;
         private final int[] lifecycleGenerations;
@@ -329,10 +417,10 @@ public final class PhaseTransitionRuntime {
         private final int[] profileIds;
         private final byte[] candidateBits;
         private final long[] requestSequences;
-        private final AtomicLong writeSequence = new AtomicLong();
-        private final AtomicLong readSequence = new AtomicLong();
+        private long writeSequence;
+        private long readSequence;
 
-        private RequestRing(int capacity) {
+        private RequestQueue(int capacity) {
             if (capacity <= 0) {
                 throw new IllegalArgumentException("phase request capacity must be positive");
             }
@@ -348,30 +436,28 @@ public final class PhaseTransitionRuntime {
         }
 
         private boolean offer(ThermalCellArena arena, int phaseSlot) {
-            long write = writeSequence.get();
-            if (write - readSequence.get() >= capacity) {
+            if (size() >= capacity) {
                 return false;
             }
-            int index = (int) (write % capacity);
+            int index = (int) (writeSequence % capacity);
             fastSlots[index] = phaseSlot;
             lifecycleGenerations[index] = arena.lifecycleGeneration(phaseSlot);
-            brickMinX[index] = arena.minimumX(phaseSlot);
-            brickMinY[index] = arena.minimumY(phaseSlot);
-            brickMinZ[index] = arena.minimumZ(phaseSlot);
+            brickMinX[index] = arena.minimum(phaseSlot, 0);
+            brickMinY[index] = arena.minimum(phaseSlot, 1);
+            brickMinZ[index] = arena.minimum(phaseSlot, 2);
             profileIds[index] = arena.phaseProfileId(phaseSlot);
             candidateBits[index] = (byte) arena.phaseRequestCandidateBit(phaseSlot);
             requestSequences[index] = arena.phaseRequestSequence(phaseSlot);
-            writeSequence.lazySet(write + 1L);
+            writeSequence++;
             return true;
         }
 
-        private boolean poll(MutableRequest target) {
-            long read = readSequence.get();
-            if (read >= writeSequence.get()) {
-                return false;
+        private Request poll() {
+            if (size() == 0) {
+                return null;
             }
-            int index = (int) (read % capacity);
-            target.set(
+            int index = (int) (readSequence % capacity);
+            Request result = new Request(
                     fastSlots[index],
                     lifecycleGenerations[index],
                     brickMinX[index],
@@ -380,201 +466,13 @@ public final class PhaseTransitionRuntime {
                     profileIds[index],
                     Byte.toUnsignedInt(candidateBits[index]),
                     requestSequences[index]);
-            readSequence.lazySet(read + 1L);
-            return true;
+            readSequence++;
+            return result;
         }
 
-        private long writeSequence() {
-            return writeSequence.get();
+        private int size() {
+            return Math.toIntExact(writeSequence - readSequence);
         }
 
-        private void rewindWriteSequence(long checkpoint) {
-            long read = readSequence.get();
-            long write = writeSequence.get();
-            if (checkpoint < read || checkpoint > write) {
-                throw new IllegalStateException(
-                        "phase request ring changed during a solver substep");
-            }
-            writeSequence.set(checkpoint);
-        }
-    }
-
-    private static final class AckRing {
-        private final int capacity;
-        private final long[] watermarks;
-        private final int[] fastSlots;
-        private final int[] lifecycleGenerations;
-        private final int[] brickMinX;
-        private final int[] brickMinY;
-        private final int[] brickMinZ;
-        private final int[] profileIds;
-        private final long[] requestSequences;
-        private final byte[] outcomes;
-        private final AtomicLong writeSequence = new AtomicLong();
-        private final AtomicLong readSequence = new AtomicLong();
-        private long nextWatermark;
-
-        private AckRing(int capacity) {
-            if (capacity <= 0) {
-                throw new IllegalArgumentException("phase ACK capacity must be positive");
-            }
-            this.capacity = capacity;
-            watermarks = new long[capacity];
-            fastSlots = new int[capacity];
-            lifecycleGenerations = new int[capacity];
-            brickMinX = new int[capacity];
-            brickMinY = new int[capacity];
-            brickMinZ = new int[capacity];
-            profileIds = new int[capacity];
-            requestSequences = new long[capacity];
-            outcomes = new byte[capacity];
-        }
-
-        private boolean offer(MutableRequest request, AckOutcome outcome) {
-            return offer(
-                    request.fastSlot,
-                    request.lifecycleGeneration,
-                    request.brickMinX,
-                    request.brickMinY,
-                    request.brickMinZ,
-                    request.profileId,
-                    request.requestSequence,
-                    outcome);
-        }
-
-        private boolean offer(
-                int fastSlot,
-                int lifecycleGeneration,
-                int nextBrickMinX,
-                int nextBrickMinY,
-                int nextBrickMinZ,
-                int profileId,
-                long requestSequence,
-                AckOutcome outcome
-        ) {
-            long write = writeSequence.get();
-            if (write - readSequence.get() >= capacity) {
-                return false;
-            }
-            int index = (int) (write % capacity);
-            long watermark = ++nextWatermark;
-            watermarks[index] = watermark;
-            fastSlots[index] = fastSlot;
-            lifecycleGenerations[index] = lifecycleGeneration;
-            brickMinX[index] = nextBrickMinX;
-            brickMinY[index] = nextBrickMinY;
-            brickMinZ[index] = nextBrickMinZ;
-            profileIds[index] = profileId;
-            requestSequences[index] = requestSequence;
-            outcomes[index] = (byte) outcome.ordinal();
-            writeSequence.lazySet(write + 1L);
-            return true;
-        }
-
-        private boolean pollThrough(long maximumWatermark, MutableAck target) {
-            long read = readSequence.get();
-            if (read >= writeSequence.get()) {
-                return false;
-            }
-            int index = (int) (read % capacity);
-            if (watermarks[index] > maximumWatermark) {
-                return false;
-            }
-            target.watermark = watermarks[index];
-            target.fastSlot = fastSlots[index];
-            target.lifecycleGeneration = lifecycleGenerations[index];
-            target.brickMinX = brickMinX[index];
-            target.brickMinY = brickMinY[index];
-            target.brickMinZ = brickMinZ[index];
-            target.profileId = profileIds[index];
-            target.requestSequence = requestSequences[index];
-            target.outcome = ACK_OUTCOMES[Byte.toUnsignedInt(outcomes[index])];
-            readSequence.lazySet(read + 1L);
-            return true;
-        }
-
-        private long latestOfferedWatermark() {
-            return nextWatermark;
-        }
-
-        private boolean canOffer() {
-            return writeSequence.get() - readSequence.get() < capacity;
-        }
-    }
-
-    private static final class PendingAckTable {
-        private final boolean[] occupied;
-        private final int[] fastSlots;
-        private final int[] lifecycleGenerations;
-        private final int[] brickMinX;
-        private final int[] brickMinY;
-        private final int[] brickMinZ;
-        private final int[] profileIds;
-        private final long[] requestSequences;
-        private final byte[] outcomes;
-
-        private PendingAckTable(int capacity) {
-            occupied = new boolean[capacity];
-            fastSlots = new int[capacity];
-            lifecycleGenerations = new int[capacity];
-            brickMinX = new int[capacity];
-            brickMinY = new int[capacity];
-            brickMinZ = new int[capacity];
-            profileIds = new int[capacity];
-            requestSequences = new long[capacity];
-            outcomes = new byte[capacity];
-        }
-
-        private boolean retain(MutableRequest request, AckOutcome outcome) {
-            for (int index = 0; index < occupied.length; index++) {
-                if (!occupied[index]) {
-                    occupied[index] = true;
-                    fastSlots[index] = request.fastSlot;
-                    lifecycleGenerations[index] = request.lifecycleGeneration;
-                    brickMinX[index] = request.brickMinX;
-                    brickMinY[index] = request.brickMinY;
-                    brickMinZ[index] = request.brickMinZ;
-                    profileIds[index] = request.profileId;
-                    requestSequences[index] = request.requestSequence;
-                    outcomes[index] = (byte) outcome.ordinal();
-                    return true;
-                }
-            }
-            return false;
-        }
-
-        private boolean hasFreeSlot() {
-            for (boolean value : occupied) {
-                if (!value) {
-                    return true;
-                }
-            }
-            return false;
-        }
-
-        private int flushInto(AckRing ring) {
-            int flushed = 0;
-            for (int index = 0; index < occupied.length; index++) {
-                if (!occupied[index]) {
-                    continue;
-                }
-                AckOutcome outcome = ACK_OUTCOMES[
-                        Byte.toUnsignedInt(outcomes[index])];
-                if (!ring.offer(
-                        fastSlots[index],
-                        lifecycleGenerations[index],
-                        brickMinX[index],
-                        brickMinY[index],
-                        brickMinZ[index],
-                        profileIds[index],
-                        requestSequences[index],
-                        outcome)) {
-                    break;
-                }
-                occupied[index] = false;
-                flushed++;
-            }
-            return flushed;
-        }
     }
 }

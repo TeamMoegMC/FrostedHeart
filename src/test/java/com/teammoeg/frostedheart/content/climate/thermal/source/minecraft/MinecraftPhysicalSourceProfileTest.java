@@ -87,6 +87,7 @@ class MinecraftPhysicalSourceProfileTest {
                         new MinecraftPhysicalSourceProfile.Port[]{
                                 MinecraftPhysicalSourceProfile.Port.declaredLoss(
                                         0, SourceChannel.RADIATION, 0.5D)
-                        }));
+                        },
+                        0.5D, 0.5D, 0.5D, 1.0D));
     }
 }

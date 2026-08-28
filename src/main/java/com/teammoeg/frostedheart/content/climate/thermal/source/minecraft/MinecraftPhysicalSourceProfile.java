@@ -88,14 +88,15 @@ public record MinecraftPhysicalSourceProfile(
                     },
                     0.5D, 0.5D, 0.5D, 1.0D);
 
-    public MinecraftPhysicalSourceProfile(
-            int profileId,
-            double ratedPowerW,
-            MissingPortPolicy missingPortPolicy,
-            Port[] ports
-    ) {
-        this(profileId, ratedPowerW, missingPortPolicy, ports,
-                0.5D, 0.5D, 0.5D, 1.0D);
+    public static MinecraftPhysicalSourceProfile byId(int profileId) {
+        return switch (profileId) {
+            case 1 -> CAMPFIRE;
+            case 2 -> GENERATOR;
+            case 3 -> FOUNTAIN;
+            case 4 -> RADIATOR;
+            default -> throw new IllegalArgumentException(
+                    "unknown Minecraft physical source profile: " + profileId);
+        };
     }
 
     public MinecraftPhysicalSourceProfile {
@@ -137,6 +138,16 @@ public record MinecraftPhysicalSourceProfile(
     @Override
     public Port[] ports() {
         return ports.clone();
+    }
+
+    /** Safe indexed access for runtime code that must not clone the port table. */
+    public int portCount() {
+        return ports.length;
+    }
+
+    /** Ports are immutable values; returning one element does not expose the array. */
+    public Port port(int index) {
+        return ports[index];
     }
 
     public double powerForLevel(double level) {

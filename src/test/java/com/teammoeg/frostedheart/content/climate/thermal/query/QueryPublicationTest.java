@@ -1,15 +1,7 @@
-/*
- * Copyright (c) 2026 TeamMoeg
- *
- * This file is part of Frosted Heart.
- *
- * Frosted Heart is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, version 3.
- */
-
+/* Copyright (c) 2026 TeamMoeg */
 package com.teammoeg.frostedheart.content.climate.thermal.query;
 
+import com.teammoeg.frostedheart.content.climate.thermal.ThermalTestFixtures;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.ThermalCellArena;
 import com.teammoeg.frostedheart.content.climate.thermal.runtime.ThermalMemoryBudget;
 import org.junit.jupiter.api.Test;
@@ -26,91 +18,83 @@ class QueryPublicationTest {
     private static final double EPSILON = 1.0e-12D;
 
     @Test
-    void publicationCarriesOneRevisionGenerationAndEpochEnvelope() {
+    void publicationWritesEveryLiveSlotAndValidatesSlotGeneration() {
         ThermalCellArena arena = arena(2, 10.0D);
         arena.setEnthalpyJ(0, 20.0D);
         arena.setEnthalpyJ(1, 40.0D);
         QueryPublication publication = publication(2, 1_000L);
 
         assertTrue(publication.publish(
-                arena, 5.0D, 7L, 11L, 13L, 17L, 20L, 0, 2));
-        QueryPublication.MutableSample out = new QueryPublication.MutableSample();
-        assertTrue(publication.tryRead(1, 7L, 11L, out));
-        assertTrue(out.valid());
+                arena, 5.0D, 3L, true, 20L));
+        QueryPublication.MutableSample out =
+                new QueryPublication.MutableSample();
+        assertTrue(publication.tryRead(1, 1, 3L, out));
         assertEquals(9.0D, out.temperatureC(), EPSILON);
         assertEquals(0, out.mediumId());
-        assertEquals(7L, out.lifecycleGeneration());
-        assertEquals(11L, out.geometryRevision());
-        assertEquals(13L, out.topologyGeneration());
-        assertEquals(17L, out.solveEpoch());
+        assertTrue(out.topologyResolved());
         assertEquals(20L, out.sampleTick());
-        assertFalse(publication.tryRead(1, 7L, 12L, out));
-        assertFalse(out.valid());
+        assertFalse(publication.tryRead(1, 2, 3L, out));
+        assertFalse(publication.tryRead(1, 1, 4L, out));
         publication.close();
     }
 
     @Test
-    void sleepingRepublishUpdatesOnlyTheStableEnvelope() {
+    void sleepingRepublishAdvancesSampleTimeWithoutCopyingCells() {
         ThermalCellArena arena = arena(1, 10.0D);
         QueryPublication publication = publication(1, 1_000L);
-        publication.publish(arena, 0.0D, 1L, 2L, 3L, 4L, 5L, 0, 1);
-        assertTrue(publication.republishUnchanged(1L, 2L, 3L, 5L, 10L));
-        QueryPublication.MutableSample out = new QueryPublication.MutableSample();
-        assertTrue(publication.tryRead(0, 1L, 2L, out));
-        assertEquals(5L, out.solveEpoch());
+        publication.publish(arena, 0.0D, 1L, true, 5L);
+        arena.setEnthalpyJ(0, 100.0D);
+
+        assertTrue(publication.republishUnchanged(1L, 10L));
+        QueryPublication.MutableSample out =
+                new QueryPublication.MutableSample();
+        assertTrue(publication.tryRead(0, 1, 1L, out));
+        assertEquals(0.0D, out.temperatureC(), EPSILON);
         assertEquals(10L, out.sampleTick());
         publication.close();
     }
 
     @Test
-    void resizeChargesPeakDoubleBackingAndKeepsOldPublicationOnRefusal() {
-        ThermalMemoryBudget server = new ThermalMemoryBudget(90L, 0L);
-        ThermalMemoryBudget dimension = server.createDimensionBudget(90L, 0L);
-        QueryPublication publication = QueryPublication.tryCreate(dimension, 1);
-        assertNotNull(publication);
+    void refusedGrowthPreservesThePreviousPublishedBuffer() {
         ThermalCellArena arena = arena(1, 1.0D);
-        publication.publish(arena, 0.0D, 1L, 1L, 1L, 1L, 1L, 0, 1);
+        QueryPublication publication = publication(1, 90L);
+        publication.publish(arena, 0.0D, 1L, true, 1L);
 
-        assertFalse(publication.tryEnsureCapacity(2));
-        assertEquals(1, publication.capacity());
-        QueryPublication.MutableSample out = new QueryPublication.MutableSample();
-        assertTrue(publication.tryRead(0, 1L, 1L, out));
+        assertFalse(publication.tryEnsureCapacity(2, 2));
+        QueryPublication.MutableSample out =
+                new QueryPublication.MutableSample();
+        assertTrue(publication.tryRead(0, 1, 1L, out));
         publication.close();
-        QueryPublication replacement = QueryPublication.tryCreate(dimension, 1);
-        assertNotNull(replacement);
-        replacement.close();
     }
 
     @Test
-    void retiredLifecycleRejectsStaleWorkerPublication() {
+    void successfulGrowthAlsoPreservesThePreviousPublishedBuffer() {
         ThermalCellArena arena = arena(1, 1.0D);
         QueryPublication publication = publication(1, 1_000L);
-        publication.publish(arena, 0.0D, 3L, 4L, 5L, 6L, 7L, 0, 1);
+        publication.publish(arena, 0.0D, 2L, false, 4L);
 
-        publication.retire();
-
-        assertFalse(publication.publish(
-                arena, 0.0D, 3L, 4L, 5L, 7L, 8L, 0, 1));
-        QueryPublication.MutableSample out = new QueryPublication.MutableSample();
-        assertFalse(publication.tryRead(0, 3L, 4L, out));
+        assertTrue(publication.tryEnsureCapacity(2, 2));
+        QueryPublication.MutableSample out =
+                new QueryPublication.MutableSample();
+        assertTrue(publication.tryRead(0, 1, 2L, out));
+        assertEquals(4L, out.sampleTick());
+        assertFalse(out.topologyResolved());
         publication.close();
     }
 
     @Test
-    void acceptedConcurrentReadsNeverMixBufferAndEnvelopeGenerations()
+    void concurrentReadersNeverMixBufferValuesAndSampleTime()
             throws InterruptedException {
         ThermalCellArena arena = arena(1, 1.0D);
         QueryPublication publication = publication(1, 1_000L);
-        publication.publish(arena, 0.0D, 1L, 1L, 1L, 0L, 0L, 0, 1);
+        publication.publish(arena, 0.0D, 1L, true, 0L);
         AtomicBoolean running = new AtomicBoolean(true);
         AtomicReference<Throwable> failure = new AtomicReference<>();
         Thread writer = new Thread(() -> {
             try {
-                for (long epoch = 1L; epoch <= 20_000L; epoch++) {
-                    arena.setEnthalpyJ(0, epoch);
-                    publication.publish(
-                            arena, 0.0D, 1L, 1L, 1L,
-                            epoch, epoch, 0, 1);
+                for (long sample = 1L; sample <= 10_000L; sample++) {
+                    arena.setEnthalpyJ(0, sample);
+                    publication.publish(arena, 0.0D, 1L, true, sample);
                 }
             } catch (Throwable throwable) {
                 failure.set(throwable);
@@ -120,19 +104,21 @@ class QueryPublicationTest {
         }, "thermal-publication-writer");
         writer.start();
 
-        QueryPublication.MutableSample out = new QueryPublication.MutableSample();
+        QueryPublication.MutableSample out =
+                new QueryPublication.MutableSample();
         while (running.get()) {
-            if (publication.tryRead(0, 1L, 1L, out)
-                    && out.temperatureC() != (double) out.solveEpoch()) {
+            if (publication.tryRead(0, 1, 1L, out)
+                    && out.temperatureC() != (double) out.sampleTick()) {
                 failure.compareAndSet(null, new AssertionError(
                         "mixed publication: temperature=" + out.temperatureC()
-                                + ", epoch=" + out.solveEpoch()));
+                                + ", tick=" + out.sampleTick()));
                 break;
             }
         }
         writer.join();
         if (failure.get() != null) {
-            throw new AssertionError("concurrent publication failed", failure.get());
+            throw new AssertionError(
+                    "concurrent publication failed", failure.get());
         }
         publication.close();
     }
@@ -146,21 +132,12 @@ class QueryPublicationTest {
     }
 
     private static ThermalCellArena arena(int cellCount, double capacity) {
-        ThermalCellArena.CellSpec[] cells = new ThermalCellArena.CellSpec[cellCount];
-        for (int slot = 0; slot < cellCount; slot++) {
-            cells[slot] = new ThermalCellArena.CellSpec(
-                    slot * 4, 0, 0, 0, 0, capacity);
-        }
         ThermalCellArena arena = new ThermalCellArena(cellCount);
-        arena.allocatePageCells(
-                0,
-                1,
-                cells,
-                new ThermalCellArena.MixedBrickSpec[0],
-                new ThermalCellArena.MaterialPoleSpec[0],
-                new ThermalCellArena.PhaseReservoirSpec[0],
-                0.0D,
-                0.0D);
+        for (int slot = 0; slot < cellCount; slot++) {
+            ThermalTestFixtures.regularBrick(
+                    arena, slot, 1, slot * 4, 0, 0,
+                    capacity, 0.0D, 0.0D);
+        }
         return arena;
     }
 }

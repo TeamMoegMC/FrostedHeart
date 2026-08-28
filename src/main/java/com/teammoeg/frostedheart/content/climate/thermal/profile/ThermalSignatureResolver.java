@@ -42,7 +42,7 @@ public interface ThermalSignatureResolver<B, F> {
         }
         ThermalResolution<ResolvedThermalSignature> normalized = access.normalize(result);
         if (normalized.isResolved()
-                && normalized.value().orElseThrow().localAirRegionCount() > maxOutputRegions()) {
+                && normalized.value().localAirRegionCount() > maxOutputRegions()) {
             return ThermalResolution.unsupported(ThermalResolution.Reason.REGION_LIMIT_EXCEEDED);
         }
         return normalized;

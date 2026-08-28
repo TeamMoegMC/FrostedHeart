@@ -11,22 +11,20 @@
 package com.teammoeg.frostedheart.content.climate.thermal.profile;
 
 import java.util.Objects;
-import java.util.Optional;
 import java.util.function.Function;
 
 /** A value-or-reason result shared by resolver, registry, and census code. */
-public record ThermalResolution<T>(Status status, Reason reason, Optional<T> value) {
+public record ThermalResolution<T>(Status status, Reason reason, T value) {
     public ThermalResolution {
         Objects.requireNonNull(status, "status");
         Objects.requireNonNull(reason, "reason");
-        Objects.requireNonNull(value, "value");
         if (reason.expectedStatus() != status) {
             throw new IllegalArgumentException("resolution reason does not match status");
         }
-        if (status == Status.RESOLVED && value.isEmpty()) {
+        if (status == Status.RESOLVED && value == null) {
             throw new IllegalArgumentException("resolved result must contain a value");
         }
-        if (status != Status.RESOLVED && value.isPresent()) {
+        if (status != Status.RESOLVED && value != null) {
             throw new IllegalArgumentException("non-resolved result must not contain a value");
         }
     }
@@ -35,7 +33,7 @@ public record ThermalResolution<T>(Status status, Reason reason, Optional<T> val
         return new ThermalResolution<>(
                 Status.RESOLVED,
                 Reason.NONE,
-                Optional.of(Objects.requireNonNull(value, "value"))
+                Objects.requireNonNull(value, "value")
         );
     }
 
@@ -43,7 +41,7 @@ public record ThermalResolution<T>(Status status, Reason reason, Optional<T> val
         if (Objects.requireNonNull(reason, "reason").expectedStatus() != Status.UNRESOLVED) {
             throw new IllegalArgumentException("reason is not unresolved");
         }
-        return new ThermalResolution<>(Status.UNRESOLVED, reason, Optional.empty());
+        return new ThermalResolution<>(Status.UNRESOLVED, reason, null);
     }
 
     public static <T> ThermalResolution<T> unsupported(Reason reason) {
@@ -51,7 +49,8 @@ public record ThermalResolution<T>(Status status, Reason reason, Optional<T> val
                 != Status.CONSERVATIVE_UNSUPPORTED) {
             throw new IllegalArgumentException("reason is not conservative unsupported");
         }
-        return new ThermalResolution<>(Status.CONSERVATIVE_UNSUPPORTED, reason, Optional.empty());
+        return new ThermalResolution<>(
+                Status.CONSERVATIVE_UNSUPPORTED, reason, null);
     }
 
     public static <T> ThermalResolution<T> failure(Reason reason) {
@@ -71,7 +70,7 @@ public record ThermalResolution<T>(Status status, Reason reason, Optional<T> val
         if (!isResolved()) {
             return failure(reason);
         }
-        return resolved(mapper.apply(value.orElseThrow()));
+        return resolved(mapper.apply(value));
     }
 
     public enum Status {

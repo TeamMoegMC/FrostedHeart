@@ -1,91 +1,67 @@
-/*
- * Copyright (c) 2026 TeamMoeg
- *
- * This file is part of Frosted Heart.
- *
- * Frosted Heart is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, version 3.
- */
-
+/* Copyright (c) 2026 TeamMoeg */
 package com.teammoeg.frostedheart.content.climate.thermal.source;
 
+import com.teammoeg.frostedheart.content.climate.thermal.ThermalTestFixtures;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.ThermalCellArena;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class NodePowerAccumulatorArenaTest {
     private static final double EPSILON = 1.0e-9D;
 
     @Test
-    void eventTimeChangesPreserveSignedIntegralAcrossProductionDrains() {
-        NodePowerAccumulatorArena arena = new NodePowerAccumulatorArena(0);
-        int slot = arena.ensureNode(0L, 3, 2L);
+    void activeNodeIntegratesPowerOnceAndDeliversPendingEnergy() {
+        ThermalCellArena cells = new ThermalCellArena(1);
+        int node = ThermalTestFixtures.regularBrick(
+                cells, 0, 3, 0, 0, 0,
+                100.0D, 0.0D, 0.0D).cellSpan().firstSlot();
+        NodePowerAccumulatorArena accumulators =
+                new NodePowerAccumulatorArena(1);
+        accumulators.retainBinding(node, 3, 0L);
+        int slot = accumulators.ensureNode(node, 3, 0L);
+        accumulators.changePowerAt(slot, 0L, 20.0D);
 
-        arena.changePowerAt(slot, 2L, 400.0D);
-        ThermalCellArena first = cellArena(3);
-        assertEquals(200.0D, arena.drainAllPendingEnergyTo(12L, first), EPSILON);
-        assertEquals(200.0D, first.enthalpyJ(0), EPSILON);
+        assertTrue(accumulators.hasActivePowerOrPendingEnergy());
+        accumulators.drainAllPendingEnergyTo(20L, cells);
+        assertEquals(20.0D, cells.enthalpyJ(node), EPSILON);
+        assertTrue(accumulators.referencesNode(node, 3));
 
-        arena.changePowerAt(slot, 12L, -600.0D);
-        ThermalCellArena second = cellArena(3);
-        assertEquals(-100.0D, arena.drainAllPendingEnergyTo(22L, second), EPSILON);
-        assertEquals(-100.0D, second.enthalpyJ(0), EPSILON);
-
-        assertThrows(IllegalArgumentException.class, () -> arena.settleTo(slot, 21L));
+        accumulators.changePowerAt(slot, 20L, -20.0D);
+        accumulators.releaseBinding(node, 3, 20L);
+        assertFalse(accumulators.referencesNode(node, 3));
+        assertFalse(accumulators.hasActivePowerOrPendingEnergy());
     }
 
     @Test
-    void nodeIdentityIncludesLifecycleGeneration() {
-        NodePowerAccumulatorArena arena = new NodePowerAccumulatorArena(1);
-        int oldGeneration = arena.ensureNode(0L, 4, 0L);
-        int newGeneration = arena.ensureNode(1L, 5, 0L);
+    void idleSlotsAreRecycledAcrossNodeGenerations() {
+        NodePowerAccumulatorArena accumulators =
+                new NodePowerAccumulatorArena(1);
+        int first = accumulators.ensureNode(0L, 1, 0L);
+        accumulators.retainBinding(0L, 1, 0L);
+        accumulators.releaseBinding(0L, 1, 0L);
 
-        arena.changePowerAt(oldGeneration, 0L, 100.0D);
-        arena.changePowerAt(newGeneration, 0L, -20.0D);
-
-        ThermalCellArena destination = cellArena(4, 5);
-        assertEquals(40.0D,
-                arena.drainAllPendingEnergyTo(10L, destination), EPSILON);
-        assertEquals(50.0D, destination.enthalpyJ(0), EPSILON);
-        assertEquals(-10.0D, destination.enthalpyJ(1), EPSILON);
+        int replacement = accumulators.ensureNode(1L, 2, 0L);
+        assertEquals(first, replacement);
+        assertFalse(accumulators.referencesNode(0L, 1));
     }
 
     @Test
-    void staleArenaBindingRetainsEnergyUntilAValidGenerationCanReceiveIt() {
-        NodePowerAccumulatorArena accumulators = new NodePowerAccumulatorArena(0);
-        int accumulator = accumulators.ensureNode(0L, 1, 0L);
-        accumulators.changePowerAt(accumulator, 0L, 100.0D);
-        ThermalCellArena staleDestination = cellArena(2);
+    void impulsesRemainActiveUntilTheyAreDelivered() {
+        ThermalCellArena cells = new ThermalCellArena(1);
+        int node = ThermalTestFixtures.regularBrick(
+                cells, 0, 1, 0, 0, 0,
+                100.0D, 0.0D, 0.0D).cellSpan().firstSlot();
+        NodePowerAccumulatorArena accumulators =
+                new NodePowerAccumulatorArena(1);
+        int slot = accumulators.ensureNode(node, 1, 0L);
+        accumulators.addImpulseAt(slot, 5L, 12.5D);
 
-        assertThrows(IllegalStateException.class, () ->
-                accumulators.drainAllPendingEnergyTo(10L, staleDestination));
-        assertEquals(0.0D, staleDestination.enthalpyJ(0), EPSILON);
-
-        ThermalCellArena currentDestination = cellArena(1);
-        assertEquals(50.0D,
-                accumulators.drainAllPendingEnergyTo(10L, currentDestination), EPSILON);
-        assertEquals(50.0D, currentDestination.enthalpyJ(0), EPSILON);
-        assertEquals(0.0D,
-                accumulators.drainAllPendingEnergyTo(10L, currentDestination), EPSILON);
-    }
-
-    private static ThermalCellArena cellArena(int... generations) {
-        ThermalCellArena destination = new ThermalCellArena(0);
-        for (int slot = 0; slot < generations.length; slot++) {
-            destination.allocatePageCells(
-                    slot,
-                    generations[slot],
-                    new ThermalCellArena.CellSpec[]{new ThermalCellArena.CellSpec(
-                            slot * 4, 0, 0, 0, 0, 100.0D)},
-                    new ThermalCellArena.MixedBrickSpec[0],
-                    new ThermalCellArena.MaterialPoleSpec[0],
-                    new ThermalCellArena.PhaseReservoirSpec[0],
-                    0.0D,
-                    0.0D);
-        }
-        return destination;
+        assertTrue(accumulators.hasActivePowerOrPendingEnergy());
+        accumulators.drainAllPendingEnergyTo(5L, cells);
+        assertEquals(12.5D, cells.enthalpyJ(node), EPSILON);
+        assertFalse(accumulators.hasActivePowerOrPendingEnergy());
     }
 }

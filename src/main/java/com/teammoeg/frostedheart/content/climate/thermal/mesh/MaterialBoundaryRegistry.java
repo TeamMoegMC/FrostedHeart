@@ -14,7 +14,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 
 /**
  * Immutable solve-safe material parameters and contact masks. ID zero is the
@@ -226,24 +225,12 @@ public final class MaterialBoundaryRegistry {
         this.contactPatterns = indexPatterns(contactPatterns);
     }
 
-    public static MaterialBoundaryRegistry empty() {
-        return new MaterialBoundaryRegistry(List.of(), List.of());
+    public Profile profileOrNull(int id) {
+        return profiles.get(id);
     }
 
-    public Optional<Profile> profile(int id) {
-        return Optional.ofNullable(profiles.get(id));
-    }
-
-    public Optional<ContactPattern> contactPattern(int id) {
-        return Optional.ofNullable(contactPatterns.get(id));
-    }
-
-    public int profileCount() {
-        return profiles.size();
-    }
-
-    public int contactPatternCount() {
-        return contactPatterns.size();
+    public ContactPattern contactPatternOrNull(int id) {
+        return contactPatterns.get(id);
     }
 
     private static Map<Integer, Profile> indexProfiles(List<Profile> values) {
