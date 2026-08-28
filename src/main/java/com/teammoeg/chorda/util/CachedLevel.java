@@ -1,19 +1,139 @@
 package com.teammoeg.chorda.util;
 import java.util.Arrays;
+import java.util.List;
+
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.core.Holder;
+import net.minecraft.core.RegistryAccess;
 import net.minecraft.util.BitStorage;
 import net.minecraft.util.Mth;
 import net.minecraft.util.SimpleBitStorage;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.flag.FeatureFlagSet;
+import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.LevelReader;
+import net.minecraft.world.level.biome.Biome;
+import net.minecraft.world.level.biome.BiomeManager;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.border.WorldBorder;
 import net.minecraft.world.level.chunk.ChunkAccess;
+import net.minecraft.world.level.chunk.ChunkStatus;
 import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.chunk.LevelChunkSection;
 import net.minecraft.world.level.chunk.PalettedContainer;
+import net.minecraft.world.level.dimension.DimensionType;
 import net.minecraft.world.level.levelgen.Heightmap;
+import net.minecraft.world.level.levelgen.Heightmap.Types;
+import net.minecraft.world.level.lighting.LevelLightEngine;
+import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.shapes.VoxelShape;
 
-public class CachedLevel {
+public class CachedLevel implements BlockGetter{
+	public static class CachedLevelReader implements LevelReader{
+		CachedLevel clevel;
+		Level level;
+		public CachedLevelReader(CachedLevel clevel, Level level) {
+			super();
+			this.clevel = clevel;
+			this.level = level;
+		}
+
+		@Override
+		public float getShade(Direction pDirection, boolean pShade) {
+			return 1f;
+		}
+
+		@Override
+		public LevelLightEngine getLightEngine() {
+			return level.getLightEngine();
+		}
+
+		@Override
+		public BlockEntity getBlockEntity(BlockPos pPos) {
+			return null;
+		}
+
+		@Override
+		public BlockState getBlockState(BlockPos p_45571_) {
+			return clevel.getBlockState(p_45571_);
+		}
+
+		@Override
+		public FluidState getFluidState(BlockPos pPos) {
+			return clevel.getFluidState(pPos);
+		}
+
+		@Override
+		public WorldBorder getWorldBorder() {
+			return level.getWorldBorder();
+		}
+
+		@Override
+		public List<VoxelShape> getEntityCollisions(Entity pEntity, AABB pCollisionBox) {
+			return List.of();
+		}
+
+		@Override
+		public ChunkAccess getChunk(int pX, int pZ, ChunkStatus pRequiredStatus, boolean pNonnull) {
+			return level.getChunk(pX, pZ, pRequiredStatus, pNonnull);
+		}
+
+		@Override
+		public boolean hasChunk(int pChunkX, int pChunkZ) {
+			return pChunkX<=clevel.maxChunkX&&pChunkX>=clevel.minChunkX&&pChunkZ<=clevel.minChunkZ&&pChunkZ>=clevel.maxChunkZ;
+		}
+
+		@Override
+		public int getHeight(Types pHeightmapType, int pX, int pZ) {
+			return clevel.getHeight(pX, pZ);
+		}
+
+		@Override
+		public int getSkyDarken() {
+			return 0;
+		}
+
+		@Override
+		public BiomeManager getBiomeManager() {
+			return level.getBiomeManager();
+		}
+
+		@Override
+		public Holder<Biome> getUncachedNoiseBiome(int pX, int pY, int pZ) {
+			return level.getUncachedNoiseBiome(pX, pY, pZ);
+		}
+
+		@Override
+		public boolean isClientSide() {
+			return false;
+		}
+
+		@Override
+		public int getSeaLevel() {
+			return level.getSeaLevel();
+		}
+
+		@Override
+		public DimensionType dimensionType() {
+			return level.dimensionType();
+		}
+
+		@Override
+		public RegistryAccess registryAccess() {
+			return level.registryAccess();
+		}
+
+		@Override
+		public FeatureFlagSet enabledFeatures() {
+			return level.enabledFeatures();
+		}
+		
+	}
 	private interface HeightProvider{
 		int getFirstAvailable(int pX, int pZ);
 	}
@@ -46,7 +166,13 @@ public class CachedLevel {
     private final int minChunkX, maxChunkX, minChunkZ, maxChunkZ, minChunkY, maxChunkY;
     private final int chunkWidth, chunkDepth, chunkHeight;
 
-    private final PalettedContainer<BlockState>[] sections;
+    @Override
+	public String toString() {
+		return "CachedLevel [minChunkX=" + minChunkX + ", maxChunkX=" + maxChunkX + ", minChunkZ=" + minChunkZ + ", maxChunkZ=" + maxChunkZ + ", minChunkY=" + minChunkY + ", maxChunkY=" + maxChunkY
+			+ ", chunkWidth=" + chunkWidth + ", chunkDepth=" + chunkDepth + ", chunkHeight=" + chunkHeight + "]";
+	}
+
+	private final PalettedContainer<BlockState>[] sections;
     private final HeightProvider[] heightmaps;
 
     @SuppressWarnings("unchecked")
@@ -102,12 +228,12 @@ public class CachedLevel {
     }
 
     /**
-     * 通过世界坐标获取 WORLD_SURFACE 高度（O(1)）
+     * 通过世界坐标获取高度（O(1)）
      * @param x 世界X坐标
      * @param z 世界Z坐标
      * @return 地表高度（最高非空气方块），若缓存中无该列数据则返回 -1
      */
-    public int getSurfaceHeight(int x, int z) {
+    public int getHeight(int x, int z) {
         int cx = x >> 4;
         int cz = z >> 4;
         if (cx < minChunkX || cx > maxChunkX || cz < minChunkZ || cz > maxChunkZ) {
@@ -116,6 +242,10 @@ public class CachedLevel {
         int chunkIdx = getChunkIndex(cx, cz);
         HeightProvider hm = heightmaps[chunkIdx];
         return (hm == null) ? -1 : hm.getFirstAvailable(x & 15, z & 15);
+    }
+    
+    public static CachedLevelReader getCachedLevelReader(Level level, AABB aabb, boolean copy) {
+    	return new CachedLevelReader(getCachedLevel(level,aabb,copy),level);
     }
     /**
      * 从 Level 中提取指定 AABB 范围内的区块数据，生成 CachedLevel 缓存对象。
@@ -145,10 +275,8 @@ public class CachedLevel {
         int maxChunkX = maxX >> 4;
         int minChunkZ = minZ >> 4;
         int maxChunkZ = maxZ >> 4;
-
-        // 3. 涉及的 Section 范围（全局索引）
-        int minChunkY = (minY >> 4) - level.getMinSection();
-        int maxChunkY = (maxY >> 4) - level.getMinSection();
+        int minChunkY = minY >> 4;
+        int maxChunkY = maxY >> 4;
 
         // 4. 创建数据容器
         CachedLevel data = new CachedLevel(minChunkX, maxChunkX, minChunkZ, maxChunkZ, minChunkY, maxChunkY);
@@ -170,7 +298,7 @@ public class CachedLevel {
 
                 // ---- Section 数据 ----
                 for (int cy = minChunkY; cy <= maxChunkY; cy++) {
-                	LevelChunkSection section=chunk.getSection(cy);
+                	LevelChunkSection section=chunk.getSection(cy-chunk.getMinSection());
                     if (section == null || section.hasOnlyAir()) continue;
                     PalettedContainer<BlockState> container;
                     if(copy) {
@@ -182,7 +310,35 @@ public class CachedLevel {
                 }
             }
         }
-
         return data;
     }
+
+	@Override
+	public int getHeight() {
+		return chunkHeight<<4;
+	}
+
+	@Override
+	public int getMinBuildHeight() {
+		return minChunkY<<4;
+	}
+
+	@Override
+	public BlockEntity getBlockEntity(BlockPos pPos) {
+		return null;
+	}
+
+	@Override
+	public BlockState getBlockState(BlockPos p_45571_) {
+		return getBlockState(p_45571_.getX(),p_45571_.getY(),p_45571_.getZ());
+	}
+
+	@Override
+	public FluidState getFluidState(BlockPos pPos) {
+		return getBlockState(pPos).getFluidState();
+	}
+	public static void main(String[] args) {
+		CachedLevel ccl=new CachedLevel(-21,-19,3,5,6,10);
+		System.out.println(ccl.getSectionIndex(-300>>4, 80>>4, 49>>4));
+	}
 }

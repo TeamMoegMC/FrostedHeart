@@ -27,6 +27,16 @@ public class RoomPathfinder {
 			this.height = height;
 			this.reachableHeight=reachableHeight;
 		}
+		public boolean isOverlap(OccupiedCell another) {
+			if(another.pos.getX()!=this.pos.getX()||another.pos.getZ()!=this.pos.getZ())
+				return false;
+		    int aEnd = another.pos.getY() + another.height - 1; // 段 a 的最高 y 坐标
+		    int bEnd = this.pos.getY() + this.height - 1; // 段 b 的最高 y 坐标
+
+		    // 两个区间 [a.y, aEnd] 和 [b.y, bEnd] 有交集
+		    return Math.max(another.pos.getY(),this.pos.getY()) <= Math.min(aEnd, bEnd);
+			
+		}
 		public BlockPos getPos() {
 			return pos;
 		}
@@ -78,6 +88,7 @@ public class RoomPathfinder {
 					@Override
 					public MutableBlockPos next() {
 						mbp.setWithOffset(pos, 0, cy, 0);
+						cy++;
 						return mbp;
 					}
 					

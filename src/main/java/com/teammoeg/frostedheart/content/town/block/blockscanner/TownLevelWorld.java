@@ -3,15 +3,15 @@ package com.teammoeg.frostedheart.content.town.block.blockscanner;
 import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
 
 import net.minecraft.core.BlockPos;
-import net.minecraft.world.level.Level;
+import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.Heightmap.Types;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.shapes.VoxelShape;
 
 public class TownLevelWorld implements AbstractWorld {
-	Level level;
-	public TownLevelWorld(Level level) {
+	LevelReader level;
+	public TownLevelWorld(LevelReader level) {
 		super();
 		this.level = level;
 	}

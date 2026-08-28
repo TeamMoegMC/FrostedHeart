@@ -49,7 +49,9 @@ import net.minecraft.world.MenuProvider;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.level.block.BedBlock;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.BedPart;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.util.LazyOptional;
 import org.jetbrains.annotations.NotNull;
@@ -126,7 +128,7 @@ public class HouseBlockEntity extends AbstractTownBuildingBlockEntity<HouseBuild
 			building.setTemperature(rd.calculateTemperature(level));
 			building.setOccupiedVolume(rd.calculateOccupiedVolume());
 			building.setMaxResidents(calculateMaxResidents(building.getArea(), building.getVolume(), rd.countInsideBlock(t->t.is(BlockTags.BEDS))));
-			building.setLayout(rd.findBlockPosition(t->t.is(BlockTags.BEDS)), rd.doors.get(0));
+			building.setLayout(rd.findBlockPosition(t->t.is(BlockTags.BEDS)&&((!t.hasProperty(BedBlock.PART))||t.getValue(BedBlock.PART)==BedPart.HEAD)), rd.doors.get(0));
 			return true;
 		}
 		building.clearLayout();

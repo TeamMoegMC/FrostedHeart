@@ -5,12 +5,14 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 import javax.annotation.Nullable;
 
+import com.teammoeg.chorda.util.CachedLevel;
 import com.teammoeg.frostedheart.content.climate.WorldTemperature;
 import com.teammoeg.frostedheart.content.town.block.OccupiedVolume;
 import com.teammoeg.frostedheart.content.town.block.blockscanner.RoomPathfinder.OccupiedCell;
@@ -23,9 +25,11 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.BlockPos.MutableBlockPos;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.block.DoorBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.DoubleBlockHalf;
+import net.minecraft.world.phys.AABB;
 
 public class BlockScanner {
     public static class RoomData {
@@ -48,6 +52,18 @@ public class BlockScanner {
 			this.doors=doors;
 			area=occupiedCells.size();
 			volume=occupiedCells.stream().mapToInt(OccupiedCell::height).sum();
+		}
+		@Override
+		public int hashCode() {
+			return Objects.hash(neighborCells, occupiedCells);
+		}
+		@Override
+		public boolean equals(Object obj) {
+			if (this == obj) return true;
+			if (obj == null) return false;
+			if (getClass() != obj.getClass()) return false;
+			RoomData other = (RoomData) obj;
+			return Objects.equals(neighborCells, other.neighborCells) && Objects.equals(occupiedCells, other.occupiedCells);
 		}
 		@Override
 		public String toString() {
@@ -124,12 +140,14 @@ public class BlockScanner {
     }
     @Nullable
     public static RoomData scanRoomDataFromBlock(Level l,BlockPos roomBlockPos) {
-    	return scanRoomData(l,roomBlockPos.above());
+    	LevelReader lr=CachedLevel.getCachedLevelReader(l, new AABB(roomBlockPos).inflate(17, 33, 17), false);
+    	RoomData rd=scanRoomData(lr, new TownLevelWorld(lr),roomBlockPos.above());
+    	return rd;
     	
     }
     @Nullable
-    public static RoomData scanRoomData(Level l,BlockPos start) {
-    	AbstractWorld world=new CachedWorld(new TownLevelWorld(l));
+    public static RoomData scanRoomData(LevelReader r,AbstractWorld world,BlockPos start) {
+    	
     	ReachabilityResult positions=RoomPathfinder.findReachable(world, start);
     	//System.out.println(positions);
     	if(positions==null)
@@ -139,7 +157,7 @@ public class BlockScanner {
     	Reference2IntOpenHashMap<BlockState> neighborBlocks=new Reference2IntOpenHashMap<>();
     	Set<BlockPos> doors=new HashSet<>();
         for(BlockPos cpos:positions.neighborCells) {
-        	BlockState block=l.getBlockState(cpos);
+        	BlockState block=r.getBlockState(cpos);
         	if(block.is(BlockTags.DOORS)) {
         		if(block.hasProperty(DoorBlock.HALF)) {
         			if(block.getValue(DoorBlock.HALF)==DoubleBlockHalf.UPPER)
@@ -153,13 +171,12 @@ public class BlockScanner {
         }
         for(OccupiedCell ocell:positions.occupiedCells) {
         	for(MutableBlockPos cpos:ocell) {
-        		BlockState block=l.getBlockState(cpos);
+        		BlockState block=r.getBlockState(cpos);
         		if(!block.isAir())
         			insideBlockIndex.put(cpos.immutable(),block);
         		insideBlocks.addTo(block, 1);
         	}
         }
-        
         RoomData rd =  new RoomData(positions.occupiedCells,positions.neighborCells,insideBlockIndex,insideBlocks,neighborBlocks,new ArrayList<>(doors));
         return rd;
     }
