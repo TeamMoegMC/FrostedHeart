@@ -51,7 +51,8 @@ public class BlockScanner {
 		}
 		@Override
 		public String toString() {
-			return "RoomData [occupiedCells=" + occupiedCells + ", neighborCells=" + neighborCells + ", insideBlocks=" + insideBlocks + ", neighborBlocks=" + neighborBlocks + "]";
+			return "RoomData [occupiedCells=" + occupiedCells + ", neighborCells=" + neighborCells + ", insideBlockIndex=" + insideBlockIndex + ", insideBlocks=" + insideBlocks + ", neighborBlocks="
+				+ neighborBlocks + ", doors=" + doors + ", area=" + area + ", volume=" + volume + "]";
 		}
 		public int countInsideBlock(Predicate<BlockState> predicate) {
 			int result=0;
@@ -130,6 +131,7 @@ public class BlockScanner {
     public static RoomData scanRoomData(Level l,BlockPos start) {
     	AbstractWorld world=new CachedWorld(new TownLevelWorld(l));
     	ReachabilityResult positions=RoomPathfinder.findReachable(world, start);
+    	//System.out.println(positions);
     	if(positions==null)
     		return null;
     	Map<BlockPos,BlockState> insideBlockIndex=new HashMap<>();
@@ -157,6 +159,8 @@ public class BlockScanner {
         		insideBlocks.addTo(block, 1);
         	}
         }
-        return new RoomData(positions.occupiedCells,positions.neighborCells,insideBlockIndex,insideBlocks,neighborBlocks,new ArrayList<>(doors));
+        
+        RoomData rd =  new RoomData(positions.occupiedCells,positions.neighborCells,insideBlockIndex,insideBlocks,neighborBlocks,new ArrayList<>(doors));
+        return rd;
     }
 }

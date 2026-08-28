@@ -15,10 +15,16 @@ public class CachedWorld implements AbstractWorld {
 
 	@Override
 	public BlockType getBlockType(BlockPos pos) {
-		if(getMaxY(pos)>pos.getY())
+		if(getMaxY(pos)<pos.getY())
 			return BlockType.AIR;
 		
-		return cache.computeIfAbsent(pos.immutable(), internal::getBlockType);
+		BlockType bp=cache.get(pos);
+		if(bp==null) {
+			bp=internal.getBlockType(pos);
+			BlockPos imbp= pos.immutable();
+			cache.put(imbp, bp);
+		}
+		return bp;
 	}
 
 	@Override

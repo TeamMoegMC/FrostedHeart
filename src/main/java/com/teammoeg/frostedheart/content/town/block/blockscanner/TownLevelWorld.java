@@ -23,14 +23,14 @@ public class TownLevelWorld implements AbstractWorld {
 			return BlockType.AIR;
 		if(state.isLadder(level, pos, null))
 			return BlockType.LADDER;
-		if(state.is(FHTags.Blocks.TOWN_DECORATIONS.get()))
+		if(state.is(FHTags.Blocks.TOWN_FURNITURE.get()))
 			return BlockType.DECO;
 		VoxelShape shape=state.getCollisionShape(level, pos);
 		if(shape.isEmpty())
 			return BlockType.AIR;
 
 		AABB aabb=shape.bounds();
-		return aabb.getXsize()<0.3&&aabb.getYsize()<0.3&&aabb.getZsize()<0.3?BlockType.WALL:BlockType.AIR;
+		return aabb.getXsize()<0.3&&aabb.getYsize()<0.3&&aabb.getZsize()<0.3?BlockType.AIR:BlockType.WALL;
 	}
 
 	@Override

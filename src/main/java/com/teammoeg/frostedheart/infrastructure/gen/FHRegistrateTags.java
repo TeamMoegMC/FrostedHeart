@@ -74,7 +74,10 @@ public class FHRegistrateTags {
         prov.tag(FHTags.Blocks.TOWN_DECORATIONS.tag).add(Blocks.FLOWER_POT, Blocks.LANTERN, Blocks.SOUL_LANTERN,
                 Blocks.CAMPFIRE, Blocks.SOUL_CAMPFIRE, Blocks.ENCHANTING_TABLE, Blocks.ANVIL, Blocks.CHIPPED_ANVIL,
                 Blocks.DAMAGED_ANVIL, Blocks.STONECUTTER, Blocks.GRINDSTONE, Blocks.BELL, Blocks.LOOM, Blocks.SMITHING_TABLE);
-
+        prov.tag(FHTags.Blocks.TOWN_FURNITURE.tag)
+        .addTag(FHTags.Blocks.TOWN_DECORATIONS.tag)
+        .addTag(BlockTags.BEDS);
+        
         prov.tag(FHTags.Blocks.TOWN_WALLS.tag)
                 .add(Blocks.IRON_BARS)
                 .addTag(BlockTags.DOORS)

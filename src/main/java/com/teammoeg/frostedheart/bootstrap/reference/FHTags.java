@@ -111,6 +111,7 @@ public class FHTags {
 	public enum Blocks {
 		TOWN_DECORATIONS("town/decorations"),
 		TOWN_WALLS("town/walls"),
+		TOWN_FURNITURE("town/furniture"),
 		CONDENSED_ORES,
 		SLUDGE,
 		PERMAFROST,

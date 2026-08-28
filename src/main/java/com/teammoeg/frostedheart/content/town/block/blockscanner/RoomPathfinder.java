@@ -58,6 +58,7 @@ public class RoomPathfinder {
 				@Override
 				public MutableBlockPos next() {
 					mbp.setWithOffset(pos, 0, cy, 0);
+					cy++;
 					return mbp;
 				}
 				
@@ -228,7 +229,8 @@ public class RoomPathfinder {
         mbp.set(foot);
         boolean isLadder= isOnStair(world,mbp);
         int reachableY=foot.getY()+2;
-        for (int y = foot.getY() + 1; y <= ceilingY; y++) {
+        boolean isFirst=true;
+        for (int y = foot.getY() ; y <= ceilingY; y++) {
             mbp.setY(y);
             BlockType type = world.getBlockType(mbp);
             if(type == BlockType.LADDER) {
@@ -236,10 +238,11 @@ public class RoomPathfinder {
             		reachableY=y;
             	else
             		break;
-            }else if(isLadder) {
+            }else if(isLadder&&!isFirst) {
             	isLadder=false;
             }
-            
+            if(isFirst)
+            	isFirst=false;
             if (type == BlockType.WALL) {
                 // 遇到天花板，停止（不包含该实体方块）
                 break;
