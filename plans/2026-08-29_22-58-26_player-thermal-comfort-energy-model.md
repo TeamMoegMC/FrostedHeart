@@ -4,9 +4,9 @@
 - Last revised: `2026-08-30`; restored historical Wet semantics, added
   topology-aggregated ambient lava/fire heat, selected the initial binary
   `canSeeSky` wind gate, defined contact media, bounded integration, legacy
-  effect migration, exposure timing fixtures, and the split HUD contract where
-  the number shows environmental equivalent temperature while orb color shows
-  the player's current net body-power direction; shortened the naked `-15 C`
+  effect migration, exposure timing fixtures, and the HUD contract where both
+  the number and orb color use environmental equivalent temperature; removed
+  the unused client net-power presentation path; shortened the naked `-15 C`
   mild-hypothermia target to roughly one minute; first implementation pass now
   completes the player body/HUD/network path while world ambient lava/fire
   topology remains deferred
@@ -23,7 +23,7 @@ experience simple:
 
 ```text
 temperature-orb number = how cold or hot this place feels
-temperature-orb color = whether this player is currently gaining or losing heat
+temperature-orb color = the same place-temperature cold-to-hot band
 body status bar = how far the player's body has already moved into danger
 ```
 
@@ -57,14 +57,14 @@ survival problem.
 | Surface | Value | Meaning |
 |---|---|---|
 | HUD temperature-orb number | environmental equivalent temperature, `C` | standard still-air temperature causing the same immediate environmental heat loss |
-| HUD temperature-orb color | net body power after clothing, Wet, contact, metabolism, and equipment, `W` | blue means losing heat, neutral green/white means approximately stable, and orange/red means gaining heat; intensity communicates rate |
+| HUD temperature-orb color | environmental equivalent temperature, `C` | uses the existing cold-to-hot orb bands from the same Celsius value as the number |
 | hypothermia/hyperthermia bar and effects | body thermal state | whether current clothing, metabolism, wetness, and exposure are sufficient |
 | `TemperatureProbe` | physical air temperature, `C` | actual Thermal Air value at the probed point |
 | `ThermometerItem` | core body temperature, `C` | actual physiological core temperature |
 | admin temperature command | all named values plus `W`, `W/m2`, and confidence | diagnostics; never a gameplay formula source |
 
-The default Celsius interpretation bands describe the displayed number; they
-do not select orb color and are not instant damage thresholds:
+The default Celsius interpretation bands describe the displayed number and
+select its existing orb color; they are not instant damage thresholds:
 
 | Equivalent temperature | HUD meaning |
 |---:|---|
@@ -515,7 +515,7 @@ Derived/transient values are not persisted:
 - five absolute part temperatures and the aggregate core temperature;
 - five estimated environmental/skin feeling temperatures;
 - environmental equivalent temperature;
-- net body power and warming/cooling trend;
+- net body power;
 - radiation flux/confidence;
 - air temperature, wind, and equipment profile.
 
@@ -926,14 +926,13 @@ Initial payload target:
 ```text
 equivalent environment temperature   signed short, 0.1 C
 core temperature                     signed short, 0.01 C
-warming/cooling trend                signed short, quantized W
 status flags                         byte
 ```
 
-The fixed payload is approximately `7..10 B` before channel framing, versus an
-allocated CompoundTag every tick. The client displays the latest synchronized
-sample through the existing HUD presentation path and never feeds a value back
-to gameplay. Additional interpolation, prediction, or smoothing work is outside
+The fixed payload is `6 B` before channel framing, versus an allocated
+CompoundTag every tick. The client displays the latest synchronized sample
+through the existing HUD presentation path and never feeds a value back to
+gameplay. Additional interpolation, prediction, or smoothing work is outside
 this plan.
 
 `FHBodyDataSyncPacket` may keep its registry ID for protocol continuity within
@@ -944,19 +943,11 @@ and binary production packets.
 
 - `FrostedHud.renderTemperature` draws the synchronized environmental
   equivalent temperature as the number already placed directly on the orb.
-- Orb color is player-specific and consumes synchronized net body power after
-  clothing, Wet, contact media, metabolism, regulation, and equipment. Cooling
-  is blue, approximately stable is neutral green/white, and warming is
-  orange/red; color intensity increases monotonically with net-power magnitude.
-- The number and color deliberately have different owners. Two players in the
-  same `-20 C` environment see the same number, while suitable clothing may
-  make one orb neutral and leave the other strongly blue. Clothing, difficulty,
-  and body state never alter the displayed environmental Celsius value.
-- Use a configurable symmetric power deadband around zero and a short
-  client-only direction hold so one-second quantization near equilibrium does
-  not alternate the orb between cooling, neutral, and warming. The hold changes
-  only presentation; gameplay and synchronized power use the unsmoothed model
-  result.
+- Orb color uses the same environmental equivalent Celsius value and the
+  existing cold-to-hot texture thresholds. Two players in the same `-20 C`
+  environment therefore see the same number and orb band. Clothing, Wet,
+  difficulty, and body state still affect the body calculation and effects, but
+  do not change this environmental HUD presentation.
 - Do not add an up/down trend arrow or reserve new HUD space. The orb's existing
   color area is the warming/cooling indicator.
 - The existing body bar consumes aggregate core state as it does today and
@@ -1040,8 +1031,7 @@ Required parameter groups:
 - resources: joules per food/water exhaustion unit;
 - part effects: the migrated absolute-temperature/feeling thresholds and the
   existing `100 tick` release behavior for all five consequences;
-- display: Celsius comfort bands, warming/cooling power deadband, and network
-  quantization.
+- display: Celsius comfort bands and network quantization.
 
 There is no hot-water block state, per-fluid temperature, hot-spring registry,
 or hot-water configuration group. The liquid-water bounds only derive the one
@@ -1115,8 +1105,8 @@ legible. It must create decisions, not continuous maintenance work.
 - Environmental equivalent temperature reacts within the next model update
   (`<= 1 s` at the default cadence) to wind, shelter, source visibility, and
   extinguishing, so player actions have immediate visible feedback.
-- Core temperature changes slowly. The first adverse state is the orb's
-  cooling/warming color, not damage or a severe movement penalty.
+- Core temperature changes slowly. The first adverse state is the orb's cold or
+  hot environmental band, not damage or a severe movement penalty.
 - Every harmful progression has the existing `100 tick` release hold and a
   recovery path. Crossing one quantization boundary cannot add/remove an effect
   every model update.
@@ -1131,9 +1121,9 @@ legible. It must create decisions, not continuous maintenance work.
   improvement immediately, but leaving the severe state targets `2..4 min` and
   full core normalization may take longer. A Campfire cannot instantly erase a
   long exposure.
-- Fast feedback is derived from the orb's environmental equivalent number,
-  net-body-power color, and the existing five part-energy states. Do not add a
-  second fictitious comfort temperature, recovery reservoir, extra arrow, or
+- Fast feedback is derived from the orb's environmental equivalent number and
+  color plus the existing five part-energy states. Do not add a second
+  fictitious comfort temperature, recovery reservoir, extra arrow, or
   unconditional fire bonus to meet these timings.
 - Thermoregulation consumes food/water only while producing nonzero regulation
   power and is capped. Ordinary safe play does not create constant hidden drain.
@@ -1268,9 +1258,9 @@ tests; it does not require the body schema migration.
    the existing source files and upstream systems.
 3. Route derived core and all five part temperatures to the existing effects,
    research hand checks, overlays, food, tooltips, and body thermometer.
-4. Route environmental equivalent temperature to the number already drawn on
-   the HUD orb, and route net body power to the orb's existing color area. Do
-   not add a separate trend arrow or reserve new HUD space.
+4. Route environmental equivalent temperature to both the number already drawn
+   on the HUD orb and its existing cold-to-hot color area. Do not add a separate
+   trend arrow or reserve new HUD space.
 5. Keep `TemperatureProbe` on physical Air and forecast on climate/air data.
 6. Preserve current `INSULATION`, creative, spectator, and invulnerable freeze
    and effect semantics. Keep vanilla direct fire/lava damage, suppress only the
@@ -1297,7 +1287,7 @@ tests; it does not require the body schema migration.
    useful-distance fixture, verify the `<= 1 s`, `<= 5 s`, `<= 15 s`,
    `30..60 s`, and `2..4 min` response windows. Meet them through the existing
    five part-energy model, physiological time scale, effect thresholds, and
-   trend presentation, never by fabricating extra source power or Celsius.
+   body-state progression, never by fabricating extra source power or Celsius.
 4. Calibrate full `0 C` immersion and exposed strong-blizzard curves to their
    declared windows. Fit `onFireHeatPowerW`, lava contact coefficient, and
    powder-snow contact coefficient to the Stage 0 curves where current behavior
@@ -1348,11 +1338,8 @@ tests; it does not require the body schema migration.
 - direct flux raises equivalent temperature linearly before any declared cap;
 - blocked flux contributes exactly zero direct term;
 - clothing does not change environmental equivalent temperature;
-- changing clothing, Wet, metabolism, or equipment may change orb-color power
-  while leaving the displayed environmental equivalent number bit-identical;
-- net body power below/inside/above the symmetric display deadband selects
-  cooling/neutral/warming before client-only hold, with monotonic color
-  intensity outside the deadband;
+- changing clothing, Wet, metabolism, or equipment leaves the displayed
+  environmental equivalent number and orb texture band bit-identical;
 - clothing resistance monotonically reduces dry body heat loss;
 - wind proof affects forced convection but not calm Air;
 - water resistance reduces water/powder contact conductance and binary Wet
@@ -1420,8 +1407,8 @@ tests; it does not require the body schema migration.
 - wind changes equivalent temperature without mutating Page Air only when
   `canSeeSky` is true; placing an opaque roof makes applied wind exactly zero on
   the next player update, and removing it restores outdoor wind;
-- dry/wet and low/high clothing resistance change orb color/body trend but not
-  the HUD environmental number;
+- dry/wet and low/high clothing resistance change body heat trend but not the
+  HUD environmental number or orb texture band;
 - shallow water affects feet before higher body bands; partial and full
   immersion use the declared area fractions and water boundary;
 - leaving water removes strong water exchange within one model update while the
@@ -1483,10 +1470,10 @@ tests; it does not require the body schema migration.
 
 The plan is complete only when all of the following are true:
 
-1. The HUD number is an absolute environmental equivalent Celsius value and
-   never core body temperature or a `37 C`-relative offset. The same orb's color
-   independently shows player-specific net body power with a deadband and short
-   client-only hold; no separate trend arrow or extra HUD space is added.
+1. The HUD number and the same orb's color use the absolute environmental
+   equivalent Celsius value, never core body temperature or a `37 C`-relative
+   offset. Existing orb texture bands remain in use; no separate trend arrow or
+   extra HUD space is added.
 2. Air, radiation, wind, clothing, wetness, metabolism, equipment, food, body
    energy, and display conversions each have one named unit and one owner.
 3. Campfire convection and radiation retain their declared source split:
@@ -1548,10 +1535,10 @@ The plan is complete only when all of the following are true:
   temperature players can interpret.
 - **HUD shows raw Air only:** it cannot represent wind or immediate direct
   radiant comfort.
-- **Orb color repeats the numeric Celsius bands:** it tells the player the same
-  fact twice and does not answer whether current clothing and metabolism can
-  tolerate that environment. The selected color encodes net body power while
-  the number remains environmental Celsius.
+- **Orb color encodes net body power:** it changes too abruptly for the current
+  HUD and makes the same environment appear to change temperature when only
+  clothing, activity, or contact power changed. Keep the existing environmental
+  Celsius bands for both the number and the orb texture.
 - **Add a warming/cooling arrow:** the existing number occupies the orb and the
   current HUD has no clear space for another indicator. Reusing orb color gives
   the required warning without layout growth.

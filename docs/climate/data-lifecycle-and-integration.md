@@ -85,10 +85,11 @@ so no stale arena slot can be observed during restart.
 ## Network And Consumers
 
 `FHBodyDataSyncPacket` carries only the quantized player-facing environment,
-absolute core temperature, net body power, and status flags. It is sent on the
-player-temperature cadence only when those values change, plus one forced state
-on login, respawn, and dimension change. World air and Page cell state remain
-query-on-demand and are never placed in the body packet.
+absolute core temperature, and status flags. It is sent on the player-
+temperature cadence only when those values change, plus one forced state on
+login, respawn, and dimension change. Net body power remains server-side
+diagnostic state and is not a client HUD input. World air and Page cell state
+remain query-on-demand and are never placed in the body packet.
 
 The player NBT schema preserves each existing clothing `ItemStackHandler`, its
 complete item NBT, and temperature difficulty. New saves store per-part

@@ -993,27 +993,12 @@ public class FrostedHud {
         float temperature = f
                 ? environmentC * 9.0F / 5.0F + 32.0F
                 : environmentC;
-        float bodyPowerW = temperatureData == null
-                ? 0.0F : temperatureData.getClientPresentedPowerW();
-
-        renderTemp(stack, mc, temperature, powerToOrbLevel(bodyPowerW),
+        renderTemp(stack, mc, temperature, (int) environmentC,
                 x + BarPos.temp_orb.getX(), y + BarPos.temp_orb.getY() + 3,
                 !f);
 
         RenderSystem.disableBlend();
         mc.getProfiler().pop();
-    }
-
-    private static int powerToOrbLevel(float powerW) {
-        if (powerW >= 300.0F) return 100;
-        if (powerW >= 150.0F) return 70;
-        if (powerW >= 60.0F) return 50;
-        if (powerW >= 15.0F) return 30;
-        if (powerW <= -300.0F) return -100;
-        if (powerW <= -150.0F) return -60;
-        if (powerW <= -60.0F) return -30;
-        if (powerW <= -15.0F) return -10;
-        return 10;
     }
 
     public static void renderThirst(GuiGraphics stack, int x, int y, Minecraft mc, Player player) {

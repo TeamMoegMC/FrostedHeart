@@ -43,8 +43,6 @@ public final class TemperatureComputation {
     static final double CORE_REFERENCE_TEMPERATURE_C = 37.0D;
     static final double WHOLE_BODY_HEAT_CAPACITY_J_PER_K = 245_000.0D;
     static final double LEGACY_INSULATION_TO_RESISTANCE = 0.0002D;
-    static final float ORB_POWER_DEADBAND_W = 15.0F;
-
     private static final double GAMEPLAY_TIME_SCALE = 8.0D;
     private static final double REFERENCE_SKIN_TEMPERATURE_C = 33.0D;
     private static final double BODY_SURFACE_AREA_M2 = 1.8D;

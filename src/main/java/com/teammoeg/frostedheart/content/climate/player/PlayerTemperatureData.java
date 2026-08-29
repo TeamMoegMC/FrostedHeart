@@ -143,11 +143,7 @@ public class PlayerTemperatureData implements NBTSerializable {
     private byte thermalStatusFlags;
     private int lastSyncEnvironment = Integer.MIN_VALUE;
     private int lastSyncCore = Integer.MIN_VALUE;
-    private int lastSyncPower = Integer.MIN_VALUE;
     private byte lastSyncFlags;
-    private int clientPowerDirection;
-    private int clientPowerDirectionHoldTicks;
-    private float clientPresentedPowerW;
     private HeatingDeviceContext thermalContext;
     float blockTemp;
     float windStrengh;
@@ -438,30 +434,25 @@ public class PlayerTemperatureData implements NBTSerializable {
     public void applyClientThermalSync(
             float environmentTemperatureC,
             float absoluteCoreTemperatureC,
-            float netBodyPowerW,
             byte statusFlags
     ) {
         prevCoreBodyTemp = coreBodyTemp;
         coreBodyTemp = absoluteCoreTemperatureC
                 - (float) TemperatureComputation.CORE_REFERENCE_TEMPERATURE_C;
         envTemp = environmentTemperatureC;
-        this.netBodyPowerW = netBodyPowerW;
         this.thermalStatusFlags = statusFlags;
     }
 
     public boolean shouldSyncThermalState() {
         int environment = Math.round(getEnvTemp() * 10.0F);
         int core = Math.round(getAbsoluteCoreBodyTemp() * 100.0F);
-        int power = Math.round(netBodyPowerW);
         if (environment == lastSyncEnvironment
                 && core == lastSyncCore
-                && power == lastSyncPower
                 && thermalStatusFlags == lastSyncFlags) {
             return false;
         }
         lastSyncEnvironment = environment;
         lastSyncCore = core;
-        lastSyncPower = power;
         lastSyncFlags = thermalStatusFlags;
         return true;
     }
@@ -469,29 +460,6 @@ public class PlayerTemperatureData implements NBTSerializable {
     public void forceThermalSync() {
         lastSyncEnvironment = Integer.MIN_VALUE;
         lastSyncCore = Integer.MIN_VALUE;
-        lastSyncPower = Integer.MIN_VALUE;
-    }
-
-    public void tickClientThermalPresentation() {
-        int direction = netBodyPowerW > TemperatureComputation.ORB_POWER_DEADBAND_W
-                ? 1 : netBodyPowerW < -TemperatureComputation.ORB_POWER_DEADBAND_W
-                ? -1 : 0;
-        if (direction != 0) {
-            clientPowerDirection = direction;
-            clientPowerDirectionHoldTicks = 20;
-            clientPresentedPowerW = netBodyPowerW;
-        } else if (clientPowerDirectionHoldTicks > 0) {
-            clientPowerDirectionHoldTicks--;
-            clientPresentedPowerW = clientPowerDirection
-                    * TemperatureComputation.ORB_POWER_DEADBAND_W;
-        } else {
-            clientPowerDirection = 0;
-            clientPresentedPowerW = 0.0F;
-        }
-    }
-
-    public float getClientPresentedPowerW() {
-        return clientPresentedPowerW;
     }
 
     public float getHighestFeelTemp() {

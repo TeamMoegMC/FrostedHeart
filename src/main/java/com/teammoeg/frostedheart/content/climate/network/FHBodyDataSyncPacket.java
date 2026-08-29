@@ -25,7 +25,6 @@ public final class FHBodyDataSyncPacket implements CMessage {
 
     private final short environmentDeciC;
     private final short coreCentiC;
-    private final short netPowerW;
     private final byte statusFlags;
 
     public FHBodyDataSyncPacket(Player player) {
@@ -36,8 +35,6 @@ public final class FHBodyDataSyncPacket implements CMessage {
         coreCentiC = quantize(
                 data == null ? 37.0F : data.getAbsoluteCoreBodyTemp(),
                 100.0F);
-        netPowerW = quantize(
-                data == null ? 0.0F : data.getNetBodyPowerW(), 1.0F);
         statusFlags = data == null ? 0 : data.getThermalStatusFlags();
     }
 
@@ -45,7 +42,6 @@ public final class FHBodyDataSyncPacket implements CMessage {
         buffer.readByte();
         environmentDeciC = buffer.readShort();
         coreCentiC = buffer.readShort();
-        netPowerW = buffer.readShort();
         statusFlags = buffer.readByte();
     }
 
@@ -54,7 +50,6 @@ public final class FHBodyDataSyncPacket implements CMessage {
         buffer.writeByte(VERSION);
         buffer.writeShort(environmentDeciC);
         buffer.writeShort(coreCentiC);
-        buffer.writeShort(netPowerW);
         buffer.writeByte(statusFlags);
     }
 
@@ -67,7 +62,6 @@ public final class FHBodyDataSyncPacket implements CMessage {
                     data.applyClientThermalSync(
                             environmentDeciC / 10.0F,
                             coreCentiC / 100.0F,
-                            netPowerW,
                             statusFlags));
         });
         context.get().setPacketHandled(true);

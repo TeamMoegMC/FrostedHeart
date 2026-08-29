@@ -7,23 +7,22 @@
 
 ## Player-Facing Values
 
-The temperature orb carries two independent values:
+The temperature orb uses the environmental equivalent temperature for both its
+number and its color. This keeps the HUD's existing visual language stable:
+the number shows the value and the orb texture shows its cold-to-hot band.
 
 | HUD surface | Value | Meaning |
 |---|---|---|
 | Number | environmental equivalent temperature, `C` | the still-air temperature that would produce the current immediate environmental heat exchange |
-| Orb color | net body power, `W` | blue is losing heat, neutral is approximately balanced, and orange/red is gaining heat |
+| Orb color | environmental equivalent temperature, `C` | the existing orb texture bands are selected from the same Celsius value as the number |
 | Body status/effects | body temperature offset from `37 C` | accumulated physiological danger |
 
-The number is never body temperature and never `air - 37`. Clothing, Wet,
-movement, difficulty, food, and equipment can change body power without
-rewriting the displayed environmental temperature.
-
-`FrostedHud.powerToOrbLevel` maps the synchronized net power to the existing
-orb textures. A symmetric `15 W` deadband prevents neutral noise from
-flickering the color. `PlayerTemperatureData.tickClientThermalPresentation`
-holds the previous non-neutral direction for up to 20 client ticks when power
-returns to the deadband. No arrow or extra HUD element is added.
+The number and color are never body temperature and never `air - 37`.
+`FrostedHud.renderTemperature` passes the environmental equivalent Celsius
+value to the existing orb texture thresholds. Clothing, Wet, movement,
+difficulty, food, and equipment can change body power without changing either
+HUD temperature presentation. Net body power remains available to the server
+diagnostic command and body calculation, but is not sent for HUD color.
 
 ## Cadence And Environment
 
@@ -125,11 +124,10 @@ into the new model. Loading an old player starts body energy at normal while
 preserving clothing stacks, their complete item NBT, and temperature
 difficulty. Environment observations are transient and are sampled again.
 
-`FHBodyDataSyncPacket` is an 8-byte fixed payload: version byte, environment
-at `0.1 C`, absolute core at `0.01 C`, net power at `1 W`, and status
-flags. Normal packets are sent only on the configured temperature cadence and
-only when a quantized value changes. Login, respawn, and dimension change force
-one complete state packet.
+`FHBodyDataSyncPacket` is a 6-byte fixed payload: version byte, environment
+at `0.1 C`, absolute core at `0.01 C`, and status flags. Normal packets are
+sent only on the configured temperature cadence and only when a quantized value
+changes. Login, respawn, and dimension change force one complete state packet.
 
 ## Hot-Path Bound
 
