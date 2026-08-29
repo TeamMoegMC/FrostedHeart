@@ -32,23 +32,22 @@ import net.minecraft.world.item.ItemStack;
 public interface BodyHeatingCapability {
 
     /**
-     * Compute added effective temperature.<br>
+     * Contribute explicit heating power to covered body parts.<br>
      *
      * @param slot            current slot<br>
      * @param stack           the stack<br>
      * @param data       	  player temperature data<br>
-     * @return returns body temperature change
      */
     void tickHeating(HeatingDeviceSlot slot,ItemStack stack,HeatingDeviceContext data);
     
     /**
-     * Get highest theoretical temperature change rate
+     * Get highest theoretical heating power in watts
      * For display only
      * */
-    float getMaxTempAddValue(ItemStack stack);
+    float getMaxPowerW(ItemStack stack);
     /**
-    * Get lowest theoretical temperature change rate
+    * Get lowest theoretical heating power in watts
      * For display only
      * */
-    float getMinTempAddValue(ItemStack stack);
+    float getMinPowerW(ItemStack stack);
 }

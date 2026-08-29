@@ -6,54 +6,77 @@
  * Frosted Heart is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, version 3.
- *
- * Frosted Heart is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
- *
  */
-
 package com.teammoeg.frostedheart.content.climate.network;
 
 import java.util.function.Supplier;
 
 import com.teammoeg.chorda.client.ClientUtils;
-import com.teammoeg.chorda.network.NBTMessage;
+import com.teammoeg.chorda.network.CMessage;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData;
 
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.util.Mth;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.level.Level;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.network.NetworkEvent;
 
-public class FHBodyDataSyncPacket extends NBTMessage {
-    public FHBodyDataSyncPacket(Player pe) {
-        super(PlayerTemperatureData.getCapability(pe).map(t->t.serialize(true)).orElseGet(CompoundTag::new));
-    }
+public final class FHBodyDataSyncPacket implements CMessage {
+    private static final byte VERSION = 1;
 
+    private final short environmentDeciC;
+    private final short coreCentiC;
+    private final short netPowerW;
+    private final byte statusFlags;
+
+    public FHBodyDataSyncPacket(Player player) {
+        PlayerTemperatureData data = PlayerTemperatureData
+                .getCapability(player).orElse(null);
+        environmentDeciC = quantize(
+                data == null ? -20.0F : data.getEnvTemp(), 10.0F);
+        coreCentiC = quantize(
+                data == null ? 37.0F : data.getAbsoluteCoreBodyTemp(),
+                100.0F);
+        netPowerW = quantize(
+                data == null ? 0.0F : data.getNetBodyPowerW(), 1.0F);
+        statusFlags = data == null ? 0 : data.getThermalStatusFlags();
+    }
 
     public FHBodyDataSyncPacket(FriendlyByteBuf buffer) {
-        super(buffer);
+        buffer.readByte();
+        environmentDeciC = buffer.readShort();
+        coreCentiC = buffer.readShort();
+        netPowerW = buffer.readShort();
+        statusFlags = buffer.readByte();
     }
 
+    @Override
+    public void encode(FriendlyByteBuf buffer) {
+        buffer.writeByte(VERSION);
+        buffer.writeShort(environmentDeciC);
+        buffer.writeShort(coreCentiC);
+        buffer.writeShort(netPowerW);
+        buffer.writeByte(statusFlags);
+    }
 
     @Override
     public void handle(Supplier<NetworkEvent.Context> context) {
         context.get().enqueueWork(() -> {
-            // Update client-side nbt
-            Level world = DistExecutor.safeCallWhenOn(Dist.CLIENT, () -> ClientUtils::getWorld);
-            Player player = DistExecutor.safeCallWhenOn(Dist.CLIENT, () -> ClientUtils::getPlayer);
-            if (world != null) {
-                PlayerTemperatureData.getCapability(player).ifPresent(t -> t.deserialize(super.getTag(),true));
-            }
+            Player player = ClientUtils.getPlayer();
+            if (player == null) return;
+            PlayerTemperatureData.getCapability(player).ifPresent(data ->
+                    data.applyClientThermalSync(
+                            environmentDeciC / 10.0F,
+                            coreCentiC / 100.0F,
+                            netPowerW,
+                            statusFlags));
         });
         context.get().setPacketHandled(true);
+    }
+
+    private static short quantize(float value, float scale) {
+        if (!Float.isFinite(value)) return 0;
+        int quantized = Math.round(value * scale);
+        return (short) Mth.clamp(
+                quantized, Short.MIN_VALUE, Short.MAX_VALUE);
     }
 }

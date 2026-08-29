@@ -21,6 +21,14 @@ final class ThermalRuntimeTestFixtures {
     }
 
     static EngineFixture engine() {
+        return engine(false);
+    }
+
+    static EngineFixture engineWithFarField() {
+        return engine(true);
+    }
+
+    private static EngineFixture engine(boolean farFieldEnabled) {
         ThermalSignatureRegistry.Builder builder =
                 ThermalSignatureRegistry.builder();
         int airId = builder.intern(ThermalTestFixtures.fullAirSignature());
@@ -30,7 +38,12 @@ final class ThermalRuntimeTestFixtures {
                 new MaterialBoundaryRegistry(
                         java.util.List.of(), java.util.List.of()),
                 airId,
-                solidId);
+                solidId,
+                new FarFieldSettings(
+                        farFieldEnabled,
+                        farFieldEnabled ? 1.0D : 0.0D,
+                        1.0D,
+                        16.0D));
     }
 
     static EngineFixture engine(
@@ -38,6 +51,21 @@ final class ThermalRuntimeTestFixtures {
             MaterialBoundaryRegistry materials,
             int airId,
             int solidId
+    ) {
+        return engine(
+                signatures,
+                materials,
+                airId,
+                solidId,
+                new FarFieldSettings(false, 0.0D, 1.0D, 16.0D));
+    }
+
+    private static EngineFixture engine(
+            ThermalSignatureRegistry signatures,
+            MaterialBoundaryRegistry materials,
+            int airId,
+            int solidId,
+            FarFieldSettings farField
     ) {
         ThermalCellArena arena = new ThermalCellArena(256);
         QueryPublication publication = QueryPublication.tryCreate(
@@ -56,7 +84,7 @@ final class ThermalRuntimeTestFixtures {
                         0.0D, 0.0D, 1.0D, 0.25D, false,
                         new BuoyancyConductance.Parameters(0.25D, 4.0D, 10.0D),
                         8, 4),
-                new FarFieldSettings(false, 0.0D, 1.0D, 16.0D),
+                farField,
                 new ThermalDimensionLimits(
                         16, 4_096, 2_048,
                         4_096, 4_096, 4_096,

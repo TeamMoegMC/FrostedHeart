@@ -56,6 +56,11 @@ import java.util.function.Consumer;
 public class HeaterVestItem extends FHBaseItem {
     public static final String NBT_HEATER_VEST = FHMain.MODID + "heater_vest";
     private static final String ENERGY_KEY="steam";
+    private static final float STANDBY_HEAT = 0.05F;
+    private static final float MAX_POWER_W = 275.0F;
+    private static final float HEAT_PER_STORED_UNIT_W = MAX_POWER_W / 6.0F;
+    private static final float TARGET_BODY_TEMPERATURE_C = 37.0F;
+    private static final float CONTROL_GAIN_W_PER_K = 55.0F;
     public HeaterVestItem(Properties properties) {
         super(properties);
     }
@@ -116,26 +121,37 @@ public class HeaterVestItem extends FHBaseItem {
 						LazyOptional<HeatStorageCapability> cap=FHCapabilities.ITEM_HEAT.getCapability(stack);
 						if(cap.isPresent()) {
 							HeatStorageCapability t=cap.resolve().get();
-							float energycost=0.05f;
-							float effectiveTemp=data.getEffectiveTemperature(BodyPart.TORSO);
-							if (effectiveTemp < 31f) {
-							    float delta = 31f - effectiveTemp;
-							    if (delta > 50)
-							        delta = 50F;
-							    float rex = Math.max(t.extractEnergy( energycost + (int) (delta * 0.12f), false) - energycost, 0F);
-							    data.addEffectiveTemperature(BodyPart.TORSO, rex / 0.12f);
+							double passiveLossW = Math.max(0.0D,
+									-data.getPassivePowerW(BodyPart.TORSO));
+							double correctionW = Math.max(0.0D,
+									TARGET_BODY_TEMPERATURE_C
+									- data.getBodyTemperatureC(BodyPart.TORSO))
+									* CONTROL_GAIN_W_PER_K;
+							float requestedPowerW = (float) Math.min(
+									MAX_POWER_W, passiveLossW + correctionW);
+							if (requestedPowerW > 0.0F) {
+								float extracted = t.extractEnergy(
+										STANDBY_HEAT + requestedPowerW
+										/ HEAT_PER_STORED_UNIT_W,
+										false);
+								data.addPower(BodyPart.TORSO,
+										Math.max(0.0F, extracted - STANDBY_HEAT)
+										* HEAT_PER_STORED_UNIT_W);
 							}
 						}
 						
 					}
 
 					@Override
-					public float getMaxTempAddValue(ItemStack stack) {
-						return FHCapabilities.ITEM_HEAT.getCapability(stack).map(t->Math.min(50*0.12f,t.getEnergyStored())).orElse(0f)/ 0.12f;
+					public float getMaxPowerW(ItemStack stack) {
+						return FHCapabilities.ITEM_HEAT.getCapability(stack)
+								.map(value -> Math.max(0.0F, Math.min(6.0F,
+										value.getEnergyStored() - STANDBY_HEAT)))
+								.orElse(0.0F) * HEAT_PER_STORED_UNIT_W;
 					}
 
 					@Override
-					public float getMinTempAddValue(ItemStack stack) {
+					public float getMinPowerW(ItemStack stack) {
 						return 0;
 					}
 					

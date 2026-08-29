@@ -19,26 +19,23 @@
 
 package com.teammoeg.frostedheart.content.climate.player;
 
-import java.util.ArrayList;
-import java.util.List;
-
+import com.teammoeg.frostedheart.bootstrap.common.FHAttributes;
 import com.teammoeg.frostedheart.content.climate.data.ArmorTempData;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData.BodyPart;
 
-import lombok.Getter;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.items.ItemStackHandler;
 
 public class BodyPartData {
-	public static final float[] SINGLE_SLOT_FACTORS=new float[] {.4f,.6f};
-	public static final float[] TRIPLE_SLOT_FACTORS=new float[] {.1f,.2f,.3f,.4f};
+    private static final float[] SINGLE_SLOT_FACTORS = {0.4F, 0.6F};
+    private static final float[] TRIPLE_SLOT_FACTORS = {
+            0.1F, 0.2F, 0.3F, 0.4F
+    };
     public final ItemStackHandler clothes;
-    @Getter
-    float temperature = 0;
-	@Getter
-	float feelTemp = 0;
+	double bodyEnergyOffsetJ;
+	float feelingTemperatureC = 37.0F;
 
     BodyPartData(int max_count) {
         this.clothes = new ItemStackHandler(max_count) {
@@ -53,16 +50,20 @@ public class BodyPartData {
         //reset();
     }
 
-    public void load(CompoundTag itemsTag) {
-        clothes.deserializeNBT(itemsTag);
-        temperature = itemsTag.getFloat("temp");
-		feelTemp = itemsTag.getFloat("feel_temp");
+    public void load(CompoundTag itemsTag, boolean energySchema) {
+        if (itemsTag.contains("Size")) {
+            clothes.deserializeNBT(itemsTag);
+        }
+		if (energySchema && itemsTag.contains("energy_j")) {
+			bodyEnergyOffsetJ = itemsTag.getDouble("energy_j");
+		} else {
+			bodyEnergyOffsetJ = 0.0D;
+		}
     }
 
     public CompoundTag save() {
         CompoundTag tag = clothes.serializeNBT();
-        tag.putFloat("temp", temperature);
-		tag.putFloat("feel_temp", feelTemp);
+        tag.putDouble("energy_j", bodyEnergyOffsetJ);
         return tag;
     }
 
@@ -94,48 +95,75 @@ public class BodyPartData {
 	 * @return thermal conductivity, range (0, 1]
 	 */
     public PartClothData getClothData(Player player, BodyPart part) {
-		// heat insulation: non-negative
-        double insulation = 0f;
-        double fluidResist = 0f;
-        List<ClothData> slots=this.getClothDataBySlot(player, part);
-		// hands, feet, head: 1 layer of clothes and 1 equipment
-		if (part.slotNum==1) {
-			int delta=2-slots.size();
-			for(int i=0;i<slots.size();i++) {
-				insulation+=SINGLE_SLOT_FACTORS[i+delta]*slots.get(i).insulation;
-				fluidResist+=SINGLE_SLOT_FACTORS[SINGLE_SLOT_FACTORS.length-i-1]*slots.get(i).fluidResist;
-			}
-		}
-		// torso, legs: 3 layers of clothes, 1 armor
-		else {
-			int delta=4-slots.size();
-			for(int i=0;i<slots.size();i++) {
-				insulation+=TRIPLE_SLOT_FACTORS[i+delta]*slots.get(i).insulation;
-				fluidResist+=TRIPLE_SLOT_FACTORS[TRIPLE_SLOT_FACTORS.length-i-1]*slots.get(i).fluidResist;
+		PartClothData result = new PartClothData();
+		fillClothData(player, part, result);
+		return result;
+    }
+
+	void fillClothData(Player player, BodyPart part, PartClothData result) {
+		ItemStack equipment = player.getItemBySlot(part.slot);
+		int layerCount = equipment.isEmpty() ? 0 : 1;
+		for (int slot = 0; slot < clothes.getSlots(); slot++) {
+			ItemStack stack = clothes.getStackInSlot(slot);
+			if (!stack.isEmpty() && ArmorTempData.getData(stack, part) != null) {
+				layerCount++;
 			}
 		}
 
-        return new PartClothData((float)(100 / (100 + insulation)),(float)fluidResist);
-    }
-    /**
-     * Get cloth data without handling the stack
-     * 
-     * */
-    public List<ClothData> getClothDataBySlot(Player player,BodyPart part){
-    	List<ClothData> snst=new ArrayList<>();
-    	ItemStack equipment=player.getItemBySlot(part.slot);
-    	if(!equipment.isEmpty())
-    		snst.add(new ClothData(equipment.getAttributeModifiers(part.slot)));
-    	for(int i=0;i<clothes.getSlots();i++) {
-    		ItemStack item=clothes.getStackInSlot(i);
-    		if(!item.isEmpty()) {
-	    		ArmorTempData atd=ArmorTempData.getData(item, part);
-	    		if(atd!=null)
-	    			snst.add(new ClothData(atd));
-    		}
-    	}
-    	return snst;
-    }
+		double resistance = 0.0D;
+		double heatProof = 0.0D;
+		double windProof = 0.0D;
+		double waterResistance = 0.0D;
+		int layer = 0;
+		if (!equipment.isEmpty()) {
+			double insulationFactor = ClothData.sumAttributes(
+					equipment.getAttributeModifiers(part.slot)
+							.get(FHAttributes.INSULATION.get()));
+			double wind = ClothData.sumAttributesPercentage(
+					equipment.getAttributeModifiers(part.slot)
+							.get(FHAttributes.WIND_PROOF.get()));
+			double radiant = ClothData.sumAttributesPercentage(
+					equipment.getAttributeModifiers(part.slot)
+							.get(FHAttributes.HEAT_PROOF.get()));
+			double innerWeight = innerWeight(part, layerCount, layer);
+			double outerWeight = outerWeight(part, layer);
+			resistance += innerWeight * insulationFactor
+					* TemperatureComputation.LEGACY_INSULATION_TO_RESISTANCE;
+			heatProof += outerWeight * radiant;
+			windProof += outerWeight * wind;
+			waterResistance += outerWeight * wind;
+			layer++;
+		}
+		for (int slot = 0; slot < clothes.getSlots(); slot++) {
+			ItemStack stack = clothes.getStackInSlot(slot);
+			ArmorTempData armor = stack.isEmpty()
+					? null : ArmorTempData.getData(stack, part);
+			if (armor == null) continue;
+			double innerWeight = innerWeight(part, layerCount, layer);
+			double outerWeight = outerWeight(part, layer);
+			resistance += innerWeight * armor.getInsulation()
+					* TemperatureComputation.LEGACY_INSULATION_TO_RESISTANCE;
+			heatProof += outerWeight * armor.getHeatProof();
+			windProof += outerWeight * armor.getFluidResistance();
+			waterResistance += outerWeight * armor.getFluidResistance();
+			layer++;
+		}
+		result.set(resistance, heatProof, windProof, waterResistance);
+	}
+
+	private static double innerWeight(
+			BodyPart part, int layerCount, int layer
+	) {
+		float[] weights = part.slotNum == 1
+				? SINGLE_SLOT_FACTORS : TRIPLE_SLOT_FACTORS;
+		return weights[weights.length - layerCount + layer];
+	}
+
+	private static double outerWeight(BodyPart part, int layer) {
+		float[] weights = part.slotNum == 1
+				? SINGLE_SLOT_FACTORS : TRIPLE_SLOT_FACTORS;
+		return weights[weights.length - layer - 1];
+	}
 
 
 
@@ -149,6 +177,7 @@ public class BodyPartData {
 
     @Override
     public String toString() {
-        return "BodyPartData [clothes=" + clothes.getStackInSlot(0) + ", temperature=" + temperature + ", feelTemp=" + feelTemp + "]";
+        return "BodyPartData [clothes=" + clothes.getStackInSlot(0)
+				+ ", bodyEnergyOffsetJ=" + bodyEnergyOffsetJ + "]";
     }
 }

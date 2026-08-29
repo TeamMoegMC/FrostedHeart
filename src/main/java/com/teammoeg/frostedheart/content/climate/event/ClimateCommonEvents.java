@@ -41,6 +41,7 @@ import com.teammoeg.frostedheart.content.climate.food.FoodTemperatureHandler;
 import com.teammoeg.frostedheart.content.climate.gamedata.climate.ClimateType;
 import com.teammoeg.frostedheart.content.climate.gamedata.climate.WorldClimate;
 import com.teammoeg.frostedheart.content.climate.network.FHClimatePacket;
+import com.teammoeg.frostedheart.content.climate.network.FHBodyDataSyncPacket;
 import com.teammoeg.frostedheart.content.climate.network.FHWhiteCurtainSnapshotPacket;
 import com.teammoeg.frostedheart.content.climate.player.ClothData;
 import com.teammoeg.frostedheart.content.climate.player.EquipmentSlotType;
@@ -417,6 +418,7 @@ public class ClimateCommonEvents {
                         FHNetwork.INSTANCE.sendPlayer(currentPlayer, new FHClimatePacket(cap,currentPlayer));
                         FHNetwork.INSTANCE.sendPlayer(currentPlayer, new FHWhiteCurtainSnapshotPacket(cap, serverWorld));
                     });
+            syncPlayerTemperature(currentPlayer);
 
             // System.out.println("=x-x=");
             // System.out.println(ForgeRegistries.LOOT_MODIFIER_SERIALIZERS.getValue(new
@@ -433,6 +435,7 @@ public class ClimateCommonEvents {
                     new FHClimatePacket(WorldClimate.get(serverWorld),player));
             FHNetwork.INSTANCE.sendPlayer(player,
                     new FHWhiteCurtainSnapshotPacket(WorldClimate.get(serverWorld), serverWorld));
+            syncPlayerTemperature(player);
         }
     }
 
@@ -631,8 +634,18 @@ public class ClimateCommonEvents {
             FHNetwork.INSTANCE.sendPlayer(player, new FHClimatePacket(WorldClimate.get(serverWorld),player));
             FHNetwork.INSTANCE.sendPlayer(player,
                     new FHWhiteCurtainSnapshotPacket(WorldClimate.get(serverWorld), serverWorld));
-            //PlayerTemperatureData.getCapability(event.getEntity()).ifPresent(PlayerTemperatureData::deathResetTemperature);
+            syncPlayerTemperature(player);
         }
+    }
+
+    private static void syncPlayerTemperature(ServerPlayer player) {
+        PlayerTemperatureData.getCapability(player).ifPresent(data -> {
+            data.forceThermalSync();
+            if (data.shouldSyncThermalState()) {
+                FHNetwork.INSTANCE.sendPlayer(
+                        player, new FHBodyDataSyncPacket(player));
+            }
+        });
     }
 
     @SubscribeEvent

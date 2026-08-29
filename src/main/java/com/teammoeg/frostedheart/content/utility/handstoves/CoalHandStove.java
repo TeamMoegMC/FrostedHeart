@@ -60,7 +60,8 @@ import top.theillusivec4.curios.api.type.ISlotType;
 
 public class CoalHandStove extends FHBaseItem {
     public final static int max_fuel = 800;
-    public static final int HEAT_ADJUST = 20;
+    public static final float HAND_POWER_W = 12.0F;
+    public static final float TORSO_POWER_W = 110.0F;
 
     public static int getAshAmount(ItemStack is) {
         return is.getOrCreateTag().getInt("ash");
@@ -149,7 +150,7 @@ public class CoalHandStove extends FHBaseItem {
         return stack;
     }
 
-	public float tickHeat(ItemStack stack) {
+	public boolean tickHeat(ItemStack stack) {
 
         int fuel = getFuelAmount(stack);
         if (fuel >= 2) {
@@ -159,10 +160,10 @@ public class CoalHandStove extends FHBaseItem {
                 ash++;
                 setFuelAmount(stack, fuel);
                 setAshAmount(stack, ash);
-                return HEAT_ADJUST;
+                return true;
             }
         }
-		return 0;
+		return false;
 	}
     @Override
 	public ICapabilityProvider initCapabilities(ItemStack stack,CompoundTag nbt) {
@@ -171,23 +172,23 @@ public class CoalHandStove extends FHBaseItem {
 			@Override
 			public void tickHeating(HeatingDeviceSlot slot, ItemStack stack, HeatingDeviceContext data) {
 				if(slot.isHand()) {
-					float added=tickHeat(stack);
+					if (!tickHeat(stack)) return;
 					if(slot.is(EquipmentSlot.MAINHAND)) {//When in mainHand, only heatup mainhand
-						data.addEffectiveTemperature(BodyPart.HANDS, added);
+						data.addPower(BodyPart.HANDS, HAND_POWER_W);
 					}else {//In offhand, heatup body
-						data.addEffectiveTemperature(BodyPart.TORSO, added);
+						data.addPower(BodyPart.TORSO, TORSO_POWER_W);
 					}
 				}
 			}
 
 			@Override
-			public float getMaxTempAddValue(ItemStack stack) {
-				return getFuelAmount(stack) > 0 ? HEAT_ADJUST : 0;
+			public float getMaxPowerW(ItemStack stack) {
+				return getFuelAmount(stack) > 0 ? TORSO_POWER_W : 0;
 			}
 
 			@Override
-			public float getMinTempAddValue(ItemStack stack) {
-				return getFuelAmount(stack) > 0 ? HEAT_ADJUST : 0;
+			public float getMinPowerW(ItemStack stack) {
+				return getFuelAmount(stack) > 0 ? HAND_POWER_W : 0;
 			}
 			
 		});

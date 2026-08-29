@@ -792,3 +792,27 @@ The earlier simplification blocker is resolved in source but not yet validated:
    staging cleanup, and source-energy preservation across same-cut topology
    migration. These tests and the complete current tree have not yet passed the
    unified validation command, so no implementation checkbox is complete yet.
+
+## Single-Worker FarField Admission Crash Correction
+
+- Confirmed on `2026-08-30`: with `ThermalWorkerPool` configured for one
+  worker, initial Page admission could fail with
+  `IllegalArgumentException: cell slot is not live: 0` while compiling
+  FarField boundaries.
+- Root cause: `TopologyPlan.prepare` intentionally compiles fragments from
+  replacement cells while they are `RESERVED`, before `TopologyCommitter`
+  promotes them to `LIVE`. `BrickTopologyCompiler.freezeFarBoundaries`
+  unnecessarily recovered the owner through `ThermalCellArena.pageSlot`, whose
+  contract correctly accepts only `LIVE` cells.
+- Resolution: FarField compilation now writes the already authoritative
+  `WorkerPageStore.PageState.pageSlot` for every boundary owned by that Page.
+  `ThermalCellArena.pageSlot` remains strict; no lifecycle validation was
+  weakened and no traversal, allocation, cache, compatibility path, or
+  production diagnostic was added.
+- Regression coverage: the existing engine admission gameplay-path test now
+  enables FarField, so it crosses the exact `RESERVED` fragment-compilation
+  boundary before asserting the committed Page publication.
+- Validation: the focused diff passes `git diff --check`. The unified thermal
+  compile/test command is currently blocked before test execution by unrelated
+  uncommitted player-temperature work; those files were not changed or
+  reverted as part of this correction.

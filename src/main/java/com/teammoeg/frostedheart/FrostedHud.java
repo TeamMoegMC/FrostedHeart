@@ -931,28 +931,28 @@ public class FrostedHud {
         && ((BossHealthOverlayAccess) ClientUtils.getGui().getBossOverlay()).getEvents().isEmpty(); // check if not boss fight
     }
 
-    private static void renderTemp(GuiGraphics stack, Minecraft mc, float temp, int tlevel, int offsetX, int offsetY,
+    private static void renderTemp(GuiGraphics stack, Minecraft mc, float temp, int orbLevel, int offsetX, int offsetY,
                                    boolean celsius) {
     	TexturedUV unitUV = celsius ? HUDElements.hud_celsius : HUDElements.hud_farenhit;
     	TexturedUV signUV = temp >= 0 ? HUDElements.hud_positive : HUDElements.hud_negative;
         double abs = Math.abs(temp);
         ResourceLocation orb;
         // draw orb
-        if (tlevel > 80) {
+        if (orbLevel > 80) {
             orb=(ardent);
-        } else if (tlevel > 60) {
+        } else if (orbLevel > 60) {
             orb=(fervid);
-        } else if (tlevel > 40) {
+        } else if (orbLevel > 40) {
             orb=(hot);
-        } else if (tlevel > 20) {
+        } else if (orbLevel > 20) {
             orb=(warm);
-        } else if (tlevel > 0) {
+        } else if (orbLevel > 0) {
             orb=(moderate);
-        } else if (tlevel > -20) {
+        } else if (orbLevel > -20) {
             orb=(chilly);
-        } else if (tlevel > -40) {
+        } else if (orbLevel > -40) {
             orb=(cold);
-        } else if (tlevel > -80) {
+        } else if (orbLevel > -80) {
             orb=(frigid);
         } else {
             orb=(hadean);
@@ -985,18 +985,35 @@ public class FrostedHud {
 
         HUDElements.temperature_orb_frame.blitAt(stack, x, y + 3, BasePos.temperature_orb_frame);
         boolean f = FHConfig.CLIENT.useFahrenheit.get();
-        float temperature = 0;
-        float tlvl = PlayerTemperatureData.getCapability(player).map(PlayerTemperatureData::getTotalFeelTemp).orElse(0F);
-        tlvl = Math.max(-273, tlvl);
-        if (f)
-            temperature = (tlvl * 9 / 5 + 32);
-        else
-            temperature = tlvl;
+        PlayerTemperatureData temperatureData = PlayerTemperatureData
+                .getCapability(player).orElse(null);
+        float environmentC = temperatureData == null
+                ? -20.0F : temperatureData.getEnvTemp();
+        environmentC = Math.max(-273.0F, environmentC);
+        float temperature = f
+                ? environmentC * 9.0F / 5.0F + 32.0F
+                : environmentC;
+        float bodyPowerW = temperatureData == null
+                ? 0.0F : temperatureData.getClientPresentedPowerW();
 
-        renderTemp(stack, mc, temperature, (int) tlvl, x + BarPos.temp_orb.getX(), y + BarPos.temp_orb.getY() + 3, !f);
+        renderTemp(stack, mc, temperature, powerToOrbLevel(bodyPowerW),
+                x + BarPos.temp_orb.getX(), y + BarPos.temp_orb.getY() + 3,
+                !f);
 
         RenderSystem.disableBlend();
         mc.getProfiler().pop();
+    }
+
+    private static int powerToOrbLevel(float powerW) {
+        if (powerW >= 300.0F) return 100;
+        if (powerW >= 150.0F) return 70;
+        if (powerW >= 60.0F) return 50;
+        if (powerW >= 15.0F) return 30;
+        if (powerW <= -300.0F) return -100;
+        if (powerW <= -150.0F) return -60;
+        if (powerW <= -60.0F) return -30;
+        if (powerW <= -15.0F) return -10;
+        return 10;
     }
 
     public static void renderThirst(GuiGraphics stack, int x, int y, Minecraft mc, Player player) {

@@ -1,7 +1,7 @@
 # Climate Data And Lifecycle
 
 - Status: `Current`
-- Last verified: `2026-08-29`
+- Last verified: `2026-08-30`
 - Scope: recipe/configuration ownership, capabilities, server lifecycle, thermal runtime integration, and network boundaries
 - Primary code anchors: `FHRecipeCachingReloadListener`, `WorldTemperature`, `MinecraftThermalEvents`, `MinecraftThermalInput`, `ThermalWorkerPool`, `LevelChunkSectionMixin_ThermalInput`, `FHCapabilities`, `FHNetwork`
 
@@ -19,7 +19,7 @@ Persistent capabilities remain separate from thermal mesh state:
 | Owner | Persistence | Current responsibility |
 |---|---|---|
 | `WorldClimate` | NBT capability | climate clock, daily cache, white-curtain descriptors |
-| `PlayerTemperatureData` | NBT capability | body-part temperature, clothing, effects, and display values |
+| `PlayerTemperatureData` | NBT capability | five body-part energy offsets, clothing stacks, and difficulty; sampled environment/HUD power are transient |
 | `HeatEndpoint` / `GeneratorData` | block/entity or team data | heat-network inventory and machine power semantics |
 | `MinecraftThermalInput` | runtime only | Page handles, capture queues, worker mailbox, and query publication |
 
@@ -84,11 +84,19 @@ so no stale arena slot can be observed during restart.
 
 ## Network And Consumers
 
-The body packet continues to carry player-facing aggregate values. World air
-temperature and Page cell state are queried on demand; the thermal runtime does
-not broadcast a continuous cell stream. Analytic fields are server-side control
-fields and are composed after Page air or natural fallback. Town/crop/passive
-consumers never admit a Page merely because a low-frequency query missed.
+`FHBodyDataSyncPacket` carries only the quantized player-facing environment,
+absolute core temperature, net body power, and status flags. It is sent on the
+player-temperature cadence only when those values change, plus one forced state
+on login, respawn, and dimension change. World air and Page cell state remain
+query-on-demand and are never placed in the body packet.
+
+The player NBT schema preserves each existing clothing `ItemStackHandler`, its
+complete item NBT, and temperature difficulty. New saves store per-part
+`energy_j`; old Celsius body/feel/environment and dormant
+`blockTemp`/`windStrengh` values are ignored on load, so an old player begins at
+normal body energy. Analytic fields remain server-side control fields composed
+after Page air or natural fallback. Town/crop/passive consumers never admit a
+Page merely because a low-frequency query missed.
 
 Changes to this integration must update the relevant consumer document and add
 one dated diary entry. Performance evidence comes from external JFR/heap runs;

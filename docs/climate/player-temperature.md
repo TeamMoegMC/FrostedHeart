@@ -1,71 +1,140 @@
 # Player Temperature
 
 - Status: `Current`
-- Last verified: `2026-08-29`
-- Scope: player environment queries, body-part temperature, clothing/effects, and synchronization
-- Primary code anchors: `TemperatureUpdate`, `TemperatureComputation`, `PlayerTemperatureData`, `MinecraftThermalInput.gameplayPlayerEnvironment`, `MinecraftThermalInput.gameplayPassiveEnvironment`, `MinecraftThermalInput.gameplayCropEnvironment`, `FHBodyDataSyncPacket`
+- Last verified: `2026-08-30`
+- Scope: player environment sampling, five-part body energy, clothing, Wet, heating equipment, HUD, effects, persistence, and synchronization
+- Primary code anchors: `TemperatureUpdate.updateTemperature`, `TemperatureComputation.updatePlayer`, `PlayerTemperatureData`, `BodyPartData`, `HeatingDeviceContext`, `FHBodyDataSyncPacket`, `FrostedHud.renderTemperature`
 
-## Environment Query
+## Player-Facing Values
 
-`TemperatureUpdate` asks `MinecraftThermalInput.gameplayPlayerEnvironment` for
-the player's eye position. The runtime requests a primary Page lease, reads a
-current lock-free Page publication, and composes its air value with analytic
-control fields and direct radiation. A missing Page, stale geometry, unresolved
-Air point, old sample, or unavailable radiation result falls back to the
-current `WorldTemperature.naturalAir` value without loading a chunk or waiting
-for the worker.
+The temperature orb carries two independent values:
 
-Passive blocks and crops use the same publication reader but never admit a Page
-on a miss. Town scanners query their weighted representative points and use an
-all-or-natural fallback when a partial region is unavailable.
+| HUD surface | Value | Meaning |
+|---|---|---|
+| Number | environmental equivalent temperature, `C` | the still-air temperature that would produce the current immediate environmental heat exchange |
+| Orb color | net body power, `W` | blue is losing heat, neutral is approximately balanced, and orange/red is gaining heat |
+| Body status/effects | body temperature offset from `37 C` | accumulated physiological danger |
 
-The Page runtime is asynchronous. Admission, geometry capture, source updates,
-and solver publication share one 20-tick cut. A first query therefore returns
-natural fallback; a later query observes the Page only after worker completion
-and main-thread ACK. Repeated door/fence-gate/trapdoor mutations are coalesced
-by position until the cut.
+The number is never body temperature and never `air - 37`. Clothing, Wet,
+movement, difficulty, food, and equipment can change body power without
+rewriting the displayed environmental temperature.
 
-## Player Cadence
+`FrostedHud.powerToOrbLevel` maps the synchronized net power to the existing
+orb textures. A symmetric `15 W` deadband prevents neutral noise from
+flickering the color. `PlayerTemperatureData.tickClientThermalPresentation`
+holds the previous non-neutral direction for up to 20 client ticks when power
+returns to the deadband. No arrow or extra HUD element is added.
 
-`temperatureUpdateIntervalTicks` defaults to `20`. `TemperatureUpdate` derives
-a stable UUID phase offset, distributing players across the 20 ticks instead of
-running every player's environment query in the same tick. The body/effect
-calculation remains on the level thread and uses one caller-owned
-`ThermalEnvironmentSample` per player update.
+## Cadence And Environment
 
-`TemperatureThreadingPool.java` is retained but its initialization, tick, and
-shutdown calls are commented and disabled. It is not used for player or thermal
-runtime work. There is no second player sampler or synchronous thermal path.
+`temperatureUpdateIntervalTicks` defaults to `20`.
+`TemperatureUpdate.shouldUpdatePlayer` assigns each UUID a stable phase so
+players are distributed across the interval. Each update performs one
+`MinecraftThermalInput.gameplayPlayerEnvironment` query using a reusable
+`ThermalEnvironmentSample`.
 
-## Body And Clothing
+The query returns absolute Thermal Air in degrees Celsius and direct radiant
+flux in `W/m2`. `FHAttributes.ENV_TEMPERATURE` modifiers and the existing
+Sauna effect are then applied to the player's local air boundary. Outdoor wind
+is `WorldTemperature.wind * 19.444 / 100 m/s`; the initial indoor model applies
+that wind only when `ServerLevel.canSeeSky` is true at the player's eye
+position. A roof therefore gives exactly `0 m/s` local wind. No ray, Page,
+cache, or stored openness value is used for this gate.
 
-`PlayerTemperatureData` stores the five body-part temperatures, clothing
-insulation, effective environment, and total perceived temperature. The existing
-food, armor, wetness, fire, potion, difficulty, and damage rules consume these
-values after the environment query. Values representing body offset are in
-degrees Celsius relative to the normal body temperature; environment and
-perceived values are absolute degrees Celsius.
+Missing or stale Page data follows the existing natural-Air fallback and never
+loads a chunk or waits for the worker.
 
-`TemperatureComputation` keeps the established conversion from direct radiant
-flux (`W/m2`) to body temperature change. Analytic fields are control inputs,
-not stored body energy and not part of the physical source ledger.
+## Body Energy
 
-## Synchronization And Persistence
+`BodyPartData.bodyEnergyOffsetJ` stores one energy offset for `HEAD`,
+`TORSO`, `HANDS`, `LEGS`, and `FEET`. Absolute part temperature is:
 
-`FHBodyDataSyncPacket` carries the player-facing aggregate body/environment/
-perceived values. Page cells, arena enthalpy, source bindings, and worker
-topology are runtime state and are rebuilt after level load or worker-generation
-restart; they are not written into player or chunk NBT.
+```text
+T_part_C = 37 C + E_part_J / C_part_J_per_K
+C_part_J_per_K = 245000 J/K * BodyPart.area
+```
 
-Player capability cloning/reset follows the existing death and respawn rules.
-Recipe reload invalidates the shared gameplay profile snapshot and closes active
-thermal runtimes; the next query creates a fresh generation.
+The five `BodyPart.area` values sum to `1.0`. Core temperature remains the
+existing weighted `HEAD + TORSO + LEGS` view. Internal torso/head, torso/legs,
+torso/hands, and legs/feet transfers conserve total body energy and are clamped
+before pair equilibrium.
 
-## Hot-Path Guarantees
+Air, long-wave exchange, direct source radiation, clothing resistance, contact
+media, Wet, metabolism, movement, thermoregulation, and equipment all enter one
+power balance in watts. `TemperatureComputation.updatePlayer` integrates that
+balance with a closed-form exponential step, so passive water or lava contact
+cannot numerically jump through its boundary temperature. The configured
+`temperatureChangeRate` multiplies one explicit `GAMEPLAY_TIME_SCALE` of
+`8`; this is the gameplay acceleration, not another temperature unit. At the
+default rate, a naked dry player in calm `-15 C` Air is intended to cross the
+first torso cold threshold after roughly `45..60 s`; water and exposed wind
+remain faster because they have independent transfer coefficients.
 
-- player lookup is O(1) after Page publication and arena-slot generation checks;
-- unchanged sleeping worker batches republish the sample tick without copying cell values;
-- one hundred players have stable cadence spread over the 20 ticks;
-- query misses never admit Pages or trigger chunk loads;
-- no production counter, probe, debug collection, or legacy compatibility adapter
-  is used to implement or test this path.
+## Contact, Wet, And Clothing
+
+Water and lava use `player.getFluidHeight(tag) / player.getBbHeight()`.
+Each `BodyPart` owns a fixed vertical immersion band, so contact engages feet,
+legs, torso/hands, and head progressively. Water uses a `0..35 C` boundary
+derived from local air instead of the old fixed `x6` Celsius multiplier.
+Powder snow and on-fire state remain local body inputs.
+
+These local entity contacts do not write Thermal Air or register a world source.
+Nearby ambient lava and ordinary-fire heating through Thermal Mesh/Page
+topology is not implemented by this player-temperature pass. Campfire retains
+its existing physical-source and radiation path unchanged.
+
+The existing Wet effect remains the only post-exit wetness state. Leaving water
+removes the water-contact conductance on the next player update; Wet continues
+its extra exchange until the existing effect expires. Wet heat loss and
+sweating share one low-cost evaporation ceiling.
+
+`BodyPartData.fillClothData` reads existing equipment attributes and
+`ArmorTempData` layers directly into one reusable `PartClothData`. It creates
+no per-update list. Legacy insulation recipe values are converted once during
+calculation with `LEGACY_INSULATION_TO_RESISTANCE = 0.0002 m2*K/W`.
+Wind proof, water resistance, and radiant heat proof retain their existing data
+sources.
+
+## Equipment, Food, And Effects
+
+`BodyHeatingCapability.tickHeating` now contributes explicit watts through
+`HeatingDeviceContext.addPower`. Existing fuel, durability, heat-storage
+capabilities, item stacks, and item NBT keys are unchanged. Food converts its
+existing temperature delta into joules through
+`TemperatureComputation.bodyEnergyForTemperatureDeltaJ` and applies the
+existing minimum/maximum body offsets.
+
+The established body-part effect thresholds still consume offsets relative to
+`37 C`: torso drives hypothermia/hyperthermia, head drives confusion, lower
+limbs drive slowness, and hands drive mining slowdown. The `INSULATION`
+effect, creative mode, spectator mode, and invulnerability continue sampling
+the environment but freeze body-energy changes and suppress climate injury.
+
+## Persistence And Synchronization
+
+Player persistence writes:
+
+- `thermal_schema = 1`;
+- `difficulty`;
+- each existing clothing `ItemStackHandler`;
+- each part's new `energy_j`.
+
+Old `temp`, `feel_temp`, `bodytemperature`, `envtemperature`,
+`feeltemperature`, `blockTemp`, and `windStrengh` values are not migrated
+into the new model. Loading an old player starts body energy at normal while
+preserving clothing stacks, their complete item NBT, and temperature
+difficulty. Environment observations are transient and are sampled again.
+
+`FHBodyDataSyncPacket` is an 8-byte fixed payload: version byte, environment
+at `0.1 C`, absolute core at `0.01 C`, net power at `1 W`, and status
+flags. Normal packets are sent only on the configured temperature cadence and
+only when a quantized value changes. Login, respawn, and dimension change force
+one complete state packet.
+
+## Hot-Path Bound
+
+The body update is fixed `O(5)`. `HeatingDeviceContext` is created lazily
+once per server-side player and owns the reusable sample, one clothing value,
+and fixed five-element primitive arrays. `TemperatureComputation` has no
+global mutable player scratch, no per-update collection, and no second
+temperature architecture.

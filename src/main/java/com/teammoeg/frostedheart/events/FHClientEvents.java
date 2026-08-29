@@ -408,6 +408,7 @@ public class FHClientEvents {
 	            PlayerTemperatureData.getCapability(pe).ifPresent(t -> {
 	                t.smoothedBodyPrev = t.smoothedBody;
 	                t.smoothedBody = t.smoothedBody * .9f + t.getCoreBodyTemp() * .1f;
+	                t.tickClientThermalPresentation();
 	            });
 	
 	            if (pe != null && pe.getEffect(FHMobEffects.NYCTALOPIA.get()) != null) {
