@@ -204,7 +204,7 @@ public abstract class EffectEditor<T extends Effect> extends BaseEditDialog {
                     e.ingredient, s -> {
                 e.ingredient = s;
             }));
-            add(new OpenEditorButton<>(this, Components.str("Edit Recipe IDs"), EditListDialog.STRING_LIST, e.unlocks.stream().map(Recipe::getId).map(String::valueOf).collect(Collectors.toList()), s -> {
+            add(new OpenEditorButton<>(this, Components.str("Edit Recipe IDs"), EditListDialog.STRING_LIST, e.unlocks.stream().map(String::valueOf).collect(Collectors.toList()), s -> {
                 e.setList(s);
                 e.ingredient = null;
 

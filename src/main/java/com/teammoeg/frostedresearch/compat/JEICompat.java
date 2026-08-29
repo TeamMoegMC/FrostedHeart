@@ -20,6 +20,7 @@
 package com.teammoeg.frostedresearch.compat;
 
 import com.google.common.collect.ImmutableList;
+import com.teammoeg.chorda.util.CDistHelper;
 import com.teammoeg.frostedresearch.FHResearch;
 import com.teammoeg.frostedresearch.FRMain;
 import com.teammoeg.frostedresearch.Lang;
@@ -193,11 +194,17 @@ public class JEICompat implements IModPlugin {
                     EffectCrafting crafting = (EffectCrafting) effect;
                     if (crafting.getIngredient() != null)
                         Stream.of(crafting.getIngredient().getItems()).forEach(items::add);
-                    else if (crafting.getUnlocks() != null)
+                    else if (crafting.getUnlocks() != null) {
+
+                        RecipeManager rm=CDistHelper.getRecipeManager();
                         crafting.getUnlocks().stream()
+                        		.map(rm::byKey)
+                        		.filter(t->t.isPresent())
+                        		.map(t->t.get())
                                 .map(RecipeUtil::getResultItem)
                                 .filter(t -> t != null && !t.isEmpty())
                                 .forEach(items::add);
+                    }
                     for (ItemStack stack : items) {
                         JEICompat.research.computeIfAbsent(stack.copy(), i -> new LinkedHashMap<>())
                                 .put(research.getId(), Lang.translateTooltip("research_unlockable", research.getName()));
