@@ -1,7 +1,7 @@
 # Heat Production And Network
 
 - Status: `Current`
-- Last verified: `2026-08-29`
+- Last verified: `2026-08-31`
 - Scope: physical Minecraft sources, worker energy integration, material/phase sinks, and the separate heat-network model
 - Primary code anchors: `MinecraftPhysicalSourceProfile`, `PhysicalSourceSpatialIndex`, `ThermalSourceBatch`, `ThermalSourceLedger`, `NodePowerAccumulatorArena`, `HeatEndpoint`, `HeatNetwork`
 
@@ -15,7 +15,7 @@ section, so changing one machine or campfire does not scan all sources.
 
 | Profile | Rated power | Thermal port | Other ports |
 |---|---:|---:|---|
-| Campfire | `8,000 W` | `80%` convection through the block below | `20%` radiation declared loss |
+| Campfire | `8,000 W` default | `80%` convection into the Air block above | `20%` direct radiation |
 | Generator | `10,000 W * level` | `70%` exhaust convection | `10%` internal heat, `20%` radiation loss |
 | Fountain | `2,000 W * level` | `90%` convection | `10%` radiation loss |
 | Radiator | `4,000 W * level` | `80%` convection | `10%` internal heat, `10%` radiation loss |
@@ -25,6 +25,12 @@ They become an internal reservoir, declared loss, or degraded loss; they do not
 create a fake Page or force a chunk load. Campfire block-state changes are
 coalesced by position, and a lit/unlit change with identical thermal signature
 updates only the source state.
+
+Campfire total power and radiation share are configured by
+`FHConfig.COMMON.THERMAL_RUNTIME.campfirePowerW` and
+`campfireRadiationShare`; convection receives exactly the remaining share.
+Defaults are `8,000 W` and `0.20`. The main source index and worker binding
+resolver use the same immutable configured profile.
 
 ## Worker Energy
 
@@ -49,10 +55,16 @@ phase reservoir stores latent energy and candidate microcells; a phase request
 is ACKed by the main thread only when Page lifecycle, profile, request sequence,
 and current world state still match.
 
-New material poles initialize from the Page's captured natural temperature. Air
-and material transfer uses the fixed one-second coefficient compiled during
-topology preparation; phase and buoyant paths use the generic inverse-capacity
-kernel.
+Phase contact conductance and base energy are configured by
+`FHConfig.COMMON.THERMAL_RUNTIME.phaseFaceConductanceWPerK` and
+`phaseBaseEnergyJPerHeatCapacity`. Defaults are `5 W/K` per full exposed block
+face and `38,000 J` multiplied by the recipe `heat_capacity`.
+
+New material poles initialize from the Page's captured natural temperature.
+During dormant admission they instead use the stored capacity-weighted Air mean
+for that Brick. Partial phase-reservoir energy is intentionally reset. Air and
+material transfer uses the fixed one-second coefficient compiled during topology
+preparation; phase and buoyant paths use the generic inverse-capacity kernel.
 
 ## Heat Network
 
@@ -70,7 +82,10 @@ Machine ticks call `MinecraftThermalInput.onGeneratorTick`,
 `onFountainTick`, or `onRadiatorTick`; campfires are discovered on chunk load
 and final block-state mutation drain. `onPhysicalSourceRemoved` marks one packed
 source ID absent. Chunk unload settles and unloads sources in that origin chunk;
-target Page references are released by the source index.
+before that removal, chunk checkpoints query the existing target-section index
+for a disk-only one-shot support bit. Target Page references are then released
+by the source index. This checkpoint can retain existing warm residuals across
+an unloaded interval but never simulates source power or heat-network flow.
 
 Routine work is proportional to changed sources and affected target buckets.
 Each dimension admits at most `65,536` physical sources and `131,072` retained

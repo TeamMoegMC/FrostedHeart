@@ -12,7 +12,7 @@ package com.teammoeg.frostedheart.content.climate.player;
 import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
 import com.teammoeg.frostedheart.bootstrap.common.FHMobEffects;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData.BodyPart;
-import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.ThermalEnvironmentSample;
+import com.teammoeg.frostedheart.content.climate.thermal.query.ThermalEnvironmentSample;
 import com.teammoeg.frostedheart.content.water.capability.WaterLevelCapability;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import net.minecraft.core.BlockPos;

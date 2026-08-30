@@ -14,7 +14,7 @@ import com.teammoeg.frostedheart.bootstrap.common.FHMobEffects;
 import com.teammoeg.frostedheart.content.climate.WorldTemperature;
 import com.teammoeg.frostedheart.content.climate.gamedata.climate.WorldClimate;
 import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.MinecraftThermalInput;
-import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.ThermalEnvironmentSample;
+import com.teammoeg.frostedheart.content.climate.thermal.query.ThermalEnvironmentSample;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.tags.TagKey;

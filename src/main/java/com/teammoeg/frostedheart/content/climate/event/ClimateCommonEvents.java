@@ -254,10 +254,8 @@ public class ClimateCommonEvents {
                         event.getLevel().setBlock(event.getPos(), crop.defaultBlockState(), 2);
                 }
             } else if (status.willDie()) {
-                if (level.getBlockState(pos.below()).is(Blocks.FARMLAND)) {
-                    level.setBlock(pos.below(), Blocks.DIRT.defaultBlockState(), 2);
-                }
-                level.setBlock(pos, Blocks.DEAD_BUSH.defaultBlockState(), 2);
+                event.setResult(Event.Result.DENY);
+                return;
             }
 
             if (allow) {

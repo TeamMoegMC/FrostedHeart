@@ -1,7 +1,7 @@
 # Climate Data And Lifecycle
 
 - Status: `Current`
-- Last verified: `2026-08-30`
+- Last verified: `2026-08-31`
 - Scope: recipe/configuration ownership, capabilities, server lifecycle, thermal runtime integration, and network boundaries
 - Primary code anchors: `FHRecipeCachingReloadListener`, `WorldTemperature`, `MinecraftThermalEvents`, `MinecraftThermalInput`, `ThermalWorkerPool`, `LevelChunkSectionMixin_ThermalInput`, `FHCapabilities`, `FHNetwork`
 
@@ -22,10 +22,22 @@ Persistent capabilities remain separate from thermal mesh state:
 | `PlayerTemperatureData` | NBT capability | five body-part energy offsets, clothing stacks, and difficulty; sampled environment/HUD power are transient |
 | `HeatEndpoint` / `GeneratorData` | block/entity or team data | heat-network inventory and machine power semantics |
 | `MinecraftThermalInput` | runtime only | Page handles, capture queues, worker mailbox, and query publication |
+| `DormantChunkThermalState` | chunk NBT | bounded Air-temperature residual checkpoints for retired Pages |
 
-Page cell enthalpy, source bindings, analytic fields, and worker topology are
-not written into chunk NBT. They are rebuilt from loaded sections and active
-source reports after level load or a worker-generation restart.
+Arena enthalpy, source bindings, analytic fields, material/phase state, and
+worker topology are never serialized. `DormantChunkThermalState` writes only
+quantized Air residuals relative to section-center `WorldTemperature.naturalAir`.
+Regular Bricks store one value; bounded exact mixed Bricks store one
+capacity-weighted mean plus deterministic component values. Admission rebuilds
+topology from current BlockState and uses the checkpoint only for initial Air
+and material-pole temperatures.
+
+Thermal gameplay coefficients are instance-wide COMMON config under
+`FHConfig.COMMON.THERMAL_RUNTIME`, stored in
+`config/frostedheart-common.toml`. `MinecraftThermalProfiles.prepare()` reads
+them once into an immutable snapshot at server start. Editing the file requires
+a client or dedicated-server restart; active workers never poll config and no
+per-save `serverconfig` copy is involved.
 
 ## Server Lifecycle
 
@@ -42,8 +54,18 @@ Level tick END
   MinecraftPageManager processes leases/mutations/capture budgets
   every 20 ticks: source flush and one immutable batch submit
 
+ChunkDataEvent.Load (async)
+  decode primitive dormant NBT into the new LevelChunk only
+
+ChunkEvent.Load (level thread)
+  consume one-shot source support, rebase residuals, then expose fallback
+
+ChunkDataEvent.Save / ChunkEvent.Unload / ServerStoppingEvent
+  capture coherent Page temperatures, refresh disk-only source support,
+  and write only already-loaded chunks
+
 Level unload
-  detach section hooks, close capture/source/radiation state,
+  checkpoint active Pages, detach section hooks, close capture/source/radiation state,
   request mailbox processor close
 
 ServerStoppedEvent
@@ -77,10 +99,11 @@ Natural-temperature cache invalidation remains owned by its existing recipe
 listener; changes to that contract must update `WorldTemperature` and this
 document together.
 
-After an unexpected worker exception, the main thread logs the failure, replaces
-the accumulator, reseeds every active Page and physical source, and submits a
-complete cut. Old Page publications are cleared by the closing worker store,
-so no stale arena slot can be observed during restart.
+Before recipe reload or worker replacement discards a publication, the main
+thread captures its last coherent Page cut into the loaded chunk attachment.
+The replacement worker receives an immutable `DormantAirCut`; no NBT round trip
+or retained old arena is required. Slot generation checks still prevent stale
+arena access.
 
 ## Network And Consumers
 
@@ -97,7 +120,8 @@ complete item NBT, and temperature difficulty. New saves store per-part
 `blockTemp`/`windStrengh` values are ignored on load, so an old player begins at
 normal body energy. Analytic fields remain server-side control fields composed
 after Page air or natural fallback. Town/crop/passive consumers never admit a
-Page merely because a low-frequency query missed.
+Page merely because a low-frequency query missed. Dormant state is server-only
+and adds no packet.
 
 Changes to this integration must update the relevant consumer document and add
 one dated diary entry. Performance evidence comes from external JFR/heap runs;

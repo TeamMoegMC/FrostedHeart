@@ -29,9 +29,9 @@ import com.mojang.brigadier.context.CommandContext;
 import com.teammoeg.chorda.text.Components;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.MinecraftThermalInput;
-import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.ThermalAnalyticField;
-import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.ThermalAnalyticField.CombineMode;
-import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.ThermalAnalyticField.Shape;
+import com.teammoeg.frostedheart.content.climate.thermal.field.ThermalAnalyticField;
+import com.teammoeg.frostedheart.content.climate.thermal.field.ThermalAnalyticField.CombineMode;
+import com.teammoeg.frostedheart.content.climate.thermal.field.ThermalAnalyticField.Shape;
 
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;

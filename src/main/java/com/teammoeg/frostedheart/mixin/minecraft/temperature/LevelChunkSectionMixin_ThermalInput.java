@@ -2,8 +2,8 @@
 package com.teammoeg.frostedheart.mixin.minecraft.temperature;
 
 import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.MinecraftThermalInput;
-import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.MinecraftPageManager;
-import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.MinecraftThermalSectionAttachment;
+import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.input.MinecraftPageManager;
+import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.input.MinecraftThermalSectionAttachment;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.LevelChunkSection;
 import org.spongepowered.asm.mixin.Mixin;

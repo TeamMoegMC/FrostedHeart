@@ -21,7 +21,7 @@ package com.teammoeg.frostedheart.content.climate.player;
 
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData.BodyPart;
-import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.ThermalEnvironmentSample;
+import com.teammoeg.frostedheart.content.climate.thermal.query.ThermalEnvironmentSample;
 
 import lombok.Getter;
 import net.minecraft.nbt.CompoundTag;

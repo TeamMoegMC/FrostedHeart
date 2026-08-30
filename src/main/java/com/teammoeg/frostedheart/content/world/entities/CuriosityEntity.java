@@ -30,8 +30,8 @@ import com.teammoeg.frostedheart.bootstrap.common.FHItems;
 import com.teammoeg.frostedheart.bootstrap.reference.FHSoundEvents;
 import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
 import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.MinecraftThermalInput;
-import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.ThermalAnalyticField;
-import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.ThermalAnalyticField.CombineMode;
+import com.teammoeg.frostedheart.content.climate.thermal.field.ThermalAnalyticField;
+import com.teammoeg.frostedheart.content.climate.thermal.field.ThermalAnalyticField.CombineMode;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig.Server.Curiosity;
 

@@ -1,25 +1,34 @@
 /* Copyright (c) 2026 TeamMoeg */
 package com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft;
 
-import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.content.climate.thermal.geometry.ConservativeAirGeometry;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.MaterialBoundaryRegistry;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.PagePublication;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.PageSignatures;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.ThermalBrickCellLayout;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.ThermalCellArena;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.ThermalPageHandle;
-import com.teammoeg.frostedheart.content.climate.thermal.geometry.ConservativeAirGeometry;
 import com.teammoeg.frostedheart.content.climate.thermal.profile.ResolvedThermalSignature;
 import com.teammoeg.frostedheart.content.climate.thermal.profile.ThermalSignatureRegistry;
 import com.teammoeg.frostedheart.content.climate.thermal.query.QueryPublication;
+import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.engine.ThermalDimensionEngine;
+import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.engine.ThermalDimensionLimits;
+import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.message.ResolvedGeometryBatch;
+import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.message.ThermalCompletion;
+import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.message.ThermalInputBatch;
 import com.teammoeg.frostedheart.content.climate.thermal.runtime.ThermalMemoryBudget;
 import com.teammoeg.frostedheart.content.climate.thermal.solver.BuoyancyConductance;
 import com.teammoeg.frostedheart.content.climate.thermal.solver.PhaseTransitionRuntime;
 import com.teammoeg.frostedheart.content.climate.thermal.source.EmissionPort;
+import com.teammoeg.frostedheart.content.climate.thermal.source.minecraft.MinecraftPhysicalSourceProfile;
 import com.teammoeg.frostedheart.content.climate.thermal.source.NodePowerAccumulatorArena;
 import com.teammoeg.frostedheart.content.climate.thermal.source.SourceBinding;
 import com.teammoeg.frostedheart.content.climate.thermal.source.ThermalSourceBatch;
 import com.teammoeg.frostedheart.content.climate.thermal.source.ThermalSourceLedger;
+import com.teammoeg.frostedheart.content.climate.thermal.topology.FarFieldSettings;
+import com.teammoeg.frostedheart.content.climate.thermal.topology.ThermalTopologyParameters;
+import com.teammoeg.frostedheart.FHMain;
+
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraftforge.gametest.GameTestHolder;
@@ -286,7 +295,7 @@ public final class FrostedHeartMinecraftThermalInputGameTests {
                 new ThermalInputBatch.PageAdmission[]{
                         new ThermalInputBatch.PageAdmission(
                                 page, page.liveGeometryRevision(),
-                                page(signatures, 0), 0.0D, sky())},
+                                page(signatures, 0), 0.0D, sky(), null)},
                 ThermalInputBatch.NO_RETIREMENTS,
                 ResolvedGeometryBatch.EMPTY,
                 ThermalSourceBatch.EMPTY,
@@ -345,10 +354,11 @@ public final class FrostedHeartMinecraftThermalInputGameTests {
                 1L, 0L, arena, signatures,
                 new MaterialBoundaryRegistry(List.of(), List.of()),
                 new ThermalTopologyParameters(
-                        64, 1_200.0D, 0.0D, 0.0D, 1.0D, 0.25D,
+                        64, 1_200.0D, 0.0D, 1.0D, 0.25D,
                         new BuoyancyConductance.Parameters(0.25D, 4.0D, 10.0D),
                         8, 4),
                 new FarFieldSettings(1.0D, 1.0D, 16.0D),
+                MinecraftPhysicalSourceProfile.CAMPFIRE,
                 new ThermalDimensionLimits(
                         16, 128, 256,
                         4_096, 2_048, 4_096, 4_096, 4_096,

@@ -31,18 +31,25 @@ public final class MinecraftPhysicalSourceProfile {
     private final double radiationDirectionalUpperBound;
 
     public static final MinecraftPhysicalSourceProfile CAMPFIRE =
-            new MinecraftPhysicalSourceProfile(
+            campfire(8_000.0D, 0.2D);
+
+    public static MinecraftPhysicalSourceProfile campfire(
+            double ratedPowerW,
+            double radiationShare
+    ) {
+        return new MinecraftPhysicalSourceProfile(
                     1,
-                    8_000.0D,
+                    ratedPowerW,
                     MissingPortPolicy.EXPLICIT_LOSS,
                     new Port[]{
                             Port.airFace(
-                                    0, 0.8D,
+                                    0, 1.0D - radiationShare,
                                     0, 1, 0,
                                     ConservativeAirGeometry.Face.NEGATIVE_Y),
-                            Port.radiationLoss(1, 0.2D)
+                            Port.radiationLoss(1, radiationShare)
                     },
                     0.5D, 0.75D, 0.5D, 1.0D);
+    }
 
     public static final MinecraftPhysicalSourceProfile GENERATOR =
             new MinecraftPhysicalSourceProfile(

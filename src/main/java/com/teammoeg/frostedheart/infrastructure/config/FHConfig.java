@@ -244,13 +244,56 @@ public class FHConfig {
 	 * 
 	 */
 	public static class Common {
+		public static class ThermalRuntime {
+			public final ForgeConfigSpec.DoubleValue airHeatCapacityJPerBlockK;
+			public final ForgeConfigSpec.DoubleValue airMixingWPerBlockK;
+			public final ForgeConfigSpec.DoubleValue phaseFaceConductanceWPerK;
+			public final ForgeConfigSpec.DoubleValue phaseBaseEnergyJPerHeatCapacity;
+			public final ForgeConfigSpec.DoubleValue farFieldConductanceWPerK;
+			public final ForgeConfigSpec.DoubleValue campfirePowerW;
+			public final ForgeConfigSpec.DoubleValue campfireRadiationShare;
+			public final ForgeConfigSpec.DoubleValue dormantTemperatureHalfLifeSeconds;
+
+			ThermalRuntime(ForgeConfigSpec.Builder builder) {
+				builder.comment(
+						"Restart the client or dedicated server after changing thermal runtime values.")
+					.push("Thermal Runtime");
+				airHeatCapacityJPerBlockK = builder
+					.comment("Effective Air heat capacity per block in J/K.")
+					.defineInRange("airHeatCapacityJPerBlockK", 1_200.0D, 1.0D, 1_000_000.0D);
+				airMixingWPerBlockK = builder
+					.comment("Effective Air mixing conductance in W/(block*K).")
+					.defineInRange("airMixingWPerBlockK", 96.0D, 0.001D, 1_000_000.0D);
+				phaseFaceConductanceWPerK = builder
+					.comment("Phase-transition conductance per full exposed block face in W/K.")
+					.defineInRange("phaseFaceConductanceWPerK", 5.0D, 0.001D, 1_000_000.0D);
+				phaseBaseEnergyJPerHeatCapacity = builder
+					.comment("Phase energy per block in J, multiplied by the state-transition recipe heat_capacity.")
+					.defineInRange("phaseBaseEnergyJPerHeatCapacity", 38_000.0D, 1.0D, 1.0e12D);
+				farFieldConductanceWPerK = builder
+					.comment("Base conductance from exposed Air boundaries to natural temperature in W/K.")
+					.defineInRange("farFieldConductanceWPerK", 7_747.2298793470545D, 0.001D, 1.0e9D);
+				campfirePowerW = builder
+					.comment("Total thermal power of a lit campfire in W.")
+					.defineInRange("campfirePowerW", 8_000.0D, 0.0D, 1.0e9D);
+				campfireRadiationShare = builder
+					.comment("Fraction of campfire power emitted as direct radiation; the remainder heats Air.")
+					.defineInRange("campfireRadiationShare", 0.2D, 0.0D, 1.0D);
+				dormantTemperatureHalfLifeSeconds = builder
+					.comment("Half-life in seconds for stored unloaded Page temperature residuals.")
+					.defineInRange("dormantTemperatureHalfLifeSeconds", 1_800.0D, 1.0D, 604_800.0D);
+				builder.pop();
+			}
+		}
 
 		public final ForgeConfigSpec.ConfigValue<List<? extends String>> blackmods;
+		public final ThermalRuntime THERMAL_RUNTIME;
 
 		// public final ForgeConfigSpec.ConfigValue<Boolean> enableAutoRestart;
 		public final ForgeConfigSpec.ConfigValue<Boolean> enableUpdateReminder;
 
 		Common(ForgeConfigSpec.Builder builder) {
+			THERMAL_RUNTIME = new ThermalRuntime(builder);
 
 			builder.push("Miscellaneous");
 			blackmods = builder

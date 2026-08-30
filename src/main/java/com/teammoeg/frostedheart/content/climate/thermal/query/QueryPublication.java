@@ -13,7 +13,12 @@ package com.teammoeg.frostedheart.content.climate.thermal.query;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.ThermalCellArena;
 import com.teammoeg.frostedheart.content.climate.thermal.runtime.ThermalMemoryBudget;
 
-/** Flat arena-slot double buffer written by one dimension worker. */
+/**
+ * 由一个维度 worker 写、主线程无锁读取的 arena-slot 双缓冲。
+ *
+ * <p>slot generation 与 topology generation 共同拒绝过期读；该结构只发布
+ * 查询温度，不拥有 Page topology 或求解器状态。</p>
+ */
 public final class QueryPublication implements AutoCloseable {
     private final ThermalMemoryBudget budget;
     private double[][] temperaturesC;

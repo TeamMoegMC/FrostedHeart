@@ -623,8 +623,6 @@ public class WorldTemperature {
                 return data.willDie() ? PlantStatus.WILL_DIE : PlantStatus.CAN_SURVIVE;
             }
         }
-        blockTemp = (float) MinecraftThermalInput.gameplayCropEnvironment(
-                level, pos, blockTemp);
         if (data.isValidTemperature(TemperatureType.BONEMEAL, blockTemp)) {
             return PlantStatus.CAN_FERTILIZE;
         }

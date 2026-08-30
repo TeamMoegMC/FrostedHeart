@@ -22,9 +22,7 @@ public final class PagePublication {
             long topologyGeneration,
             Brick[] bricks
     ) {
-        if (geometryRevision < -1L || topologyGeneration < -1L) {
-            throw new IllegalArgumentException("Page publication identities are invalid");
-        }
+        validateIdentities(geometryRevision, topologyGeneration);
         if (bricks == null || bricks.length != ThermalPageHandle.BASE_BRICK_COUNT) {
             throw new IllegalArgumentException("Page publication requires 64 Bricks");
         }
@@ -38,6 +36,17 @@ public final class PagePublication {
         }
     }
 
+    private PagePublication(
+            long geometryRevision,
+            long topologyGeneration,
+            PagePublication previous
+    ) {
+        validateIdentities(geometryRevision, topologyGeneration);
+        this.geometryRevision = geometryRevision;
+        this.topologyGeneration = topologyGeneration;
+        bricks = previous.bricks;
+    }
+
     public static PagePublication owned(
             long geometryRevision,
             long topologyGeneration,
@@ -45,6 +54,18 @@ public final class PagePublication {
     ) {
         return new PagePublication(
                 geometryRevision, topologyGeneration, bricks);
+    }
+
+    public PagePublication withIdentities(
+            long geometryRevision,
+            long topologyGeneration
+    ) {
+        if (this.geometryRevision == geometryRevision
+                && this.topologyGeneration == topologyGeneration) {
+            return this;
+        }
+        return new PagePublication(
+                geometryRevision, topologyGeneration, this);
     }
 
     public long geometryRevision() {
@@ -57,6 +78,13 @@ public final class PagePublication {
 
     public Brick[] copyBricks() {
         return bricks.clone();
+    }
+
+    public Brick brick(int index) {
+        if (index < 0 || index >= bricks.length) {
+            throw new IllegalArgumentException("Brick index must be within [0, 63]");
+        }
+        return bricks[index];
     }
 
     public Brick brickAt(int localX, int localY, int localZ) {
@@ -131,6 +159,16 @@ public final class PagePublication {
         return result;
     }
 
+    private static void validateIdentities(
+            long geometryRevision,
+            long topologyGeneration
+    ) {
+        if (geometryRevision < -1L || topologyGeneration < -1L) {
+            throw new IllegalArgumentException(
+                    "Page publication identities are invalid");
+        }
+    }
+
     /** One immutable Brick's query-facing coverage, geometry, and phase payload. */
     public record Brick(
             int coverageSlot,
@@ -156,10 +194,12 @@ public final class PagePublication {
                 throw new IllegalArgumentException("Brick signature payload is invalid");
             }
             if (signaturePayload instanceof char[] values
+                    && values.length != 1
                     && values.length != PageSignatures.ENTRIES_PER_BRICK) {
                 throw new IllegalArgumentException("compact Brick signatures are invalid");
             }
             if (signaturePayload instanceof int[] values
+                    && values.length != 1
                     && values.length != PageSignatures.ENTRIES_PER_BRICK) {
                 throw new IllegalArgumentException("wide Brick signatures are invalid");
             }

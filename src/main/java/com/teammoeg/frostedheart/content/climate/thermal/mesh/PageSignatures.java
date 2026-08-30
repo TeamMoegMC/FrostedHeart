@@ -54,18 +54,26 @@ public final class PageSignatures {
 
     static int valueAt(Object payload, int index) {
         if (payload instanceof char[] compact) {
-            return compact[index] - ENCODE_OFFSET;
+            return compact[compact.length == 1 ? 0 : index]
+                    - ENCODE_OFFSET;
         }
-        return ((int[]) payload)[index];
+        int[] wide = (int[]) payload;
+        return wide[wide.length == 1 ? 0 : index];
     }
 
     private static Object encodeBrick(int[] values) {
-        boolean compact = true;
-        for (int value : values) {
-            if (!fitsCompact(value)) {
-                compact = false;
-                break;
-            }
+        int first = values[0];
+        boolean uniform = true;
+        boolean compact = fitsCompact(first);
+        for (int index = 1; index < values.length; index++) {
+            int value = values[index];
+            uniform &= value == first;
+            compact &= fitsCompact(value);
+        }
+        if (uniform) {
+            return compact
+                    ? new char[]{encode(first)}
+                    : new int[]{first};
         }
         if (!compact) {
             return values.clone();

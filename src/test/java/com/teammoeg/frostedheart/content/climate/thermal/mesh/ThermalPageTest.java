@@ -54,13 +54,13 @@ class ThermalPageTest {
         PageSignatures original =
                 ThermalTestFixtures.filledPageSignatures(1);
         int[] changed = new int[PageSignatures.ENTRIES_PER_BRICK];
-        Arrays.fill(changed, 2);
+        Arrays.fill(changed, 70_000);
 
         PageSignatures replacement = original.withBricks(
                 new int[]{5}, new int[][]{changed});
 
         assertSame(original.brickPayload(4), replacement.brickPayload(4));
-        assertEquals(2, replacement.get((1 << 2) | (1 << 6)));
+        assertEquals(70_000, replacement.get((1 << 2) | (1 << 6)));
         assertEquals(1, original.get((1 << 2) | (1 << 6)));
     }
 
