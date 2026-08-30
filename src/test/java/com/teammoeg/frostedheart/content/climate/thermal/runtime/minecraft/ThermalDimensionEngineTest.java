@@ -22,9 +22,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class ThermalDimensionEngineTest {
     @Test
-    void admissionCompilesLocalBricksAndPublishesAFlatPageCut() {
+    void admissionCompilesFarFieldAndPublishesAFlatPageCut() {
         ThermalRuntimeTestFixtures.EngineFixture fixture =
-                ThermalRuntimeTestFixtures.engine();
+                ThermalRuntimeTestFixtures.engineWithFarField();
         try {
             ThermalCompletion completion = fixture.engine().process(
                     ThermalRuntimeTestFixtures.batch(

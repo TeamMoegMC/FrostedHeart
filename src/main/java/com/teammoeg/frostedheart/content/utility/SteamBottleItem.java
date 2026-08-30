@@ -52,7 +52,7 @@ import net.minecraftforge.common.capabilities.ICapabilityProvider;
 import java.util.List;
 
 public class SteamBottleItem extends FHBaseItem implements ITempAdjustFood {
-
+    private static final float HEAT_PER_STORED_UNIT_W = 46.66667F;
 
     public SteamBottleItem(Properties properties) {
         super(properties);
@@ -156,17 +156,24 @@ public class SteamBottleItem extends FHBaseItem implements ITempAdjustFood {
 
 					@Override
 					public void tickHeating(HeatingDeviceSlot slot, ItemStack stack, HeatingDeviceContext data) {
-						data.addEffectiveTemperature(BodyPart.TORSO	, FHCapabilities.ITEM_HEAT.getCapability(stack).map(t->t.extractEnergy(1.5f, false)).orElse(0f) / 0.12f);
+						float extracted = FHCapabilities.ITEM_HEAT.getCapability(stack)
+								.map(value -> value.extractEnergy(1.5F, false))
+								.orElse(0.0F);
+						data.addPower(BodyPart.TORSO,
+								extracted * HEAT_PER_STORED_UNIT_W);
 					}
 
 					@Override
-					public float getMaxTempAddValue(ItemStack stack) {
-						return FHCapabilities.ITEM_HEAT.getCapability(stack).map(t->Math.min(3,t.getEnergyStored())).orElse(0f)/ 0.12f;
+					public float getMaxPowerW(ItemStack stack) {
+						return FHCapabilities.ITEM_HEAT.getCapability(stack)
+								.map(value -> Math.min(1.5F,
+										value.getEnergyStored()))
+								.orElse(0.0F) * HEAT_PER_STORED_UNIT_W;
 					}
 
 					@Override
-					public float getMinTempAddValue(ItemStack stack) {
-						return FHCapabilities.ITEM_HEAT.getCapability(stack).map(t->Math.min(3,t.getEnergyStored())).orElse(0f)/ 0.12f;
+					public float getMinPowerW(ItemStack stack) {
+						return getMaxPowerW(stack);
 					}
 					
 				})

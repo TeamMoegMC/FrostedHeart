@@ -26,6 +26,9 @@ import net.minecraft.world.entity.EquipmentSlot;
 import top.theillusivec4.curios.api.type.ISlotType;
 
 public class HeatingDeviceSlot {
+	static final EquipmentSlot[] EQUIPMENT_SLOTS = EquipmentSlot.values();
+	private static final HeatingDeviceSlot[] VANILLA_SLOTS =
+			createVanillaSlots();
 	ISlotType curios;
 	SlotKey vanilla;
 	BodyPart part;
@@ -42,6 +45,27 @@ public class HeatingDeviceSlot {
 	public HeatingDeviceSlot(ISlotType curios) {
 		super();
 		this.curios = curios;
+	}
+
+	HeatingDeviceSlot() {
+	}
+
+	static HeatingDeviceSlot vanilla(EquipmentSlot slot) {
+		return VANILLA_SLOTS[slot.ordinal()];
+	}
+
+	void setCurios(ISlotType curios) {
+		this.curios = curios;
+		this.vanilla = null;
+		this.part = null;
+	}
+
+	private static HeatingDeviceSlot[] createVanillaSlots() {
+		HeatingDeviceSlot[] result = new HeatingDeviceSlot[EQUIPMENT_SLOTS.length];
+		for (EquipmentSlot slot : EQUIPMENT_SLOTS) {
+			result[slot.ordinal()] = new HeatingDeviceSlot(slot);
+		}
+		return result;
 	}
 
 	public boolean is(EquipmentSlot slot) {

@@ -222,7 +222,7 @@ final class BrickTopologyCompiler {
                 materialOperations.pairs(),
                 materialOperations.boundaries(),
                 materialOperations.phases(),
-                freezeFarBoundaries());
+                freezeFarBoundaries(page.pageSlot));
         return new CompiledFragment(
                 fragment,
                 fragmentResolved && materialOperations.resolved(),
@@ -501,7 +501,9 @@ final class BrickTopologyCompiler {
                 conductance, coefficient, firstY, secondY, buoyant);
     }
 
-    private ThermalFragment.FarBoundaries freezeFarBoundaries() {
+    private ThermalFragment.FarBoundaries freezeFarBoundaries(
+            int ownerPageSlot
+    ) {
         int count = farBoundaries.size();
         if (count == 0) {
             return ThermalFragment.FarBoundaries.EMPTY;
@@ -516,7 +518,7 @@ final class BrickTopologyCompiler {
         for (int index = 0; index < count; index++) {
             cell[index] = (int) farBoundaries.first(index);
             generation[index] = arena.lifecycleGeneration(cell[index]);
-            pageSlot[index] = arena.pageSlot(cell[index]);
+            pageSlot[index] = ownerPageSlot;
             conductance[index] = farBoundaries.value(index);
         }
         return new ThermalFragment.FarBoundaries(

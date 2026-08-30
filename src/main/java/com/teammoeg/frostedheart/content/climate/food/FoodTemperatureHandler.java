@@ -28,6 +28,7 @@ import com.teammoeg.frostedheart.content.climate.WorldTemperature;
 import com.teammoeg.frostedheart.content.climate.data.FoodTempData;
 import com.teammoeg.frostedheart.content.climate.player.ITempAdjustFood;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData;
+import com.teammoeg.frostedheart.content.climate.player.TemperatureComputation;
 import com.teammoeg.frostedheart.content.water.item.DrinkContainerItem;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import com.teammoeg.frostedheart.util.Lang;
@@ -146,9 +147,6 @@ public class FoodTemperatureHandler {
                 heat = DEFAULT_HOT_FOOD_HEAT;
             }
 
-            // Get the current body temperature
-            float current = PlayerTemperatureData.getCapability((ServerPlayer) event.getEntity()).map(PlayerTemperatureData::getCoreBodyTemp).orElse(0f);
-
             // Fetch data from ITempAdjustFood, if available. Otherwise, use default values.
             if (adj != null) {
                 max = adj.getMaxTemp(event.getItem());
@@ -160,24 +158,16 @@ public class FoodTemperatureHandler {
             if (heat > 1) {
                 event.getEntity().hurt(FHDamageSources.hyperthermiaInstant(event.getEntity().level()), (heat) * 2);
             } else if (heat < -1)
-                event.getEntity().hurt(FHDamageSources.hypothermiaInstant(event.getEntity().level()), (heat) * 2);
-            if (heat > 0) {
-                if (current >= max)
-                    return;
-                current += (float) (heat * tspeed);
-                if (current > max)
-                    current = max;
-            } else {
-                if (current <= min)
-                    return;
-                current += (float) (heat * tspeed);
-                if (current <= min)
-                    return;
-            }
+                event.getEntity().hurt(FHDamageSources.hypothermiaInstant(
+                        event.getEntity().level()), (-heat) * 2);
 
-            // Set body temperature
-            final float toset = current;
-            PlayerTemperatureData.getCapability((ServerPlayer) event.getEntity()).ifPresent(t->t.setAllPartsBodyTemp(toset));
+            double energyJ = TemperatureComputation
+                    .bodyEnergyForTemperatureDeltaJ(heat * tspeed);
+            PlayerTemperatureData temperatureData = PlayerTemperatureData
+                    .getCapability(player).orElse(null);
+            if (temperatureData != null) {
+                temperatureData.addUniformBodyEnergyJ(energyJ, min, max);
+            }
         }
     }
 
