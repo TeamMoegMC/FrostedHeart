@@ -6,65 +6,81 @@
  * Frosted Heart is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, version 3.
- *
- * Frosted Heart is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
- *
  */
-
 package com.teammoeg.frostedheart.content.climate.network;
-
-import java.util.function.Supplier;
 
 import com.teammoeg.chorda.network.CMessage;
 import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.MinecraftThermalInput;
 
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.world.level.ChunkPos;
 import net.minecraftforge.network.NetworkEvent;
 
+import java.util.function.Supplier;
 
-public class FHRequestInfraredViewDataSyncPacket implements CMessage {
-    private final ChunkPos chunkPos;
-    private final int chunkRadius;
+public final class FHRequestInfraredViewDataSyncPacket implements CMessage {
+    public static final int PRESENCE_WORDS = 12;
 
-    public FHRequestInfraredViewDataSyncPacket(ChunkPos chunkPos, int chunkRadius) {
-        this.chunkPos = chunkPos;
-        this.chunkRadius = chunkRadius;
+    private final int requestId;
+    private final boolean forceFull;
+    private final long lastTemperatureChangeId;
+    private final long[] knownPresence;
+
+    public FHRequestInfraredViewDataSyncPacket(
+            int requestId,
+            boolean forceFull,
+            long lastTemperatureChangeId,
+            long[] knownPresence
+    ) {
+        if (requestId < 0 || lastTemperatureChangeId < 0L
+                || knownPresence == null
+                || knownPresence.length != PRESENCE_WORDS) {
+            throw new IllegalArgumentException("invalid infrared request");
+        }
+        this.requestId = requestId;
+        this.forceFull = forceFull;
+        this.lastTemperatureChangeId = lastTemperatureChangeId;
+        this.knownPresence = knownPresence.clone();
     }
 
     public FHRequestInfraredViewDataSyncPacket(FriendlyByteBuf buffer) {
-        this.chunkPos = new ChunkPos(buffer.readVarLong());
-        this.chunkRadius = buffer.readVarInt();
+        requestId = buffer.readVarInt();
+        forceFull = buffer.readBoolean();
+        lastTemperatureChangeId = buffer.readVarLong();
+        knownPresence = new long[PRESENCE_WORDS];
+        for (int index = 0; index < PRESENCE_WORDS; index++) {
+            knownPresence[index] = buffer.readLong();
+        }
     }
 
     @Override
     public void encode(FriendlyByteBuf buffer) {
-        buffer.writeVarLong(chunkPos.toLong());
-        buffer.writeVarInt(chunkRadius);
+        buffer.writeVarInt(requestId);
+        buffer.writeBoolean(forceFull);
+        buffer.writeVarLong(lastTemperatureChangeId);
+        for (long word : knownPresence) {
+            buffer.writeLong(word);
+        }
     }
 
     @Override
     public void handle(Supplier<NetworkEvent.Context> context) {
         context.get().enqueueWork(() -> {
             var player = context.get().getSender();
-            if (player != null) {
-                if (!player.level().getChunkSource().hasChunk(chunkPos.x, chunkPos.z) || chunkRadius > 10) {
-                    // to avoid potential abuse / attacking from client
-                    // make sure the chunk is loaded and the radius is not too large
-                    return;
-                }
-                float[] fields = MinecraftThermalInput.gameplayInfraredFields(
-                        player.serverLevel(), chunkPos, chunkRadius, 512);
+            if (player == null) {
+                return;
+            }
+            MinecraftThermalInput.InfraredSnapshot snapshot =
+                    MinecraftThermalInput.gameplayInfraredSnapshot(
+                            player,
+                            forceFull,
+                            lastTemperatureChangeId,
+                            knownPresence);
+            if (snapshot != null) {
                 FHNetwork.INSTANCE.sendPlayer(
                         player,
-                        new FHResponseInfraredViewDataSyncPacket(chunkPos, fields));
+                        new FHResponseInfraredViewDataSyncPacket(
+                                requestId, snapshot));
             }
         });
         context.get().setPacketHandled(true);

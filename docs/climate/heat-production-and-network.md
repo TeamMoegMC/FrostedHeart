@@ -16,13 +16,13 @@ section, so changing one machine or campfire does not scan all sources.
 | Profile | Rated power | Thermal port | Other ports |
 |---|---:|---:|---|
 | Campfire | `8,000 W` default | `80%` convection into the Air block above | `20%` direct radiation |
-| Generator | `10,000 W * level` | `70%` exhaust convection | `10%` internal heat, `20%` radiation loss |
+| Generator | `10,000 W * level` | `80%` exhaust convection | `20%` radiation loss |
 | Fountain | `2,000 W * level` | `90%` convection | `10%` radiation loss |
-| Radiator | `4,000 W * level` | `80%` convection | `10%` internal heat, `10%` radiation loss |
+| Radiator | `4,000 W * level` | `90%` convection | `10%` radiation loss |
 
-Blocked or unresolved AIR_FACE ports use the profile's missing-port policy.
-They become an internal reservoir, declared loss, or degraded loss; they do not
-create a fake Page or force a chunk load. Campfire block-state changes are
+Blocked AIR_FACE ports become declared loss; topology-unavailable ports become
+degraded loss. Neither creates a fake Page, accumulates pending energy, or
+forces a chunk load. Campfire block-state changes are
 coalesced by position, and a lit/unlit change with identical thermal signature
 updates only the source state.
 

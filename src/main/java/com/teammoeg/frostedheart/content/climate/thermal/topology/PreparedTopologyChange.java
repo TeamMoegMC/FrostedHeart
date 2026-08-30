@@ -210,6 +210,7 @@ public final class PreparedTopologyChange {
 
     public static final class PageWrite {
         public final WorkerPageStore.PageState page;
+        final WorkerPageStore.PageState replacedPage;
         final boolean admission;
         public final boolean retirement;
         final PageSignatures signatures;
@@ -226,6 +227,7 @@ public final class PreparedTopologyChange {
 
         private PageWrite(
                 WorkerPageStore.PageState page,
+                WorkerPageStore.PageState replacedPage,
                 boolean admission,
                 boolean retirement,
                 PageSignatures signatures,
@@ -252,6 +254,15 @@ public final class PreparedTopologyChange {
                     && !Double.isFinite(naturalTemperatureC)
                     || (Byte.toUnsignedInt(continuationFaceMask) & ~0x3f) != 0) {
                 throw new IllegalArgumentException("prepared Page write is invalid");
+            }
+            if (replacedPage != null
+                    && (!admission || retirement
+                    || replacedPage.handle.sectionKey()
+                            != page.handle.sectionKey()
+                    || replacedPage.pageSlot != page.pageSlot
+                    || replacedPage.handle == page.handle)) {
+                throw new IllegalArgumentException(
+                        "prepared Page replacement is invalid");
             }
             long indexedBricks = 0L;
             int previousBrick = -1;
@@ -282,6 +293,7 @@ public final class PreparedTopologyChange {
                 previousColumn = column;
             }
             this.page = page;
+            this.replacedPage = replacedPage;
             this.admission = admission;
             this.retirement = retirement;
             this.signatures = signatures;
@@ -309,6 +321,7 @@ public final class PreparedTopologyChange {
         ) {
             return new PageWrite(
                     draft.page,
+                    draft.replacedPage,
                     draft.admission,
                     false,
                     draft.nextSignatures,
@@ -327,6 +340,7 @@ public final class PreparedTopologyChange {
         static PageWrite retirement(TopologyPlan.PageDraft draft) {
             return new PageWrite(
                     draft.page,
+                    null,
                     false,
                     true,
                     draft.page.signatures,

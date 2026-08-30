@@ -22,7 +22,6 @@ public final class MinecraftPhysicalSourceProfile {
 
     private final int profileId;
     private final double ratedPowerW;
-    private final MissingPortPolicy missingPortPolicy;
     private final Port[] ports;
     private final double radiativePowerShare;
     private final double radiationOffsetX;
@@ -40,7 +39,6 @@ public final class MinecraftPhysicalSourceProfile {
         return new MinecraftPhysicalSourceProfile(
                     1,
                     ratedPowerW,
-                    MissingPortPolicy.EXPLICIT_LOSS,
                     new Port[]{
                             Port.airFace(
                                     0, 1.0D - radiationShare,
@@ -55,14 +53,12 @@ public final class MinecraftPhysicalSourceProfile {
             new MinecraftPhysicalSourceProfile(
                     2,
                     10_000.0D,
-                    MissingPortPolicy.INTERNAL_HEAT,
                     new Port[]{
                             Port.airFace(
-                                    0, 0.7D,
+                                    0, 0.8D,
                                     0, 0, 0,
                                     ConservativeAirGeometry.Face.NEGATIVE_Y),
-                            Port.internalHeat(1, 0.1D),
-                            Port.radiationLoss(2, 0.2D)
+                            Port.radiationLoss(1, 0.2D)
                     },
                     0.5D, 0.5D, 0.5D, 1.0D);
 
@@ -70,7 +66,6 @@ public final class MinecraftPhysicalSourceProfile {
             new MinecraftPhysicalSourceProfile(
                     3,
                     2_000.0D,
-                    MissingPortPolicy.EXPLICIT_LOSS,
                     new Port[]{
                             Port.airFace(
                                     0, 0.9D,
@@ -84,14 +79,12 @@ public final class MinecraftPhysicalSourceProfile {
             new MinecraftPhysicalSourceProfile(
                     4,
                     4_000.0D,
-                    MissingPortPolicy.INTERNAL_HEAT,
                     new Port[]{
                             Port.airFace(
-                                    0, 0.8D,
+                                    0, 0.9D,
                                     0, 0, 0,
                                     ConservativeAirGeometry.Face.NEGATIVE_Y),
-                            Port.internalHeat(1, 0.1D),
-                            Port.radiationLoss(2, 0.1D)
+                            Port.radiationLoss(1, 0.1D)
                     },
                     0.5D, 0.5D, 0.5D, 1.0D);
 
@@ -109,7 +102,6 @@ public final class MinecraftPhysicalSourceProfile {
     public MinecraftPhysicalSourceProfile(
             int profileId,
             double ratedPowerW,
-            MissingPortPolicy missingPortPolicy,
             Port[] ports,
             double radiationOffsetX,
             double radiationOffsetY,
@@ -132,7 +124,6 @@ public final class MinecraftPhysicalSourceProfile {
             throw new IllegalArgumentException(
                     "radiationDirectionalUpperBound must be finite and positive");
         }
-        Objects.requireNonNull(missingPortPolicy, "missingPortPolicy");
         ports = Objects.requireNonNull(ports, "ports").clone();
         if (ports.length == 0) {
             throw new IllegalArgumentException("a physical source requires at least one port");
@@ -155,7 +146,6 @@ public final class MinecraftPhysicalSourceProfile {
         }
         this.profileId = profileId;
         this.ratedPowerW = ratedPowerW;
-        this.missingPortPolicy = missingPortPolicy;
         this.ports = ports;
         this.radiativePowerShare = radiationShare;
         this.radiationOffsetX = radiationOffsetX;
@@ -167,7 +157,6 @@ public final class MinecraftPhysicalSourceProfile {
 
     public int profileId() { return profileId; }
     public double ratedPowerW() { return ratedPowerW; }
-    public MissingPortPolicy missingPortPolicy() { return missingPortPolicy; }
     public double radiationOffsetX() { return radiationOffsetX; }
     public double radiationOffsetY() { return radiationOffsetY; }
     public double radiationOffsetZ() { return radiationOffsetZ; }
@@ -203,14 +192,8 @@ public final class MinecraftPhysicalSourceProfile {
         return totalPowerW * radiativePowerShare;
     }
 
-    public enum MissingPortPolicy {
-        INTERNAL_HEAT,
-        EXPLICIT_LOSS
-    }
-
     public enum PortKind {
         AIR_FACE,
-        INTERNAL_HEAT,
         RADIATION_LOSS
     }
 
@@ -251,15 +234,6 @@ public final class MinecraftPhysicalSourceProfile {
             return new Port(
                     portId, powerShare, PortKind.AIR_FACE,
                     offsetX, offsetY, offsetZ, targetFace);
-        }
-
-        public static Port internalHeat(
-                int portId,
-                double powerShare
-        ) {
-            return new Port(
-                    portId, powerShare, PortKind.INTERNAL_HEAT,
-                    0, 0, 0, null);
         }
 
         public static Port radiationLoss(

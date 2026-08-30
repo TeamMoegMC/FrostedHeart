@@ -349,7 +349,8 @@ public final class FrostedHeartMinecraftThermalInputGameTests {
         QueryPublication query = QueryPublication.tryCreate(
                 new ThermalMemoryBudget(8L * 1024L * 1024L)
                         .createDimensionBudget(8L * 1024L * 1024L),
-                256);
+                256,
+                16);
         ThermalDimensionEngine engine = new ThermalDimensionEngine(
                 1L, 0L, arena, signatures,
                 new MaterialBoundaryRegistry(List.of(), List.of()),

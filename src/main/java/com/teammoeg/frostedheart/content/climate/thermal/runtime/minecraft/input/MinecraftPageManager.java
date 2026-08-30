@@ -172,6 +172,55 @@ public final class MinecraftPageManager implements AutoCloseable {
         return page == null ? null : page.handle;
     }
 
+    /**
+     * Collects Page lifecycles with at least one coherent publication in the
+     * fixed 9x9x9 infrared region.
+     */
+    public int collectInfraredPages(
+            int centerChunkX,
+            int centerSectionY,
+            int centerChunkZ,
+            ThermalPageHandle[] handles,
+            short[] localIndexes,
+            long[] presence
+    ) {
+        requireMainThread();
+        if (handles == null || handles.length < 729
+                || localIndexes == null || localIndexes.length < 729
+                || presence == null || presence.length < 12) {
+            throw new IllegalArgumentException("infrared Page scratch is too small");
+        }
+        Arrays.fill(handles, null);
+        Arrays.fill(presence, 0L);
+        int count = 0;
+        for (int dz = -4; dz <= 4; dz++) {
+            for (int dx = -4; dx <= 4; dx++) {
+                LongOpenHashSet indexed = pagesByChunk.get(ChunkPos.asLong(
+                        centerChunkX + dx, centerChunkZ + dz));
+                if (indexed == null) {
+                    continue;
+                }
+                for (long sectionKey : indexed) {
+                    int dy = SectionPos.y(sectionKey) - centerSectionY;
+                    if (dy < -4 || dy > 4) {
+                        continue;
+                    }
+                    PageEntry page = pages.get(sectionKey);
+                    ThermalPageHandle handle = page == null ? null : page.handle;
+                    if (handle == null || handle.lastPublication() == null) {
+                        continue;
+                    }
+                    int localIndex = ((dy + 4) * 9 + (dz + 4)) * 9 + dx + 4;
+                    handles[count] = handle;
+                    localIndexes[count] = (short) localIndex;
+                    presence[localIndex >>> 6] |= 1L << (localIndex & 63);
+                    count++;
+                }
+            }
+        }
+        return count;
+    }
+
     public void acknowledgeResync(
             ThermalPageHandle.GeometryResyncToken[] tokens
     ) {
@@ -940,9 +989,26 @@ public final class MinecraftPageManager implements AutoCloseable {
         }
     }
 
-    public SectionOwner loadedSection(long sectionKey) {
+    public SectionOwner loadedSectionOrAttach(long sectionKey) {
+        requireMainThread();
         SectionOwner owner = ownersBySection.get(sectionKey);
-        return owner == null || !owner.valid ? null : owner;
+        if (owner != null && owner.valid) {
+            return owner;
+        }
+        LevelChunk chunk = level.getChunkSource().getChunkNow(
+                SectionPos.x(sectionKey), SectionPos.z(sectionKey));
+        if (chunk == null) {
+            return null;
+        }
+        int sectionIndex = chunk.getSectionIndexFromSectionY(
+                SectionPos.y(sectionKey));
+        if (sectionIndex < 0
+                || sectionIndex >= chunk.getSections().length) {
+            return null;
+        }
+        ensureSectionOwner(
+                chunk, sectionIndex, chunk.getSections()[sectionIndex]);
+        return ownersBySection.get(sectionKey);
     }
 
     private static MinecraftThermalSectionAttachment attachment(

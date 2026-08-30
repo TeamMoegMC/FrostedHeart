@@ -120,10 +120,46 @@ class QueryPublicationTest {
         publication.close();
     }
 
+    @Test
+    void infraredTrackingMarksOnlyQuantizedPageChangesAndExpires() {
+        ThermalCellArena arena = arena(1, 1.0D);
+        QueryPublication publication = publication(1, 1_000L);
+        publication.publish(arena, 0.0D, 1L, 20L);
+
+        assertTrue(publication.noteInfraredRequest(20L, 80));
+        QueryPublication.InfraredReadCursor cursor =
+                new QueryPublication.InfraredReadCursor();
+        assertTrue(publication.beginInfraredRead(cursor));
+        assertEquals(1L, cursor.temperatureChangeId());
+        assertEquals(1L, cursor.pageChangeId(0));
+
+        arena.setEnthalpyJ(0, 0.1D);
+        publication.publish(arena, 0.0D, 1L, 40L);
+        assertTrue(publication.beginInfraredRead(cursor));
+        assertEquals(1L, cursor.temperatureChangeId());
+
+        arena.setEnthalpyJ(0, 0.3D);
+        publication.publish(arena, 0.0D, 1L, 60L);
+        assertTrue(publication.beginInfraredRead(cursor));
+        assertEquals(2L, cursor.temperatureChangeId());
+        assertEquals(2L, cursor.pageChangeId(0));
+
+        arena.setEnthalpyJ(0, 1.0D);
+        publication.publish(arena, 0.0D, 1L, 120L);
+        assertTrue(publication.beginInfraredRead(cursor));
+        assertEquals(2L, cursor.temperatureChangeId());
+
+        assertTrue(publication.noteInfraredRequest(120L, 80));
+        assertTrue(publication.beginInfraredRead(cursor));
+        assertEquals(3L, cursor.temperatureChangeId());
+        assertEquals(3L, cursor.pageChangeId(0));
+        publication.close();
+    }
+
     private static QueryPublication publication(int capacity, long limit) {
         ThermalMemoryBudget server = new ThermalMemoryBudget(limit);
         QueryPublication publication = QueryPublication.tryCreate(
-                server.createDimensionBudget(limit), capacity);
+                server.createDimensionBudget(limit), capacity, 4);
         assertNotNull(publication);
         return publication;
     }

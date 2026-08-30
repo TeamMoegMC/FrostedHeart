@@ -337,6 +337,19 @@ public final class ThermalCellArena {
         return lifecycleGenerations[slot];
     }
 
+    /** Worker publication ownership for one allocated cell. */
+    public int pageSlot(int slot) {
+        requireAllocatedSlot(slot);
+        return pageSlots[slot];
+    }
+
+    /** Whether one allocated slot is an Air cell published to gameplay queries. */
+    public boolean isAirCell(int slot) {
+        requireAllocatedSlot(slot);
+        return cellKinds[slot] == REGULAR_CELL
+                || cellKinds[slot] == MIXED_COMPONENT;
+    }
+
     /** Adds energy only when the source binding still names this exact cell incarnation. */
     public void addNodeEnthalpyJ(long nodeId, int lifecycleGeneration, double deltaJ) {
         int slot = requireNodeTarget(nodeId, lifecycleGeneration);

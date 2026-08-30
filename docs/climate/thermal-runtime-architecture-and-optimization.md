@@ -159,11 +159,26 @@ named builders group material-contact and prepared-transaction arrays before
 creating the same immutable primitive payloads; they do not add per-Brick or
 per-transaction group objects.
 
+When one cut retires a Page handle and admits a newer handle for the same
+section, `TopologyPlan` represents them as one Page replacement. The new Page
+reuses the committed worker Page slot, compiles one complete next Brick
+directory, migrates current worker Air/material heat, replaces the exact local
+fragment closure, and clears the old handle only after commit. It does not
+perform a retirement transaction followed by a later admission, add a
+20-tick temperature gap, or grow the Page/fragment address space. Outstanding
+phase requests belong to the old lifecycle and are not copied to the new Page;
+their stale ACKs are rejected by the existing lifecycle identity check.
+
 One Brick compile carries its current `PageState` and `nextSignatures` as local
 arguments. Interior material/microcell adjacency therefore uses those direct
 references; `TopologyView` consults section/slot hash indexes only for genuine
 cross-Page access. This avoids repeated same-Page map lookup without a retained
 compiler cache.
+
+`MaterialBoundaryRegistry` requires dense profile/contact-pattern IDs in
+`1..N` list order and stores both catalogs in direct-index arrays. Brick
+compilation performs bounds checks and array loads rather than boxed
+`Map<Integer, ...>` lookups.
 
 Preparation reserves replacement spans as arena `RESERVED` cells and may grow
 backing arrays. Reserved cells hold the exact next metadata and migrated
@@ -277,6 +292,23 @@ and stores only slot generations and temperature; topology generation and sample
 tick remain in the publication envelope. It never counts then rewrites, retains
 slot keys, scans arena holes, or binary-searches a sorted cell list.
 
+Infrared tracking reuses that same live-slot write. A dimension keeps one
+`temperatureChangeId` and `long[maximumPages] pageChangeIds`; while the
+80-tick activity window is open, Air temperatures are compared at 0.25degC
+quantization and changed Pages receive the next ID. Inactive publication pays
+one deadline branch and performs no infrared comparison. Reactivation advances
+one ID and fills the fixed Page backing so clients with an older ID rebuild
+without a server-side observer. The fixed Page backing and geometrically growing
+cell buffers hold separate reservations in the same dimension/server memory
+budget.
+
+`InfraredReadCursor` fixes one buffer, slot generations, Page change IDs,
+sample tick, topology generation, and publication version for a complete
+response. Main-thread encoding validates it once after staging. Page geometry
+gaps use `ThermalPageHandle.lastPublication`; retirement alone removes
+presence. `PagePublication.workerPageSlot` remains server-internal and maps the
+immutable Page directory to its change ID.
+
 Gameplay reads a Page's immutable current publication, resolves the local Air
 point, reads the expected arena slot generation, and verifies that the same Page
 publication is still current. During a bounded topology gap it may read the last
@@ -316,8 +348,10 @@ no runtime heap and dormant data is never synchronized to clients.
 When a runtime is active, dormant fallback resolves the loaded chunk through the
 existing `MinecraftPageManager.SectionOwner`; one lookup supplies both Page
 handle and chunk, so the normal path does not enter `ServerChunkCache.getChunkNow`
-or allocate its Optional/future wrappers. The owner-unavailable cold-start and
-no-runtime bootstrap boundaries retain `getChunkNow` for correctness.
+or allocate its Optional/future wrappers. If a section was loaded before the
+runtime existed, its first query performs one `getChunkNow` and lazily attaches
+that section owner; subsequent queries use the owner directly. The no-runtime
+bootstrap boundary retains `getChunkNow` for correctness.
 
 ## Cost Contract
 

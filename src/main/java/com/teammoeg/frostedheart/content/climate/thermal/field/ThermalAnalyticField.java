@@ -92,29 +92,6 @@ public final class ThermalAnalyticField {
         };
     }
 
-    boolean intersectsHorizontalBounds(
-            double minX,
-            double maxX,
-            double minZ,
-            double maxZ
-    ) {
-        return centerX + radius >= minX && centerX - radius <= maxX
-                && centerZ + radius >= minZ && centerZ - radius <= maxZ;
-    }
-
-    void writeInfrared(float[] output, int offset) {
-        output[offset] = (float) centerX;
-        output[offset + 1] = (float) centerY;
-        output[offset + 2] = (float) centerZ;
-        output[offset + 3] = shape.infraredMode;
-        output[offset + 4] = (float) temperatureC;
-        output[offset + 5] = (float) radius;
-        output[offset + 6] = shape == Shape.PILLAR
-                ? (float) (centerY + upperExtent) : 0.0F;
-        output[offset + 7] = shape == Shape.PILLAR
-                ? (float) (centerY - lowerExtent) : 0.0F;
-    }
-
     public enum CombineMode {
         OVERRIDE,
         MAX_HEAT,
@@ -123,15 +100,9 @@ public final class ThermalAnalyticField {
     }
 
     public enum Shape {
-        CUBE(0.0F),
-        PILLAR(1.0F),
-        SPHERE(2.0F);
-
-        private final float infraredMode;
-
-        Shape(float infraredMode) {
-            this.infraredMode = infraredMode;
-        }
+        CUBE,
+        PILLAR,
+        SPHERE
     }
 
     private static void requireFinite(double value) {

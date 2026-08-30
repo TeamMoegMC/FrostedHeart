@@ -20,7 +20,9 @@ import java.util.Objects;
  * worker 侧已提交 Page 身份与 64-Brick 目录的唯一权威。
  *
  * <p>主线程只持有 {@link com.teammoeg.frostedheart.content.climate.thermal.mesh.ThermalPageHandle}
- * 和 publication；arena span、fragment 引用及 worker slot 均不得反向暴露。</p>
+ * 和 publication；arena span 与 fragment 引用不得反向暴露。publication 只把
+ * worker Page slot 作为 QueryPublication change-ID 的不透明索引交给主线程，
+ * 该身份不进入网络或客户端模型。</p>
  */
 public final class WorkerPageStore implements AutoCloseable {
     static final int PORT_BLOCKED = -1;
@@ -139,9 +141,10 @@ public final class WorkerPageStore implements AutoCloseable {
             if (publicationChanged) {
                 publication = publicationBricks == null
                         ? previousPublication.withIdentities(
-                                draft.geometryRevision,
-                                topologyGeneration)
+                                 draft.geometryRevision,
+                                 topologyGeneration)
                         : PagePublication.owned(
+                                draft.page.pageSlot,
                                 draft.geometryRevision,
                                 topologyGeneration,
                                 publicationBricks);
@@ -319,16 +322,51 @@ public final class WorkerPageStore implements AutoCloseable {
                 admission.dormantAir());
     }
 
+    PageState stageReplacement(
+            PageState current,
+            ThermalInputBatch.PageAdmission admission
+    ) {
+        requireOpen();
+        ThermalPageHandle handle = admission.page();
+        if (current == null
+                || current.handle.sectionKey() != handle.sectionKey()
+                || current.handle == handle
+                || activeBySection.get(handle.sectionKey()) != current
+                || activeBySlot.get(current.pageSlot) != current) {
+            throw new IllegalStateException(
+                    "Page replacement no longer owns the current lifecycle");
+        }
+        return new PageState(
+                handle,
+                current.pageSlot,
+                Math.toIntExact(handle.lifecycleGeneration()),
+                admission.geometryRevision(),
+                admission.signatures(),
+                admission.naturalTemperatureC(),
+                admission.firstExposedLocalY(),
+                admission.dormantAir());
+    }
+
     void releaseStagedAdmission(PageState state) {
         if (activeBySection.get(state.handle.sectionKey()) != state) {
             releasePageSlot(state.pageSlot);
         }
     }
 
-    boolean canCommit(PageState state, boolean admission) {
+    boolean canCommit(
+            PageState state,
+            PageState replacedPage,
+            boolean admission
+    ) {
         PageState sectionOwner = activeBySection.get(
                 state.handle.sectionKey());
         PageState slotOwner = activeBySlot.get(state.pageSlot);
+        if (replacedPage != null) {
+            return admission
+                    && sectionOwner == replacedPage
+                    && slotOwner == replacedPage
+                    && replacedPage.pageSlot == state.pageSlot;
+        }
         return admission
                 ? sectionOwner == null && slotOwner == null
                 : sectionOwner == state && slotOwner == state;

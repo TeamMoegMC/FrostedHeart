@@ -154,6 +154,13 @@ public final class ThermalDimensionEngine implements ThermalDimensionProcessor {
             sourceBindings.rebindDirty(sources);
             topologyCommitter.releaseOldSpans(
                     topology, arena, solver, sources);
+            for (PreparedTopologyChange.PageWrite write : topology.pageWrites) {
+                if (!write.retirement) {
+                    queries.markInfraredPageChanged(
+                            write.publication.workerPageSlot(),
+                            batch.targetTick());
+                }
+            }
         }
 
         boolean changed = topologyInput

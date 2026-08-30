@@ -435,6 +435,7 @@ public class FHClientEvents {
         ClientUtils.DoApplyGammaValue = false;
         MouseCaptureUtil.stopMouseCapture();
         if (event.getLevel().isClientSide()) {
+            InfraredViewRenderer.reset();
             ClientWeatherState.INSTANCE.reset();
             ClientWeatherFrame.INSTANCE.invalidate();
             SpatialWeatherRenderer.INSTANCE.reset();

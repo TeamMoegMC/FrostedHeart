@@ -351,61 +351,6 @@ public final class PhysicalSourceSpatialIndex
         return nearestSlot < 0 ? null : BlockPos.of(sourceIds[nearestSlot]);
     }
 
-    public int appendInfraredFields(
-            float[] output,
-            int count,
-            int maximumFields,
-            int minimumX,
-            int maximumX,
-            int minimumZ,
-            int maximumZ
-    ) {
-        int minChunkX = SectionPos.blockToSectionCoord(minimumX);
-        int maxChunkX = SectionPos.blockToSectionCoord(maximumX);
-        int minChunkZ = SectionPos.blockToSectionCoord(minimumZ);
-        int maxChunkZ = SectionPos.blockToSectionCoord(maximumZ);
-        for (int chunkZ = minChunkZ;
-             chunkZ <= maxChunkZ && count < maximumFields;
-             chunkZ++) {
-            for (int chunkX = minChunkX;
-                 chunkX <= maxChunkX && count < maximumFields;
-                 chunkX++) {
-                IntOpenHashSet indexed = sourcesByOriginChunk.get(
-                        ChunkPos.asLong(chunkX, chunkZ));
-                if (indexed == null) {
-                    continue;
-                }
-                for (int slot : indexed) {
-                    if (count >= maximumFields) {
-                        break;
-                    }
-                    if (!isLive(slot) || !flag(slot, PRESENT)
-                            || !flag(slot, DESIRED_ENABLED)
-                            || desiredPowerW[slot] <= 0.0D
-                            || BlockPos.getX(sourceIds[slot]) < minimumX
-                            || BlockPos.getX(sourceIds[slot]) > maximumX
-                            || BlockPos.getZ(sourceIds[slot]) < minimumZ
-                            || BlockPos.getZ(sourceIds[slot]) > maximumZ) {
-                        continue;
-                    }
-                    int offset = count++ * 8;
-                    output[offset] = BlockPos.getX(sourceIds[slot]) + 0.5F;
-                    output[offset + 1] = BlockPos.getY(sourceIds[slot]) + 0.5F;
-                    output[offset + 2] = BlockPos.getZ(sourceIds[slot]) + 0.5F;
-                    output[offset + 3] = 2.0F;
-                    output[offset + 4] = (float) Math.min(
-                            20.0D,
-                            10.0D * desiredPowerW[slot]
-                                    / profile(slot).ratedPowerW());
-                    output[offset + 5] = 16.0F;
-                    output[offset + 6] = 0.0F;
-                    output[offset + 7] = 0.0F;
-                }
-            }
-        }
-        return count;
-    }
-
     public boolean supportsDormantSection(long sectionKey) {
         if (enabledTarget(sectionKey)) {
             return true;

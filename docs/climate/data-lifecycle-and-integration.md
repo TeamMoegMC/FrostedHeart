@@ -114,6 +114,16 @@ dimension change. Net body power remains server-side diagnostic state and is
 not a client HUD input. World air and Page cell state remain query-on-demand
 and are never placed in the body packet.
 
+`FHRequestInfraredViewDataSyncPacket` is a separate client-carried-state poll:
+opening or moving forces a full request; stable clients poll every 40 ticks with
+an entity-ID phase offset, the last temperature change ID, and twelve exact
+presence words. `FHResponseInfraredViewDataSyncPacket` is omitted when neither
+temperature nor presence changed, otherwise it contains one flat array of full
+or changed 64-Brick Page records. The server keeps no per-player infrared
+observer or payload copy. Requests extend one dimension-level tracking window
+to 80 ticks; the window affects query publication only and never retains or
+admits a Page.
+
 The player NBT schema preserves each existing clothing `ItemStackHandler`, its
 complete item NBT, and temperature difficulty. New saves store per-part
 `energy_j`; old Celsius body/feel/environment and dormant

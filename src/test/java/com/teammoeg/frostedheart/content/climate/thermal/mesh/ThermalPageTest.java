@@ -80,8 +80,12 @@ class ThermalPageTest {
                 null,
                 PagePublication.PhaseCandidates.owned(
                         new int[]{6}, new long[]{1L << 21}));
-        PagePublication publication = PagePublication.owned(0L, 1L, bricks);
+        PagePublication publication = PagePublication.owned(
+                3, 0L, 1L, bricks);
 
+        assertEquals(3, publication.workerPageSlot());
+        assertEquals(3, publication.withIdentities(
+                2L, 3L).workerPageSlot());
         assertEquals(12, publication.resolveAirPoint(
                 1, 1, 1, 63, registry.build()));
         assertTrue(publication.hasPhaseCandidate(1, 1, 1, 6));
@@ -103,7 +107,7 @@ class ThermalPageTest {
                 null,
                 PagePublication.PhaseCandidates.EMPTY);
         return PagePublication.owned(
-                geometryRevision, topologyGeneration, bricks);
+                2, geometryRevision, topologyGeneration, bricks);
     }
 
     private static PagePublication.Brick[] emptyBricks() {

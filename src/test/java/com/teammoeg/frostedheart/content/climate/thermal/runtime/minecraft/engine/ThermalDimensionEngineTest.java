@@ -7,6 +7,7 @@ import com.teammoeg.frostedheart.content.climate.thermal.mesh.PagePublication;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.ThermalPageHandle;
 import com.teammoeg.frostedheart.content.climate.thermal.profile.ResolvedThermalSignature;
 import com.teammoeg.frostedheart.content.climate.thermal.profile.ThermalSignatureRegistry;
+import com.teammoeg.frostedheart.content.climate.thermal.query.QueryPublication;
 import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.message.ResolvedGeometryBatch;
 import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.message.ThermalCompletion;
 import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.message.ThermalInputBatch;
@@ -15,6 +16,8 @@ import com.teammoeg.frostedheart.content.climate.thermal.source.minecraft.Worker
 import com.teammoeg.frostedheart.content.climate.thermal.source.ThermalSourceBatch;
 import com.teammoeg.frostedheart.content.climate.thermal.source.ThermalSourceMode;
 import com.teammoeg.frostedheart.content.climate.thermal.ThermalTestFixtures;
+
+import net.minecraft.core.SectionPos;
 
 import org.junit.jupiter.api.Test;
 
@@ -27,6 +30,33 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class ThermalDimensionEngineTest {
+    @Test
+    void topologyPublicationMarksTheInfraredPageChangeId() {
+        ThermalRuntimeTestFixtures.EngineFixture fixture =
+                ThermalRuntimeTestFixtures.engine();
+        try {
+            assertTrue(fixture.publication().noteInfraredRequest(0L, 80));
+            fixture.engine().process(ThermalRuntimeTestFixtures.batch(
+                    1L, 20L,
+                    new ThermalInputBatch.PageAdmission[]{
+                            ThermalRuntimeTestFixtures.admission(
+                                    fixture.page(),
+                                    ThermalTestFixtures.filledPageSignatures(
+                                            fixture.airId()))},
+                    ThermalInputBatch.NO_RETIREMENTS,
+                    ResolvedGeometryBatch.EMPTY));
+
+            PagePublication page = fixture.page().currentPublication();
+            assertNotNull(page);
+            QueryPublication.InfraredReadCursor cursor =
+                    new QueryPublication.InfraredReadCursor();
+            assertTrue(fixture.publication().beginInfraredRead(cursor));
+            assertTrue(cursor.pageChangeId(page.workerPageSlot()) > 1L);
+        } finally {
+            fixture.engine().close();
+        }
+    }
+
     @Test
     void admissionCompilesFarFieldAndPublishesAFlatPageCut() {
         ThermalRuntimeTestFixtures.EngineFixture fixture =
@@ -123,6 +153,58 @@ class ThermalDimensionEngineTest {
 
             assertNull(fixture.page().currentPublication());
             assertEquals(0, fixture.arena().liveCellCount());
+        } finally {
+            fixture.engine().close();
+        }
+    }
+
+    @Test
+    void sameSectionLifecycleReplacementIsAtomicWithAnActiveNeighbor() {
+        ThermalRuntimeTestFixtures.EngineFixture fixture =
+                ThermalRuntimeTestFixtures.engine();
+        ThermalPageHandle neighbor = new ThermalPageHandle(
+                SectionPos.asLong(1, 0, 0), 1L);
+        ThermalPageHandle replacement = new ThermalPageHandle(
+                fixture.page().sectionKey(), 2L);
+        try {
+            fixture.engine().process(ThermalRuntimeTestFixtures.batch(
+                    1L, 20L,
+                    new ThermalInputBatch.PageAdmission[]{
+                            ThermalRuntimeTestFixtures.admission(
+                                    fixture.page(),
+                                    ThermalTestFixtures.filledPageSignatures(
+                                            fixture.airId())),
+                            ThermalRuntimeTestFixtures.admission(
+                                    neighbor,
+                                    ThermalTestFixtures.filledPageSignatures(
+                                            fixture.airId()))},
+                    ThermalInputBatch.NO_RETIREMENTS,
+                    ResolvedGeometryBatch.EMPTY));
+            int workerPageSlot = fixture.page().currentPublication()
+                    .workerPageSlot();
+
+            ThermalCompletion completion = fixture.engine().process(
+                    ThermalRuntimeTestFixtures.batch(
+                            2L, 40L,
+                            new ThermalInputBatch.PageAdmission[]{
+                                    ThermalRuntimeTestFixtures.admission(
+                                            replacement,
+                                            ThermalTestFixtures
+                                                    .filledPageSignatures(
+                                                            fixture.airId()))},
+                            new ThermalInputBatch.PageRetirement[]{
+                                    new ThermalInputBatch.PageRetirement(
+                                            fixture.page())},
+                            ResolvedGeometryBatch.EMPTY));
+
+            assertEquals(ThermalCompletion.Status.COMPLETED,
+                    completion.status());
+            assertNull(fixture.page().currentPublication());
+            assertNotNull(replacement.currentPublication());
+            assertEquals(workerPageSlot,
+                    replacement.currentPublication().workerPageSlot());
+            assertNotNull(neighbor.currentPublication());
+            assertEquals(128, fixture.arena().liveCellCount());
         } finally {
             fixture.engine().close();
         }
@@ -263,8 +345,8 @@ class ThermalDimensionEngineTest {
                  slot = fixture.arena().nextLiveSlot(slot + 1)) {
                 totalEnthalpyJ += fixture.arena().enthalpyJ(slot);
             }
-            assertTrue(totalEnthalpyJ > 69.0D);
-            assertTrue(totalEnthalpyJ < 70.0D);
+            assertTrue(totalEnthalpyJ > 79.0D);
+            assertTrue(totalEnthalpyJ < 80.0D);
         } finally {
             fixture.engine().close();
         }

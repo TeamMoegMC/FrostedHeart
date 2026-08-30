@@ -24,7 +24,7 @@ import org.spongepowered.asm.mixin.injection.Redirect;
  * development environment. The unsafe variant performs the same sided
  * selection without the development-only referent validator.
  */
-@Mixin(targets = "com.yanny.age.stone.ExampleMod", remap = false)
+    @Mixin(targets = "com.yanny.age.stone.ExampleMod", remap = false)
 public abstract class ExampleModMixin {
     @SuppressWarnings({ "rawtypes", "unchecked" })
     @Redirect(

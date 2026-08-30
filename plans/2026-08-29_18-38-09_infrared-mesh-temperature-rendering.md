@@ -1,9 +1,9 @@
 # 红外视野实际温度场最小增量实现计划
 
 - Time: `2026-08-29 18:38:09 +0800`
-- Last revised: `2026-08-30 18:47:22 +0800`
+- Last revised: `2026-08-31 02:48:33 +0800`
 - Authors: `TeamMoeg; Codex (GPT-5, original architecture and final minimal-increment revision)`
-- Status: `ready`
+- Status: `in-progress`
 - Scope: `InfraredViewRenderer`, `infrared_view.fsh`, existing infrared packets, `MinecraftThermalInput`, `MinecraftPageManager`, `PagePublication`, `QueryPublication`
 - Related: [world-climate-and-temperature.md](../docs/climate/world-climate-and-temperature.md), [thermal-runtime-architecture-and-optimization.md](../docs/climate/thermal-runtime-architecture-and-optimization.md)
 
@@ -101,8 +101,14 @@ candidate positions               = 9 * 9 * 9 = 729
 2. bucket 不存在时直接跳过。
 3. 只遍历 bucket 中实际存在的 section keys。
 4. 过滤 `centerSectionY +/- 4`。
-5. `ThermalPageHandle.currentPublication()` 有效且 QueryPublication 未超龄时，
+5. `ThermalPageHandle` 存在、`lastPublication()` 非空且 QueryPublication 未超龄时，
    设置对应 presence bit。
+
+presence 表示“该 Page lifecycle 已经拥有至少一个 coherent worker cut”，不把普通
+geometry mutation 的短暂 stale 当成 Page retirement。温度编码优先使用
+`currentPublication()`；它暂时为 null 时使用 `lastPublication()`，仍由 read cursor
+校验 topology、slot generation 和 sample age。真正 retirement 后 handle 消失，
+presence 才清除。
 
 复杂度为 `O(81 + actual Page entries)`，不增加新索引、cache 或 Page admission。
 
@@ -132,16 +138,24 @@ texels。
 
 - 一个维度级 `temperatureChangeId`；
 - `long[maximumPages] pageChangeIds`，3200 Pages 时约 25 KiB；
-- 一个初始为 false、首次红外请求后保持到 worker 关闭的
-  `infraredTrackingEnabled`；
+- 一个维度级 `infraredActiveUntilTick`；
 - 一个 caller-owned `InfraredReadCursor`。
 
-首次请求启用 tracking 时，在一个 QueryPublication write 中推进一次维度 change ID，
-并把现有 `pageChangeIds` 设为该值；该请求本身发送 full snapshot，其他仍持有旧
-change ID 的客户端会在下一 poll 收到完整可见 Page delta。之后 worker publish：
+`MinecraftThermalInput.createWorker` 先构造 `ThermalDimensionLimits`，再调用
+`QueryPublication.tryCreate(dimensionBudget, initialCellCapacity, maximumPages)`。
+`pageChangeIds` 的 25,600 bytes 和可增长 cell buffers 分别持有一个 reservation
+token，但都向同一个 dimension/server budget 计费；cell capacity 扩容只替换 cell
+buffer reservation，不重复计费或重建固定 Page backing。任一初始 reservation 失败
+时释放另一 token 并返回 null，close 时释放两者。不另建预算或事后扩容。
 
-- tracking 从未启用时只检查一次 boolean，不执行红外比较；
-- tracking 启用后复用现有 live-slot publish 循环，直到 worker/维度关闭；
+每次红外请求把 `infraredActiveUntilTick` 延长到当前 tick + 80。inactive 转 active
+时，在一个 QueryPublication write 中推进一次维度 change ID，并把完整
+`pageChangeIds` backing 设为该值；触发 reactivation 的请求发送 full snapshot，
+其他仍持有旧 change ID 的客户端会在下一 poll 收到全部可见 Page delta。之后
+worker publish：
+
+- deadline 已过时只检查一次标量条件，不执行红外比较；
+- deadline 有效时复用现有 live-slot publish 循环；
 - 对 Air cells 比较新旧 0.25 degC 量化值；
 - slot generation 变化也视为改变；
 - 一个 Page 内任意 Air cell 改变时，只把该 Page 标记为本次
@@ -170,7 +184,8 @@ presence 精确发现，不需要全局 presence revision。
 
 worker restart 后新 QueryPublication 的 change ID 可以重新从零开始。服务端发现
 客户端 change ID 大于当前值时直接发送 full snapshot；新 publication 的首次请求
-同时重新启用并初始化 tracking，不增加 generation/session 或 timeout 状态。
+同时按上述 inactive-to-active 规则重建 change-ID 基线，不增加 generation/session
+或 per-player 状态。
 
 ### D4 Exact Client-Carried Presence
 
@@ -187,7 +202,8 @@ unused high bits = 0
 
 - presence 相同：允许发送 temperature delta。
 - presence 不同：发送 full snapshot；客户端清空后重建。
-- Page retirement、admission、publication 失效或恢复都会自然形成 mismatch。
+- Page retirement、首次 publication 和 worker replacement 会自然形成 mismatch；
+  普通 geometry mutation 继续使用 last coherent publication，不改变 presence。
 - 不使用 checksum、hash、概率判断或全局 presence revision。
 
 ### D5 Existing Request/Response Packets
@@ -262,8 +278,8 @@ Math.floorMod(clientGameTime + player.getId(), 40) == 0
 
 - 同一 client tick 已发送开启/移动请求时，不重复发送周期 poll。
 - 关闭红外或切换维度时递增本地 request ID 并停止请求，使在途响应失效。
-- tracking 一经启用便保持到 worker/维度关闭，因此 40-tick poll 不承担服务端 lease、
-  heartbeat 或 timeout 语义。
+- 40-tick poll 把维度 tracking deadline 延长到 80 ticks；这是一个维度级活跃窗口，
+  不保存玩家 observer、引用计数、heartbeat 状态或 cleanup 生命周期。
 
 100 人静态场景的固定应用层 C2S 上限约为：
 
@@ -293,7 +309,11 @@ combined fixed data = 186,624 bytes, about 182.25 KiB
 - delta 只覆盖 records 对应的 Pages；presence 已验证相同，因此不需要 clear。
 - pageRecordCount 为 0 的 ACK 只推进 change ID，不上传纹理。
 - 有温度 records 的响应结束后执行一次完整 `glTexSubImage3D`。
-- shader 从世界坐标计算 texel；64-block sphere 外、cube 外或 invalid 保持原画面。
+- shader 从世界坐标计算 texel；64-block sphere 外或 cube 外保持原画面，
+  扫描球内的 invalid/无 Page texel 继续沿用旧红外语义，按 `MIN_TEMP` 显示冷蓝。
+- depth 重建点在 `4-block` Brick 边界上没有唯一体素归属；采样点沿 camera ray
+  向摄像机偏移 `1/2048` 的相对距离，稳定选择可见表面前方的 Air texel。该路径
+  只有一次常量向量乘加，不增加 texture fetch、法线重建或过滤。
 - shader 不读取 UBO，不循环 source、analytic field 或 Page records。
 - level unload、resource reload 和客户端关闭时释放 3D texture。
 - 不实现 toroidal/ring、CPU 区域平移或 texture copy。
@@ -312,7 +332,7 @@ combined fixed data = 186,624 bytes, about 182.25 KiB
 增加：
 
 - `QueryPublication.InfraredReadCursor`
-- 维度/Page temperature change IDs 和一次启用的 tracking boolean
+- 维度/Page temperature change IDs 和 80-tick active deadline
 - `PagePublication.workerPageSlot`
 - QueryPublication 所需的最小 arena Page ownership 读取
 - `MinecraftPageManager` 的 main-thread region enumeration 方法
@@ -362,11 +382,11 @@ temperature compositor 的作用。
 
 | Path | Bound |
 |---|---|
-| 从未启用红外 | 每次 publish 一次 boolean 判断；零请求、零 Page 编码 |
-| 曾启用后当前无人观看 | change tracking 继续复用 live-slot pass，不保留玩家状态 |
+| 红外 inactive | 每次 publish 一次 deadline 判断；零 Page 红外比较/编码 |
 | 静态 poll Page 枚举 | `N * 81 / 2` chunk bucket lookups/s 加实际 entries |
 | 静态网络 | 约 `N * 50-55 bytes/s` C2S；零 S2C |
 | active publish tracking | 复用 live-slot pass，最多 65,536 次量化比较/s/维度 |
+| inactive-to-active | 每次活跃窗口开始一次 `O(maximumPages)` change-ID 基线填充 |
 | changed Page sampling | `C * 64 / 2` samples/s，按 2-second poll 上界 |
 | changed Page S2C | `C * 130 / 2` bytes/s |
 | 固定服务端红外内存 | 约 25 KiB Page change IDs/active dimension |
@@ -388,8 +408,9 @@ maximumPages 上限。
 
 ## Implementation Steps
 
-1. 给 `QueryPublication` 增加 read cursor、temperature/Page change IDs 和
-   一次启用的 tracking boolean；复用现有 publish live-slot loop。
+1. 先构造 `ThermalDimensionLimits`，再给 `QueryPublication.tryCreate` 传入
+   `maximumPages`；增加 read cursor、temperature/Page change IDs 和 80-tick
+   active deadline，复用现有 publish live-slot loop。
 2. 给 `MinecraftPageManager` 增加基于现有 `pagesByChunk` 的 81-bucket region
    enumeration，不增加新索引。
 3. 在 `MinecraftThermalInput` 实现 presence 比较以及 full/delta/ACK 决策，
@@ -405,9 +426,15 @@ maximumPages 上限。
 ### Automated
 
 - 0.25 degC 量化边界只推进所属 Page 和维度 change ID。
-- `republishUnchanged` 和量化值不变不推进 change ID；tracking 首次启用恰好建立
-  一次完整基线，之后不暂停或重复初始化。
+- `QueryPublication.tryCreate` 对固定 Page backing 和可增长 cell buffers 分别计费；
+  cell capacity 扩容不重复计费 Page backing，失败/close 释放全部 tokens。
+- `republishUnchanged` 和量化值不变不推进 change ID；inactive-to-active 恰好推进
+  一次 change ID 并重建完整 Page 基线，连续 poll 不重复初始化。
 - Page topology/geometry replacement 即使温度相同也推进对应 Page change ID。
+- `PagePublication.owned` 和 `withIdentities` 保留同一 `workerPageSlot`，EMPTY 使用
+  invalid sentinel，worker identity 不进入 wire。
+- geometry mutation 期间 `currentPublication()` 暂时为 null 时，presence 保持且读取
+  last coherent publication；retirement 才清除 presence。
 - cursor 不混合两个 published buffers；版本变化时本次响应不发送。
 - `pagesByChunk` 枚举与 729-position brute-force 测试 fixture 得到相同 presence，
   生产代码不保留 brute-force 路径。
@@ -426,8 +453,15 @@ maximumPages 上限。
 - shader 中不存在 HeatArea 数组和按 source 数量循环。
 - source 隔墙时不出现直接功率图形，只显示 solver 已传播到 Brick 的温度。
 - `/heat_adjust` 等 analytic field 不直接出现在红外纹理。
-- invalid、无 Page、cube 外和 64-block sphere 外保持原始画面。
+- 扫描球内的 invalid 和无 Page 区域按 `MIN_TEMP` 显示冷蓝；cube 外和
+  64-block sphere 外保持原始画面。
 - 负坐标、chunk/section 边界、快速移动、切换视野和维度切换映射正确。
+- 位于 `X/Y/Z = 4n` 的墙面、地板和天花板从两侧观察时，各自稳定读取观察侧
+  Air texel；静止或移动镜头均不出现相邻体素争用闪烁。
+- depth、逆视图矩阵和世界坐标原点使用同一个 main `Camera`；潜行眼高平滑、
+  第一/第三人称切换不会移动温度场。
+- 篝火烟雾等写 depth 的粒子沿用统一世界坐标采样，与所在 Air texel 的温度颜色
+  融合；不增加粒子专用 mask、pass、shader 或渲染阶段分支。
 - Iris/Oculus 和原版 depth 路径继续正常工作。
 
 ### Performance
@@ -437,7 +471,8 @@ maximumPages 上限。
 - 100 个不重叠 fixture 视野的静态 poll 只产生约 5-5.5 KiB/s C2S 和零 S2C。
 - 3200 个实际 Pages 全部变化时，两秒周期折算不超过约 203 KiB/s S2C 和
   102,400 Brick samples/s。
-- 红外关闭与开启静止场景各采集一次服务端 JFR，确认关闭路径没有逐 cell 红外工作。
+- active deadline 过期与开启静止场景各采集一次服务端 JFR，确认 inactive 路径没有
+  逐 cell 红外工作。
 - 对相同画面比较旧 HeatArea shader 与新 3D texture shader，确认 fragment shader
   不再随 source 数量增长。
 
@@ -466,4 +501,15 @@ Page 枚举降为 `O(81 + actual entries)`。
 
 ## Outcome
 
-待实施。
+生产实现、协议 codec、定向 JUnit、Forge GameTest 和 living docs 已完成。旧
+HeatArea/source/analytic/UBO 红外路径已删除；客户端 smoke 中 fragment shader
+成功加载，full response 到达 render thread。两次上传暴露同一个 NVIDIA
+`glTexSubImage3D` native crash；第二次已绑定 PBO 0，排除了 PBO 假设。源码调查
+确认 Embeddium 插值动画进入 Vanilla `NativeImage.upload`，其全局 unpack
+row-length/skip/alignment 状态不会在上传后恢复；Oculus
+`TextureUploadHelper` 会在自定义纹理上传前精确重置这四项。红外上传现在遵循同一
+contract，并只恢复原 3D texture binding。
+
+验证结果：Java 17 production/test/GameTest source 编译通过；thermal + infrared
+codec JUnit `103/103`；Forge GameTest `14/14`。post-fix live toggle 和目标负载
+JFR 因窗口自动化被用户中止而尚未执行，完成后再将状态改为 `completed`。

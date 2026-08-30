@@ -41,7 +41,8 @@ public final class TopologyCommitter {
             }
         }
         for (PreparedTopologyChange.PageWrite write : change.pageWrites) {
-            if (!pages.canCommit(write.page, write.admission)) {
+            if (!pages.canCommit(
+                    write.page, write.replacedPage, write.admission)) {
                 throw new IllegalStateException(
                         "prepared Page ownership is no longer current");
             }
@@ -130,6 +131,11 @@ public final class TopologyCommitter {
                         com.teammoeg.frostedheart.content.climate.thermal.mesh
                                 .PagePublication.EMPTY);
             } else {
+                if (write.replacedPage != null) {
+                    write.replacedPage.handle.publish(
+                            com.teammoeg.frostedheart.content.climate.thermal.mesh
+                                    .PagePublication.EMPTY);
+                }
                 write.page.handle.publish(write.publication);
             }
         }

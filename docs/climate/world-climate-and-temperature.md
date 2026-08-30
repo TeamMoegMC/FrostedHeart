@@ -1,9 +1,9 @@
 # 世界气候与环境温度
 
 - Status: `Current`
-- Last verified: `2026-08-29`
-- Scope: 逻辑气候时钟、长期事件、局部白幕、自然/mesh/analytic 温度合成、方块状态消费者
-- Primary code anchors: `WorldClockSource`, `WorldClimate`, `ClimateEventModel`, `ClimateEventTrack`, `InterpolationClimateEvent`, `WhiteCurtainDescriptor`, `WhiteCurtainFieldModel`, `WhiteCurtainInfo`, `WorldTemperature`, `BlockTemperatureModel`, `ThermalAnalyticField`, `ThermalAnalyticFieldIndex`, `MinecraftThermalInput.gameplayPassiveEnvironment`, `MinecraftThermalInput.gameplayCropEnvironment`, `TownThermalProjection`, `MinecraftThermalInput.gameplayTownEnvironment`
+- Last verified: `2026-08-31`
+- Scope: 逻辑气候时钟、长期事件、局部白幕、自然/mesh/analytic 温度合成、红外视野、方块状态消费者
+- Primary code anchors: `WorldClockSource`, `WorldClimate`, `ClimateEventModel`, `ClimateEventTrack`, `InterpolationClimateEvent`, `WhiteCurtainDescriptor`, `WhiteCurtainFieldModel`, `WhiteCurtainInfo`, `WorldTemperature`, `BlockTemperatureModel`, `ThermalAnalyticField`, `ThermalAnalyticFieldIndex`, `MinecraftThermalInput.gameplayPassiveEnvironment`, `MinecraftThermalInput.gameplayCropEnvironment`, `MinecraftThermalInput.gameplayInfraredSnapshot`, `TownThermalProjection`, `MinecraftThermalInput.gameplayTownEnvironment`, `InfraredViewRenderer`
 
 本文只描述当前源码行为。所有温度若无特别说明均为摄氏度；“修正”表示摄氏度增量。
 
@@ -196,8 +196,24 @@ OVERRIDE -> MAX_HEAT -> MIN_COOL -> ADD_DELTA
 
 同一 mode 内再按 priority 和 field ID 排序。Curiosity 冷场使用 `ADD_DELTA`，`/heat_adjust`
 创建运行期 `OVERRIDE` field。控制场当前不跨服务器重启持久化；Curiosity 由实体状态在载入后
-重新报告。红外请求直接从 analytic list 和 physical source manager 生成一次性 shader payload，
-不维护客户端对应的区块热区副本。
+重新报告。红外视野不直接显示 analytic field 或 physical source；它只读取
+`PagePublication` 与 `QueryPublication` 已求解的实际 Air 温度。每个
+`4 x 4 x 4` thermal Brick 量化为一个 0.25degC signed-short texel，
+`Short.MIN_VALUE` 表示 invalid。
+
+客户端开启、跨 chunk/section 时请求 full snapshot，稳定时按 entity ID 错峰每
+`40` ticks 携带 temperature change ID 和 729-bit Page presence。服务端只在
+presence 改变或 Page 温度跨量化边界时返回 full/delta records；静态状态不发送
+S2C。范围枚举复用 `MinecraftPageManager.pagesByChunk`，只读取已有 coherent
+publication，不 admission Page、retain lease 或加载 chunk。客户端写入一张线性
+`GL_R16I 36 x 36 x 36` 纹理，fragment shader 每像素只执行一次 integer texture
+fetch。depth 重建得到的是可见几何表面；采样前沿 camera ray 向摄像机偏移
+`1/2048` 的相对距离，使位于 `4-block` Brick 边界的方块面稳定读取表面前方的
+Air texel，不在相邻 texels 间闪烁。扫描球内 invalid/无 Page texel 按
+`MIN_TEMP` 显示冷蓝。shader 的逆视图矩阵和 `u_CameraPosition` 均来自当前
+`GameRenderer` main `Camera`；潜行眼高平滑和第三人称不会把温度坐标相对 depth
+偏移。篝火烟雾等写 depth 的粒子沿用同一世界坐标采样，与粒子所在 Air texel 的
+温度颜色融合；不增加粒子 mask、专用 pass 或渲染时序分支。
 
 Campfire、Generator 和蒸汽喷泉不是 analytic field；它们由
 `PhysicalSourceSpatialIndex` 注册为显式功率 source，进入 mesh 与直接辐射路径。

@@ -78,7 +78,6 @@ public class FHConfig {
 		public final ForgeConfigSpec.IntValue scenarioRenderQuality;
 		public final ForgeConfigSpec.IntValue scenarioRenderThread;
 		public final ForgeConfigSpec.BooleanValue scenarioAntiAliasing;
-		public final ForgeConfigSpec.IntValue infraredViewUBOOffset;
 		public final ForgeConfigSpec.IntValue wheelMenuRadius;
 		public final ForgeConfigSpec.IntValue themeColor;
 		public final ForgeConfigSpec.BooleanValue enableWheelMenuCursor;
@@ -168,12 +167,6 @@ public class FHConfig {
 			enableFrozenSound = builder
 				.comment("Enables the frozen sound when player is freezing. ")
 				.define("enableFrozenSound", true);
-			infraredViewUBOOffset = builder.comment("The binding offset of the UBO for the infrared view shader.")
-				.comment("Partial shaders and mods may occupy the position as well.")
-				.comment("We will use default offset (7) for some known mods here. However, it is not guaranteed to be always compatible with all mods / shaders.")
-				.comment("In this case, player have to modify the config to specify the offset.")
-				.comment("No worries, from my experience, offset 7 is compatible with 99% mods / shaders.")
-				.defineInRange("infraredViewUBOOffset", 7, 0, Integer.MAX_VALUE);
 			builder.pop();
 
 

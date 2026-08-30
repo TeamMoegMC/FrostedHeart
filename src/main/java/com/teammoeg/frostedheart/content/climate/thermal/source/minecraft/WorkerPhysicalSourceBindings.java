@@ -3,7 +3,6 @@ package com.teammoeg.frostedheart.content.climate.thermal.source.minecraft;
 
 import com.teammoeg.frostedheart.content.climate.thermal.profile.ThermalSignatureCatalog;
 import com.teammoeg.frostedheart.content.climate.thermal.source.EmissionPort;
-import com.teammoeg.frostedheart.content.climate.thermal.source.minecraft.MinecraftPhysicalSourceProfile.MissingPortPolicy;
 import com.teammoeg.frostedheart.content.climate.thermal.source.minecraft.MinecraftPhysicalSourceProfile.Port;
 import com.teammoeg.frostedheart.content.climate.thermal.source.minecraft.MinecraftPhysicalSourceProfile.PortKind;
 import com.teammoeg.frostedheart.content.climate.thermal.source.SourceBinding;
@@ -157,10 +156,7 @@ public final class WorkerPhysicalSourceBindings
         Arrays.fill(source.bindings, null);
         for (int index = 0; index < source.profile.portCount(); index++) {
             Port port = source.profile.port(index);
-            if (port.kind() == PortKind.INTERNAL_HEAT) {
-                source.bindings[index] = SourceBinding.internalReservoir(
-                        sinkId(source.sourceId, port));
-            } else if (port.kind() == PortKind.RADIATION_LOSS) {
+            if (port.kind() == PortKind.RADIATION_LOSS) {
                 source.bindings[index] = SourceBinding.declaredLoss(
                         sinkId(source.sourceId, port));
             } else {
@@ -189,13 +185,8 @@ public final class WorkerPhysicalSourceBindings
                 continue;
             }
             Port port = source.profile.port(index);
-            MissingPortPolicy policy = source.profile.missingPortPolicy();
-            source.bindings[index] =
-                    policy == MissingPortPolicy.INTERNAL_HEAT
-                            ? SourceBinding.internalReservoir(
-                                    sinkId(source.sourceId, port))
-                            : SourceBinding.declaredLoss(
-                                    sinkId(source.sourceId, port));
+            source.bindings[index] = SourceBinding.declaredLoss(
+                    sinkId(source.sourceId, port));
         }
     }
 
@@ -208,8 +199,6 @@ public final class WorkerPhysicalSourceBindings
             Port port = profile.port(index);
             SourceBinding binding = switch (port.kind()) {
                 case AIR_FACE -> SourceBinding.degradedLoss(
-                        sinkId(sourceId, port));
-                case INTERNAL_HEAT -> SourceBinding.internalReservoir(
                         sinkId(sourceId, port));
                 case RADIATION_LOSS -> SourceBinding.declaredLoss(
                         sinkId(sourceId, port));

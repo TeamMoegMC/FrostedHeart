@@ -98,8 +98,8 @@ public final class TopologyPlan {
     public PreparedTopologyChange prepare(ThermalInputBatch batch) {
         reset();
         try {
-            collectAdmissions(batch);
             collectRetirements(batch);
+            collectAdmissions(batch);
             collectGeometry(batch.geometry());
             collectEnvironment(batch.environmentUpdates());
             finalizeSignatureCuts();
@@ -179,7 +179,7 @@ public final class TopologyPlan {
                 }
                 remaining &= remaining - 1L;
             }
-            if (draft.admission) {
+            if (draft.admission && draft.replacedPage == null) {
                 pages.releaseStagedAdmission(draft.page);
             }
         }
@@ -220,9 +220,18 @@ public final class TopologyPlan {
 
     private void collectAdmissions(ThermalInputBatch batch) {
         for (ThermalInputBatch.PageAdmission admission : batch.admissions()) {
-            PageDraft alreadyStaged =
+            PageDraft draft =
                     draftsBySection.get(admission.page().sectionKey());
-            if (alreadyStaged != null) {
+            if (draft != null) {
+                if (draft.retirement
+                        && draft.page.handle != admission.page()) {
+                    WorkerPageStore.PageState previous = draft.page;
+                    draft.page = pages.stageReplacement(previous, admission);
+                    draft.replacedPage = previous;
+                    draft.admission = true;
+                    draft.retirement = false;
+                    initializeAdmission(draft, admission);
+                }
                 continue;
             }
             WorkerPageStore.PageState page = pages.find(admission.page());
@@ -235,17 +244,24 @@ public final class TopologyPlan {
                 page = pages.stageAdmission(admission);
                 stagedAdmissions++;
             }
-            PageDraft draft = acquireDraft(page);
+            draft = acquireDraft(page);
             if (staged) {
                 draft.admission = true;
-                draft.nextSignatures = admission.signatures();
-                draft.geometryRevision = admission.geometryRevision();
-                draft.signatureChangedMask = -1L;
-                draft.topologyDirtyMask = -1L;
-                draft.naturalTemperatureChanged = true;
-                draft.naturalTemperatureC = admission.naturalTemperatureC();
+                initializeAdmission(draft, admission);
             }
         }
+    }
+
+    private static void initializeAdmission(
+            PageDraft draft,
+            ThermalInputBatch.PageAdmission admission
+    ) {
+        draft.nextSignatures = admission.signatures();
+        draft.geometryRevision = admission.geometryRevision();
+        draft.signatureChangedMask = -1L;
+        draft.topologyDirtyMask = -1L;
+        draft.naturalTemperatureChanged = true;
+        draft.naturalTemperatureC = admission.naturalTemperatureC();
     }
 
     private void collectRetirements(ThermalInputBatch batch) {
@@ -456,18 +472,21 @@ public final class TopologyPlan {
                 }
                 continue;
             }
+            WorkerPageStore.PageState previous = draft.replacedPage == null
+                    ? draft.page : draft.replacedPage;
             long remaining = draft.cellReplacementMask;
             while (remaining != 0L) {
                 int brick = Long.numberOfTrailingZeros(remaining);
-                WorkerBrickTopology old = draft.page.brick(brick);
+                WorkerBrickTopology old = previous.brick(brick);
                 WorkerBrickTopology next = draft.replacements[brick];
                 migration.migrate(
-                        draft.page,
+                        previous,
                         brick,
                         old,
                         next,
-                        draft.nextSignatures);
-                collectOldSpan(draft.page, old);
+                        draft.nextSignatures,
+                        draft.replacedPage == null);
+                collectOldSpan(previous, old);
                 collectReservoirChanges(old, next);
                 remaining &= remaining - 1L;
             }
@@ -571,8 +590,14 @@ public final class TopologyPlan {
 
     private WorkerPageStore.PageState page(ThermalPageHandle handle) {
         PageDraft draft = draftsBySection.get(handle.sectionKey());
-        if (draft != null && draft.page.handle == handle) {
-            return draft.page;
+        if (draft != null) {
+            if (draft.page.handle == handle) {
+                return draft.page;
+            }
+            if (draft.replacedPage != null
+                    && draft.replacedPage.handle == handle) {
+                return null;
+            }
         }
         return pages.find(handle);
     }
@@ -618,6 +643,7 @@ public final class TopologyPlan {
 
     static final class PageDraft {
         WorkerPageStore.PageState page;
+        WorkerPageStore.PageState replacedPage;
         PageSignatures nextSignatures;
         private final int[][] brickSignatureValues = new int[64][];
         final WorkerBrickTopology[] replacements =
@@ -642,6 +668,7 @@ public final class TopologyPlan {
 
         private void reset(WorkerPageStore.PageState page) {
             this.page = page;
+            replacedPage = null;
             nextSignatures = page.signatures;
             long staleReplacements = replacementMask;
             while (staleReplacements != 0L) {

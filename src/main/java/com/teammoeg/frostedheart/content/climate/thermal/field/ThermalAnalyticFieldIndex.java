@@ -80,25 +80,4 @@ public final class ThermalAnalyticFieldIndex {
         return result;
     }
 
-    public int appendInfrared(
-            float[] output,
-            int count,
-            int maximum,
-            double minimumX,
-            double maximumX,
-            double minimumZ,
-            double maximumZ
-    ) {
-        for (ThermalAnalyticField field : fields) {
-            if (count >= maximum) {
-                break;
-            }
-            if (field.intersectsHorizontalBounds(
-                    minimumX, maximumX, minimumZ, maximumZ)) {
-                field.writeInfrared(output, count++ * 8);
-            }
-        }
-        return count;
-    }
-
 }

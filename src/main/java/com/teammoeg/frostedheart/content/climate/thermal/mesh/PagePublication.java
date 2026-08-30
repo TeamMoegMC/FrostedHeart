@@ -6,26 +6,32 @@ import com.teammoeg.frostedheart.content.climate.thermal.profile.ThermalSignatur
 
 import java.util.Arrays;
 
-/** Immutable worker-to-main geometry and phase publication for one Page. */
+/**
+ * Immutable worker-to-main geometry and phase publication for one Page.
+ * The worker Page slot is an opaque QueryPublication index and is never wired.
+ */
 public final class PagePublication {
     private static final int NO_COVERAGE = -1;
     public static final int NO_AIR_POINT = -1;
     public static final PagePublication EMPTY = new PagePublication(
-            -1L, -1L, emptyBricks());
+            -1, -1L, -1L, emptyBricks());
 
+    private final int workerPageSlot;
     private final long geometryRevision;
     private final long topologyGeneration;
     private final Brick[] bricks;
 
     private PagePublication(
+            int workerPageSlot,
             long geometryRevision,
             long topologyGeneration,
             Brick[] bricks
     ) {
-        validateIdentities(geometryRevision, topologyGeneration);
+        validateIdentities(workerPageSlot, geometryRevision, topologyGeneration);
         if (bricks == null || bricks.length != ThermalPageHandle.BASE_BRICK_COUNT) {
             throw new IllegalArgumentException("Page publication requires 64 Bricks");
         }
+        this.workerPageSlot = workerPageSlot;
         this.geometryRevision = geometryRevision;
         this.topologyGeneration = topologyGeneration;
         this.bricks = bricks;
@@ -41,19 +47,22 @@ public final class PagePublication {
             long topologyGeneration,
             PagePublication previous
     ) {
-        validateIdentities(geometryRevision, topologyGeneration);
+        validateIdentities(
+                previous.workerPageSlot, geometryRevision, topologyGeneration);
+        this.workerPageSlot = previous.workerPageSlot;
         this.geometryRevision = geometryRevision;
         this.topologyGeneration = topologyGeneration;
         bricks = previous.bricks;
     }
 
     public static PagePublication owned(
+            int workerPageSlot,
             long geometryRevision,
             long topologyGeneration,
             Brick[] bricks
     ) {
         return new PagePublication(
-                geometryRevision, topologyGeneration, bricks);
+                workerPageSlot, geometryRevision, topologyGeneration, bricks);
     }
 
     public PagePublication withIdentities(
@@ -70,6 +79,10 @@ public final class PagePublication {
 
     public long geometryRevision() {
         return geometryRevision;
+    }
+
+    public int workerPageSlot() {
+        return workerPageSlot;
     }
 
     public long topologyGeneration() {
@@ -160,10 +173,13 @@ public final class PagePublication {
     }
 
     private static void validateIdentities(
+            int workerPageSlot,
             long geometryRevision,
             long topologyGeneration
     ) {
-        if (geometryRevision < -1L || topologyGeneration < -1L) {
+        if (workerPageSlot < -1
+                || geometryRevision < -1L
+                || topologyGeneration < -1L) {
             throw new IllegalArgumentException(
                     "Page publication identities are invalid");
         }

@@ -10,14 +10,13 @@
 
 package com.teammoeg.frostedheart.content.climate.thermal.mesh;
 
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 
 /**
- * Immutable solve-safe material parameters and contact masks. ID zero is the
- * reserved "no material boundary" value carried by geometry-only signatures.
+ * Immutable solve-safe material parameters and contact masks. Entries use
+ * dense IDs in list order, starting at one; zero is the reserved "no material
+ * boundary" value carried by geometry-only signatures.
  */
 public final class MaterialBoundaryRegistry {
     public enum Model {
@@ -106,8 +105,8 @@ public final class MaterialBoundaryRegistry {
         }
     }
 
-    private final Map<Integer, Profile> profiles;
-    private final Map<Integer, ContactPattern> contactPatterns;
+    private final Profile[] profiles;
+    private final ContactPattern[] contactPatterns;
 
     public MaterialBoundaryRegistry(
             List<Profile> profiles,
@@ -120,37 +119,45 @@ public final class MaterialBoundaryRegistry {
     }
 
     public Profile profileOrNull(int id) {
-        return profiles.get(id);
+        return id > 0 && id < profiles.length ? profiles[id] : null;
     }
 
     public ContactPattern contactPatternOrNull(int id) {
-        return contactPatterns.get(id);
+        return id > 0 && id < contactPatterns.length
+                ? contactPatterns[id] : null;
     }
 
-    private static Map<Integer, Profile> indexProfiles(List<Profile> values) {
-        Map<Integer, Profile> indexed = new LinkedHashMap<>();
+    private static Profile[] indexProfiles(List<Profile> values) {
+        Profile[] indexed = new Profile[values.size() + 1];
+        int expectedId = 1;
         for (Profile profile : values) {
             Objects.requireNonNull(profile, "profiles contains null");
-            if (indexed.putIfAbsent(profile.id(), profile) != null) {
+            if (profile.id() != expectedId) {
                 throw new IllegalArgumentException(
-                        "duplicate material profile ID: " + profile.id());
+                        "material profile ID must be dense and ordered: expected "
+                                + expectedId + ", got " + profile.id());
             }
+            indexed[expectedId++] = profile;
         }
-        return Map.copyOf(indexed);
+        return indexed;
     }
 
-    private static Map<Integer, ContactPattern> indexPatterns(
+    private static ContactPattern[] indexPatterns(
             List<ContactPattern> values
     ) {
-        Map<Integer, ContactPattern> indexed = new LinkedHashMap<>();
+        ContactPattern[] indexed = new ContactPattern[values.size() + 1];
+        int expectedId = 1;
         for (ContactPattern pattern : values) {
             Objects.requireNonNull(pattern, "contactPatterns contains null");
-            if (indexed.putIfAbsent(pattern.id(), pattern) != null) {
+            if (pattern.id() != expectedId) {
                 throw new IllegalArgumentException(
-                        "duplicate material contact pattern ID: " + pattern.id());
+                        "material contact pattern ID must be dense and ordered: "
+                                + "expected " + expectedId
+                                + ", got " + pattern.id());
             }
+            indexed[expectedId++] = pattern;
         }
-        return Map.copyOf(indexed);
+        return indexed;
     }
 
     private static void requirePositiveId(String name, int value) {

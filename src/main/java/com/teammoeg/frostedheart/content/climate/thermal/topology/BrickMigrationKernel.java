@@ -29,7 +29,8 @@ final class BrickMigrationKernel {
             int brick,
             WorkerBrickTopology old,
             WorkerBrickTopology next,
-            PageSignatures nextSignatures
+            PageSignatures nextSignatures,
+            boolean sameLifecycle
     ) {
         if (next.span.count() == 0) {
             return;
@@ -52,7 +53,9 @@ final class BrickMigrationKernel {
                     enthalpy,
                     overlapCapacity);
             migrateMaterial(old, next, enthalpy);
-            migratePhase(old, next, enthalpy);
+            if (sameLifecycle) {
+                migratePhase(old, next, enthalpy);
+            }
         } else if (page.dormantAir != null
                 && page.dormantAir.hasBrick(brick)) {
             restoreDormant(page.dormantAir, brick, next, enthalpy);

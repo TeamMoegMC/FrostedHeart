@@ -6306,3 +6306,14 @@ retained thermal state 不按世界冰雪总体积、作物总数或普通 passi
 - Java 17 thermal JUnit `240/240`、玩家辐射换算 `1/1`、`StateTransitionDataTest` `3/3`、`compileJava` 和 Forge GameTest `20/20` required 均通过；完整仓库 JUnit 最近一次执行 `817` 条，其中 `816` 条通过，唯一失败是 `TeamTownActualSaveCodecProbeTest.actualSaveSurvivesTheFullSyncCodec` 缺少外部存档 fixture，与 thermal 改动无关。GameTest 的 radiation 场景使用生产遮挡分类和生产预算，锁定 Campfire 可见、石墙阻断、拆墙恢复、witness cache 与只读 source ledger；新增 underground admission 场景锁定 loaded-only 单层 continuation 不递归。Phase A evidence bundle 还通过 p95/p99 JSON 校验并生成 JFR/JOL artifact。最终 Phase A 数值以该轮 diary 和 `build/reports/thermal-phase-a/` 为准。Architectury 的 dev runtime scope 已覆盖 dedicated GameTest 所需的 FTB/Item Filters 依赖。
 
 Phase E / PR 6 的 Topology Guard、candidate registry 和 fit/holdout reference gate 已实现，PR7 的 dimension runtime、coordinator/publication、whole-set sleep/wake 与 memory admission也已完成。PR8 的增量/full-resync frame -> topology -> sweep -> ACK -> Page release -> executor dispatch、稳定 frame sweep reuse、天空证明 open-space FarField、单层 loaded-only underground continuation 和 degraded 弱边界，Phase G / PR9 的四类 physical source lifecycle -> exact port -> topology-cut settle/rebind，以及 Phase J / PR12 的 radiation source index -> bounded 3-point DDA -> revision witness cache -> absorbed-energy body delta 已进入玩家实机测试路径。Phase I / PR11 的 recipe-compiled hot-side latent mutation 也已进入 applied Page gameplay authority；Phase H / PR10 的非相变材料仍 dormant。Phase K / PR13 的 player、crop 与 town consumer 已按 publication-hit/natural-fallback 切换 gameplay authority；当前没有真实普通机器温度 consumer，也不保留 dormant machine API。HUD 是 player 数据同步的下游展示，不是独立 consumer。Phase L 的历史 synthetic `1/10/50/100` query/JFR/JOL 结果只留在 diary，包装源码、Gradle task 和报告已退役；production input 中无消费者的 shadow comparison/snapshot/计数也已删除。下一步是取得真实 `1/10/50/100` player production-like server、worker solve、TPS 与 retained evidence。
+
+### 2026-08-31 Source sink correction
+
+Earlier `INTERNAL_HEAT`, `INTERNAL_RESERVOIR`, machine-reservoir accounting,
+and blocked-generator internal-retention clauses are superseded. Production
+never owned machine energy, capacity, temperature, or environmental return, so
+that binding was only an unobservable loss label. It has been deleted rather
+than retained as future scaffolding. Generator now partitions power as `80%`
+exhaust convection plus `20%` radiation; radiator uses `90%` convection plus
+`10%` radiation. Blocked Air ports are declared loss and
+topology-unavailable ports remain degraded loss.
