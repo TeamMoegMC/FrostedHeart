@@ -342,6 +342,8 @@
   "tooltip.frostedheart.heatingpad": "Single-use, generates massive heat in seconds.",
   "tooltip.frostedheart.heatingpad.flamedout": "Flamed Out",
   "tooltip.frostedheart.heatingpad.time": "Time: %d Seconds",
+  "tooltip.frostedheart.wearable_thermal_reservoir.temperature": "Reservoir temperature: %s degC",
+  "tooltip.frostedheart.wearable_thermal_reservoir.temperature.uninitialized": "Reservoir temperature: uninitialized",
   "tooltip.frostedheart.wearable_thermal_reservoir.surface_temperature": "Surface temperature: %s degC",
   "tooltip.frostedheart.wearable_thermal_reservoir.surface_temperature.uninitialized": "Surface temperature: uninitialized",
   "tooltip.frostedheart.wearable_thermal_reservoir.core_temperature": "Internal temperature: %s degC",

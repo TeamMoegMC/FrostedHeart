@@ -90,12 +90,29 @@ class WarmStoneItemTest {
         assertFalse(stack.hasTag());
         assertEquals(2, tooltip.size());
         assertTrue(tooltipJson(tooltip.get(0)).contains(
-                "wearable_thermal_reservoir.surface_temperature.uninitialized"));
+                "wearable_thermal_reservoir.temperature.uninitialized"));
         assertTrue(tooltipJson(tooltip.get(1)).contains("10"));
     }
 
     @Test
-    void advancedTooltipSeparatesCoreAndSurfaceTemperaturesWithoutWritingNbt() {
+    void normalTooltipUsesTheProfileCapacityWeights() {
+        ItemStack stack = new ItemStack(Items.STONE);
+        new WearableThermalState(60.0D, 10.0D).writeTo(stack);
+        WearableThermalProfile profile = new WearableThermalProfile(
+                0.30D, 0.40D, 1.0e-4D, 1.0e-4D);
+        List<Component> tooltip = new ArrayList<>();
+
+        WarmStoneItem.appendThermalTooltip(
+                stack, profile, tooltip, TooltipFlag.NORMAL);
+
+        assertEquals(2, tooltip.size());
+        assertTrue(tooltipJson(tooltip.get(0)).contains("40.0"));
+        assertFalse(tooltipJson(tooltip.get(0)).contains("60.0"));
+        assertFalse(tooltipJson(tooltip.get(0)).contains("10.0"));
+    }
+
+    @Test
+    void advancedTooltipShowsAverageCoreAndSurfaceWithoutWritingNbt() {
         ItemStack stack = new ItemStack(Items.STONE);
         new WearableThermalState(56.25D, 18.75D).writeTo(stack);
         CompoundTag before = stack.getTag().copy();
@@ -105,10 +122,11 @@ class WarmStoneItemTest {
                 stack, WearableThermalProfile.HOT_WATER_BAG_DEFAULT, tooltip, TooltipFlag.ADVANCED);
 
         assertEquals(before, stack.getTag());
-        assertEquals(3, tooltip.size());
-        assertTrue(tooltipJson(tooltip.get(0)).contains("18.8"));
+        assertEquals(4, tooltip.size());
+        assertTrue(tooltipJson(tooltip.get(0)).contains("48.8"));
         assertTrue(tooltipJson(tooltip.get(1)).contains("56.3"));
-        assertTrue(tooltipJson(tooltip.get(2)).contains("25"));
+        assertTrue(tooltipJson(tooltip.get(2)).contains("18.8"));
+        assertTrue(tooltipJson(tooltip.get(3)).contains("25"));
     }
 
     private static String tooltipJson(Component component) {

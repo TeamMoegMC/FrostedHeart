@@ -91,26 +91,39 @@ public class WarmStoneItem extends FHBaseItem
             ItemStack stack,
             WearableThermalProfile profile,
             List<Component> tooltip,
-            TooltipFlag flag
+        TooltipFlag flag
     ) {
         WearableThermalState.read(stack).ifPresentOrElse(state -> {
             tooltip.add(Component.translatable(
-                    "tooltip.frostedheart.wearable_thermal_reservoir.surface_temperature",
-                    formatTemperature(state.surfaceTemperatureC())
+                    "tooltip.frostedheart.wearable_thermal_reservoir.temperature",
+                    formatTemperature(weightedAverageTemperatureC(state, profile))
             ).withStyle(ChatFormatting.GRAY));
             if (flag.isAdvanced()) {
                 tooltip.add(Component.translatable(
                         "tooltip.frostedheart.wearable_thermal_reservoir.core_temperature",
                         formatTemperature(state.coreTemperatureC())
                 ).withStyle(ChatFormatting.DARK_GRAY));
+                tooltip.add(Component.translatable(
+                        "tooltip.frostedheart.wearable_thermal_reservoir.surface_temperature",
+                        formatTemperature(state.surfaceTemperatureC())
+                ).withStyle(ChatFormatting.DARK_GRAY));
             }
         }, () -> tooltip.add(Component.translatable(
-                "tooltip.frostedheart.wearable_thermal_reservoir.surface_temperature.uninitialized"
+                "tooltip.frostedheart.wearable_thermal_reservoir.temperature.uninitialized"
         ).withStyle(ChatFormatting.GRAY)));
         tooltip.add(Component.translatable(
                 "tooltip.frostedheart.wearable_thermal_reservoir.capacity",
                 formatCapacityPercent(profile.capacityRatio())
         ).withStyle(ChatFormatting.GRAY));
+    }
+
+    private static double weightedAverageTemperatureC(
+            WearableThermalState state,
+            WearableThermalProfile profile
+    ) {
+        double surfaceFraction = profile.surfaceCapacityFraction();
+        return state.coreTemperatureC() * (1.0D - surfaceFraction)
+                + state.surfaceTemperatureC() * surfaceFraction;
     }
 
     private static String formatTemperature(double temperatureC) {

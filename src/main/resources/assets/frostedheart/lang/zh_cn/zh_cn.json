@@ -342,6 +342,8 @@
   "tooltip.frostedheart.heatingpad": "一次性使用，短时间内产生大量热量",
   "tooltip.frostedheart.heatingpad.flamedout": "暖手宝已耗尽",
   "tooltip.frostedheart.heatingpad.time": "剩余时间：%d 秒",
+  "tooltip.frostedheart.wearable_thermal_reservoir.temperature": "热库温度：%s degC",
+  "tooltip.frostedheart.wearable_thermal_reservoir.temperature.uninitialized": "热库温度：未初始化",
   "tooltip.frostedheart.wearable_thermal_reservoir.surface_temperature": "表面温度：%s degC",
   "tooltip.frostedheart.wearable_thermal_reservoir.surface_temperature.uninitialized": "表面温度：未初始化",
   "tooltip.frostedheart.wearable_thermal_reservoir.core_temperature": "内部温度：%s degC",

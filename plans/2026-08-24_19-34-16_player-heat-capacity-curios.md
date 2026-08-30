@@ -1,7 +1,7 @@
 # 暖石类热库饰品实施计划
 
 - Time: `2026-08-24 19:34:16 +08:00`
-- Updated: `2026-08-30 16:00:42 +08:00`
+- Updated: `2026-08-30 21:52:15 +08:00`
 - Authors: `Codex; OpenAI; coding agent`
 - Status: `completed`
 - Scope: `Frosted Heart 玩家五部位体温、可穿戴热库、Curios 自定义槽位、新物品与配套整合包进度`
@@ -546,6 +546,11 @@ Gate B measurement outcome（`2026-08-29`）：
 - 最终生产路径为 FrostedHeart 的 `content/climate/player/thermalitem/`、共享 radiation/Minecraft thermal input、Curios/item/command/mixin/resource 接入，以及 TheWinterRescue 的 `recipes/warm_stone.js`、`fhresearches/warm_stone.json`、T0 quest 和中英文本。冻结参数保持暖石/热水袋 `r=0.10/0.25`、`a=0.20`、`k_cs=6.1613e-5/9.2420e-4 /s`、`g_sp=1.2e-4/8e-5 /s`；未因 T25 调参。
 - Gate D 关闭，T00-T28 全部完成。保留限制为未 tick 容器暂停、不追算离线墙钟、只有掉落物从通用已注册物理热源 receiver 充热、没有篝火/charger recipe 或热库专用同步；总体温度 Tooltip/client config follow-up 仍等待用户明确恢复。
 
+Post-plan Tooltip correction (`2026-08-30 21:52:15 +08:00`):
+
+- 用户重新明确普通暖石 Tooltip 必须显示节点热容加权平均温度，而不是表面温度。当前实现按 `T_average=(1-a)*T_core+a*T_surface` 读取 profile 的实际表面热容占比；高级 Tooltip 保留平均值并额外分别显示内部/表面温度。
+- 本修正只改变物品 Tooltip 展示与双语文本，不改变 NBT、profile、换热、同步、receiver 或生命周期合同；此前延期的客户端 config 调试切换仍未实现。
+
 ### 9.7 推荐执行顺序
 
 关键路径为：
@@ -673,4 +678,4 @@ gradlew.bat build
 
 ## 15. Outcome
 
-已完成。`T00-T28` 全部完成并接受，Gate A、Gate B、Gate C、Gate D 均已关闭。两件物品的三节点热库、专用 Curios 槽、生命周期、通用掉落环境 receiver、制作、真实 Hot Water 灌装、研究、任务、Create 风格 tooltip、OP 测试工具、自动化、实机矩阵、living docs 和两仓库最终验证均已完成。最终 JUnit 为 `201` suites、`868/868`，Forge GameTest 为 `13/13 required`，完整 build 成功；TheWinterRescue 暖石专项静态验证通过。剩余限制与延期项仅为本文 `T26-T28 outcome` 所列内容。
+已完成。`T00-T28` 全部完成并接受，Gate A、Gate B、Gate C、Gate D 均已关闭。两件物品的三节点热库、专用 Curios 槽、生命周期、通用掉落环境 receiver、制作、真实 Hot Water 灌装、研究、任务、Create 风格 tooltip、OP 测试工具、自动化、实机矩阵、living docs 和两仓库最终验证均已完成；普通物品 Tooltip 已按节点热容显示加权平均温度。最终 JUnit 为 `201` suites、`868/868`，Forge GameTest 为 `13/13 required`，完整 build 成功；TheWinterRescue 暖石专项静态验证通过。剩余限制与延期项仅为本文 `T26-T28 outcome` 和 post-plan correction 所列内容。

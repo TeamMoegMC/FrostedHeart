@@ -168,7 +168,7 @@ heatExchange = (effective - body) * unit / heatExchangeTempConstant
 
 `CuriosCompat` 通过现有 IMC 入口注册 `warm_stone` 专用槽，`size(1)`、priority `190`，并引用 `frostedheart:slot/empty_warm_stone_slot`。`getWearableThermalReservoirInWarmStoneSlot` 只读取这个 handler 的 slot `0`，只接受 `WearableThermalReservoir`；它刻意忽略 `isVisible()` 与 `getRenders()`，因为二者是界面表现状态。`WarmStoneItem.canEquip` 也只允许该槽的 slot `0`。`FHTags.Items.CURIOS_WARM_STONE` 与 `data/curios/tags/items/warm_stone.json` 只包含两件热库；物品模型、`16x16` 纹理、空槽图标及中英文名称均已就位。
 
-`WarmStoneItem.appendHoverText` 只调用 `WearableThermalState.read`：普通提示显示表面温度（未初始化时明确显示）和相对玩家的 `10%` 或 `25%` 热容；高级提示额外显示内部温度。提示路径不创建、初始化或写入 ItemStack NBT。
+`WarmStoneItem.appendHoverText` 只调用 `WearableThermalState.read`：普通提示显示按节点热容加权的热库温度 `T_average=(1-a)*T_core+a*T_surface`（未初始化时明确显示）和相对玩家的 `10%` 或 `25%` 热容；高级提示额外分别显示内部与表面温度。权重 `a` 读取当前物品 profile 的 `surfaceCapacityFraction`，不写死为默认 `0.20`。提示路径不创建、初始化或写入 ItemStack NBT。
 
 配套仓库 `TheWinterRescue` 的 `kubejs/server_scripts/src/recipes/warm_stone.js` 提供两件物品的普通制作入口：`minecraft:smooth_stone + frostedheart:straw_lining -> frostedheart:warm_stone`，以及 `frostedheart:leather_water_bag + frostedheart:straw_lining -> frostedheart:hot_water_bag`。这两个输出不带 `frostedheart:thermal_reservoir`，仍遵循首次服务端环境初始化。可选灌装只接受现有 `frostedheart:wooden_cup_drink` 中 `250 mB` 的 `caupona:nail_soup`（Hot Water），产出热水袋的两个节点均为显式 `60 degC`，并返还 `frostedheart:wooden_cup`。它不增加篝火或 charger 配方；篝火旁的持续充热仍是掉落物走通用已注册物理热源 receiver 的行为。
 

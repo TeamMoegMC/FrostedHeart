@@ -704,3 +704,12 @@ Closure boundary:
 
 - Frozen profiles and the T13-T19 receiver budgets, cadence, caches, synchronization and lifecycle contracts did not change. No campfire recipe, charger recipe/cost, dedicated reservoir synchronization, or aggregate-temperature Tooltip/config was added.
 - T00-T28 and Gates A-D are complete. Unticked containers still pause, offline wall time is not replayed, and only dropped reservoirs charge through the generic registered physical-source environment receiver. The aggregate-temperature Tooltip/client-config follow-up remains deferred until explicitly restored.
+
+### 9.23 `2026-08-30 21:52:15 +08:00` 普通 Tooltip 加权平均温度修正
+
+- Executor: `Codex; OpenAI GPT-5; primary engineering agent`
+- Scope: `warm-stone branch Tooltip presentation only`
+
+The user clarified that the simplified item Tooltip must show the reservoir's capacity-weighted average rather than its surface temperature. `WarmStoneItem` now computes `T_average=(1-a)*T_core+a*T_surface` from the item's actual `WearableThermalProfile.surfaceCapacityFraction`. Normal mode shows average temperature plus capacity; advanced mode shows average, core, surface, and capacity. The read path remains NBT-side-effect free.
+
+This correction does not change the frozen profiles, exchange model, receiver budgets, synchronization, recipes, or lifecycle. It does not implement the previously deferred client-config switch; only the explicitly requested default weighted value and existing advanced detail are in scope.
