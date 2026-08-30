@@ -338,7 +338,7 @@ The spatial decomposition is final: one thermal Page is exactly one Minecraft `1
 - A topology commit prepares one owned `PagePublication` only for a Page whose installed Brick payload or topology identity changed. It contains geometry revision, topology generation, committed batch sequence, and the flat Brick directory defined above.
 - Geometry and phase candidates are published by one final volatile reference assignment after the Page's topology commit. The publication constructor takes ownership of already exact arrays and does not clone them. Unchanged Pages keep the existing publication. There is no successful-solve all-Page phase pass and no `Publication.withPhaseCandidates()` copy path.
 - Reservoir lookup uses a worker-owned primitive open-address reverse index keyed by `(lifecycleGeneration, brickMinX, brickMinY, brickMinZ, profileId)`. Preparation reserves capacity and commit updates it allocation-free. ACK handling checks `fastSlot`, then this exact index, then request sequence. A stale/missing ACK is ignored; strict batch sequence prevents replay, and each outstanding reservoir request accepts its sequence at most once. There is no transition watermark stream or arena scan.
-- `QueryPublication` is a flat arena-slot-addressed double buffer: `double[2][capacity] temperature`, `int[2][capacity] mediumId`, `int[2][capacity] flags`, and `int[2][capacity] slotGeneration`. Reader lookup uses the arena slot directly, strict O(1), with no slot directory, chunk object, binary search, or published `arenaSlots[]`.
+- `QueryPublication` is a flat arena-slot-addressed double buffer: `double[2][capacity] temperature` and `int[2][capacity] slotGeneration`. Reader lookup uses the arena slot directly, strict O(1), with no slot directory, chunk object, binary search, or published `arenaSlots[]`.
 - Geometry revision remains Page-local and is validated by reading the same current `PagePublication` from its handle before and after the query seqlock read. Remove geometry revision from the dimension query envelope/API. The numeric sample additionally requires matching arena slot generation and a query topology generation at least as new as the Page publication's topology generation. This prevents one Page mutation from invalidating unrelated Pages and prevents a reused slot from exposing an older sample.
 - Capacity grows geometrically with arena slot capacity under `ThermalMemoryBudget`. `Limits` includes an explicit maximum arena slot capacity covering live plus staging slots; preparation refuses optional admission before exceeding it. A deterministic live-span cursor writes every live slot once into inactive arrays; it never counts first. Stale freed-slot values are unreachable through current Page publications. Sleeping republish remains O(1).
 - At slot capacity 65,536, the four double-buffered value arrays consume about 2.5 MiB before headers; capacity 131,072 consumes about 5 MiB. Best-fit/reuse plus the explicit slot-capacity limit bounds holes and staging memory.
@@ -366,7 +366,7 @@ There is no dimension-wide Air connected-component authority. Delete `Incrementa
 - Each Brick owns a local FarField boundary fragment for Air cells with directly exposed microface patches. It stores arena slot/generation, owning Page slot, base exposed-area conductance, and local continuation factor. Geometry/sky changes replace only affected Brick fragments.
 - Solver boundary temperature is read from `naturalTemperatureByPage[pageSlot]`. Natural-temperature refresh updates one Page scalar. Wind changes one engine scale/generation; boundary fragments lazily recompile their local fixed-step coefficients when next executed. Neither change rebuilds topology or scans all boundary fragments separately.
 - Delete `FarFieldProfileRegistry`, environment-class maps, source-power applicability, and maximum-temperature-delta profile selection. Current gameplay constructs the same conductance for every environment class, so this registry adds policy/object structure without distinct behavior.
-- `FarFieldSettings` contains only `enabled`, `baseConductanceWPerK`, `referenceOpeningAreaBlocksSquared`, and `continuationDistanceBlocks`. For an exposed cell, `G_far = baseConductanceWPerK * windScale * openPatchCount / (16 * referenceOpeningAreaBlocksSquared) * continuationFactor`. Direct sky exposure uses `continuationFactor = 1`; a loaded-but-unrepresented continuation boundary uses `1 / (1 + continuationDistanceBlocks)`. Interior cells have no natural fixed boundary and exchange heat only through Air/material edges.
+- `FarFieldSettings` contains only `baseConductanceWPerK`, `referenceOpeningAreaBlocksSquared`, and `continuationDistanceBlocks`; the production runtime always models exposed boundaries. For an exposed cell, `G_far = baseConductanceWPerK * windScale * openPatchCount / (16 * referenceOpeningAreaBlocksSquared) * continuationFactor`. Direct sky exposure uses `continuationFactor = 1`; a loaded-but-unrepresented continuation boundary uses `1 / (1 + continuationDistanceBlocks)`. Interior cells have no natural fixed boundary and exchange heat only through Air/material edges.
 - Unmapped geometry or unloaded required shape input keeps the exact Page/Brick publication unresolved and on gameplay fallback. It does not require discovering a whole connected component. Admission of a neighboring Page replaces a local boundary approximation with exact cross-Page Air edges.
 - Worker Page state keeps a 64-bit resolved-Brick mask and the dimension keeps an incrementally updated unresolved-Page count. `topologyResolved` is O(1); no solve or publication scans Pages/components to derive it.
 - This intentionally removes the old behavior where one sky-exposed member selected one FarField profile for an entire connected Air component. Local diffusion is the authoritative thermal behavior: outdoor influence propagates through conductance over time rather than changing a room-wide classification instantly.
@@ -816,3 +816,202 @@ The earlier simplification blocker is resolved in source but not yet validated:
   compile/test command is currently blocked before test execution by unrelated
   uncommitted player-temperature work; those files were not changed or
   reverted as part of this correction.
+
+## Consecutive Batch Sequence Restart-Loop Correction
+
+- Confirmed on `2026-08-30` with JDWP at the real `ThermalDimensionEngine`
+  rejection branch: the engine owned `dimensionGeneration=1000`,
+  `lastBatchSequence=1`, and `lastTargetTick=32100`, while the next batch carried
+  `dimensionGeneration=1000`, `sequence=1`, and `targetTick=32120`. Generation
+  and tick were valid; the producer duplicated sequence `1` on its second cut.
+- Root cause: `DimensionInputAccumulator.seal` passed
+  `Math.incrementExact(nextSequence)` into the batch constructor without storing
+  the result. The field therefore remained zero and every cut in one generation
+  was emitted as sequence `1`.
+- Resolution: `seal` now advances and stores `nextSequence` before constructing
+  the batch. A replacement accumulator for a new dimension generation still
+  starts at zero, so its first batch is sequence `1`, matching a fresh
+  `ThermalDimensionEngine`.
+- Regression coverage directly exercises the producer lifecycle: one generation
+  seals sequences `1` then `2`, and a replacement generation restarts at `1`.
+  No production counter, diagnostic field, compatibility branch, traversal, or
+  new abstraction was added.
+- Validation: Java 17 offline `compileJava`, `compileGameTestJava`, selected
+  thermal JUnit (`109/109`), and Forge GameTest (`14/14`) passed in one Gradle
+  run. A real quick-play client loaded the existing world and ran from integrated
+  server startup at `15:03:59` through `15:05:11`; its fresh log contained zero
+  matches for `thermal batch generation`, `Thermal dimension worker failed`, or
+  `cell slot is not live`.
+- Documentation impact: no living climate document changed. It already states
+  the intended consecutive-sequence contract; this correction makes the
+  producer conform to that documented behavior.
+
+## Dead Production Surface Cleanup
+
+- Confirmed on `2026-08-30` by a complete thermal production-symbol census.
+  Every top-level production type has a production reference except
+  `MinecraftThermalEvents`, which is loaded by Forge through
+  `@Mod.EventBusSubscriber`. Every zero-reference member was removed except the
+  Forge subscriber methods and the explicitly retained source impulse entrance.
+- Deleted six production types whose behavior existed only for tests or an
+  unconfigured future branch: `GeometrySummaryCache`, `DependencyOffsetMask`,
+  `ResolverBlockView`, `ThermalSignatureResolver`, and
+  `ThermalSignatureResolverDispatcher`, plus the write-only `GeometrySummary`.
+  Their four dedicated prototype test classes were deleted with them.
+- The dispatcher cleanup is behavior-preserving for the shipped runtime:
+  `MinecraftThermalProfiles` constructed an empty dispatcher with no explicit
+  or contextual registration. `MinecraftSignatureCapture` now resolves the
+  already-loaded `BlockState` directly through `StateStaticThermalResolver`.
+  It no longer retains the `18^3` section scratch, the `3^3` point scratch, two
+  empty resolver maps, resolver-ID registries, or dependency-mask machinery.
+  Dynamic shapes still return the same conservative unsupported result, and
+  point capture still uses `getChunkNow` without loading a chunk.
+- Removed production methods used only by tests: geometry component/combined-face
+  convenience queries, the non-inverse pair-exchange wrapper, the signature
+  region-count wrapper, and an unused solver bit lookup. Tests now inspect the
+  returned structures or invoke the real production kernel directly.
+- A second source-plus-classfile closure removed the write-only geometry summary,
+  geometry/compiler diagnostic payloads, geometry effective ticks, Query medium/
+  flags/topology state, radiation confidence/flags, arena cell flags, dead Air
+  and material profile writes, unused source binding variants, and test-only
+  buoyancy/material-array wrappers. `QueryPublication` double-buffer payload is
+  reduced from `40` to `24` bytes per slot.
+- Removed three geometry flags that no compiler path emitted and reduced
+  class-internal constants from public to private. Thermal-scoped diff is
+  `+503 / -2361`, net `-1858` lines; production thermal files decreased from
+  `79` to `73`.
+- `ThermalSourceMode.IMPULSE` and `DimensionInputAccumulator.emitSourceImpulse`
+  remain because an older explicit plan decision retained the exact-tick signed
+  joule contract, and the user reconfirmed that decision on `2026-08-30`.
+  There is currently no gameplay producer. This is the sole non-Forge
+  zero-production-caller exception and is an explicit whitelist entry, not dead
+  code.
+- Validation: Java 17 offline `compileJava`, `compileGameTestJava`, selected
+  thermal JUnit (`96/96`), and Forge GameTest (`14/14`) passed in one Gradle
+  run. Deleted type names have zero remaining compiled class files, and
+  `git diff --check` passed.
+- Final bytecode census covered every main classfile. Its `14` unreferenced
+  top-level methods are exactly `7` Forge subscriber methods, `6` interface
+  implementations invoked through their interfaces, and the retained impulse
+  entrance. Source census reports no other zero-reference type, method, or field.
+- Documentation impact: the living thermal architecture now records direct
+  state-static capture, retained impulse semantics, and the reduced query
+  payload. Gameplay formulas, cadence, Page lifecycle, continuous source power,
+  solver, and temperature query behavior are unchanged.
+
+## Nested Reachability And Allocation Closure
+
+The earlier symbol census was exact for top-level methods but was not a semantic
+reachability proof for nested records/enums or mutually referencing feature
+branches. The following cleanup closes those confirmed gaps without changing
+the currently registered gameplay profiles:
+
+- [x] Remove unregistered stateless/natural-rock material models, deep poles,
+  fixed material boundaries, unused snow/ice/custom phase actions, and their
+  policy/handler branches. Production phase profiles continue to apply compiled
+  `StateTransitionData` recipes and respect random-tick speed.
+- [x] Replace `LocalAirRegionPattern` plus worker reconversion with one canonical
+  `ConservativeAirGeometry.Resolution`; remove the five signature channels that
+  were always zero in every production classifier.
+- [x] Remove remaining handwritten test-only or zero-call production members:
+  `ContactPattern.fullBlock`, `PageState.resolved`, buoyancy factor/status
+  accessors, exchange-result status accessors, `SourceChannel.OTHER`, and the
+  unused missing-port redistribution policy. `IMPULSE` remains whitelisted.
+- [x] Replace the test-only critical/optional memory classification with one
+  hierarchical publication/radiation byte budget. Bound source SoA growth with
+  explicit per-dimension limits of `65,536` sources and `131,072` source nodes.
+- [x] Make Section mutation bitsets and 27-entry Page directories lazy; use an
+  adaptive dirty-center bitmap only for Pages that cross the small-array
+  threshold.
+- [x] Replace boxed arena free-span trees with a pooled primitive AVL index and
+  make the hierarchical live-word summary track LIVE cells only.
+- [x] Reuse one `TopologyView` for the plan lifetime and remove the duplicate
+  old-span arena ownership traversal.
+- [x] Narrow same-package runtime transport/configuration types and restore the
+  scalar-only `FarFieldSettings` record.
+
+Validation status: Java 17 production/test/GameTest compilation succeeded;
+thermal JUnit passed `95/95` and Forge GameTest passed `14/14`. The final
+thermal-scoped residual-name search and `git diff --check` also passed.
+
+## Final Semantic And Payload Closure
+
+The previous nested-reachability closure was incomplete. It proved symbol
+reachability but did not re-derive mutation dependencies or prove that every
+persisted operation field had a production reader. The following source-backed
+items supersede the earlier claim that no further cleanup remained:
+
+- [x] Replace the obsolete 27-center mutation halo with exact changed-position
+  capture. `StateStaticThermalResolver` depends only on the captured
+  `BlockState` and `FluidState`; cross-Brick effects remain the responsibility
+  of `TopologyPlan.markFragmentNeighborhood`. Do not retain neighboring Page
+  revision directories after this invariant changes.
+- [x] Make `TopologyPlan.PageDraft.setBlock` compare against the current
+  signature before allocating/copying a 64-entry Brick scratch. A final state
+  equal to the installed state must not rebuild immutable signature payloads.
+- [x] Remove all operation endpoint-generation arrays that have no production
+  reader. Slot ownership remains proven once by topology preflight/commit and
+  by reference-counted old-span release; do not add per-step validation.
+- [x] Store fragment invariants once: one FarField owner Page, one lazy wind
+  coefficient generation, and one production Air execution mode. Do not retain
+  per-operation arrays for globally or fragment-constant values.
+- [x] Remove production mode switches that exist only so tests can disable
+  buoyancy or FarField. Tests must exercise the production physics path instead
+  of selecting a simpler production branch.
+- [x] Remove the unused `LongPairDouble` flag payload and boolean add argument.
+- [x] Make physical-source capacity recovery lifecycle-complete: a source
+  ignored at the explicit hard cap must become discoverable after a slot is
+  released without an unbounded overflow collection or routine global scan.
+- [x] Replace `ThermalResolution.Reason` and `SourceChannel` with the exact
+  production data actually consumed, and narrow same-package transport members
+  whose `public` modifier cannot widen the package-private owning type.
+
+Acceptance remains one-pass: no compatibility layer, future-facing branch,
+test-only production API, new routine traversal, production counter, or
+allocation-heavy diagnostic is permitted. Complete all source edits before the
+unified compile/JUnit/GameTest run, then update this checklist, living docs, and
+the development diary with the measured result.
+
+Outcome: completed on `2026-08-30`. Production/test/GameTest compilation passed;
+thermal JUnit passed `96/96`, Forge GameTest passed `14/14`, the removed-symbol
+and package-surface searches are clean, and `git diff --check` passed. Controlled
+JFR/heap profiling remains the plan's separate performance-evidence gate.
+
+## Arena And Transaction Readability Closure
+
+The final field/data-flow review confirmed three non-constant write-only fields
+and two dense ownership surfaces. This cleanup changes organization only; it
+must not alter topology ordering, primitive array ownership, solver traversal,
+or per-Brick retained object count.
+
+- [x] Remove `BrickMaterialKernel.arena`, `TopologyPlan.parameters`, and
+  `WorkerBrickTopology.fragment`, including their redundant constructor and
+  `withFragment` arguments.
+- [x] Move the reusable Brick layout builder to `ThermalBrickCellLayout` and
+  move phase metadata/request arrays to one arena-owned
+  `ThermalPhaseReservoirStore`. Both remain primitive reusable storage; no
+  per-cell or per-request object is permitted.
+- [x] Replace positional construction of `MaterialContacts` with one reusable
+  builder owned by `BrickMaterialKernel`.
+- [x] Replace the 14-argument `PreparedTopologyChange` construction with one
+  reusable grouped builder owned by `TopologyPlan`; replace `PageWrite`'s
+  positional call sites with named active/retirement factories. The committed
+  payload remains one exact immutable delta with the existing primitive arrays.
+- [x] Re-run production/test/GameTest compilation, thermal JUnit, Forge
+  GameTest, field read closure, removed-symbol search, and `git diff --check`.
+- [x] Extend the field closure beyond write-without-read detection: remove
+  `MinecraftThermalInput.signatureCapture`, which was read only while wiring
+  constructor-owned consumers and then retained redundantly for the dimension
+  lifetime. The compiled constructor-only field set must also be empty.
+
+This is not authorization to split `MinecraftPageManager` or redesign the
+thermal architecture. It is a readability and dead-state closure inside the
+current ownership boundaries.
+
+Outcome: completed on `2026-08-30`. `ThermalCellArena` decreased from `1,163`
+to `927` lines. The extracted stores and reusable builders add no per-Brick,
+per-cell, per-request, or per-transaction grouping object. Production/test/
+GameTest compilation passed, thermal JUnit passed `96/96`, Forge GameTest passed
+`14/14`, the compiled non-constant write-only-field set is empty, removed-symbol
+searches are clean, and `git diff --check` passed. A follow-up semantic closure
+also reports zero fields whose only reads occur in their owning constructor.

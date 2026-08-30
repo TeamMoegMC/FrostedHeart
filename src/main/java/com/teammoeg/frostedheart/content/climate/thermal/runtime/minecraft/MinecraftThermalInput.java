@@ -36,25 +36,14 @@ import java.util.concurrent.atomic.AtomicLong;
 
 /** Main-thread dimension lifecycle, fixed-cut transport, and gameplay query facade. */
 public final class MinecraftThermalInput implements AutoCloseable {
-    public static final int QUERY_STALE_GEOMETRY = 1;
-    public static final int QUERY_DEGRADED_TOPOLOGY = 1 << 1;
-    public static final int QUERY_PUBLICATION_MISS = 1 << 2;
-    public static final int QUERY_PUBLICATION_STALE = 1 << 3;
-    public static final int QUERY_NO_PAGE = 1 << 4;
-    public static final int QUERY_NO_AIR_COMPONENT = 1 << 5;
-    public static final int QUERY_RADIATION_UNAVAILABLE = 1 << 6;
-    public static final int QUERY_RADIATION_BUDGET_LIMITED = 1 << 7;
-    public static final int QUERY_RADIATION_UNRESOLVED = 1 << 8;
-    public static final int QUERY_ANALYTIC_FIELD_APPLIED = 1 << 11;
-
     private static final int MAX_PUBLICATION_AGE_TICKS = 40;
     private static final float[] NO_INFRARED_FIELDS = new float[0];
     private static final double FAR_FIELD_CONDUCTANCE_W_PER_K =
             7_747.2298793470545D;
+    private static final int MAXIMUM_PHYSICAL_SOURCES = 65_536;
+    private static final int MAXIMUM_SOURCE_NODES = 131_072;
     private static final ThermalMemoryBudget MEMORY =
-            new ThermalMemoryBudget(
-                    128L * 1024L * 1024L,
-                    4L * 1024L * 1024L);
+            new ThermalMemoryBudget(128L * 1024L * 1024L);
     private static final RadiationService.Parameters RADIATION_PARAMETERS =
             new RadiationService.Parameters(
                     1_024, 128, 64, 8, 24, 8, 256,
@@ -70,7 +59,6 @@ public final class MinecraftThermalInput implements AutoCloseable {
     private final double referenceTemperatureC;
     private final ThermalAnalyticFieldIndex analyticFields =
             new ThermalAnalyticFieldIndex();
-    private final MinecraftSignatureCapture signatureCapture;
     private final MinecraftEnvironmentCapture environment;
     private final MinecraftPageManager pages;
     private final PhysicalSourceSpatialIndex physicalSources;
@@ -110,21 +98,21 @@ public final class MinecraftThermalInput implements AutoCloseable {
         accumulator = new DimensionInputAccumulator(
                 dimensionGeneration, initialTick);
         lastCompletedTargetTick = initialTick;
-        signatureCapture = new MinecraftSignatureCapture(
-                level,
-                profiles.dispatcher(),
-                profiles.signatures(),
-                profiles.signatureIdsByState());
+        MinecraftSignatureCapture signatureCapture =
+                new MinecraftSignatureCapture(
+                        level,
+                        profiles.resolver(),
+                        profiles.signatures(),
+                        profiles.signatureIdsByState());
         environment = new MinecraftEnvironmentCapture(level, accumulator);
         pages = new MinecraftPageManager(
                 this, level, accumulator, signatureCapture, environment);
         physicalSources = new PhysicalSourceSpatialIndex(
-                accumulator, pages, 64);
+                accumulator, pages, 64, MAXIMUM_PHYSICAL_SOURCES);
         createWorker(initialTick, initialTemperatureC);
         phase = new MinecraftPhaseController(
                 level, pages, signatureCapture, profiles.signatures(),
-                profiles.materials(), accumulator,
-                MinecraftPhaseTransitionHandler.rejectCustomActions(), 8);
+                profiles.materials(), accumulator, 8);
         radiationOcclusion = new MinecraftRadiationOcclusion(level, 1_024);
         pages.attachMutationConsumers(physicalSources, radiationOcclusion);
         radiation = RadiationService.tryCreate(
@@ -133,8 +121,7 @@ public final class MinecraftThermalInput implements AutoCloseable {
                 radiationOcclusion,
                 MEMORY.createDimensionBudget(
                         RadiationService.projectedMaximumBytes(
-                                RADIATION_PARAMETERS),
-                        0L));
+                                RADIATION_PARAMETERS)));
     }
 
     private void createWorker(
@@ -143,8 +130,7 @@ public final class MinecraftThermalInput implements AutoCloseable {
     ) {
         QueryPublication publication = QueryPublication.tryCreate(
                 MEMORY.createDimensionBudget(
-                        16L * 1024L * 1024L,
-                        1L * 1024L * 1024L),
+                        16L * 1024L * 1024L),
                 256);
         if (publication == null) {
             throw new IllegalStateException(
@@ -153,13 +139,14 @@ public final class MinecraftThermalInput implements AutoCloseable {
         ThermalDimensionEngine engine = null;
         try {
             ThermalTopologyParameters topology = new ThermalTopologyParameters(
-                    0, 64, 1_200.0D,
+                    64, 1_200.0D,
                     referenceTemperatureC, referenceTemperatureC,
-                    1.0D, 0.25D, true,
+                    1.0D, 0.25D,
                     new BuoyancyConductance.Parameters(0.25D, 4.0D, 10.0D),
                     1_024, 8);
             ThermalDimensionLimits limits = new ThermalDimensionLimits(
-                    3_200, 131_072, 65_536,
+                    3_200, MAXIMUM_PHYSICAL_SOURCES, MAXIMUM_SOURCE_NODES,
+                    131_072, 65_536,
                     262_144, 65_536, 65_536,
                     20, 1.0e-6D);
             engine = new ThermalDimensionEngine(
@@ -167,7 +154,7 @@ public final class MinecraftThermalInput implements AutoCloseable {
                     new ThermalCellArena(256),
                     profiles.signatures(), profiles.materials(), topology,
                     new FarFieldSettings(
-                            true, FAR_FIELD_CONDUCTANCE_W_PER_K,
+                            FAR_FIELD_CONDUCTANCE_W_PER_K,
                             32.0D, 16.0D),
                     limits, publication);
             mailbox = new ThermalDimensionMailbox(
@@ -206,6 +193,9 @@ public final class MinecraftThermalInput implements AutoCloseable {
             return;
         }
         physicalSources.flush(gameTick);
+        if (pages.recoverPhysicalSourceCapacity()) {
+            physicalSources.flush(gameTick);
+        }
         submitCut(gameTick);
     }
 
@@ -294,7 +284,6 @@ public final class MinecraftThermalInput implements AutoCloseable {
                 SectionPos.blockToSectionCoord(blockZ));
         ThermalPageHandle page = pages.handle(sectionKey);
         if (page == null) {
-            out.addFlag(QUERY_NO_PAGE);
             return;
         }
         int localX = SectionPos.sectionRelative(blockX);
@@ -302,7 +291,6 @@ public final class MinecraftThermalInput implements AutoCloseable {
         int localZ = SectionPos.sectionRelative(blockZ);
         PagePublication publication = page.currentPublication();
         if (publication == null) {
-            out.addFlag(QUERY_STALE_GEOMETRY);
             return;
         }
         PagePublication.Brick coverage = publication.brickAt(
@@ -311,7 +299,6 @@ public final class MinecraftThermalInput implements AutoCloseable {
         int slot = publication.resolveAirPoint(
                 localX, localY, localZ, microcell, profiles.signatures());
         if (slot == PagePublication.NO_AIR_POINT) {
-            out.addFlag(QUERY_NO_AIR_COMPONENT);
             return;
         }
         if (!queryPublication.tryRead(
@@ -319,25 +306,15 @@ public final class MinecraftThermalInput implements AutoCloseable {
                 coverage.arenaGeneration(),
                 publication.topologyGeneration(),
                 querySample)) {
-            out.addFlag(QUERY_PUBLICATION_MISS);
             return;
         }
         if (page.currentPublication() != publication) {
-            out.addFlag(QUERY_STALE_GEOMETRY);
             return;
         }
         if (sampleTick - querySample.sampleTick() > maximumAgeTicks) {
-            out.addFlag(QUERY_PUBLICATION_STALE);
             return;
         }
-        out.setAir(
-                querySample.temperatureC(),
-                querySample.mediumId(),
-                querySample.flags(),
-                querySample.sampleTick());
-        if (!querySample.topologyResolved()) {
-            out.addFlag(QUERY_DEGRADED_TOPOLOGY);
-        }
+        out.setAir(querySample.temperatureC());
     }
 
     private void sampleRadiation(
@@ -345,7 +322,6 @@ public final class MinecraftThermalInput implements AutoCloseable {
             ThermalEnvironmentSample out
     ) {
         if (radiation == null) {
-            out.addFlag(QUERY_RADIATION_UNAVAILABLE);
             return;
         }
         radiation.samplePlayer(
@@ -353,17 +329,7 @@ public final class MinecraftThermalInput implements AutoCloseable {
                 player.getId() & Integer.MAX_VALUE,
                 player.getX(), player.getY(), player.getZ(),
                 radiationSample);
-        out.setRadiation(
-                radiationSample.radiantFluxWPerM2(),
-                radiationSample.confidence());
-        if ((radiationSample.flags()
-                & RadiationService.RADIATION_BUDGET_LIMITED) != 0) {
-            out.addFlag(QUERY_RADIATION_BUDGET_LIMITED);
-        }
-        if ((radiationSample.flags()
-                & RadiationService.RADIATION_UNRESOLVED) != 0) {
-            out.addFlag(QUERY_RADIATION_UNRESOLVED);
-        }
+        out.setRadiation(radiationSample.radiantFluxWPerM2());
     }
 
     public static double gameplayPlayerEnvironment(
@@ -400,7 +366,6 @@ public final class MinecraftThermalInput implements AutoCloseable {
                 player.getX(), player.getEyeY(), player.getZ(), base);
         if (Double.compare(composed, base) != 0) {
             out.setComposedAir(composed);
-            out.addFlag(QUERY_ANALYTIC_FIELD_APPLIED);
         }
         return composed;
     }

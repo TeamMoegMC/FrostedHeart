@@ -33,9 +33,10 @@ final class TopologyPlan {
     private final BrickTopologyCompiler compiler;
     private final MaterialEdgeCompiler materialCompiler;
     private final BrickMigrationKernel migration;
-    private final ThermalTopologyParameters parameters;
     private final ThermalDimensionLimits limits;
     private final QueryPublication queries;
+    private final PreparedTopologyChange.Builder changeBuilder =
+            new PreparedTopologyChange.Builder();
 
     private final ArrayList<PageDraft> draftPool = new ArrayList<>();
     private final Long2ObjectOpenHashMap<PageDraft> draftsBySection =
@@ -53,7 +54,7 @@ final class TopologyPlan {
     private int draftCount;
     private int stagedAdmissions;
     private int stagedCellCount;
-    private TopologyView view;
+    private final TopologyView view;
 
     TopologyPlan(
             WorkerPageStore pages,
@@ -75,9 +76,10 @@ final class TopologyPlan {
         this.materialCompiler = new MaterialEdgeCompiler(arena, solver);
         this.migration = new BrickMigrationKernel(
                 arena, signatures, parameters);
-        this.parameters = parameters;
         this.limits = limits;
         this.queries = queries;
+        this.view = new TopologyView(
+                pages, signatures, draftsBySection, draftsBySlot);
     }
 
     PreparedTopologyChange prepare(ThermalInputBatch batch) {
@@ -88,7 +90,6 @@ final class TopologyPlan {
             collectGeometry(batch.geometry());
             collectEnvironment(batch.environmentUpdates());
             finalizeSignatureCuts();
-            buildView();
             compileChangedCells();
             collectFragmentDependencies();
             FragmentChanges fragmentChanges = compileFragments();
@@ -113,31 +114,35 @@ final class TopologyPlan {
             if (dirtySections.length > 1) {
                 Arrays.sort(dirtySections);
             }
-            return new PreparedTopologyChange(
-                    baseVersion,
-                    nextVersion,
-                    fragmentChanges.indexes,
-                    fragmentChanges.fragments,
-                    material.keys(),
-                    material.edges(),
-                    material.executionFragments(),
-                    material.executions(),
-                    removedReservoirs.isEmpty()
-                            ? PreparedTopologyChange.NO_INTS
-                            : removedReservoirs.toIntArray(),
-                    addedReservoirs.isEmpty()
-                            ? PreparedTopologyChange.NO_INTS
-                            : addedReservoirs.toIntArray(),
-                    pageWrites,
-                    oldSpans.isEmpty()
-                            ? PreparedTopologyChange.NO_OLD_SPANS
-                            : oldSpans.toArray(
-                                    PreparedTopologyChange.OldSpan[]::new),
-                    dirtySections,
-                    resyncTokens.isEmpty()
-                            ? ThermalCompletion.NO_RESYNC_TOKENS
-                            : resyncTokens.toArray(
-                                    ThermalPageHandle.GeometryResyncToken[]::new));
+            return changeBuilder.identity(baseVersion, nextVersion)
+                    .fragments(
+                            fragmentChanges.indexes,
+                            fragmentChanges.fragments)
+                    .material(
+                            material.keys(),
+                            material.edges(),
+                            material.executionFragments(),
+                            material.executions())
+                    .reservoirs(
+                            removedReservoirs.isEmpty()
+                                    ? PreparedTopologyChange.NO_INTS
+                                    : removedReservoirs.toIntArray(),
+                            addedReservoirs.isEmpty()
+                                    ? PreparedTopologyChange.NO_INTS
+                                    : addedReservoirs.toIntArray())
+                    .pages(
+                            pageWrites,
+                            oldSpans.isEmpty()
+                                    ? PreparedTopologyChange.NO_OLD_SPANS
+                                    : oldSpans.toArray(
+                                            PreparedTopologyChange.OldSpan[]::new))
+                    .sourceSections(dirtySections)
+                    .resyncTokens(
+                            resyncTokens.isEmpty()
+                                    ? ThermalCompletion.NO_RESYNC_TOKENS
+                                    : resyncTokens.toArray(
+                                            ThermalPageHandle.GeometryResyncToken[]::new))
+                    .build();
         } catch (RuntimeException | Error failure) {
             try {
                 discardStaging();
@@ -179,7 +184,6 @@ final class TopologyPlan {
         draftCount = 0;
         stagedAdmissions = 0;
         stagedCellCount = 0;
-        view = null;
     }
 
     private PageDraft acquireDraft(WorkerPageStore.PageState page) {
@@ -317,11 +321,6 @@ final class TopologyPlan {
         }
     }
 
-    private void buildView() {
-        view = new TopologyView(
-                pages, signatures, draftsBySection, draftsBySlot);
-    }
-
     private void compileChangedCells() {
         for (int draftIndex = 0; draftIndex < draftCount; draftIndex++) {
             PageDraft draft = draftPool.get(draftIndex);
@@ -422,8 +421,7 @@ final class TopologyPlan {
                     compiler.compileFragment(page, brick, view);
             fragments[index] = compiled.fragment();
             WorkerBrickTopology base = view.brick(page, brick);
-            WorkerBrickTopology next = base.withFragment(
-                    compiled.fragment(),
+            WorkerBrickTopology next = base.withFragmentResult(
                     base.resolved && compiled.resolved(),
                     compiled.continuationFaceMask());
             draft.replace(brick, next);
@@ -666,7 +664,14 @@ final class TopologyPlan {
                 ThermalSignatureCatalog catalog
         ) {
             int brick = brickIndex(block);
+            int within = indexWithinBrick(block);
             int[] values = brickSignatureValues[brick];
+            int previous = (signatureScratchMask & 1L << brick) == 0L
+                    ? nextSignatures.get(block)
+                    : values[within];
+            if (previous == signatureId) {
+                return;
+            }
             if ((signatureScratchMask & 1L << brick) == 0L) {
                 if (values == null) {
                     values = new int[64];
@@ -682,11 +687,6 @@ final class TopologyPlan {
                             localX | localZ << 4 | localY << 8);
                 }
                 signatureScratchMask |= 1L << brick;
-            }
-            int within = indexWithinBrick(block);
-            int previous = values[within];
-            if (previous == signatureId) {
-                return;
             }
             values[within] = signatureId;
             signatureChangedMask |= 1L << brick;
@@ -743,23 +743,6 @@ final class TopologyPlan {
                     : nextSkyExposure;
         }
 
-        PreparedTopologyChange.PageWrite retirementWrite() {
-            return new PreparedTopologyChange.PageWrite(
-                    page,
-                    false,
-                    true,
-                    page.signatures,
-                    0L,
-                    PagePublication.EMPTY,
-                    (byte) 0,
-                    0L,
-                    PreparedTopologyChange.NO_INTS,
-                    PreparedTopologyChange.NO_BRICKS,
-                    false,
-                    page.naturalTemperatureC,
-                    PreparedTopologyChange.NO_SHORTS,
-                    PreparedTopologyChange.NO_BYTES);
-        }
     }
 
     private record FragmentChanges(

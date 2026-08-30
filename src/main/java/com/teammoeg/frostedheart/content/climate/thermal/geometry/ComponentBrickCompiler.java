@@ -12,49 +12,14 @@ package com.teammoeg.frostedheart.content.climate.thermal.geometry;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
 
 /** Compiles 64 block-local air patterns into one bounded 4x4x4 component Brick. */
 public final class ComponentBrickCompiler {
-    public static final int BLOCKS_PER_AXIS = 4;
-    public static final int BLOCK_COUNT = BLOCKS_PER_AXIS * BLOCKS_PER_AXIS * BLOCKS_PER_AXIS;
+    private static final int BLOCKS_PER_AXIS = 4;
+    private static final int BLOCK_COUNT =
+            BLOCKS_PER_AXIS * BLOCKS_PER_AXIS * BLOCKS_PER_AXIS;
 
     private ComponentBrickCompiler() {
-    }
-
-    public enum Status {
-        RESOLVED,
-        CONSERVATIVE_UNSUPPORTED
-    }
-
-    public enum UnsupportedReason {
-        NONE,
-        BLOCK_INPUT_UNSUPPORTED,
-        REGION_LIMIT_EXCEEDED
-    }
-
-    public record Compilation(
-            Status status,
-            UnsupportedReason unsupportedReason,
-            int unsupportedBlockIndex,
-            Optional<CompiledBrick> brick
-    ) {
-        public Compilation {
-            if (status == null || unsupportedReason == null || brick == null) {
-                throw new IllegalArgumentException("compilation fields are required");
-            }
-            if (status == Status.RESOLVED) {
-                if (unsupportedReason != UnsupportedReason.NONE
-                        || unsupportedBlockIndex != -1
-                        || brick.isEmpty()) {
-                    throw new IllegalArgumentException("resolved compilation must contain one Brick");
-                }
-            } else if (unsupportedReason == UnsupportedReason.NONE
-                    || unsupportedBlockIndex < 0
-                    || brick.isPresent()) {
-                throw new IllegalArgumentException("unsupported compilation must identify one block");
-            }
-        }
     }
 
     /** Primitive-array correctness layout. Accessors expose scalar values only. */
@@ -169,27 +134,6 @@ public final class ComponentBrickCompiler {
         private byte[] portBlockSlot = new byte[64];
         private int[] portComponent = new int[64];
         private int[] portAperture = new int[64];
-        private UnsupportedReason unsupportedReason = UnsupportedReason.NONE;
-        private int unsupportedBlockIndex = -1;
-
-        public UnsupportedReason unsupportedReason() {
-            return unsupportedReason;
-        }
-
-        public int unsupportedBlockIndex() {
-            return unsupportedBlockIndex;
-        }
-
-        private void resetStatus() {
-            unsupportedReason = UnsupportedReason.NONE;
-            unsupportedBlockIndex = -1;
-        }
-
-        private void unsupported(UnsupportedReason reason, int blockIndex) {
-            unsupportedReason = reason;
-            unsupportedBlockIndex = blockIndex;
-        }
-
         private void ensureAtoms(int required) {
             if (required <= parent.length) {
                 return;
@@ -216,32 +160,6 @@ public final class ComponentBrickCompiler {
         }
     }
 
-    public static Compilation compile(
-            List<ConservativeAirGeometry.Resolution> blockGeometry,
-            int maximumRegionsPerBlock
-    ) {
-        if (blockGeometry == null || blockGeometry.size() != BLOCK_COUNT) {
-            throw new IllegalArgumentException("blockGeometry must contain exactly 64 entries");
-        }
-        if (maximumRegionsPerBlock <= 0) {
-            throw new IllegalArgumentException("maximumRegionsPerBlock must be positive");
-        }
-        Scratch scratch = new Scratch();
-        CompiledBrick brick = compileResolved(
-                blockGeometry.toArray(ConservativeAirGeometry.Resolution[]::new),
-                maximumRegionsPerBlock,
-                scratch);
-        return brick == null
-                ? unsupported(
-                        scratch.unsupportedReason(),
-                        scratch.unsupportedBlockIndex())
-                : new Compilation(
-                        Status.RESOLVED,
-                        UnsupportedReason.NONE,
-                        -1,
-                        Optional.of(brick));
-    }
-
     /**
      * Allocation-bounded worker path. Returns {@code null} for conservative
      * unsupported input and records the exact reason in {@code scratch}.
@@ -255,20 +173,15 @@ public final class ComponentBrickCompiler {
                 || scratch == null || maximumRegionsPerBlock <= 0) {
             throw new IllegalArgumentException("Brick compiler input is invalid");
         }
-        scratch.resetStatus();
         int[] blockAtomOffset = scratch.blockAtomOffset;
         blockAtomOffset[0] = 0;
         for (int blockIndex = 0; blockIndex < BLOCK_COUNT; blockIndex++) {
             ConservativeAirGeometry.Resolution resolution =
                     blockGeometry[blockIndex];
             if (resolution == null || resolution.status() != ConservativeAirGeometry.Status.RESOLVED) {
-                scratch.unsupported(
-                        UnsupportedReason.BLOCK_INPUT_UNSUPPORTED, blockIndex);
                 return null;
             }
             if (resolution.components().size() > maximumRegionsPerBlock) {
-                scratch.unsupported(
-                        UnsupportedReason.REGION_LIMIT_EXCEEDED, blockIndex);
                 return null;
             }
             blockAtomOffset[blockIndex + 1] =
@@ -278,8 +191,6 @@ public final class ComponentBrickCompiler {
         int atomCount = blockAtomOffset[BLOCK_COUNT];
         int maximumAtoms = Math.multiplyExact(BLOCK_COUNT, maximumRegionsPerBlock);
         if (atomCount > maximumAtoms) {
-            scratch.unsupported(
-                    UnsupportedReason.REGION_LIMIT_EXCEEDED, BLOCK_COUNT - 1);
             return null;
         }
         scratch.ensureAtoms(atomCount);
@@ -550,10 +461,6 @@ public final class ComponentBrickCompiler {
         portComponent[portCount] = compiledComponent;
         portAperture[portCount] = aperture;
         return portCount + 1;
-    }
-
-    private static Compilation unsupported(UnsupportedReason reason, int blockIndex) {
-        return new Compilation(Status.CONSERVATIVE_UNSUPPORTED, reason, blockIndex, Optional.empty());
     }
 
     private static int grownCapacity(int current, int required) {

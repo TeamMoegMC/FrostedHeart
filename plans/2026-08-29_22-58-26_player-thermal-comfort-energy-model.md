@@ -865,11 +865,13 @@ explicit power contract, for example a caller-owned sink receiving part and
 - `OxygenCandleItem`;
 - any Curios or downstream implementation found by the final caller census.
 
-Device fuel/energy extraction must state its conversion to joules or watts.
-For a device delivering `P W`, the item spends `P * physiological_seconds J`
-through the same gameplay time scale used by the body. Tooltip min/max values
-change from temperature additions to power and expected duration. No
-compatibility adapter may continue adding Celsius after the production switch.
+Device body contribution is explicit watts. Existing arbitrary fuel, durability,
+and stored-heat units remain a one-way gameplay resource rather than a second
+thermodynamic energy model: they are consumed by real elapsed seconds so
+`temperatureUpdateIntervalTicks` and physiological gameplay acceleration cannot
+change device duration. Tooltip min/max values change from temperature additions
+to power and expected duration. No compatibility adapter may continue adding
+Celsius after the production switch.
 
 ### Food And Drinks
 

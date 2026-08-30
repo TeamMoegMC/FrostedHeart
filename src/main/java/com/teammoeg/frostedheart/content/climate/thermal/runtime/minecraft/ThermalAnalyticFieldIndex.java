@@ -101,7 +101,4 @@ final class ThermalAnalyticFieldIndex {
         return count;
     }
 
-    boolean isEmpty() {
-        return fields.isEmpty();
-    }
 }

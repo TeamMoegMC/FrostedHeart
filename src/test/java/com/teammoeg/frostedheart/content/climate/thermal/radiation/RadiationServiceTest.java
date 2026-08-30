@@ -25,7 +25,7 @@ class RadiationServiceTest {
     void inverseSquareSamplingReusesRevisionWitnessesWithoutTouchingSources() {
         TestSources sources = new TestSources();
         TestTracer tracer = new TestTracer();
-        ThermalMemoryBudget budget = new ThermalMemoryBudget(1_000_000L, 0L);
+        ThermalMemoryBudget budget = new ThermalMemoryBudget(1_000_000L);
         RadiationService service = RadiationService.tryCreate(
                 parameters(8, 8, 24), sources, tracer, budget);
         assertNotNull(service);
@@ -60,7 +60,7 @@ class RadiationServiceTest {
     void sectionRevisionChangeRetracesAndAppliesNewOcclusion() {
         TestSources sources = new TestSources();
         TestTracer tracer = new TestTracer();
-        ThermalMemoryBudget budget = new ThermalMemoryBudget(1_000_000L, 0L);
+        ThermalMemoryBudget budget = new ThermalMemoryBudget(1_000_000L);
         try (RadiationService service = RadiationService.tryCreate(
                 parameters(8, 8, 24), sources, tracer, budget)) {
             assertNotNull(service);
@@ -79,10 +79,10 @@ class RadiationServiceTest {
     }
 
     @Test
-    void candidateAndRayCapsReturnBoundedLowerConfidenceResult() {
+    void candidateAndRayCapsBoundTheWork() {
         TestSources sources = new TestSources();
         TestTracer tracer = new TestTracer();
-        ThermalMemoryBudget budget = new ThermalMemoryBudget(1_000_000L, 0L);
+        ThermalMemoryBudget budget = new ThermalMemoryBudget(1_000_000L);
         try (RadiationService service = RadiationService.tryCreate(
                 parameters(1, 8, 1), sources, tracer, budget)) {
             assertNotNull(service);
@@ -94,8 +94,7 @@ class RadiationServiceTest {
             service.samplePlayer(3L, 1, 4.5D, 0.0D, 0.5D, sample);
 
             assertEquals(1, tracer.traces);
-            assertTrue((sample.flags() & RadiationService.RADIATION_BUDGET_LIMITED) != 0);
-            assertEquals(0.5F, sample.confidence());
+            assertTrue(sample.radiantFluxWPerM2() >= 0.0D);
         }
     }
 

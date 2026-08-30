@@ -18,8 +18,6 @@ import java.util.Objects;
 
 /** Bounded main-thread direct-radiation query and receiver witness cache. */
 public final class RadiationService implements AutoCloseable {
-    public static final int RADIATION_BUDGET_LIMITED = 1;
-    public static final int RADIATION_UNRESOLVED = 1 << 1;
     public static final long NO_SECTION_REVISION = Long.MIN_VALUE;
     private static final double FOUR_PI = 4.0D * Math.PI;
     private static final TraceStatus[] TRACE_STATUSES = TraceStatus.values();
@@ -85,7 +83,6 @@ public final class RadiationService implements AutoCloseable {
         Objects.requireNonNull(tracer, "tracer");
         Objects.requireNonNull(dimensionBudget, "dimensionBudget");
         ThermalMemoryBudget.Reservation reservation = dimensionBudget.tryReserve(
-                ThermalMemoryBudget.AllocationClass.OPTIONAL,
                 projectedMaximumBytes(parameters));
         return reservation == null ? null : new RadiationService(
                 parameters, sources, tracer, reservation);
@@ -141,15 +138,12 @@ public final class RadiationService implements AutoCloseable {
         discover(receiverX, receiverFeetY, receiverZ);
         double totalFlux = 0.0D;
         int rays = 0;
-        boolean rayLimited = false;
-        boolean unresolved = false;
         rayLoop:
         for (int candidate = 0;
              candidate < candidateCount;
              candidate++) {
             for (int ray = 0; ray < 3; ray++) {
                 if (rays++ >= parameters.maximumRaysPerReceiver()) {
-                    rayLimited = true;
                     break rayLoop;
                 }
                 double targetY = receiverFeetY
@@ -198,24 +192,10 @@ public final class RadiationService implements AutoCloseable {
                                     candidatePower[candidate],
                                     candidateDirectionalBound[candidate],
                                     distanceSquared) / 3.0D);
-                } else if (status == TraceStatus.UNRESOLVED) {
-                    unresolved = true;
-                } else if (status == TraceStatus.BUDGET_LIMITED) {
-                    rayLimited = true;
                 }
             }
         }
-        int flags = 0;
-        float confidence = 1.0F;
-        if (candidateLimited || rayLimited) {
-            flags |= RADIATION_BUDGET_LIMITED;
-            confidence *= 0.5F;
-        }
-        if (unresolved) {
-            flags |= RADIATION_UNRESOLVED;
-            confidence *= 0.5F;
-        }
-        out.finish(totalFlux, confidence, flags);
+        out.finish(totalFlux);
         sampleSequence = Math.incrementExact(sampleSequence);
     }
 
@@ -677,23 +657,15 @@ public final class RadiationService implements AutoCloseable {
 
     public static final class MutableSample {
         private double radiantFluxWPerM2;
-        private float confidence;
-        private int flags;
 
         public double radiantFluxWPerM2() { return radiantFluxWPerM2; }
-        public float confidence() { return confidence; }
-        public int flags() { return flags; }
 
         private void clear() {
             radiantFluxWPerM2 = 0.0D;
-            confidence = 0.0F;
-            flags = 0;
         }
 
-        private void finish(double flux, float confidence, int flags) {
+        private void finish(double flux) {
             radiantFluxWPerM2 = flux;
-            this.confidence = confidence;
-            this.flags = flags;
         }
     }
 

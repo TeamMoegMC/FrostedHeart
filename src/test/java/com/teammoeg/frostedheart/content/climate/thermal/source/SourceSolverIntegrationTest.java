@@ -5,7 +5,6 @@ import com.teammoeg.frostedheart.content.climate.thermal.ThermalTestFixtures;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.ThermalCellArena;
 import com.teammoeg.frostedheart.content.climate.thermal.solver.BuoyancyConductance;
 import com.teammoeg.frostedheart.content.climate.thermal.solver.PhaseTransitionRuntime;
-import com.teammoeg.frostedheart.content.climate.thermal.solver.ThermalExchangeKernel;
 import com.teammoeg.frostedheart.content.climate.thermal.solver.ThermalFragment;
 import com.teammoeg.frostedheart.content.climate.thermal.solver.ThermalSolver;
 import org.junit.jupiter.api.Test;
@@ -26,8 +25,8 @@ class SourceSolverIntegrationTest {
                 arena, 1, 1, 4, 0, 0,
                 100.0D, 0.0D, 0.0D).cellSpan().firstSlot();
         ThermalSourceLedger sources = new ThermalSourceLedger(
-                0L, 1, 1,
-                new NodePowerAccumulatorArena(1), arena);
+                0L, 1, 1, 8,
+                new NodePowerAccumulatorArena(1, 8), arena);
         ThermalSourceBatch.Builder sourceEvents = new ThermalSourceBatch.Builder(0L);
         sourceEvents.addRegister(
                 1L, 1, ThermalSourceMode.POWER_SOURCE,
@@ -41,18 +40,13 @@ class SourceSolverIntegrationTest {
                 (events, index, ledger) -> { });
 
         ThermalSolver solver = solver(arena);
-        double coefficient = ThermalExchangeKernel.compilePairCoefficientJPerK(
-                100.0D, 100.0D, 10.0D, 1.0D);
         solver.installFragment(0, new ThermalFragment(
                 1L,
                 new ThermalFragment.AirPairs(
                         new int[]{hot}, new int[]{cold},
-                        new int[]{1}, new int[]{1},
-                        new double[]{10.0D}, new double[]{coefficient},
-                        new double[]{2.0D}, new double[]{2.0D},
-                        new byte[]{0}),
+                        new double[]{10.0D},
+                        new double[]{2.0D}, new double[]{2.0D}),
                 ThermalFragment.MaterialContributions.EMPTY,
-                ThermalFragment.FixedBoundaries.EMPTY,
                 ThermalFragment.PhaseContacts.EMPTY,
                 ThermalFragment.FarBoundaries.EMPTY));
         solver.finishTopologyCommit(1L);

@@ -11,24 +11,24 @@
 package com.teammoeg.frostedheart.content.climate.thermal.source.minecraft;
 
 import com.teammoeg.frostedheart.content.climate.thermal.geometry.ConservativeAirGeometry;
-import com.teammoeg.frostedheart.content.climate.thermal.source.SourceChannel;
 
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 
 /** Frozen physical defaults used by the Minecraft thermal runtime. */
-public record MinecraftPhysicalSourceProfile(
-        int profileId,
-        double ratedPowerW,
-        MissingPortPolicy missingPortPolicy,
-        Port[] ports,
-        double radiationOffsetX,
-        double radiationOffsetY,
-        double radiationOffsetZ,
-        double radiationDirectionalUpperBound
-) {
+public final class MinecraftPhysicalSourceProfile {
     private static final double SHARE_TOLERANCE = 1.0e-12D;
+
+    private final int profileId;
+    private final double ratedPowerW;
+    private final MissingPortPolicy missingPortPolicy;
+    private final Port[] ports;
+    private final double radiativePowerShare;
+    private final double radiationOffsetX;
+    private final double radiationOffsetY;
+    private final double radiationOffsetZ;
+    private final double radiationDirectionalUpperBound;
 
     public static final MinecraftPhysicalSourceProfile CAMPFIRE =
             new MinecraftPhysicalSourceProfile(
@@ -37,10 +37,10 @@ public record MinecraftPhysicalSourceProfile(
                     MissingPortPolicy.EXPLICIT_LOSS,
                     new Port[]{
                             Port.airFace(
-                                    0, SourceChannel.CONVECTION, 0.8D,
+                                    0, 0.8D,
                                     0, 1, 0,
                                     ConservativeAirGeometry.Face.NEGATIVE_Y),
-                            Port.declaredLoss(1, SourceChannel.RADIATION, 0.2D)
+                            Port.radiationLoss(1, 0.2D)
                     },
                     0.5D, 0.75D, 0.5D, 1.0D);
 
@@ -51,11 +51,11 @@ public record MinecraftPhysicalSourceProfile(
                     MissingPortPolicy.INTERNAL_HEAT,
                     new Port[]{
                             Port.airFace(
-                                    0, SourceChannel.CONVECTION, 0.7D,
+                                    0, 0.7D,
                                     0, 0, 0,
                                     ConservativeAirGeometry.Face.NEGATIVE_Y),
-                            Port.internalHeat(1, SourceChannel.CONTACT, 0.1D),
-                            Port.declaredLoss(2, SourceChannel.RADIATION, 0.2D)
+                            Port.internalHeat(1, 0.1D),
+                            Port.radiationLoss(2, 0.2D)
                     },
                     0.5D, 0.5D, 0.5D, 1.0D);
 
@@ -66,10 +66,10 @@ public record MinecraftPhysicalSourceProfile(
                     MissingPortPolicy.EXPLICIT_LOSS,
                     new Port[]{
                             Port.airFace(
-                                    0, SourceChannel.CONVECTION, 0.9D,
+                                    0, 0.9D,
                                     0, 0, 0,
                                     ConservativeAirGeometry.Face.NEGATIVE_Y),
-                            Port.declaredLoss(1, SourceChannel.RADIATION, 0.1D)
+                            Port.radiationLoss(1, 0.1D)
                     },
                     0.5D, 0.5D, 0.5D, 1.0D);
 
@@ -80,11 +80,11 @@ public record MinecraftPhysicalSourceProfile(
                     MissingPortPolicy.INTERNAL_HEAT,
                     new Port[]{
                             Port.airFace(
-                                    0, SourceChannel.CONVECTION, 0.8D,
+                                    0, 0.8D,
                                     0, 0, 0,
                                     ConservativeAirGeometry.Face.NEGATIVE_Y),
-                            Port.internalHeat(1, SourceChannel.CONTACT, 0.1D),
-                            Port.declaredLoss(2, SourceChannel.RADIATION, 0.1D)
+                            Port.internalHeat(1, 0.1D),
+                            Port.radiationLoss(2, 0.1D)
                     },
                     0.5D, 0.5D, 0.5D, 1.0D);
 
@@ -99,7 +99,16 @@ public record MinecraftPhysicalSourceProfile(
         };
     }
 
-    public MinecraftPhysicalSourceProfile {
+    public MinecraftPhysicalSourceProfile(
+            int profileId,
+            double ratedPowerW,
+            MissingPortPolicy missingPortPolicy,
+            Port[] ports,
+            double radiationOffsetX,
+            double radiationOffsetY,
+            double radiationOffsetZ,
+            double radiationDirectionalUpperBound
+    ) {
         if (profileId < 0) {
             throw new IllegalArgumentException("profileId must be non-negative");
         }
@@ -123,21 +132,40 @@ public record MinecraftPhysicalSourceProfile(
         }
         Set<Integer> portIds = new HashSet<>();
         double share = 0.0D;
+        double radiationShare = 0.0D;
         for (Port port : ports) {
             Objects.requireNonNull(port, "ports contains null");
             if (!portIds.add(port.portId())) {
                 throw new IllegalArgumentException("duplicate portId: " + port.portId());
             }
             share += port.powerShare();
+            if (port.kind() == PortKind.RADIATION_LOSS) {
+                radiationShare += port.powerShare();
+            }
         }
         if (!Double.isFinite(share) || Math.abs(share - 1.0D) > SHARE_TOLERANCE) {
             throw new IllegalArgumentException("physical source port shares must sum to one");
         }
+        this.profileId = profileId;
+        this.ratedPowerW = ratedPowerW;
+        this.missingPortPolicy = missingPortPolicy;
+        this.ports = ports;
+        this.radiativePowerShare = radiationShare;
+        this.radiationOffsetX = radiationOffsetX;
+        this.radiationOffsetY = radiationOffsetY;
+        this.radiationOffsetZ = radiationOffsetZ;
+        this.radiationDirectionalUpperBound =
+                radiationDirectionalUpperBound;
     }
 
-    @Override
-    public Port[] ports() {
-        return ports.clone();
+    public int profileId() { return profileId; }
+    public double ratedPowerW() { return ratedPowerW; }
+    public MissingPortPolicy missingPortPolicy() { return missingPortPolicy; }
+    public double radiationOffsetX() { return radiationOffsetX; }
+    public double radiationOffsetY() { return radiationOffsetY; }
+    public double radiationOffsetZ() { return radiationOffsetZ; }
+    public double radiationDirectionalUpperBound() {
+        return radiationDirectionalUpperBound;
     }
 
     /** Safe indexed access for runtime code that must not clone the port table. */
@@ -165,17 +193,10 @@ public record MinecraftPhysicalSourceProfile(
         if (!Double.isFinite(totalPowerW) || totalPowerW < 0.0D) {
             throw new IllegalArgumentException("totalPowerW must be finite and non-negative");
         }
-        double share = 0.0D;
-        for (Port port : ports) {
-            if (port.channel() == SourceChannel.RADIATION) {
-                share += port.powerShare();
-            }
-        }
-        return totalPowerW * share;
+        return totalPowerW * radiativePowerShare;
     }
 
     public enum MissingPortPolicy {
-        REDISTRIBUTE_TO_VALID_PORTS,
         INTERNAL_HEAT,
         EXPLICIT_LOSS
     }
@@ -183,12 +204,11 @@ public record MinecraftPhysicalSourceProfile(
     public enum PortKind {
         AIR_FACE,
         INTERNAL_HEAT,
-        DECLARED_LOSS
+        RADIATION_LOSS
     }
 
     public record Port(
             int portId,
-            SourceChannel channel,
             double powerShare,
             PortKind kind,
             int offsetX,
@@ -200,7 +220,6 @@ public record MinecraftPhysicalSourceProfile(
             if (portId < 0) {
                 throw new IllegalArgumentException("portId must be non-negative");
             }
-            Objects.requireNonNull(channel, "channel");
             if (!Double.isFinite(powerShare) || powerShare < 0.0D || powerShare > 1.0D) {
                 throw new IllegalArgumentException("powerShare must be finite and in [0, 1]");
             }
@@ -216,7 +235,6 @@ public record MinecraftPhysicalSourceProfile(
 
         public static Port airFace(
                 int portId,
-                SourceChannel channel,
                 double powerShare,
                 int offsetX,
                 int offsetY,
@@ -224,27 +242,25 @@ public record MinecraftPhysicalSourceProfile(
                 ConservativeAirGeometry.Face targetFace
         ) {
             return new Port(
-                    portId, channel, powerShare, PortKind.AIR_FACE,
+                    portId, powerShare, PortKind.AIR_FACE,
                     offsetX, offsetY, offsetZ, targetFace);
         }
 
         public static Port internalHeat(
                 int portId,
-                SourceChannel channel,
                 double powerShare
         ) {
             return new Port(
-                    portId, channel, powerShare, PortKind.INTERNAL_HEAT,
+                    portId, powerShare, PortKind.INTERNAL_HEAT,
                     0, 0, 0, null);
         }
 
-        public static Port declaredLoss(
+        public static Port radiationLoss(
                 int portId,
-                SourceChannel channel,
                 double powerShare
         ) {
             return new Port(
-                    portId, channel, powerShare, PortKind.DECLARED_LOSS,
+                    portId, powerShare, PortKind.RADIATION_LOSS,
                     0, 0, 0, null);
         }
     }

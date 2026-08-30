@@ -42,14 +42,14 @@ validated against the worker cursor.
 
 ## Materials And Phase
 
-Material surface/deep poles and phase reservoirs are compiled only for affected
+Material surface poles and phase reservoirs are compiled only for affected
 Bricks. `MaterialEdgeCompiler` groups raw material contributions by packed cell
 edge and creates one deterministic execution entry for each unique edge. A
 phase reservoir stores latent energy and candidate microcells; a phase request
 is ACKed by the main thread only when Page lifecycle, profile, request sequence,
 and current world state still match.
 
-Natural material boundaries use the Page's captured natural temperature. Air
+New material poles initialize from the Page's captured natural temperature. Air
 and material transfer uses the fixed one-second coefficient compiled during
 topology preparation; phase and buoyant paths use the generic inverse-capacity
 kernel.
@@ -73,6 +73,9 @@ source ID absent. Chunk unload settles and unloads sources in that origin chunk;
 target Page references are released by the source index.
 
 Routine work is proportional to changed sources and affected target buckets.
-There is no fixed global source-count cap. External JFR measures source event,
-binding, and accumulator costs; production source classes contain no counters or
-test probes.
+Each dimension admits at most `65,536` physical sources and `131,072` retained
+source-node generations. A source refused at the physical-source cap cannot
+enter the worker batch; after capacity is released, already-scanned loaded
+chunks are revisited in bounded 20-tick slices so a still-loaded campfire is not
+permanently lost. External JFR measures source event, binding, and accumulator
+costs; production source classes contain no counters or test probes.

@@ -28,10 +28,6 @@ public final class ThermalExchangeKernel {
         private double enthalpyAJ;
         private double enthalpyBJ;
 
-        public Status status() {
-            return status;
-        }
-
         public boolean applied() {
             return status == Status.APPLIED;
         }
@@ -62,10 +58,6 @@ public final class ThermalExchangeKernel {
         private double enthalpyJ;
         private double energyFromBoundaryJ;
 
-        public Status status() {
-            return status;
-        }
-
         public boolean applied() {
             return status == Status.APPLIED;
         }
@@ -88,27 +80,6 @@ public final class ThermalExchangeKernel {
             energyFromBoundaryJ = nextEnergyFromBoundary;
         }
 
-    }
-
-    public static Status exchangePairInto(
-            double enthalpyAJ,
-            double capacityAJPerK,
-            double enthalpyBJ,
-            double capacityBJPerK,
-            double conductanceWPerK,
-            double dtSeconds,
-            MutablePairResult result
-    ) {
-        return exchangePairWithInverseInto(
-                enthalpyAJ,
-                capacityAJPerK,
-                1.0D / capacityAJPerK,
-                enthalpyBJ,
-                capacityBJPerK,
-                1.0D / capacityBJPerK,
-                conductanceWPerK,
-                dtSeconds,
-                result);
     }
 
     /** Generic pair path using arena-owned inverse capacities. */

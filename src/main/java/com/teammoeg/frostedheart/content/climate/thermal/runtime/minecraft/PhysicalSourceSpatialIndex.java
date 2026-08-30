@@ -51,6 +51,7 @@ final class PhysicalSourceSpatialIndex
     private final Long2ObjectOpenHashMap<IntOpenHashSet> sourcesByTargetSection =
             new Long2ObjectOpenHashMap<>();
     private final IntArrayList dirtyOrder = new IntArrayList();
+    private final int maximumSources;
 
     private long[] sourceIds;
     private int[] lifecycleGenerations;
@@ -69,19 +70,23 @@ final class PhysicalSourceSpatialIndex
     private int freeHead = NO_SLOT;
     private int nextLifecycleGeneration;
     private long nextRadiationRevision;
+    private boolean capacityRecoveryPending;
     private boolean closed;
 
     PhysicalSourceSpatialIndex(
             DimensionInputAccumulator accumulator,
             MinecraftPageManager pages,
-            int initialCapacity
+            int initialCapacity,
+            int maximumSources
     ) {
-        if (initialCapacity < 0) {
+        if (initialCapacity < 0 || maximumSources <= 0
+                || initialCapacity > maximumSources) {
             throw new IllegalArgumentException(
                     "source index capacity is negative");
         }
         this.accumulator = accumulator;
         this.pages = pages;
+        this.maximumSources = maximumSources;
         slotsById.defaultReturnValue(NO_SLOT);
         allocate(Math.max(1, initialCapacity));
     }
@@ -270,6 +275,22 @@ final class PhysicalSourceSpatialIndex
         dirtyOrder.clear();
     }
 
+    boolean capacityRecoveryPending() {
+        return capacityRecoveryPending;
+    }
+
+    boolean hasAvailableCapacity() {
+        return freeHead != NO_SLOT || highWaterMark < maximumSources;
+    }
+
+    void beginCapacityRecoveryPass() {
+        capacityRecoveryPending = false;
+    }
+
+    void continueCapacityRecoveryPass() {
+        capacityRecoveryPending = true;
+    }
+
     BlockPos nearestEnabledGenerator(
             BlockPos position,
             double maximumDistanceSqr
@@ -420,6 +441,10 @@ final class PhysicalSourceSpatialIndex
         boolean radiationChanged = false;
         if (slot == NO_SLOT) {
             slot = allocateSlot();
+            if (slot == NO_SLOT) {
+                capacityRecoveryPending = true;
+                return;
+            }
             sourceIds[slot] = sourceId;
             lifecycleGenerations[slot] = nextGeneration();
             anchorX[slot] = targetX;
@@ -604,6 +629,9 @@ final class PhysicalSourceSpatialIndex
             nextFree[slot] = NO_SLOT;
             return slot;
         }
+        if (highWaterMark >= maximumSources) {
+            return NO_SLOT;
+        }
         ensureCapacity(highWaterMark + 1);
         return highWaterMark++;
     }
@@ -650,7 +678,9 @@ final class PhysicalSourceSpatialIndex
             return;
         }
         int old = sourceIds.length;
-        int capacity = Math.max(required, old + Math.max(8, old >>> 1));
+        int capacity = Math.min(
+                maximumSources,
+                Math.max(required, old + Math.max(8, old >>> 1)));
         sourceIds = Arrays.copyOf(sourceIds, capacity);
         lifecycleGenerations = Arrays.copyOf(
                 lifecycleGenerations, capacity);

@@ -12,7 +12,6 @@ final class PrimitiveTopologyScratch {
         private long[] first = new long[16];
         private long[] second = new long[16];
         private double[] value = new double[16];
-        private byte[] flag = new byte[16];
         private int[] tableEntry = new int[32];
         private int[] tableGeneration = new int[32];
         private int generation = 1;
@@ -26,13 +25,10 @@ final class PrimitiveTopologyScratch {
             }
         }
 
-        int add(long left, long right, double delta, boolean marked) {
+        int add(long left, long right, double delta) {
             int index = find(left, right);
             if (index >= 0) {
                 value[index] += delta;
-                if (marked) {
-                    flag[index] = 1;
-                }
                 return index;
             }
             ensureEntryCapacity(size + 1);
@@ -43,7 +39,6 @@ final class PrimitiveTopologyScratch {
             first[index] = left;
             second[index] = right;
             value[index] = delta;
-            flag[index] = marked ? (byte) 1 : 0;
             insert(index);
             return index;
         }
@@ -52,7 +47,6 @@ final class PrimitiveTopologyScratch {
         long first(int index) { return first[index]; }
         long second(int index) { return second[index]; }
         double value(int index) { return value[index]; }
-        boolean flag(int index) { return flag[index] != 0; }
 
         private int find(long left, long right) {
             int mask = tableEntry.length - 1;
@@ -85,7 +79,6 @@ final class PrimitiveTopologyScratch {
             first = Arrays.copyOf(first, capacity);
             second = Arrays.copyOf(second, capacity);
             value = Arrays.copyOf(value, capacity);
-            flag = Arrays.copyOf(flag, capacity);
         }
 
         private void rehash(int capacity) {

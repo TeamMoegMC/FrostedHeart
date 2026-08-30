@@ -19,7 +19,7 @@ class NodePowerAccumulatorArenaTest {
                 cells, 0, 3, 0, 0, 0,
                 100.0D, 0.0D, 0.0D).cellSpan().firstSlot();
         NodePowerAccumulatorArena accumulators =
-                new NodePowerAccumulatorArena(1);
+                new NodePowerAccumulatorArena(1, 8);
         accumulators.retainBinding(node, 3, 0L);
         int slot = accumulators.ensureNode(node, 3, 0L);
         accumulators.changePowerAt(slot, 0L, 20.0D);
@@ -38,7 +38,7 @@ class NodePowerAccumulatorArenaTest {
     @Test
     void idleSlotsAreRecycledAcrossNodeGenerations() {
         NodePowerAccumulatorArena accumulators =
-                new NodePowerAccumulatorArena(1);
+                new NodePowerAccumulatorArena(1, 8);
         int first = accumulators.ensureNode(0L, 1, 0L);
         accumulators.retainBinding(0L, 1, 0L);
         accumulators.releaseBinding(0L, 1, 0L);
@@ -55,7 +55,7 @@ class NodePowerAccumulatorArenaTest {
                 cells, 0, 1, 0, 0, 0,
                 100.0D, 0.0D, 0.0D).cellSpan().firstSlot();
         NodePowerAccumulatorArena accumulators =
-                new NodePowerAccumulatorArena(1);
+                new NodePowerAccumulatorArena(1, 8);
         int slot = accumulators.ensureNode(node, 1, 0L);
         accumulators.addImpulseAt(slot, 5L, 12.5D);
 

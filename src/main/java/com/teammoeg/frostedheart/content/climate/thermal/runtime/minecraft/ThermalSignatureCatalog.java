@@ -2,13 +2,10 @@
 package com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft;
 
 import com.teammoeg.frostedheart.content.climate.thermal.geometry.ConservativeAirGeometry;
-import com.teammoeg.frostedheart.content.climate.thermal.profile.LocalAirRegionPattern;
 import com.teammoeg.frostedheart.content.climate.thermal.profile.ResolvedThermalSignature;
 import com.teammoeg.frostedheart.content.climate.thermal.profile.ThermalSignatureRegistry;
 
-import java.util.ArrayList;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 
 /** Engine-generation-local primitive lookup for immutable signature topology. */
@@ -37,12 +34,12 @@ final class ThermalSignatureCatalog {
                 throw new IllegalStateException(
                         "signature registry lost a dense ID");
             }
-            ConservativeAirGeometry.Resolution geometry = convert(signature);
+            ConservativeAirGeometry.Resolution geometry =
+                    signature.airGeometry();
             signatures[id] = signature;
             geometries[id] = geometry;
             topologyClass[id] = classes.computeIfAbsent(
                     new TopologyIdentity(
-                            signature.mediumId(),
                             signature.materialProfileId(),
                             signature.materialContactPatternId(),
                             geometry),
@@ -81,35 +78,7 @@ final class ThermalSignatureCatalog {
                 && topologyClass[first] == topologyClass[second];
     }
 
-    private static ConservativeAirGeometry.Resolution convert(
-            ResolvedThermalSignature signature
-    ) {
-        List<ConservativeAirGeometry.AirComponent> components =
-                new ArrayList<>(signature.airRegions().size());
-        long air = 0L;
-        for (LocalAirRegionPattern region : signature.airRegions()) {
-            components.add(new ConservativeAirGeometry.AirComponent(
-                    region.localRegionId(),
-                    region.provenAirMicrocellMask(),
-                    region.microcellCount(),
-                    region.negativeXMask(),
-                    region.positiveXMask(),
-                    region.negativeYMask(),
-                    region.positiveYMask(),
-                    region.negativeZMask(),
-                    region.positiveZMask()));
-            air |= region.provenAirMicrocellMask();
-        }
-        return new ConservativeAirGeometry.Resolution(
-                ConservativeAirGeometry.Status.RESOLVED,
-                ConservativeAirGeometry.UnsupportedReason.NONE,
-                components,
-                ~air,
-                components.size());
-    }
-
     private record TopologyIdentity(
-            int mediumId,
             int materialProfileId,
             int materialContactPatternId,
             ConservativeAirGeometry.Resolution geometry

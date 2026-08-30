@@ -21,18 +21,17 @@ import java.util.Objects;
  * to one dimension worker. The producer must not retain or mutate transferred
  * full-Page signature arrays.
  */
-public final class ResolvedGeometryBatch {
-    public static final int BLOCKS_PER_PAGE = 16 * 16 * 16;
+final class ResolvedGeometryBatch {
+    private static final int BLOCKS_PER_PAGE = 16 * 16 * 16;
     private static final byte[] NO_BYTES = new byte[0];
     private static final long[] NO_LONGS = new long[0];
     private static final int[] NO_INTS = new int[0];
     private static final ThermalPageHandle[] NO_PAGES = new ThermalPageHandle[0];
     private static final PageSignatures[] NO_PAGE_SIGNATURES =
             new PageSignatures[0];
-    public static final ResolvedGeometryBatch EMPTY = new ResolvedGeometryBatch(
+    static final ResolvedGeometryBatch EMPTY = new ResolvedGeometryBatch(
             NO_BYTES,
             NO_PAGES,
-            NO_LONGS,
             NO_LONGS,
             NO_INTS,
             NO_INTS,
@@ -43,7 +42,7 @@ public final class ResolvedGeometryBatch {
     private static final ThermalPageHandle.GeometryResyncReason[] RESYNC_REASONS =
             ThermalPageHandle.GeometryResyncReason.values();
 
-    public enum Kind {
+    enum Kind {
         RESOLVED_CENTER,
         FULL_RESYNC_REQUIRED
     }
@@ -51,7 +50,6 @@ public final class ResolvedGeometryBatch {
     private final byte[] kinds;
     private final ThermalPageHandle[] pages;
     private final long[] geometryRevisions;
-    private final long[] effectiveTicks;
     private final int[] blockIndices;
     private final int[] signatureIds;
     private final byte[] resyncReasons;
@@ -61,7 +59,6 @@ public final class ResolvedGeometryBatch {
             byte[] kinds,
             ThermalPageHandle[] pages,
             long[] geometryRevisions,
-            long[] effectiveTicks,
             int[] blockIndices,
             int[] signatureIds,
             byte[] resyncReasons,
@@ -70,62 +67,56 @@ public final class ResolvedGeometryBatch {
         this.kinds = kinds;
         this.pages = pages;
         this.geometryRevisions = geometryRevisions;
-        this.effectiveTicks = effectiveTicks;
         this.blockIndices = blockIndices;
         this.signatureIds = signatureIds;
         this.resyncReasons = resyncReasons;
         this.fullPageSignatures = fullPageSignatures;
     }
 
-    public int size() {
+    int size() {
         return kinds.length;
     }
 
-    public boolean isEmpty() {
+    boolean isEmpty() {
         return kinds.length == 0;
     }
 
-    public Kind kind(int index) {
+    Kind kind(int index) {
         return KINDS[Byte.toUnsignedInt(kinds[index])];
     }
 
-    public ThermalPageHandle page(int index) {
+    ThermalPageHandle page(int index) {
         return pages[index];
     }
 
-    public long geometryRevision(int index) {
+    long geometryRevision(int index) {
         return geometryRevisions[index];
     }
 
-    public long effectiveTick(int index) {
-        return effectiveTicks[index];
-    }
-
-    public int blockIndex(int index) {
+    int blockIndex(int index) {
         return blockIndices[index];
     }
 
-    public int signatureId(int index) {
+    int signatureId(int index) {
         return signatureIds[index];
     }
 
-    public ThermalPageHandle.GeometryResyncReason geometryResyncReason(int index) {
+    ThermalPageHandle.GeometryResyncReason geometryResyncReason(int index) {
         int ordinal = resyncReasons[index];
         return ordinal < 0 ? null : RESYNC_REASONS[Byte.toUnsignedInt((byte) ordinal)];
     }
 
     /** Returns the transferred storage. Worker code must not expose it further. */
-    public PageSignatures fullPageSignatures(int index) {
+    PageSignatures fullPageSignatures(int index) {
         return fullPageSignatures[index];
     }
 
-    public static final class Builder {
+    static final class Builder {
         private static final int INITIAL_CAPACITY = 16;
 
         private byte[] kinds = new byte[INITIAL_CAPACITY];
         private ThermalPageHandle[] pages = new ThermalPageHandle[INITIAL_CAPACITY];
         private long[] geometryRevisions = new long[INITIAL_CAPACITY];
-        private long[] effectiveTicks = new long[INITIAL_CAPACITY];
         private int[] blockIndices = new int[INITIAL_CAPACITY];
         private int[] signatureIds = new int[INITIAL_CAPACITY];
         private byte[] resyncReasons = new byte[INITIAL_CAPACITY];
@@ -133,10 +124,9 @@ public final class ResolvedGeometryBatch {
                 new PageSignatures[INITIAL_CAPACITY];
         private int size;
 
-        public void addResolvedCenter(
+        void addResolvedCenter(
                 ThermalPageHandle page,
                 long geometryRevision,
-                long effectiveTick,
                 int blockIndex,
                 int signatureId
         ) {
@@ -148,17 +138,15 @@ public final class ResolvedGeometryBatch {
                     Kind.RESOLVED_CENTER,
                     page,
                     geometryRevision,
-                    effectiveTick,
                     blockIndex,
                     signatureId,
                     -1,
                     null);
         }
 
-        public void addFullResync(
+        void addFullResync(
                 ThermalPageHandle page,
                 long geometryRevision,
-                long effectiveTick,
                 ThermalPageHandle.GeometryResyncReason reason,
                 PageSignatures pageSignatures
         ) {
@@ -168,14 +156,13 @@ public final class ResolvedGeometryBatch {
                     Kind.FULL_RESYNC_REQUIRED,
                     page,
                     geometryRevision,
-                    effectiveTick,
                     -1,
                     -1,
                     reason.ordinal(),
                     pageSignatures);
         }
 
-        public ResolvedGeometryBatch buildAndReset() {
+        ResolvedGeometryBatch buildAndReset() {
             if (size == 0) {
                 return EMPTY;
             }
@@ -183,7 +170,6 @@ public final class ResolvedGeometryBatch {
                     Arrays.copyOf(kinds, size),
                     Arrays.copyOf(pages, size),
                     Arrays.copyOf(geometryRevisions, size),
-                    Arrays.copyOf(effectiveTicks, size),
                     Arrays.copyOf(blockIndices, size),
                     Arrays.copyOf(signatureIds, size),
                     Arrays.copyOf(resyncReasons, size),
@@ -198,7 +184,6 @@ public final class ResolvedGeometryBatch {
                 Kind kind,
                 ThermalPageHandle page,
                 long geometryRevision,
-                long effectiveTick,
                 int blockIndex,
                 int signatureId,
                 int resyncReason,
@@ -207,16 +192,14 @@ public final class ResolvedGeometryBatch {
             Objects.requireNonNull(kind, "kind");
             Objects.requireNonNull(page, "page");
             if (page.lifecycleGeneration() < 0L
-                    || geometryRevision <= 0L
-                    || effectiveTick < 0L) {
+                    || geometryRevision <= 0L) {
                 throw new IllegalArgumentException(
-                        "generation/tick must be non-negative and revision positive");
+                        "generation must be non-negative and revision positive");
             }
             ensureCapacity(size + 1);
             kinds[size] = (byte) kind.ordinal();
             pages[size] = page;
             geometryRevisions[size] = geometryRevision;
-            effectiveTicks[size] = effectiveTick;
             blockIndices[size] = blockIndex;
             signatureIds[size] = signatureId;
             resyncReasons[size] = (byte) resyncReason;
@@ -232,7 +215,6 @@ public final class ResolvedGeometryBatch {
             kinds = Arrays.copyOf(kinds, capacity);
             pages = Arrays.copyOf(pages, capacity);
             geometryRevisions = Arrays.copyOf(geometryRevisions, capacity);
-            effectiveTicks = Arrays.copyOf(effectiveTicks, capacity);
             blockIndices = Arrays.copyOf(blockIndices, capacity);
             signatureIds = Arrays.copyOf(signatureIds, capacity);
             resyncReasons = Arrays.copyOf(resyncReasons, capacity);

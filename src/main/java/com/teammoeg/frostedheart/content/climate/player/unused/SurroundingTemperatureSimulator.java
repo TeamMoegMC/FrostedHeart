@@ -17,7 +17,7 @@
  *
  */
 
-package com.teammoeg.frostedheart.content.climate.player;
+package com.teammoeg.frostedheart.content.climate.player.unused;
 
 import com.teammoeg.frostedheart.content.climate.data.BlockTempData;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
@@ -39,7 +39,6 @@ import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * A simulator built on Alphagem618's heat conducting model

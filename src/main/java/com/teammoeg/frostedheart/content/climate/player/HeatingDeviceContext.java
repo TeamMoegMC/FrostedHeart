@@ -19,18 +19,26 @@
 
 package com.teammoeg.frostedheart.content.climate.player;
 
+import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData.BodyPart;
 import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.ThermalEnvironmentSample;
 
 import lombok.Getter;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import top.theillusivec4.curios.api.type.ISlotType;
 
 public class HeatingDeviceContext {
+    private static final String PARTIAL_HEATING_SECOND_KEY =
+            FHMain.MODID + ":partial_heating_second";
+
     @Getter
     private ServerPlayer player;
+    private double elapsedSeconds;
     private double physiologicalSeconds;
+    private int consumedHeatingSeconds;
     private final ThermalEnvironmentSample environmentSample =
             new ThermalEnvironmentSample();
     private final PartClothData clothing = new PartClothData();
@@ -49,10 +57,12 @@ public class HeatingDeviceContext {
 
     void reset(
             ServerPlayer player,
+            double elapsedSeconds,
             double physiologicalSeconds,
             PlayerTemperatureData data
     ) {
         this.player = player;
+        this.elapsedSeconds = elapsedSeconds;
         this.physiologicalSeconds = physiologicalSeconds;
         for (BodyPart part : BodyPart.VALUES) {
             int index = part.ordinal();
@@ -138,6 +148,43 @@ public class HeatingDeviceContext {
 
     public double getPhysiologicalSeconds() {
         return physiologicalSeconds;
+    }
+
+    public double getElapsedSeconds() {
+        return elapsedSeconds;
+    }
+
+    public double advanceHeatingTime(
+            ItemStack stack,
+            int remainingWholeSeconds
+    ) {
+        consumedHeatingSeconds = 0;
+        if (!(elapsedSeconds > 0.0D) || remainingWholeSeconds <= 0) {
+            return 0.0D;
+        }
+        CompoundTag tag = stack.getOrCreateTag();
+        double partialSecond = tag.getDouble(PARTIAL_HEATING_SECOND_KEY);
+        double activeSeconds = Math.min(
+                elapsedSeconds,
+                Math.max(0.0D, remainingWholeSeconds - partialSecond));
+        double accumulatedSeconds = partialSecond + activeSeconds;
+        consumedHeatingSeconds = Math.min(
+                remainingWholeSeconds,
+                (int) Math.floor(accumulatedSeconds + 1.0e-9D));
+        double nextPartialSecond =
+                accumulatedSeconds - consumedHeatingSeconds;
+        if (nextPartialSecond > 1.0e-9D) {
+            tag.putDouble(PARTIAL_HEATING_SECOND_KEY, nextPartialSecond);
+        } else {
+            tag.remove(PARTIAL_HEATING_SECOND_KEY);
+        }
+        return activeSeconds / elapsedSeconds;
+    }
+
+    public int takeConsumedHeatingSeconds() {
+        int result = consumedHeatingSeconds;
+        consumedHeatingSeconds = 0;
+        return result;
     }
 
     public Level getLevel() {

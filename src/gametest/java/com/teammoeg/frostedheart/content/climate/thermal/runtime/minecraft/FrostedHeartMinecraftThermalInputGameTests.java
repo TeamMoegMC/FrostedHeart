@@ -5,9 +5,10 @@ import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.MaterialBoundaryRegistry;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.PagePublication;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.PageSignatures;
+import com.teammoeg.frostedheart.content.climate.thermal.mesh.ThermalBrickCellLayout;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.ThermalCellArena;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.ThermalPageHandle;
-import com.teammoeg.frostedheart.content.climate.thermal.profile.LocalAirRegionPattern;
+import com.teammoeg.frostedheart.content.climate.thermal.geometry.ConservativeAirGeometry;
 import com.teammoeg.frostedheart.content.climate.thermal.profile.ResolvedThermalSignature;
 import com.teammoeg.frostedheart.content.climate.thermal.profile.ThermalSignatureRegistry;
 import com.teammoeg.frostedheart.content.climate.thermal.query.QueryPublication;
@@ -166,7 +167,8 @@ public final class FrostedHeartMinecraftThermalInputGameTests {
         ThermalCellArena arena = new ThermalCellArena(1);
         ThermalCellArena.BrickAllocation allocation = regular(arena, 0, 1, 0);
         ThermalSourceLedger ledger = new ThermalSourceLedger(
-                0L, 1, 1, new NodePowerAccumulatorArena(1), arena);
+                0L, 1, 1, 8,
+                new NodePowerAccumulatorArena(1, 8), arena);
         ThermalSourceBatch.Builder events = new ThermalSourceBatch.Builder(0L);
         events.addRegister(
                 0L, 1, com.teammoeg.frostedheart.content.climate.thermal.source.ThermalSourceMode.POWER_SOURCE,
@@ -302,7 +304,7 @@ public final class FrostedHeartMinecraftThermalInputGameTests {
     ) {
         ResolvedGeometryBatch.Builder geometry =
                 new ResolvedGeometryBatch.Builder();
-        geometry.addResolvedCenter(page, revision, tick, 0, signatureId);
+        geometry.addResolvedCenter(page, revision, 0, signatureId);
         return new ThermalInputBatch(
                 1L, sequence, tick,
                 ThermalInputBatch.NO_ADMISSIONS,
@@ -330,24 +332,26 @@ public final class FrostedHeartMinecraftThermalInputGameTests {
         ThermalSignatureRegistry.Builder builder = ThermalSignatureRegistry.builder();
         int airId = builder.intern(fullAir());
         int solidId = builder.intern(new ResolvedThermalSignature(
-                0, 0, List.of(), 0, 0, 0, 0, 0));
+                new ConservativeAirGeometry.Resolution(
+                        ConservativeAirGeometry.Status.RESOLVED, List.of()),
+                0, 0));
         ThermalSignatureRegistry signatures = builder.build();
         ThermalCellArena arena = new ThermalCellArena(256);
         QueryPublication query = QueryPublication.tryCreate(
-                new ThermalMemoryBudget(8L * 1024L * 1024L, 0L)
-                        .createDimensionBudget(8L * 1024L * 1024L, 0L),
+                new ThermalMemoryBudget(8L * 1024L * 1024L)
+                        .createDimensionBudget(8L * 1024L * 1024L),
                 256);
         ThermalDimensionEngine engine = new ThermalDimensionEngine(
                 1L, 0L, arena, signatures,
                 new MaterialBoundaryRegistry(List.of(), List.of()),
                 new ThermalTopologyParameters(
-                        0, 64, 1_200.0D, 0.0D, 0.0D, 1.0D, 0.25D,
-                        false,
+                        64, 1_200.0D, 0.0D, 0.0D, 1.0D, 0.25D,
                         new BuoyancyConductance.Parameters(0.25D, 4.0D, 10.0D),
                         8, 4),
-                new FarFieldSettings(false, 0.0D, 1.0D, 16.0D),
+                new FarFieldSettings(1.0D, 1.0D, 16.0D),
                 new ThermalDimensionLimits(
-                        16, 4_096, 2_048, 4_096, 4_096, 4_096,
+                        16, 128, 256,
+                        4_096, 2_048, 4_096, 4_096, 4_096,
                         2, 1.0e-6D),
                 query);
         return new Fixture(
@@ -384,11 +388,12 @@ public final class FrostedHeartMinecraftThermalInputGameTests {
 
     private static ResolvedThermalSignature fullAir() {
         return new ResolvedThermalSignature(
-                0, 0,
-                List.of(new LocalAirRegionPattern(
-                        0, -1L, 0xffff, 0xffff, 0xffff,
-                        0xffff, 0xffff, 0xffff)),
-                0, 0, 0, 0, 0);
+                new ConservativeAirGeometry.Resolution(
+                        ConservativeAirGeometry.Status.RESOLVED,
+                        List.of(new ConservativeAirGeometry.AirComponent(
+                                0, -1L, 0xffff, 0xffff, 0xffff,
+                                0xffff, 0xffff, 0xffff))),
+                0, 0);
     }
 
     private static ThermalCellArena.BrickAllocation regular(
@@ -397,10 +402,9 @@ public final class FrostedHeartMinecraftThermalInputGameTests {
             int generation,
             int minX
     ) {
-        ThermalCellArena.BrickCellLayout layout =
-                new ThermalCellArena.BrickCellLayout();
+        ThermalBrickCellLayout layout = new ThermalBrickCellLayout();
         layout.reset(minX, 0, 0);
-        layout.setRegularAir(0, 0, 100.0D / 64.0D);
+        layout.setRegularAir(100.0D / 64.0D);
         ThermalCellArena.BrickAllocation allocation = arena.stageBrickCells(
                 pageSlot, generation, layout, 0.0D, 0.0D, 4_096);
         arena.commitStagedCells(allocation.cellSpan());
@@ -410,10 +414,9 @@ public final class FrostedHeartMinecraftThermalInputGameTests {
     private static ThermalCellArena.BrickAllocation phase(
             ThermalCellArena arena
     ) {
-        ThermalCellArena.BrickCellLayout layout =
-                new ThermalCellArena.BrickCellLayout();
+        ThermalBrickCellLayout layout = new ThermalBrickCellLayout();
         layout.reset(0, 0, 0);
-        layout.setRegularAir(0, 0, 100.0D / 64.0D);
+        layout.setRegularAir(100.0D / 64.0D);
         layout.addPhaseReservoir(
                 0, 0, 0, 1, 1L, 0.0D, 10.0D);
         ThermalCellArena.BrickAllocation allocation = arena.stageBrickCells(

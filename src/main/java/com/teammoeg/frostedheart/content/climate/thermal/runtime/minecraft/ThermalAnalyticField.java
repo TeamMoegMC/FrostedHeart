@@ -4,19 +4,19 @@ package com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft;
 import java.util.Objects;
 
 /** Immutable non-conservative gameplay field definition. */
-public record ThermalAnalyticField(
-        long fieldId,
-        int priority,
-        CombineMode combineMode,
-        Shape shape,
-        double centerX,
-        double centerY,
-        double centerZ,
-        double radius,
-        double upperExtent,
-        double lowerExtent,
-        double temperatureC
-) {
+public final class ThermalAnalyticField {
+    private final long fieldId;
+    private final int priority;
+    private final CombineMode combineMode;
+    private final Shape shape;
+    private final double centerX;
+    private final double centerY;
+    private final double centerZ;
+    private final double radius;
+    private final double upperExtent;
+    private final double lowerExtent;
+    private final double temperatureC;
+
     public ThermalAnalyticField(
             long fieldId,
             int priority,
@@ -31,9 +31,22 @@ public record ThermalAnalyticField(
                 x, y, z, radius, radius, radius, temperatureC);
     }
 
-    public ThermalAnalyticField {
-        Objects.requireNonNull(combineMode, "combineMode");
-        Objects.requireNonNull(shape, "shape");
+    public ThermalAnalyticField(
+            long fieldId,
+            int priority,
+            CombineMode combineMode,
+            Shape shape,
+            double centerX,
+            double centerY,
+            double centerZ,
+            double radius,
+            double upperExtent,
+            double lowerExtent,
+            double temperatureC
+    ) {
+        this.combineMode = Objects.requireNonNull(
+                combineMode, "combineMode");
+        this.shape = Objects.requireNonNull(shape, "shape");
         requireFinite(centerX);
         requireFinite(centerY);
         requireFinite(centerZ);
@@ -44,7 +57,26 @@ public record ThermalAnalyticField(
             throw new IllegalArgumentException(
                     "analytic field dimensions are invalid");
         }
+        this.fieldId = fieldId;
+        this.priority = priority;
+        this.centerX = centerX;
+        this.centerY = centerY;
+        this.centerZ = centerZ;
+        this.radius = radius;
+        this.upperExtent = upperExtent;
+        this.lowerExtent = lowerExtent;
+        this.temperatureC = temperatureC;
     }
+
+    public long fieldId() { return fieldId; }
+    public int priority() { return priority; }
+    public CombineMode combineMode() { return combineMode; }
+    public Shape shape() { return shape; }
+    public double centerX() { return centerX; }
+    public double centerY() { return centerY; }
+    public double centerZ() { return centerZ; }
+    public double radius() { return radius; }
+    public double temperatureC() { return temperatureC; }
 
     boolean contains(double x, double y, double z) {
         double dx = x - centerX;

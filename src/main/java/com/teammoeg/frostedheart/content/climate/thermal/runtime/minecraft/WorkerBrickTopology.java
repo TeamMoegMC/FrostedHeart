@@ -2,20 +2,14 @@
 package com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft;
 
 import com.teammoeg.frostedheart.content.climate.thermal.geometry.ComponentBrickCompiler;
-import com.teammoeg.frostedheart.content.climate.thermal.geometry.GeometrySummary;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.ArenaSpan;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.PagePublication;
-import com.teammoeg.frostedheart.content.climate.thermal.solver.ThermalFragment;
 
 /** Immutable committed or staged authority for one 4-cubed Brick. */
 final class WorkerBrickTopology {
     static final WorkerBrickTopology EMPTY = new WorkerBrickTopology(
             ArenaSpan.EMPTY, -1, 0, null,
-            new GeometrySummary(
-                    GeometrySummary.Kind.UNKNOWN,
-                    GeometrySummary.NO_MEDIUM,
-                    0),
-            ThermalFragment.EMPTY, PagePublication.PhaseCandidates.EMPTY,
+            PagePublication.PhaseCandidates.EMPTY,
             MaterialPoles.EMPTY, PhaseReservoirs.EMPTY, MaterialContacts.EMPTY,
             (byte) 0, false, false);
 
@@ -23,8 +17,6 @@ final class WorkerBrickTopology {
     final int coverageSlot;
     final int coverageGeneration;
     final ComponentBrickCompiler.CompiledBrick mixedGeometry;
-    final GeometrySummary summary;
-    final ThermalFragment fragment;
     final PagePublication.PhaseCandidates phaseCandidates;
     final MaterialPoles materialPoles;
     final PhaseReservoirs phaseReservoirs;
@@ -38,8 +30,6 @@ final class WorkerBrickTopology {
             int coverageSlot,
             int coverageGeneration,
             ComponentBrickCompiler.CompiledBrick mixedGeometry,
-            GeometrySummary summary,
-            ThermalFragment fragment,
             PagePublication.PhaseCandidates phaseCandidates,
             MaterialPoles materialPoles,
             PhaseReservoirs phaseReservoirs,
@@ -52,8 +42,6 @@ final class WorkerBrickTopology {
         this.coverageSlot = coverageSlot;
         this.coverageGeneration = coverageGeneration;
         this.mixedGeometry = mixedGeometry;
-        this.summary = summary;
-        this.fragment = fragment;
         this.phaseCandidates = phaseCandidates;
         this.materialPoles = materialPoles;
         this.phaseReservoirs = phaseReservoirs;
@@ -63,14 +51,13 @@ final class WorkerBrickTopology {
         this.resolved = resolved;
     }
 
-    WorkerBrickTopology withFragment(
-            ThermalFragment nextFragment,
+    WorkerBrickTopology withFragmentResult(
             boolean nextResolved,
             byte nextContinuationFaceMask
     ) {
         return new WorkerBrickTopology(
-                span, coverageSlot, coverageGeneration, mixedGeometry, summary,
-                nextFragment, phaseCandidates, materialPoles, phaseReservoirs,
+                span, coverageSlot, coverageGeneration, mixedGeometry,
+                phaseCandidates, materialPoles, phaseReservoirs,
                 materialContacts, nextContinuationFaceMask, cellsResolved,
                 nextResolved);
     }
@@ -80,18 +67,15 @@ final class WorkerBrickTopology {
             int[] blockY,
             int[] blockZ,
             int[] profileId,
-            byte[] depth,
             int[] slot
     ) {
         static final MaterialPoles EMPTY = new MaterialPoles(
-                new int[0], new int[0], new int[0], new int[0],
-                new byte[0], new int[0]);
+                new int[0], new int[0], new int[0], new int[0], new int[0]);
 
         MaterialPoles {
             int size = blockX.length;
             if (blockY.length != size || blockZ.length != size
-                    || profileId.length != size || depth.length != size
-                    || slot.length != size) {
+                    || profileId.length != size || slot.length != size) {
                 throw new IllegalArgumentException(
                         "material pole directory is invalid");
             }
@@ -123,47 +107,70 @@ final class WorkerBrickTopology {
     }
 
     /** Primitive contacts retained only for exact neighbor recompilation. */
-    record MaterialContacts(
-            int[] surfaceBlockX,
-            int[] surfaceBlockY,
-            int[] surfaceBlockZ,
-            int[] surfaceProfileId,
-            double[] surfaceArea,
-            int[] surfacePoleOrdinal,
-            int[] deepPoleOrdinal,
-            int[] surfaceContactStart,
-            int[] surfaceContactCount,
-            long[] surfaceContactAirReference,
-            int[] surfaceContactPatches,
-            int[] phaseProfileId,
-            long[] phaseCandidateMask,
-            int[] phaseReservoirOrdinal,
-            int[] phaseContactStart,
-            int[] phaseContactCount,
-            long[] phaseContactAirReference,
-            int[] phaseContactPatches,
-            long[] bridgeNegativeAirReference,
-            long[] bridgePositiveAirReference,
-            double[] bridgeConductanceWPerK
-    ) {
-        static final MaterialContacts EMPTY = new MaterialContacts(
-                new int[0], new int[0], new int[0], new int[0],
-                new double[0], new int[0], new int[0], new int[0], new int[0],
-                new long[0], new int[0],
-                new int[0], new long[0], new int[0], new int[0], new int[0],
-                new long[0], new int[0],
-                new long[0], new long[0], new double[0]);
+    static final class MaterialContacts {
+        private static final int[] NO_INTS = new int[0];
+        private static final long[] NO_LONGS = new long[0];
+        static final MaterialContacts EMPTY = new MaterialContacts();
 
-        MaterialContacts {
+        private final int[] surfaceBlockX;
+        private final int[] surfaceBlockY;
+        private final int[] surfaceBlockZ;
+        private final int[] surfaceProfileId;
+        private final int[] surfacePoleOrdinal;
+        private final int[] surfaceContactStart;
+        private final int[] surfaceContactCount;
+        private final long[] surfaceContactAirReference;
+        private final int[] surfaceContactPatches;
+        private final int[] phaseProfileId;
+        private final long[] phaseCandidateMask;
+        private final int[] phaseReservoirOrdinal;
+        private final int[] phaseContactStart;
+        private final int[] phaseContactCount;
+        private final long[] phaseContactAirReference;
+        private final int[] phaseContactPatches;
+
+        private MaterialContacts() {
+            surfaceBlockX = NO_INTS;
+            surfaceBlockY = NO_INTS;
+            surfaceBlockZ = NO_INTS;
+            surfaceProfileId = NO_INTS;
+            surfacePoleOrdinal = NO_INTS;
+            surfaceContactStart = NO_INTS;
+            surfaceContactCount = NO_INTS;
+            surfaceContactAirReference = NO_LONGS;
+            surfaceContactPatches = NO_INTS;
+            phaseProfileId = NO_INTS;
+            phaseCandidateMask = NO_LONGS;
+            phaseReservoirOrdinal = NO_INTS;
+            phaseContactStart = NO_INTS;
+            phaseContactCount = NO_INTS;
+            phaseContactAirReference = NO_LONGS;
+            phaseContactPatches = NO_INTS;
+        }
+
+        private MaterialContacts(Builder builder) {
+            surfaceBlockX = builder.surfaceBlockX;
+            surfaceBlockY = builder.surfaceBlockY;
+            surfaceBlockZ = builder.surfaceBlockZ;
+            surfaceProfileId = builder.surfaceProfileId;
+            surfacePoleOrdinal = builder.surfacePoleOrdinal;
+            surfaceContactStart = builder.surfaceContactStart;
+            surfaceContactCount = builder.surfaceContactCount;
+            surfaceContactAirReference = builder.surfaceContactAirReference;
+            surfaceContactPatches = builder.surfaceContactPatches;
+            phaseProfileId = builder.phaseProfileId;
+            phaseCandidateMask = builder.phaseCandidateMask;
+            phaseReservoirOrdinal = builder.phaseReservoirOrdinal;
+            phaseContactStart = builder.phaseContactStart;
+            phaseContactCount = builder.phaseContactCount;
+            phaseContactAirReference = builder.phaseContactAirReference;
+            phaseContactPatches = builder.phaseContactPatches;
             int surfaces = surfaceBlockX.length;
             int phases = phaseProfileId.length;
-            int bridges = bridgeNegativeAirReference.length;
             if (surfaceBlockY.length != surfaces
                     || surfaceBlockZ.length != surfaces
                     || surfaceProfileId.length != surfaces
-                    || surfaceArea.length != surfaces
                     || surfacePoleOrdinal.length != surfaces
-                    || deepPoleOrdinal.length != surfaces
                     || surfaceContactStart.length != surfaces
                     || surfaceContactCount.length != surfaces
                     || surfaceContactAirReference.length
@@ -173,9 +180,7 @@ final class WorkerBrickTopology {
                     || phaseContactStart.length != phases
                     || phaseContactCount.length != phases
                     || phaseContactAirReference.length
-                            != phaseContactPatches.length
-                    || bridgePositiveAirReference.length != bridges
-                    || bridgeConductanceWPerK.length != bridges) {
+                            != phaseContactPatches.length) {
                 throw new IllegalArgumentException(
                         "Brick material contact arrays are invalid");
             }
@@ -183,6 +188,87 @@ final class WorkerBrickTopology {
 
         int surfaceCount() { return surfaceBlockX.length; }
         int phaseCount() { return phaseProfileId.length; }
-        int bridgeCount() { return bridgeNegativeAirReference.length; }
+
+        int[] surfaceBlockX() { return surfaceBlockX; }
+        int[] surfaceBlockY() { return surfaceBlockY; }
+        int[] surfaceBlockZ() { return surfaceBlockZ; }
+        int[] surfaceProfileId() { return surfaceProfileId; }
+        int[] surfacePoleOrdinal() { return surfacePoleOrdinal; }
+        int[] surfaceContactStart() { return surfaceContactStart; }
+        int[] surfaceContactCount() { return surfaceContactCount; }
+        long[] surfaceContactAirReference() { return surfaceContactAirReference; }
+        int[] surfaceContactPatches() { return surfaceContactPatches; }
+        int[] phaseProfileId() { return phaseProfileId; }
+        long[] phaseCandidateMask() { return phaseCandidateMask; }
+        int[] phaseReservoirOrdinal() { return phaseReservoirOrdinal; }
+        int[] phaseContactStart() { return phaseContactStart; }
+        int[] phaseContactCount() { return phaseContactCount; }
+        long[] phaseContactAirReference() { return phaseContactAirReference; }
+        int[] phaseContactPatches() { return phaseContactPatches; }
+
+        static final class Builder {
+            private int[] surfaceBlockX;
+            private int[] surfaceBlockY;
+            private int[] surfaceBlockZ;
+            private int[] surfaceProfileId;
+            private int[] surfacePoleOrdinal;
+            private int[] surfaceContactStart;
+            private int[] surfaceContactCount;
+            private long[] surfaceContactAirReference;
+            private int[] surfaceContactPatches;
+            private int[] phaseProfileId;
+            private long[] phaseCandidateMask;
+            private int[] phaseReservoirOrdinal;
+            private int[] phaseContactStart;
+            private int[] phaseContactCount;
+            private long[] phaseContactAirReference;
+            private int[] phaseContactPatches;
+
+            Builder surfaces(
+                    int[] blockX,
+                    int[] blockY,
+                    int[] blockZ,
+                    int[] profileId,
+                    int[] poleOrdinal,
+                    int[] contactStart,
+                    int[] contactCount,
+                    long[] contactAirReference,
+                    int[] contactPatches
+            ) {
+                surfaceBlockX = blockX;
+                surfaceBlockY = blockY;
+                surfaceBlockZ = blockZ;
+                surfaceProfileId = profileId;
+                surfacePoleOrdinal = poleOrdinal;
+                surfaceContactStart = contactStart;
+                surfaceContactCount = contactCount;
+                surfaceContactAirReference = contactAirReference;
+                surfaceContactPatches = contactPatches;
+                return this;
+            }
+
+            Builder phases(
+                    int[] profileId,
+                    long[] candidateMask,
+                    int[] reservoirOrdinal,
+                    int[] contactStart,
+                    int[] contactCount,
+                    long[] contactAirReference,
+                    int[] contactPatches
+            ) {
+                phaseProfileId = profileId;
+                phaseCandidateMask = candidateMask;
+                phaseReservoirOrdinal = reservoirOrdinal;
+                phaseContactStart = contactStart;
+                phaseContactCount = contactCount;
+                phaseContactAirReference = contactAirReference;
+                phaseContactPatches = contactPatches;
+                return this;
+            }
+
+            MaterialContacts build() {
+                return new MaterialContacts(this);
+            }
+        }
     }
 }

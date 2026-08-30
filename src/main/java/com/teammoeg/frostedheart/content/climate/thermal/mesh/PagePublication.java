@@ -2,14 +2,13 @@
 package com.teammoeg.frostedheart.content.climate.thermal.mesh;
 
 import com.teammoeg.frostedheart.content.climate.thermal.geometry.ComponentBrickCompiler;
-import com.teammoeg.frostedheart.content.climate.thermal.geometry.GeometrySummaryCache;
 import com.teammoeg.frostedheart.content.climate.thermal.profile.ThermalSignatureRegistry;
 
 import java.util.Arrays;
 
 /** Immutable worker-to-main geometry and phase publication for one Page. */
 public final class PagePublication {
-    public static final int NO_COVERAGE = -1;
+    private static final int NO_COVERAGE = -1;
     public static final int NO_AIR_POINT = -1;
     public static final PagePublication EMPTY = new PagePublication(
             -1L, -1L, emptyBricks());
@@ -61,7 +60,15 @@ public final class PagePublication {
     }
 
     public Brick brickAt(int localX, int localY, int localZ) {
-        return bricks[GeometrySummaryCache.baseIndex(localX, localY, localZ)];
+        if (localX < 0 || localX >= 16
+                || localY < 0 || localY >= 16
+                || localZ < 0 || localZ >= 16) {
+            throw new IllegalArgumentException(
+                    "local coordinates must be within [0, 15]");
+        }
+        return bricks[(localX >>> 2)
+                | (localZ >>> 2) << 2
+                | (localY >>> 2) << 4];
     }
 
     public int resolveAirPoint(

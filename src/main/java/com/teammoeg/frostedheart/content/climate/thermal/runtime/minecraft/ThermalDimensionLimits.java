@@ -2,8 +2,10 @@
 package com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft;
 
 /** Explicit memory/work limits for one worker-owned dimension engine. */
-public record ThermalDimensionLimits(
+record ThermalDimensionLimits(
         int maximumPages,
+        int maximumSources,
+        int maximumSourceNodes,
         int maximumArenaSlots,
         int maximumLiveCells,
         int maximumPairOperations,
@@ -12,8 +14,10 @@ public record ThermalDimensionLimits(
         int stableBatchesBeforeSleep,
         double sleepResidualC
 ) {
-    public ThermalDimensionLimits {
-        if (maximumPages <= 0 || maximumArenaSlots <= 0
+    ThermalDimensionLimits {
+        if (maximumPages <= 0 || maximumSources <= 0
+                || maximumSourceNodes < maximumSources
+                || maximumArenaSlots <= 0
                 || maximumLiveCells <= 0
                 || maximumPairOperations <= 0
                 || maximumBoundaryOperations <= 0

@@ -25,13 +25,11 @@ class QueryPublicationTest {
         QueryPublication publication = publication(2, 1_000L);
 
         assertTrue(publication.publish(
-                arena, 5.0D, 3L, true, 20L));
+                arena, 5.0D, 3L, 20L));
         QueryPublication.MutableSample out =
                 new QueryPublication.MutableSample();
         assertTrue(publication.tryRead(1, 1, 3L, out));
         assertEquals(9.0D, out.temperatureC(), EPSILON);
-        assertEquals(0, out.mediumId());
-        assertTrue(out.topologyResolved());
         assertEquals(20L, out.sampleTick());
         assertFalse(publication.tryRead(1, 2, 3L, out));
         assertFalse(publication.tryRead(1, 1, 4L, out));
@@ -42,7 +40,7 @@ class QueryPublicationTest {
     void sleepingRepublishAdvancesSampleTimeWithoutCopyingCells() {
         ThermalCellArena arena = arena(1, 10.0D);
         QueryPublication publication = publication(1, 1_000L);
-        publication.publish(arena, 0.0D, 1L, true, 5L);
+        publication.publish(arena, 0.0D, 1L, 5L);
         arena.setEnthalpyJ(0, 100.0D);
 
         assertTrue(publication.republishUnchanged(1L, 10L));
@@ -57,8 +55,8 @@ class QueryPublicationTest {
     @Test
     void refusedGrowthPreservesThePreviousPublishedBuffer() {
         ThermalCellArena arena = arena(1, 1.0D);
-        QueryPublication publication = publication(1, 90L);
-        publication.publish(arena, 0.0D, 1L, true, 1L);
+        QueryPublication publication = publication(1, 60L);
+        publication.publish(arena, 0.0D, 1L, 1L);
 
         assertFalse(publication.tryEnsureCapacity(2, 2));
         QueryPublication.MutableSample out =
@@ -71,14 +69,13 @@ class QueryPublicationTest {
     void successfulGrowthAlsoPreservesThePreviousPublishedBuffer() {
         ThermalCellArena arena = arena(1, 1.0D);
         QueryPublication publication = publication(1, 1_000L);
-        publication.publish(arena, 0.0D, 2L, false, 4L);
+        publication.publish(arena, 0.0D, 2L, 4L);
 
         assertTrue(publication.tryEnsureCapacity(2, 2));
         QueryPublication.MutableSample out =
                 new QueryPublication.MutableSample();
         assertTrue(publication.tryRead(0, 1, 2L, out));
         assertEquals(4L, out.sampleTick());
-        assertFalse(out.topologyResolved());
         publication.close();
     }
 
@@ -87,14 +84,14 @@ class QueryPublicationTest {
             throws InterruptedException {
         ThermalCellArena arena = arena(1, 1.0D);
         QueryPublication publication = publication(1, 1_000L);
-        publication.publish(arena, 0.0D, 1L, true, 0L);
+        publication.publish(arena, 0.0D, 1L, 0L);
         AtomicBoolean running = new AtomicBoolean(true);
         AtomicReference<Throwable> failure = new AtomicReference<>();
         Thread writer = new Thread(() -> {
             try {
                 for (long sample = 1L; sample <= 10_000L; sample++) {
                     arena.setEnthalpyJ(0, sample);
-                    publication.publish(arena, 0.0D, 1L, true, sample);
+                    publication.publish(arena, 0.0D, 1L, sample);
                 }
             } catch (Throwable throwable) {
                 failure.set(throwable);
@@ -124,9 +121,9 @@ class QueryPublicationTest {
     }
 
     private static QueryPublication publication(int capacity, long limit) {
-        ThermalMemoryBudget server = new ThermalMemoryBudget(limit, 0L);
+        ThermalMemoryBudget server = new ThermalMemoryBudget(limit);
         QueryPublication publication = QueryPublication.tryCreate(
-                server.createDimensionBudget(limit, 0L), capacity);
+                server.createDimensionBudget(limit), capacity);
         assertNotNull(publication);
         return publication;
     }

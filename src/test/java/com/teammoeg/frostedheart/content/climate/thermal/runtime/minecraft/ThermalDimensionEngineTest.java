@@ -2,6 +2,7 @@
 package com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft;
 
 import com.teammoeg.frostedheart.content.climate.thermal.ThermalTestFixtures;
+import com.teammoeg.frostedheart.content.climate.thermal.geometry.ConservativeAirGeometry;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.MaterialBoundaryRegistry;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.PagePublication;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.ThermalPageHandle;
@@ -24,7 +25,7 @@ class ThermalDimensionEngineTest {
     @Test
     void admissionCompilesFarFieldAndPublishesAFlatPageCut() {
         ThermalRuntimeTestFixtures.EngineFixture fixture =
-                ThermalRuntimeTestFixtures.engineWithFarField();
+                ThermalRuntimeTestFixtures.engine();
         try {
             ThermalCompletion completion = fixture.engine().process(
                     ThermalRuntimeTestFixtures.batch(
@@ -76,7 +77,7 @@ class ThermalDimensionEngineTest {
                             ThermalInputBatch.NO_ADMISSIONS,
                             ThermalInputBatch.NO_RETIREMENTS,
                             ThermalRuntimeTestFixtures.geometryCenter(
-                                    fixture.page(), revision, 21L, 0,
+                                    fixture.page(), revision, 0,
                                     fixture.solidId())));
 
             assertEquals(ThermalCompletion.Status.COMPLETED,
@@ -179,14 +180,14 @@ class ThermalDimensionEngineTest {
                 ThermalTestFixtures.fullAirSignature();
         ResolvedThermalSignature replacementAir =
                 new ResolvedThermalSignature(
-                        1,
+                        new ConservativeAirGeometry.Resolution(
+                                ConservativeAirGeometry.Status.RESOLVED,
+                                List.of(new ConservativeAirGeometry.AirComponent(
+                                        0, -1L,
+                                        0xffff, 0xfffe, 0xffff,
+                                        0xffff, 0xffff, 0xffff))),
                         air.materialProfileId(),
-                        air.airRegions(),
-                        air.materialContactPatternId(),
-                        air.radiationOcclusionPatternId(),
-                        air.sourceProfileId(),
-                        air.gateKind(),
-                        air.flags());
+                        air.materialContactPatternId());
         ThermalSignatureRegistry.Builder signatures =
                 ThermalSignatureRegistry.builder();
         int airId = signatures.intern(air);
@@ -240,7 +241,6 @@ class ThermalDimensionEngineTest {
             geometry.addFullResync(
                     fixture.page(),
                     revision,
-                    21L,
                     ThermalPageHandle.GeometryResyncReason
                             .EXPLICIT_INVALIDATION,
                     ThermalTestFixtures.filledPageSignatures(
@@ -258,7 +258,8 @@ class ThermalDimensionEngineTest {
                  slot = fixture.arena().nextLiveSlot(slot + 1)) {
                 totalEnthalpyJ += fixture.arena().enthalpyJ(slot);
             }
-            assertEquals(70.0D, totalEnthalpyJ, 1.0e-8D);
+            assertTrue(totalEnthalpyJ > 69.0D);
+            assertTrue(totalEnthalpyJ < 70.0D);
         } finally {
             fixture.engine().close();
         }

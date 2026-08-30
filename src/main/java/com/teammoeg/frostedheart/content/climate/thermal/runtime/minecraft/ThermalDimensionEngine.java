@@ -86,7 +86,9 @@ final class ThermalDimensionEngine implements ThermalDimensionProcessor {
                 initialTick,
                 64,
                 3,
-                new NodePowerAccumulatorArena(64),
+                limits.maximumSources(),
+                new NodePowerAccumulatorArena(
+                        64, limits.maximumSourceNodes()),
                 arena);
         sourceBindings = new WorkerPhysicalSourceBindings(pages, catalog);
         lastTargetTick = initialTick;
@@ -220,7 +222,6 @@ final class ThermalDimensionEngine implements ThermalDimensionProcessor {
                     arena,
                     parameters.referenceTemperatureC(),
                     solver.structuralVersion(),
-                    pages.topologyResolved(),
                     batch.targetTick());
         }
         if (!published) {

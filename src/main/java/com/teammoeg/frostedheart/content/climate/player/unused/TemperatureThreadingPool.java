@@ -17,11 +17,11 @@
  *
  */
 
-package com.teammoeg.frostedheart.content.climate.player;
+package com.teammoeg.frostedheart.content.climate.player.unused;
 
 import com.teammoeg.chorda.util.CDistHelper;
 import com.teammoeg.chorda.util.CUtils;
-import it.unimi.dsi.fastutil.objects.Object2ObjectArrayMap;
+import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ObjectIterator;
@@ -152,8 +152,8 @@ public class TemperatureThreadingPool {
 	private void submitPlayerData(ServerPlayer player, SurroundingTemperatureSimulator.SimulationResult result) {
 		//System.out.println(result);
 		PlayerTemperatureData.getCapability(player).ifPresent(t->{
-			t.blockTemp=result.blockTemp();
-			t.windStrengh=result.windStrength();
+//			t.blockTemp=result.blockTemp();
+//			t.windStrengh=result.windStrength();
 		});
 	}
 }

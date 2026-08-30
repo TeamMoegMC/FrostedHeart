@@ -21,25 +21,8 @@ import java.util.Objects;
  */
 public final class MaterialBoundaryRegistry {
     public enum Model {
-        STATELESS_CONDUCTANCE,
         CAPACITIVE_SURFACE,
-        NATURAL_ROCK,
         PHASE_RESERVOIR
-    }
-
-    public enum TransitionMutationPolicy {
-        NONE,
-        RESPECT_RANDOM_TICK_SPEED,
-        IGNORE_RANDOM_TICK_SPEED,
-        SCRIPT_CONTROLLED
-    }
-
-    public enum TransitionAction {
-        NONE,
-        REMOVE_ONE_SNOW_LAYER,
-        MELT_ICE_TO_WATER,
-        APPLY_STATE_TRANSITION_RECIPE,
-        CUSTOM
     }
 
     /** One bit per block-local 4x4x4 microcell occupied by this material. */
@@ -49,10 +32,6 @@ public final class MaterialBoundaryRegistry {
             if (materialMicrocellMask == 0L) {
                 throw new IllegalArgumentException("material contact mask must not be empty");
             }
-        }
-
-        public static ContactPattern fullBlock(int id) {
-            return new ContactPattern(id, -1L);
         }
 
         public boolean contains(int x, int y, int z) {
@@ -74,91 +53,24 @@ public final class MaterialBoundaryRegistry {
             Model model,
             double faceConductanceWPerK,
             double surfaceCapacityJPerK,
-            double deepConductanceWPerK,
-            double deepCapacityJPerK,
-            double naturalConductanceWPerK,
-            double initialTemperatureC,
-            double naturalTemperatureAtY0C,
-            double geothermalGradientCPerBlock,
-            boolean initializeAtNaturalTemperature,
             double transitionTemperatureC,
-            double transitionEnergyJPerUnit,
-            TransitionMutationPolicy transitionMutationPolicy,
-            TransitionAction transitionAction
+            double transitionEnergyJPerUnit
     ) {
         public Profile {
             requirePositiveId("material profile", id);
             Objects.requireNonNull(model, "model");
             requirePositiveFinite("faceConductanceWPerK", faceConductanceWPerK);
             requireNonNegativeFinite("surfaceCapacityJPerK", surfaceCapacityJPerK);
-            requireNonNegativeFinite("deepConductanceWPerK", deepConductanceWPerK);
-            requireNonNegativeFinite("deepCapacityJPerK", deepCapacityJPerK);
-            requireNonNegativeFinite("naturalConductanceWPerK", naturalConductanceWPerK);
-            requireFinite("initialTemperatureC", initialTemperatureC);
-            requireFinite("naturalTemperatureAtY0C", naturalTemperatureAtY0C);
-            requireNonNegativeFinite(
-                    "geothermalGradientCPerBlock", geothermalGradientCPerBlock);
             requireFinite("transitionTemperatureC", transitionTemperatureC);
             requireNonNegativeFinite(
                     "transitionEnergyJPerUnit", transitionEnergyJPerUnit);
-            Objects.requireNonNull(
-                    transitionMutationPolicy, "transitionMutationPolicy");
-            Objects.requireNonNull(transitionAction, "transitionAction");
-
-            switch (model) {
-                case STATELESS_CONDUCTANCE -> {
-                    requireZero("surfaceCapacityJPerK", surfaceCapacityJPerK);
-                    requireZero("deepConductanceWPerK", deepConductanceWPerK);
-                    requireZero("deepCapacityJPerK", deepCapacityJPerK);
-                    requireZero("naturalConductanceWPerK", naturalConductanceWPerK);
-                    requireZero("geothermalGradientCPerBlock", geothermalGradientCPerBlock);
-                    requireExplicitInitialTemperature(initializeAtNaturalTemperature);
-                    requireNoTransition(
-                            transitionEnergyJPerUnit,
-                            transitionMutationPolicy,
-                            transitionAction);
-                }
-                case CAPACITIVE_SURFACE -> {
-                    requirePositiveFinite("surfaceCapacityJPerK", surfaceCapacityJPerK);
-                    requireZero("deepConductanceWPerK", deepConductanceWPerK);
-                    requireZero("deepCapacityJPerK", deepCapacityJPerK);
-                    requireZero("naturalConductanceWPerK", naturalConductanceWPerK);
-                    requireZero("geothermalGradientCPerBlock", geothermalGradientCPerBlock);
-                    requireNoTransition(
-                            transitionEnergyJPerUnit,
-                            transitionMutationPolicy,
-                            transitionAction);
-                }
-                case NATURAL_ROCK -> {
-                    requireExplicitInitialTemperature(initializeAtNaturalTemperature);
-                    requirePositiveFinite("surfaceCapacityJPerK", surfaceCapacityJPerK);
-                    requirePositiveFinite("deepConductanceWPerK", deepConductanceWPerK);
-                    if (deepCapacityJPerK > 0.0D) {
-                        requirePositiveFinite(
-                                "naturalConductanceWPerK", naturalConductanceWPerK);
-                    } else {
-                        requireZero("naturalConductanceWPerK", naturalConductanceWPerK);
-                    }
-                    requireNoTransition(
-                            transitionEnergyJPerUnit,
-                            transitionMutationPolicy,
-                            transitionAction);
-                }
-                case PHASE_RESERVOIR -> {
-                    requireZero("surfaceCapacityJPerK", surfaceCapacityJPerK);
-                    requireZero("deepConductanceWPerK", deepConductanceWPerK);
-                    requireZero("deepCapacityJPerK", deepCapacityJPerK);
-                    requireZero("naturalConductanceWPerK", naturalConductanceWPerK);
-                    requireZero("geothermalGradientCPerBlock", geothermalGradientCPerBlock);
-                    requireExplicitInitialTemperature(initializeAtNaturalTemperature);
-                    requirePositiveFinite(
-                            "transitionEnergyJPerUnit", transitionEnergyJPerUnit);
-                    if (transitionMutationPolicy == TransitionMutationPolicy.NONE
-                            || transitionAction == TransitionAction.NONE) {
-                        throw new IllegalArgumentException(
-                                "phase reservoir requires mutation policy and action");
-                    }
-                }
+            if (model == Model.CAPACITIVE_SURFACE) {
+                requirePositiveFinite("surfaceCapacityJPerK", surfaceCapacityJPerK);
+                requireZero("transitionEnergyJPerUnit", transitionEnergyJPerUnit);
+            } else {
+                requireZero("surfaceCapacityJPerK", surfaceCapacityJPerK);
+                requirePositiveFinite(
+                        "transitionEnergyJPerUnit", transitionEnergyJPerUnit);
             }
         }
 
@@ -170,45 +82,27 @@ public final class MaterialBoundaryRegistry {
         ) {
             return new Profile(
                     id, Model.CAPACITIVE_SURFACE, faceConductanceWPerK,
-                    surfaceCapacityJPerK, 0.0D, 0.0D, 0.0D,
-                    0.0D, 0.0D, 0.0D,
-                    true, 0.0D, 0.0D,
-                    TransitionMutationPolicy.NONE, TransitionAction.NONE);
+                    surfaceCapacityJPerK, 0.0D, 0.0D);
         }
 
         public static Profile phaseReservoir(
                 int id,
                 double faceConductanceWPerK,
                 double transitionTemperatureC,
-                double transitionEnergyJPerUnit,
-                TransitionMutationPolicy mutationPolicy,
-                TransitionAction transitionAction
+                double transitionEnergyJPerUnit
         ) {
             return new Profile(
                     id, Model.PHASE_RESERVOIR, faceConductanceWPerK,
-                    0.0D, 0.0D, 0.0D, 0.0D,
-                    transitionTemperatureC, 0.0D, 0.0D,
-                    false, transitionTemperatureC, transitionEnergyJPerUnit,
-                    mutationPolicy, transitionAction);
+                    0.0D, transitionTemperatureC, transitionEnergyJPerUnit);
         }
 
-        public double naturalTemperatureC(int blockY) {
-            double temperature = naturalTemperatureAtY0C
-                    - geothermalGradientCPerBlock * blockY;
-            requireFinite("natural material temperature", temperature);
-            return temperature;
-        }
-
-        public double poleInitialTemperatureC(
-                int blockY,
-                double pageNaturalTemperatureC
-        ) {
+        public double poleInitialTemperatureC(double pageNaturalTemperatureC) {
             requireFinite("pageNaturalTemperatureC", pageNaturalTemperatureC);
-            return model == Model.NATURAL_ROCK
-                    ? naturalTemperatureC(blockY)
-                    : initializeAtNaturalTemperature
-                            ? pageNaturalTemperatureC
-                            : initialTemperatureC;
+            if (model != Model.CAPACITIVE_SURFACE) {
+                throw new IllegalStateException(
+                        "phase reservoirs do not own material-pole temperature");
+            }
+            return pageNaturalTemperatureC;
         }
     }
 
@@ -268,26 +162,6 @@ public final class MaterialBoundaryRegistry {
     private static void requireZero(String name, double value) {
         if (value != 0.0D) {
             throw new IllegalArgumentException(name + " must be zero for this material model");
-        }
-    }
-
-    private static void requireExplicitInitialTemperature(boolean initializeAtNatural) {
-        if (initializeAtNatural) {
-            throw new IllegalArgumentException(
-                    "natural Page initialization is only valid for capacitive surfaces");
-        }
-    }
-
-    private static void requireNoTransition(
-            double transitionEnergyJPerUnit,
-            TransitionMutationPolicy mutationPolicy,
-            TransitionAction transitionAction
-    ) {
-        requireZero("transitionEnergyJPerUnit", transitionEnergyJPerUnit);
-        if (mutationPolicy != TransitionMutationPolicy.NONE
-                || transitionAction != TransitionAction.NONE) {
-            throw new IllegalArgumentException(
-                    "non-phase material profiles cannot declare a transition");
         }
     }
 

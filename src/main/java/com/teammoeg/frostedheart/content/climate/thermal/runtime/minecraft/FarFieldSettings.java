@@ -2,29 +2,28 @@
 package com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft;
 
 /** Local exposed-boundary calibration without room/component classification. */
-public record FarFieldSettings(
-        boolean enabled,
+record FarFieldSettings(
         double baseConductanceWPerK,
         double referenceOpeningAreaBlocksSquared,
         double continuationDistanceBlocks
 ) {
-    public FarFieldSettings {
+    FarFieldSettings {
         if (!Double.isFinite(baseConductanceWPerK)
-                || baseConductanceWPerK < 0.0D
+                || baseConductanceWPerK <= 0.0D
                 || !Double.isFinite(referenceOpeningAreaBlocksSquared)
                 || referenceOpeningAreaBlocksSquared <= 0.0D
                 || !Double.isFinite(continuationDistanceBlocks)
-                || continuationDistanceBlocks <= 0.0D
-                || enabled && baseConductanceWPerK <= 0.0D) {
-            throw new IllegalArgumentException("FarField settings are invalid");
+                || continuationDistanceBlocks <= 0.0D) {
+            throw new IllegalArgumentException(
+                    "FarField settings are invalid");
         }
     }
 
-    public double conductanceForPatches(
+    double conductanceForPatches(
             int openPatchCount,
             boolean directSkyExposure
     ) {
-        if (!enabled || openPatchCount <= 0) {
+        if (openPatchCount <= 0) {
             return 0.0D;
         }
         double continuation = directSkyExposure

@@ -9,7 +9,7 @@ import com.teammoeg.frostedheart.content.climate.thermal.source.ThermalSourceBat
 import java.util.Objects;
 
 /** Immutable ownership transfer from Minecraft capture to a dimension worker. */
-public final class ThermalInputBatch {
+final class ThermalInputBatch {
     static final long CUT_INTERVAL_TICKS = 20L;
     static final PageAdmission[] NO_ADMISSIONS = new PageAdmission[0];
     static final PageRetirement[] NO_RETIREMENTS = new PageRetirement[0];
@@ -28,7 +28,7 @@ public final class ThermalInputBatch {
     private final PhaseAck[] phaseAcks;
     private final double farFieldConductanceScale;
 
-    public ThermalInputBatch(
+    ThermalInputBatch(
             long dimensionGeneration,
             long sequence,
             long targetTick,
@@ -62,58 +62,58 @@ public final class ThermalInputBatch {
         this.farFieldConductanceScale = farFieldConductanceScale;
     }
 
-    public long dimensionGeneration() {
+    long dimensionGeneration() {
         return dimensionGeneration;
     }
 
-    public long sequence() {
+    long sequence() {
         return sequence;
     }
 
-    public long targetTick() {
+    long targetTick() {
         return targetTick;
     }
 
-    public PageAdmission[] admissions() {
+    PageAdmission[] admissions() {
         return admissions;
     }
 
-    public PageRetirement[] retirements() {
+    PageRetirement[] retirements() {
         return retirements;
     }
 
-    public ResolvedGeometryBatch geometry() {
+    ResolvedGeometryBatch geometry() {
         return geometry;
     }
 
-    public ThermalSourceBatch sourceEvents() {
+    ThermalSourceBatch sourceEvents() {
         return sourceEvents;
     }
 
-    public PageEnvironmentUpdate[] environmentUpdates() {
+    PageEnvironmentUpdate[] environmentUpdates() {
         return environmentUpdates;
     }
 
-    public PhaseAck[] phaseAcks() {
+    PhaseAck[] phaseAcks() {
         return phaseAcks;
     }
 
-    public boolean hasFarFieldConductanceScale() {
+    boolean hasFarFieldConductanceScale() {
         return !Double.isNaN(farFieldConductanceScale);
     }
 
-    public double farFieldConductanceScale() {
+    double farFieldConductanceScale() {
         return farFieldConductanceScale;
     }
 
-    public record PageAdmission(
+    record PageAdmission(
             ThermalPageHandle page,
             long geometryRevision,
             PageSignatures signatures,
             double naturalTemperatureC,
             byte[] firstExposedLocalY
     ) {
-        public PageAdmission {
+        PageAdmission {
             Objects.requireNonNull(page, "page");
             Objects.requireNonNull(signatures, "signatures");
             Objects.requireNonNull(firstExposedLocalY, "firstExposedLocalY");
@@ -125,22 +125,22 @@ public final class ThermalInputBatch {
         }
     }
 
-    public record PageRetirement(
+    record PageRetirement(
             ThermalPageHandle page
     ) {
-        public PageRetirement {
+        PageRetirement {
             Objects.requireNonNull(page, "page");
         }
     }
 
-    public record PageEnvironmentUpdate(
+    record PageEnvironmentUpdate(
             ThermalPageHandle page,
             boolean naturalTemperatureChanged,
             double naturalTemperatureC,
             short[] skyColumns,
             byte[] firstExposedLocalY
     ) {
-        public PageEnvironmentUpdate {
+        PageEnvironmentUpdate {
             Objects.requireNonNull(page, "page");
             Objects.requireNonNull(skyColumns, "skyColumns");
             Objects.requireNonNull(firstExposedLocalY, "firstExposedLocalY");
@@ -159,11 +159,11 @@ public final class ThermalInputBatch {
         }
     }
 
-    public record PhaseAck(
+    record PhaseAck(
             PhaseTransitionRuntime.Request request,
             PhaseTransitionRuntime.AckOutcome outcome
     ) {
-        public PhaseAck {
+        PhaseAck {
             Objects.requireNonNull(request, "request");
             Objects.requireNonNull(outcome, "outcome");
         }

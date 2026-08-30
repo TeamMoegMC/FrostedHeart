@@ -137,13 +137,12 @@ final class WorkerPhysicalSourceBindings
 
     private void resolve(SourceDescriptor source) {
         Arrays.fill(source.bindings, null);
-        SourceBinding redistribution = null;
         for (int index = 0; index < source.profile.portCount(); index++) {
             Port port = source.profile.port(index);
             if (port.kind() == PortKind.INTERNAL_HEAT) {
                 source.bindings[index] = SourceBinding.internalReservoir(
                         sinkId(source.sourceId, port));
-            } else if (port.kind() == PortKind.DECLARED_LOSS) {
+            } else if (port.kind() == PortKind.RADIATION_LOSS) {
                 source.bindings[index] = SourceBinding.declaredLoss(
                         sinkId(source.sourceId, port));
             } else {
@@ -161,9 +160,6 @@ final class WorkerPhysicalSourceBindings
                             slot,
                             pages.lifecycleGenerationAt(
                                     blockX, blockY, blockZ));
-                    if (redistribution == null) {
-                        redistribution = source.bindings[index];
-                    }
                 } else if (slot == WorkerPageStore.PORT_TOPOLOGY_UNAVAILABLE) {
                     source.bindings[index] = SourceBinding.degradedLoss(
                             sinkId(source.sourceId, port));
@@ -177,10 +173,7 @@ final class WorkerPhysicalSourceBindings
             Port port = source.profile.port(index);
             MissingPortPolicy policy = source.profile.missingPortPolicy();
             source.bindings[index] =
-                    policy == MissingPortPolicy.REDISTRIBUTE_TO_VALID_PORTS
-                            && redistribution != null
-                    ? redistribution
-                    : policy == MissingPortPolicy.INTERNAL_HEAT
+                    policy == MissingPortPolicy.INTERNAL_HEAT
                             ? SourceBinding.internalReservoir(
                                     sinkId(source.sourceId, port))
                             : SourceBinding.declaredLoss(
@@ -200,7 +193,7 @@ final class WorkerPhysicalSourceBindings
                         sinkId(sourceId, port));
                 case INTERNAL_HEAT -> SourceBinding.internalReservoir(
                         sinkId(sourceId, port));
-                case DECLARED_LOSS -> SourceBinding.declaredLoss(
+                case RADIATION_LOSS -> SourceBinding.declaredLoss(
                         sinkId(sourceId, port));
             };
             result[index] = EmissionPort.of(

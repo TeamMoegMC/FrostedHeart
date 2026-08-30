@@ -1,4 +1,4 @@
-package com.teammoeg.frostedheart.content.climate.player;
+package com.teammoeg.frostedheart.content.climate.player.unused;
 
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.shapes.VoxelShape;

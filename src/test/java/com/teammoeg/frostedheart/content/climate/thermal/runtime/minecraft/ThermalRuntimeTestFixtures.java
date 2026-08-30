@@ -21,14 +21,6 @@ final class ThermalRuntimeTestFixtures {
     }
 
     static EngineFixture engine() {
-        return engine(false);
-    }
-
-    static EngineFixture engineWithFarField() {
-        return engine(true);
-    }
-
-    private static EngineFixture engine(boolean farFieldEnabled) {
         ThermalSignatureRegistry.Builder builder =
                 ThermalSignatureRegistry.builder();
         int airId = builder.intern(ThermalTestFixtures.fullAirSignature());
@@ -39,11 +31,7 @@ final class ThermalRuntimeTestFixtures {
                         java.util.List.of(), java.util.List.of()),
                 airId,
                 solidId,
-                new FarFieldSettings(
-                        farFieldEnabled,
-                        farFieldEnabled ? 1.0D : 0.0D,
-                        1.0D,
-                        16.0D));
+                new FarFieldSettings(1.0D, 1.0D, 16.0D));
     }
 
     static EngineFixture engine(
@@ -57,7 +45,7 @@ final class ThermalRuntimeTestFixtures {
                 materials,
                 airId,
                 solidId,
-                new FarFieldSettings(false, 0.0D, 1.0D, 16.0D));
+                new FarFieldSettings(1.0D, 1.0D, 16.0D));
     }
 
     private static EngineFixture engine(
@@ -69,8 +57,8 @@ final class ThermalRuntimeTestFixtures {
     ) {
         ThermalCellArena arena = new ThermalCellArena(256);
         QueryPublication publication = QueryPublication.tryCreate(
-                new ThermalMemoryBudget(8L * 1024L * 1024L, 0L)
-                        .createDimensionBudget(8L * 1024L * 1024L, 0L),
+                new ThermalMemoryBudget(8L * 1024L * 1024L)
+                        .createDimensionBudget(8L * 1024L * 1024L),
                 256);
         assertNotNull(publication);
         ThermalDimensionEngine engine = new ThermalDimensionEngine(
@@ -80,13 +68,14 @@ final class ThermalRuntimeTestFixtures {
                 signatures,
                 materials,
                 new ThermalTopologyParameters(
-                        0, 64, 1_200.0D,
-                        0.0D, 0.0D, 1.0D, 0.25D, false,
+                        64, 1_200.0D,
+                        0.0D, 0.0D, 1.0D, 0.25D,
                         new BuoyancyConductance.Parameters(0.25D, 4.0D, 10.0D),
                         8, 4),
                 farField,
                 new ThermalDimensionLimits(
-                        16, 4_096, 2_048,
+                        16, 128, 256,
+                        4_096, 2_048,
                         4_096, 4_096, 4_096,
                         2, 1.0e-6D),
                 publication);
@@ -128,14 +117,13 @@ final class ThermalRuntimeTestFixtures {
     static ResolvedGeometryBatch geometryCenter(
             ThermalPageHandle page,
             long revision,
-            long tick,
             int block,
             int signatureId
     ) {
         ResolvedGeometryBatch.Builder builder =
                 new ResolvedGeometryBatch.Builder();
         builder.addResolvedCenter(
-                page, revision, tick, block, signatureId);
+                page, revision, block, signatureId);
         return builder.buildAndReset();
     }
 

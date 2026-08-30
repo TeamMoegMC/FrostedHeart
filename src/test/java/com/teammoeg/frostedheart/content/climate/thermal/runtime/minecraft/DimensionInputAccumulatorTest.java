@@ -9,6 +9,22 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class DimensionInputAccumulatorTest {
     @Test
+    void sequenceAdvancesAcrossCutsAndRestartsWithANewGeneration() {
+        DimensionInputAccumulator firstGeneration =
+                new DimensionInputAccumulator(1L, 0L);
+
+        ThermalInputBatch first = firstGeneration.seal(20L);
+        ThermalInputBatch second = firstGeneration.seal(40L);
+        ThermalInputBatch restarted =
+                new DimensionInputAccumulator(2L, 40L).seal(60L);
+
+        assertEquals(1L, first.sequence());
+        assertEquals(2L, second.sequence());
+        assertEquals(1L, restarted.sequence());
+        assertEquals(2L, restarted.dimensionGeneration());
+    }
+
+    @Test
     void environmentUpdatesCoalesceByPageAndColumnBeforeSeal() {
         DimensionInputAccumulator accumulator =
                 new DimensionInputAccumulator(1L, 0L);

@@ -7,7 +7,7 @@ import com.teammoeg.frostedheart.content.climate.thermal.solver.PhaseTransitionR
 import java.util.Objects;
 
 /** Immutable worker result drained by the owning Minecraft level thread. */
-public record ThermalCompletion(
+record ThermalCompletion(
         long dimensionGeneration,
         long batchSequence,
         Status status,
@@ -23,13 +23,13 @@ public record ThermalCompletion(
     static final PageContinuation[] NO_CONTINUATIONS =
             new PageContinuation[0];
 
-    public enum Status {
+    enum Status {
         COMPLETED,
         WORK_LIMITED,
         ENGINE_FAILED
     }
 
-    public ThermalCompletion {
+    ThermalCompletion {
         if (dimensionGeneration < 0L || batchSequence <= 0L) {
             throw new IllegalArgumentException("thermal completion identity is invalid");
         }
@@ -45,14 +45,14 @@ public record ThermalCompletion(
     }
 
     /** Page-scoped continuation publication with exact lifecycle identity. */
-    public record PageContinuation(
+    record PageContinuation(
             long sectionKey,
             long lifecycleGeneration,
             long geometryRevision,
             long topologyGeneration,
             byte faceMask
     ) {
-        public PageContinuation {
+        PageContinuation {
             if (lifecycleGeneration < 0L || geometryRevision < 0L
                     || topologyGeneration < 0L
                     || (Byte.toUnsignedInt(faceMask) & ~0x3f) != 0) {

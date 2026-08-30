@@ -38,18 +38,17 @@ public final class ThermalSignatureRegistry {
         for (int signatureId = 0;
              signatureId < signatures.size();
              signatureId++) {
-            for (LocalAirRegionPattern region
-                    : signatures.get(signatureId).airRegions()) {
-                if (region.localRegionId() < 0
-                        || region.localRegionId() >= 0xff) {
+            for (var component
+                    : signatures.get(signatureId).airGeometry().components()) {
+                if (component.id() < 0 || component.id() >= 0xff) {
                     throw new IllegalArgumentException(
                             "signature Air region does not fit one byte");
                 }
-                long remaining = region.provenAirMicrocellMask();
+                long remaining = component.microcellMask();
                 while (remaining != 0L) {
                     int microcell = Long.numberOfTrailingZeros(remaining);
                     componentOrdinal[signatureId * 64 + microcell] =
-                            (byte) region.localRegionId();
+                            (byte) component.id();
                     remaining &= remaining - 1L;
                 }
             }

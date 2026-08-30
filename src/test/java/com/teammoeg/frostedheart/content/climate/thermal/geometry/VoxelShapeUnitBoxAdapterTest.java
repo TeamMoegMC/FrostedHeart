@@ -82,7 +82,7 @@ class VoxelShapeUnitBoxAdapterTest {
             for (int y = 0; y < ConservativeAirGeometry.GRID_SIZE; y++) {
                 for (int z = 0; z < ConservativeAirGeometry.GRID_SIZE; z++) {
                     for (int x = 0; x < ConservativeAirGeometry.GRID_SIZE; x++) {
-                        if (resolution.componentAt(x, y, z) >= 0) {
+                        if (containsAir(resolution, x, y, z)) {
                             assertFalse(Shapes.joinIsNotEmpty(
                                     source,
                                     microcell(x, y, z),
@@ -103,6 +103,22 @@ class VoxelShapeUnitBoxAdapterTest {
 
     private static double coordinate(Random random) {
         return (random.nextInt(13) - 2) / 8.0D;
+    }
+
+    private static boolean containsAir(
+            ConservativeAirGeometry.Resolution resolution,
+            int x,
+            int y,
+            int z
+    ) {
+        for (ConservativeAirGeometry.AirComponent component
+                : resolution.components()) {
+            int microcell = (y << 4) | (z << 2) | x;
+            if ((component.microcellMask() & 1L << microcell) != 0L) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private static double extent(Random random) {

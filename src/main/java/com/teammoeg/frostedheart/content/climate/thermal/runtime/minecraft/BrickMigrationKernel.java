@@ -163,8 +163,7 @@ final class BrickMigrationKernel {
             if (old.blockX()[index] == next.blockX()[nextIndex]
                     && old.blockY()[index] == next.blockY()[nextIndex]
                     && old.blockZ()[index] == next.blockZ()[nextIndex]
-                    && old.profileId()[index] == next.profileId()[nextIndex]
-                    && old.depth()[index] == next.depth()[nextIndex]) {
+                    && old.profileId()[index] == next.profileId()[nextIndex]) {
                 return index;
             }
         }

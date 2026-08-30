@@ -17,6 +17,8 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -123,44 +125,41 @@ class ComponentBrickCompilerTest {
         List<ConservativeAirGeometry.Resolution> unsupportedBlocks = repeated(air());
         unsupportedBlocks.set(9, ConservativeAirGeometry.resolve(List.of(slab), 1));
 
-        ComponentBrickCompiler.Compilation unsupportedInput =
-                compile(unsupportedBlocks, 4);
-        assertEquals(ComponentBrickCompiler.Status.CONSERVATIVE_UNSUPPORTED,
-                unsupportedInput.status());
-        assertEquals(ComponentBrickCompiler.UnsupportedReason.BLOCK_INPUT_UNSUPPORTED,
-                unsupportedInput.unsupportedReason());
-        assertEquals(9, unsupportedInput.unsupportedBlockIndex());
+        assertNull(compile(unsupportedBlocks, 4));
 
         List<ConservativeAirGeometry.Resolution> twoRegions = repeated(air());
         twoRegions.set(12, ConservativeAirGeometry.resolve(List.of(slab), 4));
-        ComponentBrickCompiler.Compilation regionOverflow = compile(twoRegions, 1);
-        assertEquals(ComponentBrickCompiler.UnsupportedReason.REGION_LIMIT_EXCEEDED,
-                regionOverflow.unsupportedReason());
-        assertEquals(12, regionOverflow.unsupportedBlockIndex());
+        assertNull(compile(twoRegions, 1));
     }
 
     @Test
     void invalidBrickInputsAreRejected() {
         assertThrows(IllegalArgumentException.class, () ->
-                ComponentBrickCompiler.compile(List.of(), 1));
+                ComponentBrickCompiler.compileResolved(
+                        new ConservativeAirGeometry.Resolution[0],
+                        1,
+                        new ComponentBrickCompiler.Scratch()));
         assertThrows(IllegalArgumentException.class, () ->
-                ComponentBrickCompiler.compile(repeated(air()), 0));
+                compile(repeated(air()), 0));
         assertThrows(IllegalArgumentException.class, () ->
                 ComponentBrickCompiler.blockIndex(4, 0, 0));
     }
 
-    private static ComponentBrickCompiler.Compilation compile(
+    private static ComponentBrickCompiler.CompiledBrick compile(
             List<ConservativeAirGeometry.Resolution> blocks,
             int maximumRegionsPerBlock
     ) {
-        return ComponentBrickCompiler.compile(blocks, maximumRegionsPerBlock);
+        return ComponentBrickCompiler.compileResolved(
+                blocks.toArray(ConservativeAirGeometry.Resolution[]::new),
+                maximumRegionsPerBlock,
+                new ComponentBrickCompiler.Scratch());
     }
 
     private static ComponentBrickCompiler.CompiledBrick resolved(
-            ComponentBrickCompiler.Compilation compilation
+            ComponentBrickCompiler.CompiledBrick compilation
     ) {
-        assertEquals(ComponentBrickCompiler.Status.RESOLVED, compilation.status());
-        return compilation.brick().orElseThrow();
+        assertNotNull(compilation);
+        return compilation;
     }
 
     private static ConservativeAirGeometry.Resolution air() {

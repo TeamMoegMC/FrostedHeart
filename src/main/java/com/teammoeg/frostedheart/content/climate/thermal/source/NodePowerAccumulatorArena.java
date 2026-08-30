@@ -25,6 +25,7 @@ public final class NodePowerAccumulatorArena {
     private byte[] active;
 
     private final Long2IntOpenHashMap slotsByNode;
+    private final int maximumCapacity;
 
     private int highWaterMark;
     private int liveCount;
@@ -32,10 +33,13 @@ public final class NodePowerAccumulatorArena {
     private int activeHead = NO_ACCUMULATOR;
     private int activeTail = NO_ACCUMULATOR;
 
-    public NodePowerAccumulatorArena(int initialCapacity) {
-        if (initialCapacity < 0) {
-            throw new IllegalArgumentException("initialCapacity must be non-negative");
+    public NodePowerAccumulatorArena(int initialCapacity, int maximumCapacity) {
+        if (initialCapacity < 0 || maximumCapacity <= 0
+                || initialCapacity > maximumCapacity) {
+            throw new IllegalArgumentException(
+                    "accumulator capacity limits are invalid");
         }
+        this.maximumCapacity = maximumCapacity;
         allocateStorage(Math.max(1, initialCapacity));
         slotsByNode = new Long2IntOpenHashMap(Math.max(1, initialCapacity));
         slotsByNode.defaultReturnValue(NO_ACCUMULATOR);
@@ -50,6 +54,10 @@ public final class NodePowerAccumulatorArena {
             throw new IllegalArgumentException("additional accumulator count is negative");
         }
         int required = Math.addExact(liveCount, additional);
+        if (required > maximumCapacity) {
+            throw new IllegalStateException(
+                    "thermal source node limit reached");
+        }
         ensureStorage(required);
     }
 
@@ -269,7 +277,13 @@ public final class NodePowerAccumulatorArena {
             return;
         }
         int old = nodeIds.length;
-        int capacity = Math.max(required, old + Math.max(8, old >>> 1));
+        if (required > maximumCapacity) {
+            throw new IllegalStateException(
+                    "thermal source node limit reached");
+        }
+        int capacity = Math.min(
+                maximumCapacity,
+                Math.max(required, old + Math.max(8, old >>> 1)));
         nodeIds = Arrays.copyOf(nodeIds, capacity);
         lifecycleGenerations = Arrays.copyOf(lifecycleGenerations, capacity);
         currentPowerW = Arrays.copyOf(currentPowerW, capacity);

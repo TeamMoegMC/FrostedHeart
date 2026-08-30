@@ -2,8 +2,9 @@
 package com.teammoeg.frostedheart.content.climate.thermal;
 
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.PageSignatures;
+import com.teammoeg.frostedheart.content.climate.thermal.mesh.ThermalBrickCellLayout;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.ThermalCellArena;
-import com.teammoeg.frostedheart.content.climate.thermal.profile.LocalAirRegionPattern;
+import com.teammoeg.frostedheart.content.climate.thermal.geometry.ConservativeAirGeometry;
 import com.teammoeg.frostedheart.content.climate.thermal.profile.ResolvedThermalSignature;
 
 import java.util.List;
@@ -25,10 +26,9 @@ public final class ThermalTestFixtures {
             double initialTemperatureC,
             double referenceTemperatureC
     ) {
-        ThermalCellArena.BrickCellLayout layout =
-                new ThermalCellArena.BrickCellLayout();
+        ThermalBrickCellLayout layout = new ThermalBrickCellLayout();
         layout.reset(minX, minY, minZ);
-        layout.setRegularAir(0, 0, totalCapacityJPerK / 64.0D);
+        layout.setRegularAir(totalCapacityJPerK / 64.0D);
         ThermalCellArena.BrickAllocation allocation = arena.stageBrickCells(
                 pageSlot,
                 generation,
@@ -54,10 +54,9 @@ public final class ThermalTestFixtures {
             double transitionEnergyJ,
             double referenceTemperatureC
     ) {
-        ThermalCellArena.BrickCellLayout layout =
-                new ThermalCellArena.BrickCellLayout();
+        ThermalBrickCellLayout layout = new ThermalBrickCellLayout();
         layout.reset(minX, minY, minZ);
-        layout.setRegularAir(0, 0, airCapacityJPerK / 64.0D);
+        layout.setRegularAir(airCapacityJPerK / 64.0D);
         layout.addPhaseReservoir(
                 minX,
                 minY,
@@ -87,17 +86,20 @@ public final class ThermalTestFixtures {
 
     public static ResolvedThermalSignature fullAirSignature() {
         return new ResolvedThermalSignature(
+                new ConservativeAirGeometry.Resolution(
+                        ConservativeAirGeometry.Status.RESOLVED,
+                        List.of(new ConservativeAirGeometry.AirComponent(
+                                0, -1L,
+                                0xffff, 0xffff, 0xffff,
+                                0xffff, 0xffff, 0xffff))),
                 0,
-                0,
-                List.of(new LocalAirRegionPattern(
-                        0, -1L,
-                        0xffff, 0xffff, 0xffff,
-                        0xffff, 0xffff, 0xffff)),
-                0, 0, 0, 0, 0);
+                0);
     }
 
     public static ResolvedThermalSignature solidSignature() {
         return new ResolvedThermalSignature(
-                0, 0, List.of(), 0, 0, 0, 0, 0);
+                new ConservativeAirGeometry.Resolution(
+                        ConservativeAirGeometry.Status.RESOLVED, List.of()),
+                0, 0);
     }
 }

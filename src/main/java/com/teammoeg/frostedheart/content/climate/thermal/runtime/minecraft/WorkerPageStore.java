@@ -21,7 +21,6 @@ final class WorkerPageStore implements AutoCloseable {
     private final Int2ObjectOpenHashMap<PageState> activeBySlot;
     private final IntArrayList freePageSlots;
     private int pageSlotHighWater;
-    private int unresolvedPageCount;
     private boolean closed;
 
     WorkerPageStore(int maximumPages) {
@@ -54,10 +53,6 @@ final class WorkerPageStore implements AutoCloseable {
         return pageSlotHighWater;
     }
 
-    boolean topologyResolved() {
-        return unresolvedPageCount == 0;
-    }
-
     PreparedTopologyChange.PageWrite[] prepareWrites(
             ArrayList<TopologyPlan.PageDraft> drafts,
             int draftCount,
@@ -71,7 +66,8 @@ final class WorkerPageStore implements AutoCloseable {
         for (int index = 0; index < draftCount; index++) {
             TopologyPlan.PageDraft draft = drafts.get(index);
             if (draft.retirement) {
-                writes[index] = draft.retirementWrite();
+                writes[index] = PreparedTopologyChange.PageWrite.retirement(
+                        draft);
                 continue;
             }
             int replacementCount = Long.bitCount(draft.replacementMask);
@@ -144,19 +140,13 @@ final class WorkerPageStore implements AutoCloseable {
                         ? draft.page.brick(brick)
                         : topology).continuationFaceMask;
             }
-            writes[index] = new PreparedTopologyChange.PageWrite(
-                    draft.page,
-                    draft.admission,
-                    false,
-                    draft.nextSignatures,
+            writes[index] = PreparedTopologyChange.PageWrite.active(
+                    draft,
                     resolvedMask,
                     publication,
                     continuationFaceMask,
-                    draft.cellReplacementMask,
                     brickIndexes,
                     bricks,
-                    draft.naturalTemperatureChanged,
-                    draft.naturalTemperatureC,
                     draft.skyCount == 0
                             ? PreparedTopologyChange.NO_SHORTS
                             : Arrays.copyOf(draft.skyColumns, draft.skyCount),
@@ -331,9 +321,6 @@ final class WorkerPageStore implements AutoCloseable {
     void commitAdmission(PageState state) {
         activeBySection.put(state.handle.sectionKey(), state);
         activeBySlot.put(state.pageSlot, state);
-        if (!state.resolved()) {
-            unresolvedPageCount++;
-        }
     }
 
     void commitRetirement(PageState state) {
@@ -343,9 +330,6 @@ final class WorkerPageStore implements AutoCloseable {
         }
         activeBySection.remove(state.handle.sectionKey());
         activeBySlot.remove(state.pageSlot);
-        if (!state.resolved()) {
-            unresolvedPageCount--;
-        }
         releasePageSlot(state.pageSlot);
     }
 
@@ -357,11 +341,6 @@ final class WorkerPageStore implements AutoCloseable {
             long resolvedBrickMask,
             PagePublication publication
     ) {
-        boolean wasResolved = state.resolved();
-        boolean nextResolved = resolvedBrickMask == -1L;
-        if (wasResolved != nextResolved) {
-            unresolvedPageCount += nextResolved ? -1 : 1;
-        }
         state.signatures = signatures;
         state.geometryRevision = geometryRevision;
         state.topologyGeneration = topologyGeneration;
@@ -413,7 +392,6 @@ final class WorkerPageStore implements AutoCloseable {
         activeBySection.clear();
         activeBySlot.clear();
         freePageSlots.clear();
-        unresolvedPageCount = 0;
     }
 
     static final class PageState {
@@ -460,8 +438,5 @@ final class WorkerPageStore implements AutoCloseable {
             return bricks[brickIndex];
         }
 
-        boolean resolved() {
-            return resolvedBrickMask == -1L;
-        }
     }
 }

@@ -204,8 +204,6 @@ final class MaterialEdgeCompiler {
         }
         int first = (int) (key >>> 32);
         int second = (int) key;
-        int firstGeneration = arena.lifecycleGeneration(first);
-        int secondGeneration = arena.lifecycleGeneration(second);
         double conductance = 0.0D;
         for (double contribution : conductances) {
             conductance += contribution;
@@ -223,8 +221,6 @@ final class MaterialEdgeCompiler {
         return new ThermalMaterialEdge(
                 first,
                 second,
-                firstGeneration,
-                secondGeneration,
                 fragments,
                 operations,
                 ranks,

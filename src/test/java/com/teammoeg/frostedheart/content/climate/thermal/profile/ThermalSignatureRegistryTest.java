@@ -30,7 +30,7 @@ class ThermalSignatureRegistryTest {
         assertEquals(0, registry.idOrDefault(air, -1));
         assertEquals(-1, registry.idOrDefault(
                 new ResolvedThermalSignature(
-                        1, 0, java.util.List.of(), 0, 0, 0, 0, 0),
+                        solid.airGeometry(), 1, 0),
                 -1));
     }
 

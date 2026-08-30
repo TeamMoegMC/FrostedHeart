@@ -3,12 +3,11 @@ package com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft;
 
 import com.teammoeg.frostedheart.content.climate.thermal.geometry.ComponentBrickCompiler;
 import com.teammoeg.frostedheart.content.climate.thermal.geometry.ConservativeAirGeometry;
-import com.teammoeg.frostedheart.content.climate.thermal.geometry.GeometrySummary;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.MaterialBoundaryRegistry;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.PagePublication;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.PageSignatures;
+import com.teammoeg.frostedheart.content.climate.thermal.mesh.ThermalBrickCellLayout;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.ThermalCellArena;
-import com.teammoeg.frostedheart.content.climate.thermal.solver.ThermalExchangeKernel;
 import com.teammoeg.frostedheart.content.climate.thermal.solver.ThermalFragment;
 import net.minecraft.core.SectionPos;
 
@@ -28,8 +27,8 @@ final class BrickTopologyCompiler {
     private final BrickMaterialKernel material;
     private final ComponentBrickCompiler.Scratch componentScratch =
             new ComponentBrickCompiler.Scratch();
-    private final ThermalCellArena.BrickCellLayout cellLayout =
-            new ThermalCellArena.BrickCellLayout();
+    private final ThermalBrickCellLayout cellLayout =
+            new ThermalBrickCellLayout();
     private final ConservativeAirGeometry.Resolution[] geometry =
             new ConservativeAirGeometry.Resolution[64];
     private final int[] signatureIds = new int[64];
@@ -54,7 +53,7 @@ final class BrickTopologyCompiler {
         this.farField = Objects.requireNonNull(farField, "farField");
         this.maximumArenaSlots = maximumArenaSlots;
         material = new BrickMaterialKernel(
-                arena, signatures, Objects.requireNonNull(materials, "materials"));
+                signatures, Objects.requireNonNull(materials, "materials"));
     }
 
     WorkerBrickTopology compileCells(
@@ -77,7 +76,6 @@ final class BrickTopologyCompiler {
         int minZ = sectionMinZ + (brickZ << 2);
         cellLayout.reset(minX, minY, minZ);
 
-        int mediumId = -1;
         int airMicrocells = 0;
         boolean fullAir = true;
         for (int localY = 0; localY < 4; localY++) {
@@ -99,28 +97,15 @@ final class BrickTopologyCompiler {
                     airMicrocells += Long.bitCount(airMask);
                     fullAir &= airMask == FULL_AIR
                             && resolved.components().size() == 1;
-                    if (airMask != 0L) {
-                        int blockMedium = signatures.signature(signatureId).mediumId();
-                        if (mediumId < 0) {
-                            mediumId = blockMedium;
-                        } else if (mediumId != blockMedium) {
-                            return unresolved();
-                        }
-                    }
                 }
             }
         }
 
         ComponentBrickCompiler.CompiledBrick mixed = null;
-        GeometrySummary summary;
         if (airMicrocells == 0) {
-            summary = GeometrySummary.noAir(0);
         } else if (fullAir && airMicrocells == 64 * 64) {
             cellLayout.setRegularAir(
-                    mediumId,
-                    parameters.cellFlags(),
                     parameters.effectiveAirCapacityJPerBlockK());
-            summary = GeometrySummary.singleAir(mediumId);
         } else {
             mixed = ComponentBrickCompiler.compileResolved(
                     geometry,
@@ -131,11 +116,7 @@ final class BrickTopologyCompiler {
             }
             cellLayout.setMixedAir(
                     mixed,
-                    mediumId,
-                    parameters.cellFlags(),
                     parameters.effectiveAirCapacityJPerBlockK());
-            summary = GeometrySummary.mixed(
-                    GeometrySummary.MATERIAL_INTERFACE);
         }
         if (!material.compileLayout(
                 page, minX, minY, minZ, signatureIds, view, cellLayout)) {
@@ -166,8 +147,6 @@ final class BrickTopologyCompiler {
                     coverage,
                     coverageGeneration,
                     mixed,
-                    summary,
-                    ThermalFragment.EMPTY,
                     phaseCandidates,
                     material.materialPoles(contacts, allocation),
                     material.phaseReservoirs(
@@ -220,7 +199,6 @@ final class BrickTopologyCompiler {
                 Integer.toUnsignedLong(page.fragmentIndex(brickIndex)),
                 freezeAirPairs(),
                 materialOperations.pairs(),
-                materialOperations.boundaries(),
                 materialOperations.phases(),
                 freezeFarBoundaries(page.pageSlot));
         return new CompiledFragment(
@@ -234,9 +212,6 @@ final class BrickTopologyCompiler {
                 com.teammoeg.frostedheart.content.climate.thermal.mesh
                         .ArenaSpan.EMPTY,
                 -1, 0, null,
-                GeometrySummary.noAir(
-                        GeometrySummary.UNRESOLVED_TOPOLOGY),
-                ThermalFragment.EMPTY,
                 PagePublication.PhaseCandidates.EMPTY,
                 WorkerBrickTopology.MaterialPoles.EMPTY,
                 WorkerBrickTopology.PhaseReservoirs.EMPTY,
@@ -342,7 +317,7 @@ final class BrickTopologyCompiler {
             throw new IllegalStateException(
                     "Air pair center distance is invalid");
         }
-        airPairs.add(first, second, area / distance, false);
+        airPairs.add(first, second, area / distance);
     }
 
     private double center(int slot, int axis) {
@@ -401,9 +376,6 @@ final class BrickTopologyCompiler {
             TopologyView view
     ) {
         continuationFaceMask |= (byte) (1 << face.ordinal());
-        if (!farField.enabled()) {
-            return;
-        }
         ComponentBrickCompiler.CompiledBrick mixed = owner.mixedGeometry;
         if (mixed == null) {
             int direct = directSkyColumns(page, brickIndex, face, -1, view)
@@ -412,8 +384,7 @@ final class BrickTopologyCompiler {
                     owner.coverageSlot, 0L,
                     farField.conductanceForPatches(direct, true)
                             + farField.conductanceForPatches(
-                                    256 - direct, false),
-                    false);
+                                    256 - direct, false));
             return;
         }
         for (int port = 0; port < mixed.facePortCount(); port++) {
@@ -431,8 +402,7 @@ final class BrickTopologyCompiler {
                     0L,
                     farField.conductanceForPatches(direct, true)
                             + farField.conductanceForPatches(
-                                    patches - direct, false),
-                    false);
+                                    patches - direct, false));
         }
     }
 
@@ -471,34 +441,19 @@ final class BrickTopologyCompiler {
         }
         int[] first = new int[count];
         int[] second = new int[count];
-        int[] firstGeneration = new int[count];
-        int[] secondGeneration = new int[count];
         double[] conductance = new double[count];
-        double[] coefficient = new double[count];
         double[] firstY = new double[count];
         double[] secondY = new double[count];
-        byte[] buoyant = new byte[count];
         for (int index = 0; index < count; index++) {
             first[index] = (int) airPairs.first(index);
             second[index] = (int) airPairs.second(index);
-            firstGeneration[index] = arena.lifecycleGeneration(first[index]);
-            secondGeneration[index] = arena.lifecycleGeneration(second[index]);
             conductance[index] = parameters.effectiveMixingWPerBlockK()
                     * airPairs.value(index);
-            boolean dynamic = parameters.applyBuoyancy();
-            buoyant[index] = dynamic ? (byte) 1 : 0;
-            coefficient[index] = dynamic
-                    ? 0.0D
-                    : ThermalExchangeKernel.compilePairCoefficientJPerK(
-                            arena.capacityJPerK(first[index]),
-                            arena.capacityJPerK(second[index]),
-                            conductance[index], 1.0D);
             firstY[index] = arena.center(first[index], 1);
             secondY[index] = arena.center(second[index], 1);
         }
         return new ThermalFragment.AirPairs(
-                first, second, firstGeneration, secondGeneration,
-                conductance, coefficient, firstY, secondY, buoyant);
+                first, second, conductance, firstY, secondY);
     }
 
     private ThermalFragment.FarBoundaries freezeFarBoundaries(
@@ -509,21 +464,14 @@ final class BrickTopologyCompiler {
             return ThermalFragment.FarBoundaries.EMPTY;
         }
         int[] cell = new int[count];
-        int[] generation = new int[count];
-        int[] pageSlot = new int[count];
         double[] conductance = new double[count];
         double[] coefficient = new double[count];
-        long[] coefficientGeneration = new long[count];
-        Arrays.fill(coefficientGeneration, -1L);
         for (int index = 0; index < count; index++) {
             cell[index] = (int) farBoundaries.first(index);
-            generation[index] = arena.lifecycleGeneration(cell[index]);
-            pageSlot[index] = ownerPageSlot;
             conductance[index] = farBoundaries.value(index);
         }
         return new ThermalFragment.FarBoundaries(
-                cell, generation, pageSlot, conductance,
-                coefficient, coefficientGeneration);
+                cell, ownerPageSlot, conductance, coefficient);
     }
 
     private static int brickMinX(

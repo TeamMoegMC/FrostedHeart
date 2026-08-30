@@ -5,8 +5,6 @@ package com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft;
 final class PackedAirReference {
     static final long NONE = -1L;
 
-    private static final long MICROCELL_BITS = 0x3fL << 8;
-
     private PackedAirReference() {
     }
 
@@ -30,15 +28,8 @@ final class PackedAirReference {
         return (int) ((reference >>> 14) & 0xfffL);
     }
 
-    static int microcell(long reference) {
-        return (int) ((reference >>> 8) & 0x3fL);
-    }
-
     static int localRegion(long reference) {
         return (int) (reference & 0xffL);
     }
 
-    static long region(long reference) {
-        return reference & ~MICROCELL_BITS;
-    }
 }

@@ -24,9 +24,6 @@ public record SourceBinding(Kind kind, long targetId, int lifecycleGeneration) {
         if (lifecycleGeneration < 0) {
             throw new IllegalArgumentException("lifecycleGeneration must be non-negative");
         }
-        if (kind == Kind.UNBOUND && (targetId != 0L || lifecycleGeneration != 0)) {
-            throw new IllegalArgumentException("UNBOUND cannot carry a target or generation");
-        }
     }
 
     public static SourceBinding thermalNode(long nodeId, int lifecycleGeneration) {
@@ -45,10 +42,6 @@ public record SourceBinding(Kind kind, long targetId, int lifecycleGeneration) {
         return new SourceBinding(Kind.DEGRADED_LOSS, sinkId, 0);
     }
 
-    public static SourceBinding unbound() {
-        return new SourceBinding(Kind.UNBOUND, 0L, 0);
-    }
-
     public boolean isThermalNode() {
         return kind == Kind.THERMAL_NODE;
     }
@@ -57,7 +50,6 @@ public record SourceBinding(Kind kind, long targetId, int lifecycleGeneration) {
         THERMAL_NODE,
         INTERNAL_RESERVOIR,
         DECLARED_LOSS,
-        DEGRADED_LOSS,
-        UNBOUND
+        DEGRADED_LOSS
     }
 }

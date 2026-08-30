@@ -41,22 +41,22 @@ final class PreparedTopologyChange {
     final long[] sourceDirtySections;
     final ThermalPageHandle.GeometryResyncToken[] committedResyncTokens;
 
-    PreparedTopologyChange(
-            long baseStructuralVersion,
-            long nextStructuralVersion,
-            int[] fragmentIndexes,
-            ThermalFragment[] fragments,
-            long[] materialEdgeKeys,
-            ThermalMaterialEdge[] materialEdges,
-            int[] materialExecutionFragments,
-            ThermalMaterialExecution[] materialExecutions,
-            int[] removedReservoirSlots,
-            int[] addedReservoirSlots,
-            PageWrite[] pageWrites,
-            OldSpan[] oldSpans,
-            long[] sourceDirtySections,
-            ThermalPageHandle.GeometryResyncToken[] committedResyncTokens
-    ) {
+    private PreparedTopologyChange(Builder builder) {
+        long baseStructuralVersion = builder.baseStructuralVersion;
+        long nextStructuralVersion = builder.nextStructuralVersion;
+        int[] fragmentIndexes = builder.fragmentIndexes;
+        ThermalFragment[] fragments = builder.fragments;
+        long[] materialEdgeKeys = builder.materialEdgeKeys;
+        ThermalMaterialEdge[] materialEdges = builder.materialEdges;
+        int[] materialExecutionFragments = builder.materialExecutionFragments;
+        ThermalMaterialExecution[] materialExecutions = builder.materialExecutions;
+        int[] removedReservoirSlots = builder.removedReservoirSlots;
+        int[] addedReservoirSlots = builder.addedReservoirSlots;
+        PageWrite[] pageWrites = builder.pageWrites;
+        OldSpan[] oldSpans = builder.oldSpans;
+        long[] sourceDirtySections = builder.sourceDirtySections;
+        ThermalPageHandle.GeometryResyncToken[] committedResyncTokens =
+                builder.committedResyncTokens;
         Objects.requireNonNull(fragmentIndexes, "fragmentIndexes");
         Objects.requireNonNull(fragments, "fragments");
         Objects.requireNonNull(materialEdgeKeys, "materialEdgeKeys");
@@ -104,6 +104,76 @@ final class PreparedTopologyChange {
         this.committedResyncTokens = committedResyncTokens;
     }
 
+    static final class Builder {
+        private long baseStructuralVersion;
+        private long nextStructuralVersion;
+        private int[] fragmentIndexes;
+        private ThermalFragment[] fragments;
+        private long[] materialEdgeKeys;
+        private ThermalMaterialEdge[] materialEdges;
+        private int[] materialExecutionFragments;
+        private ThermalMaterialExecution[] materialExecutions;
+        private int[] removedReservoirSlots;
+        private int[] addedReservoirSlots;
+        private PageWrite[] pageWrites;
+        private OldSpan[] oldSpans;
+        private long[] sourceDirtySections;
+        private ThermalPageHandle.GeometryResyncToken[] committedResyncTokens;
+
+        Builder identity(long baseVersion, long nextVersion) {
+            baseStructuralVersion = baseVersion;
+            nextStructuralVersion = nextVersion;
+            return this;
+        }
+
+        Builder fragments(int[] indexes, ThermalFragment[] values) {
+            fragmentIndexes = indexes;
+            fragments = values;
+            return this;
+        }
+
+        Builder material(
+                long[] edgeKeys,
+                ThermalMaterialEdge[] edges,
+                int[] executionFragments,
+                ThermalMaterialExecution[] executions
+        ) {
+            materialEdgeKeys = edgeKeys;
+            materialEdges = edges;
+            materialExecutionFragments = executionFragments;
+            materialExecutions = executions;
+            return this;
+        }
+
+        Builder reservoirs(int[] removedSlots, int[] addedSlots) {
+            removedReservoirSlots = removedSlots;
+            addedReservoirSlots = addedSlots;
+            return this;
+        }
+
+        Builder pages(PageWrite[] writes, OldSpan[] releasedSpans) {
+            pageWrites = writes;
+            oldSpans = releasedSpans;
+            return this;
+        }
+
+        Builder sourceSections(long[] dirtySections) {
+            sourceDirtySections = dirtySections;
+            return this;
+        }
+
+        Builder resyncTokens(
+                ThermalPageHandle.GeometryResyncToken[] tokens
+        ) {
+            committedResyncTokens = tokens;
+            return this;
+        }
+
+        PreparedTopologyChange build() {
+            return new PreparedTopologyChange(this);
+        }
+    }
+
     private static void requireOrderedFragments(
             int[] indexes,
             ThermalFragment[] values
@@ -148,7 +218,7 @@ final class PreparedTopologyChange {
         final short[] skyColumns;
         final byte[] firstExposedLocalY;
 
-        PageWrite(
+        private PageWrite(
                 WorkerPageStore.PageState page,
                 boolean admission,
                 boolean retirement,
@@ -219,6 +289,51 @@ final class PreparedTopologyChange {
             this.naturalTemperatureC = naturalTemperatureC;
             this.skyColumns = skyColumns;
             this.firstExposedLocalY = firstExposedLocalY;
+        }
+
+        static PageWrite active(
+                TopologyPlan.PageDraft draft,
+                long resolvedBrickMask,
+                PagePublication publication,
+                byte continuationFaceMask,
+                int[] brickIndexes,
+                WorkerBrickTopology[] bricks,
+                short[] skyColumns,
+                byte[] firstExposedLocalY
+        ) {
+            return new PageWrite(
+                    draft.page,
+                    draft.admission,
+                    false,
+                    draft.nextSignatures,
+                    resolvedBrickMask,
+                    publication,
+                    continuationFaceMask,
+                    draft.cellReplacementMask,
+                    brickIndexes,
+                    bricks,
+                    draft.naturalTemperatureChanged,
+                    draft.naturalTemperatureC,
+                    skyColumns,
+                    firstExposedLocalY);
+        }
+
+        static PageWrite retirement(TopologyPlan.PageDraft draft) {
+            return new PageWrite(
+                    draft.page,
+                    false,
+                    true,
+                    draft.page.signatures,
+                    0L,
+                    PagePublication.EMPTY,
+                    (byte) 0,
+                    0L,
+                    NO_INTS,
+                    NO_BRICKS,
+                    false,
+                    draft.page.naturalTemperatureC,
+                    NO_SHORTS,
+                    NO_BYTES);
         }
     }
 

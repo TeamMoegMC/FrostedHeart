@@ -30,6 +30,7 @@ public final class ThermalSourceLedger implements AutoCloseable {
             ThermalSourceMode.values();
 
     private final int maxPortsPerSource;
+    private final int maximumSources;
     private final NodePowerAccumulatorArena accumulators;
     private final ThermalCellArena destination;
 
@@ -66,14 +67,18 @@ public final class ThermalSourceLedger implements AutoCloseable {
             long initialTick,
             int initialSourceCapacity,
             int maxPortsPerSource,
+            int maximumSources,
             NodePowerAccumulatorArena accumulators,
             ThermalCellArena destination
     ) {
         if (initialTick < 0L
-                || initialSourceCapacity < 0 || maxPortsPerSource <= 0) {
+                || initialSourceCapacity < 0 || maxPortsPerSource <= 0
+                || maximumSources <= 0
+                || initialSourceCapacity > maximumSources) {
             throw new IllegalArgumentException("source ledger configuration is invalid");
         }
         this.maxPortsPerSource = maxPortsPerSource;
+        this.maximumSources = maximumSources;
         this.accumulators = Objects.requireNonNull(accumulators, "accumulators");
         this.destination = Objects.requireNonNull(destination, "destination");
         int capacity = Math.max(1, initialSourceCapacity);
@@ -579,7 +584,11 @@ public final class ThermalSourceLedger implements AutoCloseable {
         }
         int availableFree = highWaterMark - liveSourceCount;
         int extension = Math.max(0, additional - availableFree);
-        ensureStorageCapacity(Math.addExact(highWaterMark, extension));
+        int required = Math.addExact(highWaterMark, extension);
+        if (Math.addExact(liveSourceCount, additional) > maximumSources) {
+            throw new IllegalStateException("thermal source limit reached");
+        }
+        ensureStorageCapacity(required);
     }
 
     private void allocateStorage(int capacity) {
@@ -608,7 +617,12 @@ public final class ThermalSourceLedger implements AutoCloseable {
             return;
         }
         int old = sourceIds.length;
-        int capacity = Math.max(required, old + Math.max(8, old >>> 1));
+        if (required > maximumSources) {
+            throw new IllegalStateException("thermal source limit reached");
+        }
+        int capacity = Math.min(
+                maximumSources,
+                Math.max(required, old + Math.max(8, old >>> 1)));
         sourceIds = Arrays.copyOf(sourceIds, capacity);
         lifecycleGenerations = Arrays.copyOf(lifecycleGenerations, capacity);
         sourceModes = Arrays.copyOf(sourceModes, capacity);

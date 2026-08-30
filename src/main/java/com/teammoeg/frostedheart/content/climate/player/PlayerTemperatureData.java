@@ -140,10 +140,8 @@ public class PlayerTemperatureData implements NBTSerializable {
     private float sampledOutdoorWindMPerS;
     private float sampledLocalWindMPerS;
     private boolean sampledCanSeeSky;
-    private byte thermalStatusFlags;
     private int lastSyncEnvironment = Integer.MIN_VALUE;
     private int lastSyncCore = Integer.MIN_VALUE;
-    private byte lastSyncFlags;
     private HeatingDeviceContext thermalContext;
     float blockTemp;
     float windStrengh;
@@ -250,8 +248,7 @@ public class PlayerTemperatureData implements NBTSerializable {
             double sampledRadiantFluxWPerM2,
             double sampledOutdoorWindMPerS,
             double sampledLocalWindMPerS,
-            boolean sampledCanSeeSky,
-            byte statusFlags
+            boolean sampledCanSeeSky
     ) {
         prevCoreBodyTemp = coreBodyTemp;
         refreshCoreTemperature();
@@ -266,7 +263,6 @@ public class PlayerTemperatureData implements NBTSerializable {
         this.sampledLocalWindMPerS = finiteFloat(
                 sampledLocalWindMPerS, 0.0F);
         this.sampledCanSeeSky = sampledCanSeeSky;
-        this.thermalStatusFlags = statusFlags;
     }
 
     private static float finiteFloat(double value, float fallback) {
@@ -360,11 +356,11 @@ public class PlayerTemperatureData implements NBTSerializable {
 
     public float getBodyTempByPart(BodyPart bodyPart) {
         return (float) (clothesOfParts.get(bodyPart).bodyEnergyOffsetJ
-                / TemperatureComputation.partHeatCapacityJPerK(bodyPart));
+                / PlayerTemperatureComputation.partHeatCapacityJPerK(bodyPart));
     }
 
     public float getAbsoluteBodyTempByPart(BodyPart bodyPart) {
-        return (float) (TemperatureComputation.CORE_REFERENCE_TEMPERATURE_C
+        return (float) (PlayerTemperatureComputation.CORE_REFERENCE_TEMPERATURE_C
                 + getBodyTempByPart(bodyPart));
     }
 
@@ -374,7 +370,7 @@ public class PlayerTemperatureData implements NBTSerializable {
 
     public void setBodyTempByPart(BodyPart bodyPart, float t) {
         clothesOfParts.get(bodyPart).bodyEnergyOffsetJ = t
-                * TemperatureComputation.partHeatCapacityJPerK(bodyPart);
+                * PlayerTemperatureComputation.partHeatCapacityJPerK(bodyPart);
     }
 
     public void setFeelTempByPart(BodyPart bodyPart, float t) {
@@ -383,7 +379,7 @@ public class PlayerTemperatureData implements NBTSerializable {
 
     public void addBodyTempByPart(BodyPart bodyPart, float t) {
         addBodyEnergyJ(bodyPart, t
-                * TemperatureComputation.partHeatCapacityJPerK(bodyPart));
+                * PlayerTemperatureComputation.partHeatCapacityJPerK(bodyPart));
     }
 
     public void addFeelTempByPart(BodyPart bodyPart, float t) {
@@ -407,7 +403,7 @@ public class PlayerTemperatureData implements NBTSerializable {
     ) {
         if (!Double.isFinite(energyJ)) return;
         double temperatureDeltaC = energyJ
-                / TemperatureComputation.WHOLE_BODY_HEAT_CAPACITY_J_PER_K;
+                / PlayerTemperatureComputation.WHOLE_BODY_HEAT_CAPACITY_J_PER_K;
         for (BodyPart part : BodyPart.VALUES) {
             double next = Mth.clamp(
                     getBodyTempByPart(part) + temperatureDeltaC,
@@ -420,7 +416,7 @@ public class PlayerTemperatureData implements NBTSerializable {
 
     public float getAbsoluteCoreBodyTemp() {
         return coreBodyTemp
-                + (float) TemperatureComputation.CORE_REFERENCE_TEMPERATURE_C;
+                + (float) PlayerTemperatureComputation.CORE_REFERENCE_TEMPERATURE_C;
     }
 
     public float getNetBodyPowerW() { return netBodyPowerW; }
@@ -429,31 +425,25 @@ public class PlayerTemperatureData implements NBTSerializable {
     public float getSampledOutdoorWindMPerS() { return sampledOutdoorWindMPerS; }
     public float getSampledLocalWindMPerS() { return sampledLocalWindMPerS; }
     public boolean isSampledCanSeeSky() { return sampledCanSeeSky; }
-    public byte getThermalStatusFlags() { return thermalStatusFlags; }
 
     public void applyClientThermalSync(
             float environmentTemperatureC,
-            float absoluteCoreTemperatureC,
-            byte statusFlags
+            float absoluteCoreTemperatureC
     ) {
         prevCoreBodyTemp = coreBodyTemp;
         coreBodyTemp = absoluteCoreTemperatureC
-                - (float) TemperatureComputation.CORE_REFERENCE_TEMPERATURE_C;
+                - (float) PlayerTemperatureComputation.CORE_REFERENCE_TEMPERATURE_C;
         envTemp = environmentTemperatureC;
-        this.thermalStatusFlags = statusFlags;
     }
 
     public boolean shouldSyncThermalState() {
         int environment = Math.round(getEnvTemp() * 10.0F);
         int core = Math.round(getAbsoluteCoreBodyTemp() * 100.0F);
-        if (environment == lastSyncEnvironment
-                && core == lastSyncCore
-                && thermalStatusFlags == lastSyncFlags) {
+        if (environment == lastSyncEnvironment && core == lastSyncCore) {
             return false;
         }
         lastSyncEnvironment = environment;
         lastSyncCore = core;
-        lastSyncFlags = thermalStatusFlags;
         return true;
     }
 

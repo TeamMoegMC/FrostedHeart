@@ -30,28 +30,19 @@ public final class VoxelShapeUnitBoxAdapter {
         CONSERVATIVE_UNSUPPORTED
     }
 
-    public enum UnsupportedReason {
-        NONE,
-        INVALID_BOX_BOUNDS,
-        SHAPE_ENUMERATION_FAILED
-    }
-
     public record Adaptation(
             Status status,
-            UnsupportedReason unsupportedReason,
             List<ConservativeAirGeometry.UnitBox> blockers
     ) {
         public Adaptation {
-            if (status == null || unsupportedReason == null || blockers == null) {
+            if (status == null || blockers == null) {
                 throw new IllegalArgumentException("adaptation fields are required");
             }
             blockers = List.copyOf(blockers);
-            if (status == Status.RESOLVED) {
-                if (unsupportedReason != UnsupportedReason.NONE) {
-                    throw new IllegalArgumentException("resolved adaptation cannot have an unsupported reason");
-                }
-            } else if (unsupportedReason == UnsupportedReason.NONE || !blockers.isEmpty()) {
-                throw new IllegalArgumentException("unsupported adaptation must expose a reason and no blockers");
+            if (status == Status.CONSERVATIVE_UNSUPPORTED
+                    && !blockers.isEmpty()) {
+                throw new IllegalArgumentException(
+                        "unsupported adaptation cannot expose blockers");
             }
         }
     }
@@ -92,16 +83,16 @@ public final class VoxelShapeUnitBoxAdapter {
                 }
             });
         } catch (InvalidBoxBounds ignored) {
-            return unsupported(UnsupportedReason.INVALID_BOX_BOUNDS);
+            return unsupported();
         } catch (RuntimeException ignored) {
-            return unsupported(UnsupportedReason.SHAPE_ENUMERATION_FAILED);
+            return unsupported();
         }
 
-        return new Adaptation(Status.RESOLVED, UnsupportedReason.NONE, blockers);
+        return new Adaptation(Status.RESOLVED, blockers);
     }
 
-    private static Adaptation unsupported(UnsupportedReason reason) {
-        return new Adaptation(Status.CONSERVATIVE_UNSUPPORTED, reason, List.of());
+    private static Adaptation unsupported() {
+        return new Adaptation(Status.CONSERVATIVE_UNSUPPORTED, List.of());
     }
 
     private static boolean validBounds(

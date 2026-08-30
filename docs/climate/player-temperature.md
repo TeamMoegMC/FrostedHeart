@@ -3,7 +3,7 @@
 - Status: `Current`
 - Last verified: `2026-08-30`
 - Scope: player environment sampling, five-part body energy, clothing, Wet, heating equipment, HUD, effects, persistence, and synchronization
-- Primary code anchors: `TemperatureUpdate.updateTemperature`, `TemperatureComputation.updatePlayer`, `PlayerTemperatureData`, `BodyPartData`, `HeatingDeviceContext`, `FHBodyDataSyncPacket`, `FrostedHud.renderTemperature`
+- Primary code anchors: `TemperatureUpdate.updateTemperature`, `TemperatureComputation.updatePlayer`, `PlayerThermalEnvironment`, `PlayerEquipmentHeating`, `PlayerThermoregulation`, `PlayerThermalModel`, `PlayerThermalInjury`, `PlayerTemperatureData`, `BodyPartData`, `HeatingDeviceContext`, `FHBodyDataSyncPacket`, `FrostedHud.renderTemperature`
 
 ## Player-Facing Values
 
@@ -61,7 +61,10 @@ before pair equilibrium.
 Air, long-wave exchange, direct source radiation, clothing resistance, contact
 media, Wet, metabolism, movement, thermoregulation, and equipment all enter one
 power balance in watts. `TemperatureComputation.updatePlayer` integrates that
-balance with a closed-form exponential step, so passive water or lava contact
+balance through five visible phases: environment sampling, contact preparation,
+active-power collection, body integration, and observation publication. Its
+separate stateless `PlayerThermalModel` owns the formulas,
+including the closed-form exponential step, so passive water or lava contact
 cannot numerically jump through its boundary temperature. The configured
 `temperatureChangeRate` multiplies one explicit `GAMEPLAY_TIME_SCALE` of
 `8`; this is the gameplay acceleration, not another temperature unit. At the
@@ -98,8 +101,12 @@ sources.
 
 `BodyHeatingCapability.tickHeating` now contributes explicit watts through
 `HeatingDeviceContext.addPower`. Existing fuel, durability, heat-storage
-capabilities, item stacks, and item NBT keys are unchanged. Food converts its
-existing temperature delta into joules through
+capabilities, item stacks, and primary item NBT keys are unchanged. Device
+resource use is scaled by real elapsed seconds, independently of
+`temperatureUpdateIntervalTicks`; sub-second remainder uses the optional
+`frostedheart:partial_heating_second` item key and is removed whenever it
+returns to zero. A zero physiological time scale skips both equipment power and
+resource use. Food converts its existing temperature delta into joules through
 `TemperatureComputation.bodyEnergyForTemperatureDeltaJ` and applies the
 existing minimum/maximum body offsets.
 
@@ -124,15 +131,21 @@ into the new model. Loading an old player starts body energy at normal while
 preserving clothing stacks, their complete item NBT, and temperature
 difficulty. Environment observations are transient and are sampled again.
 
-`FHBodyDataSyncPacket` is a 6-byte fixed payload: version byte, environment
-at `0.1 C`, absolute core at `0.01 C`, and status flags. Normal packets are
-sent only on the configured temperature cadence and only when a quantized value
-changes. Login, respawn, and dimension change force one complete state packet.
+`FHBodyDataSyncPacket` is a 5-byte fixed payload: version byte, environment
+at `0.1 C`, and absolute core at `0.01 C`. Normal packets are sent only on the
+configured temperature cadence and only when a quantized value changes. Login,
+respawn, and dimension change force one complete state packet.
 
 ## Hot-Path Bound
 
 The body update is fixed `O(5)`. `HeatingDeviceContext` is created lazily
 once per server-side player and owns the reusable sample, one clothing value,
 and fixed five-element primitive arrays. `TemperatureComputation` has no
-global mutable player scratch, no per-update collection, and no second
-temperature architecture.
+global mutable player scratch or per-update collection. Stateless domain classes
+separate ownership: `PlayerThermalEnvironment` reads inputs,
+`PlayerEquipmentHeating` traverses equipment, `PlayerThermoregulation` owns
+physiological power and costs, `PlayerThermalInjury` owns damage, and
+`PlayerThermalModel` owns heat-balance formulas. No retained `ThermalStep` or
+other calculation carrier is added. Model parameters remain co-located with
+their method groups, with units, medium precedence, energy conservation, and
+equilibrium bounds documented at the formulas.

@@ -176,9 +176,10 @@ final class DimensionInputAccumulator {
         }
         ResolvedGeometryBatch geometryBatch = geometry.buildAndReset();
         ThermalSourceBatch sourceBatch = sourceEvents.buildAndReset();
+        nextSequence = Math.incrementExact(nextSequence);
         ThermalInputBatch batch = new ThermalInputBatch(
                 dimensionGeneration,
-                Math.incrementExact(nextSequence),
+                nextSequence,
                 targetTick,
                 admissions.isEmpty()
                         ? ThermalInputBatch.NO_ADMISSIONS

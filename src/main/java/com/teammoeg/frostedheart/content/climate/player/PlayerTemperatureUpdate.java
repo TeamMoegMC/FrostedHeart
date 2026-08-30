@@ -34,7 +34,7 @@ import net.minecraftforge.event.TickEvent.Phase;
 import net.minecraftforge.event.TickEvent.PlayerTickEvent;
 import net.minecraftforge.fml.LogicalSide;
 
-public class TemperatureUpdate {
+public class PlayerTemperatureUpdate {
     /**
      * Perform temperature effect
      *
@@ -212,7 +212,7 @@ public class TemperatureUpdate {
 
                 // Frostbite and Burning effects due to effective temp
                 if (!player.hasEffect(FHMobEffects.INSULATION.get())) {
-                    TemperatureComputation.burning(player, data);
+                    PlayerTemperatureComputation.burning(player, data);
                 }
 
             });
@@ -237,7 +237,7 @@ public class TemperatureUpdate {
                     .temperatureUpdateIntervalTicks.get();
             if (!shouldUpdatePlayer(player, intervalTicks)) return;
 
-            TemperatureComputation.updatePlayer(
+            PlayerTemperatureComputation.updatePlayer(
                     player, data, intervalTicks);
             if (data.shouldSyncThermalState()) {
                 FHNetwork.INSTANCE.sendPlayer(

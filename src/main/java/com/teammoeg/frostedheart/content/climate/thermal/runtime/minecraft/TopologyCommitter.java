@@ -147,13 +147,6 @@ final class TopologyCommitter {
                         "old topology span remains source-bound");
                 }
             }
-            if (!arena.ownsLiveCells(
-                    old.pageSlot(),
-                    old.lifecycleGeneration(),
-                    old.span())) {
-                throw new IllegalStateException(
-                        "old topology span is no longer owned by its Page");
-            }
         }
         for (PreparedTopologyChange.OldSpan old : change.oldSpans) {
             arena.releasePageCells(

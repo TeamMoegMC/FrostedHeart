@@ -6,22 +6,19 @@ import com.teammoeg.frostedheart.content.climate.thermal.solver.BuoyancyConducta
 import java.util.Objects;
 
 /** Immutable local topology and numerical calibration for one engine generation. */
-public record ThermalTopologyParameters(
-        int cellFlags,
+record ThermalTopologyParameters(
         int maximumRegionsPerBlock,
         double effectiveAirCapacityJPerBlockK,
         double initialAirTemperatureC,
         double referenceTemperatureC,
         double effectiveMixingWPerBlockK,
         double minimumMixedFaceDistanceBlocks,
-        boolean applyBuoyancy,
         BuoyancyConductance.Parameters buoyancyParameters,
         int phaseRequestCapacity,
         int maximumPhaseMutationsPerCompletion
 ) {
-    public ThermalTopologyParameters {
-        if (cellFlags < 0 || cellFlags > 0xff
-                || maximumRegionsPerBlock <= 0
+    ThermalTopologyParameters {
+        if (maximumRegionsPerBlock <= 0
                 || !positive(effectiveAirCapacityJPerBlockK)
                 || !Double.isFinite(initialAirTemperatureC)
                 || !Double.isFinite(referenceTemperatureC)

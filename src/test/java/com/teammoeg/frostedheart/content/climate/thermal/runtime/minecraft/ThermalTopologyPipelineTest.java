@@ -2,6 +2,7 @@
 package com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft;
 
 import com.teammoeg.frostedheart.content.climate.thermal.ThermalTestFixtures;
+import com.teammoeg.frostedheart.content.climate.thermal.geometry.ConservativeAirGeometry;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.MaterialBoundaryRegistry;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.PageSignatures;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.ThermalCellArena;
@@ -24,14 +25,9 @@ class ThermalTopologyPipelineTest {
         ResolvedThermalSignature air =
                 ThermalTestFixtures.fullAirSignature();
         ResolvedThermalSignature material = new ResolvedThermalSignature(
-                0,
-                1,
-                List.of(),
-                1,
-                0,
-                0,
-                0,
-                0);
+                new ConservativeAirGeometry.Resolution(
+                        ConservativeAirGeometry.Status.RESOLVED, List.of()),
+                1, 1);
         ThermalSignatureRegistry.Builder signatures =
                 ThermalSignatureRegistry.builder();
         int airId = signatures.intern(air);
@@ -43,8 +39,8 @@ class ThermalTopologyPipelineTest {
                                 List.of(MaterialBoundaryRegistry.Profile
                                         .capacitiveSurfaceAtNaturalTemperature(
                                                 1, 5.0D, 100.0D)),
-                                List.of(MaterialBoundaryRegistry.ContactPattern
-                                        .fullBlock(1))),
+                                List.of(new MaterialBoundaryRegistry.ContactPattern(
+                                        1, -1L))),
                         airId,
                         materialId);
         try {

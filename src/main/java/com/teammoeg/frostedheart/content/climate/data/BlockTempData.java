@@ -28,13 +28,11 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.chorda.recipe.CodecRecipeSerializer;
 
-import com.teammoeg.frostedheart.content.climate.player.CachedBlockTempInfo;
-import com.teammoeg.frostedheart.content.climate.player.SurroundingTemperatureSimulator;
+import com.teammoeg.frostedheart.content.climate.player.unused.CachedBlockTempInfo;
 import net.minecraft.data.recipes.FinishedRecipe;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.crafting.Recipe;
 import net.minecraft.world.item.crafting.RecipeManager;
-import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.RegistryObject;

@@ -6,7 +6,7 @@ import java.util.Arrays;
 /** Immutable Brick-addressed signature IDs for one 16-cubed thermal Page. */
 public final class PageSignatures {
     public static final int ENTRY_COUNT = 16 * 16 * 16;
-    public static final int BRICK_COUNT = ThermalPageHandle.BASE_BRICK_COUNT;
+    private static final int BRICK_COUNT = ThermalPageHandle.BASE_BRICK_COUNT;
     public static final int ENTRIES_PER_BRICK = 4 * 4 * 4;
 
     private static final int ENCODE_OFFSET = 2;

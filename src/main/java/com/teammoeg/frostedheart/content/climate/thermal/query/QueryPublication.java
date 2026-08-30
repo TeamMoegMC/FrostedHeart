@@ -17,8 +17,6 @@ import com.teammoeg.frostedheart.content.climate.thermal.runtime.ThermalMemoryBu
 public final class QueryPublication implements AutoCloseable {
     private final ThermalMemoryBudget budget;
     private double[][] temperaturesC;
-    private int[][] mediumIds;
-    private int[][] cellFlags;
     private int[][] slotGenerations;
     private ThermalMemoryBudget.Reservation reservation;
 
@@ -28,7 +26,6 @@ public final class QueryPublication implements AutoCloseable {
     private int publishedBufferIndex = -1;
     private long topologyGeneration = -1L;
     private long sampleTick = -1L;
-    private boolean topologyResolved;
     private volatile long publicationVersion;
 
     private QueryPublication(
@@ -51,8 +48,8 @@ public final class QueryPublication implements AutoCloseable {
             throw new IllegalArgumentException("dimensionBudget is required");
         }
         long bytes = projectedPayloadBytes(capacity);
-        ThermalMemoryBudget.Reservation reservation = dimensionBudget.tryReserve(
-                ThermalMemoryBudget.AllocationClass.OPTIONAL, bytes);
+        ThermalMemoryBudget.Reservation reservation =
+                dimensionBudget.tryReserve(bytes);
         return reservation == null
                 ? null
                 : new QueryPublication(dimensionBudget, capacity, reservation);
@@ -64,7 +61,7 @@ public final class QueryPublication implements AutoCloseable {
         }
         return Math.multiplyExact(
                 capacity,
-                2L * (Double.BYTES + 3L * Integer.BYTES));
+                2L * (Double.BYTES + Integer.BYTES));
     }
 
     /** Geometrically grows the slot-addressed backing before a topology commit. */
@@ -85,26 +82,17 @@ public final class QueryPublication implements AutoCloseable {
         int nextCapacity = Math.min(
                 maximumCapacity, Math.max(requiredCapacity, doubled));
         ThermalMemoryBudget.Reservation nextReservation = budget.tryReserve(
-                ThermalMemoryBudget.AllocationClass.OPTIONAL,
                 projectedPayloadBytes(nextCapacity));
         if (nextReservation == null) {
             return false;
         }
 
         double[][] nextTemperatures = new double[2][nextCapacity];
-        int[][] nextMediumIds = new int[2][nextCapacity];
-        int[][] nextCellFlags = new int[2][nextCapacity];
         int[][] nextSlotGenerations = new int[2][nextCapacity];
         if (valid && publishedBufferIndex >= 0) {
             System.arraycopy(
                     temperaturesC[publishedBufferIndex], 0,
                     nextTemperatures[publishedBufferIndex], 0, capacity);
-            System.arraycopy(
-                    mediumIds[publishedBufferIndex], 0,
-                    nextMediumIds[publishedBufferIndex], 0, capacity);
-            System.arraycopy(
-                    cellFlags[publishedBufferIndex], 0,
-                    nextCellFlags[publishedBufferIndex], 0, capacity);
             System.arraycopy(
                     slotGenerations[publishedBufferIndex], 0,
                     nextSlotGenerations[publishedBufferIndex], 0, capacity);
@@ -115,8 +103,6 @@ public final class QueryPublication implements AutoCloseable {
         }
         ThermalMemoryBudget.Reservation previous = reservation;
         temperaturesC = nextTemperatures;
-        mediumIds = nextMediumIds;
-        cellFlags = nextCellFlags;
         slotGenerations = nextSlotGenerations;
         capacity = nextCapacity;
         reservation = nextReservation;
@@ -130,7 +116,6 @@ public final class QueryPublication implements AutoCloseable {
             ThermalCellArena arena,
             double referenceTemperatureC,
             long topologyGeneration,
-            boolean topologyResolved,
             long sampleTick
     ) {
         if (arena == null) {
@@ -147,20 +132,15 @@ public final class QueryPublication implements AutoCloseable {
 
         int targetBuffer = publishedBufferIndex == 0 ? 1 : 0;
         double[] targetTemperatures = temperaturesC[targetBuffer];
-        int[] targetMediumIds = mediumIds[targetBuffer];
-        int[] targetFlags = cellFlags[targetBuffer];
         int[] targetGenerations = slotGenerations[targetBuffer];
         for (int slot = arena.nextLiveSlot(0);
              slot >= 0;
              slot = arena.nextLiveSlot(slot + 1)) {
             targetTemperatures[slot] = arena.temperatureC(
                     slot, referenceTemperatureC);
-            targetMediumIds[slot] = arena.mediumId(slot);
-            targetFlags[slot] = arena.flags(slot);
             targetGenerations[slot] = arena.lifecycleGeneration(slot);
         }
         this.topologyGeneration = topologyGeneration;
-        this.topologyResolved = topologyResolved;
         this.sampleTick = sampleTick;
         publishedBufferIndex = targetBuffer;
         valid = true;
@@ -210,7 +190,6 @@ public final class QueryPublication implements AutoCloseable {
             int readBuffer = publishedBufferIndex;
             int readCapacity = capacity;
             long readTopology = topologyGeneration;
-            boolean readTopologyResolved = topologyResolved;
             long readSampleTick = sampleTick;
             if (!readValid
                     || arenaSlot >= readCapacity
@@ -223,20 +202,14 @@ public final class QueryPublication implements AutoCloseable {
             }
             int generation = slotGenerations[readBuffer][arenaSlot];
             double temperature = temperaturesC[readBuffer][arenaSlot];
-            int medium = mediumIds[readBuffer][arenaSlot];
-            int flags = cellFlags[readBuffer][arenaSlot];
             long secondVersion = publicationVersion;
             if (firstVersion == secondVersion && (secondVersion & 1L) == 0L) {
                 if (generation != expectedSlotGeneration
-                        || !Double.isFinite(temperature)
-                        || medium < 0) {
+                        || !Double.isFinite(temperature)) {
                     return false;
                 }
                 out.set(
                         temperature,
-                        medium,
-                        flags,
-                        readTopologyResolved,
                         readSampleTick);
                 return true;
             }
@@ -264,8 +237,6 @@ public final class QueryPublication implements AutoCloseable {
 
     private void allocateBuffers(int size) {
         temperaturesC = new double[2][size];
-        mediumIds = new int[2][size];
-        cellFlags = new int[2][size];
         slotGenerations = new int[2][size];
     }
 
@@ -289,7 +260,6 @@ public final class QueryPublication implements AutoCloseable {
         valid = false;
         publishedBufferIndex = -1;
         topologyGeneration = -1L;
-        topologyResolved = false;
         sampleTick = -1L;
     }
 
@@ -307,36 +277,21 @@ public final class QueryPublication implements AutoCloseable {
 
     public static final class MutableSample {
         private double temperatureC;
-        private int mediumId;
-        private int flags;
-        private boolean topologyResolved;
         private long sampleTick;
 
         public double temperatureC() { return temperatureC; }
-        public int mediumId() { return mediumId; }
-        public int flags() { return flags; }
-        public boolean topologyResolved() { return topologyResolved; }
         public long sampleTick() { return sampleTick; }
 
         private void set(
                 double temperatureC,
-                int mediumId,
-                int flags,
-                boolean topologyResolved,
                 long sampleTick
         ) {
             this.temperatureC = temperatureC;
-            this.mediumId = mediumId;
-            this.flags = flags;
-            this.topologyResolved = topologyResolved;
             this.sampleTick = sampleTick;
         }
 
         private void clear() {
             temperatureC = Double.NaN;
-            mediumId = -1;
-            flags = 0;
-            topologyResolved = false;
             sampleTick = -1L;
         }
     }

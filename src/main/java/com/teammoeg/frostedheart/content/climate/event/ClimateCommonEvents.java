@@ -48,7 +48,7 @@ import com.teammoeg.frostedheart.content.climate.player.EquipmentSlotType;
 import com.teammoeg.frostedheart.content.climate.player.EquipmentSlotType.SlotKey;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData.BodyPart;
-import com.teammoeg.frostedheart.content.climate.player.TemperatureUpdate;
+import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureUpdate;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import com.teammoeg.frostedheart.mixin.minecraft.temperature.ServerLevelMixin_PlaceExtraSnow;
 import net.minecraft.core.BlockPos;
@@ -490,8 +490,8 @@ public class ClimateCommonEvents {
     public static void onPlayerTick(TickEvent.PlayerTickEvent event) {
         FoodTemperatureHandler.onPlayerTick(event);
         ForecastHandler.sendForecastMessages(event);
-        TemperatureUpdate.updateTemperature(event);
-        TemperatureUpdate.regulateTemperature(event);
+        PlayerTemperatureUpdate.updateTemperature(event);
+        PlayerTemperatureUpdate.regulateTemperature(event);
     }
 
     @SubscribeEvent
