@@ -25,9 +25,12 @@ import java.util.function.Predicate;
 import java.util.stream.IntStream;
 
 import com.mojang.datafixers.util.Pair;
+import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.content.climate.player.thermalitem.WearableThermalReservoir;
 
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.fml.InterModComms;
 import top.theillusivec4.curios.api.CuriosApi;
@@ -38,6 +41,11 @@ import top.theillusivec4.curios.api.type.capability.ICuriosItemHandler;
 import top.theillusivec4.curios.api.type.inventory.ICurioStacksHandler;
 
 public class CuriosCompat {
+	public static final String WARM_STONE_SLOT = "warm_stone";
+    public static final int WARM_STONE_SLOT_PRIORITY = 190;
+    private static final ResourceLocation WARM_STONE_SLOT_ICON =
+            new ResourceLocation(FHMain.MODID, "slot/empty_warm_stone_slot");
+
 	static class EmptyIterator<T> implements Iterator<T>{
 
 		@Override
@@ -49,8 +57,8 @@ public class CuriosCompat {
 		public T next() {
 			throw new NoSuchElementException();
 		}
-		
-		
+
+
 	}
     public static Iterable<ItemStack> getAllCuriosIfVisible(LivingEntity el) {
     	return () -> CuriosApi.getCuriosInventory(el).resolve().map(o->o.getCurios().values().stream().flatMap(t->IntStream.range(0, t.getSlots()).mapToObj(i->t.getStacks().getStackInSlot(i))).iterator()).orElseGet(EmptyIterator::new);
@@ -59,7 +67,7 @@ public class CuriosCompat {
         return () -> CuriosApi.getCuriosInventory(el).resolve().map(o->o.getCurios().entrySet().stream().flatMap(t->IntStream.range(0, t.getValue().getSlots()).mapToObj(i->Pair.of(t.getKey(),t.getValue().getStacks().getStackInSlot(i)))).iterator()).orElseGet(EmptyIterator::new);
     }
     public static Iterable<Pair<ISlotType, ItemStack>> getAllCuriosAndSlotsIfVisible(LivingEntity el) {
-    	
+
         return () -> CuriosApi.getCuriosInventory(el).resolve().map(o->o.getCurios().entrySet().stream().flatMap(t->IntStream.range(0, t.getValue().getSlots()).mapToObj(i->Pair.of(CuriosApi.getSlot(t.getKey(),el.level()).get(),t.getValue().getStacks().getStackInSlot(i)))).iterator()).orElseGet(EmptyIterator::new);
     }
     public static ItemStack getCuriosIfVisible(LivingEntity living, ISlotType slot, Predicate<ItemStack> predicate) {
@@ -78,11 +86,52 @@ public class CuriosCompat {
                 }).orElse(ItemStack.EMPTY);
     }
 
+    /**
+     * 只查询专用槽的 slot 0，且不让 Curios 的界面可见性或渲染开关参与玩法。
+     * <p>
+     * Reads only slot zero of the dedicated handler. Handler visibility and item
+     * render toggles are presentation state and intentionally do not affect this
+     * gameplay query.
+     */
+    public static ItemStack getWearableThermalReservoirInWarmStoneSlot(LivingEntity living) {
+        return CuriosApi.getCuriosInventory(living).resolve()
+                .flatMap(handler -> handler.getStacksHandler(WARM_STONE_SLOT))
+                .map(CuriosCompat::wearableThermalReservoirInWarmStoneSlot)
+                .orElse(ItemStack.EMPTY);
+    }
+
+    static ItemStack wearableThermalReservoirInWarmStoneSlot(ICurioStacksHandler stacksHandler) {
+        return wearableThermalReservoirInWarmStoneSlot(
+                stacksHandler, stack -> stack.getItem() instanceof WearableThermalReservoir);
+    }
+
+    static ItemStack wearableThermalReservoirInWarmStoneSlot(
+            ICurioStacksHandler stacksHandler,
+            Predicate<ItemStack> isWearableThermalReservoir
+    ) {
+        if (stacksHandler.getSlots() < 1) {
+            return ItemStack.EMPTY;
+        }
+        ItemStack stack = stacksHandler.getStacks().getStackInSlot(0);
+        return isWearableThermalReservoir.test(stack) ? stack : ItemStack.EMPTY;
+    }
+
+    @SuppressWarnings({"UnstableApiUsage", "removal"})
+    static SlotTypeMessage warmStoneSlotMessage() {
+        return new SlotTypeMessage.Builder(WARM_STONE_SLOT)
+                .icon(WARM_STONE_SLOT_ICON)
+                .priority(WARM_STONE_SLOT_PRIORITY)
+                .size(1)
+                .build();
+    }
+
     @SuppressWarnings({"UnstableApiUsage", "removal"})
     public static void sendIMCS() {
         InterModComms.sendTo(CuriosApi.MODID, SlotTypeMessage.REGISTER_TYPE,
                 () -> SlotTypePreset.BACK.getMessageBuilder().build());
         InterModComms.sendTo(CuriosApi.MODID, SlotTypeMessage.REGISTER_TYPE,
                 () -> SlotTypePreset.CHARM.getMessageBuilder().build());
+        InterModComms.sendTo(CuriosApi.MODID, SlotTypeMessage.REGISTER_TYPE,
+                CuriosCompat::warmStoneSlotMessage);
     }
 }

@@ -39,6 +39,89 @@ class MinecraftThermalInputTest {
     }
 
     @Test
+    void gameplayRadiationKeepsPlayerAndItemBudgetsIndependent() {
+        assertEquals(64,
+                MinecraftThermalInput.GAMEPLAY_ITEM_ENVIRONMENT_SAMPLES_PER_TICK);
+        assertEquals(128,
+                MinecraftThermalInput.GAMEPLAY_RADIATION_PARAMETERS.maximumReceivers());
+        assertEquals(64, MinecraftThermalInput.GAMEPLAY_RADIATION_PARAMETERS
+                .maximumCandidateVisits());
+        assertEquals(8, MinecraftThermalInput.GAMEPLAY_RADIATION_PARAMETERS
+                .maximumCandidatesPerReceiver());
+        assertEquals(24, MinecraftThermalInput.GAMEPLAY_RADIATION_PARAMETERS
+                .maximumRaysPerReceiver());
+
+        assertEquals(64, MinecraftThermalInput.GAMEPLAY_RADIATION_PARAMETERS
+                .itemReceiverLimits().maximumReceivers());
+        assertEquals(32, MinecraftThermalInput.GAMEPLAY_RADIATION_PARAMETERS
+                .itemReceiverLimits().maximumCandidateVisits());
+        assertEquals(4, MinecraftThermalInput.GAMEPLAY_RADIATION_PARAMETERS
+                .itemReceiverLimits().maximumCandidatesPerReceiver());
+        assertEquals(4, MinecraftThermalInput.GAMEPLAY_RADIATION_PARAMETERS
+                .itemReceiverLimits().maximumRaysPerReceiver());
+    }
+
+    @Test
+    void itemEnvironmentCacheIsFixedCapacityTickGenerationState() {
+        MinecraftThermalInput.ItemEnvironmentSampleCache cache =
+                new MinecraftThermalInput.ItemEnvironmentSampleCache(2);
+        assertEquals(2, cache.capacity());
+        MinecraftThermalInput.MutableEnvironmentSample first =
+                new MinecraftThermalInput.MutableEnvironmentSample();
+        first.setFallbackAir(-12.5D, 40L);
+        first.setObservationTick(40L);
+
+        assertEquals(-1, cache.find(40L, 1, 2, 3));
+        assertTrue(cache.store(1, 2, 3, first));
+        assertEquals(0, cache.find(40L, 1, 2, 3));
+        MinecraftThermalInput.MutableEnvironmentSample copied =
+                new MinecraftThermalInput.MutableEnvironmentSample();
+        cache.copyTo(0, copied);
+        assertEquals(-12.5D, copied.airTemperatureC());
+        assertEquals(40L, copied.sampleTick());
+        assertEquals(40L, copied.observationTick());
+
+        assertTrue(cache.store(4, 5, 6, first));
+        assertFalse(cache.canAdmit());
+        assertFalse(cache.store(7, 8, 9, first));
+        assertEquals(2, cache.size());
+
+        assertEquals(-1, cache.find(41L, 1, 2, 3));
+        assertEquals(41L, cache.generationTick());
+        assertEquals(0, cache.size());
+        assertTrue(cache.canAdmit());
+        assertTrue(cache.store(7, 8, 9, first));
+        cache.close();
+        assertEquals(Long.MIN_VALUE, cache.generationTick());
+        assertEquals(0, cache.size());
+    }
+
+    @Test
+    void itemAirBackendKeepsPublicationHitAndFallsBackOnMiss() {
+        MinecraftThermalInput.MutableEnvironmentSample published =
+                new MinecraftThermalInput.MutableEnvironmentSample();
+        published.setAir(8.5D, 7, 0x12, 38L);
+
+        assertTrue(MinecraftThermalInput.selectItemAirBackend(
+                -12.5D, 40L, published));
+        assertTrue(published.airAvailable());
+        assertEquals(8.5D, published.airTemperatureC());
+        assertEquals(7, published.mediumId());
+        assertEquals(0x12, published.cellFlags());
+        assertEquals(38L, published.sampleTick());
+
+        MinecraftThermalInput.MutableEnvironmentSample missed =
+                new MinecraftThermalInput.MutableEnvironmentSample();
+        assertFalse(MinecraftThermalInput.selectItemAirBackend(
+                -12.5D, 40L, missed));
+        assertTrue(missed.airAvailable());
+        assertEquals(-12.5D, missed.airTemperatureC());
+        assertEquals(-1, missed.mediumId());
+        assertEquals(0, missed.cellFlags());
+        assertEquals(40L, missed.sampleTick());
+    }
+
+    @Test
     void resolvedInputRingPreservesPrimitiveEnvelopeAndDoesNotConsumeOnOverflow() {
         ResolvedGeometryInputRing ring = new ResolvedGeometryInputRing(1);
         assertTrue(ring.offerResolvedCenter(

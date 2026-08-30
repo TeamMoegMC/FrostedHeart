@@ -122,6 +122,7 @@ public final class MinecraftThermalInput implements AutoCloseable {
             ResolvedGeometryInputRing.BLOCKS_PER_PAGE / Long.SIZE;
     private static final int GAMEPLAY_INITIAL_PUBLICATION_CAPACITY = 256;
     private static final int GAMEPLAY_MAX_ACTIVE_CELLS = 65_536;
+    static final int GAMEPLAY_ITEM_ENVIRONMENT_SAMPLES_PER_TICK = 64;
     private static final double GAMEPLAY_PHASE_FACE_CONDUCTANCE_W_PER_K = 20.0D;
     private static final double GAMEPLAY_PHASE_BASE_ENERGY_J = 38_000.0D;
     private static final double GAMEPLAY_FAR_FIELD_REFERENCE_AREA_BLOCKS_SQUARED = 32.0D;
@@ -142,7 +143,9 @@ public final class MinecraftThermalInput implements AutoCloseable {
                     64, 8, 24,
                     8, 256,
                     16.0D, 0.1D, 0.5D,
-                    0.1D, 0.9D, 1.62D);
+                    0.1D, 0.9D, 1.62D,
+                    new RadiationService.ReceiverLimits(
+                            64, 32, 4, 4));
     private static final ThermalMemoryBudget GAMEPLAY_MEMORY_BUDGET =
             new ThermalMemoryBudget(128L * 1024L * 1024L, 4L * 1024L * 1024L);
     private static final Map<ServerLevel, MinecraftThermalInput> ACTIVE_BY_LEVEL =
@@ -369,6 +372,11 @@ public final class MinecraftThermalInput implements AutoCloseable {
             new QueryPublication.MutableSample();
     private final RadiationService.MutableSample playerRadiationScratch =
             new RadiationService.MutableSample();
+    private final RadiationService.MutableSample itemRadiationScratch =
+            new RadiationService.MutableSample();
+    private final ItemEnvironmentSampleCache itemEnvironmentSampleCache =
+            new ItemEnvironmentSampleCache(
+                    GAMEPLAY_ITEM_ENVIRONMENT_SAMPLES_PER_TICK);
     private final MutableEnvironmentSample cropEnvironmentScratch =
             new MutableEnvironmentSample();
     private final MutableEnvironmentSample townEnvironmentScratch =
@@ -463,6 +471,26 @@ public final class MinecraftThermalInput implements AutoCloseable {
         }
         requestUrgentSolve();
         return true;
+    }
+
+    int admittedPageCount() {
+        return pages.size();
+    }
+
+    long chunkWatermark() {
+        return chunkWatermark;
+    }
+
+    int itemEnvironmentSampleCacheCapacity() {
+        return itemEnvironmentSampleCache.capacity();
+    }
+
+    int itemEnvironmentSampleCacheSize() {
+        return itemEnvironmentSampleCache.size();
+    }
+
+    long itemEnvironmentSampleCacheGenerationTick() {
+        return itemEnvironmentSampleCache.generationTick();
     }
 
     private LatestSolveEpochScheduler.SealResult sealTick(
@@ -765,6 +793,99 @@ public final class MinecraftThermalInput implements AutoCloseable {
         }
     }
 
+    /**
+     * Samples one exposed item point without creating Page interest. The local
+     * cache admits a fixed number of unique quarter-block positions each tick;
+     * overflow still receives current air composition but no radiation work.
+     */
+    public void sampleItemEnvironment(
+            double receiverX,
+            double receiverY,
+            double receiverZ,
+            double naturalAirTemperatureC,
+            long currentTick,
+            int maximumPublicationAgeTicks,
+            MutableEnvironmentSample out
+    ) {
+        requireMainThread();
+        requireOpen();
+        Objects.requireNonNull(out, "out");
+        requireFinite("receiverX", receiverX);
+        requireFinite("receiverY", receiverY);
+        requireFinite("receiverZ", receiverZ);
+        requireFinite("naturalAirTemperatureC", naturalAirTemperatureC);
+        if (currentTick < 0L || maximumPublicationAgeTicks < 0) {
+            throw new IllegalArgumentException(
+                    "tick and maximum age must be non-negative");
+        }
+
+        int quarterX = floorQuarterCoordinate(receiverX);
+        int quarterY = floorQuarterCoordinate(receiverY);
+        int quarterZ = floorQuarterCoordinate(receiverZ);
+        int cached = itemEnvironmentSampleCache.find(
+                currentTick, quarterX, quarterY, quarterZ);
+        if (cached >= 0) {
+            itemEnvironmentSampleCache.copyTo(cached, out);
+            return;
+        }
+
+        samplePublishedAir(
+                receiverX,
+                receiverY,
+                receiverZ,
+                currentTick,
+                maximumPublicationAgeTicks,
+                out);
+        if (selectItemAirBackend(
+                naturalAirTemperatureC, currentTick, out)) {
+            composeAnalyticFields(receiverX, receiverY, receiverZ, out);
+        } else {
+            out.setComposedAirTemperature(composeAnalyticFields(
+                    receiverX,
+                    receiverY,
+                    receiverZ,
+                    naturalAirTemperatureC,
+                    out));
+        }
+
+        if (!itemEnvironmentSampleCache.canAdmit()) {
+            out.setRadiation(0.0D, 0.5F);
+            out.addFlag(QUERY_RADIATION_BUDGET_LIMITED);
+            out.setObservationTick(currentTick);
+            return;
+        }
+        if (radiation == null) {
+            out.addFlag(QUERY_RADIATION_UNAVAILABLE);
+        } else {
+            radiation.sampleItem(
+                    itemReceiverKey(quarterX, quarterY, quarterZ),
+                    0,
+                    receiverX,
+                    receiverY,
+                    receiverZ,
+                    itemRadiationScratch);
+            out.setRadiation(
+                    itemRadiationScratch.radiantFluxWPerM2(),
+                    itemRadiationScratch.confidence());
+            addRadiationFlags(itemRadiationScratch, out);
+        }
+        out.setObservationTick(currentTick);
+        itemEnvironmentSampleCache.store(
+                quarterX, quarterY, quarterZ, out);
+    }
+
+    static boolean selectItemAirBackend(
+            double naturalAirTemperatureC,
+            long currentTick,
+            MutableEnvironmentSample out
+    ) {
+        if (out.airAvailable()) {
+            return true;
+        }
+        out.setFallbackAir(naturalAirTemperatureC, currentTick);
+        return false;
+    }
+
     /** Reads ambient air for one passive crop/block tick. */
     public void sampleCropEnvironment(
             int receiverBlockX,
@@ -974,6 +1095,28 @@ public final class MinecraftThermalInput implements AutoCloseable {
         }
     }
 
+    private static void addRadiationFlags(
+            RadiationService.MutableSample radiationSample,
+            MutableEnvironmentSample out
+    ) {
+        if ((radiationSample.flags()
+                & RadiationService.RADIATION_BUDGET_LIMITED) != 0) {
+            out.addFlag(QUERY_RADIATION_BUDGET_LIMITED);
+        }
+        if ((radiationSample.flags()
+                & RadiationService.RADIATION_UNRESOLVED) != 0) {
+            out.addFlag(QUERY_RADIATION_UNRESOLVED);
+        }
+    }
+
+    private static long itemReceiverKey(int quarterX, int quarterY, int quarterZ) {
+        long key = Integer.toUnsignedLong(quarterX) * 0x9E3779B185EBCA87L;
+        key ^= Long.rotateLeft(
+                Integer.toUnsignedLong(quarterY) * 0xC2B2AE3D27D4EB4FL, 21);
+        return key ^ Long.rotateLeft(
+                Integer.toUnsignedLong(quarterZ) * 0x165667B19E3779F9L, 42);
+    }
+
     private double composeAnalyticFields(
             double x,
             double y,
@@ -1085,6 +1228,41 @@ public final class MinecraftThermalInput implements AutoCloseable {
                         receiverPosition.getZ() + 0.5D,
                         naturalTemperatureC,
                         sample);
+    }
+
+    /**
+     * Samples a dropped item's current air and direct radiation. A missing
+     * gameplay runtime returns stable natural air and never starts one.
+     */
+    public static void gameplayItemEnvironment(
+            ServerLevel level,
+            BlockPos receiverPosition,
+            double receiverX,
+            double receiverY,
+            double receiverZ,
+            MutableEnvironmentSample out
+    ) {
+        Objects.requireNonNull(level, "level");
+        Objects.requireNonNull(receiverPosition, "receiverPosition");
+        Objects.requireNonNull(out, "out").clear();
+        double naturalAirTemperatureC = WorldTemperature.naturalAir(
+                level, receiverPosition);
+        long currentTick = level.getGameTime();
+        MinecraftThermalInput input = active(level);
+        if (input == null || !level.getServer().isSameThread()) {
+            out.setFallbackAir(naturalAirTemperatureC, currentTick);
+            out.setObservationTick(currentTick);
+            out.addFlag(QUERY_RADIATION_UNAVAILABLE);
+            return;
+        }
+        input.sampleItemEnvironment(
+                receiverX,
+                receiverY,
+                receiverZ,
+                naturalAirTemperatureC,
+                currentTick,
+                MAX_PUBLICATION_AGE_TICKS,
+                out);
     }
 
     /** Returns composed crop air when available, otherwise natural temperature. */
@@ -1876,6 +2054,7 @@ public final class MinecraftThermalInput implements AutoCloseable {
         if (radiation != null) {
             radiation.close();
         }
+        itemEnvironmentSampleCache.close();
         synchronized (ACTIVE_BY_LEVEL) {
             ACTIVE_BY_LEVEL.remove(level, this);
             anyActive = !ACTIVE_BY_LEVEL.isEmpty();
@@ -3165,6 +3344,15 @@ public final class MinecraftThermalInput implements AutoCloseable {
         return (int) Math.floor(value);
     }
 
+    private static int floorQuarterCoordinate(double blockCoordinate) {
+        double quarter = Math.floor(blockCoordinate * 4.0D);
+        if (quarter < Integer.MIN_VALUE || quarter > Integer.MAX_VALUE) {
+            throw new IllegalArgumentException(
+                    "item receiver coordinate is out of quarter-block range");
+        }
+        return (int) quarter;
+    }
+
     private static void requireFinite(String name, double value) {
         if (!Double.isFinite(value)) {
             throw new IllegalArgumentException(name + " must be finite");
@@ -3330,6 +3518,7 @@ public final class MinecraftThermalInput implements AutoCloseable {
         private int mediumId = -1;
         private float confidence;
         private long sampleTick = -1L;
+        private long observationTick = -1L;
         private int cellFlags;
         private int flags;
 
@@ -3361,6 +3550,10 @@ public final class MinecraftThermalInput implements AutoCloseable {
             return sampleTick;
         }
 
+        public long observationTick() {
+            return observationTick;
+        }
+
         public int cellFlags() {
             return cellFlags;
         }
@@ -3376,11 +3569,12 @@ public final class MinecraftThermalInput implements AutoCloseable {
             mediumId = -1;
             confidence = 0.0F;
             sampleTick = -1L;
+            observationTick = -1L;
             cellFlags = 0;
             flags = 0;
         }
 
-        private void setAir(
+        void setAir(
                 double nextAirTemperatureC,
                 int nextMediumId,
                 int nextCellFlags,
@@ -3396,6 +3590,14 @@ public final class MinecraftThermalInput implements AutoCloseable {
 
         private void setComposedAirTemperature(double nextAirTemperatureC) {
             airTemperatureC = nextAirTemperatureC;
+        }
+
+        void setFallbackAir(double nextAirTemperatureC, long nextSampleTick) {
+            setAir(nextAirTemperatureC, -1, 0, nextSampleTick);
+        }
+
+        void setObservationTick(long nextObservationTick) {
+            observationTick = nextObservationTick;
         }
 
         private void setAggregateAir(
@@ -3428,6 +3630,112 @@ public final class MinecraftThermalInput implements AutoCloseable {
 
         private void addFlags(int nextFlags) {
             flags |= nextFlags;
+        }
+
+        void copyFrom(MutableEnvironmentSample source) {
+            airAvailable = source.airAvailable;
+            airTemperatureC = source.airTemperatureC;
+            radiantFluxWPerM2 = source.radiantFluxWPerM2;
+            mediumId = source.mediumId;
+            confidence = source.confidence;
+            sampleTick = source.sampleTick;
+            observationTick = source.observationTick;
+            cellFlags = source.cellFlags;
+            flags = source.flags;
+        }
+    }
+
+    /** Fixed-capacity, one-tick cache for local dropped-item samples. */
+    static final class ItemEnvironmentSampleCache {
+        private final int[] quarterX;
+        private final int[] quarterY;
+        private final int[] quarterZ;
+        private final MutableEnvironmentSample[] samples;
+        private long generationTick = Long.MIN_VALUE;
+        private int size;
+
+        ItemEnvironmentSampleCache(int capacity) {
+            if (capacity <= 0) {
+                throw new IllegalArgumentException("capacity must be positive");
+            }
+            quarterX = new int[capacity];
+            quarterY = new int[capacity];
+            quarterZ = new int[capacity];
+            samples = new MutableEnvironmentSample[capacity];
+            for (int index = 0; index < capacity; index++) {
+                samples[index] = new MutableEnvironmentSample();
+            }
+        }
+
+        int find(long currentTick, int x, int y, int z) {
+            beginGeneration(currentTick);
+            for (int index = 0; index < size; index++) {
+                if (quarterX[index] == x
+                        && quarterY[index] == y
+                        && quarterZ[index] == z) {
+                    return index;
+                }
+            }
+            return -1;
+        }
+
+        boolean canAdmit() {
+            return size < samples.length;
+        }
+
+        boolean store(
+                int x,
+                int y,
+                int z,
+                MutableEnvironmentSample sample
+        ) {
+            if (!canAdmit()) {
+                return false;
+            }
+            quarterX[size] = x;
+            quarterY[size] = y;
+            quarterZ[size] = z;
+            samples[size].copyFrom(sample);
+            size++;
+            return true;
+        }
+
+        void copyTo(int index, MutableEnvironmentSample out) {
+            if (index < 0 || index >= size) {
+                throw new IndexOutOfBoundsException(index);
+            }
+            out.copyFrom(samples[index]);
+        }
+
+        int size() {
+            return size;
+        }
+
+        int capacity() {
+            return samples.length;
+        }
+
+        long generationTick() {
+            return generationTick;
+        }
+
+        void clear() {
+            generationTick = Long.MIN_VALUE;
+            size = 0;
+        }
+
+        void close() {
+            clear();
+        }
+
+        private void beginGeneration(long currentTick) {
+            if (currentTick < 0L) {
+                throw new IllegalArgumentException("tick must be non-negative");
+            }
+            if (generationTick != currentTick) {
+                generationTick = currentTick;
+                size = 0;
+            }
         }
     }
 

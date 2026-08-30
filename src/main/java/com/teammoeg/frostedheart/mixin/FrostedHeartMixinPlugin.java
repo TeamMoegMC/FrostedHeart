@@ -47,6 +47,9 @@ public class FrostedHeartMixinPlugin implements IMixinConfigPlugin, MixinPluginS
         if (mixinClassName.contains("com.teammoeg.frostedheart.mixin.ftb")) {
             return classPresent("dev.ftb.mods.ftbteams.data.ClientTeamManagerImpl");
         }
+        if (mixinClassName.contains("com.teammoeg.frostedheart.mixin.client.curios")) {
+            return classPresent("top.theillusivec4.curios.common.network.server.sync.SPacketSyncStack");
+        }
         return true;
     }
 

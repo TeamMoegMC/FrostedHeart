@@ -28,6 +28,7 @@ import com.teammoeg.frostedheart.bootstrap.common.FHMobEffects;
 import com.teammoeg.frostedheart.bootstrap.reference.FHDamageSources;
 import com.teammoeg.frostedheart.compat.curios.CuriosCompat;
 import com.teammoeg.frostedheart.content.climate.WorldTemperature;
+import com.teammoeg.frostedheart.content.climate.thermal.radiation.RadiantEquivalentTemperature;
 import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.MinecraftThermalInput;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import net.minecraft.core.BlockPos;
@@ -48,7 +49,6 @@ public class TemperatureComputation {
     private static final double PLAYER_RADIATION_PROJECTED_AREA_M2 = 0.7D;
     private static final double PLAYER_RADIATION_ABSORPTIVITY = 0.8D;
     private static final double PLAYER_RADIATION_EFFECTIVE_HEAT_CAPACITY_J_PER_C = 5_000.0D;
-    private static final double PLAYER_RADIATION_TRANSFER_W_PER_M2_K = 6.0D;
 
     /** Converts W/m2 into the uniform body-part delta for one update interval. */
     static float radiantBodyTemperatureDelta(
@@ -70,12 +70,7 @@ public class TemperatureComputation {
 
     /** Converts absorbed irradiance into the HUD's equivalent radiant temperature. */
     static float radiantFeelingTemperatureDelta(double radiantFluxWPerM2) {
-        if (!(radiantFluxWPerM2 > 0.0D) || !Double.isFinite(radiantFluxWPerM2)) {
-            return 0.0F;
-        }
-        return (float) (radiantFluxWPerM2
-                * PLAYER_RADIATION_ABSORPTIVITY
-                / PLAYER_RADIATION_TRANSFER_W_PER_M2_K);
+        return (float) RadiantEquivalentTemperature.deltaC(radiantFluxWPerM2);
     }
 
     //returns 37-based 

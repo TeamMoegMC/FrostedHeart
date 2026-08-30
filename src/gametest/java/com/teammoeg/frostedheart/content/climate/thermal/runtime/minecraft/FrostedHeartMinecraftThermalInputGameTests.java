@@ -3,8 +3,10 @@ package com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft;
 
 import com.mojang.authlib.GameProfile;
 import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.bootstrap.common.FHItems;
 import com.teammoeg.frostedheart.content.climate.WorldTemperature;
 import com.teammoeg.frostedheart.content.climate.data.PlantTempData;
+import com.teammoeg.frostedheart.content.climate.player.thermalitem.WearableThermalState;
 import com.teammoeg.frostedheart.content.climate.thermal.consumer.TownThermalProjection;
 import com.teammoeg.frostedheart.content.climate.thermal.geometry.ConservativeAirGeometry;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.ThermalCellArena;
@@ -36,6 +38,8 @@ import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.CampfireBlock;
 import net.minecraft.world.level.block.DoorBlock;
@@ -60,6 +64,8 @@ public final class FrostedHeartMinecraftThermalInputGameTests {
     private static final String SOURCE_BATCH = BATCH + "_source";
     private static final String SOURCE_RESYNC_BATCH = BATCH + "_source_resync";
     private static final String SINK_BATCH = BATCH + "_sink";
+    private static final String DROPPED_RESERVOIR_BATCH =
+            BATCH + "_dropped_reservoir";
     private static final String TEMPLATE = "phase0a_empty";
     private static final ResolvedThermalSignature SOLID_SIGNATURE =
             new ResolvedThermalSignature(0, 0, List.of(), 0, 0, 0, 0, 0);
@@ -997,6 +1003,284 @@ public final class FrostedHeartMinecraftThermalInputGameTests {
                     "receiver observations must not write the physical source ledger");
         }
         helper.succeed();
+    }
+
+    @GameTest(
+            template = TEMPLATE,
+            batch = DROPPED_RESERVOIR_BATCH,
+            timeoutTicks = 140)
+    public static void droppedReservoirsFollowCampfireRadiationAndCooling(
+            GameTestHelper helper
+    ) {
+        ServerLevel level = helper.getLevel();
+        BlockPos anchor = helper.absolutePos(new BlockPos(2, 3, 2));
+        LevelChunk chunk = level.getChunkAt(anchor);
+        int sectionIndex = allAirSectionIndex(chunk);
+        int sectionY = chunk.getSectionYFromSectionIndex(sectionIndex);
+        int baseY = SectionPos.sectionToBlockCoord(sectionY) + 4;
+        BlockPos source = new BlockPos(anchor.getX(), baseY, anchor.getZ());
+        BlockPos wall = source.west();
+        level.setBlock(wall, Blocks.STONE.defaultBlockState(), 3);
+
+        DimensionThermalRuntime runtime = runtime(level.getGameTime());
+        MinecraftThermalInput input = new MinecraftThermalInput(
+                level,
+                9L,
+                runtime,
+                ThermalSignatureResolverDispatcher.builder(
+                        StateStaticThermalResolver.geometryOnly(
+                                ConservativeAirGeometry.MICROCELL_COUNT))
+                        .build(),
+                signatureRegistry(),
+                1L,
+                32,
+                32);
+        try {
+            input.enableTopologyApplication(topologyParameters());
+            input.enablePhysicalSources(4);
+            RadiationService.Parameters parameters =
+                    MinecraftThermalInput.GAMEPLAY_RADIATION_PARAMETERS;
+            ThermalMemoryBudget radiationServerBudget =
+                    new ThermalMemoryBudget(1_000_000L, 0L);
+            helper.assertTrue(input.tryEnableRadiation(
+                            parameters,
+                            radiationServerBudget.createDimensionBudget(
+                                    1_000_000L, 0L)),
+                    "the dropped-item test requires the production radiation service");
+            input.enableSynchronousDispatch();
+            placeLitCampfire(level, source);
+            MinecraftThermalInput.sealActiveLevel(level);
+
+            double receiverY = source.getY() + 0.625D;
+            double visibleX = source.getX() + 2.5D;
+            double visibleZ = source.getZ() + 0.5D;
+            double bagX = source.getX() + 0.5D;
+            double bagZ = source.getZ() + 2.5D;
+            double blockedX = source.getX() - 1.5D;
+            double blockedZ = source.getZ() + 0.5D;
+
+            int pagesBeforeQueries = input.admittedPageCount();
+            long admissionBeforeQueries = input.chunkWatermark();
+            int highWaterBeforeQueries =
+                    runtime.thermalCellArena().highWaterMark();
+            int liveCellsBeforeQueries =
+                    runtime.thermalCellArena().liveCellCount();
+            int loadedChunksBeforeQueries =
+                    level.getChunkSource().getLoadedChunksCount();
+
+            MinecraftThermalInput.MutableEnvironmentSample visibleSample =
+                    new MinecraftThermalInput.MutableEnvironmentSample();
+            MinecraftThermalInput.MutableEnvironmentSample blockedSample =
+                    new MinecraftThermalInput.MutableEnvironmentSample();
+            MinecraftThermalInput.gameplayItemEnvironment(
+                    level,
+                    BlockPos.containing(visibleX, receiverY, visibleZ),
+                    visibleX,
+                    receiverY,
+                    visibleZ,
+                    visibleSample);
+            MinecraftThermalInput.gameplayItemEnvironment(
+                    level,
+                    BlockPos.containing(blockedX, receiverY, blockedZ),
+                    blockedX,
+                    receiverY,
+                    blockedZ,
+                    blockedSample);
+            helper.assertTrue(visibleSample.radiantFluxWPerM2() > 0.0D,
+                    "the one-point item receiver must see a lit Campfire");
+            helper.assertTrue(close(blockedSample.radiantFluxWPerM2(), 0.0D),
+                    "a stone wall must block direct Campfire radiation to the item");
+            assertPassiveItemQueryCountsUnchanged(
+                    helper,
+                    input,
+                    runtime,
+                    level,
+                    pagesBeforeQueries,
+                    admissionBeforeQueries,
+                    highWaterBeforeQueries,
+                    liveCellsBeforeQueries,
+                    loadedChunksBeforeQueries);
+
+            double visibleInitial = WorldTemperature.naturalAir(
+                    level, BlockPos.containing(visibleX, receiverY, visibleZ));
+            double bagInitial = WorldTemperature.naturalAir(
+                    level, BlockPos.containing(bagX, receiverY, bagZ));
+            double blockedInitial = WorldTemperature.naturalAir(
+                    level, BlockPos.containing(blockedX, receiverY, blockedZ));
+            ItemEntity warmStone = spawnThermalItem(
+                    level,
+                    new ItemStack(FHItems.warm_stone.get()),
+                    visibleX,
+                    receiverY,
+                    visibleZ,
+                    visibleInitial);
+            ItemEntity hotWaterBag = spawnThermalItem(
+                    level,
+                    new ItemStack(FHItems.hot_water_bag.get()),
+                    bagX,
+                    receiverY,
+                    bagZ,
+                    bagInitial);
+            ItemEntity blockedWarmStone = spawnThermalItem(
+                    level,
+                    new ItemStack(FHItems.warm_stone.get()),
+                    blockedX,
+                    receiverY,
+                    blockedZ,
+                    blockedInitial);
+            helper.assertTrue(level.addFreshEntity(warmStone)
+                            && level.addFreshEntity(hotWaterBag)
+                            && level.addFreshEntity(blockedWarmStone),
+                    "all three exact ItemEntity fixtures must enter the test level");
+
+            double[] warmedSurfaces = new double[2];
+            helper.runAfterDelay(60L, () -> {
+                WearableThermalState warmState = thermalState(warmStone);
+                WearableThermalState bagState = thermalState(hotWaterBag);
+                WearableThermalState blockedState = thermalState(blockedWarmStone);
+                helper.assertTrue(warmState.surfaceTemperatureC() > visibleInitial,
+                        "the dropped warm stone must heat beside a lit Campfire");
+                helper.assertTrue(bagState.surfaceTemperatureC() > bagInitial,
+                        "the dropped hot-water bag must heat beside a lit Campfire");
+                helper.assertTrue(warmState.surfaceTemperatureC()
+                                > blockedState.surfaceTemperatureC(),
+                        "the visible warm stone must heat more than the stone-walled control");
+                warmedSurfaces[0] = warmState.surfaceTemperatureC();
+                warmedSurfaces[1] = bagState.surfaceTemperatureC();
+
+                BlockState lit = level.getBlockState(source);
+                helper.assertTrue(lit.is(Blocks.CAMPFIRE)
+                                && lit.getValue(CampfireBlock.LIT),
+                        "the source must still be a lit Campfire before cooling");
+                level.setBlock(
+                        source,
+                        lit.setValue(CampfireBlock.LIT, false),
+                        3);
+                warmStone.setPos(
+                        source.getX() + 32.5D,
+                        receiverY,
+                        source.getZ() + 0.5D);
+                hotWaterBag.setPos(
+                        source.getX() + 0.5D,
+                        receiverY,
+                        source.getZ() + 32.5D);
+                MinecraftThermalInput.sealActiveLevel(level);
+
+                MinecraftThermalInput.MutableEnvironmentSample movedWarmSample =
+                        new MinecraftThermalInput.MutableEnvironmentSample();
+                MinecraftThermalInput.MutableEnvironmentSample movedBagSample =
+                        new MinecraftThermalInput.MutableEnvironmentSample();
+                MinecraftThermalInput.gameplayItemEnvironment(
+                        level,
+                        warmStone.blockPosition(),
+                        warmStone.getX(),
+                        warmStone.getY() + warmStone.getBbHeight() * 0.5D,
+                        warmStone.getZ(),
+                        movedWarmSample);
+                MinecraftThermalInput.gameplayItemEnvironment(
+                        level,
+                        hotWaterBag.blockPosition(),
+                        hotWaterBag.getX(),
+                        hotWaterBag.getY() + hotWaterBag.getBbHeight() * 0.5D,
+                        hotWaterBag.getZ(),
+                        movedBagSample);
+                helper.assertTrue(close(
+                                movedWarmSample.radiantFluxWPerM2(), 0.0D)
+                                && close(movedBagSample.radiantFluxWPerM2(), 0.0D),
+                        "extinguished and distant reservoirs must receive no direct radiation");
+                int coolingPages = input.admittedPageCount();
+                long coolingAdmissionWatermark = input.chunkWatermark();
+                int coolingArenaHighWater =
+                        runtime.thermalCellArena().highWaterMark();
+                int coolingLiveCells =
+                        runtime.thermalCellArena().liveCellCount();
+                int coolingLoadedChunks =
+                        level.getChunkSource().getLoadedChunksCount();
+
+                helper.runAfterDelay(50L, () -> {
+                    try {
+                        WearableThermalState cooledWarm = thermalState(warmStone);
+                        WearableThermalState cooledBag = thermalState(hotWaterBag);
+                        helper.assertTrue(cooledWarm.surfaceTemperatureC()
+                                        < warmedSurfaces[0],
+                                "the dropped warm stone must cool after extinguish and move; warm="
+                                        + warmedSurfaces[0] + ", cool="
+                                        + cooledWarm.surfaceTemperatureC());
+                        helper.assertTrue(cooledBag.surfaceTemperatureC()
+                                        < warmedSurfaces[1],
+                                "the dropped hot-water bag must cool after extinguish and move; warm="
+                                        + warmedSurfaces[1] + ", cool="
+                                        + cooledBag.surfaceTemperatureC());
+                        assertPassiveItemQueryCountsUnchanged(
+                                helper,
+                                input,
+                                runtime,
+                                level,
+                                coolingPages,
+                                coolingAdmissionWatermark,
+                                coolingArenaHighWater,
+                                coolingLiveCells,
+                                coolingLoadedChunks);
+                    } finally {
+                        input.close();
+                    }
+                    helper.succeed();
+                });
+            });
+        } catch (RuntimeException | Error exception) {
+            input.close();
+            throw exception;
+        }
+    }
+
+    private static ItemEntity spawnThermalItem(
+            ServerLevel level,
+            ItemStack stack,
+            double x,
+            double y,
+            double z,
+            double initialTemperatureC
+    ) {
+        new WearableThermalState(
+                initialTemperatureC,
+                initialTemperatureC).writeTo(stack);
+        ItemEntity entity = new ItemEntity(level, x, y, z, stack);
+        entity.setNoGravity(true);
+        entity.setDeltaMovement(0.0D, 0.0D, 0.0D);
+        entity.setDefaultPickUpDelay();
+        return entity;
+    }
+
+    private static WearableThermalState thermalState(ItemEntity entity) {
+        if (!entity.isAlive()) {
+            throw new IllegalStateException("dropped thermal reservoir was removed");
+        }
+        return WearableThermalState.read(entity.getItem()).orElseThrow();
+    }
+
+    private static void assertPassiveItemQueryCountsUnchanged(
+            GameTestHelper helper,
+            MinecraftThermalInput input,
+            DimensionThermalRuntime runtime,
+            ServerLevel level,
+            int expectedPages,
+            long expectedAdmissionWatermark,
+            int expectedArenaHighWater,
+            int expectedLiveCells,
+            int expectedLoadedChunks
+    ) {
+        helper.assertTrue(input.admittedPageCount() == expectedPages,
+                "item environment queries must not admit thermal Pages");
+        helper.assertTrue(input.chunkWatermark() == expectedAdmissionWatermark,
+                "item environment queries must not advance the Page admission watermark");
+        helper.assertTrue(runtime.thermalCellArena().highWaterMark()
+                        == expectedArenaHighWater
+                        && runtime.thermalCellArena().liveCellCount()
+                        == expectedLiveCells,
+                "item environment queries must not create thermal cells");
+        helper.assertTrue(level.getChunkSource().getLoadedChunksCount()
+                        == expectedLoadedChunks,
+                "item environment queries must not load chunks");
     }
 
     private static void setDirect(

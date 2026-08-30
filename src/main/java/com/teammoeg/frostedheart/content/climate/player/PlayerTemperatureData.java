@@ -241,12 +241,10 @@ public class PlayerTemperatureData implements NBTSerializable {
 
     public void update(float currentEnv, HeatingDeviceContext ctx,float feelTempDelta) {
         prevCoreBodyTemp = coreBodyTemp;
-        float newCoreBodyTemp = 0;
         for (BodyPart part : BodyPart.values()) {
-            newCoreBodyTemp += ctx.getBodyTemperature(part) * part.affectsCore;
             setBodyTempByPart(part, ctx.getBodyTemperature(part));
         }
-        coreBodyTemp = newCoreBodyTemp;
+        recalculateCoreBodyTemp();
 
         // Interpolate with previous envTemp
         if (envTemp == INVALID_TEMPERATURE)
@@ -360,6 +358,44 @@ public class PlayerTemperatureData implements NBTSerializable {
 
     public void addBodyTempByPart(BodyPart bodyPart, float t) {
         clothesOfParts.get(bodyPart).temperature += t;
+    }
+
+    /**
+     * Applies a single core-temperature delta after the normal body-temperature update.
+     * The three core parts move together while hands and feet keep their current values.
+     * This does not advance {@link #prevCoreBodyTemp}.
+     *
+     * @param temperatureDelta the relative-to-37-degrees-Celsius core temperature delta
+     * @return {@code true} when the complete adjustment was applied; {@code false} when
+     *         the delta is non-finite or would make a core part non-finite
+     */
+    public boolean applyCoreBodyTemperatureDelta(float temperatureDelta) {
+        if (!Float.isFinite(temperatureDelta)) {
+            return false;
+        }
+
+        float headTemperature = getBodyTempByPart(BodyPart.HEAD) + temperatureDelta;
+        float torsoTemperature = getBodyTempByPart(BodyPart.TORSO) + temperatureDelta;
+        float legsTemperature = getBodyTempByPart(BodyPart.LEGS) + temperatureDelta;
+        if (!Float.isFinite(headTemperature)
+                || !Float.isFinite(torsoTemperature)
+                || !Float.isFinite(legsTemperature)) {
+            return false;
+        }
+
+        setBodyTempByPart(BodyPart.HEAD, headTemperature);
+        setBodyTempByPart(BodyPart.TORSO, torsoTemperature);
+        setBodyTempByPart(BodyPart.LEGS, legsTemperature);
+        recalculateCoreBodyTemp();
+        return true;
+    }
+
+    private void recalculateCoreBodyTemp() {
+        float newCoreBodyTemp = 0;
+        for (BodyPart corePart : BodyPart.CoreParts) {
+            newCoreBodyTemp += getBodyTempByPart(corePart) * corePart.affectsCore;
+        }
+        coreBodyTemp = newCoreBodyTemp;
     }
 
     public void addFeelTempByPart(BodyPart bodyPart, float t) {

@@ -190,6 +190,7 @@
   "gui.frostedheart.scroll_to_adjust": "使用滚轮调整：",
   "gui.frostedheart.adjust_increment": "按住 [§7Shift/Ctrl§r] 改变调整数量",
   "gui.frostedheart.empty_slot": "未设置物品",
+  "curios.identifier.warm_stone": "暖石",
   "gui.jei.category.frostedheart.charger": "蒸汽加工",
   "gui.jei.category.frostedheart.charger_cooking": "蒸",
   "gui.jei.category.frostedheart.charger_defrost": "蒸汽解冻",
@@ -341,6 +342,10 @@
   "tooltip.frostedheart.heatingpad": "一次性使用，短时间内产生大量热量",
   "tooltip.frostedheart.heatingpad.flamedout": "暖手宝已耗尽",
   "tooltip.frostedheart.heatingpad.time": "剩余时间：%d 秒",
+  "tooltip.frostedheart.wearable_thermal_reservoir.surface_temperature": "表面温度：%s degC",
+  "tooltip.frostedheart.wearable_thermal_reservoir.surface_temperature.uninitialized": "表面温度：未初始化",
+  "tooltip.frostedheart.wearable_thermal_reservoir.core_temperature": "内部温度：%s degC",
+  "tooltip.frostedheart.wearable_thermal_reservoir.capacity": "热容：玩家的 %s%%",
   "tooltip.frostedheart.ignition_material": "可用于生火的材料，但是需要金属协助。",
   "tooltip.frostedheart.ignition_metal": "可用于生火的金属，但是需要燧石协助。",
   "tooltip.frostedheart.ignition_tutorial": "双手持金属和燧石右击尝试生火。",
@@ -1561,5 +1566,7 @@
   "gui.frostedheart.town_manager.policy.dependent_first": "弱者优先",
   "gui.frostedheart.town_manager.policy.dependent_first.description": "幼儿及不具备劳动能力者进入第一照护层。",
   "gui.frostedheart.town_manager.policy.workforce_first": "生产保障",
-  "gui.frostedheart.town_manager.policy.workforce_first.description": "具备劳动能力的居民进入第一照护层。"
+  "gui.frostedheart.town_manager.policy.workforce_first.description": "具备劳动能力的居民进入第一照护层。",
+  "item.frostedheart.hot_water_bag": "热水袋",
+  "item.frostedheart.warm_stone": "暖石"
 }

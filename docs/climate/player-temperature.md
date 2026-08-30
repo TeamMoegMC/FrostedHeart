@@ -1,9 +1,9 @@
 # 玩家体温系统
 
 - Status: `Current`
-- Last verified: `2026-08-27`
-- Scope: 玩家周围方块采样、环境温度、衣物与介质换热、分部位体温、设备/食物、状态效果、持久化和同步
-- Primary code anchors: `TemperatureUpdate`, `TemperatureComputation`, `TemperatureThreadingPool`, `SurroundingTemperatureSimulator`, `CachedBlockTempInfo`, `PlayerTemperatureData`, `BodyPartData`, `ClothData`, `HeatingDeviceContext`, `BodyHeatingCapability`, `FoodTemperatureHandler`, `FHBodyDataSyncPacket`, `FrostedHud.renderTemperature`, `MinecraftThermalInput.gameplayPlayerEnvironment`, `MinecraftThermalInput.samplePlayerEnvironment`, `MinecraftThermalInput.MutableEnvironmentSample`
+- Last verified: `2026-08-30`
+- Scope: 玩家周围方块采样、环境温度、衣物与介质换热、分部位体温、设备/食物、可穿戴热库、状态效果、持久化和同步
+- Primary code anchors: `TemperatureUpdate`, `TemperatureComputation`, `TemperatureThreadingPool`, `SurroundingTemperatureSimulator`, `CachedBlockTempInfo`, `PlayerTemperatureData`, `PlayerTemperatureData.applyCoreBodyTemperatureDelta`, `BodyPartData`, `ClothData`, `HeatingDeviceContext`, `BodyHeatingCapability`, `FoodTemperatureHandler`, `FHBodyDataSyncPacket`, `FrostedHud.renderTemperature`, `MinecraftThermalInput.gameplayPlayerEnvironment`, `MinecraftThermalInput.gameplayPassiveEnvironment`, `MinecraftThermalInput.gameplayItemEnvironment`, `MinecraftThermalInput.samplePlayerEnvironment`, `MinecraftThermalInput.sampleItemEnvironment`, `MinecraftThermalInput.MutableEnvironmentSample`, `RadiationService.sampleItem`, `WearableThermalProfile`, `ThreeNodeWearableHeatExchange`, `ReservoirEnvironmentExchange`, `WearableThermalExchangeHandler`, `InventoryThermalExchangeHandler`, `DroppedReservoirExchangeHandler`, `WearableThermalState`, `WearableThermalReservoir`, `WarmStoneItem`, `WarmStoneItem.inventoryTick`, `WarmStoneItem.onEntityItemUpdate`, `CuriosCompat.getWearableThermalReservoirInWarmStoneSlot`, `WarmStoneGateBPacketCounter`, `WarmStoneGateBClientCommand`, `WarmStoneTestCommand`, `SPacketSyncStackMixin`, `ClientPacketListenerMixin`
 
 ## 1. 数值基准
 
@@ -33,7 +33,8 @@ every player tick
     compute raw environment offset
     compute clothing/effective temperatures
     apply equipment heating
-    update five body parts and core
+    update five body parts and core (normal or INSULATION branch)
+    exchange the warm_stone slot's core/surface nodes with the player core
   send FHBodyDataSyncPacket
 ```
 
@@ -159,6 +160,38 @@ heatExchange = (effective - body) * unit / heatExchangeTempConstant
 
 头、躯干和腿可通过消耗饱食度/饮水能力进行额外恒温，手脚不能。设备的 `BodyHeatingCapability.tickHeating` 在环境交换后直接修改各部位 effective temperature；手炉、加热背心、加热垫、蒸汽瓶等都走这条接口，不创建 analytic field 或 physical environment source。
 
+### 6.1 可穿戴热库状态与槽位边界
+
+`FHItems.warm_stone` 与 `FHItems.hot_water_bag` 已注册为 `WarmStoneItem`，分别绑定不可变的 `WearableThermalProfile.WARM_STONE_DEFAULT` 与 `HOT_WATER_BAG_DEFAULT`，并固定为 `stacksTo(1)`。物品实现 `WearableThermalReservoir` 和 Curios 的 `ICurioItem`，不创建 Forge capability/provider；profile 只来自物品定义，温度只来自具体 `ItemStack`。
+
+`WearableThermalState` 是版本 `1` 的唯一持久化状态，根 key 为 `frostedheart:thermal_reservoir`。其中恰有 `version`、`initialized`、`core_temperature_c`、`surface_temperature_c` 四个字段；两个温度均为绝对 `degC`，有效闭区间为 `[-1000,1000]`。读取不会创建或修改 NBT。缺失状态、未知版本、字段畸形或非有限/越界温度，只有在服务端调用 `restoreOrInitializeForServer` 并提供有限环境温度时才会重建为同一环境温度（先夹到该区间）；没有可用环境时保持未初始化。profile、cadence、cache 和其他 transient 状态不写入该 compound，客户端不负责选择初始温度。
+
+`CuriosCompat` 通过现有 IMC 入口注册 `warm_stone` 专用槽，`size(1)`、priority `190`，并引用 `frostedheart:slot/empty_warm_stone_slot`。`getWearableThermalReservoirInWarmStoneSlot` 只读取这个 handler 的 slot `0`，只接受 `WearableThermalReservoir`；它刻意忽略 `isVisible()` 与 `getRenders()`，因为二者是界面表现状态。`WarmStoneItem.canEquip` 也只允许该槽的 slot `0`。`FHTags.Items.CURIOS_WARM_STONE` 与 `data/curios/tags/items/warm_stone.json` 只包含两件热库；物品模型、`16x16` 纹理、空槽图标及中英文名称均已就位。
+
+`WarmStoneItem.appendHoverText` 只调用 `WearableThermalState.read`：普通提示显示表面温度（未初始化时明确显示）和相对玩家的 `10%` 或 `25%` 热容；高级提示额外显示内部温度。提示路径不创建、初始化或写入 ItemStack NBT。
+
+配套仓库 `TheWinterRescue` 的 `kubejs/server_scripts/src/recipes/warm_stone.js` 提供两件物品的普通制作入口：`minecraft:smooth_stone + frostedheart:straw_lining -> frostedheart:warm_stone`，以及 `frostedheart:leather_water_bag + frostedheart:straw_lining -> frostedheart:hot_water_bag`。这两个输出不带 `frostedheart:thermal_reservoir`，仍遵循首次服务端环境初始化。可选灌装只接受现有 `frostedheart:wooden_cup_drink` 中 `250 mB` 的 `caupona:nail_soup`（Hot Water），产出热水袋的两个节点均为显式 `60 degC`，并返还 `frostedheart:wooden_cup`。它不增加篝火或 charger 配方；篝火旁的持续充热仍是掉落物走通用已注册物理热源 receiver 的行为。
+
+同一 companion 以 `config/fhresearches/warm_stone.json` 在 `hand_warmer` 后加入 `warm_stone` 研究，并在 `config/ftbquests/quests/chapters/t0.snbt` 的既有篝火任务后加入 `Carry The Warmth` 可选任务。`kubejs/assets/twr_tooltips/lang/{en_us,zh_cn}.json` 的 Create 风格 tooltip 和两项进度文本都明确专用槽、冷热双向交换、掉在已注册物理热源旁的充热方式，以及未 tick 容器暂停温度演化；它们不提供或暗示 charger 入口。
+
+`TemperatureUpdate` 已在正常 `PlayerTemperatureData.update` 或 `INSULATION` 的 `updateWhenInsulated` 完成后、发送 `FHBodyDataSyncPacket` 前调用一次 `WearableThermalExchangeHandler`。它每个 `temperatureUpdateIntervalTicks` cadence 只查询一次 `warm_stone` slot `0`，空槽、错误槽及普通库存不会进入佩戴换热。玩家节点使用绝对温度 `T_player = coreBodyTemp + 37degC`；服务端环境初值使用本轮 `rawenvtemp + 37degC`。创造、旁观，以及实体或 ability 任一无敌标志为真时，会在槽位查询和状态初始化前跳过整轮，玩家与物品均不变；`INSULATION` 本身不跳过佩戴换热。
+
+佩戴模型把玩家热容归一化为 `C_player=1`。对 profile 的相对总热容 `r` 和表面占比 `a`，有 `C_core=r*(1-a)`、`C_surface=r*a`；每个子步使用 `q_cs=k_cs*(T_core-T_surface)` 与 `q_sp=g_sp*(T_surface-T_player)`，因此 `dT_core/dt=-q_cs/C_core`、`dT_surface/dt=(q_cs-q_sp)/C_surface`、`dT_player/dt=q_sp`。`ThreeNodeWearableHeatExchange` 使用对称分裂，单个子步最大 `1 s`。暖石参数为 `r=0.10`、`a=0.20`、`k_cs=6.1613e-5 /s`、`g_sp=1.2e-4 /s`；热水袋为 `r=0.25`、`a=0.20`、`k_cs=9.2420e-4 /s`、`g_sp=8e-5 /s`。
+
+`k_cs` 来自玩家和环境均隔绝时的内部/表面双节点温差半衰期。正算为 `k_cs=r*a*(1-a)*ln(2)/t_half`，反算为 `t_half=r*a*(1-a)*ln(2)/k_cs`；它不表示与玩家耦合后的完整三节点曲线。当前暖石 `t_half=180 s`，热水袋 `t_half=30 s`，对应上面的 source-default `k_cs`。
+
+有效状态推进成功后，玩家温差通过 `PlayerTemperatureData.applyCoreBodyTemperatureDelta` 同量写入头、躯干和腿并立即重算核心；手、脚、`prevCoreBodyTemp` 和本轮既有体感结果不由该 API 改写。物品内部与表面温度在玩家调整成功后通过 `setTemperaturesC` 一次写回。缺失或无效状态在环境有限时只初始化两个节点并结束本 cadence，不在同一轮继续换热，从而保持每个相关 Stack 每 cadence 至多一次 NBT 写入；环境非有限、elapsed 非法、等温或数值降级路径不写回。
+
+普通玩家库存由 `WarmStoneItem.inventoryTick` 精确触发 `InventoryThermalExchangeHandler`，不扫描玩家或完整背包。入口只接受服务端 `ServerPlayer`，并要求传入 slot 位于 `PlayerInventory.items` 且保存的是同一个 `ItemStack` 对象；盔甲、副手、外部容器、客户端、非玩家实体和 Curios 槽均不进入。它使用固定 source-default `20 game ticks` cadence 和 `1.0 s` elapsed，不按离线或容器停留时间追算。环境目标用 `WorldTemperature.naturalAir` 作为无随机扰动基线，再经 `MinecraftThermalInput.gameplayPassiveEnvironment` 被动组合已有 Air Mesh/analytic fields；库存不查询或接收直接辐射。
+
+库存状态调用 `ReservoirEnvironmentExchange.advanceInventoryInto`，只让环境作用表面，内部仅经 `k_core_surface` 追随；`k_inventory=0.5*g_sp`，即暖石 `6.0e-5 /s`、热水袋 `4.0e-5 /s`。缺失或无效状态只初始化并结束当轮。handler 用 ItemStack identity set 防止同一对象同 tick 重复推进，并在下一次 claim 发现 server tick generation 改变时替换这一代集合内容；cadence/去重状态不进 NBT，集合最多保留最近一个被处理 server tick 的相关 Stack。只有持久化 float 温度实际变化时才一次写回。
+
+掉落状态由 `WarmStoneItem.onEntityItemUpdate` 精确把当前 `ItemEntity` 交给 `DroppedReservoirExchangeHandler`；它不从 level tick 枚举实体，也不扫描附近方块。UUID 经确定性混合得到 `0..19` bucket，实体至少加载 `20` ticks 后在 `20+bucket` 首次处理，之后每 `20 loaded game ticks` 以固定 `1.0 s` elapsed 推进。接收点为实体包围盒中心；环境来自 `MinecraftThermalInput.gameplayItemEnvironment` 的已有 publication/analytic/`naturalAir` 与一点式辐射。掉落导热率固定为 `k_dropped=8*g_sp`，即暖石 `9.6e-4 /s`、热水袋 `6.4e-4 /s`；有效环境为 `T_effective=T_air+radiantFluxWPerM2*0.8/6.0`，仍只直接连接表面。
+
+掉落 sample 的辐射 observation 只在同一 game tick 有效；过期时仍以已取得的空气温度和 `radiantFluxWPerM2=0` 推进本 cadence，不冻结后等待未来环境追算。实体 tickCount、cadence 和 per-level sample cache 都是 transient；拾取、重新掉落、跨维度及卸载/重载会从新的 loaded-mode 计时重新开始，但 `ItemStack` 的内部/表面温度不清零。箱子和其他不会调用物品 tick 的容器继续冻结温度，服务器离线时间不按墙钟追赶。
+
+`2026-08-30` 的 T25 实机矩阵验证了这些冻结参数而未调参。四段完整冷热佩戴曲线反推的 `g_sp` 分别为暖石热态 `1.19892e-4 /s`、暖石冷态 `1.20052e-4 /s`、热水袋热态 `7.9992e-5 /s`、热水袋冷态 `7.9990e-5 /s`，相对 source default 的误差均低于 `0.1%`。内部/表面 `60/0 degC` 的热水袋先让玩家降温，约 `57 s` 后表面越过玩家温度再反向加热，证明玩家交换读取表面而非内部温度。严寒 `180 s` 下玩家变化为空槽 `-0.178 degC`、暖石 `-0.091 degC`、热水袋 `-0.073 degC`；穿脱、库存/掉落、篝火/遮挡、箱子暂停、render-off、无敌状态、跨维度、重连和服务器重启均符合上述生命周期合同。
+
 五个部位及权重如下：
 
 | Part | Surface area weight | Core weight | Clothing slots |
@@ -199,6 +232,16 @@ heatExchange = (effective - body) * unit / heatExchangeTempConstant
 完整玩家能力 NBT 保存：核心/前核心体温、环境/总体验温、采样 `blockTemperature`、`wind_strengh`、可选难度，以及五个部位的衣物库存、体温和体感温度。死亡 clone 先复制能力，再重置温度和采样值；衣物库存不在 `deathResetTemperature` 中清空。
 
 `FHBodyDataSyncPacket` 使用 packet 模式，只同步前核心体温、核心体温、环境温度和总体验温，不同步各部位、衣物、难度、blockTemp 或 openness。包当前在每个服务端玩家 START tick 发送，即使主体计算默认每 20 ticks 才运行一次。
+
+Gate B 的客户端观测器默认关闭，不改变上述同步。进入真实世界后执行 `/fh_gate_b start` 会清零并开始记录实际收到的 Curios `SPacketSyncStack`、原版 `ClientboundContainerSetSlotPacket` 和 `ClientboundContainerSetContentPacket`；`status` 输出当前聚合值，`reset` 保持当前开关并清零，`stop` 停止并输出 `FH_GATE_B_SUMMARY`。汇总同时区分全部包、包含 `WearableThermalReservoir` 的包和整包内容中的热库 Stack 数量；每个相关事件以 `FH_GATE_B_PACKET` 记录 item、slot、初始化状态、内部温度和表面温度。`probe_errors` 必须为 `0` 才能把本次 Curios 计数视为有效。该路径只读客户端已经收到的 Stack/NBT，不写 NBT、不发送包，也不初始化温度。
+
+`2026-08-29` 的集成服务端实测覆盖佩戴、普通库存和槽位移动。三段测量分别持续 `162.126 s`、`135.113 s`、`28.762 s`，`probe_errors` 均为 `0`；专用 Curios Stack 包均为 `0`，实际热库更新通过原版 container slot/content 路径到达客户端。全部单槽包分别为 `147`、`84`、`20`，即 `0.907/s`、`0.622/s`、`0.695/s`；整内容包分别为 `3`、`0`、`1`，只随容器界面/槽位生命周期出现。Tooltip 随已收到的表面温度更新，人工观察未见陈旧或异常。因此 Gate B 已关闭，当前不增加热库专用同步；若未来出现可复现的远端客户端陈旧显示，再以同一观测器取得证据后评估量化限频更新。
+
+### 9.1 暖石开发测试 Stack 与序列观测
+
+`WarmStoneTestCommand` 注册 OP-only 的 `/fh_warm_stone_test`，没有注册新的 item、tag、配方或创造栏变体。`give <warm_stone|hot_water_bag> <preset>` 每次只创建一个独立的 version-1 `frostedheart:thermal_reservoir` Stack：`cold` 为内部/表面 `-20/-20 degC`，`environment` 为命令执行者 `WorldTemperature.naturalAir` 的同值双节点，`hot` 为 `60/60 degC`，`core_hot_surface_cold` 为 `60/0 degC`。该命令仅写新 Stack；它不改写已存在的 Stack、热力 runtime、receiver 预算或同步路径。
+
+把测试 Stack 装进专用 `warm_stone` 槽后，`observe start [interval_ticks]` 立即输出一次，并默认每 `20` ticks 输出 `FH_WARM_STONE_OBSERVE`；可选间隔范围为 `1..1200` ticks。每个序列点同时写入服务器日志和执行者聊天，字段为 `game_tick`、`player_core_c`、已装备热库的 registry ID、`reservoir_core_c` 与 `reservoir_surface_c`。`status` 输出当前点，`stop` 停止；未装备有效 Stack 时明确报告 `reservoir=empty` 或 `reservoir_state=uninitialized`。观察记录在玩家登出或服务器停止时清理，不进入玩家或 ItemStack NBT。
 
 当前实现还存在以下研究约束：
 

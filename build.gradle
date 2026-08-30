@@ -361,6 +361,7 @@ dependencies {
 
     // Curios
     compileOnly fg.deobf("top.theillusivec4.curios:curios-forge:${curios_version}:api")
+    testCompileOnly fg.deobf("top.theillusivec4.curios:curios-forge:${curios_version}:api")
     runtimeOnly fg.deobf("top.theillusivec4.curios:curios-forge:${curios_version}")
 
     // FTB mods

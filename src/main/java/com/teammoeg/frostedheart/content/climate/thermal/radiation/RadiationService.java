@@ -37,7 +37,9 @@ public final class RadiationService implements AutoCloseable {
             new Long2ObjectOpenHashMap<>();
     private final Long2ObjectOpenHashMap<LongArrayList> sourcesBySection =
             new Long2ObjectOpenHashMap<>();
-    private final Long2ObjectOpenHashMap<ReceiverCache> receiverCaches =
+    private final Long2ObjectOpenHashMap<ReceiverCache> playerReceiverCaches =
+            new Long2ObjectOpenHashMap<>();
+    private final Long2ObjectOpenHashMap<ReceiverCache> itemReceiverCaches =
             new Long2ObjectOpenHashMap<>();
     private final Source[] candidateSources;
     private final double[] candidateUpperBounds;
@@ -56,8 +58,11 @@ public final class RadiationService implements AutoCloseable {
         this.parameters = parameters;
         this.tracer = tracer;
         this.reservation = reservation;
-        candidateSources = new Source[parameters.maximumCandidatesPerReceiver()];
-        candidateUpperBounds = new double[parameters.maximumCandidatesPerReceiver()];
+        int maximumCandidates = Math.max(
+                parameters.maximumCandidatesPerReceiver(),
+                parameters.itemReceiverLimits().maximumCandidatesPerReceiver());
+        candidateSources = new Source[maximumCandidates];
+        candidateUpperBounds = new double[maximumCandidates];
         traceScratch = new MutableTrace(parameters.maximumWitnessSectionsPerRay());
     }
 
@@ -84,21 +89,32 @@ public final class RadiationService implements AutoCloseable {
         long bucketBytes = Math.multiplyExact(parameters.maximumSources(), 64L);
         long revisionBytes = Math.multiplyExact(
                 parameters.maximumTrackedSections(), 48L);
-        long witnessesPerReceiver = Math.multiplyExact(
+        long playerWitnessesPerReceiver = Math.multiplyExact(
                 parameters.maximumCandidatesPerReceiver(), 3L);
         long witnessBytes = Math.addExact(
                 80L,
                 Math.multiplyExact(
                         parameters.maximumWitnessSectionsPerRay(), 2L * Long.BYTES));
-        long receiverBytes = Math.multiplyExact(
+        long playerReceiverBytes = Math.multiplyExact(
                 parameters.maximumReceivers(),
-                Math.addExact(96L, Math.multiplyExact(witnessesPerReceiver, witnessBytes)));
+                Math.addExact(96L,
+                        Math.multiplyExact(playerWitnessesPerReceiver, witnessBytes)));
+        ReceiverLimits itemLimits = parameters.itemReceiverLimits();
+        long itemReceiverBytes = Math.multiplyExact(
+                itemLimits.maximumReceivers(),
+                Math.addExact(96L, Math.multiplyExact(
+                        itemLimits.maximumCandidatesPerReceiver(), witnessBytes)));
         long scratchBytes = Math.addExact(
-                Math.multiplyExact(parameters.maximumCandidatesPerReceiver(), 24L),
+                Math.multiplyExact(Math.max(
+                        parameters.maximumCandidatesPerReceiver(),
+                        itemLimits.maximumCandidatesPerReceiver()), 24L),
                 Math.multiplyExact(parameters.maximumWitnessSectionsPerRay(), 16L));
         return Math.addExact(
                 Math.addExact(sourceBytes, bucketBytes),
-                Math.addExact(Math.addExact(revisionBytes, receiverBytes), scratchBytes));
+                Math.addExact(
+                        Math.addExact(revisionBytes,
+                                Math.addExact(playerReceiverBytes, itemReceiverBytes)),
+                        scratchBytes));
     }
 
     /** Adds or replaces one radiative origin without touching emitted-energy state. */
@@ -181,6 +197,76 @@ public final class RadiationService implements AutoCloseable {
             double receiverZ,
             MutableSample out
     ) {
+        validateReceiver(
+                receiverGeneration,
+                receiverX,
+                receiverFeetY,
+                receiverZ,
+                out);
+        sampleReceiver(
+                receiverKey,
+                receiverGeneration,
+                receiverX,
+                receiverFeetY,
+                receiverZ,
+                3,
+                playerReceiverCaches,
+                parameters.maximumReceivers(),
+                parameters.maximumCandidateVisits(),
+                parameters.maximumCandidatesPerReceiver(),
+                parameters.maximumRaysPerReceiver(),
+                out);
+    }
+
+    /**
+     * Samples one exposed item point with an item-only cache and work budget.
+     * Player receiver capacity and witnesses are never consumed by this path.
+     */
+    public void sampleItem(
+            long receiverKey,
+            int receiverGeneration,
+            double receiverX,
+            double receiverY,
+            double receiverZ,
+            MutableSample out
+    ) {
+        validateReceiver(
+                receiverGeneration,
+                receiverX,
+                receiverY,
+                receiverZ,
+                out);
+        ReceiverLimits limits = parameters.itemReceiverLimits();
+        sampleReceiver(
+                receiverKey,
+                receiverGeneration,
+                receiverX,
+                receiverY,
+                receiverZ,
+                1,
+                itemReceiverCaches,
+                limits.maximumReceivers(),
+                limits.maximumCandidateVisits(),
+                limits.maximumCandidatesPerReceiver(),
+                limits.maximumRaysPerReceiver(),
+                out);
+    }
+
+    int playerReceiverCacheSize() {
+        return playerReceiverCaches.size();
+    }
+
+    int itemReceiverCacheSize() {
+        return itemReceiverCaches.size();
+    }
+
+    private void validateReceiver(
+            int receiverGeneration,
+            double receiverX,
+            double receiverY,
+            double receiverZ,
+            MutableSample out
+    ) {
         requireOwnerThread();
         requireOpen();
         Objects.requireNonNull(out, "out").clear();
@@ -188,8 +274,24 @@ public final class RadiationService implements AutoCloseable {
             throw new IllegalArgumentException("receiver generation must be non-negative");
         }
         requireFinite("receiverX", receiverX);
-        requireFinite("receiverFeetY", receiverFeetY);
+        requireFinite("receiverY", receiverY);
         requireFinite("receiverZ", receiverZ);
+    }
+
+    private void sampleReceiver(
+            long receiverKey,
+            int receiverGeneration,
+            double receiverX,
+            double receiverBaseY,
+            double receiverZ,
+            int receiverPointCount,
+            Long2ObjectOpenHashMap<ReceiverCache> receiverCaches,
+            int maximumReceivers,
+            int maximumCandidateVisits,
+            int maximumCandidatesPerReceiver,
+            int maximumRaysPerReceiver,
+            MutableSample out
+    ) {
         if (sources.isEmpty()) {
             boolean sourceLimited = sourceAdmissionRefusals != 0L;
             out.finish(
@@ -199,7 +301,12 @@ public final class RadiationService implements AutoCloseable {
             return;
         }
 
-        ReceiverCache cache = receiverCache(receiverKey, receiverGeneration);
+        ReceiverCache cache = receiverCache(
+                receiverCaches,
+                receiverKey,
+                receiverGeneration,
+                maximumReceivers,
+                maximumCandidatesPerReceiver * receiverPointCount);
         int candidateCount = 0;
         int candidateVisits = 0;
         boolean candidateLimited = false;
@@ -207,9 +314,11 @@ public final class RadiationService implements AutoCloseable {
         int minimumSectionX = floorSection(receiverX - range);
         int maximumSectionX = floorSection(receiverX + range);
         int minimumSectionY = floorSection(
-                receiverFeetY + parameters.feetOffsetBlocks() - range);
+                receiverBaseY + receiverOffset(receiverPointCount, 0) - range);
         int maximumSectionY = floorSection(
-                receiverFeetY + parameters.headOffsetBlocks() + range);
+                receiverBaseY
+                        + receiverOffset(receiverPointCount, receiverPointCount - 1)
+                        + range);
         int minimumSectionZ = floorSection(receiverZ - range);
         int maximumSectionZ = floorSection(receiverZ + range);
 
@@ -222,7 +331,7 @@ public final class RadiationService implements AutoCloseable {
                         continue;
                     }
                     for (int index = 0; index < bucket.size(); index++) {
-                        if (candidateVisits >= parameters.maximumCandidateVisits()) {
+                        if (candidateVisits >= maximumCandidateVisits) {
                             candidateLimited = true;
                             break discovery;
                         }
@@ -232,7 +341,11 @@ public final class RadiationService implements AutoCloseable {
                             continue;
                         }
                         double minimumDistanceSquared = minimumRayDistanceSquared(
-                                source, receiverX, receiverFeetY, receiverZ);
+                                source,
+                                receiverX,
+                                receiverBaseY,
+                                receiverZ,
+                                receiverPointCount);
                         if (minimumDistanceSquared
                                 > parameters.maximumRangeBlocksSquared()) {
                             continue;
@@ -247,7 +360,7 @@ public final class RadiationService implements AutoCloseable {
                         }
                         int insertion = insertionIndex(
                                 source, upperBound, candidateCount);
-                        if (candidateCount < candidateSources.length) {
+                        if (candidateCount < maximumCandidatesPerReceiver) {
                             shiftCandidates(insertion, candidateCount);
                             candidateSources[insertion] = source;
                             candidateUpperBounds[insertion] = upperBound;
@@ -272,13 +385,14 @@ public final class RadiationService implements AutoCloseable {
         rayLoop:
         for (int candidate = 0; candidate < candidateCount; candidate++) {
             Source source = candidateSources[candidate];
-            for (int ray = 0; ray < 3; ray++) {
-                if (rays >= parameters.maximumRaysPerReceiver()) {
+            for (int ray = 0; ray < receiverPointCount; ray++) {
+                if (rays >= maximumRaysPerReceiver) {
                     rayLimited = true;
                     break rayLoop;
                 }
                 rays++;
-                double targetY = receiverFeetY + parameters.receiverOffset(ray);
+                double targetY = receiverBaseY
+                        + receiverOffset(receiverPointCount, ray);
                 int quarterX = floorQuarter(receiverX);
                 int quarterY = floorQuarter(targetY);
                 int quarterZ = floorQuarter(receiverZ);
@@ -319,7 +433,9 @@ public final class RadiationService implements AutoCloseable {
                     double distanceSquared = Math.max(
                             dx * dx + dy * dy + dz * dz,
                             parameters.minimumDistanceBlocksSquared());
-                    totalFlux = finiteSum(totalFlux, flux(source, distanceSquared) / 3.0D);
+                    totalFlux = finiteSum(
+                            totalFlux,
+                            flux(source, distanceSquared) / receiverPointCount);
                 } else if (status == TraceStatus.UNRESOLVED) {
                     unresolved = true;
                 } else if (status == TraceStatus.BUDGET_LIMITED) {
@@ -355,11 +471,18 @@ public final class RadiationService implements AutoCloseable {
         closed = true;
         sources.clear();
         sourcesBySection.clear();
-        receiverCaches.clear();
+        playerReceiverCaches.clear();
+        itemReceiverCaches.clear();
         reservation.close();
     }
 
-    private ReceiverCache receiverCache(long receiverKey, int receiverGeneration) {
+    private ReceiverCache receiverCache(
+            Long2ObjectOpenHashMap<ReceiverCache> receiverCaches,
+            long receiverKey,
+            int receiverGeneration,
+            int maximumReceivers,
+            int maximumWitnesses
+    ) {
         ReceiverCache cache = receiverCaches.get(receiverKey);
         if (cache != null) {
             if (cache.receiverGeneration != receiverGeneration) {
@@ -368,7 +491,7 @@ public final class RadiationService implements AutoCloseable {
             cache.lastSampleSequence = sampleSequence;
             return cache;
         }
-        if (receiverCaches.size() >= parameters.maximumReceivers()) {
+        if (receiverCaches.size() >= maximumReceivers) {
             long oldestKey = 0L;
             long oldestSequence = Long.MAX_VALUE;
             for (Long2ObjectMap.Entry<ReceiverCache> entry
@@ -382,7 +505,7 @@ public final class RadiationService implements AutoCloseable {
         }
         cache = new ReceiverCache(
                 receiverGeneration,
-                parameters.maximumCandidatesPerReceiver() * 3,
+                maximumWitnesses,
                 parameters.maximumWitnessSectionsPerRay());
         cache.lastSampleSequence = sampleSequence;
         receiverCaches.put(receiverKey, cache);
@@ -421,18 +544,25 @@ public final class RadiationService implements AutoCloseable {
     private double minimumRayDistanceSquared(
             Source source,
             double receiverX,
-            double receiverFeetY,
-            double receiverZ
+            double receiverBaseY,
+            double receiverZ,
+            int receiverPointCount
     ) {
         double dx = receiverX - source.originX;
         double dz = receiverZ - source.originZ;
         double horizontal = dx * dx + dz * dz;
         double minimum = Double.POSITIVE_INFINITY;
-        for (int ray = 0; ray < 3; ray++) {
-            double dy = receiverFeetY + parameters.receiverOffset(ray) - source.originY;
+        for (int ray = 0; ray < receiverPointCount; ray++) {
+            double dy = receiverBaseY
+                    + receiverOffset(receiverPointCount, ray)
+                    - source.originY;
             minimum = Math.min(minimum, horizontal + dy * dy);
         }
         return minimum;
+    }
+
+    private double receiverOffset(int receiverPointCount, int ray) {
+        return receiverPointCount == 1 ? 0.0D : parameters.receiverOffset(ray);
     }
 
     private static double flux(Source source, double distanceSquared) {
@@ -553,7 +683,8 @@ public final class RadiationService implements AutoCloseable {
             double minimumDistanceBlocks,
             double feetOffsetBlocks,
             double torsoOffsetBlocks,
-            double headOffsetBlocks
+            double headOffsetBlocks,
+            ReceiverLimits itemReceiverLimits
     ) {
         public Parameters {
             if (maximumSources <= 0 || maximumTrackedSections <= 0
@@ -571,6 +702,7 @@ public final class RadiationService implements AutoCloseable {
             requireNonNegativeFinite("feetOffsetBlocks", feetOffsetBlocks);
             requireNonNegativeFinite("torsoOffsetBlocks", torsoOffsetBlocks);
             requireNonNegativeFinite("headOffsetBlocks", headOffsetBlocks);
+            Objects.requireNonNull(itemReceiverLimits, "itemReceiverLimits");
             if (!(feetOffsetBlocks < torsoOffsetBlocks
                     && torsoOffsetBlocks < headOffsetBlocks)) {
                 throw new IllegalArgumentException(
@@ -593,6 +725,24 @@ public final class RadiationService implements AutoCloseable {
                 case 2 -> headOffsetBlocks;
                 default -> throw new IllegalArgumentException("ray index is out of range");
             };
+        }
+    }
+
+    /** Independent cache and per-query caps for one-point item receivers. */
+    public record ReceiverLimits(
+            int maximumReceivers,
+            int maximumCandidateVisits,
+            int maximumCandidatesPerReceiver,
+            int maximumRaysPerReceiver
+    ) {
+        public ReceiverLimits {
+            if (maximumReceivers <= 0
+                    || maximumCandidateVisits <= 0
+                    || maximumCandidatesPerReceiver <= 0
+                    || maximumRaysPerReceiver <= 0) {
+                throw new IllegalArgumentException(
+                        "receiver cache and work caps must be positive");
+            }
         }
     }
 

@@ -19,16 +19,19 @@
 
 package com.teammoeg.frostedheart.content.climate.player;
 
+import com.teammoeg.chorda.CompatModule;
 import com.teammoeg.chorda.util.CUtils;
 import com.teammoeg.chorda.util.struct.FastEnumMap;
 import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.bootstrap.common.FHAttributes;
 import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
 import com.teammoeg.frostedheart.bootstrap.common.FHMobEffects;
+import com.teammoeg.frostedheart.compat.curios.CuriosCompat;
 import com.teammoeg.frostedheart.content.climate.WorldTemperature;
 import com.teammoeg.frostedheart.content.climate.gamedata.climate.WorldClimate;
 import com.teammoeg.frostedheart.content.climate.network.FHBodyDataSyncPacket;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData.BodyPart;
+import com.teammoeg.frostedheart.content.climate.player.thermalitem.WearableThermalExchangeHandler;
 import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.MinecraftThermalInput;
 import com.teammoeg.frostedheart.content.water.capability.WaterLevelCapability;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
@@ -68,6 +71,8 @@ public class TemperatureUpdate {
     private static final MinecraftThermalInput.MutableEnvironmentSample
             GAMEPLAY_ENVIRONMENT_SAMPLE =
             new MinecraftThermalInput.MutableEnvironmentSample();
+    private static final WearableThermalExchangeHandler WEARABLE_THERMAL_EXCHANGE_HANDLER =
+            new WearableThermalExchangeHandler();
     /**
      * Perform temperature effect
      *
@@ -554,6 +559,22 @@ public class TemperatureUpdate {
                         }
 
                         data.updateWhenInsulated(rawenvtemp, totalConductivity);
+                    }
+
+                    boolean invulnerable = player.isInvulnerable()
+                            || player.getAbilities().invulnerable;
+                    if (CompatModule.isCuriosLoaded()
+                            && WearableThermalExchangeHandler.allowsPlayerExchange(
+                                    player.isCreative(), player.isSpectator(), invulnerable)) {
+                        ItemStack reservoirStack = CuriosCompat
+                                .getWearableThermalReservoirInWarmStoneSlot(player);
+                        WEARABLE_THERMAL_EXCHANGE_HANDLER.exchangeInto(
+                                data,
+                                reservoirStack,
+                                rawenvtemp + WearableThermalExchangeHandler
+                                        .NORMAL_PLAYER_TEMPERATURE_C,
+                                temperatureUpdateIntervalTicks / 20.0D
+                        );
                     }
 
                     /* EFFECTIVE AND BODY TEMPERATURE COMPUTATION ENDS */

@@ -1,9 +1,9 @@
 # 数据、生命周期与集成边界
 
 - Status: `Current`
-- Last verified: `2026-08-27`
-- Scope: 温度与天气数据配方、缓存、能力、持久化、tick 阶段、网络、配置、命令、性能入口和测试覆盖
-- Primary code anchors: `FHRecipes`, `FHRecipeCachingReloadListener`, `FHCapabilities`, `ClimateCommonEvents`, `FHServerEvents`, `ServerLevelMixin_TemperatureUpdate`, `FHNetwork`, `FHWhiteCurtainSnapshotPacket`, `ClientWeatherState`, `FHConfig.SERVER.CLIMATE`, `FHConfig.SERVER.SIMULATION`, `FHConfig.CLIENT.weatherRenderingMode`, `LevelChunkSectionMixin_ThermalInput`, `MinecraftThermalEvents`, `ThermalSignatureResolverDispatcher`, `ThermalPage`, `ThermalCellArena`, `MaterialBoundaryRegistry`, `ComponentBrickCompiler`, `GeometryDeltaCoalescer`, `ImplicitAirAdjacency`, `GeometryMigrationLedger`, `FarFieldProfileRegistry`, `SolveEpoch`, `ThermalStepExecutor`, `ThermalSweep`, `ThermalSweepFragments`, `PhaseTransitionRuntime`, `ThermalSourceTimeline`, `ThermalSourceRegistry`, `NodePowerAccumulatorArena`, `ThermalMemoryBudget`, `QueryPublication`, `DimensionThermalRuntime`, `MinecraftThermalInput`, `MinecraftThermalTopologyApplier`, `MinecraftPhaseTransitionHandler`, `MinecraftPhysicalSourceManager`, `MinecraftPhysicalSourceProfile`, `MinecraftThermalSectionAttachment`, `ResolvedGeometryInputRing`, `TownThermalProjection`, `BuildingBlockScanner`, `HouseBlockScanner`, `HuntingBaseBlockScanner`
+- Last verified: `2026-08-30`
+- Scope: 温度与天气数据配方、缓存、能力、ItemStack 热库、持久化、tick 阶段、网络、配置、命令、性能入口和测试覆盖
+- Primary code anchors: `FHRecipes`, `FHRecipeCachingReloadListener`, `FHCapabilities`, `ClimateCommonEvents`, `FHServerEvents`, `ServerLevelMixin_TemperatureUpdate`, `TemperatureUpdate`, `PlayerTemperatureData.applyCoreBodyTemperatureDelta`, `FHNetwork`, `FHWhiteCurtainSnapshotPacket`, `ClientWeatherState`, `FHConfig.SERVER.CLIMATE`, `FHConfig.SERVER.SIMULATION`, `FHConfig.CLIENT.weatherRenderingMode`, `LevelChunkSectionMixin_ThermalInput`, `MinecraftThermalEvents`, `ThermalSignatureResolverDispatcher`, `ThermalPage`, `ThermalCellArena`, `MaterialBoundaryRegistry`, `ComponentBrickCompiler`, `GeometryDeltaCoalescer`, `ImplicitAirAdjacency`, `GeometryMigrationLedger`, `FarFieldProfileRegistry`, `SolveEpoch`, `ThermalStepExecutor`, `ThermalSweep`, `ThermalSweepFragments`, `PhaseTransitionRuntime`, `ThermalSourceTimeline`, `ThermalSourceRegistry`, `NodePowerAccumulatorArena`, `ThermalMemoryBudget`, `QueryPublication`, `DimensionThermalRuntime`, `MinecraftThermalInput`, `MinecraftThermalInput.gameplayPassiveEnvironment`, `MinecraftThermalInput.sampleItemEnvironment`, `MinecraftThermalInput.gameplayItemEnvironment`, `RadiationService.sampleItem`, `MinecraftThermalTopologyApplier`, `MinecraftPhaseTransitionHandler`, `MinecraftPhysicalSourceManager`, `MinecraftPhysicalSourceProfile`, `MinecraftThermalSectionAttachment`, `ResolvedGeometryInputRing`, `TownThermalProjection`, `BuildingBlockScanner`, `HouseBlockScanner`, `HuntingBaseBlockScanner`, `WearableThermalExchangeHandler`, `InventoryThermalExchangeHandler`, `DroppedReservoirExchangeHandler`, `ReservoirEnvironmentExchange`, `ThreeNodeWearableHeatExchange`, `WearableThermalState`, `WearableThermalReservoir`, `WarmStoneItem`, `WarmStoneItem.inventoryTick`, `WarmStoneItem.onEntityItemUpdate`, `CuriosCompat`
 
 本文描述温度系统如何接入服务端生命周期。各数值模型和公式分别见 [world-climate-and-temperature.md](world-climate-and-temperature.md)、[player-temperature.md](player-temperature.md) 和 [heat-production-and-network.md](heat-production-and-network.md)。
 
@@ -67,7 +67,7 @@ dimension id -> world temperature
 | `WorldClimate` | `FHCapabilities.CLIMATE_DATA`; 挂到所有非 fixed-time `Level` | NBT capability | 逻辑时钟、日缓存、`WhiteCurtainDescriptor` 包装列表、初始化标志；不保存长期事件轨道本身 |
 | `PlayerTemperatureData` | `FHCapabilities.PLAYER_TEMP`; 挂到非 FakePlayer | NBT capability | 五部位体温/体感/衣物、核心与环境数据、采样结果、可选难度；另有不写 NBT 的每玩家离散 Vanilla weather compatibility 状态 |
 | `ClientWeatherState` | client singleton；登录、维度卸载时 reset | 不持久化 | 当前维度 descriptor snapshot、预计算 kernel、时钟锚点、候选索引和固定容量双天气网格 |
-| `MinecraftThermalInput` | 每个 active `ServerLevel` 一份，首次 gameplay query 懒创建 | 不持久化 | Page/arena/publication、analytic fields、physical source manager 与 radiation service |
+| `MinecraftThermalInput` | 每个 active `ServerLevel` 一份，首次 gameplay query 懒创建 | 不持久化 | Page/arena/publication、analytic fields、physical source manager、radiation service 与固定容量同 tick item sample cache |
 | `HeatEndpoint` | `FHCapabilities.HEAT_EP`; 由具体方块实体或多方块状态暴露 | NBT capability | heat 缓冲、流量、温度等级、优先级和显示统计 |
 | item heat | `FHCapabilities.ITEM_HEAT`; 由具体物品暴露 | transient capability | 穿戴/充能设备自己的 heat storage |
 | equipment heating | `FHCapabilities.EQUIPMENT_HEATING`; 由具体物品暴露 | transient capability | 对玩家部位 effective temperature 的修改接口 |
@@ -99,11 +99,17 @@ Player tick START
     start/reuse MinecraftThermalInput for this level
     admit the player's loaded section when absent
     read published thermal air, with natural value as bootstrap/fallback
-    body-temperature update
+    normal or INSULATION body-temperature update
+    warm_stone slot core/surface/player exchange unless in a management mode
   FHBodyDataSyncPacket
 
 Player tick END
   every temperatureUpdateIntervalTicks: effects and direct hot/cold damage
+
+ItemEntity tick, only WarmStoneItem.onEntityItemUpdate
+  after at least 20 loaded ticks, UUID-staggered every 20 ticks:
+    sample one current entity center without Page admission
+    exchange environment with reservoir surface for fixed 1.0 s
 
 Level tick END, each active server level
   seal MinecraftThermalInput frame
@@ -117,6 +123,20 @@ ServerStopped
 ```
 
 `ServerLevelMixin_TemperatureUpdate` 注入 `ServerLevel.tickChunk`，在原版 `iceandsnow` 前执行温度冻结/降雪，然后手工重放原版 `tickBlocks` 并取消原方法。它对每个可随机 tick 的区段按 `pRandomTickSpeed` 取样；有 `StateTransitionData` 或 `PlantTempData` 时先运行温度规则，否则执行原方块/流体 random tick。这是温度系统与 Minecraft tick 实现耦合最深的入口，升级版本或重构时必须验证原版 tick 语义没有漂移。
+
+### 4.1 可穿戴热库 ItemStack 状态
+
+`WearableThermalState` 把可穿戴热库的唯一 version-1 状态保存到 `ItemStack` 的 `frostedheart:thermal_reservoir` compound。其权威字段是 `version=1`、`initialized=true`、`core_temperature_c` 和 `surface_temperature_c`；温度为绝对 `degC`，只接受有限 `[-1000,1000]`。`read` 是无副作用读取；只有持有有限服务端环境样本的 `restoreOrInitializeForServer` 会初始化或修复无效状态，并使用夹紧后的环境温度填充两个节点。每一种无效原因仅限频记录一次，不能以 unbounded per-stack 状态追踪告警。
+
+`WearableThermalReservoir` 仅暴露 immutable profile 与这个 `ItemStack` 状态，不有 Forge capability。`WarmStoneItem` 在 `FHItems` 注册两个单件物品，`CuriosCompat` 注册单格 `warm_stone` 槽并精确读取其 slot `0`；槽的可见和 render 开关不参与玩法查询。`FHTags.Items.CURIOS_WARM_STONE` 的 Curios tag 只列这两个物品，且两件物品的模型、纹理、空槽图标和中英文名称均为静态资源。其 tooltip 仅用 `WearableThermalState.read` 显示表面温度、`10%/25%` 相对热容，且仅高级 tooltip 显示内部温度；这条客户端展示路径不初始化或写入 NBT。
+
+玩家 START tick 已接入 `WearableThermalExchangeHandler`：每个 `temperatureUpdateIntervalTicks` 在正常或 `INSULATION` 体温处理之后、`FHBodyDataSyncPacket` 之前精确查询一次 Curios 槽。创造、旁观或任一无敌状态在查询前整轮跳过；其他玩家的有效状态经 `ThreeNodeWearableHeatExchange` 推进，再原子更新玩家核心部位并一次写回 ItemStack。缺失或无效状态只在有限服务端环境下初始化并结束本轮，不同 cadence 之间不保存第二份权威。等温、非法输入和数值降级不产生 NBT 写入；每个被处理 Stack 每 cadence 最多一次写回。
+
+`WarmStoneItem.inventoryTick` 已接入普通库存：只接受服务端 `ServerPlayer` 的 `PlayerInventory.items` 精确 slot/object，每 `20 game ticks` 以固定 `1.0 s` elapsed 调用 `InventoryThermalExchangeHandler`。Curios 槽、盔甲、副手、外部容器、客户端和其他实体被排除；同一 Stack 对象由 server-tick-generation identity set 去重，该集合在下一次不同 tick 的 claim 前清空并最多保留最近一代。环境使用无随机扰动的 `WorldTemperature.naturalAir`，再被动读取已有 Air Mesh 或组合 analytic fields，不建立 Page interest且不查询辐射。缺失/无效状态只初始化一次；有效状态仅在持久化 float 发生变化时写回一次。
+
+`WarmStoneItem.onEntityItemUpdate` 是掉落状态的唯一入口，只把 Forge 已经 tick 的当前 `ItemEntity` 交给 `DroppedReservoirExchangeHandler`。UUID 只决定 `20 tick` cadence bucket；`ItemEntity.tickCount` 是 loaded-mode 计时，前 `20+bucket` ticks 不推进，之后每轮固定 `1.0 s`，因此拾取、重新掉落、跨维度及 unload/reload 只重置模式计时，不修改温度，也不追算离线墙钟。handler 不保存实体 map；实体删除后没有待清理的 per-entity 状态。Stack compound 仍只有 version 和两个温度，不写 cadence、上次 tick、位置或 cache key。
+
+掉落环境先被动读取 publication，组合 analytic field，miss 时使用 `naturalAir` fallback，再做一点式辐射。每 level 的 `ItemEnvironmentSampleCache` 固定 `64` 个 quarter-block 位置并按 game tick generation 整代回收，`MinecraftThermalInput.close()` 显式清空；辐射自己的 item witness cache也固定为 `64`，与 `128` 个 player receiver 分离。cache 满额或过期 observation 不冻结 Stack：当轮以当前空气和零辐射推进并自然前移 loaded-mode cadence。该路径不调用 Page admission、chunk load、邻域方块扫描或 level 实体枚举。箱子/未 tick 容器继续冻结，服务器离线时间不追算。
 
 ## 5. 网络同步
 
@@ -132,6 +152,12 @@ ServerStopped
 | `heat_endpoint` and heat-network request/response | 双向按 GUI/调试需求 | 端点统计与热网拓扑显示；不是世界温度同步 |
 
 世界/方块/空气温度不做连续状态广播；需要显示时由服务端查询或由客户端结合已同步数据渲染。`FHBodyDataSyncPacket` 的发送频率高于默认主体计算频率，见玩家文档的同步约束。
+
+热库没有独立同步通道：其状态只在普通 `ItemStack` NBT 中保存。佩戴和普通库存路径现在都把每个相关 Stack 限制为每 cadence 至多一次写回；Curios Stack 走既有差异同步，普通 inventory Stack 走原版 container slot diff，玩家温差继续由同轮既有 `FHBodyDataSyncPacket` 覆盖，没有新增全玩家或逐 tick 广播。
+
+默认关闭的客户端 `WarmStoneGateBPacketCounter` 通过 `SPacketSyncStackMixin` 和 `ClientPacketListenerMixin` 只观测实际解码/处理的既有包。`/fh_gate_b start|status|reset|stop` 输出 `FH_GATE_B_PACKET` 事件和 `FH_GATE_B_SUMMARY` 聚合；聚合分别保留全部 Curios Stack、原版单槽、原版整内容包数量，以及其中与 `WearableThermalReservoir` 有关的数量和 `probe_errors`。观测不创建网络通道、不写 Stack、不改变同步频率。
+
+`2026-08-29` 的三段集成服务端实测中，专用 Curios Stack 包均为 `0`，`probe_errors` 均为 `0`；佩戴、库存和槽位移动实际通过原版 container slot/content 路径同步。单槽包为 `147/162.126 s`、`84/135.113 s`、`20/28.762 s`，整内容包为 `3`、`0`、`1`，不存在每 tick slot 或持续 full-inventory 广播。实现也没有新增全玩家广播，Tooltip 人工观察未见陈旧或异常。Gate B 因而关闭，当前不增加热库专用同步；未来只有取得可复现的陈旧显示和同类计数证据后，才评估按显示精度量化的限频定向更新。
 
 V1 白幕稳定移动不发送 snapshot 或逐帧强度。`FHClimatePacket` 现在同时携带玩家局部合并 `climate`、独立 `globalClimate`、`sec` 和 `clockDayTime`；客户端用全局类型填充天气底色，并按同源 `dayTime` 推进。小时变化照常发送；睡眠或 `/time` 大跳在下一次一秒气候调度复用一次同包，不新增长期频率。`FHWhiteCurtainSnapshotPacket` 只在 descriptor 集合或玩家维度生命周期变化时发送。完整 ownership 和 fallback 链路见 [weather-rendering.md](weather-rendering.md)。
 
@@ -275,11 +301,14 @@ Phase L 不再在 production input 中累计 player/machine/crop/town legacy/new
 | Phase G physical sources（`2` 条 Forge GameTest） | Campfire、Generator、Radiator、Fountain 固定 profile/port shares、每设备单一 source identity、exact face-component binding、blocked/degraded sinks、cold Page cap、dirty-only producer、unload/revival、topology-cut preapply 和不双注能 recovery |
 | Phase H `MinecraftMaterialBoundaryTest`（`3` 条 JUnit） | 单格 stateless wall、两格厚墙拒绝 shortcut、capacitive residual heat、surface key 重建迁移、Page unload、exposed-only natural rock surface/deep pole 与 geothermal boundary |
 | Phase I `PhaseTransitionRuntimeTest` + `MinecraftMaterialBoundaryTest`（`7` 条 JUnit） | Brick/profile 聚合、精确 microcell interface、潜热守恒、弱输入阈值、多 contact 合并、单 request、request/ACK overflow sticky retry、generation-safe ACK、重建迁移和 gamerule policy |
-| Phase J `RadiationServiceTest`（`5` 条 JUnit）+ Minecraft radiation GameTest | inverse-square flux、deterministic top-K、candidate/ray/source/memory caps、signed section packing、revision retrace、witness cache hit、真实石墙阻挡/拆除恢复，以及重复观察不写 source ledger |
+| Phase J `RadiationServiceTest`（`10` 条 JUnit）+ Minecraft radiation GameTest | player 三点和 item 一点 inverse-square flux、deterministic top-K、candidate/ray/source/memory caps、独立 `128/64` receiver cache、signed section packing、revision retrace、witness cache hit、真实石墙阻挡/拆除恢复，以及重复观察不写 source ledger |
 | Phase K player + crop + town gameplay query | runtime envelope advance 拒绝旧 publication、mixed Brick point-component 命中/solid 拒绝、publication age fallback、passive Page miss 不 admission、真实 `PlantStatus` 使用 published air、town 完整 weighted projection 接管/partial 整体回退，以及 10,000 crop miss/4,096 town group miss 不增长 Page/cell/arena energy |
-| Minecraft thermal integration Forge GameTest（`10` 条） | 真实 capture/admission/seal/apply/publication lifecycle、PR8 input、Phase G physical source、Phase J radiation、analytic compositor、underground continuation、生产 mutation/publication 路径，以及 fixed-deadline dirty batch 与局部 Brick fragment replacement |
+| 暖石掉落 workload（`7` 条 JUnit） | `400` 个 UUID 的 20-bucket cadence、精确 hook context、无实体 map、`4,096` 次同 tick sample claim、`64` sample/receiver hard cap、`128` player receiver 隔离、generation 回收，以及 cadence/sample/radiation 稳态分配上限 |
+| Minecraft thermal integration Forge GameTest（`12` 条） | 真实 capture/admission/seal/apply/publication lifecycle、PR8 input、Phase G physical source、Phase J player/item radiation、暖石与热水袋 Campfire 升温/移远冷却/石墙遮挡、analytic compositor、underground continuation、生产 mutation/publication 路径，以及 fixed-deadline dirty batch 与局部 Brick fragment replacement |
 
-最近一次 Java 17 thermal JUnit 为 `175/175`，Forge GameTest 为 `11/11` required，其中 thermal `10` 条、Frosted Research `1` 条。production/deobf JAR 均保留生产 `MinecraftThermalInput`，且不包含 thermal Phase 0、census、probe、JMH 或 thermal GameTest 条目；既有 `frostedresearch.ResearchGameTests` 不属于本次 thermal 清理。Phase K 的 player/crop/town query 单测覆盖 mixed Brick、solid microcell、未 admission Page、publication age、真实 plant-status observation、town weighted-group compression、10,000 crop miss、4,096 town group miss 与只读 runtime state。`TownThermalProjectionTest` 另锁定负坐标 Brick 分组和与遍历顺序无关的代表点。
+最近一次 Java 17 完整 JUnit 基线为 `201` suites、`868/868`，暖石定向基线为 `21` suites、`101/101`；Forge GameTest 为 `13/13 required`，其中 thermal `12` 条、Frosted Research `1` 条。production/deobf JAR 均保留生产 `MinecraftThermalInput`，且不包含 thermal Phase 0、census、probe、JMH 或 thermal GameTest 条目；既有 `frostedresearch.ResearchGameTests` 不属于本次 thermal 清理。Phase K 的 player/crop/town query 单测覆盖 mixed Brick、solid microcell、未 admission Page、publication age、真实 plant-status observation、town weighted-group compression、10,000 crop miss、4,096 town group miss 与只读 runtime state。`TownThermalProjectionTest` 另锁定负坐标 Brick 分组和与遍历顺序无关的代表点。
+
+`2026-08-30` 的 T25 多实体 smoke 在约 `345.936 s` 内观察到 `31` 个不同热库槽位；9 次 `/forge tps` 均为 `20.000 TPS`，总平均 tick 耗时范围 `11.935..19.080 ms`、均值 `16.404 ms`，没有 tick 追赶警告。同期 Gate B `364.032 s` 汇总为 `1817` 个 thermal slot packet、`0` 个 content packet、`0` 个 Curios packet、`probe_errors=0`；用户未观察到显示或玩法异常。这些是现有 cadence、预算与同步合同的验收证据，不改变其默认值。
 
 Phase B 的 `ThermalPage` 与一个 `16^3` section 对齐，保留固定 `int coverageRef[64]`、恰好 `64` 个 world-aligned `4^3` Brick geometry summary、`mixedBrickMask`/`dirtyBrickMask`，以及分离的 live/published `long` geometry revision。一次确认会改变热学或辐射语义的 active mutation 才递增 live revision、令旧 publication 失效并 O(1) 标记 base Brick；同 tick 同 Brick 的 voxel mask 只向 bounded primitive ring 发送一条 delta。ring 无容量时，Page-owned `FULL_GEOMETRY_RESYNC_REQUIRED` 不依赖 ring entry 存活；ACK 必须匹配 section key、lifecycle generation、最新 required revision 和原 sticky reason。普通稳定 mutation 和 full-resync 都通过 atomic multi-Brick ACK 只安装实际变化的固定 4³ Brick；Page 没有 8³/16³ coverage 或 coarse repartition 状态。
 

@@ -1,9 +1,9 @@
 # 世界气候与环境温度
 
 - Status: `Current`
-- Last verified: `2026-08-27`
-- Scope: 逻辑气候时钟、长期事件、局部白幕、自然/mesh/analytic 温度合成、方块状态消费者
-- Primary code anchors: `WorldClockSource`, `WorldClimate`, `ClimateEventModel`, `ClimateEventTrack`, `InterpolationClimateEvent`, `WhiteCurtainDescriptor`, `WhiteCurtainFieldModel`, `WhiteCurtainInfo`, `WorldTemperature`, `BlockTemperatureModel`, `MinecraftThermalInput.AnalyticField`, `MinecraftThermalInput.gameplayPassiveEnvironment`, `MinecraftThermalInput.gameplayCropEnvironment`, `TownThermalProjection`, `MinecraftThermalInput.gameplayTownEnvironment`
+- Last verified: `2026-08-30`
+- Scope: 逻辑气候时钟、长期事件、局部白幕、自然/mesh/analytic 温度合成、方块状态与掉落热库 receiver
+- Primary code anchors: `WorldClockSource`, `WorldClimate`, `ClimateEventModel`, `ClimateEventTrack`, `InterpolationClimateEvent`, `WhiteCurtainDescriptor`, `WhiteCurtainFieldModel`, `WhiteCurtainInfo`, `WorldTemperature`, `BlockTemperatureModel`, `MinecraftThermalInput.AnalyticField`, `MinecraftThermalInput.gameplayPassiveEnvironment`, `MinecraftThermalInput.sampleItemEnvironment`, `MinecraftThermalInput.gameplayItemEnvironment`, `RadiationService.sampleItem`, `MinecraftThermalInput.gameplayCropEnvironment`, `TownThermalProjection`, `MinecraftThermalInput.gameplayTownEnvironment`
 
 本文只描述当前源码行为。所有温度若无特别说明均为摄氏度；“修正”表示摄氏度增量。
 
@@ -202,6 +202,12 @@ OVERRIDE -> MAX_HEAT -> MIN_COOL -> ADD_DELTA
 Campfire、Generator 和蒸汽喷泉不是 analytic field；它们由
 `MinecraftPhysicalSourceManager` 注册为显式功率 source，进入 mesh 与直接辐射路径。
 `ChunkHeatData`、`IHeatArea`、chunk capability、周期 revalidation 和旧失效包均已删除。
+
+### 7.1 掉落物一点式环境 receiver
+
+`MinecraftThermalInput.sampleItemEnvironment` 在 `ItemEntity` 中心执行被动查询。已有且未超龄的 Air Mesh publication 命中时先采用 published air，再按本节顺序组合 analytic fields；publication miss 时以 `WorldTemperature.naturalAir` 作为无随机扰动 fallback 并组合同一 analytic fields。最后调用 `RadiationService.sampleItem` 叠加一个 receiver point 的直接辐射。该入口不会调用 `ensureGameplayPage`，不会 admission Page、加载 chunk、扫描邻域方块或枚举实体；没有 active runtime 时，`gameplayItemEnvironment` 只返回当前 `naturalAir` 和零辐射。
+
+玩家三点辐射继续保留 `128` receiver、每 query `64` candidate visit、top `8`、`24` rays。item receiver 使用独立的 `64` receiver witness cache、`32` visits、top `4` 和 `4` rays，不能驱逐玩家 witness。`MinecraftThermalInput` 另有每 level 固定 `64` 个 quarter-block 位置的同 tick sample cache；同位置命中复用完整空气/辐射结果，tick generation 改变时整代回收，level `close()` 时清空。第 `65` 个不同位置之后仍返回 publication/analytic/`naturalAir` 的空气值，但本 tick 不再做辐射工作并标记 budget-limited。source index、top-K、DDA、section revision witness 与 source ledger 均与玩家路径共享；item query 只读功率，不重复消费 source energy。
 
 ## 8. 主要消费者
 

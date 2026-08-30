@@ -95,6 +95,7 @@
     "client.BossHealthOverlayAccess",
     "client.ChatScreenMixin",
     "client.ClientPacketListenerMixin",
+    "client.curios.SPacketSyncStackMixin",
     "client.ConnectScreenAccess",
     "client.ConnectScreenMixin",
     "client.ForgeGuiMixin",

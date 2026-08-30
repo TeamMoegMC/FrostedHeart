@@ -10,7 +10,7 @@
 | [heat-production-and-network.md](heat-production-and-network.md) | 能量塔、热网、散热器、蒸汽喷泉及现有 heat/power 语义 | Current |
 | [data-lifecycle-and-integration.md](data-lifecycle-and-integration.md) | 数据入口、能力、持久化、网络、配置、命令、消费者与验证 | Current |
 
-Primary anchors: `WorldClimate`, `WhiteCurtainInfo`, `ServerLevelMixin_WeatherCycle`, `LevelRendererMixin`, `FogModification`, `WorldClockSource`, `WorldTemperature`, `BlockTemperatureModel`, `MinecraftThermalInput`, `MinecraftPhysicalSourceManager`, `SurroundingTemperatureSimulator`, `TemperatureUpdate`, `PlayerTemperatureData`, `GeneratorData`, `HeatEndpoint`, `HeatNetwork`, `FHConfig.SERVER.CLIMATE`, `FHConfig.SERVER.SIMULATION`.
+Primary anchors: `WorldClimate`, `WhiteCurtainInfo`, `ServerLevelMixin_WeatherCycle`, `LevelRendererMixin`, `FogModification`, `WorldClockSource`, `WorldTemperature`, `BlockTemperatureModel`, `MinecraftThermalInput`, `MinecraftThermalInput.gameplayItemEnvironment`, `RadiationService`, `MinecraftPhysicalSourceManager`, `SurroundingTemperatureSimulator`, `TemperatureUpdate`, `PlayerTemperatureData`, `DroppedReservoirExchangeHandler`, `GeneratorData`, `HeatEndpoint`, `HeatNetwork`, `FHConfig.SERVER.CLIMATE`, `FHConfig.SERVER.SIMULATION`.
 
 ## 系统地图
 
@@ -31,6 +31,11 @@ dimension + biome + altitude + WorldClimate
                                       v
                            five body-part temperatures -> HUD
 
+                    +--> dropped reservoir air + one-point radiation
+                                      |
+                                      v
+                           ItemStack core/surface temperatures
+
 Campfire / Generator / fountain --> physical source manager --> mesh + radiation
 GeneratorData --> HeatEndpoint --> HeatNetwork --> device buffers
 ```
@@ -46,6 +51,7 @@ GeneratorData --> HeatEndpoint --> HeatNetwork --> device buffers
 | `BlockTempData.temperature` | 玩家周围粒子采样中的方块热/冷贡献 | 温度增量 |
 | 玩家部位体温 | 相对 `37degC` 的偏移，`0` 表示正常体温 | `degC` 偏移 |
 | 玩家环境温度/体感温度 | `PlayerTemperatureData` 对外保存和显示的值 | 绝对 `degC` |
+| 暖石类热库 | ItemStack 内部/表面双节点及其相对玩家热容 | 绝对 `degC`；热容为玩家归一化比例 |
 | `HeatEndpoint.heat` / `GeneratorData.power` | 热网端点中的可存取标量缓冲 | 任意 heat unit，不是 SI 功率 |
 | `HeatEndpoint.tempLevel` | 供热设备传递给消费者的等级 | 无量纲 |
 
@@ -55,7 +61,7 @@ GeneratorData --> HeatEndpoint --> HeatNetwork --> device buffers
 
 `SurroundingTemperatureSimulator` 会让热源对向下运动的采样轨迹权重较低、冷源对向上运动的轨迹权重较低，以近似“热上升、冷下沉”；它不保存流体速度、密度或热量，也不在方块间推进对流状态。因此后续研究对流、热容或功率时，应以这些现有玩法输出作为兼容边界，而不是把现有同名字段直接解释为物理量。
 
-当前玩家路径由 `MinecraftThermalInput.gameplayPlayerEnvironment` 的 Page publication 与有界直接辐射查询驱动原有体温和 HUD 下游；publication miss 使用 natural backend，再叠加 analytic field。作物和住宅/狩猎建筑使用同一 compositor，miss 或 town partial coverage 时回退 natural composition，不读取旧热区。普通机器没有现存温度消费者。admitted Page 中具有保守材料接触面的 `StateTransitionData` 热侧转换由 phase reservoir 接管；Page 外、无材料 mask、动态形状及冻结/凝结方向继续使用随机转换。
+当前玩家路径由 `MinecraftThermalInput.gameplayPlayerEnvironment` 的 Page publication 与有界直接辐射查询驱动原有体温和 HUD 下游；publication miss 使用 natural backend，再叠加 analytic field。掉落暖石由 `gameplayItemEnvironment` 被动读取 publication，miss 时以无随机扰动的 `naturalAir` 合成 analytic field，再组合独立预算的一点式辐射；查询不 admission Page。作物和住宅/狩猎建筑使用同一 compositor，miss 或 town partial coverage 时回退 natural composition，不读取旧热区。普通机器没有现存温度消费者。admitted Page 中具有保守材料接触面的 `StateTransitionData` 热侧转换由 phase reservoir 接管；Page 外、无材料 mask、动态形状及冻结/凝结方向继续使用随机转换。
 
 ## 阅读顺序
 
