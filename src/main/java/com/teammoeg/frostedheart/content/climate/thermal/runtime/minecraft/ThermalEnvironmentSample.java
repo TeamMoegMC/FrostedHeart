@@ -52,7 +52,9 @@ public final class ThermalEnvironmentSample {
         airAvailable = true;
         airTemperatureC = temperature;
     }
-
+    boolean hasFlag(int flag) {
+        return (flags & flag)!=0;
+    }
     void addFlag(int flag) {
         flags |= flag;
     }
