@@ -12,8 +12,8 @@ package com.teammoeg.frostedheart.content.climate.gamedata.climate;
 
 /** Fixed V1 field-quality profiles. Rendering work caps are defined by the client renderer. */
 public enum WhiteCurtainVisualProfile {
-    FAST(16.0F, 5.0F, 160.0F),
-    FANCY(24.0F, 5.0F, 192.0F);
+    FAST(16.0F, 5.0F, 16.0F),
+    FANCY(24.0F, 5.0F, 16.0F);
 
     private final float corridorEdgeFadeBlocks;
     private final float phaseTransitionSeconds;

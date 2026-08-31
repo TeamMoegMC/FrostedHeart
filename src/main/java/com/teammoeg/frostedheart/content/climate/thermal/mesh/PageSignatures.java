@@ -1,7 +1,9 @@
 /* Copyright (c) 2026 TeamMoeg */
 package com.teammoeg.frostedheart.content.climate.thermal.mesh;
 
-import java.util.Arrays;
+import com.teammoeg.frostedheart.content.climate.thermal.profile.ThermalSignatureTable;
+
+import java.util.Objects;
 
 /** Immutable Brick-addressed signature IDs for one 16-cubed thermal Page. */
 public final class PageSignatures {
@@ -19,13 +21,26 @@ public final class PageSignatures {
         this.bricks = bricks;
     }
 
+    public static PageSignatures unresolved(ThermalSignatureTable signatures) {
+        Objects.requireNonNull(signatures, "signatures");
+        Object[] bricks = new Object[BRICK_COUNT];
+        java.util.Arrays.fill(
+                bricks,
+                signatures.uniformPayload(ThermalSignatureTable.UNRESOLVED));
+        return new PageSignatures(bricks);
+    }
+
     public int get(int blockIndex) {
         requireBlockIndex(blockIndex);
         int brick = brickIndex(blockIndex);
         return valueAt(bricks[brick], indexWithinBrick(blockIndex));
     }
 
-    public PageSignatures withBricks(int[] baseBrickIndexes, int[][] brickValues) {
+    public PageSignatures withBricks(
+            ThermalSignatureTable signatures,
+            int[] baseBrickIndexes,
+            int[][] brickValues
+    ) {
         if (baseBrickIndexes == null || brickValues == null
                 || baseBrickIndexes.length != brickValues.length) {
             throw new IllegalArgumentException("Brick signature replacements are invalid");
@@ -41,7 +56,7 @@ public final class PageSignatures {
                 throw new IllegalArgumentException("duplicate Brick signature replacement");
             }
             seen |= bit;
-            next[brick] = encodeBrick(brickValues[index]);
+            next[brick] = encodeBrick(signatures, brickValues[index]);
         }
         return new PageSignatures(next);
     }
@@ -53,15 +68,20 @@ public final class PageSignatures {
     }
 
     static int valueAt(Object payload, int index) {
+        if (payload instanceof Integer uniform) {
+            return uniform;
+        }
         if (payload instanceof char[] compact) {
-            return compact[compact.length == 1 ? 0 : index]
-                    - ENCODE_OFFSET;
+            return compact[index] - ENCODE_OFFSET;
         }
         int[] wide = (int[]) payload;
-        return wide[wide.length == 1 ? 0 : index];
+        return wide[index];
     }
 
-    private static Object encodeBrick(int[] values) {
+    private static Object encodeBrick(
+            ThermalSignatureTable signatures,
+            int[] values
+    ) {
         int first = values[0];
         boolean uniform = true;
         boolean compact = fitsCompact(first);
@@ -71,9 +91,7 @@ public final class PageSignatures {
             compact &= fitsCompact(value);
         }
         if (uniform) {
-            return compact
-                    ? new char[]{encode(first)}
-                    : new int[]{first};
+            return signatures.uniformPayload(first);
         }
         if (!compact) {
             return values.clone();
@@ -127,7 +145,14 @@ public final class PageSignatures {
 
     /** Main-thread or worker-preparation scratch; a built value never aliases it. */
     public static final class Builder {
+        private final ThermalSignatureTable signatures;
         private final int[] values = new int[ENTRY_COUNT];
+        private final int[] brick = new int[ENTRIES_PER_BRICK];
+        private final Object[] brickPayloads = new Object[BRICK_COUNT];
+
+        public Builder(ThermalSignatureTable signatures) {
+            this.signatures = Objects.requireNonNull(signatures, "signatures");
+        }
 
         public Builder set(int blockIndex, int value) {
             requireBlockIndex(blockIndex);
@@ -135,9 +160,31 @@ public final class PageSignatures {
             return this;
         }
 
+        public Builder reset(PageSignatures base) {
+            Objects.requireNonNull(base, "base");
+            System.arraycopy(base.bricks, 0, brickPayloads, 0, BRICK_COUNT);
+            return this;
+        }
+
+        public Builder setBrick(int brickIndex, int[] values) {
+            requireBrickIndex(brickIndex);
+            requireBrick(values);
+            brickPayloads[brickIndex] = encodeBrick(signatures, values);
+            return this;
+        }
+
+        public Builder setUniformBrick(int brickIndex, int signatureId) {
+            requireBrickIndex(brickIndex);
+            brickPayloads[brickIndex] = signatures.uniformPayload(signatureId);
+            return this;
+        }
+
+        public PageSignatures buildBricks() {
+            return new PageSignatures(brickPayloads.clone());
+        }
+
         public PageSignatures build() {
             Object[] bricks = new Object[BRICK_COUNT];
-            int[] brick = new int[ENTRIES_PER_BRICK];
             for (int baseBrick = 0; baseBrick < BRICK_COUNT; baseBrick++) {
                 int write = 0;
                 int minX = (baseBrick & 3) << 2;
@@ -151,7 +198,7 @@ public final class PageSignatures {
                         }
                     }
                 }
-                bricks[baseBrick] = encodeBrick(brick);
+                bricks[baseBrick] = encodeBrick(signatures, brick);
             }
             return new PageSignatures(bricks);
         }

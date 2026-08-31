@@ -1,11 +1,11 @@
 # 红外视野实际温度场最小增量实现计划
 
 - Time: `2026-08-29 18:38:09 +0800`
-- Last revised: `2026-08-31 02:48:33 +0800`
+- Last revised: `2026-08-31 23:00:17 +0800`
 - Authors: `TeamMoeg; Codex (GPT-5, original architecture and final minimal-increment revision)`
 - Status: `in-progress`
 - Scope: `InfraredViewRenderer`, `infrared_view.fsh`, existing infrared packets, `MinecraftThermalInput`, `MinecraftPageManager`, `PagePublication`, `QueryPublication`
-- Related: [world-climate-and-temperature.md](../docs/climate/world-climate-and-temperature.md), [thermal-runtime-architecture-and-optimization.md](../docs/climate/thermal-runtime-architecture-and-optimization.md)
+- Related: [world-climate-and-temperature.md](../docs/climate/world-climate-and-temperature.md), [thermal-runtime-architecture-and-optimization.md](../docs/climate/thermal-runtime-architecture-and-optimization.md), [thermal async/runtime topology plan](2026-08-28_01-18-39_thermal-async-runtime-topology-refactor.md#brick-residency-and-source-independent-propagation-correction)
 
 ## Goal
 
@@ -37,11 +37,32 @@
 目标规模是同一维度 100 名开启红外的玩家，玩家观察区域不重叠。红外不创建额外
 Pages，因此所有玩家能读取的唯一 Pages 总数仍受维度级 3200 上限约束。
 
+`maximumPages=3200` 只是红外可枚举 Page 的硬上限，不证明 100 个 source 的
+thermal residency、cell、pair 或 boundary 成本已经通过。该容量结论归上面的 thermal
+runtime plan 和其 100-source fixture；本文只计算已有 publication 的查询与网络成本。
+
 本计划允许每两秒约 5 KiB 的全服 C2S 精确状态查询，以换取：
 
 - 静态场景 S2C 为零；
 - 服务端不保存玩家红外状态；
 - 不增加订阅、frame、continuation、cache 或 hash。
+
+## Cross-System Residency Dependency
+
+红外是 thermal publication 的只读消费者，绝不反向拥有 Page/Brick 生命周期。当前
+Page-wide player/source/continuation residency 已被源码和实机行为否决；后续实现以
+thermal runtime plan 的 Brick correction 为唯一权威：
+
+- source 以精确目标 Brick 作为 seed；
+- worker 根据已求解温度、真实开放面和统一 gameplay error gate 持有/扩张 Brick；
+- 非天空缺页不再自动接弱自然温度 FarField；
+- 玩家离开或跨 section 不能清除 source/余热拥有的状态；
+- Page 只有在 worker desired mask 与主线程 seed 都为零后才允许退休；
+- infrared poll、presence 和 `pagesByChunk` 枚举不会 admission、续租或影响这些 mask。
+
+因此 `invalid/MIN_TEMP` 只表示当前没有 coherent thermal Brick publication；它不能由
+观察者移动直接制造。对同一世界位置，只要 source、拓扑和求解状态未变，玩家跨
+X/Y/Z section 后重新观察必须得到同一 Brick 温度。
 
 ## Required Result
 
@@ -247,7 +268,9 @@ repeated:
    `pageChangeIds[pageSlot] > lastTemperatureChangeId` 的可见 Pages。
 4. change ID 已推进但当前区域没有 changed Page：发送 pageRecordCount 为 0 的
    delta ACK，使客户端推进 change ID。
-5. QueryPublication 整体无效或超过现有 40-tick age：以空 full snapshot 清空客户端。
+5. QueryPublication 整体无效或超过现有 40-tick age：不发送响应，保留客户端最后
+   有效 snapshot；publication 恢复后由现有 change ID/Page baseline 发送重建数据，
+   worker replacement 的 change-ID rollback 仍自动发送 full。
 
 响应 payload 只持有一个最终长度的 flat `short[] pageRecords`：
 
@@ -393,7 +416,7 @@ temperature compositor 的作用。
 | 单客户端固定温度数据 | 约 182.25 KiB |
 | fragment shader | 每个有效世界像素一次 integer 3D texture fetch |
 
-在“100 人、同一维度、区域不重叠”目标条件下，`A <= 3200`。即使所有实际 Pages
+在“100 人、同一维度、区域不重叠”目标条件下，红外查询侧的 `A <= 3200`。即使所有实际 Pages
 每个周期都改变：
 
 ```text
@@ -404,7 +427,8 @@ S2C payload          <= 3200 * 130 / 2 = 208,000 bytes/s
 ```
 
 静态场景没有 Brick sampling 和 S2C temperature payload。不同维度分别应用各自
-maximumPages 上限。
+maximumPages 上限。这些数字不包含 thermal capture、topology 或 solver 工作，不能
+再作为 Page-wide source domain、固定 27-Page cube 或 100-source thermal capacity 的证据。
 
 ## Implementation Steps
 
@@ -452,6 +476,10 @@ maximumPages 上限。
 
 - shader 中不存在 HeatArea 数组和按 source 数量循环。
 - source 隔墙时不出现直接功率图形，只显示 solver 已传播到 Brick 的温度。
+- 同一固定 world position 在玩家跨越 X/Y/Z section、离开再返回且 source/拓扑未变时，
+  保持同一温度量化值；不得因 observer lease 改变而在橙色与 invalid 蓝色之间跳变。
+- source domain 穿过 section 时没有 Page 形状的颜色边界；真正 Page retirement 才通过
+  presence mismatch 清除客户端数据。
 - `/heat_adjust` 等 analytic field 不直接出现在红外纹理。
 - 扫描球内的 invalid 和无 Page 区域按 `MIN_TEMP` 显示冷蓝；cube 外和
   64-block sphere 外保持原始画面。
@@ -497,7 +525,9 @@ maximumPages 上限。
 最终方案保留一个维度温度 change ID、每 Page change IDs 和客户端携带的精确
 presence。它以约 5 KiB/s 的 100-player 静态 C2S 为代价，实现静态零 S2C、
 changed-Page-only payload、无服务端玩家状态，并复用现有 `pagesByChunk` 把稳定
-Page 枚举降为 `O(81 + actual entries)`。
+Page 枚举降为 `O(81 + actual entries)`。Page/Brick 是否存在及其热状态寿命明确归
+thermal worker residency，而不是红外观察范围；本计划不再承担或暗示 Page admission
+架构结论。
 
 ## Outcome
 

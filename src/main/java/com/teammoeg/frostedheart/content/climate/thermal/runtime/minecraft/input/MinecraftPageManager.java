@@ -14,7 +14,6 @@ import com.teammoeg.frostedheart.content.climate.thermal.source.minecraft.Physic
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.longs.LongLinkedOpenHashSet;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
-import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.SectionPos;
@@ -27,22 +26,21 @@ import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.IdentityHashMap;
-import java.util.UUID;
 
 /**
  * 服务器主线程上的 Page 生命周期所有者。
  *
- * <p>它把玩家、source 和 continuation interest 合并为 Page admission，
+ * <p>它把 source seed 与 worker-desired Brick masks 合并为 Page admission，
  * 将方块 mutation 收敛为局部几何输入，并在 retirement 前生成 dormant
  * checkpoint。{@link ThermalPageHandle} 是它与 worker 共享的唯一 Page 身份；
  * 已提交拓扑不在这里保存。</p>
  */
 public final class MinecraftPageManager implements AutoCloseable {
-    private static final int PRIMARY = 0;
-    private static final int SOURCE = 1;
-    private static final int CONTINUATION = 2;
-    private static final int PRIORITY_COUNT = 3;
+    private static final int SOURCE = 0;
+    private static final int FRONTIER = 1;
+    private static final int PRIORITY_COUNT = 2;
     private static final int MAX_ADMISSIONS_PER_TICK = 1;
+    private static final int MAX_BRICK_CAPTURES_PER_TICK = 64;
     private static final int MAX_FULL_RESYNCS_PER_TICK = 1;
     private static final int MAX_CENTERS_PER_TICK = 256;
     private static final int MAX_ADMISSION_ATTEMPTS_PER_PRIORITY = 8;
@@ -51,10 +49,7 @@ public final class MinecraftPageManager implements AutoCloseable {
     private static final int CENTER_BITMAP_THRESHOLD = 32;
     private static final int INITIAL_CENTER_CAPACITY = 8;
     private static final int UNCAPTURED_SIGNATURE = Integer.MIN_VALUE;
-    private static final long PLAYER_LEASE_TICKS = 40L;
-    private static final long PREVIOUS_PLAYER_LEASE_TICKS = 20L;
     private static final long WORK_LIMIT_RETRY_TICKS = 200L;
-    private static final int WHEEL_SIZE = 64;
 
     private final ServerLevel level;
     private final MinecraftThermalInput input;
@@ -71,9 +66,6 @@ public final class MinecraftPageManager implements AutoCloseable {
             new LongLinkedOpenHashSet();
     private final LongLinkedOpenHashSet readyCaptures =
             new LongLinkedOpenHashSet();
-    private final Object2ObjectOpenHashMap<UUID, PlayerLease> playerLeases =
-            new Object2ObjectOpenHashMap<>();
-    private final PlayerLease[] playerWheel = new PlayerLease[WHEEL_SIZE];
     private final Long2ObjectOpenHashMap<SectionOwner> ownersBySection =
             new Long2ObjectOpenHashMap<>();
     private final IdentityHashMap<LevelChunkSection, SectionOwner>
@@ -118,53 +110,37 @@ public final class MinecraftPageManager implements AutoCloseable {
         radiationOcclusion = occlusion;
     }
 
-    public void requestPlayerPage(
-            UUID playerId,
-            BlockPos position,
-            long gameTick
+    public void updateSourceBrick(
+            long sectionKey,
+            int brickIndex,
+            boolean retained
     ) {
         requireMainThread();
-        long sectionKey = SectionPos.asLong(
-                SectionPos.blockToSectionCoord(position.getX()),
-                SectionPos.blockToSectionCoord(position.getY()),
-                SectionPos.blockToSectionCoord(position.getZ()));
-        PlayerLease lease = playerLeases.get(playerId);
-        if (lease == null) {
-            lease = new PlayerLease(playerId);
-            playerLeases.put(playerId, lease);
-            lease.currentSection = sectionKey;
-            retain(sectionKey, PRIMARY);
-        } else if (lease.currentSection != sectionKey) {
-            if (lease.previousSection != Long.MIN_VALUE) {
-                release(lease.previousSection, PRIMARY);
-            }
-            lease.previousSection = lease.currentSection;
-            lease.previousExpiry =
-                    gameTick + PREVIOUS_PLAYER_LEASE_TICKS;
-            lease.currentSection = sectionKey;
-            retain(sectionKey, PRIMARY);
+        if (brickIndex < 0 || brickIndex >= 64) {
+            throw new IllegalArgumentException("source Brick index is out of range");
         }
-        lease.currentExpiry = gameTick + PLAYER_LEASE_TICKS;
-        schedulePlayer(lease);
-    }
-
-    public void releasePlayer(UUID playerId) {
-        requireMainThread();
-        PlayerLease lease = playerLeases.remove(playerId);
-        if (lease == null) {
+        PageEntry page = retained ? entry(sectionKey) : pages.get(sectionKey);
+        if (page == null) {
             return;
         }
-        unlinkPlayer(lease);
-        release(lease.currentSection, PRIMARY);
-        if (lease.previousSection != Long.MIN_VALUE) {
-            release(lease.previousSection, PRIMARY);
+        if (page.sourceSeedCounts == null) {
+            if (!retained) {
+                return;
+            }
+            page.sourceSeedCounts = new int[64];
         }
-    }
-
-    public void updateSourcePage(long sectionKey, boolean retained) {
-        requireMainThread();
-        if (retained) retain(sectionKey, SOURCE);
-        else release(sectionKey, SOURCE);
+        int count = page.sourceSeedCounts[brickIndex];
+        if (retained) {
+            page.sourceSeedCounts[brickIndex] = Math.incrementExact(count);
+            page.sourceSeedMask |= 1L << brickIndex;
+        } else if (count > 0) {
+            count--;
+            page.sourceSeedCounts[brickIndex] = count;
+            if (count == 0) {
+                page.sourceSeedMask &= ~(1L << brickIndex);
+            }
+        }
+        updateInterest(page);
     }
 
     ThermalPageHandle handle(long sectionKey) {
@@ -248,12 +224,17 @@ public final class MinecraftPageManager implements AutoCloseable {
                 continue;
             }
             SectionOwner owner = ownersBySection.get(page.sectionKey);
-            PageSignatures snapshot = signatures.capturePage(
+            PageSignatures snapshot = signatures.captureBricks(
                     page.sectionKey,
-                    owner == null ? null : owner.section);
+                    owner == null ? null : owner.section,
+                    signatures.unresolvedPage(),
+                    page.capturedBrickMask);
+            page.signatures = snapshot;
             accumulator.admit(
                     handle,
                     handle.liveGeometryRevision(),
+                    page.capturedBrickMask,
+                    page.sourceSeedMask & page.capturedBrickMask,
                     snapshot,
                     captured.naturalTemperatureC(),
                     captured.firstExposedLocalY(),
@@ -286,6 +267,14 @@ public final class MinecraftPageManager implements AutoCloseable {
                 : batch.retirements()) {
             accumulator.retire(retirement.page());
         }
+        for (ThermalInputBatch.PageResidencyUpdate update
+                : batch.residencyUpdates()) {
+            PageEntry page = pages.get(update.page().sectionKey());
+            if (page != null && page.handle == update.page()) {
+                page.retryAfterTick = gameTick + WORK_LIMIT_RETRY_TICKS;
+                enqueue(page);
+            }
+        }
         for (int index = 0; index < batch.geometry().size(); index++) {
             ThermalPageHandle handle = batch.geometry().page(index);
             PageEntry page = pages.get(handle.sectionKey());
@@ -305,46 +294,26 @@ public final class MinecraftPageManager implements AutoCloseable {
         }
     }
 
-    public void applyContinuation(
-            ThermalCompletion.PageContinuation continuation
-    ) {
-        PageEntry page = pages.get(continuation.sectionKey());
-        if (page == null || page.handle == null
+    public void applyResidency(ThermalCompletion.BrickResidency update) {
+        PageEntry page = pages.get(update.sectionKey());
+        if (page == null) {
+            if (update.desiredBrickMask() == 0L
+                    || update.lifecycleGeneration() >= 0L) {
+                return;
+            }
+            page = entry(update.sectionKey());
+        } else if (update.lifecycleGeneration() >= 0L
+                && (page.handle == null
                 || page.handle.lifecycleGeneration()
-                        != continuation.lifecycleGeneration()) {
+                        != update.lifecycleGeneration())) {
             return;
         }
-        PagePublication publication = page.handle.currentPublication();
-        if (publication == null
-                || publication.geometryRevision()
-                        != continuation.geometryRevision()
-                || publication.topologyGeneration()
-                        != continuation.topologyGeneration()) {
-            return;
-        }
-        boolean primary = page.playerReferences != 0
-                || page.sourceReferences != 0;
-        int nextMask = primary
-                ? Byte.toUnsignedInt(continuation.faceMask()) : 0;
-        int changed = page.continuationFaceMask ^ nextMask;
-        for (int face = 0; face < 6; face++) {
-            int bit = 1 << face;
-            if ((changed & bit) == 0) {
-                continue;
-            }
-            long neighbor = neighbor(page.sectionKey, face);
-            if ((nextMask & bit) != 0) {
-                retain(neighbor, CONTINUATION);
-            } else {
-                release(neighbor, CONTINUATION);
-            }
-        }
-        page.continuationFaceMask = nextMask;
+        page.workerDesiredMask = update.desiredBrickMask();
+        updateInterest(page);
     }
 
     public void tick(long gameTick) {
         requireMainThread();
-        expirePlayers(gameTick);
         drainMutations(gameTick);
         processCaptures(gameTick);
         processAdmissions(gameTick);
@@ -431,7 +400,11 @@ public final class MinecraftPageManager implements AutoCloseable {
         }
         for (long sectionKey : indexed) {
             PageEntry page = pages.get(sectionKey);
-            if (page != null && page.handle != null) {
+            int brick = SectionPos.sectionRelative(worldX) >>> 2
+                    | (SectionPos.sectionRelative(worldZ) >>> 2) << 2
+                    | 3 << 4;
+            if (page != null && page.handle != null
+                    && (page.capturedBrickMask & 1L << brick) != 0L) {
                 environment.updateSkyColumn(
                         page.handle, worldX, worldZ, exposedWorldY);
             }
@@ -459,9 +432,9 @@ public final class MinecraftPageManager implements AutoCloseable {
 
     public void onChunkUnload(LevelChunk chunk) {
         requireMainThread();
+        LongOpenHashSet indexed = pagesByChunk.get(chunk.getPos().toLong());
         sourceScannedChunks.remove(chunk.getPos().toLong());
         sourceRecoveryRemaining = 0;
-        LongOpenHashSet indexed = pagesByChunk.get(chunk.getPos().toLong());
         if (indexed != null) {
             long[] sections = indexed.toLongArray();
             for (long sectionKey : sections) {
@@ -521,35 +494,70 @@ public final class MinecraftPageManager implements AutoCloseable {
     }
 
     private void processAdmissions(long gameTick) {
-        int remaining = MAX_ADMISSIONS_PER_TICK;
+        int remainingPages = MAX_ADMISSIONS_PER_TICK;
+        int remainingBricks = MAX_BRICK_CAPTURES_PER_TICK;
         for (int priority = 0;
-             priority < PRIORITY_COUNT && remaining > 0;
+             priority < PRIORITY_COUNT && remainingBricks > 0;
              priority++) {
             LongLinkedOpenHashSet queue = admissionQueues[priority];
             int attempts = Math.min(queue.size(), MAX_ADMISSION_ATTEMPTS_PER_PRIORITY);
-            while (remaining > 0 && attempts-- > 0 && !queue.isEmpty()) {
+            while (remainingBricks > 0
+                    && attempts-- > 0 && !queue.isEmpty()) {
                 long sectionKey = queue.removeFirstLong();
                 PageEntry page = pages.get(sectionKey);
-                if (page == null || page.handle != null
-                        || !page.interested()) {
+                if (page == null || !page.interested()) {
                     continue;
                 }
-                if (page.retryAfterTick > gameTick) {
-                    queue.add(sectionKey);
-                    continue;
-                }
-                page.retryAfterTick = 0L;
                 page.queuedPriority = -1;
-                if (page.priority() != priority || !admit(page, gameTick)) {
+                if (page.retryAfterTick > gameTick) {
                     enqueue(page);
                     continue;
                 }
-                remaining--;
+                if (page.handle == null && remainingPages == 0) {
+                    enqueue(page);
+                    continue;
+                }
+                page.retryAfterTick = 0L;
+                long missing = page.requestedMask() & ~page.capturedBrickMask;
+                if (missing == 0L) {
+                    if (page.handle == null) {
+                        if (captureResidency(page, 0L, gameTick)) {
+                            remainingPages--;
+                        } else {
+                            enqueue(page);
+                        }
+                    } else {
+                        queueResidency(page);
+                    }
+                    continue;
+                }
+                long selected = takeBits(
+                        missing & page.sourceSeedMask, remainingBricks);
+                selected |= takeBits(
+                        missing & ~selected,
+                        remainingBricks - Long.bitCount(selected));
+                boolean newPage = page.handle == null;
+                if (selected == 0L
+                        || !captureResidency(page, selected, gameTick)) {
+                    enqueue(page);
+                    continue;
+                }
+                remainingBricks -= Long.bitCount(selected);
+                if (newPage) {
+                    remainingPages--;
+                }
+                if ((page.requestedMask() & ~page.capturedBrickMask) != 0L) {
+                    enqueue(page);
+                }
             }
         }
     }
 
-    private boolean admit(PageEntry page, long gameTick) {
+    private boolean captureResidency(
+            PageEntry page,
+            long addedBrickMask,
+            long gameTick
+    ) {
         int sectionX = SectionPos.x(page.sectionKey);
         int sectionY = SectionPos.y(page.sectionKey);
         int sectionZ = SectionPos.z(page.sectionKey);
@@ -564,18 +572,35 @@ public final class MinecraftPageManager implements AutoCloseable {
             return false;
         }
         LevelChunkSection section = chunk.getSections()[sectionIndex];
-        PageSignatures signatureCut =
-                signatures.capturePage(page.sectionKey, section);
+        PageSignatures base = page.signatures == null
+                ? signatures.unresolvedPage()
+                : page.signatures;
+        PageSignatures signatureCut = signatures.captureBricks(
+                page.sectionKey, section, base, addedBrickMask);
+        page.signatures = signatureCut;
+        page.capturedBrickMask |= addedBrickMask;
+        if (page.handle != null) {
+            environment.captureNewBricks(page.handle, chunk, addedBrickMask);
+            queueResidency(page);
+            SectionOwner owner = ownersBySection.get(page.sectionKey);
+            if (owner != null) {
+                owner.capturedBrickMask = page.capturedBrickMask;
+            }
+            return true;
+        }
         long lifecycleGeneration = nextLifecycleGeneration;
         nextLifecycleGeneration = Math.incrementExact(
                 nextLifecycleGeneration);
         ThermalPageHandle handle = new ThermalPageHandle(
                 page.sectionKey, lifecycleGeneration);
         MinecraftEnvironmentCapture.Captured captured =
-                environment.capture(page.sectionKey, chunk);
+                environment.capture(
+                        page.sectionKey, chunk, page.capturedBrickMask);
         accumulator.admit(
                 handle,
                 handle.liveGeometryRevision(),
+                page.capturedBrickMask,
+                page.sourceSeedMask & page.capturedBrickMask,
                 signatureCut,
                 captured.naturalTemperatureC(),
                 captured.firstExposedLocalY(),
@@ -585,16 +610,27 @@ public final class MinecraftPageManager implements AutoCloseable {
                         gameTick));
         page.handle = handle;
         environment.track(handle, captured, gameTick);
-        pagesByChunk.computeIfAbsent(
-                chunk.getPos().toLong(),
-                ignored -> new LongOpenHashSet()).add(page.sectionKey);
         ensureSectionOwner(chunk, sectionIndex, section);
         publishPageHandle(page.sectionKey, handle);
+        SectionOwner owner = ownersBySection.get(page.sectionKey);
+        if (owner != null) {
+            owner.capturedBrickMask = page.capturedBrickMask;
+        }
         if (physicalSources != null
                 && sourceScannedChunks.add(chunk.getPos().toLong())) {
             physicalSources.onChunkLoad(chunk);
         }
         return true;
+    }
+
+    private static long takeBits(long mask, int maximum) {
+        long result = 0L;
+        while (maximum-- > 0 && mask != 0L) {
+            long bit = Long.lowestOneBit(mask);
+            result |= bit;
+            mask &= ~bit;
+        }
+        return result;
     }
 
     private void processCaptures(long gameTick) {
@@ -619,10 +655,14 @@ public final class MinecraftPageManager implements AutoCloseable {
                     continue;
                 }
                 SectionOwner owner = ownersBySection.get(sectionKey);
-                PageSignatures snapshot = signatures.capturePage(
-                        sectionKey, owner == null ? null : owner.section);
+                PageSignatures snapshot = signatures.captureBricks(
+                        sectionKey,
+                        owner == null ? null : owner.section,
+                        signatures.unresolvedPage(),
+                        page.capturedBrickMask);
                 page.fullResync = false;
                 page.fullSignatureCut = snapshot;
+                page.signatures = snapshot;
                 readyCaptures.add(sectionKey);
                 fullRemaining--;
                 continue;
@@ -642,6 +682,10 @@ public final class MinecraftPageManager implements AutoCloseable {
                         minX + (page.centers[center] & 15),
                         minY + (page.centers[center] >>> 8 & 15),
                         minZ + (page.centers[center] >>> 4 & 15));
+                page.signatures = signatures.withResolvedBlock(
+                        page.signatures,
+                        Short.toUnsignedInt(page.centers[center]),
+                        page.signatureIds[center]);
                 centerRemaining--;
             }
             if (page.nextUnresolvedCenter() >= 0) {
@@ -742,7 +786,11 @@ public final class MinecraftPageManager implements AutoCloseable {
             long gameTick
     ) {
         PageEntry page = pages.get(owner.sectionKey);
-        if (page == null || page.handle == null) {
+        int brick = (changedIndex & 15) >>> 2
+                | (changedIndex >>> 4 & 15) >>> 2 << 2
+                | (changedIndex >>> 8 & 15) >>> 2 << 4;
+        if (page == null || page.handle == null
+                || (page.capturedBrickMask & 1L << brick) == 0L) {
             return;
         }
         ThermalPageHandle.GeometryResyncToken resync =
@@ -760,58 +808,60 @@ public final class MinecraftPageManager implements AutoCloseable {
         captureQueue.add(page.sectionKey);
     }
 
-    private void retain(long sectionKey, int priority) {
-        PageEntry page = entry(sectionKey);
-        if (priority == PRIMARY) {
-            page.playerReferences++;
-        } else if (priority == SOURCE) {
-            page.sourceReferences++;
-        } else {
-            page.continuationReferences++;
+    private void updateInterest(PageEntry page) {
+        if (!page.interested()) {
+            if (page.handle != null) {
+                retire(page);
+            }
+            removeEntry(page);
+            return;
         }
-        enqueue(page);
+        long missing = page.requestedMask() & ~page.capturedBrickMask;
+        if (missing != 0L || page.handle == null) {
+            enqueue(page);
+        } else {
+            queueResidency(page);
+        }
     }
 
-    private void release(long sectionKey, int priority) {
-        PageEntry page = pages.get(sectionKey);
-        if (page == null) return;
-        if (priority == PRIMARY && page.playerReferences > 0) {
-            page.playerReferences--;
-        } else if (priority == SOURCE && page.sourceReferences > 0) {
-            page.sourceReferences--;
-        } else if (priority == CONTINUATION
-                && page.continuationReferences > 0) {
-            page.continuationReferences--;
+    private void queueResidency(PageEntry page) {
+        if (page.handle == null || page.capturedBrickMask == 0L) {
+            return;
         }
-        if (page.playerReferences == 0 && page.sourceReferences == 0) {
-            clearContinuations(page);
+        accumulator.updateResidency(
+                page.handle,
+                page.handle.liveGeometryRevision(),
+                page.capturedBrickMask,
+                page.sourceSeedMask & page.capturedBrickMask,
+                page.signatures);
+    }
+
+    private void removeEntry(PageEntry page) {
+        if (page.queuedPriority >= 0) {
+            admissionQueues[page.queuedPriority].remove(page.sectionKey);
+            page.queuedPriority = -1;
         }
-        if (!page.interested()) {
-            if (page.handle != null) retire(page);
-            if (page.queuedPriority >= 0) {
-                admissionQueues[page.queuedPriority].remove(page.sectionKey);
+        captureQueue.remove(page.sectionKey);
+        readyCaptures.remove(page.sectionKey);
+        pages.remove(page.sectionKey);
+        LongOpenHashSet indexed = pagesByChunk.get(chunkKey(page.sectionKey));
+        if (indexed != null) {
+            indexed.remove(page.sectionKey);
+            if (indexed.isEmpty()) {
+                pagesByChunk.remove(chunkKey(page.sectionKey));
             }
-            pages.remove(page.sectionKey);
-            LongOpenHashSet indexed = pagesByChunk.get(chunkKey(page.sectionKey));
-            if (indexed != null) {
-                indexed.remove(page.sectionKey);
-                if (indexed.isEmpty()) {
-                    pagesByChunk.remove(chunkKey(page.sectionKey));
-                }
-            }
-        } else {
-            enqueue(page);
         }
     }
 
     private void retire(PageEntry page) {
         input.captureDormantPage(page.handle, true);
-        clearContinuations(page);
         accumulator.retire(page.handle);
         environment.untrack(page.handle);
         captureQueue.remove(page.sectionKey);
         readyCaptures.remove(page.sectionKey);
         page.handle = null;
+        page.capturedBrickMask = 0L;
+        page.signatures = null;
         page.resetCapture();
         publishPageHandle(page.sectionKey, null);
     }
@@ -849,18 +899,8 @@ public final class MinecraftPageManager implements AutoCloseable {
         }
     }
 
-    private void clearContinuations(PageEntry page) {
-        int mask = page.continuationFaceMask;
-        page.continuationFaceMask = 0;
-        for (int face = 0; face < 6; face++) {
-            if ((mask & 1 << face) != 0) {
-                release(neighbor(page.sectionKey, face), CONTINUATION);
-            }
-        }
-    }
-
     private void enqueue(PageEntry page) {
-        if (page.handle != null || !page.interested()) {
+        if (!page.interested()) {
             return;
         }
         int priority = page.priority();
@@ -885,61 +925,6 @@ public final class MinecraftPageManager implements AutoCloseable {
                 chunkKey(sectionKey),
                 ignored -> new LongOpenHashSet()).add(sectionKey);
         return page;
-    }
-
-    private void expirePlayers(long tick) {
-        int bucket = (int) tick & (WHEEL_SIZE - 1);
-        PlayerLease lease = playerWheel[bucket];
-        playerWheel[bucket] = null;
-        while (lease != null) {
-            PlayerLease next = lease.next;
-            lease.previous = null;
-            lease.next = null;
-            lease.bucket = -1;
-            if (lease.previousSection != Long.MIN_VALUE
-                    && lease.previousExpiry <= tick) {
-                release(lease.previousSection, PRIMARY);
-                lease.previousSection = Long.MIN_VALUE;
-            }
-            if (lease.currentExpiry <= tick) {
-                playerLeases.remove(lease.playerId);
-                release(lease.currentSection, PRIMARY);
-            } else {
-                schedulePlayer(lease);
-            }
-            lease = next;
-        }
-    }
-
-    private void schedulePlayer(PlayerLease lease) {
-        unlinkPlayer(lease);
-        long expiry = lease.previousSection == Long.MIN_VALUE
-                ? lease.currentExpiry
-                : Math.min(lease.currentExpiry, lease.previousExpiry);
-        int bucket = (int) expiry & (WHEEL_SIZE - 1);
-        lease.next = playerWheel[bucket];
-        if (lease.next != null) {
-            lease.next.previous = lease;
-        }
-        playerWheel[bucket] = lease;
-        lease.bucket = bucket;
-    }
-
-    private void unlinkPlayer(PlayerLease lease) {
-        if (lease.bucket < 0) {
-            return;
-        }
-        if (lease.previous == null) {
-            playerWheel[lease.bucket] = lease.next;
-        } else {
-            lease.previous.next = lease.next;
-        }
-        if (lease.next != null) {
-            lease.next.previous = lease.previous;
-        }
-        lease.previous = null;
-        lease.next = null;
-        lease.bucket = -1;
     }
 
     private void attachSection(
@@ -967,6 +952,7 @@ public final class MinecraftPageManager implements AutoCloseable {
         attachment(section).frostedheart$setThermalInputOwner(owner);
         PageEntry page = pages.get(key);
         owner.page = page == null ? null : page.handle;
+        owner.capturedBrickMask = page == null ? 0L : page.capturedBrickMask;
     }
 
     private void ensureSectionOwner(
@@ -986,6 +972,9 @@ public final class MinecraftPageManager implements AutoCloseable {
         SectionOwner owner = ownersBySection.get(sectionKey);
         if (owner != null) {
             owner.page = page;
+            PageEntry entry = pages.get(sectionKey);
+            owner.capturedBrickMask = entry == null
+                    ? 0L : entry.capturedBrickMask;
         }
     }
 
@@ -1006,9 +995,39 @@ public final class MinecraftPageManager implements AutoCloseable {
                 || sectionIndex >= chunk.getSections().length) {
             return null;
         }
+        attachResolvedSection(chunk, sectionIndex);
+        return ownersBySection.get(sectionKey);
+    }
+
+    public SectionOwner loadedSectionOrAttach(
+            long sectionKey,
+            LevelChunk chunk,
+            int sectionIndex
+    ) {
+        requireMainThread();
+        SectionOwner owner = ownersBySection.get(sectionKey);
+        if (owner != null && owner.valid) {
+            return owner;
+        }
+        if (chunk == null
+                || chunk.getPos().x != SectionPos.x(sectionKey)
+                || chunk.getPos().z != SectionPos.z(sectionKey)
+                || sectionIndex < 0
+                || sectionIndex >= chunk.getSections().length
+                || chunk.getSectionYFromSectionIndex(sectionIndex)
+                        != SectionPos.y(sectionKey)) {
+            return null;
+        }
+        attachResolvedSection(chunk, sectionIndex);
+        return ownersBySection.get(sectionKey);
+    }
+
+    private void attachResolvedSection(
+            LevelChunk chunk,
+            int sectionIndex
+    ) {
         ensureSectionOwner(
                 chunk, sectionIndex, chunk.getSections()[sectionIndex]);
-        return ownersBySection.get(sectionKey);
     }
 
     private static MinecraftThermalSectionAttachment attachment(
@@ -1020,20 +1039,6 @@ public final class MinecraftPageManager implements AutoCloseable {
     private static long chunkKey(long sectionKey) {
         return ChunkPos.asLong(
                 SectionPos.x(sectionKey), SectionPos.z(sectionKey));
-    }
-
-    private static long neighbor(long sectionKey, int face) {
-        int x = SectionPos.x(sectionKey);
-        int y = SectionPos.y(sectionKey);
-        int z = SectionPos.z(sectionKey);
-        return switch (face) {
-            case 0 -> SectionPos.asLong(x - 1, y, z);
-            case 1 -> SectionPos.asLong(x + 1, y, z);
-            case 2 -> SectionPos.asLong(x, y - 1, z);
-            case 3 -> SectionPos.asLong(x, y + 1, z);
-            case 4 -> SectionPos.asLong(x, y, z - 1);
-            default -> SectionPos.asLong(x, y, z + 1);
-        };
     }
 
     private void requireMainThread() {
@@ -1057,7 +1062,6 @@ public final class MinecraftPageManager implements AutoCloseable {
         pagesByChunk.clear();
         captureQueue.clear();
         readyCaptures.clear();
-        playerLeases.clear();
         sourceScannedChunks.clear();
         sourceRecoveryRemaining = 0;
         for (LongLinkedOpenHashSet queue : admissionQueues) {
@@ -1083,6 +1087,7 @@ public final class MinecraftPageManager implements AutoCloseable {
         private long[] pendingNonGeometry;
         private boolean pendingSourceMutation;
         private volatile ThermalPageHandle page;
+        private volatile long capturedBrickMask;
         private volatile boolean valid = true;
 
         private SectionOwner(
@@ -1107,6 +1112,14 @@ public final class MinecraftPageManager implements AutoCloseable {
             return chunk;
         }
 
+        public LevelChunkSection section() {
+            return section;
+        }
+
+        public long sectionKey() {
+            return sectionKey;
+        }
+
         public ThermalPageHandle page() {
             return page;
         }
@@ -1122,6 +1135,10 @@ public final class MinecraftPageManager implements AutoCloseable {
                 return;
             }
             int index = localX | localZ << 4 | localY << 8;
+            int brick = localX >>> 2
+                    | (localZ >>> 2) << 2
+                    | (localY >>> 2) << 4;
+            boolean captured = (capturedBrickMask & 1L << brick) != 0L;
             int word = index >>> 6;
             long bit = 1L << (index & 63);
             boolean invalidate = false;
@@ -1140,7 +1157,9 @@ public final class MinecraftPageManager implements AutoCloseable {
                         if (pendingNonGeometry != null) {
                             pendingNonGeometry[word] &= ~bit;
                         }
-                        if (Thread.currentThread() == manager.mainThread) {
+                        if (!captured) {
+                            // Sky and occlusion still consume this mutation.
+                        } else if (Thread.currentThread() == manager.mainThread) {
                             invalidate = true;
                         } else {
                             deferredGeometryInvalidation = true;
@@ -1216,6 +1235,7 @@ public final class MinecraftPageManager implements AutoCloseable {
         private void invalidate() {
             valid = false;
             page = null;
+            capturedBrickMask = 0L;
             MinecraftThermalSectionAttachment attachment =
                     attachment(section);
             if (attachment.frostedheart$getThermalInputOwner() == this) {
@@ -1239,10 +1259,11 @@ public final class MinecraftPageManager implements AutoCloseable {
     private static final class PageEntry {
         private final long sectionKey;
         private ThermalPageHandle handle;
-        private int playerReferences;
-        private int sourceReferences;
-        private int continuationReferences;
-        private int continuationFaceMask;
+        private int[] sourceSeedCounts;
+        private long sourceSeedMask;
+        private long workerDesiredMask;
+        private long capturedBrickMask;
+        private PageSignatures signatures;
         private int queuedPriority = -1;
         private short[] centers;
         private int[] signatureIds;
@@ -1260,13 +1281,15 @@ public final class MinecraftPageManager implements AutoCloseable {
         }
 
         private boolean interested() {
-            return playerReferences != 0 || sourceReferences != 0
-                    || continuationReferences != 0;
+            return requestedMask() != 0L;
         }
 
         private int priority() {
-            return playerReferences != 0 ? PRIMARY
-                    : sourceReferences != 0 ? SOURCE : CONTINUATION;
+            return sourceSeedMask != 0L ? SOURCE : FRONTIER;
+        }
+
+        private long requestedMask() {
+            return sourceSeedMask | workerDesiredMask;
         }
 
         private void markCenter(
@@ -1354,18 +1377,4 @@ public final class MinecraftPageManager implements AutoCloseable {
         }
     }
 
-    private static final class PlayerLease {
-        private final UUID playerId;
-        private long currentSection;
-        private long previousSection = Long.MIN_VALUE;
-        private long currentExpiry;
-        private long previousExpiry;
-        private PlayerLease previous;
-        private PlayerLease next;
-        private int bucket = -1;
-
-        private PlayerLease(UUID playerId) {
-            this.playerId = playerId;
-        }
-    }
 }

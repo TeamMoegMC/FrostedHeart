@@ -50,7 +50,7 @@ class SpatialWeatherRendererTest {
     }
 
     @Test
-    void wallTextureProvidesAContinuousDenseCurtain() throws IOException {
+    void wallTextureBalancesContinuousCurtainDensityAndWindBreakup() throws IOException {
         BufferedImage image;
         try (InputStream stream = SpatialWeatherRendererTest.class.getResourceAsStream(WALL_TEXTURE)) {
             assertNotNull(stream, "white curtain texture must be packaged as a client resource");
@@ -62,6 +62,8 @@ class SpatialWeatherRendererTest {
 
         long alphaSum = 0L;
         int visiblePixels = 0;
+        int minimumAlpha = 255;
+        int maximumAlpha = 0;
         int pixels = image.getWidth() * image.getHeight();
         for (int y = 0; y < image.getHeight(); y++) {
             for (int x = 0; x < image.getWidth(); x++) {
@@ -70,13 +72,18 @@ class SpatialWeatherRendererTest {
                 if (alpha > 0) {
                     visiblePixels++;
                 }
+                minimumAlpha = Math.min(minimumAlpha, alpha);
+                maximumAlpha = Math.max(maximumAlpha, alpha);
             }
         }
 
         double coverage = visiblePixels / (double) pixels;
         double meanTextureAlpha = alphaSum / (255.0 * pixels);
         assertTrue(coverage >= 0.98, "a wall texture cannot be a sparse flake atlas");
-        assertTrue(meanTextureAlpha >= 0.45, "the texture must carry a visible snow veil");
+        assertTrue(meanTextureAlpha >= 0.70 && meanTextureAlpha <= 0.85,
+                "the storm front must hide terrain behind it without becoming a flat solid color");
+        assertTrue(minimumAlpha >= 145 && maximumAlpha >= 225,
+                "the storm front must have no transparent holes while retaining gust contrast");
 
         double remainingTransparency = 1.0;
         for (int slice = 0; slice < WeatherQualityProfile.FAST.wallSlices(); slice++) {
@@ -85,8 +92,9 @@ class SpatialWeatherRendererTest {
                     * SpatialWeatherRenderer.wallLayerAlpha(sliceFade, 1.0F);
             remainingTransparency *= 1.0 - layerOpacity;
         }
-        assertTrue(1.0 - remainingTransparency >= 0.55,
-                "Fast must still read as a curtain instead of isolated transparent flakes");
+        double compositeOpacity = 1.0 - remainingTransparency;
+        assertTrue(compositeOpacity >= 0.82 && compositeOpacity <= 0.94,
+                "Fast must read as an opaque snowstorm front from outside");
 
         assertTrue(meanOppositeEdgeDelta(image) <= 16.0,
                 "opposite texture edges must remain visually continuous when repeated");

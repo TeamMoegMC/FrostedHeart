@@ -13,9 +13,9 @@ package com.teammoeg.frostedheart.content.climate.thermal.radiation.minecraft;
 import com.teammoeg.frostedheart.content.climate.thermal.radiation.RadiationService;
 import com.teammoeg.frostedheart.content.climate.thermal.radiation.RadiationService.MutableTrace;
 import com.teammoeg.frostedheart.content.climate.thermal.radiation.RadiationService.TraceStatus;
+import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.input.MinecraftPageManager;
 
 import it.unimi.dsi.fastutil.longs.Long2LongOpenHashMap;
-import it.unimi.dsi.fastutil.longs.LongIterator;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 
 import net.minecraft.server.level.ServerLevel;
@@ -25,25 +25,27 @@ import net.minecraft.world.level.chunk.LevelChunkSection;
 
 import java.util.Objects;
 
-/** Loaded-only quarter-block DDA and independent radiation revision table. */
+/** Loaded-only block-grid DDA and physical-source radiation revision table. */
 public final class MinecraftRadiationOcclusion implements RadiationService.OcclusionTracer {
     private static final double TIE_EPSILON = 1.0e-12D;
 
     private final ServerLevel level;
+    private final MinecraftPageManager pages;
     private final int maximumTrackedSections;
     private final Long2LongOpenHashMap sectionRevisions =
             new Long2LongOpenHashMap();
     private final LongOpenHashSet loadedSections = new LongOpenHashSet();
 
     private long nextSectionRevision;
-    private long cachedBlockPosition = Long.MIN_VALUE;
-    private BlockStatus cachedBlockStatus = BlockStatus.UNRESOLVED;
+    private LevelChunkSection traceSection;
 
     public MinecraftRadiationOcclusion(
             ServerLevel level,
+            MinecraftPageManager pages,
             int maximumTrackedSections
     ) {
         this.level = Objects.requireNonNull(level, "level");
+        this.pages = Objects.requireNonNull(pages, "pages");
         if (maximumTrackedSections <= 0) {
             throw new IllegalArgumentException("maximumTrackedSections must be positive");
         }
@@ -60,38 +62,63 @@ public final class MinecraftRadiationOcclusion implements RadiationService.Occlu
             double targetY,
             double targetZ,
             int maximumSteps,
+            boolean collectWitnesses,
             MutableTrace result
     ) {
-        cachedBlockPosition = Long.MIN_VALUE;
-        double startX = sourceX * 4.0D;
-        double startY = sourceY * 4.0D;
-        double startZ = sourceZ * 4.0D;
-        double deltaX = targetX * 4.0D - startX;
-        double deltaY = targetY * 4.0D - startY;
-        double deltaZ = targetZ * 4.0D - startZ;
-        int microX = floorInt(startX);
-        int microY = floorInt(startY);
-        int microZ = floorInt(startZ);
-        int targetMicroX = floorInt(targetX * 4.0D);
-        int targetMicroY = floorInt(targetY * 4.0D);
-        int targetMicroZ = floorInt(targetZ * 4.0D);
+        try {
+            traceBlocks(
+                    sourceX, sourceY, sourceZ,
+                    targetX, targetY, targetZ,
+                    maximumSteps, collectWitnesses, result);
+        } finally {
+            traceSection = null;
+        }
+    }
+
+    private void traceBlocks(
+            double sourceX,
+            double sourceY,
+            double sourceZ,
+            double targetX,
+            double targetY,
+            double targetZ,
+            int maximumSteps,
+            boolean collectWitnesses,
+            MutableTrace result
+    ) {
+        double deltaX = targetX - sourceX;
+        double deltaY = targetY - sourceY;
+        double deltaZ = targetZ - sourceZ;
+        int blockX = floorInt(sourceX);
+        int blockY = floorInt(sourceY);
+        int blockZ = floorInt(sourceZ);
+        int targetBlockX = floorInt(targetX);
+        int targetBlockY = floorInt(targetY);
+        int targetBlockZ = floorInt(targetZ);
         int stepX = Integer.signum(Double.compare(deltaX, 0.0D));
         int stepY = Integer.signum(Double.compare(deltaY, 0.0D));
         int stepZ = Integer.signum(Double.compare(deltaZ, 0.0D));
         double tDeltaX = stepX == 0 ? Double.POSITIVE_INFINITY : Math.abs(1.0D / deltaX);
         double tDeltaY = stepY == 0 ? Double.POSITIVE_INFINITY : Math.abs(1.0D / deltaY);
         double tDeltaZ = stepZ == 0 ? Double.POSITIVE_INFINITY : Math.abs(1.0D / deltaZ);
-        double tMaxX = initialTMax(startX, deltaX, stepX);
-        double tMaxY = initialTMax(startY, deltaY, stepY);
-        double tMaxZ = initialTMax(startZ, deltaZ, stepZ);
+        double tMaxX = initialTMax(sourceX, deltaX, stepX);
+        double tMaxY = initialTMax(sourceY, deltaY, stepY);
+        double tMaxZ = initialTMax(sourceZ, deltaZ, stepZ);
 
-        long currentSection = sectionKey(microX, microY, microZ);
-        TraceStatus sectionFailure = addSectionWitness(currentSection, result);
+        int currentSectionX = blockX >> 4;
+        int currentSectionY = blockY >> 4;
+        int currentSectionZ = blockZ >> 4;
+        long currentSection = RadiationService.packSection(
+                currentSectionX, currentSectionY, currentSectionZ);
+        TraceStatus sectionFailure = enterSection(
+                currentSection, collectWitnesses, result);
         if (sectionFailure != null) {
             result.finish(sectionFailure);
             return;
         }
-        if (microX == targetMicroX && microY == targetMicroY && microZ == targetMicroZ) {
+        if (blockX == targetBlockX
+                && blockY == targetBlockY
+                && blockZ == targetBlockZ) {
             result.finish(TraceStatus.VISIBLE);
             return;
         }
@@ -103,27 +130,36 @@ public final class MinecraftRadiationOcclusion implements RadiationService.Occlu
                 return;
             }
             if (tMaxX <= next + TIE_EPSILON) {
-                microX += stepX;
+                blockX += stepX;
                 tMaxX += tDeltaX;
             }
             if (tMaxY <= next + TIE_EPSILON) {
-                microY += stepY;
+                blockY += stepY;
                 tMaxY += tDeltaY;
             }
             if (tMaxZ <= next + TIE_EPSILON) {
-                microZ += stepZ;
+                blockZ += stepZ;
                 tMaxZ += tDeltaZ;
             }
-            long nextSection = sectionKey(microX, microY, microZ);
-            if (nextSection != currentSection) {
-                currentSection = nextSection;
-                sectionFailure = addSectionWitness(currentSection, result);
+            int nextSectionX = blockX >> 4;
+            int nextSectionY = blockY >> 4;
+            int nextSectionZ = blockZ >> 4;
+            if (nextSectionX != currentSectionX
+                    || nextSectionY != currentSectionY
+                    || nextSectionZ != currentSectionZ) {
+                currentSectionX = nextSectionX;
+                currentSectionY = nextSectionY;
+                currentSectionZ = nextSectionZ;
+                currentSection = RadiationService.packSection(
+                        currentSectionX, currentSectionY, currentSectionZ);
+                sectionFailure = enterSection(
+                        currentSection, collectWitnesses, result);
                 if (sectionFailure != null) {
                     result.finish(sectionFailure);
                     return;
                 }
             }
-            BlockStatus status = microcellStatus(microX, microY, microZ);
+            BlockStatus status = blockStatus(blockX, blockY, blockZ);
             if (status == BlockStatus.OCCLUDED) {
                 result.finish(TraceStatus.BLOCKED);
                 return;
@@ -132,8 +168,8 @@ public final class MinecraftRadiationOcclusion implements RadiationService.Occlu
                 result.finish(TraceStatus.UNRESOLVED);
                 return;
             }
-            if (microX == targetMicroX && microY == targetMicroY
-                    && microZ == targetMicroZ) {
+            if (blockX == targetBlockX && blockY == targetBlockY
+                    && blockZ == targetBlockZ) {
                 result.finish(TraceStatus.VISIBLE);
                 return;
             }
@@ -155,11 +191,11 @@ public final class MinecraftRadiationOcclusion implements RadiationService.Occlu
     }
 
     public synchronized void onChunkLoad(LevelChunk chunk) {
-        updateChunkState(chunk.getPos().x, chunk.getPos().z, true);
+        updateChunkState(chunk, true);
     }
 
     public synchronized void onChunkUnload(LevelChunk chunk) {
-        updateChunkState(chunk.getPos().x, chunk.getPos().z, false);
+        updateChunkState(chunk, false);
     }
 
     public synchronized void onSectionIdentityReplaced(int sectionX, int sectionY, int sectionZ) {
@@ -171,32 +207,38 @@ public final class MinecraftRadiationOcclusion implements RadiationService.Occlu
         }
     }
 
-    private TraceStatus addSectionWitness(long sectionKey, MutableTrace result) {
-        long revision = ensureSection(sectionKey);
-        if (revision == RadiationService.NO_SECTION_REVISION
-                || !result.addSection(sectionKey, revision)) {
-            return TraceStatus.BUDGET_LIMITED;
+    private TraceStatus enterSection(
+            long sectionKey,
+            boolean collectWitnesses,
+            MutableTrace result
+    ) {
+        if (collectWitnesses) {
+            long revision = ensureSection(sectionKey);
+            if (revision == RadiationService.NO_SECTION_REVISION
+                    || !result.addSection(sectionKey, revision)) {
+                return TraceStatus.BUDGET_LIMITED;
+            }
+            return traceSection == null ? TraceStatus.UNRESOLVED : null;
         }
-        return isRecordedLoaded(sectionKey) ? null : TraceStatus.UNRESOLVED;
-    }
-
-    private static long sectionKey(int microX, int microY, int microZ) {
-        int blockX = Math.floorDiv(microX, 4);
-        int blockY = Math.floorDiv(microY, 4);
-        int blockZ = Math.floorDiv(microZ, 4);
-        return RadiationService.packSection(
-                Math.floorDiv(blockX, 16),
-                Math.floorDiv(blockY, 16),
-                Math.floorDiv(blockZ, 16));
+        LevelChunkSection section = loadedSection(sectionKey);
+        if (section == null) {
+            return TraceStatus.UNRESOLVED;
+        }
+        traceSection = section;
+        return null;
     }
 
     private synchronized long ensureSection(long sectionKey) {
-        boolean loaded = isLoaded(sectionKey);
         long revision = sectionRevisions.get(sectionKey);
+        if (revision == RadiationService.NO_SECTION_REVISION
+                && sectionRevisions.size() >= maximumTrackedSections) {
+            return RadiationService.NO_SECTION_REVISION;
+        }
+        MinecraftPageManager.SectionOwner owner =
+                pages.loadedSectionOrAttach(sectionKey);
+        boolean loaded = owner != null;
+        traceSection = loaded ? owner.section() : null;
         if (revision == RadiationService.NO_SECTION_REVISION) {
-            if (sectionRevisions.size() >= maximumTrackedSections) {
-                return RadiationService.NO_SECTION_REVISION;
-            }
             nextSectionRevision = Math.incrementExact(nextSectionRevision);
             revision = nextSectionRevision;
             sectionRevisions.put(sectionKey, revision);
@@ -219,77 +261,56 @@ public final class MinecraftRadiationOcclusion implements RadiationService.Occlu
         return revision;
     }
 
-    private synchronized boolean isRecordedLoaded(long sectionKey) {
-        return loadedSections.contains(sectionKey);
-    }
-
-    private boolean isLoaded(long sectionKey) {
+    private LevelChunkSection loadedSection(long sectionKey) {
         int sectionX = RadiationService.sectionX(sectionKey);
         int sectionY = RadiationService.sectionY(sectionKey);
         int sectionZ = RadiationService.sectionZ(sectionKey);
-        LevelChunk chunk = level.getChunkSource().getChunkNow(sectionX, sectionZ);
+        LevelChunk chunk = level.getChunkSource().getChunkNow(
+                sectionX, sectionZ);
         if (chunk == null) {
-            return false;
+            return null;
         }
         int index = chunk.getSectionIndexFromSectionY(sectionY);
-        return index >= 0 && index < chunk.getSections().length;
+        return index >= 0 && index < chunk.getSections().length
+                ? chunk.getSections()[index] : null;
     }
 
-    private BlockStatus microcellStatus(int microX, int microY, int microZ) {
-        int blockX = Math.floorDiv(microX, 4);
-        int blockY = Math.floorDiv(microY, 4);
-        int blockZ = Math.floorDiv(microZ, 4);
+    private BlockStatus blockStatus(int blockX, int blockY, int blockZ) {
         if (level.isOutsideBuildHeight(blockY)) {
             return BlockStatus.UNRESOLVED;
         }
-        long blockPosition = net.minecraft.core.BlockPos.asLong(blockX, blockY, blockZ);
-        if (cachedBlockPosition != blockPosition) {
-            cachedBlockPosition = blockPosition;
-            LevelChunk chunk = level.getChunkSource().getChunkNow(
-                    Math.floorDiv(blockX, 16), Math.floorDiv(blockZ, 16));
-            int sectionY = Math.floorDiv(blockY, 16);
-            if (chunk == null) {
-                cachedBlockStatus = BlockStatus.UNRESOLVED;
-            } else {
-                int sectionIndex = chunk.getSectionIndexFromSectionY(sectionY);
-                if (sectionIndex < 0 || sectionIndex >= chunk.getSections().length) {
-                    cachedBlockStatus = BlockStatus.UNRESOLVED;
-                } else {
-                    LevelChunkSection section = chunk.getSections()[sectionIndex];
-                    BlockState state = section.getBlockState(
-                            Math.floorMod(blockX, 16),
-                            Math.floorMod(blockY, 16),
-                            Math.floorMod(blockZ, 16));
-                    cachedBlockStatus = state.getBlock().hasDynamicShape()
-                            || !state.canOcclude()
-                            ? BlockStatus.TRANSPARENT
-                            : BlockStatus.OCCLUDED;
-                }
-            }
+        if (traceSection == null) {
+            return BlockStatus.UNRESOLVED;
         }
-        return cachedBlockStatus;
+        BlockState state = traceSection.getBlockState(
+                blockX & 15,
+                blockY & 15,
+                blockZ & 15);
+        return blocksRadiation(state)
+                ? BlockStatus.OCCLUDED : BlockStatus.TRANSPARENT;
     }
 
-    private synchronized void updateChunkState(int chunkX, int chunkZ, boolean loaded) {
-        LongIterator iterator = sectionRevisions.keySet().iterator();
-        while (iterator.hasNext()) {
-            long key = iterator.nextLong();
-            if (RadiationService.sectionX(key) != chunkX
-                    || RadiationService.sectionZ(key) != chunkZ) {
+    private void updateChunkState(LevelChunk chunk, boolean loaded) {
+        int chunkX = chunk.getPos().x;
+        int chunkZ = chunk.getPos().z;
+        for (int index = 0; index < chunk.getSections().length; index++) {
+            long key = RadiationService.packSection(
+                    chunkX,
+                    chunk.getSectionYFromSectionIndex(index),
+                    chunkZ);
+            if (!sectionRevisions.containsKey(key)) {
                 continue;
             }
             if (!loaded) {
-                iterator.remove();
+                sectionRevisions.remove(key);
                 loadedSections.remove(key);
                 continue;
             }
-            boolean recordedLoaded = loadedSections.contains(key);
-            if (recordedLoaded) {
+            if (!loadedSections.add(key)) {
                 continue;
             }
             nextSectionRevision = Math.incrementExact(nextSectionRevision);
             sectionRevisions.put(key, nextSectionRevision);
-            loadedSections.add(key);
         }
     }
 
@@ -308,6 +329,10 @@ public final class MinecraftRadiationOcclusion implements RadiationService.Occlu
         return step > 0
                 ? (Math.floor(coordinate) + 1.0D - coordinate) / delta
                 : (coordinate - Math.floor(coordinate)) / -delta;
+    }
+
+    public static boolean blocksRadiation(BlockState state) {
+        return !state.getBlock().hasDynamicShape() && state.canOcclude();
     }
 
     private enum BlockStatus {

@@ -15,6 +15,7 @@ import net.minecraft.world.level.levelgen.Heightmap;
 
 import java.util.Comparator;
 import java.util.PriorityQueue;
+import java.util.Arrays;
 
 /** Bounded main-thread natural-temperature and sky-column capture. */
 public final class MinecraftEnvironmentCapture implements AutoCloseable {
@@ -48,7 +49,7 @@ public final class MinecraftEnvironmentCapture implements AutoCloseable {
         this.accumulator = accumulator;
     }
 
-    Captured capture(long sectionKey, LevelChunk chunk) {
+    Captured capture(long sectionKey, LevelChunk chunk, long residentBrickMask) {
         int sectionX = SectionPos.x(sectionKey);
         int sectionY = SectionPos.y(sectionKey);
         int sectionZ = SectionPos.z(sectionKey);
@@ -58,20 +59,66 @@ public final class MinecraftEnvironmentCapture implements AutoCloseable {
         }
         double natural = naturalTemperature(sectionKey);
         byte[] sky = new byte[256];
+        Arrays.fill(sky, (byte) 16);
         int minX = SectionPos.sectionToBlockCoord(sectionX);
         int minY = SectionPos.sectionToBlockCoord(sectionY);
         int minZ = SectionPos.sectionToBlockCoord(sectionZ);
-        for (int z = 0; z < 16; z++) {
-            for (int x = 0; x < 16; x++) {
-                int exposedY = chunk.getHeight(
-                        Heightmap.Types.MOTION_BLOCKING_NO_LEAVES,
-                        minX + x,
-                        minZ + z);
-                sky[x | z << 4] = (byte) Math.max(
-                        0, Math.min(16, exposedY - minY));
+        long topBricks = residentBrickMask & 0xffff_0000_0000_0000L;
+        while (topBricks != 0L) {
+            int brick = Long.numberOfTrailingZeros(topBricks);
+            int brickMinX = (brick & 3) << 2;
+            int brickMinZ = (brick >>> 2 & 3) << 2;
+            for (int z = brickMinZ; z < brickMinZ + 4; z++) {
+                for (int x = brickMinX; x < brickMinX + 4; x++) {
+                    int exposedY = chunk.getHeight(
+                            Heightmap.Types.MOTION_BLOCKING_NO_LEAVES,
+                            minX + x,
+                            minZ + z);
+                    sky[x | z << 4] = (byte) Math.max(
+                            0, Math.min(16, exposedY - minY));
+                }
             }
+            topBricks &= topBricks - 1L;
         }
         return new Captured(natural, sky);
+    }
+
+    void captureNewBricks(
+            ThermalPageHandle handle,
+            LevelChunk chunk,
+            long addedBrickMask
+    ) {
+        Entry entry = entries.get(handle.sectionKey());
+        if (entry == null || entry.handle != handle) {
+            return;
+        }
+        long topBricks = addedBrickMask & 0xffff_0000_0000_0000L;
+        int minX = SectionPos.sectionToBlockCoord(
+                SectionPos.x(handle.sectionKey()));
+        int minY = SectionPos.sectionToBlockCoord(
+                SectionPos.y(handle.sectionKey()));
+        int minZ = SectionPos.sectionToBlockCoord(
+                SectionPos.z(handle.sectionKey()));
+        while (topBricks != 0L) {
+            int brick = Long.numberOfTrailingZeros(topBricks);
+            int brickMinX = (brick & 3) << 2;
+            int brickMinZ = (brick >>> 2 & 3) << 2;
+            for (int z = brickMinZ; z < brickMinZ + 4; z++) {
+                for (int x = brickMinX; x < brickMinX + 4; x++) {
+                    int exposedY = chunk.getHeight(
+                            Heightmap.Types.MOTION_BLOCKING_NO_LEAVES,
+                            minX + x, minZ + z);
+                    int localY = Math.max(0, Math.min(16, exposedY - minY));
+                    int column = x | z << 4;
+                    if (Byte.toUnsignedInt(entry.firstExposedLocalY[column])
+                            != localY) {
+                        entry.firstExposedLocalY[column] = (byte) localY;
+                        accumulator.updateSkyColumn(handle, column, localY);
+                    }
+                }
+            }
+            topBricks &= topBricks - 1L;
+        }
     }
 
     void track(

@@ -7,8 +7,7 @@ import com.teammoeg.frostedheart.content.climate.thermal.mesh.PagePublication;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.PageSignatures;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.ThermalBrickCellLayout;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.ThermalCellArena;
-import com.teammoeg.frostedheart.content.climate.thermal.profile.ThermalSignatureCatalog;
-import com.teammoeg.frostedheart.content.climate.thermal.profile.ResolvedThermalSignature;
+import com.teammoeg.frostedheart.content.climate.thermal.profile.ThermalSignatureTable;
 import com.teammoeg.frostedheart.content.climate.thermal.solver.ThermalFragment;
 
 import java.util.Arrays;
@@ -19,7 +18,7 @@ final class BrickMaterialKernel {
     private static final ConservativeAirGeometry.Face[] FACES =
             ConservativeAirGeometry.Face.values();
 
-    private final ThermalSignatureCatalog signatures;
+    private final ThermalSignatureTable signatures;
     private final MaterialBoundaryRegistry materials;
     private final int[] surfaceBlockX = new int[64];
     private final int[] surfaceBlockY = new int[64];
@@ -46,7 +45,7 @@ final class BrickMaterialKernel {
     private int phaseOperationCount;
 
     BrickMaterialKernel(
-            ThermalSignatureCatalog signatures,
+            ThermalSignatureTable signatures,
             MaterialBoundaryRegistry materials
     ) {
         this.signatures = signatures;
@@ -65,10 +64,9 @@ final class BrickMaterialKernel {
     ) {
         resetLayout();
         for (int block = 0; block < 64; block++) {
-            ResolvedThermalSignature signature =
-                    signatures.signature(signatureIds[block]);
-            int profileId = signature.materialProfileId();
-            int patternId = signature.materialContactPatternId();
+            int profileId = signatures.materialProfileId(signatureIds[block]);
+            int patternId =
+                    signatures.materialContactPatternId(signatureIds[block]);
             if (profileId == 0 && patternId == 0) {
                 continue;
             }

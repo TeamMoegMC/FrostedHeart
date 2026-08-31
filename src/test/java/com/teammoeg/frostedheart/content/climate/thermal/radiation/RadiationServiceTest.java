@@ -27,13 +27,13 @@ class RadiationServiceTest {
         TestTracer tracer = new TestTracer();
         ThermalMemoryBudget budget = new ThermalMemoryBudget(1_000_000L);
         RadiationService service = RadiationService.tryCreate(
-                parameters(8, 8, 24), sources, tracer, budget);
+                parameters(8, 8, 24), sources, null, tracer, budget);
         assertNotNull(service);
         assertTrue(sources.upsertSource(
                 7L, 0.5D, 1.0D, 0.5D, 200.0D, 1.0D));
 
         RadiationService.MutableSample first = new RadiationService.MutableSample();
-        service.samplePlayer(9L, 1, 4.5D, 0.0D, 0.5D, first);
+        service.samplePlayer(9L, 1, 4.5D, 0.0D, 1.62D, 0.5D, first);
         double expected = 0.0D;
         for (double offset : new double[]{0.1D, 0.9D, 1.62D}) {
             double dy = offset - 1.0D;
@@ -42,14 +42,14 @@ class RadiationServiceTest {
         assertEquals(expected, first.radiantFluxWPerM2(), 1.0e-12D);
 
         RadiationService.MutableSample repeated = new RadiationService.MutableSample();
-        service.samplePlayer(9L, 1, 4.5D, 0.0D, 0.5D, repeated);
+        service.samplePlayer(9L, 1, 4.5D, 0.0D, 1.62D, 0.5D, repeated);
         assertEquals(expected, repeated.radiantFluxWPerM2(), 1.0e-12D);
         assertEquals(3, tracer.traces);
 
         assertTrue(sources.upsertSource(
                 7L, 0.5D, 1.0D, 0.5D, 400.0D, 1.0D));
         RadiationService.MutableSample updated = new RadiationService.MutableSample();
-        service.samplePlayer(9L, 1, 4.5D, 0.0D, 0.5D, updated);
+        service.samplePlayer(9L, 1, 4.5D, 0.0D, 1.62D, 0.5D, updated);
         assertEquals(expected * 2.0D, updated.radiantFluxWPerM2(), 1.0e-12D);
         assertEquals(6, tracer.traces);
 
@@ -62,17 +62,17 @@ class RadiationServiceTest {
         TestTracer tracer = new TestTracer();
         ThermalMemoryBudget budget = new ThermalMemoryBudget(1_000_000L);
         try (RadiationService service = RadiationService.tryCreate(
-                parameters(8, 8, 24), sources, tracer, budget)) {
+                parameters(8, 8, 24), sources, null, tracer, budget)) {
             assertNotNull(service);
             sources.upsertSource(
                     1L, 0.5D, 1.0D, 0.5D, 100.0D, 1.0D);
             RadiationService.MutableSample sample = new RadiationService.MutableSample();
-            service.samplePlayer(2L, 1, 3.5D, 0.0D, 0.5D, sample);
+            service.samplePlayer(2L, 1, 3.5D, 0.0D, 1.62D, 0.5D, sample);
             assertTrue(sample.radiantFluxWPerM2() > 0.0D);
 
             tracer.blocked = true;
             tracer.revision++;
-            service.samplePlayer(2L, 1, 3.5D, 0.0D, 0.5D, sample);
+            service.samplePlayer(2L, 1, 3.5D, 0.0D, 1.62D, 0.5D, sample);
             assertEquals(0.0D, sample.radiantFluxWPerM2());
             assertEquals(6, tracer.traces);
         }
@@ -84,17 +84,54 @@ class RadiationServiceTest {
         TestTracer tracer = new TestTracer();
         ThermalMemoryBudget budget = new ThermalMemoryBudget(1_000_000L);
         try (RadiationService service = RadiationService.tryCreate(
-                parameters(1, 8, 1), sources, tracer, budget)) {
+                parameters(1, 8, 1), sources, null, tracer, budget)) {
             assertNotNull(service);
             sources.upsertSource(
                     1L, 0.5D, 1.0D, 0.5D, 100.0D, 1.0D);
             sources.upsertSource(
                     2L, 1.5D, 1.0D, 0.5D, 100.0D, 1.0D);
             RadiationService.MutableSample sample = new RadiationService.MutableSample();
-            service.samplePlayer(3L, 1, 4.5D, 0.0D, 0.5D, sample);
+            service.samplePlayer(3L, 1, 4.5D, 0.0D, 1.62D, 0.5D, sample);
 
             assertEquals(1, tracer.traces);
             assertTrue(sample.radiantFluxWPerM2() >= 0.0D);
+        }
+    }
+
+    @Test
+    void staticNearbySourceRetracesOneEyeRayWithoutReceiverState() {
+        TestSources sources = new TestSources();
+        TestTracer tracer = new TestTracer();
+        RadiationService.NearbySourceIndex nearby = new RadiationService.NearbySourceIndex() {
+            @Override
+            public void visitNearby(
+                    double receiverX,
+                    double receiverY,
+                    double receiverZ,
+                    int maximumVisits,
+                    RadiationService.SourceVisitor visitor
+            ) {
+                visitor.visit(
+                        91L,
+                        RadiationService.STATIC_BLOCK_REVISION,
+                        0.5D, 1.0D, 0.5D,
+                        200.0D, 1.0D);
+            }
+        };
+        try (RadiationService service = RadiationService.tryCreate(
+                parameters(8, 8, 24), sources, nearby, tracer,
+                new ThermalMemoryBudget(1_000_000L))) {
+            assertNotNull(service);
+            RadiationService.MutableSample sample =
+                    new RadiationService.MutableSample();
+            service.samplePlayer(33L, 1, 4.5D, 0.0D, 1.62D, 0.5D, sample);
+            double expected = 200.0D
+                    / (4.0D * Math.PI * (16.0D + 0.62D * 0.62D));
+            assertEquals(expected, sample.radiantFluxWPerM2(), 1.0e-12D);
+            assertEquals(1, tracer.traces);
+
+            service.samplePlayer(33L, 1, 4.5D, 0.0D, 1.62D, 0.5D, sample);
+            assertEquals(2, tracer.traces);
         }
     }
 
@@ -191,10 +228,13 @@ class RadiationServiceTest {
                 double targetY,
                 double targetZ,
                 int maximumSteps,
+                boolean collectWitnesses,
                 RadiationService.MutableTrace result
         ) {
             traces++;
-            result.addSection(SECTION, revision);
+            if (collectWitnesses) {
+                result.addSection(SECTION, revision);
+            }
             result.finish(blocked
                     ? RadiationService.TraceStatus.BLOCKED
                     : RadiationService.TraceStatus.VISIBLE);

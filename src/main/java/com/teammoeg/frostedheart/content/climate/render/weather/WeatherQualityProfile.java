@@ -14,8 +14,8 @@ import com.teammoeg.frostedheart.content.climate.gamedata.climate.WhiteCurtainVi
 
 /** Immutable V1 work caps selected explicitly by the player. */
 public enum WeatherQualityProfile {
-    FAST(4, 8, 4, 16, 256, 12, WhiteCurtainVisualProfile.FAST),
-    FANCY(8, 4, 8, 32, 1024, 32, WhiteCurtainVisualProfile.FANCY);
+    FAST(4, 8, 3, 12, 256, 12, WhiteCurtainVisualProfile.FAST),
+    FANCY(8, 4, 5, 20, 1024, 32, WhiteCurtainVisualProfile.FANCY);
 
     private final int gridRadius;
     private final int gridSpacingBlocks;

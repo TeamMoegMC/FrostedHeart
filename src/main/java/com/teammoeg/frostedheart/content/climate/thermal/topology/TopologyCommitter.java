@@ -115,6 +115,8 @@ public final class TopologyCommitter {
                     write.publication.geometryRevision(),
                     write.publication.topologyGeneration(),
                     write.resolvedBrickMask,
+                    write.residentBrickMask,
+                    write.sourceSeedMask,
                     write.publication);
         }
         for (int slot : change.addedReservoirSlots) {

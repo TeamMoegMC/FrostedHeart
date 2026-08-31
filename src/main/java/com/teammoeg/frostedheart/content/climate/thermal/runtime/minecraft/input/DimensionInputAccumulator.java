@@ -29,6 +29,8 @@ public final class DimensionInputAccumulator {
             new ArrayList<>();
     private final List<ThermalInputBatch.PageRetirement> retirements =
             new ArrayList<>();
+    private final List<ThermalInputBatch.PageResidencyUpdate> residencyUpdates =
+            new ArrayList<>();
     private final IdentityHashMap<ThermalPageHandle, EnvironmentBuilder> environments =
             new IdentityHashMap<>();
     private final ArrayDeque<EnvironmentBuilder> recycledEnvironments =
@@ -57,6 +59,8 @@ public final class DimensionInputAccumulator {
     void admit(
             ThermalPageHandle page,
             long geometryRevision,
+            long residentBrickMask,
+            long sourceSeedMask,
             PageSignatures signatures,
             double naturalTemperatureC,
             byte[] firstExposedLocalY,
@@ -65,10 +69,32 @@ public final class DimensionInputAccumulator {
         admissions.add(new ThermalInputBatch.PageAdmission(
                 page,
                 geometryRevision,
+                residentBrickMask,
+                sourceSeedMask,
                 signatures,
                 naturalTemperatureC,
                 firstExposedLocalY,
                 dormantAir));
+    }
+
+    void updateResidency(
+            ThermalPageHandle page,
+            long geometryRevision,
+            long residentBrickMask,
+            long sourceSeedMask,
+            PageSignatures signatures
+    ) {
+        for (int index = 0; index < residencyUpdates.size(); index++) {
+            if (residencyUpdates.get(index).page() == page) {
+                residencyUpdates.set(index, new ThermalInputBatch.PageResidencyUpdate(
+                        page, geometryRevision, residentBrickMask,
+                        sourceSeedMask, signatures));
+                return;
+            }
+        }
+        residencyUpdates.add(new ThermalInputBatch.PageResidencyUpdate(
+                page, geometryRevision, residentBrickMask,
+                sourceSeedMask, signatures));
     }
 
     void retire(ThermalPageHandle page) {
@@ -87,6 +113,7 @@ public final class DimensionInputAccumulator {
         if (removed != null) {
             recycle(removed);
         }
+        residencyUpdates.removeIf(update -> update.page() == page);
     }
 
     ResolvedGeometryBatch.Builder geometry() {
@@ -197,6 +224,10 @@ public final class DimensionInputAccumulator {
                 retirements.isEmpty()
                         ? ThermalInputBatch.NO_RETIREMENTS
                         : retirements.toArray(ThermalInputBatch.PageRetirement[]::new),
+                residencyUpdates.isEmpty()
+                        ? ThermalInputBatch.NO_RESIDENCY_UPDATES
+                        : residencyUpdates.toArray(
+                                ThermalInputBatch.PageResidencyUpdate[]::new),
                 geometryBatch,
                 sourceBatch,
                 environmentBatch(),
@@ -206,6 +237,7 @@ public final class DimensionInputAccumulator {
                 farFieldConductanceScale);
         admissions.clear();
         retirements.clear();
+        residencyUpdates.clear();
         phaseAcks.clear();
         farFieldConductanceScale = Double.NaN;
         lastTargetTick = targetTick;

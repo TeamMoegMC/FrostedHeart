@@ -81,9 +81,10 @@ derived from local air instead of the old fixed `x6` Celsius multiplier.
 Powder snow and on-fire state remain local body inputs.
 
 These local entity contacts do not write Thermal Air or register a world source.
-Nearby ambient lava and ordinary-fire heating through Thermal Mesh/Page
-topology is not implemented by this player-temperature pass. Campfire retains
-its existing physical-source and radiation path unchanged.
+Nearby lava and ordinary fire may add optional read-only direct radiation from
+the sparse `BlockRadiationIndex`; they do not heat Thermal Mesh Air. Lava/fire
+contact remains a separate local body input. Campfire retains its existing
+physical-source split and radiation path unchanged.
 
 The existing Wet effect remains the only post-exit wetness state. Leaving water
 removes the water-contact conductance on the next player update; Wet continues

@@ -3,7 +3,7 @@ package com.teammoeg.frostedheart.content.climate.thermal.topology;
 
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.PageSignatures;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.ThermalCellArena;
-import com.teammoeg.frostedheart.content.climate.thermal.profile.ThermalSignatureCatalog;
+import com.teammoeg.frostedheart.content.climate.thermal.profile.ThermalSignatureTable;
 import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.message.ThermalInputBatch;
 
 import java.util.Arrays;
@@ -11,12 +11,12 @@ import java.util.Arrays;
 /** Stateless Brick-local enthalpy and phase-state migration kernel. */
 final class BrickMigrationKernel {
     private final ThermalCellArena arena;
-    private final ThermalSignatureCatalog signatures;
+    private final ThermalSignatureTable signatures;
     private final ThermalTopologyParameters parameters;
 
     BrickMigrationKernel(
             ThermalCellArena arena,
-            ThermalSignatureCatalog signatures,
+            ThermalSignatureTable signatures,
             ThermalTopologyParameters parameters
     ) {
         this.arena = arena;

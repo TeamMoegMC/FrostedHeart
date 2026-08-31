@@ -9,7 +9,7 @@ import com.teammoeg.frostedheart.content.climate.thermal.mesh.ThermalBrickCellLa
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.ThermalCellArena;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.ThermalPageHandle;
 import com.teammoeg.frostedheart.content.climate.thermal.profile.ResolvedThermalSignature;
-import com.teammoeg.frostedheart.content.climate.thermal.profile.ThermalSignatureRegistry;
+import com.teammoeg.frostedheart.content.climate.thermal.profile.ThermalSignatureTable;
 import com.teammoeg.frostedheart.content.climate.thermal.query.QueryPublication;
 import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.engine.ThermalDimensionEngine;
 import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.engine.ThermalDimensionLimits;
@@ -81,20 +81,20 @@ public final class FrostedHeartMinecraftThermalInputGameTests {
         }
     }
 
-    @GameTest(template = TEMPLATE, batch = BATCH + "_continuation", timeoutTicks = 40)
-    public static void continuationCarriesExactPageIdentity(GameTestHelper helper) {
+    @GameTest(template = TEMPLATE, batch = BATCH + "_residency", timeoutTicks = 40)
+    public static void residencyCarriesExactPageIdentity(GameTestHelper helper) {
         Fixture fixture = fixture();
         try {
             ThermalCompletion completion = fixture.engine.process(admissionBatch(
-                    1L, 20L, fixture.page, fixture.signatures));
-            ThermalCompletion.PageContinuation continuation =
-                    completion.continuations()[0];
+                    1L, 20L, fixture.page, fixture.signatures, 1L));
+            ThermalCompletion.BrickResidency residency =
+                    completion.residencyUpdates()[0];
             helper.assertTrue(
-                    continuation.sectionKey() == fixture.page.sectionKey()
-                            && continuation.lifecycleGeneration()
+                    residency.sectionKey() == fixture.page.sectionKey()
+                            && residency.lifecycleGeneration()
                                     == fixture.page.lifecycleGeneration()
-                            && Byte.toUnsignedInt(continuation.faceMask()) == 0x3f,
-                    "continuation must carry the committed Page identity and mask");
+                            && residency.desiredBrickMask() == -1L,
+                    "residency must carry the committed Page identity and mask");
             helper.succeed();
         } finally {
             fixture.engine.close();
@@ -130,6 +130,7 @@ public final class FrostedHeartMinecraftThermalInputGameTests {
                     ThermalInputBatch.NO_ADMISSIONS,
                     new ThermalInputBatch.PageRetirement[]{
                             new ThermalInputBatch.PageRetirement(fixture.page)},
+                    ThermalInputBatch.NO_RESIDENCY_UPDATES,
                     ResolvedGeometryBatch.EMPTY,
                     ThermalSourceBatch.EMPTY,
                     ThermalInputBatch.NO_ENVIRONMENT_UPDATES,
@@ -248,12 +249,14 @@ public final class FrostedHeartMinecraftThermalInputGameTests {
 
     @GameTest(template = TEMPLATE, batch = BATCH + "_signature", timeoutTicks = 40)
     public static void signatureDirectoryKeepsUnchangedBricksShared(GameTestHelper helper) {
-        ThermalSignatureRegistry.Builder registry = ThermalSignatureRegistry.builder();
+        ThermalSignatureTable.Builder registry = ThermalSignatureTable.builder();
         int air = registry.intern(fullAir());
-        PageSignatures original = page(air);
+        ThermalSignatureTable signatures = registry.build();
+        PageSignatures original = page(signatures, air);
         int[] changed = new int[64];
         Arrays.fill(changed, air);
-        PageSignatures next = original.withBricks(new int[]{0}, new int[][]{changed});
+        PageSignatures next = original.withBricks(
+                signatures, new int[]{0}, new int[][]{changed});
         helper.assertTrue(
                 original.brickPayload(1) == next.brickPayload(1),
                 "unchanged Brick payload must be shared");
@@ -288,15 +291,27 @@ public final class FrostedHeartMinecraftThermalInputGameTests {
             long sequence,
             long tick,
             ThermalPageHandle page,
-            ThermalSignatureRegistry signatures
+            ThermalSignatureTable signatures
+    ) {
+        return admissionBatch(sequence, tick, page, signatures, 0L);
+    }
+
+    private static ThermalInputBatch admissionBatch(
+            long sequence,
+            long tick,
+            ThermalPageHandle page,
+            ThermalSignatureTable signatures,
+            long sourceSeedMask
     ) {
         return new ThermalInputBatch(
                 1L, sequence, tick,
                 new ThermalInputBatch.PageAdmission[]{
                         new ThermalInputBatch.PageAdmission(
                                 page, page.liveGeometryRevision(),
+                                -1L, sourceSeedMask,
                                 page(signatures, 0), 0.0D, sky(), null)},
                 ThermalInputBatch.NO_RETIREMENTS,
+                ThermalInputBatch.NO_RESIDENCY_UPDATES,
                 ResolvedGeometryBatch.EMPTY,
                 ThermalSourceBatch.EMPTY,
                 ThermalInputBatch.NO_ENVIRONMENT_UPDATES,
@@ -318,6 +333,7 @@ public final class FrostedHeartMinecraftThermalInputGameTests {
                 1L, sequence, tick,
                 ThermalInputBatch.NO_ADMISSIONS,
                 ThermalInputBatch.NO_RETIREMENTS,
+                ThermalInputBatch.NO_RESIDENCY_UPDATES,
                 geometry.buildAndReset(),
                 ThermalSourceBatch.EMPTY,
                 ThermalInputBatch.NO_ENVIRONMENT_UPDATES,
@@ -330,6 +346,7 @@ public final class FrostedHeartMinecraftThermalInputGameTests {
                 1L, sequence, tick,
                 ThermalInputBatch.NO_ADMISSIONS,
                 ThermalInputBatch.NO_RETIREMENTS,
+                ThermalInputBatch.NO_RESIDENCY_UPDATES,
                 ResolvedGeometryBatch.EMPTY,
                 ThermalSourceBatch.EMPTY,
                 ThermalInputBatch.NO_ENVIRONMENT_UPDATES,
@@ -338,13 +355,13 @@ public final class FrostedHeartMinecraftThermalInputGameTests {
     }
 
     private static Fixture fixture() {
-        ThermalSignatureRegistry.Builder builder = ThermalSignatureRegistry.builder();
+        ThermalSignatureTable.Builder builder = ThermalSignatureTable.builder();
         int airId = builder.intern(fullAir());
         int solidId = builder.intern(new ResolvedThermalSignature(
                 new ConservativeAirGeometry.Resolution(
                         ConservativeAirGeometry.Status.RESOLVED, List.of()),
                 0, 0));
-        ThermalSignatureRegistry signatures = builder.build();
+        ThermalSignatureTable signatures = builder.build();
         ThermalCellArena arena = new ThermalCellArena(256);
         QueryPublication query = QueryPublication.tryCreate(
                 new ThermalMemoryBudget(8L * 1024L * 1024L)
@@ -376,15 +393,10 @@ public final class FrostedHeartMinecraftThermalInputGameTests {
     }
 
     private static PageSignatures page(
-            ThermalSignatureRegistry signatures,
-            int ignored
+            ThermalSignatureTable signatures,
+            int id
     ) {
-        int id = signatures.idOrDefault(fullAir(), 0);
-        return page(id);
-    }
-
-    private static PageSignatures page(int id) {
-        PageSignatures.Builder builder = new PageSignatures.Builder();
+        PageSignatures.Builder builder = new PageSignatures.Builder(signatures);
         for (int index = 0; index < PageSignatures.ENTRY_COUNT; index++) {
             builder.set(index, id);
         }
@@ -441,7 +453,7 @@ public final class FrostedHeartMinecraftThermalInputGameTests {
             ThermalCellArena arena,
             QueryPublication query,
             ThermalPageHandle page,
-            ThermalSignatureRegistry signatures,
+            ThermalSignatureTable signatures,
             int airId,
             int solidId
     ) {

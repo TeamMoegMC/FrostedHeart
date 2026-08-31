@@ -16,6 +16,7 @@ import com.teammoeg.frostedheart.content.climate.thermal.profile.minecraft.Minec
 import com.teammoeg.frostedheart.content.climate.thermal.profile.minecraft.MinecraftThermalProfiles;
 import com.teammoeg.frostedheart.content.climate.thermal.query.QueryPublication;
 import com.teammoeg.frostedheart.content.climate.thermal.query.ThermalEnvironmentSample;
+import com.teammoeg.frostedheart.content.climate.thermal.radiation.minecraft.BlockRadiationIndex;
 import com.teammoeg.frostedheart.content.climate.thermal.radiation.minecraft.MinecraftRadiationOcclusion;
 import com.teammoeg.frostedheart.content.climate.thermal.radiation.RadiationService;
 import com.teammoeg.frostedheart.content.climate.thermal.runtime.async.ThermalDimensionMailbox;
@@ -76,6 +77,7 @@ public final class MinecraftThermalInput implements AutoCloseable {
     private static final short[] NO_INFRARED_RECORDS = new short[0];
     private static final int MAXIMUM_PHYSICAL_SOURCES = 65_536;
     private static final int MAXIMUM_SOURCE_NODES = 131_072;
+    private static final int MAXIMUM_RADIATION_SECTIONS = 3_200;
     private static final ThermalMemoryBudget MEMORY =
             new ThermalMemoryBudget(128L * 1024L * 1024L);
     private static final RadiationService.Parameters RADIATION_PARAMETERS =
@@ -101,6 +103,7 @@ public final class MinecraftThermalInput implements AutoCloseable {
     private final PhysicalSourceSpatialIndex physicalSources;
     private final MinecraftPhaseController phase;
     private final MinecraftRadiationOcclusion radiationOcclusion;
+    private final BlockRadiationIndex blockRadiation;
     private final RadiationService radiation;
     private final QueryPublication.MutableSample querySample =
             new QueryPublication.MutableSample();
@@ -151,9 +154,8 @@ public final class MinecraftThermalInput implements AutoCloseable {
         MinecraftSignatureCapture signatureCapture =
                 new MinecraftSignatureCapture(
                         level,
-                        profiles.resolver(),
-                        profiles.signatures(),
-                        profiles.signatureIdsByState());
+                        profiles.states(),
+                        profiles.signatures());
         environment = new MinecraftEnvironmentCapture(level, accumulator);
         pages = new MinecraftPageManager(
                 this, level, accumulator, signatureCapture, environment);
@@ -162,13 +164,26 @@ public final class MinecraftThermalInput implements AutoCloseable {
                 64, MAXIMUM_PHYSICAL_SOURCES);
         createWorker(initialTick, initialTemperatureC);
         phase = new MinecraftPhaseController(
-                level, pages, signatureCapture, profiles.signatures(),
+                level, pages, profiles.states(), profiles.signatures(),
                 profiles.materials(), accumulator, 8);
-        radiationOcclusion = new MinecraftRadiationOcclusion(level, 1_024);
-        pages.attachMutationConsumers(physicalSources, radiationOcclusion);
+        radiationOcclusion = new MinecraftRadiationOcclusion(
+                level, pages, 1_024);
+        blockRadiation = profiles.states().radiationEnabled()
+                ? BlockRadiationIndex.tryCreate(
+                        level,
+                        pages,
+                        profiles.states(),
+                        MEMORY.createDimensionBudget(
+                                BlockRadiationIndex.projectedMaximumBytes(
+                                        MAXIMUM_RADIATION_SECTIONS)),
+                        MAXIMUM_RADIATION_SECTIONS)
+                : null;
+        pages.attachMutationConsumers(
+                physicalSources, radiationOcclusion);
         radiation = RadiationService.tryCreate(
                 RADIATION_PARAMETERS,
                 physicalSources,
+                blockRadiation,
                 radiationOcclusion,
                 MEMORY.createDimensionBudget(
                         RadiationService.projectedMaximumBytes(
@@ -243,6 +258,9 @@ public final class MinecraftThermalInput implements AutoCloseable {
         }
         pages.tick(gameTick);
         phase.tick();
+        if (blockRadiation != null) {
+            blockRadiation.tick(gameTick);
+        }
         if (gameTick % ThermalInputBatch.CUT_INTERVAL_TICKS != 0L) {
             return;
         }
@@ -294,9 +312,9 @@ public final class MinecraftThermalInput implements AutoCloseable {
         }
         lastCompletedTargetTick = completedBatch.targetTick();
         pages.acknowledgeResync(completion.committedResyncTokens());
-        for (ThermalCompletion.PageContinuation continuation
-                : completion.continuations()) {
-            pages.applyContinuation(continuation);
+        for (ThermalCompletion.BrickResidency residency
+                : completion.residencyUpdates()) {
+            pages.applyResidency(residency);
         }
         phase.accept(completion.phaseRequests());
         if (completion.status() == ThermalCompletion.Status.WORK_LIMITED) {
@@ -469,7 +487,7 @@ public final class MinecraftThermalInput implements AutoCloseable {
         radiation.samplePlayer(
                 receiverKey(player),
                 player.getId() & Integer.MAX_VALUE,
-                player.getX(), player.getY(), player.getZ(),
+                player.getX(), player.getY(), player.getEyeY(), player.getZ(),
                 radiationSample);
         out.setRadiation(radiationSample.radiantFluxWPerM2());
     }
@@ -492,11 +510,6 @@ public final class MinecraftThermalInput implements AutoCloseable {
         if (input == null) {
             return naturalTemperatureC;
         }
-        input.pages.requestPlayerPage(
-                player.getUUID(),
-                BlockPos.containing(
-                        player.getX(), player.getEyeY(), player.getZ()),
-                player.serverLevel().getGameTime());
         input.sampleAir(
                 player.getX(), player.getEyeY(), player.getZ(),
                 player.serverLevel().getGameTime(),
@@ -702,9 +715,7 @@ public final class MinecraftThermalInput implements AutoCloseable {
         if (!infraredCursor.valid()
                 || gameTick - infraredCursor.sampleTick()
                 > MAX_PUBLICATION_AGE_TICKS) {
-            return new InfraredSnapshot(
-                    centerChunkX, centerChunkZ, centerSectionY,
-                    changeId, true, NO_INFRARED_RECORDS);
+            return null;
         }
 
         int pageCount = pages.collectInfraredPages(
@@ -921,11 +932,38 @@ public final class MinecraftThermalInput implements AutoCloseable {
             if (input != null) {
                 int flags = MinecraftThermalProfiles.mutationFlags(
                         oldState, newState);
-                if (flags != 0) input.pages.onBlockMutation(
-                        owner, localX, localY, localZ,
-                        (flags & MinecraftThermalProfiles.TOPOLOGY_MUTATION) != 0,
-                        (flags & MinecraftThermalProfiles.SOURCE_MUTATION) != 0);
+                int pageFlags = flags & (MinecraftThermalProfiles.TOPOLOGY_MUTATION
+                        | MinecraftThermalProfiles.SOURCE_MUTATION);
+                if (pageFlags != 0) {
+                    input.pages.onBlockMutation(
+                            owner, localX, localY, localZ,
+                            (flags & MinecraftThermalProfiles.TOPOLOGY_MUTATION) != 0,
+                            (flags & MinecraftThermalProfiles.SOURCE_MUTATION) != 0);
+                }
+                if ((flags & MinecraftThermalProfiles.RADIATION_MUTATION) != 0
+                        && input.blockRadiation != null) {
+                    input.blockRadiation.markBlock(
+                            owner, localX, localY, localZ);
+                }
+                if ((flags & MinecraftThermalProfiles.OCCLUSION_MUTATION) != 0) {
+                    long sectionKey = owner.sectionKey();
+                    input.radiationOcclusion.onSectionMutation(
+                            SectionPos.x(sectionKey),
+                            SectionPos.y(sectionKey),
+                            SectionPos.z(sectionKey));
+                }
             }
+        }
+    }
+
+    public static void onRadiantLiquidNeighborChanged(
+            ServerLevel level,
+            BlockPos position
+    ) {
+        MinecraftThermalInput input = active(level);
+        if (input != null && input.blockRadiation != null) {
+            input.blockRadiation.markBlock(
+                    position.getX(), position.getY(), position.getZ());
         }
     }
 
@@ -941,6 +979,9 @@ public final class MinecraftThermalInput implements AutoCloseable {
         MinecraftThermalInput input = active(level);
         if (input != null) {
             input.pages.onChunkLoad(chunk);
+            if (input.blockRadiation != null) {
+                input.blockRadiation.onChunkLoad(chunk);
+            }
             input.radiationOcclusion.onChunkLoad(chunk);
         }
     }
@@ -948,6 +989,9 @@ public final class MinecraftThermalInput implements AutoCloseable {
     public static void onChunkUnload(ServerLevel level, LevelChunk chunk) {
         MinecraftThermalInput input = active(level);
         if (input != null) {
+            if (input.blockRadiation != null) {
+                input.blockRadiation.onChunkUnload(chunk);
+            }
             input.pages.onChunkUnload(chunk);
             input.finishDormantCheckpoint(chunk, true);
             input.physicalSources.beforeChunkUnload(
@@ -968,7 +1012,21 @@ public final class MinecraftThermalInput implements AutoCloseable {
 
     public static void onPlayerLogout(ServerPlayer player) {
         MinecraftThermalInput input = active(player.serverLevel());
-        if (input != null) input.pages.releasePlayer(player.getUUID());
+        if (input != null) {
+            if (input.radiation != null) {
+                input.radiation.removeReceiver(receiverKey(player));
+            }
+        }
+    }
+
+    public static void onPlayerChangedDimension(
+            ServerPlayer player,
+            ServerLevel previousLevel
+    ) {
+        MinecraftThermalInput input = active(previousLevel);
+        if (input != null && input.radiation != null) {
+            input.radiation.removeReceiver(receiverKey(player));
+        }
     }
 
     public static void closeAll() {
@@ -1000,6 +1058,13 @@ public final class MinecraftThermalInput implements AutoCloseable {
             input.pages.onSectionIdentityReplaced(
                     chunk, sectionIndex, previous,
                     chunk.getSections()[sectionIndex]);
+            if (input.blockRadiation != null) {
+                input.blockRadiation.onSectionIdentityReplaced(
+                        SectionPos.asLong(
+                                chunk.getPos().x,
+                                chunk.getSectionYFromSectionIndex(sectionIndex),
+                                chunk.getPos().z));
+            }
             input.radiationOcclusion.onSectionIdentityReplaced(
                     chunk.getPos().x,
                     chunk.getSectionYFromSectionIndex(sectionIndex),
@@ -1052,6 +1117,7 @@ public final class MinecraftThermalInput implements AutoCloseable {
         pages.checkpointAll(true, true);
         closed = true;
         physicalSources.close();
+        if (blockRadiation != null) blockRadiation.close();
         pages.close();
         environment.close();
         if (radiation != null) radiation.close();

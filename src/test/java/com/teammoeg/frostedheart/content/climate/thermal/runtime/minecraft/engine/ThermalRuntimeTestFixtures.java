@@ -5,7 +5,7 @@ import com.teammoeg.frostedheart.content.climate.thermal.mesh.MaterialBoundaryRe
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.PageSignatures;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.ThermalCellArena;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.ThermalPageHandle;
-import com.teammoeg.frostedheart.content.climate.thermal.profile.ThermalSignatureRegistry;
+import com.teammoeg.frostedheart.content.climate.thermal.profile.ThermalSignatureTable;
 import com.teammoeg.frostedheart.content.climate.thermal.query.QueryPublication;
 import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.message.ResolvedGeometryBatch;
 import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.message.ThermalInputBatch;
@@ -26,8 +26,8 @@ public final class ThermalRuntimeTestFixtures {
     }
 
     static EngineFixture engine() {
-        ThermalSignatureRegistry.Builder builder =
-                ThermalSignatureRegistry.builder();
+        ThermalSignatureTable.Builder builder =
+                ThermalSignatureTable.builder();
         int airId = builder.intern(ThermalTestFixtures.fullAirSignature());
         int solidId = builder.intern(ThermalTestFixtures.solidSignature());
         return engine(
@@ -40,7 +40,7 @@ public final class ThermalRuntimeTestFixtures {
     }
 
     static EngineFixture engine(
-            ThermalSignatureRegistry signatures,
+            ThermalSignatureTable signatures,
             MaterialBoundaryRegistry materials,
             int airId,
             int solidId
@@ -54,7 +54,7 @@ public final class ThermalRuntimeTestFixtures {
     }
 
     private static EngineFixture engine(
-            ThermalSignatureRegistry signatures,
+            ThermalSignatureTable signatures,
             MaterialBoundaryRegistry materials,
             int airId,
             int solidId,
@@ -104,6 +104,7 @@ public final class ThermalRuntimeTestFixtures {
                 targetTick,
                 admissions,
                 retirements,
+                ThermalInputBatch.NO_RESIDENCY_UPDATES,
                 geometry,
                 ThermalSourceBatch.EMPTY,
                 ThermalInputBatch.NO_ENVIRONMENT_UPDATES,
@@ -115,10 +116,32 @@ public final class ThermalRuntimeTestFixtures {
             ThermalPageHandle page,
             PageSignatures signatures
     ) {
+        return admission(page, signatures, -1L, 0L);
+    }
+
+    static ThermalInputBatch.PageAdmission admission(
+            ThermalPageHandle page,
+            PageSignatures signatures,
+            long residentBrickMask,
+            long sourceSeedMask
+    ) {
         byte[] sky = new byte[256];
         Arrays.fill(sky, (byte) 16);
+        return admission(
+                page, signatures, residentBrickMask, sourceSeedMask, sky);
+    }
+
+    static ThermalInputBatch.PageAdmission admission(
+            ThermalPageHandle page,
+            PageSignatures signatures,
+            long residentBrickMask,
+            long sourceSeedMask,
+            byte[] sky
+    ) {
         return new ThermalInputBatch.PageAdmission(
-                page, page.liveGeometryRevision(), signatures, 0.0D, sky, null);
+                page, page.liveGeometryRevision(),
+                residentBrickMask, sourceSeedMask,
+                signatures, 0.0D, sky.clone(), null);
     }
 
     static ResolvedGeometryBatch geometryCenter(
@@ -139,7 +162,7 @@ public final class ThermalRuntimeTestFixtures {
             ThermalCellArena arena,
             QueryPublication publication,
             ThermalPageHandle page,
-            ThermalSignatureRegistry signatures,
+            ThermalSignatureTable signatures,
             int airId,
             int solidId
     ) {

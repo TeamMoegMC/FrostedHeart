@@ -6,7 +6,7 @@ import com.teammoeg.frostedheart.content.climate.thermal.mesh.PagePublication;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.PageSignatures;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.ThermalCellArena;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.ThermalPageHandle;
-import com.teammoeg.frostedheart.content.climate.thermal.profile.ThermalSignatureCatalog;
+import com.teammoeg.frostedheart.content.climate.thermal.profile.ThermalSignatureTable;
 import com.teammoeg.frostedheart.content.climate.thermal.query.QueryPublication;
 import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.engine.ThermalDimensionLimits;
 import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.message.ResolvedGeometryBatch;
@@ -35,14 +35,13 @@ import java.util.Arrays;
  * 只能交给 {@link TopologyCommitter}。</p>
  */
 public final class TopologyPlan {
-    private static final int BLOCKS_PER_PAGE = 4096;
     private static final int BRICKS_PER_PAGE = 64;
 
     private final WorkerPageStore pages;
     private final ThermalCellArena arena;
     private final ThermalSolver solver;
     private final PhaseTransitionRuntime phases;
-    private final ThermalSignatureCatalog signatures;
+    private final ThermalSignatureTable signatures;
     private final BrickTopologyCompiler compiler;
     private final MaterialEdgeCompiler materialCompiler;
     private final BrickMigrationKernel migration;
@@ -74,7 +73,7 @@ public final class TopologyPlan {
             ThermalCellArena arena,
             ThermalSolver solver,
             PhaseTransitionRuntime phases,
-            ThermalSignatureCatalog signatures,
+            ThermalSignatureTable signatures,
             BrickTopologyCompiler compiler,
             ThermalTopologyParameters parameters,
             ThermalDimensionLimits limits,
@@ -100,6 +99,7 @@ public final class TopologyPlan {
         try {
             collectRetirements(batch);
             collectAdmissions(batch);
+            collectResidency(batch.residencyUpdates());
             collectGeometry(batch.geometry());
             collectEnvironment(batch.environmentUpdates());
             finalizeSignatureCuts();
@@ -258,10 +258,39 @@ public final class TopologyPlan {
     ) {
         draft.nextSignatures = admission.signatures();
         draft.geometryRevision = admission.geometryRevision();
-        draft.signatureChangedMask = -1L;
-        draft.topologyDirtyMask = -1L;
+        draft.nextResidentBrickMask = admission.residentBrickMask();
+        draft.nextSourceSeedMask = admission.sourceSeedMask();
+        draft.topologyDirtyMask = admission.residentBrickMask();
         draft.naturalTemperatureChanged = true;
         draft.naturalTemperatureC = admission.naturalTemperatureC();
+    }
+
+    private void collectResidency(
+            ThermalInputBatch.PageResidencyUpdate[] updates
+    ) {
+        for (ThermalInputBatch.PageResidencyUpdate update : updates) {
+            WorkerPageStore.PageState page = page(update.page());
+            if (page == null) {
+                continue;
+            }
+            PageDraft draft = acquireDraft(page);
+            if (draft.retirement
+                    || update.geometryRevision() < draft.geometryRevision) {
+                continue;
+            }
+            if ((update.residentBrickMask() & page.residentBrickMask)
+                    != page.residentBrickMask) {
+                throw new IllegalArgumentException(
+                        "resident Brick mask cannot shrink within a Page lifecycle");
+            }
+            long added = update.residentBrickMask()
+                    & ~draft.nextResidentBrickMask;
+            draft.nextResidentBrickMask = update.residentBrickMask();
+            draft.nextSourceSeedMask = update.sourceSeedMask();
+            draft.nextSignatures = update.signatures();
+            draft.geometryRevision = update.geometryRevision();
+            draft.topologyDirtyMask |= added;
+        }
     }
 
     private void collectRetirements(ThermalInputBatch batch) {
@@ -272,7 +301,7 @@ public final class TopologyPlan {
             }
             PageDraft draft = acquireDraft(page);
             draft.retirement = true;
-            draft.topologyDirtyMask = -1L;
+            draft.topologyDirtyMask = page.residentBrickMask;
             sourceDirtySections.add(page.handle.sectionKey());
         }
     }
@@ -291,8 +320,7 @@ public final class TopologyPlan {
             draft.geometryRevision = geometry.geometryRevision(index);
             if (geometry.kind(index)
                     == ResolvedGeometryBatch.Kind.FULL_RESYNC_REQUIRED) {
-                draft.finishSignatures();
-                draft.signatureChangedMask = 0L;
+                draft.finishSignatures(signatures);
                 draft.topologyDirtyMask = 0L;
                 PageSignatures next = geometry.fullPageSignatures(index);
                 compareFullSignatures(draft, next);
@@ -308,11 +336,10 @@ public final class TopologyPlan {
             }
             int signatureId = signatures.valid(geometry.signatureId(index))
                     ? geometry.signatureId(index)
-                    : ThermalSignatureCatalog.UNRESOLVED;
+                    : ThermalSignatureTable.UNRESOLVED;
             draft.setBlock(
                     geometry.blockIndex(index),
-                    signatureId,
-                    signatures);
+                    signatureId);
         }
     }
 
@@ -346,7 +373,7 @@ public final class TopologyPlan {
 
     private void finalizeSignatureCuts() {
         for (int index = 0; index < draftCount; index++) {
-            draftPool.get(index).finishSignatures();
+            draftPool.get(index).finishSignatures(signatures);
         }
     }
 
@@ -380,7 +407,7 @@ public final class TopologyPlan {
             long remaining = draft.topologyDirtyMask
                     | draft.fragmentDirtyMask;
             if (draft.retirement) {
-                remaining = -1L;
+                remaining = draft.page.residentBrickMask;
             }
             while (remaining != 0L) {
                 int brick = Long.numberOfTrailingZeros(remaining);
@@ -423,6 +450,9 @@ public final class TopologyPlan {
         int brick = Math.floorMod(minX, 16) >>> 2
                 | (Math.floorMod(minZ, 16) >>> 2) << 2
                 | (Math.floorMod(minY, 16) >>> 2) << 4;
+        if (!view.resident(page, brick)) {
+            return;
+        }
         affectedFragments.add(page.fragmentIndex(brick));
     }
 
@@ -451,8 +481,7 @@ public final class TopologyPlan {
             fragments[index] = compiled.fragment();
             WorkerBrickTopology base = view.brick(page, brick);
             WorkerBrickTopology next = base.withFragmentResult(
-                    base.resolved && compiled.resolved(),
-                    compiled.continuationFaceMask());
+                    base.resolved && compiled.resolved());
             draft.replace(brick, next);
             draft.fragmentChangedMask |= 1L << brick;
         }
@@ -463,12 +492,15 @@ public final class TopologyPlan {
         for (int draftIndex = 0; draftIndex < draftCount; draftIndex++) {
             PageDraft draft = draftPool.get(draftIndex);
             if (draft.retirement) {
-                for (int brick = 0; brick < BRICKS_PER_PAGE; brick++) {
+                long remaining = draft.page.residentBrickMask;
+                while (remaining != 0L) {
+                    int brick = Long.numberOfTrailingZeros(remaining);
                     WorkerBrickTopology old = draft.page.brick(brick);
                     collectOldSpan(draft.page, old);
                     for (int slot : old.phaseReservoirs.slot()) {
                         removedReservoirs.add(slot);
                     }
+                    remaining &= remaining - 1L;
                 }
                 continue;
             }
@@ -571,21 +603,28 @@ public final class TopologyPlan {
             PageSignatures next
     ) {
         long signatureChanged = 0L;
-        long topologyChanged = 0L;
-        for (int block = 0; block < BLOCKS_PER_PAGE; block++) {
-            int previous = draft.nextSignatures.get(block);
-            int replacement = next.get(block);
-            if (previous == replacement) {
-                continue;
+        long remaining = draft.nextResidentBrickMask;
+        while (remaining != 0L) {
+            int brick = Long.numberOfTrailingZeros(remaining);
+            int minX = (brick & 3) << 2;
+            int minZ = (brick >>> 2 & 3) << 2;
+            int minY = (brick >>> 4 & 3) << 2;
+            brickScan:
+            for (int y = minY; y < minY + 4; y++) {
+                for (int z = minZ; z < minZ + 4; z++) {
+                    for (int x = minX; x < minX + 4; x++) {
+                        int block = x | z << 4 | y << 8;
+                        if (draft.nextSignatures.get(block) != next.get(block)) {
+                            signatureChanged |= 1L << brick;
+                            break brickScan;
+                        }
+                    }
+                }
             }
-            int brick = brickIndex(block);
-            signatureChanged |= 1L << brick;
-            if (!signatures.topologyEquivalent(previous, replacement)) {
-                topologyChanged |= 1L << brick;
-            }
+            remaining &= remaining - 1L;
         }
+        draft.topologyDirtyMask |= signatureChanged;
         draft.signatureChangedMask |= signatureChanged;
-        draft.topologyDirtyMask |= topologyChanged;
     }
 
     private WorkerPageStore.PageState page(ThermalPageHandle handle) {
@@ -657,6 +696,8 @@ public final class TopologyPlan {
         boolean naturalTemperatureChanged;
         double naturalTemperatureC;
         long geometryRevision;
+        long nextResidentBrickMask;
+        long nextSourceSeedMask;
         private long signatureScratchMask;
         long signatureChangedMask;
         private long topologyDirtyMask;
@@ -682,6 +723,8 @@ public final class TopologyPlan {
             naturalTemperatureChanged = false;
             naturalTemperatureC = page.naturalTemperatureC;
             geometryRevision = page.geometryRevision;
+            nextResidentBrickMask = page.residentBrickMask;
+            nextSourceSeedMask = page.sourceSeedMask;
             signatureScratchMask = 0L;
             signatureChangedMask = 0L;
             topologyDirtyMask = 0L;
@@ -700,8 +743,7 @@ public final class TopologyPlan {
 
         private void setBlock(
                 int block,
-                int signatureId,
-                ThermalSignatureCatalog catalog
+                int signatureId
         ) {
             int brick = brickIndex(block);
             int within = indexWithinBrick(block);
@@ -730,12 +772,10 @@ public final class TopologyPlan {
             }
             values[within] = signatureId;
             signatureChangedMask |= 1L << brick;
-            if (!catalog.topologyEquivalent(previous, signatureId)) {
-                topologyDirtyMask |= 1L << brick;
-            }
+            topologyDirtyMask |= 1L << brick;
         }
 
-        private void finishSignatures() {
+        private void finishSignatures(ThermalSignatureTable signatures) {
             int count = Long.bitCount(signatureScratchMask);
             if (count == 0) {
                 return;
@@ -751,7 +791,8 @@ public final class TopologyPlan {
                 write++;
                 remaining &= remaining - 1L;
             }
-            nextSignatures = nextSignatures.withBricks(indexes, values);
+            nextSignatures = nextSignatures.withBricks(
+                    signatures, indexes, values);
             signatureScratchMask = 0L;
         }
 

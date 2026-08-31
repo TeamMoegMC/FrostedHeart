@@ -55,6 +55,8 @@ class DimensionInputAccumulatorTest {
         accumulator.admit(
                 page,
                 0L,
+                1L,
+                0L,
                 ThermalTestFixtures.filledPageSignatures(0),
                 0.0D,
                 new byte[256],

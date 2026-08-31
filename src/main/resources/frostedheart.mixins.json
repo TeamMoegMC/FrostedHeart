@@ -71,6 +71,7 @@
     "minecraft.temperature.LavaFluidMixin",
     "minecraft.temperature.LevelChunkMixin_DormantThermal",
     "minecraft.temperature.LevelChunkSectionMixin_ThermalInput",
+    "minecraft.temperature.LiquidBlockMixin_ThermalRadiation",
     "minecraft.temperature.MagmaBlockMixin",
     "minecraft.temperature.MooshroomMixin",
     "minecraft.temperature.MushroomBlockMixin",

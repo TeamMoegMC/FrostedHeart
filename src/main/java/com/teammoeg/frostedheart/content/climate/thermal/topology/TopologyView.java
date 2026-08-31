@@ -3,7 +3,7 @@ package com.teammoeg.frostedheart.content.climate.thermal.topology;
 
 import com.teammoeg.frostedheart.content.climate.thermal.geometry.ComponentBrickCompiler;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.PageSignatures;
-import com.teammoeg.frostedheart.content.climate.thermal.profile.ThermalSignatureCatalog;
+import com.teammoeg.frostedheart.content.climate.thermal.profile.ThermalSignatureTable;
 
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
@@ -13,13 +13,13 @@ import net.minecraft.core.SectionPos;
 /** Read-only planning projection over the plan's single draft authority. */
 final class TopologyView {
     private final WorkerPageStore pages;
-    private final ThermalSignatureCatalog signatures;
+    private final ThermalSignatureTable signatures;
     private final Long2ObjectOpenHashMap<TopologyPlan.PageDraft> draftsBySection;
     private final Int2ObjectOpenHashMap<TopologyPlan.PageDraft> draftsBySlot;
 
     TopologyView(
             WorkerPageStore pages,
-            ThermalSignatureCatalog signatures,
+            ThermalSignatureTable signatures,
             Long2ObjectOpenHashMap<TopologyPlan.PageDraft> draftsBySection,
             Int2ObjectOpenHashMap<TopologyPlan.PageDraft> draftsBySlot
     ) {
@@ -83,6 +83,16 @@ final class TopologyView {
         return page.brick(brickIndex);
     }
 
+    boolean resident(
+            WorkerPageStore.PageState page,
+            int brickIndex
+    ) {
+        TopologyPlan.PageDraft draft = draftsBySlot.get(page.pageSlot);
+        long mask = draft == null
+                ? page.residentBrickMask : draft.nextResidentBrickMask;
+        return (mask & 1L << brickIndex) != 0L;
+    }
+
     WorkerBrickTopology brickAtWorld(
             int brickMinX,
             int brickMinY,
@@ -98,7 +108,7 @@ final class TopologyView {
         int index = Math.floorMod(brickMinX, 16) >>> 2
                 | (Math.floorMod(brickMinZ, 16) >>> 2) << 2
                 | (Math.floorMod(brickMinY, 16) >>> 2) << 4;
-        return brick(page, index);
+        return resident(page, index) ? brick(page, index) : null;
     }
 
     long airReference(
@@ -131,6 +141,12 @@ final class TopologyView {
         int localY = SectionPos.sectionRelative(blockY);
         int localZ = SectionPos.sectionRelative(blockZ);
         int pageBlock = localX | localZ << 4 | localY << 8;
+        int brickIndex = localX >>> 2
+                | (localZ >>> 2) << 2
+                | (localY >>> 2) << 4;
+        if (!resident(page, brickIndex)) {
+            return PackedAirReference.NONE;
+        }
         int signatureId = pageSignatures.get(pageBlock);
         int microcell = microX | microZ << 2 | microY << 4;
         int region = signatures.componentOrdinal(signatureId, microcell);
@@ -153,6 +169,9 @@ final class TopologyView {
         int brickIndex = (pageBlock & 15) >>> 2
                 | (pageBlock >>> 4 & 15) >>> 2 << 2
                 | (pageBlock >>> 8 & 15) >>> 2 << 4;
+        if (!resident(page, brickIndex)) {
+            return -1;
+        }
         WorkerBrickTopology brick = brick(page, brickIndex);
         if (brick.coverageSlot < 0 || !brick.cellsResolved) {
             return -1;

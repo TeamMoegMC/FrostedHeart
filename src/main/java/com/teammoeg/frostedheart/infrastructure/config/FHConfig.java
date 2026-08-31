@@ -245,6 +245,11 @@ public class FHConfig {
 			public final ForgeConfigSpec.DoubleValue farFieldConductanceWPerK;
 			public final ForgeConfigSpec.DoubleValue campfirePowerW;
 			public final ForgeConfigSpec.DoubleValue campfireRadiationShare;
+			public final ForgeConfigSpec.BooleanValue enableStaticBlockRadiation;
+			public final ForgeConfigSpec.DoubleValue lavaRadiationTemperatureC;
+			public final ForgeConfigSpec.DoubleValue effectiveLavaEmissivity;
+			public final ForgeConfigSpec.DoubleValue radiationReferenceTemperatureC;
+			public final ForgeConfigSpec.DoubleValue fireRadiantPowerW;
 			public final ForgeConfigSpec.DoubleValue dormantTemperatureHalfLifeSeconds;
 
 			ThermalRuntime(ForgeConfigSpec.Builder builder) {
@@ -272,6 +277,21 @@ public class FHConfig {
 				campfireRadiationShare = builder
 					.comment("Fraction of campfire power emitted as direct radiation; the remainder heats Air.")
 					.defineInRange("campfireRadiationShare", 0.2D, 0.0D, 1.0D);
+				enableStaticBlockRadiation = builder
+					.comment("Enable read-only direct player radiation from static fire and exposed lava.")
+					.define("enableStaticBlockRadiation", true);
+				lavaRadiationTemperatureC = builder
+					.comment("Effective lava radiation temperature in degrees Celsius.")
+					.defineInRange("lavaRadiationTemperatureC", 1_000.0D, -273.0D, 5_000.0D);
+				effectiveLavaEmissivity = builder
+					.comment("Gameplay-scaled lava emissivity used for direct radiation.")
+					.defineInRange("effectiveLavaEmissivity", 0.01D, 0.0D, 1.0D);
+				radiationReferenceTemperatureC = builder
+					.comment("Reference environment temperature for lava radiation in degrees Celsius.")
+					.defineInRange("radiationReferenceTemperatureC", 20.0D, -273.0D, 5_000.0D);
+				fireRadiantPowerW = builder
+					.comment("Direct radiant power of an ordinary fire block in W.")
+					.defineInRange("fireRadiantPowerW", 1_000.0D, 0.0D, 1.0e9D);
 				dormantTemperatureHalfLifeSeconds = builder
 					.comment("Half-life in seconds for stored unloaded Page temperature residuals.")
 					.defineInRange("dormantTemperatureHalfLifeSeconds", 1_800.0D, 1.0D, 604_800.0D);

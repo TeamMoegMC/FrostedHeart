@@ -2,7 +2,7 @@
 package com.teammoeg.frostedheart.content.climate.thermal.mesh;
 
 import com.teammoeg.frostedheart.content.climate.thermal.geometry.ComponentBrickCompiler;
-import com.teammoeg.frostedheart.content.climate.thermal.profile.ThermalSignatureRegistry;
+import com.teammoeg.frostedheart.content.climate.thermal.profile.ThermalSignatureTable;
 
 import java.util.Arrays;
 
@@ -117,7 +117,7 @@ public final class PagePublication {
             int localY,
             int localZ,
             int microcellIndex,
-            ThermalSignatureRegistry signatureRegistry
+            ThermalSignatureTable signatureRegistry
     ) {
         if (microcellIndex < 0 || microcellIndex >= 64) {
             throw new IllegalArgumentException(
@@ -205,17 +205,16 @@ public final class PagePublication {
                 throw new IllegalArgumentException("Brick coverage identity is invalid");
             }
             if (signaturePayload != null
+                    && !(signaturePayload instanceof Integer)
                     && !(signaturePayload instanceof char[])
                     && !(signaturePayload instanceof int[])) {
                 throw new IllegalArgumentException("Brick signature payload is invalid");
             }
             if (signaturePayload instanceof char[] values
-                    && values.length != 1
                     && values.length != PageSignatures.ENTRIES_PER_BRICK) {
                 throw new IllegalArgumentException("compact Brick signatures are invalid");
             }
             if (signaturePayload instanceof int[] values
-                    && values.length != 1
                     && values.length != PageSignatures.ENTRIES_PER_BRICK) {
                 throw new IllegalArgumentException("wide Brick signatures are invalid");
             }

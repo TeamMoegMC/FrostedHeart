@@ -6,7 +6,7 @@ import com.teammoeg.frostedheart.content.climate.thermal.mesh.MaterialBoundaryRe
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.PageSignatures;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.ThermalCellArena;
 import com.teammoeg.frostedheart.content.climate.thermal.profile.ResolvedThermalSignature;
-import com.teammoeg.frostedheart.content.climate.thermal.profile.ThermalSignatureRegistry;
+import com.teammoeg.frostedheart.content.climate.thermal.profile.ThermalSignatureTable;
 import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.message.ResolvedGeometryBatch;
 import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.message.ThermalInputBatch;
 import com.teammoeg.frostedheart.content.climate.thermal.ThermalTestFixtures;
@@ -31,13 +31,14 @@ class ThermalTopologyPipelineTest {
                 new ConservativeAirGeometry.Resolution(
                         ConservativeAirGeometry.Status.RESOLVED, List.of()),
                 1, 1);
-        ThermalSignatureRegistry.Builder signatures =
-                ThermalSignatureRegistry.builder();
+        ThermalSignatureTable.Builder signatures =
+                ThermalSignatureTable.builder();
         int airId = signatures.intern(air);
         int materialId = signatures.intern(material);
+        ThermalSignatureTable signatureTable = signatures.build();
         ThermalRuntimeTestFixtures.EngineFixture fixture =
                 ThermalRuntimeTestFixtures.engine(
-                        signatures.build(),
+                        signatureTable,
                         new MaterialBoundaryRegistry(
                                 List.of(MaterialBoundaryRegistry.Profile
                                         .capacitiveSurfaceAtNaturalTemperature(
@@ -47,7 +48,8 @@ class ThermalTopologyPipelineTest {
                         airId,
                         materialId);
         try {
-            PageSignatures.Builder pageBuilder = new PageSignatures.Builder();
+            PageSignatures.Builder pageBuilder =
+                    new PageSignatures.Builder(signatureTable);
             for (int block = 0;
                  block < PageSignatures.ENTRY_COUNT;
                  block++) {
@@ -99,6 +101,7 @@ class ThermalTopologyPipelineTest {
         int[] changed = new int[PageSignatures.ENTRIES_PER_BRICK];
         Arrays.fill(changed, 1);
         PageSignatures next = original.withBricks(
+                ThermalTestFixtures.pageSignatureTable(),
                 new int[]{0}, new int[][]{changed});
 
         assertNotEquals(original.brickPayload(0), next.brickPayload(0));

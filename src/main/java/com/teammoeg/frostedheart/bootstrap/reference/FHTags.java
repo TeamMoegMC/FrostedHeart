@@ -126,6 +126,7 @@ public class FHTags {
 		SAFE_NBT(NameSpace.CREATE),
 		SLED_SNOW(),
 		CROP(),
+		STATIC_FIRE_RADIATORS("thermal/static_fire_radiators"),
 		SCAFFOLDING
 
 		;

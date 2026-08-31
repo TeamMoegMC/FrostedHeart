@@ -6,11 +6,13 @@ import com.teammoeg.frostedheart.content.climate.thermal.mesh.ThermalBrickCellLa
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.ThermalCellArena;
 import com.teammoeg.frostedheart.content.climate.thermal.geometry.ConservativeAirGeometry;
 import com.teammoeg.frostedheart.content.climate.thermal.profile.ResolvedThermalSignature;
+import com.teammoeg.frostedheart.content.climate.thermal.profile.ThermalSignatureTable;
 
 import java.util.List;
 
 public final class ThermalTestFixtures {
     private static final int TEST_ARENA_LIMIT = 1_000_000;
+    private static final ThermalSignatureTable PAGE_SIGNATURES = pageSignatures();
 
     private ThermalTestFixtures() {
     }
@@ -77,11 +79,15 @@ public final class ThermalTestFixtures {
     }
 
     public static PageSignatures filledPageSignatures(int signatureId) {
-        PageSignatures.Builder builder = new PageSignatures.Builder();
+        PageSignatures.Builder builder = new PageSignatures.Builder(PAGE_SIGNATURES);
         for (int block = 0; block < PageSignatures.ENTRY_COUNT; block++) {
             builder.set(block, signatureId);
         }
         return builder.build();
+    }
+
+    public static ThermalSignatureTable pageSignatureTable() {
+        return PAGE_SIGNATURES;
     }
 
     public static ResolvedThermalSignature fullAirSignature() {
@@ -101,5 +107,16 @@ public final class ThermalTestFixtures {
                 new ConservativeAirGeometry.Resolution(
                         ConservativeAirGeometry.Status.RESOLVED, List.of()),
                 0, 0);
+    }
+
+    private static ThermalSignatureTable pageSignatures() {
+        ThermalSignatureTable.Builder builder = ThermalSignatureTable.builder();
+        ConservativeAirGeometry.Resolution geometry =
+                fullAirSignature().airGeometry();
+        for (int profileId = 0; profileId < 16; profileId++) {
+            builder.intern(new ResolvedThermalSignature(
+                    geometry, profileId, 0));
+        }
+        return builder.build();
     }
 }

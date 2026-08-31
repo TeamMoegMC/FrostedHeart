@@ -215,8 +215,9 @@ public final class PreparedTopologyChange {
         public final boolean retirement;
         final PageSignatures signatures;
         final long resolvedBrickMask;
+        final long residentBrickMask;
+        final long sourceSeedMask;
         public final PagePublication publication;
-        public final byte continuationFaceMask;
         final long stagedBrickMask;
         final int[] brickIndexes;
         final WorkerBrickTopology[] bricks;
@@ -232,8 +233,9 @@ public final class PreparedTopologyChange {
                 boolean retirement,
                 PageSignatures signatures,
                 long resolvedBrickMask,
+                long residentBrickMask,
+                long sourceSeedMask,
                 PagePublication publication,
-                byte continuationFaceMask,
                 long stagedBrickMask,
                 int[] brickIndexes,
                 WorkerBrickTopology[] bricks,
@@ -248,11 +250,11 @@ public final class PreparedTopologyChange {
                     || brickIndexes.length != bricks.length
                     || skyColumns.length != firstExposedLocalY.length
                     || admission && retirement
+                    || (sourceSeedMask & ~residentBrickMask) != 0L
                     || retirement && (stagedBrickMask != 0L
                     || brickIndexes.length != 0)
                     || naturalTemperatureChanged
-                    && !Double.isFinite(naturalTemperatureC)
-                    || (Byte.toUnsignedInt(continuationFaceMask) & ~0x3f) != 0) {
+                    && !Double.isFinite(naturalTemperatureC)) {
                 throw new IllegalArgumentException("prepared Page write is invalid");
             }
             if (replacedPage != null
@@ -298,8 +300,9 @@ public final class PreparedTopologyChange {
             this.retirement = retirement;
             this.signatures = signatures;
             this.resolvedBrickMask = resolvedBrickMask;
+            this.residentBrickMask = residentBrickMask;
+            this.sourceSeedMask = sourceSeedMask;
             this.publication = publication;
-            this.continuationFaceMask = continuationFaceMask;
             this.stagedBrickMask = stagedBrickMask;
             this.brickIndexes = brickIndexes;
             this.bricks = bricks;
@@ -313,7 +316,6 @@ public final class PreparedTopologyChange {
                 TopologyPlan.PageDraft draft,
                 long resolvedBrickMask,
                 PagePublication publication,
-                byte continuationFaceMask,
                 int[] brickIndexes,
                 WorkerBrickTopology[] bricks,
                 short[] skyColumns,
@@ -326,8 +328,9 @@ public final class PreparedTopologyChange {
                     false,
                     draft.nextSignatures,
                     resolvedBrickMask,
+                    draft.nextResidentBrickMask,
+                    draft.nextSourceSeedMask,
                     publication,
-                    continuationFaceMask,
                     draft.cellReplacementMask,
                     brickIndexes,
                     bricks,
@@ -345,8 +348,9 @@ public final class PreparedTopologyChange {
                     true,
                     draft.page.signatures,
                     0L,
+                    0L,
+                    0L,
                     PagePublication.EMPTY,
-                    (byte) 0,
                     0L,
                     NO_INTS,
                     NO_BRICKS,

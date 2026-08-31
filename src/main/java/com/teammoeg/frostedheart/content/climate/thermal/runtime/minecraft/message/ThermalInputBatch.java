@@ -19,6 +19,8 @@ public final class ThermalInputBatch {
     public static final long CUT_INTERVAL_TICKS = 20L;
     public static final PageAdmission[] NO_ADMISSIONS = new PageAdmission[0];
     public static final PageRetirement[] NO_RETIREMENTS = new PageRetirement[0];
+    public static final PageResidencyUpdate[] NO_RESIDENCY_UPDATES =
+            new PageResidencyUpdate[0];
     public static final PageEnvironmentUpdate[] NO_ENVIRONMENT_UPDATES =
             new PageEnvironmentUpdate[0];
     public static final PhaseAck[] NO_PHASE_ACKS = new PhaseAck[0];
@@ -28,6 +30,7 @@ public final class ThermalInputBatch {
     private final long targetTick;
     private final PageAdmission[] admissions;
     private final PageRetirement[] retirements;
+    private final PageResidencyUpdate[] residencyUpdates;
     private final ResolvedGeometryBatch geometry;
     private final ThermalSourceBatch sourceEvents;
     private final PageEnvironmentUpdate[] environmentUpdates;
@@ -40,6 +43,7 @@ public final class ThermalInputBatch {
             long targetTick,
             PageAdmission[] admissions,
             PageRetirement[] retirements,
+            PageResidencyUpdate[] residencyUpdates,
             ResolvedGeometryBatch geometry,
             ThermalSourceBatch sourceEvents,
             PageEnvironmentUpdate[] environmentUpdates,
@@ -54,6 +58,8 @@ public final class ThermalInputBatch {
         this.targetTick = targetTick;
         this.admissions = Objects.requireNonNull(admissions, "admissions");
         this.retirements = Objects.requireNonNull(retirements, "retirements");
+        this.residencyUpdates = Objects.requireNonNull(
+                residencyUpdates, "residencyUpdates");
         this.geometry = Objects.requireNonNull(geometry, "geometry");
         this.sourceEvents = Objects.requireNonNull(sourceEvents, "sourceEvents");
         this.environmentUpdates = Objects.requireNonNull(
@@ -88,6 +94,10 @@ public final class ThermalInputBatch {
         return retirements;
     }
 
+    public PageResidencyUpdate[] residencyUpdates() {
+        return residencyUpdates;
+    }
+
     public ResolvedGeometryBatch geometry() {
         return geometry;
     }
@@ -115,6 +125,8 @@ public final class ThermalInputBatch {
     public record PageAdmission(
             ThermalPageHandle page,
             long geometryRevision,
+            long residentBrickMask,
+            long sourceSeedMask,
             PageSignatures signatures,
             double naturalTemperatureC,
             byte[] firstExposedLocalY,
@@ -124,10 +136,29 @@ public final class ThermalInputBatch {
             Objects.requireNonNull(page, "page");
             Objects.requireNonNull(signatures, "signatures");
             Objects.requireNonNull(firstExposedLocalY, "firstExposedLocalY");
-            if (geometryRevision < 0L
+            if (geometryRevision < 0L || residentBrickMask == 0L
+                    || (sourceSeedMask & ~residentBrickMask) != 0L
                     || firstExposedLocalY.length != 16 * 16
                     || !Double.isFinite(naturalTemperatureC)) {
                 throw new IllegalArgumentException("Page admission payload is invalid");
+            }
+        }
+    }
+
+    public record PageResidencyUpdate(
+            ThermalPageHandle page,
+            long geometryRevision,
+            long residentBrickMask,
+            long sourceSeedMask,
+            PageSignatures signatures
+    ) {
+        public PageResidencyUpdate {
+            Objects.requireNonNull(page, "page");
+            Objects.requireNonNull(signatures, "signatures");
+            if (geometryRevision < 0L || residentBrickMask == 0L
+                    || (sourceSeedMask & ~residentBrickMask) != 0L) {
+                throw new IllegalArgumentException(
+                        "Page residency payload is invalid");
             }
         }
     }

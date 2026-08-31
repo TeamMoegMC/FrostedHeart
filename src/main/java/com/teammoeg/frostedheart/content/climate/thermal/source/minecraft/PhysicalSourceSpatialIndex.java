@@ -77,6 +77,7 @@ public final class PhysicalSourceSpatialIndex
     private int[] nextFree;
     private byte[] targetCount;
     private long[] targetSections;
+    private byte[] targetBricks;
     private int highWaterMark;
     private int freeHead = NO_SLOT;
     private int nextLifecycleGeneration;
@@ -529,23 +530,34 @@ public final class PhysicalSourceSpatialIndex
             if (port.kind() != PortKind.AIR_FACE) {
                 continue;
             }
+            int targetX = anchorX[slot] + port.offsetX();
+            int targetY = anchorY[slot] + port.offsetY();
+            int targetZ = anchorZ[slot] + port.offsetZ();
             long sectionKey = SectionPos.asLong(
                     SectionPos.blockToSectionCoord(
-                            anchorX[slot] + port.offsetX()),
+                            targetX),
                     SectionPos.blockToSectionCoord(
-                            anchorY[slot] + port.offsetY()),
+                            targetY),
                     SectionPos.blockToSectionCoord(
-                            anchorZ[slot] + port.offsetZ()));
+                            targetZ));
+            int brick = SectionPos.sectionRelative(targetX) >>> 2
+                    | (SectionPos.sectionRelative(targetZ) >>> 2) << 2
+                    | (SectionPos.sectionRelative(targetY) >>> 2) << 4;
             boolean duplicate = false;
             for (int existing = 0; existing < write; existing++) {
                 duplicate |= targetSections[slot * MAX_PORTS + existing]
-                        == sectionKey;
+                        == sectionKey
+                        && Byte.toUnsignedInt(
+                                targetBricks[slot * MAX_PORTS + existing])
+                        == brick;
             }
             if (duplicate) {
                 continue;
             }
-            targetSections[slot * MAX_PORTS + write++] = sectionKey;
-            pages.updateSourcePage(sectionKey, true);
+            int targetIndex = slot * MAX_PORTS + write++;
+            targetSections[targetIndex] = sectionKey;
+            targetBricks[targetIndex] = (byte) brick;
+            pages.updateSourceBrick(sectionKey, brick, true);
             sourcesByTargetSection.computeIfAbsent(
                     sectionKey, ignored -> new IntOpenHashSet()).add(slot);
         }
@@ -558,7 +570,10 @@ public final class PhysicalSourceSpatialIndex
              index < Byte.toUnsignedInt(targetCount[slot]);
              index++) {
             long sectionKey = targetSections[first + index];
-            pages.updateSourcePage(sectionKey, false);
+            pages.updateSourceBrick(
+                    sectionKey,
+                    Byte.toUnsignedInt(targetBricks[first + index]),
+                    false);
             IntOpenHashSet indexed = sourcesByTargetSection.get(sectionKey);
             if (indexed != null) {
                 indexed.remove(slot);
@@ -567,6 +582,7 @@ public final class PhysicalSourceSpatialIndex
                 }
             }
             targetSections[first + index] = 0L;
+            targetBricks[first + index] = 0;
         }
         targetCount[slot] = 0;
     }
@@ -666,6 +682,7 @@ public final class PhysicalSourceSpatialIndex
         nextFree = new int[capacity];
         targetCount = new byte[capacity];
         targetSections = new long[capacity * MAX_PORTS];
+        targetBricks = new byte[capacity * MAX_PORTS];
         Arrays.fill(nextFree, NO_SLOT);
     }
 
@@ -694,6 +711,8 @@ public final class PhysicalSourceSpatialIndex
         targetCount = Arrays.copyOf(targetCount, capacity);
         targetSections = Arrays.copyOf(
                 targetSections, capacity * MAX_PORTS);
+        targetBricks = Arrays.copyOf(
+                targetBricks, capacity * MAX_PORTS);
     }
 
     private static boolean isCampfire(BlockState state) {

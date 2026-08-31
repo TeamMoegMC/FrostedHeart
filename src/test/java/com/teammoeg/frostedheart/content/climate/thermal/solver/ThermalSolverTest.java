@@ -68,6 +68,24 @@ class ThermalSolverTest {
                 fixture.arena.enthalpyJ(fixture.slots[1]), EPSILON);
     }
 
+    @Test
+    void materialReservationCoversInsertionBeforeDeletionPeak() {
+        Fixture fixture = fixture(2);
+        ThermalMaterialEdge edge = new ThermalMaterialEdge(
+                fixture.slots[0], fixture.slots[1],
+                new int[]{0}, new int[]{0}, new long[]{0L},
+                new double[]{1.0D}, 1.0D, 1.0D, 0, 0);
+        for (long key = 0; key < 4; key++) {
+            fixture.solver.installMaterialEdge(key, edge);
+        }
+
+        fixture.solver.reserveMaterialEdgeChanges(4, 1);
+        fixture.solver.installMaterialEdge(4L, edge);
+        fixture.solver.installMaterialEdge(0L, null);
+
+        assertEquals(4, fixture.solver.materialEdgeCount());
+    }
+
     private static ThermalFragment airPair(
             Fixture fixture,
             int first,

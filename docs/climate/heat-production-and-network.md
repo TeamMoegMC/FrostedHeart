@@ -1,7 +1,7 @@
 # Heat Production And Network
 
 - Status: `Current`
-- Last verified: `2026-08-31`
+- Last verified: `2026-09-01`
 - Scope: physical Minecraft sources, worker energy integration, material/phase sinks, and the separate heat-network model
 - Primary code anchors: `MinecraftPhysicalSourceProfile`, `PhysicalSourceSpatialIndex`, `ThermalSourceBatch`, `ThermalSourceLedger`, `NodePowerAccumulatorArena`, `HeatEndpoint`, `HeatNetwork`
 
@@ -13,6 +13,13 @@ lifecycle generation, an origin, an anchor/target, a profile, and immutable
 ports. `PhysicalSourceSpatialIndex` indexes origin section/chunk and target
 section, so changing one machine or campfire does not scan all sources.
 
+Each `AIR_FACE` port also retains its exact target Brick. Its zero/nonzero source
+reference transition updates one main-thread source-seed bit; multiple sources
+in the same Brick share one lazy count. Source seeds are the only main-thread
+cause of new thermal residency. The worker retains warmed Pages and advances
+heat through loaded neighboring Bricks with changed absolute residency masks;
+players and other queries do not hold Pages open.
+
 | Profile | Rated power | Thermal port | Other ports |
 |---|---:|---:|---|
 | Campfire | `8,000 W` default | `80%` convection into the Air block above | `20%` direct radiation |
@@ -21,8 +28,8 @@ section, so changing one machine or campfire does not scan all sources.
 | Radiator | `4,000 W * level` | `90%` convection | `10%` radiation loss |
 
 Blocked AIR_FACE ports become declared loss; topology-unavailable ports become
-degraded loss. Neither creates a fake Page, accumulates pending energy, or
-forces a chunk load. Campfire block-state changes are
+degraded loss until their exact source Brick is compiled. Neither creates a
+fake natural sink, accumulates pending energy, or forces a chunk load. Campfire block-state changes are
 coalesced by position, and a lit/unlit change with identical thermal signature
 updates only the source state.
 
@@ -31,6 +38,28 @@ Campfire total power and radiation share are configured by
 `campfireRadiationShare`; convection receives exactly the remaining share.
 Defaults are `8,000 W` and `0.20`. The main source index and worker binding
 resolver use the same immutable configured profile.
+
+## Static Fire And Lava Radiation
+
+Ordinary fire and exposed lava optionally contribute direct player radiation
+through `BlockRadiationIndex`. They are not physical sources: no power enters
+Air, crops, soil, material poles, machines, dormant checkpoints, or
+`ThermalSourceLedger`. A wall blocks the DDA ray, and removing line of sight
+removes the contribution without residual room heat.
+
+Fire power is `FHConfig.COMMON.THERMAL_RUNTIME.fireRadiantPowerW` (`1000 W`
+default). Lava uses the configured `lavaRadiationTemperatureC` (`1000 C`),
+`effectiveLavaEmissivity` (`0.01`), and
+`radiationReferenceTemperatureC` (`20 C`) in the Stefan-Boltzmann exposed-area
+calculation. `enableStaticBlockRadiation` defaults to true. These COMMON values
+are read once at startup; Campfire does not use them.
+
+Coverage is receiver-lazy and independent of Thermal Page admission. A player
+sample palette-rejects ordinary loaded sections, queues unknown 4-cubed Bricks
+under a shared 64-Brick-per-tick budget, and reuses known results across players
+until chunk unload. Static rays are retraced from the player's current eye
+position with one block-grid DDA and
+retain no receiver witness or source revision.
 
 ## Worker Energy
 

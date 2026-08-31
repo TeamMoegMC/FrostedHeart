@@ -1,7 +1,7 @@
 # Climate Data And Lifecycle
 
 - Status: `Current`
-- Last verified: `2026-08-31`
+- Last verified: `2026-09-01`
 - Scope: recipe/configuration ownership, capabilities, server lifecycle, thermal runtime integration, and network boundaries
 - Primary code anchors: `FHRecipeCachingReloadListener`, `WorldTemperature`, `MinecraftThermalEvents`, `MinecraftThermalInput`, `ThermalWorkerPool`, `LevelChunkSectionMixin_ThermalInput`, `FHCapabilities`, `FHNetwork`
 
@@ -47,11 +47,11 @@ ServerStartingEvent
 
 ServerStartedEvent
   MinecraftThermalInput.prepareGameplayProfiles()
-  static BlockState -> signature index is frozen once
+  tagged BlockState semantics and shared signature/geometry tables are frozen once
 
 Level tick END
   MinecraftThermalInput drains completion
-  MinecraftPageManager processes leases/mutations/capture budgets
+  MinecraftPageManager applies worker residency, mutations, and Brick capture budgets
   every 20 ticks: source flush and one immutable batch submit
 
 ChunkDataEvent.Load (async)
@@ -67,6 +67,9 @@ ChunkDataEvent.Save / ChunkEvent.Unload / ServerStoppingEvent
 Level unload
   checkpoint active Pages, detach section hooks, close capture/source/radiation state,
   request mailbox processor close
+
+Player logout / dimension exit
+  remove the current/old dimension radiation receiver cache by UUID-derived key
 
 ServerStoppedEvent
   MinecraftThermalInput.closeAll()
@@ -85,9 +88,17 @@ The level thread drains the inbox, reads each final state once, updates physical
 source/sky/radiation state, and submits immutable arrays through
 `DimensionInputAccumulator`.
 
+Static fire/lava radiation uses a separate primitive Brick dirty map and never
+enters `ThermalInputBatch`. `LiquidBlock.updateShape` only marks lava's own
+Brick. Receiver queries never admit a Page: palette-positive coverage alone may
+reuse the existing loaded-section mutation owner. Unknown Bricks enter one
+dimension pending mask and become known under a fixed per-tick capture budget;
+chunk unload removes known, emitter, pending, and dirty state. Static rays retain
+no receiver cache or section witness.
+
 `ThermalDimensionMailbox` serializes one batch per dimension. The worker calls
 only `ThermalDimensionEngine.process(ThermalInputBatch)`. A normal completion
-is held until the main thread applies Page continuation/resync and phase request
+is held until the main thread applies absolute Brick residency/resync and phase request
 payloads and explicitly ACKs the matching sequence. A terminal failure closes
 the engine and starts a new generation from complete current captures.
 
@@ -122,15 +133,18 @@ temperature nor presence changed, otherwise it contains one flat array of full
 or changed 64-Brick Page records. The server keeps no per-player infrared
 observer or payload copy. Requests extend one dimension-level tracking window
 to 80 ticks; the window affects query publication only and never retains or
-admits a Page.
+admits a Page. A temporarily invalid or over-age `QueryPublication` produces no
+response, so the client retains its existing temperature mirror until a valid
+rebuild response is available. A valid presence mismatch, including real Page
+retirement, remains authoritative and may send an empty full snapshot.
 
 The player NBT schema preserves each existing clothing `ItemStackHandler`, its
 complete item NBT, and temperature difficulty. New saves store per-part
 `energy_j`; old Celsius body/feel/environment and dormant
 `blockTemp`/`windStrengh` values are ignored on load, so an old player begins at
 normal body energy. Analytic fields remain server-side control fields composed
-after Page air or natural fallback. Town/crop/passive consumers never admit a
-Page merely because a low-frequency query missed. Dormant state is server-only
+after Page air or natural fallback. Player/town/crop/passive/infrared consumers
+never admit a Page merely because a query missed. Dormant state is server-only
 and adds no packet.
 
 Changes to this integration must update the relevant consumer document and add

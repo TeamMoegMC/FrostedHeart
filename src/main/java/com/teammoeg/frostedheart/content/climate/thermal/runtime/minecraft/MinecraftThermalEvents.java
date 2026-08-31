@@ -94,6 +94,19 @@ public final class MinecraftThermalEvents {
     }
 
     @SubscribeEvent
+    public static void onPlayerChangedDimension(
+            PlayerEvent.PlayerChangedDimensionEvent event
+    ) {
+        if (event.getEntity() instanceof net.minecraft.server.level.ServerPlayer player
+                && player.getServer() != null) {
+            ServerLevel previous = player.getServer().getLevel(event.getFrom());
+            if (previous != null) {
+                MinecraftThermalInput.onPlayerChangedDimension(player, previous);
+            }
+        }
+    }
+
+    @SubscribeEvent
     public static void onLevelTick(TickEvent.LevelTickEvent event) {
         if (event.side == LogicalSide.SERVER
                 && event.phase == TickEvent.Phase.END

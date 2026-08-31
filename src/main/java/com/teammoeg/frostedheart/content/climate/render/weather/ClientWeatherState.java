@@ -146,7 +146,17 @@ public final class ClientWeatherState {
         tickClock(loadedDimension, levelDayTime);
         cameraExposure = approach(cameraExposure, cameraExposedToSky ? 1.0F : 0.0F, 0.15F);
         activeProfile = profile;
+        if (kernels.length == 0) {
+            nearCandidateCount = 0;
+            wallCandidateCount = 0;
+            disableSpatialTick();
+            return;
+        }
         prefilter(cameraX, cameraZ, profile);
+        if (nearCandidateCount == 0 && wallCandidateCount == 0) {
+            disableSpatialTick();
+            return;
+        }
         fillGrid(cameraX, cameraZ, globalClimate == null ? ClimateType.NONE : globalClimate,
                 globalWind, profile);
         currentGrid.sample(cameraX, cameraZ, tickCameraSample);
@@ -313,7 +323,7 @@ public final class ClientWeatherState {
         double originX = Math.floor(cameraX / spacing) * spacing - profile.gridRadius() * spacing;
         double originZ = Math.floor(cameraZ / spacing) * spacing - profile.gridRadius() * spacing;
         currentGrid.configure(originX, originZ, spacing, side);
-        currentGrid.hasPrecipitation = false;
+        currentGrid.hasSpatialPrecipitation = false;
 
         float baseSnow = globalClimate.isSnowyOrBlizzard() ? 0.75F : 0.0F;
         float baseWhiteout = globalClimate.isBlizzard() ? 0.65F : 0.0F;
@@ -335,6 +345,9 @@ public final class ClientWeatherState {
                             kernels[nearCandidateIndices[candidate]], tickClimateSeconds,
                             blockX, blockZ, profile.fieldProfile(), scratch);
                     fieldEvaluations++;
+                    if (scratch.snowIntensity > 0.01F || scratch.whiteoutIntensity > 0.01F) {
+                        currentGrid.hasSpatialPrecipitation = true;
+                    }
                     snow = Math.max(snow, scratch.snowIntensity);
                     whiteout = Math.max(whiteout, scratch.whiteoutIntensity);
                     visibility = Math.min(visibility, scratch.visibilityBlocks);
@@ -350,9 +363,6 @@ public final class ClientWeatherState {
                 currentGrid.windX[cell] = windX;
                 currentGrid.windZ[cell] = windZ;
                 currentGrid.visibility[cell] = visibility;
-                if (snow > 0.01F || whiteout > 0.01F) {
-                    currentGrid.hasPrecipitation = true;
-                }
             }
         }
         currentGrid.valid = true;
@@ -470,9 +480,9 @@ public final class ClientWeatherState {
         return hasGrid;
     }
 
-    /** Ownership follows the unattenuated spatial footprint, never the indoor camera fade. */
+    /** Ownership follows descriptor-produced precipitation, never global weather or indoor camera fade. */
     public boolean hasPrecipitationFootprint() {
-        return hasGrid && (currentGrid.hasPrecipitation || previousGrid.hasPrecipitation);
+        return hasGrid && (currentGrid.hasSpatialPrecipitation || previousGrid.hasSpatialPrecipitation);
     }
 
     public float cameraExposure() {
@@ -526,7 +536,7 @@ public final class ClientWeatherState {
         private int spacing;
         private int side;
         private boolean valid;
-        private boolean hasPrecipitation;
+        private boolean hasSpatialPrecipitation;
 
         private void configure(double originX, double originZ, int spacing, int side) {
             this.originX = originX;
@@ -544,7 +554,7 @@ public final class ClientWeatherState {
             System.arraycopy(other.windX, 0, windX, 0, length);
             System.arraycopy(other.windZ, 0, windZ, 0, length);
             System.arraycopy(other.visibility, 0, visibility, 0, length);
-            hasPrecipitation = other.hasPrecipitation;
+            hasSpatialPrecipitation = other.hasSpatialPrecipitation;
             valid = other.valid;
         }
 

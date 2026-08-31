@@ -1,7 +1,7 @@
 # Thermal Runtime Architecture
 
-- Status: `Current; functional validation complete, controlled profiling pending`
-- Last verified: `2026-08-31`
+- Status: `Current; sparse Brick residency and receiver-lazy radiation implemented, controlled performance/live validation pending`
+- Last verified: `2026-09-01`
 - Scope: server-side thermal capture, asynchronous dimension workers, Page/Brick topology, source energy, phase requests, query publication, and hot-path cost bounds
 - Primary code anchors: `MinecraftThermalEvents`, `MinecraftThermalInput`, `MinecraftPageManager`, `PhysicalSourceSpatialIndex`, `DimensionInputAccumulator`, `ThermalDimensionMailbox`, `ThermalWorkerPool`, `ThermalDimensionEngine`, `TopologyPlan`, `PreparedTopologyChange`, `TopologyCommitter`, `ThermalSolver`, `ThermalSourceLedger`, `QueryPublication`
 
@@ -94,12 +94,47 @@ One Brick is `4 x 4 x 4` blocks. Air geometry is local to the Brick and its six
 neighbor Bricks; there is no dimension-wide Air component graph or spanning
 forest.
 
+Page is the lifecycle/container address, not the residency unit. Main-thread
+state keeps one captured mask, lazy exact source-seed counts/mask, and the last
+worker-desired mask. Worker state keeps only resident, resolved, source-seed,
+and hot masks. Player, infrared, crop, town, dormant, and static-radiation
+queries never enter those masks.
+
+A physical `AIR_FACE` port seeds its exact Brick. Page admission starts from a
+shared unresolved signature directory and captures only requested Bricks under
+the fixed 64-Brick-per-tick main-thread budget. `LevelChunkSection.hasOnlyAir`
+installs canonical Air payloads without individual BlockState reads; otherwise
+one new Brick reads exactly 64 final states. Resident bits grow within one Page
+lifecycle and inactive slots own no arena cell, fragment, or infrared payload.
+
+After each 20-tick solve, `QueryPublication` computes temperature-hysteretic hot
+masks while performing its existing live-slot write, using reusable Page-slot
+primitive scratch and `REFINE_HIGH_C = 0.125 C` /
+`RELEASE_LOW_C = 0.0625 C`. The following Page-only pass uses six static bit masks/shifts to find same-Page
+nonresident faces and active cross-Page boundary faces, then reads only their
+existing regular/mixed face topology. A cross-Page face keeps its admitted guard
+desired until residual release; missing non-sky neighbors have no synthetic
+FarField sink. Changed absolute `BrickResidency` masks request same-Page or
+cross-Page guards and include zero-mask cancellation; unchanged masks produce
+no completion payload.
+
+When source and hot/incoming frontier ownership all disappear, the worker emits
+zero desired residency. The main thread then checkpoints and retires the whole
+Page transactionally. Bricks are not individually evicted, avoiding enthalpy
+migration and threshold chatter.
+
 `ThermalPageHandle` is only cross-thread identity, live geometry revision,
 resync requirement, and a volatile `PagePublication`. `PageSignatures` stores a
-flat directory of `64` immutable Brick payloads. IDs that fit the compact range
-use `char[1]` for a uniform Brick and `char[64]` otherwise; wide IDs use the
-corresponding `int[1]`/`int[64]` payload. A changed Brick alone is replaced or
-promoted.
+flat directory of `64` immutable Brick payloads. Uniform Bricks reuse one
+canonical immutable `Integer` per signature ID; nonuniform compact/wide Bricks
+use `char[64]`/`int[64]`. A changed Brick alone is replaced or promoted.
+
+`MinecraftStateThermalTable` is one dense registry-ID-indexed tagged int table.
+Ordinary states contain their signature ID directly; only radiation, Campfire,
+or exceptional occlusion semantics enter sparse primitive extended arrays.
+`ThermalSignatureTable` is shared server-wide and stores signature-to-geometry
+and material IDs plus geometry-local Air masks/contact/component lookup. It
+replaces the frozen reverse map and every per-dimension signature catalog.
 
 `WorkerPageStore` holds one stable 64-Brick worker directory and replaces only
 changed immutable Brick entries. `WorkerBrickTopology` retains cell/query and
@@ -123,13 +158,17 @@ the second bitmap exists only after a non-geometry source-only position needs
 to be excluded. Page center arrays are likewise created at eight entries only
 after the first local geometry mutation. No per-position object is retained.
 
-`MinecraftSignatureCapture` resolves that already-loaded state directly through
-`StateStaticThermalResolver`. Static states do not allocate a dependency view or
-re-read a cube from the world. Dynamic shapes remain conservatively unsupported,
-and point capture uses `getChunkNow` without loading a chunk.
+`MinecraftSignatureCapture` resolves an already-loaded state through one state
+registry ID lookup and one tagged-table read. `StateStaticThermalResolver` runs
+only while the server-wide tables are built. Dynamic shapes remain
+conservatively unsupported. Residency capture reads the already-attached
+section and never loads a chunk; exact mutation point capture retains
+`getChunkNow` only as its loaded-only fallback.
 
 For a topology-relevant position, the owning Page captures only that exact
-block index. `StateStaticThermalResolver` is a pure function of the stored
+block index when its Brick is resident. Uncaptured Brick mutations still update
+sky/occlusion/source channels but do not invalidate Page geometry; their first
+future residency capture reads final state. `StateStaticThermalResolver` is a pure function of the stored
 `BlockState` and `FluidState`, so neighboring positions are not recaptured and
 each section owner retains only its own Page handle. Cross-Brick and cross-Page
 effects are compiled from the changed Brick through the fixed fragment
@@ -144,9 +183,45 @@ opened and closed repeatedly. The worker compares that final signature before
 allocating a Brick scratch, so a final state equal to the installed state does
 not rebuild an immutable signature payload.
 
-State changes whose static signature is unchanged and which do not involve a
-campfire are dropped before the inbox. Campfire changes still update the source
-ledger, but do not invalidate geometry when their thermal signature is the same.
+State changes whose complete tagged topology/source/radiation/occlusion
+semantics are unchanged are dropped before the inbox. Campfire changes still
+update the source ledger, but do not invalidate geometry when their thermal
+signature is the same.
+Static fire/lava profile changes write only one radiation Brick bit; a
+signature-equal DDA occlusion change invalidates the section witness without
+allocating the Page mutation bitmaps.
+
+## Static Block Radiation
+
+When `FHConfig.COMMON.THERMAL_RUNTIME.enableStaticBlockRadiation` is enabled,
+`BlockRadiationIndex` stores one `knownBrickMask`, one `emitterMask`, and compact
+packed emitters only for receiver-covered palette-positive sections. Fire uses
+fixed power; lava power is proportional to loaded-only exposed face area. This
+field is a read-only player observation: it never writes Air, material, phase,
+dormant, or infrared state and never registers a `ThermalSourceLedger` source.
+
+Relevant profile changes and lava's own `LiquidBlock.updateShape` callback merge
+into two primitive dirty maps until the 20-tick cut. Each dirty Brick reads its
+64 final states once. Player sampling performs one fused pass over at most eight
+loaded sections. `LevelChunkSection.maybeHas` rejects palette-negative sections
+without retained state; palette-positive sections queue only unknown Bricks in
+one shared primitive pending map. A fixed 64-Brick-per-tick budget bounds cold
+capture. Section-local bit masks cover the conservative 8-block cube without a
+125-Brick query loop; actual emitters still require the exact spherical range.
+
+Thermal Page admission, recapture, retry, retirement, worker restart, and
+dormant restore never install or remove radiation state. Covered sections reuse
+the existing mutation owner only to receive final-state callbacks. Chunk unload
+removes its fixed section keys; chunk/section availability marks only known
+touching boundary Bricks. Neighbor compilation reads loaded sections directly
+and never loads a chunk.
+
+`RadiationService` discovers physical sources first. Static emitters use only
+remaining visits, but the fused coverage pass still runs when none remain. Exact
+`STATIC_BLOCK_REVISION` selects one current-eye block-grid DDA and bypasses
+`ReceiverCache`, section revisions, and witness writes. Physical Campfire and
+machine rays use the same DDA with their existing feet/torso/head witnesses.
+Logout and old-dimension exit remove only that physical receiver cache by key.
 
 ## Topology Preparation And Commit
 
@@ -186,6 +261,9 @@ enthalpy needed by local fragment compilation, but are absent from `isLive`,
 `liveCellCount`, `highWaterMark`, live-slot iteration, solver state, and query
 publication. A failed prepare discards only its reserved spans and restores the
 free-span index; geometric backing growth may remain for reuse. Preparation
+reserves the material-edge table for the larger of its final edge count and
+the current count plus all possible insertions, covering insertion-before-
+deletion commit order without allocation in `TopologyCommitter`. Preparation
 also checks endpoint ownership, reference closure, final live-cell count,
 operation limits, and arena/query capacity limits. The configured address
 limit leaves staging headroom (`maximumArenaSlots` is twice the live-cell limit
@@ -243,6 +321,11 @@ indexes. Source coordinates are decoded from the packed BlockPos ID, so no
 parallel coordinate arrays are retained. Source state flags share one byte per
 source and dirty ordering uses a reusable primitive list.
 
+Every `AIR_FACE` port retains an exact `(sectionKey, Brick index)` target.
+Multiple sources in one Brick share a lazy main-thread int reference count;
+only zero/nonzero transitions change the source-seed mask. Source discovery and
+seed capture are independent of player queries.
+
 `ThermalSourceLedger` is the worker authority for source identity, exact event
 ticks, port bindings, and power integration. A source event advances only the
 nodes it changes; the active node list is drained once at the batch target tick.
@@ -271,7 +354,9 @@ generations.
 ## Environment And Phase
 
 `MinecraftEnvironmentCapture` refreshes natural temperature on a staggered
-200-tick queue and coalesces changed sky columns. Its Page builders are recycled
+200-tick queue and coalesces changed sky columns. Initial residency samples one
+natural temperature and only the 16 heightmap columns of each newly resident
+top-layer Brick; other columns remain unknown value `16`. Its Page builders are recycled
 by `DimensionInputAccumulator`. Wind updates carry one scalar conductance scale;
 FarField coefficients refresh lazily once per affected fragment.
 
@@ -366,6 +451,13 @@ material keys, and `Ks` changed state slots.
 | ordinary commit | `O(Kf + Ke + Ks)`; no allocation or sort, with one exact old-reference/ownership proof before release |
 | source event update | changed sources and affected bindings only |
 | source delivery | one ordered pass over active/touched nodes at target tick |
+| Brick cold capture | all-Air O(1), otherwise exactly 64 BlockStates per new Brick; at most 64 new Bricks/tick |
+| residency/frontier | hot bits piggyback on query live-slot publication; additional Page/frontier work is `O(P_active + F_frontier)` with changed absolute masks only |
+| static radiation mutation | changed profile/lava Bricks only; one section merge per cut |
+| static radiation cold capture | at most 64 unknown Bricks/tick; 64 primary plus at most 208 lava-neighbor BlockState reads per Brick |
+| static radiation query | one fused pass over at most eight sections; zero BlockState reads when coverage is known |
+| static radiation trace | one uncached current-eye block DDA per selected emitter |
+| radiation chunk lifecycle | fixed chunk sections plus known touching boundary Bricks only |
 | query publish | one pass over live spans and live cells; unchanged sleep is `O(1)` |
 | dormant capture | `O(64 + Page Air components)`, only at checkpoint |
 | dormant query | O(1), allocation-free after lazy section cache |
@@ -383,7 +475,7 @@ test-owned fixtures. Final performance evidence comes from external JVM JFR
 and heap runs, not production bookkeeping.
 
 The current functional validation is complete: `compileJava`, the thermal JUnit
-selection (`99/99`), `compileGameTestJava`, and Forge GameTest (`14/14`) all
+selection (`109/109`), `compileGameTestJava`, and Forge GameTest (`14/14`) all
 pass on Java 17; `git diff --check` reports no whitespace errors. Controlled
 120-second door/block/source/player/crop JFR workloads and 10/30-minute
 combined/churn heap runs remain performance evidence rather than undocumented

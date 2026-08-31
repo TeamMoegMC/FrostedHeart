@@ -146,7 +146,7 @@ class ThermalDimensionMailboxTest {
                     null,
                     ThermalCompletion.NO_PHASE_REQUESTS,
                     ThermalCompletion.NO_RESYNC_TOKENS,
-                    ThermalCompletion.NO_CONTINUATIONS);
+                    ThermalCompletion.NO_RESIDENCY_UPDATES);
         }
 
         @Override

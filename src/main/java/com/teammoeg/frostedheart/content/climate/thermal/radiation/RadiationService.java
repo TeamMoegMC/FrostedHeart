@@ -19,12 +19,14 @@ import java.util.Objects;
 /** Bounded main-thread direct-radiation query and receiver witness cache. */
 public final class RadiationService implements AutoCloseable {
     public static final long NO_SECTION_REVISION = Long.MIN_VALUE;
+    public static final long STATIC_BLOCK_REVISION = -1L;
     private static final double FOUR_PI = 4.0D * Math.PI;
     private static final TraceStatus[] TRACE_STATUSES = TraceStatus.values();
 
     private final Thread ownerThread = Thread.currentThread();
     private final Parameters parameters;
     private final SourceIndex sources;
+    private final NearbySourceIndex nearbySources;
     private final OcclusionTracer tracer;
     private final ThermalMemoryBudget.Reservation reservation;
     private final Long2ObjectOpenHashMap<ReceiverCache> receiverCaches =
@@ -42,6 +44,7 @@ public final class RadiationService implements AutoCloseable {
 
     private double discoveryX;
     private double discoveryFeetY;
+    private double discoveryEyeY;
     private double discoveryZ;
     private int candidateCount;
     private int candidateVisits;
@@ -52,11 +55,13 @@ public final class RadiationService implements AutoCloseable {
     private RadiationService(
             Parameters parameters,
             SourceIndex sources,
+            NearbySourceIndex nearbySources,
             OcclusionTracer tracer,
             ThermalMemoryBudget.Reservation reservation
     ) {
         this.parameters = parameters;
         this.sources = sources;
+        this.nearbySources = nearbySources;
         this.tracer = tracer;
         this.reservation = reservation;
         int candidates = parameters.maximumCandidatesPerReceiver();
@@ -75,6 +80,7 @@ public final class RadiationService implements AutoCloseable {
     public static RadiationService tryCreate(
             Parameters parameters,
             SourceIndex sources,
+            NearbySourceIndex nearbySources,
             OcclusionTracer tracer,
             ThermalMemoryBudget dimensionBudget
     ) {
@@ -85,7 +91,7 @@ public final class RadiationService implements AutoCloseable {
         ThermalMemoryBudget.Reservation reservation = dimensionBudget.tryReserve(
                 projectedMaximumBytes(parameters));
         return reservation == null ? null : new RadiationService(
-                parameters, sources, tracer, reservation);
+                parameters, sources, nearbySources, tracer, reservation);
     }
 
     public static long projectedMaximumBytes(Parameters parameters) {
@@ -120,6 +126,7 @@ public final class RadiationService implements AutoCloseable {
             int receiverGeneration,
             double receiverX,
             double receiverFeetY,
+            double receiverEyeY,
             double receiverZ,
             MutableSample out
     ) {
@@ -132,35 +139,28 @@ public final class RadiationService implements AutoCloseable {
         }
         requireFinite("receiverX", receiverX);
         requireFinite("receiverFeetY", receiverFeetY);
+        requireFinite("receiverEyeY", receiverEyeY);
         requireFinite("receiverZ", receiverZ);
-        ReceiverCache cache = receiverCache(
-                receiverKey, receiverGeneration);
-        discover(receiverX, receiverFeetY, receiverZ);
+        discover(receiverX, receiverFeetY, receiverEyeY, receiverZ);
+        ReceiverCache cache = null;
         double totalFlux = 0.0D;
         int rays = 0;
         rayLoop:
         for (int candidate = 0;
              candidate < candidateCount;
              candidate++) {
-            for (int ray = 0; ray < 3; ray++) {
+            boolean staticBlock = candidateRevisions[candidate]
+                    == STATIC_BLOCK_REVISION;
+            int rayCount = staticBlock ? 1 : 3;
+            for (int ray = 0; ray < rayCount; ray++) {
                 if (rays++ >= parameters.maximumRaysPerReceiver()) {
                     break rayLoop;
                 }
-                double targetY = receiverFeetY
-                        + parameters.receiverOffset(ray);
-                int quarterX = floorQuarter(receiverX);
-                int quarterY = floorQuarter(targetY);
-                int quarterZ = floorQuarter(receiverZ);
-                int witness = cache.find(
-                        candidateKeys[candidate],
-                        candidateRevisions[candidate],
-                        ray, quarterX, quarterY, quarterZ);
+                double targetY = staticBlock
+                        ? receiverEyeY
+                        : receiverFeetY + parameters.receiverOffset(ray);
                 TraceStatus status;
-                if (witness >= 0
-                        && cache.revisionsMatch(witness, tracer)) {
-                    status = cache.status(witness);
-                    cache.touch(witness, sampleSequence);
-                } else {
+                if (staticBlock) {
                     traceScratch.clear();
                     tracer.trace(
                             candidateX[candidate],
@@ -170,14 +170,45 @@ public final class RadiationService implements AutoCloseable {
                             targetY,
                             receiverZ,
                             parameters.maximumDdaStepsPerRay(),
+                            false,
                             traceScratch);
                     status = traceScratch.status();
-                    cache.store(
-                            witness,
+                } else {
+                    if (cache == null) {
+                        cache = receiverCache(
+                                receiverKey, receiverGeneration);
+                    }
+                    int quarterX = floorQuarter(receiverX);
+                    int quarterY = floorQuarter(targetY);
+                    int quarterZ = floorQuarter(receiverZ);
+                    int witness = cache.find(
                             candidateKeys[candidate],
                             candidateRevisions[candidate],
-                            ray, quarterX, quarterY, quarterZ,
-                            traceScratch, sampleSequence);
+                            ray, quarterX, quarterY, quarterZ);
+                    if (witness >= 0
+                            && cache.revisionsMatch(witness, tracer)) {
+                        status = cache.status(witness);
+                        cache.touch(witness, sampleSequence);
+                    } else {
+                        traceScratch.clear();
+                        tracer.trace(
+                                candidateX[candidate],
+                                candidateY[candidate],
+                                candidateZ[candidate],
+                                receiverX,
+                                targetY,
+                                receiverZ,
+                                parameters.maximumDdaStepsPerRay(),
+                                true,
+                                traceScratch);
+                        status = traceScratch.status();
+                        cache.store(
+                                witness,
+                                candidateKeys[candidate],
+                                candidateRevisions[candidate],
+                                ray, quarterX, quarterY, quarterZ,
+                                traceScratch, sampleSequence);
+                    }
                 }
                 if (status == TraceStatus.VISIBLE) {
                     double dx = receiverX - candidateX[candidate];
@@ -191,7 +222,8 @@ public final class RadiationService implements AutoCloseable {
                             flux(
                                     candidatePower[candidate],
                                     candidateDirectionalBound[candidate],
-                                    distanceSquared) / 3.0D);
+                                    distanceSquared)
+                                    / (staticBlock ? 1.0D : 3.0D));
                 }
             }
         }
@@ -199,9 +231,10 @@ public final class RadiationService implements AutoCloseable {
         sampleSequence = Math.incrementExact(sampleSequence);
     }
 
-    private void discover(double x, double feetY, double z) {
+    private void discover(double x, double feetY, double eyeY, double z) {
         discoveryX = x;
         discoveryFeetY = feetY;
+        discoveryEyeY = eyeY;
         discoveryZ = z;
         candidateCount = 0;
         candidateVisits = 0;
@@ -231,6 +264,16 @@ public final class RadiationService implements AutoCloseable {
                 }
             }
         }
+        if (nearbySources != null) {
+            nearbySources.visitNearby(
+                    x,
+                    eyeY,
+                    z,
+                    Math.max(0,
+                            parameters.maximumCandidateVisits()
+                                    - candidateVisits),
+                    sourceVisitor);
+        }
     }
 
     private boolean visitSource(
@@ -247,8 +290,8 @@ public final class RadiationService implements AutoCloseable {
             return false;
         }
         double minimumDistance = minimumRayDistanceSquared(
-                sourceX, sourceY, sourceZ,
-                discoveryX, discoveryFeetY, discoveryZ);
+                sourceRevision, sourceX, sourceY, sourceZ,
+                discoveryX, discoveryFeetY, discoveryEyeY, discoveryZ);
         if (minimumDistance > parameters.maximumRangeBlocksSquared()) {
             return true;
         }
@@ -374,16 +417,22 @@ public final class RadiationService implements AutoCloseable {
     }
 
     private double minimumRayDistanceSquared(
+            long sourceRevision,
             double sourceX,
             double sourceY,
             double sourceZ,
             double receiverX,
             double receiverFeetY,
+            double receiverEyeY,
             double receiverZ
     ) {
         double dx = receiverX - sourceX;
         double dz = receiverZ - sourceZ;
         double horizontal = dx * dx + dz * dz;
+        if (sourceRevision == STATIC_BLOCK_REVISION) {
+            double dy = receiverEyeY - sourceY;
+            return horizontal + dy * dy;
+        }
         double minimum = Double.POSITIVE_INFINITY;
         for (int ray = 0; ray < 3; ray++) {
             double dy = receiverFeetY
@@ -405,6 +454,12 @@ public final class RadiationService implements AutoCloseable {
                     "radiant flux exceeded the finite domain");
         }
         return result;
+    }
+
+    public void removeReceiver(long receiverKey) {
+        requireOwnerThread();
+        requireOpen();
+        receiverCaches.remove(receiverKey);
     }
 
     @Override
@@ -576,6 +631,15 @@ public final class RadiationService implements AutoCloseable {
                 SourceVisitor visitor);
     }
 
+    public interface NearbySourceIndex {
+        void visitNearby(
+                double receiverX,
+                double receiverY,
+                double receiverZ,
+                int maximumVisits,
+                SourceVisitor visitor);
+    }
+
     public interface SourceVisitor {
         boolean visit(
                 long sourceKey,
@@ -603,6 +667,7 @@ public final class RadiationService implements AutoCloseable {
                 double targetY,
                 double targetZ,
                 int maximumSteps,
+                boolean collectWitnesses,
                 MutableTrace result);
 
         long currentSectionRevision(long packedSectionKey);

@@ -14,14 +14,14 @@ public record ThermalCompletion(
         RuntimeException failure,
         PhaseTransitionRuntime.Request[] phaseRequests,
         ThermalPageHandle.GeometryResyncToken[] committedResyncTokens,
-        PageContinuation[] continuations
+        BrickResidency[] residencyUpdates
 ) {
     public static final PhaseTransitionRuntime.Request[] NO_PHASE_REQUESTS =
             new PhaseTransitionRuntime.Request[0];
     public static final ThermalPageHandle.GeometryResyncToken[] NO_RESYNC_TOKENS =
             new ThermalPageHandle.GeometryResyncToken[0];
-    public static final PageContinuation[] NO_CONTINUATIONS =
-            new PageContinuation[0];
+    public static final BrickResidency[] NO_RESIDENCY_UPDATES =
+            new BrickResidency[0];
 
     public enum Status {
         COMPLETED,
@@ -36,7 +36,7 @@ public record ThermalCompletion(
         Objects.requireNonNull(status, "status");
         Objects.requireNonNull(phaseRequests, "phaseRequests");
         Objects.requireNonNull(committedResyncTokens, "committedResyncTokens");
-        Objects.requireNonNull(continuations, "continuations");
+        Objects.requireNonNull(residencyUpdates, "residencyUpdates");
         boolean failed = status == Status.ENGINE_FAILED;
         if (failed != (failure != null)) {
             throw new IllegalArgumentException(
@@ -44,20 +44,16 @@ public record ThermalCompletion(
         }
     }
 
-    /** Page-scoped continuation publication with exact lifecycle identity. */
-    public record PageContinuation(
+    /** Absolute worker-desired Brick mask for one section. */
+    public record BrickResidency(
             long sectionKey,
             long lifecycleGeneration,
-            long geometryRevision,
-            long topologyGeneration,
-            byte faceMask
+            long desiredBrickMask
     ) {
-        public PageContinuation {
-            if (lifecycleGeneration < 0L || geometryRevision < 0L
-                    || topologyGeneration < 0L
-                    || (Byte.toUnsignedInt(faceMask) & ~0x3f) != 0) {
+        public BrickResidency {
+            if (lifecycleGeneration < -1L) {
                 throw new IllegalArgumentException(
-                        "Page continuation identity is invalid");
+                        "Brick residency identity is invalid");
             }
         }
     }

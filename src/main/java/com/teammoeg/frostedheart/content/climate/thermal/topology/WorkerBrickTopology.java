@@ -16,7 +16,7 @@ final class WorkerBrickTopology {
             ArenaSpan.EMPTY, -1, 0, null,
             PagePublication.PhaseCandidates.EMPTY,
             MaterialPoles.EMPTY, PhaseReservoirs.EMPTY, MaterialContacts.EMPTY,
-            (byte) 0, false, false);
+            false, false);
 
     final ArenaSpan span;
     final int coverageSlot;
@@ -26,7 +26,6 @@ final class WorkerBrickTopology {
     final MaterialPoles materialPoles;
     final PhaseReservoirs phaseReservoirs;
     final MaterialContacts materialContacts;
-    final byte continuationFaceMask;
     final boolean cellsResolved;
     final boolean resolved;
 
@@ -39,7 +38,6 @@ final class WorkerBrickTopology {
             MaterialPoles materialPoles,
             PhaseReservoirs phaseReservoirs,
             MaterialContacts materialContacts,
-            byte continuationFaceMask,
             boolean cellsResolved,
             boolean resolved
     ) {
@@ -51,19 +49,15 @@ final class WorkerBrickTopology {
         this.materialPoles = materialPoles;
         this.phaseReservoirs = phaseReservoirs;
         this.materialContacts = materialContacts;
-        this.continuationFaceMask = continuationFaceMask;
         this.cellsResolved = cellsResolved;
         this.resolved = resolved;
     }
 
-    WorkerBrickTopology withFragmentResult(
-            boolean nextResolved,
-            byte nextContinuationFaceMask
-    ) {
+    WorkerBrickTopology withFragmentResult(boolean nextResolved) {
         return new WorkerBrickTopology(
                 span, coverageSlot, coverageGeneration, mixedGeometry,
                 phaseCandidates, materialPoles, phaseReservoirs,
-                materialContacts, nextContinuationFaceMask, cellsResolved,
+                materialContacts, cellsResolved,
                 nextResolved);
     }
 

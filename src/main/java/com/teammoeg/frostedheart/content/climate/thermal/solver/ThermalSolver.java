@@ -735,9 +735,12 @@ public final class ThermalSolver {
                 throw new IllegalArgumentException(
                         "material edge reserve is invalid");
             }
-            if (expectedFinalSize > resizeThreshold) {
-                rehash(tableCapacity(expectedFinalSize));
-            } else if (used + possibleInsertions > resizeThreshold) {
+            int insertionPeak = Math.addExact(size, possibleInsertions);
+            int requiredSize = Math.max(expectedFinalSize, insertionPeak);
+            if (requiredSize > resizeThreshold) {
+                rehash(tableCapacity(requiredSize));
+            } else if (Math.addExact(used, possibleInsertions)
+                    > resizeThreshold) {
                 rehash(states.length);
             }
         }

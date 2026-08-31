@@ -121,6 +121,15 @@ public class FogModification {
                 float nearPlaneScale = (float) Mth.lerp(scaledDelta, 1.0F, 0.3F * fogDensity);
                 event.scaleNearPlaneDistance(nearPlaneScale);
                 event.scaleFarPlaneDistance(farPlaneScale);
+                if (weatherFrame.valid()
+                        && weatherFrame.ownership() == ClientWeatherFrame.Ownership.CUSTOM) {
+                    float visibility = weatherFrame.cameraSample().visibilityBlocks;
+                    if (Float.isFinite(visibility) && visibility > 0.0F) {
+                        float farPlane = Math.min(event.getFarPlaneDistance(), visibility);
+                        event.setFarPlaneDistance(farPlane);
+                        event.setNearPlaneDistance(Math.min(event.getNearPlaneDistance(), farPlane * 0.2F));
+                    }
+                }
                 event.setCanceled(true);
             }
         }

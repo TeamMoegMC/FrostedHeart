@@ -204,7 +204,9 @@ OVERRIDE -> MAX_HEAT -> MIN_COOL -> ADD_DELTA
 客户端开启、跨 chunk/section 时请求 full snapshot，稳定时按 entity ID 错峰每
 `40` ticks 携带 temperature change ID 和 729-bit Page presence。服务端只在
 presence 改变或 Page 温度跨量化边界时返回 full/delta records；静态状态不发送
-S2C。范围枚举复用 `MinecraftPageManager.pagesByChunk`，只读取已有 coherent
+S2C。QueryPublication 暂时 invalid 或超龄时同样不响应，客户端保留最后有效
+temperature mirror；有效 publication 确认的 Page retirement 仍通过空 full 清除。
+范围枚举复用 `MinecraftPageManager.pagesByChunk`，只读取已有 coherent
 publication，不 admission Page、retain lease 或加载 chunk。客户端写入一张线性
 `GL_R16I 36 x 36 x 36` 纹理，fragment shader 每像素只执行一次 integer texture
 fetch。depth 重建得到的是可见几何表面；采样前沿 camera ray 向摄像机偏移

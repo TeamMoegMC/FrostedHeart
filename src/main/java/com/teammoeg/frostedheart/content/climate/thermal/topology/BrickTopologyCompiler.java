@@ -8,7 +8,7 @@ import com.teammoeg.frostedheart.content.climate.thermal.mesh.PagePublication;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.PageSignatures;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.ThermalBrickCellLayout;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.ThermalCellArena;
-import com.teammoeg.frostedheart.content.climate.thermal.profile.ThermalSignatureCatalog;
+import com.teammoeg.frostedheart.content.climate.thermal.profile.ThermalSignatureTable;
 import com.teammoeg.frostedheart.content.climate.thermal.solver.ThermalFragment;
 
 import net.minecraft.core.SectionPos;
@@ -22,7 +22,7 @@ public final class BrickTopologyCompiler {
     private static final double PATCH_AREA = 1.0D / 16.0D;
 
     private final ThermalCellArena arena;
-    private final ThermalSignatureCatalog signatures;
+    private final ThermalSignatureTable signatures;
     private final ThermalTopologyParameters parameters;
     private final FarFieldSettings farField;
     private final int maximumArenaSlots;
@@ -39,11 +39,10 @@ public final class BrickTopologyCompiler {
     private final PrimitiveTopologyScratch.LongPairDouble farBoundaries =
             new PrimitiveTopologyScratch.LongPairDouble();
     private boolean fragmentResolved;
-    private byte continuationFaceMask;
 
     public BrickTopologyCompiler(
             ThermalCellArena arena,
-            ThermalSignatureCatalog signatures,
+            ThermalSignatureTable signatures,
             MaterialBoundaryRegistry materials,
             ThermalTopologyParameters parameters,
             FarFieldSettings farField,
@@ -155,7 +154,6 @@ public final class BrickTopologyCompiler {
                     material.phaseReservoirs(
                             contacts, allocation, minX, minY, minZ),
                     contacts,
-                    (byte) 0,
                     true,
                     true);
         } catch (RuntimeException | Error failure) {
@@ -172,11 +170,9 @@ public final class BrickTopologyCompiler {
         airPairs.reset();
         farBoundaries.reset();
         fragmentResolved = true;
-        continuationFaceMask = 0;
         WorkerBrickTopology owner = view.brick(page, brickIndex);
         if (!owner.cellsResolved) {
-            return new CompiledFragment(
-                    ThermalFragment.EMPTY, false, (byte) 0);
+            return new CompiledFragment(ThermalFragment.EMPTY, false);
         }
         int minX = brickMinX(page, brickIndex);
         int minY = brickMinY(page, brickIndex);
@@ -206,8 +202,7 @@ public final class BrickTopologyCompiler {
                 freezeFarBoundaries(page.pageSlot));
         return new CompiledFragment(
                 fragment,
-                fragmentResolved && materialOperations.resolved(),
-                continuationFaceMask);
+                fragmentResolved && materialOperations.resolved());
     }
 
     private WorkerBrickTopology unresolved() {
@@ -219,7 +214,6 @@ public final class BrickTopologyCompiler {
                 WorkerBrickTopology.MaterialPoles.EMPTY,
                 WorkerBrickTopology.PhaseReservoirs.EMPTY,
                 WorkerBrickTopology.MaterialContacts.EMPTY,
-                (byte) 0,
                 false, false);
     }
 
@@ -378,16 +372,15 @@ public final class BrickTopologyCompiler {
             ConservativeAirGeometry.Face face,
             TopologyView view
     ) {
-        continuationFaceMask |= (byte) (1 << face.ordinal());
         ComponentBrickCompiler.CompiledBrick mixed = owner.mixedGeometry;
         if (mixed == null) {
             int direct = directSkyColumns(page, brickIndex, face, -1, view)
                     * 16;
-            farBoundaries.add(
-                    owner.coverageSlot, 0L,
-                    farField.conductanceForPatches(direct, true)
-                            + farField.conductanceForPatches(
-                                    256 - direct, false));
+            if (direct != 0) {
+                farBoundaries.add(
+                        owner.coverageSlot, 0L,
+                        farField.conductanceForPatches(direct, true));
+            }
             return;
         }
         for (int port = 0; port < mixed.facePortCount(); port++) {
@@ -400,12 +393,12 @@ public final class BrickTopologyCompiler {
                     page, brickIndex, face,
                     mixed.facePortBlockSlot(port), view) > 0
                     ? patches : 0;
-            farBoundaries.add(
-                    owner.coverageSlot + mixed.facePortComponentId(port),
-                    0L,
-                    farField.conductanceForPatches(direct, true)
-                            + farField.conductanceForPatches(
-                                    patches - direct, false));
+            if (direct != 0) {
+                farBoundaries.add(
+                        owner.coverageSlot + mixed.facePortComponentId(port),
+                        0L,
+                        farField.conductanceForPatches(direct, true));
+            }
         }
     }
 
@@ -506,8 +499,7 @@ public final class BrickTopologyCompiler {
 
     record CompiledFragment(
             ThermalFragment fragment,
-            boolean resolved,
-            byte continuationFaceMask
+            boolean resolved
     ) {
     }
 }

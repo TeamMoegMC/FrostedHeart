@@ -3,8 +3,7 @@ package com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.engi
 
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.MaterialBoundaryRegistry;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.ThermalCellArena;
-import com.teammoeg.frostedheart.content.climate.thermal.profile.ThermalSignatureCatalog;
-import com.teammoeg.frostedheart.content.climate.thermal.profile.ThermalSignatureRegistry;
+import com.teammoeg.frostedheart.content.climate.thermal.profile.ThermalSignatureTable;
 import com.teammoeg.frostedheart.content.climate.thermal.query.QueryPublication;
 import com.teammoeg.frostedheart.content.climate.thermal.runtime.async.ThermalDimensionProcessor;
 import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.message.ThermalCompletion;
@@ -33,6 +32,8 @@ import java.util.Objects;
  * 进入该类。</p>
  */
 public final class ThermalDimensionEngine implements ThermalDimensionProcessor {
+    private static final double FRONTIER_REFINE_HIGH_C = 0.125D;
+    private static final double FRONTIER_RELEASE_LOW_C = 0.0625D;
     private final long dimensionGeneration;
     private final ThermalTopologyParameters parameters;
     private final ThermalDimensionLimits limits;
@@ -57,7 +58,7 @@ public final class ThermalDimensionEngine implements ThermalDimensionProcessor {
             long dimensionGeneration,
             long initialTick,
             ThermalCellArena arena,
-            ThermalSignatureRegistry signatures,
+            ThermalSignatureTable signatures,
             MaterialBoundaryRegistry materials,
             ThermalTopologyParameters parameters,
             FarFieldSettings farField,
@@ -73,9 +74,12 @@ public final class ThermalDimensionEngine implements ThermalDimensionProcessor {
         this.limits = Objects.requireNonNull(limits, "limits");
         this.arena = Objects.requireNonNull(arena, "arena");
         this.queries = Objects.requireNonNull(queries, "queries");
-        ThermalSignatureCatalog catalog = new ThermalSignatureCatalog(
-                Objects.requireNonNull(signatures, "signatures"));
+        ThermalSignatureTable catalog = Objects.requireNonNull(
+                signatures, "signatures");
         pages = new WorkerPageStore(limits.maximumPages());
+        pages.configureHotMaskThresholds(
+                FRONTIER_REFINE_HIGH_C,
+                FRONTIER_RELEASE_LOW_C);
         phases = new PhaseTransitionRuntime(
                 arena, parameters.phaseRequestCapacity());
         solver = new ThermalSolver(
@@ -180,7 +184,16 @@ public final class ThermalDimensionEngine implements ThermalDimensionProcessor {
                 sleepingAtStart && !changed,
                 (batch.sequence() & 1L) != 0L);
         updateSleep(step, changed, timeDegraded);
-        publish(batch, sleepingAtStart && sleeping && !changed);
+        boolean unchangedSleeping = sleepingAtStart && sleeping && !changed;
+        publish(batch, unchangedSleeping);
+        ThermalCompletion.BrickResidency[] residencyUpdates =
+                workLimited || unchangedSleeping
+                ? ThermalCompletion.NO_RESIDENCY_UPDATES
+                : pages.collectResidencyChanges(
+                        arena,
+                        parameters.referenceTemperatureC(),
+                        FRONTIER_REFINE_HIGH_C,
+                        FRONTIER_RELEASE_LOW_C);
 
         lastBatchSequence = batch.sequence();
         lastTargetTick = batch.targetTick();
@@ -189,7 +202,8 @@ public final class ThermalDimensionEngine implements ThermalDimensionProcessor {
                 workLimited
                         ? ThermalCompletion.Status.WORK_LIMITED
                         : ThermalCompletion.Status.COMPLETED,
-                topology);
+                topology,
+                residencyUpdates);
     }
 
     private void validateBatch(ThermalInputBatch batch) {
@@ -251,7 +265,8 @@ public final class ThermalDimensionEngine implements ThermalDimensionProcessor {
                     arena,
                     parameters.referenceTemperatureC(),
                     solver.structuralVersion(),
-                    batch.targetTick());
+                    batch.targetTick(),
+                    pages.hotMaskScratch());
         }
         if (!published) {
             throw new IllegalStateException(
@@ -262,7 +277,8 @@ public final class ThermalDimensionEngine implements ThermalDimensionProcessor {
     private ThermalCompletion completion(
             ThermalInputBatch batch,
             ThermalCompletion.Status status,
-            PreparedTopologyChange topology
+            PreparedTopologyChange topology,
+            ThermalCompletion.BrickResidency[] residencyUpdates
     ) {
         return new ThermalCompletion(
                 dimensionGeneration,
@@ -274,41 +290,13 @@ public final class ThermalDimensionEngine implements ThermalDimensionProcessor {
                 topology == null
                         ? ThermalCompletion.NO_RESYNC_TOKENS
                         : topology.committedResyncTokens,
-                continuations(topology));
-    }
-
-    private static ThermalCompletion.PageContinuation[] continuations(
-            PreparedTopologyChange topology
-    ) {
-        if (topology == null || topology.pageWrites.length == 0) {
-            return ThermalCompletion.NO_CONTINUATIONS;
-        }
-        int count = 0;
-        for (PreparedTopologyChange.PageWrite write : topology.pageWrites) {
-            if (!write.retirement) {
-                count++;
-            }
-        }
-        ThermalCompletion.PageContinuation[] result =
-                new ThermalCompletion.PageContinuation[count];
-        int target = 0;
-        for (PreparedTopologyChange.PageWrite write : topology.pageWrites) {
-            if (write.retirement) {
-                continue;
-            }
-            result[target++] = new ThermalCompletion.PageContinuation(
-                    write.page.handle.sectionKey(),
-                    write.page.handle.lifecycleGeneration(),
-                    write.publication.geometryRevision(),
-                    write.publication.topologyGeneration(),
-                    write.continuationFaceMask);
-        }
-        return result;
+                residencyUpdates);
     }
 
     private static boolean topologyInputPresent(ThermalInputBatch batch) {
         return batch.admissions().length != 0
                 || batch.retirements().length != 0
+                || batch.residencyUpdates().length != 0
                 || !batch.geometry().isEmpty()
                 || batch.environmentUpdates().length != 0;
     }

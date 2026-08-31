@@ -6,9 +6,8 @@ import com.teammoeg.frostedheart.content.climate.data.StateTransitionData;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.MaterialBoundaryRegistry;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.PagePublication;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.ThermalPageHandle;
-import com.teammoeg.frostedheart.content.climate.thermal.profile.minecraft.MinecraftSignatureCapture;
-import com.teammoeg.frostedheart.content.climate.thermal.profile.ResolvedThermalSignature;
-import com.teammoeg.frostedheart.content.climate.thermal.profile.ThermalSignatureRegistry;
+import com.teammoeg.frostedheart.content.climate.thermal.profile.minecraft.MinecraftStateThermalTable;
+import com.teammoeg.frostedheart.content.climate.thermal.profile.ThermalSignatureTable;
 import com.teammoeg.frostedheart.content.climate.thermal.solver.PhaseTransitionRuntime;
 
 import net.minecraft.core.BlockPos;
@@ -32,8 +31,8 @@ public final class MinecraftPhaseController {
 
     private final ServerLevel level;
     private final MinecraftPageManager pages;
-    private final MinecraftSignatureCapture capture;
-    private final ThermalSignatureRegistry signatures;
+    private final MinecraftStateThermalTable states;
+    private final ThermalSignatureTable signatures;
     private final MaterialBoundaryRegistry materials;
     private DimensionInputAccumulator accumulator;
     private final int maximumPerTick;
@@ -43,8 +42,8 @@ public final class MinecraftPhaseController {
     public MinecraftPhaseController(
             ServerLevel level,
             MinecraftPageManager pages,
-            MinecraftSignatureCapture capture,
-            ThermalSignatureRegistry signatures,
+            MinecraftStateThermalTable states,
+            ThermalSignatureTable signatures,
             MaterialBoundaryRegistry materials,
             DimensionInputAccumulator accumulator,
             int maximumPerTick
@@ -55,7 +54,7 @@ public final class MinecraftPhaseController {
         }
         this.level = level;
         this.pages = pages;
-        this.capture = capture;
+        this.states = states;
         this.signatures = signatures;
         this.materials = materials;
         this.accumulator = accumulator;
@@ -130,12 +129,10 @@ public final class MinecraftPhaseController {
                 != MaterialBoundaryRegistry.Model.PHASE_RESERVOIR) {
             return Outcome.REJECTED;
         }
-        int signatureId = capture.resolveSignatureId(
-                request.blockX(), request.blockY(), request.blockZ());
-        ResolvedThermalSignature signature =
-                signatures.signatureOrNull(signatureId);
-        if (signature == null
-                || signature.materialProfileId() != profile.id()) {
+        BlockState state = chunk.getBlockState(position);
+        int signatureId = states.signatureId(state);
+        if (!signatures.valid(signatureId)
+                || signatures.materialProfileId(signatureId) != profile.id()) {
             return Outcome.REJECTED;
         }
         int randomTickSpeed = level.getGameRules().getInt(
@@ -143,7 +140,6 @@ public final class MinecraftPhaseController {
         if (randomTickSpeed <= 0) {
             return Outcome.RETRY;
         }
-        BlockState state = chunk.getBlockState(position);
         return applyRecipe(position, state, profile);
     }
 

@@ -1,7 +1,7 @@
 /* Copyright (c) 2026 TeamMoeg */
 package com.teammoeg.frostedheart.content.climate.thermal.source.minecraft;
 
-import com.teammoeg.frostedheart.content.climate.thermal.profile.ThermalSignatureCatalog;
+import com.teammoeg.frostedheart.content.climate.thermal.profile.ThermalSignatureTable;
 import com.teammoeg.frostedheart.content.climate.thermal.source.EmissionPort;
 import com.teammoeg.frostedheart.content.climate.thermal.source.minecraft.MinecraftPhysicalSourceProfile.Port;
 import com.teammoeg.frostedheart.content.climate.thermal.source.minecraft.MinecraftPhysicalSourceProfile.PortKind;
@@ -28,7 +28,7 @@ import java.util.Objects;
 public final class WorkerPhysicalSourceBindings
         implements ThermalSourceLedger.EventObserver {
     private final WorkerPageStore pages;
-    private final ThermalSignatureCatalog signatures;
+    private final ThermalSignatureTable signatures;
     private final MinecraftPhysicalSourceProfile campfireProfile;
     private final Long2ObjectOpenHashMap<SourceDescriptor> sources =
             new Long2ObjectOpenHashMap<>();
@@ -39,7 +39,7 @@ public final class WorkerPhysicalSourceBindings
 
     public WorkerPhysicalSourceBindings(
             WorkerPageStore pages,
-            ThermalSignatureCatalog signatures,
+            ThermalSignatureTable signatures,
             MinecraftPhysicalSourceProfile campfireProfile
     ) {
         this.pages = pages;

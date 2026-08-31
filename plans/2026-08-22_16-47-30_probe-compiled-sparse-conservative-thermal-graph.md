@@ -1,9 +1,9 @@
 # Frosted Heart — Sparse Thermal Runtime V1 工程实现规格
 
 - Time: `2026-08-22 16:47:30 +08:00`
-- Last revised: `2026-08-26 21:52:36 +08:00`
+- Last revised: `2026-08-31 23:00:17 +08:00`
 - Authors: `Codex; OpenAI; main engineering agent`; independent reviews by `minecraft_geometry_review` and `thermal_runtime_review`; Phase 0/Phase A/Phase B implementation with `phase0a_mutation_spike`, `phase0_writer_census`, `phase0_enabled_mod_census`, `phasea_core_contract`, and `phaseb_face_ownership` (`gpt-5.6-sol`, `ultra`); Phase C, combined Phase D solver/source integration, Phase E PR6, PR7 runtime, PR8 Minecraft input foundation, Phase G physical sources, dormant Phase H material boundaries, Phase I Brick-local phase reservoirs and recipe activation, Phase J radiation, Phase K player/crop/town consumers, Phase L external diagnostics, and the player air/radiation gameplay test connection by the primary engineering agent
-- Status: `in-progress`
+- Status: `superseded`
 - Implementation gate: `Phase 0 and Phase A/B/C/D foundations, Phase E PR6 gate implementation, PR7 runtime correctness, Phase F Minecraft topology/resnapshot/dispatch, Phase G Campfire/Generator/Radiator/Fountain physical sources, dormant Phase H non-phase material boundaries, Phase I Brick-local phase reservoirs, Phase J radiation, Phase K player/crop/town consumers, Phase L external diagnostics, and the three-backend query compositor complete; player air/direct radiation, crop/town publication hits, recipe-compiled hot-side phase transitions, sky-proven FarField, and bounded one-Page underground continuation are connected for in-save testing with natural fallback, while production-like multiplayer evidence, non-phase material calibration, cold-side phase authority, and a real ordinary-machine consumer remain open`
 - Scope: `Frosted Heart 气候、世界温度、玩家环境采样、解析控制场、局部热源、材料相变、地热、消费者迁移与多人服务器运行时`
 - Related: [`docs/climate/README.md`](../docs/climate/README.md), [`world-climate-and-temperature.md`](../docs/climate/world-climate-and-temperature.md), [`player-temperature.md`](../docs/climate/player-temperature.md), [`heat-production-and-network.md`](../docs/climate/heat-production-and-network.md), [`data-lifecycle-and-integration.md`](../docs/climate/data-lifecycle-and-integration.md), `WorldTemperature`, `BlockTempData`, `StateTransitionData`, `PhysicalState`, `SurroundingTemperatureSimulator`, `TemperatureThreadingPool`, `MinecraftThermalInput.AnalyticField`, `MinecraftPhysicalSourceManager`, `GeneratorData`, `HeatNetwork`
@@ -11,6 +11,8 @@
 - Primary implementation target: `Codex / Engineering Agent; Minecraft 多人服务端整合包`
 
 > 本文是交给工程 agent 开始 Phase 0 和 V1 原型的冻结候选规格，不是当前实现行为的依据，也不表示已经批准替换生产温度系统。
+
+> Outcome on `2026-08-31`: this recovered V1 specification is retained as historical architecture evidence and is superseded by [`Thermal Async Runtime And Topology Refactor Plan`](2026-08-28_01-18-39_thermal-async-runtime-topology-refactor.md). In particular, Page-wide physical-source interest, one-Page continuation, non-sky weak FarField, full-Page admission, `4/8/16` LOD, and `STEADY_SOURCE_SLEEP` wording here is not the current implementation plan. The successor plan's `Brick Residency And Source-Independent Propagation Correction` is the sole authority for the next residency/propagation work.
 
 > `2026-08-26` source/dispatch 实现收敛：当前 V1 不再保留没有生产消费者的 source segment history、replay snapshot、ACK/checksum 或 registry-local watermark；`ThermalSourceTimeline` 的有界 command ring 是唯一 source stream cut，`ThermalSourceRegistry` 只保存当前 source/port/binding 状态和四类 route totals，实际能量仍经 `NodePowerAccumulatorArena` 精确积分到唯一 `ThermalCellArena`。同步 gameplay 也不再套 `ThermalRuntimeCoordinator`；`enableDispatch(Executor)` 直接执行 topology apply 与该维度的 `DimensionThermalRuntime.runOne`，latest-only 和 logical writer 仍由 dimension runtime 持有。本文较早章节中的 retained replay、bounded dimension mailbox、fairness/recovery quota 是历史候选设计，已由 [`2026-08-26 runtime convergence plan`](2026-08-26_21-15-44_thermal-runtime-dead-path-and-dispatch-convergence.md) 明确 supersede，不代表当前代码。
 

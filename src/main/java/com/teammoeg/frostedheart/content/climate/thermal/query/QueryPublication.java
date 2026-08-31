@@ -148,6 +148,18 @@ public final class QueryPublication implements AutoCloseable {
             long topologyGeneration,
             long sampleTick
     ) {
+        return publish(
+                arena, referenceTemperatureC,
+                topologyGeneration, sampleTick, null);
+    }
+
+    public synchronized boolean publish(
+            ThermalCellArena arena,
+            double referenceTemperatureC,
+            long topologyGeneration,
+            long sampleTick,
+            HotMaskScratch hotMasks
+    ) {
         if (arena == null) {
             throw new IllegalArgumentException("arena is required");
         }
@@ -172,6 +184,9 @@ public final class QueryPublication implements AutoCloseable {
         long nextTemperatureChangeId = compareInfrared
                 ? Math.incrementExact(temperatureChangeId) : temperatureChangeId;
         boolean infraredChanged = false;
+        if (hotMasks != null) {
+            hotMasks.begin();
+        }
         for (int slot = arena.nextLiveSlot(0);
              slot >= 0;
              slot = arena.nextLiveSlot(slot + 1)) {
@@ -180,6 +195,13 @@ public final class QueryPublication implements AutoCloseable {
             int generation = arena.lifecycleGeneration(slot);
             targetTemperatures[slot] = temperature;
             targetGenerations[slot] = generation;
+            if (hotMasks != null) {
+                int pageSlot = arena.pageSlot(slot);
+                int brick = Math.floorMod(arena.minimum(slot, 0), 16) >>> 2
+                        | (Math.floorMod(arena.minimum(slot, 2), 16) >>> 2) << 2
+                        | (Math.floorMod(arena.minimum(slot, 1), 16) >>> 2) << 4;
+                hotMasks.record(pageSlot, brick, temperature);
+            }
             if (compareInfrared && arena.isAirCell(slot)
                     && (previousGenerations[slot] != generation
                     || quantizedInfrared(previousTemperatures[slot])
@@ -199,6 +221,89 @@ public final class QueryPublication implements AutoCloseable {
         valid = true;
         endWrite();
         return true;
+    }
+
+    /** Reusable Page-slot scratch populated during the existing live-slot pass. */
+    public static final class HotMaskScratch {
+        private final double[] naturalTemperatureC;
+        private long[] previousHotMask;
+        private long[] nextHotMask;
+        private double refineHighC;
+        private double releaseLowC;
+
+        public HotMaskScratch(int maximumPages) {
+            if (maximumPages <= 0) {
+                throw new IllegalArgumentException("maximumPages must be positive");
+            }
+            naturalTemperatureC = new double[maximumPages];
+            previousHotMask = new long[maximumPages];
+            nextHotMask = new long[maximumPages];
+        }
+
+        public void configure(double refineHighC, double releaseLowC) {
+            if (!Double.isFinite(refineHighC)
+                    || !Double.isFinite(releaseLowC)
+                    || refineHighC <= releaseLowC || releaseLowC < 0.0D) {
+                throw new IllegalArgumentException("hot-mask thresholds are invalid");
+            }
+            this.refineHighC = refineHighC;
+            this.releaseLowC = releaseLowC;
+        }
+
+        public void installPage(int pageSlot, double naturalTemperatureC) {
+            requirePageSlot(pageSlot);
+            requireFinite("naturalTemperatureC", naturalTemperatureC);
+            this.naturalTemperatureC[pageSlot] = naturalTemperatureC;
+            previousHotMask[pageSlot] = 0L;
+            nextHotMask[pageSlot] = 0L;
+        }
+
+        public void updateNaturalTemperature(
+                int pageSlot,
+                double naturalTemperatureC
+        ) {
+            requirePageSlot(pageSlot);
+            requireFinite("naturalTemperatureC", naturalTemperatureC);
+            this.naturalTemperatureC[pageSlot] = naturalTemperatureC;
+        }
+
+        public void removePage(int pageSlot) {
+            requirePageSlot(pageSlot);
+            previousHotMask[pageSlot] = 0L;
+            nextHotMask[pageSlot] = 0L;
+        }
+
+        private void begin() {
+            Arrays.fill(nextHotMask, 0L);
+        }
+
+        private void record(int pageSlot, int brick, double temperatureC) {
+            requirePageSlot(pageSlot);
+            long bit = 1L << brick;
+            double threshold = (previousHotMask[pageSlot] & bit) != 0L
+                    ? releaseLowC : refineHighC;
+            if (Math.abs(temperatureC - naturalTemperatureC[pageSlot])
+                    >= threshold) {
+                nextHotMask[pageSlot] |= bit;
+            }
+        }
+
+        public long hotMask(int pageSlot) {
+            requirePageSlot(pageSlot);
+            return nextHotMask[pageSlot];
+        }
+
+        public void finish() {
+            long[] previous = previousHotMask;
+            previousHotMask = nextHotMask;
+            nextHotMask = previous;
+        }
+
+        private void requirePageSlot(int pageSlot) {
+            if (pageSlot < 0 || pageSlot >= naturalTemperatureC.length) {
+                throw new IllegalArgumentException("Page slot is out of range");
+            }
+        }
     }
 
     /**
