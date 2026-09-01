@@ -36,6 +36,7 @@ public final class DormantChunkThermalState {
 
     private final int minimumSectionY;
     private final SectionEntry[] entries;
+    private long[] loadedSourceSupport;
     private long[] cachedDecayTicks;
     private double[] cachedDecayFactors;
     private double[] cachedNaturalTemperatures;
@@ -114,6 +115,7 @@ public final class DormantChunkThermalState {
             if (entry == null || !entry.sourceSustained) {
                 continue;
             }
+            setLoadedSourceSupport(index, true);
             entries[index] = entry.rebase(
                     gameTick,
                     decayFactor(entry.savedGameTick, gameTick, halfLifeSeconds),
@@ -158,12 +160,65 @@ public final class DormantChunkThermalState {
             long sectionKey = net.minecraft.core.SectionPos.asLong(
                     sectionX, minimumSectionY + index, sectionZ);
             boolean next = supported.test(sectionKey);
+            setLoadedSourceSupport(index, next);
             if (entry.sourceSustained != next) {
                 entries[index] = entry.withSourceSustained(next);
                 changed = true;
             }
         }
         return changed;
+    }
+
+    public boolean updateSourceSupport(int sectionY, boolean supported) {
+        int index = sectionY - minimumSectionY;
+        if (index < 0 || index >= entries.length || entries[index] == null) {
+            return false;
+        }
+        setLoadedSourceSupport(index, supported);
+        SectionEntry entry = entries[index];
+        if (entry.sourceSustained == supported) {
+            return false;
+        }
+        entries[index] = entry.withSourceSustained(supported);
+        return true;
+    }
+
+    public boolean sourceSupported(int sectionY) {
+        int index = sectionY - minimumSectionY;
+        if (index < 0 || index >= entries.length || entries[index] == null) {
+            return false;
+        }
+        return entries[index].sourceSustained
+                || loadedSourceSupport != null
+                && (loadedSourceSupport[index >>> 6]
+                & 1L << (index & 63)) != 0L;
+    }
+
+    public long storedBrickMask(int sectionY) {
+        int index = sectionY - minimumSectionY;
+        return index < 0 || index >= entries.length || entries[index] == null
+                ? 0L : entries[index].brickMask;
+    }
+
+    public double brickMeanTemperatureC(
+            int sectionY,
+            int brick,
+            long gameTick,
+            double halfLifeSeconds,
+            double currentNaturalTemperatureC
+    ) {
+        int index = sectionY - minimumSectionY;
+        if (index < 0 || index >= entries.length
+                || brick < 0 || brick >= BRICKS
+                || entries[index] == null
+                || !entries[index].hasBrick(brick)) {
+            return Double.NaN;
+        }
+        SectionEntry entry = entries[index];
+        return entry.meanTemperatureC(
+                brick,
+                currentNaturalTemperatureC,
+                decayFactor(entry.savedGameTick, gameTick, halfLifeSeconds));
     }
 
     public double sample(
@@ -253,6 +308,21 @@ public final class DormantChunkThermalState {
     private void clearDecayCache(int index) {
         if (cachedDecayTicks != null) {
             cachedDecayTicks[index] = Long.MIN_VALUE;
+        }
+    }
+
+    private void setLoadedSourceSupport(int index, boolean supported) {
+        if (loadedSourceSupport == null) {
+            if (!supported) {
+                return;
+            }
+            loadedSourceSupport = new long[(entries.length + 63) >>> 6];
+        }
+        long bit = 1L << (index & 63);
+        if (supported) {
+            loadedSourceSupport[index >>> 6] |= bit;
+        } else {
+            loadedSourceSupport[index >>> 6] &= ~bit;
         }
     }
 

@@ -74,7 +74,7 @@ public final class PhaseTransitionRuntime {
         return arena == candidate;
     }
 
-    /** Applies one conservative Air-to-phase contact and offers a request if ready. */
+    /** Applies one conservative Air/phase contact and offers a request if ready. */
     public boolean applyContact(
             int airSlot,
             int phaseSlot,
@@ -103,8 +103,9 @@ public final class PhaseTransitionRuntime {
             return false;
         }
 
-        double requestedIntoReservoir = -boundaryScratch.energyFromBoundaryJ();
-        if (requestedIntoReservoir > 0.0D) {
+        double energyFromBoundary = boundaryScratch.energyFromBoundaryJ();
+        if (energyFromBoundary < 0.0D) {
+            double requestedIntoReservoir = -energyFromBoundary;
             double remaining = Math.max(
                     0.0D,
                     arena.phaseMaximumEnergyJ(phaseSlot) - arena.enthalpyJ(phaseSlot));
@@ -115,6 +116,17 @@ public final class PhaseTransitionRuntime {
             if (accepted > 0.0D) {
                 arena.addEnthalpyJ(airSlot, -accepted);
                 arena.addEnthalpyJ(phaseSlot, accepted);
+            }
+        } else if (energyFromBoundary > 0.0D) {
+            double available = Math.max(
+                    0.0D, arena.phaseAvailableEnergyJ(phaseSlot));
+            double released = Math.min(energyFromBoundary, available);
+            if (!Double.isFinite(released)) {
+                return false;
+            }
+            if (released > 0.0D) {
+                arena.addEnthalpyJ(airSlot, released);
+                arena.addEnthalpyJ(phaseSlot, -released);
             }
         }
         reserveOrRetry(phaseSlot);

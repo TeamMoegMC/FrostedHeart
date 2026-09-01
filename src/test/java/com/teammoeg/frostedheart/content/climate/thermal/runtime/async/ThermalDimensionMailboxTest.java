@@ -17,6 +17,7 @@ import java.util.concurrent.TimeUnit;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class ThermalDimensionMailboxTest {
@@ -97,8 +98,31 @@ class ThermalDimensionMailboxTest {
         assertEquals(ThermalCompletion.Status.ENGINE_FAILED,
                 completion.status());
         assertNotNull(completion.failure());
+        assertEquals(0, processor.closeCalls);
         mailbox.acknowledgeCompletion(1L);
         assertTrue(processor.closed.await(2L, TimeUnit.SECONDS));
+    }
+
+    @Test
+    void terminalCloseFailureStillReleasesMailboxOwnership() throws Exception {
+        ThermalWorkerPool pool = ThermalWorkerPool.startShared();
+        FakeProcessor processor = new FakeProcessor(false);
+        processor.fail = true;
+        processor.failClose = true;
+        ThermalDimensionMailbox mailbox = new ThermalDimensionMailbox(
+                pool, processor);
+        ThermalInputBatch batch = ThermalRuntimeTestFixtures.batch(
+                1L, 0L,
+                ThermalInputBatch.NO_ADMISSIONS,
+                ThermalInputBatch.NO_RETIREMENTS,
+                ResolvedGeometryBatch.EMPTY);
+
+        assertTrue(mailbox.submit(batch));
+        ThermalCompletion completion = awaitCompletion(mailbox);
+        assertThrows(IllegalStateException.class, () ->
+                mailbox.acknowledgeCompletion(completion.batchSequence()));
+        assertTrue(processor.closed.await(2L, TimeUnit.SECONDS));
+        assertFalse(mailbox.submit(batch));
     }
 
     private static ThermalCompletion awaitCompletion(
@@ -122,6 +146,7 @@ class ThermalDimensionMailboxTest {
         private final CountDownLatch closed = new CountDownLatch(1);
         private final boolean block;
         private boolean fail;
+        private boolean failClose;
         private int closeCalls;
 
         private FakeProcessor(boolean block) {
@@ -153,6 +178,9 @@ class ThermalDimensionMailboxTest {
         public void close() {
             closeCalls++;
             closed.countDown();
+            if (failClose) {
+                throw new IllegalStateException("test close failure");
+            }
         }
     }
 }

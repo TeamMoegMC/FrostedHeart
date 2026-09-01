@@ -1,7 +1,7 @@
 # 红外视野实际温度场最小增量实现计划
 
 - Time: `2026-08-29 18:38:09 +0800`
-- Last revised: `2026-08-31 23:00:17 +0800`
+- Last revised: `2026-09-01 21:20:55 +08:00`
 - Authors: `TeamMoeg; Codex (GPT-5, original architecture and final minimal-increment revision)`
 - Status: `in-progress`
 - Scope: `InfraredViewRenderer`, `infrared_view.fsh`, existing infrared packets, `MinecraftThermalInput`, `MinecraftPageManager`, `PagePublication`, `QueryPublication`
@@ -134,6 +134,14 @@ presence 才清除。
 复杂度为 `O(81 + actual Page entries)`，不增加新索引、cache 或 Page admission。
 
 ### D2 One Actual Temperature Per Thermal Brick
+
+> Superseded on `2026-09-01`: D2-D5, D7-D8, the old Explicit Non-Goals,
+> Complexity/Implementation/Validation sections, and the old Revision
+> Outcome/Outcome describe the implemented Brick-representative protocol but no
+> longer define the next implementation. They are retained as investigation
+> history only. D1 Page enumeration, D6 40-tick staggering, and the
+> cross-system residency boundary remain valid. The authoritative correction is
+> `Block-Resolved Actual Air-Cell Correction` below.
 
 一个 Page 没有单一温度。Page 内有 64 个 `4 x 4 x 4` thermal Bricks，不同 Brick
 可以属于不同空气区域并具有不同温度。每个 Page record 因此固定发送 64 个 Brick
@@ -543,3 +551,393 @@ contract，并只恢复原 3D texture binding。
 验证结果：Java 17 production/test/GameTest source 编译通过；thermal + infrared
 codec JUnit `103/103`；Forge GameTest `14/14`。post-fix live toggle 和目标负载
 JFR 因窗口自动化被用户中止而尚未执行，完成后再将状态改为 `completed`。
+
+## Block-Resolved Actual Air-Cell Correction
+
+- Time: `2026-09-01 16:46:23 +08:00`
+- Status: `ready; implementation pending`
+- Precedence: this section supersedes every Brick-representative temperature,
+  changed-Page-only payload, presence-mismatch full rebuild, fixed 65-short Page
+  record, `36^3` texture, and matching cost/validation rule above.
+
+### Confirmed Defect And Correctness Contract
+
+The current mixed-Brick encoder chooses one representative Air slot and paints
+the entire `4 x 4 x 4` Brick with that value. When a wall inside one Brick
+separates two Air components, the solver and point query own two temperatures
+but infrared discards one. This is a correctness defect, not a filtering issue.
+
+The corrected first implementation has this exact semantic:
+
+> One client texel represents one world block position. The server resolves the
+> center of that position through the immutable `PagePublication` topology and
+> writes the temperature of the resulting actual `QueryPublication` Air slot.
+> A full-block wall inside one Brick must therefore display different Air-cell
+> temperatures on its two sides.
+
+This is block-position exact, not arbitrary sub-block component exact. A stair,
+door, fence, or other shape may contain multiple Air components inside one
+block; the block-center sample represents only the component containing that
+center. Arbitrary quarter-microcell accuracy would require a client component
+topology/atlas or a much denser texture and is explicitly outside this minimal
+implementation. The implementation and docs must not call the result
+component-exact without that qualification.
+
+Brick remains only the capture/residency/topology and wire-record address. It no
+longer defines rendering resolution. This correction does not change solver
+cells, source binding, sparse residency, cross-section propagation, or the
+20-tick transport step. `airMixingWPerBlockK` calibration remains owned by the
+thermal runtime plan and must be benchmarked separately.
+
+### Existing Dirty Events, Minimal Retained History
+
+Normal delta must send changed Bricks only. Existing dirty information is the
+event source and must be reused:
+
+- `replacementMask`, `cellReplacementMask`, and exact changed Brick indexes
+  stamp topology/publication changes;
+- the existing infrared-active `QueryPublication.publish` live-slot comparison
+  stamps quantized temperature changes using the already computed
+  `(pageSlot, brickIndex)`;
+- admission/new lifecycle stamps every Brick whose old client contents must be
+  overwritten;
+- retirement remains Page presence state.
+
+Those masks are cut-local and cannot answer an arbitrarily delayed stateless
+client after the commit scratch is cleared. Do not duplicate temperatures or
+add a dirty-history ring. Retain only the last worker batch epoch for each Page
+and Brick:
+
+```text
+int[maximumPages]      pageChangeEpochs
+int[maximumPages * 64] brickChangeEpochs
+```
+
+The worker batch sequence is the epoch. Every topology and temperature change
+from one processed batch stamps the same epoch; it does not increment once per
+Page. A request carries the last accepted epoch. Page epoch is the O(1) first
+level, and only a changed Page scans its 64 Brick epochs:
+
+```text
+pageChangeEpoch <= clientEpoch       -> skip Page
+brickChangeEpoch > clientEpoch       -> encode current Brick
+```
+
+The epoch arrays are history indexes, not a second dirty authority. They add no
+cell traversal and support clients delayed by any number of publications. A new
+engine generation, infrared reactivation, or the practically unreachable
+nonnegative-int epoch boundary clears the arrays and forces one full response.
+At one normal batch per second the int domain lasts about 68 years.
+
+Raw fixed memory at `maximumPages = 3,200`:
+
+```text
+Page epochs:    3,200 * 4      = 12,800 bytes
+Brick epochs:   3,200 * 64 * 4 = 819,200 bytes
+combined:                         832,000 bytes ~= 0.794 MiB/dimension
+```
+
+Charge both arrays to the existing dimension/server memory budget. Do not add
+per-player masks, observers, revision histories, packet caches, or a second
+temperature buffer.
+
+### Presence Delta And Full Boundaries
+
+Keep the existing client-carried twelve presence words. With an unchanged
+center, presence mismatch is a Page lifecycle delta rather than a reason to
+clear all `9^3` Pages:
+
+```text
+added   = currentPresence & ~knownPresence
+removed = knownPresence & ~currentPresence
+```
+
+- Clear each removed Page's `16^3` client texture region.
+- Encode every currently valid Brick for each added Page.
+- For Pages present on both sides, encode only Bricks newer than the client
+  epoch.
+- Replace the client's presence words only after the response is accepted.
+
+A full-view rebuild remains necessary only for first open, center chunk/eye
+section change, dimension/engine generation change, infrared tracking
+reactivation, epoch reset, or explicit client invalidation. A temporarily
+invalid/over-age publication still produces no response and preserves the
+client's last coherent mirror.
+
+Same-section lifecycle replacement may leave the Page presence bit set. It must
+stamp all 64 Brick epochs so current INVALID/valid records overwrite every old
+Brick. Page-slot reuse is server-internal and never enters local client indexes.
+
+### Changed-Brick Wire Format
+
+Reuse the two registered packet classes. C2S keeps request ID, force-full,
+client epoch, and twelve presence words. S2C carries request/center/current
+epoch, full/presence flags, current presence when needed, and one flat encoded
+Brick payload.
+
+Pack Page and Brick identity into one unsigned short:
+
+```text
+localBrickIndex = localPageIndex * 64 + brickIndex
+range = 0..46,655
+```
+
+After resolving the 64 world-block centers of a Brick, quantize each actual Air
+slot temperature to the existing signed quarter-degree short and use one of
+four packet-local modes:
+
+| Mode | Payload | Purpose |
+|---|---|---|
+| `INVALID` | none | delta clears a Brick with no displayable Air |
+| `UNIFORM` | one short | all 64 positions have the same encoded value |
+| `INDEXED` | unique shorts plus 64 packed indexes | repeated actual Air-cell values |
+| `RAW` | 64 shorts | dictionary encoding is not smaller |
+
+`INDEXED` builds a dictionary from the final encoded shorts, including invalid
+when present. Use the existing Minecraft bit-storage convention for the 64
+indexes. Select it only when its complete encoded byte count is smaller than
+RAW, so compression can never expand a record. It is one-response scratch, not
+a retained component dictionary or cache.
+
+For a full response, clear the client mirror first and omit all-INVALID Brick
+records. For a delta, encode an explicit INVALID record when a previously
+displayable Brick becomes invalid. One added Page may likewise omit invalid
+Bricks because the client clears that Page before applying its records.
+
+The server freezes the immutable `PagePublication` references used by one
+response, writes records into one dimension-owned geometrically grown primitive
+byte scratch, validates the `InfraredReadCursor` once, and then creates one
+exact owned packet `byte[]`. It creates no Page/Brick record objects or
+per-record arrays. Query/publication validation failure discards the response
+before packet allocation where possible and retries on the next normal poll.
+
+### Structural Packet Bound
+
+There are at most `729 * 64 = 46,656` local Brick addresses and the dimension
+has at most `65,536` live cells. Invalid block positions may add one dictionary
+value without consuming a live cell, so the bound must combine both limits
+rather than assume one uniform component count.
+
+```text
+46,656 one-cell mixed Bricks with invalid positions:
+  record = 2 local ID + 1 mode + 1 dictionary count
+         + 8 packed-index bytes + 4 dictionary bytes
+         = 16 bytes
+  base = 46,656 * 16 = 746,496 bytes
+
+remaining live-cell budget = 65,536 - 46,656 = 18,880
+the largest per-extra-cell record increase is 10 bytes
+  extra = 18,880 * 10 = 188,800 bytes
+
+maximum encoded Brick payload = 935,296 bytes ~= 0.892 MiB
+```
+
+Other dictionary sizes or RAW mode do not exceed that mixed allocation. Header,
+epoch, flags, and optional presence words must be included by the codec test;
+the completed packet must remain below the existing 1 MiB transport boundary.
+Add no packet fragmentation, continuation, compression library, or frame
+assembly. If the actual codec cannot prove the complete bound with margin, this
+wire format is rejected rather than relying on the comparison estimate.
+
+### Server Encoding Cost
+
+Page enumeration remains D1 `O(81 + actual entries)`. Page/Brick epoch checks
+occur only for a valid active infrared snapshot:
+
+```text
+unchanged Page: O(1)
+changed Page:   64 int comparisons
+regular Brick: one QueryPublication slot read
+mixed Brick:   64 existing resolveAirPoint mappings
+               plus one read per unique referenced Air slot
+```
+
+Mixed encoding uses fixed caller-owned arrays for 64 resolved slots, encoded
+values, dictionary values, and indexes. It reads no BlockState, section, chunk,
+heightmap, source, or solver state and never creates residency. Temperature
+change detection remains fused into the existing live-slot publication pass.
+
+Expected retained server overhead is approximately:
+
+```text
+Page/Brick epoch arrays       0.794 MiB/dimension
+largest retained encode scratch <= complete bounded payload (~0.90 MiB)
+small Page-publication/sampling scratch
+```
+
+The exact packet byte array is transient ownership passed to networking. No
+per-player retained server payload exists.
+
+### Block-Resolution Client Texture
+
+Replace the `36^3` Brick texture with one `144^3` block texture. Keep one
+persistent direct `ShortBuffer` as the CPU mirror and remove the parallel heap
+`short[]`. Raw fixed storage is:
+
+```text
+144^3 = 2,985,984 texels
+R16I GPU texture          = 5,971,968 bytes ~= 5.70 MiB
+direct ShortBuffer mirror = 5,971,968 bytes ~= 5.70 MiB
+Page upload scratch       = 4,096 shorts = 8 KiB
+combined                  ~= 11.40 MiB/client
+```
+
+Decode Brick records directly into the mirror. Track affected local Pages with
+one fixed twelve-long upload mask. Delta uploads copy each affected Page from
+the mirror into the 8 KiB scratch and perform one `16^3` `glTexSubImage3D`;
+they never upload the complete texture. A full response performs one complete
+texture upload.
+
+The shader retains one integer `texelFetch` per valid pixel:
+
+```glsl
+ivec3 temperatureTexel = ivec3(floor(
+    temperatureCameraOffset + relativeWorldPos.xyz * surfaceScale));
+```
+
+Compute `temperatureCameraOffset = cameraPosition - textureOrigin` in CPU double
+precision before converting that small relative value to a float uniform. Keep
+the existing camera-relative surface nudge, depth-source ownership,
+Oculus/Embeddium unpack-state reset, scan sphere, and original-texture color
+composition unless a separate rendering defect proves a change. Do not add
+linear filtering, multiple temperature fetches, mipmaps, toroidal texture
+movement, or a client topology compiler.
+
+On presence removal/addition, clear only the affected `16^3` Page region before
+applying new records. On center change/full, clear the complete direct mirror so
+old local indexes cannot leak into the new origin.
+
+### Implementation Order
+
+1. Replace dimension/Page long temperature change IDs with batch-epoch Page and
+   Brick int arrays in `QueryPublication`; include them in memory reservation
+   and expose coherent cursor comparisons.
+2. Feed exact topology changed-Brick masks into the same epoch path and stamp
+   quantized Air temperature changes inside the existing live-slot loop.
+3. Replace full-on-presence-mismatch with added/removed Page delta calculation;
+   retain full only at the named center/generation/reactivation boundaries.
+4. Replace the fixed Page `short[]` snapshot with one flat changed-Brick byte
+   payload and INVALID/UNIFORM/INDEXED/RAW encoder using reusable scratch.
+5. Modify the existing request/response packet codec in place; add no packet
+   registration, packet family, observer, subscription, or framing protocol.
+6. Replace the client Brick mirror/texture with one block-resolution direct
+   mirror, one `R16I 144^3` texture, one Page upload scratch, and Page-local
+   subimage uploads.
+7. Update the shader coordinate scale from one texel per four blocks to one per
+   block while preserving one fetch and existing depth compatibility.
+8. Delete the old representative mixed-slot voting scratch, fixed 65-short Page
+   record, Page-wide delta encoder, complete-delta texture upload, and superseded
+   tests/docs in the same implementation.
+
+### Required Validation
+
+Automated correctness:
+
+- A full-block wall inside one Brick has two solver Air cells and produces
+  different left/right block texels from one response.
+- A regular one-cell Brick uses UNIFORM; all-invalid uses INVALID; a two-value
+  wall uses INDEXED; incompressible values use RAW; every codec round-trip is
+  byte-deterministic.
+- INDEXED is selected only when smaller than RAW, and the exact maximum packet
+  including headers remains below the transport cap.
+- Temperature-only changes stamp only their Brick epoch; topology masks stamp
+  only affected Bricks except lifecycle/full invalidation.
+- Arbitrarily old client epochs still receive every changed Brick without a
+  history ring or per-player state.
+- Added/removed Page presence clears or initializes only that Page; unchanged
+  Pages retain their texture; same-section lifecycle replacement overwrites all
+  64 Bricks.
+- Quantized unchanged temperature and unchanged presence produce zero S2C.
+  Changed data outside the view also produces zero S2C; the client keeps its
+  older epoch, which remains sufficient to select any later visible changes.
+- Negative coordinates, all Page/Brick/block edges, center changes, quick
+  movement, dimension/engine restart, stale publication, and request-ID races
+  preserve coherent mapping.
+
+Rendering and compatibility:
+
+- Full and Page-delta uploads render correctly on Vanilla and Oculus/Embeddium;
+  PBO and pixel-store state remain valid.
+- Wall sides remain different while moving or crouching; no old-origin texels
+  survive a full response.
+- Shader remains one temperature texture fetch and does not introduce source,
+  Page-record, or component loops.
+- The documented sub-block limitation is tested with a partial-shape fixture so
+  it cannot be mistaken for component-exact behavior.
+
+Performance gates, measured without production counters:
+
+- 100 non-overlapping infrared clients retain 40-tick entity-ID staggering and
+  static zero S2C.
+- Record main-thread snapshot/encode P99, actual Brick mode counts, bytes per
+  response, aggregate S2C, retained epoch/scratch heap, and packet allocation.
+- Measure client full response decode/upload and changed-Page delta frame-time
+  impact on the target low-end renderer path.
+- Run the same workload with the separately measured
+  `airMixingWPerBlockK = 384` candidate because faster propagation can increase
+  resident and quantized-changing Bricks. Do not accept either tuning or this
+  protocol from the current `96` workload alone.
+
+### Documentation Impact And Outcome
+
+Implementation must update the climate living docs from Brick-representative to
+block-position actual Air-cell temperature, record Page/Brick batch epochs,
+presence delta, packet modes, client texture ownership, exact costs, and the
+sub-block limitation. Append a new diary entry with final tests and measured
+results; do not rewrite the prior Brick-protocol history.
+
+Current outcome: the production implementation now uses Page/Brick epochs,
+presence deltas, changed-Brick modes, block-center Air-cell sampling, a single
+direct `144^3 R16I` client mirror, and Page-local delta uploads. Production,
+JUnit, and GameTest sources compile, focused thermal lifecycle suites pass
+`32/32`, and the final Forge run passes `16/16` required GameTests. The old
+private-state reflection test was deleted because it did not execute rendering;
+the exact structural payload remains `935,296` bytes and the encoded response
+including headers remains below 1 MiB. Live Vanilla/Oculus rendering
+and target-load JFR remain the final external gates, so the plan stays
+`in-progress` rather than claiming those measurements.
+
+The implementation review correction keeps center/full polling forced until a
+matching response installs the new origin, computes the shader camera offset in
+CPU double precision before float conversion, and writes known INVALID/UNIFORM
+records directly. Omitting an invalid record is a successful full/added-Page
+operation rather than a response failure. These corrections add no protocol
+field, cache, observer, texture, or render pass.
+
+The response-center correction rejects a delta unless its server-selected
+center matches the installed texture center. A full response may install a new
+center, and every accepted response updates the existing requested-center
+baseline so the next client tick detects any later movement. This uses only the
+existing center and availability fields; no center was added to C2S.
+
+The retained-memory correction keeps the existing fixed budget and wire
+protocol but allocates dimension Page/Brick epoch arrays only on the first
+infrared request. The client class no longer allocates or clears its 5.70 MiB
+direct mirror during ordinary client startup; the mirror and an all-INVALID GPU
+texture are created on the first actual infrared render, while the 8 KiB upload
+scratch is created on the first Page delta, then all are reused. Initialization
+therefore does not wait for a server response. A later section
+move clears `deltaBaselineValid` for protocol purposes but continues
+rendering the old texture/origin until full replacement, avoiding a one-frame
+pass disappearance. Reset detaches static GPU handles before scheduling deletion
+of captured old resources, so delayed cleanup cannot delete a newer texture.
+User-owned live and load validation remains pending.
+
+The initialization retry correction separates an unresolved full request from
+the stable 40-tick poll. A missing full response now retries after an
+entity-ID-spread `41..59` ticks while suppressing the stable poll; the retry
+delays deliberately exclude multiples of the 20-tick thermal cut. This breaks
+the previously permanent Page/Query publication cadence collision without a
+server observer, response cache, immediate re-encode, extra packet field, or
+normal steady-state request.
+
+The dormant-neighbor correction adds no wire field or stable-poll work. A full
+response may append existing `UNIFORM` records containing source-supported
+dormant Brick means. These temporary Brick-resolution records do not set Page
+presence, participate in delta epochs, admit topology, or load chunks. Real Page
+admission clears/replaces the region through the existing added-Page path with
+block-position exact values.
+The consumed disk-support flag is retained in a lazy transient section bitset
+until live source discovery replaces it. Full encoding reads this O(1) hint,
+not the not-yet-populated source index, so login ordering cannot omit the
+neighbor and leave the client on a permanently incomplete baseline.

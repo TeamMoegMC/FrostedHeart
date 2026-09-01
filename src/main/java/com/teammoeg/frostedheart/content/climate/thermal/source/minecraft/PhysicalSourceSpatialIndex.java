@@ -275,6 +275,8 @@ public final class PhysicalSourceSpatialIndex
                         flag(slot, DESIRED_ENABLED));
                 continue;
             }
+            boolean supportedBefore = offeredPowerW[slot] > 0.0D
+                    && flag(slot, OFFERED_ENABLED);
             if (Double.compare(
                     offeredPowerW[slot], desiredPowerW[slot]) != 0) {
                 accumulator.changeSourcePower(
@@ -290,6 +292,11 @@ public final class PhysicalSourceSpatialIndex
                 setFlag(
                         slot, OFFERED_ENABLED,
                         flag(slot, DESIRED_ENABLED));
+            }
+            boolean supportedAfter = desiredPowerW[slot] > 0.0D
+                    && flag(slot, DESIRED_ENABLED);
+            if (supportedBefore != supportedAfter) {
+                refreshDormantTargets(slot);
             }
         }
         dirtyOrder.clear();
@@ -562,6 +569,7 @@ public final class PhysicalSourceSpatialIndex
                     sectionKey, ignored -> new IntOpenHashSet()).add(slot);
         }
         targetCount[slot] = (byte) write;
+        refreshDormantTargets(slot);
     }
 
     private void releaseTargets(int slot) {
@@ -585,6 +593,33 @@ public final class PhysicalSourceSpatialIndex
             targetBricks[first + index] = 0;
         }
         targetCount[slot] = 0;
+    }
+
+    private void refreshDormantTargets(int slot) {
+        int first = slot * MAX_PORTS;
+        for (int index = 0;
+             index < Byte.toUnsignedInt(targetCount[slot]);
+             index++) {
+            refreshDormantClosure(targetSections[first + index]);
+        }
+    }
+
+    private void refreshDormantClosure(long targetSection) {
+        int x = SectionPos.x(targetSection);
+        int y = SectionPos.y(targetSection);
+        int z = SectionPos.z(targetSection);
+        refreshDormantSection(targetSection);
+        refreshDormantSection(SectionPos.asLong(x - 1, y, z));
+        refreshDormantSection(SectionPos.asLong(x + 1, y, z));
+        refreshDormantSection(SectionPos.asLong(x, y - 1, z));
+        refreshDormantSection(SectionPos.asLong(x, y + 1, z));
+        refreshDormantSection(SectionPos.asLong(x, y, z - 1));
+        refreshDormantSection(SectionPos.asLong(x, y, z + 1));
+    }
+
+    private void refreshDormantSection(long sectionKey) {
+        pages.updateDormantSourceSupport(
+                sectionKey, supportsDormantSection(sectionKey));
     }
 
     private void indexOrigin(int slot) {

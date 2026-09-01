@@ -36,7 +36,8 @@ public final class ThermalRuntimeTestFixtures {
                         java.util.List.of(), java.util.List.of()),
                 airId,
                 solidId,
-                new FarFieldSettings(1.0D, 1.0D, 16.0D));
+                new FarFieldSettings(1.0D, 1.0D, 16.0D),
+                1.0D);
     }
 
     static EngineFixture engine(
@@ -50,7 +51,24 @@ public final class ThermalRuntimeTestFixtures {
                 materials,
                 airId,
                 solidId,
-                new FarFieldSettings(1.0D, 1.0D, 16.0D));
+                new FarFieldSettings(1.0D, 1.0D, 16.0D),
+                1.0D);
+    }
+
+    static EngineFixture engine(
+            ThermalSignatureTable signatures,
+            MaterialBoundaryRegistry materials,
+            int airId,
+            int solidId,
+            double airMixingWPerBlockK
+    ) {
+        return engine(
+                signatures,
+                materials,
+                airId,
+                solidId,
+                new FarFieldSettings(1.0D, 1.0D, 16.0D),
+                airMixingWPerBlockK);
     }
 
     private static EngineFixture engine(
@@ -58,7 +76,8 @@ public final class ThermalRuntimeTestFixtures {
             MaterialBoundaryRegistry materials,
             int airId,
             int solidId,
-            FarFieldSettings farField
+            FarFieldSettings farField,
+            double airMixingWPerBlockK
     ) {
         ThermalCellArena arena = new ThermalCellArena(256);
         QueryPublication publication = QueryPublication.tryCreate(
@@ -75,7 +94,7 @@ public final class ThermalRuntimeTestFixtures {
                 materials,
                 new ThermalTopologyParameters(
                         64, 1_200.0D,
-                        0.0D, 1.0D, 0.25D,
+                        0.0D, airMixingWPerBlockK, 0.25D,
                         new BuoyancyConductance.Parameters(0.25D, 4.0D, 10.0D),
                         8, 4),
                 farField,

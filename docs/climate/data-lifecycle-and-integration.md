@@ -99,8 +99,14 @@ no receiver cache or section witness.
 `ThermalDimensionMailbox` serializes one batch per dimension. The worker calls
 only `ThermalDimensionEngine.process(ThermalInputBatch)`. A normal completion
 is held until the main thread applies absolute Brick residency/resync and phase request
-payloads and explicitly ACKs the matching sequence. A terminal failure closes
-the engine and starts a new generation from complete current captures.
+payloads and explicitly ACKs the matching sequence. A terminal failure does not
+close publications in the worker catch path. The main thread first checkpoints the
+quiescent engine's last coherent cut, then its terminal ACK closes that engine
+before a replacement generation reuses the Page handles. Query preparation keeps
+the previous envelope readable until its final exchange; if Page references were
+already exchanged when preparation fails, they alone are restored to that prior
+cut. A processor-close exception is logged after mailbox ownership is released,
+so `inFlight` is cleared and replacement still proceeds.
 
 ## Reload And Restart
 
@@ -116,6 +122,15 @@ The replacement worker receives an immutable `DormantAirCut`; no NBT round trip
 or retained old arena is required. Slot generation checks still prevent stale
 arena access.
 
+Every successful Page capture immediately derives its one-shot disk support bit
+from the current physical-source target index. Source target/power/enabled
+changes update only the target section and six face neighbors that already own
+a loaded dormant entry. This avoids an active-Page-only stop scan and adds no
+loaded-world traversal or retained chunk index.
+Chunk activation also retains the consumed disk-support decision in one lazy
+primitive bitset until live source discovery updates it, so an initial infrared
+full response cannot race campfire/block-entity registration.
+
 ## Network And Consumers
 
 `FHBodyDataSyncPacket` carries only the quantized player-facing environment and
@@ -127,16 +142,49 @@ and are never placed in the body packet.
 
 `FHRequestInfraredViewDataSyncPacket` is a separate client-carried-state poll:
 opening or moving forces a full request; stable clients poll every 40 ticks with
-an entity-ID phase offset, the last temperature change ID, and twelve exact
-presence words. `FHResponseInfraredViewDataSyncPacket` is omitted when neither
-temperature nor presence changed, otherwise it contains one flat array of full
-or changed 64-Brick Page records. The server keeps no per-player infrared
-observer or payload copy. Requests extend one dimension-level tracking window
-to 80 ticks; the window affects query publication only and never retains or
-admits a Page. A temporarily invalid or over-age `QueryPublication` produces no
+an entity-ID phase offset, the last infrared epoch, and twelve exact presence
+words. A center/full request remains full across a missing or superseded response
+until one matching response installs the new texture origin. While waiting, the
+normal 40-tick poll is replaced by one entity-ID-spread retry after 41-59 ticks;
+none of those delays is a multiple of the thermal runtime's 20-tick cut, so a
+transient publication exchange cannot become a permanent cadence collision. A delta is accepted
+only when its server-selected center matches the installed texture center;
+otherwise it is discarded and the next client tick requests a full snapshot.
+A full response may install any server-selected center, which then becomes the
+client's movement-comparison baseline.
+`FHResponseInfraredViewDataSyncPacket` is omitted when the view has no
+changed Brick or Page presence, including when only an out-of-view Page advanced
+the dimension epoch. Otherwise it carries optional current presence plus one
+flat changed-Brick payload using `INVALID`, `UNIFORM`, `INDEXED`, or `RAW` mode.
+`INDEXED` uses `SimpleBitStorage` only when its complete record is smaller than
+RAW. Full and added-Page responses omit all-invalid Bricks because the client
+first clears their target regions; ordinary deltas send explicit INVALID when a
+previous value must be removed. Known invalid and regular-uniform Bricks write
+their wire modes directly; only mixed Bricks build and scan a 64-value dictionary.
+
+The server keeps no per-player infrared observer, payload copy, history ring, or
+temperature duplicate. Requests extend one dimension-level tracking window to
+80 ticks; the window affects query publication only and never retains or admits
+a Page. The dimension's fixed epoch storage is budgeted at runtime creation but
+its arrays are allocated only by the first infrared request. The client's
+`144^3` direct mirror is created by the first actual infrared render, while the
+Page upload scratch is created by the first Page delta; both are then retained
+as bounded reusable allocations. Before the first accepted full response, an
+all-INVALID texture anchored at the player's current section keeps visual
+initialization independent from temporary publication unavailability. World reset
+immediately detaches GPU handles and queues deletion of those captured old
+resources. While a moved client waits for a replacement full response, the old
+texture remains renderable at its old origin; `deltaBaselineValid` controls only
+delta/full protocol eligibility. A temporarily invalid
+or over-age `QueryPublication` produces no
 response, so the client retains its existing temperature mirror until a valid
-rebuild response is available. A valid presence mismatch, including real Page
-retirement, remains authoritative and may send an empty full snapshot.
+rebuild response is available. A valid presence mismatch sends added/removed
+Page delta; full rebuild remains limited to first open, center change,
+reactivation, generation/reset, and explicit invalidation boundaries.
+One full response may additionally encode source-supported dormant Brick means
+through existing `UNIFORM` records. This temporary Brick-resolution bootstrap
+does not enter client presence or normal deltas, admit a Page, or load a chunk;
+real Page admission clears and replaces it with block-position exact data.
 
 The player NBT schema preserves each existing clothing `ItemStackHandler`, its
 complete item NBT, and temperature difficulty. New saves store per-part

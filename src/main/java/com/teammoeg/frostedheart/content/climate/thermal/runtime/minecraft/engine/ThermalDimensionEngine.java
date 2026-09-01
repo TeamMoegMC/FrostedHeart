@@ -153,57 +153,71 @@ public final class ThermalDimensionEngine implements ThermalDimensionProcessor {
 
         if (topology != null) {
             topologyCommitter.commit(topology, pages, arena, solver, phases);
-            sourceBindings.markCommittedSections(
-                    topology.sourceDirtySections);
-            sourceBindings.rebindDirty(sources);
-            topologyCommitter.releaseOldSpans(
-                    topology, arena, solver, sources);
-            for (PreparedTopologyChange.PageWrite write : topology.pageWrites) {
-                if (!write.retirement) {
-                    queries.markInfraredPageChanged(
-                            write.publication.workerPageSlot(),
-                            batch.targetTick());
+        }
+        boolean queryPublished = false;
+        try {
+            if (topology != null) {
+                sourceBindings.markCommittedSections(
+                        topology.sourceDirtySections);
+                sourceBindings.rebindDirty(sources);
+                topologyCommitter.releaseOldSpans(
+                        topology, arena, solver, sources);
+                for (PreparedTopologyChange.PageWrite write
+                        : topology.pageWrites) {
+                    if (!write.retirement
+                            && write.publicationChangedBrickMask != 0L) {
+                        queries.markInfraredBricksChanged(
+                                write.publication.workerPageSlot(),
+                                write.publicationChangedBrickMask,
+                                batch.targetTick());
+                    }
                 }
             }
-        }
 
-        boolean changed = topologyInput
-                || !batch.sourceEvents().isEmpty()
-                || batch.phaseAcks().length != 0
-                || windChanged;
-        boolean sleepingAtStart = sleeping;
-        if (changed || sources.hasActivePowerOrPendingEnergy()) {
-            sleeping = false;
-            stableBatches = 0;
-        }
-        long elapsedTicks = batch.targetTick() - lastTargetTick;
-        boolean timeDegraded = elapsedTicks != 0L
-                && elapsedTicks != ThermalInputBatch.CUT_INTERVAL_TICKS;
-        ThermalSolver.StepStatus step = executeTransport(
-                elapsedTicks,
-                sleepingAtStart && !changed,
-                (batch.sequence() & 1L) != 0L);
-        updateSleep(step, changed, timeDegraded);
-        boolean unchangedSleeping = sleepingAtStart && sleeping && !changed;
-        publish(batch, unchangedSleeping);
-        ThermalCompletion.BrickResidency[] residencyUpdates =
-                workLimited || unchangedSleeping
-                ? ThermalCompletion.NO_RESIDENCY_UPDATES
-                : pages.collectResidencyChanges(
-                        arena,
-                        parameters.referenceTemperatureC(),
-                        FRONTIER_REFINE_HIGH_C,
-                        FRONTIER_RELEASE_LOW_C);
+            boolean changed = topologyInput
+                    || !batch.sourceEvents().isEmpty()
+                    || batch.phaseAcks().length != 0
+                    || windChanged;
+            boolean sleepingAtStart = sleeping;
+            if (changed || sources.hasActivePowerOrPendingEnergy()) {
+                sleeping = false;
+                stableBatches = 0;
+            }
+            long elapsedTicks = batch.targetTick() - lastTargetTick;
+            boolean timeDegraded = elapsedTicks != 0L
+                    && elapsedTicks != ThermalInputBatch.CUT_INTERVAL_TICKS;
+            ThermalSolver.StepStatus step = executeTransport(
+                    elapsedTicks,
+                    sleepingAtStart && !changed,
+                    (batch.sequence() & 1L) != 0L);
+            updateSleep(step, changed, timeDegraded);
+            boolean unchangedSleeping = sleepingAtStart && sleeping && !changed;
+            publish(batch, unchangedSleeping);
+            queryPublished = true;
+            ThermalCompletion.BrickResidency[] residencyUpdates =
+                    workLimited || unchangedSleeping
+                    ? ThermalCompletion.NO_RESIDENCY_UPDATES
+                    : pages.collectResidencyChanges(
+                            arena,
+                            parameters.referenceTemperatureC(),
+                            FRONTIER_REFINE_HIGH_C,
+                            FRONTIER_RELEASE_LOW_C);
 
-        lastBatchSequence = batch.sequence();
-        lastTargetTick = batch.targetTick();
-        return completion(
-                batch,
-                workLimited
-                        ? ThermalCompletion.Status.WORK_LIMITED
-                        : ThermalCompletion.Status.COMPLETED,
-                topology,
-                residencyUpdates);
+            lastBatchSequence = batch.sequence();
+            lastTargetTick = batch.targetTick();
+            return completion(
+                    batch,
+                    workLimited
+                            ? ThermalCompletion.Status.WORK_LIMITED
+                            : ThermalCompletion.Status.COMPLETED,
+                    topology,
+                    residencyUpdates);
+        } catch (RuntimeException | Error failure) {
+            if (topology != null && !queryPublished) {
+                topologyCommitter.restorePagePublications(topology);
+            }
+            throw failure;
+        }
     }
 
     private void validateBatch(ThermalInputBatch batch) {

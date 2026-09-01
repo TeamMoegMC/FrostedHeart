@@ -4,6 +4,7 @@ package com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.engi
 import com.teammoeg.frostedheart.content.climate.thermal.geometry.ConservativeAirGeometry;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.MaterialBoundaryRegistry;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.PagePublication;
+import com.teammoeg.frostedheart.content.climate.thermal.mesh.PageSignatures;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.ThermalPageHandle;
 import com.teammoeg.frostedheart.content.climate.thermal.profile.ResolvedThermalSignature;
 import com.teammoeg.frostedheart.content.climate.thermal.profile.ThermalSignatureTable;
@@ -32,7 +33,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class ThermalDimensionEngineTest {
     @Test
-    void topologyPublicationMarksTheInfraredPageChangeId() {
+    void admissionMarksEveryInfraredBrickInOnePublicationEpoch() {
         ThermalRuntimeTestFixtures.EngineFixture fixture =
                 ThermalRuntimeTestFixtures.engine();
         try {
@@ -52,7 +53,14 @@ class ThermalDimensionEngineTest {
             QueryPublication.InfraredReadCursor cursor =
                     new QueryPublication.InfraredReadCursor();
             assertTrue(fixture.publication().beginInfraredRead(cursor));
-            assertTrue(cursor.pageChangeId(page.workerPageSlot()) > 1L);
+            int epoch = cursor.infraredEpoch();
+            assertTrue(epoch > 1);
+            assertEquals(epoch,
+                    cursor.pageChangeEpoch(page.workerPageSlot()));
+            for (int brick = 0; brick < 64; brick++) {
+                assertEquals(epoch, cursor.brickChangeEpoch(
+                        page.workerPageSlot(), brick));
+            }
         } finally {
             fixture.engine().close();
         }
@@ -82,7 +90,13 @@ class ThermalDimensionEngineTest {
             assertEquals(64, fixture.arena().liveCellCount());
             assertEquals(1L, publication.topologyGeneration());
             assertEquals(0, publication.brickAt(0, 0, 0).coverageSlot());
-            assertEquals(0, completion.residencyUpdates().length);
+            assertEquals(1, completion.residencyUpdates().length);
+            assertEquals(fixture.page().sectionKey(),
+                    completion.residencyUpdates()[0].sectionKey());
+            assertEquals(fixture.page().lifecycleGeneration(),
+                    completion.residencyUpdates()[0].lifecycleGeneration());
+            assertEquals(0L,
+                    completion.residencyUpdates()[0].desiredBrickMask());
         } finally {
             fixture.engine().close();
         }
@@ -155,6 +169,273 @@ class ThermalDimensionEngineTest {
                             ThermalInputBatch.NO_RETIREMENTS,
                             ResolvedGeometryBatch.EMPTY));
             assertEquals(0L, residencyMask(cooled, neighborSection));
+        } finally {
+            fixture.engine().close();
+        }
+    }
+
+    @Test
+    void sourceBrickAtReportedCoordinatesRequestsAllSixOpenNeighbors() {
+        ThermalRuntimeTestFixtures.EngineFixture fixture =
+                ThermalRuntimeTestFixtures.engine();
+        long section = SectionPos.asLong(0, 4, 3);
+        ThermalPageHandle page = new ThermalPageHandle(section, 1L);
+        long ownerBit = 1L << 2;
+        PageSignatures signatures = ThermalTestFixtures.filledPageSignatures(
+                fixture.airId());
+        try {
+            fixture.engine().process(ThermalRuntimeTestFixtures.batch(
+                    1L, 20L,
+                    new ThermalInputBatch.PageAdmission[]{
+                            ThermalRuntimeTestFixtures.admission(
+                                    page, signatures, ownerBit, ownerBit)},
+                    ThermalInputBatch.NO_RETIREMENTS,
+                    ResolvedGeometryBatch.EMPTY));
+            int slot = page.currentPublication()
+                    .brickAt(8, 0, 0).coverageSlot();
+            fixture.arena().setEnthalpyJ(
+                    slot, fixture.arena().capacityJPerK(slot));
+
+            ThermalCompletion completion = fixture.engine().process(
+                    ThermalRuntimeTestFixtures.batch(
+                            2L, 40L,
+                            ThermalInputBatch.NO_ADMISSIONS,
+                            ThermalInputBatch.NO_RETIREMENTS,
+                            ResolvedGeometryBatch.EMPTY));
+
+            long sameSection = ownerBit
+                    | 1L << 1
+                    | 1L << 3
+                    | 1L << 6
+                    | 1L << 18;
+            assertEquals(3, completion.residencyUpdates().length);
+            assertEquals(sameSection, residencyMask(completion, section));
+            assertEquals(1L << 14, residencyMask(
+                    completion, SectionPos.asLong(0, 4, 2)));
+            assertEquals(1L << 50, residencyMask(
+                    completion, SectionPos.asLong(0, 3, 3)));
+        } finally {
+            fixture.engine().close();
+        }
+    }
+
+    @Test
+    void adjacentCampfiresShareOneMixedCellAndHeatEveryOpenNeighbor() {
+        ThermalSignatureTable.Builder signatureBuilder =
+                ThermalSignatureTable.builder();
+        int airId = signatureBuilder.intern(
+                ThermalTestFixtures.fullAirSignature());
+        int solidId = signatureBuilder.intern(
+                ThermalTestFixtures.solidSignature());
+        ThermalSignatureTable signatures = signatureBuilder.build();
+        ThermalRuntimeTestFixtures.EngineFixture fixture =
+                ThermalRuntimeTestFixtures.engine(
+                        signatures,
+                        new MaterialBoundaryRegistry(List.of(), List.of()),
+                        airId,
+                        solidId,
+                        96.0D);
+        long section = SectionPos.asLong(0, 4, 3);
+        ThermalPageHandle page = new ThermalPageHandle(section, 1L);
+        PageSignatures pageSignatures = adjacentCampfireSignatures(
+                signatures, airId, solidId);
+        long ownerBit = 1L << 2;
+        MinecraftPhysicalSourceProfile profile =
+                MinecraftPhysicalSourceProfile.CAMPFIRE;
+        ThermalSourceBatch.Builder sourceEvents =
+                new ThermalSourceBatch.Builder(0L);
+        addCampfire(sourceEvents, 1L, 10, 66, 50, profile);
+        addCampfire(sourceEvents, 2L, 10, 66, 49, profile);
+        try {
+            fixture.engine().process(new ThermalInputBatch(
+                    1L, 1L, 20L,
+                    new ThermalInputBatch.PageAdmission[]{
+                            ThermalRuntimeTestFixtures.admission(
+                                    page, pageSignatures,
+                                    ownerBit, ownerBit)},
+                    ThermalInputBatch.NO_RETIREMENTS,
+                    ThermalInputBatch.NO_RESIDENCY_UPDATES,
+                    ResolvedGeometryBatch.EMPTY,
+                    sourceEvents.buildAndReset(),
+                    ThermalInputBatch.NO_ENVIRONMENT_UPDATES,
+                    ThermalInputBatch.NO_PHASE_ACKS,
+                    Double.NaN));
+
+            ThermalCompletion heated = fixture.engine().process(
+                    ThermalRuntimeTestFixtures.batch(
+                            2L, 40L,
+                            ThermalInputBatch.NO_ADMISSIONS,
+                            ThermalInputBatch.NO_RETIREMENTS,
+                            ResolvedGeometryBatch.EMPTY));
+            PagePublication publication = page.currentPublication();
+            assertNotNull(publication);
+            int sourceSlot = publication.brickAt(8, 0, 0).coverageSlot();
+            assertEquals(1, fixture.arena().liveCellCount());
+            assertEquals(12_800.0D,
+                    fixture.arena().enthalpyJ(sourceSlot), 1.0e-9D);
+
+            long sameSection = ownerBit
+                    | 1L << 1
+                    | 1L << 3
+                    | 1L << 6
+                    | 1L << 18;
+            long negativeZSection = SectionPos.asLong(0, 4, 2);
+            assertEquals(sameSection, residencyMask(heated, section));
+            assertEquals(1L << 14,
+                    residencyMask(heated, negativeZSection));
+            assertFalse(hasResidencyUpdate(
+                    heated, SectionPos.asLong(0, 3, 3)));
+
+            ThermalPageHandle negativeZ = new ThermalPageHandle(
+                    negativeZSection, 2L);
+            fixture.engine().process(new ThermalInputBatch(
+                    1L, 3L, 60L,
+                    new ThermalInputBatch.PageAdmission[]{
+                            ThermalRuntimeTestFixtures.admission(
+                                    negativeZ,
+                                    ThermalTestFixtures.filledPageSignatures(
+                                            airId),
+                                    1L << 14, 0L)},
+                    ThermalInputBatch.NO_RETIREMENTS,
+                    new ThermalInputBatch.PageResidencyUpdate[]{
+                            new ThermalInputBatch.PageResidencyUpdate(
+                                    page,
+                                    page.liveGeometryRevision(),
+                                    sameSection,
+                                    ownerBit,
+                                    pageSignatures)},
+                    ResolvedGeometryBatch.EMPTY,
+                    ThermalSourceBatch.EMPTY,
+                    ThermalInputBatch.NO_ENVIRONMENT_UPDATES,
+                    ThermalInputBatch.NO_PHASE_ACKS,
+                    Double.NaN));
+
+            double negativeX = temperatureC(page, fixture, 4, 0, 0);
+            double positiveX = temperatureC(page, fixture, 12, 0, 0);
+            double positiveZ = temperatureC(page, fixture, 8, 0, 4);
+            double positiveY = temperatureC(page, fixture, 8, 4, 0);
+            double negativeZTemperature = temperatureC(
+                    negativeZ, fixture, 8, 0, 12);
+            assertTrue(negativeX > 0.0D);
+            assertTrue(positiveX > 0.0D);
+            assertTrue(negativeZTemperature > 0.0D);
+            assertTrue(positiveZ > 0.0D);
+            assertTrue(positiveY > 0.0D);
+            double lateralMinimum = Math.min(
+                    Math.min(negativeX, positiveX),
+                    Math.min(negativeZTemperature, positiveZ));
+            double lateralMaximum = Math.max(
+                    Math.max(negativeX, positiveX),
+                    Math.max(negativeZTemperature, positiveZ));
+            assertTrue(lateralMaximum <= lateralMinimum * 1.05D);
+            assertTrue(positiveY > lateralMaximum);
+
+            fixture.engine().process(ThermalRuntimeTestFixtures.batch(
+                    4L, 80L,
+                    ThermalInputBatch.NO_ADMISSIONS,
+                    ThermalInputBatch.NO_RETIREMENTS,
+                    ResolvedGeometryBatch.EMPTY));
+
+            assertTrue(temperatureC(page, fixture, 4, 0, 0) > negativeX);
+            assertTrue(temperatureC(page, fixture, 12, 0, 0) > positiveX);
+            assertTrue(temperatureC(page, fixture, 8, 0, 4) > positiveZ);
+            assertTrue(temperatureC(negativeZ, fixture, 8, 0, 12)
+                    > negativeZTemperature);
+        } finally {
+            fixture.engine().close();
+        }
+    }
+
+    @Test
+    void halfAirMixedNeighborReceivesHeatAfterResidencyExpansion() {
+        ThermalSignatureTable.Builder signatureBuilder =
+                ThermalSignatureTable.builder();
+        int airId = signatureBuilder.intern(
+                ThermalTestFixtures.fullAirSignature());
+        int solidId = signatureBuilder.intern(
+                ThermalTestFixtures.solidSignature());
+        ThermalSignatureTable signatures = signatureBuilder.build();
+        ThermalRuntimeTestFixtures.EngineFixture fixture =
+                ThermalRuntimeTestFixtures.engine(
+                        signatures,
+                        new MaterialBoundaryRegistry(List.of(), List.of()),
+                        airId,
+                        solidId,
+                        96.0D);
+        long section = SectionPos.asLong(0, 4, 3);
+        ThermalPageHandle page = new ThermalPageHandle(section, 1L);
+        PageSignatures pageSignatures =
+                adjacentCampfireAndHalfAirNeighborSignatures(
+                        signatures, airId, solidId);
+        long sourceBit = 1L << 2;
+        long residentMask = sourceBit | 1L << 3;
+        ThermalSourceBatch.Builder sourceEvents =
+                new ThermalSourceBatch.Builder(0L);
+        MinecraftPhysicalSourceProfile profile =
+                MinecraftPhysicalSourceProfile.CAMPFIRE;
+        addCampfire(sourceEvents, 1L, 9, 66, 49, profile);
+        addCampfire(sourceEvents, 2L, 10, 66, 49, profile);
+        addCampfire(sourceEvents, 3L, 9, 66, 50, profile);
+        addCampfire(sourceEvents, 4L, 10, 66, 50, profile);
+        try {
+            assertTrue(fixture.publication().noteInfraredRequest(0L, 80));
+            fixture.engine().process(new ThermalInputBatch(
+                    1L, 1L, 20L,
+                    new ThermalInputBatch.PageAdmission[]{
+                            ThermalRuntimeTestFixtures.admission(
+                                    page, pageSignatures,
+                                    sourceBit, sourceBit)},
+                    ThermalInputBatch.NO_RETIREMENTS,
+                    ThermalInputBatch.NO_RESIDENCY_UPDATES,
+                    ResolvedGeometryBatch.EMPTY,
+                    sourceEvents.buildAndReset(),
+                    ThermalInputBatch.NO_ENVIRONMENT_UPDATES,
+                    ThermalInputBatch.NO_PHASE_ACKS,
+                    Double.NaN));
+            fixture.engine().process(ThermalRuntimeTestFixtures.batch(
+                    2L, 40L,
+                    ThermalInputBatch.NO_ADMISSIONS,
+                    ThermalInputBatch.NO_RETIREMENTS,
+                    ResolvedGeometryBatch.EMPTY));
+            QueryPublication.InfraredReadCursor beforeExpansion =
+                    new QueryPublication.InfraredReadCursor();
+            assertTrue(fixture.publication().beginInfraredRead(beforeExpansion));
+            int previousNeighborEpoch = beforeExpansion.brickChangeEpoch(
+                    page.currentPublication().workerPageSlot(), 3);
+            fixture.engine().process(new ThermalInputBatch(
+                    1L, 3L, 60L,
+                    ThermalInputBatch.NO_ADMISSIONS,
+                    ThermalInputBatch.NO_RETIREMENTS,
+                    new ThermalInputBatch.PageResidencyUpdate[]{
+                            new ThermalInputBatch.PageResidencyUpdate(
+                                    page,
+                                    page.liveGeometryRevision(),
+                                    residentMask,
+                                    sourceBit,
+                                    pageSignatures)},
+                    ResolvedGeometryBatch.EMPTY,
+                    ThermalSourceBatch.EMPTY,
+                    ThermalInputBatch.NO_ENVIRONMENT_UPDATES,
+                    ThermalInputBatch.NO_PHASE_ACKS,
+                    Double.NaN));
+
+            QueryPublication.InfraredReadCursor afterExpansion =
+                    new QueryPublication.InfraredReadCursor();
+            assertTrue(fixture.publication().beginInfraredRead(afterExpansion));
+            assertTrue(afterExpansion.brickChangeEpoch(
+                    page.currentPublication().workerPageSlot(), 3)
+                    > previousNeighborEpoch);
+            double migratedNeighbor = temperatureC(page, fixture, 12, 0, 0);
+            assertTrue(migratedNeighbor > 0.0D);
+
+            fixture.engine().process(ThermalRuntimeTestFixtures.batch(
+                    4L, 80L,
+                    ThermalInputBatch.NO_ADMISSIONS,
+                    ThermalInputBatch.NO_RETIREMENTS,
+                    ResolvedGeometryBatch.EMPTY));
+
+            assertTrue(temperatureC(page, fixture, 12, 0, 0)
+                    > migratedNeighbor);
         } finally {
             fixture.engine().close();
         }
@@ -336,6 +617,89 @@ class ThermalDimensionEngineTest {
             }
         }
         throw new AssertionError("missing residency update for " + sectionKey);
+    }
+
+    private static PageSignatures adjacentCampfireSignatures(
+            ThermalSignatureTable signatures,
+            int airId,
+            int solidId
+    ) {
+        int[] brick = new int[PageSignatures.ENTRIES_PER_BRICK];
+        java.util.Arrays.fill(brick, airId);
+        for (int y = 0; y <= 1; y++) {
+            for (int z = 0; z < 4; z++) {
+                for (int x = 0; x < 4; x++) {
+                    brick[x | z << 2 | y << 4] = solidId;
+                }
+            }
+        }
+        brick[2 | 1 << 2 | 2 << 4] = solidId;
+        brick[2 | 2 << 2 | 2 << 4] = solidId;
+        return ThermalTestFixtures.filledPageSignatures(airId).withBricks(
+                signatures,
+                new int[]{2},
+                new int[][]{brick});
+    }
+
+    private static PageSignatures adjacentCampfireAndHalfAirNeighborSignatures(
+            ThermalSignatureTable signatures,
+            int airId,
+            int solidId
+    ) {
+        PageSignatures base = adjacentCampfireSignatures(
+                signatures, airId, solidId);
+        int[] source = new int[PageSignatures.ENTRIES_PER_BRICK];
+        int[] neighbor = new int[PageSignatures.ENTRIES_PER_BRICK];
+        java.util.Arrays.fill(source, airId);
+        java.util.Arrays.fill(neighbor, airId);
+        for (int y = 0; y <= 1; y++) {
+            for (int z = 0; z < 4; z++) {
+                for (int x = 0; x < 4; x++) {
+                    source[x | z << 2 | y << 4] = solidId;
+                    neighbor[x | z << 2 | y << 4] = solidId;
+                }
+            }
+        }
+        source[1 | 1 << 2 | 2 << 4] = solidId;
+        source[2 | 1 << 2 | 2 << 4] = solidId;
+        source[1 | 2 << 2 | 2 << 4] = solidId;
+        source[2 | 2 << 2 | 2 << 4] = solidId;
+        return base.withBricks(
+                signatures,
+                new int[]{2, 3},
+                new int[][]{source, neighbor});
+    }
+
+    private static void addCampfire(
+            ThermalSourceBatch.Builder events,
+            long sourceId,
+            int x,
+            int y,
+            int z,
+            MinecraftPhysicalSourceProfile profile
+    ) {
+        events.addRegister(
+                sourceId,
+                1,
+                ThermalSourceMode.POWER_SOURCE,
+                profile.powerForLevel(1.0D),
+                true,
+                0L,
+                x, y, z,
+                profile.profileId(),
+                WorkerPhysicalSourceBindings.initialPorts(
+                        sourceId, profile));
+    }
+
+    private static double temperatureC(
+            ThermalPageHandle page,
+            ThermalRuntimeTestFixtures.EngineFixture fixture,
+            int x,
+            int y,
+            int z
+    ) {
+        int slot = page.currentPublication().brickAt(x, y, z).coverageSlot();
+        return fixture.arena().temperatureC(slot, 0.0D);
     }
 
     @Test

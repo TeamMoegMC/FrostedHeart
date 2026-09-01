@@ -11,6 +11,7 @@ import com.teammoeg.frostedheart.content.climate.thermal.mesh.ThermalPageHandle;
 import com.teammoeg.frostedheart.content.climate.thermal.profile.ResolvedThermalSignature;
 import com.teammoeg.frostedheart.content.climate.thermal.profile.ThermalSignatureTable;
 import com.teammoeg.frostedheart.content.climate.thermal.query.QueryPublication;
+import com.teammoeg.frostedheart.content.climate.thermal.query.ThermalEnvironmentSample;
 import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.engine.ThermalDimensionEngine;
 import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.engine.ThermalDimensionLimits;
 import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.message.ResolvedGeometryBatch;
@@ -28,9 +29,21 @@ import com.teammoeg.frostedheart.content.climate.thermal.source.ThermalSourceLed
 import com.teammoeg.frostedheart.content.climate.thermal.topology.FarFieldSettings;
 import com.teammoeg.frostedheart.content.climate.thermal.topology.ThermalTopologyParameters;
 import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.content.climate.WorldTemperature;
+import com.teammoeg.frostedheart.util.mixin.ICampfireExtra;
 
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.SectionPos;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.level.GameRules;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.CampfireBlock;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+import net.minecraftforge.common.util.FakePlayerFactory;
 import net.minecraftforge.gametest.GameTestHolder;
 import net.minecraftforge.gametest.PrefixGameTestTemplate;
 
@@ -287,6 +300,162 @@ public final class FrostedHeartMinecraftThermalInputGameTests {
         }
     }
 
+    @GameTest(
+            template = TEMPLATE,
+            batch = BATCH + "_minecraft_residency_handoff",
+            timeoutTicks = 1_300)
+    public static void minecraftResidencyHandoffHeatsHalfAirNeighbor(
+            GameTestHelper helper
+    ) {
+        ServerLevel level = helper.getLevel();
+        MinecraftThermalInput.closeActiveLevel(level);
+        BlockPos origin = helper.absolutePos(BlockPos.ZERO);
+        int minX = alignedTwoBrickBase(origin.getX(), origin.getX() + 20);
+        int minY = alignedBrickBase(origin.getY(), origin.getY() + 20);
+        int minZ = alignedBrickBase(origin.getZ(), origin.getZ() + 20);
+        BlockPos sourceAir = new BlockPos(minX, minY + 3, minZ);
+        BlockPos neighborAir = new BlockPos(minX + 4, minY + 3, minZ);
+        BlockPos pageCenter = new BlockPos(
+                SectionPos.sectionToBlockCoord(
+                        SectionPos.blockToSectionCoord(sourceAir.getX())) + 8,
+                SectionPos.sectionToBlockCoord(
+                        SectionPos.blockToSectionCoord(sourceAir.getY())) + 8,
+                SectionPos.sectionToBlockCoord(
+                        SectionPos.blockToSectionCoord(sourceAir.getZ())) + 8);
+        double pageNatural = WorldTemperature.naturalAir(level, pageCenter);
+
+        for (int x = 0; x < 8; x++) {
+            for (int y = 0; y < 2; y++) {
+                for (int z = 0; z < 4; z++) {
+                    level.setBlockAndUpdate(
+                            new BlockPos(minX + x, minY + y, minZ + z),
+                            Blocks.STONE.defaultBlockState());
+                }
+            }
+        }
+        for (int x = 1; x <= 2; x++) {
+            for (int z = 1; z <= 2; z++) {
+                BlockPos campfire = new BlockPos(
+                        minX + x, minY + 2, minZ + z);
+                level.setBlockAndUpdate(
+                        campfire,
+                        Blocks.CAMPFIRE.defaultBlockState()
+                                .setValue(CampfireBlock.LIT, true));
+                BlockEntity entity = level.getBlockEntity(campfire);
+                ((ICampfireExtra) entity).setLifeTime(20_000);
+            }
+        }
+
+        ServerPlayer player = FakePlayerFactory.getMinecraft(level);
+        player.setPos(
+                sourceAir.getX() + 0.5D,
+                sourceAir.getY() + 0.5D - player.getEyeHeight(),
+                sourceAir.getZ() + 0.5D);
+        MinecraftThermalInput.gameplayPlayerEnvironment(
+                player, pageNatural, new ThermalEnvironmentSample());
+        helper.runAfterDelay(1_200, () -> {
+            double source = MinecraftThermalInput.gameplayPassiveEnvironment(
+                    level, sourceAir, pageNatural);
+            double neighbor = MinecraftThermalInput.gameplayPassiveEnvironment(
+                    level, neighborAir, pageNatural);
+            helper.assertTrue(
+                    source > pageNatural + 1.0D,
+                    "pre-existing campfires were not discovered: source="
+                            + source + ", natural=" + pageNatural);
+            helper.assertTrue(
+                    neighbor > pageNatural + 0.25D,
+                    "half-Air neighbor did not warm: neighbor="
+                            + neighbor + ", natural=" + pageNatural
+                            + ", source=" + source);
+            MinecraftThermalInput.closeActiveLevel(level);
+            helper.succeed();
+        });
+    }
+
+    @GameTest(
+            template = TEMPLATE,
+            batch = BATCH + "_phase_topology_churn",
+            timeoutTicks = 600)
+    public static void phaseRequestSurvivesSameBrickTopologyChurn(
+            GameTestHelper helper
+    ) {
+        ServerLevel level = helper.getLevel();
+        MinecraftThermalInput.closeActiveLevel(level);
+        BlockPos origin = helper.absolutePos(BlockPos.ZERO);
+        int minX = alignedBrickBase(origin.getX(), origin.getX() + 20);
+        int minY = alignedBrickBase(origin.getY(), origin.getY() + 20);
+        int minZ = alignedBrickBase(origin.getZ(), origin.getZ() + 20);
+        BlockPos phaseBlock = new BlockPos(minX + 1, minY + 1, minZ + 1);
+        BlockPos targetAir = phaseBlock.above();
+        BlockPos changingTopology = targetAir.east();
+        BlockPos source = new BlockPos(minX, minY + 2, minZ);
+
+        level.setBlockAndUpdate(
+                phaseBlock, Blocks.PACKED_ICE.defaultBlockState());
+        level.setBlockAndUpdate(
+                changingTopology,
+                Blocks.OAK_TRAPDOOR.defaultBlockState()
+                        .setValue(BlockStateProperties.OPEN, false));
+        ServerPlayer player = FakePlayerFactory.getMinecraft(level);
+        player.setPos(
+                targetAir.getX() + 0.5D,
+                targetAir.getY() + 0.5D - player.getEyeHeight(),
+                targetAir.getZ() + 0.5D);
+        MinecraftThermalInput.gameplayPlayerEnvironment(
+                player,
+                WorldTemperature.naturalAir(level, targetAir),
+                new ThermalEnvironmentSample());
+
+        int randomTickSpeed = level.getGameRules().getInt(
+                GameRules.RULE_RANDOMTICKING);
+        level.getGameRules().getRule(GameRules.RULE_RANDOMTICKING)
+                .set(0, level.getServer());
+        int[] elapsed = {0};
+        helper.onEachTick(() -> {
+            elapsed[0]++;
+            MinecraftThermalInput.onGeneratorTick(
+                    level, source, targetAir, 1_000.0D, true);
+            if (elapsed[0] % 21 == 1) {
+                level.setBlockAndUpdate(
+                        changingTopology,
+                        level.getBlockState(changingTopology).cycle(
+                                BlockStateProperties.OPEN));
+            }
+            if (elapsed[0] == 360) {
+                level.getGameRules().getRule(GameRules.RULE_RANDOMTICKING)
+                        .set(randomTickSpeed, level.getServer());
+            }
+        });
+        helper.succeedWhen(() -> {
+            helper.assertTrue(
+                    !level.getBlockState(phaseBlock).is(Blocks.PACKED_ICE),
+                    "phase Block never completed during topology churn");
+            level.getGameRules().getRule(GameRules.RULE_RANDOMTICKING)
+                    .set(randomTickSpeed, level.getServer());
+            MinecraftThermalInput.onPhysicalSourceRemoved(level, source);
+            MinecraftThermalInput.closeActiveLevel(level);
+        });
+    }
+
+    private static int alignedTwoBrickBase(int minimum, int maximum) {
+        for (int value = minimum; value + 7 < maximum; value++) {
+            if (Math.floorMod(value, 4) == 0
+                    && (value >> 4) == (value + 7 >> 4)) {
+                return value;
+            }
+        }
+        throw new IllegalStateException("GameTest has no aligned two-Brick span");
+    }
+
+    private static int alignedBrickBase(int minimum, int maximum) {
+        for (int value = minimum; value + 3 < maximum; value++) {
+            if (Math.floorMod(value, 4) == 0) {
+                return value;
+            }
+        }
+        throw new IllegalStateException("GameTest has no aligned Brick span");
+    }
+
     private static ThermalInputBatch admissionBatch(
             long sequence,
             long tick,
@@ -397,10 +566,10 @@ public final class FrostedHeartMinecraftThermalInputGameTests {
             int id
     ) {
         PageSignatures.Builder builder = new PageSignatures.Builder(signatures);
-        for (int index = 0; index < PageSignatures.ENTRY_COUNT; index++) {
-            builder.set(index, id);
+        for (int brick = 0; brick < ThermalPageHandle.BASE_BRICK_COUNT; brick++) {
+            builder.setUniformBrick(brick, id);
         }
-        return builder.build();
+        return builder.buildBricks();
     }
 
     private static byte[] sky() {

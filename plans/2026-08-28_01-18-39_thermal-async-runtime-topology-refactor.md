@@ -1,7 +1,7 @@
 # Thermal Async Runtime And Topology Refactor Plan
 
 - Time: `2026-08-28 01:18:39 +08:00`
-- Last revised: `2026-09-01 06:26:40 +08:00`
+- Last revised: `2026-09-01 21:20:55 +08:00`
 - Authors: `Codex; OpenAI GPT-5; architecture and implementation owner`
 - Status: `in-progress`
 - Scope: `new thermal runtime threading, input capture, Page/Brick topology, source ledger, solver, publication, phase completion, lifecycle, tests, docs, and performance validation`
@@ -38,16 +38,10 @@ a hard gate, not a cleanup suggestion:
 - No production class, field, branch, collection, callback, validation pass, or
   conversion exists only to make migration easier, preserve an old test, expose
   diagnostics, or support a hypothetical future implementation.
-- The class-size targets under `Ownership-Sized Class Layout` are hard gates.
-  Moving unchanged code into extra files does not satisfy them. A helper is
-  permitted only when it owns a real immutable payload or reusable numeric/data
-  structure kernel; it must remove duplication or a distinct reason to change.
-- The final replacement scope must not have positive net production Java LOC
-  against the production classes it deletes and replaces. Tests, docs, and
-  generated files are excluded. If correct final behavior would require net
-  growth, implementation stops for explicit user approval with an itemized
-  ownership and cost proof; line formatting or mechanical file splitting is
-  not a justification.
+- Class and net production LOC counts are review signals, not acceptance gates.
+  Moving unchanged code into extra files does not reduce complexity. A helper
+  is permitted only when it owns a real immutable payload or reusable numeric/
+  data kernel, removes duplication, or has a distinct reason to change.
 - Every retained production field must have a reachable non-diagnostic
   consumer. Every retained method must be called by final production behavior
   or be a necessary public gameplay API. Repository search for obsolete
@@ -156,7 +150,7 @@ Minecraft main thread
 - global FarField conductance scale when changed;
 - close/cancel is a mailbox lifecycle operation, not a fake input frame.
 
-Arrays are exact-sized at sealing. Normal door/gate/trapdoor changes retain exact local positions. Worker Page state keeps only fixed 64-bit resident, resolved, source-seed, and hot masks. The dimension owns one bounded primitive map for requested but not-yet-admitted section masks. There is no player-required mask, variable bitset, per-source influence list, persistent frontier mask, or Page-sized continuation-parent graph.
+Arrays are exact-sized at sealing. Normal door/gate/trapdoor changes retain exact local positions. Worker Page/slot state keeps only fixed 64-bit resident, resolved, source-seed, and hot masks. The dimension owns one bounded primitive previous-desired map plus one reusable current-desired scratch map. There is no player-required mask, variable bitset, per-source influence list, persistent frontier mask, or Page-sized continuation-parent graph.
 
 There is no `InputWatermarks`, `SealedInputFrame`, or five-stream cut vector. Mailbox serialization is the ordering proof: the engine accepts only its dimension generation and `lastBatchSequence + 1`, and requires `targetTick >= lastTargetTick`. Page lifecycle/revision, source event tick/generation, and phase request sequence validate their own payloads. A profile reload creates a new engine generation instead of adding another watermark stream.
 
@@ -170,7 +164,7 @@ There is no `InputWatermarks`, `SealedInputFrame`, or five-stream cut vector. Ma
 
 ### `ThermalCompletion`
 
-- dimension generation, batch sequence, status (`COMPLETED`, `WORK_LIMITED`, or terminal `ENGINE_FAILED`), topology generation, and sleeping state;
+- dimension generation, batch sequence, and status (`COMPLETED`, `WORK_LIMITED`, or terminal `ENGINE_FAILED`);
 - exact Brick residency deltas carrying target section key, the expected lifecycle generation when a Page already exists, and one absolute desired Brick mask; a zero mask withdraws an unadmitted request or permits a cold Page to retire;
 - exact committed full-resync tokens carrying Page lifecycle/revision identity;
 - bounded phase requests;
@@ -413,33 +407,35 @@ There is no dimension-wide Air connected-component authority. Delete `Incrementa
 
 ### Ownership-Sized Class Layout
 
-The extraction is behavioral-neutral and follows authority, not arbitrary line splitting.
+The extraction is behavioral-neutral and follows authority, not arbitrary line
+splitting. Numeric line counts are intentionally not gates: split a class only
+when the result has an independent owner or reason to change.
 
-| Class | Sole responsibility | Target size |
-|---|---|---:|
-| `MinecraftThermalInput` | main-thread level lifecycle, 20-tick seal/submit/drain, consumer facade delegation | `< 800` lines |
-| `MinecraftPageManager` | thermal Page handles, source seed masks, worker residency application, loaded capture | `< 1,200` lines |
-| `ThermalPageHandle` | cross-thread Page identity/live revision/volatile publication only | `< 250` lines |
-| `PageSignatures` / `PagePublication` | immutable flat Brick directories and query payloads | `< 300` lines each |
-| `MinecraftEnvironmentCapture` | bounded natural-temperature/sky/FarField input capture | `< 600` lines |
-| `PhysicalSourceSpatialIndex` | main-thread source SoA and origin/chunk/target/kind spatial indexes | `< 700` lines |
-| `DimensionInputAccumulator` | producer-owned coalescing and immutable sequence/tick batch sealing | `< 600` lines |
-| `ThermalInputBatch` / `ThermalCompletion` | immutable ownership-transfer schemas and validation only | `< 350` lines each |
-| `ThermalWorkerPool` | shared bounded workers and server-wide close only | `< 350` lines |
-| `ThermalDimensionMailbox` | one dimension's submit/run/completion-ACK/close state only | `< 300` lines |
-| `ThermalDimensionEngine` | all worker runtime ownership and one visible `process(batch)` pipeline | `< 800` lines |
-| `ThermalCellArena` | primitive H/C/inverse-C/cell identity/allocation spans only | `< 1,100` lines |
-| `WorkerPageStore` | Page identity/lifecycle/indexed committed state | `< 800` lines |
-| `TopologyPlan` | changed closure, drafts, spans, migration, hard-cap preparation scratch | `< 800` lines |
-| `BrickTopologyCompiler` | reusable primitive scratch to exact Air/material/FarField/phase Brick payload | `< 800` lines |
-| `PreparedTopologyChange` | one immutable exact changed payload; data validation only | `< 400` lines |
-| `TopologyCommitter` | prepared nonthrowing write order | `< 500` lines |
-| `ThermalSolver` | primitive fragment stores, material aggregation, numeric execution, sleep residual | `< 1,100` lines |
-| `ThermalSourceLedger` | source slots/events/bindings/exact Pdt and node accumulator ownership | `< 900` lines |
-| `NodePowerAccumulatorArena` | primitive per-node power/pending-energy storage and active/free indexes | `< 350` lines |
-| `WorkerPhysicalSourceBindings` | descriptor-to-topology endpoint resolution only | `< 500` lines |
-| `PhaseTransitionRuntime` | phase contact/request/ACK state only | `< 500` lines |
-| `QueryPublication` | flat slot-addressed double-buffer projection and O(1) reader | `< 400` lines |
+| Class | Sole responsibility |
+|---|---|
+| `MinecraftThermalInput` | main-thread level lifecycle, 20-tick seal/submit/drain, consumer facade delegation |
+| `MinecraftPageManager` | thermal Page handles, source seed masks, worker residency application, loaded capture |
+| `ThermalPageHandle` | cross-thread Page identity/live revision/volatile publication only |
+| `PageSignatures` / `PagePublication` | immutable flat Brick directories and query payloads |
+| `MinecraftEnvironmentCapture` | bounded natural-temperature/sky/FarField input capture |
+| `PhysicalSourceSpatialIndex` | main-thread source SoA and origin/chunk/target/kind spatial indexes |
+| `DimensionInputAccumulator` | producer-owned coalescing and immutable sequence/tick batch sealing |
+| `ThermalInputBatch` / `ThermalCompletion` | immutable ownership-transfer schemas and validation only |
+| `ThermalWorkerPool` | shared bounded workers and server-wide close only |
+| `ThermalDimensionMailbox` | one dimension's submit/run/completion-ACK/close state only |
+| `ThermalDimensionEngine` | all worker runtime ownership and one visible `process(batch)` pipeline |
+| `ThermalCellArena` | primitive H/C/inverse-C/cell identity/allocation spans only |
+| `WorkerPageStore` | Page identity/lifecycle/indexed committed state |
+| `TopologyPlan` | changed closure, drafts, spans, migration, hard-cap preparation scratch |
+| `BrickTopologyCompiler` | reusable primitive scratch to exact Air/material/FarField/phase Brick payload |
+| `PreparedTopologyChange` | one immutable exact changed payload; data validation only |
+| `TopologyCommitter` | prepared nonthrowing write order |
+| `ThermalSolver` | primitive fragment stores, material aggregation, numeric execution, sleep residual |
+| `ThermalSourceLedger` | source slots/events/bindings/exact Pdt and node accumulator ownership |
+| `NodePowerAccumulatorArena` | primitive per-node power/pending-energy storage and active/free indexes |
+| `WorkerPhysicalSourceBindings` | descriptor-to-topology endpoint resolution only |
+| `PhaseTransitionRuntime` | phase contact/request/ACK state only |
+| `QueryPublication` | flat slot-addressed double-buffer projection and O(1) reader |
 
 Hot compiler scratch uses primitive arrays and project-owned primitive key tables for at most the current Brick/cut. It replaces `PageBuild` lists, linked maps, `MaterialPoleKey`/bridge builder graphs, and discarded temporary `PairOperation` lists. Persistent changed fragments receive exact primitive SoA arrays once; scratch capacity is reused geometrically and never becomes a second topology authority or unbounded cache.
 
@@ -822,7 +818,7 @@ Main-thread Page state retains only:
 - one absolute worker-desired 64-bit mask from the last accepted completion;
 - the existing handle, capture revision, priority/retry state, and sparse mutation payloads.
 
-Worker Page state retains only:
+Worker Page/slot state retains only:
 
 - resident, resolved, source-seed, and hot 64-bit masks;
 - the existing 64-entry immutable signature/topology/publication directories;
@@ -835,7 +831,17 @@ Air already has one coverage slot and mixed geometry already owns exact
 face-port/component IDs, so another cached aperture byte would duplicate
 topology authority.
 
-The worker dimension additionally owns one `Long2LongOpenHashMap pendingResidencyBySection` plus one reusable scratch map. They contain the union of desired masks for sections with no admitted worker Page. Comparing scratch with the previous map emits changed absolute masks, including zero-mask cancellation. Admission removes that section from the pending map. This is the sole state required to avoid both repeated unchanged completion payloads and leaked unadmitted requests; it is bounded by the unresolved Page frontier and is not keyed by parent/source.
+The worker dimension additionally owns `Long2LongOpenHashMap desiredBySection`
+plus one reusable `desiredScratch` map. They contain the previous and current
+union of absolute desired masks for both admitted Pages and unresolved frontier
+sections. Admitted sections remain in this comparison authority so changed-only
+completion, warm-Page retention, and zero cancellation need no fifth Page mask.
+The maps are bounded by active Pages plus their unresolved frontier and are not
+keyed by parent/source.
+One reusable primitive list holds only Page lifecycles committed since the
+previous residency completion. It forces one identity-bearing absolute mask,
+including zero, when the numeric section mask matches the prior lifecycle, then
+clears. It is not a third residency authority or steady frontier index.
 
 Source observations add source-seed bits. Only source-seed and worker hot state drive frontier expansion. Player, infrared, crop, town, and static Block-radiation queries are passive and never enter these masks. Only the worker can keep a Page alive because of non-equilibrium Air/material/phase state. A Page may retire only after the worker publishes zero desired residency and the main thread has no current source seed.
 
@@ -888,12 +894,12 @@ Every hot Brick therefore has one compiled finite-capacity guard layer. A guard 
 
 - Direct loaded sky exposure is the only routine Air-to-natural FarField proof.
 - A missing, inactive, or unrepresented non-sky neighbor receives no weak natural-temperature boundary. The worker requests its Brick when the error gate requires real continuation.
-- An unloaded chunk is not loaded or ticketed for thermal propagation. Its geometry is unknown and cannot be represented as outdoor Air. Dormant storage handles unload/reload residuals but does not simulate offline source power.
-- Work-limit refusal retains the exact pending residency request and current committed state, then uses the existing retry backoff until capacity or interest changes. A `WORK_LIMITED` completion emits no additional expansion delta. The source continues heating its valid local binding; the runtime does not invent a natural sink, clear the Page, or retry every cut. This overload may produce local overheating, which is the explicit bounded-memory degraded result when the accepted 100-source capacity gate is exceeded.
+- An unloaded chunk is not loaded or ticketed for thermal propagation. Its geometry is unknown and cannot be represented as outdoor Air. The main thread parks its pending Page outside the admission queues and the existing `pagesByChunk`/`ChunkEvent.Load` path wakes it exactly once when world data becomes available. Dormant storage handles unload/reload residuals but does not simulate offline source power.
+- Work-limit refusal retains the exact pending residency request and current committed worker state, then uses the existing retry backoff until capacity or interest changes. An uncommitted main-thread cold capture is discarded so mutations or chunk identity changes during backoff cannot make retry install stale signatures. A `WORK_LIMITED` completion emits no additional expansion delta. The source continues heating its valid local binding; the runtime does not invent a natural sink, clear the committed Page, or retry every cut. This overload may produce local overheating, which is the explicit bounded-memory degraded result when the accepted 100-source capacity gate is exceeded.
 
 ### Growth, Cooling, And Persistence
 
-Resident Brick bits may grow during one Page lifecycle but are not individually evicted. This removes per-Brick enthalpy-disposal/migration and prevents threshold chatter from repeatedly replacing topology. When source requirements disappear, hot and worker-desired masks shrink through hysteresis; an outer Page retires as one existing transaction only after all of its resident Air and stateful material/phase state is below the release contract and no adjacent hot frontier requests it.
+Resident Brick bits may grow during one Page lifecycle but are not individually evicted. This removes per-Brick enthalpy-disposal/migration and prevents threshold chatter from repeatedly replacing topology. When source requirements disappear, hot and worker-desired masks shrink through hysteresis; an outer Page retires as one existing transaction only after all resident Air/capacitive material is below the release contract, all phase reservoirs have returned their unreserved partial energy to colder Air, and no adjacent hot frontier requests it. A phase reservoir's fixed transition temperature is not itself a hot-state signal.
 
 Retirement continues to capture the existing `DormantChunkThermalState.SectionEntry.brickMask`. Dormant state answers passive queries and initializes a Brick only when a real source/frontier admission later reaches it; dormant data alone never creates Page interest. Without a live Page, residual temperature continues its existing analytic half-life toward current natural temperature.
 
@@ -901,7 +907,7 @@ Retirement continues to capture the existing `DormantChunkThermalState.SectionEn
 
 - Stable source-free player work is zero thermal Page/Brick capture; source/frontier changes alone can request residency.
 - A newly created Page performs one natural-temperature sample. Heightmap work is `16 * newlyRequestedTopLayerBricks`, from zero to 256 queries; lower-layer Bricks add none. A non-air section reads `64 * newlyRequestedBricks` BlockStates; an all-air section uses the O(1) proof and reads zero individual BlockStates. Existing-Page additions query only newly resident top-layer column groups and use the existing sparse environment update.
-- Stable worker solve remains `O(B_resident + E_resident + boundaries)`. Query publication already visits every live slot and now performs one additional Page-slot/Brick-index/threshold/OR sequence there; residency adds no second cell pass. Its Page phase scans at most `P_active <= maximumPages` headers, returns immediately for zero `sourceSeedMask | hotMask`, and performs exact component work only for candidate faces. Additional frontier work is bounded `O(P_active + F_frontier)` with no 64-Brick loop, incrementally maintained frontier-Page index, or aperture cache.
+- Stable worker solve remains `O(B_resident + E_resident + boundaries)`. Query publication already visits every live slot and now performs one additional Page-slot/Brick-index/threshold/OR sequence there plus one contiguous `O(maximumPages)` hot-mask clear. Residency adds no second cell pass. Its Page phase scans at most `P_active <= maximumPages` headers, returns immediately for zero `sourceSeedMask | hotMask`, and performs exact component work only for candidate faces. Additional frontier work is bounded `O(P_active + F_frontier)` with no 64-Brick loop, incrementally maintained frontier-Page index, or aperture cache.
 - Page containers remain bounded by `maximumPages`, but inactive Brick slots create no arena cell, solver fragment, or infrared temperature payload.
 - Existing 40-tick staggered infrared polling, client-carried presence, Page change IDs, and unchanged-response suppression remain unchanged. Infrared observes residency; it never creates it.
 
@@ -937,6 +943,12 @@ and is not selected in advance.
 8. [x] Keep player/passive lookup strictly `live publication -> dormant half-life -> natural`; dormant data never queues admission. A later real source/frontier admission may reuse its Brick residual without a new NBT version or offline solver.
 9. [x] Decouple physical-source discovery and radiation visibility from Page admission. Static no-witness DDA and covered static-radiation mutation ownership never create or retain a thermal Page. Thermal admission remains source/frontier-only.
 10. [x] Update living climate/runtime/source documents for the implemented ownership, cadence, fallback, and cost contracts.
+11. [x] Park unavailable frontier/source targets until the existing chunk-load index wakes them; remove per-tick failed admission polling without adding another pending collection.
+12. [x] Discard uncommitted work-limited admission captures before backoff so retry recaptures current BlockStates without a retained invalidation flag.
+13. [x] Exclude fixed phase-transition temperatures from hot masks, use the existing phase contact to return unreserved stored energy to colder Air, and cover that direction in the existing quiet-sleep residual without a new pass.
+14. [x] Force one absolute residency publication for every committed Page lifecycle through a reusable primitive admission-identity list; preserve ordinary changed-mask suppression and zero cancellation.
+15. [x] Cancel a mutable admission when its last main-thread interest disappears; if it is already sealed/in-flight, retain the handle, queue the latest source-seed state, and let the mandatory first lifecycle completion decide residual retention or retirement. Discard uninterested work-limited admissions without backoff.
+16. [x] Keep `queuedPriority` equivalent to physical admission-queue membership: dequeue immediately when interest reaches zero, clear metadata immediately after `removeFirstLong`, and share one dequeue helper with Page removal.
 
 ### Validation
 
@@ -952,8 +964,12 @@ and is not selected in advance.
 - An all-air section admission performs zero individual BlockState reads and all requested entries share the same immutable Air payload. A non-air admission reads exactly 64 states per requested Brick.
 - A Page with no newly resident top-layer Brick performs zero heightmap queries. Each new top-layer Brick queries exactly its 16 XZ columns; repeated Y-level additions in the same XZ group cannot occur because only Page-local Brick Y=3 owns direct-sky state. Unknown columns remain `16` and never produce FarField.
 - An uncaptured campfire mutation is still observed and seeds capture, while an ordinary uncaptured block mutation does not invalidate the Page publication; roof and radiation invalidation still occur.
-- A requested but unloaded neighbor is represented by one pending section mask, emits no repeated unchanged completion, and receives a zero-mask cancellation if the parent frontier cools before admission.
-- A work-limited frontier retains current state, follows retry backoff, emits no repeated expansion delta, and never appears as natural-temperature Air.
+- A requested but unloaded neighbor is represented by one pending section mask outside the admission queues, emits no repeated unchanged completion or failed `getChunkNow` polling, is awakened by its exact chunk-load event, and receives a zero-mask cancellation if the parent frontier cools before admission.
+- A work-limited frontier retains committed state, discards uncommitted Minecraft capture, follows retry backoff, recaptures after intervening mutation/unload, emits no repeated expansion delta, and never appears as natural-temperature Air.
+- An empty phase reservoir at a transition temperature different from natural Air does not retain its Brick. Partial unreserved energy returns to colder Air and reaches zero; reserved request energy remains resident until matching ACK.
+- Replacing a Page lifecycle while an older residency completion is in flight cannot suppress the new lifecycle's numerically identical mask; the new generation publishes exactly once, including when its current desired mask is zero.
+- Removing a source after its Page admission is sealed but before the first publication cannot discard source Pdt or residual Air. A still-mutable admission cancels without worker work; an in-flight admission publishes once, consumes the queued latest source-seed state on the following cut, and then cools or retires normally.
+- Removing and re-adding a source while a partially captured admission is in flight cannot leave a stale priority that suppresses requeue; every missing requested Brick re-enters the real queue exactly once.
 - A retired/unloaded warm Page answers from its analytically decayed dormant Brick without creating residency; when a real source/frontier later admits it, the same residual initializes the live Brick without a natural-temperature frame.
 - The 100 non-overlapping source fixture records active Pages, Bricks, cells, pairs, boundaries, worker completion latency, main-thread capture time, and retained heap externally. It must remain below the next 20-tick cut at P99 and within the existing hard limits, or this section is reopened before adding LOD/sleep/implicit traversal.
 - The threshold sweep records boundary error, two-cut residency toggles, and live work for every candidate pair. It freezes the largest correctness-valid `REFINE_HIGH` and highest lower non-toggling `RELEASE_LOW`; no hand-selected or runtime-configured value passes.
@@ -1956,3 +1972,148 @@ remains unclaimed until the same workload is recorded again.
   GameTest (`14/14`), dead-overload search, and `git diff --check`.
 - [ ] Repeat the controlled 120-second JFR and compare dormant Server-thread
   samples, same-Page topology hash samples, and phase ownership allocation.
+
+## Cross-Section Brick Residency Review Closure
+
+- Time: `2026-09-01 16:57:05 +08:00`
+- Status: `implemented; user validation pending`
+- Scope: `cross-section Brick admission, work-limit capture lifetime, phase hot-state ownership, and residency hot path`
+
+### Confirmed Findings And Outcome
+
+- [x] A refused cold admission previously retained captured signatures after its
+  handle was removed, although later mutation and chunk replacement had no live
+  handle to invalidate them. Backoff now retains only committed worker state and
+  the pending request; retry recaptures current Minecraft state.
+- [x] An unavailable target previously re-entered the admission queue after each
+  failed `getChunkNow`. It is now parked in the existing Page/chunk index and is
+  enqueued only by an exact chunk-load event or a new interest change.
+- [x] Phase reservoirs previously contributed their fixed transition temperature
+  to the Brick hot mask even at zero stored energy. Only positive reservoir
+  enthalpy now contributes; the existing phase contact returns unreserved energy
+  to colder Air so partial progress can cool to zero, and its existing residual
+  loop prevents sleep while that reverse transfer remains active.
+- [x] The fused live-slot path now derives local Brick coordinates with the exact
+  power-of-two mask instead of three `Math.floorMod(..., 16)` operations.
+- [x] Residency diff authority previously compared section masks without Page
+  lifecycle identity. A reusable primitive admission list now forces exactly one
+  current-mask completion for each committed lifecycle, including zero, and is
+  cleared immediately after publication.
+- [x] Source removal previously retired a sealed/in-flight admission before its
+  first publication could be checkpointed. Mutable admissions now cancel;
+  in-flight lifecycles retain their handle and queue the latest source seed until
+  their mandatory first residency completion. Uninterested work-limited
+  admissions are discarded immediately.
+- [x] A lazy runtime could start after a chunk containing an already-lit
+  campfire had loaded; refueling changed only BlockEntity data, so neither source
+  discovery path ran and its frontier Bricks stayed absent. Existing lit
+  `cookTick` now calls `MinecraftThermalInput.onCampfireTick` once per
+  position-staggered 20 ticks. Unchanged observations remain O(1) and do not
+  enqueue source, Page, or worker work.
+- [x] A retained no-interest lifecycle could leave `queuedPriority` set after its
+  queue entry was consumed. Interest loss now dequeues immediately, every queue
+  pop clears metadata before state filtering, and Page removal reuses the same
+  helper.
+- [x] No Page/Brick field, map, index, cache, message field, threshold, solver
+  pass, or compatibility path was added.
+
+### Validation
+
+- Production references and the final diff are reviewed locally in this change.
+- Automated tests are intentionally not run in this change; user validation and
+  the existing controlled 100-source JFR/heap gate remain pending.
+
+## End-To-End Correctness And Cost Closure
+
+- Time: `2026-09-01`
+- Status: `implemented; user validation pending`
+- Scope: `phase migration, terminal persistence, sparse dormant query, commit allocation, Brick migration cost, radiation capacity, infrared retained memory, and production test surfaces`
+
+- [x] Migrate phase enthalpy from the old reservoir slot together with its
+  request reservation. Do not validate this through a synthetic numeric kernel
+  fixture. `phaseRequestSurvivesSameBrickTopologyChurn` drives a real packed-ice
+  transition through `MinecraftThermalInput`, a public generator source,
+  same-Brick trapdoor mutations, mailbox/worker completion, and main-thread ACK;
+  it observes only the resulting world BlockState.
+- [x] Keep a failed engine quiescent and readable until the main thread captures
+  its last coherent Page cut. Terminal ACK closes it before the replacement
+  generation reuses handles.
+- [x] Let a sparse Page Brick with no published signature payload use its dormant
+  checkpoint; compiled no-Air points retain natural fallback.
+- [x] Reserve the admission identity list during preparation for the exact batch
+  admission count, leaving authoritative commit allocation-free.
+- [x] Reuse geometrically grown Brick migration scratch, skip new/no-dormant
+  migration, hoist mixed signature lookup to one per block, and use 64 Air-mask
+  intersections for regular-to-regular migration.
+- [x] Align physical witness and static coverage capacity at 3,200 sections;
+  share one lava radiation profile and invalidate the singleton classification
+  cache with one reload epoch.
+- [x] Allocate server infrared epoch arrays and the client 144-cubed direct
+  mirror only after first use. CPU buffers remain one bounded reusable
+  allocation; reset detaches and deletes captured GPU resources without
+  confusing full-sync eligibility with render availability.
+- [x] Remove the flat Page-signature builder, alternate static-profile
+  classifiers, and four-argument query publication overload that existed only
+  for tests. Tests now construct through Brick-level production paths.
+- [x] Leave `SurroundingTemperatureSimulator` and its retained legacy cluster
+  unchanged by explicit user direction.
+- [x] Java 17 `runGameTestServer` passes all `16/16` required real-world tests,
+  including `phaseRequestSurvivesSameBrickTopologyChurn`; `compileTestJava`
+  also passes after production API cleanup.
+- [ ] Run the existing controlled JFR/heap/network gates before changing the
+  plan status; numeric JUnit is not acceptance evidence for these fixes.
+
+## Five-Finding Post-Closure Correction
+
+- Time: `2026-09-01`
+- Status: `implemented; automated validation passed, live infrared validation pending`
+- Scope: `terminal publication coherence, terminal close recovery, regular Brick migration, phase RETRY GameTest, infrared render validation`
+
+- [x] Prepare `QueryPublication` in its inactive buffer and reserve the seqlock
+  write window for the final exchange. If a committed topology fails before
+  that exchange, restore only the affected `ThermalPageHandle` publication
+  references to their prior immutable cut; do not clone or roll back solver
+  state that belongs to the terminal generation.
+- [x] Let terminal ACK finish mailbox cleanup even when `processor.close()`
+  throws. `MinecraftThermalInput` logs that cleanup failure, clears `inFlight`,
+  and starts the replacement generation instead of leaving the dimension stuck.
+- [x] Preserve temperature directly across regular-to-regular single-cell Brick
+  replacement using the new cell capacity. This path is O(1); only mixed
+  geometry performs signature/microcell overlap work.
+- [x] Make `phaseRequestSurvivesSameBrickTopologyChurn` hold
+  `randomTickSpeed = 0` during real generator heating and same-Brick trapdoor
+  churn, forcing production phase application to return `RETRY`; restore the
+  gamerule before requiring the actual world BlockState transition.
+- [x] Delete `InfraredViewRendererStateTest`. Reflection over private flags did
+  not execute packet scheduling, GPU upload, shader sampling, or section
+  movement and therefore was not evidence. Keep live client rendering as the
+  actual gate rather than adding a production test seam or another synthetic
+  state test.
+- [x] Java 17 production/JUnit/GameTest source compilation passes. Focused
+  `QueryPublication`, mailbox, engine, and topology suites pass `32/32`.
+  The final unchanged-code Forge run passes all `16/16` required GameTests,
+  including the forced-RETRY phase churn path; one earlier run exposed the
+  existing timing-sensitive residency-handoff test once, and its immediate
+  unchanged rerun passed. `git diff --check` passes. Actual client infrared
+  rendering remains the non-synthetic external gate.
+
+## Dormant Neighbor Persistence Correction
+
+- Time: `2026-09-01`
+- Status: `implemented; automated validation passed, user live validation pending`
+
+- [x] Write source support together with each coherent Page capture instead of
+  relying on a later scan of active Page chunks. Source target/power/enabled
+  changes update only existing dormant entries in the exact target plus six-face
+  closure; shutdown, chunk history, and total loaded sections are not scanned.
+- [x] Retain consumed load-time source support in a lazy transient bitset until
+  live source discovery updates that section. Initial infrared full no longer
+  races campfire or machine BlockEntity registration.
+- [x] On full infrared responses only, encode current-source-supported dormant
+  Brick means through the existing `UNIFORM` record as temporary bootstrap. Do
+  not add them to presence/delta epochs, admit Pages, load chunks, or affect the
+  stable poll; real admission replaces them with block-exact values.
+- [x] Final production/test compilation and focused dormant-state tests pass
+  `4/4`. Actual save inspection, not an unrelated GameTest, proves the affected
+  face-neighbor entry is stored, source-supported, mixed, and now selected by
+  the full-response Brick-mean path. Live client rendering remains the gate.

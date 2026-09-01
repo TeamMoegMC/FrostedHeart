@@ -55,18 +55,22 @@ public final class ThermalDimensionMailbox implements AutoCloseable,
         return state == State.AWAITING_ACK ? completion : null;
     }
 
-    public synchronized void acknowledgeCompletion(long batchSequence) {
-        if (state != State.AWAITING_ACK || completion == null
-                || completion.batchSequence() != batchSequence) {
-            throw new IllegalStateException(
-                    "thermal completion ACK does not own the mailbox");
+    /** Terminal ACK closes the now-quiescent processor before handle reuse. */
+    public void acknowledgeCompletion(long batchSequence) {
+        boolean terminal;
+        synchronized (this) {
+            if (state != State.AWAITING_ACK || completion == null
+                    || completion.batchSequence() != batchSequence) {
+                throw new IllegalStateException(
+                        "thermal completion ACK does not own the mailbox");
+            }
+            terminal = completion.status()
+                    == ThermalCompletion.Status.ENGINE_FAILED;
+            completion = null;
+            state = terminal ? State.CLOSE_REQUESTED : State.IDLE;
         }
-        boolean terminal =
-                completion.status() == ThermalCompletion.Status.ENGINE_FAILED;
-        completion = null;
-        state = terminal ? State.CLOSED : State.IDLE;
         if (terminal) {
-            workers.unregisterLifecycleOwner(this);
+            closeProcessor();
         }
     }
 
@@ -95,7 +99,7 @@ public final class ThermalDimensionMailbox implements AutoCloseable,
             }
         }
         if (schedule) {
-            workers.executeLifecycle(this::closeProcessorTask);
+            workers.executeLifecycle(this::closeProcessor);
         }
     }
 
@@ -117,12 +121,11 @@ public final class ThermalDimensionMailbox implements AutoCloseable,
             }
         }
         if (closeBeforeProcess) {
-            closeProcessorTask();
+            closeProcessor();
             return;
         }
 
         ThermalCompletion result;
-        boolean terminal = false;
         try {
             result = processor.process(batch);
         } catch (Throwable failure) {
@@ -130,13 +133,7 @@ public final class ThermalDimensionMailbox implements AutoCloseable,
                     ? runtime
                     : new IllegalStateException(
                             "thermal dimension engine failed", failure);
-            try {
-                closeProcessorOnce();
-            } catch (Throwable closeFailure) {
-                diagnostic.addSuppressed(closeFailure);
-            }
             result = failedCompletion(batch, diagnostic);
-            terminal = true;
         }
 
         boolean closeRequested;
@@ -154,14 +151,7 @@ public final class ThermalDimensionMailbox implements AutoCloseable,
         if (!closeRequested) {
             return;
         }
-        if (!terminal) {
-            closeProcessorTask();
-        } else {
-            synchronized (this) {
-                state = State.CLOSED;
-            }
-            workers.unregisterLifecycleOwner(this);
-        }
+        closeProcessor();
     }
 
     private static ThermalCompletion failedCompletion(
@@ -178,7 +168,7 @@ public final class ThermalDimensionMailbox implements AutoCloseable,
                 ThermalCompletion.NO_RESIDENCY_UPDATES);
     }
 
-    private void closeProcessorTask() {
+    private void closeProcessor() {
         try {
             closeProcessorOnce();
         } finally {

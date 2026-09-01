@@ -18,7 +18,7 @@
 | `thermal.persistence.minecraft` | Chunk-owned dormant temperature checkpoints |
 | `thermal.profile` / `thermal.profile.minecraft` | Immutable signature lookup and Minecraft BlockState/profile compilation |
 | `thermal.source.minecraft` | Minecraft source profiles, main-thread source index, and worker binding |
-| `thermal.radiation.minecraft` | Minecraft block-occlusion adapter for radiation |
+| `thermal.radiation.minecraft` | Receiver-lazy block-radiation index and Minecraft occlusion adapter |
 | `thermal.field` / `thermal.query` | Analytic fields and published gameplay query values |
 | `thermal.mesh` / `thermal.solver` | Primitive storage and numerical heat transfer |
 
@@ -110,13 +110,38 @@ lifecycle and inactive slots own no arena cell, fragment, or infrared payload.
 After each 20-tick solve, `QueryPublication` computes temperature-hysteretic hot
 masks while performing its existing live-slot write, using reusable Page-slot
 primitive scratch and `REFINE_HIGH_C = 0.125 C` /
-`RELEASE_LOW_C = 0.0625 C`. The following Page-only pass uses six static bit masks/shifts to find same-Page
+`RELEASE_LOW_C = 0.0625 C`. Air and capacitive-material cells contribute their
+physical temperature residual. A phase reservoir's fixed transition temperature
+is not a physical cell temperature and never contributes by itself; only
+positive stored phase energy marks its Brick hot. The following Page-only pass
+uses six static bit masks/shifts to find same-Page
 nonresident faces and active cross-Page boundary faces, then reads only their
 existing regular/mixed face topology. A cross-Page face keeps its admitted guard
 desired until residual release; missing non-sky neighbors have no synthetic
 FarField sink. Changed absolute `BrickResidency` masks request same-Page or
 cross-Page guards and include zero-mask cancellation; unchanged masks produce
-no completion payload.
+no completion payload. A newly committed Page lifecycle is the one exception:
+one reusable primitive admission list forces its current absolute mask to be
+published once even when the section's numeric mask matches the previous
+lifecycle. The list is cleared by that completion and adds no steady Page scan.
+
+An unavailable target chunk leaves its absolute request parked outside the
+admission queues. The existing `pagesByChunk` lookup and `ChunkEvent.Load`
+enqueue it when world data becomes available, so thermal propagation neither
+loads the chunk nor polls `getChunkNow` every tick. A work-limited cold admission
+keeps the committed worker topology and request, but discards its uncommitted
+Minecraft signatures; retry backoff recaptures current final BlockStates.
+
+If all main-thread interest disappears before a Page's first worker publication,
+an admission still owned by the mutable accumulator is cancelled immediately.
+An already sealed or in-flight admission retains its handle and queues the
+latest resident/source-seed state for the following cut. The mandatory first
+lifecycle residency completion then supplies either residual ownership or zero,
+after which the ordinary retirement path runs. Losing interest immediately
+removes the Page from its admission queue, so `queuedPriority` always describes
+real queue membership if the source returns before that completion. A refused
+admission with no remaining interest is discarded instead of entering
+work-limit backoff.
 
 When source and hot/incoming frontier ownership all disappear, the worker emits
 zero desired residency. The main thread then checkpoints and retires the whole
@@ -127,7 +152,9 @@ migration and threshold chatter.
 resync requirement, and a volatile `PagePublication`. `PageSignatures` stores a
 flat directory of `64` immutable Brick payloads. Uniform Bricks reuse one
 canonical immutable `Integer` per signature ID; nonuniform compact/wide Bricks
-use `char[64]`/`int[64]`. A changed Brick alone is replaced or promoted.
+use `char[64]`/`int[64]`. Its reusable builder accepts only Brick-level reset and
+replacement operations; no flat 4,096-entry test scratch exists in production.
+A changed Brick alone is replaced or promoted.
 
 `MinecraftStateThermalTable` is one dense registry-ID-indexed tagged int table.
 Ordinary states contain their signature ID directly; only radiation, Campfire,
@@ -157,6 +184,12 @@ read. A section allocates one 4096-position changed bitmap on first mutation;
 the second bitmap exists only after a non-geometry source-only position needs
 to be excluded. Page center arrays are likewise created at eight entries only
 after the first local geometry mutation. No per-position object is retained.
+
+An already-lit campfire is also observed from its existing server `cookTick`
+once per 20 ticks with a position-derived phase. This closes the lazy-start case
+where the runtime begins after the chunk-load event and no later BlockState
+mutation occurs. The steady observation is one O(1) source lookup; an unchanged
+source produces no dirty event, Page admission, or worker payload.
 
 `MinecraftSignatureCapture` resolves an already-loaded state through one state
 registry ID lookup and one tagged-table read. `StateStaticThermalResolver` runs
@@ -216,12 +249,20 @@ removes its fixed section keys; chunk/section availability marks only known
 touching boundary Bricks. Neighbor compilation reads loaded sections directly
 and never loads a chunk.
 
+All lava states share one startup-compiled radiation profile. `LiquidBlock`
+caches lava membership per block singleton and compares one profile epoch; a
+recipe/tag reload changes that epoch, so the next liquid neighbor update
+reclassifies once without adding a tag lookup to every steady update.
+
 `RadiationService` discovers physical sources first. Static emitters use only
 remaining visits, but the fused coverage pass still runs when none remain. Exact
 `STATIC_BLOCK_REVISION` selects one current-eye block-grid DDA and bypasses
 `ReceiverCache`, section revisions, and witness writes. Physical Campfire and
 machine rays use the same DDA with their existing feet/torso/head witnesses.
 Logout and old-dimension exit remove only that physical receiver cache by key.
+The physical witness revision table and static coverage index share the
+`3,200`-section dimension bound. This covers the declared 128 receivers and
+100-player deployment without an eviction traversal or historical index.
 
 ## Topology Preparation And Commit
 
@@ -264,6 +305,14 @@ free-span index; geometric backing growth may remain for reuse. Preparation
 reserves the material-edge table for the larger of its final edge count and
 the current count plus all possible insertions, covering insertion-before-
 deletion commit order without allocation in `TopologyCommitter`. Preparation
+also reserves the admission-identity list for the exact number of Page
+admissions in that prepared cut, so its commit append cannot grow backing.
+Brick migration owns two geometrically grown kernel scratch arrays. A new Brick
+without dormant state keeps its already-staged initial enthalpy and returns
+without scratch work. Regular-to-regular migration preserves the single Air
+cell's temperature at the new capacity in O(1); only mixed geometry enters the
+64x64 microcell overlap mapping.
+Signature lookup remains once per block in that mixed path. Preparation
 also checks endpoint ownership, reference closure, final live-cell count,
 operation limits, and arena/query capacity limits. The configured address
 limit leaves staging headroom (`maximumArenaSlots` is twice the live-cell limit
@@ -278,9 +327,15 @@ publication. The worker rebinds exact dirty source sections at the already
 settled cut. Solver/source references are checked once before the old spans are
 released through the arena's single ownership check. No allocation, sort,
 validation, or recoverable branch occurs after the first old-span release. There
-is no rollback copy of the complete
-solver. An unexpected exception escapes to the mailbox, which closes that
-engine and emits one terminal `ENGINE_FAILED` completion. A `WORK_LIMITED` cut discards staging; affected
+is no rollback copy of the complete solver. If failure occurs after Page
+references were exchanged but before Query publication commits, only those Page
+references return to the prior immutable cut. Query preparation writes its
+inactive buffer while the old envelope remains readable and opens the seqlock
+write window only for the final metadata exchange. An unexpected exception
+therefore emits one terminal `ENGINE_FAILED` completion with a coherent last cut.
+The main thread checkpoints it, then terminal ACK closes the old engine before
+the replacement generation reuses Page handles. A close exception is logged but
+cannot retain `inFlight` ownership or suppress replacement. A `WORK_LIMITED` cut discards staging; affected
 Pages fall back, existing topology is retired when necessary, and admission is
 backed off for `200` ticks instead of repeating a full rebuild every cut.
 
@@ -364,6 +419,12 @@ Phase reservoirs retain candidate masks in the Brick publication. Worker phase
 requests contain the arena slot, lifecycle generation, Brick origin, profile,
 candidate bit, and request sequence. Current production profiles apply only the
 compiled `StateTransitionData` heating recipe and respect random-tick speed.
+Air above the transition temperature stores energy in the reservoir. Air below
+that temperature receives only unreserved stored energy back; energy reserved
+by an outstanding request remains unavailable until its ACK. This lets partial
+live phase progress cool to zero instead of retaining a Page indefinitely. The
+existing quiet-sleep residual treats that reverse contact as active until the
+available reservoir energy is exhausted; it adds no solver pass.
 Main-thread mutation ACKs are transferred in the next 20-tick cut and are
 accepted only for the matching live reservoir.
 `ownsGameplayHeatingTransition` consults the precompiled phase-profile index and
@@ -372,34 +433,55 @@ does not reconstruct `StateTransitionData.HeatingTransition` on random ticks.
 ## Query Publication
 
 `QueryPublication` is a lock-free seqlock double buffer addressed directly by
-arena slot. A publish writes live slots once through `ThermalCellArena.nextLiveSlot`
-and stores only slot generations and temperature; topology generation and sample
-tick remain in the publication envelope. It never counts then rewrites, retains
-slot keys, scans arena holes, or binary-searches a sorted cell list.
+arena slot. A publish writes live slots once into the inactive buffer through
+`ThermalCellArena.nextLiveSlot` while readers retain the old envelope. Only the
+final buffer/envelope exchange makes the seqlock odd, so preparation failure
+cannot strand or corrupt the previous cut. The buffers store only slot
+generations and temperature; topology generation and sample tick remain in the
+publication envelope. It never counts then rewrites, retains slot keys, scans
+arena holes, or binary-searches a sorted cell list.
 
-Infrared tracking reuses that same live-slot write. A dimension keeps one
-`temperatureChangeId` and `long[maximumPages] pageChangeIds`; while the
-80-tick activity window is open, Air temperatures are compared at 0.25degC
-quantization and changed Pages receive the next ID. Inactive publication pays
-one deadline branch and performs no infrared comparison. Reactivation advances
-one ID and fills the fixed Page backing so clients with an older ID rebuild
-without a server-side observer. The fixed Page backing and geometrically growing
-cell buffers hold separate reservations in the same dimension/server memory
-budget.
+Infrared tracking reuses that same live-slot write. Its fixed memory is admitted
+with the dimension publication, but the actual Page/Brick epoch and pending-mask
+arrays are allocated only on the dimension's first infrared request. Thereafter
+a dimension keeps one
+nonnegative `infraredEpoch`, `int[maximumPages] pageChangeEpochs`, and
+`int[maximumPages * 64] brickChangeEpochs`. While the 80-tick activity window is
+open, Air temperatures are compared at 0.25degC quantization inside the existing
+live-slot pass. Temperature and exact topology Brick masks from one successful
+publication atomically stamp one epoch. Inactive publication pays one deadline
+branch and performs no infrared comparison. Reactivation advances one epoch and
+fills both arrays so an older client rebuilds without a server-side observer.
 
-`InfraredReadCursor` fixes one buffer, slot generations, Page change IDs,
+One cut-local `long[maximumPages] pendingInfraredBrickMasks` joins topology and
+temperature changes before that commit; it is not history or another
+temperature authority. The fixed reservation is exactly `292 bytes/Page`: one
+Page plus 64 Brick ints, the pending mask, and the reusable
+natural-temperature/previous-hot/next-hot arrays used by `HotMaskScratch`. At
+`maximumPages = 3,200`, Page/Brick epochs alone use `832,000 bytes` (about
+`0.794 MiB`). Fixed Page backing and geometrically growing cell buffers hold
+separate reservations in the same dimension/server memory budget.
+
+`InfraredReadCursor` fixes one buffer, slot generations, Page/Brick epochs,
 sample tick, topology generation, and publication version for a complete
-response. Main-thread encoding validates it once after staging. Page geometry
-gaps use `ThermalPageHandle.lastPublication`; retirement alone removes
-presence. `PagePublication.workerPageSlot` remains server-internal and maps the
-immutable Page directory to its change ID.
+response. Main-thread encoding validates it once after staging. Unchanged Pages
+cost one Page-epoch comparison; only a changed Page scans its 64 Brick epochs.
+Mixed Bricks resolve the 64 world-block centers and read each unique Air slot
+once; regular Bricks read one slot and write UNIFORM directly, while known
+invalid Bricks omit or write INVALID without filling/scanning the mixed scratch.
+Page geometry gaps use
+`ThermalPageHandle.lastPublication`; retirement alone removes presence.
+`PagePublication.workerPageSlot` remains server-internal.
 
 Gameplay reads a Page's immutable current publication, resolves the local Air
 point, reads the expected arena slot generation, and verifies that the same Page
 publication is still current. During a bounded topology gap it may read the last
 coherent Brick temperature without using stale point ownership. If no coherent
 worker cut exists, it performs one O(1) lookup in the loaded chunk's dormant
-section before falling back to natural temperature.
+section before falling back to natural temperature. A Brick whose current
+publication still has no signature payload is treated as uncaptured and may use
+its dormant checkpoint; a compiled Brick with no Air at the requested point
+continues directly to natural fallback.
 
 ## Dormant Chunk Temperature
 
@@ -425,6 +507,16 @@ and fountain qualify; `IMPULSE` does not. Existing warm Brick vectors may be
 held across an unloaded interval, but no offline solver or source integration
 adds heat.
 
+Capture writes the support bit immediately, and indexed source target, power,
+or enabled changes refresh only their seven-section closure.
+The consumed load-time support is mirrored in a lazy transient bitset until the
+live source index takes authority, closing the login/full-response race without
+retaining a source object or history.
+Infrared full rebuilds may encode source-supported dormant Brick means through
+the existing uniform wire mode. This is temporary Brick-resolution fallback;
+stable polling, presence, solver residency, and active block-exact rendering are
+unchanged.
+
 `FHConfig.COMMON.THERMAL_RUNTIME.dormantTemperatureHalfLifeSeconds` defaults to
 `1800`. Ordinary fallback caches one natural temperature and decay factor per
 section per aligned 20-tick boundary. A regular/collapsed Page uses packed rank
@@ -442,17 +534,19 @@ bootstrap boundary retains `getChunkNow` for correctness.
 
 For a routine cut, let `Kp` be changed positions, `Kb` affected Bricks, `Kf`
 replaced fragments, `Ko` unique material execution operations, `Ke` affected
-material keys, and `Ks` changed state slots.
+material keys, `Ks` changed state slots, and `A_admit` newly committed Page
+lifecycles.
 
 | Path | Bound |
 |---|---|
 | mutation capture | `O(Kp)` exact positions |
 | topology prepare | `O(Kb + Kf + Ko + Ke log Ke + Ks)`; no unrelated Page/arena/high-water scan |
 | ordinary commit | `O(Kf + Ke + Ks)`; no allocation or sort, with one exact old-reference/ownership proof before release |
-| source event update | changed sources and affected bindings only |
+| Brick migration | new/no-dormant and regular-to-regular O(1); mixed geometry at most 4,096 microcell mappings, using retained scratch |
+| source event update | changed sources and affected bindings only; source-seed residency sync occurs only on zero/nonzero Brick reference transitions |
 | source delivery | one ordered pass over active/touched nodes at target tick |
 | Brick cold capture | all-Air O(1), otherwise exactly 64 BlockStates per new Brick; at most 64 new Bricks/tick |
-| residency/frontier | hot bits piggyback on query live-slot publication; additional Page/frontier work is `O(P_active + F_frontier)` with changed absolute masks only |
+| residency/frontier | hot bits piggyback on query live-slot publication with one contiguous `O(P_max)` hot-mask clear; additional Page/frontier work is `O(P_active + F_frontier + A_admit)` with changed absolute masks plus one required publication per admitted lifecycle; unavailable chunks are event-woken, and accepting a worker mask never echoes it back unchanged |
 | static radiation mutation | changed profile/lava Bricks only; one section merge per cut |
 | static radiation cold capture | at most 64 unknown Bricks/tick; 64 primary plus at most 208 lava-neighbor BlockState reads per Brick |
 | static radiation query | one fused pass over at most eight sections; zero BlockState reads when coverage is known |
@@ -474,9 +568,11 @@ collections, or test-only constructors. Tests use deterministic outputs and
 test-owned fixtures. Final performance evidence comes from external JVM JFR
 and heap runs, not production bookkeeping.
 
-The current functional validation is complete: `compileJava`, the thermal JUnit
-selection (`109/109`), `compileGameTestJava`, and Forge GameTest (`14/14`) all
-pass on Java 17; `git diff --check` reports no whitespace errors. Controlled
+The current worktree passes Java 17 `compileTestJava` and the real Forge
+GameTestServer with all `16/16` required tests, including packed-ice phase
+completion during same-Brick trapdoor topology churn and the Minecraft residency
+handoff scenario. Numeric JUnit was intentionally not used as acceptance for
+these gameplay/lifecycle fixes. Controlled
 120-second door/block/source/player/crop JFR workloads and 10/30-minute
 combined/churn heap runs remain performance evidence rather than undocumented
 claims. Results and any remaining gap belong in the dated development diary.

@@ -27,6 +27,8 @@ public abstract class LiquidBlockMixin_ThermalRadiation {
 
     @Unique
     private byte frostedheart$thermalRadiationKind;
+    @Unique
+    private int frostedheart$thermalRadiationEpoch;
 
     @Inject(
             method = "updateShape",
@@ -41,14 +43,19 @@ public abstract class LiquidBlockMixin_ThermalRadiation {
             BlockPos neighborPosition,
             CallbackInfoReturnable<BlockState> callback
     ) {
+        if (!(level instanceof ServerLevel server)) {
+            return;
+        }
+        int epoch = MinecraftThermalProfiles.profileEpoch();
         byte kind = frostedheart$thermalRadiationKind;
-        if (kind == FROSTEDHEART_UNKNOWN) {
+        if (kind == FROSTEDHEART_UNKNOWN
+                || frostedheart$thermalRadiationEpoch != epoch) {
             kind = state.getFluidState().is(FluidTags.LAVA)
                     ? FROSTEDHEART_LAVA : FROSTEDHEART_NOT_LAVA;
             frostedheart$thermalRadiationKind = kind;
+            frostedheart$thermalRadiationEpoch = epoch;
         }
         if (kind == FROSTEDHEART_LAVA
-                && level instanceof ServerLevel server
                 && MinecraftThermalProfiles.lavaBlockRadiationEnabled()) {
             MinecraftThermalInput.onRadiantLiquidNeighborChanged(
                     server, currentPosition);

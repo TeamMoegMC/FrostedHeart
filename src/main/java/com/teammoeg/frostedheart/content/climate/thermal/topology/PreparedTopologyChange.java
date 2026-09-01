@@ -218,7 +218,9 @@ public final class PreparedTopologyChange {
         final long residentBrickMask;
         final long sourceSeedMask;
         public final PagePublication publication;
+        final PagePublication rollbackPublication;
         final long stagedBrickMask;
+        public final long publicationChangedBrickMask;
         final int[] brickIndexes;
         final WorkerBrickTopology[] bricks;
         final boolean naturalTemperatureChanged;
@@ -303,7 +305,13 @@ public final class PreparedTopologyChange {
             this.residentBrickMask = residentBrickMask;
             this.sourceSeedMask = sourceSeedMask;
             this.publication = publication;
+            rollbackPublication = replacedPage == null
+                    ? page.publication : replacedPage.publication;
             this.stagedBrickMask = stagedBrickMask;
+            this.publicationChangedBrickMask = retirement
+                    ? 0L
+                    : admission || replacedPage != null
+                            ? -1L : indexedBricks;
             this.brickIndexes = brickIndexes;
             this.bricks = bricks;
             this.naturalTemperatureChanged = naturalTemperatureChanged;

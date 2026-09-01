@@ -24,7 +24,9 @@ import java.util.Arrays;
 public final class QueryPublication implements AutoCloseable {
     private final ThermalMemoryBudget budget;
     private final int maximumPages;
-    private final long[] pageChangeIds;
+    private int[] pageChangeEpochs;
+    private int[] brickChangeEpochs;
+    private long[] pendingInfraredBrickMasks;
     private double[][] temperaturesC;
     private int[][] slotGenerations;
     private ThermalMemoryBudget.Reservation cellReservation;
@@ -36,7 +38,7 @@ public final class QueryPublication implements AutoCloseable {
     private int publishedBufferIndex = -1;
     private long topologyGeneration = -1L;
     private long sampleTick = -1L;
-    private long temperatureChangeId;
+    private int infraredEpoch;
     private long infraredActiveUntilTick = -1L;
     private volatile long publicationVersion;
 
@@ -52,7 +54,6 @@ public final class QueryPublication implements AutoCloseable {
         this.maximumPages = maximumPages;
         this.cellReservation = cellReservation;
         this.pageReservation = pageReservation;
-        pageChangeIds = new long[maximumPages];
         allocateBuffers(capacity);
     }
 
@@ -69,8 +70,8 @@ public final class QueryPublication implements AutoCloseable {
             throw new IllegalArgumentException("maximumPages must be positive");
         }
         ThermalMemoryBudget.Reservation pageReservation =
-                dimensionBudget.tryReserve(Math.multiplyExact(
-                        maximumPages, (long) Long.BYTES));
+                dimensionBudget.tryReserve(projectedPagePayloadBytes(
+                        maximumPages));
         if (pageReservation == null) {
             return null;
         }
@@ -92,6 +93,14 @@ public final class QueryPublication implements AutoCloseable {
         return Math.multiplyExact(
                 capacity,
                 2L * (Double.BYTES + Integer.BYTES));
+    }
+
+    private static long projectedPagePayloadBytes(int maximumPages) {
+        return Math.multiplyExact(
+                maximumPages,
+                (long) Double.BYTES
+                        + 3L * Long.BYTES
+                        + 65L * Integer.BYTES);
     }
 
     /** Geometrically grows the slot-addressed backing before a topology commit. */
@@ -141,18 +150,6 @@ public final class QueryPublication implements AutoCloseable {
         return true;
     }
 
-    /** Writes every live arena slot exactly once into the inactive buffer. */
-    public synchronized boolean publish(
-            ThermalCellArena arena,
-            double referenceTemperatureC,
-            long topologyGeneration,
-            long sampleTick
-    ) {
-        return publish(
-                arena, referenceTemperatureC,
-                topologyGeneration, sampleTick, null);
-    }
-
     public synchronized boolean publish(
             ThermalCellArena arena,
             double referenceTemperatureC,
@@ -167,23 +164,23 @@ public final class QueryPublication implements AutoCloseable {
         requireNonNegative("topologyGeneration", topologyGeneration);
         requireNonNegative("sampleTick", sampleTick);
         if (arena.highWaterMark() > capacity
-                || !acceptingPublications
-                || !beginWrite()) {
+                || !acceptingPublications) {
             return false;
         }
 
         int targetBuffer = publishedBufferIndex == 0 ? 1 : 0;
         double[] targetTemperatures = temperaturesC[targetBuffer];
         int[] targetGenerations = slotGenerations[targetBuffer];
-        boolean compareInfrared = sampleTick <= infraredActiveUntilTick
+        boolean infraredTracking = pageChangeEpochs != null
+                && sampleTick <= infraredActiveUntilTick;
+        boolean compareInfrared = infraredTracking
                 && valid && publishedBufferIndex >= 0;
         double[] previousTemperatures = compareInfrared
                 ? temperaturesC[publishedBufferIndex] : null;
         int[] previousGenerations = compareInfrared
                 ? slotGenerations[publishedBufferIndex] : null;
-        long nextTemperatureChangeId = compareInfrared
-                ? Math.incrementExact(temperatureChangeId) : temperatureChangeId;
-        boolean infraredChanged = false;
+        boolean infraredChanged = infraredTracking
+                && hasPendingInfraredChanges();
         if (hotMasks != null) {
             hotMasks.begin();
         }
@@ -197,10 +194,14 @@ public final class QueryPublication implements AutoCloseable {
             targetGenerations[slot] = generation;
             if (hotMasks != null) {
                 int pageSlot = arena.pageSlot(slot);
-                int brick = Math.floorMod(arena.minimum(slot, 0), 16) >>> 2
-                        | (Math.floorMod(arena.minimum(slot, 2), 16) >>> 2) << 2
-                        | (Math.floorMod(arena.minimum(slot, 1), 16) >>> 2) << 4;
-                hotMasks.record(pageSlot, brick, temperature);
+                int brick = brickIndex(arena, slot);
+                if (arena.isPhaseReservoir(slot)) {
+                    if (arena.enthalpyJ(slot) > 0.0D) {
+                        hotMasks.recordHot(pageSlot, brick);
+                    }
+                } else {
+                    hotMasks.record(pageSlot, brick, temperature);
+                }
             }
             if (compareInfrared && arena.isAirCell(slot)
                     && (previousGenerations[slot] != generation
@@ -208,12 +209,16 @@ public final class QueryPublication implements AutoCloseable {
                     != quantizedInfrared(temperature))) {
                 int pageSlot = arena.pageSlot(slot);
                 requirePageSlot(pageSlot);
-                pageChangeIds[pageSlot] = nextTemperatureChangeId;
+                pendingInfraredBrickMasks[pageSlot] |=
+                        1L << brickIndex(arena, slot);
                 infraredChanged = true;
             }
         }
+        if (!beginWrite()) {
+            return false;
+        }
         if (infraredChanged) {
-            temperatureChangeId = nextTemperatureChangeId;
+            commitInfraredChanges();
         }
         this.topologyGeneration = topologyGeneration;
         this.sampleTick = sampleTick;
@@ -288,6 +293,11 @@ public final class QueryPublication implements AutoCloseable {
             }
         }
 
+        private void recordHot(int pageSlot, int brick) {
+            requirePageSlot(pageSlot);
+            nextHotMask[pageSlot] |= 1L << brick;
+        }
+
         public long hotMask(int pageSlot) {
             requirePageSlot(pageSlot);
             return nextHotMask[pageSlot];
@@ -318,33 +328,50 @@ public final class QueryPublication implements AutoCloseable {
         if (activeTicks <= 0) {
             throw new IllegalArgumentException("activeTicks must be positive");
         }
+        if (!acceptingPublications) {
+            return false;
+        }
         long deadline = Math.addExact(gameTick, activeTicks);
         boolean reactivated = gameTick > infraredActiveUntilTick;
         infraredActiveUntilTick = Math.max(infraredActiveUntilTick, deadline);
+        int[] newPageEpochs = null;
+        int[] newBrickEpochs = null;
+        long[] newPendingMasks = null;
+        if (reactivated && pageChangeEpochs == null) {
+            newPageEpochs = new int[maximumPages];
+            newBrickEpochs = new int[Math.multiplyExact(maximumPages, 64)];
+            newPendingMasks = new long[maximumPages];
+        }
         if (!reactivated || !beginWrite()) {
             return false;
         }
-        long next = Math.incrementExact(temperatureChangeId);
-        Arrays.fill(pageChangeIds, next);
-        temperatureChangeId = next;
+        if (newPageEpochs != null) {
+            pageChangeEpochs = newPageEpochs;
+            brickChangeEpochs = newBrickEpochs;
+            pendingInfraredBrickMasks = newPendingMasks;
+        }
+        int next = nextInfraredEpoch();
+        Arrays.fill(pageChangeEpochs, next);
+        Arrays.fill(brickChangeEpochs, next);
+        Arrays.fill(pendingInfraredBrickMasks, 0L);
+        infraredEpoch = next;
         endWrite();
         return true;
     }
 
-    /** Marks one topology-owned Page as changed while infrared tracking is active. */
-    public synchronized void markInfraredPageChanged(
+    /** Adds topology-owned Brick changes to the next successful publication. */
+    public synchronized void markInfraredBricksChanged(
             int pageSlot,
+            long brickMask,
             long sampleTick
     ) {
         requirePageSlot(pageSlot);
         requireNonNegative("sampleTick", sampleTick);
-        if (sampleTick > infraredActiveUntilTick || !beginWrite()) {
+        if (pendingInfraredBrickMasks == null || brickMask == 0L
+                || sampleTick > infraredActiveUntilTick) {
             return;
         }
-        long next = Math.incrementExact(temperatureChangeId);
-        pageChangeIds[pageSlot] = next;
-        temperatureChangeId = next;
-        endWrite();
+        pendingInfraredBrickMasks[pageSlot] |= brickMask;
     }
 
     /** Begins one allocation-free coherent infrared read cut. */
@@ -363,7 +390,7 @@ public final class QueryPublication implements AutoCloseable {
             int readCapacity = capacity;
             long readTopology = topologyGeneration;
             long readSampleTick = sampleTick;
-            long readTemperatureChangeId = temperatureChangeId;
+            int readInfraredEpoch = infraredEpoch;
             double[] readTemperatures = readBuffer < 0
                     ? null : temperaturesC[readBuffer];
             int[] readGenerations = readBuffer < 0
@@ -377,10 +404,11 @@ public final class QueryPublication implements AutoCloseable {
                         readCapacity,
                         readTopology,
                         readSampleTick,
-                        readTemperatureChangeId,
+                        readInfraredEpoch,
                         readTemperatures,
                         readGenerations,
-                        pageChangeIds);
+                        pageChangeEpochs,
+                        brickChangeEpochs);
                 return true;
             }
         }
@@ -504,6 +532,49 @@ public final class QueryPublication implements AutoCloseable {
         sampleTick = -1L;
     }
 
+    private boolean hasPendingInfraredChanges() {
+        for (long mask : pendingInfraredBrickMasks) {
+            if (mask != 0L) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private void commitInfraredChanges() {
+        int next = nextInfraredEpoch();
+        for (int pageSlot = 0; pageSlot < maximumPages; pageSlot++) {
+            long remaining = pendingInfraredBrickMasks[pageSlot];
+            if (remaining == 0L) {
+                continue;
+            }
+            pageChangeEpochs[pageSlot] = next;
+            int firstBrick = pageSlot << 6;
+            while (remaining != 0L) {
+                int brick = Long.numberOfTrailingZeros(remaining);
+                brickChangeEpochs[firstBrick + brick] = next;
+                remaining &= remaining - 1L;
+            }
+            pendingInfraredBrickMasks[pageSlot] = 0L;
+        }
+        infraredEpoch = next;
+    }
+
+    private int nextInfraredEpoch() {
+        if (infraredEpoch == Integer.MAX_VALUE) {
+            Arrays.fill(pageChangeEpochs, 0);
+            Arrays.fill(brickChangeEpochs, 0);
+            return 1;
+        }
+        return infraredEpoch + 1;
+    }
+
+    private static int brickIndex(ThermalCellArena arena, int slot) {
+        return ((arena.minimum(slot, 0) & 15) >>> 2)
+                | ((arena.minimum(slot, 2) & 15) >>> 2) << 2
+                | ((arena.minimum(slot, 1) & 15) >>> 2) << 4;
+    }
+
     private void requirePageSlot(int pageSlot) {
         if (pageSlot < 0 || pageSlot >= maximumPages) {
             throw new IllegalArgumentException("Page slot is outside the query publication");
@@ -557,21 +628,31 @@ public final class QueryPublication implements AutoCloseable {
         private int capacity;
         private long topologyGeneration;
         private long sampleTick;
-        private long temperatureChangeId;
+        private int infraredEpoch;
         private double[] temperaturesC;
         private int[] slotGenerations;
-        private long[] pageChangeIds;
+        private int[] pageChangeEpochs;
+        private int[] brickChangeEpochs;
 
         public boolean valid() { return valid; }
         public long sampleTick() { return sampleTick; }
-        public long temperatureChangeId() { return temperatureChangeId; }
+        public int infraredEpoch() { return infraredEpoch; }
 
-        public long pageChangeId(int pageSlot) {
-            if (pageSlot < 0 || pageChangeIds == null
-                    || pageSlot >= pageChangeIds.length) {
+        public int pageChangeEpoch(int pageSlot) {
+            if (pageSlot < 0 || pageChangeEpochs == null
+                    || pageSlot >= pageChangeEpochs.length) {
                 throw new IllegalArgumentException("Page slot is outside the read cursor");
             }
-            return pageChangeIds[pageSlot];
+            return pageChangeEpochs[pageSlot];
+        }
+
+        public int brickChangeEpoch(int pageSlot, int brickIndex) {
+            if (pageSlot < 0 || pageChangeEpochs == null
+                    || pageSlot >= pageChangeEpochs.length
+                    || brickIndex < 0 || brickIndex >= 64) {
+                throw new IllegalArgumentException("Brick is outside the read cursor");
+            }
+            return brickChangeEpochs[(pageSlot << 6) + brickIndex];
         }
 
         public boolean tryRead(
@@ -612,10 +693,11 @@ public final class QueryPublication implements AutoCloseable {
                 int capacity,
                 long topologyGeneration,
                 long sampleTick,
-                long temperatureChangeId,
+                int infraredEpoch,
                 double[] temperaturesC,
                 int[] slotGenerations,
-                long[] pageChangeIds
+                int[] pageChangeEpochs,
+                int[] brickChangeEpochs
         ) {
             this.owner = owner;
             this.version = version;
@@ -623,10 +705,11 @@ public final class QueryPublication implements AutoCloseable {
             this.capacity = capacity;
             this.topologyGeneration = topologyGeneration;
             this.sampleTick = sampleTick;
-            this.temperatureChangeId = temperatureChangeId;
+            this.infraredEpoch = infraredEpoch;
             this.temperaturesC = temperaturesC;
             this.slotGenerations = slotGenerations;
-            this.pageChangeIds = pageChangeIds;
+            this.pageChangeEpochs = pageChangeEpochs;
+            this.brickChangeEpochs = brickChangeEpochs;
         }
 
         private void clear() {
@@ -636,10 +719,11 @@ public final class QueryPublication implements AutoCloseable {
             capacity = 0;
             topologyGeneration = -1L;
             sampleTick = -1L;
-            temperatureChangeId = 0L;
+            infraredEpoch = 0;
             temperaturesC = null;
             slotGenerations = null;
-            pageChangeIds = null;
+            pageChangeEpochs = null;
+            brickChangeEpochs = null;
         }
     }
 }

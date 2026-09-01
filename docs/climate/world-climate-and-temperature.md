@@ -130,7 +130,8 @@ T_natural = D + B + A + alpha_block * C
 
 `WorldTemperature.naturalBlock` 返回上述自然值。`WorldTemperature.block` 随后调用
 `MinecraftThermalInput.gameplayPassiveEnvironment`：revision-valid mesh publication 命中时以 published
-air 替换局部自然值；否则保留 natural backend；最后应用 analytic control fields。该 passive 查询不会
+air 替换局部自然值；当前稀疏 Page 尚未发布目标 Brick signature payload 时先读取该 Brick 的
+dormant checkpoint，已编译但目标点确实无 Air 时仍保留 natural backend；最后应用 analytic control fields。该 passive 查询不会
 创建 Page，也不会加载区块。`blockHeatApplicationMultiplier` 仍由
 `WorldTemperature.naturalBlock` 传入 `BlockTemperatureModel`，但当前调用没有额外局部热区项。
 
@@ -197,25 +198,48 @@ OVERRIDE -> MAX_HEAT -> MIN_COOL -> ADD_DELTA
 同一 mode 内再按 priority 和 field ID 排序。Curiosity 冷场使用 `ADD_DELTA`，`/heat_adjust`
 创建运行期 `OVERRIDE` field。控制场当前不跨服务器重启持久化；Curiosity 由实体状态在载入后
 重新报告。红外视野不直接显示 analytic field 或 physical source；它只读取
-`PagePublication` 与 `QueryPublication` 已求解的实际 Air 温度。每个
-`4 x 4 x 4` thermal Brick 量化为一个 0.25degC signed-short texel，
-`Short.MIN_VALUE` 表示 invalid。
+`PagePublication` 与 `QueryPublication` 已求解的实际 Air 温度。服务端对每个
+world block 中心调用 `PagePublication.resolveAirPoint`，再把得到的实际 Air cell
+温度量化为一个 0.25degC signed-short texel；同一 `4 x 4 x 4` Brick 内被完整墙体
+隔开的两侧因此可以显示不同温度，`Short.MIN_VALUE` 表示中心没有可显示 Air。
+这是 block-position exact，不是任意子方块 component exact；楼梯、门、栅栏等同一
+方块内存在多个 Air component 时只表示包含方块中心的 component。
 
 客户端开启、跨 chunk/section 时请求 full snapshot，稳定时按 entity ID 错峰每
-`40` ticks 携带 temperature change ID 和 729-bit Page presence。服务端只在
-presence 改变或 Page 温度跨量化边界时返回 full/delta records；静态状态不发送
-S2C。QueryPublication 暂时 invalid 或超龄时同样不响应，客户端保留最后有效
-temperature mirror；有效 publication 确认的 Page retirement 仍通过空 full 清除。
+`40` ticks 携带 infrared epoch 和 729-bit Page presence。服务端使用固定 Page/Brick
+epoch 数组回答任意旧客户端，只编码视野内 epoch 更新的 Bricks；presence mismatch
+只发送 added/removed Page delta。无可见 Brick/presence 变化时不发送 S2C，即使维度
+内别处推进了 epoch。QueryPublication 暂时 invalid 或超龄时同样不响应，客户端
+保留最后有效 temperature mirror；center/full 请求在匹配响应被接受前不会降级为
+delta。等待 full 时暂停固定 40-tick poll，并按 entity ID 分散在 `41..59` ticks 后
+重试；该区间没有 20 的倍数，因此不会与 20-tick thermal cut 永久同相。客户端只把
+delta 应用到相同 texture center；不同中心的 delta 被丢弃并在
+下一 tick 重新 full，full 响应则接管其服务端中心。有效 publication 确认的 Page
+retirement 只清除对应 `16^3` 区域。
 范围枚举复用 `MinecraftPageManager.pagesByChunk`，只读取已有 coherent
 publication，不 admission Page、retain lease 或加载 chunk。客户端写入一张线性
-`GL_R16I 36 x 36 x 36` 纹理，fragment shader 每像素只执行一次 integer texture
+`GL_R16I 144 x 144 x 144` 纹理，CPU 侧只保留同一份 persistent direct
+`ShortBuffer`；mirror 在首次实际渲染红外视野时分配，8 KiB Page scratch 在首次
+Page delta 时分配，之后都有界复用。
+世界 reset 会立即摘下 GPU handle，并让 render callback 只删除捕获的旧资源。首个
+matching full snapshot 安装前，客户端以玩家当前 section 为中心渲染全 `INVALID`
+纹理，红外初始化不依赖服务端立即响应；跨 section 等待新 full 时继续按旧 texture
+origin 渲染旧 snapshot，响应到达后再整表替换，因此网络 full 状态不会使红外 pass
+闪烁。full 上传整张纹理，delta 通过该 scratch 只上传改变的
+`16^3` Page。fragment shader 每像素只执行一次 integer texture
 fetch。depth 重建得到的是可见几何表面；采样前沿 camera ray 向摄像机偏移
-`1/2048` 的相对距离，使位于 `4-block` Brick 边界的方块面稳定读取表面前方的
+`1/2048` 的相对距离，使方块面稳定读取表面前方的
 Air texel，不在相邻 texels 间闪烁。扫描球内 invalid/无 Page texel 按
-`MIN_TEMP` 显示冷蓝。shader 的逆视图矩阵和 `u_CameraPosition` 均来自当前
-`GameRenderer` main `Camera`；潜行眼高平滑和第三人称不会把温度坐标相对 depth
-偏移。篝火烟雾等写 depth 的粒子沿用同一世界坐标采样，与粒子所在 Air texel 的
-温度颜色融合；不增加粒子 mask、专用 pass 或渲染时序分支。
+`MIN_TEMP` 显示冷蓝。shader 的逆视图矩阵来自当前 `GameRenderer` main `Camera`；
+Java 先以 double 计算 camera 到 texture origin 的相对坐标，再转换为小范围 float
+uniform，避免远世界坐标丢失一格精度。潜行眼高平滑和第三人称不会把温度坐标相对
+depth 偏移。篝火烟雾等写 depth 的粒子沿用同一世界坐标采样，与粒子所在 Air
+texel 的温度颜色融合；不增加粒子 mask、专用 pass 或渲染时序分支。
+
+首次/换中心 full snapshot 还可读取当前 source 七-section closure 内的 dormant
+Brick mean，并复用 `UNIFORM` record 作为临时 Brick-resolution bootstrap；不加入
+presence 或稳定 delta，不 admission Page、不加载 chunk。真实 Page admission 后，
+现有 added-Page 路径会清除该区域并替换成 block-position exact 数据。
 
 Campfire、Generator 和蒸汽喷泉不是 analytic field；它们由
 `PhysicalSourceSpatialIndex` 注册为显式功率 source，进入 mesh 与直接辐射路径。

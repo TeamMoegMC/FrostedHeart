@@ -16,6 +16,7 @@ import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.longs.Long2LongMap;
 import it.unimi.dsi.fastutil.longs.Long2LongOpenHashMap;
+import it.unimi.dsi.fastutil.longs.LongArrayList;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -36,6 +37,7 @@ public final class WorkerPageStore implements AutoCloseable {
     private final Int2ObjectOpenHashMap<PageState> activeBySlot;
     private final IntArrayList freePageSlots;
     private final QueryPublication.HotMaskScratch hotMaskScratch;
+    private final LongArrayList residencyIdentityChanges = new LongArrayList();
     private int pageSlotHighWater;
     private Long2LongOpenHashMap desiredBySection = new Long2LongOpenHashMap();
     private Long2LongOpenHashMap desiredScratch = new Long2LongOpenHashMap();
@@ -99,9 +101,9 @@ public final class WorkerPageStore implements AutoCloseable {
         requireOpen();
         desiredScratch.clear();
         for (PageState page : activeBySection.values()) {
-            page.hotBrickMask = hotMaskScratch.hotMask(page.pageSlot)
+            long hotBrickMask = hotMaskScratch.hotMask(page.pageSlot)
                     & page.residentBrickMask;
-            long active = page.sourceSeedMask | page.hotBrickMask;
+            long active = page.sourceSeedMask | hotBrickMask;
             if (active == 0L) {
                 continue;
             }
@@ -274,6 +276,13 @@ public final class WorkerPageStore implements AutoCloseable {
                 count++;
             }
         }
+        for (int index = 0; index < residencyIdentityChanges.size(); index++) {
+            long sectionKey = residencyIdentityChanges.getLong(index);
+            if (desiredBySection.get(sectionKey)
+                    == desiredScratch.get(sectionKey)) {
+                count++;
+            }
+        }
         if (count == 0) {
             Long2LongOpenHashMap previous = desiredBySection;
             desiredBySection = desiredScratch;
@@ -293,6 +302,13 @@ public final class WorkerPageStore implements AutoCloseable {
                 keys[write++] = entry.getLongKey();
             }
         }
+        for (int index = 0; index < residencyIdentityChanges.size(); index++) {
+            long sectionKey = residencyIdentityChanges.getLong(index);
+            if (desiredBySection.get(sectionKey)
+                    == desiredScratch.get(sectionKey)) {
+                keys[write++] = sectionKey;
+            }
+        }
         Arrays.sort(keys);
         ThermalCompletion.BrickResidency[] updates =
                 new ThermalCompletion.BrickResidency[count];
@@ -307,6 +323,7 @@ public final class WorkerPageStore implements AutoCloseable {
         Long2LongOpenHashMap previous = desiredBySection;
         desiredBySection = desiredScratch;
         desiredScratch = previous;
+        residencyIdentityChanges.clear();
         return updates;
     }
 
@@ -351,12 +368,16 @@ public final class WorkerPageStore implements AutoCloseable {
         }
         PreparedTopologyChange.PageWrite[] writes =
                 new PreparedTopologyChange.PageWrite[draftCount];
+        int admissionCount = 0;
         for (int index = 0; index < draftCount; index++) {
             TopologyPlan.PageDraft draft = drafts.get(index);
             if (draft.retirement) {
                 writes[index] = PreparedTopologyChange.PageWrite.retirement(
                         draft);
                 continue;
+            }
+            if (draft.admission) {
+                admissionCount++;
             }
             int replacementCount = Long.bitCount(draft.replacementMask);
             int[] brickIndexes = replacementCount == 0
@@ -442,6 +463,10 @@ public final class WorkerPageStore implements AutoCloseable {
             if (draft.resyncToken != null) {
                 resyncTokens.add(draft.resyncToken);
             }
+        }
+        if (admissionCount != 0) {
+            residencyIdentityChanges.ensureCapacity(Math.addExact(
+                    residencyIdentityChanges.size(), admissionCount));
         }
         return writes;
     }
@@ -647,6 +672,7 @@ public final class WorkerPageStore implements AutoCloseable {
     void commitAdmission(PageState state) {
         activeBySection.put(state.handle.sectionKey(), state);
         activeBySlot.put(state.pageSlot, state);
+        residencyIdentityChanges.add(state.handle.sectionKey());
         hotMaskScratch.installPage(
                 state.pageSlot, state.naturalTemperatureC);
         state.dormantAir = null;
@@ -729,6 +755,7 @@ public final class WorkerPageStore implements AutoCloseable {
         freePageSlots.clear();
         desiredBySection.clear();
         desiredScratch.clear();
+        residencyIdentityChanges.clear();
     }
 
     public static final class PageState {
@@ -745,7 +772,6 @@ public final class WorkerPageStore implements AutoCloseable {
         long resolvedBrickMask;
         long residentBrickMask;
         long sourceSeedMask;
-        long hotBrickMask;
         double naturalTemperatureC;
         ThermalInputBatch.DormantAirCut dormantAir;
 

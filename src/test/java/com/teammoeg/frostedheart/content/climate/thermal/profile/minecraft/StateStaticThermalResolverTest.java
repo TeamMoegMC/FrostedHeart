@@ -150,43 +150,6 @@ class StateStaticThermalResolverTest {
         assertNull(regionOverflow);
     }
 
-    @Test
-    void injectedClassifierOwnsMaterialIdentity() {
-        StateStaticThermalResolver resolver = new StateStaticThermalResolver(
-                8,
-                (blockState, fluidState) -> new StateStaticThermalResolver.SignatureMetadata(
-                        2, 3)
-        );
-
-        ResolvedThermalSignature signature = resolved(resolver.resolve(
-                Blocks.AIR.defaultBlockState(),
-                Fluids.EMPTY.defaultFluidState()));
-
-        assertEquals(2, signature.materialProfileId());
-        assertEquals(3, signature.materialContactPatternId());
-    }
-
-    @Test
-    void geometryAwareClassifierReusesTheConservativeMaterialMask() {
-        StateStaticThermalResolver resolver =
-                StateStaticThermalResolver.withMaterialMask(
-                        8,
-                        (blockState, fluidState, materialMask) ->
-                                new StateStaticThermalResolver.SignatureMetadata(
-                                        Long.bitCount(materialMask),
-                                        materialMask == -1L ? 1 : 2));
-
-        ResolvedThermalSignature stone = resolved(resolver.resolve(
-                Blocks.STONE.defaultBlockState(), Fluids.EMPTY.defaultFluidState()));
-        ResolvedThermalSignature slab = resolved(resolver.resolve(
-                Blocks.OAK_SLAB.defaultBlockState(), Fluids.EMPTY.defaultFluidState()));
-
-        assertEquals(64, stone.materialProfileId());
-        assertEquals(1, stone.materialContactPatternId());
-        assertEquals(32, slab.materialProfileId());
-        assertEquals(2, slab.materialContactPatternId());
-    }
-
     private static ResolvedThermalSignature resolved(
             ResolvedThermalSignature result
     ) {

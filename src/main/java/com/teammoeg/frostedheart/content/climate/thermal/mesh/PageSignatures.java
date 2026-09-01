@@ -7,7 +7,7 @@ import java.util.Objects;
 
 /** Immutable Brick-addressed signature IDs for one 16-cubed thermal Page. */
 public final class PageSignatures {
-    public static final int ENTRY_COUNT = 16 * 16 * 16;
+    private static final int ENTRY_COUNT = 16 * 16 * 16;
     private static final int BRICK_COUNT = ThermalPageHandle.BASE_BRICK_COUNT;
     public static final int ENTRIES_PER_BRICK = 4 * 4 * 4;
 
@@ -146,18 +146,10 @@ public final class PageSignatures {
     /** Main-thread or worker-preparation scratch; a built value never aliases it. */
     public static final class Builder {
         private final ThermalSignatureTable signatures;
-        private final int[] values = new int[ENTRY_COUNT];
-        private final int[] brick = new int[ENTRIES_PER_BRICK];
         private final Object[] brickPayloads = new Object[BRICK_COUNT];
 
         public Builder(ThermalSignatureTable signatures) {
             this.signatures = Objects.requireNonNull(signatures, "signatures");
-        }
-
-        public Builder set(int blockIndex, int value) {
-            requireBlockIndex(blockIndex);
-            values[blockIndex] = value;
-            return this;
         }
 
         public Builder reset(PageSignatures base) {
@@ -181,26 +173,6 @@ public final class PageSignatures {
 
         public PageSignatures buildBricks() {
             return new PageSignatures(brickPayloads.clone());
-        }
-
-        public PageSignatures build() {
-            Object[] bricks = new Object[BRICK_COUNT];
-            for (int baseBrick = 0; baseBrick < BRICK_COUNT; baseBrick++) {
-                int write = 0;
-                int minX = (baseBrick & 3) << 2;
-                int minZ = (baseBrick >>> 2 & 3) << 2;
-                int minY = (baseBrick >>> 4 & 3) << 2;
-                for (int y = minY; y < minY + 4; y++) {
-                    for (int z = minZ; z < minZ + 4; z++) {
-                        int first = y << 8 | z << 4 | minX;
-                        for (int x = 0; x < 4; x++) {
-                            brick[write++] = values[first + x];
-                        }
-                    }
-                }
-                bricks[baseBrick] = encodeBrick(signatures, brick);
-            }
-            return new PageSignatures(bricks);
         }
     }
 }

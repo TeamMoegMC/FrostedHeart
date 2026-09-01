@@ -15,8 +15,7 @@ uniform isampler3D temperatureTexture;
 
 uniform mat4 u_InverseProjectionMatrix;
 uniform mat4 u_InverseViewMatrix;
-uniform vec3 u_CameraPosition;
-uniform vec3 temperatureOrigin;
+uniform vec3 temperatureCameraOffset;
 
 in vec2 texCoord;
 out vec4 FragColor;
@@ -24,7 +23,7 @@ out vec4 FragColor;
 const float SCANNING_WIDTH = 3.0;
 const float MIN_TEMP = -20.0;
 const float MAX_TEMP = 20.0;
-const int TEXTURE_SIZE = 36;
+const int TEXTURE_SIZE = 144;
 const int INVALID_TEMPERATURE = -32768;
 const float SURFACE_SAMPLE_SCALE = 2047.0 / 2048.0;
 
@@ -61,11 +60,10 @@ void main() {
     vec4 relativeWorldPos = u_InverseViewMatrix * viewSpacePos;
     relativeWorldPos /= relativeWorldPos.w;
     float distToCamera = length(relativeWorldPos.xyz);
-    vec3 temperatureSamplePos = u_CameraPosition
+    vec3 temperatureSamplePos = temperatureCameraOffset
         + relativeWorldPos.xyz * SURFACE_SAMPLE_SCALE;
 
-    ivec3 temperatureTexel = ivec3(floor(
-        (temperatureSamplePos - temperatureOrigin) * 0.25));
+    ivec3 temperatureTexel = ivec3(floor(temperatureSamplePos));
     if (distToCamera >= radius
             || any(lessThan(temperatureTexel, ivec3(0)))
             || any(greaterThanEqual(

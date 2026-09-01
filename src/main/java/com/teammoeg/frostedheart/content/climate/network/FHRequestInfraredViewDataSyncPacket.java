@@ -23,30 +23,30 @@ public final class FHRequestInfraredViewDataSyncPacket implements CMessage {
 
     private final int requestId;
     private final boolean forceFull;
-    private final long lastTemperatureChangeId;
+    private final int lastInfraredEpoch;
     private final long[] knownPresence;
 
     public FHRequestInfraredViewDataSyncPacket(
             int requestId,
             boolean forceFull,
-            long lastTemperatureChangeId,
+            int lastInfraredEpoch,
             long[] knownPresence
     ) {
-        if (requestId < 0 || lastTemperatureChangeId < 0L
+        if (requestId < 0 || lastInfraredEpoch < 0
                 || knownPresence == null
                 || knownPresence.length != PRESENCE_WORDS) {
             throw new IllegalArgumentException("invalid infrared request");
         }
         this.requestId = requestId;
         this.forceFull = forceFull;
-        this.lastTemperatureChangeId = lastTemperatureChangeId;
+        this.lastInfraredEpoch = lastInfraredEpoch;
         this.knownPresence = knownPresence.clone();
     }
 
     public FHRequestInfraredViewDataSyncPacket(FriendlyByteBuf buffer) {
         requestId = buffer.readVarInt();
         forceFull = buffer.readBoolean();
-        lastTemperatureChangeId = buffer.readVarLong();
+        lastInfraredEpoch = buffer.readVarInt();
         knownPresence = new long[PRESENCE_WORDS];
         for (int index = 0; index < PRESENCE_WORDS; index++) {
             knownPresence[index] = buffer.readLong();
@@ -57,7 +57,7 @@ public final class FHRequestInfraredViewDataSyncPacket implements CMessage {
     public void encode(FriendlyByteBuf buffer) {
         buffer.writeVarInt(requestId);
         buffer.writeBoolean(forceFull);
-        buffer.writeVarLong(lastTemperatureChangeId);
+        buffer.writeVarInt(lastInfraredEpoch);
         for (long word : knownPresence) {
             buffer.writeLong(word);
         }
@@ -74,7 +74,7 @@ public final class FHRequestInfraredViewDataSyncPacket implements CMessage {
                     MinecraftThermalInput.gameplayInfraredSnapshot(
                             player,
                             forceFull,
-                            lastTemperatureChangeId,
+                            lastInfraredEpoch,
                             knownPresence);
             if (snapshot != null) {
                 FHNetwork.INSTANCE.sendPlayer(

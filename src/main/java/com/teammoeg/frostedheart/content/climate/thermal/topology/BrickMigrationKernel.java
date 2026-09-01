@@ -8,11 +8,13 @@ import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.messa
 
 import java.util.Arrays;
 
-/** Stateless Brick-local enthalpy and phase-state migration kernel. */
+/** Reusable Brick-local enthalpy and phase-state migration kernel. */
 final class BrickMigrationKernel {
     private final ThermalCellArena arena;
     private final ThermalSignatureTable signatures;
     private final ThermalTopologyParameters parameters;
+    private double[] enthalpyScratch = new double[0];
+    private double[] overlapCapacityScratch = new double[0];
 
     BrickMigrationKernel(
             ThermalCellArena arena,
@@ -36,14 +38,19 @@ final class BrickMigrationKernel {
             return;
         }
         int count = next.span.count();
-        double[] enthalpy = new double[count];
-        double[] overlapCapacity = new double[count];
-        for (int offset = 0; offset < count; offset++) {
-            enthalpy[offset] = arena.enthalpyJ(
-                    next.span.firstSlot() + offset);
+        boolean migrateCommitted = old.span.count() != 0;
+        boolean restoreDormant = !migrateCommitted
+                && page.dormantAir != null
+                && page.dormantAir.hasBrick(brick);
+        if (!migrateCommitted && !restoreDormant) {
+            return;
         }
-        if (old.span.count() != 0) {
-            Arrays.fill(enthalpy, 0.0D);
+        ensureScratch(count);
+        double[] enthalpy = enthalpyScratch;
+        double[] overlapCapacity = overlapCapacityScratch;
+        if (migrateCommitted) {
+            Arrays.fill(enthalpy, 0, count, 0.0D);
+            Arrays.fill(overlapCapacity, 0, count, 0.0D);
             migrateAir(
                     page,
                     brick,
@@ -56,8 +63,11 @@ final class BrickMigrationKernel {
             if (sameLifecycle) {
                 migratePhase(old, next, enthalpy);
             }
-        } else if (page.dormantAir != null
-                && page.dormantAir.hasBrick(brick)) {
+        } else {
+            for (int offset = 0; offset < count; offset++) {
+                enthalpy[offset] = arena.enthalpyJ(
+                        next.span.firstSlot() + offset);
+            }
             restoreDormant(page.dormantAir, brick, next, enthalpy);
         }
         for (int offset = 0; offset < count; offset++) {
@@ -76,27 +86,22 @@ final class BrickMigrationKernel {
             double[] enthalpy,
             double[] overlapCapacity
     ) {
-        double microCapacity =
-                parameters.effectiveAirCapacityJPerBlockK() / 64.0D;
-        for (int block = 0; block < 64; block++) {
-            for (int microcell = 0; microcell < 64; microcell++) {
-                int oldSlot = airSlot(
-                        old, page.signatures, brick, block, microcell);
-                int newSlot = airSlot(
-                        next, nextSignatures, brick, block, microcell);
-                if (oldSlot < 0 || newSlot < 0) {
-                    continue;
-                }
-                int offset = newSlot - next.span.firstSlot();
-                double oldOffset = arena.enthalpyJ(oldSlot)
-                        * arena.inverseCapacityKPerJ(oldSlot);
-                enthalpy[offset] += oldOffset * microCapacity;
-                overlapCapacity[offset] += microCapacity;
+        if (old.coverageSlot >= 0 && next.coverageSlot >= 0) {
+            if (old.mixedGeometry == null && next.mixedGeometry == null) {
+                migrateRegularAir(
+                        old, next, enthalpy, overlapCapacity);
+            } else {
+                double microCapacity =
+                        parameters.effectiveAirCapacityJPerBlockK() / 64.0D;
+                migrateMixedAir(
+                        page.signatures, nextSignatures, brick,
+                        old, next, microCapacity,
+                        enthalpy, overlapCapacity);
             }
         }
         double initialOffset = page.naturalTemperatureC
                 - parameters.referenceTemperatureC();
-        for (int offset = 0; offset < enthalpy.length; offset++) {
+        for (int offset = 0; offset < next.span.count(); offset++) {
             int slot = next.span.firstSlot() + offset;
             if (arena.isMaterialPole(slot) || arena.isPhaseReservoir(slot)) {
                 enthalpy[offset] = arena.enthalpyJ(slot);
@@ -107,6 +112,56 @@ final class BrickMigrationKernel {
                     arena.capacityJPerK(slot) - overlapCapacity[offset]);
             enthalpy[offset] += added * initialOffset;
         }
+    }
+
+    private void migrateMixedAir(
+            PageSignatures oldSignatures,
+            PageSignatures nextSignatures,
+            int brick,
+            WorkerBrickTopology old,
+            WorkerBrickTopology next,
+            double microCapacity,
+            double[] enthalpy,
+            double[] overlapCapacity
+    ) {
+        for (int block = 0; block < 64; block++) {
+            int oldSignature = signatureAt(
+                    oldSignatures, brick, block);
+            int nextSignature = signatureAt(
+                    nextSignatures, brick, block);
+            long remaining = signatures.airMask(oldSignature)
+                    & signatures.airMask(nextSignature);
+            while (remaining != 0L) {
+                int microcell = Long.numberOfTrailingZeros(remaining);
+                remaining &= remaining - 1L;
+                int oldSlot = airSlot(
+                        old, oldSignature, block, microcell);
+                int newSlot = airSlot(
+                        next, nextSignature, block, microcell);
+                if (oldSlot < 0 || newSlot < 0) {
+                    continue;
+                }
+                int offset = newSlot - next.span.firstSlot();
+                double oldOffset = arena.enthalpyJ(oldSlot)
+                        * arena.inverseCapacityKPerJ(oldSlot);
+                enthalpy[offset] += oldOffset * microCapacity;
+                overlapCapacity[offset] += microCapacity;
+            }
+        }
+    }
+
+    private void migrateRegularAir(
+            WorkerBrickTopology old,
+            WorkerBrickTopology next,
+            double[] enthalpy,
+            double[] overlapCapacity
+    ) {
+        int offset = next.coverageSlot - next.span.firstSlot();
+        double nextCapacity = arena.capacityJPerK(next.coverageSlot);
+        enthalpy[offset] = arena.enthalpyJ(old.coverageSlot)
+                * arena.inverseCapacityKPerJ(old.coverageSlot)
+                * nextCapacity;
+        overlapCapacity[offset] = nextCapacity;
     }
 
     private void restoreDormant(
@@ -139,21 +194,13 @@ final class BrickMigrationKernel {
 
     private int airSlot(
             WorkerBrickTopology topology,
-            PageSignatures pageSignatures,
-            int brick,
+            int signatureId,
             int block,
             int microcell
     ) {
         if (!topology.cellsResolved || topology.coverageSlot < 0) {
             return -1;
         }
-        int localX = ((brick & 3) << 2) + (block & 3);
-        int localZ = ((brick >>> 2 & 3) << 2)
-                + (block >>> 2 & 3);
-        int localY = ((brick >>> 4 & 3) << 2)
-                + (block >>> 4 & 3);
-        int signatureId = pageSignatures.get(
-                localX | localZ << 4 | localY << 8);
         int region = signatures.componentOrdinal(signatureId, microcell);
         if (region == 0xff) {
             return -1;
@@ -166,6 +213,28 @@ final class BrickMigrationKernel {
         return component < 0
                 ? -1
                 : topology.coverageSlot + component;
+    }
+
+    private static int signatureAt(
+            PageSignatures pageSignatures,
+            int brick,
+            int block
+    ) {
+        int localX = ((brick & 3) << 2) + (block & 3);
+        int localZ = ((brick >>> 2 & 3) << 2)
+                + (block >>> 2 & 3);
+        int localY = ((brick >>> 4 & 3) << 2)
+                + (block >>> 4 & 3);
+        return pageSignatures.get(localX | localZ << 4 | localY << 8);
+    }
+
+    private void ensureScratch(int count) {
+        if (enthalpyScratch.length >= count) {
+            return;
+        }
+        int capacity = Math.max(count, Math.max(4, enthalpyScratch.length * 2));
+        enthalpyScratch = new double[capacity];
+        overlapCapacityScratch = new double[capacity];
     }
 
     private void migrateMaterial(
@@ -223,7 +292,7 @@ final class BrickMigrationKernel {
             int newSlot = next.phaseReservoirs.slot()[nextIndex];
             arena.copyPhaseRequestState(oldSlot, newSlot);
             enthalpy[newSlot - next.span.firstSlot()] =
-                    arena.enthalpyJ(newSlot);
+                    arena.enthalpyJ(oldSlot);
         }
     }
 

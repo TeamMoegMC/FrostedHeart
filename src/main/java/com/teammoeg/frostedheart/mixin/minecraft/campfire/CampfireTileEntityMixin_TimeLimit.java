@@ -26,6 +26,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.MinecraftThermalInput;
 import com.teammoeg.frostedheart.util.mixin.ICampfireExtra;
 
 import net.minecraft.world.level.block.state.BlockState;
@@ -37,6 +38,7 @@ import net.minecraftforge.items.IItemHandler;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.RecipeType;
 import net.minecraft.world.level.Level;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.block.CampfireBlock;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -155,6 +157,11 @@ public abstract class CampfireTileEntityMixin_TimeLimit extends BlockEntity impl
         } else {
         	mxi.lifeTime = 0;
         	mxi.extinguishCampfire();
+        }
+        if (pLevel instanceof ServerLevel serverLevel
+                && Math.floorMod(
+                        serverLevel.getGameTime() + pPos.asLong(), 20L) == 0L) {
+            MinecraftThermalInput.onCampfireTick(serverLevel, pPos);
         }
     }
 

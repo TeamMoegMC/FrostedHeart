@@ -21,16 +21,14 @@ import net.minecraftforge.network.NetworkEvent;
 import java.util.function.Supplier;
 
 public final class FHResponseInfraredViewDataSyncPacket implements CMessage {
-    public static final int RECORD_SHORTS = 65;
-    private static final int TEMPERATURES_PER_PAGE = 64;
-
     private final int requestId;
     private final int centerChunkX;
     private final int centerChunkZ;
     private final int centerSectionY;
-    private final long temperatureChangeId;
+    private final int infraredEpoch;
     private final boolean full;
-    private final short[] pageRecords;
+    private final long[] presence;
+    private final byte[] brickRecords;
 
     public FHResponseInfraredViewDataSyncPacket(
             int requestId,
@@ -41,9 +39,10 @@ public final class FHResponseInfraredViewDataSyncPacket implements CMessage {
                 snapshot.centerChunkX(),
                 snapshot.centerChunkZ(),
                 snapshot.centerSectionY(),
-                snapshot.temperatureChangeId(),
+                snapshot.infraredEpoch(),
                 snapshot.full(),
-                snapshot.pageRecords());
+                snapshot.presence(),
+                snapshot.brickRecords());
     }
 
     private FHResponseInfraredViewDataSyncPacket(
@@ -51,22 +50,29 @@ public final class FHResponseInfraredViewDataSyncPacket implements CMessage {
             int centerChunkX,
             int centerChunkZ,
             int centerSectionY,
-            long temperatureChangeId,
+            int infraredEpoch,
             boolean full,
-            short[] pageRecords
+            long[] presence,
+            byte[] brickRecords
     ) {
-        if (requestId < 0 || temperatureChangeId < 0L
-                || pageRecords == null
-                || pageRecords.length % RECORD_SHORTS != 0) {
+        if (requestId < 0 || infraredEpoch < 0
+                || presence == null || brickRecords == null
+                || presence.length != 0
+                && presence.length
+                        != FHRequestInfraredViewDataSyncPacket.PRESENCE_WORDS
+                || full && presence.length
+                        != FHRequestInfraredViewDataSyncPacket.PRESENCE_WORDS
+                || brickRecords.length > InfraredBrickCodec.MAX_PAYLOAD_BYTES) {
             throw new IllegalArgumentException("invalid infrared response");
         }
         this.requestId = requestId;
         this.centerChunkX = centerChunkX;
         this.centerChunkZ = centerChunkZ;
         this.centerSectionY = centerSectionY;
-        this.temperatureChangeId = temperatureChangeId;
+        this.infraredEpoch = infraredEpoch;
         this.full = full;
-        this.pageRecords = pageRecords;
+        this.presence = presence;
+        this.brickRecords = brickRecords;
     }
 
     public FHResponseInfraredViewDataSyncPacket(FriendlyByteBuf buffer) {
@@ -74,17 +80,19 @@ public final class FHResponseInfraredViewDataSyncPacket implements CMessage {
         centerChunkX = buffer.readInt();
         centerChunkZ = buffer.readInt();
         centerSectionY = buffer.readInt();
-        temperatureChangeId = buffer.readVarLong();
+        infraredEpoch = buffer.readVarInt();
         full = buffer.readBoolean();
-        int pageCount = buffer.readVarInt();
-        pageRecords = new short[Math.multiplyExact(pageCount, RECORD_SHORTS)];
-        for (int page = 0; page < pageCount; page++) {
-            int offset = page * RECORD_SHORTS;
-            pageRecords[offset] = (short) buffer.readVarInt();
-            for (int brick = 0; brick < TEMPERATURES_PER_PAGE; brick++) {
-                pageRecords[offset + 1 + brick] = buffer.readShort();
+        if (buffer.readBoolean()) {
+            presence = new long[
+                    FHRequestInfraredViewDataSyncPacket.PRESENCE_WORDS];
+            for (int index = 0; index < presence.length; index++) {
+                presence[index] = buffer.readLong();
             }
+        } else {
+            presence = new long[0];
         }
+        brickRecords = buffer.readByteArray(
+                InfraredBrickCodec.MAX_PAYLOAD_BYTES);
     }
 
     @Override
@@ -93,17 +101,15 @@ public final class FHResponseInfraredViewDataSyncPacket implements CMessage {
         buffer.writeInt(centerChunkX);
         buffer.writeInt(centerChunkZ);
         buffer.writeInt(centerSectionY);
-        buffer.writeVarLong(temperatureChangeId);
+        buffer.writeVarInt(infraredEpoch);
         buffer.writeBoolean(full);
-        int pageCount = pageRecords.length / RECORD_SHORTS;
-        buffer.writeVarInt(pageCount);
-        for (int page = 0; page < pageCount; page++) {
-            int offset = page * RECORD_SHORTS;
-            buffer.writeVarInt(Short.toUnsignedInt(pageRecords[offset]));
-            for (int brick = 0; brick < TEMPERATURES_PER_PAGE; brick++) {
-                buffer.writeShort(pageRecords[offset + 1 + brick]);
+        buffer.writeBoolean(presence.length != 0);
+        if (presence.length != 0) {
+            for (long word : presence) {
+                buffer.writeLong(word);
             }
         }
+        buffer.writeByteArray(brickRecords);
     }
 
     @Override
@@ -117,9 +123,10 @@ public final class FHResponseInfraredViewDataSyncPacket implements CMessage {
                     centerChunkX,
                     centerChunkZ,
                     centerSectionY,
-                    temperatureChangeId,
+                    infraredEpoch,
                     full,
-                    pageRecords);
+                    presence,
+                    brickRecords);
             if (RenderSystem.isOnRenderThread()) {
                 update.run();
             } else {

@@ -19,11 +19,13 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.bootstrap.client.FHShaders;
 import com.teammoeg.frostedheart.content.climate.network.FHRequestInfraredViewDataSyncPacket;
-import com.teammoeg.frostedheart.content.climate.network.FHResponseInfraredViewDataSyncPacket;
+import com.teammoeg.frostedheart.content.climate.network.InfraredBrickCodec;
 import com.teammoeg.frostedheart.mixin.oculus.IrisRenderingPipelineAccess;
 
+import io.netty.buffer.Unpooled;
 import net.irisshaders.iris.Iris;
 import net.minecraft.client.Minecraft;
+import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.util.Mth;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.api.distmarker.Dist;
@@ -46,32 +48,41 @@ public final class InfraredViewRenderer {
     private static final int SCAN_RADIUS_BLOCKS = 64;
     private static final int PAGE_RADIUS = 4;
     private static final int PAGE_WIDTH = 9;
-    private static final int BRICKS_PER_PAGE_AXIS = 4;
+    private static final int BLOCKS_PER_PAGE_AXIS = 16;
     private static final int TEXTURE_SIZE =
-            PAGE_WIDTH * BRICKS_PER_PAGE_AXIS;
+            PAGE_WIDTH * BLOCKS_PER_PAGE_AXIS;
     private static final int TEXTURE_TEXELS =
             TEXTURE_SIZE * TEXTURE_SIZE * TEXTURE_SIZE;
+    private static final int PAGE_TEXELS = 16 * 16 * 16;
     private static final int REFRESH_TICKS = 40;
+    private static final int FULL_RETRY_MIN_TICKS = 41;
+    private static final int FULL_RETRY_SPREAD_TICKS = 19;
     private static final float RADIUS_DUR =
             (float) SCAN_RADIUS_BLOCKS / EXPANDING_TICKS;
 
-    private static final short[] temperatureMirror =
-            new short[TEXTURE_TEXELS];
-    private static final ShortBuffer temperatureUpload =
-            BufferUtils.createShortBuffer(TEXTURE_TEXELS);
+    @Nullable
+    private static ShortBuffer temperatureMirror;
+    @Nullable
+    private static ShortBuffer pageUpload;
     private static final long[] knownPresence =
             new long[FHRequestInfraredViewDataSyncPacket.PRESENCE_WORDS];
+    private static final long[] dirtyUploadPages =
+            new long[FHRequestInfraredViewDataSyncPacket.PRESENCE_WORDS];
+    private static final short[] decodedBrick =
+            new short[InfraredBrickCodec.BLOCKS_PER_BRICK];
+    private static final InfraredBrickCodec.Decoder brickDecoder =
+            new InfraredBrickCodec.Decoder();
 
     @Nullable
     private static PoseStack cameraPose;
     @Nullable
     private static RenderTarget overlayTarget;
     private static boolean open;
-    private static boolean snapshotAvailable;
+    private static boolean deltaBaselineValid;
     private static boolean requestCenterValid;
     private static int requestId;
     private static long lastRequestTick = Long.MIN_VALUE;
-    private static long temperatureChangeId;
+    private static int infraredEpoch;
     private static int requestedChunkX;
     private static int requestedChunkZ;
     private static int requestedSectionY;
@@ -80,10 +91,6 @@ public final class InfraredViewRenderer {
     private static int textureCenterSectionY;
     private static int temperatureTexture;
     private static float radius;
-
-    static {
-        Arrays.fill(temperatureMirror, Short.MIN_VALUE);
-    }
 
     private InfraredViewRenderer() {
     }
@@ -120,9 +127,15 @@ public final class InfraredViewRenderer {
                 || centerChunkZ != requestedChunkZ
                 || centerSectionY != requestedSectionY;
         long gameTick = minecraft.level.getGameTime();
-        boolean periodic = Math.floorMod(
+        boolean awaitingFull = requestCenterValid && !deltaBaselineValid;
+        boolean retryFull = awaitingFull
+                && gameTick - lastRequestTick
+                >= FULL_RETRY_MIN_TICKS + Math.floorMod(
+                        minecraft.player.getId(), FULL_RETRY_SPREAD_TICKS);
+        boolean periodic = !awaitingFull && Math.floorMod(
                 gameTick + minecraft.player.getId(), REFRESH_TICKS) == 0L;
-        if ((forceFull || periodic) && lastRequestTick != gameTick) {
+        if ((forceFull || retryFull || periodic)
+                && lastRequestTick != gameTick) {
             sendRequest(
                     centerChunkX, centerChunkZ, centerSectionY,
                     forceFull, gameTick);
@@ -142,11 +155,15 @@ public final class InfraredViewRenderer {
         requestedChunkX = centerChunkX;
         requestedChunkZ = centerChunkZ;
         requestedSectionY = centerSectionY;
+        if (forceFull) {
+            // Keep retries full until a matching response installs this origin.
+            deltaBaselineValid = false;
+        }
         FHNetwork.INSTANCE.sendToServer(
                 new FHRequestInfraredViewDataSyncPacket(
                         requestId,
-                        forceFull || !snapshotAvailable,
-                        temperatureChangeId,
+                        forceFull || !deltaBaselineValid,
+                        infraredEpoch,
                         knownPresence));
     }
 
@@ -155,85 +172,182 @@ public final class InfraredViewRenderer {
             int centerChunkX,
             int centerChunkZ,
             int centerSectionY,
-            long responseTemperatureChangeId,
+            int responseInfraredEpoch,
             boolean full,
-            short[] pageRecords
+            long[] presence,
+            byte[] brickRecords
     ) {
         RenderSystem.assertOnRenderThread();
-        if (!open || responseRequestId != requestId) {
+        if (!open || responseRequestId != requestId
+                || !acceptResponseCenter(
+                        full,
+                        centerChunkX,
+                        centerChunkZ,
+                        centerSectionY)) {
             return;
         }
-        boolean upload = full || pageRecords.length != 0;
+        boolean createdMirror = ensureTemperatureMirror();
+        Arrays.fill(dirtyUploadPages, 0L);
         if (full) {
-            Arrays.fill(temperatureMirror, Short.MIN_VALUE);
-            Arrays.fill(knownPresence, 0L);
-        }
-        int pageCount =
-                pageRecords.length / FHResponseInfraredViewDataSyncPacket.RECORD_SHORTS;
-        for (int page = 0; page < pageCount; page++) {
-            int recordOffset =
-                    page * FHResponseInfraredViewDataSyncPacket.RECORD_SHORTS;
-            int localPageIndex =
-                    Short.toUnsignedInt(pageRecords[recordOffset]);
-            if (localPageIndex >= PAGE_WIDTH * PAGE_WIDTH * PAGE_WIDTH) {
-                continue;
+            if (!createdMirror) {
+                clearMirror();
             }
-            knownPresence[localPageIndex >>> 6] |=
-                    1L << (localPageIndex & 63);
-            writePage(localPageIndex, pageRecords, recordOffset + 1);
+        } else if (presence.length != 0) {
+            for (int localPageIndex = 0;
+                    localPageIndex < PAGE_WIDTH * PAGE_WIDTH * PAGE_WIDTH;
+                    localPageIndex++) {
+                boolean wasPresent = presenceBit(
+                        knownPresence, localPageIndex);
+                boolean isPresent = presenceBit(
+                        presence, localPageIndex);
+                if (wasPresent != isPresent) {
+                    clearPage(localPageIndex);
+                }
+            }
+        }
+
+        FriendlyByteBuf input = new FriendlyByteBuf(
+                Unpooled.wrappedBuffer(brickRecords));
+        try {
+            int localBrickIndex;
+            while ((localBrickIndex = brickDecoder.readBrick(
+                    input, decodedBrick)) >= 0) {
+                writeBrick(localBrickIndex, decodedBrick);
+            }
+        } finally {
+            input.release();
+        }
+        if (presence.length != 0) {
+            System.arraycopy(
+                    presence, 0, knownPresence, 0, knownPresence.length);
         }
         textureCenterChunkX = centerChunkX;
         textureCenterChunkZ = centerChunkZ;
         textureCenterSectionY = centerSectionY;
-        temperatureChangeId = responseTemperatureChangeId;
-        snapshotAvailable = true;
-        if (upload) {
-            uploadTemperatureTexture();
+        infraredEpoch = responseInfraredEpoch;
+        deltaBaselineValid = true;
+        if (full) {
+            uploadFullTemperatureTexture();
+        } else {
+            uploadDirtyPages();
         }
+        Arrays.fill(dirtyUploadPages, 0L);
     }
 
-    private static void writePage(
-            int localPageIndex,
-            short[] records,
-            int recordOffset
+    private static boolean acceptResponseCenter(
+            boolean full,
+            int centerChunkX,
+            int centerChunkZ,
+            int centerSectionY
     ) {
+        if (!full && (!deltaBaselineValid
+                || centerChunkX != textureCenterChunkX
+                || centerChunkZ != textureCenterChunkZ
+                || centerSectionY != textureCenterSectionY)) {
+            deltaBaselineValid = false;
+            requestCenterValid = false;
+            return false;
+        }
+        requestedChunkX = centerChunkX;
+        requestedChunkZ = centerChunkZ;
+        requestedSectionY = centerSectionY;
+        requestCenterValid = true;
+        return true;
+    }
+
+    private static void clearMirror() {
+        ShortBuffer mirror = temperatureMirror;
+        if (mirror == null) {
+            return;
+        }
+        mirror.clear();
+        while (mirror.hasRemaining()) {
+            mirror.put(InfraredBrickCodec.INVALID_TEMPERATURE);
+        }
+        mirror.clear();
+    }
+
+    private static boolean ensureTemperatureMirror() {
+        if (temperatureMirror != null) {
+            return false;
+        }
+        temperatureMirror = BufferUtils.createShortBuffer(TEXTURE_TEXELS);
+        clearMirror();
+        return true;
+    }
+
+    private static void clearPage(int localPageIndex) {
         int pageX = localPageIndex % PAGE_WIDTH;
         int pageZ = localPageIndex / PAGE_WIDTH % PAGE_WIDTH;
         int pageY = localPageIndex / (PAGE_WIDTH * PAGE_WIDTH);
-        for (int brick = 0; brick < 64; brick++) {
-            int brickX = brick & 3;
-            int brickZ = brick >>> 2 & 3;
-            int brickY = brick >>> 4;
-            int textureX = pageX * BRICKS_PER_PAGE_AXIS + brickX;
-            int textureZ = pageZ * BRICKS_PER_PAGE_AXIS + brickZ;
-            int textureY = pageY * BRICKS_PER_PAGE_AXIS + brickY;
-            temperatureMirror[
-                    (textureZ * TEXTURE_SIZE + textureY) * TEXTURE_SIZE
-                            + textureX] = records[recordOffset + brick];
+        int baseX = pageX * BLOCKS_PER_PAGE_AXIS;
+        int baseY = pageY * BLOCKS_PER_PAGE_AXIS;
+        int baseZ = pageZ * BLOCKS_PER_PAGE_AXIS;
+        for (int z = 0; z < BLOCKS_PER_PAGE_AXIS; z++) {
+            for (int y = 0; y < BLOCKS_PER_PAGE_AXIS; y++) {
+                int offset = ((baseZ + z) * TEXTURE_SIZE + baseY + y)
+                        * TEXTURE_SIZE + baseX;
+                for (int x = 0; x < BLOCKS_PER_PAGE_AXIS; x++) {
+                    temperatureMirror.put(
+                            offset + x,
+                            InfraredBrickCodec.INVALID_TEMPERATURE);
+                }
+            }
         }
+        markDirtyPage(localPageIndex);
     }
 
-    private static void uploadTemperatureTexture() {
-        if (temperatureTexture == 0) {
-            getOrCreateTemperatureTexture();
-        } else {
-            uploadTemperaturePixels(false);
+    private static void writeBrick(
+            int localBrickIndex,
+            short[] values
+    ) {
+        int localPageIndex = localBrickIndex >>> 6;
+        int brickIndex = localBrickIndex & 63;
+        int pageX = localPageIndex % PAGE_WIDTH;
+        int pageZ = localPageIndex / PAGE_WIDTH % PAGE_WIDTH;
+        int pageY = localPageIndex / (PAGE_WIDTH * PAGE_WIDTH);
+        int baseX = pageX * BLOCKS_PER_PAGE_AXIS + (brickIndex & 3) * 4;
+        int baseZ = pageZ * BLOCKS_PER_PAGE_AXIS
+                + (brickIndex >>> 2 & 3) * 4;
+        int baseY = pageY * BLOCKS_PER_PAGE_AXIS
+                + (brickIndex >>> 4) * 4;
+        for (int block = 0; block < InfraredBrickCodec.BLOCKS_PER_BRICK;
+                block++) {
+            int textureX = baseX + (block & 3);
+            int textureZ = baseZ + (block >>> 2 & 3);
+            int textureY = baseY + (block >>> 4);
+            temperatureMirror.put(
+                    (textureZ * TEXTURE_SIZE + textureY) * TEXTURE_SIZE
+                            + textureX,
+                    values[block]);
         }
+        markDirtyPage(localPageIndex);
+    }
+
+    private static void markDirtyPage(int localPageIndex) {
+        dirtyUploadPages[localPageIndex >>> 6] |=
+                1L << (localPageIndex & 63);
+    }
+
+    private static boolean presenceBit(long[] presence, int localPageIndex) {
+        return (presence[localPageIndex >>> 6]
+                & 1L << (localPageIndex & 63)) != 0L;
     }
 
     private static int getOrCreateTemperatureTexture() {
         if (temperatureTexture != 0) {
             return temperatureTexture;
         }
-        temperatureTexture = GL11.glGenTextures();
-        uploadTemperaturePixels(true);
+        uploadFullTemperatureTexture();
         return temperatureTexture;
     }
 
-    private static void uploadTemperaturePixels(boolean allocate) {
-        temperatureUpload.clear();
-        temperatureUpload.put(temperatureMirror);
-        temperatureUpload.flip();
+    private static void uploadFullTemperatureTexture() {
+        ensureTemperatureMirror();
+        boolean allocate = temperatureTexture == 0;
+        if (allocate) {
+            temperatureTexture = GL11.glGenTextures();
+        }
         int previousTexture = GL11.glGetInteger(
                 GL12.GL_TEXTURE_BINDING_3D);
         try {
@@ -266,10 +380,11 @@ public final class InfraredViewRenderer {
                         GL30.GL_R16I,
                         TEXTURE_SIZE, TEXTURE_SIZE, TEXTURE_SIZE,
                         0,
-                        GL30.GL_RED_INTEGER,
-                        GL11.GL_SHORT,
-                        0L);
+                         GL30.GL_RED_INTEGER,
+                         GL11.GL_SHORT,
+                         0L);
             }
+            temperatureMirror.clear();
             GL12.glTexSubImage3D(
                     GL12.GL_TEXTURE_3D,
                     0,
@@ -277,10 +392,82 @@ public final class InfraredViewRenderer {
                     TEXTURE_SIZE, TEXTURE_SIZE, TEXTURE_SIZE,
                     GL30.GL_RED_INTEGER,
                     GL11.GL_SHORT,
-                    temperatureUpload);
+                    temperatureMirror);
         } finally {
             GL11.glBindTexture(GL12.GL_TEXTURE_3D, previousTexture);
         }
+    }
+
+    private static void uploadDirtyPages() {
+        boolean dirty = false;
+        for (long word : dirtyUploadPages) {
+            dirty |= word != 0L;
+        }
+        if (!dirty) {
+            return;
+        }
+        if (temperatureTexture == 0) {
+            getOrCreateTemperatureTexture();
+            return;
+        }
+
+        int previousTexture = GL11.glGetInteger(
+                GL12.GL_TEXTURE_BINDING_3D);
+        try {
+            resetTextureUploadState();
+            GL11.glBindTexture(GL12.GL_TEXTURE_3D, temperatureTexture);
+            for (int wordIndex = 0;
+                    wordIndex < dirtyUploadPages.length;
+                    wordIndex++) {
+                long word = dirtyUploadPages[wordIndex];
+                while (word != 0L) {
+                    int bit = Long.numberOfTrailingZeros(word);
+                    int localPageIndex = (wordIndex << 6) + bit;
+                    if (localPageIndex
+                            < PAGE_WIDTH * PAGE_WIDTH * PAGE_WIDTH) {
+                        uploadPage(localPageIndex);
+                    }
+                    word &= word - 1L;
+                }
+            }
+        } finally {
+            GL11.glBindTexture(GL12.GL_TEXTURE_3D, previousTexture);
+        }
+    }
+
+    private static void uploadPage(int localPageIndex) {
+        int pageX = localPageIndex % PAGE_WIDTH;
+        int pageZ = localPageIndex / PAGE_WIDTH % PAGE_WIDTH;
+        int pageY = localPageIndex / (PAGE_WIDTH * PAGE_WIDTH);
+        int baseX = pageX * BLOCKS_PER_PAGE_AXIS;
+        int baseY = pageY * BLOCKS_PER_PAGE_AXIS;
+        int baseZ = pageZ * BLOCKS_PER_PAGE_AXIS;
+        ShortBuffer upload = pageUpload;
+        if (upload == null) {
+            upload = BufferUtils.createShortBuffer(PAGE_TEXELS);
+            pageUpload = upload;
+        }
+        upload.clear();
+        for (int z = 0; z < BLOCKS_PER_PAGE_AXIS; z++) {
+            for (int y = 0; y < BLOCKS_PER_PAGE_AXIS; y++) {
+                int offset = ((baseZ + z) * TEXTURE_SIZE + baseY + y)
+                        * TEXTURE_SIZE + baseX;
+                for (int x = 0; x < BLOCKS_PER_PAGE_AXIS; x++) {
+                    upload.put(temperatureMirror.get(offset + x));
+                }
+            }
+        }
+        upload.flip();
+        GL12.glTexSubImage3D(
+                GL12.GL_TEXTURE_3D,
+                0,
+                baseX, baseY, baseZ,
+                BLOCKS_PER_PAGE_AXIS,
+                BLOCKS_PER_PAGE_AXIS,
+                BLOCKS_PER_PAGE_AXIS,
+                GL30.GL_RED_INTEGER,
+                GL11.GL_SHORT,
+                upload);
     }
 
     private static void resetTextureUploadState() {
@@ -295,6 +482,9 @@ public final class InfraredViewRenderer {
         if (minecraft.cameraEntity == null || minecraft.player == null
                 || radius <= 0.0F || cameraPose == null) {
             return;
+        }
+        if (temperatureTexture == 0) {
+            initializeEmptyTemperatureTexture(minecraft);
         }
         RenderTarget mainTarget = minecraft.getMainRenderTarget();
         RenderTarget overlay = getOrCreateOverlayTarget(
@@ -352,13 +542,19 @@ public final class InfraredViewRenderer {
                     RenderSystem.activeTexture(GL13.GL_TEXTURE4);
                     GL11.glBindTexture(
                             GL12.GL_TEXTURE_3D,
-                            getOrCreateTemperatureTexture());
+                            temperatureTexture);
                     uniforms.glUniform1I("temperatureTexture", 4);
                     uniforms.glUniform3F(
-                            "temperatureOrigin",
-                            (textureCenterChunkX - PAGE_RADIUS) * 16.0F,
-                            (textureCenterSectionY - PAGE_RADIUS) * 16.0F,
-                            (textureCenterChunkZ - PAGE_RADIUS) * 16.0F);
+                            "temperatureCameraOffset",
+                            (float) (cameraPos.x
+                                    - (textureCenterChunkX - PAGE_RADIUS)
+                                    * 16.0D),
+                            (float) (cameraPos.y
+                                    - (textureCenterSectionY - PAGE_RADIUS)
+                                    * 16.0D),
+                            (float) (cameraPos.z
+                                    - (textureCenterChunkZ - PAGE_RADIUS)
+                                    * 16.0D));
 
                     uniforms.glUniformMatrix4F(
                             "u_InverseProjectionMatrix",
@@ -366,11 +562,6 @@ public final class InfraredViewRenderer {
                     uniforms.glUniformMatrix4F(
                             "u_InverseViewMatrix",
                             cameraPose.last().pose().invert(new Matrix4f()));
-                    uniforms.glUniform3F(
-                            "u_CameraPosition",
-                            (float) cameraPos.x,
-                            (float) cameraPos.y,
-                            (float) cameraPos.z);
                 },
                 null);
 
@@ -390,23 +581,37 @@ public final class InfraredViewRenderer {
         cameraPose = null;
     }
 
+    private static void initializeEmptyTemperatureTexture(
+            Minecraft minecraft
+    ) {
+        if (!ensureTemperatureMirror()) {
+            clearMirror();
+        }
+        textureCenterChunkX = Mth.floor(minecraft.player.getX()) >> 4;
+        textureCenterChunkZ = Mth.floor(minecraft.player.getZ()) >> 4;
+        textureCenterSectionY = Mth.floor(minecraft.player.getEyeY()) >> 4;
+        uploadFullTemperatureTexture();
+    }
+
     public static void reset() {
         invalidateRequests();
         open = false;
         radius = 0.0F;
-        snapshotAvailable = false;
-        temperatureChangeId = 0L;
+        deltaBaselineValid = false;
+        infraredEpoch = 0;
         Arrays.fill(knownPresence, 0L);
-        Arrays.fill(temperatureMirror, Short.MIN_VALUE);
+        Arrays.fill(dirtyUploadPages, 0L);
         cameraPose = null;
+        int textureToDelete = temperatureTexture;
+        temperatureTexture = 0;
+        RenderTarget overlayToDelete = overlayTarget;
+        overlayTarget = null;
         Runnable release = () -> {
-            if (temperatureTexture != 0) {
-                GL11.glDeleteTextures(temperatureTexture);
-                temperatureTexture = 0;
+            if (textureToDelete != 0) {
+                GL11.glDeleteTextures(textureToDelete);
             }
-            if (overlayTarget != null) {
-                overlayTarget.destroyBuffers();
-                overlayTarget = null;
+            if (overlayToDelete != null) {
+                overlayToDelete.destroyBuffers();
             }
         };
         if (RenderSystem.isOnRenderThread()) {

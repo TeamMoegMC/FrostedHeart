@@ -2648,6 +2648,13 @@ algorithm with their existing witness behavior. Coverage scheduling and known
 emitter enumeration share one at-most-eight-section call that runs even from an
 empty index or after physical visits are exhausted.
 
+All tagged lava states now share one compiled radiation profile. Each
+`LiquidBlock` singleton retains its steady cached classification but compares a
+profile reload epoch, so a tag/recipe reload reclassifies once. Physical DDA
+witness revisions and static coverage both use the existing 3,200-section bound,
+which covers the declared separated hundred-player workload without adding an
+eviction index.
+
 The user retained execution of build and gameplay validation. Controlled
 JFR/heap work and final fire/lava calibration remain pending; no additional
 architecture is required.

@@ -10,10 +10,17 @@ import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class InfraredPacketCodecTest {
+    private static final int INVALID_MODE = 0;
+    private static final int UNIFORM_MODE = 1;
+    private static final int INDEXED_MODE = 2;
+    private static final int RAW_MODE = 3;
+
     @Test
     void requestRoundTripsTheExactPresenceWords() {
         long[] presence =
@@ -23,7 +30,7 @@ class InfraredPacketCodecTest {
         }
         FHRequestInfraredViewDataSyncPacket original =
                 new FHRequestInfraredViewDataSyncPacket(
-                        17, false, 91L, presence);
+                        17, false, 91, presence);
 
         assertRoundTrip(
                 original,
@@ -31,23 +38,86 @@ class InfraredPacketCodecTest {
     }
 
     @Test
-    void maximumResponseStaysBelowTheSinglePacketBound() {
-        short[] records =
-                new short[729 * FHResponseInfraredViewDataSyncPacket.RECORD_SHORTS];
-        for (int page = 0; page < 729; page++) {
-            int offset =
-                    page * FHResponseInfraredViewDataSyncPacket.RECORD_SHORTS;
-            records[offset] = (short) page;
-            Arrays.fill(records, offset + 1, offset + 65, (short) (page - 300));
+    void brickModesRoundTripWithoutExpandingIndexedRecords() {
+        short[] invalid = values(InfraredBrickCodec.INVALID_TEMPERATURE);
+        byte[] invalidRecord = encodeBrick(7, invalid, false);
+        assertEquals(INVALID_MODE, Byte.toUnsignedInt(invalidRecord[2]));
+        assertArrayEquals(invalid, decodeSingle(invalidRecord, 7));
+
+        try (InfraredBrickCodec.Builder builder =
+                     new InfraredBrickCodec.Builder()) {
+            assertFalse(builder.writeBrick(7, invalid, true));
+            assertEquals(0, builder.size());
         }
+
+        short[] uniform = values((short) 73);
+        byte[] uniformRecord = encodeBrick(8, uniform, false);
+        assertEquals(UNIFORM_MODE, Byte.toUnsignedInt(uniformRecord[2]));
+        assertArrayEquals(uniform, decodeSingle(uniformRecord, 8));
+
+        try (InfraredBrickCodec.Builder builder =
+                     new InfraredBrickCodec.Builder()) {
+            assertTrue(builder.writeInvalid(7, false));
+            assertArrayEquals(invalidRecord, builder.toByteArray());
+            builder.reset();
+            assertFalse(builder.writeInvalid(7, true));
+            assertEquals(0, builder.size());
+            assertTrue(builder.writeUniform(8, (short) 73));
+            assertArrayEquals(uniformRecord, builder.toByteArray());
+        }
+
+        short[] indexed = new short[InfraredBrickCodec.BLOCKS_PER_BRICK];
+        for (int index = 0; index < indexed.length; index++) {
+            indexed[index] = (short) (index & 1);
+        }
+        byte[] indexedRecord = encodeBrick(9, indexed, false);
+        assertEquals(INDEXED_MODE, Byte.toUnsignedInt(indexedRecord[2]));
+        assertTrue(indexedRecord.length
+                < 3 + InfraredBrickCodec.BLOCKS_PER_BRICK * Short.BYTES);
+        assertArrayEquals(indexed, decodeSingle(indexedRecord, 9));
+
+        short[] raw = new short[InfraredBrickCodec.BLOCKS_PER_BRICK];
+        for (int index = 0; index < raw.length; index++) {
+            raw[index] = (short) index;
+        }
+        byte[] rawRecord = encodeBrick(10, raw, false);
+        assertEquals(RAW_MODE, Byte.toUnsignedInt(rawRecord[2]));
+        assertEquals(3 + InfraredBrickCodec.BLOCKS_PER_BRICK * Short.BYTES,
+                rawRecord.length);
+        assertArrayEquals(raw, decodeSingle(rawRecord, 10));
+        assertArrayEquals(indexedRecord, encodeBrick(9, indexed, false));
+    }
+
+    @Test
+    void structuralMaximumResponseStaysBelowOneMiB() {
+        byte[] records;
+        try (InfraredBrickCodec.Builder builder =
+                     new InfraredBrickCodec.Builder()) {
+            short[] values = values(InfraredBrickCodec.INVALID_TEMPERATURE);
+            for (int brick = 0;
+                    brick < InfraredBrickCodec.MAX_LOCAL_BRICKS;
+                    brick++) {
+                values[0] = 0;
+                values[1] = brick < 18_880
+                        ? (short) 1
+                        : InfraredBrickCodec.INVALID_TEMPERATURE;
+                assertTrue(builder.writeBrick(brick, values, false));
+            }
+            assertEquals(935_296, builder.size());
+            records = builder.toByteArray();
+        }
+        long[] presence =
+                new long[FHRequestInfraredViewDataSyncPacket.PRESENCE_WORDS];
+        Arrays.fill(presence, -1L);
         FHResponseInfraredViewDataSyncPacket original =
                 new FHResponseInfraredViewDataSyncPacket(
                         23,
                         new MinecraftThermalInput.InfraredSnapshot(
-                                -4, 7, 2, 101L, true, records));
+                                -4, 7, 2, 101, true,
+                                presence, records));
         FriendlyByteBuf encoded = new FriendlyByteBuf(Unpooled.buffer());
         original.encode(encoded);
-        assertTrue(encoded.readableBytes() < 96 * 1024);
+        assertTrue(encoded.readableBytes() < 1024 * 1024);
 
         FriendlyByteBuf responseInput =
                 new FriendlyByteBuf(encoded.copy());
@@ -60,6 +130,45 @@ class InfraredPacketCodecTest {
         assertEquals(encoded.readableBytes(), reencoded.readableBytes());
         encoded.release();
         reencoded.release();
+    }
+
+    private static short[] values(short value) {
+        short[] values = new short[InfraredBrickCodec.BLOCKS_PER_BRICK];
+        Arrays.fill(values, value);
+        return values;
+    }
+
+    private static byte[] encodeBrick(
+            int localBrickIndex,
+            short[] values,
+            boolean omitInvalid
+    ) {
+        try (InfraredBrickCodec.Builder builder =
+                     new InfraredBrickCodec.Builder()) {
+            assertTrue(builder.writeBrick(
+                    localBrickIndex, values, omitInvalid));
+            return builder.toByteArray();
+        }
+    }
+
+    private static short[] decodeSingle(
+            byte[] record,
+            int expectedLocalBrickIndex
+    ) {
+        FriendlyByteBuf input = new FriendlyByteBuf(
+                Unpooled.wrappedBuffer(record));
+        try {
+            short[] decoded =
+                    new short[InfraredBrickCodec.BLOCKS_PER_BRICK];
+            InfraredBrickCodec.Decoder decoder =
+                    new InfraredBrickCodec.Decoder();
+            assertEquals(expectedLocalBrickIndex,
+                    decoder.readBrick(input, decoded));
+            assertEquals(-1, decoder.readBrick(input, decoded));
+            return decoded;
+        } finally {
+            input.release();
+        }
     }
 
     private static <T extends com.teammoeg.chorda.network.CMessage>

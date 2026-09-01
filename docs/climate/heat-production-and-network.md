@@ -52,7 +52,9 @@ default). Lava uses the configured `lavaRadiationTemperatureC` (`1000 C`),
 `effectiveLavaEmissivity` (`0.01`), and
 `radiationReferenceTemperatureC` (`20 C`) in the Stefan-Boltzmann exposed-area
 calculation. `enableStaticBlockRadiation` defaults to true. These COMMON values
-are read once at startup; Campfire does not use them.
+are read once at startup; all tagged lava states share one compiled profile and
+Campfire does not use it. A reload epoch invalidates each `LiquidBlock`
+singleton's cached lava classification on its next neighbor update.
 
 Coverage is receiver-lazy and independent of Thermal Page admission. A player
 sample palette-rejects ordinary loaded sections, queues unknown 4-cubed Bricks
@@ -60,6 +62,9 @@ under a shared 64-Brick-per-tick budget, and reuses known results across players
 until chunk unload. Static rays are retraced from the player's current eye
 position with one block-grid DDA and
 retain no receiver witness or source revision.
+Physical-source DDA witnesses use the same `3,200`-section bound as static
+coverage, avoiding the earlier 1,024-section exhaustion under separated
+hundred-player workloads.
 
 ## Worker Energy
 
@@ -83,6 +88,13 @@ edge and creates one deterministic execution entry for each unique edge. A
 phase reservoir stores latent energy and candidate microcells; a phase request
 is ACKed by the main thread only when Page lifecycle, profile, request sequence,
 and current world state still match.
+
+The transition temperature is a fixed exchange boundary, not the reservoir's
+physical temperature. Hotter Air stores energy; colder Air receives only the
+reservoir's unreserved energy back. Consequently an empty reservoir does not
+retain thermal Brick residency, while an outstanding request keeps its reserved
+energy until the matching ACK. The normal phase-contact sleep residual covers
+both active transfer directions without a second traversal.
 
 Phase contact conductance and base energy are configured by
 `FHConfig.COMMON.THERMAL_RUNTIME.phaseFaceConductanceWPerK` and
@@ -108,8 +120,13 @@ endpoint; the two channels must not be counted twice by a caller.
 ## Lifecycle And Performance
 
 Machine ticks call `MinecraftThermalInput.onGeneratorTick`,
-`onFountainTick`, or `onRadiatorTick`; campfires are discovered on chunk load
-and final block-state mutation drain. `onPhysicalSourceRemoved` marks one packed
+`onFountainTick`, or `onRadiatorTick`. Campfires are discovered on chunk load,
+final block-state mutation drain, and the existing lit `CampfireBlockEntity`
+`cookTick`. The tick path calls `MinecraftThermalInput.onCampfireTick` once per
+20 ticks with a position-derived phase, so a lazy thermal runtime that starts
+after chunk load still discovers an already-lit campfire; refueling only changes
+BlockEntity data and is not a BlockState mutation. An unchanged observation does
+not enter the source dirty queue. `onPhysicalSourceRemoved` marks one packed
 source ID absent. Chunk unload settles and unloads sources in that origin chunk;
 before that removal, chunk checkpoints query the existing target-section index
 for a disk-only one-shot support bit. Target Page references are then released
@@ -117,6 +134,10 @@ by the source index. This checkpoint can retain existing warm residuals across
 an unloaded interval but never simulates source power or heat-network flow.
 
 Routine work is proportional to changed sources and affected target buckets.
+Steady lit campfires add one active-runtime lookup, loaded BlockState read, and
+existing-source map probe per campfire per second; their 20-tick phases are
+position-staggered. No chunk scan, Page query, allocation, or worker message is
+created when the observed source state is unchanged.
 Each dimension admits at most `65,536` physical sources and `131,072` retained
 source-node generations. A source refused at the physical-source cap cannot
 enter the worker batch; after capacity is released, already-scanned loaded

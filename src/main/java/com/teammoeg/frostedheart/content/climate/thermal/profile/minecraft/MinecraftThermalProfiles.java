@@ -36,6 +36,7 @@ public final class MinecraftThermalProfiles {
     private static final double STEFAN_BOLTZMANN_W_PER_M2_K4 =
             5.670_374_419e-8D;
     private static volatile Snapshot snapshot;
+    private static volatile int profileEpoch;
 
     private MinecraftThermalProfiles() {
     }
@@ -86,6 +87,9 @@ public final class MinecraftThermalProfiles {
                 MinecraftStateThermalTable.RADIATION_FIXED,
                 config.fireRadiantPowerW.get());
         double lavaSurfacePowerWPerM2 = lavaSurfacePowerWPerM2(config);
+        int lavaRadiationProfile = states.addRadiationProfile(
+                MinecraftStateThermalTable.RADIATION_LAVA_SURFACE,
+                lavaSurfacePowerWPerM2);
         int staticStates = 0;
         int transitionStates = 0;
 
@@ -140,9 +144,7 @@ public final class MinecraftThermalProfiles {
                 int radiationProfileId = 0;
                 if (staticRadiationEnabled && !isCampfire(state)) {
                     if (state.getFluidState().is(FluidTags.LAVA)) {
-                        radiationProfileId = states.addRadiationProfile(
-                                MinecraftStateThermalTable.RADIATION_LAVA_SURFACE,
-                                lavaSurfacePowerWPerM2);
+                        radiationProfileId = lavaRadiationProfile;
                     } else if (FHTags.Blocks.STATIC_FIRE_RADIATORS.matches(state)) {
                         radiationProfileId = fireRadiationProfile;
                     }
@@ -178,6 +180,11 @@ public final class MinecraftThermalProfiles {
 
     public static synchronized void invalidate() {
         snapshot = null;
+        profileEpoch++;
+    }
+
+    public static int profileEpoch() {
+        return profileEpoch;
     }
 
     public static int mutationFlags(

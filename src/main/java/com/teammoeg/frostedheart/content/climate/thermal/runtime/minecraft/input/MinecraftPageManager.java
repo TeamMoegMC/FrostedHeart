@@ -129,6 +129,7 @@ public final class MinecraftPageManager implements AutoCloseable {
             }
             page.sourceSeedCounts = new int[64];
         }
+        long previousMask = page.sourceSeedMask;
         int count = page.sourceSeedCounts[brickIndex];
         if (retained) {
             page.sourceSeedCounts[brickIndex] = Math.incrementExact(count);
@@ -140,7 +141,17 @@ public final class MinecraftPageManager implements AutoCloseable {
                 page.sourceSeedMask &= ~(1L << brickIndex);
             }
         }
-        updateInterest(page);
+        if (page.sourceSeedMask != previousMask) {
+            updateInterest(page, true);
+        }
+    }
+
+    public void updateDormantSourceSupport(
+            long sectionKey,
+            boolean supported
+    ) {
+        requireMainThread();
+        input.updateDormantSourceSupport(sectionKey, supported);
     }
 
     ThermalPageHandle handle(long sectionKey) {
@@ -254,13 +265,13 @@ public final class MinecraftPageManager implements AutoCloseable {
         for (ThermalInputBatch.PageAdmission admission : batch.admissions()) {
             PageEntry page = pages.get(admission.page().sectionKey());
             if (page != null && page.handle == admission.page()) {
-                environment.untrack(page.handle);
-                readyCaptures.remove(page.sectionKey);
-                page.handle = null;
-                publishPageHandle(page.sectionKey, null);
-                page.resetCapture();
-                page.retryAfterTick = gameTick + WORK_LIMIT_RETRY_TICKS;
-                enqueue(page);
+                discardLifecycle(page);
+                if (page.interested()) {
+                    page.retryAfterTick = gameTick + WORK_LIMIT_RETRY_TICKS;
+                    enqueue(page);
+                } else {
+                    removeEntry(page);
+                }
             }
         }
         for (ThermalInputBatch.PageRetirement retirement
@@ -309,7 +320,7 @@ public final class MinecraftPageManager implements AutoCloseable {
             return;
         }
         page.workerDesiredMask = update.desiredBrickMask();
-        updateInterest(page);
+        updateInterest(page, false);
     }
 
     public void tick(long gameTick) {
@@ -505,10 +516,13 @@ public final class MinecraftPageManager implements AutoCloseable {
                     && attempts-- > 0 && !queue.isEmpty()) {
                 long sectionKey = queue.removeFirstLong();
                 PageEntry page = pages.get(sectionKey);
-                if (page == null || !page.interested()) {
+                if (page == null) {
                     continue;
                 }
                 page.queuedPriority = -1;
+                if (!page.interested()) {
+                    continue;
+                }
                 if (page.retryAfterTick > gameTick) {
                     enqueue(page);
                     continue;
@@ -523,8 +537,6 @@ public final class MinecraftPageManager implements AutoCloseable {
                     if (page.handle == null) {
                         if (captureResidency(page, 0L, gameTick)) {
                             remainingPages--;
-                        } else {
-                            enqueue(page);
                         }
                     } else {
                         queueResidency(page);
@@ -537,9 +549,8 @@ public final class MinecraftPageManager implements AutoCloseable {
                         missing & ~selected,
                         remainingBricks - Long.bitCount(selected));
                 boolean newPage = page.handle == null;
-                if (selected == 0L
-                        || !captureResidency(page, selected, gameTick)) {
-                    enqueue(page);
+                if (!captureResidency(page, selected, gameTick)) {
+                    // pagesByChunk wakes unavailable targets on chunk load.
                     continue;
                 }
                 remainingBricks -= Long.bitCount(selected);
@@ -808,10 +819,22 @@ public final class MinecraftPageManager implements AutoCloseable {
         captureQueue.add(page.sectionKey);
     }
 
-    private void updateInterest(PageEntry page) {
+    private void updateInterest(
+            PageEntry page,
+            boolean synchronizeWorker
+    ) {
         if (!page.interested()) {
+            dequeueAdmission(page);
             if (page.handle != null) {
-                retire(page);
+                if (page.handle.lastPublication() == null) {
+                    if (!accumulator.cancelAdmission(page.handle)) {
+                        queueResidency(page);
+                        return;
+                    }
+                    discardLifecycle(page);
+                } else {
+                    retire(page);
+                }
             }
             removeEntry(page);
             return;
@@ -819,7 +842,7 @@ public final class MinecraftPageManager implements AutoCloseable {
         long missing = page.requestedMask() & ~page.capturedBrickMask;
         if (missing != 0L || page.handle == null) {
             enqueue(page);
-        } else {
+        } else if (synchronizeWorker) {
             queueResidency(page);
         }
     }
@@ -836,11 +859,15 @@ public final class MinecraftPageManager implements AutoCloseable {
                 page.signatures);
     }
 
-    private void removeEntry(PageEntry page) {
+    private void dequeueAdmission(PageEntry page) {
         if (page.queuedPriority >= 0) {
             admissionQueues[page.queuedPriority].remove(page.sectionKey);
             page.queuedPriority = -1;
         }
+    }
+
+    private void removeEntry(PageEntry page) {
+        dequeueAdmission(page);
         captureQueue.remove(page.sectionKey);
         readyCaptures.remove(page.sectionKey);
         pages.remove(page.sectionKey);
@@ -856,6 +883,10 @@ public final class MinecraftPageManager implements AutoCloseable {
     private void retire(PageEntry page) {
         input.captureDormantPage(page.handle, true);
         accumulator.retire(page.handle);
+        discardLifecycle(page);
+    }
+
+    private void discardLifecycle(PageEntry page) {
         environment.untrack(page.handle);
         captureQueue.remove(page.sectionKey);
         readyCaptures.remove(page.sectionKey);

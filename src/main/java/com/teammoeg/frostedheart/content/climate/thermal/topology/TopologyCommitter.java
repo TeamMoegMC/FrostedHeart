@@ -129,6 +129,10 @@ public final class TopologyCommitter {
             if (write.retirement) {
                 pages.commitRetirement(write.page);
                 solver.clearNaturalTemperature(write.page.pageSlot);
+            }
+        }
+        for (PreparedTopologyChange.PageWrite write : change.pageWrites) {
+            if (write.retirement) {
                 write.page.handle.publish(
                         com.teammoeg.frostedheart.content.climate.thermal.mesh
                                 .PagePublication.EMPTY);
@@ -139,6 +143,16 @@ public final class TopologyCommitter {
                                     .PagePublication.EMPTY);
                 }
                 write.page.handle.publish(write.publication);
+            }
+        }
+    }
+
+    /** Restores the last Page cut when query publication never commits. */
+    public void restorePagePublications(PreparedTopologyChange change) {
+        for (PreparedTopologyChange.PageWrite write : change.pageWrites) {
+            write.page.handle.publish(write.rollbackPublication);
+            if (write.replacedPage != null) {
+                write.replacedPage.handle.publish(write.rollbackPublication);
             }
         }
     }

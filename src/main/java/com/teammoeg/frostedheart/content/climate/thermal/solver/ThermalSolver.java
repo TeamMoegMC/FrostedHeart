@@ -530,12 +530,14 @@ public final class ThermalSolver {
                 if (!Double.isFinite(temperature)) {
                     return Double.POSITIVE_INFINITY;
                 }
-                residual = Math.max(
-                        residual,
-                        Math.max(
-                                0.0D,
-                                temperature - arena.phaseTransitionTemperatureC(
-                                        phase.reservoir(index))));
+                int reservoir = phase.reservoir(index);
+                double delta = temperature
+                        - arena.phaseTransitionTemperatureC(reservoir);
+                if (delta < 0.0D
+                        && arena.phaseAvailableEnergyJ(reservoir) <= 0.0D) {
+                    continue;
+                }
+                residual = Math.max(residual, Math.abs(delta));
             }
         }
         return residual;

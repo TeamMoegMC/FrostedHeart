@@ -48,19 +48,20 @@ class ThermalTopologyPipelineTest {
                         airId,
                         materialId);
         try {
-            PageSignatures.Builder pageBuilder =
-                    new PageSignatures.Builder(signatureTable);
-            for (int block = 0;
-                 block < PageSignatures.ENTRY_COUNT;
-                 block++) {
-                pageBuilder.set(block, airId);
-            }
-            pageBuilder.set(0, materialId);
+            PageSignatures page =
+                    ThermalTestFixtures.filledPageSignatures(airId);
+            int[] brick = new int[PageSignatures.ENTRIES_PER_BRICK];
+            Arrays.fill(brick, airId);
+            brick[0] = materialId;
+            page = page.withBricks(
+                    signatureTable,
+                    new int[]{0},
+                    new int[][]{brick});
             fixture.engine().process(ThermalRuntimeTestFixtures.batch(
                     1L, 20L,
                     new ThermalInputBatch.PageAdmission[]{
                             ThermalRuntimeTestFixtures.admission(
-                                    fixture.page(), pageBuilder.build())},
+                                    fixture.page(), page)},
                     ThermalInputBatch.NO_RETIREMENTS,
                     ResolvedGeometryBatch.EMPTY));
 

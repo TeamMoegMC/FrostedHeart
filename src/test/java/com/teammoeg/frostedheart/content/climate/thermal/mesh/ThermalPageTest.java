@@ -2,6 +2,8 @@
 package com.teammoeg.frostedheart.content.climate.thermal.mesh;
 
 import com.teammoeg.frostedheart.content.climate.thermal.ThermalTestFixtures;
+import com.teammoeg.frostedheart.content.climate.thermal.geometry.ComponentBrickCompiler;
+import com.teammoeg.frostedheart.content.climate.thermal.geometry.ConservativeAirGeometry;
 import com.teammoeg.frostedheart.content.climate.thermal.profile.ThermalSignatureTable;
 import org.junit.jupiter.api.Test;
 
@@ -97,6 +99,56 @@ class ThermalPageTest {
                 1, 1, 1, 63, signatureTable));
         assertTrue(publication.hasPhaseCandidate(1, 1, 1, 6));
         assertFalse(publication.hasPhaseCandidate(1, 1, 1, 7));
+    }
+
+    @Test
+    void blockCentersOnOppositeSidesOfAWallResolveDifferentAirCells() {
+        ThermalSignatureTable.Builder registry =
+                ThermalSignatureTable.builder();
+        ConservativeAirGeometry.Resolution airGeometry =
+                ThermalTestFixtures.fullAirSignature().airGeometry();
+        ConservativeAirGeometry.Resolution solidGeometry =
+                ThermalTestFixtures.solidSignature().airGeometry();
+        int airId = registry.intern(ThermalTestFixtures.fullAirSignature());
+        int solidId = registry.intern(ThermalTestFixtures.solidSignature());
+        ThermalSignatureTable signatures = registry.build();
+        ConservativeAirGeometry.Resolution[] geometry =
+                new ConservativeAirGeometry.Resolution[64];
+        int[] brickSignatures = new int[64];
+        for (int block = 0; block < 64; block++) {
+            boolean wall = (block & 3) == 2;
+            brickSignatures[block] = wall ? solidId : airId;
+            geometry[block] = wall ? solidGeometry : airGeometry;
+        }
+        ComponentBrickCompiler.CompiledBrick mixed =
+                ComponentBrickCompiler.compileResolved(
+                        geometry, 4, new ComponentBrickCompiler.Scratch());
+        assertEquals(2, mixed.componentCount());
+
+        PageSignatures pageSignatures =
+                ThermalTestFixtures.filledPageSignatures(airId).withBricks(
+                        signatures,
+                        new int[]{0},
+                        new int[][]{brickSignatures});
+        PagePublication.Brick[] bricks = emptyBricks();
+        bricks[0] = new PagePublication.Brick(
+                20,
+                1,
+                pageSignatures.brickPayload(0),
+                mixed,
+                PagePublication.PhaseCandidates.EMPTY);
+        PagePublication publication = PagePublication.owned(
+                0, 0L, 1L, bricks);
+
+        int left = publication.resolveAirPoint(
+                1, 1, 1, 42, signatures);
+        int right = publication.resolveAirPoint(
+                3, 1, 1, 42, signatures);
+        assertEquals(20, left);
+        assertEquals(21, right);
+        assertEquals(PagePublication.NO_AIR_POINT,
+                publication.resolveAirPoint(
+                        2, 1, 1, 42, signatures));
     }
 
     private static PagePublication publication(

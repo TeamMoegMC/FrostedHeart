@@ -97,18 +97,26 @@ public final class DimensionInputAccumulator {
                 sourceSeedMask, signatures));
     }
 
-    void retire(ThermalPageHandle page) {
-        boolean pendingAdmission = false;
+    boolean cancelAdmission(ThermalPageHandle page) {
         for (int index = 0; index < admissions.size(); index++) {
             if (admissions.get(index).page() == page) {
                 admissions.remove(index);
-                pendingAdmission = true;
-                break;
+                discardPageUpdates(page);
+                return true;
             }
         }
-        if (!pendingAdmission) {
-            retirements.add(new ThermalInputBatch.PageRetirement(page));
+        return false;
+    }
+
+    void retire(ThermalPageHandle page) {
+        if (cancelAdmission(page)) {
+            return;
         }
+        retirements.add(new ThermalInputBatch.PageRetirement(page));
+        discardPageUpdates(page);
+    }
+
+    private void discardPageUpdates(ThermalPageHandle page) {
         EnvironmentBuilder removed = environments.remove(page);
         if (removed != null) {
             recycle(removed);

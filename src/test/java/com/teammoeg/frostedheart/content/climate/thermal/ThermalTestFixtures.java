@@ -4,6 +4,7 @@ package com.teammoeg.frostedheart.content.climate.thermal;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.PageSignatures;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.ThermalBrickCellLayout;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.ThermalCellArena;
+import com.teammoeg.frostedheart.content.climate.thermal.mesh.ThermalPageHandle;
 import com.teammoeg.frostedheart.content.climate.thermal.geometry.ConservativeAirGeometry;
 import com.teammoeg.frostedheart.content.climate.thermal.profile.ResolvedThermalSignature;
 import com.teammoeg.frostedheart.content.climate.thermal.profile.ThermalSignatureTable;
@@ -79,11 +80,15 @@ public final class ThermalTestFixtures {
     }
 
     public static PageSignatures filledPageSignatures(int signatureId) {
-        PageSignatures.Builder builder = new PageSignatures.Builder(PAGE_SIGNATURES);
-        for (int block = 0; block < PageSignatures.ENTRY_COUNT; block++) {
-            builder.set(block, signatureId);
+        PageSignatures.Builder builder = new PageSignatures.Builder(
+                PAGE_SIGNATURES).reset(
+                        PageSignatures.unresolved(PAGE_SIGNATURES));
+        for (int brick = 0;
+                brick < ThermalPageHandle.BASE_BRICK_COUNT;
+                brick++) {
+            builder.setUniformBrick(brick, signatureId);
         }
-        return builder.build();
+        return builder.buildBricks();
     }
 
     public static ThermalSignatureTable pageSignatureTable() {
