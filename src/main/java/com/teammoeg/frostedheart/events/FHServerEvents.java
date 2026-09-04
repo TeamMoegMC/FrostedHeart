@@ -23,14 +23,10 @@ import com.teammoeg.chorda.dataholders.team.CTeamDataManager;
 import com.teammoeg.chorda.events.ServerLevelDataSaveEvent;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.clusterserver.AuthConfig;
-import com.teammoeg.frostedheart.content.climate.player.SurroundingTemperatureSimulator;
-import com.teammoeg.frostedheart.content.climate.player.TemperatureUpdate;
 import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.MinecraftThermalInput;
 import com.teammoeg.frostedheart.restarter.TssapProtocolHandler;
 
 import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.event.TickEvent.Phase;
-import net.minecraftforge.event.TickEvent.ServerTickEvent;
 import net.minecraftforge.event.server.ServerAboutToStartEvent;
 import net.minecraftforge.event.server.ServerStartedEvent;
 import net.minecraftforge.event.server.ServerStartingEvent;
@@ -51,13 +47,8 @@ public class FHServerEvents {
 	public static void serverLevelSave(final ServerLevelDataSaveEvent event) {
 	}
 
-	// Legacy TemperatureThreadingPool polling is disabled while thermal Page
-	// publications own player environment sampling.
-	// @SubscribeEvent
-	// public static void serverTick(final ServerTickEvent event) {
-	// 	if (event.phase == Phase.START && TemperatureUpdate.threadingPool != null)
-	// 		TemperatureUpdate.threadingPool.tick();
-	// }
+	// TemperatureThreadingPool.java is retained as commented legacy source;
+	// Page publications own player environment sampling.
 
 	// Server Lifecycle Events
 	/**
@@ -66,10 +57,7 @@ public class FHServerEvents {
 	 */
 	@SubscribeEvent
 	public static void serverAboutToStart(final ServerAboutToStartEvent event) {
-		// Keep the legacy sampler and TemperatureThreadingPool code available for now,
-		// but do not initialize either dormant path.
-		// SurroundingTemperatureSimulator.init();
-		// TemperatureUpdate.init();
+			// TemperatureThreadingPool remains intentionally uninitialized.
 		if(FMLEnvironment.dist==Dist.DEDICATED_SERVER) {
 			TssapProtocolHandler.serverPrepareUpdateReminder();
 			AuthConfig.reload();
@@ -108,6 +96,6 @@ public class FHServerEvents {
 	@SubscribeEvent
 	public static void serverStopped(final ServerStoppedEvent event) {
 		CTeamDataManager.INSTANCE = null;
-		// TemperatureUpdate.shutdown(); // TemperatureThreadingPool is not initialized.
+			// TemperatureThreadingPool has no active lifecycle hook.
 	}
 }

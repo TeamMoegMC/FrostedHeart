@@ -200,11 +200,13 @@ public final class ReservoirEnvironmentExchange {
             }
             surfaceEnthalpy = scratch.surfaceEnvironment.enthalpyJ();
 
-            if (ThermalExchangeKernel.exchangePairInto(
+            if (ThermalExchangeKernel.exchangePairWithInverseInto(
                     coreEnthalpy,
                     coreCapacity,
+                    1.0D / coreCapacity,
                     surfaceEnthalpy,
                     surfaceCapacity,
+                    1.0D / surfaceCapacity,
                     coreSurfaceConductance,
                     substepSeconds,
                     scratch.coreSurface) != ThermalExchangeKernel.Status.APPLIED) {

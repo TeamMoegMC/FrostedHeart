@@ -1,7 +1,7 @@
 # 暴风雪与白幕天气渲染架构
 
 - Status: `Current`
-- Last verified: `2026-08-24`
+- Last verified: `2026-08-31`
 - Scope: 普通降雪、暴风雪与局部白幕从服务端权威状态到 V1 客户端空间重建、降水、雾、地面粒子和声音的现役实现
 - Primary code anchors: `WhiteCurtainDescriptor`, `WhiteCurtainFieldModel`, `WhiteCurtainInfo`, `WorldClimate`, `FHWhiteCurtainSnapshotPacket`, `FHClimatePacket`, `ClientWeatherState`, `ClientWeatherFrame`, `SpatialWeatherRenderer`, `WeatherSoundLoop`, `WeatherRenderingMode`, `PlayerWeatherCompatibilityModel`, `LevelRendererMixin`, `FogModification`, `FHClientEvents`
 
@@ -98,7 +98,7 @@ continuousChunk = (blockCoordinate - 8) / 16
 localSeconds    = climateSeconds - continuousDeltaChunks * 300
 ```
 
-区块中心与服务端玩法相位一致；走廊边缘按 profile 平滑，雪量和白化相位都在相位切换后用 `WhiteCurtainVisualProfile.phaseTransitionSeconds=5` 做 `5 logical seconds` 平滑，不改变服务端整小时玩法结果。视觉结果写入调用者复用的 `MutableVisualWeatherSample`，包含 `snowIntensity`、`whiteoutIntensity`、`windIntensity`、风向和 `visibilityBlocks`。
+区块中心与服务端玩法相位一致；走廊边缘按 profile 平滑，雪量和白化相位都在相位切换后用 `WhiteCurtainVisualProfile.phaseTransitionSeconds=5` 做 `5 logical seconds` 平滑，不改变服务端整小时玩法结果。视觉结果写入调用者复用的 `MutableVisualWeatherSample`，包含 `snowIntensity`、`whiteoutIntensity`、`windIntensity`、风向和 `visibilityBlocks`。Fast/Fancy 的核心最低能见度都固定为 `16 blocks`；画质选项不会改变玩家在白幕内获得的信息范围。
 
 ## 3. 网络与客户端时钟
 
@@ -119,7 +119,7 @@ List<WhiteCurtainDescriptor> encoded through NBT Codec
 
 ### 3.2 全局与局部气候
 
-`FHClimatePacket.climate` 仍是玩家所在区块的全局/白幕合并结果，供现有 HUD 和预报使用。新增的 `globalClimate` 只表示 `WorldClimate.getGlobalClimate()`，作为客户端天气网格底色，避免把玩家当前位置的局部白幕错误铺满整个近场网格。
+`FHClimatePacket.climate` 仍是玩家所在区块的全局/白幕合并结果，供现有 HUD 和预报使用。新增的 `globalClimate` 只表示 `WorldClimate.getGlobalClimate()`，作为存在可见白幕时的客户端天气网格底色，避免把玩家当前位置的局部白幕错误铺满整个近场网格。全局普通雪和暴风雪不构成白幕空间 footprint，也不会单独创建网格或取得自定义降水 ownership。
 
 `WorldClockSource` 的唯一时间源是服务端 `dayTime`。`FHWhiteCurtainSnapshotPacket` 和 `FHClimatePacket` 同步同一对 `(sec, clockDayTime)`；客户端不再用持续增长的 `gameTime` 推动白幕。正常 client tick 只接受 `0..20` 的前向 `dayTime` 增量，关闭 `doDaylightCycle` 时增量为零；睡眠或 `/time` 的大跳由服务端在下一次一秒气候调度时复用 `FHClimatePacket` 重锚，客户端不会把同一跳变重复应用。
 
@@ -156,14 +156,14 @@ frozen/jump frame: frameSeconds = tickClimateSeconds
 `ClientWeatherState.tick` 每 client tick 至多执行一次：
 
 1. 应用匹配维度的 pending snapshot 和有界时钟修正。
-2. 对所有 descriptor 做一次距离/相位预筛；活动前沿 `512 blocks` 内的 wall candidates 按前沿到相机距离稳定排序，近场半径只保留会影响网格的 candidates。
-3. 交换固定容量 previous/current grid backing arrays。
-4. 只让近场 candidates 填充 world-aligned grid；发布复用的 tick camera sample 和 tick ownership。renderer、雾、声音和地面效果之后都不遍历 descriptor。
+2. 没有 descriptor 时直接发布 fallback；否则对所有 descriptor 做一次距离/相位预筛。没有近场或 wall candidate 时同样不创建 grid。
+3. 活动前沿 `512 blocks` 内的 wall candidates 按前沿到相机距离稳定排序，近场半径只保留会影响网格的 candidates。
+4. 交换固定容量 previous/current grid backing arrays；只让近场 candidates 填充 world-aligned grid，并发布复用的 tick camera sample 和 tick ownership。renderer、雾、声音和地面效果之后都不遍历 descriptor。
 
 | V1 profile | Grid | Field cells/tick | Near prefilter radius | Wall slices | Wall segments | Snow columns/frame | Terrain queries/tick |
 |---|---:|---:|---:|---:|---:|---:|---:|
-| Fast | `9x9`, spacing `8 blocks` | `81` | `48 blocks` | `4` | `16` | `<=256` | `<=12` |
-| Fancy | `17x17`, spacing `4 blocks` | `289` | `56 blocks` | `8` | `32` | `<=1024` | `<=32` |
+| Fast | `9x9`, spacing `8 blocks` | `81` | `48 blocks` | `3` | `12` | `<=256` | `<=12` |
+| Fancy | `17x17`, spacing `4 blocks` | `289` | `56 blocks` | `5` | `20` | `<=1024` | `<=32` |
 
 每个 grid cell 复用六个 `float[]` 字段，前后两张网格在 tick 间交换。完整 camera/fog sample 使用六通道；雪柱使用不计算 `visibility` 的五通道专用 sampler；声音直接复用 tick camera sample。采样使用空间双线性插值，再按 `partialTick` 在 previous/current grid 间插值。屏外 descriptor 只付一次预筛，不触发 field evaluation 或 draw work。
 
@@ -173,17 +173,19 @@ frozen/jump frame: frameSeconds = tickClimateSeconds
 
 | Ownership | Condition | Precipitation owner |
 |---|---|---|
-| `CUSTOM` | 未衰减的 previous/current 近场网格内存在 `snowIntensity` 或 `whiteoutIntensity > 0.01` | V1；frame owner 取消 `renderSnowAndRain`；tick owner 取消 `tickRain`；相机尚未穿过前沿时也能画出逼近的空间雪带 |
-| `WALL_ONLY` | 近场网格无降雪足迹，但附近存在 wall candidate | Vanilla 保留；V1 只画远处墙 |
-| `FALLBACK` | compatibility、无有效 grid、无可见天气或 renderer 已隔离 | Vanilla |
+| `CUSTOM` | 未衰减的 previous/current 近场网格内存在由白幕 descriptor 产生的 `snowIntensity` 或 `whiteoutIntensity > 0.01` | V1；frame owner 取消 `renderSnowAndRain`；tick owner 取消 `tickRain`；相机尚未穿过前沿时也能画出逼近的空间雪带 |
+| `WALL_ONLY` | 近场网格无白幕降雪足迹，但附近存在 wall candidate | Vanilla 保留，包括普通雪和原暴风雪；V1 只画远处墙 |
+| `FALLBACK` | compatibility、没有可见白幕、无有效 grid 或 renderer 已隔离 | Vanilla；全局普通雪和原暴风雪在空间模式下也走这条路径 |
 
 ### 5.1 风暴墙与近场降雪
 
 `SpatialWeatherRenderer` 在 `RenderLevelStageEvent.Stage.AFTER_WEATHER` 提交有界 geometry；墙使用 `assets/frostedheart/textures/environment/white_curtain.png`，近场 streak 继续使用 Minecraft `textures/environment/snow.png`：
 
-- 风暴墙沿 `VisualKernel.leadingSnowDeltaChunks` 移动；Fast/Fancy 分别最多选择最近 `4/8` 个活动前沿，按墙公平分配全局 `4/8` 个 slice，最终仍是 `64/256 wall quads` 上限，远 descriptor 不会按 snapshot 顺序饿死近墙。距离裁剪逐固定 segment 计算，超宽走廊不会再因整墙中心过远而误删近端；垂直顶点使用 level build height 的 camera-relative 坐标。
-- 专用 `64x256 RGBA` 墙纹理具有连续雪雾 alpha，而不是原版雪纹理的稀疏 flake atlas。每层顶点 alpha 为 `a = (0.24 + 0.30s)d`：`s` 是 `[0,1]` 的 slice fade，`d` 是 `[0,1]` 的距离 fade；不同 slice 使用确定性的 UV 偏移，横向 UV 按每 `24 blocks` 一次平铺，纵向按世界 Y 每 `32 blocks` 一次平铺并连续滚动。Fast 的完整四层在满距离权重下由资源回归测试约束为合成 opacity `>=0.55`。这没有新增墙 pass、draw、quad 或 shader。
-- 近场雪柱使用固定 `16x16 @ 2-block spacing` 或 `32x32 @ 1-block spacing` 网格。设间距为 `p blocks`、边长为 `N`，起始单元是 `c0 = floor(floor(cameraCoord) / p) - N/2`；每列位置由世界单元坐标和固定 hash 决定，并加入范围 `[-0.28p, 0.28p]` 的确定性水平偏移。因此相机在同一单元内移动不会改变任何雪柱位置，跨单元时只有径向淡出区的一排退出、另一排进入，不再整体换奇偶格。每列仍只采样共享天气 grid，不查询 descriptor 或地形，并按局部风向/风强倾斜 streak。
+- 风暴墙沿 `VisualKernel.leadingSnowDeltaChunks` 移动；Fast/Fancy 分别最多选择最近 `3/5` 个活动前沿，按墙公平分配全局 `3/5` 个 slice。单层使用 `12/20` 个横向 segment，硬上限从 `64/256` 降为 `36/100 wall quads/frame`。每个 wall 在构造 segment 前先用包含全部切片的 world-space `AABB` 做一次 `Frustum.isVisible`，再逐 segment 做 `544 blocks` 半径裁剪；超宽走廊不会因整墙中心过远而误删近端。
+- segment 不再共用一条完全笔直前沿。相邻 segment 共享由 `visualSeed + slice + boundary` 决定的端点，Fast/Fancy 沿移动轴只产生最多 `2.5/2 blocks` 的低幅连续起伏；走廊两端使用 `48 blocks` smoothstep 顶点 alpha 淡出。层间距为 `6/4.5 blocks`。低幅参数避免早期 `12/9 blocks` 起伏在地面形成可辨认的巨大多边形切片。
+- 墙体垂直范围固定为相机下方 `64 blocks` 到上方 `96 blocks`，顶部 alpha 只保留基底的 `8%`，不再从 level 最低点一直亮到 build height。render frame 读取一次 `ClientLevel.getSkyDarken(partialTick)`，墙和近场 snow streak 共用 `b = 0.55 + 0.45k`：`k` 是 `[0,1]` 的 Vanilla 天空亮度，因此典型夜间 `k=0.2` 时颜色仍保留白天的 `0.64`，避免黑夜中完全消失。高度、顶部 alpha 和原版 particle fog 共同约束远处辉光；不查询方块光照。
+- 专用 `64x256 RGBA` 墙纹理使用可平铺的细尺度云雪噪声和单一方向风带，不再叠加相反斜线。资源基线为平均 alpha `0.7753`、范围 `[154,235]`，不存在可以直接看穿内部地形的透明洞；每层顶点 alpha 基底为 `a = (0.34 + 0.34s)d`。Fast 三层平均合成 opacity 被测试约束在 `[0.82,0.94]`，使外部前沿接近雪版沙尘暴，而不是半透明玻璃。横向 UV 每 `12 blocks` 平铺，纵向按世界 Y 每 `24 blocks` 平铺；每层使用不同的 U/V 速度和由 seed 决定的横向流向。
+- 近场雪柱使用固定 `16x16 @ 2-block spacing` 或 `32x32 @ 1-block spacing` 网格。设间距为 `p blocks`、边长为 `N`，起始单元是 `c0 = floor(floor(cameraCoord) / p) - N/2`；每列位置由世界单元坐标和固定 hash 决定，并加入范围 `[-0.28p, 0.28p]` 的确定性水平偏移。renderer 用固定容量 primitive arrays 缓存当前单元的世界坐标和 hash，只有跨单元或切换 profile 才重建；每帧先做圆形半径裁剪，圆外单元不进入 previous/current 双网格采样。跨单元仍只有径向淡出区的一排退出、另一排进入。
 - `tickGroundEffects` 只查询 `Heightmap.Types.MOTION_BLOCKING`，Fast/Fancy 最多 `12/32` 次每 tick；Vanilla `DECREASED` 粒子选项减半，`MINIMAL` 禁用。
 - 没有逐雪花对象、逐列 descriptor 扫描、自定义 framebuffer、compute shader 或客户端 worker thread。
 
@@ -191,7 +193,7 @@ frozen/jump frame: frameSeconds = tickClimateSeconds
 
 ### 5.2 雾与声音
 
-`FogModification` 在 `CUSTOM` 下直接读取同一帧 `cameraSample`，不再独立计算白幕位置或时钟。非 custom 模式继续按 Vanilla rain/thunder 使用旧的平滑雾逻辑。`fogDensity`、`fogColorDay` 和 `fogColorNight` 仍控制最终雾强度与颜色。
+`FogModification` 在 `CUSTOM` 下直接读取同一帧 `cameraSample`，不再独立计算白幕位置或时钟。它先按 `fogDensity` 缩放 `ViewportEvent.RenderFog`，再用 `cameraSample.visibilityBlocks` 对最终 terrain far plane 做绝对上限；满白化核心最多 `16 blocks`。墙和近场 snow streak 使用 Minecraft 原版 `particle` shader / `DefaultVertexFormat.PARTICLE`，由 shader 的 `fog_distance` 和 `linear_fog` 逐顶点连续混到同一雾色。CPU 端只保留固定 `544 blocks` 性能裁剪，不再按动态 fog far plane 删除 geometry，也没有 Y 轴 fog 硬截断；因此墙、原版地面与天气共享同一种平滑消隐。结果是外部看不穿高不透明前沿，进入后由极低能见度雾和近景飞雪接管。
 
 `WeatherSoundLoop` 最多持有一个非定位循环 `frostedheart:wind`，每 tick 直接读取已经做过室内暴露衰减的 tick camera sample 并平滑音量/音调。室内 exposure 只衰减效果，不改变 custom ownership，因此不会在屋内重新启用旧 `tickRain` 工作。新 loop 以首个非零目标音量提交，避免声音引擎拒绝零音量实例。禁用空间模式、`windSounds=false`、卸载世界或进入 renderer 隔离状态会停止循环。Compatibility 继续使用 `LevelRendererMixin.tickRain` 的旧雪声/风声逻辑。
 
@@ -230,12 +232,12 @@ Fast/Fancy 不读取 Vanilla graphics 的 fast/fancy 状态；这是为了让玩
 - 服务端没有按渲染距离、雪柱、墙切片或客户端画质扩展的视觉工作。
 - 稳定白幕没有专用周期 packet；现有小时 `FHClimatePacket` 同时校时。
 - Fast/Fancy grid、wall、snow column 和 terrain query 上限由 enum 固定。
-- 专用墙纹理替换只改变现有 wall batch 的 texture binding；雪柱世界锚定只改变现有列坐标生成。两者均不增加服务端工作、packet、field sample、quad 上限或 draw 数。
+- V1.1 墙仍使用同一个 wall batch；切片与 segment 收缩降低了 quad 和透明 overdraw。墙和雪改用 Vanilla `particle` shader/format，复用已经配置好的 terrain fog uniforms 和 light texture；没有自定义 shader、额外 draw、服务端工作、packet 或地形查询。
 - snapshot 替换会分配 descriptor list、kernel phase arrays 和 candidate arrays；状态、sample 和 grid 数组在稳定 tick/frame 复用。空批使用 `BufferBuilder.endOrDiscardIfEmpty()`，但非空 `Tesselator.end()` 仍会为 wall/snow batch 生成 `DrawState/RenderedBuffer` 包装，因此不能宣称已经达到 `0 B/frame`；JFR 后若不达门，需改持久 VBO/复用 staging buffer，而不是只凭数组复用通过验收。
-- 当前墙已做活动前沿距离排序、公平 slice 和逐 segment 半径裁剪，但还没有真实 frustum/屏幕区间裁剪、持久墙 VBO 或地形贴合；这些仍是 V1 profile/release gate。
+- 当前墙已做活动前沿距离排序、公平 slice、wall-level frustum 和逐 segment 半径裁剪，但还没有 segment 级屏幕区间裁剪、持久墙 VBO 或地形贴合；这些仍是 V1 profile/release gate。
 - 当前没有完成 30/60/144+ FPS、1080p/1440p/4K、Embeddium/Oculus 和低端 GPU 的 render-thread/GPU P95 测量，因此计划中的毫秒门仍是 release gate，不是已达成结果。
 
-现有 V1 定向 JUnit 共 `38` 条，覆盖旧 Codec fixture、四方向传播、玩法等价、含末端边界、`5s` 雪/白化过渡、cache add/clear/prune、snapshot `0/1/8/32` round-trip 与 malformed payload、dayTime freeze/前后跳/重复校时、Compatibility 1000-tick 时钟连续性、候选排序、屏外工作量、双网格/专用 sampler、室内与前沿外 ownership、墙段距离、固定 caps、正负坐标雪柱锚定、墙纹理覆盖/接缝/合成 opacity 和 Vanilla compatibility 映射。Java 17 全量结果为 `588 tests, 0 failures, 0 errors`。
+现有 V1 定向测试覆盖旧 Codec fixture、四方向传播、玩法等价、相位过渡、cache、snapshot、时钟、ownership、固定 caps、雪柱锚定和墙纹理资源门。`2026-08-31` 本次只运行三个受影响测试类：`3 suites / 20 tests / 0 failures / 0 errors`；没有用旧的全仓结果代替本次验证。
 
 ## 9. V1 表现边界与 V2
 

@@ -125,50 +125,6 @@ class DroppedReservoirExchangeHandlerTest {
     }
 
     @Test
-    void staleObservationAdvancesWithAirOnlyInsteadOfFutureRadiation() {
-        ItemStack staleStack = stack();
-        ItemStack freshStack = stack();
-        new WearableThermalState(0.0D, 0.0D).writeTo(staleStack);
-        new WearableThermalState(0.0D, 0.0D).writeTo(freshStack);
-        CountingReservoir staleReservoir = new CountingReservoir();
-        CountingReservoir freshReservoir = new CountingReservoir();
-        DroppedReservoirExchangeHandler handler =
-                new DroppedReservoirExchangeHandler();
-
-        DroppedReservoirExchangeHandler.Status staleStatus =
-                handler.exchangeObservedInto(
-                        staleStack,
-                        staleReservoir,
-                        10.0D,
-                        100.0D,
-                        99L,
-                        100L,
-                        1.0D);
-        DroppedReservoirExchangeHandler.Status freshStatus =
-                handler.exchangeObservedInto(
-                        freshStack,
-                        freshReservoir,
-                        10.0D,
-                        100.0D,
-                        100L,
-                        100L,
-                        1.0D);
-
-        assertEquals(DroppedReservoirExchangeHandler.Status.APPLIED, staleStatus);
-        assertEquals(DroppedReservoirExchangeHandler.Status.APPLIED, freshStatus);
-        double staleSurface = WearableThermalState.read(staleStack)
-                .orElseThrow().surfaceTemperatureC();
-        double freshSurface = WearableThermalState.read(freshStack)
-                .orElseThrow().surfaceTemperatureC();
-        assertTrue(staleSurface > 0.0D);
-        assertTrue(freshSurface > staleSurface);
-        assertFalse(DroppedReservoirExchangeHandler.isRadiationSampleFresh(
-                99L, 100L));
-        assertTrue(DroppedReservoirExchangeHandler.isRadiationSampleFresh(
-                100L, 100L));
-    }
-
-    @Test
     void lifecycleMetadataIsTransientAndEntityRemovalNeedsNoStateCleanup() {
         for (java.lang.reflect.Field field
                 : DroppedReservoirExchangeHandler.class.getDeclaredFields()) {

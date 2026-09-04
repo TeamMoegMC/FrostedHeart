@@ -41,13 +41,14 @@ import com.teammoeg.frostedheart.content.climate.food.FoodTemperatureHandler;
 import com.teammoeg.frostedheart.content.climate.gamedata.climate.ClimateType;
 import com.teammoeg.frostedheart.content.climate.gamedata.climate.WorldClimate;
 import com.teammoeg.frostedheart.content.climate.network.FHClimatePacket;
+import com.teammoeg.frostedheart.content.climate.network.FHBodyDataSyncPacket;
 import com.teammoeg.frostedheart.content.climate.network.FHWhiteCurtainSnapshotPacket;
 import com.teammoeg.frostedheart.content.climate.player.ClothData;
 import com.teammoeg.frostedheart.content.climate.player.EquipmentSlotType;
 import com.teammoeg.frostedheart.content.climate.player.EquipmentSlotType.SlotKey;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData.BodyPart;
-import com.teammoeg.frostedheart.content.climate.player.TemperatureUpdate;
+import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureUpdate;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import com.teammoeg.frostedheart.mixin.minecraft.temperature.ServerLevelMixin_PlaceExtraSnow;
 import net.minecraft.core.BlockPos;
@@ -253,10 +254,8 @@ public class ClimateCommonEvents {
                         event.getLevel().setBlock(event.getPos(), crop.defaultBlockState(), 2);
                 }
             } else if (status.willDie()) {
-                if (level.getBlockState(pos.below()).is(Blocks.FARMLAND)) {
-                    level.setBlock(pos.below(), Blocks.DIRT.defaultBlockState(), 2);
-                }
-                level.setBlock(pos, Blocks.DEAD_BUSH.defaultBlockState(), 2);
+                event.setResult(Event.Result.DENY);
+                return;
             }
 
             if (allow) {
@@ -417,6 +416,7 @@ public class ClimateCommonEvents {
                         FHNetwork.INSTANCE.sendPlayer(currentPlayer, new FHClimatePacket(cap,currentPlayer));
                         FHNetwork.INSTANCE.sendPlayer(currentPlayer, new FHWhiteCurtainSnapshotPacket(cap, serverWorld));
                     });
+            syncPlayerTemperature(currentPlayer);
 
             // System.out.println("=x-x=");
             // System.out.println(ForgeRegistries.LOOT_MODIFIER_SERIALIZERS.getValue(new
@@ -433,6 +433,7 @@ public class ClimateCommonEvents {
                     new FHClimatePacket(WorldClimate.get(serverWorld),player));
             FHNetwork.INSTANCE.sendPlayer(player,
                     new FHWhiteCurtainSnapshotPacket(WorldClimate.get(serverWorld), serverWorld));
+            syncPlayerTemperature(player);
         }
     }
 
@@ -487,8 +488,8 @@ public class ClimateCommonEvents {
     public static void onPlayerTick(TickEvent.PlayerTickEvent event) {
         FoodTemperatureHandler.onPlayerTick(event);
         ForecastHandler.sendForecastMessages(event);
-        TemperatureUpdate.updateTemperature(event);
-        TemperatureUpdate.regulateTemperature(event);
+        PlayerTemperatureUpdate.updateTemperature(event);
+        PlayerTemperatureUpdate.regulateTemperature(event);
     }
 
     @SubscribeEvent
@@ -631,8 +632,18 @@ public class ClimateCommonEvents {
             FHNetwork.INSTANCE.sendPlayer(player, new FHClimatePacket(WorldClimate.get(serverWorld),player));
             FHNetwork.INSTANCE.sendPlayer(player,
                     new FHWhiteCurtainSnapshotPacket(WorldClimate.get(serverWorld), serverWorld));
-            //PlayerTemperatureData.getCapability(event.getEntity()).ifPresent(PlayerTemperatureData::deathResetTemperature);
+            syncPlayerTemperature(player);
         }
+    }
+
+    private static void syncPlayerTemperature(ServerPlayer player) {
+        PlayerTemperatureData.getCapability(player).ifPresent(data -> {
+            data.forceThermalSync();
+            if (data.shouldSyncThermalState()) {
+                FHNetwork.INSTANCE.sendPlayer(
+                        player, new FHBodyDataSyncPacket(player));
+            }
+        });
     }
 
     @SubscribeEvent

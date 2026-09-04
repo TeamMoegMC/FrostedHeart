@@ -140,7 +140,8 @@ class ClientWeatherStateTest {
         state.tick(testDimension, 1001L, 0.0, 0.0,
                 ClimateType.SNOW, 0, WeatherQualityProfile.FAST);
         assertEquals(150.05, state.frameClimateSeconds(0.0F), 1.0e-6);
-        assertTrue(state.hasGrid());
+        assertFalse(state.hasGrid());
+        assertFalse(state.tickOwnsPrecipitation());
     }
 
     @Test

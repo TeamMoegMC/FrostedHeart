@@ -285,11 +285,13 @@ public final class ThreeNodeWearableHeatExchange {
             double dtSeconds,
             Scratch scratch
     ) {
-        return ThermalExchangeKernel.exchangePairInto(
+        return ThermalExchangeKernel.exchangePairWithInverseInto(
                 enthalpyA,
                 capacityA,
+                1.0D / capacityA,
                 enthalpyB,
                 capacityB,
+                1.0D / capacityB,
                 conductance,
                 dtSeconds,
                 scratch.pairResult

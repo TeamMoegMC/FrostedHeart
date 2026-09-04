@@ -30,7 +30,6 @@ import com.simibubi.create.foundation.item.TooltipModifier;
 import com.teammoeg.chorda.text.Components;
 import com.teammoeg.chorda.text.LangBuilder;
 import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
-import com.teammoeg.frostedheart.content.climate.TemperatureDisplayHelper;
 import com.teammoeg.frostedheart.content.climate.player.BodyHeatingCapability;
 import com.teammoeg.frostedheart.util.Lang;
 import com.teammoeg.frostedheart.util.client.FHTextIcon;
@@ -77,14 +76,15 @@ public class EquipmentTempStats implements TooltipModifier {
         LazyOptional<BodyHeatingCapability> lazyheat = FHCapabilities.EQUIPMENT_HEATING.getCapability(stack);
         if(lazyheat.isPresent()) {
         	
-	        float heat = (Math.round(lazyheat.resolve().get().getMaxTempAddValue(stack) * 1000)) / 1000.0F;
+	        float heat = lazyheat.resolve().get().getMaxPowerW(stack);
 	        if (heat != 0) {
-	            String s = TemperatureDisplayHelper.toTemperatureDeltaFloatString(heat);
+	            String s = Math.round(heat) + " W";
 	            Lang.translate("tooltip", "temp.item")
 	                    .style(ChatFormatting.GRAY)
 	                    .addTo(list);
 	
-	            int progress = Mth.ceil(Mth.clamp(Math.abs(heat) * 0.1, 0, 3));
+	            int progress = Mth.ceil(Mth.clamp(
+	                    Math.abs(heat) / 50.0F, 0, 3));
 	
 	            LangBuilder builder = Lang.builder()
 	                    .add(FHTextIcon.thermometer.getIcon())

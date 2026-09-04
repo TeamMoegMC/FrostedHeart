@@ -713,3 +713,31 @@ Closure boundary:
 The user clarified that the simplified item Tooltip must show the reservoir's capacity-weighted average rather than its surface temperature. `WarmStoneItem` now computes `T_average=(1-a)*T_core+a*T_surface` from the item's actual `WearableThermalProfile.surfaceCapacityFraction`. Normal mode shows average temperature plus capacity; advanced mode shows average, core, surface, and capacity. The read path remains NBT-side-effect free.
 
 This correction does not change the frozen profiles, exchange model, receiver budgets, synchronization, recipes, or lifecycle. It does not implement the previously deferred client-config switch; only the explicitly requested default weighted value and existing advanced detail are in scope.
+
+### 9.24 `2026-09-04 20:53:00 +08:00` 主分支温度重构合并适配
+
+- Executor: `Codex; OpenAI GPT-5; primary engineering agent`
+- Scope: merge `origin/master` at `9424491bf` into `warm-stone` and adapt only the wearable-reservoir integration
+
+The old Celsius-core mutation entry was not retained. Wearable exchange now reads
+`PlayerTemperatureData.getAbsoluteCoreBodyTemp()` and applies its normalized player
+delta uniformly to all five body-part energy nodes. This makes the player node equal
+to the new whole-body `245000 J/K` capacity while leaving all frozen reservoir ratios,
+rates, cadence, Curios selection, ItemStack NBT, and synchronization ownership intact.
+
+Dropped reservoirs now use the current `ThermalEnvironmentSample` and a narrow
+`MinecraftThermalInput.gameplayItemEnvironment(ItemEntity, natural, out)` entry.
+The path never starts a runtime or admits a Page; it preserves 64 same-tick
+quarter-block samples and has a separate radiation witness cache with fixed
+`64 receivers / 32 visits / top 4 / 4 rays`. Player `128/64/8/24` receiver limits
+are unchanged. Static block radiation and registered physical sources share the
+current discovery path. The reservoir-only `q*0.8/6` boundary conversion remains
+frozen, while the refactored player model consumes radiant watts directly.
+
+Validation: targeted warm/runtime JUnit `16 suites, 77/77`; full JUnit
+`192 suites, 785/785`; full build passed; Forge GameTest `17/17 required`.
+The new Forge case proves positive Campfire radiation and real ItemEntity NBT
+advancement. A pre-existing async handoff GameTest now waits within its existing
+1300-tick timeout instead of asserting once at tick 1200. No `design/` file,
+recipe, charger path, dedicated sync, or deferred aggregate-temperature config
+surface changed.

@@ -11,6 +11,7 @@
 package com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft;
 
 import com.sun.management.ThreadMXBean;
+import com.teammoeg.frostedheart.content.climate.thermal.query.ThermalEnvironmentSample;
 import org.junit.jupiter.api.Test;
 
 import java.lang.management.ManagementFactory;
@@ -33,10 +34,9 @@ class MinecraftThermalInputDroppedWorkloadTest {
                 .GAMEPLAY_ITEM_ENVIRONMENT_SAMPLES_PER_TICK;
         MinecraftThermalInput.ItemEnvironmentSampleCache cache =
                 new MinecraftThermalInput.ItemEnvironmentSampleCache(capacity);
-        MinecraftThermalInput.MutableEnvironmentSample source =
-                new MinecraftThermalInput.MutableEnvironmentSample();
-        source.setFallbackAir(-12.5D, 80L);
-        source.setObservationTick(80L);
+        ThermalEnvironmentSample source = new ThermalEnvironmentSample();
+        source.setAir(-12.5D);
+        source.setRadiation(12.0D);
 
         int stores = 0;
         int hits = 0;
@@ -64,13 +64,12 @@ class MinecraftThermalInputDroppedWorkloadTest {
                 CLAIMS_PER_TICK - stores - hits,
                 capacity);
 
-        MinecraftThermalInput.MutableEnvironmentSample copied =
-                new MinecraftThermalInput.MutableEnvironmentSample();
+        ThermalEnvironmentSample copied = new ThermalEnvironmentSample();
         int sameQuarter = cache.find(80L, 17, 4, -17);
         assertTrue(sameQuarter >= 0);
         cache.copyTo(sameQuarter, copied);
         assertEquals(-12.5D, copied.airTemperatureC());
-        assertEquals(80L, copied.observationTick());
+        assertEquals(12.0D, copied.radiantFluxWPerM2());
 
         assertEquals(-1, cache.find(81L, 17, 4, -17));
         assertEquals(81L, cache.generationTick());
@@ -79,7 +78,7 @@ class MinecraftThermalInputDroppedWorkloadTest {
         assertTrue(cache.store(255, 4, -255, source));
         assertEquals(1, cache.size());
 
-        cache.close();
+        cache.clear();
         assertEquals(Long.MIN_VALUE, cache.generationTick());
         assertEquals(0, cache.size());
     }
@@ -91,10 +90,8 @@ class MinecraftThermalInputDroppedWorkloadTest {
                 .GAMEPLAY_ITEM_ENVIRONMENT_SAMPLES_PER_TICK;
         MinecraftThermalInput.ItemEnvironmentSampleCache cache =
                 new MinecraftThermalInput.ItemEnvironmentSampleCache(capacity);
-        MinecraftThermalInput.MutableEnvironmentSample source =
-                new MinecraftThermalInput.MutableEnvironmentSample();
-        source.setFallbackAir(-8.0D, 100L);
-        source.setObservationTick(100L);
+        ThermalEnvironmentSample source = new ThermalEnvironmentSample();
+        source.setAir(-8.0D);
         for (int location = 0; location < capacity; location++) {
             assertEquals(-1, cache.find(100L, location, 8, -location));
             assertTrue(cache.store(location, 8, -location, source));
@@ -110,8 +107,7 @@ class MinecraftThermalInputDroppedWorkloadTest {
         assertEquals(capacity, arrayLength(cache, "quarterZ"));
         assertEquals(capacity, arrayLength(cache, "samples"));
 
-        MinecraftThermalInput.MutableEnvironmentSample copied =
-                new MinecraftThermalInput.MutableEnvironmentSample();
+        ThermalEnvironmentSample copied = new ThermalEnvironmentSample();
         for (int warmup = 0; warmup < 10_000; warmup++) {
             int location = warmup & (capacity - 1);
             int cached = cache.find(100L, location, 8, -location);

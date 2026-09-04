@@ -11,15 +11,14 @@
 package com.teammoeg.frostedheart.content.climate.thermal.radiation;
 
 /**
- * Shared conversion from absorbed radiant flux to an equivalent air-temperature delta.
+ * Reservoir conversion from radiant flux to an equivalent boundary-temperature delta.
  *
- * <p>The value deliberately uses the player-facing absorption and transfer constants:
- * {@code deltaT = q * 0.8 / 6.0}. It is an equivalent boundary temperature, not the
- * player's body-energy integration formula.</p>
+ * <p>The frozen wearable balance uses {@code deltaT = q * 0.8 / 6.0}. The player
+ * energy model consumes radiant watts directly and does not use this conversion.</p>
  */
 public final class RadiantEquivalentTemperature {
-    public static final double PLAYER_RADIATION_ABSORPTIVITY = 0.8D;
-    public static final double PLAYER_RADIATION_TRANSFER_W_PER_M2_K = 6.0D;
+    public static final double RESERVOIR_RADIATION_ABSORPTIVITY = 0.8D;
+    public static final double RESERVOIR_RADIATION_TRANSFER_W_PER_M2_K = 6.0D;
 
     private RadiantEquivalentTemperature() {
     }
@@ -33,8 +32,8 @@ public final class RadiantEquivalentTemperature {
             return 0.0D;
         }
         double delta = radiantFluxWPerM2
-                * PLAYER_RADIATION_ABSORPTIVITY
-                / PLAYER_RADIATION_TRANSFER_W_PER_M2_K;
+                * RESERVOIR_RADIATION_ABSORPTIVITY
+                / RESERVOIR_RADIATION_TRANSFER_W_PER_M2_K;
         return Double.isFinite(delta) ? delta : Double.MAX_VALUE;
     }
 

@@ -10,6 +10,8 @@
 
 package com.teammoeg.frostedheart.content.climate.player.thermalitem;
 
+import com.teammoeg.frostedheart.content.climate.WorldTemperature;
+import com.teammoeg.frostedheart.content.climate.thermal.query.ThermalEnvironmentSample;
 import com.teammoeg.frostedheart.content.climate.thermal.radiation.RadiantEquivalentTemperature;
 import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.MinecraftThermalInput;
 import net.minecraft.server.level.ServerLevel;
@@ -23,14 +25,13 @@ import java.util.UUID;
 public final class DroppedReservoirExchangeHandler {
     public static final int CADENCE_TICKS = 20;
     public static final double ELAPSED_SECONDS = CADENCE_TICKS / 20.0D;
-    public static final int MAXIMUM_RADIATION_SAMPLE_AGE_TICKS = 0;
 
     private final ReservoirEnvironmentExchange.MutableResult result =
             new ReservoirEnvironmentExchange.MutableResult();
     private final ReservoirEnvironmentExchange.Scratch scratch =
             new ReservoirEnvironmentExchange.Scratch();
-    private final MinecraftThermalInput.MutableEnvironmentSample environment =
-            new MinecraftThermalInput.MutableEnvironmentSample();
+    private final ThermalEnvironmentSample environment =
+            new ThermalEnvironmentSample();
 
     public enum Status {
         NOT_CADENCE(0),
@@ -69,22 +70,20 @@ public final class DroppedReservoirExchangeHandler {
             return Status.INVALID_CONTEXT;
         }
 
-        double receiverY = entity.getY() + entity.getBbHeight() * 0.5D;
+        double naturalTemperatureC = WorldTemperature.naturalAir(
+                serverLevel, entity.blockPosition());
         MinecraftThermalInput.gameplayItemEnvironment(
-                serverLevel,
-                entity.blockPosition(),
-                entity.getX(),
-                receiverY,
-                entity.getZ(),
+                entity,
+                naturalTemperatureC,
                 environment);
-        return exchangeObservedInto(
+        double airTemperatureC = environment.airAvailable()
+                ? environment.airTemperatureC() : naturalTemperatureC;
+        return exchangeInto(
                 stack,
                 stack.getItem() instanceof WearableThermalReservoir reservoir
                         ? reservoir : null,
-                environment.airTemperatureC(),
+                airTemperatureC,
                 environment.radiantFluxWPerM2(),
-                environment.observationTick(),
-                serverLevel.getGameTime(),
                 ELAPSED_SECONDS);
     }
 
@@ -114,36 +113,6 @@ public final class DroppedReservoirExchangeHandler {
         mixed *= 0xc4ceb9fe1a85ec53L;
         mixed ^= mixed >>> 33;
         return Math.floorMod((int) (mixed ^ mixed >>> 32), CADENCE_TICKS);
-    }
-
-    static boolean isRadiationSampleFresh(
-            long observationTick,
-            long currentTick
-    ) {
-        return observationTick >= 0L
-                && currentTick >= observationTick
-                && currentTick - observationTick
-                <= MAXIMUM_RADIATION_SAMPLE_AGE_TICKS;
-    }
-
-    Status exchangeObservedInto(
-            ItemStack stack,
-            WearableThermalReservoir reservoir,
-            double airTemperatureC,
-            double radiantFluxWPerM2,
-            long observationTick,
-            long currentTick,
-            double elapsedSeconds
-    ) {
-        double usableRadiantFluxWPerM2 = isRadiationSampleFresh(
-                observationTick, currentTick)
-                ? radiantFluxWPerM2 : 0.0D;
-        return exchangeInto(
-                stack,
-                reservoir,
-                airTemperatureC,
-                usableRadiantFluxWPerM2,
-                elapsedSeconds);
     }
 
     Status exchangeInto(

@@ -95,8 +95,7 @@ public final class WearableThermalExchangeHandler {
         }
 
         WearableThermalState state = currentState.get();
-        double playerTemperatureC = playerData.getCoreBodyTemp()
-                + NORMAL_PLAYER_TEMPERATURE_C;
+        double playerTemperatureC = playerData.getAbsoluteCoreBodyTemp();
         ThermalExchangeKernel.Status exchangeStatus =
                 ThreeNodeWearableHeatExchange.exchangeInto(
                         reservoir.thermalProfile(stack),
@@ -128,7 +127,7 @@ public final class WearableThermalExchangeHandler {
                 && nextSurfaceTemperatureC == state.surfaceTemperatureC()) {
             return Status.UNCHANGED;
         }
-        if (!playerData.applyCoreBodyTemperatureDelta(playerDelta)) {
+        if (!playerData.applyUniformBodyTemperatureDelta(playerDelta)) {
             return Status.PLAYER_UPDATE_REJECTED;
         }
 

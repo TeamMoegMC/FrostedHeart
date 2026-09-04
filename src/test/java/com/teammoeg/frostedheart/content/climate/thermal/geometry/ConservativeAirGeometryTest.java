@@ -30,7 +30,7 @@ class ConservativeAirGeometryTest {
         assertEquals(ConservativeAirGeometry.Status.RESOLVED, resolution.status());
         assertEquals(1, resolution.components().size());
         ConservativeAirGeometry.AirComponent component = resolution.components().get(0);
-        assertEquals(64, component.microcellCount());
+        assertEquals(64, Long.bitCount(component.microcellMask()));
         for (ConservativeAirGeometry.Face face : ConservativeAirGeometry.Face.values()) {
             assertEquals(ConservativeAirGeometry.FULL_FACE_MASK, component.faceMask(face));
         }
@@ -43,9 +43,9 @@ class ConservativeAirGeometryTest {
 
         assertEquals(ConservativeAirGeometry.Status.RESOLVED, resolution.status());
         assertTrue(resolution.components().isEmpty());
-        assertEquals(-1, resolution.componentAt(0, 0, 0));
-        assertEquals(0, resolution.combinedFaceMask(ConservativeAirGeometry.Face.POSITIVE_X));
-        assertEquals(-1L, resolution.blockedMicrocellMask());
+        assertEquals(-1, componentAt(resolution, 0, 0, 0));
+        assertEquals(0, combinedFaceMask(
+                resolution, ConservativeAirGeometry.Face.POSITIVE_X));
     }
 
     @Test
@@ -55,13 +55,15 @@ class ConservativeAirGeometryTest {
         ConservativeAirGeometry.Resolution resolution =
                 ConservativeAirGeometry.resolve(List.of(slab), 8);
 
-        assertEquals(2, resolution.observedRegionCount());
-        assertEquals(0, resolution.componentAt(0, 1, 1));
-        assertEquals(-1, resolution.componentAt(1, 1, 1));
-        assertEquals(-1, resolution.componentAt(2, 1, 1));
-        assertEquals(1, resolution.componentAt(3, 1, 1));
-        assertEquals(16, resolution.components().get(0).microcellCount());
-        assertEquals(16, resolution.components().get(1).microcellCount());
+        assertEquals(2, resolution.components().size());
+        assertEquals(0, componentAt(resolution, 0, 1, 1));
+        assertEquals(-1, componentAt(resolution, 1, 1, 1));
+        assertEquals(-1, componentAt(resolution, 2, 1, 1));
+        assertEquals(1, componentAt(resolution, 3, 1, 1));
+        assertEquals(16, Long.bitCount(
+                resolution.components().get(0).microcellMask()));
+        assertEquals(16, Long.bitCount(
+                resolution.components().get(1).microcellMask()));
         assertEquals(ConservativeAirGeometry.FULL_FACE_MASK,
                 resolution.components().get(0).negativeXMask());
         assertEquals(0, resolution.components().get(0).positiveXMask());
@@ -77,9 +79,11 @@ class ConservativeAirGeometryTest {
         ConservativeAirGeometry.Resolution resolution =
                 ConservativeAirGeometry.resolve(List.of(tinyCornerObstruction), 8);
 
-        assertEquals(-1, resolution.componentAt(0, 0, 0));
+        assertEquals(-1, componentAt(resolution, 0, 0, 0));
         assertEquals(ConservativeAirGeometry.FULL_FACE_MASK ^ 1,
-                resolution.combinedFaceMask(ConservativeAirGeometry.Face.NEGATIVE_X));
+                combinedFaceMask(
+                        resolution,
+                        ConservativeAirGeometry.Face.NEGATIVE_X));
         assertEquals(63, Long.bitCount(resolution.provenAirMicrocellMask()));
     }
 
@@ -116,9 +120,6 @@ class ConservativeAirGeometryTest {
                 ConservativeAirGeometry.resolve(List.of(slab), 1);
 
         assertEquals(ConservativeAirGeometry.Status.CONSERVATIVE_UNSUPPORTED, resolution.status());
-        assertEquals(ConservativeAirGeometry.UnsupportedReason.REGION_LIMIT_EXCEEDED,
-                resolution.unsupportedReason());
-        assertEquals(2, resolution.observedRegionCount());
         assertTrue(resolution.components().isEmpty());
     }
 
@@ -148,7 +149,7 @@ class ConservativeAirGeometryTest {
 
             assertEquals(ConservativeAirGeometry.Status.RESOLVED, resolution.status());
             for (ConservativeAirGeometry.Face face : ConservativeAirGeometry.Face.values()) {
-                int aperture = resolution.combinedFaceMask(face);
+                int aperture = combinedFaceMask(resolution, face);
                 for (int bit = 0; bit < 16; bit++) {
                     if ((aperture & (1 << bit)) != 0) {
                         assertFalseBoundaryIntersection(blockers, face, bit);
@@ -175,13 +176,45 @@ class ConservativeAirGeometryTest {
         ConservativeAirGeometry.Resolution reflected =
                 ConservativeAirGeometry.resolve(mirrored, 64);
 
-        assertEquals(original.observedRegionCount(), reflected.observedRegionCount());
+        assertEquals(original.components().size(), reflected.components().size());
         assertEquals(Long.bitCount(original.provenAirMicrocellMask()),
                 Long.bitCount(reflected.provenAirMicrocellMask()));
-        assertEquals(original.combinedFaceMask(ConservativeAirGeometry.Face.NEGATIVE_X),
-                reflected.combinedFaceMask(ConservativeAirGeometry.Face.POSITIVE_X));
-        assertEquals(original.combinedFaceMask(ConservativeAirGeometry.Face.POSITIVE_X),
-                reflected.combinedFaceMask(ConservativeAirGeometry.Face.NEGATIVE_X));
+        assertEquals(combinedFaceMask(
+                        original, ConservativeAirGeometry.Face.NEGATIVE_X),
+                combinedFaceMask(
+                        reflected, ConservativeAirGeometry.Face.POSITIVE_X));
+        assertEquals(combinedFaceMask(
+                        original, ConservativeAirGeometry.Face.POSITIVE_X),
+                combinedFaceMask(
+                        reflected, ConservativeAirGeometry.Face.NEGATIVE_X));
+    }
+
+    private static int componentAt(
+            ConservativeAirGeometry.Resolution resolution,
+            int x,
+            int y,
+            int z
+    ) {
+        for (ConservativeAirGeometry.AirComponent component
+                : resolution.components()) {
+            int microcell = (y << 4) | (z << 2) | x;
+            if ((component.microcellMask() & 1L << microcell) != 0L) {
+                return component.id();
+            }
+        }
+        return -1;
+    }
+
+    private static int combinedFaceMask(
+            ConservativeAirGeometry.Resolution resolution,
+            ConservativeAirGeometry.Face face
+    ) {
+        int mask = 0;
+        for (ConservativeAirGeometry.AirComponent component
+                : resolution.components()) {
+            mask |= component.faceMask(face);
+        }
+        return mask;
     }
 
     private static ConservativeAirGeometry.UnitBox microcell(int x, int y, int z) {

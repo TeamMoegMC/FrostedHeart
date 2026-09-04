@@ -20,7 +20,7 @@
 ## Validation
 
 - The new targeted regression test failed against the old implementation with `MinecraftThermalTopologyApplier$LatestFrameException` and passed after the fix.
-- `./gradlew.bat compileGameTestJava test --tests "com.teammoeg.frostedheart.content.climate.thermal.*" --tests "com.teammoeg.frostedheart.content.climate.player.SurroundingTemperatureSimulator*" --offline --console=plain` completed successfully.
+- `./gradlew.bat compileGameTestJava test --tests "com.teammoeg.frostedheart.content.climate.thermal.*" --tests "com.teammoeg.frostedheart.content.climate.player.unused.SurroundingTemperatureSimulator*" --offline --console=plain` completed successfully.
 - `182/182` selected JUnit tests passed across `34` suites with zero failures, errors, or skips.
 - A fresh `runClient` session loaded `new world CT`, ran the integrated server through save-and-pause and game-mode changes, then exited normally with all dimensions saved. `latest.log` contained no `LatestFrameException` or crash markers, and no new crash report was created.
 - `git diff --check` reported no whitespace errors; only existing line-ending conversion warnings were emitted.

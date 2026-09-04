@@ -679,3 +679,17 @@ gradlew.bat build
 ## 15. Outcome
 
 已完成。`T00-T28` 全部完成并接受，Gate A、Gate B、Gate C、Gate D 均已关闭。两件物品的三节点热库、专用 Curios 槽、生命周期、通用掉落环境 receiver、制作、真实 Hot Water 灌装、研究、任务、Create 风格 tooltip、OP 测试工具、自动化、实机矩阵、living docs 和两仓库最终验证均已完成；普通物品 Tooltip 已按节点热容显示加权平均温度。最终 JUnit 为 `201` suites、`868/868`，Forge GameTest 为 `13/13 required`，完整 build 成功；TheWinterRescue 暖石专项静态验证通过。剩余限制与延期项仅为本文 `T26-T28 outcome` 和 post-plan correction 所列内容。
+
+### 15.1 主分支温度重构适配（2026-09-04）
+
+`warm-stone` 已合并 `9424491bf` 的主分支温度重构并完成无兼容层适配。
+归一化玩家节点现在通过 `PlayerTemperatureData.applyUniformBodyTemperatureDelta`
+等温作用于五个部位；五部位热容总和仍为 `245000 J/K`，因此冻结的
+`0.10/0.25` 热容比和换热速率不变。掉落物改接当前
+`ThermalEnvironmentSample`、live/last/dormant/natural Air 顺序和包含静态火/熔岩的
+`RadiationService`，并保留独立 `64/32/4/4` item receiver 与 64-entry 同 tick
+位置缓存。玩家 receiver 的 `128/64/8/24`、cadence、同步和生命周期合同未改。
+
+重构后基线为 JDK 17 全量 JUnit `192` suites、`785/785`，Forge GameTest
+`17/17 required`，完整 build 成功。测试总数变化来自主分支删除/替换旧温度测试，
+不是暖石漏跑。计划仍保持 completed；总体温度 Tooltip/client config 调试显示仍未恢复。

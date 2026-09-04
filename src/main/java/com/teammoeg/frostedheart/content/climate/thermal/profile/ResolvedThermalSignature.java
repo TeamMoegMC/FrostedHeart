@@ -10,46 +10,37 @@
 
 package com.teammoeg.frostedheart.content.climate.thermal.profile;
 
-import java.util.List;
+import com.teammoeg.frostedheart.content.climate.thermal.geometry.ConservativeAirGeometry;
+
+import java.util.Objects;
 
 /**
- * Minecraft-free signature payload interned and consumed on the main thread. Airflow,
- * material contact, and radiation remain independent channels.
+ * State-static Air geometry and material identity interned on the main thread.
  */
 public record ResolvedThermalSignature(
-        int mediumId,
+        ConservativeAirGeometry.Resolution airGeometry,
         int materialProfileId,
-        List<LocalAirRegionPattern> airRegions,
-        int materialContactPatternId,
-        int radiationOcclusionPatternId,
-        int sourceProfileId,
-        int gateKind,
-        int flags
+        int materialContactPatternId
 ) {
     public ResolvedThermalSignature {
-        requireId("mediumId", mediumId);
+        Objects.requireNonNull(airGeometry, "airGeometry");
+        if (airGeometry.status() != ConservativeAirGeometry.Status.RESOLVED) {
+            throw new IllegalArgumentException(
+                    "thermal signature requires resolved Air geometry");
+        }
         requireId("materialProfileId", materialProfileId);
         requireId("materialContactPatternId", materialContactPatternId);
-        requireId("radiationOcclusionPatternId", radiationOcclusionPatternId);
-        requireId("sourceProfileId", sourceProfileId);
-        requireId("gateKind", gateKind);
-        airRegions = List.copyOf(airRegions);
-
-        long occupiedMicrocells = 0L;
-        for (int expectedId = 0; expectedId < airRegions.size(); expectedId++) {
-            LocalAirRegionPattern region = airRegions.get(expectedId);
-            if (region.localRegionId() != expectedId) {
-                throw new IllegalArgumentException("local air region IDs must be dense and ordered");
+        long occupied = 0L;
+        var components = airGeometry.components();
+        for (int expected = 0; expected < components.size(); expected++) {
+            var component = components.get(expected);
+            if (component.id() != expected
+                    || (occupied & component.microcellMask()) != 0L) {
+                throw new IllegalArgumentException(
+                        "Air components must be dense and non-overlapping");
             }
-            if ((occupiedMicrocells & region.provenAirMicrocellMask()) != 0L) {
-                throw new IllegalArgumentException("local air regions must not overlap");
-            }
-            occupiedMicrocells |= region.provenAirMicrocellMask();
+            occupied |= component.microcellMask();
         }
-    }
-
-    public int localAirRegionCount() {
-        return airRegions.size();
     }
 
     private static void requireId(String name, int value) {

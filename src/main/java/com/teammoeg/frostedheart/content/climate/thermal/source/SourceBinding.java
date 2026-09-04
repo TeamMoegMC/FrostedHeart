@@ -16,7 +16,8 @@ import java.util.Objects;
  * Versioned destination of one source port.
  *
  * <p>A thermal-node binding includes the chunk incarnation that resolved it.
- * Sink bindings keep energy observable without creating an unbounded debt.</p>
+ * Loss bindings prevent unresolved targets from accumulating unbounded energy
+ * debt.</p>
  */
 public record SourceBinding(Kind kind, long targetId, int lifecycleGeneration) {
     public SourceBinding {
@@ -24,17 +25,10 @@ public record SourceBinding(Kind kind, long targetId, int lifecycleGeneration) {
         if (lifecycleGeneration < 0) {
             throw new IllegalArgumentException("lifecycleGeneration must be non-negative");
         }
-        if (kind == Kind.UNBOUND && (targetId != 0L || lifecycleGeneration != 0)) {
-            throw new IllegalArgumentException("UNBOUND cannot carry a target or generation");
-        }
     }
 
     public static SourceBinding thermalNode(long nodeId, int lifecycleGeneration) {
         return new SourceBinding(Kind.THERMAL_NODE, nodeId, lifecycleGeneration);
-    }
-
-    public static SourceBinding internalReservoir(long reservoirId) {
-        return new SourceBinding(Kind.INTERNAL_RESERVOIR, reservoirId, 0);
     }
 
     public static SourceBinding declaredLoss(long sinkId) {
@@ -45,19 +39,13 @@ public record SourceBinding(Kind kind, long targetId, int lifecycleGeneration) {
         return new SourceBinding(Kind.DEGRADED_LOSS, sinkId, 0);
     }
 
-    public static SourceBinding unbound() {
-        return new SourceBinding(Kind.UNBOUND, 0L, 0);
-    }
-
     public boolean isThermalNode() {
         return kind == Kind.THERMAL_NODE;
     }
 
     public enum Kind {
         THERMAL_NODE,
-        INTERNAL_RESERVOIR,
         DECLARED_LOSS,
-        DEGRADED_LOSS,
-        UNBOUND
+        DEGRADED_LOSS
     }
 }

@@ -1,37 +1,39 @@
 /* Copyright (c) 2026 TeamMoeg */
 package com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft;
 
-import com.mojang.authlib.GameProfile;
-import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.bootstrap.common.FHItems;
-import com.teammoeg.frostedheart.content.climate.WorldTemperature;
-import com.teammoeg.frostedheart.content.climate.data.PlantTempData;
-import com.teammoeg.frostedheart.content.climate.player.thermalitem.WearableThermalState;
-import com.teammoeg.frostedheart.content.climate.thermal.consumer.TownThermalProjection;
 import com.teammoeg.frostedheart.content.climate.thermal.geometry.ConservativeAirGeometry;
+import com.teammoeg.frostedheart.content.climate.thermal.mesh.MaterialBoundaryRegistry;
+import com.teammoeg.frostedheart.content.climate.thermal.mesh.PagePublication;
+import com.teammoeg.frostedheart.content.climate.thermal.mesh.PageSignatures;
+import com.teammoeg.frostedheart.content.climate.thermal.mesh.ThermalBrickCellLayout;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.ThermalCellArena;
-import com.teammoeg.frostedheart.content.climate.thermal.profile.DependencyOffsetMask;
+import com.teammoeg.frostedheart.content.climate.thermal.mesh.ThermalPageHandle;
 import com.teammoeg.frostedheart.content.climate.thermal.profile.ResolvedThermalSignature;
-import com.teammoeg.frostedheart.content.climate.thermal.profile.ResolverBlockView;
-import com.teammoeg.frostedheart.content.climate.thermal.profile.ThermalResolution;
-import com.teammoeg.frostedheart.content.climate.thermal.profile.ThermalSignatureRegistry;
-import com.teammoeg.frostedheart.content.climate.thermal.profile.ThermalSignatureResolver;
-import com.teammoeg.frostedheart.content.climate.thermal.profile.minecraft.StateStaticThermalResolver;
-import com.teammoeg.frostedheart.content.climate.thermal.profile.minecraft.ThermalSignatureResolverDispatcher;
+import com.teammoeg.frostedheart.content.climate.thermal.profile.ThermalSignatureTable;
 import com.teammoeg.frostedheart.content.climate.thermal.query.QueryPublication;
-import com.teammoeg.frostedheart.content.climate.thermal.radiation.RadiationService;
-import com.teammoeg.frostedheart.content.climate.thermal.runtime.DimensionThermalRuntime;
+import com.teammoeg.frostedheart.content.climate.thermal.query.ThermalEnvironmentSample;
+import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.engine.ThermalDimensionEngine;
+import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.engine.ThermalDimensionLimits;
+import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.message.ResolvedGeometryBatch;
+import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.message.ThermalCompletion;
+import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.message.ThermalInputBatch;
 import com.teammoeg.frostedheart.content.climate.thermal.runtime.ThermalMemoryBudget;
 import com.teammoeg.frostedheart.content.climate.thermal.solver.BuoyancyConductance;
-import com.teammoeg.frostedheart.content.climate.thermal.solver.InputWatermarks;
-import com.teammoeg.frostedheart.content.climate.thermal.solver.ThermalSweep;
-import com.teammoeg.frostedheart.content.climate.thermal.solver.ThermalSweepFragments;
-import com.teammoeg.frostedheart.content.climate.thermal.solver.ThermalTimePolicy;
+import com.teammoeg.frostedheart.content.climate.thermal.solver.PhaseTransitionRuntime;
+import com.teammoeg.frostedheart.content.climate.thermal.source.EmissionPort;
+import com.teammoeg.frostedheart.content.climate.thermal.source.minecraft.MinecraftPhysicalSourceProfile;
 import com.teammoeg.frostedheart.content.climate.thermal.source.NodePowerAccumulatorArena;
 import com.teammoeg.frostedheart.content.climate.thermal.source.SourceBinding;
-import com.teammoeg.frostedheart.content.climate.thermal.source.ThermalSourceRegistry;
-import com.teammoeg.frostedheart.content.climate.thermal.source.ThermalSourceTimeline;
+import com.teammoeg.frostedheart.content.climate.thermal.source.ThermalSourceBatch;
+import com.teammoeg.frostedheart.content.climate.thermal.source.ThermalSourceLedger;
+import com.teammoeg.frostedheart.content.climate.thermal.topology.FarFieldSettings;
+import com.teammoeg.frostedheart.content.climate.thermal.topology.ThermalTopologyParameters;
+import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.content.climate.WorldTemperature;
+import com.teammoeg.frostedheart.bootstrap.common.FHItems;
+import com.teammoeg.frostedheart.content.climate.player.thermalitem.WearableThermalState;
 import com.teammoeg.frostedheart.util.mixin.ICampfireExtra;
+
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.SectionPos;
 import net.minecraft.gametest.framework.GameTest;
@@ -40,1419 +42,659 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.GameRules;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.CampfireBlock;
-import net.minecraft.world.level.block.DoorBlock;
-import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
-import net.minecraft.world.level.block.state.properties.Half;
-import net.minecraft.world.level.chunk.LevelChunk;
-import net.minecraft.world.level.chunk.LevelChunkSection;
-import net.minecraft.world.level.material.FluidState;
+import net.minecraftforge.common.util.FakePlayerFactory;
 import net.minecraftforge.gametest.GameTestHolder;
 import net.minecraftforge.gametest.PrefixGameTestTemplate;
 
+import java.util.Arrays;
 import java.util.List;
-import java.util.UUID;
 
 @GameTestHolder(FHMain.MODID)
 @PrefixGameTestTemplate(false)
 public final class FrostedHeartMinecraftThermalInputGameTests {
-    private static final String BATCH = "frostedheart_minecraft_thermal_input";
-    private static final String MUTATION_BATCH = BATCH + "_mutation";
-    private static final String NEIGHBOR_BATCH = BATCH + "_neighbor";
-    private static final String SOURCE_BATCH = BATCH + "_source";
-    private static final String SOURCE_RESYNC_BATCH = BATCH + "_source_resync";
-    private static final String SINK_BATCH = BATCH + "_sink";
-    private static final String DROPPED_RESERVOIR_BATCH =
-            BATCH + "_dropped_reservoir";
     private static final String TEMPLATE = "phase0a_empty";
-    private static final ResolvedThermalSignature SOLID_SIGNATURE =
-            new ResolvedThermalSignature(0, 0, List.of(), 0, 0, 0, 0, 0);
+    private static final String BATCH = "frostedheart_thermal_async";
 
     private FrostedHeartMinecraftThermalInputGameTests() {
     }
 
-    @GameTest(template = TEMPLATE, batch = BATCH, timeoutTicks = 40)
-    public static void staticStateChangesReuseEquivalentThermalSignature(
-            GameTestHelper helper
-    ) {
-        MinecraftThermalInput.prepareGameplayProfiles();
-        BlockState unlit = Blocks.CAMPFIRE.defaultBlockState()
-                .setValue(CampfireBlock.LIT, false);
-        BlockState lit = unlit.setValue(CampfireBlock.LIT, true);
-        BlockState closedDoor = Blocks.OAK_DOOR.defaultBlockState();
-        BlockState openDoor = closedDoor.setValue(DoorBlock.OPEN, true);
-        BlockState lowerStairs = Blocks.OAK_STAIRS.defaultBlockState();
-        BlockState upperStairs = lowerStairs.setValue(BlockStateProperties.HALF, Half.TOP);
-
-        helper.assertTrue(
-                MinecraftThermalInput.staticMutationSemanticsUnchanged(unlit, lit),
-                "Campfire lit state must not invalidate unchanged geometry");
-        helper.assertTrue(
-                !MinecraftThermalInput.staticMutationSemanticsUnchanged(closedDoor, openDoor),
-                "Door open state must invalidate changed geometry");
-        helper.assertTrue(
-                !MinecraftThermalInput.staticMutationSemanticsUnchanged(lowerStairs, upperStairs),
-                "Stair half state must invalidate changed geometry");
-        helper.assertTrue(
-                !MinecraftThermalInput.staticMutationSemanticsUnchanged(
-                        Blocks.AIR.defaultBlockState(), Blocks.STONE.defaultBlockState()),
-                "air-to-solid mutation must remain a thermal geometry change");
-        helper.succeed();
-    }
-
-    @GameTest(template = TEMPLATE, batch = BATCH, timeoutTicks = 40)
-    public static void gameplayPlayerQueryBootstrapsAndPublishesCapturedPage(
-            GameTestHelper helper
-    ) {
-        ServerLevel level = helper.getLevel();
-        BlockPos anchor = helper.absolutePos(new BlockPos(2, 3, 2));
-        LevelChunk chunk = level.getChunkAt(anchor);
-        int sectionIndex = allAirSectionIndex(chunk);
-        int sectionY = chunk.getSectionYFromSectionIndex(sectionIndex);
-        double playerY = SectionPos.sectionToBlockCoord(sectionY) + 2.0D;
-        ServerPlayer player = new ServerPlayer(
-                level.getServer(), level,
-                new GameProfile(UUID.randomUUID(), "thermal-gametest"));
-        player.setPos(anchor.getX() + 0.5D, playerY, anchor.getZ() + 0.5D);
-        MinecraftThermalInput.MutableEnvironmentSample sample =
-                new MinecraftThermalInput.MutableEnvironmentSample();
-        double fallbackTemperatureC = 7.0D;
-
+    @GameTest(template = TEMPLATE, batch = BATCH + "_empty", timeoutTicks = 40)
+    public static void emptyCutPublishesAnEmptyQueryEnvelope(GameTestHelper helper) {
+        Fixture fixture = fixture();
         try {
-            double bootstrap = MinecraftThermalInput.gameplayPlayerEnvironment(
-                    player, fallbackTemperatureC, sample);
-            helper.assertTrue(close(bootstrap, fallbackTemperatureC)
-                            && !sample.airAvailable(),
-                    "the first production query must use fallback while admitting its Page");
-
-            MinecraftThermalInput.sealActiveLevel(level);
-            double published = MinecraftThermalInput.gameplayPlayerEnvironment(
-                    player, fallbackTemperatureC, sample);
-            helper.assertTrue(sample.airAvailable()
-                            && Double.isFinite(published)
-                            && (sample.flags() & MinecraftThermalInput.QUERY_NO_PAGE) == 0,
-                    "the production tick path must publish the captured player Page");
+            ThermalCompletion completion = fixture.engine.process(batch(1L, 0L));
+            helper.assertTrue(
+                    completion.status() == ThermalCompletion.Status.COMPLETED,
+                    "empty cut must complete");
+            helper.assertTrue(
+                    !fixture.query.tryRead(0, 1, 0L, new QueryPublication.MutableSample()),
+                    "empty arena has no query slot");
+            helper.succeed();
         } finally {
-            MinecraftThermalInput.closeAll();
+            fixture.engine.close();
         }
-        helper.succeed();
     }
 
-    @GameTest(template = TEMPLATE, batch = BATCH, timeoutTicks = 40)
-    public static void capturedMixedPagePublishesThroughGameplayDispatch(
-        GameTestHelper helper
-    ) {
-        ServerLevel level = helper.getLevel();
-        BlockPos anchor = helper.absolutePos(new BlockPos(2, 3, 2));
-        LevelChunk chunk = level.getChunkAt(anchor);
-        int sectionIndex = allAirSectionIndex(chunk);
-        LevelChunkSection section = chunk.getSections()[sectionIndex];
-        int sectionY = chunk.getSectionYFromSectionIndex(sectionIndex);
-        BlockPos position = new BlockPos(
-                anchor.getX(), SectionPos.sectionToBlockCoord(sectionY) + 2, anchor.getZ());
-        setDirect(section, position, Blocks.STONE.defaultBlockState());
-
-        DimensionThermalRuntime runtime = runtime(level.getGameTime());
-        ThermalSignatureRegistry signatures = signatureRegistry();
-        ThermalSignatureResolverDispatcher dispatcher =
-                ThermalSignatureResolverDispatcher.builder(
-                        StateStaticThermalResolver.geometryOnly(
-                                ConservativeAirGeometry.MICROCELL_COUNT))
-                        .build();
-        try (MinecraftThermalInput input = new MinecraftThermalInput(
-                level,
-                9L,
-                runtime,
-                dispatcher,
-                signatures,
-                1L,
-                 16,
-                 16)) {
-            input.enableTopologyApplication(topologyParameters());
-            input.enableSynchronousDispatch();
-            helper.assertTrue(input.retainPhysicalSourcePage(position, 4),
-                    "the real source-interest path must admit the target Page");
-            MinecraftThermalInput.sealActiveLevel(level);
-            helper.assertTrue(runtime.appliedWatermarks().geometry() == 0L,
-                    "captured admission must not fabricate a mutation watermark");
-            helper.assertTrue(runtime.appliedWatermarks().chunk() > 0L,
-                    "the admitted Page cut must reach the runtime through gameplay sealing");
-            helper.assertTrue(runtime.appliedWatermarks().profile() == 1L,
-                    "the frame must carry the frozen profile-table cut");
-            helper.assertTrue(runtime.lastCompletedTargetTick() == level.getGameTime(),
-                    "synchronous dispatch must run the admitted epoch on the main thread");
-
-            MinecraftThermalInput.MutableEnvironmentSample playerSample =
-                    new MinecraftThermalInput.MutableEnvironmentSample();
-            double sampleX = position.getX() + 0.5D;
-            double sampleZ = position.getZ() + 0.5D;
-            input.samplePlayerEnvironment(
-                    101L, 1,
-                    sampleX, position.getY(), position.getY() + 1.5D, sampleZ,
-                    level.getGameTime(), 40, playerSample);
-            helper.assertTrue(playerSample.airAvailable()
-                            && close(playerSample.airTemperatureC(), 0.0D),
-                    "the player query must resolve the exact air component in a mixed Brick");
-            helper.assertTrue(playerSample.sampleTick() == level.getGameTime(),
-                    "the player query must preserve the publication sample tick");
-
-            input.samplePlayerEnvironment(
-                    101L, 1,
-                    sampleX, position.getY(), position.getY() + 0.5D, sampleZ,
-                    level.getGameTime(), 40, playerSample);
-            helper.assertTrue(!playerSample.airAvailable()
-                            && (playerSample.flags()
-                            & MinecraftThermalInput.QUERY_NO_AIR_COMPONENT) != 0,
-                    "a solid mixed-Brick microcell must not alias its support cell");
-
-            int highWaterBeforeMiss = runtime.thermalCellArena().highWaterMark();
-            int liveCellsBeforeMiss = runtime.thermalCellArena().liveCellCount();
-            input.samplePlayerEnvironment(
-                    101L, 1,
-                    sampleX + 32.0D, position.getY(), position.getY() + 1.5D, sampleZ,
-                    level.getGameTime(), 40, playerSample);
-            helper.assertTrue(!playerSample.airAvailable()
-                            && (playerSample.flags()
-                            & MinecraftThermalInput.QUERY_NO_PAGE) != 0
-                            && runtime.thermalCellArena().highWaterMark() == highWaterBeforeMiss
-                            && runtime.thermalCellArena().liveCellCount() == liveCellsBeforeMiss,
-                    "a passive player miss must not admit or load a Page");
-
-            input.samplePlayerEnvironment(
-                    101L, 1,
-                    sampleX, position.getY(), position.getY() + 1.5D, sampleZ,
-                    level.getGameTime() + 41L, 40, playerSample);
-            helper.assertTrue(!playerSample.airAvailable()
-                            && (playerSample.flags()
-                            & MinecraftThermalInput.QUERY_PUBLICATION_STALE) != 0,
-                    "an over-age publication must use explicit fallback");
-
-            double enthalpyBeforePassiveQueries = totalEnthalpy(
-                    runtime.thermalCellArena());
-            InputWatermarks watermarksBeforePassiveQueries = runtime.appliedWatermarks();
-            long completedTickBeforePassiveQueries = runtime.lastCompletedTargetTick();
-            BlockPos cropPosition = position.above();
-            int arenaHighWaterBeforeCropQueries =
-                    runtime.thermalCellArena().highWaterMark();
-            int liveCellsBeforeCropQueries =
-                    runtime.thermalCellArena().liveCellCount();
-            MinecraftThermalInput.MutableEnvironmentSample cropSample =
-                    new MinecraftThermalInput.MutableEnvironmentSample();
-            input.sampleCropEnvironment(
-                    cropPosition.getX(), cropPosition.getY(), cropPosition.getZ(),
-                    level.getGameTime(), 40, cropSample);
-            helper.assertTrue(cropSample.airAvailable()
-                            && close(cropSample.airTemperatureC(), 0.0D)
-                            && cropSample.radiantFluxWPerM2() == 0.0D,
-                    "a passive crop must read an existing air publication only");
-
-            WorldTemperature.PlantStatus cropStatus =
-                    WorldTemperature.checkPlantStatus(
-                            level,
-                            cropPosition,
-                            new PlantTempData(
-                                    Blocks.WHEAT,
-                                    3.0F,
-                                    10.0F,
-                                    4.0F,
-                                    -10.0F,
-                                    40.0F,
-                                    40.0F,
-                                    40.0F,
-                                    false,
-                                    false,
-                                    Blocks.DEAD_BUSH,
-                                    true,
-                                    1,
-                                    1,
-                                    15),
-                            5.0F);
-            helper.assertTrue(cropStatus == WorldTemperature.PlantStatus.CAN_SURVIVE,
-                    "the real plant-status path must use published 0 C, not legacy 5 C");
-
-            TownThermalProjection townProjection = new TownThermalProjection();
-            townProjection.include(cropPosition);
-            townProjection.include((cropPosition.getX() & 3) == 3
-                    ? cropPosition.west() : cropPosition.east());
-            double gameplayTownTemperatureC =
-                    MinecraftThermalInput.gameplayTownEnvironment(
-                            level, townProjection, 5.0D);
-            helper.assertTrue(close(gameplayTownTemperatureC, 0.0D),
-                    "a complete town projection must use one published weighted Brick value");
-
-            TownThermalProjection missingTownProjection =
-                    new TownThermalProjection();
-            for (int index = 0; index < 4_096; index++) {
-                missingTownProjection.include(new BlockPos(
-                        cropPosition.getX() + 32 + (index & 63) * 4,
-                        cropPosition.getY(),
-                        cropPosition.getZ() + (index >>> 6) * 4));
-            }
-            MinecraftThermalInput.MutableEnvironmentSample townSample =
-                    new MinecraftThermalInput.MutableEnvironmentSample();
-            input.sampleTownEnvironment(
-                    missingTownProjection, level.getGameTime(), 40, townSample);
-            helper.assertTrue(!townSample.airAvailable()
-                            && (townSample.flags()
-                            & MinecraftThermalInput.QUERY_NO_PAGE) != 0
-                            && runtime.thermalCellArena().highWaterMark()
-                            == arenaHighWaterBeforeCropQueries
-                            && runtime.thermalCellArena().liveCellCount()
-                            == liveCellsBeforeCropQueries
-                            && close(totalEnthalpy(runtime.thermalCellArena()),
-                            enthalpyBeforePassiveQueries),
-                    "4,096 passive town groups must not create or retain thermal state");
-
-            for (int index = 0; index < 10_000; index++) {
-                input.sampleCropEnvironment(
-                        cropPosition.getX() + 32 + (index & 255) * 16,
-                        cropPosition.getY(),
-                        cropPosition.getZ() + (index >>> 8) * 16,
-                        level.getGameTime(), 40, cropSample);
-            }
-            helper.assertTrue(!cropSample.airAvailable()
-                            && (cropSample.flags()
-                            & MinecraftThermalInput.QUERY_NO_PAGE) != 0
-                            && runtime.thermalCellArena().highWaterMark()
-                            == arenaHighWaterBeforeCropQueries
-                            && runtime.thermalCellArena().liveCellCount()
-                            == liveCellsBeforeCropQueries
-                            && close(totalEnthalpy(runtime.thermalCellArena()),
-                            enthalpyBeforePassiveQueries)
-                            && runtime.appliedWatermarks().equals(
-                            watermarksBeforePassiveQueries)
-                            && runtime.lastCompletedTargetTick()
-                            == completedTickBeforePassiveQueries,
-                    "10,000 passive crop misses must not retain thermal state");
-
-            long geometryBeforeResnapshot = runtime.appliedWatermarks().geometry();
-            MinecraftThermalInput.onRawBlockContainerReplaced(section);
-            MinecraftThermalInput.sealActiveLevel(level);
-            helper.assertTrue(runtime.appliedWatermarks().geometry()
-                            > geometryBeforeResnapshot,
-                    "the full Page resnapshot must rebuild through synchronous dispatch");
-
-            long geometryBeforeDetach = runtime.appliedWatermarks().geometry();
-            MinecraftThermalInput.onChunkUnload(level, chunk);
-            setDirect(section, position, Blocks.AIR.defaultBlockState());
-            MinecraftThermalInput.sealActiveLevel(level);
-            helper.assertTrue(runtime.appliedWatermarks().geometry() == geometryBeforeDetach,
-                    "a detached section mutation must not enter the gameplay geometry stream");
-        }
-        helper.succeed();
-    }
-
-    @GameTest(template = TEMPLATE, batch = MUTATION_BATCH, timeoutTicks = 40)
-    public static void gameplayMutationWaitsForBatchDeadline(GameTestHelper helper) {
-        ServerLevel level = helper.getLevel();
-        BlockPos anchor = helper.absolutePos(new BlockPos(2, 3, 2));
-        LevelChunk chunk = level.getChunkAt(anchor);
-        int sectionIndex = allAirSectionIndex(chunk);
-        LevelChunkSection section = chunk.getSections()[sectionIndex];
-        int sectionY = chunk.getSectionYFromSectionIndex(sectionIndex);
-        BlockPos position = new BlockPos(
-                anchor.getX(), SectionPos.sectionToBlockCoord(sectionY) + 2, anchor.getZ());
-        long initialTick = level.getGameTime();
-        DimensionThermalRuntime runtime = runtime(initialTick);
-        MinecraftThermalInput input = new MinecraftThermalInput(
-                level,
-                9L,
-                runtime,
-                ThermalSignatureResolverDispatcher.builder(
-                        StateStaticThermalResolver.geometryOnly(
-                                ConservativeAirGeometry.MICROCELL_COUNT))
-                        .build(),
-                signatureRegistry(),
-                1L,
-                16,
-                16);
+    @GameTest(template = TEMPLATE, batch = BATCH + "_admission", timeoutTicks = 40)
+    public static void admissionPublishesAResolvedPage(GameTestHelper helper) {
+        Fixture fixture = fixture();
         try {
-            input.enableTopologyApplication(topologyParameters());
-            input.enableSynchronousDispatch();
-            helper.assertTrue(input.retainPhysicalSourcePage(position, 4),
-                    "the real source-interest path must admit the target Page");
-            MinecraftThermalInput.sealActiveLevel(level);
-
-            int localX = SectionPos.sectionRelative(position.getX());
-            int localY = SectionPos.sectionRelative(position.getY());
-            int localZ = SectionPos.sectionRelative(position.getZ());
-            section.setBlockState(
-                    localX, localY, localZ, Blocks.STONE.defaultBlockState(), false);
-            MinecraftThermalInput.sealActiveLevel(level);
-
-            helper.assertTrue(runtime.appliedWatermarks().geometry() == 0L,
-                    "a pre-deadline source/solve cut must not consume pending geometry");
-        } catch (RuntimeException | Error exception) {
-            input.close();
-            throw exception;
-        }
-
-        helper.runAfterDelay(7L, () -> {
-            try {
-                long appliedGeometry = runtime.appliedWatermarks().geometry();
-                helper.assertTrue(appliedGeometry == 1L,
-                        "the gameplay level tick must release the Brick at its deadline; got "
-                                + appliedGeometry);
-
-                Thread deferredMutation = new Thread(() -> section.setBlockState(
-                        8,
-                        8,
-                        8,
-                        Blocks.STONE.defaultBlockState(),
-                        false), "thermal-gametest-deferred-mutation");
-                deferredMutation.start();
-                try {
-                    deferredMutation.join();
-                } catch (InterruptedException exception) {
-                    Thread.currentThread().interrupt();
-                    throw new AssertionError(
-                            "interrupted while joining thermal mutation", exception);
-                }
-                MinecraftThermalInput.sealActiveLevel(level);
-                helper.assertTrue(runtime.appliedWatermarks().geometry() == 1L,
-                        "thread-deferred geometry must use the same batching deadline");
-            } catch (RuntimeException | Error exception) {
-                input.close();
-                throw exception;
-            }
-
-            helper.runAfterDelay(7L, () -> {
-                try {
-                    helper.assertTrue(runtime.appliedWatermarks().geometry() == 2L,
-                            "the deferred mutation must reach the production geometry authority");
-                } finally {
-                    input.close();
-                }
-                helper.succeed();
-            });
-        });
-    }
-
-    @GameTest(template = TEMPLATE, batch = BATCH, timeoutTicks = 40)
-    public static void analyticFieldsComposeAfterMeshWithoutCreatingPages(
-            GameTestHelper helper
-    ) {
-        ServerLevel level = helper.getLevel();
-        BlockPos anchor = helper.absolutePos(new BlockPos(2, 3, 2));
-        LevelChunk chunk = level.getChunkAt(anchor);
-        int sectionIndex = allAirSectionIndex(chunk);
-        int sectionY = chunk.getSectionYFromSectionIndex(sectionIndex);
-        BlockPos receiver = new BlockPos(
-                anchor.getX(), SectionPos.sectionToBlockCoord(sectionY) + 4, anchor.getZ());
-        long initialTick = level.getGameTime();
-
-        DimensionThermalRuntime runtime = runtime(initialTick);
-        try (MinecraftThermalInput input = new MinecraftThermalInput(
-                level,
-                9L,
-                runtime,
-                ThermalSignatureResolverDispatcher.builder(
-                        StateStaticThermalResolver.geometryOnly(
-                                ConservativeAirGeometry.MICROCELL_COUNT))
-                        .build(),
-                signatureRegistry(),
-                1L,
-                16,
-                16)) {
-            input.enableTopologyApplication(topologyParameters());
-            input.enableSynchronousDispatch();
-            input.upsertAnalyticField(new MinecraftThermalInput.AnalyticField(
-                    1L, 0,
-                    MinecraftThermalInput.AnalyticCombineMode.OVERRIDE,
-                    receiver.getX() + 0.5D,
-                    receiver.getY() + 0.5D,
-                    receiver.getZ() + 0.5D,
-                    4.0D,
-                    5.0D));
-            input.upsertAnalyticField(new MinecraftThermalInput.AnalyticField(
-                    2L, 0,
-                    MinecraftThermalInput.AnalyticCombineMode.MAX_HEAT,
-                    receiver.getX() + 0.5D,
-                    receiver.getY() + 0.5D,
-                    receiver.getZ() + 0.5D,
-                    4.0D,
-                    10.0D));
-            input.upsertAnalyticField(new MinecraftThermalInput.AnalyticField(
-                    3L, 0,
-                    MinecraftThermalInput.AnalyticCombineMode.MIN_COOL,
-                    receiver.getX() + 0.5D,
-                    receiver.getY() + 0.5D,
-                    receiver.getZ() + 0.5D,
-                    4.0D,
-                    -5.0D));
-            input.upsertAnalyticField(new MinecraftThermalInput.AnalyticField(
-                    4L, 0,
-                    MinecraftThermalInput.AnalyticCombineMode.ADD_DELTA,
-                    receiver.getX() + 0.5D,
-                    receiver.getY() + 0.5D,
-                    receiver.getZ() + 0.5D,
-                    4.0D,
-                    2.0D));
-            helper.assertTrue(runtime.thermalCellArena().liveCellCount() == 0,
-                    "analytic fields must not create sparse-mesh interest");
-
+            ThermalCompletion completion = fixture.engine.process(admissionBatch(
+                    1L, 20L, fixture.page, fixture.signatures));
+            PagePublication publication = fixture.page.currentPublication();
             helper.assertTrue(
-                    input.retainPhysicalSourcePage(receiver, 4),
-                    "the compositor test must admit through the real interest path");
-            MinecraftThermalInput.sealActiveLevel(level);
-            MinecraftThermalInput.MutableEnvironmentSample sample =
-                    new MinecraftThermalInput.MutableEnvironmentSample();
-            input.sampleCropEnvironment(
-                    receiver.getX(), receiver.getY(), receiver.getZ(),
-                    initialTick, 40, sample);
-            helper.assertTrue(
-                    sample.airAvailable()
-                            && close(sample.airTemperatureC(), -3.0D)
-                            && (sample.flags()
-                            & MinecraftThermalInput.QUERY_ANALYTIC_FIELD_APPLIED) != 0,
-                    "OVERRIDE -> MAX_HEAT -> MIN_COOL -> ADD_DELTA must follow mesh");
-        }
-        helper.succeed();
-    }
-
-    @GameTest(template = TEMPLATE, batch = BATCH, timeoutTicks = 40)
-    public static void undergroundAdmissionAddsOnlyOneLoadedContinuationLayer(
-            GameTestHelper helper
-    ) {
-        ServerLevel level = helper.getLevel();
-        BlockPos anchor = helper.absolutePos(new BlockPos(2, 3, 2));
-        LevelChunk chunk = level.getChunkAt(anchor);
-        int sectionIndex = boundedAllAirSectionIndex(chunk);
-        int sectionY = chunk.getSectionYFromSectionIndex(sectionIndex);
-        int centerX = SectionPos.sectionToBlockCoord(chunk.getPos().x) + 8;
-        int centerZ = SectionPos.sectionToBlockCoord(chunk.getPos().z) + 8;
-        BlockPos target = new BlockPos(
-                centerX, SectionPos.sectionToBlockCoord(sectionY) + 8, centerZ);
-        BlockPos roof = new BlockPos(
-                centerX, SectionPos.sectionToBlockCoord(sectionY) + 17, centerZ);
-        level.setBlockAndUpdate(roof, Blocks.STONE.defaultBlockState());
-
-        DimensionThermalRuntime runtime = runtime(level.getGameTime());
-        try (runtime; MinecraftThermalInput input = new MinecraftThermalInput(
-                level,
-                9L,
-                runtime,
-                ThermalSignatureResolverDispatcher.builder(
-                        StateStaticThermalResolver.geometryOnly(
-                                ConservativeAirGeometry.MICROCELL_COUNT))
-                        .build(),
-                signatureRegistry(),
-                1L,
-                32,
-                32)) {
-            input.enableTopologyApplication(topologyParameters());
-            input.enableSynchronousDispatch();
-
-            helper.assertTrue(input.retainPhysicalSourcePage(target, 4),
-                    "the loaded underground source Page must be admitted");
-            MinecraftThermalInput.sealActiveLevel(level);
-            int liveCells = runtime.thermalCellArena().liveCellCount();
-            helper.assertTrue(liveCells >= 128 && liveCells <= 448,
-                    "one direct Page must add loaded face continuations without recursion; got "
-                            + liveCells + " cells");
+                    completion.status() == ThermalCompletion.Status.COMPLETED
+                            && publication != null
+                            && fixture.arena.liveCellCount() == 64,
+                    "admission must compile 64 regular Air cells");
+            helper.succeed();
         } finally {
-            level.setBlockAndUpdate(roof, Blocks.AIR.defaultBlockState());
+            fixture.engine.close();
         }
+    }
+
+    @GameTest(template = TEMPLATE, batch = BATCH + "_residency", timeoutTicks = 40)
+    public static void residencyCarriesExactPageIdentity(GameTestHelper helper) {
+        Fixture fixture = fixture();
+        try {
+            ThermalCompletion completion = fixture.engine.process(admissionBatch(
+                    1L, 20L, fixture.page, fixture.signatures, 1L));
+            ThermalCompletion.BrickResidency residency =
+                    completion.residencyUpdates()[0];
+            helper.assertTrue(
+                    residency.sectionKey() == fixture.page.sectionKey()
+                            && residency.lifecycleGeneration()
+                                    == fixture.page.lifecycleGeneration()
+                            && residency.desiredBrickMask() == -1L,
+                    "residency must carry the committed Page identity and mask");
+            helper.succeed();
+        } finally {
+            fixture.engine.close();
+        }
+    }
+
+    @GameTest(template = TEMPLATE, batch = BATCH + "_mutation", timeoutTicks = 40)
+    public static void localMutationRebuildsOnlyTheChangedBrick(GameTestHelper helper) {
+        Fixture fixture = fixture();
+        try {
+            fixture.engine.process(admissionBatch(1L, 20L, fixture.page, fixture.signatures));
+            long revision = fixture.page.beginGeometryMutation();
+            ThermalCompletion completion = fixture.engine.process(
+                    mutationBatch(2L, 40L, fixture.page, revision, fixture.solidId));
+            helper.assertTrue(
+                    completion.status() == ThermalCompletion.Status.COMPLETED
+                            && fixture.page.currentPublication() != null
+                            && fixture.page.currentPublication().geometryRevision() == revision,
+                    "local geometry must publish its exact revision");
+            helper.succeed();
+        } finally {
+            fixture.engine.close();
+        }
+    }
+
+    @GameTest(template = TEMPLATE, batch = BATCH + "_retirement", timeoutTicks = 40)
+    public static void retirementClearsThePageAndArenaCells(GameTestHelper helper) {
+        Fixture fixture = fixture();
+        try {
+            fixture.engine.process(admissionBatch(1L, 20L, fixture.page, fixture.signatures));
+            ThermalInputBatch retirement = new ThermalInputBatch(
+                    1L, 2L, 40L,
+                    ThermalInputBatch.NO_ADMISSIONS,
+                    new ThermalInputBatch.PageRetirement[]{
+                            new ThermalInputBatch.PageRetirement(fixture.page)},
+                    ThermalInputBatch.NO_RESIDENCY_UPDATES,
+                    ResolvedGeometryBatch.EMPTY,
+                    ThermalSourceBatch.EMPTY,
+                    ThermalInputBatch.NO_ENVIRONMENT_UPDATES,
+                    ThermalInputBatch.NO_PHASE_ACKS,
+                    Double.NaN);
+            fixture.engine.process(retirement);
+            helper.assertTrue(
+                    fixture.page.currentPublication() == null
+                            && fixture.arena.liveCellCount() == 0,
+                    "retirement must remove the Page publication and cells");
+            helper.succeed();
+        } finally {
+            fixture.engine.close();
+        }
+    }
+
+    @GameTest(template = TEMPLATE, batch = BATCH + "_query", timeoutTicks = 40)
+    public static void flatQueryPublicationValidatesTheArenaGeneration(GameTestHelper helper) {
+        Fixture fixture = fixture();
+        try {
+            fixture.engine.process(admissionBatch(1L, 20L, fixture.page, fixture.signatures));
+            PagePublication.Brick brick = fixture.page.currentPublication()
+                    .brickAt(0, 0, 0);
+            QueryPublication.MutableSample sample =
+                    new QueryPublication.MutableSample();
+            helper.assertTrue(
+                    fixture.query.tryRead(
+                            brick.coverageSlot(), brick.arenaGeneration(),
+                            1L, sample),
+                    "query publication must read the live slot");
+            helper.assertTrue(
+                    !fixture.query.tryRead(
+                            brick.coverageSlot(), brick.arenaGeneration() + 1,
+                            1L, sample),
+                    "stale arena generation must be rejected");
+            helper.succeed();
+        } finally {
+            fixture.engine.close();
+        }
+    }
+
+    @GameTest(template = TEMPLATE, batch = BATCH + "_source", timeoutTicks = 40)
+    public static void sourceLedgerDeliversPowerAtTheExactCut(GameTestHelper helper) {
+        ThermalCellArena arena = new ThermalCellArena(1);
+        ThermalCellArena.BrickAllocation allocation = regular(arena, 0, 1, 0);
+        ThermalSourceLedger ledger = new ThermalSourceLedger(
+                0L, 1, 1, 8,
+                new NodePowerAccumulatorArena(1, 8), arena);
+        ThermalSourceBatch.Builder events = new ThermalSourceBatch.Builder(0L);
+        events.addRegister(
+                0L, 1, com.teammoeg.frostedheart.content.climate.thermal.source.ThermalSourceMode.POWER_SOURCE,
+                20.0D, true, 0L, 0, 0, 0, 1,
+                new EmissionPort[]{EmissionPort.of(
+                        0, 1.0D, SourceBinding.thermalNode(
+                                allocation.cellSpan().firstSlot(), 1))});
+        ledger.acceptAndAdvance(
+                events.buildAndReset(), 20L, (batch, index, current) -> { });
+        helper.assertTrue(
+                Math.abs(arena.enthalpyJ(allocation.cellSpan().firstSlot()) - 20.0D) < 1.0e-9D,
+                "source energy must integrate for one second");
+        ledger.close();
         helper.succeed();
     }
 
-    @GameTest(template = TEMPLATE, batch = NEIGHBOR_BATCH, timeoutTicks = 40)
-    public static void declaredNeighborDependencyInvalidatesItsResolverCenter(
-            GameTestHelper helper
-    ) {
-        ServerLevel level = helper.getLevel();
-        BlockPos anchor = helper.absolutePos(new BlockPos(2, 3, 2));
-        LevelChunk chunk = level.getChunkAt(anchor);
-        int sectionIndex = allAirSectionIndex(chunk);
-        LevelChunkSection section = chunk.getSections()[sectionIndex];
-        int sectionY = chunk.getSectionYFromSectionIndex(sectionIndex);
-        BlockPos center = new BlockPos(
-                anchor.getX(), SectionPos.sectionToBlockCoord(sectionY) + 2, anchor.getZ());
-        BlockPos east = center.east();
-        ResolvedThermalSignature airSignature = StateStaticThermalResolver.geometryOnly(
-                        ConservativeAirGeometry.MICROCELL_COUNT)
-                .resolve(Blocks.AIR.defaultBlockState(),
-                        Blocks.AIR.defaultBlockState().getFluidState())
-                .value().orElseThrow();
-
-        ThermalSignatureResolverDispatcher dispatcher =
-                ThermalSignatureResolverDispatcher.builder(
-                        StateStaticThermalResolver.geometryOnly(
-                                ConservativeAirGeometry.MICROCELL_COUNT))
-                        .registerExplicitOverride(
-                                Blocks.OAK_FENCE, neighborAwareResolver(airSignature))
-                        .build();
-        setDirect(section, center, Blocks.OAK_FENCE.defaultBlockState());
-        DimensionThermalRuntime runtime = runtime(level.getGameTime());
-        MinecraftThermalInput input = new MinecraftThermalInput(
-                level,
-                9L,
-                runtime,
-                dispatcher,
-                signatureRegistry(),
-                1L,
-                16,
-                16);
-        try {
-            input.enableTopologyApplication(topologyParameters());
-            input.enableSynchronousDispatch();
-            helper.assertTrue(input.retainPhysicalSourcePage(center, 4),
-                    "the real source-interest path must admit the target Page");
-            MinecraftThermalInput.sealActiveLevel(level);
-            MinecraftThermalInput.MutableEnvironmentSample sample =
-                    new MinecraftThermalInput.MutableEnvironmentSample();
-            input.sampleCropEnvironment(
-                    center.getX(), center.getY(), center.getZ(),
-                    level.getGameTime(), 40, sample);
-            helper.assertTrue(sample.airAvailable(),
-                    "the captured fence resolver must initially observe its east-side air");
-
-            setDirect(section, east, Blocks.STONE.defaultBlockState());
-            MinecraftThermalInput.sealActiveLevel(level);
-            input.sampleCropEnvironment(
-                    center.getX(), center.getY(), center.getZ(),
-                    level.getGameTime(), 40, sample);
-            helper.assertTrue(!sample.airAvailable()
-                            && (sample.flags()
-                            & MinecraftThermalInput.QUERY_STALE_GEOMETRY) != 0,
-                    "a live mutation must reject stale publication before the rebuild deadline");
-        } catch (RuntimeException | Error exception) {
-            input.close();
-            throw exception;
-        }
-
-        helper.runAfterDelay(7L, () -> {
-            try {
-                MinecraftThermalInput.MutableEnvironmentSample sample =
-                        new MinecraftThermalInput.MutableEnvironmentSample();
-                input.sampleCropEnvironment(
-                        center.getX(), center.getY(), center.getZ(),
-                        level.getGameTime(), 40, sample);
-                helper.assertTrue(!sample.airAvailable()
-                                && (sample.flags()
-                                & MinecraftThermalInput.QUERY_NO_AIR_COMPONENT) != 0,
-                        "the east mutation must rebuild the resolver center through production");
-            } finally {
-                input.close();
-            }
-            helper.succeed();
-        });
-    }
-
-    @GameTest(template = TEMPLATE, batch = SOURCE_BATCH, timeoutTicks = 40)
-    public static void allDeviceHeatEntersThePhysicalLedgerOnce(
-            GameTestHelper helper
-    ) {
-        ServerLevel level = helper.getLevel();
-        BlockPos anchor = helper.absolutePos(new BlockPos(2, 3, 2));
-        LevelChunk chunk = level.getChunkAt(anchor);
-        int sectionIndex = allAirSectionIndex(chunk);
-        int sectionY = chunk.getSectionYFromSectionIndex(sectionIndex);
-        BlockPos target = new BlockPos(
-                anchor.getX(), SectionPos.sectionToBlockCoord(sectionY) + 4, anchor.getZ());
-        BlockPos campfire = target.below();
-        BlockPos generator = target.offset(3, -3, 0);
-        BlockPos fountain = target.offset(-3, -2, 0);
-        BlockPos radiator = target.offset(0, -2, 3);
-        long initialTick = level.getGameTime();
-
-        DimensionThermalRuntime runtime = runtime(initialTick);
-        MinecraftThermalInput input = new MinecraftThermalInput(
-                level,
-                9L,
-                runtime,
-                ThermalSignatureResolverDispatcher.builder(
-                        StateStaticThermalResolver.geometryOnly(
-                                ConservativeAirGeometry.MICROCELL_COUNT))
-                        .build(),
-                signatureRegistry(),
-                1L,
-                32,
-                32);
-        try {
-            input.enableTopologyApplication(topologyParameters());
-            input.enablePhysicalSources(4);
-            input.enableSynchronousDispatch();
-            helper.assertTrue(
-                    input.retainPhysicalSourcePage(target, 4),
-                    "the source target Page must use the real interest path");
-
-            placeLitCampfire(level, campfire);
-            MinecraftThermalInput.onGeneratorTick(
-                    level, generator, target, 2.0D, true);
-            MinecraftThermalInput.onFountainTick(
-                    level, fountain, target, 2.0D, true);
-            MinecraftThermalInput.onRadiatorTick(
-                    level, radiator, target, 2.0D, true);
-        } catch (RuntimeException | Error exception) {
-            input.close();
-            throw exception;
-        }
-
-        helper.runAfterDelay(21L, () -> {
-            try {
-                helper.assertTrue(runtime.lastCompletedTargetTick() > initialTick,
-                        "the production level tick must advance the source timeline");
-                double campfireAirJ = routedEnergy(
-                        runtime, campfire, SourceBinding.Kind.THERMAL_NODE);
-                double generatorAirJ = routedEnergy(
-                        runtime, generator, SourceBinding.Kind.THERMAL_NODE);
-                double fountainAirJ = routedEnergy(
-                        runtime, fountain, SourceBinding.Kind.THERMAL_NODE);
-                double radiatorAirJ = routedEnergy(
-                        runtime, radiator, SourceBinding.Kind.THERMAL_NODE);
-                double routedAirJ = campfireAirJ + generatorAirJ
-                        + fountainAirJ + radiatorAirJ;
-                helper.assertTrue(campfireAirJ > 0.0D
-                                && generatorAirJ > 0.0D
-                                && fountainAirJ > 0.0D
-                                && radiatorAirJ > 0.0D,
-                        "every open device convection port must bind to the mesh; campfire="
-                                + campfireAirJ + ", generator=" + generatorAirJ
-                                + ", fountain=" + fountainAirJ
-                                + ", radiator=" + radiatorAirJ);
-                double airEnthalpyJ = totalEnthalpy(runtime.thermalCellArena());
-                helper.assertTrue(close(airEnthalpyJ, routedAirJ),
-                        "every device convection share must enter the arena once; actual="
-                                + airEnthalpyJ + " J, routed=" + routedAirJ + " J");
-                double generatorInternalJ = routedEnergy(
-                        runtime, generator, SourceBinding.Kind.INTERNAL_RESERVOIR);
-                helper.assertTrue(generatorInternalJ > 0.0D
-                                && close(routedEnergy(
-                                        runtime, generator,
-                                        SourceBinding.Kind.DECLARED_LOSS),
-                                generatorInternalJ * 2.0D),
-                        "generator radiation must remain a declared Phase J loss");
-                helper.assertTrue(routedEnergy(
-                                runtime, fountain, SourceBinding.Kind.DECLARED_LOSS) > 0.0D,
-                        "fountain radiation must remain a declared Phase J loss");
-                double radiatorInternalJ = routedEnergy(
-                        runtime, radiator, SourceBinding.Kind.INTERNAL_RESERVOIR);
-                helper.assertTrue(radiatorInternalJ > 0.0D
-                                && close(routedEnergy(
-                                        runtime, radiator,
-                                        SourceBinding.Kind.DECLARED_LOSS),
-                                radiatorInternalJ),
-                        "radiator radiation must remain a declared Phase J loss");
-            } finally {
-                input.close();
-            }
-            helper.succeed();
-        });
-    }
-
-    @GameTest(template = TEMPLATE, batch = SOURCE_RESYNC_BATCH, timeoutTicks = 60)
-    public static void rawFullResyncRebindsLivePhysicalSource(
-            GameTestHelper helper
-    ) {
-        ServerLevel level = helper.getLevel();
-        BlockPos anchor = helper.absolutePos(new BlockPos(2, 3, 2));
-        LevelChunk chunk = level.getChunkAt(anchor);
-        int sectionIndex = allAirSectionIndex(chunk);
-        LevelChunkSection section = chunk.getSections()[sectionIndex];
-        int sectionY = chunk.getSectionYFromSectionIndex(sectionIndex);
-        BlockPos target = new BlockPos(
-                anchor.getX(), SectionPos.sectionToBlockCoord(sectionY) + 4, anchor.getZ());
-        BlockPos changed = target.offset((target.getX() & 3) == 3 ? -1 : 1, 0, 0);
-        BlockPos generator = target.below(3);
-        long initialTick = level.getGameTime();
-
-        DimensionThermalRuntime runtime = runtime(initialTick);
-        MinecraftThermalInput input = new MinecraftThermalInput(
-                level,
-                9L,
-                runtime,
-                ThermalSignatureResolverDispatcher.builder(
-                        StateStaticThermalResolver.geometryOnly(
-                                ConservativeAirGeometry.MICROCELL_COUNT))
-                        .build(),
-                signatureRegistry(),
-                1L,
-                32,
-                32);
-        try {
-            input.enableTopologyApplication(topologyParameters());
-            input.enablePhysicalSources(4);
-            input.enableSynchronousDispatch();
-            helper.assertTrue(input.retainPhysicalSourcePage(target, 4),
-                    "the source target Page must be admitted before raw resync");
-            MinecraftThermalInput.onGeneratorTick(
-                    level, generator, target, 1.0D, true);
-        } catch (RuntimeException | Error exception) {
-            input.close();
-            throw exception;
-        }
-
-        double[] energyBeforeResync = {Double.NaN};
-        helper.runAfterDelay(12L, () -> {
-            try {
-                energyBeforeResync[0] = routedEnergy(
-                        runtime, generator, SourceBinding.Kind.THERMAL_NODE);
-                helper.assertTrue(energyBeforeResync[0] > 0.0D,
-                        "the source must bind before its target Page is invalidated");
-                section.getStates().getAndSetUnchecked(
-                        SectionPos.sectionRelative(changed.getX()),
-                        SectionPos.sectionRelative(changed.getY()),
-                        SectionPos.sectionRelative(changed.getZ()),
-                        Blocks.STONE.defaultBlockState());
-                MinecraftThermalInput.onRawBlockContainerReplaced(section);
-            } catch (RuntimeException | Error exception) {
-                input.close();
-                throw exception;
-            }
-        });
-
-        helper.runAfterDelay(35L, () -> {
-            try {
-                double energyAfterResync = routedEnergy(
-                        runtime, generator, SourceBinding.Kind.THERMAL_NODE);
-                helper.assertTrue(energyAfterResync > energyBeforeResync[0],
-                        "full-resync must rebind the source and keep integrating energy");
-                MinecraftThermalInput.MutableEnvironmentSample sample =
-                        new MinecraftThermalInput.MutableEnvironmentSample();
-                input.samplePlayerEnvironment(
-                        501L,
-                        1,
-                        target.getX() + 0.5D,
-                        target.getY(),
-                        target.getY() + 1.5D,
-                        target.getZ() + 0.5D,
-                        level.getGameTime(),
-                        40,
-                        sample);
-                helper.assertTrue(sample.airAvailable()
-                                && (sample.flags()
-                                & (MinecraftThermalInput.QUERY_STALE_GEOMETRY
-                                | MinecraftThermalInput.QUERY_PUBLICATION_MISS
-                                | MinecraftThermalInput.QUERY_PUBLICATION_STALE)) == 0,
-                        "raw full-resync must return the Page to current publication");
-            } finally {
-                input.close();
-            }
-            helper.succeed();
-        });
-    }
-
-    @GameTest(template = TEMPLATE, batch = SINK_BATCH, timeoutTicks = 40)
-    public static void blockedAndUnresolvedPortsUseTheirDeclaredSinks(
-            GameTestHelper helper
-    ) {
-        ServerLevel level = helper.getLevel();
-        BlockPos anchor = helper.absolutePos(new BlockPos(2, 3, 2));
-        LevelChunk chunk = level.getChunkAt(anchor);
-        int sectionIndex = allAirSectionIndex(chunk);
-        LevelChunkSection section = chunk.getSections()[sectionIndex];
-        int sectionY = chunk.getSectionYFromSectionIndex(sectionIndex);
-        int baseY = SectionPos.sectionToBlockCoord(sectionY) + 4;
-        BlockPos blockedTarget = new BlockPos(anchor.getX(), baseY, anchor.getZ());
-        BlockPos unresolvedTarget = blockedTarget.offset(5, 0, 0);
-        BlockPos campfire = blockedTarget.below();
-        BlockPos generator = unresolvedTarget.offset(0, -3, 0);
-        long initialTick = level.getGameTime();
-        setDirect(section, blockedTarget, Blocks.STONE.defaultBlockState());
-        setDirect(section, unresolvedTarget, Blocks.MOVING_PISTON.defaultBlockState());
-
-        DimensionThermalRuntime runtime = runtime(initialTick);
-        MinecraftThermalInput input = new MinecraftThermalInput(
-                level,
-                9L,
-                runtime,
-                ThermalSignatureResolverDispatcher.builder(
-                        StateStaticThermalResolver.geometryOnly(
-                                ConservativeAirGeometry.MICROCELL_COUNT))
-                        .build(),
-                signatureRegistry(),
-                1L,
-                32,
-                32);
-        try {
-            input.enableTopologyApplication(topologyParameters());
-            input.enablePhysicalSources(4);
-            input.enableSynchronousDispatch();
-            helper.assertTrue(
-                    input.retainPhysicalSourcePage(blockedTarget, 4),
-                    "the source target Page must use the real interest path");
-            placeLitCampfire(level, campfire);
-            MinecraftThermalInput.onGeneratorTick(
-                    level, generator, unresolvedTarget, 1.0D, true);
-        } catch (RuntimeException | Error exception) {
-            input.close();
-            throw exception;
-        }
-
-        helper.runAfterDelay(21L, () -> {
-            try {
-                helper.assertTrue(runtime.lastCompletedTargetTick() > initialTick,
-                        "the production level tick must advance the source timeline");
-                double generatorInternalJ = routedEnergy(
-                        runtime, generator, SourceBinding.Kind.INTERNAL_RESERVOIR);
-                double generatorSeconds = generatorInternalJ / 1_000.0D;
-                helper.assertTrue(Double.isFinite(generatorSeconds)
-                                && generatorSeconds > 0.0D,
-                        "the production source timeline must integrate generator power");
-                helper.assertTrue(close(routedEnergy(
-                                runtime, generator, SourceBinding.Kind.DEGRADED_LOSS),
-                                7_000.0D * generatorSeconds),
-                        "unresolved generator exhaust must become degraded loss");
-                helper.assertTrue(close(routedEnergy(
-                                runtime, generator, SourceBinding.Kind.DECLARED_LOSS),
-                                2_000.0D * generatorSeconds),
-                        "generator radiation share must remain declared loss");
-                double campfireDeclared = routedEnergy(
-                        runtime, campfire, SourceBinding.Kind.DECLARED_LOSS);
-                double campfireDegraded = routedEnergy(
-                        runtime, campfire, SourceBinding.Kind.DEGRADED_LOSS);
-                helper.assertTrue(campfireDeclared > 0.0D,
-                        "blocked campfire convection must remain an explicit loss; declared="
-                                + campfireDeclared + ", degraded=" + campfireDegraded);
-                helper.assertTrue(close(totalEnthalpy(runtime.thermalCellArena()), 0.0D),
-                        "blocked or unresolved ports must not inject an arbitrary air cell");
-            } finally {
-                input.close();
-            }
-            helper.succeed();
-        });
-    }
-
-    @GameTest(template = TEMPLATE, batch = BATCH, timeoutTicks = 40)
-    public static void radiationWallBlocksWithoutChangingSourceLedger(
-            GameTestHelper helper
-    ) {
-        ServerLevel level = helper.getLevel();
-        BlockPos anchor = helper.absolutePos(new BlockPos(2, 3, 2));
-        LevelChunk chunk = level.getChunkAt(anchor);
-        int sectionIndex = allAirSectionIndex(chunk);
-        int sectionY = chunk.getSectionYFromSectionIndex(sectionIndex);
-        int baseY = SectionPos.sectionToBlockCoord(sectionY) + 4;
-        BlockPos sourcePosition = new BlockPos(anchor.getX(), baseY, anchor.getZ());
-        BlockPos wall = sourcePosition.east(2);
-
-        StateStaticThermalResolver radiationResolver = new StateStaticThermalResolver(
-                ConservativeAirGeometry.MICROCELL_COUNT,
-                (state, fluid) -> new StateStaticThermalResolver.SignatureMetadata(
-                        0, 0, 0, 0, 0, 0, 0));
-        ThermalSignatureRegistry.Builder signatureBuilder = ThermalSignatureRegistry.builder();
-        signatureBuilder.intern(radiationResolver.resolve(
-                Blocks.AIR.defaultBlockState(),
-                Blocks.AIR.defaultBlockState().getFluidState()).value().orElseThrow());
-        signatureBuilder.intern(radiationResolver.resolve(
-                Blocks.STONE.defaultBlockState(),
-                Blocks.STONE.defaultBlockState().getFluidState()).value().orElseThrow());
-
-        DimensionThermalRuntime runtime = runtime(level.getGameTime());
-        try (runtime; MinecraftThermalInput input = new MinecraftThermalInput(
-                level,
-                9L,
-                runtime,
-                ThermalSignatureResolverDispatcher.builder(radiationResolver).build(),
-                signatureBuilder.build(),
-                1L,
-                32,
-                32)) {
-            input.enableTopologyApplication(topologyParameters());
-            input.enablePhysicalSources(4);
-
-            RadiationService.Parameters parameters =
-                    MinecraftThermalInput.GAMEPLAY_RADIATION_PARAMETERS;
-            ThermalMemoryBudget radiationServerBudget =
-                    new ThermalMemoryBudget(1_000_000L, 0L);
-            helper.assertTrue(input.tryEnableRadiation(
-                            parameters,
-                            radiationServerBudget.createDimensionBudget(1_000_000L, 0L)),
-                    "the optional radiation budget must admit the Phase J service");
-            placeLitCampfire(level, sourcePosition);
-            MinecraftThermalInput.MutableEnvironmentSample sample =
-                    new MinecraftThermalInput.MutableEnvironmentSample();
-            double receiverX = sourcePosition.getX() + 4.5D;
-            double receiverFeetY = sourcePosition.getY();
-            double receiverZ = sourcePosition.getZ() + 0.5D;
-            long sourceWatermark = runtime.latestOfferedSourceWatermark();
-            input.samplePlayerEnvironment(
-                    41L, 1,
-                    receiverX, receiverFeetY, receiverFeetY + 1.62D, receiverZ,
-                    level.getGameTime(), 40, sample);
-            double visibleFlux = sample.radiantFluxWPerM2();
-            helper.assertTrue(visibleFlux > 0.0D,
-                    "the unobstructed Campfire must be visible to all player rays");
-            level.setBlock(wall, Blocks.STONE.defaultBlockState(), 3);
-            level.setBlock(wall.above(), Blocks.STONE.defaultBlockState(), 3);
-            input.samplePlayerEnvironment(
-                    41L, 1,
-                    receiverX, receiverFeetY, receiverFeetY + 1.62D, receiverZ,
-                    level.getGameTime(), 40, sample);
-            helper.assertTrue(close(sample.radiantFluxWPerM2(), 0.0D),
-                    "section revision must retrace and observe a wall for the same receiver");
-
-            level.setBlock(wall, Blocks.AIR.defaultBlockState(), 3);
-            level.setBlock(wall.above(), Blocks.AIR.defaultBlockState(), 3);
-            input.samplePlayerEnvironment(
-                    41L, 1,
-                    receiverX, receiverFeetY, receiverFeetY + 1.62D, receiverZ,
-                    level.getGameTime(), 40, sample);
-            helper.assertTrue(close(sample.radiantFluxWPerM2(), visibleFlux),
-                    "section revision must retrace after wall removal and restore flux");
-            input.samplePlayerEnvironment(
-                    41L, 1,
-                    receiverX, receiverFeetY, receiverFeetY + 1.62D, receiverZ,
-                    level.getGameTime(), 40, sample);
-            helper.assertTrue(close(sample.radiantFluxWPerM2(), visibleFlux),
-                    "an unchanged witness must preserve the visible flux");
-            helper.assertTrue(runtime.latestOfferedSourceWatermark() == sourceWatermark,
-                    "receiver observations must not write the physical source ledger");
-        }
+    @GameTest(template = TEMPLATE, batch = BATCH + "_phase", timeoutTicks = 40)
+    public static void phaseRequestAcknowledgementIsExactlyOnce(GameTestHelper helper) {
+        ThermalCellArena arena = new ThermalCellArena(2);
+        ThermalCellArena.BrickAllocation allocation = phase(arena);
+        PhaseTransitionRuntime phases = new PhaseTransitionRuntime(arena, 2);
+        int phaseSlot = allocation.phaseReservoirSlots()[0];
+        int airSlot = allocation.cellSpan().firstSlot();
+        phases.registerReservoir(phaseSlot);
+        arena.setEnthalpyJ(airSlot, 10_000.0D);
+        phases.applyContact(airSlot, phaseSlot, 100.0D, 0.0D, 1.0D);
+        PhaseTransitionRuntime.Request[] requests = phases.drainRequests(2);
+        helper.assertTrue(
+                requests.length == 1
+                        && phases.applyAck(
+                                requests[0], PhaseTransitionRuntime.AckOutcome.APPLIED)
+                        && !phases.applyAck(
+                                requests[0], PhaseTransitionRuntime.AckOutcome.APPLIED),
+                "phase ACK must mutate one request once");
         helper.succeed();
+    }
+
+    @GameTest(template = TEMPLATE, batch = BATCH + "_sequence", timeoutTicks = 40)
+    public static void staleBatchIdentityIsRejected(GameTestHelper helper) {
+        Fixture fixture = fixture();
+        try {
+            boolean rejected = false;
+            try {
+                fixture.engine.process(batch(2L, 20L));
+            } catch (IllegalArgumentException expected) {
+                rejected = true;
+            }
+            helper.assertTrue(rejected, "sequence must start at one");
+            helper.succeed();
+        } finally {
+            fixture.engine.close();
+        }
+    }
+
+    @GameTest(template = TEMPLATE, batch = BATCH + "_resync", timeoutTicks = 40)
+    public static void resyncTokenRejectsAChangedLiveRevision(GameTestHelper helper) {
+        ThermalPageHandle page = new ThermalPageHandle(0L, 1L);
+        page.requireFullGeometryResync(
+                ThermalPageHandle.GeometryResyncReason.SECTION_REPLACED);
+        ThermalPageHandle.GeometryResyncToken token =
+                page.pendingFullGeometryResync();
+        page.beginGeometryMutation();
+        helper.assertTrue(
+                !page.acknowledgeFullGeometryResync(token),
+                "a changed live revision must reject the stale token");
+        helper.succeed();
+    }
+
+    @GameTest(template = TEMPLATE, batch = BATCH + "_signature", timeoutTicks = 40)
+    public static void signatureDirectoryKeepsUnchangedBricksShared(GameTestHelper helper) {
+        ThermalSignatureTable.Builder registry = ThermalSignatureTable.builder();
+        int air = registry.intern(fullAir());
+        ThermalSignatureTable signatures = registry.build();
+        PageSignatures original = page(signatures, air);
+        int[] changed = new int[64];
+        Arrays.fill(changed, air);
+        PageSignatures next = original.withBricks(
+                signatures, new int[]{0}, new int[][]{changed});
+        helper.assertTrue(
+                original.brickPayload(1) == next.brickPayload(1),
+                "unchanged Brick payload must be shared");
+        helper.succeed();
+    }
+
+    @GameTest(template = TEMPLATE, batch = BATCH + "_pool", timeoutTicks = 40)
+    public static void engineCloseIsIdempotent(GameTestHelper helper) {
+        Fixture fixture = fixture();
+        fixture.engine.close();
+        fixture.engine.close();
+        helper.succeed();
+    }
+
+    @GameTest(template = TEMPLATE, batch = BATCH + "_fixed", timeoutTicks = 40)
+    public static void fixedTwentyTickBatchesAdvanceWithoutLegacyScheduler(GameTestHelper helper) {
+        Fixture fixture = fixture();
+        try {
+            ThermalCompletion first = fixture.engine.process(batch(1L, 0L));
+            ThermalCompletion second = fixture.engine.process(batch(2L, 20L));
+            helper.assertTrue(
+                    first.status() == ThermalCompletion.Status.COMPLETED
+                            && second.status() == ThermalCompletion.Status.COMPLETED,
+                    "fixed 20-tick batches must use the direct engine pipeline");
+            helper.succeed();
+        } finally {
+            fixture.engine.close();
+        }
     }
 
     @GameTest(
             template = TEMPLATE,
-            batch = DROPPED_RESERVOIR_BATCH,
-            timeoutTicks = 140)
-    public static void droppedReservoirsFollowCampfireRadiationAndCooling(
+            batch = BATCH + "_minecraft_residency_handoff",
+            timeoutTicks = 1_300)
+    public static void minecraftResidencyHandoffHeatsHalfAirNeighbor(
             GameTestHelper helper
     ) {
         ServerLevel level = helper.getLevel();
-        BlockPos anchor = helper.absolutePos(new BlockPos(2, 3, 2));
-        LevelChunk chunk = level.getChunkAt(anchor);
-        int sectionIndex = allAirSectionIndex(chunk);
-        int sectionY = chunk.getSectionYFromSectionIndex(sectionIndex);
-        int baseY = SectionPos.sectionToBlockCoord(sectionY) + 4;
-        BlockPos source = new BlockPos(anchor.getX(), baseY, anchor.getZ());
-        BlockPos wall = source.west();
-        level.setBlock(wall, Blocks.STONE.defaultBlockState(), 3);
+        MinecraftThermalInput.closeActiveLevel(level);
+        BlockPos origin = helper.absolutePos(BlockPos.ZERO);
+        int minX = alignedTwoBrickBase(origin.getX(), origin.getX() + 20);
+        int minY = alignedBrickBase(origin.getY(), origin.getY() + 20);
+        int minZ = alignedBrickBase(origin.getZ(), origin.getZ() + 20);
+        BlockPos sourceAir = new BlockPos(minX, minY + 3, minZ);
+        BlockPos neighborAir = new BlockPos(minX + 4, minY + 3, minZ);
+        BlockPos pageCenter = new BlockPos(
+                SectionPos.sectionToBlockCoord(
+                        SectionPos.blockToSectionCoord(sourceAir.getX())) + 8,
+                SectionPos.sectionToBlockCoord(
+                        SectionPos.blockToSectionCoord(sourceAir.getY())) + 8,
+                SectionPos.sectionToBlockCoord(
+                        SectionPos.blockToSectionCoord(sourceAir.getZ())) + 8);
+        double pageNatural = WorldTemperature.naturalAir(level, pageCenter);
 
-        DimensionThermalRuntime runtime = runtime(level.getGameTime());
-        MinecraftThermalInput input = new MinecraftThermalInput(
+        for (int x = 0; x < 8; x++) {
+            for (int y = 0; y < 2; y++) {
+                for (int z = 0; z < 4; z++) {
+                    level.setBlockAndUpdate(
+                            new BlockPos(minX + x, minY + y, minZ + z),
+                            Blocks.STONE.defaultBlockState());
+                }
+            }
+        }
+        for (int x = 1; x <= 2; x++) {
+            for (int z = 1; z <= 2; z++) {
+                BlockPos campfire = new BlockPos(
+                        minX + x, minY + 2, minZ + z);
+                level.setBlockAndUpdate(
+                        campfire,
+                        Blocks.CAMPFIRE.defaultBlockState()
+                                .setValue(CampfireBlock.LIT, true));
+                BlockEntity entity = level.getBlockEntity(campfire);
+                ((ICampfireExtra) entity).setLifeTime(20_000);
+            }
+        }
+
+        ServerPlayer player = FakePlayerFactory.getMinecraft(level);
+        player.setPos(
+                sourceAir.getX() + 0.5D,
+                sourceAir.getY() + 0.5D - player.getEyeHeight(),
+                sourceAir.getZ() + 0.5D);
+        MinecraftThermalInput.gameplayPlayerEnvironment(
+                player, pageNatural, new ThermalEnvironmentSample());
+        helper.runAfterDelay(1_200, () -> helper.succeedWhen(() -> {
+            double source = MinecraftThermalInput.gameplayPassiveEnvironment(
+                    level, sourceAir, pageNatural);
+            double neighbor = MinecraftThermalInput.gameplayPassiveEnvironment(
+                    level, neighborAir, pageNatural);
+            helper.assertTrue(
+                    source > pageNatural + 1.0D,
+                    "pre-existing campfires were not discovered: source="
+                            + source + ", natural=" + pageNatural);
+            helper.assertTrue(
+                    neighbor > pageNatural + 0.25D,
+                    "half-Air neighbor did not warm: neighbor="
+                            + neighbor + ", natural=" + pageNatural
+                            + ", source=" + source);
+            MinecraftThermalInput.closeActiveLevel(level);
+        }));
+    }
+
+    @GameTest(
+            template = TEMPLATE,
+            batch = BATCH + "_phase_topology_churn",
+            timeoutTicks = 600)
+    public static void phaseRequestSurvivesSameBrickTopologyChurn(
+            GameTestHelper helper
+    ) {
+        ServerLevel level = helper.getLevel();
+        MinecraftThermalInput.closeActiveLevel(level);
+        BlockPos origin = helper.absolutePos(BlockPos.ZERO);
+        int minX = alignedBrickBase(origin.getX(), origin.getX() + 20);
+        int minY = alignedBrickBase(origin.getY(), origin.getY() + 20);
+        int minZ = alignedBrickBase(origin.getZ(), origin.getZ() + 20);
+        BlockPos phaseBlock = new BlockPos(minX + 1, minY + 1, minZ + 1);
+        BlockPos targetAir = phaseBlock.above();
+        BlockPos changingTopology = targetAir.east();
+        BlockPos source = new BlockPos(minX, minY + 2, minZ);
+
+        level.setBlockAndUpdate(
+                phaseBlock, Blocks.PACKED_ICE.defaultBlockState());
+        level.setBlockAndUpdate(
+                changingTopology,
+                Blocks.OAK_TRAPDOOR.defaultBlockState()
+                        .setValue(BlockStateProperties.OPEN, false));
+        ServerPlayer player = FakePlayerFactory.getMinecraft(level);
+        player.setPos(
+                targetAir.getX() + 0.5D,
+                targetAir.getY() + 0.5D - player.getEyeHeight(),
+                targetAir.getZ() + 0.5D);
+        MinecraftThermalInput.gameplayPlayerEnvironment(
+                player,
+                WorldTemperature.naturalAir(level, targetAir),
+                new ThermalEnvironmentSample());
+
+        int randomTickSpeed = level.getGameRules().getInt(
+                GameRules.RULE_RANDOMTICKING);
+        level.getGameRules().getRule(GameRules.RULE_RANDOMTICKING)
+                .set(0, level.getServer());
+        int[] elapsed = {0};
+        helper.onEachTick(() -> {
+            elapsed[0]++;
+            MinecraftThermalInput.onGeneratorTick(
+                    level, source, targetAir, 1_000.0D, true);
+            if (elapsed[0] % 21 == 1) {
+                level.setBlockAndUpdate(
+                        changingTopology,
+                        level.getBlockState(changingTopology).cycle(
+                                BlockStateProperties.OPEN));
+            }
+            if (elapsed[0] == 360) {
+                level.getGameRules().getRule(GameRules.RULE_RANDOMTICKING)
+                        .set(randomTickSpeed, level.getServer());
+            }
+        });
+        helper.succeedWhen(() -> {
+            helper.assertTrue(
+                    !level.getBlockState(phaseBlock).is(Blocks.PACKED_ICE),
+                    "phase Block never completed during topology churn");
+            level.getGameRules().getRule(GameRules.RULE_RANDOMTICKING)
+                    .set(randomTickSpeed, level.getServer());
+            MinecraftThermalInput.onPhysicalSourceRemoved(level, source);
+            MinecraftThermalInput.closeActiveLevel(level);
+        });
+    }
+
+    @GameTest(
+            template = TEMPLATE,
+            batch = BATCH + "_dropped_reservoir",
+            timeoutTicks = 100)
+    public static void droppedWarmStoneReceivesCampfireRadiation(
+            GameTestHelper helper
+    ) {
+        ServerLevel level = helper.getLevel();
+        MinecraftThermalInput.closeActiveLevel(level);
+        BlockPos source = helper.absolutePos(new BlockPos(2, 2, 2));
+        BlockPos itemPosition = source.east(2);
+        level.setBlockAndUpdate(
+                source,
+                Blocks.CAMPFIRE.defaultBlockState()
+                        .setValue(CampfireBlock.LIT, true));
+        ((ICampfireExtra) level.getBlockEntity(source)).setLifeTime(20_000);
+
+        double initial = WorldTemperature.naturalAir(level, itemPosition);
+        ItemStack stack = new ItemStack(FHItems.warm_stone.get());
+        new WearableThermalState(initial, initial).writeTo(stack);
+        ItemEntity item = new ItemEntity(
                 level,
-                9L,
-                runtime,
-                ThermalSignatureResolverDispatcher.builder(
-                        StateStaticThermalResolver.geometryOnly(
-                                ConservativeAirGeometry.MICROCELL_COUNT))
-                        .build(),
-                signatureRegistry(),
-                1L,
-                32,
-                32);
-        try {
-            input.enableTopologyApplication(topologyParameters());
-            input.enablePhysicalSources(4);
-            RadiationService.Parameters parameters =
-                    MinecraftThermalInput.GAMEPLAY_RADIATION_PARAMETERS;
-            ThermalMemoryBudget radiationServerBudget =
-                    new ThermalMemoryBudget(1_000_000L, 0L);
-            helper.assertTrue(input.tryEnableRadiation(
-                            parameters,
-                            radiationServerBudget.createDimensionBudget(
-                                    1_000_000L, 0L)),
-                    "the dropped-item test requires the production radiation service");
-            input.enableSynchronousDispatch();
-            placeLitCampfire(level, source);
-            MinecraftThermalInput.sealActiveLevel(level);
+                itemPosition.getX() + 0.5D,
+                source.getY() + 0.5D,
+                itemPosition.getZ() + 0.5D,
+                stack);
+        item.setNoGravity(true);
+        item.setDeltaMovement(0.0D, 0.0D, 0.0D);
+        item.setDefaultPickUpDelay();
+        helper.assertTrue(level.addFreshEntity(item),
+                "dropped warm stone must enter the test level");
 
-            double receiverY = source.getY() + 0.625D;
-            double visibleX = source.getX() + 2.5D;
-            double visibleZ = source.getZ() + 0.5D;
-            double bagX = source.getX() + 0.5D;
-            double bagZ = source.getZ() + 2.5D;
-            double blockedX = source.getX() - 1.5D;
-            double blockedZ = source.getZ() + 0.5D;
+        ServerPlayer player = FakePlayerFactory.getMinecraft(level);
+        player.setPos(
+                source.getX() + 8.5D,
+                source.getY(),
+                source.getZ() + 0.5D);
+        MinecraftThermalInput.gameplayPlayerEnvironment(
+                player,
+                WorldTemperature.naturalAir(level, player.blockPosition()),
+                new ThermalEnvironmentSample());
 
-            int pagesBeforeQueries = input.admittedPageCount();
-            long admissionBeforeQueries = input.chunkWatermark();
-            int highWaterBeforeQueries =
-                    runtime.thermalCellArena().highWaterMark();
-            int liveCellsBeforeQueries =
-                    runtime.thermalCellArena().liveCellCount();
-            int loadedChunksBeforeQueries =
-                    level.getChunkSource().getLoadedChunksCount();
-
-            MinecraftThermalInput.MutableEnvironmentSample visibleSample =
-                    new MinecraftThermalInput.MutableEnvironmentSample();
-            MinecraftThermalInput.MutableEnvironmentSample blockedSample =
-                    new MinecraftThermalInput.MutableEnvironmentSample();
-            MinecraftThermalInput.gameplayItemEnvironment(
-                    level,
-                    BlockPos.containing(visibleX, receiverY, visibleZ),
-                    visibleX,
-                    receiverY,
-                    visibleZ,
-                    visibleSample);
-            MinecraftThermalInput.gameplayItemEnvironment(
-                    level,
-                    BlockPos.containing(blockedX, receiverY, blockedZ),
-                    blockedX,
-                    receiverY,
-                    blockedZ,
-                    blockedSample);
-            helper.assertTrue(visibleSample.radiantFluxWPerM2() > 0.0D,
-                    "the one-point item receiver must see a lit Campfire");
-            helper.assertTrue(close(blockedSample.radiantFluxWPerM2(), 0.0D),
-                    "a stone wall must block direct Campfire radiation to the item");
-            assertPassiveItemQueryCountsUnchanged(
-                    helper,
-                    input,
-                    runtime,
-                    level,
-                    pagesBeforeQueries,
-                    admissionBeforeQueries,
-                    highWaterBeforeQueries,
-                    liveCellsBeforeQueries,
-                    loadedChunksBeforeQueries);
-
-            double visibleInitial = WorldTemperature.naturalAir(
-                    level, BlockPos.containing(visibleX, receiverY, visibleZ));
-            double bagInitial = WorldTemperature.naturalAir(
-                    level, BlockPos.containing(bagX, receiverY, bagZ));
-            double blockedInitial = WorldTemperature.naturalAir(
-                    level, BlockPos.containing(blockedX, receiverY, blockedZ));
-            ItemEntity warmStone = spawnThermalItem(
-                    level,
-                    new ItemStack(FHItems.warm_stone.get()),
-                    visibleX,
-                    receiverY,
-                    visibleZ,
-                    visibleInitial);
-            ItemEntity hotWaterBag = spawnThermalItem(
-                    level,
-                    new ItemStack(FHItems.hot_water_bag.get()),
-                    bagX,
-                    receiverY,
-                    bagZ,
-                    bagInitial);
-            ItemEntity blockedWarmStone = spawnThermalItem(
-                    level,
-                    new ItemStack(FHItems.warm_stone.get()),
-                    blockedX,
-                    receiverY,
-                    blockedZ,
-                    blockedInitial);
-            helper.assertTrue(level.addFreshEntity(warmStone)
-                            && level.addFreshEntity(hotWaterBag)
-                            && level.addFreshEntity(blockedWarmStone),
-                    "all three exact ItemEntity fixtures must enter the test level");
-
-            double[] warmedSurfaces = new double[2];
-            helper.runAfterDelay(60L, () -> {
-                WearableThermalState warmState = thermalState(warmStone);
-                WearableThermalState bagState = thermalState(hotWaterBag);
-                WearableThermalState blockedState = thermalState(blockedWarmStone);
-                helper.assertTrue(warmState.surfaceTemperatureC() > visibleInitial,
-                        "the dropped warm stone must heat beside a lit Campfire");
-                helper.assertTrue(bagState.surfaceTemperatureC() > bagInitial,
-                        "the dropped hot-water bag must heat beside a lit Campfire");
-                helper.assertTrue(warmState.surfaceTemperatureC()
-                                > blockedState.surfaceTemperatureC(),
-                        "the visible warm stone must heat more than the stone-walled control");
-                warmedSurfaces[0] = warmState.surfaceTemperatureC();
-                warmedSurfaces[1] = bagState.surfaceTemperatureC();
-
-                BlockState lit = level.getBlockState(source);
-                helper.assertTrue(lit.is(Blocks.CAMPFIRE)
-                                && lit.getValue(CampfireBlock.LIT),
-                        "the source must still be a lit Campfire before cooling");
-                level.setBlock(
-                        source,
-                        lit.setValue(CampfireBlock.LIT, false),
-                        3);
-                warmStone.setPos(
-                        source.getX() + 32.5D,
-                        receiverY,
-                        source.getZ() + 0.5D);
-                hotWaterBag.setPos(
-                        source.getX() + 0.5D,
-                        receiverY,
-                        source.getZ() + 32.5D);
-                MinecraftThermalInput.sealActiveLevel(level);
-
-                MinecraftThermalInput.MutableEnvironmentSample movedWarmSample =
-                        new MinecraftThermalInput.MutableEnvironmentSample();
-                MinecraftThermalInput.MutableEnvironmentSample movedBagSample =
-                        new MinecraftThermalInput.MutableEnvironmentSample();
+        helper.runAfterDelay(70, () -> {
+            try {
+                WearableThermalState warmed = WearableThermalState.read(
+                        item.getItem()).orElseThrow();
+                ThermalEnvironmentSample sample =
+                        new ThermalEnvironmentSample();
                 MinecraftThermalInput.gameplayItemEnvironment(
-                        level,
-                        warmStone.blockPosition(),
-                        warmStone.getX(),
-                        warmStone.getY() + warmStone.getBbHeight() * 0.5D,
-                        warmStone.getZ(),
-                        movedWarmSample);
-                MinecraftThermalInput.gameplayItemEnvironment(
-                        level,
-                        hotWaterBag.blockPosition(),
-                        hotWaterBag.getX(),
-                        hotWaterBag.getY() + hotWaterBag.getBbHeight() * 0.5D,
-                        hotWaterBag.getZ(),
-                        movedBagSample);
-                helper.assertTrue(close(
-                                movedWarmSample.radiantFluxWPerM2(), 0.0D)
-                                && close(movedBagSample.radiantFluxWPerM2(), 0.0D),
-                        "extinguished and distant reservoirs must receive no direct radiation");
-                int coolingPages = input.admittedPageCount();
-                long coolingAdmissionWatermark = input.chunkWatermark();
-                int coolingArenaHighWater =
-                        runtime.thermalCellArena().highWaterMark();
-                int coolingLiveCells =
-                        runtime.thermalCellArena().liveCellCount();
-                int coolingLoadedChunks =
-                        level.getChunkSource().getLoadedChunksCount();
-
-                helper.runAfterDelay(50L, () -> {
-                    try {
-                        WearableThermalState cooledWarm = thermalState(warmStone);
-                        WearableThermalState cooledBag = thermalState(hotWaterBag);
-                        helper.assertTrue(cooledWarm.surfaceTemperatureC()
-                                        < warmedSurfaces[0],
-                                "the dropped warm stone must cool after extinguish and move; warm="
-                                        + warmedSurfaces[0] + ", cool="
-                                        + cooledWarm.surfaceTemperatureC());
-                        helper.assertTrue(cooledBag.surfaceTemperatureC()
-                                        < warmedSurfaces[1],
-                                "the dropped hot-water bag must cool after extinguish and move; warm="
-                                        + warmedSurfaces[1] + ", cool="
-                                        + cooledBag.surfaceTemperatureC());
-                        assertPassiveItemQueryCountsUnchanged(
-                                helper,
-                                input,
-                                runtime,
-                                level,
-                                coolingPages,
-                                coolingAdmissionWatermark,
-                                coolingArenaHighWater,
-                                coolingLiveCells,
-                                coolingLoadedChunks);
-                    } finally {
-                        input.close();
-                    }
-                    helper.succeed();
-                });
-            });
-        } catch (RuntimeException | Error exception) {
-            input.close();
-            throw exception;
-        }
+                        item,
+                        WorldTemperature.naturalAir(
+                                level, item.blockPosition()),
+                        sample);
+                helper.assertTrue(sample.radiantFluxWPerM2() > 0.0D,
+                        "Campfire must provide positive dropped-item radiation");
+                helper.assertTrue(
+                        Double.compare(
+                                warmed.surfaceTemperatureC(), initial) != 0,
+                        "the exact ItemEntity stack must advance its state");
+            } finally {
+                item.discard();
+                MinecraftThermalInput.closeActiveLevel(level);
+            }
+            helper.succeed();
+        });
     }
 
-    private static ItemEntity spawnThermalItem(
-            ServerLevel level,
-            ItemStack stack,
-            double x,
-            double y,
-            double z,
-            double initialTemperatureC
+    private static int alignedTwoBrickBase(int minimum, int maximum) {
+        for (int value = minimum; value + 7 < maximum; value++) {
+            if (Math.floorMod(value, 4) == 0
+                    && (value >> 4) == (value + 7 >> 4)) {
+                return value;
+            }
+        }
+        throw new IllegalStateException("GameTest has no aligned two-Brick span");
+    }
+
+    private static int alignedBrickBase(int minimum, int maximum) {
+        for (int value = minimum; value + 3 < maximum; value++) {
+            if (Math.floorMod(value, 4) == 0) {
+                return value;
+            }
+        }
+        throw new IllegalStateException("GameTest has no aligned Brick span");
+    }
+
+    private static ThermalInputBatch admissionBatch(
+            long sequence,
+            long tick,
+            ThermalPageHandle page,
+            ThermalSignatureTable signatures
     ) {
-        new WearableThermalState(
-                initialTemperatureC,
-                initialTemperatureC).writeTo(stack);
-        ItemEntity entity = new ItemEntity(level, x, y, z, stack);
-        entity.setNoGravity(true);
-        entity.setDeltaMovement(0.0D, 0.0D, 0.0D);
-        entity.setDefaultPickUpDelay();
-        return entity;
+        return admissionBatch(sequence, tick, page, signatures, 0L);
     }
 
-    private static WearableThermalState thermalState(ItemEntity entity) {
-        if (!entity.isAlive()) {
-            throw new IllegalStateException("dropped thermal reservoir was removed");
-        }
-        return WearableThermalState.read(entity.getItem()).orElseThrow();
-    }
-
-    private static void assertPassiveItemQueryCountsUnchanged(
-            GameTestHelper helper,
-            MinecraftThermalInput input,
-            DimensionThermalRuntime runtime,
-            ServerLevel level,
-            int expectedPages,
-            long expectedAdmissionWatermark,
-            int expectedArenaHighWater,
-            int expectedLiveCells,
-            int expectedLoadedChunks
+    private static ThermalInputBatch admissionBatch(
+            long sequence,
+            long tick,
+            ThermalPageHandle page,
+            ThermalSignatureTable signatures,
+            long sourceSeedMask
     ) {
-        helper.assertTrue(input.admittedPageCount() == expectedPages,
-                "item environment queries must not admit thermal Pages");
-        helper.assertTrue(input.chunkWatermark() == expectedAdmissionWatermark,
-                "item environment queries must not advance the Page admission watermark");
-        helper.assertTrue(runtime.thermalCellArena().highWaterMark()
-                        == expectedArenaHighWater
-                        && runtime.thermalCellArena().liveCellCount()
-                        == expectedLiveCells,
-                "item environment queries must not create thermal cells");
-        helper.assertTrue(level.getChunkSource().getLoadedChunksCount()
-                        == expectedLoadedChunks,
-                "item environment queries must not load chunks");
+        return new ThermalInputBatch(
+                1L, sequence, tick,
+                new ThermalInputBatch.PageAdmission[]{
+                        new ThermalInputBatch.PageAdmission(
+                                page, page.liveGeometryRevision(),
+                                -1L, sourceSeedMask,
+                                page(signatures, 0), 0.0D, sky(), null)},
+                ThermalInputBatch.NO_RETIREMENTS,
+                ThermalInputBatch.NO_RESIDENCY_UPDATES,
+                ResolvedGeometryBatch.EMPTY,
+                ThermalSourceBatch.EMPTY,
+                ThermalInputBatch.NO_ENVIRONMENT_UPDATES,
+                ThermalInputBatch.NO_PHASE_ACKS,
+                Double.NaN);
     }
 
-    private static void setDirect(
-            LevelChunkSection section,
-            BlockPos position,
-            BlockState state
+    private static ThermalInputBatch mutationBatch(
+            long sequence,
+            long tick,
+            ThermalPageHandle page,
+            long revision,
+            int signatureId
     ) {
-        section.setBlockState(
-                SectionPos.sectionRelative(position.getX()),
-                SectionPos.sectionRelative(position.getY()),
-                SectionPos.sectionRelative(position.getZ()),
-                state,
-                false);
+        ResolvedGeometryBatch.Builder geometry =
+                new ResolvedGeometryBatch.Builder();
+        geometry.addResolvedCenter(page, revision, 0, signatureId);
+        return new ThermalInputBatch(
+                1L, sequence, tick,
+                ThermalInputBatch.NO_ADMISSIONS,
+                ThermalInputBatch.NO_RETIREMENTS,
+                ThermalInputBatch.NO_RESIDENCY_UPDATES,
+                geometry.buildAndReset(),
+                ThermalSourceBatch.EMPTY,
+                ThermalInputBatch.NO_ENVIRONMENT_UPDATES,
+                ThermalInputBatch.NO_PHASE_ACKS,
+                Double.NaN);
     }
 
-    private static void placeLitCampfire(ServerLevel level, BlockPos position) {
-        BlockState replaced = level.getBlockState(position);
-        BlockState campfire = litCampfireState();
-        level.setBlock(position, campfire, 3);
-        if (!(level.getBlockEntity(position) instanceof ICampfireExtra campfireExtra)) {
-            throw new IllegalStateException("placed Campfire has no lifetime state");
-        }
-        campfireExtra.setLifeTime(200);
-        MinecraftThermalInput.onPotentialPhysicalSourcePlaced(
-                level, position, replaced, campfire);
+    private static ThermalInputBatch batch(long sequence, long tick) {
+        return new ThermalInputBatch(
+                1L, sequence, tick,
+                ThermalInputBatch.NO_ADMISSIONS,
+                ThermalInputBatch.NO_RETIREMENTS,
+                ThermalInputBatch.NO_RESIDENCY_UPDATES,
+                ResolvedGeometryBatch.EMPTY,
+                ThermalSourceBatch.EMPTY,
+                ThermalInputBatch.NO_ENVIRONMENT_UPDATES,
+                ThermalInputBatch.NO_PHASE_ACKS,
+                Double.NaN);
     }
 
-    private static double totalEnthalpy(ThermalCellArena arena) {
-        double total = 0.0D;
-        for (int slot = 0; slot < arena.highWaterMark(); slot++) {
-            if (arena.isLive(slot)) {
-                total += arena.enthalpyJ(slot);
-            }
-        }
-        return total;
-    }
-
-    private static double routedEnergy(
-            DimensionThermalRuntime runtime,
-            BlockPos source,
-            SourceBinding.Kind kind
-    ) {
-        return runtime.sourceTimeline().routedEnergyJ(source.asLong(), kind);
-    }
-
-    private static boolean close(double actual, double expected) {
-        return Math.abs(actual - expected) <= 1.0e-8D;
-    }
-
-    private static int allAirSectionIndex(LevelChunk chunk) {
-        for (int index = chunk.getSections().length - 1; index >= 0; index--) {
-            if (chunk.getSections()[index].hasOnlyAir()) {
-                return index;
-            }
-        }
-        throw new IllegalStateException("GameTest chunk has no all-air section metadata proof");
-    }
-
-    private static int boundedAllAirSectionIndex(LevelChunk chunk) {
-        for (int index = 1; index < chunk.getSections().length - 1; index++) {
-            if (chunk.getSections()[index].hasOnlyAir()) {
-                return index;
-            }
-        }
-        throw new IllegalStateException(
-                "GameTest chunk has no vertically bounded all-air section");
-    }
-
-    private static ThermalSignatureResolver<BlockState, FluidState> neighborAwareResolver(
-            ResolvedThermalSignature airSignature
-    ) {
-        return new ThermalSignatureResolver<>() {
-            @Override
-            public String resolverId() {
-                return "frostedheart:gametest_neighbor_aware";
-            }
-
-            @Override
-            public DependencyOffsetMask dependencyMask() {
-                return DependencyOffsetMask.NEIGHBOR_6;
-            }
-
-            @Override
-            public int maxOutputRegions() {
-                return airSignature.localAirRegionCount();
-            }
-
-            @Override
-            public ThermalResolution<ResolvedThermalSignature> resolve(
-                    ResolverBlockView.Access<BlockState, FluidState> view
-            ) {
-                ThermalResolution<?> self = view.lookup(DependencyOffsetMask.SELF).asResolution();
-                if (!self.isResolved()) {
-                    return ThermalResolution.failure(self.reason());
-                }
-                ThermalResolution<ResolverBlockView.StateAndFluid<BlockState, FluidState>> east =
-                        view.lookup(1, 0, 0).asResolution();
-                if (!east.isResolved()) {
-                    return ThermalResolution.failure(east.reason());
-                }
-                return ThermalResolution.resolved(
-                        east.value().orElseThrow().blockState().isAir()
-                                ? airSignature
-                                : SOLID_SIGNATURE);
-            }
-        };
-    }
-
-    private static ThermalSignatureRegistry signatureRegistry() {
-        ThermalSignatureRegistry.Builder builder = ThermalSignatureRegistry.builder();
-        StateStaticThermalResolver resolver = StateStaticThermalResolver.geometryOnly(
-                ConservativeAirGeometry.MICROCELL_COUNT);
-        builder.intern(resolver.resolve(
-                Blocks.AIR.defaultBlockState(),
-                Blocks.AIR.defaultBlockState().getFluidState()).value().orElseThrow());
-        BlockState campfire = litCampfireState();
-        builder.intern(resolver.resolve(
-                campfire, campfire.getFluidState()).value().orElseThrow());
-        builder.intern(SOLID_SIGNATURE);
-        return builder.build();
-    }
-
-    private static BlockState litCampfireState() {
-        return Blocks.CAMPFIRE.defaultBlockState().setValue(CampfireBlock.LIT, true);
-    }
-
-    private static DimensionThermalRuntime runtime(long initialTick) {
-        ThermalCellArena arena = new ThermalCellArena(0);
-        NodePowerAccumulatorArena accumulators = new NodePowerAccumulatorArena(0);
-        ThermalSourceTimeline sources = new ThermalSourceTimeline(
-                9L,
-                initialTick,
-                16,
-                new ThermalSourceRegistry(0, 3, accumulators),
-                arena);
-        ThermalSweep sweep = ThermalSweepFragments.builder(
-                arena, null,
-                new BuoyancyConductance.Parameters(1.0D, 1.0D, 1.0D), 0).build();
-        ThermalMemoryBudget serverBudget = new ThermalMemoryBudget(1_000_000L, 0L);
-        QueryPublication publication = QueryPublication.tryCreate(
-                serverBudget.createDimensionBudget(1_000_000L, 0L),
-                256);
-        if (publication == null) {
-            throw new IllegalStateException("GameTest publication admission failed");
-        }
-        return new DimensionThermalRuntime(
-                9L,
-                initialTick,
-                InputWatermarks.ZERO,
-                0L,
-                0L,
-                false,
-                new ThermalTimePolicy(5L, 20L, 2),
+    private static Fixture fixture() {
+        ThermalSignatureTable.Builder builder = ThermalSignatureTable.builder();
+        int airId = builder.intern(fullAir());
+        int solidId = builder.intern(new ResolvedThermalSignature(
+                new ConservativeAirGeometry.Resolution(
+                        ConservativeAirGeometry.Status.RESOLVED, List.of()),
+                0, 0));
+        ThermalSignatureTable signatures = builder.build();
+        ThermalCellArena arena = new ThermalCellArena(256);
+        QueryPublication query = QueryPublication.tryCreate(
+                new ThermalMemoryBudget(8L * 1024L * 1024L)
+                        .createDimensionBudget(8L * 1024L * 1024L),
+                256,
+                16);
+        ThermalDimensionEngine engine = new ThermalDimensionEngine(
+                1L, 0L, arena, signatures,
+                new MaterialBoundaryRegistry(List.of(), List.of()),
+                new ThermalTopologyParameters(
+                        64, 1_200.0D, 0.0D, 1.0D, 0.25D,
+                        new BuoyancyConductance.Parameters(0.25D, 4.0D, 10.0D),
+                        8, 4),
+                new FarFieldSettings(1.0D, 1.0D, 16.0D),
+                MinecraftPhysicalSourceProfile.CAMPFIRE,
+                new ThermalDimensionLimits(
+                        16, 128, 256,
+                        4_096, 2_048, 4_096, 4_096, 4_096,
+                        2, 1.0e-6D),
+                query);
+        return new Fixture(
+                engine,
                 arena,
-                sources,
-                sweep,
-                publication,
-                0.0D,
-                new DimensionThermalRuntime.Limits(256, 1024, 8, 3, 1.0e-9D));
+                query,
+                new ThermalPageHandle(0L, 1L),
+                signatures,
+                airId,
+                solidId);
     }
 
-    private static MinecraftThermalTopologyApplier.Parameters topologyParameters() {
-        return new MinecraftThermalTopologyApplier.Parameters(
-                0,
-                0,
-                ConservativeAirGeometry.MICROCELL_COUNT,
-                1.0D,
-                0.0D,
-                0.0D,
-                1.0D,
-                0.25D,
-                false,
-                new BuoyancyConductance.Parameters(1.0D, 1.0D, 1.0D));
+    private static PageSignatures page(
+            ThermalSignatureTable signatures,
+            int id
+    ) {
+        PageSignatures.Builder builder = new PageSignatures.Builder(signatures);
+        for (int brick = 0; brick < ThermalPageHandle.BASE_BRICK_COUNT; brick++) {
+            builder.setUniformBrick(brick, id);
+        }
+        return builder.buildBricks();
+    }
+
+    private static byte[] sky() {
+        byte[] result = new byte[256];
+        Arrays.fill(result, (byte) 16);
+        return result;
+    }
+
+    private static ResolvedThermalSignature fullAir() {
+        return new ResolvedThermalSignature(
+                new ConservativeAirGeometry.Resolution(
+                        ConservativeAirGeometry.Status.RESOLVED,
+                        List.of(new ConservativeAirGeometry.AirComponent(
+                                0, -1L, 0xffff, 0xffff, 0xffff,
+                                0xffff, 0xffff, 0xffff))),
+                0, 0);
+    }
+
+    private static ThermalCellArena.BrickAllocation regular(
+            ThermalCellArena arena,
+            int pageSlot,
+            int generation,
+            int minX
+    ) {
+        ThermalBrickCellLayout layout = new ThermalBrickCellLayout();
+        layout.reset(minX, 0, 0);
+        layout.setRegularAir(100.0D / 64.0D);
+        ThermalCellArena.BrickAllocation allocation = arena.stageBrickCells(
+                pageSlot, generation, layout, 0.0D, 0.0D, 4_096);
+        arena.commitStagedCells(allocation.cellSpan());
+        return allocation;
+    }
+
+    private static ThermalCellArena.BrickAllocation phase(
+            ThermalCellArena arena
+    ) {
+        ThermalBrickCellLayout layout = new ThermalBrickCellLayout();
+        layout.reset(0, 0, 0);
+        layout.setRegularAir(100.0D / 64.0D);
+        layout.addPhaseReservoir(
+                0, 0, 0, 1, 1L, 0.0D, 10.0D);
+        ThermalCellArena.BrickAllocation allocation = arena.stageBrickCells(
+                0, 1, layout, 0.0D, 0.0D, 4_096);
+        arena.commitStagedCells(allocation.cellSpan());
+        return allocation;
+    }
+
+    private record Fixture(
+            ThermalDimensionEngine engine,
+            ThermalCellArena arena,
+            QueryPublication query,
+            ThermalPageHandle page,
+            ThermalSignatureTable signatures,
+            int airId,
+            int solidId
+    ) {
     }
 }

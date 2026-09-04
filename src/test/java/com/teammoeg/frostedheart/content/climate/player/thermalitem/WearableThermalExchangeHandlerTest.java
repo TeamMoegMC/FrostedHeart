@@ -164,12 +164,20 @@ class WearableThermalExchangeHandlerTest {
         } else {
             assertTrue(playerData.getCoreBodyTemp() < 0.0F);
         }
-        assertEquals(-7.0F, playerData.getPreviousCoreBodyTemp(), EPSILON);
-        assertEquals(-4.0F,
-                playerData.getBodyTempByPart(PlayerTemperatureData.BodyPart.HANDS),
+        assertEquals(0.0F, playerData.getPreviousCoreBodyTemp(), EPSILON);
+        assertTrue(Math.abs(playerData.getBodyTempByPart(
+                PlayerTemperatureData.BodyPart.HANDS) + 4.0F) > EPSILON);
+        assertTrue(Math.abs(playerData.getBodyTempByPart(
+                PlayerTemperatureData.BodyPart.FEET) + 5.0F) > EPSILON);
+        assertEquals(playerData.getBodyTempByPart(
+                        PlayerTemperatureData.BodyPart.HEAD),
+                playerData.getBodyTempByPart(
+                        PlayerTemperatureData.BodyPart.HANDS) + 4.0F,
                 EPSILON);
-        assertEquals(-5.0F,
-                playerData.getBodyTempByPart(PlayerTemperatureData.BodyPart.FEET),
+        assertEquals(playerData.getBodyTempByPart(
+                        PlayerTemperatureData.BodyPart.HEAD),
+                playerData.getBodyTempByPart(
+                        PlayerTemperatureData.BodyPart.FEET) + 5.0F,
                 EPSILON);
         WearableThermalState next = WearableThermalState.read(stack).orElseThrow();
         if (warmsPlayer) {
@@ -186,10 +194,7 @@ class WearableThermalExchangeHandlerTest {
         data.setBodyTempByPart(PlayerTemperatureData.BodyPart.LEGS, 0.0F);
         data.setBodyTempByPart(PlayerTemperatureData.BodyPart.HANDS, -4.0F);
         data.setBodyTempByPart(PlayerTemperatureData.BodyPart.FEET, -5.0F);
-        CompoundTag packet = new CompoundTag();
-        packet.putFloat("previous_body_temperature", -7.0F);
-        data.load(packet, true);
-        data.applyCoreBodyTemperatureDelta(0.0F);
+        data.applyUniformBodyTemperatureDelta(0.0F);
         return data;
     }
 
@@ -205,7 +210,7 @@ class WearableThermalExchangeHandlerTest {
                 data.getBodyTempByPart(PlayerTemperatureData.BodyPart.HANDS), EPSILON);
         assertEquals(-5.0F,
                 data.getBodyTempByPart(PlayerTemperatureData.BodyPart.FEET), EPSILON);
-        assertEquals(-7.0F, data.getPreviousCoreBodyTemp(), EPSILON);
+        assertEquals(0.0F, data.getPreviousCoreBodyTemp(), EPSILON);
     }
 
     private static ItemStack stack() {

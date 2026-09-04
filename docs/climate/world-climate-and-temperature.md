@@ -1,9 +1,9 @@
 # 世界气候与环境温度
 
 - Status: `Current`
-- Last verified: `2026-08-30`
-- Scope: 逻辑气候时钟、长期事件、局部白幕、自然/mesh/analytic 温度合成、方块状态与掉落热库 receiver
-- Primary code anchors: `WorldClockSource`, `WorldClimate`, `ClimateEventModel`, `ClimateEventTrack`, `InterpolationClimateEvent`, `WhiteCurtainDescriptor`, `WhiteCurtainFieldModel`, `WhiteCurtainInfo`, `WorldTemperature`, `BlockTemperatureModel`, `MinecraftThermalInput.AnalyticField`, `MinecraftThermalInput.gameplayPassiveEnvironment`, `MinecraftThermalInput.sampleItemEnvironment`, `MinecraftThermalInput.gameplayItemEnvironment`, `RadiationService.sampleItem`, `MinecraftThermalInput.gameplayCropEnvironment`, `TownThermalProjection`, `MinecraftThermalInput.gameplayTownEnvironment`
+- Last verified: `2026-09-04`
+- Scope: 逻辑气候时钟、长期事件、局部白幕、自然/mesh/analytic 温度合成、红外视野、方块状态消费者
+- Primary code anchors: `WorldClockSource`, `WorldClimate`, `ClimateEventModel`, `ClimateEventTrack`, `InterpolationClimateEvent`, `WhiteCurtainDescriptor`, `WhiteCurtainFieldModel`, `WhiteCurtainInfo`, `WorldTemperature`, `BlockTemperatureModel`, `ThermalAnalyticField`, `ThermalAnalyticFieldIndex`, `MinecraftThermalInput.gameplayPassiveEnvironment`, `MinecraftThermalInput.gameplayCropEnvironment`, `MinecraftThermalInput.gameplayInfraredSnapshot`, `TownThermalProjection`, `MinecraftThermalInput.gameplayTownEnvironment`, `InfraredViewRenderer`
 
 本文只描述当前源码行为。所有温度若无特别说明均为摄氏度；“修正”表示摄氏度增量。
 
@@ -130,9 +130,10 @@ T_natural = D + B + A + alpha_block * C
 
 `WorldTemperature.naturalBlock` 返回上述自然值。`WorldTemperature.block` 随后调用
 `MinecraftThermalInput.gameplayPassiveEnvironment`：revision-valid mesh publication 命中时以 published
-air 替换局部自然值；否则保留 natural backend；最后应用 analytic control fields。该 passive 查询不会
-创建 Page，也不会加载区块。旧 `blockHeatApplicationMultiplier` 仍保留为配置兼容项，但当前生产
-合成不再把任何局部场送进旧 `BlockTemperatureModel` 热区公式。
+air 替换局部自然值；当前稀疏 Page 尚未发布目标 Brick signature payload 时先读取该 Brick 的
+dormant checkpoint，已编译但目标点确实无 Air 时仍保留 natural backend；最后应用 analytic control fields。该 passive 查询不会
+创建 Page，也不会加载区块。`blockHeatApplicationMultiplier` 仍由
+`WorldTemperature.naturalBlock` 传入 `BlockTemperatureModel`，但当前调用没有额外局部热区项。
 
 ## 6. 空气温度
 
@@ -158,9 +159,9 @@ T_natural_air = max(absoluteZero, D + B + A + alpha_air * C)
 FarField 外部温度。已 admission Page 按 section hash 错峰排入刷新队列，同一 Page 两次刷新
 至少间隔 `200` ticks，每 tick 最多出队处理 `16` 个到期项；已 withdraw 或 generation
 不匹配的 stale 项同样占用该预算且不再持有 `ThermalPage` 引用，积压时会继续顺延。背景变化达到
-`0.25 degC` 才局部替换受影响 component 的 FarField boundary，几何、coverage slot、Air
-adjacency、component membership 和已有 cell enthalpy 都不重建。全维度风力仍每 `200` ticks
-采样一次，只遍历现有 component 的开放成员并更新 FarField conductance。天空截面不做周期全
+`0.25 degC` 才局部替换受影响 Brick 的 FarField boundary，几何、coverage slot、Air
+邻接和已有 cell enthalpy 都不重建。全维度风力仍每 `200` ticks
+采样一次，作为一个有界 FarField scale 输入交给 worker；不会遍历房间或全局连通集合。天空截面不做周期全
 Page 重采样：方块 mutation 在 heightmap 更新完成后于 tick-end 合并查询实际变化的 XZ 列，
 每 tick 最多处理 `64` 列；积压列留到后续 tick，并只重编该列穿过的 Brick open fragment。
 
@@ -173,19 +174,19 @@ Page 重采样：方块 mutation 在 heightmap 更新完成后于 tick-end 合�
 每次服务端空气温度查询还会从世界随机源加入标准差 `0.3` 的高斯扰动，所以相同位置连续查询不保证相同结果。
 
 当前 gameplay runtime 为各维度安装同一空气 open-space FarField 阻抗，维度只改变
-`T_natural_air`。Page capture 还封存每个 XZ 列首个天空暴露 local Y；拓扑编译把 Air-Air pair
-连通的 component 聚合；只有真实天空暴露能批准完整 FarField，开放方向数量不再作为室外
-证明。玩家或物理热源直接 admission 的地下 Page 会沿开放面额外 capture 一层已经加载的
-相邻 Page，自动 continuation 每维度最多 `64` Page，且不会递归扩张或加载 chunk。剩余非天空
+`T_natural_air`。Page capture 还封存每个 XZ 列首个天空暴露 local Y；拓扑编译只在当前 Brick
+及其已 admission 的相邻 Brick 中生成 Air pair。真实天空暴露才会生成完整 FarField；开放方向
+数量不作为室外证明。玩家或物理热源直接 admission 的地下 Page 会沿开放面额外 capture 一层已经加载的
+相邻 Page，自动 continuation 只在共享的 Page admission 预算内保留，且不会递归扩张或加载 chunk。剩余非天空
 边缘保持 degraded，但在 approved profile 校准域内会按真实 microface 面积、风力以及
-`1 / (1 + 16)` 距离因子获得弱 `ThermalSweep.BoundaryOperation`，避免长隧道末端成为完全
+`1 / (1 + 16)` 距离因子获得弱 `ThermalFragment.FarBoundaries`，避免长隧道末端成为完全
 绝热边界。全局风力把 calm 导纳连续缩放到 `1.0..1.8` 倍；近似 continuation 不会被标记为
 完整室外闭合。
 
 ## 7. Analytic control fields
 
 `MinecraftThermalInput` 每个维度只保存一份按 `(combineMode, priority, fieldId)` 排序的
-`AnalyticField` 列表。field 可为 `CUBE`、`PILLAR` 或 `SPHERE`，不会复制到覆盖区块、不会挂
+`ThermalAnalyticField` 列表。field 可为 `CUBE`、`PILLAR` 或 `SPHERE`，不会复制到覆盖区块、不会挂
 capability、不会创建 Page，也不参与 `H/C/P/G` 守恒账本。相同 `fieldId` 的更新原位替换定义。
 
 合成发生在 natural/mesh 选择之后，固定顺序为：
@@ -196,18 +197,53 @@ OVERRIDE -> MAX_HEAT -> MIN_COOL -> ADD_DELTA
 
 同一 mode 内再按 priority 和 field ID 排序。Curiosity 冷场使用 `ADD_DELTA`，`/heat_adjust`
 创建运行期 `OVERRIDE` field。控制场当前不跨服务器重启持久化；Curiosity 由实体状态在载入后
-重新报告。红外请求直接从 analytic list 和 physical source manager 生成一次性 shader payload，
-不维护客户端对应的区块热区副本。
+重新报告。红外视野不直接显示 analytic field 或 physical source；它只读取
+`PagePublication` 与 `QueryPublication` 已求解的实际 Air 温度。服务端对每个
+world block 中心调用 `PagePublication.resolveAirPoint`，再把得到的实际 Air cell
+温度量化为一个 0.25degC signed-short texel；同一 `4 x 4 x 4` Brick 内被完整墙体
+隔开的两侧因此可以显示不同温度，`Short.MIN_VALUE` 表示中心没有可显示 Air。
+这是 block-position exact，不是任意子方块 component exact；楼梯、门、栅栏等同一
+方块内存在多个 Air component 时只表示包含方块中心的 component。
+
+客户端开启、跨 chunk/section 时请求 full snapshot，稳定时按 entity ID 错峰每
+`40` ticks 携带 infrared epoch 和 729-bit Page presence。服务端使用固定 Page/Brick
+epoch 数组回答任意旧客户端，只编码视野内 epoch 更新的 Bricks；presence mismatch
+只发送 added/removed Page delta。无可见 Brick/presence 变化时不发送 S2C，即使维度
+内别处推进了 epoch。QueryPublication 暂时 invalid 或超龄时同样不响应，客户端
+保留最后有效 temperature mirror；center/full 请求在匹配响应被接受前不会降级为
+delta。等待 full 时暂停固定 40-tick poll，并按 entity ID 分散在 `41..59` ticks 后
+重试；该区间没有 20 的倍数，因此不会与 20-tick thermal cut 永久同相。客户端只把
+delta 应用到相同 texture center；不同中心的 delta 被丢弃并在
+下一 tick 重新 full，full 响应则接管其服务端中心。有效 publication 确认的 Page
+retirement 只清除对应 `16^3` 区域。
+范围枚举复用 `MinecraftPageManager.pagesByChunk`，只读取已有 coherent
+publication，不 admission Page、retain lease 或加载 chunk。客户端写入一张线性
+`GL_R16I 144 x 144 x 144` 纹理，CPU 侧只保留同一份 persistent direct
+`ShortBuffer`；mirror 在首次实际渲染红外视野时分配，8 KiB Page scratch 在首次
+Page delta 时分配，之后都有界复用。
+世界 reset 会立即摘下 GPU handle，并让 render callback 只删除捕获的旧资源。首个
+matching full snapshot 安装前，客户端以玩家当前 section 为中心渲染全 `INVALID`
+纹理，红外初始化不依赖服务端立即响应；跨 section 等待新 full 时继续按旧 texture
+origin 渲染旧 snapshot，响应到达后再整表替换，因此网络 full 状态不会使红外 pass
+闪烁。full 上传整张纹理，delta 通过该 scratch 只上传改变的
+`16^3` Page。fragment shader 每像素只执行一次 integer texture
+fetch。depth 重建得到的是可见几何表面；采样前沿 camera ray 向摄像机偏移
+`1/2048` 的相对距离，使方块面稳定读取表面前方的
+Air texel，不在相邻 texels 间闪烁。扫描球内 invalid/无 Page texel 按
+`MIN_TEMP` 显示冷蓝。shader 的逆视图矩阵来自当前 `GameRenderer` main `Camera`；
+Java 先以 double 计算 camera 到 texture origin 的相对坐标，再转换为小范围 float
+uniform，避免远世界坐标丢失一格精度。潜行眼高平滑和第三人称不会把温度坐标相对
+depth 偏移。篝火烟雾等写 depth 的粒子沿用同一世界坐标采样，与粒子所在 Air
+texel 的温度颜色融合；不增加粒子 mask、专用 pass 或渲染时序分支。
+
+首次/换中心 full snapshot 还可读取当前 source 七-section closure 内的 dormant
+Brick mean，并复用 `UNIFORM` record 作为临时 Brick-resolution bootstrap；不加入
+presence 或稳定 delta，不 admission Page、不加载 chunk。真实 Page admission 后，
+现有 added-Page 路径会清除该区域并替换成 block-position exact 数据。
 
 Campfire、Generator 和蒸汽喷泉不是 analytic field；它们由
-`MinecraftPhysicalSourceManager` 注册为显式功率 source，进入 mesh 与直接辐射路径。
+`PhysicalSourceSpatialIndex` 注册为显式功率 source，进入 mesh 与直接辐射路径。
 `ChunkHeatData`、`IHeatArea`、chunk capability、周期 revalidation 和旧失效包均已删除。
-
-### 7.1 掉落物一点式环境 receiver
-
-`MinecraftThermalInput.sampleItemEnvironment` 在 `ItemEntity` 中心执行被动查询。已有且未超龄的 Air Mesh publication 命中时先采用 published air，再按本节顺序组合 analytic fields；publication miss 时以 `WorldTemperature.naturalAir` 作为无随机扰动 fallback 并组合同一 analytic fields。最后调用 `RadiationService.sampleItem` 叠加一个 receiver point 的直接辐射。该入口不会调用 `ensureGameplayPage`，不会 admission Page、加载 chunk、扫描邻域方块或枚举实体；没有 active runtime 时，`gameplayItemEnvironment` 只返回当前 `naturalAir` 和零辐射。
-
-玩家三点辐射继续保留 `128` receiver、每 query `64` candidate visit、top `8`、`24` rays。item receiver 使用独立的 `64` receiver witness cache、`32` visits、top `4` 和 `4` rays，不能驱逐玩家 witness。`MinecraftThermalInput` 另有每 level 固定 `64` 个 quarter-block 位置的同 tick sample cache；同位置命中复用完整空气/辐射结果，tick generation 改变时整代回收，level `close()` 时清空。第 `65` 个不同位置之后仍返回 publication/analytic/`naturalAir` 的空气值，但本 tick 不再做辐射工作并标记 budget-limited。source index、top-K、DDA、section revision witness 与 source ledger 均与玩家路径共享；item query 只读功率，不重复消费 source energy。
 
 ## 8. 主要消费者
 
@@ -220,7 +256,15 @@ Campfire、Generator 和蒸汽喷泉不是 analytic field；它们由
 
 `WorldTemperature.air` 主要供被动环境查询、降雪判断及显示工具使用。玩家体温路径直接消费 sparse publication、analytic field 和物理辐射；旧 `BlockTempData` 粒子采样当前不再调度，见 [player-temperature.md](player-temperature.md)。
 
-`WorldTemperature.checkPlantStatus` 真正需要温度的路径调用 `MinecraftThermalInput.gameplayCropEnvironment`。已有 Air Mesh publication 命中时，返回的空气温度直接进入施肥、生长、生存和死亡阈值；无 active runtime、无 Page、无空气 component、stale 或超龄 publication 时使用 natural block temperature，再合成 analytic field。天气先行决定植物状态时不发起 thermal query。该 passive 路径不会创建 Page、Brick、Cell 或 Interest。
+`WorldTemperature.checkPlantStatus` 真正需要温度的路径调用 `MinecraftThermalInput.gameplayCropEnvironment`。已有 Air Mesh publication 命中时，返回的空气温度直接进入施肥、生长、生存和死亡阈值；无 active runtime、无 Page、无可解析 Air 点、stale 或超龄 publication 时使用 natural block temperature，再合成 analytic field。天气先行决定植物状态时不发起 thermal query。该 passive 路径不会创建 Page、Brick、Cell 或 Interest。
+
+`MinecraftThermalInput.gameplayItemEnvironment` 为掉落暖石和热水袋提供窄查询。
+它只读取已有 live/last publication，未命中时依次使用已加载 chunk 的 dormant
+温度和 `WorldTemperature.naturalAir`，随后合成 analytic field。已有 runtime 时再
+调用一点式 `RadiationService.sampleItem`，同时发现已注册物理 source 与当前
+`BlockRadiationIndex` 的静态火/熔岩 source。查询不会启动 runtime、admit Page、
+加载 chunk 或枚举实体；同 tick 的 64 个四分之一方块位置缓存满后仍返回合成空气，
+但直接辐射为零。
 
 住宅与狩猎基地扫描器访问内部空气时同步把坐标压缩成 `TownThermalProjection` 的 `4×4×4` weighted groups；成功扫描后每组只查询一个已有 publication。全部 group 命中时，新加权空气平均值直接写入建筑温度并驱动评分与日结算；任一 group miss 时整体回退同次 natural 全体素平均，并按 representative group 合成 analytic field，避免混合两套不完整区域。该路径没有第二次房间/体素遍历，不保留 mesh lease，miss 也不能 admission。矿井基地当前没有温度工作条件，因此未增加虚构的 mine consumer。
 
