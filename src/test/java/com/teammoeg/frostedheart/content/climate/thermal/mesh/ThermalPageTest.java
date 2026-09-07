@@ -87,7 +87,7 @@ class ThermalPageTest {
                 signatures.brickPayload(0),
                 null,
                 PagePublication.PhaseCandidates.owned(
-                        new int[]{6}, new long[]{1L << 21}));
+                        new int[]{6}, new long[]{1L << 21}), true);
         ThermalSignatureTable signatureTable = registry.build();
         PagePublication publication = PagePublication.owned(
                 3, 0L, 1L, bricks);
@@ -136,7 +136,7 @@ class ThermalPageTest {
                 1,
                 pageSignatures.brickPayload(0),
                 mixed,
-                PagePublication.PhaseCandidates.EMPTY);
+                PagePublication.PhaseCandidates.EMPTY, true);
         PagePublication publication = PagePublication.owned(
                 0, 0L, 1L, bricks);
 
@@ -164,7 +164,7 @@ class ThermalPageTest {
                 generation,
                 signatures.brickPayload(0),
                 null,
-                PagePublication.PhaseCandidates.EMPTY);
+                PagePublication.PhaseCandidates.EMPTY, true);
         return PagePublication.owned(
                 2, geometryRevision, topologyGeneration, bricks);
     }

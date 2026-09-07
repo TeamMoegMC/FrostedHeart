@@ -1,7 +1,7 @@
 # 世界气候与环境温度
 
 - Status: `Current`
-- Last verified: `2026-08-31`
+- Last verified: `2026-09-08`
 - Scope: 逻辑气候时钟、长期事件、局部白幕、自然/mesh/analytic 温度合成、红外视野、方块状态消费者
 - Primary code anchors: `WorldClockSource`, `WorldClimate`, `ClimateEventModel`, `ClimateEventTrack`, `InterpolationClimateEvent`, `WhiteCurtainDescriptor`, `WhiteCurtainFieldModel`, `WhiteCurtainInfo`, `WorldTemperature`, `BlockTemperatureModel`, `ThermalAnalyticField`, `ThermalAnalyticFieldIndex`, `MinecraftThermalInput.gameplayPassiveEnvironment`, `MinecraftThermalInput.gameplayCropEnvironment`, `MinecraftThermalInput.gameplayInfraredSnapshot`, `TownThermalProjection`, `MinecraftThermalInput.gameplayTownEnvironment`, `InfraredViewRenderer`
 
@@ -198,7 +198,8 @@ OVERRIDE -> MAX_HEAT -> MIN_COOL -> ADD_DELTA
 同一 mode 内再按 priority 和 field ID 排序。Curiosity 冷场使用 `ADD_DELTA`，`/heat_adjust`
 创建运行期 `OVERRIDE` field。控制场当前不跨服务器重启持久化；Curiosity 由实体状态在载入后
 重新报告。红外视野不直接显示 analytic field 或 physical source；它只读取
-`PagePublication` 与 `QueryPublication` 已求解的实际 Air 温度。服务端对每个
+`PagePublication` 与 `QueryPublication` 已求解的实际 Air 温度，并在未解析 Brick
+使用已存储的 dormant 均温。服务端对每个实时
 world block 中心调用 `PagePublication.resolveAirPoint`，再把得到的实际 Air cell
 温度量化为一个 0.25degC signed-short texel；同一 `4 x 4 x 4` Brick 内被完整墙体
 隔开的两侧因此可以显示不同温度，`Short.MIN_VALUE` 表示中心没有可显示 Air。
@@ -209,8 +210,10 @@ world block 中心调用 `PagePublication.resolveAirPoint`，再把得到的实�
 `40` ticks 携带 infrared epoch 和 729-bit Page presence。服务端使用固定 Page/Brick
 epoch 数组回答任意旧客户端，只编码视野内 epoch 更新的 Bricks；presence mismatch
 只发送 added/removed Page delta。无可见 Brick/presence 变化时不发送 S2C，即使维度
-内别处推进了 epoch。QueryPublication 暂时 invalid 或超龄时同样不响应，客户端
-保留最后有效 temperature mirror；center/full 请求在匹配响应被接受前不会降级为
+内别处推进了 epoch。QueryPublication 暂时 invalid 或超龄时不清除旧实时覆盖，
+仍可返回 dormant 更新，并以实时 epoch 0 要求下一份 coherent 响应重建实时基线；
+此时已知实时 section 内只更新此前由 dormant 拥有的 texel。
+center/full 请求在匹配响应被接受前不会降级为
 delta。等待 full 时暂停固定 40-tick poll，并按 entity ID 分散在 `41..59` ticks 后
 重试；该区间没有 20 的倍数，因此不会与 20-tick thermal cut 永久同相。客户端只把
 delta 应用到相同 texture center；不同中心的 delta 被丢弃并在
@@ -236,10 +239,14 @@ uniform，避免远世界坐标丢失一格精度。潜行眼高平滑和第三�
 depth 偏移。篝火烟雾等写 depth 的粒子沿用同一世界坐标采样，与粒子所在 Air
 texel 的温度颜色融合；不增加粒子 mask、专用 pass 或渲染时序分支。
 
-首次/换中心 full snapshot 还可读取当前 source 七-section closure 内的 dormant
-Brick mean，并复用 `UNIFORM` record 作为临时 Brick-resolution bootstrap；不加入
-presence 或稳定 delta，不 admission Page、不加载 chunk。真实 Page admission 后，
-现有 added-Page 路径会清除该区域并替换成 block-position exact 数据。
+每次红外请求还检查视野内已加载 chunk 的 dormant Brick mean，不依赖 source
+是否发现，不 admission Page、不加载 chunk。section 首次被查询才创建共享量化缓存，
+复用 20-tick 自然温度/衰减缓存；常规增量只发送变化 Brick，落后客户端收到 section
+替换，数据消失则显式删除。客户端增加一份 5,832 字节的 dormant Brick 所有权位图，
+复用原纹理。实时 `resolved` Brick（包括无 Air）优先，未解析 Brick 可继续显示
+暂存均温；实时更新时同包重写受影响 section 的剩余 fallback，避免覆盖丢失。
+关闭红外立即停止客户端请求；服务端实时比较最多延续 80 tick，dormant 计算只由
+请求触发。编码及生命周期详见 [data-lifecycle-and-integration.md](data-lifecycle-and-integration.md#network-and-consumers)。
 
 Campfire、Generator 和蒸汽喷泉不是 analytic field；它们由
 `PhysicalSourceSpatialIndex` 注册为显式功率 source，进入 mesh 与直接辐射路径。

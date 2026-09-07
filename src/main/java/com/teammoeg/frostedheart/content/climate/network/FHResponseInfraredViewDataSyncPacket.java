@@ -29,6 +29,7 @@ public final class FHResponseInfraredViewDataSyncPacket implements CMessage {
     private final boolean full;
     private final long[] presence;
     private final byte[] brickRecords;
+    private final long dormantRevision;
 
     public FHResponseInfraredViewDataSyncPacket(
             int requestId,
@@ -42,7 +43,8 @@ public final class FHResponseInfraredViewDataSyncPacket implements CMessage {
                 snapshot.infraredEpoch(),
                 snapshot.full(),
                 snapshot.presence(),
-                snapshot.brickRecords());
+                snapshot.brickRecords(),
+                snapshot.dormantRevision());
     }
 
     private FHResponseInfraredViewDataSyncPacket(
@@ -53,7 +55,8 @@ public final class FHResponseInfraredViewDataSyncPacket implements CMessage {
             int infraredEpoch,
             boolean full,
             long[] presence,
-            byte[] brickRecords
+            byte[] brickRecords,
+            long dormantRevision
     ) {
         if (requestId < 0 || infraredEpoch < 0
                 || presence == null || brickRecords == null
@@ -73,6 +76,7 @@ public final class FHResponseInfraredViewDataSyncPacket implements CMessage {
         this.full = full;
         this.presence = presence;
         this.brickRecords = brickRecords;
+        this.dormantRevision = dormantRevision;
     }
 
     public FHResponseInfraredViewDataSyncPacket(FriendlyByteBuf buffer) {
@@ -93,6 +97,7 @@ public final class FHResponseInfraredViewDataSyncPacket implements CMessage {
         }
         brickRecords = buffer.readByteArray(
                 InfraredBrickCodec.MAX_PAYLOAD_BYTES);
+        dormantRevision = buffer.readVarLong();
     }
 
     @Override
@@ -110,6 +115,7 @@ public final class FHResponseInfraredViewDataSyncPacket implements CMessage {
             }
         }
         buffer.writeByteArray(brickRecords);
+        buffer.writeVarLong(dormantRevision);
     }
 
     @Override
@@ -126,7 +132,8 @@ public final class FHResponseInfraredViewDataSyncPacket implements CMessage {
                     infraredEpoch,
                     full,
                     presence,
-                    brickRecords);
+                    brickRecords,
+                    dormantRevision);
             if (RenderSystem.isOnRenderThread()) {
                 update.run();
             } else {

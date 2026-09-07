@@ -191,14 +191,16 @@ public final class PagePublication {
             int arenaGeneration,
             Object signaturePayload,
             ComponentBrickCompiler.CompiledBrick mixedGeometry,
-            PhaseCandidates phaseCandidates
+            PhaseCandidates phaseCandidates,
+            boolean resolved
     ) {
         public static final Brick EMPTY = new Brick(
                 NO_COVERAGE,
                 0,
                 null,
                 null,
-                PhaseCandidates.EMPTY);
+                PhaseCandidates.EMPTY,
+                false);
 
         public Brick {
             if (coverageSlot < NO_COVERAGE || arenaGeneration < 0) {

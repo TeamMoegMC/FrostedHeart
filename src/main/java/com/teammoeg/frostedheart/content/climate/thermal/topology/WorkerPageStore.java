@@ -493,7 +493,8 @@ public final class WorkerPageStore implements AutoCloseable {
                 topology.resolved ? topology.mixedGeometry : null,
                 topology.resolved
                         ? topology.phaseCandidates
-                        : PagePublication.PhaseCandidates.EMPTY);
+                        : PagePublication.PhaseCandidates.EMPTY,
+                topology.resolved);
     }
 
     public int resolveAirFaceSlot(

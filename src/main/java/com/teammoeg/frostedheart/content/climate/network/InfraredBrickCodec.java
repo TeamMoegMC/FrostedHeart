@@ -20,6 +20,8 @@ public final class InfraredBrickCodec {
     private static final int UNIFORM = 1;
     private static final int INDEXED = 2;
     private static final int RAW = 3;
+    private static final int DORMANT_SECTION = 4;
+    private static final int DORMANT_PATCH = 5;
 
     private InfraredBrickCodec() {
     }
@@ -110,6 +112,19 @@ public final class InfraredBrickCodec {
             return true;
         }
 
+        /** Replaces only dormant-owned Bricks in this section; zero mask removes it. */
+        public void writeDormantSection(
+                int localPageIndex, long brickMask, short[] temperatures, boolean replace) {
+            requireLocalBrick(localPageIndex * 64);
+            writeIdentity(localPageIndex * 64, replace ? DORMANT_SECTION : DORMANT_PATCH);
+            output.writeLong(brickMask);
+            while (brickMask != 0L) {
+                int brick = Long.numberOfTrailingZeros(brickMask);
+                output.writeShort(temperatures[brick]);
+                brickMask &= brickMask - 1L;
+            }
+        }
+
         public int size() {
             return output.writerIndex();
         }
@@ -132,9 +147,16 @@ public final class InfraredBrickCodec {
     public static final class Decoder {
         private final short[] dictionary = new short[BLOCKS_PER_BRICK];
         private final SimpleBitStorage[] storageByBits = storages();
+        private boolean dormantSection;
+        private boolean dormantReplacement;
+        private long dormantBrickMask;
 
-        /** Returns {@code -1} after the final record. */
-        public int readBrick(FriendlyByteBuf input, short[] values) {
+        public boolean isDormantSection() { return dormantSection; }
+        public boolean isDormantReplacement() { return dormantReplacement; }
+        public long dormantBrickMask() { return dormantBrickMask; }
+
+        /** Returns the Brick address (section base for dormant records), or -1 at EOF. */
+        public int readRecord(FriendlyByteBuf input, short[] values) {
             requireValues(values);
             if (!input.isReadable()) {
                 return -1;
@@ -142,6 +164,8 @@ public final class InfraredBrickCodec {
             int localBrickIndex = input.readUnsignedShort();
             requireLocalBrick(localBrickIndex);
             int mode = input.readUnsignedByte();
+            dormantSection = mode == DORMANT_SECTION || mode == DORMANT_PATCH;
+            dormantReplacement = mode == DORMANT_SECTION;
             switch (mode) {
                 case INVALID -> Arrays.fill(values, INVALID_TEMPERATURE);
                 case UNIFORM -> Arrays.fill(values, input.readShort());
@@ -149,6 +173,18 @@ public final class InfraredBrickCodec {
                 case RAW -> {
                     for (int index = 0; index < BLOCKS_PER_BRICK; index++) {
                         values[index] = input.readShort();
+                    }
+                }
+                case DORMANT_SECTION, DORMANT_PATCH -> {
+                    if ((localBrickIndex & 63) != 0) {
+                        throw new IllegalArgumentException("unaligned dormant section record");
+                    }
+                    dormantBrickMask = input.readLong();
+                    long remaining = dormantBrickMask;
+                    while (remaining != 0L) {
+                        int brick = Long.numberOfTrailingZeros(remaining);
+                        values[brick] = input.readShort();
+                        remaining &= remaining - 1L;
                     }
                 }
                 default -> throw new IllegalArgumentException(

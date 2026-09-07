@@ -16,6 +16,7 @@ import net.minecraft.nbt.Tag;
 import net.minecraft.server.level.ServerLevel;
 
 import java.util.Arrays;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.LongPredicate;
 
 /**
@@ -33,10 +34,11 @@ public final class DormantChunkThermalState {
     private static final int RESIDUAL_SCALE = 16;
     private static final int PRUNE_RESIDUAL = 4;
     private static final long CACHE_INTERVAL_TICKS = 20L;
+    private static final AtomicLong INFRARED_REVISIONS = new AtomicLong();
 
     private final int minimumSectionY;
     private final SectionEntry[] entries;
-    private long[] loadedSourceSupport;
+    private InfraredSection[] infraredSections;
     private long[] cachedDecayTicks;
     private double[] cachedDecayFactors;
     private double[] cachedNaturalTemperatures;
@@ -115,7 +117,6 @@ public final class DormantChunkThermalState {
             if (entry == null || !entry.sourceSustained) {
                 continue;
             }
-            setLoadedSourceSupport(index, true);
             entries[index] = entry.rebase(
                     gameTick,
                     decayFactor(entry.savedGameTick, gameTick, halfLifeSeconds),
@@ -160,7 +161,6 @@ public final class DormantChunkThermalState {
             long sectionKey = net.minecraft.core.SectionPos.asLong(
                     sectionX, minimumSectionY + index, sectionZ);
             boolean next = supported.test(sectionKey);
-            setLoadedSourceSupport(index, next);
             if (entry.sourceSustained != next) {
                 entries[index] = entry.withSourceSustained(next);
                 changed = true;
@@ -174,7 +174,6 @@ public final class DormantChunkThermalState {
         if (index < 0 || index >= entries.length || entries[index] == null) {
             return false;
         }
-        setLoadedSourceSupport(index, supported);
         SectionEntry entry = entries[index];
         if (entry.sourceSustained == supported) {
             return false;
@@ -183,42 +182,85 @@ public final class DormantChunkThermalState {
         return true;
     }
 
-    public boolean sourceSupported(int sectionY) {
-        int index = sectionY - minimumSectionY;
-        if (index < 0 || index >= entries.length || entries[index] == null) {
-            return false;
-        }
-        return entries[index].sourceSustained
-                || loadedSourceSupport != null
-                && (loadedSourceSupport[index >>> 6]
-                & 1L << (index & 63)) != 0L;
-    }
-
     public long storedBrickMask(int sectionY) {
         int index = sectionY - minimumSectionY;
         return index < 0 || index >= entries.length || entries[index] == null
                 ? 0L : entries[index].brickMask;
     }
 
-    public double brickMeanTemperatureC(
+    /** Main-thread, read-only cached view; populated only by an infrared request. */
+    public InfraredSection infraredSection(
             int sectionY,
-            int brick,
             long gameTick,
             double halfLifeSeconds,
-            double currentNaturalTemperatureC
+            ServerLevel level,
+            int sectionX,
+            int sectionZ,
+            BlockPos.MutableBlockPos naturalPosition
     ) {
         int index = sectionY - minimumSectionY;
         if (index < 0 || index >= entries.length
-                || brick < 0 || brick >= BRICKS
-                || entries[index] == null
-                || !entries[index].hasBrick(brick)) {
-            return Double.NaN;
+                || entries[index] == null) {
+            return null;
+        }
+        if (infraredSections == null) {
+            infraredSections = new InfraredSection[entries.length];
+        }
+        InfraredSection snapshot = infraredSections[index];
+        if (snapshot == null) {
+            snapshot = new InfraredSection();
+            infraredSections[index] = snapshot;
+        }
+        long boundary = Math.floorDiv(gameTick, CACHE_INTERVAL_TICKS)
+                * CACHE_INTERVAL_TICKS;
+        if (snapshot.sampleTick == boundary) {
+            return snapshot;
         }
         SectionEntry entry = entries[index];
-        return entry.meanTemperatureC(
-                brick,
-                currentNaturalTemperatureC,
-                decayFactor(entry.savedGameTick, gameTick, halfLifeSeconds));
+        double factor = cachedDecayFactor(
+                index, entry, gameTick, halfLifeSeconds, level,
+                sectionX, sectionY, sectionZ, naturalPosition);
+        long changed = snapshot.brickMask ^ entry.brickMask;
+        long removed = snapshot.brickMask & ~entry.brickMask;
+        while (removed != 0L) {
+            snapshot.temperatures[Long.numberOfTrailingZeros(removed)] = Short.MIN_VALUE;
+            removed &= removed - 1L;
+        }
+        long remaining = entry.brickMask;
+        while (remaining != 0L) {
+            int brick = Long.numberOfTrailingZeros(remaining);
+            long value = Math.round(entry.meanTemperatureC(
+                    brick, cachedNaturalTemperatures[index], factor) * 4.0D);
+            short quantized = (short) Math.max(-32767L, Math.min(32767L, value));
+            if (snapshot.temperatures[brick] != quantized) {
+                changed |= 1L << brick;
+            }
+            snapshot.temperatures[brick] = quantized;
+            remaining &= remaining - 1L;
+        }
+        snapshot.brickMask = entry.brickMask;
+        snapshot.sampleTick = boundary;
+        if (snapshot.revision == 0L || changed != 0L) {
+            snapshot.previousRevision = snapshot.revision;
+            snapshot.changedBrickMask = changed;
+            snapshot.revision = INFRARED_REVISIONS.incrementAndGet();
+        }
+        return snapshot;
+    }
+
+    /** Shared section-level change record, never serialized or updated by a tick sweep. */
+    public static final class InfraredSection {
+        private final short[] temperatures = new short[BRICKS];
+        private long sampleTick = Long.MIN_VALUE;
+        private long revision;
+        private long previousRevision;
+        private long changedBrickMask;
+        private long brickMask;
+
+        public long revision() { return revision; }
+        public long previousRevision() { return previousRevision; }
+        public long changedBrickMask() { return changedBrickMask; }
+        public short[] temperatures() { return temperatures; }
     }
 
     public double sample(
@@ -309,20 +351,12 @@ public final class DormantChunkThermalState {
         if (cachedDecayTicks != null) {
             cachedDecayTicks[index] = Long.MIN_VALUE;
         }
-    }
-
-    private void setLoadedSourceSupport(int index, boolean supported) {
-        if (loadedSourceSupport == null) {
-            if (!supported) {
-                return;
+        if (infraredSections != null && infraredSections[index] != null) {
+            if (entries[index] == null) {
+                infraredSections[index] = null;
+            } else {
+                infraredSections[index].sampleTick = Long.MIN_VALUE;
             }
-            loadedSourceSupport = new long[(entries.length + 63) >>> 6];
-        }
-        long bit = 1L << (index & 63);
-        if (supported) {
-            loadedSourceSupport[index >>> 6] |= bit;
-        } else {
-            loadedSourceSupport[index >>> 6] &= ~bit;
         }
     }
 

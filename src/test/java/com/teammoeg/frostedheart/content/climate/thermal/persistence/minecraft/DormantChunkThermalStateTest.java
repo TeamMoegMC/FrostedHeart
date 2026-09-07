@@ -37,8 +37,6 @@ class DormantChunkThermalStateTest {
         assertEquals(-2.0D, cut.componentTemperatureC(0, 1, 2), 1.0e-9D);
         assertEquals(4.0D, cut.componentTemperatureC(0, 0, 3), 1.0e-9D);
         assertEquals(1L, state.storedBrickMask(0));
-        assertEquals(4.0D, state.brickMeanTemperatureC(
-                0, 0, 0L, 30.0D, 0.0D), 1.0e-9D);
     }
 
     @Test
@@ -47,7 +45,6 @@ class DormantChunkThermalStateTest {
         state.replace(0, mixedEntry(true));
 
         assertTrue(state.activateLoaded(600L, 30.0D));
-        assertTrue(state.sourceSupported(0));
         ThermalInputBatch.DormantAirCut activated = state.admissionCut(
                 0, 600L, 30.0D, 0.0D);
         assertNotNull(activated);
@@ -60,7 +57,6 @@ class DormantChunkThermalStateTest {
                 chunk, 0, 1);
         assertNotNull(decoded);
         assertFalse(decoded.activateLoaded(600L, 30.0D));
-        assertFalse(decoded.sourceSupported(0));
     }
 
     @Test
@@ -70,8 +66,8 @@ class DormantChunkThermalStateTest {
 
         assertTrue(state.updateSourceSupport(0, true));
         assertEquals(1L, state.storedBrickMask(0));
-        assertEquals(10.0D, state.brickMeanTemperatureC(
-                0, 0, 0L, 30.0D, 0.0D), 1.0e-9D);
+        assertEquals(10.0D, state.admissionCut(
+                0, 0L, 30.0D, 0.0D).meanTemperatureC(0), 1.0e-9D);
 
         CompoundTag chunk = new CompoundTag();
         state.encode(chunk);
@@ -80,11 +76,9 @@ class DormantChunkThermalStateTest {
         assertNotNull(decoded);
         assertEquals(1L, decoded.storedBrickMask(0));
         assertTrue(decoded.activateLoaded(600L, 30.0D));
-        assertEquals(10.0D, decoded.brickMeanTemperatureC(
-                0, 0, 600L, 30.0D, 0.0D), 1.0e-9D);
-        assertTrue(decoded.sourceSupported(0));
+        assertEquals(10.0D, decoded.admissionCut(
+                0, 600L, 30.0D, 0.0D).meanTemperatureC(0), 1.0e-9D);
         assertFalse(decoded.updateSourceSupport(0, false));
-        assertFalse(decoded.sourceSupported(0));
     }
 
     private static DormantChunkThermalState.SectionEntry entry(
