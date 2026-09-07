@@ -133,7 +133,7 @@ public final class TechnologyAccessResolver {
                 if (!state.isEffectGranted(effect)) continue;
                 AccessSource source = new AccessSource.LegacySource(research.getId(), effect.getNonce());
                 if (effect instanceof EffectCrafting crafting) {
-                    for (Recipe<?> recipe : crafting.getUnlocks()) add(recipeSources, recipe.getId(), source);
+                    for (ResourceLocation rl : crafting.getUnlocks()) add(recipeSources, rl, source);
                 } else if (effect instanceof EffectBuilding building) {
                     IMultiblock multiblock = building.getMultiblock();
                     if (multiblock != null) add(multiblockSources, multiblock.getUniqueName(), source);
