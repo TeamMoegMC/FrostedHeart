@@ -38,22 +38,21 @@ import com.teammoeg.frostedheart.content.climate.data.ArmorTempData;
 import com.teammoeg.frostedheart.content.climate.data.PlantTempData;
 import com.teammoeg.frostedheart.content.climate.data.PlantTemperature;
 import com.teammoeg.frostedheart.content.climate.food.FoodTemperatureHandler;
-import com.teammoeg.frostedheart.content.climate.gamedata.chunkheat.ChunkHeatData;
 import com.teammoeg.frostedheart.content.climate.gamedata.climate.ClimateType;
 import com.teammoeg.frostedheart.content.climate.gamedata.climate.WorldClimate;
 import com.teammoeg.frostedheart.content.climate.network.FHClimatePacket;
+import com.teammoeg.frostedheart.content.climate.network.FHBodyDataSyncPacket;
 import com.teammoeg.frostedheart.content.climate.network.FHWhiteCurtainSnapshotPacket;
 import com.teammoeg.frostedheart.content.climate.player.ClothData;
 import com.teammoeg.frostedheart.content.climate.player.EquipmentSlotType;
 import com.teammoeg.frostedheart.content.climate.player.EquipmentSlotType.SlotKey;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData.BodyPart;
-import com.teammoeg.frostedheart.content.climate.player.TemperatureUpdate;
+import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureUpdate;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import com.teammoeg.frostedheart.mixin.minecraft.temperature.ServerLevelMixin_PlaceExtraSnow;
 import net.minecraft.core.BlockPos;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.server.level.ChunkHolder;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.tags.BlockTags;
@@ -67,7 +66,6 @@ import net.minecraft.world.entity.ai.attributes.AttributeModifier.Operation;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.LightLayer;
@@ -79,7 +77,6 @@ import net.minecraft.world.level.block.FarmBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.chunk.ChunkAccess;
-import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.dimension.BuiltinDimensionTypes;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraftforge.common.util.FakePlayer;
@@ -102,7 +99,6 @@ import net.minecraftforge.items.ItemStackHandler;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.Optional;
 import java.util.function.Supplier;
 
 import static com.teammoeg.frostedheart.content.climate.WorldTemperature.SNOW_REACHES_GROUND;
@@ -141,17 +137,6 @@ public class ClimateCommonEvents {
          * CurioCapabilityProvider(()->new ArmorTempCurios(amd,event.getObject())));
          * }
          */
-    }
-
-    @SubscribeEvent
-    public static void attachToChunk(AttachCapabilitiesEvent<LevelChunk> event) {
-        if (!event.getObject().isEmpty()) {
-            Level world = event.getObject().getLevel();
-            if (!world.isClientSide) {
-                event.addCapability(new ResourceLocation(FHMain.MODID, "chunk_data"),
-                        FHCapabilities.CHUNK_HEAT.provider());
-            }
-        }
     }
 
     @SubscribeEvent
@@ -269,10 +254,8 @@ public class ClimateCommonEvents {
                         event.getLevel().setBlock(event.getPos(), crop.defaultBlockState(), 2);
                 }
             } else if (status.willDie()) {
-                if (level.getBlockState(pos.below()).is(Blocks.FARMLAND)) {
-                    level.setBlock(pos.below(), Blocks.DIRT.defaultBlockState(), 2);
-                }
-                level.setBlock(pos, Blocks.DEAD_BUSH.defaultBlockState(), 2);
+                event.setResult(Event.Result.DENY);
+                return;
             }
 
             if (allow) {
@@ -402,17 +385,6 @@ public class ClimateCommonEvents {
                     }
 
                 }
-                for (ChunkHolder lc : serverWorld.getChunkSource().chunkMap.getChunks()) {
-                    ChunkPos cp = lc.getPos();
-                    //Distribute heat validate ticks
-                    if ((serverWorld.getGameTime() + (cp.x % 100 + cp.z % 100)) % 200 == 0) {
-                        Optional<ChunkHeatData> chd = ChunkHeatData.get(world, cp);
-                        if (chd.isPresent()) {
-                            chd.get().revalidateHeatSources(world, cp);
-                        }
-                    }
-
-                }
             }
 
         }
@@ -444,6 +416,7 @@ public class ClimateCommonEvents {
                         FHNetwork.INSTANCE.sendPlayer(currentPlayer, new FHClimatePacket(cap,currentPlayer));
                         FHNetwork.INSTANCE.sendPlayer(currentPlayer, new FHWhiteCurtainSnapshotPacket(cap, serverWorld));
                     });
+            syncPlayerTemperature(currentPlayer);
 
             // System.out.println("=x-x=");
             // System.out.println(ForgeRegistries.LOOT_MODIFIER_SERIALIZERS.getValue(new
@@ -460,6 +433,7 @@ public class ClimateCommonEvents {
                     new FHClimatePacket(WorldClimate.get(serverWorld),player));
             FHNetwork.INSTANCE.sendPlayer(player,
                     new FHWhiteCurtainSnapshotPacket(WorldClimate.get(serverWorld), serverWorld));
+            syncPlayerTemperature(player);
         }
     }
 
@@ -514,8 +488,8 @@ public class ClimateCommonEvents {
     public static void onPlayerTick(TickEvent.PlayerTickEvent event) {
         FoodTemperatureHandler.onPlayerTick(event);
         ForecastHandler.sendForecastMessages(event);
-        TemperatureUpdate.updateTemperature(event);
-        TemperatureUpdate.regulateTemperature(event);
+        PlayerTemperatureUpdate.updateTemperature(event);
+        PlayerTemperatureUpdate.regulateTemperature(event);
     }
 
     @SubscribeEvent
@@ -658,8 +632,18 @@ public class ClimateCommonEvents {
             FHNetwork.INSTANCE.sendPlayer(player, new FHClimatePacket(WorldClimate.get(serverWorld),player));
             FHNetwork.INSTANCE.sendPlayer(player,
                     new FHWhiteCurtainSnapshotPacket(WorldClimate.get(serverWorld), serverWorld));
-            //PlayerTemperatureData.getCapability(event.getEntity()).ifPresent(PlayerTemperatureData::deathResetTemperature);
+            syncPlayerTemperature(player);
         }
+    }
+
+    private static void syncPlayerTemperature(ServerPlayer player) {
+        PlayerTemperatureData.getCapability(player).ifPresent(data -> {
+            data.forceThermalSync();
+            if (data.shouldSyncThermalState()) {
+                FHNetwork.INSTANCE.sendPlayer(
+                        player, new FHBodyDataSyncPacket(player));
+            }
+        });
     }
 
     @SubscribeEvent

@@ -152,15 +152,6 @@ public class GeneratorState extends HeatingState {
     }
 
     @Override
-    public boolean shouldUpdateAdjust() {
-        //方块端在城镇接管期间不得重复写入
-        if (getDataNoCheck().filter(d -> d.townProcessedTicks > 0).isPresent()) {
-            return false;
-        }
-        return super.shouldUpdateAdjust();
-    }
-
-    @Override
     public int getDownwardRange() {
         return Mth.ceil(getRangeLevel() * 2 + 1);
     }

@@ -11,7 +11,6 @@
 package com.teammoeg.frostedheart.content.climate.thermal.source.minecraft;
 
 import com.teammoeg.frostedheart.content.climate.thermal.geometry.ConservativeAirGeometry;
-import com.teammoeg.frostedheart.content.climate.thermal.source.SourceChannel;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -19,40 +18,53 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class MinecraftPhysicalSourceProfileTest {
     @Test
-    void campfireFreezesOneKilowattWithExplicitBlockedConvectionLoss() {
+    void campfireUsesEightKilowattsWithExplicitBlockedConvectionLoss() {
         MinecraftPhysicalSourceProfile profile =
                 MinecraftPhysicalSourceProfile.CAMPFIRE;
-        MinecraftPhysicalSourceProfile.Port[] ports = profile.ports();
 
-        assertEquals(1_000.0D, profile.ratedPowerW());
-        assertEquals(
-                MinecraftPhysicalSourceProfile.MissingPortPolicy.EXPLICIT_LOSS,
-                profile.missingPortPolicy());
-        assertEquals(2, ports.length);
-        assertEquals(0.8D, ports[0].powerShare());
-        assertEquals(MinecraftPhysicalSourceProfile.PortKind.AIR_FACE, ports[0].kind());
-        assertEquals(1, ports[0].offsetY());
-        assertEquals(ConservativeAirGeometry.Face.NEGATIVE_Y, ports[0].targetFace());
-        assertEquals(0.2D, ports[1].powerShare());
-        assertEquals(SourceChannel.RADIATION, ports[1].channel());
+        assertEquals(8_000.0D, profile.powerForLevel(1.0D));
+        assertEquals(2, profile.portCount());
+        assertEquals(0.8D, profile.port(0).powerShare());
+        assertEquals(MinecraftPhysicalSourceProfile.PortKind.AIR_FACE,
+                profile.port(0).kind());
+        assertEquals(1, profile.port(0).offsetY());
+        assertEquals(ConservativeAirGeometry.Face.NEGATIVE_Y,
+                profile.port(0).targetFace());
+        assertEquals(0.2D, profile.port(1).powerShare());
+        assertEquals(MinecraftPhysicalSourceProfile.PortKind.RADIATION_LOSS,
+                profile.port(1).kind());
+        assertEquals(1_600.0D, profile.radiativePowerW(8_000.0D));
     }
 
     @Test
-    void generatorScalesTenKilowattsPerThermalLevelAcrossThreeSinks() {
+    void generatorScalesTenKilowattsAcrossConvectionAndRadiation() {
         MinecraftPhysicalSourceProfile profile =
                 MinecraftPhysicalSourceProfile.GENERATOR;
-        MinecraftPhysicalSourceProfile.Port[] ports = profile.ports();
 
         assertEquals(20_000.0D, profile.powerForLevel(2.0D));
-        assertEquals(
-                MinecraftPhysicalSourceProfile.MissingPortPolicy.INTERNAL_HEAT,
-                profile.missingPortPolicy());
-        assertEquals(3, ports.length);
-        assertEquals(0.7D, ports[0].powerShare());
-        assertEquals(0.1D, ports[1].powerShare());
-        assertEquals(MinecraftPhysicalSourceProfile.PortKind.INTERNAL_HEAT, ports[1].kind());
-        assertEquals(0.2D, ports[2].powerShare());
-        assertEquals(MinecraftPhysicalSourceProfile.PortKind.DECLARED_LOSS, ports[2].kind());
+        assertEquals(2, profile.portCount());
+        assertEquals(0.8D, profile.port(0).powerShare());
+        assertEquals(0.2D, profile.port(1).powerShare());
+        assertEquals(MinecraftPhysicalSourceProfile.PortKind.RADIATION_LOSS,
+                profile.port(1).kind());
+    }
+
+    @Test
+    void fountainAndRadiatorUseOnlyPhysicalPowerPartitions() {
+        MinecraftPhysicalSourceProfile fountain =
+                MinecraftPhysicalSourceProfile.FOUNTAIN;
+        assertEquals(4_000.0D, fountain.powerForLevel(2.0D));
+        assertEquals(0.9D, fountain.port(0).powerShare());
+        assertEquals(0.1D, fountain.port(1).powerShare());
+
+        MinecraftPhysicalSourceProfile radiator =
+                MinecraftPhysicalSourceProfile.RADIATOR;
+        assertEquals(8_000.0D, radiator.powerForLevel(2.0D));
+        assertEquals(2, radiator.portCount());
+        assertEquals(0.9D, radiator.port(0).powerShare());
+        assertEquals(0.1D, radiator.port(1).powerShare());
+        assertEquals(MinecraftPhysicalSourceProfile.PortKind.RADIATION_LOSS,
+                radiator.port(1).kind());
     }
 
     @Test
@@ -61,10 +73,10 @@ class MinecraftPhysicalSourceProfileTest {
                 new MinecraftPhysicalSourceProfile(
                         3,
                         100.0D,
-                        MinecraftPhysicalSourceProfile.MissingPortPolicy.EXPLICIT_LOSS,
                         new MinecraftPhysicalSourceProfile.Port[]{
-                                MinecraftPhysicalSourceProfile.Port.declaredLoss(
-                                        0, SourceChannel.RADIATION, 0.5D)
-                        }));
+                                MinecraftPhysicalSourceProfile.Port.radiationLoss(
+                                        0, 0.5D)
+                        },
+                        0.5D, 0.5D, 0.5D, 1.0D));
     }
 }

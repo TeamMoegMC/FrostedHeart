@@ -30,7 +30,7 @@ import java.util.List;
 
 public class HeatingPadItem extends FHBaseItem {
 	public static final int BURN_TIME = 200;
-	public static final int HEAT_ADJUST = 20;
+	public static final float HEATING_POWER_W = 110.0F;
     public HeatingPadItem(Properties properties) {
         super(properties);
     }
@@ -89,19 +89,28 @@ public class HeatingPadItem extends FHBaseItem {
             @Override
             public void tickHeating(HeatingDeviceSlot slot, ItemStack stack, HeatingDeviceContext data) {
                 if (getState(stack) == 1) {
-                    data.addEffectiveTemperature(PlayerTemperatureData.BodyPart.TORSO, HEAT_ADJUST);
-                    stack.getTag().putInt("fuel", stack.getTag().getInt("fuel") + 1);
+                    double activeFraction = data.advanceHeatingTime(
+                            stack, getBurnTime(stack));
+                    if (!(activeFraction > 0.0D)) return;
+                    data.addPower(PlayerTemperatureData.BodyPart.TORSO,
+                            HEATING_POWER_W * activeFraction);
+                    int consumed = data.takeConsumedHeatingSeconds();
+                    if (consumed > 0) {
+                        stack.getTag().putInt("fuel", Math.min(
+                                BURN_TIME,
+                                stack.getTag().getInt("fuel") + consumed));
+                    }
                 }
             }
 
             @Override
-            public float getMaxTempAddValue(ItemStack stack) {
-                return getBurnTime(stack) > 0 ? HEAT_ADJUST : 0;
+            public float getMaxPowerW(ItemStack stack) {
+                return getState(stack) == 1 ? HEATING_POWER_W : 0;
             }
 
             @Override
-            public float getMinTempAddValue(ItemStack stack) {
-            	return getBurnTime(stack) > 0 ? HEAT_ADJUST : 0;
+            public float getMinPowerW(ItemStack stack) {
+                return getMaxPowerW(stack);
             }
         });
     }

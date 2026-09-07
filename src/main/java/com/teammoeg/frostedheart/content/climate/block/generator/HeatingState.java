@@ -28,9 +28,6 @@ public class HeatingState extends OwnerState {
     private boolean active;
     private float tempLevel;
     private float rangeLevel;
-    private float lastTempMod;
-    private float lastRadius;
-    private boolean initialized;
 
     public HeatingState() {
         super();
@@ -56,20 +53,6 @@ public class HeatingState extends OwnerState {
         active = nbt.getBoolean("active");
     }
 
-    /**
-     * Determines whether the heat radius or temperature modification has changed.
-     */
-    public boolean shouldUpdateAdjust() {
-        int radius = this.getRadius();
-        int tempMod = this.getTempMod();
-
-        boolean shouldUpdate = !initialized || lastRadius != radius || lastTempMod != tempMod;
-        lastRadius = radius;
-        lastTempMod = tempMod;
-        initialized = true;
-        return shouldUpdate;
-    }
-
     public float getTempLevel() {
         return tempLevel;
     }
@@ -86,14 +69,6 @@ public class HeatingState extends OwnerState {
         this.rangeLevel = rangeLevel;
     }
 
-
-    public boolean isInitialized() {
-        return initialized;
-    }
-
-    public void setInitialized(boolean initialized) {
-        this.initialized = initialized;
-    }
 
     public boolean isActive() {
         return active;

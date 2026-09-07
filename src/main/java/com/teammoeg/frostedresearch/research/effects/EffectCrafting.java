@@ -46,6 +46,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.item.crafting.Recipe;
+import net.minecraft.world.item.crafting.RecipeManager;
 import net.minecraft.world.level.ItemLike;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
@@ -60,11 +61,11 @@ public class EffectCrafting extends Effect {
                             CodecUtil.INGREDIENT_CODEC.fieldOf("item"),
                             Codec.list(ResourceLocation.CODEC).optionalFieldOf("recipes", Arrays.asList()),
                             o -> o.ingredient,
-                            o -> o.unlocks.stream().map(Recipe::getId).collect(Collectors.toList())
+                            o -> o.unlocks.stream().collect(Collectors.toList())
                     ),
                     Effect.BASE_CODEC.forGetter(Effect::getBaseData))
             .apply(t, EffectCrafting::new));
-    List<Recipe> unlocks = new ArrayList<>();
+    List<ResourceLocation> unlocks = new ArrayList<>();
     Ingredient ingredient = null;
 
     EffectCrafting() {
@@ -88,14 +89,14 @@ public class EffectCrafting extends Effect {
         unlocks.ifLeft(t -> {
             this.ingredient = t;
         });
-        unlocks.ifRight(o -> o.stream().map(CDistHelper.getRecipeManager()::byKey).filter(Optional::isPresent).map(Optional::get).forEach(this.unlocks::add));
+        unlocks.ifRight(o -> {this.unlocks=o;});
     }
 
     public EffectCrafting(ResourceLocation recipe) {
         super("@gui." + FRMain.MODID + ".effect.crafting", new ArrayList<>());
         Optional<? extends Recipe<?>> r = CDistHelper.getRecipeManager().byKey(recipe);
 
-        r.ifPresent(iRecipe -> unlocks.add(iRecipe));
+        r.ifPresent(iRecipe -> unlocks.add(recipe));
     }
 
     @Override
@@ -103,7 +104,7 @@ public class EffectCrafting extends Effect {
         if (ingredient != null && !ingredient.isEmpty())
             return "Craft " + ingredient.getItems()[0].getDisplayName().getString() + (ingredient.getItems().length > 1 ? " ..." : "");
         if (!unlocks.isEmpty())
-            return "Craft" + unlocks.get(0).getId() + (unlocks.size() > 1 ? " ..." : "");
+            return "Craft" + unlocks.get(0) + (unlocks.size() > 1 ? " ..." : "");
         return "Craft nothing";
     }
 
@@ -112,9 +113,10 @@ public class EffectCrafting extends Effect {
         if (ingredient != null)
             return CIcons.getIcon(CIcons.getIcon(ingredient), CIcons.getIcon(Items.CRAFTING_TABLE));
         Set<ItemStack> stacks = new HashSet<>();
-        for (Recipe<?> r : unlocks) {
-            if (!RecipeUtil.getResultItem(r).isEmpty()) {
-                stacks.add(RecipeUtil.getResultItem(r));
+        for (ResourceLocation r : unlocks) {
+        	ItemStack ret=CDistHelper.getRecipeManager().byKey(r).map(RecipeUtil::getResultItem).orElse(ItemStack.EMPTY);
+            if (!ret.isEmpty()) {
+                stacks.add(ret);
             }
         }
         if (!stacks.isEmpty())
@@ -135,9 +137,10 @@ public class EffectCrafting extends Effect {
             tooltip.add(CMath.selectElementByTime(ingredient.getItems()).getHoverName());
         else {
             Set<ItemStack> stacks = new HashSet<>();
-            for (Recipe<?> r : unlocks) {
-                if (!RecipeUtil.getResultItem(r).isEmpty()) {
-                    stacks.add(RecipeUtil.getResultItem(r));
+            for (ResourceLocation r : unlocks) {
+            	ItemStack ret=CDistHelper.getRecipeManager().byKey(r).map(RecipeUtil::getResultItem).orElse(ItemStack.EMPTY);
+                if (!ret.isEmpty()) {
+                    stacks.add(ret);
                 }
             }
             if (stacks.isEmpty())
@@ -153,7 +156,8 @@ public class EffectCrafting extends Effect {
 
     @Override
     public boolean grant(TeamDataHolder team, TeamResearchData trd, Player triggerPlayer, boolean isload) {
-        trd.getUnlockList(ResearchHooks.RECIPE_UNLOCK_LIST).addAll(unlocks);
+    	RecipeManager rm=CDistHelper.getRecipeManager();
+        trd.getUnlockList(ResearchHooks.RECIPE_UNLOCK_LIST).addAll(unlocks.stream().map(rm::byKey).filter(t->t.isPresent()).map(t->t.get()).collect(Collectors.toList()));
         return true;
     }
 
@@ -161,7 +165,8 @@ public class EffectCrafting extends Effect {
     public void init() {
         if (ingredient != null)
             initItem();
-        ResearchHooks.getLockList(ResearchHooks.RECIPE_UNLOCK_LIST).addAll(unlocks);
+        RecipeManager rm=CDistHelper.getRecipeManager();
+        ResearchHooks.getLockList(ResearchHooks.RECIPE_UNLOCK_LIST).addAll(unlocks.stream().map(rm::byKey).filter(t->t.isPresent()).map(t->t.get()).collect(Collectors.toList()));
     }
 
     private void initItem() {
@@ -172,7 +177,7 @@ public class EffectCrafting extends Effect {
                 LogUtils.getLogger().debug("Error null recipe " + r);
             }
             if (ingredient.test(result)) {
-                unlocks.add(r);
+                unlocks.add(r.getId());
             }
         }
     }
@@ -191,14 +196,14 @@ public class EffectCrafting extends Effect {
         if (ingredient != null) {
             initItem();
         } else {
-            unlocks.replaceAll(o -> CDistHelper.getRecipeManager().byKey(o.getId()).orElse(null));
             unlocks.removeIf(Objects::isNull);
         }
     }
 
     @Override
     public void revoke(TeamResearchData team) {
-        team.getUnlockList(ResearchHooks.RECIPE_UNLOCK_LIST).removeAll(unlocks);
+        RecipeManager rm=CDistHelper.getRecipeManager();
+        team.getUnlockList(ResearchHooks.RECIPE_UNLOCK_LIST).removeAll(unlocks.stream().map(rm::byKey).filter(t->t.isPresent()).map(t->t.get()).collect(Collectors.toList()));
     }
 
     public void setList(Collection<String> ls) {
@@ -206,11 +211,11 @@ public class EffectCrafting extends Effect {
         for (String s : ls) {
             Optional<? extends Recipe<?>> r = CDistHelper.getRecipeManager().byKey(new ResourceLocation(s));
 
-            r.ifPresent(iRecipe -> unlocks.add(iRecipe));
+            r.ifPresent(iRecipe -> unlocks.add(new ResourceLocation(s)));
         }
     }
 
-    public List<Recipe> getUnlocks() {
+    public List<ResourceLocation> getUnlocks() {
         return unlocks;
     }
 

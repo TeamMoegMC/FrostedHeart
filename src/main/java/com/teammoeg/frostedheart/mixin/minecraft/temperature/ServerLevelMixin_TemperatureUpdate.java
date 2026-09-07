@@ -27,8 +27,8 @@ import com.teammoeg.frostedheart.content.climate.WorldTemperature;
 import com.teammoeg.frostedheart.content.climate.block.LayeredThinIceBlock;
 import com.teammoeg.frostedheart.content.climate.data.PlantTempData;
 import com.teammoeg.frostedheart.content.climate.data.StateTransitionData;
-import com.teammoeg.frostedheart.content.climate.gamedata.chunkheat.ChunkHeatData;
 import com.teammoeg.frostedheart.content.climate.gamedata.climate.WorldClimate;
+import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.MinecraftThermalInput;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import net.minecraft.core.*;
 import net.minecraft.core.particles.ParticleTypes;
@@ -81,8 +81,6 @@ public abstract class ServerLevelMixin_TemperatureUpdate
         ServerLevel level = (ServerLevel) (Object) this;
         final long now = level.getGameTime();
         ChunkPos chunkpos = pChunk.getPos();
-        ChunkHeatData chunkHeatData = ChunkHeatData.get(level, chunkpos.x, chunkpos.z);
-
         // ConfigValue.get() 为 spec 值表查询：同一 tick 内配置恒定，hoist 到局部变量
         int tempBlockstateUpdateIntervalTicks = FHConfig.SERVER.CLIMATE.tempBlockstateUpdateIntervalTicks.get();
 
@@ -133,7 +131,7 @@ public abstract class ServerLevelMixin_TemperatureUpdate
                     && level.isAreaLoaded(blockpos2, 1)) // Forge: check area to avoid loading neighbors in unloaded chunks
             {
                 // Check if the block should freeze based on our custom logic
-                frostedheart$freezeWater(level, blockpos2, chunkHeatData, climateBase);
+                frostedheart$freezeWater(level, blockpos2, climateBase);
             }
 
             if (isRaining)
@@ -204,7 +202,7 @@ public abstract class ServerLevelMixin_TemperatureUpdate
                         if (std != null && std.willTransit())
                         {
                             handled = frostedHeart$updateBlockBasedOnTemperature(
-                                    pChunk, level, blockpos3, blockstate2, std, chunkHeatData, climateBase);
+                                    pChunk, level, blockpos3, blockstate2, std, climateBase);
                         }
 
                         // Fast gate custom plant temperature logic:
@@ -215,7 +213,7 @@ public abstract class ServerLevelMixin_TemperatureUpdate
                             if (plantData != null)
                             {
                                 handled = frostedHeart$updatePlantBasedOnTemperature(
-                                        level, blockpos3, blockstate2, plantData, chunkHeatData, climateBase);
+                                        level, blockpos3, plantData, climateBase);
                             }
                         }
 
@@ -276,14 +274,22 @@ public abstract class ServerLevelMixin_TemperatureUpdate
      * And it freeze water based on its level, so it turns into various thin ice.
      */
     @Unique
-    private boolean frostedheart$freezeWater(ServerLevel level, BlockPos pos,ChunkHeatData chunkHeatData, float climateBase)
+    private boolean frostedheart$freezeWater(
+            ServerLevel level,
+            BlockPos pos,
+            float climateBase
+    )
     {
 
 
 
         if (pos.getY() >= level.getMinBuildHeight()
                 && pos.getY() < level.getMaxBuildHeight()
-                && WorldTemperature.blockWithHeatData(level, pos, chunkHeatData, climateBase) < WorldTemperature.WATER_FREEZES)
+                && MinecraftThermalInput.gameplayCropEnvironment(
+                        level,
+                        pos,
+                        WorldTemperature.naturalBlock(level, pos, climateBase))
+                        < WorldTemperature.WATER_FREEZES)
         {
             BlockState blockstate = level.getBlockState(pos);
             FluidState fluidstate = blockstate.getFluidState();
@@ -350,11 +356,17 @@ public abstract class ServerLevelMixin_TemperatureUpdate
 
     // Plants should go separately
     @Unique
-    private boolean frostedHeart$updatePlantBasedOnTemperature(ServerLevel level, BlockPos pos,
-                                                               BlockState currentState,
-                                                               PlantTempData selfData,ChunkHeatData chunkHeatData,float climateBase)
+    private boolean frostedHeart$updatePlantBasedOnTemperature(
+            ServerLevel level,
+            BlockPos pos,
+            PlantTempData selfData,
+            float climateBase
+    )
     {
-        float t = WorldTemperature.blockWithHeatData(level, pos, chunkHeatData,climateBase);
+        float t = (float) MinecraftThermalInput.gameplayCropEnvironment(
+                level,
+                pos,
+                WorldTemperature.naturalBlock(level, pos, climateBase));
         var selfStatus = WorldTemperature.checkPlantStatus(level, pos, selfData, t);
         int heatCapacity = selfData.heatCapacity();
         if (selfStatus.willDie() && heatCapacity > 0 && level.getRandom().nextInt(heatCapacity) == 0)
@@ -379,10 +391,9 @@ public abstract class ServerLevelMixin_TemperatureUpdate
     @Unique
     private boolean frostedHeart$updateBlockBasedOnTemperature(LevelChunk pChunk, ServerLevel level,
                                                                BlockPos pos, final BlockState currentState,
-                                                               StateTransitionData std,ChunkHeatData chunkHeatData,float climateBase)
+                                                               StateTransitionData std,
+                                                               float climateBase)
     {
-        ChunkHeatData.HeatQueryResult heatQuery = ChunkHeatData.queryAdjust(chunkHeatData, pos);
-
         // 每方块随机刻尝试均会执行本方法：ambientBlockStateUpdateDivisor 同一 tick 内恒定，hoist 到开头
         int ambientBlockStateUpdateDivisor = FHConfig.SERVER.CLIMATE.ambientBlockStateUpdateDivisor.get();
 
@@ -403,22 +414,31 @@ public abstract class ServerLevelMixin_TemperatureUpdate
             }
         }
 
-        float t = WorldTemperature.blockWithHeatQuery(level, pos, heatQuery,climateBase);
+        float t = (float) MinecraftThermalInput.gameplayCropEnvironment(
+                level,
+                pos,
+                WorldTemperature.naturalBlock(level, pos, climateBase));
 
         // Determine the target state based on temperature thresholds
         // We check transitions in order of priority (solid->gas, gas->solid, etc.)
         final PhysicalState sourceState = std.state();
         PhysicalState targetState = sourceState; // Default to current state
         BlockState targetBlock = currentState;   // Default to current block
+        boolean thermalOwnsHeating = MinecraftThermalInput.ownsGameplayHeatingTransition(
+                level, pos, currentState, std);
 
         switch (sourceState)
         {
             case SOLID:
             {
+                if (thermalOwnsHeating)
+                {
+                    break;
+                }
                 // To save performance, we only focus on blocks that player cares more about,
                 // otherwise we reduce transition rate
                 boolean shouldDoAdjust = level.random.nextInt(ambientBlockStateUpdateDivisor) == 0
-                        || heatQuery.hasActiveAdjust();
+                        || MinecraftThermalInput.hasGameplayAnalyticFieldAt(level, pos);
 
                 if (!shouldDoAdjust)
                 {
@@ -443,10 +463,14 @@ public abstract class ServerLevelMixin_TemperatureUpdate
                     targetState = PhysicalState.SOLID;
                     targetBlock = std.solid();
                 }
+                else if (thermalOwnsHeating)
+                {
+                    break;
+                }
                 else
                 {
                     boolean shouldDoAdjust = level.random.nextInt(ambientBlockStateUpdateDivisor) == 0
-                            || heatQuery.hasActiveAdjust();
+                            || MinecraftThermalInput.hasGameplayAnalyticFieldAt(level, pos);
 
                     if (!shouldDoAdjust)
                     {

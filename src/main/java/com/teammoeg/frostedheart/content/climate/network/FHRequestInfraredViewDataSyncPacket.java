@@ -6,85 +6,83 @@
  * Frosted Heart is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, version 3.
- *
- * Frosted Heart is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
- *
  */
-
 package com.teammoeg.frostedheart.content.climate.network;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.function.Supplier;
 
 import com.teammoeg.chorda.network.CMessage;
 import com.teammoeg.frostedheart.FHNetwork;
-import com.teammoeg.frostedheart.content.climate.gamedata.chunkheat.ChunkHeatData;
-import com.teammoeg.frostedheart.content.climate.gamedata.chunkheat.IHeatArea;
+import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.MinecraftThermalInput;
 
-import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.world.level.ChunkPos;
-import net.minecraft.world.level.LevelReader;
 import net.minecraftforge.network.NetworkEvent;
 
+import java.util.function.Supplier;
 
-public class FHRequestInfraredViewDataSyncPacket implements CMessage {
-    private final ChunkPos chunkPos;
-    private final int chunkRadius;
+public final class FHRequestInfraredViewDataSyncPacket implements CMessage {
+    public static final int PRESENCE_WORDS = 12;
 
-    public FHRequestInfraredViewDataSyncPacket(ChunkPos chunkPos, int chunkRadius) {
-        this.chunkPos = chunkPos;
-        this.chunkRadius = chunkRadius;
+    private final int requestId;
+    private final boolean forceFull;
+    private final int lastInfraredEpoch;
+    private final long[] knownPresence;
+
+    public FHRequestInfraredViewDataSyncPacket(
+            int requestId,
+            boolean forceFull,
+            int lastInfraredEpoch,
+            long[] knownPresence
+    ) {
+        if (requestId < 0 || lastInfraredEpoch < 0
+                || knownPresence == null
+                || knownPresence.length != PRESENCE_WORDS) {
+            throw new IllegalArgumentException("invalid infrared request");
+        }
+        this.requestId = requestId;
+        this.forceFull = forceFull;
+        this.lastInfraredEpoch = lastInfraredEpoch;
+        this.knownPresence = knownPresence.clone();
     }
 
     public FHRequestInfraredViewDataSyncPacket(FriendlyByteBuf buffer) {
-        this.chunkPos = new ChunkPos(buffer.readVarLong());
-        this.chunkRadius = buffer.readVarInt();
+        requestId = buffer.readVarInt();
+        forceFull = buffer.readBoolean();
+        lastInfraredEpoch = buffer.readVarInt();
+        knownPresence = new long[PRESENCE_WORDS];
+        for (int index = 0; index < PRESENCE_WORDS; index++) {
+            knownPresence[index] = buffer.readLong();
+        }
     }
 
     @Override
     public void encode(FriendlyByteBuf buffer) {
-        buffer.writeVarLong(chunkPos.toLong());
-        buffer.writeVarInt(chunkRadius);
+        buffer.writeVarInt(requestId);
+        buffer.writeBoolean(forceFull);
+        buffer.writeVarInt(lastInfraredEpoch);
+        for (long word : knownPresence) {
+            buffer.writeLong(word);
+        }
     }
 
     @Override
     public void handle(Supplier<NetworkEvent.Context> context) {
         context.get().enqueueWork(() -> {
             var player = context.get().getSender();
-            if (player != null) {
-                if (!player.level().getChunkSource().hasChunk(chunkPos.x, chunkPos.z) || chunkRadius > 10) {
-                    // to avoid potential abuse / attacking from client
-                    // make sure the chunk is loaded and the radius is not too large
-                    return;
-                }
-                var heatAreas = new HashMap<BlockPos, IHeatArea>();
-                for (int chunkOffsetX = -chunkRadius; chunkOffsetX <= chunkRadius; chunkOffsetX++) {
-                    for (int chunkOffsetZ = -chunkRadius; chunkOffsetZ <= chunkRadius; chunkOffsetZ++) {
-                        for (var heatArea : getChunkAdjust(player.level(),
-                                new ChunkPos(chunkPos.x + chunkOffsetX, chunkPos.z + chunkOffsetZ))) {
-                            heatAreas.put(heatArea.getCenter(), heatArea);
-                        }
-                    }
-                }
-                var heatAreaList = new ArrayList<>(heatAreas.values());
-
-                FHNetwork.INSTANCE.sendPlayer(player, new FHResponseInfraredViewDataSyncPacket(chunkPos, heatAreaList));
+            if (player == null) {
+                return;
+            }
+            MinecraftThermalInput.InfraredSnapshot snapshot =
+                    MinecraftThermalInput.gameplayInfraredSnapshot(
+                            player,
+                            forceFull,
+                            lastInfraredEpoch,
+                            knownPresence);
+            if (snapshot != null) {
+                FHNetwork.INSTANCE.sendPlayer(
+                        player,
+                        new FHResponseInfraredViewDataSyncPacket(
+                                requestId, snapshot));
             }
         });
         context.get().setPacketHandled(true);
-    }
-
-    public static Collection<IHeatArea> getChunkAdjust(LevelReader world, ChunkPos chunkPos) {
-        return new ArrayList<>(ChunkHeatData.get(world, chunkPos).map(ChunkHeatData::getAdjusters).orElseGet(Arrays::asList));
     }
 }

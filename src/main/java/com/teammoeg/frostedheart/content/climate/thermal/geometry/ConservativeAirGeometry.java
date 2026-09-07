@@ -34,17 +34,26 @@ public final class ConservativeAirGeometry {
         NEGATIVE_Y,
         POSITIVE_Y,
         NEGATIVE_Z,
-        POSITIVE_Z
+        POSITIVE_Z;
+
+        public static final int COUNT = 6;
+
+        public static Face fromOrdinal(int ordinal) {
+            return switch (ordinal) {
+                case 0 -> NEGATIVE_X;
+                case 1 -> POSITIVE_X;
+                case 2 -> NEGATIVE_Y;
+                case 3 -> POSITIVE_Y;
+                case 4 -> NEGATIVE_Z;
+                case 5 -> POSITIVE_Z;
+                default -> throw new IllegalArgumentException("face ordinal is out of bounds");
+            };
+        }
     }
 
     public enum Status {
         RESOLVED,
         CONSERVATIVE_UNSUPPORTED
-    }
-
-    public enum UnsupportedReason {
-        NONE,
-        REGION_LIMIT_EXCEEDED
     }
 
     /** Axis-aligned blocker in block-local coordinates, inclusive of 0 and 1. */
@@ -80,7 +89,6 @@ public final class ConservativeAirGeometry {
     public record AirComponent(
             int id,
             long microcellMask,
-            int microcellCount,
             int negativeXMask,
             int positiveXMask,
             int negativeYMask,
@@ -92,8 +100,8 @@ public final class ConservativeAirGeometry {
             if (id < 0) {
                 throw new IllegalArgumentException("component id must be non-negative");
             }
-            if (microcellCount <= 0 || microcellCount != Long.bitCount(microcellMask)) {
-                throw new IllegalArgumentException("microcell count must match a non-empty mask");
+            if (microcellMask == 0L) {
+                throw new IllegalArgumentException("component mask must be non-empty");
             }
             requireFaceMask("negativeXMask", negativeXMask);
             requireFaceMask("positiveXMask", positiveXMask);
@@ -117,62 +125,28 @@ public final class ConservativeAirGeometry {
             };
         }
 
-        public double provenAirVolume() {
-            return microcellCount / (double) MICROCELL_COUNT;
-        }
-
-        public boolean contains(int x, int y, int z) {
-            return (microcellMask & bit(x, y, z)) != 0L;
-        }
     }
 
     public record Resolution(
             Status status,
-            UnsupportedReason unsupportedReason,
-            List<AirComponent> components,
-            long blockedMicrocellMask,
-            int observedRegionCount
+            List<AirComponent> components
     ) {
         public Resolution {
-            if (status == null || unsupportedReason == null || components == null) {
+            if (status == null || components == null) {
                 throw new IllegalArgumentException("resolution fields are required");
             }
             components = List.copyOf(components);
-            if (observedRegionCount < 0) {
-                throw new IllegalArgumentException("observedRegionCount must be non-negative");
+            if (status == Status.CONSERVATIVE_UNSUPPORTED
+                    && !components.isEmpty()) {
+                throw new IllegalArgumentException(
+                        "unsupported geometry cannot expose components");
             }
-            if (status == Status.RESOLVED) {
-                if (unsupportedReason != UnsupportedReason.NONE
-                        || observedRegionCount != components.size()) {
-                    throw new IllegalArgumentException("resolved geometry must expose every component");
-                }
-            } else if (unsupportedReason == UnsupportedReason.NONE || !components.isEmpty()) {
-                throw new IllegalArgumentException("unsupported geometry must expose a reason and no components");
-            }
-        }
-
-        public int componentAt(int x, int y, int z) {
-            long target = bit(x, y, z);
-            for (AirComponent component : components) {
-                if ((component.microcellMask() & target) != 0L) {
-                    return component.id();
-                }
-            }
-            return -1;
-        }
-
-        public int combinedFaceMask(Face face) {
-            int mask = 0;
-            for (AirComponent component : components) {
-                mask |= component.faceMask(face);
-            }
-            return mask;
         }
 
         public long provenAirMicrocellMask() {
             long mask = 0L;
-            for (AirComponent component : components) {
-                mask |= component.microcellMask();
+            for (int index = 0, size = components.size(); index < size; index++) {
+                mask |= components.get(index).microcellMask();
             }
             return mask;
         }
@@ -185,7 +159,8 @@ public final class ConservativeAirGeometry {
         if (maximumRegions <= 0) {
             throw new IllegalArgumentException("maximumRegions must be positive");
         }
-        for (UnitBox blocker : blockers) {
+        for (int index = 0, size = blockers.size(); index < size; index++) {
+            UnitBox blocker = blockers.get(index);
             if (blocker == null) {
                 throw new IllegalArgumentException("blockers must not contain null");
             }
@@ -206,10 +181,7 @@ public final class ConservativeAirGeometry {
         if (componentMasks.size() > maximumRegions) {
             return new Resolution(
                     Status.CONSERVATIVE_UNSUPPORTED,
-                    UnsupportedReason.REGION_LIMIT_EXCEEDED,
-                    List.of(),
-                    blockedMask,
-                    componentMasks.size()
+                    List.of()
             );
         }
 
@@ -219,10 +191,7 @@ public final class ConservativeAirGeometry {
         }
         return new Resolution(
                 Status.RESOLVED,
-                UnsupportedReason.NONE,
-                components,
-                blockedMask,
-                components.size()
+                components
         );
     }
 
@@ -320,7 +289,6 @@ public final class ConservativeAirGeometry {
         return new AirComponent(
                 id,
                 mask,
-                Long.bitCount(mask),
                 negativeX,
                 positiveX,
                 negativeY,
@@ -337,7 +305,8 @@ public final class ConservativeAirGeometry {
         double maxX = minX + MICROCELL_SIZE;
         double maxY = minY + MICROCELL_SIZE;
         double maxZ = minZ + MICROCELL_SIZE;
-        for (UnitBox blocker : blockers) {
+        for (int index = 0, size = blockers.size(); index < size; index++) {
+            UnitBox blocker = blockers.get(index);
             if (blocker.maxX() > minX && blocker.minX() < maxX
                     && blocker.maxY() > minY && blocker.minY() < maxY
                     && blocker.maxZ() > minZ && blocker.minZ() < maxZ) {

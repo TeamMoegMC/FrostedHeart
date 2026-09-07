@@ -14,7 +14,6 @@
   "message.frostedheart.freight_route_card.endpoint_unavailable": "所选端点当前未加载或已经失效。",
   "message.frostedheart.freight_route_card.connected": "货运连接已建立。",
   "message.frostedheart.freight_route_card.disconnected": "货运连接已解除。",
-  "message.frostedheart.freight_route_card.stale_connection": "该路线牌对应的连接已被替换或解除。",
   "message.frostedheart.freight_route_card.selection_cleared": "已清除货运端点选择。",
   "message.frostedheart.freight_route_card.insufficient_capacity": "城镇运力不足，无法建立该连接。",
   "message.frostedheart.freight_route_card.cross_dimension": "货运终端必须位于同一维度。",

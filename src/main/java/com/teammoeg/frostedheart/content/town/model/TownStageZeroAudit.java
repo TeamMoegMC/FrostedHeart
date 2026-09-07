@@ -1232,7 +1232,7 @@ public final class TownStageZeroAudit {
                     projectRoot.resolve("src/main/java/com/teammoeg/frostedheart/content/town/resource/TownFoodResourceAmount.java"),
                     projectRoot.resolve("src/main/java/com/teammoeg/frostedheart/content/climate/block/generator/GeneratorFuelModel.java"),
                     projectRoot.resolve("src/main/java/com/teammoeg/frostedheart/content/climate/block/generator/GeneratorHeatFieldModel.java"),
-                    projectRoot.resolve("src/main/java/com/teammoeg/frostedheart/content/climate/gamedata/chunkheat/SphericalHeatFieldModel.java"),
+                    projectRoot.resolve("src/main/java/com/teammoeg/frostedheart/content/climate/thermal/field/SphericalHeatFieldModel.java"),
                     projectRoot.resolve("src/main/java/com/teammoeg/frostedheart/content/climate/block/generator/GeneratorData.java"),
                     projectRoot.resolve("src/main/java/com/teammoeg/frostedheart/content/climate/event/ClimateCommonEvents.java"),
                     projectRoot.resolve("src/main/java/com/teammoeg/frostedheart/content/climate/gamedata/climate/ClimateEventModel.java"),

@@ -41,70 +41,30 @@ public final class BuoyancyConductance {
         NUMERIC_DEGRADED
     }
 
-    public record Result(Status status, double factor, double conductanceWPerK) {
-        public boolean applied() {
-            return status == Status.APPLIED;
-        }
-    }
-
     /** Caller-owned result for allocation-free pair traversal. */
     public static final class MutableResult {
         private Status status = Status.NUMERIC_DEGRADED;
-        private double factor = Double.NaN;
         private double conductanceWPerK = Double.NaN;
-
-        public Status status() {
-            return status;
-        }
 
         public boolean applied() {
             return status == Status.APPLIED;
-        }
-
-        public double factor() {
-            return factor;
         }
 
         public double conductanceWPerK() {
             return conductanceWPerK;
         }
 
-        private void set(Status nextStatus, double nextFactor, double nextConductance) {
+        private void set(Status nextStatus, double nextConductance) {
             status = nextStatus;
-            factor = nextFactor;
             conductanceWPerK = nextConductance;
         }
 
-        private Result snapshot() {
-            return new Result(status, factor, conductanceWPerK);
-        }
     }
 
     /**
      * Evaluates from physical lower/upper positions, so swapping A and B does
      * not change the result. Equal-height pairs receive the clamped neutral factor.
      */
-    public static Result evaluate(
-            double baseConductanceWPerK,
-            double temperatureAC,
-            double centerYA,
-            double temperatureBC,
-            double centerYB,
-            Parameters parameters
-    ) {
-        MutableResult result = new MutableResult();
-        evaluateInto(
-                baseConductanceWPerK,
-                temperatureAC,
-                centerYA,
-                temperatureBC,
-                centerYB,
-                parameters,
-                result
-        );
-        return result.snapshot();
-    }
-
     public static Status evaluateInto(
             double baseConductanceWPerK,
             double temperatureAC,
@@ -121,7 +81,7 @@ public final class BuoyancyConductance {
                 || !Double.isFinite(centerYA)
                 || !Double.isFinite(temperatureBC)
                 || !Double.isFinite(centerYB)) {
-            result.set(Status.NUMERIC_DEGRADED, Double.NaN, Double.NaN);
+            result.set(Status.NUMERIC_DEGRADED, Double.NaN);
             return Status.NUMERIC_DEGRADED;
         }
 
@@ -140,10 +100,10 @@ public final class BuoyancyConductance {
         );
         double conductance = baseConductanceWPerK * factor;
         if (!Double.isFinite(factor) || !nonNegativeFinite(conductance)) {
-            result.set(Status.NUMERIC_DEGRADED, Double.NaN, Double.NaN);
+            result.set(Status.NUMERIC_DEGRADED, Double.NaN);
             return Status.NUMERIC_DEGRADED;
         }
-        result.set(Status.APPLIED, factor, conductance);
+        result.set(Status.APPLIED, conductance);
         return Status.APPLIED;
     }
 

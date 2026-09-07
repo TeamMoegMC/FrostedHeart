@@ -11,7 +11,6 @@
   "message.frostedheart.freight_route_card.endpoint_unavailable": "The selected endpoint is not currently loaded or is no longer valid.",
   "message.frostedheart.freight_route_card.connected": "Freight connection established.",
   "message.frostedheart.freight_route_card.disconnected": "Freight connection removed.",
-  "message.frostedheart.freight_route_card.stale_connection": "This route card's connection has already been replaced or removed.",
   "message.frostedheart.freight_route_card.selection_cleared": "Freight endpoint selection cleared.",
   "message.frostedheart.freight_route_card.insufficient_capacity": "The town does not have enough transport capacity for this connection.",
   "message.frostedheart.freight_route_card.cross_dimension": "Freight terminals must be in the same dimension.",

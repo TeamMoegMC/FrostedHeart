@@ -19,10 +19,8 @@
 
 package com.teammoeg.frostedheart.bootstrap.common;
 
-import com.teammoeg.chorda.capability.types.codec.CodecCapabilityType;
 import com.teammoeg.chorda.capability.types.nbt.NBTCapabilityType;
 import com.teammoeg.chorda.capability.types.nonpresistent.TransientCapability;
-import com.teammoeg.frostedheart.content.climate.gamedata.chunkheat.ChunkHeatData;
 import com.teammoeg.frostedheart.content.climate.gamedata.climate.WorldClimate;
 import com.teammoeg.frostedheart.content.climate.player.BodyHeatingCapability;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData;
@@ -52,7 +50,6 @@ public class FHCapabilities {
 	public static final NBTCapabilityType<ScenarioConductor> SCENARIO=register(ScenarioConductor.class);
 	public static final NBTCapabilityType<PlayerTradeData> TRADE_PLAYER=register(PlayerTradeData.class);
 	
-	public static final CodecCapabilityType<ChunkHeatData> CHUNK_HEAT=register(ChunkHeatData.class,ChunkHeatData.CODEC);
 	public static final NBTCapabilityType<HeatEndpoint> HEAT_EP=register(HeatEndpoint.class);
 	public static final TransientCapability<HeatStorageCapability> ITEM_HEAT=registerTransient(HeatStorageCapability.class);
 	public static final TransientCapability<LogisticNetwork> LOGISTIC=registerTransient(LogisticNetwork.class);

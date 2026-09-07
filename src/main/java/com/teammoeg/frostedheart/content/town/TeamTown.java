@@ -836,6 +836,13 @@ public class TeamTown implements ITown, ITownWithResidents, ITownWithBuildings {
                 connectionId, Set.of(connectionId), 0.0);
     }
 
+    public Optional<UUID> getP2PConnectionIdBetween(
+            P2PTerminalEndpoint first,
+            P2PTerminalEndpoint second
+    ) {
+        return data.getP2PBindingState().connectionIdBetween(first, second);
+    }
+
     public P2PBindingResult setP2PTransportRate(GlobalPos sender, int rateItemsPerSecond) {
         Optional<TransportConsumerParameters> parametersResult = currentTransportParameters();
         if (sender == null || parametersResult.isEmpty()) {

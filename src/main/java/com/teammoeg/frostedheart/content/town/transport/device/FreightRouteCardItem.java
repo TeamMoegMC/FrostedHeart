@@ -10,7 +10,6 @@ import com.teammoeg.chorda.dataholders.team.CTeamDataManager;
 import com.teammoeg.chorda.dataholders.team.TeamDataHolder;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.town.TeamTown;
-import com.teammoeg.frostedheart.content.town.provider.TeamTownProvider;
 import com.teammoeg.frostedheart.content.town.transport.P2PBindingDecision;
 import com.teammoeg.frostedheart.content.town.transport.P2PBindingResult;
 import com.teammoeg.frostedheart.content.town.transport.P2PRouteCardState;
@@ -36,6 +35,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 /** Player-held two-endpoint pairing tool. Stored facts are hints, never connection authority. */
 public final class FreightRouteCardItem extends Item {
@@ -59,7 +59,7 @@ public final class FreightRouteCardItem extends Item {
         if (blockEntity instanceof P2PTerminalBlockEntity terminal) {
             return useOnTerminal(player, context.getItemInHand(), terminal);
         }
-        clearOrUnbind(player, context.getItemInHand());
+        clearSelection(player, context.getItemInHand());
         return InteractionResult.CONSUME;
     }
 
@@ -71,7 +71,7 @@ public final class FreightRouteCardItem extends Item {
     ) {
         ItemStack stack = player.getItemInHand(hand);
         if (!level.isClientSide && player instanceof ServerPlayer serverPlayer) {
-            clearOrUnbind(serverPlayer, stack);
+            clearSelection(serverPlayer, stack);
         }
         return InteractionResultHolder.sidedSuccess(stack, level.isClientSide);
     }
@@ -129,12 +129,27 @@ public final class FreightRouteCardItem extends Item {
             return InteractionResult.CONSUME;
         }
 
+        P2PTerminalEndpoint firstEndpoint = first.get().endpointFact();
+        P2PTerminalEndpoint secondEndpoint = clicked.endpointFact();
+        Optional<UUID> existingConnection =
+                town.getP2PConnectionIdBetween(firstEndpoint, secondEndpoint);
+        if (existingConnection.isPresent()) {
+            P2PBindingResult result = town.unbindP2PConnection(
+                    existingConnection.orElseThrow());
+            if (result.decision() == P2PBindingDecision.ACCEPTED) {
+                setState(stack, P2PRouteCardState.EMPTY);
+                feedback(player, "message.frostedheart.freight_route_card.disconnected");
+            } else {
+                feedback(player, decisionMessage(result.decision()));
+            }
+            return InteractionResult.CONSUME;
+        }
+
         P2PBindingResult result = town.bindOrRebindP2PTerminals(
-                first.get().endpointFact(), clicked.endpointFact(),
+                firstEndpoint, secondEndpoint,
                 first.get().isRedstonePowered(), clicked.isRedstonePowered());
         if (result.decision() == P2PBindingDecision.ACCEPTED) {
-            setState(stack, P2PRouteCardState.connected(
-                    result.connectionId().orElseThrow()));
+            setState(stack, P2PRouteCardState.EMPTY);
             feedback(player, "message.frostedheart.freight_route_card.connected");
         } else {
             feedback(player, decisionMessage(result.decision()));
@@ -155,23 +170,10 @@ public final class FreightRouteCardItem extends Item {
                 ? Optional.of(terminal) : Optional.empty();
     }
 
-    private static void clearOrUnbind(ServerPlayer player, ItemStack stack) {
+    private static void clearSelection(ServerPlayer player, ItemStack stack) {
         P2PRouteCardState state = getState(stack);
-        if (state.connectionId().isPresent()) {
-            TeamDataHolder holder = CTeamDataManager.get(player);
-            TeamTown town = holder == null ? null
-                    : new TeamTownProvider(holder.getId()).getTown();
-            P2PBindingDecision decision = town == null
-                    ? P2PBindingDecision.INVALID_ENDPOINT
-                    : town.unbindP2PConnection(state.connectionId().orElseThrow()).decision();
-            feedback(player, decision == P2PBindingDecision.ACCEPTED
-                    ? "message.frostedheart.freight_route_card.disconnected"
-                    : "message.frostedheart.freight_route_card.stale_connection");
-            setState(stack, P2PRouteCardState.EMPTY);
-            return;
-        }
+        setState(stack, P2PRouteCardState.EMPTY);
         if (state.selectedEndpoint().isPresent()) {
-            setState(stack, P2PRouteCardState.EMPTY);
             feedback(player, "message.frostedheart.freight_route_card.selection_cleared");
         }
     }

@@ -5,61 +5,44 @@
 | Document | Scope | Status |
 |---|---|---|
 | [world-climate-and-temperature.md](world-climate-and-temperature.md) | 逻辑气候时钟、事件轨道、世界/空气/方块温度公式、局部热区 | Current |
-| [weather-rendering.md](weather-rendering.md) | 暴风雪与白幕的空间状态、每玩家天气同步、降水/雾/粒子/声音渲染及优化边界 | Current |
-| [player-temperature.md](player-temperature.md) | 周围环境采样、玩家分部位体温、衣物、设备、食物、效果与同步 | Current |
-| [heat-production-and-network.md](heat-production-and-network.md) | 能量塔、热网、散热器、蒸汽喷泉及现有 heat/power 语义 | Current |
-| [data-lifecycle-and-integration.md](data-lifecycle-and-integration.md) | 数据入口、能力、持久化、网络、配置、命令、消费者与验证 | Current |
+| [thermal-runtime-architecture-and-optimization.md](thermal-runtime-architecture-and-optimization.md) | 新 thermal runtime 的所有权、Page/arena/topology/source/solver/publication 生命周期、复杂度与优化边界 | Current |
+| [weather-rendering.md](weather-rendering.md) | 暴风雪与白幕的空间状态、天气同步、降水/雾/粒子/声音渲染 | Current |
+| [player-temperature.md](player-temperature.md) | 玩家环境查询、分部位体温、衣物、效果与同步 | Current |
+| [heat-production-and-network.md](heat-production-and-network.md) | 物理 source、worker 能量、材料/phase 与独立热网 | Current |
+| [data-lifecycle-and-integration.md](data-lifecycle-and-integration.md) | 配方、能力、持久化、服务端生命周期、网络与消费者 | Current |
 
-Primary anchors: `WorldClimate`, `WhiteCurtainInfo`, `ServerLevelMixin_WeatherCycle`, `LevelRendererMixin`, `FogModification`, `WorldClockSource`, `WorldTemperature`, `BlockTemperatureModel`, `ChunkHeatData`, `SurroundingTemperatureSimulator`, `TemperatureUpdate`, `PlayerTemperatureData`, `GeneratorData`, `HeatEndpoint`, `HeatNetwork`, `FHConfig.SERVER.CLIMATE`, `FHConfig.SERVER.SIMULATION`.
+Primary anchors: `WorldClimate`, `WorldTemperature`, `TemperatureUpdate`, `PlayerTemperatureData`, `MinecraftThermalInput`, `MinecraftPageManager`, `PhysicalSourceSpatialIndex`, `ThermalDimensionEngine`, `ThermalSolver`, `ThermalSourceLedger`, `GeneratorData`, `HeatEndpoint`, `HeatNetwork`, `FHConfig.SERVER.CLIMATE`, `FHConfig.SERVER.SIMULATION`.
 
 ## 系统地图
 
 ```text
-WorldClimate hourly climate C and weather type
-             |
-dimension D + biome B + altitude A + local heat-field H
-             |
-             +--> WorldTemperature.block --> crops, fluids, block transitions, town buildings
-             |
-             +--> WorldTemperature.air
-                      + BlockTempData particle sample
-                      + day/night and Vanilla weather overrides
-                               |
-                               v
-                    player environment offset
-                               |
-              clothes + wind + medium + equipment
-                               |
-                               v
-                  five body-part temperatures
-                               |
-                    status effects, HUD, food/water costs
+dimension + biome + altitude + WorldClimate
+                    |
+                    v
+            natural temperature
+                    |
+       20-tick thermal Page cut
+                    |
+       Page-local Air/material solver
+                    |
+       analytic fields + direct radiation
+                    |
+              players / crops / town / phase
 
-GeneratorData / radiator / fountain --> ChunkHeatData heat areas --> H
-GeneratorData --> HeatEndpoint --> HeatNetwork --> radiator/fountain buffers
+Campfire / Generator / Radiator / Fountain -> source ledger -> Page cells + radiation
+GeneratorData -> HeatEndpoint -> HeatNetwork -> device buffers
 ```
 
-这是几套相邻但不统一的数值模型：
-
-| 名称 | 当前语义 | 单位/基准 |
-|---|---|---|
-| 气候温度 `C` | 长期事件对背景温度的修正 | `degC` 增量 |
-| 世界空气/方块温度 | 维度、群系、海拔、气候和热区合成后的查询值 | 绝对 `degC` |
-| `ChunkHeatData` 热区值 `H` | 恒定空间场的温度控制值；重叠时取最大正值 | 代码按 `degC` 使用，但不是能量 |
-| `BlockTempData.temperature` | 玩家周围粒子采样中的方块热/冷贡献 | 温度增量 |
-| 玩家部位体温 | 相对 `37degC` 的偏移，`0` 表示正常体温 | `degC` 偏移 |
-| 玩家环境温度/体感温度 | `PlayerTemperatureData` 对外保存和显示的值 | 绝对 `degC` |
-| `HeatEndpoint.heat` / `GeneratorData.power` | 热网端点中的可存取标量缓冲 | 任意 heat unit，不是 SI 功率 |
-| `HeatEndpoint.tempLevel` | 供热设备传递给消费者的等级 | 无量纲 |
-
-## 当前物理边界
-
-当前实现没有统一的能量守恒模型，也没有材料热容、质量、导热率场、相变潜热或以时间为分母的物理功率。`PlantTempData.heat_capacity` 和 `StateTransitionData.heatCapacity` 是随机状态变化的等待因子，不是热容。
-
-`SurroundingTemperatureSimulator` 会让热源对向下运动的采样轨迹权重较低、冷源对向上运动的轨迹权重较低，以近似“热上升、冷下沉”；它不保存流体速度、密度或热量，也不在方块间推进对流状态。因此后续研究对流、热容或功率时，应以这些现有玩法输出作为兼容边界，而不是把现有同名字段直接解释为物理量。
+气候、世界温度、analytic field、physical source、热网 heat unit 与玩家体温
+是不同模型。它们的单位和转换不能因为字段名称相似而混用；物理 source
+只能通过 `ThermalSourceLedger` 进入 Page cell 能量。
 
 ## 阅读顺序
 
-先读世界气候与温度公式；准备优化暴风雪或白幕画面时读天气渲染文档，再读玩家体温。需要研究供热设备或功率时读热网文档；准备修改配置、持久化、数据包或性能路径时再读数据与生命周期文档。
+先读 [world-climate-and-temperature.md](world-climate-and-temperature.md) 的
+公式，再读 [thermal-runtime-architecture-and-optimization.md](thermal-runtime-architecture-and-optimization.md)
+的线程/生命周期和复杂度。修改玩家体温读 [player-temperature.md](player-temperature.md)，
+修改机器或热网读 [heat-production-and-network.md](heat-production-and-network.md)，
+修改配方、配置、持久化、网络或命令读 [data-lifecycle-and-integration.md](data-lifecycle-and-integration.md)。
 
-城镇建筑如何抽样和使用方块温度见 [town/town-model.md](../town/town-model.md)。Curiosity 的相关材料状态为 Transitional，涉及负热区的叙述必须以本目录记录的实际 `ChunkHeatData` 聚合规则为准。
+城镇建筑的 weighted representative 查询见 [../town/town-model.md](../town/town-model.md)。

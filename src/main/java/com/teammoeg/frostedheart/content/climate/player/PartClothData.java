@@ -20,14 +20,26 @@
 package com.teammoeg.frostedheart.content.climate.player;
 
 public class PartClothData {
-	float heatConductivity;
-	float windResist;
-	public PartClothData(float heatConductivity, float windResist) {
-		super();
-		this.heatConductivity = heatConductivity;
-		this.windResist = windResist;
+	double thermalResistanceM2KPerW;
+	double radiantHeatProof;
+	double windProof;
+	double waterResistance;
+
+	public void set(
+			double thermalResistanceM2KPerW,
+			double radiantHeatProof,
+			double windProof,
+			double waterResistance
+	) {
+		this.thermalResistanceM2KPerW = Math.max(
+				0.0D, thermalResistanceM2KPerW);
+		this.radiantHeatProof = clamp01(radiantHeatProof);
+		this.windProof = clamp01(windProof);
+		this.waterResistance = clamp01(waterResistance);
 	}
-	public PartClothData() {
+
+	private static double clamp01(double value) {
+		return Math.max(0.0D, Math.min(1.0D, value));
 	}
 
 }

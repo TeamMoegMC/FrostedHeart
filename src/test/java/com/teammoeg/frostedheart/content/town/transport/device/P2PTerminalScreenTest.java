@@ -100,6 +100,15 @@ class P2PTerminalScreenTest {
     }
 
     @Test
+    void successfulTransferVisualLastsAtLeastOneSecondAndTwoCurrentIntervals() {
+        assertEquals(20, P2PTerminalBlockEntity.transferVisualTicksForInterval(1));
+        assertEquals(20, P2PTerminalBlockEntity.transferVisualTicksForInterval(5));
+        assertEquals(20, P2PTerminalBlockEntity.transferVisualTicksForInterval(10));
+        assertEquals(40, P2PTerminalBlockEntity.transferVisualTicksForInterval(20));
+        assertEquals(80, P2PTerminalBlockEntity.transferVisualTicksForInterval(40));
+    }
+
+    @Test
     void incomingConnectionDescriptionStillUsesSenderToReceiverOrder() {
         P2PTerminalEndpoint shipping = new P2PTerminalEndpoint(
                 GlobalPos.of(Level.OVERWORLD, new BlockPos(4, 70, 8)),

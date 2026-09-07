@@ -11,82 +11,20 @@
 package com.teammoeg.frostedheart.content.climate.thermal.geometry;
 
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Optional;
 
 /** Compiles 64 block-local air patterns into one bounded 4x4x4 component Brick. */
 public final class ComponentBrickCompiler {
-    public static final int BLOCKS_PER_AXIS = 4;
-    public static final int BLOCK_COUNT = BLOCKS_PER_AXIS * BLOCKS_PER_AXIS * BLOCKS_PER_AXIS;
+    private static final int BLOCKS_PER_AXIS = 4;
+    private static final int BLOCK_COUNT =
+            BLOCKS_PER_AXIS * BLOCKS_PER_AXIS * BLOCKS_PER_AXIS;
 
     private ComponentBrickCompiler() {
     }
 
-    public enum Status {
-        RESOLVED,
-        CONSERVATIVE_UNSUPPORTED
-    }
-
-    public enum UnsupportedReason {
-        NONE,
-        BLOCK_INPUT_UNSUPPORTED,
-        REGION_LIMIT_EXCEEDED
-    }
-
-    public record FacePort(
-            ConservativeAirGeometry.Face face,
-            int blockFaceSlot,
-            int compiledComponentId,
-            int apertureMask
-    ) {
-        public FacePort {
-            if (face == null) {
-                throw new IllegalArgumentException("face is required");
-            }
-            if (blockFaceSlot < 0 || blockFaceSlot >= 16) {
-                throw new IllegalArgumentException("blockFaceSlot must be within [0, 15]");
-            }
-            if (compiledComponentId < 0) {
-                throw new IllegalArgumentException("compiledComponentId must be non-negative");
-            }
-            if (apertureMask == 0 || (apertureMask & ~ConservativeAirGeometry.FULL_FACE_MASK) != 0) {
-                throw new IllegalArgumentException("apertureMask must be a non-empty 16-bit mask");
-            }
-        }
-    }
-
-    public record Compilation(
-            Status status,
-            UnsupportedReason unsupportedReason,
-            int unsupportedBlockIndex,
-            Optional<CompiledBrick> brick
-    ) {
-        public Compilation {
-            if (status == null || unsupportedReason == null || brick == null) {
-                throw new IllegalArgumentException("compilation fields are required");
-            }
-            if (status == Status.RESOLVED) {
-                if (unsupportedReason != UnsupportedReason.NONE
-                        || unsupportedBlockIndex != -1
-                        || brick.isEmpty()) {
-                    throw new IllegalArgumentException("resolved compilation must contain one Brick");
-                }
-            } else if (unsupportedReason == UnsupportedReason.NONE
-                    || unsupportedBlockIndex < 0
-                    || brick.isPresent()) {
-                throw new IllegalArgumentException("unsupported compilation must identify one block");
-            }
-        }
-    }
-
     /** Primitive-array correctness layout. Accessors expose scalar values only. */
     public static final class CompiledBrick {
-        private final int generation;
         private final int[] blockAtomOffset;
-        private final int[] atomBlockIndex;
-        private final int[] atomLocalRegionId;
         private final int[] atomCompiledComponentId;
         private final double[] componentVolume;
         private final double[] componentCentroidX;
@@ -98,10 +36,7 @@ public final class ComponentBrickCompiler {
         private final int[] facePortAperture;
 
         private CompiledBrick(
-                int generation,
                 int[] blockAtomOffset,
-                int[] atomBlockIndex,
-                int[] atomLocalRegionId,
                 int[] atomCompiledComponentId,
                 double[] componentVolume,
                 double[] componentCentroidX,
@@ -112,10 +47,7 @@ public final class ComponentBrickCompiler {
                 int[] facePortComponent,
                 int[] facePortAperture
         ) {
-            this.generation = generation;
             this.blockAtomOffset = blockAtomOffset;
-            this.atomBlockIndex = atomBlockIndex;
-            this.atomLocalRegionId = atomLocalRegionId;
             this.atomCompiledComponentId = atomCompiledComponentId;
             this.componentVolume = componentVolume;
             this.componentCentroidX = componentCentroidX;
@@ -127,45 +59,12 @@ public final class ComponentBrickCompiler {
             this.facePortAperture = facePortAperture;
         }
 
-        public int generation() {
-            return generation;
-        }
-
-        public int atomCount() {
-            return atomBlockIndex.length;
-        }
-
         public int componentCount() {
             return componentVolume.length;
         }
 
         public int facePortCount() {
             return facePortFace.length;
-        }
-
-        public int blockAtomStart(int blockIndex) {
-            requireBlockIndex(blockIndex);
-            return blockAtomOffset[blockIndex];
-        }
-
-        public int blockAtomEnd(int blockIndex) {
-            requireBlockIndex(blockIndex);
-            return blockAtomOffset[blockIndex + 1];
-        }
-
-        public int atomBlockIndex(int atomIndex) {
-            requireIndex("atomIndex", atomIndex, atomCount());
-            return atomBlockIndex[atomIndex];
-        }
-
-        public int atomLocalRegionId(int atomIndex) {
-            requireIndex("atomIndex", atomIndex, atomCount());
-            return atomLocalRegionId[atomIndex];
-        }
-
-        public int atomCompiledComponentId(int atomIndex) {
-            requireIndex("atomIndex", atomIndex, atomCount());
-            return atomCompiledComponentId[atomIndex];
         }
 
         public int compiledComponentAt(int blockIndex, int localRegionId) {
@@ -198,20 +97,10 @@ public final class ComponentBrickCompiler {
             return componentCentroidZ[componentId];
         }
 
-        public FacePort facePort(int portIndex) {
-            requireIndex("portIndex", portIndex, facePortCount());
-            return new FacePort(
-                    ConservativeAirGeometry.Face.values()[Byte.toUnsignedInt(facePortFace[portIndex])],
-                    Byte.toUnsignedInt(facePortBlockSlot[portIndex]),
-                    facePortComponent[portIndex],
-                    facePortAperture[portIndex]
-            );
-        }
-
         public ConservativeAirGeometry.Face facePortFace(int portIndex) {
             requireIndex("portIndex", portIndex, facePortCount());
-            return ConservativeAirGeometry.Face.values()[
-                    Byte.toUnsignedInt(facePortFace[portIndex])];
+            return ConservativeAirGeometry.Face.fromOrdinal(
+                    Byte.toUnsignedInt(facePortFace[portIndex]));
         }
 
         public int facePortBlockSlot(int portIndex) {
@@ -229,43 +118,71 @@ public final class ComponentBrickCompiler {
             return facePortAperture[portIndex];
         }
 
-        public int facePortCount(ConservativeAirGeometry.Face face) {
-            if (face == null) {
-                throw new IllegalArgumentException("face is required");
+    }
+
+    /** Reusable worker scratch; it owns no committed topology. */
+    public static final class Scratch {
+        private final int[] blockAtomOffset = new int[BLOCK_COUNT + 1];
+        private int[] parent = new int[64];
+        private int[] atomComponent = new int[64];
+        private int[] rootComponent = new int[64];
+        private double[] volume = new double[64];
+        private double[] centroidX = new double[64];
+        private double[] centroidY = new double[64];
+        private double[] centroidZ = new double[64];
+        private byte[] portFace = new byte[64];
+        private byte[] portBlockSlot = new byte[64];
+        private int[] portComponent = new int[64];
+        private int[] portAperture = new int[64];
+        private void ensureAtoms(int required) {
+            if (required <= parent.length) {
+                return;
             }
-            int count = 0;
-            for (byte encodedFace : facePortFace) {
-                if (Byte.toUnsignedInt(encodedFace) == face.ordinal()) {
-                    count++;
-                }
+            int capacity = grownCapacity(parent.length, required);
+            parent = Arrays.copyOf(parent, capacity);
+            atomComponent = Arrays.copyOf(atomComponent, capacity);
+            rootComponent = Arrays.copyOf(rootComponent, capacity);
+            volume = Arrays.copyOf(volume, capacity);
+            centroidX = Arrays.copyOf(centroidX, capacity);
+            centroidY = Arrays.copyOf(centroidY, capacity);
+            centroidZ = Arrays.copyOf(centroidZ, capacity);
+        }
+
+        private void ensurePorts(int required) {
+            if (required <= portFace.length) {
+                return;
             }
-            return count;
+            int capacity = grownCapacity(portFace.length, required);
+            portFace = Arrays.copyOf(portFace, capacity);
+            portBlockSlot = Arrays.copyOf(portBlockSlot, capacity);
+            portComponent = Arrays.copyOf(portComponent, capacity);
+            portAperture = Arrays.copyOf(portAperture, capacity);
         }
     }
 
-    public static Compilation compile(
-            List<ConservativeAirGeometry.Resolution> blockGeometry,
+    /**
+     * Allocation-bounded worker path. Returns {@code null} for conservative
+     * unsupported input and records the exact reason in {@code scratch}.
+     */
+    public static CompiledBrick compileResolved(
+            ConservativeAirGeometry.Resolution[] blockGeometry,
             int maximumRegionsPerBlock,
-            int generation
+            Scratch scratch
     ) {
-        if (blockGeometry == null || blockGeometry.size() != BLOCK_COUNT) {
-            throw new IllegalArgumentException("blockGeometry must contain exactly 64 entries");
+        if (blockGeometry == null || blockGeometry.length != BLOCK_COUNT
+                || scratch == null || maximumRegionsPerBlock <= 0) {
+            throw new IllegalArgumentException("Brick compiler input is invalid");
         }
-        if (maximumRegionsPerBlock <= 0) {
-            throw new IllegalArgumentException("maximumRegionsPerBlock must be positive");
-        }
-        if (generation < 0) {
-            throw new IllegalArgumentException("generation must be non-negative");
-        }
-
-        int[] blockAtomOffset = new int[BLOCK_COUNT + 1];
+        int[] blockAtomOffset = scratch.blockAtomOffset;
+        blockAtomOffset[0] = 0;
         for (int blockIndex = 0; blockIndex < BLOCK_COUNT; blockIndex++) {
-            ConservativeAirGeometry.Resolution resolution = blockGeometry.get(blockIndex);
+            ConservativeAirGeometry.Resolution resolution =
+                    blockGeometry[blockIndex];
             if (resolution == null || resolution.status() != ConservativeAirGeometry.Status.RESOLVED) {
-                return unsupported(UnsupportedReason.BLOCK_INPUT_UNSUPPORTED, blockIndex);
+                return null;
             }
             if (resolution.components().size() > maximumRegionsPerBlock) {
-                return unsupported(UnsupportedReason.REGION_LIMIT_EXCEEDED, blockIndex);
+                return null;
             }
             blockAtomOffset[blockIndex + 1] =
                     blockAtomOffset[blockIndex] + resolution.components().size();
@@ -274,39 +191,45 @@ public final class ComponentBrickCompiler {
         int atomCount = blockAtomOffset[BLOCK_COUNT];
         int maximumAtoms = Math.multiplyExact(BLOCK_COUNT, maximumRegionsPerBlock);
         if (atomCount > maximumAtoms) {
-            return unsupported(UnsupportedReason.REGION_LIMIT_EXCEEDED, BLOCK_COUNT - 1);
+            return null;
         }
-        int[] atomBlockIndex = new int[atomCount];
-        int[] atomLocalRegionId = new int[atomCount];
-        int[] parent = new int[atomCount];
+        scratch.ensureAtoms(atomCount);
+        int[] parent = scratch.parent;
         for (int blockIndex = 0; blockIndex < BLOCK_COUNT; blockIndex++) {
             List<ConservativeAirGeometry.AirComponent> components =
-                    blockGeometry.get(blockIndex).components();
+                    blockGeometry[blockIndex].components();
             for (int localRegionId = 0; localRegionId < components.size(); localRegionId++) {
                 if (components.get(localRegionId).id() != localRegionId) {
                     throw new IllegalArgumentException("block-local component IDs must be dense and ordered");
                 }
                 int atom = blockAtomOffset[blockIndex] + localRegionId;
-                atomBlockIndex[atom] = blockIndex;
-                atomLocalRegionId[atom] = localRegionId;
                 parent[atom] = atom;
             }
         }
 
         connectInteriorFaces(blockGeometry, blockAtomOffset, parent);
 
-        int[] atomCompiledComponent = new int[atomCount];
-        Map<Integer, Integer> compiledByRoot = new HashMap<>();
+        int[] atomCompiledComponent = scratch.atomComponent;
+        int[] compiledByRoot = scratch.rootComponent;
+        Arrays.fill(compiledByRoot, 0, atomCount, -1);
+        int componentCount = 0;
         for (int atom = 0; atom < atomCount; atom++) {
             int root = find(parent, atom);
-            atomCompiledComponent[atom] =
-                    compiledByRoot.computeIfAbsent(root, ignored -> compiledByRoot.size());
+            int component = compiledByRoot[root];
+            if (component < 0) {
+                component = componentCount++;
+                compiledByRoot[root] = component;
+            }
+            atomCompiledComponent[atom] = component;
         }
-        int componentCount = compiledByRoot.size();
-        double[] volume = new double[componentCount];
-        double[] centroidX = new double[componentCount];
-        double[] centroidY = new double[componentCount];
-        double[] centroidZ = new double[componentCount];
+        double[] volume = scratch.volume;
+        double[] centroidX = scratch.centroidX;
+        double[] centroidY = scratch.centroidY;
+        double[] centroidZ = scratch.centroidZ;
+        Arrays.fill(volume, 0, componentCount, 0.0D);
+        Arrays.fill(centroidX, 0, componentCount, 0.0D);
+        Arrays.fill(centroidY, 0, componentCount, 0.0D);
+        Arrays.fill(centroidZ, 0, componentCount, 0.0D);
         accumulateGeometry(
                 blockGeometry,
                 blockAtomOffset,
@@ -317,11 +240,12 @@ public final class ComponentBrickCompiler {
                 centroidZ
         );
 
-        int maximumPorts = Math.multiplyExact(atomCount, ConservativeAirGeometry.Face.values().length);
-        byte[] portFace = new byte[maximumPorts];
-        byte[] portBlockSlot = new byte[maximumPorts];
-        int[] portComponent = new int[maximumPorts];
-        int[] portAperture = new int[maximumPorts];
+        int maximumPorts = Math.multiplyExact(atomCount, ConservativeAirGeometry.Face.COUNT);
+        scratch.ensurePorts(maximumPorts);
+        byte[] portFace = scratch.portFace;
+        byte[] portBlockSlot = scratch.portBlockSlot;
+        int[] portComponent = scratch.portComponent;
+        int[] portAperture = scratch.portAperture;
         int portCount = compileFacePorts(
                 blockGeometry,
                 blockAtomOffset,
@@ -332,22 +256,18 @@ public final class ComponentBrickCompiler {
                 portAperture
         );
 
-        CompiledBrick brick = new CompiledBrick(
-                generation,
-                blockAtomOffset,
-                atomBlockIndex,
-                atomLocalRegionId,
-                atomCompiledComponent,
-                volume,
-                centroidX,
-                centroidY,
-                centroidZ,
+        return new CompiledBrick(
+                Arrays.copyOf(blockAtomOffset, BLOCK_COUNT + 1),
+                Arrays.copyOf(atomCompiledComponent, atomCount),
+                Arrays.copyOf(volume, componentCount),
+                Arrays.copyOf(centroidX, componentCount),
+                Arrays.copyOf(centroidY, componentCount),
+                Arrays.copyOf(centroidZ, componentCount),
                 Arrays.copyOf(portFace, portCount),
                 Arrays.copyOf(portBlockSlot, portCount),
                 Arrays.copyOf(portComponent, portCount),
                 Arrays.copyOf(portAperture, portCount)
         );
-        return new Compilation(Status.RESOLVED, UnsupportedReason.NONE, -1, Optional.of(brick));
     }
 
     public static int blockIndex(int x, int y, int z) {
@@ -358,7 +278,7 @@ public final class ComponentBrickCompiler {
     }
 
     private static void connectInteriorFaces(
-            List<ConservativeAirGeometry.Resolution> geometry,
+            ConservativeAirGeometry.Resolution[] geometry,
             int[] blockAtomOffset,
             int[] parent
     ) {
@@ -396,7 +316,7 @@ public final class ComponentBrickCompiler {
     }
 
     private static void connectBlocks(
-            List<ConservativeAirGeometry.Resolution> geometry,
+            ConservativeAirGeometry.Resolution[] geometry,
             int[] blockAtomOffset,
             int[] parent,
             int blockA,
@@ -404,8 +324,10 @@ public final class ComponentBrickCompiler {
             ConservativeAirGeometry.Face faceA,
             ConservativeAirGeometry.Face faceB
     ) {
-        List<ConservativeAirGeometry.AirComponent> componentsA = geometry.get(blockA).components();
-        List<ConservativeAirGeometry.AirComponent> componentsB = geometry.get(blockB).components();
+        List<ConservativeAirGeometry.AirComponent> componentsA =
+                geometry[blockA].components();
+        List<ConservativeAirGeometry.AirComponent> componentsB =
+                geometry[blockB].components();
         for (int regionA = 0; regionA < componentsA.size(); regionA++) {
             int maskA = componentsA.get(regionA).faceMask(faceA);
             if (maskA == 0) {
@@ -424,7 +346,7 @@ public final class ComponentBrickCompiler {
     }
 
     private static void accumulateGeometry(
-            List<ConservativeAirGeometry.Resolution> geometry,
+            ConservativeAirGeometry.Resolution[] geometry,
             int[] blockAtomOffset,
             int[] atomCompiledComponent,
             double[] volume,
@@ -437,7 +359,8 @@ public final class ComponentBrickCompiler {
             int blockX = block & 3;
             int blockZ = (block >>> 2) & 3;
             int blockY = (block >>> 4) & 3;
-            List<ConservativeAirGeometry.AirComponent> components = geometry.get(block).components();
+            List<ConservativeAirGeometry.AirComponent> components =
+                    geometry[block].components();
             for (int localRegion = 0; localRegion < components.size(); localRegion++) {
                 int compiled = atomCompiledComponent[blockAtomOffset[block] + localRegion];
                 long mask = components.get(localRegion).microcellMask();
@@ -465,7 +388,7 @@ public final class ComponentBrickCompiler {
     }
 
     private static int compileFacePorts(
-            List<ConservativeAirGeometry.Resolution> geometry,
+            ConservativeAirGeometry.Resolution[] geometry,
             int[] blockAtomOffset,
             int[] atomCompiledComponent,
             byte[] portFace,
@@ -478,7 +401,8 @@ public final class ComponentBrickCompiler {
             int x = block & 3;
             int z = (block >>> 2) & 3;
             int y = (block >>> 4) & 3;
-            List<ConservativeAirGeometry.AirComponent> components = geometry.get(block).components();
+            List<ConservativeAirGeometry.AirComponent> components =
+                    geometry[block].components();
             for (int localRegion = 0; localRegion < components.size(); localRegion++) {
                 ConservativeAirGeometry.AirComponent component = components.get(localRegion);
                 int compiledComponent = atomCompiledComponent[blockAtomOffset[block] + localRegion];
@@ -539,8 +463,12 @@ public final class ComponentBrickCompiler {
         return portCount + 1;
     }
 
-    private static Compilation unsupported(UnsupportedReason reason, int blockIndex) {
-        return new Compilation(Status.CONSERVATIVE_UNSUPPORTED, reason, blockIndex, Optional.empty());
+    private static int grownCapacity(int current, int required) {
+        int capacity = Math.max(1, current);
+        while (capacity < required) {
+            capacity = Math.addExact(capacity, Math.max(16, capacity >>> 1));
+        }
+        return capacity;
     }
 
     private static int faceSlot(int u, int v) {

@@ -20,7 +20,6 @@
 package com.teammoeg.frostedheart.content.climate.block.generator;
 
 import com.teammoeg.chorda.multiblock.CMultiblock;
-import com.teammoeg.frostedheart.content.climate.gamedata.chunkheat.ChunkHeatData;
 import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.MinecraftThermalInput;
 
 import blusunrize.immersiveengineering.api.multiblocks.blocks.MultiblockRegistration;
@@ -42,9 +41,8 @@ public abstract class HeatingMultiblock extends CMultiblock {
         BlockPos sourcePosition = getMasterPos(
                 origin, mirrored, clickDirectionAtCreation).below(master.getY());
         if (world instanceof ServerLevel serverLevel) {
-            MinecraftThermalInput.onGeneratorRemoved(serverLevel, sourcePosition);
+            MinecraftThermalInput.onPhysicalSourceRemoved(serverLevel, sourcePosition);
         }
-        ChunkHeatData.removeTempAdjust(world, sourcePosition);
         super.disassemble(world, origin, mirrored, clickDirectionAtCreation);
     }
 

@@ -15,38 +15,44 @@ import com.teammoeg.frostedheart.content.climate.thermal.geometry.ComponentBrick
 import java.util.Arrays;
 
 /**
- * Primitive structure-of-arrays storage for regular 4/8/16 air cells.
+ * Primitive structure-of-arrays storage for air cells and sparse material poles.
  *
- * <p>The arena is owned by one logical thermal writer. A Page owns one dense
- * {@link ArenaSpan}; a LOD replacement allocates a second dense span and keeps
- * the old span alive until the Page has installed the replacement coverage.</p>
+ * <p>The arena is owned by one logical thermal writer. Page compilation uses
+ * {@link ArenaSpan} allocations to install fixed 4x4x4 Brick fragments while
+ * enthalpy and capacity remain authoritative here.</p>
  */
 public final class ThermalCellArena {
-    public static final int NO_SLOT = -1;
+    private static final int NO_SLOT = -1;
+    private static final int[] NO_SLOTS = new int[0];
 
     private static final byte FREE = 0;
     private static final byte LIVE = 1;
+    private static final byte RESERVED = 2;
     private static final byte REGULAR_CELL = 0;
     private static final byte MIXED_COMPONENT = 1;
-    private static final double CAPACITY_RELATIVE_TOLERANCE = 1.0e-10D;
+    private static final byte MATERIAL_CELL = 2;
+    private static final byte PHASE_RESERVOIR = 3;
 
     private double[] enthalpyJ;
     private double[] capacityJPerK;
+    private double[] inverseCapacityKPerJ;
     private int[] pageSlots;
     private int[] lifecycleGenerations;
     private int[] supportRefs;
     private int[] minimumX;
     private int[] minimumY;
     private int[] minimumZ;
-    private int[] mediumIds;
-    private byte[] levels;
-    private byte[] cellFlags;
     private byte[] cellKinds;
     private int[] mixedComponentIds;
     private ComponentBrickCompiler.CompiledBrick[] mixedBrickGeometries;
     private byte[] allocationState;
+    private long[] liveSlots;
+    private long[] liveWordSummary;
+    private final ThermalFreeSpanIndex freeSpans = new ThermalFreeSpanIndex();
+    private final ThermalPhaseReservoirStore phases;
 
     private int highWaterMark;
+    private int allocationHighWaterMark;
     private int liveCellCount;
 
     public ThermalCellArena(int initialCapacity) {
@@ -55,27 +61,23 @@ public final class ThermalCellArena {
         }
         enthalpyJ = new double[initialCapacity];
         capacityJPerK = new double[initialCapacity];
+        inverseCapacityKPerJ = new double[initialCapacity];
         pageSlots = new int[initialCapacity];
         lifecycleGenerations = new int[initialCapacity];
         supportRefs = new int[initialCapacity];
         minimumX = new int[initialCapacity];
         minimumY = new int[initialCapacity];
         minimumZ = new int[initialCapacity];
-        mediumIds = new int[initialCapacity];
-        levels = new byte[initialCapacity];
-        cellFlags = new byte[initialCapacity];
         cellKinds = new byte[initialCapacity];
         mixedComponentIds = new int[initialCapacity];
         mixedBrickGeometries = new ComponentBrickCompiler.CompiledBrick[initialCapacity];
+        phases = new ThermalPhaseReservoirStore(initialCapacity);
         allocationState = new byte[initialCapacity];
+        liveSlots = new long[(initialCapacity + 63) >>> 6];
+        liveWordSummary = new long[(liveSlots.length + 63) >>> 6];
         Arrays.fill(pageSlots, NO_SLOT);
         Arrays.fill(supportRefs, NO_SLOT);
-        Arrays.fill(mediumIds, -1);
         Arrays.fill(mixedComponentIds, NO_SLOT);
-    }
-
-    public int capacity() {
-        return allocationState.length;
     }
 
     public int highWaterMark() {
@@ -86,313 +88,234 @@ public final class ThermalCellArena {
         return liveCellCount;
     }
 
+    /** Address limit required by committed and currently staged spans. */
+    public int requiredSlotCapacity() {
+        return allocationHighWaterMark;
+    }
+
     public boolean isLive(int slot) {
         return slot >= 0 && slot < highWaterMark && allocationState[slot] == LIVE;
     }
 
-    /** Allocates one dense Page layout at a uniform initial temperature. */
-    public ArenaSpan allocatePageCells(
-            int pageSlot,
-            CellSpec[] cells,
-            double initialTemperatureC,
-            double referenceTemperatureC
-    ) {
-        return allocatePageCells(
-                pageSlot, 0, cells, initialTemperatureC, referenceTemperatureC);
+    public boolean isStagedCell(int slot) {
+        return slot >= 0 && slot < allocationHighWaterMark
+                && allocationState[slot] == RESERVED;
     }
 
-    /** Allocates regular Page cells guarded by one Page lifecycle generation. */
-    public ArenaSpan allocatePageCells(
+    /** Returns the next live slot at or after {@code fromInclusive}, or -1. */
+    public int nextLiveSlot(int fromInclusive) {
+        int start = Math.max(0, fromInclusive);
+        if (start >= highWaterMark) {
+            return NO_SLOT;
+        }
+        int wordIndex = start >>> 6;
+        long word = liveSlots[wordIndex] & (-1L << (start & 63));
+        if (word != 0L) {
+            return (wordIndex << 6) + Long.numberOfTrailingZeros(word);
+        }
+        for (wordIndex = nextOccupiedWord(wordIndex + 1);
+             wordIndex >= 0;
+             wordIndex = nextOccupiedWord(wordIndex + 1)) {
+            word = liveSlots[wordIndex];
+            if (word != 0L) {
+                int slot = (wordIndex << 6) + Long.numberOfTrailingZeros(word);
+                return slot < highWaterMark ? slot : NO_SLOT;
+            }
+        }
+        return NO_SLOT;
+    }
+
+    /** Reserves and fills one worker-private Brick without publishing live cells. */
+    public BrickAllocation stageBrickCells(
             int pageSlot,
             int lifecycleGeneration,
-            CellSpec[] cells,
-            double initialTemperatureC,
-            double referenceTemperatureC
+            ThermalBrickCellLayout layout,
+            double initialAirTemperatureC,
+            double referenceTemperatureC,
+            int maximumSlots
     ) {
+        if (pageSlot < 0 || layout == null || maximumSlots <= 0
+                || maximumSlots < allocationHighWaterMark) {
+            throw new IllegalArgumentException("Brick allocation identity is invalid");
+        }
         requireLifecycleGeneration(lifecycleGeneration);
-        requireFinite("initialTemperatureC", initialTemperatureC);
+        requireFinite("initialAirTemperatureC", initialAirTemperatureC);
         requireFinite("referenceTemperatureC", referenceTemperatureC);
-        CellSpec[] validated = validateLayout(pageSlot, cells);
-        double temperatureOffset = initialTemperatureC - referenceTemperatureC;
-        requireFinite("initial temperature offset", temperatureOffset);
-        double[] initialEnthalpies = new double[validated.length];
-        for (int index = 0; index < validated.length; index++) {
-            initialEnthalpies[index] = finiteProduct(
-                    "initial enthalpy",
-                    validated[index].capacityJPerK(),
-                    temperatureOffset
-            );
-        }
-        return allocateValidated(
-                pageSlot, lifecycleGeneration, validated, initialEnthalpies);
-    }
-
-    /** Allocates one dense Page layout with caller-owned enthalpy authority. */
-    public ArenaSpan allocatePageCells(
-            int pageSlot,
-            CellSpec[] cells,
-            double[] initialEnthalpiesJ
-    ) {
-        return allocatePageCells(pageSlot, 0, cells, initialEnthalpiesJ);
-    }
-
-    /** Allocates regular Page cells with caller-owned enthalpy and generation. */
-    public ArenaSpan allocatePageCells(
-            int pageSlot,
-            int lifecycleGeneration,
-            CellSpec[] cells,
-            double[] initialEnthalpiesJ
-    ) {
-        requireLifecycleGeneration(lifecycleGeneration);
-        CellSpec[] validated = validateLayout(pageSlot, cells);
-        if (initialEnthalpiesJ == null || initialEnthalpiesJ.length != validated.length) {
-            throw new IllegalArgumentException(
-                    "initialEnthalpiesJ must match the Page cell count");
-        }
-        double[] enthalpies = initialEnthalpiesJ.clone();
-        for (double enthalpy : enthalpies) {
-            requireFinite("initial cell enthalpy", enthalpy);
-        }
-        return allocateValidated(pageSlot, lifecycleGeneration, validated, enthalpies);
-    }
-
-    /**
-     * Allocates one dense Page layout containing regular cells and compiled
-     * mixed-Brick components. Each mixed support reuses its CompiledBrick ports.
-     */
-    public PageAllocation allocatePageCells(
-            int pageSlot,
-            int lifecycleGeneration,
-            CellSpec[] regularCells,
-            MixedBrickSpec[] mixedBricks,
-            double initialTemperatureC,
-            double referenceTemperatureC
-    ) {
-        requireLifecycleGeneration(lifecycleGeneration);
-        requireFinite("initialTemperatureC", initialTemperatureC);
-        requireFinite("referenceTemperatureC", referenceTemperatureC);
-        CellSpec[] regular = validateLayout(pageSlot, regularCells);
-        MixedBrickSpec[] mixed = validateMixedLayout(pageSlot, regular, mixedBricks);
-        double temperatureOffset = initialTemperatureC - referenceTemperatureC;
-        requireFinite("initial temperature offset", temperatureOffset);
-
-        int totalCells = regular.length;
-        for (MixedBrickSpec brick : mixed) {
-            totalCells = Math.addExact(totalCells, brick.geometry().componentCount());
-        }
+        layout.requireReady();
+        int airCells = switch (layout.airKind) {
+            case NONE -> 0;
+            case REGULAR -> 1;
+            case MIXED -> layout.mixedGeometry.componentCount();
+        };
+        int totalCells = Math.addExact(
+                airCells,
+                Math.addExact(layout.materialCount, layout.phaseCount));
         if (totalCells == 0) {
-            return new PageAllocation(ArenaSpan.EMPTY, new int[0]);
+            return BrickAllocation.EMPTY;
         }
 
         int firstSlot = findFreeSpan(totalCells);
         int required = Math.addExact(firstSlot, totalCells);
-        ensureCapacity(required);
-        int write = firstSlot;
-        for (CellSpec cell : regular) {
-            writeRegularCell(
-                    write++, pageSlot, lifecycleGeneration, cell,
-                    finiteProduct("initial enthalpy", cell.capacityJPerK(), temperatureOffset));
+        if (required > maximumSlots) {
+            return null;
         }
-        int[] mixedSupportRefs = new int[mixed.length];
-        for (int brickIndex = 0; brickIndex < mixed.length; brickIndex++) {
-            MixedBrickSpec brick = mixed[brickIndex];
-            int supportRef = write;
-            mixedSupportRefs[brickIndex] = supportRef;
-            mixedBrickGeometries[supportRef] = brick.geometry();
-            for (int component = 0; component < brick.geometry().componentCount(); component++) {
+        allocationHighWaterMark = Math.max(
+                allocationHighWaterMark, required);
+        try {
+            ensureCapacity(required, maximumSlots);
+            int write = firstSlot;
+            double airOffset = initialAirTemperatureC - referenceTemperatureC;
+            if (layout.airKind == ThermalBrickCellLayout.AirKind.REGULAR) {
                 double capacity = finiteProduct(
-                        "mixed component capacity",
-                        brick.effectiveVolumetricCapacityJPerBlockK(),
-                        brick.geometry().componentVolume(component));
-                writeMixedComponent(
-                        write++, pageSlot, lifecycleGeneration, supportRef,
-                        brick, component, capacity,
-                        finiteProduct("initial enthalpy", capacity, temperatureOffset));
-            }
-        }
-        highWaterMark = Math.max(highWaterMark, required);
-        liveCellCount = Math.addExact(liveCellCount, totalCells);
-        return new PageAllocation(new ArenaSpan(firstSlot, totalCells), mixedSupportRefs);
-    }
-
-    /**
-     * Prepares a dense Page replacement in which one parent is split into an
-     * exact aligned partition. Children inherit the parent's temperature.
-     */
-    public PageLayoutReplacement prepareSplitPureLod(
-            ArenaSpan oldPageSpan,
-            int parentSlot,
-            CellSpec[] childCells
-    ) {
-        int ownerPageSlot = requireOwnedPageSpan(oldPageSpan);
-        requireSlotInSpan("parentSlot", parentSlot, oldPageSpan);
-        CellSpec parent = cellSpec(parentSlot);
-        CellSpec[] children = validateReplacementCells(childCells);
-        if (children.length < 2) {
-            throw new IllegalArgumentException("a split requires at least two child cells");
-        }
-        requireExactPartition(parent, children);
-        requireLodCompatibility(parent, children);
-
-        double[] childCapacities = new double[children.length];
-        for (int index = 0; index < children.length; index++) {
-            childCapacities[index] = children[index].capacityJPerK();
-        }
-        double[] childEnthalpies = GeometryMigrationLedger.splitPureLod(
-                enthalpyJ[parentSlot],
-                capacityJPerK[parentSlot],
-                childCapacities
-        );
-
-        CellSpec[] replacementCells = new CellSpec[
-                oldPageSpan.count() - 1 + children.length];
-        double[] replacementEnthalpies = new double[replacementCells.length];
-        int[] oldToNewOffsets = new int[oldPageSpan.count()];
-        Arrays.fill(oldToNewOffsets, NO_SLOT);
-        int parentOffset = parentSlot - oldPageSpan.firstSlot();
-        int write = 0;
-        int replacementOffset = NO_SLOT;
-        for (int oldOffset = 0; oldOffset < oldPageSpan.count(); oldOffset++) {
-            int oldSlot = oldPageSpan.firstSlot() + oldOffset;
-            if (oldOffset == parentOffset) {
-                replacementOffset = write;
-                for (int child = 0; child < children.length; child++) {
-                    replacementCells[write] = children[child];
-                    replacementEnthalpies[write] = childEnthalpies[child];
-                    write++;
+                        "regular air capacity",
+                        layout.airCapacityJPerBlockK,
+                        64.0D);
+                writeRegularCell(
+                        write++,
+                        pageSlot,
+                        lifecycleGeneration,
+                        layout.minX,
+                        layout.minY,
+                        layout.minZ,
+                        capacity,
+                        finiteProduct("initial enthalpy", capacity, airOffset));
+            } else if (layout.airKind == ThermalBrickCellLayout.AirKind.MIXED) {
+                int support = write;
+                mixedBrickGeometries[support] = layout.mixedGeometry;
+                for (int component = 0;
+                     component < layout.mixedGeometry.componentCount();
+                     component++) {
+                    double capacity = finiteProduct(
+                            "mixed component capacity",
+                            layout.airCapacityJPerBlockK,
+                            layout.mixedGeometry.componentVolume(component));
+                    writeMixedComponent(
+                            write++,
+                            pageSlot,
+                            lifecycleGeneration,
+                            support,
+                            layout.minX,
+                            layout.minY,
+                            layout.minZ,
+                            component,
+                            capacity,
+                            finiteProduct(
+                                    "initial enthalpy", capacity, airOffset));
                 }
-            } else {
-                replacementCells[write] = cellSpec(oldSlot);
-                replacementEnthalpies[write] = enthalpyJ[oldSlot];
-                oldToNewOffsets[oldOffset] = write;
-                write++;
             }
-        }
 
-        ArenaSpan newSpan = allocateValidated(
-                ownerPageSlot,
-                lifecycleGenerations[oldPageSpan.firstSlot()],
-                validateLayout(ownerPageSlot, replacementCells),
-                replacementEnthalpies
-        );
-        translateOffsets(oldToNewOffsets, newSpan.firstSlot());
-        ArenaSpan replacementSpan = new ArenaSpan(
-                newSpan.firstSlot() + replacementOffset,
-                children.length
-        );
-        return new PageLayoutReplacement(
-                ReplacementKind.SPLIT,
-                ownerPageSlot,
-                oldPageSpan,
-                newSpan,
-                replacementSpan,
-                oldToNewOffsets,
-                sumEnthalpy(oldPageSpan),
-                sumEnthalpy(newSpan)
-        );
+            int[] materialSlots = layout.materialCount == 0
+                    ? NO_SLOTS : new int[layout.materialCount];
+            for (int index = 0; index < layout.materialCount; index++) {
+                materialSlots[index] = write;
+                double offset = layout.materialInitialTemperatureC[index]
+                        - referenceTemperatureC;
+                writeMaterialPole(
+                        write++,
+                        pageSlot,
+                        lifecycleGeneration,
+                        layout.materialBlockX[index],
+                        layout.materialBlockY[index],
+                        layout.materialBlockZ[index],
+                        layout.materialCapacityJPerK[index],
+                        finiteProduct(
+                                "initial material enthalpy",
+                                layout.materialCapacityJPerK[index],
+                                offset));
+            }
+
+            int[] phaseSlots = layout.phaseCount == 0
+                    ? NO_SLOTS : new int[layout.phaseCount];
+            for (int index = 0; index < layout.phaseCount; index++) {
+                phaseSlots[index] = write;
+                writePhaseReservoir(
+                        write++,
+                        pageSlot,
+                        lifecycleGeneration,
+                        layout.phaseBrickMinX[index],
+                        layout.phaseBrickMinY[index],
+                        layout.phaseBrickMinZ[index],
+                        layout.phaseProfileId[index],
+                        layout.phaseCandidateMask[index],
+                        layout.phaseTransitionTemperatureC[index],
+                        layout.phaseTransitionEnergyJPerUnit[index]);
+            }
+            if (write != required) {
+                throw new IllegalStateException(
+                        "staged Brick cell count changed during construction");
+            }
+            return new BrickAllocation(
+                    new ArenaSpan(firstSlot, totalCells),
+                    materialSlots,
+                    phaseSlots);
+        } catch (RuntimeException | Error failure) {
+            clearRange(firstSlot, required);
+            addFreeSpan(firstSlot, totalCells);
+            throw failure;
+        }
     }
 
-    /**
-     * Prepares a dense Page replacement in which an exact aligned child
-     * partition is merged into one parent. Parent enthalpy is the child sum.
-     */
-    public PageLayoutReplacement prepareMergePureLod(
-            ArenaSpan oldPageSpan,
-            int[] childSlots,
-            CellSpec parentCell
-    ) {
-        int ownerPageSlot = requireOwnedPageSpan(oldPageSpan);
-        if (childSlots == null || childSlots.length < 2) {
-            throw new IllegalArgumentException("a merge requires at least two child slots");
-        }
-        int[] children = childSlots.clone();
-        boolean[] selected = new boolean[oldPageSpan.count()];
-        CellSpec[] childCells = new CellSpec[children.length];
-        int firstSelectedOffset = Integer.MAX_VALUE;
-        for (int index = 0; index < children.length; index++) {
-            int slot = children[index];
-            requireSlotInSpan("childSlots[" + index + "]", slot, oldPageSpan);
-            int offset = slot - oldPageSpan.firstSlot();
-            if (selected[offset]) {
-                throw new IllegalArgumentException("childSlots must be unique");
-            }
-            selected[offset] = true;
-            firstSelectedOffset = Math.min(firstSelectedOffset, offset);
-            childCells[index] = cellSpec(slot);
-        }
-        CellSpec parent = requireCellSpec(parentCell);
-        requireExactPartition(parent, childCells);
-        requireLodCompatibility(parent, childCells);
+    public boolean ownsStagedCells(ArenaSpan span) {
+        return ownsSpan(span, RESERVED, NO_SLOT, 0, false);
+    }
 
-        double[] childEnthalpies = new double[children.length];
-        for (int index = 0; index < children.length; index++) {
-            childEnthalpies[index] = enthalpyJ[children[index]];
+    /** Allocation-free authoritative state transition after global preflight. */
+    public void commitStagedCells(ArenaSpan span) {
+        if (span.count() == 0) {
+            return;
         }
-        double parentEnthalpy = GeometryMigrationLedger.mergePureLod(childEnthalpies);
-
-        CellSpec[] replacementCells = new CellSpec[
-                oldPageSpan.count() - children.length + 1];
-        double[] replacementEnthalpies = new double[replacementCells.length];
-        int[] oldToNewOffsets = new int[oldPageSpan.count()];
-        Arrays.fill(oldToNewOffsets, NO_SLOT);
-        int write = 0;
-        int replacementOffset = NO_SLOT;
-        for (int oldOffset = 0; oldOffset < oldPageSpan.count(); oldOffset++) {
-            if (oldOffset == firstSelectedOffset) {
-                replacementOffset = write;
-                replacementCells[write] = parent;
-                replacementEnthalpies[write] = parentEnthalpy;
-                write++;
-            }
-            if (selected[oldOffset]) {
-                continue;
-            }
-            int oldSlot = oldPageSpan.firstSlot() + oldOffset;
-            replacementCells[write] = cellSpec(oldSlot);
-            replacementEnthalpies[write] = enthalpyJ[oldSlot];
-            oldToNewOffsets[oldOffset] = write;
-            write++;
+        int nextLiveCellCount = Math.addExact(
+                liveCellCount, span.count());
+        int nextHighWaterMark = Math.max(
+                highWaterMark, span.endSlotExclusive());
+        for (int slot = span.firstSlot(); slot < span.endSlotExclusive(); slot++) {
+            allocationState[slot] = LIVE;
+            liveSlots[slot >>> 6] |= 1L << slot;
         }
+        setLiveWordSummary(span.firstSlot(), span.endSlotExclusive());
+        highWaterMark = nextHighWaterMark;
+        liveCellCount = nextLiveCellCount;
+    }
 
-        ArenaSpan newSpan = allocateValidated(
-                ownerPageSlot,
-                lifecycleGenerations[oldPageSpan.firstSlot()],
-                validateLayout(ownerPageSlot, replacementCells),
-                replacementEnthalpies
-        );
-        translateOffsets(oldToNewOffsets, newSpan.firstSlot());
-        ArenaSpan replacementSpan = new ArenaSpan(
-                newSpan.firstSlot() + replacementOffset,
-                1
-        );
-        return new PageLayoutReplacement(
-                ReplacementKind.MERGE,
-                ownerPageSlot,
-                oldPageSpan,
-                newSpan,
-                replacementSpan,
-                oldToNewOffsets,
-                sumEnthalpy(oldPageSpan),
-                sumEnthalpy(newSpan)
-        );
+    public void discardStagedCells(ArenaSpan span) {
+        if (span.count() == 0) {
+            return;
+        }
+        if (!ownsStagedCells(span)) {
+            throw new IllegalStateException("Brick staging span is not reserved");
+        }
+        clearRange(span.firstSlot(), span.endSlotExclusive());
+        addFreeSpan(span.firstSlot(), span.count());
+    }
+
+    public void stageEnthalpyJ(int slot, double value) {
+        requireFinite("enthalpyJ", value);
+        requireReservedSlot(slot);
+        enthalpyJ[slot] = value;
     }
 
     public double enthalpyJ(int slot) {
-        requireLiveSlot(slot);
+        requireAllocatedSlot(slot);
         return enthalpyJ[slot];
     }
 
     public double capacityJPerK(int slot) {
-        requireLiveSlot(slot);
+        requireAllocatedSlot(slot);
         return capacityJPerK[slot];
+    }
+
+    public double inverseCapacityKPerJ(int slot) {
+        requireAllocatedSlot(slot);
+        return inverseCapacityKPerJ[slot];
     }
 
     public double temperatureC(int slot, double referenceTemperatureC) {
         requireFinite("referenceTemperatureC", referenceTemperatureC);
         requireLiveSlot(slot);
-        double temperature = referenceTemperatureC + enthalpyJ[slot] / capacityJPerK[slot];
-        requireFinite("cell temperature", temperature);
-        return temperature;
+        return cellKinds[slot] == PHASE_RESERVOIR
+                ? phases.transitionTemperatureC(slot)
+                : referenceTemperatureC
+                        + enthalpyJ[slot] * inverseCapacityKPerJ[slot];
     }
 
     public void setEnthalpyJ(int slot, double value) {
@@ -409,14 +332,22 @@ public final class ThermalCellArena {
         enthalpyJ[slot] = result;
     }
 
+    public int lifecycleGeneration(int slot) {
+        requireAllocatedSlot(slot);
+        return lifecycleGenerations[slot];
+    }
+
+    /** Worker publication ownership for one allocated cell. */
     public int pageSlot(int slot) {
-        requireLiveSlot(slot);
+        requireAllocatedSlot(slot);
         return pageSlots[slot];
     }
 
-    public int lifecycleGeneration(int slot) {
-        requireLiveSlot(slot);
-        return lifecycleGenerations[slot];
+    /** Whether one allocated slot is an Air cell published to gameplay queries. */
+    public boolean isAirCell(int slot) {
+        requireAllocatedSlot(slot);
+        return cellKinds[slot] == REGULAR_CELL
+                || cellKinds[slot] == MIXED_COMPONENT;
     }
 
     /** Adds energy only when the source binding still names this exact cell incarnation. */
@@ -425,19 +356,7 @@ public final class ThermalCellArena {
         addEnthalpyJ(slot, deltaJ);
     }
 
-    /** Preflights one source delivery so a batch can validate before writing. */
-    public void requireNodeEnthalpyWrite(
-            long nodeId,
-            int lifecycleGeneration,
-            double deltaJ
-    ) {
-        int slot = requireNodeTarget(nodeId, lifecycleGeneration);
-        requireFinite("deltaJ", deltaJ);
-        requireFinite("updated enthalpy", enthalpyJ[slot] + deltaJ);
-    }
-
-    /** Validates a source binding without mutating the destination. */
-    public int requireNodeTarget(long nodeId, int lifecycleGeneration) {
+    private int requireNodeTarget(long nodeId, int lifecycleGeneration) {
         if (nodeId < 0L || nodeId > Integer.MAX_VALUE) {
             throw new IllegalStateException("thermal node ID is not an arena slot: " + nodeId);
         }
@@ -450,92 +369,156 @@ public final class ThermalCellArena {
         return slot;
     }
 
-    /** Phase C regular supports use their arena slot as the wide support ref. */
-    public int supportRef(int slot) {
-        requireLiveSlot(slot);
-        return supportRefs[slot];
-    }
-
-    public int minimumX(int slot) {
-        requireLiveSlot(slot);
-        return minimumX[slot];
-    }
-
-    public int minimumY(int slot) {
-        requireLiveSlot(slot);
-        return minimumY[slot];
-    }
-
-    public int minimumZ(int slot) {
-        requireLiveSlot(slot);
-        return minimumZ[slot];
-    }
-
-    public int widthBlocks(int slot) {
-        requireLiveSlot(slot);
-        return widthForLevel(levels[slot]);
-    }
-
-    public boolean isRegularCell(int slot) {
-        requireLiveSlot(slot);
-        return cellKinds[slot] == REGULAR_CELL;
+    public int minimum(int slot, int axis) {
+        requireAllocatedSlot(slot);
+        return switch (axis) {
+            case 0 -> minimumX[slot];
+            case 1 -> minimumY[slot];
+            case 2 -> minimumZ[slot];
+            default -> throw new IllegalArgumentException("axis must be 0, 1, or 2");
+        };
     }
 
     public boolean isMixedComponent(int slot) {
-        requireLiveSlot(slot);
+        requireAllocatedSlot(slot);
         return cellKinds[slot] == MIXED_COMPONENT;
     }
 
-    public boolean isMixedSupport(int supportRef) {
-        return isLive(supportRef)
+    public boolean isMaterialPole(int slot) {
+        requireAllocatedSlot(slot);
+        return isMaterialKind(cellKinds[slot]);
+    }
+
+    public boolean isPhaseReservoir(int slot) {
+        requireAllocatedSlot(slot);
+        return cellKinds[slot] == PHASE_RESERVOIR;
+    }
+
+    public int phaseProfileId(int slot) {
+        requirePhaseReservoir(slot);
+        return phases.profileId(slot);
+    }
+
+    public long phaseCandidateMask(int slot) {
+        requirePhaseReservoir(slot);
+        return phases.candidateMask(slot);
+    }
+
+    public double phaseTransitionTemperatureC(int slot) {
+        requirePhaseReservoir(slot);
+        return phases.transitionTemperatureC(slot);
+    }
+
+    public double phaseTransitionEnergyJPerUnit(int slot) {
+        requirePhaseReservoir(slot);
+        return phases.transitionEnergyJPerUnit(slot);
+    }
+
+    public double phaseAvailableEnergyJ(int slot) {
+        requirePhaseReservoir(slot);
+        return phases.availableEnergyJ(slot, enthalpyJ[slot]);
+    }
+
+    public double phaseMaximumEnergyJ(int slot) {
+        requirePhaseReservoir(slot);
+        return phases.maximumEnergyJ(slot);
+    }
+
+    public boolean phaseRequestOutstanding(int slot) {
+        requirePhaseReservoir(slot);
+        return phases.requestOutstanding(slot);
+    }
+
+    public boolean phaseRequestNeedsOffer(int slot) {
+        requirePhaseReservoir(slot);
+        return phases.requestNeedsOffer(slot);
+    }
+
+    public long phaseRequestSequence(int slot) {
+        requirePhaseReservoir(slot);
+        return phases.requestSequence(slot);
+    }
+
+    public int phaseRequestCandidateBit(int slot) {
+        requirePhaseReservoir(slot);
+        return phases.requestCandidateBit(slot);
+    }
+
+    public void beginPhaseRequest(
+            int slot,
+            long requestSequence,
+        int candidateBit
+    ) {
+        requirePhaseReservoir(slot);
+        phases.beginRequest(
+                slot, requestSequence, candidateBit, enthalpyJ[slot]);
+    }
+
+    public void markPhaseRequestEnqueued(int slot, long requestSequence) {
+        requirePhaseReservoir(slot);
+        phases.markRequestEnqueued(slot, requestSequence);
+    }
+
+    public void retryPhaseRequest(int slot, long requestSequence) {
+        requirePhaseReservoir(slot);
+        phases.retryRequest(slot, requestSequence);
+    }
+
+    public double completePhaseRequest(
+            int slot,
+            long requestSequence,
+            boolean mutationApplied
+    ) {
+        requirePhaseReservoir(slot);
+        double consumed = phases.completeRequest(
+                slot, requestSequence, mutationApplied, enthalpyJ[slot]);
+        if (consumed != 0.0D) {
+            enthalpyJ[slot] = Math.max(0.0D, enthalpyJ[slot] - consumed);
+        }
+        return consumed;
+    }
+
+    public void copyPhaseRequestState(int oldSlot, int newSlot) {
+        requirePhaseReservoir(oldSlot);
+        requirePhaseReservoir(newSlot);
+        if (phases.profileId(oldSlot) != phases.profileId(newSlot)
+                || minimumX[oldSlot] != minimumX[newSlot]
+                || minimumY[oldSlot] != minimumY[newSlot]
+                || minimumZ[oldSlot] != minimumZ[newSlot]) {
+            throw new IllegalArgumentException("phase reservoir ownership key changed");
+        }
+        phases.copyRequest(oldSlot, newSlot);
+    }
+
+    private boolean isMixedSupport(int supportRef) {
+        return isAllocated(supportRef)
                 && cellKinds[supportRef] == MIXED_COMPONENT
                 && supportRefs[supportRef] == supportRef
                 && mixedBrickGeometries[supportRef] != null;
     }
 
-    public int mixedComponentId(int slot) {
-        requireMixedComponent(slot);
-        return mixedComponentIds[slot];
-    }
-
-    public int mixedComponentSlot(int supportRef, int componentId) {
-        ComponentBrickCompiler.CompiledBrick geometry = mixedGeometry(supportRef);
-        if (componentId < 0 || componentId >= geometry.componentCount()) {
-            throw new IllegalArgumentException("mixed component ID is out of bounds");
+    public double center(int slot, int axis) {
+        requireAllocatedSlot(slot);
+        int origin = switch (axis) {
+            case 0 -> minimumX[slot];
+            case 1 -> minimumY[slot];
+            case 2 -> minimumZ[slot];
+            default -> throw new IllegalArgumentException("axis must be 0, 1, or 2");
+        };
+        if (isMaterialKind(cellKinds[slot])) {
+            return origin + 0.5D;
         }
-        int slot = Math.addExact(supportRef, componentId);
-        requireMixedComponent(slot);
-        if (supportRefs[slot] != supportRef || mixedComponentIds[slot] != componentId) {
-            throw new IllegalStateException("mixed component span is not dense");
-        }
-        return slot;
-    }
-
-    public double centerX(int slot) {
-        requireLiveSlot(slot);
         if (cellKinds[slot] == REGULAR_CELL) {
-            return minimumX[slot] + widthBlocks(slot) * 0.5D;
+            return origin + 2.0D;
         }
         ComponentBrickCompiler.CompiledBrick geometry = mixedGeometry(supportRefs[slot]);
-        return minimumX[slot] + geometry.componentCentroidX(mixedComponentIds[slot]);
-    }
-
-    public double centerY(int slot) {
-        requireLiveSlot(slot);
-        if (cellKinds[slot] == REGULAR_CELL) {
-            return minimumY[slot] + widthBlocks(slot) * 0.5D;
-        }
-        ComponentBrickCompiler.CompiledBrick geometry = mixedGeometry(supportRefs[slot]);
-        return minimumY[slot] + geometry.componentCentroidY(mixedComponentIds[slot]);
-    }
-
-    public double centerZ(int slot) {
-        requireLiveSlot(slot);
-        if (cellKinds[slot] == REGULAR_CELL) {
-            return minimumZ[slot] + widthBlocks(slot) * 0.5D;
-        }
-        ComponentBrickCompiler.CompiledBrick geometry = mixedGeometry(supportRefs[slot]);
-        return minimumZ[slot] + geometry.componentCentroidZ(mixedComponentIds[slot]);
+        int component = mixedComponentIds[slot];
+        return origin + switch (axis) {
+            case 0 -> geometry.componentCentroidX(component);
+            case 1 -> geometry.componentCentroidY(component);
+            case 2 -> geometry.componentCentroidZ(component);
+            default -> throw new IllegalArgumentException("axis must be 0, 1, or 2");
+        };
     }
 
     ComponentBrickCompiler.CompiledBrick mixedGeometry(int supportRef) {
@@ -543,47 +526,6 @@ public final class ThermalCellArena {
             throw new IllegalArgumentException("slot is not a mixed-Brick support: " + supportRef);
         }
         return mixedBrickGeometries[supportRef];
-    }
-
-    public int level(int slot) {
-        requireLiveSlot(slot);
-        return Byte.toUnsignedInt(levels[slot]);
-    }
-
-    public int mediumId(int slot) {
-        requireLiveSlot(slot);
-        return mediumIds[slot];
-    }
-
-    public int flags(int slot) {
-        requireLiveSlot(slot);
-        return Byte.toUnsignedInt(cellFlags[slot]);
-    }
-
-    public FacePatchIterator.Cell faceCell(int slot) {
-        requireLiveSlot(slot);
-        if (cellKinds[slot] != REGULAR_CELL) {
-            throw new IllegalArgumentException("mixed components do not have cubic face cells");
-        }
-        return new FacePatchIterator.Cell(
-                minimumX[slot], minimumY[slot], minimumZ[slot], widthBlocks(slot));
-    }
-
-    public CellSnapshot snapshot(int slot) {
-        requireLiveSlot(slot);
-        return new CellSnapshot(
-                enthalpyJ[slot],
-                capacityJPerK[slot],
-                pageSlots[slot],
-                lifecycleGenerations[slot],
-                supportRefs[slot],
-                minimumX[slot],
-                minimumY[slot],
-                minimumZ[slot],
-                widthBlocks(slot),
-                mediumIds[slot],
-                Byte.toUnsignedInt(cellFlags[slot])
-        );
     }
 
     /** Releases one retired Page span after its replacement sweep is installed. */
@@ -599,257 +541,50 @@ public final class ThermalCellArena {
             return;
         }
         requireLifecycleGeneration(expectedLifecycleGeneration);
-        for (int slot = span.firstSlot(); slot < span.endSlotExclusive(); slot++) {
-            requireLiveSlot(slot);
-            if (pageSlots[slot] != expectedPageSlot
-                    || lifecycleGenerations[slot] != expectedLifecycleGeneration) {
-                throw new IllegalArgumentException(
-                        "Page release does not own the complete arena span");
-            }
+        if (!ownsLiveCells(
+                expectedPageSlot, expectedLifecycleGeneration, span)) {
+            throw new IllegalArgumentException(
+                    "Page release does not own the complete arena span");
         }
         releaseSpan(span);
     }
 
-    private ArenaSpan allocateValidated(
-            int pageSlot,
-            int lifecycleGeneration,
-            CellSpec[] cells,
-            double[] initialEnthalpiesJ
+    public boolean ownsLiveCells(
+            int expectedPageSlot,
+            int expectedLifecycleGeneration,
+            ArenaSpan span
     ) {
-        if (cells.length == 0) {
-            return ArenaSpan.EMPTY;
-        }
-        int firstSlot = findFreeSpan(cells.length);
-        int required = Math.addExact(firstSlot, cells.length);
-        ensureCapacity(required);
-        for (int index = 0; index < cells.length; index++) {
-            int slot = firstSlot + index;
-            writeRegularCell(
-                    slot, pageSlot, lifecycleGeneration,
-                    cells[index], initialEnthalpiesJ[index]);
-        }
-        highWaterMark = Math.max(highWaterMark, required);
-        liveCellCount = Math.addExact(liveCellCount, cells.length);
-        return new ArenaSpan(firstSlot, cells.length);
-    }
-
-    private CellSpec[] validateLayout(int pageSlot, CellSpec[] cells) {
-        if (pageSlot < 0) {
-            throw new IllegalArgumentException("pageSlot must be non-negative");
-        }
-        if (cells == null) {
-            throw new IllegalArgumentException("cells are required");
-        }
-        CellSpec[] copy = cells.clone();
-        if (copy.length == 0) {
-            return copy;
-        }
-        int sectionX = Math.floorDiv(requireCellSpec(copy[0]).minX(), 16);
-        int sectionY = Math.floorDiv(copy[0].minY(), 16);
-        int sectionZ = Math.floorDiv(copy[0].minZ(), 16);
-        for (int index = 0; index < copy.length; index++) {
-            CellSpec cell = requireCellSpec(copy[index]);
-            if (Math.floorDiv(cell.minX(), 16) != sectionX
-                    || Math.floorDiv(cell.minY(), 16) != sectionY
-                    || Math.floorDiv(cell.minZ(), 16) != sectionZ
-                    || cell.maxXExclusive() > (sectionX + 1) * 16
-                    || cell.maxYExclusive() > (sectionY + 1) * 16
-                    || cell.maxZExclusive() > (sectionZ + 1) * 16) {
-                throw new IllegalArgumentException(
-                        "all Page cells must fit inside one 16-block section");
-            }
-        }
-        requireNonOverlapping(copy);
-        return copy;
-    }
-
-    private static MixedBrickSpec[] validateMixedLayout(
-            int pageSlot,
-            CellSpec[] regular,
-            MixedBrickSpec[] mixedBricks
-    ) {
-        if (pageSlot < 0) {
-            throw new IllegalArgumentException("pageSlot must be non-negative");
-        }
-        if (mixedBricks == null) {
-            throw new IllegalArgumentException("mixedBricks are required");
-        }
-        MixedBrickSpec[] mixed = mixedBricks.clone();
-        for (int index = 0; index < mixed.length; index++) {
-            if (mixed[index] == null) {
-                throw new IllegalArgumentException("mixed Brick specification is required");
-            }
-        }
-        if (regular.length == 0 && mixed.length == 0) {
-            return mixed;
-        }
-
-        int anchorX = regular.length == 0 ? mixed[0].minX() : regular[0].minX();
-        int anchorY = regular.length == 0 ? mixed[0].minY() : regular[0].minY();
-        int anchorZ = regular.length == 0 ? mixed[0].minZ() : regular[0].minZ();
-        int sectionX = Math.floorDiv(anchorX, 16);
-        int sectionY = Math.floorDiv(anchorY, 16);
-        int sectionZ = Math.floorDiv(anchorZ, 16);
-        for (MixedBrickSpec brick : mixed) {
-            if (Math.floorDiv(brick.minX(), 16) != sectionX
-                    || Math.floorDiv(brick.minY(), 16) != sectionY
-                    || Math.floorDiv(brick.minZ(), 16) != sectionZ
-                    || brick.minX() + 4 > (sectionX + 1) * 16
-                    || brick.minY() + 4 > (sectionY + 1) * 16
-                    || brick.minZ() + 4 > (sectionZ + 1) * 16) {
-                throw new IllegalArgumentException(
-                        "all Page supports must fit inside one 16-block section");
-            }
-        }
-        for (CellSpec cell : regular) {
-            for (MixedBrickSpec brick : mixed) {
-                if (overlap(cell.minX(), cell.maxXExclusive(), brick.minX(), brick.minX() + 4)
-                        && overlap(cell.minY(), cell.maxYExclusive(), brick.minY(), brick.minY() + 4)
-                        && overlap(cell.minZ(), cell.maxZExclusive(), brick.minZ(), brick.minZ() + 4)) {
-                    throw new IllegalArgumentException(
-                            "regular cells and mixed Brick supports cannot overlap");
-                }
-            }
-        }
-        for (int first = 0; first < mixed.length; first++) {
-            for (int second = first + 1; second < mixed.length; second++) {
-                MixedBrickSpec left = mixed[first];
-                MixedBrickSpec right = mixed[second];
-                if (overlap(left.minX(), left.minX() + 4, right.minX(), right.minX() + 4)
-                        && overlap(left.minY(), left.minY() + 4, right.minY(), right.minY() + 4)
-                        && overlap(left.minZ(), left.minZ() + 4, right.minZ(), right.minZ() + 4)) {
-                    throw new IllegalArgumentException("mixed Brick supports cannot overlap");
-                }
-            }
-        }
-        return mixed;
-    }
-
-    private static CellSpec[] validateReplacementCells(CellSpec[] cells) {
-        if (cells == null) {
-            throw new IllegalArgumentException("replacement cells are required");
-        }
-        CellSpec[] copy = cells.clone();
-        for (int index = 0; index < copy.length; index++) {
-            requireCellSpec(copy[index]);
-        }
-        requireNonOverlapping(copy);
-        return copy;
-    }
-
-    private int requireOwnedPageSpan(ArenaSpan span) {
-        if (span == null || span.count() == 0) {
-            throw new IllegalArgumentException("oldPageSpan must contain live cells");
-        }
-        int ownerPageSlot = NO_SLOT;
-        int ownerLifecycleGeneration = NO_SLOT;
-        for (int slot = span.firstSlot(); slot < span.endSlotExclusive(); slot++) {
-            requireLiveSlot(slot);
-            if (ownerPageSlot == NO_SLOT) {
-                ownerPageSlot = pageSlots[slot];
-                ownerLifecycleGeneration = lifecycleGenerations[slot];
-            } else if (pageSlots[slot] != ownerPageSlot
-                    || lifecycleGenerations[slot] != ownerLifecycleGeneration) {
-                throw new IllegalArgumentException(
-                        "a Page span cannot contain cells from different incarnations");
-            }
-        }
-        return ownerPageSlot;
-    }
-
-    private static void requireExactPartition(CellSpec parent, CellSpec[] children) {
-        int bricksPerAxis = parent.widthBlocks() >>> 2;
-        boolean[] occupied = new boolean[bricksPerAxis * bricksPerAxis * bricksPerAxis];
-        for (CellSpec child : children) {
-            if (child.minX() < parent.minX()
-                    || child.minY() < parent.minY()
-                    || child.minZ() < parent.minZ()
-                    || child.maxXExclusive() > parent.maxXExclusive()
-                    || child.maxYExclusive() > parent.maxYExclusive()
-                    || child.maxZExclusive() > parent.maxZExclusive()) {
-                throw new IllegalArgumentException("LOD children must remain inside the parent");
-            }
-            int childBricks = child.widthBlocks() >>> 2;
-            int originX = (child.minX() - parent.minX()) >>> 2;
-            int originY = (child.minY() - parent.minY()) >>> 2;
-            int originZ = (child.minZ() - parent.minZ()) >>> 2;
-            for (int y = 0; y < childBricks; y++) {
-                for (int z = 0; z < childBricks; z++) {
-                    for (int x = 0; x < childBricks; x++) {
-                        int index = (originX + x)
-                                + (originZ + z) * bricksPerAxis
-                                + (originY + y) * bricksPerAxis * bricksPerAxis;
-                        if (occupied[index]) {
-                            throw new IllegalArgumentException(
-                                    "LOD child partition contains overlapping support");
-                        }
-                        occupied[index] = true;
-                    }
-                }
-            }
-        }
-        for (boolean covered : occupied) {
-            if (!covered) {
-                throw new IllegalArgumentException(
-                        "LOD child partition does not cover the complete parent support");
-            }
-        }
-    }
-
-    private static void requireLodCompatibility(CellSpec parent, CellSpec[] children) {
-        double totalCapacity = 0.0D;
-        double parentDensity = parent.capacityJPerK() / parent.volumeBlocksCubed();
-        for (CellSpec child : children) {
-            if (child.mediumId() != parent.mediumId() || child.flags() != parent.flags()) {
-                throw new IllegalArgumentException(
-                        "pure LOD cells must preserve medium and flags");
-            }
-            double childDensity = child.capacityJPerK() / child.volumeBlocksCubed();
-            requireEquivalent("pure LOD capacity density", parentDensity, childDensity);
-            totalCapacity = finiteSum(
-                    "pure LOD total capacity", totalCapacity, child.capacityJPerK());
-        }
-        requireEquivalent("pure LOD total capacity", parent.capacityJPerK(), totalCapacity);
-    }
-
-    private static void requireNonOverlapping(CellSpec[] cells) {
-        for (int first = 0; first < cells.length; first++) {
-            CellSpec left = cells[first];
-            for (int second = first + 1; second < cells.length; second++) {
-                CellSpec right = cells[second];
-                if (overlap(left.minX(), left.maxXExclusive(), right.minX(), right.maxXExclusive())
-                        && overlap(left.minY(), left.maxYExclusive(), right.minY(), right.maxYExclusive())
-                        && overlap(left.minZ(), left.maxZExclusive(), right.minZ(), right.maxZExclusive())) {
-                    throw new IllegalArgumentException("regular Page cells cannot overlap");
-                }
-            }
-        }
-    }
-
-    private static boolean overlap(int minimumA, int maximumA, int minimumB, int maximumB) {
-        return Math.max(minimumA, minimumB) < Math.min(maximumA, maximumB);
+        return ownsSpan(
+                span,
+                LIVE,
+                expectedPageSlot,
+                expectedLifecycleGeneration,
+                true);
     }
 
     private int findFreeSpan(int count) {
-        int runStart = 0;
-        int runLength = 0;
-        for (int slot = 0; slot < highWaterMark; slot++) {
-            if (allocationState[slot] == FREE) {
-                if (runLength == 0) {
-                    runStart = slot;
-                }
-                runLength++;
-                if (runLength == count) {
-                    return runStart;
-                }
-            } else {
-                runLength = 0;
-            }
+        long fit = freeSpans.takeBestFit(count);
+        if (fit == ThermalFreeSpanIndex.NO_SPAN) {
+            return allocationHighWaterMark;
         }
-        return highWaterMark;
+        int spanLength = (int) (fit >>> 32);
+        int firstSlot = (int) fit;
+        if (spanLength > count) {
+            addFreeSpan(firstSlot + count, spanLength - count);
+        }
+        return firstSlot;
     }
 
-    private void ensureCapacity(int requiredCapacity) {
+    private void addFreeSpan(int firstSlot, int count) {
+        if (count <= 0 || firstSlot < 0
+                || firstSlot + count > allocationHighWaterMark) {
+            throw new IllegalArgumentException("free arena span is invalid");
+        }
+        allocationHighWaterMark = freeSpans.addAndMerge(
+                firstSlot, count, allocationHighWaterMark);
+    }
+
+    private void ensureCapacity(int requiredCapacity, int maximumCapacity) {
         if (requiredCapacity <= allocationState.length) {
             return;
         }
@@ -863,80 +598,168 @@ public final class ThermalCellArena {
             }
             grown = next;
         }
+        grown = Math.min(grown, maximumCapacity);
         if (grown < requiredCapacity) {
             throw new IllegalStateException("thermal cell arena exceeded int address space");
         }
         enthalpyJ = Arrays.copyOf(enthalpyJ, grown);
         capacityJPerK = Arrays.copyOf(capacityJPerK, grown);
+        inverseCapacityKPerJ = Arrays.copyOf(inverseCapacityKPerJ, grown);
         pageSlots = Arrays.copyOf(pageSlots, grown);
         lifecycleGenerations = Arrays.copyOf(lifecycleGenerations, grown);
         supportRefs = Arrays.copyOf(supportRefs, grown);
         minimumX = Arrays.copyOf(minimumX, grown);
         minimumY = Arrays.copyOf(minimumY, grown);
         minimumZ = Arrays.copyOf(minimumZ, grown);
-        mediumIds = Arrays.copyOf(mediumIds, grown);
-        levels = Arrays.copyOf(levels, grown);
-        cellFlags = Arrays.copyOf(cellFlags, grown);
         cellKinds = Arrays.copyOf(cellKinds, grown);
         mixedComponentIds = Arrays.copyOf(mixedComponentIds, grown);
         mixedBrickGeometries = Arrays.copyOf(mixedBrickGeometries, grown);
+        phases.ensureCapacity(grown);
         allocationState = Arrays.copyOf(allocationState, grown);
+        liveSlots = Arrays.copyOf(liveSlots, (grown + 63) >>> 6);
+        liveWordSummary = Arrays.copyOf(
+                liveWordSummary, (liveSlots.length + 63) >>> 6);
         Arrays.fill(pageSlots, oldCapacity, grown, NO_SLOT);
         Arrays.fill(supportRefs, oldCapacity, grown, NO_SLOT);
-        Arrays.fill(mediumIds, oldCapacity, grown, -1);
         Arrays.fill(mixedComponentIds, oldCapacity, grown, NO_SLOT);
     }
 
     private void releaseSpan(ArenaSpan span) {
         for (int slot = span.firstSlot(); slot < span.endSlotExclusive(); slot++) {
-            requireLiveSlot(slot);
+            liveSlots[slot >>> 6] &= ~(1L << slot);
+        }
+        clearRange(span.firstSlot(), span.endSlotExclusive());
+        clearEmptyLiveWordSummary(
+                span.firstSlot(), span.endSlotExclusive());
+        liveCellCount -= span.count();
+        recomputeHighWaterMark();
+        addFreeSpan(span.firstSlot(), span.count());
+    }
+
+    private boolean isAllocated(int slot) {
+        return slot >= 0 && slot < allocationHighWaterMark
+                && allocationState[slot] != FREE;
+    }
+
+    private boolean ownsSpan(
+            ArenaSpan span,
+            byte expectedState,
+            int expectedPageSlot,
+            int expectedLifecycleGeneration,
+            boolean validateOwner
+    ) {
+        if (span == null || span.firstSlot() < 0
+                || span.endSlotExclusive() > allocationHighWaterMark) {
+            return false;
         }
         for (int slot = span.firstSlot(); slot < span.endSlotExclusive(); slot++) {
+            if (allocationState[slot] != expectedState
+                    || validateOwner
+                    && (pageSlots[slot] != expectedPageSlot
+                    || lifecycleGenerations[slot]
+                            != expectedLifecycleGeneration)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private void setLiveWordSummary(int firstSlot, int endSlotExclusive) {
+        int firstWord = firstSlot >>> 6;
+        int lastWord = (endSlotExclusive - 1) >>> 6;
+        for (int word = firstWord; word <= lastWord; word++) {
+            liveWordSummary[word >>> 6] |= 1L << (word & 63);
+        }
+    }
+
+    private void clearEmptyLiveWordSummary(
+            int firstSlot,
+            int endSlotExclusive
+    ) {
+        int firstWord = firstSlot >>> 6;
+        int lastWord = Math.min(
+                liveSlots.length - 1,
+                Math.max(firstWord, (endSlotExclusive - 1) >>> 6));
+        for (int word = firstWord; word <= lastWord; word++) {
+            if (liveSlots[word] == 0L) {
+                liveWordSummary[word >>> 6] &= ~(1L << (word & 63));
+            }
+        }
+    }
+
+    private void recomputeHighWaterMark() {
+        int word = previousOccupiedWord(liveSlots.length - 1);
+        while (word >= 0) {
+            long live = liveSlots[word];
+            if (live != 0L) {
+                highWaterMark = (word << 6)
+                        + Long.SIZE - Long.numberOfLeadingZeros(live);
+                return;
+            }
+            word = previousOccupiedWord(word - 1);
+        }
+        highWaterMark = 0;
+    }
+
+    private int nextOccupiedWord(int fromInclusive) {
+        if (fromInclusive < 0 || fromInclusive >= liveSlots.length) {
+            return NO_SLOT;
+        }
+        int summary = fromInclusive >>> 6;
+        long word = liveWordSummary[summary]
+                & (-1L << (fromInclusive & 63));
+        while (true) {
+            if (word != 0L) {
+                int result = (summary << 6)
+                        + Long.numberOfTrailingZeros(word);
+                return result < liveSlots.length ? result : NO_SLOT;
+            }
+            if (++summary >= liveWordSummary.length) {
+                return NO_SLOT;
+            }
+            word = liveWordSummary[summary];
+        }
+    }
+
+    private int previousOccupiedWord(int fromInclusive) {
+        if (fromInclusive < 0 || liveWordSummary.length == 0) {
+            return NO_SLOT;
+        }
+        int summary = Math.min(
+                fromInclusive >>> 6, liveWordSummary.length - 1);
+        int bit = Math.min(fromInclusive & 63, 63);
+        long word = liveWordSummary[summary]
+                & (-1L >>> (63 - bit));
+        while (true) {
+            if (word != 0L) {
+                return summary << 6
+                        | 63 - Long.numberOfLeadingZeros(word);
+            }
+            if (--summary < 0) {
+                return NO_SLOT;
+            }
+            word = liveWordSummary[summary];
+        }
+    }
+
+    private void clearRange(int firstSlot, int endSlotExclusive) {
+        int end = Math.min(endSlotExclusive, allocationState.length);
+        for (int slot = firstSlot; slot < end; slot++) {
             allocationState[slot] = FREE;
             enthalpyJ[slot] = 0.0D;
             capacityJPerK[slot] = 0.0D;
+            inverseCapacityKPerJ[slot] = 0.0D;
             pageSlots[slot] = NO_SLOT;
             lifecycleGenerations[slot] = 0;
             supportRefs[slot] = NO_SLOT;
             minimumX[slot] = 0;
             minimumY[slot] = 0;
             minimumZ[slot] = 0;
-            mediumIds[slot] = -1;
-            levels[slot] = 0;
-            cellFlags[slot] = 0;
             cellKinds[slot] = REGULAR_CELL;
             mixedComponentIds[slot] = NO_SLOT;
             mixedBrickGeometries[slot] = null;
+            phases.clear(slot);
         }
-        liveCellCount -= span.count();
-        while (highWaterMark > 0 && allocationState[highWaterMark - 1] == FREE) {
-            highWaterMark--;
-        }
-    }
-
-    private double sumEnthalpy(ArenaSpan span) {
-        double total = 0.0D;
-        for (int slot = span.firstSlot(); slot < span.endSlotExclusive(); slot++) {
-            requireLiveSlot(slot);
-            total = finiteSum("Page enthalpy", total, enthalpyJ[slot]);
-        }
-        return total;
-    }
-
-    private CellSpec cellSpec(int slot) {
-        requireLiveSlot(slot);
-        if (cellKinds[slot] != REGULAR_CELL) {
-            throw new IllegalArgumentException("pure LOD replacement requires regular cells");
-        }
-        return new CellSpec(
-                minimumX[slot],
-                minimumY[slot],
-                minimumZ[slot],
-                widthBlocks(slot),
-                mediumIds[slot],
-                Byte.toUnsignedInt(cellFlags[slot]),
-                capacityJPerK[slot]
-        );
     }
 
     private void requireLiveSlot(int slot) {
@@ -945,10 +768,25 @@ public final class ThermalCellArena {
         }
     }
 
-    private void requireMixedComponent(int slot) {
-        requireLiveSlot(slot);
-        if (cellKinds[slot] != MIXED_COMPONENT) {
-            throw new IllegalArgumentException("slot is not a mixed component: " + slot);
+    private void requireAllocatedSlot(int slot) {
+        if (!isAllocated(slot)) {
+            throw new IllegalArgumentException(
+                    "cell slot is not allocated: " + slot);
+        }
+    }
+
+    private void requireReservedSlot(int slot) {
+        if (slot < 0 || slot >= allocationHighWaterMark
+                || allocationState[slot] != RESERVED) {
+            throw new IllegalArgumentException(
+                    "cell slot is not staged: " + slot);
+        }
+    }
+
+    private void requirePhaseReservoir(int slot) {
+        requireAllocatedSlot(slot);
+        if (cellKinds[slot] != PHASE_RESERVOIR) {
+            throw new IllegalArgumentException("slot is not a phase reservoir: " + slot);
         }
     }
 
@@ -956,21 +794,21 @@ public final class ThermalCellArena {
             int slot,
             int pageSlot,
             int lifecycleGeneration,
-            CellSpec cell,
+            int minX,
+            int minY,
+            int minZ,
+            double capacity,
             double initialEnthalpyJ
     ) {
-        allocationState[slot] = LIVE;
+        allocationState[slot] = RESERVED;
         enthalpyJ[slot] = initialEnthalpyJ;
-        capacityJPerK[slot] = cell.capacityJPerK();
+        writeCapacity(slot, capacity);
         pageSlots[slot] = pageSlot;
         lifecycleGenerations[slot] = lifecycleGeneration;
         supportRefs[slot] = slot;
-        minimumX[slot] = cell.minX();
-        minimumY[slot] = cell.minY();
-        minimumZ[slot] = cell.minZ();
-        mediumIds[slot] = cell.mediumId();
-        levels[slot] = levelForWidth(cell.widthBlocks());
-        cellFlags[slot] = (byte) cell.flags();
+        minimumX[slot] = minX;
+        minimumY[slot] = minY;
+        minimumZ[slot] = minZ;
         cellKinds[slot] = REGULAR_CELL;
         mixedComponentIds[slot] = NO_SLOT;
         mixedBrickGeometries[slot] = null;
@@ -981,81 +819,96 @@ public final class ThermalCellArena {
             int pageSlot,
             int lifecycleGeneration,
             int supportRef,
-            MixedBrickSpec brick,
+            int minX,
+            int minY,
+            int minZ,
             int componentId,
             double capacity,
             double initialEnthalpyJ
     ) {
-        allocationState[slot] = LIVE;
+        allocationState[slot] = RESERVED;
         enthalpyJ[slot] = initialEnthalpyJ;
-        capacityJPerK[slot] = capacity;
+        writeCapacity(slot, capacity);
         pageSlots[slot] = pageSlot;
         lifecycleGenerations[slot] = lifecycleGeneration;
         supportRefs[slot] = supportRef;
-        minimumX[slot] = brick.minX();
-        minimumY[slot] = brick.minY();
-        minimumZ[slot] = brick.minZ();
-        mediumIds[slot] = brick.mediumId();
-        levels[slot] = levelForWidth(4);
-        cellFlags[slot] = (byte) brick.flags();
+        minimumX[slot] = minX;
+        minimumY[slot] = minY;
+        minimumZ[slot] = minZ;
         cellKinds[slot] = MIXED_COMPONENT;
         mixedComponentIds[slot] = componentId;
     }
 
-    private static void requireSlotInSpan(String name, int slot, ArenaSpan span) {
-        if (slot < span.firstSlot() || slot >= span.endSlotExclusive()) {
-            throw new IllegalArgumentException(name + " is outside the Page span");
+    private void writeMaterialPole(
+            int slot,
+            int pageSlot,
+            int lifecycleGeneration,
+            int blockX,
+            int blockY,
+            int blockZ,
+            double capacity,
+            double initialEnthalpyJ
+    ) {
+        allocationState[slot] = RESERVED;
+        enthalpyJ[slot] = initialEnthalpyJ;
+        writeCapacity(slot, capacity);
+        pageSlots[slot] = pageSlot;
+        lifecycleGenerations[slot] = lifecycleGeneration;
+        supportRefs[slot] = slot;
+        minimumX[slot] = blockX;
+        minimumY[slot] = blockY;
+        minimumZ[slot] = blockZ;
+        cellKinds[slot] = MATERIAL_CELL;
+        mixedComponentIds[slot] = NO_SLOT;
+        mixedBrickGeometries[slot] = null;
+    }
+
+    private void writePhaseReservoir(
+            int slot,
+            int pageSlot,
+            int lifecycleGeneration,
+            int brickMinX,
+            int brickMinY,
+            int brickMinZ,
+            int materialProfileId,
+            long candidateMask,
+            double transitionTemperatureC,
+            double transitionEnergyJPerUnit
+    ) {
+        allocationState[slot] = RESERVED;
+        enthalpyJ[slot] = 0.0D;
+        writeCapacity(slot, transitionEnergyJPerUnit);
+        pageSlots[slot] = pageSlot;
+        lifecycleGenerations[slot] = lifecycleGeneration;
+        supportRefs[slot] = slot;
+        minimumX[slot] = brickMinX;
+        minimumY[slot] = brickMinY;
+        minimumZ[slot] = brickMinZ;
+        cellKinds[slot] = PHASE_RESERVOIR;
+        mixedComponentIds[slot] = NO_SLOT;
+        mixedBrickGeometries[slot] = null;
+        phases.write(
+                slot,
+                materialProfileId,
+                candidateMask,
+                transitionTemperatureC,
+                transitionEnergyJPerUnit);
+    }
+
+    private void writeCapacity(int slot, double capacity) {
+        if (!Double.isFinite(capacity) || capacity <= 0.0D) {
+            throw new IllegalArgumentException("cell capacity must be finite and positive");
         }
-    }
-
-    private static CellSpec requireCellSpec(CellSpec cell) {
-        if (cell == null) {
-            throw new IllegalArgumentException("cell specification is required");
+        double inverse = 1.0D / capacity;
+        if (!Double.isFinite(inverse) || inverse <= 0.0D) {
+            throw new IllegalArgumentException("inverse cell capacity is invalid");
         }
-        return cell;
-    }
-
-    private static void translateOffsets(int[] offsets, int firstSlot) {
-        for (int index = 0; index < offsets.length; index++) {
-            if (offsets[index] != NO_SLOT) {
-                offsets[index] = Math.addExact(firstSlot, offsets[index]);
-            }
-        }
-    }
-
-    private static byte levelForWidth(int width) {
-        return switch (width) {
-            case 4 -> 0;
-            case 8 -> 1;
-            case 16 -> 2;
-            default -> throw new IllegalArgumentException("unsupported cell width " + width);
-        };
-    }
-
-    private static int widthForLevel(byte level) {
-        return switch (Byte.toUnsignedInt(level)) {
-            case 0 -> 4;
-            case 1 -> 8;
-            case 2 -> 16;
-            default -> throw new IllegalStateException("corrupt thermal cell level " + level);
-        };
-    }
-
-    private static void requireEquivalent(String name, double expected, double actual) {
-        double scale = Math.max(1.0D, Math.max(Math.abs(expected), Math.abs(actual)));
-        if (Math.abs(expected - actual) > CAPACITY_RELATIVE_TOLERANCE * scale) {
-            throw new IllegalArgumentException(name + " changed: " + expected + " != " + actual);
-        }
+        capacityJPerK[slot] = capacity;
+        inverseCapacityKPerJ[slot] = inverse;
     }
 
     private static double finiteProduct(String name, double left, double right) {
         double result = left * right;
-        requireFinite(name, result);
-        return result;
-    }
-
-    private static double finiteSum(String name, double left, double right) {
-        double result = left + right;
         requireFinite(name, result);
         return result;
     }
@@ -1072,315 +925,16 @@ public final class ThermalCellArena {
         }
     }
 
-    public record CellSpec(
-            int minX,
-            int minY,
-            int minZ,
-            int widthBlocks,
-            int mediumId,
-            int flags,
-            double capacityJPerK
+    public record BrickAllocation(
+            ArenaSpan cellSpan,
+            int[] materialPoleSlots,
+            int[] phaseReservoirSlots
     ) {
-        public CellSpec {
-            new FacePatchIterator.Cell(minX, minY, minZ, widthBlocks);
-            if (mediumId < 0) {
-                throw new IllegalArgumentException("mediumId must be non-negative");
-            }
-            if (flags < 0 || flags > 0xff) {
-                throw new IllegalArgumentException("flags must fit an unsigned byte");
-            }
-            if (!Double.isFinite(capacityJPerK) || capacityJPerK <= 0.0D) {
-                throw new IllegalArgumentException(
-                        "capacityJPerK must be finite and positive");
-            }
-        }
-
-        public static CellSpec regularAir(
-                int minX,
-                int minY,
-                int minZ,
-                int widthBlocks,
-                int mediumId,
-                int flags,
-                double effectiveVolumetricCapacityJPerBlockK
-        ) {
-            if (!Double.isFinite(effectiveVolumetricCapacityJPerBlockK)
-                    || effectiveVolumetricCapacityJPerBlockK <= 0.0D) {
-                throw new IllegalArgumentException(
-                        "effective volumetric capacity must be finite and positive");
-            }
-            long volume = Math.multiplyExact(
-                    Math.multiplyExact((long) widthBlocks, widthBlocks),
-                    widthBlocks
-            );
-            return new CellSpec(
-                    minX,
-                    minY,
-                    minZ,
-                    widthBlocks,
-                    mediumId,
-                    flags,
-                    finiteProduct(
-                            "regular air capacity",
-                            effectiveVolumetricCapacityJPerBlockK,
-                            volume
-                    )
-            );
-        }
-
-        public long volumeBlocksCubed() {
-            return Math.multiplyExact(
-                    Math.multiplyExact((long) widthBlocks, widthBlocks),
-                    widthBlocks
-            );
-        }
-
-        public int maxXExclusive() {
-            return Math.addExact(minX, widthBlocks);
-        }
-
-        public int maxYExclusive() {
-            return Math.addExact(minY, widthBlocks);
-        }
-
-        public int maxZExclusive() {
-            return Math.addExact(minZ, widthBlocks);
-        }
+        private static final BrickAllocation EMPTY = new BrickAllocation(
+                ArenaSpan.EMPTY, NO_SLOTS, NO_SLOTS);
     }
 
-    public record CellSnapshot(
-            double enthalpyJ,
-            double capacityJPerK,
-            int pageSlot,
-            int lifecycleGeneration,
-            int supportRef,
-            int minX,
-            int minY,
-            int minZ,
-            int widthBlocks,
-            int mediumId,
-            int flags
-    ) {
-    }
-
-    public record PageAllocation(ArenaSpan cellSpan, int[] mixedSupportRefs) {
-        public PageAllocation {
-            if (cellSpan == null || mixedSupportRefs == null) {
-                throw new IllegalArgumentException("Page allocation fields are required");
-            }
-            mixedSupportRefs = mixedSupportRefs.clone();
-        }
-
-        @Override
-        public int[] mixedSupportRefs() {
-            return mixedSupportRefs.clone();
-        }
-    }
-
-    public record MixedBrickSpec(
-            int minX,
-            int minY,
-            int minZ,
-            ComponentBrickCompiler.CompiledBrick geometry,
-            int mediumId,
-            int flags,
-            double effectiveVolumetricCapacityJPerBlockK
-    ) {
-        public MixedBrickSpec {
-            if (Math.floorMod(minX, 4) != 0
-                    || Math.floorMod(minY, 4) != 0
-                    || Math.floorMod(minZ, 4) != 0) {
-                throw new IllegalArgumentException("mixed Brick minimum must be 4-block aligned");
-            }
-            if (geometry == null || geometry.componentCount() == 0) {
-                throw new IllegalArgumentException(
-                        "mixed Brick geometry must contain at least one air component");
-            }
-            if (mediumId < 0) {
-                throw new IllegalArgumentException("mediumId must be non-negative");
-            }
-            if (flags < 0 || flags > 0xff) {
-                throw new IllegalArgumentException("flags must fit an unsigned byte");
-            }
-            if (!Double.isFinite(effectiveVolumetricCapacityJPerBlockK)
-                    || effectiveVolumetricCapacityJPerBlockK <= 0.0D) {
-                throw new IllegalArgumentException(
-                        "effective volumetric capacity must be finite and positive");
-            }
-        }
-    }
-
-    public enum ReplacementKind {
-        SPLIT,
-        MERGE
-    }
-
-    public enum ReplacementState {
-        PREPARED,
-        COMMITTED,
-        ROLLED_BACK
-    }
-
-    /** Two-span handoff that prevents Page coverage from observing freed cells. */
-    public final class PageLayoutReplacement implements AutoCloseable {
-        private final ReplacementKind kind;
-        private final int pageSlot;
-        private final ArenaSpan oldSpan;
-        private final ArenaSpan newSpan;
-        private final ArenaSpan replacementSpan;
-        private final int[] oldToNewSlots;
-        private final double oldEnthalpyJ;
-        private final double newEnthalpyJ;
-        private ReplacementState state = ReplacementState.PREPARED;
-
-        private PageLayoutReplacement(
-                ReplacementKind kind,
-                int pageSlot,
-                ArenaSpan oldSpan,
-                ArenaSpan newSpan,
-                ArenaSpan replacementSpan,
-                int[] oldToNewSlots,
-                double oldEnthalpyJ,
-                double newEnthalpyJ
-        ) {
-            this.kind = kind;
-            this.pageSlot = pageSlot;
-            this.oldSpan = oldSpan;
-            this.newSpan = newSpan;
-            this.replacementSpan = replacementSpan;
-            this.oldToNewSlots = oldToNewSlots;
-            this.oldEnthalpyJ = oldEnthalpyJ;
-            this.newEnthalpyJ = newEnthalpyJ;
-        }
-
-        public ReplacementKind kind() {
-            return kind;
-        }
-
-        public int pageSlot() {
-            return pageSlot;
-        }
-
-        public ArenaSpan oldSpan() {
-            return oldSpan;
-        }
-
-        public ArenaSpan newSpan() {
-            return newSpan;
-        }
-
-        public ArenaSpan replacementSpan() {
-            return replacementSpan;
-        }
-
-        public ReplacementState state() {
-            return state;
-        }
-
-        public double oldEnthalpyJ() {
-            return oldEnthalpyJ;
-        }
-
-        public double newEnthalpyJ() {
-            return newEnthalpyJ;
-        }
-
-        public double energyResidualJ() {
-            return oldEnthalpyJ - newEnthalpyJ;
-        }
-
-        public int newSlotForUnchangedOldSlot(int oldSlot) {
-            requirePreparedOrCommitted();
-            requireSlotInSpan("oldSlot", oldSlot, oldSpan);
-            return oldToNewSlots[oldSlot - oldSpan.firstSlot()];
-        }
-
-        /** Finds the direct regular-cell support for one world block. */
-        public int newCellSlotCovering(int worldX, int worldY, int worldZ) {
-            requirePreparedOrCommitted();
-            for (int slot = newSpan.firstSlot(); slot < newSpan.endSlotExclusive(); slot++) {
-                if (containsBlock(slot, worldX, worldY, worldZ)) {
-                    return slot;
-                }
-            }
-            return NO_SLOT;
-        }
-
-        /**
-         * Releases the old span only after the Page owns the complete new span
-         * and no coverage entry still references an old regular cell.
-         */
-        public void commit(ThermalPage page) {
-            requirePrepared();
-            if (page == null) {
-                throw new IllegalArgumentException("page is required");
-            }
-            if (!newSpan.equals(page.cellSpan())) {
-                throw new IllegalStateException(
-                        "Page must install the replacement cell span before commit");
-            }
-            int[] coverage = page.coverageSnapshot();
-            boolean[] referencedNewCells = new boolean[newSpan.count()];
-            for (int baseIndex = 0; baseIndex < coverage.length; baseIndex++) {
-                int supportRef = coverage[baseIndex];
-                if (contains(oldSpan, supportRef)) {
-                    throw new IllegalStateException(
-                            "Page coverage still references an old thermal cell");
-                }
-                if (contains(newSpan, supportRef)) {
-                    int offset = supportRef - newSpan.firstSlot();
-                    referencedNewCells[offset] = true;
-                    if (page.coverageWidthAtBase(baseIndex) != widthBlocks(supportRef)) {
-                        throw new IllegalStateException(
-                                "Page coverage width does not match its thermal cell");
-                    }
-                }
-            }
-            for (boolean referenced : referencedNewCells) {
-                if (!referenced) {
-                    throw new IllegalStateException(
-                            "every regular cell in the replacement span must own coverage");
-                }
-            }
-            releaseSpan(oldSpan);
-            state = ReplacementState.COMMITTED;
-        }
-
-        /** Discards the prepared span while leaving the old Page state intact. */
-        public void rollback() {
-            requirePrepared();
-            releaseSpan(newSpan);
-            state = ReplacementState.ROLLED_BACK;
-        }
-
-        @Override
-        public void close() {
-            if (state == ReplacementState.PREPARED) {
-                rollback();
-            }
-        }
-
-        private boolean containsBlock(int slot, int worldX, int worldY, int worldZ) {
-            requireLiveSlot(slot);
-            return worldX >= minimumX[slot] && worldX < minimumX[slot] + widthBlocks(slot)
-                    && worldY >= minimumY[slot] && worldY < minimumY[slot] + widthBlocks(slot)
-                    && worldZ >= minimumZ[slot] && worldZ < minimumZ[slot] + widthBlocks(slot);
-        }
-
-        private void requirePrepared() {
-            if (state != ReplacementState.PREPARED) {
-                throw new IllegalStateException("replacement is no longer prepared: " + state);
-            }
-        }
-
-        private void requirePreparedOrCommitted() {
-            if (state == ReplacementState.ROLLED_BACK) {
-                throw new IllegalStateException("replacement was rolled back");
-            }
-        }
-    }
-
-    private static boolean contains(ArenaSpan span, int slot) {
-        return slot >= span.firstSlot() && slot < span.endSlotExclusive();
+    private static boolean isMaterialKind(byte kind) {
+        return kind == MATERIAL_CELL;
     }
 }

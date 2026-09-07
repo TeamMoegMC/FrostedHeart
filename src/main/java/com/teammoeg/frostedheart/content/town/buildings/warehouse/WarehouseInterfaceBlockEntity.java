@@ -203,9 +203,10 @@ public class WarehouseInterfaceBlockEntity extends CBlockEntity implements CTick
         TransportReservationResult result = teamTown.registerOrUpdateWarehouseInterface(new TransportEndpointRequest(
                 endpointId(), TransportEndpointKind.WAREHOUSE_INTERFACE, rateItemsPerSecond));
         recordTransportDecision(result.decision());
-        if (result.reservationAfter().map(TransportReservation::rateItemsPerSecond).orElse(0) == 0) {
-            transferBudget.reset();
-        } else {
+        int acceptedRate = result.reservationAfter()
+                .map(TransportReservation::rateItemsPerSecond).orElse(0);
+        transferBudget.configure(acceptedRate);
+        if (acceptedRate > 0) {
             needsBalance = true;
         }
         return result.decision();
@@ -365,6 +366,9 @@ public class WarehouseInterfaceBlockEntity extends CBlockEntity implements CTick
             resolveTown().ifPresent(this::ensureTransportReservation);
             ensureWatcherAndRefresh();
             needsBalance = true;
+            if (level != null) {
+                transferBudget.wake(level.getGameTime());
+            }
         }
         updateTransportBlockState();
     }
@@ -426,6 +430,9 @@ public class WarehouseInterfaceBlockEntity extends CBlockEntity implements CTick
         }
 
         needsBalance = true;
+        if (level != null && !level.isClientSide) {
+            transferBudget.wake(level.getGameTime());
+        }
     }
 
     /**
@@ -452,28 +459,42 @@ public class WarehouseInterfaceBlockEntity extends CBlockEntity implements CTick
         ITownWithResources resourceTown = teamTown;
 
         connectionStatus = STATUS_WORKING;
-        boolean hasDemand = hasBalanceDemand();
-        if (!hasDemand) {
-            transferBudget.beginTick(0.0, false);
-            return;
-        }
-
         Optional<TransportReservation> reservation = teamTown.getTransportReservation(endpointId());
         if (reservation.isEmpty()
                 || reservation.get().admissionStatus() != com.teammoeg.frostedheart.content.town.transport.TransportAdmissionStatus.ACTIVE
                 || reservation.get().rateItemsPerSecond() == 0) {
             transferBudget.reset();
+            needsBalance = false;
             return;
         }
 
+        transferBudget.configure(reservation.get().rateItemsPerSecond());
         double effectiveRate = reservation.get().rateItemsPerSecond()
                 * teamTown.getTransportSummary().effectiveRateScale();
-        int tickBudget = transferBudget.beginTick(effectiveRate, true);
+        long gameTime = level.getGameTime();
+        if (!Double.isFinite(effectiveRate) || effectiveRate <= 0.0) {
+            transferBudget.pause(gameTime);
+            needsBalance = true;
+            return;
+        }
+
+        boolean hasDemand = hasBalanceDemand();
+        if (!hasDemand) {
+            needsBalance = false;
+            return;
+        }
+
+        int tickBudget = transferBudget.beginAttempt(gameTime, effectiveRate);
         if (tickBudget <= 0) {
             needsBalance = true;
             return;
         }
         BalanceResult balanceResult = balance(resourceTown.getActionExecutorHandler(), tickBudget);
+        if (balanceResult.movedItems() > 0) {
+            transferBudget.recordSuccess(balanceResult.movedItems(), gameTime);
+        } else {
+            transferBudget.recordFailure(gameTime);
+        }
         needsBalance = balanceResult.hasRemainingWork();
     }
 

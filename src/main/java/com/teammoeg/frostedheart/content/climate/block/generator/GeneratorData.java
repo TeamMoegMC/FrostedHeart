@@ -21,7 +21,6 @@ package com.teammoeg.frostedheart.content.climate.block.generator;
 
 import java.util.Optional;
 
-import com.teammoeg.frostedheart.content.climate.gamedata.chunkheat.ChunkHeatData;
 import org.jetbrains.annotations.NotNull;
 
 import com.mojang.serialization.Codec;
@@ -126,8 +125,6 @@ public class GeneratorData implements SpecialData {
 
     public ResourceKey<Level> dimension;
     public transient int townProcessedTicks = 0;
-    private transient int lastWrittenRadius = -1;
-    private transient int lastWrittenTempMod = -1;
 
     public GeneratorData(SpecialDataHolder teamData) {
     }
@@ -257,20 +254,6 @@ public class GeneratorData implements SpecialData {
         isActive = tickFuelProcess(w,teamData,townBatchTicks);
         tickHeatedProcess(w,townBatchTicks);
         townProcessedTicks = townBatchTicks;
-
-        int r = getRadius();
-        int t = getTempMod();
-        if (r > 0 && t > 0) {
-            if (r != lastWrittenRadius || t != lastWrittenTempMod) {
-                ChunkHeatData.addSphereTempAdjust(w, actualPos.below(masterYPosInMB), r, t);
-                lastWrittenRadius = r;
-                lastWrittenTempMod = t;
-            }
-        } else if (lastWrittenRadius != -1) {
-            ChunkHeatData.removeTempAdjust(w, actualPos.below(masterYPosInMB));
-            lastWrittenRadius = -1;
-            lastWrittenTempMod = -1;
-        }
     }
 
     public void tickHeatedProcess(Level world, int ticks) {
@@ -379,8 +362,6 @@ public class GeneratorData implements SpecialData {
         processMax = 0;
         power = 0;
         lastPower=0;
-        lastWrittenRadius = -1;
-        lastWrittenTempMod = -1;
     }
 
     protected double getHeatEfficiency(SpecialDataHolder<?> teamData) {

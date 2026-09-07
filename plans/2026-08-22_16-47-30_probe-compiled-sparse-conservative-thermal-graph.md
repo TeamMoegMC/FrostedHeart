@@ -1,16 +1,34 @@
 # Frosted Heart — Sparse Thermal Runtime V1 工程实现规格
 
 - Time: `2026-08-22 16:47:30 +08:00`
-- Last revised: `2026-08-25 00:46:42 +08:00`
-- Authors: `Codex; OpenAI; main engineering agent`; independent reviews by `minecraft_geometry_review` and `thermal_runtime_review`; Phase 0/Phase A/Phase B implementation with `phase0a_mutation_spike`, `phase0_writer_census`, `phase0_enabled_mod_census`, `phasea_core_contract`, and `phaseb_face_ownership` (`gpt-5.6-sol`, `ultra`); Phase C, combined Phase D solver/source integration, Phase E PR6, PR7 runtime, gated PR8 Minecraft input foundation, and dormant Phase G physical sources by the primary engineering agent
-- Status: `in-progress`
-- Implementation gate: `Phase 0 and Phase A/B/C/D foundations, Phase E PR6 gate implementation, PR7 runtime correctness, dormant Phase F Minecraft topology/resnapshot/shadow dispatch, and dormant Phase G Campfire/Generator physical sources complete; FarField profiles, workload evidence, material boundaries, gameplay query compositor, and gameplay authority not yet approved`
+- Last revised: `2026-08-31 23:00:17 +08:00`
+- Authors: `Codex; OpenAI; main engineering agent`; independent reviews by `minecraft_geometry_review` and `thermal_runtime_review`; Phase 0/Phase A/Phase B implementation with `phase0a_mutation_spike`, `phase0_writer_census`, `phase0_enabled_mod_census`, `phasea_core_contract`, and `phaseb_face_ownership` (`gpt-5.6-sol`, `ultra`); Phase C, combined Phase D solver/source integration, Phase E PR6, PR7 runtime, PR8 Minecraft input foundation, Phase G physical sources, dormant Phase H material boundaries, Phase I Brick-local phase reservoirs and recipe activation, Phase J radiation, Phase K player/crop/town consumers, Phase L external diagnostics, and the player air/radiation gameplay test connection by the primary engineering agent
+- Status: `superseded`
+- Implementation gate: `Phase 0 and Phase A/B/C/D foundations, Phase E PR6 gate implementation, PR7 runtime correctness, Phase F Minecraft topology/resnapshot/dispatch, Phase G Campfire/Generator/Radiator/Fountain physical sources, dormant Phase H non-phase material boundaries, Phase I Brick-local phase reservoirs, Phase J radiation, Phase K player/crop/town consumers, Phase L external diagnostics, and the three-backend query compositor complete; player air/direct radiation, crop/town publication hits, recipe-compiled hot-side phase transitions, sky-proven FarField, and bounded one-Page underground continuation are connected for in-save testing with natural fallback, while production-like multiplayer evidence, non-phase material calibration, cold-side phase authority, and a real ordinary-machine consumer remain open`
 - Scope: `Frosted Heart 气候、世界温度、玩家环境采样、解析控制场、局部热源、材料相变、地热、消费者迁移与多人服务器运行时`
-- Related: [`docs/climate/README.md`](../docs/climate/README.md), [`world-climate-and-temperature.md`](../docs/climate/world-climate-and-temperature.md), [`player-temperature.md`](../docs/climate/player-temperature.md), [`heat-production-and-network.md`](../docs/climate/heat-production-and-network.md), [`data-lifecycle-and-integration.md`](../docs/climate/data-lifecycle-and-integration.md), `WorldTemperature`, `BlockTempData`, `StateTransitionData`, `PhysicalState`, `SurroundingTemperatureSimulator`, `TemperatureThreadingPool`, `ChunkHeatData`, `GeneratorData`, `HeatNetwork`
+- Related: [`docs/climate/README.md`](../docs/climate/README.md), [`world-climate-and-temperature.md`](../docs/climate/world-climate-and-temperature.md), [`player-temperature.md`](../docs/climate/player-temperature.md), [`heat-production-and-network.md`](../docs/climate/heat-production-and-network.md), [`data-lifecycle-and-integration.md`](../docs/climate/data-lifecycle-and-integration.md), `WorldTemperature`, `BlockTempData`, `StateTransitionData`, `PhysicalState`, `SurroundingTemperatureSimulator`, `TemperatureThreadingPool`, `MinecraftThermalInput.AnalyticField`, `MinecraftPhysicalSourceManager`, `GeneratorData`, `HeatNetwork`
 - Architecture: `Tiered Sparse Section-Component Finite-Volume Thermal Runtime`
 - Primary implementation target: `Codex / Engineering Agent; Minecraft 多人服务端整合包`
 
 > 本文是交给工程 agent 开始 Phase 0 和 V1 原型的冻结候选规格，不是当前实现行为的依据，也不表示已经批准替换生产温度系统。
+
+> Outcome on `2026-08-31`: this recovered V1 specification is retained as historical architecture evidence and is superseded by [`Thermal Async Runtime And Topology Refactor Plan`](2026-08-28_01-18-39_thermal-async-runtime-topology-refactor.md). In particular, Page-wide physical-source interest, one-Page continuation, non-sky weak FarField, full-Page admission, `4/8/16` LOD, and `STEADY_SOURCE_SLEEP` wording here is not the current implementation plan. The successor plan's `Brick Residency And Source-Independent Propagation Correction` is the sole authority for the next residency/propagation work.
+
+> `2026-08-26` source/dispatch 实现收敛：当前 V1 不再保留没有生产消费者的 source segment history、replay snapshot、ACK/checksum 或 registry-local watermark；`ThermalSourceTimeline` 的有界 command ring 是唯一 source stream cut，`ThermalSourceRegistry` 只保存当前 source/port/binding 状态和四类 route totals，实际能量仍经 `NodePowerAccumulatorArena` 精确积分到唯一 `ThermalCellArena`。同步 gameplay 也不再套 `ThermalRuntimeCoordinator`；`enableDispatch(Executor)` 直接执行 topology apply 与该维度的 `DimensionThermalRuntime.runOne`，latest-only 和 logical writer 仍由 dimension runtime 持有。本文较早章节中的 retained replay、bounded dimension mailbox、fairness/recovery quota 是历史候选设计，已由 [`2026-08-26 runtime convergence plan`](2026-08-26_21-15-44_thermal-runtime-dead-path-and-dispatch-convergence.md) 明确 supersede，不代表当前代码。
+
+> `2026-08-26` 稳态成本收敛：gameplay runtime 只在 5-tick cadence 到期时求解；Page/区块/geometry/FarField 或 physical source 注册、启停、功率变化会封存 urgent frame 并立即求解。无 source power/pending energy 且热残差连续稳定后，维度不再 seal 或 republish，新的 input event 再唤醒；`topologyResolved=false` 继续令查询携带 degraded/fallback 语义，但不再把“等待未来外部证据”误当成持续工作。`MinecraftThermalTopologyApplier` 的稳定 Page 只保留 `appliedSignatureIds[4096]`，`desiredSignatureIds` 在 dirty 时 clone/接管并于 commit 后释放，每稳定 Page 约省 `16 KiB`。`QueryPublication` 从 `256` 槽起步，solve publication 前按 arena high-water mark 倍增并继续计入新旧 backing 双持峰值；`65,536` 只保留为 active-cell hard cap。普通 section 只注入真实 thermal owner；Phase 0 probe/reference/census 已退役并从源码删除。
+
+> `2026-08-26` mutation 热路径收敛：普通 geometry mutation 立即令 Page publication stale，但首次 pending tick 固定 `+5 ticks` 的最晚 rebuild 截止时间，后续变更不延后截止时间；截止前发生的 source-only solve 继续使用已经释放的 geometry watermark，不会顺带消费 pending geometry。真实 captured Page 不再创建临时 `16^3` 全空气 cell，而是以空 unpublished Page 直接建立 `64` 个 world-aligned `4^3` fragment；显式 all-air coarse Page 仍只在首次真实变化时拆分。稳定 Page 只分配、迁移并替换 `dirtyBrickMask` 对应 fragment，未变 Brick 的 arena slot 与 `H` 保持不动。full-resync 保留必要的 4096-signature 捕获，但按 topology semantics 生成 Brick diff，相同快照不换 slot，变化快照只重编命中 Brick。Air pair 按负轴拥有者缓存为每 Brick 的 `+X/+Y/+Z` fragment，只重编脏 Brick 与三个负方向接口拥有者；coarse 邻居按 arena support 原点定位真实 owner，不递归扩散。材料候选在同一次 64-block Brick signature 遍历中收集，材料接触只刷新脏 Brick 和六个面邻居。FarField/continuation 对每个开放面只遍历 `16^2 = 256` 个边界方块。Page retirement 在 replacement sweep commit 后释放全部 fragment。该改动已有 slot stability、full-resync diff、coarse-neighbor owner、ledger、material/phase 和 gameplay batch 定向测试；真实 CPU/分配改善比例仍等待同 workload 的新 JFR，不以代码结构代替实测。
+
+> `2026-08-26` topology replacement 已改为局部 patch：primitive Air adjacency、cell-to-component 和 component members 持久保存；dirty pair fragment 只替换自身 edge，开口只合并端点 component，闭口只 flood-fill 被触及的旧 component，未触及 component 不重分类。`ThermalSweepFragments` 同样只替换 dirty Air/material/boundary/phase fragment 与受影响 FarField slot；材料 pair 聚合、forward/reverse、boundary/phase 和浮点累加次序保持 canonical。普通 mutation 不创建/sort active Page 列表、不扫描全部 Page 或 arena high-water。完整遍历只保留给 Page admission/retirement、fragment 总数变化、全局 FarField 输入、未知位置 resync 和有界容量增长。
+
+> `2026-08-26` 验证资产收缩：Phase 0 reference/probe/census、Phase A census、self-evidence JUnit、JMH/JFR/JOL fixture、专用 Gradle task 和旧报告生成物全部删除。只保留 `gameTest` source set 中 Phase A geometry 与真实 Minecraft thermal integration 两类 Forge GameTest，共 `13` 条 thermal 场景；发行 JAR 不包含这些测试。拓扑不变 frame、primitive section index 和固定六邻居传播优化保留，核心 `H/C/P*dt`、pair、migration、radiation 和 publication 语义未变。
+
+> `2026-08-26` 实机测试接线：`TemperatureUpdate` 已通过 `MinecraftThermalInput.gameplayPlayerEnvironment` 消费新 Page publication 和同次有界 Phase J 辐射结果；首次 query 建立 runtime、启用 physical source/radiation 并 capture 玩家已加载 section，自然环境值只作为初温和明确 air miss 的兜底。作物与住宅/狩猎建筑也在完整 publication 命中时使用新空气温度，miss/partial 时回退同次 natural backend。`StateTransitionData` 的可编译热侧规则现进入同一 gameplay registry，只有 applied Page candidate 才屏蔽旧热侧随机转换，冷侧与 fallback 保留；普通机器没有现存温度 consumer。Campfire、Generator、Radiator 与 Fountain 只通过 physical source manager 进入 mesh/radiation，旧区块热场、capability 和同步失效路径已经删除。当前 dispatch 在 level tick 末主线程顺序执行，以先验证真实路径正确性，不作为最终异步性能结论。
+
+> `2026-08-25` runtime 收敛：删除没有生产消费者的 player/machine/crop/town shadow comparison、machine observation API、总 snapshot、lookup/timing 计数和 input-owned mailbox。`enableDispatch` 只保留 Java `Executor` 调度边界；当前传入 `Runnable::run`，未来异步实现必须提供同一 input 内串行、按提交顺序且不重叠的 executor。
+
+> `2026-08-25` FarField/稳定帧收敛：Page capture 增加固定 `16x16 byte` 天空暴露截面，只有天空暴露 component 可按实际 microface 面积接入各维度 `WorldTemperature.naturalAir`；开放方向数不再冒充室外证明。地下直接 Page 沿开放面 capture 一层已加载 continuation，每维度最多 `64` Page、不递归且不加载 chunk；剩余边缘保持 degraded，并以 `1/(1+16)` 距离因子使用弱边界。全局风力只连续缩放同一空气阻抗，不新增 topology/wind profile 矩阵。无 topology 变化的 frame 只 ACK watermark 并复用已安装 sweep，不再逐 tick 重编 pair/FarField。
 
 > 本次整合以第 `0..91` 节为 V1 实现权威，并恢复误删前计划中的已验证现状、兼容合同、迁移边界、性能基线和未决参数。旧 `REDUCED_RC_ISLAND`、`ThermalSemanticGraph`、`CompiledThermalPlan`、`IslandRuntime`、`PartitionRuntime` 和 `PortalEdge` 只在附录 D 中说明替代关系，不得作为并行 V1 实现路径。
 
@@ -162,7 +180,7 @@ NaturalBackend
     自然气候、季节、海拔、天然空气和岩层温度
 
 AnalyticFieldBackend
-    Boss、脚本、管理员命令和 legacy Generator 控制场
+    Boss、脚本和管理员命令控制场
     不声明世界能量守恒
 
 SparseThermalMeshBackend
@@ -209,11 +227,10 @@ SPARSE_THERMAL_MESH
 ```text
 移动 Boss 冷热场
 脚本或管理员控制场
-迁移期间的 legacy Generator / ChunkHeatData 空间场
 不要求局部能量守恒的剧情效果
 ```
 
-一个解析场只保存一份 definition 和空间索引项，不能继续复制到覆盖的每个 chunk。移动场更新 bounds/generation，不触发 `MixedGeometryBrick` 重编。若某个 Generator profile 改为物理 `POWER_SOURCE`，其对流、接触和辐射通道进入第 `24..29` 节的统一功率路径，不能同时保留一份重复加热的 legacy 场。
+一个解析场只保存一份 definition，不复制到覆盖的每个 chunk。移动场更新 bounds/generation，不触发 `MixedGeometryBrick` 重编。设备不得注册为解析场；Campfire、Generator、Radiator 与 Fountain 的对流、接触和辐射通道只进入第 `24..29` 节的统一物理功率路径。
 
 ### 2.3 `CACHED_LOCAL_SURFACE`
 
@@ -276,7 +293,7 @@ enum AnalyticCombineMode {
 }
 ```
 
-重叠场按 `mode -> explicitPriority -> fieldId` 确定性合成。解析场只改变 query 输出，不回写 mesh `H`，不能驱动 `LOCAL_ENERGY_ACCOUNTED` phase。`CachedLocalSurface` 也不伪装成空气温度；它输出 `surfaceFlux` 或兼容 adapter 明确声明的 receiver contribution。物理 Generator 与 legacy analytic Generator profile 互斥，任何 source identity 同一时刻只能走一条路径。
+重叠场按 `mode -> explicitPriority -> fieldId` 确定性合成。解析场只改变 query 输出，不回写 mesh `H`，不能驱动 `LOCAL_ENERGY_ACCOUNTED` phase。`CachedLocalSurface` 也不伪装成空气温度；它输出 `surfaceFlux` 或明确声明的 receiver contribution。所有设备热源只允许一个 physical source identity，不存在设备解析场分支。
 
 ---
 
@@ -1324,7 +1341,7 @@ profile reload
 
 Solver 正常路径不遍历 source registry。
 
-Registry 同时维护按 loaded ChunkSection 分桶的 packed source spatial index，只用于 receiver-side radiation candidate discovery、debug 和生命周期定位；它不把一个 source 复制到影响范围内的所有 chunk，也不能复用会主动取/加载覆盖 chunk 的 `ChunkHeatData` registration 语义。
+Registry 同时维护按 loaded ChunkSection 分桶的 packed source spatial index，只用于 receiver-side radiation candidate discovery、debug 和生命周期定位；它不把一个 source 复制到影响范围内的所有 chunk，也不主动获取或加载覆盖区块。
 
 Main-thread authoritative registry 还必须为每个 source 保存 event-time ledger：
 
@@ -4092,9 +4109,9 @@ Phase 0 分成两个都必须通过的子门；`0a` 只验证 Minecraft mutation
 | 子门 | 状态 | 已有可执行证据 | 尚未通过的 gate |
 |---|---|---|---|
 | `0a` mutation/lifecycle | `complete (common-path scope)` | GameTest-only 五参数 section hook、loaded-section owner map、generation/revision/publication token、tick coalesce/watermark、off-thread/raw-bypass sticky resync；`DebugCommand restore_backup` whole-section rebind、raw block/biome distinct resnapshot reason、section/generation/requiredRevision-bound `ResyncToken` ACK 与 replacement-identity unload cleanup 已实现；真实 ticket load/unload/reload 与 Create assemble `block -> air`、移动期零 delta、disassemble `air -> block` 已通过；`7` 条 Phase 0a GameTest 与 `16` 条 writer/adapter JUnit 已通过 | 无；21-runtime 穷举调查、dynamic exclusion prototype 和旧断言保留为非执行注释，未知第三方 bypass 按玩家报告补 adapter；`/resetchunks` 是延期管理命令兼容项，不是 gate |
-| `0b` units/reference/workloads | `partial` | Java 17 reference contracts、`28` 条 JUnit、`14` 个 workload descriptors；覆盖 tick-to-second、`H=C(T-Tref)`、`integral(P dt)`、解析 pair/boundary、pure-LOD 与 geometry ingress/egress、typical/stress 判定、legacy/shadow routing，以及 benchmark evidence provenance；另有首轮本机 `ChunkHeatData` JMH/JFR、allocation 与隔离 retained-object-graph 微基线 | 生产模组列表中的 1/10/50/100 玩家 legacy server baseline、玩家采样 main/worker 分位数、整服 retained heap、作物/城镇/forced-random-tick/网络调用量、真实 workload threshold、四候选同输入竞争基准 |
+| `0b` units/reference/workloads | `partial` | Java 17 reference contracts、`28` 条 JUnit、`14` 个 workload descriptors；覆盖 tick-to-second、`H=C(T-Tref)`、`integral(P dt)`、解析 pair/boundary、pure-LOD 与 geometry ingress/egress、typical/stress 判定、历史 routing，以及 benchmark evidence provenance；另有已删除区块热场的首轮本机 JMH/JFR、allocation 与隔离 retained-object-graph 迁移基线 | 生产模组列表中的 1/10/50/100 玩家新 runtime server baseline、玩家采样 main/worker 分位数、整服 retained heap、作物/城镇/forced-random-tick/网络调用量、真实 workload threshold |
 
-`0a` 已按冻结的常见路径范围通过，`0b` 仍是 `partial`。当前 production source 只提供 reference/probe foundation，未接入任何 V1 gameplay route；`PhaseZeroThermalRouting` 与 benchmark evidence matrix 已移到 test source set，只能验证旧决策/证据格式，不能被引用为 runtime gate。legacy 仍是唯一 gameplay authority；在 `0b` 通过前不得开始 production Minecraft integration。
+`0a` 已按冻结的常见路径范围通过，`0b` 仍是 `partial`。本段是 Phase 0 当时的实施快照，不描述当前 gameplay authority；当前接线与删除结果以本文 Outcome 和 living docs 为准。`PhaseZeroThermalRouting` 与 benchmark evidence matrix 只能验证历史决策/证据格式，不能被引用为 runtime gate。
 
 #### Phase 0a — Mutation / Lifecycle GameTest Spike
 
@@ -4150,11 +4167,11 @@ stale R1 resync ACK cannot clear a newer R2 requirement
 
 #### Phase 0b — Units / Reference / Workload Acceptance
 
-##### 2026-08-24 本机 legacy 微基线（非 acceptance completion）
+##### 2026-08-24 已删除区块热场的历史微基线（非 acceptance completion）
 
-第一轮可重复证据已经落地到 `src/jmh/java/com/teammoeg/frostedheart/content/climate/thermal/benchmark` 和 Gradle 任务 `thermalLegacyBaseline`。环境清单冻结为 Windows 11、Oracle JDK `17.0.12`、G1、`-Xms2G -Xmx2G`、24 logical processors、`16,898,166,784 B` physical memory；该进程使用 JMH main runtime classpath，不等价于生产 modpack server。原始 `environment.json`、JMH JSON/text、JFR 和 retained-size JSON 生成到 `build/reports/thermal-phase0b/`，构建目录清理后可由任务重建。
+第一轮可重复证据曾落地到旧 JMH 类和 `thermalLegacyBaseline` 任务；该系统及专属 benchmark 现已删除。环境清单为 Windows 11、Oracle JDK `17.0.12`、G1、`-Xms2G -Xmx2G`、24 logical processors、`16,898,166,784 B` physical memory；该进程使用 JMH main runtime classpath，不等价于生产 modpack server。以下数字只保留为迁移历史，不能重建、不能作为当前性能结果。
 
-`ChunkHeatData.queryAdjust` 的首轮结果为：
+已删除 `ChunkHeatData.queryAdjust` 的历史结果为：
 
 | adjusters | hit average | miss average | `gc.alloc.rate.norm` | isolated retained graph |
 |---:|---:|---:|---:|---:|
@@ -4167,7 +4184,7 @@ stale R1 resync ACK cannot clear a newer R2 requirement
 
 同轮 harness calibration 测得解析 fixed-boundary/pair exchange 为 `14.18/16.37 ns/op`、`0 B/op`；synthetic `4^3` Brick 的 all-air/solid-wall compile 为 `35.58/26.86 us/op`、约 `7,688/6,120 B/op`。Brick 结果只有单 fork 且置信区间较宽，只证明 harness 可执行并暴露 allocation，不作为 Phase A 或 V1 性能门槛。
 
-这轮数据只能冻结一个 legacy microbaseline，不能生成 measured pass/fail，也不能在四候选尚未实现时做伪比较。test-source `ThermalBenchmarkEvidence` 只验证证据格式，不代表真实 benchmark report；Phase 0b 继续保持 `partial`。
+这轮数据只能保留为已删除系统的历史迁移基线，不能生成当前 measured pass/fail。test-source `ThermalBenchmarkEvidence` 只验证证据格式，不代表真实 benchmark report；Phase 0b 继续保持 `partial`。
 
 在写新 runtime 前锁定：
 
@@ -4223,7 +4240,7 @@ stress workloads:
     source energy is still applied exactly to an effective H or declared sink
 ```
 
-Phase 0 必须同时执行附录 A、B、C：复测现有粒子采样、`ChunkHeatData`、作物/城镇查询、forced random-ticking sections、网络同步、CPU、retained heap、allocation/GC 和多人毕业基地；冻结 legacy 输出与回退语义；建立 `CachedAnalyticSurface`、本 V1、受控 `PerBlockSparseGraph` 和离线 `ReferenceFiniteVolume` 的同输入竞争基准。完成这些工作前，不修改生产玩法路径。
+Phase 0 原计划同时执行附录 A、B、C，复测当时的粒子采样、区块热场、作物/城镇查询、forced random-ticking sections、网络同步、CPU、retained heap、allocation/GC 和多人毕业基地。该历史前置条件已经被后续生产接线取代；当前只继续测新 runtime，不恢复已删除系统或其回退语义。
 
 ---
 
@@ -4567,7 +4584,7 @@ coordinator 不创建 `Runnable` 或使用无界 `ExecutorService`。每个 dime
 
 #### Phase F 输入与显式拓扑应用快照 — 2026-08-24
 
-状态为 `complete (dormant/shadow; no gameplay authority)`。本阶段接通常见增量与完整恢复世界输入到 arena-native sweep，并提供 latest-only bounded-executor shadow dispatch，但没有绕过 Phase E / Phase 0b gate 启用 gameplay query：
+状态为 `complete (topology/runtime foundation)`。本阶段接通常见增量与完整恢复世界输入到 arena-native sweep，并提供可注入串行 `Executor` 的 dispatch；后续 Phase K 已按明确 fallback 接入 gameplay query：
 
 ```text
 LevelChunkSection mutation Mixin (always present, null-owner fast path)
@@ -4590,7 +4607,7 @@ chunk unload 会先使相邻 Page sticky resync，再撤销 section owner，并�
 
 `MinecraftThermalTopologyApplier` 是唯一 concrete topology writer：它保留每 Page 的 primitive signature/coverage 状态，把完整空气 Brick 编译为 regular cell、部分空气编译为 `ComponentBrickCompiler` mixed components、完整固体编译为 `NO_AIR/NO_COVERAGE`；不支持或 mixed-medium Brick 保守关闭并留下 unresolved topology。旧、新 proven-air microcell 以 `airCapacity/64` 形成稀疏 overlap，`GeometryMigrationLedger` 迁移唯一 arena 内的 `H`。所有 Page publication 和 canonical pairs 编译完成后，`DimensionThermalRuntime.finishTopologyUpdate` 才在同一 logical-writer transaction 内安装 replacement `ThermalSweep` 并推进 non-source ACK；随后才释放旧 span 或已经跨过 chunk watermark 的 retired Page span。
 
-该路径默认仍由调用者显式 `enableTopologyApplication` / `applyTopology`。显式 `enableShadowDispatch` 后，`sealTick` 只把 latest frame 放入单槽 mailbox；调用者提供的 bounded shared executor 在 worker 上完成 topology apply、coordinator request 和 solve drain，同一维度不会积累逐 tick Runnable。full-resync event 现在携带 token 与完整 `int[4096]` signature cut，applier 只通过匹配 section/lifecycle/revision/reason 的 `tryInstallFullGeometryResync` 清除 sticky requirement。source 保活不再因“维度存在任意 source”而全局阻塞，而只检查 live/queued port 是否引用待替换 arena span；Phase G 已提供具体 profile/rebind，并在受影响 source 尚未成功离开旧 span 时先完成 empty unresolved epoch 而不释放旧 span。没有 approved FarField profile 时，开放的 admission 外边界保持 topology unresolved 且不生成伪 boundary transport。gameplay query 仍未接入。
+该路径仍由调用者显式 `enableTopologyApplication` / `applyTopology`。`enableDispatch` 接受 Java `Executor` 作为唯一未来调度边界；当前 gameplay 传入 `Runnable::run`，在 tick 末同步完成 topology apply、coordinator request 和 solve drain。替换为异步实现时，executor 必须对同一 input 串行、按提交顺序且不重叠；input 不维护另一套 mailbox/worker/snapshot。full-resync event 携带 token 与完整 `int[4096]` signature cut，applier 只通过匹配 section/lifecycle/revision/reason 的 `tryInstallFullGeometryResync` 清除 sticky requirement。source 保活只检查 live/queued port 是否引用待替换 arena span；Phase G 已提供具体 profile/rebind，并在受影响 source 尚未成功离开旧 span 时先完成 empty unresolved epoch 而不释放旧 span。没有 approved FarField profile 时，开放的 admission 外边界保持 topology unresolved 且不生成伪 boundary transport。
 
 接：
 
@@ -4631,11 +4648,11 @@ all Phase 0a mutation/lifecycle GameTests remain green
 
 #### Phase G 实施快照 — 2026-08-25
 
-状态为 `complete (dormant shadow; no gameplay authority)`。`MinecraftPhysicalSourceProfile` 冻结 Campfire `1,000 W` 与 Generator `10,000 W * TLevel`：Campfire 为 `80%` convection + `20%` radiation declared loss，Generator 为 `70%` convection + `10%` internal heat + `20%` radiation declared loss。blocked Campfire convection 进入 declared loss，blocked Generator exhaust 进入 internal heat；unloaded、unresolved 或单端口无法唯一表达的多 component face 一律进入 `DEGRADED_LOSS`。radiation 在 Phase J 前不进入空气或玩家。
+状态为 `complete (player air and direct-radiation gameplay test path active)`。`MinecraftPhysicalSourceProfile` 暂定 Campfire `8,000 W` 与 Generator `10,000 W * TLevel`：Campfire 为 `6,400 W (80%)` convection + `1,600 W (20%)` radiation declared loss，Generator 为 `70%` convection + `10%` internal heat + `20%` radiation declared loss。blocked Campfire convection 进入 declared loss，blocked Generator exhaust 进入 internal heat；unloaded、unresolved 或单端口无法唯一表达的多 component face 一律进入 `DEGRADED_LOSS`。Phase J 已将 direct source radiation 接入玩家；材料 radiation、Phase H/I 与普通机器 gameplay authority 仍不启用。该 Campfire 功率是恢复密闭小屋取暖体验的玩法校准值，不改变功率分配、能量记账或相变合同。
 
 `MinecraftPhysicalSourceManager` 只在显式 `enablePhysicalSources` 后存在；Campfire 由放置、section mutation 与 loaded chunk block entities 观察，Generator 由 `GeneratorLogic` tick 报告并在 disassemble 时移除。source 自身拥有 independently capped cold Page interest，稳定 source 不做 world scan；profile/anchor 改变以旧 lifecycle unload + 新 lifecycle register 表达，同一 source ID 在 packed registry 内原位 revival，不随重复 load/unload 增长 storage。
 
-拓扑替换现在先执行 source zero-cut 与 `(previousTick,targetTick]` 精确积分，再检查旧 span 是否仍被 live/queued port 引用。rebind 完成后才替换/release；若 source queue 尚未提供 rebind，或 preapply 后 Page revision 竞争使安装失败，则当前 frame 安装 empty unresolved sweep 并推进 non-source ACK，让该 source epoch 恰好完成一次，下一 frame 再重建。`ThermalStepExecutor` 识别 pre-applied epoch，不会重复注入 `sourceAppliedJ`。正常 gameplay 仍不构造该 runtime，legacy `ChunkHeatData`、`GeneratorData.power` 和 `HeatEndpoint.heat` 未被重解释或双写。
+拓扑替换现在先执行 source zero-cut 与 `(previousTick,targetTick]` 精确积分，再检查旧 span 是否仍被 live/queued port 引用。rebind 完成后才替换/release；若 source queue 尚未提供 rebind，或 preapply 后 Page revision 竞争使安装失败，则当前 frame 安装 empty unresolved sweep 并推进 non-source ACK，让该 source epoch 恰好完成一次，下一 frame 再重建。`ThermalStepExecutor` 识别 pre-applied epoch，不会重复注入 `sourceAppliedJ`。正常 gameplay 已构造该 runtime；`GeneratorData.power` 和 `HeatEndpoint.heat` 仍只保留原玩法库存语义，设备产热通过 explicit physical profile 映射，不双写第二个空间热场。
 
 验证实现包含 profile partition、`100 * P/100 == P` 基础合同、unload/revival、topology-cut exactly-once、blocked/unresolved sink，以及真实 `ServerLevel` 上 Campfire/Generator shadow ledger GameTest；最终计数以本阶段 diary 的离线全量结果为准。
 
@@ -4698,6 +4715,14 @@ deep shaft geothermal
 
 ### Phase I — Phase Reservoir
 
+#### Phase I 实施快照 — 2026-08-25
+
+状态为 `complete; hot-side gameplay authority enabled for applied candidates`。`MaterialBoundaryRegistry.PHASE_RESERVOIR` 将同一 world-aligned `4x4x4` Brick、同一 profile 且与 proven air 精确接触的 candidates 聚合为一个 primitive reservoir；候选位置使用 `long mask`，不建立全局 patch、逐方块 timer 或逐方块 thermal node。潜热、预留能量和单一 outstanding request 都保存在 Page-owned `ThermalCellArena` span，普通 Air adjacency 不遍历 reservoir。
+
+`ThermalSweep` 通过 `PhaseTransitionRuntime` 保守地把空气显热转入 latent reservoir。达到一个 visible-unit threshold 后，worker 预留能量并通过固定 request ring 发给主线程；ring 满时 reservoir 保持 sticky retry。主线程在 tick sealing 前按 `maximumPhaseMutationsPerTick` 处理，并验证 Page generation、loaded chunk、当前 thermal profile 以及与编译器一致的精确 `4x4x4` material-air microface。内置 action 支持减少一层雪和冰转水，`CUSTOM` 只通过窄 `MinecraftPhaseTransitionHandler` 扩展。ACK ring 满时 outcome 保存在固定表；APPLIED ACK 才扣除预留潜热并增加 committed ledger，REJECTED 保留已吸收热量，RETRY 保持原 request。拓扑重建按 Brick/profile key 迁移潜热和 request metadata，Page generation 改变时 stale ACK 不能命中新 reservoir。
+
+`TransitionMutationPolicy` 已与 thermal core 分离：天然兼容 profile 可遵守 `randomTickSpeed`，明确的机器驱动 profile 可忽略它，script-controlled profile 不自动执行。gameplay profile cut 现从旧 `StateTransitionData` 编译热侧阈值、目标状态和相对 `heat_capacity` 倍率，按 `38,000 J * heat_capacity` 与统一 `20 W/K` full-face conductance 运行；只有静态、存在保守 material mask 且已安装到 Page 的候选归新系统所有。固体多阈值按先到阈值逐阶段执行，每个 replacement state 重新进入自己的 recipe/profile，阈值相等时保留 gas 优先。最终 mutation 继续遵守 `ICE_DO_NOT_SMELT` 群系标签。冻结/凝结、动态/空 contact 和 Page 外状态继续由 legacy 路径处理，数值仍需实机校准。
+
 实现：
 
 ```text
@@ -4726,6 +4751,14 @@ multiple sources add correctly
 
 ### Phase J — Radiation
 
+#### Phase J 实施快照 — 2026-08-25
+
+状态为 `complete (player gameplay receiver enabled; material radiation deferred)`。`RadiationService` 直接包含 source-origin section index、bounded discovery/top-K、inverse-square flux、feet/torso/head samples 和 bounded receiver witness cache；没有拆成 source-index/cache/resolver 回调类。生产参数冻结为 `128 sources / 1,024 tracked sections / 128 receivers / 64 visits / top-8 / 24 rays / 8 witness sections / 256 DDA steps / 16 blocks / 0.1 W/m² cutoff`，最坏 optional reservation 为约 `729,408 B/dimension`。达到 source/candidate/ray cap 时返回已累计结果并设置 `RADIATION_BUDGET_LIMITED`；unloaded/unresolved path 保守遮挡并设置较低 confidence。
+
+`MinecraftRadiationOcclusion` 是 concrete loaded-only quarter-block DDA。正式玩家路径只采用二值遮挡，因此直接读取已加载 section 的 `BlockState`：动态形状按空气，静态状态只按 `canOcclude()` 判断透明或整块不透明，不再为每个新方块构造 resolver 快照；它不复用 collision、airflow aperture 或 material contact。active ray 保存经过 section 的独立 revision，BlockState/raw replacement、section identity 和 chunk load/unload lifecycle 会使 witness stale。Campfire/Generator 继续由同一个 `MinecraftPhysicalSourceManager` 持有 source ID、generation、启停和总功率，radiative power 只取现有 `RADIATION` port share 与冻结 origin。晚于 source manager 启用 radiation 时会 replay live sources。
+
+player sample 不调用 `ThermalSourceTimeline`，不扣 source accumulator，也不把 `Prad` 再注入 Air Mesh；Phase G 的 radiation port 仍在 interval ledger 中只记一次 declared ambient loss。生产射线直接对 loaded `BlockState` 使用独立二值 `BlockState.canOcclude()` 通道，不为部分 shape 支付额外编译、resolver 快照或 mask 成本。`TemperatureComputation.radiantBodyTemperatureDelta` 使用 `q * 0.7 m² * 0.8 * seconds / 5,000 J/K` 将 flux 转为现有五部位体温增量；`q * 0.8 / 6 W/m²/K` 只形成 HUD 体感，不重复增加身体能量。材料 radiation 继续后置；数值仍需 production-like workload 与玩法校准。
+
 首先只实现：
 
 ```text
@@ -4744,14 +4777,43 @@ read-only player observation; no source energy mutation
 
 ### Phase K — Consumer Migration
 
+#### Phase K 实施快照 — 2026-08-25
+
+状态为 `complete (player air/radiation plus crop/town gameplay authority; no machine API without a real consumer; HUD remains downstream presentation)`。
+
+玩家第一步已经沿真实生产对象接通，不新增 resolver callback：
+
+```text
+TemperatureUpdate legacy air fallback
+    -> MinecraftThermalInput.gameplayPlayerEnvironment
+    -> ensure one loaded player ThermalPage
+    -> regular coverage or exact mixed microcell component
+    -> DimensionThermalRuntime-validated QueryPublication
+    -> enabled bounded Phase J radiation
+    -> absorbed-energy body delta
+```
+
+`MutableEnvironmentSample` 保留 `airTemperatureC`、`radiantFluxWPerM2`、`surfaceFluxW`、`mediumId`、`confidence`、`sampleTick`、cell/query flags。query 在 runtime logical writer 活跃、Page stale、dimension/geometry/topology envelope 不一致、publication 超龄、无 Page 或无 air component 时显式 miss；Air Mesh 分支不等待 worker、不读取世界、不加载 chunk、不 admission，player wrapper 启用的 Phase J radiation 仍按独立 loaded-only DDA 预算执行。mixed Brick 通过 applier 已保存的 compiled component mapping 定位 arena slot，不能把 support ref 当作具体空气 component。
+
+machine 第二步没有虚构 gameplay consumer。当前普通机器没有直接读取 `WorldTemperature.air/block`，因此删除了没有调用者的 `sampleMachineEnvironment`、`observeRegisteredMachineEnvironment` 和 `MachineShadowSnapshot`。将来只有出现真实 `QUERY_ONLY` consumer 后，才在它既有 cadence 和显式 receiver point 增加窄查询入口；不得扫描 BlockEntity、创建无关 interest，或把 Campfire/Generator 重复接成 machine receiver。
+
+crop 第三步接在真实 `WorldTemperature.checkPlantStatus` 边界：生长事件、树苗事件和 `ServerLevel.tickChunk` 的存活/死亡预计算温度路径，只要真正需要温度就调用 `gameplayCropEnvironment`。crop receiver 使用现有 BlockPos 的中心点，只读已有 regular/mixed publication；天气提前返回时不虚增 query。命中时 new air 直接进入作物阈值，miss 时 legacy block temperature 回退，不创建 Page/Brick/Cell/Interest 或 legacy/new 比较状态。
+
+town 第四步没有增加第二次室内扫描。现有 `BuildingBlockScanner` 在同一次空气遍历中生成 `TownThermalProjection`，按 world-aligned `4×4×4` base Brick 保存一个确定的真实内部空气代表点和整数 voxel 权重，不保留逐体素坐标。住宅与狩猎扫描成功后调用 `gameplayTownEnvironment`，每个 weighted group 只读一次已有 publication；所有 group 命中时 new air 加权平均成为建筑温度，部分或全部 miss 时整体回退 legacy 全体素平均，并通过 `QUERY_PARTIAL_REGION` 与 voxel coverage confidence 显式报告。全程不创建 Page/Brick/Cell/Interest、不持有 mesh lease，也不读取或加载世界。矿井基地主路径没有 gameplay 温度，停用的 `MineBlockScanner` 未重新接活。
+
+没有新增 `SharedQueryFrame` 对象层。当前不同作物位置之间没有可复用的 publication value，盲目 cache 只会增加失效合同；10,000 次 passive miss 直接验证 retained thermal state 不随作物调用量增长，不在 production input 常驻累计 query 计数。如果 Phase 0b 真实 workload 证明同 tick 同坐标重复显著，再在现有 primitive hot path 内增加 revision-safe frame cache。
+
+玩家空气 publication 与直接 source radiation 已进入现有五部位体温 authority；衣物、设备、食物、效果、伤害、HUD 阈值、网络包和更新 cadence 未改。作物 `PlantStatus` 与城镇建筑温度/评分/日结算在 publication 完整命中时也使用 new air，明确 miss 时回退 legacy；工程内没有真实普通机器温度 consumer，所以不保留 dormant machine observation 接口。surface compositor 尚未实现并以 flag 暴露。HUD 不是第五个 thermal query consumer：温度球、环境温度和冷热效果继续读取由 `FHBodyDataSyncPacket` 同步的 `PlayerTemperatureData`，位于玩家 consumer 下游，不增加第二次玩家采样。production-like Phase 0b、FarField approval 和 gameplay/reference calibration 仍约束数值冻结与后续 material/machine authority。
+
+验证基线：定向 Java 17 JUnit `239/239`（`238` thermal + `1` player radiation conversion）、Forge GameTest `19/19` required。Minecraft 场景确认 legacy `5°C`、publication `0°C` 时，真实 `PlantStatus` 按 `0°C` 进入 survive 而不是 grow，完整 town projection 也返回 `0°C`；player/crop 可读取已有 mixed 空气 component、solid microcell 不会 alias support、未 admission miss 不增加 Page、超龄 publication 显式 fallback。town 的两个内部 voxel 压成一个 weighted Brick lookup，10,000 次 crop miss 与 4,096 个 town group miss 都不增加 Page、arena high-water、live cell 或 `H`；runtime JUnit 确认 topology envelope 前进后旧 publication 被拒绝。此次 shadow 清理后的最终验证见对应 diary。
+
 顺序：
 
 ```text
 player
-machine
 crop
 town
-HUD
+HUD presentation remains downstream of player; no separate query
 ```
 
 保持 invariant：
@@ -4763,7 +4825,23 @@ town passive
 
 ---
 
-### Phase L — Shadow Runtime
+### Phase L — Runtime Validation
+
+#### Phase L 实施快照 — 2026-08-25
+
+状态为 `in progress`。曾加入 `MinecraftThermalInput` 的 production shadow observability 已删除：没有命令、HUD 或日志消费者的 per-consumer error、lookup/timing 计数、mailbox 状态和 last dispatch report 不再作为每维度常驻状态。真实 gameplay query、fallback、topology apply、solve 和 publication 路径全部保留。
+
+底层 `DimensionThermalRuntime.Diagnostics` 仍供定向测试和 JMH retained-size 使用。当 logical writer 正在修改 arena/topology 时，它返回 `writerBusy=true`，并把需要读取 arena/sweep 的瞬时计数置为 `-1`；不会为诊断等待 worker 或无同步读取可变 SoA。JFR/JMH、retained-size 和完整 `1/10/50/100` player workload 仍属于 Phase L 后续验收。
+
+首批切片验证保留 runtime writer-busy 测试；原先只验证 shadow snapshot 自洽的 Minecraft 断言随无用 API 一并删除，GameTest 改为直接验证 executor 收到 frame、topology 状态落入 Page、solve 完成、fallback 和 passive miss 不增长 thermal state。
+
+第二批 synthetic query diagnostics 已实现但不构成 Phase L acceptance。`thermalPhaseLQueryDiagnostics` 一次生成 forked JMH、100-receiver diagnostic JFR、JOL retained graph 与不含路径/源码哈希要求的环境限制 manifest；fixture 直接组合 production `ThermalPage + ThermalCellArena + DimensionThermalRuntime + QueryPublication`，覆盖共享 Page 与分散 Page 的 `1/10/50/100` 顺序 query batch。首轮测量暴露 `HashMap<Long, ThermalPage>` 在非缓存 section key 上产生约 `24 B/query` 装箱分配，因此唯一 hot Page index 改为现有 fastutil `Long2ObjectOpenHashMap`；source/witness 等其他 Map 未被泛化重写。最终两种布局约 `0.01 B/query`，100-query batch 均值约 `4.9 us`、p95 `5.0 us`、p99 `12.69/13.30 us`；JOL isolated retained graph 为共享 100 receivers `11,264 B`、分散 100 Pages/Cells `313,472 B`。
+
+第三批用外部 `jcmd JFR.start` 附着真实 Java 17 Forge GameTestServer JVM，没有增加 production capture code。录制覆盖 `55 s` 的模组加载、世界启动、`19/19` required GameTests 和关服，因此只能验证 Forge 生命周期中的路径可运行并提供热点线索，不能作为稳态 TPS 或多人验收。`5,300` 个 execution samples 中有 `97` 个栈包含 thermal package（`1.83%` sample share，其中 `50` 个在 Server thread）；主要是 Phase 0 mutation probe、resolver census、几何解析和 topology rebuild，Phase L `samplePublishedAir` 只出现 `1` 个执行栈。`13,913` 个 allocation samples 的采样权重估算为整段 JVM `33.86 GB`、thermal 栈 `765.27 MB`（`2.26%`），thermal 部分同样由 GameTest 触发的 `ConservativeAirGeometry`、resolver snapshot 和 mutation-probe fixture 主导；Phase L published-air query 没有 allocation sample 命中。sampling weight 不是精确分配计数或稳态 B/s。
+
+同一录制包含 `93` 个 GC pause event，总计约 `851.5 ms`、p95 `21.626 ms`、最大 `25.456 ms`；`13` 个 contended monitor-enter event 均无 thermal package frame。全生命周期 JVM user/system CPU 平均约 `6.91%/0.27%`、峰值约 `35.26%/1.25%`。`minecraft.ServerTickTime` 的 `42` 个周期样本中只有 `15` 个非零，且混入启动与 GameTest 长 tick，因此明确不用于推导 TPS。原始录制位于本机构建产物 `build/reports/thermal-phase-l/forge-integration-diagnostic.jfr`，不进入源码或提交物。
+
+这里的 `receiverCount` 只是顺序 query batch 标签，不是真实玩家。该 bundle 不含 `ServerPlayer/ServerLevel`、radiation receiver cache、topology rebuild、worker solve、TPS、chunk lifecycle 或生产模组集合；因此真实 `1/10/50/100` 玩家服务器 capture、`100p/10b`、`100p/100b`、exploration、dynamic base 与 source workloads 仍未通过，Phase L 保持 `in progress`。
 
 旧 thermal system：
 
@@ -4845,13 +4923,13 @@ Shadow 数据通过后才能考虑替换旧 gameplay path。
 | `PR 4+5` | pair/boundary kernel、buoyancy `G`、sealed `SolveEpoch`、bounded time model，以及 packed source registry/ports/accumulator/exact replay 的同一执行路径 | `dtSeconds`/`-expm1`、sweep error、no backlog、mid-cadence/rebind/overflow/history-exhaustion/unload settle、TIME_DEGRADED 保留全部 source energy、无 cumulative double injection |
 | `PR 6` | Topology Guard、`OPEN_CONTINUATION`、candidate `STATIC_IMPEDANCE` + holdout reference harness | FarField holdout gate；未批准 bucket 不进入 static impedance |
 | `PR 7` | bounded executor/mailbox、per-dimension logical owner、single in-flight、seqlock publication、global/dimension memory admission | ABA/generation、multi-dimension fairness、queue-full re-offer、continuous-overflow recovery |
-| `PR 8` | production state/fluid mutation capture、loaded-only incremental/full resolver snapshots、unsupported dynamic fallback、chunk lifecycle、runtime wiring | dormant topology apply/ACK、full-resync recovery 与 latest-only shadow dispatch 已完成；worker 无 World reference；FarField/workload gate 未过，不启用 gameplay authority |
+| `PR 8` | production state/fluid mutation capture、loaded-only incremental/full resolver snapshots、unsupported dynamic fallback、chunk lifecycle、runtime wiring | topology apply/ACK、full-resync recovery 与可注入串行 executor dispatch 已完成；worker 无 World reference |
 | `PR 9` | Campfire/Generator physical source adapters | source lifecycle/ports、physical-vs-legacy exclusivity、blocked/unresolved-port policy、topology-cut exactly-once |
 | `PR 10` | stateless/capacitive wall、natural rock、surface/deep material | wall/thick-rock/geothermal tests |
 | `PR 11` | ownership、candidate mask、energy reservation、per-reservoir request/ack retry、`TransitionMutationPolicy` | explicit phase energy、generation rejection、gamerule policy |
 | `PR 12` | radiation source index、3-point player rays、occlusion revisions、bounded witness cache | discovery/LOS/cache/budget limits；重复观察不重复能量 |
 | `PR 13` | gameplay query compositor、player、machine、crop、town、HUD/debug adapters | passive miss 不创建 mesh；legacy output calibration |
-| `PR 14` | shadow runtime comparison、JFR/JMH 与 production-like workloads | 无 blocker 后才讨论默认 flag 切换 |
+| `PR 14` | JFR/JMH 与 production-like workloads | 用真实 workload 验证 CPU、retained memory、publication age 与 fallback |
 
 第一批工程任务止于 `PR 0a..3 + PR 4+5`：证明 hook/lifecycle、数值合同、synthetic geometry、真实 resolver census、Page/face ownership，以及同一 solver/source path 的 exact replay。`PR 6` 是独立 FarField 可行性门；它不通过时停止 production Minecraft integration。`PR 7` 先证明 coordinator/publication/executor，之后才允许 `PR 8` 把 runtime 接入世界。
 
@@ -5903,7 +5981,7 @@ V1 的成功标准不是“能模拟更多东西”。
 
 ## 附录 A：已验证的当前实现基线
 
-本附录来自误删前计划中已核对源码、生成数据和现行文档的部分。它描述迁移起点，不描述 V1 已经实现。Phase 0 必须在固定硬件、模组列表、视距和配置下复测所有数值。
+本附录来自误删前计划中已核对源码、生成数据和当时文档的部分。它只描述 `2026-08-22` 的迁移起点；其中旧区块热场、旧玩家采样和相关专属基准均已删除，不是当前可用后端。当前行为以 source 和 living docs 为准。
 
 ### A.1 What already exists
 
@@ -5913,12 +5991,12 @@ V1 的成功标准不是“能模拟更多东西”。
 | `BlockTempData` | 复用 datapack/legacy 表面贡献，进入 `CachedLocalSurface`；不生成 volumetric node |
 | `SurroundingTemperatureSimulator` | 只作为旧行为/成本 baseline；不复用随机粒子、section copies 或 collision-shape shortcut |
 | `TemperatureThreadingPool` | 复用 shared-executor 与请求去重经验；不复用当前 executor queue/lifecycle 作为新 runtime authority |
-| `ChunkHeatData` | 兼容其可见解析场结果，迁入单份 `AnalyticField`；不复用会按覆盖 chunk 复制 registration 的生命周期 |
+| 当时的区块热场 | 现已彻底删除；Boss/脚本/管理员按真实需求直接创建 `AnalyticField`，任何设备都不迁入解析后端 |
 | `GeneratorData` / `HeatNetwork` | 保留 gameplay inventory/priority，通过 explicit profile 映射；不把旧 `power/heat/HU/tempLevel` 直接当 SI 单位 |
 | random-tick / transition hooks | 复用 Minecraft 原生候选与现有玩法 recipe；local phase 另建 energy owner，二者不双重提交 |
 | existing Forge GameTest run | 复用 `runGameTestServer` 基础设施，并把 namespace 扩到 `frostedresearch,frostedheart`；新增 thermal hook/lifecycle matrix |
 
-当前实现不是统一热力学模型，而是数套相邻模型：
+迁移前实现不是统一热力学模型，而是数套相邻模型：
 
 ```text
 WorldClimate + biome/dimension/altitude
@@ -5926,7 +6004,7 @@ WorldClimate + biome/dimension/altitude
                   v
           WorldTemperature.air/block
                   |
-                  +--> ChunkHeatData 常值温度控制场
+                  +--> ChunkHeatData 常值温度控制场 [已删除的迁移前路径]
                   |
                   +--> SurroundingTemperatureSimulator 随机粒子采样
                                       |
@@ -5936,7 +6014,7 @@ WorldClimate + biome/dimension/altitude
 GeneratorData/HeatEndpoint/HeatNetwork
                   |
                   +--> 任意 heat 缓冲和 tempLevel
-                  +--> 部分设备再创建 ChunkHeatData
+                  +--> 部分设备再创建 ChunkHeatData [已删除的迁移前路径]
 ```
 
 - `SurroundingTemperatureSimulator.getBlockTemperatureAndWind` 会反复读取附近方块和碰撞形状；异步模式会复制若干 `PalettedContainer`。`computeBlockInfo` 对 `hasDynamicShape()` 直接使用 full shape，否则调用 `BlockState#getCollisionShape(null, pos)`，异常也回退 full；这证明 V1 需要显式 bounded resolver，而不能把当前空 context 调用误当精确几何。
@@ -5944,7 +6022,7 @@ GeneratorData/HeatEndpoint/HeatNetwork
 - 异步构造最多复制八个 `PalettedContainer`；每个 worker 的 `WorkBuffer` 原始数组约 `164 KiB`，尚未计对象头、section 副本和任务对象。
 - `TemperatureThreadingPool` 当前通过 `Executors.newFixedThreadPool(threadNum, ...)` 使用固定线程数、**无界 work queue** 的 global shared executor，并在同一维度、精确坐标和 `gameTime >> 6` 种子窗口不变时跳过提交；静止玩家通常最多每 `64` ticks 重算一次。V1 只复用 shared-executor/去重经验，不能复用无界 queue；新 runtime 使用 bounded dimension mailbox、per-dimension logical ownership 和 geometry/publication revision 精确失效。
 - 旧日志曾记录约 `6.03 ms/query`、约 `1,237` 个不同方块访问；这不是可复现实验基线。
-- `WorldTemperature.air/block`、玩家环境采样、`ChunkHeatData` 和热网没有共享能量状态。
+- 迁移前的 `WorldTemperature.air/block`、玩家环境采样、区块热场和热网没有共享能量状态。
 - `BlockTempData` 中雪层/雪块、普通冰、浮冰、蓝冰/细雪、岩浆和岩浆块的默认贡献分别为 `-5`、`-10`、`-20`、`-30`、`1000`、`500`；它们是采样贡献，不是材料绝对温度或功率。
 - `snow.json` 声明 `level_divide = true`，但现行缩放只处理 `LEVEL`、`LEVEL_COMPOSTER`、`LEVEL_FLOWING` 和 `LEVEL_CAULDRON`，不处理 `SnowLayerBlock.LAYERS`。兼容测试必须锁定实际行为。
 - 当前岩浆条目未启用 `level_divide`，源岩浆和不同流动 level 使用相同的 `1000` 基础贡献。
@@ -5952,7 +6030,7 @@ GeneratorData/HeatEndpoint/HeatNetwork
 - `GeneratorData.power`、`HeatEndpoint.heat` 和 `tempLevel` 不能直接解释为 SI 功率、焦耳或摄氏度。
 - `TemperatureUpdate` 当前在每个玩家 START tick 发送 `FHBodyDataSyncPacket`，即使主体温度没有每 tick 更新。
 - `temperatureUpdateIntervalTicks` 与 `envTempUpdateIntervalTicks` 默认都是 `20` ticks；`envTempThreadCount` 当前与环境更新间隔重复使用配置 key `environmentTempMinTicks`。Phase 0 必须做配置加载兼容测试。
-- `ChunkHeatData.addTempAdjust` 把一个热区 registration 复制到覆盖的每个 chunk；半径 `24` 的场按对齐不同约写入 `16..25` 个 chunk。解析场迁移后只保留一份 field。
+- 已删除的区块热场曾把一个 registration 复制到覆盖的每个 chunk；半径 `24` 的场按对齐不同约写入 `16..25` 个 chunk。该数字只说明删除理由，不定义当前解析场生命周期。
 - 默认 random tick speed `r = 3` 时，作物随机刻调用率期望约为 `3 * loadedCropCount / 4096`：`10,000` 株约 `7.3/tick`，`50,000` 株约 `36.6/tick`；`CropGrowEvent.Pre` 还会再次查询。
 - `ServerLevelMixin_TemperatureUpdate` 只遍历随机刻 section 元数据并抽取 `r` 个位置，不扫描每个 section 的 `4096` 方块。
 - 同一 mixin 的随机刻路径受 `pRandomTickSpeed > 0` 门控，并在 BlockState 未被温度转换接管时继续读取、随机 tick `FluidState`；V1 mutation/resolver 合同因此必须显式包含 FluidState，同时把是否遵守 gamerule 留给 transition profile。
@@ -6016,7 +6094,7 @@ TPS 下降只让现实时间中的模拟变慢；不能按墙钟补发额外能�
 
 ### B.5 Generator、Boss、热网和生命周期
 
-- legacy Generator 与 `ChunkHeatData` 可先迁入 `AnalyticFieldBackend`；物理 Generator 则使用 emission ports、source accumulator 和独立辐射，二者不能双重计入。
+- Campfire、Generator、Radiator 与 Fountain 只使用 emission ports、source accumulator 和独立辐射；不得进入 `AnalyticFieldBackend`，也不存在第二份区块热场。
 - Boss、脚本与管理员场保持解析控制语义；移动只更新 field bounds/generation，不重编地形。
 - 第一版不重定义现有 `HeatNetwork` 的库存、优先级、`tempLevel` 或设备续航玩法。
 - chunk load 只恢复明确 BlockEntity/source，不扫描普通材料；unload 立即使跨边界 transport 与 publication 失效。V1 不要求局部 `H` 跨 unload/restart 持久化。
@@ -6044,7 +6122,7 @@ Phase 0 固定目标硬件、JVM、模组列表、视距、simulation distance�
 | 雪原/地下冰层/普通地形 | loaded sections、native/forced random-ticking sections、ambient candidates |
 | 主世界/下界/末地同时活跃 | mailbox wait/age、fairness promotion、server-global bytes、generation-safe unload |
 
-同时重建旧系统基线：粒子步骤、section 副本、Generator chunk registrations、body packet burst、`ChunkHeatData.queryAdjust` 候选、作物和城镇隐藏调用。任何“更快”结论必须包含 retained heap、allocation/GC、结果误差和陈旧度，不能只比较平均 tick time。
+历史迁移曾记录旧粒子步骤、section 副本、Generator chunk registrations、body packet burst、区块热场候选、作物和城镇隐藏调用。旧系统已经删除，后续性能结论直接以当前 runtime 的 retained heap、allocation/GC、结果误差、陈旧度和 tick time 为准，不恢复旧实现做重复对照。
 
 ### C.2 V1 成本模型
 
@@ -6133,7 +6211,7 @@ retained thermal state 不按世界冰雪总体积、作物总数或普通 passi
 | 旧计划概念 | V1 处理 | 结论 |
 |---|---|---|
 | `NaturalBackend` | 保持自然气候、天然空气和岩层边界 | 保留 |
-| `AnalyticFieldBackend` | Boss/脚本/管理员/legacy Generator 单份解析场 | 保留并补回顶层架构 |
+| `AnalyticFieldBackend` | Boss/脚本/管理员单份解析控制场；设备禁止进入 | 保留并补回顶层架构 |
 | `CACHED_LOCAL_SURFACE` | legacy `BlockTempData` 和无历史局部表面 | 保留为执行层级 |
 | interest 权限与被动消费者 | source/stateful machine 可 admission；crop/town/HUD miss 不创建 mesh | 保留 |
 | receiver-driven discovery | Page/Topology Guard 只沿获准 interest 和 open frontier 获取最小支持 | 原则保留，机制替换 |
@@ -6169,7 +6247,7 @@ retained thermal state 不按世界冰雪总体积、作物总数或普通 passi
 7. `UNKNOWN_DEGRADED` 的显式损失如何计量和暴露，才能避免 energy debt 又保留可观测性？
 8. source port 全部堵塞时，各 profile 选择重分配、机器内部 reservoir 还是 external loss？
 9. `PLAYER_HIGH_ACCURACY` 的 admission、TTL、sleep/wake threshold 和公平区域 token 如何设置？
-10. 玩家 `radiantFlux` 如何映射到现有 environment/effective temperature 而不改变 HUD/状态阈值？
+10. `[当前实机答案，待校准]` 玩家 `radiantFlux` 按 `0.7 m²` 投影面积、`0.8` 吸收率、实际更新秒数和 `5,000 J/K` 有效热容直接形成五部位 body delta；另按 `6 W/m²/K` 线性化系数形成已有 HUD 体感，HUD/状态阈值不改。
 11. primitive arena size classes、空闲页回收、publication 双持和 hard cap 在目标 JVM 上的真实 retained bytes 是多少？
 12. 各 workload 的 retained-memory/TPS gate 是多少；`< ~8 MiB` 对哪一个明确的 players/bases/sources/dimensions 场景有意义，哪个 optional admission/refinement 旋钮收益最高？
 13. ambient candidate cadence 如何在移除 `Sforced*r` 后保持旧自然冻结/融化节奏？
@@ -6184,14 +6262,14 @@ retained thermal state 不按世界冰雪总体积、作物总数或普通 passi
 22. shared executor 的 thread count、dimension fairness 和 in-flight age hard threshold 在主世界/下界/末地同时活跃时如何设置？
 23. 哪些现有 transition profile 使用 `RESPECT_RANDOM_TICK_SPEED`，哪些新机器 profile 明确使用 `IGNORE_RANDOM_TICK_SPEED`？
 24. publication seqlock 的实际 retry/ABA fallback p95/p99 是多少，是否需要超过一次 bounded retry？
-25. radiation `maxRange`、flux cutoff、candidate/ray caps 如何在 player-visible error 与 TPS 间取值？
+25. `[当前实机候选，待 workload 复核]` radiation 使用 `16 blocks / 0.1 W/m² / 64 visits / top-8 / 24 rays / 256 DDA steps`；多人 TPS/误差证据决定是否调整。
 26. equilibrium eviction epsilon、dimension cap 与 server-global cap 在三维度压力下如何冻结？
 
 只有 benchmark 证明 V1 基础结构存在实际瓶颈后，才讨论 `32^3+` macro cells、Brick-local `2^3` refinement、one-pole FarField、材料辐射、流体 transport、多 worker 或高级 airflow。
 
 ### E.2 文档影响
 
-本文仍在 `plans/`，不得作为当前生产行为引用。Phase 0 reference/probe 落地后，`docs/climate/data-lifecycle-and-integration.md` 已补充其自动化覆盖、GameTest-only 启用条件和 legacy 仍掌权的边界；因为玩家可见温度行为、持久化、配置和网络均未改变，其余 living docs 不提前描述 V1。每个生产阶段落地时，同步更新：
+本文仍在 `plans/`，不得作为当前生产行为引用。当前 gameplay 已接入新 runtime，三后端 compositor、physical source 与旧区块热场删除结果已同步到 living docs。每个后续生产阶段落地时继续同步更新：
 
 - `docs/climate/world-climate-and-temperature.md`：自然后端、解析场、mesh 合成、FarField 与地热；
 - `docs/climate/player-temperature.md`：环境查询、辐射、异步 publication 和网络兼容；
@@ -6201,7 +6279,17 @@ retained thermal state 不按世界冰雪总体积、作物总数或普通 passi
 
 ### E.3 Outcome
 
-`2026-08-25` Phase 0 当前为 `0a complete / 0b partial`，Phase A 的 PR 1/2、Phase B 的 PR 3 Page/ownership foundation、Phase C regular Air Mesh correctness foundation、Phase D combined PR 4+5 solver/source correctness foundation和 PR7 runtime correctness 均为 `complete`；Phase E PR6 为 `implemented / approval pending`，Phase F / PR8 与 Phase G / PR9 为 `complete (dormant shadow; no gameplay authority)`：
+`2026-08-26` 已实现稳态调度与常驻内存收缩：topology drain 通过统一 dirty Page membership 判断增量工作，稳定 frame 不再线性扫描全部 Page 寻找 dirty state；稳态每 5 ticks 合并一次求解，input event 可通过 urgent frame 提前启动，equilibrium sleep 不再因 unresolved frontier 永久失效。Page 的 desired signature cut 改为 dirty-only 生命周期，publication 改为 `256` 槽起步并按 arena admission 增长。普通游戏不再为每个 `LevelChunkSection` 注入 probe owner/counter；随后 Phase 0 reference/census/events、probe Mixin、resolver census、自洽 evidence 测试和全部 JMH/JFR/JOL 包装均从源码与 Gradle 构建删除，只保留 `gameTest` 中真实 geometry/runtime 场景。未重写 `ThermalCellArena`、source timeline、radiation 或 FarField scratch。
+
+`2026-08-26` 已完成顶层后端收敛：`WorldTemperature.air/block` 只合成 natural backend、revision-valid sparse mesh 和 analytic control fields；旧区块热场 capability、形状类、同步失效包、周期 revalidation 与专属 JMH/JFR/JOL 均已删除。Campfire、Generator、Radiator 与 Fountain 只由 `MinecraftPhysicalSourceManager` 注册为 physical source，Boss/脚本/管理员控制效果只使用 `AnalyticField`，不存在设备排除表、shadow backend 或双重热源路径。红外直接读取 analytic field 与 physical source 快照，保持按视图区块变化请求，不增加周期轮询或 source-to-chunk invalidation 表。误改为 `SLUDGEBLOCKS` 的标签常量已恢复为既有 `SLUDGE`，避免改变 `frostedheart:sludge` 资源 ID。普通材料分类已删除全部 `SoundType` 推断和 air 特判，只使用明确 block tags，未命中标签的状态按 `blocksMotion()` 自然落入 generic solid 或无 profile。Java 17 `compileJava` 与四组定向 JUnit 共 `29/29` 通过，release/deobf JAR 均构建成功；两个 JAR 都包含真实 thermal events/Mixin，且配置排除的验证条目计数均为 `0`。`git diff --check` 通过，仅有既有行尾警告。
+
+`2026-08-26` 已继续收紧 geometry observation：普通主线程 mutation 仍只解析实际位置的一格 resolver dependency 并重建 dirty `4^3` Brick；线程外 `setBlockState` 不再升级为 4096-signature full-resync，而由 owner 的临时精确方块位图合并，主线程 drain 后释放。真正未知的 raw container/section replacement 仍保留权威 `4096` 观察，但 Page 内部直接读取已定位 section；语义不变的 full-resync 在 drain 内 ACK 并沿用 publication，不再触发全局 pair/FarField sweep。没有增加稳定 Page 表、全局 BlockState ID 表或常驻 profiler 数据。
+
+`2026-08-26` topology replacement 的中间表示已收紧：完整 layout 由唯一的 primitive `ThermalSweepFragments` 建立，`ThermalSweep` 仅作为执行 facade；旧 flat builder、flat operation columns 和第二套执行循环已删除。普通 mutation 只提交 dirty fragment patch；材料 surface、phase surface、stateless bridge 及 material/phase slot index 保持 per-Brick immutable fragment，并固定按 fragment index/operation index 聚合。Page-local traversal、全局 material rank 和 mutation-history reorder 均已删除，相同最终 topology 具有相同材料聚合顺序。FarField 继续使用持久 primitive adjacency 和 component membership：opening 合并端点 component，deletion 只在受影响旧 component 内识别 split，未触及 component 不遍历。普通 mutation 不扫描 active Page 集或 arena high-water；Page 生命周期、全局 FarField 输入与 fragment layout 变化仍走明确 full rebuild。
+
+同一删除优先批次还把 topology dirty membership 合并为一个 identity Page 集，删除 source-to-section 反向索引并复用 `installedActiveBySection` 做 port lookup，同时为无 deferred revision 变化的 mutation drain 增加直接返回。完整决策、边界与行数见 [`2026-08-26_20-22-41_thermal-architecture-deletion-first-convergence.md`](2026-08-26_20-22-41_thermal-architecture-deletion-first-convergence.md)。Java 17 offline 验证通过 `compileJava compileGameTestJava`、thermal JUnit `212/212` 和 Forge GameTest `14/14` required；删除 flat-vs-fragment 自证后，剩余测试直接覆盖唯一 fragment implementation。
+
+`2026-08-25` Phase 0 当前为 `0a complete / 0b partial`，Phase A 的 PR 1/2、Phase B 的 PR 3 Page/ownership foundation、Phase C regular Air Mesh correctness foundation、Phase D combined PR 4+5 solver/source correctness foundation和 PR7 runtime correctness 均为 `complete`；Phase E PR6 为 `implemented / approval pending`，Phase H / PR10 的非相变材料仍 dormant，Phase I / PR11 热侧候选及 Phase F/G/J/K 的玩家空气、source、crop 与 town 路径已进入实机测试 authority：
 
 - `0a` 已证明五参数 `LevelChunkSection#setBlockState(..., boolean)` 能捕获 common-path GameTest 中的 `setBlockAndUpdate`、直接 chunk/section write、water flow/waterlogged、Door/Trapdoor/FenceGate、递归 Sponge 写入和 moving piston；unmapped worldgen、off-thread sticky resync、raw palette debug fingerprint、generation/publication rejection、synthetic dynamic exclusion 与真实 ticket load/unload/reload 也已执行。真实 Create bearing 已证明 assemble 产生 `stone -> air`、移动期不产生热几何 delta、disassemble 在目标位置产生 `air -> stone`，因此 Create 不需要移动 adapter 或 exclusion。`DebugCommand restore_backup` 现已显式作废旧 section owner、在同一 chunk generation 下绑定 replacement identity，并要求 ACK 前 full resnapshot；raw block/biome container notifier 也有独立 sticky reason。resync 开始时捕获 section identity、lifecycle generation、required revision 与 reason，ACK 只 CAS 清除同一个 requirement，旧 R1 重建不能清除期间产生的 R2。21-runtime 穷举清单与旧断言仅以注释保存，不参与 gate；`/resetchunks` 是延期管理命令兼容项，若以后支持则丢弃整区旧 thermal Page 并懒重建。按这一冻结范围，`0a` 已通过。
 - `0b` 已把 SI 单位、source 积分、解析交换、迁移账本、workload 分类、legacy/shadow route 和 benchmark-evidence provenance 变成 `29` 条可执行 JUnit，并列出 `14` 个 workload descriptor；首轮 Java 17 本机 legacy query JMH/JFR、allocation、隔离 retained-object-graph 与一次 Forge GameTest player-constructor capture 也已取得。Forge diagnostic 同时记录 legacy constructor 会把远端缺失的 `4/4` footprint chunks 同步加载；这里只保留事实，不继续优化旧 sampler。该证据仍不含生产模组列表的多人 workload 或整服 retained heap，四候选也尚无完整可执行实现，因此 acceptance gate 仍未冻结。
@@ -6210,10 +6298,24 @@ retained thermal state 不按世界冰雪总体积、作物总数或普通 passi
 - `FacePatchIterator` 已冻结 world negative-axis ownership，`16↔16`、`16↔4`、`8↔4` 在 X/Y/Z、粗 cell 位于任一侧及负坐标/跨 Page 时都产生唯一 canonical key、精确 overlap area 与 `d = halfWidthA + halfWidthB`。`GeometryMigrationLedger` 现直接拥有 pure LOD 与 overlap 公式，Phase 0 reference 反向调用它；signed ingress/egress/residual 包含完整空气消失和从零创建的边界。
 - Phase C 已实现 primitive `ThermalCellArena`、规则 4/8/16 与 compiled mixed-component `H/C` state、Page-owned dense-span replacement、transactional pure-LOD split/merge、caller-owned O(1) published coverage query，以及不持久化 generic edge 的 concrete pair compiler。mixed support 直接使用 `CompiledBrick` ports，不再保留 resolver callback；旧、新 Page span 在 commit 前双持，旧 coverage 不会指向已释放 cell。
 - Phase D 已把原 PR4/PR5 合并成一个 arena-native 具体执行路径：source timeline 把完整 `integral(P dt)` 直接写入 `ThermalCellArena`，随后 arena-bound `ThermalSweep` 执行 transport。source 与 sweep target generation 都在 mutation 前验证，executor 拒绝双 arena；Minecraft geometry/source frame producers 和 gameplay adapters 仍未接线。
-- Phase E 已实现 loaded-only `TopologyGuard`、不可把 candidate 当 approved 使用的 `FarFieldProfileRegistry`，以及独立 RK4 explicit-domain 与 analytic static-impedance 对比的 `FarFieldReferenceHarness`。fit 与 holdout 严格分离，四项 holdout observable 和 signed envelope 都进入 gate；标准 synthetic matrix 覆盖四种 topology、两个 wind bucket 和 `1/10/100 kW`。Phase 0b 尚无真实 tolerance/evidence，因此没有 production profile 获批，PR8 仍被阻止。
+- Phase E 已实现 loaded-only `TopologyGuard`、不可把 candidate 当 approved 使用的 `FarFieldProfileRegistry`，以及独立 RK4 explicit-domain 与 analytic static-impedance 对比的 `FarFieldReferenceHarness`。fit 与 holdout 严格分离，四项 holdout observable 和 signed envelope 都进入 gate；标准 synthetic matrix 覆盖四种 topology、两个 wind bucket 和 `1/10/100 kW`。gameplay 当前只启用已经过 reference holdout 的 open-space 基础阻抗：Page 天空截面允许真实露天单出口闭合，开放方向数不再作为 outdoor proof；各维度只替换自然温度，风力连续缩放导纳。地下 continuation 只使用同一 approved profile 的距离衰减弱边界，并始终保持 degraded。
 - PR7 已实现 `ThermalMemoryBudget`、`QueryPublication`、`DimensionThermalRuntime` 与 `ThermalRuntimeCoordinator`。两级 critical/optional admission、preallocated seqlock double buffer、worker-start revision envelope、single-writer/latest-only execution、whole-set conservative sleep、fixed ready queue、sticky re-offer、recovery quota、age promotion 和 generation-safe unload 已进入具体代码；没有第二份 `H/C`、resolver callback、Page partial sleep 或无界 executor queue。
-- PR8 已在显式 interest/admission、loaded-only resolver、shared signature IDs、bounded primitive ring 与五流 frame 之上增加唯一的 `MinecraftThermalTopologyApplier`。常见增量 mutation 与 independently capped full-Page `int[4096]` resnapshot 都能重建 regular/mixed/no-air Page、以 sparse microcell overlap 守恒迁移 arena `H`、生成 canonical pair sweep、原子安装 sweep + non-source ACK，并在安装后释放旧/退役 Page span。latest-only shadow mailbox 把 topology apply、coordinator request 与 solve 放到调用者提供的 bounded shared executor；默认不构造、不调度。source gate 只保活实际被 live/queued port 引用的待替换 span；FarField boundary 和 gameplay authority仍未实现。
-- Phase G / PR9 已增加 Campfire/Generator 的 frozen shadow power/port profiles、dirty-only main-thread producer、bounded cold Page ownership、exact face-component binding、blocked/degraded sinks、unload/revival 和 topology-cut preapply/recovery。source 起点事件先走 zero-cut；post-preapply deferred frame 以 empty unresolved sweep ACK 并继续 solve，避免重复注能或卡住 single in-flight epoch。legacy heat/power/tempLevel 语义未改，normal gameplay 不启用 physical source manager。
-- Java 17 温度定向 JUnit `220/220`、全仓 JUnit `748/748`、`compileJava` 以及 Forge GameTest 均通过；GameTest 总计 `18/18` required，其中 thermal 路径为 Phase 0a `7` 条、Phase 0b `1` 条、Phase A `5` 条、PR8 input `2` 条和 Phase G physical source `2` 条。Phase A evidence bundle 还通过 p95/p99 JSON 校验并生成 JFR/JOL artifact。最终 Phase A 数值以该轮 diary 和 `build/reports/thermal-phase-a/` 为准。Architectury 的 dev runtime scope 已覆盖 dedicated GameTest 所需的 FTB/Item Filters 依赖。
+- PR8 已在显式 interest/admission、loaded-only resolver、shared signature IDs、bounded primitive ring 与五流 frame 之上增加唯一的 `MinecraftThermalTopologyApplier`。常见增量 mutation 与 independently capped full-Page `int[4096]` resnapshot 都能重建 regular/mixed/no-air Page、以 sparse microcell overlap 守恒迁移 arena `H`、生成 canonical pair sweep、原子安装 sweep + non-source ACK，并在安装后释放旧/退役 Page span。`enableDispatch` 只保留调用者提供的串行 `Executor` 边界；当前 gameplay 同步执行。source gate 只保活实际被 live/queued port 引用的待替换 span；稳定 frame 复用已安装 sweep。玩家/物理 source 的直接地下 Page 可带入一层 `getChunkNow` continuation，总量固定上限 `64`，continuation Page 不递归扩张。
+- Phase G / PR9 已增加 Campfire/Generator/Radiator/Fountain 的 frozen power/port profiles、dirty-only main-thread producer、bounded cold Page ownership、exact face-component binding、blocked/degraded sinks、unload/revival 和 topology-cut preapply/recovery。source 起点事件先走 zero-cut；post-preapply deferred frame 以 empty unresolved sweep ACK 并继续 solve，避免重复注能或卡住 single in-flight epoch。旧 heat/power/tempLevel 仍只表示设备与热网玩法库存；首次玩家温度查询建立 runtime 后启用 physical source manager，所有设备空间产热只走这一条路径。
+- Phase H / PR10 已增加 immutable `MaterialBoundaryRegistry`、独立 `4x4x4` contact mask、完整单格 `STATELESS_CONDUCTANCE` bridge、sparse `CAPACITIVE_SURFACE` 与 `NATURAL_ROCK` surface/deep pole。material `H/C` 与空气共用 Page-owned `ThermalCellArena` span，稳定 key 参与同一 sparse migration；两格厚墙无 shortcut，地热只通过 exposed rock natural boundary，邻区变化只 dirty 直接相邻 Page。gameplay registry 当前只含 Phase I profiles，非相变材料参数尚待 reference/gameplay 校准。
+- Phase I / PR11 已增加 Brick-local `PHASE_RESERVOIR`、candidate mask、潜热阈值、单 outstanding request、固定 request/ACK rings、per-reservoir sticky retry、generation-safe ACK、committed latent ledger、重建迁移和精确 main-thread interface revalidation。gameplay profile cut 从 `StateTransitionData` 一次编译热侧规则，mutation 复用原目标方块链并按阈值逐阶段扣潜热；同阈值保持 gas 优先，`ICE_DO_NOT_SMELT` 群系内的冰 mutation 暂缓且不扣潜热。只有 applied Page candidate 屏蔽旧热侧分支，冷侧与无法编译的状态保留 legacy authority。datapack reload 会关闭旧 cut 并在下一次 query 懒重建。当前生产 registry 把 `707` 个热侧 BlockState 去重为 `6` 个共享 profile、`4` 个 contact pattern，`1` 个无保守材料接触的状态继续走 legacy。
+- Phase J / PR12 已增加并为玩家实机路径启用 main-thread `RadiationService`、source-origin section index、range/flux prefilter、deterministic top-K、feet/torso/head rays、loaded-only quarter-block DDA、独立二值 static occlusion/revision、bounded witness cache、budget/confidence flags 和约 `729,408 B/dimension` optional-memory admission。Campfire/Generator 从既有 radiation port share 同步 origin/power/lifecycle；receiver observation 不写 source timeline 或 accumulator。玩家按吸收能量换算进入五部位 body delta；材料 radiation 未实现。
+- Java 17 thermal JUnit `240/240`、玩家辐射换算 `1/1`、`StateTransitionDataTest` `3/3`、`compileJava` 和 Forge GameTest `20/20` required 均通过；完整仓库 JUnit 最近一次执行 `817` 条，其中 `816` 条通过，唯一失败是 `TeamTownActualSaveCodecProbeTest.actualSaveSurvivesTheFullSyncCodec` 缺少外部存档 fixture，与 thermal 改动无关。GameTest 的 radiation 场景使用生产遮挡分类和生产预算，锁定 Campfire 可见、石墙阻断、拆墙恢复、witness cache 与只读 source ledger；新增 underground admission 场景锁定 loaded-only 单层 continuation 不递归。Phase A evidence bundle 还通过 p95/p99 JSON 校验并生成 JFR/JOL artifact。最终 Phase A 数值以该轮 diary 和 `build/reports/thermal-phase-a/` 为准。Architectury 的 dev runtime scope 已覆盖 dedicated GameTest 所需的 FTB/Item Filters 依赖。
 
-Phase E / PR 6 的 Topology Guard、candidate registry 和 fit/holdout reference gate 已实现，PR7 的 dimension runtime、mailbox/publication、whole-set sleep/wake 与 memory admission也已完成。PR8 的增量/full-resync frame -> topology -> sweep -> ACK -> Page release -> latest-only shadow dispatch，以及 Phase G / PR9 的 Campfire/Generator source lifecycle -> exact port -> topology-cut settle/rebind 已以显式 dormant 形式闭环。下一步进入 Phase H / PR10 material boundaries；并行 gate 仍是 Phase 0b production-like evidence 与 approved FarField profile。gate 未通过前不得激活 Minecraft gameplay query，shadow workload 全部通过前不替换 legacy gameplay path。
+Phase E / PR 6 的 Topology Guard、candidate registry 和 fit/holdout reference gate 已实现，PR7 的 dimension runtime、coordinator/publication、whole-set sleep/wake 与 memory admission也已完成。PR8 的增量/full-resync frame -> topology -> sweep -> ACK -> Page release -> executor dispatch、稳定 frame sweep reuse、天空证明 open-space FarField、单层 loaded-only underground continuation 和 degraded 弱边界，Phase G / PR9 的四类 physical source lifecycle -> exact port -> topology-cut settle/rebind，以及 Phase J / PR12 的 radiation source index -> bounded 3-point DDA -> revision witness cache -> absorbed-energy body delta 已进入玩家实机测试路径。Phase I / PR11 的 recipe-compiled hot-side latent mutation 也已进入 applied Page gameplay authority；Phase H / PR10 的非相变材料仍 dormant。Phase K / PR13 的 player、crop 与 town consumer 已按 publication-hit/natural-fallback 切换 gameplay authority；当前没有真实普通机器温度 consumer，也不保留 dormant machine API。HUD 是 player 数据同步的下游展示，不是独立 consumer。Phase L 的历史 synthetic `1/10/50/100` query/JFR/JOL 结果只留在 diary，包装源码、Gradle task 和报告已退役；production input 中无消费者的 shadow comparison/snapshot/计数也已删除。下一步是取得真实 `1/10/50/100` player production-like server、worker solve、TPS 与 retained evidence。
+
+### 2026-08-31 Source sink correction
+
+Earlier `INTERNAL_HEAT`, `INTERNAL_RESERVOIR`, machine-reservoir accounting,
+and blocked-generator internal-retention clauses are superseded. Production
+never owned machine energy, capacity, temperature, or environmental return, so
+that binding was only an unobservable loss label. It has been deleted rather
+than retained as future scaffolding. Generator now partitions power as `80%`
+exhaust convection plus `20%` radiation; radiator uses `90%` convection plus
+`10%` radiation. Blocked Air ports are declared loss and
+topology-unavailable ports remain degraded loss.

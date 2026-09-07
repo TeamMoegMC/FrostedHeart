@@ -1,477 +1,1039 @@
-/*
- * Copyright (c) 2026 TeamMoeg
- *
- * This file is part of Frosted Heart.
- *
- * Frosted Heart is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, version 3.
- */
-
+/* Copyright (c) 2026 TeamMoeg */
 package com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft;
 
-import com.teammoeg.frostedheart.content.climate.thermal.geometry.GeometryDeltaRing;
-import com.teammoeg.frostedheart.content.climate.thermal.mesh.ThermalPage;
-import com.teammoeg.frostedheart.content.climate.thermal.phase0.mutation.Phase0aMutationProbe;
-import com.teammoeg.frostedheart.content.climate.thermal.profile.DependencyOffsetMask;
-import com.teammoeg.frostedheart.content.climate.thermal.profile.ResolvedThermalSignature;
-import com.teammoeg.frostedheart.content.climate.thermal.profile.ResolverBlockView;
-import com.teammoeg.frostedheart.content.climate.thermal.profile.ThermalResolution;
-import com.teammoeg.frostedheart.content.climate.thermal.profile.ThermalSignatureRegistry;
-import com.teammoeg.frostedheart.content.climate.thermal.profile.ThermalSignatureResolution;
-import com.teammoeg.frostedheart.content.climate.thermal.profile.minecraft.ThermalSignatureResolverDispatcher;
-import com.teammoeg.frostedheart.content.climate.thermal.runtime.DimensionThermalRuntime;
-import com.teammoeg.frostedheart.content.climate.thermal.runtime.ThermalRuntimeCoordinator;
-import com.teammoeg.frostedheart.content.climate.thermal.solver.InputWatermarks;
-import com.teammoeg.frostedheart.content.climate.thermal.solver.LatestSolveEpochScheduler;
-import com.teammoeg.frostedheart.content.climate.thermal.solver.SealedInputFrame;
+import com.teammoeg.frostedheart.content.climate.data.StateTransitionData;
+import com.teammoeg.frostedheart.content.climate.network.InfraredBrickCodec;
+import com.teammoeg.frostedheart.content.climate.thermal.consumer.TownThermalProjection;
+import com.teammoeg.frostedheart.content.climate.thermal.field.ThermalAnalyticField;
+import com.teammoeg.frostedheart.content.climate.thermal.field.ThermalAnalyticFieldIndex;
+import com.teammoeg.frostedheart.content.climate.thermal.geometry.ConservativeAirGeometry;
+import com.teammoeg.frostedheart.content.climate.thermal.mesh.MaterialBoundaryRegistry;
+import com.teammoeg.frostedheart.content.climate.thermal.mesh.PagePublication;
+import com.teammoeg.frostedheart.content.climate.thermal.mesh.ThermalCellArena;
+import com.teammoeg.frostedheart.content.climate.thermal.mesh.ThermalPageHandle;
+import com.teammoeg.frostedheart.content.climate.thermal.persistence.minecraft.DormantChunkThermalState;
+import com.teammoeg.frostedheart.content.climate.thermal.persistence.minecraft.MinecraftThermalChunkAttachment;
+import com.teammoeg.frostedheart.content.climate.thermal.profile.minecraft.MinecraftSignatureCapture;
+import com.teammoeg.frostedheart.content.climate.thermal.profile.minecraft.MinecraftThermalProfiles;
+import com.teammoeg.frostedheart.content.climate.thermal.query.QueryPublication;
+import com.teammoeg.frostedheart.content.climate.thermal.query.ThermalEnvironmentSample;
+import com.teammoeg.frostedheart.content.climate.thermal.radiation.minecraft.BlockRadiationIndex;
+import com.teammoeg.frostedheart.content.climate.thermal.radiation.minecraft.MinecraftRadiationOcclusion;
+import com.teammoeg.frostedheart.content.climate.thermal.radiation.RadiationService;
+import com.teammoeg.frostedheart.content.climate.thermal.runtime.async.ThermalDimensionMailbox;
+import com.teammoeg.frostedheart.content.climate.thermal.runtime.async.ThermalWorkerPool;
+import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.engine.ThermalDimensionEngine;
+import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.engine.ThermalDimensionLimits;
+import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.input.DimensionInputAccumulator;
+import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.input.MinecraftEnvironmentCapture;
+import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.input.MinecraftPageManager;
+import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.input.MinecraftPhaseController;
+import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.input.MinecraftThermalSectionAttachment;
+import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.message.ThermalCompletion;
+import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.message.ThermalInputBatch;
+import com.teammoeg.frostedheart.content.climate.thermal.runtime.ThermalMemoryBudget;
+import com.teammoeg.frostedheart.content.climate.thermal.solver.BuoyancyConductance;
+import com.teammoeg.frostedheart.content.climate.thermal.source.minecraft.MinecraftPhysicalSourceProfile;
+import com.teammoeg.frostedheart.content.climate.thermal.source.minecraft.PhysicalSourceSpatialIndex;
+import com.teammoeg.frostedheart.content.climate.thermal.topology.FarFieldSettings;
+import com.teammoeg.frostedheart.content.climate.thermal.topology.ThermalTopologyParameters;
+import com.teammoeg.frostedheart.content.climate.WorldTemperature;
+import com.teammoeg.frostedheart.FHMain;
+
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.SectionPos;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.util.Mth;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.chunk.LevelChunkSection;
-import net.minecraft.world.level.material.FluidState;
+import net.minecraft.world.level.ChunkPos;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.LevelAccessor;
+import net.minecraft.world.level.LevelReader;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.HashMap;
-import java.util.IdentityHashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.OptionalInt;
-import java.util.Set;
-import java.util.concurrent.Executor;
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.atomic.AtomicReference;
+import java.util.IdentityHashMap;
+import java.util.List;
+import java.util.Objects;
 
 /**
- * Main-thread Minecraft input owner for one dormant/shadow dimension runtime.
+ * Minecraft 热系统的唯一公开运行时入口。
  *
- * <pre>
- * section mutation Mixin
- *   owner lookup -> page invalidation -> loaded-only resolve -> primitive event
- * tick end
- *   seal page deltas -> seal five stream watermarks
- *   -> optional latest-only shadow executor -> topology -> coordinator
- * </pre>
+ * <p>服务器主线程通过该类创建每维度 runtime、收集 20-tick 输入 cut、提交
+ * mailbox、消费 completion，并从不可变 publication 回答玩法查询。它不编译
+ * Brick，也不直接推进 solver。</p>
  *
- * <p>Construction is explicit: normal gameplay creates no instance and an
- * unowned section pays only the Mixin's null-owner branch. Topology application
- * is a second explicit opt-in and is never run automatically from tick sealing.</p>
+ * <p>The sole public runtime facade for dimension lifecycle, fixed-cut
+ * transport, and gameplay queries.</p>
  */
 public final class MinecraftThermalInput implements AutoCloseable {
-    private static final Map<ServerLevel, MinecraftThermalInput> ACTIVE_BY_LEVEL =
-            new IdentityHashMap<>();
-    private static volatile boolean anyActive;
-    private static final int WITNESS_RADIUS_SECTIONS = 1;
+    private static final int MAX_PUBLICATION_AGE_TICKS = 40;
+    private static final int INFRARED_ACTIVE_TICKS = 80;
+    private static final int INFRARED_PAGE_CAPACITY = 729;
+    private static final int INFRARED_PRESENCE_WORDS = 12;
+    private static final long[] NO_INFRARED_PRESENCE = new long[0];
+    private static final byte[] NO_INFRARED_RECORDS = new byte[0];
+    private static final int MAXIMUM_PHYSICAL_SOURCES = 65_536;
+    private static final int MAXIMUM_SOURCE_NODES = 131_072;
+    private static final int MAXIMUM_RADIATION_SECTIONS = 3_200;
+    private static final ThermalMemoryBudget MEMORY =
+            new ThermalMemoryBudget(128L * 1024L * 1024L);
+    private static final RadiationService.Parameters RADIATION_PARAMETERS =
+            new RadiationService.Parameters(
+                    MAXIMUM_RADIATION_SECTIONS, 128, 64, 8, 24, 8, 256,
+                    16.0D, 0.1D, 0.5D, 0.1D, 0.9D, 1.62D);
+    private static final IdentityHashMap<ServerLevel, MinecraftThermalInput>
+            ACTIVE = new IdentityHashMap<>();
+    private static final AtomicLong NEXT_GENERATION =
+            new AtomicLong(1_000L);
+    private static final ThreadLocal<BlockPos.MutableBlockPos>
+            DORMANT_QUERY_POSITION = ThreadLocal.withInitial(
+                    BlockPos.MutableBlockPos::new);
 
     private final ServerLevel level;
     private final Thread mainThread;
-    private final long dimensionGeneration;
-    private final DimensionThermalRuntime runtime;
-    private final ThermalSignatureResolverDispatcher resolverDispatcher;
-    private final ThermalSignatureRegistry signatureRegistry;
-    private final GeometryDeltaRing geometryDeltas;
-    private final ResolvedGeometryInputRing resolvedInputs;
-    private final Map<Long, ThermalPage> pages = new HashMap<>();
-    private final Map<Long, Integer> physicalSourcePageRefCounts = new HashMap<>();
-    private final Set<Long> physicalSourceOwnedPages = new HashSet<>();
-    private final Map<Long, Integer> witnessRefCounts = new HashMap<>();
-    private final Map<Long, SectionOwner> ownersBySectionKey = new HashMap<>();
-    private final IdentityHashMap<LevelChunkSection, SectionOwner> ownersByIdentity =
-            new IdentityHashMap<>();
-    private final IdentityHashMap<ThermalPage, Boolean> dirtyPages = new IdentityHashMap<>();
-    private final AtomicBoolean offThreadResyncPending = new AtomicBoolean();
-    private final AtomicLong nextSectionGeneration = new AtomicLong();
+    private final MinecraftThermalProfiles.Snapshot profiles;
+    private final double referenceTemperatureC;
+    private final ThermalAnalyticFieldIndex analyticFields =
+            new ThermalAnalyticFieldIndex();
+    private final MinecraftEnvironmentCapture environment;
+    private final MinecraftPageManager pages;
+    private final PhysicalSourceSpatialIndex physicalSources;
+    private final MinecraftPhaseController phase;
+    private final MinecraftRadiationOcclusion radiationOcclusion;
+    private final BlockRadiationIndex blockRadiation;
+    private final RadiationService radiation;
+    private final QueryPublication.MutableSample querySample =
+            new QueryPublication.MutableSample();
+    private final DormantChunkThermalState.CaptureScratch dormantCapture =
+            new DormantChunkThermalState.CaptureScratch();
+    private final BlockPos.MutableBlockPos dormantPosition =
+            new BlockPos.MutableBlockPos();
+    private final RadiationService.MutableSample radiationSample =
+            new RadiationService.MutableSample();
+    private final ThermalEnvironmentSample passiveScratch =
+            new ThermalEnvironmentSample();
+    private final ThermalEnvironmentSample townScratch =
+            new ThermalEnvironmentSample();
+    private final BlockPos.MutableBlockPos townPosition =
+            new BlockPos.MutableBlockPos();
+    private final QueryPublication.InfraredReadCursor infraredCursor =
+            new QueryPublication.InfraredReadCursor();
+    private final ThermalPageHandle[] infraredHandles =
+            new ThermalPageHandle[INFRARED_PAGE_CAPACITY];
+    private final PagePublication[] infraredPublications =
+            new PagePublication[INFRARED_PAGE_CAPACITY];
+    private final short[] infraredLocalIndexes =
+            new short[INFRARED_PAGE_CAPACITY];
+    private final long[] infraredPresence =
+            new long[INFRARED_PRESENCE_WORDS];
+    private final short[] infraredBlockTemperatures =
+            new short[InfraredBrickCodec.BLOCKS_PER_BRICK];
+    private final int[] infraredUniqueSlots =
+            new int[InfraredBrickCodec.BLOCKS_PER_BRICK];
+    private final short[] infraredUniqueTemperatures =
+            new short[InfraredBrickCodec.BLOCKS_PER_BRICK];
+    private final InfraredBrickCodec.Builder infraredPayload =
+            new InfraredBrickCodec.Builder();
 
-    private long chunkWatermark;
-    private final long profileWatermark;
-    private long transitionAckWatermark;
-    private long lastSealedTick;
-    private volatile boolean closed;
-    private MinecraftThermalTopologyApplier topologyApplier;
-    private MinecraftPhysicalSourceManager physicalSources;
-    private ThermalRuntimeCoordinator shadowCoordinator;
-    private Executor shadowExecutor;
-    private final AtomicReference<SealedInputFrame> pendingShadowFrame =
-            new AtomicReference<>();
-    private final AtomicBoolean shadowWorkerScheduled = new AtomicBoolean();
-    private volatile ShadowReport latestShadowReport;
+    private long dimensionGeneration;
+    private DimensionInputAccumulator accumulator;
+    private QueryPublication queryPublication;
+    private ThermalDimensionMailbox mailbox;
+    private ThermalInputBatch inFlight;
+    private ThermalInputBatch pendingSubmission;
+    private long lastCompletedTargetTick;
+    private boolean closed;
 
-    public MinecraftThermalInput(
+    private MinecraftThermalInput(
             ServerLevel level,
-            long dimensionGeneration,
-            DimensionThermalRuntime runtime,
-            ThermalSignatureResolverDispatcher resolverDispatcher,
-            ThermalSignatureRegistry signatureRegistry,
-            long profileWatermark,
-            int geometryDeltaCapacity,
-            int resolvedInputCapacity
+            double initialTemperatureC
     ) {
-        this.level = Objects.requireNonNull(level, "level");
-        this.mainThread = Thread.currentThread();
-        this.dimensionGeneration = dimensionGeneration;
-        this.runtime = Objects.requireNonNull(runtime, "runtime");
-        this.resolverDispatcher = Objects.requireNonNull(
-                resolverDispatcher, "resolverDispatcher");
-        this.signatureRegistry = Objects.requireNonNull(
-                signatureRegistry, "signatureRegistry");
-        if (dimensionGeneration < 0L || profileWatermark < 0L
-                || runtime.dimensionGeneration() != dimensionGeneration) {
-            throw new IllegalArgumentException(
-                    "input/runtime generations and profile watermark are invalid");
-        }
-        this.profileWatermark = profileWatermark;
-        this.geometryDeltas = new GeometryDeltaRing(geometryDeltaCapacity);
-        this.resolvedInputs = new ResolvedGeometryInputRing(resolvedInputCapacity);
-        requireMainThread();
-        synchronized (ACTIVE_BY_LEVEL) {
-            if (ACTIVE_BY_LEVEL.putIfAbsent(level, this) != null) {
-                throw new IllegalStateException(
-                        "one Minecraft thermal input is already active for this level");
-            }
-            anyActive = true;
-        }
-        lastSealedTick = runtime.lastCompletedTargetTick();
+        this.level = level;
+        referenceTemperatureC = initialTemperatureC;
+        mainThread = Thread.currentThread();
+        profiles = MinecraftThermalProfiles.prepare();
+        long initialTick = alignedTick(level.getGameTime());
+        dimensionGeneration = nextGeneration();
+        accumulator = new DimensionInputAccumulator(
+                dimensionGeneration, initialTick);
+        lastCompletedTargetTick = initialTick;
+        MinecraftSignatureCapture signatureCapture =
+                new MinecraftSignatureCapture(
+                        level,
+                        profiles.states(),
+                        profiles.signatures());
+        environment = new MinecraftEnvironmentCapture(level, accumulator);
+        pages = new MinecraftPageManager(
+                this, level, accumulator, signatureCapture, environment);
+        physicalSources = new PhysicalSourceSpatialIndex(
+                accumulator, pages, profiles.tuning().campfire(),
+                64, MAXIMUM_PHYSICAL_SOURCES);
+        createWorker(initialTick, initialTemperatureC);
+        phase = new MinecraftPhaseController(
+                level, pages, profiles.states(), profiles.signatures(),
+                profiles.materials(), accumulator, 8);
+        radiationOcclusion = new MinecraftRadiationOcclusion(
+                level, pages, MAXIMUM_RADIATION_SECTIONS);
+        blockRadiation = profiles.states().radiationEnabled()
+                ? BlockRadiationIndex.tryCreate(
+                        level,
+                        pages,
+                        profiles.states(),
+                        MEMORY.createDimensionBudget(
+                                BlockRadiationIndex.projectedMaximumBytes(
+                                        MAXIMUM_RADIATION_SECTIONS)),
+                        MAXIMUM_RADIATION_SECTIONS)
+                : null;
+        pages.attachMutationConsumers(
+                physicalSources, radiationOcclusion);
+        radiation = RadiationService.tryCreate(
+                RADIATION_PARAMETERS,
+                physicalSources,
+                blockRadiation,
+                radiationOcclusion,
+                MEMORY.createDimensionBudget(
+                        RadiationService.projectedMaximumBytes(
+                                RADIATION_PARAMETERS)));
     }
 
-    /**
-     * Admits one section only when Minecraft already proves it contains air.
-     * No cold scan or chunk load is performed.
-     */
-    public ThermalPage admitAllAirPage(
-            LevelChunk chunk,
-            int sectionIndex,
-            int supportRef,
-            int airMediumId
+    private void createWorker(
+            long initialTick,
+            double referenceTemperatureC
     ) {
-        requireMainThread();
-        requireOpen();
-        Objects.requireNonNull(chunk, "chunk");
-        if (chunk.getLevel() != level
-                || sectionIndex < 0
-                || sectionIndex >= chunk.getSections().length) {
-            throw new IllegalArgumentException("chunk section does not belong to this level");
+        MinecraftThermalProfiles.Tuning tuning = profiles.tuning();
+        ThermalDimensionLimits limits = new ThermalDimensionLimits(
+                3_200, MAXIMUM_PHYSICAL_SOURCES, MAXIMUM_SOURCE_NODES,
+                131_072, 65_536,
+                262_144, 65_536, 65_536,
+                20, 1.0e-6D);
+        QueryPublication publication = QueryPublication.tryCreate(
+                MEMORY.createDimensionBudget(
+                        16L * 1024L * 1024L),
+                256,
+                limits.maximumPages());
+        if (publication == null) {
+            throw new IllegalStateException(
+                    "thermal query publication memory was refused");
         }
-        LevelChunkSection section = chunk.getSections()[sectionIndex];
-        if (!section.hasOnlyAir()) {
-            return null;
-        }
-        int sectionY = chunk.getSectionYFromSectionIndex(sectionIndex);
-        long sectionKey = SectionPos.asLong(chunk.getPos().x, sectionY, chunk.getPos().z);
-        if (pages.containsKey(sectionKey)) {
-            throw new IllegalStateException("thermal page is already admitted");
-        }
-        long lifecycleGeneration = nextSectionGeneration.incrementAndGet();
-        ThermalPage page = ThermalPage.allAir(
-                sectionKey, lifecycleGeneration, supportRef, airMediumId);
-        pages.put(sectionKey, page);
-        adjustWitnesses(chunk.getPos().x, sectionY, chunk.getPos().z, 1);
-        refreshNearbyOwnerPageViews(chunk.getPos().x, sectionY, chunk.getPos().z);
-        chunkWatermark = Math.incrementExact(chunkWatermark);
-        if (topologyApplier != null) {
-            topologyApplier.registerAllAirPage(page, chunkWatermark);
-        }
-        return page;
-    }
-
-    public boolean withdrawPage(long sectionKey) {
-        requireMainThread();
-        requireOpen();
-        ThermalPage removed = pages.remove(sectionKey);
-        if (removed == null) {
-            return false;
-        }
-        physicalSourcePageRefCounts.remove(sectionKey);
-        physicalSourceOwnedPages.remove(sectionKey);
-        if (physicalSources != null) {
-            physicalSources.onPageWithdrawn(sectionKey);
-        }
-        dirtyPages.remove(removed);
-        int sectionX = SectionPos.x(sectionKey);
-        int sectionY = SectionPos.y(sectionKey);
-        int sectionZ = SectionPos.z(sectionKey);
-        adjustWitnesses(sectionX, sectionY, sectionZ, -1);
-        refreshNearbyOwnerPageViews(sectionX, sectionY, sectionZ);
-        chunkWatermark = Math.incrementExact(chunkWatermark);
-        if (topologyApplier != null) {
-            topologyApplier.retirePage(removed, chunkWatermark);
-        }
-        return true;
-    }
-
-    /** Freezes the current main-thread cut and offers it to the PR7 runtime. */
-    public SealReport sealTick(long effectiveTick) {
-        requireMainThread();
-        requireOpen();
-        if (effectiveTick < lastSealedTick) {
-            throw new IllegalArgumentException("thermal input ticks must be monotonic");
-        }
-        if (physicalSources != null) {
-            physicalSources.flush(effectiveTick);
-        }
-        if (offThreadResyncPending.getAndSet(false)) {
-            for (ThermalPage page : pages.values()) {
-                dirtyPages.put(page, Boolean.TRUE);
-            }
-        }
-
-        int sealedDeltas = 0;
-        int resyncPages = 0;
-        for (ThermalPage page : List.copyOf(dirtyPages.keySet())) {
-            var sealed = page.sealGeometryDeltas(geometryDeltas);
-            sealedDeltas += sealed.offeredDeltas();
-            if (page.fullGeometryResyncRequired()) {
-                resyncPages++;
-                ThermalPage.GeometryResyncToken token = page.beginFullGeometryResync();
-                if (token != null) {
-                    if (!resolvedInputs.canOfferFullResync()
-                            || !resolvedInputs.offerFullResync(
-                                    page.sectionKey(),
-                                    page.lifecycleGeneration(),
-                                    token.requiredRevision(),
-                                    effectiveTick,
-                                    token.reason(),
-                                    captureFullPageSnapshot(page))) {
-                        offThreadResyncPending.set(true);
-                    }
+        ThermalDimensionEngine engine = null;
+        try {
+            ThermalTopologyParameters topology = new ThermalTopologyParameters(
+                    64, tuning.airHeatCapacityJPerBlockK(),
+                    referenceTemperatureC,
+                    tuning.airMixingWPerBlockK(), 0.25D,
+                    new BuoyancyConductance.Parameters(0.25D, 4.0D, 10.0D),
+                    1_024, 8);
+            engine = new ThermalDimensionEngine(
+                    dimensionGeneration, initialTick,
+                    new ThermalCellArena(256),
+                    profiles.signatures(), profiles.materials(), topology,
+                    new FarFieldSettings(
+                            tuning.farFieldConductanceWPerK(),
+                            32.0D, 16.0D),
+                    tuning.campfire(),
+                    limits, publication);
+            mailbox = new ThermalDimensionMailbox(
+                    ThermalWorkerPool.shared(), engine);
+            queryPublication = publication;
+        } catch (RuntimeException | Error failure) {
+            if (engine != null) {
+                try {
+                    engine.close();
+                } catch (Throwable cleanupFailure) {
+                    failure.addSuppressed(cleanupFailure);
                 }
+            } else {
+                publication.close();
             }
-        }
-        dirtyPages.clear();
-
-        InputWatermarks watermarks = new InputWatermarks(
-                resolvedInputs.latestOfferedWatermark(),
-                runtime.latestOfferedSourceWatermark(),
-                chunkWatermark,
-                profileWatermark,
-                transitionAckWatermark
-        );
-        SealedInputFrame frame = new SealedInputFrame(
-                effectiveTick, dimensionGeneration, watermarks);
-        LatestSolveEpochScheduler.SealResult result = runtime.sealFrame(frame);
-        if (result == LatestSolveEpochScheduler.SealResult.ACCEPTED
-                || result == LatestSolveEpochScheduler.SealResult.DUPLICATE) {
-            lastSealedTick = effectiveTick;
-        }
-        if (shadowCoordinator != null
-                && (result == LatestSolveEpochScheduler.SealResult.ACCEPTED
-                || result == LatestSolveEpochScheduler.SealResult.DUPLICATE)) {
-            pendingShadowFrame.set(frame);
-            scheduleShadowWorker();
-        }
-        return new SealReport(frame, result, sealedDeltas, resyncPages);
-    }
-
-    public GeometryDeltaRing geometryDeltas() {
-        return geometryDeltas;
-    }
-
-    public ResolvedGeometryInputRing resolvedInputs() {
-        return resolvedInputs;
-    }
-
-    /** Enables the concrete applier without changing tick-end or gameplay authority. */
-    public void enableTopologyApplication(
-            MinecraftThermalTopologyApplier.Parameters parameters
-    ) {
-        requireMainThread();
-        requireOpen();
-        if (topologyApplier != null) {
-            throw new IllegalStateException("Minecraft thermal topology application is enabled");
-        }
-        topologyApplier = new MinecraftThermalTopologyApplier(
-                runtime, signatureRegistry, geometryDeltas, resolvedInputs, parameters);
-        for (ThermalPage page : pages.values()) {
-            topologyApplier.registerAllAirPage(page, chunkWatermark);
+            throw failure;
         }
     }
 
-    /**
-     * Connects tick sealing to the shared coordinator without granting gameplay
-     * query authority. Coordinator workers remain externally owned.
-     */
-    public void enableShadowDispatch(
-            ThermalRuntimeCoordinator coordinator,
-            Executor boundedSharedExecutor
-    ) {
-        requireMainThread();
-        requireOpen();
-        Objects.requireNonNull(coordinator, "coordinator");
-        Objects.requireNonNull(boundedSharedExecutor, "boundedSharedExecutor");
-        if (topologyApplier == null) {
-            throw new IllegalStateException(
-                    "topology application must be enabled before shadow dispatch");
-        }
-        if (shadowCoordinator != null) {
-            throw new IllegalStateException("Minecraft thermal shadow dispatch is enabled");
-        }
-        if (!coordinator.register(runtime)) {
-            throw new IllegalStateException("dimension runtime could not be registered");
-        }
-        shadowCoordinator = coordinator;
-        shadowExecutor = boundedSharedExecutor;
-    }
-
-    /** Enables the two frozen physical source producers without gameplay authority. */
-    public MinecraftPhysicalSourceManager enablePhysicalSources(
-            int maximumColdSourcePages
-    ) {
-        requireMainThread();
-        requireOpen();
-        if (topologyApplier == null) {
-            throw new IllegalStateException(
-                    "topology application must be enabled before physical sources");
-        }
-        if (physicalSources != null) {
-            throw new IllegalStateException("Minecraft physical sources are enabled");
-        }
-        physicalSources = new MinecraftPhysicalSourceManager(
-                this, runtime.sourceTimeline(), maximumColdSourcePages);
-        return physicalSources;
-    }
-
-    public ShadowReport latestShadowReport() {
-        return latestShadowReport;
-    }
-
-    /** Explicit manual path used when asynchronous shadow dispatch is disabled. */
-    public MinecraftThermalTopologyApplier.ApplyReport applyTopology(
-            SealedInputFrame frame
-    ) {
-        requireMainThread();
-        requireOpen();
-        if (topologyApplier == null) {
-            throw new IllegalStateException("Minecraft thermal topology application is disabled");
-        }
-        return topologyApplier.apply(frame);
-    }
-
-    public int admittedPageCount() {
-        requireMainThread();
-        return pages.size();
-    }
-
-    public int witnessedSectionCount() {
-        requireMainThread();
-        return ownersBySectionKey.size();
-    }
-
-    long topologyGeneration() {
-        return runtime.topologyGeneration();
-    }
-
-    MinecraftThermalTopologyApplier.PortResolution resolvePhysicalSourcePort(
-            BlockPos target,
-            com.teammoeg.frostedheart.content.climate.thermal.geometry
-                    .ConservativeAirGeometry.Face targetFace
-    ) {
-        return topologyApplier.resolveAirFacePort(
-                target.getX(), target.getY(), target.getZ(), targetFace);
-    }
-
-    boolean retainPhysicalSourcePage(BlockPos target, int maximumColdSourcePages) {
-        requireMainThread();
-        requireOpen();
-        int sectionX = SectionPos.blockToSectionCoord(target.getX());
-        int sectionY = SectionPos.blockToSectionCoord(target.getY());
-        int sectionZ = SectionPos.blockToSectionCoord(target.getZ());
-        long sectionKey = SectionPos.asLong(sectionX, sectionY, sectionZ);
-        ThermalPage existing = pages.get(sectionKey);
-        if (existing != null) {
-            physicalSourcePageRefCounts.merge(sectionKey, 1, Math::addExact);
-            return true;
-        }
-        if (physicalSourceOwnedPages.size() >= maximumColdSourcePages) {
-            return false;
-        }
-        LevelChunk chunk = level.getChunkSource().getChunkNow(sectionX, sectionZ);
-        if (chunk == null) {
-            return false;
-        }
-        int sectionIndex = chunk.getSectionIndexFromSectionY(sectionY);
-        if (sectionIndex < 0 || sectionIndex >= chunk.getSections().length) {
-            return false;
-        }
-
-        long lifecycleGeneration = nextSectionGeneration.incrementAndGet();
-        long admissionWatermark = Math.incrementExact(chunkWatermark);
-        chunkWatermark = admissionWatermark;
-        ThermalPage page = topologyApplier.registerCapturedPage(
-                sectionKey,
-                lifecycleGeneration,
-                admissionWatermark,
-                captureFullPageSnapshot(sectionKey));
-        pages.put(sectionKey, page);
-        physicalSourcePageRefCounts.put(sectionKey, 1);
-        physicalSourceOwnedPages.add(sectionKey);
-        adjustWitnesses(sectionX, sectionY, sectionZ, 1);
-        refreshNearbyOwnerPageViews(sectionX, sectionY, sectionZ);
-        return true;
-    }
-
-    void releasePhysicalSourcePage(long sectionKey) {
-        requireMainThread();
-        Integer references = physicalSourcePageRefCounts.get(sectionKey);
-        if (references == null) {
-            return;
-        }
-        if (references > 1) {
-            physicalSourcePageRefCounts.put(sectionKey, references - 1);
-            return;
-        }
-        physicalSourcePageRefCounts.remove(sectionKey);
-        if (physicalSourceOwnedPages.remove(sectionKey)) {
-            withdrawPage(sectionKey);
-        }
-    }
-
-    public long chunkWatermark() {
-        requireMainThread();
-        return chunkWatermark;
-    }
-
-    /** Records a completed main-thread transition outcome without applying it. */
-    public void advanceTransitionAckWatermark(long watermark) {
-        requireMainThread();
-        if (watermark < transitionAckWatermark) {
-            throw new IllegalArgumentException("transition ACK watermark regressed");
-        }
-        transitionAckWatermark = watermark;
-    }
-
-    @Override
-    public void close() {
+    private void tick() {
         requireMainThread();
         if (closed) {
             return;
         }
-        closed = true;
-        if (physicalSources != null) {
-            physicalSources.close();
+        drainCompletion();
+        long gameTick = level.getGameTime();
+        long alignedTick = alignedTick(gameTick);
+        if (pendingSubmission != null
+                || gameTick % ThermalInputBatch.CUT_INTERVAL_TICKS != 0L
+                && alignedTick > lastCompletedTargetTick) {
+            submitCut(alignedTick);
         }
-        synchronized (ACTIVE_BY_LEVEL) {
-            ACTIVE_BY_LEVEL.remove(level, this);
-            anyActive = !ACTIVE_BY_LEVEL.isEmpty();
+        pages.tick(gameTick);
+        phase.tick();
+        if (blockRadiation != null) {
+            blockRadiation.tick(gameTick);
         }
-        if (shadowCoordinator != null) {
-            pendingShadowFrame.set(null);
-            shadowCoordinator.unload(runtime.runtimeId(), dimensionGeneration);
+        if (gameTick % ThermalInputBatch.CUT_INTERVAL_TICKS != 0L) {
+            return;
         }
-        for (SectionOwner owner : new ArrayList<>(ownersByIdentity.values())) {
-            detach(owner);
+        physicalSources.flush(gameTick);
+        if (pages.recoverPhysicalSourceCapacity()) {
+            physicalSources.flush(gameTick);
         }
-        pages.clear();
-        witnessRefCounts.clear();
-        dirtyPages.clear();
+        submitCut(gameTick);
     }
 
-    /** Single Mixin dispatch point preserving the gated Phase 0a evidence path. */
+    private void submitCut(long targetTick) {
+        if (inFlight != null) {
+            return;
+        }
+        ThermalInputBatch batch = pendingSubmission;
+        if (batch == null) {
+            pages.flushCapturedGeometry();
+            batch = accumulator.seal(targetTick);
+        }
+        if (mailbox.submit(batch)) {
+            inFlight = batch;
+            pendingSubmission = null;
+        } else {
+            pendingSubmission = batch;
+        }
+    }
+
+    private void drainCompletion() {
+        ThermalCompletion completion = mailbox.peekCompletion();
+        if (completion == null) {
+            return;
+        }
+        if (inFlight == null
+                || completion.dimensionGeneration() != dimensionGeneration
+                || completion.batchSequence() != inFlight.sequence()) {
+            throw new IllegalStateException(
+                    "thermal completion does not own the in-flight batch");
+        }
+        ThermalInputBatch completedBatch = inFlight;
+        if (completion.status() == ThermalCompletion.Status.ENGINE_FAILED) {
+            FHMain.LOGGER.error(
+                    "Thermal dimension worker failed for {}",
+                    level.dimension().location(),
+                    completion.failure());
+            pages.checkpointAll(true, false);
+            try {
+                mailbox.acknowledgeCompletion(completion.batchSequence());
+            } catch (RuntimeException | Error closeFailure) {
+                FHMain.LOGGER.error(
+                        "Failed to close terminal thermal worker for {}",
+                        level.dimension().location(),
+                        closeFailure);
+            }
+            inFlight = null;
+            restartWorker(level.getGameTime());
+            return;
+        }
+        mailbox.acknowledgeCompletion(completion.batchSequence());
+        inFlight = null;
+        lastCompletedTargetTick = completedBatch.targetTick();
+        pages.acknowledgeResync(completion.committedResyncTokens());
+        for (ThermalCompletion.BrickResidency residency
+                : completion.residencyUpdates()) {
+            pages.applyResidency(residency);
+        }
+        phase.accept(completion.phaseRequests());
+        if (completion.status() == ThermalCompletion.Status.WORK_LIMITED) {
+            pages.retryWorkLimited(completedBatch, level.getGameTime());
+        }
+    }
+
+    private void restartWorker(long gameTick) {
+        dimensionGeneration = nextGeneration();
+        long initialTick = alignedTick(gameTick);
+        accumulator = new DimensionInputAccumulator(
+                dimensionGeneration, initialTick);
+        lastCompletedTargetTick = initialTick;
+        environment.replaceAccumulator(accumulator);
+        physicalSources.replaceAccumulator(accumulator);
+        phase.replaceAccumulator(accumulator);
+        pendingSubmission = null;
+        createWorker(
+                initialTick,
+                referenceTemperatureC);
+        pages.reseedAll(accumulator);
+        physicalSources.reseedAll(gameTick);
+    }
+
+    private void sampleAir(
+            double x,
+            double y,
+            double z,
+            long sampleTick,
+            int maximumAgeTicks,
+            ThermalEnvironmentSample out
+    ) {
+        int blockX = floor(x);
+        int blockY = floor(y);
+        int blockZ = floor(z);
+        long sectionKey = SectionPos.asLong(
+                SectionPos.blockToSectionCoord(blockX),
+                SectionPos.blockToSectionCoord(blockY),
+                SectionPos.blockToSectionCoord(blockZ));
+        MinecraftPageManager.SectionOwner owner =
+                pages.loadedSectionOrAttach(sectionKey);
+        ThermalPageHandle page = owner == null ? null : owner.page();
+        LevelChunk loadedChunk = owner == null ? null : owner.chunk();
+        if (page == null) {
+            sampleDormant(
+                    loadedChunk, blockX, blockY, blockZ, sampleTick, out);
+            return;
+        }
+        int localX = SectionPos.sectionRelative(blockX);
+        int localY = SectionPos.sectionRelative(blockY);
+        int localZ = SectionPos.sectionRelative(blockZ);
+        PagePublication publication = page.currentPublication();
+        if (publication == null) {
+            if (!resolveLastPublication(page, localX, localY, localZ,
+                sampleTick, maximumAgeTicks, out)) {
+                sampleDormant(
+                        loadedChunk, blockX, blockY, blockZ, sampleTick, out);
+            }
+            return;
+        }
+        PagePublication.Brick coverage = publication.brickAt(
+                localX, localY, localZ);
+        int microcell = microcell(x, y, z);
+        int slot = publication.resolveAirPoint(
+                localX, localY, localZ, microcell, profiles.signatures());
+        if (slot == PagePublication.NO_AIR_POINT) {
+            if (coverage.signaturePayload() == null) {
+                sampleDormant(
+                        loadedChunk, blockX, blockY, blockZ, sampleTick, out);
+            }
+            return;
+        }
+        if (!queryPublication.tryRead(
+                slot,
+                coverage.arenaGeneration(),
+                publication.topologyGeneration(),
+                querySample)) {
+            if (!resolveLastPublication(page, localX, localY, localZ,
+                sampleTick, maximumAgeTicks, out)) {
+                sampleDormant(
+                        loadedChunk, blockX, blockY, blockZ, sampleTick, out);
+            }
+            return;
+        }
+        if (page.currentPublication() != publication) {
+            if (!resolveLastPublication(page, localX, localY, localZ,
+                sampleTick, maximumAgeTicks, out)) {
+                sampleDormant(
+                        loadedChunk, blockX, blockY, blockZ, sampleTick, out);
+            }
+            return;
+        }
+        if (sampleTick - querySample.sampleTick() > maximumAgeTicks) {
+            sampleDormant(
+                    loadedChunk, blockX, blockY, blockZ, sampleTick, out);
+            return;
+        }
+        out.setAir(querySample.temperatureC());
+    }
+
+    /** Returns true when the last cut answers the point, including definite no-Air. */
+    private boolean resolveLastPublication(
+            ThermalPageHandle page,
+            int localX,
+            int localY,
+            int localZ,
+            long sampleTick,
+            int maximumAgeTicks,
+            ThermalEnvironmentSample out
+    ) {
+        PagePublication publication = page.lastPublication();
+        if (publication == null) {
+            return false;
+        }
+        PagePublication.Brick brick = publication.brickAt(
+                localX, localY, localZ);
+        if (brick.coverageSlot() < 0) {
+            return brick.signaturePayload() != null;
+        }
+        int components = brick.mixedGeometry() == null
+                ? 1 : brick.mixedGeometry().componentCount();
+        double warmest = -Double.MAX_VALUE;
+        long commonTick = -1L;
+        for (int component = 0; component < components; component++) {
+            if (!queryPublication.tryRead(
+                    brick.coverageSlot() + component,
+                    brick.arenaGeneration(),
+                    publication.topologyGeneration(),
+                    querySample)) {
+                return false;
+            }
+            if (commonTick < 0L) {
+                commonTick = querySample.sampleTick();
+            } else if (commonTick != querySample.sampleTick()) {
+                return false;
+            }
+            warmest = Math.max(warmest, querySample.temperatureC());
+        }
+        if (page.lastPublication() != publication
+                || sampleTick - commonTick > maximumAgeTicks) {
+            return false;
+        }
+        out.setAir(warmest);
+        return true;
+    }
+
+    private void sampleDormant(
+            LevelChunk loadedChunk,
+            int blockX,
+            int blockY,
+            int blockZ,
+            long gameTick,
+            ThermalEnvironmentSample out
+    ) {
+        double temperature = loadedChunk == null
+                ? dormantTemperature(
+                        level, blockX, blockY, blockZ,
+                        gameTick, dormantPosition)
+                : dormantTemperature(
+                        level, loadedChunk, blockX, blockY, blockZ,
+                        gameTick, dormantPosition);
+        if (Double.isFinite(temperature)) {
+            out.setAir(temperature);
+        }
+    }
+
+    private void sampleRadiation(
+            ServerPlayer player,
+            ThermalEnvironmentSample out
+    ) {
+        if (radiation == null) {
+            return;
+        }
+        radiation.samplePlayer(
+                receiverKey(player),
+                player.getId() & Integer.MAX_VALUE,
+                player.getX(), player.getY(), player.getEyeY(), player.getZ(),
+                radiationSample);
+        out.setRadiation(radiationSample.radiantFluxWPerM2());
+    }
+
+    public static double gameplayPlayerEnvironment(
+            ServerPlayer player,
+            double naturalTemperatureC,
+            ThermalEnvironmentSample out
+    ) {
+        Objects.requireNonNull(player, "player");
+        Objects.requireNonNull(out, "out").clear();
+        if (!Double.isFinite(naturalTemperatureC)) {
+            return naturalTemperatureC;
+        }
+        MinecraftThermalInput input = active(player.serverLevel());
+        if (input == null) {
+            input = start(
+                    player.serverLevel(), naturalTemperatureC);
+        }
+        if (input == null) {
+            return naturalTemperatureC;
+        }
+        input.sampleAir(
+                player.getX(), player.getEyeY(), player.getZ(),
+                player.serverLevel().getGameTime(),
+                MAX_PUBLICATION_AGE_TICKS, out);
+        input.sampleRadiation(player, out);
+        double base = out.airAvailable()
+                ? out.airTemperatureC() : naturalTemperatureC;
+        double composed = input.analyticFields.compose(
+                player.getX(), player.getEyeY(), player.getZ(), base);
+        if (Double.compare(composed, base) != 0) {
+            out.setComposedAir(composed);
+        }
+        return composed;
+    }
+
+    public static double gameplayPassiveEnvironment(
+            LevelReader level,
+            BlockPos position,
+            double naturalTemperatureC
+    ) {
+        if (!(level instanceof ServerLevel server)
+                || !Double.isFinite(naturalTemperatureC)
+                || !server.getServer().isSameThread()) {
+            return naturalTemperatureC;
+        }
+        MinecraftThermalInput input = active(server);
+        if (input == null) {
+            double dormant = dormantTemperature(
+                    server,
+                    position.getX(), position.getY(), position.getZ(),
+                    server.getGameTime(), DORMANT_QUERY_POSITION.get());
+            return Double.isFinite(dormant) ? dormant : naturalTemperatureC;
+        }
+        ThermalEnvironmentSample out = input.passiveScratch;
+        out.clear();
+        input.sampleAir(
+                position.getX() + 0.5D,
+                position.getY() + 0.5D,
+                position.getZ() + 0.5D,
+                server.getGameTime(), MAX_PUBLICATION_AGE_TICKS, out);
+        double base = out.airAvailable()
+                ? out.airTemperatureC() : naturalTemperatureC;
+        return input.analyticFields.compose(
+                position.getX() + 0.5D,
+                position.getY() + 0.5D,
+                position.getZ() + 0.5D,
+                base);
+    }
+
+    public static double gameplayCropEnvironment(
+            LevelAccessor level,
+            BlockPos position,
+            double naturalTemperatureC
+    ) {
+        return gameplayPassiveEnvironment(level, position, naturalTemperatureC);
+    }
+
+    public static double gameplayTownEnvironment(
+            LevelAccessor level,
+            TownThermalProjection projection,
+            double naturalTemperatureC
+    ) {
+        if (!(level instanceof ServerLevel server)
+                || projection.voxelCount() == 0
+                || !Double.isFinite(naturalTemperatureC)) {
+            return naturalTemperatureC;
+        }
+        MinecraftThermalInput input = active(server);
+        int totalWeight = 0;
+        double total = 0.0D;
+        for (long key : projection.groupKeys()) {
+            int weight = projection.weight(key);
+            if (weight <= 0) continue;
+            int x = projection.representativeX(key);
+            int y = projection.representativeY(key);
+            int z = projection.representativeZ(key);
+            double base;
+            if (input != null) {
+                ThermalEnvironmentSample out = input.townScratch;
+                out.clear();
+                input.sampleAir(
+                        x + 0.5D, y + 0.5D, z + 0.5D,
+                        server.getGameTime(), MAX_PUBLICATION_AGE_TICKS, out);
+                if (out.airAvailable()) {
+                    base = out.airTemperatureC();
+                } else {
+                    input.townPosition.set(x, y, z);
+                    base = WorldTemperature.naturalBlock(
+                            server, input.townPosition);
+                }
+            } else {
+                double dormant = dormantTemperature(
+                        server, x, y, z, server.getGameTime(),
+                        DORMANT_QUERY_POSITION.get());
+                base = Double.isFinite(dormant)
+                        ? dormant : WorldTemperature.naturalBlock(
+                                server, DORMANT_QUERY_POSITION.get().set(x, y, z));
+            }
+            total += (input == null ? base : input.analyticFields.compose(
+                    x + 0.5D, y + 0.5D, z + 0.5D, base)) * weight;
+            totalWeight += weight;
+        }
+        return totalWeight == 0 ? naturalTemperatureC : total / totalWeight;
+    }
+
+    public static boolean upsertGameplayAnalyticField(
+            ServerLevel level, ThermalAnalyticField field
+    ) {
+        MinecraftThermalInput input = active(level);
+        if (input == null && level.getServer().isSameThread()) {
+            input = start(
+                    level,
+                    WorldTemperature.naturalAir(
+                            level,
+                            BlockPos.containing(
+                                    field.centerX(),
+                                    field.centerY(),
+                                    field.centerZ())));
+        }
+        if (input == null) return false;
+        input.analyticFields.upsert(field);
+        return true;
+    }
+
+    public static boolean removeGameplayAnalyticField(
+            ServerLevel level, long fieldId
+    ) {
+        MinecraftThermalInput input = active(level);
+        return input != null && level.getServer().isSameThread()
+                && input.analyticFields.remove(fieldId);
+    }
+
+    public static List<ThermalAnalyticField> gameplayAnalyticFieldsAt(
+            ServerLevel level, BlockPos position
+    ) {
+        MinecraftThermalInput input = active(level);
+        return input == null || !level.getServer().isSameThread()
+                ? List.of()
+                : input.analyticFields.fieldsAt(
+                        position.getX() + 0.5D,
+                        position.getY() + 0.5D,
+                        position.getZ() + 0.5D);
+    }
+
+    public static boolean hasGameplayAnalyticFieldAt(
+            ServerLevel level, BlockPos position
+    ) {
+        MinecraftThermalInput input = active(level);
+        return input != null && level.getServer().isSameThread()
+                && input.analyticFields.appliesAt(
+                        position.getX() + 0.5D,
+                        position.getY() + 0.5D,
+                        position.getZ() + 0.5D);
+    }
+
+    public static InfraredSnapshot gameplayInfraredSnapshot(
+            ServerPlayer player,
+            boolean forceFull,
+            int lastInfraredEpoch,
+            long[] knownPresence
+    ) {
+        Objects.requireNonNull(player, "player");
+        if (knownPresence == null
+                || knownPresence.length != INFRARED_PRESENCE_WORDS) {
+            throw new IllegalArgumentException("infrared presence requires 12 words");
+        }
+        int centerChunkX = SectionPos.blockToSectionCoord(
+                Mth.floor(player.getX()));
+        int centerChunkZ = SectionPos.blockToSectionCoord(
+                Mth.floor(player.getZ()));
+        int centerSectionY = SectionPos.blockToSectionCoord(
+                Mth.floor(player.getEyeY()));
+        MinecraftThermalInput input = active(player.serverLevel());
+        if (input == null || !player.server.isSameThread()) {
+            return new InfraredSnapshot(
+                    centerChunkX, centerChunkZ, centerSectionY,
+                    0, true,
+                    new long[INFRARED_PRESENCE_WORDS],
+                    NO_INFRARED_RECORDS);
+        }
+        return input.infraredSnapshot(
+                centerChunkX,
+                centerChunkZ,
+                centerSectionY,
+                forceFull,
+                lastInfraredEpoch,
+                knownPresence);
+    }
+
+    private InfraredSnapshot infraredSnapshot(
+            int centerChunkX,
+            int centerChunkZ,
+            int centerSectionY,
+            boolean forceFull,
+            int lastInfraredEpoch,
+            long[] knownPresence
+    ) {
+        long gameTick = level.getGameTime();
+        boolean reactivated = queryPublication.noteInfraredRequest(
+                gameTick, INFRARED_ACTIVE_TICKS);
+        if (!queryPublication.beginInfraredRead(infraredCursor)) {
+            return null;
+        }
+        int currentEpoch = infraredCursor.infraredEpoch();
+        if (!infraredCursor.valid()
+                || gameTick - infraredCursor.sampleTick()
+                > MAX_PUBLICATION_AGE_TICKS) {
+            return null;
+        }
+
+        int pageCount = pages.collectInfraredPages(
+                centerChunkX,
+                centerSectionY,
+                centerChunkZ,
+                infraredHandles,
+                infraredLocalIndexes,
+                infraredPresence);
+        boolean presenceChanged = !Arrays.equals(
+                knownPresence, infraredPresence);
+        boolean full = forceFull
+                || reactivated
+                || lastInfraredEpoch > currentEpoch;
+        if (!full && !presenceChanged
+                && lastInfraredEpoch == currentEpoch) {
+            return null;
+        }
+
+        infraredPayload.reset();
+        try {
+            for (int index = 0; index < pageCount; index++) {
+                PagePublication publication = currentOrLast(
+                        infraredHandles[index]);
+                if (publication == null) {
+                    return null;
+                }
+                infraredPublications[index] = publication;
+            }
+            for (int index = 0; index < pageCount; index++) {
+                PagePublication publication = infraredPublications[index];
+                int localPageIndex = Short.toUnsignedInt(
+                        infraredLocalIndexes[index]);
+                boolean added = full || !presenceBit(
+                        knownPresence, localPageIndex);
+                long brickMask = added ? -1L : changedBrickMask(
+                        publication.workerPageSlot(), lastInfraredEpoch);
+                while (brickMask != 0L) {
+                    int brickIndex = Long.numberOfTrailingZeros(brickMask);
+                    if (!writeInfraredBrick(
+                            publication,
+                            localPageIndex,
+                            brickIndex,
+                            added)) {
+                        return null;
+                    }
+                    brickMask &= brickMask - 1L;
+                }
+            }
+            if (full) {
+                writeDormantInfrared(
+                        centerChunkX, centerChunkZ, centerSectionY, gameTick);
+            }
+            if (!infraredCursor.isCurrent()) {
+                return null;
+            }
+            if (!full && !presenceChanged && infraredPayload.size() == 0) {
+                return null;
+            }
+            byte[] records = infraredPayload.size() == 0
+                    ? NO_INFRARED_RECORDS
+                    : infraredPayload.toByteArray();
+            long[] presence = full || presenceChanged
+                    ? infraredPresence.clone()
+                    : NO_INFRARED_PRESENCE;
+            return new InfraredSnapshot(
+                    centerChunkX, centerChunkZ, centerSectionY,
+                    currentEpoch, full, presence, records);
+        } finally {
+            Arrays.fill(infraredPublications, 0, pageCount, null);
+        }
+    }
+
+    private void writeDormantInfrared(
+            int centerChunkX,
+            int centerChunkZ,
+            int centerSectionY,
+            long gameTick
+    ) {
+        double halfLifeSeconds =
+                profiles.tuning().dormantTemperatureHalfLifeSeconds();
+        for (int dz = -4; dz <= 4; dz++) {
+            for (int dx = -4; dx <= 4; dx++) {
+                int sectionX = centerChunkX + dx;
+                int sectionZ = centerChunkZ + dz;
+                LevelChunk chunk = level.getChunkSource().getChunkNow(
+                        sectionX, sectionZ);
+                DormantChunkThermalState state = chunk == null
+                        ? null : dormantState(chunk);
+                if (state == null) {
+                    continue;
+                }
+                for (int dy = -4; dy <= 4; dy++) {
+                    int localPageIndex = ((dy + 4) * 9 + (dz + 4)) * 9
+                            + dx + 4;
+                    if (presenceBit(infraredPresence, localPageIndex)) {
+                        continue;
+                    }
+                    int sectionY = centerSectionY + dy;
+                    long brickMask = state.storedBrickMask(sectionY);
+                    if (brickMask == 0L) {
+                        continue;
+                    }
+                    if (!state.sourceSupported(sectionY)) {
+                        continue;
+                    }
+                    dormantPosition.set(
+                            SectionPos.sectionToBlockCoord(sectionX) + 8,
+                            SectionPos.sectionToBlockCoord(sectionY) + 8,
+                            SectionPos.sectionToBlockCoord(sectionZ) + 8);
+                    double natural = WorldTemperature.naturalAir(
+                            level, dormantPosition);
+                    while (brickMask != 0L) {
+                        int brick = Long.numberOfTrailingZeros(brickMask);
+                        double temperature = state.brickMeanTemperatureC(
+                                sectionY,
+                                brick,
+                                gameTick,
+                                halfLifeSeconds,
+                                natural);
+                        infraredPayload.writeUniform(
+                                localPageIndex * 64 + brick,
+                                quantizeInfrared(temperature));
+                        brickMask &= brickMask - 1L;
+                    }
+                }
+            }
+        }
+    }
+
+    private long changedBrickMask(int pageSlot, int lastInfraredEpoch) {
+        if (infraredCursor.pageChangeEpoch(pageSlot) <= lastInfraredEpoch) {
+            return 0L;
+        }
+        long result = 0L;
+        for (int brick = 0; brick < 64; brick++) {
+            if (infraredCursor.brickChangeEpoch(pageSlot, brick)
+                    > lastInfraredEpoch) {
+                result |= 1L << brick;
+            }
+        }
+        return result;
+    }
+
+    private boolean writeInfraredBrick(
+            PagePublication publication,
+            int localPageIndex,
+            int brickIndex,
+            boolean omitInvalid
+    ) {
+        PagePublication.Brick brick = publication.brick(brickIndex);
+        int localBrickIndex = localPageIndex * 64 + brickIndex;
+        int slot = brick.coverageSlot();
+        if (slot == PagePublication.NO_AIR_POINT) {
+            infraredPayload.writeInvalid(localBrickIndex, omitInvalid);
+            return true;
+        }
+        if (brick.mixedGeometry() == null) {
+            if (!infraredCursor.tryRead(
+                    slot,
+                    brick.arenaGeneration(),
+                    publication.topologyGeneration(),
+                    querySample)) {
+                return false;
+            }
+            infraredPayload.writeUniform(
+                    localBrickIndex,
+                    quantizeInfrared(querySample.temperatureC()));
+            return true;
+        }
+
+        Arrays.fill(
+                infraredBlockTemperatures,
+                InfraredBrickCodec.INVALID_TEMPERATURE);
+        int brickX = (brickIndex & 3) << 2;
+        int brickZ = (brickIndex >>> 2 & 3) << 2;
+        int brickY = (brickIndex >>> 4) << 2;
+        int uniqueCount = 0;
+        for (int block = 0; block < 64; block++) {
+            int resolvedSlot = publication.resolveAirPoint(
+                    brickX + (block & 3),
+                    brickY + (block >>> 4),
+                    brickZ + (block >>> 2 & 3),
+                    42,
+                    profiles.signatures());
+            if (resolvedSlot == PagePublication.NO_AIR_POINT) {
+                continue;
+            }
+            int unique = 0;
+            while (unique < uniqueCount
+                    && infraredUniqueSlots[unique] != resolvedSlot) {
+                unique++;
+            }
+            if (unique == uniqueCount) {
+                if (!infraredCursor.tryRead(
+                        resolvedSlot,
+                        brick.arenaGeneration(),
+                        publication.topologyGeneration(),
+                        querySample)) {
+                    return false;
+                }
+                infraredUniqueSlots[uniqueCount] = resolvedSlot;
+                infraredUniqueTemperatures[uniqueCount] =
+                        quantizeInfrared(querySample.temperatureC());
+                uniqueCount++;
+            }
+            infraredBlockTemperatures[block] =
+                    infraredUniqueTemperatures[unique];
+        }
+        infraredPayload.writeBrick(
+                localBrickIndex, infraredBlockTemperatures, omitInvalid);
+        return true;
+    }
+
+    private static boolean presenceBit(long[] presence, int localPageIndex) {
+        return (presence[localPageIndex >>> 6]
+                & 1L << (localPageIndex & 63)) != 0L;
+    }
+
+    private static PagePublication currentOrLast(ThermalPageHandle handle) {
+        PagePublication current = handle.currentPublication();
+        return current == null ? handle.lastPublication() : current;
+    }
+
+    private static short quantizeInfrared(double temperatureC) {
+        long value = Math.round(temperatureC * 4.0D);
+        return (short) Math.max(-32767L, Math.min(32767L, value));
+    }
+
+    public record InfraredSnapshot(
+            int centerChunkX,
+            int centerChunkZ,
+            int centerSectionY,
+            int infraredEpoch,
+            boolean full,
+            long[] presence,
+            byte[] brickRecords
+    ) {
+        public InfraredSnapshot {
+            if (infraredEpoch < 0 || presence == null || brickRecords == null
+                    || presence.length != 0
+                    && presence.length != INFRARED_PRESENCE_WORDS
+                    || full && presence.length != INFRARED_PRESENCE_WORDS
+                    || brickRecords.length
+                            > InfraredBrickCodec.MAX_PAYLOAD_BYTES) {
+                throw new IllegalArgumentException("invalid infrared snapshot");
+            }
+        }
+    }
+
+    public static BlockPos nearestGameplayGenerator(
+            Level level,
+            BlockPos position,
+            double maximumDistanceBlocks
+    ) {
+        if (!(level instanceof ServerLevel server)
+                || !server.getServer().isSameThread()
+                || !Double.isFinite(maximumDistanceBlocks)
+                || maximumDistanceBlocks <= 0.0D) {
+            return null;
+        }
+        MinecraftThermalInput input = active(server);
+        return input == null ? null
+                : input.physicalSources.nearestEnabledGenerator(
+                        position,
+                        maximumDistanceBlocks * maximumDistanceBlocks);
+    }
+
+    public static boolean ownsGameplayHeatingTransition(
+            ServerLevel level,
+            BlockPos position,
+            BlockState state,
+            StateTransitionData data
+    ) {
+        if (!data.willTransit() || data.heatCapacity() <= 0) {
+            return false;
+        }
+        Integer profileId = MinecraftThermalProfiles.phaseProfileId(state);
+        MinecraftThermalInput input = active(level);
+        return profileId != null && input != null
+                && input.phase.ownsHeatingTransition(position, profileId);
+    }
+
+    public static void prepareGameplayProfiles() {
+        MinecraftThermalProfiles.prepare();
+    }
+
+    public static void invalidateGameplayProfilesForRecipeReload() {
+        closeAll();
+        MinecraftThermalProfiles.invalidate();
+    }
+
     public static void onSectionSetBlockState(
             LevelChunkSection section,
             int localX,
@@ -480,735 +1042,474 @@ public final class MinecraftThermalInput implements AutoCloseable {
             BlockState oldState,
             BlockState newState
     ) {
-        Phase0aMutationProbe.onSectionSetBlockState(
-                section, localX, localY, localZ, oldState, newState);
-        if (oldState == newState) {
-            return;
-        }
-        SectionOwner owner = attachment(section).frostedheart$getThermalInputOwner();
+        if (oldState == newState) return;
+        MinecraftPageManager.SectionOwner owner =
+                ((MinecraftThermalSectionAttachment) (Object) section)
+                        .frostedheart$getThermalInputOwner();
         if (owner != null) {
-            owner.input.recordMutation(
-                    owner, localX, localY, localZ, oldState, newState);
+            MinecraftThermalInput input = owner.input();
+            if (input != null) {
+                int flags = MinecraftThermalProfiles.mutationFlags(
+                        oldState, newState);
+                int pageFlags = flags & (MinecraftThermalProfiles.TOPOLOGY_MUTATION
+                        | MinecraftThermalProfiles.SOURCE_MUTATION);
+                if (pageFlags != 0) {
+                    input.pages.onBlockMutation(
+                            owner, localX, localY, localZ,
+                            (flags & MinecraftThermalProfiles.TOPOLOGY_MUTATION) != 0,
+                            (flags & MinecraftThermalProfiles.SOURCE_MUTATION) != 0);
+                }
+                if ((flags & MinecraftThermalProfiles.RADIATION_MUTATION) != 0
+                        && input.blockRadiation != null) {
+                    input.blockRadiation.markBlock(
+                            owner, localX, localY, localZ);
+                }
+                if ((flags & MinecraftThermalProfiles.OCCLUSION_MUTATION) != 0) {
+                    long sectionKey = owner.sectionKey();
+                    input.radiationOcclusion.onSectionMutation(
+                            SectionPos.x(sectionKey),
+                            SectionPos.y(sectionKey),
+                            SectionPos.z(sectionKey));
+                }
+            }
+        }
+    }
+
+    public static void onRadiantLiquidNeighborChanged(
+            ServerLevel level,
+            BlockPos position
+    ) {
+        MinecraftThermalInput input = active(level);
+        if (input != null && input.blockRadiation != null) {
+            input.blockRadiation.markBlock(
+                    position.getX(), position.getY(), position.getZ());
         }
     }
 
     public static void onChunkLoad(ServerLevel level, LevelChunk chunk) {
+        DormantChunkThermalState state = dormantState(chunk);
+        if (state != null && state.activateLoaded(
+                level.getGameTime(), dormantHalfLifeSeconds())) {
+            if (state.isEmpty()) {
+                setDormantState(chunk, null);
+            }
+            chunk.setUnsaved(true);
+        }
         MinecraftThermalInput input = active(level);
         if (input != null) {
-            if (input.physicalSources != null) {
-                input.physicalSources.onChunkLoad(chunk);
+            input.pages.onChunkLoad(chunk);
+            if (input.blockRadiation != null) {
+                input.blockRadiation.onChunkLoad(chunk);
             }
-            input.attachWitnessesInChunk(chunk);
+            input.radiationOcclusion.onChunkLoad(chunk);
         }
     }
 
     public static void onChunkUnload(ServerLevel level, LevelChunk chunk) {
         MinecraftThermalInput input = active(level);
         if (input != null) {
-            input.detachChunk(chunk);
+            if (input.blockRadiation != null) {
+                input.blockRadiation.onChunkUnload(chunk);
+            }
+            input.pages.onChunkUnload(chunk);
+            input.finishDormantCheckpoint(chunk, true);
+            input.physicalSources.beforeChunkUnload(
+                    chunk, level.getGameTime());
+            input.radiationOcclusion.onChunkUnload(chunk);
         }
     }
 
     public static void sealActiveLevel(ServerLevel level) {
         MinecraftThermalInput input = active(level);
+        if (input != null) input.tick();
+    }
+
+    public static void closeActiveLevel(ServerLevel level) {
+        MinecraftThermalInput input = active(level);
+        if (input != null) input.close();
+    }
+
+    public static void onPlayerLogout(ServerPlayer player) {
+        MinecraftThermalInput input = active(player.serverLevel());
         if (input != null) {
-            input.sealTick(level.getGameTime());
+            if (input.radiation != null) {
+                input.radiation.removeReceiver(receiverKey(player));
+            }
+        }
+    }
+
+    public static void onPlayerChangedDimension(
+            ServerPlayer player,
+            ServerLevel previousLevel
+    ) {
+        MinecraftThermalInput input = active(previousLevel);
+        if (input != null && input.radiation != null) {
+            input.radiation.removeReceiver(receiverKey(player));
         }
     }
 
     public static void closeAll() {
-        List<MinecraftThermalInput> active;
-        synchronized (ACTIVE_BY_LEVEL) {
-            active = List.copyOf(ACTIVE_BY_LEVEL.values());
+        MinecraftThermalInput[] inputs;
+        synchronized (ACTIVE) {
+            inputs = ACTIVE.values().toArray(MinecraftThermalInput[]::new);
         }
-        for (MinecraftThermalInput input : active) {
-            input.close();
-        }
+        for (MinecraftThermalInput input : inputs) input.close();
+        ThermalWorkerPool.closeShared();
     }
 
     public static void onRawBlockContainerReplaced(LevelChunkSection section) {
-        SectionOwner owner = attachment(section).frostedheart$getThermalInputOwner();
-        if (owner != null) {
-            owner.invalidateAffectedPages(
-                    ThermalPage.GeometryResyncReason.EXPLICIT_INVALIDATION);
-        }
-    }
-
-    public static void onGeneratorTick(
-            ServerLevel level,
-            BlockPos sourcePosition,
-            BlockPos exhaustTarget,
-            double thermalLevel,
-            boolean active
-    ) {
-        MinecraftThermalInput input = active(level);
-        if (input != null && input.physicalSources != null) {
-            input.physicalSources.observeGenerator(
-                    sourcePosition, exhaustTarget, thermalLevel, active);
-        }
-    }
-
-    public static void onGeneratorRemoved(ServerLevel level, BlockPos sourcePosition) {
-        MinecraftThermalInput input = active(level);
-        if (input != null && input.physicalSources != null) {
-            input.physicalSources.removeSource(sourcePosition);
-        }
-    }
-
-    public static void onPotentialPhysicalSourcePlaced(
-            ServerLevel level,
-            BlockPos position,
-            BlockState replacedState,
-            BlockState placedState
-    ) {
-        MinecraftThermalInput input = active(level);
-        if (input != null && input.physicalSources != null) {
-            input.physicalSources.onBlockMutation(
-                    position, replacedState, placedState);
-        }
+        MinecraftPageManager.SectionOwner owner =
+                ((MinecraftThermalSectionAttachment) (Object) section)
+                        .frostedheart$getThermalInputOwner();
+        if (owner != null) owner.recordFullResync(
+                ThermalPageHandle.GeometryResyncReason.EXPLICIT_INVALIDATION);
     }
 
     public static void onSectionIdentityReplaced(
             ServerLevel level,
             LevelChunk chunk,
             int sectionIndex,
-            LevelChunkSection previousSection
+            LevelChunkSection previous
     ) {
         MinecraftThermalInput input = active(level);
-        if (input == null || sectionIndex < 0
-                || sectionIndex >= chunk.getSections().length) {
-            return;
+        if (input != null && sectionIndex >= 0
+                && sectionIndex < chunk.getSections().length) {
+            input.pages.onSectionIdentityReplaced(
+                    chunk, sectionIndex, previous,
+                    chunk.getSections()[sectionIndex]);
+            if (input.blockRadiation != null) {
+                input.blockRadiation.onSectionIdentityReplaced(
+                        SectionPos.asLong(
+                                chunk.getPos().x,
+                                chunk.getSectionYFromSectionIndex(sectionIndex),
+                                chunk.getPos().z));
+            }
+            input.radiationOcclusion.onSectionIdentityReplaced(
+                    chunk.getPos().x,
+                    chunk.getSectionYFromSectionIndex(sectionIndex),
+                    chunk.getPos().z);
         }
-        input.requireMainThread();
-        SectionOwner previous = input.ownersByIdentity.get(previousSection);
-        if (previous != null) {
-            previous.invalidateAffectedPages(ThermalPage.GeometryResyncReason.SECTION_REPLACED);
-            input.detach(previous);
-        }
-        input.attachWitnessSection(
-                chunk,
-                sectionIndex,
-                chunk.getSectionYFromSectionIndex(sectionIndex));
     }
 
-    private void recordMutation(
-            SectionOwner owner,
-            int localX,
-            int localY,
-            int localZ,
-            BlockState oldState,
-            BlockState newState
+    public static void onGeneratorTick(
+            ServerLevel level, BlockPos source, BlockPos target,
+            double thermalLevel, boolean active
     ) {
-        if (!owner.valid || oldState == newState) {
-            return;
-        }
-        if (Thread.currentThread() != mainThread) {
-            owner.invalidateAffectedPages(ThermalPage.GeometryResyncReason.OFF_THREAD_MUTATION);
-            offThreadResyncPending.set(true);
-            return;
-        }
-        if (ownersByIdentity.get(owner.section) != owner) {
-            return;
-        }
-
-        int worldX = SectionPos.sectionToBlockCoord(owner.sectionX) + localX;
-        int worldY = SectionPos.sectionToBlockCoord(owner.sectionY) + localY;
-        int worldZ = SectionPos.sectionToBlockCoord(owner.sectionZ) + localZ;
-        long effectiveTick = level.getGameTime();
-        if (physicalSources != null) {
-            physicalSources.onBlockMutation(
-                    new BlockPos(worldX, worldY, worldZ), oldState, newState);
-        }
-        LoadedCube cube = new LoadedCube(level, worldX, worldY, worldZ);
-
-        for (int dy = -1; dy <= 1; dy++) {
-            for (int dz = -1; dz <= 1; dz++) {
-                for (int dx = -1; dx <= 1; dx++) {
-                    int centerX = worldX + dx;
-                    int centerY = worldY + dy;
-                    int centerZ = worldZ + dz;
-                    long pageKey = SectionPos.asLong(
-                            SectionPos.blockToSectionCoord(centerX),
-                            SectionPos.blockToSectionCoord(centerY),
-                            SectionPos.blockToSectionCoord(centerZ));
-                    ThermalPage page = pages.get(pageKey);
-                    if (page == null) {
-                        continue;
-                    }
-
-                    ResolverBlockView.SnapshotCell<BlockState, FluidState> self =
-                            cube.cell(dx, dy, dz);
-                    ThermalSignatureResolution resolution;
-                    ThermalSignatureResolverDispatcher.DispatchPlan plan;
-                    Optional<ResolverBlockView.StateAndFluid<BlockState, FluidState>> value =
-                            self.value();
-                    if (value.isEmpty()) {
-                        resolution = ThermalSignatureResolution.failure(
-                                ThermalResolution.unresolved(self.status()
-                                        == ResolverBlockView.LookupStatus.UNLOADED
-                                        ? ThermalResolution.Reason.DEPENDENCY_UNLOADED
-                                        : ThermalResolution.Reason.SNAPSHOT_DATA_MISSING));
-                        plan = null;
-                    } else {
-                        plan = resolverDispatcher.plan(value.orElseThrow().blockState());
-                        if (!plan.dependencyMask().contains(-dx, -dy, -dz)) {
-                            continue;
-                        }
-                        resolution = resolveCenter(cube, dx, dy, dz, plan);
-                    }
-
-                    int pageLocalX = SectionPos.sectionRelative(centerX);
-                    int pageLocalY = SectionPos.sectionRelative(centerY);
-                    int pageLocalZ = SectionPos.sectionRelative(centerZ);
-                    ThermalPage.MutationObservation mutation = page.recordGeometryMutation(
-                            pageLocalX,
-                            pageLocalY,
-                            pageLocalZ,
-                            effectiveTick,
-                            geometryDeltas);
-                    if (physicalSources != null) {
-                        physicalSources.onPageInvalidated(page.sectionKey());
-                    }
-                    dirtyPages.put(page, Boolean.TRUE);
-                    if (mutation.fullResyncRequired()) {
-                        continue;
-                    }
-                    if (!resolvedInputs.offerResolvedCenter(
-                            page.sectionKey(),
-                            page.lifecycleGeneration(),
-                            mutation.geometryRevision(),
-                            effectiveTick,
-                            blockIndex(pageLocalX, pageLocalY, pageLocalZ),
-                            resolution)) {
-                        page.requireFullGeometryResync(
-                                ThermalPage.GeometryResyncReason.RING_OVERFLOW);
-                        offThreadResyncPending.set(true);
-                    }
-                }
-            }
-        }
+        MinecraftThermalInput input = active(level);
+        if (input != null) input.physicalSources.observeMachine(
+                source, target, MinecraftPhysicalSourceProfile.GENERATOR,
+                thermalLevel, active);
     }
 
-    private ThermalSignatureResolution resolveCenter(
-            LoadedCube cube,
-            int centerX,
-            int centerY,
-            int centerZ,
-            ThermalSignatureResolverDispatcher.DispatchPlan plan
+    public static void onCampfireTick(
+            ServerLevel level, BlockPos position
     ) {
-        Map<DependencyOffsetMask.Offset,
-                ResolverBlockView.SnapshotCell<BlockState, FluidState>> cells =
-                new LinkedHashMap<>();
-        for (DependencyOffsetMask.Offset offset : plan.dependencyMask().offsets()) {
-            cells.put(offset, cube.cell(
-                    centerX + offset.x(),
-                    centerY + offset.y(),
-                    centerZ + offset.z()));
-        }
-        ThermalResolution<ResolvedThermalSignature> resolved = plan.resolve(
-                ResolverBlockView.snapshot(plan.dependencyMask(), cells));
-        if (!resolved.isResolved()) {
-            return ThermalSignatureResolution.failure(resolved);
-        }
-        OptionalInt signatureId = signatureRegistry.idOf(resolved.value().orElseThrow());
-        return signatureId.isPresent()
-                ? ThermalSignatureResolution.resolved(signatureId.getAsInt())
-                : ThermalSignatureResolution.failure(ThermalResolution.unsupported(
-                        ThermalResolution.Reason.INVALID_RESOLVER_OUTPUT));
-    }
-
-    /** Captures one complete loaded-only Page cut without retaining a World view. */
-    private int[] captureFullPageSnapshot(ThermalPage page) {
-        return captureFullPageSnapshot(page.sectionKey());
-    }
-
-    private int[] captureFullPageSnapshot(long sectionKey) {
-        LoadedSectionSnapshot snapshot = new LoadedSectionSnapshot(
-                level,
-                SectionPos.sectionToBlockCoord(SectionPos.x(sectionKey)),
-                SectionPos.sectionToBlockCoord(SectionPos.y(sectionKey)),
-                SectionPos.sectionToBlockCoord(SectionPos.z(sectionKey)));
-        int[] signatureIds = new int[ResolvedGeometryInputRing.BLOCKS_PER_PAGE];
-        for (int localY = 0; localY < 16; localY++) {
-            for (int localZ = 0; localZ < 16; localZ++) {
-                for (int localX = 0; localX < 16; localX++) {
-                    ResolverBlockView.SnapshotCell<BlockState, FluidState> self =
-                            snapshot.cell(localX, localY, localZ);
-                    ThermalSignatureResolution resolution;
-                    Optional<ResolverBlockView.StateAndFluid<BlockState, FluidState>> value =
-                            self.value();
-                    if (value.isEmpty()) {
-                        resolution = ThermalSignatureResolution.failure(
-                                ThermalResolution.unresolved(self.status()
-                                        == ResolverBlockView.LookupStatus.UNLOADED
-                                        ? ThermalResolution.Reason.DEPENDENCY_UNLOADED
-                                        : ThermalResolution.Reason.SNAPSHOT_DATA_MISSING));
-                    } else {
-                        ThermalSignatureResolverDispatcher.DispatchPlan plan =
-                                resolverDispatcher.plan(value.orElseThrow().blockState());
-                        Map<DependencyOffsetMask.Offset,
-                                ResolverBlockView.SnapshotCell<BlockState, FluidState>> cells =
-                                new LinkedHashMap<>();
-                        for (DependencyOffsetMask.Offset offset
-                                : plan.dependencyMask().offsets()) {
-                            cells.put(offset, snapshot.cell(
-                                    localX + offset.x(),
-                                    localY + offset.y(),
-                                    localZ + offset.z()));
-                        }
-                        ThermalResolution<ResolvedThermalSignature> resolved = plan.resolve(
-                                ResolverBlockView.snapshot(plan.dependencyMask(), cells));
-                        if (!resolved.isResolved()) {
-                            resolution = ThermalSignatureResolution.failure(resolved);
-                        } else {
-                            OptionalInt signatureId = signatureRegistry.idOf(
-                                    resolved.value().orElseThrow());
-                            resolution = signatureId.isPresent()
-                                    ? ThermalSignatureResolution.resolved(
-                                            signatureId.getAsInt())
-                                    : ThermalSignatureResolution.failure(
-                                            ThermalResolution.unsupported(
-                                                    ThermalResolution.Reason
-                                                            .INVALID_RESOLVER_OUTPUT));
-                        }
-                    }
-                    signatureIds[blockIndex(localX, localY, localZ)] =
-                            resolution.status() == ThermalResolution.Status.RESOLVED
-                                    ? resolution.signatureId()
-                                    : ThermalSignatureResolution.NO_SIGNATURE_ID;
-                }
-            }
-        }
-        return signatureIds;
-    }
-
-    private void adjustWitnesses(int centerX, int centerY, int centerZ, int delta) {
-        for (int y = centerY - WITNESS_RADIUS_SECTIONS;
-             y <= centerY + WITNESS_RADIUS_SECTIONS; y++) {
-            for (int z = centerZ - WITNESS_RADIUS_SECTIONS;
-                 z <= centerZ + WITNESS_RADIUS_SECTIONS; z++) {
-                for (int x = centerX - WITNESS_RADIUS_SECTIONS;
-                     x <= centerX + WITNESS_RADIUS_SECTIONS; x++) {
-                    long key = SectionPos.asLong(x, y, z);
-                    int next = witnessRefCounts.getOrDefault(key, 0) + delta;
-                    if (next < 0) {
-                        throw new IllegalStateException("thermal witness reference underflow");
-                    }
-                    if (next == 0) {
-                        witnessRefCounts.remove(key);
-                        SectionOwner owner = ownersBySectionKey.get(key);
-                        if (owner != null) {
-                            detach(owner);
-                        }
-                    } else {
-                        witnessRefCounts.put(key, next);
-                        if (next == 1) {
-                            attachLoadedWitness(key);
-                        }
-                    }
-                }
-            }
+        MinecraftThermalInput input = active(level);
+        if (input != null) {
+            input.physicalSources.resyncBlock(
+                    position.getX(), position.getY(), position.getZ(),
+                    level.getBlockState(position));
         }
     }
 
-    private void attachLoadedWitness(long sectionKey) {
+    public static void onFountainTick(
+            ServerLevel level, BlockPos source, BlockPos target,
+            double thermalLevel, boolean active
+    ) {
+        MinecraftThermalInput input = active(level);
+        if (input != null) input.physicalSources.observeMachine(
+                source, target, MinecraftPhysicalSourceProfile.FOUNTAIN,
+                thermalLevel, active);
+    }
+
+    public static void onRadiatorTick(
+            ServerLevel level, BlockPos source, BlockPos target,
+            double thermalLevel, boolean active
+    ) {
+        MinecraftThermalInput input = active(level);
+        if (input != null) input.physicalSources.observeMachine(
+                source, target, MinecraftPhysicalSourceProfile.RADIATOR,
+                thermalLevel, active);
+    }
+
+    public static void onPhysicalSourceRemoved(
+            ServerLevel level, BlockPos source
+    ) {
+        MinecraftThermalInput input = active(level);
+        if (input != null) input.physicalSources.remove(
+                source.getX(), source.getY(), source.getZ());
+    }
+
+    @Override
+    public void close() {
+        requireMainThread();
+        if (closed) return;
+        pages.checkpointAll(true, true);
+        closed = true;
+        physicalSources.close();
+        if (blockRadiation != null) blockRadiation.close();
+        pages.close();
+        environment.close();
+        if (radiation != null) radiation.close();
+        infraredPayload.close();
+        mailbox.close();
+        synchronized (ACTIVE) {
+            ACTIVE.remove(level, this);
+        }
+    }
+
+    public ThermalInputBatch.DormantAirCut dormantAdmissionCut(
+            long sectionKey,
+            double naturalTemperatureC,
+            long gameTick
+    ) {
         LevelChunk chunk = level.getChunkSource().getChunkNow(
                 SectionPos.x(sectionKey), SectionPos.z(sectionKey));
-        if (chunk == null) {
-            return;
-        }
-        int sectionY = SectionPos.y(sectionKey);
-        int sectionIndex = chunk.getSectionIndexFromSectionY(sectionY);
-        if (sectionIndex < 0 || sectionIndex >= chunk.getSections().length) {
-            return;
-        }
-        attachWitnessSection(chunk, sectionIndex, sectionY);
+        DormantChunkThermalState state = chunk == null ? null : dormantState(chunk);
+        return state == null ? null : state.admissionCut(
+                SectionPos.y(sectionKey), gameTick,
+                profiles.tuning().dormantTemperatureHalfLifeSeconds(),
+                naturalTemperatureC);
     }
 
-    private void attachWitnessesInChunk(LevelChunk chunk) {
-        requireMainThread();
-        for (int sectionIndex = 0; sectionIndex < chunk.getSections().length; sectionIndex++) {
-            int sectionY = chunk.getSectionYFromSectionIndex(sectionIndex);
-            long key = SectionPos.asLong(chunk.getPos().x, sectionY, chunk.getPos().z);
-            if (witnessRefCounts.containsKey(key)) {
-                attachWitnessSection(chunk, sectionIndex, sectionY);
-            }
+    public void captureDormantPage(ThermalPageHandle page, boolean markDirty) {
+        LevelChunk chunk = level.getChunkSource().getChunkNow(
+                SectionPos.x(page.sectionKey()), SectionPos.z(page.sectionKey()));
+        if (chunk != null) {
+            captureDormantPage(page, chunk, markDirty);
         }
     }
 
-    private void attachWitnessSection(
+    public void captureDormantPage(
+            ThermalPageHandle page,
             LevelChunk chunk,
-            int sectionIndex,
-            int sectionY
+            boolean markDirty
     ) {
-        long key = SectionPos.asLong(chunk.getPos().x, sectionY, chunk.getPos().z);
-        if (!witnessRefCounts.containsKey(key)) {
+        PagePublication publication;
+        DormantChunkThermalState.CaptureResult captured = null;
+        int sectionX = SectionPos.x(page.sectionKey());
+        int sectionY = SectionPos.y(page.sectionKey());
+        int sectionZ = SectionPos.z(page.sectionKey());
+        dormantPosition.set(
+                SectionPos.sectionToBlockCoord(sectionX) + 8,
+                SectionPos.sectionToBlockCoord(sectionY) + 8,
+                SectionPos.sectionToBlockCoord(sectionZ) + 8);
+        double natural = WorldTemperature.naturalAir(level, dormantPosition);
+        for (int attempt = 0; attempt < 2; attempt++) {
+            publication = page.lastPublication();
+            if (publication == null) {
+                return;
+            }
+            captured = DormantChunkThermalState.capture(
+                    publication,
+                    queryPublication,
+                    querySample,
+                    natural,
+                    dormantCapture);
+            if (captured.valid() && page.lastPublication() == publication) {
+                break;
+            }
+            captured = null;
+        }
+        if (captured == null || !captured.valid()) {
             return;
         }
-        LevelChunkSection section = chunk.getSections()[sectionIndex];
-        SectionOwner current = ownersBySectionKey.get(key);
-        if (current != null && current.section == section && current.valid) {
+        DormantChunkThermalState state = dormantState(chunk);
+        if (state == null && captured.entry() != null) {
+            state = new DormantChunkThermalState(
+                    chunk.getSectionYFromSectionIndex(0),
+                    chunk.getSections().length);
+            setDormantState(chunk, state);
+        }
+        if (state == null) {
             return;
         }
-        if (current != null) {
-            current.invalidateAffectedPages(ThermalPage.GeometryResyncReason.SECTION_REPLACED);
-            detach(current);
+        boolean changed = state.replace(sectionY, captured.entry());
+        if (captured.entry() != null) {
+            changed |= state.updateSourceSupport(
+                    sectionY,
+                    physicalSources.supportsDormantSection(
+                            page.sectionKey()));
         }
-        SectionOwner owner = new SectionOwner(
-                this,
-                section,
+        if (state.isEmpty()) {
+            setDormantState(chunk, null);
+        }
+        if (changed && markDirty) {
+            chunk.setUnsaved(true);
+        }
+    }
+
+    public void finishDormantCheckpoint(LevelChunk chunk, boolean markDirty) {
+        DormantChunkThermalState state = dormantState(chunk);
+        if (state == null) {
+            return;
+        }
+        boolean changed = state.rebaseForSave(
+                level.getGameTime(),
+                profiles.tuning().dormantTemperatureHalfLifeSeconds());
+        changed |= state.refreshSourceSupport(
                 chunk.getPos().x,
-                sectionY,
                 chunk.getPos().z,
-                nextSectionGeneration.incrementAndGet());
-        ownersBySectionKey.put(key, owner);
-        ownersByIdentity.put(section, owner);
-        attachment(section).frostedheart$setThermalInputOwner(owner);
-        refreshOwnerPageView(owner);
-        chunkWatermark = Math.incrementExact(chunkWatermark);
-    }
-
-    private void detachChunk(LevelChunk chunk) {
-        requireMainThread();
-        if (physicalSources != null) {
-            physicalSources.beforeChunkUnload(chunk, level.getGameTime());
+                physicalSources::supportsDormantSection);
+        if (state.isEmpty()) {
+            setDormantState(chunk, null);
         }
-        List<SectionOwner> chunkOwners = new ArrayList<>();
-        for (LevelChunkSection section : chunk.getSections()) {
-            SectionOwner owner = ownersByIdentity.get(section);
-            if (owner != null) {
-                owner.invalidateAffectedPages(ThermalPage.GeometryResyncReason.SECTION_REPLACED);
-                chunkOwners.add(owner);
-            }
-        }
-        List<Long> unloadedPages = new ArrayList<>();
-        for (long sectionKey : pages.keySet()) {
-            if (SectionPos.x(sectionKey) == chunk.getPos().x
-                    && SectionPos.z(sectionKey) == chunk.getPos().z) {
-                unloadedPages.add(sectionKey);
-            }
-        }
-        for (long sectionKey : unloadedPages) {
-            withdrawPage(sectionKey);
-        }
-        for (SectionOwner owner : chunkOwners) {
-            if (owner.valid) {
-                detach(owner);
-            }
+        if (changed && markDirty) {
+            chunk.setUnsaved(true);
         }
     }
 
-    private void detach(SectionOwner owner) {
-        owner.valid = false;
-        ownersBySectionKey.remove(owner.sectionKey, owner);
-        ownersByIdentity.remove(owner.section, owner);
-        MinecraftThermalSectionAttachment attachment = attachment(owner.section);
-        if (attachment.frostedheart$getThermalInputOwner() == owner) {
-            attachment.frostedheart$setThermalInputOwner(null);
-        }
-        chunkWatermark = Math.incrementExact(chunkWatermark);
-    }
-
-    private void refreshNearbyOwnerPageViews(int centerX, int centerY, int centerZ) {
-        for (int y = centerY - WITNESS_RADIUS_SECTIONS;
-             y <= centerY + WITNESS_RADIUS_SECTIONS; y++) {
-            for (int z = centerZ - WITNESS_RADIUS_SECTIONS;
-                 z <= centerZ + WITNESS_RADIUS_SECTIONS; z++) {
-                for (int x = centerX - WITNESS_RADIUS_SECTIONS;
-                     x <= centerX + WITNESS_RADIUS_SECTIONS; x++) {
-                    SectionOwner owner = ownersBySectionKey.get(SectionPos.asLong(x, y, z));
-                    if (owner != null) {
-                        refreshOwnerPageView(owner);
-                    }
-                }
-            }
+    public void updateDormantSourceSupport(
+            long sectionKey,
+            boolean supported
+    ) {
+        LevelChunk chunk = level.getChunkSource().getChunkNow(
+                SectionPos.x(sectionKey), SectionPos.z(sectionKey));
+        DormantChunkThermalState state = chunk == null
+                ? null : dormantState(chunk);
+        if (state != null && state.updateSourceSupport(
+                SectionPos.y(sectionKey), supported)) {
+            chunk.setUnsaved(true);
         }
     }
 
-    private void refreshOwnerPageView(SectionOwner owner) {
-        List<ThermalPage> affected = new ArrayList<>(27);
-        for (int y = owner.sectionY - 1; y <= owner.sectionY + 1; y++) {
-            for (int z = owner.sectionZ - 1; z <= owner.sectionZ + 1; z++) {
-                for (int x = owner.sectionX - 1; x <= owner.sectionX + 1; x++) {
-                    ThermalPage page = pages.get(SectionPos.asLong(x, y, z));
-                    if (page != null) {
-                        affected.add(page);
-                    }
-                }
+    static void checkpointForSave(ServerLevel level, LevelChunk chunk) {
+        MinecraftThermalInput input = active(level);
+        if (input != null) {
+            input.pages.checkpointChunk(chunk, false, true);
+        }
+    }
+
+    static void checkpointAllForStop() {
+        MinecraftThermalInput[] inputs;
+        synchronized (ACTIVE) {
+            inputs = ACTIVE.values().toArray(MinecraftThermalInput[]::new);
+        }
+        for (MinecraftThermalInput input : inputs) {
+            input.pages.checkpointAll(true, true);
+        }
+    }
+
+    private static double dormantTemperature(
+            ServerLevel level,
+            int blockX,
+            int blockY,
+            int blockZ,
+            long gameTick,
+            BlockPos.MutableBlockPos naturalPosition
+    ) {
+        LevelChunk chunk = level.getChunkSource().getChunkNow(
+                SectionPos.blockToSectionCoord(blockX),
+                SectionPos.blockToSectionCoord(blockZ));
+        return dormantTemperature(
+                level, chunk, blockX, blockY, blockZ,
+                gameTick, naturalPosition);
+    }
+
+    private static double dormantTemperature(
+            ServerLevel level,
+            LevelChunk chunk,
+            int blockX,
+            int blockY,
+            int blockZ,
+            long gameTick,
+            BlockPos.MutableBlockPos naturalPosition
+    ) {
+        DormantChunkThermalState state = chunk == null ? null : dormantState(chunk);
+        if (state == null) {
+            return Double.NaN;
+        }
+        int sectionX = SectionPos.blockToSectionCoord(blockX);
+        int sectionY = SectionPos.blockToSectionCoord(blockY);
+        int sectionZ = SectionPos.blockToSectionCoord(blockZ);
+        int brick = SectionPos.sectionRelative(blockX) >>> 2
+                | (SectionPos.sectionRelative(blockZ) >>> 2) << 2
+                | (SectionPos.sectionRelative(blockY) >>> 2) << 4;
+        return state.sample(
+                sectionY, brick, gameTick,
+                dormantHalfLifeSeconds(),
+                level, sectionX, sectionZ, naturalPosition);
+    }
+
+    static DormantChunkThermalState dormantState(LevelChunk chunk) {
+        return ((MinecraftThermalChunkAttachment) (Object) chunk)
+                .frostedheart$getDormantThermalState();
+    }
+
+    static void setDormantState(
+            LevelChunk chunk,
+            DormantChunkThermalState state
+    ) {
+        ((MinecraftThermalChunkAttachment) (Object) chunk)
+                .frostedheart$setDormantThermalState(state);
+    }
+
+    static double dormantHalfLifeSeconds() {
+        return MinecraftThermalProfiles.dormantTemperatureHalfLifeSeconds();
+    }
+
+    private static MinecraftThermalInput start(
+            ServerLevel level,
+            double initialTemperatureC
+    ) {
+        synchronized (ACTIVE) {
+            MinecraftThermalInput existing = ACTIVE.get(level);
+            if (existing != null) return existing;
+            try {
+                MinecraftThermalInput created =
+                        new MinecraftThermalInput(
+                                level, initialTemperatureC);
+                ACTIVE.put(level, created);
+                return created;
+            } catch (RuntimeException failure) {
+                FHMain.LOGGER.error(
+                        "Could not start thermal runtime for {}",
+                        level.dimension().location(), failure);
+                return null;
             }
         }
-        owner.affectedPages = affected.toArray(ThermalPage[]::new);
     }
 
     private static MinecraftThermalInput active(ServerLevel level) {
-        if (!anyActive) {
-            return null;
-        }
-        synchronized (ACTIVE_BY_LEVEL) {
-            return ACTIVE_BY_LEVEL.get(level);
-        }
-    }
-
-    private static MinecraftThermalSectionAttachment attachment(LevelChunkSection section) {
-        return (MinecraftThermalSectionAttachment) section;
-    }
-
-    private static int blockIndex(int localX, int localY, int localZ) {
-        return (localY << 8) | (localZ << 4) | localX;
-    }
-
-    private void scheduleShadowWorker() {
-        if (closed || !shadowWorkerScheduled.compareAndSet(false, true)) {
-            return;
-        }
-        try {
-            shadowExecutor.execute(this::drainShadowFrames);
-        } catch (RuntimeException exception) {
-            shadowWorkerScheduled.set(false);
-            SealedInputFrame rejected = pendingShadowFrame.get();
-            latestShadowReport = new ShadowReport(
-                    rejected == null ? lastSealedTick : rejected.effectiveTick(),
-                    null,
-                    null,
-                    true);
-        }
-    }
-
-    private void drainShadowFrames() {
-        try {
-            while (!closed) {
-                SealedInputFrame frame = pendingShadowFrame.getAndSet(null);
-                if (frame == null) {
-                    return;
-                }
-                MinecraftThermalTopologyApplier.ApplyReport topology =
-                        topologyApplier.apply(frame);
-                ThermalRuntimeCoordinator.RequestResult request = null;
-                if (topology.readyForSolve()) {
-                    request = shadowCoordinator.request(
-                            runtime.runtimeId(),
-                            dimensionGeneration,
-                            false,
-                            frame.effectiveTick());
-                    while (shadowCoordinator.runNext(frame.effectiveTick()).status()
-                            == ThermalRuntimeCoordinator.DispatchStatus.EXECUTED) {
-                        // Drain the bounded coordinator on its shared worker.
-                    }
-                }
-                latestShadowReport = new ShadowReport(
-                        frame.effectiveTick(), topology, request, false);
-            }
-        } finally {
-            shadowWorkerScheduled.set(false);
-            if (!closed && pendingShadowFrame.get() != null) {
-                scheduleShadowWorker();
-            }
-        }
-    }
-
-    private void requireOpen() {
-        if (closed) {
-            throw new IllegalStateException("Minecraft thermal input is closed");
+        synchronized (ACTIVE) {
+            return ACTIVE.get(level);
         }
     }
 
     private void requireMainThread() {
-        if (Thread.currentThread() != mainThread || !level.getServer().isSameThread()) {
-            throw new IllegalStateException("Minecraft thermal input is main-thread confined");
+        if (Thread.currentThread() != mainThread) {
+            throw new IllegalStateException(
+                    "Minecraft thermal input requires the level thread");
         }
     }
 
-    public record SealReport(
-            SealedInputFrame frame,
-            LatestSolveEpochScheduler.SealResult runtimeResult,
-            int sealedGeometryDeltas,
-            int fullResyncPages
-    ) {
+    private static long alignedTick(long tick) {
+        return Math.floorDiv(tick, ThermalInputBatch.CUT_INTERVAL_TICKS)
+                * ThermalInputBatch.CUT_INTERVAL_TICKS;
     }
 
-    public record ShadowReport(
-            long effectiveTick,
-            MinecraftThermalTopologyApplier.ApplyReport topology,
-            ThermalRuntimeCoordinator.RequestResult request,
-            boolean executorRejected
-    ) {
+    private static long receiverKey(ServerPlayer player) {
+        return player.getUUID().getMostSignificantBits()
+                ^ Long.rotateLeft(
+                        player.getUUID().getLeastSignificantBits(), 17);
     }
 
-    /** Attached owner is a concrete route, not a generic resolver callback. */
-    public static final class SectionOwner {
-        private final MinecraftThermalInput input;
-        private final LevelChunkSection section;
-        private final int sectionX;
-        private final int sectionY;
-        private final int sectionZ;
-        private final long sectionKey;
-        private final long lifecycleGeneration;
-        private volatile ThermalPage[] affectedPages = new ThermalPage[0];
-        private volatile boolean valid = true;
-
-        private SectionOwner(
-                MinecraftThermalInput input,
-                LevelChunkSection section,
-                int sectionX,
-                int sectionY,
-                int sectionZ,
-                long lifecycleGeneration
-        ) {
-            this.input = input;
-            this.section = section;
-            this.sectionX = sectionX;
-            this.sectionY = sectionY;
-            this.sectionZ = sectionZ;
-            this.sectionKey = SectionPos.asLong(sectionX, sectionY, sectionZ);
-            this.lifecycleGeneration = lifecycleGeneration;
-        }
-
-        public long sectionKey() {
-            return sectionKey;
-        }
-
-        public long lifecycleGeneration() {
-            return lifecycleGeneration;
-        }
-
-        public boolean valid() {
-            return valid;
-        }
-
-        private void invalidateAffectedPages(ThermalPage.GeometryResyncReason reason) {
-            for (ThermalPage page : affectedPages) {
-                page.requireFullGeometryResync(reason);
-                if (Thread.currentThread() == input.mainThread) {
-                    input.dirtyPages.put(page, Boolean.TRUE);
-                }
-            }
-            if (Thread.currentThread() != input.mainThread) {
-                input.offThreadResyncPending.set(true);
-            }
-        }
+    private static long nextGeneration() {
+        return NEXT_GENERATION.getAndUpdate(Math::incrementExact);
     }
 
-    /** Lazy 5-cubed loaded-only union; each world position is read at most once. */
-    private static final class LoadedCube {
-        private static final int RADIUS = 2;
-        private static final int WIDTH = 5;
-        private final ServerLevel level;
-        private final int originX;
-        private final int originY;
-        private final int originZ;
-        private final ResolverBlockView.SnapshotCell<BlockState, FluidState>[] cells;
-
-        @SuppressWarnings("unchecked")
-        private LoadedCube(ServerLevel level, int originX, int originY, int originZ) {
-            this.level = level;
-            this.originX = originX;
-            this.originY = originY;
-            this.originZ = originZ;
-            this.cells = new ResolverBlockView.SnapshotCell[WIDTH * WIDTH * WIDTH];
-        }
-
-        private ResolverBlockView.SnapshotCell<BlockState, FluidState> cell(
-                int relativeX,
-                int relativeY,
-                int relativeZ
-        ) {
-            if (Math.abs(relativeX) > RADIUS
-                    || Math.abs(relativeY) > RADIUS
-                    || Math.abs(relativeZ) > RADIUS) {
-                return ResolverBlockView.SnapshotCell.missing();
-            }
-            int index = ((relativeY + RADIUS) * WIDTH + relativeZ + RADIUS)
-                    * WIDTH + relativeX + RADIUS;
-            ResolverBlockView.SnapshotCell<BlockState, FluidState> cached = cells[index];
-            if (cached != null) {
-                return cached;
-            }
-            BlockPos position = new BlockPos(
-                    originX + relativeX,
-                    originY + relativeY,
-                    originZ + relativeZ);
-            ResolverBlockView.SnapshotCell<BlockState, FluidState> captured;
-            if (level.isOutsideBuildHeight(position)) {
-                captured = ResolverBlockView.SnapshotCell.missing();
-            } else {
-                LevelChunk chunk = level.getChunkSource().getChunkNow(
-                        SectionPos.blockToSectionCoord(position.getX()),
-                        SectionPos.blockToSectionCoord(position.getZ()));
-                if (chunk == null) {
-                    captured = ResolverBlockView.SnapshotCell.unloaded();
-                } else {
-                    BlockState state = chunk.getBlockState(position);
-                    captured = ResolverBlockView.SnapshotCell.present(
-                            state, state.getFluidState());
-                }
-            }
-            cells[index] = captured;
-            return captured;
-        }
+    private static int floor(double value) {
+        return (int) Math.floor(value);
     }
 
-    /** Lazy section plus one-block dependency halo used only during resnapshot. */
-    private static final class LoadedSectionSnapshot {
-        private static final int MIN_LOCAL = -1;
-        private static final int MAX_LOCAL = 16;
-        private static final int WIDTH = 18;
-        private final ServerLevel level;
-        private final int sectionMinX;
-        private final int sectionMinY;
-        private final int sectionMinZ;
-        private final ResolverBlockView.SnapshotCell<BlockState, FluidState>[] cells;
-
-        @SuppressWarnings("unchecked")
-        private LoadedSectionSnapshot(
-                ServerLevel level,
-                int sectionMinX,
-                int sectionMinY,
-                int sectionMinZ
-        ) {
-            this.level = level;
-            this.sectionMinX = sectionMinX;
-            this.sectionMinY = sectionMinY;
-            this.sectionMinZ = sectionMinZ;
-            this.cells = new ResolverBlockView.SnapshotCell[WIDTH * WIDTH * WIDTH];
-        }
-
-        private ResolverBlockView.SnapshotCell<BlockState, FluidState> cell(
-                int localX,
-                int localY,
-                int localZ
-        ) {
-            if (localX < MIN_LOCAL || localX > MAX_LOCAL
-                    || localY < MIN_LOCAL || localY > MAX_LOCAL
-                    || localZ < MIN_LOCAL || localZ > MAX_LOCAL) {
-                return ResolverBlockView.SnapshotCell.missing();
-            }
-            int index = ((localY - MIN_LOCAL) * WIDTH + localZ - MIN_LOCAL)
-                    * WIDTH + localX - MIN_LOCAL;
-            ResolverBlockView.SnapshotCell<BlockState, FluidState> cached = cells[index];
-            if (cached != null) {
-                return cached;
-            }
-            BlockPos position = new BlockPos(
-                    sectionMinX + localX,
-                    sectionMinY + localY,
-                    sectionMinZ + localZ);
-            ResolverBlockView.SnapshotCell<BlockState, FluidState> captured;
-            if (level.isOutsideBuildHeight(position)) {
-                captured = ResolverBlockView.SnapshotCell.missing();
-            } else {
-                LevelChunk chunk = level.getChunkSource().getChunkNow(
-                        SectionPos.blockToSectionCoord(position.getX()),
-                        SectionPos.blockToSectionCoord(position.getZ()));
-                if (chunk == null) {
-                    captured = ResolverBlockView.SnapshotCell.unloaded();
-                } else {
-                    BlockState state = chunk.getBlockState(position);
-                    captured = ResolverBlockView.SnapshotCell.present(
-                            state, state.getFluidState());
-                }
-            }
-            cells[index] = captured;
-            return captured;
-        }
+    private static int microcell(double x, double y, double z) {
+        int microX = Math.min(3, (int) Math.floor(
+                (x - Math.floor(x)) * 4.0D));
+        int microY = Math.min(3, (int) Math.floor(
+                (y - Math.floor(y)) * 4.0D));
+        int microZ = Math.min(3, (int) Math.floor(
+                (z - Math.floor(z)) * 4.0D));
+        return microX | microZ << 2 | microY << 4;
     }
+
 }

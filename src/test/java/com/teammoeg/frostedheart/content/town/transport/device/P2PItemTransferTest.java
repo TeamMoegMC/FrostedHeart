@@ -7,27 +7,16 @@
 package com.teammoeg.frostedheart.content.town.transport.device;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import com.teammoeg.frostedheart.content.town.transport.P2PDirectedBinding;
-import com.teammoeg.frostedheart.content.town.transport.P2PTerminalEndpoint;
-import com.teammoeg.frostedheart.content.town.transport.P2PTerminalRole;
-import net.minecraft.core.BlockPos;
-import net.minecraft.core.GlobalPos;
 import net.minecraft.SharedConstants;
 import net.minecraft.server.Bootstrap;
-import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
-import net.minecraft.world.level.Level;
 import net.minecraftforge.items.ItemStackHandler;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.BeforeAll;
 
-import java.util.List;
-import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
 
 class P2PItemTransferTest {
@@ -137,31 +126,25 @@ class P2PItemTransferTest {
     }
 
     @Test
-    void stableRoundRobinGivesEveryIncomingSourceTurns() {
-        ResourceKey<Level> dimension = ResourceKey.create(
-                net.minecraft.core.registries.Registries.DIMENSION,
-                new ResourceLocation("frostedheart", "test"));
-        P2PTerminalEndpoint receiver = endpoint(dimension, 0, P2PTerminalRole.RECEIVING);
-        P2PTerminalEndpoint first = endpoint(dimension, 1, P2PTerminalRole.SHIPPING);
-        P2PTerminalEndpoint second = endpoint(dimension, 2, P2PTerminalRole.SHIPPING);
-        P2PDirectedBinding a = new P2PDirectedBinding(
-                new UUID(0, 2), first, receiver, 16, false);
-        P2PDirectedBinding b = new P2PDirectedBinding(
-                new UUID(0, 1), second, receiver, 16, false);
+    void independentMovesCanBothCommitToSameTarget() {
+        ItemStackHandler firstSource = new ItemStackHandler(1);
+        firstSource.setStackInSlot(0, new ItemStack(Items.STONE, 4));
+        ItemStackHandler secondSource = new ItemStackHandler(1);
+        secondSource.setStackInSlot(0, new ItemStack(Items.DIRT, 3));
+        ItemStackHandler target = new ItemStackHandler(2);
 
-        List<P2PDirectedBinding> reverseMapOrder = List.of(a, b);
-        assertTrue(P2PFairTransferScheduler.isSenderTurn(reverseMapOrder, second.pos(), 0));
-        assertTrue(P2PFairTransferScheduler.isSenderTurn(reverseMapOrder, first.pos(), 1));
-        assertFalse(P2PFairTransferScheduler.isSenderTurn(reverseMapOrder, first.pos(), 2));
-        assertTrue(P2PFairTransferScheduler.isSenderTurn(reverseMapOrder, second.pos(), 2));
-    }
+        P2PItemTransfer.Result first = P2PItemTransfer.move(
+                firstSource, target, stack -> true, 4,
+                stack -> { throw new AssertionError("unexpected recovery"); });
+        P2PItemTransfer.Result second = P2PItemTransfer.move(
+                secondSource, target, stack -> true, 3,
+                stack -> { throw new AssertionError("unexpected recovery"); });
 
-    private static P2PTerminalEndpoint endpoint(
-            ResourceKey<Level> dimension,
-            int x,
-            P2PTerminalRole role
-    ) {
-        return new P2PTerminalEndpoint(
-                GlobalPos.of(dimension, new BlockPos(x, 0, 0)), role);
+        assertEquals(4, first.movedItems());
+        assertEquals(3, second.movedItems());
+        assertEquals(4, target.getStackInSlot(0).getCount());
+        assertEquals(3, target.getStackInSlot(1).getCount());
+        assertTrue(firstSource.getStackInSlot(0).isEmpty());
+        assertTrue(secondSource.getStackInSlot(0).isEmpty());
     }
 }

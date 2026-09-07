@@ -199,8 +199,6 @@ public class MarshallUtil {
     	
     }
     public static void main(String[] args) {
-//    	Tag data=serialize(new CubicHeatArea(new BlockPos(10,20,30),40,50));
 //    	System.out.println(data);
-//    	System.out.println(deserialize(CubicHeatArea.class,data));
     }
 }

@@ -175,7 +175,6 @@ public class FHNetwork extends CBaseNetwork {
         // Infrared View
         registerMessage("infrared_view_c2s", FHRequestInfraredViewDataSyncPacket.class);
         registerMessage("infrared_view_s2c", FHResponseInfraredViewDataSyncPacket.class);
-        registerMessage("notify_chunk_heat_update", FHNotifyChunkHeatUpdatePacket.class);
         //Sled
         registerMessage("sled", FHServerBoundUpdateSledState.class);
         
