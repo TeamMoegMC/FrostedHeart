@@ -10,7 +10,7 @@
 
 package com.teammoeg.frostedheart.content.climate.thermal.source.minecraft;
 
-import com.teammoeg.frostedheart.content.climate.thermal.geometry.ConservativeAirGeometry;
+import com.teammoeg.frostedheart.content.climate.thermal.mesh.BlockFace;
 
 import java.util.HashSet;
 import java.util.Objects;
@@ -43,7 +43,7 @@ public final class MinecraftPhysicalSourceProfile {
                             Port.airFace(
                                     0, 1.0D - radiationShare,
                                     0, 1, 0,
-                                    ConservativeAirGeometry.Face.NEGATIVE_Y),
+                                    BlockFace.NEGATIVE_Y),
                             Port.radiationLoss(1, radiationShare)
                     },
                     0.5D, 0.75D, 0.5D, 1.0D);
@@ -57,7 +57,7 @@ public final class MinecraftPhysicalSourceProfile {
                             Port.airFace(
                                     0, 0.8D,
                                     0, 0, 0,
-                                    ConservativeAirGeometry.Face.NEGATIVE_Y),
+                                    BlockFace.NEGATIVE_Y),
                             Port.radiationLoss(1, 0.2D)
                     },
                     0.5D, 0.5D, 0.5D, 1.0D);
@@ -70,7 +70,7 @@ public final class MinecraftPhysicalSourceProfile {
                             Port.airFace(
                                     0, 0.9D,
                                     0, 0, 0,
-                                    ConservativeAirGeometry.Face.NEGATIVE_Y),
+                                    BlockFace.NEGATIVE_Y),
                             Port.radiationLoss(1, 0.1D)
                     },
                     0.5D, 0.5D, 0.5D, 1.0D);
@@ -83,7 +83,7 @@ public final class MinecraftPhysicalSourceProfile {
                             Port.airFace(
                                     0, 0.9D,
                                     0, 0, 0,
-                                    ConservativeAirGeometry.Face.NEGATIVE_Y),
+                                    BlockFace.NEGATIVE_Y),
                             Port.radiationLoss(1, 0.1D)
                     },
                     0.5D, 0.5D, 0.5D, 1.0D);
@@ -204,7 +204,7 @@ public final class MinecraftPhysicalSourceProfile {
             int offsetX,
             int offsetY,
             int offsetZ,
-            ConservativeAirGeometry.Face targetFace
+            BlockFace targetFace
     ) {
         public Port {
             if (portId < 0) {
@@ -229,7 +229,7 @@ public final class MinecraftPhysicalSourceProfile {
                 int offsetX,
                 int offsetY,
                 int offsetZ,
-                ConservativeAirGeometry.Face targetFace
+                BlockFace targetFace
         ) {
             return new Port(
                     portId, powerShare, PortKind.AIR_FACE,

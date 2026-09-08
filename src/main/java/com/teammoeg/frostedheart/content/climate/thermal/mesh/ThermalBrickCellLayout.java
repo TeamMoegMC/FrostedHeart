@@ -1,7 +1,7 @@
 /* Copyright (c) 2026 TeamMoeg */
 package com.teammoeg.frostedheart.content.climate.thermal.mesh;
 
-import com.teammoeg.frostedheart.content.climate.thermal.geometry.ComponentBrickCompiler;
+
 
 import java.util.Arrays;
 import java.util.Objects;
@@ -19,7 +19,8 @@ public final class ThermalBrickCellLayout {
     int minY;
     int minZ;
     double airCapacityJPerBlockK;
-    ComponentBrickCompiler.CompiledBrick mixedGeometry;
+    BlockBrickLayout mixedGeometry;
+    final double[] transportCapacityJPerK = new double[64];
 
     int[] materialBlockX = new int[8];
     int[] materialBlockY = new int[8];
@@ -57,7 +58,7 @@ public final class ThermalBrickCellLayout {
     }
 
     public void setMixedAir(
-            ComponentBrickCompiler.CompiledBrick geometry,
+            BlockBrickLayout geometry,
             double capacityJPerBlockK
     ) {
         setAir(
@@ -68,7 +69,7 @@ public final class ThermalBrickCellLayout {
 
     private void setAir(
             AirKind kind,
-            ComponentBrickCompiler.CompiledBrick geometry,
+            BlockBrickLayout geometry,
             double capacityJPerBlockK
     ) {
         if (!Double.isFinite(capacityJPerBlockK)
@@ -78,6 +79,10 @@ public final class ThermalBrickCellLayout {
         airKind = kind;
         mixedGeometry = geometry;
         airCapacityJPerBlockK = capacityJPerBlockK;
+    }
+
+    public void setTransportCapacity(int node, double capacity) {
+        transportCapacityJPerK[node] = capacity;
     }
 
     public void addMaterialPole(

@@ -115,6 +115,31 @@ for that Brick. Partial phase-reservoir energy is intentionally reset. Air and
 material transfer uses the fixed one-second coefficient compiled during topology
 preparation; phase and buoyant paths use the generic inverse-capacity kernel.
 
+## Generator Gameplay Floor
+
+Generator also publishes a regional analytic floor from authoritative team data,
+independent of its normal physical source. Its sphere takes the maximum matching
+natural-relative temperature increase; physical powers still add normally.
+The sphere does not write worker enthalpy, alter FarField, seed Bricks, or clip
+physical propagation. Positive generator levels can retain gameplay afterheat
+after active power stops and while the source chunk is unloaded. Indoor heating
+becomes visible above the floor only when the actual source-connected Air is
+hotter than that floor. See [temperature composition](world-climate-and-temperature.md#7-analytic-control-fields).
+
+Current geometry support is a material limitation: `MinecraftThermalProfiles`
+assigns dynamic-shape blocks an unresolved signature, and `BrickTopologyCompiler`
+leaves an entire Brick unresolved when any member lacks geometry. A generator
+exhaust sharing its Brick with dynamic tower blocks can therefore have a valid
+source record but no physical Air publication. The analytic floor still works.
+Resolved-exhaust enclosure validation does not establish physical heating for
+every tower placement; dynamic-shape geometry support remains separate work.
+
+Explicit analytic bounds can authorize legacy gameplay melting/evaporation even
+inside physical phase ownership when the bound itself reaches the candidate's
+threshold. This is a non-conservative gameplay transition, not solver heating;
+delta-only fields do not bypass latent energy. Existing mutation and current
+block/profile checks invalidate obsolete physical requests afterward.
+
 ## Heat Network
 
 `HeatEndpoint`, `GeneratorData`, and `HeatNetwork` are a separate gameplay

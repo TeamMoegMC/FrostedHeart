@@ -1,7 +1,7 @@
 # Thermal Runtime Architecture
 
-- Status: `Current; sparse Brick residency and receiver-lazy radiation implemented, controlled performance/live validation pending`
-- Last verified: `2026-09-08`
+- Status: `Current; whole-block ventilation implemented and Forge GameTest verified; controlled performance comparison pending`
+- Last verified: `2026-09-09`
 - Scope: server-side thermal capture, asynchronous dimension workers, Page/Brick topology, source energy, phase requests, query publication, and hot-path cost bounds
 - Primary code anchors: `MinecraftThermalEvents`, `MinecraftThermalInput`, `MinecraftPageManager`, `PhysicalSourceSpatialIndex`, `DimensionInputAccumulator`, `ThermalDimensionMailbox`, `ThermalWorkerPool`, `ThermalDimensionEngine`, `TopologyPlan`, `PreparedTopologyChange`, `TopologyCommitter`, `ThermalSolver`, `ThermalSourceLedger`, `QueryPublication`
 
@@ -28,11 +28,30 @@ persistence code under `runtime`.
 
 ## Ownership
 
-Each `ServerLevel` has one `MinecraftThermalInput` on its level thread and one
+Each active thermal `ServerLevel` has one `MinecraftThermalInput` on its level thread and one
 `ThermalDimensionEngine` on a bounded thermal worker. Minecraft objects never
 cross into the worker. The main thread reads loaded state and produces immutable
 primitive cuts; the worker owns arena cells, topology, source integration,
 phase state, solver execution, and publication.
+
+Analytic gameplay fields have world lifetime through `MinecraftGameplayFields`.
+The runtime caches the same `ThermalAnalyticFieldIndex` reference; field-only
+publication does not construct a dimension runtime or attach loaded sections.
+World unload/server stop clear the index, while physical close/profile reload
+retain it. Main-thread fields never enter worker messages or Page hot masks.
+
+The field index shares entries between an update map and a compact ordered list.
+Unchanged sphere reports compare primitives without allocating a definition or
+sorting; geometry/value changes retain their ordered slot. Insert/remove/reorder
+cost O(F), and queries still scan O(F) fields. Generator provider reconciliation
+adds O(F) work around the existing team enumeration, with no new world scan or
+polling scheduler. Ordinary queries compose directly; town/phase callers reuse
+reductions when they need a local natural baseline or several thresholds.
+The update map adds memory and an entry indirection versus the former single
+list. Ownership separation itself provides no steady-query speedup. Radius does
+not allocate cells; existing physical source residency and its Page overhead
+remain independent costs. See [composition](world-climate-and-temperature.md#7-analytic-control-fields)
+and [lifecycle](data-lifecycle-and-integration.md#reload-and-restart).
 
 The only topology lifecycle is:
 
@@ -159,18 +178,39 @@ A changed Brick alone is replaced or promoted.
 `MinecraftStateThermalTable` is one dense registry-ID-indexed tagged int table.
 Ordinary states contain their signature ID directly; only radiation, Campfire,
 or exceptional occlusion semantics enter sparse primitive extended arrays.
-`ThermalSignatureTable` is shared server-wide and stores signature-to-geometry
-and material IDs plus geometry-local Air masks/contact/component lookup. It
-replaces the frozen reverse map and every per-dimension signature catalog.
+`ThermalSignatureTable` stores shared whole-block ventilation (0–100) and
+material profile IDs. Unknown dynamic shapes and partial collision shapes use
+75; full solids use 0 and ordinary Air uses 100. No block-internal microcells,
+void geometry, or material contact-pattern catalog remain.
+
+`BlockBrickLayout` maps 64 whole blocks to nodes with a byte mapping and one
+member mask per node. Only connected material-free V100 blocks merge. V75
+blocks retain separate nodes and exchange resistance; a full-Air Brick still
+uses one node with no mixed layout. Material-bearing transport blocks own one
+temperature, not separate interior Air and material temperatures. Exposed area
+counts external block faces adjacent to transport blocks. Material capacity is
+`surfaceCapacityJPerK * exposedArea`; a transport block without exposed material
+capacity uses the existing Air reference capacity. Ventilation does not scale
+capacity. Solid material nodes exist only while exposed.
 
 `WorkerPageStore` holds one stable 64-Brick worker directory and replaces only
 changed immutable Brick entries. `WorkerBrickTopology` retains cell/query and
-incremental contact metadata but does not duplicate the solver's fragment
+whole-block membership and phase metadata but does not duplicate the solver's fragment
 reference. A cross-thread `PagePublication` directory is shallow-cloned lazily
 only when a Brick's query payload actually changes. A publication that changes
 only geometry/topology identity reuses the existing private immutable directory.
 Arena spans use a pooled primitive AVL best-fit index, migrate locally, and are
 released only after source and solver references have been rebound.
+
+Mixed transport nodes occupy consecutive arena slots, so their layout index is
+`slot - supportRef`; there is no separate per-slot component-index array.
+Worker phase metadata retains the reservoir slot list and published candidates;
+migration reads profile identity from the arena within the same Brick/lifecycle,
+without a second coordinate/profile directory. Neighbor-only layout dependency
+checks compare only outward block faces and sum exposure changes per block.
+Shared-face compilation resolves each neighbor Page/cut once before its 16 pairs;
+sky faces read the already selected owner cut. These changes reduce duplicate
+storage and lookups without adding persistent caches.
 
 ## Mutation Capture
 
@@ -304,16 +344,23 @@ perform a retirement transaction followed by a later admission, add a
 phase requests belong to the old lifecycle and are not copied to the new Page;
 their stale ACKs are rejected by the existing lifecycle identity check.
 
-One Brick compile carries its current `PageState` and `nextSignatures` as local
-arguments. Interior material/microcell adjacency therefore uses those direct
-references; `TopologyView` consults section/slot hash indexes only for genuine
-cross-Page access. This avoids repeated same-Page map lookup without a retained
-compiler cache.
+Brick compilation uses 144 interior block-face pairs and 16 aligned pairs per
+shared face; full-Air/full-Air uses one area-16 connection. Interior attributes
+come from reusable 64-entry scratch. Shared faces belong to the negative-coordinate
+Brick, including material-only owners. Transport conductance is
+`K*A/(dL/pL+dR/pR)`, where `p=V/100`, A is face area in square blocks, K is
+`effectiveMixingWPerBlockK`, and each center-to-face distance d is at least 0.5
+blocks. Material contacts keep their profile's face conductance. Direct-sky
+boundaries retain existing eligibility and wind scaling, with conductance
+multiplied by p. The solver continues to use exponential pair exchange.
 
-`MaterialBoundaryRegistry` requires dense profile/contact-pattern IDs in
-`1..N` list order and stores both catalogs in direct-index arrays. Brick
-compilation performs bounds checks and array loads rather than boxed
-`Map<Integer, ...>` lookups.
+`MaterialBoundaryRegistry` stores dense profile IDs in `1..N` list order.
+There are no retained microcell contact lists or duplicate material-pole
+coordinate directories. Neighbor exposure changes are collected from final
+signature/residency cuts before layouts are rebuilt; changed face count can
+change capacity even when the same material remains exposed. Fragment recovery
+uses `cellsResolved && compiled.resolved()` and marks source bindings dirty
+when resolved status changes.
 
 Preparation reserves replacement spans as arena `RESERVED` cells and may grow
 backing arrays. Reserved cells hold the exact next metadata and migrated
@@ -326,12 +373,11 @@ the current count plus all possible insertions, covering insertion-before-
 deletion commit order without allocation in `TopologyCommitter`. Preparation
 also reserves the admission-identity list for the exact number of Page
 admissions in that prepared cut, so its commit append cannot grow backing.
-Brick migration owns two geometrically grown kernel scratch arrays. A new Brick
-without dormant state keeps its already-staged initial enthalpy and returns
-without scratch work. Regular-to-regular migration preserves the single Air
-cell's temperature at the new capacity in O(1); only mixed geometry enters the
-64x64 microcell overlap mapping.
-Signature lookup remains once per block in that mixed path. Preparation
+Brick migration uses bounded 64-entry scratch. New Bricks without dormant state
+and regular-to-regular migration take constant-time fast paths. Mixed migration
+visits at most 64 whole blocks, preserving each surviving same-material member's
+share of old enthalpy. Exposure or door-state changes retain enthalpy and use the
+new capacity to determine temperature. Phase requests migrate separately. Preparation
 also checks endpoint ownership, reference closure, final live-cell count,
 operation limits, and arena/query capacity limits. The configured address
 limit leaves staging headroom (`maximumArenaSlots` is twice the live-cell limit
@@ -495,6 +541,31 @@ Page geometry gaps use
 `ThermalPageHandle.lastPublication`; retirement alone removes presence.
 `PagePublication.workerPageSlot` remains server-internal.
 
+Infrared display composition now happens in
+`MinecraftThermalInput.InfraredCapture`, a single lazily allocated server-thread
+scratch shared by display requests. It can read fields and dormant data without
+constructing a physical runtime. Physical-only Pages retain the epoch path above.
+The client echoes `knownRefreshPages` and receives `refreshPages`: twelve longs
+(96 bytes) identify display Pages to regenerate. They are neither field definitions
+nor physical residency. Each response rebuilds the union of previous refresh Pages
+and current field intersections, resolving each physical transport node once per
+Brick, composing fields on the server and using the original Brick temperature codec.
+An unavailable physical read discards that Page's staged records and carries its
+refresh bit forward, preserving its last display until a coherent read is available.
+
+Ordinary Brick records carry final physical/analytic/invalid temperatures. Only
+genuine dormant-only final Bricks use the existing dormant section records; those
+follow ordinary records so field removal restores the original ownership correctly.
+Analytic output never uses dormant ownership or enters the solver/checkpoint.
+Natural temperature is evaluated only where composition needs it, using loaded
+world data; biome-neighbor availability is checked before calling the biome zoom.
+The client still decodes one response into the same temperature mirror and uploads
+dirty Pages. No field interpreter, second texture, or per-observer server cache is
+involved. Delta requests and responses each add 96 bytes; full requests omit the
+refresh mask. Page-granularity regeneration can resend unchanged Bricks, so large
+fields increase server work and payload. The existing 960 KiB payload ceiling still
+applies and must be included in validation of supported field sizes.
+
 Gameplay reads a Page's immutable current publication, resolves the local Air
 point, reads the expected arena slot generation, and verifies that the same Page
 publication is still current. During a bounded topology gap it may read the last
@@ -510,15 +581,19 @@ continues directly to natural fallback.
 `DormantChunkThermalState` is a lazy `LevelChunk` attachment. Async
 `ChunkDataEvent.Load` only validates and decodes primitive NBT. Main-thread
 `ChunkEvent.Load` consumes the disk-only `sourceSustained` bit once, applies one
-factor to each complete Brick mean/component vector, rebases to the load tick,
+factor to each complete Brick mean/spatial-mask vector, rebases to the load tick,
 and clears the bit before random ticks. Normal queries and worker admission never
 read that support bit.
 
 Stored temperature uses signed `1/16 C` residuals from section-center
-`WorldTemperature.naturalAir`. Pages with at most `256` Air components preserve
-exact mixed component order and a capacity-weighted Brick mean; larger Pages
-store one mean per Brick. Missing/count-mismatched geometry restores from the
-mean. Partial phase energy and topology are not persisted.
+`WorldTemperature.naturalAir`. Format 2 stores a Brick mean weighted by represented
+whole blocks, plus optional member-mask/residual entries when nodes differ after
+quantization. All exact entries are retained only if packed residuals and masks
+together fit the 640-byte section numeric budget; otherwise only means remain.
+One-node or equal-residual Bricks need no exact entries. Restore fills 64 block
+temperatures from the mean, overlays stored masks, and aggregates into the new
+layout. This is spatial temperature approximation, not offline enthalpy
+conservation; no old-format reader is retained. Phase latent energy is not saved.
 
 Retirement captures one coherent `PagePublication`/`QueryPublication.sampleTick`
 before clearing the handle. Save, unload, stop, recipe reload, and terminal
@@ -566,10 +641,10 @@ lifecycles.
 
 | Path | Bound |
 |---|---|
-| mutation capture | `O(Kp)` exact positions |
+| mutation capture | `O(Kp + 64*Kb)`; one world-state read per changed center, one encode per changed Brick and one Page build per ready cut |
 | topology prepare | `O(Kb + Kf + Ko + Ke log Ke + Ks)`; no unrelated Page/arena/high-water scan |
 | ordinary commit | `O(Kf + Ke + Ks)`; no allocation or sort, with one exact old-reference/ownership proof before release |
-| Brick migration | new/no-dormant and regular-to-regular O(1); mixed geometry at most 4,096 microcell mappings, using retained scratch |
+| Brick migration | new/no-dormant and regular-to-regular O(1); mixed ordinary migration at most 64 block mappings, using retained scratch |
 | source event update | changed sources and affected bindings only; source-seed residency sync occurs only on zero/nonzero Brick reference transitions |
 | source delivery | one ordered pass over active/touched nodes at target tick |
 | Brick cold capture | all-Air O(1), otherwise exactly 64 BlockStates per new Brick; at most 64 new Bricks/tick |

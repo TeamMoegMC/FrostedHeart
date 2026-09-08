@@ -22,6 +22,7 @@ Persistent capabilities remain separate from thermal mesh state:
 | `PlayerTemperatureData` | NBT capability | five body-part energy offsets, clothing stacks, and difficulty; sampled environment/HUD power are transient |
 | `HeatEndpoint` / `GeneratorData` | block/entity or team data | heat-network inventory and machine power semantics |
 | `MinecraftThermalInput` | runtime only | Page handles, capture queues, worker mailbox, and query publication |
+| `MinecraftGameplayFields` | transient world lifetime | shared generator/boss/command index, retained across physical-runtime rebuilds |
 | `DormantChunkThermalState` | chunk NBT | bounded Air-temperature residual checkpoints for retired Pages |
 
 Arena enthalpy, source bindings, analytic fields, material/phase state, and
@@ -49,6 +50,10 @@ ServerStartedEvent
   MinecraftThermalInput.prepareGameplayProfiles()
   tagged BlockState semantics and shared signature/geometry tables are frozen once
 
+Level tick START
+  existing team enumeration advances town data and publishes generator analytic desired state
+  completed generator-provider refresh removes fields from deleted team holders
+
 Level tick END
   MinecraftThermalInput drains completion
   MinecraftPageManager applies worker residency, mutations, and Brick capture budgets
@@ -68,13 +73,14 @@ ChunkDataEvent.Save / ChunkEvent.Unload / ServerStoppingEvent
 
 Level unload
   checkpoint active Pages, detach section hooks, close capture/source/radiation state,
-  request mailbox processor close
+  request mailbox processor close; MinecraftGameplayFields.unload(level)
 
 Player logout / dimension exit
   remove the current/old dimension radiation receiver cache by UUID-derived key
 
 ServerStoppedEvent
   MinecraftThermalInput.closeAll()
+  MinecraftGameplayFields.stop()
   closeShared() joins the bounded thermal workers
 ```
 
@@ -114,8 +120,9 @@ so `inFlight` is cleared and replacement still proceeds.
 
 Recipe reload invalidates gameplay profiles and closes active thermal levels.
 The next gameplay query creates a new profile snapshot and worker generation.
-Both player environment queries and analytic-field insertion can lazily start
-the runtime. Startup binds already-loaded sections and queues current-state
+Player environment queries can lazily start the runtime; analytic-field insertion
+only creates a world-owned index and never starts the physical runtime.
+Startup binds already-loaded sections and queues current-state
 discovery without replaying dormant/radiation chunk-load events. Full reload
 repeats this attachment; worker-only replacement retains owners, source indexes,
 and pending discovery, using `reseedAll` without another world scan. Chunk unload
@@ -123,6 +130,23 @@ removes its pending entry by instance; close clears all pending chunk references
 Natural-temperature cache invalidation remains owned by its existing recipe
 listener; changes to that contract must update `WorldTemperature` and this
 document together.
+
+`MinecraftGameplayFields` keeps the same index instance across physical close,
+worker replacement, and recipe reload, including when empty. Actual level unload
+and server stop clear it. Ownership uses `ServerLevel` identity, not climate
+capability availability, so fixed-time dimensions also support fields.
+Boss removal resets `coldApplied`; normal AI can republish after same-object
+readdition. Commands are session-only and remove only their own namespaced key.
+
+`GeneratorData.publishGameplayHeat` runs in the existing level START team loop
+after optional town advancement and before morning settlement. It does not
+consume fuel, tick twice, scan chunks, or depend on online members/source chunk
+residency. Normal machine changes become visible by the next valid START pass.
+Positive levels retain afterheat independently of active physical power.
+Disassembly checks the bound master and dimension; rebind removes the old field
+before changing identity. A completed provider refresh removes orphaned team
+fields, while leaving boss/command fields intact. Server restart rebuilds fields
+from team/entity data without persisting duplicate definitions.
 
 Before recipe reload or worker replacement discards a publication, the main
 thread captures its last coherent Page cut into the loaded chunk attachment.

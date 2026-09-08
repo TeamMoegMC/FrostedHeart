@@ -90,7 +90,7 @@ public class GeneratorState extends HeatingState {
         	TeamDataHolder teamData=data.get();
         	GeneratorData dat=teamData.getData(FHSpecialDataTypes.GENERATOR_DATA);
         	
-        	if(origin.equals(dat.actualPos)) {
+            if(origin.equals(dat.actualPos) && level.dimension().equals(dat.dimension)) {
                 dat.tickBlock(level, teamData);
         		dat.lastPower=endpoint.getHeat();
         		endpoint.setHeat(dat.power);
@@ -120,7 +120,9 @@ public class GeneratorState extends HeatingState {
      */
     public void regist(Level level, BlockPos origin,short masterYPosInMB) {
         getDataNoCheck().ifPresent(t -> {
-            if (!origin.equals(t.actualPos)) {
+            if (!origin.equals(t.actualPos) || !level.dimension().equals(t.dimension)
+                    || t.masterYPosInMB != masterYPosInMB) {
+                t.removeGameplayHeat(level.getServer());
                 t.onPosChange();
                 onDataChange();
             }

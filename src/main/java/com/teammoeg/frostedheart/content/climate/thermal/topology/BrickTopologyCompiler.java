@@ -1,435 +1,233 @@
 /* Copyright (c) 2026 TeamMoeg */
 package com.teammoeg.frostedheart.content.climate.thermal.topology;
 
-import com.teammoeg.frostedheart.content.climate.thermal.geometry.ComponentBrickCompiler;
-import com.teammoeg.frostedheart.content.climate.thermal.geometry.ConservativeAirGeometry;
-import com.teammoeg.frostedheart.content.climate.thermal.mesh.MaterialBoundaryRegistry;
-import com.teammoeg.frostedheart.content.climate.thermal.mesh.PagePublication;
-import com.teammoeg.frostedheart.content.climate.thermal.mesh.PageSignatures;
-import com.teammoeg.frostedheart.content.climate.thermal.mesh.ThermalBrickCellLayout;
-import com.teammoeg.frostedheart.content.climate.thermal.mesh.ThermalCellArena;
+import com.teammoeg.frostedheart.content.climate.thermal.mesh.*;
 import com.teammoeg.frostedheart.content.climate.thermal.profile.ThermalSignatureTable;
 import com.teammoeg.frostedheart.content.climate.thermal.solver.ThermalFragment;
-
 import net.minecraft.core.SectionPos;
-
 import java.util.Arrays;
-import java.util.Objects;
 
-/** Reusable primitive Air geometry, adjacency, and FarField Brick compiler. */
+/** Whole-block connectivity compiler with one-node full-Air fast paths. */
 public final class BrickTopologyCompiler {
-    private static final long FULL_AIR = -1L;
-    private static final double PATCH_AREA = 1.0D / 16.0D;
-
     private final ThermalCellArena arena;
     private final ThermalSignatureTable signatures;
+    private final MaterialBoundaryRegistry materials;
     private final ThermalTopologyParameters parameters;
     private final FarFieldSettings farField;
     private final int maximumArenaSlots;
-    private final BrickMaterialKernel material;
-    private final ComponentBrickCompiler.Scratch componentScratch =
-            new ComponentBrickCompiler.Scratch();
-    private final ThermalBrickCellLayout cellLayout =
-            new ThermalBrickCellLayout();
-    private final ConservativeAirGeometry.Resolution[] geometry =
-            new ConservativeAirGeometry.Resolution[64];
-    private final int[] signatureIds = new int[64];
-    private final PrimitiveTopologyScratch.LongPairDouble airPairs =
-            new PrimitiveTopologyScratch.LongPairDouble();
-    private final PrimitiveTopologyScratch.LongPairDouble farBoundaries =
-            new PrimitiveTopologyScratch.LongPairDouble();
+    private final ThermalBrickCellLayout cells = new ThermalBrickCellLayout();
+    private final int[] ids = new int[64], exposure = new int[64], phaseIds = new int[64];
+    private final byte[] mapping = new byte[64];
+    private final long[] masks = new long[64], phaseMasks = new long[64];
+    private final PrimitiveTopologyScratch.LongPairDouble airPairs = new PrimitiveTopologyScratch.LongPairDouble();
+    private final PrimitiveTopologyScratch.LongPairDouble materialPairs = new PrimitiveTopologyScratch.LongPairDouble();
+    private final PrimitiveTopologyScratch.LongPairDouble phasePairs = new PrimitiveTopologyScratch.LongPairDouble();
+    private final PrimitiveTopologyScratch.LongPairDouble farBoundaries = new PrimitiveTopologyScratch.LongPairDouble();
     private boolean fragmentResolved;
-
-    public BrickTopologyCompiler(
-            ThermalCellArena arena,
-            ThermalSignatureTable signatures,
-            MaterialBoundaryRegistry materials,
-            ThermalTopologyParameters parameters,
-            FarFieldSettings farField,
-            int maximumArenaSlots
-    ) {
-        this.arena = Objects.requireNonNull(arena, "arena");
-        this.signatures = Objects.requireNonNull(signatures, "signatures");
-        this.parameters = Objects.requireNonNull(parameters, "parameters");
-        this.farField = Objects.requireNonNull(farField, "farField");
-        this.maximumArenaSlots = maximumArenaSlots;
-        material = new BrickMaterialKernel(
-                signatures, Objects.requireNonNull(materials, "materials"));
+    private static final long[] NEIGHBORS = new long[64];
+    static {
+        for (int b=0;b<64;b++) {
+            long m=0;
+            if ((b&3)>0) m|=1L<<(b-1); if ((b&3)<3) m|=1L<<(b+1);
+            if ((b>>>2&3)>0) m|=1L<<(b-4); if ((b>>>2&3)<3) m|=1L<<(b+4);
+            if ((b>>>4)>0) m|=1L<<(b-16); if ((b>>>4)<3) m|=1L<<(b+16);
+            NEIGHBORS[b]=m;
+        }
+    }
+    public BrickTopologyCompiler(ThermalCellArena arena, ThermalSignatureTable signatures,
+            MaterialBoundaryRegistry materials, ThermalTopologyParameters parameters,
+            FarFieldSettings farField, int maximumArenaSlots) {
+        this.arena=arena; this.signatures=signatures; this.materials=materials;
+        this.parameters=parameters; this.farField=farField; this.maximumArenaSlots=maximumArenaSlots;
     }
 
-    WorkerBrickTopology compileCells(
-            WorkerPageStore.PageState page,
-            PageSignatures nextSignatures,
-            int brickIndex,
-            TopologyView view
-    ) {
-        int sectionMinX = SectionPos.sectionToBlockCoord(
-                SectionPos.x(page.handle.sectionKey()));
-        int sectionMinY = SectionPos.sectionToBlockCoord(
-                SectionPos.y(page.handle.sectionKey()));
-        int sectionMinZ = SectionPos.sectionToBlockCoord(
-                SectionPos.z(page.handle.sectionKey()));
-        int brickX = brickIndex & 3;
-        int brickZ = brickIndex >>> 2 & 3;
-        int brickY = brickIndex >>> 4 & 3;
-        int minX = sectionMinX + (brickX << 2);
-        int minY = sectionMinY + (brickY << 2);
-        int minZ = sectionMinZ + (brickZ << 2);
-        cellLayout.reset(minX, minY, minZ);
-
-        int airMicrocells = 0;
-        boolean fullAir = true;
-        for (int localY = 0; localY < 4; localY++) {
-            for (int localZ = 0; localZ < 4; localZ++) {
-                for (int localX = 0; localX < 4; localX++) {
-                    int block = localX | localZ << 2 | localY << 4;
-                    int pageBlock = brickX * 4 + localX
-                            | (brickZ * 4 + localZ) << 4
-                            | (brickY * 4 + localY) << 8;
-                    int signatureId = nextSignatures.get(pageBlock);
-                    signatureIds[block] = signatureId;
-                    ConservativeAirGeometry.Resolution resolved =
-                            signatures.geometry(signatureId);
-                    geometry[block] = resolved;
-                    if (resolved == null) {
-                        return unresolved();
-                    }
-                    long airMask = signatures.airMask(signatureId);
-                    airMicrocells += Long.bitCount(airMask);
-                    fullAir &= airMask == FULL_AIR
-                            && resolved.components().size() == 1;
-                }
-            }
+    WorkerBrickTopology compileCells(WorkerPageStore.PageState page, PageSignatures next,
+            int brick, TopologyView view) {
+        int x=brickMinX(page,brick), y=brickMinY(page,brick), z=brickMinZ(page,brick);
+        cells.reset(x,y,z);
+        long mergeable=0;
+        for (int b=0;b<64;b++) {
+            ids[b]=next.get(BlockBrickLayout.pageBlock(brick,b));
+            if (!signatures.valid(ids[b])) return WorkerBrickTopology.EMPTY;
+            if (signatures.mergeable(ids[b])) mergeable|=1L<<b;
         }
-
-        ComponentBrickCompiler.CompiledBrick mixed = null;
-        if (airMicrocells == 0) {
-        } else if (fullAir && airMicrocells == 64 * 64) {
-            cellLayout.setRegularAir(
-                    parameters.effectiveAirCapacityJPerBlockK());
+        int nodes=0, transport=0, phases=0;
+        BlockBrickLayout layout=null;
+        if (mergeable == -1L) {
+            cells.setRegularAir(parameters.effectiveAirCapacityJPerBlockK());
+            transport=1;
         } else {
-            mixed = ComponentBrickCompiler.compileResolved(
-                    geometry,
-                    parameters.maximumRegionsPerBlock(),
-                    componentScratch);
-            if (mixed == null || mixed.componentCount() == 0) {
-                return unresolved();
+            Arrays.fill(mapping,(byte)255);
+            while (mergeable!=0) {
+                long pending=Long.lowestOneBit(mergeable), members=0;
+                while (pending!=0) {
+                    int b=Long.numberOfTrailingZeros(pending);
+                    pending &= pending-1;
+                    if ((mergeable & 1L<<b)==0) continue;
+                    mergeable &= ~(1L<<b); members|=1L<<b;
+                    pending |= NEIGHBORS[b] & mergeable;
+                }
+                mapNode(nodes,members);
+                cells.setTransportCapacity(nodes++,Long.bitCount(members)*parameters.effectiveAirCapacityJPerBlockK());
             }
-            cellLayout.setMixedAir(
-                    mixed,
-                    parameters.effectiveAirCapacityJPerBlockK());
+            for (int b=0;b<64;b++) {
+                int profile=signatures.materialProfileId(ids[b]);
+                exposure[b]=profile==0 ? 0 : exposedFaces(b,x,y,z,view);
+                if (signatures.ventilation(ids[b])==0 || mapping[b]!=(byte)255) continue;
+                mapNode(nodes,1L<<b);
+                double capacity=profile==0 || exposure[b]==0 ? parameters.effectiveAirCapacityJPerBlockK()
+                        : materials.profileOrNull(profile).surfaceCapacityJPerK()*exposure[b];
+                cells.setTransportCapacity(nodes++,capacity);
+            }
+            transport=nodes;
+            for (int b=0;b<64;b++) {
+                int id=signatures.materialProfileId(ids[b]);
+                if (id==0 || exposure[b]==0 || signatures.ventilation(ids[b])>0) continue;
+                var profile=materials.profileOrNull(id);
+                if (profile.model()==MaterialBoundaryRegistry.Model.PHASE_RESERVOIR) {
+                    int i=0; while (i<phases && phaseIds[i]!=id) i++;
+                    if (i==phases) { phaseIds[phases]=id; phaseMasks[phases++]=0; }
+                    phaseMasks[i]|=1L<<b;
+                } else {
+                    mapNode(nodes++,1L<<b);
+                    cells.addMaterialPole(x+(b&3),y+(b>>>4),z+(b>>>2&3),
+                            profile.surfaceCapacityJPerK()*exposure[b],view.naturalTemperature(page));
+                }
+            }
+            for (int i=0;i<phases;i++) {
+                var profile=materials.profileOrNull(phaseIds[i]);
+                mapNode(nodes++,phaseMasks[i]);
+                cells.addPhaseReservoir(x,y,z,profile.id(),phaseMasks[i],
+                        profile.transitionTemperatureC(),profile.transitionEnergyJPerUnit());
+            }
+            if (nodes>0) {
+                layout=new BlockBrickLayout(mapping.clone(),Arrays.copyOf(masks,nodes),transport);
+                if (transport>0) cells.setMixedAir(layout,parameters.effectiveAirCapacityJPerBlockK());
+            }
         }
-        if (!material.compileLayout(
-                page, minX, minY, minZ, signatureIds,
-                nextSignatures, view, cellLayout)) {
-            return unresolved();
-        }
-        WorkerBrickTopology.MaterialContacts contacts =
-                material.freezeContacts();
-        ThermalCellArena.BrickAllocation allocation = arena.stageBrickCells(
-                page.pageSlot,
-                page.lifecycleGeneration,
-                cellLayout,
-                view.naturalTemperature(page),
-                parameters.referenceTemperatureC(),
-                maximumArenaSlots);
-        if (allocation == null) {
-            throw new TopologyPlan.WorkLimitedException(
-                    "thermal arena slot limit reached");
-        }
+        var allocation=arena.stageBrickCells(page.pageSlot,page.lifecycleGeneration,cells,
+                view.naturalTemperature(page),parameters.referenceTemperatureC(),maximumArenaSlots);
+        if (allocation==null) throw new TopologyPlan.WorkLimitedException("thermal arena slot limit reached");
         try {
-            int coverage = airMicrocells == 0
-                    ? -1 : allocation.cellSpan().firstSlot();
-            int coverageGeneration = coverage < 0
-                    ? 0 : arena.lifecycleGeneration(coverage);
-            PagePublication.PhaseCandidates phaseCandidates =
-                    material.phaseCandidates(contacts);
-            return new WorkerBrickTopology(
-                    allocation.cellSpan(),
-                    coverage,
-                    coverageGeneration,
-                    mixed,
-                    phaseCandidates,
-                    material.materialPoles(contacts, allocation),
-                    material.phaseReservoirs(
-                            contacts, allocation, minX, minY, minZ),
-                    contacts,
-                    true,
-                    true);
+            int coverage=transport==0 ? -1 : allocation.cellSpan().firstSlot();
+            var candidates=phases==0 ? PagePublication.PhaseCandidates.EMPTY
+                    : PagePublication.PhaseCandidates.owned(Arrays.copyOf(phaseIds,phases),Arrays.copyOf(phaseMasks,phases));
+            return new WorkerBrickTopology(allocation.cellSpan(),coverage,coverage<0?0:arena.lifecycleGeneration(coverage),
+                    layout,transport,candidates,allocation.phaseReservoirSlots(),true,true);
         } catch (RuntimeException | Error failure) {
-            arena.discardStagedCells(allocation.cellSpan());
-            throw failure;
+            arena.discardStagedCells(allocation.cellSpan()); throw failure;
         }
     }
-
-    CompiledFragment compileFragment(
-            WorkerPageStore.PageState page,
-            int brickIndex,
-            TopologyView view
-    ) {
-        airPairs.reset();
-        farBoundaries.reset();
-        fragmentResolved = true;
-        WorkerBrickTopology owner = view.brick(page, brickIndex);
-        if (!owner.cellsResolved) {
-            return new CompiledFragment(ThermalFragment.EMPTY, false);
-        }
-        int minX = brickMinX(page, brickIndex);
-        int minY = brickMinY(page, brickIndex);
-        int minZ = brickMinZ(page, brickIndex);
-        if (owner.coverageSlot >= 0) {
-            compilePositive(
-                    owner, view.brickAtWorld(minX + 4, minY, minZ),
-                    ConservativeAirGeometry.Face.POSITIVE_X,
-                    ConservativeAirGeometry.Face.NEGATIVE_X, 0, minX + 4);
-            compilePositive(
-                    owner, view.brickAtWorld(minX, minY + 4, minZ),
-                    ConservativeAirGeometry.Face.POSITIVE_Y,
-                    ConservativeAirGeometry.Face.NEGATIVE_Y, 1, minY + 4);
-            compilePositive(
-                    owner, view.brickAtWorld(minX, minY, minZ + 4),
-                    ConservativeAirGeometry.Face.POSITIVE_Z,
-                    ConservativeAirGeometry.Face.NEGATIVE_Z, 2, minZ + 4);
-            compileExternalBoundaries(page, owner, brickIndex, view);
-        }
-        BrickMaterialKernel.Operations materialOperations =
-                material.compileOperations(owner.materialContacts, owner, view);
-        ThermalFragment fragment = new ThermalFragment(
-                Integer.toUnsignedLong(page.fragmentIndex(brickIndex)),
-                freezeAirPairs(),
-                materialOperations.pairs(),
-                materialOperations.phases(),
-                freezeFarBoundaries(page.pageSlot));
-        return new CompiledFragment(
-                fragment,
-                fragmentResolved && materialOperations.resolved());
+    private void mapNode(int node,long members) {
+        masks[node]=members;
+        while(members!=0) { int b=Long.numberOfTrailingZeros(members); members&=members-1; mapping[b]=(byte)node; }
     }
 
-    private WorkerBrickTopology unresolved() {
-        return new WorkerBrickTopology(
-                com.teammoeg.frostedheart.content.climate.thermal.mesh
-                        .ArenaSpan.EMPTY,
-                -1, 0, null,
-                PagePublication.PhaseCandidates.EMPTY,
-                WorkerBrickTopology.MaterialPoles.EMPTY,
-                WorkerBrickTopology.PhaseReservoirs.EMPTY,
-                WorkerBrickTopology.MaterialContacts.EMPTY,
-                false, false);
+    private int exposedFaces(int block, int x, int y, int z, TopologyView view) {
+        int count = 0;
+        long neighbors = NEIGHBORS[block];
+        while (neighbors != 0) {
+            int neighbor = Long.numberOfTrailingZeros(neighbors);
+            neighbors &= neighbors - 1;
+            if (signatures.ventilation(ids[neighbor]) > 0) count++;
+        }
+        int bx = x + (block & 3), by = y + (block >>> 4), bz = z + (block >>> 2 & 3);
+        if ((block & 3) == 0 && signatures.ventilation(view.signatureAtWorld(bx-1,by,bz)) > 0) count++;
+        if ((block & 3) == 3 && signatures.ventilation(view.signatureAtWorld(bx+1,by,bz)) > 0) count++;
+        if ((block >>> 4) == 0 && signatures.ventilation(view.signatureAtWorld(bx,by-1,bz)) > 0) count++;
+        if ((block >>> 4) == 3 && signatures.ventilation(view.signatureAtWorld(bx,by+1,bz)) > 0) count++;
+        if ((block >>> 2 & 3) == 0 && signatures.ventilation(view.signatureAtWorld(bx,by,bz-1)) > 0) count++;
+        if ((block >>> 2 & 3) == 3 && signatures.ventilation(view.signatureAtWorld(bx,by,bz+1)) > 0) count++;
+        return count;
     }
 
-    private void compilePositive(
-            WorkerBrickTopology negative,
-            WorkerBrickTopology positive,
-            ConservativeAirGeometry.Face negativeFace,
-            ConservativeAirGeometry.Face positiveFace,
-            int axis,
-            int plane
-    ) {
-        if (positive == null || !positive.cellsResolved) {
-            if (positive != null) {
+    CompiledFragment compileFragment(WorkerPageStore.PageState page,int brick,TopologyView view) {
+        airPairs.reset(); materialPairs.reset(); phasePairs.reset(); farBoundaries.reset(); fragmentResolved=true;
+        var owner=view.brick(page,brick);
+        if (!owner.cellsResolved) return new CompiledFragment(ThermalFragment.EMPTY,false);
+        int x=brickMinX(page,brick), y=brickMinY(page,brick), z=brickMinZ(page,brick);
+        PageSignatures cut = view.signatures(page);
+        if (owner.blockLayout!=null) {
+            for (int b=0;b<64;b++) ids[b]=cut.get(BlockBrickLayout.pageBlock(brick,b));
+            for(int b=0;b<64;b++) {
+                if((b&3)<3) face(owner,b,owner,b+1,0,x+(b&3)+1,ids[b],ids[b+1]);
+                if((b>>>4)<3) face(owner,b,owner,b+16,1,y+(b>>>4)+1,ids[b],ids[b+16]);
+                if((b>>>2&3)<3) face(owner,b,owner,b+4,2,z+(b>>>2&3)+1,ids[b],ids[b+4]);
+            }
+        }
+        for (int axis = 0; axis < 3; axis++) {
+            int nx = x + (axis == 0 ? 4 : 0);
+            int ny = y + (axis == 1 ? 4 : 0);
+            int nz = z + (axis == 2 ? 4 : 0);
+            var neighborPage = view.page(SectionPos.asLong(
+                    SectionPos.blockToSectionCoord(nx), SectionPos.blockToSectionCoord(ny),
+                    SectionPos.blockToSectionCoord(nz)));
+            if (neighborPage == null) continue;
+            int neighborBrick = (nx & 15) >>> 2 | ((nz & 15) >>> 2) << 2 | ((ny & 15) >>> 2) << 4;
+            if (!view.resident(neighborPage, neighborBrick)) continue;
+            var neighbor = view.brick(neighborPage, neighborBrick);
+            if (!neighbor.cellsResolved) {
                 fragmentResolved = false;
-            }
-            return;
-        }
-        if (positive.coverageSlot < 0) {
-            return;
-        }
-        ComponentBrickCompiler.CompiledBrick left = negative.mixedGeometry;
-        ComponentBrickCompiler.CompiledBrick right = positive.mixedGeometry;
-        if (left == null && right == null) {
-            addAirPair(
-                    negative.coverageSlot, positive.coverageSlot,
-                    axis, plane, 16.0D);
-            return;
-        }
-        if (left != null && right != null) {
-            for (int a = 0; a < left.facePortCount(); a++) {
-                if (left.facePortFace(a) != negativeFace) {
-                    continue;
-                }
-                for (int b = 0; b < right.facePortCount(); b++) {
-                    if (right.facePortFace(b) != positiveFace
-                            || left.facePortBlockSlot(a)
-                                    != right.facePortBlockSlot(b)) {
-                        continue;
-                    }
-                    int aperture = left.facePortApertureMask(a)
-                            & right.facePortApertureMask(b);
-                    if (aperture != 0) {
-                        addAirPair(
-                                negative.coverageSlot
-                                        + left.facePortComponentId(a),
-                                positive.coverageSlot
-                                        + right.facePortComponentId(b),
-                                axis, plane,
-                                Integer.bitCount(aperture) * PATCH_AREA);
-                    }
-                }
-            }
-            return;
-        }
-        ComponentBrickCompiler.CompiledBrick mixed = left != null ? left : right;
-        ConservativeAirGeometry.Face face =
-                left != null ? negativeFace : positiveFace;
-        for (int port = 0; port < mixed.facePortCount(); port++) {
-            if (mixed.facePortFace(port) != face) {
                 continue;
             }
-            addAirPair(
-                    left != null
-                            ? negative.coverageSlot
-                                    + mixed.facePortComponentId(port)
-                            : negative.coverageSlot,
-                    right != null
-                            ? positive.coverageSlot
-                                    + mixed.facePortComponentId(port)
-                            : positive.coverageSlot,
-                    axis, plane,
-                    Integer.bitCount(mixed.facePortApertureMask(port))
-                            * PATCH_AREA);
-        }
-    }
-
-    private void addAirPair(
-            int first,
-            int second,
-            int axis,
-            int plane,
-            double area
-    ) {
-        double firstDistance = plane - center(first, axis);
-        double secondDistance = center(second, axis) - plane;
-        if (arena.isMixedComponent(first)) {
-            firstDistance = Math.max(
-                    parameters.minimumMixedFaceDistanceBlocks(),
-                    firstDistance);
-        }
-        if (arena.isMixedComponent(second)) {
-            secondDistance = Math.max(
-                    parameters.minimumMixedFaceDistanceBlocks(),
-                    secondDistance);
-        }
-        double distance = firstDistance + secondDistance;
-        if (!Double.isFinite(distance) || distance <= 0.0D) {
-            throw new IllegalStateException(
-                    "Air pair center distance is invalid");
-        }
-        airPairs.add(first, second, area / distance);
-    }
-
-    private double center(int slot, int axis) {
-        return arena.center(slot, axis);
-    }
-
-    private void compileExternalBoundaries(
-            WorkerPageStore.PageState page,
-            WorkerBrickTopology owner,
-            int brickIndex,
-            TopologyView view
-    ) {
-        int minX = brickMinX(page, brickIndex);
-        int minY = brickMinY(page, brickIndex);
-        int minZ = brickMinZ(page, brickIndex);
-        int x = brickIndex & 3;
-        int z = brickIndex >>> 2 & 3;
-        int y = brickIndex >>> 4 & 3;
-        if (x == 0 && view.brickAtWorld(minX - 4, minY, minZ) == null) {
-            addFarFace(
-                    page, owner, brickIndex,
-                    ConservativeAirGeometry.Face.NEGATIVE_X, view);
-        }
-        if (x == 3 && view.brickAtWorld(minX + 4, minY, minZ) == null) {
-            addFarFace(
-                    page, owner, brickIndex,
-                    ConservativeAirGeometry.Face.POSITIVE_X, view);
-        }
-        if (y == 0 && view.brickAtWorld(minX, minY - 4, minZ) == null) {
-            addFarFace(
-                    page, owner, brickIndex,
-                    ConservativeAirGeometry.Face.NEGATIVE_Y, view);
-        }
-        if (y == 3 && view.brickAtWorld(minX, minY + 4, minZ) == null) {
-            addFarFace(
-                    page, owner, brickIndex,
-                    ConservativeAirGeometry.Face.POSITIVE_Y, view);
-        }
-        if (z == 0 && view.brickAtWorld(minX, minY, minZ - 4) == null) {
-            addFarFace(
-                    page, owner, brickIndex,
-                    ConservativeAirGeometry.Face.NEGATIVE_Z, view);
-        }
-        if (z == 3 && view.brickAtWorld(minX, minY, minZ + 4) == null) {
-            addFarFace(
-                    page, owner, brickIndex,
-                    ConservativeAirGeometry.Face.POSITIVE_Z, view);
-        }
-    }
-
-    private void addFarFace(
-            WorkerPageStore.PageState page,
-            WorkerBrickTopology owner,
-            int brickIndex,
-            ConservativeAirGeometry.Face face,
-            TopologyView view
-    ) {
-        ComponentBrickCompiler.CompiledBrick mixed = owner.mixedGeometry;
-        if (mixed == null) {
-            int direct = directSkyColumns(page, brickIndex, face, -1, view)
-                    * 16;
-            if (direct != 0) {
-                farBoundaries.add(
-                        owner.coverageSlot, 0L,
-                        farField.conductanceForPatches(direct, true));
-            }
-            return;
-        }
-        for (int port = 0; port < mixed.facePortCount(); port++) {
-            if (mixed.facePortFace(port) != face) {
+            int plane = axis == 0 ? nx : axis == 1 ? ny : nz;
+            if (owner.blockLayout == null && neighbor.blockLayout == null
+                    && owner.coverageSlot >= 0 && neighbor.coverageSlot >= 0) {
+                addAirPair(owner.coverageSlot, neighbor.coverageSlot, axis, plane, 16, 100, 100);
                 continue;
             }
-            int patches = Integer.bitCount(
-                    mixed.facePortApertureMask(port));
-            int direct = directSkyColumns(
-                    page, brickIndex, face,
-                    mixed.facePortBlockSlot(port), view) > 0
-                    ? patches : 0;
-            if (direct != 0) {
-                farBoundaries.add(
-                        owner.coverageSlot + mixed.facePortComponentId(port),
-                        0L,
-                        farField.conductanceForPatches(direct, true));
+            PageSignatures neighborCut = neighborPage == page ? cut : view.signatures(neighborPage);
+            for (int i = 0; i < 16; i++) {
+                int left = BlockBrickLayout.faceBlock(axis, 3, i);
+                int right = BlockBrickLayout.faceBlock(axis, 0, i);
+                int leftId = cut.get(BlockBrickLayout.pageBlock(brick, left));
+                int rightId = neighborCut.get(BlockBrickLayout.pageBlock(neighborBrick, right));
+                face(owner, left, neighbor, right, axis, plane, leftId, rightId);
             }
         }
-    }
-
-    private static int directSkyColumns(
-            WorkerPageStore.PageState page,
-            int brickIndex,
-            ConservativeAirGeometry.Face face,
-            int faceBlockSlot,
-            TopologyView view
-    ) {
-        if (face != ConservativeAirGeometry.Face.POSITIVE_Y) {
-            return 0;
-        }
-        int firstX = (brickIndex & 3) << 2;
-        int firstZ = (brickIndex >>> 2 & 3) << 2;
-        if (faceBlockSlot >= 0) {
-            int column = firstX + (faceBlockSlot & 3)
-                    | (firstZ + (faceBlockSlot >>> 2)) << 4;
-            return view.firstExposedLocalY(page, column) <= 15 ? 1 : 0;
-        }
-        int direct = 0;
-        for (int z = firstZ; z < firstZ + 4; z++) {
-            for (int x = firstX; x < firstX + 4; x++) {
-                if (view.firstExposedLocalY(page, x | z << 4) <= 15) {
-                    direct++;
-                }
+        // Existing FarField eligibility is direct sky at the absent upper Page.
+        if ((brick>>>4)==3 && view.brickAtWorld(x,y+4,z)==null && owner.coverageSlot>=0) {
+            for(int i=0;i<16;i++) {
+                int b=BlockBrickLayout.faceBlock(1,3,i), slot=owner.transportSlot(b);
+                int column=((x+(b&3))&15)|((z+(b>>>2&3))&15)<<4;
+                if(slot<0 || view.firstExposedLocalY(page,column)>15) continue;
+                int v=signatures.ventilation(cut.get(BlockBrickLayout.pageBlock(brick,b)));
+                farBoundaries.add(slot,0,farField.conductanceForPatches(16,true)*v/100.0);
             }
         }
-        return direct;
+        return new CompiledFragment(new ThermalFragment(Integer.toUnsignedLong(page.fragmentIndex(brick)),
+                freezeAirPairs(),freezeMaterialPairs(),freezePhasePairs(),freezeFarBoundaries(page.pageSlot)),fragmentResolved);
     }
-
+    private void face(WorkerBrickTopology a,int ba,WorkerBrickTopology b,int bb,int axis,int plane,int ia,int ib) {
+        int sa=a.slotAt(ba), sb=b.slotAt(bb);
+        if(sa<0 || sb<0 || sa==sb) return;
+        int va=signatures.ventilation(ia), vb=signatures.ventilation(ib);
+        if(va>0 && vb>0) { addAirPair(sa,sb,axis,plane,1,va,vb); return; }
+        if(va==0 && vb==0) return;
+        int solid=va==0?sa:sb, air=va==0?sb:sa;
+        var profile=materials.profileOrNull(signatures.materialProfileId(va==0?ia:ib));
+        if(profile==null) return;
+        if(profile.model()==MaterialBoundaryRegistry.Model.PHASE_RESERVOIR)
+            phasePairs.add(air,solid,profile.faceConductanceWPerK());
+        else materialPairs.add(Math.min(air,solid),Math.max(air,solid),profile.faceConductanceWPerK());
+    }
+    private void addAirPair(int first,int second,int axis,int plane,double area,int va,int vb) {
+        double da=Math.max(0.5,plane-arena.center(first,axis));
+        double db=Math.max(0.5,arena.center(second,axis)-plane);
+        airPairs.add(Math.min(first,second),Math.max(first,second),area/(da*100.0/va+db*100.0/vb));
+    }
+    private ThermalFragment.MaterialContributions freezeMaterialPairs() {
+        int n=materialPairs.size(); if(n==0) return ThermalFragment.MaterialContributions.EMPTY;
+        int[] a=new int[n],b=new int[n]; double[] g=new double[n];
+        for(int i=0;i<n;i++){ a[i]=(int)materialPairs.first(i); b[i]=(int)materialPairs.second(i); g[i]=materialPairs.value(i); }
+        return new ThermalFragment.MaterialContributions(a,b,g);
+    }
+    private ThermalFragment.PhaseContacts freezePhasePairs() {
+        int n=phasePairs.size(); if(n==0) return ThermalFragment.PhaseContacts.EMPTY;
+        int[] a=new int[n],b=new int[n]; double[] g=new double[n];
+        for(int i=0;i<n;i++){ a[i]=(int)phasePairs.first(i); b[i]=(int)phasePairs.second(i); g[i]=phasePairs.value(i); }
+        return new ThermalFragment.PhaseContacts(a,b,g);
+    }
     private ThermalFragment.AirPairs freezeAirPairs() {
         int count = airPairs.size();
         if (count == 0) {

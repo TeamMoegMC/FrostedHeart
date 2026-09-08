@@ -1,7 +1,6 @@
 /* Copyright (c) 2026 TeamMoeg */
 package com.teammoeg.frostedheart.content.climate.thermal.persistence.minecraft;
 
-import com.teammoeg.frostedheart.content.climate.thermal.geometry.ComponentBrickCompiler;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.PagePublication;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.ThermalPageHandle;
 import com.teammoeg.frostedheart.content.climate.thermal.query.QueryPublication;
@@ -27,10 +26,9 @@ import java.util.function.LongPredicate;
  */
 public final class DormantChunkThermalState {
     private static final String ROOT_TAG = "FrostedHeartThermal";
-    private static final int FORMAT_VERSION = 1;
+    private static final int FORMAT_VERSION = 2;
     private static final int BRICKS = ThermalPageHandle.BASE_BRICK_COUNT;
-    private static final int MAX_EXACT_COMPONENTS = 256;
-    private static final int MAX_VALUES = MAX_EXACT_COMPONENTS + BRICKS;
+    private static final int MAX_VALUES = 320;
     private static final int RESIDUAL_SCALE = 16;
     private static final int PRUNE_RESIDUAL = 4;
     private static final long CACHE_INTERVAL_TICKS = 20L;
@@ -380,353 +378,154 @@ public final class DormantChunkThermalState {
         return Math.pow(2.0D, -elapsed / (halfLifeSeconds * 20.0D));
     }
 
-    public static CaptureResult capture(
-            PagePublication publication,
-            QueryPublication queries,
-            QueryPublication.MutableSample sample,
-            double naturalTemperatureC,
-            CaptureScratch scratch
-    ) {
-        int totalComponents = 0;
-        for (int brick = 0; brick < BRICKS; brick++) {
-            PagePublication.Brick payload = publication.brick(brick);
-            if (payload.coverageSlot() >= 0) {
-                totalComponents += payload.mixedGeometry() == null
-                        ? 1 : payload.mixedGeometry().componentCount();
-            }
-        }
-        boolean exact = totalComponents <= MAX_EXACT_COMPONENTS;
-        int valueCount = 0;
-        int countWrite = 0;
-        long brickMask = 0L;
-        long mixedMask = 0L;
-        long commonSampleTick = -1L;
-
-        for (int brick = 0; brick < BRICKS; brick++) {
-            PagePublication.Brick payload = publication.brick(brick);
-            if (payload.coverageSlot() < 0) {
-                continue;
-            }
-            ComponentBrickCompiler.CompiledBrick mixed = payload.mixedGeometry();
-            int components = mixed == null ? 1 : mixed.componentCount();
-            double weightedTemperature = 0.0D;
-            double totalVolume = 0.0D;
-            boolean retainExact = false;
-            for (int component = 0; component < components; component++) {
-                if (!queries.tryRead(
-                        payload.coverageSlot() + component,
-                        payload.arenaGeneration(),
-                        publication.topologyGeneration(),
-                        sample)) {
+    public static CaptureResult capture(PagePublication publication, QueryPublication queries,
+            QueryPublication.MutableSample sample, double naturalTemperatureC, CaptureScratch scratch) {
+        long brickMask=0, sampleTick=-1;
+        int exactNodes=0;
+        for(int brick=0;brick<64;brick++) {
+            var payload=publication.brick(brick);
+            int n=payload.transportNodeCount();
+            scratch.counts[brick]=0;
+            if(payload.coverageSlot()<0 || n==0) continue;
+            double sum=0; int blocks=0; boolean different=false, retained=false;
+            short firstResidual=0;
+            for(int node=0;node<n;node++) {
+                if(!queries.tryRead(payload.coverageSlot()+node,payload.arenaGeneration(),publication.topologyGeneration(),sample))
                     return CaptureResult.FAILED;
-                }
-                if (commonSampleTick < 0L) {
-                    commonSampleTick = sample.sampleTick();
-                } else if (commonSampleTick != sample.sampleTick()) {
-                    return CaptureResult.FAILED;
-                }
-                double temperature = sample.temperatureC();
-                double volume = mixed == null ? 64.0D : mixed.componentVolume(component);
-                weightedTemperature += temperature * volume;
-                totalVolume += volume;
-                if (exact) {
-                    scratch.temperatures[component] = temperature;
-                    retainExact |= Math.abs(quantizeResidual(
-                            temperature - naturalTemperatureC)) > PRUNE_RESIDUAL;
-                }
+                if(sampleTick<0) sampleTick=sample.sampleTick();
+                else if(sampleTick!=sample.sampleTick()) return CaptureResult.FAILED;
+                long mask=payload.blockLayout()==null ? -1L : payload.blockLayout().nodeBlockMask(node);
+                int weight=Long.bitCount(mask);
+                short residual=quantizeResidual(sample.temperatureC()-naturalTemperatureC);
+                int index=brick*64+node;
+                scratch.nodeMasks[index]=mask; scratch.nodeResiduals[index]=residual;
+                if(node==0) firstResidual=residual; else different|=residual!=firstResidual;
+                retained|=Math.abs(residual)>PRUNE_RESIDUAL;
+                sum+=sample.temperatureC()*weight; blocks+=weight;
             }
-            short mean = quantizeResidual(
-                    weightedTemperature / totalVolume - naturalTemperatureC);
-            boolean retained = exact ? retainExact : Math.abs(mean) > PRUNE_RESIDUAL;
-            if (!retained) {
-                continue;
-            }
-            brickMask |= 1L << brick;
-            scratch.residuals[valueCount++] = mean;
-            if (exact && components > 1) {
-                mixedMask |= 1L << brick;
-                scratch.counts[countWrite++] = (byte) (components - 1);
-                for (int component = 0; component < components; component++) {
-                    scratch.residuals[valueCount++] = quantizeResidual(
-                            scratch.temperatures[component] - naturalTemperatureC);
-                }
+            if(!retained) continue;
+            brickMask|=1L<<brick;
+            scratch.means[brick]=quantizeResidual(sum/blocks-naturalTemperatureC);
+            if(different) { scratch.counts[brick]=(byte)n; exactNodes+=n; }
+        }
+        if(brickMask==0) return new CaptureResult(true,null);
+        int means=Long.bitCount(brickMask);
+        boolean exact=8*((means+exactNodes+3)/4)+8*exactNodes<=640;
+        short[] residuals=new short[means+(exact?exactNodes:0)];
+        long[] masks=new long[exact?exactNodes:0];
+        byte[] counts=new byte[means];
+        int value=0,entry=0,maskIndex=0;
+        for(int brick=0;brick<64;brick++) {
+            if((brickMask & 1L<<brick)==0) continue;
+            residuals[value++]=scratch.means[brick];
+            int count=exact?Byte.toUnsignedInt(scratch.counts[brick]):0;
+            counts[entry++]=(byte)count;
+            for(int node=0;node<count;node++) {
+                masks[maskIndex++]=scratch.nodeMasks[brick*64+node];
+                residuals[value++]=scratch.nodeResiduals[brick*64+node];
             }
         }
-        if (commonSampleTick < 0L || brickMask == 0L) {
-            return new CaptureResult(true, null);
-        }
-        long[] packed = new long[(valueCount + 3) >>> 2];
-        for (int index = 0; index < valueCount; index++) {
-            putResidual(packed, index, scratch.residuals[index]);
-        }
-        SectionEntry entry = new SectionEntry(
-                commonSampleTick,
-                false,
-                brickMask,
-                mixedMask,
-                Arrays.copyOf(scratch.counts, countWrite),
-                packed);
-        return new CaptureResult(true, entry);
+        return new CaptureResult(true,new SectionEntry(sampleTick,false,brickMask,counts,pack(residuals),masks));
     }
-
     public static final class CaptureScratch {
-        public CaptureScratch() {
-        }
-
-        final double[] temperatures = new double[MAX_EXACT_COMPONENTS];
-        final short[] residuals = new short[MAX_VALUES];
-        final byte[] counts = new byte[BRICKS];
+        final long[] nodeMasks=new long[4096];
+        final short[] nodeResiduals=new short[4096], means=new short[64];
+        final byte[] counts=new byte[64];
     }
-
-    public record CaptureResult(boolean valid, SectionEntry entry) {
-        private static final CaptureResult FAILED = new CaptureResult(false, null);
+    public record CaptureResult(boolean valid,SectionEntry entry) {
+        private static final CaptureResult FAILED=new CaptureResult(false,null);
     }
-
+    /** Spatial temperatures, independent of transient node ordinals. */
     public static final class SectionEntry {
-        private final long savedGameTick;
+        private final long savedGameTick, brickMask;
         private final boolean sourceSustained;
-        private final long brickMask;
-        private final long mixedMask;
-        private final byte[] componentCountMinusOne;
-        private final long[] residuals;
-        private final short[] valueOffsets;
-        private final short[] warmestResiduals;
-
-        public SectionEntry(
-                long savedGameTick,
-                boolean sourceSustained,
-                long brickMask,
-                long mixedMask,
-                byte[] componentCountMinusOne,
-                long[] residuals
-        ) {
-            this.savedGameTick = Math.max(0L, savedGameTick);
-            this.sourceSustained = sourceSustained;
-            this.brickMask = brickMask;
-            this.mixedMask = mixedMask;
-            this.componentCountMinusOne = componentCountMinusOne;
-            this.residuals = residuals;
-            if (mixedMask == 0L) {
-                valueOffsets = null;
-                warmestResiduals = null;
-            } else {
-                valueOffsets = new short[BRICKS];
-                warmestResiduals = new short[BRICKS];
-                buildMixedLookup();
+        private final byte[] exactCounts;
+        private final long[] residuals, blockMasks;
+        private final short[] valueOffsets=new short[64], maskOffsets=new short[64];
+        public SectionEntry(long savedGameTick,boolean sourceSustained,long brickMask,
+                byte[] exactCounts,long[] residuals,long[] blockMasks) {
+            this.savedGameTick=Math.max(0,savedGameTick); this.sourceSustained=sourceSustained;
+            this.brickMask=brickMask; this.exactCounts=exactCounts; this.residuals=residuals; this.blockMasks=blockMasks;
+            int value=0,mask=0,rank=0;
+            for(int brick=0;brick<64;brick++) if(hasBrick(brick)) {
+                valueOffsets[brick]=(short)value; maskOffsets[brick]=(short)mask;
+                int n=Byte.toUnsignedInt(exactCounts[rank++]); value+=1+n; mask+=n;
             }
         }
-
         private static SectionEntry decode(CompoundTag tag) {
-            long brickMask = tag.getLong("bricks");
-            long mixedMask = tag.getLong("mixed");
-            byte[] counts = tag.getByteArray("counts");
-            long[] residuals = tag.getLongArray("residuals");
-            if (brickMask == 0L || (mixedMask & ~brickMask) != 0L
-                    || counts.length != Long.bitCount(mixedMask)) {
-                return null;
+            long bricks=tag.getLong("bricks"); byte[] counts=tag.getByteArray("counts");
+            long[] values=tag.getLongArray("residuals"), masks=tag.getLongArray("blocks");
+            if(bricks==0 || counts.length!=Long.bitCount(bricks)) return null;
+            int exact=0;
+            for(byte count:counts) { int n=Byte.toUnsignedInt(count); if(n>64) return null; exact+=n; }
+            if(masks.length!=exact || values.length!=(counts.length+exact+3)/4 || 8*(values.length+masks.length)>640) return null;
+            int at=0;
+            for(byte count:counts) {
+                long seen=0;
+                for(int n=0;n<Byte.toUnsignedInt(count);n++) {
+                    long m=masks[at++]; if(m==0 || (seen&m)!=0) return null; seen|=m;
+                }
             }
-            int values = Long.bitCount(brickMask);
-            int components = Long.bitCount(brickMask) - counts.length;
-            for (byte count : counts) {
-                int componentCount = Byte.toUnsignedInt(count) + 1;
-                values += componentCount;
-                components += componentCount;
-            }
-            if (components > MAX_EXACT_COMPONENTS
-                    || values > MAX_VALUES
-                    || residuals.length != (values + 3) >>> 2) {
-                return null;
-            }
-            try {
-                return new SectionEntry(
-                        Math.max(0L, tag.getLong("tick")),
-                        tag.getBoolean("supported"),
-                        brickMask,
-                        mixedMask,
-                        counts,
-                        residuals);
-            } catch (IllegalArgumentException ignored) {
-                return null;
-            }
+            return new SectionEntry(tag.getLong("tick"),tag.getBoolean("supported"),bricks,counts,values,masks);
         }
-
         private CompoundTag encode(int sectionY) {
-            CompoundTag result = new CompoundTag();
-            result.putInt("y", sectionY);
-            result.putLong("tick", savedGameTick);
-            result.putBoolean("supported", sourceSustained);
-            result.putLong("bricks", brickMask);
-            result.putLong("mixed", mixedMask);
-            result.putByteArray("counts", componentCountMinusOne);
-            result.putLongArray("residuals", residuals);
-            return result;
+            CompoundTag tag=new CompoundTag(); tag.putInt("y",sectionY); tag.putLong("tick",savedGameTick);
+            tag.putBoolean("supported",sourceSustained); tag.putLong("bricks",brickMask);
+            tag.putByteArray("counts",exactCounts); tag.putLongArray("residuals",residuals); tag.putLongArray("blocks",blockMasks);
+            return tag;
         }
-
-        public boolean hasBrick(int brick) {
-            return (brickMask & 1L << brick) != 0L;
+        public boolean hasBrick(int brick) { return (brickMask & 1L<<brick)!=0; }
+        private int exactCount(int brick) { return Byte.toUnsignedInt(exactCounts[Long.bitCount(brickMask & lowerBits(brick))]); }
+        private short meanResidual(int brick) { return residualAt(residuals,valueOffsets[brick]); }
+        public double meanTemperatureC(int brick,double natural,double factor) {
+            return natural+meanResidual(brick)/(double)RESIDUAL_SCALE*factor;
         }
-
-        public int componentCount(int brick) {
-            if (!hasBrick(brick)) {
-                return 0;
+        public void fillBlockTemperatures(int brick,double natural,double factor,double[] target) {
+            Arrays.fill(target,0,64,meanTemperatureC(brick,natural,factor));
+            int count=exactCount(brick), offset=valueOffsets[brick]+1, masks=maskOffsets[brick];
+            for(int i=0;i<count;i++) {
+                double t=natural+residualAt(residuals,offset+i)/(double)RESIDUAL_SCALE*factor;
+                long mask=blockMasks[masks+i];
+                while(mask!=0) { int b=Long.numberOfTrailingZeros(mask); mask&=mask-1; target[b]=t; }
             }
-            if ((mixedMask & 1L << brick) == 0L) {
-                return 1;
-            }
-            int rank = Long.bitCount(mixedMask & lowerBits(brick));
-            return Byte.toUnsignedInt(componentCountMinusOne[rank]) + 1;
         }
-
-        public double meanTemperatureC(
-                int brick,
-                double naturalTemperatureC,
-                double factor
-        ) {
-            return naturalTemperatureC
-                    + meanResidual(brick) / (double) RESIDUAL_SCALE * factor;
-        }
-
-        public double componentTemperatureC(
-                int brick,
-                int component,
-                int currentComponentCount,
-                double naturalTemperatureC,
-                double factor
-        ) {
-            int storedCount = componentCount(brick);
-            short residual = meanResidual(brick);
-            if (storedCount == currentComponentCount && storedCount > 1
-                    && component >= 0 && component < storedCount) {
-                residual = residualAt(residuals, valueOffset(brick) + 1 + component);
-            }
-            return naturalTemperatureC
-                    + residual / (double) RESIDUAL_SCALE * factor;
-        }
-
         public short warmestResidual(int brick) {
-            if (!hasBrick(brick)) {
-                throw new IllegalArgumentException("Brick is not stored");
-            }
-            return mixedMask == 0L
-                    ? meanResidual(brick)
-                    : warmestResiduals[brick];
+            int n=exactCount(brick); short warmest=n==0?meanResidual(brick):Short.MIN_VALUE;
+            for(int i=0;i<n;i++) warmest=(short)Math.max(warmest,residualAt(residuals,valueOffsets[brick]+1+i));
+            return warmest;
         }
-
-        private short meanResidual(int brick) {
-            if (!hasBrick(brick)) {
-                throw new IllegalArgumentException("Brick is not stored");
-            }
-            return residualAt(residuals, valueOffset(brick));
-        }
-
-        private int valueOffset(int brick) {
-            return mixedMask == 0L
-                    ? Long.bitCount(brickMask & lowerBits(brick))
-                    : Short.toUnsignedInt(valueOffsets[brick]) - 1;
-        }
-
-        private void buildMixedLookup() {
-            int value = 0;
-            int count = 0;
-            for (int brick = 0; brick < BRICKS; brick++) {
-                if (!hasBrick(brick)) {
-                    continue;
-                }
-                valueOffsets[brick] = (short) (value + 1);
-                short warmest = residualAt(residuals, value++);
-                if ((mixedMask & 1L << brick) != 0L) {
-                    int components = Byte.toUnsignedInt(
-                            componentCountMinusOne[count++]) + 1;
-                    warmest = Short.MIN_VALUE;
-                    for (int component = 0; component < components; component++) {
-                        warmest = (short) Math.max(
-                                warmest, residualAt(residuals, value++));
-                    }
-                }
-                warmestResiduals[brick] = warmest;
-            }
-        }
-
         private SectionEntry withSourceSustained(boolean value) {
-            return sourceSustained == value ? this : new SectionEntry(
-                    savedGameTick,
-                    value,
-                    brickMask,
-                    mixedMask,
-                    componentCountMinusOne,
-                    residuals);
+            return value==sourceSustained?this:new SectionEntry(savedGameTick,value,brickMask,exactCounts,residuals,blockMasks);
         }
-
-        private SectionEntry rebase(
-                long gameTick,
-                double factor,
-                boolean applySourceSupport
-        ) {
-            short[] output = new short[MAX_VALUES];
-            byte[] counts = new byte[BRICKS];
-            int outputValues = 0;
-            int outputCounts = 0;
-            long nextBricks = 0L;
-            long nextMixed = 0L;
-            for (int brick = 0; brick < BRICKS; brick++) {
-                if (!hasBrick(brick)) {
-                    continue;
+        private SectionEntry rebase(long tick,double factor,boolean support) {
+            short[] output=new short[MAX_VALUES]; byte[] counts=new byte[64]; long[] masks=new long[blockMasks.length];
+            int values=0,entries=0,maskCount=0; long retainedBricks=0;
+            for(int brick=0;brick<64;brick++) {
+                if(!hasBrick(brick)) continue;
+                int n=exactCount(brick); double scale=support && warmestResidual(brick)>0?1:factor;
+                boolean retain=false;
+                for(int i=0;i<=n;i++) {
+                    short v=scaleResidual(residualAt(residuals,valueOffsets[brick]+i),scale);
+                    output[values+i]=v; retain|=Math.abs(v)>PRUNE_RESIDUAL;
                 }
-                int offset = valueOffset(brick);
-                int components = componentCount(brick);
-                int vectorLength = components > 1 ? components + 1 : 1;
-                double scale = applySourceSupport && warmestResidual(brick) > 0
-                        ? 1.0D : factor;
-                boolean retained = false;
-                for (int vector = 0; vector < vectorLength; vector++) {
-                    short transformed = scaleResidual(
-                            residualAt(residuals, offset + vector), scale);
-                    output[outputValues + vector] = transformed;
-                    if ((components == 1 || vector != 0)
-                            && Math.abs(transformed) > PRUNE_RESIDUAL) {
-                        retained = true;
-                    }
-                }
-                if (!retained) {
-                    continue;
-                }
-                nextBricks |= 1L << brick;
-                if (components > 1) {
-                    nextMixed |= 1L << brick;
-                    counts[outputCounts++] = (byte) (components - 1);
-                }
-                outputValues += vectorLength;
+                if(!retain) continue;
+                retainedBricks|=1L<<brick; counts[entries++]=(byte)n; values+=1+n;
+                System.arraycopy(blockMasks,maskOffsets[brick],masks,maskCount,n); maskCount+=n;
             }
-            if (nextBricks == 0L) {
-                return null;
-            }
-            long[] packed = new long[(outputValues + 3) >>> 2];
-            for (int index = 0; index < outputValues; index++) {
-                putResidual(packed, index, output[index]);
-            }
-            return new SectionEntry(
-                    Math.max(0L, gameTick),
-                    false,
-                    nextBricks,
-                    nextMixed,
-                    Arrays.copyOf(counts, outputCounts),
-                    packed);
+            return retainedBricks==0?null:new SectionEntry(tick,false,retainedBricks,Arrays.copyOf(counts,entries),
+                    pack(Arrays.copyOf(output,values)),Arrays.copyOf(masks,maskCount));
         }
-
-        private static boolean contentEquals(SectionEntry first, SectionEntry second) {
-            if (first == second) {
-                return true;
-            }
-            return first != null && second != null
-                    && first.savedGameTick == second.savedGameTick
-                    && first.sourceSustained == second.sourceSustained
-                    && first.brickMask == second.brickMask
-                    && first.mixedMask == second.mixedMask
-                    && Arrays.equals(
-                            first.componentCountMinusOne,
-                            second.componentCountMinusOne)
-                    && Arrays.equals(first.residuals, second.residuals);
+        private static boolean contentEquals(SectionEntry a,SectionEntry b) {
+            return a==b || a!=null && b!=null && a.savedGameTick==b.savedGameTick
+                    && a.sourceSustained==b.sourceSustained && a.brickMask==b.brickMask
+                    && Arrays.equals(a.exactCounts,b.exactCounts) && Arrays.equals(a.residuals,b.residuals)
+                    && Arrays.equals(a.blockMasks,b.blockMasks);
         }
+    }
+    private static long[] pack(short[] values) {
+        long[] result=new long[(values.length+3)/4];
+        for(int i=0;i<values.length;i++) putResidual(result,i,values[i]);
+        return result;
     }
 
     private static short quantizeResidual(double residualC) {

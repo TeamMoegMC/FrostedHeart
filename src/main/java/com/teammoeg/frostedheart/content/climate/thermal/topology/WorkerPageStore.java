@@ -1,8 +1,9 @@
 /* Copyright (c) 2026 TeamMoeg */
 package com.teammoeg.frostedheart.content.climate.thermal.topology;
 
-import com.teammoeg.frostedheart.content.climate.thermal.geometry.ConservativeAirGeometry;
+import com.teammoeg.frostedheart.content.climate.thermal.mesh.BlockFace;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.PagePublication;
+import com.teammoeg.frostedheart.content.climate.thermal.mesh.BlockBrickLayout;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.PageSignatures;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.ThermalCellArena;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.ThermalPageHandle;
@@ -108,22 +109,22 @@ public final class WorkerPageStore implements AutoCloseable {
                 continue;
             }
             orDesired(page.handle.sectionKey(), page.residentBrickMask);
-            collectInternalFaces(page, active, ConservativeAirGeometry.Face.NEGATIVE_X,
+            collectInternalFaces(page, active, BlockFace.NEGATIVE_X,
                     X_MIN, page.residentBrickMask << 1, -1,
                     arena, referenceTemperatureC, refineHighC, releaseLowC);
-            collectInternalFaces(page, active, ConservativeAirGeometry.Face.POSITIVE_X,
+            collectInternalFaces(page, active, BlockFace.POSITIVE_X,
                     X_MAX, page.residentBrickMask >>> 1, 1,
                     arena, referenceTemperatureC, refineHighC, releaseLowC);
-            collectInternalFaces(page, active, ConservativeAirGeometry.Face.NEGATIVE_Z,
+            collectInternalFaces(page, active, BlockFace.NEGATIVE_Z,
                     Z_MIN, page.residentBrickMask << 4, -4,
                     arena, referenceTemperatureC, refineHighC, releaseLowC);
-            collectInternalFaces(page, active, ConservativeAirGeometry.Face.POSITIVE_Z,
+            collectInternalFaces(page, active, BlockFace.POSITIVE_Z,
                     Z_MAX, page.residentBrickMask >>> 4, 4,
                     arena, referenceTemperatureC, refineHighC, releaseLowC);
-            collectInternalFaces(page, active, ConservativeAirGeometry.Face.NEGATIVE_Y,
+            collectInternalFaces(page, active, BlockFace.NEGATIVE_Y,
                     Y_MIN, page.residentBrickMask << 16, -16,
                     arena, referenceTemperatureC, refineHighC, releaseLowC);
-            collectInternalFaces(page, active, ConservativeAirGeometry.Face.POSITIVE_Y,
+            collectInternalFaces(page, active, BlockFace.POSITIVE_Y,
                     Y_MAX, page.residentBrickMask >>> 16, 16,
                     arena, referenceTemperatureC, refineHighC, releaseLowC);
         }
@@ -135,7 +136,7 @@ public final class WorkerPageStore implements AutoCloseable {
     private void collectInternalFaces(
             PageState page,
             long active,
-            ConservativeAirGeometry.Face face,
+            BlockFace face,
             long boundaryMask,
             long alignedResident,
             int internalOffset,
@@ -169,7 +170,7 @@ public final class WorkerPageStore implements AutoCloseable {
     private void requestFace(
             PageState page,
             int ownerBrick,
-            ConservativeAirGeometry.Face face,
+            BlockFace face,
             long targetSection,
             int targetBrick,
             ThermalCellArena arena,
@@ -190,7 +191,7 @@ public final class WorkerPageStore implements AutoCloseable {
     private static double faceResidualC(
             PageState page,
             int brick,
-            ConservativeAirGeometry.Face face,
+            BlockFace face,
             ThermalCellArena arena,
             double referenceTemperatureC
     ) {
@@ -198,8 +199,8 @@ public final class WorkerPageStore implements AutoCloseable {
         if (!topology.resolved || topology.coverageSlot < 0) {
             return 0.0D;
         }
-        if (topology.mixedGeometry == null) {
-            if (face == ConservativeAirGeometry.Face.POSITIVE_Y
+        if (topology.blockLayout == null) {
+            if (face == BlockFace.POSITIVE_Y
                     && allTopColumnsDirectSky(page, brick)) {
                 return 0.0D;
             }
@@ -208,22 +209,15 @@ public final class WorkerPageStore implements AutoCloseable {
                             - page.naturalTemperatureC);
         }
         double residual = 0.0D;
-        for (int port = 0;
-             port < topology.mixedGeometry.facePortCount(); port++) {
-            if (topology.mixedGeometry.facePortFace(port) != face
-                    || topology.mixedGeometry.facePortApertureMask(port) == 0
-                    || face == ConservativeAirGeometry.Face.POSITIVE_Y
-                    && topPortDirectSky(
-                            page, brick,
-                            topology.mixedGeometry.facePortBlockSlot(port))) {
-                continue;
-            }
-            int slot = topology.coverageSlot
-                    + topology.mixedGeometry.facePortComponentId(port);
-            residual = Math.max(
-                    residual,
-                    Math.abs(arena.temperatureC(slot, referenceTemperatureC)
-                            - page.naturalTemperatureC));
+        long seen=0;
+        int axis=face.ordinal()/2, side=(face.ordinal()&1)==0?0:3;
+        for (int i=0;i<16;i++) {
+            if (face==BlockFace.POSITIVE_Y && topPortDirectSky(page,brick,i)) continue;
+            int node=topology.blockLayout.transportAt(BlockBrickLayout.faceBlock(axis,side,i));
+            if(node<0 || (seen & 1L<<node)!=0) continue;
+            seen|=1L<<node;
+            int slot=topology.coverageSlot+node;
+            residual=Math.max(residual,Math.abs(arena.temperatureC(slot,referenceTemperatureC)-page.naturalTemperatureC));
         }
         return residual;
     }
@@ -329,7 +323,7 @@ public final class WorkerPageStore implements AutoCloseable {
 
     private static long neighborSection(
             long sectionKey,
-            ConservativeAirGeometry.Face face
+            BlockFace face
     ) {
         int x = net.minecraft.core.SectionPos.x(sectionKey);
         int y = net.minecraft.core.SectionPos.y(sectionKey);
@@ -346,7 +340,7 @@ public final class WorkerPageStore implements AutoCloseable {
 
     private static int boundaryTargetBrick(
             int ownerBrick,
-            ConservativeAirGeometry.Face face
+            BlockFace face
     ) {
         return switch (face) {
             case NEGATIVE_X -> ownerBrick + 3;
@@ -478,7 +472,8 @@ public final class WorkerPageStore implements AutoCloseable {
         return previous.resolved != next.resolved
                 || previous.coverageSlot != next.coverageSlot
                 || previous.coverageGeneration != next.coverageGeneration
-                || previous.mixedGeometry != next.mixedGeometry
+                || previous.blockLayout != next.blockLayout
+                || previous.transportNodeCount != next.transportNodeCount
                 || previous.phaseCandidates != next.phaseCandidates;
     }
 
@@ -490,7 +485,8 @@ public final class WorkerPageStore implements AutoCloseable {
                 topology.resolved ? topology.coverageSlot : -1,
                 topology.resolved ? topology.coverageGeneration : 0,
                 signaturePayload,
-                topology.resolved ? topology.mixedGeometry : null,
+                topology.resolved ? topology.blockLayout : null,
+                topology.resolved ? topology.transportNodeCount : 0,
                 topology.resolved
                         ? topology.phaseCandidates
                         : PagePublication.PhaseCandidates.EMPTY,
@@ -501,7 +497,7 @@ public final class WorkerPageStore implements AutoCloseable {
             int blockX,
             int blockY,
             int blockZ,
-            ConservativeAirGeometry.Face face,
+            BlockFace face,
             ThermalSignatureTable signatures
     ) {
         long sectionKey = net.minecraft.core.SectionPos.asLong(
@@ -527,42 +523,8 @@ public final class WorkerPageStore implements AutoCloseable {
         int blockInBrick = localX & 3
                 | (localZ & 3) << 2
                 | (localY & 3) << 4;
-        int firstSlot = -1;
-        int secondSlot = -1;
-        for (int vertical = 0; vertical < 4; vertical++) {
-            for (int horizontal = 0; horizontal < 4; horizontal++) {
-                int microcell = faceMicrocell(face, horizontal, vertical);
-                int region = signatures.componentOrdinal(
-                        signatureId, microcell);
-                if (region == 0xff || brick.coverageSlot < 0) {
-                    continue;
-                }
-                int slot;
-                if (brick.mixedGeometry == null) {
-                    slot = brick.coverageSlot;
-                } else {
-                    int component = brick.mixedGeometry.compiledComponentAt(
-                            blockInBrick, region);
-                    if (component < 0) {
-                        continue;
-                    }
-                    slot = brick.coverageSlot + component;
-                }
-                if (slot == firstSlot || slot == secondSlot) {
-                    continue;
-                }
-                if (firstSlot < 0) {
-                    firstSlot = slot;
-                } else if (secondSlot < 0) {
-                    secondSlot = slot;
-                } else {
-                    return PORT_TOPOLOGY_UNAVAILABLE;
-                }
-            }
-        }
-        return firstSlot < 0
-                ? PORT_BLOCKED
-                : secondSlot < 0 ? firstSlot : PORT_TOPOLOGY_UNAVAILABLE;
+        int slot=brick.transportSlot(blockInBrick);
+        return slot<0 ? PORT_BLOCKED : slot;
     }
 
     public int lifecycleGenerationAt(int blockX, int blockY, int blockZ) {
@@ -578,20 +540,7 @@ public final class WorkerPageStore implements AutoCloseable {
         return page.lifecycleGeneration;
     }
 
-    private static int faceMicrocell(
-            ConservativeAirGeometry.Face face,
-            int horizontal,
-            int vertical
-    ) {
-        return switch (face) {
-            case NEGATIVE_X -> vertical << 4 | horizontal << 2;
-            case POSITIVE_X -> vertical << 4 | horizontal << 2 | 3;
-            case NEGATIVE_Y -> horizontal;
-            case POSITIVE_Y -> 3 << 4 | horizontal;
-            case NEGATIVE_Z -> vertical << 4 | horizontal;
-            case POSITIVE_Z -> vertical << 4 | 3 << 2 | horizontal;
-        };
-    }
+
 
     PageState stageAdmission(ThermalInputBatch.PageAdmission admission) {
         requireOpen();

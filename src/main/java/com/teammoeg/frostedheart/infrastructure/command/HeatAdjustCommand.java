@@ -30,6 +30,8 @@ import com.teammoeg.chorda.text.Components;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.MinecraftThermalInput;
 import com.teammoeg.frostedheart.content.climate.thermal.field.ThermalAnalyticField;
+import com.teammoeg.frostedheart.content.climate.thermal.field.ThermalFieldKey;
+import net.minecraft.resources.ResourceLocation;
 import com.teammoeg.frostedheart.content.climate.thermal.field.ThermalAnalyticField.CombineMode;
 import com.teammoeg.frostedheart.content.climate.thermal.field.ThermalAnalyticField.Shape;
 
@@ -43,6 +45,11 @@ import net.minecraftforge.fml.common.Mod;
 
 @Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public class HeatAdjustCommand {
+    private static final ResourceLocation FIELD_PROVIDER = new ResourceLocation(FHMain.MODID, "heat_adjust");
+
+    private static ThermalFieldKey fieldKey(BlockPos position) {
+        return new ThermalFieldKey(FIELD_PROVIDER, 0, position.asLong(), 0);
+    }
     @SubscribeEvent
     public static void register(RegisterCommandsEvent event) {
         CommandDispatcher<CommandSourceStack> dispatcher = event.getDispatcher();
@@ -51,7 +58,7 @@ public class HeatAdjustCommand {
                 .then(Commands.argument("position", BlockPosArgument.blockPos()).executes((ct) -> {
                     BlockPos position = BlockPosArgument.getBlockPos(ct, "position");
                     MinecraftThermalInput.removeGameplayAnalyticField(
-                            ct.getSource().getLevel(), position.asLong());
+                            ct.getSource().getLevel(), fieldKey(position));
                     return Command.SINGLE_SUCCESS;
                 }));
 
@@ -60,7 +67,7 @@ public class HeatAdjustCommand {
                 .then(Commands.argument("position", BlockPosArgument.blockPos()).executes((ct) -> {
                     BlockPos position = BlockPosArgument.getBlockPos(ct, "position");
                     MinecraftThermalInput.removeGameplayAnalyticField(
-                            ct.getSource().getLevel(), position.asLong());
+                            ct.getSource().getLevel(), fieldKey(position));
                     return Command.SINGLE_SUCCESS;
                 }).then(Commands.argument("range", IntegerArgumentType.integer(1))
                         .then(Commands.argument("temperature", IntegerArgumentType.integer()).executes((ct) -> {
@@ -135,7 +142,7 @@ public class HeatAdjustCommand {
         MinecraftThermalInput.upsertGameplayAnalyticField(
                 source.getLevel(),
                 new ThermalAnalyticField(
-                        position.asLong(),
+                        fieldKey(position),
                         0,
                         CombineMode.OVERRIDE,
                         shape,
@@ -156,7 +163,8 @@ public class HeatAdjustCommand {
                 field.centerX(), field.centerY(), field.centerZ());
         source.sendSuccess(
                 () -> Components.str(
-                        "center:" + center
+                        "key:" + field.key() + ",mode:" + field.combineMode()
+                                + ",center:" + center
                                 + ",shape:" + field.shape().name().toLowerCase()
                                 + ",radius:" + field.radius()
                                 + ",temperature:" + field.temperatureC()),

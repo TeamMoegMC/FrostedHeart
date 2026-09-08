@@ -10,7 +10,7 @@
 
 package com.teammoeg.frostedheart.content.climate.thermal.mesh;
 
-import com.teammoeg.frostedheart.content.climate.thermal.geometry.ComponentBrickCompiler;
+
 
 import java.util.Arrays;
 
@@ -43,8 +43,7 @@ public final class ThermalCellArena {
     private int[] minimumY;
     private int[] minimumZ;
     private byte[] cellKinds;
-    private int[] mixedComponentIds;
-    private ComponentBrickCompiler.CompiledBrick[] mixedBrickGeometries;
+    private BlockBrickLayout[] mixedBrickGeometries;
     private byte[] allocationState;
     private long[] liveSlots;
     private long[] liveWordSummary;
@@ -69,15 +68,13 @@ public final class ThermalCellArena {
         minimumY = new int[initialCapacity];
         minimumZ = new int[initialCapacity];
         cellKinds = new byte[initialCapacity];
-        mixedComponentIds = new int[initialCapacity];
-        mixedBrickGeometries = new ComponentBrickCompiler.CompiledBrick[initialCapacity];
+        mixedBrickGeometries = new BlockBrickLayout[initialCapacity];
         phases = new ThermalPhaseReservoirStore(initialCapacity);
         allocationState = new byte[initialCapacity];
         liveSlots = new long[(initialCapacity + 63) >>> 6];
         liveWordSummary = new long[(liveSlots.length + 63) >>> 6];
         Arrays.fill(pageSlots, NO_SLOT);
         Arrays.fill(supportRefs, NO_SLOT);
-        Arrays.fill(mixedComponentIds, NO_SLOT);
     }
 
     public int highWaterMark() {
@@ -145,7 +142,7 @@ public final class ThermalCellArena {
         int airCells = switch (layout.airKind) {
             case NONE -> 0;
             case REGULAR -> 1;
-            case MIXED -> layout.mixedGeometry.componentCount();
+            case MIXED -> layout.mixedGeometry.transportNodeCount();
         };
         int totalCells = Math.addExact(
                 airCells,
@@ -183,12 +180,9 @@ public final class ThermalCellArena {
                 int support = write;
                 mixedBrickGeometries[support] = layout.mixedGeometry;
                 for (int component = 0;
-                     component < layout.mixedGeometry.componentCount();
+                     component < layout.mixedGeometry.transportNodeCount();
                      component++) {
-                    double capacity = finiteProduct(
-                            "mixed component capacity",
-                            layout.airCapacityJPerBlockK,
-                            layout.mixedGeometry.componentVolume(component));
+                    double capacity = layout.transportCapacityJPerK[component];
                     writeMixedComponent(
                             write++,
                             pageSlot,
@@ -197,17 +191,13 @@ public final class ThermalCellArena {
                             layout.minX,
                             layout.minY,
                             layout.minZ,
-                            component,
                             capacity,
                             finiteProduct(
                                     "initial enthalpy", capacity, airOffset));
                 }
             }
 
-            int[] materialSlots = layout.materialCount == 0
-                    ? NO_SLOTS : new int[layout.materialCount];
             for (int index = 0; index < layout.materialCount; index++) {
-                materialSlots[index] = write;
                 double offset = layout.materialInitialTemperatureC[index]
                         - referenceTemperatureC;
                 writeMaterialPole(
@@ -246,7 +236,6 @@ public final class ThermalCellArena {
             }
             return new BrickAllocation(
                     new ArenaSpan(firstSlot, totalCells),
-                    materialSlots,
                     phaseSlots);
         } catch (RuntimeException | Error failure) {
             clearRange(firstSlot, required);
@@ -379,11 +368,6 @@ public final class ThermalCellArena {
         };
     }
 
-    public boolean isMixedComponent(int slot) {
-        requireAllocatedSlot(slot);
-        return cellKinds[slot] == MIXED_COMPONENT;
-    }
-
     public boolean isMaterialPole(int slot) {
         requireAllocatedSlot(slot);
         return isMaterialKind(cellKinds[slot]);
@@ -511,17 +495,13 @@ public final class ThermalCellArena {
         if (cellKinds[slot] == REGULAR_CELL) {
             return origin + 2.0D;
         }
-        ComponentBrickCompiler.CompiledBrick geometry = mixedGeometry(supportRefs[slot]);
-        int component = mixedComponentIds[slot];
-        return origin + switch (axis) {
-            case 0 -> geometry.componentCentroidX(component);
-            case 1 -> geometry.componentCentroidY(component);
-            case 2 -> geometry.componentCentroidZ(component);
-            default -> throw new IllegalArgumentException("axis must be 0, 1, or 2");
-        };
+        int support = supportRefs[slot];
+        BlockBrickLayout geometry = mixedGeometry(support);
+        // Transport nodes occupy consecutive slots starting at their Brick support.
+        return origin + geometry.center(slot - support, axis);
     }
 
-    ComponentBrickCompiler.CompiledBrick mixedGeometry(int supportRef) {
+    BlockBrickLayout mixedGeometry(int supportRef) {
         if (!isMixedSupport(supportRef)) {
             throw new IllegalArgumentException("slot is not a mixed-Brick support: " + supportRef);
         }
@@ -612,7 +592,6 @@ public final class ThermalCellArena {
         minimumY = Arrays.copyOf(minimumY, grown);
         minimumZ = Arrays.copyOf(minimumZ, grown);
         cellKinds = Arrays.copyOf(cellKinds, grown);
-        mixedComponentIds = Arrays.copyOf(mixedComponentIds, grown);
         mixedBrickGeometries = Arrays.copyOf(mixedBrickGeometries, grown);
         phases.ensureCapacity(grown);
         allocationState = Arrays.copyOf(allocationState, grown);
@@ -621,7 +600,6 @@ public final class ThermalCellArena {
                 liveWordSummary, (liveSlots.length + 63) >>> 6);
         Arrays.fill(pageSlots, oldCapacity, grown, NO_SLOT);
         Arrays.fill(supportRefs, oldCapacity, grown, NO_SLOT);
-        Arrays.fill(mixedComponentIds, oldCapacity, grown, NO_SLOT);
     }
 
     private void releaseSpan(ArenaSpan span) {
@@ -756,7 +734,6 @@ public final class ThermalCellArena {
             minimumY[slot] = 0;
             minimumZ[slot] = 0;
             cellKinds[slot] = REGULAR_CELL;
-            mixedComponentIds[slot] = NO_SLOT;
             mixedBrickGeometries[slot] = null;
             phases.clear(slot);
         }
@@ -810,7 +787,6 @@ public final class ThermalCellArena {
         minimumY[slot] = minY;
         minimumZ[slot] = minZ;
         cellKinds[slot] = REGULAR_CELL;
-        mixedComponentIds[slot] = NO_SLOT;
         mixedBrickGeometries[slot] = null;
     }
 
@@ -822,7 +798,6 @@ public final class ThermalCellArena {
             int minX,
             int minY,
             int minZ,
-            int componentId,
             double capacity,
             double initialEnthalpyJ
     ) {
@@ -836,7 +811,6 @@ public final class ThermalCellArena {
         minimumY[slot] = minY;
         minimumZ[slot] = minZ;
         cellKinds[slot] = MIXED_COMPONENT;
-        mixedComponentIds[slot] = componentId;
     }
 
     private void writeMaterialPole(
@@ -859,7 +833,6 @@ public final class ThermalCellArena {
         minimumY[slot] = blockY;
         minimumZ[slot] = blockZ;
         cellKinds[slot] = MATERIAL_CELL;
-        mixedComponentIds[slot] = NO_SLOT;
         mixedBrickGeometries[slot] = null;
     }
 
@@ -885,7 +858,6 @@ public final class ThermalCellArena {
         minimumY[slot] = brickMinY;
         minimumZ[slot] = brickMinZ;
         cellKinds[slot] = PHASE_RESERVOIR;
-        mixedComponentIds[slot] = NO_SLOT;
         mixedBrickGeometries[slot] = null;
         phases.write(
                 slot,
@@ -927,11 +899,10 @@ public final class ThermalCellArena {
 
     public record BrickAllocation(
             ArenaSpan cellSpan,
-            int[] materialPoleSlots,
             int[] phaseReservoirSlots
     ) {
         private static final BrickAllocation EMPTY = new BrickAllocation(
-                ArenaSpan.EMPTY, NO_SLOTS, NO_SLOTS);
+                ArenaSpan.EMPTY, NO_SLOTS);
     }
 
     private static boolean isMaterialKind(byte kind) {

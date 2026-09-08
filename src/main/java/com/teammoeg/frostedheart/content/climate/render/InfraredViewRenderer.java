@@ -68,6 +68,8 @@ public final class InfraredViewRenderer {
             new long[FHRequestInfraredViewDataSyncPacket.PRESENCE_WORDS];
     private static final long[] knownDormantPresence =
             new long[FHRequestInfraredViewDataSyncPacket.PRESENCE_WORDS];
+    private static final long[] knownRefreshPages =
+            new long[FHRequestInfraredViewDataSyncPacket.PRESENCE_WORDS];
     private static long[] dormantBrickMasks;
     private static long dormantRevision;
     private static final long[] dirtyUploadPages =
@@ -168,7 +170,8 @@ public final class InfraredViewRenderer {
                         requestId,
                         forceFull || !deltaBaselineValid,
                         infraredEpoch,
-                        knownPresence, dormantRevision, knownDormantPresence));
+                        knownPresence, dormantRevision, knownDormantPresence,
+                        knownRefreshPages));
     }
 
     public static void updateData(
@@ -180,7 +183,8 @@ public final class InfraredViewRenderer {
             boolean full,
             long[] presence,
             byte[] brickRecords,
-            long responseDormantRevision
+            long responseDormantRevision,
+            long[] refreshPages
     ) {
         RenderSystem.assertOnRenderThread();
         if (!open || responseRequestId != requestId
@@ -221,7 +225,9 @@ public final class InfraredViewRenderer {
                 if (brickDecoder.isDormantSection()) {
                     applyDormantSection(page, brickDecoder.dormantBrickMask(),
                             brickDecoder.isDormantReplacement(),
-                            !full && responseInfraredEpoch == 0 && presenceBit(knownPresence, page));
+                            !full && responseInfraredEpoch == 0 && presenceBit(knownPresence, page)
+                                    && !presenceBit(knownRefreshPages, page)
+                                    && !presenceBit(refreshPages, page));
                 } else {
                     dormantBrickMasks[page] &= ~(1L << (localBrickIndex & 63));
                     writeBrick(localBrickIndex, decodedBrick, (short) 0);
@@ -234,6 +240,7 @@ public final class InfraredViewRenderer {
             System.arraycopy(
                     presence, 0, knownPresence, 0, knownPresence.length);
         }
+        System.arraycopy(refreshPages, 0, knownRefreshPages, 0, knownRefreshPages.length);
         textureCenterChunkX = centerChunkX;
         textureCenterChunkZ = centerChunkZ;
         textureCenterSectionY = centerSectionY;
@@ -277,6 +284,7 @@ public final class InfraredViewRenderer {
         mirror.clear();
         Arrays.fill(dormantBrickMasks, 0L);
         Arrays.fill(knownDormantPresence, 0L);
+        Arrays.fill(knownRefreshPages, 0L);
         while (mirror.hasRemaining()) {
             mirror.put(InfraredBrickCodec.INVALID_TEMPERATURE);
         }
@@ -658,6 +666,7 @@ public final class InfraredViewRenderer {
         infraredEpoch = 0;
         dormantRevision = 0L;
         Arrays.fill(knownDormantPresence, 0L);
+        Arrays.fill(knownRefreshPages, 0L);
         if (dormantBrickMasks != null) Arrays.fill(dormantBrickMasks, 0L);
         Arrays.fill(knownPresence, 0L);
         Arrays.fill(dirtyUploadPages, 0L);

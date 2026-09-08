@@ -129,6 +129,11 @@ public final class InfraredBrickCodec {
             return output.writerIndex();
         }
 
+        /** Discard an uncommitted Page if its physical publication changed while reading. */
+        public void rewind(int offset) {
+            output.writerIndex(offset);
+        }
+
         public byte[] toByteArray() {
             return ByteBufUtil.getBytes(output, 0, output.writerIndex());
         }

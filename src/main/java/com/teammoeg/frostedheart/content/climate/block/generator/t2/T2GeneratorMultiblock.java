@@ -19,6 +19,8 @@
 
 package com.teammoeg.frostedheart.content.climate.block.generator.t2;
 
+import com.teammoeg.frostedheart.content.climate.block.generator.GeneratorData;
+
 import com.teammoeg.chorda.multiblock.CMultiblockHelper;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.bootstrap.common.FHMultiblocks.Registration;
@@ -45,14 +47,12 @@ public class T2GeneratorMultiblock extends HeatingMultiblock {
 
     @Override
     public void disassemble(Level world, BlockPos origin, boolean mirrored, Direction clickDirectionAtCreation) {
+        GeneratorData.unregister(world, getMasterPos(origin, mirrored, clickDirectionAtCreation));
         //FHMain.LOGGER.info("Running");
 
         CMultiblockHelper.getBEHelperOptional(world, origin).ifPresent(te -> {
             T2GeneratorState state = (T2GeneratorState) te.getState();
             if (state != null) {
-                state.getDataNoCheck().ifPresent(data -> {
-                    data.actualPos = null;    // 取消绑定，城镇 tick 将跳过
-                });
 
             	if(state.manager!=null) {
             		//FHMain.LOGGER.info("invalidated network T2GeneratorMultiblock.");

@@ -19,6 +19,8 @@ public final class MinecraftSignatureCapture {
     private final ThermalSignatureTable signatureTable;
     private final PageSignatures.Builder pageBuilder;
     private final int[] brickValues = new int[PageSignatures.ENTRIES_PER_BRICK];
+    private final int[] firstCenter = new int[64];
+    private int[] nextCenter = new int[64];
     private final int airSignatureId;
     private final BlockPos.MutableBlockPos position =
             new BlockPos.MutableBlockPos();
@@ -100,35 +102,37 @@ public final class MinecraftSignatureCapture {
         return resolveId(chunk.getBlockState(position));
     }
 
-    public PageSignatures withResolvedBlock(
-            PageSignatures base,
-            int blockIndex,
-            int signatureId
-    ) {
-        int localX = blockIndex & 15;
-        int localZ = blockIndex >>> 4 & 15;
-        int localY = blockIndex >>> 8 & 15;
-        int brick = localX >>> 2
-                | (localZ >>> 2) << 2
-                | (localY >>> 2) << 4;
-        int write = 0;
-        int minX = (brick & 3) << 2;
-        int minZ = (brick >>> 2 & 3) << 2;
-        int minY = (brick >>> 4 & 3) << 2;
-        for (int y = minY; y < minY + 4; y++) {
-            for (int z = minZ; z < minZ + 4; z++) {
-                for (int x = minX; x < minX + 4; x++) {
-                    brickValues[write++] = base.get(x | z << 4 | y << 8);
-                }
-            }
+    public PageSignatures withResolvedBlocks(PageSignatures base,
+            short[] centers, int[] signatureIds, int count) {
+        if (count == 0) return base;
+        java.util.Arrays.fill(firstCenter, -1);
+        if (nextCenter.length < count) nextCenter = new int[count];
+        long changedBricks = 0;
+        for (int i = count - 1; i >= 0; i--) {
+            int block = Short.toUnsignedInt(centers[i]);
+            int brick = (block & 15) >>> 2
+                    | ((block >>> 4 & 15) >>> 2) << 2
+                    | ((block >>> 8 & 15) >>> 2) << 4;
+            nextCenter[i] = firstCenter[brick];
+            firstCenter[brick] = i;
+            changedBricks |= 1L << brick;
         }
-        int within = (localX & 3)
-                | (localZ & 3) << 2
-                | (localY & 3) << 4;
-        brickValues[within] = signatureId;
-        return pageBuilder.reset(base)
-                .setBrick(brick, brickValues)
-                .buildBricks();
+        pageBuilder.reset(base);
+        while (changedBricks != 0) {
+            int brick = Long.numberOfTrailingZeros(changedBricks);
+            changedBricks &= changedBricks - 1;
+            for (int b = 0; b < 64; b++) {
+                brickValues[b] = base.get(
+                        com.teammoeg.frostedheart.content.climate.thermal.mesh.BlockBrickLayout.pageBlock(brick, b));
+            }
+            for (int i = firstCenter[brick]; i >= 0; i = nextCenter[i]) {
+                int block = Short.toUnsignedInt(centers[i]);
+                int within = (block & 3) | (block >>> 4 & 3) << 2 | (block >>> 8 & 3) << 4;
+                brickValues[within] = signatureIds[i];
+            }
+            pageBuilder.setBrick(brick, brickValues);
+        }
+        return pageBuilder.buildBricks();
     }
 
     private int resolveId(BlockState state) {

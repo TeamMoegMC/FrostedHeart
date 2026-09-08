@@ -30,6 +30,7 @@ public final class FHResponseInfraredViewDataSyncPacket implements CMessage {
     private final long[] presence;
     private final byte[] brickRecords;
     private final long dormantRevision;
+    private final long[] refreshPages;
 
     public FHResponseInfraredViewDataSyncPacket(
             int requestId,
@@ -44,7 +45,8 @@ public final class FHResponseInfraredViewDataSyncPacket implements CMessage {
                 snapshot.full(),
                 snapshot.presence(),
                 snapshot.brickRecords(),
-                snapshot.dormantRevision());
+                snapshot.dormantRevision(),
+                snapshot.refreshPages());
     }
 
     private FHResponseInfraredViewDataSyncPacket(
@@ -56,7 +58,8 @@ public final class FHResponseInfraredViewDataSyncPacket implements CMessage {
             boolean full,
             long[] presence,
             byte[] brickRecords,
-            long dormantRevision
+            long dormantRevision,
+            long[] refreshPages
     ) {
         if (requestId < 0 || infraredEpoch < 0
                 || presence == null || brickRecords == null
@@ -65,7 +68,10 @@ public final class FHResponseInfraredViewDataSyncPacket implements CMessage {
                         != FHRequestInfraredViewDataSyncPacket.PRESENCE_WORDS
                 || full && presence.length
                         != FHRequestInfraredViewDataSyncPacket.PRESENCE_WORDS
-                || brickRecords.length > InfraredBrickCodec.MAX_PAYLOAD_BYTES) {
+                || brickRecords.length > InfraredBrickCodec.MAX_PAYLOAD_BYTES
+                || refreshPages == null
+                || refreshPages.length
+                        != FHRequestInfraredViewDataSyncPacket.PRESENCE_WORDS) {
             throw new IllegalArgumentException("invalid infrared response");
         }
         this.requestId = requestId;
@@ -77,6 +83,7 @@ public final class FHResponseInfraredViewDataSyncPacket implements CMessage {
         this.presence = presence;
         this.brickRecords = brickRecords;
         this.dormantRevision = dormantRevision;
+        this.refreshPages = refreshPages;
     }
 
     public FHResponseInfraredViewDataSyncPacket(FriendlyByteBuf buffer) {
@@ -98,6 +105,10 @@ public final class FHResponseInfraredViewDataSyncPacket implements CMessage {
         brickRecords = buffer.readByteArray(
                 InfraredBrickCodec.MAX_PAYLOAD_BYTES);
         dormantRevision = buffer.readVarLong();
+        refreshPages = new long[FHRequestInfraredViewDataSyncPacket.PRESENCE_WORDS];
+        for (int index = 0; index < refreshPages.length; index++) {
+            refreshPages[index] = buffer.readLong();
+        }
     }
 
     @Override
@@ -116,6 +127,9 @@ public final class FHResponseInfraredViewDataSyncPacket implements CMessage {
         }
         buffer.writeByteArray(brickRecords);
         buffer.writeVarLong(dormantRevision);
+        for (long word : refreshPages) {
+            buffer.writeLong(word);
+        }
     }
 
     @Override
@@ -133,7 +147,8 @@ public final class FHResponseInfraredViewDataSyncPacket implements CMessage {
                     full,
                     presence,
                     brickRecords,
-                    dormantRevision);
+                    dormantRevision,
+                    refreshPages);
             if (RenderSystem.isOnRenderThread()) {
                 update.run();
             } else {

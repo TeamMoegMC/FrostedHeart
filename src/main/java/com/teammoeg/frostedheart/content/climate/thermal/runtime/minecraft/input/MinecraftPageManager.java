@@ -148,7 +148,7 @@ public final class MinecraftPageManager implements AutoCloseable {
         input.updateDormantSourceSupport(sectionKey, supported);
     }
 
-    ThermalPageHandle handle(long sectionKey) {
+    public ThermalPageHandle handle(long sectionKey) {
         PageEntry page = pages.get(sectionKey);
         return page == null ? null : page.handle;
     }
@@ -624,31 +624,23 @@ public final class MinecraftPageManager implements AutoCloseable {
                 fullRemaining--;
                 continue;
             }
-            while (centerRemaining > 0) {
-                int center = page.nextUnresolvedCenter();
-                if (center < 0) {
-                    break;
-                }
-                int minX = SectionPos.sectionToBlockCoord(
-                        SectionPos.x(sectionKey));
-                int minY = SectionPos.sectionToBlockCoord(
-                        SectionPos.y(sectionKey));
-                int minZ = SectionPos.sectionToBlockCoord(
-                        SectionPos.z(sectionKey));
+            int minX = SectionPos.sectionToBlockCoord(SectionPos.x(sectionKey));
+            int minY = SectionPos.sectionToBlockCoord(SectionPos.y(sectionKey));
+            int minZ = SectionPos.sectionToBlockCoord(SectionPos.z(sectionKey));
+            for (int center = 0; center < page.centerCount && centerRemaining > 0; center++) {
+                if (page.signatureIds[center] != UNCAPTURED_SIGNATURE) continue;
                 page.signatureIds[center] = signatures.resolveSignatureId(
                         minX + (page.centers[center] & 15),
                         minY + (page.centers[center] >>> 8 & 15),
                         minZ + (page.centers[center] >>> 4 & 15));
-                page.signatures = signatures.withResolvedBlock(
-                        page.signatures,
-                        Short.toUnsignedInt(page.centers[center]),
-                        page.signatureIds[center]);
                 centerRemaining--;
             }
             if (page.nextUnresolvedCenter() >= 0) {
                 captureQueue.add(sectionKey);
                 continue;
             }
+            page.signatures = signatures.withResolvedBlocks(
+                    page.signatures, page.centers, page.signatureIds, page.centerCount);
             readyCaptures.add(sectionKey);
         }
     }

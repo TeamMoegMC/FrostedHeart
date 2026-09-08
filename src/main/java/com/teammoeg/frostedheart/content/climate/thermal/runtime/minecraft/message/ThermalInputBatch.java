@@ -182,14 +182,8 @@ public final class ThermalInputBatch {
                     brick, naturalTemperatureC, decayFactor);
         }
 
-        public double componentTemperatureC(
-                int brick,
-                int component,
-                int currentComponentCount
-        ) {
-            return entry.componentTemperatureC(
-                    brick, component, currentComponentCount,
-                    naturalTemperatureC, decayFactor);
+        public void fillBlockTemperatures(int brick,double[] target) {
+            entry.fillBlockTemperatures(brick,naturalTemperatureC,decayFactor,target);
         }
 
         public boolean hasBrick(int brick) {

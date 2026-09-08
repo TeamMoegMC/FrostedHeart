@@ -1,7 +1,6 @@
 /* Copyright (c) 2026 TeamMoeg */
 package com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft;
 
-import com.teammoeg.frostedheart.content.climate.thermal.geometry.ConservativeAirGeometry;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.MaterialBoundaryRegistry;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.PagePublication;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.PageSignatures;
@@ -526,10 +525,7 @@ public final class FrostedHeartMinecraftThermalInputGameTests {
     private static Fixture fixture() {
         ThermalSignatureTable.Builder builder = ThermalSignatureTable.builder();
         int airId = builder.intern(fullAir());
-        int solidId = builder.intern(new ResolvedThermalSignature(
-                new ConservativeAirGeometry.Resolution(
-                        ConservativeAirGeometry.Status.RESOLVED, List.of()),
-                0, 0));
+        int solidId = builder.intern(new ResolvedThermalSignature(0, 0));
         ThermalSignatureTable signatures = builder.build();
         ThermalCellArena arena = new ThermalCellArena(256);
         QueryPublication query = QueryPublication.tryCreate(
@@ -539,9 +535,9 @@ public final class FrostedHeartMinecraftThermalInputGameTests {
                 16);
         ThermalDimensionEngine engine = new ThermalDimensionEngine(
                 1L, 0L, arena, signatures,
-                new MaterialBoundaryRegistry(List.of(), List.of()),
+                new MaterialBoundaryRegistry(List.of()),
                 new ThermalTopologyParameters(
-                        64, 1_200.0D, 0.0D, 1.0D, 0.25D,
+                        1_200.0D, 0.0D, 1.0D,
                         new BuoyancyConductance.Parameters(0.25D, 4.0D, 10.0D),
                         8, 4),
                 new FarFieldSettings(1.0D, 1.0D, 16.0D),
@@ -579,13 +575,7 @@ public final class FrostedHeartMinecraftThermalInputGameTests {
     }
 
     private static ResolvedThermalSignature fullAir() {
-        return new ResolvedThermalSignature(
-                new ConservativeAirGeometry.Resolution(
-                        ConservativeAirGeometry.Status.RESOLVED,
-                        List.of(new ConservativeAirGeometry.AirComponent(
-                                0, -1L, 0xffff, 0xffff, 0xffff,
-                                0xffff, 0xffff, 0xffff))),
-                0, 0);
+        return new ResolvedThermalSignature(100, 0);
     }
 
     private static ThermalCellArena.BrickAllocation regular(

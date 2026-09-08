@@ -20,7 +20,7 @@
 package com.teammoeg.frostedheart.content.climate.block.generator.t1;
 
 import com.teammoeg.chorda.multiblock.CMultiblock;
-import com.teammoeg.chorda.multiblock.CMultiblockHelper;
+import com.teammoeg.frostedheart.content.climate.block.generator.GeneratorData;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.bootstrap.common.FHMultiblocks;
 import com.teammoeg.frostedheart.content.climate.block.generator.HeatingMultiblock;
@@ -46,14 +46,7 @@ public class T1GeneratorMultiblock extends HeatingMultiblock {
 
     @Override
     public void disassemble(Level world, BlockPos origin, boolean mirrored, Direction clickDirectionAtCreation) {
-        CMultiblockHelper.getBEHelperOptional(world, origin).ifPresent(te -> {
-            T1GeneratorState state = (T1GeneratorState) te.getState();
-            if (state != null) {
-                state.getDataNoCheck().ifPresent(data -> {
-                    data.actualPos = null;    // 取消绑定，城镇 tick 将跳过
-                });
-            }
-        });
+        GeneratorData.unregister(world, getMasterPos(origin, mirrored, clickDirectionAtCreation));
         super.disassemble(world, origin, mirrored, clickDirectionAtCreation);
     }
 
