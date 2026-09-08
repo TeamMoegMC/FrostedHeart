@@ -29,6 +29,8 @@ import com.teammoeg.frostedheart.content.climate.thermal.topology.FarFieldSettin
 import com.teammoeg.frostedheart.content.climate.thermal.topology.ThermalTopologyParameters;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.climate.WorldTemperature;
+import com.teammoeg.frostedheart.bootstrap.common.FHItems;
+import com.teammoeg.frostedheart.content.climate.player.thermalitem.WearableThermalState;
 import com.teammoeg.frostedheart.util.mixin.ICampfireExtra;
 
 import net.minecraft.core.BlockPos;
@@ -37,6 +39,8 @@ import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.GameRules;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.CampfireBlock;
@@ -352,7 +356,7 @@ public final class FrostedHeartMinecraftThermalInputGameTests {
                 sourceAir.getZ() + 0.5D);
         MinecraftThermalInput.gameplayPlayerEnvironment(
                 player, pageNatural, new ThermalEnvironmentSample());
-        helper.runAfterDelay(1_200, () -> {
+        helper.runAfterDelay(1_200, () -> helper.succeedWhen(() -> {
             double source = MinecraftThermalInput.gameplayPassiveEnvironment(
                     level, sourceAir, pageNatural);
             double neighbor = MinecraftThermalInput.gameplayPassiveEnvironment(
@@ -367,8 +371,7 @@ public final class FrostedHeartMinecraftThermalInputGameTests {
                             + neighbor + ", natural=" + pageNatural
                             + ", source=" + source);
             MinecraftThermalInput.closeActiveLevel(level);
-            helper.succeed();
-        });
+        }));
     }
 
     @GameTest(
@@ -433,6 +436,73 @@ public final class FrostedHeartMinecraftThermalInputGameTests {
                     .set(randomTickSpeed, level.getServer());
             MinecraftThermalInput.onPhysicalSourceRemoved(level, source);
             MinecraftThermalInput.closeActiveLevel(level);
+        });
+    }
+
+    @GameTest(
+            template = TEMPLATE,
+            batch = BATCH + "_dropped_reservoir",
+            timeoutTicks = 100)
+    public static void droppedWarmStoneReceivesCampfireRadiation(
+            GameTestHelper helper
+    ) {
+        ServerLevel level = helper.getLevel();
+        MinecraftThermalInput.closeActiveLevel(level);
+        BlockPos source = helper.absolutePos(new BlockPos(2, 2, 2));
+        BlockPos itemPosition = source.east(2);
+        level.setBlockAndUpdate(
+                source,
+                Blocks.CAMPFIRE.defaultBlockState()
+                        .setValue(CampfireBlock.LIT, true));
+        ((ICampfireExtra) level.getBlockEntity(source)).setLifeTime(20_000);
+
+        double initial = WorldTemperature.naturalAir(level, itemPosition);
+        ItemStack stack = new ItemStack(FHItems.warm_stone.get());
+        new WearableThermalState(initial, initial).writeTo(stack);
+        ItemEntity item = new ItemEntity(
+                level,
+                itemPosition.getX() + 0.5D,
+                source.getY() + 0.5D,
+                itemPosition.getZ() + 0.5D,
+                stack);
+        item.setNoGravity(true);
+        item.setDeltaMovement(0.0D, 0.0D, 0.0D);
+        item.setDefaultPickUpDelay();
+        helper.assertTrue(level.addFreshEntity(item),
+                "dropped warm stone must enter the test level");
+
+        ServerPlayer player = FakePlayerFactory.getMinecraft(level);
+        player.setPos(
+                source.getX() + 8.5D,
+                source.getY(),
+                source.getZ() + 0.5D);
+        MinecraftThermalInput.gameplayPlayerEnvironment(
+                player,
+                WorldTemperature.naturalAir(level, player.blockPosition()),
+                new ThermalEnvironmentSample());
+
+        helper.runAfterDelay(70, () -> {
+            try {
+                WearableThermalState warmed = WearableThermalState.read(
+                        item.getItem()).orElseThrow();
+                ThermalEnvironmentSample sample =
+                        new ThermalEnvironmentSample();
+                MinecraftThermalInput.gameplayItemEnvironment(
+                        item,
+                        WorldTemperature.naturalAir(
+                                level, item.blockPosition()),
+                        sample);
+                helper.assertTrue(sample.radiantFluxWPerM2() > 0.0D,
+                        "Campfire must provide positive dropped-item radiation");
+                helper.assertTrue(
+                        Double.compare(
+                                warmed.surfaceTemperatureC(), initial) != 0,
+                        "the exact ItemEntity stack must advance its state");
+            } finally {
+                item.discard();
+                MinecraftThermalInput.closeActiveLevel(level);
+            }
+            helper.succeed();
         });
     }
 

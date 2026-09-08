@@ -659,6 +659,7 @@ lifecycles.
 | dormant query | O(1), allocation-free after lazy section cache |
 | dormant activation | one bounded pass over that section's stored values per disk load |
 | player cadence | stable UUID phase offset over the 20 ticks |
+| dropped reservoir query | one point; 64 same-tick quarter-block samples, 32 candidate visits, top 4, at most 4 rays, and a separate 64-receiver witness cache |
 
 Capacity growth and fatal generation rebuilds are exceptional structural work.
 They are measured separately from routine door/block/source/player workloads.

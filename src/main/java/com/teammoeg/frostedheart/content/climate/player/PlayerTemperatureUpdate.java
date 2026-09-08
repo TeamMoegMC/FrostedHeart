@@ -19,11 +19,14 @@
 
 package com.teammoeg.frostedheart.content.climate.player;
 
+import com.teammoeg.chorda.CompatModule;
 import com.teammoeg.chorda.util.CUtils;
 import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.bootstrap.common.FHMobEffects;
+import com.teammoeg.frostedheart.compat.curios.CuriosCompat;
 import com.teammoeg.frostedheart.content.climate.network.FHBodyDataSyncPacket;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData.BodyPart;
+import com.teammoeg.frostedheart.content.climate.player.thermalitem.WearableThermalExchangeHandler;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 
 import net.minecraft.server.level.ServerPlayer;
@@ -35,6 +38,10 @@ import net.minecraftforge.event.TickEvent.PlayerTickEvent;
 import net.minecraftforge.fml.LogicalSide;
 
 public class PlayerTemperatureUpdate {
+    private static final WearableThermalExchangeHandler
+            WEARABLE_THERMAL_EXCHANGE_HANDLER =
+            new WearableThermalExchangeHandler();
+
     /**
      * Perform temperature effect
      *
@@ -239,6 +246,19 @@ public class PlayerTemperatureUpdate {
 
             PlayerTemperatureComputation.updatePlayer(
                     player, data, intervalTicks);
+            boolean invulnerable = player.isInvulnerable()
+                    || player.getAbilities().invulnerable;
+            if (CompatModule.isCuriosLoaded()
+                    && WearableThermalExchangeHandler.allowsPlayerExchange(
+                            player.isCreative(), player.isSpectator(), invulnerable)) {
+                ItemStack reservoirStack = CuriosCompat
+                        .getWearableThermalReservoirInWarmStoneSlot(player);
+                WEARABLE_THERMAL_EXCHANGE_HANDLER.exchangeInto(
+                        data,
+                        reservoirStack,
+                        data.getSampledAirTemperatureC(),
+                        intervalTicks / 20.0D);
+            }
             if (data.shouldSyncThermalState()) {
                 FHNetwork.INSTANCE.sendPlayer(
                         player, new FHBodyDataSyncPacket(player));

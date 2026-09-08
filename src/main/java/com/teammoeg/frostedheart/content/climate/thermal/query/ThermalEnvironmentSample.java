@@ -31,4 +31,10 @@ public final class ThermalEnvironmentSample {
         airTemperatureC = temperature;
     }
 
+    public void copyFrom(ThermalEnvironmentSample source) {
+        airAvailable = source.airAvailable;
+        airTemperatureC = source.airTemperatureC;
+        radiantFluxWPerM2 = source.radiantFluxWPerM2;
+    }
+
 }

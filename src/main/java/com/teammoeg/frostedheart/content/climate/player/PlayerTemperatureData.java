@@ -414,6 +414,22 @@ public class PlayerTemperatureData implements NBTSerializable {
         forceThermalSync();
     }
 
+    /** Atomically applies one whole-body temperature delta to all five parts. */
+    public boolean applyUniformBodyTemperatureDelta(float temperatureDeltaC) {
+        if (!Float.isFinite(temperatureDeltaC)) return false;
+        for (BodyPart part : BodyPart.VALUES) {
+            float next = getBodyTempByPart(part) + temperatureDeltaC;
+            if (!Float.isFinite(next)) return false;
+        }
+        for (BodyPart part : BodyPart.VALUES) {
+            setBodyTempByPart(
+                    part, getBodyTempByPart(part) + temperatureDeltaC);
+        }
+        refreshCoreTemperature();
+        forceThermalSync();
+        return true;
+    }
+
     public float getAbsoluteCoreBodyTemp() {
         return coreBodyTemp
                 + (float) PlayerTemperatureComputation.CORE_REFERENCE_TEMPERATURE_C;

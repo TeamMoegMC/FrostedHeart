@@ -24,6 +24,7 @@ Persistent capabilities remain separate from thermal mesh state:
 | `MinecraftThermalInput` | runtime only | Page handles, capture queues, worker mailbox, and query publication |
 | `MinecraftGameplayFields` | transient world lifetime | shared generator/boss/command index, retained across physical-runtime rebuilds |
 | `DormantChunkThermalState` | chunk NBT | bounded Air-temperature residual checkpoints for retired Pages |
+| warm stone / hot-water bag | ItemStack NBT | version-1 initialized flag plus absolute core and surface temperatures |
 
 Arena enthalpy, source bindings, analytic fields, material/phase state, and
 worker topology are never serialized. `DormantChunkThermalState` writes only
@@ -83,6 +84,16 @@ ServerStoppedEvent
   MinecraftGameplayFields.stop()
   closeShared() joins the bounded thermal workers
 ```
+
+Wearable reservoirs advance on the configured player-temperature cadence in
+`PlayerTemperatureUpdate`, after the ordinary five-part body computation and
+before the existing quantized body packet decision. No reservoir-specific
+network packet exists; ItemStack/Curios synchronization remains authoritative.
+Inventory stacks and exact single `ItemEntity` stacks use their own staggered
+20-tick cadence. Dropped sampling keeps at most 64 quarter-block positions per
+level and tick, plus a separate 64-receiver radiation witness cache; overflow
+still receives composed air with zero direct radiation. These caches are
+transient and are cleared with the level runtime.
 
 `TemperatureThreadingPool.java` is intentionally retained but never initialized
 or polled. It is not part of the new lifecycle. No synchronous thermal dispatch

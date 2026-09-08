@@ -18,6 +18,10 @@ import java.util.Objects;
 
 /** Bounded main-thread direct-radiation query and receiver witness cache. */
 public final class RadiationService implements AutoCloseable {
+    public static final int ITEM_MAXIMUM_RECEIVERS = 64;
+    public static final int ITEM_MAXIMUM_CANDIDATE_VISITS = 32;
+    public static final int ITEM_MAXIMUM_CANDIDATES = 4;
+    public static final int ITEM_MAXIMUM_RAYS = 4;
     public static final long NO_SECTION_REVISION = Long.MIN_VALUE;
     public static final long STATIC_BLOCK_REVISION = -1L;
     private static final double FOUR_PI = 4.0D * Math.PI;
@@ -30,6 +34,8 @@ public final class RadiationService implements AutoCloseable {
     private final OcclusionTracer tracer;
     private final ThermalMemoryBudget.Reservation reservation;
     private final Long2ObjectOpenHashMap<ReceiverCache> receiverCaches =
+            new Long2ObjectOpenHashMap<>();
+    private final Long2ObjectOpenHashMap<ReceiverCache> itemReceiverCaches =
             new Long2ObjectOpenHashMap<>();
     private final long[] candidateKeys;
     private final long[] candidateRevisions;
@@ -49,6 +55,9 @@ public final class RadiationService implements AutoCloseable {
     private int candidateCount;
     private int candidateVisits;
     private boolean candidateLimited;
+    private int discoveryMaximumCandidateVisits;
+    private int discoveryMaximumCandidates;
+    private boolean discoveryItem;
     private long sampleSequence;
     private boolean closed;
 
@@ -111,6 +120,12 @@ public final class RadiationService implements AutoCloseable {
                         96L,
                         Math.multiplyExact(
                                 witnessesPerReceiver, witnessBytes)));
+        long itemReceiverBytes = Math.multiplyExact(
+                ITEM_MAXIMUM_RECEIVERS,
+                Math.addExact(
+                        96L,
+                        Math.multiplyExact(
+                                ITEM_MAXIMUM_CANDIDATES, witnessBytes)));
         long scratchBytes = Math.addExact(
                 Math.multiplyExact(
                         parameters.maximumCandidatesPerReceiver(), 64L),
@@ -118,7 +133,9 @@ public final class RadiationService implements AutoCloseable {
                         parameters.maximumWitnessSectionsPerRay(), 16L));
         return Math.addExact(
                 revisionBytes,
-                Math.addExact(receiverBytes, scratchBytes));
+                Math.addExact(
+                        Math.addExact(receiverBytes, itemReceiverBytes),
+                        scratchBytes));
     }
 
     public void samplePlayer(
@@ -141,7 +158,10 @@ public final class RadiationService implements AutoCloseable {
         requireFinite("receiverFeetY", receiverFeetY);
         requireFinite("receiverEyeY", receiverEyeY);
         requireFinite("receiverZ", receiverZ);
-        discover(receiverX, receiverFeetY, receiverEyeY, receiverZ);
+        discover(
+                receiverX, receiverFeetY, receiverEyeY, receiverZ,
+                parameters.maximumCandidateVisits(),
+                parameters.maximumCandidatesPerReceiver(), false);
         ReceiverCache cache = null;
         double totalFlux = 0.0D;
         int rays = 0;
@@ -176,7 +196,10 @@ public final class RadiationService implements AutoCloseable {
                 } else {
                     if (cache == null) {
                         cache = receiverCache(
-                                receiverKey, receiverGeneration);
+                                receiverCaches,
+                                receiverKey, receiverGeneration,
+                                parameters.maximumReceivers(),
+                                parameters.maximumCandidatesPerReceiver() * 3);
                     }
                     int quarterX = floorQuarter(receiverX);
                     int quarterY = floorQuarter(targetY);
@@ -231,7 +254,103 @@ public final class RadiationService implements AutoCloseable {
         sampleSequence = Math.incrementExact(sampleSequence);
     }
 
-    private void discover(double x, double feetY, double eyeY, double z) {
+    /** Samples one item point without consuming player receiver cache capacity. */
+    public void sampleItem(
+            long receiverKey,
+            int receiverGeneration,
+            double receiverX,
+            double receiverY,
+            double receiverZ,
+            MutableSample out
+    ) {
+        requireOwnerThread();
+        requireOpen();
+        Objects.requireNonNull(out, "out").clear();
+        if (receiverGeneration < 0) {
+            throw new IllegalArgumentException(
+                    "receiver generation must be non-negative");
+        }
+        requireFinite("receiverX", receiverX);
+        requireFinite("receiverY", receiverY);
+        requireFinite("receiverZ", receiverZ);
+        discover(
+                receiverX, receiverY, receiverY, receiverZ,
+                ITEM_MAXIMUM_CANDIDATE_VISITS,
+                ITEM_MAXIMUM_CANDIDATES, true);
+        ReceiverCache cache = null;
+        double totalFlux = 0.0D;
+        int rays = 0;
+        for (int candidate = 0; candidate < candidateCount; candidate++) {
+            if (rays++ >= ITEM_MAXIMUM_RAYS) break;
+            boolean staticBlock = candidateRevisions[candidate]
+                    == STATIC_BLOCK_REVISION;
+            TraceStatus status;
+            if (staticBlock) {
+                traceScratch.clear();
+                tracer.trace(
+                        candidateX[candidate], candidateY[candidate],
+                        candidateZ[candidate], receiverX, receiverY, receiverZ,
+                        parameters.maximumDdaStepsPerRay(), false, traceScratch);
+                status = traceScratch.status();
+            } else {
+                if (cache == null) {
+                    cache = receiverCache(
+                            itemReceiverCaches,
+                            receiverKey, receiverGeneration,
+                            ITEM_MAXIMUM_RECEIVERS,
+                            ITEM_MAXIMUM_CANDIDATES);
+                }
+                int quarterX = floorQuarter(receiverX);
+                int quarterY = floorQuarter(receiverY);
+                int quarterZ = floorQuarter(receiverZ);
+                int witness = cache.find(
+                        candidateKeys[candidate], candidateRevisions[candidate],
+                        0, quarterX, quarterY, quarterZ);
+                if (witness >= 0 && cache.revisionsMatch(witness, tracer)) {
+                    status = cache.status(witness);
+                    cache.touch(witness, sampleSequence);
+                } else {
+                    traceScratch.clear();
+                    tracer.trace(
+                            candidateX[candidate], candidateY[candidate],
+                            candidateZ[candidate], receiverX, receiverY, receiverZ,
+                            parameters.maximumDdaStepsPerRay(), true, traceScratch);
+                    status = traceScratch.status();
+                    cache.store(
+                            witness,
+                            candidateKeys[candidate], candidateRevisions[candidate],
+                            0, quarterX, quarterY, quarterZ,
+                            traceScratch, sampleSequence);
+                }
+            }
+            if (status == TraceStatus.VISIBLE) {
+                double dx = receiverX - candidateX[candidate];
+                double dy = receiverY - candidateY[candidate];
+                double dz = receiverZ - candidateZ[candidate];
+                double distanceSquared = Math.max(
+                        dx * dx + dy * dy + dz * dz,
+                        parameters.minimumDistanceBlocksSquared());
+                totalFlux = finiteSum(
+                        totalFlux,
+                        flux(
+                                candidatePower[candidate],
+                                candidateDirectionalBound[candidate],
+                                distanceSquared));
+            }
+        }
+        out.finish(totalFlux);
+        sampleSequence = Math.incrementExact(sampleSequence);
+    }
+
+    private void discover(
+            double x,
+            double feetY,
+            double eyeY,
+            double z,
+            int maximumCandidateVisits,
+            int maximumCandidates,
+            boolean item
+    ) {
         discoveryX = x;
         discoveryFeetY = feetY;
         discoveryEyeY = eyeY;
@@ -239,6 +358,9 @@ public final class RadiationService implements AutoCloseable {
         candidateCount = 0;
         candidateVisits = 0;
         candidateLimited = false;
+        discoveryMaximumCandidateVisits = maximumCandidateVisits;
+        discoveryMaximumCandidates = maximumCandidates;
+        discoveryItem = item;
         double range = parameters.maximumRangeBlocks();
         int minX = floorSection(x - range);
         int maxX = floorSection(x + range);
@@ -258,7 +380,7 @@ public final class RadiationService implements AutoCloseable {
                             sectionX, sectionY, sectionZ, sourceVisitor);
                     if (candidateLimited
                             && candidateVisits
-                                    >= parameters.maximumCandidateVisits()) {
+                                    >= discoveryMaximumCandidateVisits) {
                         break discovery;
                     }
                 }
@@ -270,7 +392,7 @@ public final class RadiationService implements AutoCloseable {
                     eyeY,
                     z,
                     Math.max(0,
-                            parameters.maximumCandidateVisits()
+                            discoveryMaximumCandidateVisits
                                     - candidateVisits),
                     sourceVisitor);
         }
@@ -285,7 +407,7 @@ public final class RadiationService implements AutoCloseable {
             double radiativePowerW,
             double directionalUpperBound
     ) {
-        if (candidateVisits++ >= parameters.maximumCandidateVisits()) {
+        if (candidateVisits++ >= discoveryMaximumCandidateVisits) {
             candidateLimited = true;
             return false;
         }
@@ -306,7 +428,7 @@ public final class RadiationService implements AutoCloseable {
         }
         int insertion = insertionIndex(
                 sourceKey, upperBound, candidateCount);
-        if (candidateCount < candidateKeys.length) {
+        if (candidateCount < discoveryMaximumCandidates) {
             shiftCandidates(insertion, candidateCount);
             writeCandidate(
                     insertion,
@@ -384,10 +506,13 @@ public final class RadiationService implements AutoCloseable {
     }
 
     private ReceiverCache receiverCache(
+            Long2ObjectOpenHashMap<ReceiverCache> caches,
             long receiverKey,
-            int receiverGeneration
+            int receiverGeneration,
+            int maximumReceivers,
+            int maximumWitnesses
     ) {
-        ReceiverCache cache = receiverCaches.get(receiverKey);
+        ReceiverCache cache = caches.get(receiverKey);
         if (cache != null) {
             if (cache.receiverGeneration != receiverGeneration) {
                 cache.clear(receiverGeneration);
@@ -395,24 +520,24 @@ public final class RadiationService implements AutoCloseable {
             cache.lastSampleSequence = sampleSequence;
             return cache;
         }
-        if (receiverCaches.size() >= parameters.maximumReceivers()) {
+        if (caches.size() >= maximumReceivers) {
             long oldestKey = 0L;
             long oldestSequence = Long.MAX_VALUE;
             for (Long2ObjectMap.Entry<ReceiverCache> entry
-                    : receiverCaches.long2ObjectEntrySet()) {
+                    : caches.long2ObjectEntrySet()) {
                 if (entry.getValue().lastSampleSequence < oldestSequence) {
                     oldestKey = entry.getLongKey();
                     oldestSequence = entry.getValue().lastSampleSequence;
                 }
             }
-            receiverCaches.remove(oldestKey);
+            caches.remove(oldestKey);
         }
         cache = new ReceiverCache(
                 receiverGeneration,
-                parameters.maximumCandidatesPerReceiver() * 3,
+                maximumWitnesses,
                 parameters.maximumWitnessSectionsPerRay());
         cache.lastSampleSequence = sampleSequence;
-        receiverCaches.put(receiverKey, cache);
+        caches.put(receiverKey, cache);
         return cache;
     }
 
@@ -429,7 +554,7 @@ public final class RadiationService implements AutoCloseable {
         double dx = receiverX - sourceX;
         double dz = receiverZ - sourceZ;
         double horizontal = dx * dx + dz * dz;
-        if (sourceRevision == STATIC_BLOCK_REVISION) {
+        if (discoveryItem || sourceRevision == STATIC_BLOCK_REVISION) {
             double dy = receiverEyeY - sourceY;
             return horizontal + dy * dy;
         }
@@ -462,6 +587,14 @@ public final class RadiationService implements AutoCloseable {
         receiverCaches.remove(receiverKey);
     }
 
+    int playerReceiverCacheSize() {
+        return receiverCaches.size();
+    }
+
+    int itemReceiverCacheSize() {
+        return itemReceiverCaches.size();
+    }
+
     @Override
     public void close() {
         requireOwnerThread();
@@ -470,6 +603,7 @@ public final class RadiationService implements AutoCloseable {
         }
         closed = true;
         receiverCaches.clear();
+        itemReceiverCaches.clear();
         reservation.close();
     }
 
