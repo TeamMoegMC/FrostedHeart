@@ -1,7 +1,7 @@
 # Heat Production And Network
 
 - Status: `Current`
-- Last verified: `2026-09-01`
+- Last verified: `2026-09-08`
 - Scope: physical Minecraft sources, worker energy integration, material/phase sinks, and the separate heat-network model
 - Primary code anchors: `MinecraftPhysicalSourceProfile`, `PhysicalSourceSpatialIndex`, `ThermalSourceBatch`, `ThermalSourceLedger`, `NodePowerAccumulatorArena`, `HeatEndpoint`, `HeatNetwork`
 
@@ -13,7 +13,7 @@ lifecycle generation, an origin, an anchor/target, a profile, and immutable
 ports. `PhysicalSourceSpatialIndex` indexes origin section/chunk and target
 section, so changing one machine or campfire does not scan all sources.
 
-Each `AIR_FACE` port also retains its exact target Brick. Its zero/nonzero source
+Each positive-share `AIR_FACE` port retains its exact target Brick. Its zero/nonzero source
 reference transition updates one main-thread source-seed bit; multiple sources
 in the same Brick share one lazy count. Source seeds are the only main-thread
 cause of new thermal residency. The worker retains warmed Pages and advances
@@ -38,6 +38,14 @@ Campfire total power and radiation share are configured by
 `campfireRadiationShare`; convection receives exactly the remaining share.
 Defaults are `8,000 W` and `0.20`. The main source index and worker binding
 resolver use the same immutable configured profile.
+
+All four Minecraft profiles retain a source only while `enabled && powerW > 0`.
+Inactive/zero-power observations allocate no new slot and remove an existing
+source through the normal cut. Zero-share convection ports create no Page seed;
+a fully radiative campfire still retains its emitting source. Removing or moving
+targets recomputes their dormant support after removing old reverse references,
+preserving support from other sources and the worker's residual heat. Repeated
+off/on transitions across cuts use normal unload/register generations.
 
 ## Static Fire And Lava Radiation
 
@@ -120,13 +128,20 @@ endpoint; the two channels must not be counted twice by a caller.
 ## Lifecycle And Performance
 
 Machine ticks call `MinecraftThermalInput.onGeneratorTick`,
-`onFountainTick`, or `onRadiatorTick`. Campfires are discovered on chunk load,
-final block-state mutation drain, and the existing lit `CampfireBlockEntity`
-`cookTick`. The tick path calls `MinecraftThermalInput.onCampfireTick` once per
-20 ticks with a position-derived phase, so a lazy thermal runtime that starts
-after chunk load still discovers an already-lit campfire; refueling only changes
-BlockEntity data and is not a BlockState mutation. An unchanged observation does
-not enter the source dirty queue. `onPhysicalSourceRemoved` marks one packed
+`onFountainTick`, or `onRadiatorTick` after normal production calculations.
+T1/T2 generator publication continues even when `GeneratorData.tickBlock` skips
+fuel consumption through `townProcessedTicks`. Runtime startup/reload does not
+execute extra production or heat-network consumption: machines recover on their
+next valid normal tick. Merely loaded but non-ticking machines are not actively
+advanced; town/offline simulation is not a physical-source publisher.
+
+Campfires are discovered through the runtime's shared startup/load/retry queue
+and final block-state mutation drain. Startup also attaches already-loaded
+sections, so later ignition is observed even in an initially source-free section.
+`PhysicalSourceSpatialIndex.discoverChunk` reads pending/live BE positions and
+current states without creating BEs. Refueling still only changes BE data;
+discovery does not depend on it or on campfire ticking. An unchanged observation
+does not enter the source dirty queue. `onPhysicalSourceRemoved` marks one packed
 source ID absent. Chunk unload settles and unloads sources in that origin chunk;
 before that removal, chunk checkpoints query the existing target-section index
 for a disk-only one-shot support bit. Target Page references are then released
@@ -134,13 +149,13 @@ by the source index. This checkpoint can retain existing warm residuals across
 an unloaded interval but never simulates source power or heat-network flow.
 
 Routine work is proportional to changed sources and affected target buckets.
-Steady lit campfires add one active-runtime lookup, loaded BlockState read, and
-existing-source map probe per campfire per second; their 20-tick phases are
-position-staggered. No chunk scan, Page query, allocation, or worker message is
-created when the observed source state is unchanged.
+Stable campfires do not poll. Machines retain their existing O(1) observation
+per production tick; unchanged output produces no dirty worker message.
 Each dimension admits at most `65,536` physical sources and `131,072` retained
 source-node generations. A source refused at the physical-source cap cannot
-enter the worker batch; after capacity is released, already-scanned loaded
-chunks are revisited in bounded 20-tick slices so a still-loaded campfire is not
-permanently lost. External JFR measures source event, binding, and accumulator
+enter the worker batch. State-source refusals return a completion boolean and
+queue their exact chunk; machines retry through normal production. Discovery
+attempts at most eight pending chunks per tick and stops while capacity is full;
+ordinary removals continue and the next available drain resumes queued work.
+Completed chunks are not retained in a recovery directory. External JFR measures source event, binding, and accumulator
 costs; production source classes contain no counters or test probes.

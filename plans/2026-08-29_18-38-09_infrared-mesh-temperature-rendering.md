@@ -931,13 +931,82 @@ the previously permanent Page/Query publication cadence collision without a
 server observer, response cache, immediate re-encode, extra packet field, or
 normal steady-state request.
 
-The dormant-neighbor correction adds no wire field or stable-poll work. A full
-response may append existing `UNIFORM` records containing source-supported
-dormant Brick means. These temporary Brick-resolution records do not set Page
-presence, participate in delta epochs, admit topology, or load chunks. Real Page
-admission clears/replaces the region through the existing added-Page path with
-block-position exact values.
-The consumed disk-support flag is retained in a lazy transient section bitset
-until live source discovery replaces it. Full encoding reads this O(1) hint,
-not the not-yet-populated source index, so login ordering cannot omit the
-neighbor and leave the client on a permanently incomplete baseline.
+## Dormant Infrared Synchronization Correction
+
+- Author: Codex, OpenAI GPT-6, primary implementation agent
+- Updated: 2026-09-08
+- Status: in-progress
+- Scope: dormant infrared refresh/removal/handover and infrared activation;
+  no solver, residency, persistence-format, or source-model redesign.
+
+The previous full-only bootstrap is incomplete: ordinary polls cannot refresh
+decay, remove unloaded/deleted entries, or discover late-loaded dormant data.
+This section supersedes that bootstrap and the earlier blanket ban on shared
+infrared caches, but retains the ban on per-player server state and histories.
+
+### Decisions
+
+- Keep the existing 40-tick client poll and two packet registrations. Closed
+  clients send no polls. Live infrared comparison is request-activated and ends
+  after the existing 80-tick dimension lease; dormant calculation runs only
+  inside requests, never from a tick sweep or an unload/save callback.
+- Lazily cache one quantized 64-Brick section snapshot in its existing dormant
+  chunk attachment. Reuse its 20-tick decay/natural-temperature cache. Refresh
+  once per cache interval or entry invalidation, compare at 0.25 C, and assign
+  a process-unique monotonically increasing revision only when content changes.
+  No cache allocation occurs during NBT decode. Cache lifetime follows the
+  attachment; no new global section index, observer, ACK packet, or timer.
+- A request carries the last applied dormant revision and exact known dormant
+  section presence. Encode 0..47 sections as one count byte plus unsigned-short
+  local indexes; encode 48..729 as one marker byte plus twelve longs. Empty
+  presence omits the revision; full requests omit the old dormant state entirely.
+- Cache comparison also records the last changed-Brick mask and the preceding
+  change revision (16 bytes per cached section). A client whose baseline covers
+  that preceding revision receives only those changed Bricks. Older baselines,
+  first snapshots, and live handovers receive a complete section replacement.
+  Include an explicit empty replacement when a known section disappears. Each
+  record contains a Brick mask and signed uniform temperatures; no per-Brick
+  revision array, history ring, extra dirty queue, or per-player temperature copy.
+- Reuse the existing flat payload and add a dormant-section record mode. Client
+  ownership is one lazy 729-long Brick mask array; clearing a dormant section
+  only clears its own texels, and live writes revoke dormant ownership.
+- Publish the existing worker `resolved` bit with Brick query metadata. Live
+  resolved Bricks, including resolved no-Air Bricks, suppress dormant fallback;
+  an unresolved Brick may use stored data. Live changes and Page presence clears
+  force a same-response dormant replacement for the affected section even when
+  its cached temperature revision did not change.
+- Dormant data is eligible by stored data, not by source discovery or a retained
+  disk-support hint. Keep disk support's existing offline-preservation meaning.
+- An unreadable live cut is not deletion. A dormant-only response retains the
+  previous live presence/texels and uses live epoch zero to request a full live
+  rebuild once a coherent cut returns. Until then, dormant replacements in a
+  previously live Page can update only client-owned dormant texels. A new full
+  origin can still initialize from dormant data without waiting for a worker.
+
+### Costs And Acceptance
+
+- Shared temperature payload: at most 128 bytes per queried dormant section,
+  plus cache metadata/objects. No multiplication by viewer count.
+- Client ownership: 5,832 bytes plus presence/revision fields; reuse one texture.
+- Sparse dormant presence costs 1 + 2*N bytes up to N=47, otherwise 97 bytes;
+  version and ordinary packet headers are additional. No-heat views use only
+  the empty marker, and full requests need no dormant baseline.
+- Discovery still performs bounded loaded-chunk/section lookups in the view.
+  Cache misses still examine stored Brick values. Shared views amortize that
+  calculation; disjoint views do not. No unmeasured CPU/TPS claim is accepted.
+- [x] Record the bounded design and exact sparse-presence tradeoff.
+- [x] Implement request-driven shared snapshots and lifecycle-correct records.
+- [x] Verify the source call paths have no unsolicited packets or always-on dormant work; document the
+  existing 80-tick live-comparison tail instead of claiming immediate shutdown.
+- [ ] Exercise the production request/response lifecycle with stored neighbor
+  data, decay, deletion/reload, live handover, and an ignored response baseline.
+- Validation uses the actual client, server, network and renderer in a gameplay
+  world. Do not add synthetic JUnit/GameTest cases for this correction or count
+  compilation as gameplay validation; the newly added cases have been removed.
+- [x] Update the three climate living documents for the implemented protocol and activation paths.
+- Production `compileJava --offline --no-daemon --console=plain` passed on
+  2026-09-08. The actual Forge client launched successfully with the new classes
+  and reached world selection. No JUnit or GameTest task was run.
+- [ ] Validate in the user's reproduction world and record the observed outcome
+  after the work is finished. World selection is awaiting confirmation; startup
+  alone does not verify dormant refresh, live handover, rendering or network cost.

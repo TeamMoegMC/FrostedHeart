@@ -1,7 +1,7 @@
 # Climate Data And Lifecycle
 
 - Status: `Current`
-- Last verified: `2026-09-04`
+- Last verified: `2026-09-08`
 - Scope: recipe/configuration ownership, capabilities, server lifecycle, thermal runtime integration, and network boundaries
 - Primary code anchors: `FHRecipeCachingReloadListener`, `WorldTemperature`, `MinecraftThermalEvents`, `MinecraftThermalInput`, `ThermalWorkerPool`, `LevelChunkSectionMixin_ThermalInput`, `FHCapabilities`, `FHNetwork`
 
@@ -53,6 +53,7 @@ ServerStartedEvent
 Level tick END
   MinecraftThermalInput drains completion
   MinecraftPageManager applies worker residency, mutations, and Brick capture budgets
+  advance the shared startup/load/refusal discovery queue (up to 8 chunks/tick)
   every 20 ticks: source flush and one immutable batch submit
 
 ChunkDataEvent.Load (async)
@@ -60,6 +61,7 @@ ChunkDataEvent.Load (async)
 
 ChunkEvent.Load (level thread)
   consume one-shot source support, rebase residuals, then expose fallback
+  attach section owners and enqueue source discovery if runtime is active
 
 ChunkDataEvent.Save / ChunkEvent.Unload / ServerStoppingEvent
   capture coherent Page temperatures, refresh disk-only source support,
@@ -123,6 +125,12 @@ so `inFlight` is cleared and replacement still proceeds.
 
 Recipe reload invalidates gameplay profiles and closes active thermal levels.
 The next gameplay query creates a new profile snapshot and worker generation.
+Both player environment queries and analytic-field insertion can lazily start
+the runtime. Startup binds already-loaded sections and queues current-state
+discovery without replaying dormant/radiation chunk-load events. Full reload
+repeats this attachment; worker-only replacement retains owners, source indexes,
+and pending discovery, using `reseedAll` without another world scan. Chunk unload
+removes its pending entry by instance; close clears all pending chunk references.
 Natural-temperature cache invalidation remains owned by its existing recipe
 listener; changes to that contract must update `WorldTemperature` and this
 document together.
@@ -138,9 +146,9 @@ from the current physical-source target index. Source target/power/enabled
 changes update only the target section and six face neighbors that already own
 a loaded dormant entry. This avoids an active-Page-only stop scan and adds no
 loaded-world traversal or retained chunk index.
-Chunk activation also retains the consumed disk-support decision in one lazy
-primitive bitset until live source discovery updates it, so an initial infrared
-full response cannot race campfire/block-entity registration.
+Infrared fallback reads stored temperature regardless of source discovery.
+The consumed disk-support bit has no extra loaded-state mirror and is not an
+infrared eligibility condition.
 
 ## Network And Consumers
 
@@ -154,7 +162,10 @@ and are never placed in the body packet.
 `FHRequestInfraredViewDataSyncPacket` is a separate client-carried-state poll:
 opening or moving forces a full request; stable clients poll every 40 ticks with
 an entity-ID phase offset, the last infrared epoch, and twelve exact presence
-words. A center/full request remains full across a missing or superseded response
+words. Non-full requests also carry known dormant section presence and its last
+applied revision: 0..47 sections use a count and two-byte local indexes; denser
+presence uses a marker and twelve longs. Empty presence omits the revision;
+full requests omit this dormant baseline. A center/full request remains full across a missing or superseded response
 until one matching response installs the new texture origin. While waiting, the
 normal 40-tick poll is replaced by one entity-ID-spread retry after 41-59 ticks;
 none of those delays is a multiple of the thermal runtime's 20-tick cut, so a
@@ -166,7 +177,8 @@ client's movement-comparison baseline.
 `FHResponseInfraredViewDataSyncPacket` is omitted when the view has no
 changed Brick or Page presence, including when only an out-of-view Page advanced
 the dimension epoch. Otherwise it carries optional current presence plus one
-flat changed-Brick payload using `INVALID`, `UNIFORM`, `INDEXED`, or `RAW` mode.
+flat payload using live `INVALID`, `UNIFORM`, `INDEXED`, or `RAW` records and
+`DORMANT_SECTION` replacement or `DORMANT_PATCH` changed-Brick records.
 `INDEXED` uses `SimpleBitStorage` only when its complete record is smaller than
 RAW. Full and added-Page responses omit all-invalid Bricks because the client
 first clears their target regions; ordinary deltas send explicit INVALID when a
@@ -186,16 +198,25 @@ initialization independent from temporary publication unavailability. World rese
 immediately detaches GPU handles and queues deletion of those captured old
 resources. While a moved client waits for a replacement full response, the old
 texture remains renderable at its old origin; `deltaBaselineValid` controls only
-delta/full protocol eligibility. A temporarily invalid
-or over-age `QueryPublication` produces no
-response, so the client retains its existing temperature mirror until a valid
-rebuild response is available. A valid presence mismatch sends added/removed
+delta/full protocol eligibility. An invalid or over-age `QueryPublication`
+does not remove existing live coverage. Dormant-only updates retain the old
+live presence and use live epoch zero; in previously live sections they update
+only already dormant-owned texels. A coherent subsequent response rebuilds the
+live baseline. A valid presence mismatch sends added/removed
 Page delta; full rebuild remains limited to first open, center change,
 reactivation, generation/reset, and explicit invalidation boundaries.
-One full response may additionally encode source-supported dormant Brick means
-through existing `UNIFORM` records. This temporary Brick-resolution bootstrap
-does not enter client presence or normal deltas, admit a Page, or load a chunk;
-real Page admission clears and replaces it with block-position exact data.
+Each request also discovers existing dormant attachments through at most 81
+loaded-chunk lookups and 729 section positions, without loading chunks or
+admitting Pages. `DormantChunkThermalState.infraredSection` lazily caches 64
+quantized means per queried section, using the existing aligned 20-tick decay
+cache. Its revision, previous revision and changed-Brick mask are shared among
+viewers; no tick sweep maintains them. Up-to-date clients receive changed
+Bricks; older baselines receive section replacement, and missing entries send
+empty replacement. The client tracks dormant-owned texels in one lazy
+`long[729]` (5,832 bytes). Live resolved Bricks, including no-Air Bricks, exclude
+fallback. Live writes revoke dormant ownership; affected sections resend any
+remaining fallback in that same response. Cache data is not persisted, and
+process-unique revisions distinguish recreated attachments.
 
 The player NBT schema preserves each existing clothing `ItemStackHandler`, its
 complete item NBT, and temperature difficulty. New saves store per-part
@@ -203,8 +224,11 @@ complete item NBT, and temperature difficulty. New saves store per-part
 `blockTemp`/`windStrengh` values are ignored on load, so an old player begins at
 normal body energy. Analytic fields remain server-side control fields composed
 after Page air or natural fallback. Player/town/crop/passive/infrared consumers
-never admit a Page merely because a query missed. Dormant state is server-only
-and adds no packet.
+never admit a Page merely because a query missed. Dormant checkpoints remain
+server-owned; infrared transmits only quantized Brick means through the existing
+response packet, not component vectors or checkpoint metadata. Closed clients
+send no requests; live comparison stops after the last request's 80-tick lease,
+and dormant calculation/encoding runs only inside requests.
 
 Changes to this integration must update the relevant consumer document and add
 one dated diary entry. Performance evidence comes from external JFR/heap runs;

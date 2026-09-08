@@ -1,7 +1,7 @@
 # Thermal Runtime Architecture
 
 - Status: `Current; sparse Brick residency and receiver-lazy radiation implemented, controlled performance/live validation pending`
-- Last verified: `2026-09-01`
+- Last verified: `2026-09-08`
 - Scope: server-side thermal capture, asynchronous dimension workers, Page/Brick topology, source energy, phase requests, query publication, and hot-path cost bounds
 - Primary code anchors: `MinecraftThermalEvents`, `MinecraftThermalInput`, `MinecraftPageManager`, `PhysicalSourceSpatialIndex`, `DimensionInputAccumulator`, `ThermalDimensionMailbox`, `ThermalWorkerPool`, `ThermalDimensionEngine`, `TopologyPlan`, `PreparedTopologyChange`, `TopologyCommitter`, `ThermalSolver`, `ThermalSourceLedger`, `QueryPublication`
 
@@ -185,11 +185,30 @@ the second bitmap exists only after a non-geometry source-only position needs
 to be excluded. Page center arrays are likewise created at eight entries only
 after the first local geometry mutation. No per-position object is retained.
 
-An already-lit campfire is also observed from its existing server `cookTick`
-once per 20 ticks with a position-derived phase. This closes the lazy-start case
-where the runtime begins after the chunk-load event and no later BlockState
-mutation occurs. The steady observation is one O(1) source lookup; an unchanged
-source produces no dirty event, Page admission, or worker payload.
+Lazy runtime startup synchronously attaches every currently loaded section,
+including sections without a source. `MinecraftThermalInput.attachLoadedWorld`
+enumerates visible chunk holders through loaded-only `getChunkNow`; it does not
+scan all blocks or instantiate block entities. Section identity lookup uses the
+existing attachment; `ownersBySection` is the sole owner map. Repeated attachment
+preserves pending mutations. Three inline volatile flags with shared `VarHandle`
+operations retain atomic enqueue/full-resync semantics without per-owner atomic
+wrapper objects. Mutation bitmaps remain lazily allocated and reused.
+
+Startup, real chunk loads, and exact capacity refusals share one ordered
+`pendingSourceChunks` map. `drainPendingSources` attempts at most eight chunks
+per tick, enumerating pending/live BE positions via `getBlockEntitiesPos()` and
+reading current BlockState. Completed chunks leave the map; refused chunks go
+to its tail. Source capacity exhaustion pauses discovery but not mutation,
+removal, or flush. Startup prioritizes loaded chunks within 3x3 of its trigger.
+Page admission has no discovery side effect, and campfire `cookTick` only manages
+fuel lifetime. Stable campfires require no discovery polling.
+
+Synchronous attachment is O(loaded sections); candidate discovery is proportional
+to BE positions, plus retries, and allocates a temporary position union per chunk.
+Eight chunks is a work-count budget, not a hard millisecond bound. Queue backing
+arrays and dirty bitmaps can retain capacity; the 128 MiB reservation budget does
+not bound the runtime's entire Java heap. Source discovery, cut submission, Page
+admission, and observable warming are separate steps.
 
 `MinecraftSignatureCapture` resolves an already-loaded state through one state
 registry ID lookup and one tagged-table read. `StateStaticThermalResolver` runs
@@ -376,7 +395,8 @@ indexes. Source coordinates are decoded from the packed BlockPos ID, so no
 parallel coordinate arrays are retained. Source state flags share one byte per
 source and dirty ordering uses a reusable primitive list.
 
-Every `AIR_FACE` port retains an exact `(sectionKey, Brick index)` target.
+Every positive-share `AIR_FACE` port of an emitting source retains an exact
+`(sectionKey, Brick index)` target.
 Multiple sources in one Brick share a lazy main-thread int reference count;
 only zero/nonzero transitions change the source-seed mask. Source discovery and
 seed capture are independent of player queries.
@@ -389,12 +409,14 @@ old node at the current cursor before changing references. Source and
 accumulator slots are recycled after power, pending energy, and binding
 references reach zero. The production dimension limits are `65,536` physical
 sources and `131,072` simultaneously retained source-node generations; source
-growth beyond those explicit bounds cannot enter the worker batch. If an
-observation is refused at the physical-source cap, the index records that
-capacity recovery is required. After a slot is released, the Page manager
-round-robins at most `64` already-scanned loaded chunks per 20-tick cut until
-the refused loaded sources have been observed again. This exceptional recovery
-uses the existing chunk set and retains no overflow-source objects.
+growth beyond those explicit bounds cannot enter the worker batch. A refused
+state observation returns false, and its main-thread caller queues the exact
+loaded chunk in `MinecraftThermalInput.pendingSourceChunks`. Removal is flushed
+before discovery on cut ticks, so released capacity can be reused immediately.
+Machines retry through their next normal complete production output. No completed
+chunk directory or separate capacity-recovery pass is retained. Inactive and
+zero-power Minecraft sources are removed at the cut; the generic worker ledger's
+enabled and impulse contracts remain unchanged.
 
 `ThermalSourceMode.IMPULSE` is an intentionally retained exact-tick contract.
 It routes one signed energy amount in joules to a selected source port instead
@@ -509,19 +531,24 @@ adds heat.
 
 Capture writes the support bit immediately, and indexed source target, power,
 or enabled changes refresh only their seven-section closure.
-The consumed load-time support is mirrored in a lazy transient bitset until the
-live source index takes authority, closing the login/full-response race without
-retaining a source object or history.
-Infrared full rebuilds may encode source-supported dormant Brick means through
-the existing uniform wire mode. This is temporary Brick-resolution fallback;
-stable polling, presence, solver residency, and active block-exact rendering are
-unchanged.
+Infrared eligibility depends on stored temperature, not source discovery or the
+consumed disk-support bit. Requests discover loaded dormant data and lazily
+refresh a shared quantized section snapshot; current baselines receive changed
+Bricks, older baselines receive section replacement, and missing data is removed.
+Published `Brick.resolved` metadata prevents fallback from overriding resolved
+live geometry, including no-Air Bricks. Unresolved Bricks may still use stored
+means. Live changes resend the affected section's remaining fallback in the
+same response. This neither admits Pages nor changes solver residency. Exact
+wire/ownership rules are in [data-lifecycle-and-integration.md](data-lifecycle-and-integration.md#network-and-consumers).
 
 `FHConfig.COMMON.THERMAL_RUNTIME.dormantTemperatureHalfLifeSeconds` defaults to
 `1800`. Ordinary fallback caches one natural temperature and decay factor per
 section per aligned 20-tick boundary. A regular/collapsed Page uses packed rank
 directly; only exact mixed data owns derived lookup arrays. Unloaded chunks own
-no runtime heap and dormant data is never synchronized to clients.
+no runtime heap. Only requested infrared Brick means are synchronized; checkpoint
+vectors and derived caches remain server-owned. The lazy infrared cache owns
+128 temperature bytes per queried section plus metadata, without per-viewer
+copies; normal thermal ticks do not refresh it.
 When a runtime is active, dormant fallback resolves the loaded chunk through the
 existing `MinecraftPageManager.SectionOwner`; one lookup supplies both Page
 handle and chunk, so the normal path does not enter `ServerChunkCache.getChunkNow`
