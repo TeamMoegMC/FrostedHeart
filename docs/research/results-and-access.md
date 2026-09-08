@@ -1,23 +1,29 @@
 # Research Results And Technology Access
 
 - Status: `Current`
-- Last verified: `2026-08-25`
-- Scope: Generative Research V2 Phase 1 result definitions, minimal datapack catalogue, team authority, projections, legacy entitlement provenance, prototype shell, commands, reload, and explicit non-goals
+- Last verified: `2026-09-08` (knowledge integration verified against source)
+- Scope: Result payloads, compatibility topic catalogue, active knowledge projections, legacy entitlement provenance,
+  physical prototype shell, and existing result commands
 - Code anchors: [`ResearchResult`](../../src/main/java/com/teammoeg/frostedresearch/knowledge/ResearchResult.java), [`ResearchResultCatalogLoader`](../../src/main/java/com/teammoeg/frostedresearch/knowledge/ResearchResultCatalogLoader.java), [`ResearchResultCatalog`](../../src/main/java/com/teammoeg/frostedresearch/knowledge/ResearchResultCatalog.java), [`TeamKnowledgeData`](../../src/main/java/com/teammoeg/frostedresearch/data/TeamKnowledgeData.java), [`TechnologyAccessResolver`](../../src/main/java/com/teammoeg/frostedresearch/knowledge/TechnologyAccessResolver.java), [`TeamResearchService`](../../src/main/java/com/teammoeg/frostedresearch/api/TeamResearchService.java), [`UpgradePrototypeItem`](../../src/main/java/com/teammoeg/frostedresearch/item/UpgradePrototypeItem.java)
 
 ## Implemented Boundary
 
-Phase 1 implements a mergeable foundation alongside the current `Research`/`Effect` system. It does not implement the evidence board, ideas, research institute, experiment apparatus, installed upgrades, or any formal V2 topic. Existing `config/fhresearches/*.json`, including `generator_efficiency_1` and its `generator_effi` stats effect, are unchanged.
+The five existing `ResearchResult` payloads are reused by the independent [knowledge system](../knowledge/README.md).
+Observations, ideas, results, inbox learning, linking, notes, and hints are implemented there. This document owns the
+result/access bridge and the existing topic/prototype formats. Existing `config/fhresearches/*.json`, including
+`generator_efficiency_1` and its `generator_effi` stats effect, retain their legacy behavior. Evidence/experiment
+execution, research-institute work scheduling, and installed numerical upgrades remain outside the implemented knowledge
+core.
 
 Five result definitions exist:
 
-| Type | Stable payload | Team acquisition | Direct consumer |
-|---|---|---:|---|
-| `finding` | `id`, optional `views` | yes | `KnowledgeProjection` only |
-| `design` | `id`, nonempty `recipes` | yes | recipe access |
-| `construction` | `id`, nonempty `multiblocks` | yes | multiblock formation access |
-| `procedure` | `id`, nonempty `usable_blocks` | yes | right-click block access |
-| `prototype` | `id`, `profile` | no | fabricates a physical `upgrade_prototype` ItemStack |
+| Type           | Stable payload                 |         Team acquisition | Direct consumer                                                                                                         |
+|----------------|--------------------------------|-------------------------:|-------------------------------------------------------------------------------------------------------------------------|
+| `finding`      | `id`, optional `views`         |                      yes | `KnowledgeProjection` only                                                                                              |
+| `design`       | `id`, nonempty `recipes`       |                      yes | recipe access                                                                                                           |
+| `construction` | `id`, nonempty `multiblocks`   |                      yes | multiblock formation access                                                                                             |
+| `procedure`    | `id`, nonempty `usable_blocks` |                      yes | right-click block access                                                                                                |
+| `prototype`    | `id`, `profile`                | yes, as result knowledge | no numerical upgrade consumer yet; the existing `/research result grant` command separately fabricates a physical shell |
 
 Construction and Procedure are intentionally separate. Construction cannot declare `usable_blocks`; Procedure cannot declare `multiblocks`. Procedure currently means exactly the `RightClickBlock` permission already enforced by `ResearchHooks#canUseBlock`; it does not claim placement, breaking, capability, automation, maintenance, or numerical behavior.
 
@@ -37,30 +43,34 @@ A topic currently compiles only:
 - required `format: 3`;
 - optional `presentation.icon`;
 - a list of the five typed `results`;
-- ordinary item `rewards`, which are validated but not granted by the Phase 1 result command.
+- ordinary item `rewards`, which are validated but not granted by `/research result grant`.
 
-Unknown future fields may remain in the JSON but have no runtime meaning yet. A prototype declaration currently requires `format: 1` and a positive integer `revision`; additional host/BOM/contribution fields are deferred to Phase 5.
+Unknown future fields may remain in the JSON but have no runtime meaning yet. A prototype declaration currently requires
+`format: 1` and a positive integer `revision`; additional host, material, and numerical contribution fields currently
+have no runtime implementation.
 
 Catalogue validation aggregates diagnostics for wrong formats/revisions, duplicate global result IDs, empty or duplicate target lists, cross-type Construction/Procedure fields, missing recipes, multiblocks, blocks, reward items, and prototype profiles. Finding view-handler semantics are deferred until a Finding consumer exists.
 
 `ResearchResultCatalog.Snapshot` is immutable. Every valid install receives a monotonically increasing `catalogRevision` and derives three managed target universes. Empty directories install a valid empty snapshot. An invalid reload logs all diagnostics and leaves the previous snapshot installed.
 
-Phase 1 intentionally adds no built-in topic resources. Stable companion KubeJS recipe IDs and the five initial content slices begin in later phases.
+The compatibility topic catalogue remains available. New knowledge results use
+`data/<namespace>/frostedresearch/knowledge/results/<path>.json`: `ResultDefinition` wraps the same payload with title,
+body, independent understanding requirements, and an enabled flag. See [knowledge definitions](../knowledge/README.md)
+for current examples and loading rules.
 
 ## Team Authority
 
-`FRSpecialDataTypes.KNOWLEDGE_DATA` registers the independent Chorda ID `frostedresearch:knowledge`. `TeamKnowledgeData` schema `1` persists:
+`FRSpecialDataTypes.KNOWLEDGE_DATA` retains the Chorda component ID `frostedresearch:knowledge`. `TeamKnowledgeData` now
+extends `KnowledgeState`, whose schema `2` saves the archive, inbox, original records, actual link/research/acquisition
+history, hints, and daily opportunities. The earlier four acquired-ID sets are no longer the persisted authority; this
+schema change does not migrate that experimental knowledge format. Legacy `TeamResearchData` persistence is separate and
+unchanged.
 
-```text
-acquiredFindingIds
-acquiredDesignIds
-acquiredConstructionIds
-acquiredProcedureIds
-```
-
-Acquisition is set-like and idempotent. A result removed from the current catalogue remains in its saved set as orphan history but produces no projection entry. There is no `acquiredPrototypeIds` field.
-
-`KnowledgeDataAPI` resolves server or client team data. Mutations are coordinated by `TeamResearchService`; `TeamResearchManager` is now only a compatibility facade.
+All result kinds, including Prototype, use one idempotent `KnowledgeKey.result(id)` archive identity. Missing or
+disabled definitions make archived knowledge dormant while preserving its identity and history. `KnowledgeService`
+supplies ordinary learning, special initial/command grants, forgetting, events, and synchronization;
+`TeamResearchService` bridges existing result commands to it.
+See [knowledge state and API](../knowledge/state-and-api.md).
 
 ## Projection And Default-Open Rule
 
@@ -77,7 +87,7 @@ Procedure    -> managed/usable block IDs
 For each target:
 
 ```text
-managed = declared by the V2 snapshot or a legacy lock effect
+managed = declared by a knowledge result, compatibility topic result, or legacy lock effect
 allowed = !managed || sources is not empty
 ```
 
@@ -111,7 +121,10 @@ serial: random UUID
 owner_team: Chorda team UUID
 ```
 
-Every fabrication creates a new serial. `ItemHandlerHelper#giveItemToPlayer` supplies the existing inventory-or-nearby-drop delivery path. Uninitialized or damaged shells remain items and expose no valid identity. Phase 1 has no host, socket, installation, contribution, tint, overlay, or upgrade GUI behavior.
+Every fabrication creates a new serial. `ItemHandlerHelper#giveItemToPlayer` supplies the existing
+inventory-or-nearby-drop delivery path. Uninitialized or damaged shells remain items and expose no valid identity. The
+shell has no host, socket, installation, contribution, tint, overlay, or upgrade GUI behavior. Learning a Prototype
+knowledge element does not fabricate another shell or stack numerical effects.
 
 ## Command And Synchronization
 
@@ -128,22 +141,41 @@ Permission-level-2 commands are:
 
 The unqualified form targets the command source's current team. Placing an online player immediately after `research` targets that player's current team instead; `/frostedheart research <online-player> result ...` is the equivalent alias.
 
-Finding, Design, Construction, and Procedure perform idempotent team acquisition. Prototype fabricates one new physical item for the affected player on every invocation. Revoke removes the four team-owned kinds, including orphan IDs whose definitions are no longer loaded; known Prototype results reject revoke because their authority is the physical item. Info reports the current definition and team acquisition/orphan state without mutation. These commands do not grant the topic's ordinary rewards.
+These existing commands resolve definitions from `ResearchResultCatalog`. Finding, Design, Construction, and Procedure
+grants invoke `KnowledgeService` as special command grants. The Prototype branch of `/research result grant` retains its
+physical behavior: each invocation fabricates a new shell for the affected player. Its revoke branch still rejects known
+Prototype definitions. Other revocations call the unified forget operation, including for retained unknown IDs. Info
+reports the compatibility catalogue and its existing four-kind acquisition view. These commands do not grant ordinary
+topic rewards.
 
-`knowledge_data` is a full S2C replacement packet containing:
+The independent `/knowledge grant result <id>` grants a knowledge archive identity, including Prototype, idempotently;
+it does not fabricate physical prototypes. `/knowledge forget result <id>` removes that knowledge identity through the
+shared event flow. Use the [knowledge API and command reference](../knowledge/state-and-api.md) for ordinary acquisition
+and learning.
 
-- the four acquired ID sets;
+`knowledge_snapshot` transports one logical full S2C replacement containing:
+
+- schema-2 `TeamKnowledgeData`;
 - `catalogRevision`;
 - compiled `KnowledgeProjection`;
-- compiled `TechnologyAccessProjection`, including provenance.
+- compiled `TechnologyAccessProjection`, including provenance;
+- `archive_view`, the current team-visible entries, actual discovered relations, acquisition history, and revealed
+  hints.
 
-It is sent after login, team change, V2 acquisition, relevant legacy effect grant/reset, and catalogue reload. Client installation replaces the Chorda knowledge component and both projections in one queued task, then requests JEI synchronization. There is no Phase 1 delta protocol.
+It is sent after login, team change, knowledge mutations, relevant legacy effect grant/reset, and catalogue reload.
+Client installation replaces the Chorda knowledge component and both projections, installs `KnowledgeClientState`, and
+requests JEI synchronization. Knowledge synchronization encodes the full snapshot once as compressed NBT, divides it
+into 128 KiB fragments, and installs the replacement only after all fragments arrive. This avoids the single-NBT packet
+limit without adding a knowledge-record limit. Batch learning/deletion sends captured selections in requests of at most
+128 keys, coalesces each request's team update, and accumulates all per-entry outcomes before showing the final
+selection summary. Unrevealed link input definitions are not sent.
 
 ## Current Limits
 
-- No official topic/profile content is bundled.
 - Finding view IDs are structural references only until view handlers are implemented.
 - Topic presentation currently compiles only its icon; workflow fields are ignored.
 - Prototype profiles are identity/revision declarations only.
-- Normal gameplay cannot yet accept a V2 result; the administrator command is the only acquisition/fabrication entry point.
+- Ordinary knowledge gameplay can import result notes and learn them after satisfying independent understanding
+  requirements. Full new research execution remains a separate integration; the knowledge API records starts/completions
+  and preserves produced results.
 - Existing third-party execution boundaries remain explicit integrations rather than automatic global interception.

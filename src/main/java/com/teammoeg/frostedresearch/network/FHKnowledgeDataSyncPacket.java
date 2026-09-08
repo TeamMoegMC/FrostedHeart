@@ -46,11 +46,12 @@ public final class FHKnowledgeDataSyncPacket implements CMessage {
         context.get().setPacketHandled(true);
     }
 
-    private static void installClient(KnowledgeSyncSnapshot snapshot) {
+    public static void installClient(KnowledgeSyncSnapshot snapshot) {
         try {
             CClientTeamDataManager.INSTANCE.getInstance().setData(
                     FRSpecialDataTypes.KNOWLEDGE_DATA, snapshot.teamData());
             ClientKnowledgeDataAPI.install(snapshot.catalogRevision(), snapshot.knowledge(), snapshot.technology());
+            com.teammoeg.frostedresearch.knowledge.client.KnowledgeClientState.setSnapshot(snapshot.archiveView());
             ResearchJeiBridge.sync();
         } catch (RuntimeException exception) {
             FRMain.LOGGER.error("Failed to install knowledge snapshot", exception);

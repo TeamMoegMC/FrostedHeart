@@ -1,0 +1,8 @@
+{
+  "title": "knowledge.knowledge_example.results.heat_finding.title",
+  "body": "knowledge.knowledge_example.results.heat_finding.body",
+  "result": {
+    "type": "finding",
+    "id": "knowledge_example:heat_finding"
+  }
+}

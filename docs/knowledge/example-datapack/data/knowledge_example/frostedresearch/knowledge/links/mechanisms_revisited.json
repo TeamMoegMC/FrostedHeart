@@ -1,0 +1,18 @@
+{
+  "inputs": [
+    {
+      "name": "feedback",
+      "kind": "result",
+      "definition": "knowledge_example:feedback_finding"
+    },
+    {
+      "name": "switch",
+      "kind": "result",
+      "definition": "knowledge_example:lever_procedure"
+    }
+  ],
+  "output": "knowledge_example:mechanisms",
+  "hints": [
+    "knowledge.knowledge_example.links.mechanisms_revisited.hint"
+  ]
+}

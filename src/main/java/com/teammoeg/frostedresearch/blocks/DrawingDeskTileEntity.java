@@ -64,7 +64,8 @@ public class DrawingDeskTileEntity extends CBlockEntity implements MenuProvider 
             else if (slot == INK_SLOT)
                 return item.getItem() instanceof IPen && ((IPen) item.getItem()).canUse(null, item, 1);
             else if (slot == PAPER_SLOT)
-                return CUtils.filterRecipes(getLevel().getRecipeManager(), ResearchPaperRecipe.TYPE).stream().anyMatch(r -> r.paper.test(item));
+                return com.teammoeg.frostedresearch.knowledge.item.ResearchNotes.isBlank(item)
+                        || CUtils.filterRecipes(getLevel().getRecipeManager(), ResearchPaperRecipe.TYPE).stream().anyMatch(r -> r.paper.test(item));
             else
                 return false;
         }

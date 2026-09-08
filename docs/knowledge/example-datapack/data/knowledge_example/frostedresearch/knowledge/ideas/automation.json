@@ -1,0 +1,7 @@
+{
+  "title": "knowledge.knowledge_example.ideas.automation.title",
+  "body": "knowledge.knowledge_example.ideas.automation.body",
+  "projects": [
+    "knowledge_example:furnace_control"
+  ]
+}

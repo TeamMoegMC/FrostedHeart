@@ -1,0 +1,8 @@
+{
+  "title": "knowledge.knowledge_example.results.signal_finding.title",
+  "body": "knowledge.knowledge_example.results.signal_finding.body",
+  "result": {
+    "type": "finding",
+    "id": "knowledge_example:signal_finding"
+  }
+}

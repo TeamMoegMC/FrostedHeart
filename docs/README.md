@@ -2,14 +2,15 @@
 
 This directory explains implemented, player-facing game systems. Source, configuration, datapacks, and companion-pack data remain authoritative.
 
-| System | Start here | Status |
-|---|---|---|
-| Town management | [town/README.md](town/README.md) | Transitional |
-| Curiosity encounter | [boss/README.md](boss/README.md) | Transitional |
-| Nutrition | [nutrition/README.md](nutrition/README.md) | Current |
-| Frosted Research | [research/README.md](research/README.md) | Current |
-| Climate and temperature | [climate/README.md](climate/README.md) | Current |
-| Scenario font rendering | [scenario-font-rendering.md](scenario-font-rendering.md) | Current |
+| System                        | Start here                                               | Status       |
+|-------------------------------|----------------------------------------------------------|--------------|
+| Town management               | [town/README.md](town/README.md)                         | Transitional |
+| Curiosity encounter           | [boss/README.md](boss/README.md)                         | Transitional |
+| Nutrition                     | [nutrition/README.md](nutrition/README.md)               | Current      |
+| Frosted Research              | [research/README.md](research/README.md)                 | Current      |
+| Knowledge archive and linking | [knowledge/README.md](knowledge/README.md)               | Current      |
+| Climate and temperature       | [climate/README.md](climate/README.md)                   | Current      |
+| Scenario font rendering       | [scenario-font-rendering.md](scenario-font-rendering.md) | Current      |
 
 `Current` means verified against implementation. `Partial` omits known areas. `Transitional` mixes verified material with legacy, experimental, or proposed content. [`deprecated/`](deprecated/) is historical only.
 

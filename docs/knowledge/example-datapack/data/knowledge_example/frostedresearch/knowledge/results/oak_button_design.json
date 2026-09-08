@@ -1,0 +1,17 @@
+{
+  "title": "knowledge.knowledge_example.results.oak_button_design.title",
+  "body": "knowledge.knowledge_example.results.oak_button_design.body",
+  "understanding": [
+    {
+      "kind": "idea",
+      "id": "knowledge_example:materials"
+    }
+  ],
+  "result": {
+    "type": "design",
+    "id": "knowledge_example:oak_button_design",
+    "recipes": [
+      "minecraft:oak_button"
+    ]
+  }
+}

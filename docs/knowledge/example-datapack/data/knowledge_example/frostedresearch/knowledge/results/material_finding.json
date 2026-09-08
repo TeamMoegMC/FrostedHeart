@@ -1,0 +1,15 @@
+{
+  "title": "knowledge.knowledge_example.results.material_finding.title",
+  "body": "knowledge.knowledge_example.results.material_finding.body",
+  "understanding": [
+    {
+      "kind": "idea",
+      "id": "knowledge_example:materials"
+    }
+  ],
+  "result": {
+    "type": "finding",
+    "id": "knowledge_example:material_finding",
+    "views": []
+  }
+}

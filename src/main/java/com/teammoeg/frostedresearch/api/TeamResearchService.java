@@ -10,19 +10,17 @@ import com.teammoeg.frostedresearch.item.UpgradePrototypeItem;
 import com.teammoeg.frostedresearch.knowledge.PrototypeProfileDefinition;
 import com.teammoeg.frostedresearch.knowledge.ResearchResult;
 import com.teammoeg.frostedresearch.knowledge.ResearchResultCatalog;
-import com.teammoeg.frostedresearch.network.FHKnowledgeDataSyncPacket;
+import com.teammoeg.frostedresearch.knowledge.network.KnowledgeSnapshotPacket;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.items.ItemHandlerHelper;
 
-import java.util.LinkedHashSet;
-import java.util.Optional;
-import java.util.OptionalInt;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
-/** Sole mutation service for Phase 1 team results and prototype fabrication. */
+/**
+ * Sole mutation service for Phase 1 team results and prototype fabrication.
+ */
 public final class TeamResearchService {
     private TeamResearchService() {
     }
@@ -42,25 +40,19 @@ public final class TeamResearchService {
                     UpgradePrototypeItem.identity(stack).orElse(null));
         }
 
-        boolean changed;
-        if (result instanceof ResearchResult.Finding) {
-            changed = closure.get().acquireFinding(resultId);
-        } else if (result instanceof ResearchResult.Design) {
-            changed = closure.get().acquireDesign(resultId);
-        } else if (result instanceof ResearchResult.Construction) {
-            changed = closure.get().acquireConstruction(resultId);
-        } else if (result instanceof ResearchResult.Procedure) {
-            changed = closure.get().acquireProcedure(resultId);
-        } else {
-            throw new IllegalStateException("Unhandled result type " + result.type());
-        }
-        // An idempotent administrator action also reconciles a potentially stale
-        // client projection (for example after a resource reload).
+        var learned = com.teammoeg.frostedresearch.knowledge.KnowledgeService.forPlayer(player).learn(
+                com.teammoeg.frostedresearch.knowledge.model.KnowledgeElement.result(resultId),
+                com.teammoeg.frostedresearch.knowledge.state.AcquisitionSource.of("command", player),
+                com.teammoeg.frostedresearch.knowledge.KnowledgeService.Grant.COMMAND);
         sync(closure.team());
-        return new GrantResult(changed ? Status.ACQUIRED : Status.ALREADY_ACQUIRED, resultId, null);
+        return new GrantResult(learned.succeeded() ? Status.ACQUIRED
+                : learned.status() == com.teammoeg.frostedresearch.knowledge.KnowledgeService.Status.ALREADY_OWNED
+                ? Status.ALREADY_ACQUIRED : Status.REJECTED, resultId, null);
     }
 
-    /** Revokes team-owned results, including orphan IDs no longer present in the catalogue. */
+    /**
+     * Revokes team-owned results, including orphan IDs no longer present in the catalogue.
+     */
     public static RevokeResult revokeResult(ServerPlayer player, ResourceLocation resultId) {
         ResearchResultCatalog.ResultEntry entry = ResearchResultCatalog.current().result(resultId);
         if (entry != null && entry.result() instanceof ResearchResult.Prototype) {
@@ -69,21 +61,18 @@ public final class TeamResearchService {
 
         TeamDataClosure<TeamKnowledgeData> closure = KnowledgeDataAPI.getData(player);
         TeamKnowledgeData data = closure.get();
-        Set<ResearchResult.ResultType> revokedTypes = new LinkedHashSet<>();
-        if (data.revokeFinding(resultId)) revokedTypes.add(ResearchResult.ResultType.FINDING);
-        if (data.revokeDesign(resultId)) revokedTypes.add(ResearchResult.ResultType.DESIGN);
-        if (data.revokeConstruction(resultId)) revokedTypes.add(ResearchResult.ResultType.CONSTRUCTION);
-        if (data.revokeProcedure(resultId)) revokedTypes.add(ResearchResult.ResultType.PROCEDURE);
-        if (!revokedTypes.isEmpty()) {
-            sync(closure.team());
-            return new RevokeResult(Status.REVOKED, resultId, revokedTypes);
-        }
+        Set<ResearchResult.ResultType> revokedTypes = acquiredTypes(data, resultId);
+        var forgotten = com.teammoeg.frostedresearch.knowledge.KnowledgeService.forPlayer(player)
+                .forget(com.teammoeg.frostedresearch.knowledge.model.KnowledgeKey.result(resultId));
+        if (forgotten.succeeded()) return new RevokeResult(Status.REVOKED, resultId, revokedTypes);
         if (entry != null) sync(closure.team());
-        return new RevokeResult(entry == null ? Status.UNKNOWN_RESULT : Status.NOT_ACQUIRED,
-                resultId, Set.of());
+        return new RevokeResult(forgotten.status() == com.teammoeg.frostedresearch.knowledge.KnowledgeService.Status.CANCELLED
+                ? Status.REJECTED : entry == null ? Status.UNKNOWN_RESULT : Status.NOT_ACQUIRED, resultId, Set.of());
     }
 
-    /** Describes both current catalogue definitions and retained orphan acquisition state. */
+    /**
+     * Describes both current catalogue definitions and retained orphan acquisition state.
+     */
     public static ResultInfo resultInfo(ServerPlayer player, ResourceLocation resultId) {
         TeamDataClosure<TeamKnowledgeData> closure = KnowledgeDataAPI.getData(player);
         TeamKnowledgeData data = closure.get();
@@ -111,16 +100,18 @@ public final class TeamResearchService {
     }
 
     public static void sync(TeamDataHolder team) {
-        FHKnowledgeDataSyncPacket snapshot = new FHKnowledgeDataSyncPacket(team);
+        var fragments = KnowledgeSnapshotPacket.create(team);
         team.forEachOnline(player -> {
             // A player can already appear in team membership during login or a GameTest
             // before its network listener has been attached. The login event sends the
             // same full snapshot once that listener exists.
-            if (player.connection != null) FRNetwork.INSTANCE.sendPlayer(player, snapshot);
+            if (player.connection != null)
+                for (var fragment : fragments) FRNetwork.INSTANCE.sendPlayer(player, fragment);
         });
     }
 
     public enum Status {
+        REJECTED,
         UNKNOWN_RESULT,
         UNKNOWN_PROFILE,
         ACQUIRED,
@@ -132,14 +123,14 @@ public final class TeamResearchService {
     }
 
     public record GrantResult(Status status, ResourceLocation resultId,
-            UpgradePrototypeItem.Identity prototype) {
+                              UpgradePrototypeItem.Identity prototype) {
         public boolean succeeded() {
             return status == Status.ACQUIRED || status == Status.ALREADY_ACQUIRED || status == Status.FABRICATED;
         }
     }
 
     public record RevokeResult(Status status, ResourceLocation resultId,
-            Set<ResearchResult.ResultType> revokedTypes) {
+                               Set<ResearchResult.ResultType> revokedTypes) {
         public RevokeResult {
             revokedTypes = Set.copyOf(revokedTypes);
         }
@@ -150,10 +141,10 @@ public final class TeamResearchService {
     }
 
     public record ResultInfo(UUID teamId, ResourceLocation resultId,
-            Optional<ResourceLocation> topicId,
-            Optional<ResearchResult> definition,
-            Set<ResearchResult.ResultType> acquiredTypes,
-            OptionalInt profileRevision) {
+                             Optional<ResourceLocation> topicId,
+                             Optional<ResearchResult> definition,
+                             Set<ResearchResult.ResultType> acquiredTypes,
+                             OptionalInt profileRevision) {
         public ResultInfo {
             acquiredTypes = Set.copyOf(acquiredTypes);
         }

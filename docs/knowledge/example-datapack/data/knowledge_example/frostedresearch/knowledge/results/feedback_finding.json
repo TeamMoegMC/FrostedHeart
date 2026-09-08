@@ -1,0 +1,8 @@
+{
+  "title": "knowledge.knowledge_example.results.feedback_finding.title",
+  "body": "knowledge.knowledge_example.results.feedback_finding.body",
+  "result": {
+    "type": "finding",
+    "id": "knowledge_example:feedback_finding"
+  }
+}

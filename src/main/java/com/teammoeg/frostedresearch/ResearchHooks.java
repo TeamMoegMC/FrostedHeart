@@ -290,6 +290,7 @@ public class ResearchHooks {
 	}
 
 	public static void ServerReload(ResourceManager resources, RecipeManager recipes) {
+
 		try {
 			ResearchResultCatalog.Snapshot installed = ResearchResultCatalog.install(
 					ResearchResultCatalogLoader.load(resources, recipes));
@@ -303,6 +304,9 @@ public class ResearchHooks {
 			FRMain.LOGGER.error("Research result reload rejected; keeping catalogue revision {}",
 					ResearchResultCatalog.current().revision(), invalid);
 		}
+        var knowledgeReload = com.teammoeg.frostedresearch.knowledge.definition.KnowledgeDefinitions.reload(resources);
+        if (!knowledgeReload.applied())
+            knowledgeReload.diagnostics().forEach(message -> FRMain.LOGGER.error("Knowledge definitions: {}", message));
 		if (CTeamDataManager.INSTANCE == null) return;
 		FRMain.LOGGER.info("reloading research system");
 		if (!FHResearch.reloadCatalog()) {

@@ -1,0 +1,11 @@
+{
+  "title": "knowledge.knowledge_example.results.blast_furnace_construction.title",
+  "body": "knowledge.knowledge_example.results.blast_furnace_construction.body",
+  "result": {
+    "type": "construction",
+    "id": "knowledge_example:blast_furnace_construction",
+    "multiblocks": [
+      "immersiveengineering:multiblocks/blast_furnace"
+    ]
+  }
+}

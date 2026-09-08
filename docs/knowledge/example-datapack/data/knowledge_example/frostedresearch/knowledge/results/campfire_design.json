@@ -1,0 +1,11 @@
+{
+  "title": "knowledge.knowledge_example.results.campfire_design.title",
+  "body": "knowledge.knowledge_example.results.campfire_design.body",
+  "result": {
+    "type": "design",
+    "id": "knowledge_example:campfire_design",
+    "recipes": [
+      "minecraft:campfire"
+    ]
+  }
+}

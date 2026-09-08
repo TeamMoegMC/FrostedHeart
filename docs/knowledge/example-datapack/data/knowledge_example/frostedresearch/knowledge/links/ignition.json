@@ -1,0 +1,29 @@
+{
+  "inputs": [
+    {
+      "name": "material",
+      "kind": "result",
+      "definition": "knowledge_example:material_finding"
+    },
+    {
+      "name": "fuel",
+      "kind": "observation",
+      "observation_type": "item",
+      "conditions": [
+        {
+          "field": "object",
+          "operator": "eq",
+          "value": {
+            "state": "known",
+            "type": "string",
+            "text": "minecraft:coal"
+          }
+        }
+      ]
+    }
+  ],
+  "output": "knowledge_example:ignition",
+  "hints": [
+    "knowledge.knowledge_example.links.ignition.hint"
+  ]
+}

@@ -36,12 +36,11 @@ public final class TechnologyAccessResolver {
     public static KnowledgeProjection projectKnowledge(TeamKnowledgeData data) {
         List<KnowledgeProjection.FindingEntry> findings = new ArrayList<>();
         ResearchResultCatalog.Snapshot catalog = ResearchResultCatalog.current();
-        for (ResourceLocation resultId : data.findingIds()) {
-            ResearchResultCatalog.ResultEntry entry = catalog.result(resultId);
-            if (entry != null && entry.result() instanceof ResearchResult.Finding finding) {
-                AccessSource.ResultSource source = resultSource(entry);
-                findings.add(new KnowledgeProjection.FindingEntry(finding.id(), finding.views(), source));
-            }
+        for (var acquired : data.archive().entries().keySet()) {
+            if (acquired.kind() != com.teammoeg.frostedresearch.knowledge.model.KnowledgeKey.Kind.RESULT) continue;
+            ResourceLocation resultId = new ResourceLocation(acquired.id());
+            if (KnowledgeAvailability.result(resultId) instanceof ResearchResult.Finding finding)
+                findings.add(new KnowledgeProjection.FindingEntry(finding.id(), finding.views(), resultSource(finding)));
         }
         return new KnowledgeProjection(findings);
     }
@@ -57,6 +56,14 @@ public final class TechnologyAccessResolver {
         Set<ResourceLocation> managedRecipes = new LinkedHashSet<>(catalog.managedRecipes());
         Set<ResourceLocation> managedMultiblocks = new LinkedHashSet<>(catalog.managedMultiblocks());
         Set<ResourceLocation> managedBlocks = new LinkedHashSet<>(catalog.managedBlocks());
+        com.teammoeg.frostedresearch.knowledge.definition.KnowledgeDefinitions.current().results().values().forEach(definition -> {
+            ResearchResult result = definition.result();
+            if (result instanceof ResearchResult.Design design) managedRecipes.addAll(design.recipes());
+            else if (result instanceof ResearchResult.Construction construction)
+                managedMultiblocks.addAll(construction.multiblocks());
+            else if (result instanceof ResearchResult.Procedure procedure)
+                managedBlocks.addAll(procedure.usableBlocks());
+        });
         ResearchHooks.getLockList(ResearchHooks.RECIPE_UNLOCK_LIST).forEach(recipe -> managedRecipes.add(recipe.getId()));
         ResearchHooks.getLockList(ResearchHooks.MULTIBLOCK_UNLOCK_LIST).forEach(multiblock ->
                 managedMultiblocks.add(multiblock.getUniqueName()));
@@ -101,23 +108,15 @@ public final class TechnologyAccessResolver {
             Map<ResourceLocation, List<AccessSource>> recipeSources,
             Map<ResourceLocation, List<AccessSource>> multiblockSources,
             Map<ResourceLocation, List<AccessSource>> blockSources) {
-        for (ResourceLocation id : knowledge.designIds()) {
-            ResearchResultCatalog.ResultEntry entry = catalog.result(id);
-            if (entry != null && entry.result() instanceof ResearchResult.Design design) {
-                design.recipes().forEach(target -> add(recipeSources, target, resultSource(entry)));
-            }
-        }
-        for (ResourceLocation id : knowledge.constructionIds()) {
-            ResearchResultCatalog.ResultEntry entry = catalog.result(id);
-            if (entry != null && entry.result() instanceof ResearchResult.Construction construction) {
-                construction.multiblocks().forEach(target -> add(multiblockSources, target, resultSource(entry)));
-            }
-        }
-        for (ResourceLocation id : knowledge.procedureIds()) {
-            ResearchResultCatalog.ResultEntry entry = catalog.result(id);
-            if (entry != null && entry.result() instanceof ResearchResult.Procedure procedure) {
-                procedure.usableBlocks().forEach(target -> add(blockSources, target, resultSource(entry)));
-            }
+        for (var key : knowledge.archive().entries().keySet()) {
+            if (key.kind() != com.teammoeg.frostedresearch.knowledge.model.KnowledgeKey.Kind.RESULT) continue;
+            ResearchResult result = KnowledgeAvailability.result(new ResourceLocation(key.id()));
+            if (result instanceof ResearchResult.Design design)
+                design.recipes().forEach(target -> add(recipeSources, target, resultSource(result)));
+            else if (result instanceof ResearchResult.Construction construction)
+                construction.multiblocks().forEach(target -> add(multiblockSources, target, resultSource(result)));
+            else if (result instanceof ResearchResult.Procedure procedure)
+                procedure.usableBlocks().forEach(target -> add(blockSources, target, resultSource(result)));
         }
     }
 
@@ -147,6 +146,10 @@ public final class TechnologyAccessResolver {
         }
     }
 
+    private static AccessSource.ResultSource resultSource(ResearchResult result) {
+        var entry = ResearchResultCatalog.current().result(result.id());
+        return new AccessSource.ResultSource(entry == null ? result.id() : entry.topicId(), result.type(), result.id());
+    }
     private static AccessSource.ResultSource resultSource(ResearchResultCatalog.ResultEntry entry) {
         return new AccessSource.ResultSource(entry.topicId(), entry.result().type(), entry.result().id());
     }

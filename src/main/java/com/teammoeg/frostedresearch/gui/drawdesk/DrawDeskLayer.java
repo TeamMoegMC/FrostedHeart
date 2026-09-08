@@ -79,6 +79,15 @@ public class DrawDeskLayer extends UILayer {
 		techTree.setPosAndSize(16, 68, 36, 19);
 
 		add(techTree);
+        Button knowledge = new com.teammoeg.chorda.client.cui.widgets.TextButton(this, net.minecraft.network.chat.Component.translatable("gui.frostedresearch.journal.title"), com.teammoeg.chorda.client.icon.CIcons.nop()) {
+            @Override
+            public void onClicked(MouseButton button) {
+                com.teammoeg.frostedresearch.knowledge.client.KnowledgeScreen.open(dd.getScreen().getScreen(), dd.getMenu());
+            }
+        };
+        knowledge.setTitle(net.minecraft.network.chat.Component.translatable("gui.frostedresearch.journal.title"));
+        knowledge.setPosAndSize(78, 68, 49, 19);
+        add(knowledge);
 		Button techStop = new Button(this, DrawDeskIcons.STOP) {
 
 			@Override

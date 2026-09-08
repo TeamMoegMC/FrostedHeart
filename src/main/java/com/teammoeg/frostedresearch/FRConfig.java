@@ -43,8 +43,12 @@ public class FRConfig {
 
     public static class Server {
         public final ForgeConfigSpec.ConfigValue<Integer> rangeInsight;
+        public final ForgeConfigSpec.IntValue knowledgeArchiveObservations;
+        public final ForgeConfigSpec.IntValue knowledgeInboxObservations;
 
         Server(ForgeConfigSpec.Builder builder) {
+            knowledgeArchiveObservations = builder.comment("Maximum archived observation records per team; existing records are retained when lowered.").defineInRange("knowledgeArchiveObservations", 4096, 0, Integer.MAX_VALUE);
+            knowledgeInboxObservations = builder.comment("Maximum inbox observation records per team.").defineInRange("knowledgeInboxObservations", 512, 0, Integer.MAX_VALUE);
             rangeInsight = builder.comment("Range Radius for each insight visitable rings")
                     .defineInRange("insightAreaRange", 128, 1, Integer.MAX_VALUE);
         }

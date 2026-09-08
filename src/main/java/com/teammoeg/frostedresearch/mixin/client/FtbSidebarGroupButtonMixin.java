@@ -25,7 +25,7 @@ public abstract class FtbSidebarGroupButtonMixin {
     @Inject(method = "render", at = @At("HEAD"), cancellable = true, require = 0, remap = false)
     private void fh$hideWhileResearchArchiveOpen(
             GuiGraphics graphics, int mouseX, int mouseY, float partialTick, CallbackInfo callback) {
-        if (DrawDeskScreen.isResearchArchiveOpen()) {
+        if ((DrawDeskScreen.isResearchArchiveOpen() || DrawDeskScreen.isKnowledgeOpen())) {
             callback.cancel();
         }
     }

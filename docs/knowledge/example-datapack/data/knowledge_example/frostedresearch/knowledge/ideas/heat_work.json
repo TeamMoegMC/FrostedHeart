@@ -1,0 +1,7 @@
+{
+  "title": "knowledge.knowledge_example.ideas.heat_work.title",
+  "body": "knowledge.knowledge_example.ideas.heat_work.body",
+  "projects": [
+    "knowledge_example:kiln"
+  ]
+}

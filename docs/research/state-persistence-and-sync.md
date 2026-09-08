@@ -1,8 +1,9 @@
 # Research State, Persistence, And Synchronization
 
 - Status: `Current`
-- Last verified: `2026-08-25`
-- Scope: Legacy and V2 Phase 1 team structures, formulas, transitions, saved files, full/delta packet models, and reload behavior
+- Last verified: `2026-09-08` (knowledge integration verified against source)
+- Scope: Legacy research state and synchronization, plus its integration with the independent schema-2 knowledge
+  component
 - Code anchors: [`TeamResearchData`](../../src/main/java/com/teammoeg/frostedresearch/data/TeamResearchData.java), [`TeamKnowledgeData`](../../src/main/java/com/teammoeg/frostedresearch/data/TeamKnowledgeData.java), [`KnowledgeSyncSnapshot`](../../src/main/java/com/teammoeg/frostedresearch/knowledge/KnowledgeSyncSnapshot.java), [`FHKnowledgeDataSyncPacket`](../../src/main/java/com/teammoeg/frostedresearch/network/FHKnowledgeDataSyncPacket.java), [`ResearchNetworkCodec`](../../src/main/java/com/teammoeg/frostedresearch/network/ResearchNetworkCodec.java), [`FRNetwork`](../../src/main/java/com/teammoeg/frostedresearch/FRNetwork.java)
 
 ## State Hierarchy
@@ -23,16 +24,21 @@ TeamDataHolder
     ├── insight / usedInsightLevel
     └── visitedArea: BitSet
 └── data.frostedresearch:knowledge: TeamKnowledgeData
-    ├── schemaVersion: 1
-    ├── acquiredFindingIds
-    ├── acquiredDesignIds
-    ├── acquiredConstructionIds
-    └── acquiredProcedureIds
+    ├── schema_version: 2
+    ├── archive / inbox: KnowledgeEntry records keyed by KnowledgeKey
+    ├── links / research / acquisitions: actual history
+    ├── hints / daily / dream_topics
+    └── initialized / revision
 ```
 
 It is not stored in a player capability. `ResearchDataAPI.getData(Player)` resolves the player's current Chorda team, so team joins/leaves change which saved research state a player observes.
 
-`TeamKnowledgeData` is deliberately independent of `TeamResearchData`: legacy effect history remains authoritative for legacy grants, while V2 acquired result IDs remain stable even if a result definition is temporarily absent. Deleted/unknown result IDs persist as orphans but do not project. Prototype identity is stored only on the physical ItemStack and never in an acquired-ID set.
+`TeamKnowledgeData` remains independent of `TeamResearchData` and now extends `KnowledgeState`. The archive preserves
+learned observation, idea, and result identities; missing definitions or observation uses make entries dormant instead
+of deleting them. All five result kinds, including Prototype, may be archived. The older physical `upgrade_prototype`
+item identity remains a separate object. The four-set experimental knowledge schema is not migrated by this rewrite.
+See [knowledge state and API](../knowledge/state-and-api.md) for the authoritative knowledge contract; the research
+migration rules below apply to `TeamResearchData`.
 
 When FTB Teams is absent, `SinglePlayerTeam#getOnlineMembers` returns the associated `ServerPlayer` as a single-member collection while online and an empty collection while offline. This allows the same `TeamDataHolder#sendToOnline` incremental-sync path to serve fallback teams.
 
@@ -186,12 +192,12 @@ The team's `visitedArea` bitset awards one insight on first entry. The key does 
 
 Two independent persistence systems must remain consistent:
 
-| File/data | Typical location | Contents |
-|---|---|---|
-| definition config | `<server>/config/fhresearches/*.json` | complete current research catalogue; supplied only by the companion pack in production |
-| registry snapshot | `<world>/fhregistries.dat` | historical NBT string list used only to migrate old integer `active` values |
-| editor state | `<world>/fheditor.dat` | global editor flag |
-| team state | `<world>/chorda_data/<internal-team-UUID>.nbt` | compressed Chorda holder with legacy `data.research` and, once materialized, schema-1 `data.frostedresearch:knowledge` |
+| File/data         | Typical location                               | Contents                                                                                                               |
+|-------------------|------------------------------------------------|------------------------------------------------------------------------------------------------------------------------|
+| definition config | `<server>/config/fhresearches/*.json`          | complete current research catalogue; supplied only by the companion pack in production                                 |
+| registry snapshot | `<world>/fhregistries.dat`                     | historical NBT string list used only to migrate old integer `active` values                                            |
+| editor state      | `<world>/fheditor.dat`                         | global editor flag                                                                                                     |
+| team state        | `<world>/chorda_data/<internal-team-UUID>.nbt` | compressed Chorda holder with legacy `data.research` and, once materialized, schema-2 `data.frostedresearch:knowledge` |
 
 The registry snapshot does not store definitions. Restoring a world without the complete config catalogue aborts startup. Current saves and packets no longer depend on registry order; losing the snapshot only prevents translation of a schema-0/1 integer active selection and does not remove any other progress.
 
@@ -235,24 +241,32 @@ This ordering ensures UI definitions are complete before state is applied. Team/
 
 `FRNetwork` registers these semantic flows:
 
-| Message ID | Direction by use | Payload/purpose |
-|---|---|---|
-| `research_registry` | S2C | begin staged definitions plus legacy slot names |
-| `research_sync` | S2C | one definition by bounded formal string ID |
-| `research_sync_end` | S2C | finish definition indexing |
-| `research_data` | S2C | full string/nonce-keyed `TeamResearchData.NETWORK_CODEC` |
-| `knowledge_data` | S2C | full schema-1 acquired sets, result-catalogue revision, Finding projection, and technology projection with sources |
-| `research_data_update` | S2C | one `ResearchData` by research string ID |
-| `research_clue` | S2C | one clue Boolean by research string ID and clue nonce |
-| `research_effect` | S2C | one effect Boolean by research string ID and effect nonce |
-| `research_attribute` | S2C | variants NBT |
-| `research_select` | S2C | current research string ID or empty |
-| `research_insight` | S2C | insight/used-level values |
-| `research_control` | C2S | activate, start, or pause research |
-| `effect_trigger` | C2S | claim pending player effects |
-| `research_drawdesk` | C2S | drawing-desk game/item operation at a block position |
+| Message ID                                                 | Direction by use | Payload/purpose                                                                                                                                    |
+|------------------------------------------------------------|------------------|----------------------------------------------------------------------------------------------------------------------------------------------------|
+| `research_registry`                                        | S2C              | begin staged definitions plus legacy slot names                                                                                                    |
+| `research_sync`                                            | S2C              | one definition by bounded formal string ID                                                                                                         |
+| `research_sync_end`                                        | S2C              | finish definition indexing                                                                                                                         |
+| `research_data`                                            | S2C              | full string/nonce-keyed `TeamResearchData.NETWORK_CODEC`                                                                                           |
+| `knowledge_snapshot`                                       | S2C              | compressed 128 KiB fragments of schema-2 knowledge state, projections, and visible archive/relations/hints; installed as one completed replacement |
+| `knowledge_data`                                           | S2C              | retained single-envelope handler; ordinary synchronization now uses `knowledge_snapshot`                                                           |
+| `research_data_update`                                     | S2C              | one `ResearchData` by research string ID                                                                                                           |
+| `research_clue`                                            | S2C              | one clue Boolean by research string ID and clue nonce                                                                                              |
+| `research_effect`                                          | S2C              | one effect Boolean by research string ID and effect nonce                                                                                          |
+| `research_attribute`                                       | S2C              | variants NBT                                                                                                                                       |
+| `research_select`                                          | S2C              | current research string ID or empty                                                                                                                |
+| `research_insight`                                         | S2C              | insight/used-level values                                                                                                                          |
+| `research_control`                                         | C2S              | activate, start, or pause research                                                                                                                 |
+| `effect_trigger`                                           | C2S              | claim pending player effects                                                                                                                       |
+| `research_drawdesk`                                        | C2S              | drawing-desk game/item operation at a block position                                                                                               |
+| `knowledge_observe` / `knowledge_observation_state`        | C2S / S2C        | active observation session, authoritative completion preview, and inbox decision                                                                   |
+| `knowledge_workbench_action` / `knowledge_workbench_reply` | C2S / S2C        | knowledge desk operations, per-entry outcomes, complete-match candidate outputs, and refreshed view                                                |
 
-Handlers enqueue work onto the game thread. Research IDs and nonces are bounded to `128` UTF-8 characters. Codec payloads use bounded NBT envelopes; decoders validate enum ordinals, nonnegative numeric state, target existence, truncation, and malformed/oversized input. Unknown or stale targets are discarded with rate-limited diagnostics rather than dereferenced. This protocol is intentionally binary-incompatible with older clients; the network channel's exact-version handshake rejects those clients before play.
+Handlers enqueue work onto the game thread. The existing research packet envelopes described here remain separate from
+the new knowledge operation payloads; see [knowledge workbench](../knowledge/workbench.md). Research IDs and nonces are
+bounded to `128` UTF-8 characters. Codec payloads use bounded NBT envelopes; decoders validate enum ordinals,
+nonnegative numeric state, target existence, truncation, and malformed/oversized input. Unknown or stale targets are
+discarded with rate-limited diagnostics rather than dereferenced. This protocol is intentionally binary-incompatible
+with older clients; the network channel's exact-version handshake rejects those clients before play.
 
 ## Full Versus Incremental Client Refresh
 
@@ -260,7 +274,20 @@ Incremental progress, active, clue, and effect handlers call the corresponding `
 
 `FHResearchDataSyncPacket#handle` atomically replaces the complete client team value, rebuilds derived unlocks/JEI, and emits `ResearchUtils#notifyResearchDataReplaced`. An open archive then rebuilds its visible-definition set, layout, and presentation caches; valid category/filter/camera state is retained, while a removed or newly hidden selection is reconciled to a valid target.
 
-`FHKnowledgeDataSyncPacket` is a separate full-replacement protocol; Phase 1 has no knowledge delta. Login, team change, V2 acquisition/revoke, relevant legacy grant/reset, and V2 catalogue reload send one `KnowledgeSyncSnapshot`. The client replaces `TeamKnowledgeData`, `KnowledgeProjection`, `TechnologyAccessProjection`, and `catalogRevision` in the same queued handler, then refreshes JEI. Catalogue definitions themselves are not sent: the compiled projections contain every Phase 1 client-consumed target and source. Administrative revoke may also remove an orphan acquired ID while its definition is absent; this is an explicit deletion of saved history, unlike merely removing the definition from the datapack.
+`KnowledgeSnapshotPacket` carries the full-replacement protocol in compressed fragments;
+`FHKnowledgeDataSyncPacket.installClient` remains the shared installation method. Login, team changes, knowledge state
+changes, relevant legacy grants/resets, and catalogue reloads send `KnowledgeSyncSnapshot`. The client replaces schema-2
+`TeamKnowledgeData`, `KnowledgeProjection`, `TechnologyAccessProjection`, and `catalogRevision`, then installs
+`archive_view` through `KnowledgeClientState.setSnapshot` and refreshes JEI. `KnowledgeSnapshotTransfer` uses 128 KiB
+compressed fragments and waits for the entire transfer before decoding/installing; a partially received transfer leaves
+the prior view in place. The view includes only knowledge the team has encountered, actual discovered relationships, and
+revealed hints. It does not contain all undiscovered rule inputs.
+
+Knowledge batch learning/deletion returns individual outcomes while coalescing team synchronization per request. The
+client captures the original selection and submits up to 128 keys per request; UUID-correlated replies accumulate into
+the final summary. Forgetting removes an archive entry without cascading through its descendants; acquisition, research,
+and discovery history can remain visible. Removing a definition causes dormancy and does not perform a forget operation.
+See [knowledge state and API](../knowledge/state-and-api.md).
 
 ## Compatibility Rules For Saved Worlds
 
