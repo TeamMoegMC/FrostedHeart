@@ -78,8 +78,14 @@ cannot numerically jump through its boundary temperature. The configured
 `temperatureChangeRate` multiplies one explicit `GAMEPLAY_TIME_SCALE` of
 `8`; this is the gameplay acceleration, not another temperature unit. At the
 default rate, a naked dry player in calm `-15 C` Air is intended to cross the
-first torso cold threshold after roughly `45..60 s`; water and exposed wind
+first torso cold threshold after roughly `22..30 s`; water and exposed wind
 remain faster because they have independent transfer coefficients.
+
+The current gameplay balance applies `THERMAL_EXCHANGE_RATE_MULTIPLIER = 2` to
+the finalized passive air, water, powder-snow, lava, and Wet conductances, and
+to the conservative internal body-part transfers. It changes temperature
+approach speed without changing clothing resistance, environment observation,
+active heat power, or the separate world thermal runtime.
 
 ## Contact, Wet, And Clothing
 
@@ -132,10 +138,32 @@ mode, and invulnerability skip wearable exchange as well as climate injury.
 `frostedheart:warm_stone` and `frostedheart:hot_water_bag` each persist a core
 and surface temperature. Their frozen normalized capacity ratios are `0.10`
 and `0.25` relative to the whole player capacity; surface share is `a=0.20`.
-Core/surface transfer rates are `6.1613e-5 /s` and `9.2420e-4 /s`, while
-surface/player rates are `1.2e-4 /s` and `8e-5 /s`. Every at-most-one-second
-substep uses `core-surface half -> surface-player full -> core-surface half`
+Core/surface transfer rates are `2.46452e-4 /s` and `3.6968e-3 /s`, while
+surface/player rates are `6.0e-4 /s` and `4.0e-4 /s`. These are the original
+reservoir constants multiplied by `4` and `5`, respectively; the derived
+environment rates retain their `0.5` inventory and `8` dropped/placed ratios.
+Every at-most-one-second substep uses
+`core-surface half -> surface-player full -> core-surface half`
 through `ThermalExchangeKernel.exchangePairWithInverseInto`.
+
+Here `g` is the normalized heat-transfer rate per degree difference. For a
+node with normalized capacity ratio `r`, its actual temperature coefficient is
+`g/r` in `degC/s per degC`; the hotter side changes by `-g/r * deltaT` and the
+colder side by `+g/r * deltaT`. The final node-side coefficients are:
+
+| Edge | Warm stone | Hot-water bag | Node that changes |
+|---|---:|---:|---|
+| core -> surface | core `3.08065e-3`, surface `1.23226e-2` | core `1.8484e-2`, surface `7.3936e-2` | both finite nodes |
+| surface -> player | surface `3.0e-2`, player `6.0e-4` | surface `8.0e-3`, player `4.0e-4` | both finite nodes |
+| surface -> environment, inventory | surface `1.5e-2` | surface `4.0e-3` | surface only; environment is fixed |
+| surface -> environment, dropped/placed | surface `2.4e-1` | surface `6.4e-2` | surface only; environment is fixed |
+
+The corresponding isolated core/surface temperature-difference half-lives are
+`45 s` for the warm stone and `7.5 s` for the hot-water bag. Inventory
+surface/environment conductances are `3.0e-4 /s` and `2.0e-4 /s`; exposed
+dropped/placed conductances are `4.8e-3 /s` and `3.2e-3 /s`. The environment
+edge still connects only to the surface node, so the item surface rate also
+depends on its `0.02` or `0.05` normalized surface capacity.
 
 The normalized player-node delta is applied by
 `PlayerTemperatureData.applyUniformBodyTemperatureDelta` to all five parts.

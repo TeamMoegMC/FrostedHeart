@@ -42,13 +42,13 @@ class WearableThermalProfileTest {
 
         assertEquals(0.10D, profile.capacityRatio());
         assertEquals(0.20D, profile.surfaceCapacityFraction());
-        assertEquals(6.1613e-5D, profile.coreSurfaceTransferRatePerSecond());
-        assertEquals(1.2e-4D, profile.playerTransferRatePerSecond());
+        assertEquals(2.46452e-4D, profile.coreSurfaceTransferRatePerSecond(), EPSILON);
+        assertEquals(6.0e-4D, profile.playerTransferRatePerSecond(), EPSILON);
         assertEquals(0.08D, profile.coreCapacityRatio(), EPSILON);
         assertEquals(0.02D, profile.surfaceCapacityRatio(), EPSILON);
-        assertEquals(6.0e-5D,
+        assertEquals(3.0e-4D,
                 profile.inventoryEnvironmentTransferRatePerSecond(), EPSILON);
-        assertEquals(9.6e-4D,
+        assertEquals(4.8e-3D,
                 profile.droppedEnvironmentTransferRatePerSecond(), EPSILON);
     }
 
@@ -58,13 +58,13 @@ class WearableThermalProfileTest {
 
         assertEquals(0.25D, profile.capacityRatio());
         assertEquals(0.20D, profile.surfaceCapacityFraction());
-        assertEquals(9.2420e-4D, profile.coreSurfaceTransferRatePerSecond());
-        assertEquals(8.0e-5D, profile.playerTransferRatePerSecond());
+        assertEquals(3.6968e-3D, profile.coreSurfaceTransferRatePerSecond(), EPSILON);
+        assertEquals(4.0e-4D, profile.playerTransferRatePerSecond(), EPSILON);
         assertEquals(0.20D, profile.coreCapacityRatio(), EPSILON);
         assertEquals(0.05D, profile.surfaceCapacityRatio(), EPSILON);
-        assertEquals(4.0e-5D,
+        assertEquals(2.0e-4D,
                 profile.inventoryEnvironmentTransferRatePerSecond(), EPSILON);
-        assertEquals(6.4e-4D,
+        assertEquals(3.2e-3D,
                 profile.droppedEnvironmentTransferRatePerSecond(), EPSILON);
     }
 
