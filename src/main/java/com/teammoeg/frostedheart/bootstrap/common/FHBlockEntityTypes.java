@@ -25,6 +25,7 @@ import com.simibubi.create.content.kinetics.base.KineticBlockEntityRenderer;
 import com.simibubi.create.content.kinetics.base.SingleRotatingInstance;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.climate.block.wardrobe.WardrobeBlockEntity;
+import com.teammoeg.frostedheart.content.climate.player.thermalitem.ThermalReservoirBlockEntity;
 import com.teammoeg.frostedheart.content.decoration.RelicChestTileEntity;
 import com.teammoeg.frostedheart.content.incubator.HeatIncubatorTileEntity;
 import com.teammoeg.frostedheart.content.incubator.IncubatorTileEntity;
@@ -77,6 +78,10 @@ public class FHBlockEntityTypes {
 
     public static final DeferredRegister<BlockEntityType<?>> REGISTER = DeferredRegister.create(
             ForgeRegistries.BLOCK_ENTITY_TYPES, FHMain.MODID);
+    public static final RegistryObject<BlockEntityType<ThermalReservoirBlockEntity>> THERMAL_RESERVOIR = REGISTER.register(
+            "thermal_reservoir", makeType(ThermalReservoirBlockEntity::new,
+                    FHBlocks.WARM_STONE::get, FHBlocks.HOT_WATER_BAG::get)
+    );
     public static final RegistryObject<BlockEntityType<HeatPipeTileEntity>> HEATPIPE = REGISTER.register(
             "heat_pipe", makeType(HeatPipeTileEntity::new, FHBlocks.HEAT_PIPE::get)
     );

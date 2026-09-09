@@ -2,8 +2,8 @@
 
 - Status: `Current`
 - Last verified: `2026-09-09`
-- Scope: player environment sampling, five-part body energy, wearable thermal reservoirs, clothing, Wet, heating equipment, HUD, effects, persistence, and synchronization
-- Primary code anchors: `PlayerTemperatureUpdate.updateTemperature`, `PlayerTemperatureComputation.updatePlayer`, `PlayerThermalEnvironment`, `PlayerEquipmentHeating`, `PlayerThermoregulation`, `PlayerThermalModel`, `PlayerThermalInjury`, `PlayerTemperatureData`, `WearableThermalExchangeHandler`, `ThreeNodeWearableHeatExchange`, `FHBodyDataSyncPacket`, `FrostedHud.renderTemperature`
+- Scope: player environment sampling, five-part body energy, wearable thermal reservoirs, clothing, Wet, heating equipment, thermometers, HUD, effects, persistence, and synchronization
+- Primary code anchors: `PlayerTemperatureUpdate.updateTemperature`, `PlayerTemperatureComputation.updatePlayer`, `PlayerThermalEnvironment`, `PlayerEquipmentHeating`, `PlayerThermoregulation`, `PlayerThermalModel`, `PlayerThermalInjury`, `PlayerTemperatureData`, `ThermometerItem`, `CreativeThermometerItem`, `FHTemperatureDisplayPacket`, `WearableThermalExchangeHandler`, `ThreeNodeWearableHeatExchange`, `ThermalReservoirBlock`, `ThermalReservoirBlockEntity.serverTick`, `FHBodyDataSyncPacket`, `FrostedHud.renderTemperature`
 
 ## Player-Facing Values
 
@@ -16,6 +16,8 @@ the number shows the value and the orb texture shows its cold-to-hot band.
 | Number | environmental equivalent temperature, `C` | the still-air temperature that would produce the current immediate environmental heat exchange |
 | Orb color | environmental equivalent temperature, `C` | the existing orb texture bands are selected from the same Celsius value as the number |
 | Body status/effects | body temperature offset from `37 C` | accumulated physiological danger |
+| Mercury body thermometer | core body temperature, displayed to `0.1 C` | the existing held measurement flow uses the normal client temperature unit |
+| Creative thermometer | raw absolute core body temperature, `C` | right-click reports immediately in every game mode without display quantization |
 
 The number and color are never body temperature and never `air - 37`.
 `FrostedHud.renderTemperature` passes the environmental equivalent Celsius
@@ -23,6 +25,13 @@ value to the existing orb texture thresholds. Clothing, Wet, movement,
 difficulty, food, and equipment can change body power without changing either
 HUD temperature presentation. Net body power remains available to the server
 diagnostic command and body calculation, but is not sent for HUD color.
+
+`ThermometerItem` keeps its 100-tick held measurement. Its floating-point
+display packet is quantized to one decimal place and formatted with one decimal
+digit on the client. `CreativeThermometerItem` handles the server-side right
+click immediately, reads `PlayerTemperatureData.getAbsoluteCoreBodyTemp()`, and
+passes `Float.toString` directly to the localized message. That raw value is
+reported in Celsius and is not converted to the client Fahrenheit setting.
 
 ## Cadence And Environment
 
@@ -136,7 +145,8 @@ energy representation. It does not advance `prevCoreBodyTemp`.
 
 Only slot `curios:warm_stone` participates. Inventory reservoirs exchange with
 air at half the surface/player rate; dropped single-item entities exchange at
-eight times that rate and also consume bounded direct radiation. Unticked
+eight times that rate and also consume bounded direct radiation. Placed
+reservoir blocks use the same exposed exchange rate and radiation boundary. Unticked
 containers pause. Normal tooltip shows the capacity-weighted mean
 `(1-a)*T_core + a*T_surface`; advanced tooltip additionally shows both nodes.
 
@@ -147,6 +157,28 @@ physical runtime. Equipped reservoirs initialize from composed player air and
 then exchange with the five-part body; they have no additional direct
 generator-heating step. See [world-climate-and-temperature.md](world-climate-and-temperature.md)
 for composition order and dropped-item cache behavior.
+
+Both items are also placeable blocks with the same registry IDs. Right-click a
+supported surface to place one reservoir, oriented toward the player; creative
+placement retains the held stack. The small ground models reuse the existing
+item textures. Breaking the block or removing its support drops one item with
+the current core/surface temperatures, custom name, and other original item
+data. Pick block also returns this stored item state.
+
+`ThermalReservoirBlockEntity` saves the complete single-item stack under
+`ReservoirItem` using block entity type `frostedheart:thermal_reservoir`.
+Server block ticks exchange once per `20 ticks` (one simulated second), staggered
+by position, after at least `20` loaded ticks. Unloaded blocks pause; loading
+does not simulate elapsed offline time. Fresh, uninitialized placements acquire
+the effective environment temperature on their first exchange. Existing
+temperatures survive placement and reload without reinitialization.
+
+`MinecraftThermalInput.gameplayPlacedReservoirEnvironment` samples just above
+the model at block-relative `(0.5, 0.3125, 0.5)` and shares the dropped-item
+air/radiation cache and budgets. `DroppedReservoirExchangeHandler.exchangeInto`
+owns both forms' core/surface update, including generator floors and bounded
+direct radiation. Like dropped reservoirs, these blocks consume the environment
+boundary without registering a new physical heat source in the world solver.
 
 ## Persistence And Synchronization
 

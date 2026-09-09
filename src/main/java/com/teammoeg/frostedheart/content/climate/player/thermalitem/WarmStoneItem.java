@@ -11,13 +11,14 @@
 package com.teammoeg.frostedheart.content.climate.player.thermalitem;
 
 import com.teammoeg.frostedheart.compat.curios.CuriosCompat;
-import com.teammoeg.frostedheart.item.FHBaseItem;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.item.BlockItem;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.level.Level;
@@ -35,7 +36,7 @@ import java.util.Objects;
  * Shared item implementation for warm stones and hot-water bags. Its profile is
  * immutable; each ItemStack owns only the two persisted temperatures.
  */
-public class WarmStoneItem extends FHBaseItem
+public class WarmStoneItem extends BlockItem
         implements WearableThermalReservoir, ICurioItem {
     private static final InventoryThermalExchangeHandler INVENTORY_EXCHANGE_HANDLER =
             new InventoryThermalExchangeHandler();
@@ -43,9 +44,14 @@ public class WarmStoneItem extends FHBaseItem
             new DroppedReservoirExchangeHandler();
     private final WearableThermalProfile thermalProfile;
 
-    public WarmStoneItem(Item.Properties properties, WearableThermalProfile thermalProfile) {
-        super(properties.stacksTo(1));
+    public WarmStoneItem(Block block, Item.Properties properties, WearableThermalProfile thermalProfile) {
+        super(block, properties.stacksTo(1));
         this.thermalProfile = Objects.requireNonNull(thermalProfile, "thermalProfile");
+    }
+
+    @Override
+    public String getDescriptionId() {
+        return getOrCreateDescriptionId();
     }
 
     @Override

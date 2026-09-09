@@ -648,15 +648,31 @@ public final class MinecraftThermalInput implements AutoCloseable {
             ItemEntity entity, double naturalTemperatureC, ThermalEnvironmentSample out
     ) {
         Objects.requireNonNull(entity, "entity");
-        Objects.requireNonNull(out, "out").clear();
-        if (!(entity.level() instanceof ServerLevel server)
-                || !server.getServer().isSameThread()
-                || !Double.isFinite(naturalTemperatureC)) return;
+        if (!(entity.level() instanceof ServerLevel server)) {
+            out.clear();
+            return;
+        }
+        gameplayExposedReservoirEnvironment(server, receiverKey(entity), entity.getId() & Integer.MAX_VALUE,
+                entity.getX(), entity.getY() + entity.getBbHeight() * 0.5D, entity.getZ(),
+                naturalTemperatureC, out);
+    }
 
+    /** Samples just above a placed reservoir using the same budget and boundary as dropped items. */
+    public static void gameplayPlacedReservoirEnvironment(
+            ServerLevel server, BlockPos position, double naturalTemperatureC, ThermalEnvironmentSample out
+    ) {
+        gameplayExposedReservoirEnvironment(server, position.asLong(), 0,
+                position.getX() + 0.5D, position.getY() + 0.3125D, position.getZ() + 0.5D,
+                naturalTemperatureC, out);
+    }
+
+    private static void gameplayExposedReservoirEnvironment(
+            ServerLevel server, long receiverIdentity, int receiverGeneration,
+            double x, double y, double z, double naturalTemperatureC, ThermalEnvironmentSample out
+    ) {
+        Objects.requireNonNull(out, "out").clear();
+        if (!server.getServer().isSameThread() || !Double.isFinite(naturalTemperatureC)) return;
         MinecraftThermalInput input = active(server);
-        double x = entity.getX();
-        double y = entity.getY() + entity.getBbHeight() * 0.5D;
-        double z = entity.getZ();
         long tick = server.getGameTime();
         if (input == null) {
             double dormant = dormantTemperature(server, floor(x), floor(y), floor(z),
@@ -672,7 +688,7 @@ public final class MinecraftThermalInput implements AutoCloseable {
             } else {
                 input.sampleAir(x, y, z, tick, MAX_PUBLICATION_AGE_TICKS, out);
                 if (input.itemEnvironmentCache.canAdmit() && input.radiation != null) {
-                    input.radiation.sampleItem(receiverKey(entity), entity.getId() & Integer.MAX_VALUE,
+                    input.radiation.sampleItem(receiverIdentity, receiverGeneration,
                             x, y, z, input.radiationSample);
                     out.setRadiation(input.radiationSample.radiantFluxWPerM2());
                 }

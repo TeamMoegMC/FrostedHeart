@@ -88,9 +88,15 @@ ServerStoppedEvent
 Wearable reservoirs advance on the configured player-temperature cadence in
 `PlayerTemperatureUpdate`, after the ordinary five-part body computation and
 before the existing quantized body packet decision. No reservoir-specific
-network packet exists; ItemStack/Curios synchronization remains authoritative.
+network packet exists; ItemStack/Curios synchronization remains authoritative
+for carried and equipped items. Placed reservoirs use vanilla block entity
+update packets/tags to synchronize their stored `ReservoirItem` stack whenever
+exchange changes it. The block entity type is `frostedheart:thermal_reservoir`;
+`ThermalReservoirBlockEntity.saveAdditional/load` preserve the complete item NBT.
 Inventory stacks and exact single `ItemEntity` stacks use their own staggered
-20-tick cadence. Dropped sampling keeps at most 64 quarter-block positions per
+20-tick cadence. Placed reservoirs also use a position-staggered 20-tick server
+block cadence, with at least 20 loaded ticks before the first update and no
+unloaded-time catch-up. Dropped and placed sampling share at most 64 quarter-block positions per
 level and tick, plus a separate 64-receiver radiation witness cache; overflow
 still receives composed air with zero direct radiation. These caches are
 transient and are cleared with the level runtime. The position cache stores raw
@@ -185,6 +191,12 @@ when either value changes, plus one forced state on login, respawn, and
 dimension change. Net body power remains server-side diagnostic state and is
 not a client HUD input. World air and Page cell state remain query-on-demand
 and are never placed in the body packet.
+
+`FHTemperatureDisplayPacket` remains the registered `temperature_display` message
+for localized temperature reports. Its floating-point constructors carry the
+one-decimal display flag and its integer constructors retain integer formatting;
+`CreativeThermometerItem` sends its unquantized raw body value as a localized
+server component instead of using this packet.
 
 `FHRequestInfraredViewDataSyncPacket` is a separate client-carried-state poll:
 opening or moving forces a full request; stable clients poll every 40 ticks with

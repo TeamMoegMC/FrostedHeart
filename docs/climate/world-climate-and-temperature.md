@@ -284,7 +284,9 @@ Generator 另外提供上述解析保底；其物理功率和传播范围不受�
 
 `MinecraftThermalInput.gameplayItemEnvironment` 为掉落暖石和热水袋读取已有 live/last
 publication，未命中时使用已加载 chunk 的 dormant 温度，再回退 `WorldTemperature.naturalAir`。
-随后在物品中心按当前 `MinecraftGameplayFields` 合成解析场：能量塔取
+方块形态的 `gameplayPlacedReservoirEnvironment` 复用同一查询和预算，在方块相对坐标
+`(0.5, 0.3125, 0.5)`（模型上方）采样；两种形态使用相同的暴露换热速率。
+随后在接收点按当前 `MinecraftGameplayFields` 合成解析场：能量塔取
 `max(physicalOrFallback, naturalAir + maximumMatchingDelta)`，再执行命令和 Boss 控制。
 即使物理 runtime 不存在或刚关闭，世界拥有的解析场仍然生效；查询不会启动 runtime 或加载区块。
 有 runtime 时，同 tick 最多缓存 64 个四分之一方块位置的原始空气/直接辐射结果；解析场不缓存，
