@@ -1,7 +1,7 @@
 # 世界气候与环境温度
 
 - Status: `Current`
-- Last verified: `2026-09-08`
+- Last verified: `2026-09-09`
 - Scope: 逻辑气候时钟、长期事件、局部白幕、自然/mesh/analytic 温度合成、红外视野、方块状态消费者
 - Primary code anchors: `WorldClockSource`, `WorldClimate`, `ClimateEventModel`, `ClimateEventTrack`, `InterpolationClimateEvent`, `WhiteCurtainDescriptor`, `WhiteCurtainFieldModel`, `WhiteCurtainInfo`, `WorldTemperature`, `BlockTemperatureModel`, `ThermalAnalyticField`, `ThermalAnalyticFieldIndex`, `MinecraftThermalInput.gameplayPassiveEnvironment`, `MinecraftThermalInput.gameplayCropEnvironment`, `MinecraftThermalInput.gameplayInfraredSnapshot`, `TownThermalProjection`, `MinecraftThermalInput.gameplayTownEnvironment`, `InfraredViewRenderer`
 
@@ -281,6 +281,15 @@ Generator 另外提供上述解析保底；其物理功率和传播范围不受�
 `WorldTemperature.air` 主要供被动环境查询、降雪判断及显示工具使用。玩家体温路径直接消费 sparse publication、analytic field 和物理辐射；旧 `BlockTempData` 粒子采样当前不再调度，见 [player-temperature.md](player-temperature.md)。
 
 `WorldTemperature.checkPlantStatus` 真正需要温度的路径调用 `MinecraftThermalInput.gameplayCropEnvironment`。已有 Air Mesh publication 命中时，返回的空气温度直接进入施肥、生长、生存和死亡阈值；无 active runtime、无 Page、无可解析 Air 点、stale 或超龄 publication 时使用 natural block temperature，再合成 analytic field。天气先行决定植物状态时不发起 thermal query。该 passive 路径不会创建 Page、Brick、Cell 或 Interest。
+
+`MinecraftThermalInput.gameplayItemEnvironment` 为掉落暖石和热水袋读取已有 live/last
+publication，未命中时使用已加载 chunk 的 dormant 温度，再回退 `WorldTemperature.naturalAir`。
+随后在物品中心按当前 `MinecraftGameplayFields` 合成解析场：能量塔取
+`max(physicalOrFallback, naturalAir + maximumMatchingDelta)`，再执行命令和 Boss 控制。
+即使物理 runtime 不存在或刚关闭，世界拥有的解析场仍然生效；查询不会启动 runtime 或加载区块。
+有 runtime 时，同 tick 最多缓存 64 个四分之一方块位置的原始空气/直接辐射结果；解析场不缓存，
+每次按精确位置重新合成，保留同 tick 场更新、移除与边界变化。缓存满后仍采样空气并合成解析场，
+新增位置的直接辐射为零。`RadiationService.sampleItem` 保留独立的物品辐射预算。
 
 住宅与狩猎基地扫描器访问内部空气时同步把坐标压缩成 `TownThermalProjection` 的 `4×4×4` weighted groups。
 每组在 representative 点独立选择 live/dormant/natural，合成解析场后按体素数加权，并驱动评分与日结算。

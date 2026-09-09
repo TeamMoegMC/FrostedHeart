@@ -1,7 +1,7 @@
 # Player Temperature
 
 - Status: `Current`
-- Last verified: `2026-09-04`
+- Last verified: `2026-09-09`
 - Scope: player environment sampling, five-part body energy, wearable thermal reservoirs, clothing, Wet, heating equipment, HUD, effects, persistence, and synchronization
 - Primary code anchors: `PlayerTemperatureUpdate.updateTemperature`, `PlayerTemperatureComputation.updatePlayer`, `PlayerThermalEnvironment`, `PlayerEquipmentHeating`, `PlayerThermoregulation`, `PlayerThermalModel`, `PlayerThermalInjury`, `PlayerTemperatureData`, `WearableThermalExchangeHandler`, `ThreeNodeWearableHeatExchange`, `FHBodyDataSyncPacket`, `FrostedHud.renderTemperature`
 
@@ -139,6 +139,14 @@ air at half the surface/player rate; dropped single-item entities exchange at
 eight times that rate and also consume bounded direct radiation. Unticked
 containers pause. Normal tooltip shows the capacity-weighted mean
 `(1-a)*T_core + a*T_surface`; advanced tooltip additionally shows both nodes.
+
+Inventory air comes from `MinecraftThermalInput.gameplayPassiveEnvironment`;
+dropped air comes from `gameplayItemEnvironment`. Both compose the generator
+floor against local natural air before command/Boss controls, even without a
+physical runtime. Equipped reservoirs initialize from composed player air and
+then exchange with the five-part body; they have no additional direct
+generator-heating step. See [world-climate-and-temperature.md](world-climate-and-temperature.md)
+for composition order and dropped-item cache behavior.
 
 ## Persistence And Synchronization
 

@@ -1,7 +1,7 @@
 # Climate Data And Lifecycle
 
 - Status: `Current`
-- Last verified: `2026-09-08`
+- Last verified: `2026-09-09`
 - Scope: recipe/configuration ownership, capabilities, server lifecycle, thermal runtime integration, and network boundaries
 - Primary code anchors: `FHRecipeCachingReloadListener`, `WorldTemperature`, `MinecraftThermalEvents`, `MinecraftThermalInput`, `ThermalWorkerPool`, `LevelChunkSectionMixin_ThermalInput`, `FHCapabilities`, `FHNetwork`
 
@@ -93,7 +93,10 @@ Inventory stacks and exact single `ItemEntity` stacks use their own staggered
 20-tick cadence. Dropped sampling keeps at most 64 quarter-block positions per
 level and tick, plus a separate 64-receiver radiation witness cache; overflow
 still receives composed air with zero direct radiation. These caches are
-transient and are cleared with the level runtime.
+transient and are cleared with the level runtime. The position cache stores raw
+physical inputs only. Every item query composes the current world-owned
+`MinecraftGameplayFields` at its exact receiver position, including when the
+physical runtime is absent; runtime close does not discard generator floors.
 
 `TemperatureThreadingPool.java` is intentionally retained but never initialized
 or polled. It is not part of the new lifecycle. No synchronous thermal dispatch
