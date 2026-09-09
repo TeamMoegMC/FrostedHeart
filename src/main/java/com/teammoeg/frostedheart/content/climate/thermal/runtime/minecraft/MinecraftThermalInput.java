@@ -48,6 +48,7 @@ import net.minecraft.core.SectionPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.Mth;
+import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.chunk.LevelChunkSection;
@@ -83,6 +84,7 @@ public final class MinecraftThermalInput implements AutoCloseable {
     private static final int SOURCE_DISCOVERY_CHUNKS_PER_TICK = 8;
     private static final int MAXIMUM_SOURCE_NODES = 131_072;
     private static final int MAXIMUM_RADIATION_SECTIONS = 3_200;
+    static final int GAMEPLAY_ITEM_ENVIRONMENT_SAMPLES_PER_TICK = 64;
     private static final ThermalMemoryBudget MEMORY =
             new ThermalMemoryBudget(128L * 1024L * 1024L);
     private static final RadiationService.Parameters RADIATION_PARAMETERS =
@@ -125,6 +127,8 @@ public final class MinecraftThermalInput implements AutoCloseable {
             new ThermalEnvironmentSample();
     private final ThermalEnvironmentSample townScratch =
             new ThermalEnvironmentSample();
+    private final ItemEnvironmentSampleCache itemEnvironmentCache =
+            new ItemEnvironmentSampleCache(GAMEPLAY_ITEM_ENVIRONMENT_SAMPLES_PER_TICK);
     private final BlockPos.MutableBlockPos townPosition =
             new BlockPos.MutableBlockPos();
     private static InfraredCapture infraredCapture;
@@ -633,6 +637,69 @@ public final class MinecraftThermalInput implements AutoCloseable {
         if (fieldsOut == null) return fields.compose(x, y, z, naturalTemperatureC, base);
         fields.sample(x, y, z, fieldsOut);
         return fieldsOut.compose(naturalTemperatureC, base);
+    }
+
+    /**
+     * Samples a dropped reservoir without starting a physical runtime or admitting
+     * Pages. Cache only physical inputs; world fields are composed at the exact
+     * receiver position on every query, including same-tick field updates.
+     */
+    public static void gameplayItemEnvironment(
+            ItemEntity entity, double naturalTemperatureC, ThermalEnvironmentSample out
+    ) {
+        Objects.requireNonNull(entity, "entity");
+        if (!(entity.level() instanceof ServerLevel server)) {
+            out.clear();
+            return;
+        }
+        gameplayExposedReservoirEnvironment(server, receiverKey(entity), entity.getId() & Integer.MAX_VALUE,
+                entity.getX(), entity.getY() + entity.getBbHeight() * 0.5D, entity.getZ(),
+                naturalTemperatureC, out);
+    }
+
+    /** Samples just above a placed reservoir using the same budget and boundary as dropped items. */
+    public static void gameplayPlacedReservoirEnvironment(
+            ServerLevel server, BlockPos position, double naturalTemperatureC, ThermalEnvironmentSample out
+    ) {
+        gameplayExposedReservoirEnvironment(server, position.asLong(), 0,
+                position.getX() + 0.5D, position.getY() + 0.3125D, position.getZ() + 0.5D,
+                naturalTemperatureC, out);
+    }
+
+    private static void gameplayExposedReservoirEnvironment(
+            ServerLevel server, long receiverIdentity, int receiverGeneration,
+            double x, double y, double z, double naturalTemperatureC, ThermalEnvironmentSample out
+    ) {
+        Objects.requireNonNull(out, "out").clear();
+        if (!server.getServer().isSameThread() || !Double.isFinite(naturalTemperatureC)) return;
+        MinecraftThermalInput input = active(server);
+        long tick = server.getGameTime();
+        if (input == null) {
+            double dormant = dormantTemperature(server, floor(x), floor(y), floor(z),
+                    tick, DORMANT_QUERY_POSITION.get());
+            if (Double.isFinite(dormant)) out.setAir(dormant);
+        } else {
+            int quarterX = floorQuarter(x);
+            int quarterY = floorQuarter(y);
+            int quarterZ = floorQuarter(z);
+            int cached = input.itemEnvironmentCache.find(tick, quarterX, quarterY, quarterZ);
+            if (cached >= 0) {
+                input.itemEnvironmentCache.copyTo(cached, out);
+            } else {
+                input.sampleAir(x, y, z, tick, MAX_PUBLICATION_AGE_TICKS, out);
+                if (input.itemEnvironmentCache.canAdmit() && input.radiation != null) {
+                    input.radiation.sampleItem(receiverIdentity, receiverGeneration,
+                            x, y, z, input.radiationSample);
+                    out.setRadiation(input.radiationSample.radiantFluxWPerM2());
+                }
+                input.itemEnvironmentCache.store(quarterX, quarterY, quarterZ, out);
+            }
+        }
+        double base = out.airAvailable() ? out.airTemperatureC() : naturalTemperatureC;
+        ThermalAnalyticFieldIndex fields = input == null
+                ? MinecraftGameplayFields.existing(server) : input.analyticFields;
+        out.setComposedAir(fields == null ? base
+                : fields.compose(x, y, z, naturalTemperatureC, base));
     }
 
     public static double gameplayCropEnvironment(
@@ -1541,6 +1608,7 @@ public final class MinecraftThermalInput implements AutoCloseable {
         pages.close();
         environment.close();
         if (radiation != null) radiation.close();
+        itemEnvironmentCache.clear();
         mailbox.close();
         synchronized (ACTIVE) {
             ACTIVE.remove(level, this);
@@ -1779,10 +1847,10 @@ public final class MinecraftThermalInput implements AutoCloseable {
                 * ThermalInputBatch.CUT_INTERVAL_TICKS;
     }
 
-    private static long receiverKey(ServerPlayer player) {
-        return player.getUUID().getMostSignificantBits()
+    private static long receiverKey(net.minecraft.world.entity.Entity entity) {
+        return entity.getUUID().getMostSignificantBits()
                 ^ Long.rotateLeft(
-                        player.getUUID().getLeastSignificantBits(), 17);
+                        entity.getUUID().getLeastSignificantBits(), 17);
     }
 
     private static long nextGeneration() {
@@ -1791,6 +1859,74 @@ public final class MinecraftThermalInput implements AutoCloseable {
 
     private static int floor(double value) {
         return (int) Math.floor(value);
+    }
+
+    private static int floorQuarter(double value) {
+        return (int) Math.floor(value * 4.0D);
+    }
+
+    static final class ItemEnvironmentSampleCache {
+        private final int[] quarterX;
+        private final int[] quarterY;
+        private final int[] quarterZ;
+        private final ThermalEnvironmentSample[] samples;
+        private long generationTick = Long.MIN_VALUE;
+        private int size;
+
+        ItemEnvironmentSampleCache(int capacity) {
+            if (capacity <= 0) {
+                throw new IllegalArgumentException("capacity must be positive");
+            }
+            quarterX = new int[capacity];
+            quarterY = new int[capacity];
+            quarterZ = new int[capacity];
+            samples = new ThermalEnvironmentSample[capacity];
+            for (int index = 0; index < capacity; index++) {
+                samples[index] = new ThermalEnvironmentSample();
+            }
+        }
+
+        int find(long tick, int x, int y, int z) {
+            beginGeneration(tick);
+            for (int index = 0; index < size; index++) {
+                if (quarterX[index] == x && quarterY[index] == y && quarterZ[index] == z) return index;
+            }
+            return -1;
+        }
+
+        boolean canAdmit() { return size < samples.length; }
+
+        boolean store(int x, int y, int z, ThermalEnvironmentSample sample) {
+            if (!canAdmit()) return false;
+            quarterX[size] = x;
+            quarterY[size] = y;
+            quarterZ[size] = z;
+            samples[size].copyFrom(sample);
+            size++;
+            return true;
+        }
+
+        void copyTo(int index, ThermalEnvironmentSample out) {
+            if (index < 0 || index >= size) throw new IndexOutOfBoundsException(index);
+            out.copyFrom(samples[index]);
+        }
+
+        int size() { return size; }
+        int capacity() { return samples.length; }
+        long generationTick() { return generationTick; }
+
+        void clear() {
+            generationTick = Long.MIN_VALUE;
+            size = 0;
+        }
+
+        private void beginGeneration(long tick) {
+            if (tick < 0L) throw new IllegalArgumentException("tick must be non-negative");
+            if (generationTick != tick) {
+                generationTick = tick;
+                size = 0;
+            }
+        }
     }
 
 

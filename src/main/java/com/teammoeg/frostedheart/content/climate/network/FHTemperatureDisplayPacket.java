@@ -39,6 +39,7 @@ public class FHTemperatureDisplayPacket implements CMessage {
     private final String langKey;
     private final boolean isStatus;
     private final boolean isAction;
+    private final boolean showDecimal;
 
     public FHTemperatureDisplayPacket(FriendlyByteBuf buffer) {
         langKey = buffer.readUtf();
@@ -46,6 +47,7 @@ public class FHTemperatureDisplayPacket implements CMessage {
         boolean[] bs = SerializeUtil.readBooleans(buffer);
         isStatus = bs[0];
         isAction = bs[1];
+        showDecimal = bs[2];
     }
 
     public FHTemperatureDisplayPacket(String format, boolean isAction, float... data) {
@@ -55,6 +57,7 @@ public class FHTemperatureDisplayPacket implements CMessage {
             temp[i] = (int) (data[i] * 10);
         isStatus = true;
         this.isAction = isAction;
+        showDecimal = true;
     }
 
     public FHTemperatureDisplayPacket(String format, boolean isAction, int... data) {
@@ -64,6 +67,7 @@ public class FHTemperatureDisplayPacket implements CMessage {
             temp[i] *= 10;
         isStatus = true;
         this.isAction = isAction;
+        showDecimal = false;
     }
 
     public FHTemperatureDisplayPacket(String format, float... data) {
@@ -73,6 +77,7 @@ public class FHTemperatureDisplayPacket implements CMessage {
             temp[i] = (int) (data[i] * 10);
         isStatus = false;
         isAction = false;
+        showDecimal = true;
     }
 
     public FHTemperatureDisplayPacket(String format, int... data) {
@@ -82,12 +87,13 @@ public class FHTemperatureDisplayPacket implements CMessage {
             temp[i] *= 10;
         isStatus = false;
         isAction = false;
+        showDecimal = false;
     }
 
     public void encode(FriendlyByteBuf buffer) {
         buffer.writeUtf(langKey);
         buffer.writeVarIntArray(temp);
-        SerializeUtil.writeBooleans(buffer, isStatus, isAction);
+        SerializeUtil.writeBooleans(buffer, isStatus, isAction, showDecimal);
     }
 
     public void handle(Supplier<NetworkEvent.Context> context) {
@@ -95,7 +101,9 @@ public class FHTemperatureDisplayPacket implements CMessage {
             Player player = DistExecutor.safeCallWhenOn(Dist.CLIENT, () -> ClientUtils::getPlayer);
             Object[] ss = new Object[temp.length];
             for (int i = 0; i < ss.length; i++) {
-                ss[i] = TemperatureDisplayHelper.toTemperatureIntString(temp[i] / 10f);
+                ss[i] = showDecimal
+                        ? TemperatureDisplayHelper.toTemperatureFloatString(temp[i] / 10f)
+                        : TemperatureDisplayHelper.toTemperatureIntString(temp[i] / 10f);
             }
             
             MutableComponent tosend = Lang.translateMessage(langKey, ss);

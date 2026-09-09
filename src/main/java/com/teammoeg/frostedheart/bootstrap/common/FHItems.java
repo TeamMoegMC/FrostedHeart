@@ -1339,14 +1339,14 @@ thinner.png
             .register();
     public static final ItemEntry<WarmStoneItem> warm_stone = REGISTRATE
             .item("warm_stone", properties -> new WarmStoneItem(
-                    properties, WearableThermalProfile.WARM_STONE_DEFAULT))
+                    FHBlocks.WARM_STONE.get(), properties, WearableThermalProfile.WARM_STONE_DEFAULT))
             .tag(FHTags.Items.CURIOS_WARM_STONE.tag)
             .model(FHBlockStateGen.existingItemModel())
             .lang("Warm Stone")
             .register();
     public static final ItemEntry<WarmStoneItem> hot_water_bag = REGISTRATE
             .item("hot_water_bag", properties -> new WarmStoneItem(
-                    properties, WearableThermalProfile.HOT_WATER_BAG_DEFAULT))
+                    FHBlocks.HOT_WATER_BAG.get(), properties, WearableThermalProfile.HOT_WATER_BAG_DEFAULT))
             .tag(FHTags.Items.CURIOS_WARM_STONE.tag)
             .model(FHBlockStateGen.existingItemModel())
             .lang("Hot Water Bag")
@@ -1359,6 +1359,10 @@ thinner.png
             .register();
     public static final ItemEntry<ThermometerItem> mercury_body_thermometer = REGISTRATE
             .item("mercury_body_thermometer", ThermometerItem::new)
+            .model(FHBlockStateGen.existingItemModel())
+            .register();
+    public static final ItemEntry<CreativeThermometerItem> creative_thermometer = REGISTRATE
+            .item("creative_thermometer", CreativeThermometerItem::new)
             .model(FHBlockStateGen.existingItemModel())
             .register();
     public static final ItemEntry<SteamBottleItem> steam_bottle = REGISTRATE

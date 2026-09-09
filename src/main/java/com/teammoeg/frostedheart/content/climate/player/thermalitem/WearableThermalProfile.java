@@ -26,13 +26,24 @@ public record WearableThermalProfile(
         double coreSurfaceTransferRatePerSecond,
         double playerTransferRatePerSecond
 ) {
+    /** Final gameplay multipliers relative to the original reservoir constants. */
+    public static final double CORE_SURFACE_RATE_MULTIPLIER = 4.0D;
+    public static final double PLAYER_RATE_MULTIPLIER = 5.0D;
     public static final double INVENTORY_ENVIRONMENT_MULTIPLIER = 0.5D;
     public static final double DROPPED_ENVIRONMENT_MULTIPLIER = 16.0D;
 
     public static final WearableThermalProfile WARM_STONE_DEFAULT =
-            new WearableThermalProfile(0.10D, 0.20D, 6.1613e-5D, 1.2e-4D);
+            new WearableThermalProfile(
+                    0.10D,
+                    0.20D,
+                    6.1613e-5D * CORE_SURFACE_RATE_MULTIPLIER,
+                    1.2e-4D * PLAYER_RATE_MULTIPLIER);
     public static final WearableThermalProfile HOT_WATER_BAG_DEFAULT =
-            new WearableThermalProfile(0.25D, 0.20D, 9.2420e-4D, 8.0e-5D);
+            new WearableThermalProfile(
+                    0.25D,
+                    0.20D,
+                    9.2420e-4D * CORE_SURFACE_RATE_MULTIPLIER,
+                    8.0e-5D * PLAYER_RATE_MULTIPLIER);
 
     public WearableThermalProfile {
         requirePositiveFinite(capacityRatio, "capacityRatio");

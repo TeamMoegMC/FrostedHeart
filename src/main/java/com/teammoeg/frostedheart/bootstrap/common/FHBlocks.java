@@ -42,6 +42,7 @@ import com.teammoeg.frostedheart.content.climate.block.CooledMagmaBlock;
 import com.teammoeg.frostedheart.content.climate.block.LayeredThinIceBlock;
 import com.teammoeg.frostedheart.content.climate.block.ThinIceBlock;
 import com.teammoeg.frostedheart.content.climate.block.wardrobe.WardrobeBlock;
+import com.teammoeg.frostedheart.content.climate.player.thermalitem.ThermalReservoirBlock;
 import com.teammoeg.frostedheart.content.decoration.*;
 import com.teammoeg.frostedheart.content.incubator.HeatIncubatorBlock;
 import com.teammoeg.frostedheart.content.incubator.IncubatorBlock;
@@ -125,6 +126,21 @@ import static net.minecraft.world.level.block.Blocks.*;
 
 @SuppressWarnings("unused")
 public class FHBlocks {
+
+    public static final BlockEntry<ThermalReservoirBlock> WARM_STONE = REGISTRATE
+            .block("warm_stone", ThermalReservoirBlock::new)
+            .properties(p -> p.strength(0.3F).sound(SoundType.STONE).noOcclusion()
+                    .pushReaction(PushReaction.DESTROY))
+            .blockstate(FHBlockStateGen.existed())
+            .loot((provider, block) -> {}) // Drops the stored ItemStack in getDrops.
+            .register();
+    public static final BlockEntry<ThermalReservoirBlock> HOT_WATER_BAG = REGISTRATE
+            .block("hot_water_bag", ThermalReservoirBlock::new)
+            .properties(p -> p.strength(0.2F).sound(SoundType.WOOL).noOcclusion()
+                    .pushReaction(PushReaction.DESTROY))
+            .blockstate(FHBlockStateGen.existed())
+            .loot((provider, block) -> {})
+            .register();
 
     public static final DeferredRegister<Block> BLOCKS = DeferredRegister.create(ForgeRegistries.BLOCKS, FHMain.MODID);
 

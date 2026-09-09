@@ -25,19 +25,20 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class ThreeNodeWearableHeatExchangeTest {
     private static final double EPSILON = 1.0e-12D;
+    private static final double INTEGRATOR_SPLIT_TOLERANCE = 5.0e-4D;
 
     @Test
     void frozenHalfLivesRoundTripToAuthoritativeTransferRates() {
         assertHalfLife(
                 WearableThermalProfile.WARM_STONE_DEFAULT,
-                180.0D,
-                6.1613e-5D,
+                45.0D,
+                2.46452e-4D,
                 3.0e-10D
         );
         assertHalfLife(
                 WearableThermalProfile.HOT_WATER_BAG_DEFAULT,
-                30.0D,
-                9.2420e-4D,
+                7.5D,
+                3.6968e-3D,
                 2.0e-10D
         );
     }
@@ -45,7 +46,7 @@ class ThreeNodeWearableHeatExchangeTest {
     @Test
     void playerInitialRateUsesTheSurfaceDifferenceDirectly() {
         assertEquals(
-                0.0024D,
+                0.012D,
                 ThreeNodeWearableHeatExchange.playerTemperatureRatePerSecond(
                         WearableThermalProfile.WARM_STONE_DEFAULT,
                         60.0D,
@@ -54,7 +55,7 @@ class ThreeNodeWearableHeatExchangeTest {
                 EPSILON
         );
         assertEquals(
-                -0.0024D,
+                -0.012D,
                 ThreeNodeWearableHeatExchange.playerTemperatureRatePerSecond(
                         WearableThermalProfile.WARM_STONE_DEFAULT,
                         20.0D,
@@ -63,7 +64,7 @@ class ThreeNodeWearableHeatExchangeTest {
                 EPSILON
         );
         assertEquals(
-                0.0016D,
+                0.008D,
                 ThreeNodeWearableHeatExchange.playerTemperatureRatePerSecond(
                         WearableThermalProfile.HOT_WATER_BAG_DEFAULT,
                         60.0D,
@@ -165,17 +166,17 @@ class ThreeNodeWearableHeatExchangeTest {
             assertEquals(
                     oneCall.reservoirCoreTemperatureC(),
                     split.reservoirCoreTemperatureC(),
-                    1.0e-4D
+                    INTEGRATOR_SPLIT_TOLERANCE
             );
             assertEquals(
                     oneCall.reservoirSurfaceTemperatureC(),
                     split.reservoirSurfaceTemperatureC(),
-                    1.0e-4D
+                    INTEGRATOR_SPLIT_TOLERANCE
             );
             assertEquals(
                     oneCall.playerTemperatureC(),
                     split.playerTemperatureC(),
-                    1.0e-4D
+                    INTEGRATOR_SPLIT_TOLERANCE
             );
         }
     }
@@ -241,7 +242,7 @@ class ThreeNodeWearableHeatExchangeTest {
                         );
         // Profiles retain the plan's rounded source constants, while the helper
         // evaluates the full logarithmic formula.
-        assertEquals(frozenRate, calculatedRate, 5.0e-9D);
+        assertEquals(frozenRate, calculatedRate, 2.0e-8D);
         assertEquals(
                 expectedHalfLife,
                 ThreeNodeWearableHeatExchange.coreSurfaceHalfLifeSeconds(
