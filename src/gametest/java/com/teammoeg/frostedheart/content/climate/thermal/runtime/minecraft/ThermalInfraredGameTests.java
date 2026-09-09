@@ -3,6 +3,7 @@ package com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft;
 
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.climate.WorldTemperature;
+import com.teammoeg.frostedheart.content.climate.data.BiomeTempData;
 import com.teammoeg.frostedheart.content.climate.block.generator.GeneratorData;
 import com.teammoeg.frostedheart.content.climate.network.FHRequestInfraredViewDataSyncPacket;
 import com.teammoeg.frostedheart.content.climate.network.FHResponseInfraredViewDataSyncPacket;
@@ -12,6 +13,8 @@ import com.teammoeg.frostedheart.content.climate.thermal.field.ThermalAnalyticFi
 import com.teammoeg.frostedheart.content.climate.thermal.field.ThermalAnalyticField.Shape;
 import com.teammoeg.frostedheart.content.climate.thermal.field.ThermalFieldKey;
 import com.teammoeg.frostedheart.content.climate.thermal.query.ThermalEnvironmentSample;
+import com.teammoeg.frostedheart.content.climate.thermal.query.QueryPublication;
+import com.teammoeg.frostedheart.content.climate.thermal.radiation.minecraft.BlockRadiationIndex;
 import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.MinecraftThermalInput.InfraredSnapshot;
 import com.teammoeg.frostedheart.content.climate.thermal.source.minecraft.PhysicalSourceSpatialIndex;
 import com.teammoeg.frostedheart.util.mixin.ICampfireExtra;
@@ -20,6 +23,10 @@ import io.netty.buffer.Unpooled;
 import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.core.Holder;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.world.level.biome.Biome;
+import net.minecraft.world.level.biome.Biomes;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.network.FriendlyByteBuf;
@@ -34,6 +41,8 @@ import net.minecraftforge.gametest.PrefixGameTestTemplate;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
@@ -167,11 +176,18 @@ public final class ThermalInfraredGameTests {
             FHMain.LOGGER.info("Infrared large-field fixture: radius={}, center={}, loaded Chunk square=11x11",
                     generator.getRadius(), center);
             InfraredSnapshot snapshot = capture(helper, player, null, "generator r128 full display window");
+            helper.assertTrue(snapshot.brickRecords().length > 1, "r128 regression must exercise multiple bounded packets");
             temperature(helper, snapshot, center,
                     WorldTemperature.naturalAir(level, center) + generator.getTempMod());
             temperature(helper, snapshot, center.above(64),
                     WorldTemperature.naturalAir(level, center.above(64)) + generator.getTempMod());
             wireRoundTrip(helper, snapshot);
+            for (int repeat = 1; repeat <= 2; repeat++) {
+                snapshot = capture(helper, player, snapshot, "generator r128 repeat " + repeat);
+                temperature(helper, snapshot, center.above(64),
+                        WorldTemperature.naturalAir(level, center.above(64)) + generator.getTempMod());
+                wireRoundTrip(helper, snapshot);
+            }
             noRuntime(helper, level);
             helper.succeed();
         } finally {
@@ -233,6 +249,34 @@ public final class ThermalInfraredGameTests {
                 helper.assertTrue(value != null && value != InfraredBrickCodec.INVALID_TEMPERATURE
                                 && Math.abs(value * .25 - raw) < .5,
                         "field exit must restore actual hotter physical temperature: encoded=" + value + ", raw=" + raw);
+                MinecraftThermalInput.removeGameplayAnalyticField(level, floor);
+                MinecraftThermalInput.removeGameplayAnalyticField(level, override);
+                InfraredSnapshot physicalDisplay = capture(helper, player, null, "physical mixed Brick without fields");
+                Short physicalValue = encodedTemperature(physicalDisplay, target);
+                helper.assertTrue(physicalValue != null && physicalValue != InfraredBrickCodec.INVALID_TEMPERATURE
+                                && Math.abs(physicalValue * .25 - rawAir(input, level, target)) < .5,
+                        "ordinary physical encoding must retain the actual hot air temperature");
+                invalid(helper, physicalDisplay, target.east());
+                wireRoundTrip(helper, physicalDisplay);
+                register(level, floor, CombineMode.FLOOR_FROM_NATURAL, Shape.SPHERE, target, 1, 1, 1, 1);
+                QueryPublication queries = read(input, "queryPublication");
+                // A closed publication is a real unavailable read, not an empty
+                // physical world. A full response must not clear the old display.
+                queries.close();
+                InfraredSnapshot incomplete = MinecraftThermalInput.gameplayInfraredSnapshot(
+                        player, true, restored.infraredEpoch(), ready[0].presence(),
+                        restored.dormantRevision(), EMPTY_PAGES, restored.refreshPages());
+                helper.assertTrue(incomplete == null, "an incomplete full capture must wait instead of clearing the client");
+                scratchReleased(helper);
+                MinecraftThermalInput.removeGameplayAnalyticField(level, floor);
+                MinecraftThermalInput.removeGameplayAnalyticField(level, override);
+                helper.assertTrue(!MinecraftThermalInput.hasGameplayAnalyticFieldAt(level, target),
+                        "the second failed full read must exercise a physical-only target");
+                InfraredSnapshot physicalOnly = MinecraftThermalInput.gameplayInfraredSnapshot(
+                        player, true, restored.infraredEpoch(), ready[0].presence(),
+                        restored.dormantRevision(), EMPTY_PAGES, EMPTY_PAGES);
+                helper.assertTrue(physicalOnly == null, "unreadable physical-only full capture must also preserve the old display");
+                scratchReleased(helper);
             } finally {
                 MinecraftThermalInput.removeGameplayAnalyticField(level, floor);
                 MinecraftThermalInput.removeGameplayAnalyticField(level, override);
@@ -243,6 +287,116 @@ public final class ThermalInfraredGameTests {
                 MinecraftThermalInput.closeActiveLevel(level);
                 level.setChunkForced(chunkX, chunkZ, false);
             }
+        }).thenSucceed();
+    }
+
+    @GameTest(template = TEMPLATE, batch = "thermal_biome_zero_cache", timeoutTicks = 100)
+    public static void zeroBiomeTemperatureIsCachedUntilExplicitInvalidation(GameTestHelper helper) {
+        ServerLevel level = helper.getLevel();
+        BlockPos position = helper.absolutePos(new BlockPos(2, 3, 2));
+        var biome = level.getBiome(position).value();
+        var key = level.registryAccess().registryOrThrow(Registries.BIOME).getKey(biome);
+        var previous = BiomeTempData.cacheList;
+        var temperatures = new HashMap<>(previous);
+        try {
+            temperatures.put(key, new BiomeTempData(key, 0));
+            BiomeTempData.cacheList = Map.copyOf(temperatures);
+            WorldTemperature.clear();
+            helper.assertTrue(WorldTemperature.biome(level, position) == 0, "zero must enter the ordinary biome cache");
+            temperatures.put(key, new BiomeTempData(key, 15));
+            BiomeTempData.cacheList = Map.copyOf(temperatures);
+            helper.assertTrue(WorldTemperature.biome(level, position) == 0,
+                    "a cached zero must behave like other cached values until invalidated");
+            WorldTemperature.clear();
+            helper.assertTrue(WorldTemperature.biome(level, position) == 15, "invalidation must expose updated biome data");
+            helper.succeed();
+        } finally {
+            BiomeTempData.cacheList = previous;
+            WorldTemperature.clear();
+        }
+    }
+
+    @GameTest(template = TEMPLATE, batch = "thermal_infrared_biomes", timeoutTicks = 100)
+    public static void naturalLayerReuseMatchesEveryBlockAcrossRealBiomeBoundaries(GameTestHelper helper) {
+        ServerLevel level = helper.getLevel();
+        BlockPos center = loadedCenter(helper);
+        ServerPlayer player = observer(level, center);
+        MinecraftThermalInput.closeActiveLevel(level);
+        var chunk = level.getChunkAt(center);
+        int sectionY = center.getY() >> 4;
+        var section = chunk.getSection(chunk.getSectionIndex(center.getY()));
+        var registry = level.registryAccess().registryOrThrow(Registries.BIOME);
+        var plains = registry.getHolderOrThrow(Biomes.PLAINS);
+        var desert = registry.getHolderOrThrow(Biomes.DESERT);
+        var sampler = level.getChunkSource().randomState().sampler();
+        ArrayList<Holder<Biome>> saved = new ArrayList<>(64);
+        for (int i = 0; i < 64; i++) saved.add(section.getNoiseBiome(i & 3, i >>> 4, i >>> 2 & 3));
+        var previousTemperatures = BiomeTempData.cacheList;
+        var temperatures = new HashMap<>(previousTemperatures);
+        temperatures.put(Biomes.PLAINS.location(), new BiomeTempData(Biomes.PLAINS.location(), -10));
+        temperatures.put(Biomes.DESERT.location(), new BiomeTempData(Biomes.DESERT.location(), 20));
+        ThermalFieldKey field = key(center, 9);
+        try {
+            BiomeTempData.cacheList = Map.copyOf(temperatures);
+            WorldTemperature.clear();
+            register(level, field, CombineMode.FLOOR_FROM_NATURAL, Shape.SPHERE, center, 8, 8, 8, 7);
+            InfraredSnapshot previous = null;
+            for (int pass = 0; pass < 2; pass++) {
+                boolean mixed = pass == 0;
+                section.fillBiomesFromNoise((qx, qy, qz, climate) -> mixed && (qx & 1) != 0 ? desert : plains,
+                        sampler, (center.getX() >> 4) * 4, sectionY * 4, (center.getZ() >> 4) * 4);
+                InfraredSnapshot snapshot = capture(helper, player, previous, mixed ? "mixed biome boundary" : "uniform biome layers");
+                boolean sawCold = false, sawHot = false;
+                for (int block = 0; block < 64; block++) {
+                    BlockPos pos = new BlockPos((center.getX() & ~3) + (block & 3),
+                            (center.getY() & ~3) + (block >>> 4), (center.getZ() & ~3) + (block >>> 2 & 3));
+                    temperature(helper, snapshot, pos, WorldTemperature.naturalAir(level, pos) + 7);
+                    float biome = WorldTemperature.biome(level, pos);
+                    sawCold |= biome == -10;
+                    sawHot |= biome == 20;
+                }
+                helper.assertTrue(sawCold && (!mixed || sawHot), "fixture must exercise actual biome variation within one Brick");
+                previous = snapshot;
+            }
+            noRuntime(helper, level);
+            helper.succeed();
+        } finally {
+            section.fillBiomesFromNoise((qx, qy, qz, climate) -> saved.get((qx & 3) | (qz & 3) << 2 | (qy & 3) << 4),
+                    sampler, (center.getX() >> 4) * 4, sectionY * 4, (center.getZ() >> 4) * 4);
+            BiomeTempData.cacheList = previousTemperatures;
+            WorldTemperature.clear();
+            MinecraftThermalInput.removeGameplayAnalyticField(level, field);
+        }
+    }
+
+    @GameTest(template = TEMPLATE, batch = "thermal_lava_section_edges", timeoutTicks = 200)
+    public static void lavaSurfaceReadsDiagonalSectionsAtUpperChunkEdges(GameTestHelper helper) {
+        ServerLevel level = helper.getLevel();
+        BlockPos anchor = loadedCenter(helper);
+        int cx = anchor.getX() >> 4, cz = anchor.getZ() >> 4;
+        BlockPos corner = new BlockPos(cx * 16, (anchor.getY() & ~15) + 15, cz * 16);
+        BlockPos[] lava = {corner.south(7), corner.south(7).west(), corner.east(7), corner.east(7).north()};
+        for (int[] offset : new int[][]{{0, 0}, {-1, 0}, {0, -1}}) level.setChunkForced(cx + offset[0], cz + offset[1], true);
+        MinecraftThermalInput.closeActiveLevel(level);
+        for (BlockPos pos : lava) level.setBlockAndUpdate(pos, Blocks.LAVA.defaultBlockState());
+        MinecraftThermalInput input = start(level, corner.offset(4, 2, 4));
+        BlockRadiationIndex index = read(input, "blockRadiation");
+        helper.assertTrue(index != null, "static lava radiation must be enabled");
+        helper.startSequence().thenWaitUntil(() -> {
+            boolean[] found = {false, false};
+            index.visitNearby(corner.getX() + 4.5, corner.getY() + 2, corner.getZ() + 4.5, 128,
+                    (key, revision, x, y, z, power, bound) -> {
+                        if (power > 0) {
+                            found[0] |= Math.abs(z - corner.getZ() - 7.5) < 1;
+                            found[1] |= Math.abs(x - corner.getX() - 7.5) < 1;
+                        }
+                        return true;
+                    });
+            helper.assertTrue(found[0] && found[1], "real lava surface compilation must complete across X/Y and Z/Y edges");
+        }).thenExecute(() -> {
+            for (BlockPos pos : lava) level.setBlockAndUpdate(pos, Blocks.AIR.defaultBlockState());
+            MinecraftThermalInput.closeActiveLevel(level);
+            for (int[] offset : new int[][]{{0, 0}, {-1, 0}, {0, -1}}) level.setChunkForced(cx + offset[0], cz + offset[1], false);
         }).thenSucceed();
     }
 
@@ -289,12 +443,33 @@ public final class ThermalInfraredGameTests {
                 previous == null ? 0 : previous.dormantRevision(), EMPTY_PAGES,
                 previous == null ? EMPTY_PAGES : previous.refreshPages());
         helper.assertTrue(snapshot != null, label + " must produce a display update");
-        helper.assertTrue(snapshot.brickRecords().length <= InfraredBrickCodec.MAX_PAYLOAD_BYTES,
-                label + " must fit the production payload");
-        FHMain.LOGGER.info("Infrared production capture {}: {} ms, {} bytes, {} refresh Pages", label,
-                (System.nanoTime() - started) / 1_000_000.0, snapshot.brickRecords().length,
+        scratchReleased(helper);
+        int bytes = 0;
+        for (byte[] part : snapshot.brickRecords()) {
+            helper.assertTrue(part.length <= InfraredBrickCodec.MAX_PAYLOAD_BYTES,
+                    label + " part must fit the production payload");
+            bytes += part.length;
+        }
+        FHMain.LOGGER.info("Infrared production capture {}: {} ms, {} bytes in {} parts, {} refresh Pages", label,
+                (System.nanoTime() - started) / 1_000_000.0, bytes, snapshot.brickRecords().length,
                 Arrays.stream(snapshot.refreshPages()).map(Long::bitCount).sum());
         return snapshot;
+    }
+
+    private static void scratchReleased(GameTestHelper helper) {
+        try {
+            Field captureField = MinecraftThermalInput.class.getDeclaredField("infraredCapture");
+            captureField.setAccessible(true);
+            Object capture = captureField.get(null);
+            Object[] handles = read(capture, "infraredHandles");
+            for (Object handle : handles) helper.assertTrue(handle == null, "capture must release borrowed Page handles");
+            QueryPublication.InfraredReadCursor cursor = read(capture, "infraredCursor");
+            helper.assertTrue(!cursor.valid() && read(cursor, "owner") == null
+                            && read(cursor, "temperaturesC") == null,
+                    "capture must release borrowed publication buffers after every response");
+        } catch (ReflectiveOperationException exception) {
+            throw new AssertionError(exception);
+        }
     }
 
     private static int page(InfraredSnapshot snapshot, BlockPos position) {
@@ -315,19 +490,21 @@ public final class ThermalInfraredGameTests {
         int block = (position.getX() & 3) | (position.getZ() & 3) << 2 | (position.getY() & 3) << 4;
         InfraredBrickCodec.Decoder decoder = new InfraredBrickCodec.Decoder();
         short[] values = new short[64];
-        FriendlyByteBuf buffer = new FriendlyByteBuf(Unpooled.wrappedBuffer(snapshot.brickRecords()));
         Short result = null;
-        try {
-            int address;
-            while ((address = decoder.readRecord(buffer, values)) >= 0) {
-                if (decoder.isDormantSection()) {
-                    if (address == page * 64 && (decoder.dormantBrickMask() & 1L << brick) != 0) result = values[brick];
-                } else if (address == page * 64 + brick) result = values[block];
+        for (byte[] part : snapshot.brickRecords()) {
+            FriendlyByteBuf buffer = new FriendlyByteBuf(Unpooled.wrappedBuffer(part));
+            try {
+                int address;
+                while ((address = decoder.readRecord(buffer, values)) >= 0) {
+                    if (decoder.isDormantSection()) {
+                        if (address == page * 64 && (decoder.dormantBrickMask() & 1L << brick) != 0) result = values[brick];
+                    } else if (address == page * 64 + brick) result = values[block];
+                }
+            } finally {
+                buffer.release();
             }
-            return result;
-        } finally {
-            buffer.release();
         }
+        return result;
     }
 
     private static void temperature(GameTestHelper helper, InfraredSnapshot snapshot, BlockPos position, double expected) {
@@ -372,15 +549,22 @@ public final class ThermalInfraredGameTests {
                 request.encode(copy);
                 helper.assertTrue(Arrays.equals(bytes, ByteBufUtil.getBytes(copy)), "request wire roundtrip");
             }
-            wire.clear();
-            copy.clear();
-            new FHResponseInfraredViewDataSyncPacket(17, snapshot).encode(wire);
-            byte[] bytes = ByteBufUtil.getBytes(wire);
-            var response = new FHResponseInfraredViewDataSyncPacket(wire);
-            helper.assertTrue(!wire.isReadable(), "response decoder must consume the exact packet");
-            helper.assertTrue(Arrays.equals(snapshot.refreshPages(), read(response, "refreshPages")), "response refresh mask");
-            response.encode(copy);
-            helper.assertTrue(Arrays.equals(bytes, ByteBufUtil.getBytes(copy)), "response wire roundtrip");
+            int count = Math.max(1, snapshot.brickRecords().length);
+            for (int part = 0; part < count; part++) {
+                wire.clear();
+                copy.clear();
+                new FHResponseInfraredViewDataSyncPacket(17, snapshot, part).encode(wire);
+                helper.assertTrue(wire.readableBytes() < 1024 * 1024, "complete wire packet must fit Minecraft's custom payload limit");
+                byte[] bytes = ByteBufUtil.getBytes(wire);
+                var response = new FHResponseInfraredViewDataSyncPacket(wire);
+                helper.assertTrue(!wire.isReadable(), "response decoder must consume the exact packet");
+                helper.assertTrue((boolean) read(response, "firstPart") == (part == 0)
+                                && (boolean) read(response, "lastPart") == (part == count - 1),
+                        "only the first and last parts delimit the display transaction");
+                helper.assertTrue(Arrays.equals(snapshot.refreshPages(), read(response, "refreshPages")), "response refresh mask");
+                response.encode(copy);
+                helper.assertTrue(Arrays.equals(bytes, ByteBufUtil.getBytes(copy)), "response wire roundtrip");
+            }
         } finally {
             wire.release();
             copy.release();

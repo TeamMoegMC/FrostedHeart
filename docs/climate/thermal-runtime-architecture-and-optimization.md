@@ -28,6 +28,16 @@ persistence code under `runtime`.
 
 ## Ownership
 
+An enabled positive-power machine report can start the existing dimension runtime
+without a player query. Lit campfires bootstrap through chunk load or the existing
+LevelChunk mixin's ignition callback; server start and the server-side tags-updated
+event inspect loaded block-entity positions once. Recipe listeners invalidate
+profiles without rebuilding against old tags. Subsequent discovery uses the original bounded queue.
+Inactive/zero-power reports and analytic-only queries do not bootstrap physics.
+Source bootstrap uses the dimension baseline as the enthalpy reference, avoiding
+biome/chunk reads during chunk attachment; admitted cells still initialize from
+their Page's captured natural temperature.
+
 Each active thermal `ServerLevel` has one `MinecraftThermalInput` on its level thread and one
 `ThermalDimensionEngine` on a bounded thermal worker. Minecraft objects never
 cross into the worker. The main thread reads loaded state and produces immutable
@@ -477,7 +487,10 @@ generations.
 ## Environment And Phase
 
 `MinecraftEnvironmentCapture` refreshes natural temperature on a staggered
-200-tick queue and coalesces changed sky columns. Initial residency samples one
+200-tick queue and coalesces changed sky columns. Each completed sample schedules
+its next deadline at the actual game tick plus 200; delayed entries do not catch
+up historical samples. Stale entries still consume the 16-entry tick budget.
+Initial residency samples one
 natural temperature and only the 16 heightmap columns of each newly resident
 top-layer Brick; other columns remain unknown value `16`. Its Page builders are recycled
 by `DimensionInputAccumulator`. Wind updates carry one scalar conductance scale;
@@ -534,8 +547,9 @@ separate reservations in the same dimension/server memory budget.
 sample tick, topology generation, and publication version for a complete
 response. Main-thread encoding validates it once after staging. Unchanged Pages
 cost one Page-epoch comparison; only a changed Page scans its 64 Brick epochs.
-Mixed Bricks resolve the 64 world-block centers and read each unique Air slot
-once; regular Bricks read one slot and write UNIFORM directly, while known
+Mixed Bricks read and quantize each transport node once, then expand to 64 blocks
+by `BlockBrickLayout.transportAt`, without linear slot deduplication or an
+`int[64]` slot scratch. Regular Bricks read one slot and write UNIFORM directly, while known
 invalid Bricks omit or write INVALID without filling/scanning the mixed scratch.
 Page geometry gaps use
 `ThermalPageHandle.lastPublication`; retirement alone removes presence.
@@ -551,7 +565,13 @@ nor physical residency. Each response rebuilds the union of previous refresh Pag
 and current field intersections, resolving each physical transport node once per
 Brick, composing fields on the server and using the original Brick temperature codec.
 An unavailable physical read discards that Page's staged records and carries its
-refresh bit forward, preserving its last display until a coherent read is available.
+refresh bit forward. An incomplete full capture returns no response, so the client
+keeps its previous complete texture until its full retry succeeds. The same rule
+covers an unreadable global physical cut when published Pages exist, even without
+analytic refresh bits. With no physical Pages, field-only capture can still complete.
+Borrowed Page handles and the cursor's publication/array references are released after each
+request; only reusable scratch remains. Unaffected regular/invalid Bricks use direct
+UNIFORM/INVALID writes without expanding and requantizing 64 equal values.
 
 Ordinary Brick records carry final physical/analytic/invalid temperatures. Only
 genuine dormant-only final Bricks use the existing dormant section records; those
@@ -559,12 +579,40 @@ follow ordinary records so field removal restores the original ownership correct
 Analytic output never uses dormant ownership or enters the solver/checkpoint.
 Natural temperature is evaluated only where composition needs it, using loaded
 world data; biome-neighbor availability is checked before calling the biome zoom.
-The client still decodes one response into the same temperature mirror and uploads
-dirty Pages. No field interpreter, second texture, or per-observer server cache is
-involved. Delta requests and responses each add 96 bytes; full requests omit the
-refresh mask. Page-granularity regeneration can resend unchanged Bricks, so large
-fields increase server work and payload. The existing 960 KiB payload ceiling still
-applies and must be included in validation of supported field sizes.
+For an aligned Brick, the union of Minecraft 1.20.1's possible biome-zoom samples
+is a 3³ quart lattice. When all those holders agree, climate is also common to the
+Brick's Chunk, so natural temperature is calculated once per occupied Y layer.
+The already expanded node scratch holds these four values. Mixed-biome Bricks
+continue to use the original per-position natural calculation; this is an exact
+local reuse, not a coarse biome or temperature approximation.
+
+`InfraredBrickCodec.Builder.beginPage` reserves space for a complete Page before
+encoding it. Responses exceeding one buffer are split at these boundaries into
+parts of at most 960 KiB, each retaining the original Brick codec. The existing
+response flag byte carries FULL/FIRST/LAST. TCP supplies ordering, while requestId
+supplies request identity. The client adds one receiving boolean and decodes parts
+into the existing CPU mirror; only LAST advances its baseline/origin and uploads
+the texture. Timed full retries only run while waiting for a first part; an accepted
+multipart response finishes without the request deadline discarding its later parts.
+A window move still immediately starts a new full request. Empty-texture
+initialization waits until receiving finishes, preserving any first part that arrives
+before the first rendered frame. The existing mirror handles staging without a second
+temperature mirror, client field interpreter, or server observer cache.
+Delta requests add the 96-byte refresh mask; each response part carries that same
+mask, and full requests omit it. Large captures temporarily own their encoded byte
+parts until sent, rather than one enlarged persistent buffer. Page-granularity
+regeneration can still resend unchanged Bricks and its cost grows with field area.
+Brick palette scanning stops at 36 distinct temperatures: INDEXED then needs at
+least 130 bytes versus RAW's 129 (excluding their shared address), so the existing
+RAW encoder writes the original 64 values without further dictionary searches.
+When all 729 display Pages are dirty, the client
+uses the existing full texture upload instead of copying and uploading each Page;
+partial updates retain the original Page upload path, and multipart responses
+still upload only after LAST.
+
+The underlying `WorldTemperature.biome` cache uses primitive `getOrDefault` with
+an explicit missing value. A legitimate zero-degree biome contribution is cached
+like other values and is refreshed by the existing `WorldTemperature.clear` path.
 
 Gameplay reads a Page's immutable current publication, resolves the local Air
 point, reads the expected arena slot generation, and verifies that the same Page

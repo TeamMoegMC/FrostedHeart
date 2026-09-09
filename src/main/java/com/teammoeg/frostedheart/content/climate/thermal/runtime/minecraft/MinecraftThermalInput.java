@@ -47,6 +47,8 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.SectionPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.world.level.block.CampfireBlock;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.level.block.state.BlockState;
@@ -79,7 +81,6 @@ public final class MinecraftThermalInput implements AutoCloseable {
     private static final int INFRARED_PAGE_CAPACITY = 9 * 9 * 9;
     private static final int INFRARED_PRESENCE_WORDS = 12;
     private static final long[] NO_INFRARED_PRESENCE = new long[0];
-    private static final byte[] NO_INFRARED_RECORDS = new byte[0];
     private static final int MAXIMUM_PHYSICAL_SOURCES = 65_536;
     private static final int SOURCE_DISCOVERY_CHUNKS_PER_TICK = 8;
     private static final int MAXIMUM_SOURCE_NODES = 131_072;
@@ -843,9 +844,7 @@ public final class MinecraftThermalInput implements AutoCloseable {
         private final long[] infraredDormantPresence = new long[INFRARED_PRESENCE_WORDS];
         private final short[] infraredBlockTemperatures =
                 new short[InfraredBrickCodec.BLOCKS_PER_BRICK];
-        private final int[] infraredUniqueSlots =
-                new int[InfraredBrickCodec.BLOCKS_PER_BRICK];
-        private final short[] infraredUniqueTemperatures =
+        private final short[] infraredNodeTemperatures =
                 new short[InfraredBrickCodec.BLOCKS_PER_BRICK];
         private InfraredBrickCodec.Builder infraredPayload;
 
@@ -895,7 +894,8 @@ public final class MinecraftThermalInput implements AutoCloseable {
             return (int) Math.max(0, Math.min(8, Math.floor((coordinate - origin) / 16)));
         }
 
-        private void writeRefreshPages(int centerX, int centerY, int centerZ) {
+        private boolean writeRefreshPages(int centerX, int centerY, int centerZ) {
+            boolean complete = true;
             for (int word = 0; word < refreshPages.length; word++) {
                 long remaining = refreshPages[word] | previousRefreshPages[word];
                 while (remaining != 0) {
@@ -906,6 +906,7 @@ public final class MinecraftThermalInput implements AutoCloseable {
                     int sz = centerZ - 4 + page / 9 % 9;
                     int sy = centerY - 4 + page / 81;
                     int x = sx * 16, y = sy * 16, z = sz * 16;
+                    infraredPayload.beginPage();
                     int pageStart = infraredPayload.size();
                     rawReadFailed = false;
                     var chunk = level.getChunkSource().getChunkNow(sx, sz);
@@ -925,14 +926,6 @@ public final class MinecraftThermalInput implements AutoCloseable {
                     long dormantMask = 0;
                     for (int brick = 0; brick < 64; brick++) {
                         int bx = x + (brick & 3) * 4, by = y + (brick >>> 4) * 4, bz = z + (brick >>> 2 & 3) * 4;
-                        Arrays.fill(rawTemperatures, Double.NaN);
-                        boolean live = chunk != null && copyRawBrick(publication, brick);
-                        if (rawReadFailed) break;
-                        short dormantValue = dormantSection == null || (storedDormantMask & 1L << brick) == 0
-                                ? InfraredBrickCodec.INVALID_TEMPERATURE
-                                : dormantSection.temperatures()[brick];
-                        boolean usesDormant = !live && dormantValue != InfraredBrickCodec.INVALID_TEMPERATURE;
-                        if (usesDormant) Arrays.fill(rawTemperatures, dormantValue * .25);
                         brickFields.clear();
                         if (chunk != null && !level.isOutsideBuildHeight(by)) {
                             for (int f = 0; f < fields.size(); f++) {
@@ -940,10 +933,24 @@ public final class MinecraftThermalInput implements AutoCloseable {
                                 if (field.intersects(bx + .5, by + .5, bz + .5, bx + 3.5, by + 3.5, bz + 3.5)) brickFields.add(field);
                             }
                         }
+                        var physical = publication == null ? null : publication.brick(brick);
+                        boolean expand = !brickFields.isEmpty() || physical != null && physical.blockLayout() != null;
+                        if (expand) Arrays.fill(rawTemperatures, Double.NaN);
+                        boolean live = chunk != null && copyRawBrick(publication, brick, expand);
+                        if (rawReadFailed) break;
+                        short dormantValue = dormantSection == null || (storedDormantMask & 1L << brick) == 0
+                                ? InfraredBrickCodec.INVALID_TEMPERATURE
+                                : dormantSection.temperatures()[brick];
+                        boolean usesDormant = !live && dormantValue != InfraredBrickCodec.INVALID_TEMPERATURE;
+                        if (usesDormant && expand) Arrays.fill(rawTemperatures, dormantValue * .25);
                         boolean composed = false;
                         if (brickFields.isEmpty()) {
                             if (usesDormant) dormantMask |= 1L << brick;
-                            else {
+                            else if (!live || physical == null || physical.coverageSlot() < 0) {
+                                infraredPayload.writeInvalid(page * 64 + brick, false);
+                            } else if (physical.blockLayout() == null) {
+                                infraredPayload.writeUniform(page * 64 + brick, quantizeInfrared(nodeTemperatures[0]));
+                            } else {
                                 for (int block = 0; block < 64; block++) {
                                     double temperature = rawTemperatures[block];
                                     infraredBlockTemperatures[block] = Double.isFinite(temperature)
@@ -953,6 +960,11 @@ public final class MinecraftThermalInput implements AutoCloseable {
                             }
                             continue;
                         }
+                        int naturalMode = 0;
+                        int naturalLayers = 0;
+                        // Raw nodes have already been expanded. Reuse their scratch
+                        // for the four heights only after proving a uniform biome.
+                        double[] naturalByY = nodeTemperatures;
                         for (int block = 0; block < 64; block++) {
                             int px = bx + (block & 3), py = by + (block >>> 4), pz = bz + (block >>> 2 & 3);
                             fieldSample.clear();
@@ -966,8 +978,20 @@ public final class MinecraftThermalInput implements AutoCloseable {
                                 boolean needsNatural = fieldSample.requiresNatural()
                                         || !Double.isFinite(temperature) && fieldSample.requiresBase();
                                 if (!needsNatural || hasBiomeNeighbors(px, pz)) {
-                                    double natural = needsNatural
-                                            ? WorldTemperature.naturalAir(level, dormantPosition.set(px, py, pz)) : 0;
+                                    double natural = 0;
+                                    if (needsNatural) {
+                                        if (naturalMode == 0) naturalMode = uniformBiomeBrick(bx, by, bz) ? 1 : -1;
+                                        int layer = block >>> 4;
+                                        if (naturalMode > 0) {
+                                            if ((naturalLayers & 1 << layer) == 0) {
+                                                naturalByY[layer] = WorldTemperature.naturalAir(level, dormantPosition.set(px, py, pz));
+                                                naturalLayers |= 1 << layer;
+                                            }
+                                            natural = naturalByY[layer];
+                                        } else {
+                                            natural = WorldTemperature.naturalAir(level, dormantPosition.set(px, py, pz));
+                                        }
+                                    }
                                     temperature = fieldSample.compose(natural,
                                             Double.isFinite(temperature) ? temperature : natural);
                                 }
@@ -979,6 +1003,7 @@ public final class MinecraftThermalInput implements AutoCloseable {
                         else infraredPayload.writeBrick(page * 64 + brick, infraredBlockTemperatures, false);
                     }
                     if (rawReadFailed) {
+                        complete = false;
                         infraredPayload.rewind(pageStart);
                         long bit = 1L << (page & 63);
                         refreshPages[page >>> 6] |= bit;
@@ -992,9 +1017,10 @@ public final class MinecraftThermalInput implements AutoCloseable {
                             dormantSection == null ? null : dormantSection.temperatures(), true);
                 }
             }
+            return complete;
         }
 
-        private boolean copyRawBrick(PagePublication publication, int brickIndex) {
+        private boolean copyRawBrick(PagePublication publication, int brickIndex, boolean expand) {
             if (input == null || publication == null) return false;
             var brick = publication.brick(brickIndex);
             if (brick.coverageSlot() < 0) return brick.signaturePayload() != null;
@@ -1015,6 +1041,7 @@ public final class MinecraftThermalInput implements AutoCloseable {
                 rawReadFailed = true;
                 return false;
             }
+            if (!expand) return true;
             if (brick.blockLayout() == null) Arrays.fill(rawTemperatures, nodeTemperatures[0]);
             else for (int block = 0; block < 64; block++) {
                 int node = brick.blockLayout().transportAt(block);
@@ -1028,6 +1055,25 @@ public final class MinecraftThermalInput implements AutoCloseable {
             int dx = (x & 15) < 2 ? -1 : (x & 15) >= 14 ? 1 : 0;
             int dz = (z & 15) < 2 ? -1 : (z & 15) >= 14 ? 1 : 0;
             return loadedNeighbors[4 + dx] && loadedNeighbors[4 + dz * 3] && loadedNeighbors[4 + dz * 3 + dx];
+        }
+
+        private boolean uniformBiomeBrick(int x, int y, int z) {
+            int minX = (x & 15) == 0 ? -1 : 0, maxX = (x & 15) == 12 ? 1 : 0;
+            int minZ = (z & 15) == 0 ? -1 : 0, maxZ = (z & 15) == 12 ? 1 : 0;
+            for (int dz = minZ; dz <= maxZ; dz++) for (int dx = minX; dx <= maxX; dx++) {
+                if (!loadedNeighbors[(dz + 1) * 3 + dx + 1]) return false;
+            }
+            // BiomeManager subtracts two blocks, then selects one of eight quart
+            // samples. Across an aligned 4³ Brick their union is this 3³ lattice.
+            int qx = x >> 2, qy = y >> 2, qz = z >> 2;
+            var biome = level.getNoiseBiome(qx, qy, qz);
+            for (int dy = -1; dy <= 1; dy++) for (int dz = -1; dz <= 1; dz++) {
+                for (int dx = -1; dx <= 1; dx++) {
+                    if ((dx != 0 || dy != 0 || dz != 0)
+                            && level.getNoiseBiome(qx + dx, qy + dy, qz + dz) != biome) return false;
+                }
+            }
+            return true;
         }
 
         @Override
@@ -1071,6 +1117,12 @@ public final class MinecraftThermalInput implements AutoCloseable {
                             full, lastInfraredEpoch, knownPresence);
                 }
                 if (!liveReadable) {
+                    // No physical Pages is a valid field-only display. Existing
+                    // published Pages with an unreadable cut must wait on full,
+                    // even when no analytic refresh bit happens to cover them.
+                    if (full && input != null && input.pages.collectInfraredPages(
+                            centerChunkX, centerSectionY, centerChunkZ,
+                            infraredHandles, infraredLocalIndexes, infraredPresence) > 0) return null;
                     // A missing live cut must not delete the client's last live coverage.
                     full = forceFull;
                     infraredPayload.reset();
@@ -1087,15 +1139,15 @@ public final class MinecraftThermalInput implements AutoCloseable {
                 long dormantRevision = writeDormantInfrared(
                         centerChunkX, centerChunkZ, centerSectionY, gameTick,
                         full, lastDormantRevision, knownDormantPresence, knownPresence);
-                writeRefreshPages(centerChunkX, centerSectionY, centerChunkZ);
+                // A full response clears the client's mirror: an incomplete Page
+                // cannot be omitted from it while claiming to preserve old display.
+                if (!writeRefreshPages(centerChunkX, centerSectionY, centerChunkZ) && full) return null;
                 boolean presenceChanged = !Arrays.equals(knownPresence, infraredPresence);
                 if (!full && !presenceChanged && infraredPayload.size() == 0
                         && Arrays.equals(refreshPages, knownRefreshPages)) {
                     return null;
                 }
-                byte[] records = infraredPayload.size() == 0
-                        ? NO_INFRARED_RECORDS
-                        : infraredPayload.toByteArray();
+                byte[][] records = infraredPayload.finishParts();
                 long[] presence = full || presenceChanged
                         ? infraredPresence.clone()
                         : NO_INFRARED_PRESENCE;
@@ -1103,7 +1155,10 @@ public final class MinecraftThermalInput implements AutoCloseable {
                         centerChunkX, centerChunkZ, centerSectionY,
                         currentEpoch, full, presence, records, dormantRevision, refreshPages.clone());
             } finally {
+                infraredCursor.clear();
+                Arrays.fill(infraredHandles, null);
                 Arrays.fill(infraredPublications, null);
+                infraredPayload.reset();
                 fields.clear();
                 brickFields.clear();
                 this.previousRefreshPages = null;
@@ -1131,6 +1186,7 @@ public final class MinecraftThermalInput implements AutoCloseable {
                 boolean added = full || !presenceBit(knownPresence, localPage);
                 long changed = added ? -1L : changedBrickMask(publication.workerPageSlot(), lastEpoch);
                 if (changed != 0L) {
+                    infraredPayload.beginPage();
                     infraredChangedPages[localPage >>> 6] |= 1L << (localPage & 63);
                 }
                 while (changed != 0L) {
@@ -1197,6 +1253,7 @@ public final class MinecraftThermalInput implements AutoCloseable {
                                     || lastRevision < snapshot.previousRevision();
                             long written = replace ? brickMask : snapshot.changedBrickMask() & ~resolved;
                             if (replace || written != 0L) {
+                                infraredPayload.beginPage();
                                 infraredPayload.writeDormantSection(localPageIndex, written,
                                         snapshot.temperatures(), replace);
                             }
@@ -1209,7 +1266,10 @@ public final class MinecraftThermalInput implements AutoCloseable {
                     long removed = knownDormantPresence[word] & ~infraredDormantPresence[word];
                     while (removed != 0L) {
                         int section = word * 64 + Long.numberOfTrailingZeros(removed);
-                        if (!refreshPage(section)) infraredPayload.writeDormantSection(section, 0L, null, true);
+                        if (!refreshPage(section)) {
+                            infraredPayload.beginPage();
+                            infraredPayload.writeDormantSection(section, 0L, null, true);
+                        }
                         removed &= removed - 1L;
                     }
                 }
@@ -1270,41 +1330,20 @@ public final class MinecraftThermalInput implements AutoCloseable {
                 return true;
             }
 
-            Arrays.fill(
-                    infraredBlockTemperatures,
-                    InfraredBrickCodec.INVALID_TEMPERATURE);
-            int brickX = (brickIndex & 3) << 2;
-            int brickZ = (brickIndex >>> 2 & 3) << 2;
-            int brickY = (brickIndex >>> 4) << 2;
-            int uniqueCount = 0;
+            for (int node = 0; node < brick.transportNodeCount(); node++) {
+                if (!infraredCursor.tryRead(
+                        slot + node,
+                        brick.arenaGeneration(),
+                        publication.topologyGeneration(),
+                        querySample)) {
+                    return false;
+                }
+                infraredNodeTemperatures[node] = quantizeInfrared(querySample.temperatureC());
+            }
             for (int block = 0; block < 64; block++) {
-                int resolvedSlot = publication.resolveAirPoint(
-                        brickX + (block & 3),
-                        brickY + (block >>> 4),
-                        brickZ + (block >>> 2 & 3));
-                if (resolvedSlot == PagePublication.NO_AIR_POINT) {
-                    continue;
-                }
-                int unique = 0;
-                while (unique < uniqueCount
-                        && infraredUniqueSlots[unique] != resolvedSlot) {
-                    unique++;
-                }
-                if (unique == uniqueCount) {
-                    if (!infraredCursor.tryRead(
-                            resolvedSlot,
-                            brick.arenaGeneration(),
-                            publication.topologyGeneration(),
-                            querySample)) {
-                        return false;
-                    }
-                    infraredUniqueSlots[uniqueCount] = resolvedSlot;
-                    infraredUniqueTemperatures[uniqueCount] =
-                            quantizeInfrared(querySample.temperatureC());
-                    uniqueCount++;
-                }
-                infraredBlockTemperatures[block] =
-                        infraredUniqueTemperatures[unique];
+                int node = brick.blockLayout().transportAt(block);
+                infraredBlockTemperatures[block] = node < 0
+                        ? InfraredBrickCodec.INVALID_TEMPERATURE : infraredNodeTemperatures[node];
             }
             infraredPayload.writeBrick(
                     localBrickIndex, infraredBlockTemperatures, omitInvalid);
@@ -1335,7 +1374,7 @@ public final class MinecraftThermalInput implements AutoCloseable {
             int infraredEpoch,
             boolean full,
             long[] presence,
-            byte[] brickRecords,
+            byte[][] brickRecords,
             long dormantRevision,
             long[] refreshPages
     ) {
@@ -1344,9 +1383,13 @@ public final class MinecraftThermalInput implements AutoCloseable {
                     || presence.length != 0
                     && presence.length != INFRARED_PRESENCE_WORDS
                     || full && presence.length != INFRARED_PRESENCE_WORDS
-                    || brickRecords.length
-                            > InfraredBrickCodec.MAX_PAYLOAD_BYTES) {
+                    || refreshPages == null || refreshPages.length != INFRARED_PRESENCE_WORDS) {
                 throw new IllegalArgumentException("invalid infrared snapshot");
+            }
+            for (byte[] part : brickRecords) {
+                if (part == null || part.length > InfraredBrickCodec.MAX_PAYLOAD_BYTES) {
+                    throw new IllegalArgumentException("invalid infrared part");
+                }
             }
         }
     }
@@ -1391,6 +1434,38 @@ public final class MinecraftThermalInput implements AutoCloseable {
     public static void invalidateGameplayProfilesForRecipeReload() {
         closeAll();
         MinecraftThermalProfiles.invalidate();
+    }
+
+    /** One lifecycle scan of loaded block-entity positions; never loads chunks. */
+    public static void bootstrapLoadedSources(MinecraftServer server) {
+        if (!server.isSameThread()) return;
+        for (ServerLevel level : server.getAllLevels()) {
+            if (active(level) != null) continue;
+            for (var holder : level.getChunkSource().chunkMap.getChunks()) {
+                ChunkPos pos = holder.getPos();
+                LevelChunk chunk = level.getChunkSource().getChunkNow(pos.x, pos.z);
+                if (chunk != null && startFromCampfires(level, chunk) != null) break;
+            }
+        }
+    }
+
+    private static MinecraftThermalInput startFromCampfires(ServerLevel level, LevelChunk chunk) {
+        if (!level.getServer().isSameThread()) return null;
+        for (BlockPos pos : chunk.getBlockEntitiesPos()) {
+            if (CampfireBlock.isLitCampfire(chunk.getBlockState(pos))) {
+                if (MinecraftThermalProfiles.prepare().tuning().campfire().ratedPowerW() <= 0) return null;
+                return start(level, WorldTemperature.dimension(level), pos);
+            }
+        }
+        return null;
+    }
+
+    /** State changes cover ignition before section owners exist. */
+    public static void onCampfireIgnited(ServerLevel level, BlockPos pos) {
+        if (level.getServer().isSameThread() && active(level) == null
+                && MinecraftThermalProfiles.prepare().tuning().campfire().ratedPowerW() > 0) {
+            start(level, WorldTemperature.dimension(level), pos);
+        }
     }
 
     public static void onSectionSetBlockState(
@@ -1455,6 +1530,7 @@ public final class MinecraftThermalInput implements AutoCloseable {
             chunk.setUnsaved(true);
         }
         MinecraftThermalInput input = active(level);
+        if (input == null) input = startFromCampfires(level, chunk);
         if (input != null) {
             input.attachLoadedChunk(chunk);
             if (input.blockRadiation != null) {
@@ -1562,30 +1638,31 @@ public final class MinecraftThermalInput implements AutoCloseable {
             ServerLevel level, BlockPos source, BlockPos target,
             double thermalLevel, boolean active
     ) {
-        MinecraftThermalInput input = active(level);
-        if (input != null) input.physicalSources.observeMachine(
-                source, target, MinecraftPhysicalSourceProfile.GENERATOR,
-                thermalLevel, active);
+        observeMachine(level, source, target, MinecraftPhysicalSourceProfile.GENERATOR, thermalLevel, active);
     }
 
     public static void onFountainTick(
             ServerLevel level, BlockPos source, BlockPos target,
             double thermalLevel, boolean active
     ) {
-        MinecraftThermalInput input = active(level);
-        if (input != null) input.physicalSources.observeMachine(
-                source, target, MinecraftPhysicalSourceProfile.FOUNTAIN,
-                thermalLevel, active);
+        observeMachine(level, source, target, MinecraftPhysicalSourceProfile.FOUNTAIN, thermalLevel, active);
     }
 
     public static void onRadiatorTick(
             ServerLevel level, BlockPos source, BlockPos target,
             double thermalLevel, boolean active
     ) {
+        observeMachine(level, source, target, MinecraftPhysicalSourceProfile.RADIATOR, thermalLevel, active);
+    }
+
+    private static void observeMachine(ServerLevel level, BlockPos source, BlockPos target,
+            MinecraftPhysicalSourceProfile profile, double thermalLevel, boolean enabled) {
         MinecraftThermalInput input = active(level);
-        if (input != null) input.physicalSources.observeMachine(
-                source, target, MinecraftPhysicalSourceProfile.RADIATOR,
-                thermalLevel, active);
+        if (input == null && enabled && profile.powerForLevel(thermalLevel) > 0
+                && level.getServer().isSameThread()) {
+            input = start(level, WorldTemperature.dimension(level), source);
+        }
+        if (input != null) input.physicalSources.observeMachine(source, target, profile, thermalLevel, enabled);
     }
 
     public static void onPhysicalSourceRemoved(

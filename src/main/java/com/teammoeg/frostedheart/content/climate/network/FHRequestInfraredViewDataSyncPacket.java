@@ -155,10 +155,11 @@ public final class FHRequestInfraredViewDataSyncPacket implements CMessage {
                             knownDormantPresence,
                             knownRefreshPages);
             if (snapshot != null) {
-                FHNetwork.INSTANCE.sendPlayer(
-                        player,
-                        new FHResponseInfraredViewDataSyncPacket(
-                                requestId, snapshot));
+                int count = Math.max(1, snapshot.brickRecords().length);
+                for (int part = 0; part < count; part++) {
+                    FHNetwork.INSTANCE.sendPlayer(player,
+                            new FHResponseInfraredViewDataSyncPacket(requestId, snapshot, part));
+                }
             }
         });
         context.get().setPacketHandled(true);

@@ -1,11 +1,19 @@
 # 红外视野实际温度场最小增量实现计划
 
 - Time: `2026-08-29 18:38:09 +0800`
-- Last revised: `2026-09-01 21:20:55 +08:00`
+- Last revised: `2026-09-10 +08:00`
 - Authors: `TeamMoeg; Codex (GPT-5, original architecture and final minimal-increment revision)`
-- Status: `in-progress`
+- Status: `superseded`
 - Scope: `InfraredViewRenderer`, `infrared_view.fsh`, existing infrared packets, `MinecraftThermalInput`, `MinecraftPageManager`, `PagePublication`, `QueryPublication`
 - Related: [world-climate-and-temperature.md](../docs/climate/world-climate-and-temperature.md), [thermal-runtime-architecture-and-optimization.md](../docs/climate/thermal-runtime-architecture-and-optimization.md), [thermal async/runtime topology plan](2026-08-28_01-18-39_thermal-async-runtime-topology-refactor.md#brick-residency-and-source-independent-propagation-correction)
+
+## Superseded outcome — 2026-09-10
+
+Author: Codex; OpenAI GPT-6. The Air-only infrared implementation and its historical corrections below remain investigation history. Current implementation has evolved further, including analytic-field composition; this file is not current behavior documentation.
+
+The new execution plan is [材料温度闭环：完整工程方案](2026-09-08_21-58-58_thermal-unknown-block-ventilation-75.md#material-temperature-closure). It covers material-node addressing, solid conduction, shared measurement, material persistence, player long-wave sampling, and surface infrared. Its surface contract replaces this plan's Air-only display, visible-side Air sampling, and blanket prohibition on all additional display data. Existing bounded delta encoding, coherent publication and lifecycle work are reused where applicable.
+
+The replacement is a plan, not an implemented feature. Use [climate documentation](../docs/climate/README.md) and current source for shipped behavior. This status change does not mark old pending client/performance checks as passed.
 
 ## Goal
 

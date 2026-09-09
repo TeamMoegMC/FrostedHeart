@@ -762,37 +762,31 @@ public final class BlockRadiationIndex
             return;
         }
 
-        int face;
-        int x = localX;
-        int y = localY;
-        int z = localZ;
-        if (localX < 0) {
-            face = NEGATIVE_X;
-            x = 15;
-        } else if (localX >= 16) {
-            face = POSITIVE_X;
-            x = 0;
-        } else if (localY < 0) {
-            face = NEGATIVE_Y;
-            y = 15;
-        } else if (localY >= 16) {
-            face = POSITIVE_Y;
-            y = 0;
-        } else if (localZ < 0) {
-            face = NEGATIVE_Z;
-            z = 15;
+        int dx = localX >> 4, dy = localY >> 4, dz = localZ >> 4;
+        int crossedAxes = (dx == 0 ? 0 : 1) + (dy == 0 ? 0 : 1) + (dz == 0 ? 0 : 1);
+        LevelChunkSection section = null;
+        if (crossedAxes > 1) {
+            // A lava side face also samples above its neighbor. At an edge that
+            // position belongs to a diagonal section, not one of the six faces.
+            LevelChunk chunk = level.getChunkSource().getChunkNow(
+                    SectionPos.x(currentSectionKey) + dx, SectionPos.z(currentSectionKey) + dz);
+            if (chunk != null) {
+                int index = chunk.getSectionIndexFromSectionY(SectionPos.y(currentSectionKey) + dy);
+                if (index >= 0 && index < chunk.getSections().length) section = chunk.getSections()[index];
+            }
         } else {
-            face = POSITIVE_Z;
-            z = 0;
+            int face = dx < 0 ? NEGATIVE_X : dx > 0 ? POSITIVE_X
+                    : dy < 0 ? NEGATIVE_Y : dy > 0 ? POSITIVE_Y
+                    : dz < 0 ? NEGATIVE_Z : POSITIVE_Z;
+            section = neighborSection(face);
         }
-        LevelChunkSection section = neighborSection(face);
         if (section == null) {
             neighborHeight = 0.0F;
             neighborLava = false;
             neighborOccluding = true;
             return;
         }
-        setNeighbor(section.getBlockState(x, y, z));
+        setNeighbor(section.getBlockState(localX & 15, localY & 15, localZ & 15));
     }
 
     private void setNeighbor(BlockState state) {

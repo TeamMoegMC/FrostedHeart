@@ -10,6 +10,11 @@
 ## Data Ownership
 
 `FHRecipeCachingReloadListener` rebuilds recipe indexes after `/reload`.
+`buildRecipeLists` also rebuilds empty recipe sets and calls `WorldTemperature.clear`
+after replacing temperature tables. Remote clients do the same on recipe sync;
+integrated clients skip this duplicate rebuild because the server owns the shared
+static tables and caches. Cached
+dimension/biome values therefore cannot outlive the tables that supplied them.
 `WorldTemperature` owns dimension/biome/altitude natural temperature lookup.
 `StateTransitionData` and `PlantTempData` remain gameplay data; their
 `heat_capacity` values are random-tick timing factors, not SI heat capacity.
@@ -49,7 +54,12 @@ ServerStartingEvent
 
 ServerStartedEvent
   MinecraftThermalInput.prepareGameplayProfiles()
+  MinecraftThermalInput.bootstrapLoadedSources(server)
   tagged BlockState semantics and shared signature/geometry tables are frozen once
+
+Datapack reload
+  recipe listener rebuilds indexes, closes physical runtimes, invalidates profiles
+  TagsUpdatedEvent(SERVER_DATA_LOAD), after tag binding: bootstrapLoadedSources(server)
 
 Level tick START
   existing team enumeration advances town data and publishes generator analytic desired state
@@ -66,7 +76,10 @@ ChunkDataEvent.Load (async)
 
 ChunkEvent.Load (level thread)
   consume one-shot source support, rebase residuals, then expose fallback
-  attach section owners and enqueue source discovery if runtime is active
+  a loaded lit campfire may start the runtime; attach owners and enqueue discovery
+
+Machine production / campfire ignition
+  enabled positive-power output or first ignition may start the same runtime
 
 ChunkDataEvent.Save / ChunkEvent.Unload / ServerStoppingEvent
   capture coherent Page temperatures, refresh disk-only source support,
@@ -110,6 +123,13 @@ entry remains.
 
 ## Thread Boundaries
 
+The additional LevelChunk ignition callback starts physics only on the server
+thread and only for a newly lit campfire. It does not poll campfire cookTick.
+Recipe reload closes physical runtimes and invalidates profiles in the recipe
+listener. Loaded campfires are checked only after server tags have been bound;
+active machines recover through their next production tick. Client tag-packet
+events never bootstrap physical runtimes.
+
 The section mixin records only primitive local-position bits. An off-thread
 mutation cannot read a `ServerLevel`, `LevelChunk`, source index, or heightmap.
 The level thread drains the inbox, reads each final state once, updates physical
@@ -139,8 +159,11 @@ so `inFlight` is cleared and replacement still proceeds.
 ## Reload And Restart
 
 Recipe reload invalidates gameplay profiles and closes active thermal levels.
-The next gameplay query creates a new profile snapshot and worker generation.
-Player environment queries can lazily start the runtime; analytic-field insertion
+The server-side `TagsUpdatedEvent` then checks loaded lit campfires once to restart
+needed dimensions. Compiling in the earlier recipe listener would freeze old
+material/radiation tags. Enabled
+machines can restart through their next normal output. Player environment queries
+can also lazily start the runtime; analytic-field insertion
 only creates a world-owned index and never starts the physical runtime.
 Startup binds already-loaded sections and queues current-state
 discovery without replaying dormant/radiation chunk-load events. Full reload

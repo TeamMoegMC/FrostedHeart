@@ -85,6 +85,7 @@ public final class InfraredViewRenderer {
     private static RenderTarget overlayTarget;
     private static boolean open;
     private static boolean deltaBaselineValid;
+    private static boolean receivingResponse;
     private static boolean requestCenterValid;
     private static int requestId;
     private static long lastRequestTick = Long.MIN_VALUE;
@@ -134,7 +135,8 @@ public final class InfraredViewRenderer {
                 || centerSectionY != requestedSectionY;
         long gameTick = minecraft.level.getGameTime();
         boolean awaitingFull = requestCenterValid && !deltaBaselineValid;
-        boolean retryFull = awaitingFull
+        // All parts are sent together over TCP; let an accepted response finish.
+        boolean retryFull = awaitingFull && !receivingResponse
                 && gameTick - lastRequestTick
                 >= FULL_RETRY_MIN_TICKS + Math.floorMod(
                         minecraft.player.getId(), FULL_RETRY_SPREAD_TICKS);
@@ -156,6 +158,7 @@ public final class InfraredViewRenderer {
             long gameTick
     ) {
         requestId = nextRequestId(requestId);
+        receivingResponse = false;
         lastRequestTick = gameTick;
         requestCenterValid = true;
         requestedChunkX = centerChunkX;
@@ -184,24 +187,31 @@ public final class InfraredViewRenderer {
             long[] presence,
             byte[] brickRecords,
             long responseDormantRevision,
-            long[] refreshPages
+            long[] refreshPages,
+            boolean firstPart,
+            boolean lastPart
     ) {
         RenderSystem.assertOnRenderThread();
-        if (!open || responseRequestId != requestId
-                || !acceptResponseCenter(
+        if (!open || responseRequestId != requestId) return;
+        if (firstPart && !acceptResponseCenter(
                         full,
                         centerChunkX,
                         centerChunkZ,
                         centerSectionY)) {
             return;
         }
+        if (!firstPart && !receivingResponse) return;
+        if (firstPart) {
+            receivingResponse = true;
+            deltaBaselineValid = false;
+        }
         boolean createdMirror = ensureTemperatureMirror();
-        Arrays.fill(dirtyUploadPages, 0L);
-        if (full) {
+        if (firstPart) Arrays.fill(dirtyUploadPages, 0L);
+        if (firstPart && full) {
             if (!createdMirror) {
                 clearMirror();
             }
-        } else if (presence.length != 0) {
+        } else if (firstPart && presence.length != 0) {
             for (int localPageIndex = 0;
                     localPageIndex < PAGE_WIDTH * PAGE_WIDTH * PAGE_WIDTH;
                     localPageIndex++) {
@@ -236,6 +246,10 @@ public final class InfraredViewRenderer {
         } finally {
             input.release();
         }
+        // TCP preserves these parts' order. Until LAST, only the existing CPU
+        // mirror changes; the old complete GPU texture and its origin stay live.
+        if (!lastPart) return;
+        receivingResponse = false;
         if (presence.length != 0) {
             System.arraycopy(
                     presence, 0, knownPresence, 0, knownPresence.length);
@@ -399,14 +413,6 @@ public final class InfraredViewRenderer {
                 & 1L << (localPageIndex & 63)) != 0L;
     }
 
-    private static int getOrCreateTemperatureTexture() {
-        if (temperatureTexture != 0) {
-            return temperatureTexture;
-        }
-        uploadFullTemperatureTexture();
-        return temperatureTexture;
-    }
-
     private static void uploadFullTemperatureTexture() {
         ensureTemperatureMirror();
         boolean allocate = temperatureTexture == 0;
@@ -464,15 +470,15 @@ public final class InfraredViewRenderer {
     }
 
     private static void uploadDirtyPages() {
-        boolean dirty = false;
+        int dirtyPages = 0;
         for (long word : dirtyUploadPages) {
-            dirty |= word != 0L;
+            dirtyPages += Long.bitCount(word);
         }
-        if (!dirty) {
+        if (dirtyPages == 0) {
             return;
         }
-        if (temperatureTexture == 0) {
-            getOrCreateTemperatureTexture();
+        if (temperatureTexture == 0 || dirtyPages == PAGE_WIDTH * PAGE_WIDTH * PAGE_WIDTH) {
+            uploadFullTemperatureTexture();
             return;
         }
 
@@ -549,6 +555,9 @@ public final class InfraredViewRenderer {
             return;
         }
         if (temperatureTexture == 0) {
+            // FIRST may arrive before the first rendered frame. Keep its staged
+            // records intact until LAST creates the complete texture.
+            if (receivingResponse) return;
             initializeEmptyTemperatureTexture(minecraft);
         }
         RenderTarget mainTarget = minecraft.getMainRenderTarget();
@@ -691,6 +700,7 @@ public final class InfraredViewRenderer {
     }
 
     private static void invalidateRequests() {
+        receivingResponse = false;
         requestId = nextRequestId(requestId);
         requestCenterValid = false;
         lastRequestTick = Long.MIN_VALUE;

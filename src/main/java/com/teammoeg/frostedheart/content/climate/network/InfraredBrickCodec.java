@@ -8,6 +8,7 @@ import net.minecraft.util.Mth;
 import net.minecraft.util.SimpleBitStorage;
 
 import java.util.Arrays;
+import java.util.ArrayList;
 
 /** Flat changed-Brick wire codec shared by server encoding and client decode. */
 public final class InfraredBrickCodec {
@@ -15,6 +16,9 @@ public final class InfraredBrickCodec {
     public static final int MAX_LOCAL_BRICKS = 729 * 64;
     public static final int MAX_PAYLOAD_BYTES = 960 * 1024;
     public static final short INVALID_TEMPERATURE = Short.MIN_VALUE;
+    public static final byte[][] NO_PARTS = new byte[0][];
+    // 64 largest ordinary records plus one complete dormant section record.
+    private static final int MAX_PAGE_BYTES = 64 * (3 + 64 * Short.BYTES) + 11 + 64 * Short.BYTES;
 
     private static final int INVALID = 0;
     private static final int UNIFORM = 1;
@@ -32,9 +36,18 @@ public final class InfraredBrickCodec {
         private final short[] dictionary = new short[BLOCKS_PER_BRICK];
         private final int[] indexes = new int[BLOCKS_PER_BRICK];
         private final SimpleBitStorage[] storageByBits = storages();
+        private final ArrayList<byte[]> parts = new ArrayList<>();
+        private int completedBytes;
 
         public void reset() {
             output.clear();
+            parts.clear();
+            completedBytes = 0;
+        }
+
+        /** A Page and its rollback point always remain in one bounded buffer. */
+        public void beginPage() {
+            if (output.writerIndex() > MAX_PAYLOAD_BYTES - MAX_PAGE_BYTES) flushPart();
         }
 
         public boolean writeBrick(
@@ -54,6 +67,9 @@ public final class InfraredBrickCodec {
                 }
                 if (dictionaryIndex == dictionarySize) {
                     dictionary[dictionarySize++] = value;
+                    // 36 entries need 2 + 7*8 + 36*2 = 130 bytes; RAW needs 129.
+                    // Further entries cannot make INDEXED smaller.
+                    if (dictionarySize == 36) break;
                 }
                 indexes[index] = dictionaryIndex;
             }
@@ -126,16 +142,27 @@ public final class InfraredBrickCodec {
         }
 
         public int size() {
-            return output.writerIndex();
+            return completedBytes + output.writerIndex();
         }
 
         /** Discard an uncommitted Page if its physical publication changed while reading. */
         public void rewind(int offset) {
-            output.writerIndex(offset);
+            output.writerIndex(offset - completedBytes);
         }
 
-        public byte[] toByteArray() {
-            return ByteBufUtil.getBytes(output, 0, output.writerIndex());
+        public byte[][] finishParts() {
+            if (output.isReadable()) flushPart();
+            byte[][] result = parts.toArray(NO_PARTS);
+            parts.clear();
+            completedBytes = 0;
+            return result;
+        }
+
+        private void flushPart() {
+            int length = output.writerIndex();
+            parts.add(ByteBufUtil.getBytes(output, 0, length));
+            completedBytes += length;
+            output.clear();
         }
 
         private void writeIdentity(int localBrickIndex, int mode) {
@@ -145,6 +172,7 @@ public final class InfraredBrickCodec {
 
         @Override
         public void close() {
+            parts.clear();
             output.release();
         }
     }

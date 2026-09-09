@@ -209,10 +209,10 @@ public class FHClientEvents {
 
     @SubscribeEvent(priority = EventPriority.HIGH)
     public static void onRecipesUpdated(RecipesUpdatedEvent event) {
-       // if (!Minecraft.getInstance().hasSingleplayerServer()) {
-            //FHMain.LOGGER.info("Frostedheart recipes updated from server, rebuilding recipe lists");
+        // Integrated servers already own these shared static recipe tables and caches.
+        if (!Minecraft.getInstance().hasSingleplayerServer()) {
             FHRecipeCachingReloadListener.buildRecipeLists(event.getRecipeManager());
-        //}
+        }
     }
 
     @SubscribeEvent
