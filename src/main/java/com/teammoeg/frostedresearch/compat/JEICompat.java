@@ -197,9 +197,9 @@ public class JEICompat implements IModPlugin {
 
                         RecipeManager rm=CDistHelper.getRecipeManager();
                         crafting.getUnlocks().stream()
-                        		.map(rm::byKey)
-                        		.filter(t->t.isPresent())
-                        		.map(t->t.get())
+                                .map(rm::byKey)
+                                .filter(t->t.isPresent())
+                                .map(t->t.get())
                                 .map(RecipeUtil::getResultItem)
                                 .filter(t -> t != null && !t.isEmpty())
                                 .forEach(items::add);

@@ -83,6 +83,7 @@ public final class MinecraftThermalEvents {
     public static void onLevelUnload(LevelEvent.Unload event) {
         if (event.getLevel() instanceof ServerLevel level) {
             MinecraftThermalInput.closeActiveLevel(level);
+            MinecraftGameplayFields.unload(level);
         }
     }
 
@@ -123,6 +124,7 @@ public final class MinecraftThermalEvents {
     @SubscribeEvent
     public static void onServerStopped(ServerStoppedEvent event) {
         MinecraftThermalInput.closeAll();
+        MinecraftGameplayFields.stop();
     }
 
     private static LevelChunk fullChunk(net.minecraft.world.level.chunk.ChunkAccess chunk) {

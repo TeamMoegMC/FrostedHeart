@@ -1,9 +1,9 @@
 # Player Temperature
 
 - Status: `Current`
-- Last verified: `2026-08-30`
-- Scope: player environment sampling, five-part body energy, clothing, Wet, heating equipment, HUD, effects, persistence, and synchronization
-- Primary code anchors: `TemperatureUpdate.updateTemperature`, `TemperatureComputation.updatePlayer`, `PlayerThermalEnvironment`, `PlayerEquipmentHeating`, `PlayerThermoregulation`, `PlayerThermalModel`, `PlayerThermalInjury`, `PlayerTemperatureData`, `BodyPartData`, `HeatingDeviceContext`, `FHBodyDataSyncPacket`, `FrostedHud.renderTemperature`
+- Last verified: `2026-09-04`
+- Scope: player environment sampling, five-part body energy, wearable thermal reservoirs, clothing, Wet, heating equipment, HUD, effects, persistence, and synchronization
+- Primary code anchors: `PlayerTemperatureUpdate.updateTemperature`, `PlayerTemperatureComputation.updatePlayer`, `PlayerThermalEnvironment`, `PlayerEquipmentHeating`, `PlayerThermoregulation`, `PlayerThermalModel`, `PlayerThermalInjury`, `PlayerTemperatureData`, `WearableThermalExchangeHandler`, `ThreeNodeWearableHeatExchange`, `FHBodyDataSyncPacket`, `FrostedHud.renderTemperature`
 
 ## Player-Facing Values
 
@@ -27,7 +27,7 @@ diagnostic command and body calculation, but is not sent for HUD color.
 ## Cadence And Environment
 
 `temperatureUpdateIntervalTicks` defaults to `20`.
-`TemperatureUpdate.shouldUpdatePlayer` assigns each UUID a stable phase so
+`PlayerTemperatureUpdate.shouldUpdatePlayer` assigns each UUID a stable phase so
 players are distributed across the interval. Each update performs one
 `MinecraftThermalInput.gameplayPlayerEnvironment` query using a reusable
 `ThermalEnvironmentSample`.
@@ -60,7 +60,7 @@ before pair equilibrium.
 
 Air, long-wave exchange, direct source radiation, clothing resistance, contact
 media, Wet, metabolism, movement, thermoregulation, and equipment all enter one
-power balance in watts. `TemperatureComputation.updatePlayer` integrates that
+power balance in watts. `PlayerTemperatureComputation.updatePlayer` integrates that
 balance through five visible phases: environment sampling, contact preparation,
 active-power collection, body integration, and observation publication. Its
 separate stateless `PlayerThermalModel` owns the formulas,
@@ -108,14 +108,37 @@ resource use is scaled by real elapsed seconds, independently of
 `frostedheart:partial_heating_second` item key and is removed whenever it
 returns to zero. A zero physiological time scale skips both equipment power and
 resource use. Food converts its existing temperature delta into joules through
-`TemperatureComputation.bodyEnergyForTemperatureDeltaJ` and applies the
+`PlayerTemperatureComputation.bodyEnergyForTemperatureDeltaJ` and applies the
 existing minimum/maximum body offsets.
 
 The established body-part effect thresholds still consume offsets relative to
 `37 C`: torso drives hypothermia/hyperthermia, head drives confusion, lower
-limbs drive slowness, and hands drive mining slowdown. The `INSULATION`
-effect, creative mode, spectator mode, and invulnerability continue sampling
-the environment but freeze body-energy changes and suppress climate injury.
+limbs drive slowness, and hands drive mining slowdown. The `INSULATION` effect
+freezes the ordinary environment/physiology body step, but an equipped thermal
+reservoir still exchanges with the player afterward. Creative mode, spectator
+mode, and invulnerability skip wearable exchange as well as climate injury.
+
+## Wearable Thermal Reservoirs
+
+`frostedheart:warm_stone` and `frostedheart:hot_water_bag` each persist a core
+and surface temperature. Their frozen normalized capacity ratios are `0.10`
+and `0.25` relative to the whole player capacity; surface share is `a=0.20`.
+Core/surface transfer rates are `6.1613e-5 /s` and `9.2420e-4 /s`, while
+surface/player rates are `1.2e-4 /s` and `8e-5 /s`. Every at-most-one-second
+substep uses `core-surface half -> surface-player full -> core-surface half`
+through `ThermalExchangeKernel.exchangePairWithInverseInto`.
+
+The normalized player-node delta is applied by
+`PlayerTemperatureData.applyUniformBodyTemperatureDelta` to all five parts.
+Because the five part capacities sum to `245000 J/K`, this preserves the
+reservoir/player energy ratio and exchange speed while fitting the new body
+energy representation. It does not advance `prevCoreBodyTemp`.
+
+Only slot `curios:warm_stone` participates. Inventory reservoirs exchange with
+air at half the surface/player rate; dropped single-item entities exchange at
+eight times that rate and also consume bounded direct radiation. Unticked
+containers pause. Normal tooltip shows the capacity-weighted mean
+`(1-a)*T_core + a*T_surface`; advanced tooltip additionally shows both nodes.
 
 ## Persistence And Synchronization
 
@@ -141,7 +164,7 @@ respawn, and dimension change force one complete state packet.
 
 The body update is fixed `O(5)`. `HeatingDeviceContext` is created lazily
 once per server-side player and owns the reusable sample, one clothing value,
-and fixed five-element primitive arrays. `TemperatureComputation` has no
+and fixed five-element primitive arrays. `PlayerTemperatureComputation` has no
 global mutable player scratch or per-update collection. Stateless domain classes
 separate ownership: `PlayerThermalEnvironment` reads inputs,
 `PlayerEquipmentHeating` traverses equipment, `PlayerThermoregulation` owns

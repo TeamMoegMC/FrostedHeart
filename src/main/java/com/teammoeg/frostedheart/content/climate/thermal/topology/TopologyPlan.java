@@ -2,6 +2,7 @@
 package com.teammoeg.frostedheart.content.climate.thermal.topology;
 
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.ArenaSpan;
+import com.teammoeg.frostedheart.content.climate.thermal.mesh.BlockBrickLayout;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.PagePublication;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.PageSignatures;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.ThermalCellArena;
@@ -56,6 +57,7 @@ public final class TopologyPlan {
     private final Int2ObjectOpenHashMap<PageDraft> draftsBySlot =
             new Int2ObjectOpenHashMap<>();
     private final IntOpenHashSet affectedFragments = new IntOpenHashSet();
+    private final IntOpenHashSet layoutCandidates = new IntOpenHashSet();
     private final LongOpenHashSet sourceDirtySections = new LongOpenHashSet();
     private final IntArrayList removedReservoirs = new IntArrayList();
     private final IntArrayList addedReservoirs = new IntArrayList();
@@ -91,7 +93,7 @@ public final class TopologyPlan {
         this.limits = limits;
         this.queries = queries;
         this.view = new TopologyView(
-                pages, signatures, draftsBySection, draftsBySlot);
+                pages, draftsBySection, draftsBySlot);
     }
 
     public PreparedTopologyChange prepare(ThermalInputBatch batch) {
@@ -103,6 +105,7 @@ public final class TopologyPlan {
             collectGeometry(batch.geometry());
             collectEnvironment(batch.environmentUpdates());
             finalizeSignatureCuts();
+            collectLayoutDependencies();
             compileChangedCells();
             collectFragmentDependencies();
             FragmentChanges fragmentChanges = compileFragments();
@@ -377,6 +380,66 @@ public final class TopologyPlan {
         }
     }
 
+    private void collectLayoutDependencies() {
+        // First freeze candidates, then mark replacements: no recursive expansion.
+        layoutCandidates.clear();
+        int originalDrafts=draftCount;
+        for(int i=0;i<originalDrafts;i++) {
+            PageDraft draft=draftPool.get(i);
+            long mask=draft.retirement ? draft.page.residentBrickMask : draft.topologyDirtyMask;
+            while(mask!=0) {
+                int b=Long.numberOfTrailingZeros(mask); mask&=mask-1;
+                int x=brickMinX(draft.page,b),y=brickMinY(draft.page,b),z=brickMinZ(draft.page,b);
+                for(int axis=0;axis<3;axis++) for(int d=-4;d<=4;d+=8) {
+                    int nx=x+(axis==0?d:0),ny=y+(axis==1?d:0),nz=z+(axis==2?d:0);
+                    long key=SectionPos.asLong(SectionPos.blockToSectionCoord(nx),SectionPos.blockToSectionCoord(ny),SectionPos.blockToSectionCoord(nz));
+                    var page=view.page(key);
+                    int nb=(nx&15)>>>2|((nz&15)>>>2)<<2|((ny&15)>>>2)<<4;
+                    if(page!=null && view.resident(page,nb)) layoutCandidates.add(page.fragmentIndex(nb));
+                }
+            }
+        }
+        for(int index:layoutCandidates) {
+            var page=view.pageSlot(index/64); int brick=index%64;
+            var draft=acquireDraft(page);
+            if((draft.topologyDirtyMask & 1L<<brick)!=0) continue;
+            int x=brickMinX(page,brick),y=brickMinY(page,brick),z=brickMinZ(page,brick);
+            // This Brick's own signatures did not change. Only outward faces can
+            // change its capacity; opposite changes at a corner may cancel out.
+            for (int block = 0; block < 64; block++) {
+                int lx = block & 3, ly = block >>> 4, lz = block >>> 2 & 3;
+                if (lx > 0 && lx < 3 && ly > 0 && ly < 3 && lz > 0 && lz < 3) continue;
+                int signature = draft.nextSignatures.get(BlockBrickLayout.pageBlock(brick, block));
+                if (signatures.materialProfileId(signature) == 0) continue;
+                int bx = x + lx, by = y + ly, bz = z + lz;
+                int delta = 0;
+                if (lx == 0) delta += exposureDeltaAt(bx - 1, by, bz);
+                if (lx == 3) delta += exposureDeltaAt(bx + 1, by, bz);
+                if (ly == 0) delta += exposureDeltaAt(bx, by - 1, bz);
+                if (ly == 3) delta += exposureDeltaAt(bx, by + 1, bz);
+                if (lz == 0) delta += exposureDeltaAt(bx, by, bz - 1);
+                if (lz == 3) delta += exposureDeltaAt(bx, by, bz + 1);
+                if (delta != 0) {
+                    draft.topologyDirtyMask |= 1L << brick;
+                    break;
+                }
+            }
+        }
+    }
+
+    private int exposureDeltaAt(int x, int y, int z) {
+        int next = signatures.ventilation(view.signatureAtWorld(x, y, z)) > 0 ? 1 : 0;
+        var page = pages.find(SectionPos.asLong(
+                SectionPos.blockToSectionCoord(x), SectionPos.blockToSectionCoord(y),
+                SectionPos.blockToSectionCoord(z)));
+        int brick = (x & 15) >>> 2 | ((z & 15) >>> 2) << 2 | ((y & 15) >>> 2) << 4;
+        if (page != null && (page.residentBrickMask & 1L << brick) != 0
+                && signatures.ventilation(page.signatures.get((x & 15) | (z & 15) << 4 | (y & 15) << 8)) > 0) {
+            return next - 1;
+        }
+        return next;
+    }
+
     private void compileChangedCells() {
         for (int draftIndex = 0; draftIndex < draftCount; draftIndex++) {
             PageDraft draft = draftPool.get(draftIndex);
@@ -481,7 +544,8 @@ public final class TopologyPlan {
             fragments[index] = compiled.fragment();
             WorkerBrickTopology base = view.brick(page, brick);
             WorkerBrickTopology next = base.withFragmentResult(
-                    base.resolved && compiled.resolved());
+                    base.cellsResolved && compiled.resolved());
+            if (base.resolved != next.resolved) sourceDirtySections.add(page.handle.sectionKey());
             draft.replace(brick, next);
             draft.fragmentChangedMask |= 1L << brick;
         }
@@ -497,7 +561,7 @@ public final class TopologyPlan {
                     int brick = Long.numberOfTrailingZeros(remaining);
                     WorkerBrickTopology old = draft.page.brick(brick);
                     collectOldSpan(draft.page, old);
-                    for (int slot : old.phaseReservoirs.slot()) {
+                    for (int slot : old.phaseSlots) {
                         removedReservoirs.add(slot);
                     }
                     remaining &= remaining - 1L;
@@ -529,10 +593,10 @@ public final class TopologyPlan {
             WorkerBrickTopology old,
             WorkerBrickTopology next
     ) {
-        for (int slot : old.phaseReservoirs.slot()) {
+        for (int slot : old.phaseSlots) {
             removedReservoirs.add(slot);
         }
-        for (int slot : next.phaseReservoirs.slot()) {
+        for (int slot : next.phaseSlots) {
             addedReservoirs.add(slot);
         }
     }

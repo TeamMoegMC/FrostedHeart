@@ -29,6 +29,8 @@ public final class FHResponseInfraredViewDataSyncPacket implements CMessage {
     private final boolean full;
     private final long[] presence;
     private final byte[] brickRecords;
+    private final long dormantRevision;
+    private final long[] refreshPages;
 
     public FHResponseInfraredViewDataSyncPacket(
             int requestId,
@@ -42,7 +44,9 @@ public final class FHResponseInfraredViewDataSyncPacket implements CMessage {
                 snapshot.infraredEpoch(),
                 snapshot.full(),
                 snapshot.presence(),
-                snapshot.brickRecords());
+                snapshot.brickRecords(),
+                snapshot.dormantRevision(),
+                snapshot.refreshPages());
     }
 
     private FHResponseInfraredViewDataSyncPacket(
@@ -53,7 +57,9 @@ public final class FHResponseInfraredViewDataSyncPacket implements CMessage {
             int infraredEpoch,
             boolean full,
             long[] presence,
-            byte[] brickRecords
+            byte[] brickRecords,
+            long dormantRevision,
+            long[] refreshPages
     ) {
         if (requestId < 0 || infraredEpoch < 0
                 || presence == null || brickRecords == null
@@ -62,7 +68,10 @@ public final class FHResponseInfraredViewDataSyncPacket implements CMessage {
                         != FHRequestInfraredViewDataSyncPacket.PRESENCE_WORDS
                 || full && presence.length
                         != FHRequestInfraredViewDataSyncPacket.PRESENCE_WORDS
-                || brickRecords.length > InfraredBrickCodec.MAX_PAYLOAD_BYTES) {
+                || brickRecords.length > InfraredBrickCodec.MAX_PAYLOAD_BYTES
+                || refreshPages == null
+                || refreshPages.length
+                        != FHRequestInfraredViewDataSyncPacket.PRESENCE_WORDS) {
             throw new IllegalArgumentException("invalid infrared response");
         }
         this.requestId = requestId;
@@ -73,6 +82,8 @@ public final class FHResponseInfraredViewDataSyncPacket implements CMessage {
         this.full = full;
         this.presence = presence;
         this.brickRecords = brickRecords;
+        this.dormantRevision = dormantRevision;
+        this.refreshPages = refreshPages;
     }
 
     public FHResponseInfraredViewDataSyncPacket(FriendlyByteBuf buffer) {
@@ -93,6 +104,11 @@ public final class FHResponseInfraredViewDataSyncPacket implements CMessage {
         }
         brickRecords = buffer.readByteArray(
                 InfraredBrickCodec.MAX_PAYLOAD_BYTES);
+        dormantRevision = buffer.readVarLong();
+        refreshPages = new long[FHRequestInfraredViewDataSyncPacket.PRESENCE_WORDS];
+        for (int index = 0; index < refreshPages.length; index++) {
+            refreshPages[index] = buffer.readLong();
+        }
     }
 
     @Override
@@ -110,6 +126,10 @@ public final class FHResponseInfraredViewDataSyncPacket implements CMessage {
             }
         }
         buffer.writeByteArray(brickRecords);
+        buffer.writeVarLong(dormantRevision);
+        for (long word : refreshPages) {
+            buffer.writeLong(word);
+        }
     }
 
     @Override
@@ -126,7 +146,9 @@ public final class FHResponseInfraredViewDataSyncPacket implements CMessage {
                     infraredEpoch,
                     full,
                     presence,
-                    brickRecords);
+                    brickRecords,
+                    dormantRevision,
+                    refreshPages);
             if (RenderSystem.isOnRenderThread()) {
                 update.run();
             } else {

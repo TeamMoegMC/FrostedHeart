@@ -7,21 +7,17 @@ import java.util.Objects;
 
 /** Immutable local topology and numerical calibration for one engine generation. */
 public record ThermalTopologyParameters(
-        int maximumRegionsPerBlock,
         double effectiveAirCapacityJPerBlockK,
         double referenceTemperatureC,
         double effectiveMixingWPerBlockK,
-        double minimumMixedFaceDistanceBlocks,
         BuoyancyConductance.Parameters buoyancyParameters,
         int phaseRequestCapacity,
         int maximumPhaseMutationsPerCompletion
 ) {
     public ThermalTopologyParameters {
-        if (maximumRegionsPerBlock <= 0
-                || !positive(effectiveAirCapacityJPerBlockK)
+        if (!positive(effectiveAirCapacityJPerBlockK)
                 || !Double.isFinite(referenceTemperatureC)
                 || !positive(effectiveMixingWPerBlockK)
-                || !positive(minimumMixedFaceDistanceBlocks)
                 || phaseRequestCapacity <= 0
                 || maximumPhaseMutationsPerCompletion <= 0) {
             throw new IllegalArgumentException("thermal topology parameters are invalid");

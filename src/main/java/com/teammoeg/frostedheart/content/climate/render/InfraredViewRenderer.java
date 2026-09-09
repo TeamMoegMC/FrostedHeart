@@ -66,6 +66,12 @@ public final class InfraredViewRenderer {
     private static ShortBuffer pageUpload;
     private static final long[] knownPresence =
             new long[FHRequestInfraredViewDataSyncPacket.PRESENCE_WORDS];
+    private static final long[] knownDormantPresence =
+            new long[FHRequestInfraredViewDataSyncPacket.PRESENCE_WORDS];
+    private static final long[] knownRefreshPages =
+            new long[FHRequestInfraredViewDataSyncPacket.PRESENCE_WORDS];
+    private static long[] dormantBrickMasks;
+    private static long dormantRevision;
     private static final long[] dirtyUploadPages =
             new long[FHRequestInfraredViewDataSyncPacket.PRESENCE_WORDS];
     private static final short[] decodedBrick =
@@ -164,7 +170,8 @@ public final class InfraredViewRenderer {
                         requestId,
                         forceFull || !deltaBaselineValid,
                         infraredEpoch,
-                        knownPresence));
+                        knownPresence, dormantRevision, knownDormantPresence,
+                        knownRefreshPages));
     }
 
     public static void updateData(
@@ -175,7 +182,9 @@ public final class InfraredViewRenderer {
             int responseInfraredEpoch,
             boolean full,
             long[] presence,
-            byte[] brickRecords
+            byte[] brickRecords,
+            long responseDormantRevision,
+            long[] refreshPages
     ) {
         RenderSystem.assertOnRenderThread();
         if (!open || responseRequestId != requestId
@@ -210,9 +219,19 @@ public final class InfraredViewRenderer {
                 Unpooled.wrappedBuffer(brickRecords));
         try {
             int localBrickIndex;
-            while ((localBrickIndex = brickDecoder.readBrick(
+            while ((localBrickIndex = brickDecoder.readRecord(
                     input, decodedBrick)) >= 0) {
-                writeBrick(localBrickIndex, decodedBrick);
+                int page = localBrickIndex >>> 6;
+                if (brickDecoder.isDormantSection()) {
+                    applyDormantSection(page, brickDecoder.dormantBrickMask(),
+                            brickDecoder.isDormantReplacement(),
+                            !full && responseInfraredEpoch == 0 && presenceBit(knownPresence, page)
+                                    && !presenceBit(knownRefreshPages, page)
+                                    && !presenceBit(refreshPages, page));
+                } else {
+                    dormantBrickMasks[page] &= ~(1L << (localBrickIndex & 63));
+                    writeBrick(localBrickIndex, decodedBrick, (short) 0);
+                }
             }
         } finally {
             input.release();
@@ -221,10 +240,12 @@ public final class InfraredViewRenderer {
             System.arraycopy(
                     presence, 0, knownPresence, 0, knownPresence.length);
         }
+        System.arraycopy(refreshPages, 0, knownRefreshPages, 0, knownRefreshPages.length);
         textureCenterChunkX = centerChunkX;
         textureCenterChunkZ = centerChunkZ;
         textureCenterSectionY = centerSectionY;
         infraredEpoch = responseInfraredEpoch;
+        dormantRevision = responseDormantRevision;
         deltaBaselineValid = true;
         if (full) {
             uploadFullTemperatureTexture();
@@ -261,6 +282,9 @@ public final class InfraredViewRenderer {
             return;
         }
         mirror.clear();
+        Arrays.fill(dormantBrickMasks, 0L);
+        Arrays.fill(knownDormantPresence, 0L);
+        Arrays.fill(knownRefreshPages, 0L);
         while (mirror.hasRemaining()) {
             mirror.put(InfraredBrickCodec.INVALID_TEMPERATURE);
         }
@@ -272,11 +296,13 @@ public final class InfraredViewRenderer {
             return false;
         }
         temperatureMirror = BufferUtils.createShortBuffer(TEXTURE_TEXELS);
+        dormantBrickMasks = new long[PAGE_WIDTH * PAGE_WIDTH * PAGE_WIDTH];
         clearMirror();
         return true;
     }
 
     private static void clearPage(int localPageIndex) {
+        dormantBrickMasks[localPageIndex] = 0L;
         int pageX = localPageIndex % PAGE_WIDTH;
         int pageZ = localPageIndex / PAGE_WIDTH % PAGE_WIDTH;
         int pageY = localPageIndex / (PAGE_WIDTH * PAGE_WIDTH);
@@ -299,7 +325,8 @@ public final class InfraredViewRenderer {
 
     private static void writeBrick(
             int localBrickIndex,
-            short[] values
+            short[] values,
+            short uniform
     ) {
         int localPageIndex = localBrickIndex >>> 6;
         int brickIndex = localBrickIndex & 63;
@@ -319,9 +346,47 @@ public final class InfraredViewRenderer {
             temperatureMirror.put(
                     (textureZ * TEXTURE_SIZE + textureY) * TEXTURE_SIZE
                             + textureX,
-                    values[block]);
+                    values == null ? uniform : values[block]);
         }
         markDirtyPage(localPageIndex);
+    }
+
+    private static void applyDormantSection(
+            int page, long writtenMask, boolean replace, boolean retainLive
+    ) {
+        long previouslyOwned = dormantBrickMasks[page];
+        if (replace) {
+            long removed = previouslyOwned & ~writtenMask;
+            while (removed != 0L) {
+                int brick = Long.numberOfTrailingZeros(removed);
+                writeBrick(page * 64 + brick, null, InfraredBrickCodec.INVALID_TEMPERATURE);
+                removed &= removed - 1L;
+            }
+            dormantBrickMasks[page] &= writtenMask;
+        }
+        long remaining = writtenMask;
+        while (remaining != 0L) {
+            int brick = Long.numberOfTrailingZeros(remaining);
+            long bit = 1L << brick;
+            short value = decodedBrick[brick];
+            if (value == InfraredBrickCodec.INVALID_TEMPERATURE) {
+                if ((dormantBrickMasks[page] & bit) != 0L) {
+                    writeBrick(page * 64 + brick, null, value);
+                    dormantBrickMasks[page] &= ~bit;
+                }
+            } else if (!retainLive || (previouslyOwned & bit) != 0L) {
+                writeBrick(page * 64 + brick, null, value);
+                dormantBrickMasks[page] |= bit;
+            }
+            remaining &= remaining - 1L;
+        }
+        // Presence describes the received snapshot, even if a stale live cut hides some Bricks.
+        long sectionBit = 1L << (page & 63);
+        if (replace && writtenMask == 0L) {
+            knownDormantPresence[page >>> 6] &= ~sectionBit;
+        } else {
+            knownDormantPresence[page >>> 6] |= sectionBit;
+        }
     }
 
     private static void markDirtyPage(int localPageIndex) {
@@ -599,6 +664,10 @@ public final class InfraredViewRenderer {
         radius = 0.0F;
         deltaBaselineValid = false;
         infraredEpoch = 0;
+        dormantRevision = 0L;
+        Arrays.fill(knownDormantPresence, 0L);
+        Arrays.fill(knownRefreshPages, 0L);
+        if (dormantBrickMasks != null) Arrays.fill(dormantBrickMasks, 0L);
         Arrays.fill(knownPresence, 0L);
         Arrays.fill(dirtyUploadPages, 0L);
         cameraPose = null;

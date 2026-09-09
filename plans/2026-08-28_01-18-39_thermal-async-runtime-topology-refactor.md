@@ -25,7 +25,7 @@ This rule outranks implementation speed and every narrower checklist item: the f
 
 ## Production Code Admission Standard
 
-The thermal system is new and has no compatibility obligation. This section is
+The thermal system is new and has no compatibility obligation. This section is`
 a hard gate, not a cleanup suggestion:
 
 - No legacy constructor, facade, alias, adapter, deprecated method, parallel

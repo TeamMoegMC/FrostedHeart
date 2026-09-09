@@ -113,6 +113,7 @@ public final class TownStageFourModel {
                 buildings);
     }
 
+    /** Legacy heat-chunk balance reference; does not model the live analytic floor or physical Air. */
     public static HourThermalResult evaluateHour(
             float climateTemperatureCelsius,
             boolean heatFieldActive,

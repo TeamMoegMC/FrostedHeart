@@ -1,7 +1,7 @@
 # 世界气候与环境温度
 
 - Status: `Current`
-- Last verified: `2026-08-31`
+- Last verified: `2026-09-08`
 - Scope: 逻辑气候时钟、长期事件、局部白幕、自然/mesh/analytic 温度合成、红外视野、方块状态消费者
 - Primary code anchors: `WorldClockSource`, `WorldClimate`, `ClimateEventModel`, `ClimateEventTrack`, `InterpolationClimateEvent`, `WhiteCurtainDescriptor`, `WhiteCurtainFieldModel`, `WhiteCurtainInfo`, `WorldTemperature`, `BlockTemperatureModel`, `ThermalAnalyticField`, `ThermalAnalyticFieldIndex`, `MinecraftThermalInput.gameplayPassiveEnvironment`, `MinecraftThermalInput.gameplayCropEnvironment`, `MinecraftThermalInput.gameplayInfraredSnapshot`, `TownThermalProjection`, `MinecraftThermalInput.gameplayTownEnvironment`, `InfraredViewRenderer`
 
@@ -185,20 +185,38 @@ Page 重采样：方块 mutation 在 heightmap 更新完成后于 tick-end 合�
 
 ## 7. Analytic control fields
 
-`MinecraftThermalInput` 每个维度只保存一份按 `(combineMode, priority, fieldId)` 排序的
-`ThermalAnalyticField` 列表。field 可为 `CUBE`、`PILLAR` 或 `SPHERE`，不会复制到覆盖区块、不会挂
-capability、不会创建 Page，也不参与 `H/C/P/G` 守恒账本。相同 `fieldId` 的更新原位替换定义。
+`MinecraftGameplayFields` 在服务端主线程按实际 `ServerLevel` 身份持有一份
+`ThermalAnalyticFieldIndex`；`MinecraftThermalInput` 缓存同一索引引用。field 可为
+`CUBE`、`PILLAR` 或 `SPHERE`，范围内为常值，无衰减或遮挡；不会复制到覆盖区块、挂 capability、
+创建 Page，也不参与 `H/C/P/G` 守恒账本。键为 `ThermalFieldKey(provider, ownerHigh, ownerLow, channel)`：
+generator 使用团队数据完整 UUID，Curiosity 使用实体完整 UUID，命令使用独立命名空间内的位置。
+更新 map 与有序列表引用同一 Entry；重复球形报告不创建定义，不排序；仅新增、删除、mode/priority
+变化需要移动列表。普通点查询仍按列表进行 O(F) 扫描。
 
 合成发生在 natural/mesh 选择之后，固定顺序为：
 
 ```text
-OVERRIDE -> MAX_HEAT -> MIN_COOL -> ADD_DELTA
+FLOOR_FROM_NATURAL -> OVERRIDE -> MAX_HEAT -> MIN_COOL -> ADD_DELTA
 ```
 
-同一 mode 内再按 priority 和 field ID 排序。Curiosity 冷场使用 `ADD_DELTA`，`/heat_adjust`
-创建运行期 `OVERRIDE` field。控制场当前不跨服务器重启持久化；Curiosity 由实体状态在载入后
-重新报告。红外视野不直接显示 analytic field 或 physical source；它只读取
-`PagePublication` 与 `QueryPublication` 已求解的实际 Air 温度。服务端对每个
+同一 mode 内按 priority 和完整 key 排序。Generator 使用 `FLOOR_FROM_NATURAL`：令 N 为当前消费者
+在查询点的自然温度，P 为原有 live/dormant/natural 选择，D 为命中保底场的最大温差，先求
+`max(P, N + D)`；没有保底场时保留 P。N/P 是摄氏温度，D 是摄氏温差。Curiosity 的负值
+`ADD_DELTA` 在后续扣减；`/heat_adjust` 创建 `OVERRIDE`，删除时只删除命令自己的场。
+保底适用于区域玩法，包括人物、作物和城镇，并不向物理网格注入能量。
+
+Generator 的半径/温差来自 `GeneratorData.getRadius/getTempMod` 和 `GeneratorHeatFieldModel`：
+默认半径为 `floor(16 * Lr)`（`0 < Lr <= 1`）或 `floor(16 + 8 * (Lr - 1))`（`Lr > 1`）个方块，
+默认温差为 `floor(10 * Lt)`。配置属于 `FHConfig.SERVER.TOWN.GENERATOR_T1` 的
+`baseRadiusBlocks`、`additionalRadiusPerLevelBlocks`、`temperaturePerLevelCelsius`。
+例如 N=-40、D=30 时保底是 -10；室内物理温度只有超过 -10 后才进一步提高合成温度。
+这不是旧 `BlockTemperatureModel.applyHeat` 的 `min(N + 2H, H)` 曲线；该旧曲线不用于通用场。
+
+解析场不会触发物理 runtime 启动，物理关闭/配方重载不清场。实际世界卸载和服务器停止清理索引；
+服务器重启后 generator 从团队数据重建，Curiosity 从实体状态重建，命令场不持久化。
+红外视野不直接显示 analytic field 或 physical source；它只读取
+`PagePublication` 与 `QueryPublication` 已求解的实际 Air 温度，并在未解析 Brick
+使用已存储的 dormant 均温。服务端对每个实时
 world block 中心调用 `PagePublication.resolveAirPoint`，再把得到的实际 Air cell
 温度量化为一个 0.25degC signed-short texel；同一 `4 x 4 x 4` Brick 内被完整墙体
 隔开的两侧因此可以显示不同温度，`Short.MIN_VALUE` 表示中心没有可显示 Air。
@@ -209,8 +227,10 @@ world block 中心调用 `PagePublication.resolveAirPoint`，再把得到的实�
 `40` ticks 携带 infrared epoch 和 729-bit Page presence。服务端使用固定 Page/Brick
 epoch 数组回答任意旧客户端，只编码视野内 epoch 更新的 Bricks；presence mismatch
 只发送 added/removed Page delta。无可见 Brick/presence 变化时不发送 S2C，即使维度
-内别处推进了 epoch。QueryPublication 暂时 invalid 或超龄时同样不响应，客户端
-保留最后有效 temperature mirror；center/full 请求在匹配响应被接受前不会降级为
+内别处推进了 epoch。QueryPublication 暂时 invalid 或超龄时不清除旧实时覆盖，
+仍可返回 dormant 更新，并以实时 epoch 0 要求下一份 coherent 响应重建实时基线；
+此时已知实时 section 内只更新此前由 dormant 拥有的 texel。
+center/full 请求在匹配响应被接受前不会降级为
 delta。等待 full 时暂停固定 40-tick poll，并按 entity ID 分散在 `41..59` ticks 后
 重试；该区间没有 20 的倍数，因此不会与 20-tick thermal cut 永久同相。客户端只把
 delta 应用到相同 texture center；不同中心的 delta 被丢弃并在
@@ -236,13 +256,17 @@ uniform，避免远世界坐标丢失一格精度。潜行眼高平滑和第三�
 depth 偏移。篝火烟雾等写 depth 的粒子沿用同一世界坐标采样，与粒子所在 Air
 texel 的温度颜色融合；不增加粒子 mask、专用 pass 或渲染时序分支。
 
-首次/换中心 full snapshot 还可读取当前 source 七-section closure 内的 dormant
-Brick mean，并复用 `UNIFORM` record 作为临时 Brick-resolution bootstrap；不加入
-presence 或稳定 delta，不 admission Page、不加载 chunk。真实 Page admission 后，
-现有 added-Page 路径会清除该区域并替换成 block-position exact 数据。
+每次红外请求还检查视野内已加载 chunk 的 dormant Brick mean，不依赖 source
+是否发现，不 admission Page、不加载 chunk。section 首次被查询才创建共享量化缓存，
+复用 20-tick 自然温度/衰减缓存；常规增量只发送变化 Brick，落后客户端收到 section
+替换，数据消失则显式删除。客户端增加一份 5,832 字节的 dormant Brick 所有权位图，
+复用原纹理。实时 `resolved` Brick（包括无 Air）优先，未解析 Brick 可继续显示
+暂存均温；实时更新时同包重写受影响 section 的剩余 fallback，避免覆盖丢失。
+关闭红外立即停止客户端请求；服务端实时比较最多延续 80 tick，dormant 计算只由
+请求触发。编码及生命周期详见 [data-lifecycle-and-integration.md](data-lifecycle-and-integration.md#network-and-consumers)。
 
-Campfire、Generator 和蒸汽喷泉不是 analytic field；它们由
-`PhysicalSourceSpatialIndex` 注册为显式功率 source，进入 mesh 与直接辐射路径。
+Campfire、Generator 和蒸汽喷泉仍由 `PhysicalSourceSpatialIndex` 注册为显式功率 source。
+Generator 另外提供上述解析保底；其物理功率和传播范围不受解析场半径裁剪。
 `ChunkHeatData`、`IHeatArea`、chunk capability、周期 revalidation 和旧失效包均已删除。
 
 ## 8. 主要消费者
@@ -258,7 +282,15 @@ Campfire、Generator 和蒸汽喷泉不是 analytic field；它们由
 
 `WorldTemperature.checkPlantStatus` 真正需要温度的路径调用 `MinecraftThermalInput.gameplayCropEnvironment`。已有 Air Mesh publication 命中时，返回的空气温度直接进入施肥、生长、生存和死亡阈值；无 active runtime、无 Page、无可解析 Air 点、stale 或超龄 publication 时使用 natural block temperature，再合成 analytic field。天气先行决定植物状态时不发起 thermal query。该 passive 路径不会创建 Page、Brick、Cell 或 Interest。
 
-住宅与狩猎基地扫描器访问内部空气时同步把坐标压缩成 `TownThermalProjection` 的 `4×4×4` weighted groups；成功扫描后每组只查询一个已有 publication。全部 group 命中时，新加权空气平均值直接写入建筑温度并驱动评分与日结算；任一 group miss 时整体回退同次 natural 全体素平均，并按 representative group 合成 analytic field，避免混合两套不完整区域。该路径没有第二次房间/体素遍历，不保留 mesh lease，miss 也不能 admission。矿井基地当前没有温度工作条件，因此未增加虚构的 mine consumer。
+住宅与狩猎基地扫描器访问内部空气时同步把坐标压缩成 `TownThermalProjection` 的 `4×4×4` weighted groups。
+每组在 representative 点独立选择 live/dormant/natural，合成解析场后按体素数加权，并驱动评分与日结算。
+命中相对保底的 live/dormant 点才额外计算当地 natural；不会使用全建筑平均值构造局部保底。
+该路径没有第二次房间/体素遍历，不保留 mesh lease，miss 也不能 admission。矿井基地当前没有温度工作条件。
+
+`ServerLevelMixin_TemperatureUpdate` 对每个候选融化/蒸发阈值检查显式解析下限：
+`L = compose(natural, -Infinity)`。被物理 phase 接管的方块，仅当解析下限自身达到对应阈值时，
+才允许原有玩法相变路径执行该升温变化；融化下限不能越权触发更高阈值的蒸发。Boss 负温差会降低 L，
+单独 `ADD_DELTA` 没有绝对下限，不绕过潜热。方块变化仍走原有 mutation/phase ACK 失效路径。
 
 ## 9. 持久化与当前约束
 

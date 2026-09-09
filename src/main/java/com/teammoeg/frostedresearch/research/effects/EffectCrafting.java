@@ -114,7 +114,7 @@ public class EffectCrafting extends Effect {
             return CIcons.getIcon(CIcons.getIcon(ingredient), CIcons.getIcon(Items.CRAFTING_TABLE));
         Set<ItemStack> stacks = new HashSet<>();
         for (ResourceLocation r : unlocks) {
-        	ItemStack ret=CDistHelper.getRecipeManager().byKey(r).map(RecipeUtil::getResultItem).orElse(ItemStack.EMPTY);
+            ItemStack ret=CDistHelper.getRecipeManager().byKey(r).map(RecipeUtil::getResultItem).orElse(ItemStack.EMPTY);
             if (!ret.isEmpty()) {
                 stacks.add(ret);
             }
@@ -138,7 +138,7 @@ public class EffectCrafting extends Effect {
         else {
             Set<ItemStack> stacks = new HashSet<>();
             for (ResourceLocation r : unlocks) {
-            	ItemStack ret=CDistHelper.getRecipeManager().byKey(r).map(RecipeUtil::getResultItem).orElse(ItemStack.EMPTY);
+                ItemStack ret=CDistHelper.getRecipeManager().byKey(r).map(RecipeUtil::getResultItem).orElse(ItemStack.EMPTY);
                 if (!ret.isEmpty()) {
                     stacks.add(ret);
                 }
@@ -156,7 +156,7 @@ public class EffectCrafting extends Effect {
 
     @Override
     public boolean grant(TeamDataHolder team, TeamResearchData trd, Player triggerPlayer, boolean isload) {
-    	RecipeManager rm=CDistHelper.getRecipeManager();
+        RecipeManager rm=CDistHelper.getRecipeManager();
         trd.getUnlockList(ResearchHooks.RECIPE_UNLOCK_LIST).addAll(unlocks.stream().map(rm::byKey).filter(t->t.isPresent()).map(t->t.get()).collect(Collectors.toList()));
         return true;
     }

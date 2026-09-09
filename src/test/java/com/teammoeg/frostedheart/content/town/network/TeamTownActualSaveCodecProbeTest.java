@@ -4,18 +4,20 @@ import com.electronwill.nightconfig.core.CommentedConfig;
 import com.teammoeg.frostedheart.bootstrap.common.FHSpecialDataTypes;
 import com.teammoeg.frostedheart.content.town.TeamTown;
 import com.teammoeg.frostedheart.content.town.TeamTownData;
+import com.teammoeg.frostedheart.content.town.TownStaffingPlan;
+import com.teammoeg.frostedheart.content.town.resource.TeamTownResourceHolder;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import io.netty.buffer.Unpooled;
 import net.minecraft.SharedConstants;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.NbtIo;
 import net.minecraft.nbt.NbtOps;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.Bootstrap;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
-import java.io.File;
+import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -30,10 +32,17 @@ class TeamTownActualSaveCodecProbeTest {
     }
 
     @Test
-    void actualSaveSurvivesTheFullSyncCodec() throws Exception {
-        String path = "/Users/wyc/Development/FrostedHeart/run/saves/20030716/chorda_data/"
-                + "6dfdd05b-5a40-4b73-8467-cdd9b68ff7a2.nbt";
-        CompoundTag root = NbtIo.readCompressed(new File(path));
+    void persistedTownSurvivesTheFullSyncCodec() throws Exception {
+        TeamTownData fixture = new TeamTownData(
+                "Portable Save Fixture",
+                new TeamTownResourceHolder(Map.of()),
+                Map.of(), Map.of(), Map.of(),
+                0, 0, List.of(), TownStaffingPlan.EMPTY, -1L);
+        CompoundTag data = new CompoundTag();
+        data.put("town", FHSpecialDataTypes.TOWN_DATA.saveData(NbtOps.INSTANCE, fixture));
+        CompoundTag root = new CompoundTag();
+        root.put("data", data);
+
         TeamTownData serverData = FHSpecialDataTypes.TOWN_DATA.loadData(
                 NbtOps.INSTANCE, root.getCompound("data").get("town"));
         TeamTown serverTown = serverData.createTeamTown();

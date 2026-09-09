@@ -19,6 +19,9 @@
 
 package com.teammoeg.frostedheart.content.climate.event;
 
+import com.teammoeg.frostedheart.content.climate.block.generator.GeneratorData;
+import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.MinecraftGameplayFields;
+
 import com.simibubi.create.foundation.utility.worldWrappers.WrappedServerWorld;
 import com.teammoeg.chorda.dataholders.team.CTeamDataManager;
 import com.teammoeg.chorda.dataholders.team.TeamDataHolder;
@@ -344,8 +347,10 @@ public class ClimateCommonEvents {
                 // ITown logic tick
                 int i = 0;
                 int townUpdateIntervalGameTicks = FHConfig.SERVER.TOWN.townUpdateIntervalGameTicks.get();
+                MinecraftGameplayFields.beginProviderRefresh(serverWorld, GeneratorData.HEAT_FIELD_PROVIDER);
                 for (TeamDataHolder trd : CTeamDataManager.INSTANCE.getAllData()) {
-                    if (DEBUG_MODE || trd.getOptional(FHSpecialDataTypes.GENERATOR_DATA).filter(g -> serverWorld.dimension().equals(g.dimension)).isPresent()) {
+                    GeneratorData generator = trd.getOptional(FHSpecialDataTypes.GENERATOR_DATA).orElse(null);
+                    if (DEBUG_MODE || generator != null && serverWorld.dimension().equals(generator.dimension)) {
                         trd.getData(FHSpecialDataTypes.TOWN_DATA).tick(serverWorld,trd);
                         if (serverWorld.getGameTime() % townUpdateIntervalGameTicks
                                 == i % townUpdateIntervalGameTicks) {// Split town calculations across update intervals
@@ -353,6 +358,7 @@ public class ClimateCommonEvents {
                                 trd.getData(FHSpecialDataTypes.TOWN_DATA).tickSecond(serverWorld,trd);
                             }
                         }
+                        if (generator != null) generator.publishGameplayHeat(serverWorld, trd.getId());
                         if (serverWorld.getDayTime() % 24000 == i % 20 + 1000) {
                             if (!trd.getTeam().getOnlineMembers().isEmpty()) {
                                 trd.getData(FHSpecialDataTypes.TOWN_DATA).tickMorning(serverWorld, trd);// execute only once a day
@@ -361,6 +367,7 @@ public class ClimateCommonEvents {
                     }
                     i++;
                 }
+                MinecraftGameplayFields.endProviderRefresh(serverWorld, GeneratorData.HEAT_FIELD_PROVIDER);
 
                 // Refresh climate caches and check hour data once per second.
                 if (serverWorld.getGameTime() % 20 == 0) {

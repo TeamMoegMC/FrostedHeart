@@ -66,17 +66,12 @@ public final class MinecraftThermalProfiles {
         blocks.sort(Comparator.comparing(
                 block -> String.valueOf(
                         ForgeRegistries.BLOCKS.getKey(block))));
-        StateStaticThermalResolver geometryResolver =
-                StateStaticThermalResolver.geometryOnly(64);
         Map<PhaseKey, Integer> phaseIds = new LinkedHashMap<>();
-        Map<Long, Integer> patternIds = new LinkedHashMap<>();
         List<MaterialBoundaryRegistry.Profile> profiles =
                 new ArrayList<>();
         for (GameplayMaterial material : GameplayMaterial.values()) {
             profiles.add(material.profile());
         }
-        List<MaterialBoundaryRegistry.ContactPattern> patterns =
-                new ArrayList<>();
         ThermalSignatureTable.Builder signatures =
                 ThermalSignatureTable.builder();
         MinecraftStateThermalTable.Builder states =
@@ -101,13 +96,9 @@ public final class MinecraftThermalProfiles {
                         data != null && data.willTransit()
                                 && data.heatCapacity() > 0
                                 ? data.heatingTransition(state) : null;
-                ResolvedThermalSignature geometry = block.hasDynamicShape()
-                        ? null : geometryResolver.resolve(
-                                state, state.getFluidState());
-                long materialMask = geometry == null
-                        ? 0L : materialMask(geometry);
+                int ventilation = StateStaticThermalResolver.ventilation(state);
                 int profileId = 0;
-                if (transition != null && materialMask != 0L) {
+                if (transition != null) {
                     double energy = phaseBaseEnergyJPerHeatCapacity
                             * data.heatCapacity();
                     PhaseKey key = new PhaseKey(
@@ -125,8 +116,9 @@ public final class MinecraftThermalProfiles {
                                                 energy));
                     }
                     profileId = existing;
+                    ventilation = 0;
                     transitionStates++;
-                } else if (materialMask != 0L
+                } else if (!state.isAir()
                         && state.getFluidState().isEmpty()) {
                     GameplayMaterial material = classify(state);
                     if (material != null) {
@@ -134,13 +126,8 @@ public final class MinecraftThermalProfiles {
                         staticStates++;
                     }
                 }
-                int signatureId = ThermalSignatureTable.UNRESOLVED;
-                if (geometry != null) {
-                    int patternId = profileId == 0 ? 0 : patternId(
-                            materialMask, patternIds, patterns);
-                    signatureId = signatures.intern(withMaterial(
-                            geometry, profileId, patternId));
-                }
+                int signatureId = signatures.intern(new ResolvedThermalSignature(
+                        ventilation, profileId));
                 int radiationProfileId = 0;
                 if (staticRadiationEnabled && !isCampfire(state)) {
                     if (state.getFluidState().is(FluidTags.LAVA)) {
@@ -160,15 +147,14 @@ public final class MinecraftThermalProfiles {
         snapshot = new Snapshot(
                 signatures.build(),
                 states.build(),
-                new MaterialBoundaryRegistry(profiles, patterns),
+                new MaterialBoundaryRegistry(profiles),
                 tuning);
         FHMain.LOGGER.info(
                 "Compiled {} static material states, {} phase states, "
-                        + "{} material profiles, and {} contact patterns",
+                        + "{} material profiles",
                 staticStates,
                 transitionStates,
-                profiles.size(),
-                patterns.size());
+                profiles.size());
         return snapshot;
     }
 
@@ -215,34 +201,6 @@ public final class MinecraftThermalProfiles {
         Snapshot current = snapshot;
         return current != null && current.states.hasRadiationMode(
                 MinecraftStateThermalTable.RADIATION_LAVA_SURFACE);
-    }
-
-    private static int patternId(
-            long mask,
-            Map<Long, Integer> ids,
-            List<MaterialBoundaryRegistry.ContactPattern> patterns
-    ) {
-        Integer existing = ids.get(mask);
-        if (existing != null) {
-            return existing;
-        }
-        int id = patterns.size() + 1;
-        ids.put(mask, id);
-        patterns.add(new MaterialBoundaryRegistry.ContactPattern(id, mask));
-        return id;
-    }
-
-    private static long materialMask(ResolvedThermalSignature signature) {
-        return ~signature.airGeometry().provenAirMicrocellMask();
-    }
-
-    private static ResolvedThermalSignature withMaterial(
-            ResolvedThermalSignature geometry,
-            int profileId,
-            int patternId
-    ) {
-        return new ResolvedThermalSignature(
-                geometry.airGeometry(), profileId, patternId);
     }
 
     private static boolean isCampfire(BlockState state) {

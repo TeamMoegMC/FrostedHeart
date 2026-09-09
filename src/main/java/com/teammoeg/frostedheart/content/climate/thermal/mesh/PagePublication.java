@@ -1,7 +1,6 @@
 /* Copyright (c) 2026 TeamMoeg */
 package com.teammoeg.frostedheart.content.climate.thermal.mesh;
 
-import com.teammoeg.frostedheart.content.climate.thermal.geometry.ComponentBrickCompiler;
 import com.teammoeg.frostedheart.content.climate.thermal.profile.ThermalSignatureTable;
 
 import java.util.Arrays;
@@ -112,42 +111,12 @@ public final class PagePublication {
                 | (localY >>> 2) << 4];
     }
 
-    public int resolveAirPoint(
-            int localX,
-            int localY,
-            int localZ,
-            int microcellIndex,
-            ThermalSignatureTable signatureRegistry
-    ) {
-        if (microcellIndex < 0 || microcellIndex >= 64) {
-            throw new IllegalArgumentException(
-                    "microcellIndex must be within [0, 63]");
-        }
-        Brick brick = brickAt(localX, localY, localZ);
-        int support = brick.coverageSlot;
-        if (support == NO_COVERAGE) {
-            return NO_AIR_POINT;
-        }
-        ComponentBrickCompiler.CompiledBrick mixed = brick.mixedGeometry;
-        if (mixed == null) {
-            return support;
-        }
-        if (brick.signaturePayload == null) {
-            return NO_AIR_POINT;
-        }
-        int blockInBrick = (localX & 3)
-                | (localZ & 3) << 2
-                | (localY & 3) << 4;
-        int signatureId = PageSignatures.valueAt(
-                brick.signaturePayload, blockInBrick);
-        int localRegion = signatureRegistry.componentOrdinal(
-                signatureId, microcellIndex);
-        if (localRegion == 0xff) {
-            return NO_AIR_POINT;
-        }
-        int component = mixed.compiledComponentAt(
-                blockInBrick, localRegion);
-        return component < 0 ? NO_AIR_POINT : support + component;
+    public int resolveAirPoint(int localX, int localY, int localZ) {
+        Brick brick=brickAt(localX,localY,localZ);
+        if (!brick.resolved || brick.coverageSlot<0) return NO_AIR_POINT;
+        if (brick.blockLayout==null) return brick.coverageSlot;
+        int node=brick.blockLayout.transportAt((localX&3)|(localZ&3)<<2|(localY&3)<<4);
+        return node<0 ? NO_AIR_POINT : brick.coverageSlot+node;
     }
 
     public boolean hasPhaseCandidate(
@@ -190,15 +159,19 @@ public final class PagePublication {
             int coverageSlot,
             int arenaGeneration,
             Object signaturePayload,
-            ComponentBrickCompiler.CompiledBrick mixedGeometry,
-            PhaseCandidates phaseCandidates
+            BlockBrickLayout blockLayout,
+            int transportNodeCount,
+            PhaseCandidates phaseCandidates,
+            boolean resolved
     ) {
         public static final Brick EMPTY = new Brick(
                 NO_COVERAGE,
                 0,
                 null,
                 null,
-                PhaseCandidates.EMPTY);
+                0,
+                PhaseCandidates.EMPTY,
+                false);
 
         public Brick {
             if (coverageSlot < NO_COVERAGE || arenaGeneration < 0) {

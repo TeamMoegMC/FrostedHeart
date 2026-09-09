@@ -30,7 +30,7 @@ class InfraredPacketCodecTest {
         }
         FHRequestInfraredViewDataSyncPacket original =
                 new FHRequestInfraredViewDataSyncPacket(
-                        17, false, 91, presence);
+                        17, false, 91, presence, 0L, new long[presence.length]);
 
         assertRoundTrip(
                 original,
@@ -114,7 +114,7 @@ class InfraredPacketCodecTest {
                         23,
                         new MinecraftThermalInput.InfraredSnapshot(
                                 -4, 7, 2, 101, true,
-                                presence, records));
+                                presence, records, 0L));
         FriendlyByteBuf encoded = new FriendlyByteBuf(Unpooled.buffer());
         original.encode(encoded);
         assertTrue(encoded.readableBytes() < 1024 * 1024);
@@ -163,8 +163,8 @@ class InfraredPacketCodecTest {
             InfraredBrickCodec.Decoder decoder =
                     new InfraredBrickCodec.Decoder();
             assertEquals(expectedLocalBrickIndex,
-                    decoder.readBrick(input, decoded));
-            assertEquals(-1, decoder.readBrick(input, decoded));
+                    decoder.readRecord(input, decoded));
+            assertEquals(-1, decoder.readRecord(input, decoded));
             return decoded;
         } finally {
             input.release();

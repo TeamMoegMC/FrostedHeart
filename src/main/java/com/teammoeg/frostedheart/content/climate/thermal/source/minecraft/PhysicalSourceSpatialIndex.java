@@ -18,8 +18,6 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.SectionPos;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.CampfireBlock;
-import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.world.level.block.entity.CampfireBlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.chunk.LevelChunkSection;
@@ -82,7 +80,6 @@ public final class PhysicalSourceSpatialIndex
     private int freeHead = NO_SLOT;
     private int nextLifecycleGeneration;
     private long nextRadiationRevision;
-    private boolean capacityRecoveryPending;
     private boolean closed;
 
     public PhysicalSourceSpatialIndex(
@@ -111,14 +108,14 @@ public final class PhysicalSourceSpatialIndex
         allocate(Math.max(1, initialCapacity));
     }
 
-    public void observeMachine(
+    public boolean observeMachine(
             BlockPos source,
             BlockPos anchor,
             MinecraftPhysicalSourceProfile profile,
             double level,
             boolean active
     ) {
-        observe(
+        return observe(
                 source.getX(), source.getY(), source.getZ(),
                 anchor.getX(), anchor.getY(), anchor.getZ(),
                 profile,
@@ -126,9 +123,9 @@ public final class PhysicalSourceSpatialIndex
                 active);
     }
 
-    public void resyncBlock(int x, int y, int z, BlockState state) {
+    public boolean resyncBlock(int x, int y, int z, BlockState state) {
         if (isCampfire(state)) {
-            observeCampfire(x, y, z, state);
+            return observeCampfire(x, y, z, state);
         } else {
             int slot = slotsById.get(BlockPos.asLong(x, y, z));
             if (slot != NO_SLOT && isLive(slot)
@@ -136,9 +133,10 @@ public final class PhysicalSourceSpatialIndex
                 remove(x, y, z);
             }
         }
+        return true;
     }
 
-    public void resyncSection(
+    public boolean resyncSection(
             int sectionX,
             int sectionY,
             int sectionZ,
@@ -158,32 +156,31 @@ public final class PhysicalSourceSpatialIndex
         int minX = SectionPos.sectionToBlockCoord(sectionX);
         int minY = SectionPos.sectionToBlockCoord(sectionY);
         int minZ = SectionPos.sectionToBlockCoord(sectionZ);
+        boolean complete = true;
         for (int localY = 0; localY < 16; localY++) {
             for (int localZ = 0; localZ < 16; localZ++) {
                 for (int localX = 0; localX < 16; localX++) {
                     BlockState state = section.getBlockState(
                             localX, localY, localZ);
                     if (isCampfire(state)) {
-                        observeCampfire(
+                        complete &= observeCampfire(
                                 minX + localX, minY + localY, minZ + localZ,
                                 state);
                     }
                 }
             }
         }
+        return complete;
     }
 
-    public void onChunkLoad(LevelChunk chunk) {
-        for (BlockEntity entity : chunk.getBlockEntities().values()) {
-            if (!(entity instanceof CampfireBlockEntity)
-                    || !isCampfire(entity.getBlockState())) {
-                continue;
-            }
-            BlockPos position = entity.getBlockPos();
-            observeCampfire(
+    public boolean discoverChunk(LevelChunk chunk) {
+        boolean complete = true;
+        for (BlockPos position : chunk.getBlockEntitiesPos()) {
+            complete &= resyncBlock(
                     position.getX(), position.getY(), position.getZ(),
-                    entity.getBlockState());
+                    chunk.getBlockState(position));
         }
+        return complete;
     }
 
     public void beforeChunkUnload(LevelChunk chunk, long eventTick) {
@@ -302,20 +299,8 @@ public final class PhysicalSourceSpatialIndex
         dirtyOrder.clear();
     }
 
-    public boolean capacityRecoveryPending() {
-        return capacityRecoveryPending;
-    }
-
     public boolean hasAvailableCapacity() {
         return freeHead != NO_SLOT || highWaterMark < maximumSources;
-    }
-
-    public void beginCapacityRecoveryPass() {
-        capacityRecoveryPending = false;
-    }
-
-    public void continueCapacityRecoveryPass() {
-        capacityRecoveryPending = true;
     }
 
     public BlockPos nearestEnabledGenerator(
@@ -426,7 +411,7 @@ public final class PhysicalSourceSpatialIndex
         }
     }
 
-    private void observe(
+    private boolean observe(
             int x,
             int y,
             int z,
@@ -440,12 +425,15 @@ public final class PhysicalSourceSpatialIndex
         requireOpen();
         long sourceId = BlockPos.asLong(x, y, z);
         int slot = slotsById.get(sourceId);
+        if (!enabled || !(powerW > 0.0D)) {
+            remove(x, y, z);
+            return true;
+        }
         boolean radiationChanged = false;
         if (slot == NO_SLOT) {
             slot = allocateSlot();
             if (slot == NO_SLOT) {
-                capacityRecoveryPending = true;
-                return;
+                return false;
             }
             sourceIds[slot] = sourceId;
             lifecycleGenerations[slot] = nextGeneration();
@@ -488,15 +476,16 @@ public final class PhysicalSourceSpatialIndex
                 || flag(slot, REGISTRATION_STALE)) {
             markDirty(slot);
         }
+        return true;
     }
 
-    private void observeCampfire(
+    private boolean observeCampfire(
             int x,
             int y,
             int z,
             BlockState state
     ) {
-        observe(
+        return observe(
                 x, y, z, x, y, z,
                 campfireProfile,
                 campfireProfile.ratedPowerW(),
@@ -534,7 +523,7 @@ public final class PhysicalSourceSpatialIndex
         int write = 0;
         for (int index = 0; index < profile.portCount(); index++) {
             Port port = profile.port(index);
-            if (port.kind() != PortKind.AIR_FACE) {
+            if (port.kind() != PortKind.AIR_FACE || port.powerShare() <= 0.0D) {
                 continue;
             }
             int targetX = anchorX[slot] + port.offsetX();
@@ -589,9 +578,11 @@ public final class PhysicalSourceSpatialIndex
                     sourcesByTargetSection.remove(sectionKey);
                 }
             }
-            targetSections[first + index] = 0L;
-            targetBricks[first + index] = 0;
         }
+        // Remove every reverse reference before recomputing shared support.
+        refreshDormantTargets(slot);
+        Arrays.fill(targetSections, first, first + targetCount[slot], 0L);
+        Arrays.fill(targetBricks, first, first + targetCount[slot], (byte) 0);
         targetCount[slot] = 0;
     }
 

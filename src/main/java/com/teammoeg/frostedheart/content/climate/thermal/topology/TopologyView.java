@@ -1,7 +1,6 @@
 /* Copyright (c) 2026 TeamMoeg */
 package com.teammoeg.frostedheart.content.climate.thermal.topology;
 
-import com.teammoeg.frostedheart.content.climate.thermal.geometry.ComponentBrickCompiler;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.PageSignatures;
 import com.teammoeg.frostedheart.content.climate.thermal.profile.ThermalSignatureTable;
 
@@ -13,18 +12,15 @@ import net.minecraft.core.SectionPos;
 /** Read-only planning projection over the plan's single draft authority. */
 final class TopologyView {
     private final WorkerPageStore pages;
-    private final ThermalSignatureTable signatures;
     private final Long2ObjectOpenHashMap<TopologyPlan.PageDraft> draftsBySection;
     private final Int2ObjectOpenHashMap<TopologyPlan.PageDraft> draftsBySlot;
 
     TopologyView(
             WorkerPageStore pages,
-            ThermalSignatureTable signatures,
             Long2ObjectOpenHashMap<TopologyPlan.PageDraft> draftsBySection,
             Int2ObjectOpenHashMap<TopologyPlan.PageDraft> draftsBySlot
     ) {
         this.pages = pages;
-        this.signatures = signatures;
         this.draftsBySection = draftsBySection;
         this.draftsBySlot = draftsBySlot;
     }
@@ -111,81 +107,13 @@ final class TopologyView {
         return resident(page, index) ? brick(page, index) : null;
     }
 
-    long airReference(
-            WorkerPageStore.PageState localPage,
-            PageSignatures localSignatures,
-            int blockX,
-            int blockY,
-            int blockZ,
-            int microX,
-            int microY,
-            int microZ
-    ) {
-        long sectionKey = SectionPos.asLong(
-                SectionPos.blockToSectionCoord(blockX),
-                SectionPos.blockToSectionCoord(blockY),
-                SectionPos.blockToSectionCoord(blockZ));
-        WorkerPageStore.PageState page;
-        PageSignatures pageSignatures;
-        if (localPage.handle.sectionKey() == sectionKey) {
-            page = localPage;
-            pageSignatures = localSignatures;
-        } else {
-            page = page(sectionKey);
-            if (page == null) {
-                return PackedAirReference.NONE;
-            }
-            pageSignatures = signatures(page);
-        }
-        int localX = SectionPos.sectionRelative(blockX);
-        int localY = SectionPos.sectionRelative(blockY);
-        int localZ = SectionPos.sectionRelative(blockZ);
-        int pageBlock = localX | localZ << 4 | localY << 8;
-        int brickIndex = localX >>> 2
-                | (localZ >>> 2) << 2
-                | (localY >>> 2) << 4;
-        if (!resident(page, brickIndex)) {
-            return PackedAirReference.NONE;
-        }
-        int signatureId = pageSignatures.get(pageBlock);
-        int microcell = microX | microZ << 2 | microY << 4;
-        int region = signatures.componentOrdinal(signatureId, microcell);
-        return region == 0xff
-                ? PackedAirReference.NONE
-                : PackedAirReference.pack(
-                        page.pageSlot, pageBlock, microcell, region);
+    int signatureAtWorld(int x, int y, int z) {
+        WorkerPageStore.PageState page = page(SectionPos.asLong(
+                SectionPos.blockToSectionCoord(x), SectionPos.blockToSectionCoord(y), SectionPos.blockToSectionCoord(z)));
+        if (page == null) return ThermalSignatureTable.UNRESOLVED;
+        int local = (x & 15) | (z & 15) << 4 | (y & 15) << 8;
+        int brick = (x & 15) >>> 2 | ((z & 15) >>> 2) << 2 | ((y & 15) >>> 2) << 4;
+        return resident(page, brick) ? signatures(page).get(local) : ThermalSignatureTable.UNRESOLVED;
     }
 
-    int resolveAirSlot(long reference) {
-        if (reference == PackedAirReference.NONE) {
-            return -1;
-        }
-        WorkerPageStore.PageState page =
-                pageSlot(PackedAirReference.pageSlot(reference));
-        if (page == null) {
-            return -1;
-        }
-        int pageBlock = PackedAirReference.pageBlock(reference);
-        int brickIndex = (pageBlock & 15) >>> 2
-                | (pageBlock >>> 4 & 15) >>> 2 << 2
-                | (pageBlock >>> 8 & 15) >>> 2 << 4;
-        if (!resident(page, brickIndex)) {
-            return -1;
-        }
-        WorkerBrickTopology brick = brick(page, brickIndex);
-        if (brick.coverageSlot < 0 || !brick.cellsResolved) {
-            return -1;
-        }
-        ComponentBrickCompiler.CompiledBrick mixed = brick.mixedGeometry;
-        if (mixed == null) {
-            return brick.coverageSlot;
-        }
-        int blockInBrick = pageBlock & 3
-                | (pageBlock >>> 4 & 3) << 2
-                | (pageBlock >>> 8 & 3) << 4;
-        int component = mixed.compiledComponentAt(
-                blockInBrick,
-                PackedAirReference.localRegion(reference));
-        return component < 0 ? -1 : brick.coverageSlot + component;
-    }
 }

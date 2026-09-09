@@ -135,6 +135,34 @@ class RadiationServiceTest {
         }
     }
 
+    @Test
+    void staticNearbySourceUsesOneUncachedItemRay() {
+        TestSources sources = new TestSources();
+        TestTracer tracer = new TestTracer();
+        RadiationService.NearbySourceIndex nearby = (
+                receiverX, receiverY, receiverZ, maximumVisits, visitor) ->
+                visitor.visit(
+                        91L,
+                        RadiationService.STATIC_BLOCK_REVISION,
+                        0.5D, 1.0D, 0.5D,
+                        200.0D, 1.0D);
+        try (RadiationService service = RadiationService.tryCreate(
+                parameters(8, 8, 24), sources, nearby, tracer,
+                new ThermalMemoryBudget(1_000_000L))) {
+            assertNotNull(service);
+            RadiationService.MutableSample sample =
+                    new RadiationService.MutableSample();
+            service.sampleItem(44L, 1, 4.5D, 1.0D, 0.5D, sample);
+            double expected = 200.0D / (4.0D * Math.PI * 16.0D);
+            assertEquals(expected, sample.radiantFluxWPerM2(), 1.0e-12D);
+            assertEquals(1, tracer.traces);
+            assertEquals(0, service.itemReceiverCacheSize());
+
+            service.sampleItem(44L, 1, 4.5D, 1.0D, 0.5D, sample);
+            assertEquals(2, tracer.traces);
+        }
+    }
+
     private static RadiationService.Parameters parameters(
             int maximumCandidates,
             int maximumCandidateVisits,

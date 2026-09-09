@@ -24,29 +24,7 @@ public final class MaterialBoundaryRegistry {
         PHASE_RESERVOIR
     }
 
-    /** One bit per block-local 4x4x4 microcell occupied by this material. */
-    public record ContactPattern(int id, long materialMicrocellMask) {
-        public ContactPattern {
-            requirePositiveId("contact pattern", id);
-            if (materialMicrocellMask == 0L) {
-                throw new IllegalArgumentException("material contact mask must not be empty");
-            }
-        }
-
-        public boolean contains(int x, int y, int z) {
-            if ((x | y | z) < 0 || x >= 4 || y >= 4 || z >= 4) {
-                return false;
-            }
-            int bit = (y << 4) | (z << 2) | x;
-            return (materialMicrocellMask & (1L << bit)) != 0L;
-        }
-    }
-
-    /**
-     * Conductances and capacities are specified per full exposed block face.
-     * Partial 4x4 contacts scale them by represented area; all exposed faces
-     * of one block share the same capacitive pole.
-     */
+    /** Material coefficients; capacity is scaled by exposed whole-block faces. */
     public record Profile(
             int id,
             Model model,
@@ -106,25 +84,16 @@ public final class MaterialBoundaryRegistry {
     }
 
     private final Profile[] profiles;
-    private final ContactPattern[] contactPatterns;
 
     public MaterialBoundaryRegistry(
-            List<Profile> profiles,
-            List<ContactPattern> contactPatterns
+            List<Profile> profiles
     ) {
         Objects.requireNonNull(profiles, "profiles");
-        Objects.requireNonNull(contactPatterns, "contactPatterns");
         this.profiles = indexProfiles(profiles);
-        this.contactPatterns = indexPatterns(contactPatterns);
     }
 
     public Profile profileOrNull(int id) {
         return id > 0 && id < profiles.length ? profiles[id] : null;
-    }
-
-    public ContactPattern contactPatternOrNull(int id) {
-        return id > 0 && id < contactPatterns.length
-                ? contactPatterns[id] : null;
     }
 
     private static Profile[] indexProfiles(List<Profile> values) {
@@ -138,24 +107,6 @@ public final class MaterialBoundaryRegistry {
                                 + expectedId + ", got " + profile.id());
             }
             indexed[expectedId++] = profile;
-        }
-        return indexed;
-    }
-
-    private static ContactPattern[] indexPatterns(
-            List<ContactPattern> values
-    ) {
-        ContactPattern[] indexed = new ContactPattern[values.size() + 1];
-        int expectedId = 1;
-        for (ContactPattern pattern : values) {
-            Objects.requireNonNull(pattern, "contactPatterns contains null");
-            if (pattern.id() != expectedId) {
-                throw new IllegalArgumentException(
-                        "material contact pattern ID must be dense and ordered: "
-                                + "expected " + expectedId
-                                + ", got " + pattern.id());
-            }
-            indexed[expectedId++] = pattern;
         }
         return indexed;
     }
