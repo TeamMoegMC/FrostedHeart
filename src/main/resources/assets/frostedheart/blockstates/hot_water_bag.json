@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "facing=north": {
+      "model": "frostedheart:block/hot_water_bag"
+    },
+    "facing=east": {
+      "model": "frostedheart:block/hot_water_bag",
+      "y": 90
+    },
+    "facing=south": {
+      "model": "frostedheart:block/hot_water_bag",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "frostedheart:block/hot_water_bag",
+      "y": 270
+    }
+  }
+}

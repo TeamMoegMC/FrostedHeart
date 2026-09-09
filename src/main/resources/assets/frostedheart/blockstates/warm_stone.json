@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "facing=north": {
+      "model": "frostedheart:block/warm_stone"
+    },
+    "facing=east": {
+      "model": "frostedheart:block/warm_stone",
+      "y": 90
+    },
+    "facing=south": {
+      "model": "frostedheart:block/warm_stone",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "frostedheart:block/warm_stone",
+      "y": 270
+    }
+  }
+}

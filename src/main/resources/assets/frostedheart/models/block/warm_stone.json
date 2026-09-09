@@ -1,0 +1,144 @@
+{
+  "textures": {
+    "surface": "frostedheart:item/warm_stone",
+    "particle": "frostedheart:item/warm_stone"
+  },
+  "elements": [
+    {
+      "from": [
+        4,
+        0,
+        3
+      ],
+      "to": [
+        12,
+        3,
+        13
+      ],
+      "faces": {
+        "up": {
+          "uv": [
+            3,
+            5,
+            13,
+            12
+          ],
+          "texture": "#surface"
+        },
+        "down": {
+          "uv": [
+            3,
+            5,
+            13,
+            12
+          ],
+          "texture": "#surface"
+        },
+        "north": {
+          "uv": [
+            4,
+            9,
+            12,
+            12
+          ],
+          "texture": "#surface"
+        },
+        "south": {
+          "uv": [
+            4,
+            9,
+            12,
+            12
+          ],
+          "texture": "#surface"
+        },
+        "east": {
+          "uv": [
+            4,
+            9,
+            12,
+            12
+          ],
+          "texture": "#surface"
+        },
+        "west": {
+          "uv": [
+            4,
+            9,
+            12,
+            12
+          ],
+          "texture": "#surface"
+        }
+      }
+    },
+    {
+      "from": [
+        5,
+        3,
+        4
+      ],
+      "to": [
+        11,
+        4,
+        11
+      ],
+      "faces": {
+        "up": {
+          "uv": [
+            4,
+            3,
+            10,
+            9
+          ],
+          "texture": "#surface"
+        },
+        "down": {
+          "uv": [
+            4,
+            3,
+            10,
+            9
+          ],
+          "texture": "#surface"
+        },
+        "north": {
+          "uv": [
+            4,
+            5,
+            10,
+            7
+          ],
+          "texture": "#surface"
+        },
+        "south": {
+          "uv": [
+            4,
+            5,
+            10,
+            7
+          ],
+          "texture": "#surface"
+        },
+        "east": {
+          "uv": [
+            4,
+            5,
+            10,
+            7
+          ],
+          "texture": "#surface"
+        },
+        "west": {
+          "uv": [
+            4,
+            5,
+            10,
+            7
+          ],
+          "texture": "#surface"
+        }
+      }
+    }
+  ]
+}
