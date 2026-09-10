@@ -712,7 +712,8 @@ public final class QueryPublication implements AutoCloseable {
             this.brickChangeEpochs = brickChangeEpochs;
         }
 
-        private void clear() {
+        /** Release the borrowed publication and arrays after the read operation. */
+        public void clear() {
             owner = null;
             version = -1L;
             valid = false;

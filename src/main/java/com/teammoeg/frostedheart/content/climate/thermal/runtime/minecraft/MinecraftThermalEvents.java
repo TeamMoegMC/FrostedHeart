@@ -17,6 +17,8 @@ import net.minecraftforge.event.server.ServerStartingEvent;
 import net.minecraftforge.event.server.ServerStoppedEvent;
 import net.minecraftforge.event.server.ServerStoppingEvent;
 import net.minecraftforge.event.TickEvent;
+import net.minecraftforge.event.TagsUpdatedEvent;
+import net.minecraftforge.server.ServerLifecycleHooks;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.LogicalSide;
@@ -30,6 +32,13 @@ public final class MinecraftThermalEvents {
     @SubscribeEvent
     public static void onServerStarting(ServerStartingEvent event) {
         ThermalWorkerPool.startShared();
+    }
+
+    @SubscribeEvent
+    public static void onTagsUpdated(TagsUpdatedEvent event) {
+        if (event.getUpdateCause() != TagsUpdatedEvent.UpdateCause.SERVER_DATA_LOAD) return;
+        var server = ServerLifecycleHooks.getCurrentServer();
+        if (server != null) MinecraftThermalInput.bootstrapLoadedSources(server);
     }
 
     @SubscribeEvent

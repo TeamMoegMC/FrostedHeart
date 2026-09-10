@@ -79,6 +79,7 @@ public class FHServerEvents {
 	@SubscribeEvent
 	public static void serverStarted(final ServerStartedEvent event) {
 		MinecraftThermalInput.prepareGameplayProfiles();
+		MinecraftThermalInput.bootstrapLoadedSources(event.getServer());
 	}
 
 	/**

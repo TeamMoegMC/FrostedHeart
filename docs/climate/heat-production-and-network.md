@@ -1,7 +1,7 @@
 # Heat Production And Network
 
 - Status: `Current`
-- Last verified: `2026-09-08`
+- Last verified: `2026-09-09`
 - Scope: physical Minecraft sources, worker energy integration, material/phase sinks, and the separate heat-network model
 - Primary code anchors: `MinecraftPhysicalSourceProfile`, `PhysicalSourceSpatialIndex`, `ThermalSourceBatch`, `ThermalSourceLedger`, `NodePowerAccumulatorArena`, `HeatEndpoint`, `HeatNetwork`
 
@@ -154,6 +154,8 @@ endpoint; the two channels must not be counted twice by a caller.
 
 Machine ticks call `MinecraftThermalInput.onGeneratorTick`,
 `onFountainTick`, or `onRadiatorTick` after normal production calculations.
+Enabled positive-power output starts the existing runtime if absent, without a
+player query. Inactive/zero-power reports do not create a runtime.
 T1/T2 generator publication continues even when `GeneratorData.tickBlock` skips
 fuel consumption through `townProcessedTicks`. Runtime startup/reload does not
 execute extra production or heat-network consumption: machines recover on their
@@ -161,6 +163,9 @@ next valid normal tick. Merely loaded but non-ticking machines are not actively
 advanced; town/offline simulation is not a physical-source publisher.
 
 Campfires are discovered through the runtime's shared startup/load/retry queue
+after bootstrap by chunk load, first ignition, or the one-time loaded-source check
+at server start or after reloaded server tags bind. The ignition callback reuses the LevelChunk mixin;
+there is no campfire tick poll. Subsequent changes use the source queue
 and final block-state mutation drain. Startup also attaches already-loaded
 sections, so later ignition is observed even in an initially source-free section.
 `PhysicalSourceSpatialIndex.discoverChunk` reads pending/live BE positions and

@@ -158,7 +158,8 @@ T_natural_air = max(absoluteZero, D + B + A + alpha_air * C)
 新热学 runtime 在 Page admission 时以 section 中心的 `T_natural_air` 初始化空气并作为
 FarField 外部温度。已 admission Page 按 section hash 错峰排入刷新队列，同一 Page 两次刷新
 至少间隔 `200` ticks，每 tick 最多出队处理 `16` 个到期项；已 withdraw 或 generation
-不匹配的 stale 项同样占用该预算且不再持有 `ThermalPage` 引用，积压时会继续顺延。背景变化达到
+不匹配的 stale 项同样占用该预算；其Entry中的handle与天空列数组在出队时释放。
+每次实际采样后以当前gameTick加200安排下次刷新，不追赶历史截止时间。背景变化达到
 `0.25 degC` 才局部替换受影响 Brick 的 FarField boundary，几何、coverage slot、Air
 邻接和已有 cell enthalpy 都不重建。全维度风力仍每 `200` ticks
 采样一次，作为一个有界 FarField scale 输入交给 worker；不会遍历房间或全局连通集合。天空截面不做周期全
@@ -176,12 +177,10 @@ Page 重采样：方块 mutation 在 heightmap 更新完成后于 tick-end 合�
 当前 gameplay runtime 为各维度安装同一空气 open-space FarField 阻抗，维度只改变
 `T_natural_air`。Page capture 还封存每个 XZ 列首个天空暴露 local Y；拓扑编译只在当前 Brick
 及其已 admission 的相邻 Brick 中生成 Air pair。真实天空暴露才会生成完整 FarField；开放方向
-数量不作为室外证明。玩家或物理热源直接 admission 的地下 Page 会沿开放面额外 capture 一层已经加载的
-相邻 Page，自动 continuation 只在共享的 Page admission 预算内保留，且不会递归扩张或加载 chunk。剩余非天空
-边缘保持 degraded，但在 approved profile 校准域内会按真实 microface 面积、风力以及
-`1 / (1 + 16)` 距离因子获得弱 `ThermalFragment.FarBoundaries`，避免长隧道末端成为完全
-绝热边界。全局风力把 calm 导纳连续缩放到 `1.0..1.8` 倍；近似 continuation 不会被标记为
-完整室外闭合。
+数量不作为室外证明。物理source播种其出口Brick，worker根据热残差请求相邻驻留Brick；
+缺失的非天空邻居没有合成FarField散热项，也没有旧的一层continuation扫描。
+当前FarField由顶层Brick上方缺失邻Page且该列真实天空暴露的方块面生成，按通风率缩放。
+全局风力把calm导纳连续缩放到`1.0..1.8`倍。玩家、作物和显示查询不直接admission Page。
 
 ## 7. Analytic control fields
 
@@ -214,38 +213,35 @@ Generator 的半径/温差来自 `GeneratorData.getRadius/getTempMod` 和 `Gener
 
 解析场不会触发物理 runtime 启动，物理关闭/配方重载不清场。实际世界卸载和服务器停止清理索引；
 服务器重启后 generator 从团队数据重建，Curiosity 从实体状态重建，命令场不持久化。
-红外视野不直接显示 analytic field 或 physical source；它只读取
-`PagePublication` 与 `QueryPublication` 已求解的实际 Air 温度，并在未解析 Brick
-使用已存储的 dormant 均温。服务端对每个实时
-world block 中心调用 `PagePublication.resolveAirPoint`，再把得到的实际 Air cell
-温度量化为一个 0.25degC signed-short texel；同一 `4 x 4 x 4` Brick 内被完整墙体
-隔开的两侧因此可以显示不同温度，`Short.MIN_VALUE` 表示中心没有可显示 Air。
-这是 block-position exact，不是任意子方块 component exact；楼梯、门、栅栏等同一
-方块内存在多个 Air component 时只表示包含方块中心的 component。
+红外由服务端读取已有物理/休眠温度，再按相同顺序合成解析场，量化为0.25°C signed-short。
+没有物理Page时也能显示解析场，不会为显示创建物理Page。物理混合Brick按唯一transport节点
+读温度，再按`BlockBrickLayout.transportAt`展开到64个整块位置；方块内部不再细分空气体积。
+`Short.MIN_VALUE`表示没有可显示的最终温度。客户端只解码温度，不运行解析场或自然温度公式。
+协议与上传细节以[当前runtime文档](thermal-runtime-architecture-and-optimization.md)为准。
 
 客户端开启、跨 chunk/section 时请求 full snapshot，稳定时按 entity ID 错峰每
 `40` ticks 携带 infrared epoch 和 729-bit Page presence。服务端使用固定 Page/Brick
-epoch 数组回答任意旧客户端，只编码视野内 epoch 更新的 Bricks；presence mismatch
-只发送 added/removed Page delta。无可见 Brick/presence 变化时不发送 S2C，即使维度
+epoch 数组处理纯物理增量；另用96字节刷新标记重建上次标记及当前场相交Page。
+presence仅表示物理Page；无温度记录、presence或刷新标记变化时不发送S2C，即使维度
 内别处推进了 epoch。QueryPublication 暂时 invalid 或超龄时不清除旧实时覆盖，
 仍可返回 dormant 更新，并以实时 epoch 0 要求下一份 coherent 响应重建实时基线；
 此时已知实时 section 内只更新此前由 dormant 拥有的 texel。
 center/full 请求在匹配响应被接受前不会降级为
-delta。等待 full 时暂停固定 40-tick poll，并按 entity ID 分散在 `41..59` ticks 后
-重试；该区间没有 20 的倍数，因此不会与 20-tick thermal cut 永久同相。客户端只把
+delta。等待首包时暂停固定40-tick poll，并按entity ID分散在`41..59` ticks后
+重试；接收分包期间不触发定时重试。每包不超过960 KiB，在Page记录边界拆分，尾包才提交纹理。
+该重试区间没有20的倍数。客户端只把
 delta 应用到相同 texture center；不同中心的 delta 被丢弃并在
 下一 tick 重新 full，full 响应则接管其服务端中心。有效 publication 确认的 Page
 retirement 只清除对应 `16^3` 区域。
 范围枚举复用 `MinecraftPageManager.pagesByChunk`，只读取已有 coherent
 publication，不 admission Page、retain lease 或加载 chunk。客户端写入一张线性
 `GL_R16I 144 x 144 x 144` 纹理，CPU 侧只保留同一份 persistent direct
-`ShortBuffer`；mirror 在首次实际渲染红外视野时分配，8 KiB Page scratch 在首次
-Page delta 时分配，之后都有界复用。
+`ShortBuffer`；mirror在首次接收或初始化显示时分配，8 KiB Page scratch在首次部分Page上传时分配，之后有界复用。
 世界 reset 会立即摘下 GPU handle，并让 render callback 只删除捕获的旧资源。首个
 matching full snapshot 安装前，客户端以玩家当前 section 为中心渲染全 `INVALID`
 纹理，红外初始化不依赖服务端立即响应；跨 section 等待新 full 时继续按旧 texture
 origin 渲染旧 snapshot，响应到达后再整表替换，因此网络 full 状态不会使红外 pass
-闪烁。full 上传整张纹理，delta 通过该 scratch 只上传改变的
+闪烁。full及全部729个显示Page变脏的delta复用整纹理上传；部分delta通过scratch上传变化的
 `16^3` Page。fragment shader 每像素只执行一次 integer texture
 fetch。depth 重建得到的是可见几何表面；采样前沿 camera ray 向摄像机偏移
 `1/2048` 的相对距离，使方块面稳定读取表面前方的

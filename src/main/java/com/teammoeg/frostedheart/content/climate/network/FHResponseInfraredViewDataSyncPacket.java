@@ -21,12 +21,18 @@ import net.minecraftforge.network.NetworkEvent;
 import java.util.function.Supplier;
 
 public final class FHResponseInfraredViewDataSyncPacket implements CMessage {
+    private static final int FULL = 1;
+    private static final int FIRST = 2;
+    private static final int LAST = 4;
+    private static final byte[] EMPTY_RECORDS = new byte[0];
     private final int requestId;
     private final int centerChunkX;
     private final int centerChunkZ;
     private final int centerSectionY;
     private final int infraredEpoch;
     private final boolean full;
+    private final boolean firstPart;
+    private final boolean lastPart;
     private final long[] presence;
     private final byte[] brickRecords;
     private final long dormantRevision;
@@ -34,7 +40,8 @@ public final class FHResponseInfraredViewDataSyncPacket implements CMessage {
 
     public FHResponseInfraredViewDataSyncPacket(
             int requestId,
-            MinecraftThermalInput.InfraredSnapshot snapshot
+            MinecraftThermalInput.InfraredSnapshot snapshot,
+            int part
     ) {
         this(
                 requestId,
@@ -44,9 +51,10 @@ public final class FHResponseInfraredViewDataSyncPacket implements CMessage {
                 snapshot.infraredEpoch(),
                 snapshot.full(),
                 snapshot.presence(),
-                snapshot.brickRecords(),
+                snapshot.brickRecords().length == 0 ? EMPTY_RECORDS : snapshot.brickRecords()[part],
                 snapshot.dormantRevision(),
-                snapshot.refreshPages());
+                snapshot.refreshPages(), part == 0,
+                part == Math.max(1, snapshot.brickRecords().length) - 1);
     }
 
     private FHResponseInfraredViewDataSyncPacket(
@@ -59,7 +67,9 @@ public final class FHResponseInfraredViewDataSyncPacket implements CMessage {
             long[] presence,
             byte[] brickRecords,
             long dormantRevision,
-            long[] refreshPages
+            long[] refreshPages,
+            boolean firstPart,
+            boolean lastPart
     ) {
         if (requestId < 0 || infraredEpoch < 0
                 || presence == null || brickRecords == null
@@ -80,6 +90,8 @@ public final class FHResponseInfraredViewDataSyncPacket implements CMessage {
         this.centerSectionY = centerSectionY;
         this.infraredEpoch = infraredEpoch;
         this.full = full;
+        this.firstPart = firstPart;
+        this.lastPart = lastPart;
         this.presence = presence;
         this.brickRecords = brickRecords;
         this.dormantRevision = dormantRevision;
@@ -92,7 +104,10 @@ public final class FHResponseInfraredViewDataSyncPacket implements CMessage {
         centerChunkZ = buffer.readInt();
         centerSectionY = buffer.readInt();
         infraredEpoch = buffer.readVarInt();
-        full = buffer.readBoolean();
+        int flags = buffer.readUnsignedByte();
+        full = (flags & FULL) != 0;
+        firstPart = (flags & FIRST) != 0;
+        lastPart = (flags & LAST) != 0;
         if (buffer.readBoolean()) {
             presence = new long[
                     FHRequestInfraredViewDataSyncPacket.PRESENCE_WORDS];
@@ -118,7 +133,7 @@ public final class FHResponseInfraredViewDataSyncPacket implements CMessage {
         buffer.writeInt(centerChunkZ);
         buffer.writeInt(centerSectionY);
         buffer.writeVarInt(infraredEpoch);
-        buffer.writeBoolean(full);
+        buffer.writeByte((full ? FULL : 0) | (firstPart ? FIRST : 0) | (lastPart ? LAST : 0));
         buffer.writeBoolean(presence.length != 0);
         if (presence.length != 0) {
             for (long word : presence) {
@@ -148,7 +163,9 @@ public final class FHResponseInfraredViewDataSyncPacket implements CMessage {
                     presence,
                     brickRecords,
                     dormantRevision,
-                    refreshPages);
+                    refreshPages,
+                    firstPart,
+                    lastPart);
             if (RenderSystem.isOnRenderThread()) {
                 update.run();
             } else {

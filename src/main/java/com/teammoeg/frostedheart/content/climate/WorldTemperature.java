@@ -287,8 +287,8 @@ public class WorldTemperature {
      */
     public static float biome(LevelReader w, BlockPos pos) {
         Biome b = w.getBiome(pos).get();
-        float cached = biomeCache.getFloat(b);
-        if (cached != biomeCache.defaultReturnValue()) {
+        float cached = biomeCache.getOrDefault(b, Float.NaN);
+        if (!Float.isNaN(cached)) {
             return cached;
         }
         float temp = BiomeTempData.getBiomeTemp(w, b);

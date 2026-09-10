@@ -240,7 +240,7 @@ public final class MinecraftEnvironmentCapture implements AutoCloseable {
                 entry.naturalTemperatureC = natural;
                 accumulator.updateNaturalTemperature(entry.handle, natural);
             }
-            entry.nextRefreshTick += REFRESH_INTERVAL_TICKS;
+            entry.nextRefreshTick = gameTick + REFRESH_INTERVAL_TICKS;
             naturalQueue.add(entry);
         }
     }
