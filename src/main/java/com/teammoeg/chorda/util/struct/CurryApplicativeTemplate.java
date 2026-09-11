@@ -238,7 +238,7 @@ public class CurryApplicativeTemplate {
 	 * @param <T> 自身类型 / the self type
 	 * @param <A> 值类型 / the value type
 	 */
-	public static interface Applicatable<T extends Applicatable<T, ?>, A> {
+	public static interface Applicatable<T, A> {
 		/**
 		 * 获取当前条目，默认返回自身。
 		 * <p>
@@ -259,11 +259,11 @@ public class CurryApplicativeTemplate {
 	 *
 	 * @param <T> 可应用元素类型 / the applicatable element type
 	 */
-	public static class Applicative0<T extends Applicatable<T, ?>> {
+	public static class Applicative0<T> {
 		@SuppressWarnings({ "unchecked", "rawtypes" })
 		public static final Applicative0 EMPTY = new Applicative0<>(new Item[0]);
 		@SuppressWarnings("unchecked")
-		public static <T extends Applicatable<T, ?>> Applicative0<T> getInstance() {
+		public static <T> Applicative0<T> getInstance() {
 			return EMPTY;
 		}
 		private final Item<T>[] item;
@@ -276,7 +276,6 @@ public class CurryApplicativeTemplate {
 		public <A> Applicative1<T, A> add(Applicatable<T, A> item) {
 			return new Applicative1<T, A>(ArrayUtils.add(this.item, new Item<T>(item.getItem(), 0)));
 		}
-
 		public Applicative0<T> decorator(Applicatable<T, ?> item) {
 			return new Applicative0<>(ArrayUtils.add(this.item, new Item<T>(item.getItem(), -1)));
 		}
@@ -287,7 +286,7 @@ public class CurryApplicativeTemplate {
 	}
 
 	// 1
-	public static class Applicative1<T extends Applicatable<T, ?>, A> {
+	public static class Applicative1<T, A> {
 		private final Item<T>[] item;
 
 		private Applicative1(Item<T>[] item) {
@@ -307,7 +306,7 @@ public class CurryApplicativeTemplate {
 		}
 	}
 
-	public static class Applicative2<T extends Applicatable<T, ?>, A, B> {
+	public static class Applicative2<T, A, B> {
 		private final Item<T>[] item;
 
 		private Applicative2(Item<T>[] item) {
@@ -327,7 +326,7 @@ public class CurryApplicativeTemplate {
 		}
 	}
 
-	public static class Applicative3<T extends Applicatable<T, ?>, A, B, C> {
+	public static class Applicative3<T, A, B, C> {
 		private final Item<T>[] item;
 
 		private Applicative3(Item<T>[] item) {
@@ -347,7 +346,7 @@ public class CurryApplicativeTemplate {
 		}
 	}
 
-	public static class Applicative4<T extends Applicatable<T, ?>, A, B, C, D> {
+	public static class Applicative4<T, A, B, C, D> {
 		private final Item<T>[] item;
 
 		private Applicative4(Item<T>[] item) {
@@ -368,7 +367,7 @@ public class CurryApplicativeTemplate {
 		}
 	}
 
-	public static class Applicative5<T extends Applicatable<T, ?>, A, B, C, D, E> {
+	public static class Applicative5<T, A, B, C, D, E> {
 		private final Item<T>[] item;
 
 		private Applicative5(Item<T>[] item) {
@@ -390,7 +389,7 @@ public class CurryApplicativeTemplate {
 		}
 	}
 
-	public static class Applicative6<T extends Applicatable<T, ?>, A, B, C, D, E, F> {
+	public static class Applicative6<T, A, B, C, D, E, F> {
 		private final Item<T>[] item;
 
 		private Applicative6(Item<T>[] item) {
@@ -412,7 +411,7 @@ public class CurryApplicativeTemplate {
 		}
 	}
 
-	public static class Applicative7<T extends Applicatable<T, ?>, A, B, C, D, E, F, G> {
+	public static class Applicative7<T, A, B, C, D, E, F, G> {
 		private final Item<T>[] item;
 
 		private Applicative7(Item<T>[] item) {
@@ -434,7 +433,7 @@ public class CurryApplicativeTemplate {
 		}
 	}
 
-	public static class Applicative8<T extends Applicatable<T, ?>, A, B, C, D, E, F, G, H> {
+	public static class Applicative8<T, A, B, C, D, E, F, G, H> {
 		private final Item<T>[] item;
 
 		private Applicative8(Item<T>[] item) {
@@ -456,7 +455,7 @@ public class CurryApplicativeTemplate {
 		}
 	}
 
-	public static class Applicative9<T extends Applicatable<T, ?>, A, B, C, D, E, F, G, H, I> {
+	public static class Applicative9<T, A, B, C, D, E, F, G, H, I> {
 		private final Item<T>[] item;
 
 		private Applicative9(Item<T>[] item) {
@@ -478,7 +477,7 @@ public class CurryApplicativeTemplate {
 		}
 	}
 
-	public static class Applicative10<T extends Applicatable<T, ?>, A, B, C, D, E, F, G, H, I, J> {
+	public static class Applicative10<T, A, B, C, D, E, F, G, H, I, J> {
 		private final Item<T>[] item;
 
 		private Applicative10(Item<T>[] item) {
@@ -500,7 +499,7 @@ public class CurryApplicativeTemplate {
 		}
 	}
 
-	public static class Applicative11<T extends Applicatable<T, ?>, A, B, C, D, E, F, G, H, I, J, K> {
+	public static class Applicative11<T, A, B, C, D, E, F, G, H, I, J, K> {
 		private final Item<T>[] item;
 
 		private Applicative11(Item<T>[] item) {
@@ -525,7 +524,7 @@ public class CurryApplicativeTemplate {
 		}
 	}
 
-	public static class Applicative12<T extends Applicatable<T, ?>, A, B, C, D, E, F, G, H, I, J, K, L> {
+	public static class Applicative12<T, A, B, C, D, E, F, G, H, I, J, K, L> {
 		private final Item<T>[] item;
 
 		private Applicative12(Item<T>[] item) {
@@ -550,7 +549,7 @@ public class CurryApplicativeTemplate {
 		}
 	}
 
-	public static class Applicative13<T extends Applicatable<T, ?>, A, B, C, D, E, F, G, H, I, J, K, L, M> {
+	public static class Applicative13<T, A, B, C, D, E, F, G, H, I, J, K, L, M> {
 		private final Item<T>[] item;
 
 		private Applicative13(Item<T>[] item) {
@@ -576,7 +575,7 @@ public class CurryApplicativeTemplate {
 		}
 	}
 
-	public static class Applicative14<T extends Applicatable<T, ?>, A, B, C, D, E, F, G, H, I, J, K, L, M, N> {
+	public static class Applicative14<T, A, B, C, D, E, F, G, H, I, J, K, L, M, N> {
 		private final Item<T>[] item;
 
 		private Applicative14(Item<T>[] item) {
@@ -602,7 +601,7 @@ public class CurryApplicativeTemplate {
 		}
 	}
 
-	public static class Applicative15<T extends Applicatable<T, ?>, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O> {
+	public static class Applicative15<T, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O> {
 		private final Item<T>[] item;
 
 		private Applicative15(Item<T>[] item) {
@@ -628,7 +627,7 @@ public class CurryApplicativeTemplate {
 		}
 	}
 
-	public static class Applicative16<T extends Applicatable<T, ?>, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P> {
+	public static class Applicative16<T, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P> {
 		private final Item<T>[] item;
 
 		private Applicative16(Item<T>[] item) {
@@ -654,7 +653,7 @@ public class CurryApplicativeTemplate {
 		}
 	}
 
-	public static class Applicative17<T extends Applicatable<T, ?>, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q> {
+	public static class Applicative17<T, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q> {
 		private final Item<T>[] item;
 
 		private Applicative17(Item<T>[] item) {
@@ -681,7 +680,7 @@ public class CurryApplicativeTemplate {
 		}
 	}
 
-	public static class Applicative18<T extends Applicatable<T, ?>, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R> {
+	public static class Applicative18<T, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R> {
 		private final Item<T>[] item;
 
 		private Applicative18(Item<T>[] item) {
@@ -708,7 +707,7 @@ public class CurryApplicativeTemplate {
 		}
 	}
 
-	public static class Applicative19<T extends Applicatable<T, ?>, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S> {
+	public static class Applicative19<T, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S> {
 		private final Item<T>[] item;
 
 		private Applicative19(Item<T>[] item) {
@@ -735,7 +734,7 @@ public class CurryApplicativeTemplate {
 		}
 	}
 
-	public static class Applicative20<T extends Applicatable<T, ?>, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, U> {
+	public static class Applicative20<T, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, U> {
 		private final Item<T>[] item;
 
 		private Applicative20(Item<T>[] item) {
@@ -762,7 +761,7 @@ public class CurryApplicativeTemplate {
 		}
 	}
 
-	public static class Applicative21<T extends Applicatable<T, ?>, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, U, V> {
+	public static class Applicative21<T, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, U, V> {
 		private final Item<T>[] item;
 
 		private Applicative21(Item<T>[] item) {
@@ -790,7 +789,7 @@ public class CurryApplicativeTemplate {
 		}
 	}
 
-	public static class Applicative22<T extends Applicatable<T, ?>, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, U, V, W> {
+	public static class Applicative22<T, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, U, V, W> {
 		private final Item<T>[] item;
 
 		private Applicative22(Item<T>[] item) {
@@ -818,7 +817,7 @@ public class CurryApplicativeTemplate {
 		}
 	}
 
-	public static class Applicative23<T extends Applicatable<T, ?>, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, U, V, W, X> {
+	public static class Applicative23<T, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, U, V, W, X> {
 		private final Item<T>[] item;
 
 		private Applicative23(Item<T>[] item) {
@@ -846,7 +845,7 @@ public class CurryApplicativeTemplate {
 		}
 	}
 
-	public static class Applicative24<T extends Applicatable<T, ?>, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, U, V, W, X, Y> {
+	public static class Applicative24<T, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, U, V, W, X, Y> {
 		private final Item<T>[] item;
 
 		private Applicative24(Item<T>[] item) {
@@ -883,7 +882,7 @@ public class CurryApplicativeTemplate {
 	 * @param builder 构建器函数 / the builder function
 	 * @return 构建结果 / the build result
 	 */
-	public static <T extends Applicatable<T, ?>,O> BuildResult<T, O> build(Function<Applicative0<T>, BuildResult<T, O>> builder) {
+	public static <T,O> BuildResult<T, O> build(Function<Applicative0<T>, BuildResult<T, O>> builder) {
 		return builder.apply(Applicative0.getInstance());
 	}
 }

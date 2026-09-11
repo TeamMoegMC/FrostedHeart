@@ -19,6 +19,8 @@
 
 package com.teammoeg.chorda.client.cui.editor;
 
+import java.util.function.Consumer;
+
 import com.teammoeg.chorda.client.ClientUtils;
 import com.teammoeg.chorda.client.cui.base.PrimaryLayer;
 import com.teammoeg.chorda.client.cui.base.UIElement;
@@ -27,9 +29,8 @@ import com.teammoeg.chorda.client.cui.theme.SimpleTechTheme;
 import com.teammoeg.chorda.client.cui.theme.Theme;
 import com.teammoeg.chorda.client.cui.theme.UIColors;
 import com.teammoeg.chorda.client.cui.widgets.TextField;
-import net.minecraft.network.chat.Component;
 
-import java.util.function.Consumer;
+import net.minecraft.network.chat.Component;
 
 /**
  * 编辑器工具类，提供打开独立编辑器屏幕和创建标题控件的便捷方法。

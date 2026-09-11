@@ -19,14 +19,9 @@
 
 package com.teammoeg.frostedheart.bootstrap.client;
 
-import org.lwjgl.opengl.GL11;
-import org.lwjgl.opengl.GL20;
-
-import com.lowdragmc.lowdraglib.LDLib;
 import com.lowdragmc.lowdraglib.client.shader.Shaders;
 import com.lowdragmc.lowdraglib.client.shader.management.Shader;
 import com.lowdragmc.lowdraglib.client.shader.management.ShaderProgram;
-import com.mojang.blaze3d.platform.GlStateManager;
 import com.teammoeg.frostedheart.FHMain;
 
 import net.minecraftforge.api.distmarker.Dist;

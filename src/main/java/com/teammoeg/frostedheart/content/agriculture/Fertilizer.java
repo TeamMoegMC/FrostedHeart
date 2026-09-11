@@ -20,23 +20,18 @@
 package com.teammoeg.frostedheart.content.agriculture;
 
 import com.teammoeg.frostedheart.bootstrap.common.FHBlocks;
-import com.teammoeg.frostedheart.bootstrap.common.FHItems;
 import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
 import com.teammoeg.frostedheart.item.FHBaseItem;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
-import net.minecraft.tags.BlockTags;
 import net.minecraft.util.StringRepresentable;
 import net.minecraft.world.InteractionResult;
-import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.level.block.FarmBlock;
 import net.minecraft.world.level.block.state.BlockState;
 
 import javax.annotation.Nullable;

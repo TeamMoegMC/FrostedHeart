@@ -24,6 +24,7 @@ import com.teammoeg.chorda.client.cui.base.UIElement;
 import com.teammoeg.chorda.client.cui.base.UILayer;
 import com.teammoeg.chorda.client.cui.theme.UIColors;
 import com.teammoeg.chorda.client.cui.widgets.TextField;
+
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 

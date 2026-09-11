@@ -38,7 +38,6 @@ import com.google.common.collect.ImmutableMap;
 import com.mojang.datafixers.util.Pair;
 import com.mojang.serialization.DataResult;
 import com.mojang.serialization.DynamicOps;
-import com.mojang.serialization.JsonOps;
 import com.mojang.serialization.Lifecycle;
 import com.mojang.serialization.ListBuilder;
 import com.mojang.serialization.MapLike;

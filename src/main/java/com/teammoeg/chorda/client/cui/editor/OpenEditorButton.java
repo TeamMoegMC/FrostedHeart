@@ -20,6 +20,9 @@
 package com.teammoeg.chorda.client.cui.editor;
 
 
+import java.util.function.Consumer;
+import java.util.function.Function;
+
 import com.teammoeg.chorda.client.RenderingHint;
 import com.teammoeg.chorda.client.cui.base.MouseButton;
 import com.teammoeg.chorda.client.cui.base.UIElement;
@@ -28,11 +31,9 @@ import com.teammoeg.chorda.client.icon.CIcons;
 import com.teammoeg.chorda.client.icon.CIcons.CIcon;
 import com.teammoeg.chorda.text.Components;
 import com.teammoeg.chorda.util.CFunctionUtils;
+
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
-
-import java.util.function.Consumer;
-import java.util.function.Function;
 
 
 /**

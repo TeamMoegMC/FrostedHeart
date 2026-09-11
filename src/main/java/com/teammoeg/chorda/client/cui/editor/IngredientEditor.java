@@ -146,7 +146,7 @@ public class IngredientEditor extends BaseEditDialog {
     	.buildEdit();
     public static final Editor<Ingredient> EDITOR_INGREDIENT_EXTERN = new EditorSelectorBuilder<Ingredient>()
     	.addEditor("Edit", EDITOR_INGREDIENT)
-    	.addEditor("Change to Multiple",  EDITOR_MULTIPLE,v->v!=null||v.values.length == 1)
+    	.addEditor("Change to Multiple",  EDITOR_MULTIPLE,v->v==null||v.values.length == 1)
     	.addEditor("Change to Tag",  TAG_EDITOR,v->v!=null&&v.values.length == 1&&v.values[0] instanceof TagValue)
     	.addEditor("Change to Item", ITEM_EDITOR,v->v!=null&&v.values.length == 1&&v.values[0] instanceof ItemValue)
     	.addEditor("Change to Single",  EDITOR_SIMPLE,v->v!=null&&v.values.length != 1)

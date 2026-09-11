@@ -19,6 +19,14 @@
 
 package com.teammoeg.chorda.client.cui.editor;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.IdentityHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.function.Consumer;
+import java.util.function.Function;
+
 import com.mojang.datafixers.util.Pair;
 import com.teammoeg.chorda.client.RenderingHint;
 import com.teammoeg.chorda.client.cui.base.UIElement;
@@ -30,17 +38,10 @@ import com.teammoeg.chorda.client.cui.editor.EditorDialogBuilder.SetterAndGetter
 import com.teammoeg.chorda.client.cui.widgets.TextField;
 import com.teammoeg.chorda.util.struct.CurryApplicativeTemplate.BuildResult;
 import com.teammoeg.chorda.util.struct.CurryApplicativeTemplate.BuiltParams;
+
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.IdentityHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.function.Consumer;
-import java.util.function.Function;
 
 /**
  * 多字段编辑器对话框，自动从EditorDialogPrototype生成包含多个编辑项的可滚动表单。
@@ -55,13 +56,13 @@ import java.util.function.Function;
 public class EditorFieldsDialog<O> extends BaseEditDialog {
 	ContentPanel mainPane;
 	public static record EditorPair<O,A>(EditorItemFactory<A> factory,Function<O,A> getter,int index) {
+		@SuppressWarnings({ "unchecked", "rawtypes" })
 		public Pair<Integer, EditItem<Object>> create(EditorFieldsDialog<O> dialog,UILayer parent,O o,Object[] params){
 			A val=null;
 			if(o!=null)
 				val=getter.apply(o);
 			if(index>=0)
 				params[index]=val;
-			final int cindex=index;
 			return Pair.of(index, (EditItem)factory.create(parent,dialog,val));
 		}
 	}
@@ -69,6 +70,7 @@ public class EditorFieldsDialog<O> extends BaseEditDialog {
 		List<EditorPair<O,?>> widgets;
 		Function<BuiltParams, O> consumer;
 		int paramSize=0;
+		@SuppressWarnings({ "unchecked", "rawtypes" })
 		public EditorDialogPrototype(BuildResult<SetterAndGetter<O, ?>,O> dialog) {
 			this.widgets=new ArrayList<>();
 			Arrays.stream(dialog.obj()).map(t->new EditorPair((EditorItemFactory<?>)t.obj().factory(),(Function)t.obj().func(),t.index())).forEach(widgets::add);
@@ -203,6 +205,7 @@ public class EditorFieldsDialog<O> extends BaseEditDialog {
 	 * @param <T> 值类型 / the value type
 	 * @return 字段值 / the field value
 	 */
+	@SuppressWarnings("unchecked")
 	public <T> T getValue(int idx) {
 		return (T) map.get(idx).getValue().result().flatMap(t->t).orElse(null);
 	}

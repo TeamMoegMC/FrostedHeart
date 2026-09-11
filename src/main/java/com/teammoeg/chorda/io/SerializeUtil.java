@@ -126,6 +126,7 @@ public class SerializeUtil {
 		 * @param obj 要序列化的对象 / the object to serialize
 		 * @return JSON元素 / the JSON element
 		 */
+		@SuppressWarnings("deprecation")
 		public JsonElement serialize(U obj) {
 			return obj.serialize();
 		}
@@ -138,6 +139,7 @@ public class SerializeUtil {
 		 * @param packet 网络数据包 / the network packet
 		 * @param obj 要写入的对象 / the object to write
 		 */
+		@SuppressWarnings("deprecation")
 		public void write(FriendlyByteBuf packet, U obj) {
 			packet.writeVarInt(id);
 			obj.write(packet);

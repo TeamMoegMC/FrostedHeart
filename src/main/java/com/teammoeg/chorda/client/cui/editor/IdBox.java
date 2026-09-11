@@ -19,14 +19,15 @@
 
 package com.teammoeg.chorda.client.cui.editor;
 
+import java.util.UUID;
+
 import com.teammoeg.chorda.client.cui.base.MouseButton;
 import com.teammoeg.chorda.client.cui.base.UIElement;
 import com.teammoeg.chorda.client.cui.widgets.TextButton;
 import com.teammoeg.chorda.client.icon.CIcons;
 import com.teammoeg.chorda.text.Components;
-import net.minecraft.network.chat.Component;
 
-import java.util.UUID;
+import net.minecraft.network.chat.Component;
 
 /**
  * ID输入框，扩展带按钮的文本框，提供随机ID生成和重置到原始值功能。
