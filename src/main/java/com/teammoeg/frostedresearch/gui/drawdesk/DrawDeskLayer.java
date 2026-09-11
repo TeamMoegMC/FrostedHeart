@@ -109,7 +109,10 @@ public class DrawDeskLayer extends UILayer {
 
 			@Override
 			public void onClicked(MouseButton arg0) {
-				FRNetwork.INSTANCE.sendToServer(new FHDrawingDeskOperationPacket(dd.getTile().getBlockPos(), 3));
+				if (ResearchHooks.canExamine(
+						dd.getTile().getInventory().getStackInSlot(DrawingDeskTileEntity.EXAMINE_SLOT))) {
+					FRNetwork.INSTANCE.sendToServer(new FHDrawingDeskOperationPacket(dd.getTile().getBlockPos(), 3));
+				}
 			}
 
 		};

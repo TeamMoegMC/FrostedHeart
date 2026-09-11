@@ -26,7 +26,7 @@ import com.teammoeg.chorda.client.icon.CIcons.CIcon;
 import com.teammoeg.chorda.dataholders.team.TeamDataHolder;
 import com.teammoeg.frostedresearch.Lang;
 import com.teammoeg.frostedresearch.ResearchHooks;
-import com.teammoeg.frostedresearch.compat.JEICompat;
+import com.teammoeg.frostedresearch.compat.ResearchJeiBridge;
 import com.teammoeg.frostedresearch.data.ResearchData;
 import com.teammoeg.frostedresearch.data.TeamResearchData;
 
@@ -106,7 +106,7 @@ public class EffectShowCategory extends Effect {
     @Override
     public void onClick(ResearchData data) {
         if (cate != null)
-            JEICompat.showJEICategory(cate);
+            ResearchJeiBridge.showCategory(cate);
     }
 
     @Override

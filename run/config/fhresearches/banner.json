@@ -1,0 +1,37 @@
+{
+  "showAltDesc": true,
+  "locked": true,
+  "hidden": true,
+  "points": 276447232,
+  "insight": 1,
+  "effects": [
+    {
+      "type": "multiblock",
+      "id": "4778c2bd97464689",
+      "multiblock": "immersiveengineering:multiblocks/excavator"
+    },
+    {
+      "type": "multiblock",
+      "id": "347c0f6c35e9450b",
+      "multiblock": "immersiveengineering:multiblocks/lightning_rod"
+    },
+    {
+      "type": "multiblock",
+      "id": "4055c27d4d6340e1",
+      "multiblock": "immersiveengineering:multiblocks/refinery"
+    },
+    {
+      "type": "multiblock",
+      "id": "a5169b9b5c34415e",
+      "multiblock": "immersiveengineering:multiblocks/diesel_generator"
+    }
+  ],
+  "icon": {
+    "type": "item",
+    "item": {
+      "id": "minecraft:barrier",
+      "Count": 1
+    }
+  },
+  "category": "frostedresearch:rescue"
+}

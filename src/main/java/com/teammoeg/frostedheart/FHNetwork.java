@@ -43,6 +43,7 @@ import com.teammoeg.frostedheart.content.town.network.TownNameEditRequestPacket;
 import com.teammoeg.frostedheart.content.town.network.TownNameUpdatePacket;
 import com.teammoeg.frostedheart.content.town.network.TownResidentNameEditRequestPacket;
 import com.teammoeg.frostedheart.content.town.network.TownSignalNotificationPacket;
+import com.teammoeg.frostedheart.content.town.network.TownTransportShortageNotificationPacket;
 import com.teammoeg.frostedheart.content.town.network.TownStaffingEditRequestPacket;
 import com.teammoeg.frostedheart.content.town.network.TownStaffingPlanUpdatePacket;
 import com.teammoeg.frostedheart.content.town.network.TownHousingEditRequestPacket;
@@ -91,6 +92,7 @@ public class FHNetwork extends CBaseNetwork {
         //registerMessage("temperature_data", FHDatapackSyncPacket.class);
 
         registerMessage("climate_data", FHClimatePacket.class);
+        registerMessage("white_curtain_snapshot", FHWhiteCurtainSnapshotPacket.class);
         registerMessage("temperature_display", FHTemperatureDisplayPacket.class);
         registerMessage("open_clothes", C2SOpenClothesScreenMessage.class);
 
@@ -133,6 +135,7 @@ public class FHNetwork extends CBaseNetwork {
         registerMessage("town_name_update", TownNameUpdatePacket.class);
         registerMessage("town_resident_name_edit_request", TownResidentNameEditRequestPacket.class);
         registerMessage("town_signal_notification", TownSignalNotificationPacket.class);
+        registerMessage("town_transport_shortage_notification", TownTransportShortageNotificationPacket.class);
         registerMessage("town_staffing_edit_request", TownStaffingEditRequestPacket.class);
         registerMessage("town_staffing_plan_update", TownStaffingPlanUpdatePacket.class);
         registerMessage("town_housing_edit_request", TownHousingEditRequestPacket.class);
@@ -172,7 +175,6 @@ public class FHNetwork extends CBaseNetwork {
         // Infrared View
         registerMessage("infrared_view_c2s", FHRequestInfraredViewDataSyncPacket.class);
         registerMessage("infrared_view_s2c", FHResponseInfraredViewDataSyncPacket.class);
-        registerMessage("notify_chunk_heat_update", FHNotifyChunkHeatUpdatePacket.class);
         //Sled
         registerMessage("sled", FHServerBoundUpdateSledState.class);
         

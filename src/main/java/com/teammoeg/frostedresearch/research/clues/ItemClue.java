@@ -114,11 +114,23 @@ public class ItemClue extends Clue {
     public int test(TeamDataHolder t, Research r, ItemStack stack) {
         TeamResearchData trd = t.getData(FRSpecialDataTypes.RESEARCH_DATA);
         if (!trd.isClueCompleted(r, this))
-            if (this.stack!=null&&this.stack.getFirst().test(stack)&&stack.getCount()>=this.stack.getSecond()) {
+            if (matches(stack)) {
                 trd.setClueCompleted(t, r, this, true);
                 if (consume)
                     return this.stack.getSecond();
             }
         return 0;
+    }
+
+    /** Side-effect-free predicate shared by client affordances and server submission. */
+    public boolean matches(ItemStack candidate) {
+        return stack != null
+                && stack.getSecond() > 0
+                && stack.getFirst().test(candidate)
+                && candidate.getCount() >= stack.getSecond();
+    }
+
+    public int getRequiredCount() {
+        return stack == null ? 0 : stack.getSecond();
     }
 }

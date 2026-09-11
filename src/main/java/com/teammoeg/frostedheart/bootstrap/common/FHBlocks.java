@@ -42,6 +42,7 @@ import com.teammoeg.frostedheart.content.climate.block.CooledMagmaBlock;
 import com.teammoeg.frostedheart.content.climate.block.LayeredThinIceBlock;
 import com.teammoeg.frostedheart.content.climate.block.ThinIceBlock;
 import com.teammoeg.frostedheart.content.climate.block.wardrobe.WardrobeBlock;
+import com.teammoeg.frostedheart.content.climate.player.thermalitem.ThermalReservoirBlock;
 import com.teammoeg.frostedheart.content.decoration.*;
 import com.teammoeg.frostedheart.content.incubator.HeatIncubatorBlock;
 import com.teammoeg.frostedheart.content.incubator.IncubatorBlock;
@@ -67,6 +68,8 @@ import com.teammoeg.frostedheart.content.town.buildings.mine.MineBlock;
 import com.teammoeg.frostedheart.content.town.buildings.warehouse.WarehouseBlock;
 import com.teammoeg.frostedheart.content.town.buildings.warehouse.WarehouseInterfaceBlock;
 import com.teammoeg.frostedheart.content.town.buildings.warehouse.WarehouseLevelEmitterBlock;
+import com.teammoeg.frostedheart.content.town.transport.P2PTerminalRole;
+import com.teammoeg.frostedheart.content.town.transport.device.P2PTerminalBlock;
 import com.teammoeg.frostedheart.content.utility.gunpowderbarrel.GunpowderBarrelBlock;
 import com.teammoeg.frostedheart.content.utility.gunpowderbarrel.GunpowderBarrelItem;
 import com.teammoeg.frostedheart.content.utility.incinerator.GasVentBlock;
@@ -123,6 +126,21 @@ import static net.minecraft.world.level.block.Blocks.*;
 
 @SuppressWarnings("unused")
 public class FHBlocks {
+
+    public static final BlockEntry<ThermalReservoirBlock> WARM_STONE = REGISTRATE
+            .block("warm_stone", ThermalReservoirBlock::new)
+            .properties(p -> p.strength(0.3F).sound(SoundType.STONE).noOcclusion()
+                    .pushReaction(PushReaction.DESTROY))
+            .blockstate(FHBlockStateGen.existed())
+            .loot((provider, block) -> {}) // Drops the stored ItemStack in getDrops.
+            .register();
+    public static final BlockEntry<ThermalReservoirBlock> HOT_WATER_BAG = REGISTRATE
+            .block("hot_water_bag", ThermalReservoirBlock::new)
+            .properties(p -> p.strength(0.2F).sound(SoundType.WOOL).noOcclusion()
+                    .pushReaction(PushReaction.DESTROY))
+            .blockstate(FHBlockStateGen.existed())
+            .loot((provider, block) -> {})
+            .register();
 
     public static final DeferredRegister<Block> BLOCKS = DeferredRegister.create(ForgeRegistries.BLOCKS, FHMain.MODID);
 
@@ -2280,6 +2298,42 @@ public class FHBlocks {
                     .model(existingItemModel())
                     .build()
                     .lang("Warehouse Level Emitter")
+                    .register();
+
+    public static final BlockEntry<P2PTerminalBlock> SHIPPING_TERMINAL =
+            REGISTRATE.block("shipping_terminal",
+                            properties -> new P2PTerminalBlock(properties,
+                                    P2PTerminalRole.SHIPPING))
+                    .initialProperties(() -> Blocks.IRON_BLOCK)
+                    .tag(FHTags.Blocks.TOWN_WALLS.tag)
+                    .tag(FHTags.Blocks.METAL_MACHINES.tag)
+                    .blockstate(FHBlockStateGen.existed())
+                    .item().model(existingItemModel()).build()
+                    .lang("Shipping Terminal")
+                    .register();
+
+    public static final BlockEntry<P2PTerminalBlock> RECEIVING_TERMINAL =
+            REGISTRATE.block("receiving_terminal",
+                            properties -> new P2PTerminalBlock(properties,
+                                    P2PTerminalRole.RECEIVING))
+                    .initialProperties(() -> Blocks.IRON_BLOCK)
+                    .tag(FHTags.Blocks.TOWN_WALLS.tag)
+                    .tag(FHTags.Blocks.METAL_MACHINES.tag)
+                    .blockstate(FHBlockStateGen.existed())
+                    .item().model(existingItemModel()).build()
+                    .lang("Receiving Terminal")
+                    .register();
+
+    public static final BlockEntry<P2PTerminalBlock> BIDIRECTIONAL_LOGISTICS_TERMINAL =
+            REGISTRATE.block("bidirectional_logistics_terminal",
+                            properties -> new P2PTerminalBlock(properties,
+                                    P2PTerminalRole.BIDIRECTIONAL))
+                    .initialProperties(() -> Blocks.IRON_BLOCK)
+                    .tag(FHTags.Blocks.TOWN_WALLS.tag)
+                    .tag(FHTags.Blocks.METAL_MACHINES.tag)
+                    .blockstate(FHBlockStateGen.existed())
+                    .item().model(existingItemModel()).build()
+                    .lang("Bidirectional Logistics Terminal")
                     .register();
 
     public static final BlockEntry<MineBlock> MINE = REGISTRATE.block("mine", MineBlock::new)

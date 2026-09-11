@@ -21,9 +21,11 @@ package com.teammoeg.frostedheart.infrastructure.data;
 
 import com.teammoeg.chorda.util.struct.EnumDefaultedMap;
 import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.content.climate.WorldTemperature;
 import com.teammoeg.frostedheart.content.climate.data.*;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData.BodyPart;
 import com.teammoeg.frostedheart.content.climate.recipe.CampfireDefrostRecipe;
+import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.MinecraftThermalInput;
 import com.teammoeg.frostedheart.content.trade.policy.TradePolicy;
 import com.teammoeg.frostedheart.content.ui.wheelmenu.WheelMenuRenderer;
 import net.minecraft.resources.ResourceLocation;
@@ -60,8 +62,6 @@ public class FHRecipeCachingReloadListener implements ResourceManagerReloadListe
     public static void buildRecipeLists(RecipeManager recipeManager) {
         FHMain.LOGGER.info("Building recipe lists");
         Collection<Recipe<?>> recipes = recipeManager.getRecipes();
-        if (recipes.isEmpty())
-            return;
         //filterRecipes(recipes, GeneratorRecipe.class, GeneratorRecipe.TYPE);
         //GeneratorSteamRecipe.recipeList = filterRecipes(recipes, GeneratorSteamRecipe.class, GeneratorSteamRecipe.TYPE);
        /* InstallInnerRecipe.recipeList = recipes.stream()
@@ -100,6 +100,7 @@ public class FHRecipeCachingReloadListener implements ResourceManagerReloadListe
         FoodTempData.cacheList=FoodTempData.TYPE.get().filterRecipes(recipes).collect(Collectors.toMap(t->t.getData().item(), t->t.getData()));
         PlantTempData.cacheList=PlantTempData.TYPE.get().filterRecipes(recipes).collect(Collectors.toMap(t->t.getData().block(), t->t.getData()));
         WorldTempData.cacheList=WorldTempData.TYPE.get().filterRecipes(recipes).collect(Collectors.toMap(t->t.getData().world(), t->t.getData()));
+        WorldTemperature.clear();
         //System.out.println(TradePolicy.totalW);
 
     }
@@ -121,6 +122,7 @@ public class FHRecipeCachingReloadListener implements ResourceManagerReloadListe
     @Override
     public void onResourceManagerReload(@Nonnull ResourceManager resourceManager) {
         buildRecipeLists(dataPackRegistries.getRecipeManager());
+        MinecraftThermalInput.invalidateGameplayProfilesForRecipeReload();
         
         if(FMLEnvironment.dist==Dist.CLIENT)
         	WheelMenuRenderer.load();

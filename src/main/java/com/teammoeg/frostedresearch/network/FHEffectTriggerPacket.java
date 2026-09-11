@@ -34,27 +34,31 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.network.NetworkEvent;
 
 public class FHEffectTriggerPacket implements CMessage {
-    private final int researchID;
+    private final String researchID;
 
     public FHEffectTriggerPacket(FriendlyByteBuf buffer) {
-        researchID = buffer.readVarInt();
+        researchID = ResearchNetworkCodec.readId(buffer, "effect trigger target");
 
     }
 
     public FHEffectTriggerPacket(Research r) {
-        this.researchID = FHResearch.researches.getIntId(r);
+        this.researchID = r.getId();
     }
 
     public void encode(FriendlyByteBuf buffer) {
-        buffer.writeVarInt(researchID);
+        buffer.writeUtf(researchID, ResearchNetworkCodec.MAX_ID_LENGTH);
     }
 
     public void handle(Supplier<NetworkEvent.Context> context) {
 
         context.get().enqueueWork(() -> {
-            Research r = FHResearch.researches.get(researchID);
+            Research r = FHResearch.getResearch(researchID);
 
             ServerPlayer spe = context.get().getSender();
+            if (r == null || spe == null) {
+                ResearchNetworkCodec.reject("effect trigger: invalid target or missing sender");
+                return;
+            }
             TeamDataHolder data = CTeamDataManager.get(spe);
             TeamResearchData trd = data.getData(FRSpecialDataTypes.RESEARCH_DATA);
             if (trd.getData(r).isCompleted()) {

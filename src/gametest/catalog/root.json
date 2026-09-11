@@ -1,0 +1,16 @@
+{
+  "icon": {
+    "type": "item",
+    "item": {
+      "id": "minecraft:paper",
+      "Count": 1
+    }
+  },
+  "category": "frostedresearch:rescue",
+  "parents": [],
+  "clues": [],
+  "ingredients": [],
+  "effects": [],
+  "points": 100,
+  "insight": 0
+}

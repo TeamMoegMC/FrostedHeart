@@ -1,0 +1,102 @@
+{
+  "showAltDesc": true,
+  "points": 4000,
+  "insight": 1,
+  "clues": [
+    {
+      "type": "game",
+      "id": "8ddb982329754dfb",
+      "required": true,
+      "value": 0.5,
+      "level": 1
+    },
+    {
+      "type": "kill",
+      "id": "5543b5168f0844d1",
+      "required": false,
+      "value": 0.25,
+      "always": false,
+      "desc": "@entity.stone_age.mouflon",
+      "entity": "stone_age:mouflon"
+    },
+    {
+      "type": "kill",
+      "id": "9c8fd05a77c64aae",
+      "required": false,
+      "value": 0.25,
+      "always": false,
+      "desc": "@entity.stone_age.auroch",
+      "entity": "stone_age:auroch"
+    },
+    {
+      "type": "kill",
+      "id": "6857748b9fe24e1f",
+      "required": false,
+      "value": 0.25,
+      "always": false,
+      "desc": "@entity.stone_age.fowl",
+      "entity": "stone_age:fowl"
+    }
+  ],
+  "ingredients": [
+    {
+      "count": 6,
+      "base_ingredient": {
+        "tag": "forge:plates/steel"
+      }
+    },
+    {
+      "count": 2,
+      "base_ingredient": [
+        {
+          "item": "frostedheart:buff_coat"
+        },
+        {
+          "item": "frostedheart:gambeson"
+        }
+      ]
+    },
+    {
+      "count": 2,
+      "base_ingredient": {
+        "tag": "immersiveengineering:scaffoldings/steel"
+      }
+    },
+    {
+      "count": 6,
+      "base_ingredient": {
+        "item": "charcoal_pit:straw"
+      }
+    },
+    {
+      "count": 6,
+      "base_ingredient": {
+        "tag": "forge:treated_wood"
+      }
+    }
+  ],
+  "effects": [
+    {
+      "type": "recipe",
+      "item": {
+        "item": "supplementaries:cage"
+      },
+      "id": "5acc6356a60b4822"
+    },
+    {
+      "type": "item",
+      "id": "88694e96eb3240b9",
+      "rewards": [
+        {
+          "id": "supplementaries:cage",
+          "Count": 1
+        }
+      ]
+    }
+  ],
+  "icon": "supplementaries:cage",
+  "category": "frostedheart:ars",
+  "parents": [
+    "crucible"
+  ]
+}

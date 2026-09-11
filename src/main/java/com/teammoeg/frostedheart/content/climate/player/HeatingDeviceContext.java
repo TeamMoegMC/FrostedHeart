@@ -19,92 +19,172 @@
 
 package com.teammoeg.frostedheart.content.climate.player;
 
-import java.util.EnumMap;
-
+import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData.BodyPart;
+import com.teammoeg.frostedheart.content.climate.thermal.query.ThermalEnvironmentSample;
 
 import lombok.Getter;
-import lombok.Setter;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
+import top.theillusivec4.curios.api.type.ISlotType;
 
 public class HeatingDeviceContext {
-    public static class BodyPartContext {
-        @Getter
-        private float bodyTemperature;
-        @Getter
-        @Setter
-        private float effectiveTemperature;
-        @Getter
-        @Setter
-        private float feelTemperature;
-
-        private BodyPartContext(float bodyTemperature, float effectiveTemperature) {
-            super();
-            this.bodyTemperature = bodyTemperature;
-            this.effectiveTemperature = effectiveTemperature;
-            this.feelTemperature = effectiveTemperature;
-        }
-
-        private BodyPartContext() {
-            super();
-        }
-
-    }
+    private static final String PARTIAL_HEATING_SECOND_KEY =
+            FHMain.MODID + ":partial_heating_second";
 
     @Getter
-    ServerPlayer player;
-    private final EnumMap<BodyPart, BodyPartContext> partData = new EnumMap<>(BodyPart.class);
+    private ServerPlayer player;
+    private double elapsedSeconds;
+    private double physiologicalSeconds;
+    private int consumedHeatingSeconds;
+    private final ThermalEnvironmentSample environmentSample =
+            new ThermalEnvironmentSample();
+    private final PartClothData clothing = new PartClothData();
+    private final HeatingDeviceSlot curiosSlot = new HeatingDeviceSlot();
+    private final double[] partTemperatureC = new double[BodyPart.VALUES.length];
+    private final double[] powerW = new double[BodyPart.VALUES.length];
+    private final double[] dryConductanceWPerK = new double[BodyPart.VALUES.length];
+    private final double[] weightedBoundaryWPerK = new double[BodyPart.VALUES.length];
+    private final double[] wetConductanceWPerK = new double[BodyPart.VALUES.length];
+    private final double[] operativeTemperatureC = new double[BodyPart.VALUES.length];
+    private final double[] radiantHeatProof = new double[BodyPart.VALUES.length];
+    private final double[] airFraction = new double[BodyPart.VALUES.length];
 
-    HeatingDeviceContext(ServerPlayer player) {
-        super();
+    HeatingDeviceContext() {
+    }
+
+    void reset(
+            ServerPlayer player,
+            double elapsedSeconds,
+            double physiologicalSeconds,
+            PlayerTemperatureData data
+    ) {
         this.player = player;
-        for (BodyPart bp : BodyPart.values()) {
-            partData.put(bp, new BodyPartContext());
+        this.elapsedSeconds = elapsedSeconds;
+        this.physiologicalSeconds = physiologicalSeconds;
+        for (BodyPart part : BodyPart.VALUES) {
+            int index = part.ordinal();
+            partTemperatureC[index] = data.getAbsoluteBodyTempByPart(part);
+            powerW[index] = 0.0D;
         }
     }
 
-    public BodyPartContext getPartData(BodyPart part) {
-        return partData.get(part);
+    public double getBodyTemperatureC(BodyPart part) {
+        return partTemperatureC[part.ordinal()];
     }
 
-    public void setPartData(BodyPart part, float bodyTemperature, float effectiveTemperature) {
-        BodyPartContext ctx = getPartData(part);
-        ctx.bodyTemperature = bodyTemperature;
-        ctx.effectiveTemperature = effectiveTemperature;
-        ctx.feelTemperature = effectiveTemperature;
+    public void addPower(BodyPart part, double addedPowerW) {
+        if (Double.isFinite(addedPowerW)) {
+            powerW[part.ordinal()] += addedPowerW;
+        }
     }
 
-    public float getEffectiveTemperature(BodyPart part) {
-        return getPartData(part).effectiveTemperature;
+    double getPowerW(BodyPart part) {
+        return powerW[part.ordinal()];
     }
 
-    public float getBodyTemperature(BodyPart part) {
-        return getPartData(part).bodyTemperature;
+    ThermalEnvironmentSample environmentSample() {
+        return environmentSample;
     }
 
-    public void setEffectiveTemperature(BodyPart part, float value) {
-        getPartData(part).effectiveTemperature = value;
+    PartClothData clothing() {
+        return clothing;
     }
 
-    public void setBodyTemperature(BodyPart part, float value) {
-        getPartData(part).bodyTemperature = value;
+    HeatingDeviceSlot curiosSlot(ISlotType slotType) {
+        curiosSlot.setCurios(slotType);
+        return curiosSlot;
     }
 
-    public void addEffectiveTemperature(BodyPart part, float value) {
-        getPartData(part).effectiveTemperature += value;
+    void setPartEnvironment(
+            BodyPart part,
+            double dryConductanceWPerK,
+            double weightedBoundaryWPerK,
+            double wetConductanceWPerK,
+            double operativeTemperatureC,
+            double radiantHeatProof,
+            double airFraction
+    ) {
+        int index = part.ordinal();
+        this.dryConductanceWPerK[index] = dryConductanceWPerK;
+        this.weightedBoundaryWPerK[index] = weightedBoundaryWPerK;
+        this.wetConductanceWPerK[index] = wetConductanceWPerK;
+        this.operativeTemperatureC[index] = operativeTemperatureC;
+        this.radiantHeatProof[index] = radiantHeatProof;
+        this.airFraction[index] = airFraction;
     }
 
-    public void setFeelTemperature(BodyPart part, float value) {
-        getPartData(part).feelTemperature += value;
+    double getDryConductanceWPerK(BodyPart part) {
+        return dryConductanceWPerK[part.ordinal()];
     }
 
-    public float getFeelTemperature(BodyPart part) {
-        return getPartData(part).feelTemperature;
+    double getWeightedBoundaryWPerK(BodyPart part) {
+        return weightedBoundaryWPerK[part.ordinal()];
     }
 
-    public void addFeelTemperature(BodyPart part, float value) {
-        getPartData(part).feelTemperature += value;
+    double getWetConductanceWPerK(BodyPart part) {
+        return wetConductanceWPerK[part.ordinal()];
+    }
+
+    double getOperativeTemperatureC(BodyPart part) {
+        return operativeTemperatureC[part.ordinal()];
+    }
+
+    double getRadiantHeatProof(BodyPart part) {
+        return radiantHeatProof[part.ordinal()];
+    }
+
+    double getAirFraction(BodyPart part) {
+        return airFraction[part.ordinal()];
+    }
+
+    public double getPassivePowerW(BodyPart part) {
+        int index = part.ordinal();
+        return weightedBoundaryWPerK[index]
+                - dryConductanceWPerK[index] * partTemperatureC[index];
+    }
+
+    public double getPhysiologicalSeconds() {
+        return physiologicalSeconds;
+    }
+
+    public double getElapsedSeconds() {
+        return elapsedSeconds;
+    }
+
+    public double advanceHeatingTime(
+            ItemStack stack,
+            int remainingWholeSeconds
+    ) {
+        consumedHeatingSeconds = 0;
+        if (!(elapsedSeconds > 0.0D) || remainingWholeSeconds <= 0) {
+            return 0.0D;
+        }
+        CompoundTag tag = stack.getOrCreateTag();
+        double partialSecond = tag.getDouble(PARTIAL_HEATING_SECOND_KEY);
+        double activeSeconds = Math.min(
+                elapsedSeconds,
+                Math.max(0.0D, remainingWholeSeconds - partialSecond));
+        double accumulatedSeconds = partialSecond + activeSeconds;
+        consumedHeatingSeconds = Math.min(
+                remainingWholeSeconds,
+                (int) Math.floor(accumulatedSeconds + 1.0e-9D));
+        double nextPartialSecond =
+                accumulatedSeconds - consumedHeatingSeconds;
+        if (nextPartialSecond > 1.0e-9D) {
+            tag.putDouble(PARTIAL_HEATING_SECOND_KEY, nextPartialSecond);
+        } else {
+            tag.remove(PARTIAL_HEATING_SECOND_KEY);
+        }
+        return activeSeconds / elapsedSeconds;
+    }
+
+    public int takeConsumedHeatingSeconds() {
+        int result = consumedHeatingSeconds;
+        consumedHeatingSeconds = 0;
+        return result;
     }
 
     public Level getLevel() {

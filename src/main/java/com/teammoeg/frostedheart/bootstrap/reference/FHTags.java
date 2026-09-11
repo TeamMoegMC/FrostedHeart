@@ -127,6 +127,7 @@ public class FHTags {
 		SAFE_NBT(NameSpace.CREATE),
 		SLED_SNOW(),
 		CROP(),
+		STATIC_FIRE_RADIATORS("thermal/static_fire_radiators"),
 		SCAFFOLDING
 
 		;
@@ -223,6 +224,7 @@ public class FHTags {
 		CURIOS_BACK(NameSpace.CURIOS, "back"),
 		CURIOS_CHARM(NameSpace.CURIOS, "charm"),
 		CURIOS_HANDS(NameSpace.CURIOS, "hands"),
+		CURIOS_WARM_STONE(NameSpace.CURIOS, "warm_stone"),
 		SLED_CONTAINER(false),
 		CRUSHED_RAW_MATERIALS(NameSpace.CREATE)
 

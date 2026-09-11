@@ -53,8 +53,13 @@ public class MinecraftServerMixin {
 	 * @param pForced 是否强制保存 / Whether the save is forced
 	 * @param ret 回调信息 / The callback info
 	 */
-	@Inject(at=@At("HEAD"),method="saveAllChunks")
+	@Inject(at=@At("HEAD"), method="saveAllChunks", cancellable=true)
 	public void saveAllChunks(boolean pSuppressLog, boolean pFlush, boolean pForced,CallbackInfoReturnable<Boolean> ret) {
+		MinecraftServer server = (MinecraftServer) (Object) this;
+		if (server.overworld() == null) {
+			ret.setReturnValue(false);
+			return;
+		}
 		MinecraftForge.EVENT_BUS.post(new ServerLevelDataSaveEvent());
 	}
 

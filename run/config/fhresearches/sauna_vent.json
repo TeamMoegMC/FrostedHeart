@@ -1,0 +1,72 @@
+{
+  "showAltDesc": true,
+  "points": 4000,
+  "insight": 1,
+  "clues": [
+    {
+      "type": "game",
+      "id": "1a7681e011ca44e4",
+      "required": true,
+      "value": 0.5,
+      "level": 1
+    },
+    {
+      "type": "game",
+      "id": "31ce65091f394ea1",
+      "value": 0.25,
+      "level": 1
+    }
+  ],
+  "ingredients": [
+    {
+      "base_ingredient": {
+        "item": "immersiveengineering:treated_wood_horizontal"
+      },
+      "count": 8
+    },
+    {
+      "base_ingredient": {
+        "item": "frostedheart:invar_sheet"
+      },
+      "count": 8
+    }
+  ],
+  "effects": [
+    {
+      "type": "recipe",
+      "item": {
+        "item": "frostedheart:sauna_vent"
+      },
+      "id": "aa6927e4f2164989"
+    },
+    {
+      "type": "use",
+      "id": "7e0bd48fb9094af6",
+      "blocks": [
+        "frostedheart:sauna_vent"
+      ]
+    },
+    {
+      "type": "item",
+      "id": "121231b41bf14cb5",
+      "rewards": [
+        {
+          "id": "frostedheart:sauna_vent",
+          "Count": 1
+        }
+      ]
+    }
+  ],
+  "icon": {
+    "type": "item",
+    "item": {
+      "id": "frostedheart:sauna_vent",
+      "Count": 1
+    }
+  },
+  "category": "frostedresearch:rescue",
+  "parents": [
+    "heating_vest",
+    "steam_heater"
+  ]
+}

@@ -25,13 +25,11 @@ import com.mojang.brigadier.arguments.FloatArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.teammoeg.chorda.text.Components;
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.content.climate.WorldTemperature;
 import com.teammoeg.frostedheart.content.climate.gamedata.climate.WorldClimate;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData;
 import com.teammoeg.frostedheart.content.climate.FHTemperatureDifficulty;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
-import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.event.RegisterCommandsEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -64,18 +62,19 @@ public class TemperatureCommand {
                 result.append("§e=== Player Temperature Data ===§r\n");
                 result.append(String.format("§6Core:§r %.2f°C (Previous: %.2f°C)\n",
                         data.getCoreBodyTemp() + 37, data.getPreviousCoreBodyTemp() + 37));
-                result.append(String.format("§6Feeling:§r %.1f°C\n", data.getTotalFeelTemp()));
-                result.append(String.format("§6Environment:§r %.1f°C\n", data.getEnvTemp()));
-                BlockPos pos = new BlockPos((int) player.getX(), (int) player.getEyeY(), (int) player.getZ());
-                result.append(String.format("§6Air:§r %.1f°C | §6Soil:§r %.1f°C\n",
-                        WorldTemperature.air(player.level(), pos),
-                        WorldTemperature.block(player.level(), pos)
-                ));
-                result.append(String.format("§6Wind:§r %s | §6Openness:§r %.2f | §6Humidity:§r %.2f\n",
-                        WorldTemperature.wind(player.level()),
-                        data.getAirOpenness(),
-                        WorldClimate.getHumidity(player.level()) * 2F
-                ));
+                result.append(String.format(
+                        "§6Environment equivalent:§r %.1f°C | §6Air:§r %.1f°C\n",
+                        data.getEnvTemp(), data.getSampledAirTemperatureC()));
+                result.append(String.format(
+                        "§6Radiation:§r %.1f W/m² | §6Net body power:§r %.0f W\n",
+                        data.getSampledRadiantFluxWPerM2(),
+                        data.getNetBodyPowerW()));
+                result.append(String.format(
+                        "§6Wind outdoor/local:§r %.1f/%.1f m/s | §6Sky:§r %s | §6Humidity:§r %.0f%%\n",
+                        data.getSampledOutdoorWindMPerS(),
+                        data.getSampledLocalWindMPerS(),
+                        data.isSampledCanSeeSky(),
+                        WorldClimate.getHumidity(player.level()) * 2F));
 
                 // Body parts information
                 result.append("\n§e=== Body Parts ===§r\n");
@@ -83,14 +82,16 @@ public class TemperatureCommand {
                 // Display body part temperatures with proper formatting
                 for (PlayerTemperatureData.BodyPart part : PlayerTemperatureData.BodyPart.values()) {
                     String partName = part.name().charAt(0) + part.name().substring(1).toLowerCase();
-                    float body = data.getBodyTempByPart(part);
+                    float body = data.getAbsoluteBodyTempByPart(part);
                     float felt = data.getFeelTempByPart(part);
 
                     // Color code based on temperature range (optional)
                     String colorCode = getTemperatureColorCode(body);
                     String colorCodeFelt = getTemperatureColorCode(felt);
 
-                    result.append(String.format("§6%s Body:§r %s%.1f°C | §6Feeling: %s%.1f°C§r\n", partName, colorCode, body + 37, colorCodeFelt, felt));
+                    result.append(String.format(
+                            "§6%s Body:§r %s%.1f°C | §6Boundary: %s%.1f°C§r\n",
+                            partName, colorCode, body, colorCodeFelt, felt));
                 }
 
                 // Send the compiled message as one comprehensive output

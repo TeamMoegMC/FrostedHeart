@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "frostedheart:item/freight_route_card_selected"
+  }
+}

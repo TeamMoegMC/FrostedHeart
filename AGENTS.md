@@ -64,3 +64,15 @@ Before changing KubeJS scripts, recipes, datapacks, quests, or pack configuratio
 - locate and read the companion repository's AGENTS.md;
 - inspect both repositories for related identifiers and registrations;
 - validate and report changes for each Git repository separately.
+
+## Code Review & Inspection Specification
+First, stop this inhumane practice of copying a version and recompiling it, and on top of that, requiring a path-sensitive hash. Also check the image building part—don't give me that insane pinning of a single version:
+raw materials and components have nothing to do with your one-time build; they are just there, and each build artifact can have its own unique hash. If an attacker has already gained operational privileges, what's the point of defending against them?
+
+Regarding safety:
+Prohibit safety and security-related audits.
+Prohibit the introduction of unconventional security designs and validations.
+Prohibit safety measures taken without a clearly defined attacker and attack model.
+Prohibit defenses that hinder observability under the pretense of protecting against operations staff.
+Prohibit "fail-closed" and "fail-fast" approaches that push work back to users—instead, resolve edge cases and state inconsistencies properly.
+Prohibit repeated privilege escalation and de-escalation in code that has no external calls.

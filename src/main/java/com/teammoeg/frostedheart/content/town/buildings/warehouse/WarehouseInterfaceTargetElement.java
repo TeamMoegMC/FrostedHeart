@@ -43,7 +43,7 @@ class WarehouseInterfaceTargetElement extends AbstractFilterGhostSlot {
         super(parent);
         this.menu = menu;
         this.slot = slot;
-        setPosAndSize(8 + slot * 18, 18, 16, 16);
+        setPosAndSize(8 + slot * 18, WarehouseInterfaceMenu.TARGET_FILTER_Y, 16, 16);
     }
 
     @Override

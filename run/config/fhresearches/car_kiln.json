@@ -1,0 +1,83 @@
+{
+  "icon": "immersiveindustry:car_kiln",
+  "category": "frostedheart:production",
+  "parents": [
+    "metal_press",
+    "squeezer"
+  ],
+  "clues": [
+    {
+      "type": "game",
+      "value": 0.3,
+      "id": "9de0bbcf75c7473d",
+      "required": true,
+      "level": 1
+    },
+    {
+      "type": "game",
+      "value": 0.2,
+      "id": "7c97b94c17664901",
+      "level": 1
+    },
+    {
+      "type": "item",
+      "value": 0.125,
+      "id": "f78fc853822a42e4",
+      "item": {
+        "count": 4,
+        "base_ingredient": {
+          "item": "kubejs:servo_core"
+        }
+      },
+      "consume": true
+    },
+    {
+      "type": "item",
+      "value": 0.125,
+      "id": "b48870814cb64a75",
+      "item": {
+        "count": 4,
+        "base_ingredient": {
+          "item": "kubejs:servo_core"
+        }
+      },
+      "consume": true
+    },
+    {
+      "type": "item",
+      "value": 0.125,
+      "id": "deadad7615dd4517",
+      "item": {
+        "count": 4,
+        "base_ingredient": {
+          "item": "kubejs:servo_core"
+        }
+      },
+      "consume": true
+    }
+  ],
+  "ingredients": [
+    {
+      "count": 2,
+      "base_ingredient": {
+        "item": "immersiveindustry:car_kiln_brick"
+      }
+    },
+    {
+      "count": 2,
+      "base_ingredient": {
+        "item": "kubejs:servo_core"
+      }
+    }
+  ],
+  "effects": [
+    {
+      "type": "multiblock",
+      "icon": "immersiveindustry:car_kiln",
+      "id": "eb4a4d16a7a3400c",
+      "multiblock": "immersiveindustry:multiblocks/car_kiln"
+    }
+  ],
+  "points": 8000,
+  "showAltDesc": true
+}

@@ -141,8 +141,12 @@ public class ResearchDataAPI {
     }
 
     public static void putVariantLong(ServerPlayer id, String name, long val) {
-        getVariants(id).putDouble(name, val);
+        putVariantLong(getData(id).get(), name, val);
         sendVariants(id);
+    }
+
+    static void putVariantLong(TeamResearchData data, String name, long val) {
+        data.putVariantLong(name, val);
     }
 
     public static void putVariantLong(UUID id, ResearchVariant name, long val) {

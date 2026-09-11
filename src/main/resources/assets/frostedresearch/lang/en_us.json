@@ -156,5 +156,7 @@
   "message.frostedresearch.research.multiblock.cannot_build": "I have no idea how to build it. I need more research. ",
   "message.frostedresearch.research.not_owned": "This is not my paper. I can't understand its content",
   "message.frostedresearch.research.too_cold": "My finger is shivering in the coldness...",
-  "message.frostedresearch.research.too_dark": "This place is too dark to write anything..."
+  "message.frostedresearch.research.too_dark": "This place is too dark to write anything...",
+  "gui.frostedresearch.catalog_error.title": "Invalid Research Catalogue",
+  "gui.frostedresearch.catalog_error.message": "World startup was safely cancelled before the save was opened. Found %s problems. First problem: %s. Full diagnostics were written to latest.log."
 }

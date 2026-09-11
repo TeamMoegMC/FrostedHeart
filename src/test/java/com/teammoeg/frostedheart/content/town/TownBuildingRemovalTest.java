@@ -23,12 +23,18 @@ import com.teammoeg.frostedheart.content.town.resource.VirtualResourceType;
 import com.teammoeg.frostedheart.content.town.resource.action.ResourceActionMode;
 import com.teammoeg.frostedheart.content.town.resource.action.ResourceActionType;
 import com.teammoeg.frostedheart.content.town.resource.action.TownResourceActions;
+import com.teammoeg.frostedheart.content.town.transport.TransportEndpointId;
+import com.teammoeg.frostedheart.content.town.transport.TransportEndpointKind;
+import com.teammoeg.frostedheart.content.town.transport.TransportEndpointRequest;
+import com.teammoeg.frostedheart.content.town.transport.TransportAdmissionStatus;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import net.minecraft.SharedConstants;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.GlobalPos;
 import net.minecraft.server.Bootstrap;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.level.Level;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.junit.jupiter.api.BeforeAll;
@@ -175,6 +181,33 @@ class TownBuildingRemovalTest {
     }
 
     @Test
+    void warehouseRemovalPreservesReservationsUntilTopologyRefresh() {
+        BlockPos warehousePos = new BlockPos(35, 64, 35);
+        BlockPos firstInterface = new BlockPos(36, 64, 35);
+        BlockPos secondInterface = new BlockPos(34, 64, 35);
+        WarehouseBuilding warehouse = workableWarehouse(warehousePos, 100.0);
+        warehouse.setVolume(64);
+        TeamTownResourceHolder resources = new TeamTownResourceHolder(Map.of(
+                VirtualResourceType.TRANSPORT_CAPACITY.generateAttribute(0), 1_000.0));
+        TeamTown town = town(Map.of(warehousePos, warehouse), Map.of(), resources);
+        for (BlockPos interfacePos : List.of(firstInterface, secondInterface)) {
+            TransportEndpointId endpoint = new TransportEndpointId(GlobalPos.of(Level.OVERWORLD, interfacePos));
+            town.registerOrUpdateTransportEndpoint(new TransportEndpointRequest(
+                    endpoint, TransportEndpointKind.WAREHOUSE_INTERFACE, 20));
+        }
+        assertEquals(2, town.getTransportReservations().size());
+
+        town.removeTownBlock(null, warehousePos);
+
+        assertEquals(2, town.getTransportReservations().size());
+        town.getTransportReservations().keySet().forEach(town::refreshTransportEndpointMetric);
+        assertEquals(0.0, town.getTransportSummary().reservedCapacity(), 1.0e-9);
+        assertTrue(town.getTransportReservations().values().stream()
+                .allMatch(reservation -> reservation.admissionStatus()
+                        == TransportAdmissionStatus.UNAVAILABLE));
+    }
+
+    @Test
     void removalRecalculatesSurvivingOverlapFlags() {
         BlockPos firstPos = new BlockPos(50, 64, 50);
         BlockPos secondPos = new BlockPos(51, 64, 50);
@@ -214,6 +247,30 @@ class TownBuildingRemovalTest {
         assertInstanceOf(MineBuilding.class, town.getTownBuilding(pos).orElseThrow());
     }
 
+    @Test
+    void samePositionWarehouseReplacementKeepsTownOwnedInterfaceReservation() {
+        BlockPos warehousePos = new BlockPos(70, 64, 70);
+        BlockPos interfacePos = new BlockPos(71, 64, 70);
+        WarehouseBuilding warehouse = workableWarehouse(warehousePos, 100.0);
+        TeamTownResourceHolder resources = new TeamTownResourceHolder(Map.of(
+                VirtualResourceType.TRANSPORT_CAPACITY.generateAttribute(0), 100.0));
+        TeamTown town = town(Map.of(warehousePos, warehouse), Map.of(), resources);
+        TransportEndpointId endpoint = new TransportEndpointId(
+                GlobalPos.of(Level.OVERWORLD, interfacePos));
+        town.registerOrUpdateTransportEndpoint(new TransportEndpointRequest(
+                endpoint,
+                TransportEndpointKind.WAREHOUSE_INTERFACE,
+                20));
+        MineBuilding replacement = new MineBuilding(warehousePos);
+
+        town.addTownBlock(warehousePos, new FixedTownBlockEntity(replacement));
+
+        town.refreshTransportEndpointMetric(endpoint);
+        assertEquals(TransportAdmissionStatus.UNAVAILABLE,
+                town.getTransportReservation(endpoint).orElseThrow().admissionStatus());
+        assertSame(replacement, town.getTownBuilding(warehousePos).orElseThrow());
+    }
+
     private static WarehouseBuilding workableWarehouse(BlockPos pos, double capacity) {
         WarehouseBuilding warehouse = new WarehouseBuilding(pos);
         warehouse.setInitialized(true);
@@ -248,7 +305,7 @@ class TownBuildingRemovalTest {
     ) {
         Map<BlockPos, ITownBuilding> orderedBuildings = new LinkedHashMap<>();
         orderedBuildings.putAll(buildings);
-        return new TeamTownData(
+        TeamTown town = new TeamTownData(
                 "Removal Test",
                 resources,
                 orderedBuildings,
@@ -259,6 +316,8 @@ class TownBuildingRemovalTest {
                 List.of(),
                 TownStaffingPlan.EMPTY,
                 -1L).createTeamTown();
+        town.prepareWarehouseTopology(Level.OVERWORLD);
+        return town;
     }
 
     private record FixedTownBlockEntity(MineBuilding building) implements TownBlockEntity<MineBuilding> {

@@ -1,18 +1,63 @@
 {
   "variants": {
-    "facing=north": {
+    "facing=north,transport_state=active": {
       "model": "frostedheart:block/warehouse_interface"
     },
-    "facing=east": {
+    "facing=east,transport_state=active": {
       "model": "frostedheart:block/warehouse_interface",
       "y": 90
     },
-    "facing=south": {
+    "facing=south,transport_state=active": {
       "model": "frostedheart:block/warehouse_interface",
       "y": 180
     },
-    "facing=west": {
+    "facing=west,transport_state=active": {
       "model": "frostedheart:block/warehouse_interface",
+      "y": 270
+    },
+    "facing=north,transport_state=disabled": {
+      "model": "frostedheart:block/warehouse_interface_disabled"
+    },
+    "facing=east,transport_state=disabled": {
+      "model": "frostedheart:block/warehouse_interface_disabled",
+      "y": 90
+    },
+    "facing=south,transport_state=disabled": {
+      "model": "frostedheart:block/warehouse_interface_disabled",
+      "y": 180
+    },
+    "facing=west,transport_state=disabled": {
+      "model": "frostedheart:block/warehouse_interface_disabled",
+      "y": 270
+    },
+    "facing=north,transport_state=shortage": {
+      "model": "frostedheart:block/warehouse_interface_shortage"
+    },
+    "facing=east,transport_state=shortage": {
+      "model": "frostedheart:block/warehouse_interface_shortage",
+      "y": 90
+    },
+    "facing=south,transport_state=shortage": {
+      "model": "frostedheart:block/warehouse_interface_shortage",
+      "y": 180
+    },
+    "facing=west,transport_state=shortage": {
+      "model": "frostedheart:block/warehouse_interface_shortage",
+      "y": 270
+    },
+    "facing=north,transport_state=unavailable": {
+      "model": "frostedheart:block/warehouse_interface_unavailable"
+    },
+    "facing=east,transport_state=unavailable": {
+      "model": "frostedheart:block/warehouse_interface_unavailable",
+      "y": 90
+    },
+    "facing=south,transport_state=unavailable": {
+      "model": "frostedheart:block/warehouse_interface_unavailable",
+      "y": 180
+    },
+    "facing=west,transport_state=unavailable": {
+      "model": "frostedheart:block/warehouse_interface_unavailable",
       "y": 270
     }
   }

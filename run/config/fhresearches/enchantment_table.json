@@ -1,0 +1,59 @@
+{
+  "icon": "minecraft:enchanting_table",
+  "category": "frostedheart:ars",
+  "parents": [
+    "tetra",
+    "simple_machines"
+  ],
+  "clues": [
+    {
+      "type": "game",
+      "value": 0.5,
+      "id": "a292677f06d14e6e",
+      "required": true,
+      "level": 1
+    },
+    {
+      "type": "item",
+      "value": 0.5,
+      "id": "d04a1b21631444a7",
+      "required": true,
+      "item": {
+        "tag": "forge:bookshelves"
+      }
+    }
+  ],
+  "ingredients": [
+    {
+      "item": "minecraft:diamond"
+    },
+    {
+      "count": 4,
+      "base_ingredient": {
+        "item": "minecraft:lapis_lazuli"
+      }
+    },
+    {
+      "count": 4,
+      "base_ingredient": {
+        "item": "minecraft:paper"
+      }
+    }
+  ],
+  "effects": [
+    {
+      "type": "recipe",
+      "id": "fdb784870461417f",
+      "item": "minecraft:enchanting_table"
+    },
+    {
+      "type": "use",
+      "id": "36b873d9a8254f13",
+      "blocks": [
+        "minecraft:enchanting_table"
+      ]
+    }
+  ],
+  "points": 1200,
+  "showAltDesc": true
+}

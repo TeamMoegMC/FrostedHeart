@@ -1,0 +1,63 @@
+{
+  "infinite": true,
+  "points": 1000,
+  "insight": 1,
+  "name": "@",
+  "clues": [
+    {
+      "type": "game",
+      "id": "dbd746e217974930",
+      "required": true,
+      "value": 1.0,
+      "name": "@",
+      "level": 0
+    }
+  ],
+  "ingredients": [
+    {
+      "base_ingredient": {
+        "item": "minecraft:white_dye"
+      },
+      "count": 16
+    },
+    {
+      "base_ingredient": {
+        "item": "minecraft:yellow_dye"
+      },
+      "count": 16
+    },
+    {
+      "base_ingredient": {
+        "item": "minecraft:red_dye"
+      },
+      "count": 16
+    },
+    {
+      "base_ingredient": {
+        "item": "minecraft:leather_helmet"
+      },
+      "count": 1
+    }
+  ],
+  "effects": [
+    {
+      "type": "stats",
+      "id": "bca5e148a828478b",
+      "name": "@",
+      "vars": "vlg_forgive",
+      "val": 1.0,
+      "percent": false
+    }
+  ],
+  "icon": {
+    "type": "item",
+    "item": {
+      "id": "minecraft:player_head",
+      "Count": 1
+    }
+  },
+  "category": "frostedresearch:exploration",
+  "parents": [
+    "villager_language"
+  ]
+}

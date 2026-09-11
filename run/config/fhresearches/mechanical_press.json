@@ -1,0 +1,61 @@
+{
+  "icon": {
+    "type": "combined",
+    "base": "immersiveengineering:plate_constantan",
+    "small": "create:mechanical_press"
+  },
+  "category": "frostedheart:production",
+  "parents": [
+    "simple_machines"
+  ],
+  "clues": [
+    {
+      "type": "game",
+      "value": 0.5,
+      "id": "28ab353d187e4c53",
+      "required": true,
+      "level": 1
+    },
+    {
+      "type": "item",
+      "value": 0.25,
+      "id": "1fd198f02090444c",
+      "item": {
+        "item": "minecraft:iron_block"
+      }
+    },
+    {
+      "type": "item",
+      "value": 0.1,
+      "id": "f69fc49b25d14d99",
+      "item": {
+        "count": 2,
+        "base_ingredient": {
+          "tag": "the_winter_rescue:cogwheels"
+        }
+      }
+    },
+    {
+      "type": "item",
+      "value": 0.15,
+      "id": "2562a0d18a024a78",
+      "item": {
+        "item": "create:basin"
+      }
+    }
+  ],
+  "ingredients": [
+    {
+      "item": "stone_age:tree_stump"
+    }
+  ],
+  "effects": [
+    {
+      "type": "recipe",
+      "id": "1d1635e0077042fa",
+      "item": "create:mechanical_press"
+    }
+  ],
+  "points": 1750,
+  "showAltDesc": true
+}

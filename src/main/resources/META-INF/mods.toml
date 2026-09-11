@@ -155,7 +155,7 @@ The Library Mod for TeamMoeg Projects.
     side="BOTH"
 [[mods]] #mandatory
 modId = "frostedresearch" #mandatory
-version = "0.1.0" #mandatory
+version = "0.2.0" #mandatory
 displayName = "Frosted Research" #mandatory
 displayURL="https://www.curseforge.com/minecraft/mc-mods/frostedresearch"
 logoFile="logo.png"

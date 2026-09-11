@@ -1,0 +1,907 @@
+/* Copyright (c) 2026 TeamMoeg */
+package com.teammoeg.frostedheart.content.climate.thermal.topology;
+
+import com.teammoeg.frostedheart.content.climate.thermal.mesh.ArenaSpan;
+import com.teammoeg.frostedheart.content.climate.thermal.mesh.BlockBrickLayout;
+import com.teammoeg.frostedheart.content.climate.thermal.mesh.PagePublication;
+import com.teammoeg.frostedheart.content.climate.thermal.mesh.PageSignatures;
+import com.teammoeg.frostedheart.content.climate.thermal.mesh.ThermalCellArena;
+import com.teammoeg.frostedheart.content.climate.thermal.mesh.ThermalPageHandle;
+import com.teammoeg.frostedheart.content.climate.thermal.profile.ThermalSignatureTable;
+import com.teammoeg.frostedheart.content.climate.thermal.query.QueryPublication;
+import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.engine.ThermalDimensionLimits;
+import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.message.ResolvedGeometryBatch;
+import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.message.ThermalCompletion;
+import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.message.ThermalInputBatch;
+import com.teammoeg.frostedheart.content.climate.thermal.solver.PhaseTransitionRuntime;
+import com.teammoeg.frostedheart.content.climate.thermal.solver.ThermalFragment;
+import com.teammoeg.frostedheart.content.climate.thermal.solver.ThermalSolver;
+
+import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.ints.IntArrayList;
+import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
+import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
+
+import net.minecraft.core.SectionPos;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+
+/**
+ * 可失败、可复用的稀疏拓扑准备阶段。
+ *
+ * <p>它读取当前 {@link WorkerPageStore} 和一个输入 batch，为受影响 Brick
+ * 生成完整 replacement 与 solver delta，但不修改任何已提交权威。成功结果
+ * 只能交给 {@link TopologyCommitter}。</p>
+ */
+public final class TopologyPlan {
+    private static final int BRICKS_PER_PAGE = 64;
+
+    private final WorkerPageStore pages;
+    private final ThermalCellArena arena;
+    private final ThermalSolver solver;
+    private final PhaseTransitionRuntime phases;
+    private final ThermalSignatureTable signatures;
+    private final BrickTopologyCompiler compiler;
+    private final MaterialEdgeCompiler materialCompiler;
+    private final BrickMigrationKernel migration;
+    private final ThermalDimensionLimits limits;
+    private final QueryPublication queries;
+    private final PreparedTopologyChange.Builder changeBuilder =
+            new PreparedTopologyChange.Builder();
+
+    private final ArrayList<PageDraft> draftPool = new ArrayList<>();
+    private final Long2ObjectOpenHashMap<PageDraft> draftsBySection =
+            new Long2ObjectOpenHashMap<>();
+    private final Int2ObjectOpenHashMap<PageDraft> draftsBySlot =
+            new Int2ObjectOpenHashMap<>();
+    private final IntOpenHashSet affectedFragments = new IntOpenHashSet();
+    private final IntOpenHashSet layoutCandidates = new IntOpenHashSet();
+    private final LongOpenHashSet sourceDirtySections = new LongOpenHashSet();
+    private final IntArrayList removedReservoirs = new IntArrayList();
+    private final IntArrayList addedReservoirs = new IntArrayList();
+    private final ArrayList<PreparedTopologyChange.OldSpan> oldSpans =
+            new ArrayList<>();
+    private final ArrayList<ThermalPageHandle.GeometryResyncToken> resyncTokens =
+            new ArrayList<>();
+    private int draftCount;
+    private int stagedAdmissions;
+    private int stagedCellCount;
+    private final TopologyView view;
+
+    public TopologyPlan(
+            WorkerPageStore pages,
+            ThermalCellArena arena,
+            ThermalSolver solver,
+            PhaseTransitionRuntime phases,
+            ThermalSignatureTable signatures,
+            BrickTopologyCompiler compiler,
+            ThermalTopologyParameters parameters,
+            ThermalDimensionLimits limits,
+            QueryPublication queries
+    ) {
+        this.pages = pages;
+        this.arena = arena;
+        this.solver = solver;
+        this.phases = phases;
+        this.signatures = signatures;
+        this.compiler = compiler;
+        this.materialCompiler = new MaterialEdgeCompiler(arena, solver);
+        this.migration = new BrickMigrationKernel(
+                arena, signatures, parameters);
+        this.limits = limits;
+        this.queries = queries;
+        this.view = new TopologyView(
+                pages, draftsBySection, draftsBySlot);
+    }
+
+    public PreparedTopologyChange prepare(ThermalInputBatch batch) {
+        reset();
+        try {
+            collectRetirements(batch);
+            collectAdmissions(batch);
+            collectResidency(batch.residencyUpdates());
+            collectGeometry(batch.geometry());
+            collectEnvironment(batch.environmentUpdates());
+            finalizeSignatureCuts();
+            collectLayoutDependencies();
+            compileChangedCells();
+            collectFragmentDependencies();
+            FragmentChanges fragmentChanges = compileFragments();
+            prepareMigrationsAndRetirements();
+            MaterialEdgeCompiler.Result material = materialCompiler.compile(
+                    fragmentChanges.indexes, fragmentChanges.fragments);
+            preflightLimits(fragmentChanges, material);
+            reserveBacking(fragmentChanges, material);
+            PreparedTopologyChange.PageWrite[] pageWrites = pages.prepareWrites(
+                    draftPool,
+                    draftCount,
+                    resyncTokens);
+            long baseVersion = solver.structuralVersion();
+            boolean structural = fragmentChanges.indexes.length != 0
+                    || !oldSpans.isEmpty();
+            long nextVersion = structural
+                    ? Math.incrementExact(baseVersion)
+                    : baseVersion;
+            long[] dirtySections = sourceDirtySections.isEmpty()
+                    ? PreparedTopologyChange.NO_LONGS
+                    : sourceDirtySections.toLongArray();
+            if (dirtySections.length > 1) {
+                Arrays.sort(dirtySections);
+            }
+            return changeBuilder.identity(baseVersion, nextVersion)
+                    .fragments(
+                            fragmentChanges.indexes,
+                            fragmentChanges.fragments)
+                    .material(
+                            material.keys(),
+                            material.edges(),
+                            material.executionFragments(),
+                            material.executions())
+                    .reservoirs(
+                            removedReservoirs.isEmpty()
+                                    ? PreparedTopologyChange.NO_INTS
+                                    : removedReservoirs.toIntArray(),
+                            addedReservoirs.isEmpty()
+                                    ? PreparedTopologyChange.NO_INTS
+                                    : addedReservoirs.toIntArray())
+                    .pages(
+                            pageWrites,
+                            oldSpans.isEmpty()
+                                    ? PreparedTopologyChange.NO_OLD_SPANS
+                                    : oldSpans.toArray(
+                                            PreparedTopologyChange.OldSpan[]::new))
+                    .sourceSections(dirtySections)
+                    .resyncTokens(
+                            resyncTokens.isEmpty()
+                                    ? ThermalCompletion.NO_RESYNC_TOKENS
+                                    : resyncTokens.toArray(
+                                            ThermalPageHandle.GeometryResyncToken[]::new))
+                    .build();
+        } catch (RuntimeException | Error failure) {
+            try {
+                discardStaging();
+            } catch (Throwable cleanupFailure) {
+                failure.addSuppressed(cleanupFailure);
+            }
+            reset();
+            throw failure;
+        }
+    }
+
+    private void discardStaging() {
+        for (int draftIndex = 0; draftIndex < draftCount; draftIndex++) {
+            PageDraft draft = draftPool.get(draftIndex);
+            long remaining = draft.cellReplacementMask;
+            while (remaining != 0L) {
+                int brick = Long.numberOfTrailingZeros(remaining);
+                WorkerBrickTopology staged = draft.replacements[brick];
+                if (staged != null && staged.span.count() != 0) {
+                    arena.discardStagedCells(staged.span);
+                }
+                remaining &= remaining - 1L;
+            }
+            if (draft.admission && draft.replacedPage == null) {
+                pages.releaseStagedAdmission(draft.page);
+            }
+        }
+    }
+
+    private void reset() {
+        draftsBySection.clear();
+        draftsBySlot.clear();
+        affectedFragments.clear();
+        sourceDirtySections.clear();
+        removedReservoirs.clear();
+        addedReservoirs.clear();
+        oldSpans.clear();
+        resyncTokens.clear();
+        draftCount = 0;
+        stagedAdmissions = 0;
+        stagedCellCount = 0;
+    }
+
+    private PageDraft acquireDraft(WorkerPageStore.PageState page) {
+        PageDraft existing = draftsBySection.get(page.handle.sectionKey());
+        if (existing != null) {
+            return existing;
+        }
+        PageDraft draft;
+        if (draftCount == draftPool.size()) {
+            draft = new PageDraft();
+            draftPool.add(draft);
+        } else {
+            draft = draftPool.get(draftCount);
+        }
+        draftCount++;
+        draft.reset(page);
+        draftsBySection.put(page.handle.sectionKey(), draft);
+        draftsBySlot.put(page.pageSlot, draft);
+        return draft;
+    }
+
+    private void collectAdmissions(ThermalInputBatch batch) {
+        for (ThermalInputBatch.PageAdmission admission : batch.admissions()) {
+            PageDraft draft =
+                    draftsBySection.get(admission.page().sectionKey());
+            if (draft != null) {
+                if (draft.retirement
+                        && draft.page.handle != admission.page()) {
+                    WorkerPageStore.PageState previous = draft.page;
+                    draft.page = pages.stageReplacement(previous, admission);
+                    draft.replacedPage = previous;
+                    draft.admission = true;
+                    draft.retirement = false;
+                    initializeAdmission(draft, admission);
+                }
+                continue;
+            }
+            WorkerPageStore.PageState page = pages.find(admission.page());
+            boolean staged = page == null;
+            if (staged) {
+                if (pages.activePageCount() + stagedAdmissions
+                        >= limits.maximumPages()) {
+                    throw new WorkLimitedException("thermal Page limit reached");
+                }
+                page = pages.stageAdmission(admission);
+                stagedAdmissions++;
+            }
+            draft = acquireDraft(page);
+            if (staged) {
+                draft.admission = true;
+                initializeAdmission(draft, admission);
+            }
+        }
+    }
+
+    private static void initializeAdmission(
+            PageDraft draft,
+            ThermalInputBatch.PageAdmission admission
+    ) {
+        draft.nextSignatures = admission.signatures();
+        draft.geometryRevision = admission.geometryRevision();
+        draft.nextResidentBrickMask = admission.residentBrickMask();
+        draft.nextSourceSeedMask = admission.sourceSeedMask();
+        draft.topologyDirtyMask = admission.residentBrickMask();
+        draft.naturalTemperatureChanged = true;
+        draft.naturalTemperatureC = admission.naturalTemperatureC();
+    }
+
+    private void collectResidency(
+            ThermalInputBatch.PageResidencyUpdate[] updates
+    ) {
+        for (ThermalInputBatch.PageResidencyUpdate update : updates) {
+            WorkerPageStore.PageState page = page(update.page());
+            if (page == null) {
+                continue;
+            }
+            PageDraft draft = acquireDraft(page);
+            if (draft.retirement
+                    || update.geometryRevision() < draft.geometryRevision) {
+                continue;
+            }
+            if ((update.residentBrickMask() & page.residentBrickMask)
+                    != page.residentBrickMask) {
+                throw new IllegalArgumentException(
+                        "resident Brick mask cannot shrink within a Page lifecycle");
+            }
+            long added = update.residentBrickMask()
+                    & ~draft.nextResidentBrickMask;
+            draft.nextResidentBrickMask = update.residentBrickMask();
+            draft.nextSourceSeedMask = update.sourceSeedMask();
+            draft.nextSignatures = update.signatures();
+            draft.geometryRevision = update.geometryRevision();
+            draft.topologyDirtyMask |= added;
+        }
+    }
+
+    private void collectRetirements(ThermalInputBatch batch) {
+        for (ThermalInputBatch.PageRetirement retirement : batch.retirements()) {
+            WorkerPageStore.PageState page = page(retirement.page());
+            if (page == null) {
+                continue;
+            }
+            PageDraft draft = acquireDraft(page);
+            draft.retirement = true;
+            draft.topologyDirtyMask = page.residentBrickMask;
+            sourceDirtySections.add(page.handle.sectionKey());
+        }
+    }
+
+    private void collectGeometry(ResolvedGeometryBatch geometry) {
+        for (int index = 0; index < geometry.size(); index++) {
+            WorkerPageStore.PageState page = page(geometry.page(index));
+            if (page == null) {
+                continue;
+            }
+            PageDraft draft = acquireDraft(page);
+            if (draft.retirement
+                    || geometry.geometryRevision(index) < draft.geometryRevision) {
+                continue;
+            }
+            draft.geometryRevision = geometry.geometryRevision(index);
+            if (geometry.kind(index)
+                    == ResolvedGeometryBatch.Kind.FULL_RESYNC_REQUIRED) {
+                draft.finishSignatures(signatures);
+                draft.topologyDirtyMask = 0L;
+                PageSignatures next = geometry.fullPageSignatures(index);
+                compareFullSignatures(draft, next);
+                draft.nextSignatures = next;
+                ThermalPageHandle.GeometryResyncReason reason =
+                        geometry.geometryResyncReason(index);
+                draft.resyncToken = new ThermalPageHandle.GeometryResyncToken(
+                        page.handle.sectionKey(),
+                        page.handle.lifecycleGeneration(),
+                        geometry.geometryRevision(index),
+                        reason);
+                continue;
+            }
+            int signatureId = signatures.valid(geometry.signatureId(index))
+                    ? geometry.signatureId(index)
+                    : ThermalSignatureTable.UNRESOLVED;
+            draft.setBlock(
+                    geometry.blockIndex(index),
+                    signatureId);
+        }
+    }
+
+    private void collectEnvironment(
+            ThermalInputBatch.PageEnvironmentUpdate[] updates
+    ) {
+        for (ThermalInputBatch.PageEnvironmentUpdate update : updates) {
+            WorkerPageStore.PageState page = page(update.page());
+            if (page == null) {
+                continue;
+            }
+            PageDraft draft = acquireDraft(page);
+            if (draft.retirement) {
+                continue;
+            }
+            if (update.naturalTemperatureChanged()) {
+                draft.naturalTemperatureChanged = true;
+                draft.naturalTemperatureC = update.naturalTemperatureC();
+            }
+            for (int index = 0; index < update.skyColumns().length; index++) {
+                int column = Short.toUnsignedInt(update.skyColumns()[index]);
+                draft.setSkyColumn(
+                        column, update.firstExposedLocalY()[index]);
+                int brick = (column & 15) >>> 2
+                        | (column >>> 4) >>> 2 << 2
+                        | 3 << 4;
+                draft.fragmentDirtyMask |= 1L << brick;
+            }
+        }
+    }
+
+    private void finalizeSignatureCuts() {
+        for (int index = 0; index < draftCount; index++) {
+            draftPool.get(index).finishSignatures(signatures);
+        }
+    }
+
+    private void collectLayoutDependencies() {
+        // First freeze candidates, then mark replacements: no recursive expansion.
+        layoutCandidates.clear();
+        int originalDrafts=draftCount;
+        for(int i=0;i<originalDrafts;i++) {
+            PageDraft draft=draftPool.get(i);
+            long mask=draft.retirement ? draft.page.residentBrickMask : draft.topologyDirtyMask;
+            while(mask!=0) {
+                int b=Long.numberOfTrailingZeros(mask); mask&=mask-1;
+                int x=brickMinX(draft.page,b),y=brickMinY(draft.page,b),z=brickMinZ(draft.page,b);
+                for(int axis=0;axis<3;axis++) for(int d=-4;d<=4;d+=8) {
+                    int nx=x+(axis==0?d:0),ny=y+(axis==1?d:0),nz=z+(axis==2?d:0);
+                    long key=SectionPos.asLong(SectionPos.blockToSectionCoord(nx),SectionPos.blockToSectionCoord(ny),SectionPos.blockToSectionCoord(nz));
+                    var page=view.page(key);
+                    int nb=(nx&15)>>>2|((nz&15)>>>2)<<2|((ny&15)>>>2)<<4;
+                    if(page!=null && view.resident(page,nb)) layoutCandidates.add(page.fragmentIndex(nb));
+                }
+            }
+        }
+        for(int index:layoutCandidates) {
+            var page=view.pageSlot(index/64); int brick=index%64;
+            var draft=acquireDraft(page);
+            if((draft.topologyDirtyMask & 1L<<brick)!=0) continue;
+            int x=brickMinX(page,brick),y=brickMinY(page,brick),z=brickMinZ(page,brick);
+            // This Brick's own signatures did not change. Only outward faces can
+            // change its capacity; opposite changes at a corner may cancel out.
+            for (int block = 0; block < 64; block++) {
+                int lx = block & 3, ly = block >>> 4, lz = block >>> 2 & 3;
+                if (lx > 0 && lx < 3 && ly > 0 && ly < 3 && lz > 0 && lz < 3) continue;
+                int signature = draft.nextSignatures.get(BlockBrickLayout.pageBlock(brick, block));
+                if (signatures.materialProfileId(signature) == 0) continue;
+                int bx = x + lx, by = y + ly, bz = z + lz;
+                int delta = 0;
+                if (lx == 0) delta += exposureDeltaAt(bx - 1, by, bz);
+                if (lx == 3) delta += exposureDeltaAt(bx + 1, by, bz);
+                if (ly == 0) delta += exposureDeltaAt(bx, by - 1, bz);
+                if (ly == 3) delta += exposureDeltaAt(bx, by + 1, bz);
+                if (lz == 0) delta += exposureDeltaAt(bx, by, bz - 1);
+                if (lz == 3) delta += exposureDeltaAt(bx, by, bz + 1);
+                if (delta != 0) {
+                    draft.topologyDirtyMask |= 1L << brick;
+                    break;
+                }
+            }
+        }
+    }
+
+    private int exposureDeltaAt(int x, int y, int z) {
+        int next = signatures.ventilation(view.signatureAtWorld(x, y, z)) > 0 ? 1 : 0;
+        var page = pages.find(SectionPos.asLong(
+                SectionPos.blockToSectionCoord(x), SectionPos.blockToSectionCoord(y),
+                SectionPos.blockToSectionCoord(z)));
+        int brick = (x & 15) >>> 2 | ((z & 15) >>> 2) << 2 | ((y & 15) >>> 2) << 4;
+        if (page != null && (page.residentBrickMask & 1L << brick) != 0
+                && signatures.ventilation(page.signatures.get((x & 15) | (z & 15) << 4 | (y & 15) << 8)) > 0) {
+            return next - 1;
+        }
+        return next;
+    }
+
+    private void compileChangedCells() {
+        for (int draftIndex = 0; draftIndex < draftCount; draftIndex++) {
+            PageDraft draft = draftPool.get(draftIndex);
+            if (draft.retirement) {
+                continue;
+            }
+            long remaining = draft.topologyDirtyMask;
+            while (remaining != 0L) {
+                int brick = Long.numberOfTrailingZeros(remaining);
+                WorkerBrickTopology next = compiler.compileCells(
+                        draft.page,
+                        draft.nextSignatures,
+                        brick,
+                        view);
+                draft.replace(brick, next);
+                draft.cellReplacementMask |= 1L << brick;
+                stagedCellCount = Math.addExact(
+                        stagedCellCount, next.span.count());
+                sourceDirtySections.add(draft.page.handle.sectionKey());
+                remaining &= remaining - 1L;
+            }
+        }
+    }
+
+    private void collectFragmentDependencies() {
+        for (int draftIndex = 0; draftIndex < draftCount; draftIndex++) {
+            PageDraft draft = draftPool.get(draftIndex);
+            long remaining = draft.topologyDirtyMask
+                    | draft.fragmentDirtyMask;
+            if (draft.retirement) {
+                remaining = draft.page.residentBrickMask;
+            }
+            while (remaining != 0L) {
+                int brick = Long.numberOfTrailingZeros(remaining);
+                markFragmentNeighborhood(draft.page, brick);
+                remaining &= remaining - 1L;
+            }
+        }
+    }
+
+    private void markFragmentNeighborhood(
+            WorkerPageStore.PageState page,
+            int brick
+    ) {
+        int minX = brickMinX(page, brick);
+        int minY = brickMinY(page, brick);
+        int minZ = brickMinZ(page, brick);
+        markFragment(minX, minY, minZ);
+        markFragment(minX - 4, minY, minZ);
+        markFragment(minX + 4, minY, minZ);
+        markFragment(minX, minY - 4, minZ);
+        markFragment(minX, minY + 4, minZ);
+        markFragment(minX, minY, minZ - 4);
+        markFragment(minX, minY, minZ + 4);
+    }
+
+    private void markFragment(int minX, int minY, int minZ) {
+        long sectionKey = SectionPos.asLong(
+                SectionPos.blockToSectionCoord(minX),
+                SectionPos.blockToSectionCoord(minY),
+                SectionPos.blockToSectionCoord(minZ));
+        WorkerPageStore.PageState page = view.page(sectionKey);
+        if (page == null) {
+            page = pages.find(sectionKey);
+            PageDraft draft = page == null
+                    ? null : draftsBySection.get(page.handle.sectionKey());
+            if (draft == null || !draft.retirement) {
+                return;
+            }
+        }
+        int brick = Math.floorMod(minX, 16) >>> 2
+                | (Math.floorMod(minZ, 16) >>> 2) << 2
+                | (Math.floorMod(minY, 16) >>> 2) << 4;
+        if (!view.resident(page, brick)) {
+            return;
+        }
+        affectedFragments.add(page.fragmentIndex(brick));
+    }
+
+    private FragmentChanges compileFragments() {
+        if (affectedFragments.isEmpty()) {
+            return FragmentChanges.EMPTY;
+        }
+        int[] indexes = affectedFragments.toIntArray();
+        Arrays.sort(indexes);
+        ThermalFragment[] fragments = new ThermalFragment[indexes.length];
+        for (int index = 0; index < indexes.length; index++) {
+            int fragmentIndex = indexes[index];
+            int pageSlot = fragmentIndex / BRICKS_PER_PAGE;
+            int brick = fragmentIndex % BRICKS_PER_PAGE;
+            WorkerPageStore.PageState page = view.pageSlot(pageSlot);
+            if (page == null) {
+                page = pages.findPageSlot(pageSlot);
+            }
+            PageDraft draft = acquireDraft(page);
+            if (draft.retirement) {
+                fragments[index] = ThermalFragment.EMPTY;
+                continue;
+            }
+            BrickTopologyCompiler.CompiledFragment compiled =
+                    compiler.compileFragment(page, brick, view);
+            fragments[index] = compiled.fragment();
+            WorkerBrickTopology base = view.brick(page, brick);
+            WorkerBrickTopology next = base.withFragmentResult(
+                    base.cellsResolved && compiled.resolved());
+            if (base.resolved != next.resolved) sourceDirtySections.add(page.handle.sectionKey());
+            draft.replace(brick, next);
+            draft.fragmentChangedMask |= 1L << brick;
+        }
+        return new FragmentChanges(indexes, fragments);
+    }
+
+    private void prepareMigrationsAndRetirements() {
+        for (int draftIndex = 0; draftIndex < draftCount; draftIndex++) {
+            PageDraft draft = draftPool.get(draftIndex);
+            if (draft.retirement) {
+                long remaining = draft.page.residentBrickMask;
+                while (remaining != 0L) {
+                    int brick = Long.numberOfTrailingZeros(remaining);
+                    WorkerBrickTopology old = draft.page.brick(brick);
+                    collectOldSpan(draft.page, old);
+                    for (int slot : old.phaseSlots) {
+                        removedReservoirs.add(slot);
+                    }
+                    remaining &= remaining - 1L;
+                }
+                continue;
+            }
+            WorkerPageStore.PageState previous = draft.replacedPage == null
+                    ? draft.page : draft.replacedPage;
+            long remaining = draft.cellReplacementMask;
+            while (remaining != 0L) {
+                int brick = Long.numberOfTrailingZeros(remaining);
+                WorkerBrickTopology old = previous.brick(brick);
+                WorkerBrickTopology next = draft.replacements[brick];
+                migration.migrate(
+                        previous,
+                        brick,
+                        old,
+                        next,
+                        draft.nextSignatures,
+                        draft.replacedPage == null);
+                collectOldSpan(previous, old);
+                collectReservoirChanges(old, next);
+                remaining &= remaining - 1L;
+            }
+        }
+    }
+
+    private void collectReservoirChanges(
+            WorkerBrickTopology old,
+            WorkerBrickTopology next
+    ) {
+        for (int slot : old.phaseSlots) {
+            removedReservoirs.add(slot);
+        }
+        for (int slot : next.phaseSlots) {
+            addedReservoirs.add(slot);
+        }
+    }
+
+    private void collectOldSpan(
+            WorkerPageStore.PageState page,
+            WorkerBrickTopology old
+    ) {
+        if (old.span.count() != 0) {
+            oldSpans.add(new PreparedTopologyChange.OldSpan(
+                    page.pageSlot,
+                    page.lifecycleGeneration,
+                    old.span));
+        }
+    }
+
+    private void preflightLimits(
+            FragmentChanges changes,
+            MaterialEdgeCompiler.Result material
+    ) {
+        ArenaSpan[] retiringSpans = new ArenaSpan[oldSpans.size()];
+        for (int index = 0; index < oldSpans.size(); index++) {
+            retiringSpans[index] = oldSpans.get(index).span();
+        }
+        ThermalSolver.ProjectedWork work = solver.preflightReplacement(
+                changes.indexes,
+                changes.fragments,
+                retiringSpans,
+                material.expectedFinalSize());
+        int finalLiveCells = Math.addExact(
+                arena.liveCellCount(), stagedCellCount);
+        for (PreparedTopologyChange.OldSpan old : oldSpans) {
+            finalLiveCells -= old.span().count();
+        }
+        if (arena.requiredSlotCapacity() > limits.maximumArenaSlots()
+                || finalLiveCells > limits.maximumLiveCells()
+                || work.pairOperations() > limits.maximumPairOperations()
+                || work.boundaryOperations()
+                        > limits.maximumBoundaryOperations()
+                || work.phaseOperations() > limits.maximumPhaseOperations()) {
+            throw new WorkLimitedException("thermal topology work limit reached");
+        }
+    }
+
+    private void reserveBacking(
+            FragmentChanges fragments,
+            MaterialEdgeCompiler.Result material
+    ) {
+        int fragmentCapacity = Math.multiplyExact(
+                pages.pageSlotCapacity(), BRICKS_PER_PAGE);
+        solver.reserveTopologyCapacity(
+                fragmentCapacity,
+                arena.requiredSlotCapacity(),
+                pages.pageSlotCapacity());
+        solver.reserveMaterialEdgeChanges(
+                material.expectedFinalSize(),
+                material.possibleInsertions());
+        phases.reserveReservoirChanges(addedReservoirs.size());
+        if (!queries.tryEnsureCapacity(
+                arena.requiredSlotCapacity(), limits.maximumArenaSlots())) {
+            throw new WorkLimitedException(
+                    "thermal query publication memory was refused");
+        }
+    }
+
+    private void compareFullSignatures(
+            PageDraft draft,
+            PageSignatures next
+    ) {
+        long signatureChanged = 0L;
+        long remaining = draft.nextResidentBrickMask;
+        while (remaining != 0L) {
+            int brick = Long.numberOfTrailingZeros(remaining);
+            int minX = (brick & 3) << 2;
+            int minZ = (brick >>> 2 & 3) << 2;
+            int minY = (brick >>> 4 & 3) << 2;
+            brickScan:
+            for (int y = minY; y < minY + 4; y++) {
+                for (int z = minZ; z < minZ + 4; z++) {
+                    for (int x = minX; x < minX + 4; x++) {
+                        int block = x | z << 4 | y << 8;
+                        if (draft.nextSignatures.get(block) != next.get(block)) {
+                            signatureChanged |= 1L << brick;
+                            break brickScan;
+                        }
+                    }
+                }
+            }
+            remaining &= remaining - 1L;
+        }
+        draft.topologyDirtyMask |= signatureChanged;
+        draft.signatureChangedMask |= signatureChanged;
+    }
+
+    private WorkerPageStore.PageState page(ThermalPageHandle handle) {
+        PageDraft draft = draftsBySection.get(handle.sectionKey());
+        if (draft != null) {
+            if (draft.page.handle == handle) {
+                return draft.page;
+            }
+            if (draft.replacedPage != null
+                    && draft.replacedPage.handle == handle) {
+                return null;
+            }
+        }
+        return pages.find(handle);
+    }
+
+    private static int brickIndex(int blockIndex) {
+        return (blockIndex & 15) >>> 2
+                | (blockIndex >>> 4 & 15) >>> 2 << 2
+                | (blockIndex >>> 8 & 15) >>> 2 << 4;
+    }
+
+    private static int indexWithinBrick(int blockIndex) {
+        return blockIndex & 3
+                | (blockIndex >>> 4 & 3) << 2
+                | (blockIndex >>> 8 & 3) << 4;
+    }
+
+    private static int brickMinX(
+            WorkerPageStore.PageState page,
+            int brick
+    ) {
+        return SectionPos.sectionToBlockCoord(
+                SectionPos.x(page.handle.sectionKey()))
+                + ((brick & 3) << 2);
+    }
+
+    private static int brickMinY(
+            WorkerPageStore.PageState page,
+            int brick
+    ) {
+        return SectionPos.sectionToBlockCoord(
+                SectionPos.y(page.handle.sectionKey()))
+                + ((brick >>> 4 & 3) << 2);
+    }
+
+    private static int brickMinZ(
+            WorkerPageStore.PageState page,
+            int brick
+    ) {
+        return SectionPos.sectionToBlockCoord(
+                SectionPos.z(page.handle.sectionKey()))
+                + ((brick >>> 2 & 3) << 2);
+    }
+
+    static final class PageDraft {
+        WorkerPageStore.PageState page;
+        WorkerPageStore.PageState replacedPage;
+        PageSignatures nextSignatures;
+        private final int[][] brickSignatureValues = new int[64][];
+        final WorkerBrickTopology[] replacements =
+                new WorkerBrickTopology[BRICKS_PER_PAGE];
+        short[] skyColumns = new short[8];
+        byte[] skyValues = new byte[8];
+        private byte[] nextSkyExposure;
+        int skyCount;
+        boolean admission;
+        boolean retirement;
+        boolean naturalTemperatureChanged;
+        double naturalTemperatureC;
+        long geometryRevision;
+        long nextResidentBrickMask;
+        long nextSourceSeedMask;
+        private long signatureScratchMask;
+        long signatureChangedMask;
+        private long topologyDirtyMask;
+        private long fragmentDirtyMask;
+        long cellReplacementMask;
+        long fragmentChangedMask;
+        long replacementMask;
+        ThermalPageHandle.GeometryResyncToken resyncToken;
+
+        private void reset(WorkerPageStore.PageState page) {
+            this.page = page;
+            replacedPage = null;
+            nextSignatures = page.signatures;
+            long staleReplacements = replacementMask;
+            while (staleReplacements != 0L) {
+                int brick = Long.numberOfTrailingZeros(staleReplacements);
+                replacements[brick] = null;
+                staleReplacements &= staleReplacements - 1L;
+            }
+            skyCount = 0;
+            admission = false;
+            retirement = false;
+            naturalTemperatureChanged = false;
+            naturalTemperatureC = page.naturalTemperatureC;
+            geometryRevision = page.geometryRevision;
+            nextResidentBrickMask = page.residentBrickMask;
+            nextSourceSeedMask = page.sourceSeedMask;
+            signatureScratchMask = 0L;
+            signatureChangedMask = 0L;
+            topologyDirtyMask = 0L;
+            fragmentDirtyMask = 0L;
+            cellReplacementMask = 0L;
+            fragmentChangedMask = 0L;
+            replacementMask = 0L;
+            resyncToken = null;
+            nextSkyExposure = null;
+        }
+
+        private void replace(int brick, WorkerBrickTopology replacement) {
+            replacements[brick] = replacement;
+            replacementMask |= 1L << brick;
+        }
+
+        private void setBlock(
+                int block,
+                int signatureId
+        ) {
+            int brick = brickIndex(block);
+            int within = indexWithinBrick(block);
+            int[] values = brickSignatureValues[brick];
+            int previous = (signatureScratchMask & 1L << brick) == 0L
+                    ? nextSignatures.get(block)
+                    : values[within];
+            if (previous == signatureId) {
+                return;
+            }
+            if ((signatureScratchMask & 1L << brick) == 0L) {
+                if (values == null) {
+                    values = new int[64];
+                    brickSignatureValues[brick] = values;
+                }
+                for (int index = 0; index < 64; index++) {
+                    int localX = ((brick & 3) << 2) + (index & 3);
+                    int localZ = ((brick >>> 2 & 3) << 2)
+                            + (index >>> 2 & 3);
+                    int localY = ((brick >>> 4 & 3) << 2)
+                            + (index >>> 4 & 3);
+                    values[index] = nextSignatures.get(
+                            localX | localZ << 4 | localY << 8);
+                }
+                signatureScratchMask |= 1L << brick;
+            }
+            values[within] = signatureId;
+            signatureChangedMask |= 1L << brick;
+            topologyDirtyMask |= 1L << brick;
+        }
+
+        private void finishSignatures(ThermalSignatureTable signatures) {
+            int count = Long.bitCount(signatureScratchMask);
+            if (count == 0) {
+                return;
+            }
+            int[] indexes = new int[count];
+            int[][] values = new int[count][];
+            int write = 0;
+            long remaining = signatureScratchMask;
+            while (remaining != 0L) {
+                int brick = Long.numberOfTrailingZeros(remaining);
+                indexes[write] = brick;
+                values[write] = brickSignatureValues[brick];
+                write++;
+                remaining &= remaining - 1L;
+            }
+            nextSignatures = nextSignatures.withBricks(
+                    signatures, indexes, values);
+            signatureScratchMask = 0L;
+        }
+
+        private void setSkyColumn(int column, byte value) {
+            if (nextSkyExposure == null) {
+                nextSkyExposure = page.firstExposedLocalY.clone();
+            }
+            nextSkyExposure[column] = value;
+            for (int index = 0; index < skyCount; index++) {
+                if (Short.toUnsignedInt(skyColumns[index]) == column) {
+                    skyValues[index] = value;
+                    return;
+                }
+            }
+            if (skyCount == skyColumns.length) {
+                int capacity = skyColumns.length
+                        + Math.max(8, skyColumns.length >>> 1);
+                skyColumns = Arrays.copyOf(skyColumns, capacity);
+                skyValues = Arrays.copyOf(skyValues, capacity);
+            }
+            skyColumns[skyCount] = (short) column;
+            skyValues[skyCount] = value;
+            skyCount++;
+        }
+
+        byte[] nextSkyExposure() {
+            return nextSkyExposure == null
+                    ? page.firstExposedLocalY
+                    : nextSkyExposure;
+        }
+
+    }
+
+    private record FragmentChanges(
+            int[] indexes,
+            ThermalFragment[] fragments
+    ) {
+        private static final FragmentChanges EMPTY = new FragmentChanges(
+                PreparedTopologyChange.NO_INTS,
+                PreparedTopologyChange.NO_FRAGMENTS);
+    }
+
+    public static final class WorkLimitedException extends RuntimeException {
+        WorkLimitedException(String message) {
+            super(message);
+        }
+    }
+}

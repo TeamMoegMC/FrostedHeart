@@ -1,0 +1,47 @@
+{
+  "showAltDesc": true,
+  "points": 1000,
+  "insight": 1,
+  "clues": [
+    {
+      "type": "game",
+      "id": "c8dbb91bb89f42ac",
+      "value": 1.0,
+      "level": 1
+    }
+  ],
+  "ingredients": [
+    {
+      "base_ingredient": {
+        "tag": "minecraft:dirt"
+      },
+      "count": 16
+    },
+    {
+      "base_ingredient": {
+        "item": "frostedheart:mercury_body_thermometer"
+      },
+      "count": 1
+    }
+  ],
+  "effects": [
+    {
+      "type": "recipe",
+      "item": {
+        "item": "frostedheart:soil_thermometer"
+      },
+      "id": "4b7f02c44a714ea8"
+    }
+  ],
+  "icon": {
+    "type": "item",
+    "item": {
+      "id": "frostedheart:soil_thermometer",
+      "Count": 1
+    }
+  },
+  "category": "frostedresearch:living",
+  "parents": [
+    "precision_mechanism"
+  ]
+}

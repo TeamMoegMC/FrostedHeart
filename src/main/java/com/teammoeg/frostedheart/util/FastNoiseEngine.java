@@ -5,6 +5,7 @@
  */
 package com.teammoeg.frostedheart.util;
 
+import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.MinecraftThermalInput;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
 import net.minecraft.core.QuartPos;
@@ -126,7 +127,9 @@ public final class FastNoiseEngine {
         // 结束填充，重算计数
         for (int i = 0; i < fastSections.length; i++) {
             if (fastSections[i] != null) {
-                fastSections[i].finish(chunk.getSection(i));
+                LevelChunkSection section = chunk.getSection(i);
+                fastSections[i].finish(section);
+                MinecraftThermalInput.onRawBlockContainerReplaced(section);
             }
         }
 

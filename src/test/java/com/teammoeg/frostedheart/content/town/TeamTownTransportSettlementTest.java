@@ -11,6 +11,7 @@ import com.teammoeg.frostedheart.content.town.block.OccupiedVolume;
 import com.teammoeg.frostedheart.content.town.building.ITownBuilding;
 import com.teammoeg.frostedheart.content.town.building.TownProductionStopReason;
 import com.teammoeg.frostedheart.content.town.buildings.logistics.TransportStationBuilding;
+import com.teammoeg.frostedheart.content.town.buildings.warehouse.WarehouseBuilding;
 import com.teammoeg.frostedheart.content.town.resident.Resident;
 import com.teammoeg.frostedheart.content.town.resident.ResidentActivity;
 import com.teammoeg.frostedheart.content.town.resource.ITownResourceKey;
@@ -19,7 +20,12 @@ import com.teammoeg.frostedheart.content.town.resource.VirtualResourceType;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import net.minecraft.SharedConstants;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.GlobalPos;
 import net.minecraft.server.Bootstrap;
+import net.minecraft.world.level.Level;
+import com.teammoeg.frostedheart.content.town.transport.TransportEndpointId;
+import com.teammoeg.frostedheart.content.town.transport.TransportEndpointKind;
+import com.teammoeg.frostedheart.content.town.transport.TransportEndpointRequest;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -206,6 +212,33 @@ class TeamTownTransportSettlementTest {
         assertFalse(data.getDataSyncCache().hasChangedResources());
         assertFalse(data.getDataSyncCache().hasTransportStateChange());
         assertFalse(data.getDataSyncCache().hasChanges());
+    }
+
+    @Test
+    void morningReportSnapshotsLiveNominalReservationsWithoutChangingThem() {
+        TeamTownData data = townData(
+                new TeamTownResourceHolder(Map.<ITownResourceKey, Double>of(
+                        VirtualResourceType.TRANSPORT_CAPACITY.generateAttribute(0), 64.0)),
+                Map.of(), Map.of());
+        TeamTown town = data.createTeamTown();
+        TransportEndpointId endpoint = new TransportEndpointId(
+                GlobalPos.of(Level.OVERWORLD, new BlockPos(4, 64, 4)));
+        BlockPos warehousePos = new BlockPos(8, 64, 8);
+        data.buildings.put(warehousePos, new WarehouseBuilding(
+                warehousePos, true, OccupiedVolume.EMPTY, true,
+                false, 1_000.0, 1, 1, 0));
+        data.markWarehouseTopologyDirty();
+        town.prepareWarehouseTopology(Level.OVERWORLD);
+        town.registerOrUpdateTransportEndpoint(new TransportEndpointRequest(
+                endpoint, TransportEndpointKind.WAREHOUSE_INTERFACE, 20));
+
+        data.buildingsWork(null);
+
+        assertEquals(0.0, transportCapacity(town.getResourceHolder()), EPSILON);
+        assertEquals(28.0, data.getTransportState().getReservedTransportCapacity(), EPSILON);
+        assertEquals(28.0, data.getTransportState().getDailyReport().reservedCapacity(), EPSILON);
+        assertEquals(0.0, data.getTransportState().getDailyReport().totalCapacity(), EPSILON);
+        assertEquals(20, town.getTransportReservation(endpoint).orElseThrow().rateItemsPerSecond());
     }
 
     private static TeamTownData townData(

@@ -59,6 +59,11 @@ public class ThermometerItem extends FHBaseItem {
     	 return 0;
     }
 
+    protected float getRawTemperature(ServerPlayer player) {
+        PlayerTemperatureData data = PlayerTemperatureData.getCapability(player).orElse(null);
+        return data == null ? 37.0F : data.getAbsoluteCoreBodyTemp();
+    }
+
     /**
      * returns the action that specifies what animation to play when the items is being used
      */

@@ -35,6 +35,7 @@ import com.teammoeg.frostedheart.content.town.event.ITownDataUpdateListener;
 import com.teammoeg.frostedheart.content.town.network.TownOperationalStatusRequestPacket;
 import com.teammoeg.frostedheart.content.town.observation.TownOperationalStatus;
 import com.teammoeg.frostedheart.content.town.observation.TownOperationalStatusClientCache;
+import com.teammoeg.frostedheart.content.town.resource.VirtualResourceType;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.Nullable;
@@ -84,11 +85,14 @@ public class TownManagerScreen extends PrimaryLayer implements ITownDataUpdateLi
     public static final int CONTENT_Y = 6;
     public static final int CONTENT_WIDTH = FRAME_WIDTH - CONTENT_X * 2;
     public static final int CONTENT_HEIGHT = 204;
+    public static final int VIRTUAL_RESOURCES_TAB = 3;
     public static final int EVENTS_TAB = 8;
 
     private int activeTab = 0;
     private final List<TownManagerTab> tabs = new ArrayList<>();
     private final UILayer contentLayer;
+    @Nullable
+    private final VirtualResourceType initialVirtualResource;
     private int statusRequestTicks;
 
     public TownManagerScreen() {
@@ -96,7 +100,12 @@ public class TownManagerScreen extends PrimaryLayer implements ITownDataUpdateLi
     }
 
     public TownManagerScreen(int initialTab) {
+        this(initialTab, null);
+    }
+
+    public TownManagerScreen(int initialTab, @Nullable VirtualResourceType initialVirtualResource) {
         super();
+        this.initialVirtualResource = initialVirtualResource;
         tabs.add(new TownOverviewTab(this));
         tabs.add(new TownResidentsTab(this));
         tabs.add(new TownBuildingsTab(this));
@@ -119,6 +128,11 @@ public class TownManagerScreen extends PrimaryLayer implements ITownDataUpdateLi
             public void alignWidgets() {
             }
         };
+    }
+
+    @Nullable
+    public VirtualResourceType getInitialVirtualResource() {
+        return initialVirtualResource;
     }
 
     /**

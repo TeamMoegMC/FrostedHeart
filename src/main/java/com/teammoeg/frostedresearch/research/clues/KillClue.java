@@ -83,7 +83,7 @@ public class KillClue extends ListenerClue {
 
     @Override
     public void initListener(TeamDataHolder t, Research parent) {
-        ResearchHooks.getKillClues().add(super.getClueClosure(parent), t.getId());
+        ResearchHooks.getKillClues().add(super.getClueClosure(parent), t == null ? null : t.getId());
     }
 
     public boolean isCompleted(TeamResearchData trd, LivingEntity e) {
@@ -95,7 +95,7 @@ public class KillClue extends ListenerClue {
 
     @Override
     public void removeListener(TeamDataHolder t, Research parent) {
-        ResearchHooks.getKillClues().remove(super.getClueClosure(parent), t.getId());
+        ResearchHooks.getKillClues().remove(super.getClueClosure(parent), t == null ? null : t.getId());
     }
 
 }

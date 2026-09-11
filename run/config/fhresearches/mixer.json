@@ -1,0 +1,75 @@
+{
+  "showAltDesc": true,
+  "points": 1500,
+  "clues": [
+    {
+      "type": "game",
+      "id": "e01900bbb5d948b3",
+      "required": true,
+      "value": 0.5,
+      "level": 0
+    },
+    {
+      "type": "item",
+      "id": "4d4a1257e1c64949",
+      "value": 0.5,
+      "item": {
+        "base_ingredient": {
+          "item": "create:whisk"
+        },
+        "count": 1
+      }
+    }
+  ],
+  "ingredients": [
+    {
+      "base_ingredient": {
+        "tag": "forge:plates/iron"
+      },
+      "count": 1
+    },
+    {
+      "base_ingredient": {
+        "item": "minecraft:cauldron"
+      },
+      "count": 1
+    }
+  ],
+  "effects": [
+    {
+      "type": "recipe",
+      "item": {
+        "item": "create:mechanical_mixer"
+      },
+      "id": "ffd2c74f98494956"
+    },
+    {
+      "type": "recipe",
+      "item": {
+        "item": "create:basin"
+      },
+      "id": "8f50d8ed61ee479f"
+    },
+    {
+      "type": "item",
+      "id": "6238470d69594c59",
+      "rewards": [
+        {
+          "id": "create:basin",
+          "Count": 1
+        }
+      ]
+    }
+  ],
+  "icon": {
+    "type": "item",
+    "item": {
+      "id": "create:whisk",
+      "Count": 1
+    }
+  },
+  "category": "frostedresearch:production",
+  "parents": [
+    "transmission_machinery"
+  ]
+}

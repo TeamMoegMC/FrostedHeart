@@ -27,6 +27,7 @@ import com.teammoeg.frostedheart.content.climate.gamedata.climate.ForecastFrame;
 public class ClientClimateData {
     public static final ForecastFrame[] forecastData = new ForecastFrame[40];
     public static ClimateType climate;
+    public static ClimateType globalClimate;
     public static ClimateType lastClimate;//store last climate for transition
     public static long climateChange;//store climate change time for transition
     public static long secs = 0;
@@ -37,6 +38,7 @@ public class ClientClimateData {
         secs = 0;
         Arrays.fill(forecastData, null);
         climate = ClimateType.NONE;
+        globalClimate = ClimateType.NONE;
         lastClimate = ClimateType.NONE;
         climateChange = -1;
         wind = 0;

@@ -21,5 +21,10 @@ public class FHClickActions {
                     TipOverlay.removeCurrent();
                     TownManagerClientHelper.openEvents();
                 });
+        register(FHMain.rl("open_town_transport"),
+                "tips.frostedheart.click_action.open_town_transport", ignored -> {
+                    TipOverlay.removeCurrent();
+                    TownManagerClientHelper.openTransportCapacity();
+                });
     }
 }

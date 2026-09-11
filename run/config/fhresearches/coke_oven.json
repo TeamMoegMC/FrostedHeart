@@ -1,0 +1,54 @@
+{
+  "icon": "immersiveengineering:coal_coke",
+  "category": "frostedheart:ars",
+  "parents": [],
+  "clues": [
+    {
+      "type": "game",
+      "value": 0.5,
+      "id": "27b6af1bfc154174",
+      "required": true,
+      "level": 0
+    },
+    {
+      "type": "item",
+      "value": 0.5,
+      "id": "d6ba935397e64525",
+      "item": {
+        "count": 8,
+        "base_ingredient": {
+          "item": "minecraft:coal"
+        }
+      },
+      "consume": true
+    },
+    {
+      "type": "item",
+      "value": 0.5,
+      "id": "69b761398e8547cb",
+      "item": {
+        "tag": "forge:coal_coke"
+      },
+      "consume": true
+    }
+  ],
+  "ingredients": [],
+  "effects": [
+    {
+      "type": "multiblock",
+      "tooltip": [
+        "@"
+      ],
+      "icon": "immersiveengineering:coke_oven",
+      "id": "6d782276c0774dd4",
+      "multiblock": "immersiveengineering:multiblocks/coke_oven"
+    },
+    {
+      "type": "recipe",
+      "id": "5938110ad0154232",
+      "item": "immersiveengineering:cokebrick"
+    }
+  ],
+  "points": 800,
+  "showAltDesc": true
+}

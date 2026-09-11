@@ -123,11 +123,18 @@ public class EffectStats extends Effect {
 
     @Override
     public void revoke(TeamResearchData team) {
+		revoke(team, 1);
+	}
+
+	@Override
+	public void revoke(TeamResearchData team, int applications) {
+		if (applications <= 0)
+			return;
         double var = team.getVariants().getDouble(vars);
         if (isPercentage)
-            var -= val / 100;
+            var -= val / 100 * applications;
         else
-            var -= val;
+            var -= val * applications;
         team.getVariants().putDouble(vars, var);
     }
 

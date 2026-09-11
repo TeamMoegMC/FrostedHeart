@@ -124,7 +124,7 @@ old nutritionGainRate        * 400
 old nutritionConsumptionRate * 100
 ```
 
-版本 1 的规范初值仍使用旧 `0.0025/0.0025`，加载后立即得到版本 2 的 `1.0/0.25` 并保存，之后不再重复迁移。
+版本 1 的规范初值仍使用旧 `0.0025/0.0025`。专服世界和单人世界的磁盘型 `frostedheart-server.toml` 加载后立即得到版本 2 的 `1.0/0.25` 并保存，之后不再重复迁移。远程连接期间由 Forge 创建或由服务器同步的内存型 SERVER 配置不在客户端迁移或保存；客户端直接使用服务端权威配置，避免登录服的 vanilla 回退流程对 `SimpleCommentedConfig` 调用 `ModConfig.save()`。
 
 ### 3.5 玩家后果和界面
 
@@ -293,7 +293,7 @@ nextX = clamp(X + growth - nutritionDecay - ageDecay, 0, 100)
 
 共享 `residentNutritionDeficiencyExponent` 默认 `1.5`。力量权重使只有蛋白质完全缺失、其他三项全满时 `Q_strength=0.25`，低于 `0.40` 维护线；蛋白满足度达到 `0.20` 时恰好回到维护线。智力维护阈值更低、零支持衰减更慢，需要更广泛的严重缺乏才会永久下降。
 
-对应运行时键位于 `FHConfig.SERVER.TOWN.HOUSING`：`residentStrengthGrowthEfficiencyAtZeroSupport`、`residentIntelligenceGrowthEfficiencyAtZeroSupport`、`residentStrengthMaintenanceThreshold`、`residentIntelligenceMaintenanceThreshold`、`residentNutritionDeficiencyExponent`、`residentStrengthDecayAtZeroSupport` 和 `residentIntelligenceDecayAtZeroSupport`。四年龄基础活动、成长率、成长上限和老人固定衰退位于 `FHConfig.SERVER.TOWN.RESIDENT_AGING`。`residentAttributeModelVersion` 在旧配置首次加载时把已有同名成长参数和力量权重迁移到版本 2 默认值，随后只执行一次；新引入的键由 Forge 配置默认值补齐。
+对应运行时键位于 `FHConfig.SERVER.TOWN.HOUSING`：`residentStrengthGrowthEfficiencyAtZeroSupport`、`residentIntelligenceGrowthEfficiencyAtZeroSupport`、`residentStrengthMaintenanceThreshold`、`residentIntelligenceMaintenanceThreshold`、`residentNutritionDeficiencyExponent`、`residentStrengthDecayAtZeroSupport` 和 `residentIntelligenceDecayAtZeroSupport`。四年龄基础活动、成长率、成长上限和老人固定衰退位于 `FHConfig.SERVER.TOWN.RESIDENT_AGING`。`residentAttributeModelVersion` 在旧的磁盘型服务端配置首次加载时把已有同名成长参数和力量权重迁移到版本 2 默认值，随后只执行一次；远程客户端的内存型配置不执行该迁移，新引入的键由 Forge 配置默认值补齐。
 
 生产、岗位评分和模拟预测直接使用存储的力量与智力。营养不足不再生成单独的“有效智力”；其长期后果通过真实智力的日变化体现。
 

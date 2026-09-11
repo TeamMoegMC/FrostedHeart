@@ -25,6 +25,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.teammoeg.frostedheart.content.climate.block.generator.GeneratorFuelModel;
+import com.teammoeg.frostedheart.content.town.transport.TransportConsumerParameters;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -414,6 +415,7 @@ public final class TownStageZeroAudit {
     ) {
         List<ParameterValue> values = new ArrayList<>();
         TownModelParameters.TransportStationParameters transport = parameters.transportStation();
+        TransportConsumerParameters consumers = parameters.transportConsumers();
         addShared(values, "transportStation.capacityPerStandardWorkerDay",
                 transport.capacityPerStandardWorkerDay(), "transport-capacity/SWE/day", source,
                 "TRANSPORT_STATION_CAPACITY_PER_STANDARD_WORKER_DAY",
@@ -443,6 +445,26 @@ public final class TownStageZeroAudit {
                 "TRANSPORT_STATION_LEARNING_ACTIVITY",
                 "TRANSPORT_STATION.learningActivity");
         addProductivity(values, "transportStation.productivity", transport.productivity(), source);
+        addShared(values, "transportConsumers.defaultRateItemsPerSecond",
+                consumers.defaultRateItemsPerSecond(), "items/s", source,
+                "TRANSPORT_CONSUMER_DEFAULT_RATE_ITEMS_PER_SECOND",
+                "TRANSPORT_CONSUMERS.defaultRateItemsPerSecond");
+        addShared(values, "transportConsumers.minimumRateItemsPerSecond",
+                consumers.minimumRateItemsPerSecond(), "items/s", source,
+                "TRANSPORT_CONSUMER_MINIMUM_RATE_ITEMS_PER_SECOND",
+                "TRANSPORT_CONSUMERS.minimumRateItemsPerSecond");
+        addShared(values, "transportConsumers.maximumRateItemsPerSecond",
+                consumers.maximumRateItemsPerSecond(), "items/s", source,
+                "TRANSPORT_CONSUMER_MAXIMUM_RATE_ITEMS_PER_SECOND",
+                "TRANSPORT_CONSUMERS.maximumRateItemsPerSecond");
+        addShared(values, "transportConsumers.warehouseDistanceCostPerBlock",
+                consumers.warehouseDistanceCostPerBlock(), "1/block", source,
+                "TRANSPORT_CONSUMER_WAREHOUSE_DISTANCE_COST_PER_BLOCK",
+                "TRANSPORT_CONSUMERS.warehouseDistanceCostPerBlock");
+        addShared(values, "transportConsumers.p2pDistanceCostPerBlock",
+                consumers.p2pDistanceCostPerBlock(), "1/block", source,
+                "TRANSPORT_CONSUMER_P2P_DISTANCE_COST_PER_BLOCK",
+                "TRANSPORT_CONSUMERS.p2pDistanceCostPerBlock");
         return List.copyOf(values);
     }
 
@@ -1210,7 +1232,7 @@ public final class TownStageZeroAudit {
                     projectRoot.resolve("src/main/java/com/teammoeg/frostedheart/content/town/resource/TownFoodResourceAmount.java"),
                     projectRoot.resolve("src/main/java/com/teammoeg/frostedheart/content/climate/block/generator/GeneratorFuelModel.java"),
                     projectRoot.resolve("src/main/java/com/teammoeg/frostedheart/content/climate/block/generator/GeneratorHeatFieldModel.java"),
-                    projectRoot.resolve("src/main/java/com/teammoeg/frostedheart/content/climate/gamedata/chunkheat/SphericalHeatFieldModel.java"),
+                    projectRoot.resolve("src/main/java/com/teammoeg/frostedheart/content/climate/thermal/field/SphericalHeatFieldModel.java"),
                     projectRoot.resolve("src/main/java/com/teammoeg/frostedheart/content/climate/block/generator/GeneratorData.java"),
                     projectRoot.resolve("src/main/java/com/teammoeg/frostedheart/content/climate/event/ClimateCommonEvents.java"),
                     projectRoot.resolve("src/main/java/com/teammoeg/frostedheart/content/climate/gamedata/climate/ClimateEventModel.java"),

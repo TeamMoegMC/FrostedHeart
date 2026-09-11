@@ -41,6 +41,13 @@ public class ResearchUtils {
         }
     }
 
+    public static void notifyResearchDataReplaced() {
+        ResearchGui gui = getOpenResearchGui();
+        if (gui != null) {
+            gui.onResearchDataReplaced();
+        }
+    }
+
     public static void notifyResearchProgressChanged(String researchId) {
         ResearchGui gui = getOpenResearchGui();
         if (gui != null) {

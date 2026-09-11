@@ -19,9 +19,11 @@
 
 package com.teammoeg.frostedheart.infrastructure.config;
 
+import com.electronwill.nightconfig.core.file.CommentedFileConfig;
 import com.teammoeg.chorda.client.cui.screenadapter.OverlayPositioner;
 import com.teammoeg.chorda.math.Colors;
 import com.teammoeg.frostedheart.content.climate.FHTemperatureDifficulty;
+import com.teammoeg.frostedheart.content.climate.render.weather.WeatherRenderingMode;
 import com.teammoeg.frostedheart.content.climate.gamedata.climate.ClimateEventModel;
 import com.teammoeg.frostedheart.content.climate.gamedata.climate.WorldClockSource;
 import com.teammoeg.frostedheart.content.health.nutrition.NutritionScaleMigration;
@@ -67,6 +69,7 @@ public class FHConfig {
 		public final ForgeConfigSpec.IntValue fogColorDay;
 		public final ForgeConfigSpec.IntValue fogColorNight;
 		public final ForgeConfigSpec.BooleanValue weatherRenderChanges;
+		public final ForgeConfigSpec.EnumValue<WeatherRenderingMode> weatherRenderingMode;
 		public final ForgeConfigSpec.IntValue snowDensity;
 		public final ForgeConfigSpec.IntValue blizzardDensity;
 		public final ForgeConfigSpec.BooleanValue snowSounds;
@@ -75,7 +78,6 @@ public class FHConfig {
 		public final ForgeConfigSpec.IntValue scenarioRenderQuality;
 		public final ForgeConfigSpec.IntValue scenarioRenderThread;
 		public final ForgeConfigSpec.BooleanValue scenarioAntiAliasing;
-		public final ForgeConfigSpec.IntValue infraredViewUBOOffset;
 		public final ForgeConfigSpec.IntValue wheelMenuRadius;
 		public final ForgeConfigSpec.IntValue themeColor;
 		public final ForgeConfigSpec.BooleanValue enableWheelMenuCursor;
@@ -165,12 +167,6 @@ public class FHConfig {
 			enableFrozenSound = builder
 				.comment("Enables the frozen sound when player is freezing. ")
 				.define("enableFrozenSound", true);
-			infraredViewUBOOffset = builder.comment("The binding offset of the UBO for the infrared view shader.")
-				.comment("Partial shaders and mods may occupy the position as well.")
-				.comment("We will use default offset (7) for some known mods here. However, it is not guaranteed to be always compatible with all mods / shaders.")
-				.comment("In this case, player have to modify the config to specify the offset.")
-				.comment("No worries, from my experience, offset 7 is compatible with 99% mods / shaders.")
-				.defineInRange("infraredViewUBOOffset", 7, 0, Integer.MAX_VALUE);
 			builder.pop();
 
 
@@ -178,6 +174,9 @@ public class FHConfig {
 			builder.push("Weather");
 			weatherRenderChanges = builder.comment("Enables weather rendering changes.")
 				.define("weatherRenderChanges", true);
+			weatherRenderingMode = builder
+				.comment("Selects the fixed weather renderer. This choice is never changed automatically from measured FPS.")
+				.defineEnum("weatherRenderingMode", WeatherRenderingMode.SPATIAL_V1_FAST);
 			fogDensity = builder.comment("How dense the fog effect during a snowstorm is.")
 				.defineInRange("fogDensity", 0.1, 0, 1);
 			fogColorDay = builder.comment("This is the fog color during the day. It must be an RGB hex string.")
@@ -238,13 +237,76 @@ public class FHConfig {
 	 * 
 	 */
 	public static class Common {
+		public static class ThermalRuntime {
+			public final ForgeConfigSpec.DoubleValue airHeatCapacityJPerBlockK;
+			public final ForgeConfigSpec.DoubleValue airMixingWPerBlockK;
+			public final ForgeConfigSpec.DoubleValue phaseFaceConductanceWPerK;
+			public final ForgeConfigSpec.DoubleValue phaseBaseEnergyJPerHeatCapacity;
+			public final ForgeConfigSpec.DoubleValue farFieldConductanceWPerK;
+			public final ForgeConfigSpec.DoubleValue campfirePowerW;
+			public final ForgeConfigSpec.DoubleValue campfireRadiationShare;
+			public final ForgeConfigSpec.BooleanValue enableStaticBlockRadiation;
+			public final ForgeConfigSpec.DoubleValue lavaRadiationTemperatureC;
+			public final ForgeConfigSpec.DoubleValue effectiveLavaEmissivity;
+			public final ForgeConfigSpec.DoubleValue radiationReferenceTemperatureC;
+			public final ForgeConfigSpec.DoubleValue fireRadiantPowerW;
+			public final ForgeConfigSpec.DoubleValue dormantTemperatureHalfLifeSeconds;
+
+			ThermalRuntime(ForgeConfigSpec.Builder builder) {
+				builder.comment(
+						"Restart the client or dedicated server after changing thermal runtime values.")
+					.push("Thermal Runtime");
+				airHeatCapacityJPerBlockK = builder
+					.comment("Effective Air heat capacity per block in J/K.")
+					.defineInRange("airHeatCapacityJPerBlockK", 1_200.0D, 1.0D, 1_000_000.0D);
+				airMixingWPerBlockK = builder
+					.comment("Effective Air mixing conductance in W/(block*K).")
+					.defineInRange("airMixingWPerBlockK", 96.0D, 0.001D, 1_000_000.0D);
+				phaseFaceConductanceWPerK = builder
+					.comment("Phase-transition conductance per full exposed block face in W/K.")
+					.defineInRange("phaseFaceConductanceWPerK", 5.0D, 0.001D, 1_000_000.0D);
+				phaseBaseEnergyJPerHeatCapacity = builder
+					.comment("Phase energy per block in J, multiplied by the state-transition recipe heat_capacity.")
+					.defineInRange("phaseBaseEnergyJPerHeatCapacity", 38_000.0D, 1.0D, 1.0e12D);
+				farFieldConductanceWPerK = builder
+					.comment("Base conductance from exposed Air boundaries to natural temperature in W/K.")
+					.defineInRange("farFieldConductanceWPerK", 7_747.2298793470545D, 0.001D, 1.0e9D);
+				campfirePowerW = builder
+					.comment("Total thermal power of a lit campfire in W.")
+					.defineInRange("campfirePowerW", 8_000.0D, 0.0D, 1.0e9D);
+				campfireRadiationShare = builder
+					.comment("Fraction of campfire power emitted as direct radiation; the remainder heats Air.")
+					.defineInRange("campfireRadiationShare", 0.2D, 0.0D, 1.0D);
+				enableStaticBlockRadiation = builder
+					.comment("Enable read-only direct player radiation from static fire and exposed lava.")
+					.define("enableStaticBlockRadiation", true);
+				lavaRadiationTemperatureC = builder
+					.comment("Effective lava radiation temperature in degrees Celsius.")
+					.defineInRange("lavaRadiationTemperatureC", 1_000.0D, -273.0D, 5_000.0D);
+				effectiveLavaEmissivity = builder
+					.comment("Gameplay-scaled lava emissivity used for direct radiation.")
+					.defineInRange("effectiveLavaEmissivity", 0.01D, 0.0D, 1.0D);
+				radiationReferenceTemperatureC = builder
+					.comment("Reference environment temperature for lava radiation in degrees Celsius.")
+					.defineInRange("radiationReferenceTemperatureC", 20.0D, -273.0D, 5_000.0D);
+				fireRadiantPowerW = builder
+					.comment("Direct radiant power of an ordinary fire block in W.")
+					.defineInRange("fireRadiantPowerW", 1_000.0D, 0.0D, 1.0e9D);
+				dormantTemperatureHalfLifeSeconds = builder
+					.comment("Half-life in seconds for stored unloaded Page temperature residuals.")
+					.defineInRange("dormantTemperatureHalfLifeSeconds", 1_800.0D, 1.0D, 604_800.0D);
+				builder.pop();
+			}
+		}
 
 		public final ForgeConfigSpec.ConfigValue<List<? extends String>> blackmods;
+		public final ThermalRuntime THERMAL_RUNTIME;
 
 		// public final ForgeConfigSpec.ConfigValue<Boolean> enableAutoRestart;
 		public final ForgeConfigSpec.ConfigValue<Boolean> enableUpdateReminder;
 
 		Common(ForgeConfigSpec.Builder builder) {
+			THERMAL_RUNTIME = new ThermalRuntime(builder);
 
 			builder.push("Miscellaneous");
 			blackmods = builder
@@ -300,8 +362,6 @@ public class FHConfig {
 			public final ForgeConfigSpec.ConfigValue<Integer> heatExchangeTimeConstant;
 			public final ForgeConfigSpec.ConfigValue<Double> heatExchangeTempConstant;
 			public final ForgeConfigSpec.BooleanValue addInitClimate;
-			public final ForgeConfigSpec.IntValue envTempUpdateIntervalTicks;
-			public final ForgeConfigSpec.IntValue envTempThreadCount;
 			public final ForgeConfigSpec.IntValue tempBlockstateUpdateIntervalTicks;
 			public final ForgeConfigSpec.IntValue ambientBlockStateUpdateDivisor;
 			public final ForgeConfigSpec.IntValue tempRandomTickSpeedDivisor;
@@ -352,17 +412,12 @@ public class FHConfig {
 					.defineInRange("temperatureChangeRate", 1f, 0, 20);
 				temperatureUpdateIntervalTicks = builder.comment("The interval of temperature update in ticks.")
 					.defineInRange("temperatureUpdateIntervalTicks", 20, 1, Integer.MAX_VALUE);
-				envTempUpdateIntervalTicks = builder.comment("The shortest interval of environment(block) temperature update in ticks.")
-					.defineInRange("environmentTempMinTicks", 20, 1, Integer.MAX_VALUE);
 				tempBlockstateUpdateIntervalTicks = builder.comment("The interval for block state update due to temperature.")
 					.defineInRange("tempBlockstateUpdateIntervalTicks", 20, 1, Integer.MAX_VALUE);
 				tempRandomTickSpeedDivisor = builder.comment("The random tick speed is divided by this value when used for temperature related updates.")
 					.defineInRange("tempRandomTickSpeedDivisor", 1, 1, Integer.MAX_VALUE);
 				ambientBlockStateUpdateDivisor = builder.comment("Block update divisor for ambient blocks(blocks without heat area).")
 					.defineInRange("ambientRandomTickSpeedDivisor", 10, 1, Integer.MAX_VALUE);
-				int numProcessor = Runtime.getRuntime().availableProcessors();
-				envTempThreadCount = builder.comment("The number of threads used for environment(block) temperature update, set to 0 disables multithreading, default to min(processors/2,2)")
-					.defineInRange("environmentTempMinTicks", Math.min(2, numProcessor / 2), 0, 16);
 				wetEffectDuration = builder.comment("The duration of the wet effect applied in water in ticks.")
 					.defineInRange("wetEffectDuration", 100, 1, Integer.MAX_VALUE);
 				wetClothesDurationMultiplier = builder.comment("The multiplier of the wet effect duration when player is wearing clothes.")
@@ -1822,6 +1877,44 @@ public class FHConfig {
 				}
 			}
 
+			public static class TransportConsumers {
+				public final ForgeConfigSpec.IntValue defaultRateItemsPerSecond;
+				public final ForgeConfigSpec.IntValue minimumRateItemsPerSecond;
+				public final ForgeConfigSpec.IntValue maximumRateItemsPerSecond;
+				public final ForgeConfigSpec.DoubleValue warehouseDistanceCostPerBlock;
+				public final ForgeConfigSpec.DoubleValue p2pDistanceCostPerBlock;
+
+				TransportConsumers(ForgeConfigSpec.Builder builder) {
+					builder.push("Transport Consumers");
+					defaultRateItemsPerSecond = builder
+							.comment("Default item transfer rate for a newly bound transport consumer, in items per second.")
+							.defineInRange("defaultRateItemsPerSecond",
+									TownModelParameters.Defaults.TRANSPORT_CONSUMER_DEFAULT_RATE_ITEMS_PER_SECOND,
+									0, 1_000_000);
+					minimumRateItemsPerSecond = builder
+							.comment("Smallest non-zero transport-consumer rate, in items per second. Zero disables a consumer.")
+							.defineInRange("minimumRateItemsPerSecond",
+									TownModelParameters.Defaults.TRANSPORT_CONSUMER_MINIMUM_RATE_ITEMS_PER_SECOND,
+									1, 1_000_000);
+					maximumRateItemsPerSecond = builder
+							.comment("Maximum transport-consumer rate, in items per second.")
+							.defineInRange("maximumRateItemsPerSecond",
+									TownModelParameters.Defaults.TRANSPORT_CONSUMER_MAXIMUM_RATE_ITEMS_PER_SECOND,
+									1, 1_000_000);
+					warehouseDistanceCostPerBlock = builder
+							.comment("Additional transport-capacity multiplier per block of capacity-weighted warehouse distance.")
+							.defineInRange("warehouseDistanceCostPerBlock",
+									TownModelParameters.Defaults.TRANSPORT_CONSUMER_WAREHOUSE_DISTANCE_COST_PER_BLOCK,
+									0d, 1_000_000d);
+					p2pDistanceCostPerBlock = builder
+							.comment("Additional transport-capacity multiplier per block of direct P2P Manhattan distance.")
+							.defineInRange("p2pDistanceCostPerBlock",
+									TownModelParameters.Defaults.TRANSPORT_CONSUMER_P2P_DISTANCE_COST_PER_BLOCK,
+									0d, 1_000_000d);
+					builder.pop();
+				}
+			}
+
 			public static class Resource{
 				/**
 				 * @deprecated Use {@link #oreReservePerChunk}. Kept as a Java alias
@@ -1900,6 +1993,7 @@ public class FHConfig {
 			public final GeneratorT1 GENERATOR_T1;
 			public final Mining MINING;
 			public final TransportStation TRANSPORT_STATION;
+			public final TransportConsumers TRANSPORT_CONSUMERS;
 			public final ResidentRules RESIDENT_RULES;
 			public final ResidentProgression RESIDENT_PROGRESSION;
 			public final ResidentGeneration RESIDENT_GENERATION;
@@ -1941,6 +2035,7 @@ public class FHConfig {
 				HUNTING = new Hunting(builder);
 				MINING = new Mining(builder);
 				TRANSPORT_STATION = new TransportStation(builder);
+				TRANSPORT_CONSUMERS = new TransportConsumers(builder);
 				RESOURCE=new Resource(builder);
 				builder.pop();
 
@@ -2187,18 +2282,29 @@ public class FHConfig {
 	}
 
 	public static void onConfigLoading(ModConfigEvent.Loading event) {
-		migrateNutritionScale(event.getConfig());
-		migrateResidentAttributeModel(event.getConfig());
+		migratePersistentServerConfig(event.getConfig());
 	}
 
 	public static void onConfigReloading(ModConfigEvent.Reloading event) {
-		migrateNutritionScale(event.getConfig());
-		migrateResidentAttributeModel(event.getConfig());
+		migratePersistentServerConfig(event.getConfig());
 	}
 
-	private static void migrateNutritionScale(ModConfig config) {
-		if (config.getSpec() != SERVER_CONFIG || SERVER.NUTRITION.nutritionScaleVersion.get() >= 2) {
+	private static void migratePersistentServerConfig(ModConfig config) {
+		if (config.getType() != ModConfig.Type.SERVER
+				|| config.getSpec() != SERVER_CONFIG
+				|| !ConfigMigrationSupport.isPersistent(config.getConfigData())) {
 			return;
+		}
+		boolean changed = migrateNutritionScale();
+		changed |= migrateResidentAttributeModel();
+		if (changed) {
+			((CommentedFileConfig) config.getConfigData()).save();
+		}
+	}
+
+	private static boolean migrateNutritionScale() {
+		if (SERVER.NUTRITION.nutritionScaleVersion.get() >= 2) {
+			return false;
 		}
 		NutritionScaleMigration.Rates rates = NutritionScaleMigration.fromVersionOne(
 				SERVER.NUTRITION.nutritionGainRate.get(),
@@ -2206,13 +2312,13 @@ public class FHConfig {
 		SERVER.NUTRITION.nutritionGainRate.set(rates.gainRate());
 		SERVER.NUTRITION.nutritionConsumptionRate.set(rates.consumptionRate());
 		SERVER.NUTRITION.nutritionScaleVersion.set(2);
-		config.save();
+		return true;
 	}
 
-	private static void migrateResidentAttributeModel(ModConfig config) {
+	private static boolean migrateResidentAttributeModel() {
 		Server.Town.Housing housing = SERVER.TOWN.HOUSING;
-		if (config.getSpec() != SERVER_CONFIG || housing.residentAttributeModelVersion.get() >= 2) {
-			return;
+		if (housing.residentAttributeModelVersion.get() >= 2) {
+			return false;
 		}
 		Server.Town.ResidentAging aging = SERVER.TOWN.RESIDENT_AGING;
 		housing.residentNutritionStrengthProteinWeight.set(0.75);
@@ -2229,7 +2335,7 @@ public class FHConfig {
 			TownModelParameters.Defaults.RESIDENT_CHILD_INTELLIGENCE_GAIN_PER_DAY);
 		aging.adultAttributeCap.set(TownModelParameters.Defaults.RESIDENT_ADULT_ATTRIBUTE_CAP);
 		housing.residentAttributeModelVersion.set(2);
-		config.save();
+		return true;
 	}
 
 	static final boolean specialDay = MonthDay.of(4, 1).equals(MonthDay.now());

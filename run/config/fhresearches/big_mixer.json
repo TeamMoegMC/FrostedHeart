@@ -1,0 +1,76 @@
+{
+  "icon": "immersiveengineering:mixer",
+  "category": "frostedheart:production",
+  "parents": [
+    "multiblock_structure"
+  ],
+  "clues": [
+    {
+      "type": "game",
+      "value": 0.4,
+      "id": "522526f83bfa4da0",
+      "required": true,
+      "level": 1
+    },
+    {
+      "type": "item",
+      "value": 0.2,
+      "id": "768fcc75fc20433c",
+      "item": {
+        "count": 4,
+        "base_ingredient": {
+          "item": "kubejs:servo_core"
+        }
+      },
+      "consume": true
+    },
+    {
+      "type": "item",
+      "value": 0.2,
+      "id": "746fa799c6724ccd",
+      "item": {
+        "count": 4,
+        "base_ingredient": {
+          "item": "kubejs:servo_core"
+        }
+      },
+      "consume": true
+    },
+    {
+      "type": "item",
+      "value": 0.1,
+      "id": "21f8feac65414f2b",
+      "item": {
+        "count": 2,
+        "base_ingredient": {
+          "item": "kubejs:servo_core"
+        }
+      },
+      "consume": true
+    }
+  ],
+  "ingredients": [
+    {
+      "item": "create:mechanical_mixer"
+    },
+    {
+      "item": "create:basin"
+    },
+    {
+      "count": 2,
+      "base_ingredient": {
+        "item": "kubejs:servo_core"
+      }
+    }
+  ],
+  "effects": [
+    {
+      "type": "multiblock",
+      "icon": "immersiveengineering:mixer",
+      "id": "447aa475382f4b84",
+      "multiblock": "immersiveengineering:multiblocks/mixer"
+    }
+  ],
+  "points": 6000,
+  "showAltDesc": true
+}

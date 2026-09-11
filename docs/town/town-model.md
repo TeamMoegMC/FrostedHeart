@@ -1,7 +1,7 @@
 # 城镇临界自给数值模型
 
-> 状态：阶段 0–4 已实现；阶段 5 及之后尚未开始。最近验证：2026-08-21。货运站单日运力已进入
-> `TownModelParameters`、纯 Java 城镇汇总模型和阶段 0 审计；运力使用方和距离成本仍未进入模拟。
+> 状态：阶段 0–4 已实现；阶段 5 及之后尚未开始。最近验证：2026-08-25。货运站单日运力、仓库接口
+> 与 P2P 消费参数已进入 `TownModelParameters` 和阶段 0 审计；仓库接口与 P2P 运行时消费均已实现，但尚未进入阶段模拟。
 >
 > 目标：把 FH/TWR 当前代码和数据中的城镇数值关系整理为一套可调用、可审计、可模拟的 Java 数学模型。本文是后续实现时的上下文基准。
 
@@ -216,6 +216,8 @@ T_{building,b,h}=\frac{1}{|V_b|}\sum_{v\in V_b}T_{block,v,h}
 \]
 
 这里的 \(|V_b|\) 就是扫描器记录的内部体积。它是离散空气方块数量，不是连续几何球体积。
+
+Phase K 在同一次 `BuildingBlockScanner` 遍历中顺带生成 `TownThermalProjection`：每个 world-aligned `4×4×4` base Brick 保存一个确定的真实内部空气代表点和体素权重；扫描成功后，`HouseBlockScanner` 与 `HuntingBaseBlockScanner` 通过 `MinecraftThermalInput.gameplayTownEnvironment` 各组只读一次已有 Air Mesh publication。所有 group 命中时，新加权平均驱动住宅和狩猎基地的温度、评分与日结算；部分或全部 miss 时整体回退上式 legacy 平均值。它不重新扫描房间、不保存逐体素位置、不创建 Page/Brick/Cell/Interest，也不持有 mesh lease。`MineBaseBlockScanner` 当前不产出 gameplay 温度，停用的 `MineBlockScanner` 也没有重新启用。
 
 ## 5. 能量塔、燃料过程 tick 与 T2 热网
 
@@ -1350,7 +1352,7 @@ Java 模拟不生成 HTML，也不依赖 Python、Pandas、SciPy 或绘图库。
 
 - `ClimateEventModel`：普通长期冷/暖事件的整数选择、冷峰权重、持续时间、前置时间、平静期、Gaussian 扰动和零端点导数 Hermite 插值。`InterpolationClimateEvent` 直接调用它。
 - `BlockTemperatureModel`：`alpha(y)`、自然方块温度和当前 `min(nature + k_heat H, H)` 热场上限；默认 `k_heat=2.0`。`WorldTemperature.block` 及其快速路径直接调用它。
-- `SphericalHeatFieldModel`：整数坐标球体的边界包含判定和精确体素计数。`SphereHeatArea.isEffective` 直接调用它。
+- `SphericalHeatFieldModel`：位于 `content.climate.thermal.field` 的纯整数格点球体工具，供城镇模型计算边界包含与精确体素数；它不注册世界热场。
 - `GeneratorHeatFieldModel`：阶段 0 已抽取的等级到半径/温升公式继续同时服务运行时和模拟器。
 - `HuntingDailyModel.calculateCapacity`：狩猎基地扫描时的有效面积到岗位容量公式由游戏与模拟共享。
 
@@ -1385,15 +1387,23 @@ T_covered = min(N + 2H, H), H = 10°C
 T_building = f_cover T_covered + (1-f_cover) N
 ```
 
-在未触及 `H` 上限的寒冷区间，建筑达到当前住宅/狩猎 `0°C` 阈值所需气候温度为：
+模型边界说明（2026-09-08）：`TownStageFourModel.evaluateHour` 保留旧 heat-chunk 曲线，
+供既有离线基准对照。它没有模拟当前 runtime 的 `max(P, N + H)` 解析保底、物理 Air 或 Boss 控制，
+不能作为实际游戏温度的替代实现。当前合成规则见 [世界温度](../climate/world-climate-and-temperature.md#7-analytic-control-fields)。
+在该旧模型未触及 H 上限的寒冷区间，建筑达到住宅/狩猎 `0°C` 阈值所需气候温度为：
 
 ```text
 climate_min(f_cover) = 20 - 40 f_cover
 ```
 
-所以全覆盖也只能抵抗到 `climate=-20°C`；覆盖 `88.45%` 的参考住宅只能抵抗到约 `-15.38°C`；覆盖 `83.16%` 的参考狩猎基地只能抵抗到约 `-13.26°C`。因此 T1 的主要承载约束不是 `17,077` 个球体体素，而是 `10°C` 热场值与气候分布共同形成的温度可服务时段。
+旧模型中全覆盖可抵抗到 `climate=-20°C`，参考住宅/狩猎分别约为 `-15.38°C` / `-13.26°C`。
+当前 runtime 仅凭同档解析保底达到阈值，则需要全覆盖 `climate>=0°C`，参考住宅/狩猎分别约为
+`2.31°C` / `3.37°C`；实际还取决于物理源连通和供热。源配置未随解析场接入调高，不能沿用旧曲线的温度结论。
 
 #### 首轮 8/24/48 人耦合基准
+
+历史结果说明（2026-09-08）：下列既有基准使用旧 `min(N + 2H, H)` 曲线，尚未按新的
+自然相对保底重新运行；这些数据不代表当前温度模型的生存率或可工作时段。
 
 三个基准均为 `120 day × 1,000 fixed seed`、七日初始食物/焦煤、正常 T1、紧凑双层参考布局。它们是布局诊断，不是推荐建筑蓝图：建筑体积仍沿用阶段 3 的每人 `48 interior voxel` 参考值，因此人口越多，几何覆盖自然下降。
 
@@ -1698,12 +1708,78 @@ T1 燃料总 process tick 定义为：
 其中 `C_max = resources[MAX_CAPACITY, level 0]`，`C_occupied = TeamTownResourceHolder.occupiedCapacity`。界面同时
 显示使用率 `C_occupied / C_max`；总容量为零时不执行除零，并用“暂无容量”或“超出容量”状态表达。
 
-运力详情的单位为 transport-capacity/day。当前总运力读取
-`resources[TRANSPORT_CAPACITY, level 0]`，已占用运力读取同步的
-`TownTransportState.DailyReport.reservedCapacity`，剩余与缺口使用同一容量公式。有效传输比例显示为
-`reserved > 0 ? min(1, total / reserved) : 1`。运力使用方尚未实现时 `reservedCapacity` 为 `0`；本页不会凭空
-创建接口登记或改变结算结果。完整城镇同步和 `TownResourceUpdatePacket` 已覆盖总量、仓库占用量和运力日报，
-因此该页不增加独立网络请求。
+运力是每日重建但不在搬运时消耗的 transport-capacity service。`1` 运力表示零距离成本下支持
+`1 item/s` 的设置传输速率。仓库接口可以放在城镇所在维度的任意位置，并由首次交互的本队玩家认领；接口自身
+`GlobalPos` 是预约端点，不再绑定或保存某座仓库核心。已经接受的设置速率 `R` 单位是 `items/s`，默认 `20`，有效
+非零范围默认 `1..1280`，其中 `0` 表示禁用。
+
+只统计同城镇中 `isBuildingWorkable()` 且容量 `W_i` 为有限正数的仓库。设接口与第 `i` 座仓库核心的三维曼哈顿距离为
+`D_i` blocks，则容量加权平均距离 `D_eff`、距离因子 `F` 和名义占用 `C_reserved` 为：
+
+```text
+D_i = |x_e - x_i| + |y_e - y_i| + |z_e - z_i|
+D_eff = sum(W_i * D_i) / sum(W_i)
+F = 1 + k_d * D_eff
+C_reserved = R * F
+```
+
+`k_d` 默认 `0.05 运力/(item/s)/block`，来自
+`FHConfig.SERVER.TOWN.TRANSPORT_CONSUMERS.warehouseDistanceCostPerBlock`。实现按最大容量归一化权重后求和，数学结果与上式
+相同，同时降低极大容量值的中间溢出风险；仓库顺序不影响结果。没有有效仓库、城镇维度未知、接口跨维度或计算得到
+非有限值时，预约进入 `UNAVAILABLE`：保留唯一的设置速率，但派生距离和占用归零，实际传输停止。仓库恢复后由城镇拓扑
+事实刷新直接恢复为 `ACTIVE` 或零速率的 `DISABLED`，不重新做玩家调速准入。
+
+P2P 直连运行时使用同一纯模型。`TransportReservationModel#p2pManhattanDistance` 仅接受同维度的两个
+`GlobalPos`，并以三轴绝对差之和得到 `D_p2p`；跨维度或缺失端点返回无效结果。`P2P_DIRECT_LINK` 的纯占用公式为：
+
+```text
+F_p2p = 1 + k_p2p * D_p2p
+C_reserved,p2p = R * F_p2p
+```
+
+`k_p2p` 默认 `0.05 运力/(item/s)/block`，独立来自
+`FHConfig.SERVER.TOWN.TRANSPORT_CONSUMERS.p2pDistanceCostPerBlock`，不会因调整仓库加权距离系数而改变。纯状态
+`REDSTONE_PAUSED` 保留非零设置速率和已解析距离，但强制预约占用为 `0`；它既不是零速率 `DISABLED`，也不是事实缺失的
+`UNAVAILABLE`。`TeamTown#bindOrRebindP2PTerminals` 从城镇级 `P2PBindingState` 的双方位置派生距离并原子提交预约；仓库
+接口的 `registerOrUpdateTransportEndpoint` 仍明确拒绝 `P2P_DIRECT_LINK`。设备、过滤、传输与生命周期见
+[p2p-logistics.md](p2p-logistics.md)。
+
+占用不做令牌量化或向上取整；持久化只保存 kind、单一 `rateItemsPerSecond`、当前派生距离指标和准入状态，
+`reservedTransportCapacity` 只进入权威网络快照并按当前参数重算。只有离散准入边界使用
+`TransportReservationModel` 的 `8 ULP` 比较，tick 搬运预算不使用该容差。
+
+这五项消费者默认值属于 Forge 无关的 `TownModelParameters.transportConsumers` 输入。`TownStageZeroAudit` 输出值、单位和
+`FHConfig.SERVER.TOWN.TRANSPORT_CONSUMERS` 来源符号；`TownStageFourSimulator.Summary.parameters` 将同一参数快照写入
+`summary.json`，因此模拟结果可以追踪默认设置速率、最小/最大速率、仓库距离成本和 P2P 直连距离成本，纯模拟层不依赖
+方块实体或网络包。
+
+当全镇总运力 `T` 低于名义占用 `C` 时，不取消预约或改变设置速率，而是所有活动端点使用统一比例：
+
+```text
+S = C > 0 ? min(1, T / C) : 1
+R_effective = R * S
+```
+
+已有接口尝试上调但无法准入时，城镇预约、占用和同步脏状态均保持不变，接口菜单回到原设置值并显示瞬时失败提示。
+新接口以默认速率准入失败时仍保留城镇归属，但预约为 `rateItemsPerSecond = 0`、占用 `0`、状态 `DISABLED`；只有明确的
+放置者会收到新增失败提示，后台扫描和区块加载不会广播。接口菜单显示当前有效物品传输速率（低于设置速率时为红色）、
+占用运力、剩余可用运力和总运力，不显示原始规模指标。速率输入的最大值由服务端通过
+`WarehouseInterfaceTransportView.maximumRateItemsPerSecond` 同步，默认范围为 `0..1280`；超过最大值的数字不会进入
+输入框。菜单不再提供固定速率快捷按钮，在速率框上滚轮会立即提交调整，无修饰键、Shift、Ctrl、Shift+Ctrl 的每格
+步长依次为 `1`、`8`、`16`、`64 items/s`，结果限制在 `0..maximumRateItemsPerSecond`。
+
+`TeamTownData` 用 transient `WarehouseTopologySnapshot` 保存按核心坐标稳定排序的 `(corePos, capacityWeight)`；建筑
+添加、移除或事实字段变化只标记 dirty，下一次 prepare 原子重建并一次性重算全部接口预约、标记 transport dirty，随后
+通知已加载的接口和仓库库存发信器。快照无净变化时不遍历端点，也不通知设备。仓库结构扫描不再发现、发布或拥有接口/
+发信器；拆除某座仓库不会删除任一设备，拆除设备自身才注销接口预约或释放发信器 Watcher。
+
+`TownTransportState.DailyReport` 是晨间历史快照；`TownTransportSnapshot` 才是当天调速、扩建、拆除后的实时列表和
+汇总。仓库接口菜单与镇长印章运力详情都读取实时 snapshot 派生视图；镇长印章把晨间日报单独显示在实时汇总之后，
+设备详情位于最底部并默认收起，展开后标注接口自身坐标、设置速率、实际有效速率、容量加权平均距离、距离因子、
+占用运力和状态；不可用时距离与因子显示为 `-`。距离系数和有效仓库数由服务端 snapshot 显式同步，客户端不读取本地
+服务端配置重算。`TeamTownDataS2CPacket` 与 `TownResourceUpdatePacket` 都显式携带同一结构的权威 snapshot；全量包
+先解码持久化数据、应用 snapshot，再替换客户端实例，因此持久化 Codec 省略的派生占用不会在登录、换维度或打开印章
+时变为零。
 
 城镇近况顶部名称和居民详情顶部姓/名现在是服务端权威的内联文本输入。城镇名与居民名最多分别为 64/32 字符；城镇名和居民“名”不能为空，居民“姓”可以为空字符串。客户端请求不携带城镇标识，服务端始终限定在发包玩家所属队伍，并验证居民 UUID 确实存在于该城镇后才修改。名称变化通过轻量城镇名包或既有居民增量同步返回所有在线队员。
 
@@ -1783,9 +1859,11 @@ Tip 的颜色和自动关闭时间由批次最高严重度决定：信息为青�
 Stage 3/4 JSON 新增：
 
 ```json
-"staffing": {
-  "queue": ["mine", "hunt"],
-  "targets": { "mine": 0, "hunt": 0 }
+{
+  "staffing": {
+    "queue": ["mine", "hunt"],
+    "targets": { "mine": 0, "hunt": 0 }
+  }
 }
 ```
 

@@ -19,7 +19,9 @@
 
 package com.teammoeg.frostedresearch.blocks;
 
+import net.minecraft.server.level.ServerPlayer;
+
 public interface ComputeMachine {
-	public int fetchPoint(int max);
-	public int getFetchablePoints();
+	int fetchPoint(ServerPlayer player, int max);
+	int getFetchablePoints(ServerPlayer player);
 }

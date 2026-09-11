@@ -60,7 +60,8 @@ import top.theillusivec4.curios.api.type.ISlotType;
 
 public class CoalHandStove extends FHBaseItem {
     public final static int max_fuel = 800;
-    public static final int HEAT_ADJUST = 20;
+    public static final float HAND_POWER_W = 12.0F;
+    public static final float TORSO_POWER_W = 110.0F;
 
     public static int getAshAmount(ItemStack is) {
         return is.getOrCreateTag().getInt("ash");
@@ -79,7 +80,7 @@ public class CoalHandStove extends FHBaseItem {
 
     public static void setFuelAmount(ItemStack is, int v) {
         is.getOrCreateTag().putInt("fuel", v);
-        if (v < 2)
+        if (v <= 0)
             is.getTag().putInt("CustomModelData", 0);
         else
             is.getTag().putInt("CustomModelData", 1);
@@ -149,20 +150,23 @@ public class CoalHandStove extends FHBaseItem {
         return stack;
     }
 
-	public float tickHeat(ItemStack stack) {
+	private static int availableBurnSeconds(ItemStack stack) {
+		return Math.min(
+				getFuelAmount(stack),
+				Math.max(0, max_fuel - getAshAmount(stack)));
+	}
 
-        int fuel = getFuelAmount(stack);
-        if (fuel >= 2) {
-            int ash = getAshAmount(stack);
-            if (ash <= 800) {
-                fuel--;
-                ash++;
-                setFuelAmount(stack, fuel);
-                setAshAmount(stack, ash);
-                return HEAT_ADJUST;
-            }
-        }
-		return 0;
+	private static void consumeFuel(ItemStack stack, int consumed) {
+		setFuelAmount(stack, Math.max(
+				0, getFuelAmount(stack) - consumed));
+		setAshAmount(stack, Math.min(
+				max_fuel, getAshAmount(stack) + consumed));
+	}
+
+	public boolean tickHeat(ItemStack stack) {
+		if (availableBurnSeconds(stack) <= 0) return false;
+		consumeFuel(stack, 1);
+		return true;
 	}
     @Override
 	public ICapabilityProvider initCapabilities(ItemStack stack,CompoundTag nbt) {
@@ -171,23 +175,33 @@ public class CoalHandStove extends FHBaseItem {
 			@Override
 			public void tickHeating(HeatingDeviceSlot slot, ItemStack stack, HeatingDeviceContext data) {
 				if(slot.isHand()) {
-					float added=tickHeat(stack);
+					double activeFraction = data.advanceHeatingTime(
+							stack, availableBurnSeconds(stack));
+					if (!(activeFraction > 0.0D)) return;
 					if(slot.is(EquipmentSlot.MAINHAND)) {//When in mainHand, only heatup mainhand
-						data.addEffectiveTemperature(BodyPart.HANDS, added);
+						data.addPower(BodyPart.HANDS,
+								HAND_POWER_W * activeFraction);
 					}else {//In offhand, heatup body
-						data.addEffectiveTemperature(BodyPart.TORSO, added);
+						data.addPower(BodyPart.TORSO,
+								TORSO_POWER_W * activeFraction);
+					}
+					int consumed = data.takeConsumedHeatingSeconds();
+					if (consumed > 0) {
+						consumeFuel(stack, consumed);
 					}
 				}
 			}
 
 			@Override
-			public float getMaxTempAddValue(ItemStack stack) {
-				return getFuelAmount(stack) > 0 ? HEAT_ADJUST : 0;
+			public float getMaxPowerW(ItemStack stack) {
+				return availableBurnSeconds(stack) > 0
+						? TORSO_POWER_W : 0;
 			}
 
 			@Override
-			public float getMinTempAddValue(ItemStack stack) {
-				return getFuelAmount(stack) > 0 ? HEAT_ADJUST : 0;
+			public float getMinPowerW(ItemStack stack) {
+				return availableBurnSeconds(stack) > 0
+						? HAND_POWER_W : 0;
 			}
 			
 		});

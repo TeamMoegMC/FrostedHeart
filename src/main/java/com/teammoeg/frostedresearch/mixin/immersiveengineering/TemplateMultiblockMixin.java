@@ -40,6 +40,7 @@ import blusunrize.immersiveengineering.api.multiblocks.MultiblockHandler.IMultib
 import blusunrize.immersiveengineering.api.multiblocks.TemplateMultiblock;
 import blusunrize.immersiveengineering.common.util.Utils;
 import net.minecraft.world.entity.player.Player;
+import net.minecraftforge.common.util.FakePlayer;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.core.Direction;
 import net.minecraft.world.level.block.Mirror;
@@ -60,8 +61,8 @@ public abstract class TemplateMultiblockMixin implements IMultiblock, MultiBlock
     @Inject(at = @At(value = "INVOKE", target = "Lblusunrize/immersiveengineering/api/multiblocks/TemplateMultiblock;form"), method = "createStructure", remap = false)
     public void fh$on$createStructure(Level world, BlockPos pos, Direction side, Player player, CallbackInfoReturnable<Boolean> cbi) {
     	user = null;
-    	if (!world.isClientSide)
-    		setPlayer((ServerPlayer) player);
+		if (!world.isClientSide && player instanceof ServerPlayer serverPlayer && !(player instanceof FakePlayer))
+			setPlayer(serverPlayer);
     }
 
     @Inject(at = @At("RETURN"), remap = false, method = "form", locals = LocalCapture.CAPTURE_FAILHARD)

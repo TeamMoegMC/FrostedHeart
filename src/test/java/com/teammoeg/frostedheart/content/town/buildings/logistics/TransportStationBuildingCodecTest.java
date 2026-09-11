@@ -32,6 +32,7 @@ import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class TransportStationBuildingCodecTest {
     @BeforeAll
@@ -116,8 +117,11 @@ class TransportStationBuildingCodecTest {
         Tag legacyTag = legacyCodec.encodeStart(NbtOps.INSTANCE, new WarehouseBuilding(BlockPos.ZERO))
                 .result().orElseThrow();
 
-        assertInstanceOf(WarehouseBuilding.class,
-                ITownBuilding.CODEC.parse(NbtOps.INSTANCE, legacyTag).result().orElseThrow());
+        var decoded = ITownBuilding.CODEC.parse(NbtOps.INSTANCE, legacyTag);
+        assertTrue(decoded.result().isPresent(),
+                () -> "Could not decode legacy tag " + legacyTag + ": "
+                        + decoded.error().map(Object::toString).orElse("unknown codec error"));
+        assertInstanceOf(WarehouseBuilding.class, decoded.result().orElseThrow());
     }
 
     private static void assertBuildingEquals(TransportStationBuilding expected, TransportStationBuilding actual) {

@@ -25,6 +25,7 @@ import com.teammoeg.chorda.menu.CCustomMenuSlot.CDataSlot;
 import com.teammoeg.frostedheart.bootstrap.common.FHMenuSlots;
 import com.teammoeg.frostedheart.bootstrap.common.FHMenuTypes;
 import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.entity.player.Player;
 import org.jetbrains.annotations.Nullable;
 
 /**
@@ -47,9 +48,11 @@ public class WarehouseLevelEmitterMenu extends CBlockEntityMenu<WarehouseLevelEm
     private final CDataSlot<Integer> connectionStatus;
     private final CDataSlot<Integer> stockData;
     private final CDataSlot<Integer> emitterState;
+    private final Player menuPlayer;
 
     public WarehouseLevelEmitterMenu(int id, Inventory playerInventory, WarehouseLevelEmitterBlockEntity blockEntity) {
         super(FHMenuTypes.WAREHOUSE_LEVEL_EMITTER.get(), blockEntity, id, playerInventory.player, 0);
+        menuPlayer = playerInventory.player;
 
         boolean serverSide = !playerInventory.player.level().isClientSide;
         filterData = FHMenuSlots.SIMPLE_ITEM_KEY_ENCODER_SLOT.create(this);
@@ -63,7 +66,8 @@ public class WarehouseLevelEmitterMenu extends CBlockEntityMenu<WarehouseLevelEm
             thresholdData.bind(blockEntity::getThreshold);
             modeData.bind(() -> blockEntity.getMode().ordinal());
             connectionStatus.bind(blockEntity::getConnectionStatus);
-            stockData.bind(() -> (int) Math.min(blockEntity.getLastKnownStock(), Integer.MAX_VALUE));
+            stockData.bind(() -> WarehouseLevelEmitterModel.stockForMenu(
+                    blockEntity.getLastKnownStock()));
             emitterState.bind(() -> blockEntity.isEmitterOn() ? 1 : 0);
         }
 
@@ -118,6 +122,9 @@ public class WarehouseLevelEmitterMenu extends CBlockEntityMenu<WarehouseLevelEm
 
     @Override
     public void receiveMessage(short buttonId, int state) {
+        if (!isCommandContextValid()) {
+            return;
+        }
         switch (buttonId) {
             case CMD_SET_FILTER -> {
                 if (!getCarried().isEmpty()) {
@@ -125,10 +132,24 @@ public class WarehouseLevelEmitterMenu extends CBlockEntityMenu<WarehouseLevelEm
                 }
             }
             case CMD_CLEAR_FILTER -> blockEntity.setFilter(null);
-            case CMD_SET_THRESHOLD -> blockEntity.setThreshold(state);
+            case CMD_SET_THRESHOLD -> {
+                if (state >= 1) {
+                    blockEntity.setThreshold(state);
+                }
+            }
             case CMD_CYCLE_MODE -> blockEntity.cycleMode();
             default -> {
             }
         }
+    }
+
+    private boolean isCommandContextValid() {
+        return TownWarehouseDeviceAccess.isMenuAccessValid(
+                menuPlayer, blockEntity, blockEntity.getTownProvider(), this);
+    }
+
+    @Override
+    public boolean stillValid(Player player) {
+        return player == menuPlayer && isCommandContextValid();
     }
 }

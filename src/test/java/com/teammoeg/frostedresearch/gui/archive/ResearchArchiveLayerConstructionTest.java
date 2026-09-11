@@ -3,6 +3,7 @@ package com.teammoeg.frostedresearch.gui.archive;
 import com.teammoeg.chorda.client.cui.base.LayerHolder;
 import com.teammoeg.chorda.client.cui.base.UIElement;
 import com.teammoeg.chorda.client.cui.theme.Theme;
+import com.teammoeg.frostedresearch.FHResearch;
 import net.minecraft.SharedConstants;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.screens.Screen;
@@ -13,6 +14,7 @@ import org.junit.jupiter.api.Test;
 import java.lang.reflect.Field;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -49,6 +51,30 @@ class ResearchArchiveLayerConstructionTest {
     }
 
     @Test
+    void editorTransitionRebuildsTheCompleteArchiveViewOnce() throws ReflectiveOperationException {
+        boolean originalEditor = FHResearch.editor;
+        try {
+            FHResearch.editor = false;
+            ResearchOpenContext context = ResearchOpenContext.drawingDesk(null);
+            ResearchWorkspaceState state = new ResearchWorkspaceState(context);
+            ResearchArchiveLayer layer = new ResearchArchiveLayer(
+                    new TestParent(), context, state,
+                    new StatefulResearchNavigationController(context, state, () -> { }), () -> { });
+            layer.addUIElements();
+            long initialRevision = privateLong(layer, "definitionRevision");
+
+            assertFalse(layer.refreshEditorModeIfNeeded());
+            FHResearch.editor = true;
+            assertTrue(layer.refreshEditorModeIfNeeded());
+            assertEquals(initialRevision + 1, privateLong(layer, "definitionRevision"));
+            assertFalse(layer.refreshEditorModeIfNeeded());
+            assertEquals(initialRevision + 1, privateLong(layer, "definitionRevision"));
+        } finally {
+            FHResearch.editor = originalEditor;
+        }
+    }
+
+    @Test
     void openingProjectWorkspaceHidesAndDisablesGraphViewport() throws ReflectiveOperationException {
         ResearchOpenContext context = ResearchOpenContext.drawingDesk(null);
         ResearchWorkspaceState state = new ResearchWorkspaceState(context);
@@ -74,6 +100,13 @@ class ResearchArchiveLayerConstructionTest {
         Field field = ResearchArchiveLayer.class.getDeclaredField(fieldName);
         field.setAccessible(true);
         return (UIElement) field.get(layer);
+    }
+
+    private static long privateLong(ResearchArchiveLayer layer, String fieldName)
+            throws ReflectiveOperationException {
+        Field field = ResearchArchiveLayer.class.getDeclaredField(fieldName);
+        field.setAccessible(true);
+        return field.getLong(layer);
     }
 
     private static final class TestParent extends UIElement {

@@ -34,31 +34,40 @@ import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.network.NetworkEvent;
 
 // send when clue progress updated
-public record FHS2CClueProgressSyncPacket(boolean data, int id, int index) implements CMessage {
+public record FHS2CClueProgressSyncPacket(boolean data, String researchId, String clueId) implements CMessage {
 
     public FHS2CClueProgressSyncPacket(FriendlyByteBuf buffer) {
-        this(buffer.readBoolean(), buffer.readVarInt(), buffer.readVarInt());
+        this(buffer.isReadable() && buffer.readBoolean(),
+                ResearchNetworkCodec.readId(buffer, "clue progress research"),
+                ResearchNetworkCodec.readId(buffer, "clue progress clue"));
 
     }
 
     public FHS2CClueProgressSyncPacket(TeamDataHolder team, Research rch, Clue clue) {
-        this(team.getData(FRSpecialDataTypes.RESEARCH_DATA).getData(rch).isClueTriggered(clue), FHResearch.researches.getIntId(rch), rch.getClues().indexOf(clue));
+        this(team.getData(FRSpecialDataTypes.RESEARCH_DATA).getData(rch).isClueTriggered(clue),
+                rch.getId(), clue.getNonce());
     }
 
     public void encode(FriendlyByteBuf buffer) {
         buffer.writeBoolean(data);
-        buffer.writeVarInt(id);
-        buffer.writeVarInt(index);
+        buffer.writeUtf(researchId, ResearchNetworkCodec.MAX_ID_LENGTH);
+        buffer.writeUtf(clueId, ResearchNetworkCodec.MAX_ID_LENGTH);
     }
 
     public void handle(Supplier<NetworkEvent.Context> context) {
         context.get().enqueueWork(() -> {
-            Research rch = FHResearch.researches.get(id);
+            Research rch = FHResearch.getResearch(researchId);
             if (rch != null) {
-                Clue cl = rch.getClues().get(index);
-                ClientResearchDataAPI.getData().get().getData(id()).setClueTriggered(cl, data);
-                ResearchUtils.notifyClueProgressChanged(rch.getId(), cl.getNonce());
-            }
+                Clue cl = rch.getClues().stream()
+                        .filter(candidate -> candidate.getNonce().equals(clueId))
+                        .findFirst().orElse(null);
+                if (cl == null) {
+                    ResearchNetworkCodec.reject("clue progress: unknown clue " + researchId + "/" + clueId);
+                    return;
+                }
+                ClientResearchDataAPI.getData().get().getData(rch).setClueTriggered(cl, data);
+                ResearchUtils.notifyClueProgressChanged(rch.getId(), clueId);
+            } else ResearchNetworkCodec.reject("clue progress: unknown research " + researchId);
 
         });
         context.get().setPacketHandled(true);

@@ -52,14 +52,14 @@ public abstract class TickListenerClue extends ListenerClue {
 
 	@Override
     public void initListener(TeamDataHolder t, Research parent) {
-        ResearchHooks.getTickClues().add(super.getClueClosure(parent), t.getId());
+        ResearchHooks.getTickClues().add(super.getClueClosure(parent), t == null ? null : t.getId());
     }
 
     public abstract boolean isCompleted(TeamResearchData t, ServerPlayer player);
 
     @Override
     public void removeListener(TeamDataHolder t, Research parent) {
-        ResearchHooks.getTickClues().remove(super.getClueClosure(parent), t.getId());
+        ResearchHooks.getTickClues().remove(super.getClueClosure(parent), t == null ? null : t.getId());
     }
 
 }

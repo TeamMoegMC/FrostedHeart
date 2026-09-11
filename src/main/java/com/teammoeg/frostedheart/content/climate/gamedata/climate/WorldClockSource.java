@@ -70,6 +70,9 @@ public class WorldClockSource {
     public long getTimeSecs() {
         return secs;
     }
+    public long getSourceDayTime() {
+        return lastdaytime;
+    }
     public Calendar getGameCalendar() {
     	if(calendar==null) {
 	    	calendar=Calendar.getInstance();
@@ -128,20 +131,29 @@ public class WorldClockSource {
         return "WorldClockSource [secs=" + secs + "]";
     }
 
-    public void update(long newTime) {
-        long dt = newTime - lastdaytime;
-        if (dt < 0) {// if time run backwards, it's command done the trick
-            long nextday = lastdaytime + 24000L;
-            nextday = nextday - nextday % 24000L;
-            dt = newTime % 24000L + nextday - lastdaytime;//assume it's next day and continue
-        }
+    public boolean update(long newTime) {
+        long dt = elapsedDayTimeTicks(lastdaytime, newTime);
         secs += dt / 20;
         if(dt>20)
         	calendar=null;
         lastdaytime = newTime - newTime % 20;
+        return dt > 20L;
     }
 
-    public void update(ServerLevel w) {
-        update(w.getDayTime());
+    /**
+     * Applies the clock's established rule for a backwards daylight jump: it is
+     * interpreted as wrapping into the next Minecraft day.
+     */
+    public static long elapsedDayTimeTicks(long previousDayTime, long currentDayTime) {
+        long dt = currentDayTime - previousDayTime;
+        if (dt >= 0L) {
+            return dt;
+        }
+        long nextDayStart = previousDayTime - Math.floorMod(previousDayTime, 24000L) + 24000L;
+        return Math.floorMod(currentDayTime, 24000L) + nextDayStart - previousDayTime;
+    }
+
+    public boolean update(ServerLevel w) {
+        return update(w.getDayTime());
     }
 }

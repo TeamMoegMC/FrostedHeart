@@ -23,32 +23,32 @@ import java.util.function.Supplier;
 
 import com.teammoeg.chorda.dataholders.team.CClientTeamDataManager;
 import com.teammoeg.chorda.dataholders.team.TeamDataClosure;
-import com.teammoeg.chorda.io.codec.DataOps;
-import com.teammoeg.chorda.io.codec.ObjectWriter;
 import com.teammoeg.chorda.network.CMessage;
 import com.teammoeg.frostedresearch.FRMain;
 import com.teammoeg.frostedresearch.FRSpecialDataTypes;
-import com.teammoeg.frostedresearch.compat.JEICompat;
+import com.teammoeg.frostedresearch.ResearchUtils;
+import com.teammoeg.frostedresearch.compat.ResearchJeiBridge;
 import com.teammoeg.frostedresearch.data.TeamResearchData;
 import com.teammoeg.frostedresearch.gui.InsightOverlay;
 
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.network.NetworkEvent;
 
 // send when player join
 public class FHResearchDataSyncPacket implements CMessage {
-    Object dat;
+    CompoundTag dat;
 
 
     public FHResearchDataSyncPacket(FriendlyByteBuf buffer) {
-        this.dat = (ObjectWriter.readObject(buffer));
+        this.dat = ResearchNetworkCodec.readPayload(buffer, "full team state");
     }
 
     public FHResearchDataSyncPacket(TeamResearchData team) {
         try {
-            this.dat = (TeamResearchData.NETWORK_CODEC.encodeStart(DataOps.COMPRESSED, team).getOrThrow(false, FRMain.LOGGER::warn));
+            this.dat = ResearchNetworkCodec.encode(TeamResearchData.NETWORK_CODEC, team);
             //System.out.println(dat);
         } catch (Exception e) {
             FRMain.LOGGER.error("Failed to save research data when syncing research data", e);
@@ -60,23 +60,27 @@ public class FHResearchDataSyncPacket implements CMessage {
         context.get().enqueueWork(() -> {
             try {
                 // Sync Server Data to Client
-                CClientTeamDataManager.INSTANCE.getInstance().setData(FRSpecialDataTypes.RESEARCH_DATA, TeamResearchData.NETWORK_CODEC.parse(DataOps.COMPRESSED, dat).getOrThrow(false,FRMain.LOGGER::warn));
+                TeamResearchData decoded = ResearchNetworkCodec.decode(
+                        TeamResearchData.NETWORK_CODEC, dat, "full team state");
+                if (decoded == null) return;
+                CClientTeamDataManager.INSTANCE.getInstance().setData(FRSpecialDataTypes.RESEARCH_DATA, decoded);
                 // Grant Effects on Client
                 
 
                  TeamDataClosure<TeamResearchData> closure = CClientTeamDataManager.INSTANCE.getInstance().getDataHolder(FRSpecialDataTypes.RESEARCH_DATA);
                  closure.get().initResearch(closure.team());
                  DistExecutor.safeRunWhenOn(Dist.CLIENT, ()->InsightOverlay::initOverlay);
+                 DistExecutor.safeRunWhenOn(Dist.CLIENT, ()->ResearchUtils::notifyResearchDataReplaced);
             } catch (Exception e) {
                 FRMain.LOGGER.error("Failed to load data when syncing research data", e);
             }
-            DistExecutor.safeRunWhenOn(Dist.CLIENT, () -> JEICompat::syncJEI);
+            DistExecutor.safeRunWhenOn(Dist.CLIENT, () -> ResearchJeiBridge::sync);
         });
         context.get().setPacketHandled(true);
     }
 
     @Override
     public void encode(FriendlyByteBuf buffer) {
-        ObjectWriter.writeObject(buffer, dat);
+        buffer.writeNbt(dat);
     }
 }

@@ -126,8 +126,8 @@ public class RubbingTool extends FRBaseItem{
 
             BlockEntity te = CUtils.getExistingTileEntity(worldIn, brtr.getBlockPos());
             if (te instanceof ComputeMachine mcte) {
-            	if(mcte.getFetchablePoints()>=100) {
-	                int crp = mcte.fetchPoint(10000);
+	            if(mcte.getFetchablePoints((ServerPlayer) entityplayer)>=100) {
+	                int crp = mcte.fetchPoint((ServerPlayer) entityplayer, 100);
 	                if (crp > 0) {
 	                    stack.setDamageValue(stack.getDamageValue() + 1);
 	                    crp += getPoint(stack);

@@ -25,6 +25,7 @@ import com.simibubi.create.content.kinetics.base.KineticBlockEntityRenderer;
 import com.simibubi.create.content.kinetics.base.SingleRotatingInstance;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.climate.block.wardrobe.WardrobeBlockEntity;
+import com.teammoeg.frostedheart.content.climate.player.thermalitem.ThermalReservoirBlockEntity;
 import com.teammoeg.frostedheart.content.decoration.RelicChestTileEntity;
 import com.teammoeg.frostedheart.content.incubator.HeatIncubatorTileEntity;
 import com.teammoeg.frostedheart.content.incubator.IncubatorTileEntity;
@@ -48,6 +49,7 @@ import com.teammoeg.frostedheart.content.town.buildings.mine.MineBlockEntity;
 import com.teammoeg.frostedheart.content.town.buildings.warehouse.WarehouseBlockEntity;
 import com.teammoeg.frostedheart.content.town.buildings.warehouse.WarehouseInterfaceBlockEntity;
 import com.teammoeg.frostedheart.content.town.buildings.warehouse.WarehouseLevelEmitterBlockEntity;
+import com.teammoeg.frostedheart.content.town.transport.device.P2PTerminalBlockEntity;
 import com.teammoeg.frostedheart.content.utility.gunpowderbarrel.GunpowderBarrelBlockEntity;
 import com.teammoeg.frostedheart.content.utility.incinerator.GasVentTileEntity;
 import com.teammoeg.frostedheart.content.utility.incinerator.OilBurnerTileEntity;
@@ -76,6 +78,10 @@ public class FHBlockEntityTypes {
 
     public static final DeferredRegister<BlockEntityType<?>> REGISTER = DeferredRegister.create(
             ForgeRegistries.BLOCK_ENTITY_TYPES, FHMain.MODID);
+    public static final RegistryObject<BlockEntityType<ThermalReservoirBlockEntity>> THERMAL_RESERVOIR = REGISTER.register(
+            "thermal_reservoir", makeType(ThermalReservoirBlockEntity::new,
+                    FHBlocks.WARM_STONE::get, FHBlocks.HOT_WATER_BAG::get)
+    );
     public static final RegistryObject<BlockEntityType<HeatPipeTileEntity>> HEATPIPE = REGISTER.register(
             "heat_pipe", makeType(HeatPipeTileEntity::new, FHBlocks.HEAT_PIPE::get)
     );
@@ -145,6 +151,12 @@ public class FHBlockEntityTypes {
     );
     public static final RegistryObject<BlockEntityType<WarehouseLevelEmitterBlockEntity>> WAREHOUSE_LEVEL_EMITTER = REGISTER.register(
             "warehouse_level_emitter", makeType(WarehouseLevelEmitterBlockEntity::new, FHBlocks.WAREHOUSE_LEVEL_EMITTER::get)
+    );
+    public static final RegistryObject<BlockEntityType<P2PTerminalBlockEntity>> P2P_TERMINAL = REGISTER.register(
+            "p2p_terminal", makeType(P2PTerminalBlockEntity::new,
+                    FHBlocks.SHIPPING_TERMINAL::get,
+                    FHBlocks.RECEIVING_TERMINAL::get,
+                    FHBlocks.BIDIRECTIONAL_LOGISTICS_TERMINAL::get)
     );
     public static final RegistryObject<BlockEntityType<MineBlockEntity>> MINE = REGISTER.register(
             "mine", makeType(MineBlockEntity::new, FHBlocks.MINE::get)

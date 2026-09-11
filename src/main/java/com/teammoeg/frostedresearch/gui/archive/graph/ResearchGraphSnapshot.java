@@ -39,6 +39,11 @@ public final class ResearchGraphSnapshot {
     }
 
     public static ResearchGraphSnapshot fromResearches(Collection<Research> researches, long localRevision) {
+        return fromResearches(researches, localRevision, false);
+    }
+
+    public static ResearchGraphSnapshot fromResearches(
+            Collection<Research> researches, long localRevision, boolean revealHidden) {
         List<ResearchGraphNode> nodes = new ArrayList<>(researches.size());
         for (Research research : researches) {
             if (research != null && research.getId() != null) {
@@ -46,7 +51,7 @@ public final class ResearchGraphSnapshot {
                         research.getId(),
                         ResearchTypeIdNormalizer.normalize(research.getCategory()),
                         research.getParentIds(),
-                        research.isHidden()));
+                        research.isHidden() && !revealHidden));
             }
         }
         return of(nodes, localRevision);

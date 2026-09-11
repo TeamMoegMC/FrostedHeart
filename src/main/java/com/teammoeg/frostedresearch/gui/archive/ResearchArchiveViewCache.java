@@ -63,15 +63,10 @@ final class ResearchArchiveViewCache {
 
         for (View view : viewsById.values()) {
             ResearchData data = teamData.getData(view.research);
-            view.completed = data.isCompleted();
-            float progress = data.getProgress(view.research);
-            view.progress = Float.isFinite(progress)
-                    ? Math.max(0.0F, Math.min(1.0F, progress))
-                    : 0.0F;
-            view.active = view.research.getId().equals(activeResearchId);
+            view.refreshState(data, activeResearchId);
         }
         for (View view : viewsById.values()) {
-            view.unlocked = parentsCompleted(view.research, teamData);
+            view.setUnlocked(parentsCompleted(view.research, teamData));
         }
         stateRevision++;
     }
@@ -80,7 +75,7 @@ final class ResearchArchiveViewCache {
         for (String parentId : research.getParentIds()) {
             View parentView = viewsById.get(parentId);
             if (parentView != null) {
-                if (!parentView.completed) {
+                if (!parentView.completed()) {
                     return false;
                 }
                 continue;
@@ -95,21 +90,14 @@ final class ResearchArchiveViewCache {
 
     private void rebuildPresentations() {
         for (View view : viewsById.values()) {
-            Component name = view.research.getName();
-            String title = name.getString();
-            Component categoryName = view.research.getCategory().getName();
-            view.name = name;
-            view.title = title;
-            view.lowercaseSearchText = (view.research.getId() + '\n' + title).toLowerCase(Locale.ROOT);
-            view.categoryName = categoryName;
-            view.categoryTitle = categoryName.getString();
+            view.rebuildPresentation();
         }
         presentationRevision++;
     }
 
     @Nullable
-    View view(String researchId) {
-        return viewsById.get(researchId);
+    View view(@Nullable String researchId) {
+        return researchId == null ? null : viewsById.get(researchId);
     }
 
     List<Research> definitions() {
@@ -131,18 +119,36 @@ final class ResearchArchiveViewCache {
 
     static final class View {
         private final Research research;
-        private Component name = Component.empty();
-        private String title = "";
-        private String lowercaseSearchText = "";
-        private Component categoryName = Component.empty();
-        private String categoryTitle = "";
-        private boolean completed;
-        private boolean active;
-        private boolean unlocked;
-        private float progress;
+        private final LocalizedPresentation presentation = new LocalizedPresentation();
+        private final SynchronizedState state = new SynchronizedState();
 
         private View(Research research) {
             this.research = research;
+        }
+
+        private void rebuildPresentation() {
+            Component name = research.getName();
+            String title = name.getString();
+            Component categoryName = research.getCategory().getName();
+            presentation.name = name;
+            presentation.title = title;
+            presentation.lowercaseSearchText =
+                    (research.getId() + '\n' + title).toLowerCase(Locale.ROOT);
+            presentation.categoryName = categoryName;
+            presentation.categoryTitle = categoryName.getString();
+        }
+
+        private void refreshState(ResearchData data, @Nullable String activeResearchId) {
+            state.completed = data.isCompleted();
+            float progress = data.getProgress(research);
+            state.progress = Float.isFinite(progress)
+                    ? Math.max(0.0F, Math.min(1.0F, progress))
+                    : 0.0F;
+            state.active = research.getId().equals(activeResearchId);
+        }
+
+        private void setUnlocked(boolean unlocked) {
+            state.unlocked = unlocked;
         }
 
         Research research() {
@@ -150,39 +156,54 @@ final class ResearchArchiveViewCache {
         }
 
         Component name() {
-            return name;
+            return presentation.name;
         }
 
         String title() {
-            return title;
+            return presentation.title;
         }
 
         String lowercaseSearchText() {
-            return lowercaseSearchText;
+            return presentation.lowercaseSearchText;
         }
 
         Component categoryName() {
-            return categoryName;
+            return presentation.categoryName;
         }
 
         String categoryTitle() {
-            return categoryTitle;
+            return presentation.categoryTitle;
         }
 
         boolean completed() {
-            return completed;
+            return state.completed;
         }
 
         boolean active() {
-            return active;
+            return state.active;
         }
 
         boolean unlocked() {
-            return unlocked;
+            return state.unlocked;
         }
 
         float progress() {
-            return progress;
+            return state.progress;
         }
+    }
+
+    private static final class LocalizedPresentation {
+        private Component name = Component.empty();
+        private String title = "";
+        private String lowercaseSearchText = "";
+        private Component categoryName = Component.empty();
+        private String categoryTitle = "";
+    }
+
+    private static final class SynchronizedState {
+        private boolean completed;
+        private boolean active;
+        private boolean unlocked;
+        private float progress;
     }
 }

@@ -1,0 +1,99 @@
+{
+  "showAltDesc": true,
+  "points": 4000,
+  "clues": [
+    {
+      "type": "game",
+      "id": "e1b4f383d5e345ea",
+      "required": true,
+      "value": 0.25,
+      "level": 1
+    },
+    {
+      "type": "item",
+      "id": "c5d4328814d0411c",
+      "required": true,
+      "value": 0.25,
+      "item": {
+        "base_ingredient": {
+          "item": "frostedresearch:mechanical_calculator"
+        },
+        "count": 1
+      }
+    },
+    {
+      "type": "game",
+      "id": "dccec6b8dfba4031",
+      "value": 0.25,
+      "level": 1
+    },
+    {
+      "type": "item",
+      "id": "c63eed3e6f43436b",
+      "value": 0.2,
+      "consume": true,
+      "item": {
+        "base_ingredient": {
+          "tag": "forge:coal_coke"
+        },
+        "count": 40
+      }
+    }
+  ],
+  "ingredients": [
+    {
+      "base_ingredient": {
+        "item": "frostedheart:generator_ash"
+      },
+      "count": 16
+    },
+    {
+      "base_ingredient": {
+        "item": "frostedheart:cast_iron_sheet"
+      },
+      "count": 8
+    },
+    {
+      "base_ingredient": {
+        "item": "minecraft:paper"
+      },
+      "count": 4
+    },
+    {
+      "base_ingredient": {
+        "tag": "forge:ingots/cast_iron"
+      },
+      "count": 6
+    }
+  ],
+  "effects": [
+    {
+      "type": "recipe",
+      "item": {
+        "item": "frostedresearch:rubbing_pad"
+      },
+      "id": "c1c6bbd1353b4ec1"
+    },
+    {
+      "type": "recipe",
+      "item": {
+        "item": "frostedresearch:rubbing_tool"
+      },
+      "id": "19c7452413f0474b"
+    }
+  ],
+  "icon": {
+    "type": "item",
+    "item": {
+      "id": "frostedresearch:rubbing_tool",
+      "Count": 1,
+      "tag": {
+        "Damage": 0
+      }
+    }
+  },
+  "category": "frostedresearch:ars",
+  "parents": [
+    "mechanical_calculator"
+  ]
+}

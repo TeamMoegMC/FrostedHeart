@@ -72,7 +72,7 @@ import net.minecraftforge.network.PacketDistributor;
 public class ResearchHooks {
 	public final static Map<UnlockListType<?>,UnlockList<?>> locklists=new IdentityHashMap<>(10);
 
-	public static UUID te;
+	private static final ThreadLocal<RecipeOwnerContext> RECIPE_OWNER = new ThreadLocal<>();
 	private static ListenerList<TickListenerClue> tickClues = new ListenerList<>();
 	private static ListenerList<KillClue> killClues = new ListenerList<>();
 
@@ -91,12 +91,30 @@ public class ResearchHooks {
 	@OnlyIn(Dist.CLIENT)
 	public static boolean canExamine(ItemStack i) {
 		if (i.isEmpty()) return false;
+		TeamResearchData data = ClientResearchDataAPI.getData().get();
+		Research current = data.getCurrentResearchValue();
+		if (current != null) {
+			for (Clue clue : current.getClues()) {
+				if (clue instanceof ItemClue itemClue
+						&& !data.isClueCompleted(current, clue) && itemClue.matches(i)) {
+					return true;
+				}
+			}
+		}
+		if (i.getItem() instanceof RubbingTool) {
+			if (!RubbingTool.hasResearch(i)) {
+				return current != null;
+			}
+			Research bound = FHResearch.getResearch(RubbingTool.getResearch(i));
+			return bound != null && RubbingTool.getPoint(i) > 0
+					&& data.getData(bound).canResearch() && !data.getData(bound).isCompleted();
+		}
 		for (InspireRecipe ir : CUtils.filterRecipes(null, InspireRecipe.TYPE)) {
 			if (ir.item.test(i)) {
 				return true;
 			}
 		}
-		return true;
+		return false;
 	}
 
 	public static boolean canUseBlock(Player player, Block b) {
@@ -118,9 +136,9 @@ public class ResearchHooks {
 	}
 
 	public static boolean canUseRecipe(Player s, Recipe<?> r) {
-		if (s == null)
-			return canUseRecipe(r);
 		if (getLockList(RECIPE_UNLOCK_LIST).has(r)) {
+			if (s == null || s instanceof FakePlayer)
+				return false;
 			if (s.getCommandSenderWorld().isClientSide)
 				return ClientResearchDataAPI.getData().get().getUnlockList(ResearchHooks.RECIPE_UNLOCK_LIST).has(r);
 			return ResearchDataAPI.getData(s).get().getUnlockList(ResearchHooks.RECIPE_UNLOCK_LIST).has(r);
@@ -134,6 +152,23 @@ public class ResearchHooks {
 			return ResearchDataAPI.getData(team).map(t -> t.get().getUnlockList(ResearchHooks.RECIPE_UNLOCK_LIST).has(r)).orElse(false);
 		}
 		return true;
+	}
+
+	/** Runs one machine recipe lookup with a nested, exception-safe owner context. */
+	public static <T> T withRecipeOwner(UUID owner, Supplier<T> action) {
+		RecipeOwnerContext previous = RECIPE_OWNER.get();
+		RECIPE_OWNER.set(new RecipeOwnerContext(owner));
+		try {
+			return action.get();
+		} finally {
+			if (previous == null) RECIPE_OWNER.remove();
+			else RECIPE_OWNER.set(previous);
+		}
+	}
+
+	public static UUID currentRecipeOwner() {
+		RecipeOwnerContext context = RECIPE_OWNER.get();
+		return context == null ? null : context.owner();
 	}
 
 	public static boolean commitGameLevel(ServerPlayer s, int lvl) {
@@ -200,13 +235,18 @@ public class ResearchHooks {
 	public static void kill(ServerPlayer s, LivingEntity e) {
 		TeamDataClosure<TeamResearchData> data = ResearchDataAPI.getData(s);
 		killClues.call(data.getId(), c -> {
-
-			if (data.get().isClueCompleted(c.research(), c.clue())) {
+			boolean alreadyCompleted = data.get().isClueCompleted(c.research(), c.clue());
+			boolean matchesKilledEntity = !alreadyCompleted && c.clue().isCompleted(data.get(), e);
+			if (shouldCompleteKillClue(alreadyCompleted, matchesKilledEntity)) {
 				data.get().setClueCompleted(data.team(), c.research(), c.clue(), true);
 				return true;
 			}
-			return false;
+			return alreadyCompleted;
 		});
+	}
+
+	static boolean shouldCompleteKillClue(boolean alreadyCompleted, boolean matchesKilledEntity) {
+		return !alreadyCompleted && matchesKilledEntity;
 	}
 
 	public static void reload() {
@@ -214,22 +254,27 @@ public class ResearchHooks {
 		MinecraftForge.EVENT_BUS.post(new PopulateUnlockListEvent(locklists));
 		tickClues.clear();
 		killClues.clear();
-		te = null;
+		RECIPE_OWNER.remove();
 	}
 
-	public static boolean hasMultiblock(UUID rid, IETemplateMultiblock mb) {
-		if (getLockList(MULTIBLOCK_UNLOCK_LIST).has(mb))
-			if (rid == null) {
-				if (!ClientResearchDataAPI.getData().get().getUnlockList(ResearchHooks.MULTIBLOCK_UNLOCK_LIST).has(mb)) {
-					return false;
-				}
-			} else {
-				if (!ResearchDataAPI.getData(rid).map(t -> t.get().getUnlockList(ResearchHooks.MULTIBLOCK_UNLOCK_LIST).has(mb)).orElse(false)) {
-					return false;
-				}
+	private record RecipeOwnerContext(UUID owner) {
+	}
 
-			}
-		return true;
+	/** Server-side machine authorization. Ownerless machines fail closed for locked multiblocks. */
+	public static boolean hasMultiblock(UUID owner, IETemplateMultiblock mb) {
+		if (!getLockList(MULTIBLOCK_UNLOCK_LIST).has(mb)) return true;
+		if (owner == null) return false;
+		return ResearchDataAPI.getData(owner)
+				.map(t -> t.get().getUnlockList(ResearchHooks.MULTIBLOCK_UNLOCK_LIST).has(mb))
+				.orElse(false);
+	}
+
+	/** Client-only preview authorization for player-facing screens. */
+	@OnlyIn(Dist.CLIENT)
+	public static boolean hasMultiblock(IETemplateMultiblock mb) {
+		return !getLockList(MULTIBLOCK_UNLOCK_LIST).has(mb)
+				|| ClientResearchDataAPI.getData().get()
+						.getUnlockList(ResearchHooks.MULTIBLOCK_UNLOCK_LIST).has(mb);
 	}
 
 	@OnlyIn(Dist.CLIENT)
@@ -241,8 +286,11 @@ public class ResearchHooks {
 	public static void ServerReload() {
 		if (CTeamDataManager.INSTANCE == null) return;
 		FRMain.LOGGER.info("reloading research system");
-		CTeamDataManager.INSTANCE.save();
-		CTeamDataManager.INSTANCE.load();
+		if (!FHResearch.reloadCatalog()) {
+			FRMain.LOGGER.error("Research reload rejected; the previous catalogue remains active");
+			return;
+		}
+		CTeamDataManager.INSTANCE.forAllData(FRSpecialDataTypes.RESEARCH_DATA, TeamResearchData::initResearch);
 		FHResearch.sendSyncPacket(PacketDistributor.ALL.noArg());
 		CTeamDataManager.INSTANCE.forAllData(FRSpecialDataTypes.RESEARCH_DATA, TeamResearchData::sendUpdate);
 	}
@@ -263,16 +311,19 @@ public class ResearchHooks {
 			if (i.getItem() instanceof RubbingTool) {
 				if (RubbingTool.hasResearch(i)) {
 					int pts = RubbingTool.getPoint(i);
-					if (pts > 0) {
-						Research rssubmit = FHResearch.getResearch(RubbingTool.getResearch(i));
-						if (rssubmit != null && pts > 0) {
-							trd.get().doResearch(trd.team(),rssubmit, pts);
-						}
+					Research rssubmit = FHResearch.getResearch(RubbingTool.getResearch(i));
+					if (rssubmit != null && pts > 0
+							&& trd.get().getData(rssubmit).canResearch()
+							&& !trd.get().getData(rssubmit).isCompleted()) {
+						trd.get().doResearch(trd.team(),rssubmit, pts);
+						return new ItemStack(FRContents.Items.rubbing_pad.get());
 					}
-					return new ItemStack(FRContents.Items.rubbing_pad.get());
+					return i;
 				}
-				if(rs!=null)
+				if(rs!=null) {
 					RubbingTool.setResearch(i, rs.getId());
+					return i;
+				}
 			}
 			for (InspireRecipe ir : CUtils.filterRecipes(s.level().getRecipeManager(), InspireRecipe.TYPE)) {
 				if (ir.item.test(i)) {
@@ -288,8 +339,11 @@ public class ResearchHooks {
 	}
 
 	public static void tick(ServerPlayer s) {
+		if (tickClues.isEmpty()) return;
 		TeamDataClosure<TeamResearchData> data = ResearchDataAPI.getData(s);
 		tickClues.call(data.team().getId(), e -> {
+			if (data.get().isClueCompleted(e.research(), e.clue()))
+				return true;
 			if (e.clue().isCompleted(data.get(), s)) {
 				data.get().setClueCompleted(data.team(), e.research(), e.clue(), true);
 				return true;
@@ -408,7 +462,7 @@ public class ResearchHooks {
 						return cl.add(t);
 				}
 			} else
-				this.removeIf(cl -> cl.getListener() == c);
+				this.removeIf(cl -> cl.getListener().equals(c));
 			return super.add(new ListenerInfo<>(c, t));
 		}
 

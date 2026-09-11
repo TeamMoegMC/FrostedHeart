@@ -44,7 +44,22 @@ public class FrostedHeartMixinPlugin implements IMixinConfigPlugin, MixinPluginS
         if (mixinClassName.contains("com.teammoeg.frostedheart.mixin.oculus")) {
             return IS_OCULUS_LOAD;
         }
+        if (mixinClassName.contains("com.teammoeg.frostedheart.mixin.ftb")) {
+            return classPresent("dev.ftb.mods.ftbteams.data.ClientTeamManagerImpl");
+        }
+        if (mixinClassName.contains("com.teammoeg.frostedheart.mixin.client.curios")) {
+            return classPresent("top.theillusivec4.curios.common.network.server.sync.SPacketSyncStack");
+        }
         return true;
+    }
+
+    private static boolean classPresent(String name) {
+        try {
+            Class.forName(name, false, FrostedHeartMixinPlugin.class.getClassLoader());
+            return true;
+        } catch (ClassNotFoundException | LinkageError ignored) {
+            return false;
+        }
     }
 
     @Override

@@ -1,0 +1,80 @@
+{
+  "icon": "immersiveengineering:mold_plate",
+  "category": "frostedheart:production",
+  "parents": [
+    "multiblock_structure"
+  ],
+  "clues": [
+    {
+      "type": "game",
+      "value": 0.3,
+      "id": "bf1c581c7b7441c9",
+      "required": true,
+      "level": 1
+    },
+    {
+      "type": "game",
+      "value": 0.2,
+      "id": "66b34cb8fdff4c78",
+      "level": 1
+    },
+    {
+      "type": "item",
+      "value": 0.2,
+      "id": "f377a9cefbfd4bc2",
+      "item": {
+        "count": 4,
+        "base_ingredient": {
+          "item": "kubejs:servo_core"
+        }
+      },
+      "consume": true
+    },
+    {
+      "type": "item",
+      "value": 0.2,
+      "id": "c21ea42375de48a9",
+      "item": {
+        "count": 4,
+        "base_ingredient": {
+          "item": "kubejs:servo_core"
+        }
+      },
+      "consume": true
+    }
+  ],
+  "ingredients": [
+    {
+      "item": "create:mechanical_press"
+    },
+    {
+      "item": "kubejs:servo_core"
+    },
+    {
+      "count": 2,
+      "base_ingredient": {
+        "item": "kubejs:motor"
+      }
+    }
+  ],
+  "effects": [
+    {
+      "type": "multiblock",
+      "icon": {
+        "type": "combined",
+        "base": "immersiveengineering:metal_press",
+        "small": {
+          "type": "item",
+          "item": {
+            "id": "immersiveengineering:hammer",
+            "nbt": "{Damage:0}"
+          }
+        }
+      },
+      "id": "b8375949ae8044af",
+      "multiblock": "immersiveengineering:multiblocks/metal_press"
+    }
+  ],
+  "points": 6000,
+  "showAltDesc": true
+}

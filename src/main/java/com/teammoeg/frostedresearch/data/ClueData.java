@@ -23,7 +23,6 @@ import java.util.Optional;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
-import com.teammoeg.chorda.io.codec.CompressDifferCodec;
 
 import lombok.ToString;
 import net.minecraft.nbt.CompoundTag;
@@ -33,8 +32,8 @@ public class ClueData {
     public static final Codec<ClueData> FULL_CODEC = RecordCodecBuilder.create(t -> t.group(
             Codec.BOOL.fieldOf("completed").forGetter(o -> o.completed),
             CompoundTag.CODEC.optionalFieldOf("data").forGetter(o -> Optional.ofNullable(o.data))).apply(t, ClueData::new));
-    public static final Codec<ClueData> CODEC = new CompressDifferCodec<>(FULL_CODEC,RecordCodecBuilder.create(t -> t.group(
-            Codec.BOOL.fieldOf("completed").forGetter(o -> o.completed)).apply(t, ClueData::new)));
+    /** Persistence and network sync both retain optional custom clue payloads. */
+    public static final Codec<ClueData> CODEC = FULL_CODEC;
     boolean completed;
     CompoundTag data;
 

@@ -23,16 +23,13 @@ import com.teammoeg.chorda.menu.CBaseMenu;
 import com.teammoeg.chorda.menu.CCustomMenuSlot;
 import com.teammoeg.chorda.menu.CCustomMenuSlot.CDataSlot;
 import com.teammoeg.frostedheart.bootstrap.common.FHMenuTypes;
-import com.teammoeg.frostedheart.content.climate.player.BodyPartData;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData;
+import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData.BodyPart;
 import com.teammoeg.frostedheart.content.health.capability.NutritionCapability;
 
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.util.Mth;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraftforge.common.util.LazyOptional;
-
-import java.util.Map;
 
 public class HealthStatMenu extends CBaseMenu {
 	public CDataSlot<Float> fat=CCustomMenuSlot.SLOT_PERCENTAGE.create(this);
@@ -63,27 +60,12 @@ public class HealthStatMenu extends CBaseMenu {
 		});
 
 		LazyOptional<PlayerTemperatureData> temp_lo = PlayerTemperatureData.getCapability(inventoryPlayer.player);
-		temp_lo.ifPresent(cap->{
-			cap.clothesOfParts.forEach((part, data)->{
-				switch (part) {
-					case HEAD:
-						headTemperature.bind(()->data.getTemperature());
-						break;
-					case TORSO:
-						bodyTemperature.bind(()->data.getTemperature());
-						break;
-					case HANDS:
-						handsTemperature.bind(()->data.getTemperature());
-						break;
-					case LEGS:
-						legsTemperature.bind(()->data.getTemperature());
-						break;
-					case FEET:
-						feetTemperature.bind(()->data.getTemperature());
-						break;
-				}
-			});
-
+		temp_lo.ifPresent(data->{
+			headTemperature.bind(()->data.getBodyTempByPart(BodyPart.HEAD));
+			bodyTemperature.bind(()->data.getBodyTempByPart(BodyPart.TORSO));
+			handsTemperature.bind(()->data.getBodyTempByPart(BodyPart.HANDS));
+			legsTemperature.bind(()->data.getBodyTempByPart(BodyPart.LEGS));
+			feetTemperature.bind(()->data.getBodyTempByPart(BodyPart.FEET));
 		});
 	}
 

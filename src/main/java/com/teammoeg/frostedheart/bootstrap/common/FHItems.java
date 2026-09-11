@@ -30,7 +30,10 @@ import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
 import com.teammoeg.frostedheart.content.agriculture.Fertilizer;
 import com.teammoeg.frostedheart.content.health.food.CannedFoodItem;
 import com.teammoeg.frostedheart.content.health.food.FHSoupItem;
+import com.teammoeg.frostedheart.content.climate.player.thermalitem.WarmStoneItem;
+import com.teammoeg.frostedheart.content.climate.player.thermalitem.WearableThermalProfile;
 import com.teammoeg.frostedheart.content.steamenergy.debug.HeatDebugItem;
+import com.teammoeg.frostedheart.content.town.transport.device.FreightRouteCardItem;
 import com.teammoeg.frostedheart.content.utility.*;
 import com.teammoeg.frostedheart.content.utility.handstoves.CoalHandStove;
 import com.teammoeg.frostedheart.content.utility.heatervest.HeaterVestItem;
@@ -1334,6 +1337,20 @@ thinner.png
             .model(FHBlockStateGen.existingItemModel())
             .lang("Heating Pad")
             .register();
+    public static final ItemEntry<WarmStoneItem> warm_stone = REGISTRATE
+            .item("warm_stone", properties -> new WarmStoneItem(
+                    FHBlocks.WARM_STONE.get(), properties, WearableThermalProfile.WARM_STONE_DEFAULT))
+            .tag(FHTags.Items.CURIOS_WARM_STONE.tag)
+            .model(FHBlockStateGen.existingItemModel())
+            .lang("Warm Stone")
+            .register();
+    public static final ItemEntry<WarmStoneItem> hot_water_bag = REGISTRATE
+            .item("hot_water_bag", properties -> new WarmStoneItem(
+                    FHBlocks.HOT_WATER_BAG.get(), properties, WearableThermalProfile.HOT_WATER_BAG_DEFAULT))
+            .tag(FHTags.Items.CURIOS_WARM_STONE.tag)
+            .model(FHBlockStateGen.existingItemModel())
+            .lang("Hot Water Bag")
+            .register();
     public static final ItemEntry<CoalHandStove> hand_stove = REGISTRATE.item("hand_stove", CoalHandStove::new)
             .properties(p -> p.defaultDurability(10))
             .tag(FHTags.Items.CURIOS_HANDS.tag)
@@ -1342,6 +1359,10 @@ thinner.png
             .register();
     public static final ItemEntry<ThermometerItem> mercury_body_thermometer = REGISTRATE
             .item("mercury_body_thermometer", ThermometerItem::new)
+            .model(FHBlockStateGen.existingItemModel())
+            .register();
+    public static final ItemEntry<CreativeThermometerItem> creative_thermometer = REGISTRATE
+            .item("creative_thermometer", CreativeThermometerItem::new)
             .model(FHBlockStateGen.existingItemModel())
             .register();
     public static final ItemEntry<SteamBottleItem> steam_bottle = REGISTRATE
@@ -1398,6 +1419,12 @@ thinner.png
             .properties(p -> p.stacksTo(1))
             .model(FHBlockStateGen.existingItemModel())
             .lang("Mayor's Seal")
+            .register();
+    public static final ItemEntry<FreightRouteCardItem> FREIGHT_ROUTE_CARD = REGISTRATE
+            .item("freight_route_card", FreightRouteCardItem::new)
+            .properties(properties -> properties.stacksTo(1))
+            .model(FHBlockStateGen.existingItemModel())
+            .lang("Freight Route Card")
             .register();
 
 

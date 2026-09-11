@@ -1,6 +1,7 @@
 /* Copyright (c) 2026 TeamMoeg */
 package com.teammoeg.frostedresearch.gui.archive;
 
+import com.teammoeg.frostedresearch.FHResearch;
 import com.teammoeg.frostedresearch.research.Research;
 import com.teammoeg.frostedresearch.research.ResearchCategory;
 import net.minecraft.SharedConstants;
@@ -20,7 +21,7 @@ class ResearchTypeListPanelCacheTest {
     }
 
     @Test
-    void visibleProjectsAreCachedUntilARelevantInputChanges() {
+    void visibleProjectsRebuildForProgressButNotActiveResearchOrBookmarks() {
         ResearchWorkspaceState state = new ResearchWorkspaceState(ResearchOpenContext.browse());
         ResearchTypeListPanel panel = new ResearchTypeListPanel(null, state, () -> { });
         Research alpha = research("alpha", ResearchCategory.PRODUCTION);
@@ -39,13 +40,34 @@ class ResearchTypeListPanelCacheTest {
 
         state.setBookmarked(beta.getId(), true);
         panel.onBookmarksChanged();
-        assertEquals(3, panel.visibleResearchBuildCountForTest());
+        assertEquals(2, panel.visibleResearchBuildCountForTest());
+
+        panel.onActiveResearchChanged();
+        assertEquals(2, panel.visibleResearchBuildCountForTest());
 
         panel.onProgressChanged(alpha.getId());
         assertEquals(3, panel.visibleResearchBuildCountForTest());
 
         panel.setDefinitions(List.of(alpha));
         assertEquals(4, panel.visibleResearchBuildCountForTest());
+    }
+
+    @Test
+    void editorModeParticipatesInVisibleProjectCacheIdentity() {
+        boolean originalEditor = FHResearch.editor;
+        try {
+            FHResearch.editor = false;
+            ResearchWorkspaceState state = new ResearchWorkspaceState(ResearchOpenContext.browse());
+            ResearchTypeListPanel panel = new ResearchTypeListPanel(null, state, () -> { });
+            panel.setDefinitions(List.of(research("alpha", ResearchCategory.PRODUCTION)));
+            assertEquals(1, panel.visibleResearchBuildCountForTest());
+
+            FHResearch.editor = true;
+            panel.visibleResearchesForTest();
+            assertEquals(2, panel.visibleResearchBuildCountForTest());
+        } finally {
+            FHResearch.editor = originalEditor;
+        }
     }
 
     private static Research research(String id, ResearchCategory category) {

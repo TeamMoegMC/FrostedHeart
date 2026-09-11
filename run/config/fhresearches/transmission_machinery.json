@@ -1,0 +1,63 @@
+{
+  "showAltDesc": true,
+  "points": 1500,
+  "clues": [
+    {
+      "type": "game",
+      "id": "5196c8e264dc41e6",
+      "required": true,
+      "value": 0.5,
+      "level": 0
+    },
+    {
+      "type": "item",
+      "id": "9c8abd778cc04c1a",
+      "value": 0.5,
+      "consume": true,
+      "item": {
+        "base_ingredient": {
+          "item": "frostedheart:bronze_ingot"
+        },
+        "count": 4
+      }
+    }
+  ],
+  "effects": [
+    {
+      "type": "recipe",
+      "item": {
+        "item": "steampowered:bronze_large_cogwheel"
+      },
+      "id": "a6ea06ff08b4a27"
+    },
+    {
+      "type": "recipe",
+      "item": {
+        "item": "steampowered:bronze_cogwheel"
+      },
+      "id": "afbec057af9c49af"
+    },
+    {
+      "type": "recipe",
+      "item": {
+        "item": "create:shaft"
+      },
+      "id": "6aa606dd64b94197"
+    },
+    {
+      "type": "recipe",
+      "item": {
+        "item": "create:hand_crank"
+      },
+      "id": "7866174699b54cd8"
+    }
+  ],
+  "icon": {
+    "type": "item",
+    "item": {
+      "id": "steampowered:bronze_large_cogwheel",
+      "Count": 1
+    }
+  },
+  "category": "frostedresearch:production"
+}

@@ -1,0 +1,84 @@
+{
+  "showAltDesc": true,
+  "points": 5000,
+  "insight": 1,
+  "clues": [
+    {
+      "type": "game",
+      "id": "350827af7cbd4bcd",
+      "required": true,
+      "value": 0.45,
+      "level": 1
+    },
+    {
+      "type": "game",
+      "id": "4df5fbeb8e024f0a",
+      "value": 0.2,
+      "level": 1
+    },
+    {
+      "type": "item",
+      "id": "f48a72c281184d7a",
+      "value": 0.2,
+      "consume": true,
+      "item": {
+        "base_ingredient": {
+          "item": "kubejs:servo_core"
+        },
+        "count": 4
+      }
+    },
+    {
+      "type": "item",
+      "id": "10da963f5344453e",
+      "value": 0.1,
+      "consume": true,
+      "item": {
+        "base_ingredient": {
+          "item": "kubejs:servo_core"
+        },
+        "count": 2
+      }
+    }
+  ],
+  "ingredients": [
+    {
+      "base_ingredient": {
+        "item": "create:mechanical_pump"
+      },
+      "count": 1
+    },
+    {
+      "base_ingredient": {
+        "tag": "forge:plates/aluminum"
+      },
+      "count": 1
+    },
+    {
+      "base_ingredient": {
+        "item": "kubejs:servo_core"
+      },
+      "count": 1
+    }
+  ],
+  "effects": [
+    {
+      "type": "recipe",
+      "item": {
+        "item": "immersiveengineering:fluid_pump"
+      },
+      "id": "a9694a53bbab41d6"
+    }
+  ],
+  "icon": {
+    "type": "item",
+    "item": {
+      "id": "immersiveengineering:fluid_pump",
+      "Count": 1
+    }
+  },
+  "category": "frostedresearch:production",
+  "parents": [
+    "electrolyzer"
+  ]
+}

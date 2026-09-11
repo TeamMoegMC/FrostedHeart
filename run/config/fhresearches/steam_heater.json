@@ -1,0 +1,69 @@
+{
+  "showAltDesc": true,
+  "points": 3000,
+  "insight": 1,
+  "clues": [
+    {
+      "type": "game",
+      "id": "ae5d7e4c7d9245c1",
+      "required": true,
+      "value": 0.5,
+      "level": 1
+    },
+    {
+      "type": "game",
+      "id": "5e81ea5ba49a4c55",
+      "value": 0.25,
+      "level": 1
+    }
+  ],
+  "ingredients": [
+    {
+      "base_ingredient": {
+        "tag": "forge:plates/cast_iron"
+      },
+      "count": 4
+    },
+    {
+      "base_ingredient": {
+        "item": "frostedheart:constantan_sheet"
+      },
+      "count": 8
+    }
+  ],
+  "effects": [
+    {
+      "type": "multiblock",
+      "icon": {
+        "type": "item",
+        "item": {
+          "id": "frostedheart:radiator",
+          "Count": 1
+        }
+      },
+      "id": "6931e12b7a594fea",
+      "multiblock": "frostedheart:multiblocks/heat_radiator"
+    },
+    {
+      "type": "item",
+      "id": "1df4cfe336034968",
+      "rewards": [
+        {
+          "id": "immersiveengineering:sheetmetal_constantan",
+          "Count": 1
+        }
+      ]
+    }
+  ],
+  "icon": {
+    "type": "item",
+    "item": {
+      "id": "frostedheart:radiator",
+      "Count": 1
+    }
+  },
+  "category": "frostedresearch:rescue",
+  "parents": [
+    "generator_T2"
+  ]
+}

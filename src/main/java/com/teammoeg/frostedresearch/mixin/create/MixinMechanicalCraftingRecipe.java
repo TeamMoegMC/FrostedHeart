@@ -47,6 +47,6 @@ public class MixinMechanicalCraftingRecipe extends ShapedRecipe {
 
 	@Inject(at = @At("HEAD"), method = "matches", cancellable = true)
     public void fh$matches(CraftingContainer inv, Level worldIn, CallbackInfoReturnable<Boolean> cbi) {
-        if (!ResearchHooks.canUseRecipe(ResearchHooks.te, this)) cbi.setReturnValue(false);
+        if (!ResearchHooks.canUseRecipe(ResearchHooks.currentRecipeOwner(), this)) cbi.setReturnValue(false);
     }
 }

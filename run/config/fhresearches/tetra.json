@@ -1,0 +1,30 @@
+{
+  "icon": {
+    "type": "combined",
+    "base": "tetra:basic_workbench",
+    "small": "frostedheart:bronze_pickaxe"
+  },
+  "category": "frostedheart:ars",
+  "parents": [],
+  "clues": [
+    {
+      "type": "game",
+      "value": 1.0,
+      "id": "64b712be30ed4d7f",
+      "required": true,
+      "level": 0
+    }
+  ],
+  "ingredients": [],
+  "effects": [
+    {
+      "type": "use",
+      "id": "a451e5ccab974fb1",
+      "blocks": [
+        "tetra:basic_workbench"
+      ]
+    }
+  ],
+  "points": 1200,
+  "showAltDesc": true
+}

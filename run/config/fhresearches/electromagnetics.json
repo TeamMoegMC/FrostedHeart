@@ -1,0 +1,74 @@
+{
+  "icon": "immersiveengineering:wirecoil_copper",
+  "category": "frostedheart:production",
+  "parents": [
+    "mechanical_crafter",
+    "mechanical_calculator"
+  ],
+  "clues": [
+    {
+      "type": "game",
+      "value": 0.6,
+      "id": "a5b15ed5c6ee494c",
+      "required": true,
+      "level": 1
+    },
+    {
+      "type": "game",
+      "value": 0.2,
+      "id": "6d73a2dec83e4cdb",
+      "level": 1
+    },
+    {
+      "type": "item",
+      "value": 0.175,
+      "id": "c2477c47da734861",
+      "item": {
+        "count": 32,
+        "base_ingredient": {
+          "item": "frostedheart:copper_wire"
+        }
+      },
+      "consume": true
+    }
+  ],
+  "ingredients": [
+    {
+      "count": 4,
+      "base_ingredient": {
+        "item": "frostedheart:copper_wire"
+      }
+    },
+    {
+      "count": 2,
+      "base_ingredient": {
+        "tag": "forge:rods/cast_iron"
+      }
+    },
+    {
+      "count": 2,
+      "base_ingredient": {
+        "tag": "forge:ingots/cast_iron"
+      }
+    }
+  ],
+  "effects": [
+    {
+      "type": "recipe",
+      "id": "a8045c2fe61849b9",
+      "item": "immersiveengineering:wirecoil_copper"
+    },
+    {
+      "type": "recipe",
+      "id": "33b90660c1b843e6",
+      "item": "steampowered:alternator"
+    },
+    {
+      "type": "recipe",
+      "id": "deac752e9d6c4f95",
+      "item": "kubejs:motor"
+    }
+  ],
+  "points": 4000,
+  "showAltDesc": true
+}

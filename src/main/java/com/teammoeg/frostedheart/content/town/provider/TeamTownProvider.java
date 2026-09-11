@@ -8,6 +8,7 @@ import com.teammoeg.frostedheart.content.town.TeamTown;
 import com.teammoeg.frostedheart.content.town.TeamTownData;
 import net.minecraft.nbt.StringTag;
 import net.minecraft.nbt.Tag;
+import net.minecraft.world.entity.player.Player;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.UUID;
@@ -32,6 +33,15 @@ public class TeamTownProvider implements ITownProviderSerializable<TeamTown>{
         }
         TeamTownData townData = datatype.getData(FHSpecialDataTypes.TOWN_DATA);
         return townData.createTeamTown();
+    }
+
+    /** Server-side membership check used by bound town devices. */
+    public boolean ownsTeam(Player player) {
+        if (player == null || player.level().isClientSide || ownerUUID == null) {
+            return false;
+        }
+        TeamDataHolder holder = CTeamDataManager.get(player);
+        return holder != null && ownerUUID.equals(holder.getId());
     }
 
     @Override

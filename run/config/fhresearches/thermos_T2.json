@@ -1,0 +1,86 @@
+{
+  "showAltDesc": true,
+  "points": 4000,
+  "clues": [
+    {
+      "type": "game",
+      "id": "587048a44a004a5d",
+      "value": 0.4,
+      "level": 1
+    },
+    {
+      "type": "game",
+      "id": "61de1d3709fa4a80",
+      "value": 0.4,
+      "level": 1
+    },
+    {
+      "type": "item",
+      "id": "5cdfa597760f4ed2",
+      "value": 0.15,
+      "consume": true,
+      "item": {
+        "base_ingredient": {
+          "tag": "forge:plates/aluminum"
+        },
+        "count": 10
+      }
+    }
+  ],
+  "ingredients": [
+    {
+      "base_ingredient": {
+        "item": "frostedheart:aluminum_sheet"
+      },
+      "count": 1
+    },
+    {
+      "base_ingredient": {
+        "item": "frostedheart:steel_sheet"
+      },
+      "count": 1
+    },
+    {
+      "base_ingredient": {
+        "tag": "forge:plates/invar"
+      },
+      "count": 1
+    },
+    {
+      "base_ingredient": {
+        "item": "create:copper_sheet"
+      },
+      "count": 1
+    },
+    {
+      "base_ingredient": {
+        "item": "create:iron_sheet"
+      },
+      "count": 1
+    }
+  ],
+  "effects": [
+    {
+      "type": "recipe",
+      "item": {
+        "item": "frostedheart:advanced_thermos"
+      },
+      "id": "2859cb96ccf842e2"
+    }
+  ],
+  "icon": {
+    "type": "item",
+    "item": {
+      "id": "frostedheart:white_advanced_thermos",
+      "Count": 1,
+      "tag": {
+        "Damage": 3000
+      }
+    }
+  },
+  "category": "frostedresearch:living",
+  "parents": [
+    "electrolyzer",
+    "thermos_T1"
+  ]
+}

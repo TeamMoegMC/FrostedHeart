@@ -20,6 +20,7 @@
 package com.teammoeg.frostedheart.item.townmanager;
 
 import com.teammoeg.chorda.client.cui.screenadapter.CUIScreenWrapper;
+import com.teammoeg.frostedheart.content.town.resource.VirtualResourceType;
 
 /**
  * 镇长印章界面的客户端打开入口。界面无容器菜单，
@@ -37,5 +38,11 @@ public class TownManagerClientHelper {
 
     public static void openEvents() {
         CUIScreenWrapper.open(new TownManagerScreen(TownManagerScreen.EVENTS_TAB));
+    }
+
+    public static void openTransportCapacity() {
+        CUIScreenWrapper.open(new TownManagerScreen(
+                TownManagerScreen.VIRTUAL_RESOURCES_TAB,
+                VirtualResourceType.TRANSPORT_CAPACITY));
     }
 }

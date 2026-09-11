@@ -1,0 +1,88 @@
+{
+  "icon": "immersiveindustry:rotary_kiln",
+  "category": "frostedheart:production",
+  "parents": [
+    "squeezer"
+  ],
+  "clues": [
+    {
+      "type": "game",
+      "value": 0.3,
+      "id": "558625025aee400b",
+      "required": true,
+      "level": 1
+    },
+    {
+      "type": "game",
+      "value": 0.2,
+      "id": "461880d426be4c16",
+      "level": 1
+    },
+    {
+      "type": "item",
+      "value": 0.125,
+      "id": "7ba893faa01e461f",
+      "item": {
+        "count": 4,
+        "base_ingredient": {
+          "item": "kubejs:servo_core"
+        }
+      },
+      "consume": true
+    },
+    {
+      "type": "item",
+      "value": 0.125,
+      "id": "2977d2e9281643fe",
+      "item": {
+        "count": 4,
+        "base_ingredient": {
+          "item": "kubejs:servo_core"
+        }
+      },
+      "consume": true
+    },
+    {
+      "type": "item",
+      "value": 0.125,
+      "id": "b07cebdca1ec4059",
+      "item": {
+        "count": 4,
+        "base_ingredient": {
+          "item": "kubejs:servo_core"
+        }
+      },
+      "consume": true
+    }
+  ],
+  "ingredients": [
+    {
+      "count": 4,
+      "base_ingredient": {
+        "item": "immersiveindustry:rotary_kiln_cylinder"
+      }
+    },
+    {
+      "count": 2,
+      "base_ingredient": {
+        "item": "kubejs:servo_core"
+      }
+    },
+    {
+      "count": 8,
+      "base_ingredient": {
+        "item": "kubejs:motor"
+      }
+    }
+  ],
+  "effects": [
+    {
+      "type": "multiblock",
+      "icon": "immersiveindustry:rotary_kiln",
+      "id": "b51f3e53bee04af0",
+      "multiblock": "immersiveindustry:multiblocks/rotary_kiln"
+    }
+  ],
+  "points": 8000,
+  "showAltDesc": true
+}

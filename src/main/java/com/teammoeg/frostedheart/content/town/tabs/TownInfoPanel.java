@@ -46,30 +46,35 @@ public class TownInfoPanel extends UIElement {
             Component text,
             int color,
             @Nullable ItemStack icon,
-            @Nullable Component tooltip
+            @Nullable Component tooltip,
+            @Nullable Runnable clickAction
     ) {
         public Row(Component text, int color, @Nullable ItemStack icon) {
-            this(text, color, icon, null);
+            this(text, color, icon, null, null);
         }
 
         public static Row text(Component text) {
-            return new Row(text, 0xFFFFFFFF, null, null);
+            return new Row(text, 0xFFFFFFFF, null, null, null);
         }
 
         public static Row colored(Component text, int color) {
-            return new Row(text, color, null, null);
+            return new Row(text, color, null, null, null);
         }
 
         public static Row item(Item item, Component text) {
-            return new Row(text, 0xFFFFFFFF, new ItemStack(item), null);
+            return new Row(text, 0xFFFFFFFF, new ItemStack(item), null, null);
         }
 
         public static Row empty() {
-            return new Row(Component.empty(), 0xFFFFFFFF, null, null);
+            return new Row(Component.empty(), 0xFFFFFFFF, null, null, null);
+        }
+
+        public static Row clickable(Component text, int color, Runnable clickAction) {
+            return new Row(text, color, null, null, clickAction);
         }
 
         public Row withTooltip(Component tooltip) {
-            return new Row(text, color, icon, tooltip);
+            return new Row(text, color, icon, tooltip, clickAction);
         }
     }
 
@@ -89,7 +94,8 @@ public class TownInfoPanel extends UIElement {
             int color,
             @Nullable ItemStack icon,
             int textIndent,
-            @Nullable Component tooltip
+            @Nullable Component tooltip,
+            @Nullable Runnable clickAction
     ) {}
 
     public TownInfoPanel(
@@ -148,11 +154,20 @@ public class TownInfoPanel extends UIElement {
 
     @Override
     public boolean onMousePressed(MouseButton button) {
-        if (!isMouseOver() || button != MouseButton.LEFT || !isScrollable()) return false;
-        if (getMouseX() >= getWidth() - SCROLLBAR_WIDTH - 2) {
+        if (!isMouseOver() || button != MouseButton.LEFT) return false;
+        if (isScrollable() && getMouseX() >= getWidth() - SCROLLBAR_WIDTH - 2) {
             draggingScrollbar = true;
             updateScrollFromMouse();
             return true;
+        }
+        int localY = (int) getMouseY() - PADDING_Y;
+        if (localY >= 0) {
+            List<VisualRow> rows = visualRows();
+            int index = scrollStart + localY / LINE_HEIGHT;
+            if (index >= 0 && index < rows.size() && rows.get(index).clickAction() != null) {
+                rows.get(index).clickAction().run();
+                return true;
+            }
         }
         return super.onMousePressed(button);
     }
@@ -264,7 +279,8 @@ public class TownInfoPanel extends UIElement {
                         row.color(),
                         hasIcon && index == 0 ? row.icon() : null,
                         textIndent,
-                        row.tooltip()
+                        row.tooltip(),
+                        row.clickAction()
                 ));
             }
         }

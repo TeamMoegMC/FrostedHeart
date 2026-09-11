@@ -74,7 +74,8 @@ public class Research implements FHRegisteredItem {
                     .flag("keepShow", o -> o.alwaysShow)
                     .flag("infinite", o -> o.isInfinite()).build(),
             Codec.INT.fieldOf("points").forGetter(o -> o.points),
-            Codec.INT.optionalFieldOf("insight",1).forGetter(o->o.getInsight())
+            Codec.INT.optionalFieldOf("insight",1).forGetter(o->o.getInsight()),
+            Codec.list(Codec.STRING).optionalFieldOf("legacyIds", List.of()).forGetter(Research::getLegacyIds)
     ).apply(t, Research::new));
     /**
      * The icon for this research.<br>
@@ -119,6 +120,7 @@ public class Research implements FHRegisteredItem {
     int points = 1000;// research point
     int insight = 1;//insight point
     private String id;// id of this research
+    private List<String> legacyIds = new ArrayList<>();
     private ResearchCategory category = ResearchCategory.RESCUE;
     HashSet<String> parents = new HashSet<>();// parent researches
     HashSet<String> children = new HashSet<>();// child researches, this is set automatically,
@@ -164,8 +166,8 @@ public class Research implements FHRegisteredItem {
 		this.infinite = infinite;
 	}
 
-	public Research(CIcon icon, ResearchCategory category, List<String> parents, List<Clue> clues, List<Pair<Ingredient,Integer>> requiredItems, Optional<List<Effect>> effects, String name,
-                    List<String> desc, List<String> fdesc, boolean[] flags, int points,int insight) {
+    public Research(CIcon icon, ResearchCategory category, List<String> parents, List<Clue> clues, List<Pair<Ingredient,Integer>> requiredItems, Optional<List<Effect>> effects, String name,
+                    List<String> desc, List<String> fdesc, boolean[] flags, int points,int insight, List<String> legacyIds) {
         super();
         this.icon = icon;
         this.category = category;
@@ -188,6 +190,7 @@ public class Research implements FHRegisteredItem {
         this.setInfinite(flags[5]);
         this.points = points;
         this.insight=insight;
+        this.legacyIds.addAll(legacyIds);
 //		System.out.println(effects);
     }
 
@@ -465,6 +468,11 @@ public class Research implements FHRegisteredItem {
      */
     public void setId(String id) {
         this.id = id;
+    }
+
+    /** Former definition IDs accepted only while migrating persisted data. */
+    public List<String> getLegacyIds() {
+        return Collections.unmodifiableList(legacyIds);
     }
 
     /**

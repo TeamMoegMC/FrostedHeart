@@ -46,6 +46,11 @@ import com.teammoeg.frostedheart.content.town.buildings.mine.MineScreen;
 import com.teammoeg.frostedheart.content.town.buildings.warehouse.WarehouseLevelEmitterScreen;
 import com.teammoeg.frostedheart.content.town.buildings.warehouse.WarehouseScreen;
 import com.teammoeg.frostedheart.content.town.buildings.warehouse.WarehouseInterfaceScreen;
+import com.teammoeg.frostedheart.content.town.transport.P2PTerminalRole;
+import com.teammoeg.frostedheart.content.town.transport.device.P2PBidirectionalTerminalScreen;
+import com.teammoeg.frostedheart.content.town.transport.device.P2PEndpointTerminalScreen;
+import com.teammoeg.frostedheart.content.town.transport.device.P2PTerminalMenu;
+import com.teammoeg.frostedheart.content.town.transport.device.P2PTerminalScreen;
 import com.teammoeg.frostedheart.content.trade.gui.TradeScreen;
 import com.teammoeg.frostedheart.item.snowsack.ui.SnowSackScreen;
 import net.minecraft.client.gui.screens.MenuScreens;
@@ -60,7 +65,7 @@ public class FHScreens {
         MenuScreens.register(FHMenuTypes.GENERATOR_T1.getType(), GeneratorScreen<T1GeneratorState, T1GeneratorLogic>::new);
         MenuScreens.register(FHMenuTypes.GENERATOR_T2.getType(), GeneratorScreen<T2GeneratorState, T2GeneratorLogic>::new);
         MenuScreens.register(FHMenuTypes.RELIC_CHEST.get(), RelicChestScreen::new);
-        
+
         registerCUIScreen(FHMenuTypes.TRADE_GUI.get(), TradeScreen::new);
         registerCUIScreen(FHMenuTypes.HEAT_STAT.get(), HeatStatScreen::new);
         registerCUIScreen(FHMenuTypes.WAREHOUSE.get(),WarehouseScreen::new);
@@ -71,6 +76,7 @@ public class FHScreens {
         registerCUIScreen(FHMenuTypes.MINE.get(), MineScreen::new);
         registerCUIScreen(FHMenuTypes.WAREHOUSE_INTERFACE.get(), WarehouseInterfaceScreen::new);
         registerCUIScreen(FHMenuTypes.WAREHOUSE_LEVEL_EMITTER.get(), WarehouseLevelEmitterScreen::new);
+        MenuScreens.register(FHMenuTypes.P2P_TERMINAL.get(), FHScreens::createP2PTerminalScreen);
         MenuScreens.register(FHMenuTypes.SAUNA.get(), SaunaScreen::new);
         MenuScreens.register(FHMenuTypes.INCUBATOR_T1.get(), IncubatorT1Screen::new);
         MenuScreens.register(FHMenuTypes.INCUBATOR_T2.get(), IncubatorT2Screen::new);
@@ -81,6 +87,16 @@ public class FHScreens {
         registerCUIScreen(FHMenuTypes.STORAGE_CHEST.get(), StorageChestScreen::new);
         registerCUIScreen(FHMenuTypes.REQUEST_CHEST.get(), RequesterChestScreen::new);
         MenuScreens.register(FHMenuTypes.SNOW_SACK.get(), SnowSackScreen::new);
+    }
+
+    private static P2PTerminalScreen createP2PTerminalScreen(
+            P2PTerminalMenu menu,
+            net.minecraft.world.entity.player.Inventory inventory,
+            net.minecraft.network.chat.Component title
+    ) {
+        return menu.getRole() == P2PTerminalRole.BIDIRECTIONAL
+                ? new P2PBidirectionalTerminalScreen(menu, inventory, title)
+                : new P2PEndpointTerminalScreen(menu, inventory, title);
     }
 
     /*public static <C extends AbstractContainerMenu, S extends BaseScreen> void

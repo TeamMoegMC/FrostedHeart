@@ -37,7 +37,7 @@ import com.teammoeg.frostedresearch.ResearchHooks.MultiblockUnlockList;
 import com.teammoeg.frostedresearch.ResearchHooks.RecipeUnlockList;
 import com.teammoeg.frostedresearch.api.ClientResearchDataAPI;
 import com.teammoeg.frostedresearch.api.ResearchDataAPI;
-import com.teammoeg.frostedresearch.compat.JEICompat;
+import com.teammoeg.frostedresearch.compat.ResearchJeiBridge;
 import com.teammoeg.frostedresearch.events.DrawDeskOpenEvent;
 import com.teammoeg.frostedresearch.events.PopulateUnlockListEvent;
 import com.teammoeg.frostedresearch.network.FHResearchDataSyncPacket;
@@ -161,11 +161,7 @@ public class ResearchCommonEvents {
     public static void onItemTooltip(ItemTooltipEvent event) {
         final ItemStack stack = event.getItemStack();
         if (!stack.isEmpty()) {
-            JEICompat.research.forEach((locked, tooltip) -> {
-                if (ItemStack.isSameItemSameTags(stack, locked)) {
-                    event.getToolTip().addAll(tooltip.values());
-                }
-            });
+            ResearchJeiBridge.appendResearchTooltips(stack, event.getToolTip());
 
             for (InspireRecipe ir : CUtils.filterRecipes(null, InspireRecipe.TYPE)) {
                 if (ir.item.test(stack)) {

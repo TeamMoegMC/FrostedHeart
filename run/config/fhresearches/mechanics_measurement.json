@@ -1,0 +1,34 @@
+{
+  "icon": "create:speedometer",
+  "category": "frostedheart:ars",
+  "parents": [
+    "mechanics_tools"
+  ],
+  "clues": [
+    {
+      "type": "game",
+      "value": 1.0,
+      "id": "fd8cd1d907204197",
+      "level": 1
+    }
+  ],
+  "ingredients": [
+    {
+      "item": "minecraft:compass"
+    }
+  ],
+  "effects": [
+    {
+      "type": "recipe",
+      "id": "6f01401c712d4a2d",
+      "item": "create:speedometer"
+    },
+    {
+      "type": "recipe",
+      "id": "deba63d6981d4580",
+      "item": "create:stressometer"
+    }
+  ],
+  "points": 1250,
+  "showAltDesc": true
+}

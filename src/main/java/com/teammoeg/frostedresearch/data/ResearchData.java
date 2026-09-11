@@ -19,8 +19,6 @@
 
 package com.teammoeg.frostedresearch.data;
 
-import java.util.ArrayList;
-import java.util.BitSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -29,6 +27,7 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.chorda.io.CodecUtil;
 import com.teammoeg.chorda.math.evaluator.IEnvironment;
+import com.teammoeg.frostedresearch.FRMain;
 import com.teammoeg.frostedresearch.research.Research;
 import com.teammoeg.frostedresearch.research.clues.Clue;
 import com.teammoeg.frostedresearch.research.effects.Effect;
@@ -101,6 +100,9 @@ public class ResearchData implements IEnvironment {
 
         @Override
         public long commitPoints(Research r, long pts, Runnable onSuccess) {
+            if (pts < 0) {
+                throw new IllegalArgumentException("Research points cannot be negative: " + pts);
+            }
             return pts;
         }
 
@@ -147,7 +149,7 @@ public class ResearchData implements IEnvironment {
 
     };
     public static final Codec<ResearchData> CODEC = RecordCodecBuilder.create(t -> t.group(
-            Codec.INT.fieldOf("committed").forGetter(o -> o.committed),
+            Codec.LONG.fieldOf("committed").forGetter(o -> o.committed),
             CodecUtil.<ResearchData>booleans("flags")
                     .flag("active", o -> o.active)
                     .flag("finished", o -> o.finished).build(),
@@ -155,32 +157,28 @@ public class ResearchData implements IEnvironment {
             CodecUtil.mapCodec("id", Codec.STRING, "data", ClueData.CODEC).fieldOf("clueData").forGetter(o -> o.clueData),
             CodecUtil.mapCodec("id", Codec.STRING, "data", Codec.BOOL).fieldOf("effectData").forGetter(o -> o.effectData)
     ).apply(t, ResearchData::new));
-    public static final Codec<ResearchDataPacket> NETWORK_CODEC = RecordCodecBuilder.create(t -> t.group(
-            Codec.INT.fieldOf("committed").forGetter(o -> o.committed()),
-            CodecUtil.<ResearchDataPacket>booleans("flags")
-                    .flag("active", o -> o.active())
-                    .flag("finished", o -> o.finished()).build(),
-            Codec.INT.optionalFieldOf("level",0).forGetter(o -> o.level()),
-            CodecUtil.discreteList(ClueData.CODEC).fieldOf("clueData").forGetter(o -> o.clueData()),
-            CodecUtil.BYTE_ARRAY_CODEC.fieldOf("effectData").forGetter(o -> o.effectData().toByteArray())
-    ).apply(t, ResearchDataPacket::new));
+    /** Network state uses the same stable nonce-keyed representation as persistence. */
+    public static final Codec<ResearchData> NETWORK_CODEC = CODEC;
     @Getter
     boolean active;// is all items fulfilled?
     @Getter
     boolean finished;
     int level;
-    private int committed;// points committed
+    private long committed;// points committed
     @Getter
     private Map<String, ClueData> clueData = new HashMap<>();
     @Getter
     private Map<String, Boolean> effectData = new HashMap<>();
 
-    public ResearchData(int committed, boolean[] flags, int level, Map<String, ClueData> clueData, Map<String, Boolean> effectData) {
+    public ResearchData(long committed, boolean[] flags, int level, Map<String, ClueData> clueData, Map<String, Boolean> effectData) {
         super();
         this.active = flags[0];
         this.finished = flags[1];
         this.level = level;
-        this.committed = committed;
+        if (committed < 0) {
+            FRMain.LOGGER.warn("Negative persisted research progress {} was reset to zero", committed);
+        }
+        this.committed = Math.max(0, committed);
         this.clueData.putAll(clueData);
         this.effectData.putAll(effectData);
     }
@@ -211,37 +209,15 @@ public class ResearchData implements IEnvironment {
                 + ", clueData=" + clueData + ", effectData=" + effectData + "]";
     }
 
-    public ResearchDataPacket write(Research r) {
-    	
-        List<ClueData> clueData = new ArrayList<>(r.getClues().size());
-        BitSet effectData = new BitSet(r.getEffects().size());
-        for (Clue c : r.getClues())
-            clueData.add(this.clueData.get(c.getNonce()));
-        int i = 0;
-        for (Effect e : r.getEffects()) {
-            effectData.set(i++, this.effectData.getOrDefault(e.getNonce(), false));
-        }
-        ResearchDataPacket packet=new ResearchDataPacket(active, finished, level, committed, clueData, effectData);
-        return packet;
-    }
-
-    public void read(Research r, ResearchDataPacket packet) {
-        active = packet.active();
-        finished = packet.finished();
-        level = packet.level();
-        committed = packet.committed();
-        int i = 0;
-        this.clueData.clear();
-        this.effectData.clear();
-        for (Clue c : r.getClues()) {
-            if (i >= packet.clueData().size()) break;
-            this.clueData.put(c.getNonce(), packet.clueData().get(i++));
-        }
-        i = 0;
-        for (Effect e : r.getEffects()) {
-            if (i >= packet.effectData().size()) break;
-            this.effectData.put(e.getNonce(), packet.effectData().get(i++));
-        }
+    public void copyFrom(ResearchData source) {
+        active = source.active;
+        finished = source.finished;
+        level = source.level;
+        committed = Math.max(0, source.committed);
+        clueData.clear();
+        clueData.putAll(source.clueData);
+        effectData.clear();
+        effectData.putAll(source.effectData);
     }
 
     public void reset() {
@@ -290,19 +266,32 @@ public class ResearchData implements IEnvironment {
      * @return 0.0F-1.0F fraction
      */
     public float getProgress(Research r) {
-        return getTotalCommitted(r) * 1f / r.getRequiredPoints();
+        long required = r.getRequiredPoints();
+        if (required <= 0) {
+            return 0;
+        }
+        double progress = (double) getTotalCommitted(r) / required;
+        if (!Double.isFinite(progress)) {
+            return 0;
+        }
+        return (float) Math.max(0, Math.min(1, progress));
     }
 
     public long getTotalCommitted(Research r) {
         long currentProgress = committed;
-        float contribution = 0;
+        double contribution = 0;
         for (Clue ac : r.getClues())
-            if (this.isClueTriggered(ac))
+            if (this.isClueTriggered(ac) && Float.isFinite(ac.getResearchContribution()))
                 contribution += ac.getResearchContribution();
         if (contribution >= 0.999)
             return r.getRequiredPoints();
-        currentProgress += (long) (contribution * r.getRequiredPoints());
-        return Math.min(currentProgress, r.getRequiredPoints());
+        long clueProgress = (long) (Math.max(0, contribution) * r.getRequiredPoints());
+        if (Long.MAX_VALUE - currentProgress < clueProgress) {
+            currentProgress = Long.MAX_VALUE;
+        } else {
+            currentProgress += clueProgress;
+        }
+        return Math.max(0, Math.min(currentProgress, r.getRequiredPoints()));
     }
 
     /**
@@ -340,7 +329,14 @@ public class ResearchData implements IEnvironment {
     }
 
     public long commitPoints(Research r, long pts, Runnable onSuccess) {
-        long tocommit = Math.min(pts, r.getRequiredPoints() - committed);
+        if (pts < 0) {
+            throw new IllegalArgumentException("Research points cannot be negative: " + pts);
+        }
+        if (pts == 0) {
+            return 0;
+        }
+        long remaining = Math.max(0, r.getRequiredPoints() - committed);
+        long tocommit = Math.min(pts, remaining);
         if (tocommit > 0) {
             committed += tocommit;
             if (onSuccess != null)
@@ -391,10 +387,4 @@ public class ResearchData implements IEnvironment {
         return effectData.getOrDefault(id, false);
     }
 
-    public static record ResearchDataPacket(boolean active, boolean finished, int level, int committed,
-                                            List<ClueData> clueData, BitSet effectData) {
-        public ResearchDataPacket(int committed, boolean[] flags, int level, List<ClueData> clueData, byte[] effectData) {
-            this(flags[0], flags[1], level, committed, clueData, BitSet.valueOf(effectData));
-        }
-    }
 }

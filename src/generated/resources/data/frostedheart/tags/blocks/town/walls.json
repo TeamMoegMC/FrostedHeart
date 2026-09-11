@@ -2,6 +2,9 @@
   "values": [
     "frostedheart:warehouse_interface",
     "frostedheart:warehouse_level_emitter",
+    "frostedheart:shipping_terminal",
+    "frostedheart:receiving_terminal",
+    "frostedheart:bidirectional_logistics_terminal",
     "minecraft:iron_bars",
     "#minecraft:doors",
     "#minecraft:walls",

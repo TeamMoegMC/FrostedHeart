@@ -1,0 +1,71 @@
+{
+  "showAltDesc": true,
+  "points": 3000,
+  "insight": 1,
+  "name": "@",
+  "clues": [
+    {
+      "type": "game",
+      "id": "2adce1ec39354428",
+      "required": true,
+      "value": 0.5,
+      "level": 1
+    },
+    {
+      "type": "item",
+      "id": "2eb06417a6484b85",
+      "value": 0.1,
+      "consume": true,
+      "item": {
+        "base_ingredient": {
+          "item": "immersiveengineering:phenolic_resin_bucket"
+        },
+        "count": 1
+      }
+    },
+    {
+      "type": "item",
+      "id": "915a7227534f4377",
+      "value": 0.1,
+      "consume": true,
+      "item": {
+        "base_ingredient": {
+          "item": "kubejs:motor"
+        },
+        "count": 4
+      }
+    }
+  ],
+  "ingredients": [
+    {
+      "base_ingredient": {
+        "item": "kubejs:servo_core"
+      },
+      "count": 1
+    },
+    {
+      "base_ingredient": {
+        "item": "immersiveengineering:ethanol_bucket"
+      },
+      "count": 1
+    }
+  ],
+  "effects": [
+    {
+      "type": "multiblock",
+      "id": "40400a1bba6d43bd",
+      "multiblock": "immersiveengineering:multiblocks/bottling_machine"
+    }
+  ],
+  "icon": {
+    "type": "item",
+    "item": {
+      "id": "immersiveengineering:phenolic_resin_bucket",
+      "Count": 1
+    }
+  },
+  "category": "frostedresearch:production",
+  "parents": [
+    "chemical_reactor"
+  ]
+}

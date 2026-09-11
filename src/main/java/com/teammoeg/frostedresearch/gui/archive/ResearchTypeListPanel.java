@@ -23,9 +23,10 @@ import net.minecraft.network.chat.Component;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
-import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
@@ -33,20 +34,22 @@ import java.util.Set;
 final class ResearchTypeListPanel extends UIElement {
     private static final int HEADER_HEIGHT = 18;
     private static final int RESEARCH_ROW_HEIGHT = 19;
+    private static final Component PROJECTS =
+            Component.translatable("gui.frostedresearch.archive.projects");
 
     private final ResearchWorkspaceState state;
     private final ResearchArchiveViewCache viewCache;
     private final Runnable navigationChanged;
     private final boolean ownsViewCache;
     private List<Research> definitions = List.of();
-    private List<Research> cachedVisibleResearches = List.of();
-    private String cachedFilter = "";
-    private String cachedQuery = "";
+    private List<Research> visibleResearchCache = List.of();
     @Nullable
-    private String cachedCurrentResearchId;
-    private Set<String> cachedBookmarks = Set.of();
+    private VisibleResearchCacheKey visibleResearchCacheKey;
     private boolean visibleResearchesDirty = true;
     private int visibleResearchBuildCount;
+    private final Map<String, RowTitles> rowTitlesById = new HashMap<>();
+    @Nullable
+    private RowTitleCacheKey rowTitleCacheKey;
 
     ResearchTypeListPanel(
             ResearchArchiveLayer parent,
@@ -82,6 +85,7 @@ final class ResearchTypeListPanel extends UIElement {
             viewCache.setDefinitions(definitions);
         }
         invalidateVisibleResearches();
+        invalidateRowTitles();
         clampScroll();
     }
 
@@ -91,22 +95,22 @@ final class ResearchTypeListPanel extends UIElement {
     }
 
     void onProgressChanged(@Nullable String researchId) {
-        // Row styles read the synchronized state snapshot; ordering is unchanged.
+        invalidateVisibleResearches();
+        clampScroll();
     }
 
     void onActiveResearchChanged() {
-        invalidateVisibleResearches();
-        clampScroll();
+        // Active research changes row styling, not the legacy list order.
     }
 
     void onPresentationChanged() {
         invalidateVisibleResearches();
+        invalidateRowTitles();
         clampScroll();
     }
 
     void onBookmarksChanged() {
-        invalidateVisibleResearches();
-        clampScroll();
+        // Bookmarks remain row markers and do not alter the legacy list order.
     }
 
     @Override
@@ -117,8 +121,7 @@ final class ResearchTypeListPanel extends UIElement {
 
         graphics.fill(x + 1, y + 1, x + width - 1, y + HEADER_HEIGHT,
                 ResearchArchiveLayer.COLOR_PAPER_DARK);
-        Component projects = Component.translatable("gui.frostedresearch.archive.projects");
-        graphics.drawString(getFont(), projects, x + 6, y + 6,
+        graphics.drawString(getFont(), PROJECTS, x + 6, y + 6,
                 ResearchArchiveLayer.COLOR_INK, false);
         int bookmarkCount = state.bookmarkedResearchIds().size();
         if (bookmarkCount > 0) {
@@ -140,6 +143,7 @@ final class ResearchTypeListPanel extends UIElement {
         int rowY = listTop + firstRow * RESEARCH_ROW_HEIGHT - scroll;
         String currentId = currentResearchId();
         Set<String> bookmarks = state.bookmarkedResearchIds();
+        prepareRowTitleCache(width - 2);
         for (int row = firstRow; row < lastRowExclusive; row++) {
             Research research = visible.get(row);
             drawResearchRow(graphics, research, hovered, currentId, bookmarks, x + 1, rowY, width - 2);
@@ -179,8 +183,8 @@ final class ResearchTypeListPanel extends UIElement {
             graphics.drawString(getFont(), "*", x + width - 9, y + 6,
                     ResearchArchiveLayer.COLOR_RED, false);
         }
-        String title = view.title();
-        title = getFont().plainSubstrByWidth(title, width - (bookmarked ? 25 : 17));
+        RowTitles titles = rowTitles(view, width);
+        String title = bookmarked ? titles.bookmarked : titles.normal;
         graphics.drawString(getFont(), title, x + 12, y + 6,
                 ResearchArchiveLayer.COLOR_INK, false);
     }
@@ -258,16 +262,14 @@ final class ResearchTypeListPanel extends UIElement {
 
     private List<Research> visibleResearches() {
         String filter = state.researchTypeFilter();
-        String query = state.searchQuery().toLowerCase(Locale.ROOT);
-        String currentId = currentResearchId();
-        Set<String> bookmarks = state.bookmarkedResearchIds();
-        if (!visibleResearchesDirty
-                && cachedFilter.equals(filter)
-                && cachedQuery.equals(query)
-                && Objects.equals(cachedCurrentResearchId, currentId)
-                && cachedBookmarks.equals(bookmarks)) {
-            return cachedVisibleResearches;
+        String sourceQuery = state.searchQuery();
+        long presentationRevision = viewCache.presentationRevision();
+        if (!visibleResearchesDirty && visibleResearchCacheKey != null
+                && visibleResearchCacheKey.matches(
+                        filter, sourceQuery, FHResearch.editor, presentationRevision)) {
+            return visibleResearchCache;
         }
+        String query = sourceQuery.toLowerCase(Locale.ROOT);
         List<Research> visible = new ArrayList<>();
         for (Research research : definitions) {
             ResearchArchiveViewCache.View view = viewCache.view(research.getId());
@@ -284,22 +286,44 @@ final class ResearchTypeListPanel extends UIElement {
             }
             visible.add(research);
         }
-        visible.sort(Comparator
-                .comparing((Research research) -> !bookmarks.contains(research.getId()))
-                .thenComparing(research -> !research.getId().equals(currentId))
-                .thenComparing(research -> viewCache.view(research.getId()).title(), String.CASE_INSENSITIVE_ORDER));
-        cachedVisibleResearches = List.copyOf(visible);
-        cachedFilter = filter;
-        cachedQuery = query;
-        cachedCurrentResearchId = currentId;
-        cachedBookmarks = Set.copyOf(bookmarks);
+        visibleResearchCache = List.copyOf(
+                FHResearch.getResearchesForRender(visible, FHResearch.editor));
+        visibleResearchCacheKey = new VisibleResearchCacheKey(
+                filter, sourceQuery, FHResearch.editor, presentationRevision);
         visibleResearchesDirty = false;
         visibleResearchBuildCount++;
-        return cachedVisibleResearches;
+        return visibleResearchCache;
     }
 
     private void invalidateVisibleResearches() {
         visibleResearchesDirty = true;
+    }
+
+    private void prepareRowTitleCache(int width) {
+        long presentationRevision = viewCache.presentationRevision();
+        if (rowTitleCacheKey != null && rowTitleCacheKey.matches(width, presentationRevision)) {
+            return;
+        }
+        rowTitlesById.clear();
+        rowTitleCacheKey = new RowTitleCacheKey(width, presentationRevision);
+    }
+
+    private RowTitles rowTitles(ResearchArchiveViewCache.View view, int width) {
+        RowTitles titles = rowTitlesById.get(view.research().getId());
+        if (titles != null) {
+            return titles;
+        }
+        String title = view.title();
+        titles = new RowTitles(
+                getFont().plainSubstrByWidth(title, Math.max(1, width - 17)),
+                getFont().plainSubstrByWidth(title, Math.max(1, width - 25)));
+        rowTitlesById.put(view.research().getId(), titles);
+        return titles;
+    }
+
+    private void invalidateRowTitles() {
+        rowTitleCacheKey = null;
+        rowTitlesById.clear();
     }
 
     private void clampScroll() {
@@ -322,5 +346,32 @@ final class ResearchTypeListPanel extends UIElement {
 
     int visibleResearchBuildCountForTest() {
         return visibleResearchBuildCount;
+    }
+
+    private record VisibleResearchCacheKey(
+            String researchType,
+            String sourceQuery,
+            boolean editor,
+            long presentationRevision) {
+
+        private boolean matches(
+                String currentResearchType,
+                String currentSourceQuery,
+                boolean currentEditor,
+                long currentPresentationRevision) {
+            return researchType.equals(currentResearchType)
+                    && sourceQuery.equals(currentSourceQuery)
+                    && editor == currentEditor
+                    && presentationRevision == currentPresentationRevision;
+        }
+    }
+
+    private record RowTitleCacheKey(int width, long presentationRevision) {
+        private boolean matches(int currentWidth, long currentPresentationRevision) {
+            return width == currentWidth && presentationRevision == currentPresentationRevision;
+        }
+    }
+
+    private record RowTitles(String normal, String bookmarked) {
     }
 }
