@@ -128,8 +128,8 @@ public class FHTags {
 		SLED_SNOW(),
 		CROP(),
 		STATIC_FIRE_RADIATORS("thermal/static_fire_radiators"),
-		SCAFFOLDING
-
+		SCAFFOLDING,
+		TANNING_RACK
 		;
 
 		public final TagKey<Block> tag;
