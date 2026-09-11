@@ -19,22 +19,57 @@
 
 package com.teammoeg.frostedheart.bootstrap.client;
 
+import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.GL20;
+
+import com.lowdragmc.lowdraglib.LDLib;
 import com.lowdragmc.lowdraglib.client.shader.Shaders;
 import com.lowdragmc.lowdraglib.client.shader.management.Shader;
+import com.lowdragmc.lowdraglib.client.shader.management.ShaderProgram;
+import com.mojang.blaze3d.platform.GlStateManager;
 import com.teammoeg.frostedheart.FHMain;
+
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
 @OnlyIn(Dist.CLIENT)
 public class FHShaders extends Shaders {
     private static Shader INFRARED_VIEW;
+    public static class RegionShaders{
+	    private final Shader fs;
+	    private final Shader vs;
+	    private RegionShaders(Shader fs, Shader vs) {
+			super();
+			this.fs = fs;
+			this.vs = vs;
+		}
+	    public void attachShader(ShaderProgram program) {
+	    	fs.attachShader(program);
+	    	vs.attachShader(program);
+	    }
 
+	    public void deleteShader() {
+	        fs.deleteShader();
+	        vs.deleteShader();
+	    }
+
+    }
+    private static RegionShaders REGION;
     public static Shader getInfraredView() {
         if (INFRARED_VIEW == null) {
-            INFRARED_VIEW = load(Shader.ShaderType.FRAGMENT, FHMain.rl("infrared_view"));
-            addReloadListener(() -> INFRARED_VIEW = load(Shader.ShaderType.FRAGMENT, FHMain.rl("infrared_view")));
+        	runAndAddReloadListener(()->INFRARED_VIEW = load(Shader.ShaderType.FRAGMENT, FHMain.rl("infrared_view")));
         }
         return INFRARED_VIEW;
     }
-
+    public static RegionShaders getRegion() {
+        if (REGION == null) {
+        	runAndAddReloadListener(()->REGION=new RegionShaders(load(Shader.ShaderType.FRAGMENT, FHMain.rl("region_marker")),
+        		load(Shader.ShaderType.VERTEX, FHMain.rl("region_marker"))));
+        }
+        return REGION;
+    }
+	public static void runAndAddReloadListener(Runnable runnable) {
+		runnable.run();
+		addReloadListener(runnable);
+	}
 }

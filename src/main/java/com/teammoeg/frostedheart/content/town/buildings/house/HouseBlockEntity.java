@@ -67,7 +67,7 @@ import org.jetbrains.annotations.Nullable;
  * rating based on the house structure
  */
 public class HouseBlockEntity extends AbstractTownBuildingBlockEntity<HouseBuilding> implements MenuProvider {
-
+	public static RoomData test;
 	@Getter
     private double temperatureModifier = 0;
 
@@ -113,6 +113,7 @@ public class HouseBlockEntity extends AbstractTownBuildingBlockEntity<HouseBuild
 		BlockPos housePos = this.getBlockPos();
 		RoomData rd=BlockScanner.scanRoomDataFromBlock(level,housePos);
 		if (rd!=null&&rd.doors.size()>0) {
+			test=rd;
 			//FHMain.LOGGER.debug("HouseScanner: scan successful");
 			building.setVolume(rd.volume);
 			building.setArea(rd.area);

@@ -43,6 +43,9 @@ public class RoomPathfinder {
 		public int height() {
 			return height;
 		}
+		public int getReachableHeight() {
+			return reachableHeight;
+		}
 		@Override
 		public int hashCode() {
 			return Objects.hash(pos, height);
