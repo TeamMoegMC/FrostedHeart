@@ -21,7 +21,6 @@ package com.teammoeg.chorda.block;
 
 import com.teammoeg.chorda.block.entity.BlockStateAccess;
 
-import blusunrize.immersiveengineering.common.blocks.IEBlockInterfaces;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 

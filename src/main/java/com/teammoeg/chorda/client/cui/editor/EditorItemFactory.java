@@ -45,6 +45,7 @@ public interface EditorItemFactory<T> {
 	 * @param val    初始值 / the initial value
 	 * @return 编辑项实例 / the edit item instance
 	 */
+	@SuppressWarnings("rawtypes")
 	EditItem<T> create(UILayer l,EditorFieldsDialog dialog,T val);
 	
 	/**

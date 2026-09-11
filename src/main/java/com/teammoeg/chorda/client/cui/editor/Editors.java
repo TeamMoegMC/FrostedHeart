@@ -36,8 +36,8 @@ import com.teammoeg.chorda.client.cui.base.Verifiers;
 import com.teammoeg.chorda.client.cui.widgets.TextButton;
 import com.teammoeg.chorda.client.icon.CIcons;
 import com.teammoeg.chorda.client.icon.CIcons.CIcon;
-import com.teammoeg.chorda.text.Components;
 import com.teammoeg.chorda.client.icon.IconEditor;
+import com.teammoeg.chorda.text.Components;
 import com.teammoeg.chorda.util.CFunctionUtils;
 import com.teammoeg.chorda.util.CRegistryHelper;
 
@@ -69,7 +69,7 @@ public class Editors {
 	public static final Editor<String> EDITOR_ITEM_TAGS = (p, l, v, c) -> new EditPromptWithSelect(p, l, v, Components.str("Select Tag"), c, Editors.EDITOR_SELECT_ITEM_TAGS).open();
 	public static final Editor<String> TEXT_PROMPT = EditPrompt::open;
 	public static final Editor<String> COMMAND_PROMPT = (p, l, v, c) ->  new EditPrompt(p,l,v,c,Verifiers.COMMAND).open();
-	public static final Editor<JsonElement> JSON_PROMPT = (p, l, v, c) -> EditPrompt.open(p, l, v == null ? "" : v.toString(), e -> c.accept(new JsonParser().parse(e)));
+	public static final Editor<JsonElement> JSON_PROMPT = (p, l, v, c) -> EditPrompt.open(p, l, v == null ? "" : v.toString(), e -> c.accept(JsonParser.parseString(e)));
 	public static final Editor<Long> LONG_PROMPT = (p, l, v, c) -> EditPrompt.open(p, l, String.valueOf(v), o -> c.accept(Long.parseLong(o)),Verifiers.LONG_STR);
 	public static final Editor<Integer> INT_PROMPT = (p, l, v, c) -> EditPrompt.open(p, l, String.valueOf(v), o -> c.accept(Integer.parseInt(o)),Verifiers.INT_STR);
 	public static final Editor<Double> REAL_PROMPT = (p, l, v, c) -> EditPrompt.open(p, l, String.valueOf(v), o -> c.accept(Double.parseDouble(o)),Verifiers.NUMBER_STR);
@@ -146,6 +146,7 @@ public class Editors {
 	}
 	public static <T> EditorWidgetFactory<T,TextButton> createAction(CIcon icon,BiConsumer<EditorFieldsDialog<T>,T> onClick){
 		return EditorWidgetFactory.create((d,p,l,v)->new TextButton(p,l,icon) {
+			@SuppressWarnings("unchecked")
 			@Override
 			public void onClicked(MouseButton button) {
 				onClick.accept(d, v);

@@ -56,6 +56,7 @@ public class OneArgConstructorFactory<T, R> extends AbstractConstructorFactory {
 	 * @throws InvocationTargetException 如果构造函数不可访问 / if the constructor is inaccessible
 	 * @throws NoSuchMethodException     如果匹配的构造函数不存在 / if no matching constructor exists
 	 */
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public <AT extends R> Function<T, AT> create(Class<AT> clazz) throws InvocationTargetException, NoSuchMethodException {
 		try {// check if corresponding constructor exists
 			clazz.getDeclaredConstructor(this.clazz);

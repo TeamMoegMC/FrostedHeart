@@ -23,6 +23,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.mojang.datafixers.util.Pair;
+import com.mojang.serialization.Codec;
+import com.teammoeg.chorda.io.CodecUtil;
 
 /**
  * 类型注册表。维护类到类型ID和名称之间的双向映射关系，
@@ -36,7 +38,12 @@ import com.mojang.datafixers.util.Pair;
 public class TypeRegistry<T> {
 
 	/** 类 -> (ID, 名称)对的映射 / Mapping from class to (ID, name) pair */
-	protected Map<Class<? extends T>, Pair<Integer, String>> typeInfo = new HashMap<>();
+	protected Map<T, Pair<Integer, String>> typeInfo = new HashMap<>();
+	protected Map<String, T> byType = new HashMap<>();
+	protected Codec<T> byNameCodec=Codec.STRING.flatXmap(o->CodecUtil.nonNull(byType.get(o), ()->"Registry item"+o+" not exist"), o->CodecUtil.nonNull(typeInfo.get(o), ()->"Registry item"+o+" not exist").map(t->t.getSecond()));
+	public Codec<T> typeCodec() {
+		return byNameCodec;
+	}
 
 	/**
 	 * 构造一个空的类型注册表。
@@ -56,7 +63,7 @@ public class TypeRegistry<T> {
 	 * @return 类型ID，如果未注册则返回-1 / the type ID, or -1 if not registered
 	 */
 	public int idOf(T obj) {
-	    Pair<Integer, String> info = typeInfo.get(obj.getClass());
+	    Pair<Integer, String> info = typeInfo.get(obj);
 	    if (info == null)
 	        return -1;
 	    return info.getFirst();
@@ -69,7 +76,7 @@ public class TypeRegistry<T> {
 	 * @param cls 要查询的类 / the class to look up
 	 * @return 类型名称字符串 / the type name string
 	 */
-	public String typeOf(Class<?> cls) {
+	public String typeOf(T cls) {
 		return typeInfo.get(cls).getSecond();
 	}
 	/**
@@ -80,7 +87,7 @@ public class TypeRegistry<T> {
 	 * @param cls 要查询的类 / the class to look up
 	 * @return 包含类型ID和名称的Pair / a Pair containing the type ID and name
 	 */
-	public Pair<Integer, String> fullTypeOf(Class<?> cls) {
+	public Pair<Integer, String> fullTypeOf(T cls) {
 		return typeInfo.get(cls);
 	}
 	/**
@@ -91,9 +98,9 @@ public class TypeRegistry<T> {
 	 * @param cls 要注册的类 / the class to register
 	 * @param type 类型名称 / the type name
 	 */
-	public void register(Class<? extends T> cls, String type) {
+	public void register(T cls, String type) {
 	    int id = typeInfo.size();
-	    
+	    byType.put(type, cls);
 	    typeInfo.put(cls, Pair.of(id, type));
 	}
 

@@ -32,7 +32,6 @@ import com.teammoeg.chorda.io.codec.CompressDifferCodec;
 import com.teammoeg.chorda.io.codec.KeyMapCodec;
 
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.util.ExtraCodecs;
 
 /**
  * 基于Codec的类型化注册表。扩展{@link TypeRegistry}，为每个注册类型关联一个{@link MapCodec}，
@@ -44,7 +43,8 @@ import net.minecraft.util.ExtraCodecs;
  *
  * @param <T> 注册的基类型 / the base type being registered
  */
-public class TypedCodecRegistry<T> extends TypeRegistry<T> {
+@SuppressWarnings("rawtypes")
+public class TypedCodecRegistry<T> extends TypeRegistry<Class> {
 	/** 类型名称 -> MapCodec的映射 / Mapping from type name to MapCodec */
 	Map<String,MapCodec<T>> codecs=new HashMap<>();
 	/** 按注册顺序排列的MapCodec列表 / List of MapCodecs in registration order */
@@ -54,7 +54,7 @@ public class TypedCodecRegistry<T> extends TypeRegistry<T> {
 	/** 基于名称的Codec，使用类型名称作为鉴别器 / Name-based Codec using type name as discriminator */
 	Codec<T> byName=new KeyMapCodec<T,String>(Codec.STRING,o->this.typeOf(o.getClass()),this::getCodec);
 	/** 基于整数ID的Codec，使用注册顺序ID作为鉴别器 / Integer ID-based Codec using registration order ID as discriminator */
-	Codec<T> byInt=Codec.INT.dispatch(this::idOf,codecCodecList::get);
+	Codec<T> byInt=Codec.INT.dispatch(o->this.idOf(o.getClass()),codecCodecList::get);
 	/**
 	 * 注册一个类型及其对应的MapCodec。线程安全。
 	 * <p>
@@ -65,6 +65,7 @@ public class TypedCodecRegistry<T> extends TypeRegistry<T> {
 	 * @param type 类型名称 / the type name
 	 * @param codec 该类型的MapCodec / the MapCodec for the type
 	 */
+	@SuppressWarnings("unchecked")
 	public synchronized <A extends T>  void register(Class<A> cls, String type,MapCodec<A> codec) {
 		codecs.put(type, (MapCodec<T>) codec);
 		codecList.add((MapCodec<T>) codec);

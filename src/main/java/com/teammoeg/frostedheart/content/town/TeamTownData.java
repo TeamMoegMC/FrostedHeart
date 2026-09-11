@@ -38,7 +38,6 @@ import com.teammoeg.frostedheart.content.town.network.TownHistoryUpdatePacket;
 import com.teammoeg.frostedheart.content.town.network.TownSignalNotificationPacket;
 import com.teammoeg.frostedheart.content.town.network.TownTransportShortageNotificationPacket;
 import com.teammoeg.frostedheart.content.town.network.TownPolicyStateUpdatePacket;
-import com.teammoeg.frostedheart.content.town.observation.TownObservationModel;
 import com.teammoeg.frostedheart.content.town.observation.TownNutritionHistory;
 import com.teammoeg.frostedheart.content.town.observation.TownOperationalHistory;
 import com.teammoeg.frostedheart.content.town.observation.TownOperationalStatus;
@@ -55,7 +54,7 @@ import it.unimi.dsi.fastutil.objects.Object2DoubleOpenHashMap;
 import lombok.Getter;
 
 import com.mojang.serialization.Codec;
-import com.mojang.serialization.codecs.RecordCodecBuilder;
+import com.mojang.serialization.MapCodec;
 import com.teammoeg.chorda.dataholders.SpecialData;
 import com.teammoeg.chorda.dataholders.SpecialDataHolder;
 import com.teammoeg.chorda.dataholders.team.CClientTeamDataManager;
@@ -77,12 +76,12 @@ import com.teammoeg.frostedheart.content.town.event.ITownResourceChangeEventList
 import com.teammoeg.frostedheart.content.town.event.TownBuildingChangeEvent;
 import com.teammoeg.frostedheart.content.town.event.TownResidentChangeEvent;
 import com.teammoeg.frostedheart.content.town.event.TownResourceChangeEvent;
+import com.teammoeg.frostedheart.content.town.labour.MachineLevelManager;
 import com.teammoeg.frostedheart.content.town.resident.Resident;
 import com.teammoeg.frostedheart.content.town.resident.ResidentActivity;
 import com.teammoeg.frostedheart.content.town.resident.ResidentAttributeChange;
 import com.teammoeg.frostedheart.content.town.resident.ResidentAttributeModel;
 import com.teammoeg.frostedheart.content.town.resident.ResidentDailyModel;
-import com.teammoeg.frostedheart.content.town.resident.ResidentNutrition;
 import com.teammoeg.frostedheart.content.town.resident.ResidentNutritionSupportModel;
 import com.teammoeg.frostedheart.content.town.model.TownAssignmentModel;
 import com.teammoeg.frostedheart.content.town.model.TownResidentCareModel;
@@ -124,7 +123,6 @@ import java.util.*;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
 /**
  * ITown data for a whole team.
@@ -135,65 +133,46 @@ import java.util.stream.Collectors;
  * Everything permanent should be saved in this class.
  */
 public class TeamTownData implements SpecialData{
-    public static final Codec<TeamTownData> CODEC = RecordCodecBuilder.create(t -> t.group(
-        //Only prevent decoding failures in this field from breaking the whole object.
-        CodecUtil.defaultSupply(Codec.STRING, () -> "Default Town")
-        .fieldOf("name").forGetter(o -> o.name),
-
-        CodecUtil.defaultSupply(CodecUtil.catchingCodec(TeamTownResourceHolder.CODEC), TeamTownResourceHolder::new)
-        .fieldOf("resources").forGetter(o -> o.resources),
-
-        CodecUtil.defaultSupply(CodecUtil.catchingCodec(CodecUtil.mapCodec("pos", BlockPos.CODEC, "building", AbstractTownBuilding.CODEC)), ObservableTownMap::new)
-        .fieldOf("blocks").forGetter(o -> new HashMap<>(o.buildings)),
-
-        CodecUtil.defaultSupply(CodecUtil.catchingCodec(CodecUtil.mapCodec("uuid", UUIDUtil.CODEC, "data", Resident.CODEC)), ObservableTownMap::new)
-        .fieldOf("residents").forGetter(o -> o.residents),
-
-        CodecUtil.defaultSupply(CodecUtil.catchingCodec(CodecUtil.mapCodec("type", CodecUtil.enumCodec(TerrainResourceType.values()), "data", TerrainResourceData.CODEC)), HashMap::new)
-        .fieldOf("terrainResource").forGetter(o -> o.terrainResource),
-
-        CodecUtil.defaultSupply(CodecUtil.catchingCodec(Codec.INT), () -> 0)
-        .fieldOf("labour").forGetter(o -> o.labour),
-
-        CodecUtil.defaultSupply(CodecUtil.catchingCodec(Codec.INT), () -> 0)
-        .fieldOf("maxLabour").forGetter(o -> o.maxLabour),
-
-        CodecUtil.defaultSupply(CodecUtil.catchingCodec(TownHistoryEntry.CODEC.listOf()), ArrayList::new)
-        .fieldOf("history").forGetter(o -> o.history),
-
+    public static final MapCodec<TeamTownData> MAP_CODEC = CodecUtil.mapCodec(t->t
+    	.add(CodecUtil.wrap(CodecUtil.defaultSupply(Codec.STRING, () -> "Default Town")
+    	    .fieldOf("name").forGetter(o -> o.name)))
+    	.add(CodecUtil.wrap(CodecUtil.defaultSupply(CodecUtil.catchingCodec(TeamTownResourceHolder.CODEC), TeamTownResourceHolder::new)
+    	    .fieldOf("resources").forGetter(o -> o.resources)))
+    	.add(CodecUtil.wrap(CodecUtil.defaultSupply(CodecUtil.catchingCodec(CodecUtil.mapCodec("pos", BlockPos.CODEC, "building", AbstractTownBuilding.CODEC)), ObservableTownMap::new)
+    	    .fieldOf("blocks").forGetter(o -> new HashMap<>(o.buildings))))
+    	.add(CodecUtil.wrap(CodecUtil.defaultSupply(CodecUtil.catchingCodec(CodecUtil.mapCodec("uuid", UUIDUtil.CODEC, "data", Resident.CODEC)), ObservableTownMap::new)
+    	    .fieldOf("residents").forGetter(o -> o.residents)))
+    	.add(CodecUtil.wrap(CodecUtil.defaultSupply(CodecUtil.catchingCodec(CodecUtil.mapCodec("type", CodecUtil.enumCodec(TerrainResourceType.values()), "data", TerrainResourceData.CODEC)), HashMap::new)
+    	    .fieldOf("terrainResource").forGetter(o -> o.terrainResource)))
+    	.add(CodecUtil.wrap(CodecUtil.defaultSupply(CodecUtil.catchingCodec(TownHistoryEntry.CODEC.listOf()), ArrayList::new)
+    	    .fieldOf("history").forGetter(o -> o.history)))
         // Older saves did not persist town age. A negative sentinel lets the
         // constructor migrate them from the retained settlement count.
-        CodecUtil.defaultSupply(CodecUtil.catchingCodec(Codec.LONG), () -> -1L)
-        .fieldOf("townDay").forGetter(o -> o.townDay),
-
-        // Old saves have no staffingPlan field. Decode them as EMPTY; the
+        .add(CodecUtil.wrap(CodecUtil.defaultSupply(CodecUtil.catchingCodec(Codec.LONG), () -> -1L)
+    	    .fieldOf("townDay").forGetter(o -> o.townDay)))
+        	// Old saves have no staffingPlan field. Decode them as EMPTY; the
         // constructor then derives a deterministic plan from surviving work
         // buildings and their existing rosters.
-        CodecUtil.defaultSupply(CodecUtil.catchingCodec(TownStaffingPlan.CODEC), () -> TownStaffingPlan.EMPTY)
-        .fieldOf("staffingPlan").forGetter(TeamTownData::getStaffingPlan),
+        .add(CodecUtil.wrap(CodecUtil.defaultSupply(CodecUtil.catchingCodec(TownStaffingPlan.CODEC), () -> TownStaffingPlan.EMPTY)
+    	    .fieldOf("staffingPlan").forGetter(TeamTownData::getStaffingPlan)))
+    	.add(CodecUtil.wrap(CodecUtil.defaultSupply(CodecUtil.catchingCodec(TownHousingPlan.CODEC), () -> TownHousingPlan.EMPTY)
+    	    .fieldOf("housingPlan").forGetter(TeamTownData::getHousingPlan)))
+    	.add(CodecUtil.wrap(CodecUtil.defaultSupply(CodecUtil.catchingCodec(TownPolicyState.CODEC), () -> TownPolicyState.DEFAULT)
+    	    .fieldOf("policyState").forGetter(TeamTownData::getPolicyState)))
+    	.add(CodecUtil.wrap(CodecUtil.defaultSupply(CodecUtil.catchingCodec(TownTransportState.CODEC), TownTransportState::new)
+    	    .fieldOf("transportState").forGetter(TeamTownData::getTransportState)))
+    	.add(CodecUtil.wrap(CodecUtil.defaultSupply(CodecUtil.catchingCodec(P2PBindingState.CODEC), () -> P2PBindingState.EMPTY)
+    	    .fieldOf("p2pBindingState").forGetter(TeamTownData::getP2PBindingState)))
+    	.add(CodecUtil.wrap(CodecUtil.defaultSupply(CodecUtil.catchingCodec(P2PFilterSummaryState.CODEC),() -> P2PFilterSummaryState.EMPTY)
+    		.fieldOf("p2pFilterSummaryState").forGetter(TeamTownData::getP2PFilterSummaryState)))
+    	.add(CodecUtil.wrap(CodecUtil.defaultSupply(CodecUtil.catchingCodec(Codec.LONG), () -> -1L)
+    	    .fieldOf("lastRefugeeSpawnDay").forGetter(o -> o.lastRefugeeSpawnDay)))
+    	.add(CodecUtil.wrap(CodecUtil.defaultSupply(CodecUtil.catchingCodec(MachineLevelManager.CODEC), () -> new MachineLevelManager())
+    	    .fieldOf("machineData").forGetter(o -> o.machineLevels)))
+    	.apply(TeamTownData::new));
 
-        CodecUtil.defaultSupply(CodecUtil.catchingCodec(TownHousingPlan.CODEC), () -> TownHousingPlan.EMPTY)
-        .fieldOf("housingPlan").forGetter(TeamTownData::getHousingPlan),
-
-        CodecUtil.defaultSupply(CodecUtil.catchingCodec(TownPolicyState.CODEC), () -> TownPolicyState.DEFAULT)
-        .fieldOf("policyState").forGetter(TeamTownData::getPolicyState),
-
-        CodecUtil.defaultSupply(CodecUtil.catchingCodec(TownTransportState.CODEC), TownTransportState::new)
-        .fieldOf("transportState").forGetter(TeamTownData::getTransportState),
-
-        CodecUtil.defaultSupply(CodecUtil.catchingCodec(P2PBindingState.CODEC), () -> P2PBindingState.EMPTY)
-        .fieldOf("p2pBindingState").forGetter(TeamTownData::getP2PBindingState),
-
-        CodecUtil.defaultSupply(CodecUtil.catchingCodec(P2PFilterSummaryState.CODEC),
-                () -> P2PFilterSummaryState.EMPTY)
-        .fieldOf("p2pFilterSummaryState").forGetter(TeamTownData::getP2PFilterSummaryState),
-
-        CodecUtil.defaultSupply(CodecUtil.catchingCodec(Codec.LONG), () -> -1L)
-        .fieldOf("lastRefugeeSpawnDay").forGetter(o -> o.lastRefugeeSpawnDay)
-
-        )
-
-        .apply(t, TeamTownData::new));
+    
+    public static final Codec<TeamTownData> CODEC=MAP_CODEC.codec();
 //    public static final Codec<TeamTownData> CODEC = CodecUtil.debugCodec(CODEC_TOWN);
     /**
      * The town name.
@@ -216,10 +195,6 @@ public class TeamTownData implements SpecialData{
 
 
     Map<TerrainResourceType, TerrainResourceData> terrainResource=new EnumMap<>(TerrainResourceType.class);
-    @Getter
-    int labour=0;
-    @Getter
-    int maxLabour=0;
     /**
      * 城镇结算快照历史，最新条目在末尾，按观测配置裁剪。
      * 随存档持久化，并随城镇数据全量同步下发客户端。
@@ -326,6 +301,8 @@ public class TeamTownData implements SpecialData{
      * Never set on client instances.
      */
     private ITownResidentListener residentListener;
+    
+    private MachineLevelManager machineLevels;
 
     /**
      * 设置居民生命周期监听器（服务端，模拟 adopt 时调用）。
@@ -405,7 +382,8 @@ public class TeamTownData implements SpecialData{
      * @param staffingPlan 已保存的岗位计划；旧存档缺失时由 Codec 提供空计划
      * @param lastRefugeeSpawnDay 最近一次难民自然刷新所用的稳定世界日
      */
-    public TeamTownData(String name, TeamTownResourceHolder resources, Map<BlockPos, ITownBuilding> buildings, Map<UUID, Resident> residents, Map<TerrainResourceType, TerrainResourceData> terrainResource,int labour,int maxlabour, List<TownHistoryEntry> history, long townDay, TownStaffingPlan staffingPlan, TownHousingPlan housingPlan, TownPolicyState policyState, TownTransportState transportState, P2PBindingState p2pBindingState, P2PFilterSummaryState p2pFilterSummaryState, long lastRefugeeSpawnDay) {
+    public TeamTownData(String name, TeamTownResourceHolder resources, Map<BlockPos, ITownBuilding> buildings, Map<UUID, Resident> residents, Map<TerrainResourceType, TerrainResourceData> terrainResource, List<TownHistoryEntry> history, long townDay, TownStaffingPlan staffingPlan, TownHousingPlan housingPlan, TownPolicyState policyState, TownTransportState transportState, P2PBindingState p2pBindingState, P2PFilterSummaryState p2pFilterSummaryState, long lastRefugeeSpawnDay
+    	,MachineLevelManager machines) {
         super();
         this.history = new ArrayList<>(history);
         this.townDay = townDay >= 0L ? townDay : history.size();
@@ -418,8 +396,7 @@ public class TeamTownData implements SpecialData{
         });
         this.residents.putAll(residents);
         this.terrainResource.putAll(terrainResource);
-        this.labour=0;
-        this.maxLabour=0;
+
         this.staffingPlan = staffingPlan == null ? TownStaffingPlan.EMPTY : staffingPlan;
         normalizeStaffingPlan();
         this.housingPlan = housingPlan == null ? TownHousingPlan.EMPTY : housingPlan;
@@ -430,41 +407,42 @@ public class TeamTownData implements SpecialData{
         this.p2pFilterSummaryState = p2pFilterSummaryState == null
                 ? P2PFilterSummaryState.EMPTY : p2pFilterSummaryState;
         this.lastRefugeeSpawnDay = lastRefugeeSpawnDay;
+        this.machineLevels=machines;
     }
 
     /** Source-compatible constructor for callers predating P2P filter summaries. */
-    public TeamTownData(String name, TeamTownResourceHolder resources, Map<BlockPos, ITownBuilding> buildings, Map<UUID, Resident> residents, Map<TerrainResourceType, TerrainResourceData> terrainResource,int labour,int maxlabour, List<TownHistoryEntry> history, long townDay, TownStaffingPlan staffingPlan, TownHousingPlan housingPlan, TownPolicyState policyState, TownTransportState transportState, P2PBindingState p2pBindingState, long lastRefugeeSpawnDay) {
-        this(name, resources, buildings, residents, terrainResource, labour, maxlabour,
+    public TeamTownData(String name, TeamTownResourceHolder resources, Map<BlockPos, ITownBuilding> buildings, Map<UUID, Resident> residents, Map<TerrainResourceType, TerrainResourceData> terrainResource, List<TownHistoryEntry> history, long townDay, TownStaffingPlan staffingPlan, TownHousingPlan housingPlan, TownPolicyState policyState, TownTransportState transportState, P2PBindingState p2pBindingState, long lastRefugeeSpawnDay) {
+        this(name, resources, buildings, residents, terrainResource,
                 history, townDay, staffingPlan, housingPlan, policyState,
                 transportState, p2pBindingState, P2PFilterSummaryState.EMPTY,
-                lastRefugeeSpawnDay);
+                lastRefugeeSpawnDay,new MachineLevelManager());
     }
 
     /** Source-compatible constructor for callers predating P2P binding state. */
-    public TeamTownData(String name, TeamTownResourceHolder resources, Map<BlockPos, ITownBuilding> buildings, Map<UUID, Resident> residents, Map<TerrainResourceType, TerrainResourceData> terrainResource,int labour,int maxlabour, List<TownHistoryEntry> history, long townDay, TownStaffingPlan staffingPlan, TownHousingPlan housingPlan, TownPolicyState policyState, TownTransportState transportState, long lastRefugeeSpawnDay) {
-        this(name, resources, buildings, residents, terrainResource, labour, maxlabour,
+    public TeamTownData(String name, TeamTownResourceHolder resources, Map<BlockPos, ITownBuilding> buildings, Map<UUID, Resident> residents, Map<TerrainResourceType, TerrainResourceData> terrainResource, List<TownHistoryEntry> history, long townDay, TownStaffingPlan staffingPlan, TownHousingPlan housingPlan, TownPolicyState policyState, TownTransportState transportState, long lastRefugeeSpawnDay) {
+        this(name, resources, buildings, residents, terrainResource,
                 history, townDay, staffingPlan, housingPlan, policyState,
                 transportState, P2PBindingState.EMPTY, P2PFilterSummaryState.EMPTY,
-                lastRefugeeSpawnDay);
+                lastRefugeeSpawnDay,new MachineLevelManager());
     }
 
     /** Source-compatible constructor for callers predating town transport state. */
-    public TeamTownData(String name, TeamTownResourceHolder resources, Map<BlockPos, ITownBuilding> buildings, Map<UUID, Resident> residents, Map<TerrainResourceType, TerrainResourceData> terrainResource,int labour,int maxlabour, List<TownHistoryEntry> history, long townDay, TownStaffingPlan staffingPlan, TownHousingPlan housingPlan, TownPolicyState policyState, long lastRefugeeSpawnDay) {
-        this(name, resources, buildings, residents, terrainResource, labour, maxlabour,
+    public TeamTownData(String name, TeamTownResourceHolder resources, Map<BlockPos, ITownBuilding> buildings, Map<UUID, Resident> residents, Map<TerrainResourceType, TerrainResourceData> terrainResource, List<TownHistoryEntry> history, long townDay, TownStaffingPlan staffingPlan, TownHousingPlan housingPlan, TownPolicyState policyState, long lastRefugeeSpawnDay) {
+        this(name, resources, buildings, residents, terrainResource,
                 history, townDay, staffingPlan, housingPlan, policyState,
                 new TownTransportState(), lastRefugeeSpawnDay);
     }
 
     /** Source-compatible constructor for callers predating housing and policy plans. */
-    public TeamTownData(String name, TeamTownResourceHolder resources, Map<BlockPos, ITownBuilding> buildings, Map<UUID, Resident> residents, Map<TerrainResourceType, TerrainResourceData> terrainResource,int labour,int maxlabour, List<TownHistoryEntry> history, long townDay, TownStaffingPlan staffingPlan, long lastRefugeeSpawnDay) {
-        this(name, resources, buildings, residents, terrainResource, labour, maxlabour,
+    public TeamTownData(String name, TeamTownResourceHolder resources, Map<BlockPos, ITownBuilding> buildings, Map<UUID, Resident> residents, Map<TerrainResourceType, TerrainResourceData> terrainResource, List<TownHistoryEntry> history, long townDay, TownStaffingPlan staffingPlan, long lastRefugeeSpawnDay) {
+        this(name, resources, buildings, residents, terrainResource,
                 history, townDay, staffingPlan, TownHousingPlan.EMPTY,
                 TownPolicyState.DEFAULT, lastRefugeeSpawnDay);
     }
 
     /** Source-compatible constructor for callers predating the persistent town-day field. */
-    public TeamTownData(String name, TeamTownResourceHolder resources, Map<BlockPos, ITownBuilding> buildings, Map<UUID, Resident> residents, Map<TerrainResourceType, TerrainResourceData> terrainResource,int labour,int maxlabour, List<TownHistoryEntry> history, TownStaffingPlan staffingPlan, long lastRefugeeSpawnDay) {
-        this(name, resources, buildings, residents, terrainResource, labour, maxlabour,
+    public TeamTownData(String name, TeamTownResourceHolder resources, Map<BlockPos, ITownBuilding> buildings, Map<UUID, Resident> residents, Map<TerrainResourceType, TerrainResourceData> terrainResource, List<TownHistoryEntry> history, TownStaffingPlan staffingPlan, long lastRefugeeSpawnDay) {
+        this(name, resources, buildings, residents, terrainResource,
                 history, -1L, staffingPlan, lastRefugeeSpawnDay);
     }
 
@@ -2101,7 +2079,11 @@ public class TeamTownData implements SpecialData{
         this.dataSyncCache.markFullSynced();
     }
 
-    /**
+    public MachineLevelManager getMachineLevels() {
+		return machineLevels;
+	}
+
+	/**
      * 用于在服务端向客户端同步发生变化的数据
      */
     class DataSyncCache implements ITownBuildingChangeEventListener, ITownResourceChangeEventListener, ITownResidentChangeEventListener {

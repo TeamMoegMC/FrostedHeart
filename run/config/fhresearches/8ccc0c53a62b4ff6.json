@@ -1,0 +1,45 @@
+{
+  "points": 1000,
+  "insight": 1,
+  "name": "test",
+  "clues": [
+    {
+      "type": "item",
+      "id": "d7fdd6eee26f43b6",
+      "required": true,
+      "value": 0.5,
+      "consume": true,
+      "item": {
+        "base_ingredient": {
+          "item": "minecraft:rotten_flesh"
+        },
+        "count": 1
+      }
+    },
+    {
+      "type": "item",
+      "id": "3b317876325348b2",
+      "value": 0.5,
+      "consume": true,
+      "item": {
+        "base_ingredient": {
+          "item": "minecraft:spruce_trapdoor"
+        },
+        "count": 1
+      }
+    }
+  ],
+  "effects": [
+    {
+      "type": "multiblock",
+      "id": "8c61c3daac4b40a4",
+      "multiblock": "frostedheart:multiblocks/generator"
+    },
+    {
+      "type": "multiblock",
+      "id": "6609f2b0bad04387",
+      "multiblock": "frostedheart:multiblocks/generator_t2"
+    }
+  ],
+  "category": "frostedresearch:rescue"
+}

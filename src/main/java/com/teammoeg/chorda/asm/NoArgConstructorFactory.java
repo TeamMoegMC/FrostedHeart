@@ -64,6 +64,7 @@ public class NoArgConstructorFactory extends AbstractConstructorFactory {
 		}
 		Class<?> cls = createWrapper(clazz);
 		try {
+			@SuppressWarnings({ "unchecked", "rawtypes" })
 			Supplier<AT>supm=(Supplier) cls.getDeclaredConstructor().newInstance();
 			return supm;
 		} catch (InstantiationException | IllegalAccessException | IllegalArgumentException | NoSuchMethodException | SecurityException e) {

@@ -20,10 +20,13 @@
 package com.teammoeg.frostedheart.content.town.buildings.warehouse;
 
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
+import com.teammoeg.frostedheart.content.decoration.WarehouseStorageRackBlock;
 import com.teammoeg.frostedheart.content.town.*;
 import com.teammoeg.frostedheart.content.town.block.AbstractTownBuildingBlockEntity;
 import com.teammoeg.frostedheart.content.town.block.blockscanner.AbstractBlockScanner;
+import com.teammoeg.frostedheart.content.town.block.blockscanner.BlockScanner;
 import com.teammoeg.frostedheart.content.town.block.blockscanner.FloorBlockScanner;
+import com.teammoeg.frostedheart.content.town.block.blockscanner.BlockScanner.RoomData;
 import com.teammoeg.frostedheart.content.town.building.AbstractTownBuilding;
 import net.minecraft.network.chat.Component;
 import net.minecraft.tags.BlockTags;
@@ -56,34 +59,18 @@ public class WarehouseBlockEntity extends AbstractTownBuildingBlockEntity<Wareho
     }
 
     public boolean scanStructure(WarehouseBuilding building){
-        BlockPos warehousePos = this.getBlockPos();
-        BlockPos doorPos = AbstractBlockScanner.getDoorAdjacent(level, warehousePos);
-        if (doorPos == null) {
-            return false;
-        }
-        BlockPos floorBelowDoor = AbstractBlockScanner.getBlockBelow(Objects.requireNonNull(level), (pos)->!(Objects.requireNonNull(level).getBlockState(pos).is(BlockTags.DOORS)), doorPos);//找到门下面垫的的那个方块
-        if (floorBelowDoor == null) {
-            return false;
-        }
-        for (Direction direction : AbstractBlockScanner.PLANE_DIRECTIONS) {
-            BlockPos startPos = floorBelowDoor.relative(direction);//找到门下方块旁边的方块
-            if (!FloorBlockScanner.isValidFloorOrLadder(Objects.requireNonNull(level), startPos)) {//如果门下方块旁边的方块不是合法的地板，找一下它下面的方块
-                if (!FloorBlockScanner.isValidFloorOrLadder(Objects.requireNonNull(level), startPos.below()) || FloorBlockScanner.isBuildingBlock(level, startPos.above(2))) {//如果它下面的方块也不是合法地板（或者梯子），或者门的上半部分堵了方块，就不找了。我们默认村民不能从两格以上的高度跳下来，也不能从一格高的空间爬过去
-                    continue;
-                }
-                startPos = startPos.below();
-            }
-            WarehouseBlockScanner scanner = new WarehouseBlockScanner(level, startPos);
-            if(scanner.scan()){
-            	building.setArea(scanner.getArea());
-            	building.setVolume(scanner.getVolume());
-                //容量与体积相似，但是在随着房间高度增高略有衰减
-                building.setDecorationAmount(scanner.decorations.values().stream().mapToInt(Integer::intValue).sum());
+		BlockPos housePos = this.getBlockPos();
+		RoomData rd=BlockScanner.scanRoomDataFromBlock(level,housePos);
+		if (rd!=null&&rd.doors.size()>0) {
+        	building.setArea(rd.area);
+        	building.setVolume(rd.volume);
+            //容量与体积相似，但是在随着房间高度增高略有衰减
+            building.setDecorationAmount(rd.countInsideBlock(t->t.getBlock() instanceof WarehouseStorageRackBlock));
 
-                building.setCapacity(building.getArea() * Math.pow(building.getVolume() * 0.02 / building.getArea(), 0.9) * 1980 + building.getDecorationAmount() * 512);
-                building.setOccupiedVolume(scanner.getOccupiedVolume());
-                return true;
-            }
+            building.setCapacity(building.getArea() * Math.pow(building.getVolume() * 0.02 / building.getArea(), 0.9) * 1980 + building.getDecorationAmount() * 512);
+            building.setOccupiedVolume(rd.calculateOccupiedVolume());
+            return true;
+            
         }
         return false;
     }

@@ -19,17 +19,18 @@
 
 package com.teammoeg.chorda.client.cui.editor;
 
-import com.mojang.serialization.DataResult;
-import com.teammoeg.chorda.client.cui.base.UIElement;
-import com.teammoeg.chorda.client.cui.base.UILayer;
-import com.teammoeg.chorda.text.Components;
-import net.minecraft.network.chat.Component;
-
 import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Supplier;
+
+import com.mojang.serialization.DataResult;
+import com.teammoeg.chorda.client.cui.base.UIElement;
+import com.teammoeg.chorda.client.cui.base.UILayer;
+import com.teammoeg.chorda.text.Components;
+
+import net.minecraft.network.chat.Component;
 
 /**
  * 编辑器控件工厂接口，定义创建编辑控件、获取/设置值的通用契约。
@@ -49,8 +50,10 @@ public interface EditorWidgetFactory<T,W extends UIElement> {
 		W create(UILayer parent,Component prompt,T origin);
 	}
 	interface ActionWidgetConstructor<T,W extends UIElement>{
+		@SuppressWarnings("rawtypes")
 		W create(EditorFieldsDialog dialog,UILayer parent,Component prompt,T origin);
 	}
+	@SuppressWarnings("rawtypes")
 	W create(UILayer parent,Component prompt,T origin,EditorFieldsDialog dialog);
 	DataResult<Optional<T>> getValue(W widget);
 	W setValue(W widget,T value);
@@ -60,6 +63,7 @@ public interface EditorWidgetFactory<T,W extends UIElement> {
 	
 	default EditorItemFactory<T> withName(Component prompt){
 		return new EditorItemFactory<T>() {
+			@SuppressWarnings("rawtypes")
 			@Override
 			public EditItem<T> create(UILayer layer,EditorFieldsDialog dialog,T val) {
 				return new EditItem<>() {
@@ -89,6 +93,7 @@ public interface EditorWidgetFactory<T,W extends UIElement> {
 	default <X> EditorWidgetFactory<X,W> xmap(Function<T,X> from,Function<X,T> to){
 		EditorWidgetFactory<T,W> objthis=this;
 		return new EditorWidgetFactory<>() {
+			@SuppressWarnings("rawtypes")
 			@Override
 			public W create(UILayer parent, Component prompt, X origin,EditorFieldsDialog dialog) {
 				return objthis.create(parent, prompt, origin==null?null:to.apply(origin),dialog);
@@ -109,6 +114,7 @@ public interface EditorWidgetFactory<T,W extends UIElement> {
 	default <X> EditorWidgetFactory<X,W> flatXmap(Function<T,DataResult<X>> from,Function<X,T> to){
 		EditorWidgetFactory<T,W> objthis=this;
 		return new EditorWidgetFactory<>() {
+			@SuppressWarnings("rawtypes")
 			@Override
 			public W create(UILayer parent, Component prompt, X origin,EditorFieldsDialog dialog) {
 				return objthis.create(parent, prompt, origin==null?null:to.apply(origin),dialog);
@@ -129,6 +135,7 @@ public interface EditorWidgetFactory<T,W extends UIElement> {
 	default EditorWidgetFactory<T,W> withDefault(Supplier<T> def){
 		EditorWidgetFactory<T,W> objthis=this;
 		return new EditorWidgetFactory<>() {
+			@SuppressWarnings("rawtypes")
 			@Override
 			public W create(UILayer parent, Component prompt, T origin,EditorFieldsDialog dialog) {
 				return objthis.create(parent, prompt, origin==null?def.get():origin,dialog);
@@ -148,6 +155,7 @@ public interface EditorWidgetFactory<T,W extends UIElement> {
 	}
 	public static <T,W extends UIElement> EditorWidgetFactory<T,W> create(WidgetConstructor<T,W> constr,Function<W,T> func,BiFunction<W,T,W> setValue){
 		return new EditorWidgetFactory<>() {
+			@SuppressWarnings("rawtypes")
 			@Override
 			public W create(UILayer parent, Component prompt, T origin,EditorFieldsDialog dialog) {
 				return constr.create(parent, prompt, origin);
@@ -167,6 +175,7 @@ public interface EditorWidgetFactory<T,W extends UIElement> {
 	}
 	public static <T,W extends UIElement> EditorWidgetFactory<T,W> create(WidgetConstructor<T,W> constr,Function<W,T> func,BiConsumer<W,T> setValue){
 		return new EditorWidgetFactory<>() {
+			@SuppressWarnings("rawtypes")
 			@Override
 			public W create(UILayer parent, Component prompt, T origin,EditorFieldsDialog dialog) {
 				return constr.create(parent, prompt, origin);
@@ -187,6 +196,7 @@ public interface EditorWidgetFactory<T,W extends UIElement> {
 	}
 	public static <T,W extends UIElement> EditorWidgetFactory<T,W> create(ActionWidgetConstructor<T,W> constr){
 		return new EditorWidgetFactory<>() {
+			@SuppressWarnings("rawtypes")
 			@Override
 			public W create(UILayer parent, Component prompt, T origin,EditorFieldsDialog dialog) {
 				return constr.create(dialog,parent, prompt, origin);

@@ -1,0 +1,38 @@
+{
+  "points": 1000,
+  "name": "测试",
+  "effects": [
+    {
+      "type": "item",
+      "id": "a27ad907b3d24c28",
+      "rewards": [
+        {
+          "id": "create:andesite_alloy_block",
+          "Count": 1
+        }
+      ]
+    },
+    {
+      "type": "recipe",
+      "item": {
+        "item": "minecraft:spruce_trapdoor"
+      },
+      "id": "6d86e6dcf704458d"
+    }
+  ],
+  "icon": {
+    "type": "combined",
+    "base": {
+      "type": "item",
+      "item": {
+        "id": "caupona:acquacotta",
+        "Count": 1
+      }
+    },
+    "small": {
+      "type": "internal",
+      "name": "plus"
+    }
+  },
+  "category": "frostedresearch:rescue"
+}

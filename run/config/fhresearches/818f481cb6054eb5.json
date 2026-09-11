@@ -1,0 +1,16 @@
+{
+  "points": 1000,
+  "name": "3213131",
+  "icon": {
+    "type": "item",
+    "item": {
+      "id": "caupona:calcite_spoked_fence",
+      "Count": 1
+    }
+  },
+  "category": "frostedresearch:rescue",
+  "parents": [
+    "e88dd5bbf80643ce",
+    "651c5ccef8644e50"
+  ]
+}

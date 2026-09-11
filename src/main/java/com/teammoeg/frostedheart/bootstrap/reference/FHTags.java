@@ -111,6 +111,7 @@ public class FHTags {
 	public enum Blocks {
 		TOWN_DECORATIONS("town/decorations"),
 		TOWN_WALLS("town/walls"),
+		TOWN_FURNITURE("town/furniture"),
 		CONDENSED_ORES,
 		SLUDGE,
 		PERMAFROST,
@@ -127,8 +128,8 @@ public class FHTags {
 		SLED_SNOW(),
 		CROP(),
 		STATIC_FIRE_RADIATORS("thermal/static_fire_radiators"),
-		SCAFFOLDING
-
+		SCAFFOLDING,
+		TANNING_RACK
 		;
 
 		public final TagKey<Block> tag;

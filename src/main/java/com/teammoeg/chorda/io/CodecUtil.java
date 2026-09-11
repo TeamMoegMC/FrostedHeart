@@ -19,7 +19,6 @@
 
 package com.teammoeg.chorda.io;
 
-import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.mojang.datafixers.util.Either;
@@ -29,18 +28,18 @@ import com.mojang.serialization.DataResult.PartialResult;
 import com.mojang.serialization.codecs.EitherMapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.chorda.Chorda;
+import com.teammoeg.chorda.asm.AccessorFactory;
 import com.teammoeg.chorda.io.codec.*;
 import com.teammoeg.chorda.io.codec.BooleansCodec.BooleanCodecBuilder;
 import com.teammoeg.chorda.io.nbtbuilder.ArrayNBTBuilder;
 import com.teammoeg.chorda.util.CRegistryHelper;
+import com.teammoeg.chorda.util.struct.CurryApplicativeTemplate;
+import com.teammoeg.chorda.util.struct.CurryApplicativeTemplate.*;
 
 import io.netty.handler.codec.DecoderException;
 import io.netty.handler.codec.EncoderException;
 import net.minecraft.ResourceLocationException;
-import net.minecraft.core.BlockPos;
 import net.minecraft.core.MappedRegistry;
-import net.minecraft.core.Registry;
-import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.NbtOps;
@@ -61,7 +60,6 @@ import java.util.Map.Entry;
 import java.util.function.Function;
 import java.util.function.IntFunction;
 import java.util.function.Supplier;
-import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -549,6 +547,11 @@ public class CodecUtil {
 	public static <A> DispatchNameCodecBuilder<A> dispatch(Class<A> clazz){
 		return new DispatchNameCodecBuilder<A>();
 	}
+	public static <A> DataResult<A> nonNull(A data,Supplier<String> message){
+		if(data!=null)
+			return DataResult.success(data);
+		return DataResult.error(message);
+	}
 	public static class Test{
 		public int test;
 
@@ -566,6 +569,67 @@ public class CodecUtil {
 			return "Test [test=" + test + "]";
 		}
 		
+	}
+	@SuppressWarnings("rawtypes")
+	private static Function<RecordCodecBuilder,Function> getRecGetter=AccessorFactory.accessor(RecordCodecBuilder.class, "getter", Function.class);
+	@SuppressWarnings("rawtypes")
+	private static Function<RecordCodecBuilder,Function> getEncGetter=AccessorFactory.accessor(RecordCodecBuilder.class, "encoder", Function.class);
+	@SuppressWarnings("rawtypes")
+	private static Function<RecordCodecBuilder,MapDecoder> getCodecGetter=AccessorFactory.accessor(RecordCodecBuilder.class, "decoder", MapDecoder.class);
+	private static record RecordTarget<O>(Function<O,Object> getter,Function<O,MapEncoder<Object>> encoder,MapDecoder<Object> decoder){
+		
+	}
+	public static <O,A> Applicatable<RecordCodecBuilder<O,?>,A> wrap(RecordCodecBuilder<O, A> rec){
+		return new Applicatable<>() {
+
+			@Override
+			public RecordCodecBuilder<O, A> getItem() {
+				return rec;
+			}
+			
+		};
+	}
+	public static <O> MapCodec<O> mapCodec(Function<Applicative0<RecordCodecBuilder<O,?>>, BuildResult<RecordCodecBuilder<O,?>, O>> builder){
+		return deserializer(CurryApplicativeTemplate.build(builder));
+	}
+	@SuppressWarnings("unchecked")
+	public static <O> MapCodec<O> deserializer(BuildResult<RecordCodecBuilder<O,?>,O> br) {
+		List<RecordTarget<O>> list=Arrays.asList(new RecordTarget[br.parcount()]);
+		for(com.teammoeg.chorda.util.struct.CurryApplicativeTemplate.Item<RecordCodecBuilder<O, ?>> i:br.obj()) {
+			if(i.index()>=0)
+				list.set(i.index(), new RecordTarget<>(getRecGetter.apply(i.obj()),getEncGetter.apply(i.obj()),getCodecGetter.apply(i.obj())));
+		}
+		return new MapCodec<O>(){
+
+			@Override
+			public <T> DataResult<O> decode(DynamicOps<T> arg0, MapLike<T> arg1) {
+				O data;
+				try {
+					data=br.consumer().apply(new BuiltParams() {
+						@Override
+						public Object getRaw(int params) {
+							return list.get(params).decoder.decode(arg0, arg1);
+						}
+					});
+				}catch(Exception ex) {
+					return DataResult.error(()->ex.getMessage());
+				}
+				return DataResult.success(data);
+			}
+
+			@Override
+			public <T> RecordBuilder<T> encode(O arg0, DynamicOps<T> arg1, RecordBuilder<T> arg2) {
+				for(RecordTarget<O> rt:list) {
+					Object member=rt.getter.apply(arg0);
+					rt.encoder.apply(arg0).encode(member, arg1, arg2);
+				}
+				return arg2;
+			}
+
+			@Override
+			public <T> Stream<T> keys(DynamicOps<T> arg0) {
+				return list.stream().flatMap(t->t.decoder.keys(arg0));
+			}};
 	}
 	public static void main(String[] args) throws Exception {
 //		System.out.println(GeneratorData.CODEC.encodeStart(NbtOps.INSTANCE, new GeneratorData((SpecialDataHolder)null)));

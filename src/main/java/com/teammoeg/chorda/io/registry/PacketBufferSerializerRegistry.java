@@ -42,7 +42,8 @@ public abstract class PacketBufferSerializerRegistry<T extends PacketWritable, C
 	/** 数据包缓冲区序列化器 / Packet buffer serializer */
 	PacketBufferSerializer<T> pbs= new PacketBufferSerializer<>();
 	/** 类型注册表 / Type registry */
-	TypeRegistry<T> types= new TypeRegistry<>();
+	@SuppressWarnings("rawtypes")
+	TypeRegistry<Class> types= new TypeRegistry<>();
 	/**
 	 * 从数据包缓冲区中读取对象。
 	 * <p>
@@ -101,6 +102,7 @@ public abstract class PacketBufferSerializerRegistry<T extends PacketWritable, C
 	 * @param pb 数据包缓冲区 / the packet buffer
 	 * @param obj 要写入的对象 / the object to write
 	 */
+	@SuppressWarnings("deprecation")
 	public void write(FriendlyByteBuf pb, T obj) {
 		pbs.writeId(pb, obj);
 		obj.write(pb);
@@ -114,7 +116,7 @@ public abstract class PacketBufferSerializerRegistry<T extends PacketWritable, C
 	 * @return 类型ID / the type ID
 	 */
 	public int idOf(T obj) {
-		return types.idOf(obj);
+		return types.idOf(obj.getClass());
 	}
 
 	/**

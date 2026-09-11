@@ -20,9 +20,7 @@
 package com.teammoeg.chorda.client.cui.editor;
 
 import java.util.function.Consumer;
-import java.util.function.Predicate;
 
-import com.mojang.datafixers.util.Pair;
 import com.teammoeg.chorda.client.cui.base.MouseButton;
 import com.teammoeg.chorda.client.cui.base.UIElement;
 import com.teammoeg.chorda.client.cui.base.Verifier;

@@ -11,8 +11,10 @@ import com.teammoeg.frostedheart.content.town.TownMathFunctions;
 import com.teammoeg.frostedheart.content.town.block.AbstractTownBuildingBlockEntity;
 import com.teammoeg.frostedheart.content.town.block.OccupiedVolume;
 import com.teammoeg.frostedheart.content.town.block.blockscanner.AbstractBlockScanner;
+import com.teammoeg.frostedheart.content.town.block.blockscanner.BlockScanner;
 import com.teammoeg.frostedheart.content.town.block.blockscanner.BuildingBlockScanner;
 import com.teammoeg.frostedheart.content.town.block.blockscanner.FloorBlockScanner;
+import com.teammoeg.frostedheart.content.town.block.blockscanner.BlockScanner.RoomData;
 import com.teammoeg.frostedheart.content.town.building.AbstractTownBuilding;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import net.minecraft.core.BlockPos;
@@ -43,47 +45,25 @@ public class TransportStationBlockEntity
 
     @Override
     public boolean scanStructure(TransportStationBuilding building) {
-        Level level = Objects.requireNonNull(this.level);
-        List<BlockPos> doors = AbstractBlockScanner.getBlocksAdjacent(
-                getBlockPos(), pos -> level.getBlockState(pos).is(BlockTags.DOORS));
-        if (doors.isEmpty()) return false;
-
-        Set<Long> attemptedStarts = new HashSet<>();
-        for (BlockPos door : doors) {
-            BlockPos floorBelowDoor = AbstractBlockScanner.getBlockBelow(
-                    level, pos -> !level.getBlockState(pos).is(BlockTags.DOORS), door);
-            if (floorBelowDoor == null) continue;
-
-            for (Direction direction : AbstractBlockScanner.PLANE_DIRECTIONS) {
-                BlockPos start = floorBelowDoor.relative(direction);
-                if (!FloorBlockScanner.isValidFloorOrLadder(level, start)) {
-                    if (!FloorBlockScanner.isValidFloorOrLadder(level, start.below())
-                            || FloorBlockScanner.isBuildingBlock(level, start.above(2))) {
-                        continue;
-                    }
-                    start = start.below();
-                }
-                if (!attemptedStarts.add(start.asLong())) continue;
-
-                BuildingBlockScanner scanner = new BuildingBlockScanner(level, start);
-                if (scanner.scan()) {
-                    applyScan(building, scanner);
-                    return true;
-                }
-            }
+		BlockPos housePos = this.getBlockPos();
+		RoomData rd=BlockScanner.scanRoomDataFromBlock(level,housePos);
+		if (rd!=null&&rd.doors.size()>0) {
+            applyScan(building, rd);
+            return true;
         }
+        
         return false;
     }
 
     private static void applyScan(
             TransportStationBuilding building,
-            BuildingBlockScanner scanner
+            RoomData scanner
     ) {
         applyScanResult(
                 building,
-                scanner.getArea(),
-                scanner.getVolume(),
-                scanner.getOccupiedVolume());
+                scanner.area,
+                scanner.volume,
+                scanner.calculateOccupiedVolume());
     }
 
     static void applyScanResult(
