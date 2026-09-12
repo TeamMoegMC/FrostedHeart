@@ -1,7 +1,7 @@
 # 服务端低开销的真实白幕空间渲染计划
 
 - Time: `2026-08-24 04:25:01 +08:00`
-- Last revised: `2026-08-24 08:05:33 +08:00`
+- Last revised: `2026-08-31 05:20:46 +08:00`
 - Authors: `Codex; OpenAI GPT-5; architecture and implementation planning`、`Codex subagent; OpenAI gpt-5.6-sol ultra; V2 handoff performance review`
 - Status: `in-progress`
 - Scope: `com.teammoeg.frostedheart.content.climate.gamedata.climate`、`content.climate.network`、`content.climate.render`、天气相关 Mixin、客户端天气配置与资源
@@ -62,8 +62,8 @@ CPU、GPU 和 allocation 必须分开记录；总 FPS 只能作为玩家体验�
 |---|---:|---:|---|
 | 近场世界对齐采样间距 | `8 blocks` | `4 blocks` | 固定 `9x9 / 17x17` 网格，各为 `81/289` cells |
 | 可见降雪 column/quad | `<= 256` | `<= 1024` | Fancy 上限覆盖当前 `blizzardDensity=15` 的 `31 x 31` 数量级 |
-| 远景墙 depth slices | `4` | `8` | 发布版本硬上限 `12`；不得用层数替代纹理细节 |
-| 单白幕横向 segments | `<= 16` | `<= 32` | 与全局 slice 预算合成 `64/256 wall quads/frame` 硬上限 |
+| 远景墙 depth slices | `3` | `5` | 发布版本硬上限 `12`；V1.1 用纹理和前沿形状替代额外透明层 |
+| 单白幕横向 segments | `<= 12` | `<= 20` | 与全局 slice 预算合成 `36/100 wall quads/frame` 硬上限 |
 | 地面 impact/terrain query | `<= 12/tick` | `<= 32/tick` | 尊重 Vanilla particle status；近景飞雪不走粒子对象系统 |
 | 相机天空暴露 | `1 canSeeSky/tick` | `1 canSeeSky/tick` | 复用 `MutableBlockPos`，以 `0.15/tick` 平滑；不是逐列 terrain/depth 模型 |
 
@@ -364,7 +364,7 @@ Exit condition: two clients reconstruct the same large-scale front from one snap
 
 1. Make `ClientWeatherState.tick` merge `ClientClimateData.climate/wind` with the prefiltered local descriptors into previous/current world-aligned primitive grids. Fill at `20 Hz`; render consumers use bilinear spatial interpolation plus partial-tick temporal interpolation.
 2. Implement the wall pass inside one `SpatialWeatherRenderer` at the world render stage nearest weather. Use frustum/screen-width culling, render-distance fade, cached cross-front geometry and one batched translucent submission.
-3. Start with `4` Fast / `8` Fancy noise-textured depth slices perpendicular to movement, with a hard release cap of `12`. Sort back-to-front, keep depth test on and depth writes off, and rebuild terrain-conforming vertices only when snapshot generation, profile, camera grid cell or bounded terrain refresh changes.
+3. Use `3` Fast / `5` Fancy noise-textured depth slices perpendicular to movement, with a hard release cap of `12`. Sort back-to-front, keep depth test on and depth writes off, and derive visual detail from deterministic front shape, endpoint fade and per-layer UV flow instead of additional transparent layers.
 4. Segment only visible curtain width. Refresh loaded heightmaps through the per-tick work budget; never request or retain an unloaded chunk. Missing terrain uses the last valid sample briefly, then fades to horizon instead of synchronously filling holes.
 5. Keep far-wall detail in reusable textures, deterministic multi-scale UV motion, vertex alpha and front-shape noise. Do not increase slice count to hide weak assets; GPU capture must show the pass stays inside the translucent budget.
 6. Change `FogModification` to read the frame's already-interpolated camera `whiteoutIntensity`, preserve fluid fog ownership and interpolate to client-configured visibility. Exposure uses cached sky visibility/light as an input, not as the storm's source of truth, and must not call `Util.getMillis()` or resample weather independently.
@@ -649,6 +649,12 @@ V1 主体已实现，但尚未通过完整运行时性能与兼容验收，因�
 - 雪量与白化相位统一 `5 logical seconds` 平滑；低成本室内模型每 tick 只做一次眼位 `canSeeSky`，统一衰减近场雪、雾、风与声音；风声以非零初始音量启动。
 - 活动墙按前沿距离稳定排序，Fast/Fancy 最近 `4/8` 个候选公平分配全局 slice 预算，不再由 snapshot 首项吃满全部 quads。
 - 修复首次人工穿越发现的 V1 表现回归：墙体不再把仅约 `0.8%` 像素不透明的 Vanilla `snow.png` 当连续幕布，而使用一张可平铺的致密 `white_curtain.png`；仍复用原 wall batch 和 `64/256` quad 上限，不增加 pass/draw。近场雪柱以世界单元而不是逐方块相机原点锚定，并使用基于单元 hash 的固定偏移；Fast 相机移动一格不再让全部 `256` 列换奇偶格，跨 `2-block` 单元只在径向淡出外圈换入一排。
+- 修复 ownership 边界：普通雪和原暴风雪不再因 `globalClimate` 网格底色触发 `CUSTOM`，继续使用 Vanilla/旧暴风雪渲染；只有白幕 descriptor 的近场贡献能取消 `renderSnowAndRain`。没有 descriptor 或可见候选时空间状态不再重建网格，普通天气不支付 V1 网格与雪柱成本。
+- V1.1 移除“世界屏障”式规则墙面：在现有 segment 内加入共享端点的低幅确定性前沿起伏、`48 blocks` 走廊端点淡出和逐层 U/V 风动；墙纹理改为单一风向的细尺度云雪噪声。首轮 `12/9 blocks` 起伏与交叉斜线纹理经用户截图证明会产生巨大地面多边形和纱网感，因此收敛为 `2.5/2 blocks` 起伏、`6/4.5 blocks` 层间距和更细的 `12x24 blocks` UV 平铺。Fast/Fancy 从 `4x16 / 8x32` 收缩为 `3x12 / 5x20`，wall quad 上限由 `64/256` 降为 `36/100`；每 wall 先做一次 frustum cull。雪柱世界坐标/hash 按相机单元缓存，圆外单元在双网格采样前剔除。没有新增 draw、shader、framebuffer、服务端或网络工作。
+- 夜间截图继续暴露两个 V1 材质错误：低 alpha 区域把夜空读成黑洞，未使用 lightmap 的墙色保持白天亮度。最终纹理 alpha 收敛到 `[51,193]`，墙色按一次 `ClientLevel.getSkyDarken` 读取调制；后续人工反馈表明首轮 `34.4%` 夜间亮度过暗，因此提高为典型夜间 `64%`。垂直墙面限制为相机 `-64/+96 blocks`，顶部 alpha 保持 `8%`，fog far plane 继续限制远处辉光。这些变化不增加 draw、shader、光照查询或服务端状态。
+- 进入白幕后，Fog callback 仍负责最终 terrain `farPlaneDistance`，但 wall pass 不再在 CPU 端按该值删除 geometry。墙和近场雪改用 Minecraft 原版 `particle` shader/format，直接复用 `fog_distance` / `linear_fog` 与 light texture；固定 `544 blocks` 只保留为工作量上限。这消除了动态 far plane 和 Y 轴阈值导致的整段突隐。
+- 最终 V1 表现目标明确为“雪版沙尘暴”：外部前沿遮住内部，穿越后核心视野极低。墙纹理 alpha 收敛为 `[154,235]`、Fast 三层合成 opacity `[0.82,0.94]`；Fast/Fancy 的 `minimumVisibilityBlocks` 统一为 `16`，Fog event 在比例缩放后再执行该绝对 far-plane 上限。画质档不改变玩法信息范围，且没有增加切片、draw 或地形工作。
+- Y 轴不能复用水平 `16-block` far plane做 CPU 硬裁剪，否则墙会早于仍可见的地面消失。墙恢复固定相机相对 `-64/+96 blocks` geometry，真正可见部分完全交给与原版地面相同的 particle fog shader 连续消隐，不增加垂直 segment 或 quad。
 - `38` 条 V1 定向 JUnit 已通过；Java 17 全量结果为 `588 tests, 0 failures, 0 errors`。
 
 未完成：
@@ -656,4 +662,4 @@ V1 主体已实现，但尚未通过完整运行时性能与兼容验收，因�
 - 进入实际世界后观察/穿越白幕、Fast/Fancy/Compatibility 切换、登录/换维度/清除/末地返回和异常注入的人工 smoke matrix；当前只完成到主菜单启动。
 - 固定轨迹下 server tick/JFR、packet bytes、client tick、render-thread、GPU P50/P95/P99、稳态 allocation、retained memory 和 `30/60/144+ FPS` profile。
 - Embeddium/Oculus、无 shader、4K、低端硬件和多人 opposite-side 兼容/性能验收。
-- 墙体已按固定 segment 做距离裁剪并使用 level build height 的 camera-relative 垂直坐标，但真实 frustum/屏幕区间裁剪、地形贴合、持久 VBO/复用 staging buffer 和 V2 backend 生命周期交接仍未实现。空批走 `endOrDiscardIfEmpty()`；非空 `Tesselator.end()` 仍会创建 batch 包装，`0 B/frame` 尚未达成。V1 墙仍是有界透明 geometry，不是电影级体积天气。
+- 墙体已按 wall-level frustum 和固定 segment 做距离裁剪，并使用 level build height 的 camera-relative 垂直坐标；segment 级屏幕区间裁剪、地形贴合、持久 VBO/复用 staging buffer 和 V2 backend 生命周期交接仍未实现。空批走 `endOrDiscardIfEmpty()`；非空 `Tesselator.end()` 仍会创建 batch 包装，`0 B/frame` 尚未达成。V1 墙仍是有界透明 geometry，不是电影级体积天气。

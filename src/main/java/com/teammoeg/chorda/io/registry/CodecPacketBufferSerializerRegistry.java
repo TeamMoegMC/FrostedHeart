@@ -61,6 +61,7 @@ public class CodecPacketBufferSerializerRegistry<A extends PacketWritable> exten
 	 * @param <T> 序列化格式类型 / the serialization format type
 	 * @return 包含编码结果的DataResult / DataResult containing the encoded result
 	 */
+	@SuppressWarnings("unchecked")
 	@Override
 	public <T> DataResult<T> encode(A input, DynamicOps<T> ops, T prefix) {
 		return DataResult.success((T)super.write(input,new Dynamic<>(ops,prefix)).getValue());
@@ -103,6 +104,7 @@ public class CodecPacketBufferSerializerRegistry<A extends PacketWritable> exten
 	 * @param codec 用于编解码的Codec / the Codec for encoding/decoding
 	 * @param packet 从数据包缓冲区读取对象的函数 / function to read the object from a packet buffer
 	 */
+	@SuppressWarnings("unchecked")
 	public void register(Class<A> cls, String type, Codec<A> codec, Function<FriendlyByteBuf, A> packet) {
 		super.register(cls, type,
 			t->codec.decode(t).result().map(Pair::getFirst).orElse(null),

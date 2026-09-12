@@ -111,6 +111,7 @@ public class FHTags {
 	public enum Blocks {
 		TOWN_DECORATIONS("town/decorations"),
 		TOWN_WALLS("town/walls"),
+		TOWN_FURNITURE("town/furniture"),
 		CONDENSED_ORES,
 		SLUDGE,
 		PERMAFROST,
@@ -126,8 +127,9 @@ public class FHTags {
 		SAFE_NBT(NameSpace.CREATE),
 		SLED_SNOW(),
 		CROP(),
-		SCAFFOLDING
-
+		STATIC_FIRE_RADIATORS("thermal/static_fire_radiators"),
+		SCAFFOLDING,
+		TANNING_RACK
 		;
 
 		public final TagKey<Block> tag;
@@ -222,6 +224,7 @@ public class FHTags {
 		CURIOS_BACK(NameSpace.CURIOS, "back"),
 		CURIOS_CHARM(NameSpace.CURIOS, "charm"),
 		CURIOS_HANDS(NameSpace.CURIOS, "hands"),
+		CURIOS_WARM_STONE(NameSpace.CURIOS, "warm_stone"),
 		SLED_CONTAINER(false),
 		CRUSHED_RAW_MATERIALS(NameSpace.CREATE)
 

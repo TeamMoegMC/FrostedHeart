@@ -91,24 +91,29 @@
 
 ### 4.1 冷场实现
 
+本节最后按源码核验：2026-09-08；`CuriosityEntity.applyColdField/removeColdField`、
+`MinecraftGameplayFields`、`ThermalFieldKey` 是当前冷场生命周期入口。
+
 冷场直接注册为新 thermal compositor 的**负值球形 analytic field**：
 
 ```java
 // 激活：服务器端
 MinecraftThermalInput.upsertGameplayAnalyticField(level,
-    new AnalyticField(arenaCenter.asLong(), 0, ADD_DELTA,
+    new ThermalAnalyticField(coldFieldKey, 0, ADD_DELTA,
         arenaCenter.getX() + 0.5, arenaCenter.getY() + 0.5, arenaCenter.getZ() + 0.5,
         R, coldTier));
 // 清理（RESET / DISPERSED / onRemovedFromWorld）
-MinecraftThermalInput.removeGameplayAnalyticField(level, arenaCenter.asLong());
+MinecraftThermalInput.removeGameplayAnalyticField(level, coldFieldKey);
 ```
 
 - 冷场在 natural/mesh 之后由 `ADD_DELTA` 合成，自动流入 `WorldTemperature.air/block`、玩家、
   作物、状态转换和 town consumer。
 - 设定诠释（§1.1）：冷场 = 集群把场地热量搬运进冻土深处（温度流动的控制），实现上即一个
   负值热区，无新机制。
-- Generator、Campfire、散热器和喷泉走守恒 physical source；冷场明确是 Boss 控制场，不伪装成功率设备。
-- 红外视野从 analytic field/physical source 的即时快照渲染冷域，不维护区块副本。
+- `coldFieldKey` 是 `frostedheart:curiosity` 命名空间下的实体完整 UUID，不与同位置的命令或 generator 冲突。
+  世界持有索引，物理 runtime 重建不清冷场；实体移除清场并重置 `coldApplied`，重新加入可由 AI 重新发布。
+- Generator、Campfire、散热器和喷泉保留 physical source；Generator 另有区域解析保底，Boss 冷场在保底之后扣减。
+- 红外当前仅显示求解的物理 Air/dormant 温度，不直接显示解析冷场，不维护冷场区块副本。
 
 ### 4.2 反制关系：环境侧与身体侧（关键依据）
 
@@ -255,7 +260,7 @@ MinecraftThermalInput.removeGameplayAnalyticField(level, arenaCenter.asLong());
   OGA 开源，sounds.json 已有 stream 条目）；若 `ServerBossEvent` 的 Boss 音乐为硬编码原版
   曲目，则自实现 Boss 音乐 `SoundInstance`（参照 `MinecartBossMusicSoundInstance`），开关
   由 `bossMusic` 配置控制，状态随实体数据同步。
-- 冷场不单独同步；红外的现有请求/响应包按需读取当前 analytic field 快照。
+- 冷场不单独同步，也不进入当前红外物理温度快照；玩法查询在服务端合成解析场。
 
 ## 9. 持久化与异常恢复
 

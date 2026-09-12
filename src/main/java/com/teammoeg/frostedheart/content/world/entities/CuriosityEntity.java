@@ -30,8 +30,9 @@ import com.teammoeg.frostedheart.bootstrap.common.FHItems;
 import com.teammoeg.frostedheart.bootstrap.reference.FHSoundEvents;
 import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
 import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.MinecraftThermalInput;
-import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.ThermalAnalyticField;
-import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.ThermalAnalyticField.CombineMode;
+import com.teammoeg.frostedheart.content.climate.thermal.field.ThermalAnalyticField;
+import com.teammoeg.frostedheart.content.climate.thermal.field.ThermalFieldKey;
+import com.teammoeg.frostedheart.content.climate.thermal.field.ThermalAnalyticField.CombineMode;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig.Server.Curiosity;
 
@@ -126,6 +127,8 @@ public class CuriosityEntity extends Monster {
     private long mazeSeed;
     private int mazeEntranceCX, mazeEntranceCZ, mazeBorderSide, mazeCoreCX, mazeCoreCZ;
     private boolean coldApplied;
+    private ThermalFieldKey coldFieldKey;
+    private static final ResourceLocation COLD_FIELD_PROVIDER = new ResourceLocation("frostedheart", "curiosity");
     @Nullable
     private BlockPos corePos;
 
@@ -362,9 +365,8 @@ public class CuriosityEntity extends Monster {
 
     @Override
     public void onRemovedFromWorld() {
-        if (!this.level().isClientSide && this.level() instanceof ServerLevel sl && this.arenaCenter != null) {
-            MinecraftThermalInput.removeGameplayAnalyticField(
-                    sl, this.arenaCenter.asLong());
+        if (this.level() instanceof ServerLevel sl) {
+            removeColdField(sl);
         }
         super.onRemovedFromWorld();
     }
@@ -756,10 +758,15 @@ public class CuriosityEntity extends Monster {
         int base = (this.phase == CuriosityPhase.MAZE || this.phase == CuriosityPhase.EXPOSED)
                 ? config.coldTier2.get() : config.coldTier1.get();
         int tier = Math.max(config.coldCap.get(), base + this.round * config.coldPerRound.get());
+        if (coldFieldKey == null || coldFieldKey.ownerHigh() != getUUID().getMostSignificantBits()
+                || coldFieldKey.ownerLow() != getUUID().getLeastSignificantBits()) {
+            removeColdField(sl);
+            coldFieldKey = ThermalFieldKey.of(COLD_FIELD_PROVIDER, getUUID(), 0);
+        }
         this.coldApplied = MinecraftThermalInput.upsertGameplayAnalyticField(
                 sl,
                 new ThermalAnalyticField(
-                        this.arenaCenter.asLong(),
+                        coldFieldKey,
                         0,
                         CombineMode.ADD_DELTA,
                         this.arenaCenter.getX() + 0.5D,
@@ -770,9 +777,7 @@ public class CuriosityEntity extends Monster {
     }
 
     private void removeColdField(ServerLevel sl) {
-        if (this.arenaCenter == null) return;
-        MinecraftThermalInput.removeGameplayAnalyticField(
-                sl, this.arenaCenter.asLong());
+        if (coldFieldKey != null) MinecraftThermalInput.removeGameplayAnalyticField(sl, coldFieldKey);
         this.coldApplied = false;
     }
 

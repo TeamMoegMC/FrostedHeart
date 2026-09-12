@@ -11,7 +11,7 @@
 | [heat-production-and-network.md](heat-production-and-network.md) | 物理 source、worker 能量、材料/phase 与独立热网 | Current |
 | [data-lifecycle-and-integration.md](data-lifecycle-and-integration.md) | 配方、能力、持久化、服务端生命周期、网络与消费者 | Current |
 
-Primary anchors: `WorldClimate`, `WorldTemperature`, `TemperatureUpdate`, `PlayerTemperatureData`, `MinecraftThermalInput`, `MinecraftPageManager`, `PhysicalSourceSpatialIndex`, `ThermalDimensionEngine`, `ThermalSolver`, `ThermalSourceLedger`, `GeneratorData`, `HeatEndpoint`, `HeatNetwork`, `FHConfig.SERVER.CLIMATE`, `FHConfig.SERVER.SIMULATION`.
+Primary anchors: `WorldClimate`, `WorldTemperature`, `PlayerTemperatureUpdate`, `PlayerTemperatureData`, `WearableThermalReservoir`, `MinecraftThermalInput`, `MinecraftPageManager`, `PhysicalSourceSpatialIndex`, `ThermalDimensionEngine`, `ThermalSolver`, `ThermalSourceLedger`, `GeneratorData`, `HeatEndpoint`, `HeatNetwork`, `FHConfig.SERVER.CLIMATE`, `FHConfig.SERVER.SIMULATION`.
 
 ## 系统地图
 
@@ -29,6 +29,8 @@ dimension + biome + altitude + WorldClimate
                     |
               players / crops / town / phase
 
+warm stone / hot-water bag -> normalized core+surface reservoir -> five-part player energy
+
 Campfire / Generator / Radiator / Fountain -> source ledger -> Page cells + radiation
 GeneratorData -> HeatEndpoint -> HeatNetwork -> device buffers
 ```
@@ -36,6 +38,8 @@ GeneratorData -> HeatEndpoint -> HeatNetwork -> device buffers
 气候、世界温度、analytic field、physical source、热网 heat unit 与玩家体温
 是不同模型。它们的单位和转换不能因为字段名称相似而混用；物理 source
 只能通过 `ThermalSourceLedger` 进入 Page cell 能量。
+玩家本体使用 `245000 J/K` 的五部位能量模型；暖石与热水袋内部仍使用相对该
+整人体热容的归一化比例，并只在佩戴交换边界映射为五部位统一温差。
 
 ## 阅读顺序
 

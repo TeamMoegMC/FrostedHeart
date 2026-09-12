@@ -21,6 +21,7 @@ package com.teammoeg.frostedheart.content.town.buildings.house;
 
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
@@ -333,6 +334,13 @@ public class HouseBuilding extends AbstractTownBuilding implements ITownResident
         return entrancePosition;
     }
 
+    void setLayout(Stream<BlockPos> beds, BlockPos entrance) {
+        Objects.requireNonNull(beds, "beds");
+        Objects.requireNonNull(entrance, "entrance");
+        long[] positions = beds.mapToLong(BlockPos::asLong)
+                .toArray();
+        setLayout(positions, true, entrance.asLong());
+    }
     void setLayout(Collection<BlockPos> beds, BlockPos entrance) {
         Objects.requireNonNull(beds, "beds");
         Objects.requireNonNull(entrance, "entrance");

@@ -10,155 +10,44 @@
 
 package com.teammoeg.frostedheart.content.climate.thermal.mesh;
 
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 
 /**
- * Immutable solve-safe material parameters and contact masks. ID zero is the
- * reserved "no material boundary" value carried by geometry-only signatures.
+ * Immutable solve-safe material parameters and contact masks. Entries use
+ * dense IDs in list order, starting at one; zero is the reserved "no material
+ * boundary" value carried by geometry-only signatures.
  */
 public final class MaterialBoundaryRegistry {
     public enum Model {
-        STATELESS_CONDUCTANCE,
         CAPACITIVE_SURFACE,
-        NATURAL_ROCK,
         PHASE_RESERVOIR
     }
 
-    public enum TransitionMutationPolicy {
-        NONE,
-        RESPECT_RANDOM_TICK_SPEED,
-        IGNORE_RANDOM_TICK_SPEED,
-        SCRIPT_CONTROLLED
-    }
-
-    public enum TransitionAction {
-        NONE,
-        REMOVE_ONE_SNOW_LAYER,
-        MELT_ICE_TO_WATER,
-        APPLY_STATE_TRANSITION_RECIPE,
-        CUSTOM
-    }
-
-    /** One bit per block-local 4x4x4 microcell occupied by this material. */
-    public record ContactPattern(int id, long materialMicrocellMask) {
-        public ContactPattern {
-            requirePositiveId("contact pattern", id);
-            if (materialMicrocellMask == 0L) {
-                throw new IllegalArgumentException("material contact mask must not be empty");
-            }
-        }
-
-        public static ContactPattern fullBlock(int id) {
-            return new ContactPattern(id, -1L);
-        }
-
-        public boolean contains(int x, int y, int z) {
-            if ((x | y | z) < 0 || x >= 4 || y >= 4 || z >= 4) {
-                return false;
-            }
-            int bit = (y << 4) | (z << 2) | x;
-            return (materialMicrocellMask & (1L << bit)) != 0L;
-        }
-    }
-
-    /**
-     * Conductances and capacities are specified per full exposed block face.
-     * Partial 4x4 contacts scale them by represented area; all exposed faces
-     * of one block share the same capacitive pole.
-     */
+    /** Material coefficients; capacity is scaled by exposed whole-block faces. */
     public record Profile(
             int id,
             Model model,
             double faceConductanceWPerK,
             double surfaceCapacityJPerK,
-            double deepConductanceWPerK,
-            double deepCapacityJPerK,
-            double naturalConductanceWPerK,
-            double initialTemperatureC,
-            double naturalTemperatureAtY0C,
-            double geothermalGradientCPerBlock,
-            boolean initializeAtNaturalTemperature,
             double transitionTemperatureC,
-            double transitionEnergyJPerUnit,
-            TransitionMutationPolicy transitionMutationPolicy,
-            TransitionAction transitionAction
+            double transitionEnergyJPerUnit
     ) {
         public Profile {
             requirePositiveId("material profile", id);
             Objects.requireNonNull(model, "model");
             requirePositiveFinite("faceConductanceWPerK", faceConductanceWPerK);
             requireNonNegativeFinite("surfaceCapacityJPerK", surfaceCapacityJPerK);
-            requireNonNegativeFinite("deepConductanceWPerK", deepConductanceWPerK);
-            requireNonNegativeFinite("deepCapacityJPerK", deepCapacityJPerK);
-            requireNonNegativeFinite("naturalConductanceWPerK", naturalConductanceWPerK);
-            requireFinite("initialTemperatureC", initialTemperatureC);
-            requireFinite("naturalTemperatureAtY0C", naturalTemperatureAtY0C);
-            requireNonNegativeFinite(
-                    "geothermalGradientCPerBlock", geothermalGradientCPerBlock);
             requireFinite("transitionTemperatureC", transitionTemperatureC);
             requireNonNegativeFinite(
                     "transitionEnergyJPerUnit", transitionEnergyJPerUnit);
-            Objects.requireNonNull(
-                    transitionMutationPolicy, "transitionMutationPolicy");
-            Objects.requireNonNull(transitionAction, "transitionAction");
-
-            switch (model) {
-                case STATELESS_CONDUCTANCE -> {
-                    requireZero("surfaceCapacityJPerK", surfaceCapacityJPerK);
-                    requireZero("deepConductanceWPerK", deepConductanceWPerK);
-                    requireZero("deepCapacityJPerK", deepCapacityJPerK);
-                    requireZero("naturalConductanceWPerK", naturalConductanceWPerK);
-                    requireZero("geothermalGradientCPerBlock", geothermalGradientCPerBlock);
-                    requireExplicitInitialTemperature(initializeAtNaturalTemperature);
-                    requireNoTransition(
-                            transitionEnergyJPerUnit,
-                            transitionMutationPolicy,
-                            transitionAction);
-                }
-                case CAPACITIVE_SURFACE -> {
-                    requirePositiveFinite("surfaceCapacityJPerK", surfaceCapacityJPerK);
-                    requireZero("deepConductanceWPerK", deepConductanceWPerK);
-                    requireZero("deepCapacityJPerK", deepCapacityJPerK);
-                    requireZero("naturalConductanceWPerK", naturalConductanceWPerK);
-                    requireZero("geothermalGradientCPerBlock", geothermalGradientCPerBlock);
-                    requireNoTransition(
-                            transitionEnergyJPerUnit,
-                            transitionMutationPolicy,
-                            transitionAction);
-                }
-                case NATURAL_ROCK -> {
-                    requireExplicitInitialTemperature(initializeAtNaturalTemperature);
-                    requirePositiveFinite("surfaceCapacityJPerK", surfaceCapacityJPerK);
-                    requirePositiveFinite("deepConductanceWPerK", deepConductanceWPerK);
-                    if (deepCapacityJPerK > 0.0D) {
-                        requirePositiveFinite(
-                                "naturalConductanceWPerK", naturalConductanceWPerK);
-                    } else {
-                        requireZero("naturalConductanceWPerK", naturalConductanceWPerK);
-                    }
-                    requireNoTransition(
-                            transitionEnergyJPerUnit,
-                            transitionMutationPolicy,
-                            transitionAction);
-                }
-                case PHASE_RESERVOIR -> {
-                    requireZero("surfaceCapacityJPerK", surfaceCapacityJPerK);
-                    requireZero("deepConductanceWPerK", deepConductanceWPerK);
-                    requireZero("deepCapacityJPerK", deepCapacityJPerK);
-                    requireZero("naturalConductanceWPerK", naturalConductanceWPerK);
-                    requireZero("geothermalGradientCPerBlock", geothermalGradientCPerBlock);
-                    requireExplicitInitialTemperature(initializeAtNaturalTemperature);
-                    requirePositiveFinite(
-                            "transitionEnergyJPerUnit", transitionEnergyJPerUnit);
-                    if (transitionMutationPolicy == TransitionMutationPolicy.NONE
-                            || transitionAction == TransitionAction.NONE) {
-                        throw new IllegalArgumentException(
-                                "phase reservoir requires mutation policy and action");
-                    }
-                }
+            if (model == Model.CAPACITIVE_SURFACE) {
+                requirePositiveFinite("surfaceCapacityJPerK", surfaceCapacityJPerK);
+                requireZero("transitionEnergyJPerUnit", transitionEnergyJPerUnit);
+            } else {
+                requireZero("surfaceCapacityJPerK", surfaceCapacityJPerK);
+                requirePositiveFinite(
+                        "transitionEnergyJPerUnit", transitionEnergyJPerUnit);
             }
         }
 
@@ -170,93 +59,56 @@ public final class MaterialBoundaryRegistry {
         ) {
             return new Profile(
                     id, Model.CAPACITIVE_SURFACE, faceConductanceWPerK,
-                    surfaceCapacityJPerK, 0.0D, 0.0D, 0.0D,
-                    0.0D, 0.0D, 0.0D,
-                    true, 0.0D, 0.0D,
-                    TransitionMutationPolicy.NONE, TransitionAction.NONE);
+                    surfaceCapacityJPerK, 0.0D, 0.0D);
         }
 
         public static Profile phaseReservoir(
                 int id,
                 double faceConductanceWPerK,
                 double transitionTemperatureC,
-                double transitionEnergyJPerUnit,
-                TransitionMutationPolicy mutationPolicy,
-                TransitionAction transitionAction
+                double transitionEnergyJPerUnit
         ) {
             return new Profile(
                     id, Model.PHASE_RESERVOIR, faceConductanceWPerK,
-                    0.0D, 0.0D, 0.0D, 0.0D,
-                    transitionTemperatureC, 0.0D, 0.0D,
-                    false, transitionTemperatureC, transitionEnergyJPerUnit,
-                    mutationPolicy, transitionAction);
+                    0.0D, transitionTemperatureC, transitionEnergyJPerUnit);
         }
 
-        public double naturalTemperatureC(int blockY) {
-            double temperature = naturalTemperatureAtY0C
-                    - geothermalGradientCPerBlock * blockY;
-            requireFinite("natural material temperature", temperature);
-            return temperature;
-        }
-
-        public double poleInitialTemperatureC(
-                int blockY,
-                double pageNaturalTemperatureC
-        ) {
+        public double poleInitialTemperatureC(double pageNaturalTemperatureC) {
             requireFinite("pageNaturalTemperatureC", pageNaturalTemperatureC);
-            return model == Model.NATURAL_ROCK
-                    ? naturalTemperatureC(blockY)
-                    : initializeAtNaturalTemperature
-                            ? pageNaturalTemperatureC
-                            : initialTemperatureC;
+            if (model != Model.CAPACITIVE_SURFACE) {
+                throw new IllegalStateException(
+                        "phase reservoirs do not own material-pole temperature");
+            }
+            return pageNaturalTemperatureC;
         }
     }
 
-    private final Map<Integer, Profile> profiles;
-    private final Map<Integer, ContactPattern> contactPatterns;
+    private final Profile[] profiles;
 
     public MaterialBoundaryRegistry(
-            List<Profile> profiles,
-            List<ContactPattern> contactPatterns
+            List<Profile> profiles
     ) {
         Objects.requireNonNull(profiles, "profiles");
-        Objects.requireNonNull(contactPatterns, "contactPatterns");
         this.profiles = indexProfiles(profiles);
-        this.contactPatterns = indexPatterns(contactPatterns);
     }
 
     public Profile profileOrNull(int id) {
-        return profiles.get(id);
+        return id > 0 && id < profiles.length ? profiles[id] : null;
     }
 
-    public ContactPattern contactPatternOrNull(int id) {
-        return contactPatterns.get(id);
-    }
-
-    private static Map<Integer, Profile> indexProfiles(List<Profile> values) {
-        Map<Integer, Profile> indexed = new LinkedHashMap<>();
+    private static Profile[] indexProfiles(List<Profile> values) {
+        Profile[] indexed = new Profile[values.size() + 1];
+        int expectedId = 1;
         for (Profile profile : values) {
             Objects.requireNonNull(profile, "profiles contains null");
-            if (indexed.putIfAbsent(profile.id(), profile) != null) {
+            if (profile.id() != expectedId) {
                 throw new IllegalArgumentException(
-                        "duplicate material profile ID: " + profile.id());
+                        "material profile ID must be dense and ordered: expected "
+                                + expectedId + ", got " + profile.id());
             }
+            indexed[expectedId++] = profile;
         }
-        return Map.copyOf(indexed);
-    }
-
-    private static Map<Integer, ContactPattern> indexPatterns(
-            List<ContactPattern> values
-    ) {
-        Map<Integer, ContactPattern> indexed = new LinkedHashMap<>();
-        for (ContactPattern pattern : values) {
-            Objects.requireNonNull(pattern, "contactPatterns contains null");
-            if (indexed.putIfAbsent(pattern.id(), pattern) != null) {
-                throw new IllegalArgumentException(
-                        "duplicate material contact pattern ID: " + pattern.id());
-            }
-        }
-        return Map.copyOf(indexed);
+        return indexed;
     }
 
     private static void requirePositiveId(String name, int value) {
@@ -268,26 +120,6 @@ public final class MaterialBoundaryRegistry {
     private static void requireZero(String name, double value) {
         if (value != 0.0D) {
             throw new IllegalArgumentException(name + " must be zero for this material model");
-        }
-    }
-
-    private static void requireExplicitInitialTemperature(boolean initializeAtNatural) {
-        if (initializeAtNatural) {
-            throw new IllegalArgumentException(
-                    "natural Page initialization is only valid for capacitive surfaces");
-        }
-    }
-
-    private static void requireNoTransition(
-            double transitionEnergyJPerUnit,
-            TransitionMutationPolicy mutationPolicy,
-            TransitionAction transitionAction
-    ) {
-        requireZero("transitionEnergyJPerUnit", transitionEnergyJPerUnit);
-        if (mutationPolicy != TransitionMutationPolicy.NONE
-                || transitionAction != TransitionAction.NONE) {
-            throw new IllegalArgumentException(
-                    "non-phase material profiles cannot declare a transition");
         }
     }
 

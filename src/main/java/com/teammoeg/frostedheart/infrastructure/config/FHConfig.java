@@ -78,7 +78,6 @@ public class FHConfig {
 		public final ForgeConfigSpec.IntValue scenarioRenderQuality;
 		public final ForgeConfigSpec.IntValue scenarioRenderThread;
 		public final ForgeConfigSpec.BooleanValue scenarioAntiAliasing;
-		public final ForgeConfigSpec.IntValue infraredViewUBOOffset;
 		public final ForgeConfigSpec.IntValue wheelMenuRadius;
 		public final ForgeConfigSpec.IntValue themeColor;
 		public final ForgeConfigSpec.BooleanValue enableWheelMenuCursor;
@@ -168,12 +167,6 @@ public class FHConfig {
 			enableFrozenSound = builder
 				.comment("Enables the frozen sound when player is freezing. ")
 				.define("enableFrozenSound", true);
-			infraredViewUBOOffset = builder.comment("The binding offset of the UBO for the infrared view shader.")
-				.comment("Partial shaders and mods may occupy the position as well.")
-				.comment("We will use default offset (7) for some known mods here. However, it is not guaranteed to be always compatible with all mods / shaders.")
-				.comment("In this case, player have to modify the config to specify the offset.")
-				.comment("No worries, from my experience, offset 7 is compatible with 99% mods / shaders.")
-				.defineInRange("infraredViewUBOOffset", 7, 0, Integer.MAX_VALUE);
 			builder.pop();
 
 
@@ -244,13 +237,76 @@ public class FHConfig {
 	 * 
 	 */
 	public static class Common {
+		public static class ThermalRuntime {
+			public final ForgeConfigSpec.DoubleValue airHeatCapacityJPerBlockK;
+			public final ForgeConfigSpec.DoubleValue airMixingWPerBlockK;
+			public final ForgeConfigSpec.DoubleValue phaseFaceConductanceWPerK;
+			public final ForgeConfigSpec.DoubleValue phaseBaseEnergyJPerHeatCapacity;
+			public final ForgeConfigSpec.DoubleValue farFieldConductanceWPerK;
+			public final ForgeConfigSpec.DoubleValue campfirePowerW;
+			public final ForgeConfigSpec.DoubleValue campfireRadiationShare;
+			public final ForgeConfigSpec.BooleanValue enableStaticBlockRadiation;
+			public final ForgeConfigSpec.DoubleValue lavaRadiationTemperatureC;
+			public final ForgeConfigSpec.DoubleValue effectiveLavaEmissivity;
+			public final ForgeConfigSpec.DoubleValue radiationReferenceTemperatureC;
+			public final ForgeConfigSpec.DoubleValue fireRadiantPowerW;
+			public final ForgeConfigSpec.DoubleValue dormantTemperatureHalfLifeSeconds;
+
+			ThermalRuntime(ForgeConfigSpec.Builder builder) {
+				builder.comment(
+						"Restart the client or dedicated server after changing thermal runtime values.")
+					.push("Thermal Runtime");
+				airHeatCapacityJPerBlockK = builder
+					.comment("Effective Air heat capacity per block in J/K.")
+					.defineInRange("airHeatCapacityJPerBlockK", 1_200.0D, 1.0D, 1_000_000.0D);
+				airMixingWPerBlockK = builder
+					.comment("Effective Air mixing conductance in W/(block*K).")
+					.defineInRange("airMixingWPerBlockK", 96.0D, 0.001D, 1_000_000.0D);
+				phaseFaceConductanceWPerK = builder
+					.comment("Phase-transition conductance per full exposed block face in W/K.")
+					.defineInRange("phaseFaceConductanceWPerK", 5.0D, 0.001D, 1_000_000.0D);
+				phaseBaseEnergyJPerHeatCapacity = builder
+					.comment("Phase energy per block in J, multiplied by the state-transition recipe heat_capacity.")
+					.defineInRange("phaseBaseEnergyJPerHeatCapacity", 38_000.0D, 1.0D, 1.0e12D);
+				farFieldConductanceWPerK = builder
+					.comment("Base conductance from exposed Air boundaries to natural temperature in W/K.")
+					.defineInRange("farFieldConductanceWPerK", 7_747.2298793470545D, 0.001D, 1.0e9D);
+				campfirePowerW = builder
+					.comment("Total thermal power of a lit campfire in W.")
+					.defineInRange("campfirePowerW", 8_000.0D, 0.0D, 1.0e9D);
+				campfireRadiationShare = builder
+					.comment("Fraction of campfire power emitted as direct radiation; the remainder heats Air.")
+					.defineInRange("campfireRadiationShare", 0.2D, 0.0D, 1.0D);
+				enableStaticBlockRadiation = builder
+					.comment("Enable read-only direct player radiation from static fire and exposed lava.")
+					.define("enableStaticBlockRadiation", true);
+				lavaRadiationTemperatureC = builder
+					.comment("Effective lava radiation temperature in degrees Celsius.")
+					.defineInRange("lavaRadiationTemperatureC", 1_000.0D, -273.0D, 5_000.0D);
+				effectiveLavaEmissivity = builder
+					.comment("Gameplay-scaled lava emissivity used for direct radiation.")
+					.defineInRange("effectiveLavaEmissivity", 0.01D, 0.0D, 1.0D);
+				radiationReferenceTemperatureC = builder
+					.comment("Reference environment temperature for lava radiation in degrees Celsius.")
+					.defineInRange("radiationReferenceTemperatureC", 20.0D, -273.0D, 5_000.0D);
+				fireRadiantPowerW = builder
+					.comment("Direct radiant power of an ordinary fire block in W.")
+					.defineInRange("fireRadiantPowerW", 1_000.0D, 0.0D, 1.0e9D);
+				dormantTemperatureHalfLifeSeconds = builder
+					.comment("Half-life in seconds for stored unloaded Page temperature residuals.")
+					.defineInRange("dormantTemperatureHalfLifeSeconds", 1_800.0D, 1.0D, 604_800.0D);
+				builder.pop();
+			}
+		}
 
 		public final ForgeConfigSpec.ConfigValue<List<? extends String>> blackmods;
+		public final ThermalRuntime THERMAL_RUNTIME;
 
 		// public final ForgeConfigSpec.ConfigValue<Boolean> enableAutoRestart;
 		public final ForgeConfigSpec.ConfigValue<Boolean> enableUpdateReminder;
 
 		Common(ForgeConfigSpec.Builder builder) {
+			THERMAL_RUNTIME = new ThermalRuntime(builder);
 
 			builder.push("Miscellaneous");
 			blackmods = builder

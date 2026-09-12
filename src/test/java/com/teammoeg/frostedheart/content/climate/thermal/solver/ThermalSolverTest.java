@@ -54,34 +54,10 @@ class ThermalSolverTest {
     }
 
     @Test
-    void fixedBoundaryUsesCompiledCoefficientAtOneSecond() {
-        Fixture fixture = fixture(1);
-        int cell = fixture.slots[0];
-        double coefficient = ThermalExchangeKernel
-                .compileBoundaryCoefficientJPerK(100.0D, 10.0D, 1.0D);
-        fixture.solver.installFragment(0, new ThermalFragment(
-                0L,
-                ThermalFragment.AirPairs.EMPTY,
-                ThermalFragment.MaterialContributions.EMPTY,
-                new ThermalFragment.FixedBoundaries(
-                        new int[]{cell}, new int[]{1},
-                        new double[]{20.0D}, new double[]{10.0D},
-                        new double[]{coefficient}),
-                ThermalFragment.PhaseContacts.EMPTY,
-                ThermalFragment.FarBoundaries.EMPTY));
-
-        fixture.solver.step(1.0D, true);
-
-        assertTrue(fixture.arena.enthalpyJ(cell) > 0.0D);
-        assertTrue(fixture.arena.temperatureC(cell, 0.0D) < 20.0D);
-    }
-
-    @Test
     void invalidCompiledOperationDegradesWithoutMutatingEitherCell() {
         Fixture fixture = fixture(2);
         fixture.arena.setEnthalpyJ(fixture.slots[0], 100.0D);
-        ThermalFragment broken = airPair(fixture, 0, 1, 1.0D);
-        broken.airPairs().coefficient()[0] = Double.NaN;
+        ThermalFragment broken = airPair(fixture, 0, 1, Double.NaN);
         fixture.solver.installFragment(0, broken);
 
         assertEquals(ThermalSolver.StepStatus.NUMERIC_DEGRADED,
@@ -92,26 +68,38 @@ class ThermalSolverTest {
                 fixture.arena.enthalpyJ(fixture.slots[1]), EPSILON);
     }
 
+    @Test
+    void materialReservationCoversInsertionBeforeDeletionPeak() {
+        Fixture fixture = fixture(2);
+        ThermalMaterialEdge edge = new ThermalMaterialEdge(
+                fixture.slots[0], fixture.slots[1],
+                new int[]{0}, new int[]{0}, new long[]{0L},
+                new double[]{1.0D}, 1.0D, 1.0D, 0, 0);
+        for (long key = 0; key < 4; key++) {
+            fixture.solver.installMaterialEdge(key, edge);
+        }
+
+        fixture.solver.reserveMaterialEdgeChanges(4, 1);
+        fixture.solver.installMaterialEdge(4L, edge);
+        fixture.solver.installMaterialEdge(0L, null);
+
+        assertEquals(4, fixture.solver.materialEdgeCount());
+    }
+
     private static ThermalFragment airPair(
             Fixture fixture,
             int first,
             int second,
             double conductance
     ) {
-        double coefficient = ThermalExchangeKernel.compilePairCoefficientJPerK(
-                100.0D, 100.0D, conductance, 1.0D);
         return new ThermalFragment(
                 0L,
                 new ThermalFragment.AirPairs(
                         new int[]{fixture.slots[first]},
                         new int[]{fixture.slots[second]},
-                        new int[]{1}, new int[]{1},
                         new double[]{conductance},
-                        new double[]{coefficient},
-                        new double[]{2.0D}, new double[]{2.0D},
-                        new byte[]{0}),
+                        new double[]{2.0D}, new double[]{2.0D}),
                 ThermalFragment.MaterialContributions.EMPTY,
-                ThermalFragment.FixedBoundaries.EMPTY,
                 ThermalFragment.PhaseContacts.EMPTY,
                 ThermalFragment.FarBoundaries.EMPTY);
     }

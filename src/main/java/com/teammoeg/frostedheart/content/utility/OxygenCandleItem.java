@@ -100,20 +100,28 @@ public class OxygenCandleItem extends FHBaseItem {
             @Override
             public void tickHeating(HeatingDeviceSlot slot, ItemStack stack, HeatingDeviceContext data) {
                 if (getState(stack) == 1) {
+                    double activeFraction = data.advanceHeatingTime(
+                            stack, getBurnTime(stack));
+                    if (!(activeFraction > 0.0D)) return;
                     data.addPower(PlayerTemperatureData.BodyPart.TORSO,
-                            HEATING_POWER_W);
-                    stack.getTag().putInt("fuel", stack.getTag().getInt("fuel") + 1);
+                            HEATING_POWER_W * activeFraction);
+                    int consumed = data.takeConsumedHeatingSeconds();
+                    if (consumed > 0) {
+                        stack.getTag().putInt("fuel", Math.min(
+                                BURN_TIME,
+                                stack.getTag().getInt("fuel") + consumed));
+                    }
                 }
             }
 
             @Override
             public float getMaxPowerW(ItemStack stack) {
-                return getBurnTime(stack) > 0 ? HEATING_POWER_W : 0;
+                return getState(stack) == 1 ? HEATING_POWER_W : 0;
             }
 
             @Override
             public float getMinPowerW(ItemStack stack) {
-                return getBurnTime(stack) > 0 ? HEATING_POWER_W : 0;
+                return getMaxPowerW(stack);
             }
         });
     }

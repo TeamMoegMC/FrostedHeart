@@ -128,7 +128,7 @@ public class BodyPartData {
 			double innerWeight = innerWeight(part, layerCount, layer);
 			double outerWeight = outerWeight(part, layer);
 			resistance += innerWeight * insulationFactor
-					* TemperatureComputation.LEGACY_INSULATION_TO_RESISTANCE;
+					* PlayerTemperatureComputation.LEGACY_INSULATION_TO_RESISTANCE;
 			heatProof += outerWeight * radiant;
 			windProof += outerWeight * wind;
 			waterResistance += outerWeight * wind;
@@ -142,7 +142,7 @@ public class BodyPartData {
 			double innerWeight = innerWeight(part, layerCount, layer);
 			double outerWeight = outerWeight(part, layer);
 			resistance += innerWeight * armor.getInsulation()
-					* TemperatureComputation.LEGACY_INSULATION_TO_RESISTANCE;
+					* PlayerTemperatureComputation.LEGACY_INSULATION_TO_RESISTANCE;
 			heatProof += outerWeight * armor.getHeatProof();
 			windProof += outerWeight * armor.getFluidResistance();
 			waterResistance += outerWeight * armor.getFluidResistance();

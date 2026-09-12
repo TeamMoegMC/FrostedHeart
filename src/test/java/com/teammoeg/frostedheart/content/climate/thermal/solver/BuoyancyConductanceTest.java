@@ -23,47 +23,44 @@ class BuoyancyConductanceTest {
 
     @Test
     void hotBelowIncreasesAndColdBelowReducesConductance() {
-        BuoyancyConductance.Result unstable = BuoyancyConductance.evaluate(
+        BuoyancyConductance.MutableResult unstable = evaluate(
                 10.0D, 40.0D, 0.0D, 0.0D, 4.0D, PARAMETERS);
-        BuoyancyConductance.Result stable = BuoyancyConductance.evaluate(
+        BuoyancyConductance.MutableResult stable = evaluate(
                 10.0D, 0.0D, 0.0D, 40.0D, 4.0D, PARAMETERS);
 
-        assertTrue(unstable.factor() > 1.0D);
-        assertTrue(stable.factor() < 1.0D);
         assertEquals(30.0D, unstable.conductanceWPerK());
         assertEquals(2.5D, stable.conductanceWPerK());
     }
 
     @Test
     void endpointSwapLeavesPhysicalFactorExactlyUnchanged() {
-        BuoyancyConductance.Result first = BuoyancyConductance.evaluate(
+        BuoyancyConductance.MutableResult first = evaluate(
                 7.5D, 35.0D, -8.0D, -5.0D, 12.0D, PARAMETERS);
-        BuoyancyConductance.Result swapped = BuoyancyConductance.evaluate(
+        BuoyancyConductance.MutableResult swapped = evaluate(
                 7.5D, -5.0D, 12.0D, 35.0D, -8.0D, PARAMETERS);
 
-        assertEquals(first.status(), swapped.status());
-        assertEquals(first.factor(), swapped.factor());
+        assertEquals(first.applied(), swapped.applied());
         assertEquals(first.conductanceWPerK(), swapped.conductanceWPerK());
     }
 
     @Test
     void horizontalPairUsesNeutralClampedFactorAndClampNeverGoesNegative() {
-        BuoyancyConductance.Result horizontal = BuoyancyConductance.evaluate(
+        BuoyancyConductance.MutableResult horizontal = evaluate(
                 8.0D, 1_000.0D, 2.0D, -1_000.0D, 2.0D, PARAMETERS);
-        BuoyancyConductance.Result stronglyStable = BuoyancyConductance.evaluate(
+        BuoyancyConductance.MutableResult stronglyStable = evaluate(
                 8.0D, -1_000.0D, 0.0D, 1_000.0D, 1.0D, PARAMETERS);
 
-        assertEquals(1.0D, horizontal.factor());
-        assertEquals(PARAMETERS.minimumFactor(), stronglyStable.factor());
+        assertEquals(8.0D, horizontal.conductanceWPerK());
+        assertEquals(8.0D * PARAMETERS.minimumFactor(),
+                stronglyStable.conductanceWPerK());
         assertTrue(stronglyStable.conductanceWPerK() >= 0.0D);
     }
 
     @Test
     void invalidRuntimeValuesDegradeAndInvalidProfilesAreRejected() {
-        BuoyancyConductance.Result result = BuoyancyConductance.evaluate(
+        BuoyancyConductance.MutableResult result = evaluate(
                 10.0D, Double.NaN, 0.0D, 5.0D, 1.0D, PARAMETERS);
 
-        assertEquals(BuoyancyConductance.Status.NUMERIC_DEGRADED, result.status());
         assertFalse(result.applied());
         assertThrows(IllegalArgumentException.class,
                 () -> new BuoyancyConductance.Parameters(-0.1D, 2.0D, 10.0D));
@@ -71,5 +68,26 @@ class BuoyancyConductanceTest {
                 () -> new BuoyancyConductance.Parameters(2.0D, 1.0D, 10.0D));
         assertThrows(IllegalArgumentException.class,
                 () -> new BuoyancyConductance.Parameters(0.0D, 1.0D, 0.0D));
+    }
+
+    private static BuoyancyConductance.MutableResult evaluate(
+            double baseConductanceWPerK,
+            double temperatureAC,
+            double centerYA,
+            double temperatureBC,
+            double centerYB,
+            BuoyancyConductance.Parameters parameters
+    ) {
+        BuoyancyConductance.MutableResult result =
+                new BuoyancyConductance.MutableResult();
+        BuoyancyConductance.evaluateInto(
+                baseConductanceWPerK,
+                temperatureAC,
+                centerYA,
+                temperatureBC,
+                centerYB,
+                parameters,
+                result);
+        return result;
     }
 }

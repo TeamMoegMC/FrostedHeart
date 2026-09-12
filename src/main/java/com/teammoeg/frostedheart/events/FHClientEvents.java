@@ -46,6 +46,8 @@ import com.teammoeg.frostedheart.content.health.network.C2SOpenNutritionScreenMe
 import com.teammoeg.frostedheart.content.health.screen.HealthStatScreen;
 import com.teammoeg.frostedheart.content.scenario.client.ClientScene;
 import com.teammoeg.frostedheart.content.scenario.client.dialog.HUDDialog;
+import com.teammoeg.frostedheart.content.town.buildings.house.HouseBlockEntity;
+import com.teammoeg.frostedheart.content.town.render.CylinderRegionRenderer;
 import com.teammoeg.frostedheart.content.ui.archive.ArchiveScreen;
 import com.teammoeg.frostedheart.content.ui.tips.client.gui.DebugScreen;
 import com.teammoeg.frostedheart.content.ui.waypoint.ClientWaypointManager;
@@ -209,10 +211,10 @@ public class FHClientEvents {
 
     @SubscribeEvent(priority = EventPriority.HIGH)
     public static void onRecipesUpdated(RecipesUpdatedEvent event) {
-       // if (!Minecraft.getInstance().hasSingleplayerServer()) {
-            //FHMain.LOGGER.info("Frostedheart recipes updated from server, rebuilding recipe lists");
+        // Integrated servers already own these shared static recipe tables and caches.
+        if (!Minecraft.getInstance().hasSingleplayerServer()) {
             FHRecipeCachingReloadListener.buildRecipeLists(event.getRecipeManager());
-        //}
+        }
     }
 
     @SubscribeEvent
@@ -236,6 +238,8 @@ public class FHClientEvents {
             ClientUtils.getMc().getProfiler().push("frostedheart:render_infrared_view");
             InfraredViewRenderer.renderInfraredView();
             ClientUtils.getMc().getProfiler().pop();
+            if(HouseBlockEntity.test!=null)
+            CylinderRegionRenderer.render(HouseBlockEntity.test.occupiedCells);
         }
     }
 
@@ -435,6 +439,7 @@ public class FHClientEvents {
         ClientUtils.DoApplyGammaValue = false;
         MouseCaptureUtil.stopMouseCapture();
         if (event.getLevel().isClientSide()) {
+            InfraredViewRenderer.reset();
             ClientWeatherState.INSTANCE.reset();
             ClientWeatherFrame.INSTANCE.invalidate();
             SpatialWeatherRenderer.INSTANCE.reset();

@@ -1,440 +1,1020 @@
-# 红外视野实际温度场网络方案
+# 红外视野实际温度场最小增量实现计划
 
 - Time: `2026-08-29 18:38:09 +0800`
-- Last reviewed: `2026-08-29 19:22:55 +0800`
-- Authors: `TeamMoeg; Codex (GPT-5, architecture review)`
-- Status: `ready`
-- Scope: `InfraredViewRenderer`, `infrared_view.fsh`, infrared packets, `MinecraftThermalInput`, `MinecraftPageManager`, `PagePublication`, `QueryPublication`
-- Related: [world-climate-and-temperature.md](../docs/climate/world-climate-and-temperature.md), [thermal-runtime-architecture-and-optimization.md](../docs/climate/thermal-runtime-architecture-and-optimization.md)
+- Last revised: `2026-09-10 +08:00`
+- Authors: `TeamMoeg; Codex (GPT-5, original architecture and final minimal-increment revision)`
+- Status: `superseded`
+- Scope: `InfraredViewRenderer`, `infrared_view.fsh`, existing infrared packets, `MinecraftThermalInput`, `MinecraftPageManager`, `PagePublication`, `QueryPublication`
+- Related: [world-climate-and-temperature.md](../docs/climate/world-climate-and-temperature.md), [thermal-runtime-architecture-and-optimization.md](../docs/climate/thermal-runtime-architecture-and-optimization.md), [thermal async/runtime topology plan](2026-08-28_01-18-39_thermal-async-runtime-topology-refactor.md#brick-residency-and-source-independent-propagation-correction)
+
+## Superseded outcome — 2026-09-10
+
+Author: Codex; OpenAI GPT-6. The Air-only infrared implementation and its historical corrections below remain investigation history. Current implementation has evolved further, including analytic-field composition; this file is not current behavior documentation.
+
+The new execution plan is [材料温度闭环：完整工程方案](2026-09-08_21-58-58_thermal-unknown-block-ventilation-75.md#material-temperature-closure). It covers material-node addressing, solid conduction, shared measurement, material persistence, player long-wave sampling, and surface infrared. Its surface contract replaces this plan's Air-only display, visible-side Air sampling, and blanket prohibition on all additional display data. Existing bounded delta encoding, coherent publication and lifecycle work are reused where applicable.
+
+The replacement is a plan, not an implemented feature. Use [climate documentation](../docs/climate/README.md) and current source for shipped behavior. This status change does not mark old pending client/performance checks as passed.
 
 ## Goal
 
-红外视野只显示 thermal runtime 已求解并发布的空气温度。Page 是服务端内部查询、revision 和缓存边界，不是客户端数据模型。
+红外视野显示 thermal runtime 已求解并发布的实际空气温度，并满足：
 
-- 不解析 physical source。
-- 不发送 source ID、功率、形状或伪温度 blob。
-- source 已经通过 solver 改变的实际空气温度会自然出现在 render tiles 中；只删除直接 source 可视化，不删除 source 热学作用。
-- 不叠加 `ThermalAnalyticField`。
-- 不把 material/phase 温度伪装成可见空气温度。
-- wire/client 不接收 sectionKey、Page slot、lifecycle generation 或 topology generation，只接收固定渲染网格中的温度 tile 和清除命令。
-- 没有有效 Page publication 时不绘制热学 overlay。
-- 红外 observer 不 admission、不 retain Page，也不加载区块；只读取现有 player/source/continuation interest 已产生的 publication。
-- 以 100 人服务器为验收规模，优先减少稳定带宽、重复编码和大包分配。
-- 新协议不兼容旧 HeatArea wire format；双端模组必须同版本。
+- 不周期重复发送未变化的温度 Pages。
+- 不为减少少量控制流量引入服务端 observer 或 per-player 状态。
+- 不 admission、不 retain Page，也不加载区块。
+- physical source 只通过 solver 改变空气温度，不直接进入红外 payload。
+- `ThermalAnalyticField` 不进入红外纹理。
+- shader 每个可见像素只做一次温度纹理采样，不循环 HeatArea。
+- 复用现有请求包、响应包和网络注册。
 
 ## Verified Current State
 
-- 当前 `MinecraftThermalInput.gameplayInfraredFields` 完全不读取 Page 温度，只把下面两类对象编码为 8-float `HeatArea`：
-  - `ThermalAnalyticFieldIndex.appendInfrared`；
-  - `PhysicalSourceSpatialIndex.appendInfraredFields`。
-- `PhysicalSourceSpatialIndex.appendInfraredFields` 发送的是按额定功率推导的伪热量，不是 solver 输出；隔墙时会产生干扰和双重表达。
-- 当前 C2S 包发送 `chunkPos + chunkRadius`；S2C 包发送 `VarIntArray(floatToIntBits)`；客户端只在跨 chunk 时请求一次。
-- `PagePublication` 只发布 64 个 Brick 的空气覆盖 slot、slot generation、签名和 mixed geometry，不含温度。
-- `QueryPublication` 按 arena slot 双缓冲发布真实温度；`tryRead` 是现有 gameplay 查询入口。
-- `QueryPublication.sampleTick` 是整个维度的一份时间戳。每次非休眠 publication 都会推进它，不能据此判断具体哪个 Page 的温度发生变化。
-- `QueryPublication.publish` 已经遍历所有 live arena slots；在该遍历内比较量化温度不需要第二次 arena/Page 扫描。
-- 默认红外半径为 4 chunks。若垂直带为 +/-2 sections，可见区域最多有：
+- `InfraredViewRenderer` 当前使用 4-chunk、即 64-block 球形扫描半径。
+- 当前请求只在玩家跨 chunk 时发送；响应携带 analytic fields 和 physical sources
+  生成的最多 512 个 `HeatArea`，不是 solver 输出。
+- 当前 fragment shader 对每个可见像素循环最多 512 个 HeatArea。
+- `PagePublication` 可以把 `16 x 16 x 16` Page 内的位置解析到实际 Air arena slot。
+- `QueryPublication` 已用双缓冲发布 slot 温度和 lifecycle generation。
+- `MinecraftPageManager` 已维护 `pagesByChunk`，可按 9 x 9 chunk buckets 枚举
+  实际存在的 Page entries。
+- thermal Page 是稀疏 admission 的运行时对象；候选 section 位置不等于已存在 Page。
+- 同一维度 `ThermalDimensionLimits.maximumPages()` 当前为 3200。
+
+## Workload Assumption
+
+目标规模是同一维度 100 名开启红外的玩家，玩家观察区域不重叠。红外不创建额外
+Pages，因此所有玩家能读取的唯一 Pages 总数仍受维度级 3200 上限约束。
+
+`maximumPages=3200` 只是红外可枚举 Page 的硬上限，不证明 100 个 source 的
+thermal residency、cell、pair 或 boundary 成本已经通过。该容量结论归上面的 thermal
+runtime plan 和其 100-source fixture；本文只计算已有 publication 的查询与网络成本。
+
+本计划允许每两秒约 5 KiB 的全服 C2S 精确状态查询，以换取：
+
+- 静态场景 S2C 为零；
+- 服务端不保存玩家红外状态；
+- 不增加订阅、frame、continuation、cache 或 hash。
+
+## Cross-System Residency Dependency
+
+红外是 thermal publication 的只读消费者，绝不反向拥有 Page/Brick 生命周期。当前
+Page-wide player/source/continuation residency 已被源码和实机行为否决；后续实现以
+thermal runtime plan 的 Brick correction 为唯一权威：
+
+- source 以精确目标 Brick 作为 seed；
+- worker 根据已求解温度、真实开放面和统一 gameplay error gate 持有/扩张 Brick；
+- 非天空缺页不再自动接弱自然温度 FarField；
+- 玩家离开或跨 section 不能清除 source/余热拥有的状态；
+- Page 只有在 worker desired mask 与主线程 seed 都为零后才允许退休；
+- infrared poll、presence 和 `pagesByChunk` 枚举不会 admission、续租或影响这些 mask。
+
+因此 `invalid/MIN_TEMP` 只表示当前没有 coherent thermal Brick publication；它不能由
+观察者移动直接制造。对同一世界位置，只要 source、拓扑和求解状态未变，玩家跨
+X/Y/Z section 后重新观察必须得到同一 Brick 温度。
+
+## Required Result
 
 ```text
-(2 * 4 + 1)^2 * (2 * 2 + 1) = 405 Page positions
-```
-
-## Corrected Draft Errors
-
-本次复查明确废弃前一版中的以下假设：
-
-1. `sampleTick` 不是 Page revision；用它做 Page 增量会让所有 Page 每秒都被判定为变化。
-2. mixed Brick 取 8 个八分程样本不等于“空气分量级完全保真”；小分量可能不经过样本点。它只能准确表示 2-block 采样网格上的真实 Page 温度。
-3. “1 byte 同时保存 uniform 标志和 8-bit valid mask”需要 9 bits，wire layout 不成立。
-4. 半径 4、垂直 +/-2、cell size 2 的纹理应为 `72 x 40 x 72`，不是 `288 x 40 x 288`。
-5. 一个 Page 在该纹理中占 `8 x 8 x 8` texels，不是 `32 x 32 x 32`。
-6. `glCopyTexSubImage3D` 不能完成计划中的同纹理 3D 平移；使用环形纹理坐标，不做 GPU 内复制。
-7. memo 淘汰后不能再依赖 memo 生成 Page retirement 列表，否则客户端会保留幽灵 Page。
-8. `8192 Page ~= 4 MiB` 的估算错误；slot mapping 本身就可能超过该数字。缓存必须按实际字节预算，而不是按虚构的固定项数。
-9. 周期拉取即使返回 unchanged，也会让 100 个客户端持续产生 C2S/S2C 控制流量；网络优先时应改为订阅推送。
-
-## Architecture
-
-```text
-client infrared toggle
+client open / move / staggered 40-tick poll
         |
         v
-C2S subscription on/off
+existing C2S:
+requestId + forceFull + lastTemperatureChangeId + knownPresence
         |
         v
-InfraredObserverManager (level thread)
+server derives actual center
         |
-        +--> current Page presence / Page revisions
+        v
+MinecraftPageManager pagesByChunk
+81 bucket lookups + actual Page entries
         |
-        +--> shared InfraredTilePayloadCache
-                         |
-                         v
-              PagePublication + QueryPublication
-                         |
-                         v
-              quantized Brick payload blobs
-                         |
-                         v
-        S2C initial / movement / changed-Page frames
-                         |
-                         v
-          client toroidal GL_R16I 3D texture
+        v
+compare exact presence and temperature change IDs
+        |
+        +--> identical: no S2C
+        |
+        +--> presence mismatch / forceFull: full current Page snapshot
+        |
+        +--> temperature changed: changed Page records only
+        |
+        +--> changes outside view: header-only ACK
+        |
+        v
+client full rebuild or delta patch
+        |
+        v
+one GL_R16I texture upload
+        |
+        v
+shader: one isampler3D fetch
 ```
 
 ## Decisions
 
-### D1 Actual Page Temperature Semantics
+### D1 Candidate Cube And Existing Pages
 
-- 红外值来自 `PagePublication.resolveAirPoint` 解析出的 Air slot，再从 D2 的一致性 read cursor 读取对应 QueryPublication 温度；现有单点 gameplay 继续使用 `tryRead`。
-- material pole、deep pole、phase reservoir、source 功率和 analytic field 不进入红外 payload。
-- 采样网格固定为 2-block 分辨率，即每个 Page `8 x 8 x 8` texels。
-- 均匀 Brick：
-  - 读取一个有效 Air slot；
-  - 将该真实温度复制到该 Brick 的 8 个 2-block texels。
-- mixed Brick：
-  - 每个 2-block texel 检查其 8 个方块中心（固定 block-center microcell 42）；
-  - 选择出现次数最多的实际 Air slot，平票时取最小 slot，保证确定性；
-  - 只读取并发送该 slot 的真实温度，不平均不同空气分量；
-  - 8 个方块中心都无 Air 时保持 invalid。
-- mixed mapping 最多执行 64 次 `resolveAirPoint`/Brick，但只在 geometry revision 变化或 cache miss 时计算；温度更新沿缓存 slot mapping 读取最多 8 个样本。
-- 该表示准确的是“2-block 网格样本温度”，不是所有微小空气分量。任何实现和文档都不得再次声称 component-exact。
-- 从未 admission、已 retirement、worker reset 或维度 publication 超龄的 Page 表示未知；shader 保留原始画面，不回退 source blob、analytic field 或自然温度。普通 geometry mutation 的短暂 stale 窗口保留上一份不超过 40 ticks 的客户端 texels，等待新 commit 直接覆盖，避免整 Page 清空后重发。
-
-### D2 Page/Brick-Local Quantized Revisions
-
-网络增量需要真实的 Page/Brick revision，不能使用维度级 `sampleTick`。
-
-- `PagePublication` 增加 worker Page slot；生命周期仍由 `ThermalPageHandle.lifecycleGeneration` 校验。
-- `QueryPublication` 增加：
-  - 全局单调 `infraredRevision`；
-  - 按 worker Page slot 保存的 `pageTemperatureRevision`、lifecycle generation 和 `64` 个 `brickTemperatureRevision`；
-  - caller-owned、可复用的 `InfraredReadCursor`，一次固定 published buffer、Page/Brick revisions、sample tick 和 publication version。
-- `QueryPublication` 只在该维度 `infraredObserverCount > 0` 时执行量化比较。第一个 observer 启用 tracking 并要求下一次正常 publish reseed；最后一个 observer 关闭后只保留一次 volatile flag 检查，不再执行逐 Air-cell 量化/revision 工作。
-- 初始快照直接读取当前 published buffer，不依赖 revision tracking 已经运行；reseed 只保证初始快照之后的变化不会遗漏。
-- revision backing 在 engine 创建时按 `ThermalDimensionLimits.maximumPages() * 64` 一次预分配并计入 query publication budget；topology prepare/commit 和 observer 请求都不得扩容。使用 `long` revision 时 3200 Page 上限约占 1.6MiB，属于固定可计算成本。
-- 正常 `QueryPublication.publish` 已遍历 live slots。该循环内：
-  - 只处理 Air cells；
-  - 将新温度量化到 `0.05 C`；
-  - 与当前 published buffer 中相同 slot/generation 的量化值比较；
-  - 从 Air cell 的 Page slot 和 Brick minimum 直接得到 `brickIndex`；
-  - 同一 Brick 只要一个量化值变化，就把该 Brick 和所属 Page 标为本次 infrared revision。
-- dirty 收集使用预分配的 `touchedPageSlots[] + pendingBrickMask[pageSlot] + stamp[pageSlot]`；第一次触碰 Page 才加入列表，publish 结束只遍历 touched Pages 写 revisions。不得每次清空/扫描 `maximumPages * 64` revision backing。
-- 不增加第二次 live-slot、无关 Page 或 high-water 遍历；收口成本严格为 O(changed pages)。
-- `republishUnchanged` 不推进 infrared revision，保持睡眠路径 O(1)。
-- admission、任何 PagePublication geometry/topology mapping change 和 lifecycle replacement 由 `ThermalDimensionEngine` 从现有 `PreparedTopologyChange.PageWrite` 传入精确 dirty Brick mask，强制推进对应 Brick/Page revisions；不能只看 topology generation，也不能把一个 Brick 变化扩成整 Page dirty。
-- retirement 不依赖 revision；observer 的 presence bitmap 负责删除客户端 Page。
-- revision 是候选变化信号。Brick packer 重新编码后若字节与旧 blob 完全一致，则保留旧 blob revision，不产生网络更新。
-- 主线程读取顺序固定为：begin cursor，取得当前 `PagePublication`，读取匹配 `(pageSlot, lifecycleGeneration)` 的 Page/Brick revisions 和 slots，完成临时编码，最后同时验证 cursor publication version 与 handle publication identity。验证成功后才提交 cache entry；任一步失败就丢弃 staging 并留到下一次 dispatch，不循环自旋，也不拼接跨版本数据。
-- 一个 observer dispatch 尽量共享一个 cursor，而不是每个 slot 单独进入 seqlock；cursor 由 manager 复用，不产生每 Page/请求对象。
-- 生产代码不增加统计计数器、测试 getter 或诊断集合。
-
-### D3 Server-Owned Observer Subscription
-
-为了让静态场景达到零红外网络流量，采用订阅推送。
-
-- 客户端打开/关闭红外时只发送一次 `C2SInfraredSubscriptionPacket`：
-  - `clientSessionId`；
-  - `enabled`。
-- 服务器从 `ServerPlayer` 的实际位置计算中心 chunk 和 center section Y；客户端不发送当前位置、半径或垂直带。
-- 半径和 yBand 由服务端配置/协议常量决定，避免每个请求携带重复字段。
-- observer 枚举只访问 `MinecraftPageManager` 已存在的 handles/current publications；红外视野本身不调用 `retain`、不创建 primary lease、不扩大 continuation，也不触发 chunk load。
-- `InfraredObserverManager` 在 level thread 保存每个开启玩家的最小状态：
-  - client session ID；
-  - 上次中心 chunk / section Y；
-  - last delivered infrared revision；
-  - last observed dimension infrared revision / Page presence revision；
-  - 当前区域 presence bitmap；
-  - 当前正在发送的 frame ID、target infrared revision 和无数组 continuation cursor。
-- 不保存 per-player Page 温度、副本、hash 或完整已发送 payload。
-- 更新时机：
-  - 开启红外：发送当前区域初始快照；
-  - 玩家跨 chunk/section：发送新的 presence bitmap、进入环带 Page 和重叠区域中尚未送达的变化 Page；
-  - Page 量化温度/topology 变化：只向覆盖该 Page 的 observer 发送其中 changed Bricks；
-  - Page retirement / worker reset：presence 变化时清除客户端对应位置；普通 mutation stale 不改变 presence；
-  - 关闭、logout、dimension change、level close：删除 observer 状态；
-  - worker generation restart / recipe reload：清空 observer watermark 和 payload cache，等待新 Page publications 后发送新的初始快照。
-- observer 调度与 thermal completion 对齐到最多每 20 ticks 一次，不按 render frame 或玩家体温查询频率发送。
-- dispatch 位于 main thread 应用 thermal completion、Page continuation/resync 和即时 retirement 之后；不从网络线程枚举 `MinecraftPageManager.pages`。
-- Page 发送顺序使用一份按距离排序的共享静态 local-index 表，初始/移动快照先近后远；不为每个 observer 分配排序数组。
-- `MinecraftPageManager` 维护一个 O(1) 的 Page presence revision，只在 admission、retirement 和 worker-generation reset 推进，不因普通 geometry mutation 的临时 stale 推进。observer 中心、维度 infrared revision 和 presence revision 均未变化时，跳过区域枚举。
-- 红外沿用 gameplay 的 `MAX_PUBLICATION_AGE_TICKS = 40`。维度 sample 超龄时发送 presence 清除并停止温度 payload；新 publication 恢复后重新发送当前区域。age 可用维度级 sample tick O(1) 门控，不逐 Page 计算。
-- 默认区域最多 405 Page positions。静态维度每个 observer 只做 O(1) 门控；存在温度/Page 生命周期变化时，100 人每次 dispatch 最多约 40,500 次 Page presence/revision 读取，这些是 primitive/volatile 查询，不分配 render payload。
-- 稳定且不移动的 observer 在初始快照后不发送 C2S、S2C 或 unchanged 心跳。
-
-### D4 Shared Render-Tile Payload Cache
-
-- 每个维度使用一个按实际字节计费的 `InfraredTilePayloadCache`。key 仍利用服务端 Page/Brick 生命周期，但 value 和 wire 都是 render-tile 数据。
-- key 为：
+当前扫描半径是 64 blocks。以玩家当前 chunk 和 eye section 为中心，完整包围该球体的
+section cube 为：
 
 ```text
-sectionKey
-+ lifecycleGeneration
-+ geometryRevision
-+ topologyGeneration
-+ pageTemperatureRevision / per-Brick revision
+horizontal: center +/- 4 chunks   = 9
+vertical:   center +/- 4 sections = 9
+candidate positions               = 9 * 9 * 9 = 729
 ```
 
-- entry 只保存：
-  - topology-stable sample slot mapping；
-  - Page lifecycle generation（所有 Page cells 共用，不为每个 slot 重复保存）；
-  - 64 个按 Brick revision 复用的 immutable Brick blobs；
-  - 实际计费字节数和 LRU 链接。
-- 缓存复用该 engine 已传给 QueryPublication 的 dimension budget，使用 `ThermalMemoryBudget.AllocationClass.OPTIONAL`，默认硬预算 `4 MiB / dimension`；不另建一套“红外维度预算”，也不使用“8192 项”等与真实 entry 大小无关的上限。
-- 淘汰只影响下次重新编码，不影响 presence、revision 或客户端清理正确性。
-- 同一个 Brick revision 在 cache entry 驻留期间只编码一次。entry 被预算淘汰后允许按当前 publication 重新编码；正确性不依赖命中率。
-- 100 个玩家观看同一 Page 时，共享对应 changed Brick blobs；每个连接仍需发送一份，这是不可消除的网络下限。
-- observer count 从 1 变 0 时关闭 tracking 并释放全部 tile payload cache entries；无人观看期间 revision 不推进，因此旧 blob 禁止跨该边界复用。
-- observer count 从 0 变 1 时从当前 QueryPublication 做全量初始编码，并要求下一次正常 publish reseed Brick revisions。无 observer 时仅保留固定 revision backing，不保留可选 payload cache。
+客户端 presence 使用 12 个 longs 精确表示 729 个 local Page positions。
 
-### D5 Wire Format
+服务端不逐个查询 729 个 section keys，而是复用现有 `pagesByChunk`：
 
-#### C2S Subscription
+1. 遍历中心周围 `9 x 9 = 81` 个 chunk buckets。
+2. bucket 不存在时直接跳过。
+3. 只遍历 bucket 中实际存在的 section keys。
+4. 过滤 `centerSectionY +/- 4`。
+5. `ThermalPageHandle` 存在、`lastPublication()` 非空且 QueryPublication 未超龄时，
+   设置对应 presence bit。
+
+presence 表示“该 Page lifecycle 已经拥有至少一个 coherent worker cut”，不把普通
+geometry mutation 的短暂 stale 当成 Page retirement。温度编码优先使用
+`currentPublication()`；它暂时为 null 时使用 `lastPublication()`，仍由 read cursor
+校验 topology、slot generation 和 sample age。真正 retirement 后 handle 消失，
+presence 才清除。
+
+复杂度为 `O(81 + actual Page entries)`，不增加新索引、cache 或 Page admission。
+
+### D2 One Actual Temperature Per Thermal Brick
+
+> Superseded on `2026-09-01`: D2-D5, D7-D8, the old Explicit Non-Goals,
+> Complexity/Implementation/Validation sections, and the old Revision
+> Outcome/Outcome describe the implemented Brick-representative protocol but no
+> longer define the next implementation. They are retained as investigation
+> history only. D1 Page enumeration, D6 40-tick staggering, and the
+> cross-system residency boundary remain valid. The authoritative correction is
+> `Block-Resolved Actual Air-Cell Correction` below.
+
+一个 Page 没有单一温度。Page 内有 64 个 `4 x 4 x 4` thermal Bricks，不同 Brick
+可以属于不同空气区域并具有不同温度。每个 Page record 因此固定发送 64 个 Brick
+texels。
+
+- 普通 Brick 直接读取 coverage Air slot。
+- mixed Brick 检查八个八分体中心的 block-center 样本，从有效 Air slots 中选择
+  出现次数最多者；平票时选择最小 slot。
+- mixed Brick 最多执行 8 次 `resolveAirPoint`，不发送 component 或 geometry。
+- 没有有效 Air slot 时写 `Short.MIN_VALUE`。
+- 有效温度编码为
+  `clamp(round(temperatureC * 4), -32767, 32767)`，即 0.25 degC 精度。
+- `GL_NEAREST` 采样，不插值 invalid texel 或相邻 Brick。
+
+该表示是 Brick 级实际空气温度，不承诺逐方块或 component-exact 显示。
+
+### D3 Minimal Temperature Change Tracking
+
+`revision` 在本计划中只是运行时温度变化编号，不是软件版本、构建版本或 hash。
+实现命名使用 `temperatureChangeId` 和 `pageChangeIds`。
+
+`QueryPublication` 增加：
+
+- 一个维度级 `temperatureChangeId`；
+- `long[maximumPages] pageChangeIds`，3200 Pages 时约 25 KiB；
+- 一个维度级 `infraredActiveUntilTick`；
+- 一个 caller-owned `InfraredReadCursor`。
+
+`MinecraftThermalInput.createWorker` 先构造 `ThermalDimensionLimits`，再调用
+`QueryPublication.tryCreate(dimensionBudget, initialCellCapacity, maximumPages)`。
+`pageChangeIds` 的 25,600 bytes 和可增长 cell buffers 分别持有一个 reservation
+token，但都向同一个 dimension/server budget 计费；cell capacity 扩容只替换 cell
+buffer reservation，不重复计费或重建固定 Page backing。任一初始 reservation 失败
+时释放另一 token 并返回 null，close 时释放两者。不另建预算或事后扩容。
+
+每次红外请求把 `infraredActiveUntilTick` 延长到当前 tick + 80。inactive 转 active
+时，在一个 QueryPublication write 中推进一次维度 change ID，并把完整
+`pageChangeIds` backing 设为该值；触发 reactivation 的请求发送 full snapshot，
+其他仍持有旧 change ID 的客户端会在下一 poll 收到全部可见 Page delta。之后
+worker publish：
+
+- deadline 已过时只检查一次标量条件，不执行红外比较；
+- deadline 有效时复用现有 live-slot publish 循环；
+- 对 Air cells 比较新旧 0.25 degC 量化值；
+- slot generation 变化也视为改变；
+- 一个 Page 内任意 Air cell 改变时，只把该 Page 标记为本次
+  `temperatureChangeId + 1`；
+- publish 结束有 Page 改变时才提交新的维度 change ID；
+- `republishUnchanged` 不推进 change ID；
+- 不增加第二次 cell/Page 遍历。
+
+为确定 cell 所属 Page，只恢复 QueryPublication 生产使用的只读 arena
+`pageSlot`/Air-kind 访问；不恢复测试接口或诊断 metadata。
+
+`PagePublication` 增加仅服务端内部使用的 `workerPageSlot`。主线程据此从 cursor
+读取对应 `pageChangeIds`；该 identity 不进入 wire 或客户端数据模型。
+
+Page geometry/topology publication 改变时，`ThermalDimensionEngine` 通过现有
+Page writes 把对应 Page 标记为温度数据已变化。Page admission、retirement 由客户端
+presence 精确发现，不需要全局 presence revision。
+
+`InfraredReadCursor`：
+
+- 固定 published buffer、publication version、topology generation、sample tick、
+  temperature change ID 和 Page change IDs；
+- 对响应内多个 slots 做无分配读取并校验 slot generation；
+- 响应完成后验证一次 publication version；
+- 验证失败时不发送响应，下一次 40-tick poll 自然重试，不循环自旋。
+
+worker restart 后新 QueryPublication 的 change ID 可以重新从零开始。服务端发现
+客户端 change ID 大于当前值时直接发送 full snapshot；新 publication 的首次请求
+同时按上述 inactive-to-active 规则重建 change-ID 基线，不增加 generation/session
+或 per-player 状态。
+
+### D4 Exact Client-Carried Presence
+
+服务端不保存玩家上次看见的 Page set。客户端在每次稳定 poll 中携带自己当前纹理的
+精确 presence：
 
 ```text
-VarInt clientSessionId
-boolean enabled
+12 longs = 768 bits
+used bits = 729
+unused high bits = 0
 ```
 
-没有周期请求包。
+服务端用 D1 的 `pagesByChunk` 枚举构造当前 12 longs，并做精确比较：
 
-#### S2C Frame Header
+- presence 相同：允许发送 temperature delta。
+- presence 不同：发送 full snapshot；客户端清空后重建。
+- Page retirement、首次 publication 和 worker replacement 会自然形成 mismatch；
+  普通 geometry mutation 继续使用 last coherent publication，不改变 presence。
+- 不使用 checksum、hash、概率判断或全局 presence revision。
+
+### D5 Existing Request/Response Packets
+
+不新增 packet 类，不改变 `FHNetwork` 的两条现有注册。原位修改现有请求和响应。
+
+C2S：
 
 ```text
-VarInt clientSessionId
-VarLong frameId
-VarLong targetInfraredRevision
-optional ZigZag VarInt centerChunkX
-optional ZigZag VarInt centerChunkZ
-optional ZigZag VarInt centerSectionY
-VarInt partSequence
-byte flags
-VarInt clearBlockCount
-VarInt fullBlockCount
-VarInt tileUpdateCount
+VarInt requestId
+boolean forceFull
+VarLong lastTemperatureChangeId
+12 longs knownPresence
 ```
 
-- `clientSessionId` 使客户端在关闭、重开或维度切换后丢弃旧帧。
-- `frameId` 在一个 client session 内单调递增，负责区分温度帧、presence-only 帧和被 supersede 的旧帧。
-- `targetInfraredRevision` 是本组更新完成后可提交的 observer 温度 watermark；presence-only frame 允许它与上一次相同。
-- `partSequence` 从 0 单调递增；flags 的 `MORE` 位表示后续仍有 Page。客户端只在收到不含 `MORE` 的 final frame 后提交 watermark。
-- center 只在初始/区域移动 frame 出现；稳定区域的温度增量不重复发送中心坐标。
-- flags 至少包含 `CLEAR_ALL`、`REGION_CHANGED` 和 `MORE`。初始、worker reset、publication 超龄时用 `CLEAR_ALL`；普通更新不重复发送 presence bitmap。
-- 客户端和 wire 只认识两层固定渲染坐标：
-  - render block：一个 `16 x 16 x 16` 世界区域，对应 `8 x 8 x 8` texels；默认区域最多 405 个；
-  - render tile：一个 `4 x 4 x 4` 世界区域，对应 `2 x 2 x 2` texels；默认网格为 `36 x 20 x 36 = 25,920` tiles。
-- render block index 固定为 `((dy + yBand) * width + (dz + radius)) * width + (dx + radius)`；tile index 使用相同的 Y/Z/X 顺序。wire 不发送 sectionKey、Page slot 或任何 lifecycle/topology 字段。
+- 开启红外、跨 chunk、跨 eye section 或维度切换时 `forceFull=true`。
+- forceFull 请求仍写固定 12 longs，保持单一路径 codec；服务端忽略其内容。
+- 服务端始终从 `ServerPlayer` 实际位置派生中心和范围。
 
-#### Commands
-
-- `CLEAR_BLOCKS`：按升序写 render block index 的非负 VarInt delta。服务端内部 presence bitmap 只用于生成该列表，不上网。
-- `FULL_BLOCKS`：每项写 render block index delta、64 个 tile 的 2-bit tags（固定 16 bytes），再按 tile index 写 payload。用于初始快照、新 admission 和进入环带；不为每个 tile 重复发送 1-byte tag。
-- `TILE_UPDATES`：每项写 tile index delta，随后一个 tile 编码。用于稳定区域的 Brick 温度/geometry 增量。
-- Page 只是服务端把 section/Brick 映射到 render block/tile index 的实现细节。客户端无法也无需还原 Page identity。
-
-#### Tile Encoding
-
-`TILE_UPDATES` 每个 tile 使用一个 byte tag；`FULL_BLOCKS` 使用同值的 packed 2-bit tag：
+S2C：
 
 ```text
-0 EMPTY
-1 UNIFORM
-2 SAMPLED_8
+VarInt requestId
+int centerChunkX
+int centerChunkZ
+int centerSectionY
+VarLong temperatureChangeId
+boolean fullSnapshot
+VarInt pageRecordCount
+repeated:
+    VarInt localPageIndex
+    64 signed shorts
 ```
 
-- `UNIFORM`：随后一个 signed short 温度。
-- `SAMPLED_8`：随后一个 8-bit valid mask，再按 bit 顺序写 signed short 温度。
-- 温度编码为 `clamp(round(temperatureC * 20), -32767, 32767)`，精度 `0.05 C`；极端值饱和而不是溢出或中止整帧。
-- `Short.MIN_VALUE` 保留为客户端纹理 invalid sentinel，不作为有效温度发送。
-- topology 变化为 EMPTY 时发送 `TILE_UPDATE(EMPTY)` 清除旧 texels；retirement 使用一个 `CLEAR_BLOCK`，worker reset/publication 超龄使用 `CLEAR_ALL`。
-- 不发送 float、source ID、功率、mode、radius、pillar、analytic field 或 material 状态。
+服务端决策固定为：
 
-#### Framing
+1. `forceFull=true`、客户端 change ID 大于当前值、presence mismatch 或
+   QueryPublication 从无效恢复：发送 full snapshot。
+2. change ID 相同且 presence 相同：不发送 S2C。
+3. change ID 已推进且 presence 相同：只发送
+   `pageChangeIds[pageSlot] > lastTemperatureChangeId` 的可见 Pages。
+4. change ID 已推进但当前区域没有 changed Page：发送 pageRecordCount 为 0 的
+   delta ACK，使客户端推进 change ID。
+5. QueryPublication 整体无效或超过现有 40-tick age：不发送响应，保留客户端最后
+   有效 snapshot；publication 恢复后由现有 change ID/Page baseline 发送重建数据，
+   worker replacement 的 change-ID rollback 仍自动发送 full。
 
-- 单个 S2C frame payload 硬上限 `32 KiB`。
-- 一个 observer 每次 20-tick dispatch 最多发送一个 frame；每个维度另有按实际连接字节计费的总发送预算，默认 `512 KiB / dispatch`，observer 使用 round-robin 公平续传。
-- 直接根据共享 tile blobs 计算 command 长度并分配到 frame；不先构造一个大区域数组再切片。frame 只能在 command 边界切分。
-- 常见 uniform tile 增量约为 `1-3 byte index delta + 1 byte tag + 2 byte temperature = 4-6 bytes`；mixed/full-valid tile 约为 `19-21 bytes`。
-- 全 uniform render block 约为 `1-2 byte block delta + 16 byte tags + 64 * 2 = 145-146 bytes`；全 mixed/full-valid 最坏约为 `1-2 + 16 + 64 * 17 = 1105-1106 bytes`。默认 405 block 区域的协议级最坏值约 438KiB，因此必须允许跨 dispatch continuation。
-- 初始/移动快照的所有 parts 入队后，服务器才推进 observer 的 last delivered revision；预算耗尽时保留 cursor，不能跳过未发送 Page。玩家移动或 session 变化会废弃旧 cursor 并从新区域重新开始。
-- continuation 固定一个 frame ID 和 target infrared revision，只选择 `(lastDelivered, target]` 内的 Brick revisions。发送过程中出现的更新留给下一 frame；若读取到更新后的 blob，可发送最新值但仍只提交旧 target，下一 frame允许保守重发，不能漏发。
-- region center、session 或 presence revision 在 continuation 中途变化时，废弃旧 cursor 并以新的 presence/frame 开始；温度 revision 单独变化不打断当前 continuation。
-- 客户端只按序应用当前 session/frame 的 parts；缺号、较旧 session/frame 或被新区域 supersede 的旧 continuation 直接丢弃。
-- Forge 连接自身可能压缩数据，但协议不依赖连接压缩，也不引入自定义压缩库。
+响应 payload 只持有一个最终长度的 flat `short[] pageRecords`：
 
-### D6 Client Texture And Rendering
+- 每条内存记录为一个 unsigned local Page index 加 64 个 signed temperatures，
+  共 65 shorts；
+- wire 编码把首个 short 转为 VarInt，其余 64 个直接写 short；
+- 禁止 `List<PageRecord>`、Page record 对象、每 Page 数组或装箱集合。
 
-- 默认区域的纹理尺寸：
+单个 full response 的协议级上限：
 
 ```text
-X = (2 * radius + 1) * 8 = 72
-Y = (2 * yBand + 1) * 8 = 40
-Z = (2 * radius + 1) * 8 = 72
+729 * (2-byte local index upper bound + 64 * 2-byte temperature)
+= 94,770 bytes
 ```
 
-- 使用单张 `GL_R16I` 3D integer texture：
-  - `72 x 40 x 72 x 2 bytes ~= 0.40 MiB`；
-  - 保存与 wire 完全一致的 int16 量化值；
-  - `Short.MIN_VALUE` 表示 invalid；
-  - `GL_NEAREST` 采样，避免 sentinel 插值、隔墙温度混合和第二张 validity texture。
-- 客户端另保留一份同尺寸 `short[]` CPU mirror（约 0.40MiB），用于应用 tile delta、ring 清除和合并上传；总固定温度场存储约 0.80MiB。
-- 一个 tile 更新 `2 x 2 x 2` texels；一个 full/clear block 更新 `8 x 8 x 8` texels。
-- 纹理采用 toroidal/ring 坐标：
-  - 玩家移动时只改变逻辑世界原点；
-  - 清除进入环带；
-  - 写入新的 Page blocks；
-  - 不调用 `glCopyTexSubImage3D` 或依赖 OpenGL 4.3 的 texture copy。
-- render block 跨 ring 边界时最多拆成 8 个 `glTexSubImage3D` box。
-- 解包期间只修改 CPU mirror 并标记受影响 render blocks；一帧结束后按 render block 合并上传，避免每个 tile 各发一次 GL call。
-- shader 从重建的世界坐标映射到 ring texel：
-  - valid 温度映射为配置色标；
-  - invalid 保持原始场景颜色；
-  - 不读取 HeatArea UBO，不循环 source/analytic 列表。
-- 2-block nearest 网格是明确的视觉分辨率选择；若未来需要平滑，只能在不跨 invalid/wall 的前提下另行设计，不能伪称当前方案 component-exact。
+加 header 后仍小于 96 KiB，远低于 Forge 1.20.1 的 1 MiB clientbound custom
+payload 上限。不增加分片、自定义压缩或发送预算。
 
-### D7 Legacy Infrared Deletion
+### D6 Forty-Tick Staggered Polling
 
-实施时删除红外专用旧路径：
+- 开启、跨 chunk 或跨 eye section 时立即请求。
+- 稳定视野每 40 ticks poll 一次，即 2 seconds。
+- 周期 poll 使用 entity ID 错峰：
 
-- `MinecraftThermalInput.gameplayInfraredFields`；
-- `ThermalAnalyticFieldIndex.appendInfrared`（确认无其他调用后）；
-- `PhysicalSourceSpatialIndex.appendInfraredFields`（确认无其他调用后）；
-- `FHRequestInfraredViewDataSyncPacket`；
-- `FHResponseInfraredViewDataSyncPacket`；
-- `InfraredViewRenderer` 的 HeatArea UBO、`adjustNum` 和旧 updateData；
-- `infrared_view.fsh` 的 `HeatArea`、`Adjusts` 和 source/analytic 循环；
-- `FHNetwork` 中旧 packet registrations。
+```java
+Math.floorMod(clientGameTime + player.getId(), 40) == 0
+```
 
-保留：
+- 同一 client tick 已发送开启/移动请求时，不重复发送周期 poll。
+- 关闭红外或切换维度时递增本地 request ID 并停止请求，使在途响应失效。
+- 40-tick poll 把维度 tracking deadline 延长到 80 ticks；这是一个维度级活跃窗口，
+  不保存玩家 observer、引用计数、heartbeat 状态或 cleanup 生命周期。
 
-- physical source 对 Page solver 和 radiation 的正常输入；
-- analytic field 对 gameplay 温度的正常合成；
-- 其他非红外消费者使用的 source/analytic APIs。
+100 人静态场景的固定应用层 C2S 上限约为：
 
-## Rejected Alternatives
+```text
+requestId + flag + changeId + 12 longs ~= 100-111 bytes/request
+100 players / 2 seconds ~= 50 requests/s
+total ~= 5-5.5 KiB/s
+S2C = 0
+```
 
-| Alternative | Reason |
-|---|---|
-| 周期 C2S 拉取 + unchanged 响应 | 100 人静态场景仍持续产生双向控制流量；订阅推送可做到初始快照后 0 bytes |
-| Page 级温度增量 | 一个 Brick 变化就重发整个 Page；Brick revision 可在现有 publish pass 内精确获得 |
-| 在 wire/client 暴露 Page identity/revisions | 渲染只需要固定网格坐标和值；Page 只留作服务端内部索引和压缩边界 |
-| per-player Page/Brick 已发副本 | 内存与 observer 数相乘；全局 revisions + 小 watermark 足以判断增量 |
-| source/analytic/HeatArea 红外通道 | 不是 Page 求解温度，会产生伪热区、隔墙干扰和额外 wire 分支 |
-| 每个 worker cut 预生成完整红外网格 | 无 observer 时仍产生常驻编码成本；只维护廉价量化 revision，payload 按需编码 |
-| float 温度或逐方块 1-block 网格 | 带宽分别约为 int16/2-block 方案的 2 倍和 8 倍，且超出当前视觉需求 |
-| 自定义压缩库 | 小增量和 Forge 连接压缩已覆盖主要收益；增加依赖、缓冲和延迟不值得 |
-| 依赖 memo 推断 Page retirement | cache eviction 会造成幽灵 Page；presence bitmap 才是独立正确性来源 |
+这是为避免服务端 observer/per-player 生命周期状态而保留的唯一周期控制流量。
 
-## Complexity And Network Contract
+### D7 Linear Client Texture
 
-### Concrete Dual-Side Budget
+每个 Page 对应 `4 x 4 x 4` texels。9-section cube 对应：
 
-服务端（按当前 `maximumPages = 3200`、`maximumLiveCells = 65,536`）：
+```text
+texture = 36 x 36 x 36
+texels = 46,656
+GL_R16I bytes = 93,312
+CPU short[] bytes = 93,312
+combined fixed data = 186,624 bytes, about 182.25 KiB
+```
 
-- Page x 64 的 `long` Brick revisions 约 `3200 * 64 * 8 = 1,638,400 bytes ~= 1.56MiB / active dimension`，engine 创建时固定分配；Page aggregate/lifecycle/touched scratch 另为几十 KiB。
-- 无 observer 时每次 QueryPublication 只检查一次 tracking flag，不执行逐-cell 红外量化；无 tile cache、observer 枚举或网络发送。
-- 有 observer 且 worker 正常 publish 时，最多在已有 live-slot pass 内增加 65,536 次 Air-cell 量化/比较；没有第二次 cell traversal。
-- level thread 静态场景每秒约 O(observer) 标量门控；dimension revision 变化时最坏为 `100 * 405 = 40,500` 次 Page revision/presence 读取。
-- `InfraredTilePayloadCache` 最多 4MiB/维度，仅 observer 存在时保留；编码 scratch 复用，单个 outbound frame <=32KiB。
+- texture 使用普通线性坐标，锚定最近接受响应的中心。
+- full snapshot 先用 `Short.MIN_VALUE` 清空 mirror，再写入 records。
+- delta 只覆盖 records 对应的 Pages；presence 已验证相同，因此不需要 clear。
+- pageRecordCount 为 0 的 ACK 只推进 change ID，不上传纹理。
+- 有温度 records 的响应结束后执行一次完整 `glTexSubImage3D`。
+- shader 从世界坐标计算 texel；64-block sphere 外或 cube 外保持原画面，
+  扫描球内的 invalid/无 Page texel 继续沿用旧红外语义，按 `MIN_TEMP` 显示冷蓝。
+- depth 重建点在 `4-block` Brick 边界上没有唯一体素归属；采样点沿 camera ray
+  向摄像机偏移 `1/2048` 的相对距离，稳定选择可见表面前方的 Air texel。该路径
+  只有一次常量向量乘加，不增加 texture fetch、法线重建或过滤。
+- shader 不读取 UBO，不循环 source、analytic field 或 Page records。
+- level unload、resource reload 和客户端关闭时释放 3D texture。
+- 不实现 toroidal/ring、CPU 区域平移或 texture copy。
 
-客户端（默认 radius 4、yBand 2）：
+### D8 Reuse And Deletion Boundary
 
-- `GL_R16I` texture 约 0.40MiB，CPU mirror 约 0.40MiB；固定温度场存储合计约 0.80MiB。
-- packet/frame staging 上限 32KiB；不存在 source/analytic 数组或 512-entry HeatArea UBO。
-- shader 每个有效世界像素执行一次 integer 3D texture fetch 和颜色映射，不再循环最多 512 个 HeatArea。
-- 静态且不移动时没有周期网络、纹理上传或 payload 解码。
+修改并复用：
+
+- `FHRequestInfraredViewDataSyncPacket`
+- `FHResponseInfraredViewDataSyncPacket`
+- `InfraredViewRenderer`
+- `infrared_view.fsh`
+- 现有 `FHNetwork` packet registrations
+- `MinecraftPageManager.pagesByChunk`
+
+增加：
+
+- `QueryPublication.InfraredReadCursor`
+- 维度/Page temperature change IDs 和 80-tick active deadline
+- `PagePublication.workerPageSlot`
+- QueryPublication 所需的最小 arena Page ownership 读取
+- `MinecraftPageManager` 的 main-thread region enumeration 方法
+- `MinecraftThermalInput` 的 full/delta snapshot 入口
+
+确认无其他调用后删除：
+
+- `MinecraftThermalInput.gameplayInfraredFields`
+- `ThermalAnalyticFieldIndex.appendInfrared`
+- `ThermalAnalyticField.writeInfrared` 和 infrared shape mode
+- `PhysicalSourceSpatialIndex.appendInfraredFields`
+- HeatArea UBO、`adjustNum` 和旧 `updateData` overloads
+- shader 中的 `HeatArea`、`Adjusts` 和 source/analytic 循环
+- 不再使用的 `FHConfig.CLIENT.infraredViewUBOOffset`
+
+保留 physical source 对 solver/radiation 的输入和 analytic field 对 gameplay
+temperature compositor 的作用。
+
+## Explicit Non-Goals
+
+本次不实现：
+
+- 周期 full Page snapshot；
+- 全局 presence revision 或 Page retirement event log；
+- `InfraredObserverManager`、subscription packet 或服务端 per-player 状态；
+- Brick 级 change IDs；
+- payload memo、cache、LRU、hash 或跨玩家请求合并；
+- 异步/后台 packet encoder；
+- 自定义压缩、分片、frame/part/continuation；
+- Page admission、红外 lease 或 chunk load；
+- 2-block/1-block 纹理；
+- source/analytic field 图形 fallback；
+- Page record 对象、列表、每 Page 子数组或装箱 payload；
+- 生产统计计数器、测试 getter 或诊断集合。
+
+## Complexity And Performance Contract
 
 设：
 
-- `O`：开启红外的玩家数；
-- `P`：每个 observer 区域 Page positions，默认上限 405；
-- `C`：本次真正变化且可见的 Brick 数；
-- `S`：这些 tile/full-block/clear commands 的实际 encoded bytes。
+- `N`：开启红外的玩家数；
+- `V_i`：第 i 名玩家区域内实际有效 Pages；
+- `C_i`：第 i 名玩家本次可见 changed Pages；
+- `A = sum(V_i)`；
+- `C = sum(C_i)`。
 
-正常成本：
+则：
 
 | Path | Bound |
 |---|---|
-| 无 observer | 每次 publication 一次 tracking flag 分支；零逐-cell 红外量化、observer 枚举、tile 编码和网络流量 |
-| 稳定 observer tick | revision/position 未变时 `O(O)` 标量门控，零区域枚举和 payload allocation |
-| 维度有可见候选变化 | 最坏 `O(O * P)` primitive presence/revision reads |
-| Brick 编码 | `O(C * sampled slots)`，驻留 cache 内同一 Brick revision 每维度一次 |
-| S2C bytes | `O(S * receiving observers)`；每个客户端必须收到自己的数据 |
-| 静态网络 | 初始快照后 0 bytes |
-| 移动 1 chunk | presence + 进入环带 Page + 重叠区未送达变化 |
-| retirement | presence bitmap 变化，不发送伪温度 |
-| 瞬时发送 | 每 observer 每 dispatch <= 32KiB；每维度默认 <= 512KiB/dispatch |
+| 红外 inactive | 每次 publish 一次 deadline 判断；零 Page 红外比较/编码 |
+| 静态 poll Page 枚举 | `N * 81 / 2` chunk bucket lookups/s 加实际 entries |
+| 静态网络 | 约 `N * 50-55 bytes/s` C2S；零 S2C |
+| active publish tracking | 复用 live-slot pass，最多 65,536 次量化比较/s/维度 |
+| inactive-to-active | 每次活跃窗口开始一次 `O(maximumPages)` change-ID 基线填充 |
+| changed Page sampling | `C * 64 / 2` samples/s，按 2-second poll 上界 |
+| changed Page S2C | `C * 130 / 2` bytes/s |
+| 固定服务端红外内存 | 约 25 KiB Page change IDs/active dimension |
+| 单客户端固定温度数据 | 约 182.25 KiB |
+| fragment shader | 每个有效世界像素一次 integer 3D texture fetch |
 
-协议级估算（不含 Forge channel/连接头）：
+在“100 人、同一维度、区域不重叠”目标条件下，红外查询侧的 `A <= 3200`。即使所有实际 Pages
+每个周期都改变：
 
-- 200 个全 uniform render blocks 的初始区域约 `200 * 146 = 29,200 bytes ~= 28.5KiB / client`。
-- 一个 uniform tile 增量约 4-6 bytes；100 个同区域客户端的必要 payload 约 0.4-0.6KiB，加各连接 frame header。编码只做一次，但发送副本无法消除。
-- 一个 mixed/full-valid tile 增量约 19-21 bytes。
-- 100 人同时首次开启的总量由 512KiB/dispatch 的维度预算摊平，不形成单 tick 全量突发。
+```text
+chunk bucket lookups <= 100 * 81 / 2 = 4,050/s
+Brick samples        <= 3200 * 64 / 2 = 102,400/s
+S2C payload          <= 3200 * 130 / 2 = 208,000 bytes/s
+                     ~= 203 KiB/s ~= 1.66 Mbps
+```
 
-不允许：
-
-- 每 20/40 ticks 向所有 observer 发送全量 Page；
-- 为红外范围 admission/retain Page 或加载 chunk；
-- 客户端周期轮询；
-- 按 source 数量发送条目；
-- 为每个玩家重复解析/编码相同 Brick；
-- per-player Page 温度副本；
-- 大于 32KiB 的单个红外 frame；
-- 生产计数器或测试专用 getter。
+静态场景没有 Brick sampling 和 S2C temperature payload。不同维度分别应用各自
+maximumPages 上限。这些数字不包含 thermal capture、topology 或 solver 工作，不能
+再作为 Page-wide source domain、固定 27-Page cube 或 100-source thermal capacity 的证据。
 
 ## Implementation Steps
 
-1. 在 `PagePublication` / `QueryPublication` 增加 Page slot/lifecycle 校验和量化后的 Page/Brick revisions，并在 `MinecraftPageManager` 增加 O(1) presence revision；复用现有 publish live-slot pass。
-2. 增加字节预算受限的 `InfraredTilePayloadCache` 和无分配 Brick sampler/render-command writer。
-3. 增加 `InfraredObserverManager`，实现订阅、服务器位置派生、presence、移动环带和 revision dispatch。
-4. 定义新的 subscription/update packets、clear/full-block/tile codec 和 32KiB command-boundary framing；删除旧红外 packet 注册。
-5. 将 `InfraredViewRenderer` 改为 `GL_R16I` toroidal 3D texture；重写 shader 为单一 Page 温度采样。
-6. 删除 D7 列出的红外 source/analytic/HeatArea dead path。
-7. 更新 living docs，完成网络/JFR/渲染验证后记录 diary。
+1. 先构造 `ThermalDimensionLimits`，再给 `QueryPublication.tryCreate` 传入
+   `maximumPages`；增加 read cursor、temperature/Page change IDs 和 80-tick
+   active deadline，复用现有 publish live-slot loop。
+2. 给 `MinecraftPageManager` 增加基于现有 `pagesByChunk` 的 81-bucket region
+   enumeration，不增加新索引。
+3. 在 `MinecraftThermalInput` 实现 presence 比较以及 full/delta/ACK 决策，
+   payload 使用一个 flat `short[]`。
+4. 原位修改现有 C2S/S2C packet codec 和 handler，不增加网络类或注册。
+5. 将 `InfraredViewRenderer` 改为 40-tick staggered polling、精确 presence、
+   线性 `GL_R16I 36 x 36 x 36` 纹理和一次上传。
+6. 将 shader 改为一次温度 fetch，并删除 D8 中的旧 HeatArea/UBO 路径。
+7. 更新 living docs，运行定向测试和一次性能验证，记录 diary。
 
 ## Validation
 
 ### Automated
 
-- 量化变化小于 `0.05 C` 不推进 payload revision；跨量化边界只标记所属 Brick 和 Page aggregate revision。
-- `republishUnchanged` 不推进 infrared revision。
-- topology/lifecycle replacement 即使温度相同也刷新对应 Brick payload。
-- geometry revision 改变但 topology generation 不变时也重建采样 mapping；publication 超过 40 ticks 时清除 overlay，恢复后重发。
-- Page retirement/worker reset/publication 超龄通过 presence 清理，且在 memo 已淘汰时仍然正确；普通 mutation stale 不触发清空重发。
-- `CLEAR_BLOCK`、`FULL_BLOCK`、均匀/mixed/invalid `TILE_UPDATE` 的 tags、valid mask、int16 顺序和局部坐标 delta 可确定往返。
-- 分片从不拆开 command，单 frame 不超过 32KiB；`partSequence/MORE` 可跨 dispatch 流式续传，旧 session/frame 不覆盖新纹理。
-- per-observer 和 per-dimension 发送预算耗尽后从正确 cursor 续传，不提前推进 watermark；round-robin 不饿死后续 observer。
-- 同一驻留 cache entry 的 immutable Brick blobs 可供多个 observer 复用；淘汰后重编码不改变 wire 结果。
-- 测试只通过现有 production contracts 构建 fixture，不增加生产测试钩子或计数器。
-
-### Multiplayer Network Scenarios
-
-使用外部网络捕获和 JFR，不向生产代码加入统计：
-
-1. 100 个 observer 同一静态基地：初始快照后红外 C2S/S2C 流量为零。
-2. 100 个 observer 同一区域、一个 Brick 跨量化温度边界：tile 编码共享，向覆盖它的连接各发送一个 `TILE_UPDATE`。
-3. 100 个 observer 分散基地：编码和发送只涉及各自可见的 changed Bricks。
-4. 玩家移动 1 chunk：只发送 presence 和进入环带，不发送完整重叠区域。
-5. Page retirement、worker reset 或 publication 超龄：客户端在下一 observer dispatch 收到对应 render-block/CLEAR_ALL 清除，无 source blob fallback。
-6. 快速开关红外、维度切换和分片交错：旧 session/frame 不再可见。
+- 0.25 degC 量化边界只推进所属 Page 和维度 change ID。
+- `QueryPublication.tryCreate` 对固定 Page backing 和可增长 cell buffers 分别计费；
+  cell capacity 扩容不重复计费 Page backing，失败/close 释放全部 tokens。
+- `republishUnchanged` 和量化值不变不推进 change ID；inactive-to-active 恰好推进
+  一次 change ID 并重建完整 Page 基线，连续 poll 不重复初始化。
+- Page topology/geometry replacement 即使温度相同也推进对应 Page change ID。
+- `PagePublication.owned` 和 `withIdentities` 保留同一 `workerPageSlot`，EMPTY 使用
+  invalid sentinel，worker identity 不进入 wire。
+- geometry mutation 期间 `currentPublication()` 暂时为 null 时，presence 保持且读取
+  last coherent publication；retirement 才清除 presence。
+- cursor 不混合两个 published buffers；版本变化时本次响应不发送。
+- `pagesByChunk` 枚举与 729-position brute-force 测试 fixture 得到相同 presence，
+  生产代码不保留 brute-force 路径。
+- forceFull、presence mismatch 和 change-ID rollback 产生 full snapshot。
+- presence/change ID 相同不产生 S2C。
+- 只有温度变化时只发送 changed Pages。
+- 区域外变化产生零-record ACK。
+- Page retirement/admission 通过 presence mismatch 在下一 poll 完整重建。
+- C2S/S2C codec 可确定往返；729 Page full packet 小于 96 KiB。
+- packet 只持有一个 flat `short[]`，不存在 per-Page payload 对象。
+- 40-tick poll 按 entity ID 错峰；即时请求和周期请求同 tick 不重复。
+- 现有 thermal JUnit 和 Forge GameTest 继续通过。
 
 ### Rendering
 
-- 密闭房间的墙内外读取对应 2-block Page samples。
-- source 隔墙时不出现直接功率 blob。
-- `/heat_adjust` 等 analytic field 不出现在红外中。
-- invalid/no admission 区域保持原始场景颜色。
-- ring wrap、负坐标、跨 chunk/section 和视野半径边缘映射正确。
+- shader 中不存在 HeatArea 数组和按 source 数量循环。
+- source 隔墙时不出现直接功率图形，只显示 solver 已传播到 Brick 的温度。
+- 同一固定 world position 在玩家跨越 X/Y/Z section、离开再返回且 source/拓扑未变时，
+  保持同一温度量化值；不得因 observer lease 改变而在橙色与 invalid 蓝色之间跳变。
+- source domain 穿过 section 时没有 Page 形状的颜色边界；真正 Page retirement 才通过
+  presence mismatch 清除客户端数据。
+- `/heat_adjust` 等 analytic field 不直接出现在红外纹理。
+- 扫描球内的 invalid 和无 Page 区域按 `MIN_TEMP` 显示冷蓝；cube 外和
+  64-block sphere 外保持原始画面。
+- 负坐标、chunk/section 边界、快速移动、切换视野和维度切换映射正确。
+- 位于 `X/Y/Z = 4n` 的墙面、地板和天花板从两侧观察时，各自稳定读取观察侧
+  Air texel；静止或移动镜头均不出现相邻体素争用闪烁。
+- depth、逆视图矩阵和世界坐标原点使用同一个 main `Camera`；潜行眼高平滑、
+  第一/第三人称切换不会移动温度场。
+- 篝火烟雾等写 depth 的粒子沿用统一世界坐标采样，与所在 Air texel 的温度颜色
+  融合；不增加粒子专用 mask、pass、shader 或渲染阶段分支。
+- Iris/Oculus 和原版 depth 路径继续正常工作。
+
+### Performance
+
+只做一次目标负载验证，不增加生产诊断：
+
+- 100 个不重叠 fixture 视野的静态 poll 只产生约 5-5.5 KiB/s C2S 和零 S2C。
+- 3200 个实际 Pages 全部变化时，两秒周期折算不超过约 203 KiB/s S2C 和
+  102,400 Brick samples/s。
+- active deadline 过期与开启静止场景各采集一次服务端 JFR，确认 inactive 路径没有
+  逐 cell 红外工作。
+- 对相同画面比较旧 HeatArea shader 与新 3D texture shader，确认 fragment shader
+  不再随 source 数量增长。
 
 ## Documentation Impact
 
 实施完成后：
 
-- 更新 [world-climate-and-temperature.md](../docs/climate/world-climate-and-temperature.md)，把当前 source/analytic 红外描述改为 Page 温度订阅协议。
-- 更新 [data-lifecycle-and-integration.md](../docs/climate/data-lifecycle-and-integration.md)，记录 observer 生命周期、Page revision 和网络边界。
-- 若其他 living docs 提到 HeatArea/UBO/source blob，同步删除旧描述。
-- 新增 diary 条目，记录协议字节数、100 人场景、JFR、渲染结果及剩余限制。
+- 更新 [world-climate-and-temperature.md](../docs/climate/world-climate-and-temperature.md)，
+  将 source/analytic HeatArea 描述改为 Brick 级 Page publication 温度。
+- 更新 [data-lifecycle-and-integration.md](../docs/climate/data-lifecycle-and-integration.md)，
+  记录 40-tick client-carried presence poll、Page change IDs 和无 Page admission。
+- 删除其他 living docs 中失效的 HeatArea/UBO/source blob 描述。
+- 新增 diary 条目，记录实际 Page 数、静态/变化流量、测试和一次性能结果。
+
+## Revision Outcome
+
+此前的两个极端方案均已废弃：
+
+- observer/cache/frame 方案为了静态零控制流量引入过多长期状态；
+- 周期完整快照方案虽然简单，但会重复发送未变化 Pages。
+
+最终方案保留一个维度温度 change ID、每 Page change IDs 和客户端携带的精确
+presence。它以约 5 KiB/s 的 100-player 静态 C2S 为代价，实现静态零 S2C、
+changed-Page-only payload、无服务端玩家状态，并复用现有 `pagesByChunk` 把稳定
+Page 枚举降为 `O(81 + actual entries)`。Page/Brick 是否存在及其热状态寿命明确归
+thermal worker residency，而不是红外观察范围；本计划不再承担或暗示 Page admission
+架构结论。
 
 ## Outcome
 
-待实施。
+生产实现、协议 codec、定向 JUnit、Forge GameTest 和 living docs 已完成。旧
+HeatArea/source/analytic/UBO 红外路径已删除；客户端 smoke 中 fragment shader
+成功加载，full response 到达 render thread。两次上传暴露同一个 NVIDIA
+`glTexSubImage3D` native crash；第二次已绑定 PBO 0，排除了 PBO 假设。源码调查
+确认 Embeddium 插值动画进入 Vanilla `NativeImage.upload`，其全局 unpack
+row-length/skip/alignment 状态不会在上传后恢复；Oculus
+`TextureUploadHelper` 会在自定义纹理上传前精确重置这四项。红外上传现在遵循同一
+contract，并只恢复原 3D texture binding。
+
+验证结果：Java 17 production/test/GameTest source 编译通过；thermal + infrared
+codec JUnit `103/103`；Forge GameTest `14/14`。post-fix live toggle 和目标负载
+JFR 因窗口自动化被用户中止而尚未执行，完成后再将状态改为 `completed`。
+
+## Block-Resolved Actual Air-Cell Correction
+
+- Time: `2026-09-01 16:46:23 +08:00`
+- Status: `ready; implementation pending`
+- Precedence: this section supersedes every Brick-representative temperature,
+  changed-Page-only payload, presence-mismatch full rebuild, fixed 65-short Page
+  record, `36^3` texture, and matching cost/validation rule above.
+
+### Confirmed Defect And Correctness Contract
+
+The current mixed-Brick encoder chooses one representative Air slot and paints
+the entire `4 x 4 x 4` Brick with that value. When a wall inside one Brick
+separates two Air components, the solver and point query own two temperatures
+but infrared discards one. This is a correctness defect, not a filtering issue.
+
+The corrected first implementation has this exact semantic:
+
+> One client texel represents one world block position. The server resolves the
+> center of that position through the immutable `PagePublication` topology and
+> writes the temperature of the resulting actual `QueryPublication` Air slot.
+> A full-block wall inside one Brick must therefore display different Air-cell
+> temperatures on its two sides.
+
+This is block-position exact, not arbitrary sub-block component exact. A stair,
+door, fence, or other shape may contain multiple Air components inside one
+block; the block-center sample represents only the component containing that
+center. Arbitrary quarter-microcell accuracy would require a client component
+topology/atlas or a much denser texture and is explicitly outside this minimal
+implementation. The implementation and docs must not call the result
+component-exact without that qualification.
+
+Brick remains only the capture/residency/topology and wire-record address. It no
+longer defines rendering resolution. This correction does not change solver
+cells, source binding, sparse residency, cross-section propagation, or the
+20-tick transport step. `airMixingWPerBlockK` calibration remains owned by the
+thermal runtime plan and must be benchmarked separately.
+
+### Existing Dirty Events, Minimal Retained History
+
+Normal delta must send changed Bricks only. Existing dirty information is the
+event source and must be reused:
+
+- `replacementMask`, `cellReplacementMask`, and exact changed Brick indexes
+  stamp topology/publication changes;
+- the existing infrared-active `QueryPublication.publish` live-slot comparison
+  stamps quantized temperature changes using the already computed
+  `(pageSlot, brickIndex)`;
+- admission/new lifecycle stamps every Brick whose old client contents must be
+  overwritten;
+- retirement remains Page presence state.
+
+Those masks are cut-local and cannot answer an arbitrarily delayed stateless
+client after the commit scratch is cleared. Do not duplicate temperatures or
+add a dirty-history ring. Retain only the last worker batch epoch for each Page
+and Brick:
+
+```text
+int[maximumPages]      pageChangeEpochs
+int[maximumPages * 64] brickChangeEpochs
+```
+
+The worker batch sequence is the epoch. Every topology and temperature change
+from one processed batch stamps the same epoch; it does not increment once per
+Page. A request carries the last accepted epoch. Page epoch is the O(1) first
+level, and only a changed Page scans its 64 Brick epochs:
+
+```text
+pageChangeEpoch <= clientEpoch       -> skip Page
+brickChangeEpoch > clientEpoch       -> encode current Brick
+```
+
+The epoch arrays are history indexes, not a second dirty authority. They add no
+cell traversal and support clients delayed by any number of publications. A new
+engine generation, infrared reactivation, or the practically unreachable
+nonnegative-int epoch boundary clears the arrays and forces one full response.
+At one normal batch per second the int domain lasts about 68 years.
+
+Raw fixed memory at `maximumPages = 3,200`:
+
+```text
+Page epochs:    3,200 * 4      = 12,800 bytes
+Brick epochs:   3,200 * 64 * 4 = 819,200 bytes
+combined:                         832,000 bytes ~= 0.794 MiB/dimension
+```
+
+Charge both arrays to the existing dimension/server memory budget. Do not add
+per-player masks, observers, revision histories, packet caches, or a second
+temperature buffer.
+
+### Presence Delta And Full Boundaries
+
+Keep the existing client-carried twelve presence words. With an unchanged
+center, presence mismatch is a Page lifecycle delta rather than a reason to
+clear all `9^3` Pages:
+
+```text
+added   = currentPresence & ~knownPresence
+removed = knownPresence & ~currentPresence
+```
+
+- Clear each removed Page's `16^3` client texture region.
+- Encode every currently valid Brick for each added Page.
+- For Pages present on both sides, encode only Bricks newer than the client
+  epoch.
+- Replace the client's presence words only after the response is accepted.
+
+A full-view rebuild remains necessary only for first open, center chunk/eye
+section change, dimension/engine generation change, infrared tracking
+reactivation, epoch reset, or explicit client invalidation. A temporarily
+invalid/over-age publication still produces no response and preserves the
+client's last coherent mirror.
+
+Same-section lifecycle replacement may leave the Page presence bit set. It must
+stamp all 64 Brick epochs so current INVALID/valid records overwrite every old
+Brick. Page-slot reuse is server-internal and never enters local client indexes.
+
+### Changed-Brick Wire Format
+
+Reuse the two registered packet classes. C2S keeps request ID, force-full,
+client epoch, and twelve presence words. S2C carries request/center/current
+epoch, full/presence flags, current presence when needed, and one flat encoded
+Brick payload.
+
+Pack Page and Brick identity into one unsigned short:
+
+```text
+localBrickIndex = localPageIndex * 64 + brickIndex
+range = 0..46,655
+```
+
+After resolving the 64 world-block centers of a Brick, quantize each actual Air
+slot temperature to the existing signed quarter-degree short and use one of
+four packet-local modes:
+
+| Mode | Payload | Purpose |
+|---|---|---|
+| `INVALID` | none | delta clears a Brick with no displayable Air |
+| `UNIFORM` | one short | all 64 positions have the same encoded value |
+| `INDEXED` | unique shorts plus 64 packed indexes | repeated actual Air-cell values |
+| `RAW` | 64 shorts | dictionary encoding is not smaller |
+
+`INDEXED` builds a dictionary from the final encoded shorts, including invalid
+when present. Use the existing Minecraft bit-storage convention for the 64
+indexes. Select it only when its complete encoded byte count is smaller than
+RAW, so compression can never expand a record. It is one-response scratch, not
+a retained component dictionary or cache.
+
+For a full response, clear the client mirror first and omit all-INVALID Brick
+records. For a delta, encode an explicit INVALID record when a previously
+displayable Brick becomes invalid. One added Page may likewise omit invalid
+Bricks because the client clears that Page before applying its records.
+
+The server freezes the immutable `PagePublication` references used by one
+response, writes records into one dimension-owned geometrically grown primitive
+byte scratch, validates the `InfraredReadCursor` once, and then creates one
+exact owned packet `byte[]`. It creates no Page/Brick record objects or
+per-record arrays. Query/publication validation failure discards the response
+before packet allocation where possible and retries on the next normal poll.
+
+### Structural Packet Bound
+
+There are at most `729 * 64 = 46,656` local Brick addresses and the dimension
+has at most `65,536` live cells. Invalid block positions may add one dictionary
+value without consuming a live cell, so the bound must combine both limits
+rather than assume one uniform component count.
+
+```text
+46,656 one-cell mixed Bricks with invalid positions:
+  record = 2 local ID + 1 mode + 1 dictionary count
+         + 8 packed-index bytes + 4 dictionary bytes
+         = 16 bytes
+  base = 46,656 * 16 = 746,496 bytes
+
+remaining live-cell budget = 65,536 - 46,656 = 18,880
+the largest per-extra-cell record increase is 10 bytes
+  extra = 18,880 * 10 = 188,800 bytes
+
+maximum encoded Brick payload = 935,296 bytes ~= 0.892 MiB
+```
+
+Other dictionary sizes or RAW mode do not exceed that mixed allocation. Header,
+epoch, flags, and optional presence words must be included by the codec test;
+the completed packet must remain below the existing 1 MiB transport boundary.
+Add no packet fragmentation, continuation, compression library, or frame
+assembly. If the actual codec cannot prove the complete bound with margin, this
+wire format is rejected rather than relying on the comparison estimate.
+
+### Server Encoding Cost
+
+Page enumeration remains D1 `O(81 + actual entries)`. Page/Brick epoch checks
+occur only for a valid active infrared snapshot:
+
+```text
+unchanged Page: O(1)
+changed Page:   64 int comparisons
+regular Brick: one QueryPublication slot read
+mixed Brick:   64 existing resolveAirPoint mappings
+               plus one read per unique referenced Air slot
+```
+
+Mixed encoding uses fixed caller-owned arrays for 64 resolved slots, encoded
+values, dictionary values, and indexes. It reads no BlockState, section, chunk,
+heightmap, source, or solver state and never creates residency. Temperature
+change detection remains fused into the existing live-slot publication pass.
+
+Expected retained server overhead is approximately:
+
+```text
+Page/Brick epoch arrays       0.794 MiB/dimension
+largest retained encode scratch <= complete bounded payload (~0.90 MiB)
+small Page-publication/sampling scratch
+```
+
+The exact packet byte array is transient ownership passed to networking. No
+per-player retained server payload exists.
+
+### Block-Resolution Client Texture
+
+Replace the `36^3` Brick texture with one `144^3` block texture. Keep one
+persistent direct `ShortBuffer` as the CPU mirror and remove the parallel heap
+`short[]`. Raw fixed storage is:
+
+```text
+144^3 = 2,985,984 texels
+R16I GPU texture          = 5,971,968 bytes ~= 5.70 MiB
+direct ShortBuffer mirror = 5,971,968 bytes ~= 5.70 MiB
+Page upload scratch       = 4,096 shorts = 8 KiB
+combined                  ~= 11.40 MiB/client
+```
+
+Decode Brick records directly into the mirror. Track affected local Pages with
+one fixed twelve-long upload mask. Delta uploads copy each affected Page from
+the mirror into the 8 KiB scratch and perform one `16^3` `glTexSubImage3D`;
+they never upload the complete texture. A full response performs one complete
+texture upload.
+
+The shader retains one integer `texelFetch` per valid pixel:
+
+```glsl
+ivec3 temperatureTexel = ivec3(floor(
+    temperatureCameraOffset + relativeWorldPos.xyz * surfaceScale));
+```
+
+Compute `temperatureCameraOffset = cameraPosition - textureOrigin` in CPU double
+precision before converting that small relative value to a float uniform. Keep
+the existing camera-relative surface nudge, depth-source ownership,
+Oculus/Embeddium unpack-state reset, scan sphere, and original-texture color
+composition unless a separate rendering defect proves a change. Do not add
+linear filtering, multiple temperature fetches, mipmaps, toroidal texture
+movement, or a client topology compiler.
+
+On presence removal/addition, clear only the affected `16^3` Page region before
+applying new records. On center change/full, clear the complete direct mirror so
+old local indexes cannot leak into the new origin.
+
+### Implementation Order
+
+1. Replace dimension/Page long temperature change IDs with batch-epoch Page and
+   Brick int arrays in `QueryPublication`; include them in memory reservation
+   and expose coherent cursor comparisons.
+2. Feed exact topology changed-Brick masks into the same epoch path and stamp
+   quantized Air temperature changes inside the existing live-slot loop.
+3. Replace full-on-presence-mismatch with added/removed Page delta calculation;
+   retain full only at the named center/generation/reactivation boundaries.
+4. Replace the fixed Page `short[]` snapshot with one flat changed-Brick byte
+   payload and INVALID/UNIFORM/INDEXED/RAW encoder using reusable scratch.
+5. Modify the existing request/response packet codec in place; add no packet
+   registration, packet family, observer, subscription, or framing protocol.
+6. Replace the client Brick mirror/texture with one block-resolution direct
+   mirror, one `R16I 144^3` texture, one Page upload scratch, and Page-local
+   subimage uploads.
+7. Update the shader coordinate scale from one texel per four blocks to one per
+   block while preserving one fetch and existing depth compatibility.
+8. Delete the old representative mixed-slot voting scratch, fixed 65-short Page
+   record, Page-wide delta encoder, complete-delta texture upload, and superseded
+   tests/docs in the same implementation.
+
+### Required Validation
+
+Automated correctness:
+
+- A full-block wall inside one Brick has two solver Air cells and produces
+  different left/right block texels from one response.
+- A regular one-cell Brick uses UNIFORM; all-invalid uses INVALID; a two-value
+  wall uses INDEXED; incompressible values use RAW; every codec round-trip is
+  byte-deterministic.
+- INDEXED is selected only when smaller than RAW, and the exact maximum packet
+  including headers remains below the transport cap.
+- Temperature-only changes stamp only their Brick epoch; topology masks stamp
+  only affected Bricks except lifecycle/full invalidation.
+- Arbitrarily old client epochs still receive every changed Brick without a
+  history ring or per-player state.
+- Added/removed Page presence clears or initializes only that Page; unchanged
+  Pages retain their texture; same-section lifecycle replacement overwrites all
+  64 Bricks.
+- Quantized unchanged temperature and unchanged presence produce zero S2C.
+  Changed data outside the view also produces zero S2C; the client keeps its
+  older epoch, which remains sufficient to select any later visible changes.
+- Negative coordinates, all Page/Brick/block edges, center changes, quick
+  movement, dimension/engine restart, stale publication, and request-ID races
+  preserve coherent mapping.
+
+Rendering and compatibility:
+
+- Full and Page-delta uploads render correctly on Vanilla and Oculus/Embeddium;
+  PBO and pixel-store state remain valid.
+- Wall sides remain different while moving or crouching; no old-origin texels
+  survive a full response.
+- Shader remains one temperature texture fetch and does not introduce source,
+  Page-record, or component loops.
+- The documented sub-block limitation is tested with a partial-shape fixture so
+  it cannot be mistaken for component-exact behavior.
+
+Performance gates, measured without production counters:
+
+- 100 non-overlapping infrared clients retain 40-tick entity-ID staggering and
+  static zero S2C.
+- Record main-thread snapshot/encode P99, actual Brick mode counts, bytes per
+  response, aggregate S2C, retained epoch/scratch heap, and packet allocation.
+- Measure client full response decode/upload and changed-Page delta frame-time
+  impact on the target low-end renderer path.
+- Run the same workload with the separately measured
+  `airMixingWPerBlockK = 384` candidate because faster propagation can increase
+  resident and quantized-changing Bricks. Do not accept either tuning or this
+  protocol from the current `96` workload alone.
+
+### Documentation Impact And Outcome
+
+Implementation must update the climate living docs from Brick-representative to
+block-position actual Air-cell temperature, record Page/Brick batch epochs,
+presence delta, packet modes, client texture ownership, exact costs, and the
+sub-block limitation. Append a new diary entry with final tests and measured
+results; do not rewrite the prior Brick-protocol history.
+
+Current outcome: the production implementation now uses Page/Brick epochs,
+presence deltas, changed-Brick modes, block-center Air-cell sampling, a single
+direct `144^3 R16I` client mirror, and Page-local delta uploads. Production,
+JUnit, and GameTest sources compile, focused thermal lifecycle suites pass
+`32/32`, and the final Forge run passes `16/16` required GameTests. The old
+private-state reflection test was deleted because it did not execute rendering;
+the exact structural payload remains `935,296` bytes and the encoded response
+including headers remains below 1 MiB. Live Vanilla/Oculus rendering
+and target-load JFR remain the final external gates, so the plan stays
+`in-progress` rather than claiming those measurements.
+
+The implementation review correction keeps center/full polling forced until a
+matching response installs the new origin, computes the shader camera offset in
+CPU double precision before float conversion, and writes known INVALID/UNIFORM
+records directly. Omitting an invalid record is a successful full/added-Page
+operation rather than a response failure. These corrections add no protocol
+field, cache, observer, texture, or render pass.
+
+The response-center correction rejects a delta unless its server-selected
+center matches the installed texture center. A full response may install a new
+center, and every accepted response updates the existing requested-center
+baseline so the next client tick detects any later movement. This uses only the
+existing center and availability fields; no center was added to C2S.
+
+The retained-memory correction keeps the existing fixed budget and wire
+protocol but allocates dimension Page/Brick epoch arrays only on the first
+infrared request. The client class no longer allocates or clears its 5.70 MiB
+direct mirror during ordinary client startup; the mirror and an all-INVALID GPU
+texture are created on the first actual infrared render, while the 8 KiB upload
+scratch is created on the first Page delta, then all are reused. Initialization
+therefore does not wait for a server response. A later section
+move clears `deltaBaselineValid` for protocol purposes but continues
+rendering the old texture/origin until full replacement, avoiding a one-frame
+pass disappearance. Reset detaches static GPU handles before scheduling deletion
+of captured old resources, so delayed cleanup cannot delete a newer texture.
+User-owned live and load validation remains pending.
+
+The initialization retry correction separates an unresolved full request from
+the stable 40-tick poll. A missing full response now retries after an
+entity-ID-spread `41..59` ticks while suppressing the stable poll; the retry
+delays deliberately exclude multiples of the 20-tick thermal cut. This breaks
+the previously permanent Page/Query publication cadence collision without a
+server observer, response cache, immediate re-encode, extra packet field, or
+normal steady-state request.
+
+## Dormant Infrared Synchronization Correction
+
+- Author: Codex, OpenAI GPT-6, primary implementation agent
+- Updated: 2026-09-08
+- Status: in-progress
+- Scope: dormant infrared refresh/removal/handover and infrared activation;
+  no solver, residency, persistence-format, or source-model redesign.
+
+The previous full-only bootstrap is incomplete: ordinary polls cannot refresh
+decay, remove unloaded/deleted entries, or discover late-loaded dormant data.
+This section supersedes that bootstrap and the earlier blanket ban on shared
+infrared caches, but retains the ban on per-player server state and histories.
+
+### Decisions
+
+- Keep the existing 40-tick client poll and two packet registrations. Closed
+  clients send no polls. Live infrared comparison is request-activated and ends
+  after the existing 80-tick dimension lease; dormant calculation runs only
+  inside requests, never from a tick sweep or an unload/save callback.
+- Lazily cache one quantized 64-Brick section snapshot in its existing dormant
+  chunk attachment. Reuse its 20-tick decay/natural-temperature cache. Refresh
+  once per cache interval or entry invalidation, compare at 0.25 C, and assign
+  a process-unique monotonically increasing revision only when content changes.
+  No cache allocation occurs during NBT decode. Cache lifetime follows the
+  attachment; no new global section index, observer, ACK packet, or timer.
+- A request carries the last applied dormant revision and exact known dormant
+  section presence. Encode 0..47 sections as one count byte plus unsigned-short
+  local indexes; encode 48..729 as one marker byte plus twelve longs. Empty
+  presence omits the revision; full requests omit the old dormant state entirely.
+- Cache comparison also records the last changed-Brick mask and the preceding
+  change revision (16 bytes per cached section). A client whose baseline covers
+  that preceding revision receives only those changed Bricks. Older baselines,
+  first snapshots, and live handovers receive a complete section replacement.
+  Include an explicit empty replacement when a known section disappears. Each
+  record contains a Brick mask and signed uniform temperatures; no per-Brick
+  revision array, history ring, extra dirty queue, or per-player temperature copy.
+- Reuse the existing flat payload and add a dormant-section record mode. Client
+  ownership is one lazy 729-long Brick mask array; clearing a dormant section
+  only clears its own texels, and live writes revoke dormant ownership.
+- Publish the existing worker `resolved` bit with Brick query metadata. Live
+  resolved Bricks, including resolved no-Air Bricks, suppress dormant fallback;
+  an unresolved Brick may use stored data. Live changes and Page presence clears
+  force a same-response dormant replacement for the affected section even when
+  its cached temperature revision did not change.
+- Dormant data is eligible by stored data, not by source discovery or a retained
+  disk-support hint. Keep disk support's existing offline-preservation meaning.
+- An unreadable live cut is not deletion. A dormant-only response retains the
+  previous live presence/texels and uses live epoch zero to request a full live
+  rebuild once a coherent cut returns. Until then, dormant replacements in a
+  previously live Page can update only client-owned dormant texels. A new full
+  origin can still initialize from dormant data without waiting for a worker.
+
+### Costs And Acceptance
+
+- Shared temperature payload: at most 128 bytes per queried dormant section,
+  plus cache metadata/objects. No multiplication by viewer count.
+- Client ownership: 5,832 bytes plus presence/revision fields; reuse one texture.
+- Sparse dormant presence costs 1 + 2*N bytes up to N=47, otherwise 97 bytes;
+  version and ordinary packet headers are additional. No-heat views use only
+  the empty marker, and full requests need no dormant baseline.
+- Discovery still performs bounded loaded-chunk/section lookups in the view.
+  Cache misses still examine stored Brick values. Shared views amortize that
+  calculation; disjoint views do not. No unmeasured CPU/TPS claim is accepted.
+- [x] Record the bounded design and exact sparse-presence tradeoff.
+- [x] Implement request-driven shared snapshots and lifecycle-correct records.
+- [x] Verify the source call paths have no unsolicited packets or always-on dormant work; document the
+  existing 80-tick live-comparison tail instead of claiming immediate shutdown.
+- [ ] Exercise the production request/response lifecycle with stored neighbor
+  data, decay, deletion/reload, live handover, and an ignored response baseline.
+- Validation uses the actual client, server, network and renderer in a gameplay
+  world. Do not add synthetic JUnit/GameTest cases for this correction or count
+  compilation as gameplay validation; the newly added cases have been removed.
+- [x] Update the three climate living documents for the implemented protocol and activation paths.
+- Production `compileJava --offline --no-daemon --console=plain` passed on
+  2026-09-08. The actual Forge client launched successfully with the new classes
+  and reached world selection. No JUnit or GameTest task was run.
+- [ ] Validate in the user's reproduction world and record the observed outcome
+  after the work is finished. World selection is awaiting confirmation; startup
+  alone does not verify dormant refresh, live handover, rendering or network cost.

@@ -1,0 +1,24 @@
+{
+  "descAlt": [],
+  "points": 1000,
+  "effects": [],
+  "name": "测试",
+  "desc": [
+    "123",
+    "456"
+  ],
+  "parents": [],
+  "clues": [
+    {
+      "id": "f74d74349d8244a6",
+      "required": false,
+      "value": 0.0,
+      "name": "",
+      "desc": "",
+      "hint": "",
+      "level": 0,
+      "type": "game"
+    }
+  ],
+  "category": "frostedresearch:living"
+}

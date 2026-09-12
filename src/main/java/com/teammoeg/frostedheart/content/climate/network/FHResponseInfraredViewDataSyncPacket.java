@@ -6,64 +6,170 @@
  * Frosted Heart is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, version 3.
- *
- * Frosted Heart is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
- *
  */
-
 package com.teammoeg.frostedheart.content.climate.network;
-
-import java.util.function.Supplier;
 
 import com.lowdragmc.lowdraglib.LDLib;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.teammoeg.chorda.network.CMessage;
 import com.teammoeg.frostedheart.content.climate.render.InfraredViewRenderer;
+import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.MinecraftThermalInput;
 
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.world.level.ChunkPos;
 import net.minecraftforge.network.NetworkEvent;
 
+import java.util.function.Supplier;
 
-public class FHResponseInfraredViewDataSyncPacket implements CMessage {
-    private final ChunkPos chunkPos;
-    private final int[] data;
+public final class FHResponseInfraredViewDataSyncPacket implements CMessage {
+    private static final int FULL = 1;
+    private static final int FIRST = 2;
+    private static final int LAST = 4;
+    private static final byte[] EMPTY_RECORDS = new byte[0];
+    private final int requestId;
+    private final int centerChunkX;
+    private final int centerChunkZ;
+    private final int centerSectionY;
+    private final int infraredEpoch;
+    private final boolean full;
+    private final boolean firstPart;
+    private final boolean lastPart;
+    private final long[] presence;
+    private final byte[] brickRecords;
+    private final long dormantRevision;
+    private final long[] refreshPages;
 
-    public FHResponseInfraredViewDataSyncPacket(ChunkPos chunkPos, float[] fields) {
-        this.chunkPos = chunkPos;
-        data = new int[fields.length];
-        for (int index = 0; index < fields.length; index++) {
-            data[index] = Float.floatToIntBits(fields[index]);
+    public FHResponseInfraredViewDataSyncPacket(
+            int requestId,
+            MinecraftThermalInput.InfraredSnapshot snapshot,
+            int part
+    ) {
+        this(
+                requestId,
+                snapshot.centerChunkX(),
+                snapshot.centerChunkZ(),
+                snapshot.centerSectionY(),
+                snapshot.infraredEpoch(),
+                snapshot.full(),
+                snapshot.presence(),
+                snapshot.brickRecords().length == 0 ? EMPTY_RECORDS : snapshot.brickRecords()[part],
+                snapshot.dormantRevision(),
+                snapshot.refreshPages(), part == 0,
+                part == Math.max(1, snapshot.brickRecords().length) - 1);
+    }
+
+    private FHResponseInfraredViewDataSyncPacket(
+            int requestId,
+            int centerChunkX,
+            int centerChunkZ,
+            int centerSectionY,
+            int infraredEpoch,
+            boolean full,
+            long[] presence,
+            byte[] brickRecords,
+            long dormantRevision,
+            long[] refreshPages,
+            boolean firstPart,
+            boolean lastPart
+    ) {
+        if (requestId < 0 || infraredEpoch < 0
+                || presence == null || brickRecords == null
+                || presence.length != 0
+                && presence.length
+                        != FHRequestInfraredViewDataSyncPacket.PRESENCE_WORDS
+                || full && presence.length
+                        != FHRequestInfraredViewDataSyncPacket.PRESENCE_WORDS
+                || brickRecords.length > InfraredBrickCodec.MAX_PAYLOAD_BYTES
+                || refreshPages == null
+                || refreshPages.length
+                        != FHRequestInfraredViewDataSyncPacket.PRESENCE_WORDS) {
+            throw new IllegalArgumentException("invalid infrared response");
         }
+        this.requestId = requestId;
+        this.centerChunkX = centerChunkX;
+        this.centerChunkZ = centerChunkZ;
+        this.centerSectionY = centerSectionY;
+        this.infraredEpoch = infraredEpoch;
+        this.full = full;
+        this.firstPart = firstPart;
+        this.lastPart = lastPart;
+        this.presence = presence;
+        this.brickRecords = brickRecords;
+        this.dormantRevision = dormantRevision;
+        this.refreshPages = refreshPages;
     }
 
     public FHResponseInfraredViewDataSyncPacket(FriendlyByteBuf buffer) {
-        this.chunkPos = new ChunkPos(buffer.readVarLong());
-        this.data = buffer.readVarIntArray();
+        requestId = buffer.readVarInt();
+        centerChunkX = buffer.readInt();
+        centerChunkZ = buffer.readInt();
+        centerSectionY = buffer.readInt();
+        infraredEpoch = buffer.readVarInt();
+        int flags = buffer.readUnsignedByte();
+        full = (flags & FULL) != 0;
+        firstPart = (flags & FIRST) != 0;
+        lastPart = (flags & LAST) != 0;
+        if (buffer.readBoolean()) {
+            presence = new long[
+                    FHRequestInfraredViewDataSyncPacket.PRESENCE_WORDS];
+            for (int index = 0; index < presence.length; index++) {
+                presence[index] = buffer.readLong();
+            }
+        } else {
+            presence = new long[0];
+        }
+        brickRecords = buffer.readByteArray(
+                InfraredBrickCodec.MAX_PAYLOAD_BYTES);
+        dormantRevision = buffer.readVarLong();
+        refreshPages = new long[FHRequestInfraredViewDataSyncPacket.PRESENCE_WORDS];
+        for (int index = 0; index < refreshPages.length; index++) {
+            refreshPages[index] = buffer.readLong();
+        }
     }
 
     @Override
     public void encode(FriendlyByteBuf buffer) {
-        buffer.writeVarLong(chunkPos.toLong());
-        buffer.writeVarIntArray(data);
+        buffer.writeVarInt(requestId);
+        buffer.writeInt(centerChunkX);
+        buffer.writeInt(centerChunkZ);
+        buffer.writeInt(centerSectionY);
+        buffer.writeVarInt(infraredEpoch);
+        buffer.writeByte((full ? FULL : 0) | (firstPart ? FIRST : 0) | (lastPart ? LAST : 0));
+        buffer.writeBoolean(presence.length != 0);
+        if (presence.length != 0) {
+            for (long word : presence) {
+                buffer.writeLong(word);
+            }
+        }
+        buffer.writeByteArray(brickRecords);
+        buffer.writeVarLong(dormantRevision);
+        for (long word : refreshPages) {
+            buffer.writeLong(word);
+        }
     }
 
     @Override
     public void handle(Supplier<NetworkEvent.Context> context) {
         context.get().enqueueWork(() -> {
-            if (LDLib.isClient()) {
-                if (!RenderSystem.isOnRenderThread()) {
-                    RenderSystem.recordRenderCall(() -> InfraredViewRenderer.updateData(chunkPos, data));
-                } else {
-                    InfraredViewRenderer.updateData(chunkPos, data);
-                }
-
+            if (!LDLib.isClient()) {
+                return;
+            }
+            Runnable update = () -> InfraredViewRenderer.updateData(
+                    requestId,
+                    centerChunkX,
+                    centerChunkZ,
+                    centerSectionY,
+                    infraredEpoch,
+                    full,
+                    presence,
+                    brickRecords,
+                    dormantRevision,
+                    refreshPages,
+                    firstPart,
+                    lastPart);
+            if (RenderSystem.isOnRenderThread()) {
+                update.run();
+            } else {
+                RenderSystem.recordRenderCall(update::run);
             }
         });
         context.get().setPacketHandled(true);

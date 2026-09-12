@@ -108,8 +108,8 @@ class ThermalSourceLedgerTest {
                     100.0D, 0.0D, 0.0D).cellSpan().firstSlot();
         }
         ThermalSourceLedger ledger = new ThermalSourceLedger(
-                0L, 2, 2,
-                new NodePowerAccumulatorArena(2), arena);
+                0L, 2, 2, 16,
+                new NodePowerAccumulatorArena(2, 32), arena);
         return new Fixture(arena, ledger, first, second);
     }
 

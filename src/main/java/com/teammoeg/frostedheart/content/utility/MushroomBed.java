@@ -127,15 +127,22 @@ public class MushroomBed extends FHBaseItem {
 			public void tickHeating(HeatingDeviceSlot slot, ItemStack stack,HeatingDeviceContext data) {
 				if (stack.getDamageValue() > 0) {
 		            if (data.getBodyTemperatureC(BodyPart.TORSO) > 36.0D) {
-		            	stack.setDamageValue(stack.getDamageValue()-1);
-                        data.addPower(BodyPart.TORSO, 3.0D);
+					double activeFraction = data.advanceHeatingTime(
+							stack, stack.getDamageValue());
+					if (!(activeFraction > 0.0D)) return;
+					data.addPower(BodyPart.TORSO, 3.0D * activeFraction);
+					int consumed = data.takeConsumedHeatingSeconds();
+					if (consumed > 0) {
+						stack.setDamageValue(Math.max(
+								0, stack.getDamageValue() - consumed));
+					}
 		            }
 		        }
 			}
 
 			@Override
 			public float getMaxPowerW(ItemStack stack) {
-				return 3.0F;
+				return stack.getDamageValue() > 0 ? 3.0F : 0.0F;
 			}
 
 			@Override

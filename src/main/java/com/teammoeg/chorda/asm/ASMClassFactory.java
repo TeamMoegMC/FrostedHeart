@@ -57,9 +57,11 @@ public class ASMClassFactory {
 	 * @return 唯一的内部类名（使用 '/' 分隔） / unique internal class name (using '/' separators)
 	 */
 	protected String getUniqueName(Class<?> clazz) {
-		return (clazz.getPackageName()+".__ChordaAsm"+clazz.getSimpleName()+"Accessor").replace('.', '/');
+		return getUniqueName(clazz,clazz.getSimpleName());
 	}
-
+	protected String getUniqueName(Class<?> clazz,String name) {
+		return (clazz.getPackageName()+".__ChordaAsm"+name+"Accessor").replace('.', '/');
+	}
 	/**
 	 * 自定义类加载器，用于加载 ASM 动态生成的类。
 	 * 使用当前线程的上下文类加载器来解析已有的类。

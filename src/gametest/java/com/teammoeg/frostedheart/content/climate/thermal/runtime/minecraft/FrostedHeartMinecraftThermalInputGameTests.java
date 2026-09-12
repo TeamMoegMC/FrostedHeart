@@ -1,26 +1,52 @@
 /* Copyright (c) 2026 TeamMoeg */
 package com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft;
 
-import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.MaterialBoundaryRegistry;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.PagePublication;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.PageSignatures;
+import com.teammoeg.frostedheart.content.climate.thermal.mesh.ThermalBrickCellLayout;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.ThermalCellArena;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.ThermalPageHandle;
-import com.teammoeg.frostedheart.content.climate.thermal.profile.LocalAirRegionPattern;
 import com.teammoeg.frostedheart.content.climate.thermal.profile.ResolvedThermalSignature;
-import com.teammoeg.frostedheart.content.climate.thermal.profile.ThermalSignatureRegistry;
+import com.teammoeg.frostedheart.content.climate.thermal.profile.ThermalSignatureTable;
 import com.teammoeg.frostedheart.content.climate.thermal.query.QueryPublication;
+import com.teammoeg.frostedheart.content.climate.thermal.query.ThermalEnvironmentSample;
+import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.engine.ThermalDimensionEngine;
+import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.engine.ThermalDimensionLimits;
+import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.message.ResolvedGeometryBatch;
+import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.message.ThermalCompletion;
+import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.message.ThermalInputBatch;
 import com.teammoeg.frostedheart.content.climate.thermal.runtime.ThermalMemoryBudget;
 import com.teammoeg.frostedheart.content.climate.thermal.solver.BuoyancyConductance;
 import com.teammoeg.frostedheart.content.climate.thermal.solver.PhaseTransitionRuntime;
 import com.teammoeg.frostedheart.content.climate.thermal.source.EmissionPort;
+import com.teammoeg.frostedheart.content.climate.thermal.source.minecraft.MinecraftPhysicalSourceProfile;
 import com.teammoeg.frostedheart.content.climate.thermal.source.NodePowerAccumulatorArena;
 import com.teammoeg.frostedheart.content.climate.thermal.source.SourceBinding;
 import com.teammoeg.frostedheart.content.climate.thermal.source.ThermalSourceBatch;
 import com.teammoeg.frostedheart.content.climate.thermal.source.ThermalSourceLedger;
+import com.teammoeg.frostedheart.content.climate.thermal.topology.FarFieldSettings;
+import com.teammoeg.frostedheart.content.climate.thermal.topology.ThermalTopologyParameters;
+import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.content.climate.WorldTemperature;
+import com.teammoeg.frostedheart.bootstrap.common.FHItems;
+import com.teammoeg.frostedheart.content.climate.player.thermalitem.WearableThermalState;
+import com.teammoeg.frostedheart.util.mixin.ICampfireExtra;
+
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.SectionPos;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.GameRules;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.CampfireBlock;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+import net.minecraftforge.common.util.FakePlayerFactory;
 import net.minecraftforge.gametest.GameTestHolder;
 import net.minecraftforge.gametest.PrefixGameTestTemplate;
 
@@ -71,20 +97,20 @@ public final class FrostedHeartMinecraftThermalInputGameTests {
         }
     }
 
-    @GameTest(template = TEMPLATE, batch = BATCH + "_continuation", timeoutTicks = 40)
-    public static void continuationCarriesExactPageIdentity(GameTestHelper helper) {
+    @GameTest(template = TEMPLATE, batch = BATCH + "_residency", timeoutTicks = 40)
+    public static void residencyCarriesExactPageIdentity(GameTestHelper helper) {
         Fixture fixture = fixture();
         try {
             ThermalCompletion completion = fixture.engine.process(admissionBatch(
-                    1L, 20L, fixture.page, fixture.signatures));
-            ThermalCompletion.PageContinuation continuation =
-                    completion.continuations()[0];
+                    1L, 20L, fixture.page, fixture.signatures, 1L));
+            ThermalCompletion.BrickResidency residency =
+                    completion.residencyUpdates()[0];
             helper.assertTrue(
-                    continuation.sectionKey() == fixture.page.sectionKey()
-                            && continuation.lifecycleGeneration()
+                    residency.sectionKey() == fixture.page.sectionKey()
+                            && residency.lifecycleGeneration()
                                     == fixture.page.lifecycleGeneration()
-                            && Byte.toUnsignedInt(continuation.faceMask()) == 0x3f,
-                    "continuation must carry the committed Page identity and mask");
+                            && residency.desiredBrickMask() == -1L,
+                    "residency must carry the committed Page identity and mask");
             helper.succeed();
         } finally {
             fixture.engine.close();
@@ -120,6 +146,7 @@ public final class FrostedHeartMinecraftThermalInputGameTests {
                     ThermalInputBatch.NO_ADMISSIONS,
                     new ThermalInputBatch.PageRetirement[]{
                             new ThermalInputBatch.PageRetirement(fixture.page)},
+                    ThermalInputBatch.NO_RESIDENCY_UPDATES,
                     ResolvedGeometryBatch.EMPTY,
                     ThermalSourceBatch.EMPTY,
                     ThermalInputBatch.NO_ENVIRONMENT_UPDATES,
@@ -166,7 +193,8 @@ public final class FrostedHeartMinecraftThermalInputGameTests {
         ThermalCellArena arena = new ThermalCellArena(1);
         ThermalCellArena.BrickAllocation allocation = regular(arena, 0, 1, 0);
         ThermalSourceLedger ledger = new ThermalSourceLedger(
-                0L, 1, 1, new NodePowerAccumulatorArena(1), arena);
+                0L, 1, 1, 8,
+                new NodePowerAccumulatorArena(1, 8), arena);
         ThermalSourceBatch.Builder events = new ThermalSourceBatch.Builder(0L);
         events.addRegister(
                 0L, 1, com.teammoeg.frostedheart.content.climate.thermal.source.ThermalSourceMode.POWER_SOURCE,
@@ -237,12 +265,14 @@ public final class FrostedHeartMinecraftThermalInputGameTests {
 
     @GameTest(template = TEMPLATE, batch = BATCH + "_signature", timeoutTicks = 40)
     public static void signatureDirectoryKeepsUnchangedBricksShared(GameTestHelper helper) {
-        ThermalSignatureRegistry.Builder registry = ThermalSignatureRegistry.builder();
+        ThermalSignatureTable.Builder registry = ThermalSignatureTable.builder();
         int air = registry.intern(fullAir());
-        PageSignatures original = page(air);
+        ThermalSignatureTable signatures = registry.build();
+        PageSignatures original = page(signatures, air);
         int[] changed = new int[64];
         Arrays.fill(changed, air);
-        PageSignatures next = original.withBricks(new int[]{0}, new int[][]{changed});
+        PageSignatures next = original.withBricks(
+                signatures, new int[]{0}, new int[][]{changed});
         helper.assertTrue(
                 original.brickPayload(1) == next.brickPayload(1),
                 "unchanged Brick payload must be shared");
@@ -273,19 +303,253 @@ public final class FrostedHeartMinecraftThermalInputGameTests {
         }
     }
 
+    @GameTest(
+            template = TEMPLATE,
+            batch = BATCH + "_minecraft_residency_handoff",
+            timeoutTicks = 1_300)
+    public static void minecraftResidencyHandoffHeatsHalfAirNeighbor(
+            GameTestHelper helper
+    ) {
+        ServerLevel level = helper.getLevel();
+        MinecraftThermalInput.closeActiveLevel(level);
+        BlockPos origin = helper.absolutePos(BlockPos.ZERO);
+        int minX = alignedTwoBrickBase(origin.getX(), origin.getX() + 20);
+        int minY = alignedBrickBase(origin.getY(), origin.getY() + 20);
+        int minZ = alignedBrickBase(origin.getZ(), origin.getZ() + 20);
+        BlockPos sourceAir = new BlockPos(minX, minY + 3, minZ);
+        BlockPos neighborAir = new BlockPos(minX + 4, minY + 3, minZ);
+        BlockPos pageCenter = new BlockPos(
+                SectionPos.sectionToBlockCoord(
+                        SectionPos.blockToSectionCoord(sourceAir.getX())) + 8,
+                SectionPos.sectionToBlockCoord(
+                        SectionPos.blockToSectionCoord(sourceAir.getY())) + 8,
+                SectionPos.sectionToBlockCoord(
+                        SectionPos.blockToSectionCoord(sourceAir.getZ())) + 8);
+        double pageNatural = WorldTemperature.naturalAir(level, pageCenter);
+
+        for (int x = 0; x < 8; x++) {
+            for (int y = 0; y < 2; y++) {
+                for (int z = 0; z < 4; z++) {
+                    level.setBlockAndUpdate(
+                            new BlockPos(minX + x, minY + y, minZ + z),
+                            Blocks.STONE.defaultBlockState());
+                }
+            }
+        }
+        for (int x = 1; x <= 2; x++) {
+            for (int z = 1; z <= 2; z++) {
+                BlockPos campfire = new BlockPos(
+                        minX + x, minY + 2, minZ + z);
+                level.setBlockAndUpdate(
+                        campfire,
+                        Blocks.CAMPFIRE.defaultBlockState()
+                                .setValue(CampfireBlock.LIT, true));
+                BlockEntity entity = level.getBlockEntity(campfire);
+                ((ICampfireExtra) entity).setLifeTime(20_000);
+            }
+        }
+
+        ServerPlayer player = FakePlayerFactory.getMinecraft(level);
+        player.setPos(
+                sourceAir.getX() + 0.5D,
+                sourceAir.getY() + 0.5D - player.getEyeHeight(),
+                sourceAir.getZ() + 0.5D);
+        MinecraftThermalInput.gameplayPlayerEnvironment(
+                player, pageNatural, new ThermalEnvironmentSample());
+        helper.runAfterDelay(1_200, () -> helper.succeedWhen(() -> {
+            double source = MinecraftThermalInput.gameplayPassiveEnvironment(
+                    level, sourceAir, pageNatural);
+            double neighbor = MinecraftThermalInput.gameplayPassiveEnvironment(
+                    level, neighborAir, pageNatural);
+            helper.assertTrue(
+                    source > pageNatural + 1.0D,
+                    "pre-existing campfires were not discovered: source="
+                            + source + ", natural=" + pageNatural);
+            helper.assertTrue(
+                    neighbor > pageNatural + 0.25D,
+                    "half-Air neighbor did not warm: neighbor="
+                            + neighbor + ", natural=" + pageNatural
+                            + ", source=" + source);
+            MinecraftThermalInput.closeActiveLevel(level);
+        }));
+    }
+
+    @GameTest(
+            template = TEMPLATE,
+            batch = BATCH + "_phase_topology_churn",
+            timeoutTicks = 600)
+    public static void phaseRequestSurvivesSameBrickTopologyChurn(
+            GameTestHelper helper
+    ) {
+        ServerLevel level = helper.getLevel();
+        MinecraftThermalInput.closeActiveLevel(level);
+        BlockPos origin = helper.absolutePos(BlockPos.ZERO);
+        int minX = alignedBrickBase(origin.getX(), origin.getX() + 20);
+        int minY = alignedBrickBase(origin.getY(), origin.getY() + 20);
+        int minZ = alignedBrickBase(origin.getZ(), origin.getZ() + 20);
+        BlockPos phaseBlock = new BlockPos(minX + 1, minY + 1, minZ + 1);
+        BlockPos targetAir = phaseBlock.above();
+        BlockPos changingTopology = targetAir.east();
+        BlockPos source = new BlockPos(minX, minY + 2, minZ);
+
+        level.setBlockAndUpdate(
+                phaseBlock, Blocks.PACKED_ICE.defaultBlockState());
+        level.setBlockAndUpdate(
+                changingTopology,
+                Blocks.OAK_TRAPDOOR.defaultBlockState()
+                        .setValue(BlockStateProperties.OPEN, false));
+        ServerPlayer player = FakePlayerFactory.getMinecraft(level);
+        player.setPos(
+                targetAir.getX() + 0.5D,
+                targetAir.getY() + 0.5D - player.getEyeHeight(),
+                targetAir.getZ() + 0.5D);
+        MinecraftThermalInput.gameplayPlayerEnvironment(
+                player,
+                WorldTemperature.naturalAir(level, targetAir),
+                new ThermalEnvironmentSample());
+
+        int randomTickSpeed = level.getGameRules().getInt(
+                GameRules.RULE_RANDOMTICKING);
+        level.getGameRules().getRule(GameRules.RULE_RANDOMTICKING)
+                .set(0, level.getServer());
+        int[] elapsed = {0};
+        helper.onEachTick(() -> {
+            elapsed[0]++;
+            MinecraftThermalInput.onGeneratorTick(
+                    level, source, targetAir, 1_000.0D, true);
+            if (elapsed[0] % 21 == 1) {
+                level.setBlockAndUpdate(
+                        changingTopology,
+                        level.getBlockState(changingTopology).cycle(
+                                BlockStateProperties.OPEN));
+            }
+            if (elapsed[0] == 360) {
+                level.getGameRules().getRule(GameRules.RULE_RANDOMTICKING)
+                        .set(randomTickSpeed, level.getServer());
+            }
+        });
+        helper.succeedWhen(() -> {
+            helper.assertTrue(
+                    !level.getBlockState(phaseBlock).is(Blocks.PACKED_ICE),
+                    "phase Block never completed during topology churn");
+            level.getGameRules().getRule(GameRules.RULE_RANDOMTICKING)
+                    .set(randomTickSpeed, level.getServer());
+            MinecraftThermalInput.onPhysicalSourceRemoved(level, source);
+            MinecraftThermalInput.closeActiveLevel(level);
+        });
+    }
+
+    @GameTest(
+            template = TEMPLATE,
+            batch = BATCH + "_dropped_reservoir",
+            timeoutTicks = 100)
+    public static void droppedWarmStoneReceivesCampfireRadiation(
+            GameTestHelper helper
+    ) {
+        ServerLevel level = helper.getLevel();
+        MinecraftThermalInput.closeActiveLevel(level);
+        BlockPos source = helper.absolutePos(new BlockPos(2, 2, 2));
+        BlockPos itemPosition = source.east(2);
+        level.setBlockAndUpdate(
+                source,
+                Blocks.CAMPFIRE.defaultBlockState()
+                        .setValue(CampfireBlock.LIT, true));
+        ((ICampfireExtra) level.getBlockEntity(source)).setLifeTime(20_000);
+
+        double initial = WorldTemperature.naturalAir(level, itemPosition);
+        ItemStack stack = new ItemStack(FHItems.warm_stone.get());
+        new WearableThermalState(initial, initial).writeTo(stack);
+        ItemEntity item = new ItemEntity(
+                level,
+                itemPosition.getX() + 0.5D,
+                source.getY() + 0.5D,
+                itemPosition.getZ() + 0.5D,
+                stack);
+        item.setNoGravity(true);
+        item.setDeltaMovement(0.0D, 0.0D, 0.0D);
+        item.setDefaultPickUpDelay();
+        helper.assertTrue(level.addFreshEntity(item),
+                "dropped warm stone must enter the test level");
+
+        ServerPlayer player = FakePlayerFactory.getMinecraft(level);
+        player.setPos(
+                source.getX() + 8.5D,
+                source.getY(),
+                source.getZ() + 0.5D);
+        MinecraftThermalInput.gameplayPlayerEnvironment(
+                player,
+                WorldTemperature.naturalAir(level, player.blockPosition()),
+                new ThermalEnvironmentSample());
+
+        helper.runAfterDelay(70, () -> {
+            try {
+                WearableThermalState warmed = WearableThermalState.read(
+                        item.getItem()).orElseThrow();
+                ThermalEnvironmentSample sample =
+                        new ThermalEnvironmentSample();
+                MinecraftThermalInput.gameplayItemEnvironment(
+                        item,
+                        WorldTemperature.naturalAir(
+                                level, item.blockPosition()),
+                        sample);
+                helper.assertTrue(sample.radiantFluxWPerM2() > 0.0D,
+                        "Campfire must provide positive dropped-item radiation");
+                helper.assertTrue(
+                        Double.compare(
+                                warmed.surfaceTemperatureC(), initial) != 0,
+                        "the exact ItemEntity stack must advance its state");
+            } finally {
+                item.discard();
+                MinecraftThermalInput.closeActiveLevel(level);
+            }
+            helper.succeed();
+        });
+    }
+
+    private static int alignedTwoBrickBase(int minimum, int maximum) {
+        for (int value = minimum; value + 7 < maximum; value++) {
+            if (Math.floorMod(value, 4) == 0
+                    && (value >> 4) == (value + 7 >> 4)) {
+                return value;
+            }
+        }
+        throw new IllegalStateException("GameTest has no aligned two-Brick span");
+    }
+
+    private static int alignedBrickBase(int minimum, int maximum) {
+        for (int value = minimum; value + 3 < maximum; value++) {
+            if (Math.floorMod(value, 4) == 0) {
+                return value;
+            }
+        }
+        throw new IllegalStateException("GameTest has no aligned Brick span");
+    }
+
     private static ThermalInputBatch admissionBatch(
             long sequence,
             long tick,
             ThermalPageHandle page,
-            ThermalSignatureRegistry signatures
+            ThermalSignatureTable signatures
+    ) {
+        return admissionBatch(sequence, tick, page, signatures, 0L);
+    }
+
+    private static ThermalInputBatch admissionBatch(
+            long sequence,
+            long tick,
+            ThermalPageHandle page,
+            ThermalSignatureTable signatures,
+            long sourceSeedMask
     ) {
         return new ThermalInputBatch(
                 1L, sequence, tick,
                 new ThermalInputBatch.PageAdmission[]{
                         new ThermalInputBatch.PageAdmission(
                                 page, page.liveGeometryRevision(),
-                                page(signatures, 0), 0.0D, sky())},
+                                -1L, sourceSeedMask,
+                                page(signatures, 0), 0.0D, sky(), null)},
                 ThermalInputBatch.NO_RETIREMENTS,
+                ThermalInputBatch.NO_RESIDENCY_UPDATES,
                 ResolvedGeometryBatch.EMPTY,
                 ThermalSourceBatch.EMPTY,
                 ThermalInputBatch.NO_ENVIRONMENT_UPDATES,
@@ -302,11 +566,12 @@ public final class FrostedHeartMinecraftThermalInputGameTests {
     ) {
         ResolvedGeometryBatch.Builder geometry =
                 new ResolvedGeometryBatch.Builder();
-        geometry.addResolvedCenter(page, revision, tick, 0, signatureId);
+        geometry.addResolvedCenter(page, revision, 0, signatureId);
         return new ThermalInputBatch(
                 1L, sequence, tick,
                 ThermalInputBatch.NO_ADMISSIONS,
                 ThermalInputBatch.NO_RETIREMENTS,
+                ThermalInputBatch.NO_RESIDENCY_UPDATES,
                 geometry.buildAndReset(),
                 ThermalSourceBatch.EMPTY,
                 ThermalInputBatch.NO_ENVIRONMENT_UPDATES,
@@ -319,6 +584,7 @@ public final class FrostedHeartMinecraftThermalInputGameTests {
                 1L, sequence, tick,
                 ThermalInputBatch.NO_ADMISSIONS,
                 ThermalInputBatch.NO_RETIREMENTS,
+                ThermalInputBatch.NO_RESIDENCY_UPDATES,
                 ResolvedGeometryBatch.EMPTY,
                 ThermalSourceBatch.EMPTY,
                 ThermalInputBatch.NO_ENVIRONMENT_UPDATES,
@@ -327,27 +593,28 @@ public final class FrostedHeartMinecraftThermalInputGameTests {
     }
 
     private static Fixture fixture() {
-        ThermalSignatureRegistry.Builder builder = ThermalSignatureRegistry.builder();
+        ThermalSignatureTable.Builder builder = ThermalSignatureTable.builder();
         int airId = builder.intern(fullAir());
-        int solidId = builder.intern(new ResolvedThermalSignature(
-                0, 0, List.of(), 0, 0, 0, 0, 0));
-        ThermalSignatureRegistry signatures = builder.build();
+        int solidId = builder.intern(new ResolvedThermalSignature(0, 0));
+        ThermalSignatureTable signatures = builder.build();
         ThermalCellArena arena = new ThermalCellArena(256);
         QueryPublication query = QueryPublication.tryCreate(
-                new ThermalMemoryBudget(8L * 1024L * 1024L, 0L)
-                        .createDimensionBudget(8L * 1024L * 1024L, 0L),
-                256);
+                new ThermalMemoryBudget(8L * 1024L * 1024L)
+                        .createDimensionBudget(8L * 1024L * 1024L),
+                256,
+                16);
         ThermalDimensionEngine engine = new ThermalDimensionEngine(
                 1L, 0L, arena, signatures,
-                new MaterialBoundaryRegistry(List.of(), List.of()),
+                new MaterialBoundaryRegistry(List.of()),
                 new ThermalTopologyParameters(
-                        0, 64, 1_200.0D, 0.0D, 0.0D, 1.0D, 0.25D,
-                        false,
+                        1_200.0D, 0.0D, 1.0D,
                         new BuoyancyConductance.Parameters(0.25D, 4.0D, 10.0D),
                         8, 4),
-                new FarFieldSettings(false, 0.0D, 1.0D, 16.0D),
+                new FarFieldSettings(1.0D, 1.0D, 16.0D),
+                MinecraftPhysicalSourceProfile.CAMPFIRE,
                 new ThermalDimensionLimits(
-                        16, 4_096, 2_048, 4_096, 4_096, 4_096,
+                        16, 128, 256,
+                        4_096, 2_048, 4_096, 4_096, 4_096,
                         2, 1.0e-6D),
                 query);
         return new Fixture(
@@ -361,19 +628,14 @@ public final class FrostedHeartMinecraftThermalInputGameTests {
     }
 
     private static PageSignatures page(
-            ThermalSignatureRegistry signatures,
-            int ignored
+            ThermalSignatureTable signatures,
+            int id
     ) {
-        int id = signatures.idOrDefault(fullAir(), 0);
-        return page(id);
-    }
-
-    private static PageSignatures page(int id) {
-        PageSignatures.Builder builder = new PageSignatures.Builder();
-        for (int index = 0; index < PageSignatures.ENTRY_COUNT; index++) {
-            builder.set(index, id);
+        PageSignatures.Builder builder = new PageSignatures.Builder(signatures);
+        for (int brick = 0; brick < ThermalPageHandle.BASE_BRICK_COUNT; brick++) {
+            builder.setUniformBrick(brick, id);
         }
-        return builder.build();
+        return builder.buildBricks();
     }
 
     private static byte[] sky() {
@@ -383,12 +645,7 @@ public final class FrostedHeartMinecraftThermalInputGameTests {
     }
 
     private static ResolvedThermalSignature fullAir() {
-        return new ResolvedThermalSignature(
-                0, 0,
-                List.of(new LocalAirRegionPattern(
-                        0, -1L, 0xffff, 0xffff, 0xffff,
-                        0xffff, 0xffff, 0xffff)),
-                0, 0, 0, 0, 0);
+        return new ResolvedThermalSignature(100, 0);
     }
 
     private static ThermalCellArena.BrickAllocation regular(
@@ -397,10 +654,9 @@ public final class FrostedHeartMinecraftThermalInputGameTests {
             int generation,
             int minX
     ) {
-        ThermalCellArena.BrickCellLayout layout =
-                new ThermalCellArena.BrickCellLayout();
+        ThermalBrickCellLayout layout = new ThermalBrickCellLayout();
         layout.reset(minX, 0, 0);
-        layout.setRegularAir(0, 0, 100.0D / 64.0D);
+        layout.setRegularAir(100.0D / 64.0D);
         ThermalCellArena.BrickAllocation allocation = arena.stageBrickCells(
                 pageSlot, generation, layout, 0.0D, 0.0D, 4_096);
         arena.commitStagedCells(allocation.cellSpan());
@@ -410,10 +666,9 @@ public final class FrostedHeartMinecraftThermalInputGameTests {
     private static ThermalCellArena.BrickAllocation phase(
             ThermalCellArena arena
     ) {
-        ThermalCellArena.BrickCellLayout layout =
-                new ThermalCellArena.BrickCellLayout();
+        ThermalBrickCellLayout layout = new ThermalBrickCellLayout();
         layout.reset(0, 0, 0);
-        layout.setRegularAir(0, 0, 100.0D / 64.0D);
+        layout.setRegularAir(100.0D / 64.0D);
         layout.addPhaseReservoir(
                 0, 0, 0, 1, 1L, 0.0D, 10.0D);
         ThermalCellArena.BrickAllocation allocation = arena.stageBrickCells(
@@ -427,7 +682,7 @@ public final class FrostedHeartMinecraftThermalInputGameTests {
             ThermalCellArena arena,
             QueryPublication query,
             ThermalPageHandle page,
-            ThermalSignatureRegistry signatures,
+            ThermalSignatureTable signatures,
             int airId,
             int solidId
     ) {

@@ -29,6 +29,7 @@ import com.teammoeg.frostedheart.content.climate.data.PlantTempData;
 import com.teammoeg.frostedheart.content.climate.data.StateTransitionData;
 import com.teammoeg.frostedheart.content.climate.gamedata.climate.WorldClimate;
 import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.MinecraftThermalInput;
+import com.teammoeg.frostedheart.content.climate.thermal.field.ThermalAnalyticFieldIndex;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import net.minecraft.core.*;
 import net.minecraft.core.particles.ParticleTypes;
@@ -62,6 +63,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public abstract class ServerLevelMixin_TemperatureUpdate
 {
     @Shadow public abstract boolean isFlat();
+    @Unique private final ThermalAnalyticFieldIndex.Sample frostedHeart$phaseFields =
+            new ThermalAnalyticFieldIndex.Sample();
 
     /**
      * Adds our custom temperature section before iceandsnow.
@@ -414,10 +417,11 @@ public abstract class ServerLevelMixin_TemperatureUpdate
             }
         }
 
-        float t = (float) MinecraftThermalInput.gameplayCropEnvironment(
-                level,
-                pos,
-                WorldTemperature.naturalBlock(level, pos, climateBase));
+        double natural = WorldTemperature.naturalBlock(level, pos, climateBase);
+        double t = MinecraftThermalInput.gameplayPassiveEnvironment(
+                level, pos, natural, frostedHeart$phaseFields);
+        double analyticFloor = frostedHeart$phaseFields.guaranteedFloor(natural);
+        boolean hasAnalyticField = frostedHeart$phaseFields.present();
 
         // Determine the target state based on temperature thresholds
         // We check transitions in order of priority (solid->gas, gas->solid, etc.)
@@ -431,25 +435,28 @@ public abstract class ServerLevelMixin_TemperatureUpdate
         {
             case SOLID:
             {
-                if (thermalOwnsHeating)
+                if (thermalOwnsHeating && analyticFloor < std.meltTemp()
+                        && analyticFloor < std.evaporateTemp())
                 {
                     break;
                 }
                 // To save performance, we only focus on blocks that player cares more about,
                 // otherwise we reduce transition rate
                 boolean shouldDoAdjust = level.random.nextInt(ambientBlockStateUpdateDivisor) == 0
-                        || MinecraftThermalInput.hasGameplayAnalyticFieldAt(level, pos);
+                        || hasAnalyticField;
 
                 if (!shouldDoAdjust)
                 {
                     return false;
                 }
-                else if (t >= std.evaporateTemp() && std.gas() != null)
+                else if (t >= std.evaporateTemp() && std.gas() != null
+                        && (!thermalOwnsHeating || analyticFloor >= std.evaporateTemp()))
                 {
                     targetState = PhysicalState.GAS;
                     targetBlock = std.gas();
                 }
-                else if (t >= std.meltTemp() && std.liquid() != null)
+                else if (t >= std.meltTemp() && std.liquid() != null
+                        && (!thermalOwnsHeating || analyticFloor >= std.meltTemp()))
                 {
                     targetState = PhysicalState.LIQUID;
                     targetBlock = std.liquid();
@@ -463,14 +470,14 @@ public abstract class ServerLevelMixin_TemperatureUpdate
                     targetState = PhysicalState.SOLID;
                     targetBlock = std.solid();
                 }
-                else if (thermalOwnsHeating)
+                else if (thermalOwnsHeating && analyticFloor < std.evaporateTemp())
                 {
                     break;
                 }
                 else
                 {
                     boolean shouldDoAdjust = level.random.nextInt(ambientBlockStateUpdateDivisor) == 0
-                            || MinecraftThermalInput.hasGameplayAnalyticFieldAt(level, pos);
+                            || hasAnalyticField;
 
                     if (!shouldDoAdjust)
                     {

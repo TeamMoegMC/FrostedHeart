@@ -28,7 +28,7 @@ import com.teammoeg.frostedheart.content.climate.WorldTemperature;
 import com.teammoeg.frostedheart.content.climate.data.FoodTempData;
 import com.teammoeg.frostedheart.content.climate.player.ITempAdjustFood;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData;
-import com.teammoeg.frostedheart.content.climate.player.TemperatureComputation;
+import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureComputation;
 import com.teammoeg.frostedheart.content.water.item.DrinkContainerItem;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import com.teammoeg.frostedheart.util.Lang;
@@ -161,7 +161,7 @@ public class FoodTemperatureHandler {
                 event.getEntity().hurt(FHDamageSources.hypothermiaInstant(
                         event.getEntity().level()), (-heat) * 2);
 
-            double energyJ = TemperatureComputation
+            double energyJ = PlayerTemperatureComputation
                     .bodyEnergyForTemperatureDeltaJ(heat * tspeed);
             PlayerTemperatureData temperatureData = PlayerTemperatureData
                     .getCapability(player).orElse(null);

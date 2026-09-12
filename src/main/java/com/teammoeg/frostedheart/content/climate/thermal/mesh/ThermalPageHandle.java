@@ -87,6 +87,12 @@ public final class ThermalPageHandle {
                 ? current : null;
     }
 
+    /** Last non-empty worker cut for bounded temperature-only fallback/capture. */
+    public PagePublication lastPublication() {
+        PagePublication current = publication;
+        return current == PagePublication.EMPTY ? null : current;
+    }
+
     private boolean owns(GeometryResyncToken token) {
         return token != null
                 && token.sectionKey() == sectionKey

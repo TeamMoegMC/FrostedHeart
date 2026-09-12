@@ -1,34 +1,36 @@
 /* Copyright (c) 2026 TeamMoeg */
 package com.teammoeg.frostedheart.content.climate.thermal.mesh;
 
-import com.teammoeg.frostedheart.content.climate.thermal.geometry.ComponentBrickCompiler;
-import com.teammoeg.frostedheart.content.climate.thermal.geometry.GeometrySummaryCache;
-import com.teammoeg.frostedheart.content.climate.thermal.profile.ThermalSignatureRegistry;
+import com.teammoeg.frostedheart.content.climate.thermal.profile.ThermalSignatureTable;
 
 import java.util.Arrays;
 
-/** Immutable worker-to-main geometry and phase publication for one Page. */
+/**
+ * Immutable worker-to-main geometry and phase publication for one Page.
+ * The worker Page slot is an opaque QueryPublication index and is never wired.
+ */
 public final class PagePublication {
-    public static final int NO_COVERAGE = -1;
+    private static final int NO_COVERAGE = -1;
     public static final int NO_AIR_POINT = -1;
     public static final PagePublication EMPTY = new PagePublication(
-            -1L, -1L, emptyBricks());
+            -1, -1L, -1L, emptyBricks());
 
+    private final int workerPageSlot;
     private final long geometryRevision;
     private final long topologyGeneration;
     private final Brick[] bricks;
 
     private PagePublication(
+            int workerPageSlot,
             long geometryRevision,
             long topologyGeneration,
             Brick[] bricks
     ) {
-        if (geometryRevision < -1L || topologyGeneration < -1L) {
-            throw new IllegalArgumentException("Page publication identities are invalid");
-        }
+        validateIdentities(workerPageSlot, geometryRevision, topologyGeneration);
         if (bricks == null || bricks.length != ThermalPageHandle.BASE_BRICK_COUNT) {
             throw new IllegalArgumentException("Page publication requires 64 Bricks");
         }
+        this.workerPageSlot = workerPageSlot;
         this.geometryRevision = geometryRevision;
         this.topologyGeneration = topologyGeneration;
         this.bricks = bricks;
@@ -39,17 +41,47 @@ public final class PagePublication {
         }
     }
 
+    private PagePublication(
+            long geometryRevision,
+            long topologyGeneration,
+            PagePublication previous
+    ) {
+        validateIdentities(
+                previous.workerPageSlot, geometryRevision, topologyGeneration);
+        this.workerPageSlot = previous.workerPageSlot;
+        this.geometryRevision = geometryRevision;
+        this.topologyGeneration = topologyGeneration;
+        bricks = previous.bricks;
+    }
+
     public static PagePublication owned(
+            int workerPageSlot,
             long geometryRevision,
             long topologyGeneration,
             Brick[] bricks
     ) {
         return new PagePublication(
-                geometryRevision, topologyGeneration, bricks);
+                workerPageSlot, geometryRevision, topologyGeneration, bricks);
+    }
+
+    public PagePublication withIdentities(
+            long geometryRevision,
+            long topologyGeneration
+    ) {
+        if (this.geometryRevision == geometryRevision
+                && this.topologyGeneration == topologyGeneration) {
+            return this;
+        }
+        return new PagePublication(
+                geometryRevision, topologyGeneration, this);
     }
 
     public long geometryRevision() {
         return geometryRevision;
+    }
+
+    public int workerPageSlot() {
+        return workerPageSlot;
     }
 
     public long topologyGeneration() {
@@ -60,46 +92,31 @@ public final class PagePublication {
         return bricks.clone();
     }
 
-    public Brick brickAt(int localX, int localY, int localZ) {
-        return bricks[GeometrySummaryCache.baseIndex(localX, localY, localZ)];
+    public Brick brick(int index) {
+        if (index < 0 || index >= bricks.length) {
+            throw new IllegalArgumentException("Brick index must be within [0, 63]");
+        }
+        return bricks[index];
     }
 
-    public int resolveAirPoint(
-            int localX,
-            int localY,
-            int localZ,
-            int microcellIndex,
-            ThermalSignatureRegistry signatureRegistry
-    ) {
-        if (microcellIndex < 0 || microcellIndex >= 64) {
+    public Brick brickAt(int localX, int localY, int localZ) {
+        if (localX < 0 || localX >= 16
+                || localY < 0 || localY >= 16
+                || localZ < 0 || localZ >= 16) {
             throw new IllegalArgumentException(
-                    "microcellIndex must be within [0, 63]");
+                    "local coordinates must be within [0, 15]");
         }
-        Brick brick = brickAt(localX, localY, localZ);
-        int support = brick.coverageSlot;
-        if (support == NO_COVERAGE) {
-            return NO_AIR_POINT;
-        }
-        ComponentBrickCompiler.CompiledBrick mixed = brick.mixedGeometry;
-        if (mixed == null) {
-            return support;
-        }
-        if (brick.signaturePayload == null) {
-            return NO_AIR_POINT;
-        }
-        int blockInBrick = (localX & 3)
-                | (localZ & 3) << 2
-                | (localY & 3) << 4;
-        int signatureId = PageSignatures.valueAt(
-                brick.signaturePayload, blockInBrick);
-        int localRegion = signatureRegistry.componentOrdinal(
-                signatureId, microcellIndex);
-        if (localRegion == 0xff) {
-            return NO_AIR_POINT;
-        }
-        int component = mixed.compiledComponentAt(
-                blockInBrick, localRegion);
-        return component < 0 ? NO_AIR_POINT : support + component;
+        return bricks[(localX >>> 2)
+                | (localZ >>> 2) << 2
+                | (localY >>> 2) << 4];
+    }
+
+    public int resolveAirPoint(int localX, int localY, int localZ) {
+        Brick brick=brickAt(localX,localY,localZ);
+        if (!brick.resolved || brick.coverageSlot<0) return NO_AIR_POINT;
+        if (brick.blockLayout==null) return brick.coverageSlot;
+        int node=brick.blockLayout.transportAt((localX&3)|(localZ&3)<<2|(localY&3)<<4);
+        return node<0 ? NO_AIR_POINT : brick.coverageSlot+node;
     }
 
     public boolean hasPhaseCandidate(
@@ -124,26 +141,44 @@ public final class PagePublication {
         return result;
     }
 
+    private static void validateIdentities(
+            int workerPageSlot,
+            long geometryRevision,
+            long topologyGeneration
+    ) {
+        if (workerPageSlot < -1
+                || geometryRevision < -1L
+                || topologyGeneration < -1L) {
+            throw new IllegalArgumentException(
+                    "Page publication identities are invalid");
+        }
+    }
+
     /** One immutable Brick's query-facing coverage, geometry, and phase payload. */
     public record Brick(
             int coverageSlot,
             int arenaGeneration,
             Object signaturePayload,
-            ComponentBrickCompiler.CompiledBrick mixedGeometry,
-            PhaseCandidates phaseCandidates
+            BlockBrickLayout blockLayout,
+            int transportNodeCount,
+            PhaseCandidates phaseCandidates,
+            boolean resolved
     ) {
         public static final Brick EMPTY = new Brick(
                 NO_COVERAGE,
                 0,
                 null,
                 null,
-                PhaseCandidates.EMPTY);
+                0,
+                PhaseCandidates.EMPTY,
+                false);
 
         public Brick {
             if (coverageSlot < NO_COVERAGE || arenaGeneration < 0) {
                 throw new IllegalArgumentException("Brick coverage identity is invalid");
             }
             if (signaturePayload != null
+                    && !(signaturePayload instanceof Integer)
                     && !(signaturePayload instanceof char[])
                     && !(signaturePayload instanceof int[])) {
                 throw new IllegalArgumentException("Brick signature payload is invalid");

@@ -23,8 +23,6 @@ import java.util.function.Supplier;
 
 import org.jetbrains.annotations.NotNull;
 
-import lombok.Getter;
-import lombok.Setter;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.items.IItemHandlerModifiable;
 

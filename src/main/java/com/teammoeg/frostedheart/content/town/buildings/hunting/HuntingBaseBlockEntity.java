@@ -21,6 +21,7 @@ package com.teammoeg.frostedheart.content.town.buildings.hunting;
 
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
+import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
 import com.teammoeg.frostedheart.content.steamenergy.HeatEndpoint;
 import com.teammoeg.frostedheart.content.town.*;
 import com.teammoeg.frostedheart.content.town.block.AbstractTownBuildingBlockEntity;
@@ -28,7 +29,10 @@ import com.teammoeg.frostedheart.content.town.building.AbstractTownBuilding;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import com.teammoeg.frostedheart.util.client.FHClientUtils;
 import com.teammoeg.frostedheart.content.town.block.blockscanner.AbstractBlockScanner;
+import com.teammoeg.frostedheart.content.town.block.blockscanner.BlockScanner;
 import com.teammoeg.frostedheart.content.town.block.blockscanner.FloorBlockScanner;
+import com.teammoeg.frostedheart.content.town.block.blockscanner.BlockScanner.RoomData;
+
 import lombok.Getter;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.network.chat.Component;
@@ -66,36 +70,22 @@ public class HuntingBaseBlockEntity extends AbstractTownBuildingBlockEntity<Hunt
 
 	public boolean scanStructure(HuntingBaseBuilding building) {
 		BlockPos housePos = this.getBlockPos();
-		List<BlockPos> doorPosSet = AbstractBlockScanner.getBlocksAdjacent(housePos, (pos) -> Objects.requireNonNull(level).getBlockState(pos).is(BlockTags.DOORS));
-		if (doorPosSet.isEmpty()) return false;
-		for (BlockPos doorPos : doorPosSet) {
-			BlockPos floorBelowDoor = AbstractBlockScanner.getBlockBelow(Objects.requireNonNull(level), (pos) -> !(Objects.requireNonNull(level).getBlockState(pos).is(BlockTags.DOORS)), doorPos);// 找到门下面垫的的那个方块
-			for (Direction direction : AbstractBlockScanner.PLANE_DIRECTIONS) {
-				assert floorBelowDoor != null;
-				BlockPos startPos = floorBelowDoor.relative(direction);// 找到门下方块旁边的方块
-				if (!FloorBlockScanner.isValidFloorOrLadder(Objects.requireNonNull(level), startPos)) {// 如果门下方块旁边的方块不是合法的地板，找一下它下面的方块
-					if (!FloorBlockScanner.isValidFloorOrLadder(Objects.requireNonNull(level), startPos.below()) || FloorBlockScanner.isBuildingBlock(level, startPos.above(2))) {// 如果它下面的方块也不是合法地板（或者梯子），或者门的上半部分堵了方块，就不找了。我们默认村民不能从两格以上的高度跳下来，也不能从一格高的空间爬过去
-						continue;
-					}
-					startPos = startPos.below();
-				}
-				HuntingBaseBlockScanner scanner = new HuntingBaseBlockScanner(this.level, startPos);
-				if (scanner.scan()) {
-					building.setVolume(scanner.getVolume());
-					building.setArea(scanner.getArea());
-					building.setTemperature(scanner.getTemperature());
-					building.setOccupiedVolume(scanner.getOccupiedVolume());
-					building.setTanningRackNum(scanner.getTanningRackNum());
-					building.setRating(computeRating(building.getVolume(), building.getArea(), building.getTemperature(), this.getTemperatureModifier()));
-					FHConfig.Server.Town.BuildingScoring scoring = FHConfig.SERVER.TOWN.BUILDING_SCORING;
-					FHConfig.Server.Town.Hunting config = FHConfig.SERVER.TOWN.HUNTING;
-					building.setMaxResidents(HuntingDailyModel.calculateCapacity(
-							calculateSpaceRating(scanner.getVolume(), scanner.getArea(), scoring),
-							scanner.getArea(), config.floorBlocksPerWorkerSlot.get(),
-							config.minimumWorkerSlots.get()));
-					return true;
-				}
-			}
+		RoomData rd=BlockScanner.scanRoomDataFromBlock(level,housePos);
+		if (rd!=null&&rd.doors.size()>0) {
+			building.setVolume(rd.volume);
+			building.setArea(rd.area);
+			building.setTemperature(rd.calculateTemperature(level));
+			building.setOccupiedVolume(rd.calculateOccupiedVolume());
+			building.setTanningRackNum(rd.countInsideBlock(t->t.is(FHTags.Blocks.TANNING_RACK.get())));
+			building.setRating(computeRating(building.getVolume(), building.getArea(), building.getTemperature(), this.getTemperatureModifier()));
+			FHConfig.Server.Town.BuildingScoring scoring = FHConfig.SERVER.TOWN.BUILDING_SCORING;
+			FHConfig.Server.Town.Hunting config = FHConfig.SERVER.TOWN.HUNTING;
+			building.setMaxResidents(HuntingDailyModel.calculateCapacity(
+					calculateSpaceRating(rd.volume, rd.area, scoring),
+					rd.area, config.floorBlocksPerWorkerSlot.get(),
+					config.minimumWorkerSlots.get()));
+			return true;
+			
 		}
 		return false;
 	}

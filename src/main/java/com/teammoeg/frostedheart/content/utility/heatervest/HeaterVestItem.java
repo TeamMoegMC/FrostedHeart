@@ -118,6 +118,8 @@ public class HeaterVestItem extends FHBaseItem {
 					@Override
 					public void tickHeating(HeatingDeviceSlot slot, ItemStack stack, HeatingDeviceContext data) {
 						if(slot.isHand())return;
+						double elapsedSeconds = data.getElapsedSeconds();
+						if (!(elapsedSeconds > 0.0D)) return;
 						LazyOptional<HeatStorageCapability> cap=FHCapabilities.ITEM_HEAT.getCapability(stack);
 						if(cap.isPresent()) {
 							HeatStorageCapability t=cap.resolve().get();
@@ -130,13 +132,19 @@ public class HeaterVestItem extends FHBaseItem {
 							float requestedPowerW = (float) Math.min(
 									MAX_POWER_W, passiveLossW + correctionW);
 							if (requestedPowerW > 0.0F) {
-								float extracted = t.extractEnergy(
+								float requestedUnits = (float) ((
 										STANDBY_HEAT + requestedPowerW
-										/ HEAT_PER_STORED_UNIT_W,
+										/ HEAT_PER_STORED_UNIT_W)
+										* elapsedSeconds);
+								float extracted = t.extractEnergy(
+										requestedUnits,
 										false);
 								data.addPower(BodyPart.TORSO,
-										Math.max(0.0F, extracted - STANDBY_HEAT)
-										* HEAT_PER_STORED_UNIT_W);
+										Math.min(requestedPowerW,
+										Math.max(0.0D,
+										extracted / elapsedSeconds
+										- STANDBY_HEAT)
+										* HEAT_PER_STORED_UNIT_W));
 							}
 						}
 						

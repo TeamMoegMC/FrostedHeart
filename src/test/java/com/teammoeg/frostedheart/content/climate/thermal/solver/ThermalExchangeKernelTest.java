@@ -44,7 +44,7 @@ class ThermalExchangeKernelTest {
                 * (1.0D / capacityA + 1.0D / capacityB))
                 * (enthalpyA / capacityA - enthalpyB / capacityB);
 
-        assertEquals(ThermalExchangeKernel.Status.APPLIED, result.status());
+        assertTrue(result.applied());
         assertEquals(expectedFromAToB, enthalpyA - result.enthalpyAJ(), EPSILON);
         assertEquals(enthalpyA + enthalpyB,
                 result.enthalpyAJ() + result.enthalpyBJ(), EPSILON);
@@ -69,7 +69,7 @@ class ThermalExchangeKernelTest {
         double expectedTemperature = 100.0D
                 + (initialTemperatureC - 100.0D) * Math.exp(-0.1D);
 
-        assertEquals(ThermalExchangeKernel.Status.APPLIED, result.status());
+        assertTrue(result.applied());
         assertEquals(
                 expectedTemperature,
                 referenceTemperatureC + result.enthalpyJ() / capacity,
@@ -96,8 +96,8 @@ class ThermalExchangeKernelTest {
             ThermalExchangeKernel.MutablePairResult swapped = exchangePair(
                     enthalpyB, capacityB, enthalpyA, capacityA, conductance, dtSeconds);
 
-            assertEquals(ThermalExchangeKernel.Status.APPLIED, forward.status());
-            assertEquals(ThermalExchangeKernel.Status.APPLIED, swapped.status());
+            assertTrue(forward.applied());
+            assertTrue(swapped.applied());
             double scale = Math.max(1.0D, Math.abs(enthalpyA) + Math.abs(enthalpyB));
             assertEquals(enthalpyA + enthalpyB,
                     forward.enthalpyAJ() + forward.enthalpyBJ(), scale * 2.0e-15D);
@@ -128,11 +128,11 @@ class ThermalExchangeKernelTest {
                         Double.MAX_VALUE
                 );
 
-        assertEquals(ThermalExchangeKernel.Status.APPLIED, pair.status());
+        assertTrue(pair.applied());
         assertTrue(Double.isFinite(pair.enthalpyAJ()));
         assertTrue(Double.isFinite(pair.enthalpyBJ()));
         assertEquals(1.0D, pair.enthalpyAJ() + pair.enthalpyBJ(), EPSILON);
-        assertEquals(ThermalExchangeKernel.Status.APPLIED, boundary.status());
+        assertTrue(boundary.applied());
         assertEquals(100.0D, boundary.enthalpyJ(), EPSILON);
     }
 
@@ -147,7 +147,7 @@ class ThermalExchangeKernelTest {
         ThermalExchangeKernel.MutableBoundaryResult boundary =
                 exchangeFixedBoundary(
                         12.0D, 0.0D, 0.0D, 10.0D, 1.0D, 1.0D);
-        assertEquals(ThermalExchangeKernel.Status.NUMERIC_DEGRADED, boundary.status());
+        assertFalse(boundary.applied());
         assertEquals(12.0D, boundary.enthalpyJ());
         assertEquals(0.0D, boundary.energyFromBoundaryJ());
     }
@@ -168,7 +168,6 @@ class ThermalExchangeKernelTest {
                 conductance,
                 dtSeconds
         );
-        assertEquals(ThermalExchangeKernel.Status.NUMERIC_DEGRADED, result.status());
         assertFalse(result.applied());
         assertEquals(enthalpyA, result.enthalpyAJ());
         assertEquals(enthalpyB, result.enthalpyBJ());
@@ -184,8 +183,9 @@ class ThermalExchangeKernelTest {
     ) {
         ThermalExchangeKernel.MutablePairResult result =
                 new ThermalExchangeKernel.MutablePairResult();
-        ThermalExchangeKernel.exchangePairInto(
-                enthalpyA, capacityA, enthalpyB, capacityB,
+        ThermalExchangeKernel.exchangePairWithInverseInto(
+                enthalpyA, capacityA, 1.0D / capacityA,
+                enthalpyB, capacityB, 1.0D / capacityB,
                 conductance, dtSeconds, result);
         return result;
     }

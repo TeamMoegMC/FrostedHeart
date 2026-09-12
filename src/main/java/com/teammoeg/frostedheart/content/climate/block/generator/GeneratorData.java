@@ -20,6 +20,7 @@
 package com.teammoeg.frostedheart.content.climate.block.generator;
 
 import java.util.Optional;
+import java.util.UUID;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -29,9 +30,13 @@ import com.teammoeg.chorda.capability.capabilities.ItemHandlerWrapper;
 import com.teammoeg.chorda.dataholders.SpecialData;
 import com.teammoeg.chorda.dataholders.SpecialDataHolder;
 import com.teammoeg.chorda.dataholders.team.TeamDataHolder;
+import com.teammoeg.chorda.dataholders.team.CTeamDataManager;
 import com.teammoeg.chorda.io.CodecUtil;
 import com.teammoeg.chorda.util.CUtils;
 import com.teammoeg.frostedheart.bootstrap.common.FHSpecialDataTypes;
+import com.teammoeg.frostedheart.content.climate.thermal.field.ThermalAnalyticField;
+import com.teammoeg.frostedheart.content.climate.thermal.field.ThermalFieldKey;
+import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.MinecraftGameplayFields;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import com.teammoeg.frostedheart.util.Lang;
 import com.teammoeg.frostedresearch.FRSpecialDataTypes;
@@ -44,6 +49,8 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Style;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.Mth;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
@@ -59,6 +66,8 @@ import net.minecraftforge.items.ItemStackHandler;
  * See {@link FHSpecialDataTypes}
  */
 public class GeneratorData implements SpecialData {
+    public static final ResourceLocation HEAT_FIELD_PROVIDER = new ResourceLocation("frostedheart", "generator");
+    private transient ThermalFieldKey gameplayFieldKey;
     public static final int INPUT_SLOT = 0;
     public static final int OUTPUT_SLOT = 1;
     public static final Codec<GeneratorData> CODEC = RecordCodecBuilder.create(t -> t.group(
@@ -127,6 +136,44 @@ public class GeneratorData implements SpecialData {
     public transient int townProcessedTicks = 0;
 
     public GeneratorData(SpecialDataHolder teamData) {
+    }
+
+    /** Reports the existing team state without advancing fuel or loading the tower chunk. */
+    public void publishGameplayHeat(ServerLevel level, UUID owner) {
+        if (!level.dimension().equals(dimension)) return;
+        int radius = getRadius();
+        int delta = getTempMod();
+        if (actualPos == null || radius <= 0 || delta <= 0) {
+            removeGameplayHeat(level.getServer());
+            return;
+        }
+        if (gameplayFieldKey == null || gameplayFieldKey.ownerHigh() != owner.getMostSignificantBits()
+                || gameplayFieldKey.ownerLow() != owner.getLeastSignificantBits()) {
+            removeGameplayHeat(level.getServer());
+            gameplayFieldKey = ThermalFieldKey.of(HEAT_FIELD_PROVIDER, owner, 0);
+        }
+        MinecraftGameplayFields.upsertSphere(level, gameplayFieldKey, 0,
+                ThermalAnalyticField.CombineMode.FLOOR_FROM_NATURAL,
+                actualPos.getX() + 0.5D, actualPos.getY() - masterYPosInMB + 0.5D,
+                actualPos.getZ() + 0.5D, radius, delta);
+    }
+
+    public void removeGameplayHeat(MinecraftServer server) {
+        if (gameplayFieldKey == null || dimension == null || server == null) return;
+        ServerLevel previous = server.getLevel(dimension);
+        if (previous != null) MinecraftGameplayFields.remove(previous, gameplayFieldKey);
+    }
+
+    /** Disassembly can run after the master's block entity has already lost its state. */
+    public static void unregister(Level world, BlockPos master) {
+        if (!(world instanceof ServerLevel level) || CTeamDataManager.INSTANCE == null) return;
+        for (TeamDataHolder team : CTeamDataManager.INSTANCE.getAllData()) {
+            GeneratorData data = team.getOptional(FHSpecialDataTypes.GENERATOR_DATA).orElse(null);
+            if (data != null && master.equals(data.actualPos) && level.dimension().equals(data.dimension)) {
+                data.removeGameplayHeat(level.getServer());
+                data.actualPos = null;
+            }
+        }
     }
 
 

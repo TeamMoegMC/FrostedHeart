@@ -19,14 +19,15 @@
 
 package com.teammoeg.chorda.client.cui.editor;
 
-import com.teammoeg.chorda.client.cui.base.UIElement;
-import com.teammoeg.chorda.text.Components;
-import net.minecraft.network.chat.Component;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
+
+import com.teammoeg.chorda.client.cui.base.UIElement;
+import com.teammoeg.chorda.text.Components;
+
+import net.minecraft.network.chat.Component;
 
 /**
  * 编辑器选择器对话框，当一个值有多种可用编辑器时，让用户选择使用哪个编辑器。
@@ -58,6 +59,7 @@ public class EditorSelector<T> extends BaseEditDialog {
 			return addEditor(Components.str(name), e);
 		}
 
+		@SuppressWarnings({ "unchecked", "rawtypes" })
 		public EditorSelectorBuilder<T> addEditor(Component name, Editor<? extends T> e) {
 			editors.add(new EditorDefinition<T>(name, (Editor)e, o -> true));
 			return this;
@@ -66,6 +68,7 @@ public class EditorSelector<T> extends BaseEditDialog {
 			return addEditorWhenEmpty(Components.str(name), e);
 		}
 
+		@SuppressWarnings({ "unchecked", "rawtypes" })
 		public EditorSelectorBuilder<T> addEditorWhenEmpty(Component name, Editor<? extends T> e) {
 			editors.add(new EditorDefinition<T>(name, (Editor)e, isNull));
 			return this;
@@ -74,6 +77,7 @@ public class EditorSelector<T> extends BaseEditDialog {
 			return addEditorWhenNotEmpty(Components.str(name), e, isNull.negate().and(isSuitable));
 		}
 
+		@SuppressWarnings({ "rawtypes", "unchecked" })
 		public EditorSelectorBuilder<T> addEditorWhenNotEmpty(Component name, Editor<? extends T> e, Predicate<T> isSuitable) {
 			editors.add(new EditorDefinition<T>(name, (Editor)e, isNull.negate().and(isSuitable)));
 			return this;
@@ -82,6 +86,7 @@ public class EditorSelector<T> extends BaseEditDialog {
 			return addEditorWhenNotEmpty(Components.str(name), e);
 		}
 
+		@SuppressWarnings({ "rawtypes", "unchecked" })
 		public EditorSelectorBuilder<T> addEditorWhenNotEmpty(Component name, Editor<? extends T> e) {
 			editors.add(new EditorDefinition<T>(name, (Editor)e, isNull.negate()));
 			return this;
@@ -90,6 +95,7 @@ public class EditorSelector<T> extends BaseEditDialog {
 			return addEditor(Components.str(name), e, isNull.or(isSuitable));
 		}
 
+		@SuppressWarnings({ "rawtypes", "unchecked" })
 		public EditorSelectorBuilder<T> addEditor(Component name, Editor<? extends T> e, Predicate<T> isSuitable) {
 			editors.add(new EditorDefinition<T>(name, (Editor)e, isNull.or(isSuitable)));
 			return this;

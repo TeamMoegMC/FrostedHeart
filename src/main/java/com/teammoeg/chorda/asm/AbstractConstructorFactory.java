@@ -58,7 +58,7 @@ public abstract class AbstractConstructorFactory extends ASMClassFactory {
 	 */
 	public static CallSite createCallSite(MethodHandles.Lookup lookup, String name, MethodType type) throws Exception {
 		// Derive the constructor signature from the signature of this INVOKEDYNAMIC
-		Constructor c = type.returnType().getDeclaredConstructor(type.parameterArray());
+		Constructor<?> c = type.returnType().getDeclaredConstructor(type.parameterArray());
 		c.setAccessible(true);
 		// Convert Constructor to MethodHandle which will serve as a target of
 		// INVOKEDYNAMIC

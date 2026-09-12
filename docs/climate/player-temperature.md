@@ -1,9 +1,9 @@
 # Player Temperature
 
 - Status: `Current`
-- Last verified: `2026-08-30`
-- Scope: player environment sampling, five-part body energy, clothing, Wet, heating equipment, HUD, effects, persistence, and synchronization
-- Primary code anchors: `TemperatureUpdate.updateTemperature`, `TemperatureComputation.updatePlayer`, `PlayerTemperatureData`, `BodyPartData`, `HeatingDeviceContext`, `FHBodyDataSyncPacket`, `FrostedHud.renderTemperature`
+- Last verified: `2026-09-09`
+- Scope: player environment sampling, five-part body energy, wearable thermal reservoirs, clothing, Wet, heating equipment, thermometers, HUD, effects, persistence, and synchronization
+- Primary code anchors: `PlayerTemperatureUpdate.updateTemperature`, `PlayerTemperatureComputation.updatePlayer`, `PlayerThermalEnvironment`, `PlayerEquipmentHeating`, `PlayerThermoregulation`, `PlayerThermalModel`, `PlayerThermalInjury`, `PlayerTemperatureData`, `ThermometerItem`, `CreativeThermometerItem`, `FHTemperatureDisplayPacket`, `WearableThermalExchangeHandler`, `ThreeNodeWearableHeatExchange`, `ThermalReservoirBlock`, `ThermalReservoirBlockEntity.serverTick`, `FHBodyDataSyncPacket`, `FrostedHud.renderTemperature`
 
 ## Player-Facing Values
 
@@ -16,6 +16,8 @@ the number shows the value and the orb texture shows its cold-to-hot band.
 | Number | environmental equivalent temperature, `C` | the still-air temperature that would produce the current immediate environmental heat exchange |
 | Orb color | environmental equivalent temperature, `C` | the existing orb texture bands are selected from the same Celsius value as the number |
 | Body status/effects | body temperature offset from `37 C` | accumulated physiological danger |
+| Mercury body thermometer | core body temperature, displayed to `0.1 C` | the existing held measurement flow uses the normal client temperature unit |
+| Creative thermometer | raw absolute core body temperature, `C` | right-click reports immediately in every game mode without display quantization |
 
 The number and color are never body temperature and never `air - 37`.
 `FrostedHud.renderTemperature` passes the environmental equivalent Celsius
@@ -24,10 +26,17 @@ difficulty, food, and equipment can change body power without changing either
 HUD temperature presentation. Net body power remains available to the server
 diagnostic command and body calculation, but is not sent for HUD color.
 
+`ThermometerItem` keeps its 100-tick held measurement. Its floating-point
+display packet is quantized to one decimal place and formatted with one decimal
+digit on the client. `CreativeThermometerItem` handles the server-side right
+click immediately, reads `PlayerTemperatureData.getAbsoluteCoreBodyTemp()`, and
+passes `Float.toString` directly to the localized message. That raw value is
+reported in Celsius and is not converted to the client Fahrenheit setting.
+
 ## Cadence And Environment
 
 `temperatureUpdateIntervalTicks` defaults to `20`.
-`TemperatureUpdate.shouldUpdatePlayer` assigns each UUID a stable phase so
+`PlayerTemperatureUpdate.shouldUpdatePlayer` assigns each UUID a stable phase so
 players are distributed across the interval. Each update performs one
 `MinecraftThermalInput.gameplayPlayerEnvironment` query using a reusable
 `ThermalEnvironmentSample`.
@@ -60,14 +69,23 @@ before pair equilibrium.
 
 Air, long-wave exchange, direct source radiation, clothing resistance, contact
 media, Wet, metabolism, movement, thermoregulation, and equipment all enter one
-power balance in watts. `TemperatureComputation.updatePlayer` integrates that
-balance with a closed-form exponential step, so passive water or lava contact
+power balance in watts. `PlayerTemperatureComputation.updatePlayer` integrates that
+balance through five visible phases: environment sampling, contact preparation,
+active-power collection, body integration, and observation publication. Its
+separate stateless `PlayerThermalModel` owns the formulas,
+including the closed-form exponential step, so passive water or lava contact
 cannot numerically jump through its boundary temperature. The configured
 `temperatureChangeRate` multiplies one explicit `GAMEPLAY_TIME_SCALE` of
 `8`; this is the gameplay acceleration, not another temperature unit. At the
 default rate, a naked dry player in calm `-15 C` Air is intended to cross the
-first torso cold threshold after roughly `45..60 s`; water and exposed wind
+first torso cold threshold after roughly `22..30 s`; water and exposed wind
 remain faster because they have independent transfer coefficients.
+
+The current gameplay balance applies `THERMAL_EXCHANGE_RATE_MULTIPLIER = 2` to
+the finalized passive air, water, powder-snow, lava, and Wet conductances, and
+to the conservative internal body-part transfers. It changes temperature
+approach speed without changing clothing resistance, environment observation,
+active heat power, or the separate world thermal runtime.
 
 ## Contact, Wet, And Clothing
 
@@ -78,9 +96,10 @@ derived from local air instead of the old fixed `x6` Celsius multiplier.
 Powder snow and on-fire state remain local body inputs.
 
 These local entity contacts do not write Thermal Air or register a world source.
-Nearby ambient lava and ordinary-fire heating through Thermal Mesh/Page
-topology is not implemented by this player-temperature pass. Campfire retains
-its existing physical-source and radiation path unchanged.
+Nearby lava and ordinary fire may add optional read-only direct radiation from
+the sparse `BlockRadiationIndex`; they do not heat Thermal Mesh Air. Lava/fire
+contact remains a separate local body input. Campfire retains its existing
+physical-source split and radiation path unchanged.
 
 The existing Wet effect remains the only post-exit wetness state. Leaving water
 removes the water-contact conductance on the next player update; Wet continues
@@ -98,16 +117,96 @@ sources.
 
 `BodyHeatingCapability.tickHeating` now contributes explicit watts through
 `HeatingDeviceContext.addPower`. Existing fuel, durability, heat-storage
-capabilities, item stacks, and item NBT keys are unchanged. Food converts its
-existing temperature delta into joules through
-`TemperatureComputation.bodyEnergyForTemperatureDeltaJ` and applies the
+capabilities, item stacks, and primary item NBT keys are unchanged. Device
+resource use is scaled by real elapsed seconds, independently of
+`temperatureUpdateIntervalTicks`; sub-second remainder uses the optional
+`frostedheart:partial_heating_second` item key and is removed whenever it
+returns to zero. A zero physiological time scale skips both equipment power and
+resource use. Food converts its existing temperature delta into joules through
+`PlayerTemperatureComputation.bodyEnergyForTemperatureDeltaJ` and applies the
 existing minimum/maximum body offsets.
 
 The established body-part effect thresholds still consume offsets relative to
 `37 C`: torso drives hypothermia/hyperthermia, head drives confusion, lower
-limbs drive slowness, and hands drive mining slowdown. The `INSULATION`
-effect, creative mode, spectator mode, and invulnerability continue sampling
-the environment but freeze body-energy changes and suppress climate injury.
+limbs drive slowness, and hands drive mining slowdown. The `INSULATION` effect
+freezes the ordinary environment/physiology body step, but an equipped thermal
+reservoir still exchanges with the player afterward. Creative mode, spectator
+mode, and invulnerability skip wearable exchange as well as climate injury.
+
+## Wearable Thermal Reservoirs
+
+`frostedheart:warm_stone` and `frostedheart:hot_water_bag` each persist a core
+and surface temperature. Their frozen normalized capacity ratios are `0.10`
+and `0.25` relative to the whole player capacity; surface share is `a=0.20`.
+Core/surface transfer rates are `2.46452e-4 /s` and `3.6968e-3 /s`, while
+surface/player rates are `6.0e-4 /s` and `4.0e-4 /s`. These are the original
+reservoir constants multiplied by `4` and `5`, respectively; the derived
+environment rates retain their `0.5` inventory and `8` dropped/placed ratios.
+Every at-most-one-second substep uses
+`core-surface half -> surface-player full -> core-surface half`
+through `ThermalExchangeKernel.exchangePairWithInverseInto`.
+
+Here `g` is the normalized heat-transfer rate per degree difference. For a
+node with normalized capacity ratio `r`, its actual temperature coefficient is
+`g/r` in `degC/s per degC`; the hotter side changes by `-g/r * deltaT` and the
+colder side by `+g/r * deltaT`. The final node-side coefficients are:
+
+| Edge | Warm stone | Hot-water bag | Node that changes |
+|---|---:|---:|---|
+| core -> surface | core `3.08065e-3`, surface `1.23226e-2` | core `1.8484e-2`, surface `7.3936e-2` | both finite nodes |
+| surface -> player | surface `3.0e-2`, player `6.0e-4` | surface `8.0e-3`, player `4.0e-4` | both finite nodes |
+| surface -> environment, inventory | surface `1.5e-2` | surface `4.0e-3` | surface only; environment is fixed |
+| surface -> environment, dropped/placed | surface `2.4e-1` | surface `6.4e-2` | surface only; environment is fixed |
+
+The corresponding isolated core/surface temperature-difference half-lives are
+`45 s` for the warm stone and `7.5 s` for the hot-water bag. Inventory
+surface/environment conductances are `3.0e-4 /s` and `2.0e-4 /s`; exposed
+dropped/placed conductances are `4.8e-3 /s` and `3.2e-3 /s`. The environment
+edge still connects only to the surface node, so the item surface rate also
+depends on its `0.02` or `0.05` normalized surface capacity.
+
+The normalized player-node delta is applied by
+`PlayerTemperatureData.applyUniformBodyTemperatureDelta` to all five parts.
+Because the five part capacities sum to `245000 J/K`, this preserves the
+reservoir/player energy ratio and exchange speed while fitting the new body
+energy representation. It does not advance `prevCoreBodyTemp`.
+
+Only slot `curios:warm_stone` participates. Inventory reservoirs exchange with
+air at half the surface/player rate; dropped single-item entities exchange at
+eight times that rate and also consume bounded direct radiation. Placed
+reservoir blocks use the same exposed exchange rate and radiation boundary. Unticked
+containers pause. Normal tooltip shows the capacity-weighted mean
+`(1-a)*T_core + a*T_surface`; advanced tooltip additionally shows both nodes.
+
+Inventory air comes from `MinecraftThermalInput.gameplayPassiveEnvironment`;
+dropped air comes from `gameplayItemEnvironment`. Both compose the generator
+floor against local natural air before command/Boss controls, even without a
+physical runtime. Equipped reservoirs initialize from composed player air and
+then exchange with the five-part body; they have no additional direct
+generator-heating step. See [world-climate-and-temperature.md](world-climate-and-temperature.md)
+for composition order and dropped-item cache behavior.
+
+Both items are also placeable blocks with the same registry IDs. Right-click a
+supported surface to place one reservoir, oriented toward the player; creative
+placement retains the held stack. The small ground models reuse the existing
+item textures. Breaking the block or removing its support drops one item with
+the current core/surface temperatures, custom name, and other original item
+data. Pick block also returns this stored item state.
+
+`ThermalReservoirBlockEntity` saves the complete single-item stack under
+`ReservoirItem` using block entity type `frostedheart:thermal_reservoir`.
+Server block ticks exchange once per `20 ticks` (one simulated second), staggered
+by position, after at least `20` loaded ticks. Unloaded blocks pause; loading
+does not simulate elapsed offline time. Fresh, uninitialized placements acquire
+the effective environment temperature on their first exchange. Existing
+temperatures survive placement and reload without reinitialization.
+
+`MinecraftThermalInput.gameplayPlacedReservoirEnvironment` samples just above
+the model at block-relative `(0.5, 0.3125, 0.5)` and shares the dropped-item
+air/radiation cache and budgets. `DroppedReservoirExchangeHandler.exchangeInto`
+owns both forms' core/surface update, including generator floors and bounded
+direct radiation. Like dropped reservoirs, these blocks consume the environment
+boundary without registering a new physical heat source in the world solver.
 
 ## Persistence And Synchronization
 
@@ -124,15 +223,21 @@ into the new model. Loading an old player starts body energy at normal while
 preserving clothing stacks, their complete item NBT, and temperature
 difficulty. Environment observations are transient and are sampled again.
 
-`FHBodyDataSyncPacket` is a 6-byte fixed payload: version byte, environment
-at `0.1 C`, absolute core at `0.01 C`, and status flags. Normal packets are
-sent only on the configured temperature cadence and only when a quantized value
-changes. Login, respawn, and dimension change force one complete state packet.
+`FHBodyDataSyncPacket` is a 5-byte fixed payload: version byte, environment
+at `0.1 C`, and absolute core at `0.01 C`. Normal packets are sent only on the
+configured temperature cadence and only when a quantized value changes. Login,
+respawn, and dimension change force one complete state packet.
 
 ## Hot-Path Bound
 
 The body update is fixed `O(5)`. `HeatingDeviceContext` is created lazily
 once per server-side player and owns the reusable sample, one clothing value,
-and fixed five-element primitive arrays. `TemperatureComputation` has no
-global mutable player scratch, no per-update collection, and no second
-temperature architecture.
+and fixed five-element primitive arrays. `PlayerTemperatureComputation` has no
+global mutable player scratch or per-update collection. Stateless domain classes
+separate ownership: `PlayerThermalEnvironment` reads inputs,
+`PlayerEquipmentHeating` traverses equipment, `PlayerThermoregulation` owns
+physiological power and costs, `PlayerThermalInjury` owns damage, and
+`PlayerThermalModel` owns heat-balance formulas. No retained `ThermalStep` or
+other calculation carrier is added. Model parameters remain co-located with
+their method groups, with units, medium precedence, energy conservation, and
+equilibrium bounds documented at the formulas.

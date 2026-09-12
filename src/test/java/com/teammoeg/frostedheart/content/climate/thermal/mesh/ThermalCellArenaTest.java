@@ -22,7 +22,6 @@ class ThermalCellArenaTest {
 
         assertEquals(1, allocation.cellSpan().count());
         assertEquals(1, arena.liveCellCount());
-        assertEquals(7, arena.pageSlot(slot));
         assertEquals(3, arena.lifecycleGeneration(slot));
         assertEquals(640.0D, arena.capacityJPerK(slot), EPSILON);
         assertEquals(1.0D / 640.0D,
@@ -75,12 +74,46 @@ class ThermalCellArenaTest {
     void slotLimitRefusesGrowthBeforeWritingArenaState() {
         ThermalCellArena arena = new ThermalCellArena(1);
         allocateSpan(arena, 0, 1, 1);
-        ThermalCellArena.BrickCellLayout layout = regularLayout(4, 0, 0, 1);
+        ThermalBrickCellLayout layout = regularLayout(4, 0, 0, 1);
 
         assertNull(arena.stageBrickCells(
                 1, 2, layout, 0.0D, 0.0D, 1));
         assertEquals(1, arena.highWaterMark());
         assertEquals(1, arena.liveCellCount());
+    }
+
+    @Test
+    void bestFitIndexSurvivesRepeatedSplitMergeAndReuse() {
+        ThermalCellArena arena = new ThermalCellArena(1);
+        ArenaSpan[] spans = new ArenaSpan[48];
+        boolean[] occupied = new boolean[256];
+        for (int index = 0; index < spans.length; index++) {
+            int count = index % 5 + 1;
+            spans[index] = allocateSpan(arena, index, index + 1, count);
+            mark(occupied, spans[index], true);
+        }
+        for (int index = 0; index < spans.length; index += 2) {
+            arena.releasePageCells(index, index + 1, spans[index]);
+            mark(occupied, spans[index], false);
+        }
+        for (int index = 0; index < spans.length / 2; index++) {
+            ArenaSpan replacement = allocateSpan(
+                    arena, 100 + index, 100 + index, index % 4 + 1);
+            mark(occupied, replacement, true);
+        }
+
+        int expected = 0;
+        for (boolean live : occupied) {
+            if (live) expected++;
+        }
+        int actual = 0;
+        for (int slot = arena.nextLiveSlot(0);
+             slot >= 0;
+             slot = arena.nextLiveSlot(slot + 1)) {
+            actual++;
+        }
+        assertEquals(expected, arena.liveCellCount());
+        assertEquals(expected, actual);
     }
 
     private static ArenaSpan allocateSpan(
@@ -100,26 +133,32 @@ class ThermalCellArenaTest {
         return allocation.cellSpan();
     }
 
-    private static ThermalCellArena.BrickCellLayout regularLayout(
+    private static ThermalBrickCellLayout regularLayout(
             int minX,
             int minY,
             int minZ,
             int count
     ) {
-        ThermalCellArena.BrickCellLayout layout =
-                new ThermalCellArena.BrickCellLayout();
+        ThermalBrickCellLayout layout = new ThermalBrickCellLayout();
         layout.reset(minX, minY, minZ);
-        layout.setRegularAir(0, 0, 1.0D);
+        layout.setRegularAir(1.0D);
         for (int index = 1; index < count; index++) {
             layout.addMaterialPole(
                     minX + index,
                     minY,
                     minZ,
-                    1,
-                    ThermalCellArena.MaterialPoleDepth.SURFACE,
                     1.0D,
                     0.0D);
         }
         return layout;
+    }
+
+    private static void mark(boolean[] occupied, ArenaSpan span, boolean value) {
+        for (int slot = span.firstSlot(); slot < span.endSlotExclusive(); slot++) {
+            if (occupied[slot] == value) {
+                throw new AssertionError("arena span overlap or duplicate release");
+            }
+            occupied[slot] = value;
+        }
     }
 }

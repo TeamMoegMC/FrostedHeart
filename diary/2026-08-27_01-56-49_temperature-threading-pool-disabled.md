@@ -20,7 +20,7 @@
 
 ## Validation
 
-- `.\gradlew.bat compileJava compileGameTestJava test --tests "com.teammoeg.frostedheart.content.climate.thermal.*" --tests "com.teammoeg.frostedheart.content.climate.player.SurroundingTemperatureSimulator*" --offline --console=plain` completed successfully.
+- `.\gradlew.bat compileJava compileGameTestJava test --tests "com.teammoeg.frostedheart.content.climate.thermal.*" --tests "com.teammoeg.frostedheart.content.climate.player.unused.SurroundingTemperatureSimulator*" --offline --console=plain` completed successfully.
 - `181/181` selected JUnit tests passed across `34` suites with zero failures, errors, or skips.
 - `git diff --check` reported no whitespace errors; only existing line-ending conversion warnings were emitted.
 - The `01:58:29` client crash reported many unrelated Frosted Heart classes missing from the same output directory; affected class files were written back after that failure as compilation completed.
