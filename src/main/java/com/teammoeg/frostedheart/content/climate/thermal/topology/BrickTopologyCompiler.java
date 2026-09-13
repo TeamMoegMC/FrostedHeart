@@ -16,12 +16,12 @@ public final class BrickTopologyCompiler {
     private final FarFieldSettings farField;
     private final int maximumArenaSlots;
     private final ThermalBrickCellLayout cells = new ThermalBrickCellLayout();
-    private final int[] ids = new int[64], exposure = new int[64], phaseIds = new int[64];
+    private final int[] ids = new int[64], phaseIds = new int[64];
     private final byte[] mapping = new byte[64];
     private final long[] masks = new long[64], phaseMasks = new long[64];
     private final PrimitiveTopologyScratch.LongPairDouble airPairs = new PrimitiveTopologyScratch.LongPairDouble();
+    private final ThermalFragment.RoutedContacts.Builder routedContacts = new ThermalFragment.RoutedContacts.Builder();
     private final PrimitiveTopologyScratch.LongPairDouble materialPairs = new PrimitiveTopologyScratch.LongPairDouble();
-    private final PrimitiveTopologyScratch.LongPairDouble phasePairs = new PrimitiveTopologyScratch.LongPairDouble();
     private final PrimitiveTopologyScratch.LongPairDouble farBoundaries = new PrimitiveTopologyScratch.LongPairDouble();
     private boolean fragmentResolved;
     private static final long[] NEIGHBORS = new long[64];
@@ -52,6 +52,8 @@ public final class BrickTopologyCompiler {
             if (signatures.mergeable(ids[b])) mergeable|=1L<<b;
         }
         int nodes=0, transport=0, phases=0;
+        int bodyPhaseCount = 0;
+        long surfaceNodes=0;
         BlockBrickLayout layout=null;
         if (mergeable == -1L) {
             cells.setRegularAir(parameters.effectiveAirCapacityJPerBlockK());
@@ -70,38 +72,26 @@ public final class BrickTopologyCompiler {
                 mapNode(nodes,members);
                 cells.setTransportCapacity(nodes++,Long.bitCount(members)*parameters.effectiveAirCapacityJPerBlockK());
             }
-            for (int b=0;b<64;b++) {
-                int profile=signatures.materialProfileId(ids[b]);
-                exposure[b]=profile==0 ? 0 : exposedFaces(b,x,y,z,view);
-                if (signatures.ventilation(ids[b])==0 || mapping[b]!=(byte)255) continue;
-                mapNode(nodes,1L<<b);
-                double capacity=profile==0 || exposure[b]==0 ? parameters.effectiveAirCapacityJPerBlockK()
-                        : materials.profileOrNull(profile).surfaceCapacityJPerK()*exposure[b];
-                cells.setTransportCapacity(nodes++,capacity);
+            // Only actual Air owns transport capacity. Ventilated materials
+            // participate in geometric routes and retain one separate body H.
+            for (int b = 0; b < 64; b++) {
+                if (!signatures.isAir(ids[b]) || mapping[b] != (byte) 255
+                        || signatures.ventilation(ids[b]) == 0) continue;
+                mapNode(nodes, 1L << b);
+                cells.setTransportCapacity(nodes++, parameters.effectiveAirCapacityJPerBlockK());
             }
-            transport=nodes;
-            for (int b=0;b<64;b++) {
-                int id=signatures.materialProfileId(ids[b]);
-                if (id==0 || exposure[b]==0 || signatures.ventilation(ids[b])>0) continue;
-                var profile=materials.profileOrNull(id);
-                if (profile.model()==MaterialBoundaryRegistry.Model.PHASE_RESERVOIR) {
-                    int i=0; while (i<phases && phaseIds[i]!=id) i++;
-                    if (i==phases) { phaseIds[phases]=id; phaseMasks[phases++]=0; }
-                    phaseMasks[i]|=1L<<b;
-                } else {
-                    mapNode(nodes++,1L<<b);
-                    cells.addMaterialPole(x+(b&3),y+(b>>>4),z+(b>>>2&3),
-                            profile.surfaceCapacityJPerK()*exposure[b],view.naturalTemperature(page));
-                }
-            }
-            for (int i=0;i<phases;i++) {
-                var profile=materials.profileOrNull(phaseIds[i]);
-                mapNode(nodes++,phaseMasks[i]);
-                cells.addPhaseReservoir(x,y,z,profile.id(),phaseMasks[i],
-                        profile.transitionTemperatureC(),profile.transitionEnergyJPerUnit());
+            transport = nodes;
+            for (int b = 0; b < 64; b++) {
+                var profile = materials.profileOrNull(signatures.materialProfileId(ids[b]));
+                if (profile == null) continue;
+                surfaceNodes |= 1L << nodes;
+                mapNode(nodes++, 1L << b);
+                cells.addMaterialPole(x + (b & 3), y + (b >>> 4), z + (b >>> 2 & 3),
+                        profile.thermalLaw().capacityJPerK(), view.naturalTemperature(page));
+                if (profile.thermalLaw().heating() != null || profile.thermalLaw().cooling() != null) bodyPhaseCount++;
             }
             if (nodes>0) {
-                layout=new BlockBrickLayout(mapping.clone(),Arrays.copyOf(masks,nodes),transport);
+                layout=new BlockBrickLayout(mapping.clone(),Arrays.copyOf(masks,nodes),transport,surfaceNodes);
                 if (transport>0) cells.setMixedAir(layout,parameters.effectiveAirCapacityJPerBlockK());
             }
         }
@@ -109,13 +99,31 @@ public final class BrickTopologyCompiler {
                 view.naturalTemperature(page),parameters.referenceTemperatureC(),maximumArenaSlots);
         if (allocation==null) throw new TopologyPlan.WorkLimitedException("thermal arena slot limit reached");
         try {
-            int coverage=transport==0 ? -1 : allocation.cellSpan().firstSlot();
+            int[] phaseSlots = new int[bodyPhaseCount];
+            int phaseSlotCount = 0;
+            if (layout != null) for (int block = 0; block < 64; block++) {
+                var profile = materials.profileOrNull(signatures.materialProfileId(ids[block]));
+                if (profile == null || profile.thermalLaw() == null) continue;
+                int slot = allocation.firstSlot() + layout.nodeAt(block);
+                arena.stageMaterialLaw(slot, profile.id(), profile.thermalLaw(), view.naturalTemperature(page));
+                if (profile.thermalLaw().heating() == null && profile.thermalLaw().cooling() == null) continue;
+                phaseSlots[phaseSlotCount++] = slot;
+                int phase = 0;
+                while (phase < phases && phaseIds[phase] != profile.id()) phase++;
+                if (phase == phases) {
+                    phaseIds[phases] = profile.id();
+                    phaseMasks[phases++] = 0;
+                }
+                phaseMasks[phase] |= 1L << block;
+            }
+            int coverage=transport==0 ? -1 : allocation.firstSlot();
             var candidates=phases==0 ? PagePublication.PhaseCandidates.EMPTY
                     : PagePublication.PhaseCandidates.owned(Arrays.copyOf(phaseIds,phases),Arrays.copyOf(phaseMasks,phases));
-            return new WorkerBrickTopology(allocation.cellSpan(),coverage,coverage<0?0:arena.lifecycleGeneration(coverage),
-                    layout,transport,candidates,allocation.phaseReservoirSlots(),true,true);
+            return new WorkerBrickTopology(allocation,coverage,
+                    allocation.count()==0?0:arena.lifecycleGeneration(allocation.firstSlot()),
+                    layout,transport,candidates,phaseSlots,true,true);
         } catch (RuntimeException | Error failure) {
-            arena.discardStagedCells(allocation.cellSpan()); throw failure;
+            arena.discardStagedCells(allocation); throw failure;
         }
     }
     private void mapNode(int node,long members) {
@@ -123,26 +131,9 @@ public final class BrickTopologyCompiler {
         while(members!=0) { int b=Long.numberOfTrailingZeros(members); members&=members-1; mapping[b]=(byte)node; }
     }
 
-    private int exposedFaces(int block, int x, int y, int z, TopologyView view) {
-        int count = 0;
-        long neighbors = NEIGHBORS[block];
-        while (neighbors != 0) {
-            int neighbor = Long.numberOfTrailingZeros(neighbors);
-            neighbors &= neighbors - 1;
-            if (signatures.ventilation(ids[neighbor]) > 0) count++;
-        }
-        int bx = x + (block & 3), by = y + (block >>> 4), bz = z + (block >>> 2 & 3);
-        if ((block & 3) == 0 && signatures.ventilation(view.signatureAtWorld(bx-1,by,bz)) > 0) count++;
-        if ((block & 3) == 3 && signatures.ventilation(view.signatureAtWorld(bx+1,by,bz)) > 0) count++;
-        if ((block >>> 4) == 0 && signatures.ventilation(view.signatureAtWorld(bx,by-1,bz)) > 0) count++;
-        if ((block >>> 4) == 3 && signatures.ventilation(view.signatureAtWorld(bx,by+1,bz)) > 0) count++;
-        if ((block >>> 2 & 3) == 0 && signatures.ventilation(view.signatureAtWorld(bx,by,bz-1)) > 0) count++;
-        if ((block >>> 2 & 3) == 3 && signatures.ventilation(view.signatureAtWorld(bx,by,bz+1)) > 0) count++;
-        return count;
-    }
-
     CompiledFragment compileFragment(WorkerPageStore.PageState page,int brick,TopologyView view) {
-        airPairs.reset(); materialPairs.reset(); phasePairs.reset(); farBoundaries.reset(); fragmentResolved=true;
+        airPairs.reset(); materialPairs.reset(); farBoundaries.reset(); fragmentResolved=true;
+        routedContacts.clear();
         var owner=view.brick(page,brick);
         if (!owner.cellsResolved) return new CompiledFragment(ThermalFragment.EMPTY,false);
         int x=brickMinX(page,brick), y=brickMinY(page,brick), z=brickMinZ(page,brick);
@@ -150,9 +141,9 @@ public final class BrickTopologyCompiler {
         if (owner.blockLayout!=null) {
             for (int b=0;b<64;b++) ids[b]=cut.get(BlockBrickLayout.pageBlock(brick,b));
             for(int b=0;b<64;b++) {
-                if((b&3)<3) face(owner,b,owner,b+1,0,x+(b&3)+1,ids[b],ids[b+1]);
-                if((b>>>4)<3) face(owner,b,owner,b+16,1,y+(b>>>4)+1,ids[b],ids[b+16]);
-                if((b>>>2&3)<3) face(owner,b,owner,b+4,2,z+(b>>>2&3)+1,ids[b],ids[b+4]);
+                if((b&3)<3) face(owner,b,owner,b+1,0,x+(b&3)+1,ids[b],ids[b+1],view);
+                if((b>>>4)<3) face(owner,b,owner,b+16,1,y+(b>>>4)+1,ids[b],ids[b+16],view);
+                if((b>>>2&3)<3) face(owner,b,owner,b+4,2,z+(b>>>2&3)+1,ids[b],ids[b+4],view);
             }
         }
         for (int axis = 0; axis < 3; axis++) {
@@ -182,7 +173,7 @@ public final class BrickTopologyCompiler {
                 int right = BlockBrickLayout.faceBlock(axis, 0, i);
                 int leftId = cut.get(BlockBrickLayout.pageBlock(brick, left));
                 int rightId = neighborCut.get(BlockBrickLayout.pageBlock(neighborBrick, right));
-                face(owner, left, neighbor, right, axis, plane, leftId, rightId);
+                face(owner, left, neighbor, right, axis, plane, leftId, rightId, view);
             }
         }
         // Existing FarField eligibility is direct sky at the absent upper Page.
@@ -195,21 +186,56 @@ public final class BrickTopologyCompiler {
                 farBoundaries.add(slot,0,farField.conductanceForPatches(16,true)*v/100.0);
             }
         }
+        long origin = net.minecraft.core.BlockPos.asLong(x, y, z);
+        view.airRoutes().appendEdges(origin, view, parameters.effectiveMixingWPerBlockK(), routedContacts);
+        BlockBrickLayout routedLayout = view.airRoutes().publishRoutes(origin, owner.blockLayout);
+        long airContactBlocks = 0;
+        if (routedLayout != null) for (int block = 0; block < 64; block++) {
+            int slot = owner.slotAt(block);
+            long position = AirRouteCompiler.blockPosition(origin, block);
+            int bx = net.minecraft.core.BlockPos.getX(position), by = net.minecraft.core.BlockPos.getY(position), bz = net.minecraft.core.BlockPos.getZ(position);
+            if (slot < 0 || arena.materialLaw(slot) == null) continue;
+            if (view.materialSurfaceAt(bx, by, bz, signatures)) airContactBlocks |= 1L << block;
+            if (!view.airRoutes().hasRegion(position)
+                    || view.hasDirectAir(bx, by, bz, signatures)) continue;
+            int air = view.airSlotAt(view.airRoutes().region(position));
+            if (air < 0) continue;
+            double surfaceG = materials.profileOrNull(arena.materialProfileId(slot)).faceConductanceWPerK();
+            double conductance = 1 / (view.airRoutes().normalizedResistance(position)
+                    / parameters.effectiveMixingWPerBlockK() + 1 / surfaceG);
+            routedContacts.add(slot, air, conductance, view.airRoutes().validity(position));
+        }
+        if (routedLayout != null) routedLayout = routedLayout.withAirContactBlocks(airContactBlocks);
         return new CompiledFragment(new ThermalFragment(Integer.toUnsignedLong(page.fragmentIndex(brick)),
-                freezeAirPairs(),freezeMaterialPairs(),freezePhasePairs(),freezeFarBoundaries(page.pageSlot)),fragmentResolved);
+                freezeAirPairs(),freezeMaterialPairs(),routedContacts.build(),freezeFarBoundaries(page.pageSlot)),fragmentResolved,routedLayout);
     }
-    private void face(WorkerBrickTopology a,int ba,WorkerBrickTopology b,int bb,int axis,int plane,int ia,int ib) {
+    private void face(WorkerBrickTopology a,int ba,WorkerBrickTopology b,int bb,int axis,int plane,int ia,int ib,
+            TopologyView view) {
         int sa=a.slotAt(ba), sb=b.slotAt(bb);
         if(sa<0 || sb<0 || sa==sb) return;
+        boolean firstBody = arena.materialLaw(sa) != null;
+        boolean secondBody = arena.materialLaw(sb) != null;
+        if (firstBody && secondBody) {
+            int firstFace = axis * 2 + 1, secondFace = axis * 2;
+            if ((signatures.fullContactFaces(ia) & 1 << firstFace) == 0
+                    || (signatures.fullContactFaces(ib) & 1 << secondFace) == 0
+                    || !view.materialContactAllowed(arena.minimum(sa, 0), arena.minimum(sa, 1), arena.minimum(sa, 2),
+                            arena.minimum(sb, 0), arena.minimum(sb, 1), arena.minimum(sb, 2), signatures)) return;
+            double firstG = materials.profileOrNull(arena.materialProfileId(sa)).faceConductanceWPerK();
+            double secondG = materials.profileOrNull(arena.materialProfileId(sb)).faceConductanceWPerK();
+            materialPairs.add(Math.min(sa, sb), Math.max(sa, sb), 2 * firstG * secondG / (firstG + secondG));
+            return;
+        }
+        if (firstBody || secondBody) {
+            int body = firstBody ? sa : sb;
+            int air = firstBody ? sb : sa;
+            if (!arena.isAirCell(air)) return;
+            materialPairs.add(Math.min(air, body), Math.max(air, body),
+                    materials.profileOrNull(arena.materialProfileId(body)).faceConductanceWPerK());
+            return;
+        }
         int va=signatures.ventilation(ia), vb=signatures.ventilation(ib);
         if(va>0 && vb>0) { addAirPair(sa,sb,axis,plane,1,va,vb); return; }
-        if(va==0 && vb==0) return;
-        int solid=va==0?sa:sb, air=va==0?sb:sa;
-        var profile=materials.profileOrNull(signatures.materialProfileId(va==0?ia:ib));
-        if(profile==null) return;
-        if(profile.model()==MaterialBoundaryRegistry.Model.PHASE_RESERVOIR)
-            phasePairs.add(air,solid,profile.faceConductanceWPerK());
-        else materialPairs.add(Math.min(air,solid),Math.max(air,solid),profile.faceConductanceWPerK());
     }
     private void addAirPair(int first,int second,int axis,int plane,double area,int va,int vb) {
         double da=Math.max(0.5,plane-arena.center(first,axis));
@@ -222,12 +248,7 @@ public final class BrickTopologyCompiler {
         for(int i=0;i<n;i++){ a[i]=(int)materialPairs.first(i); b[i]=(int)materialPairs.second(i); g[i]=materialPairs.value(i); }
         return new ThermalFragment.MaterialContributions(a,b,g);
     }
-    private ThermalFragment.PhaseContacts freezePhasePairs() {
-        int n=phasePairs.size(); if(n==0) return ThermalFragment.PhaseContacts.EMPTY;
-        int[] a=new int[n],b=new int[n]; double[] g=new double[n];
-        for(int i=0;i<n;i++){ a[i]=(int)phasePairs.first(i); b[i]=(int)phasePairs.second(i); g[i]=phasePairs.value(i); }
-        return new ThermalFragment.PhaseContacts(a,b,g);
-    }
+
     private ThermalFragment.AirPairs freezeAirPairs() {
         int count = airPairs.size();
         if (count == 0) {
@@ -297,7 +318,9 @@ public final class BrickTopologyCompiler {
 
     record CompiledFragment(
             ThermalFragment fragment,
-            boolean resolved
+            boolean resolved,
+            BlockBrickLayout layout
     ) {
+        CompiledFragment(ThermalFragment fragment, boolean resolved) { this(fragment, resolved, null); }
     }
 }

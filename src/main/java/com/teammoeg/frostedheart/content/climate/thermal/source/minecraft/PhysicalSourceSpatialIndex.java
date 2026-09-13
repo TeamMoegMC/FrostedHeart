@@ -423,12 +423,12 @@ public final class PhysicalSourceSpatialIndex
             boolean enabled
     ) {
         requireOpen();
-        long sourceId = BlockPos.asLong(x, y, z);
-        int slot = slotsById.get(sourceId);
         if (!enabled || !(powerW > 0.0D)) {
             remove(x, y, z);
             return true;
         }
+        long sourceId = BlockPos.asLong(x, y, z);
+        int slot = slotsById.get(sourceId);
         boolean radiationChanged = false;
         if (slot == NO_SLOT) {
             slot = allocateSlot();

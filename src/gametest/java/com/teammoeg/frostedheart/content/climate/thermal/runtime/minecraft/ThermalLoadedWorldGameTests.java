@@ -7,8 +7,14 @@ import com.teammoeg.chorda.dataholders.team.SinglePlayerTeam;
 import com.teammoeg.chorda.multiblock.CMultiblockHelper;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlocks;
+import com.teammoeg.frostedheart.bootstrap.common.FHAttributes;
+import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureComputation;
+import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData;
+import com.teammoeg.frostedheart.content.climate.thermal.field.ThermalAnalyticField;
+import com.teammoeg.frostedheart.content.climate.thermal.field.ThermalFieldKey;
 import com.teammoeg.frostedheart.bootstrap.common.FHMultiblocks;
 import com.teammoeg.frostedheart.content.climate.WorldTemperature;
+import com.teammoeg.frostedheart.content.climate.BlockTemperatureModel;
 import com.teammoeg.frostedheart.content.climate.data.BiomeTempData;
 import com.teammoeg.frostedheart.content.climate.data.WorldTempData;
 import com.teammoeg.frostedheart.infrastructure.data.FHRecipeCachingReloadListener;
@@ -29,6 +35,12 @@ import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectLinkedOpenHashMap;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.item.context.UseOnContext;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.Vec3;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.nbt.CompoundTag;
@@ -42,6 +54,8 @@ import net.minecraft.world.level.block.CampfireBlock;
 import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.chunk.LevelChunkSection;
 import net.minecraftforge.common.util.FakePlayerFactory;
+import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.level.BlockEvent;
 import net.minecraftforge.gametest.GameTestHolder;
 import net.minecraftforge.gametest.PrefixGameTestTemplate;
 
@@ -54,11 +68,128 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.PriorityQueue;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Consumer;
 
 @GameTestHolder(FHMain.MODID)
 @PrefixGameTestTemplate(false)
 public final class ThermalLoadedWorldGameTests {
     private static final String TEMPLATE = "phase0a_empty";
+
+    @GameTest(template = TEMPLATE, batch = "thermal_natural_formula_equivalence", timeoutTicks = 100)
+    public static void naturalWorldQueriesRetainTheirTemperatureResults(GameTestHelper helper) {
+        ServerLevel level = helper.getLevel();
+        BlockPos origin = helper.absolutePos(new BlockPos(2, 2, 2));
+        var config = FHConfig.SERVER.CLIMATE;
+        float minimum = config.absoluteZeroCelsius.get().floatValue();
+        for (int y : new int[]{-64, -55, -1, 0, 1, 63, 64, 240, 241, 319}) {
+            BlockPos pos = new BlockPos(origin.getX(), y, origin.getZ());
+            float dimension = WorldTemperature.dimension(level);
+            float biome = WorldTemperature.biome(level, pos);
+            float altitude = WorldTemperature.altitude(level, pos);
+            for (float climate : new float[]{-10000, -40, 0, 40}) {
+                float previous = BlockTemperatureModel.blockTemperature(y,
+                        config.climateStoneInterfaceLevel.get(), config.climateSeaLevel.get(),
+                        config.blockMaximumClimateAffection.get().floatValue(), dimension, biome, altitude, climate,
+                        0, config.blockHeatApplicationMultiplier.get().floatValue(), minimum);
+                helper.assertTrue(WorldTemperature.naturalBlock(level, pos, climate) == previous,
+                        "natural block query must preserve zero-heat behavior at y=" + y + ", climate=" + climate);
+            }
+            if (y <= WorldTemperature.STONE_INTERFACE_LEVEL) {
+                helper.assertTrue(WorldTemperature.naturalAir(level, pos) == Math.max(minimum, dimension + biome + altitude),
+                        "underground air must retain dimension, biome, altitude and lower clamp at y=" + y);
+            }
+        }
+        helper.succeed();
+    }
+
+    @GameTest(template = TEMPLATE, batch = "thermal_stable_environment_attribute", timeoutTicks = 100)
+    public static void stablePlayerEnvironmentReusesItsModifierAndObservesChanges(GameTestHelper helper) {
+        ServerLevel level = helper.getLevel();
+        MinecraftThermalInput.closeActiveLevel(level);
+        var player = FakePlayerFactory.get(level,
+                new com.mojang.authlib.GameProfile(java.util.UUID.randomUUID(), "ThermalAttrTest"));
+        BlockPos pos = helper.absolutePos(new BlockPos(2, 3, 2));
+        player.setPos(pos.getX() + .5, pos.getY(), pos.getZ() + .5);
+        var data = new PlayerTemperatureData();
+        var attribute = player.getAttribute(FHAttributes.ENV_TEMPERATURE.get());
+        var fieldKey = ThermalFieldKey.of(FHMain.rl("gametest_attribute"), player.getUUID(), 0);
+        var extra = new net.minecraft.world.entity.ai.attributes.AttributeModifier(java.util.UUID.randomUUID(),
+                "test environment bonus", 5, net.minecraft.world.entity.ai.attributes.AttributeModifier.Operation.ADDITION);
+        try {
+            PlayerTemperatureComputation.updatePlayer(player, data, 20);
+            var first = attribute.getModifier(PlayerTemperatureComputation.ENV_TEMP_ATTRIBUTE_UUID);
+            helper.assertTrue(first != null, "production player update must install its environment modifier");
+            PlayerTemperatureComputation.updatePlayer(player, data, 20);
+            helper.assertTrue(attribute.getModifier(PlayerTemperatureComputation.ENV_TEMP_ATTRIBUTE_UUID) == first,
+                    "unchanged sampled air must reuse the modifier");
+            attribute.addTransientModifier(extra);
+            PlayerTemperatureComputation.updatePlayer(player, data, 20);
+            helper.assertTrue(attribute.getModifier(PlayerTemperatureComputation.ENV_TEMP_ATTRIBUTE_UUID) == first
+                            && Math.abs(attribute.getValue() - first.getAmount() - 5) < 1e-6,
+                    "reused air input must still observe another modifier's change");
+            MinecraftThermalInput.upsertGameplayAnalyticField(level, new ThermalAnalyticField(fieldKey, 100,
+                    ThermalAnalyticField.CombineMode.OVERRIDE, player.getX(), player.getEyeY(), player.getZ(), 2, 20));
+            PlayerTemperatureComputation.updatePlayer(player, data, 20);
+            helper.assertTrue(attribute.getModifier(PlayerTemperatureComputation.ENV_TEMP_ATTRIBUTE_UUID).getAmount() == 20
+                            && Math.abs(attribute.getValue() - 25) < 1e-6,
+                    "a changed field must update sampled air while retaining other modifiers");
+            helper.succeed();
+        } finally {
+            attribute.removeModifier(extra);
+            MinecraftThermalInput.removeGameplayAnalyticField(level, fieldKey);
+            MinecraftThermalInput.closeActiveLevel(level);
+        }
+    }
+
+    @GameTest(template = TEMPLATE, batch = "thermal_campfire_ignition_callback", timeoutTicks = 120)
+    public static void campfireIgnitionBootstrapsOnlyAfterPlacementIsAccepted(GameTestHelper helper) {
+        ServerLevel level = helper.getLevel();
+        BlockPos fire = helper.absolutePos(new BlockPos(2, 2, 2));
+        campfire(level, fire, false);
+        MinecraftThermalInput.closeActiveLevel(level);
+        var player = FakePlayerFactory.getMinecraft(level);
+        ItemStack previous = player.getMainHandItem();
+        ItemStack lighter = new ItemStack(Items.FLINT_AND_STEEL);
+        player.setItemInHand(InteractionHand.MAIN_HAND, lighter);
+        UseOnContext use = new UseOnContext(player, InteractionHand.MAIN_HAND,
+                new BlockHitResult(Vec3.atCenterOf(fire), Direction.UP, fire, false));
+        boolean[] cancelled = {false};
+        Consumer<BlockEvent.EntityPlaceEvent> reject = event -> {
+            if (event.getLevel() == level && event.getPos().equals(fire)) {
+                cancelled[0] = true;
+                event.setCanceled(true);
+            }
+        };
+        try {
+            level.setBlockAndUpdate(fire.east(), Blocks.STONE.defaultBlockState());
+            level.setBlockAndUpdate(fire.east(), Blocks.AIR.defaultBlockState());
+            helper.assertTrue(owner(level, fire) == null, "ordinary block changes must not bootstrap thermal runtime");
+            MinecraftForge.EVENT_BUS.addListener(reject);
+            try {
+                lighter.useOn(use);
+            } finally {
+                MinecraftForge.EVENT_BUS.unregister(reject);
+            }
+            helper.assertTrue(cancelled[0] && !level.getBlockState(fire).getValue(CampfireBlock.LIT),
+                    "real Forge placement cancellation must restore the unlit campfire");
+            helper.assertTrue(owner(level, fire) == null, "cancelled ignition must not create a runtime");
+            helper.assertTrue(lighter.useOn(use).consumesAction(), "accepted flint-and-steel use must ignite the campfire");
+            helper.assertTrue(level.getBlockState(fire).getValue(CampfireBlock.LIT) && owner(level, fire) != null,
+                    "same-block ignition must bootstrap through CampfireBlock.onPlace");
+        } finally {
+            player.setItemInHand(InteractionHand.MAIN_HAND, previous);
+        }
+        MinecraftThermalInput input = owner(level, fire).input();
+        helper.runAfterDelay(40, () -> {
+            try {
+                helper.assertTrue(present(input, fire), "accepted ignition must enter the normal source discovery path");
+                helper.succeed();
+            } finally {
+                level.setBlockAndUpdate(fire, Blocks.AIR.defaultBlockState());
+                MinecraftThermalInput.closeActiveLevel(level);
+            }
+        });
+    }
 
     @GameTest(template = TEMPLATE, batch = "thermal_complete_tag_reload", timeoutTicks = 300)
     public static void completeReloadRebuildsMaterialProfilesAfterTagsBind(GameTestHelper helper) throws IOException {

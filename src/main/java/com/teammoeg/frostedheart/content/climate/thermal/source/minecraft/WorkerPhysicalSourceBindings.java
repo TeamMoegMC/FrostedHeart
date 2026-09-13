@@ -36,6 +36,7 @@ public final class WorkerPhysicalSourceBindings
             new Long2ObjectOpenHashMap<>();
     private final LongOpenHashSet dirtySources = new LongOpenHashSet();
     private final LongArrayList dirtyOrder = new LongArrayList();
+    private final WorkerPageStore.MutableAirTarget airTarget = new WorkerPageStore.MutableAirTarget();
 
     public WorkerPhysicalSourceBindings(
             WorkerPageStore pages,
@@ -163,17 +164,16 @@ public final class WorkerPhysicalSourceBindings
                 int blockX = source.anchorX + port.offsetX();
                 int blockY = source.anchorY + port.offsetY();
                 int blockZ = source.anchorZ + port.offsetZ();
-                int slot = pages.resolveAirFaceSlot(
+                int slot = pages.resolveAirFaceTarget(
                         blockX,
                         blockY,
                         blockZ,
                         port.targetFace(),
-                        signatures);
+                        signatures, airTarget);
                 if (slot >= 0) {
                     source.bindings[index] = SourceBinding.thermalNode(
                             slot,
-                            pages.lifecycleGenerationAt(
-                                    blockX, blockY, blockZ));
+                            airTarget.generation());
                 } else if (slot == WorkerPageStore.PORT_TOPOLOGY_UNAVAILABLE) {
                     source.bindings[index] = SourceBinding.degradedLoss(
                             sinkId(source.sourceId, port));

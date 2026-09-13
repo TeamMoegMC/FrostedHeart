@@ -23,7 +23,6 @@ import java.util.Arrays;
  */
 public final class ThermalCellArena {
     private static final int NO_SLOT = -1;
-    private static final int[] NO_SLOTS = new int[0];
 
     private static final byte FREE = 0;
     private static final byte LIVE = 1;
@@ -31,11 +30,14 @@ public final class ThermalCellArena {
     private static final byte REGULAR_CELL = 0;
     private static final byte MIXED_COMPONENT = 1;
     private static final byte MATERIAL_CELL = 2;
-    private static final byte PHASE_RESERVOIR = 3;
 
     private double[] enthalpyJ;
     private double[] capacityJPerK;
     private double[] inverseCapacityKPerJ;
+    private MaterialThermalLaw[] materialLaws;
+    private int[] materialProfileIds;
+    private byte[] materialBranches;
+    private long[] pendingMaterialLayouts;
     private int[] pageSlots;
     private int[] lifecycleGenerations;
     private int[] supportRefs;
@@ -48,11 +50,14 @@ public final class ThermalCellArena {
     private long[] liveSlots;
     private long[] liveWordSummary;
     private final ThermalFreeSpanIndex freeSpans = new ThermalFreeSpanIndex();
-    private final ThermalPhaseReservoirStore phases;
+    private final ThermalPhaseRequestStore phases;
 
     private int highWaterMark;
     private int allocationHighWaterMark;
     private int liveCellCount;
+    private double externalMaterialEnergyJ;
+    public double externalMaterialEnergyJ() { return externalMaterialEnergyJ; }
+    public void recordExternalMaterialEnergy(double energyJ) { externalMaterialEnergyJ += energyJ; }
 
     public ThermalCellArena(int initialCapacity) {
         if (initialCapacity < 0) {
@@ -61,6 +66,10 @@ public final class ThermalCellArena {
         enthalpyJ = new double[initialCapacity];
         capacityJPerK = new double[initialCapacity];
         inverseCapacityKPerJ = new double[initialCapacity];
+        materialLaws = new MaterialThermalLaw[initialCapacity];
+        materialProfileIds = new int[initialCapacity];
+        materialBranches = new byte[initialCapacity];
+        pendingMaterialLayouts = new long[(initialCapacity + 63) >>> 6];
         pageSlots = new int[initialCapacity];
         lifecycleGenerations = new int[initialCapacity];
         supportRefs = new int[initialCapacity];
@@ -69,7 +78,7 @@ public final class ThermalCellArena {
         minimumZ = new int[initialCapacity];
         cellKinds = new byte[initialCapacity];
         mixedBrickGeometries = new BlockBrickLayout[initialCapacity];
-        phases = new ThermalPhaseReservoirStore(initialCapacity);
+        phases = new ThermalPhaseRequestStore(initialCapacity);
         allocationState = new byte[initialCapacity];
         liveSlots = new long[(initialCapacity + 63) >>> 6];
         liveWordSummary = new long[(liveSlots.length + 63) >>> 6];
@@ -123,7 +132,7 @@ public final class ThermalCellArena {
     }
 
     /** Reserves and fills one worker-private Brick without publishing live cells. */
-    public BrickAllocation stageBrickCells(
+    public ArenaSpan stageBrickCells(
             int pageSlot,
             int lifecycleGeneration,
             ThermalBrickCellLayout layout,
@@ -146,9 +155,9 @@ public final class ThermalCellArena {
         };
         int totalCells = Math.addExact(
                 airCells,
-                Math.addExact(layout.materialCount, layout.phaseCount));
+                layout.materialCount);
         if (totalCells == 0) {
-            return BrickAllocation.EMPTY;
+            return ArenaSpan.EMPTY;
         }
 
         int firstSlot = findFreeSpan(totalCells);
@@ -214,29 +223,11 @@ public final class ThermalCellArena {
                                 offset));
             }
 
-            int[] phaseSlots = layout.phaseCount == 0
-                    ? NO_SLOTS : new int[layout.phaseCount];
-            for (int index = 0; index < layout.phaseCount; index++) {
-                phaseSlots[index] = write;
-                writePhaseReservoir(
-                        write++,
-                        pageSlot,
-                        lifecycleGeneration,
-                        layout.phaseBrickMinX[index],
-                        layout.phaseBrickMinY[index],
-                        layout.phaseBrickMinZ[index],
-                        layout.phaseProfileId[index],
-                        layout.phaseCandidateMask[index],
-                        layout.phaseTransitionTemperatureC[index],
-                        layout.phaseTransitionEnergyJPerUnit[index]);
-            }
             if (write != required) {
                 throw new IllegalStateException(
                         "staged Brick cell count changed during construction");
             }
-            return new BrickAllocation(
-                    new ArenaSpan(firstSlot, totalCells),
-                    phaseSlots);
+            return new ArenaSpan(firstSlot, totalCells);
         } catch (RuntimeException | Error failure) {
             clearRange(firstSlot, required);
             addFreeSpan(firstSlot, totalCells);
@@ -301,10 +292,142 @@ public final class ThermalCellArena {
     public double temperatureC(int slot, double referenceTemperatureC) {
         requireFinite("referenceTemperatureC", referenceTemperatureC);
         requireLiveSlot(slot);
-        return cellKinds[slot] == PHASE_RESERVOIR
-                ? phases.transitionTemperatureC(slot)
-                : referenceTemperatureC
-                        + enthalpyJ[slot] * inverseCapacityKPerJ[slot];
+        if (materialLaws[slot] != null) {
+            return materialLaws[slot].temperatureC(enthalpyJ[slot], materialBranches[slot]);
+        }
+        return referenceTemperatureC + enthalpyJ[slot] * inverseCapacityKPerJ[slot];
+    }
+
+    /** Installs body parameters while its replacement span is still private. */
+    public void stageMaterialLaw(int slot, int profileId, MaterialThermalLaw law,
+            double initialTemperatureC) {
+        requireReservedSlot(slot);
+        materialLaws[slot] = law;
+        materialProfileIds[slot] = profileId;
+        materialBranches[slot] = MaterialThermalLaw.SENSIBLE;
+        capacityJPerK[slot] = law.capacityJPerK();
+        inverseCapacityKPerJ[slot] = 1 / law.capacityJPerK();
+        enthalpyJ[slot] = law.enthalpyAtTemperature(initialTemperatureC);
+        if (law.heating() != null && initialTemperatureC >= law.heating().temperatureC()) materialBranches[slot] = MaterialThermalLaw.HEATING;
+        else if (law.cooling() != null && initialTemperatureC <= law.cooling().temperatureC()) materialBranches[slot] = MaterialThermalLaw.COOLING;
+    }
+
+    public MaterialThermalLaw materialLaw(int slot) {
+        requireAllocatedSlot(slot);
+        return materialLaws[slot];
+    }
+
+    public int materialProfileId(int slot) {
+        requireAllocatedSlot(slot);
+        return materialProfileIds[slot];
+    }
+
+    public byte materialBranch(int slot) {
+        requireAllocatedSlot(slot);
+        return materialBranches[slot];
+    }
+
+    public void stageMaterialState(int slot, double energyJ, byte branch) {
+        stageEnthalpyJ(slot, energyJ);
+        materialBranches[slot] = branch;
+    }
+
+    public boolean needsMaterialSegments(int slot) {
+        MaterialThermalLaw law = materialLaws[slot];
+        return law != null && (law.offsetJ() != 0 || law.heating() != null || law.cooling() != null);
+    }
+
+    public boolean materialTransitionWaiting(int slot) {
+        return materialLayoutPending(slot) || materialLaws[slot] != null && phases.requestOutstanding(slot);
+    }
+
+    public boolean materialLayoutPending(int slot) {
+        return (pendingMaterialLayouts[slot >>> 6] & 1L << slot) != 0;
+    }
+
+    public void awaitMaterialLayout(int slot) {
+        if (isLive(slot) && materialLaws[slot] != null) pendingMaterialLayouts[slot >>> 6] |= 1L << slot;
+    }
+
+    public boolean materialTransitionAcknowledged(int slot) {
+        return materialLaws[slot] != null && phases.acknowledged(slot);
+    }
+
+    public boolean hasMaterialTransition(int slot) {
+        MaterialThermalLaw law = materialLaws[slot];
+        return law != null && (law.heating() != null || law.cooling() != null);
+    }
+
+    public boolean forceMaterialTransition(int slot, byte branch) {
+        MaterialThermalLaw law = materialLaws[slot];
+        var edge = law == null ? null : law.transition(branch);
+        if (edge == null) return false;
+        if (phases.requestOutstanding(slot) && materialBranches[slot] != branch) {
+            phases.completeMaterialRequest(slot, phases.requestSequence(slot), false);
+        }
+        double next = edge.heating() ? Math.max(enthalpyJ[slot], edge.targetEnthalpyJ())
+                : Math.min(enthalpyJ[slot], edge.targetEnthalpyJ());
+        externalMaterialEnergyJ += next - enthalpyJ[slot];
+        enthalpyJ[slot] = next;
+        materialBranches[slot] = branch;
+        return true;
+    }
+
+    public MaterialThermalLaw.Transition materialTransition(int slot) {
+        MaterialThermalLaw law = materialLaws[slot];
+        return law == null ? null : law.transition(materialBranches[slot]);
+    }
+
+    /** Chooses the local branch, then returns the energy distance to its boundary. */
+    public double materialEnergyLimitJ(int slot, double direction) {
+        MaterialThermalLaw law = materialLaws[slot];
+        if (law == null) return Double.POSITIVE_INFINITY;
+        if (materialTransitionWaiting(slot)) return 0;
+        double energy = enthalpyJ[slot];
+        MaterialThermalLaw.Transition active = materialTransition(slot);
+        if (active != null) {
+            boolean advancing = (direction > 0) == active.heating();
+            double remaining = advancing
+                    ? (active.targetEnthalpyJ() - energy) * Math.signum(direction)
+                    : (active.sourceEnthalpyJ() - energy) * Math.signum(direction);
+            if (advancing || remaining > 0) return Math.max(0, remaining);
+            materialBranches[slot] = MaterialThermalLaw.SENSIBLE;
+        }
+        byte branch = direction > 0 ? MaterialThermalLaw.HEATING : MaterialThermalLaw.COOLING;
+        MaterialThermalLaw.Transition edge = law.transition(branch);
+        if (edge == null) return Double.POSITIVE_INFINITY;
+        double distance = (edge.sourceEnthalpyJ() - energy) * Math.signum(direction);
+        if (distance > 0) return distance;
+        materialBranches[slot] = branch;
+        return Math.max(0, (edge.targetEnthalpyJ() - energy) * Math.signum(direction));
+    }
+
+    public double energyTemperatureSlope(int slot) {
+        MaterialThermalLaw law = materialLaws[slot];
+        return law == null ? inverseCapacityKPerJ[slot]
+                : law.slopeKPerJ(enthalpyJ[slot], materialBranches[slot]);
+    }
+
+    /** Returns actual source energy accepted; an ACK boundary owns no heat debt. */
+    public double acceptExternalEnergyJ(int slot, double requestedJ) {
+        requireLiveSlot(slot);
+        requireFinite("external energy", requestedJ);
+        if (materialLayoutPending(slot)) return 0;
+        if (requestedJ == 0) return 0;
+        if (materialLaws[slot] == null) {
+            addEnthalpyJ(slot, requestedJ);
+            return requestedJ;
+        }
+        double remaining = Math.abs(requestedJ);
+        double direction = Math.signum(requestedJ);
+        // One state's sensible segment and one latent interval end at an ACK.
+        for (int segment = 0; segment < 3 && remaining > 0; segment++) {
+            double accepted = Math.min(remaining, materialEnergyLimitJ(slot, direction));
+            if (accepted == 0) break;
+            addEnthalpyJ(slot, direction * accepted);
+            remaining -= accepted;
+        }
+        return direction * (Math.abs(requestedJ) - remaining);
     }
 
     public void setEnthalpyJ(int slot, double value) {
@@ -340,9 +463,9 @@ public final class ThermalCellArena {
     }
 
     /** Adds energy only when the source binding still names this exact cell incarnation. */
-    public void addNodeEnthalpyJ(long nodeId, int lifecycleGeneration, double deltaJ) {
+    public double addNodeEnthalpyJ(long nodeId, int lifecycleGeneration, double deltaJ) {
         int slot = requireNodeTarget(nodeId, lifecycleGeneration);
-        addEnthalpyJ(slot, deltaJ);
+        return acceptExternalEnergyJ(slot, deltaJ);
     }
 
     private int requireNodeTarget(long nodeId, int lifecycleGeneration) {
@@ -368,108 +491,54 @@ public final class ThermalCellArena {
         };
     }
 
-    public boolean isMaterialPole(int slot) {
+    /** Finite material temperature; valid for staged migration and live publication. */
+    public boolean isSurfaceCell(int slot) {
         requireAllocatedSlot(slot);
-        return isMaterialKind(cellKinds[slot]);
-    }
-
-    public boolean isPhaseReservoir(int slot) {
-        requireAllocatedSlot(slot);
-        return cellKinds[slot] == PHASE_RESERVOIR;
-    }
-
-    public int phaseProfileId(int slot) {
-        requirePhaseReservoir(slot);
-        return phases.profileId(slot);
-    }
-
-    public long phaseCandidateMask(int slot) {
-        requirePhaseReservoir(slot);
-        return phases.candidateMask(slot);
-    }
-
-    public double phaseTransitionTemperatureC(int slot) {
-        requirePhaseReservoir(slot);
-        return phases.transitionTemperatureC(slot);
-    }
-
-    public double phaseTransitionEnergyJPerUnit(int slot) {
-        requirePhaseReservoir(slot);
-        return phases.transitionEnergyJPerUnit(slot);
-    }
-
-    public double phaseAvailableEnergyJ(int slot) {
-        requirePhaseReservoir(slot);
-        return phases.availableEnergyJ(slot, enthalpyJ[slot]);
-    }
-
-    public double phaseMaximumEnergyJ(int slot) {
-        requirePhaseReservoir(slot);
-        return phases.maximumEnergyJ(slot);
+        return cellKinds[slot] == MATERIAL_CELL;
     }
 
     public boolean phaseRequestOutstanding(int slot) {
-        requirePhaseReservoir(slot);
+        requirePhaseMaterial(slot);
         return phases.requestOutstanding(slot);
     }
 
     public boolean phaseRequestNeedsOffer(int slot) {
-        requirePhaseReservoir(slot);
+        requirePhaseMaterial(slot);
         return phases.requestNeedsOffer(slot);
     }
 
     public long phaseRequestSequence(int slot) {
-        requirePhaseReservoir(slot);
+        requirePhaseMaterial(slot);
         return phases.requestSequence(slot);
     }
-
-    public int phaseRequestCandidateBit(int slot) {
-        requirePhaseReservoir(slot);
-        return phases.requestCandidateBit(slot);
-    }
-
-    public void beginPhaseRequest(
-            int slot,
-            long requestSequence,
-        int candidateBit
-    ) {
-        requirePhaseReservoir(slot);
-        phases.beginRequest(
-                slot, requestSequence, candidateBit, enthalpyJ[slot]);
+    public void beginPhaseRequest(int slot, long requestSequence) {
+        requirePhaseMaterial(slot);
+        phases.beginMaterialRequest(slot, requestSequence);
     }
 
     public void markPhaseRequestEnqueued(int slot, long requestSequence) {
-        requirePhaseReservoir(slot);
+        requirePhaseMaterial(slot);
         phases.markRequestEnqueued(slot, requestSequence);
     }
 
     public void retryPhaseRequest(int slot, long requestSequence) {
-        requirePhaseReservoir(slot);
+        requirePhaseMaterial(slot);
         phases.retryRequest(slot, requestSequence);
     }
 
-    public double completePhaseRequest(
-            int slot,
-            long requestSequence,
-            boolean mutationApplied
-    ) {
-        requirePhaseReservoir(slot);
-        double consumed = phases.completeRequest(
-                slot, requestSequence, mutationApplied, enthalpyJ[slot]);
-        if (consumed != 0.0D) {
-            enthalpyJ[slot] = Math.max(0.0D, enthalpyJ[slot] - consumed);
-        }
-        return consumed;
+    public void completePhaseRequest(int slot, long requestSequence, boolean mutationApplied) {
+        requirePhaseMaterial(slot);
+        phases.completeMaterialRequest(slot, requestSequence, mutationApplied);
     }
 
     public void copyPhaseRequestState(int oldSlot, int newSlot) {
-        requirePhaseReservoir(oldSlot);
-        requirePhaseReservoir(newSlot);
-        if (phases.profileId(oldSlot) != phases.profileId(newSlot)
+        requirePhaseMaterial(oldSlot);
+        requirePhaseMaterial(newSlot);
+        if (materialProfileIds[oldSlot] != materialProfileIds[newSlot]
                 || minimumX[oldSlot] != minimumX[newSlot]
                 || minimumY[oldSlot] != minimumY[newSlot]
                 || minimumZ[oldSlot] != minimumZ[newSlot]) {
-            throw new IllegalArgumentException("phase reservoir ownership key changed");
+            throw new IllegalArgumentException("phase material ownership key changed");
         }
         phases.copyRequest(oldSlot, newSlot);
     }
@@ -585,6 +654,10 @@ public final class ThermalCellArena {
         enthalpyJ = Arrays.copyOf(enthalpyJ, grown);
         capacityJPerK = Arrays.copyOf(capacityJPerK, grown);
         inverseCapacityKPerJ = Arrays.copyOf(inverseCapacityKPerJ, grown);
+        materialLaws = Arrays.copyOf(materialLaws, grown);
+        materialProfileIds = Arrays.copyOf(materialProfileIds, grown);
+        materialBranches = Arrays.copyOf(materialBranches, grown);
+        pendingMaterialLayouts = Arrays.copyOf(pendingMaterialLayouts, (grown + 63) >>> 6);
         pageSlots = Arrays.copyOf(pageSlots, grown);
         lifecycleGenerations = Arrays.copyOf(lifecycleGenerations, grown);
         supportRefs = Arrays.copyOf(supportRefs, grown);
@@ -727,6 +800,10 @@ public final class ThermalCellArena {
             enthalpyJ[slot] = 0.0D;
             capacityJPerK[slot] = 0.0D;
             inverseCapacityKPerJ[slot] = 0.0D;
+            materialLaws[slot] = null;
+            materialProfileIds[slot] = 0;
+            materialBranches[slot] = MaterialThermalLaw.SENSIBLE;
+            pendingMaterialLayouts[slot >>> 6] &= ~(1L << slot);
             pageSlots[slot] = NO_SLOT;
             lifecycleGenerations[slot] = 0;
             supportRefs[slot] = NO_SLOT;
@@ -760,10 +837,10 @@ public final class ThermalCellArena {
         }
     }
 
-    private void requirePhaseReservoir(int slot) {
+    private void requirePhaseMaterial(int slot) {
         requireAllocatedSlot(slot);
-        if (cellKinds[slot] != PHASE_RESERVOIR) {
-            throw new IllegalArgumentException("slot is not a phase reservoir: " + slot);
+        if (!hasMaterialTransition(slot)) {
+            throw new IllegalArgumentException("slot is not a phase material: " + slot);
         }
     }
 
@@ -836,36 +913,7 @@ public final class ThermalCellArena {
         mixedBrickGeometries[slot] = null;
     }
 
-    private void writePhaseReservoir(
-            int slot,
-            int pageSlot,
-            int lifecycleGeneration,
-            int brickMinX,
-            int brickMinY,
-            int brickMinZ,
-            int materialProfileId,
-            long candidateMask,
-            double transitionTemperatureC,
-            double transitionEnergyJPerUnit
-    ) {
-        allocationState[slot] = RESERVED;
-        enthalpyJ[slot] = 0.0D;
-        writeCapacity(slot, transitionEnergyJPerUnit);
-        pageSlots[slot] = pageSlot;
-        lifecycleGenerations[slot] = lifecycleGeneration;
-        supportRefs[slot] = slot;
-        minimumX[slot] = brickMinX;
-        minimumY[slot] = brickMinY;
-        minimumZ[slot] = brickMinZ;
-        cellKinds[slot] = PHASE_RESERVOIR;
-        mixedBrickGeometries[slot] = null;
-        phases.write(
-                slot,
-                materialProfileId,
-                candidateMask,
-                transitionTemperatureC,
-                transitionEnergyJPerUnit);
-    }
+
 
     private void writeCapacity(int slot, double capacity) {
         if (!Double.isFinite(capacity) || capacity <= 0.0D) {
@@ -895,14 +943,6 @@ public final class ThermalCellArena {
         if (lifecycleGeneration < 0) {
             throw new IllegalArgumentException("lifecycleGeneration must be non-negative");
         }
-    }
-
-    public record BrickAllocation(
-            ArenaSpan cellSpan,
-            int[] phaseReservoirSlots
-    ) {
-        private static final BrickAllocation EMPTY = new BrickAllocation(
-                ArenaSpan.EMPTY, NO_SLOTS);
     }
 
     private static boolean isMaterialKind(byte kind) {

@@ -211,6 +211,7 @@ public class FHClientEvents {
 
     @SubscribeEvent(priority = EventPriority.HIGH)
     public static void onRecipesUpdated(RecipesUpdatedEvent event) {
+        InfraredViewRenderer.invalidateDisplay();
         // Integrated servers already own these shared static recipe tables and caches.
         if (!Minecraft.getInstance().hasSingleplayerServer()) {
             FHRecipeCachingReloadListener.buildRecipeLists(event.getRecipeManager());
@@ -233,13 +234,13 @@ public class FHClientEvents {
     }
 
     @SubscribeEvent(priority = EventPriority.HIGHEST)
-    public static void onRenderAfterBlockEntity(RenderLevelStageEvent event) {
+    public static void onRenderSurfaceInfrared(RenderLevelStageEvent event) {
         if (event.getStage() == RenderLevelStageEvent.Stage.AFTER_LEVEL) {
             ClientUtils.getMc().getProfiler().push("frostedheart:render_infrared_view");
             InfraredViewRenderer.renderInfraredView();
             ClientUtils.getMc().getProfiler().pop();
             if(HouseBlockEntity.test!=null)
-            CylinderRegionRenderer.render(HouseBlockEntity.test.occupiedCells);
+                CylinderRegionRenderer.render(HouseBlockEntity.test.occupiedCells);
         }
     }
 

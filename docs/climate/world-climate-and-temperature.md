@@ -1,7 +1,7 @@
 # 世界气候与环境温度
 
 - Status: `Current`
-- Last verified: `2026-09-09`
+- Last verified: `2026-09-14`
 - Scope: 逻辑气候时钟、长期事件、局部白幕、自然/mesh/analytic 温度合成、红外视野、方块状态消费者
 - Primary code anchors: `WorldClockSource`, `WorldClimate`, `ClimateEventModel`, `ClimateEventTrack`, `InterpolationClimateEvent`, `WhiteCurtainDescriptor`, `WhiteCurtainFieldModel`, `WhiteCurtainInfo`, `WorldTemperature`, `BlockTemperatureModel`, `ThermalAnalyticField`, `ThermalAnalyticFieldIndex`, `MinecraftThermalInput.gameplayPassiveEnvironment`, `MinecraftThermalInput.gameplayCropEnvironment`, `MinecraftThermalInput.gameplayInfraredSnapshot`, `TownThermalProjection`, `MinecraftThermalInput.gameplayTownEnvironment`, `InfraredViewRenderer`
 
@@ -132,8 +132,9 @@ T_natural = D + B + A + alpha_block * C
 `MinecraftThermalInput.gameplayPassiveEnvironment`：revision-valid mesh publication 命中时以 published
 air 替换局部自然值；当前稀疏 Page 尚未发布目标 Brick signature payload 时先读取该 Brick 的
 dormant checkpoint，已编译但目标点确实无 Air 时仍保留 natural backend；最后应用 analytic control fields。该 passive 查询不会
-创建 Page，也不会加载区块。`blockHeatApplicationMultiplier` 仍由
-`WorldTemperature.naturalBlock` 传入 `BlockTemperatureModel`，但当前调用没有额外局部热区项。
+创建 Page，也不会加载区块。`WorldTemperature.naturalBlock`直接使用
+`BlockTemperatureModel.climateBlockAffection`和`naturalTemperature`，再应用绝对零度下限；
+它不读取`blockHeatApplicationMultiplier`或执行零热量的旧加热公式。旧城镇模拟器仍使用`applyHeat`。
 
 ## 6. 空气温度
 
@@ -171,6 +172,9 @@ Page 重采样：方块 mutation 在 heightmap 更新完成后于 tick-end 合�
 - `alpha_air` 使用 `WorldTemperature.SEA_LEVEL=63` 和 `STONE_INTERFACE_LEVEL=0` 硬编码常量，不读取对应服务端配置；
 - 气候最大影响为 `1.0`，而方块默认最大影响为 `0.5`；
 - `WorldTemperature.air` 的 fallback 有 `0.3degC` 高斯扰动，`naturalAir` 和 FarField 没有。
+
+自然空气在`y <= STONE_INTERFACE_LEVEL`时的气候系数为零，直接跳过气候查询；
+维度、群系、海拔贡献及绝对零度下限保持原公式。
 
 每次服务端空气温度查询还会从世界随机源加入标准差 `0.3` 的高斯扰动，所以相同位置连续查询不保证相同结果。
 
@@ -213,54 +217,100 @@ Generator 的半径/温差来自 `GeneratorData.getRadius/getTempMod` 和 `Gener
 
 解析场不会触发物理 runtime 启动，物理关闭/配方重载不清场。实际世界卸载和服务器停止清理索引；
 服务器重启后 generator 从团队数据重建，Curiosity 从实体状态重建，命令场不持久化。
-红外由服务端读取已有物理/休眠温度，再按相同顺序合成解析场，量化为0.25°C signed-short。
-没有物理Page时也能显示解析场，不会为显示创建物理Page。物理混合Brick按唯一transport节点
-读温度，再按`BlockBrickLayout.transportAt`展开到64个整块位置；方块内部不再细分空气体积。
-`Short.MIN_VALUE`表示没有可显示的最终温度。客户端只解码温度，不运行解析场或自然温度公式。
-协议与上传细节以[当前runtime文档](thermal-runtime-architecture-and-optimization.md)为准。
+红外温度数据的基础为已有方块材料表层平均温度，
+再在服务端按原顺序合成玩法解析场。无解析修正的材料值采用黑体近似`epsilon=tau=1`，
+无需额外距离平方、视角余弦或辐射求解。解析修正后的`displayTemperature`是玩法显示值，
+不能称为实测材料温度；它不回写材料H/C/T。现有节点六面共用，不代表六面独立或内部温度。
 
-客户端开启、跨 chunk/section 时请求 full snapshot，稳定时按 entity ID 错峰每
-`40` ticks 携带 infrared epoch 和 729-bit Page presence。服务端使用固定 Page/Brick
-epoch 数组处理纯物理增量；另用96字节刷新标记重建上次标记及当前场相交Page。
-presence仅表示物理Page；无温度记录、presence或刷新标记变化时不发送S2C，即使维度
-内别处推进了 epoch。QueryPublication 暂时 invalid 或超龄时不清除旧实时覆盖，
-仍可返回 dormant 更新，并以实时 epoch 0 要求下一份 coherent 响应重建实时基线；
-此时已知实时 section 内只更新此前由 dormant 拥有的 texel。
-center/full 请求在匹配响应被接受前不会降级为
-delta。等待首包时暂停固定40-tick poll，并按entity ID分散在`41..59` ticks后
-重试；接收分包期间不触发定时重试。每包不超过960 KiB，在Page记录边界拆分，尾包才提交纹理。
-该重试区间没有20的倍数。客户端只把
-delta 应用到相同 texture center；不同中心的 delta 被丢弃并在
-下一 tick 重新 full，full 响应则接管其服务端中心。有效 publication 确认的 Page
-retirement 只清除对应 `16^3` 区域。
-范围枚举复用 `MinecraftPageManager.pagesByChunk`，只读取已有 coherent
-publication，不 admission Page、retain lease 或加载 chunk。客户端写入一张线性
-`GL_R16I 144 x 144 x 144` 纹理，CPU 侧只保留同一份 persistent direct
-`ShortBuffer`；mirror在首次接收或初始化显示时分配，8 KiB Page scratch在首次部分Page上传时分配，之后有界复用。
-世界 reset 会立即摘下 GPU handle，并让 render callback 只删除捕获的旧资源。首个
-matching full snapshot 安装前，客户端以玩家当前 section 为中心渲染全 `INVALID`
-纹理，红外初始化不依赖服务端立即响应；跨 section 等待新 full 时继续按旧 texture
-origin 渲染旧 snapshot，响应到达后再整表替换，因此网络 full 状态不会使红外 pass
-闪烁。full及全部729个显示Page变脏的delta复用整纹理上传；部分delta通过scratch上传变化的
-`16^3` Page。fragment shader 每像素只执行一次 integer texture
-fetch。depth 重建得到的是可见几何表面；采样前沿 camera ray 向摄像机偏移
-`1/2048` 的相对距离，使方块面稳定读取表面前方的
-Air texel，不在相邻 texels 间闪烁。扫描球内 invalid/无 Page texel 按
-`MIN_TEMP` 显示冷蓝。shader 的逆视图矩阵来自当前 `GameRenderer` main `Camera`；
-Java 先以 double 计算 camera 到 texture origin 的相对坐标，再转换为小范围 float
-uniform，避免远世界坐标丢失一格精度。潜行眼高平滑和第三人称不会把温度坐标相对
-depth 偏移。篝火烟雾等写 depth 的粒子沿用同一世界坐标采样，与粒子所在 Air
-texel 的温度颜色融合；不增加粒子 mask、专用 pass 或渲染时序分支。
+`MinecraftThermalInput.gameplayInfraredSnapshot`通过`BlockBrickLayout.surfaceNodeMask`
+读取材料本体节点的H→T，包括普通材料、相变平台与相变后的状态。楼梯本体不再与空气
+共用温度；实际Air和休眠Air均温不作为材料基础。材料本体H/分支另存于format 3，
+不通过Air均温恢复。旧相变池和旧存档兼容读取已移除。
 
-每次红外请求还检查视野内已加载 chunk 的 dormant Brick mean，不依赖 source
-是否发现，不 admission Page、不加载 chunk。section 首次被查询才创建共享量化缓存，
-复用 20-tick 自然温度/衰减缓存；常规增量只发送变化 Brick，落后客户端收到 section
-替换，数据消失则显式删除。客户端增加一份 5,832 字节的 dormant Brick 所有权位图，
-复用原纹理。实时 `resolved` Brick（包括无 Air）优先，未解析 Brick 可继续显示
-暂存均温；实时更新时同包重写受影响 section 的剩余 fallback，避免覆盖丢失。
-关闭红外立即停止客户端请求；服务端实时比较最多延续 80 tick，dormant 计算只由
-请求触发。编码及生命周期详见 [data-lifecycle-and-integration.md](data-lifecycle-and-integration.md#network-and-consumers)。
+活动Brick优先使用当前材料发布；未驻留的Brick可直接读取已加载Chunk中
+`DormantChunkThermalState.materials`的既有材料记录，并验证当前BlockState一致。
+这与温度计使用同一`MaterialSectionState.read`关系。活动Page正在更新时不以旧记录覆盖它。
+活动模拟关闭后，保存的材料温度仍可显示；没有创建新的Page、材料H或休眠系统。
 
+局部几何变化不等于材料温度消失。红外和`sampleMaterial`读取`ThermalPageHandle.lastPublication()`
+这份既有材料发布，并继续检查slot generation及query cut一致性。材料变更日志只排除发布之后
+真正替换、物质量变化或转换的位置；未变化方块在同Brick/同Page重建期间仍可读。
+红外通过`collectMaterialChangesSince`一次展开到共用的64个long（512 bytes）临时位图，
+只重发受影响Brick，不为每Page/玩家保存额外温度。被删除或A→Air→A替换的旧物体不会保温串值；
+整段替换仍排除整段旧材料。这不允许空气传输查询复用已失效的几何路线。
+
+`storedEpoch`只用于同步变化：客户端在完整响应的最后一片提交后回传编号，服务端按Section
+变化编号更新，删除记录和替换/重载Chunk也会清除旧热色。编号不写入存档；协议不保留旧格式读取。
+未变化且没有解析场刷新的保存记录不产生重复响应。
+
+有材料且无场时显示材料温度；无材料且无场时发送`Short.MIN_VALUE`，客户端使用
+`MIN_TEMP=-20`的蓝色**占位**，不把-20当实测值。全窗口自然背景估计、729值背景包和
+第二张背景纹理已删除。完整扫描覆盖不受材料缺值影响。
+
+命中场的块中心使用`ThermalAnalyticFieldIndex.Sample`合成。能量塔仍是
+`max(base, naturalAir + getTempMod())`保底；有冷材料也执行，较热材料不被降低。
+没有材料而公式需要base时，仅在场范围内用`WorldTemperature.naturalAir`作原公式基准；
+OVERRIDE不需要这项读取。场合成后统一量化0.25°C，保留原priority/key排序及其他场模式。
+自然读取只在命中且需要时发生，复用精确同biome Brick按Y层计算；未加载的必要邻区不会
+被强制加载，也不拿Page中心值替代。能量塔显示与物理runtime的可用性独立。
+
+客户端仍用单张`GL_R16I 144³`最终显示纹理、一个direct mirror和部分Page上传scratch。
+稳定窗口每40 ticks错峰请求；无场窗口按材料epoch增量，场窗口重算上次/当前场Page并集，
+使关闭或缩小范围后恢复材料/蓝底。材料presence不会在客户端直接擦掉场热色。
+并发发布导致Page/slot/cursor不一致时，整份读取最多重试两次；仍未读到一致cut则不发送响应，
+客户端保留已提交的显示，下一次按原节奏请求，不把读竞争编码成材料删除。
+全局物理cut稳定invalid或超过40 ticks时
+返回field-only full，恢复后full重建。同一不可读状态可以继续delta。只有LAST才提交
+origin、epoch、generation与两个Page位图并上传。详见[网络合同](data-lifecycle-and-integration.md#network-and-consumers)。
+
+`FHClientEvents.onRenderSurfaceInfrared`在`AFTER_LEVEL`直接混合到主颜色附件。
+`InfraredChunkRenderer`继承Embeddium原地形renderer，沿用原网格、可见性、排序和multiDraw。
+`InfraredBlockScopeMixin`在实际`BlockRenderer.renderModel`调用期间设置`BlockOwnerScope`，
+普通/Forge fallback/FRAPI模型产生的顶点由同一encoder携带真实源方块归属。
+不再从像素深度、表面法线、整数面或相邻温度猜方块，跨块伸出的普通模型也使用源方块温度。
+
+`OwnedChunkVertexType.COMPACT`仍为20 bytes/vertex：原前16 bytes不动，block/sky light
+各占byte 16/17，独立`UNSIGNED_SHORT`归属属性占18..19。高精度型保留原28 bytes，
+尾部增加4 bytes，总32 bytes。归属为`0x1000 | x | (z << 4) | (y << 8)`，其中xyz
+是0..15的Section局部坐标；0表示没有模型归属。原格式常量与普通shader不改。
+有4个生产Mixin桥接：renderer创建、GPU arena高精度步长、自有属性绑定、模型归属scope。
+
+开启期间，SOLID/CUTOUT的同一次地形draw额外写屏幕尺寸`R16I`；原材质alpha discard和
+深度测试同时约束颜色与温度，顶点shader查询144³纹理后用`flat int`传递温度。
+`InfraredSurfaceTarget`拥有温度图、地形深度快照和两个FBO，借用主颜色/深度；最终混合FBO只挂颜色，
+采样主深度不会形成读写反馈。每活动帧第一次地形pass清温度为INVALID，后续pass保留已有结果。
+Embeddium在同一solid调用中依次绘制SOLID/CUTOUT；自有renderer在CUTOUT完成后、实体绘制前，
+用`captureTerrainDepth()`复制一次实际深度存储。快照沿用主深度精度；不使用低精度压缩或epsilon。
+最终shader逐像素比较快照与主深度：相同才使用地形热图，较晚的深度写入者不能继承身后的冷热轮廓。
+没有重新绘制地形或实体。
+保留原精度复制经过对比：D24下同次MRT输出的`gl_FragCoord.z`未通过原生深度一致性测试，
+简单量化也不等价，故未替换生产路径。`verifyNativeDepth`另覆盖12,441,600个默认/D24/D32F
+渐变像素，要求全部保持正确地形温度；资格和GPU成本结果见IR plan末尾。
+
+实体等遮挡像素采用环境显示近似：从自己的可见表面位置重建camera-relative坐标，加
+`cameraToTemperatureOrigin`，直接读取既有144³显示纹理。已有能量塔等解析场显示可直接复用；
+没有有效值时仍采用蓝色基底。此路径不查询/同步真实空气温度，不取脚下块，不建立实体体温或逐实体缓存。
+其目的仅是实体融入环境，不能称为实测空气温度或体温；方块本身仍通过精确owner取材料温度。
+不写深度的透明介质/粒子的独立遮挡与热成像尚未实现。
+
+`InfraredRasterValidation`使用实际encoder、属性和捕获shader，覆盖两种顶点格式、D24/D32F、
+平面、完整块、楼梯及cutout，共8,640场景、353,123,074个分类像素，归属错误0，GL error 0。
+此结果验证精确归属，不能代替真实整合包性能与所有特殊模型验收；实际接入进度见
+[实施plan](../../plans/2026-09-13_17-18-00_infrared-exact-surface-capture.md)。
+独立开发客户端已通过两种格式的真实接入、resize、资源重载、缩圈释放及重开；原图与红外图
+37,246个热表面像素对照RGB误差≤1色阶、alpha精确相同。Forge AFTER_LEVEL与地形入口的
+PoseStack不是同一个对象；最终显示使用已捕获camera pose和本帧主FBO/terrain访问标志。
+稳定圈内保留-20..20°C原色标和`mix(originalRGB,heatColor,0.43)`；最终RGB受原图影响，
+不是定量温度图。天空/圈外保留原图，前沿3 blocks保留原扫描动画。
+RGB使用预乘`ONE, ONE_MINUS_SRC_ALPHA`，alpha使用`ZERO, ONE`保留目标alpha。
+混合结束恢复进入前的GL program，保持`ShaderInstance`编号缓存与实际绑定一致；不调用
+只解绑到0的`ShaderProgram.release()`。自有program使用raw GL绑定，因此也用raw GL恢复，
+不让Oculus的绑定缓存跳过恢复。纹理、viewport/scissor及depth/blend状态也恢复。
+删除了旧RGBA8中转图和颜色复制；当前自有图像为2P-byte温度图加原精度深度快照。
+D24/D32F快照通常按4P bytes计，总预算6P bytes（P为屏幕像素数）；比此前未处理实体遮挡的2P多4P。
+快照是GPU→GPU复制，没有CPU整屏读回；实体环境取色每个遮挡像素最多增加一次3D纹理读取。
+关闭并完成缩圈后释放屏幕附件；资源重载重建program，卸载时删除自有资源，不删除借用附件。
+本轮范围是固定Embeddium整合包且不启用光影；特殊BE和实体的独立热状态留待以后。
 Campfire、Generator 和蒸汽喷泉仍由 `PhysicalSourceSpatialIndex` 注册为显式功率 source。
 Generator 另外提供上述解析保底；其物理功率和传播范围不受解析场半径裁剪。
 `ChunkHeatData`、`IHeatArea`、chunk capability、周期 revalidation 和旧失效包均已删除。

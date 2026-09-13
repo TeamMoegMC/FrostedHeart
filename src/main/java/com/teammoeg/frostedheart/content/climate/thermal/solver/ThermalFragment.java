@@ -2,30 +2,34 @@
 package com.teammoeg.frostedheart.content.climate.thermal.solver;
 
 import java.util.Objects;
+import java.util.ArrayList;
+import it.unimi.dsi.fastutil.ints.IntArrayList;
+import it.unimi.dsi.fastutil.doubles.DoubleArrayList;
+import com.teammoeg.frostedheart.content.climate.thermal.mesh.AirRouteValidity;
 
 /** Exact persistent primitive operations owned by one topology Brick. */
 public record ThermalFragment(
         long spatialRank,
         AirPairs airPairs,
         MaterialContributions materialContributions,
-        PhaseContacts phaseContacts,
+        RoutedContacts routedContacts,
         FarBoundaries farBoundaries
 ) {
     public static final ThermalFragment EMPTY = new ThermalFragment(
             0L, AirPairs.EMPTY, MaterialContributions.EMPTY,
-            PhaseContacts.EMPTY, FarBoundaries.EMPTY);
+            RoutedContacts.EMPTY, FarBoundaries.EMPTY);
 
     public ThermalFragment {
         Objects.requireNonNull(airPairs, "airPairs");
         Objects.requireNonNull(materialContributions, "materialContributions");
-        Objects.requireNonNull(phaseContacts, "phaseContacts");
+        Objects.requireNonNull(routedContacts, "routedContacts");
         Objects.requireNonNull(farBoundaries, "farBoundaries");
     }
 
     public boolean isEmpty() {
         return airPairs.size() == 0
                 && materialContributions.size() == 0
-                && phaseContacts.size() == 0
+                && routedContacts.size() == 0
                 && farBoundaries.size() == 0;
     }
 
@@ -69,6 +73,32 @@ public record ThermalFragment(
         public double secondCenterY(int index) { return secondCenterY[index]; }
     }
 
+    /** Indirect contacts retain the component that made their route possible. */
+    public record RoutedContacts(int[] first, int[] second, double[] conductance, AirRouteValidity[] routes) {
+        public static final RoutedContacts EMPTY = new RoutedContacts(new int[0], new int[0], new double[0], new AirRouteValidity[0]);
+        public int size() { return first.length; }
+        public int first(int index) { return first[index]; }
+        public int second(int index) { return second[index]; }
+        public double conductance(int index) { return conductance[index]; }
+        public boolean active(int index) { return routes[index].activeForSolve(); }
+
+        public static final class Builder {
+            private final IntArrayList first = new IntArrayList();
+            private final IntArrayList second = new IntArrayList();
+            private final DoubleArrayList conductance = new DoubleArrayList();
+            private final ArrayList<AirRouteValidity> routes = new ArrayList<>();
+
+            public void clear() { first.clear(); second.clear(); conductance.clear(); routes.clear(); }
+            public void add(int a, int b, double g, AirRouteValidity route) {
+                first.add(Math.min(a, b)); second.add(Math.max(a, b)); conductance.add(g); routes.add(route);
+            }
+            public RoutedContacts build() {
+                return first.isEmpty() ? EMPTY : new RoutedContacts(first.toIntArray(), second.toIntArray(),
+                        conductance.toDoubleArray(), routes.toArray(AirRouteValidity[]::new));
+            }
+        }
+    }
+
     /** Raw material contributions used only for local edge aggregation. */
     public static final class MaterialContributions {
         public static final MaterialContributions EMPTY =
@@ -110,34 +140,7 @@ public record ThermalFragment(
         }
     }
 
-    public static final class PhaseContacts {
-        public static final PhaseContacts EMPTY = new PhaseContacts(
-                new int[0], new int[0], new double[0]);
 
-        private final int[] air;
-        private final int[] reservoir;
-        private final double[] conductance;
-
-        public PhaseContacts(
-                int[] air,
-                int[] reservoir,
-                double[] conductance
-        ) {
-            int size = length(air);
-            if (length(reservoir) != size
-                    || length(conductance) != size) {
-                throw new IllegalArgumentException("phase contact arrays differ");
-            }
-            this.air = air;
-            this.reservoir = reservoir;
-            this.conductance = conductance;
-        }
-
-        public int size() { return air.length; }
-        public int air(int index) { return air[index]; }
-        public int reservoir(int index) { return reservoir[index]; }
-        public double conductance(int index) { return conductance[index]; }
-    }
 
     /** Local exposed Air boundaries with lazy wind-dependent coefficients. */
     public static final class FarBoundaries {

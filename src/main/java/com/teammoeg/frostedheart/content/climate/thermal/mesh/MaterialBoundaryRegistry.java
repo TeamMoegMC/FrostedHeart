@@ -19,67 +19,16 @@ import java.util.Objects;
  * boundary" value carried by geometry-only signatures.
  */
 public final class MaterialBoundaryRegistry {
-    public enum Model {
-        CAPACITIVE_SURFACE,
-        PHASE_RESERVOIR
-    }
-
-    /** Material coefficients; capacity is scaled by exposed whole-block faces. */
-    public record Profile(
-            int id,
-            Model model,
-            double faceConductanceWPerK,
-            double surfaceCapacityJPerK,
-            double transitionTemperatureC,
-            double transitionEnergyJPerUnit
-    ) {
+    /** One material body law; face area affects conductance, never capacity. */
+    public record Profile(int id, double faceConductanceWPerK, MaterialThermalLaw thermalLaw) {
         public Profile {
             requirePositiveId("material profile", id);
-            Objects.requireNonNull(model, "model");
             requirePositiveFinite("faceConductanceWPerK", faceConductanceWPerK);
-            requireNonNegativeFinite("surfaceCapacityJPerK", surfaceCapacityJPerK);
-            requireFinite("transitionTemperatureC", transitionTemperatureC);
-            requireNonNegativeFinite(
-                    "transitionEnergyJPerUnit", transitionEnergyJPerUnit);
-            if (model == Model.CAPACITIVE_SURFACE) {
-                requirePositiveFinite("surfaceCapacityJPerK", surfaceCapacityJPerK);
-                requireZero("transitionEnergyJPerUnit", transitionEnergyJPerUnit);
-            } else {
-                requireZero("surfaceCapacityJPerK", surfaceCapacityJPerK);
-                requirePositiveFinite(
-                        "transitionEnergyJPerUnit", transitionEnergyJPerUnit);
-            }
+            Objects.requireNonNull(thermalLaw, "thermalLaw");
         }
 
-        /** Creates a gameplay surface initialized from its Page's natural air. */
-        public static Profile capacitiveSurfaceAtNaturalTemperature(
-                int id,
-                double faceConductanceWPerK,
-                double surfaceCapacityJPerK
-        ) {
-            return new Profile(
-                    id, Model.CAPACITIVE_SURFACE, faceConductanceWPerK,
-                    surfaceCapacityJPerK, 0.0D, 0.0D);
-        }
-
-        public static Profile phaseReservoir(
-                int id,
-                double faceConductanceWPerK,
-                double transitionTemperatureC,
-                double transitionEnergyJPerUnit
-        ) {
-            return new Profile(
-                    id, Model.PHASE_RESERVOIR, faceConductanceWPerK,
-                    0.0D, transitionTemperatureC, transitionEnergyJPerUnit);
-        }
-
-        public double poleInitialTemperatureC(double pageNaturalTemperatureC) {
-            requireFinite("pageNaturalTemperatureC", pageNaturalTemperatureC);
-            if (model != Model.CAPACITIVE_SURFACE) {
-                throw new IllegalStateException(
-                        "phase reservoirs do not own material-pole temperature");
-            }
-            return pageNaturalTemperatureC;
+        public static Profile body(int id, double faceConductanceWPerK, MaterialThermalLaw law) {
+            return new Profile(id, faceConductanceWPerK, law);
         }
     }
 
@@ -117,23 +66,10 @@ public final class MaterialBoundaryRegistry {
         }
     }
 
-    private static void requireZero(String name, double value) {
-        if (value != 0.0D) {
-            throw new IllegalArgumentException(name + " must be zero for this material model");
-        }
-    }
-
     private static void requirePositiveFinite(String name, double value) {
         requireFinite(name, value);
         if (value <= 0.0D) {
             throw new IllegalArgumentException(name + " must be positive");
-        }
-    }
-
-    private static void requireNonNegativeFinite(String name, double value) {
-        requireFinite(name, value);
-        if (value < 0.0D) {
-            throw new IllegalArgumentException(name + " must be non-negative");
         }
     }
 

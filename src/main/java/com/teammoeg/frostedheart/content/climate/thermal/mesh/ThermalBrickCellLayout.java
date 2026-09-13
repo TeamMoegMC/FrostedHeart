@@ -29,15 +29,6 @@ public final class ThermalBrickCellLayout {
     double[] materialInitialTemperatureC = new double[8];
     int materialCount;
 
-    int[] phaseBrickMinX = new int[4];
-    int[] phaseBrickMinY = new int[4];
-    int[] phaseBrickMinZ = new int[4];
-    int[] phaseProfileId = new int[4];
-    long[] phaseCandidateMask = new long[4];
-    double[] phaseTransitionTemperatureC = new double[4];
-    double[] phaseTransitionEnergyJPerUnit = new double[4];
-    int phaseCount;
-
     public void reset(int minX, int minY, int minZ) {
         if (Math.floorMod(minX, 4) != 0
                 || Math.floorMod(minY, 4) != 0
@@ -50,7 +41,6 @@ public final class ThermalBrickCellLayout {
         airKind = AirKind.NONE;
         mixedGeometry = null;
         materialCount = 0;
-        phaseCount = 0;
     }
 
     public void setRegularAir(double capacityJPerBlockK) {
@@ -106,31 +96,7 @@ public final class ThermalBrickCellLayout {
         materialCount++;
     }
 
-    public void addPhaseReservoir(
-            int brickMinX,
-            int brickMinY,
-            int brickMinZ,
-            int profileId,
-            long candidateMask,
-            double transitionTemperatureC,
-            double transitionEnergyJPerUnit
-    ) {
-        if (profileId <= 0 || candidateMask == 0L
-                || !Double.isFinite(transitionTemperatureC)
-                || !Double.isFinite(transitionEnergyJPerUnit)
-                || transitionEnergyJPerUnit <= 0.0D) {
-            throw new IllegalArgumentException("phase reservoir layout is invalid");
-        }
-        ensurePhaseCapacity(phaseCount + 1);
-        phaseBrickMinX[phaseCount] = brickMinX;
-        phaseBrickMinY[phaseCount] = brickMinY;
-        phaseBrickMinZ[phaseCount] = brickMinZ;
-        phaseProfileId[phaseCount] = profileId;
-        phaseCandidateMask[phaseCount] = candidateMask;
-        phaseTransitionTemperatureC[phaseCount] = transitionTemperatureC;
-        phaseTransitionEnergyJPerUnit[phaseCount] = transitionEnergyJPerUnit;
-        phaseCount++;
-    }
+
 
     void requireReady() {
         if (airKind == AirKind.MIXED && mixedGeometry == null) {
@@ -151,21 +117,7 @@ public final class ThermalBrickCellLayout {
                 materialInitialTemperatureC, capacity);
     }
 
-    private void ensurePhaseCapacity(int required) {
-        if (required <= phaseBrickMinX.length) {
-            return;
-        }
-        int capacity = grow(phaseBrickMinX.length, required);
-        phaseBrickMinX = Arrays.copyOf(phaseBrickMinX, capacity);
-        phaseBrickMinY = Arrays.copyOf(phaseBrickMinY, capacity);
-        phaseBrickMinZ = Arrays.copyOf(phaseBrickMinZ, capacity);
-        phaseProfileId = Arrays.copyOf(phaseProfileId, capacity);
-        phaseCandidateMask = Arrays.copyOf(phaseCandidateMask, capacity);
-        phaseTransitionTemperatureC = Arrays.copyOf(
-                phaseTransitionTemperatureC, capacity);
-        phaseTransitionEnergyJPerUnit = Arrays.copyOf(
-                phaseTransitionEnergyJPerUnit, capacity);
-    }
+
 
     private static int grow(int current, int required) {
         int capacity = Math.max(1, current);

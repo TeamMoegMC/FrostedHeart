@@ -27,6 +27,10 @@ final class WorkerBrickTopology {
         return new WorkerBrickTopology(span, coverageSlot, coverageGeneration, blockLayout,
                 transportNodeCount, phaseCandidates, phaseSlots, cellsResolved, resolved);
     }
+    WorkerBrickTopology withLayout(BlockBrickLayout layout) {
+        return new WorkerBrickTopology(span, coverageSlot, coverageGeneration, layout, transportNodeCount,
+                phaseCandidates, phaseSlots, cellsResolved, resolved);
+    }
     int nodeAt(int block) { return blockLayout == null ? (coverageSlot < 0 ? -1 : 0) : blockLayout.nodeAt(block); }
     int slotAt(int block) { int n=nodeAt(block); return n < 0 ? -1 : span.firstSlot()+n; }
     int transportSlot(int block) { int n=nodeAt(block); return n < 0 || n >= transportNodeCount ? -1 : span.firstSlot()+n; }

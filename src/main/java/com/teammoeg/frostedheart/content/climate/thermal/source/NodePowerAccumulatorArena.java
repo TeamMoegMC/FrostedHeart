@@ -8,6 +8,10 @@ import java.util.Arrays;
 
 /** Recyclable primitive node-power ledger with O(active nodes) delivery. */
 public final class NodePowerAccumulatorArena {
+    private double deliveredEnergyJ;
+    private double unacceptedEnergyJ;
+    public double deliveredEnergyJ() { return deliveredEnergyJ; }
+    public double unacceptedEnergyJ() { return unacceptedEnergyJ; }
     private static final int NO_ACCUMULATOR = -1;
 
     private static final double TICKS_PER_SECOND = 20.0D;
@@ -167,8 +171,10 @@ public final class NodePowerAccumulatorArena {
             settleTo(slot, targetTick);
             double energyJ = pendingEnergyJ[slot];
             if (energyJ != 0.0D) {
-                destination.addNodeEnthalpyJ(
+                double delivered = destination.addNodeEnthalpyJ(
                         nodeIds[slot], lifecycleGenerations[slot], energyJ);
+                deliveredEnergyJ += delivered;
+                unacceptedEnergyJ += energyJ - delivered;
                 pendingEnergyJ[slot] = 0.0D;
                 pendingCompensationJ[slot] = 0.0D;
             }

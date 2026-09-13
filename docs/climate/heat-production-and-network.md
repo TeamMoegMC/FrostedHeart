@@ -1,7 +1,7 @@
 # Heat Production And Network
 
-- Status: `Current`
-- Last verified: `2026-09-09`
+- Status: `Transitional; material-body replacement is under integration validation`
+- Last verified: `2026-09-13`
 - Scope: physical Minecraft sources, worker energy integration, material/phase sinks, and the separate heat-network model
 - Primary code anchors: `MinecraftPhysicalSourceProfile`, `PhysicalSourceSpatialIndex`, `ThermalSourceBatch`, `ThermalSourceLedger`, `NodePowerAccumulatorArena`, `HeatEndpoint`, `HeatNetwork`
 
@@ -90,31 +90,43 @@ validated against the worker cursor.
 
 ## Materials And Phase
 
-Material surface poles and phase reservoirs are compiled only for affected
-Bricks. `MaterialEdgeCompiler` groups raw material contributions by packed cell
-edge and creates one deterministic execution entry for each unique edge. A
-phase reservoir stores latent energy and candidate microcells; a phase request
-is ACKed by the main thread only when Page lifecycle, profile, request sequence,
-and current world state still match.
+Each resident material block owns one enthalpy H in `ThermalCellArena` and a
+shared `MaterialThermalLaw`; temperature comes from that law. A partially filled
+block owns no gap-Air temperature. Actual Air regions and material bodies use
+the same arena and conservative pair exchange. `AirRouteCompiler` compiles
+ventilated geometry into region references and finite-conductance connections.
+An ordinary Brick has at most 64 Air-region plus material nodes; full Air uses one.
 
-The transition temperature is a fixed exchange boundary, not the reservoir's
-physical temperature. Hotter Air stores energy; colder Air receives only the
-reservoir's unreserved energy back. Consequently an empty reservoir does not
-retain thermal Brick residency, while an outstanding request keeps its reserved
-energy until the matching ACK. The normal phase-contact sleep residual covers
-both active transfer directions without a second traversal.
+`MaterialEdgeCompiler` aggregates each undirected contact once. Ordinary zero-offset
+fixed-capacity laws retain the compiled one-second exchange kernel; nonzero-offset
+or phase laws use `MaterialEnthalpyExchange` over bounded sensible/latent segments.
+The phase plateau is part of H-to-temperature conversion, not a separate reservoir.
+`PhaseTransitionRuntime` owns only completed-transition requests. Main-thread ACK
+requires the matching block, Page lifecycle, profile, branch and request sequence;
+an applied ACK does not subtract latent energy again.
 
 Phase contact conductance and base energy are configured by
 `FHConfig.COMMON.THERMAL_RUNTIME.phaseFaceConductanceWPerK` and
 `phaseBaseEnergyJPerHeatCapacity`. Defaults are `5 W/K` per full exposed block
 face and `38,000 J` multiplied by the recipe `heat_capacity`.
 
-New material poles initialize from the Page's captured natural temperature.
-During dormant admission they instead use the stored capacity-weighted Air mean
-for that Brick. Partial phase-reservoir energy is intentionally reset. Air and
-material transfer uses the fixed one-second coefficient compiled during topology
-preparation; phase and buoyant paths use the generic inverse-capacity kernel.
+New material bodies initialize from the Page's captured natural temperature.
+Capacity is fixed for a given material state: the initial ordinary-body tuning
+uses six times the former per-face capacity (stone: 5400 J/K; wood: 2700 J/K).
+Exposure changes connections, not capacity. `MaterialSectionState` stores exact
+body H, phase branch and stable BlockState identity separately from compressed Air
+history. Checkpoint format 3 has no format-2 migration reader.
 
+`TopologyView.materialContactAllowed` limits material conduction to a geometric
+surface and its second material layer. A second-layer block selects one surface
+owner; second-to-second connections and connections to a different owner are
+omitted. A resident third layer cannot join that chain merely because it has H.
+This is an explicit gameplay range limit, not a physical claim about real walls.
+
+`MinecraftMaterialLawCompiler` preserves the configured ice-stage chain and its
+9 C heating thresholds; source water freezes toward thin ice at -5 C. Other
+unambiguous reciprocal phase pairs use the same law. Unsupported gameplay
+transformations are not silently interpreted as physical latent heat.
 ## Generator Gameplay Floor
 
 Generator also publishes a regional analytic floor from authoritative team data,
@@ -126,19 +138,27 @@ after active power stops and while the source chunk is unloaded. Indoor heating
 becomes visible above the floor only when the actual source-connected Air is
 hotter than that floor. See [temperature composition](world-climate-and-temperature.md#7-analytic-control-fields).
 
-Current geometry support is a material limitation: `MinecraftThermalProfiles`
-assigns dynamic-shape blocks an unresolved signature, and `BrickTopologyCompiler`
-leaves an entire Brick unresolved when any member lacks geometry. A generator
-exhaust sharing its Brick with dynamic tower blocks can therefore have a valid
-source record but no physical Air publication. The analytic floor still works.
-Resolved-exhaust enclosure validation does not establish physical heating for
-every tower placement; dynamic-shape geometry support remains separate work.
-
-Explicit analytic bounds can authorize legacy gameplay melting/evaporation even
+Geometry uses whole-block ventilation: static full collision blocks are V0,
+ordinary Air is V100, partial/dynamic/unsupported shapes normally use V75, and
+registered generator T1/T2 blocks are V0. Unresolved capture data remains distinct
+from that supported fallback. Material capacity and phase capability are independent
+of ventilation. Fluids and waterlogged bodies retain material laws; no-matter
+states such as fire do not acquire fictitious solid heat capacity.
+Explicit analytic bounds can authorize gameplay melting/evaporation even
 inside physical phase ownership when the bound itself reaches the candidate's
-threshold. This is a non-conservative gameplay transition, not solver heating;
-delta-only fields do not bypass latent energy. Existing mutation and current
-block/profile checks invalidate obsolete physical requests afterward.
+threshold. Analytic fields are an authoritative gameplay mechanism alongside
+finite-power sources. For a physically owned body, `PhaseIntent` advances its H
+to the required transition boundary and records the gameplay energy input before
+the world mutation request. `ADD_DELTA` alone has no guaranteed temperature floor.
+This distinction retains the existing field combination rules.
+
+`MinecraftPhaseController.applyGameplayTransition` marks gameplay material
+conversions that do not use a physical phase edge. They preserve the previous
+material temperature under the target law. `BrickMigrationKernel` records the
+resulting H difference only after topology commit; normal physical phase ACK
+preserves H exactly. `ThermalCellArena.externalMaterialEnergyJ()` also includes
+modeled material replacement and effective-capacity changes, separately from
+the source ledger's finite-power energy balance.
 
 ## Heat Network
 
@@ -164,7 +184,8 @@ advanced; town/offline simulation is not a physical-source publisher.
 
 Campfires are discovered through the runtime's shared startup/load/retry queue
 after bootstrap by chunk load, first ignition, or the one-time loaded-source check
-at server start or after reloaded server tags bind. The ignition callback reuses the LevelChunk mixin;
+at server start or after reloaded server tags bind. Ignition reuses the existing
+CampfireBlock mixin's `onPlace`, including same-block LIT transitions;
 there is no campfire tick poll. Subsequent changes use the source queue
 and final block-state mutation drain. Startup also attaches already-loaded
 sections, so later ignition is observed even in an initially source-free section.

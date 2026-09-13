@@ -2,6 +2,7 @@
 package com.teammoeg.frostedheart.content.climate.thermal;
 
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.PageSignatures;
+import com.teammoeg.frostedheart.content.climate.thermal.mesh.ArenaSpan;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.ThermalBrickCellLayout;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.ThermalCellArena;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.ThermalPageHandle;
@@ -18,7 +19,7 @@ public final class ThermalTestFixtures {
     private ThermalTestFixtures() {
     }
 
-    public static ThermalCellArena.BrickAllocation regularBrick(
+    public static ArenaSpan regularBrick(
             ThermalCellArena arena,
             int pageSlot,
             int generation,
@@ -32,50 +33,14 @@ public final class ThermalTestFixtures {
         ThermalBrickCellLayout layout = new ThermalBrickCellLayout();
         layout.reset(minX, minY, minZ);
         layout.setRegularAir(totalCapacityJPerK / 64.0D);
-        ThermalCellArena.BrickAllocation allocation = arena.stageBrickCells(
+        ArenaSpan allocation = arena.stageBrickCells(
                 pageSlot,
                 generation,
                 layout,
                 initialTemperatureC,
                 referenceTemperatureC,
                 TEST_ARENA_LIMIT);
-        arena.commitStagedCells(allocation.cellSpan());
-        return allocation;
-    }
-
-    public static ThermalCellArena.BrickAllocation phaseBrick(
-            ThermalCellArena arena,
-            int pageSlot,
-            int generation,
-            int minX,
-            int minY,
-            int minZ,
-            double airCapacityJPerK,
-            int phaseProfileId,
-            long candidateMask,
-            double transitionTemperatureC,
-            double transitionEnergyJ,
-            double referenceTemperatureC
-    ) {
-        ThermalBrickCellLayout layout = new ThermalBrickCellLayout();
-        layout.reset(minX, minY, minZ);
-        layout.setRegularAir(airCapacityJPerK / 64.0D);
-        layout.addPhaseReservoir(
-                minX,
-                minY,
-                minZ,
-                phaseProfileId,
-                candidateMask,
-                transitionTemperatureC,
-                transitionEnergyJ);
-        ThermalCellArena.BrickAllocation allocation = arena.stageBrickCells(
-                pageSlot,
-                generation,
-                layout,
-                referenceTemperatureC,
-                referenceTemperatureC,
-                TEST_ARENA_LIMIT);
-        arena.commitStagedCells(allocation.cellSpan());
+        arena.commitStagedCells(allocation);
         return allocation;
     }
 

@@ -29,6 +29,7 @@ import com.teammoeg.frostedheart.content.climate.data.PlantTempData;
 import com.teammoeg.frostedheart.content.climate.data.StateTransitionData;
 import com.teammoeg.frostedheart.content.climate.gamedata.climate.WorldClimate;
 import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.MinecraftThermalInput;
+import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.input.MinecraftPhaseController;
 import com.teammoeg.frostedheart.content.climate.thermal.field.ThermalAnalyticFieldIndex;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import net.minecraft.core.*;
@@ -283,9 +284,7 @@ public abstract class ServerLevelMixin_TemperatureUpdate
             float climateBase
     )
     {
-
-
-
+        if (MinecraftThermalInput.ownsMaterialTransitions(level, pos, level.getBlockState(pos))) return false;
         if (pos.getY() >= level.getMinBuildHeight()
                 && pos.getY() < level.getMaxBuildHeight()
                 && MinecraftThermalInput.gameplayCropEnvironment(
@@ -313,7 +312,7 @@ public abstract class ServerLevelMixin_TemperatureUpdate
             {
                 if (isAtEdge)
                 {
-                    level.setBlockAndUpdate(pos, FHBlocks.THIN_ICE_BLOCK.get().defaultBlockState());
+                    MinecraftPhaseController.applyGameplayTransition(level, pos, FHBlocks.THIN_ICE_BLOCK.get().defaultBlockState());
                     return true;
                 }
             }
@@ -348,7 +347,7 @@ public abstract class ServerLevelMixin_TemperatureUpdate
 
                     if (targetState != null)
                     {
-                        level.setBlockAndUpdate(pos, targetState);
+                        MinecraftPhaseController.applyGameplayTransition(level, pos, targetState);
                         return true;
                     }
                 }
@@ -430,6 +429,12 @@ public abstract class ServerLevelMixin_TemperatureUpdate
         BlockState targetBlock = currentState;   // Default to current block
         boolean thermalOwnsHeating = MinecraftThermalInput.ownsGameplayHeatingTransition(
                 level, pos, currentState, std);
+        if (thermalOwnsHeating) {
+            var heating = std.heatingTransition(currentState);
+            boolean forcedHeating = hasAnalyticField && heating != null && analyticFloor >= heating.temperatureC();
+            if (!forcedHeating || MinecraftThermalInput.requestGameplayPhase(level, pos, currentState,
+                    com.teammoeg.frostedheart.content.climate.thermal.mesh.MaterialThermalLaw.HEATING)) return false;
+        }
 
         switch (sourceState)
         {
@@ -517,8 +522,7 @@ public abstract class ServerLevelMixin_TemperatureUpdate
         frostedHeart$addTransitionEffects(level, pos, sourceState, targetState, currentState, targetBlock);
 
         // Update the block state
-        level.setBlockAndUpdate(pos, targetBlock);
-        return true;
+        return MinecraftPhaseController.applyGameplayTransition(level, pos, targetBlock);
     }
 
     /**

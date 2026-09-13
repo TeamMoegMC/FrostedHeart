@@ -14,13 +14,13 @@ class ThermalCellArenaTest {
     @Test
     void regularBrickStoresHCapacityAndInverseCapacity() {
         ThermalCellArena arena = new ThermalCellArena(1);
-        ThermalCellArena.BrickAllocation allocation =
+        ArenaSpan allocation =
                 ThermalTestFixtures.regularBrick(
                         arena, 7, 3, 0, 0, 0,
                         640.0D, -10.0D, 0.0D);
-        int slot = allocation.cellSpan().firstSlot();
+        int slot = allocation.firstSlot();
 
-        assertEquals(1, allocation.cellSpan().count());
+        assertEquals(1, allocation.count());
         assertEquals(1, arena.liveCellCount());
         assertEquals(3, arena.lifecycleGeneration(slot));
         assertEquals(640.0D, arena.capacityJPerK(slot), EPSILON);
@@ -39,7 +39,7 @@ class ThermalCellArenaTest {
         ThermalCellArena arena = new ThermalCellArena(1);
         int slot = ThermalTestFixtures.regularBrick(
                 arena, 0, 2, 0, 0, 0,
-                100.0D, 0.0D, 0.0D).cellSpan().firstSlot();
+                100.0D, 0.0D, 0.0D).firstSlot();
         arena.setEnthalpyJ(slot, 10.0D);
 
         assertThrows(IllegalStateException.class,
@@ -122,15 +122,15 @@ class ThermalCellArenaTest {
             int generation,
             int count
     ) {
-        ThermalCellArena.BrickAllocation allocation = arena.stageBrickCells(
+        ArenaSpan allocation = arena.stageBrickCells(
                 pageSlot,
                 generation,
                 regularLayout(pageSlot * 4, 0, 0, count),
                 0.0D,
                 0.0D,
                 1_000);
-        arena.commitStagedCells(allocation.cellSpan());
-        return allocation.cellSpan();
+        arena.commitStagedCells(allocation);
+        return allocation;
     }
 
     private static ThermalBrickCellLayout regularLayout(

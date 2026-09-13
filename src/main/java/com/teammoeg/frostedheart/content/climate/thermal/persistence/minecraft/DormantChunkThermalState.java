@@ -2,6 +2,7 @@
 package com.teammoeg.frostedheart.content.climate.thermal.persistence.minecraft;
 
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.PagePublication;
+import com.teammoeg.frostedheart.content.climate.thermal.mesh.MaterialThermalLaw;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.ThermalPageHandle;
 import com.teammoeg.frostedheart.content.climate.thermal.query.QueryPublication;
 import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.message.ThermalInputBatch;
@@ -15,28 +16,30 @@ import net.minecraft.nbt.Tag;
 import net.minecraft.server.level.ServerLevel;
 
 import java.util.Arrays;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.LongPredicate;
 
 /**
  * LevelChunk 自有的、有界休眠温度 checkpoint。
  *
- * <p>只保存重新进入时需要的 Brick/Air component 温度残差与一次性 source
- * 支持位；不保存 topology、arena slot、source 历史或离线 solver 状态。</p>
+ * <p>保存 Air 温度残差、一次性 source 支持位，以及材料本体 H/分支/状态身份；
+ * 不保存 topology、arena slot、source 历史或离线 solver 状态。</p>
  */
 public final class DormantChunkThermalState {
+    private static final java.util.concurrent.atomic.AtomicLong MATERIAL_REVISION = new java.util.concurrent.atomic.AtomicLong();
+    public static long nextMaterialRevision() { return MATERIAL_REVISION.incrementAndGet(); }
+    public static long currentMaterialRevision() { return MATERIAL_REVISION.get(); }
     private static final String ROOT_TAG = "FrostedHeartThermal";
-    private static final int FORMAT_VERSION = 2;
+    private static final int FORMAT_VERSION = 3;
     private static final int BRICKS = ThermalPageHandle.BASE_BRICK_COUNT;
     private static final int MAX_VALUES = 320;
     private static final int RESIDUAL_SCALE = 16;
     private static final int PRUNE_RESIDUAL = 4;
     private static final long CACHE_INTERVAL_TICKS = 20L;
-    private static final AtomicLong INFRARED_REVISIONS = new AtomicLong();
 
     private final int minimumSectionY;
     private final SectionEntry[] entries;
-    private InfraredSection[] infraredSections;
+    private final MaterialSectionState.Editor[] materialEntries;
+    private long[] materialRevisions;
     private long[] cachedDecayTicks;
     private double[] cachedDecayFactors;
     private double[] cachedNaturalTemperatures;
@@ -47,6 +50,7 @@ public final class DormantChunkThermalState {
         }
         this.minimumSectionY = minimumSectionY;
         entries = new SectionEntry[sectionCount];
+        materialEntries = new MaterialSectionState.Editor[sectionCount];
     }
 
     public static DormantChunkThermalState decode(
@@ -75,6 +79,9 @@ public final class DormantChunkThermalState {
             if (entry != null) {
                 result.entries[index] = entry;
             }
+            if (section.contains("materials", Tag.TAG_COMPOUND)) {
+                result.replaceMaterials(sectionY, MaterialSectionState.decode(section.getCompound("materials")));
+            }
         }
         return result.isEmpty() ? null : result;
     }
@@ -89,8 +96,12 @@ public final class DormantChunkThermalState {
         ListTag sections = new ListTag();
         for (int index = 0; index < entries.length; index++) {
             SectionEntry entry = entries[index];
-            if (entry != null) {
-                sections.add(entry.encode(minimumSectionY + index));
+            MaterialSectionState material = materials(minimumSectionY + index);
+            if (entry != null || material != null) {
+                CompoundTag section = entry == null ? new CompoundTag() : entry.encode(minimumSectionY + index);
+                section.putInt("y", minimumSectionY + index);
+                if (material != null) section.put("materials", material.encode());
+                sections.add(section);
             }
         }
         root.put("sections", sections);
@@ -106,6 +117,67 @@ public final class DormantChunkThermalState {
         entries[index] = entry;
         clearDecayCache(index);
         return true;
+    }
+
+    public MaterialSectionState materials(int sectionY) {
+        int index = sectionY - minimumSectionY;
+        return index < 0 || index >= materialEntries.length || materialEntries[index] == null
+                ? null : materialEntries[index].snapshot();
+    }
+
+    /** Mutation-path lookup does not publish a snapshot or trigger its next copy-on-write. */
+    public boolean hasMaterials(int sectionY) {
+        int index = sectionY - minimumSectionY;
+        return index >= 0 && index < materialEntries.length && materialEntries[index] != null;
+    }
+
+    public boolean hasMaterial(int sectionY, int position) {
+        int index = sectionY - minimumSectionY;
+        return index >= 0 && index < materialEntries.length && materialEntries[index] != null
+                && materialEntries[index].find(position) >= 0;
+    }
+
+    /** A scalar thermometer read shares no arrays with its caller. */
+    public boolean readMaterial(int sectionY, int position, int stateId, MaterialThermalLaw law,
+            QueryPublication.MutableMaterialSample out) {
+        int index = sectionY - minimumSectionY;
+        return index >= 0 && index < materialEntries.length && materialEntries[index] != null
+                && materialEntries[index].read(position, stateId, law, out);
+    }
+
+    public boolean applyMaterialChange(int sectionY, int position, int stateId, MaterialThermalLaw law,
+            byte cause, double naturalC) {
+        int index = index(sectionY);
+        var editor = materialEntries[index];
+        if (editor == null || !editor.applyChange(position, stateId, law, cause, naturalC)) return false;
+        if (editor.isEmpty()) materialEntries[index] = null;
+        markMaterialChanged(index);
+        return true;
+    }
+
+    public boolean mergeMaterials(int sectionY, MaterialSectionState current, long sampledBricks) {
+        MaterialSectionState previous = materials(sectionY);
+        MaterialSectionState next = MaterialSectionState.merge(previous, current, sampledBricks);
+        if (MaterialSectionState.contentEquals(previous, next)) return false;
+        replaceMaterials(sectionY, next);
+        return true;
+    }
+
+    public void replaceMaterials(int sectionY, MaterialSectionState state) {
+        int index = index(sectionY);
+        if (MaterialSectionState.contentEquals(materials(sectionY), state)) return;
+        materialEntries[index] = state == null ? null : new MaterialSectionState.Editor(state);
+        markMaterialChanged(index);
+    }
+
+    private void markMaterialChanged(int index) {
+        if (materialRevisions == null) materialRevisions = new long[materialEntries.length];
+        materialRevisions[index] = nextMaterialRevision();
+    }
+
+    public long materialRevision(int sectionY) {
+        int index = sectionY - minimumSectionY;
+        return materialRevisions == null || index < 0 || index >= materialRevisions.length ? 0 : materialRevisions[index];
     }
 
     public boolean activateLoaded(long gameTick, double halfLifeSeconds) {
@@ -186,81 +258,6 @@ public final class DormantChunkThermalState {
                 ? 0L : entries[index].brickMask;
     }
 
-    /** Main-thread, read-only cached view; populated only by an infrared request. */
-    public InfraredSection infraredSection(
-            int sectionY,
-            long gameTick,
-            double halfLifeSeconds,
-            ServerLevel level,
-            int sectionX,
-            int sectionZ,
-            BlockPos.MutableBlockPos naturalPosition
-    ) {
-        int index = sectionY - minimumSectionY;
-        if (index < 0 || index >= entries.length
-                || entries[index] == null) {
-            return null;
-        }
-        if (infraredSections == null) {
-            infraredSections = new InfraredSection[entries.length];
-        }
-        InfraredSection snapshot = infraredSections[index];
-        if (snapshot == null) {
-            snapshot = new InfraredSection();
-            infraredSections[index] = snapshot;
-        }
-        long boundary = Math.floorDiv(gameTick, CACHE_INTERVAL_TICKS)
-                * CACHE_INTERVAL_TICKS;
-        if (snapshot.sampleTick == boundary) {
-            return snapshot;
-        }
-        SectionEntry entry = entries[index];
-        double factor = cachedDecayFactor(
-                index, entry, gameTick, halfLifeSeconds, level,
-                sectionX, sectionY, sectionZ, naturalPosition);
-        long changed = snapshot.brickMask ^ entry.brickMask;
-        long removed = snapshot.brickMask & ~entry.brickMask;
-        while (removed != 0L) {
-            snapshot.temperatures[Long.numberOfTrailingZeros(removed)] = Short.MIN_VALUE;
-            removed &= removed - 1L;
-        }
-        long remaining = entry.brickMask;
-        while (remaining != 0L) {
-            int brick = Long.numberOfTrailingZeros(remaining);
-            long value = Math.round(entry.meanTemperatureC(
-                    brick, cachedNaturalTemperatures[index], factor) * 4.0D);
-            short quantized = (short) Math.max(-32767L, Math.min(32767L, value));
-            if (snapshot.temperatures[brick] != quantized) {
-                changed |= 1L << brick;
-            }
-            snapshot.temperatures[brick] = quantized;
-            remaining &= remaining - 1L;
-        }
-        snapshot.brickMask = entry.brickMask;
-        snapshot.sampleTick = boundary;
-        if (snapshot.revision == 0L || changed != 0L) {
-            snapshot.previousRevision = snapshot.revision;
-            snapshot.changedBrickMask = changed;
-            snapshot.revision = INFRARED_REVISIONS.incrementAndGet();
-        }
-        return snapshot;
-    }
-
-    /** Shared section-level change record, never serialized or updated by a tick sweep. */
-    public static final class InfraredSection {
-        private final short[] temperatures = new short[BRICKS];
-        private long sampleTick = Long.MIN_VALUE;
-        private long revision;
-        private long previousRevision;
-        private long changedBrickMask;
-        private long brickMask;
-
-        public long revision() { return revision; }
-        public long previousRevision() { return previousRevision; }
-        public long changedBrickMask() { return changedBrickMask; }
-        public short[] temperatures() { return temperatures; }
-    }
-
     public double sample(
             int sectionY,
             int brick,
@@ -304,6 +301,9 @@ public final class DormantChunkThermalState {
     }
 
     public boolean isEmpty() {
+        for (MaterialSectionState.Editor material : materialEntries) {
+            if (material != null && !material.isEmpty()) return false;
+        }
         for (SectionEntry entry : entries) {
             if (entry != null) {
                 return false;
@@ -349,13 +349,7 @@ public final class DormantChunkThermalState {
         if (cachedDecayTicks != null) {
             cachedDecayTicks[index] = Long.MIN_VALUE;
         }
-        if (infraredSections != null && infraredSections[index] != null) {
-            if (entries[index] == null) {
-                infraredSections[index] = null;
-            } else {
-                infraredSections[index].sampleTick = Long.MIN_VALUE;
-            }
-        }
+
     }
 
     private int index(int sectionY) {
@@ -386,11 +380,11 @@ public final class DormantChunkThermalState {
             var payload=publication.brick(brick);
             int n=payload.transportNodeCount();
             scratch.counts[brick]=0;
-            if(payload.coverageSlot()<0 || n==0) continue;
+            if(payload.firstSlot()<0 || n==0) continue;
             double sum=0; int blocks=0; boolean different=false, retained=false;
             short firstResidual=0;
             for(int node=0;node<n;node++) {
-                if(!queries.tryRead(payload.coverageSlot()+node,payload.arenaGeneration(),publication.topologyGeneration(),sample))
+                if(!queries.tryRead(payload.firstSlot()+node,payload.arenaGeneration(),publication.topologyGeneration(),sample))
                     return CaptureResult.FAILED;
                 if(sampleTick<0) sampleTick=sample.sampleTick();
                 else if(sampleTick!=sample.sampleTick()) return CaptureResult.FAILED;

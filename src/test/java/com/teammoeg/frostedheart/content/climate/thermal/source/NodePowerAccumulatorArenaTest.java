@@ -17,7 +17,7 @@ class NodePowerAccumulatorArenaTest {
         ThermalCellArena cells = new ThermalCellArena(1);
         int node = ThermalTestFixtures.regularBrick(
                 cells, 0, 3, 0, 0, 0,
-                100.0D, 0.0D, 0.0D).cellSpan().firstSlot();
+                100.0D, 0.0D, 0.0D).firstSlot();
         NodePowerAccumulatorArena accumulators =
                 new NodePowerAccumulatorArena(1, 8);
         accumulators.retainBinding(node, 3, 0L);
@@ -53,7 +53,7 @@ class NodePowerAccumulatorArenaTest {
         ThermalCellArena cells = new ThermalCellArena(1);
         int node = ThermalTestFixtures.regularBrick(
                 cells, 0, 1, 0, 0, 0,
-                100.0D, 0.0D, 0.0D).cellSpan().firstSlot();
+                100.0D, 0.0D, 0.0D).firstSlot();
         NodePowerAccumulatorArena accumulators =
                 new NodePowerAccumulatorArena(1, 8);
         int slot = accumulators.ensureNode(node, 1, 0L);

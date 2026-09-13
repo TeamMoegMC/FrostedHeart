@@ -94,6 +94,10 @@
     "tetra.MixinToolbeltInventory"
   ],
   "client": [
+    "client.embeddium.InfraredRendererFactoryMixin",
+    "client.embeddium.InfraredArenaFormatMixin",
+    "client.embeddium.InfraredVertexBindingsMixin",
+    "client.embeddium.InfraredBlockScopeMixin",
     "client.BossHealthOverlayAccess",
     "client.ChatScreenMixin",
     "client.ClientPacketListenerMixin",

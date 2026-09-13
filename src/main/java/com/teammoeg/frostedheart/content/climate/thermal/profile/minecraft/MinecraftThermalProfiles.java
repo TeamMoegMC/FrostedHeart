@@ -4,6 +4,7 @@ package com.teammoeg.frostedheart.content.climate.thermal.profile.minecraft;
 import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
 import com.teammoeg.frostedheart.content.climate.data.StateTransitionData;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.MaterialBoundaryRegistry;
+import com.teammoeg.frostedheart.content.climate.thermal.mesh.MaterialThermalLaw;
 import com.teammoeg.frostedheart.content.climate.thermal.profile.ResolvedThermalSignature;
 import com.teammoeg.frostedheart.content.climate.thermal.profile.ThermalSignatureTable;
 import com.teammoeg.frostedheart.content.climate.thermal.radiation.minecraft.MinecraftRadiationOcclusion;
@@ -37,6 +38,9 @@ public final class MinecraftThermalProfiles {
             5.670_374_419e-8D;
     private static volatile Snapshot snapshot;
     private static volatile int profileEpoch;
+    private static final double WATER_CAPACITY_J_PER_K = 6_600;
+    // An effective reference amount, not a volume inferred from ventilation.
+    private static final double WATERLOGGED_CAPACITY_J_PER_K = WATER_CAPACITY_J_PER_K / 4;
 
     private MinecraftThermalProfiles() {
     }
@@ -66,12 +70,11 @@ public final class MinecraftThermalProfiles {
         blocks.sort(Comparator.comparing(
                 block -> String.valueOf(
                         ForgeRegistries.BLOCKS.getKey(block))));
-        Map<PhaseKey, Integer> phaseIds = new LinkedHashMap<>();
+        Map<BodyKey, Integer> bodyIds = new LinkedHashMap<>();
         List<MaterialBoundaryRegistry.Profile> profiles =
                 new ArrayList<>();
-        for (GameplayMaterial material : GameplayMaterial.values()) {
-            profiles.add(material.profile());
-        }
+        MinecraftMaterialLawCompiler lawCompiler = new MinecraftMaterialLawCompiler(
+                blocks, MinecraftThermalProfiles::bodyCapacity, phaseBaseEnergyJPerHeatCapacity);
         ThermalSignatureTable.Builder signatures =
                 ThermalSignatureTable.builder();
         MinecraftStateThermalTable.Builder states =
@@ -91,43 +94,29 @@ public final class MinecraftThermalProfiles {
         for (Block block : blocks) {
             for (BlockState state
                     : block.getStateDefinition().getPossibleStates()) {
-                StateTransitionData data = StateTransitionData.getData(state);
-                StateTransitionData.HeatingTransition transition =
-                        data != null && data.willTransit()
-                                && data.heatCapacity() > 0
-                                ? data.heatingTransition(state) : null;
                 int ventilation = StateStaticThermalResolver.ventilation(state);
                 int profileId = 0;
-                if (transition != null) {
-                    double energy = phaseBaseEnergyJPerHeatCapacity
-                            * data.heatCapacity();
-                    PhaseKey key = new PhaseKey(
-                            transition.temperatureC(), energy);
-                    Integer existing = phaseIds.get(key);
+                MaterialThermalLaw law = lawCompiler.law(state);
+                if (law != null) {
+                    boolean phase = law.heating() != null || law.cooling() != null;
+                    GameplayMaterial material = classify(state);
+                    double conductance = phase ? phaseFaceConductanceWPerK : material.conductance;
+                    BodyKey key = new BodyKey(conductance, law);
+                    Integer existing = bodyIds.get(key);
                     if (existing == null) {
                         existing = profiles.size() + 1;
-                        phaseIds.put(key, existing);
-                        profiles.add(
-                                MaterialBoundaryRegistry.Profile
-                                        .phaseReservoir(
-                                                existing,
-                                                phaseFaceConductanceWPerK,
-                                                transition.temperatureC(),
-                                                energy));
+                        bodyIds.put(key, existing);
+                        profiles.add(MaterialBoundaryRegistry.Profile.body(existing, conductance, law));
                     }
                     profileId = existing;
-                    ventilation = 0;
-                    transitionStates++;
-                } else if (!state.isAir()
-                        && state.getFluidState().isEmpty()) {
-                    GameplayMaterial material = classify(state);
-                    if (material != null) {
-                        profileId = material.profileId();
-                        staticStates++;
-                    }
+                    if (phase) transitionStates++;
+                    else staticStates++;
                 }
                 int signatureId = signatures.intern(new ResolvedThermalSignature(
-                        ventilation, profileId));
+                        ventilation, profileId,
+                        profileId == 0 ? -1 : Block.BLOCK_STATE_REGISTRY.getId(state),
+                        profileId == 0 ? 0 : StateStaticThermalResolver.fullContactFaces(state),
+                        state.isAir(), profileId == 0 ? -1 : net.minecraft.core.registries.BuiltInRegistries.BLOCK.getId(block)));
                 int radiationProfileId = 0;
                 if (staticRadiationEnabled && !isCampfire(state)) {
                     if (state.getFluidState().is(FluidTags.LAVA)) {
@@ -193,7 +182,8 @@ public final class MinecraftThermalProfiles {
         MaterialBoundaryRegistry.Profile profile =
                 current.materials.profileOrNull(profileId);
         return profile != null
-                && profile.model() == MaterialBoundaryRegistry.Model.PHASE_RESERVOIR
+                && profile.thermalLaw() != null
+                && (profile.thermalLaw().heating() != null || profile.thermalLaw().cooling() != null)
                 ? profileId : null;
     }
 
@@ -231,13 +221,20 @@ public final class MinecraftThermalProfiles {
     }
 
     private static GameplayMaterial classify(BlockState state) {
+        if (state.isAir()
+                || state.getBlock() instanceof net.minecraft.world.level.block.BaseFireBlock
+                || state.getBlock() instanceof net.minecraft.world.level.block.NetherPortalBlock
+                || state.getBlock() instanceof net.minecraft.world.level.block.EndPortalBlock
+                || state.getBlock() instanceof net.minecraft.world.level.block.EndGatewayBlock
+                || state.getBlock() instanceof net.minecraft.world.level.block.StructureVoidBlock
+                || state.getBlock() instanceof net.minecraft.world.level.block.LightBlock) return null;
         if (state.getBlock() instanceof LeavesBlock
                 || state.is(BlockTags.LEAVES)
                 || state.is(BlockTags.CROPS)
                 || state.is(BlockTags.SAPLINGS)
                 || state.is(BlockTags.FLOWERS)
                 || state.is(BlockTags.REPLACEABLE)) {
-            return null;
+            return GameplayMaterial.INSULATING_FABRIC;
         }
         if (state.is(BlockTags.WOOL)
                 || state.is(BlockTags.WOOL_CARPETS)) {
@@ -251,8 +248,24 @@ public final class MinecraftThermalProfiles {
         if (isWood(state)) return GameplayMaterial.WOOD;
         if (isEarth(state)) return GameplayMaterial.EARTH;
         if (isMasonry(state)) return GameplayMaterial.MASONRY;
-        return state.blocksMotion()
-                ? GameplayMaterial.GENERIC_SOLID : null;
+        return GameplayMaterial.GENERIC_SOLID;
+    }
+
+    public static MaterialThermalLaw materialLaw(BlockState state) {
+        Snapshot current = snapshot;
+        if (current == null) current = prepare();
+        var profile = current.materials.profileOrNull(current.signatures.materialProfileId(current.states.signatureId(state)));
+        return profile == null ? null : profile.thermalLaw();
+    }
+
+    private static double bodyCapacity(BlockState state) {
+        GameplayMaterial material = classify(state);
+        if (material == null) return 0;
+        if (state.getBlock() instanceof net.minecraft.world.level.block.LiquidBlock) {
+            return WATER_CAPACITY_J_PER_K * state.getFluidState().getAmount() / 8.0;
+        }
+        return 6 * material.capacity
+                + (state.getFluidState().is(FluidTags.WATER) ? WATERLOGGED_CAPACITY_J_PER_K : 0);
     }
 
     private static boolean isMetal(BlockState state) {
@@ -319,11 +332,7 @@ public final class MinecraftThermalProfiles {
     ) {
     }
 
-    private record PhaseKey(
-            double transitionTemperatureC,
-            double transitionEnergyJ
-    ) {
-    }
+    private record BodyKey(double conductance, MaterialThermalLaw law) {}
 
     private enum GameplayMaterial {
         INSULATING_FABRIC(0.12D, 120.0D),
@@ -342,11 +351,6 @@ public final class MinecraftThermalProfiles {
             this.capacity = capacity;
         }
 
-        int profileId() { return ordinal() + 1; }
-        MaterialBoundaryRegistry.Profile profile() {
-            return MaterialBoundaryRegistry.Profile
-                    .capacitiveSurfaceAtNaturalTemperature(
-                            profileId(), conductance, capacity);
-        }
+
     }
 }

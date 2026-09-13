@@ -100,12 +100,12 @@ class ThermalSourceLedgerTest {
         ThermalCellArena arena = new ThermalCellArena(cells);
         int first = ThermalTestFixtures.regularBrick(
                 arena, 0, 1, 0, 0, 0,
-                100.0D, 0.0D, 0.0D).cellSpan().firstSlot();
+                100.0D, 0.0D, 0.0D).firstSlot();
         int second = first;
         if (cells > 1) {
             second = ThermalTestFixtures.regularBrick(
                     arena, 1, 1, 4, 0, 0,
-                    100.0D, 0.0D, 0.0D).cellSpan().firstSlot();
+                    100.0D, 0.0D, 0.0D).firstSlot();
         }
         ThermalSourceLedger ledger = new ThermalSourceLedger(
                 0L, 2, 2, 16,

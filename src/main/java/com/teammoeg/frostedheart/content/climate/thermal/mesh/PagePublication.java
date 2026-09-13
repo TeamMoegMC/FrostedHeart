@@ -113,10 +113,10 @@ public final class PagePublication {
 
     public int resolveAirPoint(int localX, int localY, int localZ) {
         Brick brick=brickAt(localX,localY,localZ);
-        if (!brick.resolved || brick.coverageSlot<0) return NO_AIR_POINT;
-        if (brick.blockLayout==null) return brick.coverageSlot;
+        if (!brick.resolved || brick.firstSlot<0 || brick.transportNodeCount==0) return NO_AIR_POINT;
+        if (brick.blockLayout==null) return brick.firstSlot;
         int node=brick.blockLayout.transportAt((localX&3)|(localZ&3)<<2|(localY&3)<<4);
-        return node<0 ? NO_AIR_POINT : brick.coverageSlot+node;
+        return node<0 ? NO_AIR_POINT : brick.firstSlot+node;
     }
 
     public boolean hasPhaseCandidate(
@@ -156,7 +156,7 @@ public final class PagePublication {
 
     /** One immutable Brick's query-facing coverage, geometry, and phase payload. */
     public record Brick(
-            int coverageSlot,
+            int firstSlot,
             int arenaGeneration,
             Object signaturePayload,
             BlockBrickLayout blockLayout,
@@ -164,6 +164,10 @@ public final class PagePublication {
             PhaseCandidates phaseCandidates,
             boolean resolved
     ) {
+        public int signatureAtBlock(int block) {
+            return signaturePayload == null ? ThermalSignatureTable.UNRESOLVED
+                    : PageSignatures.valueAt(signaturePayload, block);
+        }
         public static final Brick EMPTY = new Brick(
                 NO_COVERAGE,
                 0,
@@ -174,7 +178,7 @@ public final class PagePublication {
                 false);
 
         public Brick {
-            if (coverageSlot < NO_COVERAGE || arenaGeneration < 0) {
+            if (firstSlot < NO_COVERAGE || arenaGeneration < 0) {
                 throw new IllegalArgumentException("Brick coverage identity is invalid");
             }
             if (signaturePayload != null

@@ -36,6 +36,13 @@ public final class DimensionInputAccumulator {
     private final ArrayDeque<EnvironmentBuilder> recycledEnvironments =
             new ArrayDeque<>();
     private final List<ThermalInputBatch.PhaseAck> phaseAcks = new ArrayList<>();
+    private final it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap<ThermalInputBatch.PhaseIntent> phaseIntents = new it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap<>();
+
+    public void requestPhase(long position, ThermalPageHandle page, int blockIndex, int stateId, byte branch) {
+        var existing = phaseIntents.get(position);
+        if (existing != null && existing.page() == page && existing.sourceStateId() == stateId && existing.branch() == branch) return;
+        phaseIntents.put(position, new ThermalInputBatch.PhaseIntent(page, blockIndex, stateId, branch));
+    }
 
     private final ResolvedGeometryBatch.Builder geometry;
     private final ThermalSourceBatch.Builder sourceEvents;
@@ -64,7 +71,8 @@ public final class DimensionInputAccumulator {
             PageSignatures signatures,
             double naturalTemperatureC,
             byte[] firstExposedLocalY,
-            ThermalInputBatch.DormantAirCut dormantAir
+            ThermalInputBatch.DormantAirCut dormantAir,
+            com.teammoeg.frostedheart.content.climate.thermal.persistence.minecraft.MaterialSectionState dormantMaterials
     ) {
         admissions.add(new ThermalInputBatch.PageAdmission(
                 page,
@@ -74,7 +82,7 @@ public final class DimensionInputAccumulator {
                 signatures,
                 naturalTemperatureC,
                 firstExposedLocalY,
-                dormantAir));
+                dormantAir, dormantMaterials));
     }
 
     void updateResidency(
@@ -82,19 +90,20 @@ public final class DimensionInputAccumulator {
             long geometryRevision,
             long residentBrickMask,
             long sourceSeedMask,
-            PageSignatures signatures
+            PageSignatures signatures,
+            com.teammoeg.frostedheart.content.climate.thermal.persistence.minecraft.MaterialSectionState dormantMaterials
     ) {
         for (int index = 0; index < residencyUpdates.size(); index++) {
             if (residencyUpdates.get(index).page() == page) {
                 residencyUpdates.set(index, new ThermalInputBatch.PageResidencyUpdate(
                         page, geometryRevision, residentBrickMask,
-                        sourceSeedMask, signatures));
+                        sourceSeedMask, signatures, dormantMaterials));
                 return;
             }
         }
         residencyUpdates.add(new ThermalInputBatch.PageResidencyUpdate(
                 page, geometryRevision, residentBrickMask,
-                sourceSeedMask, signatures));
+                sourceSeedMask, signatures, dormantMaterials));
     }
 
     boolean cancelAdmission(ThermalPageHandle page) {
@@ -242,11 +251,12 @@ public final class DimensionInputAccumulator {
                 phaseAcks.isEmpty()
                         ? ThermalInputBatch.NO_PHASE_ACKS
                         : phaseAcks.toArray(ThermalInputBatch.PhaseAck[]::new),
-                farFieldConductanceScale);
+                farFieldConductanceScale, phaseIntents.values().toArray(ThermalInputBatch.PhaseIntent[]::new));
         admissions.clear();
         retirements.clear();
         residencyUpdates.clear();
         phaseAcks.clear();
+        phaseIntents.clear();
         farFieldConductanceScale = Double.NaN;
         lastTargetTick = targetTick;
         return batch;

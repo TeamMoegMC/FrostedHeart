@@ -14,20 +14,24 @@ import java.util.ArrayList;
 public final class InfraredBrickCodec {
     public static final int BLOCKS_PER_BRICK = 64;
     public static final int MAX_LOCAL_BRICKS = 729 * 64;
-    public static final int MAX_PAYLOAD_BYTES = 960 * 1024;
+    public static final int MAX_PACKET_BYTES = 960 * 1024;
+    // Reserve the complete display header and both Page masks on every part.
+    public static final int MAX_PAYLOAD_BYTES = MAX_PACKET_BYTES - 2048;
     public static final short INVALID_TEMPERATURE = Short.MIN_VALUE;
     public static final byte[][] NO_PARTS = new byte[0][];
-    // 64 largest ordinary records plus one complete dormant section record.
-    private static final int MAX_PAGE_BYTES = 64 * (3 + 64 * Short.BYTES) + 11 + 64 * Short.BYTES;
+    private static final int MAX_PAGE_BYTES = 64 * (3 + 64 * Short.BYTES);
 
     private static final int INVALID = 0;
     private static final int UNIFORM = 1;
     private static final int INDEXED = 2;
     private static final int RAW = 3;
-    private static final int DORMANT_SECTION = 4;
-    private static final int DORMANT_PATCH = 5;
 
     private InfraredBrickCodec() {
+    }
+
+    public static short quantize(double temperatureC) {
+        if (!Double.isFinite(temperatureC)) return INVALID_TEMPERATURE;
+        return (short) Math.max(-32767L, Math.min(32767L, Math.round(temperatureC * 4.0)));
     }
 
     public static final class Builder implements AutoCloseable {
@@ -128,26 +132,8 @@ public final class InfraredBrickCodec {
             return true;
         }
 
-        /** Replaces only dormant-owned Bricks in this section; zero mask removes it. */
-        public void writeDormantSection(
-                int localPageIndex, long brickMask, short[] temperatures, boolean replace) {
-            requireLocalBrick(localPageIndex * 64);
-            writeIdentity(localPageIndex * 64, replace ? DORMANT_SECTION : DORMANT_PATCH);
-            output.writeLong(brickMask);
-            while (brickMask != 0L) {
-                int brick = Long.numberOfTrailingZeros(brickMask);
-                output.writeShort(temperatures[brick]);
-                brickMask &= brickMask - 1L;
-            }
-        }
-
         public int size() {
             return completedBytes + output.writerIndex();
-        }
-
-        /** Discard an uncommitted Page if its physical publication changed while reading. */
-        public void rewind(int offset) {
-            output.writerIndex(offset - completedBytes);
         }
 
         public byte[][] finishParts() {
@@ -180,15 +166,7 @@ public final class InfraredBrickCodec {
     public static final class Decoder {
         private final short[] dictionary = new short[BLOCKS_PER_BRICK];
         private final SimpleBitStorage[] storageByBits = storages();
-        private boolean dormantSection;
-        private boolean dormantReplacement;
-        private long dormantBrickMask;
-
-        public boolean isDormantSection() { return dormantSection; }
-        public boolean isDormantReplacement() { return dormantReplacement; }
-        public long dormantBrickMask() { return dormantBrickMask; }
-
-        /** Returns the Brick address (section base for dormant records), or -1 at EOF. */
+        /** Returns the Brick address, or -1 at EOF. */
         public int readRecord(FriendlyByteBuf input, short[] values) {
             requireValues(values);
             if (!input.isReadable()) {
@@ -197,8 +175,6 @@ public final class InfraredBrickCodec {
             int localBrickIndex = input.readUnsignedShort();
             requireLocalBrick(localBrickIndex);
             int mode = input.readUnsignedByte();
-            dormantSection = mode == DORMANT_SECTION || mode == DORMANT_PATCH;
-            dormantReplacement = mode == DORMANT_SECTION;
             switch (mode) {
                 case INVALID -> Arrays.fill(values, INVALID_TEMPERATURE);
                 case UNIFORM -> Arrays.fill(values, input.readShort());
@@ -206,18 +182,6 @@ public final class InfraredBrickCodec {
                 case RAW -> {
                     for (int index = 0; index < BLOCKS_PER_BRICK; index++) {
                         values[index] = input.readShort();
-                    }
-                }
-                case DORMANT_SECTION, DORMANT_PATCH -> {
-                    if ((localBrickIndex & 63) != 0) {
-                        throw new IllegalArgumentException("unaligned dormant section record");
-                    }
-                    dormantBrickMask = input.readLong();
-                    long remaining = dormantBrickMask;
-                    while (remaining != 0L) {
-                        int brick = Long.numberOfTrailingZeros(remaining);
-                        values[brick] = input.readShort();
-                        remaining &= remaining - 1L;
                     }
                 }
                 default -> throw new IllegalArgumentException(

@@ -242,6 +242,14 @@ public final class ThermalGameplayFieldGameTests {
         start(level, ice);
         helper.runAfterDelay(50, () -> {
             ThermalFieldKey key = new ThermalFieldKey(TEST_PROVIDER, 0, ice.asLong(), 0);
+            Runnable cleanup = () -> {
+                command(level, "remove", ice, "");
+                MinecraftThermalInput.removeGameplayAnalyticField(level, key);
+                level.setBlockAndUpdate(fire, Blocks.AIR.defaultBlockState());
+                level.setBlockAndUpdate(ice, Blocks.AIR.defaultBlockState());
+                level.getGameRules().getRule(GameRules.RULE_RANDOMTICKING).set(randomTickSpeed, level.getServer());
+                MinecraftThermalInput.closeActiveLevel(level);
+            };
             try {
                 StateTransitionData data = StateTransitionData.getData(level.getBlockState(ice));
                 helper.assertTrue(data != null && MinecraftThermalInput.ownsGameplayHeatingTransition(
@@ -260,8 +268,8 @@ public final class ThermalGameplayFieldGameTests {
                 MinecraftThermalInput.removeGameplayAnalyticField(level, key);
                 attemptTransition(level, ice, 100);
                 BlockState expected = data.heatingTransition(Blocks.ICE.defaultBlockState()).targetBlock();
-                helper.assertTrue(level.getBlockState(ice) == expected,
-                        "explicit bound must apply the configured ice warming stage: " + level.getBlockState(ice));
+                helper.assertTrue(level.getBlockState(ice).is(Blocks.ICE),
+                        "an owned material transition must first pass through worker energy settlement");
                 BlockPos unowned = ice.east(160);
                 level.setBlockAndUpdate(unowned, Blocks.ICE.defaultBlockState());
                 try {
@@ -275,14 +283,22 @@ public final class ThermalGameplayFieldGameTests {
                     command(level, "remove", unowned, "");
                     level.setBlockAndUpdate(unowned, Blocks.AIR.defaultBlockState());
                 }
-                helper.succeed();
-            } finally {
+                // The accepted intent carries one warming stage. Remove the field
+                // before resuming random ticks so it cannot request later stages.
                 command(level, "remove", ice, "");
-                MinecraftThermalInput.removeGameplayAnalyticField(level, key);
-                level.setBlockAndUpdate(fire, Blocks.AIR.defaultBlockState());
-                level.setBlockAndUpdate(ice, Blocks.AIR.defaultBlockState());
-                level.getGameRules().getRule(GameRules.RULE_RANDOMTICKING).set(randomTickSpeed, level.getServer());
-                MinecraftThermalInput.closeActiveLevel(level);
+                level.getGameRules().getRule(GameRules.RULE_RANDOMTICKING).set(1, level.getServer());
+                helper.runAfterDelay(80, () -> {
+                    try {
+                        helper.assertTrue(level.getBlockState(ice) == expected,
+                                "explicit bound must apply the configured ice warming stage after worker ACK: " + level.getBlockState(ice));
+                        helper.succeed();
+                    } finally {
+                        cleanup.run();
+                    }
+                });
+            } catch (RuntimeException | Error failure) {
+                cleanup.run();
+                throw failure;
             }
         });
     }

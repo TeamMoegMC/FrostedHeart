@@ -98,10 +98,11 @@ public final class PlayerTemperatureComputation {
         // Wet and sweat later share the same environmental evaporation limit.
         double wetCoolingRequestW = 0.0D;
         double exposedAreaM2 = 0.0D;
+        double hNatural = PlayerThermalModel.naturalConvectionCoefficientWPerM2K(airTemperatureC);
 
         for (BodyPart part : BodyPart.VALUES) {
             PlayerThermalModel.preparePart(data, context, part,
-                    airTemperatureC, sample.radiantFluxWPerM2(), localWindMPerS,
+                    airTemperatureC, hNatural, sample.radiantFluxWPerM2(), localWindMPerS,
                     waterTemperatureC, waterHeightRatio, lavaHeightRatio, powderSnow, wet);
 
             wetCoolingRequestW += Math.max(0.0D,
@@ -142,7 +143,7 @@ public final class PlayerTemperatureComputation {
 
         // 5. Publish observations and charge only actual regulation work.
         double environmentTemperatureC = PlayerThermalModel.environmentalEquivalentTemperatureC(
-                airTemperatureC, sample.radiantFluxWPerM2(), localWindMPerS,
+                airTemperatureC, hNatural, sample.radiantFluxWPerM2(), localWindMPerS,
                 waterTemperatureC, waterHeightRatio, lavaHeightRatio, powderSnow, onFire);
         double averageBodyPowerW = !frozen && physiologicalSeconds > 0.0D
                 ? integratedEnergyJ / physiologicalSeconds : 0.0D;

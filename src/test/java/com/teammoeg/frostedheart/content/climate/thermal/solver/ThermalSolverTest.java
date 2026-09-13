@@ -100,7 +100,7 @@ class ThermalSolverTest {
                         new double[]{conductance},
                         new double[]{2.0D}, new double[]{2.0D}),
                 ThermalFragment.MaterialContributions.EMPTY,
-                ThermalFragment.PhaseContacts.EMPTY,
+                ThermalFragment.RoutedContacts.EMPTY,
                 ThermalFragment.FarBoundaries.EMPTY);
     }
 
@@ -110,11 +110,10 @@ class ThermalSolverTest {
         for (int index = 0; index < count; index++) {
             slots[index] = ThermalTestFixtures.regularBrick(
                     arena, index, 1, index * 4, 0, 0,
-                    100.0D, 0.0D, 0.0D).cellSpan().firstSlot();
+                    100.0D, 0.0D, 0.0D).firstSlot();
         }
         ThermalSolver solver = new ThermalSolver(
                 arena,
-                new PhaseTransitionRuntime(arena, 4),
                 new BuoyancyConductance.Parameters(0.25D, 4.0D, 10.0D),
                 0.0D,
                 8,

@@ -4,6 +4,7 @@ package com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.mess
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.PageSignatures;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.ThermalPageHandle;
 import com.teammoeg.frostedheart.content.climate.thermal.persistence.minecraft.DormantChunkThermalState;
+import com.teammoeg.frostedheart.content.climate.thermal.persistence.minecraft.MaterialSectionState;
 import com.teammoeg.frostedheart.content.climate.thermal.solver.PhaseTransitionRuntime;
 import com.teammoeg.frostedheart.content.climate.thermal.source.ThermalSourceBatch;
 
@@ -24,6 +25,8 @@ public final class ThermalInputBatch {
     public static final PageEnvironmentUpdate[] NO_ENVIRONMENT_UPDATES =
             new PageEnvironmentUpdate[0];
     public static final PhaseAck[] NO_PHASE_ACKS = new PhaseAck[0];
+    public static final PhaseIntent[] NO_PHASE_INTENTS = new PhaseIntent[0];
+    public record PhaseIntent(ThermalPageHandle page, int blockIndex, int sourceStateId, byte branch) {}
 
     private final long dimensionGeneration;
     private final long sequence;
@@ -36,6 +39,7 @@ public final class ThermalInputBatch {
     private final PageEnvironmentUpdate[] environmentUpdates;
     private final PhaseAck[] phaseAcks;
     private final double farFieldConductanceScale;
+    private final PhaseIntent[] phaseIntents;
 
     public ThermalInputBatch(
             long dimensionGeneration,
@@ -50,6 +54,14 @@ public final class ThermalInputBatch {
             PhaseAck[] phaseAcks,
             double farFieldConductanceScale
     ) {
+        this(dimensionGeneration, sequence, targetTick, admissions, retirements, residencyUpdates,
+                geometry, sourceEvents, environmentUpdates, phaseAcks, farFieldConductanceScale, NO_PHASE_INTENTS);
+    }
+
+    public ThermalInputBatch(long dimensionGeneration, long sequence, long targetTick,
+            PageAdmission[] admissions, PageRetirement[] retirements, PageResidencyUpdate[] residencyUpdates,
+            ResolvedGeometryBatch geometry, ThermalSourceBatch sourceEvents, PageEnvironmentUpdate[] environmentUpdates,
+            PhaseAck[] phaseAcks, double farFieldConductanceScale, PhaseIntent[] phaseIntents) {
         if (dimensionGeneration < 0L || sequence <= 0L || targetTick < 0L) {
             throw new IllegalArgumentException("batch identity is invalid");
         }
@@ -72,7 +84,9 @@ public final class ThermalInputBatch {
                     "FarField conductance scale must be positive or absent");
         }
         this.farFieldConductanceScale = farFieldConductanceScale;
+        this.phaseIntents = phaseIntents;
     }
+    public PhaseIntent[] phaseIntents() { return phaseIntents; }
 
     public long dimensionGeneration() {
         return dimensionGeneration;
@@ -130,8 +144,15 @@ public final class ThermalInputBatch {
             PageSignatures signatures,
             double naturalTemperatureC,
             byte[] firstExposedLocalY,
-            DormantAirCut dormantAir
+            DormantAirCut dormantAir,
+            MaterialSectionState dormantMaterials
     ) {
+        public PageAdmission(ThermalPageHandle page, long geometryRevision, long residentBrickMask,
+                long sourceSeedMask, PageSignatures signatures, double naturalTemperatureC,
+                byte[] firstExposedLocalY, DormantAirCut dormantAir) {
+            this(page, geometryRevision, residentBrickMask, sourceSeedMask, signatures,
+                    naturalTemperatureC, firstExposedLocalY, dormantAir, null);
+        }
         public PageAdmission {
             Objects.requireNonNull(page, "page");
             Objects.requireNonNull(signatures, "signatures");
@@ -150,8 +171,13 @@ public final class ThermalInputBatch {
             long geometryRevision,
             long residentBrickMask,
             long sourceSeedMask,
-            PageSignatures signatures
+            PageSignatures signatures,
+            MaterialSectionState dormantMaterials
     ) {
+        public PageResidencyUpdate(ThermalPageHandle page, long geometryRevision, long residentBrickMask,
+                long sourceSeedMask, PageSignatures signatures) {
+            this(page, geometryRevision, residentBrickMask, sourceSeedMask, signatures, null);
+        }
         public PageResidencyUpdate {
             Objects.requireNonNull(page, "page");
             Objects.requireNonNull(signatures, "signatures");

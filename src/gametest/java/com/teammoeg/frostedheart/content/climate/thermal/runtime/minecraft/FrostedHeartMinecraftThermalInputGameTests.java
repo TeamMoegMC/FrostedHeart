@@ -2,6 +2,7 @@
 package com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft;
 
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.MaterialBoundaryRegistry;
+import com.teammoeg.frostedheart.content.climate.thermal.mesh.ArenaSpan;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.PagePublication;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.PageSignatures;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.ThermalBrickCellLayout;
@@ -174,12 +175,12 @@ public final class FrostedHeartMinecraftThermalInputGameTests {
                     new QueryPublication.MutableSample();
             helper.assertTrue(
                     fixture.query.tryRead(
-                            brick.coverageSlot(), brick.arenaGeneration(),
+                            brick.firstSlot(), brick.arenaGeneration(),
                             1L, sample),
                     "query publication must read the live slot");
             helper.assertTrue(
                     !fixture.query.tryRead(
-                            brick.coverageSlot(), brick.arenaGeneration() + 1,
+                            brick.firstSlot(), brick.arenaGeneration() + 1,
                             1L, sample),
                     "stale arena generation must be rejected");
             helper.succeed();
@@ -191,7 +192,7 @@ public final class FrostedHeartMinecraftThermalInputGameTests {
     @GameTest(template = TEMPLATE, batch = BATCH + "_source", timeoutTicks = 40)
     public static void sourceLedgerDeliversPowerAtTheExactCut(GameTestHelper helper) {
         ThermalCellArena arena = new ThermalCellArena(1);
-        ThermalCellArena.BrickAllocation allocation = regular(arena, 0, 1, 0);
+        ArenaSpan allocation = regular(arena, 0, 1, 0);
         ThermalSourceLedger ledger = new ThermalSourceLedger(
                 0L, 1, 1, 8,
                 new NodePowerAccumulatorArena(1, 8), arena);
@@ -201,27 +202,69 @@ public final class FrostedHeartMinecraftThermalInputGameTests {
                 20.0D, true, 0L, 0, 0, 0, 1,
                 new EmissionPort[]{EmissionPort.of(
                         0, 1.0D, SourceBinding.thermalNode(
-                                allocation.cellSpan().firstSlot(), 1))});
+                                allocation.firstSlot(), 1))});
         ledger.acceptAndAdvance(
                 events.buildAndReset(), 20L, (batch, index, current) -> { });
         helper.assertTrue(
-                Math.abs(arena.enthalpyJ(allocation.cellSpan().firstSlot()) - 20.0D) < 1.0e-9D,
+                Math.abs(arena.enthalpyJ(allocation.firstSlot()) - 20.0D) < 1.0e-9D,
                 "source energy must integrate for one second");
         ledger.close();
+        helper.succeed();
+    }
+
+    @GameTest(template = TEMPLATE, batch = BATCH + "_source_balance", timeoutTicks = 40)
+    public static void sourceEnergyIsAccountedWhenMaterialCannotAcceptMore(GameTestHelper helper) {
+        ThermalCellArena arena = new ThermalCellArena(2);
+        var allocation = phase(arena);
+        int material = allocation.firstSlot() + 1;
+        ThermalSourceLedger ledger = new ThermalSourceLedger(0, 1, 3, 8,
+                new NodePowerAccumulatorArena(1, 8), arena);
+        try {
+            var events = new ThermalSourceBatch.Builder(0);
+            events.addRegister(0, 1, com.teammoeg.frostedheart.content.climate.thermal.source.ThermalSourceMode.POWER_SOURCE,
+                    100, true, 0, 0, 0, 0, 1,
+                    new EmissionPort[]{EmissionPort.of(0, .5, SourceBinding.thermalNode(material, 1)),
+                            EmissionPort.of(1, .3, SourceBinding.declaredLoss(1)),
+                            EmissionPort.of(2, .2, SourceBinding.degradedLoss(2))});
+            ledger.acceptAndAdvance(events.buildAndReset(), 20, (batch, index, current) -> {});
+            var balance = ledger.energyBalance();
+            helper.assertTrue(Math.abs(balance.outputJ() - 100) < 1e-8
+                            && Math.abs(balance.deliveredJ() - 10) < 1e-8
+                            && Math.abs(balance.unacceptedJ() - 40) < 1e-8,
+                    "material saturation must return its unaccepted source energy");
+            helper.assertTrue(Math.abs(balance.outputJ() - balance.deliveredJ() - balance.unacceptedJ()
+                            - balance.declaredLossJ() - balance.degradedLossJ()) < 1e-8,
+                    "every source joule has exactly one destination");
+            ledger.acceptAndAdvance(ThermalSourceBatch.EMPTY, 40, (batch, index, current) -> {});
+            helper.assertTrue(Math.abs(arena.enthalpyJ(material) - 10) < 1e-8
+                            && Math.abs(ledger.energyBalance().unacceptedJ() - 90) < 1e-8,
+                    "a later cut must not replay previously unaccepted energy");
+        } finally { ledger.close(); }
         helper.succeed();
     }
 
     @GameTest(template = TEMPLATE, batch = BATCH + "_phase", timeoutTicks = 40)
     public static void phaseRequestAcknowledgementIsExactlyOnce(GameTestHelper helper) {
         ThermalCellArena arena = new ThermalCellArena(2);
-        ThermalCellArena.BrickAllocation allocation = phase(arena);
+        ArenaSpan allocation = phase(arena);
         PhaseTransitionRuntime phases = new PhaseTransitionRuntime(arena, 2);
-        int phaseSlot = allocation.phaseReservoirSlots()[0];
-        int airSlot = allocation.cellSpan().firstSlot();
-        phases.registerReservoir(phaseSlot);
+        int phaseSlot = allocation.firstSlot() + 1;
+        int airSlot = allocation.firstSlot();
+        phases.registerMaterial(phaseSlot);
         arena.setEnthalpyJ(airSlot, 10_000.0D);
-        phases.applyContact(airSlot, phaseSlot, 100.0D, 0.0D, 1.0D);
+        arena.acceptExternalEnergyJ(phaseSlot, 10.0D);
+        phases.collectMaterialRequests();
+        double completedEnergy = arena.enthalpyJ(phaseSlot);
         PhaseTransitionRuntime.Request[] requests = phases.drainRequests(2);
+        helper.assertTrue(requests.length == 1, "one completed material yields one request");
+        PhaseTransitionRuntime.Request firstRequest = requests[0];
+        helper.assertTrue(phases.applyAck(firstRequest, PhaseTransitionRuntime.AckOutcome.RETRY),
+                "a deferred mutation must remain retryable");
+        phases.collectMaterialRequests();
+        requests = phases.drainRequests(2);
+        helper.assertTrue(requests.length == 1
+                        && requests[0].requestSequence() == firstRequest.requestSequence(),
+                "retry retains the original request identity");
         helper.assertTrue(
                 requests.length == 1
                         && phases.applyAck(
@@ -229,6 +272,21 @@ public final class FrostedHeartMinecraftThermalInputGameTests {
                         && !phases.applyAck(
                                 requests[0], PhaseTransitionRuntime.AckOutcome.APPLIED),
                 "phase ACK must mutate one request once");
+        helper.assertTrue(arena.enthalpyJ(phaseSlot) == completedEnergy,
+                "ACK must not subtract latent energy a second time");
+        phases.unregisterMaterial(phaseSlot);
+        arena.releasePageCells(0, 1, allocation);
+        ArenaSpan replacement = phase(arena);
+        int replacementSlot = replacement.firstSlot() + 1;
+        phases.registerMaterial(replacementSlot);
+        arena.acceptExternalEnergyJ(replacementSlot, 10);
+        phases.collectMaterialRequests();
+        helper.assertTrue(!phases.applyAck(firstRequest, PhaseTransitionRuntime.AckOutcome.APPLIED),
+                "a reused slot in the same Page cannot inherit a previous body's ACK");
+        var replacementRequest = phases.drainRequests(2)[0];
+        helper.assertTrue(phases.applyAck(replacementRequest, PhaseTransitionRuntime.AckOutcome.REJECTED)
+                        && arena.enthalpyJ(replacementSlot) == 10,
+                "rejection preserves the material's stored energy");
         helper.succeed();
     }
 
@@ -614,7 +672,7 @@ public final class FrostedHeartMinecraftThermalInputGameTests {
                 MinecraftPhysicalSourceProfile.CAMPFIRE,
                 new ThermalDimensionLimits(
                         16, 128, 256,
-                        4_096, 2_048, 4_096, 4_096, 4_096,
+                        4_096, 2_048, 4_096, 4_096,
                         2, 1.0e-6D),
                 query);
         return new Fixture(
@@ -648,7 +706,7 @@ public final class FrostedHeartMinecraftThermalInputGameTests {
         return new ResolvedThermalSignature(100, 0);
     }
 
-    private static ThermalCellArena.BrickAllocation regular(
+    private static ArenaSpan regular(
             ThermalCellArena arena,
             int pageSlot,
             int generation,
@@ -657,23 +715,27 @@ public final class FrostedHeartMinecraftThermalInputGameTests {
         ThermalBrickCellLayout layout = new ThermalBrickCellLayout();
         layout.reset(minX, 0, 0);
         layout.setRegularAir(100.0D / 64.0D);
-        ThermalCellArena.BrickAllocation allocation = arena.stageBrickCells(
+        ArenaSpan allocation = arena.stageBrickCells(
                 pageSlot, generation, layout, 0.0D, 0.0D, 4_096);
-        arena.commitStagedCells(allocation.cellSpan());
+        arena.commitStagedCells(allocation);
         return allocation;
     }
 
-    private static ThermalCellArena.BrickAllocation phase(
+    private static ArenaSpan phase(
             ThermalCellArena arena
     ) {
         ThermalBrickCellLayout layout = new ThermalBrickCellLayout();
         layout.reset(0, 0, 0);
         layout.setRegularAir(100.0D / 64.0D);
-        layout.addPhaseReservoir(
-                0, 0, 0, 1, 1L, 0.0D, 10.0D);
-        ThermalCellArena.BrickAllocation allocation = arena.stageBrickCells(
+        layout.addMaterialPole(0, 0, 0, 100.0D, 0.0D);
+        ArenaSpan allocation = arena.stageBrickCells(
                 0, 1, layout, 0.0D, 0.0D, 4_096);
-        arena.commitStagedCells(allocation.cellSpan());
+        var law = new com.teammoeg.frostedheart.content.climate.thermal.mesh.MaterialThermalLaw(
+                100, 0, new com.teammoeg.frostedheart.content.climate.thermal.mesh.MaterialThermalLaw.Transition(
+                        net.minecraft.world.level.block.Block.getId(net.minecraft.world.level.block.Blocks.WATER.defaultBlockState()),
+                        0, 0, 10), null);
+        arena.stageMaterialLaw(allocation.firstSlot() + 1, 1, law, 0);
+        arena.commitStagedCells(allocation);
         return allocation;
     }
 

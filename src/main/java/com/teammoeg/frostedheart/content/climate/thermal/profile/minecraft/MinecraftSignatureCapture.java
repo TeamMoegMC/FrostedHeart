@@ -40,6 +40,7 @@ public final class MinecraftSignatureCapture {
     public PageSignatures unresolvedPage() {
         return PageSignatures.unresolved(signatureTable);
     }
+    public boolean hasMaterial(int signatureId) { return signatureTable.materialProfileId(signatureId) != 0; }
 
     public PageSignatures captureBricks(
             long sectionKey,

@@ -130,6 +130,7 @@ run/config/*
 !run/config/fhresearches/
 !run/config/fhresearches/**
 run-gametest/
+run-infrared-validation/
 
 # Avoid ignoring Gradle wrapper jar file (.jar files are usually ignored)
 !gradle-wrapper.jar

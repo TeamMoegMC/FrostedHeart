@@ -4,32 +4,23 @@
  */
 #version 150
 
-uniform vec2 iResolution;
 uniform float radius;
-
-uniform sampler2D mainTexture;
 uniform sampler2D depthTexture;
-uniform sampler2D noHandDepthTexture;
-uniform sampler2D noTranslucentDepthTexture;
-uniform isampler3D temperatureTexture;
-
-uniform mat4 u_InverseProjectionMatrix;
-uniform mat4 u_InverseViewMatrix;
-uniform vec3 temperatureCameraOffset;
-
-in vec2 texCoord;
+uniform isampler2D surfaceTemperature;
+uniform sampler2D terrainDepthTexture;
+uniform bool hasTerrainDepth;
+uniform isampler3D environmentTemperature;
+uniform bool hasEnvironmentTemperature;
+uniform vec3 cameraToTemperatureOrigin;
+uniform mat4 u_InverseViewProjectionMatrix;
 out vec4 FragColor;
-
 const float SCANNING_WIDTH = 3.0;
 const float MIN_TEMP = -20.0;
 const float MAX_TEMP = 20.0;
-const int TEXTURE_SIZE = 144;
 const int INVALID_TEMPERATURE = -32768;
-const float SURFACE_SAMPLE_SCALE = 2047.0 / 2048.0;
 
 vec3 temperatureToColor(float temp) {
-    float normalizedTemp = clamp(
-        (temp - MIN_TEMP) / (MAX_TEMP - MIN_TEMP), 0.0, 1.0);
+    float normalizedTemp = clamp((temp - MIN_TEMP) / (MAX_TEMP - MIN_TEMP), 0.0, 1.0);
     if (normalizedTemp < 0.33) {
         float t = normalizedTemp / 0.33;
         return mix(vec3(0.0, 0.0, 1.0), vec3(1.0, 0.5, 0.0), t);
@@ -43,48 +34,27 @@ vec3 temperatureToColor(float temp) {
 }
 
 void main() {
-    vec4 color = texture(mainTexture, texCoord);
-    float depth = texture(depthTexture, texCoord).r;
-    float noHandDepth = texture(noHandDepthTexture, texCoord).r;
-    float noTranslucentDepth = texture(
-        noTranslucentDepthTexture, texCoord).r;
-
-    if (depth == 1.0 || noHandDepth != noTranslucentDepth) {
-        FragColor = color;
+    ivec2 pixel = ivec2(gl_FragCoord.xy);
+    float depth = texelFetch(depthTexture, pixel, 0).r;
+    if (depth == 1.0) discard;
+    vec2 uv = (vec2(pixel) + 0.5) / vec2(textureSize(depthTexture, 0));
+    vec4 position = u_InverseViewProjectionMatrix * vec4(uv * 2.0 - 1.0, depth * 2.0 - 1.0, 1.0);
+    float distance = length(position.xyz / position.w);
+    if (!(distance < radius)) discard;
+    if (distance > radius - SCANNING_WIDTH) {
+        float edge = smoothstep(radius - SCANNING_WIDTH, radius, distance);
+        FragColor = vec4(vec3(edge), 0.0);
         return;
     }
-
-    vec3 ndc = vec3(texCoord.xy * 2.0 - 1.0, depth * 2.0 - 1.0);
-    vec4 viewSpacePos = u_InverseProjectionMatrix * vec4(ndc, 1.0);
-    viewSpacePos /= viewSpacePos.w;
-    vec4 relativeWorldPos = u_InverseViewMatrix * viewSpacePos;
-    relativeWorldPos /= relativeWorldPos.w;
-    float distToCamera = length(relativeWorldPos.xyz);
-    vec3 temperatureSamplePos = temperatureCameraOffset
-        + relativeWorldPos.xyz * SURFACE_SAMPLE_SCALE;
-
-    ivec3 temperatureTexel = ivec3(floor(temperatureSamplePos));
-    if (distToCamera >= radius
-            || any(lessThan(temperatureTexel, ivec3(0)))
-            || any(greaterThanEqual(
-                temperatureTexel, ivec3(TEXTURE_SIZE)))) {
-        FragColor = color;
-        return;
+    // A later depth writer occludes the captured terrain. Its body must not inherit that terrain's heat pattern.
+    bool terrainVisible = hasTerrainDepth && depth == texelFetch(terrainDepthTexture, pixel, 0).r;
+    int value = terrainVisible ? texelFetch(surfaceTemperature, pixel, 0).r : INVALID_TEMPERATURE;
+    if (!terrainVisible && hasEnvironmentTemperature) {
+        ivec3 cell = ivec3(floor(position.xyz / position.w + cameraToTemperatureOrigin));
+        if (all(greaterThanEqual(cell, ivec3(0))) && all(lessThan(cell, textureSize(environmentTemperature, 0))))
+            value = texelFetch(environmentTemperature, cell, 0).r;
     }
-
-    int encodedTemperature = texelFetch(
-        temperatureTexture, temperatureTexel, 0).r;
-
-    if (distToCamera > radius - SCANNING_WIDTH) {
-        float edge = smoothstep(
-            radius - SCANNING_WIDTH, radius, distToCamera);
-        FragColor = color + vec4(edge, edge, edge, 0.0);
-        return;
-    }
-
-    float temperatureC = encodedTemperature == INVALID_TEMPERATURE
-        ? MIN_TEMP
-        : float(encodedTemperature) * 0.25;
-    vec3 heatColor = temperatureToColor(temperatureC);
-    FragColor = vec4(mix(color.xyz, heatColor, 0.43), color.a);
+    float temperature = value == INVALID_TEMPERATURE ? MIN_TEMP : float(value) * 0.25;
+    // Premultiplied blending preserves the original mix and destination alpha.
+    FragColor = vec4(temperatureToColor(temperature) * 0.43, 0.43);
 }

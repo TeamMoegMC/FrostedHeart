@@ -10,7 +10,6 @@ public record ThermalDimensionLimits(
         int maximumLiveCells,
         int maximumPairOperations,
         int maximumBoundaryOperations,
-        int maximumPhaseOperations,
         int stableBatchesBeforeSleep,
         double sleepResidualC
 ) {
@@ -21,7 +20,6 @@ public record ThermalDimensionLimits(
                 || maximumLiveCells <= 0
                 || maximumPairOperations <= 0
                 || maximumBoundaryOperations <= 0
-                || maximumPhaseOperations <= 0
                 || stableBatchesBeforeSleep <= 0
                 || !Double.isFinite(sleepResidualC)
                 || sleepResidualC < 0.0D) {

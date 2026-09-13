@@ -84,7 +84,6 @@ public final class ThermalDimensionEngine implements ThermalDimensionProcessor {
                 arena, parameters.phaseRequestCapacity());
         solver = new ThermalSolver(
                 arena,
-                phases,
                 parameters.buoyancyParameters(),
                 parameters.referenceTemperatureC(),
                 64,
@@ -102,6 +101,7 @@ public final class ThermalDimensionEngine implements ThermalDimensionProcessor {
                 solver,
                 phases,
                 catalog,
+                materials,
                 compiler,
                 parameters,
                 limits,
@@ -120,14 +120,21 @@ public final class ThermalDimensionEngine implements ThermalDimensionProcessor {
         lastTargetTick = initialTick;
     }
 
+    public long routeVisitsLastCut() { return topologyPlan.routeVisitsLastCut(); }
+
     @Override
     public ThermalCompletion process(ThermalInputBatch batch) {
         Objects.requireNonNull(batch, "batch");
         requireOpen();
         validateBatch(batch);
+        topologyPlan.beginCut();
 
         for (ThermalInputBatch.PhaseAck ack : batch.phaseAcks()) {
             phases.applyAck(ack.request(), ack.outcome());
+        }
+        for (var intent : batch.phaseIntents()) {
+            int slot = pages.materialSlot(intent.page(), intent.blockIndex(), intent.sourceStateId());
+            if (slot >= 0) arena.forceMaterialTransition(slot, intent.branch());
         }
         boolean windChanged = batch.hasFarFieldConductanceScale();
         if (windChanged) {
@@ -139,10 +146,11 @@ public final class ThermalDimensionEngine implements ThermalDimensionProcessor {
         // migration cannot overwrite energy delivered in this cut.
         sources.acceptAndAdvance(
                 batch.sourceEvents(), batch.targetTick(), sourceBindings);
+        pages.awaitChangedMaterials(batch, arena);
 
         PreparedTopologyChange topology = null;
         boolean workLimited = false;
-        boolean topologyInput = topologyInputPresent(batch);
+        boolean topologyInput = topologyInputPresent(batch) || topologyPlan.hasPendingRoutes();
         if (topologyInput) {
             try {
                 topology = topologyPlan.prepare(batch);
@@ -153,6 +161,10 @@ public final class ThermalDimensionEngine implements ThermalDimensionProcessor {
 
         if (topology != null) {
             topologyCommitter.commit(topology, pages, arena, solver, phases);
+            topologyPlan.committed();
+        } else if (workLimited) {
+            sourceBindings.markCommittedSections(topologyPlan.invalidatedRouteSourceSections());
+            sourceBindings.rebindDirty(sources);
         }
         boolean queryPublished = false;
         try {
@@ -177,6 +189,7 @@ public final class ThermalDimensionEngine implements ThermalDimensionProcessor {
             boolean changed = topologyInput
                     || !batch.sourceEvents().isEmpty()
                     || batch.phaseAcks().length != 0
+                    || batch.phaseIntents().length != 0
                     || windChanged;
             boolean sleepingAtStart = sleeping;
             if (changed || sources.hasActivePowerOrPendingEnergy()) {
@@ -190,6 +203,7 @@ public final class ThermalDimensionEngine implements ThermalDimensionProcessor {
                     elapsedTicks,
                     sleepingAtStart && !changed,
                     (batch.sequence() & 1L) != 0L);
+            phases.collectMaterialRequests();
             updateSleep(step, changed, timeDegraded);
             boolean unchangedSleeping = sleepingAtStart && sleeping && !changed;
             publish(batch, unchangedSleeping);

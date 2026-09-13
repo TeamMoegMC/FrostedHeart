@@ -8,11 +8,14 @@ import com.teammoeg.frostedheart.content.climate.thermal.field.ThermalAnalyticFi
 import com.teammoeg.frostedheart.content.climate.thermal.field.ThermalAnalyticFieldIndex;
 import com.teammoeg.frostedheart.content.climate.thermal.field.ThermalFieldKey;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.BlockFace;
+import com.teammoeg.frostedheart.content.climate.thermal.mesh.BlockBrickLayout;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.MaterialBoundaryRegistry;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.PagePublication;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.ThermalCellArena;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.ThermalPageHandle;
 import com.teammoeg.frostedheart.content.climate.thermal.persistence.minecraft.DormantChunkThermalState;
+import com.teammoeg.frostedheart.content.climate.thermal.persistence.minecraft.MaterialSectionState;
+import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.message.ResolvedGeometryBatch;
 import com.teammoeg.frostedheart.content.climate.thermal.persistence.minecraft.MinecraftThermalChunkAttachment;
 import com.teammoeg.frostedheart.content.climate.thermal.profile.minecraft.MinecraftSignatureCapture;
 import com.teammoeg.frostedheart.content.climate.thermal.profile.minecraft.MinecraftThermalProfiles;
@@ -120,6 +123,10 @@ public final class MinecraftThermalInput implements AutoCloseable {
             new QueryPublication.MutableSample();
     private final DormantChunkThermalState.CaptureScratch dormantCapture =
             new DormantChunkThermalState.CaptureScratch();
+    private final MaterialSectionState.CaptureScratch materialCapture = new MaterialSectionState.CaptureScratch();
+    private final QueryPublication.InfraredReadCursor checkpointCursor = new QueryPublication.InfraredReadCursor();
+    private static final ThreadLocal<QueryPublication.MutableMaterialSample> MATERIAL_SAMPLE =
+            ThreadLocal.withInitial(QueryPublication.MutableMaterialSample::new);
     private final BlockPos.MutableBlockPos dormantPosition =
             new BlockPos.MutableBlockPos();
     private final RadiationService.MutableSample radiationSample =
@@ -133,7 +140,6 @@ public final class MinecraftThermalInput implements AutoCloseable {
     private final BlockPos.MutableBlockPos townPosition =
             new BlockPos.MutableBlockPos();
     private static InfraredCapture infraredCapture;
-    private static final long[] EMPTY_REFRESH_PAGES = new long[INFRARED_PRESENCE_WORDS];
 
     private long dimensionGeneration;
     private DimensionInputAccumulator accumulator;
@@ -150,7 +156,7 @@ public final class MinecraftThermalInput implements AutoCloseable {
     ) {
         this.level = level;
         analyticFields = MinecraftGameplayFields.indexFor(level);
-        referenceTemperatureC = initialTemperatureC;
+        referenceTemperatureC = 0;
         mainThread = Thread.currentThread();
         profiles = MinecraftThermalProfiles.prepare();
         long initialTick = alignedTick(level.getGameTime());
@@ -169,7 +175,7 @@ public final class MinecraftThermalInput implements AutoCloseable {
         physicalSources = new PhysicalSourceSpatialIndex(
                 accumulator, pages, profiles.tuning().campfire(),
                 64, MAXIMUM_PHYSICAL_SOURCES);
-        createWorker(initialTick, initialTemperatureC);
+        createWorker(initialTick, referenceTemperatureC);
         phase = new MinecraftPhaseController(
                 level, pages, profiles.states(), profiles.signatures(),
                 profiles.materials(), accumulator, 8);
@@ -205,7 +211,7 @@ public final class MinecraftThermalInput implements AutoCloseable {
         ThermalDimensionLimits limits = new ThermalDimensionLimits(
                 3_200, MAXIMUM_PHYSICAL_SOURCES, MAXIMUM_SOURCE_NODES,
                 131_072, 65_536,
-                262_144, 65_536, 65_536,
+                262_144, 65_536,
                 20, 1.0e-6D);
         QueryPublication publication = QueryPublication.tryCreate(
                 MEMORY.createDimensionBudget(
@@ -427,11 +433,7 @@ public final class MinecraftThermalInput implements AutoCloseable {
         int localZ = SectionPos.sectionRelative(blockZ);
         PagePublication publication = page.currentPublication();
         if (publication == null) {
-            if (!resolveLastPublication(page, localX, localY, localZ,
-                sampleTick, maximumAgeTicks, out)) {
-                sampleDormant(
-                        loadedChunk, blockX, blockY, blockZ, sampleTick, out);
-            }
+            sampleDormant(loadedChunk, blockX, blockY, blockZ, sampleTick, out);
             return;
         }
         PagePublication.Brick coverage = publication.brickAt(
@@ -439,6 +441,8 @@ public final class MinecraftThermalInput implements AutoCloseable {
         int slot = publication.resolveAirPoint(
                 localX, localY, localZ);
         if (slot == PagePublication.NO_AIR_POINT) {
+            if (sampleRoutedAir(page, publication, coverage, (localX & 3) | (localZ & 3) << 2 | (localY & 3) << 4,
+                    sampleTick, maximumAgeTicks, out)) return;
             if (coverage.signaturePayload() == null) {
                 sampleDormant(
                         loadedChunk, blockX, blockY, blockZ, sampleTick, out);
@@ -450,19 +454,11 @@ public final class MinecraftThermalInput implements AutoCloseable {
                 coverage.arenaGeneration(),
                 publication.topologyGeneration(),
                 querySample)) {
-            if (!resolveLastPublication(page, localX, localY, localZ,
-                sampleTick, maximumAgeTicks, out)) {
-                sampleDormant(
-                        loadedChunk, blockX, blockY, blockZ, sampleTick, out);
-            }
+            sampleDormant(loadedChunk, blockX, blockY, blockZ, sampleTick, out);
             return;
         }
         if (page.currentPublication() != publication) {
-            if (!resolveLastPublication(page, localX, localY, localZ,
-                sampleTick, maximumAgeTicks, out)) {
-                sampleDormant(
-                        loadedChunk, blockX, blockY, blockZ, sampleTick, out);
-            }
+            sampleDormant(loadedChunk, blockX, blockY, blockZ, sampleTick, out);
             return;
         }
         if (sampleTick - querySample.sampleTick() > maximumAgeTicks) {
@@ -473,49 +469,29 @@ public final class MinecraftThermalInput implements AutoCloseable {
         out.setAir(querySample.temperatureC());
     }
 
-    /** Returns true when the last cut answers the point, including definite no-Air. */
-    private boolean resolveLastPublication(
-            ThermalPageHandle page,
-            int localX,
-            int localY,
-            int localZ,
-            long sampleTick,
-            int maximumAgeTicks,
-            ThermalEnvironmentSample out
-    ) {
-        PagePublication publication = page.lastPublication();
-        if (publication == null) {
-            return false;
-        }
-        PagePublication.Brick brick = publication.brickAt(
-                localX, localY, localZ);
-        if (brick.coverageSlot() < 0) {
-            return brick.signaturePayload() != null;
-        }
-        int components = brick.transportNodeCount();
-        double warmest = -Double.MAX_VALUE;
-        long commonTick = -1L;
-        for (int component = 0; component < components; component++) {
-            if (!queryPublication.tryRead(
-                    brick.coverageSlot() + component,
-                    brick.arenaGeneration(),
-                    publication.topologyGeneration(),
-                    querySample)) {
-                return false;
-            }
-            if (commonTick < 0L) {
-                commonTick = querySample.sampleTick();
-            } else if (commonTick != querySample.sampleTick()) {
-                return false;
-            }
-            warmest = Math.max(warmest, querySample.temperatureC());
-        }
-        if (page.lastPublication() != publication
-                || sampleTick - commonTick > maximumAgeTicks) {
-            return false;
-        }
-        out.setAir(warmest);
+    private boolean sampleRoutedAir(ThermalPageHandle owner, PagePublication ownerPublication,
+            PagePublication.Brick brick, int block, long sampleTick, int maximumAgeTicks, ThermalEnvironmentSample out) {
+        var layout = brick.blockLayout();
+        if (layout == null || !layout.hasAirRoute(block)) return false;
+        long target = layout.routedAirBlock(block);
+        int x = BlockPos.getX(target), y = BlockPos.getY(target), z = BlockPos.getZ(target);
+        ThermalPageHandle page = pages.handle(SectionPos.asLong(x >> 4, y >> 4, z >> 4));
+        PagePublication publication = page == null ? null : page.currentPublication();
+        if (publication == null) return false;
+        var coverage = publication.brickAt(x & 15, y & 15, z & 15);
+        int slot = publication.resolveAirPoint(x & 15, y & 15, z & 15);
+        if (slot < 0 || !queryPublication.tryRead(slot, coverage.arenaGeneration(), publication.topologyGeneration(), querySample)
+                || sampleTick - querySample.sampleTick() > maximumAgeTicks || page.currentPublication() != publication
+                || owner.currentPublication() != ownerPublication || !layout.hasAirRoute(block)) return false;
+        out.setAirFromRegion(querySample.temperatureC(), target);
         return true;
+    }
+
+    private void awaitLatestCompletion() {
+        if (inFlight != null) {
+            mailbox.awaitCompletion();
+            drainCompletion();
+        }
     }
 
     private void sampleDormant(
@@ -807,251 +783,396 @@ public final class MinecraftThermalInput implements AutoCloseable {
     }
 
     public static InfraredSnapshot gameplayInfraredSnapshot(
-            ServerPlayer player, boolean forceFull, int lastInfraredEpoch,
-            long[] knownPresence, long lastDormantRevision, long[] knownDormantPresence,
-            long[] knownRefreshPages
-    ) {
-        Objects.requireNonNull(player, "player");
-        if (!player.server.isSameThread()) return null;
+            ServerPlayer player, boolean forceFull, long knownGeneration, long knownCenter,
+            int lastEpoch, long[] knownPresence, boolean knownReadable, long[] knownFieldPages, long knownStoredEpoch) {
         if (knownPresence.length != INFRARED_PRESENCE_WORDS
-                || knownDormantPresence.length != INFRARED_PRESENCE_WORDS
-                || knownRefreshPages.length != INFRARED_PRESENCE_WORDS) {
+                || knownFieldPages.length != 0 && knownFieldPages.length != INFRARED_PRESENCE_WORDS)
             throw new IllegalArgumentException("infrared presence requires 12 words");
-        }
         if (infraredCapture == null) infraredCapture = new InfraredCapture();
-        return infraredCapture.capture(active(player.serverLevel()), player.serverLevel(),
-                SectionPos.blockToSectionCoord(Mth.floor(player.getX())),
-                SectionPos.blockToSectionCoord(Mth.floor(player.getZ())),
-                SectionPos.blockToSectionCoord(Mth.floor(player.getEyeY())),
-                forceFull, lastInfraredEpoch, knownPresence, lastDormantRevision,
-                knownDormantPresence, forceFull ? EMPTY_REFRESH_PAGES : knownRefreshPages);
+        return infraredCapture.capture(active(player.serverLevel()), player, forceFull,
+                knownGeneration, knownCenter, lastEpoch, knownPresence, knownReadable, knownFieldPages, knownStoredEpoch);
     }
 
-    /** One lazily allocated server-thread scratch for the existing display path.
-     * A display request does not require a physical dimension engine. */
-    private static final class InfraredCapture implements AutoCloseable {
-        private final QueryPublication.InfraredReadCursor infraredCursor =
-                new QueryPublication.InfraredReadCursor();
-        private final ThermalPageHandle[] infraredHandles =
-                new ThermalPageHandle[INFRARED_PAGE_CAPACITY];
-        private final PagePublication[] infraredPublications =
-                new PagePublication[INFRARED_PAGE_CAPACITY];
-        private final short[] infraredLocalIndexes =
-                new short[INFRARED_PAGE_CAPACITY];
-        private final long[] infraredPresence =
-                new long[INFRARED_PRESENCE_WORDS];
-        private final long[] infraredChangedPages = new long[INFRARED_PRESENCE_WORDS];
-        private final long[] infraredDormantPresence = new long[INFRARED_PRESENCE_WORDS];
-        private final short[] infraredBlockTemperatures =
-                new short[InfraredBrickCodec.BLOCKS_PER_BRICK];
-        private final short[] infraredNodeTemperatures =
-                new short[InfraredBrickCodec.BLOCKS_PER_BRICK];
-        private InfraredBrickCodec.Builder infraredPayload;
+    public static double materialTemperature(ServerLevel level, BlockPos position) {
+        var sample = MATERIAL_SAMPLE.get();
+        return sampleMaterial(level, position, sample) ? sample.temperatureC() : Double.NaN;
+    }
 
-        private MinecraftThermalInput input;
-        private ServerLevel level;
-        private long[] previousRefreshPages;
-        private long[] previousPresence;
-        private boolean rawReadFailed;
-        private final long[] refreshPages = new long[INFRARED_PRESENCE_WORDS];
+    public boolean matchesMaterialRequest(com.teammoeg.frostedheart.content.climate.thermal.solver.PhaseTransitionRuntime.Request request) {
+        int x = request.blockX(), y = request.blockY(), z = request.blockZ();
+        long section = SectionPos.asLong(x >> 4, y >> 4, z >> 4);
+        ThermalPageHandle handle = pages.handle(section);
+        PagePublication publication = handle == null ? null : handle.lastPublication();
+        if (publication == null || pages.materialChangedSince(section, (x & 15) | (z & 15) << 4 | (y & 15) << 8,
+                publication.geometryRevision())) return false;
+        var brick = publication.brickAt(x & 15, y & 15, z & 15);
+        if (brick.firstSlot() < 0 || brick.blockLayout() == null) return false;
+        int node = brick.blockLayout().nodeAt((x & 3) | (z & 3) << 2 | (y & 3) << 4);
+        var sample = MATERIAL_SAMPLE.get();
+        if (node < 0 || !queryPublication.tryReadMaterial(brick.firstSlot() + node, brick.arenaGeneration(),
+                publication.topologyGeneration(), sample) || sample.requestSequence() != request.requestSequence()
+                || sample.branch() != request.materialBranch()) return false;
+        var edge = sample.law().transition(sample.branch());
+        return edge != null && edge.targetStateId() == request.targetStateId() && edge.complete(sample.enthalpyJ());
+    }
+
+    /** Reads a body without creating physical residency or substituting environmental temperature. */
+    public static boolean sampleMaterial(ServerLevel level, BlockPos position,
+            QueryPublication.MutableMaterialSample out) {
+        out.clear();
+        MinecraftThermalInput input = active(level);
+        int x = position.getX(), y = position.getY(), z = position.getZ();
+        long section = SectionPos.asLong(SectionPos.blockToSectionCoord(x), SectionPos.blockToSectionCoord(y),
+                SectionPos.blockToSectionCoord(z));
+        if (input != null) {
+            ThermalPageHandle handle = input.pages.handle(section);
+            if (handle != null) {
+                PagePublication publication = handle.lastPublication();
+                if (publication == null || publication.geometryRevision() != handle.liveGeometryRevision()
+                        && input.pages.materialChangedSince(section, (x & 15) | (z & 15) << 4 | (y & 15) << 8,
+                                publication.geometryRevision())) return false;
+                var brick = publication.brickAt(x & 15, y & 15, z & 15);
+                if (brick.resolved() && brick.firstSlot() >= 0 && brick.blockLayout() != null) {
+                    int node = brick.blockLayout().nodeAt((x & 3) | (z & 3) << 2 | (y & 3) << 4);
+                    if (node >= 0) return input.queryPublication.tryReadMaterial(brick.firstSlot() + node,
+                            brick.arenaGeneration(), publication.topologyGeneration(), out)
+                            && handle.lastPublication() == publication;
+                }
+            }
+        }
+        LevelChunk chunk = level.getChunkSource().getChunkNow(SectionPos.x(section), SectionPos.z(section));
+        DormantChunkThermalState stored = chunk == null ? null : dormantState(chunk);
+        if (stored == null || !stored.hasMaterials(SectionPos.y(section))) return false;
+        BlockState state = chunk.getBlockState(position);
+        var law = MinecraftThermalProfiles.materialLaw(state);
+        if (law == null) return false;
+        return stored.readMaterial(SectionPos.y(section), (x & 15) | (z & 15) << 4 | (y & 15) << 8,
+                net.minecraft.world.level.block.Block.BLOCK_STATE_REGISTRY.getId(state), law, out);
+    }
+
+    /** Shared main-thread scratch; display reads never start a runtime or load chunks. */
+    private static final class InfraredCapture implements AutoCloseable {
+        private final QueryPublication.InfraredReadCursor cursor = new QueryPublication.InfraredReadCursor();
+        private final ThermalPageHandle[] handles = new ThermalPageHandle[INFRARED_PAGE_CAPACITY];
+        private final ThermalPageHandle[] localHandles = new ThermalPageHandle[INFRARED_PAGE_CAPACITY];
+        private final short[] localIndexes = new short[INFRARED_PAGE_CAPACITY];
+        private final long[] presence = new long[INFRARED_PRESENCE_WORDS];
+        private final long[] fieldPages = new long[INFRARED_PRESENCE_WORDS];
+        private final long[] storedPresence = new long[INFRARED_PRESENCE_WORDS];
+        private final LevelChunk[] loadedChunks = new LevelChunk[81];
+        private final double[] storedTemperatures = new double[4096];
+        private final long[] changedMaterialBlocks = new long[64];
+        private long changedMaterialBricks;
+        private final QueryPublication.MutableMaterialSample storedSample = new QueryPublication.MutableMaterialSample();
+        private int profileEpoch = -1;
+        private long profileRevision;
+        private final short[] nodes = new short[64], blocks = new short[64];
+        private final double[] rawNodes = new double[64], rawBlocks = new double[64];
         private final java.util.ArrayList<ThermalAnalyticField> fields = new java.util.ArrayList<>();
         private final java.util.ArrayList<ThermalAnalyticField> brickFields = new java.util.ArrayList<>();
         private final ThermalAnalyticFieldIndex.Sample fieldSample = new ThermalAnalyticFieldIndex.Sample();
-        private final QueryPublication.MutableSample querySample = new QueryPublication.MutableSample();
-        private final BlockPos.MutableBlockPos dormantPosition = new BlockPos.MutableBlockPos();
-        private final double[] nodeTemperatures = new double[64];
-        private final double[] rawTemperatures = new double[64];
+        private final QueryPublication.MutableSample sample = new QueryPublication.MutableSample();
+        private final BlockPos.MutableBlockPos position = new BlockPos.MutableBlockPos();
+        private final InfraredBrickCodec.Builder payload = new InfraredBrickCodec.Builder();
         private final boolean[] loadedNeighbors = new boolean[9];
+        private boolean neighborsReady;
+        private ServerLevel level;
+        private int originX, originY, originZ;
 
-        private boolean refreshPage(int page) {
-            return presenceBit(refreshPages, page) || presenceBit(previousRefreshPages, page);
+        InfraredSnapshot capture(MinecraftThermalInput input, ServerPlayer player, boolean forceFull,
+                long knownGeneration, long knownCenter, int lastEpoch, long[] knownPresence,
+                boolean knownReadable, long[] knownFieldPages, long knownStoredEpoch) {
+            level = player.serverLevel();
+            int cx = Mth.floor(player.getX()) >> 4, cy = Mth.floor(player.getEyeY()) >> 4;
+            int cz = Mth.floor(player.getZ()) >> 4;
+            originX = (cx - 4) * 16; originY = (cy - 4) * 16; originZ = (cz - 4) * 16;
+            long center = SectionPos.asLong(cx, cy, cz), tick = level.getGameTime();
+            long generation = input == null ? 0 : input.dimensionGeneration;
+            boolean reactivated = input != null && input.queryPublication.noteInfraredRequest(tick, INFRARED_ACTIVE_TICKS);
+            try {
+                if (profileEpoch != MinecraftThermalProfiles.profileEpoch()) {
+                    profileEpoch = MinecraftThermalProfiles.profileEpoch();
+                    profileRevision = DormantChunkThermalState.nextMaterialRevision();
+                }
+                collectFields();
+                collectStoredMaterials(cx, cy, cz);
+                long storedEpoch = DormantChunkThermalState.currentMaterialRevision();
+                // A concurrent publication exchange is not a material deletion. Retry, then retain the client baseline.
+                captureAttempt: for (int attempt = 0; attempt < 2; attempt++) {
+                    payload.reset(); cursor.clear();
+                    Arrays.fill(presence, 0L); Arrays.fill(localHandles, null);
+                    if (input != null && !input.queryPublication.beginInfraredRead(cursor)) continue;
+                    boolean readable = input != null && cursor.valid()
+                            && tick - cursor.sampleTick() <= MAX_PUBLICATION_AGE_TICKS;
+                    int epoch = readable ? cursor.infraredEpoch() : 0;
+                    boolean full = forceFull || knownGeneration != generation || knownCenter != center || knownStoredEpoch > storedEpoch
+                            || knownReadable != readable || readable && (reactivated || lastEpoch == 0 || lastEpoch > epoch);
+                    if (input != null) collectMaterials(input, cx, cy, cz, readable);
+                    for (int word = 0; word < presence.length; word++) {
+                        long previousFields = full || knownFieldPages.length == 0 ? 0 : knownFieldPages[word];
+                        long work = presence[word] | storedPresence[word] | fieldPages[word]
+                                | (full ? 0 : knownPresence[word] | previousFields);
+                        while (work != 0) {
+                            int local = word * 64 + Long.numberOfTrailingZeros(work);
+                            work &= work - 1;
+                            if (local >= INFRARED_PAGE_CAPACITY) continue;
+                            LevelChunk chunk = loadedChunks[local % 81];
+                            int sectionY = cy - 4 + local / 81;
+                            var attachment = (MinecraftThermalChunkAttachment) (Object) chunk;
+                            var state = attachment == null ? null : attachment.frostedheart$getDormantThermalState();
+                            MaterialSectionState stored = state == null ? null : state.materials(sectionY);
+                            long storedRevision = attachment == null ? 0 : Math.max(attachment.frostedheart$getMaterialRevision(),
+                                    state == null ? 0 : state.materialRevision(sectionY));
+                            ThermalPageHandle handle = localHandles[local];
+                            if (handle == null && input != null && stored != null) {
+                                handle = input.pages.handle(SectionPos.asLong(cx - 4 + local % 9,
+                                        cy - 4 + local / 81, cz - 4 + local / 9 % 9));
+                            }
+                            PagePublication page = !readable || handle == null ? null : handle.lastPublication();
+                            if (page != null && page.topologyGeneration() > cursor.topologyGeneration()) continue captureAttempt;
+                            if (page == null) {
+                                presence[word] &= ~(1L << (local & 63));
+                            }
+                            if (handle != null && page == null) stored = null;
+                            changedMaterialBricks = page != null && page.geometryRevision() != handle.liveGeometryRevision()
+                                    ? input.pages.collectMaterialChangesSince(handle.sectionKey(), page.geometryRevision(), changedMaterialBlocks) : 0L;
+                            if (changedMaterialBricks != 0L) {
+                                presence[word] &= ~(1L << (local & 63));
+                                for (int b = 0; b < 64; b++) if (readableSurfaceMask(page.brick(b), b) != 0) {
+                                    presence[word] |= 1L << (local & 63);
+                                    break;
+                                }
+                            }
+                            long storedMask = storedBrickMask(page, stored);
+                            if (storedMask != 0) presence[word] |= 1L << (local & 63);
+                            boolean refresh = presenceBit(fieldPages, local) || (previousFields & 1L << (local & 63)) != 0;
+                            boolean replace = full || refresh || presenceBit(presence, local) != presenceBit(knownPresence, local);
+                            long changed = replace ? -1L : page == null ? 0 : changedBricks(page.workerPageSlot(), lastEpoch);
+                            changed |= changedMaterialBricks;
+                            if (storedRevision > knownStoredEpoch
+                                    || storedMask != 0 && profileRevision > knownStoredEpoch) changed = -1L;
+                            if (changed == 0) continue;
+                            payload.beginPage();
+                            if (!writePage(page, stored, storedMask, local, changed, full)
+                                    || page != null && handle.lastPublication() != page) continue captureAttempt;
+                        }
+                    }
+                    if (input != null && !cursor.isCurrent()) continue;
+                    boolean changedPresence = !Arrays.equals(presence, knownPresence);
+                    if (!full && !changedPresence && payload.size() == 0 && sameFieldPages(knownFieldPages)) return null;
+                    return new InfraredSnapshot(cx, cz, cy, generation, epoch, readable, full,
+                            full || changedPresence ? presence.clone() : NO_INFRARED_PRESENCE,
+                            hasFieldPages() ? fieldPages.clone() : NO_INFRARED_PRESENCE, payload.finishParts(), storedEpoch);
+                }
+                return null;
+            } finally {
+                cursor.clear(); Arrays.fill(handles, null); Arrays.fill(localHandles, null);
+                Arrays.fill(loadedChunks, null);
+                fields.clear(); brickFields.clear(); level = null; payload.reset();
+            }
         }
 
-        private void collectRefreshPages(int centerX, int centerY, int centerZ) {
-            Arrays.fill(refreshPages, 0);
-            fields.clear();
+        private void collectMaterials(MinecraftThermalInput input, int cx, int cy, int cz, boolean readable) {
+            int count = input.pages.collectInfraredPages(cx, cy, cz, handles, localIndexes, presence);
+            Arrays.fill(presence, 0L);
+            for (int i = 0; i < count; i++) {
+                ThermalPageHandle handle = handles[i];
+                int local = Short.toUnsignedInt(localIndexes[i]);
+                localHandles[local] = handle;
+                PagePublication page = handle.lastPublication();
+                if (!readable || page == null || page.topologyGeneration() > cursor.topologyGeneration()) continue;
+                for (int b = 0; b < 64; b++) {
+                    if (surfaceMask(page.brick(b)) == 0) continue;
+                    presence[local >>> 6] |= 1L << (local & 63);
+                    break;
+                }
+            }
+        }
+
+        private void collectStoredMaterials(int cx, int cy, int cz) {
+            Arrays.fill(storedPresence, 0);
+            for (int z = 0; z < 9; z++) for (int x = 0; x < 9; x++) {
+                LevelChunk chunk = level.getChunkSource().getChunkNow(cx - 4 + x, cz - 4 + z);
+                loadedChunks[x + 9 * z] = chunk;
+                if (chunk == null) continue;
+                var attachment = (MinecraftThermalChunkAttachment) (Object) chunk;
+                var state = attachment.frostedheart$getDormantThermalState();
+                if (state == null) continue;
+                for (int y = 0; y < 9; y++) {
+                    int local = x + 9 * (z + 9 * y);
+                    if (state.hasMaterials(cy - 4 + y)) storedPresence[local >>> 6] |= 1L << (local & 63);
+                }
+            }
+        }
+
+        private static long storedBrickMask(PagePublication page, MaterialSectionState stored) {
+            if (stored == null) return 0;
+            long mask = stored.brickMask(), remaining = mask;
+            if (page != null) while (remaining != 0) {
+                int index = Long.numberOfTrailingZeros(remaining); remaining &= remaining - 1;
+                var brick = page.brick(index);
+                if (brick.resolved() && brick.firstSlot() >= 0) mask &= ~(1L << index);
+            }
+            return mask;
+        }
+
+        private void collectFields() {
+            Arrays.fill(fieldPages, 0L); fields.clear();
             var index = MinecraftGameplayFields.existing(level);
             if (index == null) return;
-            int x = (centerX - 4) * 16, y = (centerY - 4) * 16, z = (centerZ - 4) * 16;
-            index.collectIntersecting(x + .5, y + .5, z + .5, x + 143.5, y + 143.5, z + 143.5, fields);
-            for (int i = 0; i < fields.size(); i++) {
-                var field = fields.get(i);
-                int minX = clippedPage(field.min(0), x), maxX = clippedPage(field.max(0), x);
-                int minY = clippedPage(field.min(1), y), maxY = clippedPage(field.max(1), y);
-                int minZ = clippedPage(field.min(2), z), maxZ = clippedPage(field.max(2), z);
-                for (int py = minY; py <= maxY; py++) for (int pz = minZ; pz <= maxZ; pz++) {
-                    for (int px = minX; px <= maxX; px++) {
-                        if (!field.intersects(x + px * 16 + .5, y + py * 16 + .5, z + pz * 16 + .5,
-                                x + px * 16 + 15.5, y + py * 16 + 15.5, z + pz * 16 + 15.5)) continue;
-                        int page = (py * 9 + pz) * 9 + px;
-                        refreshPages[page >>> 6] |= 1L << (page & 63);
-                    }
+            index.collectIntersecting(originX + .5, originY + .5, originZ + .5,
+                    originX + 143.5, originY + 143.5, originZ + 143.5, fields);
+            for (var field : fields) {
+                int minX = clippedPage(field.min(0), originX), maxX = clippedPage(field.max(0), originX);
+                int minY = clippedPage(field.min(1), originY), maxY = clippedPage(field.max(1), originY);
+                int minZ = clippedPage(field.min(2), originZ), maxZ = clippedPage(field.max(2), originZ);
+                for (int y = minY; y <= maxY; y++) for (int z = minZ; z <= maxZ; z++) for (int x = minX; x <= maxX; x++) {
+                    int bx = originX + x * 16, by = originY + y * 16, bz = originZ + z * 16;
+                    if (!field.intersects(bx + .5, by + .5, bz + .5, bx + 15.5, by + 15.5, bz + 15.5)) continue;
+                    int local = x + 9 * (z + 9 * y);
+                    fieldPages[local >>> 6] |= 1L << (local & 63);
                 }
             }
         }
 
         private static int clippedPage(double coordinate, int origin) {
-            return (int) Math.max(0, Math.min(8, Math.floor((coordinate - origin) / 16)));
+            return (int)Math.max(0, Math.min(8, Math.floor((coordinate - origin) / 16)));
         }
 
-        private boolean writeRefreshPages(int centerX, int centerY, int centerZ) {
-            boolean complete = true;
-            for (int word = 0; word < refreshPages.length; word++) {
-                long remaining = refreshPages[word] | previousRefreshPages[word];
-                while (remaining != 0) {
-                    int page = word * 64 + Long.numberOfTrailingZeros(remaining);
-                    remaining &= remaining - 1;
-                    if (page >= INFRARED_PAGE_CAPACITY) continue;
-                    int sx = centerX - 4 + page % 9;
-                    int sz = centerZ - 4 + page / 9 % 9;
-                    int sy = centerY - 4 + page / 81;
-                    int x = sx * 16, y = sy * 16, z = sz * 16;
-                    infraredPayload.beginPage();
-                    int pageStart = infraredPayload.size();
-                    rawReadFailed = false;
-                    var chunk = level.getChunkSource().getChunkNow(sx, sz);
-                    PagePublication publication = infraredPublications[page];
-                    if (chunk != null && publication == null && input != null) {
-                        ThermalPageHandle handle = input.pages.handle(SectionPos.asLong(sx, sy, sz));
-                        if (handle != null) publication = currentOrLast(handle);
-                    }
-                    var dormant = chunk == null ? null : dormantState(chunk);
-                    long storedDormantMask = dormant == null ? 0 : dormant.storedBrickMask(sy);
-                    var dormantSection = dormant == null ? null : dormant.infraredSection(
-                            sy, level.getGameTime(), dormantHalfLifeSeconds(), level, sx, sz, dormantPosition);
-                    for (int dz = -1; dz <= 1; dz++) for (int dx = -1; dx <= 1; dx++) {
-                        loadedNeighbors[(dz + 1) * 3 + dx + 1] =
-                                level.getChunkSource().getChunkNow(sx + dx, sz + dz) != null;
-                    }
-                    long dormantMask = 0;
-                    for (int brick = 0; brick < 64; brick++) {
-                        int bx = x + (brick & 3) * 4, by = y + (brick >>> 4) * 4, bz = z + (brick >>> 2 & 3) * 4;
-                        brickFields.clear();
-                        if (chunk != null && !level.isOutsideBuildHeight(by)) {
-                            for (int f = 0; f < fields.size(); f++) {
-                                var field = fields.get(f);
-                                if (field.intersects(bx + .5, by + .5, bz + .5, bx + 3.5, by + 3.5, bz + 3.5)) brickFields.add(field);
-                            }
-                        }
-                        var physical = publication == null ? null : publication.brick(brick);
-                        boolean expand = !brickFields.isEmpty() || physical != null && physical.blockLayout() != null;
-                        if (expand) Arrays.fill(rawTemperatures, Double.NaN);
-                        boolean live = chunk != null && copyRawBrick(publication, brick, expand);
-                        if (rawReadFailed) break;
-                        short dormantValue = dormantSection == null || (storedDormantMask & 1L << brick) == 0
-                                ? InfraredBrickCodec.INVALID_TEMPERATURE
-                                : dormantSection.temperatures()[brick];
-                        boolean usesDormant = !live && dormantValue != InfraredBrickCodec.INVALID_TEMPERATURE;
-                        if (usesDormant && expand) Arrays.fill(rawTemperatures, dormantValue * .25);
-                        boolean composed = false;
-                        if (brickFields.isEmpty()) {
-                            if (usesDormant) dormantMask |= 1L << brick;
-                            else if (!live || physical == null || physical.coverageSlot() < 0) {
-                                infraredPayload.writeInvalid(page * 64 + brick, false);
-                            } else if (physical.blockLayout() == null) {
-                                infraredPayload.writeUniform(page * 64 + brick, quantizeInfrared(nodeTemperatures[0]));
-                            } else {
-                                for (int block = 0; block < 64; block++) {
-                                    double temperature = rawTemperatures[block];
-                                    infraredBlockTemperatures[block] = Double.isFinite(temperature)
-                                            ? quantizeInfrared(temperature) : InfraredBrickCodec.INVALID_TEMPERATURE;
-                                }
-                                infraredPayload.writeBrick(page * 64 + brick, infraredBlockTemperatures, false);
-                            }
-                            continue;
-                        }
-                        int naturalMode = 0;
-                        int naturalLayers = 0;
-                        // Raw nodes have already been expanded. Reuse their scratch
-                        // for the four heights only after proving a uniform biome.
-                        double[] naturalByY = nodeTemperatures;
-                        for (int block = 0; block < 64; block++) {
-                            int px = bx + (block & 3), py = by + (block >>> 4), pz = bz + (block >>> 2 & 3);
-                            fieldSample.clear();
-                            for (int f = 0; f < brickFields.size(); f++) {
-                                var field = brickFields.get(f);
-                                if (field.contains(px + .5, py + .5, pz + .5)) fieldSample.include(field);
-                            }
-                            double temperature = rawTemperatures[block];
-                            if (fieldSample.present()) {
-                                composed = true;
-                                boolean needsNatural = fieldSample.requiresNatural()
-                                        || !Double.isFinite(temperature) && fieldSample.requiresBase();
-                                if (!needsNatural || hasBiomeNeighbors(px, pz)) {
-                                    double natural = 0;
-                                    if (needsNatural) {
-                                        if (naturalMode == 0) naturalMode = uniformBiomeBrick(bx, by, bz) ? 1 : -1;
-                                        int layer = block >>> 4;
-                                        if (naturalMode > 0) {
-                                            if ((naturalLayers & 1 << layer) == 0) {
-                                                naturalByY[layer] = WorldTemperature.naturalAir(level, dormantPosition.set(px, py, pz));
-                                                naturalLayers |= 1 << layer;
-                                            }
-                                            natural = naturalByY[layer];
-                                        } else {
-                                            natural = WorldTemperature.naturalAir(level, dormantPosition.set(px, py, pz));
-                                        }
-                                    }
-                                    temperature = fieldSample.compose(natural,
-                                            Double.isFinite(temperature) ? temperature : natural);
-                                }
-                            }
-                            infraredBlockTemperatures[block] = Double.isFinite(temperature)
-                                    ? quantizeInfrared(temperature) : InfraredBrickCodec.INVALID_TEMPERATURE;
-                        }
-                        if (usesDormant && !composed) dormantMask |= 1L << brick;
-                        else infraredPayload.writeBrick(page * 64 + brick, infraredBlockTemperatures, false);
-                    }
-                    if (rawReadFailed) {
-                        complete = false;
-                        infraredPayload.rewind(pageStart);
-                        long bit = 1L << (page & 63);
-                        refreshPages[page >>> 6] |= bit;
-                        infraredPresence[page >>> 6] = (infraredPresence[page >>> 6] & ~bit)
-                                | (previousPresence[page >>> 6] & bit);
-                        continue;
-                    }
-                    // Only genuine dormant final Bricks retain dormant ownership.
-                    // Ordinary records above already replaced physical/analytic/invalid Bricks.
-                    infraredPayload.writeDormantSection(page, dormantMask,
-                            dormantSection == null ? null : dormantSection.temperatures(), true);
-                }
-            }
-            return complete;
+        private boolean hasFieldPages() {
+            for (long word : fieldPages) if (word != 0) return true;
+            return false;
         }
 
-        private boolean copyRawBrick(PagePublication publication, int brickIndex, boolean expand) {
-            if (input == null || publication == null) return false;
-            var brick = publication.brick(brickIndex);
-            if (brick.coverageSlot() < 0) return brick.signaturePayload() != null;
-            if (!input.queryPublication.beginInfraredRead(infraredCursor) || !infraredCursor.valid()
-                    || level.getGameTime() - infraredCursor.sampleTick() > MAX_PUBLICATION_AGE_TICKS) {
-                rawReadFailed = true;
-                return false;
-            }
-            for (int node = 0; node < brick.transportNodeCount(); node++) {
-                if (!infraredCursor.tryRead(brick.coverageSlot() + node, brick.arenaGeneration(),
-                        publication.topologyGeneration(), querySample)) {
-                    rawReadFailed = true;
-                    return false;
+        private boolean sameFieldPages(long[] known) {
+            return known.length == 0 ? !hasFieldPages() : Arrays.equals(fieldPages, known);
+        }
+
+        private boolean writePage(PagePublication page, MaterialSectionState stored, long storedMask,
+                int local, long changed, boolean full) {
+            int x = originX + local % 9 * 16, z = originZ + local / 9 % 9 * 16, y = originY + local / 81 * 16;
+            boolean withFields = presenceBit(fieldPages, local) && !level.isOutsideBuildHeight(y)
+                    && loadedChunks[local % 81] != null;
+            neighborsReady = false;
+            if ((storedMask & changed) != 0) readStoredPage(stored, storedMask & changed, local, x, y, z);
+            while (changed != 0) {
+                int brick = Long.numberOfTrailingZeros(changed); changed &= changed - 1;
+                int bx = x + (brick & 3) * 4, by = y + (brick >>> 4) * 4, bz = z + (brick >>> 2 & 3) * 4;
+                brickFields.clear();
+                if (withFields) for (int i = 0; i < fields.size(); i++) {
+                    var field = fields.get(i);
+                    if (field.intersects(bx + .5, by + .5, bz + .5, bx + 3.5, by + 3.5, bz + 3.5)) brickFields.add(field);
                 }
-                nodeTemperatures[node] = querySample.temperatureC();
-            }
-            if (!infraredCursor.isCurrent()) {
-                rawReadFailed = true;
-                return false;
-            }
-            if (!expand) return true;
-            if (brick.blockLayout() == null) Arrays.fill(rawTemperatures, nodeTemperatures[0]);
-            else for (int block = 0; block < 64; block++) {
-                int node = brick.blockLayout().transportAt(block);
-                if (node >= 0) rawTemperatures[block] = nodeTemperatures[node];
+                if (!writeBrick(page, (storedMask & 1L << brick) != 0, local, brick, full, bx, by, bz)) return false;
             }
             return true;
         }
 
+        private void readStoredPage(MaterialSectionState stored, long mask, int local, int x, int y, int z) {
+            Arrays.fill(storedTemperatures, Double.NaN);
+            LevelChunk chunk = loadedChunks[local % 81];
+            for (int index = 0; index < stored.size(); index++) {
+                int block = stored.position(index);
+                int brick = (block & 15) >>> 2 | ((block >>> 4 & 15) >>> 2) << 2 | ((block >>> 8) >>> 2) << 4;
+                if ((mask & 1L << brick) == 0) continue;
+                BlockState state = chunk.getBlockState(position.set(x + (block & 15), y + (block >>> 8), z + (block >>> 4 & 15)));
+                if (net.minecraft.world.level.block.Block.BLOCK_STATE_REGISTRY.getId(state) != stored.stateId(index)) continue;
+                var law = MinecraftThermalProfiles.materialLaw(state);
+                if (law == null) continue;
+                stored.read(index, law, storedSample);
+                storedTemperatures[block] = storedSample.temperatureC();
+            }
+        }
+
+        private static long surfaceMask(PagePublication.Brick brick) {
+            return brick.resolved() && brick.firstSlot() >= 0 && brick.blockLayout() != null
+                    ? brick.blockLayout().surfaceNodeMask() : 0L;
+        }
+
+        private long readableSurfaceMask(PagePublication.Brick brick, int index) {
+            long mask = surfaceMask(brick);
+            if ((changedMaterialBricks & 1L << index) == 0L) return mask;
+            long nodes = mask;
+            while (nodes != 0L) {
+                int node = Long.numberOfTrailingZeros(nodes); nodes &= nodes - 1;
+                if ((brick.blockLayout().nodeBlockMask(node) & changedMaterialBlocks[index]) != 0L)
+                    mask &= ~(1L << node);
+            }
+            return mask;
+        }
+
+        private long changedBricks(int page, int epoch) {
+            if (cursor.pageChangeEpoch(page) <= epoch) return 0;
+            long result = 0;
+            for (int brick = 0; brick < 64; brick++)
+                if (cursor.brickChangeEpoch(page, brick) > epoch) result |= 1L << brick;
+            return result;
+        }
+
+        private boolean writeBrick(PagePublication page, boolean stored, int localPage, int index, boolean full, int x, int y, int z) {
+            var brick = page == null ? null : page.brick(index);
+            long mask = brick == null ? 0 : readableSurfaceMask(brick, index);
+            int address = localPage * 64 + index;
+            boolean compose = !brickFields.isEmpty();
+            if (mask == 0 && !stored && !compose) { payload.writeInvalid(address, full); return true; }
+            long remaining = mask;
+            while (remaining != 0) {
+                int node = Long.numberOfTrailingZeros(remaining); remaining &= remaining - 1;
+                if (!cursor.tryRead(brick.firstSlot() + node, brick.arenaGeneration(), page.topologyGeneration(), sample)) return false;
+                if (compose) rawNodes[node] = sample.temperatureC();
+                else nodes[node] = InfraredBrickCodec.quantize(sample.temperatureC());
+            }
+            for (int block = 0; block < 64; block++) {
+                int node = brick == null || brick.blockLayout() == null ? -1 : brick.blockLayout().nodeAt(block);
+                boolean material = node >= 0 && (mask & 1L << node) != 0;
+                double saved = stored ? storedTemperatures[BlockBrickLayout.pageBlock(index, block)] : Double.NaN;
+                if (compose) rawBlocks[block] = material ? rawNodes[node] : saved;
+                else blocks[block] = material ? nodes[node] : InfraredBrickCodec.quantize(saved);
+            }
+            if (compose) {
+                int naturalMode = 0, naturalLayers = 0;
+                // Material values have been expanded; rawNodes can now hold four exact natural Y layers.
+                for (int block = 0; block < 64; block++) {
+                    int px = x + (block & 3), py = y + (block >>> 4), pz = z + (block >>> 2 & 3);
+                    fieldSample.clear();
+                    for (int i = 0; i < brickFields.size(); i++) {
+                        var field = brickFields.get(i);
+                        if (field.contains(px + .5, py + .5, pz + .5)) fieldSample.include(field);
+                    }
+                    double temperature = rawBlocks[block];
+                    if (fieldSample.present()) {
+                        boolean needsNatural = fieldSample.requiresNatural() || !Double.isFinite(temperature) && fieldSample.requiresBase();
+                        if (needsNatural && !neighborsReady) prepareNeighbors(x >> 4, z >> 4);
+                        if (!needsNatural || hasBiomeNeighbors(px, pz)) {
+                            double natural = 0;
+                            if (needsNatural) {
+                                if (naturalMode == 0) naturalMode = uniformBiomeBrick(x, y, z) ? 1 : -1;
+                                int layer = block >>> 4;
+                                if (naturalMode > 0) {
+                                    if ((naturalLayers & 1 << layer) == 0) {
+                                        rawNodes[layer] = WorldTemperature.naturalAir(level, position.set(px, py, pz));
+                                        naturalLayers |= 1 << layer;
+                                    }
+                                    natural = rawNodes[layer];
+                                } else natural = WorldTemperature.naturalAir(level, position.set(px, py, pz));
+                            }
+                            temperature = fieldSample.compose(natural, Double.isFinite(temperature) ? temperature : natural);
+                        }
+                    }
+                    blocks[block] = InfraredBrickCodec.quantize(temperature);
+                }
+            }
+            payload.writeBrick(address, blocks, full);
+            return true;
+        }
+
+        private void prepareNeighbors(int cx, int cz) {
+            for (int dz = -1; dz <= 1; dz++) for (int dx = -1; dx <= 1; dx++)
+                loadedNeighbors[(dz + 1) * 3 + dx + 1] = level.getChunkSource().getChunkNow(cx + dx, cz + dz) != null;
+            neighborsReady = true;
+        }
+
         private boolean hasBiomeNeighbors(int x, int z) {
-            // Biome zoom may read an adjacent Chunk within two blocks of its edge.
             int dx = (x & 15) < 2 ? -1 : (x & 15) >= 14 ? 1 : 0;
             int dz = (z & 15) < 2 ? -1 : (z & 15) >= 14 ? 1 : 0;
             return loadedNeighbors[4 + dx] && loadedNeighbors[4 + dz * 3] && loadedNeighbors[4 + dz * 3 + dx];
@@ -1060,340 +1181,27 @@ public final class MinecraftThermalInput implements AutoCloseable {
         private boolean uniformBiomeBrick(int x, int y, int z) {
             int minX = (x & 15) == 0 ? -1 : 0, maxX = (x & 15) == 12 ? 1 : 0;
             int minZ = (z & 15) == 0 ? -1 : 0, maxZ = (z & 15) == 12 ? 1 : 0;
-            for (int dz = minZ; dz <= maxZ; dz++) for (int dx = minX; dx <= maxX; dx++) {
+            for (int dz = minZ; dz <= maxZ; dz++) for (int dx = minX; dx <= maxX; dx++)
                 if (!loadedNeighbors[(dz + 1) * 3 + dx + 1]) return false;
-            }
-            // BiomeManager subtracts two blocks, then selects one of eight quart
-            // samples. Across an aligned 4³ Brick their union is this 3³ lattice.
             int qx = x >> 2, qy = y >> 2, qz = z >> 2;
             var biome = level.getNoiseBiome(qx, qy, qz);
-            for (int dy = -1; dy <= 1; dy++) for (int dz = -1; dz <= 1; dz++) {
-                for (int dx = -1; dx <= 1; dx++) {
-                    if ((dx != 0 || dy != 0 || dz != 0)
-                            && level.getNoiseBiome(qx + dx, qy + dy, qz + dz) != biome) return false;
-                }
-            }
+            for (int dy = -1; dy <= 1; dy++) for (int dz = -1; dz <= 1; dz++) for (int dx = -1; dx <= 1; dx++)
+                if ((dx != 0 || dy != 0 || dz != 0) && level.getNoiseBiome(qx + dx, qy + dy, qz + dz) != biome) return false;
             return true;
         }
 
-        @Override
-        public void close() {
-            if (infraredPayload != null) infraredPayload.close();
-        }
-        InfraredSnapshot capture(
-                MinecraftThermalInput input, ServerLevel level,
-                int centerChunkX,
-                int centerChunkZ,
-                int centerSectionY,
-                boolean forceFull,
-                int lastInfraredEpoch,
-                long[] knownPresence,
-                long lastDormantRevision,
-                long[] knownDormantPresence, long[] knownRefreshPages
-        ) {
-            this.input = input;
-            this.level = level;
-            this.previousRefreshPages = knownRefreshPages;
-            this.previousPresence = knownPresence;
-            collectRefreshPages(centerChunkX, centerSectionY, centerChunkZ);
-            long gameTick = level.getGameTime();
-            boolean reactivated = input != null && input.queryPublication.noteInfraredRequest(
-                    gameTick, INFRARED_ACTIVE_TICKS);
-            boolean liveReadable = input != null && input.queryPublication.beginInfraredRead(infraredCursor)
-                    && infraredCursor.valid()
-                    && gameTick - infraredCursor.sampleTick() <= MAX_PUBLICATION_AGE_TICKS;
-            boolean full = forceFull || liveReadable && (reactivated
-                    || lastInfraredEpoch == 0
-                    || lastInfraredEpoch > infraredCursor.infraredEpoch());
-            if (infraredPayload == null) {
-                infraredPayload = new InfraredBrickCodec.Builder();
-            }
-            infraredPayload.reset();
-            Arrays.fill(infraredChangedPages, 0L);
-            try {
-                if (liveReadable) {
-                    liveReadable = writeLiveInfrared(
-                            centerChunkX, centerSectionY, centerChunkZ,
-                            full, lastInfraredEpoch, knownPresence);
-                }
-                if (!liveReadable) {
-                    // No physical Pages is a valid field-only display. Existing
-                    // published Pages with an unreadable cut must wait on full,
-                    // even when no analytic refresh bit happens to cover them.
-                    if (full && input != null && input.pages.collectInfraredPages(
-                            centerChunkX, centerSectionY, centerChunkZ,
-                            infraredHandles, infraredLocalIndexes, infraredPresence) > 0) return null;
-                    // A missing live cut must not delete the client's last live coverage.
-                    full = forceFull;
-                    infraredPayload.reset();
-                    Arrays.fill(infraredPublications, null);
-                    Arrays.fill(infraredChangedPages, 0L);
-                    if (full) {
-                        Arrays.fill(infraredPresence, 0L);
-                    } else {
-                        System.arraycopy(knownPresence, 0, infraredPresence, 0,
-                                INFRARED_PRESENCE_WORDS);
-                    }
-                }
-                int currentEpoch = liveReadable ? infraredCursor.infraredEpoch() : 0;
-                long dormantRevision = writeDormantInfrared(
-                        centerChunkX, centerChunkZ, centerSectionY, gameTick,
-                        full, lastDormantRevision, knownDormantPresence, knownPresence);
-                // A full response clears the client's mirror: an incomplete Page
-                // cannot be omitted from it while claiming to preserve old display.
-                if (!writeRefreshPages(centerChunkX, centerSectionY, centerChunkZ) && full) return null;
-                boolean presenceChanged = !Arrays.equals(knownPresence, infraredPresence);
-                if (!full && !presenceChanged && infraredPayload.size() == 0
-                        && Arrays.equals(refreshPages, knownRefreshPages)) {
-                    return null;
-                }
-                byte[][] records = infraredPayload.finishParts();
-                long[] presence = full || presenceChanged
-                        ? infraredPresence.clone()
-                        : NO_INFRARED_PRESENCE;
-                return new InfraredSnapshot(
-                        centerChunkX, centerChunkZ, centerSectionY,
-                        currentEpoch, full, presence, records, dormantRevision, refreshPages.clone());
-            } finally {
-                infraredCursor.clear();
-                Arrays.fill(infraredHandles, null);
-                Arrays.fill(infraredPublications, null);
-                infraredPayload.reset();
-                fields.clear();
-                brickFields.clear();
-                this.previousRefreshPages = null;
-                this.previousPresence = null;
-                this.input = null;
-                this.level = null;
-            }
-        }
-
-        private boolean writeLiveInfrared(
-                int centerX, int centerY, int centerZ,
-                boolean full, int lastEpoch, long[] knownPresence
-        ) {
-            int count = input.pages.collectInfraredPages(
-                    centerX, centerY, centerZ, infraredHandles, infraredLocalIndexes,
-                    infraredPresence);
-            for (int index = 0; index < count; index++) {
-                PagePublication publication = currentOrLast(infraredHandles[index]);
-                if (publication == null) {
-                    return false;
-                }
-                int localPage = Short.toUnsignedInt(infraredLocalIndexes[index]);
-                infraredPublications[localPage] = publication;
-                if (refreshPage(localPage)) continue;
-                boolean added = full || !presenceBit(knownPresence, localPage);
-                long changed = added ? -1L : changedBrickMask(publication.workerPageSlot(), lastEpoch);
-                if (changed != 0L) {
-                    infraredPayload.beginPage();
-                    infraredChangedPages[localPage >>> 6] |= 1L << (localPage & 63);
-                }
-                while (changed != 0L) {
-                    int brick = Long.numberOfTrailingZeros(changed);
-                    if (!writeInfraredBrick(publication, localPage, brick, added)) {
-                        return false;
-                    }
-                    changed &= changed - 1L;
-                }
-            }
-            // All live values are now copied into the payload; later worker writes cannot alter them.
-            return infraredCursor.isCurrent();
-        }
-
-        private long writeDormantInfrared(
-                int centerChunkX,
-                int centerChunkZ,
-                int centerSectionY,
-                long gameTick,
-                boolean full,
-                long lastRevision,
-                long[] knownDormantPresence,
-                long[] knownLivePresence
-        ) {
-            Arrays.fill(infraredDormantPresence, 0L);
-            long currentRevision = full ? 0L : lastRevision;
-            double halfLifeSeconds = dormantHalfLifeSeconds();
-            for (int dz = -4; dz <= 4; dz++) {
-                for (int dx = -4; dx <= 4; dx++) {
-                    int sectionX = centerChunkX + dx;
-                    int sectionZ = centerChunkZ + dz;
-                    LevelChunk chunk = level.getChunkSource().getChunkNow(
-                            sectionX, sectionZ);
-                    DormantChunkThermalState state = chunk == null
-                            ? null : dormantState(chunk);
-                    if (state == null) {
-                        continue;
-                    }
-                    for (int dy = -4; dy <= 4; dy++) {
-                        int localPageIndex = ((dy + 4) * 9 + (dz + 4)) * 9
-                                + dx + 4;
-                        int sectionY = centerSectionY + dy;
-                        if (refreshPage(localPageIndex)) continue;
-                        long stored = state.storedBrickMask(sectionY);
-                        PagePublication publication = infraredPublications[localPageIndex];
-                        long resolved = resolvedInfraredBricks(publication, stored);
-                        long brickMask = stored & ~resolved;
-                        if (brickMask == 0L) {
-                            continue;
-                        }
-                        DormantChunkThermalState.InfraredSection snapshot = state.infraredSection(
-                                sectionY, gameTick, halfLifeSeconds, level,
-                                sectionX, sectionZ, dormantPosition);
-                        resolved |= resolvedInfraredBricks(
-                                publication, snapshot.changedBrickMask() & ~stored);
-                        infraredDormantPresence[localPageIndex >>> 6] |= 1L << (localPageIndex & 63);
-                        currentRevision = Math.max(currentRevision, snapshot.revision());
-                        boolean replace = full || !presenceBit(knownDormantPresence, localPageIndex)
-                                || presenceBit(infraredChangedPages, localPageIndex)
-                                || presenceBit(knownLivePresence, localPageIndex)
-                                != presenceBit(infraredPresence, localPageIndex);
-                        if (replace || snapshot.revision() > lastRevision) {
-                            replace |= snapshot.previousRevision() == 0L
-                                    || lastRevision < snapshot.previousRevision();
-                            long written = replace ? brickMask : snapshot.changedBrickMask() & ~resolved;
-                            if (replace || written != 0L) {
-                                infraredPayload.beginPage();
-                                infraredPayload.writeDormantSection(localPageIndex, written,
-                                        snapshot.temperatures(), replace);
-                            }
-                        }
-                    }
-                }
-            }
-            if (!full) {
-                for (int word = 0; word < INFRARED_PRESENCE_WORDS; word++) {
-                    long removed = knownDormantPresence[word] & ~infraredDormantPresence[word];
-                    while (removed != 0L) {
-                        int section = word * 64 + Long.numberOfTrailingZeros(removed);
-                        if (!refreshPage(section)) {
-                            infraredPayload.beginPage();
-                            infraredPayload.writeDormantSection(section, 0L, null, true);
-                        }
-                        removed &= removed - 1L;
-                    }
-                }
-            }
-            return currentRevision;
-        }
-
-        private static long resolvedInfraredBricks(PagePublication publication, long candidates) {
-            long result = 0L;
-            if (publication != null) {
-                while (candidates != 0L) {
-                    int brick = Long.numberOfTrailingZeros(candidates);
-                    if (publication.brick(brick).resolved()) result |= 1L << brick;
-                    candidates &= candidates - 1L;
-                }
-            }
-            return result;
-        }
-
-        private long changedBrickMask(int pageSlot, int lastInfraredEpoch) {
-            if (infraredCursor.pageChangeEpoch(pageSlot) <= lastInfraredEpoch) {
-                return 0L;
-            }
-            long result = 0L;
-            for (int brick = 0; brick < 64; brick++) {
-                if (infraredCursor.brickChangeEpoch(pageSlot, brick)
-                        > lastInfraredEpoch) {
-                    result |= 1L << brick;
-                }
-            }
-            return result;
-        }
-
-        private boolean writeInfraredBrick(
-                PagePublication publication,
-                int localPageIndex,
-                int brickIndex,
-                boolean omitInvalid
-        ) {
-            PagePublication.Brick brick = publication.brick(brickIndex);
-            int localBrickIndex = localPageIndex * 64 + brickIndex;
-            int slot = brick.coverageSlot();
-            if (slot == PagePublication.NO_AIR_POINT) {
-                infraredPayload.writeInvalid(localBrickIndex, omitInvalid);
-                return true;
-            }
-            if (brick.blockLayout() == null) {
-                if (!infraredCursor.tryRead(
-                        slot,
-                        brick.arenaGeneration(),
-                        publication.topologyGeneration(),
-                        querySample)) {
-                    return false;
-                }
-                infraredPayload.writeUniform(
-                        localBrickIndex,
-                        quantizeInfrared(querySample.temperatureC()));
-                return true;
-            }
-
-            for (int node = 0; node < brick.transportNodeCount(); node++) {
-                if (!infraredCursor.tryRead(
-                        slot + node,
-                        brick.arenaGeneration(),
-                        publication.topologyGeneration(),
-                        querySample)) {
-                    return false;
-                }
-                infraredNodeTemperatures[node] = quantizeInfrared(querySample.temperatureC());
-            }
-            for (int block = 0; block < 64; block++) {
-                int node = brick.blockLayout().transportAt(block);
-                infraredBlockTemperatures[block] = node < 0
-                        ? InfraredBrickCodec.INVALID_TEMPERATURE : infraredNodeTemperatures[node];
-            }
-            infraredPayload.writeBrick(
-                    localBrickIndex, infraredBlockTemperatures, omitInvalid);
-            return true;
-        }
-
+        @Override public void close() { payload.close(); }
     }
 
-    private static boolean presenceBit(long[] presence, int localPageIndex) {
-        return (presence[localPageIndex >>> 6]
-                & 1L << (localPageIndex & 63)) != 0L;
+    private static boolean presenceBit(long[] presence, int page) {
+        return presence.length != 0 && (presence[page >>> 6] & 1L << (page & 63)) != 0;
     }
 
-    private static PagePublication currentOrLast(ThermalPageHandle handle) {
-        PagePublication current = handle.currentPublication();
-        return current == null ? handle.lastPublication() : current;
+    /** Final display transaction; readable describes the live worker baseline, independent of stored bodies and fields. */
+    public record InfraredSnapshot(int centerChunkX, int centerChunkZ, int centerSectionY,
+            long generation, int infraredEpoch, boolean readable, boolean full,
+            long[] presence, long[] fieldPages, byte[][] brickRecords, long storedEpoch) {
     }
-
-    private static short quantizeInfrared(double temperatureC) {
-        long value = Math.round(temperatureC * 4.0D);
-        return (short) Math.max(-32767L, Math.min(32767L, value));
-    }
-
-    public record InfraredSnapshot(
-            int centerChunkX,
-            int centerChunkZ,
-            int centerSectionY,
-            int infraredEpoch,
-            boolean full,
-            long[] presence,
-            byte[][] brickRecords,
-            long dormantRevision,
-            long[] refreshPages
-    ) {
-        public InfraredSnapshot {
-            if (infraredEpoch < 0 || presence == null || brickRecords == null
-                    || presence.length != 0
-                    && presence.length != INFRARED_PRESENCE_WORDS
-                    || full && presence.length != INFRARED_PRESENCE_WORDS
-                    || refreshPages == null || refreshPages.length != INFRARED_PRESENCE_WORDS) {
-                throw new IllegalArgumentException("invalid infrared snapshot");
-            }
-            for (byte[] part : brickRecords) {
-                if (part == null || part.length > InfraredBrickCodec.MAX_PAYLOAD_BYTES) {
-                    throw new IllegalArgumentException("invalid infrared part");
-                }
-            }
-        }
-    }
-
     public static BlockPos nearestGameplayGenerator(
             Level level,
             BlockPos position,
@@ -1418,13 +1226,31 @@ public final class MinecraftThermalInput implements AutoCloseable {
             BlockState state,
             StateTransitionData data
     ) {
-        if (!data.willTransit() || data.heatCapacity() <= 0) {
+        if (data == null || !data.willTransit() || data.heatCapacity() <= 0) {
             return false;
         }
+        return ownsMaterialTransitions(level, position, state);
+    }
+
+    public static boolean ownsMaterialTransitions(ServerLevel level, BlockPos position, BlockState state) {
         Integer profileId = MinecraftThermalProfiles.phaseProfileId(state);
         MinecraftThermalInput input = active(level);
         return profileId != null && input != null
                 && input.phase.ownsHeatingTransition(position, profileId);
+    }
+
+    public static boolean requestGameplayPhase(ServerLevel level, BlockPos position, BlockState state, byte branch) {
+        MinecraftThermalInput input = active(level);
+        if (input == null) return false;
+        int signature = input.profiles.states().signatureId(state);
+        var profile = input.profiles.materials().profileOrNull(input.profiles.signatures().materialProfileId(signature));
+        if (profile == null || profile.thermalLaw() == null || profile.thermalLaw().transition(branch) == null) return false;
+        var page = input.pages.handle(SectionPos.asLong(position));
+        if (page == null) return false;
+        int block = (position.getX() & 15) | (position.getZ() & 15) << 4 | (position.getY() & 15) << 8;
+        input.accumulator.requestPhase(position.asLong(), page, block,
+                net.minecraft.world.level.block.Block.BLOCK_STATE_REGISTRY.getId(state), branch);
+        return true;
     }
 
     public static void prepareGameplayProfiles() {
@@ -1485,6 +1311,19 @@ public final class MinecraftThermalInput implements AutoCloseable {
             if (input != null) {
                 int flags = MinecraftThermalProfiles.mutationFlags(
                         oldState, newState);
+                int oldSignature = input.profiles.states().signatureId(oldState);
+                int newSignature = input.profiles.states().signatureId(newState);
+                if (input.profiles.signatures().materialProfileId(oldSignature) != 0
+                        || input.profiles.signatures().materialProfileId(newSignature) != 0) {
+                    int worldX = SectionPos.sectionToBlockCoord(SectionPos.x(owner.sectionKey())) + localX;
+                    int worldY = SectionPos.sectionToBlockCoord(SectionPos.y(owner.sectionKey())) + localY;
+                    int worldZ = SectionPos.sectionToBlockCoord(SectionPos.z(owner.sectionKey())) + localZ;
+                    byte cause = MinecraftPhaseController.materialChangeCause(oldState, newState, worldX, worldY, worldZ);
+                    if (cause != 0) {
+                        owner.recordMaterialChange(localX | localZ << 4 | localY << 8, oldSignature, newSignature, cause);
+                        flags |= MinecraftThermalProfiles.TOPOLOGY_MUTATION;
+                    }
+                }
                 int pageFlags = flags & (MinecraftThermalProfiles.TOPOLOGY_MUTATION
                         | MinecraftThermalProfiles.SOURCE_MUTATION);
                 if (pageFlags != 0) {
@@ -1522,6 +1361,9 @@ public final class MinecraftThermalInput implements AutoCloseable {
 
     public static void onChunkLoad(ServerLevel level, LevelChunk chunk) {
         DormantChunkThermalState state = dormantState(chunk);
+        // A newly loaded chunk can replace a client's previous stored display,
+        // including when the new chunk has no material records at all.
+        setDormantState(chunk, state);
         if (state != null && state.activateLoaded(
                 level.getGameTime(), dormantHalfLifeSeconds())) {
             if (state.isEmpty()) {
@@ -1543,6 +1385,7 @@ public final class MinecraftThermalInput implements AutoCloseable {
     public static void onChunkUnload(ServerLevel level, LevelChunk chunk) {
         MinecraftThermalInput input = active(level);
         if (input != null) {
+            input.awaitLatestCompletion();
             input.pendingSourceChunks.remove(chunk.getPos().toLong(), chunk);
             LevelChunk current = level.getChunkSource().getChunkNow(
                     chunk.getPos().x, chunk.getPos().z);
@@ -1605,7 +1448,7 @@ public final class MinecraftThermalInput implements AutoCloseable {
                 ((MinecraftThermalSectionAttachment) (Object) section)
                         .frostedheart$getThermalInputOwner();
         if (owner != null) owner.recordFullResync(
-                ThermalPageHandle.GeometryResyncReason.EXPLICIT_INVALIDATION);
+                ThermalPageHandle.GeometryResyncReason.SECTION_REPLACED);
     }
 
     public static void onSectionIdentityReplaced(
@@ -1614,6 +1457,11 @@ public final class MinecraftThermalInput implements AutoCloseable {
             int sectionIndex,
             LevelChunkSection previous
     ) {
+        DormantChunkThermalState stored = dormantState(chunk);
+        if (stored != null && sectionIndex >= 0 && sectionIndex < chunk.getSections().length) {
+            stored.replaceMaterials(chunk.getSectionYFromSectionIndex(sectionIndex), null);
+            chunk.setUnsaved(true);
+        }
         MinecraftThermalInput input = active(level);
         if (input != null && sectionIndex >= 0
                 && sectionIndex < chunk.getSections().length) {
@@ -1677,6 +1525,7 @@ public final class MinecraftThermalInput implements AutoCloseable {
     public void close() {
         requireMainThread();
         if (closed) return;
+        awaitLatestCompletion();
         pages.checkpointAll(true, true);
         closed = true;
         pendingSourceChunks.clear();
@@ -1714,6 +1563,47 @@ public final class MinecraftThermalInput implements AutoCloseable {
         }
     }
 
+    public MaterialSectionState dormantMaterialAdmissionCut(long sectionKey) {
+        LevelChunk chunk = level.getChunkSource().getChunkNow(SectionPos.x(sectionKey), SectionPos.z(sectionKey));
+        DormantChunkThermalState stored = chunk == null ? null : dormantState(chunk);
+        return stored == null ? null : stored.materials(SectionPos.y(sectionKey));
+    }
+
+    public long materialPublicationRevision(ThermalPageHandle page) {
+        PagePublication publication = page.lastPublication();
+        return publication != null && queryPublication.beginInfraredRead(checkpointCursor)
+                && checkpointCursor.valid() && checkpointCursor.topologyGeneration() >= publication.topologyGeneration()
+                && checkpointCursor.isCurrent() ? publication.geometryRevision() : -1;
+    }
+
+    /** Also runs without an active dimension worker; saved matter must follow world replacement. */
+    public static void onMaterialBlockChanged(LevelChunk chunk, BlockPos position, BlockState previous, BlockState next) {
+        if (previous == null || previous == next || !(chunk.getLevel() instanceof ServerLevel level)) return;
+        if (!level.getServer().isSameThread()) {
+            BlockPos capturedPosition = position.immutable();
+            level.getServer().execute(() -> onMaterialBlockChanged(chunk, capturedPosition, previous, next));
+            return;
+        }
+        DormantChunkThermalState stored = dormantState(chunk);
+        int sectionY = SectionPos.blockToSectionCoord(position.getY());
+        int sectionIndex = chunk.getSectionIndex(position.getY());
+        if (sectionIndex < 0 || sectionIndex >= chunk.getSections().length) return;
+        var owner = ((MinecraftThermalSectionAttachment) (Object) chunk.getSections()[sectionIndex]).frostedheart$getThermalInputOwner();
+        int block = (position.getX() & 15) | (position.getZ() & 15) << 4 | (position.getY() & 15) << 8;
+        boolean saved = stored != null && stored.hasMaterial(sectionY, block);
+        if (!saved && (owner == null || owner.page() == null)) return;
+        byte cause = MinecraftPhaseController.materialChangeCause(previous, next, position.getX(), position.getY(), position.getZ());
+        int nextId = net.minecraft.world.level.block.Block.BLOCK_STATE_REGISTRY.getId(next);
+        if (owner != null) owner.recordMaterialCheckpointChange(block, nextId, cause);
+        if (saved) {
+            var nextLaw = MinecraftThermalProfiles.materialLaw(next);
+            double natural = nextLaw != null && (cause == ResolvedGeometryBatch.MaterialChanges.REPLACE
+                    || cause == ResolvedGeometryBatch.MaterialChanges.MASS_CHANGE)
+                    ? WorldTemperature.naturalAir(level, position) : 0;
+            if (stored.applyMaterialChange(sectionY, block, nextId, nextLaw, cause, natural)) chunk.setUnsaved(true);
+        }
+    }
+
     public void captureDormantPage(
             ThermalPageHandle page,
             LevelChunk chunk,
@@ -1721,6 +1611,8 @@ public final class MinecraftThermalInput implements AutoCloseable {
     ) {
         PagePublication publication;
         DormantChunkThermalState.CaptureResult captured = null;
+        MaterialSectionState.Capture capturedMaterials = null;
+        long materialSnapshotRevision = -1;
         int sectionX = SectionPos.x(page.sectionKey());
         int sectionY = SectionPos.y(page.sectionKey());
         int sectionZ = SectionPos.z(page.sectionKey());
@@ -1734,22 +1626,26 @@ public final class MinecraftThermalInput implements AutoCloseable {
             if (publication == null) {
                 return;
             }
+            if (!queryPublication.beginInfraredRead(checkpointCursor) || !checkpointCursor.valid()) continue;
             captured = DormantChunkThermalState.capture(
                     publication,
                     queryPublication,
                     querySample,
                     natural,
                     dormantCapture);
-            if (captured.valid() && page.lastPublication() == publication) {
+            capturedMaterials = MaterialSectionState.capture(publication, queryPublication, profiles.signatures(), materialCapture);
+            if (captured.valid() && capturedMaterials.valid() && checkpointCursor.isCurrent()
+                    && page.lastPublication() == publication) {
+                materialSnapshotRevision = publication.geometryRevision();
                 break;
             }
             captured = null;
         }
-        if (captured == null || !captured.valid()) {
+        if (captured == null || !captured.valid() || capturedMaterials == null || !capturedMaterials.valid()) {
             return;
         }
         DormantChunkThermalState state = dormantState(chunk);
-        if (state == null && captured.entry() != null) {
+        if (state == null && (captured.entry() != null || capturedMaterials.state() != null)) {
             state = new DormantChunkThermalState(
                     chunk.getSectionYFromSectionIndex(0),
                     chunk.getSections().length);
@@ -1759,6 +1655,11 @@ public final class MinecraftThermalInput implements AutoCloseable {
             return;
         }
         boolean changed = state.replace(sectionY, captured.entry());
+        MaterialSectionState materialState = capturedMaterials.state();
+        int sectionIndex = chunk.getSectionIndex(SectionPos.sectionToBlockCoord(sectionY));
+        var owner = ((MinecraftThermalSectionAttachment) (Object) chunk.getSections()[sectionIndex]).frostedheart$getThermalInputOwner();
+        if (owner != null) materialState = owner.projectMaterialCheckpoint(materialState, materialSnapshotRevision, natural);
+        changed |= state.mergeMaterials(sectionY, materialState, capturedMaterials.sampledBricks());
         if (captured.entry() != null) {
             changed |= state.updateSourceSupport(
                     sectionY,
@@ -1810,6 +1711,7 @@ public final class MinecraftThermalInput implements AutoCloseable {
     static void checkpointForSave(ServerLevel level, LevelChunk chunk) {
         MinecraftThermalInput input = active(level);
         if (input != null) {
+            input.awaitLatestCompletion();
             input.pages.checkpointChunk(chunk, false, true);
         }
     }
@@ -1820,6 +1722,7 @@ public final class MinecraftThermalInput implements AutoCloseable {
             inputs = ACTIVE.values().toArray(MinecraftThermalInput[]::new);
         }
         for (MinecraftThermalInput input : inputs) {
+            input.awaitLatestCompletion();
             input.pages.checkpointAll(true, true);
         }
     }

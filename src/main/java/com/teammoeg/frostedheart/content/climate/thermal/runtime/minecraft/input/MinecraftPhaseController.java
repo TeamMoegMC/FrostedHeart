@@ -2,13 +2,15 @@
 package com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.input;
 
 import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
-import com.teammoeg.frostedheart.content.climate.data.StateTransitionData;
+import com.teammoeg.frostedheart.content.climate.WorldTemperature;
+import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.MinecraftThermalInput;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.MaterialBoundaryRegistry;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.PagePublication;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.ThermalPageHandle;
 import com.teammoeg.frostedheart.content.climate.thermal.profile.minecraft.MinecraftStateThermalTable;
 import com.teammoeg.frostedheart.content.climate.thermal.profile.ThermalSignatureTable;
 import com.teammoeg.frostedheart.content.climate.thermal.solver.PhaseTransitionRuntime;
+import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.message.ResolvedGeometryBatch.MaterialChanges;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.SectionPos;
@@ -19,10 +21,33 @@ import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.GameRules;
 
 import java.util.ArrayDeque;
-import java.util.Objects;
 
 /** Main-thread application and acknowledgement of worker phase requests. */
 public final class MinecraftPhaseController {
+    private record Mutation(long position, byte cause) {}
+    private static final ThreadLocal<Mutation> APPLYING = new ThreadLocal<>();
+
+    public static byte materialChangeCause(BlockState before, BlockState after, int x, int y, int z) {
+        Mutation mutation = APPLYING.get();
+        if (mutation != null && mutation.position() == BlockPos.asLong(x, y, z)) return mutation.cause();
+        if (before.getBlock() != after.getBlock()) return MaterialChanges.REPLACE;
+        return before.getFluidState() != after.getFluidState() ? MaterialChanges.MASS_CHANGE : 0;
+    }
+
+    public static boolean applyGameplayTransition(ServerLevel level, BlockPos position, BlockState target) {
+        return setMaterialBlock(level, position, target, MaterialChanges.GAMEPLAY_TRANSITION);
+    }
+
+    private static boolean setMaterialBlock(ServerLevel level, BlockPos position, BlockState target, byte cause) {
+        Mutation previous = APPLYING.get();
+        APPLYING.set(new Mutation(position.asLong(), cause));
+        try {
+            return level.setBlockAndUpdate(position, target);
+        } finally {
+            if (previous == null) APPLYING.remove();
+            else APPLYING.set(previous);
+        }
+    }
     private enum Outcome {
         APPLIED,
         REJECTED,
@@ -38,6 +63,9 @@ public final class MinecraftPhaseController {
     private final int maximumPerTick;
     private final ArrayDeque<PhaseTransitionRuntime.Request> pending =
             new ArrayDeque<>();
+    private final com.teammoeg.frostedheart.content.climate.thermal.field.ThermalAnalyticFieldIndex.Sample fieldSample =
+            new com.teammoeg.frostedheart.content.climate.thermal.field.ThermalAnalyticFieldIndex.Sample();
+    private final BlockPos.MutableBlockPos neighborPosition = new BlockPos.MutableBlockPos();
 
     public MinecraftPhaseController(
             ServerLevel level,
@@ -98,7 +126,8 @@ public final class MinecraftPhaseController {
             return false;
         }
         PagePublication publication = page.currentPublication();
-        return publication == null || publication.hasPhaseCandidate(
+        if (publication == null) publication = page.lastPublication();
+        return publication != null && publication.hasPhaseCandidate(
                 position.getX(), position.getY(), position.getZ(), profileId);
     }
 
@@ -111,10 +140,7 @@ public final class MinecraftPhaseController {
         if (page == null
                 || page.lifecycleGeneration()
                         != request.lifecycleGeneration()
-                || !hasCandidate(
-                        page,
-                        request.blockX(), request.blockY(), request.blockZ(),
-                        request.profileId())) {
+                || !pages.matchesMaterialRequest(request)) {
             return Outcome.REJECTED;
         }
         LevelChunk chunk = level.getChunkSource().getChunkNow(
@@ -125,8 +151,7 @@ public final class MinecraftPhaseController {
         }
         MaterialBoundaryRegistry.Profile profile =
                 materials.profileOrNull(request.profileId());
-        if (profile == null || profile.model()
-                != MaterialBoundaryRegistry.Model.PHASE_RESERVOIR) {
+        if (profile == null) {
             return Outcome.REJECTED;
         }
         BlockState state = chunk.getBlockState(position);
@@ -140,44 +165,27 @@ public final class MinecraftPhaseController {
         if (randomTickSpeed <= 0) {
             return Outcome.RETRY;
         }
-        return applyRecipe(position, state, profile);
-    }
-
-    private Outcome applyRecipe(
-            BlockPos position,
-            BlockState state,
-            MaterialBoundaryRegistry.Profile profile
-    ) {
-        StateTransitionData data = StateTransitionData.getData(state);
-        StateTransitionData.HeatingTransition transition = data == null
-                ? null : data.heatingTransition(state);
-        if (data == null || !data.willTransit() || data.heatCapacity() <= 0
-                || transition == null
-                || Double.compare(
-                        transition.temperatureC(),
-                        profile.transitionTemperatureC()) != 0) {
-            return Outcome.REJECTED;
+        var transition = profile.thermalLaw().transition(request.materialBranch());
+        if (transition == null || transition.targetStateId() != request.targetStateId()) return Outcome.REJECTED;
+        if (transition.heating() && state.is(BlockTags.ICE)
+                && level.getBiome(position).is(FHTags.Biomes.ICE_DO_NOT_SMELT.tag)) return Outcome.RETRY;
+        if (!transition.heating()) {
+            double natural = WorldTemperature.naturalBlock(level, position);
+            MinecraftThermalInput.gameplayPassiveEnvironment(level, position, natural, fieldSample);
+            if (fieldSample.present() && fieldSample.guaranteedFloor(natural) >= transition.temperatureC()) return Outcome.RETRY;
+            if (state.getBlock() instanceof net.minecraft.world.level.block.LiquidBlock
+                    && state.getFluidState().is(net.minecraft.tags.FluidTags.WATER)) {
+                boolean edge = !level.isWaterAt(neighborPosition.set(position).move(net.minecraft.core.Direction.WEST))
+                        || !level.isWaterAt(neighborPosition.set(position).move(net.minecraft.core.Direction.EAST))
+                        || !level.isWaterAt(neighborPosition.set(position).move(net.minecraft.core.Direction.NORTH))
+                        || !level.isWaterAt(neighborPosition.set(position).move(net.minecraft.core.Direction.SOUTH));
+                if (!edge) return Outcome.RETRY;
+            }
         }
-        if (state.is(BlockTags.ICE)
-                && level.getBiome(position).is(
-                        FHTags.Biomes.ICE_DO_NOT_SMELT.tag)) {
-            return Outcome.RETRY;
-        }
-        return level.setBlockAndUpdate(position, transition.targetBlock())
-                ? Outcome.APPLIED
-                : Outcome.REJECTED;
-    }
-
-    private static boolean hasCandidate(
-            ThermalPageHandle page,
-            int blockX,
-            int blockY,
-            int blockZ,
-            int profileId
-    ) {
-        PagePublication publication = page.currentPublication();
-        return publication != null && publication.hasPhaseCandidate(
-                blockX, blockY, blockZ, profileId);
+        BlockState target = net.minecraft.world.level.block.Block.BLOCK_STATE_REGISTRY.byId(transition.targetStateId());
+        if (target == null) return Outcome.REJECTED;
+        return setMaterialBlock(level, position, target, MaterialChanges.THERMAL_TRANSITION)
+                ? Outcome.APPLIED : Outcome.REJECTED;
     }
 
     private static long sectionKey(BlockPos position) {

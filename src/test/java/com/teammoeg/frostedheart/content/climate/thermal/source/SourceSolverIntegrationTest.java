@@ -20,10 +20,10 @@ class SourceSolverIntegrationTest {
         ThermalCellArena arena = new ThermalCellArena(2);
         int hot = ThermalTestFixtures.regularBrick(
                 arena, 0, 1, 0, 0, 0,
-                100.0D, 0.0D, 0.0D).cellSpan().firstSlot();
+                100.0D, 0.0D, 0.0D).firstSlot();
         int cold = ThermalTestFixtures.regularBrick(
                 arena, 1, 1, 4, 0, 0,
-                100.0D, 0.0D, 0.0D).cellSpan().firstSlot();
+                100.0D, 0.0D, 0.0D).firstSlot();
         ThermalSourceLedger sources = new ThermalSourceLedger(
                 0L, 1, 1, 8,
                 new NodePowerAccumulatorArena(1, 8), arena);
@@ -47,7 +47,7 @@ class SourceSolverIntegrationTest {
                         new double[]{10.0D},
                         new double[]{2.0D}, new double[]{2.0D}),
                 ThermalFragment.MaterialContributions.EMPTY,
-                ThermalFragment.PhaseContacts.EMPTY,
+                ThermalFragment.RoutedContacts.EMPTY,
                 ThermalFragment.FarBoundaries.EMPTY));
         solver.finishTopologyCommit(1L);
 
@@ -63,7 +63,6 @@ class SourceSolverIntegrationTest {
     private static ThermalSolver solver(ThermalCellArena arena) {
         return new ThermalSolver(
                 arena,
-                new PhaseTransitionRuntime(arena, 4),
                 new BuoyancyConductance.Parameters(0.25D, 4.0D, 10.0D),
                 0.0D,
                 1,

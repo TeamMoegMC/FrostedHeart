@@ -9,25 +9,32 @@
  */
 package com.teammoeg.frostedheart.content.climate.render;
 
-import com.lowdragmc.lowdraglib.LDLib;
-import com.lowdragmc.lowdraglib.client.shader.management.ShaderManager;
+
+import com.lowdragmc.lowdraglib.client.shader.management.Shader;
+import com.lowdragmc.lowdraglib.client.shader.management.ShaderProgram;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.pipeline.RenderTarget;
-import com.mojang.blaze3d.pipeline.TextureTarget;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.BufferBuilder;
+import com.mojang.blaze3d.vertex.BufferUploader;
+import com.mojang.blaze3d.vertex.DefaultVertexFormat;
+import com.mojang.blaze3d.vertex.Tesselator;
+import com.mojang.blaze3d.vertex.VertexFormat;
 import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.bootstrap.client.FHShaders;
 import com.teammoeg.frostedheart.content.climate.network.FHRequestInfraredViewDataSyncPacket;
 import com.teammoeg.frostedheart.content.climate.network.InfraredBrickCodec;
-import com.teammoeg.frostedheart.mixin.oculus.IrisRenderingPipelineAccess;
+import com.teammoeg.frostedheart.content.climate.render.infrared.InfraredSurfaceTarget;
+
 
 import io.netty.buffer.Unpooled;
-import net.irisshaders.iris.Iris;
+
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.util.Mth;
-import net.minecraft.world.phys.Vec3;
+import net.minecraft.core.SectionPos;
+import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.MinecraftThermalInput.InfraredSnapshot;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
@@ -36,10 +43,14 @@ import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL12;
 import org.lwjgl.opengl.GL13;
+import org.lwjgl.opengl.GL14;
+import org.lwjgl.opengl.GL20;
 import org.lwjgl.opengl.GL30;
+import org.lwjgl.system.MemoryStack;
 
 import javax.annotation.Nullable;
 import java.nio.ShortBuffer;
+import java.nio.IntBuffer;
 import java.util.Arrays;
 
 @OnlyIn(Dist.CLIENT)
@@ -66,12 +77,6 @@ public final class InfraredViewRenderer {
     private static ShortBuffer pageUpload;
     private static final long[] knownPresence =
             new long[FHRequestInfraredViewDataSyncPacket.PRESENCE_WORDS];
-    private static final long[] knownDormantPresence =
-            new long[FHRequestInfraredViewDataSyncPacket.PRESENCE_WORDS];
-    private static final long[] knownRefreshPages =
-            new long[FHRequestInfraredViewDataSyncPacket.PRESENCE_WORDS];
-    private static long[] dormantBrickMasks;
-    private static long dormantRevision;
     private static final long[] dirtyUploadPages =
             new long[FHRequestInfraredViewDataSyncPacket.PRESENCE_WORDS];
     private static final short[] decodedBrick =
@@ -82,7 +87,11 @@ public final class InfraredViewRenderer {
     @Nullable
     private static PoseStack cameraPose;
     @Nullable
-    private static RenderTarget overlayTarget;
+    private static InfraredSurfaceTarget surfaceTarget;
+    @Nullable private static ShaderProgram infraredProgram;
+    @Nullable private static Shader infraredShader;
+    private static boolean surfacePrepared, terrainVisited, terrainDepthCaptured;
+    private static int frameTexture, frameOriginX, frameOriginY, frameOriginZ;
     private static boolean open;
     private static boolean deltaBaselineValid;
     private static boolean receivingResponse;
@@ -90,6 +99,11 @@ public final class InfraredViewRenderer {
     private static int requestId;
     private static long lastRequestTick = Long.MIN_VALUE;
     private static int infraredEpoch;
+    private static long storedEpoch;
+    private static long generation;
+    private static boolean materialReadable;
+    private static long[] knownFieldPages = new long[0];
+    private static final Matrix4f inverseViewProjection = new Matrix4f();
     private static int requestedChunkX;
     private static int requestedChunkZ;
     private static int requestedSectionY;
@@ -103,7 +117,48 @@ public final class InfraredViewRenderer {
     }
 
     public static void setCameraPose(@Nullable PoseStack pose) {
+        if (radius > 0 && GL11.glGetInteger(GL30.GL_DRAW_FRAMEBUFFER_BINDING)
+                != Minecraft.getInstance().getMainRenderTarget().frameBufferId) return;
         cameraPose = pose;
+        surfacePrepared = terrainVisited = false;
+        terrainDepthCaptured = false;
+        frameTexture = 0;
+    }
+
+    /** Called by our terrain renderer after the original pass has selected its target. */
+    public static boolean visitTerrainPass() {
+        if (radius <= 0 || cameraPose == null || GL11.glGetInteger(GL30.GL_DRAW_FRAMEBUFFER_BINDING)
+                != Minecraft.getInstance().getMainRenderTarget().frameBufferId) return false;
+        terrainVisited = true;
+        return true;
+    }
+
+    public static boolean prepareSurfaceCapture() {
+        if (surfacePrepared) return true;
+        Minecraft minecraft = Minecraft.getInstance();
+        if (minecraft.player == null) return false;
+        if (temperatureTexture == 0 && !receivingResponse) initializeEmptyTemperatureTexture(minecraft);
+        RenderTarget main = minecraft.getMainRenderTarget();
+        if (surfaceTarget == null) surfaceTarget = new InfraredSurfaceTarget();
+        if (!surfaceTarget.ensure(main.width, main.height, main.getColorTextureId(), main.getDepthTextureId())) return false;
+        surfaceTarget.clear();
+        frameTexture = temperatureTexture;
+        frameOriginX = (textureCenterChunkX - PAGE_RADIUS) * 16;
+        frameOriginY = (textureCenterSectionY - PAGE_RADIUS) * 16;
+        frameOriginZ = (textureCenterChunkZ - PAGE_RADIUS) * 16;
+        surfacePrepared = true;
+        return true;
+    }
+
+    public static int frameTemperatureTexture() { return frameTexture; }
+    public static int frameOriginX() { return frameOriginX; }
+    public static int frameOriginY() { return frameOriginY; }
+    public static int frameOriginZ() { return frameOriginZ; }
+    public static int surfaceCaptureFramebuffer() { return surfaceTarget.captureFramebuffer(); }
+
+    public static void captureTerrainDepth() {
+        surfaceTarget.captureTerrainDepth();
+        terrainDepthCaptured = true;
     }
 
     public static void toggleInfraredView() {
@@ -172,133 +227,63 @@ public final class InfraredViewRenderer {
                 new FHRequestInfraredViewDataSyncPacket(
                         requestId,
                         forceFull || !deltaBaselineValid,
-                        infraredEpoch,
-                        knownPresence, dormantRevision, knownDormantPresence,
-                        knownRefreshPages));
+                        generation, SectionPos.asLong(textureCenterChunkX, textureCenterSectionY, textureCenterChunkZ),
+                        infraredEpoch, knownPresence.clone(), materialReadable, knownFieldPages, storedEpoch));
     }
 
-    public static void updateData(
-            int responseRequestId,
-            int centerChunkX,
-            int centerChunkZ,
-            int centerSectionY,
-            int responseInfraredEpoch,
-            boolean full,
-            long[] presence,
-            byte[] brickRecords,
-            long responseDormantRevision,
-            long[] refreshPages,
-            boolean firstPart,
-            boolean lastPart
-    ) {
+    /** Only LAST commits the complete display baseline, including field-only responses. */
+    public static void updateData(int responseRequestId, InfraredSnapshot data, boolean firstPart, boolean lastPart) {
         RenderSystem.assertOnRenderThread();
         if (!open || responseRequestId != requestId) return;
-        if (firstPart && !acceptResponseCenter(
-                        full,
-                        centerChunkX,
-                        centerChunkZ,
-                        centerSectionY)) {
-            return;
-        }
-        if (!firstPart && !receivingResponse) return;
+        boolean sameCenter = data.centerChunkX() == textureCenterChunkX
+                && data.centerChunkZ() == textureCenterChunkZ && data.centerSectionY() == textureCenterSectionY;
         if (firstPart) {
+            if (!data.full() && (!deltaBaselineValid || !sameCenter || data.generation() != generation)) {
+                deltaBaselineValid = false;
+                requestCenterValid = false;
+                return;
+            }
             receivingResponse = true;
             deltaBaselineValid = false;
+            requestedChunkX = data.centerChunkX(); requestedChunkZ = data.centerChunkZ();
+            requestedSectionY = data.centerSectionY(); requestCenterValid = true;
+            ensureTemperatureMirror();
+            Arrays.fill(dirtyUploadPages, 0L);
+            if (data.full()) clearMirror();
+        } else if (!receivingResponse) return;
+        for (byte[] records : data.brickRecords()) {
+            FriendlyByteBuf input = new FriendlyByteBuf(Unpooled.wrappedBuffer(records));
+            try {
+                int brick;
+                while ((brick = brickDecoder.readRecord(input, decodedBrick)) >= 0)
+                    writeBrick(brick, decodedBrick);
+            } finally { input.release(); }
         }
-        boolean createdMirror = ensureTemperatureMirror();
-        if (firstPart) Arrays.fill(dirtyUploadPages, 0L);
-        if (firstPart && full) {
-            if (!createdMirror) {
-                clearMirror();
-            }
-        } else if (firstPart && presence.length != 0) {
-            for (int localPageIndex = 0;
-                    localPageIndex < PAGE_WIDTH * PAGE_WIDTH * PAGE_WIDTH;
-                    localPageIndex++) {
-                boolean wasPresent = presenceBit(
-                        knownPresence, localPageIndex);
-                boolean isPresent = presenceBit(
-                        presence, localPageIndex);
-                if (wasPresent != isPresent) {
-                    clearPage(localPageIndex);
-                }
-            }
-        }
-
-        FriendlyByteBuf input = new FriendlyByteBuf(
-                Unpooled.wrappedBuffer(brickRecords));
-        try {
-            int localBrickIndex;
-            while ((localBrickIndex = brickDecoder.readRecord(
-                    input, decodedBrick)) >= 0) {
-                int page = localBrickIndex >>> 6;
-                if (brickDecoder.isDormantSection()) {
-                    applyDormantSection(page, brickDecoder.dormantBrickMask(),
-                            brickDecoder.isDormantReplacement(),
-                            !full && responseInfraredEpoch == 0 && presenceBit(knownPresence, page)
-                                    && !presenceBit(knownRefreshPages, page)
-                                    && !presenceBit(refreshPages, page));
-                } else {
-                    dormantBrickMasks[page] &= ~(1L << (localBrickIndex & 63));
-                    writeBrick(localBrickIndex, decodedBrick, (short) 0);
-                }
-            }
-        } finally {
-            input.release();
-        }
-        // TCP preserves these parts' order. Until LAST, only the existing CPU
-        // mirror changes; the old complete GPU texture and its origin stay live.
         if (!lastPart) return;
         receivingResponse = false;
-        if (presence.length != 0) {
-            System.arraycopy(
-                    presence, 0, knownPresence, 0, knownPresence.length);
-        }
-        System.arraycopy(refreshPages, 0, knownRefreshPages, 0, knownRefreshPages.length);
-        textureCenterChunkX = centerChunkX;
-        textureCenterChunkZ = centerChunkZ;
-        textureCenterSectionY = centerSectionY;
-        infraredEpoch = responseInfraredEpoch;
-        dormantRevision = responseDormantRevision;
+        if (data.presence().length != 0)
+            System.arraycopy(data.presence(), 0, knownPresence, 0, knownPresence.length);
+        textureCenterChunkX = data.centerChunkX(); textureCenterChunkZ = data.centerChunkZ();
+        textureCenterSectionY = data.centerSectionY();
+        generation = data.generation(); infraredEpoch = data.infraredEpoch();
+        storedEpoch = data.storedEpoch();
+        if (data.full()) uploadFullTemperatureTexture(); else uploadDirtyPages();
+        materialReadable = data.readable();
         deltaBaselineValid = true;
-        if (full) {
-            uploadFullTemperatureTexture();
-        } else {
-            uploadDirtyPages();
-        }
         Arrays.fill(dirtyUploadPages, 0L);
+        knownFieldPages = data.fieldPages();
     }
 
-    private static boolean acceptResponseCenter(
-            boolean full,
-            int centerChunkX,
-            int centerChunkZ,
-            int centerSectionY
-    ) {
-        if (!full && (!deltaBaselineValid
-                || centerChunkX != textureCenterChunkX
-                || centerChunkZ != textureCenterChunkZ
-                || centerSectionY != textureCenterSectionY)) {
-            deltaBaselineValid = false;
-            requestCenterValid = false;
-            return false;
-        }
-        requestedChunkX = centerChunkX;
-        requestedChunkZ = centerChunkZ;
-        requestedSectionY = centerSectionY;
-        requestCenterValid = true;
-        return true;
+    public static void invalidateDisplay() {
+        invalidateRequests();
+        deltaBaselineValid = false;
     }
-
     private static void clearMirror() {
         ShortBuffer mirror = temperatureMirror;
         if (mirror == null) {
             return;
         }
         mirror.clear();
-        Arrays.fill(dormantBrickMasks, 0L);
-        Arrays.fill(knownDormantPresence, 0L);
-        Arrays.fill(knownRefreshPages, 0L);
         while (mirror.hasRemaining()) {
             mirror.put(InfraredBrickCodec.INVALID_TEMPERATURE);
         }
@@ -310,37 +295,13 @@ public final class InfraredViewRenderer {
             return false;
         }
         temperatureMirror = BufferUtils.createShortBuffer(TEXTURE_TEXELS);
-        dormantBrickMasks = new long[PAGE_WIDTH * PAGE_WIDTH * PAGE_WIDTH];
         clearMirror();
         return true;
     }
 
-    private static void clearPage(int localPageIndex) {
-        dormantBrickMasks[localPageIndex] = 0L;
-        int pageX = localPageIndex % PAGE_WIDTH;
-        int pageZ = localPageIndex / PAGE_WIDTH % PAGE_WIDTH;
-        int pageY = localPageIndex / (PAGE_WIDTH * PAGE_WIDTH);
-        int baseX = pageX * BLOCKS_PER_PAGE_AXIS;
-        int baseY = pageY * BLOCKS_PER_PAGE_AXIS;
-        int baseZ = pageZ * BLOCKS_PER_PAGE_AXIS;
-        for (int z = 0; z < BLOCKS_PER_PAGE_AXIS; z++) {
-            for (int y = 0; y < BLOCKS_PER_PAGE_AXIS; y++) {
-                int offset = ((baseZ + z) * TEXTURE_SIZE + baseY + y)
-                        * TEXTURE_SIZE + baseX;
-                for (int x = 0; x < BLOCKS_PER_PAGE_AXIS; x++) {
-                    temperatureMirror.put(
-                            offset + x,
-                            InfraredBrickCodec.INVALID_TEMPERATURE);
-                }
-            }
-        }
-        markDirtyPage(localPageIndex);
-    }
-
     private static void writeBrick(
             int localBrickIndex,
-            short[] values,
-            short uniform
+            short[] values
     ) {
         int localPageIndex = localBrickIndex >>> 6;
         int brickIndex = localBrickIndex & 63;
@@ -360,57 +321,14 @@ public final class InfraredViewRenderer {
             temperatureMirror.put(
                     (textureZ * TEXTURE_SIZE + textureY) * TEXTURE_SIZE
                             + textureX,
-                    values == null ? uniform : values[block]);
+                    values[block]);
         }
         markDirtyPage(localPageIndex);
-    }
-
-    private static void applyDormantSection(
-            int page, long writtenMask, boolean replace, boolean retainLive
-    ) {
-        long previouslyOwned = dormantBrickMasks[page];
-        if (replace) {
-            long removed = previouslyOwned & ~writtenMask;
-            while (removed != 0L) {
-                int brick = Long.numberOfTrailingZeros(removed);
-                writeBrick(page * 64 + brick, null, InfraredBrickCodec.INVALID_TEMPERATURE);
-                removed &= removed - 1L;
-            }
-            dormantBrickMasks[page] &= writtenMask;
-        }
-        long remaining = writtenMask;
-        while (remaining != 0L) {
-            int brick = Long.numberOfTrailingZeros(remaining);
-            long bit = 1L << brick;
-            short value = decodedBrick[brick];
-            if (value == InfraredBrickCodec.INVALID_TEMPERATURE) {
-                if ((dormantBrickMasks[page] & bit) != 0L) {
-                    writeBrick(page * 64 + brick, null, value);
-                    dormantBrickMasks[page] &= ~bit;
-                }
-            } else if (!retainLive || (previouslyOwned & bit) != 0L) {
-                writeBrick(page * 64 + brick, null, value);
-                dormantBrickMasks[page] |= bit;
-            }
-            remaining &= remaining - 1L;
-        }
-        // Presence describes the received snapshot, even if a stale live cut hides some Bricks.
-        long sectionBit = 1L << (page & 63);
-        if (replace && writtenMask == 0L) {
-            knownDormantPresence[page >>> 6] &= ~sectionBit;
-        } else {
-            knownDormantPresence[page >>> 6] |= sectionBit;
-        }
     }
 
     private static void markDirtyPage(int localPageIndex) {
         dirtyUploadPages[localPageIndex >>> 6] |=
                 1L << (localPageIndex & 63);
-    }
-
-    private static boolean presenceBit(long[] presence, int localPageIndex) {
-        return (presence[localPageIndex >>> 6]
-                & 1L << (localPageIndex & 63)) != 0L;
     }
 
     private static void uploadFullTemperatureTexture() {
@@ -545,116 +463,121 @@ public final class InfraredViewRenderer {
         GlStateManager._pixelStore(GL11.GL_UNPACK_ROW_LENGTH, 0);
         GlStateManager._pixelStore(GL11.GL_UNPACK_SKIP_ROWS, 0);
         GlStateManager._pixelStore(GL11.GL_UNPACK_SKIP_PIXELS, 0);
+        GlStateManager._pixelStore(GL12.GL_UNPACK_IMAGE_HEIGHT, 0);
+        GlStateManager._pixelStore(GL12.GL_UNPACK_SKIP_IMAGES, 0);
         GlStateManager._pixelStore(GL11.GL_UNPACK_ALIGNMENT, 4);
     }
 
     public static void renderInfraredView() {
         Minecraft minecraft = Minecraft.getInstance();
-        if (minecraft.cameraEntity == null || minecraft.player == null
-                || radius <= 0.0F || cameraPose == null) {
+        if (cameraPose == null) return;
+        if (radius <= 0) {
+            if (surfaceTarget != null) { surfaceTarget.close(); surfaceTarget = null; }
+            cameraPose = null;
             return;
         }
-        if (temperatureTexture == 0) {
-            // FIRST may arrive before the first rendered frame. Keep its staged
-            // records intact until LAST creates the complete texture.
-            if (receivingResponse) return;
-            initializeEmptyTemperatureTexture(minecraft);
+        if (minecraft.cameraEntity == null || minecraft.player == null || !terrainVisited) return;
+        RenderTarget main = minecraft.getMainRenderTarget();
+        int previousFramebuffer = GL11.glGetInteger(GL30.GL_DRAW_FRAMEBUFFER_BINDING);
+        if (previousFramebuffer != main.frameBufferId) return;
+        // Even an empty terrain pass prepares an INVALID image, so no previous-frame silhouette survives.
+        if (!prepareSurfaceCapture()) return;
+        ShaderProgram program = getInfraredProgram();
+        inverseViewProjection.set(RenderSystem.getProjectionMatrix()).mul(cameraPose.last().pose()).invert();
+        try (MemoryStack stack = MemoryStack.stackPush()) {
+            int previousProgram = GL11.glGetInteger(GL20.GL_CURRENT_PROGRAM);
+            IntBuffer viewport = stack.mallocInt(4);
+            GL11.glGetIntegerv(GL11.GL_VIEWPORT, viewport);
+            boolean scissor = GL11.glIsEnabled(GL11.GL_SCISSOR_TEST);
+            boolean depthWrites = GL11.glGetBoolean(GL11.GL_DEPTH_WRITEMASK);
+            boolean depthTest = GL11.glIsEnabled(GL11.GL_DEPTH_TEST);
+            boolean blending = GL11.glIsEnabled(GL11.GL_BLEND);
+            int srcRgb = GL11.glGetInteger(GL14.GL_BLEND_SRC_RGB), dstRgb = GL11.glGetInteger(GL14.GL_BLEND_DST_RGB);
+            int srcAlpha = GL11.glGetInteger(GL14.GL_BLEND_SRC_ALPHA), dstAlpha = GL11.glGetInteger(GL14.GL_BLEND_DST_ALPHA);
+            int equationRgb = GL11.glGetInteger(GL20.GL_BLEND_EQUATION_RGB), equationAlpha = GL11.glGetInteger(GL20.GL_BLEND_EQUATION_ALPHA);
+            int activeTexture = GL11.glGetInteger(GL13.GL_ACTIVE_TEXTURE);
+            RenderSystem.activeTexture(GL13.GL_TEXTURE0);
+            int oldDepthBinding = GL11.glGetInteger(GL11.GL_TEXTURE_BINDING_2D);
+            RenderSystem.activeTexture(GL13.GL_TEXTURE1);
+            int oldSurfaceBinding = GL11.glGetInteger(GL11.GL_TEXTURE_BINDING_2D);
+            RenderSystem.activeTexture(GL13.GL_TEXTURE2);
+            int oldTerrainDepthBinding = GL11.glGetInteger(GL11.GL_TEXTURE_BINDING_2D);
+            RenderSystem.activeTexture(GL13.GL_TEXTURE3);
+            int oldEnvironmentBinding = GL11.glGetInteger(GL12.GL_TEXTURE_BINDING_3D);
+            try {
+                // Color only: sampling the main depth cannot create a framebuffer feedback loop.
+                GL30.glBindFramebuffer(GL30.GL_DRAW_FRAMEBUFFER, surfaceTarget.blendFramebuffer());
+                RenderSystem.viewport(0, 0, main.width, main.height);
+                RenderSystem.disableScissor();
+                RenderSystem.depthMask(false);
+                RenderSystem.disableDepthTest();
+                RenderSystem.enableBlend();
+                RenderSystem.blendFuncSeparate(GL11.GL_ONE, GL11.GL_ONE_MINUS_SRC_ALPHA, GL11.GL_ZERO, GL11.GL_ONE);
+                GL20.glBlendEquationSeparate(GL14.GL_FUNC_ADD, GL14.GL_FUNC_ADD);
+                RenderSystem.activeTexture(GL13.GL_TEXTURE0);
+                RenderSystem.bindTexture(main.getDepthTextureId());
+                RenderSystem.activeTexture(GL13.GL_TEXTURE1);
+                RenderSystem.bindTexture(surfaceTarget.temperatureTexture());
+                RenderSystem.activeTexture(GL13.GL_TEXTURE2);
+                RenderSystem.bindTexture(surfaceTarget.terrainDepthTexture());
+                RenderSystem.activeTexture(GL13.GL_TEXTURE3);
+                GL11.glBindTexture(GL12.GL_TEXTURE_3D, frameTexture);
+                program.use(uniforms -> {
+                    uniforms.glUniform1I("depthTexture", 0);
+                    uniforms.glUniform1I("surfaceTemperature", 1);
+                    uniforms.glUniform1I("terrainDepthTexture", 2);
+                    uniforms.glUniform1I("hasTerrainDepth", terrainDepthCaptured ? 1 : 0);
+                    uniforms.glUniform1I("environmentTemperature", 3);
+                    uniforms.glUniform1I("hasEnvironmentTemperature", frameTexture != 0 ? 1 : 0);
+                    var camera = minecraft.gameRenderer.getMainCamera().getPosition();
+                    uniforms.glUniform3F("cameraToTemperatureOrigin", (float)(camera.x - frameOriginX),
+                            (float)(camera.y - frameOriginY), (float)(camera.z - frameOriginZ));
+                    uniforms.glUniform1F("radius", Mth.clamp(radius + minecraft.getFrameTime() * RADIUS_DUR * (open ? 1 : -1), 0, SCAN_RADIUS_BLOCKS));
+                    uniforms.glUniformMatrix4F("u_InverseViewProjectionMatrix", inverseViewProjection);
+                });
+                BufferBuilder buffer = Tesselator.getInstance().getBuilder();
+                buffer.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION);
+                buffer.vertex(-1, 1, 0).endVertex();
+                buffer.vertex(-1, -1, 0).endVertex();
+                buffer.vertex(1, -1, 0).endVertex();
+                buffer.vertex(1, 1, 0).endVertex();
+                BufferUploader.draw(buffer.end());
+            } finally {
+                // ShaderProgram binds raw GL. Restore it raw too, leaving vanilla/Oculus caches unchanged.
+                GL20.glUseProgram(previousProgram);
+                RenderSystem.activeTexture(GL13.GL_TEXTURE0);
+                RenderSystem.bindTexture(oldDepthBinding);
+                RenderSystem.activeTexture(GL13.GL_TEXTURE1);
+                RenderSystem.bindTexture(oldSurfaceBinding);
+                RenderSystem.activeTexture(GL13.GL_TEXTURE2);
+                RenderSystem.bindTexture(oldTerrainDepthBinding);
+                RenderSystem.activeTexture(GL13.GL_TEXTURE3);
+                GL11.glBindTexture(GL12.GL_TEXTURE_3D, oldEnvironmentBinding);
+                RenderSystem.activeTexture(activeTexture);
+                RenderSystem.blendFuncSeparate(srcRgb, dstRgb, srcAlpha, dstAlpha);
+                GL20.glBlendEquationSeparate(equationRgb, equationAlpha);
+                if (!blending) RenderSystem.disableBlend();
+                if (depthTest) RenderSystem.enableDepthTest(); else RenderSystem.disableDepthTest();
+                RenderSystem.depthMask(depthWrites);
+                RenderSystem.viewport(viewport.get(0), viewport.get(1), viewport.get(2), viewport.get(3));
+                if (scissor) GlStateManager._enableScissorTest();
+                GL30.glBindFramebuffer(GL30.GL_DRAW_FRAMEBUFFER, previousFramebuffer);
+                cameraPose = null;
+                surfacePrepared = terrainVisited = false;
+                terrainDepthCaptured = false;
+            }
         }
-        RenderTarget mainTarget = minecraft.getMainRenderTarget();
-        RenderTarget overlay = getOrCreateOverlayTarget(
-                mainTarget.width, mainTarget.height);
-        float partialTicks = minecraft.getFrameTime();
-        Vec3 cameraPos = minecraft.gameRenderer.getMainCamera().getPosition();
-
-        RenderSystem.depthMask(false);
-        RenderSystem.disableDepthTest();
-        overlay.clear(Minecraft.ON_OSX);
-        ShaderManager.getInstance().renderFullImageInFramebuffer(
-                overlay,
-                FHShaders.getInfraredView(),
-                uniforms -> {
-                    uniforms.glUniform1F(
-                            "radius",
-                            Mth.clamp(
-                                    radius + partialTicks * RADIUS_DUR
-                                            * (open ? 1.0F : -1.0F),
-                                    0.0F,
-                                    SCAN_RADIUS_BLOCKS));
-
-                    RenderSystem.activeTexture(GL13.GL_TEXTURE0);
-                    RenderSystem.bindTexture(mainTarget.getColorTextureId());
-                    uniforms.glUniform1I("mainTexture", 0);
-
-                    RenderSystem.activeTexture(GL13.GL_TEXTURE1);
-                    RenderSystem.bindTexture(mainTarget.getDepthTextureId());
-                    uniforms.glUniform1I("depthTexture", 1);
-
-                    RenderSystem.activeTexture(GL13.GL_TEXTURE2);
-                    if (LDLib.isOculusLoaded()
-                            && Iris.getPipelineManager().getPipeline()
-                            .orElse(null) instanceof IrisRenderingPipelineAccess access) {
-                        RenderSystem.bindTexture(
-                                access.getRenderTargets()
-                                        .getDepthTextureNoHand().getTextureId());
-                    } else {
-                        RenderSystem.bindTexture(mainTarget.getDepthTextureId());
-                    }
-                    uniforms.glUniform1I("noHandDepthTexture", 2);
-
-                    RenderSystem.activeTexture(GL13.GL_TEXTURE3);
-                    if (LDLib.isOculusLoaded()
-                            && Iris.getPipelineManager().getPipeline()
-                            .orElse(null) instanceof IrisRenderingPipelineAccess access) {
-                        RenderSystem.bindTexture(
-                                access.getRenderTargets()
-                                        .getDepthTextureNoTranslucents().getTextureId());
-                    } else {
-                        RenderSystem.bindTexture(mainTarget.getDepthTextureId());
-                    }
-                    uniforms.glUniform1I("noTranslucentDepthTexture", 3);
-
-                    RenderSystem.activeTexture(GL13.GL_TEXTURE4);
-                    GL11.glBindTexture(
-                            GL12.GL_TEXTURE_3D,
-                            temperatureTexture);
-                    uniforms.glUniform1I("temperatureTexture", 4);
-                    uniforms.glUniform3F(
-                            "temperatureCameraOffset",
-                            (float) (cameraPos.x
-                                    - (textureCenterChunkX - PAGE_RADIUS)
-                                    * 16.0D),
-                            (float) (cameraPos.y
-                                    - (textureCenterSectionY - PAGE_RADIUS)
-                                    * 16.0D),
-                            (float) (cameraPos.z
-                                    - (textureCenterChunkZ - PAGE_RADIUS)
-                                    * 16.0D));
-
-                    uniforms.glUniformMatrix4F(
-                            "u_InverseProjectionMatrix",
-                            RenderSystem.getProjectionMatrix().invert(new Matrix4f()));
-                    uniforms.glUniformMatrix4F(
-                            "u_InverseViewMatrix",
-                            cameraPose.last().pose().invert(new Matrix4f()));
-                },
-                null);
-
-        ShaderManager.getInstance().renderFullImageInFramebuffer(
-                mainTarget,
-                FHShaders.IMAGE_F,
-                uniforms -> {
-                    RenderSystem.activeTexture(GL13.GL_TEXTURE0);
-                    RenderSystem.bindTexture(overlay.getColorTextureId());
-                    uniforms.glUniform1I("DiffuseSampler", 0);
-                },
-                null);
-
-        RenderSystem.activeTexture(GL13.GL_TEXTURE0);
-        RenderSystem.enableDepthTest();
-        RenderSystem.depthMask(true);
-        cameraPose = null;
     }
 
+    private static ShaderProgram getInfraredProgram() {
+        Shader shader = FHShaders.getInfraredView();
+        if (infraredProgram == null || infraredShader != shader) {
+            if (infraredProgram != null) infraredProgram.delete();
+            infraredProgram = new ShaderProgram().attach(FHShaders.IMAGE_V).attach(shader);
+            infraredShader = shader;
+        }
+        return infraredProgram;
+    }
     private static void initializeEmptyTemperatureTexture(
             Minecraft minecraft
     ) {
@@ -673,24 +596,29 @@ public final class InfraredViewRenderer {
         radius = 0.0F;
         deltaBaselineValid = false;
         infraredEpoch = 0;
-        dormantRevision = 0L;
-        Arrays.fill(knownDormantPresence, 0L);
-        Arrays.fill(knownRefreshPages, 0L);
-        if (dormantBrickMasks != null) Arrays.fill(dormantBrickMasks, 0L);
+        storedEpoch = 0;
+        generation = 0;
+        materialReadable = false;
+        knownFieldPages = new long[0];
+        surfacePrepared = terrainVisited = false;
+        terrainDepthCaptured = false;
+        frameTexture = 0;
         Arrays.fill(knownPresence, 0L);
         Arrays.fill(dirtyUploadPages, 0L);
         cameraPose = null;
         int textureToDelete = temperatureTexture;
         temperatureTexture = 0;
-        RenderTarget overlayToDelete = overlayTarget;
-        overlayTarget = null;
+        InfraredSurfaceTarget surfaceToDelete = surfaceTarget;
+        surfaceTarget = null;
+        ShaderProgram programToDelete = infraredProgram;
+        infraredProgram = null;
+        infraredShader = null;
         Runnable release = () -> {
             if (textureToDelete != 0) {
                 GL11.glDeleteTextures(textureToDelete);
             }
-            if (overlayToDelete != null) {
-                overlayToDelete.destroyBuffers();
-            }
+            if (surfaceToDelete != null) surfaceToDelete.close();
+            if (programToDelete != null) programToDelete.delete();
         };
         if (RenderSystem.isOnRenderThread()) {
             release.run();
@@ -710,15 +638,4 @@ public final class InfraredViewRenderer {
         return current == Integer.MAX_VALUE ? 0 : current + 1;
     }
 
-    private static RenderTarget getOrCreateOverlayTarget(int width, int height) {
-        if (overlayTarget == null) {
-            overlayTarget = new TextureTarget(
-                    width, height, false, Minecraft.ON_OSX);
-            overlayTarget.setClearColor(0, 0, 0, 0);
-        } else if (overlayTarget.width != width
-                || overlayTarget.height != height) {
-            overlayTarget.resize(width, height, Minecraft.ON_OSX);
-        }
-        return overlayTarget;
-    }
 }

@@ -41,10 +41,7 @@ class ThermalTopologyPipelineTest {
                         signatureTable,
                         new MaterialBoundaryRegistry(
                                 List.of(MaterialBoundaryRegistry.Profile
-                                        .capacitiveSurfaceAtNaturalTemperature(
-                                                1, 5.0D, 100.0D)),
-                                List.of(new MaterialBoundaryRegistry.ContactPattern(
-                                        1, -1L))),
+                                        .body(1, 5.0D, com.teammoeg.frostedheart.content.climate.thermal.mesh.MaterialThermalLaw.sensible(100.0D)))),
                         airId,
                         materialId);
         try {
@@ -69,7 +66,7 @@ class ThermalTopologyPipelineTest {
             for (int slot = fixture.arena().nextLiveSlot(0);
                  slot >= 0;
                  slot = fixture.arena().nextLiveSlot(slot + 1)) {
-                if (fixture.arena().isMaterialPole(slot)) {
+                if (fixture.arena().isSurfaceCell(slot)) {
                     materialSlot = slot;
                     break;
                 }
