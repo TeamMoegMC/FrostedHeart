@@ -241,7 +241,6 @@ public class FHConfig {
 			public final ForgeConfigSpec.DoubleValue airHeatCapacityJPerBlockK;
 			public final ForgeConfigSpec.DoubleValue airMixingWPerBlockK;
 			public final ForgeConfigSpec.DoubleValue phaseFaceConductanceWPerK;
-			public final ForgeConfigSpec.DoubleValue phaseBaseEnergyJPerHeatCapacity;
 			public final ForgeConfigSpec.DoubleValue farFieldConductanceWPerK;
 			public final ForgeConfigSpec.DoubleValue campfirePowerW;
 			public final ForgeConfigSpec.DoubleValue campfireRadiationShare;
@@ -265,9 +264,6 @@ public class FHConfig {
 				phaseFaceConductanceWPerK = builder
 					.comment("Phase-transition conductance per full exposed block face in W/K.")
 					.defineInRange("phaseFaceConductanceWPerK", 5.0D, 0.001D, 1_000_000.0D);
-				phaseBaseEnergyJPerHeatCapacity = builder
-					.comment("Phase energy per block in J, multiplied by the state-transition recipe heat_capacity.")
-					.defineInRange("phaseBaseEnergyJPerHeatCapacity", 38_000.0D, 1.0D, 1.0e12D);
 				farFieldConductanceWPerK = builder
 					.comment("Base conductance from exposed Air boundaries to natural temperature in W/K.")
 					.defineInRange("farFieldConductanceWPerK", 7_747.2298793470545D, 0.001D, 1.0e9D);
@@ -293,7 +289,7 @@ public class FHConfig {
 					.comment("Direct radiant power of an ordinary fire block in W.")
 					.defineInRange("fireRadiantPowerW", 1_000.0D, 0.0D, 1.0e9D);
 				dormantTemperatureHalfLifeSeconds = builder
-					.comment("Half-life in seconds for stored unloaded Page temperature residuals.")
+					.comment("Sensible temperature half-life in game seconds for dormant Air and materials approaching natural temperature. Material latent heat is retained; no offline source simulation.")
 					.defineInRange("dormantTemperatureHalfLifeSeconds", 1_800.0D, 1.0D, 604_800.0D);
 				builder.pop();
 			}
@@ -363,8 +359,6 @@ public class FHConfig {
 			public final ForgeConfigSpec.ConfigValue<Double> heatExchangeTempConstant;
 			public final ForgeConfigSpec.BooleanValue addInitClimate;
 			public final ForgeConfigSpec.IntValue tempBlockstateUpdateIntervalTicks;
-			public final ForgeConfigSpec.IntValue ambientBlockStateUpdateDivisor;
-			public final ForgeConfigSpec.IntValue tempRandomTickSpeedDivisor;
 			public final ForgeConfigSpec.ConfigValue<Integer> blizzardFrequency;
 			public final ForgeConfigSpec.IntValue longTermTrackCount;
 			public final ForgeConfigSpec.IntValue eventChoiceRollBound;
@@ -412,12 +406,8 @@ public class FHConfig {
 					.defineInRange("temperatureChangeRate", 1f, 0, 20);
 				temperatureUpdateIntervalTicks = builder.comment("The interval of temperature update in ticks.")
 					.defineInRange("temperatureUpdateIntervalTicks", 20, 1, Integer.MAX_VALUE);
-				tempBlockstateUpdateIntervalTicks = builder.comment("The interval for block state update due to temperature.")
+				tempBlockstateUpdateIntervalTicks = builder.comment("The interval for surface water freezing and temperature-dependent weather updates.")
 					.defineInRange("tempBlockstateUpdateIntervalTicks", 20, 1, Integer.MAX_VALUE);
-				tempRandomTickSpeedDivisor = builder.comment("The random tick speed is divided by this value when used for temperature related updates.")
-					.defineInRange("tempRandomTickSpeedDivisor", 1, 1, Integer.MAX_VALUE);
-				ambientBlockStateUpdateDivisor = builder.comment("Block update divisor for ambient blocks(blocks without heat area).")
-					.defineInRange("ambientRandomTickSpeedDivisor", 10, 1, Integer.MAX_VALUE);
 				wetEffectDuration = builder.comment("The duration of the wet effect applied in water in ticks.")
 					.defineInRange("wetEffectDuration", 100, 1, Integer.MAX_VALUE);
 				wetClothesDurationMultiplier = builder.comment("The multiplier of the wet effect duration when player is wearing clothes.")

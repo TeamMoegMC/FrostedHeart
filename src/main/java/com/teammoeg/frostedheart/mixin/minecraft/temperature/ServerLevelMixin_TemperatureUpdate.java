@@ -20,23 +20,15 @@
 package com.teammoeg.frostedheart.mixin.minecraft.temperature;
 
 import com.teammoeg.chorda.util.CUtils;
-import com.teammoeg.frostedheart.bootstrap.common.FHBlocks;
-import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
-import com.teammoeg.frostedheart.content.climate.PhysicalState;
 import com.teammoeg.frostedheart.content.climate.WorldTemperature;
-import com.teammoeg.frostedheart.content.climate.block.LayeredThinIceBlock;
 import com.teammoeg.frostedheart.content.climate.data.PlantTempData;
 import com.teammoeg.frostedheart.content.climate.data.StateTransitionData;
 import com.teammoeg.frostedheart.content.climate.gamedata.climate.WorldClimate;
 import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.MinecraftThermalInput;
 import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.input.MinecraftPhaseController;
-import com.teammoeg.frostedheart.content.climate.thermal.field.ThermalAnalyticFieldIndex;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import net.minecraft.core.*;
-import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.sounds.SoundEvents;
-import net.minecraft.sounds.SoundSource;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.GameRules;
@@ -44,15 +36,12 @@ import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.level.block.LiquidBlock;
 import net.minecraft.world.level.block.SnowLayerBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.chunk.LevelChunkSection;
 import net.minecraft.world.level.levelgen.Heightmap;
-import net.minecraft.world.level.material.FlowingFluid;
 import net.minecraft.world.level.material.FluidState;
-import net.minecraft.world.level.material.Fluids;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -64,8 +53,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public abstract class ServerLevelMixin_TemperatureUpdate
 {
     @Shadow public abstract boolean isFlat();
-    @Unique private final ThermalAnalyticFieldIndex.Sample frostedHeart$phaseFields =
-            new ThermalAnalyticFieldIndex.Sample();
 
     /**
      * Adds our custom temperature section before iceandsnow.
@@ -106,18 +93,9 @@ public abstract class ServerLevelMixin_TemperatureUpdate
         int i = chunkpos.getMinBlockX();
         int j = chunkpos.getMinBlockZ();
 
-        // Process fewer blocks for temperature checks to reduce performance impact
-        // Adjust this divisor based on your performance needs
-/*
-        Unused int temperatureChecks = Math.max(1,
-                pRandomTickSpeed / FHConfig.SERVER.CLIMATE.tempRandomTickSpeedDivisor.get());
-*/
-
-        // Custom water freezing logic
-        level.getProfiler().popPush("water");
+        level.getProfiler().popPush("weather");
         if (pRandomTickSpeed > 0 && updateTempBlock)
         {
-            // for (int l1 = 0; l1 < temperatureChecks; ++l1) {
             BlockPos blockpos1 = level.getHeightmapPos(
                     Heightmap.Types.MOTION_BLOCKING,
                     level.getBlockRandomPos(i, 0, j, 15));
@@ -127,19 +105,14 @@ public abstract class ServerLevelMixin_TemperatureUpdate
                     ? blockpos1.below()
                     : blockpos1;
 
-            Holder<Biome> biomeHolder = CUtils.fastGetBiome(pChunk, blockpos2);
-            Biome biome = biomeHolder.value();
-
-            // TODO: for ocean freezing, we need some special handling...
-            if (!biomeHolder.is(FHTags.Biomes.WATER_DO_NOT_FREEZE.tag)
-                    && level.isAreaLoaded(blockpos2, 1)) // Forge: check area to avoid loading neighbors in unloaded chunks
-            {
-                // Check if the block should freeze based on our custom logic
-                frostedheart$freezeWater(level, blockpos2, climateBase);
+            BlockState surface = pChunk.getBlockState(blockpos2);
+            if (surface.is(Blocks.WATER)) {
+                MinecraftThermalInput.tryMaterialPhaseAtRandomTick(level, pChunk, blockpos2, surface);
             }
 
             if (isRaining)
             {
+                Biome biome = CUtils.fastGetBiome(pChunk, blockpos2).value();
                 int i1 = level.getGameRules().getInt(GameRules.RULE_SNOW_ACCUMULATION_HEIGHT);
                 if (i1 > 0 && frostedHeart$shouldSnowCustom(level, blockpos1))
                 {
@@ -167,7 +140,6 @@ public abstract class ServerLevelMixin_TemperatureUpdate
                     blockstate3.getBlock().handlePrecipitation(blockstate3, level, blockpos2, biome$precipitation);
                 }
             }
-            // }
         }
 
         // Add temperature profiler section
@@ -203,10 +175,10 @@ public abstract class ServerLevelMixin_TemperatureUpdate
                         // Fast gate custom block state transition logic:
                         // only enter the method if this state actually has transition data.
                         StateTransitionData std = StateTransitionData.getData(blockstate2);
-                        if (std != null && std.willTransit())
+                        if (std != null && std.hasRandomTransitions())
                         {
-                            handled = frostedHeart$updateBlockBasedOnTemperature(
-                                    pChunk, level, blockpos3, blockstate2, std, climateBase);
+                            handled = MinecraftThermalInput.tryMaterialPhaseAtRandomTick(level, pChunk, blockpos3, blockstate2)
+                                    == MinecraftPhaseController.PhaseAttempt.CHANGED;
                         }
 
                         // Fast gate custom plant temperature logic:
@@ -270,92 +242,6 @@ public abstract class ServerLevelMixin_TemperatureUpdate
         return false;
     }
 
-    /**
-     * Custom version of shouldFreeze that keeps all checks except the light level check.
-     *
-     * Freezes flowing water too.
-     *
-     * And it freeze water based on its level, so it turns into various thin ice.
-     */
-    @Unique
-    private boolean frostedheart$freezeWater(
-            ServerLevel level,
-            BlockPos pos,
-            float climateBase
-    )
-    {
-        if (MinecraftThermalInput.ownsMaterialTransitions(level, pos, level.getBlockState(pos))) return false;
-        if (pos.getY() >= level.getMinBuildHeight()
-                && pos.getY() < level.getMaxBuildHeight()
-                && MinecraftThermalInput.gameplayCropEnvironment(
-                        level,
-                        pos,
-                        WorldTemperature.naturalBlock(level, pos, climateBase))
-                        < WorldTemperature.WATER_FREEZES)
-        {
-            BlockState blockstate = level.getBlockState(pos);
-            FluidState fluidstate = blockstate.getFluidState();
-
-            // Reuse a mutable position for neighbor checks to avoid allocating
-            // pos.west()/east()/north()/south() BlockPos objects on every call.
-            BlockPos.MutableBlockPos cursor = new BlockPos.MutableBlockPos();
-
-            // Check if block is at edge of water (from original code)
-            boolean isAtEdge =
-                    !level.isWaterAt(cursor.set(pos).move(Direction.WEST))
-                            || !level.isWaterAt(cursor.set(pos).move(Direction.EAST))
-                            || !level.isWaterAt(cursor.set(pos).move(Direction.NORTH))
-                            || !level.isWaterAt(cursor.set(pos).move(Direction.SOUTH));
-
-            // source
-            if (fluidstate.getType() == Fluids.WATER && blockstate.getBlock() instanceof LiquidBlock)
-            {
-                if (isAtEdge)
-                {
-                    MinecraftPhaseController.applyGameplayTransition(level, pos, FHBlocks.THIN_ICE_BLOCK.get().defaultBlockState());
-                    return true;
-                }
-            }
-
-            // flowing
-            else if (fluidstate.getType() == Fluids.FLOWING_WATER
-                    && blockstate.getBlock() instanceof LiquidBlock)
-            {
-                if (isAtEdge)
-                {
-                    BlockState targetState = null;
-
-                    // TODO: should we do Icicles?
-                    if (fluidstate.hasProperty(FlowingFluid.LEVEL))
-                    {
-                        int flowingLevel = fluidstate.getValue(FlowingFluid.LEVEL);
-                        if (flowingLevel == 8)
-                        {
-                            targetState = FHBlocks.THIN_ICE_BLOCK.get().defaultBlockState();
-                        }
-                        else
-                        {
-                            targetState = FHBlocks.LAYERED_THIN_ICE.get().defaultBlockState()
-                                    .setValue(LayeredThinIceBlock.LAYERS, flowingLevel);
-                        }
-                    }
-                    else if (fluidstate.hasProperty(FlowingFluid.FALLING)
-                            && fluidstate.getValue(FlowingFluid.FALLING))
-                    {
-                        targetState = FHBlocks.THIN_ICE_BLOCK.get().defaultBlockState();
-                    }
-
-                    if (targetState != null)
-                    {
-                        MinecraftPhaseController.applyGameplayTransition(level, pos, targetState);
-                        return true;
-                    }
-                }
-            }
-        }
-        return false;
-    }
-
     // Plants should go separately
     @Unique
     private boolean frostedHeart$updatePlantBasedOnTemperature(
@@ -390,262 +276,4 @@ public abstract class ServerLevelMixin_TemperatureUpdate
         return false;
     }
 
-    @Unique
-    private boolean frostedHeart$updateBlockBasedOnTemperature(LevelChunk pChunk, ServerLevel level,
-                                                               BlockPos pos, final BlockState currentState,
-                                                               StateTransitionData std,
-                                                               float climateBase)
-    {
-        // 每方块随机刻尝试均会执行本方法：ambientBlockStateUpdateDivisor 同一 tick 内恒定，hoist 到开头
-        int ambientBlockStateUpdateDivisor = FHConfig.SERVER.CLIMATE.ambientBlockStateUpdateDivisor.get();
-
-        int heatCapacity = std.heatCapacity();
-        if (heatCapacity <= 0 || level.random.nextInt(heatCapacity) != 0)
-        {
-            return false;
-        }
-
-        // TODO: For ocean melting we need special handling...
-        // Biome lookup is only needed for ice-like blocks, so delay it until necessary.
-        if (currentState.is(BlockTags.ICE))
-        {
-            Holder<Biome> biome = CUtils.fastGetBiome(pChunk, pos);
-            if (biome.is(FHTags.Biomes.ICE_DO_NOT_SMELT.tag))
-            {
-                return false;
-            }
-        }
-
-        double natural = WorldTemperature.naturalBlock(level, pos, climateBase);
-        double t = MinecraftThermalInput.gameplayPassiveEnvironment(
-                level, pos, natural, frostedHeart$phaseFields);
-        double analyticFloor = frostedHeart$phaseFields.guaranteedFloor(natural);
-        boolean hasAnalyticField = frostedHeart$phaseFields.present();
-
-        // Determine the target state based on temperature thresholds
-        // We check transitions in order of priority (solid->gas, gas->solid, etc.)
-        final PhysicalState sourceState = std.state();
-        PhysicalState targetState = sourceState; // Default to current state
-        BlockState targetBlock = currentState;   // Default to current block
-        boolean thermalOwnsHeating = MinecraftThermalInput.ownsGameplayHeatingTransition(
-                level, pos, currentState, std);
-        if (thermalOwnsHeating) {
-            var heating = std.heatingTransition(currentState);
-            boolean forcedHeating = hasAnalyticField && heating != null && analyticFloor >= heating.temperatureC();
-            if (!forcedHeating || MinecraftThermalInput.requestGameplayPhase(level, pos, currentState,
-                    com.teammoeg.frostedheart.content.climate.thermal.mesh.MaterialThermalLaw.HEATING)) return false;
-        }
-
-        switch (sourceState)
-        {
-            case SOLID:
-            {
-                if (thermalOwnsHeating && analyticFloor < std.meltTemp()
-                        && analyticFloor < std.evaporateTemp())
-                {
-                    break;
-                }
-                // To save performance, we only focus on blocks that player cares more about,
-                // otherwise we reduce transition rate
-                boolean shouldDoAdjust = level.random.nextInt(ambientBlockStateUpdateDivisor) == 0
-                        || hasAnalyticField;
-
-                if (!shouldDoAdjust)
-                {
-                    return false;
-                }
-                else if (t >= std.evaporateTemp() && std.gas() != null
-                        && (!thermalOwnsHeating || analyticFloor >= std.evaporateTemp()))
-                {
-                    targetState = PhysicalState.GAS;
-                    targetBlock = std.gas();
-                }
-                else if (t >= std.meltTemp() && std.liquid() != null
-                        && (!thermalOwnsHeating || analyticFloor >= std.meltTemp()))
-                {
-                    targetState = PhysicalState.LIQUID;
-                    targetBlock = std.liquid();
-                }
-                break;
-            }
-            case LIQUID:
-            {
-                if (t <= std.freezeTemp() && std.solid() != null)
-                {
-                    targetState = PhysicalState.SOLID;
-                    targetBlock = std.solid();
-                }
-                else if (thermalOwnsHeating && analyticFloor < std.evaporateTemp())
-                {
-                    break;
-                }
-                else
-                {
-                    boolean shouldDoAdjust = level.random.nextInt(ambientBlockStateUpdateDivisor) == 0
-                            || hasAnalyticField;
-
-                    if (!shouldDoAdjust)
-                    {
-                        return false;
-                    }
-                    else if (t >= std.evaporateTemp() && std.gas() != null)
-                    {
-                        targetState = PhysicalState.GAS;
-                        targetBlock = std.gas();
-                    }
-                }
-                break;
-            }
-            case GAS:
-            {
-                if (t <= std.freezeTemp() && std.solid() != null)
-                {
-                    targetState = PhysicalState.SOLID;
-                    targetBlock = std.solid();
-                }
-                else if (t <= std.condenseTemp() && std.liquid() != null)
-                {
-                    targetState = PhysicalState.LIQUID;
-                    targetBlock = std.liquid();
-                }
-                break;
-            }
-        }
-
-        // Skip update if target state is the same as current state
-        if (targetState == sourceState || targetBlock == currentState)
-        {
-            return false;
-        }
-
-        // Create effects before changing the block
-        frostedHeart$addTransitionEffects(level, pos, sourceState, targetState, currentState, targetBlock);
-
-        // Update the block state
-        return MinecraftPhaseController.applyGameplayTransition(level, pos, targetBlock);
-    }
-
-    /**
-     * Adds visual and audio effects when a block changes state
-     *
-     * @param level The server level
-     * @param pos Position of the block
-     * @param oldState The original state string ("solid", "liquid", "gas")
-     * @param newState The new state string
-     * @param oldBlock The original block
-     * @param newBlock The new block
-     */
-    @Unique
-    private void frostedHeart$addTransitionEffects(ServerLevel level, BlockPos pos,
-                                                   PhysicalState oldState, PhysicalState newState,
-                                                   BlockState oldBlock, BlockState newBlock)
-    {
-        // Only create transition effects when a player is nearby.
-        // This avoids wasting server/network/client resources on effects
-        // that nobody can see or hear.
-        double x = pos.getX() + 0.5D;
-        double y = pos.getY() + 0.5D;
-        double z = pos.getZ() + 0.5D;
-        if (!level.hasNearbyAlivePlayer(x, y, z, 12.0D))
-        {
-            return;
-        }
-
-        // Create server-side particle effects that will be sent to clients
-        // Use the transition type to determine appropriate particles
-        switch (oldState.translate(newState))
-        {
-            case MELTING:
-                // Melting effect - dripping water particles
-                level.sendParticles(
-                        ParticleTypes.DRIPPING_WATER,
-                        x,
-                        y,
-                        z,
-                        8, // particle count
-                        0.3D, // spread X
-                        0.3D, // spread Y
-                        0.3D, // spread Z
-                        0.0D  // speed
-                );
-                // Melting sound
-                level.playSound(null, pos, SoundEvents.FIRE_EXTINGUISH,
-                        SoundSource.BLOCKS, 0.5F,
-                        2.6F + (level.random.nextFloat() - level.random.nextFloat()) * 0.8F);
-                break;
-            case SUBLIMATION:
-            case EVAPORATION:
-                // Evaporation/sublimation effect - cloud particles
-                level.sendParticles(
-                        ParticleTypes.CLOUD,
-                        x,
-                        y,
-                        z,
-                        12, // particle count
-                        0.25D, // spread X
-                        0.25D, // spread Y
-                        0.25D, // spread Z
-                        0.05D  // speed - slightly rising
-                );
-                // Steam hissing sound
-                level.playSound(null, pos, SoundEvents.FIRE_EXTINGUISH,
-                        SoundSource.BLOCKS, 0.4F,
-                        2.0F + level.random.nextFloat() * 0.4F);
-                break;
-            case FREEZING:
-                // Freezing effect - snowflake particles
-                level.sendParticles(
-                        ParticleTypes.SNOWFLAKE,
-                        x,
-                        y,
-                        z,
-                        10, // particle count
-                        0.3D, // spread X
-                        0.3D, // spread Y
-                        0.3D, // spread Z
-                        0.0D  // speed
-                );
-                // Freezing sound
-                // level.playSound(null, pos, SoundEvents.GLASS_PLACE, SoundSource.BLOCKS, 0.5F, 1.0F + (level.random.nextFloat() - level.random.nextFloat()) * 0.4F);
-                break;
-            case CONDENSATION:
-            case DEPOSITION:
-                // Condensation/deposition effect - dripping particles
-                level.sendParticles(
-                        ParticleTypes.DRIPPING_WATER,
-                        x,
-                        pos.getY() + 0.8D,
-                        z,
-                        15, // particle count
-                        0.4D, // spread X
-                        0.1D, // spread Y
-                        0.4D, // spread Z
-                        0.0D  // speed
-                );
-                // Condensation sound - light rain-like sound
-                level.playSound(null, pos, SoundEvents.POINTED_DRIPSTONE_DRIP_WATER,
-                        SoundSource.AMBIENT, 0.5F, 1.0F);
-                break;
-            default:
-                break;
-        }
-
-        // You could also add custom particles for specific block transitions
-        // For example, if water is turning to ice:
-        if (oldBlock.is(Blocks.WATER) && newBlock.is(Blocks.ICE))
-        {
-            // Special ice formation particles
-            level.sendParticles(
-                    ParticleTypes.ITEM_SNOWBALL,
-                    x,
-                    y,
-                    z,
-                    5,
-                    0.2D,
-                    0.2D,
-                    0.2D,
-                    0.0D
-            );
-        }
-    }
 }

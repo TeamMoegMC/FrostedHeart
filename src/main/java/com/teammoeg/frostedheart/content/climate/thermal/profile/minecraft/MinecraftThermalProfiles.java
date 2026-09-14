@@ -53,8 +53,6 @@ public final class MinecraftThermalProfiles {
                 FHConfig.COMMON.THERMAL_RUNTIME;
         double phaseFaceConductanceWPerK =
                 config.phaseFaceConductanceWPerK.get();
-        double phaseBaseEnergyJPerHeatCapacity =
-                config.phaseBaseEnergyJPerHeatCapacity.get();
         boolean staticRadiationEnabled =
                 config.enableStaticBlockRadiation.get();
         Tuning tuning = new Tuning(
@@ -73,8 +71,11 @@ public final class MinecraftThermalProfiles {
         Map<BodyKey, Integer> bodyIds = new LinkedHashMap<>();
         List<MaterialBoundaryRegistry.Profile> profiles =
                 new ArrayList<>();
+        List<StateTransitionData.Edge> heatingData = new ArrayList<>(), coolingData = new ArrayList<>();
+        heatingData.add(null);
+        coolingData.add(null);
         MinecraftMaterialLawCompiler lawCompiler = new MinecraftMaterialLawCompiler(
-                blocks, MinecraftThermalProfiles::bodyCapacity, phaseBaseEnergyJPerHeatCapacity);
+                blocks, MinecraftThermalProfiles::bodyCapacity);
         ThermalSignatureTable.Builder signatures =
                 ThermalSignatureTable.builder();
         MinecraftStateThermalTable.Builder states =
@@ -101,12 +102,18 @@ public final class MinecraftThermalProfiles {
                     boolean phase = law.heating() != null || law.cooling() != null;
                     GameplayMaterial material = classify(state);
                     double conductance = phase ? phaseFaceConductanceWPerK : material.conductance;
-                    BodyKey key = new BodyKey(conductance, law);
+                    var data = StateTransitionData.getData(state);
+                    if (data != null && Double.isFinite(data.conductanceWPerK())) conductance = data.conductanceWPerK();
+                    var heating = data == null ? null : data.heating();
+                    var cooling = data == null ? null : data.cooling();
+                    BodyKey key = new BodyKey(conductance, law, heating, cooling);
                     Integer existing = bodyIds.get(key);
                     if (existing == null) {
                         existing = profiles.size() + 1;
                         bodyIds.put(key, existing);
                         profiles.add(MaterialBoundaryRegistry.Profile.body(existing, conductance, law));
+                        heatingData.add(heating);
+                        coolingData.add(cooling);
                     }
                     profileId = existing;
                     if (phase) transitionStates++;
@@ -137,7 +144,7 @@ public final class MinecraftThermalProfiles {
                 signatures.build(),
                 states.build(),
                 new MaterialBoundaryRegistry(profiles),
-                tuning);
+                tuning, heatingData.toArray(StateTransitionData.Edge[]::new), coolingData.toArray(StateTransitionData.Edge[]::new));
         FHMain.LOGGER.info(
                 "Compiled {} static material states, {} phase states, "
                         + "{} material profiles",
@@ -170,21 +177,6 @@ public final class MinecraftThermalProfiles {
         return current == null
                 ? TOPOLOGY_MUTATION
                 : current.states.mutationFlags(oldState, newState);
-    }
-
-    public static Integer phaseProfileId(BlockState state) {
-        Snapshot current = snapshot;
-        if (current == null) {
-            return null;
-        }
-        int signatureId = current.states.signatureId(state);
-        int profileId = current.signatures.materialProfileId(signatureId);
-        MaterialBoundaryRegistry.Profile profile =
-                current.materials.profileOrNull(profileId);
-        return profile != null
-                && profile.thermalLaw() != null
-                && (profile.thermalLaw().heating() != null || profile.thermalLaw().cooling() != null)
-                ? profileId : null;
     }
 
     public static boolean lavaBlockRadiationEnabled() {
@@ -319,8 +311,13 @@ public final class MinecraftThermalProfiles {
             ThermalSignatureTable signatures,
             MinecraftStateThermalTable states,
             MaterialBoundaryRegistry materials,
-            Tuning tuning
+            Tuning tuning,
+            StateTransitionData.Edge[] heatingData,
+            StateTransitionData.Edge[] coolingData
     ) {
+        public StateTransitionData.Edge transitionData(int profileId, boolean heating) {
+            return (heating ? heatingData : coolingData)[profileId];
+        }
     }
 
     public record Tuning(
@@ -332,7 +329,7 @@ public final class MinecraftThermalProfiles {
     ) {
     }
 
-    private record BodyKey(double conductance, MaterialThermalLaw law) {}
+    private record BodyKey(double conductance, MaterialThermalLaw law, StateTransitionData.Edge heating, StateTransitionData.Edge cooling) {}
 
     private enum GameplayMaterial {
         INSULATING_FABRIC(0.12D, 120.0D),

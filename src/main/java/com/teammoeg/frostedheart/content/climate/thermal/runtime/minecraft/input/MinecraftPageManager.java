@@ -147,14 +147,6 @@ public final class MinecraftPageManager implements AutoCloseable {
         }
     }
 
-    public void updateDormantSourceSupport(
-            long sectionKey,
-            boolean supported
-    ) {
-        requireMainThread();
-        input.updateDormantSourceSupport(sectionKey, supported);
-    }
-
     public ThermalPageHandle handle(long sectionKey) {
         PageEntry page = pages.get(sectionKey);
         return page == null ? null : page.handle;
@@ -994,8 +986,7 @@ public final class MinecraftPageManager implements AutoCloseable {
 
     public void checkpointChunk(
             LevelChunk chunk,
-            boolean markDirty,
-            boolean refreshSupport
+            boolean markDirty
     ) {
         requireMainThread();
         LongOpenHashSet indexed = pagesByChunk.get(chunk.getPos().toLong());
@@ -1007,12 +998,9 @@ public final class MinecraftPageManager implements AutoCloseable {
                 }
             }
         }
-        if (refreshSupport) {
-            input.finishDormantCheckpoint(chunk, markDirty);
-        }
     }
 
-    public void checkpointAll(boolean markDirty, boolean refreshSupport) {
+    public void checkpointAll(boolean markDirty) {
         requireMainThread();
         long[] chunks = pagesByChunk.keySet().toLongArray();
         for (long chunkKey : chunks) {
@@ -1020,7 +1008,7 @@ public final class MinecraftPageManager implements AutoCloseable {
                     (int) chunkKey,
                     (int) (chunkKey >>> Integer.SIZE));
             if (chunk != null) {
-                checkpointChunk(chunk, markDirty, refreshSupport);
+                checkpointChunk(chunk, markDirty);
             }
         }
     }
@@ -1242,6 +1230,7 @@ public final class MinecraftPageManager implements AutoCloseable {
         private it.unimi.dsi.fastutil.ints.IntArrayList pendingMaterialChanges;
         private it.unimi.dsi.fastutil.ints.IntArrayList checkpointMaterialChanges;
         private it.unimi.dsi.fastutil.longs.LongArrayList checkpointMaterialRevisions;
+        private it.unimi.dsi.fastutil.longs.LongArrayList checkpointMaterialTicks;
         private long checkpointPruneTick = Long.MIN_VALUE;
         private long materialResetRevision = -1;
         private volatile ThermalPageHandle page;
@@ -1282,6 +1271,21 @@ public final class MinecraftPageManager implements AutoCloseable {
             return page;
         }
 
+        /** A pending captured Brick is still owned by the live handoff, not dormant fallback. */
+        public boolean ownsMaterialPosition(int block) {
+            if (page == null) return false;
+            int brick = (block & 15) >>> 2 | ((block >>> 4 & 15) >>> 2) << 2 | (block >>> 10) << 4;
+            if ((capturedBrickMask & 1L << brick) == 0) return false;
+            var publication = page.lastPublication();
+            if (publication == null) return true;
+            var payload = publication.brick(brick);
+            if (!payload.resolved() || payload.firstSlot() < 0) return true;
+            if (publication.geometryRevision() != page.liveGeometryRevision()
+                    && manager.materialChangedSince(sectionKey, block, publication.geometryRevision())) return true;
+            return payload.blockLayout() != null
+                    && payload.blockLayout().nodeAt((block & 3) | ((block >>> 4 & 3) << 2) | ((block >>> 8 & 3) << 4)) >= 0;
+        }
+
         public synchronized void recordMaterialChange(int block, int previousSignature, int nextSignature, byte cause) {
             if (pendingMaterialChanges == null) pendingMaterialChanges = new it.unimi.dsi.fastutil.ints.IntArrayList();
             pendingMaterialChanges.add(block);
@@ -1295,6 +1299,7 @@ public final class MinecraftPageManager implements AutoCloseable {
             if (checkpointMaterialChanges == null) {
                 checkpointMaterialChanges = new it.unimi.dsi.fastutil.ints.IntArrayList();
                 checkpointMaterialRevisions = new it.unimi.dsi.fastutil.longs.LongArrayList();
+                checkpointMaterialTicks = new it.unimi.dsi.fastutil.longs.LongArrayList();
             }
             long tick = manager.level.getGameTime();
             if (checkpointPruneTick != tick) {
@@ -1302,6 +1307,7 @@ public final class MinecraftPageManager implements AutoCloseable {
                 pruneMaterialCheckpoint();
             }
             checkpointMaterialRevisions.add(page.liveGeometryRevision());
+            checkpointMaterialTicks.add(tick);
             checkpointMaterialChanges.add(block);
             checkpointMaterialChanges.add(nextState);
             checkpointMaterialChanges.add(cause);
@@ -1314,12 +1320,14 @@ public final class MinecraftPageManager implements AutoCloseable {
             if (checkpointMaterialRevisions.getLong(size - 1) <= published) {
                 checkpointMaterialRevisions.clear();
                 checkpointMaterialChanges.clear();
+                checkpointMaterialTicks.clear();
                 return;
             }
             int removed = 0;
             while (removed < size && checkpointMaterialRevisions.getLong(removed) <= published) removed++;
             if (removed != 0) {
                 checkpointMaterialRevisions.removeElements(0, removed);
+                checkpointMaterialTicks.removeElements(0, removed);
                 checkpointMaterialChanges.removeElements(0, removed * 3);
             }
         }
@@ -1338,7 +1346,8 @@ public final class MinecraftPageManager implements AutoCloseable {
                 BlockState state = net.minecraft.world.level.block.Block.BLOCK_STATE_REGISTRY.byId(stateId);
                 var law = state == null ? null : MinecraftThermalProfiles.materialLaw(state);
                 editor.applyChange(checkpointMaterialChanges.getInt(base), stateId, law,
-                        (byte) checkpointMaterialChanges.getInt(base + 2), naturalTemperatureC);
+                        (byte) checkpointMaterialChanges.getInt(base + 2), naturalTemperatureC,
+                        checkpointMaterialTicks.getLong(index), 0, naturalTemperatureC);
             }
             return editor.snapshot();
         }

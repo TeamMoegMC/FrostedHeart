@@ -384,22 +384,9 @@ public final class ThermalCellArena {
         if (law == null) return Double.POSITIVE_INFINITY;
         if (materialTransitionWaiting(slot)) return 0;
         double energy = enthalpyJ[slot];
-        MaterialThermalLaw.Transition active = materialTransition(slot);
-        if (active != null) {
-            boolean advancing = (direction > 0) == active.heating();
-            double remaining = advancing
-                    ? (active.targetEnthalpyJ() - energy) * Math.signum(direction)
-                    : (active.sourceEnthalpyJ() - energy) * Math.signum(direction);
-            if (advancing || remaining > 0) return Math.max(0, remaining);
-            materialBranches[slot] = MaterialThermalLaw.SENSIBLE;
-        }
-        byte branch = direction > 0 ? MaterialThermalLaw.HEATING : MaterialThermalLaw.COOLING;
-        MaterialThermalLaw.Transition edge = law.transition(branch);
-        if (edge == null) return Double.POSITIVE_INFINITY;
-        double distance = (edge.sourceEnthalpyJ() - energy) * Math.signum(direction);
-        if (distance > 0) return distance;
+        byte branch = law.selectBranch(energy, materialBranches[slot], direction);
         materialBranches[slot] = branch;
-        return Math.max(0, (edge.targetEnthalpyJ() - energy) * Math.signum(direction));
+        return law.energyLimitJ(energy, branch, direction);
     }
 
     public double energyTemperatureSlope(int slot) {

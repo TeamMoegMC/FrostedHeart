@@ -3,23 +3,27 @@
   "block": {
     "Name": "frostedheart:thin_ice"
   },
-  "condense_temp": -5.0,
-  "evaporate_temp": 9.0,
-  "freeze_temp": -20.0,
-  "gas": {
-    "Name": "minecraft:water",
-    "Properties": {
-      "level": "0"
-    }
+  "all_states": true,
+  "capacity_j_per_k": 5400.0,
+  "enthalpy_offset_j": 1520000.0,
+  "heating": {
+    "target": {
+      "Properties": {
+        "level": "0"
+      },
+      "Name": "minecraft:water"
+    },
+    "temperature_c": 9.0,
+    "world_conditions": {
+      "excluded_biome_tag": "frostedheart:ice_do_not_smelt"
+    },
+    "effect": "evaporation"
   },
-  "heat_capacity": 10,
-  "liquid": {
-    "Name": "frostedheart:thin_ice"
-  },
-  "melt_temp": 9.0,
-  "solid": {
-    "Name": "minecraft:ice"
-  },
-  "state": "liquid",
-  "will_transit": true
+  "cooling": {
+    "target": {
+      "Name": "minecraft:ice"
+    },
+    "temperature_c": -20.0,
+    "effect": "freezing"
+  }
 }

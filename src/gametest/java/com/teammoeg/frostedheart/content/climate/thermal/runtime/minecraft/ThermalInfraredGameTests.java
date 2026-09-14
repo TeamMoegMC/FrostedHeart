@@ -90,7 +90,7 @@ public final class ThermalInfraredGameTests {
             expectTemperature(helper, restored, p, WorldTemperature.material(level, p));
             int index = saved.find(block);
             var edit = new MaterialSectionState.Editor(saved);
-            edit.update(block, saved.stateId(index), saved.law(index), saved.law(index).enthalpyAtTemperature(51.37), (byte) 0);
+            edit.update(block, saved.stateId(index), saved.law(index), saved.law(index).enthalpyAtTemperature(51.37), (byte) 0, level.getGameTime());
             saved = edit.snapshot();
             stored.replaceMaterials(section, saved);
             InfraredSnapshot changed = sample(player, restored, false, full.presence());
@@ -386,7 +386,7 @@ public final class ThermalInfraredGameTests {
             parts=builder.finishParts();
         }
         long[] presence = new long[12]; Arrays.fill(presence,-1L); presence[11]=(1L<<25)-1;
-        InfraredSnapshot full = new InfraredSnapshot(-3,5,7,93,11,true,true,presence,presence,parts, 123456789012L);
+        InfraredSnapshot full = new InfraredSnapshot(-3,5,7,93,11,true,true,presence,presence,parts, 123456789012L, 9876543210L);
         helper.assertTrue(parts.length > 1, "fixture must cross the real wire limit");
         int expected=0;
         for (byte[] part:parts) {
@@ -543,7 +543,8 @@ public final class ThermalInfraredGameTests {
     private static InfraredSnapshot sample(ServerPlayer p, InfraredSnapshot previous, boolean full, long[] presence) {
         return MinecraftThermalInput.gameplayInfraredSnapshot(p,full,previous==null?0:previous.generation(),
                 previous==null?0:center(previous),previous==null?0:previous.infraredEpoch(),presence,
-                previous!=null&&previous.readable(),previous==null?EMPTY:previous.fieldPages(), previous==null?0:previous.storedEpoch());
+                previous!=null&&previous.readable(),previous==null?EMPTY:previous.fieldPages(), previous==null?0:previous.storedEpoch(),
+                previous==null?0:previous.storedSampleTick());
     }
     private static int page(InfraredSnapshot s, BlockPos p) {
         int x=(p.getX()>>4)-s.centerChunkX()+4, y=(p.getY()>>4)-s.centerSectionY()+4, z=(p.getZ()>>4)-s.centerChunkZ()+4;
@@ -604,7 +605,7 @@ public final class ThermalInfraredGameTests {
             for (boolean full : new boolean[]{false,true}) {
                 b.clear();
                 var request=new FHRequestInfraredViewDataSyncPacket(17,full,s.generation(),center(s),s.infraredEpoch(),
-                        s.presence().length==12?s.presence():EMPTY,s.readable(),s.fieldPages(),s.storedEpoch());
+                        s.presence().length==12?s.presence():EMPTY,s.readable(),s.fieldPages(),s.storedEpoch(),s.storedSampleTick());
                 request.encode(b); var decoded=new FHRequestInfraredViewDataSyncPacket(b);
                 h.assertTrue(!b.isReadable() && decoded.knownReadable()==s.readable()
                         && decoded.knownStoredEpoch()==s.storedEpoch()

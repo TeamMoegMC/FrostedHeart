@@ -575,8 +575,7 @@ public final class WorkerPageStore implements AutoCloseable {
                 || previous.coverageSlot != next.coverageSlot
                 || previous.coverageGeneration != next.coverageGeneration
                 || previous.blockLayout != next.blockLayout
-                || previous.transportNodeCount != next.transportNodeCount
-                || previous.phaseCandidates != next.phaseCandidates;
+                || previous.transportNodeCount != next.transportNodeCount;
     }
 
     private static PagePublication.Brick publicationBrick(
@@ -589,9 +588,6 @@ public final class WorkerPageStore implements AutoCloseable {
                 signaturePayload,
                 topology.cellsResolved ? topology.blockLayout : null,
                 topology.cellsResolved ? topology.transportNodeCount : 0,
-                topology.cellsResolved
-                        ? topology.phaseCandidates
-                        : PagePublication.PhaseCandidates.EMPTY,
                 topology.cellsResolved);
     }
 
@@ -862,7 +858,7 @@ public final class WorkerPageStore implements AutoCloseable {
         long sourceSeedMask;
         double naturalTemperatureC;
         ThermalInputBatch.DormantAirCut dormantAir;
-        com.teammoeg.frostedheart.content.climate.thermal.persistence.minecraft.MaterialSectionState dormantMaterials;
+        ThermalInputBatch.DormantMaterialCut dormantMaterials;
 
         private PageState(
                 ThermalPageHandle handle,
@@ -875,7 +871,7 @@ public final class WorkerPageStore implements AutoCloseable {
                 double naturalTemperatureC,
                 byte[] firstExposedLocalY,
                 ThermalInputBatch.DormantAirCut dormantAir,
-                com.teammoeg.frostedheart.content.climate.thermal.persistence.minecraft.MaterialSectionState dormantMaterials
+                ThermalInputBatch.DormantMaterialCut dormantMaterials
         ) {
             this.handle = Objects.requireNonNull(handle, "handle");
             this.pageSlot = pageSlot;

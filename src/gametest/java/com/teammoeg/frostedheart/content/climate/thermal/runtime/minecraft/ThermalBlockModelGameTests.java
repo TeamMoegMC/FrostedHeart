@@ -164,7 +164,7 @@ public final class ThermalBlockModelGameTests {
                 }
                 if (stage == 0) {
                     // Existing Air-only format: mean 50 C, while new material initializes at 10 C.
-                    var entry = new DormantChunkThermalState.SectionEntry(0, false, 1L << brickIndex,
+                    var entry = new DormantChunkThermalState.SectionEntry(0, 0, 1L << brickIndex,
                             new byte[]{0}, new long[]{40L * 16}, new long[0]);
                     var dormant = new ThermalInputBatch.DormantAirCut(entry, 10, 1);
                     long mask = (1L << brickIndex) | (1L << brickIndex(origin.east(4)));

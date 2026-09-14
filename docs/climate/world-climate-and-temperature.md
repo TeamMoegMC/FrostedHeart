@@ -224,13 +224,15 @@ Generator 的半径/温差来自 `GeneratorData.getRadius/getTempMod` 和 `Gener
 
 `MinecraftThermalInput.gameplayInfraredSnapshot`通过`BlockBrickLayout.surfaceNodeMask`
 读取材料本体节点的H→T，包括普通材料、相变平台与相变后的状态。楼梯本体不再与空气
-共用温度；实际Air和休眠Air均温不作为材料基础。材料本体H/分支另存于format 3，
+共用温度；实际Air和休眠Air均温不作为材料基础。材料本体H/分支/时间另存于format 4，
 不通过Air均温恢复。旧相变池和旧存档兼容读取已移除。
 
 活动Brick优先使用当前材料发布；未驻留的Brick可直接读取已加载Chunk中
 `DormantChunkThermalState.materials`的既有材料记录，并验证当前BlockState一致。
 这与温度计使用同一`MaterialSectionState.read`关系。活动Page正在更新时不以旧记录覆盖它。
-活动模拟关闭后，保存的材料温度仍可显示；没有创建新的Page、材料H或休眠系统。
+活动模拟关闭后，保存的材料温度按`DormantThermalCooling`投影后显示；不创建新Page或第二份H。
+空气与普通材料共用默认1800游戏秒温差半衰期，相变材料保留潜热平台。
+当前Section中心自然温度近似整个休眠区间；不回放天气历史，也不累计服务器停止的现实时间。
 
 局部几何变化不等于材料温度消失。红外和`sampleMaterial`读取`ThermalPageHandle.lastPublication()`
 这份既有材料发布，并继续检查slot generation及query cut一致性。材料变更日志只排除发布之后
@@ -241,7 +243,8 @@ Generator 的半径/温差来自 `GeneratorData.getRadius/getTempMod` 和 `Gener
 
 `storedEpoch`只用于同步变化：客户端在完整响应的最后一片提交后回传编号，服务端按Section
 变化编号更新，删除记录和替换/重载Chunk也会清除旧热色。编号不写入存档；协议不保留旧格式读取。
-未变化且没有解析场刷新的保存记录不产生重复响应。
+协议另带`storedSampleTick`，LAST时一起提交。即使记录未编辑，两个时刻的量化温度不同也会更新
+对应Brick；没有量化变化且没有解析场刷新时不产生重复响应。自然温度变动会使Section显示基准失效。
 
 有材料且无场时显示材料温度；无材料且无场时发送`Short.MIN_VALUE`，客户端使用
 `MIN_TEMP=-20`的蓝色**占位**，不把-20当实测值。全窗口自然背景估计、729值背景包和
@@ -317,9 +320,9 @@ Generator 另外提供上述解析保底；其物理功率和传播范围不受�
 
 ## 8. 主要消费者
 
-`WorldTemperature.block` 及同一 compositor 目前驱动：
+环境温度及同一 compositor 目前驱动：
 
-- `ServerLevelMixin_TemperatureUpdate` 中的水冻结、冰/流体/其他 `StateTransitionData` 状态变化；
+- `MinecraftPhaseController.tryAtRandomTick` 中无材料记录的环境平衡转换；有记录时由材料H和同一数据边决定相变；
 - `PlantTempData` 的施肥、生长、生存和死亡检查；
 - 动物、蜂巢、村民交易、战利品条件和温度探针；
 - 城镇住宅和狩猎建筑的内部体素温度扫描。`MineBlockScanner` 中的旧温度累积当前没有生产调用者，`MineBaseBlockScanner` 不计算温度。
@@ -344,7 +347,7 @@ publication，未命中时使用已加载 chunk 的 dormant 温度，再回退 `
 命中相对保底的 live/dormant 点才额外计算当地 natural；不会使用全建筑平均值构造局部保底。
 该路径没有第二次房间/体素遍历，不保留 mesh lease，miss 也不能 admission。矿井基地当前没有温度工作条件。
 
-`ServerLevelMixin_TemperatureUpdate` 对每个候选融化/蒸发阈值检查显式解析下限：
+`MinecraftPhaseController` 对编译升温边检查显式解析下限：
 `L = compose(natural, -Infinity)`。被物理 phase 接管的方块，仅当解析下限自身达到对应阈值时，
 才允许原有玩法相变路径执行该升温变化；融化下限不能越权触发更高阈值的蒸发。Boss 负温差会降低 L，
 单独 `ADD_DELTA` 没有绝对下限，不绕过潜热。方块变化仍走原有 mutation/phase ACK 失效路径。

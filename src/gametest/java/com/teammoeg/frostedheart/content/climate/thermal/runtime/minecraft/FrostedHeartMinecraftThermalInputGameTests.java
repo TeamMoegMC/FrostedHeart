@@ -471,6 +471,7 @@ public final class FrostedHeartMinecraftThermalInputGameTests {
         level.getGameRules().getRule(GameRules.RULE_RANDOMTICKING)
                 .set(0, level.getServer());
         int[] elapsed = {0};
+        boolean[] phaseRequested = {false};
         helper.onEachTick(() -> {
             elapsed[0]++;
             MinecraftThermalInput.onGeneratorTick(
@@ -481,7 +482,18 @@ public final class FrostedHeartMinecraftThermalInputGameTests {
                         level.getBlockState(changingTopology).cycle(
                                 BlockStateProperties.OPEN));
             }
+            // Establish an actual pending request. Reaching 9 C alone only proves
+            // onset of the latent plateau, not that this ACK/churn fixture is ready.
+            if (elapsed[0] >= 100 && !phaseRequested[0]) {
+                phaseRequested[0] = MinecraftThermalInput.requestGameplayPhase(level, phaseBlock,
+                        level.getBlockState(phaseBlock),
+                        com.teammoeg.frostedheart.content.climate.thermal.mesh.MaterialThermalLaw.HEATING);
+            }
             if (elapsed[0] == 360) {
+                var pending = new QueryPublication.MutableMaterialSample();
+                helper.assertTrue(MinecraftThermalInput.sampleMaterial(level, phaseBlock, pending)
+                                && pending.requestSequence() > 0,
+                        "a completed energy transition must be waiting for ACK before enabling world mutation");
                 level.getGameRules().getRule(GameRules.RULE_RANDOMTICKING)
                         .set(randomTickSpeed, level.getServer());
             }
@@ -489,7 +501,8 @@ public final class FrostedHeartMinecraftThermalInputGameTests {
         helper.succeedWhen(() -> {
             helper.assertTrue(
                     !level.getBlockState(phaseBlock).is(Blocks.PACKED_ICE),
-                    "phase Block never completed during topology churn");
+                    "phase Block never completed during topology churn: temperature=" + WorldTemperature.material(level, phaseBlock)
+                            + ", randomTickSpeed=" + level.getGameRules().getInt(GameRules.RULE_RANDOMTICKING));
             level.getGameRules().getRule(GameRules.RULE_RANDOMTICKING)
                     .set(randomTickSpeed, level.getServer());
             MinecraftThermalInput.onPhysicalSourceRemoved(level, source);

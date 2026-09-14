@@ -1,182 +1,116 @@
-/*
- * Copyright (c) 2026 TeamMoeg
- *
- * This file is part of Frosted Heart.
- *
- * Frosted Heart is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, version 3.
- *
- * Frosted Heart is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
- *
- */
-
+/* Copyright (c) 2026 TeamMoeg */
 package com.teammoeg.frostedheart.content.climate.data;
 
-import com.google.common.collect.ImmutableMap;
-import com.mojang.datafixers.util.Pair;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
-import com.teammoeg.chorda.io.CodecUtil;
 import com.teammoeg.chorda.recipe.CodecRecipeSerializer;
-import com.teammoeg.frostedheart.content.climate.PhysicalState;
-
+import net.minecraft.core.registries.Registries;
 import net.minecraft.data.recipes.FinishedRecipe;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.item.crafting.Recipe;
+import net.minecraft.tags.TagKey;
+import net.minecraft.util.StringRepresentable;
 import net.minecraft.world.item.crafting.RecipeManager;
-import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.biome.Biome;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraftforge.registries.ForgeRegistries;
+import net.minecraft.world.level.material.Fluid;
 import net.minecraftforge.registries.RegistryObject;
 
-import javax.annotation.Nullable;
-import java.util.Collection;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
+import java.util.Set;
 import java.util.stream.Stream;
 
-/**
- * General specification for physical state transition
- *
- * Note: In some sense, some entries can be omitted bse on "state".
- *
- * @param block the block to consider
- * @param checked the current state of the block. For example, Water would be "liquid", and Ice would be "solid".
- *              This avoid certain updates when the block is already in certain state to save performance.
- * @param solid the solid state for the block
- * @param liquid the liquid state for the block
- * @param gas the gas state for the block
- * @param freezeTemp the temp below which the block goes to solid.
- *                   may be omitted if state is solid.
- * @param meltTemp the temp above which the block goes to liquid.
- *                 may be omitted if state is liquid or gas.
- * @param condenseTemp the temp below which the block goes to liquid.
- *                     may be omitted if state is liquid or solid.
- * @param evaporateTemp the temp above which the block goes to gas.
- *                      may be omitted if state is gas.
- * @param heatCapacity higher this is, less likely the transition happens. transition rate ~ 1 / heatCapacity
- * @param willTransit an overriding switch disallowing any transition, saves performance. in general this is true.
- */
-public record StateTransitionData(BlockState block,boolean ignoreState, PhysicalState state,
-		BlockState solid, BlockState liquid, BlockState gas,
-                                  float freezeTemp, float meltTemp,
-                                  float condenseTemp, float evaporateTemp,
-                                  int heatCapacity, boolean willTransit){
+/** Content declares two independent directions; simulation never infers a material's phase family. */
+public record StateTransitionData(BlockState block, boolean allStates, double capacityJPerK,
+        double offsetJ, double conductanceWPerK, Edge heating, Edge cooling) {
+    public static final Codec<StateTransitionData> CODEC = RecordCodecBuilder.create(instance -> instance.group(
+            BlockState.CODEC.fieldOf("block").forGetter(StateTransitionData::block),
+            Codec.BOOL.optionalFieldOf("all_states", false).forGetter(StateTransitionData::allStates),
+            Codec.DOUBLE.optionalFieldOf("capacity_j_per_k", Double.NaN).forGetter(StateTransitionData::capacityJPerK),
+            Codec.DOUBLE.optionalFieldOf("enthalpy_offset_j", 0.0).forGetter(StateTransitionData::offsetJ),
+            Codec.DOUBLE.optionalFieldOf("conductance_w_per_k", Double.NaN).forGetter(StateTransitionData::conductanceWPerK),
+            Edge.CODEC.optionalFieldOf("heating").forGetter(data -> Optional.ofNullable(data.heating)),
+            Edge.CODEC.optionalFieldOf("cooling").forGetter(data -> Optional.ofNullable(data.cooling))
+    ).apply(instance, (block, all, capacity, offset, conductance, hot, cold) ->
+            new StateTransitionData(block, all, capacity, offset, conductance, hot.orElse(null), cold.orElse(null))));
 
-    /** The first configured transition stage reached while heating this state. */
-    public record HeatingTransition(
-            float temperatureC,
-            PhysicalState targetState,
-            BlockState targetBlock
-    ) {
-        public HeatingTransition {
-            if (!Float.isFinite(temperatureC) || targetState == null || targetBlock == null) {
-                throw new IllegalArgumentException("heating transition fields are invalid");
+    public enum Effect implements StringRepresentable {
+        NONE, MELTING, SUBLIMATION, FREEZING, EVAPORATION, CONDENSATION, DEPOSITION;
+        @Override public String getSerializedName() { return name().toLowerCase(Locale.ROOT); }
+    }
+
+    public record Edge(BlockState target, double temperatureC, double latentHeatJ, WorldConditions worldConditions, Effect effect) {
+        public static final Codec<Edge> CODEC = RecordCodecBuilder.create(instance -> instance.group(
+                BlockState.CODEC.fieldOf("target").forGetter(Edge::target),
+                Codec.DOUBLE.fieldOf("temperature_c").forGetter(Edge::temperatureC),
+                Codec.DOUBLE.optionalFieldOf("latent_heat_j", 38_000.0).forGetter(Edge::latentHeatJ),
+                WorldConditions.CODEC.optionalFieldOf("world_conditions", WorldConditions.NONE).forGetter(Edge::worldConditions),
+                StringRepresentable.fromEnum(Effect::values).optionalFieldOf("effect", Effect.NONE).forGetter(Edge::effect)
+        ).apply(instance, Edge::new));
+    }
+
+    /** Fixed submission constraints, shared by profiles; never stored on energy nodes. */
+    public record WorldConditions(int minYExclusive, TagKey<Fluid> fluidBoundary, TagKey<Biome> excludedBiome) {
+        public static final WorldConditions NONE = new WorldConditions(Integer.MIN_VALUE, null, null);
+        public static final Codec<WorldConditions> CODEC = RecordCodecBuilder.create(instance -> instance.group(
+                Codec.INT.optionalFieldOf("min_y_exclusive", Integer.MIN_VALUE).forGetter(WorldConditions::minYExclusive),
+                TagKey.codec(Registries.FLUID).optionalFieldOf("fluid_boundary_tag").forGetter(rules -> Optional.ofNullable(rules.fluidBoundary)),
+                TagKey.codec(Registries.BIOME).optionalFieldOf("excluded_biome_tag").forGetter(rules -> Optional.ofNullable(rules.excludedBiome))
+        ).apply(instance, (minY, fluid, biome) -> new WorldConditions(minY, fluid.orElse(null), biome.orElse(null))));
+    }
+
+    public static RegistryObject<CodecRecipeSerializer<StateTransitionData>> TYPE;
+    private static Map<BlockState, StateTransitionData> cache = Map.of();
+
+    public boolean hasTransitions() { return heating != null || cooling != null; }
+    /** Water uses the chunk surface sample; a phase law must not make entire oceans randomly tick. */
+    public boolean hasRandomTransitions() { return hasTransitions() && !block.is(Blocks.WATER); }
+    public static StateTransitionData getData(BlockState state) { return cache.get(state); }
+    private Stream<BlockState> states() {
+        return allStates ? block.getBlock().getStateDefinition().getPossibleStates().stream() : Stream.of(block);
+    }
+
+    public static void updateCache(RecipeManager manager) {
+        var definitions = TYPE.get().filterRecipes(manager.getRecipes())
+                .sorted(Comparator.comparing(recipe -> recipe.getId().toString())).map(recipe -> recipe.getData()).toList();
+        Map<BlockState, StateTransitionData> next = new HashMap<>();
+        // Exact state definitions override broad declarations, independently of recipe iteration order.
+        for (boolean broad : new boolean[]{true, false}) {
+            for (var data : definitions) {
+                if (data.allStates == broad) data.states().forEach(state -> next.put(state, data));
             }
         }
-    }
-	
-    public static final Codec<StateTransitionData> CODEC= RecordCodecBuilder.create(t->t.group(
-    		BlockState.CODEC.optionalFieldOf("block").forGetter(o->Optional.ofNullable(o.block)),
-    		Codec.BOOL.optionalFieldOf("ignoreState",true).forGetter(o->o.ignoreState),
-            CodecUtil.enumCodec(PhysicalState.class).fieldOf("state").forGetter(o->o.state),
-            BlockState.CODEC.optionalFieldOf("solid").forGetter(o->Optional.ofNullable(o.solid)),
-            BlockState.CODEC.optionalFieldOf("liquid").forGetter(o->Optional.ofNullable(o.liquid)),
-            BlockState.CODEC.optionalFieldOf("gas").forGetter(o->Optional.ofNullable(o.gas)),
-            Codec.FLOAT.optionalFieldOf("freeze_temp",0f).forGetter(o->o.freezeTemp),
-            Codec.FLOAT.optionalFieldOf("melt_temp",0f).forGetter(o->o.meltTemp),
-            Codec.FLOAT.optionalFieldOf("condense_temp",0f).forGetter(o->o.condenseTemp),
-            Codec.FLOAT.optionalFieldOf("evaporate_temp",0f).forGetter(o->o.evaporateTemp),
-            Codec.INT.optionalFieldOf("heat_capacity",1).forGetter(o->o.heatCapacity),
-            Codec.BOOL.optionalFieldOf("will_transit",false).forGetter(o->o.willTransit)).apply(t, StateTransitionData::new));
-    
-    public static RegistryObject<CodecRecipeSerializer<StateTransitionData>> TYPE;
-    private static Map<BlockState,StateTransitionData> CACHE = ImmutableMap.of();
-    StateTransitionData(Optional<BlockState> block,boolean ignoreState, PhysicalState state,
-    		Optional<BlockState> solid, Optional<BlockState> liquid, Optional<BlockState> gas,
-                                      float freezeTemp, float meltTemp,
-                                      float condenseTemp, float evaporateTemp,
-                                      int heatCapacity, boolean willTransit){
-    	this(block.orElse(null),ignoreState,state,solid.orElse(null),liquid.orElse(null),gas.orElse(null),freezeTemp,meltTemp,condenseTemp,evaporateTemp,heatCapacity,willTransit);
-    	
-    }
-    @Nullable
-    public static StateTransitionData getData(BlockState block) {
-        return CACHE.get(block);
-    }
-
-    /**
-     * Returns the first hot-side stage at its onset temperature. A later stage
-     * is compiled from the replacement BlockState, so each stage accounts for
-     * its own latent energy. Equal solid thresholds keep the legacy gas-first
-     * priority.
-     */
-    @Nullable
-    public HeatingTransition heatingTransition(BlockState currentState) {
-        if (currentState == null) {
-            return null;
-        }
-        return switch (state) {
-            case SOLID -> earlier(
-                    candidate(evaporateTemp, PhysicalState.GAS, gas, currentState),
-                    candidate(meltTemp, PhysicalState.LIQUID, liquid, currentState));
-            case LIQUID -> candidate(
-                    evaporateTemp, PhysicalState.GAS, gas, currentState);
-            case GAS -> null;
+        Set<BlockState> changed = new HashSet<>();
+        cache.forEach((state, old) -> {
+            var value = next.get(state);
+            if (old.hasRandomTransitions() != (value != null && value.hasRandomTransitions())) changed.add(state);
+        });
+        next.forEach((state, value) -> {
+            var old = cache.get(state);
+            if (value.hasRandomTransitions() != (old != null && old.hasRandomTransitions())) changed.add(state);
+        });
+        cache = Map.copyOf(next);
+        var server = net.minecraftforge.server.ServerLifecycleHooks.getCurrentServer();
+        if (server == null || changed.isEmpty()) return;
+        Runnable recount = () -> {
+            for (var level : server.getAllLevels()) {
+                for (var holder : level.getChunkSource().chunkMap.getChunks()) {
+                    var pos = holder.getPos();
+                    var chunk = level.getChunkSource().getChunkNow(pos.x, pos.z);
+                    if (chunk == null) continue;
+                    for (var section : chunk.getSections()) {
+                        if (section.getStates().maybeHas(changed::contains)) section.recalcBlockCounts();
+                    }
+                }
+            }
         };
+        if (server.isSameThread()) recount.run(); else server.execute(recount);
     }
 
-    @Nullable
-    private static HeatingTransition candidate(
-            float temperatureC,
-            PhysicalState targetState,
-            BlockState targetBlock,
-            BlockState currentState
-    ) {
-        if (!Float.isFinite(temperatureC)
-                || targetBlock == null
-                || targetBlock == currentState) {
-            return null;
-        }
-        return new HeatingTransition(temperatureC, targetState, targetBlock);
-    }
-
-    @Nullable
-    private static HeatingTransition earlier(
-            HeatingTransition priority,
-            HeatingTransition fallback
-    ) {
-        if (priority == null) {
-            return fallback;
-        }
-        if (fallback == null || priority.temperatureC() <= fallback.temperatureC()) {
-            return priority;
-        }
-        return fallback;
-    }
-    public Stream<Pair<BlockState,StateTransitionData>> getStates(){
-    	if(!ignoreState)
-    		return Stream.of(Pair.of(block, this));
-    	Stream.Builder<Pair<BlockState,StateTransitionData>> builder=Stream.builder();
-    	for(BlockState bs:block.getBlock().getStateDefinition().getPossibleStates()) {
-    		builder.add(Pair.of(bs, this));
-    	}
-    	return builder.build();
-    }
-    public static void updateCache(RecipeManager manager) {
-        Collection<Recipe<?>> recipes = manager.getRecipes();
-        StateTransitionData.CACHE = StateTransitionData.TYPE.get().filterRecipes(recipes).flatMap(t->t.getData().getStates()).collect(Collectors.toMap(t->t.getFirst(), t->t.getSecond()));
-    }
-
-    public FinishedRecipe toFinished(ResourceLocation name) {
-        return TYPE.get().toFinished(name, this);
-    }
+    public FinishedRecipe toFinished(ResourceLocation name) { return TYPE.get().toFinished(name, this); }
 }

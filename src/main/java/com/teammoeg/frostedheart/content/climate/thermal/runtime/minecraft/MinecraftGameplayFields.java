@@ -4,6 +4,8 @@ package com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft;
 import com.teammoeg.frostedheart.content.climate.thermal.field.ThermalAnalyticField;
 import com.teammoeg.frostedheart.content.climate.thermal.field.ThermalAnalyticFieldIndex;
 import com.teammoeg.frostedheart.content.climate.thermal.field.ThermalFieldKey;
+import com.teammoeg.frostedheart.content.climate.WorldTemperature;
+import net.minecraft.core.BlockPos;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 
@@ -12,6 +14,7 @@ import java.util.IdentityHashMap;
 /** World-lifetime main-thread fields; physical worker restarts do not invalidate them. */
 public final class MinecraftGameplayFields {
     private static final IdentityHashMap<ServerLevel, ThermalAnalyticFieldIndex> LEVELS = new IdentityHashMap<>();
+    private static final ThermalAnalyticFieldIndex.Sample FLOOR_SAMPLE = new ThermalAnalyticFieldIndex.Sample();
 
     private MinecraftGameplayFields() {}
 
@@ -21,6 +24,16 @@ public final class MinecraftGameplayFields {
 
     static ThermalAnalyticFieldIndex existing(ServerLevel level) {
         return LEVELS.get(level);
+    }
+
+    /** Main-thread phase queries use explicit floors; additive fields alone cannot force a phase. */
+    public static double guaranteedFloor(ServerLevel level, BlockPos position) {
+        var fields = existing(level);
+        if (fields == null) return Double.NEGATIVE_INFINITY;
+        fields.sample(position.getX() + .5, position.getY() + .5, position.getZ() + .5, FLOOR_SAMPLE);
+        if (!FLOOR_SAMPLE.present()) return Double.NEGATIVE_INFINITY;
+        double natural = FLOOR_SAMPLE.requiresNatural() ? WorldTemperature.naturalBlock(level, position) : 0;
+        return FLOOR_SAMPLE.guaranteedFloor(natural);
     }
 
     public static boolean upsert(ServerLevel level, ThermalAnalyticField field) {

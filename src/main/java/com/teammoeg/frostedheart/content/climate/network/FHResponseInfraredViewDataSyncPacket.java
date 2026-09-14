@@ -24,7 +24,7 @@ public final class FHResponseInfraredViewDataSyncPacket implements CMessage {
         snapshot = new InfraredSnapshot(source.centerChunkX(), source.centerChunkZ(), source.centerSectionY(),
                 source.generation(), source.infraredEpoch(), source.readable(), source.full(), source.presence(),
                 source.fieldPages(), source.brickRecords().length == 0 ? InfraredBrickCodec.NO_PARTS
-                        : new byte[][] {source.brickRecords()[part]}, source.storedEpoch());
+                        : new byte[][] {source.brickRecords()[part]}, source.storedEpoch(), source.storedSampleTick());
     }
 
     public FHResponseInfraredViewDataSyncPacket(FriendlyByteBuf b) {
@@ -42,9 +42,10 @@ public final class FHResponseInfraredViewDataSyncPacket implements CMessage {
         }
         long[] fields = FHRequestInfraredViewDataSyncPacket.readFieldPages(b);
         long storedEpoch = b.readVarLong();
+        long storedSampleTick = b.readLong();
         byte[][] records = {b.readByteArray(InfraredBrickCodec.MAX_PAYLOAD_BYTES)};
         snapshot = new InfraredSnapshot(x, z, y, generation, epoch,
-                (flags & READABLE) != 0, (flags & FULL) != 0, presence, fields, records, storedEpoch);
+                (flags & READABLE) != 0, (flags & FULL) != 0, presence, fields, records, storedEpoch, storedSampleTick);
     }
     public InfraredSnapshot snapshot() { return snapshot; }
     public boolean firstPart() { return firstPart; }
@@ -61,6 +62,7 @@ public final class FHResponseInfraredViewDataSyncPacket implements CMessage {
         for (long word : snapshot.presence()) b.writeLong(word);
         FHRequestInfraredViewDataSyncPacket.writeFieldPages(b, snapshot.fieldPages());
         b.writeVarLong(snapshot.storedEpoch());
+        b.writeLong(snapshot.storedSampleTick());
         b.writeByteArray(snapshot.brickRecords().length == 0 ? new byte[0] : snapshot.brickRecords()[0]);
         if (b.writerIndex() - start > InfraredBrickCodec.MAX_PACKET_BYTES)
             throw new IllegalArgumentException("infrared packet exceeded wire budget");

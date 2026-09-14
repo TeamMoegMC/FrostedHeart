@@ -31,15 +31,39 @@ public record MaterialThermalLaw(
         return offsetJ + capacityJPerK * temperatureC;
     }
 
-    /** Added matter arrives at ambient temperature; removed matter carries its share of H. */
+    /** Added matter arrives at ambient; removal scales thermal excess into the target energy reference. */
     public double afterMassChange(double energyJ, MaterialThermalLaw target, double ambientC) {
         return target.capacityJPerK >= capacityJPerK
                 ? energyJ + target.enthalpyAtTemperature(ambientC) - enthalpyAtTemperature(ambientC)
-                : energyJ * target.capacityJPerK / capacityJPerK;
+                : target.offsetJ + (energyJ - offsetJ) * target.capacityJPerK / capacityJPerK;
     }
 
     public Transition transition(byte branch) {
         return branch == HEATING ? heating : branch == COOLING ? cooling : null;
+    }
+
+    /** Retain latent progress when reversing; leave the plateau at its source end. */
+    public byte selectBranch(double energyJ, byte branch, double direction) {
+        Transition active = transition(branch);
+        if (active != null && ((direction > 0) == active.heating()
+                || (active.sourceEnthalpyJ() - energyJ) * Math.signum(direction) > 0)) return branch;
+        byte next = direction > 0 ? HEATING : COOLING;
+        Transition edge = transition(next);
+        return edge != null && (edge.sourceEnthalpyJ() - energyJ) * Math.signum(direction) <= 0
+                ? next : SENSIBLE;
+    }
+
+    /** Energy distance to the next sensible/latent boundary, after selecting a branch. */
+    public double energyLimitJ(double energyJ, byte branch, double direction) {
+        Transition active = transition(branch);
+        if (active != null) {
+            double end = (direction > 0) == active.heating()
+                    ? active.targetEnthalpyJ() : active.sourceEnthalpyJ();
+            return Math.max(0, (end - energyJ) * Math.signum(direction));
+        }
+        Transition edge = direction > 0 ? heating : cooling;
+        return edge == null ? Double.POSITIVE_INFINITY
+                : Math.max(0, (edge.sourceEnthalpyJ() - energyJ) * Math.signum(direction));
     }
 
     public double temperatureC(double enthalpyJ, byte branch) {

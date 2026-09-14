@@ -4,8 +4,8 @@ import com.teammoeg.frostedheart.content.climate.thermal.mesh.*;
 import com.teammoeg.frostedheart.content.climate.thermal.profile.ThermalSignatureTable;
 import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.message.ResolvedGeometryBatch.MaterialChanges;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
-import com.teammoeg.frostedheart.content.climate.thermal.persistence.minecraft.MaterialSectionState;
 import com.teammoeg.frostedheart.content.climate.thermal.query.QueryPublication;
+import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.message.ThermalInputBatch;
 
 /** Bounded whole-block enthalpy migration; phase requests keep their identity. */
 final class BrickMigrationKernel {
@@ -24,7 +24,7 @@ final class BrickMigrationKernel {
     }
     void migrate(WorkerPageStore.PageState page,int brick,WorkerBrickTopology old,WorkerBrickTopology next,
             PageSignatures nextSignatures,boolean sameLifecycle, MaterialChanges changes, IntArrayList changeIndexes,
-            MaterialSectionState dormantMaterials, double initialTemperatureC, boolean resetMaterials) {
+            ThermalInputBatch.DormantMaterialCut dormantMaterials, double initialTemperatureC, boolean resetMaterials) {
         externalMaterialEnergyJ = 0;
         int n=next.span.count(), first=next.span.firstSlot();
         if(n==0) {
@@ -94,9 +94,10 @@ final class BrickMigrationKernel {
                 int slot = next.slotAt(block);
                 if (slot < 0 || arena.materialLaw(slot) == null) continue;
                 int position = BlockBrickLayout.pageBlock(brick, block);
-                int stored = dormantMaterials.find(position);
-                if (stored < 0 || dormantMaterials.stateId(stored) != signatures.materialStateId(nextSignatures.get(position))) continue;
-                dormantMaterials.read(stored, arena.materialLaw(slot), restoredMaterial);
+                int stored = dormantMaterials.state().find(position);
+                if (stored < 0 || dormantMaterials.state().stateId(stored) != signatures.materialStateId(nextSignatures.get(position))) continue;
+                dormantMaterials.state().read(stored, arena.materialLaw(slot), dormantMaterials.tick(),
+                        dormantMaterials.naturalC(), dormantMaterials.coolingRate(), restoredMaterial);
                 enthalpy[slot - first] = restoredMaterial.enthalpyJ();
                 arena.stageMaterialState(slot, restoredMaterial.enthalpyJ(), restoredMaterial.branch());
             }

@@ -72,7 +72,7 @@ public final class DimensionInputAccumulator {
             double naturalTemperatureC,
             byte[] firstExposedLocalY,
             ThermalInputBatch.DormantAirCut dormantAir,
-            com.teammoeg.frostedheart.content.climate.thermal.persistence.minecraft.MaterialSectionState dormantMaterials
+            ThermalInputBatch.DormantMaterialCut dormantMaterials
     ) {
         admissions.add(new ThermalInputBatch.PageAdmission(
                 page,
@@ -91,7 +91,7 @@ public final class DimensionInputAccumulator {
             long residentBrickMask,
             long sourceSeedMask,
             PageSignatures signatures,
-            com.teammoeg.frostedheart.content.climate.thermal.persistence.minecraft.MaterialSectionState dormantMaterials
+            ThermalInputBatch.DormantMaterialCut dormantMaterials
     ) {
         for (int index = 0; index < residencyUpdates.size(); index++) {
             if (residencyUpdates.get(index).page() == page) {

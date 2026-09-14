@@ -1,7 +1,7 @@
 # Climate Data And Lifecycle
 
 - Status: `Transitional; material lifecycle integration is under validation`
-- Last verified: `2026-09-14`
+- Last verified: `2026-09-15`
 - Scope: recipe/configuration ownership, capabilities, server lifecycle, thermal runtime integration, and network boundaries
 - Primary code anchors: `FHRecipeCachingReloadListener`, `WorldTemperature`, `MinecraftThermalEvents`, `MinecraftThermalInput`, `ThermalWorkerPool`, `LevelChunkSectionMixin_ThermalInput`, `FHCapabilities`, `FHNetwork`
 
@@ -16,8 +16,21 @@ integrated clients skip this duplicate rebuild because the server owns the share
 static tables and caches. Cached
 dimension/biome values therefore cannot outlive the tables that supplied them.
 `WorldTemperature` owns dimension/biome/altitude natural temperature lookup.
-`StateTransitionData` and `PlantTempData` remain gameplay data; their
-`heat_capacity` values are random-tick timing factors, not SI heat capacity.
+`StateTransitionData` declares material C/O/conductance and independent heating/cooling
+edges. Its authoritative datagen input is
+`src/datagen/resources/data/frostedheart/data/state_transition.xlsx`; `FHRecipeProvider`
+emits `data/frostedheart/recipes/state_transition/`. `PhysicalState` slots and the phase
+`heat_capacity` timing factor have been removed. The spreadsheet has been adapted to
+the new schema and reconnected to `FHRecipeProvider.materialTransitions`. Its original
+data sheet contains 74 material rows; a Chinese field guide explains units and defaults.
+`heating_enabled` / `cooling_enabled` are authoring controls only. FALSE keeps a direction
+visible in the spreadsheet but omits it from runtime JSON; with a target present, blank
+means enabled. Five originally disabled cooling declarations are preserved explicitly.
+The intermediate `material_transitions.json` authoring file is retired; runtime reads
+the generated recipes, never Excel. Other sheets/blank rows without a `block` column
+value produce no recipe.
+`PlantTempData` remains separate plant gameplay data.
+See [material rules](heat-production-and-network.md#material-transition-data) for the schema and energy reference.
 
 Persistent capabilities remain separate from thermal mesh state:
 
@@ -28,16 +41,15 @@ Persistent capabilities remain separate from thermal mesh state:
 | `HeatEndpoint` / `GeneratorData` | block/entity or team data | heat-network inventory and machine power semantics |
 | `MinecraftThermalInput` | runtime only | Page handles, capture queues, worker mailbox, and query publication |
 | `MinecraftGameplayFields` | transient world lifetime | shared generator/boss/command index, retained across physical-runtime rebuilds |
-| `DormantChunkThermalState` | chunk NBT | bounded Air-temperature residual checkpoints for retired Pages |
+| `DormantChunkThermalState` | chunk NBT | bounded Air residuals and exact material H/branch/BlockState/time checkpoints |
 | warm stone / hot-water bag | ItemStack NBT | version-1 initialized flag plus absolute core and surface temperatures |
 
-Arena enthalpy, source bindings, analytic fields, material/phase state, and
-worker topology are never serialized. `DormantChunkThermalState` writes only
-quantized Air residuals relative to section-center `WorldTemperature.naturalAir`.
-Regular Bricks store one value; bounded exact mixed Bricks store one
-capacity-weighted mean plus deterministic component values. Admission rebuilds
-topology from current BlockState and uses the checkpoint only for initial Air
-and material-pole temperatures.
+Source bindings, analytic fields and worker topology are not serialized.
+`DormantChunkThermalState` writes quantized Air residuals relative to Section-center
+`WorldTemperature.naturalAir` and separate exact `MaterialSectionState` records.
+Admission rebuilds topology from current BlockState and restores matching material
+energy. Transition world conditions/effects live only in the shared profile snapshot;
+they add no fields to each saved material record.
 
 Thermal gameplay coefficients are instance-wide COMMON config under
 `FHConfig.COMMON.THERMAL_RUNTIME`, stored in
@@ -75,15 +87,15 @@ ChunkDataEvent.Load (async)
   decode primitive dormant NBT into the new LevelChunk only
 
 ChunkEvent.Load (level thread)
-  consume one-shot source support, rebase residuals, then expose fallback
+  attach saved H/time/natural baseline without a cooling sweep
   a loaded lit campfire may start the runtime; attach owners and enqueue discovery
 
 Machine production / campfire ignition
   enabled positive-power output or first ignition may start the same runtime
 
 ChunkDataEvent.Save / ChunkEvent.Unload / ServerStoppingEvent
-  capture coherent Page temperatures, refresh disk-only source support,
-  and write only already-loaded chunks
+  capture coherent Page temperatures and sample ticks; serialize existing anchors
+  without advancing dormant energy, and write only already-loaded chunks
 
 Level unload
   checkpoint active Pages, detach section hooks, close capture/source/radiation state,
@@ -199,26 +211,40 @@ The replacement worker receives an immutable `DormantAirCut`; no NBT round trip
 or retained old arena is required. Slot generation checks still prevent stale
 arena access.
 
-Every successful Page capture immediately derives its one-shot disk support bit
-from the current physical-source target index. Source target/power/enabled
-changes update only the target section and six face neighbors that already own
-a loaded dormant entry. This avoids an active-Page-only stop scan and adds no
-loaded-world traversal or retained chunk index.
+Air and material share lazy natural cooling through `DormantThermalCooling`.
+No source-support flag, source-neighbor refresh or save-time decay remains.
 Infrared does not read dormant Air means. Air restoration targets actual Air only.
-`DormantChunkThermalState` now writes and reads format 3 exclusively; no format-2
-migration is retained. `MaterialSectionState` records exact material H, active
-phase branch and stable BlockState identity separately from compressed Air history.
+`DormantChunkThermalState` writes and reads format 4 exclusively; older thermal
+records are not restored. `MaterialSectionState` records exact material H, active
+phase branch, sampling tick and stable BlockState identity separately from Air history.
+One scalar tick covers uniform-age records; partial writes lazily add per-record
+ticks. Air also saves its capture's natural-temperature baseline. Pure reads and
+serialization do not change these anchors. Partial checkpoints retain unrepresented
+material ages; admission receives a `DormantMaterialCut` for one-time projection.
 Material replacement discards the previous body's heat; confirmed thermal conversion
 continues with the same H under the target law. `ThermalPhaseRequestStore` contains
 request sequence/state only, and matching ACK never subtracts latent energy again.
 
 `MinecraftPhaseController.materialChangeCause` is shared by active geometry
-capture and dormant material updates. Shape/property-only changes retain H;
+capture and dormant material updates. Its scoped cause matches position and both
+old/new BlockStates, so an unrelated nested replacement at the same position does
+not inherit phase energy. Physical submission also rechecks the current world state.
+The chunk callback ignores an outer setter's outdated target when `onPlace` already
+performed a nested replacement; the newer material identity and journal entry win.
+The existing short-lived mutation scope also remembers supersession at the same
+position, so replacing back to the outer target state cannot revive its old H.
+Shape/property-only changes retain H;
 ordinary block replacement initializes a new body; confirmed physical transitions
-retain H under the target law. Gameplay conversions preserve the previous body's
-temperature. Existing dry/wet effective-capacity changes use one
+retain H under the target law. Dormant phase commits carry the projected H/tick
+through the existing APPLYING scope and successful chunk mutation hook. They require
+no Page and no synthetic ACK. Explicit nonphysical recipe conversions preserve the
+body's projected temperature, while an explicit analytic bound can supply the energy
+needed for a physical heating endpoint. Existing dry/wet effective-capacity changes use one
 `MaterialThermalLaw.afterMassChange` rule; snow-layer and slab-volume subdivision
 are not implemented.
+Removal uses `Hnext=offsetNext+(H-offsetOld)*Cnext/Cold`, keeping the target energy
+reference explicit, including after parameter changes (H/offset in J, C in J/K). Lava amount variants share
+the source lava's specific offset; only source lava has the native basalt edge.
 
 `SECTION_REPLACED` also resets material identity when the final thermal signatures
 are unchanged. The reset revision prevents old phase requests and checkpoint
@@ -227,10 +253,26 @@ until the replacement publication is observed. Raw container replacement uses
 the same reason. Material checkpoint updates execute on the server thread;
 off-thread callbacks are handed to Minecraft's existing server executor.
 
-`MaterialSectionState.update` reuses a parameter-table slot when no other stored
-body references it; repeated state/parameter changes do not append an unbounded
-history. Snapshots remain immutable. Encoding emits only referenced parameters
-and remaps their indices, so unused table capacity is not written to NBT.
+`DormantChunkThermalState` owns a `MaterialSectionState.Editor` only for populated
+material Sections. Edits copy arrays once after sharing a snapshot, then reuse
+the writable arrays; scalar thermometer/presence reads do not publish snapshots.
+Removal marks a slot immediately and compacts it when `snapshot()` is requested.
+Lazy palette reference counts reuse unreferenced slots without rescanning all bodies
+for each edit. Published `MaterialSectionState` objects remain immutable; encoding
+emits only referenced parameters and remaps their indices. The former per-edit
+immutable `update/remove` API and runtime change adapter are removed.
+
+The Section and Chunk mutation hooks remain distinct: the former observes active
+geometry, while the latter also maintains stored bodies without an active runtime.
+Both use `ModifyReturnValue` and return the original result unchanged, avoiding
+`CallbackInfoReturnable` allocation. The existing LDLib supplies MixinExtras at
+runtime; Gradle declares only its compile-time/API processor dependency. Unchanged
+writes, client Chunk callbacks, unowned Sections and untracked material positions
+exit before expensive work. The checkpoint journal stores position/next-state/cause
+plus revision; its old-state field was unused and is removed. Pruning occurs at
+most once per touched Section per game tick, with a constant-time clear when the
+whole journal has retired. Natural temperature remains necessary only for tracked
+replacement/mass changes whose target still has material; removal does not query it.
 
 ## Network And Consumers
 
@@ -241,7 +283,20 @@ and remaps their indices, so unused table capacity is not written to NBT.
 
 红外也可读取同一个休眠容器中的`MaterialSectionState`；活动材料优先，保存记录只补充
 未驻留Brick。请求和响应增加`storedEpoch`，用于变化、删除和Chunk替换后的增量刷新；
-客户端在最后一片响应提交时记录它。该编号不表示材料H或新休眠Page，也不持久化。
+并携带`storedSampleTick`。客户端在最后一片响应提交时一起记录它们。服务端比较两个时刻的
+量化材料温度，使纯时间冷却也能刷新；自然温度改变通过原Section显示编号失效。
+这些基准不表示新休眠Page，也不持久化，不增加每玩家的服务端材料缓存。
+
+`tryMaterialPhaseAtRandomTick` 接入 `ServerLevelMixin_TemperatureUpdate` 的通用随机抽样，
+雪层回调也调用同一入口以保护受跟踪物体的潜热。水恢复原Chunk地表抽样：默认每20tick
+选一列，以MOTION_BLOCKING高度图定位，只让命中的表面水调用同一入口；冻结不要求降水。
+`StateTransitionData.hasRandomTransitions`使水不增加方块随机资格，也不在其他方块
+开启的Section中进入通用相变抽样；重载资格变化比较使用同一判断。独立水温/目标算法没有恢复。
+地表积雪/降水与岩浆原生点火继续执行。无记录相变使用编译边做环境平衡近似。
+`DEFERRED`只拦截旧温度转换，保留非相变随机行为；`CHANGED`才终止旧状态的后续回调。
+不另建轮询、候选位图或定时任务。`StateTransitionData.updateCache`在随机资格改变时，
+只于重载边界重算包含相关状态的已加载Section计数。单纯加载、但不参与原随机更新的区域
+没有转换时限；该路径不加载Chunk或启动worker。
 
 `FHBodyDataSyncPacket` carries only the quantized player-facing environment and
 absolute core temperature. It is sent on the player-temperature cadence only

@@ -145,7 +145,7 @@ public final class ThermalInputBatch {
             double naturalTemperatureC,
             byte[] firstExposedLocalY,
             DormantAirCut dormantAir,
-            MaterialSectionState dormantMaterials
+            DormantMaterialCut dormantMaterials
     ) {
         public PageAdmission(ThermalPageHandle page, long geometryRevision, long residentBrickMask,
                 long sourceSeedMask, PageSignatures signatures, double naturalTemperatureC,
@@ -172,7 +172,7 @@ public final class ThermalInputBatch {
             long residentBrickMask,
             long sourceSeedMask,
             PageSignatures signatures,
-            MaterialSectionState dormantMaterials
+            DormantMaterialCut dormantMaterials
     ) {
         public PageResidencyUpdate(ThermalPageHandle page, long geometryRevision, long residentBrickMask,
                 long sourceSeedMask, PageSignatures signatures) {
@@ -188,6 +188,8 @@ public final class ThermalInputBatch {
             }
         }
     }
+
+    public record DormantMaterialCut(MaterialSectionState state, long tick, double naturalC, double coolingRate) {}
 
     public record DormantAirCut(
             DormantChunkThermalState.SectionEntry entry,

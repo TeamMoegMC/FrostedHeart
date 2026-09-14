@@ -119,22 +119,6 @@ public final class PagePublication {
         return node<0 ? NO_AIR_POINT : brick.firstSlot+node;
     }
 
-    public boolean hasPhaseCandidate(
-            int blockX,
-            int blockY,
-            int blockZ,
-            int materialProfileId
-    ) {
-        int localX = Math.floorMod(blockX, 16);
-        int localY = Math.floorMod(blockY, 16);
-        int localZ = Math.floorMod(blockZ, 16);
-        int candidateBit = localX & 3
-                | (localZ & 3) << 2
-                | (localY & 3) << 4;
-        return brickAt(localX, localY, localZ).phaseCandidates.contains(
-                materialProfileId, candidateBit);
-    }
-
     private static Brick[] emptyBricks() {
         Brick[] result = new Brick[ThermalPageHandle.BASE_BRICK_COUNT];
         Arrays.fill(result, Brick.EMPTY);
@@ -154,14 +138,13 @@ public final class PagePublication {
         }
     }
 
-    /** One immutable Brick's query-facing coverage, geometry, and phase payload. */
+    /** One immutable Brick's query-facing coverage and geometry. */
     public record Brick(
             int firstSlot,
             int arenaGeneration,
             Object signaturePayload,
             BlockBrickLayout blockLayout,
             int transportNodeCount,
-            PhaseCandidates phaseCandidates,
             boolean resolved
     ) {
         public int signatureAtBlock(int block) {
@@ -174,7 +157,6 @@ public final class PagePublication {
                 null,
                 null,
                 0,
-                PhaseCandidates.EMPTY,
                 false);
 
         public Brick {
@@ -195,46 +177,7 @@ public final class PagePublication {
                     && values.length != PageSignatures.ENTRIES_PER_BRICK) {
                 throw new IllegalArgumentException("wide Brick signatures are invalid");
             }
-            if (phaseCandidates == null) {
-                throw new IllegalArgumentException("Brick phase candidates are required");
-            }
         }
     }
 
-    /** Exact profile/mask entries for one base Brick. */
-    public static final class PhaseCandidates {
-        public static final PhaseCandidates EMPTY = new PhaseCandidates(
-                new int[0], new long[0]);
-
-        private final int[] profileIds;
-        private final long[] candidateMasks;
-
-        private PhaseCandidates(
-                int[] profileIds,
-                long[] candidateMasks
-        ) {
-            if (profileIds == null || candidateMasks == null
-                    || profileIds.length != candidateMasks.length) {
-                throw new IllegalArgumentException("phase candidate arrays are invalid");
-            }
-            this.profileIds = profileIds;
-            this.candidateMasks = candidateMasks;
-        }
-
-        public static PhaseCandidates owned(int[] profileIds, long[] candidateMasks) {
-            return new PhaseCandidates(profileIds, candidateMasks);
-        }
-
-        public boolean contains(int profileId, int candidateBit) {
-            if (candidateBit < 0 || candidateBit >= Long.SIZE) {
-                return false;
-            }
-            for (int index = 0; index < profileIds.length; index++) {
-                if (profileIds[index] == profileId) {
-                    return (candidateMasks[index] & 1L << candidateBit) != 0L;
-                }
-            }
-            return false;
-        }
-    }
 }

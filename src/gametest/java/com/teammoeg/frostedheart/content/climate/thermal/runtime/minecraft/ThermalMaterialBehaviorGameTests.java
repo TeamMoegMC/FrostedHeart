@@ -300,22 +300,6 @@ public final class ThermalMaterialBehaviorGameTests {
             near(helper, 20, simulation.arena.temperatureC(simulation.slot(block), 0), "gameplay material conversion continues at the existing temperature");
             near(helper, simulation.totalEnergy() - before, simulation.arena.externalMaterialEnergyJ(),
                     "gameplay conversion records its actual energy change");
-            simulation.publish(ResolvedGeometryBatch.EMPTY, ThermalInputBatch.NO_PHASE_ACKS);
-            var captured = MaterialSectionState.capture(simulation.page(block).currentPublication(), simulation.query,
-                    simulation.profiles.signatures(), new MaterialSectionState.CaptureScratch());
-            var chunk = level.getChunkAt(block);
-            var attachment = (MinecraftThermalChunkAttachment) (Object) chunk;
-            var previous = attachment.frostedheart$getDormantThermalState();
-            var stored = new DormantChunkThermalState(block.getY() >> 4, 1);
-            stored.mergeMaterials(block.getY() >> 4, captured.state(), captured.sampledBricks());
-            try {
-                attachment.frostedheart$setDormantThermalState(stored);
-                com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.input.MinecraftPhaseController
-                        .applyGameplayTransition(level, block, Blocks.STONE.defaultBlockState());
-                var materials = stored.materials(block.getY() >> 4);
-                near(helper, 20, materials.temperatureC(materials.find(pageBlock(block))),
-                        "inactive stored body follows the same gameplay conversion rule");
-            } finally { attachment.frostedheart$setDormantThermalState(previous); }
         }
         helper.succeed();
     }
@@ -343,7 +327,7 @@ public final class ThermalMaterialBehaviorGameTests {
             CompoundTag nbt = new CompoundTag(); stored.encode(nbt);
             var restored = DormantChunkThermalState.decode(nbt, water.getY() >> 4, 1).materials(water.getY() >> 4);
             var sample = new QueryPublication.MutableMaterialSample();
-            restored.read(restored.find(pageBlock(water)), simulation.arena.materialLaw(slot), sample);
+            restored.read(restored.find(pageBlock(water)), simulation.arena.materialLaw(slot), simulation.tick, 0, 0, sample);
             near(helper, middle, sample.enthalpyJ(), "checkpoint retains the same joules during freezing");
             helper.assertTrue(sample.branch() == MaterialThermalLaw.COOLING, "checkpoint retains the cooling branch");
             simulation.arena.acceptExternalEnergyJ(slot, edge.targetEnthalpyJ() - middle);
@@ -377,10 +361,10 @@ public final class ThermalMaterialBehaviorGameTests {
         for (int change = 0; change < 128; change++) {
             var law = MaterialThermalLaw.sensible(100 + change);
             double untouched = state.temperatureC(state.find(secondPosition));
-            editor.update(firstPosition, stateId, law, law.enthalpyAtTemperature(31.25), (byte) 0);
+            editor.update(firstPosition, stateId, law, law.enthalpyAtTemperature(31.25), (byte) 0, level.getGameTime());
             state = editor.snapshot();
             near(helper, untouched, state.temperatureC(state.find(secondPosition)), "reusing a palette entry must preserve other bodies");
-            editor.update(secondPosition, stateId, law, law.enthalpyAtTemperature(44.75), (byte) 0);
+            editor.update(secondPosition, stateId, law, law.enthalpyAtTemperature(44.75), (byte) 0, level.getGameTime());
             state = editor.snapshot();
         }
         int[] palette = ThermalLoadedWorldGameTests.read(state, "stateIds");
@@ -401,7 +385,7 @@ public final class ThermalMaterialBehaviorGameTests {
         var removed=editor.snapshot();
         helper.assertTrue(removed.size()==1 && removed.find(firstPosition)<0, "snapshot must compact removed records");
         near(helper,31.25,state.temperatureC(state.find(firstPosition)), "a snapshot before removal must remain unchanged");
-        editor.update(secondPosition,stateId,MaterialThermalLaw.sensible(300),300*9.0,(byte)0);
+        editor.update(secondPosition,stateId,MaterialThermalLaw.sensible(300),300*9.0,(byte)0,level.getGameTime());
         near(helper,44.75,removed.temperatureC(removed.find(secondPosition)), "mutating after compaction must preserve its published snapshot");
         near(helper,9,editor.snapshot().temperatureC(0), "remaining body must update after compaction");
         helper.succeed();
@@ -417,7 +401,12 @@ public final class ThermalMaterialBehaviorGameTests {
             var captured = MaterialSectionState.capture(simulation.page(material).currentPublication(), simulation.query,
                     simulation.profiles.signatures(), new MaterialSectionState.CaptureScratch());
             helper.assertTrue(captured.valid(), "stored material fixture must be a coherent solver checkpoint");
-            return captured.state();
+            var container = new DormantChunkThermalState(material.getY() >> 4, 1);
+            container.replaceMaterials(material.getY() >> 4, captured.state());
+            CompoundTag tag = new CompoundTag(); container.encode(tag);
+            tag.getCompound("FrostedHeartThermal").getList("sections", net.minecraft.nbt.Tag.TAG_COMPOUND)
+                    .getCompound(0).getCompound("materials").putLong("tick", helper.getLevel().getGameTime());
+            return DormantChunkThermalState.decode(tag, material.getY() >> 4, 1).materials(material.getY() >> 4);
         }
     }
 

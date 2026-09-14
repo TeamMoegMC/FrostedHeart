@@ -19,7 +19,8 @@
 
 package com.teammoeg.frostedheart.mixin.minecraft.temperature;
 
-import com.teammoeg.frostedheart.content.climate.WorldTemperature;
+import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.MinecraftThermalInput;
+import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.input.MinecraftPhaseController;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.RandomSource;
@@ -36,12 +37,17 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public class SnowLayerBlockMixin_Melt {
 
     /**
-     * Melts snow layers when the temperature is high enough.
+     * Tracked bodies use phase energy; untracked snow retains light-driven layer loss.
      */
     @Inject(method = "randomTick", at = @At("HEAD"), cancellable = true)
     private void randomTick(BlockState pState, ServerLevel pLevel, BlockPos pPos, RandomSource pRandom, CallbackInfo info) {
-        if (pLevel.getBrightness(LightLayer.BLOCK, pPos) > 11 ||
-                WorldTemperature.block(pLevel, pPos) >= WorldTemperature.WATER_ICE_MELTS) {
+        var phase = MinecraftThermalInput.tryMaterialPhaseAtRandomTick(pLevel,
+                pLevel.getChunkSource().getChunkNow(pPos.getX() >> 4, pPos.getZ() >> 4), pPos, pState);
+        if (phase != MinecraftPhaseController.PhaseAttempt.GAMEPLAY) {
+            info.cancel();
+            return;
+        }
+        if (pLevel.getBrightness(LightLayer.BLOCK, pPos) > 11) {
             int layers = pState.getValue(SnowLayerBlock.LAYERS);
             if (layers > 1) {
                 BlockState newState = pState.setValue(SnowLayerBlock.LAYERS, layers - 1);

@@ -3,19 +3,7 @@
   "block": {
     "Name": "frostedheart:bauxite_block"
   },
-  "condense_temp": 90.0,
-  "evaporate_temp": 100.0,
-  "freeze_temp": -10.0,
-  "heat_capacity": 5,
-  "liquid": {
-    "Name": "frostedheart:bauxite_block"
-  },
-  "melt_temp": 9.0,
-  "solid": {
-    "Name": "frostedheart:bauxite_permafrost",
-    "Properties": {
-      "snowy": "false"
-    }
-  },
-  "state": "liquid"
+  "all_states": true,
+  "capacity_j_per_k": 6600.0,
+  "enthalpy_offset_j": 38000.0
 }

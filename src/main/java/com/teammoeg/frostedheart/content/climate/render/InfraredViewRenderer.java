@@ -100,6 +100,7 @@ public final class InfraredViewRenderer {
     private static long lastRequestTick = Long.MIN_VALUE;
     private static int infraredEpoch;
     private static long storedEpoch;
+    private static long storedSampleTick;
     private static long generation;
     private static boolean materialReadable;
     private static long[] knownFieldPages = new long[0];
@@ -228,7 +229,7 @@ public final class InfraredViewRenderer {
                         requestId,
                         forceFull || !deltaBaselineValid,
                         generation, SectionPos.asLong(textureCenterChunkX, textureCenterSectionY, textureCenterChunkZ),
-                        infraredEpoch, knownPresence.clone(), materialReadable, knownFieldPages, storedEpoch));
+                        infraredEpoch, knownPresence.clone(), materialReadable, knownFieldPages, storedEpoch, storedSampleTick));
     }
 
     /** Only LAST commits the complete display baseline, including field-only responses. */
@@ -267,6 +268,7 @@ public final class InfraredViewRenderer {
         textureCenterSectionY = data.centerSectionY();
         generation = data.generation(); infraredEpoch = data.infraredEpoch();
         storedEpoch = data.storedEpoch();
+        storedSampleTick = data.storedSampleTick();
         if (data.full()) uploadFullTemperatureTexture(); else uploadDirtyPages();
         materialReadable = data.readable();
         deltaBaselineValid = true;
@@ -597,6 +599,7 @@ public final class InfraredViewRenderer {
         deltaBaselineValid = false;
         infraredEpoch = 0;
         storedEpoch = 0;
+        storedSampleTick = 0;
         generation = 0;
         materialReadable = false;
         knownFieldPages = new long[0];

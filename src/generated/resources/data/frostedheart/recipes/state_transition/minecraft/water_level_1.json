@@ -1,0 +1,24 @@
+{
+  "type": "frostedheart:state_transition",
+  "block": {
+    "Properties": {
+      "level": "1"
+    },
+    "Name": "minecraft:water"
+  },
+  "capacity_j_per_k": 5775.0,
+  "enthalpy_offset_j": 1653050.0,
+  "cooling": {
+    "target": {
+      "Properties": {
+        "layers": "7"
+      },
+      "Name": "frostedheart:layered_thin_ice"
+    },
+    "temperature_c": -5.0,
+    "world_conditions": {
+      "fluid_boundary_tag": "minecraft:water",
+      "excluded_biome_tag": "frostedheart:water_do_not_freeze"
+    }
+  }
+}

@@ -3,19 +3,13 @@
   "block": {
     "Name": "minecraft:snow_block"
   },
-  "condense_temp": 90.0,
-  "evaporate_temp": 100.0,
-  "freeze_temp": -10.0,
-  "gas": {
-    "Name": "minecraft:air"
-  },
-  "liquid": {
-    "Name": "minecraft:air"
-  },
-  "melt_temp": 9.0,
-  "solid": {
-    "Name": "minecraft:snow_block"
-  },
-  "state": "solid",
-  "will_transit": true
+  "all_states": true,
+  "capacity_j_per_k": 6600.0,
+  "heating": {
+    "target": {
+      "Name": "minecraft:air"
+    },
+    "temperature_c": 9.0,
+    "effect": "melting"
+  }
 }

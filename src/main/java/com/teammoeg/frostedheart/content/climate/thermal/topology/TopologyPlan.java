@@ -794,7 +794,7 @@ public final class TopologyPlan {
         final IntArrayList[] materialChangeIndexes = new IntArrayList[64];
         long materialDirtyMask;
         boolean resetMaterials;
-        com.teammoeg.frostedheart.content.climate.thermal.persistence.minecraft.MaterialSectionState dormantMaterials;
+        ThermalInputBatch.DormantMaterialCut dormantMaterials;
 
         private void reset(WorkerPageStore.PageState page) {
             while (materialDirtyMask != 0) {

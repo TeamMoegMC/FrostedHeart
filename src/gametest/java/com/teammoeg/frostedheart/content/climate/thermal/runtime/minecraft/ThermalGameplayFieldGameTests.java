@@ -36,7 +36,6 @@ import net.minecraft.world.level.GameRules;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraftforge.common.util.FakePlayerFactory;
 import net.minecraftforge.gametest.GameTestHolder;
 import net.minecraftforge.gametest.PrefixGameTestTemplate;
@@ -252,8 +251,10 @@ public final class ThermalGameplayFieldGameTests {
             };
             try {
                 StateTransitionData data = StateTransitionData.getData(level.getBlockState(ice));
-                helper.assertTrue(data != null && MinecraftThermalInput.ownsGameplayHeatingTransition(
-                        level, ice, level.getBlockState(ice), data), "real ice must be owned by the physical phase path");
+                helper.assertTrue(data != null && MinecraftThermalInput.tryMaterialPhaseAtRandomTick(
+                        level, level.getChunkAt(ice), ice, level.getBlockState(ice))
+                        == com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.input.MinecraftPhaseController.PhaseAttempt.DEFERRED,
+                        "real ice must be owned by the physical phase path");
                 MinecraftThermalInput.upsertGameplayAnalyticField(level,
                         new ThermalAnalyticField(key, 0, CombineMode.ADD_DELTA,
                                 ice.getX() + 0.5, ice.getY() + 0.5, ice.getZ() + 0.5, 3, 50));
@@ -267,19 +268,23 @@ public final class ThermalGameplayFieldGameTests {
                 helper.assertTrue(level.getBlockState(ice).is(Blocks.ICE), "cold control must lower the analytic bound");
                 MinecraftThermalInput.removeGameplayAnalyticField(level, key);
                 attemptTransition(level, ice, 100);
-                BlockState expected = data.heatingTransition(Blocks.ICE.defaultBlockState()).targetBlock();
+                BlockState expected = data.heating().target();
                 helper.assertTrue(level.getBlockState(ice).is(Blocks.ICE),
                         "an owned material transition must first pass through worker energy settlement");
                 BlockPos unowned = ice.east(160);
                 level.setBlockAndUpdate(unowned, Blocks.ICE.defaultBlockState());
                 try {
-                    helper.assertTrue(!MinecraftThermalInput.ownsGameplayHeatingTransition(
-                            level, unowned, Blocks.ICE.defaultBlockState(), data), "comparison ice must be outside physical ownership");
+                    helper.assertTrue(MinecraftThermalInput.tryMaterialPhaseAtRandomTick(
+                            level, level.getChunkAt(unowned), unowned, Blocks.ICE.defaultBlockState())
+                            == com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.input.MinecraftPhaseController.PhaseAttempt.GAMEPLAY,
+                            "comparison ice must be outside physical ownership");
                     command(level, "set", unowned, " 3 50 sphere");
+                    level.getGameRules().getRule(GameRules.RULE_RANDOMTICKING).set(1, level.getServer());
                     attemptTransition(level, unowned, 100);
                     helper.assertTrue(level.getBlockState(unowned) == expected,
                             "same explicit bound must apply the same stage outside physical ownership");
                 } finally {
+                    level.getGameRules().getRule(GameRules.RULE_RANDOMTICKING).set(0, level.getServer());
                     command(level, "remove", unowned, "");
                     level.setBlockAndUpdate(unowned, Blocks.AIR.defaultBlockState());
                 }
@@ -443,17 +448,9 @@ public final class ThermalGameplayFieldGameTests {
     }
 
     private static void attemptTransition(ServerLevel level, BlockPos position, int attempts) {
-        try {
-            Method method = ServerLevel.class.getDeclaredMethod("frostedHeart$updateBlockBasedOnTemperature",
-                    LevelChunk.class, ServerLevel.class, BlockPos.class, BlockState.class, StateTransitionData.class, float.class);
-            method.setAccessible(true);
-            for (int i = 0; i < attempts && level.getBlockState(position).is(Blocks.ICE); i++) {
-                BlockState state = level.getBlockState(position);
-                method.invoke(level, level.getChunkAt(position), level, position, state,
-                        StateTransitionData.getData(state), WorldTemperature.climate(level, position));
-            }
-        } catch (ReflectiveOperationException exception) {
-            throw new AssertionError(exception);
+        for (int i = 0; i < attempts && level.getBlockState(position).is(Blocks.ICE); i++) {
+            MinecraftThermalInput.tryMaterialPhaseAtRandomTick(level, level.getChunkAt(position),
+                    position, level.getBlockState(position));
         }
     }
 

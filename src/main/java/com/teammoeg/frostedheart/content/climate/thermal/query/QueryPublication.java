@@ -679,6 +679,7 @@ public final class QueryPublication implements AutoCloseable {
     }
 
     public static final class MutableMaterialSample {
+        private boolean stored;
         public enum Source { UNAVAILABLE, LIVE, STORED }
         private double enthalpyJ;
         private MaterialThermalLaw law;
@@ -690,16 +691,22 @@ public final class QueryPublication implements AutoCloseable {
         public MaterialThermalLaw law() { return law; }
         public byte branch() { return branch; }
         public long sampleTick() { return sampleTick; }
-        public Source source() { return law == null ? Source.UNAVAILABLE : sampleTick < 0 ? Source.STORED : Source.LIVE; }
+        public Source source() { return law == null ? Source.UNAVAILABLE : stored ? Source.STORED : Source.LIVE; }
         public long requestSequence() { return requestSequence; }
         public double temperatureC() { return law == null ? Double.NaN : law.temperatureC(enthalpyJ, branch); }
 
         public void set(double energyJ, MaterialThermalLaw law, byte branch, long sampleTick) {
+            stored = false;
             this.enthalpyJ = energyJ;
             this.law = law;
             this.branch = branch;
             this.sampleTick = sampleTick;
             requestSequence = 0;
+        }
+
+        public void setStored(double energyJ, MaterialThermalLaw law, byte branch, long sampleTick) {
+            set(energyJ, law, branch, sampleTick);
+            stored = true;
         }
 
         public void clear() {

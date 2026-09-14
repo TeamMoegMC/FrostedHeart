@@ -16,9 +16,9 @@ public final class BrickTopologyCompiler {
     private final FarFieldSettings farField;
     private final int maximumArenaSlots;
     private final ThermalBrickCellLayout cells = new ThermalBrickCellLayout();
-    private final int[] ids = new int[64], phaseIds = new int[64];
+    private final int[] ids = new int[64];
     private final byte[] mapping = new byte[64];
-    private final long[] masks = new long[64], phaseMasks = new long[64];
+    private final long[] masks = new long[64];
     private final PrimitiveTopologyScratch.LongPairDouble airPairs = new PrimitiveTopologyScratch.LongPairDouble();
     private final ThermalFragment.RoutedContacts.Builder routedContacts = new ThermalFragment.RoutedContacts.Builder();
     private final PrimitiveTopologyScratch.LongPairDouble materialPairs = new PrimitiveTopologyScratch.LongPairDouble();
@@ -51,7 +51,7 @@ public final class BrickTopologyCompiler {
             if (!signatures.valid(ids[b])) return WorkerBrickTopology.EMPTY;
             if (signatures.mergeable(ids[b])) mergeable|=1L<<b;
         }
-        int nodes=0, transport=0, phases=0;
+        int nodes=0, transport=0;
         int bodyPhaseCount = 0;
         long surfaceNodes=0;
         BlockBrickLayout layout=null;
@@ -108,20 +108,11 @@ public final class BrickTopologyCompiler {
                 arena.stageMaterialLaw(slot, profile.id(), profile.thermalLaw(), view.naturalTemperature(page));
                 if (profile.thermalLaw().heating() == null && profile.thermalLaw().cooling() == null) continue;
                 phaseSlots[phaseSlotCount++] = slot;
-                int phase = 0;
-                while (phase < phases && phaseIds[phase] != profile.id()) phase++;
-                if (phase == phases) {
-                    phaseIds[phases] = profile.id();
-                    phaseMasks[phases++] = 0;
-                }
-                phaseMasks[phase] |= 1L << block;
             }
             int coverage=transport==0 ? -1 : allocation.firstSlot();
-            var candidates=phases==0 ? PagePublication.PhaseCandidates.EMPTY
-                    : PagePublication.PhaseCandidates.owned(Arrays.copyOf(phaseIds,phases),Arrays.copyOf(phaseMasks,phases));
             return new WorkerBrickTopology(allocation,coverage,
                     allocation.count()==0?0:arena.lifecycleGeneration(allocation.firstSlot()),
-                    layout,transport,candidates,phaseSlots,true,true);
+                    layout,transport,phaseSlots,true,true);
         } catch (RuntimeException | Error failure) {
             arena.discardStagedCells(allocation); throw failure;
         }

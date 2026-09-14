@@ -1,6 +1,8 @@
 /* Copyright (c) 2026 TeamMoeg */
 package com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft;
 
+import com.teammoeg.frostedheart.content.climate.thermal.source.minecraft.MinecraftPhysicalSourceProfile;
+
 import blusunrize.immersiveengineering.api.multiblocks.TemplateMultiblock;
 import com.teammoeg.chorda.dataholders.team.CTeamDataManager;
 import com.teammoeg.chorda.dataholders.team.SinglePlayerTeam;
@@ -362,7 +364,9 @@ public final class ThermalLoadedWorldGameTests {
                     helper.assertTrue(present(radiation, fire), "pure radiation must retain its source");
                     byte[] targets = read(sources, "targetCount");
                     helper.assertTrue(targets[slots.get(fire.asLong())] == 0,
-                            "zero-share AIR_FACE must not create convection targets");
+                            "zero-share AIR_FACE must not create convection targets: config="
+                                    + FHConfig.COMMON.THERMAL_RUNTIME.campfireRadiationShare.get()
+                                    + ", sourceAirShare=" + ((MinecraftPhysicalSourceProfile) read(sources, "campfireProfile")).port(0).powerShare());
                     helper.succeed();
                 } finally {
                     level.setBlockAndUpdate(fire, Blocks.AIR.defaultBlockState());
