@@ -19,17 +19,13 @@
 
 package com.teammoeg.frostedheart.content.robotics.logistics.grid;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
-
+import java.util.ArrayList;
+import java.util.List;
 import org.jetbrains.annotations.NotNull;
 
+import com.teammoeg.frostedheart.content.robotics.logistics.data.Index.Coord;
 import com.teammoeg.frostedheart.content.robotics.logistics.data.ItemKey;
 
-import it.unimi.dsi.fastutil.ints.IntArrayList;
-import it.unimi.dsi.fastutil.ints.IntArraySet;
-import it.unimi.dsi.fastutil.ints.IntIterator;
 import lombok.Getter;
 import lombok.Setter;
 import net.minecraft.core.BlockPos;
@@ -38,24 +34,14 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.items.IItemHandler;
 import net.minecraftforge.items.IItemHandlerModifiable;
+import net.minecraftforge.items.ItemHandlerHelper;
 import net.minecraftforge.items.ItemStackHandler;
 
 public class LogisticChest implements IItemHandler, IGridElement,IItemHandlerModifiable{
-	private static class ItemData implements ItemCountProvider{
-		IntArraySet slots=new IntArraySet();
-		@Getter
-		int totalCount;
-		@Override
-		public String toString() {
-			return "ItemData [slots=" + slots + ", totalCount=" + totalCount + "]";
-		}
-		
-	}
 	private static final int MAX_SLOT=27;
 	@Getter
 	ItemStackHandler chest=new ItemStackHandler(MAX_SLOT);
-	Map<ItemKey,ItemData> cachedData=new HashMap<>();
-	ItemKey[] slotRef=new ItemKey[MAX_SLOT];
+	List<LogisticHub> hubs=new ArrayList<>();
 	boolean isChanged;
 	@Getter
 	Level level;
@@ -64,10 +50,6 @@ public class LogisticChest implements IItemHandler, IGridElement,IItemHandlerMod
 	@Setter
 	@Getter
 	ItemKey filter;
-	@Getter
-	int emptySlotCount=MAX_SLOT;
-	private boolean isCacheInvalidated;
-	private final Runnable changeListener;
 
 	public CompoundTag serialize() {
 		return chest.serializeNBT();
@@ -84,178 +66,66 @@ public class LogisticChest implements IItemHandler, IGridElement,IItemHandlerMod
 	public @NotNull ItemStack getStackInSlot(int slot) {
 		return chest.getStackInSlot(slot);
 	}
-	private void onStackAdded(int slot) {
+	private void onStackModified(int slot) {
 		ItemStack stack=chest.getStackInSlot(slot);
-		if(stack.isEmpty())return;
-		ItemKey key=new ItemKey(stack);
-		onStackAdded(slot,key,stack.getCount());
-	}
-	private void onStackAdded(int slot,ItemKey key,int count) {
-		if(count==0)return;
-		ItemData id=cachedData.get(key);
-		if(id==null) {
-			id=new ItemData();
-			cachedData.put(key, id);
+		if(stack.isEmpty()) {
+			onStackRemoved(slot);
+			return;
 		}
-		slotRef[slot]=key;
-		id.totalCount+=count;
-		id.slots.add(slot);
-		emptySlotCount--;
+		for(LogisticHub hub:hubs){
+			hub.set(new Coord(pos,slot), stack);
+		}
 	}
-	private void onStackRemoved(int slot,int count) {
-		ItemKey origin=slotRef[slot];
-		if(origin==null)return;
-		slotRef[slot]=null;
-		ItemData id=cachedData.get(origin);
-		id.totalCount-=count;
-		id.slots.remove(slot);
-		if(id.slots.isEmpty()||id.totalCount==0)
-			cachedData.remove(origin);
-		emptySlotCount++;
-	}
-	private void modifySlotCount(int slot,int count) {
-		ItemKey origin=slotRef[slot];
-		ItemData id=cachedData.get(origin);
-		id.totalCount+=count;
+	private void onStackRemoved(int slot) {
+		for(LogisticHub hub:hubs){
+			if(filter==null)
+				hub.set(new Coord(pos,slot), ItemStack.EMPTY);
+			else
+				hub.set(new Coord(pos,slot), filter);
+		}
 	}
 
 	@Override
 	public void revalidate() {
-		Arrays.fill(slotRef, null);
-		cachedData.clear();
-		this.emptySlotCount=this.getSlots();
 		for(int i=0;i<chest.getSlots();i++)
-			onStackAdded(i);
+			onStackModified(i);
 	}
-	public void computeEmptySlots() {
-		emptySlotCount=0;
-		for(int i=0;i<chest.getSlots();i++) {
-			emptySlotCount+=chest.getStackInSlot(i).isEmpty()?1:0;
-		}
+	@Override
+	public ItemStack pushItem(ItemKey ik,ItemStack is) {
+		return ItemHandlerHelper.insertItem(chest, is, false);
 	}
-	public void tick() {
-		if(isCacheInvalidated) {
-			revalidate();
-			isCacheInvalidated=false;
-		}
-	}
-	public ItemStack pushItem(ItemKey ik,ItemStack is,boolean fillEmpty) {
-		ItemData id=cachedData.get(ik);
-		ItemStack remain=is;
-		boolean changed=false;
-		if(id!=null) {
-			IntIterator ii=id.slots.iterator();
-			while(ii.hasNext()) {
-				int oldCount=remain.getCount();
-				int slot=ii.nextInt();
-				remain=chest.insertItem(slot, remain, false);
-				int inserted=oldCount-remain.getCount();
-				id.totalCount+=inserted;
-				changed|=inserted>0;
-				if(remain.isEmpty())
-					break;
-			}
-		}
-		if(fillEmpty&&!remain.isEmpty()) {
-			for(int i=0;i<chest.getSlots();i++) {
-				if(chest.getStackInSlot(i).isEmpty()) {
-					int oldCount=remain.getCount();
-					remain=chest.insertItem(i, remain, false);
-					ItemStack stack=chest.getStackInSlot(i);
-					if(!stack.isEmpty())
-						onStackAdded(i,ik,stack.getCount());
-					changed|=oldCount!=remain.getCount();
-					if(remain.isEmpty())
-						break;
-				}
-			}
-		}
-		if(changed)
-			markChanged();
-		return remain;
-		
-	}
+	@Override
 	public boolean fillable() {
 		return true;
 	}
+	@Override
 	public ItemStack takeItem(ItemKey key,int amount) {
-		ItemData id=cachedData.get(key);
-		if(id==null||amount==0)
-			return ItemStack.EMPTY;
-		int totake=amount;
-		IntIterator ii=id.slots.iterator();
-		IntArrayList il=new IntArrayList();
-		ItemStack taken=ItemStack.EMPTY;
-		while(ii.hasNext()) {
-			int slot=ii.nextInt();
-			ItemStack inslot=chest.getStackInSlot(slot);
-			if(inslot.isEmpty()||!key.isSameItem(inslot)) {
-				isCacheInvalidated=true;
-				continue;
-			}
-			if(!taken.isEmpty()&&!ItemStack.isSameItemSameTags(taken, inslot))continue;
-			int slotToReduce=Math.min(totake, inslot.getCount());
-			int oldCount=inslot.getCount();
-			if(slotToReduce>0) {
-				id.totalCount-=slotToReduce;
-				if(taken.isEmpty()) {
-					taken=chest.extractItem(slot, slotToReduce, false);
-				}else {
-					taken.grow(chest.extractItem(slot, slotToReduce, false).getCount());
-				}
-				if(slotToReduce==oldCount) {
-					il.add(slot);
-					slotRef[slot]=null;
-					emptySlotCount++;
-				}
-				totake-=slotToReduce;
-				if(totake<=0)
-					break;
+		for(int i=0;i<chest.getSlots();i++) {
+			ItemStack stack=chest.getStackInSlot(i);
+			if(key.isSameItem(stack)) {
+				return chest.extractItem(i, amount, false);
 			}
 		}
-		id.slots.removeAll(il);
-		if(id.slots.isEmpty()||id.totalCount<=0){
-			cachedData.remove(key);
-		}
-		if(!taken.isEmpty())
-			markChanged();
-		return taken;
+		return ItemStack.EMPTY;
 		
-	}
-	public Map<ItemKey,? extends ItemCountProvider> getAllItems(){
-		return this.cachedData;
 	}
 	@Override
 	public @NotNull ItemStack insertItem(int slot, @NotNull ItemStack stack, boolean simulate) {
 		if(simulate)return chest.insertItem(slot, stack, simulate);
-		ItemKey origin=slotRef[slot];
-		int originCount=chest.getStackInSlot(slot).getCount();
 		ItemStack remain=chest.insertItem(slot, stack, simulate);
 		if(remain.getCount()<stack.getCount()) {
-			ItemStack after=chest.getStackInSlot(slot);
 			markChanged();
-			if(origin==null||originCount==0) {
-				onStackAdded(slot);
-			}else {
-				modifySlotCount(slot,after.getCount()-originCount);
-			}
+			onStackModified(slot);
 		}
 		return remain;
 	}
 	@Override
 	public @NotNull ItemStack extractItem(int slot, int amount, boolean simulate) {
 		if(simulate)return chest.extractItem(slot, amount, simulate);
-		ItemKey origin=slotRef[slot];
-		int originCount=chest.getStackInSlot(slot).getCount();
 		ItemStack extracted=chest.extractItem(slot, amount, simulate);
 		if(!extracted.isEmpty()) {
-			ItemStack after=chest.getStackInSlot(slot);
 			markChanged();
-			if(after.isEmpty()) {
-				onStackRemoved(slot,originCount);
-			}else {
-				modifySlotCount(slot,after.getCount()-originCount);
-			}
+			onStackModified(slot);
 		}
 		return extracted;
 	}
@@ -268,10 +138,6 @@ public class LogisticChest implements IItemHandler, IGridElement,IItemHandlerMod
 		return chest.isItemValid(slot, stack);
 	}
 	@Override
-	public String toString() {
-		return "LogisticChest [chest=" + chest + ", cachedData=" + cachedData + "]";
-	}
-	@Override
 	public boolean isChanged() {
 		return isChanged;
 	}
@@ -282,30 +148,44 @@ public class LogisticChest implements IItemHandler, IGridElement,IItemHandlerMod
 		return changed;
 	}
 	public LogisticChest(Level level, BlockPos pos) {
-		this(level,pos,()->{});
-	}
-	public LogisticChest(Level level, BlockPos pos,Runnable changeListener) {
 		super();
 		this.level = level;
 		this.pos = pos;
-		this.changeListener = changeListener;
 	}
 	public void setLevel(Level level) {
 		this.level=level;
 	}
 	@Override
 	public void setStackInSlot(int slot, @NotNull ItemStack stack) {
-		ItemStack original=chest.getStackInSlot(slot);
-		onStackRemoved(slot,original.getCount());
 		chest.setStackInSlot(slot, stack);
-		onStackAdded(slot);
 		markChanged();
+		onStackModified(slot);
 	}
 
 	private void markChanged() {
 		isChanged=true;
-		changeListener.run();
+	}
+	public void tick() {
+		hubs.removeIf(t->!t.isValid());
+	}
+	@Override
+	public ItemStack takeItem(int slot, int amount) {
+		return chest.extractItem(slot, amount, false);
+	}
+	@Override
+	public void registerSlots(LogisticHub hub) {
+		for(int i=0;i<chest.getSlots();i++) {
+			ItemStack stack=chest.getStackInSlot(i);
+			hub.set(new Coord(pos,i), stack);
+		}
+		hubs.add(hub);
 	}
 	
-
+	@Override
+	public void removeSlots() {
+		for(LogisticHub hub:hubs) {
+			
+			hub.remove(pos);
+		}
+	}
 }

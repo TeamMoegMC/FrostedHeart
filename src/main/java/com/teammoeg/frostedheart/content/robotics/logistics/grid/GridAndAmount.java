@@ -19,8 +19,8 @@
 
 package com.teammoeg.frostedheart.content.robotics.logistics.grid;
 
-import net.minecraftforge.common.util.LazyOptional;
+import com.teammoeg.frostedheart.content.robotics.logistics.data.Index.Coord;
 
-public record GridAndAmount(LazyOptional<IGridElement> grid,int amount) {
+public record GridAndAmount(Coord grid,int amount) {
 
 }

@@ -368,7 +368,12 @@ public class CUtils {
 		if (!pe.addItem(is))
 			pe.level().addFreshEntity(new ItemEntity(pe.level(), pe.blockPosition().getX(), pe.blockPosition().getY(), pe.blockPosition().getZ(), is));
 	}
-
+	public static void dropItem(Level level,Vec3 pos, ItemStack is) {
+		level.addFreshEntity(new ItemEntity(level,pos.x(), pos.y(), pos.z(), is));
+	}
+	public static void dropItem(Level level,Vec3i pos, ItemStack is) {
+		dropItem(level,Vec3.atCenterOf(pos),is);
+	}
 	/**
 	 * 移除药水效果的所有治愈物品，使其无法通过喝牛奶等方式移除。
 	 * <p>

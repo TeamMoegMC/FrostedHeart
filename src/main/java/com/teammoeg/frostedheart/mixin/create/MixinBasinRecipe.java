@@ -64,12 +64,11 @@ public abstract class MixinBasinRecipe extends ProcessingRecipe<SmartInventory> 
                     cir.setReturnValue(false);
                 }
             }});*/
-        var optionalHandler = basin.getCapability(ForgeCapabilities.ITEM_HANDLER).resolve();
+        var handler = basin.getCapability(ForgeCapabilities.ITEM_HANDLER).orElse(null);
 
-        if (optionalHandler.isEmpty()) {
+        if (handler==null) {
             return;
         }
-        IItemHandler handler = optionalHandler.get();
         for (int i = 0; i < handler.getSlots(); i++) {
             ItemStack stack = handler.getStackInSlot(i);
             if (stack.isEmpty()) continue;
