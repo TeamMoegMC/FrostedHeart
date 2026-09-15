@@ -21,6 +21,8 @@ package com.teammoeg.frostedheart.content.robotics.logistics.gui;
 
 import java.util.function.Consumer;
 
+import com.teammoeg.chorda.block.entity.CBlockEntity;
+import com.teammoeg.frostedheart.content.robotics.logistics.workers.LogisticStatusBlockEntity;
 import com.teammoeg.frostedheart.util.client.FHClientUtils;
 
 import blusunrize.immersiveengineering.client.gui.IEContainerScreen;
@@ -29,10 +31,10 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
 
-public class LogisticChestScreen extends IEContainerScreen<LogisticChestMenu> {
+public class LogisticChestScreen<T extends CBlockEntity&LogisticStatusBlockEntity> extends IEContainerScreen<LogisticChestMenu<T>> {
     private static final ResourceLocation TEXTURE = FHClientUtils.makeGuiTextureLocation("bot_dock");
 
-    public LogisticChestScreen(LogisticChestMenu inventorySlotsIn, Inventory inv, Component title) {
+    public LogisticChestScreen(LogisticChestMenu<T> inventorySlotsIn, Inventory inv, Component title) {
         super(inventorySlotsIn, inv, title,TEXTURE);
         this.imageHeight = 200;
         this.inventoryLabelY = this.imageHeight - 94;

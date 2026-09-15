@@ -68,7 +68,6 @@
     "minecraft.temperature.ChickenMixin",
     "minecraft.temperature.CowMixin",
     "minecraft.temperature.IceBlockMixin_Melt",
-    "minecraft.temperature.LavaFluidMixin",
     "minecraft.temperature.LevelChunkMixin_DormantThermal",
     "minecraft.temperature.LevelChunkSectionMixin_ThermalInput",
     "minecraft.temperature.LiquidBlockMixin_ThermalRadiation",
@@ -94,6 +93,10 @@
     "tetra.MixinToolbeltInventory"
   ],
   "client": [
+    "client.embeddium.InfraredRendererFactoryMixin",
+    "client.embeddium.InfraredArenaFormatMixin",
+    "client.embeddium.InfraredVertexBindingsMixin",
+    "client.embeddium.InfraredBlockScopeMixin",
     "client.BossHealthOverlayAccess",
     "client.ChatScreenMixin",
     "client.ClientPacketListenerMixin",

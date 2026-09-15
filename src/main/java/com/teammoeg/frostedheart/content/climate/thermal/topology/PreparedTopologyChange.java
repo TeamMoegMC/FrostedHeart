@@ -34,6 +34,7 @@ public final class PreparedTopologyChange {
 
     final long baseStructuralVersion;
     final long nextStructuralVersion;
+    final double externalMaterialEnergyJ;
     final int[] fragmentIndexes;
     final ThermalFragment[] fragments;
     final long[] materialEdgeKeys;
@@ -95,6 +96,7 @@ public final class PreparedTopologyChange {
             Objects.requireNonNull(oldSpan, "oldSpans contains null");
         }
         this.baseStructuralVersion = baseStructuralVersion;
+        this.externalMaterialEnergyJ = builder.externalMaterialEnergyJ;
         this.nextStructuralVersion = nextStructuralVersion;
         this.fragmentIndexes = fragmentIndexes;
         this.fragments = fragments;
@@ -113,6 +115,7 @@ public final class PreparedTopologyChange {
     static final class Builder {
         private long baseStructuralVersion;
         private long nextStructuralVersion;
+        private double externalMaterialEnergyJ;
         private int[] fragmentIndexes;
         private ThermalFragment[] fragments;
         private long[] materialEdgeKeys;
@@ -129,6 +132,11 @@ public final class PreparedTopologyChange {
         Builder identity(long baseVersion, long nextVersion) {
             baseStructuralVersion = baseVersion;
             nextStructuralVersion = nextVersion;
+            return this;
+        }
+
+        Builder externalMaterialEnergy(double energyJ) {
+            externalMaterialEnergyJ = energyJ;
             return this;
         }
 

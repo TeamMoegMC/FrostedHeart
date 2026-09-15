@@ -6,27 +6,18 @@ import java.lang.invoke.MethodType;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.util.HashMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 
 /**
- * 纯 {@link MethodHandles} 实现的成员访问器工厂。
+ * 成员访问器工厂。
+ * 以高性能方式反射获取目标类的成员。
  *
- * <p>用 {@link MethodHandles#privateLookupIn} 进入声明成员的类的运行时包，
- * 解析出<b>直接</b>{@link MethodHandle}——访问检查在此一次性完成，之后不受访问控制约束。
- *
- * <p>不再使用 {@link java.lang.invoke.LambdaMetafactory}：
- * <ul>
- *   <li>传调用方的 {@code MethodHandles.lookup()} → {@code is not direct or cannot be cracked}
- *       （看不到 private 成员）；</li>
- *   <li>传 {@code privateLookupIn} 的结果 → {@code Invalid caller}
- *       （ModLauncher / 自定义类加载器下模块不匹配）。</li>
- * </ul>
- * 两头都堵，所以直接返回调用 {@code mh.invoke(arg)} 的普通 lambda。
  */
 public final class AccessorFactory {
 
-    private static final ConcurrentHashMap<String, Function<?, ?>> CACHE = new ConcurrentHashMap<>();
+    private static final HashMap<String, Function<?, ?>> CACHE = new HashMap<>();
 
     private AccessorFactory() {
     }
@@ -38,9 +29,15 @@ public final class AccessorFactory {
         if (cached != null) {
             return cached;
         }
-        Function<A, R> created = build(obj, name, returnType);
-        Function<?, ?> prev = CACHE.putIfAbsent(key, created);
-        return prev == null ? created : (Function<A, R>) prev;
+        synchronized(CACHE) {
+        	cached = (Function<A, R>) CACHE.get(key);
+            if (cached != null) {
+                return cached;
+            }
+	        Function<A, R> created = build(obj, name, returnType);
+	        Function<?, ?> prev = CACHE.putIfAbsent(key, created);
+	        return prev == null ? created : (Function<A, R>) prev;
+        }
     }
 
     // ------------------------------------------------------------------
@@ -54,14 +51,14 @@ public final class AccessorFactory {
             Class<?> actual = boxed(t.valueType());
             if (!expected.isAssignableFrom(actual)) {
                 throw new IllegalArgumentException(
-                        "返回类型不匹配: 期望 " + returnType.getName()
-                                + "，实际 " + t.valueType().getName());
+                        "Invalid return type, expect " + returnType.getName()
+                                + " but got " + t.valueType().getName());
             }
         }
 
         if (t.isStatic()) {
             throw new UnsupportedOperationException(
-                    "静态成员需要额外接收者参数，本实现暂不支持: "
+                    "Static method is not supported:  "
                             + t.declaringClass().getName() + "#" + name);
         }
 
@@ -71,13 +68,13 @@ public final class AccessorFactory {
             lookup = MethodHandles.privateLookupIn(t.declaringClass(), MethodHandles.lookup());
         } catch (IllegalAccessException e) {
             throw new IllegalStateException(
-                    "无法进入 " + t.declaringClass().getName() + " 的运行时包。"
-                            + "若目标是 JDK 内部类，请对相应模块添加 --add-opens。", e);
+                    "Package " + t.declaringClass().getName() + " access denied,"
+                            + "--add-opens is required for jdk internal class.", e);
         }
 
         // 2) 解析出直接句柄 —— 访问检查在此完成
         final MethodHandle mh = findDirectHandle(lookup, t, name);
-
+        final String errMsg="Cannot access " + t.declaringClass().getName() + "#" + name + "";
         // 3) 普通 lambda 包装。JIT 会把 mh.invoke 的调用点内联到实际成员读取。
         return (Function<A, R>) (Function<Object, Object>) arg -> {
             try {
@@ -85,8 +82,7 @@ public final class AccessorFactory {
             } catch (RuntimeException | Error e) {
                 throw e;
             } catch (Throwable e) {
-                throw new RuntimeException(
-                        "访问 " + t.declaringClass().getName() + "#" + name + " 失败", e);
+                throw new RuntimeException(errMsg, e);
             }
         };
     }
@@ -101,7 +97,7 @@ public final class AccessorFactory {
             return lookup.findVirtual(
                     m.getDeclaringClass(), name, MethodType.methodType(m.getReturnType()));
         } catch (NoSuchFieldException | NoSuchMethodException | IllegalAccessException e) {
-            throw new IllegalStateException("无法解析成员: " + name, e);
+            throw new IllegalStateException("Member not found: " + name, e);
         }
     }
 
@@ -117,12 +113,12 @@ public final class AccessorFactory {
         Method method = findMethod(owner, name);
         if (method != null) {
             if (method.getParameterCount() != 0) {
-                throw new IllegalArgumentException("只支持无参方法: " + name);
+                throw new IllegalArgumentException("Only no-arg method supported: " + name);
             }
             return new Target(null, method);
         }
         throw new IllegalArgumentException(
-                "在 " + owner.getName() + " 及其父类/接口中找不到成员: " + name);
+                "Member not found: " + owner.getName() + "#" + name);
     }
 
     private static Field findField(Class<?> c, String name) {

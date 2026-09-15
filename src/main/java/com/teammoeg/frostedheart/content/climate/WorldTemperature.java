@@ -82,6 +82,11 @@ import net.minecraft.world.level.levelgen.Heightmap;
  * </p>
  */
 public class WorldTemperature {
+    /** Actual body temperature; NaN means no live or stored material state. */
+    public static float material(LevelReader world, BlockPos position) {
+        return world instanceof ServerLevel server
+                ? (float) MinecraftThermalInput.materialTemperature(server, position) : Float.NaN;
+    }
 
 
     /** Legacy compatibility constant; runtime block/air calculations read FHConfig. */
@@ -266,11 +271,10 @@ public class WorldTemperature {
      * Now, it is constant: [-10, -10].
      */
     public static float dimension(LevelReader w) {
-        float wt = FHConfig.SERVER.CLIMATE.overworldBaselineCelsius.get().floatValue();
         if (w instanceof Level level) {
-            wt = worldCache.computeIfAbsent(level,l-> WorldTempData.getWorldTemp(l));
+            return worldCache.computeIfAbsent(level, WorldTempData::getWorldTemp);
         }
-        return wt;
+        return FHConfig.SERVER.CLIMATE.overworldBaselineCelsius.get().floatValue();
     }
 
     /**
@@ -404,14 +408,13 @@ public class WorldTemperature {
             BlockPos pos,
             float climateBase
     ) {
-        return BlockTemperatureModel.blockTemperature(
+        float affection = BlockTemperatureModel.climateBlockAffection(
                 pos.getY(), FHConfig.SERVER.CLIMATE.climateStoneInterfaceLevel.get(),
                 FHConfig.SERVER.CLIMATE.climateSeaLevel.get(),
-                FHConfig.SERVER.CLIMATE.blockMaximumClimateAffection.get().floatValue(),
-                dimension(world), biome(world, pos), altitude(world, pos), climateBase,
-                0.0F,
-                FHConfig.SERVER.CLIMATE.blockHeatApplicationMultiplier.get().floatValue(),
-                FHConfig.SERVER.CLIMATE.absoluteZeroCelsius.get().floatValue());
+                FHConfig.SERVER.CLIMATE.blockMaximumClimateAffection.get().floatValue());
+        float natural = BlockTemperatureModel.naturalTemperature(
+                dimension(world), biome(world, pos), altitude(world, pos), climateBase, affection);
+        return Math.max(FHConfig.SERVER.CLIMATE.absoluteZeroCelsius.get().floatValue(), natural);
     }
 
     /**
@@ -464,7 +467,7 @@ public class WorldTemperature {
         }
 
         return dimension(world) + biome(world, pos) + altitude(world, pos) +
-                climate(world,pos) * climateAirAffection;
+                (climateAirAffection == 0.0F ? 0.0F : climate(world,pos) * climateAirAffection);
     }
 
     /**

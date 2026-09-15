@@ -85,7 +85,7 @@ public class SoilThermometer extends FHBaseItem {
             BlockHitResult brtr = getPlayerPOVHitResult(worldIn, playerIn, Fluid.ANY);
             if (brtr.getType() != Type.MISS) {
 
-                playerIn.sendSystemMessage(Lang.translateMessage("info.soil_thermometerbody", toTemperatureFloatString(WorldTemperature.block(playerIn.level(), brtr.getBlockPos()))));
+                reportMaterialTemperature(playerIn, brtr.getBlockPos());
             }
 
         }
@@ -99,7 +99,7 @@ public class SoilThermometer extends FHBaseItem {
         if (entityplayer instanceof ServerPlayer) {
             BlockHitResult brtr = getPlayerPOVHitResult(worldIn, entityplayer, Fluid.ANY);
             if (brtr.getType() == Type.MISS) return stack;
-            entityplayer.sendSystemMessage(Lang.translateMessage("info.soil_thermometerbody", toTemperatureFloatString(WorldTemperature.block(entityplayer.level(), brtr.getBlockPos()))));
+            reportMaterialTemperature(entityplayer, brtr.getBlockPos());
         }
         return stack;
     }
@@ -111,6 +111,13 @@ public class SoilThermometer extends FHBaseItem {
             }
         }
         return false;
+    }
+
+    private static void reportMaterialTemperature(Player player, net.minecraft.core.BlockPos position) {
+        float temperature = WorldTemperature.material(player.level(), position);
+        player.sendSystemMessage(Float.isFinite(temperature)
+                ? Lang.translateMessage("info.soil_thermometerbody", toTemperatureFloatString(temperature))
+                : Lang.translateMessage("info.material_temperature_unavailable"));
     }
 
     public static void addIsWearingPredicate(Predicate<Player> predicate) {

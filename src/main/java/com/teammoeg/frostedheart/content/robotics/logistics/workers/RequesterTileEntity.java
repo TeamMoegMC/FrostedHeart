@@ -19,15 +19,11 @@
 
 package com.teammoeg.frostedheart.content.robotics.logistics.workers;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.function.Supplier;
-
+import java.util.Collection;
+import java.util.Collections;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import com.teammoeg.chorda.block.entity.CBlockEntity;
-import com.teammoeg.chorda.block.entity.CTickableBlockEntity;
 import com.teammoeg.chorda.util.struct.LazyTickWorker;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
@@ -38,7 +34,6 @@ import com.teammoeg.frostedheart.content.robotics.logistics.gui.RequesterChestMe
 import com.teammoeg.frostedheart.content.robotics.logistics.tasks.LogisticRequestTask;
 import com.teammoeg.frostedheart.content.robotics.logistics.tasks.LogisticTaskKey;
 
-import lombok.Getter;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
@@ -54,11 +49,10 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.ForgeCapabilities;
-import net.minecraftforge.common.util.Lazy;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.items.ItemStackHandler;
 
-public class RequesterTileEntity extends CBlockEntity implements  CTickableBlockEntity,MenuProvider,LogisticStatusBlockEntity {
+public class RequesterTileEntity extends LogisticBlockEntity implements  MenuProvider {
 	
 	ItemStackHandler container=new ItemStackHandler(27) {
 		@Override
@@ -68,20 +62,9 @@ public class RequesterTileEntity extends CBlockEntity implements  CTickableBlock
 		}
 	};
 	public LazyOptional<ItemStackHandler> grid=LazyOptional.of(()->container);
-	public LazyOptional<LogisticNetwork> network;
 	public Filter[] filters=new Filter[9];
-	@Getter
-	protected int networkStatus=0;
-	@Getter
-	protected int uplinkStatus=0;
-	List<Supplier<LogisticTaskKey>> keys=new ArrayList<>(filters.length);
-	private int networkCheckTicks;
 	public RequesterTileEntity(BlockPos pos,BlockState bs) {
-		super(FHBlockEntityTypes.REQUESTER_CHEST.get(),pos,bs);
-		for(int i=0;i<filters.length;i++){
-			final int cnt=i;
-			keys.add(Lazy.of(()->new LogisticTaskKey(pos,cnt)));
-		}
+		super(FHBlockEntityTypes.REQUESTER_CHEST.get(),pos,bs,9);
 
 	}
 
@@ -111,10 +94,9 @@ public class RequesterTileEntity extends CBlockEntity implements  CTickableBlock
 		arg0.put("filters", list);
 	}
 	LazyTickWorker worker=new LazyTickWorker(10,()->{
-		if(network!=null&&network.isPresent()) {
+		if(!networks.isEmpty()) {
 			boolean hasUplink=false;
 			boolean hasRequest=false;
-			LogisticNetwork networkGrid=network.resolve().get();
 			for(int i=0;i<filters.length;i++) {
 				Filter filter=filters[i];
 				if(filter!=null&&filter.getKey()!=null) {
@@ -132,11 +114,16 @@ public class RequesterTileEntity extends CBlockEntity implements  CTickableBlock
 					}
 					int missing=Math.min(filter.getSize()-currcnt,freeSpace);
 					if(missing>0) {
-						LogisticTaskKey key=keys.get(i).get();
-						if(networkGrid.canAddTask(key)) {
-							hasRequest=true;
-							int requestSize=Math.min(missing,filter.getKey().getMaxStackSize());
-							networkGrid.addTask(key,new LogisticRequestTask(filter,requestSize,getBlockPos(),grid.cast()));
+						LogisticTaskKey key=getKeys().get(i).get();
+						for(LazyOptional<LogisticNetwork> lln:networks) {
+							LogisticNetwork logisticNetwork=lln.orElse(null);
+							if(logisticNetwork!=null) {
+								if(logisticNetwork.canAddTask(key)) {
+									hasRequest=true;
+									int requestSize=Math.min(missing,filter.getKey().getMaxStackSize());
+									logisticNetwork.addTask(key,new LogisticRequestTask(filter,requestSize,getBlockPos(),grid.cast()));
+								}
+							}
 						}
 					}
 				}
@@ -155,28 +142,18 @@ public class RequesterTileEntity extends CBlockEntity implements  CTickableBlock
 	@Override
 	public void tick() {
 		if(!this.level.isClientSide) {
-			if(network==null||!network.isPresent()||networkCheckTicks--<=0) {
-				refreshNetwork();
-				networkCheckTicks=20;
-			}
-			networkStatus=network!=null&&network.isPresent()?2:0;
+			networkStatus=networks.isEmpty()?0:2;
 			worker.tick();
 		}
 	}
 
-	private void refreshNetwork() {
-		LazyOptional<LogisticNetwork> candidate=FHCapabilities.ROBOTIC_LOGISTIC_CHUNK
+	protected void refreshNetwork() {
+		Collection<LazyOptional<LogisticNetwork>> candidate=FHCapabilities.ROBOTIC_LOGISTIC_CHUNK
 			.getCapability(level.getChunk(worldPosition))
 			.map(chunk->chunk.getNetworkFor(level,worldPosition))
-			.orElse(LazyOptional.empty());
-		LogisticNetwork current=network!=null&&network.isPresent()?network.resolve().get():null;
-		LogisticNetwork next=candidate.isPresent()?candidate.resolve().get():null;
-		if(current!=null&&current!=next)
-			current.cancelTasksAt(worldPosition);
-		if(current!=next)
-			network=next==null?null:candidate;
-		else if(current==null)
-			network=null;
+			.orElse(Collections.emptySet());
+		networks.addAll(candidate);
+		
 	}
 
 	@Override
@@ -198,15 +175,12 @@ public class RequesterTileEntity extends CBlockEntity implements  CTickableBlock
 	@Override
 	public void onRemoved() {
 		super.onRemoved();
-		if(network!=null&&network.isPresent())
-			network.resolve().get().cancelTasksAt(worldPosition);
-		network=null;
 		grid.invalidate();
 	}
 
 	@Override
 	public void onUnloaded() {
-		network=null;
+		super.onUnloaded();
 		grid.invalidate();
 	}
 
@@ -215,7 +189,6 @@ public class RequesterTileEntity extends CBlockEntity implements  CTickableBlock
 		super.onLoad();
 		if(!grid.isPresent())
 			grid=LazyOptional.of(()->container);
-		networkCheckTicks=0;
 	}
 
 

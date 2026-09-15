@@ -20,12 +20,14 @@
 package com.teammoeg.frostedheart.mixin.minecraft.campfire;
 
 import com.teammoeg.frostedheart.util.Lang;
+import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.MinecraftThermalInput;
 import com.teammoeg.frostedheart.util.mixin.ICampfireExtra;
 import com.teammoeg.frostedresearch.ResearchHooks;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.stats.Stats;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.Containers;
 import net.minecraft.world.InteractionHand;
@@ -63,6 +65,15 @@ import java.util.Optional;
 public abstract class CampfireBlockMixin_TimeLimit extends BaseEntityBlock {
     public CampfireBlockMixin_TimeLimit(Properties builder) {
         super(builder);
+    }
+
+    @Override
+    public void onPlace(BlockState state, Level level, BlockPos pos, BlockState previous, boolean moving) {
+        super.onPlace(state, level, pos, previous, moving);
+        if (level instanceof ServerLevel server && state.getValue(CampfireBlock.LIT)
+                && !CampfireBlock.isLitCampfire(previous)) {
+            MinecraftThermalInput.onCampfireIgnited(server, pos);
+        }
     }
 
     @Inject(at = @At("RETURN"), method = "getStateForPlacement", cancellable = true)

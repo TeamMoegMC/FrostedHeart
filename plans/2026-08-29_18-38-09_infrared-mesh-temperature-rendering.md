@@ -1,7 +1,7 @@
 # 红外视野实际温度场最小增量实现计划
 
 - Time: `2026-08-29 18:38:09 +0800`
-- Last revised: `2026-09-10 +08:00`
+- Last revised: `2026-09-12 +08:00`
 - Authors: `TeamMoeg; Codex (GPT-5, original architecture and final minimal-increment revision)`
 - Status: `superseded`
 - Scope: `InfraredViewRenderer`, `infrared_view.fsh`, existing infrared packets, `MinecraftThermalInput`, `MinecraftPageManager`, `PagePublication`, `QueryPublication`
@@ -11,10 +11,9 @@
 
 Author: Codex; OpenAI GPT-6. The Air-only infrared implementation and its historical corrections below remain investigation history. Current implementation has evolved further, including analytic-field composition; this file is not current behavior documentation.
 
-The new execution plan is [材料温度闭环：完整工程方案](2026-09-08_21-58-58_thermal-unknown-block-ventilation-75.md#material-temperature-closure). It covers material-node addressing, solid conduction, shared measurement, material persistence, player long-wave sampling, and surface infrared. Its surface contract replaces this plan's Air-only display, visible-side Air sampling, and blanket prohibition on all additional display data. Existing bounded delta encoding, coherent publication and lifecycle work are reused where applicable.
+The current execution plan is [红外显示修复](2026-09-08_21-58-58_thermal-unknown-block-ventilation-75.md#block-surface-infrared), updated on 2026-09-12 after the user's client feedback. It keeps block-material surface sampling, restores the original analytic-field display composition and blue no-data placeholder, and removes the added natural-background grid. It reuses the existing single texture, packets and screen post-process without changing Embeddium vertex formats. Other thermal systems remain [deferred](2026-09-08_21-58-58_thermal-unknown-block-ventilation-75.md#deferred-thermal-work).
 
-The replacement is a plan, not an implemented feature. Use [climate documentation](../docs/climate/README.md) and current source for shipped behavior. This status change does not mark old pending client/performance checks as passed.
-
+The corrective code is implemented and all 58 Forge GameTests passed; client visual acceptance remains pending. Current source and [climate documentation](../docs/climate/README.md) describe the repaired implementation. The historical Air-side design below is not to be restored wholesale.
 ## Goal
 
 红外视野显示 thermal runtime 已求解并发布的实际空气温度，并满足：

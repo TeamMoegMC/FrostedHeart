@@ -22,16 +22,13 @@ package com.teammoeg.frostedheart.content.robotics.logistics.gui;
 import com.teammoeg.chorda.client.RenderingHint;
 import com.teammoeg.chorda.client.ScrollTracker;
 import com.teammoeg.chorda.client.cui.base.MouseButton;
-import com.teammoeg.chorda.client.cui.base.UIElement;
 import com.teammoeg.chorda.client.cui.base.UILayer;
-import com.teammoeg.chorda.client.cui.base.Verifier.VerifyResult;
 import com.teammoeg.chorda.client.cui.base.Verifiers;
 import com.teammoeg.chorda.client.cui.widgets.CheckBox;
 import com.teammoeg.chorda.client.cui.widgets.ImageButton;
 import com.teammoeg.chorda.client.cui.widgets.TextBoxNoBackground;
 import com.teammoeg.chorda.client.icon.CIcons;
 import com.teammoeg.chorda.client.ui.CGuiHelper;
-import com.teammoeg.chorda.text.Components;
 import com.teammoeg.frostedheart.content.robotics.logistics.Filter;
 
 import net.minecraft.client.gui.GuiGraphics;

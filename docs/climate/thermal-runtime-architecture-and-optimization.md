@@ -1,7 +1,7 @@
 # Thermal Runtime Architecture
 
-- Status: `Current; whole-block ventilation implemented and Forge GameTest verified; controlled performance comparison pending`
-- Last verified: `2026-09-09`
+- Status: `Transitional; current local Air mixing and residency behavior verified by focused regressions; full-load performance validation pending`
+- Last verified: `2026-09-16`
 - Scope: server-side thermal capture, asynchronous dimension workers, Page/Brick topology, source energy, phase requests, query publication, and hot-path cost bounds
 - Primary code anchors: `MinecraftThermalEvents`, `MinecraftThermalInput`, `MinecraftPageManager`, `PhysicalSourceSpatialIndex`, `DimensionInputAccumulator`, `ThermalDimensionMailbox`, `ThermalWorkerPool`, `ThermalDimensionEngine`, `TopologyPlan`, `PreparedTopologyChange`, `TopologyCommitter`, `ThermalSolver`, `ThermalSourceLedger`, `QueryPublication`
 
@@ -30,10 +30,14 @@ persistence code under `runtime`.
 
 An enabled positive-power machine report can start the existing dimension runtime
 without a player query. Lit campfires bootstrap through chunk load or the existing
-LevelChunk mixin's ignition callback; server start and the server-side tags-updated
+CampfireBlock mixin's `onPlace` callback; server start and the server-side tags-updated
 event inspect loaded block-entity positions once. Recipe listeners invalidate
 profiles without rebuilding against old tags. Subsequent discovery uses the original bounded queue.
 Inactive/zero-power reports and analytic-only queries do not bootstrap physics.
+The ignition callback is specific to campfires, including LIT state transitions;
+ordinary LevelChunk block writes have no added campfire hook. Forge snapshot
+placement invokes it after acceptance, and the original discovery queue reads
+block-entity positions after placement completes.
 Source bootstrap uses the dimension baseline as the enthalpy reference, avoiding
 biome/chunk reads during chunk attachment; admitted cells still initialize from
 their Page's captured natural temperature.
@@ -112,9 +116,27 @@ aligned target tick, applies phase/wind input, and then settles source energy
 through the target tick against the currently installed topology. Only after
 that settlement may it prepare and commit a topology replacement, so migration
 cannot overwrite energy delivered in the same cut. A normal
-20-tick interval executes one fixed one-second transport step. A larger delayed
-interval executes at most one step, marks that batch time-degraded, and never
-pretends that missing solver steps were processed.
+20-tick interval executes one one-second transport step. A larger delayed interval
+also executes one step, with `dtSeconds = elapsedTicks / 20.0`, so exchange covers
+the same game-time interval as source energy. Air, material and FarField paths
+already support this dt; the ordinary one-second compiled-coefficient fast paths
+remain. Zero-time cuts and unchanged sleeping state do not run transport. There
+is no per-missed-tick loop, accumulated solver debt or new temperature storage.
+
+Coalesced intervals suppress sleep for that cut and emit a DEBUG message from
+`ThermalDimensionEngine`: `Coalesced thermal cut`, dimension generation, batch
+sequence, `elapsedTicks` and actual `transportSeconds`. Ordinary cuts do not build
+this log message. A completed coalesced cut still reports `COMPLETED`: it has
+advanced the full interval, although it is a coarse numerical step.
+
+Source changes remain settled before topology replacement, and the exchange uses
+the resulting topology. A large step does not replay intermediate geometry or
+interleave continuous source injection exactly as many one-second steps would.
+In the two-Air-node 600-second regression, the 20-vs-200-tick source-temperature
+difference fell from 8.26 C to about 0.174 C with identical energy. This is one
+controlled network, not a universal error bound. Latent exchange still stops at
+the world-ACK boundary. See the
+[time-step repair](../../diary/2026-09-16_00-00-26_thermal-elapsed-time-fix.md).
 
 ## Page And Brick Model
 
@@ -138,11 +160,13 @@ lifecycle and inactive slots own no arena cell, fragment, or infrared payload.
 
 After each 20-tick solve, `QueryPublication` computes temperature-hysteretic hot
 masks while performing its existing live-slot write, using reusable Page-slot
-primitive scratch and `REFINE_HIGH_C = 0.125 C` /
-`RELEASE_LOW_C = 0.0625 C`. Air and capacitive-material cells contribute their
-physical temperature residual. A phase reservoir's fixed transition temperature
-is not a physical cell temperature and never contributes by itself; only
-positive stored phase energy marks its Brick hot. The following Page-only pass
+primitive scratch and `FRONTIER_REFINE_HIGH_C = 1.0 C` /
+`FRONTIER_RELEASE_LOW_C = 0.5 C`. These compare absolute temperature deviation
+from the Page's existing natural-temperature baseline, not the difference between
+neighbors. New temperature activity requires at least 1 C; existing activity
+persists at 0.5 C and releases below it. Air and material cells contribute their
+physical temperature residual. A body with phase progress or a pending material
+transition request keeps its Brick hot. The following Page-only pass
 uses six static bit masks/shifts to find same-Page
 nonresident faces and active cross-Page boundary faces, then reads only their
 existing regular/mixed face topology. A cross-Page face keeps its admitted guard
@@ -153,6 +177,9 @@ no completion payload. A newly committed Page lifecycle is the one exception:
 one reusable primitive admission list forces its current absolute mask to be
 published once even when the section's numeric mask matches the previous
 lifecycle. The list is cleared by that completion and adds no steady Page scan.
+`HotMaskScratch.begin` swaps its two buffers at the start of the next publication;
+between cuts, `hotMask` continues to expose the latest completed mask to routing
+and residency consumers. Residency collection does not swap it back to an older cut.
 
 An unavailable target chunk leaves its absolute request parked outside the
 admission queues. The existing `pagesByChunk` lookup and `ChunkEvent.Load`
@@ -177,6 +204,14 @@ zero desired residency. The main thread then checkpoints and retires the whole
 Page transactionally. Bricks are not individually evicted, avoiding enthalpy
 migration and threshold chatter.
 
+`WorkerPageStore.collectMaterialFrontier` maintains the owner's material-contact
+request even when the neighbor is already resident. It reads committed neighbor
+signatures when present and existing halo signatures otherwise, using the same
+material/opposite-face conditions. This prevents an otherwise cold neighbor from
+retiring and being requested again on the next cut. The owner losing thermal
+interest still removes that incoming reason; this does not create a new material
+heat origin or bypass the two-layer material-contact rule.
+
 `ThermalPageHandle` is only cross-thread identity, live geometry revision,
 resync requirement, and a volatile `PagePublication`. `PageSignatures` stores a
 flat directory of `64` immutable Brick payloads. Uniform Bricks reuse one
@@ -193,15 +228,17 @@ material profile IDs. Unknown dynamic shapes and partial collision shapes use
 75; full solids use 0 and ordinary Air uses 100. No block-internal microcells,
 void geometry, or material contact-pattern catalog remain.
 
-`BlockBrickLayout` maps 64 whole blocks to nodes with a byte mapping and one
-member mask per node. Only connected material-free V100 blocks merge. V75
-blocks retain separate nodes and exchange resistance; a full-Air Brick still
-uses one node with no mixed layout. Material-bearing transport blocks own one
-temperature, not separate interior Air and material temperatures. Exposed area
-counts external block faces adjacent to transport blocks. Material capacity is
-`surfaceCapacityJPerK * exposedArea`; a transport block without exposed material
-capacity uses the existing Air reference capacity. Ventilation does not scale
-capacity. Solid material nodes exist only while exposed.
+`BlockBrickLayout` maps 64 whole blocks to actual Air regions followed by material
+bodies. Connected material-free V100 Air members merge; full Air uses one node
+without a layout. A material block owns one H and a fixed-capacity law regardless
+of exposure. Its ventilation contributes geometric routes, never gap-Air capacity
+or a second temperature. The ordinary Brick total remains at most 64 nodes.
+
+`MinecraftThermalProfiles.prepare` selects face conductance from the material
+category (earth 1.0 W/K, masonry 1.4 W/K), then applies an explicit recipe
+`conductance_w_per_k` if present. Phase capability does not override conductance;
+the former common `phaseFaceConductanceWPerK` setting is removed. Energy laws,
+capacities and latent endpoints remain independent of this contact parameter.
 
 `WorkerPageStore` holds one stable 64-Brick worker directory and replaces only
 changed immutable Brick entries. `WorkerBrickTopology` retains cell/query and
@@ -214,15 +251,24 @@ released only after source and solver references have been rebound.
 
 Mixed transport nodes occupy consecutive arena slots, so their layout index is
 `slot - supportRef`; there is no separate per-slot component-index array.
-Worker phase metadata retains the reservoir slot list and published candidates;
+Worker phase metadata retains the phase-capable material slot list and published candidates;
 migration reads profile identity from the arena within the same Brick/lifecycle,
-without a second coordinate/profile directory. Neighbor-only layout dependency
-checks compare only outward block faces and sum exposure changes per block.
+without a second coordinate/profile directory. Neighbor-only geometry changes
+recompile contact eligibility; the old exposure-dependent capacity rebuild is removed.
 Shared-face compilation resolves each neighbor Page/cut once before its 16 pairs;
 sky faces read the already selected owner cut. These changes reduce duplicate
 storage and lookups without adding persistent caches.
 
 ## Mutation Capture
+
+Both existing `setBlockState` bridges now use MixinExtras `ModifyReturnValue`;
+they preserve the return value and do not allocate callback containers. The Section
+bridge skips unowned/no-op writes locally; the Chunk bridge skips client/no-op writes.
+They are not merged: the Chunk entry also maintains stored material without an active
+SectionOwner. Ordinary untracked positions do not classify material changes or look
+up natural temperature. Material checkpoint journal entries contain three ints
+(position, next state, cause) plus a revision; pruning is limited to once per touched
+Section/tick instead of rescanning on every write.
 
 `MinecraftPageManager.SectionOwner` is the only mutation inbox. The mixin path
 records primitive section/local-position bits plus one cut-level source-relevant
@@ -335,9 +381,9 @@ The physical witness revision table and static coverage index share the
 
 ## Topology Preparation And Commit
 
-`TopologyPlan` collects changed Pages, sparse centers, environment deltas, and
-the exact one-Brick dependency closure. `BrickTopologyCompiler` produces local
-Air, material, phase, and exposed FarField payloads using worker-owned reusable
+`TopologyPlan` collects changed Pages, sparse centers, environment deltas, local
+contact dependencies and affected passage components. `BrickTopologyCompiler` produces
+direct Air/material contacts, indirect routed contacts and exposed FarField payloads using worker-owned reusable
 scratch. `MaterialEdgeCompiler` groups changed contributions by packed edge key
 in one pass and rebuilds only affected canonical owner executions. Reusable
 named builders group material-contact and prepared-transaction arrays before
@@ -366,14 +412,14 @@ multiplied by p. The solver continues to use exponential pair exchange.
 
 `MaterialBoundaryRegistry` stores dense profile IDs in `1..N` list order.
 There are no retained microcell contact lists or duplicate material-pole
-coordinate directories. Neighbor exposure changes are collected from final
-signature/residency cuts before layouts are rebuilt; changed face count can
-change capacity even when the same material remains exposed. Fragment recovery
+coordinate directories. Neighbor geometry changes update contact edges and the
+two-layer material range; they do not alter an existing body's capacity. Fragment recovery
 uses `cellsResolved && compiled.resolved()` and marks source bindings dirty
 when resolved status changes.
 
 Preparation reserves replacement spans as arena `RESERVED` cells and may grow
-backing arrays. Reserved cells hold the exact next metadata and migrated
+backing arrays. `ThermalCellArena.stageBrickCells` returns `ArenaSpan` directly;
+the former single-field `BrickAllocation` wrapper is removed. Reserved cells hold the exact next metadata and migrated
 enthalpy needed by local fragment compilation, but are absent from `isLive`,
 `liveCellCount`, `highWaterMark`, live-slot iteration, solver state, and query
 publication. A failed prepare discards only its reserved spans and restores the
@@ -395,9 +441,9 @@ in the production profile), so a valid replacement is not rejected merely
 because its old span is still installed.
 
 `TopologyCommitter` validates every structural version, Page owner, reserved
-span, and phase-reservoir identity before its first authoritative write. It
+span, and phase-material identity before its first authoritative write. It
 then promotes all exact reserved spans, installs solver fragments/material
-indexes, Page state, phase reservoir index, topology version, and Page
+indexes, Page state, phase-material index, topology version, and Page
 publication. The worker rebinds exact dirty source sections at the already
 settled cut. Solver/source references are checked once before the old spans are
 released through the arena's single ownership check. No allocation, sort,
@@ -418,24 +464,59 @@ backed off for `200` ticks instead of repeating a full rebuild every cut.
 
 `ThermalCellArena` is primitive SoA storage for enthalpy `H`, capacity `C`,
 inverse capacity `1/C`, identity, and recyclable spans. One arena-owned
-`ThermalPhaseReservoirStore` holds phase metadata/request arrays by the same
-slot, while `ThermalBrickCellLayout` is the reusable compilation input rather
-than an arena responsibility. No per-cell phase or layout object is created.
-Normal fixed-step coefficients are compiled once:
+`ThermalPhaseRequestStore` holds only request sequence and state by the same
+slot; it has no latent or reserved energy arrays. `ThermalBrickCellLayout` is
+the reusable compilation input. Every material body references one shared
+`MaterialThermalLaw`; temperature and phase progress derive from its single H.
+Normal zero-offset fixed-capacity coefficients are compiled once:
 
 ```text
 pair:     q = Kpair * (H_a / C_a - H_b / C_b)
 boundary: q = Kboundary * (T_boundary - T_reference - H / C)
 ```
 
-Air pairs always use the production buoyancy kernel. Phase contacts, FarField
-wind changes, and abnormal timing use the generic inverse-capacity kernel.
+Direct Air pairs store the actual contact direction in one byte:
+`HORIZONTAL`, `FIRST_BELOW`, or `SECOND_BELOW`. `BrickTopologyCompiler` assigns
+direction after ordering arena endpoints and aggregates different directions
+separately. Horizontal pairs use G directly; only vertical pairs call
+`BuoyancyConductance`, retaining `clamp(1 + (T_lower - T_upper) / 10, 0.25, 4)`
+with temperatures in C and differences in K. Region centroids still determine
+geometric distances, but no longer decide buoyancy direction. The old two Y
+arrays and height-based direction API were removed. Direction payload is 1 byte
+per pair instead of 16 bytes; a multi-direction pair can produce several operations,
+so that per-pair saving is not a whole-heap percentage.
+
+`AirMixingRegion` is one reusable source-position scratch per compiler. A direct
+unit Air face gets 4 times its original G when its center lies within 4 blocks
+of any enabled positive-power source's positive-share `AIR_FACE` outlet center.
+Overlapping regions form a union. A full-Air Brick face counts its covered unit
+faces (k of 16), using effective area `16 + 3*k`; it is not classified solely by
+the large face's center. With no nearby source the original 16-area fast path
+remains. Material exchange, indirect ventilation routes, FarField coefficients,
+and static radiation are not multiplied. No extra Air node or query interpolation
+is introduced; coarse-region spatial error remains an explicit approximation.
+
+`WorkerPhysicalSourceBindings.collectMixingSources` reuses its Section index and
+visits each outlet only in that outlet's indexed Section. The ledger's
+`suppliesPower` updates one cached emitting flag per descriptor on source events.
+Register, remove, move, enable/disable, and zero/nonzero power changes mark only
+nearby resident world-Brick positions in one reusable pending set. Positive power
+adjustments do not change mixing geometry. `TopologyPlan.prepare` consumes those
+positions as fragment-only changes; no cell replacement or H migration is needed.
+The engine checks this pending set even for source-only cuts and clears it only
+after commit. Work-limited attempts keep it for a later cut. Removed source power
+stops through the normal ledger immediately; a budget-delayed coefficient update
+can temporarily retain the previous mixing G on otherwise valid geometry.
+
+Source lookup and face weighting happen during fragment construction, not in the
+steady solver or player query. Phase contacts, FarField wind changes, and abnormal
+timing continue to use their existing exchange paths.
 Operation payloads store arena slots without duplicate endpoint generations;
 the topology transaction proves their ownership before old spans can be
 released. A FarField fragment stores one owner Page and one lazy wind
 coefficient generation rather than repeating them per boundary.
 `ThermalSolver` keeps one execution
-presence bitset per operation kind, so material/phase/FarField passes do not
+presence bitset per operation kind, so material/FarField passes do not
 walk fragments that cannot contain that operation. Forward and reverse order
 remain deterministic and are selected directly from the batch sequence.
 
@@ -496,20 +577,66 @@ top-layer Brick; other columns remain unknown value `16`. Its Page builders are 
 by `DimensionInputAccumulator`. Wind updates carry one scalar conductance scale;
 FarField coefficients refresh lazily once per affected fragment.
 
-Phase reservoirs retain candidate masks in the Brick publication. Worker phase
-requests contain the arena slot, lifecycle generation, Brick origin, profile,
-candidate bit, and request sequence. Current production profiles apply only the
-compiled `StateTransitionData` heating recipe and respect random-tick speed.
-Air above the transition temperature stores energy in the reservoir. Air below
-that temperature receives only unreserved stored energy back; energy reserved
-by an outstanding request remains unavailable until its ACK. This lets partial
-live phase progress cool to zero instead of retaining a Page indefinitely. The
-existing quiet-sleep residual treats that reverse contact as active until the
-available reservoir energy is exhausted; it adds no solver pass.
-Main-thread mutation ACKs are transferred in the next 20-tick cut and are
-accepted only for the matching live reservoir.
-`ownsGameplayHeatingTransition` consults the precompiled phase-profile index and
-does not reconstruct `StateTransitionData.HeatingTransition` on random ticks.
+Phase-capable bodies retain only the worker's phase-slot list; the unused published
+profile/mask candidate arrays have been removed. Worker requests name the exact block, arena slot,
+Page lifecycle, material profile, branch, target state and request sequence.
+`PhaseTransitionRuntime` indexes phase-capable bodies by block position using
+the existing fastutil library. `ThermalSolver` has no separate `PhaseContacts`
+payload or fixed-threshold phase pass: material contacts use the ordinary fast
+kernel or bounded `MaterialEnthalpyExchange` segments. Exchange stops at an ACK
+boundary; ACK itself consumes no energy. Replacing the world block installs the
+target law over the same H. Main-thread mutation continues to respect random-tick
+speed and recipe/biome eligibility. Explicit gameplay phase intents pass through
+the worker and record the external energy change before requesting mutation.
+`tryMaterialPhaseAtRandomTick` uses existing Section ownership and scalar stored
+records. Its `GAMEPLAY / DEFERRED / CHANGED` result distinguishes natural or
+explicit recipe gameplay from owned phase energy and successful world mutation.
+The facade delegates to `MinecraftPhaseController.tryAtRandomTick`, which owns
+phase rules and submission. `DormantChunkThermalState.projectMaterial` owns stored
+projection/law adaptation, while `MinecraftGameplayFields.guaranteedFloor` owns
+field sampling. These details are not implemented in `MinecraftThermalInput`.
+`MinecraftMaterialLawCompiler` now makes two passes over explicit data: C/O references,
+then heating/cooling endpoints. There are no native-material branches or inferred phase
+slots. Submission constraints and effects are two shared reference arrays per profile
+snapshot, with no new per-node or saved-state allocation. See
+[material data](heat-production-and-network.md#material-transition-data).
+Water does not add block random-tick eligibility. `StateTransitionData.hasRandomTransitions`
+also excludes it from generic phase dispatch in otherwise ticking Sections. Original
+chunk surface sampling (default one column per 20 ticks) calls the shared controller;
+the sampling count does not grow with ocean depth. Active water energy/phase requests
+still use their existing worker path. No per-water state is added for sampling.
+Vanilla `LevelChunkSection.setBlockState` counts nonempty fluids in its incremental
+fluid counter, whereas `recalcBlockCounts` counts randomly ticking fluids. Consequently
+a mutated pure-water Section can still be sampled by vanilla eligibility. This behavior
+is preserved; the mod no longer adds water block eligibility or per-sample water freezing.
+An owned but deferred transition cannot fall through to an environmental threshold;
+unrelated native random behavior, such as lava ignition, still runs.
+
+## Geometry Changes While Rebuilding
+
+`AirRouteCompiler` expands at most 4096 route visits per 20-tick cut; uncompleted
+work and dirty fragments survive to the next cut. `routeVisitsLastCut()` reports
+zero when stable. This is a work counter, not a hard wall-clock deadline: final
+edge preparation and publication also cost time.
+
+`ThermalFragment.RoutedContacts` retains a shared `AirRouteValidity` for each
+indirect connection. Retirement disables that connection immediately in the worker
+cut; a new route becomes active only after matching geometry publication commits.
+These contacts use the existing conservative exchange kernels without buoyancy.
+Independent parallel passages retain independent validity. There is no route H/T.
+
+While a route is invalid, its Q is zero and endpoint energy remains stored; other
+valid contacts continue. No historical heat transfer is replayed after rebuilding.
+A topology budget refusal also rebinds affected source ports and requeues halo
+captures. Source power that cannot be delivered uses the existing loss/unaccepted
+accounting rather than an accumulated heat debt.
+
+`ThermalCellArena.pendingMaterialLayouts` holds one bit per arena capacity slot.
+Changed material awaiting a replacement layout stops contact exchange, source
+acceptance and new phase requests. Its old H remains available to checkpoint
+projection; public world consumers still require matching geometry identity.
+Releasing the old span clears the bit. This is an explicit temporary simulation
+pause, not an estimate of exchange through the new geometry.
 
 ## Query Publication
 
@@ -522,97 +649,179 @@ generations and temperature; topology generation and sample tick remain in the
 publication envelope. It never counts then rewrites, retains slot keys, scans
 arena holes, or binary-searches a sorted cell list.
 
-Infrared tracking reuses that same live-slot write. Its fixed memory is admitted
-with the dimension publication, but the actual Page/Brick epoch and pending-mask
-arrays are allocated only on the dimension's first infrared request. Thereafter
-a dimension keeps one
-nonnegative `infraredEpoch`, `int[maximumPages] pageChangeEpochs`, and
-`int[maximumPages * 64] brickChangeEpochs`. While the 80-tick activity window is
-open, Air temperatures are compared at 0.25degC quantization inside the existing
-live-slot pass. Temperature and exact topology Brick masks from one successful
-publication atomically stamp one epoch. Inactive publication pays one deadline
-branch and performs no infrared comparison. Reactivation advances one epoch and
-fills both arrays so an older client rebuilds without a server-side observer.
+Infrared tracking reuses the live-slot publication pass. `BlockBrickLayout` has
+one immutable `long surfaceNodeMask`, shared by worker topology and
+`PagePublication`. It covers all material bodies, including phase-capable bodies.
+`ThermalCellArena.isSurfaceCell` works for RESERVED and LIVE allocations without
+changing Air/source eligibility, mixed centers, cell kinds, or per-slot arrays.
+Full-Air Bricks still have one node and no layout. A material-only Brick publishes
+its actual `firstSlot` and arena generation; Air consumers additionally require
+`transportNodeCount > 0`. The worker's internal `coverageSlot` stays Air-only.
 
-One cut-local `long[maximumPages] pendingInfraredBrickMasks` joins topology and
-temperature changes before that commit; it is not history or another
-temperature authority. The fixed reservation is exactly `292 bytes/Page`: one
-Page plus 64 Brick ints, the pending mask, and the reusable
-natural-temperature/previous-hot/next-hot arrays used by `HotMaskScratch`. At
-`maximumPages = 3,200`, Page/Brick epochs alone use `832,000 bytes` (about
-`0.794 MiB`). Fixed Page backing and geometrically growing cell buffers hold
-separate reservations in the same dimension/server memory budget.
+The first request lazily allocates Page/Brick epochs and pending masks. During the
+80-tick activity window, only surface temperatures are compared at 0.25°C in the
+existing write pass. Exact topology masks and temperature changes stamp one epoch
+atomically. Reactivation advances an epoch and fills both arrays. No second solver
+sweep or server observer cache is added. The existing fixed reservation remains
+292 bytes/Page, including `HotMaskScratch`; Page/Brick epochs at 3,200 Pages use
+832,000 bytes. Each existing block layout adds eight bytes of numeric payload.
 
-`InfraredReadCursor` fixes one buffer, slot generations, Page/Brick epochs,
-sample tick, topology generation, and publication version for a complete
-response. Main-thread encoding validates it once after staging. Unchanged Pages
-cost one Page-epoch comparison; only a changed Page scans its 64 Brick epochs.
-Mixed Bricks read and quantize each transport node once, then expand to 64 blocks
-by `BlockBrickLayout.transportAt`, without linear slot deduplication or an
-`int[64]` slot scratch. Regular Bricks read one slot and write UNIFORM directly, while known
-invalid Bricks omit or write INVALID without filling/scanning the mixed scratch.
-Page geometry gaps use
-`ThermalPageHandle.lastPublication`; retirement alone removes presence.
-`PagePublication.workerPageSlot` remains server-internal.
+`MinecraftThermalInput.InfraredCapture` is one lazy main-thread scratch. Existing
+handles are gathered with `MinecraftPageManager.pagesByChunk`; current layouts,
+slot generations, topology generations and the coherent `InfraredReadCursor`
+select readable material Pages. Phase-capable bodies use their material law;
+Air and dormant Air temperatures do not become material measurements.
+For nonresident Bricks it also reads existing material records from loaded chunks.
+Live resolved Bricks take precedence, and an updating live Page suppresses old
+stored records until its geometry is coherent. `MaterialSectionState.read` is
+shared with the thermometer, so saved phase energy uses the same temperature law.
+Unchanged non-field Pages use Page/Brick epochs. Each eligible node is read once;
+field Bricks expand raw double values before composition and quantize only the
+final result, while non-field Bricks keep the quantized-node fast path.
 
-Infrared display composition now happens in
-`MinecraftThermalInput.InfraredCapture`, a single lazily allocated server-thread
-scratch shared by display requests. It can read fields and dormant data without
-constructing a physical runtime. Physical-only Pages retain the epoch path above.
-The client echoes `knownRefreshPages` and receives `refreshPages`: twelve longs
-(96 bytes) identify display Pages to regenerate. They are neither field definitions
-nor physical residency. Each response rebuilds the union of previous refresh Pages
-and current field intersections, resolving each physical transport node once per
-Brick, composing fields on the server and using the original Brick temperature codec.
-An unavailable physical read discards that Page's staged records and carries its
-refresh bit forward. An incomplete full capture returns no response, so the client
-keeps its previous complete texture until its full retry succeeds. The same rule
-covers an unreadable global physical cut when published Pages exist, even without
-analytic refresh bits. With no physical Pages, field-only capture can still complete.
-Borrowed Page handles and the cursor's publication/array references are released after each
-request; only reusable scratch remains. Unaffected regular/invalid Bricks use direct
-UNIFORM/INVALID writes without expanding and requantizing 64 equal values.
+Stored-material discovery checks at most 81 already-loaded chunks and nine vertical
+Sections each. `storedPresence` is a 96-byte work mask; it does not own material
+state. There are no `storedPages` or `storedRevisions` window arrays: the capture
+reads Section records/revisions directly from 81 reused chunk references. One
+reused 4096-double buffer expands a changed stored Section before the existing
+Brick encoding and field composition. Added capture scratch is about 33 KiB,
+shared across observers; chunk references are cleared when the capture returns.
 
-Ordinary Brick records carry final physical/analytic/invalid temperatures. Only
-genuine dormant-only final Bricks use the existing dormant section records; those
-follow ordinary records so field removal restores the original ownership correctly.
-Analytic output never uses dormant ownership or enters the solver/checkpoint.
-Natural temperature is evaluated only where composition needs it, using loaded
-world data; biome-neighbor availability is checked before calling the biome zoom.
-For an aligned Brick, the union of Minecraft 1.20.1's possible biome-zoom samples
-is a 3³ quart lattice. When all those holders agree, climate is also common to the
-Brick's Chunk, so natural temperature is calculated once per occupied Y layer.
-The already expanded node scratch holds these four values. Mixed-biome Bricks
-continue to use the original per-position natural calculation; this is an exact
-local reuse, not a coarse biome or temperature approximation.
+`DormantChunkThermalState.materialRevision` advances when material content changes
+or a refreshed natural-temperature cache invalidates the previous display. Its lazy long array costs eight bytes per Section of a chunk with material
+history (192 bytes for a typical 24-Section chunk, excluding array headers).
+The existing chunk attachment holds another eight-byte revision for replacement,
+clearing and load, and each immutable material snapshot caches an eight-byte Brick
+mask. These revisions are transient and use one process-wide sequence.
+`storedEpoch` adds one VarLong, and `storedSampleTick` adds one long, to each
+request/response header. The client commits both only on LAST. Stored fallback
+compares the current and previous committed tick's final quantized material
+temperatures, sending only changed Bricks. Changes to natural temperature or law
+invalidate the old prediction through the existing revisions. The scratch buffer
+also holds current values for encoding; it is not expanded a second time.
+Same-age records reuse local sensible fractions, without a persistent factor table.
+This supports time-only cooling, partial-live Pages and deletion without per-observer
+server caches or old-protocol readers. Observer requests still incur separate CPU/network work.
 
-`InfraredBrickCodec.Builder.beginPage` reserves space for a complete Page before
-encoding it. Responses exceeding one buffer are split at these boundaries into
-parts of at most 960 KiB, each retaining the original Brick codec. The existing
-response flag byte carries FULL/FIRST/LAST. TCP supplies ordering, while requestId
-supplies request identity. The client adds one receiving boolean and decodes parts
-into the existing CPU mirror; only LAST advances its baseline/origin and uploads
-the texture. Timed full retries only run while waiting for a first part; an accepted
-multipart response finishes without the request deadline discarding its later parts.
-A window move still immediately starts a new full request. Empty-texture
-initialization waits until receiving finishes, preserving any first part that arrives
-before the first rendered frame. The existing mirror handles staging without a second
-temperature mirror, client field interpreter, or server observer cache.
-Delta requests add the 96-byte refresh mask; each response part carries that same
-mask, and full requests omit it. Large captures temporarily own their encoded byte
-parts until sent, rather than one enlarged persistent buffer. Page-granularity
-regeneration can still resend unchanged Bricks and its cost grows with field area.
-Brick palette scanning stops at 36 distinct temperatures: INDEXED then needs at
-least 130 bytes versus RAW's 129 (excluding their shared address), so the existing
-RAW encoder writes the original 64 values without further dictionary searches.
-When all 729 display Pages are dirty, the client
-uses the existing full texture upload instead of copying and uploading each Page;
-partial updates retain the original Page upload path, and multipart responses
-still upload only after LAST.
+`MinecraftGameplayFields.existing` supplies the original ordered analytic fields.
+Window/Page/Brick intersections prune candidates, then exact block-center contains
+checks feed the reusable `ThermalAnalyticFieldIndex.Sample`. The generator remains
+FLOOR_FROM_NATURAL, including when a colder material value exists. Only an actual
+field hit requiring natural/base evaluates `WorldTemperature.naturalAir`; override
+skips it. Necessary loaded-biome neighbors are prepared lazily once per Page.
+Proven uniform-biome Bricks reuse at most four occupied Y-layer natural values;
+mixed biomes use exact point queries. No full-window natural grid is built, no
+chunks are loaded, and display reads never start/admit/retain physical simulation.
 
+The client echoes a field-Page footprint (empty or twelve longs), independent of
+material presence and epoch. Each poll rebuilds the union of previous and current
+field footprints. This handles field edits, natural changes and removal without a
+server observer/history/cache or new field revisions. A Page is encoded only once.
+Field deletion restores current material or INVALID, never the previous composed
+value. The client no longer clears display by material-presence XOR: every delta,
+including added/removed Pages, sends explicit INVALID when needed. Only full may
+omit invalid Bricks after clearing the mirror. Local geometry invalidation does not
+erase material temperatures. Infrared uses the last immutable Page publication and
+the coherent query cut, excluding changed bodies through the existing mutation journal.
+`collectMaterialChangesSince` expands the journal once per stale Page into one shared
+64-long (512-byte) scratch; only affected Bricks need an extra delta. Unchanged bodies
+in the same Brick/Page remain readable. Full Section replacement excludes every old
+body. `sampleMaterial` uses the same identity rule; Air queries retain current-geometry
+requirements. No additional temperature history or observer cache is created.
+
+Two complete read attempts handle publication exchange. A concurrent version/slot/Page
+mismatch retries; if both attempts conflict, no response is sent and the client's last
+committed baseline remains visible until its next normal request. Read contention is
+never serialized as INVALID removal. A stably invalid/older-than-40-tick cut still
+yields a complete field-only display. Material readability
+transitions force full. Subsequent unchanged unreadable state permits delta and
+can send nothing when no fields remain. Generation/center changes, reactivation,
+epoch reset and explicit client invalidation also force full. All borrowed handles
+and field/world references are cleared after capture. The extra server arrays are
+one bounded shared scratch, never per-viewer temperatures.
+
+`InfraredBrickCodec` retains INVALID/UNIFORM/INDEXED/RAW and exits palette scanning
+at 36 distinct values. Page-boundary parts stay below 960 KiB including the existing
+2,048-byte header reserve. Packets carry FULL/FIRST/LAST/READABLE; READABLE describes
+physical input, not permission to display. Each part carries the same current field
+footprint; full requests omit their old field footprint. LAST alone installs both
+masks, generation, readability, epoch and origin, then uploads the existing mirror.
+The previous GPU image remains at its committed origin during staging. Field-only
+full establishes a valid display baseline. All-Page deltas use the full upload;
+partial deltas reuse one 8 KiB scratch. No background packet, background texture,
+dormant ownership map or second material mirror exists.
+
+`AFTER_LEVEL` directly blends the infrared result into the borrowed main color
+attachment, preserving destination alpha and the original 0.43 tint/scan animation.
+The RGBA8 intermediate, copy draw and all depth-based ownership heuristics are removed.
+Depth reconstruction serves scan distance, sky rejection and the local display coordinate
+of non-terrain occluders. Those pixels sample the existing 144³ display texture at their
+own visible position, reusing analytic fields and the blue missing-value base. This is
+an environment display approximation, not synchronized Air or entity body temperature.
+Terrain still uses its exact vertex owner; no depth-based block-ownership guess is restored.
+
+`BlockOwnerScope` carries the actual model block through existing mesh emission.
+`OwnedChunkVertexType` delegates base encoding: compact stays at 20 bytes (two light
+bytes plus a separate 16-bit owner); high precision preserves the original 28 bytes
+and adds four bytes. Four production bridges supply the renderer factory, GPU arena
+high-precision stride, custom attribute bindings and exception-safe model scope. The original static formats,
+ordinary shader loader, meshing, culling, sorting and batch submission remain owned
+by Embeddium. No per-block scope object, duplicate mesh or world scan is introduced.
+
+`InfraredChunkRenderer` uses normal superclass program caching while IR is inactive;
+capture programs are created lazily and cached per original pass/fog/type options.
+SOLID/CUTOUT capture uses a vertex-stage integer fetch from the committed 144³ image
+and a flat integer output. Main color and R16I share the same original fragment
+discard and depth test. `InfraredChunkShaderInterface.setRegionOffset` inverts the
+backend's actual quantized `CameraTransform` with
+`round(offset + camera.frac) + camera.int - textureOrigin`; no large float world
+coordinate or depth-derived block index is used.
+
+`InfraredSurfaceTarget` owns one screen-size R16I image, a terrain depth snapshot and two FBOs. Capture borrows
+main color/depth; final blending attaches color only to avoid depth feedback. Immediately
+after the original CUTOUT draw, `captureTerrainDepth` copies the actual depth storage
+at its original precision. Final blending compares the snapshot and main depth exactly:
+later depth writers use their own environment display position, never the background
+terrain heat image. Neither terrain nor entity geometry is submitted again.
+An MRT depth-output replacement was tested and rejected for production: D24 sampling
+does not exactly match raw fragment depth or the tested quantization conversions.
+Even on D32F, where raw MRT matches, measured savings at one layer become a regression
+at four overlapping layers; storage stays 6P. `verifyNativeDepth` preserves native-depth
+equality coverage. Qualification and controlled timing data are in the IR plan.
+The first active terrain pass clears only temperature to INVALID; subsequent passes
+retain it, including when transparency sorting is disabled. An empty visited pass
+also starts a fresh INVALID image, preventing previous-frame silhouettes. Shrink-to-zero
+releases screen objects; reset releases owned resources, never borrowed attachments.
+Final blending restores viewport, scissor, depth, blend, the previous GL program and
+texture/framebuffer state. Restoring the program preserves `ShaderInstance.lastProgramId`:
+the same vanilla shader can be applied again without leaving GL program 0 bound.
+The temporary program and its restoration both use raw GL, leaving Oculus's separate
+bind cache unchanged; a cached `GlStateManager._glUseProgram` can skip the restoration.
+For D24/D32F the screen-image budget is 2P temperature + approximately 4P depth bytes,
+so total 6P; the previous 2P implementation omitted entity occlusion. The 144³ image/mirror
+is unchanged. The extra GPU copy occurs only during active IR, and screen objects are
+released after shrink-to-zero. Environment tint adds at most one 3D lookup per occluding
+fragment, one camera-to-window uniform, no server queries/wire fields/entity cache.
+There is one extra integer terrain output and one final fullscreen draw, no extra terrain
+draw or CPU work proportional to screen pixels/visible blocks in steady frames.
+Owner encoding still occurs during ordinary mesh rebuilds while IR is off.
+
+The strict production-encoder/GLSL test covers 8,640 scenes and 353,123,074 classified
+pixels with zero ownership errors for both layouts and D24/D32F. Real backend integration,
+performance evidence and remaining acceptance work are recorded in the
+[exact surface capture plan](../../plans/2026-09-13_17-18-00_infrared-exact-surface-capture.md).
+Without fields, unchanged material windows send no S2C and perform no display
+natural queries. With fields, work and wire grow with their previous/current Page
+area; stable fields are recomposed every poll, not promised zero traffic. This is
+the original display-composition tradeoff without per-observer state. See
+[world temperature](world-climate-and-temperature.md) for semantics and
+[network lifecycle](data-lifecycle-and-integration.md#network-and-consumers)
+for baseline and reset rules.
 The underlying `WorldTemperature.biome` cache uses primitive `getOrDefault` with
 an explicit missing value. A legitimate zero-degree biome contribution is cached
 like other values and is refreshed by the existing `WorldTemperature.clear` path.
+`WorldTemperature.dimension` returns the existing Level cache result directly;
+the default config is read only by a cache-miss fallback or a non-Level reader.
 
 Gameplay reads a Page's immutable current publication, resolves the local Air
 point, reads the expected arena slot generation, and verifies that the same Page
@@ -628,50 +837,88 @@ continues directly to natural fallback.
 
 `DormantChunkThermalState` is a lazy `LevelChunk` attachment. Async
 `ChunkDataEvent.Load` only validates and decodes primitive NBT. Main-thread
-`ChunkEvent.Load` consumes the disk-only `sourceSustained` bit once, applies one
-factor to each complete Brick mean/spatial-mask vector, rebases to the load tick,
-and clears the bit before random ticks. Normal queries and worker admission never
-read that support bit.
+`ChunkEvent.Load` attaches the state without advancing it. There is no source-support
+bit or unloaded-source heat exemption. Neither ordinary load nor serialization
+integrates an offline solver or forces a thermal Page into residency.
 
 Stored temperature uses signed `1/16 C` residuals from section-center
-`WorldTemperature.naturalAir`. Format 2 stores a Brick mean weighted by represented
+`WorldTemperature.naturalAir`. The Air payload stores a Brick mean weighted by represented
 whole blocks, plus optional member-mask/residual entries when nodes differ after
 quantization. All exact entries are retained only if packed residuals and masks
 together fit the 640-byte section numeric budget; otherwise only means remain.
 One-node or equal-residual Bricks need no exact entries. Restore fills 64 block
 temperatures from the mean, overlays stored masks, and aggregates into the new
-layout. This is spatial temperature approximation, not offline enthalpy
-conservation; no old-format reader is retained. Phase latent energy is not saved.
+layout. `BrickMigrationKernel` restores this payload only into actual Air.
+Checkpoint format 4 stores the Air capture's natural baseline, and exact material
+H, branch, BlockState/law and sampling ticks in `MaterialSectionState`. Material
+records do not use Air quantization, mean compression or the 640-byte Air budget.
+Only v4 is read; older thermal checkpoints are not restored. World blocks are not
+removed by this format change. Air history remains a spatial temperature approximation.
+
+`DormantThermalCooling` is a pure, allocation-free projection into a caller-owned
+sample. For a sensible state, `T=N+(T0-N)*exp(-lambda*dt)` with
+`lambda=ln(2)/halfLifeSeconds`, `dt=max(0,t-t0)/20` seconds, and N the current
+Section-center `WorldTemperature.naturalAir`. Air reconstructs T0 from its saved
+natural baseline plus the 1/16 C residual; changing N no longer directly shifts T0.
+Material follows `dH/dt=lambda*C*(N-T(H,branch))`, preserving its latent plateau.
+The plateau has constant heat flux and zero flux when N equals its temperature.
+Only a bounded number of analytic segments is evaluated, regardless of elapsed time.
+
+This is a common dormant half-life, not geometry-dependent physical cooling:
+ordinary Air and material lose the same fraction of temperature difference.
+Current N approximates the whole unsolved interval; there is no weather history.
+Server-stopped wall time is excluded. Current half-life settings reinterpret an
+unsettled interval on profile/config reload. Project using the saved law before
+adapting to changed law parameters. Reads do not rewrite H, tick, or chunk NBT.
+
+Same-age material snapshots hold one long tick. Partial edits lazily allocate a
+long per record so editing one block cannot reset another's age; merge carries each
+record's tick and uses a scalar again for uniform results. The worst additional
+timestamp payload is 8 bytes/record (32 KiB for 4096 records), plus the scalar,
+array/object overhead and any simultaneously retained COW copies. No scheduler or
+candidate bitset is added. `MutableMaterialSample` keeps explicit STORED provenance
+because both live and stored samples now have valid timestamps.
+
+Chunk-owned material editing uses `MaterialSectionState.Editor`: the first write
+after sharing a snapshot forks data, subsequent writes reuse it, and deletions
+compact when publishing a new snapshot. Palette reference counts are allocated
+only for edited Sections. Metadata and scalar reads do not freeze the editor.
+This avoids O(N) array copies for every mutation while preserving immutable worker,
+checkpoint and serialization inputs. It is not zero-cost in all cases: the first
+write after publication and deletion compaction still cost O(N). In the controlled
+4096-record repeated-block-write test, 1024 measured edits after warm-up fell from
+53,344 heap bytes/call to 0 and from 12.734 to 1.050 microseconds/call median;
+this is a mutation fixture, not a whole-server tick benchmark.
 
 Retirement captures one coherent `PagePublication`/`QueryPublication.sampleTick`
 before clearing the handle. Save, unload, stop, recipe reload, and terminal
-worker replacement reuse the same Page-local capture. Save/unload refresh the
-disk-only support bit from at most the target section and six face neighbors
-while `PhysicalSourceSpatialIndex` is still live. Campfire, generator, radiator,
-and fountain qualify; `IMPULSE` does not. Existing warm Brick vectors may be
-held across an unloaded interval, but no offline solver or source integration
-adds heat.
+worker replacement reuse the same Page-local capture. Partial captures preserve
+unrepresented material records and their clocks. Retained Air is merged at the
+capture cut; repeated capture at the same sample tick reuses its natural baseline
+to prevent repeated quantization drift. Saving otherwise serializes the anchor
+without rebasing. `DormantMaterialCut` carries immutable records plus a main-thread
+tick/N/rate cut; only newly restored nodes project it, while live migration retains H.
 
-Capture writes the support bit immediately, and indexed source target, power,
-or enabled changes refresh only their seven-section closure.
-Infrared eligibility depends on stored temperature, not source discovery or the
-consumed disk-support bit. Requests discover loaded dormant data and lazily
-refresh a shared quantized section snapshot; current baselines receive changed
-Bricks, older baselines receive section replacement, and missing data is removed.
-Published `Brick.resolved` metadata prevents fallback from overriding resolved
-live geometry, including no-Air Bricks. Unresolved Bricks may still use stored
-means. Live changes resend the affected section's remaining fallback in the
-same response. This neither admits Pages nor changes solver residency. Exact
-wire/ownership rules are in [data-lifecycle-and-integration.md](data-lifecycle-and-integration.md#network-and-consumers).
+Original random tick and surface-freezing selections call the shared single-point
+phase entry even without a worker. Native snow, lava and flowing-water transitions
+have energy edges; disappearing recipe stages pay latent heat before removing the
+record. Tracked snow treats its current state as one body and melts to Air, without
+a new layer-mass model. Nonreciprocal recipes without a physical edge remain explicit
+gameplay conversions; missing records retain original environmental gameplay.
+Latent projection stops at the current state's target endpoint until a world update
+is allowed. A successful dormant mutation passes its projected H and commit tick
+through the existing scoped chunk hook; it does not manufacture a worker request/ACK.
+The next state starts at commit time, without historical heat debt or a replay loop.
+Unloaded/non-ticking chunks are not activated. Random completion has no maximum latency.
+Recipe reload only recounts loaded Sections whose palettes contain changed random-tick eligibility.
 
 `FHConfig.COMMON.THERMAL_RUNTIME.dormantTemperatureHalfLifeSeconds` defaults to
-`1800`. Ordinary fallback caches one natural temperature and decay factor per
-section per aligned 20-tick boundary. A regular/collapsed Page uses packed rank
+`1800`. Fallback caches one natural temperature per Section per aligned 20-tick
+boundary; projection uses the actual query tick. A regular/collapsed Page uses packed rank
 directly; only exact mixed data owns derived lookup arrays. Unloaded chunks own
-no runtime heap. Only requested infrared Brick means are synchronized; checkpoint
-vectors and derived caches remain server-owned. The lazy infrared cache owns
-128 temperature bytes per queried section plus metadata, without per-viewer
-copies; normal thermal ticks do not refresh it.
+no runtime heap. Infrared reads only the material portion of loaded dormant data;
+Air residuals remain excluded. It creates no dormant ownership map or second
+material store. Display revisions are transient Section/chunk change markers.
 When a runtime is active, dormant fallback resolves the loaded chunk through the
 existing `MinecraftPageManager.SectionOwner`; one lookup supplies both Page
 handle and chunk, so the normal path does not enter `ServerChunkCache.getChunkNow`
@@ -704,8 +951,9 @@ lifecycles.
 | radiation chunk lifecycle | fixed chunk sections plus known touching boundary Bricks only |
 | query publish | one pass over live spans and live cells; unchanged sleep is `O(1)` |
 | dormant capture | `O(64 + Page Air components)`, only at checkpoint |
-| dormant query | O(1), allocation-free after lazy section cache |
-| dormant activation | one bounded pass over that section's stored values per disk load |
+| dormant query | Air O(1); material O(log N) lookup plus bounded energy segments, no snapshot/COW |
+| dormant activation | attach decoded state; no cooling sweep or new Page |
+| dormant random phase | existing sampled position only; reads leave anchors unchanged, actual mutations pay normal world/COW costs |
 | player cadence | stable UUID phase offset over the 20 ticks |
 | dropped reservoir query | one point; 64 same-tick quarter-block samples, 32 candidate visits, top 4, at most 4 rays, and a separate 64-receiver witness cache |
 
@@ -714,16 +962,20 @@ They are measured separately from routine door/block/source/player workloads.
 
 ## Validation Standard
 
-Production code contains no counters, traversal probes, test callbacks, debug
-collections, or test-only constructors. Tests use deterministic outputs and
-test-owned fixtures. Final performance evidence comes from external JVM JFR
-and heap runs, not production bookkeeping.
+Tests use deterministic outputs and test-owned fixtures. Existing route-visit
+diagnostics and delayed-cut DEBUG logging are not substitutes for performance
+measurement. Final performance evidence comes from external JVM JFR and heap
+runs, not additional production bookkeeping.
 
-The current worktree passes Java 17 `compileTestJava` and the real Forge
-GameTestServer with all `16/16` required tests, including packed-ice phase
-completion during same-Brick trapdoor topology churn and the Minecraft residency
-handoff scenario. Numeric JUnit was intentionally not used as acceptance for
-these gameplay/lifecycle fixes. Controlled
+The latest completed Forge GameTest run passed `102/102`, including topology,
+material/phase lifecycle, local Air mixing and elapsed-time regressions; see the
+[elapsed-time repair](../../diary/2026-09-16_00-00-26_thermal-elapsed-time-fix.md).
+On 2026-09-16, obsolete JUnit tests and their fixtures were deleted at the user's
+request instead of restoring removed production APIs. Java 17 `compileTestJava`
+and `compileGameTestJava` then passed; the cleanup did not rerun the game tests
+or claim the remaining JUnit suite had executed successfully. Future thermal
+refactoring uses available GameTests and actual gameplay/client validation,
+without requiring restoration of old JUnit fixtures. Controlled
 120-second door/block/source/player/crop JFR workloads and 10/30-minute
 combined/churn heap runs remain performance evidence rather than undocumented
 claims. Results and any remaining gap belong in the dated development diary.

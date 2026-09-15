@@ -113,26 +113,10 @@ public final class PagePublication {
 
     public int resolveAirPoint(int localX, int localY, int localZ) {
         Brick brick=brickAt(localX,localY,localZ);
-        if (!brick.resolved || brick.coverageSlot<0) return NO_AIR_POINT;
-        if (brick.blockLayout==null) return brick.coverageSlot;
+        if (!brick.resolved || brick.firstSlot<0 || brick.transportNodeCount==0) return NO_AIR_POINT;
+        if (brick.blockLayout==null) return brick.firstSlot;
         int node=brick.blockLayout.transportAt((localX&3)|(localZ&3)<<2|(localY&3)<<4);
-        return node<0 ? NO_AIR_POINT : brick.coverageSlot+node;
-    }
-
-    public boolean hasPhaseCandidate(
-            int blockX,
-            int blockY,
-            int blockZ,
-            int materialProfileId
-    ) {
-        int localX = Math.floorMod(blockX, 16);
-        int localY = Math.floorMod(blockY, 16);
-        int localZ = Math.floorMod(blockZ, 16);
-        int candidateBit = localX & 3
-                | (localZ & 3) << 2
-                | (localY & 3) << 4;
-        return brickAt(localX, localY, localZ).phaseCandidates.contains(
-                materialProfileId, candidateBit);
+        return node<0 ? NO_AIR_POINT : brick.firstSlot+node;
     }
 
     private static Brick[] emptyBricks() {
@@ -154,27 +138,29 @@ public final class PagePublication {
         }
     }
 
-    /** One immutable Brick's query-facing coverage, geometry, and phase payload. */
+    /** One immutable Brick's query-facing coverage and geometry. */
     public record Brick(
-            int coverageSlot,
+            int firstSlot,
             int arenaGeneration,
             Object signaturePayload,
             BlockBrickLayout blockLayout,
             int transportNodeCount,
-            PhaseCandidates phaseCandidates,
             boolean resolved
     ) {
+        public int signatureAtBlock(int block) {
+            return signaturePayload == null ? ThermalSignatureTable.UNRESOLVED
+                    : PageSignatures.valueAt(signaturePayload, block);
+        }
         public static final Brick EMPTY = new Brick(
                 NO_COVERAGE,
                 0,
                 null,
                 null,
                 0,
-                PhaseCandidates.EMPTY,
                 false);
 
         public Brick {
-            if (coverageSlot < NO_COVERAGE || arenaGeneration < 0) {
+            if (firstSlot < NO_COVERAGE || arenaGeneration < 0) {
                 throw new IllegalArgumentException("Brick coverage identity is invalid");
             }
             if (signaturePayload != null
@@ -191,46 +177,7 @@ public final class PagePublication {
                     && values.length != PageSignatures.ENTRIES_PER_BRICK) {
                 throw new IllegalArgumentException("wide Brick signatures are invalid");
             }
-            if (phaseCandidates == null) {
-                throw new IllegalArgumentException("Brick phase candidates are required");
-            }
         }
     }
 
-    /** Exact profile/mask entries for one base Brick. */
-    public static final class PhaseCandidates {
-        public static final PhaseCandidates EMPTY = new PhaseCandidates(
-                new int[0], new long[0]);
-
-        private final int[] profileIds;
-        private final long[] candidateMasks;
-
-        private PhaseCandidates(
-                int[] profileIds,
-                long[] candidateMasks
-        ) {
-            if (profileIds == null || candidateMasks == null
-                    || profileIds.length != candidateMasks.length) {
-                throw new IllegalArgumentException("phase candidate arrays are invalid");
-            }
-            this.profileIds = profileIds;
-            this.candidateMasks = candidateMasks;
-        }
-
-        public static PhaseCandidates owned(int[] profileIds, long[] candidateMasks) {
-            return new PhaseCandidates(profileIds, candidateMasks);
-        }
-
-        public boolean contains(int profileId, int candidateBit) {
-            if (candidateBit < 0 || candidateBit >= Long.SIZE) {
-                return false;
-            }
-            for (int index = 0; index < profileIds.length; index++) {
-                if (profileIds[index] == profileId) {
-                    return (candidateMasks[index] & 1L << candidateBit) != 0L;
-                }
-            }
-            return false;
-        }
-    }
 }

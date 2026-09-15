@@ -1,31 +1,29 @@
 {
   "type": "frostedheart:state_transition",
   "block": {
-    "Name": "minecraft:farmland",
     "Properties": {
       "moisture": "0"
-    }
+    },
+    "Name": "minecraft:farmland"
   },
-  "condense_temp": 90.0,
-  "evaporate_temp": 100.0,
-  "freeze_temp": -10.0,
-  "gas": {
-    "Name": "minecraft:coarse_dirt"
+  "all_states": true,
+  "capacity_j_per_k": 6600.0,
+  "enthalpy_offset_j": 380000.0,
+  "heating": {
+    "target": {
+      "Name": "minecraft:coarse_dirt"
+    },
+    "temperature_c": 100.0,
+    "effect": "evaporation"
   },
-  "heat_capacity": 10,
-  "liquid": {
-    "Name": "minecraft:farmland",
-    "Properties": {
-      "moisture": "0"
-    }
-  },
-  "melt_temp": 9.0,
-  "solid": {
-    "Name": "frostedheart:dirt_permafrost",
-    "Properties": {
-      "snowy": "false"
-    }
-  },
-  "state": "liquid",
-  "will_transit": true
+  "cooling": {
+    "target": {
+      "Properties": {
+        "snowy": "false"
+      },
+      "Name": "frostedheart:dirt_permafrost"
+    },
+    "temperature_c": -10.0,
+    "effect": "freezing"
+  }
 }

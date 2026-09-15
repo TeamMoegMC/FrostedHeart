@@ -20,7 +20,6 @@
 package com.teammoeg.frostedheart.content.robotics.logistics.gui;
 
 import com.teammoeg.chorda.client.RenderingHint;
-import com.teammoeg.chorda.client.cui.base.UIElement;
 import com.teammoeg.chorda.client.cui.base.UILayer;
 import com.teammoeg.chorda.client.cui.base.Verifier.VerifyResult;
 import com.teammoeg.chorda.client.cui.widgets.TextBoxNoBackground;

@@ -37,8 +37,10 @@ public abstract class LevelChunkSectionMixin_ThermalInput
     private void frostedheart$recordThermalMutation(
             int x, int y, int z, BlockState newState, boolean useLocks,
             CallbackInfoReturnable<BlockState> callback) {
-        MinecraftThermalInput.onSectionSetBlockState(
-                (LevelChunkSection) (Object) this,
-                x, y, z, callback.getReturnValue(), newState);
+        BlockState previous = callback.getReturnValue();
+        if (frostedheart$thermalInputOwner != null && previous != newState) {
+            MinecraftThermalInput.onSectionSetBlockState(
+                    (LevelChunkSection) (Object) this, x, y, z, previous, newState);
+        }
     }
 }

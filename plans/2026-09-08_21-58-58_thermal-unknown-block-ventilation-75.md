@@ -1,336 +1,278 @@
-# 方块级热模型与材料温度闭环实施计划
+# 红外显示修复：蓝色缺值占位、材料表面与能量塔解析场
 
 - Time: `2026-09-08 21:58:58 +08:00`
-- Updated: `2026-09-10`
+- Updated: `2026-09-13 17:22:12 +08:00`
 - Author: `Codex; OpenAI GPT-6`
-- Status: `ready`
-- Scope: `材料节点与导热、温度查询、土壤测温、作物土壤输入、材料长波环境、休眠保存、表面红外`
-- Outcome: `此前通风简化和接口修复已实施；本次新增材料闭环方案仅完成设计，尚未实施或验证性能。`
+- Status: `superseded`
+- Repair status: `display data implemented; rendering work superseded by the exact surface capture plan; strict edge acceptance still pending`
+- Scope: `修复红外自然背景估计、恢复能量塔及原有解析场显示，统一单纹理合成、增量与可用性合同`
+- Outcome: `自然背景路径已删除，材料与解析场数据合成已实施；当时58项Forge GameTest通过，但后续严格GPU边缘归属测试仍失败。2026-09-13渲染实施转入真实表面捕获plan；本页保留数据合同和历史依据，不再指挥渲染修复。`
 
-> **当前执行入口：** [材料温度闭环：完整工程方案](#material-temperature-closure)。下文此前的确定范围、实施步骤和日期记录保留为已执行方案的上下文；与新方案冲突时以新方案为准。尤其不再沿用“V0 只在暴露时建节点”“热容乘暴露面数”“所有消费者只查 transport”“红外直接合成解析场”“整个 section 的全部温度只能用 640 字节保存”这些约束。
+> **渲染实施已转入：** [真实归属、紧凑编码与直接混合](2026-09-13_17-18-00_infrared-exact-surface-capture.md)。本文件保留已实现的材料/解析场/增量数据合同及调查历史；先前“不修改Embeddium顶点”和深度恢复归属的约束已被新方案替代，不再作为新代码实施指令。材料与网络本轮不重写；实际当前行为仍以docs和源码为准。
 
 <a id="material-temperature-closure"></a>
+<a id="block-surface-infrared"></a>
 
-## 材料温度闭环：完整工程方案
+## 1. 用户要求与本次确定的结果
 
-- Time: `2026-09-10 00:42:55 +08:00`
-- Reviewed: `2026-09-10 01:00:30 +08:00; Codex / OpenAI GPT-6`
-- Author: `Codex; OpenAI GPT-6; engineering investigation and plan revision`
-- Status: `ready`；下列新增行为、接口名、参数和预算是实施目标，不是当前功能说明。
-- 目标：同一块材料的求解状态能够被测量、显示、用于相邻导热及玩家长波环境，并在卸载后按明确精度恢复。
-- 设计依据：[创作原则](../design/creative-principles.md)、[世界设计](../design/world-design.md)；保留温度支撑生存、建设和探索的体验。没有人类设计要求真实光谱追踪或全世界逐块模拟；不修改 `design/`。
-- 当前行为依据：[气候文档入口](../docs/climate/README.md)、[runtime](../docs/climate/thermal-runtime-architecture-and-optimization.md)、[热源](../docs/climate/heat-production-and-network.md)、[玩家温度](../docs/climate/player-temperature.md)、[生命周期](../docs/climate/data-lifecycle-and-integration.md)，以及下列源码。
+1. 删除全窗口自然温度估计：无材料且无解析场的表面使用原蓝色占位，不计算区域背景，不发送小背景表，不保留背景纹理。
+2. 保留真实已有材料表层温度；恢复能量塔解析场的可见热区，不要求等待物理材料升到玩法保底温度才显示。
+3. 圈内维持原`mix(originalRGB, heatColor, 0.43)`，保留贴图与地形细节；色标仍为-20..20°C、扫描半径64 blocks、扩张20 ticks、前沿3 blocks。没有数据不能露出原图形成斑洞。
+4. 当前显示是“材料表面温度作为基础 + 既有玩法解析场显示修正”。没有解析修正的材料读数仍符合黑体近似；有修正的值称为`displayTemperature`，不能继续统称实测材料温度、真实辐射温度或全画面定量热像。
+5. 显示读取不启动/扩张物理runtime、不加载区块、不修改H/C/T、不回写解析修正。实体/特殊BE/透明介质热成像、固体导热/热容与材料存档仍后续。
 
-### 0. 工程复查结论与选型依据
+当前依据：源码为准；[世界温度](../docs/climate/world-climate-and-temperature.md)、[runtime](../docs/climate/thermal-runtime-architecture-and-optimization.md)、[生命周期](../docs/climate/data-lifecycle-and-integration.md)解释当前实现。`.Codex/memory/project-structure.md`和`architecture.md`当前不存在。
 
-上一版覆盖了功能缺口，但还不能称为最小工程方案：存在可推导的持久字段、两套屏幕温度间接寻址、过细的背景表、未核实的旧样本保留能力，以及缺少具体规则的驻留/恢复路径。本次已在对应章节直接修正，不要求实施者在两套互相冲突的建议中选择。
+## 2. 已核实的不匹配与修复边界
 
-| 复查项 | 本次决定 | 需求与代价判断 |
+| 问题 | 当前代码/证据 | 修复决定 |
 |---|---|---|
-| 持久 `finiteNodeCount` | 从总节点数减phase目录长度推导 | 同样O(1)，每Brick省一个计数字段和维护点 |
-| R32UI对象标记后再查温 | 热表面pass直接写R16I温度 | 去掉每像素标记解码和最终合成中的3D寻址；屏幕颜色附件从4 B/pixel变2 B/pixel |
-| `9×144×9`背景 | 改为`9³` Page背景，与物理初始化的Page自然边界相同 | 取样/数值存储减少16倍，并消除naturalBlock/naturalAir回退不一致 |
-| 每块热材料建发射源 | 保留接收者方向采样 | 不增加随热材料数量增长的source索引与每玩家候选表 |
-| 物品“沿用上次结果/下一次服务” | 删除不存在的承诺，复用当前64位置/tick缓存，超额用明确背景近似 | 不新增物品调度器、跨tick缓存或待办队列；单独核算物品射线预算 |
-| 所有温度变化标红外脏 | 只标可见温度输入的变化，纯Air不标 | 材料纹理不再因室内Air波动发送重复INVALID |
-| 保存/恢复泛称“接入原流程” | 明确同一cut、唯一输入流、只恢复一次、替换清理、超龄处理 | 防止旧空气均温污染材料、重复恢复余热和冷热位置互换 |
+| 缺数据被替换成自然背景，大面积蓝底变紫褐色 | `InfraredCapture.background`生成729值；shader缺材料查backgroundTexture | 整条背景路径删除，NO_DATA直接蓝色占位；不把所有真实低温强改蓝色 |
+| 能量塔玩法0°C未进入红外 | `GeneratorData.publishGameplayHeat`仍发布FLOOR_FROM_NATURAL；当前IR不读`MinecraftGameplayFields` | 恢复服务端场显示合成；保留generator物理source及原玩法场 |
+| 只在缺材料处补场仍会失败 | 冷材料可能存在，而generator只给玩法环境做保底 | 对有材料位置也执行原合成；不能让材料有效性遮掉解析保底 |
+| 解析场生命周期独立于物理worker | `MinecraftGameplayFields.LEVELS`在runtime重启后仍存在 | 无runtime/材料publication invalid时继续合成场，不把场绑定物理presence或IR epoch |
+| READABLE错误地成为全显示开关 | `updateData`遇不可读使baseline无效；shader `materialReadable`限制纹理采样 | 分开物理可读状态与最终显示基线；完整field-only快照也能提交和绘制 |
+| 只看材料epoch无法发现开关塔/调范围/场叠加变化 | `QueryPublication`只追踪材料与拓扑，field index未参与 | 复用原客户端携带的field刷新Page位图，每poll重算当前/上次场范围；不新增每玩家服务端状态 |
+| 仅材料presence清Page会误删场热色 | 当前客户端presence XOR直接`clearPage` | 改为服务端发最终display结果和显式INVALID；presence只用于材料基线，不再由客户端据此擦显示 |
+| 场撤销后只写新范围会留下旧热色 | 仅当前场AABB不能表达刚缩小/删除的区域 | 刷新`previousFieldPages | currentFieldPages`，从原始材料重新合成，缺材料则INVALID |
+| 材料先量化再加场会改变边界结果 | 当前`writeBrick`先量化节点为short | 场路径使用double原始材料值，合成后仅量化一次；无场快路径保持唯一节点一次量化 |
+| 恢复原Air/dormant链路会把空气再涂到墙上 | HEAD中的旧IR基础值来自transport/dormant；当前已改surface mask | 只复用旧场枚举、Sample和必要自然查询优化，不整段恢复旧capture |
+| 纯色最终RGB要求破坏原观感 | 用户实机截图；当前已恢复0.43混合 | 保留已恢复的混合；测试同温的混合前heatColor，不要求最终RGB相同 |
+| 温度计/HUD与材料表面不是同一个量 | `WorldTemperature.block`走naturalBlock+玩法查询；旧IR场基准用naturalAir | 不能用任一工具显示0°C就断言墙必须实测0°C；场复原对照同位置原场公式，热材料仍可高于保底 |
+| 移动渲染挂点改变后续层覆盖关系 | 用户要求后已恢复AFTER_LEVEL | 最终画面中的实体等也会被空间显示值染色，不代表体温；复杂几何边缘仍未通过GPU归属测试，进度见[材料主plan](2026-09-12_23-53-20_thermal-material-enthalpy-lifecycle-repair.md) |
 
-保留一个专用热表面pass作为正确性与低接入复杂度的共同基线；不再声称“多绘制一遍必然最快”。它避免对任意shaderpack的MRT输出进行侵入式改写，也避免为地形/玻璃/实体分别维护修补路径。GPU实际最优仍由第9节的同画面对照验证；代码和预算能证明删去了哪些工作，不能在实现前证明所有显卡上的全局最优。
+后四项中，Air污染、近表面float舍入等已修复部分保留；FBO/透明层是否另有具体绘制错误尚无实测结论，不作为已发现的渲染bug。当前缺陷不是色标范围被改：0°C与-10°C本来就应得到不同的混合前热色。
 
-### 1. 已核实的缺口与本轮完成标准
+## 3. 最小显示模型：一套结果、一张纹理
 
-| 当前源码事实 | 实施后的合同 |
+用`M`表示可读材料表层温度（°C，缺值为NaN），`F(p)`表示在**方块中心**p命中的有序解析场，`N(p)`表示仅公式需要时才取得的`WorldTemperature.naturalAir`。最终规则：
+
+| 条件 | 发送值 |
 |---|---|
-| `BrickTopologyCompiler.compileCells` 只为暴露 V0 材料建立节点；热容随暴露面积变化 | 已驻留 Brick 内每块普通材料都有一个有限热容节点；热容不随开门、遮挡和邻块改变 |
-| `BrickTopologyCompiler.face` 对 V0/V0 直接返回 | 相邻材料之间有唯一导热连接；热能能够穿过多块实心墙 |
-| `PagePublication.Brick.coverageSlot` 在 material-only Brick 中为 -1 | 通用节点 span 与 Air 覆盖分开解释，material-only Brick 也可读 |
-| `SoilThermometer` 和 `SoilThermometerRequestPacket` 使用 `WorldTemperature.block -> gameplayPassiveEnvironment -> sampleAir` | 两个入口共用材料测温接口，明确返回实测、休眠近似或背景估计 |
-| 红外编码与变化追踪只考虑 transport/Air | 材料改变能独立产生增量；按被看见的表面所属对象取温 |
-| `DormantChunkThermalState.capture` 只遍历 `transportNodeCount` | 材料温度按原材料身份和方块位置保存，不混入空气均值 |
-| `BrickMigrationKernel.migrate` 在dormant分支把Brick空气均温写入普通材料槽 | 删除该回退；材料只从匹配材料记录恢复，无记录用统一Page背景 |
-| `PlayerThermalModel` 的长波背景等于空气温度；直接辐射只来自 source/fire/lava | 普通可见材料影响玩家平均辐射温度，热源直接辐射仍单独计算 |
-| `gameplayCropEnvironment` 直接转发被动环境查询 | 根部土壤和地上环境各有明确来源，保留能量塔的作物玩法保底 |
+| 无场，有有限M | quantize(M) |
+| 无场，无M | INVALID；shader用MIN_TEMP产生蓝色占位，不发送-20伪测量值 |
+| 有场 | 用原`ThermalAnalyticFieldIndex.Sample`合成，得到有限displayTemperature后quantize |
 
-完成不能只以编译或通用 solver 单测为准：测温工具、红外、材料热状态和保存恢复必须在同一真实世界夹具中对应起来。旧测试中“石块必须 INVALID”的断言随合同更新，不能保留后再把该测试排除。
+场路径伪代码：
 
-### 2. 最小模型与范围
+```text
+sample.clear()
+按原排序将contains(blockCenter)的field include进sample
+if !sample.present(): return finite(M) ? quantize(M) : INVALID
+needNatural = sample.requiresNatural() || (!finite(M) && sample.requiresBase())
+N = needNatural ? existingNaturalAirAtThisPosition() : 0
+if needNatural && N不可取得: return finite(M) ? quantize(M) : INVALID
+base = finite(M) ? M : N
+return quantize(sample.compose(N, base))
+```
 
-保留一个维度一个 worker、20-tick cut、16³ Page、4³ Brick、source ledger、arena、现有指数交换内核、Page/Brick 增量和现有预算。没有第二套世界温度引擎、材料 BlockEntity、逐块 tick、全世界导热图或逐观察者温度副本。
+蓝色占位绝不能作为`base=-20`输入场公式；例如N=-15、塔增温D=15时，空材料位置和M=-10的位置都应得到0°C，M=8则仍为8°C。若拿占位值当N，或直接把D=15当绝对温度，都会改变原玩法语义。
 
-每个普通材料方块只保留一个温度，代表该块的有效体温，也作为六个面的表面温度近似。它不能表达同一方块的内外温差；不同方块可以有温差。V75 等部分方块仍只有一个材料/通风混合节点，不拆内部空气和材料。只有相连且无材料的 V100 空气可以合并。相变沿用独立潜热机制，见第 4 节的边界，不能把潜热槽误当普通材料温度。
+`GeneratorData.publishGameplayHeat`的真实规则是球形`FLOOR_FROM_NATURAL`：中心Y为`actualPos.y - masterYPosInMB + .5`，半径来自`getRadius()`，D来自`getTempMod()`，结果为`max(base, N+D)`。复用已发布field，不在IR重算燃料、猜塔中心、固定写0°C，或把塔改成OVERRIDE。两座塔重叠取原保底规则，不把增温相加两次。
 
-本轮补上材料闭环；不增加全场材料互相辐射、光谱反射、多次反弹、实体热流反写世界、地热新模型、自动色阶、另一套可切换空气调试渲染。对火焰/岩浆原有“只向玩家提供直接辐射”的玩法边界不顺带改成新的世界功率 source。
+复用`Sample`及索引原排序：combineMode、priority、key；模式顺序为FLOOR_FROM_NATURAL → OVERRIDE → MAX_HEAT → MIN_COOL → ADD_DELTA。保留已有SPHERE/CUBE/PILLAR与其他provider，避免只硬编码generator而再次丢失已有场功能。只在IR输出合成，不影响玩家/作物/城镇、source ledger或材料状态。
 
-### 3. 状态所有权与明确的数据接口
+```mermaid
+flowchart LR
+    M[已有材料表层温度] --> C[服务端原有解析场合成]
+    F[已有玩法场定义] --> C
+    N[仅命中场且公式需要的自然基准] --> C
+    C --> P[最终显示温度或INVALID]
+    P --> T[原有单张144³整数纹理]
+    T --> R[可见方块表面取样]
+    R --> O[原色标和0.43混合]
+    B[INVALID用蓝色占位] --> O
+```
 
-#### 3.1 一份材料状态，通用 span 地址
+纯Air、Air休眠均温和phase不作为普通材料基础值；但有场区域的这些坐标可承载场合成结果，因为纹理是显示场，实际只着色本阶段可见terrain表面。无场时仍INVALID。
 
-改造 `WorkerBrickTopology` 和 `PagePublication.Brick`：把现有 `coverageSlot` 的物理意义改为通用 `firstSlot`，保留 generation 与 transport数量。`BlockBrickLayout.nodeCount()` 返回现有 `nodeBlockMasks.length`；`PhaseCandidates.reservoirCount()` 返回现有profile目录长度；`finiteNodeCount()` 是两者之差的派生getter，不是新增字段。完整空气快路径总数/有限节点数均为1、空Brick为0。不新增逐节点坐标、种类、温度副本数组。
+## 4. 删除自然背景：明确到字段和调用点
 
-- `firstSlot` 指向任意非空 span，不能以是否有 transport 决定是否发布。
-- 节点顺序继续为 transport、普通材料、phase；`[0, finiteNodeCount)` 都能读取普通有限热容温度。
-- `resolveAirPoint` 必须继续检查 `node < transportNodeCount`，不能因 `firstSlot` 变成有效值而把整块石头当空气。
-- 新增 `resolveMaterialPoint`：从同一发布签名取得材料分类，`nodeAt` 取得节点，检查它属于普通材料或带材料的 transport。纯空气和 phase 槽分别返回明确类别。
-- `QueryPublication`已发布全部live slot温度，复用双缓冲和generation。普通材料槽参与红外变化比较，纯Air不标显示脏。带材料transport在已有`ThermalCellArena.cellKinds`中用一个新的`MATERIAL_TRANSPORT`枚举值表达，沿用同一个byte数组：`isAirCell`包含它，中心/容量/支持引用按mixed transport解释，`isMaterialPole`不包含它；新增`isSurfaceCell`是普通material或该枚举。编译时由profile决定kind，发布时只做字节判断，不每个slot回查Page/签名。材料transport的构建标志用一个临时long mask传递，不增加arena布尔数组。相变状态变化走已有phase候选发布事件。
-- `coverageSlot` 的所有 `<0` 和 `+node` 使用点逐一替换：query、infrared、dormant、phase、worker publication 构造器及 GameTest。不能仅替换 `transportAt` 为 `nodeAt`。
-
-`MATERIAL_TRANSPORT`的修改点包括stage/writeMixedComponent、supportRef中心定位、所有直接比较`MIXED_COMPONENT`的分支、isAirCell、source端口资格、迁移和slot回收。保持原kind数组容量与字节宽度；不把它误归入使用独立块坐标的material pole。实际布局与材质没有改变时不重新设置kind或标dirty。
-
-#### 3.2 查询按物理量分开，复用具体方法
-
-在 `MinecraftThermalInput` 增加具体方法 `sampleMaterial(BlockPos, MutableMaterialSample)` 和 `sampleSurface(...)`。`MutableMaterialSample` 只含摄氏温度、采样 tick、来源枚举和可用性；调用方复用 scratch，不为每次读取创建 record/list。`sampleSurface` 是普通材料、已放置 reservoir、有效热源的固定分支，不引入泛型 provider/service 框架。
-
-来源枚举建议为 `LIVE_MATERIAL / RESERVOIR / EMITTER_MODEL / DORMANT_MATERIAL / NATURAL_ESTIMATE / UNAVAILABLE`。该来源用于测温提示和验证；普通红外每像素不必额外同步来源字节。
-
-普通材料查询优先级：当前coherent材料节点 -> 同位置同材料的最近coherent发布 -> 同位置同材料的dormant记录 -> 统一Page自然边界估计。统一基准为`MinecraftEnvironmentCapture.naturalTemperature`目前采用的Page中心`WorldTemperature.naturalAir`，优先用现有发布/capture中的值，无runtime时在同一中心按需计算。不能给尚未驻留材料用naturalBlock、驻留后却初始化为naturalAir，造成没有传热也跳温。旧`WorldTemperature.block/naturalBlock`仍服务其既有玩法，不是本轮物理材料基准。上一次发布只允许精确位置匹配，不得采用现有`resolveLastPublication`的最暖transport代表值。区块未加载返回unavailable，不加载区块，不启动runtime。估计值从不回写arena。
-
-暂时读不到完整新 cut 时保留最近已确认显示；材料替换/方块删除已确认时立即清掉对应旧读数，不能把旧热石头的温度继续贴到新空气或木头上。温度计遇到估计显示“估计”即可，不把节点编号和发布版本放进普通使用界面。
-
-批量查询不反复调用会重新begin cursor的点接口。将现有`InfraredReadCursor`的只读温度cut能力抽出/重命名为具体`ReadCursor`，红外epoch访问继续复用；`readMaterialAt(publication, cursor, localBlock, out)`不重新定位Page或开启cut。温度计只读一点；红外/checkpoint先定位一次Page，唯一节点各读一次，再展开。最多两次完整cut尝试，最终检查`cursor.isCurrent()`及Page publication身份；失败不提交混合新旧代次数据。不能持有borrowed数组跨tick、回调或网络发送，builder只保留已编码字节。
-
-保留 `WorldTemperature.block` 作为现有玩法环境接口，更新其注释说明它不是材料测温；不全局改写其所有调用者。`gameplayPlayerEnvironment`、镇区环境和空气采样仍保持自己的量纲与合同。
-
-### 4. 材料节点、热容、连接和相变边界
-
-#### 4.1 节点只随稀疏物理驻留产生
-
-在已驻留 Brick 中，普通 V0 材料即使被完全包住也建节点。Brick 未驻留时没有 arena 分配；“支持内部材料温度”不意味着给整个已加载 section 或整个世界建节点。完整空气 Brick 仍是一个节点；普通材料块不合并，以免抹平不同块的温差。
-
-热容改为 profile 的 `blockCapacityJPerK`，普通整块按一个有效块计。暴露面只影响换热连接和辐射可见性，不改变热容。V75 使用同一材料热容；无材料通风节点继续使用空气参考热容，不另加空气容量。形状变化不自动加减热量。
-
-首轮调试参数：沿用当前七类 profile 的数值作为每有效块热容候选，即 fabric 120、wood 450、earth 1100、masonry 900、glass 250、metal 700、generic 650 J/K；这是一套游戏参数，不能标成真实一立方米材料常数。与旧的“每暴露面相同数值”相比会改变多面暴露块的响应速度，必须在热石/墙体夹具中记录，不暗称平衡不变。最终平衡只调整这七个表项，不把开门时容量跳变保留下来。新符号取代 `surfaceCapacityJPerK`，删除不再需要的 exposure 容量依赖扫描。
-
-#### 4.2 每个相邻面最多一条导热连接
-
-继续内部 144 个正向面、跨 Brick 每面 16 对，负坐标侧唯一持有。没有新邻接对象：复用 `MaterialContributions -> MaterialEdgeCompiler -> ThermalMaterialExecution` 的 primitive 数组、无向边聚合和指数交换内核。
-
-- transport/transport：保留现有通风公式 `G=K*A/(dL/pL+dR/pR)`。带材料的 V75 仍按这个有效混合路径交换，不能再叠加第二条材料边。
-- transport/普通实心材料：`G=h_material*A`，沿用当前 profile 面换热参数。
-- 普通实心材料/普通实心材料：`G=A/(0.5/k_a+0.5/k_b)`，新增每类 `bulkConductanceWPerBlockK`；块长按 1 m 的游戏换算，A 是接触整块面面积，G 单位 W/K。首轮 k 候选采用当前 0.12/0.45/1.0/1.4/0.8/6.0/1.0 数值，但独立命名，不能把空气侧 h 和固体 k 当成同一物理量。
-- 两侧有限节点按 `Q=C_a*C_b/(C_a+C_b)*(T_a-T_b)*(1-exp(-G*(1/C_a+1/C_b)*dt))` 转移能量；两边一减一加。温度为 °C，温差为 K，C 为 J/K，dt 为 s，Q 为 J。复用已有实现及预编译 coefficient，不另写一套公式执行器。
-- 未驻留/未加载邻块不建立自然温度固定边界。对已加载且需要传播的邻 Brick 请求既有驻留；等待期间保留当前边界和能量，不虚构散热。
-
-#### 4.3 沿材料传播，禁止一次扩展整片地下
-
-`WorkerPageStore` 的热前沿检测由 transport-only 改为所有可导热有限节点。既有 hot mask/残差迟滞负责保留热材料；相邻候选每次 cut 只扩展一层 Brick，候选仍由原驻留队列去重、分批服务。读温、红外和玩家辐射不能触发扩展。
-
-具体修改`faceResidualC`：只检查该面16个成员，使用`nodeAt`并去重，排除phase；`firstSlot<0`才代表没有节点。正Y方向的`topPortDirectSky`排除仅适用于无材料Air，不能让暴露于天空的热石头失去向上/邻区传播资格。原hot mask承担“本Brick有温差”的保留，面残差承担“哪一邻Brick需要加入”，两者不能互相替代。冷驻留目录不因内部非边界热节点直接扩展六面。
-
-连接改变只收集本Brick和面相邻者，既有唯一面owner决定需重编的fragment，不递归重编整个连通材料体。新增材料节点导致的sky/exposure可见性更新只更新相应面/辐射分类，不再触发热容重建。每次cut的候选集合在编译前固定，新admission只能在下一次cut继续传播。
-
-热源能量首先走已有 source 端口；材料通过连接接收能量。没有为每块材料注册 source。材料-only Brick 的向外热差也必须唤醒邻 Brick。达到已有 cells/pairs/work 预算时保留旧拓扑并在原队列继续服务待办，不清掉热材料、不把未传播能量算成自然损失；需要测量待办年龄与传播延迟，不能只看未超过内存上限。
-
-#### 4.4 相变不冒充正常材料状态
-
-现有 phase reservoir 是固定转换温度与潜热进度，不含完整低于转换点的显热模型。本轮不把“每块相变材料的完整显热/潜热重构”夹带进普通材料改造。
-
-- 保留原候选、潜热、ACK 和方块替换流程。普通材料与 phase 相邻时，接入原 `PhaseContacts` 的有限节点到潜热槽交换；把 `air` 参数名改为 `finiteCell`，不新造 phase solver。
-- phase/phase 不新增直接边；phase 在平台吸收/释放能量仍按现有上限和转换条件执行。
-- `sampleMaterial/sampleSurface`对phase返回单独的状态：确有平台能量/转换过程时使用转换温度；尚无显热模型时返回统一Page背景估计。不能因槽位`temperatureC()`恒为转换点就把所有冻冰测成0°C。在已有phase候选发布对象中增加一个`long activePhaseBlocks`；同一worker cut根据潜热/待ACK状态生成，仅当整个mask与上次不同时标显示变化，并替换该候选快照，不能原地修改读者持有的发布对象。普通Brick复用EMPTY候选，不分配额外对象；主线程不读worker arena。
-- 验收分别列出普通材料完整闭环与 phase 的此项近似；不得声称本轮完成了所有物质的完整热力学。此前“保留相变”的范围不因此扩成一个新物理系统。
-
-### 5. 在线变化、卸载、重载与材料余热
-
-#### 5.1 在线迁移
-
-复用当前最多64块的成员迁移。相同材料和空间成员保留焓；门开关改变transport分类但保留同块材料能量；纯空气合并/拆分按已有成员份额分配。真正替换材料以新材料背景初始化，并在同一mutation清除旧dormant材料位。这里“同材料类别”不足以识别保留资格：stone替换为同属masonry的另一方块也应重置；同一个Block的门开关/方向属性变化才默认保留。主线程已有变更聚合为每个变更Brick OR一个临时`resetMaterialBlocks`，物品拆除再放回即使最终signature相同也不能丢失reset事实；该mask随已有input batch传worker，不建逐块generation目录。查询在reset尚未发布时不返回被重置位置的旧值。显式拆除的材料能量属于拆除物离开世界热模拟的边界，不灌给相邻空气。
-
-取消仅由 exposure 变化造成的容量和 span 重建；邻面导热/天空/遮挡仍按原依赖闭包重编。保留 source 结算 -> staged spans -> material edge 编译 -> commit -> source 重绑 -> 旧 span 释放的顺序。
-
-#### 5.2 在原 section 存档增加稀疏材料字段
-
-空气继续沿用当前 format 2 的 `bricks/counts/residuals/blocks` 与 640 字节数值预算。本轮给同一个 section 增加可选材料字段，不复制整份 checkpoint，不引入旧版本转换服务；现有 format 2 无新字段自然解释为“无材料记录”。空气和材料共同决定 entry 是否为空、sourceSupported、保存与清理流程，不能在空气为空时丢掉 material-only entry。
-
-材料记录按 Brick 地址和块内 bit 排序：
-
-- 一个 section `long materialBricks`；每个有记录 Brick 一个 `long materialBlocks`。
-- 保存普通 V0 和带材料 transport 的材料余热；只有量化后残差非零且超过 prune 阈值的块占记录。每个块存一个 `short` 温度残差和一个稳定的 `byte materialKind`。七类材料使用固定枚举代码，禁止保存运行期 dense profile ID。未来确实新增类型再扩字段，不预建 palette 框架。
-- 新材料字段采用 `MATERIAL_RESIDUAL_SCALE=4`，即0.25°C/单位、误差最多0.125°C、可表示残差 -8192..8191.75°C；原空气 `RESIDUAL_SCALE=16` 不变。材料基准为保存时该 Page 的自然边界，正常材料/背景均在 -273.15..2000°C 时其温差可表示。极端配置超量程采用饱和并累计现有诊断计数，不能数值绕回冷温，也不能声称这种配置精确保存。
-- 使用平铺 primitive 数组，只有 section 有材料余热时分配；64 个 Brick offsets 按现有 offset 模式复用/扩展。没有逐块对象、逐材料计时器或额外后台衰减任务。
-- 带材料 transport 改为只进材料字段，原空气 capture/均值只统计无材料 transport。恢复时先按当前节点类别选择唯一流；只有无材料 transport 可以使用空气记录。这样旧混合材料的热量不会在新存档中被当空气均值保存，门开关也能在同材料类别下承接原温度。旧format2中的混合均值只能保持旧空气近似，不能从其推导不存在的材料历史。
-
-全 section 4096 块实心材料都有残差时，材料原始数值上界为 `8 + 64*8 + 4096*(2+1) = 12,808` 字节；再加空气最多 640 字节，为 13,448 字节，不含 NBT 标签、数组对象、offsets、对齐和压缩。不得继续宣称材料全部能塞入旧 640 字节。不保留第二份均值和每块精确温度；均值只在确实需要的已有调用中临时求取。
-
-材料残差按现有全局半衰期 `r(t)=r_saved*2^(-elapsed/(20*halfLifeSeconds))` 进行按需衰减，elapsed 单位 tick。材料不因 sourceSupported 或解析场存在而冻结余热；原 supported 标志仅继续作用于空气流。保存基准与恢复基准都取同一Page自然边界合同，点测温不得另用该块的naturalBlock替换残差基准。恢复 `T=N_current+r(t)`、`H=C_current*(T-T_reference)`，离线是温度近似，不宣称离线能量守恒。只有同位置同材料类别可用；已加载 mutation 清相应 bit，离线替换以加载后实际分类筛除。
-
-材料恢复在普通迁移后、第一次 source 能量执行前进行；未匹配处按新 profile 背景初始化。无 source 的 dormant 材料可被测温/红外读出，但读取本身不唤醒求解器。世界卸载、保存、服务器停止和完整 tags/recipe reload 均先沿用现有 coherent checkpoint 入口收集材料，再释放旧 arena。新 tags 下稳定类别变更按替换处理；关闭物理 runtime 不能直接丢弃尚未 checkpoint 的材料热状态。
-
-#### 5.3 恢复与存档的具体执行规则
-
-1. `BrickMigrationKernel.migrate`先迁移有效旧节点。仅在没有可迁移旧节点、没有reset标记且存在本次admission材料输入时恢复dormant；已经迁移的块不能再加一份旧checkpoint能量。删除当前“给非transport有限节点套空气mean”的循环分支。
-2. 将`ThermalInputBatch.DormantAirCut`扩为同一份`DormantThermalCut`，包含两条互斥输入流和一次冻结的衰减factor。保留原入队/所有权机制，不复制全section工作数组。worker Page增加一个`long pendingDormantBricks`，初值为空气/材料输入Brick并集；成功commit才清已承接的bit，staging失败不清。Brick再次睡眠/重编不能重放Page初次admission携带的旧记录。该字段8 B/Page，3200 Pages数值载荷25,600 B。
-3. 点查材料索引为`offset[brick]+bitCount(storedMask & lowerBits(block))`；64个`short`偏移足以容纳4096项，128 B/有材料section。删除记录用`materialKind[index]=0`作墓碑，rank仍按原storedMask；在正常保存/重建时一次压实，不为一次敲石头搬移整个section数组。若存在并发保存读者则沿用section现有不可变替换时机，不共享可变数组给异步IO。维护一个`liveMaterialCount`用于O(1)空判断，不能把墓碑再次编码成有效材料。
-4. `sample`只计算factor，不重写残差/时间；不会因红外请求频率不同而加速冷却。`rebaseForSave`至多在一次真实保存边界量化，反复查询或同tick重复保存不重复衰减。无新定时任务。保存后读数允许0.125°C量化误差，跨多次真实重存的误差单独测量。
-5. `capture`按同一ReadCursor收集所有有限节点，验证同cut后一次替换section entry；失败保留旧entry，不能把半个材料流与新空气流拼接。退休/卸载先checkpoint再释放slot；当前`MinecraftThermalInput.close()`已经先调用`pages.checkpointAll(true,true)`，复用并扩展该入口，不新增第二次全世界扫描。
-6. 全部`SectionEntry`方法成组扩展：decode/encode、contentEquals、isEmpty、rebase、删除、sourceSupported、admissionCut、红外fallback。`bricks==0 && materialBricks!=0`必须有效。仅新增可选材料字段，无旧档迁移器；读入时没有材料历史就明确估计，不借空气历史补造。
-
-### 6. 接通玩法消费者，避免更换一个接口后全系统含义漂移
-
-| 消费者/入口 | 实施动作 |
+| 文件/位置 | 必须删除或调整 |
 |---|---|
-| `SoilThermometer.use/finishUsingItem` | 两种模式同用 `sampleMaterial`，命中已放置暖石/水袋用其既有表面状态；默认显示 0.1°C，估计值带简短提示 |
-| `SoilThermometerRequestPacket` 与 `TemperatureGoogleRenderer` | 指向同一位置查询；返回温度和来源，不再另走 `WorldTemperature.block` |
-| `WorldTemperature.checkPlantStatus` / `gameplayCropEnvironment` | 普通地上作物定位根部支持块；GROW/BONEMEAL使用根部材料温度，SURVIVE保留地上空气环境。两个值各自在作物位置应用原解析场规则，不能共用一个float覆盖全部阈值。上下两格作物定位到根块；水生、附着、无土作物保留自身环境查询，以已有方块/tag分类分支处理，不强行向下测土 |
-| `gameplayPlayerEnvironment` / `PlayerThermalModel` | 对流继续使用空气；新增平均辐射温度输入，见第 7 节；不以材料温度替换空气 |
-| `gameplayTownEnvironment` | 保留当前代表点环境合同；材料通过空气影响室内环境。本轮不把全镇温度改成墙体温度 |
-| `ThermalReservoirBlockEntity` / dropped reservoir | 继续使用现有 core/surface 状态；显示直接读 surface；环境交换消费同一长波采样，不能增加另一套 reservoir 温度 |
+| `MinecraftThermalInput.InfraredCapture` | 删除`background(...)`、200-tick bucket、背景key比较、中心自然温度和81区块/729格背景扫描；position仅供场公式按需使用 |
+| `InfraredSnapshot`与C2S/S2C | 删除`backgroundBucket/background`、`hasBackground/backgroundCenter`以及BACKGROUND flags；不保留空兼容字段 |
+| `InfraredBrickCodec` | 删除BACKGROUND_VALUES/NO_BACKGROUND；保留INVALID/UNIFORM/INDEXED/RAW及palette=36早退 |
+| `InfraredViewRenderer` | 删除backgroundMirror/Texture、hasBackground/Key、origin/bucket、install/invalidateBackground、上传和reset释放；保留材料镜像并明确其现在存最终display值 |
+| `infrared_view.fsh` | 删除backgroundTexture/backgroundCameraOffset/hasBackground与fallback fetch；缺值直接MIN_TEMP占位 |
+| `MinecraftEnvironmentCapture.peekNaturalTemperature` | 检查调用者；若仍仅供IR背景则删除新增方法，不动正常环境capture/cache |
+| `FHClientEvents.onRecipesUpdated` | 删除背景专用失效调用，改为使显示请求基线失效、下一tick full；旧GPU可以保留到新提交，不为此清画面 |
 
-通用材料测温与表面红外不直接应用 `FLOOR_FROM_NATURAL/ADD_DELTA/OVERRIDE`。能量塔的物理 source 仍通过求解器影响材料；区域玩法保底继续用于人物/作物/城镇。场移动、缩小、消失不瞬间改写材料温度和 dormant。旧红外 field-only 显示目标被本方案替代，相关全场合成测试改为检查“玩法场可变化，物理表面不被直接覆盖”。
+每次实施前重新检查调用者。不能误删solver/player仍需要的自然温度缓存。原显示窗口9³ Page继续用于144³纹理地址，删除的是新增的**9³背景温度网格**，不是删除原窗口维度。
 
-这里改变的是读数语义而非删除能量塔能力。无需新增塔覆盖渲染或修改整合包配方。实施如确需调整作物 tags/pack 数据，先定位伴生仓库并读取其 AGENTS.md，对两个仓库分别验证和汇报。
+## 5. 服务端合成与增量：沿用旧机制，修正数据基础
 
-### 7. 材料参与玩家长波环境：按接收者采样，不建立海量发射源
+### 5.1 复用和最少scratch
 
-采用固定方向的可见表面采样，复用 `MinecraftRadiationOcclusion` 的 block DDA 遍历，增加“返回首个热表面位置”的具体入口。不给每块热石头注册 `PhysicalSourceSpatialIndex` source，不维护热材料 BVH、每玩家热源清单或可见性历史。
+复用当前`InfraredCapture`、Builder、ReadCursor、surfaceNodeMask/firstSlot、原范围枚举、0.25°C、40-tick错峰poll和两次一致性读上限。无场窗口继续走当前材料Page/Brick epoch快路径。
 
-采用14个固定方向（六轴加八个归一化立方体对角线），轴向权重各`1/15`、角向各`3/40`，合计1。这比14方向等权在相同射线数下具有更好的低阶角向积分性质，不新增状态。半径16 blocks，每射线最多32个voxel steps。它不能保证命中任意小热块；尖锐的已注册source/fire/lava仍走原直接辐射。方向和两个权重是静态常量，不为每次采样创建向量。
+从HEAD旧实现有选择地恢复`collectRefreshPages`、`clippedPage`、field/brickField复用列表、`Sample`以及按需自然查询辅助。不恢复旧Air采样、dormant所有权、lastPublication冒用新几何或整窗失败等待逻辑。
 
-在玩家现有错峰20-tick环境采样中，从躯干位置取得一次共享结果，五部位复用。DDA命中有热表面的方块即终止；玻璃阻挡、普通Air透过。有限节点先在同一ReadCursor下读取；dormant/估计走第3节同一合同。miss/区块缺失/暂不可读方向用空气背景。采样前检查起始voxel；现有source-to-receiver DDA跳过起始块的行为不能照搬到receiver-to-surface。每次enterSection仅`getChunkNow`取已加载section，并复用到下一次跨界；普通空气palette快退，完整实心直接命中，部分形状调用服务端`VoxelShape`的有限线段clip，复用MutableBlockPos。禁止在专用服务器引用客户端baked model。暖石/水袋使用已有方块形状与surface，跳过接收者自己的模型；动态特殊形状走该Block已有shape方法，不建立世界形状缓存。
+新增/恢复scratch仅限共享capture的`long[12] currentFieldPages`、工作位图、复用field列表、场路径double[64]节点/块scratch；需要按localPage定位时恢复一个`PagePublication[729]`借用表。无逐玩家服务端对象、历史环、场温度缓存、全尺寸第二镜像或生产统计器。每次尝试清空位图/表，finally释放borrowed publication/field/world引用；数组保留复用。
 
-计算量：令 `T_aK=T_air+273.15`，`T_iK=T_surface_i+273.15`，材料有效发射率 `epsilon_i` 首轮统一 0.9（游戏近似，后续平衡只改七类表项），则 `T_rK^4=T_aK^4+sum(w_i*epsilon_i*(T_iK^4-T_aK^4))`；`T_rC=T_rK-273.15`。先平方再平方，不每面调用通用 pow；最多一次四次方根。冷材料产生负修正，不把所有负值裁成零。
+### 5.2 解析刷新区域
 
-`PlayerThermalModel.preparePart` 将现有 operative temperature 改为 `(h_conv*T_air+h_lw*T_r+q_direct_absorbed)/(h_conv+h_lw)`，保持已有衣物/组织串联热阻、部位面积和稳定指数积分。`h_lw` 继续用当前 4.7 W/(m² K)，属于游戏线性长波近似；红外只显示表面温度，不倒算这个体感值。源码中基于空气的 `airLossFluxWPerM2`、平衡/提示计算也使用同一 `T_r`，避免主模型和显示两套公式。
+1. 在服务器主线程用`MinecraftGameplayFields.existing(level)`取得现有索引，不创建runtime或字段副本。
+2. `collectIntersecting`只枚举与当前显示窗口方块中心范围相交的field，并保持原排序；AABB缩到Page，再用`intersects`筛选。Page内再筛Brick，最后`contains`判断块中心。相交只用于候选裁剪，不能把整个AABB都染热。
+3. `currentFieldPages`是当前**几何场覆盖候选**，不是材料presence、非零温度或成功查到自然值的标记。范围仍在而邻区暂缺时必须继续保留候选，后续poll才能补齐。
+4. full只使用当前范围；delta刷新`R = previousFieldPages | currentFieldPages`。每次poll主动重建R，故温度/优先级/位置/范围/增删/自然基准变化不依赖材料epoch，也不需要给所有provider增设revision。
+5. 不在R内的Page只处理材料dirty/新增/消失。R内每Page只输出一次最终结果，不能先发一遍材料、再发一遍解析覆盖。
 
-被现有直接辐射覆盖的 fire/lava/机器发射面在方向积分中贡献空气背景，不再次叠加相同热源。暖材料的长波和 source 的直接通量分别保持来源，不能把材料温差转换成 source 功率再加一次。积分照顾负温差，但不新增空气或材料之间的全对全辐射。
+### 5.3 Page和Brick输出规则
 
-材料长波仍沿用现有人物/掉落物“单向环境采样”的边界，不从材料节点逐玩家扣能量；因此它不是闭合世界-人体的能量守恒模型。若未来要求多人同时耗尽热石头，必须做有反馈的能量交换，不能把本轮单向采样宣传成已实现。此次世界内空气/材料导热保持守恒。
+- 先枚举当前coherent材料Page及`surfacePresence Pcur`，并与客户端`Pprev`对照。`Pcur`继续仅表示可读材料资格，场区域不伪装成物理Page。
+- 完整重算Page集合为：R、Pcur/Pprev差异Page、full中的Pcur与当前场Page。其余Page按原材料Brick epoch输出。
+- field Brick读每个唯一材料节点一次到double scratch，再展开块成员并合成；无field Brick复用原材料快路径。没有命中场的块绝不调用自然温度函数；有override使Sample不需要N/base时也跳过自然取值。
+- **只在full允许省略INVALID**，因为full已预清整镜像。delta包括新增Page、旧场范围、材料消失/局部失效都发必要的显式INVALID；这允许删除客户端“presence变化就擦Page”的耦合，不新增CLEAR_PAGE wire模式。
+- 对完整重算Page，64个Brick从最新材料/场重新生成；不存在者用INVALID记录。不是在上次合成温度上再加一次场，避免每poll累加升温。
+- 若某Page读取失败或publication身份变动：rewind其记录，移除该Page材料presence，在同一请求中将整Page按**仅解析场/INVALID**重新生成；不丢掉其场，也不影响其他Page。
+- 仍核对slot generation、minimumTopologyGeneration和cursor末尾version，不能新布局配旧温度。两次完整尝试仍无法得到一致物理cut时按下一节生成field-only full。
 
-物品现有`ItemEnvironmentSampleCache`只有64个quarter-position条目，每tick清空，既无跨tick旧样本也无待办队列。本轮维持这一结构：同位置本tick的空气/长波/直接辐射一起复用；缓存可容纳的新位置做六轴等权`1/6`长波，最多`6*32`steps/位置；满额时仅使用已算空气作为辐射背景，记录近似次数，不杜撰“稍后必然补采样”。不新增物品调度器或延迟对象。最坏新增`64*6*32=12,288`steps/tick，另计原直接辐射；必须测量大量不同位置物品，不能只报告100玩家的射线成本。原cache容量保持64，不为测试成功调大。
+### 5.4 物理不可读与最终显示基线
 
-长波结果在服务器上保留为一个明确的`meanRadiantTemperatureC`及可用性，`clear/copyFrom`和所有sample缓存一并更新；不要复用`radiantFluxWPerM2`字段存摄氏度。方向积分使用物理空气背景，在解析场合成前完成；最终对流温度仍由原玩法场合成。寒冷墙面会改变玩家体感，计划不再承诺新长波加入后旧体感平衡完全不变。
+`materialReadable`仅表示这次能否使用有效年龄≤40 ticks的物理cut。无runtime时为false，dimensionGeneration用0；这不妨碍获得完整可提交的field-only或全INVALID显示。
 
-### 8. 表面红外：温度数据与几何归属同时修正
+- full触发：用户开启/换中心/显式失效、generation变化、物理readable状态转换、物理tracking重激活、可读cut的epoch重置/反向、客户端无最终显示基线。
+- 物理readable由true变false：返回field-only full，一次清除全部旧材料同时重建当前场。后续稳定false可继续delta，不因`!knownReadable`或epoch=0每poll重发full。
+- false恢复true：full重建最新材料+当前场，禁止把field-only基线当成旧材料epoch继续拼接。
+- 即使纯控制状态变化而无有效温度，也发送一个可提交的空full；客户端在LAST确认generation/readability/epoch，避免只显示控制却永不更新身份、不断收到同样控制。
+- 同状态、无场R、无材料变化则无S2C。存在R时重算/发送R，**不承诺有场静止窗口零响应**；不为追求这项承诺新增逐玩家历史或温度副本。
 
-#### 8.1 温度纹理与稀疏同步
+## 6. 原自然公式需要的最低计算量
 
-沿用 `InfraredViewRenderer` 的单份 direct `ShortBuffer`、`144³ GL_R16I`、729 Page 地址、Brick codec、40-tick 错峰 poll、Page subimage、full/尾包提交及 retry。0.25°C 编码继续沿用；不增加第二张全尺寸三维温度纹理。
+删除背景网格不等于删除`FLOOR_FROM_NATURAL`中的N。必须保持：
 
-服务端普通 Brick 读取各唯一可显示材料节点一次，按 `nodeAt` 展开。纯空气温度不再作为表面纹理记录，material-only Brick 可发送；带材料 transport 可发送其有效材料温度。读取与 dirty tracking 都覆盖有限材料节点。删除、材料替换、Page 退休必须发对应 INVALID 或 replacement；retirement 时先提供可用的 dormant 材料值，不整 Page 一律清冷。
+- 只有块中心实际命中field，且`Sample.requiresNatural()`，或无M而`requiresBase()`时才查询N。
+- N使用原IR合成的`WorldTemperature.naturalAir`，不是带随机噪声的`air`、已叠场的`block`，也不是整段统一的Page中心估计。不能因工具显示值不同而悄悄改变IR公式。
+- 读取只限已加载区块和有效世界高度；BiomeManager缩放采样可能取邻区，保留`hasBiomeNeighbors`必要可用性判断。在该Page第一次真正需要N时才准备最多9个邻区可用性值，并在该Page复用。无场/override-only不做这些检查。
+- 保留此前已做的**精确**同生物群系Brick复用：确认相关3³ quart holder一致且所需邻区可用后，同一Brick按占用Y层最多算4次N；复用已展开后的节点scratch存这些值。混合biome退回命中位置的精确N。该检查本身有成本，不能把“不确定同biome”当同温。
+- 缺少计算N必需的已加载数据时，保留M或INVALID；不加载区块、不拿中心估计替代。currentFieldPages不撤销，下一次poll自然恢复。已能确定结果的OVERRIDE不受不必要的自然读取阻塞。
+- 复用现有dimension/biome与climate路径，不新增Page自然网格、后台遍历或每客户端缓存。
 
-休眠材料通过同一 `INVALID/UNIFORM/INDEXED/RAW` 记录发送精确块值；原 `DORMANT_SECTION` 的空气 Brick mean 不能再覆盖实心表面。现有 dormant ownership 和刷新标记按表面合同简化，不能为新材料另复制一套 144³ mirror。沿用客户端携带 presence/refresh 状态重建需要刷新范围，服务端不保存逐玩家温度历史。
+## 7. 包与客户端：一个最终显示事务
 
-热源/暖石等已有独立状态：固定 fire/lava 温度是小型服务器同步 profile 表；机器通过已有 source 索引按所在 Page 输出有效表面温度；暖石/水袋使用现有 BE 更新数据。动态独立表面的旧/新范围复用 `knownRefreshPages` 处理退出；没有 source Page 也能显示有效发射面。固定温度 profile 修改只更新小表，不让每个熔岩方块重建物理 Page。禁用/移除热源退回该位置普通材料或背景，不能留下旧的热源颜色。
+继续使用现有两个packet。建议目标记录合同（实际名称统一调整调用者，旧构造器不保留伪兼容）：
 
-`knownRefreshPages`不能单独作为每40tick重发整Page的理由。source token复用`MinecraftThermalInput.dimensionGeneration`与`PhysicalSourceSpatialIndex.nextRadiationRevision`，请求/响应携带这两个long；后者须在删除/禁用时同样推进，不能只在新增/改功率时推进。token、物理epoch、dormant量化结果及背景版本均未变时不重建源覆盖Page。token变化时才重建旧标记与当前源所在Page并集，物理或dormant已脏Page始终重新合成当前source值。无需服务端每玩家缓存或每source另一份显示版本。runtime不存在用显式空token，不能与重启后同数值revision混淆。
+```text
+C2S: requestId, forceFull,
+     committedGeneration, committedCenter, materialEpoch,
+     knownSurfacePresence[12], knownMaterialReadable,
+     hasKnownFieldPages, [knownFieldPages[12]]
+S2C: requestId, serverCenter, generation, materialEpoch,
+     flags(FULL/FIRST/LAST/MATERIAL_READABLE),
+     hasSurfacePresence, [surfacePresence[12]],
+     hasFieldPages, [currentFieldPages[12]], brickRecords
+```
 
-Page内源通过现有`sourcesByOriginSection`索引枚举，不能每Brick扫描全维度source列表。最终64个块值的优先顺序为独立surface provider -> 当前材料/phase -> 匹配dormant -> INVALID交由背景。每个输出Brick只写一次最终记录，禁用/删除时重算原覆盖位置；不得发物理温度后再靠包顺序叠加场。用一个请求复用的Page级源位置scratch即可，最多4096个short与64个long块掩码（8,704 B），只在Page确有source时按被使用的Brick清理，不预填整个显示窗口。BE和实体已有更新通道的surface无需再走这一source scratch。
+- 删除原MATERIAL_UPDATE/独立背景控制分支：每份响应都是可提交的最终display事务，payload允许为空；MATERIAL_READABLE只描述原始物理数据可用性。
+- C2S full省略旧field mask，因为旧中心不参与full；delta空mask编码一个false即可。S2C field mask每个part带相同的完整当前值，false明确表示全0，而不是“保留旧值”。presence仍可在delta未变时省略，full必须携带完整presence。
+- 恢复的field mask最多96 B；不传场定义、不让shader每像素遍历field、不加新packet。保持每个**完整包**≤960 KiB及Page边界拆分；沿用现有2,048 B头部预留即可，更新注释和边界测试，无需为节省少量空间调整已验证的分包器。
+- FIRST验证requestId/中心/generation；full清唯一CPU镜像，delta只应用显式Brick记录，不根据材料presence调用clearPage。旧GPU继续按已提交origin显示。
+- LAST才提交generation、materialReadable、epoch、surfacePresence、currentFieldPages和origin，并执行full/dirty Page上传。中途绝不提交field mask，否则后续撤销范围会用未显示过的状态。
+- `deltaBaselineValid`改为最终display基线是否完整；field-only全量也必须设true。单独保留上次提交的materialReadable供请求回显，shader不再用它禁用整个温度纹理。
+- shader只按是否已有可用纹理及几何地址读取最终值；无纹理/INVALID显示蓝色占位。保留0.5 block后移上限及分离相机坐标；按19:45 GPU回归修正为沿重建法线内侧偏移，depth量化步长只用于误差估计。
+- 请求超时、跨中心、取消/重新打开、旧request丢弃及41..59 tick full重试保留；只有等待完整显示full时重试，不能因materialReadable=false永久处于awaitingFull。
+- recipe sync使显示基线请求失效，下一tick full；世界reset清field mask和请求状态并释放原GPU句柄，不再有背景资源。shader资源reload保留原overlay混合。
 
-material-only场景仍使用物理Page presence；source-only、dormant-only与小背景各有现有/新增的明确状态，不能把`presence=0`解释为整屏没有温度。任何Page的live cut暂不可读时不以背景覆写该Page旧材料值，继续当前coherent基线并在后续自动poll重建；同位置已确认的block reset例外，立即清除。收到主世界block replacement时客户端清该texel并标原Page上传dirty；服务器旧publication的geometryRevision必须覆盖对应reset事件后才能再次发送该位置值，防止旧包复活。无需逐块版本数组。
+## 8. 复杂度、成本和明确排除的替代实现
 
-#### 8.2 无模拟数据的自然背景：小表而非重算 144³
-
-背景改为`9×9×9 GL_R16I`，每个显示Page只有一个服务器已计算的自然边界温度，共729个值、1,458字节；CPU一份short镜像，GPU一份。优先从现有Page自然边界取值，无物理Page时按同一Page中心调用`WorldTemperature.naturalAir`。复用每次capture的Page句柄/loaded chunk，不对729个位置反复定位相同chunk。不传公式、不在客户端重新算气候、不在full时遍历近300万个块。
-
-背景三轴均为16-block分辨率估计，与当前物理Page初始背景的精度相同。它不能表达Page内部的自然高度/群系差异，但温度计、材料初始化与红外在使用估计时采用同一个基准，不会因是否驻留而跳到另一套公式。实际材料温度仍为整块精度，不在shader跨墙插值。无热状态的真实温度未知，不能用更密的显示表伪装成真实材料模拟。
-
-full 或窗口中心改变时带完整背景表；稳定窗口跟随已有自然边界的 200-tick 级刷新，客户端请求携带上次背景时间片和背景表版本。服务器小型显示profile/背景版本跟随现有tags/config重载事件递增，没有周期性hash。同片无变化不重发。另用两个long携带窗口81个chunk的已知加载位（16 B），与当前已加载状态对照触发背景更新；原物理Page presence不能表示这一信息。无加载数据的列保留 unavailable，不用零温度冒充。背景可以分包，但沿用同一 snapshot 的尾包安装，不增加后台观察服务。
-
-小型背景表替代旧的“完全无独立自然温度同步”约束。相比上一版计划的`9×144×9`，取样和数值存储都减少16倍：每次full最多729个Page背景取样，已有值时无需再次算公式。旧r128全窗口场合成约300–440ms仅为旧实现记录，新路径仍须实测。背景表按已有响应附带固定数量short，无需再套一层Brick codec或自建调色板。
-
-#### 8.3 几何归属：一个专用热表面 pass
-
-不再使用 `SURFACE_SAMPLE_SCALE=2047/2048` 选择空气，也不把它改成反方向就宣称完成。原深度不能区分地形、生物、粒子，普通透明玻璃在长波下的遮挡也不同；这是新 pass 的具体必要性。
-
-只在红外实际绘制期间增加一个thermal-surface pass，复用摄像机、视锥、已有可见chunk mesh/GPU buffer，使用自己的深度与单通道`GL_R16I`温度附件。直接在该pass输出量化温度，删除上一版R32UI对象标记附件及最终合成的标记分支。不重新逐块烘焙世界，不GPU读回，不给每块方块注册渲染器。
-
-- terrain metadata只含`ownerLocalIndex`的12 bits与热绘制类别4 bits：普通表面/玻璃/火焰/熔岩等，不含当前温度或窗口内索引。一个quad的顶点携带相同owner；section/region draw origin与当前texture origin在draw时合成绝对归属。移动窗口、温度变化、profile温度更新都不重建mesh。模型偏移/跨块顶点不能floor猜owner。
-- terrain vertex shader按owner查一次144³温度，INVALID才查9³背景；固定发射类别查小profile表。结果以`flat int`传到fragment，fragment只做必要alpha判定并输出温度与深度；四个顶点可能重复同一texel读取，列入V计数，不能称GPU每个像素只读一次。对fragment查温可作为同场景shader对照，只保留测量后更合适的一种；不增加运行期双路径开关。
-- 临时温度附件用整数clear写`Short.MIN_VALUE`，禁用blend/filter/MSAA resolve。天空/无表面由depth=1判定；表面存在但温度仍INVALID时保留原画面并在准星提示暂无估计，不能把invalid转成0°C或最低温。切换/resize按所属资源生命周期释放。
-- 原有mesh、UV和alpha cutout重用，热pass不跑光照。玻璃按热材质写depth，玻璃中间透明纹理不应用可见光alpha discard；栅栏/植物保留真实几何与cutout。烟雾不画热表面，火焰画发射面。透明水面的热波段按不透明表面处理，温度无物理节点时明确使用背景估计；不能透过水面直接看水底温度。
-- 实体和BE复用既有模型/变换，通过draw uniform或现有per-part render context提供直接量化温度，不把温度复制到chunk顶点。保留热depth决定遮挡，衣物外层输出其温度。layer重绘不能再次执行实体tick、动画推进或产生粒子，只复用本帧计算结果。
-- 最后原全屏红外pass只读取屏幕热温度、热depth和原颜色，量化值乘0.25后配色。距离由同一main Camera与热depth得到，扫描边界和0.43混合可沿用。最终合成不再读取世界3D温度、对象ID或发射profile，GPU温度没有第二份CPU屏幕镜像。
-- 渲染输出由两个明确的 renderer adapter 接入：Vanilla 和当前装载的 Embeddium/Oculus。共享温度及标记协议，不写两套物理数据路径。项目目前只有 `IrisRenderingPipelineAccess` 等有限接入，不能把复用 mesh buffer 当作已存在 API；实施第一个客户端里程碑就核对实际 renderer 的格式、draw 调用和生命周期，并补齐两个 adapter。
-- FBO、viewport、depth mask、blend、draw buffers 与纹理上传状态由当前 pass 成对恢复；窗口重建、关闭红外和世界退出释放所属资源。现有旧纹理 reset/generation 时序沿用。不能因 renderer 暂不支持就悄悄切回空气热图。
-
-热pass统一处理实体、玻璃和复杂模型，避免多套屏幕修补mask/CPU射线。R16I加保守32-bit深度按`6*W*H`数值字节计，1080p约11.87MiB；相比上一版8WH省4,147,200B，约3.96MiB。实际驱动可能对齐，报告真实GPU分配。该pass确实多绘制一遍可见几何，必须测GPU时间；不能用“只一个pass”推导性能最优。
-
-本次已只读检查当前Embeddium依赖：`CompactChunkVertex.STRIDE=20`，position/material/mesh占0..7，color占8..11，UV占12..15，light占16..19，没有可直接占用的空洞。最小通用实现增加一个packed owner/class字段并对齐到24字节，原mesh数值带宽增加20%，不能冒称关闭红外完全零内存成本。不要挪用light高位，其他渲染器可能读取它。Vanilla使用同一owner语义，实际stride单独计量。若后续现有renderer格式确有受支持的同类字段，可复用，但不能把待确认字段作为预算前提。
-
-已确认的Embeddium接入锚点为`ChunkVertexEncoder.write`、`CompactChunkVertex`、`DefaultChunkRenderer.render`/`fillCommandBuffer`/`prepareTessellation`、`ChunkShaderInterface.setRegionOffset`。owner必须在原block/fluid mesh builder仍知道BlockPos时写入，并跟随原缓冲排序/拷贝/区域迁移；不可另按提交顺序拼一个未同步的sidecar。Oculus启用时可能替换vertex type，adapter必须选择实际`ChunkVertexType`和draw bindings，不能硬编码20/24字节去解释另一格式。
-
-热pass只使用扫描球相交且当前view可见的section draw ranges，复用原索引和region多绘制批次；不按方块循环draw call。渲染温度不用与主颜色重复执行shaderpack后处理。复用绑定/绘制能力可以通过现有mixin/accessor取得，但不克隆整个Embeddium renderer源码或建立第二套chunk编译/驻留系统。模型改动只由正常chunk rebuild产生新owner数据，不因开启红外强制全部section重编。
-
-#### 8.4 生物、热源和色标
-
-玩家已有五部位体温是内部节点，不能直接当衣物表面温度。服务器复用现有部位热阻和本轮环境结果，按稳态热阻估计 `q=(T_part-T_op)/(R_tissue+R_cloth+1/h_out)`、`T_outer=T_op+q/h_out`。单位为 W/m²、m² K/W 和 °C；液体接触/湿润沿用现有分支，使用当前保护参数。该外表估计不建立新体温积分节点。
-
-玩家的至多五个量化外表温度通过既有实体 tracking 范围发送，仅 0.25°C 值变化时更新，最多每 20 ticks；不能假设 `FHBodyDataSyncPacket` 已同步了其他玩家。没有完整体温模型的生物使用固定物种有效外表温度/随环境类别，小型静态表即可；未知种类使用环境估计，不一律恒温 37°C。若确需新实体同步包，复用 Forge tracking 分发，不增加自己的订阅系统。冷实体、衣物和小模型的精度范围写进最终文档。
-
-tracked实体新开始跟踪时主动发送当前五个值，不能只等下一次changed事件；自身玩家也接收一次同格式更新。缓存上限随原tracked entity生命周期，离开tracking/换维度立即移除，entity ID复用不能继承旧温度。首次尚无表面数据先显示背景估计。温度快照只保留在实体已有温度数据/客户端对应实体中，不在红外renderer再维护一份ID到温度的全局map；是否需要发更新由同一份已量化值比较，不每帧重新计算服装热阻。
-
-fire/lava 共享服务端已有温度参数或有效发射模型。功率型篝火可按 `T_K=(P_rad/(epsilon*sigma*A_eff)+T_refK^4)^(1/4)` 得有效发射温度；P 为 W，A 为 m²，sigma=5.670374419e-8 W/(m² K⁴)。给 profile 明确的有效面积/发射率候选，首轮 A=1、epsilon=0.9，不把功率 W 当 °C。熔岩沿用当前配置温度与有效发射率，不借此次重画调整其现有辐射功率。
-
-默认固定环境色标候选 -50..50°C，额外高温档候选 0..1200°C；超量程饱和并保留图例/准星数值。两档都只是显示参数，不影响求解温度。第一版无自动量程和复杂光谱材质；已求解表面温度是主显示量，发射率用于辐射模型，不能宣传为带真实反射的辐射测温仪。
-
-### 9. 成本、预算与实际性能验收
-
-令B为驻留Brick数，S为有限节点数，E为唯一交换边数，D为本次需编码Brick数，F为含邻接闭包的重编owner fragment数，P为读取显示Page数，V_draw为本帧绘制顶点数，V_mesh为全部已保留chunk mesh顶点数。B受既有Page/Brick驻留和arena/work上限共同约束。显存按V_mesh计算，shader工作按V_draw计算，不能把两者混用。
-
-| 路径 | 预期工作与状态上界 |
+| 路径 | 本方案成本 |
 |---|---|
-| 普通材料节点 | 每驻留 Brick 至多 64 个有限节点；不随观察人数复制，完整空气仍 1 个 |
-| 拓扑编译 | 每owner fragment至多144内面+3*16正向跨面，最多192F面检查；依赖捕获另为6*16面邻位置。邻接闭包F不等于最初变更Brick数 |
-| 求解 | O(S+E)，材料边复用原执行数组；不用每步重新计算指数 coefficient |
-| 点测温 | Page/Brick 一次定位、一个节点读取；fallback 最多一次已有 dormant 查找 |
-| 发布 | 原live-slot遍历同时记材料变化与热残差，O(S)；MATERIAL_TRANSPORT复用原kind字节，纯Air无显示脏；phase候选另8 B active mask |
-| 红外增量 | O(P+64D+视野内源数)展开/编码，唯一节点只读一次；source token无变化跳过覆盖重建；原palette编码上界仍是固定64值且第36个不同值提前转RAW |
-| 红外背景 | full最多729个取样；稳定每200ticks一张1,458 B小表，100人原始数据约14,580 B/s，不含包头/重传/移动full |
-| 玩家材料长波 | 每次采样最多 14*32=448 voxel steps；100 玩家各每秒一次约 44,800 steps/s，另计原 source rays，不等同于耗时保证 |
-| 物品材料长波 | 原64位置/tick限额，每新位置6*32，最多12,288 steps/tick；其满额次数纳入性能结果 |
-| checkpoint | 旧空气最多640 B+新材料最坏12,808 B/section；额外offsets128 B和live count4 B/有材料section；worker恢复mask8 B/Page，均另计对象对齐 |
-| 客户端 | 原CPU mirror 5,971,968 B+GPU同量；背景CPU/GPU各1,458 B；热pass约6WH B；owner属性按4V_mesh B保守计，温度vertex fetch按V_draw计 |
-| 请求scratch | source Page scratch至多8,704 B/共享捕获器，按需分配并复用；临时reset/分类mask随已有batch，不留全世界副本 |
+| 无场、无材料窗口 | 无自然采样；首次/失效full后稳定poll可无S2C；shader只查原纹理并蓝色占位 |
+| 无场、材料稳定窗口 | 当前Page资格/epoch读取，未变不发S2C；材料一份镜像、一份GPU纹理 |
+| 有场窗口 | Page/Brick候选裁剪后做命中块合成；原稳定40-tick周期，不每帧/每tick全窗求值 |
+| 场缩小/删除 | 旧/新范围并集重建一次；旧范围之后从field mask消失 |
+| 客户端 | 原144³ CPU/GPU各5,971,968 B、8 KiB部分上传scratch；删除背景CPU/GPU各1,458 B与背景取样，恢复一份96 B field mask |
+| 服务端 | 一个共享capture scratch；无每玩家温度/field解释器，物理节点/边数不因显示改变 |
 
-`maximumPages=3200` 不能证明全材料场景可承载：3200*64*64=13,107,200 个块节点只是未受 arena 限制的地址上界。实现必须按实际 `maximumArenaSlots/maximumLiveCells/maximumPairOperations` 收费，不能按 Page 数隐去材料成本，也不能为通过 fixture 悄悄增加上限。
+令R为前后场候选Page数、Br为相交Brick数、Fb为各Brick候选field数，场路径上界为Page遍历加`Σ(64*Fb)` contains/合成与必要N查询；不能把有场开销说成仅729个低频背景值。精确同biome复用降低自然公式调用，不消除边界判断与合成。
 
-固定机器上测同一运行目录/同一配置，保留现有构建产物与正常增量编译。无需复制仓库重编、路径敏感 hash 或钉死原料版本。复用已有 profiler/JFR与日志计数；只有缺少关键数值时加有限计数器，不开发新的性能平台。
+这不是声称“恢复解析场后所有场景更快”：与当前丢失场功能的实现相比，有场窗口增加的是用户要求的必要计算；无场窗口明确删除无用背景工作。与原解析场架构相比，复用原服务器合成机制，移除Air/dormant复杂性，保留已验证的裁剪/早退/精确复用。
 
-基准场景：无热源冷世界、单篝火木/石/金属室、多层实心墙、100 个分离热源与100观察者、100人冷启动红外、移动跨 section、全窗口 hot/dormant 增量、玻璃+实体+Oculus。每场景预热后采样至少60秒，报告服务器主线程 p50/p95/max、worker cut耗时和积压、节点/边数、分配速率、retained heap、S2C bytes、客户端CPU/GPU帧耗时。
+暂不加入field revision/温度hash、服务器observer、场结果缓存、第二张全尺寸纹理、GPU field循环或新渲染后端。它们需要额外生命周期和失效合同，当前没有测量证明值得。若实际目标场景超预算，只针对已测热点优化；不以恢复功能为名升级架构。
 
-验收门槛：原无材料Air快路径节点/边不增加；从未开启红外时不分配显示mirror/FBO或计算背景，已开启后关闭停止pass/poll并按既有资源生命周期释放或保留有界复用缓冲，准确报告保留值。owner顶点字段是持续mesh成本，不能写成关闭红外零成本。无变化材料/source不重复发；物理/保存内存落在预算；100人持续负载主线程p95<50ms，worker无持续增长积压。满负载物品另测。50ms是20TPS目标，不是已达到的数字；冷启动尖峰单列。full首次发送按已有entity ID错峰，不能同tick强制100份背景计算；背景稳定发送仍走40-tick poll的错峰。预算内工作队列应最终被服务，但持续容量耗尽时不得承诺无限传播，记录受限区域和等待年龄，保留已有能量。
+## 9. 实施顺序与必须通过的验收
 
-GPU比较至少固定相同分辨率、render distance、shaderpack、视角与场景：关闭红外、热pass空绘制开销、完整R16I表面绘制。再对照一次vertex查温与fragment查温，比较实际GPU ms及V_draw/片元量后保留一个实现。不能仅依据FBO少4MiB就宣称帧率提高，也不为争取纸面“最佳”同时维护MRT改shaderpack、深度猜归属和全场重绘三种生产后端。
+1. 先改server最终display合成和协议/客户端事务合同；删除背景路径，保留材料底座与蓝色占位。在这一阶段就用真实generator夹具验证塔内外输出，不能最后才补塔测试。
+2. 将当前`ThermalInfraredGameTests`中“解析场不影响IR”“背景729值”的断言替换为本合同；保留材料/空气分离、局部Page、重启、网络分包及144种深度测试。不能以旧57通过当作新方案的证明。
+3. 客户端实际验证原混合、蓝底、场内热色、关塔恢复及后续遮挡；然后计量真实目标负载。只做文档修复时不重跑编译/GameTest。
 
-### 10. 实施顺序、文件责任与阶段验收
+| 场景 | 可观察断言 |
+|---|---|
+| 无runtime/无场/无材料 | 满圆蓝色占位；没有背景采样/纹理/数据；不开物理runtime、不加载chunk |
+| N=-15、真实generator D=15 | 场内缺M和M=-10均编码0°C；场外缺M为INVALID；场内M=8保留8°C；对照真实`publishGameplayHeat`的塔底中心与半径 |
+| 场无变化、材料变温 | 未覆盖区域按原epoch增量；覆盖区域从新M合成；不是在旧display上重复加delta |
+| 只变场，不变材料epoch | 启停、升降档、移动/缩半径、删除provider均更新；旧区域还原M或INVALID |
+| 多场 | 同/不同priority、双塔保底、OVERRIDE/MAX_HEAT/MIN_COOL/ADD_DELTA按原排序；非球形边界不把AABB当真覆盖 |
+| 先合成后量化 | 使用靠近0.125°C量化边界及小delta的double值，输出等于quantize(compose(rawM)) |
+| Page失效/恢复 | 失效Page仍显示解析场；其他Page材料不丢；恢复时重新合成；没有场的失效格蓝色，无旧热色残留 |
+| global invalid/超龄、runtime重启/无runtime | field-only快照能提交；同一不可读状态不每poll full；恢复/代次变更full；场独立生命周期保留 |
+| 场删除与材料presence同时变化 | 最终记录一次性恢复，无client清Page误删场；空field mask清掉旧基线 |
+| 真协议/客户端事务 | forceFull旧中心mask不参与；LAST才提交两个mask与origin；旧request不复活，partial接收中移动/关闭/recipe reload正确；无背景字段 |
+| 编码与GPU地址 | XYZ非对称温度、负坐标、最高localBrick、RAW最大窗口和960 KiB全包边界；full省INVALID，delta显式INVALID |
+| 原画面效果 | 同材质固定光照下验证0°C金黄、-10°C红褐、NO_DATA蓝底的混合前颜色与最终截图；0°C不能被当缺值。按原色标，真实-10°C本来不是纯蓝 |
+| 实机几何 | 正/斜视、近/远、墙后热源、六面、第三人称、resize、原版/Embeddium及普通图形模式；实体/烟雾/手不读取terrain温度；透明专用热成像不纳入 |
 
-每步应可单独检查，但本计划只有下表各项及第11节验证全部闭合才标 completed。为避免先实现昂贵模拟却仍无法观测，测温接通放在导热扩展之前。
+Java17只运行`compileJava compileGameTestJava`与完整`runGameTestServer --offline --no-daemon --console=plain`，不写/跑JUnit，不恢复测试排除脚本。ForgeGradle离线联网预检若仍卡住，沿用已验证命令参数`-Dnet.minecraftforge.gradle.check.certs=false`，不修改项目配置。
 
-| 阶段 | 主要文件/符号 | 交付与退出条件 |
-|---|---|---|
-| A：统一可读节点 | `BlockBrickLayout`、`WorkerBrickTopology`、`PagePublication`、`ThermalCellArena`、`QueryPublication`、`MinecraftThermalInput`、两个土壤温度计入口 | 现有已暴露材料可测；派生有限节点数；MATERIAL_TRANSPORT分类；material-only有效地址；同基准估计 |
-| B：材料导热与驻留 | `MaterialBoundaryRegistry`、`MinecraftThermalProfiles`、`BrickTopologyCompiler`、`MaterialEdgeCompiler`、`TopologyPlan`、`WorkerPageStore` | 固定热容、内部材料节点、固体面导热；跨 Brick/Page 热传播、预算待办、同材料迁移正确 |
-| C：余热生命周期 | `DormantChunkThermalState`、`ThermalInputBatch`、`BrickMigrationKernel`、`captureDormantPage`、`LevelChunkMixin_DormantThermal`、启动/重载入口 | 删除空气mean恢复材料；唯一输入流且只恢复一次；材料-only保存、重启、同类替换、tags重载 |
-| D：玩法接入 | `gameplayCropEnvironment`、`ThermalEnvironmentSample`、`MinecraftRadiationOcclusion`、`PlayerThermalModel`、reservoir环境入口 | 土壤输入、冷/热材料长波、热源不重复、衣物外表估计在真实环境生效 |
-| E：表面数据协议 | 两个红外packet、`InfraredBrickCodec`、`InfraredCapture`、`InfraredViewRenderer` | 材料delta、material-only、dormant替换、背景小表、发射profile、退出清理、分包coherence通过；不再把石头INVALID当正确 |
-| F：几何与实体 | `InfraredViewRenderer`、`infrared_view.fsh`、`FHClientEvents`、Vanilla/Embeddium/Oculus adapter、实体tracking同步 | 一个热表面pass覆盖墙、台阶、玻璃、人物、暖石与火源；关闭时释放资源；专用服务器能正常加载 |
-| G：联调与性能 | `ThermalLoadedWorldGameTests`、`ThermalInfraredGameTests`、新增同目录材料场景、既有run配置 | 完整因果夹具、实际客户端和100人目标场景完成；文档与日记落地 |
+性能验收须分别测：无场静止、真实塔r16/r24、多个重叠场、材料+场、移动/撤销、100次观察者请求；记录capture/必要自然查询/实际wire、客户端full/delta上传和GPU帧时。区分warmup、p50/p95和一次值，不复用此前“背景键命中且场被删除”的0.0266 ms作为新场合成基准。用既有测试夹具/外部JFR记录，不加生产计数、逐玩家缓存或复制checkout重编旧版本。
 
-F 的 renderer 格式/mesh复用探查在 A 开始时做短原型验证，避免完成全部协议后才发现需要不同 owner 表达；最终实现仍只保留一个选定方案，原型不形成第二套渲染路径。不因这个原型更换项目 renderer、依赖版本或引入引擎框架。
+## 10. 实施结果（2026-09-12 19:25）
 
-### 11. 必须实际验证的因果链与边界
+- 已按本合同实施：删除729自然背景值、background key与第二纹理，恢复原解析场合成；shader保留0.43混合、原色标和蓝色缺值占位。继续仅读取surfaceNodeMask材料基础，不恢复Air/dormant显示。
+- 复用一个共享capture，新增一份localPage到handle的借用scratch和原场列表/位图/double scratch；无逐玩家服务端状态或第二套纹理。场并集刷新与显式INVALID统一最终display事务，materialReadable不再作为整张纹理显示开关。
+- Java17 `compileJava compileGameTestJava`通过；完整`runGameTestServer`为58/58通过。包含真实GeneratorData发布的塔底球形场、无物理runtime显示、升温/缩小/删除、冷材料保底、局部Page/全局publication失效与field-only delta、0°C有效值、末端量化、分包/field mask往返及原144种深度数值用例。
+- 100次同窗口GeneratorData（RLevel=2）delta请求：capture中位3.5303 ms、p95 8.3229 ms，合计3,971,100 S2C字节；100次full：中位3.4527 ms、p95 3.812 ms，3,754,500字节。营火+半径8场delta：中位0.2582 ms、p95 0.4022 ms。均为单机串行样本，不等于100实际在线玩家，也未与旧版本做受控GPU/堆对比。
+- 客户端已启动本次构建，创建独立`Codex Infrared Repair`世界。进入场景后用户按Esc停止界面控制；停止继续操作，未把截图、蓝底/热区对照、图形模式或GPU耗时记为通过。日志仅确认红外shader资源加载。
+- 三份living docs已同步最终display语义、独立场刷新、field-only事务及背景删除。日记见[本轮实现记录](../diary/2026-09-12_19-25-00_infrared-fields-blue-placeholder.md)。当前计划保持in-progress只因实机验收未完成；生产代码不再处于待实施状态。
+### 追加：19:45实际GPU条纹回归
 
-沿用 Java17、生产编译和真实 Forge GameTest 工作流，不新增或运行 JUnit。执行 `./gradlew.bat compileJava compileGameTestJava --offline --no-daemon --console=plain` 与 `./gradlew.bat runGameTestServer --offline --no-daemon --console=plain`；如继续使用现有范围 init 脚本，记录确切脚本、所含测试和排除原因。新材料闭环场景不得被排除。当前旧测试里未接通的掉落物接口问题不能被当作本方案已解决。
+用户两张截图显示同平面黄蓝细条纹。离屏只画单平面即可复现，不需要重叠几何，因此确认原“depth两个量化步后移即可保证内侧”不足；传统双面Z-fighting不能解释该复现。理想点投影的144组测试没有包含真实光栅化，不能据此保证材料归属。
 
-1. **可观测吸热/余热：** 真实篝火加热空气和石块；工具读数等于同位置材料发布值；灭火后空气先降、石块保留余热并向空气放热。最终实际客户端红外颜色与材料温度对应，不读取前方空气。测试不能只直接 set arena 温度替代全部真实加热链路。
-2. **固体内部传播：** 绝热侧边的三块材料链，热量从首块传到末块；跨 Brick 和跨 Page 分别测试。没有空气通路时仍传播。检查封闭有限节点总焓和时间推进，排除通过周围空气绕路导致的假通过。
-3. **容量与迁移：** 开洞/关门/邻块变化不改变现存材料热容；节点转换保持能量。同类不同Block替换、同cut拆掉再放回也不继承余热。MATERIAL_TRANSPORT仍能接受source并参与Air交换。完整Air fast path不变；纯Air温变不产生材料红外delta。
-4. **稀疏边界：** 热材料能驱动下一层驻留，纯观察不能；未加载邻块无固定冷源；预算缩小时既有状态保留、待办最终被服务，记录延迟。测试冷地下不因一个热源在同一cut递归铺满。
-5. **保存全过程：** material-only entry有效；NBT往返、真实chunk卸载/加载、进程重启、tags reload保持匹配材料温度到量化/衰减误差内。冷热材料不被空气mean抹平；旧无新字段format2仍读Air但不给材料编造历史。测试Brick在同Page中反复退驻留/重入、staging重试、迁移后恢复，确认旧checkpoint只承接一次；查询次数不改变衰减。删除一个墓碑不移动其他块温度。
-6. **测温一致性：** 创造即测、生存长按、HUD请求同一块返回一致来源/值；无状态有明确估计；没加载返回不可用。查询材料-only不能被当成无Page；不得读取任意最暖transport fallback。
-7. **作物：** 根部土壤改变影响普通作物生长/施肥；温暖土壤不能自动免除寒冷空气的生存阈值；双高作物定位根块正确；水生/附着例外不误取脚下墙；能量塔场仍保障作物玩法，却不改写土壤温度计和材料H。
-8. **材料长波：** 相同空气下热墙减少失热、冷墙增加失热；遮挡改变；固定14方向权重和为1，六轴/对角场景都测。起始voxel、部分形状、玻璃和接收者自身排除正确；小source继续原直接辐射且不重复。64位置物品缓存命中/超额明确计数；不再测试并不存在的物品待办队列。
-9. **红外协议：** 仅材料变化发delta；纯Air和稳定source不重发；source删除/禁用/重启token都覆盖。full移动、重试、尾包提交、material-only、dormant接管、729值背景、loaded mask、初次tracking全量、entity ID复用均检查。客户端镜像对应服务端值；block reset后旧publication不能复活旧温度。改变窗口只更新origin和温度，不重编owner mesh。
-10. **真正的图像检查：** Vanilla及Embeddium/Oculus各测试石墙、台阶、栅栏、玻璃后生物、人物衣物、火焰、烟雾、放置/掉落暖石；第一/第三人称、潜行、远坐标、窗口resize、多次切换。墙后实体不得穿透；玻璃显示自身温度；热表面归属不随镜头抖动；无状态背景不是全冷蓝。仅GameTestServer通过不能替代此项。
-11. **相变边界：** 普通材料接触潜热槽仍触发正确ACK；冻结但未到平台的材料读数标估计，不报恒定转换温度；既有相变潜热不因通用材料查询和checkpoint被覆盖。
-12. **性能：** 第9节全部场景实测并保留可追溯日志；报告新增有限节点/边与内存，不以“复用了类”或少量fixture通过声称全场景最优。
+shader已改为在所有early return之前计算深度表面导数，沿内侧法线加`1/1024 + 4*length(depthNudged-surface)` block取样余量，保留0.5 block限制和原纹理/混合/解析逻辑。沿法线避免斜视时沿切线横跨相邻块；导数必须在非均匀分支之前求值，否则扫描边缘仍会出现错误。
 
-### 12. 文档更新与本次计划结果
+新增`InfraredRasterValidation`，用项目现有LWJGL/JOML在隐藏OpenGL context中直接执行生产fragment shader，只替换最终输出为成功/缺值诊断色。6朝向×8距离×5俯角×3yaw×2 depth格式=1,440场景，RTX 4070 Laptop实测130,955,206个被分类像素、错误侧0、GL error=0。原单平面120场景方法出现3,943,910个错误侧像素。没有新增生产pass、vertex或GPU附件；这不是对所有自定义模型/驱动的完全证明。
+### 23:12材料/相变状态复查
 
-实施时同步更新：`docs/climate/world-climate-and-temperature.md`（三类温度及红外语义）、`thermal-runtime-architecture-and-optimization.md`（节点/span/固定容量/导热/复杂度）、`data-lifecycle-and-integration.md`（材料checkpoint/网络/重载）、`heat-production-and-network.md`（材料参数/辐射边界）、`player-temperature.md`（工具、土壤输入、长波、衣物表面）。Boss文档目前仍有旧的“红外不含解析场”表述，按实施后的表面合同复核，不能单凭旧文档证明当前行为。
+用户要求全面检查相变方块无材料温度的类似问题，结果见[材料与相变覆盖复查](2026-09-12_23-12-00_thermal-material-phase-coverage-review.md)。报告区分了状态缺口、空间聚合/迁移、覆盖/恢复与查询语义，共15类已确认行为及修复方向。本轮仅调查和纠正文档，不把当前红外修复扩大为已实施的完整材料模型，也不把phase阈值加入红外冒充材料温度。
+## 历史记录说明
 
-本次只修订计划和新增调查日记；源码与实际行为没有改变，故不把上述目标写入 living docs 当作已实现。旧红外计划标 superseded 并指向本节；此前已完成的通风/协议/重载历史保留。新实现每阶段追加开发日记，说明真实验证、文档影响和未完成项。
+以下Outcome记录2026-09-12凌晨那一版已做的工作与局限；其中自然背景和移除解析场的决定已被上面的本轮修复替代，不是当前执行要求。旧开发记录保持原样。
 
-Outcome：已完成源码核实及工程复查，实施尚未开始。已删除持久finiteNodeCount、R32UI标记附件和过细背景表，新增细节限定为既有kind枚举、phase激活mask、worker一次性恢复mask、稀疏checkpoint/offsets、当前sample中的辐射温度、729值背景及加载位/版本、R16I热附件/owner metadata、既有source revision token和实体表面值。临时reset/source scratch有明确边界。性能数字除引用旧记录外均为预算或验收目标；最终GPU选型保留一次同画面对照，不以纸面减少步骤冒称全硬件最优。
+## 本阶段 Outcome（2026-09-12）
+
+- 生产接线已完成：共享surfaceNodeMask、material-only firstSlot、仅材料量化变化、Air-only恢复过滤、局部surfacePresence、generation/full/delta、独立自然背景、既有后处理内侧取样。旧红外analytic/dormant合成及客户端所有权缓存已移除。
+- Java17生产及GameTest编译通过；完整57项Forge GameTest全部通过，未排除测试类、未运行JUnit。新增深度夹具144种六面/距离/斜视/世界原点组合通过，最大后移0.01562342 block，且修复了原计算在1 block反向平面上的float舍入问题。
+- 真实营火场景100次同窗口稳定增量请求：capture中位0.0266 ms、p95 0.046 ms、0响应/0 S2C字节。100次full（背景键已命中）：中位0.0387 ms、p95 0.1676 ms、合计24,400 S2C字节。只是本机同一场景的串行请求样本，不是100实际玩家、更不是受控CPU/GPU前后性能证明。
+- **用户实机截图判定纯热色效果失败。** 原纯色覆盖抹掉了地形贴图和层次，已恢复原`mix(originalRGB, heatColor, 0.43)`。完整圆形覆盖与材料优先/自然背景取值保留。恢复原观感优先于旧“最终RGB同温同色”条目；该条目已统一撤回。
+- `processResources`通过，修正版shader已进入运行资源目录，可用F3+T重载。客户端界面控制被用户Esc终止，未继续操作其世界；不能声称修正版画面、实体/粒子遮挡、图形模式或GPU耗时已验收。
+- 剩余当前验收：修正版实机画面、原版/Embeddium图形模式与resize/第三人称、实际分包提交画面、目标负载的受控GPU/分配对比。实现不再扩大到新渲染后端或后续材料系统。
+- Living docs已同步：[世界温度](../docs/climate/world-climate-and-temperature.md)、[runtime](../docs/climate/thermal-runtime-architecture-and-optimization.md)、[网络生命周期](../docs/climate/data-lifecycle-and-integration.md)。开发记录见[本轮日记](../diary/2026-09-12_00-08-00_surface-infrared-implementation.md)。
+<a id="deferred-thermal-work"></a>
+
+## 后续材料修复与其他延期事项
+
+最新材料计划已按用户澄清统一为同一能量/换热模型，物质通过C和H→T关系区分；楼梯等气隙不再独立储热；本体一份H、实际Air区域共享状态，气隙只生成路线与阻力。已撤回逐楼梯双节点/128槽要求；共享区域和稀疏路线的近似及重建成本见该计划第3、12节。
+
+- Status: `material repair planned separately; other extensions deferred`
+- 用户已要求制定材料基础修复方案：材料温度计、固体导热/热容、相变状态及材料持久化现在转入[2026-09-12_23-53-20_thermal-material-enthalpy-lifecycle-repair.md](2026-09-12_23-53-20_thermal-material-enthalpy-lifecycle-repair.md)，尚未实施；不再只以“以后再做”概括。其余人体/作物生理、实体/特殊BE/透明热成像仍延期，不能据此扩大普通红外补丁。原完整A–G安排不恢复。
+
+| 后续事项 | 已知缺口 / 后续要解决的事 |
+|---|---|
+| 材料温度计 | 已转入材料基础计划P5：SoilThermometer改材料查询；环境HUD保持其空气/玩法语义，尚未实施 |
+| 固体导热与热容 | 已转入材料基础计划P1/P2/P4：固定C、逐块M、固体连接与有界前沿，尚未实施 |
+| 材料余热保存恢复 | 红外补丁仅修过Air恢复过滤；独立材料记录及物体身份/交接已转入材料基础计划P3/P4，尚未实施 |
+| 作物根部温度 | 以后区分根部土壤与地上环境及解析场玩法，验证普通/双高/水生/附着植物；不在本阶段改变生长或生存阈值 |
+| 玩家/物品的材料长波 | 以后单独评估可见表面采样、冷壁效应、热源重复计算与接收者预算。14/6方向方案只是候选，不在当前tick路径增加射线或sample字段 |
+| 实体与衣物热成像 | 以后确定皮肤/毛皮/衣物外表模型、tracking和初次同步；当前不发实体温度包、不改身体模型、不维护实体热表 |
+| BlockEntity、自定义模型、掉落/放置热容物品显示 | 以后接入已有surface状态及其独立绘制时序；当前不重画模型或扩展所有BlockEntity渲染器 |
+| 透明材质与流体热成像 | 以后定义玻璃、水、熔岩在热波段的表面与遮挡，再选择必要时序；当前不将玻璃强制变热不透明 |
+| 火焰/机器的有效发射模型 | 以后明确温度、功率、有效面积与发射率的关系；当前不从W反推温度或新增profile协议 |
+| 相变表面状态 | 已转入材料基础计划P1/P2/P3/P5：单H相图、逐块phase与实际温度显示；不直接使用旧固定阈值冒充温度 |
+| 精确几何归属与真实shaderpack适配 | 仅当后续需求确实超过depth取样能力时再选方案。专用热表面pass、owner字段、Embeddium顶点扩展均撤回为未选定候选，不安排“以后必做”的改造 |
+| 显示与辐射模型扩展 | 高温色标、定量图例、分材质发射率、金属反射、空气吸收、光谱响应、准星测温以后讨论。已有材料取值、原热色叠加、蓝色缺值覆盖及既有解析场显示属于当前修复阶段 |
+
+前几轮关于顶点布局、完整材料闭环的调查结论保留在既有日记中作为历史参考；不将那些日记的Remaining列表当作最新排期。文末是此前已实施工作的原始记录，不因收缩当前计划而删除或重写。
 
 ## 先前方案与实施记录
 
@@ -513,6 +455,60 @@ Outcome：已完成源码核实及工程复查，实施尚未开始。已删除�
 - 真实Forge测试增加完整MinecraftServer.reloadResources调用及实际临时tag数据包，核对重载后的runtime使用新材料分类；专用服务器不能验证集成客户端线程，单独记录限制。
 - 结果：run-gametest/world-temperature-tags-verification.log，30项全部通过，BUILD SUCCESSFUL。实际临时数据包将stone加入wool tag，完整重载后自动恢复的runtime采用新材料分类；移除并再次完整重载恢复原分类。原篝火恢复测试也改走完整reloadResources。测试数据包已清理，git diff --check通过。未写或运行JUnit，仍排除含未接通掉落物接口的旧测试类。
 - 生产修复只移动启动时机并恢复客户端现有单人游戏条件，不新增持久状态、缓存、锁或调度器。已同步现有runtime、生命周期及热源文档；先前29项结果不覆盖完整tag重载，此轮验证补齐该范围。
+
+### 2026-09-10 篝火启动回调收敛与此前改动检查
+
+作者：Codex。状态：已完成；生产编译与完整53项真实Forge GameTest通过。
+
+- 删除LevelChunk.setBlockState上的篝火启动注入及其专用imports。复用既有CampfireBlockMixin_TimeLimit，覆盖继承的onPlace并保留super调用，仅处理篝火未点燃到点燃的变化。普通方块写入不再执行篝火判断。
+- onPlace在BlockEntity创建前运行时，只启动/挂接原runtime和排队；原有稍后发现流程读取完整BE位置。已点燃篝火的加载、tags重载恢复沿用现有入口，不恢复cookTick轮询。
+- 检查此前提交7e1e8c715中新增/修改的全局事件、tick与请求路径，寻找同类局部功能扩大到无关高频路径或重复工作的问题；不顺带实施材料温度计划。
+- 使用真实Forge游戏世界验证新放置、已有篝火点燃及Forge暂存方块修改的提交/取消。全量GameTest，不写/运行JUnit。
+- 结果：run-gametest/campfire-local-callback-verification.log，53项全部通过，BUILD SUCCESSFUL。新增真实打火石使用测试确认普通方块修改不启动runtime、被取消的点燃不启动runtime、同方块LIT变化在获准后启动并进入原发现流程；原新放置/加载/完整重载测试同时通过。
+- 类似问题检查覆盖此前提交的全局事件、tick、重载缓存、红外捕获/编码/上传与辐射邻区读取。未发现第二处同类全局高频挂载：启动/tags扫描仅生命周期触发，机器复用生产tick，红外额外工作只在显示请求或提交时发生，辐射修正仅处理实际跨区段读取。原section热学变更监听负责通风/材料/遮挡失效，具有通用职责，保留。无新增生产缓存、状态或轮询；已同步现有文档。
+
+### 2026-09-10 红外邻区检查按需执行与高频路径复查
+
+作者：Codex。状态：邻区检查修复完成，完整53项真实Forge GameTest通过；继续检查发现的候选项记录如下，尚未实施。
+
+- writeRefreshPages不再无条件初始化9个邻区加载标记；仅在当前Page第一次确实需要自然温度时读取，同Page后续方块复用。使用方法局部布尔变量，无新增持久状态、缓存数组或协议。
+- OVERRIDE、旧场退出后的纯物理恢复、未加载区块清理不执行这组查询。需要自然温度的路径保留原加载边界检查和精确群系计算。
+- 验证沿用完整真实Forge GameTest（覆盖Boss组合/删除、generator保底、物理恢复和混合群系）；继续检查高频路径中的无关准备、重复查找与分配，新发现明确列出触发范围和最小修复方向。
+- 验证结果：run-gametest/infrared-lazy-neighbors-verification.log，53项全部通过、BUILD SUCCESSFUL；git diff --check通过。未运行JUnit，无排除测试类。该修复按路径省去不必要的邻区查询，未进行受控耗时对比，不宣称固定加速比例。
+- 后续候选1：PlayerThermalEnvironment.localAirTemperatureC在采样空气温度未变时仍remove/add同一UUID的AttributeModifier；每次分配对象并使原生属性缓存失效。可比较已有modifier，仅值/操作不匹配时替换，不新增缓存。
+- 后续候选2：writeRefreshPages在确定是否需要dormant fallback前调用infraredSection。Page留有checkpoint但已有物理温度覆盖所有目标时，仍可能初始化快照、计算自然温度/衰减和量化。可推迟到首次真正需要休眠背景的Brick，复用现有局部引用；注意保留真实休眠所有权和最终记录语义。
+- 后续候选3：PhysicalSourceSpatialIndex.observe先查slotsById，遇停用/零功率后调用remove再次查同一ID。可将首次查找移到启用分支，无需改动移除和dirty语义。以上为源码确认的工作量，尚无实际整体收益占比。
+
+### 2026-09-10 三处高频重复工作的最小修复
+
+作者：Codex。状态：三项均已完成；生产编译与完整54项真实Forge GameTest通过。
+
+- 玩家环境属性复用已有同UUID的ADDITION修饰器；仅缺失、数值或操作改变时替换，仍每次读取属性最终值，以响应其他修饰器变化。复用已取得的AttributeInstance，不新增缓存。
+- 红外休眠快照局部引用初始为null；只有物理读取不可用且该Brick确有checkpoint时才调用infraredSection，同Page复用原快照。不改变休眠所有权、分包和最终温度语义。
+- source停用/零功率分支在首次ID查找之前进入原remove，省掉重复查询；启用分支和移除dirty逻辑不改。
+- 完整真实Forge GameTest验证，沿用真实机器停机/恢复测试，补充属性稳定值与外部修饰器、物理/休眠红外切换的检查。无JUnit。
+- 结果：run-gametest/thermal-hotpath-reuse-verification.log，54项全部通过，BUILD SUCCESSFUL；git diff --check通过。真实ServerPlayer完整体温更新验证稳定modifier对象复用、其他修饰器及解析场变化仍生效；真实篝火创建checkpoint，在live覆盖和runtime关闭后的休眠背景间切换，红外温度及协议往返正确。停用/恢复由原真实机器测试覆盖。无测试类排除、无JUnit。
+- 未新增持久状态、缓存数组或协议；更新现有player-temperature与runtime文档。工作量减少由代码路径确认，未测量整体加速比例。
+
+### 2026-09-10 维度缓存快路径与红外presence差分
+
+作者：Codex。状态：已完成；生产编译与完整54项真实Forge GameTest通过，客户端差分分支静态核对完成。
+
+- WorldTemperature.dimension对Level直接返回原worldCache结果；非Level才读取默认配置。缓存未命中时仍由WorldTempData处理配方/默认值，不新增缓存。
+- 红外增量首包的presence差分改为12个long逐字XOR，只遍历变化位并调用原clearPage；保留729个有效Page边界，忽略末尾填充位。原full、分包时序、清理与脏标记语义不改。
+- 验证生产编译、完整真实Forge GameTest与差分检查；客户端分支另做静态核对，不把专用服务器测试当成客户端实测。无JUnit。
+- 结果：run-gametest/temperature-cache-presence-verification.log，54项全部通过、BUILD SUCCESSFUL；git diff --check通过。维度配方重建/空表回退等原真实用例通过。XOR差分保留完整12字、增量首包触发条件和尾部有效Page边界；无新增持久状态、缓存或协议。整体耗时/FPS未实测，已更新现有runtime文档。
+
+### 2026-09-11 自然温度与玩家对流系数复用
+
+作者：Codex。状态：已完成；生产编译与完整55项真实Forge GameTest通过。
+
+- 一次玩家更新计算一次固定33°C参考皮肤温度对应的自然对流系数，作为局部double传给五部位准备和等效环境温度；强制对流/衣物防护仍逐部位计算。修改现有内部方法参数，不增加上下文成员、缓存或兼容包装。
+- naturalAirUnclamped在已有气候影响系数为零时跳过climate查询，保留维度/群系/海拔项及上层绝对零度限制。
+- naturalBlock直接调用原climateBlockAffection与naturalTemperature，再限制绝对零度；不读取零热量无效的heat multiplier。原公共公式接口保留；旧城镇模拟器继续使用applyHeat。
+- 完整真实Forge GameTest验证玩家、自然温度、解析场和热源场景；不写/运行JUnit。性能收益按省掉的工作说明，不宣称固定加速比例。
+- 结果：run-gametest/thermal-shared-coefficients-verification.log，55项全部通过，BUILD SUCCESSFUL；git diff --check通过。新增真实世界查询在10个高度、4组气候输入下对照原零热量公式，并验证地下空气的维度/群系/海拔贡献与下限。现有真实玩家完整更新、解析场、热源和重载用例通过；无测试类排除、无JUnit。
+- 同步现有玩家温度、世界温度文档。未新增持久状态/缓存；共用系数仍以固定33°C参考和本次空气温度计算，未改各部位防护和强制对流计算。整体耗时改善比例未实测。
 
 ### 2026-09-09 19:46 后续边界修复
 

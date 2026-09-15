@@ -24,6 +24,7 @@ import java.util.Optional;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import com.teammoeg.chorda.util.CUtils;
 import com.teammoeg.frostedheart.content.robotics.logistics.LogisticNetwork;
 import com.teammoeg.frostedheart.content.robotics.logistics.data.ItemKey;
 import com.teammoeg.frostedheart.content.robotics.logistics.grid.GridAndAmount;
@@ -32,6 +33,8 @@ import com.teammoeg.frostedheart.content.robotics.logistics.grid.IGridElement;
 import lombok.ToString;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.items.IItemHandler;
 @ToString
@@ -39,10 +42,10 @@ public class LogisticPushTask extends LogisticTask {
 	public static final MapCodec<LogisticPushTask> WORKING_CODEC=RecordCodecBuilder.mapCodec(t->t.group(
 		LogisticTaskKey.CODEC.fieldOf("key").forGetter(o->o.taskKey),
 		Codec.INT.fieldOf("ticks").forGetter(o->o.ticks),
+		Codec.INT.fieldOf("maxTicks").forGetter(o->o.ticks),
 		BlockPos.CODEC.fieldOf("from").forGetter(o->o.origin),
 		BlockPos.CODEC.optionalFieldOf("to").forGetter(o->Optional.ofNullable(o.targetPos)),
 		ItemStack.CODEC.fieldOf("stack").forGetter(o->o.stack),
-		ItemKey.CODEC.fieldOf("item").forGetter(o->o.key),
 		Codec.INT.optionalFieldOf("failures",0).forGetter(o->o.failures)
 		).apply(t, LogisticPushTask::new));
 	private static final int MAX_DELIVERY_FAILURES=15;
@@ -64,40 +67,26 @@ public class LogisticPushTask extends LogisticTask {
 	 * use stage:work
 	 * */
 	ItemStack stack;
-	/**
-	 * ItemKey to put
-	 * prepare stage:prepare
-	 * use stage:work
-	 * */
-	ItemKey key;
 	int failures;
-	/**
-	 * Grid element to put
-	 * prepare stage:prepare
-	 * use stage:work
-	 * */
-	transient LazyOptional<IGridElement> target;
-	public LogisticPushTask(LogisticTaskKey taskKey, int ticks, BlockPos origin, Optional<BlockPos> targetPos, ItemStack stack, ItemKey key) {
-		this(taskKey,ticks,origin,targetPos,stack,key,0);
+	transient ItemKey key;
+	public LogisticPushTask(LogisticTaskKey taskKey, int ticks, int maxTicks, BlockPos origin, Optional<BlockPos> targetPos, ItemStack stack) {
+		this(taskKey,ticks,maxTicks,origin,targetPos,stack,0);
 	}
 
-	public LogisticPushTask(LogisticTaskKey taskKey, int ticks, BlockPos origin, Optional<BlockPos> targetPos, ItemStack stack, ItemKey key,int failures) {
-		super(taskKey, ticks);
+	public LogisticPushTask(LogisticTaskKey taskKey, int ticks, int maxTicks, BlockPos origin, Optional<BlockPos> targetPos, ItemStack stack,int failures) {
+		super(taskKey, ticks,maxTicks);
 		this.origin = origin;
 		this.targetPos = targetPos.orElse(null);
 		this.stack = stack;
-		this.key = key;
 		this.failures=failures;
 	}
 	
-	public LogisticPushTask(BlockPos origin, BlockPos targetPos, ItemStack stack, ItemKey key, LazyOptional<IGridElement> target) {
+	public LogisticPushTask(BlockPos origin, BlockPos targetPos, ItemStack stack) {
 		super();
 		this.origin = origin;
 		this.targetPos = targetPos;
 		this.stack = stack;
-		this.key = key;
-		this.target = target;
-		this.ticks=20;
+		this.ticks=this.maxTicks=20;
 	}
 
 	public LogisticPushTask(BlockPos pos,LazyOptional<IItemHandler> handler, int fromSlot) {
@@ -111,15 +100,18 @@ public class LogisticPushTask extends LogisticTask {
 	public LogisticTask work(LogisticNetwork network) {
 		if(stack==null||stack.isEmpty())
 			return null;
-		if(target==null&&targetPos!=null) {
-			target=network.getHub().getByPos(targetPos);
+		if(targetPos!=null) {
+			LazyOptional<IGridElement> target=network.getHub().getByPos(targetPos);
+			if(target!=null) {
+				IGridElement grid=target.orElse(null);
+				stack=grid.pushItem(stack);
+			}
 		}
-		if(target!=null&&target.isPresent())
-			stack=network.getHub().pushItem(target, key, stack);
 		if(!stack.isEmpty()) {
-			GridAndAmount gaa=network.getHub().findGridForPlace(key, stack);
+			if(key==null)
+				key=new ItemKey(stack);
+			GridAndAmount gaa=network.getHub().findGridForPlace(key, stack, targetPos);
 			if(gaa==null) {
-				target=null;
 				targetPos=null;
 				ticks=20;
 				return ++failures>=MAX_DELIVERY_FAILURES?null:this;
@@ -127,8 +119,7 @@ public class LogisticPushTask extends LogisticTask {
 			if(targetPos!=null)
 				origin=targetPos;
 			ticks=20;
-			target=gaa.grid();
-			targetPos=target.resolve().get().getPos();
+			targetPos=gaa.grid().pos();
 			failures=0;
 			return this;
 		}
@@ -138,17 +129,19 @@ public class LogisticPushTask extends LogisticTask {
 	public LogisticTask prepare(LogisticNetwork network) {
 		if(handler==null||!handler.isPresent())
 			return null;
-		IItemHandler itemHandler=handler.resolve().get();
+		IItemHandler itemHandler=handler.orElse(null);
+		if(itemHandler==null)
+			return null;
+			
 		stack=itemHandler.getStackInSlot(fromSlot);
 		if(stack.isEmpty())
 			return null;
 		key=new ItemKey(stack);
 		
-		GridAndAmount gaa=network.getHub().findGridForPlace(key, stack);
+		GridAndAmount gaa=network.getHub().findGridForPlace(key, stack, origin);
 		if(gaa==null)
 			return null;
-		target=gaa.grid();
-		targetPos=target.resolve().get().getPos();
+		targetPos=gaa.grid().pos();
 		stack=itemHandler.extractItem(fromSlot, gaa.amount(), false);
 		this.ticks=20;
 		return this;
@@ -159,6 +152,20 @@ public class LogisticPushTask extends LogisticTask {
 		ItemStack carried=stack;
 		stack=ItemStack.EMPTY;
 		return carried==null?ItemStack.EMPTY:carried;
+	}
+
+	@Override
+	public void destroy(Level l) {
+		if(targetPos!=null&&origin!=null) {
+			Vec3 vor=Vec3.atCenterOf(origin);
+			Vec3 vtar=Vec3.atCenterOf(targetPos);
+			CUtils.dropItem(l, vor.add(vtar.subtract(vor).scale(1-(ticks*1f/maxTicks))), stack);
+		}
+		if(targetPos==null&&origin!=null)
+			CUtils.dropItem(l, origin, stack);
+
+		if(origin==null&&targetPos!=null)
+			CUtils.dropItem(l, targetPos, stack);
 	}
 
 

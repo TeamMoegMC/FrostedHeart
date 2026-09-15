@@ -22,6 +22,7 @@ package com.teammoeg.frostedheart.content.robotics.logistics.tasks;
 import com.teammoeg.frostedheart.content.robotics.logistics.LogisticNetwork;
 
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
 /**
  * Stage for tasks:
  * Queue->Prepared->Working->finished
@@ -31,18 +32,20 @@ import net.minecraft.world.item.ItemStack;
 public abstract class LogisticTask {
 
 	public int ticks;
+	public int maxTicks;
 	public LogisticTaskKey taskKey;
-	public LogisticTask(LogisticTaskKey taskKey, int ticks) {
+	public LogisticTask(LogisticTaskKey taskKey, int ticks, int maxTicks) {
 		super();
 		this.taskKey = taskKey;
 		this.ticks = ticks;
+		this.maxTicks = maxTicks;
 	}
 	public LogisticTask() {
 		super();
 	}
 	public abstract LogisticTask prepare(LogisticNetwork network);
 	public abstract LogisticTask work(LogisticNetwork network);
-
+	public abstract void destroy(Level l);
 	/**
 	 * Removes and returns any item currently carried by this task.
 	 * Unprepared tasks do not carry an item.

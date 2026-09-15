@@ -61,6 +61,8 @@ public final class ItemKey {
 		return this.getStack().getMaxStackSize();
 	}
 	public boolean isSameItem(ItemStack stack) {
+		if(stack.isEmpty())
+			return true;
 		if(stack.getItem()!=this.item)return false;
 		CompoundTag stackTag=stack.getTag();
 		if(stackTag!=null&&this.nbt!=null)return this.nbt.equals(stackTag);

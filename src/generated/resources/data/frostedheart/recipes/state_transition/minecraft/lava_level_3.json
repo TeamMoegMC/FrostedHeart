@@ -1,0 +1,11 @@
+{
+  "type": "frostedheart:state_transition",
+  "block": {
+    "Properties": {
+      "level": "3"
+    },
+    "Name": "minecraft:lava"
+  },
+  "capacity_j_per_k": 4125.0,
+  "enthalpy_offset_j": -362500.0
+}

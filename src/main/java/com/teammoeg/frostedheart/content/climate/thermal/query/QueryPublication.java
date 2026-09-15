@@ -11,6 +11,7 @@
 package com.teammoeg.frostedheart.content.climate.thermal.query;
 
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.ThermalCellArena;
+import com.teammoeg.frostedheart.content.climate.thermal.mesh.MaterialThermalLaw;
 import com.teammoeg.frostedheart.content.climate.thermal.runtime.ThermalMemoryBudget;
 
 import java.util.Arrays;
@@ -29,6 +30,10 @@ public final class QueryPublication implements AutoCloseable {
     private long[] pendingInfraredBrickMasks;
     private double[][] temperaturesC;
     private int[][] slotGenerations;
+    private double[][] materialEnthalpiesJ;
+    private MaterialThermalLaw[][] materialLaws;
+    private byte[][] materialBranches;
+    private long[][] materialRequests;
     private ThermalMemoryBudget.Reservation cellReservation;
     private ThermalMemoryBudget.Reservation pageReservation;
 
@@ -92,7 +97,7 @@ public final class QueryPublication implements AutoCloseable {
         }
         return Math.multiplyExact(
                 capacity,
-                2L * (Double.BYTES + Integer.BYTES));
+                2L * (2 * Double.BYTES + Integer.BYTES + 2 * Long.BYTES + Byte.BYTES));
     }
 
     private static long projectedPagePayloadBytes(int maximumPages) {
@@ -128,6 +133,10 @@ public final class QueryPublication implements AutoCloseable {
 
         double[][] nextTemperatures = new double[2][nextCapacity];
         int[][] nextSlotGenerations = new int[2][nextCapacity];
+        double[][] nextEnthalpies = new double[2][nextCapacity];
+        MaterialThermalLaw[][] nextLaws = new MaterialThermalLaw[2][nextCapacity];
+        byte[][] nextBranches = new byte[2][nextCapacity];
+        long[][] nextRequests = new long[2][nextCapacity];
         if (valid && publishedBufferIndex >= 0) {
             System.arraycopy(
                     temperaturesC[publishedBufferIndex], 0,
@@ -135,6 +144,10 @@ public final class QueryPublication implements AutoCloseable {
             System.arraycopy(
                     slotGenerations[publishedBufferIndex], 0,
                     nextSlotGenerations[publishedBufferIndex], 0, capacity);
+            System.arraycopy(materialEnthalpiesJ[publishedBufferIndex], 0, nextEnthalpies[publishedBufferIndex], 0, capacity);
+            System.arraycopy(materialLaws[publishedBufferIndex], 0, nextLaws[publishedBufferIndex], 0, capacity);
+            System.arraycopy(materialBranches[publishedBufferIndex], 0, nextBranches[publishedBufferIndex], 0, capacity);
+            System.arraycopy(materialRequests[publishedBufferIndex], 0, nextRequests[publishedBufferIndex], 0, capacity);
         }
         if (!beginWrite()) {
             nextReservation.close();
@@ -143,6 +156,10 @@ public final class QueryPublication implements AutoCloseable {
         ThermalMemoryBudget.Reservation previous = cellReservation;
         temperaturesC = nextTemperatures;
         slotGenerations = nextSlotGenerations;
+        materialEnthalpiesJ = nextEnthalpies;
+        materialLaws = nextLaws;
+        materialBranches = nextBranches;
+        materialRequests = nextRequests;
         capacity = nextCapacity;
         cellReservation = nextReservation;
         endWrite();
@@ -171,6 +188,10 @@ public final class QueryPublication implements AutoCloseable {
         int targetBuffer = publishedBufferIndex == 0 ? 1 : 0;
         double[] targetTemperatures = temperaturesC[targetBuffer];
         int[] targetGenerations = slotGenerations[targetBuffer];
+        double[] targetEnthalpies = materialEnthalpiesJ[targetBuffer];
+        MaterialThermalLaw[] targetLaws = materialLaws[targetBuffer];
+        byte[] targetBranches = materialBranches[targetBuffer];
+        long[] targetRequests = materialRequests[targetBuffer];
         boolean infraredTracking = pageChangeEpochs != null
                 && sampleTick <= infraredActiveUntilTick;
         boolean compareInfrared = infraredTracking
@@ -192,18 +213,23 @@ public final class QueryPublication implements AutoCloseable {
             int generation = arena.lifecycleGeneration(slot);
             targetTemperatures[slot] = temperature;
             targetGenerations[slot] = generation;
+            // Keep the last body state available to coherent checkpoint capture.
+            // Public world queries require a matching Page geometry publication.
+            targetLaws[slot] = arena.materialLaw(slot);
+            targetEnthalpies[slot] = arena.enthalpyJ(slot);
+            targetBranches[slot] = arena.materialBranch(slot);
+            targetRequests[slot] = arena.hasMaterialTransition(slot) ? arena.phaseRequestSequence(slot) : 0;
             if (hotMasks != null) {
                 int pageSlot = arena.pageSlot(slot);
                 int brick = brickIndex(arena, slot);
-                if (arena.isPhaseReservoir(slot)) {
-                    if (arena.enthalpyJ(slot) > 0.0D) {
-                        hotMasks.recordHot(pageSlot, brick);
-                    }
+                if (arena.materialLayoutPending(slot) || arena.hasMaterialTransition(slot) && (arena.phaseRequestOutstanding(slot)
+                        || arena.materialTransition(slot) != null && arena.materialTransition(slot).progress(arena.enthalpyJ(slot)) > 0)) {
+                    hotMasks.recordHot(pageSlot, brick);
                 } else {
                     hotMasks.record(pageSlot, brick, temperature);
                 }
             }
-            if (compareInfrared && arena.isAirCell(slot)
+            if (compareInfrared && arena.isSurfaceCell(slot)
                     && (previousGenerations[slot] != generation
                     || quantizedInfrared(previousTemperatures[slot])
                     != quantizedInfrared(temperature))) {
@@ -279,6 +305,10 @@ public final class QueryPublication implements AutoCloseable {
         }
 
         private void begin() {
+            // Keep hotMask() on the latest completed cut between publications.
+            long[] previous = previousHotMask;
+            previousHotMask = nextHotMask;
+            nextHotMask = previous;
             Arrays.fill(nextHotMask, 0L);
         }
 
@@ -301,12 +331,6 @@ public final class QueryPublication implements AutoCloseable {
         public long hotMask(int pageSlot) {
             requirePageSlot(pageSlot);
             return nextHotMask[pageSlot];
-        }
-
-        public void finish() {
-            long[] previous = previousHotMask;
-            previousHotMask = nextHotMask;
-            nextHotMask = previous;
         }
 
         private void requirePageSlot(int pageSlot) {
@@ -491,6 +515,34 @@ public final class QueryPublication implements AutoCloseable {
         }
     }
 
+    /** Coherent read-only energy state for thermometers, checkpoints and reload. */
+    public boolean tryReadMaterial(int arenaSlot, int expectedGeneration, long minimumTopology,
+            MutableMaterialSample out) {
+        out.clear();
+        for (int attempt = 0; attempt < 2; attempt++) {
+            long version = publicationVersion;
+            if ((version & 1) != 0) continue;
+            int buffer = publishedBufferIndex;
+            long tick = sampleTick;
+            if (!valid || buffer < 0 || arenaSlot < 0 || arenaSlot >= capacity
+                    || topologyGeneration < minimumTopology) {
+                if (version == publicationVersion) return false;
+                continue;
+            }
+            int generation = slotGenerations[buffer][arenaSlot];
+            MaterialThermalLaw law = materialLaws[buffer][arenaSlot];
+            double energy = materialEnthalpiesJ[buffer][arenaSlot];
+            byte branch = materialBranches[buffer][arenaSlot];
+            long request = materialRequests[buffer][arenaSlot];
+            if (version != publicationVersion) continue;
+            if (generation != expectedGeneration || law == null) return false;
+            out.set(energy, law, branch, tick);
+            out.requestSequence = request;
+            return true;
+        }
+        return false;
+    }
+
     @Override
     public synchronized void close() {
         if (cellReservation == null) {
@@ -507,6 +559,10 @@ public final class QueryPublication implements AutoCloseable {
     private void allocateBuffers(int size) {
         temperaturesC = new double[2][size];
         slotGenerations = new int[2][size];
+        materialEnthalpiesJ = new double[2][size];
+        materialLaws = new MaterialThermalLaw[2][size];
+        materialBranches = new byte[2][size];
+        materialRequests = new long[2][size];
     }
 
     private boolean beginWrite() {
@@ -620,6 +676,46 @@ public final class QueryPublication implements AutoCloseable {
         }
     }
 
+    public static final class MutableMaterialSample {
+        private boolean stored;
+        public enum Source { UNAVAILABLE, LIVE, STORED }
+        private double enthalpyJ;
+        private MaterialThermalLaw law;
+        private byte branch;
+        private long sampleTick;
+        private long requestSequence;
+
+        public double enthalpyJ() { return enthalpyJ; }
+        public MaterialThermalLaw law() { return law; }
+        public byte branch() { return branch; }
+        public long sampleTick() { return sampleTick; }
+        public Source source() { return law == null ? Source.UNAVAILABLE : stored ? Source.STORED : Source.LIVE; }
+        public long requestSequence() { return requestSequence; }
+        public double temperatureC() { return law == null ? Double.NaN : law.temperatureC(enthalpyJ, branch); }
+
+        public void set(double energyJ, MaterialThermalLaw law, byte branch, long sampleTick) {
+            stored = false;
+            this.enthalpyJ = energyJ;
+            this.law = law;
+            this.branch = branch;
+            this.sampleTick = sampleTick;
+            requestSequence = 0;
+        }
+
+        public void setStored(double energyJ, MaterialThermalLaw law, byte branch, long sampleTick) {
+            set(energyJ, law, branch, sampleTick);
+            stored = true;
+        }
+
+        public void clear() {
+            law = null;
+            enthalpyJ = Double.NaN;
+            branch = 0;
+            sampleTick = -1;
+            requestSequence = 0;
+        }
+    }
+
     /** Caller-owned coherent view of one published infrared/query cut. */
     public static final class InfraredReadCursor {
         private QueryPublication owner;
@@ -637,6 +733,7 @@ public final class QueryPublication implements AutoCloseable {
         public boolean valid() { return valid; }
         public long sampleTick() { return sampleTick; }
         public int infraredEpoch() { return infraredEpoch; }
+        public long topologyGeneration() { return topologyGeneration; }
 
         public int pageChangeEpoch(int pageSlot) {
             if (pageSlot < 0 || pageChangeEpochs == null

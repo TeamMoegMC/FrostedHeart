@@ -3,20 +3,17 @@
   "block": {
     "Name": "minecraft:gravel"
   },
-  "condense_temp": 90.0,
-  "evaporate_temp": 100.0,
-  "freeze_temp": -10.0,
-  "heat_capacity": 5,
-  "liquid": {
-    "Name": "minecraft:gravel"
-  },
-  "melt_temp": 9.0,
-  "solid": {
-    "Name": "frostedheart:gravel_permafrost",
-    "Properties": {
-      "snowy": "false"
-    }
-  },
-  "state": "liquid",
-  "will_transit": true
+  "all_states": true,
+  "capacity_j_per_k": 6600.0,
+  "enthalpy_offset_j": 38000.0,
+  "cooling": {
+    "target": {
+      "Properties": {
+        "snowy": "false"
+      },
+      "Name": "frostedheart:gravel_permafrost"
+    },
+    "temperature_c": -10.0,
+    "effect": "freezing"
+  }
 }

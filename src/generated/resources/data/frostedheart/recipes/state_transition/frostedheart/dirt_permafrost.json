@@ -1,27 +1,18 @@
 {
   "type": "frostedheart:state_transition",
   "block": {
-    "Name": "frostedheart:dirt_permafrost",
     "Properties": {
       "snowy": "false"
-    }
+    },
+    "Name": "frostedheart:dirt_permafrost"
   },
-  "condense_temp": 90.0,
-  "evaporate_temp": 100.0,
-  "freeze_temp": -10.0,
-  "gas": {
-    "Name": "minecraft:coarse_dirt"
-  },
-  "liquid": {
-    "Name": "minecraft:mud"
-  },
-  "melt_temp": 9.0,
-  "solid": {
-    "Name": "frostedheart:dirt_permafrost",
-    "Properties": {
-      "snowy": "false"
-    }
-  },
-  "state": "solid",
-  "will_transit": true
+  "all_states": true,
+  "capacity_j_per_k": 6600.0,
+  "heating": {
+    "target": {
+      "Name": "minecraft:mud"
+    },
+    "temperature_c": 9.0,
+    "effect": "melting"
+  }
 }

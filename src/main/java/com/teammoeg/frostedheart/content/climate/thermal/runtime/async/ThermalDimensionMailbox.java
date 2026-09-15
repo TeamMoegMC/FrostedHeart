@@ -55,6 +55,19 @@ public final class ThermalDimensionMailbox implements AutoCloseable,
         return state == State.AWAITING_ACK ? completion : null;
     }
 
+    /** Save/unload waits for the current immutable cut; ordinary ticks never wait. */
+    public synchronized void awaitCompletion() {
+        boolean interrupted = false;
+        while (state == State.QUEUED || state == State.RUNNING) {
+            try {
+                wait();
+            } catch (InterruptedException interruption) {
+                interrupted = true;
+            }
+        }
+        if (interrupted) Thread.currentThread().interrupt();
+    }
+
     /** Terminal ACK closes the now-quiescent processor before handle reuse. */
     public void acknowledgeCompletion(long batchSequence) {
         boolean terminal;
@@ -146,6 +159,7 @@ public final class ThermalDimensionMailbox implements AutoCloseable,
                 }
                 completion = result;
                 state = State.AWAITING_ACK;
+                notifyAll();
             }
         }
         if (!closeRequested) {
@@ -175,6 +189,7 @@ public final class ThermalDimensionMailbox implements AutoCloseable,
             synchronized (this) {
                 completion = null;
                 state = State.CLOSED;
+                notifyAll();
             }
             workers.unregisterLifecycleOwner(this);
         }

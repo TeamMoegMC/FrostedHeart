@@ -5,11 +5,11 @@
 | Document | Scope | Status |
 |---|---|---|
 | [world-climate-and-temperature.md](world-climate-and-temperature.md) | 逻辑气候时钟、事件轨道、世界/空气/方块温度公式、局部热区 | Current |
-| [thermal-runtime-architecture-and-optimization.md](thermal-runtime-architecture-and-optimization.md) | 新 thermal runtime 的所有权、Page/arena/topology/source/solver/publication 生命周期、复杂度与优化边界 | Current |
+| [thermal-runtime-architecture-and-optimization.md](thermal-runtime-architecture-and-optimization.md) | thermal runtime 的所有权、生命周期及复杂度；材料新模型正在集成验证 | Transitional |
 | [weather-rendering.md](weather-rendering.md) | 暴风雪与白幕的空间状态、天气同步、降水/雾/粒子/声音渲染 | Current |
 | [player-temperature.md](player-temperature.md) | 玩家环境查询、分部位体温、衣物、效果与同步 | Current |
-| [heat-production-and-network.md](heat-production-and-network.md) | 物理 source、worker 能量、材料/phase 与独立热网 | Current |
-| [data-lifecycle-and-integration.md](data-lifecycle-and-integration.md) | 配方、能力、持久化、服务端生命周期、网络与消费者 | Current |
+| [heat-production-and-network.md](heat-production-and-network.md) | 物理 source、worker 能量、材料/phase 与独立热网 | Transitional |
+| [data-lifecycle-and-integration.md](data-lifecycle-and-integration.md) | 配方、能力、持久化、服务端生命周期、网络与消费者 | Transitional |
 
 Primary anchors: `WorldClimate`, `WorldTemperature`, `PlayerTemperatureUpdate`, `PlayerTemperatureData`, `WearableThermalReservoir`, `MinecraftThermalInput`, `MinecraftPageManager`, `PhysicalSourceSpatialIndex`, `ThermalDimensionEngine`, `ThermalSolver`, `ThermalSourceLedger`, `GeneratorData`, `HeatEndpoint`, `HeatNetwork`, `FHConfig.SERVER.CLIMATE`, `FHConfig.SERVER.SIMULATION`.
 

@@ -28,16 +28,16 @@ public final class TopologyCommitter {
                     "prepared topology base version is no longer current");
         }
         for (int slot : change.removedReservoirSlots) {
-            if (!arena.isLive(slot) || !arena.isPhaseReservoir(slot)) {
+            if (!arena.isLive(slot) || !arena.hasMaterialTransition(slot)) {
                 throw new IllegalStateException(
-                        "prepared removed phase reservoir is no longer current");
+                        "prepared removed phase material is no longer current");
             }
         }
         for (int slot : change.addedReservoirSlots) {
             if (!arena.isStagedCell(slot)
-                    || !arena.isPhaseReservoir(slot)) {
+                    || !arena.hasMaterialTransition(slot)) {
                 throw new IllegalStateException(
-                        "prepared added phase reservoir is not staged");
+                        "prepared added phase material is not staged");
             }
         }
         for (PreparedTopologyChange.PageWrite write : change.pageWrites) {
@@ -65,7 +65,7 @@ public final class TopologyCommitter {
             }
         }
         for (int slot : change.removedReservoirSlots) {
-            phases.unregisterReservoir(slot);
+            phases.unregisterMaterial(slot);
         }
         for (int index = 0; index < change.fragmentIndexes.length; index++) {
             solver.installFragment(
@@ -120,8 +120,9 @@ public final class TopologyCommitter {
                     write.publication);
         }
         for (int slot : change.addedReservoirSlots) {
-            phases.registerReservoir(slot);
+            phases.registerMaterial(slot);
         }
+        arena.recordExternalMaterialEnergy(change.externalMaterialEnergyJ);
         if (change.nextStructuralVersion != change.baseStructuralVersion) {
             solver.finishTopologyCommit(change.nextStructuralVersion);
         }

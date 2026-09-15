@@ -590,12 +590,12 @@ public class CodecUtil {
 		};
 	}
 	public static <O> MapCodec<O> mapCodec(Function<Applicative0<RecordCodecBuilder<O,?>>, BuildResult<RecordCodecBuilder<O,?>, O>> builder){
-		return deserializer(CurryApplicativeTemplate.build(builder));
+		return codecFromCurry(CurryApplicativeTemplate.build(builder));
 	}
 	@SuppressWarnings("unchecked")
-	public static <O> MapCodec<O> deserializer(BuildResult<RecordCodecBuilder<O,?>,O> br) {
+	public static <O> MapCodec<O> codecFromCurry(BuildResult<RecordCodecBuilder<O,?>,O> br) {
 		List<RecordTarget<O>> list=Arrays.asList(new RecordTarget[br.parcount()]);
-		for(com.teammoeg.chorda.util.struct.CurryApplicativeTemplate.Item<RecordCodecBuilder<O, ?>> i:br.obj()) {
+		for(CurryApplicativeTemplate.Item<RecordCodecBuilder<O, ?>> i:br.obj()) {
 			if(i.index()>=0)
 				list.set(i.index(), new RecordTarget<>(getRecGetter.apply(i.obj()),getEncGetter.apply(i.obj()),getCodecGetter.apply(i.obj())));
 		}
@@ -604,11 +604,21 @@ public class CodecUtil {
 			@Override
 			public <T> DataResult<O> decode(DynamicOps<T> arg0, MapLike<T> arg1) {
 				O data;
+				Object[] param=new Object[list.size()];
 				try {
+					for(int i=0;i<list.size();i++) {
+						DataResult<Object> dr=list.get(i).decoder.decode(arg0, arg1);
+						Optional<Object> suc=dr.result();
+						final int fi=i;
+						if(suc.isPresent())
+							param[i]=suc.get();
+						else
+							return DataResult.error(()->dr.error().map(t->t.message()).orElse("error decoding param "+fi));
+					}
 					data=br.consumer().apply(new BuiltParams() {
 						@Override
 						public Object getRaw(int params) {
-							return list.get(params).decoder.decode(arg0, arg1);
+							return param[params];
 						}
 					});
 				}catch(Exception ex) {

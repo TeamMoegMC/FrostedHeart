@@ -27,6 +27,7 @@ import com.teammoeg.frostedheart.content.robotics.logistics.data.ItemKey;
 
 import lombok.Getter;
 import lombok.Setter;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 
 public class Filter {
@@ -52,6 +53,9 @@ public class Filter {
 	}
 	public Filter() {
 		
+	}
+	public Item getItem() {
+		return key.item;
 	}
 	public boolean matches(ItemKey okey) {
 		if(ignoreNbt)

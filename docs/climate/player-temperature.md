@@ -1,7 +1,7 @@
 # Player Temperature
 
 - Status: `Current`
-- Last verified: `2026-09-09`
+- Last verified: `2026-09-11`
 - Scope: player environment sampling, five-part body energy, wearable thermal reservoirs, clothing, Wet, heating equipment, thermometers, HUD, effects, persistence, and synchronization
 - Primary code anchors: `PlayerTemperatureUpdate.updateTemperature`, `PlayerTemperatureComputation.updatePlayer`, `PlayerThermalEnvironment`, `PlayerEquipmentHeating`, `PlayerThermoregulation`, `PlayerThermalModel`, `PlayerThermalInjury`, `PlayerTemperatureData`, `ThermometerItem`, `CreativeThermometerItem`, `FHTemperatureDisplayPacket`, `WearableThermalExchangeHandler`, `ThreeNodeWearableHeatExchange`, `ThermalReservoirBlock`, `ThermalReservoirBlockEntity.serverTick`, `FHBodyDataSyncPacket`, `FrostedHud.renderTemperature`
 
@@ -43,8 +43,13 @@ players are distributed across the interval. Each update performs one
 
 The query returns absolute Thermal Air in degrees Celsius and direct radiant
 flux in `W/m2`. `FHAttributes.ENV_TEMPERATURE` modifiers and the existing
-Sauna effect are then applied to the player's local air boundary. Outdoor wind
-is `WorldTemperature.wind * 19.444 / 100 m/s`; the initial indoor model applies
+Sauna effect are then applied to the player's local air boundary.
+
+The owned environment attribute modifier is reused while its sampled value and
+ADDITION operation match. Changed air replaces it; the final attribute value is
+still read on every update so other modifiers remain effective.
+
+Outdoor wind is `WorldTemperature.wind * 19.444 / 100 m/s`; the initial indoor model applies
 that wind only when `ServerLevel.canSeeSky` is true at the player's eye
 position. A roof therefore gives exactly `0 m/s` local wind. No ray, Page,
 cache, or stored openness value is used for this gate.
@@ -71,8 +76,11 @@ Air, long-wave exchange, direct source radiation, clothing resistance, contact
 media, Wet, metabolism, movement, thermoregulation, and equipment all enter one
 power balance in watts. `PlayerTemperatureComputation.updatePlayer` integrates that
 balance through five visible phases: environment sampling, contact preparation,
-active-power collection, body integration, and observation publication. Its
-separate stateless `PlayerThermalModel` owns the formulas,
+active-power collection, body integration, and observation publication. The
+natural-convection coefficient uses the fixed 33 C reference skin temperature
+and is calculated once per update, then passed to the five part preparations and
+environmental-equivalent calculation. Clothing and forced convection retain
+their per-part calculations. The stateless `PlayerThermalModel` owns the formulas,
 including the closed-form exponential step, so passive water or lava contact
 cannot numerically jump through its boundary temperature. The configured
 `temperatureChangeRate` multiplies one explicit `GAMEPLAY_TIME_SCALE` of

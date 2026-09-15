@@ -62,6 +62,9 @@ public final class ThermalSourceLedger implements AutoCloseable {
     private int freeHead = NO_SOURCE;
     private long cursorTick;
     private boolean closed;
+    private long accountingTick;
+    private double outputPowerW, declaredLossPowerW, degradedLossPowerW;
+    private double outputEnergyJ, declaredLossEnergyJ, degradedLossEnergyJ;
 
     public ThermalSourceLedger(
             long initialTick,
@@ -85,10 +88,16 @@ public final class ThermalSourceLedger implements AutoCloseable {
         allocateStorage(capacity);
         allocateTable(tableCapacity(capacity));
         cursorTick = initialTick;
+        accountingTick = initialTick;
     }
 
     public boolean hasActivePowerOrPendingEnergy() {
         return accumulators.hasActivePowerOrPendingEnergy();
+    }
+
+    public boolean suppliesPower(long sourceId) {
+        int slot = findSource(sourceId);
+        return slot != NO_SOURCE && effectivePower(slot) > 0;
     }
 
     /**
@@ -115,6 +124,7 @@ public final class ThermalSourceLedger implements AutoCloseable {
                         "source events are outside their ordered batch interval");
             }
             cursorTick = eventTick;
+            settleAccounting(eventTick);
             applyEvent(batch, index);
             observer.afterEvent(batch, index, this);
             previousTick = eventTick;
@@ -128,6 +138,7 @@ public final class ThermalSourceLedger implements AutoCloseable {
         if (targetTick < cursorTick) {
             throw new IllegalArgumentException("source target tick precedes the cursor");
         }
+        settleAccounting(targetTick);
         accumulators.drainAllPendingEnergyTo(targetTick, destination);
         cursorTick = targetTick;
     }
@@ -268,6 +279,9 @@ public final class ThermalSourceLedger implements AutoCloseable {
             throw new IllegalStateException("only IMPULSE accepts impulse events");
         }
         int portOffset = requirePortOffset(slot, portId);
+        outputEnergyJ += energyJ;
+        if (portBindingKinds[portOffset] == SourceBinding.Kind.DECLARED_LOSS.ordinal()) declaredLossEnergyJ += energyJ;
+        if (portBindingKinds[portOffset] == SourceBinding.Kind.DEGRADED_LOSS.ordinal()) degradedLossEnergyJ += energyJ;
         if (isThermalNode(portOffset) && energyJ != 0.0D) {
             int accumulator = accumulators.ensureNode(
                     portTargetIds[portOffset],
@@ -292,6 +306,8 @@ public final class ThermalSourceLedger implements AutoCloseable {
         for (int index = 0; index < portCounts[slot]; index++) {
             int portOffset = firstPort + index;
             double contribution = portContributionW[portOffset];
+            outputPowerW -= contribution;
+            changeLossPower(portOffset, -contribution);
             if (isThermalNode(portOffset)) {
                 if (contribution != 0.0D) {
                     changeNodePower(
@@ -332,6 +348,8 @@ public final class ThermalSourceLedger implements AutoCloseable {
                         "assigned source power", assigned, contribution);
             }
             double delta = contribution - portContributionW[portOffset];
+            outputPowerW += delta;
+            changeLossPower(portOffset, delta);
             if (isThermalNode(portOffset) && delta != 0.0D) {
                 changeNodePower(
                         portTargetIds[portOffset],
@@ -349,6 +367,7 @@ public final class ThermalSourceLedger implements AutoCloseable {
             long eventTick
     ) {
         double contribution = portContributionW[portOffset];
+        changeLossPower(portOffset, -contribution);
         if (isThermalNode(portOffset)) {
             if (contribution != 0.0D) {
                 changeNodePower(
@@ -374,6 +393,28 @@ public final class ThermalSourceLedger implements AutoCloseable {
             }
         }
         writeBinding(portOffset, next);
+        changeLossPower(portOffset, contribution);
+    }
+
+    private void changeLossPower(int portOffset, double deltaW) {
+        if (portBindingKinds[portOffset] == SourceBinding.Kind.DECLARED_LOSS.ordinal()) declaredLossPowerW += deltaW;
+        if (portBindingKinds[portOffset] == SourceBinding.Kind.DEGRADED_LOSS.ordinal()) degradedLossPowerW += deltaW;
+    }
+
+    private void settleAccounting(long tick) {
+        double seconds = (tick - accountingTick) / 20.0;
+        outputEnergyJ += outputPowerW * seconds;
+        declaredLossEnergyJ += declaredLossPowerW * seconds;
+        degradedLossEnergyJ += degradedLossPowerW * seconds;
+        accountingTick = tick;
+    }
+
+    public record EnergyBalance(double outputJ, double deliveredJ, double declaredLossJ,
+            double degradedLossJ, double unacceptedJ) {}
+
+    public EnergyBalance energyBalance() {
+        return new EnergyBalance(outputEnergyJ, accumulators.deliveredEnergyJ(), declaredLossEnergyJ,
+                degradedLossEnergyJ, accumulators.unacceptedEnergyJ());
     }
 
     private void changeNodePower(

@@ -37,7 +37,12 @@ import com.simibubi.create.Create;
 import com.teammoeg.caupona.CPMain;
 import com.teammoeg.caupona.CPTags;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlocks;
-import com.teammoeg.frostedheart.content.climate.PhysicalState;
+import java.util.Locale;
+import net.minecraft.commands.arguments.blocks.BlockStateParser;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.tags.TagKey;
+import org.apache.poi.ss.usermodel.Cell;
 import com.teammoeg.frostedheart.content.climate.data.*;
 import com.teammoeg.frostedresearch.FRContents;
 import com.yanny.age.stone.subscribers.ItemSubscriber;
@@ -61,9 +66,6 @@ import com.teammoeg.frostedheart.bootstrap.common.FHItems;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData.BodyPart;
 import com.teammoeg.frostedheart.content.trade.policy.TradeBuilder;
 
-import net.minecraft.commands.arguments.blocks.BlockStateArgument;
-import net.minecraft.commands.arguments.blocks.BlockStateParser;
-import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.data.DataGenerator;
 import net.minecraft.data.recipes.FinishedRecipe;
 import net.minecraft.data.recipes.RecipeProvider;
@@ -141,63 +143,11 @@ public class FHRecipeProvider extends RecipeProvider {
 					ExcelHelper.getCellValueAsBoolean(m.get("must_lit"))
 					).toFinished(FHMain.rl("block_temperature/"+block.getPath())));
 		});
-		Set<BlockState> allStates=new HashSet<>();
-		// state transition
-		ExcelHelper.forEachRowExcludingHeaders(openWorkBook("/data/frostedheart/data/state_transition.xlsx"), m->{
-			try {
-				String name=ExcelHelper.getCellValueAsString(m.get("block"));
-			BlockState block=BlockStateParser.parseForBlock(BuiltInRegistries.BLOCK.asLookup(),name,true).blockState();
-			String solidName=ExcelHelper.getCellValueAsString(m.get("solid"));
-			BlockState solid=null;
-			if(solidName!=null&&!solidName.isEmpty())
-				try {
-					solid=BlockStateParser.parseForBlock(BuiltInRegistries.BLOCK.asLookup(),solidName,true).blockState();
-				}catch(Throwable t) {
-					FHMain.LOGGER.error("error parsing solid "+solidName+" for state transition");
-					t.printStackTrace();
-				}
-			String liquidName=ExcelHelper.getCellValueAsString(m.get("liquid"));
-			BlockState liquid=null;
-			if(liquidName!=null&&!liquidName.isEmpty())
-				try {
-					liquid=BlockStateParser.parseForBlock(BuiltInRegistries.BLOCK.asLookup(),liquidName,true).blockState();
-				}catch(Throwable t) {
-					FHMain.LOGGER.error("error parsing liquid "+liquidName+" for state transition");
-					t.printStackTrace();
-				}
-			String gasName=ExcelHelper.getCellValueAsString(m.get("gas"));
-			BlockState gas=null;
-			if(gasName!=null&&!gasName.isEmpty())
-				try {
-					gas=BlockStateParser.parseForBlock(BuiltInRegistries.BLOCK.asLookup(),gasName,true).blockState();
-				}catch(Throwable t) {
-					FHMain.LOGGER.error("error parsing gas "+gasName+" for state transition");
-					t.printStackTrace();
-				}
-			String blockPath=name.replaceAll(":", "/").replaceAll("[^A-Za-z_/]", "_");
-				if(!allStates.add(block)) {
-					FHMain.LOGGER.error("Duplicated state "+block+" for state transition");
-					return;
-				}
-				out.accept(new StateTransitionData(
-						block,
-						ExcelHelper.getCellValueAsBoolean(m.get("all_state")),
-						PhysicalState.fromString(ExcelHelper.getCellValueAsString(m.get("state"))),
-						solid,
-						liquid,
-						gas,
-						(float)ExcelHelper.getCellValueAsNumber(m.get("freeze_temp")),
-						(float)ExcelHelper.getCellValueAsNumber(m.get("melt_temp")),
-						(float)ExcelHelper.getCellValueAsNumber(m.get("condense_temp")),
-						(float)ExcelHelper.getCellValueAsNumber(m.get("evaporate_temp")),
-						(int)ExcelHelper.getCellValueAsNumber(m.get("heat_capacity")),
-						ExcelHelper.getCellValueAsBoolean(m.get("will_transit"))
-				).toFinished(FHMain.rl("state_transition/"+blockPath)));
-
-			}catch(Throwable t) {
-				t.printStackTrace();
-			}
-		});
+		try (Workbook book = openWorkBook("/data/frostedheart/data/state_transition.xlsx")) {
+			materialTransitions(book, out);
+		} catch (IOException exception) {
+			throw new IllegalStateException("Cannot read material transition workbook", exception);
+		}
 		//world
 		out.accept(new WorldTempData(new ResourceLocation("the_nether"),300).toFinished(FHMain.rl("level_temperature/nether")));
 		out.accept(new WorldTempData(new ResourceLocation("the_end"),-300).toFinished(FHMain.rl("level_temperature/the_end")));
@@ -340,7 +290,59 @@ public class FHRecipeProvider extends RecipeProvider {
 		return new ArmorTempData(item.asItem(), Optional.of(BodyPart.fromVanilla(((Equipable)item.asItem()).getEquipmentSlot())), insulation, heat_proof,cold_proof).toFinished(FHMain.rl("armor_insulation/"+CRegistryHelper.getPath(item.asItem())));
 		
 	}
-	private Workbook openWorkBook(String name) {
+	/** Spreadsheet is the authoring source; disabled directions stay editable without entering runtime data. */
+	private static void materialTransitions(Workbook book, Consumer<FinishedRecipe> out) {
+		ExcelHelper.forEachRowExcludingHeaders(book, row -> {
+			String block = materialText(row, "block");
+			if (block.isEmpty()) return; // Empty rows and the field guide have no block definition.
+			String id = materialText(row, "recipe_id");
+			if (id.isEmpty()) throw new IllegalArgumentException("Missing recipe_id for material " + block);
+			var data = new StateTransitionData(materialState(block),
+					ExcelHelper.getCellValueAsBoolean(row.get("all_states")),
+					materialNumber(row, "capacity_j_per_k", Double.NaN),
+					materialNumber(row, "enthalpy_offset_j", 0),
+					materialNumber(row, "conductance_w_per_k", Double.NaN),
+					materialEdge(row, "heating"), materialEdge(row, "cooling"));
+			out.accept(data.toFinished(FHMain.rl("state_transition/" + id)));
+		});
+	}
+
+	private static StateTransitionData.Edge materialEdge(Map<String, Cell> row, String direction) {
+		String target = materialText(row, direction + "_target");
+		String enabled = materialText(row, direction + "_enabled");
+		if (target.isEmpty() || !enabled.isEmpty() && !ExcelHelper.getCellValueAsBoolean(row.get(direction + "_enabled"))) return null;
+		String fluid = materialText(row, direction + "_fluid_boundary_tag");
+		String biome = materialText(row, direction + "_excluded_biome_tag");
+		String effect = materialText(row, direction + "_effect");
+		return new StateTransitionData.Edge(materialState(target),
+				Double.parseDouble(materialText(row, direction + "_temperature_c")),
+				materialNumber(row, direction + "_latent_heat_j", 38_000),
+				new StateTransitionData.WorldConditions(
+						(int) materialNumber(row, direction + "_min_y_exclusive", Integer.MIN_VALUE),
+						fluid.isEmpty() ? null : TagKey.create(Registries.FLUID, new ResourceLocation(fluid)),
+						biome.isEmpty() ? null : TagKey.create(Registries.BIOME, new ResourceLocation(biome))),
+				effect.isEmpty() ? StateTransitionData.Effect.NONE : StateTransitionData.Effect.valueOf(effect.toUpperCase(Locale.ROOT)));
+	}
+
+	private static String materialText(Map<String, Cell> row, String column) {
+		String value = ExcelHelper.getCellValueAsString(row.get(column));
+		return value == null ? "" : value.trim();
+	}
+
+	private static double materialNumber(Map<String, Cell> row, String column, double defaultValue) {
+		String value = materialText(row, column);
+		return value.isEmpty() ? defaultValue : Double.parseDouble(value);
+	}
+
+	private static BlockState materialState(String value) {
+		try {
+			return BlockStateParser.parseForBlock(BuiltInRegistries.BLOCK.asLookup(), value, false).blockState();
+		} catch (com.mojang.brigadier.exceptions.CommandSyntaxException exception) {
+			throw new IllegalArgumentException("Invalid material BlockState: " + value, exception);
+		}
+	}
+
+	private static Workbook openWorkBook(String name) {
 		try {
 			HSSFWorkbook book=new HSSFWorkbook(openDatagenResource(name));
 			return book;

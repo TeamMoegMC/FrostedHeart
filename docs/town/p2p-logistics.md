@@ -152,7 +152,9 @@ P2P 终端只在已到期且拥有至少 1 件完整额度后才解析源端和�
 不能令该总数溢出。`TownTransportSnapshot` 在全量和增量同步中携带绑定、
 过滤摘要、P2P 距离系数和派生预约。镇长印章使用稳定排序展示每条发送方预约，双向连接因此显示两个方向而不重复计费。
 
-自动化锚点包括 `P2PBindingStateTest`、`TeamTownP2PBindingTest`、`P2PItemTransferTest`、`TransportTransferBudgetTest`、
+自动化锚点包括 `P2PBindingStateTest`、`P2PItemTransferTest`、`TransportTransferBudgetTest`、
 `P2PTerminalBufferTest`、`P2PTerminalResourcesTest`、`P2PTerminalScreenTest` 和 `TownTransportSnapshotTest`。`H01` 的七轮游戏内反馈覆盖了方块外观、
 GUI scale、中英文布局、配对、调速、低速状态和容器可用性，并已完成对应返修。多人并发、重启、区块生命周期和真实外部
 物流组合仍属于发布回归重点；它们不扩大上文明确限定的硬崩溃保证范围。
+
+2026-09-16 测试维护：`TeamTownP2PBindingTest` 引用已移除的构造器，按用户要求删除，不再作为当前可运行的验证入口；生产 P2P 行为未改变。

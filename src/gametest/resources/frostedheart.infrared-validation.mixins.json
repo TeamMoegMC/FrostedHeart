@@ -1,0 +1,8 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.infraredvalidation.mixin",
+  "compatibilityLevel": "JAVA_17",
+  "client": ["HiddenValidationWindowMixin"],
+  "injectors": {"defaultRequire": 1}
+}

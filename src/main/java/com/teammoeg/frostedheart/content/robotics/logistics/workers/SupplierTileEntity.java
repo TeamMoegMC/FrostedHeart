@@ -20,7 +20,11 @@
 package com.teammoeg.frostedheart.content.robotics.logistics.workers;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.function.Supplier;
 
 import org.jetbrains.annotations.NotNull;
@@ -53,102 +57,52 @@ import net.minecraftforge.common.capabilities.ForgeCapabilities;
 import net.minecraftforge.common.util.LazyOptional;
 
 @SuppressWarnings("unused")
-public class SupplierTileEntity extends CBlockEntity implements CTickableBlockEntity,MenuProvider,ILogisticProvider,LogisticStatusBlockEntity {
-	@Getter
-	RequestLogisticChest container;
-	public LazyOptional<LogisticChest> grid=LazyOptional.of(()->container);
-	public LazyOptional<LogisticNetwork> network;
-	@Getter
-	protected int networkStatus=0;
-	@Getter
-	protected int uplinkStatus=0;
-	private final List<Supplier<LogisticTaskKey>> keys=new ArrayList<>(27);
-	private int networkCheckTicks;
+public class SupplierTileEntity extends LogisticProviderBlockEntity implements MenuProvider,ILogisticProvider {
+
+	
+
+	
 	public SupplierTileEntity(BlockPos pos,BlockState bs) {
-		super(FHBlockEntityTypes.SUPPLIER_CHEST.get(),pos,bs);
-		container=new RequestLogisticChest(null,pos,this::setChanged);
-		for(int slot=0;slot<27;slot++) {
-			final int taskSlot=slot;
-			keys.add(()->new LogisticTaskKey(pos,taskSlot));
-		}
+		super(FHBlockEntityTypes.SUPPLIER_CHEST.get(),pos,bs,27,new RequestLogisticChest(null,pos));
 	}
 
-
-
-	@Override
-	public void readCustomNBT(CompoundTag nbt, boolean descPacket) {
-		container.deserialize(nbt.getCompound("chest"));
-	}
-	@Override
-	public void writeCustomNBT(CompoundTag nbt, boolean descPacket) {
-		nbt.put("chest",container.serialize());
-	}
 
 	LazyTickWorker pushWorker=new LazyTickWorker(10,()->{
-		if(network==null||!network.isPresent())
+		if(networks.isEmpty())
 			return;
-		LogisticNetwork logisticNetwork=network.resolve().get();
-		for(int slot=0;slot<container.getSlots();slot++) {
-			if(container.getStackInSlot(slot).isEmpty())
+		
+		for(int slot=0;slot<getContainer().getSlots();slot++) {
+			if(getContainer().getStackInSlot(slot).isEmpty())
 				continue;
-			LogisticTaskKey key=keys.get(slot).get();
-			if(logisticNetwork.canAddTask(key))
-				logisticNetwork.addTask(key,new LogisticPushTask(worldPosition,grid.cast(),slot));
+			LogisticTaskKey key=getKeys().get(slot).get();
+			for(LazyOptional<LogisticNetwork> lln:networks) {
+				LogisticNetwork logisticNetwork=lln.orElse(null);
+				if(logisticNetwork!=null) {
+					if(logisticNetwork.canAddTask(key))
+						logisticNetwork.addTask(key,new LogisticPushTask(worldPosition,grid.cast(),slot));
+				}
+			}
 		}
 	});
 
 	@Override
 	public void tick() {
+		super.tick();
 		if(!this.level.isClientSide) {
-			container.setLevel(level);
-			container.tick();
-			if(network==null||!network.isPresent()||networkCheckTicks--<=0) {
-				refreshNetwork();
-				networkCheckTicks=20;
+			if(!networks.isEmpty()) {
+				for(int i=0;i<getContainer().getSlots();i++){
+					if(!getContainer().getStackInSlot(i).isEmpty()) {
+						uplinkStatus=2;
+						break;
+					}
+				}
 			}
-			if(network!=null&&network.isPresent()) {
-				networkStatus=2;
-				if(container.getEmptySlotCount()>=27) {
-					uplinkStatus=1;
-				}else 
-					uplinkStatus=2;
-			}else
-				uplinkStatus=networkStatus=0;
 			pushWorker.tick();
 		}
 	}
-
-	private void refreshNetwork() {
-		LazyOptional<LogisticNetwork> candidate=FHCapabilities.ROBOTIC_LOGISTIC_CHUNK
-			.getCapability(level.getChunk(worldPosition))
-			.map(chunk->chunk.getNetworkFor(level,worldPosition))
-			.orElse(LazyOptional.empty());
-		LogisticNetwork current=network!=null&&network.isPresent()?network.resolve().get():null;
-		LogisticNetwork next=candidate.isPresent()?candidate.resolve().get():null;
-		if(current!=null&&next!=null&&current!=next) {
-			current.cancelTasksAt(worldPosition);
-			current.getHub().removeElement(grid.cast());
-			network=candidate;
-			next.getHub().addElement(grid.cast());
-		}else if(current==null&&next!=null) {
-			network=candidate;
-			next.getHub().addElement(grid.cast());
-		}else if(current!=null&&next==null) {
-			current.cancelTasksAt(worldPosition);
-			current.getHub().removeElement(grid.cast());
-			network=null;
-		}else if(current==null)
-			network=null;
-	}
-
-	private void disconnectNetwork() {
-		if(network!=null&&network.isPresent())
-			network.resolve().get().getHub().removeElement(grid.cast());
-		network=null;
-	}
 	@Override
 	public AbstractContainerMenu createMenu(int pContainerId, Inventory pPlayerInventory, Player pPlayer) {
-		return new SupplierChestMenu(pContainerId,this,pPlayerInventory,container);
+		return new SupplierChestMenu(pContainerId,this,pPlayerInventory,getContainer());
 	}
 	@Override
 	public <T> @NotNull LazyOptional<T> getCapability(@NotNull Capability<T> cap, @Nullable Direction side) {
@@ -161,33 +115,5 @@ public class SupplierTileEntity extends CBlockEntity implements CTickableBlockEn
 	public Component getDisplayName() {
 		return Component.translatable(this.getBlockState().getBlock().getDescriptionId());
 	}
-
-
-
-	@Override
-	public void onRemoved() {
-		super.onRemoved();
-		if(network!=null&&network.isPresent())
-			network.resolve().get().cancelTasksAt(worldPosition);
-		disconnectNetwork();
-		grid.invalidate();
-	}
-
-	@Override
-	public void onUnloaded() {
-		disconnectNetwork();
-		grid.invalidate();
-	}
-
-	@Override
-	public void onLoad() {
-		super.onLoad();
-		container.setLevel(level);
-		if(!grid.isPresent())
-			grid=LazyOptional.of(()->container);
-		networkCheckTicks=0;
-	}
-
-
 
 }

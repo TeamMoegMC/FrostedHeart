@@ -47,7 +47,7 @@ public abstract class BlockStateBaseMixin_RandomTick extends StateHolder<Block, 
 		if(((Object)this) instanceof BlockState bs) {
 			StateTransitionData std=StateTransitionData.getData(bs);
 			if(std!=null)
-				bool.setReturnValue(std.willTransit()||bool.getReturnValueZ());
+				bool.setReturnValue(std.hasRandomTransitions()||bool.getReturnValueZ());
 		}
 	}
 

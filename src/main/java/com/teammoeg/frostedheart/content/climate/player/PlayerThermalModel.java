@@ -66,7 +66,7 @@ public class PlayerThermalModel {
      * radiant proof affects absorbed source/fire heat.
      */
     static void preparePart(PlayerTemperatureData data, HeatingDeviceContext context, BodyPart part,
-                            double airTemperatureC, double radiantFluxWPerM2, double localWindMPerS,
+                            double airTemperatureC, double hNatural, double radiantFluxWPerM2, double localWindMPerS,
                             double waterTemperatureC, double waterHeightRatio, double lavaHeightRatio,
                             boolean powderSnow, boolean wet) {
         // Fractions are exclusive and sum to one for this body part.
@@ -80,7 +80,7 @@ public class PlayerThermalModel {
         PartClothData clothing = context.clothing();
         data.fillClothDataByPart(context.getPlayer(), part, clothing);
         double hConvection = convectionCoefficientWPerM2K(
-                airTemperatureC, localWindMPerS, clothing.windProof);
+                hNatural, localWindMPerS, clothing.windProof);
         double absorbedFluxWPerM2 = absorbedRadiantFluxWPerM2(
                 radiantFluxWPerM2, clothing.radiantHeatProof);
         double hTotal = hConvection
@@ -128,8 +128,7 @@ public class PlayerThermalModel {
     }
 
     private static double convectionCoefficientWPerM2K(
-            double airTemperatureC, double localWindMPerS, double windProof) {
-        double hNatural = naturalConvectionCoefficientWPerM2K(REFERENCE_SKIN_TEMPERATURE_C, airTemperatureC);
+            double hNatural, double localWindMPerS, double windProof) {
         double hForced = forcedConvectionCoefficientWPerM2K(localWindMPerS * (1.0D - windProof));
         return Math.max(hNatural, hForced);
     }
@@ -166,8 +165,8 @@ public class PlayerThermalModel {
                 0.0D, 1.0D);
     }
 
-    private static double naturalConvectionCoefficientWPerM2K(double skinTemperatureC, double airTemperatureC) {
-        return 2.38D * Math.pow(Math.abs(skinTemperatureC - airTemperatureC), 0.25D);
+    static double naturalConvectionCoefficientWPerM2K(double airTemperatureC) {
+        return 2.38D * Math.pow(Math.abs(REFERENCE_SKIN_TEMPERATURE_C - airTemperatureC), 0.25D);
     }
 
     private static double forcedConvectionCoefficientWPerM2K(double velocityMPerS) {
@@ -323,10 +322,9 @@ public class PlayerThermalModel {
      * excluded because this is an environment observation, not body safety.
      */
     static double environmentalEquivalentTemperatureC(
-            double airTemperatureC, double radiantFluxWPerM2, double localWindMPerS,
+            double airTemperatureC, double hNatural, double radiantFluxWPerM2, double localWindMPerS,
             double waterTemperatureC, double waterHeightRatio, double lavaHeightRatio,
             boolean powderSnow, boolean onFire) {
-        double hNatural = naturalConvectionCoefficientWPerM2K(REFERENCE_SKIN_TEMPERATURE_C, airTemperatureC);
         double hConvection = Math.max(hNatural,
                 forcedConvectionCoefficientWPerM2K(localWindMPerS));
         double airLossFlux = airLossFluxWPerM2(airTemperatureC, radiantFluxWPerM2, hConvection);

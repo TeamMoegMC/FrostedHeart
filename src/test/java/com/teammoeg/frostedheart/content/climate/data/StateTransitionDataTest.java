@@ -1,25 +1,15 @@
-/*
- * Copyright (c) 2026 TeamMoeg
- *
- * This file is part of Frosted Heart.
- *
- * Frosted Heart is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, version 3.
- */
-
+/* Copyright (c) 2026 TeamMoeg */
 package com.teammoeg.frostedheart.content.climate.data;
 
-import com.teammoeg.frostedheart.content.climate.PhysicalState;
+import com.google.gson.JsonParser;
+import com.mojang.serialization.JsonOps;
 import net.minecraft.SharedConstants;
 import net.minecraft.server.Bootstrap;
 import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.level.block.state.BlockState;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.*;
 
 class StateTransitionDataTest {
     @BeforeAll
@@ -29,85 +19,39 @@ class StateTransitionDataTest {
     }
 
     @Test
-    void equalSolidThresholdKeepsLegacyGasPriority() {
-        BlockState current = Blocks.BLUE_ICE.defaultBlockState();
-        StateTransitionData data = transition(
-                current,
-                PhysicalState.SOLID,
-                Blocks.PACKED_ICE.defaultBlockState(),
-                Blocks.ICE.defaultBlockState(),
-                9.0F,
-                9.0F);
-
-        StateTransitionData.HeatingTransition heating =
-                data.heatingTransition(current);
-
-        assertEquals(9.0F, heating.temperatureC());
-        assertEquals(PhysicalState.GAS, heating.targetState());
-        assertEquals(Blocks.ICE.defaultBlockState(), heating.targetBlock());
+    void independentDirectionsAndConditionsRoundTrip() {
+        var data = decode("""
+                {"block":{"Name":"minecraft:stone"}, "capacity_j_per_k":100,
+                 "enthalpy_offset_j":1200,
+                 "heating":{"target":{"Name":"minecraft:glass"}, "temperature_c":40,
+                            "world_conditions":{"min_y_exclusive":-55,"fluid_boundary_tag":"minecraft:water"}},
+                 "cooling":{"target":{"Name":"minecraft:dirt"}, "temperature_c":-10}}
+                """);
+        assertEquals(Blocks.GLASS.defaultBlockState(), data.heating().target());
+        assertEquals(Blocks.DIRT.defaultBlockState(), data.cooling().target());
+        assertEquals(-55, data.heating().worldConditions().minYExclusive());
+        assertEquals(StateTransitionData.WorldConditions.NONE, data.cooling().worldConditions());
+        assertEquals(data, StateTransitionData.CODEC.parse(JsonOps.INSTANCE,
+                StateTransitionData.CODEC.encodeStart(JsonOps.INSTANCE, data).result().orElseThrow()).result().orElseThrow());
     }
 
     @Test
-    void lowerMeltThresholdWinsBeforeLaterSublimation() {
-        BlockState current = Blocks.SNOW_BLOCK.defaultBlockState();
-        StateTransitionData data = transition(
-                current,
-                PhysicalState.SOLID,
-                Blocks.WATER.defaultBlockState(),
-                Blocks.AIR.defaultBlockState(),
-                9.0F,
-                100.0F);
-
-        StateTransitionData.HeatingTransition heating =
-                data.heatingTransition(current);
-
-        assertEquals(9.0F, heating.temperatureC());
-        assertEquals(PhysicalState.LIQUID, heating.targetState());
-        assertEquals(Blocks.WATER.defaultBlockState(), heating.targetBlock());
+    void omittedDirectionsHaveNoInferredInverse() {
+        var data = decode("""
+                {"block":{"Name":"minecraft:stone"},
+                 "cooling":{"target":{"Name":"minecraft:dirt"}, "temperature_c":-10}}
+                """);
+        assertNull(data.heating());
+        assertTrue(data.hasTransitions());
+        assertEquals(38000, data.cooling().latentHeatJ());
+        var ordinary = decode("""
+                {"block":{"Name":"minecraft:stone"}}
+                """);
+        assertFalse(ordinary.hasTransitions());
+        assertTrue(Double.isNaN(ordinary.capacityJPerK()));
     }
 
-    @Test
-    void gasAndNoOpTargetsDoNotCreateHotSideProfiles() {
-        BlockState current = Blocks.WATER.defaultBlockState();
-        StateTransitionData gas = transition(
-                current,
-                PhysicalState.GAS,
-                Blocks.ICE.defaultBlockState(),
-                current,
-                9.0F,
-                100.0F);
-        StateTransitionData liquidNoOp = transition(
-                current,
-                PhysicalState.LIQUID,
-                Blocks.ICE.defaultBlockState(),
-                current,
-                9.0F,
-                100.0F);
-
-        assertNull(gas.heatingTransition(current));
-        assertNull(liquidNoOp.heatingTransition(current));
-    }
-
-    private static StateTransitionData transition(
-            BlockState block,
-            PhysicalState state,
-            BlockState liquid,
-            BlockState gas,
-            float meltTemperatureC,
-            float evaporateTemperatureC
-    ) {
-        return new StateTransitionData(
-                block,
-                false,
-                state,
-                Blocks.ICE.defaultBlockState(),
-                liquid,
-                gas,
-                -10.0F,
-                meltTemperatureC,
-                -5.0F,
-                evaporateTemperatureC,
-                1,
-                true);
+    private static StateTransitionData decode(String json) {
+        return StateTransitionData.CODEC.parse(JsonOps.INSTANCE, JsonParser.parseString(json)).result().orElseThrow();
     }
 }

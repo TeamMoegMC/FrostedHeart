@@ -19,8 +19,6 @@
 
 package com.teammoeg.frostedheart.content.robotics.logistics.grid;
 
-import java.util.Map;
-
 import com.teammoeg.frostedheart.content.robotics.logistics.data.ItemKey;
 
 import net.minecraft.core.BlockPos;
@@ -29,23 +27,22 @@ import net.minecraft.world.level.Level;
 
 public interface IGridElement {
 
-	int getEmptySlotCount();
-
-	default ItemStack pushItem(ItemStack is,boolean fillEmpty) {
-		return pushItem(new ItemKey(is),is,fillEmpty);
+	default ItemStack pushItem(ItemStack is) {
+		return pushItem(new ItemKey(is),is);
 	}
 
-	ItemStack pushItem(ItemKey ik, ItemStack is,boolean fillEmpty);
+	ItemStack pushItem(ItemKey ik, ItemStack is);
 
 	ItemStack takeItem(ItemKey key, int amount);
+
+	ItemStack takeItem(int slot, int amount);
 
 	default ItemStack takeItem(ItemStack is) {
 		return takeItem(new ItemKey(is),is.getCount());
 	}
-	Map<ItemKey, ? extends ItemCountProvider> getAllItems();
+	void registerSlots(LogisticHub hub);
 	
 	boolean isChanged();
-	void tick();
 	default void revalidate() {
 	}
 	boolean consumeChange();
@@ -53,4 +50,6 @@ public interface IGridElement {
 	Level getLevel();
 
 	boolean fillable();
+
+	void removeSlots();
 }

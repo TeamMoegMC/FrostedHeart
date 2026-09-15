@@ -19,7 +19,7 @@
 
 package com.teammoeg.frostedheart.content.robotics.logistics;
 
-import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -28,6 +28,7 @@ import com.teammoeg.chorda.io.CodecUtil;
 import com.teammoeg.chorda.io.NBTSerializable;
 import com.teammoeg.chorda.util.CUtils;
 import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
+
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
@@ -37,11 +38,9 @@ import net.minecraftforge.common.util.LazyOptional;
 
 public class RobotChunk implements NBTSerializable{
 	Set<BlockPos> networks = new HashSet<>();
-	public LazyOptional<LogisticNetwork> getNetworkFor(Level world,BlockPos actual) {
-		LazyOptional<LogisticNetwork> nearest=LazyOptional.empty();
-		double nearestDistance=Double.MAX_VALUE;
-		long nearestPosition=Long.MAX_VALUE;
+	public Collection<LazyOptional<LogisticNetwork>> getNetworkFor(Level world,BlockPos actual) {
 		var it=networks.iterator();
+		Set<LazyOptional<LogisticNetwork>> nets=new HashSet<>();
 		while(it.hasNext()) {
 			BlockPos pos=it.next();
 			BlockEntity core = CUtils.getExistingTileEntity(world, pos);
@@ -51,16 +50,10 @@ public class RobotChunk implements NBTSerializable{
 			}
 			LazyOptional<LogisticNetwork> candidate=FHCapabilities.LOGISTIC.getCapability(core);
 			if(candidate.isPresent()) {
-				double distance=pos.distSqr(actual);
-				long packedPosition=pos.asLong();
-				if(distance<nearestDistance||(distance==nearestDistance&&packedPosition<nearestPosition)) {
-					nearest=candidate;
-					nearestDistance=distance;
-					nearestPosition=packedPosition;
-				}
+				nets.add(candidate);
 			}
 		}
-		return nearest;
+		return nets;
 	}
     
     public RobotChunk(List<BlockPos> networks) {

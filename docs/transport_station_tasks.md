@@ -1,6 +1,8 @@
 # 货运站逐步执行任务清单
 
 > 依据：`docs/transport_station_design.md`
+
+> 2026-09-16 测试维护：本清单记录历史完成结果；`TownBuildingRemovalTest` 等失配 JUnit 已按用户要求删除，历史通过记录不代表当前仍有这些测试入口，不再要求恢复。
 >
 > 范围：只实现城镇建筑和城镇 `TRANSPORT_CAPACITY` 的每日生产，不实现物流接口、占用登记或实时限速；后者见
 > `plans/2026-08-20_16-53-08_transport-capacity-consumers.md`。不包含 KHJ 物流。

@@ -36,7 +36,7 @@ public final class ResolvedGeometryBatch {
             NO_INTS,
             NO_INTS,
             NO_BYTES,
-            NO_PAGE_SIGNATURES);
+            NO_PAGE_SIGNATURES, MaterialChanges.EMPTY, new HaloUpdate[0]);
 
     private static final Kind[] KINDS = Kind.values();
     private static final ThermalPageHandle.GeometryResyncReason[] RESYNC_REASONS =
@@ -54,6 +54,9 @@ public final class ResolvedGeometryBatch {
     private final int[] signatureIds;
     private final byte[] resyncReasons;
     private final PageSignatures[] fullPageSignatures;
+    private final MaterialChanges materialChanges;
+    private final HaloUpdate[] halos;
+    public record HaloUpdate(ThermalPageHandle page, long geometryRevision, GeometryHalo halo) {}
 
     private ResolvedGeometryBatch(
             byte[] kinds,
@@ -62,7 +65,8 @@ public final class ResolvedGeometryBatch {
             int[] blockIndices,
             int[] signatureIds,
             byte[] resyncReasons,
-            PageSignatures[] fullPageSignatures
+            PageSignatures[] fullPageSignatures,
+            MaterialChanges materialChanges, HaloUpdate[] halos
     ) {
         this.kinds = kinds;
         this.pages = pages;
@@ -71,6 +75,8 @@ public final class ResolvedGeometryBatch {
         this.signatureIds = signatureIds;
         this.resyncReasons = resyncReasons;
         this.fullPageSignatures = fullPageSignatures;
+        this.materialChanges = materialChanges;
+        this.halos = halos;
     }
 
     public int size() {
@@ -78,7 +84,34 @@ public final class ResolvedGeometryBatch {
     }
 
     public boolean isEmpty() {
-        return kinds.length == 0;
+        return kinds.length == 0 && materialChanges.size() == 0 && halos.length == 0;
+    }
+
+    public MaterialChanges materialChanges() { return materialChanges; }
+    public HaloUpdate[] halos() { return halos; }
+
+    /** Ordered matter changes survive geometry coalescing, including A -> Air -> A. */
+    public static final class MaterialChanges {
+        public static final byte REPLACE = 1, MASS_CHANGE = 2, THERMAL_TRANSITION = 3, GAMEPLAY_TRANSITION = 4;
+        public static final MaterialChanges EMPTY = new MaterialChanges(NO_PAGES, NO_INTS, NO_INTS, NO_INTS, NO_BYTES);
+        private final ThermalPageHandle[] pages;
+        private final int[] positions, previousSignatures, nextSignatures;
+        private final byte[] causes;
+
+        private MaterialChanges(ThermalPageHandle[] pages, int[] positions,
+                int[] previousSignatures, int[] nextSignatures, byte[] causes) {
+            this.pages = pages;
+            this.positions = positions;
+            this.previousSignatures = previousSignatures;
+            this.nextSignatures = nextSignatures;
+            this.causes = causes;
+        }
+        public int size() { return pages.length; }
+        public ThermalPageHandle page(int index) { return pages[index]; }
+        public int blockIndex(int index) { return positions[index]; }
+        public int previousSignature(int index) { return previousSignatures[index]; }
+        public int nextSignature(int index) { return nextSignatures[index]; }
+        public byte cause(int index) { return causes[index]; }
     }
 
     public Kind kind(int index) {
@@ -123,6 +156,53 @@ public final class ResolvedGeometryBatch {
         private PageSignatures[] fullPageSignatures =
                 new PageSignatures[INITIAL_CAPACITY];
         private int size;
+        private ThermalPageHandle[] materialPages = NO_PAGES;
+        private int[] materialPositions = NO_INTS, previousMaterialSignatures = NO_INTS, nextMaterialSignatures = NO_INTS;
+        private byte[] materialCauses = NO_BYTES;
+        private int materialCount;
+        private final java.util.LinkedHashMap<ThermalPageHandle, HaloUpdate> haloUpdates = new java.util.LinkedHashMap<>();
+
+        public void addHalo(ThermalPageHandle page, long revision, GeometryHalo halo) {
+            haloUpdates.put(page, new HaloUpdate(page, revision, halo));
+        }
+
+        public void addMaterialChange(ThermalPageHandle page, int block, int previousSignature,
+                int nextSignature, byte cause) {
+            ensureMaterialCapacity(materialCount + 1);
+            materialPages[materialCount] = page;
+            materialPositions[materialCount] = block;
+            previousMaterialSignatures[materialCount] = previousSignature;
+            nextMaterialSignatures[materialCount] = nextSignature;
+            materialCauses[materialCount++] = cause;
+        }
+
+        private void ensureMaterialCapacity(int required) {
+            if (required > materialPages.length) {
+                int capacity = Math.max(required, Math.max(8, materialPages.length * 2));
+                materialPages = Arrays.copyOf(materialPages, capacity);
+                materialPositions = Arrays.copyOf(materialPositions, capacity);
+                previousMaterialSignatures = Arrays.copyOf(previousMaterialSignatures, capacity);
+                nextMaterialSignatures = Arrays.copyOf(nextMaterialSignatures, capacity);
+                materialCauses = Arrays.copyOf(materialCauses, capacity);
+            }
+        }
+
+        public void prependMaterialChanges(MaterialChanges previous) {
+            int count = previous.size();
+            if (count == 0) return;
+            ensureMaterialCapacity(materialCount + count);
+            System.arraycopy(materialPages, 0, materialPages, count, materialCount);
+            System.arraycopy(materialPositions, 0, materialPositions, count, materialCount);
+            System.arraycopy(previousMaterialSignatures, 0, previousMaterialSignatures, count, materialCount);
+            System.arraycopy(nextMaterialSignatures, 0, nextMaterialSignatures, count, materialCount);
+            System.arraycopy(materialCauses, 0, materialCauses, count, materialCount);
+            System.arraycopy(previous.pages, 0, materialPages, 0, count);
+            System.arraycopy(previous.positions, 0, materialPositions, 0, count);
+            System.arraycopy(previous.previousSignatures, 0, previousMaterialSignatures, 0, count);
+            System.arraycopy(previous.nextSignatures, 0, nextMaterialSignatures, 0, count);
+            System.arraycopy(previous.causes, 0, materialCauses, 0, count);
+            materialCount += count;
+        }
 
         public void addResolvedCenter(
                 ThermalPageHandle page,
@@ -163,7 +243,7 @@ public final class ResolvedGeometryBatch {
         }
 
         public ResolvedGeometryBatch buildAndReset() {
-            if (size == 0) {
+            if (size == 0 && materialCount == 0 && haloUpdates.isEmpty()) {
                 return EMPTY;
             }
             ResolvedGeometryBatch batch = new ResolvedGeometryBatch(
@@ -173,7 +253,15 @@ public final class ResolvedGeometryBatch {
                     Arrays.copyOf(blockIndices, size),
                     Arrays.copyOf(signatureIds, size),
                     Arrays.copyOf(resyncReasons, size),
-                    Arrays.copyOf(fullPageSignatures, size));
+                    Arrays.copyOf(fullPageSignatures, size), materialCount == 0 ? MaterialChanges.EMPTY
+                            : new MaterialChanges(Arrays.copyOf(materialPages, materialCount),
+                                    Arrays.copyOf(materialPositions, materialCount),
+                                    Arrays.copyOf(previousMaterialSignatures, materialCount),
+                                    Arrays.copyOf(nextMaterialSignatures, materialCount),
+                                    Arrays.copyOf(materialCauses, materialCount)), haloUpdates.values().toArray(HaloUpdate[]::new));
+            haloUpdates.clear();
+            Arrays.fill(materialPages, 0, materialCount, null);
+            materialCount = 0;
             Arrays.fill(pages, 0, size, null);
             Arrays.fill(fullPageSignatures, 0, size, null);
             size = 0;

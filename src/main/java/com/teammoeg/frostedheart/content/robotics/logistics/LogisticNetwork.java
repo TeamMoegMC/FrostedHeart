@@ -34,10 +34,10 @@ import com.teammoeg.frostedheart.content.robotics.logistics.tasks.LogisticPushTa
 import com.teammoeg.frostedheart.content.robotics.logistics.tasks.LogisticRequestTask;
 import com.teammoeg.frostedheart.content.robotics.logistics.tasks.LogisticTask;
 import com.teammoeg.frostedheart.content.robotics.logistics.tasks.LogisticTaskKey;
+
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
-import net.minecraft.world.Containers;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraftforge.common.capabilities.ForgeCapabilities;
@@ -101,7 +101,6 @@ public class LogisticNetwork {
 	public void tick() {
 		if(closed)
 			return;
-		hub.tick();
 		if(++hubRevalidationTicks>=HUB_REVALIDATION_INTERVAL) {
 			hubRevalidationTicks=0;
 			hub.revalidate();
@@ -186,20 +185,12 @@ public class LogisticNetwork {
 		tasks.clear();
 		keys.clear();
 		markDirty.run();
+		this.hub.invalidate();
+		
 	}
 
 	private void recoverCarriedItem(LogisticTask task) {
-		var carried=task.takeCarriedStack();
-		if(carried.isEmpty())
-			return;
-		var remainder=carried;
-		try {
-			remainder=hub.pushItem(carried,true);
-		}catch(RuntimeException ex) {
-			FHMain.LOGGER.error("Failed to return item carried by logistic task {}",task,ex);
-		}
-		if(!remainder.isEmpty()&&world!=null&&!world.isClientSide)
-			Containers.dropItemStack(world,centerPos.getX()+0.5,centerPos.getY()+0.5,centerPos.getZ()+0.5,remainder);
+		task.destroy(world);
 	}
 
 	public LazyOptional<IItemHandler> getItemHandler(BlockPos pos) {

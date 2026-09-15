@@ -366,6 +366,8 @@ production、forecast、produced capacity、stop reason 等键已加入。英文
 
 ### 自动化测试
 
+2026-09-16 维护说明：下列历史清单中的 `TownBuildingRemovalTest`、`TeamTownTransportSettlementTest`、`TransportStationForecastTest`、`TownTransportStateTest` 和 `TownResourceUpdatePacketTest` 因引用失效构造器，已按用户要求删除。对应条目保留历史验证含义，不是当前可执行入口，也不要求恢复这些 JUnit。
+
 - `TransportStationBuildingCodecTest`：默认字段、具体 Codec 往返、多态 Codec 往返、第一阶段存档兼容。
 - `TransportStationBuildingChangeTest`：重复设置相同扫描结果不会重复触发 `fireChange()`。
 - `TransportStationStaffingTest`：自动加入岗位计划、目标人数受 `maxResidents` 限制、不可工作时容量为 0。

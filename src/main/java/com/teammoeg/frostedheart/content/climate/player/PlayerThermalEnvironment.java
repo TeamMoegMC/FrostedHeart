@@ -36,11 +36,15 @@ public final class PlayerThermalEnvironment {
         AttributeInstance attribute = player.getAttribute(FHAttributes.ENV_TEMPERATURE.get());
         double result = sampledAirTemperatureC;
         if (attribute != null) {
-            attribute.removeModifier(PlayerTemperatureComputation.ENV_TEMP_ATTRIBUTE_UUID);
-            attribute.addTransientModifier(new AttributeModifier(
-                    PlayerTemperatureComputation.ENV_TEMP_ATTRIBUTE_UUID, "player environment temperature",
-                    sampledAirTemperatureC, AttributeModifier.Operation.ADDITION));
-            result = player.getAttributeValue(FHAttributes.ENV_TEMPERATURE.get());
+            AttributeModifier current = attribute.getModifier(PlayerTemperatureComputation.ENV_TEMP_ATTRIBUTE_UUID);
+            if (current == null || Double.compare(current.getAmount(), sampledAirTemperatureC) != 0
+                    || current.getOperation() != AttributeModifier.Operation.ADDITION) {
+                if (current != null) attribute.removeModifier(current);
+                attribute.addTransientModifier(new AttributeModifier(
+                        PlayerTemperatureComputation.ENV_TEMP_ATTRIBUTE_UUID, "player environment temperature",
+                        sampledAirTemperatureC, AttributeModifier.Operation.ADDITION));
+            }
+            result = attribute.getValue();
         }
         return player.hasEffect(FHMobEffects.SAUNA.get())
                 ? Math.max(result, 80.0D) : result;
