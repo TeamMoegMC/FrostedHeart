@@ -28,6 +28,12 @@ public final class ThermalTransitionDataGameTests {
     public static void allShippedEdgesShareTargetEnergyReferences(GameTestHelper helper) {
         int checked = 0;
         var profiles = MinecraftThermalProfiles.prepare();
+        int dirtProfile = profiles.signatures().materialProfileId(profiles.states().signatureId(Blocks.DIRT.defaultBlockState()));
+        int stoneProfile = profiles.signatures().materialProfileId(profiles.states().signatureId(Blocks.STONE.defaultBlockState()));
+        near(helper, 1.0, profiles.materials().profileOrNull(dirtProfile).faceConductanceWPerK(),
+                "dirt retains earth conductance despite its phase transitions");
+        near(helper, 1.4, profiles.materials().profileOrNull(stoneProfile).faceConductanceWPerK(),
+                "stone retains masonry conductance");
         for (BlockState state : Block.BLOCK_STATE_REGISTRY) {
             var data = StateTransitionData.getData(state);
             if (data == null) continue;
@@ -84,7 +90,8 @@ public final class ThermalTransitionDataGameTests {
                      "cooling":{"target":{"Name":"minecraft:dirt"}, "temperature_c":-10}}
                     """));
             definitions.put(Blocks.GLASS.defaultBlockState(), decode("""
-                    {"block":{"Name":"minecraft:glass"}, "capacity_j_per_k":100,"enthalpy_offset_j":1000}
+                    {"block":{"Name":"minecraft:glass"}, "capacity_j_per_k":100,"enthalpy_offset_j":1000,
+                     "conductance_w_per_k":3.25}
                     """));
             definitions.put(Blocks.DIRT.defaultBlockState(), decode("""
                     {"block":{"Name":"minecraft:dirt"}, "capacity_j_per_k":100,"enthalpy_offset_j":-1000}
@@ -95,6 +102,11 @@ public final class ThermalTransitionDataGameTests {
             int first = profiles.signatures().materialProfileId(profiles.states().signatureId(stone.block()));
             int second = profiles.signatures().materialProfileId(profiles.states().signatureId(Blocks.COBBLESTONE.defaultBlockState()));
             helper.assertTrue(first != second, "same physical law with different world constraints must not merge");
+            near(helper, 1.4, profiles.materials().profileOrNull(first).faceConductanceWPerK(),
+                    "adding phase transitions does not override stone conductance");
+            int glassProfile = profiles.signatures().materialProfileId(profiles.states().signatureId(Blocks.GLASS.defaultBlockState()));
+            near(helper, 3.25, profiles.materials().profileOrNull(glassProfile).faceConductanceWPerK(),
+                    "explicit recipe conductance overrides the material default");
             var law = MinecraftThermalProfiles.materialLaw(stone.block());
             near(helper, 1000, law.heating().targetEnthalpyJ() - law.heating().sourceEnthalpyJ(), "explicit heating gap");
             near(helper, -1000, law.cooling().targetEnthalpyJ() - law.cooling().sourceEnthalpyJ(), "independent cooling gap");

@@ -23,6 +23,8 @@ import com.teammoeg.frostedheart.content.climate.thermal.topology.TopologyPlan;
 import com.teammoeg.frostedheart.content.climate.thermal.topology.WorkerPageStore;
 
 import java.util.Objects;
+import com.mojang.logging.LogUtils;
+import org.slf4j.Logger;
 
 /**
  * 一个维度 generation 的唯一可变 worker 权威。
@@ -32,8 +34,9 @@ import java.util.Objects;
  * 进入该类。</p>
  */
 public final class ThermalDimensionEngine implements ThermalDimensionProcessor {
-    private static final double FRONTIER_REFINE_HIGH_C = 0.125D;
-    private static final double FRONTIER_RELEASE_LOW_C = 0.0625D;
+    private static final Logger LOGGER = LogUtils.getLogger();
+    private static final double FRONTIER_REFINE_HIGH_C = 1.0D;
+    private static final double FRONTIER_RELEASE_LOW_C = 0.5D;
     private final long dimensionGeneration;
     private final ThermalTopologyParameters parameters;
     private final ThermalDimensionLimits limits;
@@ -89,12 +92,17 @@ public final class ThermalDimensionEngine implements ThermalDimensionProcessor {
                 64,
                 16,
                 128);
+        sources = new ThermalSourceLedger(
+                initialTick, 64, 3, limits.maximumSources(),
+                new NodePowerAccumulatorArena(64, limits.maximumSourceNodes()), arena);
+        sourceBindings = new WorkerPhysicalSourceBindings(
+                pages, catalog, Objects.requireNonNull(campfireProfile, "campfireProfile"));
         BrickTopologyCompiler compiler = new BrickTopologyCompiler(
                 arena, catalog,
                 Objects.requireNonNull(materials, "materials"),
                 parameters,
                 Objects.requireNonNull(farField, "farField"),
-                limits.maximumArenaSlots());
+                limits.maximumArenaSlots(), sourceBindings::collectMixingSources);
         topologyPlan = new TopologyPlan(
                 pages,
                 arena,
@@ -106,17 +114,6 @@ public final class ThermalDimensionEngine implements ThermalDimensionProcessor {
                 parameters,
                 limits,
                 queries);
-        sources = new ThermalSourceLedger(
-                initialTick,
-                64,
-                3,
-                limits.maximumSources(),
-                new NodePowerAccumulatorArena(
-                        64, limits.maximumSourceNodes()),
-                arena);
-        sourceBindings = new WorkerPhysicalSourceBindings(
-                pages, catalog,
-                Objects.requireNonNull(campfireProfile, "campfireProfile"));
         lastTargetTick = initialTick;
     }
 
@@ -150,10 +147,11 @@ public final class ThermalDimensionEngine implements ThermalDimensionProcessor {
 
         PreparedTopologyChange topology = null;
         boolean workLimited = false;
-        boolean topologyInput = topologyInputPresent(batch) || topologyPlan.hasPendingRoutes();
+        boolean topologyInput = topologyInputPresent(batch) || topologyPlan.hasPendingRoutes()
+                || !sourceBindings.mixingChanges().isEmpty();
         if (topologyInput) {
             try {
-                topology = topologyPlan.prepare(batch);
+                topology = topologyPlan.prepare(batch, sourceBindings.mixingChanges());
             } catch (TopologyPlan.WorkLimitedException refused) {
                 workLimited = true;
             }
@@ -162,6 +160,7 @@ public final class ThermalDimensionEngine implements ThermalDimensionProcessor {
         if (topology != null) {
             topologyCommitter.commit(topology, pages, arena, solver, phases);
             topologyPlan.committed();
+            sourceBindings.mixingCommitted();
         } else if (workLimited) {
             sourceBindings.markCommittedSections(topologyPlan.invalidatedRouteSourceSections());
             sourceBindings.rebindDirty(sources);
@@ -197,14 +196,18 @@ public final class ThermalDimensionEngine implements ThermalDimensionProcessor {
                 stableBatches = 0;
             }
             long elapsedTicks = batch.targetTick() - lastTargetTick;
-            boolean timeDegraded = elapsedTicks != 0L
-                    && elapsedTicks != ThermalInputBatch.CUT_INTERVAL_TICKS;
+            boolean coalesced = elapsedTicks > ThermalInputBatch.CUT_INTERVAL_TICKS;
             ThermalSolver.StepStatus step = executeTransport(
                     elapsedTicks,
                     sleepingAtStart && !changed,
                     (batch.sequence() & 1L) != 0L);
+            if (coalesced && LOGGER.isDebugEnabled()) {
+                LOGGER.debug("Coalesced thermal cut: dimensionGeneration={}, sequence={}, elapsedTicks={}, transportSeconds={}",
+                        dimensionGeneration, batch.sequence(), elapsedTicks,
+                        sleepingAtStart && !changed ? 0.0D : elapsedTicks / 20.0D);
+            }
             phases.collectMaterialRequests();
-            updateSleep(step, changed, timeDegraded);
+            updateSleep(step, changed, coalesced);
             boolean unchangedSleeping = sleepingAtStart && sleeping && !changed;
             publish(batch, unchangedSleeping);
             queryPublished = true;
@@ -253,16 +256,18 @@ public final class ThermalDimensionEngine implements ThermalDimensionProcessor {
         if (elapsedTicks == 0L || unchangedSleeping) {
             return ThermalSolver.StepStatus.COMPLETED;
         }
-        return solver.step(1.0D, forward);
+        // The ledger has settled this entire interval. Advance exchange over the
+        // same game time in one bounded pass; 20 ticks still selects the 1 s fast path.
+        return solver.step(elapsedTicks / 20.0D, forward);
     }
 
     private void updateSleep(
             ThermalSolver.StepStatus step,
             boolean changed,
-            boolean timeDegraded
+            boolean coalesced
     ) {
         if (step == ThermalSolver.StepStatus.NUMERIC_DEGRADED
-                || timeDegraded
+                || coalesced
                 || changed
                 || sources.hasActivePowerOrPendingEnergy()) {
             sleeping = false;

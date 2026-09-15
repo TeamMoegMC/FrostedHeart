@@ -95,6 +95,11 @@ public final class ThermalSourceLedger implements AutoCloseable {
         return accumulators.hasActivePowerOrPendingEnergy();
     }
 
+    public boolean suppliesPower(long sourceId) {
+        int slot = findSource(sourceId);
+        return slot != NO_SOURCE && effectivePower(slot) > 0;
+    }
+
     /**
      * Applies one immutable source cut in stable event order and delivers all
      * accumulated energy through {@code targetTick}.

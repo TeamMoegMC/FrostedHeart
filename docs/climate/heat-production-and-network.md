@@ -1,9 +1,9 @@
 # Heat Production And Network
 
 - Status: `Transitional; material-body replacement is under integration validation`
-- Last verified: `2026-09-15`
+- Last verified: `2026-09-16`
 - Scope: physical Minecraft sources, worker energy integration, material/phase sinks, and the separate heat-network model
-- Primary code anchors: `MinecraftPhysicalSourceProfile`, `PhysicalSourceSpatialIndex`, `ThermalSourceBatch`, `ThermalSourceLedger`, `NodePowerAccumulatorArena`, `HeatEndpoint`, `HeatNetwork`
+- Primary code anchors: `MinecraftPhysicalSourceProfile`, `PhysicalSourceSpatialIndex`, `WorkerPhysicalSourceBindings`, `AirMixingRegion`, `ThermalSourceBatch`, `ThermalSourceLedger`, `NodePowerAccumulatorArena`, `HeatEndpoint`, `HeatNetwork`
 
 ## Physical Sources
 
@@ -12,6 +12,11 @@ Physical sources are observed on the server thread and coalesced into the next
 lifecycle generation, an origin, an anchor/target, a profile, and immutable
 ports. `PhysicalSourceSpatialIndex` indexes origin section/chunk and target
 section, so changing one machine or campfire does not scan all sources.
+
+When worker delay combines several normal cuts, the ledger settles the full
+elapsed source energy and transport advances once with the same elapsed game
+time. The normal cut remains one second. Source events keep their timestamps;
+the coarse exchange step does not reconstruct intermediate geometry changes.
 
 Each positive-share `AIR_FACE` port retains its exact target Brick. Its zero/nonzero source
 reference transition updates one main-thread source-seed bit; multiple sources
@@ -31,7 +36,18 @@ Blocked AIR_FACE ports become declared loss; topology-unavailable ports become
 degraded loss until their exact source Brick is compiled. Neither creates a
 fake natural sink, accumulates pending energy, or forces a chunk load. Campfire block-state changes are
 coalesced by position, and a lit/unlit change with identical thermal signature
-updates only the source state.
+updates the source state and the nearby Air coefficients, without replacing
+temperature nodes merely because the source switched on or off.
+
+For enabled positive-power sources, direct Air faces within 4 blocks of a
+positive-share `AIR_FACE` outlet center use 4 times their original mixing
+conductance. This is a local mixing coefficient, not additional source power or
+a maximum heat-propagation distance. Overlap does not multiply the factor again.
+Outside the region, and for material exchange and indirect ventilation routes,
+the original coefficients apply. The source Section index supplies these positions
+only when fragments are rebuilt; there is no per-tick distance-field update.
+The implementation and activity thresholds are described in
+[thermal runtime](thermal-runtime-architecture-and-optimization.md).
 
 Campfire total power and radiation share are configured by
 `FHConfig.COMMON.THERMAL_RUNTIME.campfirePowerW` and
@@ -105,8 +121,11 @@ The phase plateau is part of H-to-temperature conversion, not a separate reservo
 requires the matching block, Page lifecycle, profile, branch and request sequence;
 an applied ACK does not subtract latent energy again.
 
-Phase contact conductance defaults to `5 W/K` per full exposed block face via
-`FHConfig.COMMON.THERMAL_RUNTIME.phaseFaceConductanceWPerK`; data can override it.
+Contact conductance uses the material category whether or not the state has phase
+transitions: earth `1.0 W/K`, masonry `1.4 W/K` per full block face. A recipe's
+explicit `conductance_w_per_k` overrides that default. Adding a heating/cooling edge
+does not change conductance. The former `phaseFaceConductanceWPerK` override and
+configuration entry are removed; this applies to all phase-capable materials.
 Latent energy comes from the source/target C/O references described below.
 The old `phaseBaseEnergyJPerHeatCapacity` probability-derived configuration is removed.
 

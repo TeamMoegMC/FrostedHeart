@@ -1,7 +1,7 @@
 # Thermal Runtime Architecture
 
-- Status: `Transitional; material-body replacement is under integration; controlled performance comparison pending`
-- Last verified: `2026-09-15`
+- Status: `Transitional; current local Air mixing and residency behavior verified by focused regressions; full-load performance validation pending`
+- Last verified: `2026-09-16`
 - Scope: server-side thermal capture, asynchronous dimension workers, Page/Brick topology, source energy, phase requests, query publication, and hot-path cost bounds
 - Primary code anchors: `MinecraftThermalEvents`, `MinecraftThermalInput`, `MinecraftPageManager`, `PhysicalSourceSpatialIndex`, `DimensionInputAccumulator`, `ThermalDimensionMailbox`, `ThermalWorkerPool`, `ThermalDimensionEngine`, `TopologyPlan`, `PreparedTopologyChange`, `TopologyCommitter`, `ThermalSolver`, `ThermalSourceLedger`, `QueryPublication`
 
@@ -116,9 +116,27 @@ aligned target tick, applies phase/wind input, and then settles source energy
 through the target tick against the currently installed topology. Only after
 that settlement may it prepare and commit a topology replacement, so migration
 cannot overwrite energy delivered in the same cut. A normal
-20-tick interval executes one fixed one-second transport step. A larger delayed
-interval executes at most one step, marks that batch time-degraded, and never
-pretends that missing solver steps were processed.
+20-tick interval executes one one-second transport step. A larger delayed interval
+also executes one step, with `dtSeconds = elapsedTicks / 20.0`, so exchange covers
+the same game-time interval as source energy. Air, material and FarField paths
+already support this dt; the ordinary one-second compiled-coefficient fast paths
+remain. Zero-time cuts and unchanged sleeping state do not run transport. There
+is no per-missed-tick loop, accumulated solver debt or new temperature storage.
+
+Coalesced intervals suppress sleep for that cut and emit a DEBUG message from
+`ThermalDimensionEngine`: `Coalesced thermal cut`, dimension generation, batch
+sequence, `elapsedTicks` and actual `transportSeconds`. Ordinary cuts do not build
+this log message. A completed coalesced cut still reports `COMPLETED`: it has
+advanced the full interval, although it is a coarse numerical step.
+
+Source changes remain settled before topology replacement, and the exchange uses
+the resulting topology. A large step does not replay intermediate geometry or
+interleave continuous source injection exactly as many one-second steps would.
+In the two-Air-node 600-second regression, the 20-vs-200-tick source-temperature
+difference fell from 8.26 C to about 0.174 C with identical energy. This is one
+controlled network, not a universal error bound. Latent exchange still stops at
+the world-ACK boundary. See the
+[time-step repair](../../diary/2026-09-16_00-00-26_thermal-elapsed-time-fix.md).
 
 ## Page And Brick Model
 
@@ -142,8 +160,11 @@ lifecycle and inactive slots own no arena cell, fragment, or infrared payload.
 
 After each 20-tick solve, `QueryPublication` computes temperature-hysteretic hot
 masks while performing its existing live-slot write, using reusable Page-slot
-primitive scratch and `REFINE_HIGH_C = 0.125 C` /
-`RELEASE_LOW_C = 0.0625 C`. Air and material cells contribute their
+primitive scratch and `FRONTIER_REFINE_HIGH_C = 1.0 C` /
+`FRONTIER_RELEASE_LOW_C = 0.5 C`. These compare absolute temperature deviation
+from the Page's existing natural-temperature baseline, not the difference between
+neighbors. New temperature activity requires at least 1 C; existing activity
+persists at 0.5 C and releases below it. Air and material cells contribute their
 physical temperature residual. A body with phase progress or a pending material
 transition request keeps its Brick hot. The following Page-only pass
 uses six static bit masks/shifts to find same-Page
@@ -156,6 +177,9 @@ no completion payload. A newly committed Page lifecycle is the one exception:
 one reusable primitive admission list forces its current absolute mask to be
 published once even when the section's numeric mask matches the previous
 lifecycle. The list is cleared by that completion and adds no steady Page scan.
+`HotMaskScratch.begin` swaps its two buffers at the start of the next publication;
+between cuts, `hotMask` continues to expose the latest completed mask to routing
+and residency consumers. Residency collection does not swap it back to an older cut.
 
 An unavailable target chunk leaves its absolute request parked outside the
 admission queues. The existing `pagesByChunk` lookup and `ChunkEvent.Load`
@@ -180,6 +204,14 @@ zero desired residency. The main thread then checkpoints and retires the whole
 Page transactionally. Bricks are not individually evicted, avoiding enthalpy
 migration and threshold chatter.
 
+`WorkerPageStore.collectMaterialFrontier` maintains the owner's material-contact
+request even when the neighbor is already resident. It reads committed neighbor
+signatures when present and existing halo signatures otherwise, using the same
+material/opposite-face conditions. This prevents an otherwise cold neighbor from
+retiring and being requested again on the next cut. The owner losing thermal
+interest still removes that incoming reason; this does not create a new material
+heat origin or bypass the two-layer material-contact rule.
+
 `ThermalPageHandle` is only cross-thread identity, live geometry revision,
 resync requirement, and a volatile `PagePublication`. `PageSignatures` stores a
 flat directory of `64` immutable Brick payloads. Uniform Bricks reuse one
@@ -201,6 +233,12 @@ bodies. Connected material-free V100 Air members merge; full Air uses one node
 without a layout. A material block owns one H and a fixed-capacity law regardless
 of exposure. Its ventilation contributes geometric routes, never gap-Air capacity
 or a second temperature. The ordinary Brick total remains at most 64 nodes.
+
+`MinecraftThermalProfiles.prepare` selects face conductance from the material
+category (earth 1.0 W/K, masonry 1.4 W/K), then applies an explicit recipe
+`conductance_w_per_k` if present. Phase capability does not override conductance;
+the former common `phaseFaceConductanceWPerK` setting is removed. Energy laws,
+capacities and latent endpoints remain independent of this contact parameter.
 
 `WorkerPageStore` holds one stable 64-Brick worker directory and replaces only
 changed immutable Brick entries. `WorkerBrickTopology` retains cell/query and
@@ -437,8 +475,42 @@ pair:     q = Kpair * (H_a / C_a - H_b / C_b)
 boundary: q = Kboundary * (T_boundary - T_reference - H / C)
 ```
 
-Air pairs always use the production buoyancy kernel. Phase contacts, FarField
-wind changes, and abnormal timing use the generic inverse-capacity kernel.
+Direct Air pairs store the actual contact direction in one byte:
+`HORIZONTAL`, `FIRST_BELOW`, or `SECOND_BELOW`. `BrickTopologyCompiler` assigns
+direction after ordering arena endpoints and aggregates different directions
+separately. Horizontal pairs use G directly; only vertical pairs call
+`BuoyancyConductance`, retaining `clamp(1 + (T_lower - T_upper) / 10, 0.25, 4)`
+with temperatures in C and differences in K. Region centroids still determine
+geometric distances, but no longer decide buoyancy direction. The old two Y
+arrays and height-based direction API were removed. Direction payload is 1 byte
+per pair instead of 16 bytes; a multi-direction pair can produce several operations,
+so that per-pair saving is not a whole-heap percentage.
+
+`AirMixingRegion` is one reusable source-position scratch per compiler. A direct
+unit Air face gets 4 times its original G when its center lies within 4 blocks
+of any enabled positive-power source's positive-share `AIR_FACE` outlet center.
+Overlapping regions form a union. A full-Air Brick face counts its covered unit
+faces (k of 16), using effective area `16 + 3*k`; it is not classified solely by
+the large face's center. With no nearby source the original 16-area fast path
+remains. Material exchange, indirect ventilation routes, FarField coefficients,
+and static radiation are not multiplied. No extra Air node or query interpolation
+is introduced; coarse-region spatial error remains an explicit approximation.
+
+`WorkerPhysicalSourceBindings.collectMixingSources` reuses its Section index and
+visits each outlet only in that outlet's indexed Section. The ledger's
+`suppliesPower` updates one cached emitting flag per descriptor on source events.
+Register, remove, move, enable/disable, and zero/nonzero power changes mark only
+nearby resident world-Brick positions in one reusable pending set. Positive power
+adjustments do not change mixing geometry. `TopologyPlan.prepare` consumes those
+positions as fragment-only changes; no cell replacement or H migration is needed.
+The engine checks this pending set even for source-only cuts and clears it only
+after commit. Work-limited attempts keep it for a later cut. Removed source power
+stops through the normal ledger immediately; a budget-delayed coefficient update
+can temporarily retain the previous mixing G on otherwise valid geometry.
+
+Source lookup and face weighting happen during fragment construction, not in the
+steady solver or player query. Phase contacts, FarField wind changes, and abnormal
+timing continue to use their existing exchange paths.
 Operation payloads store arena slots without duplicate endpoint generations;
 the topology transaction proves their ownership before old spans can be
 released. A FarField fragment stores one owner Page and one lazy wind
@@ -890,16 +962,20 @@ They are measured separately from routine door/block/source/player workloads.
 
 ## Validation Standard
 
-Production code contains no counters, traversal probes, test callbacks, debug
-collections, or test-only constructors. Tests use deterministic outputs and
-test-owned fixtures. Final performance evidence comes from external JVM JFR
-and heap runs, not production bookkeeping.
+Tests use deterministic outputs and test-owned fixtures. Existing route-visit
+diagnostics and delayed-cut DEBUG logging are not substitutes for performance
+measurement. Final performance evidence comes from external JVM JFR and heap
+runs, not additional production bookkeeping.
 
-The current worktree passes Java 17 `compileTestJava` and the real Forge
-GameTestServer with all `16/16` required tests, including packed-ice phase
-completion during same-Brick trapdoor topology churn and the Minecraft residency
-handoff scenario. Numeric JUnit was intentionally not used as acceptance for
-these gameplay/lifecycle fixes. Controlled
+The latest completed Forge GameTest run passed `102/102`, including topology,
+material/phase lifecycle, local Air mixing and elapsed-time regressions; see the
+[elapsed-time repair](../../diary/2026-09-16_00-00-26_thermal-elapsed-time-fix.md).
+On 2026-09-16, obsolete JUnit tests and their fixtures were deleted at the user's
+request instead of restoring removed production APIs. Java 17 `compileTestJava`
+and `compileGameTestJava` then passed; the cleanup did not rerun the game tests
+or claim the remaining JUnit suite had executed successfully. Future thermal
+refactoring uses available GameTests and actual gameplay/client validation,
+without requiring restoration of old JUnit fixtures. Controlled
 120-second door/block/source/player/crop JFR workloads and 10/30-minute
 combined/churn heap runs remain performance evidence rather than undocumented
 claims. Results and any remaining gap belong in the dated development diary.

@@ -62,15 +62,14 @@ public final class BuoyancyConductance {
     }
 
     /**
-     * Evaluates from physical lower/upper positions, so swapping A and B does
-     * not change the result. Equal-height pairs receive the clamped neutral factor.
+     * Uses the real contact direction after ordering endpoints. Horizontal faces
+     * are neutral regardless of either region's centroid height.
      */
     public static Status evaluateInto(
             double baseConductanceWPerK,
             double temperatureAC,
-            double centerYA,
             double temperatureBC,
-            double centerYB,
+            byte direction,
             Parameters parameters,
             MutableResult result
     ) {
@@ -78,22 +77,20 @@ public final class BuoyancyConductance {
         if (parameters == null
                 || !nonNegativeFinite(baseConductanceWPerK)
                 || !Double.isFinite(temperatureAC)
-                || !Double.isFinite(centerYA)
                 || !Double.isFinite(temperatureBC)
-                || !Double.isFinite(centerYB)) {
+                || direction < ThermalFragment.AirPairs.HORIZONTAL
+                || direction > ThermalFragment.AirPairs.SECOND_BELOW) {
             result.set(Status.NUMERIC_DEGRADED, Double.NaN);
             return Status.NUMERIC_DEGRADED;
         }
 
-        double rawFactor;
-        if (centerYA == centerYB) {
-            rawFactor = 1.0D;
-        } else {
-            double lowerTemperature = centerYA < centerYB ? temperatureAC : temperatureBC;
-            double upperTemperature = centerYA < centerYB ? temperatureBC : temperatureAC;
-            rawFactor = 1.0D
-                    + (lowerTemperature - upperTemperature) / parameters.temperatureScaleK();
+        if (direction == ThermalFragment.AirPairs.HORIZONTAL) {
+            result.set(Status.APPLIED, baseConductanceWPerK);
+            return Status.APPLIED;
         }
+        double difference = direction == ThermalFragment.AirPairs.FIRST_BELOW
+                ? temperatureAC - temperatureBC : temperatureBC - temperatureAC;
+        double rawFactor = 1.0D + difference / parameters.temperatureScaleK();
         double factor = Math.max(
                 parameters.minimumFactor(),
                 Math.min(parameters.maximumFactor(), rawFactor)

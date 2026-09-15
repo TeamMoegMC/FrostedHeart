@@ -75,6 +75,13 @@ public final class WorkerPageStore implements AutoCloseable {
         int brick = (x & 15) >>> 2 | ((z & 15) >>> 2) << 2 | ((y & 15) >>> 2) << 4;
         return ((page.sourceSeedMask | hotMaskScratch.hotMask(page.pageSlot)) & 1L << brick) != 0;
     }
+
+    public boolean hasResidentBrick(long position) {
+        int x = net.minecraft.core.BlockPos.getX(position), y = net.minecraft.core.BlockPos.getY(position), z = net.minecraft.core.BlockPos.getZ(position);
+        PageState page = find(SectionPos.asLong(x >> 4, y >> 4, z >> 4));
+        int brick = (x & 15) >>> 2 | ((z & 15) >>> 2) << 2 | ((y & 15) >>> 2) << 4;
+        return page != null && (page.residentBrickMask & 1L << brick) != 0;
+    }
     static final int PORT_BLOCKED = -1;
     public static final int PORT_TOPOLOGY_UNAVAILABLE = -2;
     private final Long2ObjectOpenHashMap<PageState> activeBySection;
@@ -199,7 +206,6 @@ public final class WorkerPageStore implements AutoCloseable {
         }
         if (airRoutes != null) airRoutes.collectRequiredBricks(this, desiredScratch);
         ThermalCompletion.BrickResidency[] result = finishResidencyChanges();
-        hotMaskScratch.finish();
         return result;
     }
 
@@ -224,8 +230,10 @@ public final class WorkerPageStore implements AutoCloseable {
                     long section = SectionPos.asLong(nx >> 4, ny >> 4, nz >> 4);
                     int neighborBrick = (nx & 15) >>> 2 | ((nz & 15) >>> 2) << 2 | ((ny & 15) >>> 2) << 4;
                     PageState neighbor = find(section);
-                    if (neighbor != null && (neighbor.residentBrickMask & 1L << neighborBrick) != 0) continue;
-                    int signature = haloSignatureAt(nx, ny, nz);
+                    // A cold resident neighbor still needs the owner's incoming request.
+                    int signature = neighbor != null && (neighbor.residentBrickMask & 1L << neighborBrick) != 0
+                            ? neighbor.signatures.get((nx & 15) | (nz & 15) << 4 | (ny & 15) << 8)
+                            : haloSignatureAt(nx, ny, nz);
                     if (signatureTable.materialProfileId(signature) != 0
                             && (signatureTable.fullContactFaces(signature) & 1 << (face ^ 1)) != 0) {
                         orDesired(section, 1L << neighborBrick);

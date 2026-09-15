@@ -305,6 +305,10 @@ public final class QueryPublication implements AutoCloseable {
         }
 
         private void begin() {
+            // Keep hotMask() on the latest completed cut between publications.
+            long[] previous = previousHotMask;
+            previousHotMask = nextHotMask;
+            nextHotMask = previous;
             Arrays.fill(nextHotMask, 0L);
         }
 
@@ -327,12 +331,6 @@ public final class QueryPublication implements AutoCloseable {
         public long hotMask(int pageSlot) {
             requirePageSlot(pageSlot);
             return nextHotMask[pageSlot];
-        }
-
-        public void finish() {
-            long[] previous = previousHotMask;
-            previousHotMask = nextHotMask;
-            nextHotMask = previous;
         }
 
         private void requirePageSlot(int pageSlot) {

@@ -240,7 +240,6 @@ public class FHConfig {
 		public static class ThermalRuntime {
 			public final ForgeConfigSpec.DoubleValue airHeatCapacityJPerBlockK;
 			public final ForgeConfigSpec.DoubleValue airMixingWPerBlockK;
-			public final ForgeConfigSpec.DoubleValue phaseFaceConductanceWPerK;
 			public final ForgeConfigSpec.DoubleValue farFieldConductanceWPerK;
 			public final ForgeConfigSpec.DoubleValue campfirePowerW;
 			public final ForgeConfigSpec.DoubleValue campfireRadiationShare;
@@ -261,9 +260,6 @@ public class FHConfig {
 				airMixingWPerBlockK = builder
 					.comment("Effective Air mixing conductance in W/(block*K).")
 					.defineInRange("airMixingWPerBlockK", 96.0D, 0.001D, 1_000_000.0D);
-				phaseFaceConductanceWPerK = builder
-					.comment("Phase-transition conductance per full exposed block face in W/K.")
-					.defineInRange("phaseFaceConductanceWPerK", 5.0D, 0.001D, 1_000_000.0D);
 				farFieldConductanceWPerK = builder
 					.comment("Base conductance from exposed Air boundaries to natural temperature in W/K.")
 					.defineInRange("farFieldConductanceWPerK", 7_747.2298793470545D, 0.001D, 1.0e9D);

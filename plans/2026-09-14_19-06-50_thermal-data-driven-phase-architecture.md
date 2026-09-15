@@ -5,9 +5,12 @@
 - Authors: `Codex; OpenAI GPT-6; primary engineering agent`
 - Status: `completed`
 - Scope: `统一材料规则、相变数据迁移与旧入口清理；代码实施和验证`
+- Next stage: `2026-09-15空气表达与浮力方案集中在材料主计划；本体发热候选已撤回，本文已完成的数据架构不重做。`
 - Related: [已实施休眠冷却](2026-09-14_16-22-45_thermal-unified-dormant-natural-cooling.md)、[材料主计划](2026-09-12_23-53-20_thermal-material-enthalpy-lifecycle-repair.md)、[当前runtime](../docs/climate/thermal-runtime-architecture-and-optimization.md)、[当前热源/相变](../docs/climate/heat-production-and-network.md)、[职责收拢记录](../diary/2026-09-14_18-58-02_thermal-input-responsibility-cleanup.md)
 
 ## 1. 决定与范围
+
+后续设计入口：[固定近源空气混合与5～10°C误差取舍](2026-09-15_18-49-35_thermal-local-air-mixing-tradeoff.md)。用户容差放宽后不优先增加Air节点；方向修复及局部直接Air系数为当前候选，数值原型已测，生产未实施。本文已完成的数据架构不重做。
 
 **所有材料使用同一换热和相变规则，差异只来自少量参数和转换数据。** 增加一种材料，不应要求修改solver、休眠积分器、提交控制器或增加Mixin。
 

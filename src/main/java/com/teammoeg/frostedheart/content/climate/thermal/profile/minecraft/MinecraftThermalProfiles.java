@@ -51,8 +51,6 @@ public final class MinecraftThermalProfiles {
         }
         FHConfig.Common.ThermalRuntime config =
                 FHConfig.COMMON.THERMAL_RUNTIME;
-        double phaseFaceConductanceWPerK =
-                config.phaseFaceConductanceWPerK.get();
         boolean staticRadiationEnabled =
                 config.enableStaticBlockRadiation.get();
         Tuning tuning = new Tuning(
@@ -101,7 +99,7 @@ public final class MinecraftThermalProfiles {
                 if (law != null) {
                     boolean phase = law.heating() != null || law.cooling() != null;
                     GameplayMaterial material = classify(state);
-                    double conductance = phase ? phaseFaceConductanceWPerK : material.conductance;
+                    double conductance = material.conductance;
                     var data = StateTransitionData.getData(state);
                     if (data != null && Double.isFinite(data.conductanceWPerK())) conductance = data.conductanceWPerK();
                     var heating = data == null ? null : data.heating();

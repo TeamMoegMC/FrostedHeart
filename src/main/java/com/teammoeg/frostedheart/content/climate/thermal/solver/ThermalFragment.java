@@ -35,42 +35,39 @@ public record ThermalFragment(
 
     /** Buoyant Air pairs; arrays transfer ownership to this value. */
     public static final class AirPairs {
+        public static final byte HORIZONTAL = 0;
+        public static final byte FIRST_BELOW = 1;
+        public static final byte SECOND_BELOW = 2;
         public static final AirPairs EMPTY = new AirPairs(
-                new int[0], new int[0], new double[0],
-                new double[0], new double[0]);
+                new int[0], new int[0], new double[0], new byte[0]);
 
         private final int[] first;
         private final int[] second;
         private final double[] conductance;
-        private final double[] firstCenterY;
-        private final double[] secondCenterY;
+        private final byte[] direction;
 
         public AirPairs(
                 int[] first,
                 int[] second,
                 double[] conductance,
-                double[] firstCenterY,
-                double[] secondCenterY
+                byte[] direction
         ) {
             int size = length(first);
             if (length(second) != size || length(conductance) != size
-                    || length(firstCenterY) != size
-                    || length(secondCenterY) != size) {
+                    || direction.length != size) {
                 throw new IllegalArgumentException("Air pair arrays differ");
             }
             this.first = first;
             this.second = second;
             this.conductance = conductance;
-            this.firstCenterY = firstCenterY;
-            this.secondCenterY = secondCenterY;
+            this.direction = direction;
         }
 
         public int size() { return first.length; }
         public int first(int index) { return first[index]; }
         public int second(int index) { return second[index]; }
         public double conductance(int index) { return conductance[index]; }
-        public double firstCenterY(int index) { return firstCenterY[index]; }
-        public double secondCenterY(int index) { return secondCenterY[index]; }
+        public byte direction(int index) { return direction[index]; }
     }
 
     /** Indirect contacts retain the component that made their route possible. */

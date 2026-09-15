@@ -450,6 +450,11 @@ public final class FrostedHeartMinecraftThermalInputGameTests {
         BlockPos changingTopology = targetAir.east();
         BlockPos source = new BlockPos(minX, minY + 2, minZ);
 
+        // The tiny template does not clear the whole Brick used by this fixture.
+        // In particular, the source outlet must not inherit a previous test's block.
+        for (BlockPos position : BlockPos.betweenClosed(minX, minY, minZ, minX + 3, minY + 3, minZ + 3)) {
+            level.setBlockAndUpdate(position, Blocks.AIR.defaultBlockState());
+        }
         level.setBlockAndUpdate(
                 phaseBlock, Blocks.PACKED_ICE.defaultBlockState());
         level.setBlockAndUpdate(
@@ -492,17 +497,22 @@ public final class FrostedHeartMinecraftThermalInputGameTests {
             if (elapsed[0] == 360) {
                 var pending = new QueryPublication.MutableMaterialSample();
                 helper.assertTrue(MinecraftThermalInput.sampleMaterial(level, phaseBlock, pending)
-                                && pending.requestSequence() > 0,
+                                && pending.requestSequence() > 0 && pending.law().heating() != null
+                                && pending.law().heating().complete(pending.enthalpyJ()),
                         "a completed energy transition must be waiting for ACK before enabling world mutation");
                 level.getGameRules().getRule(GameRules.RULE_RANDOMTICKING)
                         .set(randomTickSpeed, level.getServer());
             }
         });
         helper.succeedWhen(() -> {
+            var phaseSample = new QueryPublication.MutableMaterialSample();
+            boolean phaseReadable = MinecraftThermalInput.sampleMaterial(level, phaseBlock, phaseSample);
             helper.assertTrue(
                     !level.getBlockState(phaseBlock).is(Blocks.PACKED_ICE),
                     "phase Block never completed during topology churn: temperature=" + WorldTemperature.material(level, phaseBlock)
-                            + ", randomTickSpeed=" + level.getGameRules().getInt(GameRules.RULE_RANDOMTICKING));
+                            + ", randomTickSpeed=" + level.getGameRules().getInt(GameRules.RULE_RANDOMTICKING)
+                            + ", sample=" + phaseSample.source() + ", H=" + phaseSample.enthalpyJ() + ", request=" + phaseSample.requestSequence()
+                            + ", targetH=" + (phaseReadable && phaseSample.law().heating() != null ? phaseSample.law().heating().targetEnthalpyJ() : Double.NaN));
             level.getGameRules().getRule(GameRules.RULE_RANDOMTICKING)
                     .set(randomTickSpeed, level.getServer());
             MinecraftThermalInput.onPhysicalSourceRemoved(level, source);

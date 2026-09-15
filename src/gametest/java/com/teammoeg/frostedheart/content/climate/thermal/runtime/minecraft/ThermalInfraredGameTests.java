@@ -41,11 +41,18 @@ public final class ThermalInfraredGameTests {
     @GameTest(template = TEMPLATE, batch = "surface_empty", timeoutTicks = 100)
     public static void missingSurfaceKeepsBluePlaceholderWithoutCreatingPhysics(GameTestHelper helper) throws Exception {
         ServerLevel level = helper.getLevel();
-        ServerPlayer player = observer(level, loadedCenter(helper));
+        // Closing another test's runtime preserves its material checkpoints. Use
+        // a loaded window away from those fixtures when asserting truly empty data.
+        BlockPos anchor = helper.absolutePos(BlockPos.ZERO);
+        BlockPos center = new BlockPos(8192 + anchor.getX(),
+                ((level.getMaxBuildHeight() - 64) & ~15) + 8, 8192 + anchor.getZ());
+        level.getChunkAt(center);
+        ServerPlayer player = observer(level, center);
         MinecraftThermalInput.closeActiveLevel(level);
         InfraredSnapshot full = sample(player, null, true, EMPTY);
         helper.assertTrue(full != null && !full.readable() && full.full() && full.brickRecords().length == 0,
-                "empty physical window must commit all-INVALID display, not natural estimates");
+                "empty physical window must commit all-INVALID display, not natural estimates: "
+                        + (full == null ? "no snapshot" : "readable=" + full.readable() + ", records=" + full.brickRecords().length));
         helper.assertTrue(full.generation() == 0 && Arrays.stream(full.presence()).allMatch(v -> v == 0)
                 && full.fieldPages().length == 0, "empty display cannot manufacture physical or field presence");
         helper.assertTrue(sample(player, full, false, full.presence()) == null, "stable unreadable empty display sends nothing");

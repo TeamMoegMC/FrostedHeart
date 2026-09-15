@@ -323,13 +323,15 @@ public final class ThermalSolver {
                 int first = pairs.first(operation);
                 int second = pairs.second(operation);
                 double conductance = pairs.conductance(operation);
-                BuoyancyConductance.evaluateInto(conductance, temperatureC(first), pairs.firstCenterY(operation),
-                        temperatureC(second), pairs.secondCenterY(operation), buoyancyParameters, buoyancyScratch);
-                if (!buoyancyScratch.applied()) {
-                    degraded = true;
-                    continue;
+                if (pairs.direction(operation) != ThermalFragment.AirPairs.HORIZONTAL) {
+                    BuoyancyConductance.evaluateInto(conductance, temperatureC(first), temperatureC(second),
+                            pairs.direction(operation), buoyancyParameters, buoyancyScratch);
+                    if (!buoyancyScratch.applied()) {
+                        degraded = true;
+                        continue;
+                    }
+                    conductance = buoyancyScratch.conductanceWPerK();
                 }
-                conductance = buoyancyScratch.conductanceWPerK();
                 ThermalExchangeKernel.exchangePairWithInverseInto(
                         arena.enthalpyJ(first),
                         arena.capacityJPerK(first),

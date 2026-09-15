@@ -3,6 +3,7 @@ package com.teammoeg.frostedheart.content.climate.thermal.source.minecraft;
 
 import com.teammoeg.frostedheart.content.climate.thermal.profile.ThermalSignatureTable;
 import com.teammoeg.frostedheart.content.climate.thermal.source.EmissionPort;
+import com.teammoeg.frostedheart.content.climate.thermal.source.AirMixingRegion;
 import com.teammoeg.frostedheart.content.climate.thermal.source.minecraft.MinecraftPhysicalSourceProfile.Port;
 import com.teammoeg.frostedheart.content.climate.thermal.source.minecraft.MinecraftPhysicalSourceProfile.PortKind;
 import com.teammoeg.frostedheart.content.climate.thermal.source.SourceBinding;
@@ -13,7 +14,9 @@ import com.teammoeg.frostedheart.content.climate.thermal.topology.WorkerPageStor
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.longs.LongArrayList;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
+import it.unimi.dsi.fastutil.longs.LongSet;
 
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.SectionPos;
 
 import java.util.Arrays;
@@ -36,6 +39,7 @@ public final class WorkerPhysicalSourceBindings
             new Long2ObjectOpenHashMap<>();
     private final LongOpenHashSet dirtySources = new LongOpenHashSet();
     private final LongArrayList dirtyOrder = new LongArrayList();
+    private final LongOpenHashSet mixingChanges = new LongOpenHashSet();
     private final WorkerPageStore.MutableAirTarget airTarget = new WorkerPageStore.MutableAirTarget();
 
     public WorkerPhysicalSourceBindings(
@@ -55,6 +59,58 @@ public final class WorkerPhysicalSourceBindings
             if (affected != null) {
                 for (long sourceId : affected) {
                     markDirty(sourceId);
+                }
+            }
+        }
+    }
+
+    /** Pending world Brick positions survive a work-limited topology attempt. */
+    public LongSet mixingChanges() { return mixingChanges; }
+
+    public void mixingCommitted() { mixingChanges.clear(); }
+
+    public void collectMixingSources(AirMixingRegion region) {
+        if (sourcesBySection.isEmpty()) return;
+        for (int x = region.minX() >> 4; x <= (region.maxX() >> 4); x++) {
+            for (int y = region.minY() >> 4; y <= (region.maxY() >> 4); y++) {
+                for (int z = region.minZ() >> 4; z <= (region.maxZ() >> 4); z++) {
+                    long section = SectionPos.asLong(x, y, z);
+                    LongOpenHashSet indexed = sourcesBySection.get(section);
+                    if (indexed == null) continue;
+                    var iterator = indexed.iterator();
+                    while (iterator.hasNext()) {
+                        SourceDescriptor source = sources.get(iterator.nextLong());
+                        if (!source.emitting) continue;
+                        for (int i = 0; i < source.profile.portCount(); i++) {
+                            Port port = source.profile.port(i);
+                            if (port.kind() != PortKind.AIR_FACE || port.powerShare() == 0) continue;
+                            int px = source.anchorX + port.offsetX();
+                            int py = source.anchorY + port.offsetY();
+                            int pz = source.anchorZ + port.offsetZ();
+                            // A source may be indexed in several Sections; visit each port once.
+                            if (sectionKey(px, py, pz) == section) region.include(px, py, pz);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private void markMixingChanged(SourceDescriptor source) {
+        int radius = AirMixingRegion.RADIUS;
+        for (int i = 0; i < source.profile.portCount(); i++) {
+            Port port = source.profile.port(i);
+            if (port.kind() != PortKind.AIR_FACE || port.powerShare() == 0) continue;
+            int px = source.anchorX + port.offsetX();
+            int py = source.anchorY + port.offsetY();
+            int pz = source.anchorZ + port.offsetZ();
+            // Fragments own positive faces, including the lower side of Brick boundaries.
+            for (int x = (px - radius) & ~3; x <= px + radius; x += 4) {
+                for (int y = (py - radius) & ~3; y <= py + radius; y += 4) {
+                    for (int z = (pz - radius) & ~3; z <= pz + radius; z += 4) {
+                        long brick = BlockPos.asLong(x, y, z);
+                        if (pages.hasResidentBrick(brick)) mixingChanges.add(brick);
+                    }
                 }
             }
         }
@@ -93,6 +149,7 @@ public final class WorkerPhysicalSourceBindings
         if (kind == ThermalSourceBatch.Kind.REGISTER) {
             SourceDescriptor previous = sources.remove(sourceId);
             if (previous != null) {
+                if (previous.emitting) markMixingChanged(previous);
                 unindex(previous);
             }
             SourceDescriptor next = new SourceDescriptor(
@@ -102,18 +159,30 @@ public final class WorkerPhysicalSourceBindings
                     batch.anchorY(eventIndex),
                     batch.anchorZ(eventIndex),
                     profile(batch.profileId(eventIndex)));
+            next.emitting = ledger.suppliesPower(sourceId);
             sources.put(sourceId, next);
             index(next);
+            if (next.emitting) markMixingChanged(next);
             markDirty(sourceId);
         } else if (kind == ThermalSourceBatch.Kind.UNLOAD) {
             SourceDescriptor previous = sources.get(sourceId);
             if (previous != null
                     && previous.lifecycleGeneration == lifecycleGeneration) {
+                if (previous.emitting) markMixingChanged(previous);
                 sources.remove(sourceId);
                 unindex(previous);
                 dirtySources.remove(sourceId);
             }
             return;
+        } else if (kind == ThermalSourceBatch.Kind.POWER_CHANGE || kind == ThermalSourceBatch.Kind.ENABLED_CHANGE) {
+            SourceDescriptor current = sources.get(sourceId);
+            if (current != null) {
+                boolean emitting = ledger.suppliesPower(sourceId);
+                if (current.emitting != emitting) {
+                    current.emitting = emitting;
+                    markMixingChanged(current);
+                }
+            }
         }
         SourceDescriptor source = sources.get(sourceId);
         if (source != null
@@ -265,6 +334,7 @@ public final class WorkerPhysicalSourceBindings
         private final int anchorZ;
         private final MinecraftPhysicalSourceProfile profile;
         private final SourceBinding[] bindings;
+        private boolean emitting;
 
         private SourceDescriptor(
                 long sourceId,

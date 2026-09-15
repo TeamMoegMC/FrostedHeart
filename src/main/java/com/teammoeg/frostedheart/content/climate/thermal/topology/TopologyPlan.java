@@ -23,7 +23,9 @@ import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
+import it.unimi.dsi.fastutil.longs.LongSet;
 
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.SectionPos;
 
 import java.util.ArrayList;
@@ -110,7 +112,7 @@ public final class TopologyPlan {
     public long[] invalidatedRouteSourceSections() { return airRoutes.invalidatedSourceSections(); }
     public void committed() { airRoutes.committed(); }
 
-    public PreparedTopologyChange prepare(ThermalInputBatch batch) {
+    public PreparedTopologyChange prepare(ThermalInputBatch batch, LongSet mixingChanges) {
         reset();
         try {
             airRoutes.invalidate(batch);
@@ -123,6 +125,11 @@ public final class TopologyPlan {
             collectLayoutDependencies();
             compileChangedCells();
             collectFragmentDependencies();
+            var changedMixing = mixingChanges.iterator();
+            while (changedMixing.hasNext()) {
+                long position = changedMixing.nextLong();
+                markFragment(BlockPos.getX(position), BlockPos.getY(position), BlockPos.getZ(position));
+            }
             airRoutes.prepare(view, affectedFragments);
             FragmentChanges fragmentChanges = compileFragments();
             prepareMigrationsAndRetirements();
