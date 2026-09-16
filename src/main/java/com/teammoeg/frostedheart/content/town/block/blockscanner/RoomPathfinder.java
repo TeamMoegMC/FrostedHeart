@@ -1,9 +1,10 @@
 package com.teammoeg.frostedheart.content.town.block.blockscanner;
 
 import java.util.*;
-
 import javax.annotation.Nullable;
 
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.DataResult;
 import com.teammoeg.frostedheart.content.town.block.blockscanner.AbstractWorld.BlockType;
 
 import net.minecraft.core.BlockPos;
@@ -15,6 +16,21 @@ public class RoomPathfinder {
     private static final int MAX_XZ_DISTANCE = 16;
     private static final int MAX_Y_DISTANCE = 32;
     public static class OccupiedCell implements Iterable<MutableBlockPos>{
+    	public static final Codec<OccupiedCell> CODEC=Codec.INT_STREAM.flatXmap(t->{
+    		int[] data=t.toArray();
+    		if(data.length!=4)
+    			return DataResult.error(()->"Array length is not 4");
+    		return DataResult.success(new OccupiedCell(BlockPos.of((long)data[0] << 32 | data[1] & 0xFFFFFFFFL),data[2],data[3]));
+    	}, t->{
+    		int[] data=new int[4];
+    		long v=t.pos.asLong();
+    		data[0] = (int)(v >> 32);
+    		data[1] = (int)v;
+    		data[2] = t.height();
+    		data[3] = t.getReachableHeight();
+    		return DataResult.success(Arrays.stream(data));
+    	});
+    	public static final Codec<Set<OccupiedCell>> SET_CODEC=CODEC.listOf().xmap(Set::copyOf, List::copyOf);
     	final BlockPos pos;
     	final int height;
     	final int reachableHeight;
@@ -98,6 +114,28 @@ public class RoomPathfinder {
 				};
 			}
 			return reachableIterator;
+		}
+		private Iterable<MutableBlockPos> pathIterator;
+		public Iterable<MutableBlockPos> pathIterable() {
+			if(pathIterator==null) {
+				pathIterator=()->new Iterator<>() {
+					int cy=0;
+					MutableBlockPos mbp=new MutableBlockPos();
+					@Override
+					public boolean hasNext() {
+						return cy<=reachableHeight-2;
+					}
+
+					@Override
+					public MutableBlockPos next() {
+						mbp.setWithOffset(pos, 0, cy, 0);
+						cy++;
+						return mbp;
+					}
+					
+				};
+			}
+			return pathIterator;
 		}
 		@Override
 		public String toString() {
@@ -200,12 +238,22 @@ public class RoomPathfinder {
         for (Direction dir : Direction.Plane.HORIZONTAL) {
         	mbp.setWithOffset(foot,dir);
         	int y=mbp.getY();
-            for (int dy = -1; dy <= 1; dy++) {
-            	mbp.setY(y+dy);
-                if (canStandAt(world, mbp)) {
-                    result.add(mbp.immutable());
-                    break;
-                }
+        	mbp.setY(y-1);
+            if (canStandAt(world, mbp)) {
+            	if(world.getBlockType(mbp.above(2))!=BlockType.WALL)
+            		result.add(mbp.immutable());
+                break;
+            }
+        	mbp.setY(y);
+            if (canStandAt(world, mbp)) {
+            	result.add(mbp.immutable());
+                break;
+            }
+        	mbp.setY(y+1);
+            if (canStandAt(world, mbp)) {
+            	if(world.getBlockType(foot.above(2))!=BlockType.WALL)
+            		result.add(mbp.immutable());
+                break;
             }
         }
         mbp.set(foot);

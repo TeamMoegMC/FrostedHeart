@@ -6,12 +6,17 @@
 
 package com.teammoeg.frostedheart.content.town.buildings.warehouse;
 
+import java.util.Objects;
+import java.util.Optional;
+import java.util.UUID;
+
 import com.teammoeg.chorda.dataholders.team.CTeamDataManager;
 import com.teammoeg.chorda.dataholders.team.TeamDataHolder;
 import com.teammoeg.frostedheart.content.town.TeamTown;
 import com.teammoeg.frostedheart.content.town.TeamTownData;
-import com.teammoeg.frostedheart.content.town.provider.TeamTownProvider;
 import com.teammoeg.frostedheart.content.town.provider.ITownProviderSerializable;
+import com.teammoeg.frostedheart.content.town.provider.TeamTownProvider;
+
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerLevel;
@@ -20,10 +25,6 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
-
-import java.util.Objects;
-import java.util.Optional;
-import java.util.UUID;
 
 /** Shared server authority checks for town-owned warehouse automation devices. */
 final class TownWarehouseDeviceAccess {

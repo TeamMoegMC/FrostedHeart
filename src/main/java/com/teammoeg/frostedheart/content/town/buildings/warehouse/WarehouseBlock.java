@@ -19,26 +19,26 @@
 
 package com.teammoeg.frostedheart.content.town.buildings.warehouse;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.util.function.Supplier;
+
 import com.teammoeg.chorda.block.CEntityBlock;
 import com.teammoeg.chorda.text.Components;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.content.town.block.AbstractTownBuildingBlock;
-
 import com.teammoeg.frostedheart.util.CConstants;
-import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.level.block.entity.BlockEntityType;
-import net.minecraft.world.InteractionResult;
-import net.minecraft.world.InteractionHand;
-import net.minecraft.core.BlockPos;
-import net.minecraft.world.phys.BlockHitResult;
-import net.minecraft.world.level.Level;
-import net.minecraftforge.network.NetworkHooks;
 
-import java.math.BigDecimal;
-import java.math.RoundingMode;
-import java.util.function.Supplier;
+import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.entity.BlockEntityType;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraftforge.network.NetworkHooks;
 
 public class WarehouseBlock extends AbstractTownBuildingBlock implements CEntityBlock<WarehouseBlockEntity> {
     public WarehouseBlock(Properties blockProps) {

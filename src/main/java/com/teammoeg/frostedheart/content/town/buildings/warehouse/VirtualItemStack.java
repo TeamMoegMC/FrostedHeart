@@ -19,11 +19,9 @@
 
 package com.teammoeg.frostedheart.content.town.buildings.warehouse;
 
-import net.minecraft.world.item.ItemStack;
-
-import java.util.List;
 import java.util.Locale;
-import java.util.Map;
+
+import net.minecraft.world.item.ItemStack;
 
 public class VirtualItemStack {
     private final SimpleItemKey key;

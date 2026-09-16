@@ -18,13 +18,14 @@
 
 package com.teammoeg.frostedheart.content.town.buildings.mine;
 
+import java.util.Optional;
+
 import com.teammoeg.chorda.menu.CBlockEntityMenu;
 import com.teammoeg.frostedheart.bootstrap.common.FHMenuTypes;
 import com.teammoeg.frostedheart.content.town.ITownWithBuildings;
 import com.teammoeg.frostedheart.content.town.TeamTown;
-import net.minecraft.world.entity.player.Inventory;
 
-import java.util.Optional;
+import net.minecraft.world.entity.player.Inventory;
 
 public class MineMenu extends CBlockEntityMenu<MineBlockEntity> {
     public MineMenu(int id, Inventory inventory, MineBlockEntity blockEntity) {

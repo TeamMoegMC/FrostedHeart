@@ -20,13 +20,16 @@
 package com.teammoeg.frostedheart.content.town.building;
 
 import com.teammoeg.frostedheart.content.town.ITownWithBuildings;
-import com.teammoeg.frostedheart.content.town.block.OccupiedVolume;
+import com.teammoeg.frostedheart.content.town.block.blockscanner.RoomPathfinder.OccupiedCell;
 import com.teammoeg.frostedheart.content.town.event.ITownBuildingChangeEventListener;
 import com.teammoeg.frostedheart.content.town.event.TownBuildingChangeEvent;
+import com.teammoeg.frostedheart.content.town.render.ITownSpaceOccupiedBuilding;
+
+import java.util.Set;
+
 import com.mojang.serialization.Codec;
 import lombok.Getter;
 import lombok.AccessLevel;
-import lombok.Setter;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 
@@ -34,7 +37,7 @@ import net.minecraft.server.level.ServerLevel;
  *
  */
 @Getter
-public abstract class AbstractTownBuilding implements ITownBuilding{
+public abstract class AbstractTownBuilding implements ITownBuilding,ITownSpaceOccupiedBuilding{
 
     /**
      * The codec for (de)serializing any town building. Delegates to {@link ITownBuilding#CODEC}.
@@ -56,7 +59,7 @@ public abstract class AbstractTownBuilding implements ITownBuilding{
 
     private boolean isStructureValid = false;
 
-    private OccupiedVolume occupiedVolume = OccupiedVolume.EMPTY;
+    private Set<OccupiedCell> occupiedVolume = null;
 
     /**
      * 变化监听。由 TeamTownData 在 building 装入 Map 后注入；
@@ -98,7 +101,7 @@ public abstract class AbstractTownBuilding implements ITownBuilding{
         fireChange();
     }
 
-    public void setOccupiedVolume(OccupiedVolume occupiedVolume) {
+    public void setOccupiedVolume(Set<OccupiedCell> occupiedVolume) {
         if (java.util.Objects.equals(this.occupiedVolume, occupiedVolume)) return;
         this.occupiedVolume = occupiedVolume;
         fireChange();

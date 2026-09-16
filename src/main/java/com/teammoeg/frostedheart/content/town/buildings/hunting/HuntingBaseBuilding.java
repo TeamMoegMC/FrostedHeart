@@ -19,36 +19,47 @@
 
 package com.teammoeg.frostedheart.content.town.buildings.hunting;
 
+import static com.teammoeg.frostedheart.content.town.ITown.*;
+
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
+
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.content.town.*;
-import com.teammoeg.frostedheart.content.town.block.OccupiedVolume;
+import com.teammoeg.frostedheart.content.town.ITownWithBuildings;
+import com.teammoeg.frostedheart.content.town.TeamTown;
+import com.teammoeg.frostedheart.content.town.TownMathFunctions;
+import com.teammoeg.frostedheart.content.town.block.blockscanner.RoomPathfinder.OccupiedCell;
 import com.teammoeg.frostedheart.content.town.building.AbstractTownResidentWorkBuilding;
 import com.teammoeg.frostedheart.content.town.building.ITownTemperatureBuilding;
 import com.teammoeg.frostedheart.content.town.building.TownProductionReportItem;
 import com.teammoeg.frostedheart.content.town.building.TownProductionStopReason;
 import com.teammoeg.frostedheart.content.town.resident.Resident;
-import com.teammoeg.frostedheart.content.town.resource.action.*;
-import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
-import net.minecraft.core.UUIDUtil;
-
+import com.teammoeg.frostedheart.content.town.resource.action.ResourceActionMode;
+import com.teammoeg.frostedheart.content.town.resource.action.ResourceActionType;
+import com.teammoeg.frostedheart.content.town.resource.action.TownResourceActionResults;
+import com.teammoeg.frostedheart.content.town.resource.action.TownResourceActions;
 import com.teammoeg.frostedheart.content.town.terrainresource.TerrainResourceType;
+import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
+
 import lombok.Getter;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.UUIDUtil;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
-import net.minecraft.world.level.storage.loot.LootContext;
 import net.minecraft.world.level.storage.loot.LootParams;
 import net.minecraft.world.level.storage.loot.LootTable;
 import net.minecraft.world.level.storage.loot.parameters.LootContextParamSets;
-
-import java.util.*;
-
-import static com.teammoeg.frostedheart.content.town.ITown.DEBUG_MODE;
 
 public class HuntingBaseBuilding extends AbstractTownResidentWorkBuilding implements ITownTemperatureBuilding {
     public record HuntingDailyReport(
@@ -103,7 +114,7 @@ public class HuntingBaseBuilding extends AbstractTownResidentWorkBuilding implem
 					Codec.BOOL.optionalFieldOf("initialized", false).forGetter(o -> o.isInitialized()),
 					Codec.BOOL.optionalFieldOf("occupiedAreaOverlapped", false).forGetter(o -> o.isOccupiedAreaOverlapped()),
 					Codec.BOOL.optionalFieldOf("isStructureValid",false).forGetter(o -> o.isStructureValid()),
-					OccupiedVolume.CODEC.optionalFieldOf("occupiedVolume",OccupiedVolume.EMPTY).forGetter(o -> o.getOccupiedVolume()),
+					OccupiedCell.SET_CODEC.optionalFieldOf("occupiedVolume").forGetter(o -> Optional.ofNullable(o.getOccupiedVolume())),
 					Codec.list(UUIDUtil.CODEC).optionalFieldOf("residentsID",List.of()).forGetter(o -> new ArrayList<>(o.getResidentsID())),
 					Codec.INT.optionalFieldOf("area",0).forGetter(o -> o.getArea()),
 					Codec.INT.optionalFieldOf("volume",0).forGetter(o -> o.getVolume()),
@@ -169,7 +180,7 @@ public class HuntingBaseBuilding extends AbstractTownResidentWorkBuilding implem
 	 * @param lootRollCarry fractional expected loot-table rolls retained between work cycles
 	 */
 	public HuntingBaseBuilding(BlockPos pos, boolean initialized, boolean occupiedAreaOverlapped,
-                              boolean isStructureValid, OccupiedVolume occupiedVolume,
+                              boolean isStructureValid, Optional<Set<OccupiedCell>> occupiedVolume,
                               java.util.List<UUID> residentsID, int area, int volume,
                               double temperature, int maxResidents, int tanningRackNum,
                               double temperatureModifier, double rating, double lootRollCarry,
@@ -178,7 +189,7 @@ public class HuntingBaseBuilding extends AbstractTownResidentWorkBuilding implem
         this.setInitialized(initialized);
         this.setOccupiedAreaOverlapped(occupiedAreaOverlapped);
 		this.setIsStructureValid(isStructureValid);
-		this.setOccupiedVolume(occupiedVolume);
+		this.setOccupiedVolume(occupiedVolume.orElse(null));
 		this.residentsID = new java.util.HashSet<>(residentsID);
 		this.setArea(area);
 		this.setVolume(volume);

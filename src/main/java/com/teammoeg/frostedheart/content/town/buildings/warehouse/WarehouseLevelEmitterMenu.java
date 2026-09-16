@@ -19,14 +19,16 @@
 
 package com.teammoeg.frostedheart.content.town.buildings.warehouse;
 
+import org.jetbrains.annotations.Nullable;
+
 import com.teammoeg.chorda.menu.CBlockEntityMenu;
 import com.teammoeg.chorda.menu.CCustomMenuSlot;
 import com.teammoeg.chorda.menu.CCustomMenuSlot.CDataSlot;
 import com.teammoeg.frostedheart.bootstrap.common.FHMenuSlots;
 import com.teammoeg.frostedheart.bootstrap.common.FHMenuTypes;
+
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
-import org.jetbrains.annotations.Nullable;
 
 /**
  * 仓库发信器菜单：同步过滤物品、阈值、模式、连接状态、当前存量与输出状态，

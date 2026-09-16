@@ -10,9 +10,9 @@
 
 package com.teammoeg.frostedheart.content.town.buildings.logistics;
 
-import com.teammoeg.frostedheart.content.town.TownMathFunctions;
-
 import java.util.Collection;
+
+import com.teammoeg.frostedheart.content.town.TownMathFunctions;
 
 /** Forge-independent arithmetic for one transport-station settlement. */
 public final class TransportStationDailyModel {

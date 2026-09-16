@@ -63,6 +63,7 @@ import com.teammoeg.chorda.io.CodecUtil;
 import com.teammoeg.chorda.math.CMath;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.town.block.TownBlockEntity;
+import com.teammoeg.frostedheart.content.town.block.blockscanner.RoomPathfinder.OccupiedCell;
 import com.teammoeg.frostedheart.content.town.building.AbstractTownBuilding;
 import com.teammoeg.frostedheart.content.town.building.ITownBuilding;
 import com.teammoeg.frostedheart.content.town.building.ITownResidentBuilding;
@@ -1141,21 +1142,24 @@ public class TeamTownData implements SpecialData{
 
     void checkOccupiedAreaOverlap() {
         // removeNonTownBlocks(world);
-        List<AbstractTownBuilding> buildingsWithOccupiedAreas = buildings.values().stream()
-                .filter(building -> building.getOccupiedVolume() != null && building.getOccupiedVolume() != OccupiedVolume.EMPTY)
-                .toList();
+
         Set<AbstractTownBuilding> overlapped = new HashSet<>();
         // 两两比对，根据OccupiedArea的外接矩形是否重合初步筛选可能重叠的worker
-        for (int i = 0; i < buildingsWithOccupiedAreas.size() - 1; i++) {
-            AbstractTownBuilding building = buildingsWithOccupiedAreas.get(i);
-            OccupiedVolume occupiedVolume = building.getOccupiedVolume();
-            for (int j = i + 1; j < buildingsWithOccupiedAreas.size(); j++) {
-                AbstractTownBuilding otherBuilding = buildingsWithOccupiedAreas.get(j);
-                OccupiedVolume otherOccupiedVolume = otherBuilding.getOccupiedVolume();
-                if (occupiedVolume.intersects(otherOccupiedVolume)) {
-                    overlapped.add(building);
+        Map<BlockPos,AbstractTownBuilding> signedRoom=new HashMap<>();
+        for (AbstractTownBuilding building:buildings.values()) {
+            Set<OccupiedCell> occupiedVolume = building.getOccupiedVolume();
+            if(occupiedVolume!=null) {
+            	BlockPos curPos=new BlockPos(Integer.MAX_VALUE,Integer.MAX_VALUE,Integer.MAX_VALUE);
+	            for(OccupiedCell cell:occupiedVolume) {
+	            	if(curPos.compareTo(cell.getPos())>0) {
+	            		curPos=cell.getPos();
+	            	}
+	            }
+	            AbstractTownBuilding otherBuilding=signedRoom.put(curPos,building);
+	            if(otherBuilding!=null) {
+	            	overlapped.add(building);
                     overlapped.add(otherBuilding);
-                }
+	            }
             }
         }
         for (AbstractTownBuilding building : buildings.values()) {

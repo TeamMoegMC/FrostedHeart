@@ -6,11 +6,13 @@
 
 package com.teammoeg.frostedheart.content.town.buildings.warehouse;
 
+import org.jetbrains.annotations.Nullable;
+
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.town.provider.TeamTownProvider;
+
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtOps;
-import org.jetbrains.annotations.Nullable;
 
 /** NBT contract for a town-owned warehouse level emitter. */
 final class WarehouseLevelEmitterPersistence {

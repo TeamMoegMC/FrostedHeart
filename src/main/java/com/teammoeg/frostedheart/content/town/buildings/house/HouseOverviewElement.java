@@ -19,15 +19,16 @@
 
 package com.teammoeg.frostedheart.content.town.buildings.house;
 
-import com.teammoeg.frostedheart.content.town.tabs.BuildingInfoElement;
-import com.teammoeg.frostedheart.content.town.TownMathFunctions;
-import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
-import net.minecraft.ChatFormatting;
-import net.minecraft.network.chat.Component;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+
+import com.teammoeg.frostedheart.content.town.TownMathFunctions;
+import com.teammoeg.frostedheart.content.town.tabs.BuildingInfoElement;
+import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
+
+import net.minecraft.ChatFormatting;
+import net.minecraft.network.chat.Component;
 
 final class HouseOverviewElement extends BuildingInfoElement {
 

@@ -19,24 +19,27 @@
 
 package com.teammoeg.frostedheart.content.town.buildings.warehouse;
 
+import java.util.Optional;
+import java.util.Set;
+
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.frostedheart.content.town.ITown;
-import com.teammoeg.frostedheart.content.town.block.OccupiedVolume;
+import com.teammoeg.frostedheart.content.town.block.blockscanner.RoomPathfinder.OccupiedCell;
 import com.teammoeg.frostedheart.content.town.building.AbstractTownBuilding;
 import com.teammoeg.frostedheart.content.town.resource.VirtualResourceType;
-import lombok.Getter;
 import com.teammoeg.frostedheart.content.town.resource.action.ResourceActionMode;
 import com.teammoeg.frostedheart.content.town.resource.action.ResourceActionType;
 import com.teammoeg.frostedheart.content.town.resource.action.TownResourceActions;
 
+import lombok.Getter;
 import net.minecraft.core.BlockPos;
 
 public class WarehouseBuilding extends AbstractTownBuilding {
 	public static final Codec<WarehouseBuilding> CODEC = RecordCodecBuilder.create(t -> t.group(
                     BlockPos.CODEC.optionalFieldOf("pos",BlockPos.ZERO).forGetter(o -> o.pos),
                     Codec.BOOL.optionalFieldOf("isStructureValid",false).forGetter(o -> o.isStructureValid()),
-                    OccupiedVolume.CODEC.optionalFieldOf("occupiedVolume",OccupiedVolume.EMPTY).forGetter(o -> o.getOccupiedVolume()),
+                    OccupiedCell.SET_CODEC.optionalFieldOf("occupiedVolume").forGetter(o -> Optional.ofNullable(o.getOccupiedVolume())),
                     Codec.BOOL.optionalFieldOf("initialized", false).forGetter(o -> o.isInitialized()),
                     Codec.BOOL.optionalFieldOf("occupiedAreaOverlapped", false).forGetter(o -> o.isOccupiedAreaOverlapped()),
 					Codec.DOUBLE.optionalFieldOf("capacity",0D).forGetter(o -> o.getCapacity()),
@@ -70,11 +73,11 @@ public class WarehouseBuilding extends AbstractTownBuilding {
      * @param area the area
      * @param volume the volume
      */
-    public WarehouseBuilding(BlockPos pos, boolean isStructureValid, OccupiedVolume occupiedVolume, boolean initialized,
+    public WarehouseBuilding(BlockPos pos, boolean isStructureValid, Optional<Set<OccupiedCell>> occupiedVolume, boolean initialized,
                              boolean occupiedAreaOverlapped, double capacity, int area, int volume, int decorationAmount) {
         super(pos);
         this.setIsStructureValid(isStructureValid);
-        this.setOccupiedVolume(occupiedVolume);
+        this.setOccupiedVolume(occupiedVolume.orElse(null));
         this.setInitialized(initialized);
         this.setOccupiedAreaOverlapped(occupiedAreaOverlapped);
         this.setCapacity(capacity);

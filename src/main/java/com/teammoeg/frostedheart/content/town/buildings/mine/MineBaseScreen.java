@@ -18,6 +18,11 @@
 
 package com.teammoeg.frostedheart.content.town.buildings.mine;
 
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Locale;
+
 import com.teammoeg.chorda.client.cui.base.UILayer;
 import com.teammoeg.chorda.client.icon.CIcons;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlocks;
@@ -32,15 +37,11 @@ import com.teammoeg.frostedheart.content.town.tabs.AbstractTownTab;
 import com.teammoeg.frostedheart.content.town.tabs.TownInfoPanel;
 import com.teammoeg.frostedheart.content.town.tabs.TownWorkforcePanel;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
+
 import net.minecraft.Util;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.Items;
-
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Locale;
 
 public class MineBaseScreen extends StandardTownBuildingScreen<MineBaseMenu> {
     public MineBaseScreen(MineBaseMenu menu) {

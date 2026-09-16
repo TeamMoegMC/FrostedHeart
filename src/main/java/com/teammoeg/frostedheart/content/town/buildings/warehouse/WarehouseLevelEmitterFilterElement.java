@@ -21,18 +21,10 @@ package com.teammoeg.frostedheart.content.town.buildings.warehouse;
 
 import com.teammoeg.chorda.client.CInputHelper;
 import com.teammoeg.chorda.client.RenderingHint;
-import com.teammoeg.chorda.client.ScrollTracker;
-import com.teammoeg.chorda.client.cui.base.MouseButton;
-import com.teammoeg.chorda.client.cui.base.TooltipBuilder;
 import com.teammoeg.chorda.client.cui.base.UIElement;
 import com.teammoeg.chorda.client.cui.widgets.AbstractFilterGhostSlot;
-import com.teammoeg.chorda.client.icon.FlatIcon;
-import net.minecraft.ChatFormatting;
-import net.minecraft.client.Minecraft;
+
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.network.chat.Component;
-import net.minecraft.util.Mth;
 import net.minecraft.world.item.ItemStack;
 
 /**

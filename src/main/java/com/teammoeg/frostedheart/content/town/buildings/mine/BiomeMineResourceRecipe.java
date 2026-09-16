@@ -19,12 +19,20 @@
 
 package com.teammoeg.frostedheart.content.town.buildings.mine;
 
-import blusunrize.immersiveengineering.api.crafting.IERecipeSerializer;
-import blusunrize.immersiveengineering.api.crafting.IERecipeTypes;
-import blusunrize.immersiveengineering.api.crafting.IESerializableRecipe;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
+
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlocks;
+
+import blusunrize.immersiveengineering.api.crafting.IERecipeSerializer;
+import blusunrize.immersiveengineering.api.crafting.IERecipeTypes;
+import blusunrize.immersiveengineering.api.crafting.IESerializableRecipe;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
@@ -37,12 +45,6 @@ import net.minecraftforge.common.crafting.conditions.ICondition;
 import net.minecraftforge.common.util.Lazy;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.RegistryObject;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
 
 /**
  * 描述城镇矿场在特定生物群系中所产出的资源种类及比例。

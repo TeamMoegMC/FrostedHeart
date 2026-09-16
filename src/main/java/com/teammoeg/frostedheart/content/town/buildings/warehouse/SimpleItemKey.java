@@ -19,18 +19,20 @@
 
 package com.teammoeg.frostedheart.content.town.buildings.warehouse;
 
+import java.util.Objects;
+import java.util.Optional;
+
+import org.jetbrains.annotations.Nullable;
+
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.frostedheart.content.town.resource.ItemStackResourceKey;
+
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import org.jetbrains.annotations.Nullable;
-
-import java.util.Objects;
-import java.util.Optional;
 
 public record SimpleItemKey(Item item, @Nullable CompoundTag tag)
 {

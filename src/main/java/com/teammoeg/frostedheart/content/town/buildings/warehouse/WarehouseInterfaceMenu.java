@@ -19,17 +19,18 @@
 
 package com.teammoeg.frostedheart.content.town.buildings.warehouse;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.teammoeg.chorda.client.cui.menu.CUISlotItemHandler;
 import com.teammoeg.chorda.menu.CBlockEntityMenu;
 import com.teammoeg.chorda.menu.CCustomMenuSlot;
 import com.teammoeg.chorda.menu.CCustomMenuSlot.CDataSlot;
 import com.teammoeg.frostedheart.bootstrap.common.FHMenuSlots;
 import com.teammoeg.frostedheart.bootstrap.common.FHMenuTypes;
+
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
-
-import java.util.ArrayList;
-import java.util.List;
 
 public class WarehouseInterfaceMenu extends CBlockEntityMenu<WarehouseInterfaceBlockEntity> {
     static final int SCREEN_HEIGHT = 218;

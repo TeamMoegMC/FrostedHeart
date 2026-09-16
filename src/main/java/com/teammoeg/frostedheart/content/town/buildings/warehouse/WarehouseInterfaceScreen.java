@@ -19,6 +19,8 @@
 
 package com.teammoeg.frostedheart.content.town.buildings.warehouse;
 
+import java.util.Locale;
+
 import com.teammoeg.chorda.client.CInputHelper;
 import com.teammoeg.chorda.client.RenderingHint;
 import com.teammoeg.chorda.client.ScrollTracker;
@@ -29,12 +31,11 @@ import com.teammoeg.chorda.client.cui.base.UIElement;
 import com.teammoeg.chorda.client.cui.base.Verifiers;
 import com.teammoeg.chorda.client.cui.widgets.TextBox;
 import com.teammoeg.frostedheart.content.town.transport.TransportRateScroll;
+
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
-
-import java.util.Locale;
 
 public class WarehouseInterfaceScreen extends MenuPrimaryLayer<WarehouseInterfaceMenu> {
     private final WarehouseInterfaceTargetElement[] targets =

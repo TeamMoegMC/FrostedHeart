@@ -19,28 +19,26 @@
 
 package com.teammoeg.frostedheart.content.town.buildings.warehouse;
 
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.content.decoration.WarehouseStorageRackBlock;
-import com.teammoeg.frostedheart.content.town.*;
+import com.teammoeg.frostedheart.content.town.ITownWithBuildings;
+import com.teammoeg.frostedheart.content.town.TeamTown;
+import com.teammoeg.frostedheart.content.town.TeamTownData;
 import com.teammoeg.frostedheart.content.town.block.AbstractTownBuildingBlockEntity;
-import com.teammoeg.frostedheart.content.town.block.blockscanner.AbstractBlockScanner;
 import com.teammoeg.frostedheart.content.town.block.blockscanner.BlockScanner;
-import com.teammoeg.frostedheart.content.town.block.blockscanner.FloorBlockScanner;
 import com.teammoeg.frostedheart.content.town.block.blockscanner.BlockScanner.RoomData;
 import com.teammoeg.frostedheart.content.town.building.AbstractTownBuilding;
+
+import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
-import net.minecraft.tags.BlockTags;
 import net.minecraft.world.MenuProvider;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.core.Direction;
-import net.minecraft.core.BlockPos;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-
-import java.util.Objects;
 
 public class WarehouseBlockEntity extends AbstractTownBuildingBlockEntity<WarehouseBuilding> implements MenuProvider {
 
@@ -68,7 +66,7 @@ public class WarehouseBlockEntity extends AbstractTownBuildingBlockEntity<Wareho
             building.setDecorationAmount(rd.countInsideBlock(t->t.getBlock() instanceof WarehouseStorageRackBlock));
 
             building.setCapacity(building.getArea() * Math.pow(building.getVolume() * 0.02 / building.getArea(), 0.9) * 1980 + building.getDecorationAmount() * 512);
-            building.setOccupiedVolume(rd.calculateOccupiedVolume());
+            building.setOccupiedVolume(rd.occupiedCells);
             return true;
             
         }

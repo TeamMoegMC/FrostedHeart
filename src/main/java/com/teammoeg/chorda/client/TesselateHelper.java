@@ -22,6 +22,7 @@ import net.minecraft.util.Mth;
 public abstract class TesselateHelper implements AutoCloseable {
 	private static final TextureTesselator TEXTURE = new TextureTesselator();
 	private static final ShapeTesslator SHAPE=new ShapeTesslator();
+	private static final Shape3DTesslator SHAPE3D=new Shape3DTesslator();
 	private static final LineTesslator LINE=new LineTesslator();
 	@Override
 	public void close() {
@@ -55,6 +56,10 @@ public abstract class TesselateHelper implements AutoCloseable {
 	public static ShapeTesslator getShapeTesslator() {
 		SHAPE.beginTesselate();
 		return SHAPE;
+	}
+	public static Shape3DTesslator getShape3DTesslator() {
+		SHAPE3D.beginTesselate();
+		return SHAPE3D;
 	}
 	public static LineTesslator getLineTesslator() {
 		LINE.beginTesselate();
@@ -171,6 +176,24 @@ public abstract class TesselateHelper implements AutoCloseable {
 			bufferbuilder.vertex(matrix, x2, y1, 0f).color(f1, f2, f3, f).endVertex();
 			bufferbuilder.vertex(matrix, x1, y1, 0f).color(f5, f6, f7, f4).endVertex();
 			bufferbuilder.vertex(matrix, x1, y2, 0f).color(f5, f6, f7, f4).endVertex();
+			return this;
+		}
+
+
+	}
+
+	public static class Shape3DTesslator extends TesselateHelper{
+		@Override
+		public void beginBuffer() {
+			RenderSystem.enableDepthTest();
+			RenderSystem.enableBlend();
+			RenderSystem.defaultBlendFunc();
+			RenderSystem.setShader(GameRenderer::getPositionColorShader);
+			bufferbuilder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
+		}
+
+		public Shape3DTesslator vertex(Matrix4f matrix, float x, float y, float z, int color) {
+			bufferbuilder.vertex(matrix, x, y, z).color(color).endVertex();
 			return this;
 		}
 

@@ -19,16 +19,21 @@
 
 package com.teammoeg.frostedheart.content.town.buildings.warehouse;
 
+import java.util.function.Supplier;
+
+import org.jetbrains.annotations.Nullable;
+
 import com.teammoeg.chorda.block.CGuiBlock;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
+
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.util.StringRepresentable;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.player.Player;
+import net.minecraft.util.StringRepresentable;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.Level;
@@ -39,9 +44,6 @@ import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.DirectionProperty;
 import net.minecraft.world.level.block.state.properties.EnumProperty;
 import net.minecraft.world.phys.BlockHitResult;
-import org.jetbrains.annotations.Nullable;
-
-import java.util.function.Supplier;
 
 /**
  * A full wall block that bridges a warehouse's virtual item storage with

@@ -19,31 +19,42 @@
 
 package com.teammoeg.frostedheart.content.town.buildings.house;
 
-import java.util.*;
+import static com.teammoeg.frostedheart.content.town.ITown.*;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
-import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.content.town.*;
-import com.teammoeg.frostedheart.content.town.block.OccupiedVolume;
+import com.teammoeg.frostedheart.content.town.ITownWithBuildings;
+import com.teammoeg.frostedheart.content.town.ITownWithResidents;
+import com.teammoeg.frostedheart.content.town.TownMathFunctions;
+import com.teammoeg.frostedheart.content.town.block.blockscanner.RoomPathfinder.OccupiedCell;
 import com.teammoeg.frostedheart.content.town.building.AbstractTownBuilding;
 import com.teammoeg.frostedheart.content.town.building.ITownResidentBuilding;
 import com.teammoeg.frostedheart.content.town.building.ITownTemperatureBuilding;
 import com.teammoeg.frostedheart.content.town.resident.Resident;
 import com.teammoeg.frostedheart.content.town.resident.ResidentNutrition;
 import com.teammoeg.frostedheart.content.town.resident.ResidentNutritionSupportModel;
-import com.teammoeg.frostedheart.content.town.resource.ItemResourceType;
 import com.teammoeg.frostedheart.content.town.resource.ItemStackResourceKey;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
+
+import lombok.Getter;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.UUIDUtil;
 import net.minecraft.core.registries.BuiltInRegistries;
-
-import lombok.Getter;
-
-import static com.teammoeg.frostedheart.content.town.ITown.DEBUG_MODE;
 
 /**
  * 城镇住宅。
@@ -150,7 +161,7 @@ public class HouseBuilding extends AbstractTownBuilding implements ITownResident
     public static final Codec<HouseBuilding> CODEC = RecordCodecBuilder.create(t -> t.group(
             BlockPos.CODEC.optionalFieldOf("pos",BlockPos.ZERO).forGetter(o -> o.pos),
             Codec.BOOL.optionalFieldOf("isStructureValid",false).forGetter(o -> o.isStructureValid()),
-            OccupiedVolume.CODEC.optionalFieldOf("occupiedVolume",OccupiedVolume.EMPTY).forGetter(o -> o.getOccupiedVolume()),
+            OccupiedCell.SET_CODEC.optionalFieldOf("occupiedVolume").forGetter(o -> Optional.ofNullable(o.getOccupiedVolume())),
             Codec.BOOL.optionalFieldOf("initialized", false).forGetter(o -> o.isInitialized()),
             Codec.BOOL.optionalFieldOf("occupiedAreaOverlapped", false).forGetter(o -> o.isOccupiedAreaOverlapped()),
             Codec.INT.optionalFieldOf("area",0).forGetter(o -> o.getArea()),
@@ -215,7 +226,7 @@ public class HouseBuilding extends AbstractTownBuilding implements ITownResident
         super(pos);
     }
 
-    public HouseBuilding(BlockPos pos, boolean isStructureValid, OccupiedVolume occupiedVolume, int area, int volume, double temperature, double decorationRating, int maxResidents, double temperatureModifier) {
+    public HouseBuilding(BlockPos pos, boolean isStructureValid, Optional<Set<OccupiedCell>> occupiedVolume, int area, int volume, double temperature, double decorationRating, int maxResidents, double temperatureModifier) {
         this(pos, isStructureValid, occupiedVolume, false, false, area, volume, temperature,
                 decorationRating, maxResidents, List.of(), temperatureModifier, DailyReport.EMPTY);
     }
@@ -223,7 +234,7 @@ public class HouseBuilding extends AbstractTownBuilding implements ITownResident
     public HouseBuilding(
             BlockPos pos,
             boolean isStructureValid,
-            OccupiedVolume occupiedVolume,
+            Optional<Set<OccupiedCell>> occupiedVolume,
             boolean initialized,
             boolean occupiedAreaOverlapped,
             int area,
@@ -243,7 +254,7 @@ public class HouseBuilding extends AbstractTownBuilding implements ITownResident
     private HouseBuilding(
             BlockPos pos,
             boolean isStructureValid,
-            OccupiedVolume occupiedVolume,
+            Optional<Set<OccupiedCell>> occupiedVolume,
             boolean initialized,
             boolean occupiedAreaOverlapped,
             int area,
@@ -259,7 +270,7 @@ public class HouseBuilding extends AbstractTownBuilding implements ITownResident
     ) {
         super(pos);
         this.setIsStructureValid(isStructureValid);
-        this.setOccupiedVolume(occupiedVolume);
+        this.setOccupiedVolume(occupiedVolume.orElse(null));
         this.setInitialized(initialized);
         this.setOccupiedAreaOverlapped(occupiedAreaOverlapped);
         this.setArea(area);

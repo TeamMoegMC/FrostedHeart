@@ -26,6 +26,7 @@ import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlocks;
 import com.teammoeg.frostedheart.content.town.AbstractTownWorkerBlockScreen;
 import com.teammoeg.frostedheart.content.town.tabs.AbstractTownTab;
+
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;

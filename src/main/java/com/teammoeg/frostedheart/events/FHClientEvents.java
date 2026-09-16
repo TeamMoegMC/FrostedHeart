@@ -46,8 +46,6 @@ import com.teammoeg.frostedheart.content.health.network.C2SOpenNutritionScreenMe
 import com.teammoeg.frostedheart.content.health.screen.HealthStatScreen;
 import com.teammoeg.frostedheart.content.scenario.client.ClientScene;
 import com.teammoeg.frostedheart.content.scenario.client.dialog.HUDDialog;
-import com.teammoeg.frostedheart.content.town.buildings.house.HouseBlockEntity;
-import com.teammoeg.frostedheart.content.town.render.CylinderRegionRenderer;
 import com.teammoeg.frostedheart.content.ui.archive.ArchiveScreen;
 import com.teammoeg.frostedheart.content.ui.tips.client.gui.DebugScreen;
 import com.teammoeg.frostedheart.content.ui.waypoint.ClientWaypointManager;
@@ -239,8 +237,6 @@ public class FHClientEvents {
             ClientUtils.getMc().getProfiler().push("frostedheart:render_infrared_view");
             InfraredViewRenderer.renderInfraredView();
             ClientUtils.getMc().getProfiler().pop();
-            if(HouseBlockEntity.test!=null)
-                CylinderRegionRenderer.render(HouseBlockEntity.test.occupiedCells);
         }
     }
 

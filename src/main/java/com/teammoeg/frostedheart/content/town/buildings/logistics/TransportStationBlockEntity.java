@@ -6,34 +6,27 @@
 
 package com.teammoeg.frostedheart.content.town.buildings.logistics;
 
+import java.util.Set;
+
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.content.town.TownMathFunctions;
 import com.teammoeg.frostedheart.content.town.block.AbstractTownBuildingBlockEntity;
-import com.teammoeg.frostedheart.content.town.block.OccupiedVolume;
-import com.teammoeg.frostedheart.content.town.block.blockscanner.AbstractBlockScanner;
 import com.teammoeg.frostedheart.content.town.block.blockscanner.BlockScanner;
-import com.teammoeg.frostedheart.content.town.block.blockscanner.BuildingBlockScanner;
-import com.teammoeg.frostedheart.content.town.block.blockscanner.FloorBlockScanner;
 import com.teammoeg.frostedheart.content.town.block.blockscanner.BlockScanner.RoomData;
+import com.teammoeg.frostedheart.content.town.block.blockscanner.RoomPathfinder.OccupiedCell;
 import com.teammoeg.frostedheart.content.town.building.AbstractTownBuilding;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
+
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
-import net.minecraft.tags.BlockTags;
 import net.minecraft.world.MenuProvider;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
-import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-
-import java.util.HashSet;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
 
 /** Scans and exposes the logical building owned by a transport-station core. */
 public class TransportStationBlockEntity
@@ -63,14 +56,14 @@ public class TransportStationBlockEntity
                 building,
                 scanner.area,
                 scanner.volume,
-                scanner.calculateOccupiedVolume());
+                scanner.occupiedCells);
     }
 
     static void applyScanResult(
             TransportStationBuilding building,
             int area,
             int volume,
-            OccupiedVolume occupiedVolume
+            Set<OccupiedCell> occupiedVolume
     ) {
         building.setArea(area);
         building.setVolume(volume);

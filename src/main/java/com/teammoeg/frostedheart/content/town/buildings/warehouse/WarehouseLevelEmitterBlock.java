@@ -19,8 +19,13 @@
 
 package com.teammoeg.frostedheart.content.town.buildings.warehouse;
 
+import java.util.function.Supplier;
+
+import org.jetbrains.annotations.Nullable;
+
 import com.teammoeg.chorda.block.CGuiBlock;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
+
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerPlayer;
@@ -30,17 +35,14 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.context.BlockPlaceContext;
-import net.minecraft.world.level.Level;
 import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.HorizontalDirectionalBlock;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.DirectionProperty;
 import net.minecraft.world.phys.BlockHitResult;
-import org.jetbrains.annotations.Nullable;
-
-import java.util.function.Supplier;
 
 /**
  * 仓库发信器方块：嵌在仓库墙上的红石信号源，正面对着仓库外。

@@ -19,30 +19,37 @@
 
 package com.teammoeg.frostedheart.content.town.buildings.warehouse;
 
+import java.util.Arrays;
+import java.util.Optional;
+import java.util.UUID;
+
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
 import com.teammoeg.chorda.block.entity.CBlockEntity;
 import com.teammoeg.chorda.block.entity.CTickableBlockEntity;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.content.town.ITownWithResources;
 import com.teammoeg.frostedheart.content.town.TeamTown;
-import com.teammoeg.frostedheart.content.town.building.AbstractTownBuilding;
 import com.teammoeg.frostedheart.content.town.provider.TeamTownProvider;
 import com.teammoeg.frostedheart.content.town.resource.TeamTownResourceActionExecutorHandler;
 import com.teammoeg.frostedheart.content.town.resource.TeamTownResourceHolder;
 import com.teammoeg.frostedheart.content.town.resource.action.IActionExecutorHandler;
 import com.teammoeg.frostedheart.content.town.resource.watcher.IWarehouseStockWatcher;
 import com.teammoeg.frostedheart.content.town.resource.watcher.IWarehouseStockWatcherNode;
+import com.teammoeg.frostedheart.content.town.transport.TownTransportSummary;
 import com.teammoeg.frostedheart.content.town.transport.TransportEndpointId;
 import com.teammoeg.frostedheart.content.town.transport.TransportEndpointKind;
 import com.teammoeg.frostedheart.content.town.transport.TransportEndpointRequest;
 import com.teammoeg.frostedheart.content.town.transport.TransportReservation;
 import com.teammoeg.frostedheart.content.town.transport.TransportReservationDecision;
 import com.teammoeg.frostedheart.content.town.transport.TransportReservationResult;
-import com.teammoeg.frostedheart.content.town.transport.TownTransportSummary;
 import com.teammoeg.frostedheart.content.town.transport.TransportTransferBudget;
 import com.teammoeg.frostedheart.content.town.transport.WarehouseTopologyListener;
 import com.teammoeg.frostedheart.content.town.transport.WarehouseTopologySnapshot;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
+
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.GlobalPos;
@@ -59,19 +66,12 @@ import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.ForgeCapabilities;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.items.IItemHandler;
 import net.minecraftforge.items.ItemStackHandler;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-
-import java.util.Arrays;
-import java.util.Optional;
-import java.util.UUID;
 
 public class WarehouseInterfaceBlockEntity extends CBlockEntity implements CTickableBlockEntity, MenuProvider,
         IWarehouseStockWatcherNode, WarehouseTopologyListener {

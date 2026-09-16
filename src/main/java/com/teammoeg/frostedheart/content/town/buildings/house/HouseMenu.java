@@ -19,16 +19,17 @@
 
 package com.teammoeg.frostedheart.content.town.buildings.house;
 
+import java.util.Comparator;
+import java.util.List;
+import java.util.Optional;
+
 import com.teammoeg.chorda.menu.CBlockEntityMenu;
 import com.teammoeg.frostedheart.bootstrap.common.FHMenuTypes;
 import com.teammoeg.frostedheart.content.town.ITownWithBuildings;
 import com.teammoeg.frostedheart.content.town.ITownWithResidents;
 import com.teammoeg.frostedheart.content.town.resident.Resident;
-import net.minecraft.world.entity.player.Inventory;
 
-import java.util.Comparator;
-import java.util.List;
-import java.util.Optional;
+import net.minecraft.world.entity.player.Inventory;
 
 /**
  * The house menu intentionally has no additional synchronization layer.

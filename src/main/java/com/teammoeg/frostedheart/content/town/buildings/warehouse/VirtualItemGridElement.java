@@ -19,6 +19,9 @@
 
 package com.teammoeg.frostedheart.content.town.buildings.warehouse;
 
+import java.util.List;
+import java.util.function.Supplier;
+
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.teammoeg.chorda.client.ClientUtils;
 import com.teammoeg.chorda.client.RenderingHint;
@@ -27,6 +30,7 @@ import com.teammoeg.chorda.client.cui.base.TooltipBuilder;
 import com.teammoeg.chorda.client.cui.base.UIElement;
 import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.content.town.network.WarehouseInteractPacket;
+
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
@@ -35,9 +39,6 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.util.Mth;
 import net.minecraft.world.item.ItemStack;
-
-import java.util.List;
-import java.util.function.Supplier;
 
 public class VirtualItemGridElement extends UIElement{
     private final Supplier<List<VirtualItemStack>> itemSource; // 数据源

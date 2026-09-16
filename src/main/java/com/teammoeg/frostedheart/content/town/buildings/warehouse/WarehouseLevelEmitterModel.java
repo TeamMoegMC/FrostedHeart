@@ -6,8 +6,9 @@
 
 package com.teammoeg.frostedheart.content.town.buildings.warehouse;
 
-import com.teammoeg.frostedheart.content.town.resource.watcher.IWarehouseStockWatcher;
 import org.jetbrains.annotations.Nullable;
+
+import com.teammoeg.frostedheart.content.town.resource.watcher.IWarehouseStockWatcher;
 
 /** Pure state rules shared by the warehouse level emitter and its tests. */
 final class WarehouseLevelEmitterModel {

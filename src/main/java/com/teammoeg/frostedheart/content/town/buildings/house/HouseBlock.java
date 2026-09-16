@@ -19,12 +19,15 @@
 
 package com.teammoeg.frostedheart.content.town.buildings.house;
 
+import java.util.function.Supplier;
+
 import com.teammoeg.chorda.block.CEntityBlock;
 import com.teammoeg.chorda.text.Components;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.content.town.block.AbstractTownBuildingBlock;
 import com.teammoeg.frostedheart.util.CConstants;
 import com.teammoeg.frostedheart.util.client.FHClientUtils;
+
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.RandomSource;
@@ -36,8 +39,6 @@ import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraftforge.network.NetworkHooks;
-
-import java.util.function.Supplier;
 
 /**
  * A house in the town.

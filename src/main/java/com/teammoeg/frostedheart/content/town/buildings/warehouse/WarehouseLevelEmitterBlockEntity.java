@@ -19,6 +19,10 @@
 
 package com.teammoeg.frostedheart.content.town.buildings.warehouse;
 
+import java.util.Optional;
+
+import org.jetbrains.annotations.Nullable;
+
 import com.teammoeg.chorda.block.entity.CBlockEntity;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.content.town.ITownWithResources;
@@ -31,22 +35,19 @@ import com.teammoeg.frostedheart.content.town.resource.watcher.IWarehouseStockWa
 import com.teammoeg.frostedheart.content.town.resource.watcher.IWarehouseStockWatcherNode;
 import com.teammoeg.frostedheart.content.town.transport.WarehouseTopologyListener;
 import com.teammoeg.frostedheart.content.town.transport.WarehouseTopologySnapshot;
+
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.GlobalPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.MenuProvider;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
-import org.jetbrains.annotations.Nullable;
-
-import java.util.Optional;
 
 /**
  * 仓库发信器：归属于一个城镇，监测城镇仓库中某种物品（NBT 精确匹配）的存量，

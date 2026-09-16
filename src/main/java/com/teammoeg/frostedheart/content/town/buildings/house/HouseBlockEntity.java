@@ -19,24 +19,21 @@
 
 package com.teammoeg.frostedheart.content.town.buildings.house;
 
-import java.util.List;
-import java.util.Objects;
-
 import javax.annotation.Nonnull;
+
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
 import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
 import com.teammoeg.frostedheart.content.steamenergy.HeatEndpoint;
-import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.town.TownMathFunctions;
-import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import com.teammoeg.frostedheart.content.town.block.AbstractTownBuildingBlockEntity;
-import com.teammoeg.frostedheart.content.town.block.blockscanner.AbstractBlockScanner;
 import com.teammoeg.frostedheart.content.town.block.blockscanner.BlockScanner;
 import com.teammoeg.frostedheart.content.town.block.blockscanner.BlockScanner.RoomData;
-import com.teammoeg.frostedheart.content.town.block.blockscanner.FloorBlockScanner;
 import com.teammoeg.frostedheart.content.town.building.AbstractTownBuilding;
+import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import com.teammoeg.frostedheart.util.client.FHClientUtils;
 
 import lombok.Getter;
@@ -54,8 +51,6 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BedPart;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.util.LazyOptional;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 
 /**
@@ -67,7 +62,6 @@ import org.jetbrains.annotations.Nullable;
  * rating based on the house structure
  */
 public class HouseBlockEntity extends AbstractTownBuildingBlockEntity<HouseBuilding> implements MenuProvider {
-	public static RoomData test;
 	@Getter
     private double temperatureModifier = 0;
 
@@ -113,7 +107,6 @@ public class HouseBlockEntity extends AbstractTownBuildingBlockEntity<HouseBuild
 		BlockPos housePos = this.getBlockPos();
 		RoomData rd=BlockScanner.scanRoomDataFromBlock(level,housePos);
 		if (rd!=null&&rd.doors.size()>0) {
-			test=rd;
 			//FHMain.LOGGER.debug("HouseScanner: scan successful");
 			building.setVolume(rd.volume);
 			building.setArea(rd.area);
@@ -127,7 +120,7 @@ public class HouseBlockEntity extends AbstractTownBuildingBlockEntity<HouseBuild
 					housing.decorationBaseDemand.get(),
 					housing.decorationFloorBlocksPerDemand.get()));
 			building.setTemperature(rd.calculateTemperature(level));
-			building.setOccupiedVolume(rd.calculateOccupiedVolume());
+			building.setOccupiedVolume(rd.occupiedCells);
 			building.setMaxResidents(calculateMaxResidents(building.getArea(), building.getVolume(), rd.countInsideBlock(t->t.is(BlockTags.BEDS))));
 			building.setLayout(rd.findBlockPosition(t->t.is(BlockTags.BEDS)&&((!t.hasProperty(BedBlock.PART))||t.getValue(BedBlock.PART)==BedPart.HEAD)), rd.doors.get(0));
 			return true;
@@ -222,4 +215,5 @@ public class HouseBlockEntity extends AbstractTownBuildingBlockEntity<HouseBuild
 	public Component getDisplayName() {
 		return Component.translatable("container.frostedheart.house");
 	}
+
 }

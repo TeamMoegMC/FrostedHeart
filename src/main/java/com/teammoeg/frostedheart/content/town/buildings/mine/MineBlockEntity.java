@@ -19,6 +19,9 @@
 
 package com.teammoeg.frostedheart.content.town.buildings.mine;
 
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
 import com.teammoeg.chorda.util.CRegistryHelper;
 import com.teammoeg.chorda.util.CUtils;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
@@ -34,8 +37,6 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.block.state.BlockState;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 public class MineBlockEntity extends AbstractTownBuildingBlockEntity<MineBuilding> implements MenuProvider {
 

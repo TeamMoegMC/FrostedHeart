@@ -6,11 +6,19 @@
 
 package com.teammoeg.frostedheart.content.town.buildings.logistics;
 
+import java.util.Comparator;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
+
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.frostedheart.content.town.ITownWithBuildings;
 import com.teammoeg.frostedheart.content.town.TeamTown;
-import com.teammoeg.frostedheart.content.town.block.OccupiedVolume;
+import com.teammoeg.frostedheart.content.town.block.blockscanner.RoomPathfinder.OccupiedCell;
 import com.teammoeg.frostedheart.content.town.building.AbstractTownResidentWorkBuilding;
 import com.teammoeg.frostedheart.content.town.building.TownProductionStopReason;
 import com.teammoeg.frostedheart.content.town.resident.Resident;
@@ -21,16 +29,11 @@ import com.teammoeg.frostedheart.content.town.resource.action.ResourceActionType
 import com.teammoeg.frostedheart.content.town.resource.action.TownResourceActionResults;
 import com.teammoeg.frostedheart.content.town.resource.action.TownResourceActions;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
+
 import lombok.Getter;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.UUIDUtil;
 import net.minecraft.server.level.ServerLevel;
-
-import java.util.HashSet;
-import java.util.List;
-import java.util.Objects;
-import java.util.UUID;
-import java.util.Comparator;
 
 /**
  * 货运站的持久化建筑状态。
@@ -89,8 +92,8 @@ public class TransportStationBuilding extends AbstractTownResidentWorkBuilding {
                     .forGetter(TransportStationBuilding::isOccupiedAreaOverlapped),
             Codec.BOOL.optionalFieldOf("isStructureValid", false)
                     .forGetter(TransportStationBuilding::isStructureValid),
-            OccupiedVolume.CODEC.optionalFieldOf("occupiedVolume", OccupiedVolume.EMPTY)
-                    .forGetter(TransportStationBuilding::getOccupiedVolume),
+            OccupiedCell.SET_CODEC.optionalFieldOf("occupiedVolume")
+                    .forGetter(t->Optional.ofNullable(t.getOccupiedVolume())),
             UUIDUtil.CODEC.listOf().optionalFieldOf("residentsID", List.of())
                     .forGetter(building -> building.getResidentsID().stream().sorted().toList()),
             Codec.INT.optionalFieldOf("area", 0).forGetter(TransportStationBuilding::getArea),
@@ -116,7 +119,7 @@ public class TransportStationBuilding extends AbstractTownResidentWorkBuilding {
             boolean initialized,
             boolean occupiedAreaOverlapped,
             boolean structureValid,
-            OccupiedVolume occupiedVolume,
+            Optional<Set<OccupiedCell>> occupiedVolume,
             List<UUID> residentsID,
             int area,
             int volume,
@@ -131,7 +134,7 @@ public class TransportStationBuilding extends AbstractTownResidentWorkBuilding {
             boolean initialized,
             boolean occupiedAreaOverlapped,
             boolean structureValid,
-            OccupiedVolume occupiedVolume,
+            Optional<Set<OccupiedCell>> occupiedVolume,
             List<UUID> residentsID,
             int area,
             int volume,
@@ -142,7 +145,7 @@ public class TransportStationBuilding extends AbstractTownResidentWorkBuilding {
         setInitialized(initialized);
         setOccupiedAreaOverlapped(occupiedAreaOverlapped);
         setIsStructureValid(structureValid);
-        setOccupiedVolume(occupiedVolume);
+        setOccupiedVolume(occupiedVolume.orElse(null));
         this.residentsID = new HashSet<>(residentsID);
         setArea(area);
         setVolume(volume);

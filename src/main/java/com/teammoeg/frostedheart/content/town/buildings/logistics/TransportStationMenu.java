@@ -6,17 +6,18 @@
 
 package com.teammoeg.frostedheart.content.town.buildings.logistics;
 
+import java.util.Comparator;
+import java.util.List;
+import java.util.Optional;
+
 import com.teammoeg.chorda.menu.CBlockEntityMenu;
 import com.teammoeg.frostedheart.bootstrap.common.FHMenuTypes;
 import com.teammoeg.frostedheart.content.town.ITownWithBuildings;
 import com.teammoeg.frostedheart.content.town.ITownWithResidents;
 import com.teammoeg.frostedheart.content.town.TeamTown;
 import com.teammoeg.frostedheart.content.town.resident.Resident;
-import net.minecraft.world.entity.player.Inventory;
 
-import java.util.Comparator;
-import java.util.List;
-import java.util.Optional;
+import net.minecraft.world.entity.player.Inventory;
 
 /** Menu bridge for the synchronized client-side transport-station snapshot. */
 public class TransportStationMenu extends CBlockEntityMenu<TransportStationBlockEntity> {

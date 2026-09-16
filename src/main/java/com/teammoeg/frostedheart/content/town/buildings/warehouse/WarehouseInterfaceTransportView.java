@@ -6,17 +6,17 @@
 
 package com.teammoeg.frostedheart.content.town.buildings.warehouse;
 
+import java.util.Optional;
+
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.DataResult;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import com.teammoeg.frostedheart.content.town.model.TownModelParameters;
 import com.teammoeg.frostedheart.content.town.transport.TownTransportSummary;
 import com.teammoeg.frostedheart.content.town.transport.TransportAdmissionStatus;
 import com.teammoeg.frostedheart.content.town.transport.TransportReservation;
 import com.teammoeg.frostedheart.content.town.transport.TransportReservationDecision;
 import com.teammoeg.frostedheart.content.town.transport.TransportReservationModel;
-import com.teammoeg.frostedheart.content.town.model.TownModelParameters;
-
-import java.util.Optional;
 
 /** Immutable server snapshot for one warehouse interface menu. */
 public record WarehouseInterfaceTransportView(

@@ -18,26 +18,26 @@
 
 package com.teammoeg.frostedheart.content.town.buildings.mine;
 
-import com.teammoeg.chorda.client.cui.base.UILayer;
-import com.teammoeg.chorda.client.icon.CIcons;
-import com.teammoeg.frostedheart.bootstrap.common.FHBlocks;
-import com.teammoeg.frostedheart.content.town.StandardTownBuildingScreen;
-import com.teammoeg.frostedheart.content.town.TeamTown;
-import com.teammoeg.frostedheart.content.town.building.AbstractTownBuilding;
-import com.teammoeg.frostedheart.content.town.tabs.AbstractTownTab;
-import com.teammoeg.frostedheart.content.town.tabs.TownInfoPanel;
-import com.teammoeg.frostedheart.content.town.terrainresource.TerrainResourceType;
-import net.minecraft.Util;
-import net.minecraft.network.chat.Component;
-import net.minecraft.world.item.Item;
-import net.minecraft.world.item.Items;
-import net.minecraft.world.level.ChunkPos;
-
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+
+import com.teammoeg.chorda.client.cui.base.UILayer;
+import com.teammoeg.chorda.client.icon.CIcons;
+import com.teammoeg.frostedheart.bootstrap.common.FHBlocks;
+import com.teammoeg.frostedheart.content.town.StandardTownBuildingScreen;
+import com.teammoeg.frostedheart.content.town.TeamTown;
+import com.teammoeg.frostedheart.content.town.tabs.AbstractTownTab;
+import com.teammoeg.frostedheart.content.town.tabs.TownInfoPanel;
+import com.teammoeg.frostedheart.content.town.terrainresource.TerrainResourceType;
+
+import net.minecraft.Util;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.level.ChunkPos;
 
 public class MineScreen extends StandardTownBuildingScreen<MineMenu> {
     public MineScreen(MineMenu menu) {

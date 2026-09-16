@@ -19,12 +19,13 @@
 
 package com.teammoeg.frostedheart.content.town.buildings.warehouse;
 
+import java.util.Objects;
+
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+
 import net.minecraft.util.Mth;
 import net.minecraft.world.item.ItemStack;
-
-import java.util.Objects;
 
 /**
  * A ghost-slot configuration for one warehouse interface inventory slot.

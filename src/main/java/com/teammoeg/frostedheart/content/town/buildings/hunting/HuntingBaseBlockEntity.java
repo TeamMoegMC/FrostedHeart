@@ -19,37 +19,34 @@
 
 package com.teammoeg.frostedheart.content.town.buildings.hunting;
 
+import javax.annotation.Nonnull;
+
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
 import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
 import com.teammoeg.frostedheart.content.steamenergy.HeatEndpoint;
-import com.teammoeg.frostedheart.content.town.*;
+import com.teammoeg.frostedheart.content.town.TownMathFunctions;
 import com.teammoeg.frostedheart.content.town.block.AbstractTownBuildingBlockEntity;
+import com.teammoeg.frostedheart.content.town.block.blockscanner.BlockScanner;
+import com.teammoeg.frostedheart.content.town.block.blockscanner.BlockScanner.RoomData;
 import com.teammoeg.frostedheart.content.town.building.AbstractTownBuilding;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import com.teammoeg.frostedheart.util.client.FHClientUtils;
-import com.teammoeg.frostedheart.content.town.block.blockscanner.AbstractBlockScanner;
-import com.teammoeg.frostedheart.content.town.block.blockscanner.BlockScanner;
-import com.teammoeg.frostedheart.content.town.block.blockscanner.FloorBlockScanner;
-import com.teammoeg.frostedheart.content.town.block.blockscanner.BlockScanner.RoomData;
 
 import lombok.Getter;
-import net.minecraft.tags.BlockTags;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.MenuProvider;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.core.Direction;
-import net.minecraft.core.BlockPos;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.util.LazyOptional;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-
-import javax.annotation.Nonnull;
-import java.util.*;
 
 public class HuntingBaseBlockEntity extends AbstractTownBuildingBlockEntity<HuntingBaseBuilding> implements MenuProvider {
 	final HeatEndpoint endpoint;
@@ -75,7 +72,7 @@ public class HuntingBaseBlockEntity extends AbstractTownBuildingBlockEntity<Hunt
 			building.setVolume(rd.volume);
 			building.setArea(rd.area);
 			building.setTemperature(rd.calculateTemperature(level));
-			building.setOccupiedVolume(rd.calculateOccupiedVolume());
+			building.setOccupiedVolume(rd.occupiedCells);
 			building.setTanningRackNum(rd.countInsideBlock(t->t.is(FHTags.Blocks.TANNING_RACK.get())));
 			building.setRating(computeRating(building.getVolume(), building.getArea(), building.getTemperature(), this.getTemperatureModifier()));
 			FHConfig.Server.Town.BuildingScoring scoring = FHConfig.SERVER.TOWN.BUILDING_SCORING;

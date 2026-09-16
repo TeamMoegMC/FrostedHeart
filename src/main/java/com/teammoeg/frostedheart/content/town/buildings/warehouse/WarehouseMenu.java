@@ -19,21 +19,30 @@
 
 package com.teammoeg.frostedheart.content.town.buildings.warehouse;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.function.Supplier;
+
 import com.teammoeg.chorda.menu.CBlockEntityMenu;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.bootstrap.common.FHMenuTypes;
 import com.teammoeg.frostedheart.content.town.TeamTown;
 import com.teammoeg.frostedheart.content.town.network.WarehouseUpdatePacket;
-import com.teammoeg.frostedheart.content.town.resource.action.*;
+import com.teammoeg.frostedheart.content.town.resource.action.IActionExecutorHandler;
+import com.teammoeg.frostedheart.content.town.resource.action.ResourceActionMode;
+import com.teammoeg.frostedheart.content.town.resource.action.ResourceActionType;
+import com.teammoeg.frostedheart.content.town.resource.action.TownResourceActions;
+
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
-
-import java.util.*;
-import java.util.function.Supplier;
 
 public class WarehouseMenu extends CBlockEntityMenu<WarehouseBlockEntity> {
 	private final Supplier<Map<SimpleItemKey, Long>> serverSource;

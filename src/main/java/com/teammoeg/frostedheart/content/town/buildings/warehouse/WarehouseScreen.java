@@ -20,12 +20,12 @@
 package com.teammoeg.frostedheart.content.town.buildings.warehouse;
 
 import com.teammoeg.chorda.client.RenderingHint;
-import com.teammoeg.chorda.client.cui.base.UILayer;
 import com.teammoeg.chorda.client.icon.CIcons;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.town.AbstractTownWorkerBlockScreen;
 import com.teammoeg.frostedheart.content.town.tabs.TownInformationTab;
 import com.teammoeg.frostedheart.content.town.tabs.TownResourceTab;
+
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.resources.ResourceLocation;
 

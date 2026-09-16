@@ -19,11 +19,11 @@
 
 package com.teammoeg.frostedheart.content.town.buildings.warehouse;
 
-import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.network.chat.Component;
-
 import java.util.Comparator;
 import java.util.Locale;
+
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.network.chat.Component;
 
 /**
  * 仓库 GUI 的物品排序模式（仅客户端使用）。

@@ -6,9 +6,13 @@
 
 package com.teammoeg.frostedheart.content.town.buildings.house;
 
+import java.util.List;
+import java.util.Locale;
+
 import com.teammoeg.chorda.client.RenderingHint;
 import com.teammoeg.chorda.client.cui.base.TooltipBuilder;
 import com.teammoeg.chorda.client.cui.base.UIElement;
+
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
@@ -17,9 +21,6 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
-
-import java.util.List;
-import java.util.Locale;
 
 /** Read-only item grid for the latest actual meal consumed by one house. */
 final class HouseMealElement extends UIElement {

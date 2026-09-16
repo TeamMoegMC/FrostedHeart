@@ -19,10 +19,23 @@
 
 package com.teammoeg.frostedheart.content.town.buildings.mine;
 
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
+
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
-import com.teammoeg.frostedheart.content.town.*;
-import com.teammoeg.frostedheart.content.town.block.OccupiedVolume;
+import com.teammoeg.frostedheart.content.town.ITownWithBuildings;
+import com.teammoeg.frostedheart.content.town.TeamTown;
+import com.teammoeg.frostedheart.content.town.TownMathFunctions;
+import com.teammoeg.frostedheart.content.town.block.blockscanner.RoomPathfinder.OccupiedCell;
 import com.teammoeg.frostedheart.content.town.building.AbstractTownResidentWorkBuilding;
 import com.teammoeg.frostedheart.content.town.building.ITownBuilding;
 import com.teammoeg.frostedheart.content.town.building.TownProductionReportItem;
@@ -34,15 +47,13 @@ import com.teammoeg.frostedheart.content.town.resource.action.TownResourceAction
 import com.teammoeg.frostedheart.content.town.resource.action.TownResourceActions;
 import com.teammoeg.frostedheart.content.town.terrainresource.TerrainResourceType;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
-import net.minecraft.core.UUIDUtil;
-import lombok.Getter;
 
+import lombok.Getter;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.UUIDUtil;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.ChunkPos;
-
-import java.util.*;
 
 public class MineBaseBuilding extends AbstractTownResidentWorkBuilding {
     public record MiningDailyReport(
@@ -91,7 +102,7 @@ public class MineBaseBuilding extends AbstractTownResidentWorkBuilding {
                     Codec.BOOL.optionalFieldOf("initialized", false).forGetter(o -> o.isInitialized()),
                     Codec.BOOL.optionalFieldOf("occupiedAreaOverlapped", false).forGetter(o -> o.isOccupiedAreaOverlapped()),
                     Codec.BOOL.optionalFieldOf("isStructureValid",false).forGetter(o -> o.isStructureValid()),
-                    OccupiedVolume.CODEC.optionalFieldOf("occupiedVolume",OccupiedVolume.EMPTY).forGetter(o -> o.getOccupiedVolume()),
+                    OccupiedCell.SET_CODEC.optionalFieldOf("occupiedVolume").forGetter(o -> Optional.ofNullable(o.getOccupiedVolume())),
                     Codec.list(UUIDUtil.CODEC).optionalFieldOf("residentsID",List.of()).forGetter(o -> new ArrayList<>(o.getResidentsID())),
                     Codec.INT.optionalFieldOf("area",0).forGetter(o -> o.getArea()),
                     Codec.INT.optionalFieldOf("volume",0).forGetter(o -> o.getVolume()),
@@ -139,7 +150,7 @@ public class MineBaseBuilding extends AbstractTownResidentWorkBuilding {
 	 * @param maxResidents the maximum residents
 	 */
 	public MineBaseBuilding(BlockPos pos, boolean initialized, boolean occupiedAreaOverlapped,
-                            boolean isStructureValid, OccupiedVolume occupiedVolume,
+                            boolean isStructureValid, Optional<Set<OccupiedCell>> occupiedVolume,
                             java.util.List<UUID> residentsID, int area, int volume,
                             int maxResidents, List<BlockPos> linkedMines,
                             MiningDailyReport dailyReport) {
@@ -147,7 +158,7 @@ public class MineBaseBuilding extends AbstractTownResidentWorkBuilding {
         this.setInitialized(initialized);
         this.setOccupiedAreaOverlapped(occupiedAreaOverlapped);
 		this.setIsStructureValid(isStructureValid);
-		this.setOccupiedVolume(occupiedVolume);
+		this.setOccupiedVolume(occupiedVolume.orElse(null));
 		this.residentsID = new HashSet<>(residentsID);
 		this.setArea(area);
 		this.setVolume(volume);

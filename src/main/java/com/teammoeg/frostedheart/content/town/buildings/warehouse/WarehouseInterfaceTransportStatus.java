@@ -6,10 +6,10 @@
 
 package com.teammoeg.frostedheart.content.town.buildings.warehouse;
 
+import java.util.Arrays;
+
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.DataResult;
-
-import java.util.Arrays;
 
 /** Finite server-owned transport state shown by the warehouse interface menu. */
 public enum WarehouseInterfaceTransportStatus {

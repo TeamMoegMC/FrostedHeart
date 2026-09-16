@@ -19,6 +19,11 @@
 
 package com.teammoeg.frostedheart.content.town.buildings.house;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
+import java.util.UUID;
+
 import com.teammoeg.chorda.client.RenderingHint;
 import com.teammoeg.chorda.client.cui.base.MouseButton;
 import com.teammoeg.chorda.client.cui.base.UIElement;
@@ -26,19 +31,15 @@ import com.teammoeg.frostedheart.content.town.buildings.hunting.HuntingBaseBuild
 import com.teammoeg.frostedheart.content.town.buildings.mine.MineBaseBuilding;
 import com.teammoeg.frostedheart.content.town.resident.Resident;
 import com.teammoeg.frostedheart.content.town.resident.ResidentNutritionExplanation;
-import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import com.teammoeg.frostedheart.content.town.tabs.TownTextLayout;
+import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
+
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.util.Mth;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Locale;
-import java.util.UUID;
 
 final class HouseResidentPanel extends UIElement {
     private static final int PANEL_WIDTH = 160;

@@ -6,6 +6,15 @@
 
 package com.teammoeg.frostedheart.content.town.buildings.house;
 
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
 import com.teammoeg.frostedheart.content.health.nutrition.FoodNutritionProfile;
 import com.teammoeg.frostedheart.content.health.nutrition.FoodNutritionResolver;
 import com.teammoeg.frostedheart.content.town.TeamTown;
@@ -25,19 +34,11 @@ import com.teammoeg.frostedheart.content.town.resource.action.ResourceActionType
 import com.teammoeg.frostedheart.content.town.resource.action.TownResourceActionResults;
 import com.teammoeg.frostedheart.content.town.resource.action.TownResourceActions;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
+
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.food.FoodProperties;
 import net.minecraft.world.item.ItemStack;
-
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 /** Executes centralized ration allocation followed by priority-ordered house menus. */
 public final class TownHousingMealService {

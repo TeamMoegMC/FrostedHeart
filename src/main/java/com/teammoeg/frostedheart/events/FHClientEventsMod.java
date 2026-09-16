@@ -33,6 +33,7 @@ import com.teammoeg.chorda.util.ShaderCompatHelper;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.bootstrap.client.FHKeyMappings;
 import com.teammoeg.frostedheart.bootstrap.client.FHScreens;
+import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlocks;
 import com.teammoeg.frostedheart.bootstrap.common.FHEntityTypes;
 import com.teammoeg.frostedheart.bootstrap.common.FHItems;
@@ -54,6 +55,7 @@ import com.teammoeg.frostedheart.content.climate.tooltips.PlantTempStats;
 import com.teammoeg.frostedheart.content.health.tooltip.FoodNutritionStats;
 import com.teammoeg.frostedheart.content.scenario.client.gui.layered.font.KGlyphProvider;
 import com.teammoeg.frostedheart.content.town.citizen.client.FakeCitizenRenderer;
+import com.teammoeg.frostedheart.content.town.render.SpaceOutlineRenderer;
 import com.teammoeg.frostedheart.content.town.resident.WanderingRefugeeRenderer;
 import com.teammoeg.frostedheart.content.ui.FHClickActions;
 import com.teammoeg.frostedheart.content.ui.dialogue.DialogueOverlay;
@@ -359,6 +361,14 @@ public class FHClientEventsMod {
 		FHMain.LOGGER.info("===========Dynamic Block Renderers========");
         event.registerBlockEntityRenderer(FHMultiblocks.Registration.GENERATOR_T1.masterBE().get(), T1GeneratorRenderer::new);
         event.registerBlockEntityRenderer(FHMultiblocks.Registration.GENERATOR_T2.masterBE().get(), T2GeneratorRenderer::new);
+        
+        
+        event.registerBlockEntityRenderer(FHBlockEntityTypes.HOUSE.get(), SpaceOutlineRenderer::new);
+        event.registerBlockEntityRenderer(FHBlockEntityTypes.HUNTING_BASE.get(), SpaceOutlineRenderer::new);
+        event.registerBlockEntityRenderer(FHBlockEntityTypes.TRANSPORT_STATION.get(), SpaceOutlineRenderer::new);
+        event.registerBlockEntityRenderer(FHBlockEntityTypes.MINE_BASE.get(), SpaceOutlineRenderer::new);
+        event.registerBlockEntityRenderer(FHBlockEntityTypes.MINE.get(), SpaceOutlineRenderer::new);
+        event.registerBlockEntityRenderer(FHBlockEntityTypes.WAREHOUSE.get(), SpaceOutlineRenderer::new);
 	}
 
     @SubscribeEvent

@@ -19,28 +19,24 @@
 
 package com.teammoeg.frostedheart.content.town.buildings.mine;
 
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.content.town.TownMathFunctions;
 import com.teammoeg.frostedheart.content.town.block.AbstractTownBuildingBlockEntity;
-import com.teammoeg.frostedheart.content.town.block.blockscanner.AbstractBlockScanner;
 import com.teammoeg.frostedheart.content.town.block.blockscanner.BlockScanner;
-import com.teammoeg.frostedheart.content.town.block.blockscanner.FloorBlockScanner;
 import com.teammoeg.frostedheart.content.town.block.blockscanner.BlockScanner.RoomData;
 import com.teammoeg.frostedheart.content.town.building.AbstractTownBuilding;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
-import net.minecraft.tags.BlockTags;
-import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.core.Direction;
+
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.MenuProvider;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-
-import java.util.Objects;
+import net.minecraft.world.level.block.state.BlockState;
 
 public class MineBaseBlockEntity extends AbstractTownBuildingBlockEntity<MineBaseBuilding> implements MenuProvider {
 
@@ -56,7 +52,7 @@ public class MineBaseBlockEntity extends AbstractTownBuildingBlockEntity<MineBas
             building.setVolume(rd.volume);
             //this.rack = scanner.getRack();
             //this.chest = scanner.getChest();
-            building.setOccupiedVolume(rd.calculateOccupiedVolume());
+            building.setOccupiedVolume(rd.occupiedCells);
             FHConfig.Server.Town.BuildingScoring scoring = FHConfig.SERVER.TOWN.BUILDING_SCORING;
             double effectiveFloorBlocks = TownMathFunctions.calculateSpaceRating(
             	rd.volume,
