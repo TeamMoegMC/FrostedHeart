@@ -23,7 +23,7 @@ import com.teammoeg.chorda.client.cui.base.UIElement;
 import com.teammoeg.chorda.client.cui.base.UILayer;
 import com.teammoeg.chorda.client.cui.theme.Coloring;
 import com.teammoeg.chorda.client.cui.theme.UIColors;
-import com.teammoeg.chorda.math.Colors;
+
 import lombok.Getter;
 import net.minecraft.network.chat.Style;
 
@@ -84,9 +84,12 @@ public abstract class Line<T extends Line<T>> extends UILayer {
         setWidth(parent.getWidth());
     }
 
-    @Override
-    public void alignWidgets() {}
+	@Override
+	public void addUIElements() {
+	}
 
-    @Override
-    public void addUIElements() {}
+	@Override
+	public void alignWidgets() {
+	}
+
 }

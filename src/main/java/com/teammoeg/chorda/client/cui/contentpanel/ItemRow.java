@@ -19,6 +19,10 @@
 
 package com.teammoeg.chorda.client.cui.contentpanel;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+
 import com.teammoeg.chorda.client.RenderingHint;
 import com.teammoeg.chorda.client.cui.base.UIElement;
 import com.teammoeg.chorda.client.cui.theme.Coloring;
@@ -29,10 +33,6 @@ import lombok.Setter;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
-
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
 
 /**
  * 物品行，用于在内容面板中以网格布局展示一组物品。

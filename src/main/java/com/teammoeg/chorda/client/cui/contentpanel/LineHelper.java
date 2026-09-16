@@ -19,14 +19,15 @@
 
 package com.teammoeg.chorda.client.cui.contentpanel;
 
+import java.util.Collection;
+import java.util.List;
+
 import com.teammoeg.chorda.client.cui.base.UIElement;
 import com.teammoeg.chorda.client.cui.theme.Coloring;
+
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
-
-import java.util.Collection;
-import java.util.List;
 
 /**
  * 内容行工厂辅助类，提供创建各类内容行（文本、图片、物品、空白、分割线）的静态方法。

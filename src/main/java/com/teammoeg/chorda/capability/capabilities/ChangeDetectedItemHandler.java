@@ -185,6 +185,7 @@ public class ChangeDetectedItemHandler implements IItemHandler,IItemHandlerModif
 	 * {@inheritDoc}
 	 * @throws UnsupportedOperationException 如果被包装的处理器未实现INBTSerializable / if the wrapped handler does not implement INBTSerializable
 	 */
+	@SuppressWarnings("unchecked")
 	@Override
 	public void deserializeNBT(CompoundTag nbt) {
 		if(handler instanceof INBTSerializable im) {

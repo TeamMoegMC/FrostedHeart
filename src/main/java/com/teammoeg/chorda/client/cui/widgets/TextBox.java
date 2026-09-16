@@ -19,6 +19,8 @@
 
 package com.teammoeg.chorda.client.cui.widgets;
 
+import org.lwjgl.glfw.GLFW;
+
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.teammoeg.chorda.client.CInputHelper;
 import com.teammoeg.chorda.client.CInputHelper.Cursor;
@@ -43,7 +45,6 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
-import org.lwjgl.glfw.GLFW;
 
 /**
  * 文本输入框控件。支持文本输入、编辑、选择、复制粘贴、撤销等完整文本编辑功能。

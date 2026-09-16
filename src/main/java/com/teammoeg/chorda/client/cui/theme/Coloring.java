@@ -5,7 +5,6 @@ import com.teammoeg.chorda.client.cui.base.UIElement;
 import com.teammoeg.chorda.math.Colors;
 
 import net.minecraft.util.FastColor;
-import net.minecraft.util.FastColor.ARGB32;
 
 @FunctionalInterface
 public interface Coloring {

@@ -39,7 +39,10 @@ public class StringLineSource extends StreamLineSource {
 		super(name);
 		this.code = code;
 	}
-
+	public StringLineSource(String code) {
+		super("<anonymous>");
+		this.code = code;
+	}
 	/**
 	 * {@inheritDoc}
 	 * 从源代码字符串中读取下一个字符码点。到达字符串末尾时返回-1。

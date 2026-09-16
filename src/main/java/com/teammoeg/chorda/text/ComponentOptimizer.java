@@ -38,10 +38,20 @@ import net.minecraft.network.chat.Style;
  */
 public class ComponentOptimizer implements ContentConsumer<Unit>,StyledContentConsumer<Unit>{
 	StringBuilder sb=new StringBuilder();
-	Style sty=Style.EMPTY;
+	Style sty;
 	List<Component> calculated=new ArrayList<>();
 	public ComponentOptimizer() {
-		
+		this(Style.EMPTY);
+	}
+	public ComponentOptimizer(Component o) {
+		this(o, Style.EMPTY);
+	}
+	public ComponentOptimizer(Component o, Style style) {
+		this(style);
+		o.visit(this, sty);
+	}
+	public ComponentOptimizer(Style style) {
+		sty=style;
 	}
 	/**
 	 * 优化给定组件，合并具有相同样式的相邻文本部分。
@@ -52,8 +62,7 @@ public class ComponentOptimizer implements ContentConsumer<Unit>,StyledContentCo
 	 * @return 优化后的可变组件 / The optimized mutable component
 	 */
 	public static MutableComponent optimize(Component o) {
-		ComponentOptimizer com=new ComponentOptimizer();
-		o.visit(com, Style.EMPTY);
+		ComponentOptimizer com=new ComponentOptimizer(o);
 		return com.build();
 	}
 	/**
@@ -99,6 +108,9 @@ public class ComponentOptimizer implements ContentConsumer<Unit>,StyledContentCo
 		}
 		return mstr;
 	}
+	public List<Component> components(){
+		return List.copyOf(calculated);
+	}
 	/**
 	 * 追加一个字符，当样式改变时创建新组件。
 	 * <p>
@@ -115,15 +127,23 @@ public class ComponentOptimizer implements ContentConsumer<Unit>,StyledContentCo
 		sb.append(ch);
 	}
 	/**
-	 * 追加一个原始组件，不进行合并优化。
+	 * 追加一个组件，不进行合并优化。
 	 * <p>
-	 * Appends a raw component without merge optimization.
+	 * Appends a component without merge optimization.
 	 *
-	 * @param c 要追加的原始组件 / The raw component to append
+	 * @param c 要追加的组件 / The component to append
 	 */
 	public void appendRawComponent(Component c) {
 		createComponent();
 		calculated.add(c);
+	}
+	/**
+	 * 追加一个组件并合并优化。
+	 *
+	 * @param c 要追加的原始组件
+	 */
+	public void appendComponent(Component c) {
+		c.visit(this);
 	}
 	@Override
 	public Optional<Unit> accept(Style pStyle, String pContent) {

@@ -23,10 +23,9 @@ import com.teammoeg.chorda.client.CInputHelper.Cursor;
 import com.teammoeg.chorda.client.MouseHelper;
 import com.teammoeg.chorda.client.RenderingHint;
 import com.teammoeg.chorda.client.cui.screenadapter.CUIScreen;
-import com.teammoeg.chorda.client.cui.theme.Theme;
-import com.teammoeg.chorda.client.cui.theme.VanillaTheme;
 import com.teammoeg.chorda.math.Rect;
 import com.teammoeg.chorda.text.Components;
+
 import lombok.Getter;
 import lombok.Setter;
 import net.minecraft.client.gui.Font;

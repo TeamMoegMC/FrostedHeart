@@ -1,6 +1,7 @@
 package com.teammoeg.chorda.client.cui.contentpanel;
 
 import com.teammoeg.chorda.client.cui.base.UIElement;
+
 import lombok.Getter;
 
 public class UIEleWrapperLine extends Line<UIEleWrapperLine> {

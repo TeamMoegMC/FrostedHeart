@@ -23,9 +23,9 @@ import com.teammoeg.chorda.client.RenderingHint;
 import com.teammoeg.chorda.client.TesselateHelper;
 import com.teammoeg.chorda.client.cui.base.UIElement;
 import com.teammoeg.chorda.client.cui.theme.UIColors;
-import com.teammoeg.chorda.client.ui.CGuiHelper;
 import com.teammoeg.chorda.math.Colors;
 import com.teammoeg.frostedresearch.gui.LineIcon;
+
 import lombok.Getter;
 import net.minecraft.client.gui.GuiGraphics;
 

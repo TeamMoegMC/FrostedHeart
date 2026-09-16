@@ -90,7 +90,8 @@ public abstract class CGuiBlock<T extends BlockEntity> extends CBlock implements
      * @param hit 方块命中结果 / the block hit result
      * @return 交互结果 / the interaction result
      */
-    @Override
+    @SuppressWarnings("deprecation")
+	@Override
     public InteractionResult use(BlockState state, Level world, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hit) {
         InteractionResult superResult = super.use(state, world, pos, player, hand, hit);
         if (superResult.consumesAction())

@@ -19,6 +19,9 @@
 
 package com.teammoeg.chorda.client.cui.widgets;
 
+import java.util.List;
+import java.util.function.Consumer;
+
 import com.teammoeg.chorda.client.RenderingHint;
 import com.teammoeg.chorda.client.cui.base.MouseButton;
 import com.teammoeg.chorda.client.cui.base.TooltipBuilder;
@@ -35,9 +38,6 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.FormattedText;
 import net.minecraft.util.FormattedCharSequence;
-
-import java.util.List;
-import java.util.function.Consumer;
 
 /**
  * 文本按钮控件。显示文本标题的按钮，支持图标和文本组合显示。

@@ -169,17 +169,6 @@ public class SelectDialog<T> extends EditDialog {
 
 		}
 
-		private int getTextureY() {
-			int i = 1;
-			if (val == this.obj) {
-				i = 0;
-			} else if (this.isMouseOver()) {
-				i = 2;
-			}
-
-			return 46 + i * 20;
-		}
-
 		@Override
 		public void onClicked(MouseButton mouseButton) {
 			cb.accept(obj);

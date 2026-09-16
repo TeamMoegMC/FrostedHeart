@@ -19,6 +19,15 @@
 
 package com.teammoeg.chorda.client.cui.base;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.annotation.Nullable;
+
+import org.joml.Matrix4f;
+import org.joml.Vector2f;
+import org.joml.Vector3d;
+
 import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import com.teammoeg.chorda.Chorda;
@@ -29,18 +38,12 @@ import com.teammoeg.chorda.client.StencilHelper;
 import com.teammoeg.chorda.client.StencilHelper.StencilStackElement;
 import com.teammoeg.chorda.client.cui.CUIDebugHelper;
 import com.teammoeg.chorda.client.cui.theme.Theme;
+
 import lombok.Getter;
 import lombok.Setter;
 import net.minecraft.Util;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.util.Mth;
-import org.joml.Matrix4f;
-import org.joml.Vector2f;
-import org.joml.Vector3d;
-
-import javax.annotation.Nullable;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * UI层，包含并管理一组子UI元素。

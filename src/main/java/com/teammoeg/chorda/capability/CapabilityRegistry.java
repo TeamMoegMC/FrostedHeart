@@ -50,6 +50,7 @@ import net.minecraftforge.fml.common.Mod;
 @Mod.EventBusSubscriber(modid = Chorda.MODID, bus = Mod.EventBusSubscriber.Bus.MOD)
 public class CapabilityRegistry {
 	/** 所有已注册的能力类型列表 / List of all registered capability types */
+	@SuppressWarnings("rawtypes")
 	private static List<CapabilityType> capabilities=new ArrayList<>();
 	/** 无参构造器工厂，用于通过反射创建能力实例 / No-arg constructor factory for creating capability instances via reflection */
 	private static final NoArgConstructorFactory capTypeFactory=new NoArgConstructorFactory();
@@ -169,6 +170,7 @@ public class CapabilityRegistry {
 	 *
 	 * @param ev Forge能力注册事件 / The Forge capability registration event
 	 */
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@SubscribeEvent
 	public static void onRegister(RegisterCapabilitiesEvent ev) {
 		

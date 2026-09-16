@@ -19,6 +19,8 @@
 
 package com.teammoeg.chorda.client.cui.widgets;
 
+import org.lwjgl.glfw.GLFW;
+
 import com.teammoeg.chorda.client.ClientUtils;
 import com.teammoeg.chorda.client.RenderingHint;
 import com.teammoeg.chorda.client.cui.base.MouseButton;
@@ -27,17 +29,13 @@ import com.teammoeg.chorda.client.cui.base.UIElement;
 import com.teammoeg.chorda.client.ui.CGuiHelper;
 import com.teammoeg.chorda.compat.jei.JEICompat;
 import com.teammoeg.chorda.math.Colors;
+
 import lombok.Getter;
 import lombok.Setter;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.crafting.Ingredient;
-
-import org.lwjgl.glfw.GLFW;
-
-import java.util.function.Consumer;
 
 /**
  * 物品槽控件。用于显示物品堆的UI元素，支持缩放、悬停高亮和JEI集成。

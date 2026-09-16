@@ -1,5 +1,7 @@
 package com.teammoeg.chorda.client.cui.contentpanel;
 
+import java.util.function.Consumer;
+
 import com.teammoeg.chorda.client.RenderingHint;
 import com.teammoeg.chorda.client.cui.base.MouseButton;
 import com.teammoeg.chorda.client.cui.base.UIElement;
@@ -7,12 +9,11 @@ import com.teammoeg.chorda.client.cui.theme.Coloring;
 import com.teammoeg.chorda.client.cui.theme.UIColors;
 import com.teammoeg.chorda.client.cui.widgets.Button;
 import com.teammoeg.chorda.client.icon.FlatIcon;
+
 import lombok.Getter;
 import lombok.Setter;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
-
-import java.util.function.Consumer;
 
 /**
  * 扁平图标按钮，使用FlatIcon矢量图标作为显示内容的紧凑按钮。

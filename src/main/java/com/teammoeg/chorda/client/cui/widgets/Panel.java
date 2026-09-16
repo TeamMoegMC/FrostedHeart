@@ -19,6 +19,8 @@
 
 package com.teammoeg.chorda.client.cui.widgets;
 
+import java.util.function.Consumer;
+
 import com.teammoeg.chorda.client.RenderingHint;
 import com.teammoeg.chorda.client.cui.base.UIElement;
 import com.teammoeg.chorda.client.cui.base.UILayer;
@@ -29,8 +31,6 @@ import lombok.Getter;
 import lombok.Setter;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
-
-import java.util.function.Consumer;
 
 /**
  * 面板控件。带标题的UI图层容器，使用主题绘制面板边框，子元素自动偏移以留出标题和边距空间。

@@ -1,6 +1,7 @@
 package com.teammoeg.chorda.client.cui.base;
 
 import com.teammoeg.chorda.client.RenderingHint;
+
 import lombok.Getter;
 import lombok.Setter;
 import net.minecraft.Util;

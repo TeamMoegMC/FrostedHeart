@@ -19,12 +19,13 @@
 
 package com.teammoeg.chorda.client.cui.widgets;
 
+import java.util.function.Supplier;
+
 import com.teammoeg.chorda.client.RenderingHint;
 import com.teammoeg.chorda.client.cui.base.UIElement;
 import com.teammoeg.chorda.client.icon.CIcons;
-import net.minecraft.client.gui.GuiGraphics;
 
-import java.util.function.Supplier;
+import net.minecraft.client.gui.GuiGraphics;
 
 /**
  * 标签页图像按钮控件。用于标签页切换的按钮，根据当前激活的标签页显示不同图标。

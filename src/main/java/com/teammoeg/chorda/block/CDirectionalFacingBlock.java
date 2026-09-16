@@ -96,7 +96,8 @@ public class CDirectionalFacingBlock extends DirectionalBlock {
      * @param pMirror 镜像变换 / the mirror to apply
      * @return 镜像后的方块状态 / the mirrored block state
      */
-    public BlockState mirror(BlockState pState, Mirror pMirror) {
+    @SuppressWarnings("deprecation")
+	public BlockState mirror(BlockState pState, Mirror pMirror) {
         return pState.rotate(pMirror.getRotation(pState.getValue(FACING)));
     }
 }

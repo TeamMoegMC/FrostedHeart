@@ -19,6 +19,10 @@
 
 package com.teammoeg.chorda.client.cui.contentpanel;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Consumer;
+
 import com.teammoeg.chorda.client.ClickActions;
 import com.teammoeg.chorda.client.RenderingHint;
 import com.teammoeg.chorda.client.StringTextComponentParser;
@@ -28,14 +32,11 @@ import com.teammoeg.chorda.client.cui.theme.Coloring;
 import com.teammoeg.chorda.client.cui.widgets.Button;
 import com.teammoeg.chorda.client.icon.FlatIcon;
 import com.teammoeg.chorda.client.ui.CGuiHelper;
+
 import lombok.Getter;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.FormattedCharSequence;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.function.Consumer;
 
 /**
  * 文本行，用于在内容面板中显示富文本内容。
@@ -189,7 +190,7 @@ public class TextLine extends Line<TextLine> {
         var pre = text.getString().split("\\n");
         splitText.clear();
         for (String s : pre) {
-            splitText.addAll(getFont().split(StringTextComponentParser.parse(s), width));
+            splitText.addAll(getFont().split(StringTextComponentParser.parse(s,text.getStyle()), width));
         }
         setHeight(splitText.size() * (DEF_LINE_HEIGHT + (isQuote ? 2 : 0)) * scale);
     }

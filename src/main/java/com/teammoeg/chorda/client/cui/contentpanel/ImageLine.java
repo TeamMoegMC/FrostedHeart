@@ -29,6 +29,7 @@ import com.teammoeg.chorda.client.icon.FlatIcon;
 import com.teammoeg.chorda.client.ui.CGuiHelper;
 import com.teammoeg.chorda.client.ui.UV;
 import com.teammoeg.chorda.math.Colors;
+
 import lombok.Getter;
 import lombok.Setter;
 import net.minecraft.client.gui.GuiGraphics;
@@ -70,6 +71,9 @@ public class ImageLine extends Line<ImageLine> {
 
     @Override
     public void render(GuiGraphics graphics, int x, int y, int w, int h, RenderingHint hint) {
+    	if (imgSize.width < getWidth()/3) {
+            graphics.fill(x, y, x+w, y+h, borderColor.getColorARGB(this, x, y, hint));
+        }
         super.render(graphics, x, y, w, h, hint);
         // 图片无效时显示错误图标
         if (!isImgValid()) {
@@ -92,13 +96,6 @@ public class ImageLine extends Line<ImageLine> {
         super.renderDebug(graphics, x, y, w, h, hint, depth);
         graphics.drawString(getFont(), imgUV.toString(), imgX, imgY-8, -1);
         CGuiHelper.drawBox(graphics, imgX, imgY, imgUV.getW(), imgUV.getH(), CUIDebugHelper.getDepthColor(depth), true);
-    }
-
-    @Override
-    public void drawBackground(GuiGraphics graphics, int x, int y, int w, int h, RenderingHint hint) {
-        if (imgSize.width < getWidth()/3) {
-            graphics.fill(x, y, x+w, y+h, borderColor.getColorARGB(this, x, y, hint));
-        }
     }
 
     public boolean isImgValid() {

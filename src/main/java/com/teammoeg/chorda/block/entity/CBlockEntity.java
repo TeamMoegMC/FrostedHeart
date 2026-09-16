@@ -268,6 +268,7 @@ public abstract class CBlockEntity extends BlockEntity implements SyncableBlockE
 	 * Marks the chunk containing this block entity as unsaved, ensuring data
 	 * will be written to disk on the next save.
 	 */
+	@SuppressWarnings("deprecation")
 	protected void setChunkUnsaved()
 	{
 		if(this.level.hasChunkAt(this.worldPosition))
@@ -309,6 +310,7 @@ public abstract class CBlockEntity extends BlockEntity implements SyncableBlockE
 	 *
 	 * @param state 新的方块状态 / the new block state
 	 */
+	@SuppressWarnings("deprecation")
 	@Override
 	public void setBlock(BlockState state) {
 		this.level.setBlock(this.worldPosition, state, 6);

@@ -19,6 +19,8 @@
 
 package com.teammoeg.chorda.client.cui.base;
 
+import org.lwjgl.glfw.GLFW;
+
 import com.teammoeg.chorda.client.CInputHelper.Cursor;
 import com.teammoeg.chorda.client.ClientUtils;
 import com.teammoeg.chorda.client.MouseHelper;
@@ -37,7 +39,6 @@ import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.ChatScreen;
 import net.minecraft.client.gui.screens.Screen;
-import org.lwjgl.glfw.GLFW;
 
 /**
  * 主层，作为Minecraft Screen与CUI层级基础设施之间的桥梁。

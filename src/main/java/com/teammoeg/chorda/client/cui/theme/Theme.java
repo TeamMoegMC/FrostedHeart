@@ -1,11 +1,12 @@
 package com.teammoeg.chorda.client.cui.theme;
 
-import com.teammoeg.chorda.client.ClientUtils;
-import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.network.chat.Component;
-
 import java.util.List;
 import java.util.Optional;
+
+import com.teammoeg.chorda.client.ClientUtils;
+
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.network.chat.Component;
 
 /**
  * UI主题接口。定义CUI系统中所有UI组件的绘制方法和颜色配置。

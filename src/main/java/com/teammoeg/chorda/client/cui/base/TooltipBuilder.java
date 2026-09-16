@@ -19,14 +19,15 @@
 
 package com.teammoeg.chorda.client.cui.base;
 
-import com.teammoeg.chorda.client.cui.theme.Theme;
-import com.teammoeg.chorda.text.Components;
-import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.network.chat.Component;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
+
+import com.teammoeg.chorda.client.cui.theme.Theme;
+import com.teammoeg.chorda.text.Components;
+
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.network.chat.Component;
 
 /**
  * 工具提示构建器，用于收集和渲染CUI元素的工具提示文本。
