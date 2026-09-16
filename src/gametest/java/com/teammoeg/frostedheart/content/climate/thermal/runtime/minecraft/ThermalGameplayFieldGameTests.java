@@ -243,7 +243,7 @@ public final class ThermalGameplayFieldGameTests {
             ThermalFieldKey key = new ThermalFieldKey(TEST_PROVIDER, 0, ice.asLong(), 0);
             Runnable cleanup = () -> {
                 command(level, "remove", ice, "");
-                MinecraftThermalInput.removeGameplayAnalyticField(level, key);
+                MinecraftGameplayFields.remove(level, key);
                 level.setBlockAndUpdate(fire, Blocks.AIR.defaultBlockState());
                 level.setBlockAndUpdate(ice, Blocks.AIR.defaultBlockState());
                 level.getGameRules().getRule(GameRules.RULE_RANDOMTICKING).set(randomTickSpeed, level.getServer());
@@ -255,18 +255,18 @@ public final class ThermalGameplayFieldGameTests {
                         level, level.getChunkAt(ice), ice, level.getBlockState(ice))
                         == com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.input.MinecraftPhaseController.PhaseAttempt.DEFERRED,
                         "real ice must be owned by the physical phase path");
-                MinecraftThermalInput.upsertGameplayAnalyticField(level,
+                MinecraftGameplayFields.upsert(level,
                         new ThermalAnalyticField(key, 0, CombineMode.ADD_DELTA,
                                 ice.getX() + 0.5, ice.getY() + 0.5, ice.getZ() + 0.5, 3, 50));
                 attemptTransition(level, ice, 100);
                 helper.assertTrue(level.getBlockState(ice).is(Blocks.ICE), "delta-only field must not bypass latent heat");
                 command(level, "set", ice, " 3 50 sphere");
-                MinecraftThermalInput.upsertGameplayAnalyticField(level,
+                MinecraftGameplayFields.upsert(level,
                         new ThermalAnalyticField(key, 0, CombineMode.ADD_DELTA,
                                 ice.getX() + 0.5, ice.getY() + 0.5, ice.getZ() + 0.5, 3, -100));
                 attemptTransition(level, ice, 100);
                 helper.assertTrue(level.getBlockState(ice).is(Blocks.ICE), "cold control must lower the analytic bound");
-                MinecraftThermalInput.removeGameplayAnalyticField(level, key);
+                MinecraftGameplayFields.remove(level, key);
                 attemptTransition(level, ice, 100);
                 BlockState expected = data.heating().target();
                 helper.assertTrue(level.getBlockState(ice).is(Blocks.ICE),

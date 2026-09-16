@@ -1,338 +1,360 @@
-# 温度架构检查与可读性、可维护性重构计划
+# 温度代码可读性与可维护性重构实施计划
 
 - Time: `2026-09-16 00:15:34 +08:00`
-- Updated: `2026-09-16 00:52:38 +08:00`
+- Updated: `2026-09-16 16:00:58 +08:00`
 - Authors: `Codex; OpenAI GPT-6; primary engineering agent`
-- Status: `ready`
-- Scope: `当前温度系统的职责、依赖、状态所有权、测试及成本约束；本次只调查和规划，未实施生产代码重构`
-- Related: [当前架构](../docs/climate/thermal-runtime-architecture-and-optimization.md)、[温度语义](../docs/climate/world-climate-and-temperature.md)、[数据生命周期](../docs/climate/data-lifecycle-and-integration.md)、[最近时间步修复](../diary/2026-09-16_00-00-26_thermal-elapsed-time-fix.md)
+- Status: `completed; 八批整理及验证已完成，保留材料导热修复基线`
+- Scope: `温度代码命名、表达、必要的职责整理；保持热行为与主要性能成本`
+- Related: [当前架构](../docs/climate/thermal-runtime-architecture-and-optimization.md)、[温度语义](../docs/climate/world-climate-and-temperature.md)、[导热修复基线](../diary/2026-09-16_01-03-57_material-conductance-defaults.md)、[调查记录](../diary/2026-09-16_13-29-11_thermal-refactor-plan-review.md)
 
-## Goal
+## 1. 目标与范围
 
-目标是让修改一条热行为有明确落点，让维护者能沿入口找到状态、算法、世界提交与显示，而不必理解整个系统才能改局部代码。保持现有游戏规则和实际 CPU/内存成本；以减少修改波及范围、重复规则和隐式时序为验收标准，不以文件数或总行数最少为标准。
+让维护者从名称和主流程理解数据来源、处理顺序与修改位置。优先可读性和可维护性，允许必要的方法提取、内部类型改名和职责归位；JIT 内联等细微影响尽量控制，不追求字节或测量结果绝对相同。
 
-2026-09-16 00:38 用户进一步限定：本计划只做可读性、可维护性与命名整理。算法、计算顺序、数据布局、分配次数、缓存策略、线程/锁、更新频率、网络格式和渲染流程保持。下文发现的问题是调查记录，不代表全部都要借这次重构改掉；行为问题只记录，另行决定。
+本轮覆盖整条温度链路：数据编译、捕获和调度、源账本、节点与连接、求解、查询、休眠保存、辐射/解析场、红外与外部消费者。整理名称、复杂表达、职责和维护入口；已经清楚的实现保留并说明，无须机械修改所有文件。确定的类型归位仍只有材料样本与红外采集，不把全面覆盖等同于大量拆类。行为缺陷、平衡调整、渲染技术替换不在本轮范围。
 
-### 当前实施边界：可读性和可维护性优先
+不增加每节点/每查询对象、额外全量扫描、重复大数组、通用 Context、服务定位器或无实际需要的接口层。不恢复已删除的 JUnit。源码和现有数据为准，调查历史不再重复写入实施要求。
 
-以用户最新决定为准：允许必要的结构整理，JIT 内联、方法调用和类元数据等细微影响尽量控制，不要求字节或实测耗时绝对相同。不能为了推测中的微小内联收益保留难读代码。
+## 2. 当前基线与必须保留的行为
 
-| 可以实施 | 必须保持 |
+审核基线为 `7e242c2ff` 的源码；当前未提交的计划与 diary 是本次准备工作。实施前确认是否有新的代码改动，保留他人和前序任务的修改，不另建源码副本或计算路径敏感哈希。
+
+最新验证是材料导热修复后的 **102/102 GameTest**，不是本计划实施后的验收结果。
+
+| 范围 | 保留内容 |
 |---|---|
-| 局部、字段、内部方法和类型的准确命名 | 外部 API 行为、网络/存档/配置键和资源标识 |
-| 方法提取、方法排列、必要的类型归位 | 热算法、数值计算顺序、更新频率及线程同步语义 |
-| 减少转发和完全等价的重复计算 | 状态唯一归属、相变 ACK、源积分和保存/恢复规则 |
-| 少量有明确责任的具体类，清楚的注释与维护文档 | 节点规模、大数组布局、缓存复用、网络载荷和渲染工作量 |
+| 材料参数 | 分类默认导热：泥土 1.0、石头 1.4 W/K；配方显式值优先；有无相变不再覆盖导热；不恢复旧配置 |
+| 能量 | Air 和材料继续存 H；材料 law 共享 C/O/相变边；显热 H=O+C*T；暴露面影响连接，不改变整块热容 |
+| 空间 | Page=16³、Brick=4³；普通 Brick 最多 64 节点；楼梯没有单独气隙温度 |
+| 传播 | 材料从受热表面最多进入两层；水平面不施加浮力；近源四格直接 Air 面 4×G，重叠取并集 |
+| 驻留 | 相对自然基线 1°C 扩张、0.5°C 保留/释放；原采集和路由预算、Page 退出规则不变 |
+| 时间 | 20 tick 普通 cut；延迟 cut 用实际 dt，一次遍历；源先结算后迁移，正反扫次序不变 |
+| 相变 | 潜热完成等待世界 ACK；活动、休眠、无记录环境转换各自入口保持；水仍按原地表列采样 |
+| 查询/存档 | 查询不额外加载区块；休眠惰性冷却；缺少材料状态仍表示不可用，不替换成空气温度 |
+| 玩法 | 解析场仍具有独立世界生命周期；静态火/岩浆辐射保持；玩家体温与热网单位不混用 |
+| 红外 | 原顶点归属、深度快照、差量同步、实体环境近似、冷蓝缺失值、−20～20°C 色带和 0.43 混合不变 |
 
-优先移动已有对象和状态；若一个仅随维度初始化的具体对象能实质减少职责混杂，可以采用并说明成本。禁止每节点/每方块包装、逐次查询新建结果对象、额外全量遍历、重复大缓冲及只为“解耦”建立的接口层。改名涉及反射、record component 或注入字符串时，核对实际入口，不作盲目文本替换。
+## 3. 确定的命名与职责
 
-性能验证集中于确实受影响的频繁调用和批处理路径。细微 JIT 差异不是拒绝合理重构的默认理由；可重复的明显 CPU/分配退化需要处理。不把“尽量保持性能”扩大成更换热模型或另做一轮性能架构设计。
+### 名称
 
-### 人能直接读懂的代码标准
+| 当前名称/表达 | 最终决定 |
+|---|---|
+| Page | 文档首次出现写“ThermalPage：对应一个 Section 的热模拟容器”；代码保留已有 `ThermalPageHandle/PagePublication/WorkerPageStore`，不额外创建 ThermalPage 包装类 |
+| Brick、Topology | 保留；分别说明为“4³ 方块组”和“节点及可换热连接”；不将热 Page 机械改成 Minecraft Section |
+| `TopologyPlan` | 改为 `TopologyUpdatePlanner`，同目录移动文件、构造器和直接引用同步改名；仍负责准备，不负责安装 |
+| `PreparedTopologyChange/TopologyCommitter` | 保留，分别是已准备变更和提交器 |
+| `removedReservoirs/addedReservoirs` 及对应 slot 字段 | 按各字段实际含义改为 `removedPhaseSlots/addedPhaseSlots` |
+| `QueryPublication.MutableMaterialSample` | 移至 `thermal.mesh.MaterialSample`，保留“调用者复用的可变读取结果”语义 |
+| `QueryPublication.InfraredReadCursor/beginInfraredRead` | 改为嵌套 `ReadCursor/beginRead`，不搬出发布器 |
+| 迁移中的 `old/next/n/first/os/ns/pb` | `oldBrick/newBrick/nodeCount/firstSlot/oldSlot/newSlot/pageBlockIndex` |
+| 迁移中的 `previous/initial` | 已按覆盖方块数分摊，使用 `previousEnergyPerBlockJ/initialEnergyPerBlockJ` |
+| scratch `enthalpy/temperatures` | `nodeEnthalpiesJ/blockTemperaturesC`，区分索引与数值单位 |
+| `WorldTemperature.block/air` | 保留外部 API，修正注释：玩法环境温度，不是材料本体；本体使用 `material` |
+| 实际 Air 布局的 `transportNodeCount/transportSlot/setTransportCapacity` | 改为 `airNodeCount/airSlotAt/setAirCapacity`；仅对确认代表真实 Air 状态的符号替换，不改空气路径的独立概念 |
+| `addMaterialPole/writeMaterialPole` | 改为 `addMaterialCell/writeMaterialCell`；本体是一份材料 H，不是另一种表面储能模型 |
+| `ThermalCellArena.isSurfaceCell`、布局 `surfaceNodeMask` | 当前实际判断/标记所有材料节点，改为 `isMaterialCell/materialNodeMask`；真正的几何暴露/接触仍由原接触判断表示，不能按名字新增过滤 |
+| `MaterialThermalLaw.Transition.temperatureC` | 改为 `transitionTemperatureC`，更新 Java 调用；实际节点 `temperatureC(H, branch)` 保留，数据键 `temperature_c` 不改 |
+| AirRouteCompiler.Component 的 `distance/labels/stage` | `pathResistance/airRegionIds/stage`；四个命名 int 常量表示发现位置、初始化端口、传播阻力、生成连接，保留原阶段顺序 |
 
-- 先整理现有方法的名称、排版和局部变量，再考虑提取方法，最后才考虑移动类。禁止把拆类数量当作成果。
-- 名称说明实际动作和对象：例如迁移循环里的 `n/first/os/ns/pb` 改为 `nodeCount/firstSlot/oldSlot/newSlot/pageBlockIndex`；材料迁移中 `previous/initial` 已除以节点覆盖方块数，应写为 `previousEnergyPerBlockJ/initialEnergyPerBlockJ`。极小循环的 `i` 和坐标 `x/y/z` 无需机械加长。
-- 修正已经不符合模型的名字：`removedReservoirSlots` 实际是移除的可相变材料 slot，可改为 `removedPhaseSlots`；检查点也使用的 `InfraredReadCursor` 应表达发布快照读取。先确认调用语义，再整组改名；不为了“专业感”造新术语。
-- Page、Brick、slot、enthalpy 是已有明确含义的术语，保留并在入口解释一次；避免同一概念混用 body/pole/reservoir 等名称，也避免给每个变量叠加 physical/material/thermal/runtime 前缀。
-- 一行一个主要操作；复杂分支展开，不把声明、赋值、循环推进、条件返回挤成一行。使用正常 import，避免方法体里反复写全限定类名。
-- 注释解释必要的原因和先后关系，例如“先结算旧连接上的供能，再迁移节点”；删除重述代码、空泛描述架构或已经过时的注释。公式说明单位，位打包说明字段和位宽。
-- 主流程能自上而下阅读；提取的方法对应完整动作，不能为缩短行数制造大量单行转发。参数直接表达需要的数据，不用万能 Context 隐藏依赖。
-- 同一规则共享实现时必须保留原分支顺序、算术表达式和结果写入时机；不能趁机重写公式或修复边界行为。无法明确证明等价的整理暂缓。
-- 新名称不意味着新数据结构。已有嵌套对象可直接移到独立文件，保留原实例和数组；不默认增加协作者对象、结果对象、包装层或 getter 集合。
+小循环的 i、坐标 x/y/z 保留。revision 表示几何变更版本，generation 表示身份代次，sequence 表示批次/请求序号，不全部改叫 version。pageSlot 与 arena 的 nodeSlot 分开命名。
 
-本计划包含命名、表达与下文六批必要的结构整理。用户已明确不恢复失效 JUnit。`ready` 表示实施边界和验收条件明确，生产重构尚未开始。
+### 文件与责任边界
 
-### 命名落点
+| 文件/类型 | 实施后的责任 |
+|---|---|
+| `MinecraftThermalInput` | 维度启动/关闭/重启、输入提交、完成回执、世界事件入口；保留环境/材料查询和检查点交接，按职责分组，不再包含红外采集算法 |
+| 新文件 `runtime/minecraft/InfraredCapture.java` | 搬移现有嵌套采集器及采集专用常量/helpers，package-private final；不新建每玩家或每维度实例 |
+| 新文件 `mesh/MaterialSample.java` | 搬移现有样本字段和操作；无世界访问、无发布缓冲、无自主缓存 |
+| `QueryPublication` | 双缓冲发布与一致读取；ReadCursor 继续嵌套；不改变发布和版本读取顺序 |
+| `MinecraftPageManager/SectionOwner` | 驻留、采集、变更记录和检查点协调；SectionOwner 本轮保留嵌套，方法和记录格式写清楚 |
+| `MinecraftPhaseController` | 请求校验、世界转换及 ACK；tick 直接接收当前 QueryPublication，不缓存发布器，不经 PageManager 回调 Input |
+| `TopologyUpdatePlanner/TopologyCommitter/Engine` | 准备、安装、驱动，边界不变；按真实顺序排列主流程 |
+| `MaterialThermalLaw` 与两个变更入口 | 已有共同公式继续共享；活动迁移与休眠编辑的生命周期操作分别保留 |
 
-以下名称随直接调用者一并整理，不保留旧名称转发。类型提取仍需满足下文的维护收益条件，已有清晰名称不动。
+请求校验转发已删除：Input 调用 `phase.tick(queryPublication)`，控制器直接校验已有 Page 与材料样本。删除 PageManager 的纯转发和 Input 的公共校验入口；没有新增接口、持久依赖字段、对象或重启通知。此前“删除转发需要新增依赖替换机制”的理由不成立。
 
-| 位置 | 当前名称/表达 | 整理方向 |
+检查点仍跨 Input（等待 worker/读取发布/写 Chunk）、PageManager（枚举与退出）和 SectionOwner（变更记录投影），这是**已知职责重叠**。本轮没有消除该重叠；“紧密关联”仅说明拆分需要核对交接顺序，不能证明现有分工合理。后续如处理，应先明确唯一的保存协调入口、删除重复编排，再决定归属，而非自动再加一个协调器。本次补充不宣称已解决存档职责。
+
+SectionOwner 保留为 static 嵌套类有实际归属依据：仅由 PageManager 创建/挂接/失效；通过管理器的私有 dirtyOwners 排队，takeDirty 与管理器 scratch 交换数组，Page 引用也由管理器发布。当前没有独立生命周期或其他所有者，移出只会扩大内部 API，不能删除状态或依赖。它承担的检查点投影部分仍属于上述职责重叠，嵌套位置合理不代表其所有方法职责都已合理。
+
+### 删除优先的审查方法
+
+每个拟提取的类/接口/转发先检查：删除后哪项独立责任会丢失；调用处能否直接提供当前值；是否只是替另一层透传参数。优先删除无效入口、重复编排与不必要的依赖，再考虑移动或提取。真实的同步、状态与能量校验不因“删抽象”被取消。
+
+| 对象 | 结论 | 证据或剩余问题 |
 |---|---|---|
-| `BrickMigrationKernel.migrate` | `old/next` | `oldBrick/newBrick`，与旧/新 slot 明确对应 |
-| 同上 | `b/pb` | `blockIndex/pageBlockIndex`，区分 Brick 内 0～63 与 Page 内 0～4095 |
-| 同上 | `enthalpy/temperatures` scratch | `nodeEnthalpiesJ/blockTemperaturesC`，把索引单位和数值单位写出来 |
-| `TopologyPlan` 与提交载荷 | `removedReservoirs/addedReservoirs` | `removedPhaseSlots/addedPhaseSlots`；只指可相变材料，不泛指所有节点 |
-| `QueryPublication` | `InfraredReadCursor` | `ReadCursor`；方法同步改为 `beginRead`，保留与该发布器相关的内部访问 |
-| 共享材料样本 | `QueryPublication.MutableMaterialSample` | 如提取则为 `mesh.MaterialSample`；Javadoc 写明调用者复用的可变结果，不增加同名包装 |
-| `SectionOwner` 材料记录 | 三元组/四元组的 `index * 3/4` | 各自在拥有记录的类声明 stride 和字段偏移，注释记录格式和清除时机 |
-| `MinecraftThermalInput` | 环境/材料/红外变量中泛称 `temperature` | 在可能混淆的边界分别使用 `naturalTemperatureC/materialTemperatureC/displayTemperatureC`，小函数内不重复长前缀 |
-| `WorldTemperature.block/air` | capability/provider 旧注释 | 写明玩法环境合成和自然基线；本轮保留这两个外部 API 名称及行为 |
+| Phase → PageManager → Input 校验转发 | 已删除 | 调用时传入 publication 即可；复用原样本，无替换机制 |
+| Input/管理器/SectionOwner 的检查点分工 | 已知职责重叠，未处理 | 等待、枚举、采样、投影、落盘跨三处，不能以关联紧密当作合理性证明 |
+| SectionOwner 的嵌套位置 | 有依据保留 | 管理器唯一拥有生命周期、队列、句柄和数组交换；检查点投影债务另记 |
+| 已移除旧名称、无效初温参数/常量 | 保持删除 | 无调用或无运行作用；不补旧别名/兼容包装 |
+| WorkerPageStore.resolveAirFaceSlot | 已删除 | 无调用者；唯一实际入口 resolveAirFaceTarget 同时提供 slot/generation，取消仅供该包装使用的 null 输出模式 |
+| MaterialBoundaryRegistry.Profile.body | 已删除 | 仅包装公开构造器；调用方直接 new Profile，构造校验保持 |
+| Input 的解析场 upsert/remove 转发 | 已删除 | 命令、Curiosity 和测试直接调用已有 MinecraftGameplayFields；没有新增统一入口类 |
+| 每 Engine 的 TopologyCommitter 实例 | 已删除 | 无实例状态；原提交/恢复/释放方法改 static，删除 Engine 字段，顺序和校验保持 |
 
-范围标记约定：`pageSlot` 是 worker 目录索引，`firstSlot/nodeSlot` 是 arena 索引，`blockIndex` 必须由方法上下文确定 Brick 或 Page，跨两种范围时加 `page` 前缀。`revision` 表示几何变更版本、`generation` 表示身份代次、`sequence` 表示批次/请求序号；不要全部改叫 version。
+以上是本轮确定边界。除重命名文件外，只计划上述两个类型归位，不以文件行数或“零依赖环”为目标。其他固定生命周期协作者只有遇到明确维护障碍才考虑，并说明成本；不自动追加类清单。
 
-位打包保留原布局：Page 方块索引为 `x | z << 4 | y << 8`，Brick 方块索引为 `x | z << 2 | y << 4`，局部坐标范围分别为 0～15 和 0～3。优先调用已存在且含义相同的 `BlockBrickLayout.pageBlock`；不要额外创建坐标对象。位掩码不能改成逐位布尔数组。
+## 4. 代码应该整理成什么样
 
-## Verified Current State
+下面是当前源码的局部示例；实施时保持表达式和调用次序。
 
-### 检查范围和证据
+### 示例一：迁移索引
 
-本次追踪了自然温度、玩家与被动查询、热源事件、主线程捕获、worker cut、拓扑准备/提交、Air/材料交换、相变 ACK、休眠恢复与存档、配方编译入口、红外同步/后处理、测温与植物提示调用链。数值内核和高耦合类读取实现；周边体温、热网、内容生成读取入口和现有文档，不宣称逐行证明所有内容或客户端效果。
-
-检查时 `content/climate/thermal` 有 85 个 Java 文件、23,633 行（含注释/空行）。重点文件：
-
-| 文件 | 行数 | 实际承担的职责 |
-|---|---:|---|
-| `runtime/minecraft/MinecraftThermalInput.java` | 1904 | 维度运行时、事件入口、各类查询、红外采集、检查点与休眠交接 |
-| `runtime/minecraft/input/MinecraftPageManager.java` | 1627 | Page 驻留、采集预算、Section 变更追踪、halo、存档投影 |
-| `radiation/minecraft/BlockRadiationIndex.java` | 1041 | 静态辐射几何索引与增量维护 |
-| `radiation/RadiationService.java` | 1010 | 受体查询、候选选择、遮挡及复用缓存 |
-| `topology/TopologyPlan.java` | 947 | 拓扑准备、依赖收集、预算、迁移与构建提交载荷 |
-| `mesh/ThermalCellArena.java` | 938 | 原始数组、slot 分配、能量及材料状态操作 |
-| `topology/WorkerPageStore.java` | 910 | worker Page 状态、驻留请求、查询几何与目标解析 |
-| `query/QueryPublication.java` | 827 | 查询双缓冲、材料检查点字段、红外变化标记及 hot mask 写入 |
-| `solver/ThermalSolver.java` | 817 | 编译连接安装、引用维护、顺序换热与休眠残差 |
-| `source/ThermalSourceLedger.java` | 804 | 源事件时间积分、绑定和能量账本 |
-
-行数仅用于定位。辐射索引与求解器有实际紧密共享的数组和遍历状态，不能仅因文件长就强制拆分。
-
-### 当前架构与单位
-
-```text
-WorldClimate + dimension/biome/altitude
-                  │
-                  └─ WorldTemperature.naturalAir / naturalBlock
-                                      │ 自然边界
-机器正常 tick / 篝火发现                ▼
-        └─ PhysicalSourceSpatialIndex → DimensionInputAccumulator
-方块变更 / Page 采集 / phase ACK ───────┘
-                                      │ ThermalInputBatch
-                                      ▼
-                               单维度 mailbox
-                                      ▼
-ThermalDimensionEngine:
-  ACK/意图/风 → 源按时间结算 → 失效标记 → 拓扑准备/提交
-  → 源重绑 → 释放旧 slot → 实际 dt 换热 → phase 请求 → 查询发布/驻留
-                                      │
-              ┌───────────────────────┴────────────────────┐
-              ▼                                            ▼
-     主线程应用方块转换并 ACK                    查询 / 检查点 / 红外同步
-
-独立玩法通道：解析场合成；静态辐射受体查询；热网库存；玩家五部位体温
+当前：
+```java
+int n=next.span.count(), first=next.span.firstSlot();
+for(int i=0;i<n;i++) enthalpy[i]=arena.enthalpyJ(first+i);
 ```
 
-| 模型 | 状态和单位 | 维护时不能混淆的边界 |
+目标：
+```java
+int nodeCount = newBrick.span.count();
+int firstSlot = newBrick.span.firstSlot();
+
+for (int nodeIndex = 0; nodeIndex < nodeCount; nodeIndex++) {
+    nodeEnthalpiesJ[nodeIndex] = arena.enthalpyJ(firstSlot + nodeIndex);
+}
+```
+
+不增加临时集合或每节点对象。Page 方块索引为 x | z << 4 | y << 8，Brick 方块索引为 x | z << 2 | y << 4；只在转换位置说明范围，不逐行复述位运算。
+
+### 示例二：复杂条件
+
+当前：
+```java
+if (node < 0 || !queryPublication.tryReadMaterial(brick.firstSlot() + node, brick.arenaGeneration(),
+        publication.topologyGeneration(), sample) || sample.requestSequence() != request.requestSequence()
+        || sample.branch() != request.materialBranch()) return false;
+```
+
+目标：
+```java
+if (nodeIndex < 0) {
+    return false;
+}
+if (!queryPublication.tryReadMaterial(
+        brick.firstSlot() + nodeIndex,
+        brick.arenaGeneration(),
+        publication.topologyGeneration(),
+        sample)) {
+    return false;
+}
+if (sample.requestSequence() != request.requestSequence()
+        || sample.branch() != request.materialBranch()) {
+    return false;
+}
+```
+
+样本获取仍留在原位置，不提前求值原短路分支。这里不需要再提取三层谓词方法。
+
+### 示例三：主流程与必要注释
+
+```java
+// 先向旧连接结算截至本次更新时间的供能，避免迁移覆盖刚输入的能量。
+sources.acceptAndAdvance(
+        batch.sourceEvents(), batch.targetTick(), sourceBindings);
+pages.awaitChangedMaterials(batch, arena);
+```
+
+保留后续准备、提交等完整动作，注释解释为何必须这样排序。不要改写成一串含义模糊的 processStage1/processStage2，也不为每行增加“执行某某”的注释。
+
+## 5. 全链路覆盖与八批实施顺序
+
+每组检查参数单位、字段含义、缺失值、修改落点与回调顺序。最终逐组标明“已整理”或“原实现清楚，保留的理由”，不能只改大文件前几十行就宣称完成。
+
+| 覆盖组 | 主要文件 | 必须交付的整理 |
 |---|---|---|
-| 自然温度 | °C；世界、群系、高度和气候函数 | 是边界条件，不是已加热材料的 H |
-| 活动 Air | `ThermalCellArena` 中 H，J；C，J/K；T=参考温度+H/C | 合并真正的 Air 区域，非每个空格必有独立节点 |
-| 活动材料 | 每个建模材料方块一个 H；`MaterialThermalLaw` 的 C/O/相变边共享 | 显热 H=O+C*T；平台根据 branch 读温度；暴露面影响 G，不改变整块 C |
-| 部分方块通风 | `AirRouteCompiler` 的几何路径/阻力/有效性 | 没有楼梯气隙热容或第二个温度；其材料 H 仍独立 |
-| 休眠 | Chunk 上稀疏 Air 检查点和 `MaterialSectionState` | 非另一套持续 tick 模拟；查询/恢复时惰性自然换热，不加载区块 |
-| 解析场 | `MinecraftGameplayFields` 世界生命周期索引；温度合成 | 不进源能量账本；明确温度下限仍可按玩法触发相变 |
-| 静态辐射 | 配置的发射功率/辐射温度，受体得到 W/m² | 火/岩浆静态辐射是游戏平衡，不改成材料动态辐射 |
-| 玩家体温 | 五部位能量；整人体热容 245,000 J/K | 消费环境与辐射；不是热网 heat unit，也不是一个世界材料节点 |
-| 热网 | 机器 heat/tempLevel 等玩法库存 | 仅在机器明确出口处转成物理 source，不能按名称当成 J/W |
-| 红外 | 活动/休眠材料温度与解析场的显示数据 | 非地形遮挡物使用既有显示体积纹理近似融入环境，不是同步实体体温或真实 Air 场 |
+| 材料与数据编译 | MaterialThermalLaw、MaterialBoundaryRegistry、MinecraftMaterialLawCompiler、MinecraftThermalProfiles、StateStaticThermalResolver | G/C/O/T 与相变阈值分清；默认/配方覆盖及签名分类的修改位置明确 |
+| 捕获与主线程 | MinecraftThermalInput、MinecraftPageManager、MinecraftEnvironmentCapture、DimensionInputAccumulator、消息类 | 采集、封批、排队、ACK、保存分清；集合能否再写、何时清空明确 |
+| 异步调度 | ThermalDimensionMailbox、ThermalWorkerPool、ThermalDimensionEngine | 状态转换与线程归属就地说明；队列、等待和关闭行为不变 |
+| 源与账本 | PhysicalSourceSpatialIndex、WorkerPhysicalSourceBindings、ThermalSourceLedger、NodePowerAccumulatorArena、源消息/绑定 | sourceId/sourceSlot/nodeSlot/portOffset 和 tick/W/J 分清；供能、重绑、损失及未接收能量各自可追踪 |
+| 几何与连接 | BrickTopologyCompiler、TopologyView、AirRouteCompiler、MaterialEdgeCompiler、TopologyUpdatePlanner、TopologyCommitter | 连通编译、路径阻力、接触资格、边归属、迁移/提交阶段可读 |
+| 节点与分配 | ThermalCellArena、ThermalBrickCellLayout、BlockBrickLayout、PageSignatures、ThermalFreeSpanIndex、ThermalPhaseRequestStore | 数组索引、slot 代次、FREE/RESERVED/LIVE、phase 状态和释放条件明确；现有分配算法保留 |
+| 换热与相变 | ThermalSolver、ThermalFragment、ThermalMaterialExecution、ThermalExchangeKernel、MaterialEnthalpyExchange、PhaseTransitionRuntime | 每类边的温度来源、G/C/系数单位、快慢路径及潜热停止边界明确 |
+| 查询与驻留 | QueryPublication、PagePublication、ThermalPageHandle、WorkerPageStore | 几何与数值发布、hot/desired/resident/sourceSeed 位图、缺失/过期/有效状态分清 |
+| 休眠与存档 | DormantChunkThermalState、MaterialSectionState、DormantThermalCooling、Chunk attachment | 空气残差与材料 H、索引/编码、时刻/冷却/部分覆盖交接分别清楚 |
+| 辐射与解析场 | RadiationService、BlockRadiationIndex、MinecraftRadiationOcclusion、ThermalAnalyticFieldIndex、MinecraftGameplayFields | 发射、候选、遮挡缓存、温度合成各自单位和失效规则明确 |
+| 红外两端 | InfraredCapture、InfraredBrickCodec、请求/响应 packet、InfraredViewRenderer、surface target/后端桥 | 采集、分包、接收、镜像上传、渲染五段入口可追踪；原资源和绘制路径保持 |
+| 消费者边界 | WorldTemperature、PlayerThermalEnvironment、热物品查询、TownThermalProjection、测温/植物提示、机器源出口 | 自然/环境/材料温度及辐射通量分清；玩家、城镇及热网内部算法不扩展重构 |
 
-### 当前必须保留的工程与玩法约束
+每批完成相关检查再继续，不为每个名字重启完整测试服务器。
 
-- 2026-09-16 用户另行授权导热规则修正：`MinecraftThermalProfiles` 不再按相变能力覆盖 G。默认采用材料分类（泥土 1.0 W/K、石头 1.4 W/K），显式配方 `conductance_w_per_k` 优先；旧 `phaseFaceConductanceWPerK` 配置删除。这是重构前已实施的行为修正，之后整理代码须保留该新基线。
-- Page 为 16³，Brick 为 4³；每 Brick 普通布局最多 64 个节点。一个建模材料方块一个状态，不新增楼梯双节点或统一细网格。
-- 从受热表面最多进入两层连续材料；`TopologyView.materialContactAllowed/ownsInnerLayer` 的表面与内层归属限制保持。表面之间、单个内层归属及第三层截止的行为都要测试，不能只把变量名改成 depth 后重写规则。
-- 真正水平接触不施加浮力；近正功率 AIR_FACE 出口四格范围内直接 Air 接触 4×G，重叠取并集。保持现有间接通风规则。
-- 新活动/扩张 1°C、保留/释放 0.5°C 是相对自然基线的滞回，不是把远处温度钳制到某个值。
-- 普通 cut 20 tick；延迟 cut 按 `elapsedTicks/20.0` 换热，一次遍历。源先结算再迁移，保持求解顺序和正反扫次序。大步近似不改成历史子步重放。
-- `WORK_LIMITED` 保留待办；几何已失效的空气通路不继续换热；仅系数变化的待办与几何失效不是同一件事。
-- 活动材料潜热完成后等待世界 ACK；没有记录的环境平衡转换、休眠相变端点、活动 worker 请求是三种状态入口，不是应删除的兼容模式。
-- 水继续使用原 Chunk 地表列采样，不给整个海洋新增随机 tick 资格；自然岩浆初始材料温度不在结构重构中重平衡。
-- 红外地形使用真实顶点归属，保留现有 SOLID/CUTOUT 捕获、地形深度快照和最终混合。实体环境近似、缺失值冷蓝底色、−20～20°C 色带和 0.43 混合保持；不增加 Mixin 或重绘地形。
-
-## Findings
-
-本节记录调查发现及整理方向，按下方六批步骤实施；行为问题 B1 继续排除在本次重构之外。
-
-### R1：总入口承担了五种独立变化原因（优先）
-
-证据：[MinecraftThermalInput](../src/main/java/com/teammoeg/frostedheart/content/climate/thermal/runtime/minecraft/MinecraftThermalInput.java) 的 `tick/drainCompletion`、`gameplay*Environment`、内嵌 `InfraredCapture`、`captureDormantPage/onMaterialBlockChanged`。修改显示编码需要进入运行时生命周期类，材料存档也引用该入口的查询游标。
-
-处理：先把现有方法按生命周期、环境读取、材料读取、存档、红外分组，并将高耦合点命名清楚。`InfraredCapture` 是已有独立对象，作为文件提取候选；材料读取/检查点先整理现有方法，不预设新协作者。只有直接搬移实现和原状态、无新增对象且减少阅读跳转时才提取。入口保留真正需要的公开 API，不增加一层转发后仍把计算留在原类。
-
-### R2：主线程依赖成环（优先）
-
-证据：`MinecraftPhaseController.apply → MinecraftPageManager.matchesMaterialRequest → MinecraftThermalInput.matchesMaterialRequest`；`MinecraftPageManager` 多处经 `input` 获取休眠 admission、捕获检查点、查询材料发布 revision，`SectionOwner.pruneMaterialCheckpoint` 又回调入口。
-
-处理：先明确每个回调的职责和真实依赖；能通过已有对象直接调用且不改变状态归属时，删除中间转发。不能为了画出单向依赖图引入协作者实例、捕获 lambda 或公开内部容器。源发现队列的归属和排队/清空时机本轮保持。暂时保留的必要回调在方法旁说明原因，不把“零依赖环”设为强制完成指标。
-
-### R3：同一材料变更规则有两份实现（优先）
-
-证据：[BrickMigrationKernel.applyMaterialChanges](../src/main/java/com/teammoeg/frostedheart/content/climate/thermal/topology/BrickMigrationKernel.java) 和 [MaterialSectionState.Editor.applyChange](../src/main/java/com/teammoeg/frostedheart/content/climate/thermal/persistence/minecraft/MaterialSectionState.java) 分别判断 `REPLACE/MASS_CHANGE/GAMEPLAY_TRANSITION/THERMAL_TRANSITION`。`afterMassChange` 公式已共享，但原因分派、branch 重置规则还没有统一。
-
-处理：先按变更原因逐项对照两份实现。只提取输入语义、分支与运算完全相同的能量转换片段，优先在已有 `MaterialThermalLaw` 放置返回 primitive 的方法；不创建新的变更结果对象或策略类。活动入口保留外部能量计账，休眠入口保留先按时间投影，branch 和删除记录的操作保留原时机。若共享整份分派需要包装参数、增加判断或改变特殊分支，则只共享共同公式并清楚命名两入口，不以消除所有重复为目标。
-
-### R4：存档和热学工具依赖查询发布内部类型（优先）
-
-证据：`DormantThermalCooling`、`MaterialSectionState`、`BrickMigrationKernel` 使用 `QueryPublication.MutableMaterialSample`。保存材料状态却必须引用发布器内嵌类型；`InfraredReadCursor` 同时被材料检查点使用，名字掩盖了真实职责。
-
-处理：将已有可变材料样本移动到材料/mesh 层，保持原字段与调用者复用方式；直接替换引用并移除原嵌套类型，不保留别名包装。游标改名表达一致发布读取，仍复用现有对象和版本验证。H/law/branch 是共享材料语义，sampleTick/requestSequence 是样本元数据，不能误复制成第二份活动权威状态。
-
-### R5：准备阶段并非完全无副作用，顺序契约藏在调用之间（优先）
-
-证据：`ThermalDimensionEngine.process` 先 `sources.acceptAndAdvance`，再 `TopologyPlan.prepare`；后者调用 `airRoutes.invalidate`，且会持有跨 cut 待办和 staging。随后 commit、源重绑、旧 span 释放、query 发布分别完成。`restorePagePublications` 只恢复 Page 发布引用，不是完整回滚求解器。Engine 类头注释未明确最重要的源结算顺序。
-
-处理：保持一个编排方法按实际阶段从上到下展示；在 `prepare/commit/release/restore` 方法旁写清可变状态、失败后谁保留待办、哪些引用已经可见。类内方法提取优先，不为每个阶段新增对象。禁止把“prepare”误当纯函数而提前重试/并行化，也禁止把发布回退扩成第二套事务框架。
-
-### R6：SectionOwner 隐含了两种不同变更记录（次优先）
-
-证据：`MinecraftPageManager.SectionOwner` 有 `pendingMaterialChanges` 四元组和 `checkpointMaterialChanges` 三元组，后者另配 revision/tick；前者用于 worker 几何迁移，后者把已发布检查点投影到最新世界。还有 dirty 位图、待主线程失效标志以及 Page 身份。
-
-处理：先整理 SectionOwner 的方法分组和命名；只有移动后确实更便于维护才移为独立类型，保持每 Section 一个原对象。为两种记录分别命名 stride/字段偏移和消费时机，不额外创建每 Section 记录组件。两份记录的消费者和清理时机不同，不能仅因字段相似删除其中一份。
-
-### R7：温度 API 名称掩盖不同语义（次优先）
-
-证据：`WorldTemperature.block` 调用 `gameplayPassiveEnvironment`；`material` 才读取本体。`SoilThermometer.reportMaterialTemperature` 读材料，`SoilThermometerRequestPacket` 读环境且最终进入 `TemperatureGoogleRenderer → PlantTempStats` 的生存/生长判断。这不是一条可以盲目统一成材料读数的旧兼容路径。
-
-处理：明确“自然空气/自然方块背景、玩法环境、材料本体、辐射通量、显示温度”六种契约。本轮整理内部名称和 `block/air` 的过时注释，保留外部 API、packet 类和注册名、编码顺序、配方/NBT/config 键及资源路径。植物判断与材料读取不得相互替换。涉及脚本公开名称或反射入口的改名，先核对引用；无法确定只是内部符号的名称保留。
-
-### R8：失效 JUnit 清理，不作为重构前置
-
-检查时 `ThermalTestFixtures` 仍 import 并构造已删除的 `ConservativeAirGeometry`，编译也确认旧几何测试及依赖夹具无法使用；旧红外协议测试和状态解析测试还引用已移除的方法。最近 102/102 GameTest 成功不等于普通 JUnit 全通过。
-
-用户决定：不迁移或恢复这些 JUnit，不补生产兼容类型，直接删除无法使用的测试与专用辅助代码。编译检查只用于确认清理边界和剩余引用，不作为要求用户恢复 JUnit 的理由。重构以现有可用 GameTest、真实客户端和必要的直接验证为依据。
-
-本轮结果：已删除 20 份温度/红外失配测试及夹具，以及编译揭示的 11 份城镇旧构造器测试。`compileTestJava` 和 `compileGameTestJava` 通过；未恢复或新增 JUnit，未运行剩余 JUnit。
-
-### R9：存在可以直接清理的误导性残留（低风险）
-
-证据：`MinecraftThermalInput` 构造函数的 `initialTemperatureC` 已不参与初始化，只由 `start` 继续传入；节点初温来自 Page 环境。`WorldTemperature.ABSOLUTE_ZERO/OVERWORLD_BASELINE` 标注 legacy compatibility，当前仓库 Java 调用搜索仅见声明，实际行为读配置。`ThermalCellArena` 注释仍称 material poles，TopologyPlan 的 reservoir 命名实际对应可相变材料 slot。
-
-处理：删除无效参数及内部传递；核对仓库内实际调用后删除不用的常量；修正材料、phase slot 和 mixed layout 术语。`player/unused/TemperatureThreadingPool` 及历史模拟器不在活动调度链，现有文档记载曾被明确要求保留；本次重构不将它们接回，也不把它们算作正在运行的兼容层。清理历史文件需先核对该保留约束的后续决定。
-
-### R10：量化和预算口径容易被错误维护（次优先）
-
-证据：`QueryPublication.quantizedInfrared`、`InfraredBrickCodec.quantize` 及 GLSL 解码共同约定四分之一度和 short 范围；CPU 比较与发送分别实现量化。`QueryPublication.projectedPayloadBytes` 按 74 B/slot 预留双缓冲数值及引用载荷；引用实际大小与 VM 有关。`MinecraftThermalInput.MEMORY` 的 128 MiB 只给显式 reservation 记账的发布和辐射存储，不是整个温度系统 retained heap 上限。
-
-处理：写明量化单位、无效值、截断区间和预算覆盖范围。保留当前量化代码与各自非有限数处理；不为两处短公式增加工具类，也不恢复已经删除的 codec JUnit。若以后改编码，才在现有 GameTest 验证相应边界。本轮不扫描对象图或给所有容器追加计账，不删除发布双缓冲、slot 身份和 hot mask 双缓冲。
-
-### R11：内容定义还承担 Minecraft 生命周期动作（次优先）
-
-证据：`StateTransitionData.updateCache` 同时处理配方优先级与差异，并扫描已加载 Section 执行 `recalcBlockCounts`。`MinecraftMaterialLawCompiler` 已采用两遍数据编译，无需按材料建立策略子类。
-
-处理：在现有 `updateCache` 内区分定义整理、差异计算、已加载 Section 刷新三个动作，必要时提取同类私有方法；保留现有回调注册、Runnable 创建与调度时机，不移动到新 reload 入口。保留两遍编译及水排除规则。人工输入是 `src/datagen/resources/data/frostedheart/data/state_transition.xlsx`，通过 `FHRecipeProvider.materialTransitions` 生成 JSON，源表不在本次改动范围。
-
-### B1：植物提示缓存生命周期有实际缺口（单独行为修复）
-
-证据：`TemperatureGoogleRenderer.renderOverlay` 只在 `lastHovered` 改变时发请求；持续盯住同一植物时不会更新温度。响应只携带一个 float，并写入全局 `cachedTemperature`，没有目标身份，切换目标到新响应到达前也会复用旧值。
-
-影响：本体/环境 API 重命名后这个问题仍存在，不能靠重构自然消失。
-
-这属于行为问题，已移出本次实施范围。本次保持请求频率、缓存和 packet 格式，只在此记录发现；需要用户另行决定修复。本次只确认源码路径，未启动客户端复现。
-
-## Target Boundaries
-
-本节说明结构整理的责任边界，不要求为每一项新建类。
-
-下列是职责说明，不是必须创建的新类清单。优先在已有类里整理；仅对职责完整、能够直接搬移原实现和状态的部分提取文件。不会为了实现表格而增加运行时对象。
-
-| 职责 | 目标拥有者 | 核心约束 |
+| 批次 | 工作 | 完成条件 |
 |---|---|---|
-| 维度生命周期、batch/completion 编排 | `MinecraftThermalInput` | 按实际顺序排列主流程和相关方法，保持启动/关闭/重启顺序 |
-| 玩法环境与材料读取 | 总入口中明确分组的读取方法 | 空气 fallback 和材料 unavailable 分开；减少无必要的中间转发 |
-| 活动↔休眠交接、检查点 | 原检查点方法与 scratch | 交接时机就地说明；保留发布读取及 Section 变更记录，不增加第二份实时 H |
-| 红外服务端采集 | 现有 `InfraredCapture`，有条件移动文件 | 仍是全服务端主线程复用的一份 scratch，不改为每玩家/维度各一套 |
-| Page 驻留和捕获调度 | `MinecraftPageManager` | 方法按驻留、采集、变更、检查点分组；保留必要回调及原状态归属 |
-| Section 捕获与材料变更记录 | 原 Section owner，必要时移动文件 | 保持惰性数组、锁和清理语义，不增加实例或变成方块对象目录 |
-| 材料法则与修改规则 | `MaterialThermalLaw` 与原两个变更入口 | 只共享完全等价的共同计算；各入口生命周期操作保留 |
-| worker 拓扑与求解 | 现有 compiler/plan/committer/arena/solver | 拓扑仍唯一提交，保留热循环连续数组与编译系数 |
-| 静态辐射 | 现有 index/service/occlusion | 先清楚命名和方法排列，不强制拆成每步一个类 |
-| 红外客户端 | 现有 renderer/surface target/Embeddium 桥 | 网络接收/镜像上传和 GL 状态职责可独立整理；不改捕获技术路线 |
-| 玩家与热网 | 原各自模型 | 接口标单位，结构重构不合并能量账本或改变平衡 |
+| 1 | 材料迁移、law、DormantChunkThermalState 与 MaterialSectionState 的命名、存储布局、编码和状态处理整理 | H 与空气残差分清；单位、索引、哨兵、位布局可直接读懂；编码结果与计算时机不变 |
+| 2 | Brick 编译、空气路由、材料边、节点分配整理；TopologyUpdatePlanner 改名；Engine/提交器交接表落实 | 连通/阻力/接触/分配分清；旧类型引用清完；交接顺序清楚，预算及算法保持 |
+| 3 | MaterialSample 归位、ReadCursor 改名 | 所有调用同批更新；样本来源/请求序号、一致读取及原实例数量保持 |
+| 4 | InfraredCapture 整体移出 | 原静态实例复用、重试和 finally 保持；Input 无采集算法，packet 和 Snapshot 不迁移 |
+| 5 | 源发现/绑定/账本与 accumulator/mailbox 交接整理 | 能从机器报告追到节点供能与能量去向；批次数据不被提前重用 |
+| 6 | Input、PageManager、PhaseController、solver/query 发布与驻留整理；共同计算审查 | 重启/保存/潜热/驻留边界清楚；无新增协议、重复扫描或空壳转发 |
+| 7 | 辐射、解析场、红外客户端、profile 编译和消费者边界整理 | 缓存失效、温度单位与数据流清楚；玩法、GPU 资源及更新频率保持 |
+| 8 | 各组旧注释/无效参数清理；按覆盖表复核；更新文档 | 每项删除有引用依据；未改组说明理由；完成最终验证 |
 
-不新建万能 `ThermalContext`、插件式材料处理器、通用事件总线、DI 框架或跨线程调用代理。若移出类后需要大量总入口 getter 才能工作，保留原位置并改进类内组织，不为完成拆分类目而实施。
+`StateTransitionData.updateCache` 只在原方法/类内整理定义覆盖、差异计算和 Section 刷新，保留原 Runnable 与调度。无效参数删除前检查实参是否有副作用；不顺手改变世界查询。
 
-## State And Lifecycle Contract
+## 6. 容易误改的位置
 
-| 数据 | 谁写 | 谁读/何时交接 | 重构禁止的变化 |
+### 四个重点问题的具体完成标准
+
+以下四项均属于本轮正式实施范围，当前只是补齐计划，生产代码尚未修改。
+
+**A. BrickTopologyCompiler 的紧凑代码。** `compileCells` 按当前算法展示六个连续阶段：读取 64 个签名并检查可用性；全 Air 快速路径或真实 Air 连通分组；追加独立 Air 节点；追加材料并统计可相变节点；生成布局并分配 staged slot；安装材料 law、收集 phaseSlots、返回结果。这里收集相变 slot，不是把多个材料本体合并为一个相变储能器。
+
+- `ids/mapping/masks/mergeable/nodes/transport/bodyPhaseCount` 分别表达为签名表、方块到节点映射、节点覆盖位图、可合并 Air 位图、节点数、Air 节点数、可相变材料数。邻接位图构造和洪泛循环展开排版，说明 x/z/y 位顺序。
+- 分组循环与材料安装可以提取完整动作的私有方法，但不得为传回几个计数新建结果 record、数组或 Context；不增加扫描次数。计数相互依赖的短阶段留在主方法，比藏进编译器可变字段更清楚。
+- 原全 Air 单节点、无布局快速路径，未解析签名返回 EMPTY，材料顺序、scratch 复用、原 layout clone、stage 失败和异常释放均保持。完成后不应再出现一行多个循环操作，或必须同时推算三种索引才能理解的变量。
+
+**B. 状态名称与温度接口。** 统一的是含义与接口表达，不改变底层热状态：Air cell、material cell、phase request、几何暴露分别表示不同事物。
+
+- 当前 `isSurfaceCell` 只检查 MATERIAL_CELL，`surfaceNodeMask` 在编译时给全部材料节点置位，并非几何表面可见性；按命名表修正，不能借改名改变哪些节点发布或显示。
+- 实际材料温度仍由 H/law/branch 求得，潜热平台时等于转换温度是正确的材料状态，并非“返回了假的温度”。Transition 的固定阈值使用独立名称，不能把它接到实际温度读取位置。
+- `phaseReservoir` 本次生产源码搜索未发现仍在运行的同名入口；不按历史名重建类型。逐个检查现存 pole/reservoir/surface/transport 用法，仅修改确实误导的名称。验收检查调用者拿到的是实际温度、转换阈值还是环境温度，不能只补一句注释。
+
+**C. 跨类执行顺序。** 在 Engine 主流程及相关方法边界落实下表，帮助维护者追踪读写，而非新增阶段对象：
+
+| 步骤 | 主要读取 | 主要修改 | 完成后可依赖的状态 |
 |---|---|---|---|
-| BlockState/Chunk | Minecraft 世界线程和原世界回调 | 捕获阶段转 primitive signatures | worker 读取可变世界对象 |
-| mutable accumulator / pendingSubmission / inFlight | 主线程 | seal 后转 worker，completion 后 ACK | 把三个不同阶段合成一个布尔或随意清空 sealed 输入 |
-| arena H/branch/request | 单维度 worker | 双缓冲发布，主线程只读 | 暴露数组供主线程直接写或复制为第二个活动模型 |
-| PagePublication / QueryPublication | worker 安装/发布 | 几何 revision、slot generation、topology generation 共同匹配 | 仅检查一个版本，或将退让读当材料已删除 |
-| Section checkpoint mutation log | 主线程记录并剪裁 | 把旧检查点投影到当前世界 | 因 worker 未 ACK 就清掉记录，或重复扣除材料能量 |
-| dormant material snapshot | Chunk 拥有；Editor 写时复制 | 保存、查询、重新 admission | 在已交给 worker 的快照上就地修改 |
-| AirRouteValidity / pending routes | worker 路由编译器 | 查询/执行检查有效性；提交后生效 | 假设布局里所有引用永远不变，或重建失败恢复失效路线 |
-| analytic fields | 世界生命周期主线程索引 | 查询时合成 | 跟随物理 worker 重建丢失能量塔场 |
-| IR scratch / 客户端镜像 / GPU 资源 | 各原线程拥有者 | packet 和已完成纹理上传 | 复制完整窗口给每节点/每帧，或删除借用的主 framebuffer 资源 |
+| 源结算 | 当前绑定、已安装节点、事件时刻 | 源账本及旧节点 H | 能量结算到 targetTick，之后才能按该 H 迁移 |
+| 失效与准备 | 新输入、旧几何/H | 失效标记、staging、路由待办 | 得到准备载荷或保留预算不足待办；不代表新状态已全部发布 |
+| 提交 | PreparedTopologyChange | arena/solver/Page/phase 注册 | 新结构已安装，尚不能释放仍被源引用的旧 slot |
+| 重绑与释放 | 新结构、源/solver 引用 | 绑定、旧 span | 引用已解除的旧 span 才归还；后续换热使用已安装连接 |
+| 换热与请求 | 新连接、dt、H/law | H/branch、待确认请求 | 本次能量推进完成；实际方块转换仍需主线程 ACK |
+| 查询发布与驻留 | 本次结果、hot mask | QueryPublication、驻留 completion | 读者仍须通过原版本验证，不能单凭新 Page 引用认定查询已一致 |
 
-## Cost Contract
+保留原 try/catch/finally 和失败处理，尤其不能把 prepare 当纯计算、把 Page 发布引用恢复当成完整事务回滚。
 
-- 活动 Air/材料仍使用 SoA 原始数组。不能以“可维护”为由改成每节点 `ThermalNode` 对象、装箱集合或虚方法调度。
-- `QueryPublication` 两份材料/温度快照是跨线程读取和检查点需要，不是旧模型残留。名称/类移动保持数组数量及容量不变。
-- `InfraredCapture.storedTemperatures` 为共享 `double[4096]`（32 KiB 数值载荷）；不能提取后变成每玩家每请求分配。729 页 presence 每份 `long[12]` 只是 96 B，真正大的部分是温度窗口和节点缓冲。
-- 144³ 的 short 温度窗口单份约 5.70 MiB；当前客户端镜像/GPU 所有权保持。屏幕表面温度约 2P B，D24/D32F 深度约 4P B，P 为屏幕像素数。重构不增加第三份全屏/体积镜像。
-- 主线程原预算、变更去重、64-Brick 每 tick 捕获、路由每 cut 4096 visits、source dirty 索引、冷 Page 退出策略保持。共享 scratch 不变成调用内 new。
-- 命名常量放在拥有规则的现有类，区分 gameplay tuning、硬工作预算、容量初值和编码常量；不把所有数字收进一份全局“设置大全”。
-- 优先原对象移动和类内方法提取，保持主要数组数量、容量与分配时机。必要的每维度具体协作者须有实际职责和明确维护收益，不复制状态；报告固定初始化成本，避免逐查询/逐节点分配增长。
-- 验收保持现有工作规模，无额外全量遍历/世界读取/网络载荷；JIT 和方法边界影响尽量控制，频繁调用处有实际疑点才对照测量。只测 solver 的结果不能代表完整 tick/MSPT，不以不可测的微小差异阻止有价值的整理。
+**D. DormantChunkThermalState 的压缩存储。** 用户指出的行段主要处理休眠 Air 检查点，材料 H 在 MaterialSectionState，二者都整理但不混成一个编码模型。
 
-## Steps
+- 在 SectionEntry/fromScratch/pack/residualAt/putResidual 附近说明布局：Brick 按 brickMask 置位顺序排列；每 Brick 先均值，再放 exactCount 个节点残差；blockMasks 与这些节点逐一对应；valueOffsets 指向解包后的 short 值索引，maskOffsets 指向覆盖位图索引。
+- 空气 residual 的单位为 1/16°C，每个 long 装四个 16 位有符号值；写入掩码、读取右移后转 short、现有取整/截断保持。Short.MIN_VALUE 在这里是合法负残差，不能误用红外的无效温度哨兵。
+- 640 B 是现有 packed residuals 与节点 masks 的预算判定，不是整个对象堆大小。保持 exact 明细超预算退回均值、PRUNE_RESIDUAL=4 及原严格大于判断，不重调精度或裁剪条件。
+- 展开 fromScratch、SectionEntry 构造/encode/decode、mergeAir，命名 residualIndex/nodeMaskIndex/brickRank 等局部变量；编码、索引建立和冷却/合并各自表达完整动作，保留 primitive 数组、字段键、格式版本及错误数据处理。
+- 说明各处 null/空位图/无记录的真实含义，保留“保存未变化检查点不重新计时”与部分 Brick 合并规则。材料容器则标明 H 的 J 单位、palette 索引及逐记录 tick，不套用空气量化。
+- 验收不仅是能编译：用现有保存/恢复与休眠 GameTest 核对 NBT、负残差、预算临界/回退、部分覆盖和反复保存的结果。实际缺少覆盖的改动边界才补 GameTest，不恢复 JUnit。
 
-按以下批次顺序实施；每批只包含一个明确整理目的，通过相应检查再进入下一批。已有工作区热行为修复不能被还原。第一批开始前记下当前差异与验证结果，作为本次重构起点，不要求提交、另建源码副本或计算路径敏感哈希。
+### 材料样本和发布读取
 
-| 批次 | 文件/方法重点 | 具体改动 | 完成判据 |
-|---|---|---|---|
-| 1：材料代码读得懂 | `BrickMigrationKernel`、`MaterialSectionState.Editor`、`MaterialThermalLaw`、`DormantThermalCooling` | 按命名表展开代码；区分节点能量/每块能量、活动迁移/休眠投影；补公式单位 | 读者能沿迁移判断找到 H 的来源和去向；表达式、分支及写入顺序保持 |
-| 2：运行顺序看得见 | `ThermalDimensionEngine.process`、`TopologyPlan.prepare`、`TopologyCommitter` | 改 phase slot 名称；在调用处说明源结算、几何失效、提交、重绑、释放和发布；整理方法排列 | 主流程无需跨多层转发即可看清顺序；prepare 的副作用及 WORK_LIMITED 待办清楚 |
-| 3：主线程职责分得清 | `MinecraftThermalInput`、`MinecraftPageManager.SectionOwner`、`MinecraftPhaseController` | 按职责排列方法，命名版本/坐标范围及两份变更记录；删除可直接省略的转发 | 确认材料状态在哪读、在哪记录世界改变、何时保存；原锁、回调时机、scratch 所有者保持 |
-| 4：修正类型归属 | `MutableMaterialSample`、`InfraredReadCursor`；候选 `InfraredCapture` | 前两者按命名表处理；红外采集仅在满足下方提取条件时移动；更新直接 Java 调用 | 原对象与数组实例数不变；不暴露内部缓存；跨包访问只增加必要的完整操作 |
-| 5：减少规则重复 | 活动/休眠变更入口与 `MaterialThermalLaw` | 完成下方语义对照，只共享完全等价的纯计算 | 不创建结果对象，不新增热路径分派；无法等价的部分保留并解释差异 |
-| 6：外围名称与收尾 | `WorldTemperature`、`StateTransitionData`、实际涉及的源/辐射/查询代码 | 修正误导名称和旧注释，清理无效参数/import，补维护阅读路径 | 不扩展到整个玩家/热网/渲染系统重排；变更文件都能对应本计划中的一个问题 |
+- MaterialSample 保持原字段和 Source 枚举，不改成每次返回新 record。set 重置 stored/requestSequence，setStored 标记存档来源，clear 保持原缺失状态；source 仍先看 law 是否为空。
+- 外部类原来直接写 requestSequence。搬移后用完整 live 样本赋值操作传入 H/law/branch/tick/requestSequence，不公开字段。只有 QueryPublication 完成版本/generation 验证后才能写成功结果。
+- ReadCursor 保持“读版本→取缓冲引用→再读版本”、原两次尝试与 isCurrent 检查。不增加读锁，不复制快照，不把相邻步骤各读到的不同版本拼在一起。
 
-独立文件提取必须同时满足：已有完整职责；原实例和初始化/释放地点可保留；不增加 Context/工厂/接口；不需要一排 getter；调用链实际更短或实现更容易定位。`ReadCursor` 需要访问发布器内部缓冲，默认继续嵌套；`MaterialSample` 是跨存储/查询使用的值容器，适合直接移动。样本中的 requestSequence 通过完整的样本赋值操作传入，不能把所有字段公开以绕过原外部类的私有访问。`InfraredSnapshot` 本轮保留原位置和网络使用方式，避免扩大协议相关改名。
+### 红外采集和 worker 重启
 
-### 材料变更共享前的对照
+- InfraredCapture 由 Input 继续惰性创建，closeAll 关闭并置空。采集调用传入当前 PageManager、QueryPublication 和 dimensionGeneration，不新增 Context 或缓存旧发布器。
+- restartWorker 会更换 accumulator/mailbox/queryPublication；长期对象不能持有过期引用。沿用已有 replaceAccumulator/createWorker/reseedAll 顺序，不新增通知链。
+- 没有活动 runtime 时仍可读休眠材料和解析场，不为显示启动物理模拟。
+- 保留 payload reset、两次重试、完整成功才返回。发布竞争返回 null 保留客户端基线，不能发送“空窗口”替代；差量 generation/epoch/presence/storedSampleTick 判定保持。
+- finally 清游标、handle/Chunk 引用、列表、level 和 payload。原来输出时 clone 的位图仍在原位置 clone，工作数组不能交给网络长期持有。
+- 采集专用常量随实现移动；共享的发布年龄限制保持单一命名来源。InfraredSnapshot、packet 注册名/格式、GL 与 Mixin 均不改。
+- closeActiveLevel 不等于 closeAll；一个玩家/维度退出不能释放全局采集器。普通查询/tick 不增加等待，保存/卸载保留原 awaitLatestCompletion。
 
-| 原因/输入 | 必须保留的差异或结果 |
+### 更新与变更记录
+
+固定次序：ACK/意图/风 → 源结算 → 材料失效 → 准备/提交 → 源重绑 → 释放旧 slot → 换热 → phase 请求 → 查询发布/驻留。
+
+- 提取方法不能扩大或缩小 try/catch/finally 覆盖范围。WORK_LIMITED 保留待办；committed/mixingCommitted 只在原成功分支执行，不能放到 finally。
+- restorePagePublications 仅恢复发布引用，不是整个 worker 回滚；prepare 会失效路线并保留待办，不是纯函数。
+- SectionOwner pending 材料四元组用于迁移；checkpoint 三元组另配 revision/tick 用于保存投影。命名 stride/字段偏移，数组追加、交换和剪裁成组保持，不改成每条记录一个对象。
+- 同位置多次修改按原序回放，不合并成最终状态、不排序、不合并两份记录。保留 PhaseController.APPLYING 与 superseded 对嵌套回调的处理。
+
+### 材料计算的共享范围
+
+| 情形 | 原语义 |
 |---|---|
-| 普通属性改变，cause=0 | 原 H/branch 保留；活动入口还要匹配原材料身份，休眠入口保留其原时间投影 |
-| REPLACE | 新材料按原入口自然温度初始化；休眠替换不先对旧体执行自然冷却 |
-| MASS_CHANGE | 调用已有 `afterMassChange`，保留参数/算术次序和 branch 重置 |
-| GAMEPLAY_TRANSITION | 由旧 law 的当前温度映射新 law 的 H；不改成热转换守恒语义 |
-| THERMAL_TRANSITION | 保留 H，按原流程重置 branch；ACK 和几何交接仍由原层处理 |
-| 旧 law 缺失/新 law 缺失 | 活动迁移仍处理初始化/删除和能量计账；休眠 Editor 仍只更新已有记录，不能自动新建记录 |
+| 普通属性 cause=0 | H/branch 保留；休眠保留其冷却投影 |
+| REPLACE | 新 law 按原自然温度初始化；休眠不先冷却旧体 |
+| MASS_CHANGE | 已有 afterMassChange 共享公式，branch 按原流程重置 |
+| GAMEPLAY_TRANSITION | 旧 law 的温度映射到新 law 的 H |
+| THERMAL_TRANSITION | 保留 H，原流程重置 branch，ACK 单独处理 |
+| 旧/新 law 或记录缺失 | 活动处理初始化/删除和外部能量计账；休眠仅编辑已有记录 |
 
-### 表达整理不能顺手改变的执行细节
+只共享完全等价的纯计算，优先使用已有 MaterialThermalLaw 返回 primitive 的方法。不要把 runtime 的 MaterialChanges 原因码引入 law，也不增加统一策略/结果类。短公式重复允许保留；不能为了去重合并活动与休眠流程。
 
-- 改名时一并更新 Java 调用、必要文档锚点和仍使用该符号的 GameTest；对 Minecraft 注入字符串、反射、VarHandle 字段名、序列化和脚本入口单独核对，不能全仓库文本替换。
-- 提取布尔局部变量不得提前执行原短路条件中的方法，不重复调用有状态 getter；不得交换 `&&/||` 条件或浮点求和顺序。
-- 不将 `1 / C` 替换为另一种预计算，不将 `expm1` 换成 `exp - 1`，不改变位移、排序/遍历顺序、正反扫、原双缓冲交换位置。
-- 方法排列可以调整；字段初始化、静态初始化和构造函数赋值次序保持。同步方法或锁内片段不移到锁外，也不以名称整理改变 `ThreadLocal/volatile`。
-- 删除无效参数前检查实参表达式是否有副作用；不因删除形参顺手跳过原来实际执行的世界查询或状态更新。
-- 单行返回和简单 getter 无需机械展开；复杂主流程展开后不再逐行配“翻译代码”的注释。
-- 新发现的行为问题记入计划未实施部分，继续完成独立的名称整理，不将问题修复带入本轮。不要只为了保持整洁而删除仍承担原行为的分支。
+## 7. 性能与可读性验收
 
-## Validation
+### 补充模块的工程边界
 
-本轮架构调查为静态检查，随后按用户要求编译定位并删除失效 JUnit，没有重新运行游戏测试。上次实现的验证证据为 102/102 GameTest；4 项目标浮力 JUnit 是此前独立结果，不等于全部 JUnit。接下来的重构使用以下分层验收，数值检查优先复用现有 GameTest，不恢复旧 JUnit：
+- **源账本：** 分清观测变化、有效时刻、积分、端口分配、重绑和释放。保留最后端口分配剩余功率以消除舍入差的算法。declaredLoss、degradedLoss、unaccepted 分开，不因都没进入节点而合并；EnergyBalance 不改成每源每 tick 生成的对象。
+- **源索引：** 保留主线程 Section 索引和 worker 绑定索引的不同职责，不跨线程共用可变状态。稳定源仍不生成 dirty 消息；正功率调整与启停导致的混合区域改变分别处理，不新增每 tick 全源扫描。
+- **空气路由：** Component.advance 的四阶段使用命名 int 常量和完整动作方法，明确预算扣减。pathResistance 是归一化累计阻力，不是距离或温度；原最小堆、同阻力按 region/position 的决胜顺序、可恢复 cursor 和 validity 保持，不换图框架或状态对象。
+- **封批/mailbox：** seal 后数组属于 batch，builder reset/recycle 不得修改已交出的内容。pendingSubmission、inFlight、mutable accumulator 分别命名；AWAITING_ACK 不表示可接下一批。整理状态机不新增 Future/任务/锁，不将 save 等待移入普通 tick。
+- **求解/发布：** 原 Air、材料、FarField 执行方法保留，不引入每边虚调用。QueryPublication 的一次 live-slot 遍历继续同时写温度/材料快照、hot mask 和红外变化位，不拆成几次全量扫描。hot mask 的 begin 交换及发布间读取最新位图保持。
+- **分配/材料边：** 空 slot/span、staged/live 和代次命名清楚；保留 free-span 索引、释放/合并次序、边去重排序与引用计数。边的 contributor 和合计 conductance 分清，不能把多份面贡献误当重复边删除。
+- **辐射：** 候选收集、排序/截断、射线、缓存复用按动作分组；静态索引按需覆盖、脏块重建、液面发射分别表达。保留受体/物品预算及缓存有效性，不改为材料动态辐射，不增加逐受体临时集合。
+- **解析场：** 区分 natural/base/composed/floor；保留 combineMode、priority、key 的排序和 unchanged sphere 快速路径。不用无序 hash 遍历替换有序列表，不将合成提前到 worker。
+- **客户端：** InfraredViewRenderer 按请求/响应、镜像/上传、帧捕获/绘制、关闭分组。保持 requestId/中心/generation/epoch 校验、脏页上传及 GL 状态恢复，不新增管理器、纹理副本或渲染 pass。实际改到 GL 控制流必须使用客户端验证，服务端 GameTest 不能替代。
+- **数据/消费者：** 分类、默认、配方覆盖、签名生成按现有步骤表达；运行期不额外读配置。查询保留自然温度回退与材料不可用的区别，源表/JSON/NBT/config 键不变；纯计算类不新增 Level、网络或主线程总入口依赖。
 
-| 范围 | 必须验证的行为 |
+**代码检查：** 保留 SoA 数组、双缓冲、位图、预算、索引、缓存粒度、锁和线程归属；不增加逐节点/查询分配、重复大缓冲、全量扫描、世界读取或网络工作量。固定生命周期对象若增加，单列数量、引用及维护收益。
+
+频繁循环中不用 Stream、装箱集合、捕获 lambda 或通用函数对象替代原循环。不凭推测 JIT 不内联否定一个清楚的方法提取；也不能用“应该会内联”忽略实际退化。浮点运算顺序、expm1、位移、排序、正反扫及缓冲交换位置不变。
+
+**人工阅读：** 从代码直接回答：入口在哪、值是什么单位和索引、谁改状态、为何这个顺序、常见规则改哪里。简单 getter 不机械展开；只格式化涉及代码；不设任意行数上限。Java 名称用常规英文，复杂规则注释用简短直白的说明，不堆“权威/事务/契约”等词。
+
+**性能对照：** 名称/注释改动集中编译即可。确实提取频繁调用路径时，在改前记录相同场景基线，改后用同 JDK/JVM、预热和工作量核对耗时分布与分配。保持完成 cut/节点/边数量和行为输出一致，不能以少做热工作获得的低耗时当成功。solver 微基准不代表采集/保存或多人 MSPT。
+
+有可重复的明显退化先消除额外包装或调用绕行，必要时保留原热循环，仅整理外围；JIT 细微差异尽量控制，可读性和可维护性仍优先。不新增监控/benchmark 框架，不以一次测试声称所有规模性能相同。
+
+每组交付按以下成本维度验收，不能仅用总耗时掩盖工作增加：
+
+| 维度 | 基本不变的条件 |
 |---|---|
-| 纯计算/索引 | 当前整块布局、负坐标、显热公式、潜热反向推进和能量守恒；单步系数与实际 dt |
-| 材料变更统一 | REPLACE、同块属性、质量变化、玩法转换、热转换、目标无材料；活动/休眠共有规则对照 |
-| 生命周期 | 源启停/移动/零功率、无源残热、跨 Page、两层截止、WORK_LIMITED 待办、几何先失效、重建时材料读取和 checkpoint |
-| 时序 | 20/40/100/200 tick，相同总输入 J；源先结算后迁移；latent 完成等待 ACK；失败重启、保存、卸载和重载 |
-| 数据/玩法 | 水地表采样、配置快照、解析场独立生命周期；若改生成器，使用实际注册表验证 workbook→74 份配方，保留开关/0°C/空白语义 |
-| 红外 | 全量/增量、几何改变不闪烁、活动/休眠切换、字段合成；若动 GL/顶点桥需客户端验证边缘、实体遮挡、资源重建/关闭和高精度格式 |
-| 性能 | 固定相同场景的稳态与拓扑 churn；记录完成 cut 数、节点/边数、分配和完整 cut 耗时。保持节点/数组/网络规模，重复测量仅在变化或疑点存在时进行 |
+| 工作规模 | 相同输入的节点/边、完成 cut、变化 Brick、路由访问预算和查询频率不增加，结果可用性保持 |
+| 分配与常驻 | 稳态无新增逐节点/逐查询对象；大数组/纹理数量及容量保持；初始化对象单列，不只看 GC 后净堆 |
+| 遍历与同步 | 不增加全量扫描、额外排序、世界读取、锁和线程切换；维护动作保持原脏数据范围 |
+| 网络与 GPU | 同窗口的消息与有效温度保持；请求频率、上传范围、深度复制和绘制次数不增加 |
+| 实测 | 对实际改动热点采用相同运行参数、预热和工作量比较耗时分布与分配，可重复退化须处理 |
 
-验证按改动类型决定，避免每改一个名字都启动完整服务器：
+这些是实施验收条件，不是尚未修改代码前的实测保证。最终区分结构检查和实际测量结果；不以“JIT 会优化”接受新增扫描或分配。测试一次发现差异先辨别波动和工作量，不用无限重测挑选好看的结果。
 
-| 改动类型 | 足够的验证 | 不应增加的工作 |
-|---|---|---|
-| 只改局部名、import、排版、注释 | 差异检查，确认表达式不变；同批完成后编译 | 逐名字重跑完整 GameTest、反复采集性能 |
-| 跨文件/类型改名 | 搜索直接引用与必要字符串入口；`compileJava compileGameTestJava` | 恢复旧别名、旧 JUnit 或给测试加排除配置 |
-| 方法提取/原对象移动/共同计算提取 | 上述检查与受影响 GameTest；核对 new/数组/锁/访问次数 | 全局增设计数器、节点对象化、改规则后放宽断言 |
-| 确实改变热路径调用边界 | 对比同输入、同完成 cut/节点/边数量的耗时与分配 | 仅因源码短了宣称更快，或用不同工作量比较 |
+## 8. 验证与交付
 
-涉及结构或计算提取的批次完成后，最终运行一次现有完整 GameTest；只有后续实际修改、失败或未解决疑点才重复。纯移动和提取要求相同输入的数值与请求顺序保持，不通过放大容差接受差异。已有 GameTest 缺少某个实际变更边界时，仅补必要的该边界验证，不新建测试框架。没有恢复旧 JUnit 或新增 JUnit 体系的任务。
+| 改动 | 现有验证重点 |
+|---|---|
+| 类型/方法改名 | 搜索 Java 和字符串引用，compileJava、compileGameTestJava |
+| 材料样本/公式 | ThermalTransitionDataGameTests、ThermalDormantCoolingGameTests、phaseRequestAcknowledgementIsExactlyOnce |
+| 拓扑流程 | ThermalTimingGameTests、localMutationRebuildsOnlyTheChangedBrick、phaseRequestSurvivesSameBrickTopologyChurn |
+| 待办/驻留/双缓冲 | sourceMixingChangeSurvivesRefusedGeometryBudget、coldMaterialNeighborKeepsItsIncomingRequest、activityThresholdsKeepTheCompletedHotMask |
+| 红外搬移 | brickMutationKeepsUnchangedMaterialTemperatures、restartedRuntimeCannotReuseTheOldMaterialBaseline、warmedMaterialRemainsVisibleAfterTheRuntimeCloses、fullWindowPartitionsPreserveEveryBrickAndFieldFootprint |
+| 保存/重载 | ThermalLoadedWorldGameTests 和现有 dormant/save 回归 |
+| 源发现/绑定/账本 | sourceLedgerDeliversPowerAtTheExactCut、sourceEnergyIsAccountedWhenMaterialCannotAcceptMore、sourceLifecycleChangesConductanceWithoutReplacingCells、延迟 cut 对照 |
+| 批次/调度 | fixedTwentyTickBatchesAdvanceWithoutLegacyScheduler、空发布、预算拒绝、卸载/重启已有回归 |
+| 辐射/场/客户端 | 现有静态辐射/物品查询和 ThermalGameplayFieldGameTests；涉及 GL 控制流沿用客户端验证，记录实际范围 |
 
-需要性能对照时，在相关改动前于当前工作区记录基线；使用相同 JDK/JVM 参数、场景和固定工作量，预热后读取耗时与分配。初次差异有疑点时复测，排除噪声后若存在明显退化，调整实现或撤回该项提取。细微 JIT 差异尽量控制，但可读性和可维护性仍为主要目标，不引入没有场景依据的百分比审批门槛。原 16 源/2176 节点微基准只覆盖 solver；触及主线程捕获或检查点时应测对应路径。无需为名称整理新增生产监控或 benchmark 框架。
+改名还需更新 VarHandle 的 enqueued/fullResync/deferredFullResync、测试 getDeclaredField/getDeclaredMethod 及反射 helper 的字符串。按实际改动符号搜索，不增加测试专用生产 getter，不保留旧类型别名。
 
-客户端图形效果、在线多人完整 heap/MSPT 不由 GameTest 覆盖，只有实际完成相应验证才能报告通过。本计划不为未改动的外围系统追加全面重测。
+结构改动按影响运行相应 GameTest，所有批次结束后运行一次完整 GameTest；仅在后续修改、失败或新疑点时重跑。相同输入的 H/温度、请求顺序和查询可用性保持，不能放宽断言掩盖改变。不恢复 JUnit；只有实际变更缺少必要边界覆盖时才补现有 GameTest。
 
-## Documentation Impact And Outcome
+每批报告：改名与移动、职责如何更清楚、对象/数组增减、验证结果、保留问题。更新 docs/climate 的实际类名和阅读入口，追加 diary，清理本轮临时文件；保留必要测试、人工源表与用户存档。
 
-- 本次检查及失效测试清理完成，生产代码、配方、Mixin、配置和求解行为未修改。后续用户决定覆盖早先调查 diary 中“恢复 JUnit”的建议。
-- 实施时仅更新实际移动/改名涉及的 `docs/climate` 锚点和维护入口；配方刷新仍是原入口。文档按游戏系统组织，不按新增 Java 类逐份创建文档。
-- 失效 JUnit 按用户决定删除，不作为前置阻碍；主要维护障碍是总入口混杂、回调环、材料变更重复和发布器内部类型泄漏。B1 是独立的显示刷新行为缺口。
-- 不把静态辐射、显式解析场、空气与材料的不同温度、持久化快照、双缓冲、原水采样视作“必须消除的架构不统一”。
-- 成功标准：名字和主流程直接可读、职责有明确落点、必要的共同计算可维护；保持热行为和主要运行成本，完成必要编译/GameTest。实际减少的回调/重复逻辑和保留原因逐项报告，不以文件变多或行数变化作为成果。
-- 收尾只检查本轮修改及引用，不再扩展到未动过的材料特例或其他系统。保留必要 GameTest，清理本轮临时文件，不改人工源表、用户存档和既有待提交改动。当前已统一为六批重构计划，生产实施尚未开始。
+不实施植物提示缓存刷新缺口，不改 worldgen 岩浆初温、热平衡、渲染后端、玩家或热网模型。player/unused 中曾明确要求保留的历史模拟器不自动删除。源表 state_transition.xlsx 与生成器保持，128 MiB 显式预算也不能误称为整个系统堆上限。
+
+**完成标准：** 覆盖表每组有结论，八批改动可单独解释与核对；主流程直白、类型职责清楚、必要重复有理由；热行为和主要成本保持；对应验证完成。
+
+## 9. 实施结果
+
+2026-09-16 已完成。细节与测量见[实施记录](../diary/2026-09-16_15-24-40_thermal-readability-implementation.md)。没有新增运行时节点对象、数组、扫描、锁或渲染 pass；原样本和采集器移动后仍按原生命周期复用。最后一次完整 GameTest 为 102/102，最后的存档索引命名与等值常量整理另经编译通过。
+
+| 覆盖组 | 实际结果 |
+|---|---|
+| 材料与数据 | 实际温度/相变阈值分开命名，profile/data 编译展开排版，G/C/O 法则保持 |
+| 捕获与主线程 | Input 移出采集器；请求校验归 PhaseController 并删除 PageManager/Input 转发入口；变更记录 stride/offset 命名，移除无效初温传参；检查点跨层协调仍记为职责重叠 |
+| 异步调度 | Engine/提交器说明交接次序，mailbox 标明等待 ACK；线程池和关闭算法已清楚，保留 |
+| 源与账本 | 绑定解析展开，三种能量去向注明；原索引/账本/累积器已有明确阶段和单位，保留算法及存储 |
+| 几何与连接 | TopologyUpdatePlanner 改名，compileCells 提取真实 Air 连通动作，路由阻力/四阶段命名，接触端点分清 |
+| 节点与分配 | airNode/materialCell/materialNodeMask 统一，布局位编码说明；原 free-span 索引和 phase 状态机保留 |
+| 换热与相变 | 相变阈值独立接口，材料 law/冷却展开；原 solver 分三类边执行、显热/潜热内核保留，不增加共享策略 |
+| 查询与驻留 | MaterialSample 归位、ReadCursor 改名，保留一次发布遍历；WorkerPageStore 展开表达，位图交换和驻留规则保持 |
+| 休眠与存档 | 两种存储分清，残差单位/打包/预算说明，偏移和计数命名、同一预算常量复用；NBT 不变 |
+| 辐射与场 | 场合成表达展开；静态辐射 index/service/tracer 已按真实职责分开，原候选与缓存算法保留 |
+| 红外两端 | InfraredCapture 独立、调用传当前发布器；客户端标明接收/上传边界，原编码、GPU 资源及 GL 流程保留 |
+| 消费者边界 | WorldTemperature 旧注释和无调用常量清理；玩家、热物品、城镇查询单位边界核对，算法保持 |
+
+性能结论限定为结构成本保持及已测路径：求解器同为 2176 节点、零稳态分配；多次耗时有波动。IR 原计时没有预热，本轮补 256 次预热并记录全部结果，不把不同预热方式或不同场景负载算成严格加速比。未对全部硬件、多人大服或 GPU 做新性能承诺。
+
+删除优先补充结果：相变校验不再回调 Input，tick 直接接收当前 publication，复用控制器原材料样本和已解析 Page，无新增对象/通知/缓存。补充修改后完整 GameTest 102/102 通过。详见[删除转发记录](../diary/2026-09-16_15-30-06_thermal-validation-forwarding-removal.md)。
+
+后续四处精简已完成：无调用的 resolveAirFaceSlot、Profile.body 构造包装、Input 的两个解析场写转发已删除，TopologyCommitter 不再实例化。编译通过；固定 seed=0 的平坦 plains 测试世界 102/102 GameTest 通过。原随机自然世界两轮出现不同失败，尚未全部查明原因，不能将受控环境结果表述为原环境全通过。临时测试配置已还原，见[无用抽象清理记录](../diary/2026-09-16_16-00-58_thermal-unused-abstractions.md)。
+
+验证中确认原水边界测试偶发落在禁止结冰的 deep_dark 群系；仅隔离测试的独立群系条件并在 finally 恢复数据，生产规则不变。未恢复 JUnit、未新增兼容别名；既有植物提示缓存和透明地形红外边界不在本轮修改范围。

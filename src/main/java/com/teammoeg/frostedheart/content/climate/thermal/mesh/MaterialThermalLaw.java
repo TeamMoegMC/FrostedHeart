@@ -3,22 +3,17 @@ package com.teammoeg.frostedheart.content.climate.thermal.mesh;
 
 /**
  * Shared material energy law, referenced by nodes rather than copied into them.
- * Enthalpy is in joules relative to 0 degrees Celsius; capacity is in J/K.
+ * Sensible enthalpy is offsetJ + capacityJPerK * temperatureC, in joules.
  * A node owns only its enthalpy and, during a transition, the selected branch.
  */
 public record MaterialThermalLaw(
-        double capacityJPerK,
-        double offsetJ,
-        Transition heating,
-        Transition cooling
-) {
+        double capacityJPerK, double offsetJ, Transition heating, Transition cooling) {
     public static final byte SENSIBLE = 0;
     public static final byte HEATING = 1;
     public static final byte COOLING = -1;
 
     public MaterialThermalLaw {
-        if (!Double.isFinite(capacityJPerK) || capacityJPerK <= 0
-                || !Double.isFinite(offsetJ)) {
+        if (!Double.isFinite(capacityJPerK) || capacityJPerK <= 0 || !Double.isFinite(offsetJ)) {
             throw new IllegalArgumentException("invalid material energy law");
         }
     }
@@ -45,31 +40,37 @@ public record MaterialThermalLaw(
     /** Retain latent progress when reversing; leave the plateau at its source end. */
     public byte selectBranch(double energyJ, byte branch, double direction) {
         Transition active = transition(branch);
-        if (active != null && ((direction > 0) == active.heating()
-                || (active.sourceEnthalpyJ() - energyJ) * Math.signum(direction) > 0)) return branch;
+        if (active != null
+                && ((direction > 0) == active.heating()
+                        || (active.sourceEnthalpyJ() - energyJ) * Math.signum(direction) > 0))
+            return branch;
         byte next = direction > 0 ? HEATING : COOLING;
         Transition edge = transition(next);
         return edge != null && (edge.sourceEnthalpyJ() - energyJ) * Math.signum(direction) <= 0
-                ? next : SENSIBLE;
+                ? next
+                : SENSIBLE;
     }
 
     /** Energy distance to the next sensible/latent boundary, after selecting a branch. */
     public double energyLimitJ(double energyJ, byte branch, double direction) {
         Transition active = transition(branch);
         if (active != null) {
-            double end = (direction > 0) == active.heating()
-                    ? active.targetEnthalpyJ() : active.sourceEnthalpyJ();
+            double end =
+                    (direction > 0) == active.heating()
+                            ? active.targetEnthalpyJ()
+                            : active.sourceEnthalpyJ();
             return Math.max(0, (end - energyJ) * Math.signum(direction));
         }
         Transition edge = direction > 0 ? heating : cooling;
-        return edge == null ? Double.POSITIVE_INFINITY
+        return edge == null
+                ? Double.POSITIVE_INFINITY
                 : Math.max(0, (edge.sourceEnthalpyJ() - energyJ) * Math.signum(direction));
     }
 
     public double temperatureC(double enthalpyJ, byte branch) {
         Transition edge = transition(branch);
         if (edge != null && edge.contains(enthalpyJ)) {
-            return edge.temperatureC();
+            return edge.transitionTemperatureC();
         }
         return (enthalpyJ - offsetJ) / capacityJPerK;
     }
@@ -87,12 +88,12 @@ public record MaterialThermalLaw(
      */
     public record Transition(
             int targetStateId,
-            double temperatureC,
+            double transitionTemperatureC,
             double sourceEnthalpyJ,
-            double targetEnthalpyJ
-    ) {
+            double targetEnthalpyJ) {
         public Transition {
-            if (targetStateId < 0 || !Double.isFinite(temperatureC)
+            if (targetStateId < 0
+                    || !Double.isFinite(transitionTemperatureC)
                     || !Double.isFinite(sourceEnthalpyJ)
                     || !Double.isFinite(targetEnthalpyJ)
                     || sourceEnthalpyJ == targetEnthalpyJ) {
@@ -106,8 +107,11 @@ public record MaterialThermalLaw(
         }
 
         public double progress(double enthalpyJ) {
-            return Math.max(0, Math.min(1,
-                    (enthalpyJ - sourceEnthalpyJ) / (targetEnthalpyJ - sourceEnthalpyJ)));
+            return Math.max(
+                    0,
+                    Math.min(
+                            1,
+                            (enthalpyJ - sourceEnthalpyJ) / (targetEnthalpyJ - sourceEnthalpyJ)));
         }
 
         public boolean heating() {

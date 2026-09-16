@@ -1,25 +1,28 @@
 /* Copyright (c) 2026 TeamMoeg */
 package com.teammoeg.frostedheart.content.climate.thermal.topology;
 
-import net.minecraft.core.SectionPos;
-
+import com.teammoeg.frostedheart.content.climate.thermal.mesh.BlockBrickLayout;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.BlockFace;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.PagePublication;
-import com.teammoeg.frostedheart.content.climate.thermal.mesh.BlockBrickLayout;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.PageSignatures;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.ThermalCellArena;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.ThermalPageHandle;
 import com.teammoeg.frostedheart.content.climate.thermal.profile.ThermalSignatureTable;
 import com.teammoeg.frostedheart.content.climate.thermal.query.QueryPublication;
-import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.message.ThermalInputBatch;
+import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.message.GeometryHalo;
 import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.message.ThermalCompletion;
+import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.message.ThermalInputBatch;
 
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
-import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;
 import it.unimi.dsi.fastutil.longs.Long2LongMap;
 import it.unimi.dsi.fastutil.longs.Long2LongOpenHashMap;
+import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.longs.LongArrayList;
+
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.SectionPos;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -34,13 +37,17 @@ import java.util.Objects;
  * 该身份不进入网络或客户端模型。</p>
  */
 public final class WorkerPageStore implements AutoCloseable {
-    private final java.util.IdentityHashMap<ThermalPageHandle, com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.message.GeometryHalo> halos = new java.util.IdentityHashMap<>();
-    private final it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap haloSignatures = new it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap();
-    private final it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap haloReferences = new it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap();
+    private final java.util.IdentityHashMap<ThermalPageHandle, GeometryHalo> halos =
+            new java.util.IdentityHashMap<>();
+    private final Long2IntOpenHashMap haloSignatures = new Long2IntOpenHashMap();
+    private final Long2IntOpenHashMap haloReferences = new Long2IntOpenHashMap();
     private ThermalSignatureTable signatureTable;
-    void signatures(ThermalSignatureTable signatures) { signatureTable = signatures; }
 
-    void replaceHalo(ThermalPageHandle owner, com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.message.GeometryHalo halo) {
+    void signatures(ThermalSignatureTable signatures) {
+        signatureTable = signatures;
+    }
+
+    void replaceHalo(ThermalPageHandle owner, GeometryHalo halo) {
         removeHalo(owner);
         halos.put(owner, halo);
         for (int index = 0; index < halo.size(); index++) {
@@ -62,14 +69,20 @@ public final class WorkerPageStore implements AutoCloseable {
     }
 
     int haloSignatureAt(int x, int y, int z) {
-        long position = net.minecraft.core.BlockPos.asLong(x, y, z);
-        return haloReferences.containsKey(position) ? haloSignatures.get(position) : ThermalSignatureTable.UNRESOLVED;
+        long position = BlockPos.asLong(x, y, z);
+        return haloReferences.containsKey(position)
+                ? haloSignatures.get(position)
+                : ThermalSignatureTable.UNRESOLVED;
     }
+
     private AirRouteCompiler airRoutes;
-    void airRoutes(AirRouteCompiler compiler) { airRoutes = compiler; }
+
+    void airRoutes(AirRouteCompiler compiler) {
+        airRoutes = compiler;
+    }
 
     boolean hasThermalInterestAt(long position) {
-        int x = net.minecraft.core.BlockPos.getX(position), y = net.minecraft.core.BlockPos.getY(position), z = net.minecraft.core.BlockPos.getZ(position);
+        int x = BlockPos.getX(position), y = BlockPos.getY(position), z = BlockPos.getZ(position);
         PageState page = find(SectionPos.asLong(x >> 4, y >> 4, z >> 4));
         if (page == null) return false;
         int brick = (x & 15) >>> 2 | ((z & 15) >>> 2) << 2 | ((y & 15) >>> 2) << 4;
@@ -77,11 +90,12 @@ public final class WorkerPageStore implements AutoCloseable {
     }
 
     public boolean hasResidentBrick(long position) {
-        int x = net.minecraft.core.BlockPos.getX(position), y = net.minecraft.core.BlockPos.getY(position), z = net.minecraft.core.BlockPos.getZ(position);
+        int x = BlockPos.getX(position), y = BlockPos.getY(position), z = BlockPos.getZ(position);
         PageState page = find(SectionPos.asLong(x >> 4, y >> 4, z >> 4));
         int brick = (x & 15) >>> 2 | ((z & 15) >>> 2) << 2 | ((y & 15) >>> 2) << 4;
         return page != null && (page.residentBrickMask & 1L << brick) != 0;
     }
+
     static final int PORT_BLOCKED = -1;
     public static final int PORT_TOPOLOGY_UNAVAILABLE = -2;
     private final Long2ObjectOpenHashMap<PageState> activeBySection;
@@ -126,7 +140,9 @@ public final class WorkerPageStore implements AutoCloseable {
 
     public int materialSlot(ThermalPageHandle handle, int position, int expectedStateId) {
         PageState page = find(handle);
-        if (page == null || signatureTable.materialStateId(page.signatures.get(position)) != expectedStateId) return -1;
+        if (page == null
+                || signatureTable.materialStateId(page.signatures.get(position)) != expectedStateId)
+            return -1;
         int x = position & 15, y = position >>> 8 & 15, z = position >>> 4 & 15;
         var brick = page.brick((x >>> 2) | (z >>> 2) << 2 | (y >>> 2) << 4);
         return brick.cellsResolved ? brick.slotAt((x & 3) | (z & 3) << 2 | (y & 3) << 4) : -1;
@@ -140,11 +156,14 @@ public final class WorkerPageStore implements AutoCloseable {
             if (slot >= 0) arena.awaitMaterialLayout(slot);
         }
         for (int index = 0; index < batch.geometry().size(); index++) {
-            if (batch.geometry().geometryResyncReason(index) != ThermalPageHandle.GeometryResyncReason.SECTION_REPLACED) continue;
+            if (batch.geometry().geometryResyncReason(index)
+                    != ThermalPageHandle.GeometryResyncReason.SECTION_REPLACED) continue;
             PageState page = find(batch.geometry().page(index));
             if (page == null) continue;
             for (WorkerBrickTopology brick : page.bricks) {
-                for (int slot = brick.span.firstSlot(); slot < brick.span.endSlotExclusive(); slot++) arena.awaitMaterialLayout(slot);
+                for (int slot = brick.span.firstSlot();
+                        slot < brick.span.endSlotExclusive();
+                        slot++) arena.awaitMaterialLayout(slot);
             }
         }
     }
@@ -161,10 +180,7 @@ public final class WorkerPageStore implements AutoCloseable {
         return hotMaskScratch;
     }
 
-    public void configureHotMaskThresholds(
-            double refineHighC,
-            double releaseLowC
-    ) {
+    public void configureHotMaskThresholds(double refineHighC, double releaseLowC) {
         hotMaskScratch.configure(refineHighC, releaseLowC);
     }
 
@@ -172,37 +188,83 @@ public final class WorkerPageStore implements AutoCloseable {
             ThermalCellArena arena,
             double referenceTemperatureC,
             double refineHighC,
-            double releaseLowC
-    ) {
+            double releaseLowC) {
         requireOpen();
         desiredScratch.clear();
         for (PageState page : activeBySection.values()) {
-            long hotBrickMask = hotMaskScratch.hotMask(page.pageSlot)
-                    & page.residentBrickMask;
+            long hotBrickMask = hotMaskScratch.hotMask(page.pageSlot) & page.residentBrickMask;
             long active = page.sourceSeedMask | hotBrickMask;
             if (active == 0L) {
                 continue;
             }
             orDesired(page.handle.sectionKey(), page.residentBrickMask);
-            collectInternalFaces(page, active, BlockFace.NEGATIVE_X,
-                    X_MIN, page.residentBrickMask << 1, -1,
-                    arena, referenceTemperatureC, refineHighC, releaseLowC);
-            collectInternalFaces(page, active, BlockFace.POSITIVE_X,
-                    X_MAX, page.residentBrickMask >>> 1, 1,
-                    arena, referenceTemperatureC, refineHighC, releaseLowC);
-            collectInternalFaces(page, active, BlockFace.NEGATIVE_Z,
-                    Z_MIN, page.residentBrickMask << 4, -4,
-                    arena, referenceTemperatureC, refineHighC, releaseLowC);
-            collectInternalFaces(page, active, BlockFace.POSITIVE_Z,
-                    Z_MAX, page.residentBrickMask >>> 4, 4,
-                    arena, referenceTemperatureC, refineHighC, releaseLowC);
+            collectInternalFaces(
+                    page,
+                    active,
+                    BlockFace.NEGATIVE_X,
+                    X_MIN,
+                    page.residentBrickMask << 1,
+                    -1,
+                    arena,
+                    referenceTemperatureC,
+                    refineHighC,
+                    releaseLowC);
+            collectInternalFaces(
+                    page,
+                    active,
+                    BlockFace.POSITIVE_X,
+                    X_MAX,
+                    page.residentBrickMask >>> 1,
+                    1,
+                    arena,
+                    referenceTemperatureC,
+                    refineHighC,
+                    releaseLowC);
+            collectInternalFaces(
+                    page,
+                    active,
+                    BlockFace.NEGATIVE_Z,
+                    Z_MIN,
+                    page.residentBrickMask << 4,
+                    -4,
+                    arena,
+                    referenceTemperatureC,
+                    refineHighC,
+                    releaseLowC);
+            collectInternalFaces(
+                    page,
+                    active,
+                    BlockFace.POSITIVE_Z,
+                    Z_MAX,
+                    page.residentBrickMask >>> 4,
+                    4,
+                    arena,
+                    referenceTemperatureC,
+                    refineHighC,
+                    releaseLowC);
             collectMaterialFrontier(page, active);
-            collectInternalFaces(page, active, BlockFace.NEGATIVE_Y,
-                    Y_MIN, page.residentBrickMask << 16, -16,
-                    arena, referenceTemperatureC, refineHighC, releaseLowC);
-            collectInternalFaces(page, active, BlockFace.POSITIVE_Y,
-                    Y_MAX, page.residentBrickMask >>> 16, 16,
-                    arena, referenceTemperatureC, refineHighC, releaseLowC);
+            collectInternalFaces(
+                    page,
+                    active,
+                    BlockFace.NEGATIVE_Y,
+                    Y_MIN,
+                    page.residentBrickMask << 16,
+                    -16,
+                    arena,
+                    referenceTemperatureC,
+                    refineHighC,
+                    releaseLowC);
+            collectInternalFaces(
+                    page,
+                    active,
+                    BlockFace.POSITIVE_Y,
+                    Y_MAX,
+                    page.residentBrickMask >>> 16,
+                    16,
+                    arena,
+                    referenceTemperatureC,
+                    refineHighC,
+                    releaseLowC);
         }
         if (airRoutes != null) airRoutes.collectRequiredBricks(this, desiredScratch);
         ThermalCompletion.BrickResidency[] result = finishResidencyChanges();
@@ -222,20 +284,32 @@ public final class WorkerPageStore implements AutoCloseable {
                 int block = Long.numberOfTrailingZeros(surfaces);
                 surfaces &= surfaces - 1;
                 long position = AirRouteCompiler.blockPosition(origin, block);
-                int x = net.minecraft.core.BlockPos.getX(position), y = net.minecraft.core.BlockPos.getY(position), z = net.minecraft.core.BlockPos.getZ(position);
-                int contacts = signatureTable.fullContactFaces(page.signatures.get(BlockBrickLayout.pageBlock(brick, block)));
+                int x = BlockPos.getX(position),
+                        y = BlockPos.getY(position),
+                        z = BlockPos.getZ(position);
+                int contacts =
+                        signatureTable.fullContactFaces(
+                                page.signatures.get(BlockBrickLayout.pageBlock(brick, block)));
                 for (int face = 0; face < 6; face++) {
                     if ((contacts & 1 << face) == 0) continue;
-                    int nx = x + TopologyView.DX[face], ny = y + TopologyView.DY[face], nz = z + TopologyView.DZ[face];
+                    int nx = x + TopologyView.DX[face],
+                            ny = y + TopologyView.DY[face],
+                            nz = z + TopologyView.DZ[face];
                     long section = SectionPos.asLong(nx >> 4, ny >> 4, nz >> 4);
-                    int neighborBrick = (nx & 15) >>> 2 | ((nz & 15) >>> 2) << 2 | ((ny & 15) >>> 2) << 4;
+                    int neighborBrick =
+                            (nx & 15) >>> 2 | ((nz & 15) >>> 2) << 2 | ((ny & 15) >>> 2) << 4;
                     PageState neighbor = find(section);
                     // A cold resident neighbor still needs the owner's incoming request.
-                    int signature = neighbor != null && (neighbor.residentBrickMask & 1L << neighborBrick) != 0
-                            ? neighbor.signatures.get((nx & 15) | (nz & 15) << 4 | (ny & 15) << 8)
-                            : haloSignatureAt(nx, ny, nz);
+                    int signature =
+                            neighbor != null
+                                            && (neighbor.residentBrickMask & 1L << neighborBrick)
+                                                    != 0
+                                    ? neighbor.signatures.get(
+                                            (nx & 15) | (nz & 15) << 4 | (ny & 15) << 8)
+                                    : haloSignatureAt(nx, ny, nz);
                     if (signatureTable.materialProfileId(signature) != 0
-                            && (signatureTable.fullContactFaces(signature) & 1 << (face ^ 1)) != 0) {
+                            && (signatureTable.fullContactFaces(signature) & 1 << (face ^ 1))
+                                    != 0) {
                         orDesired(section, 1L << neighborBrick);
                     }
                 }
@@ -253,16 +327,21 @@ public final class WorkerPageStore implements AutoCloseable {
             ThermalCellArena arena,
             double referenceTemperatureC,
             double refineHighC,
-            double releaseLowC
-    ) {
+            double releaseLowC) {
         long internal = active & ~boundaryMask & ~alignedResident;
         while (internal != 0L) {
             int ownerBrick = Long.numberOfTrailingZeros(internal);
             int targetBrick = ownerBrick + internalOffset;
             requestFace(
-                    page, ownerBrick, face,
-                    page.handle.sectionKey(), targetBrick,
-                    arena, referenceTemperatureC, refineHighC, releaseLowC);
+                    page,
+                    ownerBrick,
+                    face,
+                    page.handle.sectionKey(),
+                    targetBrick,
+                    arena,
+                    referenceTemperatureC,
+                    refineHighC,
+                    releaseLowC);
             internal &= internal - 1L;
         }
         long boundary = active & boundaryMask;
@@ -271,8 +350,15 @@ public final class WorkerPageStore implements AutoCloseable {
             int ownerBrick = Long.numberOfTrailingZeros(boundary);
             int targetBrick = boundaryTargetBrick(ownerBrick, face);
             requestFace(
-                    page, ownerBrick, face, targetSection, targetBrick,
-                    arena, referenceTemperatureC, refineHighC, releaseLowC);
+                    page,
+                    ownerBrick,
+                    face,
+                    targetSection,
+                    targetBrick,
+                    arena,
+                    referenceTemperatureC,
+                    refineHighC,
+                    releaseLowC);
             boundary &= boundary - 1L;
         }
     }
@@ -286,14 +372,11 @@ public final class WorkerPageStore implements AutoCloseable {
             ThermalCellArena arena,
             double referenceTemperatureC,
             double refineHighC,
-            double releaseLowC
-    ) {
+            double releaseLowC) {
         long targetBit = 1L << targetBrick;
-        double threshold = (desiredBySection.get(targetSection) & targetBit) != 0L
-                ? releaseLowC : refineHighC;
-        if (faceResidualC(
-                page, ownerBrick, face, arena, referenceTemperatureC)
-                >= threshold) {
+        double threshold =
+                (desiredBySection.get(targetSection) & targetBit) != 0L ? releaseLowC : refineHighC;
+        if (faceResidualC(page, ownerBrick, face, arena, referenceTemperatureC) >= threshold) {
             orDesired(targetSection, targetBit);
         }
     }
@@ -303,15 +386,13 @@ public final class WorkerPageStore implements AutoCloseable {
             int brick,
             BlockFace face,
             ThermalCellArena arena,
-            double referenceTemperatureC
-    ) {
+            double referenceTemperatureC) {
         WorkerBrickTopology topology = page.brick(brick);
         if (!topology.resolved || topology.coverageSlot < 0) {
             return 0.0D;
         }
         if (topology.blockLayout == null) {
-            if (face == BlockFace.POSITIVE_Y
-                    && allTopColumnsDirectSky(page, brick)) {
+            if (face == BlockFace.POSITIVE_Y && allTopColumnsDirectSky(page, brick)) {
                 return 0.0D;
             }
             return Math.abs(
@@ -319,15 +400,20 @@ public final class WorkerPageStore implements AutoCloseable {
                             - page.naturalTemperatureC);
         }
         double residual = 0.0D;
-        long seen=0;
-        int axis=face.ordinal()/2, side=(face.ordinal()&1)==0?0:3;
-        for (int i=0;i<16;i++) {
-            if (face==BlockFace.POSITIVE_Y && topPortDirectSky(page,brick,i)) continue;
-            int node=topology.blockLayout.transportAt(BlockBrickLayout.faceBlock(axis,side,i));
-            if(node<0 || (seen & 1L<<node)!=0) continue;
-            seen|=1L<<node;
-            int slot=topology.coverageSlot+node;
-            residual=Math.max(residual,Math.abs(arena.temperatureC(slot,referenceTemperatureC)-page.naturalTemperatureC));
+        long seen = 0;
+        int axis = face.ordinal() / 2, side = (face.ordinal() & 1) == 0 ? 0 : 3;
+        for (int i = 0; i < 16; i++) {
+            if (face == BlockFace.POSITIVE_Y && topPortDirectSky(page, brick, i)) continue;
+            int node = topology.blockLayout.airNodeAt(BlockBrickLayout.faceBlock(axis, side, i));
+            if (node < 0 || (seen & 1L << node) != 0) continue;
+            seen |= 1L << node;
+            int slot = topology.coverageSlot + node;
+            residual =
+                    Math.max(
+                            residual,
+                            Math.abs(
+                                    arena.temperatureC(slot, referenceTemperatureC)
+                                            - page.naturalTemperatureC));
         }
         return residual;
     }
@@ -340,8 +426,7 @@ public final class WorkerPageStore implements AutoCloseable {
         int firstZ = (brick >>> 2 & 3) << 2;
         for (int z = firstZ; z < firstZ + 4; z++) {
             for (int x = firstX; x < firstX + 4; x++) {
-                if (Byte.toUnsignedInt(page.firstExposedLocalY[x | z << 4])
-                        > 15) {
+                if (Byte.toUnsignedInt(page.firstExposedLocalY[x | z << 4]) > 15) {
                     return false;
                 }
             }
@@ -349,17 +434,12 @@ public final class WorkerPageStore implements AutoCloseable {
         return true;
     }
 
-    private static boolean topPortDirectSky(
-            PageState page,
-            int brick,
-            int blockInBrick
-    ) {
+    private static boolean topPortDirectSky(PageState page, int brick, int blockInBrick) {
         if ((brick >>> 4 & 3) != 3) {
             return false;
         }
         int x = ((brick & 3) << 2) + (blockInBrick & 3);
-        int z = ((brick >>> 2 & 3) << 2)
-                + (blockInBrick >>> 2 & 3);
+        int z = ((brick >>> 2 & 3) << 2) + (blockInBrick >>> 2 & 3);
         return Byte.toUnsignedInt(page.firstExposedLocalY[x | z << 4]) <= 15;
     }
 
@@ -375,15 +455,13 @@ public final class WorkerPageStore implements AutoCloseable {
             }
         }
         for (Long2LongMap.Entry entry : desiredBySection.long2LongEntrySet()) {
-            if (entry.getLongValue() != 0L
-                    && !desiredScratch.containsKey(entry.getLongKey())) {
+            if (entry.getLongValue() != 0L && !desiredScratch.containsKey(entry.getLongKey())) {
                 count++;
             }
         }
         for (int index = 0; index < residencyIdentityChanges.size(); index++) {
             long sectionKey = residencyIdentityChanges.getLong(index);
-            if (desiredBySection.get(sectionKey)
-                    == desiredScratch.get(sectionKey)) {
+            if (desiredBySection.get(sectionKey) == desiredScratch.get(sectionKey)) {
                 count++;
             }
         }
@@ -401,28 +479,26 @@ public final class WorkerPageStore implements AutoCloseable {
             }
         }
         for (Long2LongMap.Entry entry : desiredBySection.long2LongEntrySet()) {
-            if (entry.getLongValue() != 0L
-                    && !desiredScratch.containsKey(entry.getLongKey())) {
+            if (entry.getLongValue() != 0L && !desiredScratch.containsKey(entry.getLongKey())) {
                 keys[write++] = entry.getLongKey();
             }
         }
         for (int index = 0; index < residencyIdentityChanges.size(); index++) {
             long sectionKey = residencyIdentityChanges.getLong(index);
-            if (desiredBySection.get(sectionKey)
-                    == desiredScratch.get(sectionKey)) {
+            if (desiredBySection.get(sectionKey) == desiredScratch.get(sectionKey)) {
                 keys[write++] = sectionKey;
             }
         }
         Arrays.sort(keys);
-        ThermalCompletion.BrickResidency[] updates =
-                new ThermalCompletion.BrickResidency[count];
+        ThermalCompletion.BrickResidency[] updates = new ThermalCompletion.BrickResidency[count];
         for (int index = 0; index < count; index++) {
             long sectionKey = keys[index];
             PageState page = activeBySection.get(sectionKey);
-            updates[index] = new ThermalCompletion.BrickResidency(
-                    sectionKey,
-                    page == null ? -1L : page.handle.lifecycleGeneration(),
-                    desiredScratch.get(sectionKey));
+            updates[index] =
+                    new ThermalCompletion.BrickResidency(
+                            sectionKey,
+                            page == null ? -1L : page.handle.lifecycleGeneration(),
+                            desiredScratch.get(sectionKey));
         }
         Long2LongOpenHashMap previous = desiredBySection;
         desiredBySection = desiredScratch;
@@ -431,10 +507,7 @@ public final class WorkerPageStore implements AutoCloseable {
         return updates;
     }
 
-    private static long neighborSection(
-            long sectionKey,
-            BlockFace face
-    ) {
+    private static long neighborSection(long sectionKey, BlockFace face) {
         int x = net.minecraft.core.SectionPos.x(sectionKey);
         int y = net.minecraft.core.SectionPos.y(sectionKey);
         int z = net.minecraft.core.SectionPos.z(sectionKey);
@@ -448,10 +521,7 @@ public final class WorkerPageStore implements AutoCloseable {
         };
     }
 
-    private static int boundaryTargetBrick(
-            int ownerBrick,
-            BlockFace face
-    ) {
+    private static int boundaryTargetBrick(int ownerBrick, BlockFace face) {
         return switch (face) {
             case NEGATIVE_X -> ownerBrick + 3;
             case POSITIVE_X -> ownerBrick - 3;
@@ -463,10 +533,9 @@ public final class WorkerPageStore implements AutoCloseable {
     }
 
     PreparedTopologyChange.PageWrite[] prepareWrites(
-            ArrayList<TopologyPlan.PageDraft> drafts,
+            ArrayList<TopologyUpdatePlanner.PageDraft> drafts,
             int draftCount,
-            ArrayList<ThermalPageHandle.GeometryResyncToken> resyncTokens
-    ) {
+            ArrayList<ThermalPageHandle.GeometryResyncToken> resyncTokens) {
         if (draftCount == 0) {
             return PreparedTopologyChange.NO_PAGE_WRITES;
         }
@@ -474,36 +543,36 @@ public final class WorkerPageStore implements AutoCloseable {
                 new PreparedTopologyChange.PageWrite[draftCount];
         int admissionCount = 0;
         for (int index = 0; index < draftCount; index++) {
-            TopologyPlan.PageDraft draft = drafts.get(index);
+            TopologyUpdatePlanner.PageDraft draft = drafts.get(index);
             if (draft.retirement) {
-                writes[index] = PreparedTopologyChange.PageWrite.retirement(
-                        draft);
+                writes[index] = PreparedTopologyChange.PageWrite.retirement(draft);
                 continue;
             }
             if (draft.admission) {
                 admissionCount++;
             }
             int replacementCount = Long.bitCount(draft.replacementMask);
-            int[] brickIndexes = replacementCount == 0
-                    ? PreparedTopologyChange.NO_INTS
-                    : new int[replacementCount];
-            WorkerBrickTopology[] bricks = replacementCount == 0
-                    ? PreparedTopologyChange.NO_BRICKS
-                    : new WorkerBrickTopology[replacementCount];
-            boolean structural = draft.fragmentChangedMask != 0L
-                    || draft.cellReplacementMask != 0L
-                    || draft.admission;
-            long publicationChanges = draft.replacementMask
-                    | draft.signatureChangedMask;
-            boolean publicationChanged = structural
-                    || publicationChanges != 0L
-                    || draft.geometryRevision != draft.page.geometryRevision;
-            PagePublication previousPublication = draft.admission
-                    ? PagePublication.EMPTY
-                    : draft.page.publication;
+            int[] brickIndexes =
+                    replacementCount == 0
+                            ? PreparedTopologyChange.NO_INTS
+                            : new int[replacementCount];
+            WorkerBrickTopology[] bricks =
+                    replacementCount == 0
+                            ? PreparedTopologyChange.NO_BRICKS
+                            : new WorkerBrickTopology[replacementCount];
+            boolean structural =
+                    draft.fragmentChangedMask != 0L
+                            || draft.cellReplacementMask != 0L
+                            || draft.admission;
+            long publicationChanges = draft.replacementMask | draft.signatureChangedMask;
+            boolean publicationChanged =
+                    structural
+                            || publicationChanges != 0L
+                            || draft.geometryRevision != draft.page.geometryRevision;
+            PagePublication previousPublication =
+                    draft.admission ? PagePublication.EMPTY : draft.page.publication;
             PagePublication.Brick[] publicationBricks = null;
-            long resolvedMask = draft.admission
-                    ? 0L : draft.page.resolvedBrickMask;
+            long resolvedMask = draft.admission ? 0L : draft.page.resolvedBrickMask;
             int write = 0;
             long remaining = draft.replacementMask;
             while (remaining != 0L) {
@@ -531,95 +600,94 @@ public final class WorkerPageStore implements AutoCloseable {
                     if (publicationBricks == null) {
                         publicationBricks = previousPublication.copyBricks();
                     }
-                    publicationBricks[brick] = publicationBrick(
-                            topology,
-                            draft.nextSignatures.brickPayload(brick));
+                    publicationBricks[brick] =
+                            publicationBrick(topology, draft.nextSignatures.brickPayload(brick));
                 }
                 publicationChanges &= publicationChanges - 1L;
             }
-            long topologyGeneration = structural
-                    ? Math.incrementExact(draft.page.topologyGeneration)
-                    : draft.page.topologyGeneration;
+            long topologyGeneration =
+                    structural
+                            ? Math.incrementExact(draft.page.topologyGeneration)
+                            : draft.page.topologyGeneration;
             PagePublication publication = previousPublication;
             if (publicationChanged) {
-                publication = publicationBricks == null
-                        ? previousPublication.withIdentities(
-                                 draft.geometryRevision,
-                                 topologyGeneration)
-                        : PagePublication.owned(
-                                draft.page.pageSlot,
-                                draft.geometryRevision,
-                                topologyGeneration,
-                                publicationBricks);
+                publication =
+                        publicationBricks == null
+                                ? previousPublication.withIdentities(
+                                        draft.geometryRevision, topologyGeneration)
+                                : PagePublication.owned(
+                                        draft.page.pageSlot,
+                                        draft.geometryRevision,
+                                        topologyGeneration,
+                                        publicationBricks);
             }
-            writes[index] = PreparedTopologyChange.PageWrite.active(
-                    draft,
-                    resolvedMask,
-                    publication,
-                    brickIndexes,
-                    bricks,
-                    draft.skyCount == 0
-                            ? PreparedTopologyChange.NO_SHORTS
-                            : Arrays.copyOf(draft.skyColumns, draft.skyCount),
-                    draft.skyCount == 0
-                            ? PreparedTopologyChange.NO_BYTES
-                            : Arrays.copyOf(draft.skyValues, draft.skyCount));
+            writes[index] =
+                    PreparedTopologyChange.PageWrite.active(
+                            draft,
+                            resolvedMask,
+                            publication,
+                            brickIndexes,
+                            bricks,
+                            draft.skyCount == 0
+                                    ? PreparedTopologyChange.NO_SHORTS
+                                    : Arrays.copyOf(draft.skyColumns, draft.skyCount),
+                            draft.skyCount == 0
+                                    ? PreparedTopologyChange.NO_BYTES
+                                    : Arrays.copyOf(draft.skyValues, draft.skyCount));
             if (draft.resyncToken != null) {
                 resyncTokens.add(draft.resyncToken);
             }
         }
         if (admissionCount != 0) {
-            residencyIdentityChanges.ensureCapacity(Math.addExact(
-                    residencyIdentityChanges.size(), admissionCount));
+            residencyIdentityChanges.ensureCapacity(
+                    Math.addExact(residencyIdentityChanges.size(), admissionCount));
         }
         return writes;
     }
 
     private static boolean queryMetadataChanged(
-            WorkerBrickTopology previous,
-            WorkerBrickTopology next
-    ) {
+            WorkerBrickTopology previous, WorkerBrickTopology next) {
         return previous.resolved != next.resolved
                 || previous.coverageSlot != next.coverageSlot
                 || previous.coverageGeneration != next.coverageGeneration
                 || previous.blockLayout != next.blockLayout
-                || previous.transportNodeCount != next.transportNodeCount;
+                || previous.airNodeCount != next.airNodeCount;
     }
 
     private static PagePublication.Brick publicationBrick(
-            WorkerBrickTopology topology,
-            Object signaturePayload
-    ) {
+            WorkerBrickTopology topology, Object signaturePayload) {
         return new PagePublication.Brick(
-                topology.cellsResolved && topology.span.count() > 0 ? topology.span.firstSlot() : -1,
+                topology.cellsResolved && topology.span.count() > 0
+                        ? topology.span.firstSlot()
+                        : -1,
                 topology.cellsResolved ? topology.coverageGeneration : 0,
                 signaturePayload,
                 topology.cellsResolved ? topology.blockLayout : null,
-                topology.cellsResolved ? topology.transportNodeCount : 0,
+                topology.cellsResolved ? topology.airNodeCount : 0,
                 topology.cellsResolved);
-    }
-
-    public int resolveAirFaceSlot(
-            int blockX,
-            int blockY,
-            int blockZ,
-            BlockFace face,
-            ThermalSignatureTable signatures
-    ) {
-        return resolveAirFaceTarget(blockX, blockY, blockZ, face, signatures, null);
     }
 
     public static final class MutableAirTarget {
         private int generation;
-        public int generation() { return generation; }
+
+        public int generation() {
+            return generation;
+        }
     }
 
-    public int resolveAirFaceTarget(int blockX, int blockY, int blockZ, BlockFace face,
-            ThermalSignatureTable signatures, MutableAirTarget out) {
-        long sectionKey = net.minecraft.core.SectionPos.asLong(
-                net.minecraft.core.SectionPos.blockToSectionCoord(blockX),
-                net.minecraft.core.SectionPos.blockToSectionCoord(blockY),
-                net.minecraft.core.SectionPos.blockToSectionCoord(blockZ));
+    /** Resolves a slot and writes its generation to the caller's reusable result on success. */
+    public int resolveAirFaceTarget(
+            int blockX,
+            int blockY,
+            int blockZ,
+            BlockFace face,
+            ThermalSignatureTable signatures,
+            MutableAirTarget out) {
+        long sectionKey =
+                net.minecraft.core.SectionPos.asLong(
+                        net.minecraft.core.SectionPos.blockToSectionCoord(blockX),
+                        net.minecraft.core.SectionPos.blockToSectionCoord(blockY),
+                        net.minecraft.core.SectionPos.blockToSectionCoord(blockZ));
         PageState page = activeBySection.get(sectionKey);
         if (page == null) {
             return PORT_TOPOLOGY_UNAVAILABLE;
@@ -628,55 +696,51 @@ public final class WorkerPageStore implements AutoCloseable {
         int localY = net.minecraft.core.SectionPos.sectionRelative(blockY);
         int localZ = net.minecraft.core.SectionPos.sectionRelative(blockZ);
         int pageBlock = localX | localZ << 4 | localY << 8;
-        int brickIndex = (localX >>> 2)
-                | (localZ >>> 2) << 2
-                | (localY >>> 2) << 4;
+        int brickIndex = (localX >>> 2) | (localZ >>> 2) << 2 | (localY >>> 2) << 4;
         WorkerBrickTopology brick = page.brick(brickIndex);
         if (!brick.cellsResolved) {
             return PORT_TOPOLOGY_UNAVAILABLE;
         }
         int signatureId = page.signatures.get(pageBlock);
-        int blockInBrick = localX & 3
-                | (localZ & 3) << 2
-                | (localY & 3) << 4;
-        int slot = brick.transportSlot(blockInBrick);
+        int blockInBrick = localX & 3 | (localZ & 3) << 2 | (localY & 3) << 4;
+        int slot = brick.airSlotAt(blockInBrick);
         if (slot >= 0) {
-            if (out != null) out.generation = page.lifecycleGeneration;
+            out.generation = page.lifecycleGeneration;
             return slot;
         }
         if (signatures.ventilation(signatureId) == 0) return PORT_BLOCKED;
         if (brick.blockLayout != null && brick.blockLayout.hasAirRoute(blockInBrick)) {
             long target = brick.blockLayout.routedAirBlock(blockInBrick);
-            int x = net.minecraft.core.BlockPos.getX(target), y = net.minecraft.core.BlockPos.getY(target), z = net.minecraft.core.BlockPos.getZ(target);
+            int x = BlockPos.getX(target), y = BlockPos.getY(target), z = BlockPos.getZ(target);
             PageState targetPage = find(SectionPos.asLong(x >> 4, y >> 4, z >> 4));
             if (targetPage == null) return PORT_TOPOLOGY_UNAVAILABLE;
             int targetBrick = (x & 15) >>> 2 | ((z & 15) >>> 2) << 2 | ((y & 15) >>> 2) << 4;
             var topology = targetPage.brick(targetBrick);
             int targetBlock = (x & 3) | (z & 3) << 2 | (y & 3) << 4;
-            slot = topology.cellsResolved ? topology.transportSlot(targetBlock) : -1;
+            slot = topology.cellsResolved ? topology.airSlotAt(targetBlock) : -1;
             if (slot >= 0) {
-                if (out != null) out.generation = targetPage.lifecycleGeneration;
+                out.generation = targetPage.lifecycleGeneration;
                 return slot;
             }
         }
-        long position = net.minecraft.core.BlockPos.asLong(blockX, blockY, blockZ);
-        return airRoutes != null && airRoutes.closed(position) ? PORT_BLOCKED : PORT_TOPOLOGY_UNAVAILABLE;
+        long position = BlockPos.asLong(blockX, blockY, blockZ);
+        return airRoutes != null && airRoutes.closed(position)
+                ? PORT_BLOCKED
+                : PORT_TOPOLOGY_UNAVAILABLE;
     }
 
     public int lifecycleGenerationAt(int blockX, int blockY, int blockZ) {
-        PageState page = activeBySection.get(
-                net.minecraft.core.SectionPos.asLong(
-                        net.minecraft.core.SectionPos.blockToSectionCoord(blockX),
-                        net.minecraft.core.SectionPos.blockToSectionCoord(blockY),
-                        net.minecraft.core.SectionPos.blockToSectionCoord(blockZ)));
+        PageState page =
+                activeBySection.get(
+                        net.minecraft.core.SectionPos.asLong(
+                                net.minecraft.core.SectionPos.blockToSectionCoord(blockX),
+                                net.minecraft.core.SectionPos.blockToSectionCoord(blockY),
+                                net.minecraft.core.SectionPos.blockToSectionCoord(blockZ)));
         if (page == null) {
-            throw new IllegalStateException(
-                    "resolved source target Page is no longer active");
+            throw new IllegalStateException("resolved source target Page is no longer active");
         }
         return page.lifecycleGeneration;
     }
-
-
 
     PageState stageAdmission(ThermalInputBatch.PageAdmission admission) {
         requireOpen();
@@ -684,8 +748,7 @@ public final class WorkerPageStore implements AutoCloseable {
         PageState current = activeBySection.get(handle.sectionKey());
         if (current != null) {
             if (current.handle != handle) {
-                throw new IllegalStateException(
-                        "another Page lifecycle already owns this section");
+                throw new IllegalStateException("another Page lifecycle already owns this section");
             }
             return current;
         }
@@ -700,13 +763,11 @@ public final class WorkerPageStore implements AutoCloseable {
                 admission.signatures(),
                 admission.naturalTemperatureC(),
                 admission.firstExposedLocalY(),
-                admission.dormantAir(), admission.dormantMaterials());
+                admission.dormantAir(),
+                admission.dormantMaterials());
     }
 
-    PageState stageReplacement(
-            PageState current,
-            ThermalInputBatch.PageAdmission admission
-    ) {
+    PageState stageReplacement(PageState current, ThermalInputBatch.PageAdmission admission) {
         requireOpen();
         ThermalPageHandle handle = admission.page();
         if (current == null
@@ -727,7 +788,8 @@ public final class WorkerPageStore implements AutoCloseable {
                 admission.signatures(),
                 admission.naturalTemperatureC(),
                 admission.firstExposedLocalY(),
-                admission.dormantAir(), admission.dormantMaterials());
+                admission.dormantAir(),
+                admission.dormantMaterials());
     }
 
     void releaseStagedAdmission(PageState state) {
@@ -736,13 +798,8 @@ public final class WorkerPageStore implements AutoCloseable {
         }
     }
 
-    boolean canCommit(
-            PageState state,
-            PageState replacedPage,
-            boolean admission
-    ) {
-        PageState sectionOwner = activeBySection.get(
-                state.handle.sectionKey());
+    boolean canCommit(PageState state, PageState replacedPage, boolean admission) {
+        PageState sectionOwner = activeBySection.get(state.handle.sectionKey());
         PageState slotOwner = activeBySlot.get(state.pageSlot);
         if (replacedPage != null) {
             return admission
@@ -761,8 +818,7 @@ public final class WorkerPageStore implements AutoCloseable {
         activeBySection.put(state.handle.sectionKey(), state);
         activeBySlot.put(state.pageSlot, state);
         residencyIdentityChanges.add(state.handle.sectionKey());
-        hotMaskScratch.installPage(
-                state.pageSlot, state.naturalTemperatureC);
+        hotMaskScratch.installPage(state.pageSlot, state.naturalTemperatureC);
         state.dormantAir = null;
         state.dormantMaterials = null;
     }
@@ -786,8 +842,7 @@ public final class WorkerPageStore implements AutoCloseable {
             long resolvedBrickMask,
             long residentBrickMask,
             long sourceSeedMask,
-            PagePublication publication
-    ) {
+            PagePublication publication) {
         state.signatures = signatures;
         state.geometryRevision = geometryRevision;
         state.topologyGeneration = topologyGeneration;
@@ -797,11 +852,7 @@ public final class WorkerPageStore implements AutoCloseable {
         state.publication = publication;
     }
 
-    void installBrick(
-            PageState state,
-            int brickIndex,
-            WorkerBrickTopology topology
-    ) {
+    void installBrick(PageState state, int brickIndex, WorkerBrickTopology topology) {
         state.bricks[brickIndex] = topology;
     }
 
@@ -879,8 +930,7 @@ public final class WorkerPageStore implements AutoCloseable {
                 double naturalTemperatureC,
                 byte[] firstExposedLocalY,
                 ThermalInputBatch.DormantAirCut dormantAir,
-                ThermalInputBatch.DormantMaterialCut dormantMaterials
-        ) {
+                ThermalInputBatch.DormantMaterialCut dormantMaterials) {
             this.handle = Objects.requireNonNull(handle, "handle");
             this.pageSlot = pageSlot;
             this.lifecycleGeneration = lifecycleGeneration;
@@ -897,14 +947,11 @@ public final class WorkerPageStore implements AutoCloseable {
 
         int fragmentIndex(int brickIndex) {
             return Math.addExact(
-                    Math.multiplyExact(
-                            pageSlot, ThermalPageHandle.BASE_BRICK_COUNT),
-                    brickIndex);
+                    Math.multiplyExact(pageSlot, ThermalPageHandle.BASE_BRICK_COUNT), brickIndex);
         }
 
         WorkerBrickTopology brick(int brickIndex) {
             return bricks[brickIndex];
         }
-
     }
 }

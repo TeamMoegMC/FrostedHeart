@@ -1,12 +1,17 @@
 /* Copyright (c) 2026 TeamMoeg */
 package com.teammoeg.frostedheart.content.climate.thermal.persistence.minecraft;
 
+import static com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.message.ResolvedGeometryBatch.MaterialChanges.*;
+
+import com.teammoeg.frostedheart.content.climate.thermal.mesh.MaterialSample;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.MaterialThermalLaw;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.PagePublication;
+import com.teammoeg.frostedheart.content.climate.thermal.persistence.DormantThermalCooling;
 import com.teammoeg.frostedheart.content.climate.thermal.profile.ThermalSignatureTable;
 import com.teammoeg.frostedheart.content.climate.thermal.query.QueryPublication;
-import com.teammoeg.frostedheart.content.climate.thermal.persistence.DormantThermalCooling;
+
 import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
+
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
@@ -18,9 +23,13 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.BitSet;
 import java.util.LinkedHashMap;
-import static com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.message.ResolvedGeometryBatch.MaterialChanges.*;
 
-/** Immutable, position-addressed body energy and its actual sampling time. */
+/**
+ * Exact material energy checkpoints, sorted by Page-local block index (x | z << 4 | y << 8).
+ * Energy is in joules; paletteIndexes selects the BlockState and shared law for each record.
+ * savedTicks is allocated only when record times differ from the common savedTick.
+ * Editor copies shared arrays before mutation; Air residual packing is a separate format.
+ */
 public final class MaterialSectionState {
     private final short[] positions;
     private final double[] enthalpiesJ;
@@ -32,8 +41,15 @@ public final class MaterialSectionState {
     private final long savedTick;
     private long[] savedTicks;
 
-    private MaterialSectionState(short[] positions, double[] enthalpiesJ, byte[] branches,
-            int[] paletteIndexes, int[] stateIds, MaterialThermalLaw[] laws, long savedTick, long[] savedTicks) {
+    private MaterialSectionState(
+            short[] positions,
+            double[] enthalpiesJ,
+            byte[] branches,
+            int[] paletteIndexes,
+            int[] stateIds,
+            MaterialThermalLaw[] laws,
+            long savedTick,
+            long[] savedTicks) {
         this.positions = positions;
         this.enthalpiesJ = enthalpiesJ;
         this.branches = branches;
@@ -47,34 +63,68 @@ public final class MaterialSectionState {
         brickMask = mask;
     }
 
-    public int size() { return positions.length; }
-    public int position(int index) { return Short.toUnsignedInt(positions[index]); }
-    public double enthalpyJ(int index) { return enthalpiesJ[index]; }
-    public byte branch(int index) { return branches[index]; }
-    public long savedTick(int index) { return savedTicks == null ? savedTick : savedTicks[index]; }
-    public int stateId(int index) { return stateIds[paletteIndexes[index]]; }
-    public MaterialThermalLaw law(int index) { return laws[paletteIndexes[index]]; }
-    public int find(int position) { return Arrays.binarySearch(positions, (short) position); }
-    public double temperatureC(int index) { return law(index).temperatureC(enthalpiesJ[index], branches[index]); }
+    public int size() {
+        return positions.length;
+    }
+
+    public int position(int index) {
+        return Short.toUnsignedInt(positions[index]);
+    }
+
+    public double enthalpyJ(int index) {
+        return enthalpiesJ[index];
+    }
+
+    public byte branch(int index) {
+        return branches[index];
+    }
+
+    public long savedTick(int index) {
+        return savedTicks == null ? savedTick : savedTicks[index];
+    }
+
+    public int stateId(int index) {
+        return stateIds[paletteIndexes[index]];
+    }
+
+    public MaterialThermalLaw law(int index) {
+        return laws[paletteIndexes[index]];
+    }
+
+    public int find(int position) {
+        return Arrays.binarySearch(positions, (short) position);
+    }
+
+    public double temperatureC(int index) {
+        return law(index).temperatureC(enthalpiesJ[index], branches[index]);
+    }
 
     public long brickMask() {
         return brickMask;
     }
 
     public static boolean contentEquals(MaterialSectionState first, MaterialSectionState second) {
-        return first == second || first != null && second != null
-                && Arrays.equals(first.positions, second.positions)
-                && Arrays.equals(first.enthalpiesJ, second.enthalpiesJ)
-                && Arrays.equals(first.branches, second.branches)
-                && Arrays.equals(first.paletteIndexes, second.paletteIndexes)
-                && Arrays.equals(first.stateIds, second.stateIds)
-                && Arrays.equals(first.laws, second.laws)
-                && first.savedTick == second.savedTick && Arrays.equals(first.savedTicks, second.savedTicks);
+        return first == second
+                || first != null
+                        && second != null
+                        && Arrays.equals(first.positions, second.positions)
+                        && Arrays.equals(first.enthalpiesJ, second.enthalpiesJ)
+                        && Arrays.equals(first.branches, second.branches)
+                        && Arrays.equals(first.paletteIndexes, second.paletteIndexes)
+                        && Arrays.equals(first.stateIds, second.stateIds)
+                        && Arrays.equals(first.laws, second.laws)
+                        && first.savedTick == second.savedTick
+                        && Arrays.equals(first.savedTicks, second.savedTicks);
     }
 
     /** Same positions, so editing data/palettes does not rescan the Section's Brick mask. */
-    private MaterialSectionState(MaterialSectionState previous, double[] energies, byte[] branches,
-            int[] indexes, int[] states, MaterialThermalLaw[] laws) {
+    private MaterialSectionState(
+            MaterialSectionState previous,
+            double[] energies,
+            byte[] branches,
+            int[] indexes,
+            int[] states,
+            MaterialThermalLaw[] laws) {
         positions = previous.positions;
         brickMask = previous.brickMask;
         enthalpiesJ = energies;
@@ -92,7 +142,7 @@ public final class MaterialSectionState {
         private boolean shared = true;
         private int size;
         private int[] references;
-        private QueryPublication.MutableMaterialSample changeSample;
+        private MaterialSample changeSample;
 
         public Editor(MaterialSectionState initial) {
             state = initial;
@@ -104,12 +154,16 @@ public final class MaterialSectionState {
             return index < 0 || state.paletteIndexes[index] < 0 ? -1 : index;
         }
 
-        public boolean isEmpty() { return size == 0; }
+        public boolean isEmpty() {
+            return size == 0;
+        }
 
-        public DormantChunkThermalState.MaterialRead read(int position, int stateId, QueryPublication.MutableMaterialSample out) {
+        public DormantChunkThermalState.MaterialRead read(
+                int position, int stateId, MaterialSample out) {
             int index = find(position);
             if (index < 0) return DormantChunkThermalState.MaterialRead.MISSING;
-            if (state.stateId(index) != stateId) return DormantChunkThermalState.MaterialRead.MISMATCH;
+            if (state.stateId(index) != stateId)
+                return DormantChunkThermalState.MaterialRead.MISMATCH;
             state.readCheckpoint(index, out);
             return DormantChunkThermalState.MaterialRead.MATCH;
         }
@@ -131,53 +185,95 @@ public final class MaterialSectionState {
                     if (ticks != null) ticks[next] = state.savedTick(i);
                     next++;
                 }
-                state = new MaterialSectionState(positions, energies, branches, indexes, state.stateIds, state.laws,
-                        state.savedTick, ticks);
+                state =
+                        new MaterialSectionState(
+                                positions,
+                                energies,
+                                branches,
+                                indexes,
+                                state.stateIds,
+                                state.laws,
+                                state.savedTick,
+                                ticks);
             }
             shared = true;
             return state;
         }
 
-        public boolean applyChange(int position, int stateId, MaterialThermalLaw nextLaw, byte cause,
-                double naturalC, long tick, double coolingRate, double coolingNaturalC) {
+        public boolean applyChange(
+                int position,
+                int stateId,
+                MaterialThermalLaw nextLaw,
+                byte cause,
+                double naturalC,
+                long tick,
+                double coolingRate,
+                double coolingNaturalC) {
             int index = find(position);
             if (index < 0) return false;
             if (nextLaw == null) return removeAt(index);
             double energy = state.enthalpiesJ[index];
             byte branch = state.branches[index];
             if (cause != REPLACE && coolingRate > 0) {
-                if (changeSample == null) changeSample = new QueryPublication.MutableMaterialSample();
+                if (changeSample == null) changeSample = new MaterialSample();
                 state.readCheckpoint(index, changeSample);
                 DormantThermalCooling.project(changeSample, tick, coolingNaturalC, coolingRate);
                 energy = changeSample.enthalpyJ();
                 branch = changeSample.branch();
             }
             if (cause == REPLACE) energy = nextLaw.enthalpyAtTemperature(naturalC);
-            else if (cause == MASS_CHANGE) energy = state.law(index).afterMassChange(energy, nextLaw, naturalC);
-            else if (cause == GAMEPLAY_TRANSITION) energy = nextLaw.enthalpyAtTemperature(state.law(index).temperatureC(energy, branch));
+            else if (cause == MASS_CHANGE)
+                energy = state.law(index).afterMassChange(energy, nextLaw, naturalC);
+            else if (cause == GAMEPLAY_TRANSITION)
+                energy =
+                        nextLaw.enthalpyAtTemperature(
+                                state.law(index).temperatureC(energy, branch));
             return updateAt(index, stateId, nextLaw, energy, cause == 0 ? branch : 0, tick);
         }
 
-        public boolean update(int position, int stateId, MaterialThermalLaw law, double energy, byte branch, long tick) {
+        public boolean update(
+                int position,
+                int stateId,
+                MaterialThermalLaw law,
+                double energy,
+                byte branch,
+                long tick) {
             int index = find(position);
             return index >= 0 && updateAt(index, stateId, law, energy, branch, tick);
         }
 
-        private boolean updateAt(int index, int stateId, MaterialThermalLaw law, double energy, byte branch, long tick) {
-            if (state.stateId(index) == stateId && state.law(index).equals(law)
-                    && Double.doubleToLongBits(state.enthalpiesJ[index]) == Double.doubleToLongBits(energy)
-                    && state.branches[index] == branch && state.savedTick(index) == tick) return false;
+        private boolean updateAt(
+                int index,
+                int stateId,
+                MaterialThermalLaw law,
+                double energy,
+                byte branch,
+                long tick) {
+            if (state.stateId(index) == stateId
+                    && state.law(index).equals(law)
+                    && Double.doubleToLongBits(state.enthalpiesJ[index])
+                            == Double.doubleToLongBits(energy)
+                    && state.branches[index] == branch
+                    && state.savedTick(index) == tick) return false;
             writable();
             int palette = 0;
-            while (palette < references.length && (state.stateIds[palette] != stateId || !law.equals(state.laws[palette]))) palette++;
+            while (palette < references.length
+                    && (state.stateIds[palette] != stateId || !law.equals(state.laws[palette])))
+                palette++;
             references[state.paletteIndexes[index]]--;
             if (palette == references.length) {
                 palette = 0;
                 while (palette < references.length && references[palette] != 0) palette++;
                 if (palette == references.length) {
                     references = Arrays.copyOf(references, palette + 1);
-                    state = new MaterialSectionState(state, state.enthalpiesJ, state.branches, state.paletteIndexes,
-                            Arrays.copyOf(state.stateIds, palette + 1), Arrays.copyOf(state.laws, palette + 1));
+                    state =
+                            new MaterialSectionState(
+                                    state,
+                                    state.enthalpiesJ,
+                                    state.branches,
+                                    state.paletteIndexes,
+                                    Arrays.copyOf(state.stateIds, palette + 1),
+                                    Arrays.copyOf(state.laws, palette + 1));
                 }
                 state.stateIds[palette] = stateId;
                 state.laws[palette] = law;
@@ -201,7 +297,9 @@ public final class MaterialSectionState {
 
         private boolean removeAt(int index) {
             if (size == 1) {
-                state = null; size = 0; references = null;
+                state = null;
+                size = 0;
+                references = null;
                 return true;
             }
             writable();
@@ -213,8 +311,14 @@ public final class MaterialSectionState {
 
         private void writable() {
             if (shared) {
-                state = new MaterialSectionState(state, state.enthalpiesJ.clone(), state.branches.clone(),
-                        state.paletteIndexes.clone(), state.stateIds.clone(), state.laws.clone());
+                state =
+                        new MaterialSectionState(
+                                state,
+                                state.enthalpiesJ.clone(),
+                                state.branches.clone(),
+                                state.paletteIndexes.clone(),
+                                state.stateIds.clone(),
+                                state.laws.clone());
                 if (state.savedTicks != null) state.savedTicks = state.savedTicks.clone();
                 shared = false;
             }
@@ -234,10 +338,12 @@ public final class MaterialSectionState {
     }
 
     /** Replace only sampled Bricks; untouched dormant material remains owned by the chunk. */
-    public static MaterialSectionState merge(MaterialSectionState previous, MaterialSectionState current, long sampledBricks) {
+    public static MaterialSectionState merge(
+            MaterialSectionState previous, MaterialSectionState current, long sampledBricks) {
         if (previous == null) return current;
         int retained = 0;
-        for (short position : previous.positions) if ((sampledBricks & 1L << brickIndex(position)) == 0) retained++;
+        for (short position : previous.positions)
+            if ((sampledBricks & 1L << brickIndex(position)) == 0) retained++;
         if (retained == 0) return current;
         int count = retained + (current == null ? 0 : current.size());
         short[] positions = new short[count];
@@ -249,9 +355,14 @@ public final class MaterialSectionState {
         LinkedHashMap<PaletteKey, Integer> palette = new LinkedHashMap<>();
         int oldIndex = 0, newIndex = 0;
         for (int index = 0; index < count; index++) {
-            while (oldIndex < previous.size() && (sampledBricks & 1L << brickIndex(previous.positions[oldIndex])) != 0) oldIndex++;
-            boolean takeOld = oldIndex < previous.size() && (current == null || newIndex == current.size()
-                    || previous.positions[oldIndex] < current.positions[newIndex]);
+            while (oldIndex < previous.size()
+                    && (sampledBricks & 1L << brickIndex(previous.positions[oldIndex])) != 0)
+                oldIndex++;
+            boolean takeOld =
+                    oldIndex < previous.size()
+                            && (current == null
+                                    || newIndex == current.size()
+                                    || previous.positions[oldIndex] < current.positions[newIndex]);
             MaterialSectionState source = takeOld ? previous : current;
             int sourceIndex = takeOld ? oldIndex++ : newIndex++;
             positions[index] = source.positions[sourceIndex];
@@ -273,33 +384,53 @@ public final class MaterialSectionState {
             states[entry.getValue()] = entry.getKey().stateId;
             laws[entry.getValue()] = entry.getKey().law;
         }
-        return new MaterialSectionState(positions, energy, branches, indexes, states, laws, firstTick, ticks);
+        return new MaterialSectionState(
+                positions, energy, branches, indexes, states, laws, firstTick, ticks);
     }
 
     private record PaletteKey(int stateId, MaterialThermalLaw law) {}
 
     private static int brickIndex(int position) {
-        return (position & 15) >>> 2 | (position >>> 4 & 15) >>> 2 << 2 | (position >>> 8 & 15) >>> 2 << 4;
+        return (position & 15) >>> 2
+                | (position >>> 4 & 15) >>> 2 << 2
+                | (position >>> 8 & 15) >>> 2 << 4;
     }
 
-    private void readCheckpoint(int index, QueryPublication.MutableMaterialSample out) {
+    private void readCheckpoint(int index, MaterialSample out) {
         out.setStored(enthalpiesJ[index], law(index), branches[index], savedTick(index));
     }
 
-    public void read(int index, MaterialThermalLaw currentLaw, long tick, double naturalC, double coolingRate,
-            QueryPublication.MutableMaterialSample out) {
-        read(index, currentLaw, tick, naturalC, coolingRate,
-                DormantThermalCooling.fraction(savedTick(index), tick, coolingRate), out);
+    public void read(
+            int index,
+            MaterialThermalLaw currentLaw,
+            long tick,
+            double naturalC,
+            double coolingRate,
+            MaterialSample out) {
+        read(
+                index,
+                currentLaw,
+                tick,
+                naturalC,
+                coolingRate,
+                DormantThermalCooling.fraction(savedTick(index), tick, coolingRate),
+                out);
     }
 
-    public void read(int index, MaterialThermalLaw currentLaw, long tick, double naturalC, double coolingRate,
-            double sensibleFraction, QueryPublication.MutableMaterialSample out) {
+    public void read(
+            int index,
+            MaterialThermalLaw currentLaw,
+            long tick,
+            double naturalC,
+            double coolingRate,
+            double sensibleFraction,
+            MaterialSample out) {
         readCheckpoint(index, out);
         DormantThermalCooling.project(out, tick, naturalC, coolingRate, sensibleFraction);
         adaptLaw(out, currentLaw);
     }
 
-    public static void adaptLaw(QueryPublication.MutableMaterialSample out, MaterialThermalLaw currentLaw) {
+    public static void adaptLaw(MaterialSample out, MaterialThermalLaw currentLaw) {
         MaterialThermalLaw previous = out.law();
         double energy = out.enthalpyJ();
         byte branch = out.branch();
@@ -307,9 +438,13 @@ public final class MaterialSectionState {
             double temperature = previous.temperatureC(energy, branch);
             var oldEdge = previous.transition(branch);
             var newEdge = currentLaw.transition(branch);
-            if (oldEdge != null && newEdge != null && oldEdge.targetStateId() == newEdge.targetStateId()) {
-                energy = newEdge.sourceEnthalpyJ() + oldEdge.progress(energy)
-                        * (newEdge.targetEnthalpyJ() - newEdge.sourceEnthalpyJ());
+            if (oldEdge != null
+                    && newEdge != null
+                    && oldEdge.targetStateId() == newEdge.targetStateId()) {
+                energy =
+                        newEdge.sourceEnthalpyJ()
+                                + oldEdge.progress(energy)
+                                        * (newEdge.targetEnthalpyJ() - newEdge.sourceEnthalpyJ());
             } else {
                 double latentRemainder = energy - previous.enthalpyAtTemperature(temperature);
                 energy = currentLaw.enthalpyAtTemperature(temperature) + latentRemainder;
@@ -327,13 +462,16 @@ public final class MaterialSectionState {
         final Int2IntOpenHashMap paletteByState = new Int2IntOpenHashMap();
         final ArrayList<Integer> states = new ArrayList<>();
         final ArrayList<MaterialThermalLaw> laws = new ArrayList<>();
-        final QueryPublication.MutableMaterialSample sample = new QueryPublication.MutableMaterialSample();
+        final MaterialSample sample = new MaterialSample();
     }
 
     public record Capture(boolean valid, long sampledBricks, MaterialSectionState state) {}
 
-    public static Capture capture(PagePublication page, QueryPublication query,
-            ThermalSignatureTable signatures, CaptureScratch scratch) {
+    public static Capture capture(
+            PagePublication page,
+            QueryPublication query,
+            ThermalSignatureTable signatures,
+            CaptureScratch scratch) {
         Arrays.fill(scratch.presence, 0);
         scratch.paletteByState.clear();
         scratch.paletteByState.defaultReturnValue(-1);
@@ -350,9 +488,13 @@ public final class MaterialSectionState {
                 int node = payload.blockLayout().nodeAt(block);
                 int stateId = signatures.materialStateId(payload.signatureAtBlock(block));
                 if (node < 0 || stateId < 0) continue;
-                if (!query.tryReadMaterial(payload.firstSlot() + node, payload.arenaGeneration(),
-                        page.topologyGeneration(), scratch.sample)) return new Capture(false, 0, null);
-                if (tick >= 0 && tick != scratch.sample.sampleTick()) return new Capture(false, 0, null);
+                if (!query.tryReadMaterial(
+                        payload.firstSlot() + node,
+                        payload.arenaGeneration(),
+                        page.topologyGeneration(),
+                        scratch.sample)) return new Capture(false, 0, null);
+                if (tick >= 0 && tick != scratch.sample.sampleTick())
+                    return new Capture(false, 0, null);
                 tick = scratch.sample.sampleTick();
                 int palette = scratch.paletteByState.get(stateId);
                 if (palette < 0) {
@@ -361,7 +503,9 @@ public final class MaterialSectionState {
                     scratch.states.add(stateId);
                     scratch.laws.add(scratch.sample.law());
                 }
-                int position = com.teammoeg.frostedheart.content.climate.thermal.mesh.BlockBrickLayout.pageBlock(brick, block);
+                int position =
+                        com.teammoeg.frostedheart.content.climate.thermal.mesh.BlockBrickLayout
+                                .pageBlock(brick, block);
                 scratch.presence[position >>> 6] |= 1L << (position & 63);
                 scratch.enthalpies[position] = scratch.sample.enthalpyJ();
                 scratch.branches[position] = scratch.sample.branch();
@@ -388,8 +532,18 @@ public final class MaterialSectionState {
         }
         int[] stateIds = new int[scratch.states.size()];
         for (int i = 0; i < stateIds.length; i++) stateIds[i] = scratch.states.get(i);
-        return new Capture(true, sampledBricks, new MaterialSectionState(positions, enthalpies, branches,
-                palettes, stateIds, scratch.laws.toArray(MaterialThermalLaw[]::new), tick, null));
+        return new Capture(
+                true,
+                sampledBricks,
+                new MaterialSectionState(
+                        positions,
+                        enthalpies,
+                        branches,
+                        palettes,
+                        stateIds,
+                        scratch.laws.toArray(MaterialThermalLaw[]::new),
+                        tick,
+                        null));
     }
 
     CompoundTag encode() {
@@ -411,15 +565,19 @@ public final class MaterialSectionState {
         if (used.cardinality() != stateIds.length) {
             int[] remap = new int[stateIds.length];
             int next = 0;
-            for (int index = used.nextSetBit(0); index >= 0; index = used.nextSetBit(index + 1)) remap[index] = next++;
+            for (int index = used.nextSetBit(0); index >= 0; index = used.nextSetBit(index + 1))
+                remap[index] = next++;
             encodedIndexes = new int[paletteIndexes.length];
-            for (int index = 0; index < encodedIndexes.length; index++) encodedIndexes[index] = remap[paletteIndexes[index]];
+            for (int index = 0; index < encodedIndexes.length; index++)
+                encodedIndexes[index] = remap[paletteIndexes[index]];
         }
         tag.putIntArray("palette_indexes", encodedIndexes);
         ListTag palette = new ListTag();
         for (int index = used.nextSetBit(0); index >= 0; index = used.nextSetBit(index + 1)) {
             CompoundTag entry = new CompoundTag();
-            entry.put("state", NbtUtils.writeBlockState(Block.BLOCK_STATE_REGISTRY.byId(stateIds[index])));
+            entry.put(
+                    "state",
+                    NbtUtils.writeBlockState(Block.BLOCK_STATE_REGISTRY.byId(stateIds[index])));
             entry.putDouble("capacity", laws[index].capacityJPerK());
             entry.putDouble("offset", laws[index].offsetJ());
             writeEdge(entry, "heating", laws[index].heating());
@@ -436,8 +594,10 @@ public final class MaterialSectionState {
         int[] indexes = tag.getIntArray("palette_indexes");
         long tick = tag.getLong("tick");
         long[] ticks = tag.contains("ticks", Tag.TAG_LONG_ARRAY) ? tag.getLongArray("ticks") : null;
-        if (energies.length == 0 || encoded.length != energies.length * 2
-                || branches.length != energies.length || indexes.length != energies.length
+        if (energies.length == 0
+                || encoded.length != energies.length * 2
+                || branches.length != energies.length
+                || indexes.length != energies.length
                 || ticks != null && ticks.length != energies.length) return null;
         ListTag palette = tag.getList("palette", Tag.TAG_COMPOUND);
         int[] stateIds = new int[palette.size()];
@@ -447,17 +607,28 @@ public final class MaterialSectionState {
             stateIds[index] = readState(entry.getCompound("state"));
             double capacity = entry.getDouble("capacity"), offset = entry.getDouble("offset");
             if (!Double.isFinite(capacity) || capacity <= 0 || !Double.isFinite(offset)) continue;
-            laws[index] = new MaterialThermalLaw(capacity, offset, readEdge(entry, "heating"), readEdge(entry, "cooling"));
+            laws[index] =
+                    new MaterialThermalLaw(
+                            capacity,
+                            offset,
+                            readEdge(entry, "heating"),
+                            readEdge(entry, "cooling"));
         }
         short[] positions = new short[energies.length];
         double[] enthalpies = new double[energies.length];
         int count = 0, previous = -1;
         for (int index = 0; index < energies.length; index++) {
-            int position = Byte.toUnsignedInt(encoded[index * 2]) << 8 | Byte.toUnsignedInt(encoded[index * 2 + 1]);
+            int position =
+                    Byte.toUnsignedInt(encoded[index * 2]) << 8
+                            | Byte.toUnsignedInt(encoded[index * 2 + 1]);
             double energy = Double.longBitsToDouble(energies[index]);
             int entry = indexes[index];
-            if (position <= previous || position >= 4096 || !Double.isFinite(energy)
-                    || entry < 0 || entry >= laws.length || laws[entry] == null) continue;
+            if (position <= previous
+                    || position >= 4096
+                    || !Double.isFinite(energy)
+                    || entry < 0
+                    || entry >= laws.length
+                    || laws[entry] == null) continue;
             previous = position;
             positions[count] = (short) position;
             enthalpies[count] = energy;
@@ -465,16 +636,27 @@ public final class MaterialSectionState {
             if (ticks != null) ticks[count] = ticks[index];
             indexes[count++] = entry;
         }
-        return count == 0 ? null : new MaterialSectionState(Arrays.copyOf(positions, count),
-                Arrays.copyOf(enthalpies, count), Arrays.copyOf(branches, count), Arrays.copyOf(indexes, count), stateIds, laws,
-                tick, ticks == null ? null : Arrays.copyOf(ticks, count));
+        return count == 0
+                ? null
+                : new MaterialSectionState(
+                        Arrays.copyOf(positions, count),
+                        Arrays.copyOf(enthalpies, count),
+                        Arrays.copyOf(branches, count),
+                        Arrays.copyOf(indexes, count),
+                        stateIds,
+                        laws,
+                        tick,
+                        ticks == null ? null : Arrays.copyOf(ticks, count));
     }
 
-    private static void writeEdge(CompoundTag parent, String key, MaterialThermalLaw.Transition edge) {
+    private static void writeEdge(
+            CompoundTag parent, String key, MaterialThermalLaw.Transition edge) {
         if (edge == null) return;
         CompoundTag tag = new CompoundTag();
-        tag.put("target", NbtUtils.writeBlockState(Block.BLOCK_STATE_REGISTRY.byId(edge.targetStateId())));
-        tag.putDouble("temperature", edge.temperatureC());
+        tag.put(
+                "target",
+                NbtUtils.writeBlockState(Block.BLOCK_STATE_REGISTRY.byId(edge.targetStateId())));
+        tag.putDouble("temperature", edge.transitionTemperatureC());
         tag.putDouble("source_energy", edge.sourceEnthalpyJ());
         tag.putDouble("target_energy", edge.targetEnthalpyJ());
         parent.put(key, tag);
@@ -483,12 +665,19 @@ public final class MaterialSectionState {
     private static MaterialThermalLaw.Transition readEdge(CompoundTag parent, String key) {
         if (!parent.contains(key, Tag.TAG_COMPOUND)) return null;
         CompoundTag tag = parent.getCompound(key);
-        double temperature = tag.getDouble("temperature"), source = tag.getDouble("source_energy"), target = tag.getDouble("target_energy");
-        if (!Double.isFinite(temperature) || !Double.isFinite(source) || !Double.isFinite(target) || source == target) return null;
-        return new MaterialThermalLaw.Transition(readState(tag.getCompound("target")), temperature, source, target);
+        double temperature = tag.getDouble("temperature"),
+                source = tag.getDouble("source_energy"),
+                target = tag.getDouble("target_energy");
+        if (!Double.isFinite(temperature)
+                || !Double.isFinite(source)
+                || !Double.isFinite(target)
+                || source == target) return null;
+        return new MaterialThermalLaw.Transition(
+                readState(tag.getCompound("target")), temperature, source, target);
     }
 
     private static int readState(CompoundTag state) {
-        return Block.BLOCK_STATE_REGISTRY.getId(NbtUtils.readBlockState(BuiltInRegistries.BLOCK.asLookup(), state));
+        return Block.BLOCK_STATE_REGISTRY.getId(
+                NbtUtils.readBlockState(BuiltInRegistries.BLOCK.asLookup(), state));
     }
 }

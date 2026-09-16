@@ -129,7 +129,7 @@ public final class ThermalLoadedWorldGameTests {
             helper.assertTrue(attribute.getModifier(PlayerTemperatureComputation.ENV_TEMP_ATTRIBUTE_UUID) == first
                             && Math.abs(attribute.getValue() - first.getAmount() - 5) < 1e-6,
                     "reused air input must still observe another modifier's change");
-            MinecraftThermalInput.upsertGameplayAnalyticField(level, new ThermalAnalyticField(fieldKey, 100,
+            MinecraftGameplayFields.upsert(level, new ThermalAnalyticField(fieldKey, 100,
                     ThermalAnalyticField.CombineMode.OVERRIDE, player.getX(), player.getEyeY(), player.getZ(), 2, 20));
             PlayerTemperatureComputation.updatePlayer(player, data, 20);
             helper.assertTrue(attribute.getModifier(PlayerTemperatureComputation.ENV_TEMP_ATTRIBUTE_UUID).getAmount() == 20
@@ -138,7 +138,7 @@ public final class ThermalLoadedWorldGameTests {
             helper.succeed();
         } finally {
             attribute.removeModifier(extra);
-            MinecraftThermalInput.removeGameplayAnalyticField(level, fieldKey);
+            MinecraftGameplayFields.remove(level, fieldKey);
             MinecraftThermalInput.closeActiveLevel(level);
         }
     }

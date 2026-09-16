@@ -1,6 +1,8 @@
 /* Copyright (c) 2026 TeamMoeg */
 package com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft;
 
+import com.teammoeg.frostedheart.content.climate.thermal.mesh.MaterialSample;
+
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.MaterialBoundaryRegistry;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.ArenaSpan;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.PagePublication;
@@ -495,7 +497,7 @@ public final class FrostedHeartMinecraftThermalInputGameTests {
                         com.teammoeg.frostedheart.content.climate.thermal.mesh.MaterialThermalLaw.HEATING);
             }
             if (elapsed[0] == 360) {
-                var pending = new QueryPublication.MutableMaterialSample();
+                var pending = new MaterialSample();
                 helper.assertTrue(MinecraftThermalInput.sampleMaterial(level, phaseBlock, pending)
                                 && pending.requestSequence() > 0 && pending.law().heating() != null
                                 && pending.law().heating().complete(pending.enthalpyJ()),
@@ -505,7 +507,7 @@ public final class FrostedHeartMinecraftThermalInputGameTests {
             }
         });
         helper.succeedWhen(() -> {
-            var phaseSample = new QueryPublication.MutableMaterialSample();
+            var phaseSample = new MaterialSample();
             boolean phaseReadable = MinecraftThermalInput.sampleMaterial(level, phaseBlock, phaseSample);
             helper.assertTrue(
                     !level.getBlockState(phaseBlock).is(Blocks.PACKED_ICE),
@@ -750,7 +752,7 @@ public final class FrostedHeartMinecraftThermalInputGameTests {
         ThermalBrickCellLayout layout = new ThermalBrickCellLayout();
         layout.reset(0, 0, 0);
         layout.setRegularAir(100.0D / 64.0D);
-        layout.addMaterialPole(0, 0, 0, 100.0D, 0.0D);
+        layout.addMaterialCell(0, 0, 0, 100.0D, 0.0D);
         ArenaSpan allocation = arena.stageBrickCells(
                 0, 1, layout, 0.0D, 0.0D, 4_096);
         var law = new com.teammoeg.frostedheart.content.climate.thermal.mesh.MaterialThermalLaw(

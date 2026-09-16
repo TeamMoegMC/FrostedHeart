@@ -1,6 +1,8 @@
 /* Copyright (c) 2026 TeamMoeg */
 package com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft;
 
+import com.teammoeg.frostedheart.content.climate.thermal.mesh.MaterialSample;
+
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.climate.WorldTemperature;
 import com.teammoeg.frostedheart.content.climate.network.InfraredBrickCodec;
@@ -38,7 +40,7 @@ public final class ThermalDormantCoolingGameTests {
         state.replace(0, new DormantChunkThermalState.SectionEntry(0, 10, 1,
                 new byte[]{0}, new long[]{160}, new long[0]));
         var law = MaterialThermalLaw.sensible(300);
-        var sample = new QueryPublication.MutableMaterialSample();
+        var sample = new MaterialSample();
         for (int saves = 0; saves < 20; saves++) {
             CompoundTag tag = new CompoundTag(); state.encode(tag);
             state = DormantChunkThermalState.decode(tag, 0, 1);
@@ -49,7 +51,7 @@ public final class ThermalDormantCoolingGameTests {
                 double air = state.admissionCut(0, tick, 1800, -20).meanTemperatureC(0);
                 near(helper, air, sample.temperatureC(), "Air and material share sensible cooling");
                 near(helper, tick == 0 ? 20 : tick == 36000 ? 0 : -10, air, "half-life result without save drift");
-                helper.assertTrue(sample.source() == QueryPublication.MutableMaterialSample.Source.STORED,
+                helper.assertTrue(sample.source() == MaterialSample.Source.STORED,
                         "a timestamp must not mislabel a dormant read as live");
             }
         }
@@ -61,7 +63,7 @@ public final class ThermalDormantCoolingGameTests {
         int target = Block.BLOCK_STATE_REGISTRY.getId(Blocks.WATER.defaultBlockState());
         var law = new MaterialThermalLaw(100, 0, new MaterialThermalLaw.Transition(target, 0, 0, 1000), null);
         double rate = DormantThermalCooling.rate(30);
-        var sample = new QueryPublication.MutableMaterialSample();
+        var sample = new MaterialSample();
         sample.setStored(-1000, law, (byte) 0, 0);
         DormantThermalCooling.project(sample, 1000, 10, rate);
         near(helper, 0, sample.temperatureC(), "latent plateau cannot be bypassed by temperature interpolation");
@@ -99,7 +101,7 @@ public final class ThermalDormantCoolingGameTests {
         container.replaceMaterials(first.getY() >> 4, edited);
         CompoundTag tag = new CompoundTag(); container.encode(tag);
         var decoded = DormantChunkThermalState.decode(tag, first.getY() >> 4, 1).materials(first.getY() >> 4);
-        var sample = new QueryPublication.MutableMaterialSample();
+        var sample = new MaterialSample();
         decoded.read(a, decoded.law(a), 600, -20, DormantThermalCooling.rate(30), sample);
         near(helper, 20, sample.temperatureC(), "edited body starts its own interval");
         decoded.read(b, decoded.law(b), 600, -20, DormantThermalCooling.rate(30), sample);

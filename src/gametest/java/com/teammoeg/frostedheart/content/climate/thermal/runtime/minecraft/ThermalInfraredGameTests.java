@@ -87,12 +87,12 @@ public final class ThermalInfraredGameTests {
             expectTemperature(helper, full, p, WorldTemperature.material(level, p));
             helper.assertTrue(sample(player, full, false, full.presence()) == null, "unchanged stored records send no data");
             measureSurfaceRequests(player, full);
-            MinecraftThermalInput.upsertGameplayAnalyticField(level, new ThermalAnalyticField(field, 0,
+            MinecraftGameplayFields.upsert(level, new ThermalAnalyticField(field, 0,
                     CombineMode.ADD_DELTA, p.getX() + .5, p.getY() + .5, p.getZ() + .5, 2, .12));
             InfraredSnapshot composed = sample(player, full, false, full.presence());
             helper.assertTrue(Objects.equals(temperature(composed, p), InfraredBrickCodec.quantize(20.24)),
                     "stored temperature and analytic field must be quantized together once");
-            MinecraftThermalInput.removeGameplayAnalyticField(level, field);
+            MinecraftGameplayFields.remove(level, field);
             InfraredSnapshot restored = sample(player, composed, false, full.presence());
             expectTemperature(helper, restored, p, WorldTemperature.material(level, p));
             int index = saved.find(block);
@@ -113,7 +113,7 @@ public final class ThermalInfraredGameTests {
             Field active = MinecraftThermalInput.class.getDeclaredField("ACTIVE"); active.setAccessible(true);
             helper.assertTrue(!((Map<?, ?>) active.get(null)).containsKey(level), "stored infrared requests cannot start physics");
         } finally {
-            MinecraftThermalInput.removeGameplayAnalyticField(level, field);
+            MinecraftGameplayFields.remove(level, field);
             attachment.frostedheart$setDormantThermalState(previous);
         }
         helper.succeed();
@@ -231,15 +231,15 @@ public final class ThermalInfraredGameTests {
         ThermalFieldKey override = new ThermalFieldKey(PROVIDER, 0, p.asLong(), 10);
         ThermalFieldKey delta = new ThermalFieldKey(PROVIDER, 0, p.asLong(), 11);
         try {
-            MinecraftThermalInput.upsertGameplayAnalyticField(level, new ThermalAnalyticField(override, 0,
+            MinecraftGameplayFields.upsert(level, new ThermalAnalyticField(override, 0,
                     CombineMode.OVERRIDE, Shape.PILLAR, p.getX()+.5, p.getY()+.5, p.getZ()+.5, 3, 1, 2, 0));
             InfraredSnapshot zero = sample(player, null, true, EMPTY);
             expectTemperature(helper, zero, p, 0);
             expectMissing(helper, zero, p.above(2), false);
             expectMissing(helper, zero, p.offset(3,0,3), false); // AABB corner is outside the pillar.
-            MinecraftThermalInput.upsertGameplayAnalyticField(level, new ThermalAnalyticField(override, 0,
+            MinecraftGameplayFields.upsert(level, new ThermalAnalyticField(override, 0,
                     CombineMode.OVERRIDE, p.getX()+.5, p.getY()+.5, p.getZ()+.5, 3, .12));
-            MinecraftThermalInput.upsertGameplayAnalyticField(level, new ThermalAnalyticField(delta, 0,
+            MinecraftGameplayFields.upsert(level, new ThermalAnalyticField(delta, 0,
                     CombineMode.ADD_DELTA, p.getX()+.5, p.getY()+.5, p.getZ()+.5, 3, .02));
             InfraredSnapshot fractional = sample(player, zero, false, zero.presence());
             helper.assertTrue(Objects.equals(temperature(fractional,p),(short)1), ".12 + .02 must quantize once to .25 C");
@@ -247,8 +247,8 @@ public final class ThermalInfraredGameTests {
             wire(helper, fractional);
             helper.succeed();
         } finally {
-            MinecraftThermalInput.removeGameplayAnalyticField(level, override);
-            MinecraftThermalInput.removeGameplayAnalyticField(level, delta);
+            MinecraftGameplayFields.remove(level, override);
+            MinecraftGameplayFields.remove(level, delta);
         }
     }
     @GameTest(template = TEMPLATE, batch = "surface_live", timeoutTicks = 700)
@@ -269,7 +269,7 @@ public final class ThermalInfraredGameTests {
                     || temperature(result, f.target) == InfraredBrickCodec.INVALID_TEMPERATURE, "Air is not a thermal surface");
             baseline[0] = result;
         }).thenExecute(() -> {
-            MinecraftThermalInput.upsertGameplayAnalyticField(f.level, new ThermalAnalyticField(field, 0,
+            MinecraftGameplayFields.upsert(f.level, new ThermalAnalyticField(field, 0,
                     CombineMode.FLOOR_FROM_NATURAL, Shape.SPHERE, f.wall.getX()+.5, f.wall.getY()+.5, f.wall.getZ()+.5,
                     8, 8, 8, 30));
             InfraredSnapshot result = sample(f.player, baseline[0], true, baseline[0].presence());
@@ -305,12 +305,12 @@ public final class ThermalInfraredGameTests {
                 wire(helper, unavailable);
                 InfraredSnapshot steady = sample(f.player, unavailable, false, unavailable.presence());
                 helper.assertTrue(steady != null && !steady.full(), "field-only baseline must allow delta while physics stays closed");
-                MinecraftThermalInput.removeGameplayAnalyticField(f.level, field);
+                MinecraftGameplayFields.remove(f.level, field);
                 InfraredSnapshot cleared = sample(f.player, steady, false, unavailable.presence());
                 expectMissing(helper, cleared, f.wall, true);
                 helper.assertTrue(sample(f.player, cleared, false, unavailable.presence()) == null,
                         "closed physics and removed field need no repeated packets");            } finally {
-                MinecraftThermalInput.removeGameplayAnalyticField(f.level, field);
+                MinecraftGameplayFields.remove(f.level, field);
                 f.close();
             }
         }).thenSucceed();
@@ -505,6 +505,11 @@ public final class ThermalInfraredGameTests {
     private static void measureSurfaceRequests(ServerPlayer player, InfraredSnapshot baseline) {
         // One real source scene, 100 sequential client-carried baselines; no server observer state.
         for (boolean full : new boolean[]{false, true}) {
+            // Keep JIT compilation out of the measured request window. The level tick and
+            // client-carried baseline stay fixed, just as in the measured calls below.
+            for (int warmup = 0; warmup < 256; warmup++) {
+                sample(player, baseline, full, baseline.presence());
+            }
             long[] nanos = new long[100];
             long bytes = 0;
             int responses = 0;
@@ -524,7 +529,7 @@ public final class ThermalInfraredGameTests {
                 }
             } finally { wire.release(); }
             Arrays.sort(nanos);
-            FHMain.LOGGER.info("Surface request sample: full={}, count=100, capture median={} ms, p95={} ms, responses={}, wire={} bytes",
+            FHMain.LOGGER.info("Surface request sample: warmup=256, full={}, count=100, capture median={} ms, p95={} ms, responses={}, wire={} bytes",
                     full, nanos[50]/1e6, nanos[94]/1e6, responses, bytes);
         }
     }
@@ -586,7 +591,7 @@ public final class ThermalInfraredGameTests {
         var brick=publication.brickAt(p.getX()&15,p.getY()&15,p.getZ()&15);
         if(brick.blockLayout()==null || brick.firstSlot()<0) return Double.NaN;
         int node=brick.blockLayout().nodeAt((p.getX()&3)|(p.getZ()&3)<<2|(p.getY()&3)<<4);
-        if(node<0 || (brick.blockLayout().surfaceNodeMask() & 1L<<node)==0) return Double.NaN;
+        if(node<0 || (brick.blockLayout().materialNodeMask() & 1L<<node)==0) return Double.NaN;
         QueryPublication queries=read(input,"queryPublication"); var sample=new QueryPublication.MutableSample();
         return queries.tryRead(brick.firstSlot()+node,brick.arenaGeneration(),publication.topologyGeneration(),sample)
                 ? sample.temperatureC() : Double.NaN;

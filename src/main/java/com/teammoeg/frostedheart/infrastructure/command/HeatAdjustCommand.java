@@ -19,6 +19,8 @@
 
 package com.teammoeg.frostedheart.infrastructure.command;
 
+import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.MinecraftGameplayFields;
+
 import java.util.List;
 
 import com.mojang.brigadier.Command;
@@ -57,7 +59,7 @@ public class HeatAdjustCommand {
         LiteralArgumentBuilder<CommandSourceStack> remove = Commands.literal("remove")
                 .then(Commands.argument("position", BlockPosArgument.blockPos()).executes((ct) -> {
                     BlockPos position = BlockPosArgument.getBlockPos(ct, "position");
-                    MinecraftThermalInput.removeGameplayAnalyticField(
+                    MinecraftGameplayFields.remove(
                             ct.getSource().getLevel(), fieldKey(position));
                     return Command.SINGLE_SUCCESS;
                 }));
@@ -66,7 +68,7 @@ public class HeatAdjustCommand {
         LiteralArgumentBuilder<CommandSourceStack> add = Commands.literal("set")
                 .then(Commands.argument("position", BlockPosArgument.blockPos()).executes((ct) -> {
                     BlockPos position = BlockPosArgument.getBlockPos(ct, "position");
-                    MinecraftThermalInput.removeGameplayAnalyticField(
+                    MinecraftGameplayFields.remove(
                             ct.getSource().getLevel(), fieldKey(position));
                     return Command.SINGLE_SUCCESS;
                 }).then(Commands.argument("range", IntegerArgumentType.integer(1))
@@ -139,7 +141,7 @@ public class HeatAdjustCommand {
         BlockPos position = BlockPosArgument.getBlockPos(context, "position");
         int range = IntegerArgumentType.getInteger(context, "range");
         int temperature = IntegerArgumentType.getInteger(context, "temperature");
-        MinecraftThermalInput.upsertGameplayAnalyticField(
+        MinecraftGameplayFields.upsert(
                 source.getLevel(),
                 new ThermalAnalyticField(
                         fieldKey(position),

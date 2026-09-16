@@ -409,6 +409,8 @@ public final class ThermalSourceLedger implements AutoCloseable {
         accountingTick = tick;
     }
 
+    // Declared loss is a modeled sink, degraded loss is unavailable topology, and unaccepted
+    // energy reached a node that could not absorb it (for example a completed latent plateau).
     public record EnergyBalance(double outputJ, double deliveredJ, double declaredLossJ,
             double degradedLossJ, double unacceptedJ) {}
 

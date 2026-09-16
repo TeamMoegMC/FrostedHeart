@@ -233,6 +233,7 @@ public final class InfraredViewRenderer {
     }
 
     /** Only LAST commits the complete display baseline, including field-only responses. */
+    /** Apply response parts to the existing CPU mirror; publish the baseline only on the last part. */
     public static void updateData(int responseRequestId, InfraredSnapshot data, boolean firstPart, boolean lastPart) {
         RenderSystem.assertOnRenderThread();
         if (!open || responseRequestId != requestId) return;
@@ -389,6 +390,7 @@ public final class InfraredViewRenderer {
         }
     }
 
+    /** Upload only changed Pages, reusing the single Page staging buffer. */
     private static void uploadDirtyPages() {
         int dirtyPages = 0;
         for (long word : dirtyUploadPages) {

@@ -81,10 +81,10 @@ public final class ThermalBlockModelGameTests {
             ThermalSolver solver = read(engine, "solver");
             int a = materialSlot(pages[0], origin.offset(1, 2, 2));
             int b = materialSlot(pages[0], origin.offset(2, 2, 2));
-            int c = transportSlot(pages[0], origin.offset(3, 2, 2));
+            int c = airSlotAt(pages[0], origin.offset(3, 2, 2));
             int d = materialSlot(pages[1], origin.offset(4, 2, 2));
             var pairs = solver.fragment(pages[0].currentPublication().workerPageSlot() * 64 + bricks[0]).airPairs();
-            helper.assertTrue(arena.isSurfaceCell(a) && arena.isSurfaceCell(b) && arena.isSurfaceCell(d), "ventilated matter owns material cells");
+            helper.assertTrue(arena.isMaterialCell(a) && arena.isMaterialCell(b) && arena.isMaterialCell(d), "ventilated matter owns material cells");
             helper.assertTrue(!arena.isAirCell(a) && !arena.isAirCell(b) && !arena.isAirCell(d) && arena.isAirCell(c), "only real air owns transport capacity");
             near(helper, 0, conductance(pairs, a, b), "material cells must not appear in air transport edges");
             int materialSlot = materialSlot(pages[0], material);
@@ -182,51 +182,51 @@ public final class ThermalBlockModelGameTests {
                 var publication = page.currentPublication();
                 var brick = publication.brick(brickIndex);
                 if (stage == 0) {
-                    helper.assertTrue(brick.transportNodeCount()==0 && brick.firstSlot()>=0,
+                    helper.assertTrue(brick.airNodeCount()==0 && brick.firstSlot()>=0,
                             "material-only Brick must publish its real arena span");
-                    long surfaces=brick.blockLayout().surfaceNodeMask();
+                    long surfaces=brick.blockLayout().materialNodeMask();
                     helper.assertTrue(surfaces!=0,"exposed solid must have material nodes");
                     while(surfaces!=0) {
                         int node=Long.numberOfTrailingZeros(surfaces); surfaces&=surfaces-1;
                         int slot=brick.firstSlot()+node;
-                        helper.assertTrue(arena.isSurfaceCell(slot) && !arena.isAirCell(slot),"solid must remain non-Air");
+                        helper.assertTrue(arena.isMaterialCell(slot) && !arena.isAirCell(slot),"solid must remain non-Air");
                         near(helper,10,arena.temperatureC(slot,0),"Air checkpoint cannot initialize material");
                     }
-                    var cursor = new QueryPublication.InfraredReadCursor();
-                    helper.assertTrue(query.beginInfraredRead(cursor), "initial surface epoch must be readable");
+                    var cursor = new QueryPublication.ReadCursor();
+                    helper.assertTrue(query.beginRead(cursor), "initial surface epoch must be readable");
                     int epoch = cursor.infraredEpoch(); cursor.clear();
-                    int airSlot = transportSlot(page, origin.east(4));
+                    int airSlot = airSlotAt(page, origin.east(4));
                     arena.addEnthalpyJ(airSlot, arena.capacityJPerK(airSlot));
                     helper.assertTrue(query.publish(arena, 0, publication.topologyGeneration(), 21, null), "Air change publication");
-                    helper.assertTrue(query.beginInfraredRead(cursor) && cursor.infraredEpoch() == epoch,
+                    helper.assertTrue(query.beginRead(cursor) && cursor.infraredEpoch() == epoch,
                             "Air-only temperature change must not dirty surface infrared");
                     cursor.clear();
-                    int materialSlot = brick.firstSlot() + Long.numberOfTrailingZeros(brick.blockLayout().surfaceNodeMask());
+                    int materialSlot = brick.firstSlot() + Long.numberOfTrailingZeros(brick.blockLayout().materialNodeMask());
                     arena.addEnthalpyJ(materialSlot, arena.capacityJPerK(materialSlot));
                     helper.assertTrue(query.publish(arena, 0, publication.topologyGeneration(), 22, null), "material change publication");
-                    helper.assertTrue(query.beginInfraredRead(cursor) && cursor.infraredEpoch() > epoch
+                    helper.assertTrue(query.beginRead(cursor) && cursor.infraredEpoch() > epoch
                                     && cursor.brickChangeEpoch(publication.workerPageSlot(), brickIndex) > epoch,
                             "material-only temperature change must dirty its exact Brick");
                     cursor.clear();
                 } else if (stage == 1) {
-                    helper.assertTrue(brick.transportNodeCount()==0 && brick.blockLayout().surfaceNodeMask()==-1L,
+                    helper.assertTrue(brick.airNodeCount()==0 && brick.blockLayout().materialNodeMask()==-1L,
                             "64 stair bodies include bit63 and own no gap-air nodes");
                     for(int b=0;b<64;b++) {
                         int slot=brick.firstSlot()+brick.blockLayout().nodeAt(b);
-                        helper.assertTrue(!arena.isAirCell(slot)&&arena.isSurfaceCell(slot),"stair body is material, not an air cell");
+                        helper.assertTrue(!arena.isAirCell(slot)&&arena.isMaterialCell(slot),"stair body is material, not an air cell");
                         near(helper,origin.getX()+(b&3)+.5,arena.center(slot,0),"mixed support X coordinate");
                         near(helper,origin.getY()+(b>>>4)+.5,arena.center(slot,1),"mixed support Y coordinate");
                         near(helper,origin.getZ()+(b>>>2&3)+.5,arena.center(slot,2),"mixed support Z coordinate");
                     }
                 } else if (stage == 2) {
                     int slot=materialSlot(page,origin.offset(1,1,1));
-                    helper.assertTrue(slot>=0 && arena.isSurfaceCell(slot) && !arena.isAirCell(slot),"unexposed stair keeps its material state");
+                    helper.assertTrue(slot>=0 && arena.isMaterialCell(slot) && !arena.isAirCell(slot),"unexposed stair keeps its material state");
                     near(helper,MinecraftThermalProfiles.materialLaw(Blocks.OAK_STAIRS.defaultBlockState()).capacityJPerK(),
                             arena.capacityJPerK(slot),"unexposed body capacity is unchanged");
                 } else {
                     helper.assertTrue(brick.blockLayout()==null && arena.liveCellCount()==2,
                             "full Air must retain its one-node allocation and no surface layout");
-                    helper.assertTrue(!arena.isSurfaceCell(brick.firstSlot()),"full Air is not a thermal surface");
+                    helper.assertTrue(!arena.isMaterialCell(brick.firstSlot()),"full Air is not a thermal surface");
                 }
             }
             helper.succeed();
@@ -238,7 +238,7 @@ public final class ThermalBlockModelGameTests {
     }
     private static int brickIndex(BlockPos pos) { return (pos.getX() & 15) >>> 2 | ((pos.getZ() & 15) >>> 2) << 2 | ((pos.getY() & 15) >>> 2) << 4; }
     private static int pageBlock(BlockPos pos) { return (pos.getX() & 15) | (pos.getZ() & 15) << 4 | (pos.getY() & 15) << 8; }
-    private static int transportSlot(ThermalPageHandle page, BlockPos pos) { return page.currentPublication().resolveAirPoint(pos.getX() & 15, pos.getY() & 15, pos.getZ() & 15); }
+    private static int airSlotAt(ThermalPageHandle page, BlockPos pos) { return page.currentPublication().resolveAirPoint(pos.getX() & 15, pos.getY() & 15, pos.getZ() & 15); }
     private static int materialSlot(ThermalPageHandle page, BlockPos pos) {
         var brick = page.currentPublication().brick(brickIndex(pos));
         return brick.firstSlot() + brick.blockLayout().nodeAt((pos.getX() & 3) | (pos.getZ() & 3) << 2 | (pos.getY() & 3) << 4);

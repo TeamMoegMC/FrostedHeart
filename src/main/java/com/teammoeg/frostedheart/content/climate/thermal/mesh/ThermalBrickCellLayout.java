@@ -1,8 +1,6 @@
 /* Copyright (c) 2026 TeamMoeg */
 package com.teammoeg.frostedheart.content.climate.thermal.mesh;
 
-
-
 import java.util.Arrays;
 import java.util.Objects;
 
@@ -20,7 +18,7 @@ public final class ThermalBrickCellLayout {
     int minZ;
     double airCapacityJPerBlockK;
     BlockBrickLayout mixedGeometry;
-    final double[] transportCapacityJPerK = new double[64];
+    final double[] airNodeCapacityJPerK = new double[64];
 
     int[] materialBlockX = new int[8];
     int[] materialBlockY = new int[8];
@@ -47,23 +45,12 @@ public final class ThermalBrickCellLayout {
         setAir(AirKind.REGULAR, null, capacityJPerBlockK);
     }
 
-    public void setMixedAir(
-            BlockBrickLayout geometry,
-            double capacityJPerBlockK
-    ) {
-        setAir(
-                AirKind.MIXED,
-                Objects.requireNonNull(geometry, "geometry"),
-                capacityJPerBlockK);
+    public void setMixedAir(BlockBrickLayout geometry, double capacityJPerBlockK) {
+        setAir(AirKind.MIXED, Objects.requireNonNull(geometry, "geometry"), capacityJPerBlockK);
     }
 
-    private void setAir(
-            AirKind kind,
-            BlockBrickLayout geometry,
-            double capacityJPerBlockK
-    ) {
-        if (!Double.isFinite(capacityJPerBlockK)
-                || capacityJPerBlockK <= 0.0D) {
+    private void setAir(AirKind kind, BlockBrickLayout geometry, double capacityJPerBlockK) {
+        if (!Double.isFinite(capacityJPerBlockK) || capacityJPerBlockK <= 0.0D) {
             throw new IllegalArgumentException("Brick Air layout is invalid");
         }
         airKind = kind;
@@ -71,21 +58,16 @@ public final class ThermalBrickCellLayout {
         airCapacityJPerBlockK = capacityJPerBlockK;
     }
 
-    public void setTransportCapacity(int node, double capacity) {
-        transportCapacityJPerK[node] = capacity;
+    public void setAirCapacity(int node, double capacity) {
+        airNodeCapacityJPerK[node] = capacity;
     }
 
-    public void addMaterialPole(
-            int blockX,
-            int blockY,
-            int blockZ,
-            double capacityJPerK,
-            double initialTemperatureC
-    ) {
+    public void addMaterialCell(
+            int blockX, int blockY, int blockZ, double capacityJPerK, double initialTemperatureC) {
         if (!Double.isFinite(capacityJPerK)
                 || capacityJPerK <= 0.0D
                 || !Double.isFinite(initialTemperatureC)) {
-            throw new IllegalArgumentException("material pole layout is invalid");
+            throw new IllegalArgumentException("material cell layout is invalid");
         }
         ensureMaterialCapacity(materialCount + 1);
         materialBlockX[materialCount] = blockX;
@@ -95,8 +77,6 @@ public final class ThermalBrickCellLayout {
         materialInitialTemperatureC[materialCount] = initialTemperatureC;
         materialCount++;
     }
-
-
 
     void requireReady() {
         if (airKind == AirKind.MIXED && mixedGeometry == null) {
@@ -113,17 +93,13 @@ public final class ThermalBrickCellLayout {
         materialBlockY = Arrays.copyOf(materialBlockY, capacity);
         materialBlockZ = Arrays.copyOf(materialBlockZ, capacity);
         materialCapacityJPerK = Arrays.copyOf(materialCapacityJPerK, capacity);
-        materialInitialTemperatureC = Arrays.copyOf(
-                materialInitialTemperatureC, capacity);
+        materialInitialTemperatureC = Arrays.copyOf(materialInitialTemperatureC, capacity);
     }
-
-
 
     private static int grow(int current, int required) {
         int capacity = Math.max(1, current);
         while (capacity < required) {
-            capacity = Math.addExact(
-                    capacity, Math.max(4, capacity >>> 1));
+            capacity = Math.addExact(capacity, Math.max(4, capacity >>> 1));
         }
         return capacity;
     }

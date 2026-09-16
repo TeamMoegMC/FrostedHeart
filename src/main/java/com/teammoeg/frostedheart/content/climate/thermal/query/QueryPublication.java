@@ -10,8 +10,9 @@
 
 package com.teammoeg.frostedheart.content.climate.thermal.query;
 
-import com.teammoeg.frostedheart.content.climate.thermal.mesh.ThermalCellArena;
+import com.teammoeg.frostedheart.content.climate.thermal.mesh.MaterialSample;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.MaterialThermalLaw;
+import com.teammoeg.frostedheart.content.climate.thermal.mesh.ThermalCellArena;
 import com.teammoeg.frostedheart.content.climate.thermal.runtime.ThermalMemoryBudget;
 
 import java.util.Arrays;
@@ -20,7 +21,7 @@ import java.util.Arrays;
  * 由一个维度 worker 写、主线程无锁读取的 arena-slot 双缓冲。
  *
  * <p>slot generation 与 topology generation 共同拒绝过期读；该结构只发布
- * 查询温度，不拥有 Page topology 或求解器状态。</p>
+ * 温度和材料能量快照，不拥有 Page topology 或求解器状态。</p>
  */
 public final class QueryPublication implements AutoCloseable {
     private final ThermalMemoryBudget budget;
@@ -52,8 +53,7 @@ public final class QueryPublication implements AutoCloseable {
             int capacity,
             int maximumPages,
             ThermalMemoryBudget.Reservation cellReservation,
-            ThermalMemoryBudget.Reservation pageReservation
-    ) {
+            ThermalMemoryBudget.Reservation pageReservation) {
         this.budget = budget;
         this.capacity = capacity;
         this.maximumPages = maximumPages;
@@ -64,10 +64,7 @@ public final class QueryPublication implements AutoCloseable {
 
     /** Returns {@code null} when the complete double buffer cannot be admitted. */
     public static QueryPublication tryCreate(
-            ThermalMemoryBudget dimensionBudget,
-            int capacity,
-            int maximumPages
-    ) {
+            ThermalMemoryBudget dimensionBudget, int capacity, int maximumPages) {
         if (dimensionBudget == null) {
             throw new IllegalArgumentException("dimensionBudget is required");
         }
@@ -75,8 +72,7 @@ public final class QueryPublication implements AutoCloseable {
             throw new IllegalArgumentException("maximumPages must be positive");
         }
         ThermalMemoryBudget.Reservation pageReservation =
-                dimensionBudget.tryReserve(projectedPagePayloadBytes(
-                        maximumPages));
+                dimensionBudget.tryReserve(projectedPagePayloadBytes(maximumPages));
         if (pageReservation == null) {
             return null;
         }
@@ -87,8 +83,7 @@ public final class QueryPublication implements AutoCloseable {
             return null;
         }
         return new QueryPublication(
-                dimensionBudget, capacity, maximumPages,
-                cellReservation, pageReservation);
+                dimensionBudget, capacity, maximumPages, cellReservation, pageReservation);
     }
 
     private static long projectedPayloadBytes(int capacity) {
@@ -96,23 +91,16 @@ public final class QueryPublication implements AutoCloseable {
             throw new IllegalArgumentException("capacity must be positive");
         }
         return Math.multiplyExact(
-                capacity,
-                2L * (2 * Double.BYTES + Integer.BYTES + 2 * Long.BYTES + Byte.BYTES));
+                capacity, 2L * (2 * Double.BYTES + Integer.BYTES + 2 * Long.BYTES + Byte.BYTES));
     }
 
     private static long projectedPagePayloadBytes(int maximumPages) {
         return Math.multiplyExact(
-                maximumPages,
-                (long) Double.BYTES
-                        + 3L * Long.BYTES
-                        + 65L * Integer.BYTES);
+                maximumPages, (long) Double.BYTES + 3L * Long.BYTES + 65L * Integer.BYTES);
     }
 
     /** Geometrically grows the slot-addressed backing before a topology commit. */
-    public synchronized boolean tryEnsureCapacity(
-            int requiredCapacity,
-            int maximumCapacity
-    ) {
+    public synchronized boolean tryEnsureCapacity(int requiredCapacity, int maximumCapacity) {
         if (maximumCapacity < requiredCapacity) {
             return false;
         }
@@ -123,10 +111,9 @@ public final class QueryPublication implements AutoCloseable {
             return false;
         }
         int doubled = Math.multiplyExact(capacity, 2);
-        int nextCapacity = Math.min(
-                maximumCapacity, Math.max(requiredCapacity, doubled));
-        ThermalMemoryBudget.Reservation nextReservation = budget.tryReserve(
-                projectedPayloadBytes(nextCapacity));
+        int nextCapacity = Math.min(maximumCapacity, Math.max(requiredCapacity, doubled));
+        ThermalMemoryBudget.Reservation nextReservation =
+                budget.tryReserve(projectedPayloadBytes(nextCapacity));
         if (nextReservation == null) {
             return false;
         }
@@ -139,15 +126,41 @@ public final class QueryPublication implements AutoCloseable {
         long[][] nextRequests = new long[2][nextCapacity];
         if (valid && publishedBufferIndex >= 0) {
             System.arraycopy(
-                    temperaturesC[publishedBufferIndex], 0,
-                    nextTemperatures[publishedBufferIndex], 0, capacity);
+                    temperaturesC[publishedBufferIndex],
+                    0,
+                    nextTemperatures[publishedBufferIndex],
+                    0,
+                    capacity);
             System.arraycopy(
-                    slotGenerations[publishedBufferIndex], 0,
-                    nextSlotGenerations[publishedBufferIndex], 0, capacity);
-            System.arraycopy(materialEnthalpiesJ[publishedBufferIndex], 0, nextEnthalpies[publishedBufferIndex], 0, capacity);
-            System.arraycopy(materialLaws[publishedBufferIndex], 0, nextLaws[publishedBufferIndex], 0, capacity);
-            System.arraycopy(materialBranches[publishedBufferIndex], 0, nextBranches[publishedBufferIndex], 0, capacity);
-            System.arraycopy(materialRequests[publishedBufferIndex], 0, nextRequests[publishedBufferIndex], 0, capacity);
+                    slotGenerations[publishedBufferIndex],
+                    0,
+                    nextSlotGenerations[publishedBufferIndex],
+                    0,
+                    capacity);
+            System.arraycopy(
+                    materialEnthalpiesJ[publishedBufferIndex],
+                    0,
+                    nextEnthalpies[publishedBufferIndex],
+                    0,
+                    capacity);
+            System.arraycopy(
+                    materialLaws[publishedBufferIndex],
+                    0,
+                    nextLaws[publishedBufferIndex],
+                    0,
+                    capacity);
+            System.arraycopy(
+                    materialBranches[publishedBufferIndex],
+                    0,
+                    nextBranches[publishedBufferIndex],
+                    0,
+                    capacity);
+            System.arraycopy(
+                    materialRequests[publishedBufferIndex],
+                    0,
+                    nextRequests[publishedBufferIndex],
+                    0,
+                    capacity);
         }
         if (!beginWrite()) {
             nextReservation.close();
@@ -172,16 +185,14 @@ public final class QueryPublication implements AutoCloseable {
             double referenceTemperatureC,
             long topologyGeneration,
             long sampleTick,
-            HotMaskScratch hotMasks
-    ) {
+            HotMaskScratch hotMasks) {
         if (arena == null) {
             throw new IllegalArgumentException("arena is required");
         }
         requireFinite("referenceTemperatureC", referenceTemperatureC);
         requireNonNegative("topologyGeneration", topologyGeneration);
         requireNonNegative("sampleTick", sampleTick);
-        if (arena.highWaterMark() > capacity
-                || !acceptingPublications) {
+        if (arena.highWaterMark() > capacity || !acceptingPublications) {
             return false;
         }
 
@@ -192,24 +203,19 @@ public final class QueryPublication implements AutoCloseable {
         MaterialThermalLaw[] targetLaws = materialLaws[targetBuffer];
         byte[] targetBranches = materialBranches[targetBuffer];
         long[] targetRequests = materialRequests[targetBuffer];
-        boolean infraredTracking = pageChangeEpochs != null
-                && sampleTick <= infraredActiveUntilTick;
-        boolean compareInfrared = infraredTracking
-                && valid && publishedBufferIndex >= 0;
-        double[] previousTemperatures = compareInfrared
-                ? temperaturesC[publishedBufferIndex] : null;
-        int[] previousGenerations = compareInfrared
-                ? slotGenerations[publishedBufferIndex] : null;
-        boolean infraredChanged = infraredTracking
-                && hasPendingInfraredChanges();
+        boolean infraredTracking =
+                pageChangeEpochs != null && sampleTick <= infraredActiveUntilTick;
+        boolean compareInfrared = infraredTracking && valid && publishedBufferIndex >= 0;
+        double[] previousTemperatures =
+                compareInfrared ? temperaturesC[publishedBufferIndex] : null;
+        int[] previousGenerations = compareInfrared ? slotGenerations[publishedBufferIndex] : null;
+        boolean infraredChanged = infraredTracking && hasPendingInfraredChanges();
         if (hotMasks != null) {
             hotMasks.begin();
         }
-        for (int slot = arena.nextLiveSlot(0);
-             slot >= 0;
-             slot = arena.nextLiveSlot(slot + 1)) {
-            double temperature = arena.temperatureC(
-                    slot, referenceTemperatureC);
+        // Temperature, checkpoint state, activity and infrared changes share one live-slot pass.
+        for (int slot = arena.nextLiveSlot(0); slot >= 0; slot = arena.nextLiveSlot(slot + 1)) {
+            double temperature = arena.temperatureC(slot, referenceTemperatureC);
             int generation = arena.lifecycleGeneration(slot);
             targetTemperatures[slot] = temperature;
             targetGenerations[slot] = generation;
@@ -218,25 +224,31 @@ public final class QueryPublication implements AutoCloseable {
             targetLaws[slot] = arena.materialLaw(slot);
             targetEnthalpies[slot] = arena.enthalpyJ(slot);
             targetBranches[slot] = arena.materialBranch(slot);
-            targetRequests[slot] = arena.hasMaterialTransition(slot) ? arena.phaseRequestSequence(slot) : 0;
+            targetRequests[slot] =
+                    arena.hasMaterialTransition(slot) ? arena.phaseRequestSequence(slot) : 0;
             if (hotMasks != null) {
                 int pageSlot = arena.pageSlot(slot);
                 int brick = brickIndex(arena, slot);
-                if (arena.materialLayoutPending(slot) || arena.hasMaterialTransition(slot) && (arena.phaseRequestOutstanding(slot)
-                        || arena.materialTransition(slot) != null && arena.materialTransition(slot).progress(arena.enthalpyJ(slot)) > 0)) {
+                if (arena.materialLayoutPending(slot)
+                        || arena.hasMaterialTransition(slot)
+                                && (arena.phaseRequestOutstanding(slot)
+                                        || arena.materialTransition(slot) != null
+                                                && arena.materialTransition(slot)
+                                                                .progress(arena.enthalpyJ(slot))
+                                                        > 0)) {
                     hotMasks.recordHot(pageSlot, brick);
                 } else {
                     hotMasks.record(pageSlot, brick, temperature);
                 }
             }
-            if (compareInfrared && arena.isSurfaceCell(slot)
+            if (compareInfrared
+                    && arena.isMaterialCell(slot)
                     && (previousGenerations[slot] != generation
-                    || quantizedInfrared(previousTemperatures[slot])
-                    != quantizedInfrared(temperature))) {
+                            || quantizedInfrared(previousTemperatures[slot])
+                                    != quantizedInfrared(temperature))) {
                 int pageSlot = arena.pageSlot(slot);
                 requirePageSlot(pageSlot);
-                pendingInfraredBrickMasks[pageSlot] |=
-                        1L << brickIndex(arena, slot);
+                pendingInfraredBrickMasks[pageSlot] |= 1L << brickIndex(arena, slot);
                 infraredChanged = true;
             }
         }
@@ -274,7 +286,8 @@ public final class QueryPublication implements AutoCloseable {
         public void configure(double refineHighC, double releaseLowC) {
             if (!Double.isFinite(refineHighC)
                     || !Double.isFinite(releaseLowC)
-                    || refineHighC <= releaseLowC || releaseLowC < 0.0D) {
+                    || refineHighC <= releaseLowC
+                    || releaseLowC < 0.0D) {
                 throw new IllegalArgumentException("hot-mask thresholds are invalid");
             }
             this.refineHighC = refineHighC;
@@ -289,10 +302,7 @@ public final class QueryPublication implements AutoCloseable {
             nextHotMask[pageSlot] = 0L;
         }
 
-        public void updateNaturalTemperature(
-                int pageSlot,
-                double naturalTemperatureC
-        ) {
+        public void updateNaturalTemperature(int pageSlot, double naturalTemperatureC) {
             requirePageSlot(pageSlot);
             requireFinite("naturalTemperatureC", naturalTemperatureC);
             this.naturalTemperatureC[pageSlot] = naturalTemperatureC;
@@ -315,10 +325,8 @@ public final class QueryPublication implements AutoCloseable {
         private void record(int pageSlot, int brick, double temperatureC) {
             requirePageSlot(pageSlot);
             long bit = 1L << brick;
-            double threshold = (previousHotMask[pageSlot] & bit) != 0L
-                    ? releaseLowC : refineHighC;
-            if (Math.abs(temperatureC - naturalTemperatureC[pageSlot])
-                    >= threshold) {
+            double threshold = (previousHotMask[pageSlot] & bit) != 0L ? releaseLowC : refineHighC;
+            if (Math.abs(temperatureC - naturalTemperatureC[pageSlot]) >= threshold) {
                 nextHotMask[pageSlot] |= bit;
             }
         }
@@ -344,10 +352,7 @@ public final class QueryPublication implements AutoCloseable {
      * Extends dimension-wide infrared tracking and returns whether it was
      * reactivated after the previous window expired.
      */
-    public synchronized boolean noteInfraredRequest(
-            long gameTick,
-            int activeTicks
-    ) {
+    public synchronized boolean noteInfraredRequest(long gameTick, int activeTicks) {
         requireNonNegative("gameTick", gameTick);
         if (activeTicks <= 0) {
             throw new IllegalArgumentException("activeTicks must be positive");
@@ -385,13 +390,11 @@ public final class QueryPublication implements AutoCloseable {
 
     /** Adds topology-owned Brick changes to the next successful publication. */
     public synchronized void markInfraredBricksChanged(
-            int pageSlot,
-            long brickMask,
-            long sampleTick
-    ) {
+            int pageSlot, long brickMask, long sampleTick) {
         requirePageSlot(pageSlot);
         requireNonNegative("sampleTick", sampleTick);
-        if (pendingInfraredBrickMasks == null || brickMask == 0L
+        if (pendingInfraredBrickMasks == null
+                || brickMask == 0L
                 || sampleTick > infraredActiveUntilTick) {
             return;
         }
@@ -399,7 +402,7 @@ public final class QueryPublication implements AutoCloseable {
     }
 
     /** Begins one allocation-free coherent infrared read cut. */
-    public boolean beginInfraredRead(InfraredReadCursor out) {
+    public boolean beginRead(ReadCursor out) {
         if (out == null) {
             throw new IllegalArgumentException("out is required");
         }
@@ -415,10 +418,8 @@ public final class QueryPublication implements AutoCloseable {
             long readTopology = topologyGeneration;
             long readSampleTick = sampleTick;
             int readInfraredEpoch = infraredEpoch;
-            double[] readTemperatures = readBuffer < 0
-                    ? null : temperaturesC[readBuffer];
-            int[] readGenerations = readBuffer < 0
-                    ? null : slotGenerations[readBuffer];
+            double[] readTemperatures = readBuffer < 0 ? null : temperaturesC[readBuffer];
+            int[] readGenerations = readBuffer < 0 ? null : slotGenerations[readBuffer];
             long secondVersion = publicationVersion;
             if (firstVersion == secondVersion && (secondVersion & 1L) == 0L) {
                 out.set(
@@ -440,10 +441,7 @@ public final class QueryPublication implements AutoCloseable {
     }
 
     /** Advances an unchanged sleeping publication without copying slot values. */
-    public synchronized boolean republishUnchanged(
-            long topologyGeneration,
-            long sampleTick
-    ) {
+    public synchronized boolean republishUnchanged(long topologyGeneration, long sampleTick) {
         requireNonNegative("topologyGeneration", topologyGeneration);
         requireNonNegative("sampleTick", sampleTick);
         if (!acceptingPublications
@@ -462,10 +460,8 @@ public final class QueryPublication implements AutoCloseable {
             int arenaSlot,
             int expectedSlotGeneration,
             long minimumTopologyGeneration,
-            MutableSample out
-    ) {
-        if (arenaSlot < 0 || expectedSlotGeneration < 0
-                || minimumTopologyGeneration < 0L) {
+            MutableSample out) {
+        if (arenaSlot < 0 || expectedSlotGeneration < 0 || minimumTopologyGeneration < 0L) {
             throw new IllegalArgumentException("query identity is invalid");
         }
         if (out == null) {
@@ -495,13 +491,10 @@ public final class QueryPublication implements AutoCloseable {
             double temperature = temperaturesC[readBuffer][arenaSlot];
             long secondVersion = publicationVersion;
             if (firstVersion == secondVersion && (secondVersion & 1L) == 0L) {
-                if (generation != expectedSlotGeneration
-                        || !Double.isFinite(temperature)) {
+                if (generation != expectedSlotGeneration || !Double.isFinite(temperature)) {
                     return false;
                 }
-                out.set(
-                        temperature,
-                        readSampleTick);
+                out.set(temperature, readSampleTick);
                 return true;
             }
         }
@@ -516,15 +509,18 @@ public final class QueryPublication implements AutoCloseable {
     }
 
     /** Coherent read-only energy state for thermometers, checkpoints and reload. */
-    public boolean tryReadMaterial(int arenaSlot, int expectedGeneration, long minimumTopology,
-            MutableMaterialSample out) {
+    public boolean tryReadMaterial(
+            int arenaSlot, int expectedGeneration, long minimumTopology, MaterialSample out) {
         out.clear();
         for (int attempt = 0; attempt < 2; attempt++) {
             long version = publicationVersion;
             if ((version & 1) != 0) continue;
             int buffer = publishedBufferIndex;
             long tick = sampleTick;
-            if (!valid || buffer < 0 || arenaSlot < 0 || arenaSlot >= capacity
+            if (!valid
+                    || buffer < 0
+                    || arenaSlot < 0
+                    || arenaSlot >= capacity
                     || topologyGeneration < minimumTopology) {
                 if (version == publicationVersion) return false;
                 continue;
@@ -536,8 +532,8 @@ public final class QueryPublication implements AutoCloseable {
             long request = materialRequests[buffer][arenaSlot];
             if (version != publicationVersion) continue;
             if (generation != expectedGeneration || law == null) return false;
-            out.set(energy, law, branch, tick);
-            out.requestSequence = request;
+            out.setLive(energy, law, branch, tick, request);
+
             return true;
         }
         return false;
@@ -639,8 +635,7 @@ public final class QueryPublication implements AutoCloseable {
 
     private static short quantizedInfrared(double temperatureC) {
         long value = Math.round(temperatureC * 4.0D);
-        return (short) Math.max(
-                -32767L, Math.min(32767L, value));
+        return (short) Math.max(-32767L, Math.min(32767L, value));
     }
 
     private static void requireNonNegative(String name, long value) {
@@ -659,13 +654,15 @@ public final class QueryPublication implements AutoCloseable {
         private double temperatureC;
         private long sampleTick;
 
-        public double temperatureC() { return temperatureC; }
-        public long sampleTick() { return sampleTick; }
+        public double temperatureC() {
+            return temperatureC;
+        }
 
-        private void set(
-                double temperatureC,
-                long sampleTick
-        ) {
+        public long sampleTick() {
+            return sampleTick;
+        }
+
+        private void set(double temperatureC, long sampleTick) {
             this.temperatureC = temperatureC;
             this.sampleTick = sampleTick;
         }
@@ -676,48 +673,8 @@ public final class QueryPublication implements AutoCloseable {
         }
     }
 
-    public static final class MutableMaterialSample {
-        private boolean stored;
-        public enum Source { UNAVAILABLE, LIVE, STORED }
-        private double enthalpyJ;
-        private MaterialThermalLaw law;
-        private byte branch;
-        private long sampleTick;
-        private long requestSequence;
-
-        public double enthalpyJ() { return enthalpyJ; }
-        public MaterialThermalLaw law() { return law; }
-        public byte branch() { return branch; }
-        public long sampleTick() { return sampleTick; }
-        public Source source() { return law == null ? Source.UNAVAILABLE : stored ? Source.STORED : Source.LIVE; }
-        public long requestSequence() { return requestSequence; }
-        public double temperatureC() { return law == null ? Double.NaN : law.temperatureC(enthalpyJ, branch); }
-
-        public void set(double energyJ, MaterialThermalLaw law, byte branch, long sampleTick) {
-            stored = false;
-            this.enthalpyJ = energyJ;
-            this.law = law;
-            this.branch = branch;
-            this.sampleTick = sampleTick;
-            requestSequence = 0;
-        }
-
-        public void setStored(double energyJ, MaterialThermalLaw law, byte branch, long sampleTick) {
-            set(energyJ, law, branch, sampleTick);
-            stored = true;
-        }
-
-        public void clear() {
-            law = null;
-            enthalpyJ = Double.NaN;
-            branch = 0;
-            sampleTick = -1;
-            requestSequence = 0;
-        }
-    }
-
     /** Caller-owned coherent view of one published infrared/query cut. */
-    public static final class InfraredReadCursor {
+    public static final class ReadCursor {
         private QueryPublication owner;
         private long version;
         private boolean valid;
@@ -730,23 +687,35 @@ public final class QueryPublication implements AutoCloseable {
         private int[] pageChangeEpochs;
         private int[] brickChangeEpochs;
 
-        public boolean valid() { return valid; }
-        public long sampleTick() { return sampleTick; }
-        public int infraredEpoch() { return infraredEpoch; }
-        public long topologyGeneration() { return topologyGeneration; }
+        public boolean valid() {
+            return valid;
+        }
+
+        public long sampleTick() {
+            return sampleTick;
+        }
+
+        public int infraredEpoch() {
+            return infraredEpoch;
+        }
+
+        public long topologyGeneration() {
+            return topologyGeneration;
+        }
 
         public int pageChangeEpoch(int pageSlot) {
-            if (pageSlot < 0 || pageChangeEpochs == null
-                    || pageSlot >= pageChangeEpochs.length) {
+            if (pageSlot < 0 || pageChangeEpochs == null || pageSlot >= pageChangeEpochs.length) {
                 throw new IllegalArgumentException("Page slot is outside the read cursor");
             }
             return pageChangeEpochs[pageSlot];
         }
 
         public int brickChangeEpoch(int pageSlot, int brickIndex) {
-            if (pageSlot < 0 || pageChangeEpochs == null
+            if (pageSlot < 0
+                    || pageChangeEpochs == null
                     || pageSlot >= pageChangeEpochs.length
-                    || brickIndex < 0 || brickIndex >= 64) {
+                    || brickIndex < 0
+                    || brickIndex >= 64) {
                 throw new IllegalArgumentException("Brick is outside the read cursor");
             }
             return brickChangeEpochs[(pageSlot << 6) + brickIndex];
@@ -756,14 +725,17 @@ public final class QueryPublication implements AutoCloseable {
                 int arenaSlot,
                 int expectedSlotGeneration,
                 long minimumTopologyGeneration,
-                MutableSample out
-        ) {
-            if (arenaSlot < 0 || expectedSlotGeneration < 0
-                    || minimumTopologyGeneration < 0L || out == null) {
+                MutableSample out) {
+            if (arenaSlot < 0
+                    || expectedSlotGeneration < 0
+                    || minimumTopologyGeneration < 0L
+                    || out == null) {
                 throw new IllegalArgumentException("infrared query identity is invalid");
             }
             out.clear();
-            if (!valid || temperaturesC == null || slotGenerations == null
+            if (!valid
+                    || temperaturesC == null
+                    || slotGenerations == null
                     || arenaSlot >= capacity
                     || topologyGeneration < minimumTopologyGeneration
                     || slotGenerations[arenaSlot] != expectedSlotGeneration) {
@@ -778,9 +750,7 @@ public final class QueryPublication implements AutoCloseable {
         }
 
         public boolean isCurrent() {
-            return owner != null
-                    && owner.publicationVersion == version
-                    && (version & 1L) == 0L;
+            return owner != null && owner.publicationVersion == version && (version & 1L) == 0L;
         }
 
         private void set(
@@ -794,8 +764,7 @@ public final class QueryPublication implements AutoCloseable {
                 double[] temperaturesC,
                 int[] slotGenerations,
                 int[] pageChangeEpochs,
-                int[] brickChangeEpochs
-        ) {
+                int[] brickChangeEpochs) {
             this.owner = owner;
             this.version = version;
             this.valid = valid;

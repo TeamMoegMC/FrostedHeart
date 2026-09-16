@@ -41,8 +41,8 @@ public final class PreparedTopologyChange {
     final ThermalMaterialEdge[] materialEdges;
     final int[] materialExecutionFragments;
     final ThermalMaterialExecution[] materialExecutions;
-    final int[] removedReservoirSlots;
-    final int[] addedReservoirSlots;
+    final int[] removedPhaseSlots;
+    final int[] addedPhaseSlots;
     public final PageWrite[] pageWrites;
     final OldSpan[] oldSpans;
     public final long[] sourceDirtySections;
@@ -57,8 +57,8 @@ public final class PreparedTopologyChange {
         ThermalMaterialEdge[] materialEdges = builder.materialEdges;
         int[] materialExecutionFragments = builder.materialExecutionFragments;
         ThermalMaterialExecution[] materialExecutions = builder.materialExecutions;
-        int[] removedReservoirSlots = builder.removedReservoirSlots;
-        int[] addedReservoirSlots = builder.addedReservoirSlots;
+        int[] removedPhaseSlots = builder.removedPhaseSlots;
+        int[] addedPhaseSlots = builder.addedPhaseSlots;
         PageWrite[] pageWrites = builder.pageWrites;
         OldSpan[] oldSpans = builder.oldSpans;
         long[] sourceDirtySections = builder.sourceDirtySections;
@@ -71,8 +71,8 @@ public final class PreparedTopologyChange {
         Objects.requireNonNull(
                 materialExecutionFragments, "materialExecutionFragments");
         Objects.requireNonNull(materialExecutions, "materialExecutions");
-        Objects.requireNonNull(removedReservoirSlots, "removedReservoirSlots");
-        Objects.requireNonNull(addedReservoirSlots, "addedReservoirSlots");
+        Objects.requireNonNull(removedPhaseSlots, "removedPhaseSlots");
+        Objects.requireNonNull(addedPhaseSlots, "addedPhaseSlots");
         Objects.requireNonNull(pageWrites, "pageWrites");
         Objects.requireNonNull(oldSpans, "oldSpans");
         Objects.requireNonNull(sourceDirtySections, "sourceDirtySections");
@@ -104,8 +104,8 @@ public final class PreparedTopologyChange {
         this.materialEdges = materialEdges;
         this.materialExecutionFragments = materialExecutionFragments;
         this.materialExecutions = materialExecutions;
-        this.removedReservoirSlots = removedReservoirSlots;
-        this.addedReservoirSlots = addedReservoirSlots;
+        this.removedPhaseSlots = removedPhaseSlots;
+        this.addedPhaseSlots = addedPhaseSlots;
         this.pageWrites = pageWrites;
         this.oldSpans = oldSpans;
         this.sourceDirtySections = sourceDirtySections;
@@ -122,8 +122,8 @@ public final class PreparedTopologyChange {
         private ThermalMaterialEdge[] materialEdges;
         private int[] materialExecutionFragments;
         private ThermalMaterialExecution[] materialExecutions;
-        private int[] removedReservoirSlots;
-        private int[] addedReservoirSlots;
+        private int[] removedPhaseSlots;
+        private int[] addedPhaseSlots;
         private PageWrite[] pageWrites;
         private OldSpan[] oldSpans;
         private long[] sourceDirtySections;
@@ -159,9 +159,9 @@ public final class PreparedTopologyChange {
             return this;
         }
 
-        Builder reservoirs(int[] removedSlots, int[] addedSlots) {
-            removedReservoirSlots = removedSlots;
-            addedReservoirSlots = addedSlots;
+        Builder phaseSlots(int[] removedSlots, int[] addedSlots) {
+            removedPhaseSlots = removedSlots;
+            addedPhaseSlots = addedSlots;
             return this;
         }
 
@@ -329,7 +329,7 @@ public final class PreparedTopologyChange {
         }
 
         static PageWrite active(
-                TopologyPlan.PageDraft draft,
+                TopologyUpdatePlanner.PageDraft draft,
                 long resolvedBrickMask,
                 PagePublication publication,
                 int[] brickIndexes,
@@ -356,7 +356,7 @@ public final class PreparedTopologyChange {
                     firstExposedLocalY);
         }
 
-        static PageWrite retirement(TopologyPlan.PageDraft draft) {
+        static PageWrite retirement(TopologyUpdatePlanner.PageDraft draft) {
             return new PageWrite(
                     draft.page,
                     null,

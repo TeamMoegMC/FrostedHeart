@@ -3,13 +3,13 @@
 - Status: `Transitional; current local Air mixing and residency behavior verified by focused regressions; full-load performance validation pending`
 - Last verified: `2026-09-16`
 - Scope: server-side thermal capture, asynchronous dimension workers, Page/Brick topology, source energy, phase requests, query publication, and hot-path cost bounds
-- Primary code anchors: `MinecraftThermalEvents`, `MinecraftThermalInput`, `MinecraftPageManager`, `PhysicalSourceSpatialIndex`, `DimensionInputAccumulator`, `ThermalDimensionMailbox`, `ThermalWorkerPool`, `ThermalDimensionEngine`, `TopologyPlan`, `PreparedTopologyChange`, `TopologyCommitter`, `ThermalSolver`, `ThermalSourceLedger`, `QueryPublication`
+- Primary code anchors: `MinecraftThermalEvents`, `MinecraftThermalInput`, `MinecraftPageManager`, `PhysicalSourceSpatialIndex`, `DimensionInputAccumulator`, `ThermalDimensionMailbox`, `ThermalWorkerPool`, `ThermalDimensionEngine`, `TopologyUpdatePlanner`, `PreparedTopologyChange`, `TopologyCommitter`, `ThermalSolver`, `ThermalSourceLedger`, `QueryPublication`
 
 ## Source Layout
 
 | Package | Responsibility |
 |---|---|
-| `thermal.runtime.minecraft` | Forge lifecycle and the public gameplay facade only |
+| `thermal.runtime.minecraft` | Forge lifecycle, gameplay facade and the shared infrared capture workspace |
 | `thermal.runtime.minecraft.input` | Page interest, Minecraft state capture, phase ACK, and input accumulation |
 | `thermal.runtime.minecraft.message` | Immutable main-thread/worker ownership-transfer messages |
 | `thermal.runtime.minecraft.engine` | Per-dimension execution engine and runtime limits |
@@ -25,6 +25,49 @@
 Packages are grouped by function. Thread ownership is documented on the owning
 classes; it is not used as a catch-all reason to place topology, source, or
 persistence code under `runtime`.
+
+### Maintenance entry points
+
+`ThermalPage` means the simulation container corresponding to one Minecraft Section;
+it is not the Section itself. A Brick contains 4³ blocks. Topology is the set of
+nodes and permitted heat-exchange connections. Existing Page/Brick types retain
+these meanings without wrapper objects.
+
+| Change | Start here | Preserve |
+|---|---|---|
+| Material response | `MaterialThermalLaw`, `MinecraftThermalProfiles` | C/O/G units, category defaults and explicit data overrides |
+| Compile or migrate a Brick | `BrickTopologyCompiler.compileCells`, `BrickMigrationKernel.migrate` | Air nodes before material nodes, whole-block H, phase request identity |
+| Prepare/install topology | `TopologyUpdatePlanner.prepare`, `TopologyCommitter` | Source settlement before migration; rebind before old-span release |
+| Actual material reading | `MaterialSample`, `QueryPublication.tryReadMaterial` | Source provenance, H/branch, tick and request sequence |
+| Phase threshold | `MaterialThermalLaw.Transition.transitionTemperatureC` | Threshold is separate from the body's actual `temperatureC` |
+| Air route | `AirRouteCompiler.Component.advance` | Four resumable stages, normalized path resistance and tie order |
+| Save/recover | `DormantChunkThermalState`, `MaterialSectionState` | Air residual packing versus exact material H; partial Brick merges |
+| Infrared sampling | `InfraredCapture.capture` | One shared workspace, bounded retries, current publication per call |
+
+Phase requests are checked in `MinecraftPhaseController`. The level tick passes
+its current `QueryPublication` directly to `phase.tick(publication)`; the controller
+does not retain that worker reference. The former PageManager-to-Input validation
+forwarding is removed. Validation reuses the already resolved Page and the existing
+main-thread material sample before any world mutation runs.
+
+Checkpoint coordination still overlaps: Input waits for worker completion and
+captures/writes state, PageManager selects Pages and handles retirement, and
+SectionOwner projects intervening material changes. This is known responsibility
+overlap, not a claim that the current split is ideal. SectionOwner's static nesting
+itself follows its sole owner: PageManager controls attachment/invalidation, the
+dirty queue, Page handles and scratch exchange. Moving that type alone would not
+resolve the checkpoint overlap.
+
+`TopologyCommitter` provides static commit/restore/release operations and retains
+no per-engine instance. Material profiles are constructed directly through
+`MaterialBoundaryRegistry.Profile`, whose constructor keeps the numeric checks.
+Source binding resolves the node and generation together through
+`WorkerPageStore.resolveAirFaceTarget`; its caller reuses a `MutableAirTarget`.
+
+`isMaterialCell` and `materialNodeMask` name material membership; they do not
+test geometric exposure. `airNodeCount` identifies real Air nodes, while routed
+ventilation through material owns no additional thermal state. `ReadCursor`
+stays within `QueryPublication` because it reads the publication's private buffers.
 
 ## Ownership
 
@@ -49,6 +92,9 @@ primitive cuts; the worker owns arena cells, topology, source integration,
 phase state, solver execution, and publication.
 
 Analytic gameplay fields have world lifetime through `MinecraftGameplayFields`.
+Commands and the Curiosity encounter call its `upsert/remove` operations directly,
+as generator code already does. `MinecraftThermalInput` no longer duplicates those
+write entry points; the owner still performs the same main-thread checks.
 The runtime caches the same `ThermalAnalyticFieldIndex` reference; field-only
 publication does not construct a dimension runtime or attach loaded sections.
 World unload/server stop clear the index, while physical close/profile reload
@@ -79,7 +125,7 @@ DimensionInputAccumulator -> ThermalInputBatch
 ThermalDimensionMailbox -> ThermalDimensionEngine
         |
         v
-TopologyPlan -> PreparedTopologyChange -> TopologyCommitter
+TopologyUpdatePlanner -> PreparedTopologyChange -> TopologyCommitter
         |
         v
 ThermalSolver / ThermalSourceLedger / PagePublication / QueryPublication
@@ -320,7 +366,7 @@ future residency capture reads final state. `StateStaticThermalResolver` is a pu
 `BlockState` and `FluidState`, so neighboring positions are not recaptured and
 each section owner retains only its own Page handle. Cross-Brick and cross-Page
 effects are compiled from the changed Brick through the fixed fragment
-neighborhood in `TopologyPlan.markFragmentNeighborhood`.
+neighborhood in `TopologyUpdatePlanner.markFragmentNeighborhood`.
 
 Repeated changes to the same position are coalesced until the next cut. Captured
 center signatures stay in the Page manager until a batch is actually sealed.
@@ -381,7 +427,7 @@ The physical witness revision table and static coverage index share the
 
 ## Topology Preparation And Commit
 
-`TopologyPlan` collects changed Pages, sparse centers, environment deltas, local
+`TopologyUpdatePlanner` collects changed Pages, sparse centers, environment deltas, local
 contact dependencies and affected passage components. `BrickTopologyCompiler` produces
 direct Air/material contacts, indirect routed contacts and exposed FarField payloads using worker-owned reusable
 scratch. `MaterialEdgeCompiler` groups changed contributions by packed edge key
@@ -391,7 +437,7 @@ creating the same immutable primitive payloads; they do not add per-Brick or
 per-transaction group objects.
 
 When one cut retires a Page handle and admits a newer handle for the same
-section, `TopologyPlan` represents them as one Page replacement. The new Page
+section, `TopologyUpdatePlanner` represents them as one Page replacement. The new Page
 reuses the committed worker Page slot, compiles one complete next Brick
 directory, migrates current worker Air/material heat, replaces the exact local
 fragment closure, and clears the old handle only after commit. It does not
@@ -501,7 +547,7 @@ visits each outlet only in that outlet's indexed Section. The ledger's
 `suppliesPower` updates one cached emitting flag per descriptor on source events.
 Register, remove, move, enable/disable, and zero/nonzero power changes mark only
 nearby resident world-Brick positions in one reusable pending set. Positive power
-adjustments do not change mixing geometry. `TopologyPlan.prepare` consumes those
+adjustments do not change mixing geometry. `TopologyUpdatePlanner.prepare` consumes those
 positions as fragment-only changes; no cell replacement or H migration is needed.
 The engine checks this pending set even for source-only cuts and clears it only
 after commit. Work-limited attempts keep it for a later cut. Removed source power
@@ -650,25 +696,27 @@ publication envelope. It never counts then rewrites, retains slot keys, scans
 arena holes, or binary-searches a sorted cell list.
 
 Infrared tracking reuses the live-slot publication pass. `BlockBrickLayout` has
-one immutable `long surfaceNodeMask`, shared by worker topology and
+one immutable `long materialNodeMask`, shared by worker topology and
 `PagePublication`. It covers all material bodies, including phase-capable bodies.
-`ThermalCellArena.isSurfaceCell` works for RESERVED and LIVE allocations without
+`ThermalCellArena.isMaterialCell` works for RESERVED and LIVE allocations without
 changing Air/source eligibility, mixed centers, cell kinds, or per-slot arrays.
 Full-Air Bricks still have one node and no layout. A material-only Brick publishes
 its actual `firstSlot` and arena generation; Air consumers additionally require
-`transportNodeCount > 0`. The worker's internal `coverageSlot` stays Air-only.
+`airNodeCount > 0`. The worker's internal `coverageSlot` stays Air-only.
 
 The first request lazily allocates Page/Brick epochs and pending masks. During the
-80-tick activity window, only surface temperatures are compared at 0.25°C in the
+80-tick activity window, material temperatures are compared at 0.25°C in the
 existing write pass. Exact topology masks and temperature changes stamp one epoch
 atomically. Reactivation advances an epoch and fills both arrays. No second solver
 sweep or server observer cache is added. The existing fixed reservation remains
 292 bytes/Page, including `HotMaskScratch`; Page/Brick epochs at 3,200 Pages use
 832,000 bytes. Each existing block layout adds eight bytes of numeric payload.
 
-`MinecraftThermalInput.InfraredCapture` is one lazy main-thread scratch. Existing
+`InfraredCapture` is one lazy main-thread scratch owned by `MinecraftThermalInput`.
+Each call receives the current Page manager, publication and dimension generation;
+the scratch does not retain a replaced worker publication. Existing
 handles are gathered with `MinecraftPageManager.pagesByChunk`; current layouts,
-slot generations, topology generations and the coherent `InfraredReadCursor`
+slot generations, topology generations and the coherent `ReadCursor`
 select readable material Pages. Phase-capable bodies use their material law;
 Air and dormant Air temperatures do not become material measurements.
 For nonresident Bricks it also reads existing material records from loaded chunks.
@@ -876,7 +924,7 @@ long per record so editing one block cannot reset another's age; merge carries e
 record's tick and uses a scalar again for uniform results. The worst additional
 timestamp payload is 8 bytes/record (32 KiB for 4096 records), plus the scalar,
 array/object overhead and any simultaneously retained COW copies. No scheduler or
-candidate bitset is added. `MutableMaterialSample` keeps explicit STORED provenance
+candidate bitset is added. `MaterialSample` keeps explicit STORED provenance
 because both live and stored samples now have valid timestamps.
 
 Chunk-owned material editing uses `MaterialSectionState.Editor`: the first write

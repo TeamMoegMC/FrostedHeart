@@ -19,7 +19,7 @@ import com.teammoeg.frostedheart.content.climate.thermal.topology.FarFieldSettin
 import com.teammoeg.frostedheart.content.climate.thermal.topology.PreparedTopologyChange;
 import com.teammoeg.frostedheart.content.climate.thermal.topology.ThermalTopologyParameters;
 import com.teammoeg.frostedheart.content.climate.thermal.topology.TopologyCommitter;
-import com.teammoeg.frostedheart.content.climate.thermal.topology.TopologyPlan;
+import com.teammoeg.frostedheart.content.climate.thermal.topology.TopologyUpdatePlanner;
 import com.teammoeg.frostedheart.content.climate.thermal.topology.WorkerPageStore;
 
 import java.util.Objects;
@@ -27,10 +27,10 @@ import com.mojang.logging.LogUtils;
 import org.slf4j.Logger;
 
 /**
- * 一个维度 generation 的唯一可变 worker 权威。
+ * 在 worker 上推进一个维度的热状态。
  *
- * <p>处理顺序固定为：应用输入、准备并提交 topology、重绑 source、推进
- * solver、发布 query、生成 completion。Minecraft 对象不得越过 batch 边界
+ * <p>先处理 ACK/意图并结算旧连接的供能，再准备和提交拓扑、重绑热源、
+ * 释放旧节点，最后换热并发布查询和回执。Minecraft 对象不得越过 batch 边界
  * 进入该类。</p>
  */
 public final class ThermalDimensionEngine implements ThermalDimensionProcessor {
@@ -47,9 +47,7 @@ public final class ThermalDimensionEngine implements ThermalDimensionProcessor {
     private final ThermalSolver solver;
     private final ThermalSourceLedger sources;
     private final WorkerPhysicalSourceBindings sourceBindings;
-    private final TopologyPlan topologyPlan;
-    private final TopologyCommitter topologyCommitter =
-            new TopologyCommitter();
+    private final TopologyUpdatePlanner topologyPlan;
 
     private long lastBatchSequence;
     private long lastTargetTick;
@@ -103,7 +101,7 @@ public final class ThermalDimensionEngine implements ThermalDimensionProcessor {
                 parameters,
                 Objects.requireNonNull(farField, "farField"),
                 limits.maximumArenaSlots(), sourceBindings::collectMixingSources);
-        topologyPlan = new TopologyPlan(
+        topologyPlan = new TopologyUpdatePlanner(
                 pages,
                 arena,
                 solver,
@@ -152,13 +150,13 @@ public final class ThermalDimensionEngine implements ThermalDimensionProcessor {
         if (topologyInput) {
             try {
                 topology = topologyPlan.prepare(batch, sourceBindings.mixingChanges());
-            } catch (TopologyPlan.WorkLimitedException refused) {
+            } catch (TopologyUpdatePlanner.WorkLimitedException refused) {
                 workLimited = true;
             }
         }
 
         if (topology != null) {
-            topologyCommitter.commit(topology, pages, arena, solver, phases);
+            TopologyCommitter.commit(topology, pages, arena, solver, phases);
             topologyPlan.committed();
             sourceBindings.mixingCommitted();
         } else if (workLimited) {
@@ -171,7 +169,7 @@ public final class ThermalDimensionEngine implements ThermalDimensionProcessor {
                 sourceBindings.markCommittedSections(
                         topology.sourceDirtySections);
                 sourceBindings.rebindDirty(sources);
-                topologyCommitter.releaseOldSpans(
+                TopologyCommitter.releaseOldSpans(
                         topology, arena, solver, sources);
                 for (PreparedTopologyChange.PageWrite write
                         : topology.pageWrites) {
@@ -231,7 +229,7 @@ public final class ThermalDimensionEngine implements ThermalDimensionProcessor {
                     residencyUpdates);
         } catch (RuntimeException | Error failure) {
             if (topology != null && !queryPublished) {
-                topologyCommitter.restorePagePublications(topology);
+                TopologyCommitter.restorePagePublications(topology);
             }
             throw failure;
         }

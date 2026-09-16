@@ -188,8 +188,10 @@ Page 重采样：方块 mutation 在 heightmap 更新完成后于 tick-end 合�
 
 ## 7. Analytic control fields
 
-`MinecraftGameplayFields` 在服务端主线程按实际 `ServerLevel` 身份持有一份
-`ThermalAnalyticFieldIndex`；`MinecraftThermalInput` 缓存同一索引引用。field 可为
+`MinecraftGameplayFields` 在服务端主线程按实际 `ServerLevel` 身份持有一份世界生命周期的
+`ThermalAnalyticFieldIndex`；`MinecraftThermalInput` 缓存同一索引引用。命令和 Curiosity
+直接使用 `MinecraftGameplayFields.upsert/remove`，能量塔仍使用原 `upsertSphere/remove`。
+field 可为
 `CUBE`、`PILLAR` 或 `SPHERE`，范围内为常值，无衰减或遮挡；不会复制到覆盖区块、挂 capability、
 创建 Page，也不参与 `H/C/P/G` 守恒账本。键为 `ThermalFieldKey(provider, ownerHigh, ownerLow, channel)`：
 generator 使用团队数据完整 UUID，Curiosity 使用实体完整 UUID，命令使用独立命名空间内的位置。
@@ -222,7 +224,7 @@ Generator 的半径/温差来自 `GeneratorData.getRadius/getTempMod` 和 `Gener
 无需额外距离平方、视角余弦或辐射求解。解析修正后的`displayTemperature`是玩法显示值，
 不能称为实测材料温度；它不回写材料H/C/T。现有节点六面共用，不代表六面独立或内部温度。
 
-`MinecraftThermalInput.gameplayInfraredSnapshot`通过`BlockBrickLayout.surfaceNodeMask`
+`MinecraftThermalInput.gameplayInfraredSnapshot`通过`BlockBrickLayout.materialNodeMask`
 读取材料本体节点的H→T，包括普通材料、相变平台与相变后的状态。楼梯本体不再与空气
 共用温度；实际Air和休眠Air均温不作为材料基础。材料本体H/分支/时间另存于format 4，
 不通过Air均温恢复。旧相变池和旧存档兼容读取已移除。

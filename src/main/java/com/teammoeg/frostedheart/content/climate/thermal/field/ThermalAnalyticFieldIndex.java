@@ -2,25 +2,35 @@
 package com.teammoeg.frostedheart.content.climate.thermal.field;
 
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
+
 import net.minecraft.resources.ResourceLocation;
 
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
-/** Main-thread ordered non-conservative analytic field authority. */
+/** Main-thread gameplay temperature fields, composed in mode/priority/key order outside the energy solver. */
 public final class ThermalAnalyticFieldIndex {
-    private static final Comparator<ThermalAnalyticField> ORDER = Comparator
-            .comparingInt((ThermalAnalyticField field) -> field.combineMode().ordinal())
-            .thenComparingInt(ThermalAnalyticField::priority)
-            .thenComparing(ThermalAnalyticField::key);
-    private final Object2ObjectOpenHashMap<ThermalFieldKey, Entry> byKey = new Object2ObjectOpenHashMap<>();
+    private static final Comparator<ThermalAnalyticField> ORDER =
+            Comparator.comparingInt((ThermalAnalyticField field) -> field.combineMode().ordinal())
+                    .thenComparingInt(ThermalAnalyticField::priority)
+                    .thenComparing(ThermalAnalyticField::key);
+    private final Object2ObjectOpenHashMap<ThermalFieldKey, Entry> byKey =
+            new Object2ObjectOpenHashMap<>();
     private final ArrayList<Entry> fields = new ArrayList<>();
 
-    public boolean isEmpty() { return fields.isEmpty(); }
+    public boolean isEmpty() {
+        return fields.isEmpty();
+    }
 
-    public void collectIntersecting(double minX, double minY, double minZ,
-            double maxX, double maxY, double maxZ, List<ThermalAnalyticField> out) {
+    public void collectIntersecting(
+            double minX,
+            double minY,
+            double minZ,
+            double maxX,
+            double maxY,
+            double maxZ,
+            List<ThermalAnalyticField> out) {
         out.clear();
         for (int i = 0; i < fields.size(); i++) {
             ThermalAnalyticField field = fields.get(i).field;
@@ -44,7 +54,8 @@ public final class ThermalAnalyticFieldIndex {
             byKey.put(field.key(), entry);
         } else {
             entry.seen = true;
-            if (entry.field.combineMode() == field.combineMode() && entry.field.priority() == field.priority()) {
+            if (entry.field.combineMode() == field.combineMode()
+                    && entry.field.priority() == field.priority()) {
                 entry.field = field;
                 return;
             }
@@ -61,11 +72,28 @@ public final class ThermalAnalyticFieldIndex {
         fields.add(low, entry);
     }
 
-    public void upsertSphere(ThermalFieldKey key, int priority, ThermalAnalyticField.CombineMode mode,
-            double x, double y, double z, double radius, double value) {
+    public void upsertSphere(
+            ThermalFieldKey key,
+            int priority,
+            ThermalAnalyticField.CombineMode mode,
+            double x,
+            double y,
+            double z,
+            double radius,
+            double value) {
         Entry entry = byKey.get(key);
-        if (entry != null && entry.field.matches(priority, mode, ThermalAnalyticField.Shape.SPHERE,
-                x, y, z, radius, radius, radius, value)) {
+        if (entry != null
+                && entry.field.matches(
+                        priority,
+                        mode,
+                        ThermalAnalyticField.Shape.SPHERE,
+                        x,
+                        y,
+                        z,
+                        radius,
+                        radius,
+                        radius,
+                        value)) {
             entry.seen = true;
             return;
         }
@@ -104,13 +132,14 @@ public final class ThermalAnalyticFieldIndex {
         for (int i = 0; i < fields.size(); i++) {
             ThermalAnalyticField field = fields.get(i).field;
             if (!field.contains(x, y, z)) continue;
-            result = switch (field.combineMode()) {
-                case FLOOR_FROM_NATURAL -> Math.max(result, natural + field.temperatureC());
-                case OVERRIDE -> field.temperatureC();
-                case MAX_HEAT -> Math.max(result, field.temperatureC());
-                case MIN_COOL -> Math.min(result, field.temperatureC());
-                case ADD_DELTA -> result + field.temperatureC();
-            };
+            result =
+                    switch (field.combineMode()) {
+                        case FLOOR_FROM_NATURAL -> Math.max(result, natural + field.temperatureC());
+                        case OVERRIDE -> field.temperatureC();
+                        case MAX_HEAT -> Math.max(result, field.temperatureC());
+                        case MIN_COOL -> Math.min(result, field.temperatureC());
+                        case ADD_DELTA -> result + field.temperatureC();
+                    };
         }
         return result;
     }
@@ -131,13 +160,8 @@ public final class ThermalAnalyticFieldIndex {
         return false;
     }
 
-    public List<ThermalAnalyticField> fieldsAt(
-            double x,
-            double y,
-            double z
-    ) {
-        ArrayList<ThermalAnalyticField> result =
-                new ArrayList<>();
+    public List<ThermalAnalyticField> fieldsAt(double x, double y, double z) {
+        ArrayList<ThermalAnalyticField> result = new ArrayList<>();
         for (int i = 0; i < fields.size(); i++) {
             ThermalAnalyticField field = fields.get(i).field;
             if (field.contains(x, y, z)) {
@@ -166,9 +190,17 @@ public final class ThermalAnalyticFieldIndex {
             delta = 0;
         }
 
-        public boolean present() { return present; }
-        public boolean requiresNatural() { return !hasOverride && relativeFloor != Double.NEGATIVE_INFINITY; }
-        public boolean requiresBase() { return !hasOverride; }
+        public boolean present() {
+            return present;
+        }
+
+        public boolean requiresNatural() {
+            return !hasOverride && relativeFloor != Double.NEGATIVE_INFINITY;
+        }
+
+        public boolean requiresBase() {
+            return !hasOverride;
+        }
 
         /** Fields must be included in the index's canonical order. */
         public void include(ThermalAnalyticField field) {
@@ -176,7 +208,10 @@ public final class ThermalAnalyticFieldIndex {
             double value = field.temperatureC();
             switch (field.combineMode()) {
                 case FLOOR_FROM_NATURAL -> relativeFloor = Math.max(relativeFloor, value);
-                case OVERRIDE -> { override = value; hasOverride = true; }
+                case OVERRIDE -> {
+                    override = value;
+                    hasOverride = true;
+                }
                 case MAX_HEAT -> floor = Math.max(floor, value);
                 case MIN_COOL -> ceiling = Math.min(ceiling, value);
                 case ADD_DELTA -> delta += value;

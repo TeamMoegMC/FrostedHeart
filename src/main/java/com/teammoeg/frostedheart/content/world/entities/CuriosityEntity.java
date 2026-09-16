@@ -19,6 +19,8 @@
 
 package com.teammoeg.frostedheart.content.world.entities;
 
+import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.MinecraftGameplayFields;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -29,7 +31,6 @@ import com.teammoeg.frostedheart.bootstrap.common.FHEntityTypes;
 import com.teammoeg.frostedheart.bootstrap.common.FHItems;
 import com.teammoeg.frostedheart.bootstrap.reference.FHSoundEvents;
 import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
-import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.MinecraftThermalInput;
 import com.teammoeg.frostedheart.content.climate.thermal.field.ThermalAnalyticField;
 import com.teammoeg.frostedheart.content.climate.thermal.field.ThermalFieldKey;
 import com.teammoeg.frostedheart.content.climate.thermal.field.ThermalAnalyticField.CombineMode;
@@ -763,7 +764,7 @@ public class CuriosityEntity extends Monster {
             removeColdField(sl);
             coldFieldKey = ThermalFieldKey.of(COLD_FIELD_PROVIDER, getUUID(), 0);
         }
-        this.coldApplied = MinecraftThermalInput.upsertGameplayAnalyticField(
+        this.coldApplied = MinecraftGameplayFields.upsert(
                 sl,
                 new ThermalAnalyticField(
                         coldFieldKey,
@@ -777,7 +778,7 @@ public class CuriosityEntity extends Monster {
     }
 
     private void removeColdField(ServerLevel sl) {
-        if (coldFieldKey != null) MinecraftThermalInput.removeGameplayAnalyticField(sl, coldFieldKey);
+        if (coldFieldKey != null) MinecraftGameplayFields.remove(sl, coldFieldKey);
         this.coldApplied = false;
     }
 

@@ -98,13 +98,13 @@ public final class ThermalTimingGameTests {
             helper.assertTrue(edge != null, "ice has a heating transition");
             double remaining = Math.min(1000, (edge.targetEnthalpyJ() - edge.sourceEnthalpyJ()) / 4);
             f.arena.acceptExternalEnergyJ(body, edge.targetEnthalpyJ() - remaining - f.arena.enthalpyJ(body));
-            f.arena.setEnthalpyJ(air, f.arena.capacityJPerK(air) * (edge.temperatureC() + 100));
+            f.arena.setEnthalpyJ(air, f.arena.capacityJPerK(air) * (edge.transitionTemperatureC() + 100));
             double before = f.energy();
             f.tick = 200;
             var result = f.process(ThermalSourceBatch.EMPTY, ResolvedGeometryBatch.EMPTY);
             helper.assertTrue(result.status() == ThermalCompletion.Status.COMPLETED && result.phaseRequests().length == 1, "one completed transition is offered");
             near(helper, edge.targetEnthalpyJ(), f.arena.enthalpyJ(body), "large dt stops exactly at the ACK energy boundary");
-            near(helper, edge.temperatureC(), f.arena.temperatureC(body, 0), "latent plateau is not skipped");
+            near(helper, edge.transitionTemperatureC(), f.arena.temperatureC(body, 0), "latent plateau is not skipped");
             near(helper, before, f.energy(), "excess heat remains in the other node");
             f.tick = 400; f.cut(ThermalSourceBatch.EMPTY, ResolvedGeometryBatch.EMPTY);
             near(helper, edge.targetEnthalpyJ(), f.arena.enthalpyJ(body), "waiting for the world ACK does not absorb extra latent energy");

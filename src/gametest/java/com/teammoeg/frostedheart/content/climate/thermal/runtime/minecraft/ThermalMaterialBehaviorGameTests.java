@@ -1,6 +1,8 @@
 /* Copyright (c) 2026 TeamMoeg */
 package com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft;
 
+import com.teammoeg.frostedheart.content.climate.thermal.mesh.MaterialSample;
+
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.climate.WorldTemperature;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.*;
@@ -87,9 +89,9 @@ public final class ThermalMaterialBehaviorGameTests {
             double warmToThreshold = edge.sourceEnthalpyJ() - simulation.arena.enthalpyJ(slot);
             double latent = edge.targetEnthalpyJ() - edge.sourceEnthalpyJ();
             simulation.arena.acceptExternalEnergyJ(slot, warmToThreshold / 2);
-            near(helper, (-10 + edge.temperatureC()) / 2, simulation.arena.temperatureC(slot, 0), "sensible heating precedes melting");
+            near(helper, (-10 + edge.transitionTemperatureC()) / 2, simulation.arena.temperatureC(slot, 0), "sensible heating precedes melting");
             simulation.arena.acceptExternalEnergyJ(slot, warmToThreshold / 2 + latent / 2);
-            near(helper, edge.temperatureC(), simulation.arena.temperatureC(slot, 0), "latent heat holds the plateau");
+            near(helper, edge.transitionTemperatureC(), simulation.arena.temperatureC(slot, 0), "latent heat holds the plateau");
             near(helper, .5, edge.progress(simulation.arena.enthalpyJ(slot)), "half of latent heat means half progress");
             simulation.arena.acceptExternalEnergyJ(slot, -latent / 4);
             near(helper, .25, edge.progress(simulation.arena.enthalpyJ(slot)), "cooling returns latent energy on the same branch");
@@ -105,7 +107,7 @@ public final class ThermalMaterialBehaviorGameTests {
             simulation.publish(geometry, new ThermalInputBatch.PhaseAck[]{new ThermalInputBatch.PhaseAck(request, PhaseTransitionRuntime.AckOutcome.APPLIED)});
             slot = simulation.slot(ice);
             near(helper, before, simulation.totalEnergy(), "successful ACK does not subtract latent energy again");
-            near(helper, edge.temperatureC(), simulation.arena.temperatureC(slot, 0), "next ice stage begins at the completed transition temperature");
+            near(helper, edge.transitionTemperatureC(), simulation.arena.temperatureC(slot, 0), "next ice stage begins at the completed transition temperature");
             for (int stage = 0; stage < 6 && !level.getBlockState(ice).is(Blocks.WATER); stage++) {
                 var nextEdge = simulation.arena.materialLaw(slot).heating();
                 helper.assertTrue(nextEdge != null, "configured ice stages must reach water");
@@ -122,7 +124,7 @@ public final class ThermalMaterialBehaviorGameTests {
             }
             helper.assertTrue(level.getBlockState(ice).is(Blocks.WATER), "configured ice chain reaches water");
             simulation.arena.acceptExternalEnergyJ(slot, simulation.arena.capacityJPerK(slot) * 5);
-            near(helper, edge.temperatureC() + 5, simulation.arena.temperatureC(slot, 0), "target material heats after conversion");
+            near(helper, edge.transitionTemperatureC() + 5, simulation.arena.temperatureC(slot, 0), "target material heats after conversion");
         }
         helper.succeed();
     }
@@ -317,7 +319,7 @@ public final class ThermalMaterialBehaviorGameTests {
             helper.assertTrue(edge != null, "source water has a physical freezing edge");
             double middle = (edge.sourceEnthalpyJ() + edge.targetEnthalpyJ()) / 2;
             simulation.arena.acceptExternalEnergyJ(slot, middle - simulation.arena.enthalpyJ(slot));
-            near(helper, edge.temperatureC(), simulation.arena.temperatureC(slot, 0), "freezing releases latent heat at the plateau");
+            near(helper, edge.transitionTemperatureC(), simulation.arena.temperatureC(slot, 0), "freezing releases latent heat at the plateau");
             simulation.publish(ResolvedGeometryBatch.EMPTY, ThermalInputBatch.NO_PHASE_ACKS);
             var page = simulation.page(water);
             var capture = MaterialSectionState.capture(page.currentPublication(), simulation.query,
@@ -326,7 +328,7 @@ public final class ThermalMaterialBehaviorGameTests {
             stored.mergeMaterials(water.getY() >> 4, capture.state(), capture.sampledBricks());
             CompoundTag nbt = new CompoundTag(); stored.encode(nbt);
             var restored = DormantChunkThermalState.decode(nbt, water.getY() >> 4, 1).materials(water.getY() >> 4);
-            var sample = new QueryPublication.MutableMaterialSample();
+            var sample = new MaterialSample();
             restored.read(restored.find(pageBlock(water)), simulation.arena.materialLaw(slot), simulation.tick, 0, 0, sample);
             near(helper, middle, sample.enthalpyJ(), "checkpoint retains the same joules during freezing");
             helper.assertTrue(sample.branch() == MaterialThermalLaw.COOLING, "checkpoint retains the cooling branch");
@@ -339,7 +341,7 @@ public final class ThermalMaterialBehaviorGameTests {
                             ResolvedGeometryBatch.MaterialChanges.THERMAL_TRANSITION),
                     new ThermalInputBatch.PhaseAck[]{new ThermalInputBatch.PhaseAck(request, PhaseTransitionRuntime.AckOutcome.APPLIED)});
             near(helper, before, simulation.totalEnergy(), "freezing ACK preserves total H");
-            near(helper, edge.temperatureC(), simulation.arena.temperatureC(simulation.slot(water), 0), "ice stage starts at the completed freezing temperature");
+            near(helper, edge.transitionTemperatureC(), simulation.arena.temperatureC(simulation.slot(water), 0), "ice stage starts at the completed freezing temperature");
         }
         helper.succeed();
     }

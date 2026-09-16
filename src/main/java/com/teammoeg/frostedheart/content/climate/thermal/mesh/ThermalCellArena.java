@@ -10,12 +10,10 @@
 
 package com.teammoeg.frostedheart.content.climate.thermal.mesh;
 
-
-
 import java.util.Arrays;
 
 /**
- * Primitive structure-of-arrays storage for air cells and sparse material poles.
+ * Primitive structure-of-arrays storage for Air cells and whole-block material cells.
  *
  * <p>The arena is owned by one logical thermal writer. Page compilation uses
  * {@link ArenaSpan} allocations to install fixed 4x4x4 Brick fragments while
@@ -56,8 +54,14 @@ public final class ThermalCellArena {
     private int allocationHighWaterMark;
     private int liveCellCount;
     private double externalMaterialEnergyJ;
-    public double externalMaterialEnergyJ() { return externalMaterialEnergyJ; }
-    public void recordExternalMaterialEnergy(double energyJ) { externalMaterialEnergyJ += energyJ; }
+
+    public double externalMaterialEnergyJ() {
+        return externalMaterialEnergyJ;
+    }
+
+    public void recordExternalMaterialEnergy(double energyJ) {
+        externalMaterialEnergyJ += energyJ;
+    }
 
     public ThermalCellArena(int initialCapacity) {
         if (initialCapacity < 0) {
@@ -104,8 +108,7 @@ public final class ThermalCellArena {
     }
 
     public boolean isStagedCell(int slot) {
-        return slot >= 0 && slot < allocationHighWaterMark
-                && allocationState[slot] == RESERVED;
+        return slot >= 0 && slot < allocationHighWaterMark && allocationState[slot] == RESERVED;
     }
 
     /** Returns the next live slot at or after {@code fromInclusive}, or -1. */
@@ -120,8 +123,8 @@ public final class ThermalCellArena {
             return (wordIndex << 6) + Long.numberOfTrailingZeros(word);
         }
         for (wordIndex = nextOccupiedWord(wordIndex + 1);
-             wordIndex >= 0;
-             wordIndex = nextOccupiedWord(wordIndex + 1)) {
+                wordIndex >= 0;
+                wordIndex = nextOccupiedWord(wordIndex + 1)) {
             word = liveSlots[wordIndex];
             if (word != 0L) {
                 int slot = (wordIndex << 6) + Long.numberOfTrailingZeros(word);
@@ -138,9 +141,10 @@ public final class ThermalCellArena {
             ThermalBrickCellLayout layout,
             double initialAirTemperatureC,
             double referenceTemperatureC,
-            int maximumSlots
-    ) {
-        if (pageSlot < 0 || layout == null || maximumSlots <= 0
+            int maximumSlots) {
+        if (pageSlot < 0
+                || layout == null
+                || maximumSlots <= 0
                 || maximumSlots < allocationHighWaterMark) {
             throw new IllegalArgumentException("Brick allocation identity is invalid");
         }
@@ -148,14 +152,13 @@ public final class ThermalCellArena {
         requireFinite("initialAirTemperatureC", initialAirTemperatureC);
         requireFinite("referenceTemperatureC", referenceTemperatureC);
         layout.requireReady();
-        int airCells = switch (layout.airKind) {
-            case NONE -> 0;
-            case REGULAR -> 1;
-            case MIXED -> layout.mixedGeometry.transportNodeCount();
-        };
-        int totalCells = Math.addExact(
-                airCells,
-                layout.materialCount);
+        int airCells =
+                switch (layout.airKind) {
+                    case NONE -> 0;
+                    case REGULAR -> 1;
+                    case MIXED -> layout.mixedGeometry.airNodeCount();
+                };
+        int totalCells = Math.addExact(airCells, layout.materialCount);
         if (totalCells == 0) {
             return ArenaSpan.EMPTY;
         }
@@ -165,17 +168,14 @@ public final class ThermalCellArena {
         if (required > maximumSlots) {
             return null;
         }
-        allocationHighWaterMark = Math.max(
-                allocationHighWaterMark, required);
+        allocationHighWaterMark = Math.max(allocationHighWaterMark, required);
         try {
             ensureCapacity(required, maximumSlots);
             int write = firstSlot;
             double airOffset = initialAirTemperatureC - referenceTemperatureC;
             if (layout.airKind == ThermalBrickCellLayout.AirKind.REGULAR) {
-                double capacity = finiteProduct(
-                        "regular air capacity",
-                        layout.airCapacityJPerBlockK,
-                        64.0D);
+                double capacity =
+                        finiteProduct("regular air capacity", layout.airCapacityJPerBlockK, 64.0D);
                 writeRegularCell(
                         write++,
                         pageSlot,
@@ -189,9 +189,9 @@ public final class ThermalCellArena {
                 int support = write;
                 mixedBrickGeometries[support] = layout.mixedGeometry;
                 for (int component = 0;
-                     component < layout.mixedGeometry.transportNodeCount();
-                     component++) {
-                    double capacity = layout.transportCapacityJPerK[component];
+                        component < layout.mixedGeometry.airNodeCount();
+                        component++) {
+                    double capacity = layout.airNodeCapacityJPerK[component];
                     writeMixedComponent(
                             write++,
                             pageSlot,
@@ -201,15 +201,13 @@ public final class ThermalCellArena {
                             layout.minY,
                             layout.minZ,
                             capacity,
-                            finiteProduct(
-                                    "initial enthalpy", capacity, airOffset));
+                            finiteProduct("initial enthalpy", capacity, airOffset));
                 }
             }
 
             for (int index = 0; index < layout.materialCount; index++) {
-                double offset = layout.materialInitialTemperatureC[index]
-                        - referenceTemperatureC;
-                writeMaterialPole(
+                double offset = layout.materialInitialTemperatureC[index] - referenceTemperatureC;
+                writeMaterialCell(
                         write++,
                         pageSlot,
                         lifecycleGeneration,
@@ -244,10 +242,8 @@ public final class ThermalCellArena {
         if (span.count() == 0) {
             return;
         }
-        int nextLiveCellCount = Math.addExact(
-                liveCellCount, span.count());
-        int nextHighWaterMark = Math.max(
-                highWaterMark, span.endSlotExclusive());
+        int nextLiveCellCount = Math.addExact(liveCellCount, span.count());
+        int nextHighWaterMark = Math.max(highWaterMark, span.endSlotExclusive());
         for (int slot = span.firstSlot(); slot < span.endSlotExclusive(); slot++) {
             allocationState[slot] = LIVE;
             liveSlots[slot >>> 6] |= 1L << slot;
@@ -299,8 +295,8 @@ public final class ThermalCellArena {
     }
 
     /** Installs body parameters while its replacement span is still private. */
-    public void stageMaterialLaw(int slot, int profileId, MaterialThermalLaw law,
-            double initialTemperatureC) {
+    public void stageMaterialLaw(
+            int slot, int profileId, MaterialThermalLaw law, double initialTemperatureC) {
         requireReservedSlot(slot);
         materialLaws[slot] = law;
         materialProfileIds[slot] = profileId;
@@ -308,8 +304,11 @@ public final class ThermalCellArena {
         capacityJPerK[slot] = law.capacityJPerK();
         inverseCapacityKPerJ[slot] = 1 / law.capacityJPerK();
         enthalpyJ[slot] = law.enthalpyAtTemperature(initialTemperatureC);
-        if (law.heating() != null && initialTemperatureC >= law.heating().temperatureC()) materialBranches[slot] = MaterialThermalLaw.HEATING;
-        else if (law.cooling() != null && initialTemperatureC <= law.cooling().temperatureC()) materialBranches[slot] = MaterialThermalLaw.COOLING;
+        if (law.heating() != null && initialTemperatureC >= law.heating().transitionTemperatureC())
+            materialBranches[slot] = MaterialThermalLaw.HEATING;
+        else if (law.cooling() != null
+                && initialTemperatureC <= law.cooling().transitionTemperatureC())
+            materialBranches[slot] = MaterialThermalLaw.COOLING;
     }
 
     public MaterialThermalLaw materialLaw(int slot) {
@@ -334,11 +333,13 @@ public final class ThermalCellArena {
 
     public boolean needsMaterialSegments(int slot) {
         MaterialThermalLaw law = materialLaws[slot];
-        return law != null && (law.offsetJ() != 0 || law.heating() != null || law.cooling() != null);
+        return law != null
+                && (law.offsetJ() != 0 || law.heating() != null || law.cooling() != null);
     }
 
     public boolean materialTransitionWaiting(int slot) {
-        return materialLayoutPending(slot) || materialLaws[slot] != null && phases.requestOutstanding(slot);
+        return materialLayoutPending(slot)
+                || materialLaws[slot] != null && phases.requestOutstanding(slot);
     }
 
     public boolean materialLayoutPending(int slot) {
@@ -346,7 +347,8 @@ public final class ThermalCellArena {
     }
 
     public void awaitMaterialLayout(int slot) {
-        if (isLive(slot) && materialLaws[slot] != null) pendingMaterialLayouts[slot >>> 6] |= 1L << slot;
+        if (isLive(slot) && materialLaws[slot] != null)
+            pendingMaterialLayouts[slot >>> 6] |= 1L << slot;
     }
 
     public boolean materialTransitionAcknowledged(int slot) {
@@ -365,8 +367,10 @@ public final class ThermalCellArena {
         if (phases.requestOutstanding(slot) && materialBranches[slot] != branch) {
             phases.completeMaterialRequest(slot, phases.requestSequence(slot), false);
         }
-        double next = edge.heating() ? Math.max(enthalpyJ[slot], edge.targetEnthalpyJ())
-                : Math.min(enthalpyJ[slot], edge.targetEnthalpyJ());
+        double next =
+                edge.heating()
+                        ? Math.max(enthalpyJ[slot], edge.targetEnthalpyJ())
+                        : Math.min(enthalpyJ[slot], edge.targetEnthalpyJ());
         externalMaterialEnergyJ += next - enthalpyJ[slot];
         enthalpyJ[slot] = next;
         materialBranches[slot] = branch;
@@ -391,7 +395,8 @@ public final class ThermalCellArena {
 
     public double energyTemperatureSlope(int slot) {
         MaterialThermalLaw law = materialLaws[slot];
-        return law == null ? inverseCapacityKPerJ[slot]
+        return law == null
+                ? inverseCapacityKPerJ[slot]
                 : law.slopeKPerJ(enthalpyJ[slot], materialBranches[slot]);
     }
 
@@ -445,8 +450,7 @@ public final class ThermalCellArena {
     /** Whether one allocated slot is an Air cell published to gameplay queries. */
     public boolean isAirCell(int slot) {
         requireAllocatedSlot(slot);
-        return cellKinds[slot] == REGULAR_CELL
-                || cellKinds[slot] == MIXED_COMPONENT;
+        return cellKinds[slot] == REGULAR_CELL || cellKinds[slot] == MIXED_COMPONENT;
     }
 
     /** Adds energy only when the source binding still names this exact cell incarnation. */
@@ -462,8 +466,7 @@ public final class ThermalCellArena {
         int slot = (int) nodeId;
         requireLiveSlot(slot);
         if (lifecycleGenerations[slot] != lifecycleGeneration) {
-            throw new IllegalStateException(
-                    "stale thermal node generation for slot " + slot);
+            throw new IllegalStateException("stale thermal node generation for slot " + slot);
         }
         return slot;
     }
@@ -478,8 +481,8 @@ public final class ThermalCellArena {
         };
     }
 
-    /** Finite material temperature; valid for staged migration and live publication. */
-    public boolean isSurfaceCell(int slot) {
+    /** Material membership, not geometric exposure; valid for staged and live cells. */
+    public boolean isMaterialCell(int slot) {
         requireAllocatedSlot(slot);
         return cellKinds[slot] == MATERIAL_CELL;
     }
@@ -498,6 +501,7 @@ public final class ThermalCellArena {
         requirePhaseMaterial(slot);
         return phases.requestSequence(slot);
     }
+
     public void beginPhaseRequest(int slot, long requestSequence) {
         requirePhaseMaterial(slot);
         phases.beginMaterialRequest(slot, requestSequence);
@@ -539,12 +543,13 @@ public final class ThermalCellArena {
 
     public double center(int slot, int axis) {
         requireAllocatedSlot(slot);
-        int origin = switch (axis) {
-            case 0 -> minimumX[slot];
-            case 1 -> minimumY[slot];
-            case 2 -> minimumZ[slot];
-            default -> throw new IllegalArgumentException("axis must be 0, 1, or 2");
-        };
+        int origin =
+                switch (axis) {
+                    case 0 -> minimumX[slot];
+                    case 1 -> minimumY[slot];
+                    case 2 -> minimumZ[slot];
+                    default -> throw new IllegalArgumentException("axis must be 0, 1, or 2");
+                };
         if (isMaterialKind(cellKinds[slot])) {
             return origin + 0.5D;
         }
@@ -566,10 +571,7 @@ public final class ThermalCellArena {
 
     /** Releases one retired Page span after its replacement sweep is installed. */
     public void releasePageCells(
-            int expectedPageSlot,
-            int expectedLifecycleGeneration,
-            ArenaSpan span
-    ) {
+            int expectedPageSlot, int expectedLifecycleGeneration, ArenaSpan span) {
         if (span == null) {
             throw new IllegalArgumentException("span is required");
         }
@@ -577,25 +579,15 @@ public final class ThermalCellArena {
             return;
         }
         requireLifecycleGeneration(expectedLifecycleGeneration);
-        if (!ownsLiveCells(
-                expectedPageSlot, expectedLifecycleGeneration, span)) {
-            throw new IllegalArgumentException(
-                    "Page release does not own the complete arena span");
+        if (!ownsLiveCells(expectedPageSlot, expectedLifecycleGeneration, span)) {
+            throw new IllegalArgumentException("Page release does not own the complete arena span");
         }
         releaseSpan(span);
     }
 
     public boolean ownsLiveCells(
-            int expectedPageSlot,
-            int expectedLifecycleGeneration,
-            ArenaSpan span
-    ) {
-        return ownsSpan(
-                span,
-                LIVE,
-                expectedPageSlot,
-                expectedLifecycleGeneration,
-                true);
+            int expectedPageSlot, int expectedLifecycleGeneration, ArenaSpan span) {
+        return ownsSpan(span, LIVE, expectedPageSlot, expectedLifecycleGeneration, true);
     }
 
     private int findFreeSpan(int count) {
@@ -612,12 +604,10 @@ public final class ThermalCellArena {
     }
 
     private void addFreeSpan(int firstSlot, int count) {
-        if (count <= 0 || firstSlot < 0
-                || firstSlot + count > allocationHighWaterMark) {
+        if (count <= 0 || firstSlot < 0 || firstSlot + count > allocationHighWaterMark) {
             throw new IllegalArgumentException("free arena span is invalid");
         }
-        allocationHighWaterMark = freeSpans.addAndMerge(
-                firstSlot, count, allocationHighWaterMark);
+        allocationHighWaterMark = freeSpans.addAndMerge(firstSlot, count, allocationHighWaterMark);
     }
 
     private void ensureCapacity(int requiredCapacity, int maximumCapacity) {
@@ -656,8 +646,7 @@ public final class ThermalCellArena {
         phases.ensureCapacity(grown);
         allocationState = Arrays.copyOf(allocationState, grown);
         liveSlots = Arrays.copyOf(liveSlots, (grown + 63) >>> 6);
-        liveWordSummary = Arrays.copyOf(
-                liveWordSummary, (liveSlots.length + 63) >>> 6);
+        liveWordSummary = Arrays.copyOf(liveWordSummary, (liveSlots.length + 63) >>> 6);
         Arrays.fill(pageSlots, oldCapacity, grown, NO_SLOT);
         Arrays.fill(supportRefs, oldCapacity, grown, NO_SLOT);
     }
@@ -667,16 +656,14 @@ public final class ThermalCellArena {
             liveSlots[slot >>> 6] &= ~(1L << slot);
         }
         clearRange(span.firstSlot(), span.endSlotExclusive());
-        clearEmptyLiveWordSummary(
-                span.firstSlot(), span.endSlotExclusive());
+        clearEmptyLiveWordSummary(span.firstSlot(), span.endSlotExclusive());
         liveCellCount -= span.count();
         recomputeHighWaterMark();
         addFreeSpan(span.firstSlot(), span.count());
     }
 
     private boolean isAllocated(int slot) {
-        return slot >= 0 && slot < allocationHighWaterMark
-                && allocationState[slot] != FREE;
+        return slot >= 0 && slot < allocationHighWaterMark && allocationState[slot] != FREE;
     }
 
     private boolean ownsSpan(
@@ -684,18 +671,17 @@ public final class ThermalCellArena {
             byte expectedState,
             int expectedPageSlot,
             int expectedLifecycleGeneration,
-            boolean validateOwner
-    ) {
-        if (span == null || span.firstSlot() < 0
+            boolean validateOwner) {
+        if (span == null
+                || span.firstSlot() < 0
                 || span.endSlotExclusive() > allocationHighWaterMark) {
             return false;
         }
         for (int slot = span.firstSlot(); slot < span.endSlotExclusive(); slot++) {
             if (allocationState[slot] != expectedState
                     || validateOwner
-                    && (pageSlots[slot] != expectedPageSlot
-                    || lifecycleGenerations[slot]
-                            != expectedLifecycleGeneration)) {
+                            && (pageSlots[slot] != expectedPageSlot
+                                    || lifecycleGenerations[slot] != expectedLifecycleGeneration)) {
                 return false;
             }
         }
@@ -710,14 +696,10 @@ public final class ThermalCellArena {
         }
     }
 
-    private void clearEmptyLiveWordSummary(
-            int firstSlot,
-            int endSlotExclusive
-    ) {
+    private void clearEmptyLiveWordSummary(int firstSlot, int endSlotExclusive) {
         int firstWord = firstSlot >>> 6;
-        int lastWord = Math.min(
-                liveSlots.length - 1,
-                Math.max(firstWord, (endSlotExclusive - 1) >>> 6));
+        int lastWord =
+                Math.min(liveSlots.length - 1, Math.max(firstWord, (endSlotExclusive - 1) >>> 6));
         for (int word = firstWord; word <= lastWord; word++) {
             if (liveSlots[word] == 0L) {
                 liveWordSummary[word >>> 6] &= ~(1L << (word & 63));
@@ -730,8 +712,7 @@ public final class ThermalCellArena {
         while (word >= 0) {
             long live = liveSlots[word];
             if (live != 0L) {
-                highWaterMark = (word << 6)
-                        + Long.SIZE - Long.numberOfLeadingZeros(live);
+                highWaterMark = (word << 6) + Long.SIZE - Long.numberOfLeadingZeros(live);
                 return;
             }
             word = previousOccupiedWord(word - 1);
@@ -744,12 +725,10 @@ public final class ThermalCellArena {
             return NO_SLOT;
         }
         int summary = fromInclusive >>> 6;
-        long word = liveWordSummary[summary]
-                & (-1L << (fromInclusive & 63));
+        long word = liveWordSummary[summary] & (-1L << (fromInclusive & 63));
         while (true) {
             if (word != 0L) {
-                int result = (summary << 6)
-                        + Long.numberOfTrailingZeros(word);
+                int result = (summary << 6) + Long.numberOfTrailingZeros(word);
                 return result < liveSlots.length ? result : NO_SLOT;
             }
             if (++summary >= liveWordSummary.length) {
@@ -763,15 +742,12 @@ public final class ThermalCellArena {
         if (fromInclusive < 0 || liveWordSummary.length == 0) {
             return NO_SLOT;
         }
-        int summary = Math.min(
-                fromInclusive >>> 6, liveWordSummary.length - 1);
+        int summary = Math.min(fromInclusive >>> 6, liveWordSummary.length - 1);
         int bit = Math.min(fromInclusive & 63, 63);
-        long word = liveWordSummary[summary]
-                & (-1L >>> (63 - bit));
+        long word = liveWordSummary[summary] & (-1L >>> (63 - bit));
         while (true) {
             if (word != 0L) {
-                return summary << 6
-                        | 63 - Long.numberOfLeadingZeros(word);
+                return summary << 6 | 63 - Long.numberOfLeadingZeros(word);
             }
             if (--summary < 0) {
                 return NO_SLOT;
@@ -811,16 +787,13 @@ public final class ThermalCellArena {
 
     private void requireAllocatedSlot(int slot) {
         if (!isAllocated(slot)) {
-            throw new IllegalArgumentException(
-                    "cell slot is not allocated: " + slot);
+            throw new IllegalArgumentException("cell slot is not allocated: " + slot);
         }
     }
 
     private void requireReservedSlot(int slot) {
-        if (slot < 0 || slot >= allocationHighWaterMark
-                || allocationState[slot] != RESERVED) {
-            throw new IllegalArgumentException(
-                    "cell slot is not staged: " + slot);
+        if (slot < 0 || slot >= allocationHighWaterMark || allocationState[slot] != RESERVED) {
+            throw new IllegalArgumentException("cell slot is not staged: " + slot);
         }
     }
 
@@ -839,8 +812,7 @@ public final class ThermalCellArena {
             int minY,
             int minZ,
             double capacity,
-            double initialEnthalpyJ
-    ) {
+            double initialEnthalpyJ) {
         allocationState[slot] = RESERVED;
         enthalpyJ[slot] = initialEnthalpyJ;
         writeCapacity(slot, capacity);
@@ -863,8 +835,7 @@ public final class ThermalCellArena {
             int minY,
             int minZ,
             double capacity,
-            double initialEnthalpyJ
-    ) {
+            double initialEnthalpyJ) {
         allocationState[slot] = RESERVED;
         enthalpyJ[slot] = initialEnthalpyJ;
         writeCapacity(slot, capacity);
@@ -877,7 +848,7 @@ public final class ThermalCellArena {
         cellKinds[slot] = MIXED_COMPONENT;
     }
 
-    private void writeMaterialPole(
+    private void writeMaterialCell(
             int slot,
             int pageSlot,
             int lifecycleGeneration,
@@ -885,8 +856,7 @@ public final class ThermalCellArena {
             int blockY,
             int blockZ,
             double capacity,
-            double initialEnthalpyJ
-    ) {
+            double initialEnthalpyJ) {
         allocationState[slot] = RESERVED;
         enthalpyJ[slot] = initialEnthalpyJ;
         writeCapacity(slot, capacity);
@@ -899,8 +869,6 @@ public final class ThermalCellArena {
         cellKinds[slot] = MATERIAL_CELL;
         mixedBrickGeometries[slot] = null;
     }
-
-
 
     private void writeCapacity(int slot, double capacity) {
         if (!Double.isFinite(capacity) || capacity <= 0.0D) {

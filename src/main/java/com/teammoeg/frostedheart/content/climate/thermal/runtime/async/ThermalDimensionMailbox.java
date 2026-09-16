@@ -18,7 +18,7 @@ public final class ThermalDimensionMailbox implements AutoCloseable,
         IDLE,
         QUEUED,
         RUNNING,
-        AWAITING_ACK,
+        AWAITING_ACK, // The main thread must consume completion before another cut can enter.
         CLOSE_REQUESTED,
         CLOSED
     }

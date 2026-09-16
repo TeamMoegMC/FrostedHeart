@@ -113,9 +113,9 @@ public final class PagePublication {
 
     public int resolveAirPoint(int localX, int localY, int localZ) {
         Brick brick=brickAt(localX,localY,localZ);
-        if (!brick.resolved || brick.firstSlot<0 || brick.transportNodeCount==0) return NO_AIR_POINT;
+        if (!brick.resolved || brick.firstSlot<0 || brick.airNodeCount==0) return NO_AIR_POINT;
         if (brick.blockLayout==null) return brick.firstSlot;
-        int node=brick.blockLayout.transportAt((localX&3)|(localZ&3)<<2|(localY&3)<<4);
+        int node=brick.blockLayout.airNodeAt((localX&3)|(localZ&3)<<2|(localY&3)<<4);
         return node<0 ? NO_AIR_POINT : brick.firstSlot+node;
     }
 
@@ -144,7 +144,7 @@ public final class PagePublication {
             int arenaGeneration,
             Object signaturePayload,
             BlockBrickLayout blockLayout,
-            int transportNodeCount,
+            int airNodeCount,
             boolean resolved
     ) {
         public int signatureAtBlock(int block) {

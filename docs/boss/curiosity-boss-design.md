@@ -91,19 +91,19 @@
 
 ### 4.1 冷场实现
 
-本节最后按源码核验：2026-09-08；`CuriosityEntity.applyColdField/removeColdField`、
+本节最后按源码核验：2026-09-16；`CuriosityEntity.applyColdField/removeColdField`、
 `MinecraftGameplayFields`、`ThermalFieldKey` 是当前冷场生命周期入口。
 
 冷场直接注册为新 thermal compositor 的**负值球形 analytic field**：
 
 ```java
 // 激活：服务器端
-MinecraftThermalInput.upsertGameplayAnalyticField(level,
+MinecraftGameplayFields.upsert(level,
     new ThermalAnalyticField(coldFieldKey, 0, ADD_DELTA,
         arenaCenter.getX() + 0.5, arenaCenter.getY() + 0.5, arenaCenter.getZ() + 0.5,
         R, coldTier));
 // 清理（RESET / DISPERSED / onRemovedFromWorld）
-MinecraftThermalInput.removeGameplayAnalyticField(level, coldFieldKey);
+MinecraftGameplayFields.remove(level, coldFieldKey);
 ```
 
 - 冷场在 natural/mesh 之后由 `ADD_DELTA` 合成，自动流入 `WorldTemperature.air/block`、玩家、

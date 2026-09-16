@@ -53,7 +53,7 @@ public final class ThermalTransitionDataGameTests {
                         + (hot ? definition.latentHeatJ() : -definition.latentHeatJ())
                         : target.enthalpyAtTemperature(definition.temperatureC());
                 near(helper, expected, edge.targetEnthalpyJ(), "target reference: " + state);
-                if (target != null) near(helper, edge.temperatureC(), target.temperatureC(edge.targetEnthalpyJ(), (byte) 0),
+                if (target != null) near(helper, edge.transitionTemperatureC(), target.temperatureC(edge.targetEnthalpyJ(), (byte) 0),
                         "successful conversion has no temperature jump: " + state);
                 checked++;
             }
@@ -132,27 +132,50 @@ public final class ThermalTransitionDataGameTests {
     }
 
     @GameTest(template = "phase0a_empty", batch = "thermal_transition_fluid_boundary", timeoutTicks = 100)
-    public static void waterInteriorWaitsForAnEdge(GameTestHelper helper) {
+    public static void waterInteriorWaitsForAnEdge(GameTestHelper helper) throws Exception {
         var level = helper.getLevel();
         MinecraftThermalInput.closeActiveLevel(level);
         BlockPos pos = helper.absolutePos(new BlockPos(2, 2, 2));
         var water = Blocks.WATER.defaultBlockState();
         var edge = MinecraftThermalProfiles.materialLaw(water).cooling();
         int speed = level.getGameRules().getInt(GameRules.RULE_RANDOMTICKING);
+        // This test varies fluid boundaries, not the generated biome. Deep-dark and frozen-ocean
+        // placements legitimately forbid freezing, so isolate that independent data condition.
+        var cacheField = StateTransitionData.class.getDeclaredField("cache");
+        cacheField.setAccessible(true);
+        @SuppressWarnings("unchecked")
+        var previousDefinitions = (Map<BlockState, StateTransitionData>) cacheField.get(null);
+        var waterData = StateTransitionData.getData(water);
+        var cooling = waterData.cooling();
+        var conditions = cooling.worldConditions();
+        var boundaryOnly = new StateTransitionData.Edge(cooling.target(), cooling.temperatureC(),
+                cooling.latentHeatJ(), new StateTransitionData.WorldConditions(
+                        conditions.minYExclusive(), conditions.fluidBoundary(), null), cooling.effect());
+        var definitions = new HashMap<>(previousDefinitions);
+        definitions.put(water, new StateTransitionData(waterData.block(), waterData.allStates(),
+                waterData.capacityJPerK(), waterData.offsetJ(), waterData.conductanceWPerK(),
+                waterData.heating(), boundaryOnly));
         var originals = new HashMap<BlockPos, BlockState>();
         originals.put(pos, level.getBlockState(pos));
         for (Direction direction : Direction.Plane.HORIZONTAL) originals.put(pos.relative(direction), level.getBlockState(pos.relative(direction)));
         try {
+            cacheField.set(null, Map.copyOf(definitions));
+            MinecraftThermalProfiles.invalidate();
             level.getGameRules().getRule(GameRules.RULE_RANDOMTICKING).set(3, level.getServer());
             for (BlockPos block : originals.keySet()) level.setBlock(block, water, 2);
             helper.assertTrue(!MinecraftPhaseController.applyDormantTransition(level, pos, water, edge, edge.targetEnthalpyJ(), level.getGameTime()),
                     "interior water retains its completed energy while boundary is blocked");
             level.setBlock(pos.west(), Blocks.STONE.defaultBlockState(), 2);
             helper.assertTrue(MinecraftPhaseController.applyDormantTransition(level, pos, water, edge, edge.targetEnthalpyJ(), level.getGameTime()),
-                    "opening a horizontal boundary allows the same completed transition");
+                    "opening a horizontal boundary allows the same completed transition; loaded="
+                            + level.isAreaLoaded(pos, 1) + ", biome=" + level.getBiome(pos).unwrapKey()
+                            + ", floor=" + MinecraftGameplayFields.guaranteedFloor(level, pos)
+                            + ", state=" + level.getBlockState(pos));
         } finally {
             originals.forEach((block, state) -> level.setBlock(block, state, 2));
             level.getGameRules().getRule(GameRules.RULE_RANDOMTICKING).set(speed, level.getServer());
+            cacheField.set(null, previousDefinitions);
+            MinecraftThermalProfiles.invalidate();
         }
         helper.succeed();
     }

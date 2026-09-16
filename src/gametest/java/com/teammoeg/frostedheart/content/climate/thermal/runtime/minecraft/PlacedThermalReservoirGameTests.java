@@ -166,7 +166,11 @@ public final class PlacedThermalReservoirGameTests {
                     probe.setPos(probe.getX(), pos.getY() + 0.3125 - probe.getBbHeight() * 0.5, probe.getZ());
                     MinecraftThermalInput.gameplayItemEnvironment(probe, natural, dropped);
                     probe.discard();
-                    helper.assertTrue(placed.radiantFluxWPerM2() > 0, "campfire radiation must reach the placed reservoir");
+                    helper.assertTrue(placed.radiantFluxWPerM2() > 0,
+                            "campfire radiation must reach the placed reservoir; source="
+                                    + level.getBlockState(source) + ", middle="
+                                    + level.getBlockState(source.offset((pos.getX() - source.getX()) / 2, 0, 0))
+                                    + ", receiver=" + pos + ", raining=" + level.isRainingAt(source));
                     near(helper, dropped.radiantFluxWPerM2(), placed.radiantFluxWPerM2(), "placed and dropped radiation agree");
                     near(helper, dropped.airTemperatureC(), placed.airTemperatureC(), "placed and dropped composed air agree");
                     helper.assertTrue(temperature(level, pos).surfaceTemperatureC() > -100, "real block ticks advance stored heat");

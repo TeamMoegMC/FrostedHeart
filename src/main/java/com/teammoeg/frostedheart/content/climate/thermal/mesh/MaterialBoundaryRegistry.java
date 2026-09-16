@@ -14,7 +14,7 @@ import java.util.List;
 import java.util.Objects;
 
 /**
- * Immutable solve-safe material parameters and contact masks. Entries use
+ * Immutable material energy laws and full-face conductances. Entries use
  * dense IDs in list order, starting at one; zero is the reserved "no material
  * boundary" value carried by geometry-only signatures.
  */
@@ -25,10 +25,6 @@ public final class MaterialBoundaryRegistry {
             requirePositiveId("material profile", id);
             requirePositiveFinite("faceConductanceWPerK", faceConductanceWPerK);
             Objects.requireNonNull(thermalLaw, "thermalLaw");
-        }
-
-        public static Profile body(int id, double faceConductanceWPerK, MaterialThermalLaw law) {
-            return new Profile(id, faceConductanceWPerK, law);
         }
     }
 

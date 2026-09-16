@@ -13,10 +13,10 @@ import com.teammoeg.frostedheart.content.climate.thermal.source.ThermalSourceLed
  * 发布新引用，最后释放旧 span。</p>
  */
 public final class TopologyCommitter {
-    public TopologyCommitter() {
+    private TopologyCommitter() {
     }
 
-    public void commit(
+    public static void commit(
             PreparedTopologyChange change,
             WorkerPageStore pages,
             ThermalCellArena arena,
@@ -27,13 +27,13 @@ public final class TopologyCommitter {
             throw new IllegalStateException(
                     "prepared topology base version is no longer current");
         }
-        for (int slot : change.removedReservoirSlots) {
+        for (int slot : change.removedPhaseSlots) {
             if (!arena.isLive(slot) || !arena.hasMaterialTransition(slot)) {
                 throw new IllegalStateException(
                         "prepared removed phase material is no longer current");
             }
         }
-        for (int slot : change.addedReservoirSlots) {
+        for (int slot : change.addedPhaseSlots) {
             if (!arena.isStagedCell(slot)
                     || !arena.hasMaterialTransition(slot)) {
                 throw new IllegalStateException(
@@ -64,7 +64,7 @@ public final class TopologyCommitter {
                 }
             }
         }
-        for (int slot : change.removedReservoirSlots) {
+        for (int slot : change.removedPhaseSlots) {
             phases.unregisterMaterial(slot);
         }
         for (int index = 0; index < change.fragmentIndexes.length; index++) {
@@ -119,7 +119,7 @@ public final class TopologyCommitter {
                     write.sourceSeedMask,
                     write.publication);
         }
-        for (int slot : change.addedReservoirSlots) {
+        for (int slot : change.addedPhaseSlots) {
             phases.registerMaterial(slot);
         }
         arena.recordExternalMaterialEnergy(change.externalMaterialEnergyJ);
@@ -148,8 +148,11 @@ public final class TopologyCommitter {
         }
     }
 
-    /** Restores the last Page cut when query publication never commits. */
-    public void restorePagePublications(PreparedTopologyChange change) {
+    /**
+     * Restore only the Page references when numeric publication fails. This does not roll back
+     * the installed solver; the failed engine is closed and restarted by its owner.
+     */
+    public static void restorePagePublications(PreparedTopologyChange change) {
         for (PreparedTopologyChange.PageWrite write : change.pageWrites) {
             write.page.handle.publish(write.rollbackPublication);
             if (write.replacedPage != null) {
@@ -158,7 +161,8 @@ public final class TopologyCommitter {
         }
     }
 
-    public void releaseOldSpans(
+    /** Source rebinding must finish before these unreferenced slots can be returned to the arena. */
+    public static void releaseOldSpans(
             PreparedTopologyChange change,
             ThermalCellArena arena,
             ThermalSolver solver,

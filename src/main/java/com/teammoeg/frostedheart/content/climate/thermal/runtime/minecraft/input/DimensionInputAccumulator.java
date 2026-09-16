@@ -25,23 +25,25 @@ import java.util.Map;
  */
 public final class DimensionInputAccumulator {
     private final long dimensionGeneration;
-    private final List<ThermalInputBatch.PageAdmission> admissions =
-            new ArrayList<>();
-    private final List<ThermalInputBatch.PageRetirement> retirements =
-            new ArrayList<>();
-    private final List<ThermalInputBatch.PageResidencyUpdate> residencyUpdates =
-            new ArrayList<>();
+    private final List<ThermalInputBatch.PageAdmission> admissions = new ArrayList<>();
+    private final List<ThermalInputBatch.PageRetirement> retirements = new ArrayList<>();
+    private final List<ThermalInputBatch.PageResidencyUpdate> residencyUpdates = new ArrayList<>();
     private final IdentityHashMap<ThermalPageHandle, EnvironmentBuilder> environments =
             new IdentityHashMap<>();
-    private final ArrayDeque<EnvironmentBuilder> recycledEnvironments =
-            new ArrayDeque<>();
+    private final ArrayDeque<EnvironmentBuilder> recycledEnvironments = new ArrayDeque<>();
     private final List<ThermalInputBatch.PhaseAck> phaseAcks = new ArrayList<>();
-    private final it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap<ThermalInputBatch.PhaseIntent> phaseIntents = new it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap<>();
+    private final it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap<ThermalInputBatch.PhaseIntent>
+            phaseIntents = new it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap<>();
 
-    public void requestPhase(long position, ThermalPageHandle page, int blockIndex, int stateId, byte branch) {
+    public void requestPhase(
+            long position, ThermalPageHandle page, int blockIndex, int stateId, byte branch) {
         var existing = phaseIntents.get(position);
-        if (existing != null && existing.page() == page && existing.sourceStateId() == stateId && existing.branch() == branch) return;
-        phaseIntents.put(position, new ThermalInputBatch.PhaseIntent(page, blockIndex, stateId, branch));
+        if (existing != null
+                && existing.page() == page
+                && existing.sourceStateId() == stateId
+                && existing.branch() == branch) return;
+        phaseIntents.put(
+                position, new ThermalInputBatch.PhaseIntent(page, blockIndex, stateId, branch));
     }
 
     private final ResolvedGeometryBatch.Builder geometry;
@@ -50,10 +52,7 @@ public final class DimensionInputAccumulator {
     private long lastTargetTick;
     private double farFieldConductanceScale = Double.NaN;
 
-    public DimensionInputAccumulator(
-            long dimensionGeneration,
-            long initialTargetTick
-    ) {
+    public DimensionInputAccumulator(long dimensionGeneration, long initialTargetTick) {
         if (dimensionGeneration < 0L || initialTargetTick < 0L) {
             throw new IllegalArgumentException("input accumulator baseline is invalid");
         }
@@ -72,17 +71,18 @@ public final class DimensionInputAccumulator {
             double naturalTemperatureC,
             byte[] firstExposedLocalY,
             ThermalInputBatch.DormantAirCut dormantAir,
-            ThermalInputBatch.DormantMaterialCut dormantMaterials
-    ) {
-        admissions.add(new ThermalInputBatch.PageAdmission(
-                page,
-                geometryRevision,
-                residentBrickMask,
-                sourceSeedMask,
-                signatures,
-                naturalTemperatureC,
-                firstExposedLocalY,
-                dormantAir, dormantMaterials));
+            ThermalInputBatch.DormantMaterialCut dormantMaterials) {
+        admissions.add(
+                new ThermalInputBatch.PageAdmission(
+                        page,
+                        geometryRevision,
+                        residentBrickMask,
+                        sourceSeedMask,
+                        signatures,
+                        naturalTemperatureC,
+                        firstExposedLocalY,
+                        dormantAir,
+                        dormantMaterials));
     }
 
     void updateResidency(
@@ -91,19 +91,29 @@ public final class DimensionInputAccumulator {
             long residentBrickMask,
             long sourceSeedMask,
             PageSignatures signatures,
-            ThermalInputBatch.DormantMaterialCut dormantMaterials
-    ) {
+            ThermalInputBatch.DormantMaterialCut dormantMaterials) {
         for (int index = 0; index < residencyUpdates.size(); index++) {
             if (residencyUpdates.get(index).page() == page) {
-                residencyUpdates.set(index, new ThermalInputBatch.PageResidencyUpdate(
-                        page, geometryRevision, residentBrickMask,
-                        sourceSeedMask, signatures, dormantMaterials));
+                residencyUpdates.set(
+                        index,
+                        new ThermalInputBatch.PageResidencyUpdate(
+                                page,
+                                geometryRevision,
+                                residentBrickMask,
+                                sourceSeedMask,
+                                signatures,
+                                dormantMaterials));
                 return;
             }
         }
-        residencyUpdates.add(new ThermalInputBatch.PageResidencyUpdate(
-                page, geometryRevision, residentBrickMask,
-                sourceSeedMask, signatures, dormantMaterials));
+        residencyUpdates.add(
+                new ThermalInputBatch.PageResidencyUpdate(
+                        page,
+                        geometryRevision,
+                        residentBrickMask,
+                        sourceSeedMask,
+                        signatures,
+                        dormantMaterials));
     }
 
     boolean cancelAdmission(ThermalPageHandle page) {
@@ -147,8 +157,7 @@ public final class DimensionInputAccumulator {
 
     void requeueEnvironment(ThermalInputBatch.PageEnvironmentUpdate update) {
         if (update.naturalTemperatureChanged()) {
-            updateNaturalTemperature(
-                    update.page(), update.naturalTemperatureC());
+            updateNaturalTemperature(update.page(), update.naturalTemperatureC());
         }
         for (int index = 0; index < update.skyColumns().length; index++) {
             updateSkyColumn(
@@ -169,8 +178,7 @@ public final class DimensionInputAccumulator {
             int anchorY,
             int anchorZ,
             int profileId,
-            EmissionPort[] ports
-    ) {
+            EmissionPort[] ports) {
         sourceEvents.addRegister(
                 sourceId,
                 lifecycleGeneration,
@@ -194,26 +202,16 @@ public final class DimensionInputAccumulator {
     }
 
     public void emitSourceImpulse(
-            long sourceId,
-            int portId,
-            double signedEnergyJ,
-            long effectiveTick
-    ) {
+            long sourceId, int portId, double signedEnergyJ, long effectiveTick) {
         sourceEvents.addImpulse(sourceId, portId, signedEnergyJ, effectiveTick);
     }
 
-    public void unloadSource(
-            long sourceId,
-            int lifecycleGeneration,
-            long effectiveTick
-    ) {
+    public void unloadSource(long sourceId, int lifecycleGeneration, long effectiveTick) {
         sourceEvents.addUnload(sourceId, lifecycleGeneration, effectiveTick);
     }
 
     void acknowledgePhase(
-            PhaseTransitionRuntime.Request request,
-            PhaseTransitionRuntime.AckOutcome outcome
-    ) {
+            PhaseTransitionRuntime.Request request, PhaseTransitionRuntime.AckOutcome outcome) {
         phaseAcks.add(new ThermalInputBatch.PhaseAck(request, outcome));
     }
 
@@ -225,33 +223,37 @@ public final class DimensionInputAccumulator {
     }
 
     public ThermalInputBatch seal(long targetTick) {
+        // Transfer immutable payloads before clearing mutable input queues. A retained
+        // submission owns these arrays even while the worker queue is full.
         if (targetTick < lastTargetTick) {
             throw new IllegalArgumentException("thermal batch ticks must be monotonic");
         }
         ResolvedGeometryBatch geometryBatch = geometry.buildAndReset();
         ThermalSourceBatch sourceBatch = sourceEvents.buildAndReset();
         nextSequence = Math.incrementExact(nextSequence);
-        ThermalInputBatch batch = new ThermalInputBatch(
-                dimensionGeneration,
-                nextSequence,
-                targetTick,
-                admissions.isEmpty()
-                        ? ThermalInputBatch.NO_ADMISSIONS
-                        : admissions.toArray(ThermalInputBatch.PageAdmission[]::new),
-                retirements.isEmpty()
-                        ? ThermalInputBatch.NO_RETIREMENTS
-                        : retirements.toArray(ThermalInputBatch.PageRetirement[]::new),
-                residencyUpdates.isEmpty()
-                        ? ThermalInputBatch.NO_RESIDENCY_UPDATES
-                        : residencyUpdates.toArray(
-                                ThermalInputBatch.PageResidencyUpdate[]::new),
-                geometryBatch,
-                sourceBatch,
-                environmentBatch(),
-                phaseAcks.isEmpty()
-                        ? ThermalInputBatch.NO_PHASE_ACKS
-                        : phaseAcks.toArray(ThermalInputBatch.PhaseAck[]::new),
-                farFieldConductanceScale, phaseIntents.values().toArray(ThermalInputBatch.PhaseIntent[]::new));
+        ThermalInputBatch batch =
+                new ThermalInputBatch(
+                        dimensionGeneration,
+                        nextSequence,
+                        targetTick,
+                        admissions.isEmpty()
+                                ? ThermalInputBatch.NO_ADMISSIONS
+                                : admissions.toArray(ThermalInputBatch.PageAdmission[]::new),
+                        retirements.isEmpty()
+                                ? ThermalInputBatch.NO_RETIREMENTS
+                                : retirements.toArray(ThermalInputBatch.PageRetirement[]::new),
+                        residencyUpdates.isEmpty()
+                                ? ThermalInputBatch.NO_RESIDENCY_UPDATES
+                                : residencyUpdates.toArray(
+                                        ThermalInputBatch.PageResidencyUpdate[]::new),
+                        geometryBatch,
+                        sourceBatch,
+                        environmentBatch(),
+                        phaseAcks.isEmpty()
+                                ? ThermalInputBatch.NO_PHASE_ACKS
+                                : phaseAcks.toArray(ThermalInputBatch.PhaseAck[]::new),
+                        farFieldConductanceScale,
+                        phaseIntents.values().toArray(ThermalInputBatch.PhaseIntent[]::new));
         admissions.clear();
         retirements.clear();
         residencyUpdates.clear();
@@ -269,8 +271,7 @@ public final class DimensionInputAccumulator {
         ThermalInputBatch.PageEnvironmentUpdate[] result =
                 new ThermalInputBatch.PageEnvironmentUpdate[environments.size()];
         int index = 0;
-        for (Map.Entry<ThermalPageHandle, EnvironmentBuilder> entry :
-                environments.entrySet()) {
+        for (Map.Entry<ThermalPageHandle, EnvironmentBuilder> entry : environments.entrySet()) {
             EnvironmentBuilder builder = entry.getValue();
             result[index++] = builder.build(entry.getKey());
             recycle(builder);
@@ -312,8 +313,7 @@ public final class DimensionInputAccumulator {
         }
 
         private void putSkyColumn(int column, int firstExposedLocalY) {
-            if (column < 0 || column >= 256
-                    || firstExposedLocalY < 0 || firstExposedLocalY > 16) {
+            if (column < 0 || column >= 256 || firstExposedLocalY < 0 || firstExposedLocalY > 16) {
                 throw new IllegalArgumentException("sky column is out of bounds");
             }
             sky[column] = (byte) firstExposedLocalY;

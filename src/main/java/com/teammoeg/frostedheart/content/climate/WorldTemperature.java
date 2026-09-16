@@ -54,7 +54,8 @@ import net.minecraft.world.level.levelgen.Heightmap;
  *
  * <p>This class provides a set of methods to get realistic temperature in the world.
  *
- * Methods here are cheap, so you can call them tick wise frequently.
+ * Natural inputs and gameplay-composed queries have different costs and meanings.
+ * Use material() for a recorded body's temperature, not block().
  *
  * <p>There are 3 natural inputs plus composed local thermal state:
  *
@@ -89,8 +90,6 @@ public class WorldTemperature {
     }
 
 
-    /** Legacy compatibility constant; runtime block/air calculations read FHConfig. */
-    public static final int ABSOLUTE_ZERO = -273;
 
     public static boolean isBlizzardHarming(LevelAccessor iWorld, BlockPos p) {
         return WorldClimate.isBlizzard(iWorld) && openToAir(iWorld,p);
@@ -183,8 +182,6 @@ public class WorldTemperature {
     // Climate
     public static final float SNOW_REACHES_GROUND = -13F;
     public static final float BLIZZARD_REACHES_GROUND = -30;
-    /** Legacy compatibility constant; runtime dimension fallback reads FHConfig. */
-    public static final float OVERWORLD_BASELINE = -10;
     /**
      * The temporary uprising peak temperature of a cold period.
      */
@@ -386,8 +383,8 @@ public class WorldTemperature {
      * Result = Dimension + Biome + Altitude + Climate + HeatAdjusts.
      * A factor would be applied to climate value to lower the climate affect on block, simulates lower heat transfer rate between block and air
      * Called to get temperature when a world context is available.
-     * on server, will either query capability falling back to cache, or query
-     * provider to generate the data.
+     * Composes the block's natural background with available Air state and gameplay fields.
+     * This is the environment used by crops and machines, not the material body's temperature.
      * This method directly get temperature at any positions.
      * This value is dynamic in game.
      */
@@ -423,8 +420,8 @@ public class WorldTemperature {
      * Result = Dimension + Biome + Altitude + Climate + HeatAdjusts.
      *
      * Called to get temperature when a world context is available.
-     * on server, will either query capability falling back to cache, or query
-     * provider to generate the data.
+     * Composes the natural Air background (including sampling noise) with available
+     * local Air state and gameplay fields. It does not create a material body.
      * This method directly get temperature at any positions.
      * This value is dynamic in game.
      */

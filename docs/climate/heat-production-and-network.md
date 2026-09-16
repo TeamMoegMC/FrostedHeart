@@ -67,7 +67,7 @@ off/on transitions across cuts use normal unload/register generations.
 
 Ordinary fire and exposed lava optionally contribute direct player radiation
 through `BlockRadiationIndex`. They are not physical sources: no power enters
-Air, crops, soil, material poles, machines, dormant checkpoints, or
+Air, crops, soil, material cells, machines, dormant checkpoints, or
 `ThermalSourceLedger`. A wall blocks the DDA ray, and removing line of sight
 removes the contribution without residual room heat.
 
