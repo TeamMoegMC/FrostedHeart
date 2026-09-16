@@ -57,6 +57,7 @@ public abstract class LogisticProviderBlockEntity extends LogisticBlockEntity im
 		for(LazyOptional<LogisticNetwork> lln:candidate) {
 			LogisticNetwork ln = lln.orElse(null);
 			ln.getHub().addElement(grid.cast(), false);
+			networks.add(lln);
 		}
 	}
 	protected void disconnectNetwork() {

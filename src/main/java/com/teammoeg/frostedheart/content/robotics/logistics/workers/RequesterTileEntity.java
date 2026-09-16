@@ -141,6 +141,7 @@ public class RequesterTileEntity extends LogisticBlockEntity implements  MenuPro
 	});
 	@Override
 	public void tick() {
+		super.tick();
 		if(!this.level.isClientSide) {
 			networkStatus=networks.isEmpty()?0:2;
 			worker.tick();
@@ -148,6 +149,7 @@ public class RequesterTileEntity extends LogisticBlockEntity implements  MenuPro
 	}
 
 	protected void refreshNetwork() {
+		super.refreshNetwork();
 		Collection<LazyOptional<LogisticNetwork>> candidate=FHCapabilities.ROBOTIC_LOGISTIC_CHUNK
 			.getCapability(level.getChunk(worldPosition))
 			.map(chunk->chunk.getNetworkFor(level,worldPosition))

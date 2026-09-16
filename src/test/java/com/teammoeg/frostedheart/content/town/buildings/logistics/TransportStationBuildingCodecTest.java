@@ -6,10 +6,20 @@
 
 package com.teammoeg.frostedheart.content.town.buildings.logistics;
 
+import static org.junit.jupiter.api.Assertions.*;
+
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
+
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+
 import com.google.gson.JsonParser;
 import com.mojang.serialization.JsonOps;
 import com.teammoeg.chorda.io.CodecUtil;
-import com.teammoeg.frostedheart.content.town.block.OccupiedVolume;
+import com.teammoeg.frostedheart.content.town.block.blockscanner.RoomPathfinder.OccupiedCell;
 import com.teammoeg.frostedheart.content.town.building.AbstractTownBuilding;
 import com.teammoeg.frostedheart.content.town.building.ITownBuilding;
 import com.teammoeg.frostedheart.content.town.building.TownProductionStopReason;
@@ -18,21 +28,12 @@ import com.teammoeg.frostedheart.content.town.buildings.hunting.HuntingBaseBuild
 import com.teammoeg.frostedheart.content.town.buildings.mine.MineBaseBuilding;
 import com.teammoeg.frostedheart.content.town.buildings.mine.MineBuilding;
 import com.teammoeg.frostedheart.content.town.buildings.warehouse.WarehouseBuilding;
+
 import net.minecraft.SharedConstants;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.NbtOps;
 import net.minecraft.nbt.Tag;
 import net.minecraft.server.Bootstrap;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
-
-import java.util.List;
-import java.util.UUID;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertInstanceOf;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class TransportStationBuildingCodecTest {
     @BeforeAll
@@ -63,12 +64,10 @@ class TransportStationBuildingCodecTest {
     void concreteAndPolymorphicCodecsRoundTrip() {
         UUID firstResident = UUID.fromString("00000000-0000-0000-0000-000000000002");
         UUID secondResident = UUID.fromString("00000000-0000-0000-0000-000000000001");
-        OccupiedVolume occupiedVolume = new OccupiedVolume();
-        occupiedVolume.add(new BlockPos(4, 64, -2));
-        occupiedVolume.add(new BlockPos(5, 64, -2));
         TransportStationBuilding source = new TransportStationBuilding(
                 new BlockPos(4, 64, -2), true, false, true,
-                occupiedVolume,
+                Optional.of(Set.of(new OccupiedCell(new BlockPos(4, 64, -2),2),
+                	new OccupiedCell(new BlockPos(5, 64, -2),2))),
                 List.of(firstResident, secondResident), 24, 72, 6,
                 new TransportStationBuilding.TransportStationDailyReport(
                         true, 2, 2.5, 160.0, 160.0,
@@ -93,11 +92,11 @@ class TransportStationBuildingCodecTest {
         UUID secondResident = UUID.fromString("00000000-0000-0000-0000-000000000002");
         TransportStationBuilding first = new TransportStationBuilding(
                 BlockPos.ZERO, false, false, false,
-                com.teammoeg.frostedheart.content.town.block.OccupiedVolume.EMPTY,
+                Optional.empty(),
                 List.of(firstResident, secondResident), 0, 0, 0);
         TransportStationBuilding second = new TransportStationBuilding(
                 BlockPos.ZERO, false, false, false,
-                com.teammoeg.frostedheart.content.town.block.OccupiedVolume.EMPTY,
+                Optional.empty(),
                 List.of(secondResident, firstResident), 0, 0, 0);
 
         assertEquals(

@@ -30,7 +30,7 @@ public class LogisticCoreMultiblock extends CMultiblock {
 
 	public LogisticCoreMultiblock() {
 		super(new ResourceLocation(FHMain.MODID, "multiblocks/logistic_core"),
-            new BlockPos(0, 0, 0), new BlockPos(0, 1, 0), new BlockPos(1, 3, 1), FHMultiblocks.Registration.LOGISTIC_CORE
+            new BlockPos(0, 0, 0), new BlockPos(0, 0, 0), new BlockPos(1, 3, 1), FHMultiblocks.Registration.LOGISTIC_CORE
     );
 	}
 

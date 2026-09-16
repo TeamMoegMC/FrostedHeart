@@ -13,6 +13,7 @@ import com.teammoeg.frostedheart.content.town.block.blockscanner.RoomPathfinder.
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
 import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.BlockPos.MutableBlockPos;
 import net.minecraft.world.level.block.entity.BlockEntity;
 
@@ -26,8 +27,10 @@ public class SpaceOutlineRenderer<T extends BlockEntity&TownBlockEntity<? extend
 	public void render(T pBlockEntity, float pPartialTick, PoseStack pPoseStack, MultiBufferSource pBuffer, int pPackedLight, int pPackedOverlay) {
 		var data=pBlockEntity.getBuilding();
 		if(data.isPresent()) {
+			System.out.println("data present");
 			Set<OccupiedCell> space=data.get().getOccupiedVolume();
 			if(space!=null) {
+				System.out.println("space present");
 				if(/*cache==null||*/oldSpace==null||!Objects.equals(space, oldSpace)) {
 					oldSpace=Set.copyOf(space);
 					/*Set<BlockPos> poss=new HashSet<>();
@@ -39,19 +42,21 @@ public class SpaceOutlineRenderer<T extends BlockEntity&TownBlockEntity<? extend
 				}
 				if(oldSpace!=null) {
 					Matrix4f matrix=pPoseStack.last().pose();
+					BlockPos bpos=pBlockEntity.getBlockPos();
 					try(var tesselator=TesselateHelper.getShape3DTesslator()){
 						for(OccupiedCell oc:space)
 							for(MutableBlockPos pos:oc.pathIterable()) {
+								pos.move(-bpos.getX(), -bpos.getY(), -bpos.getZ());
 								//bottom face
-								tesselator.vertex(matrix, pos.getX()  , pos.getY(), pos.getZ()  , 0xaa88ff88);
-								tesselator.vertex(matrix, pos.getX()+1, pos.getY(), pos.getZ()  , 0xaa88ff88);
-								tesselator.vertex(matrix, pos.getX()+1, pos.getY(), pos.getZ()+1, 0xaa88ff88);
-								tesselator.vertex(matrix, pos.getX()  , pos.getY(), pos.getZ()+1, 0xaa88ff88);
+								tesselator.vertex(matrix, pos.getX()  , pos.getY()+0.05f, pos.getZ()  , 0xaa88ff88);
+								tesselator.vertex(matrix, pos.getX()+1, pos.getY()+0.05f, pos.getZ()  , 0xaa88ff88);
+								tesselator.vertex(matrix, pos.getX()+1, pos.getY()+0.05f, pos.getZ()+1, 0xaa88ff88);
+								tesselator.vertex(matrix, pos.getX()  , pos.getY()+0.05f, pos.getZ()+1, 0xaa88ff88);
 								//top face
-								tesselator.vertex(matrix, pos.getX()  , pos.getY(), pos.getZ()  , 0xaa88ff88);
-								tesselator.vertex(matrix, pos.getX()  , pos.getY(), pos.getZ()+1, 0xaa88ff88);
-								tesselator.vertex(matrix, pos.getX()+1, pos.getY(), pos.getZ()+1, 0xaa88ff88);
-								tesselator.vertex(matrix, pos.getX()+1, pos.getY(), pos.getZ()  , 0xaa88ff88);
+								tesselator.vertex(matrix, pos.getX()  , pos.getY()+0.05f, pos.getZ()  , 0xaa88ff88);
+								tesselator.vertex(matrix, pos.getX()  , pos.getY()+0.05f, pos.getZ()+1, 0xaa88ff88);
+								tesselator.vertex(matrix, pos.getX()+1, pos.getY()+0.05f, pos.getZ()+1, 0xaa88ff88);
+								tesselator.vertex(matrix, pos.getX()+1, pos.getY()+0.05f, pos.getZ()  , 0xaa88ff88);
 								
 							}
 						/*for(Face face:cache.faces) {

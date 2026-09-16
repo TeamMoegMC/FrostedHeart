@@ -242,18 +242,18 @@ public class RoomPathfinder {
             if (canStandAt(world, mbp)) {
             	if(world.getBlockType(mbp.above(2))!=BlockType.WALL)
             		result.add(mbp.immutable());
-                break;
+                continue;
             }
         	mbp.setY(y);
             if (canStandAt(world, mbp)) {
             	result.add(mbp.immutable());
-                break;
+            	continue;
             }
         	mbp.setY(y+1);
             if (canStandAt(world, mbp)) {
             	if(world.getBlockType(foot.above(2))!=BlockType.WALL)
             		result.add(mbp.immutable());
-                break;
+            	continue;
             }
         }
         mbp.set(foot);

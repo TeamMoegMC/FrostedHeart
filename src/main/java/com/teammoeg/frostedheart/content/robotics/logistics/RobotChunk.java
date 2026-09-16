@@ -49,6 +49,7 @@ public class RobotChunk implements NBTSerializable{
 				continue;
 			}
 			LazyOptional<LogisticNetwork> candidate=FHCapabilities.LOGISTIC.getCapability(core);
+			
 			if(candidate.isPresent()) {
 				nets.add(candidate);
 			}
@@ -62,6 +63,7 @@ public class RobotChunk implements NBTSerializable{
 	}
 
 	public void register(BlockPos pos) {
+		
     	networks.add(pos);
     }
     public void release(BlockPos pos) {
