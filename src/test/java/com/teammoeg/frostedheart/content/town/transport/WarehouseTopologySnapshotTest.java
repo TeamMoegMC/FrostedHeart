@@ -6,17 +6,15 @@
 
 package com.teammoeg.frostedheart.content.town.transport;
 
-import net.minecraft.core.BlockPos;
-import net.minecraft.world.level.Level;
-import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import org.junit.jupiter.api.Test;
+
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.Level;
 
 class WarehouseTopologySnapshotTest {
     @Test

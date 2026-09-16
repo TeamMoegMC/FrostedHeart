@@ -1,16 +1,15 @@
 /* Copyright (c) 2026 TeamMoeg */
 package com.teammoeg.frostedresearch.gui.archive.graph;
 
-import com.teammoeg.chorda.client.icon.CIcons;
-import com.teammoeg.frostedresearch.research.Research;
-import com.teammoeg.frostedresearch.research.ResearchCategory;
-import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import org.junit.jupiter.api.Test;
+
+import com.teammoeg.chorda.client.icon.CIcons;
+import com.teammoeg.frostedresearch.research.Research;
+import com.teammoeg.frostedresearch.research.ResearchCategory;
 
 class ResearchGraphVisibilityTest {
     @Test

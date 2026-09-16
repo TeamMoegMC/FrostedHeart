@@ -10,12 +10,13 @@
 
 package com.teammoeg.frostedheart.content.town;
 
-import com.teammoeg.frostedheart.content.town.model.TownModelParameters;
-import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import org.junit.jupiter.api.Test;
+
+import com.teammoeg.frostedheart.content.town.model.TownModelParameters;
 
 class TownMathFunctionsParameterTest {
     private static final double EPSILON = 1.0e-12;

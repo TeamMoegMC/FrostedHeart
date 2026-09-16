@@ -6,21 +6,20 @@
 
 package com.teammoeg.frostedheart.content.town.buildings.logistics;
 
-import com.electronwill.nightconfig.core.CommentedConfig;
-import com.teammoeg.frostedheart.content.town.model.TownModelParameters;
-import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
-import net.minecraft.SharedConstants;
-import net.minecraft.server.Bootstrap;
+import static org.junit.jupiter.api.Assertions.*;
+
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import com.electronwill.nightconfig.core.CommentedConfig;
+import com.teammoeg.chorda.util.CUtils;
+import com.teammoeg.frostedheart.content.town.model.TownModelParameters;
+import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 
 class TransportStationConfigTest {
     @BeforeAll
     static void loadServerConfigDefaults() {
-        SharedConstants.tryDetectVersion();
-        Bootstrap.bootStrap();
+        CUtils.startTestEnvironment();
         CommentedConfig serverConfig = CommentedConfig.inMemory();
         FHConfig.SERVER_CONFIG.correct(serverConfig);
         FHConfig.SERVER_CONFIG.setConfig(serverConfig);

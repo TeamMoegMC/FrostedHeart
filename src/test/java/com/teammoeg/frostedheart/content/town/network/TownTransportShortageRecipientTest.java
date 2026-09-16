@@ -6,21 +6,22 @@
 
 package com.teammoeg.frostedheart.content.town.network;
 
-import com.teammoeg.chorda.dataholders.team.AbstractTeam;
-import com.teammoeg.chorda.dataholders.team.TeamDataHolder;
-import com.teammoeg.chorda.network.CBaseNetwork;
-import com.teammoeg.chorda.network.CMessage;
-import com.teammoeg.frostedheart.content.town.transport.TownTransportShortageNotice;
-import net.minecraft.server.level.ServerPlayer;
-import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertSame;
+import org.junit.jupiter.api.Test;
+
+import com.teammoeg.chorda.dataholders.team.AbstractTeam;
+import com.teammoeg.chorda.dataholders.team.TeamDataHolder;
+import com.teammoeg.chorda.network.CBaseNetwork;
+import com.teammoeg.chorda.network.CMessage;
+import com.teammoeg.frostedheart.content.town.transport.TownTransportShortageNotice;
+
+import net.minecraft.server.level.ServerPlayer;
 
 class TownTransportShortageRecipientTest {
     @Test

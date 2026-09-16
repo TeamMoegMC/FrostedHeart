@@ -1,15 +1,14 @@
 /* Copyright (c) 2026 TeamMoeg */
 package com.teammoeg.frostedheart.content.climate.thermal.radiation;
 
-import com.sun.management.ThreadMXBean;
-import com.teammoeg.frostedheart.content.climate.thermal.runtime.ThermalMemoryBudget;
-import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.lang.management.ManagementFactory;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import org.junit.jupiter.api.Test;
+
+import com.sun.management.ThreadMXBean;
+import com.teammoeg.frostedheart.content.climate.thermal.runtime.ThermalMemoryBudget;
 
 class RadiationServiceDroppedWorkloadTest {
     private static final int PLAYER_RECEIVERS = 128;

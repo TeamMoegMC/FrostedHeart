@@ -10,27 +10,26 @@
 
 package com.teammoeg.frostedheart.content.climate.render.weather;
 
-import com.teammoeg.chorda.math.Rect;
-import com.teammoeg.frostedheart.content.climate.gamedata.climate.ClimateType;
-import com.teammoeg.frostedheart.content.climate.gamedata.climate.InterpolationClimateEvent;
-import com.teammoeg.frostedheart.content.climate.gamedata.climate.WhiteCurtainDescriptor;
-import com.teammoeg.frostedheart.content.climate.gamedata.climate.WhiteCurtainVisualProfile;
-import net.minecraft.SharedConstants;
-import net.minecraft.core.Direction;
-import net.minecraft.core.registries.Registries;
-import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.server.Bootstrap;
-import net.minecraft.world.level.Level;
+import static org.junit.jupiter.api.Assertions.*;
+
+import java.util.List;
+
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
-import java.util.List;
+import com.teammoeg.chorda.math.Rect;
+import com.teammoeg.chorda.util.CUtils;
+import com.teammoeg.frostedheart.content.climate.gamedata.climate.ClimateType;
+import com.teammoeg.frostedheart.content.climate.gamedata.climate.InterpolationClimateEvent;
+import com.teammoeg.frostedheart.content.climate.gamedata.climate.WhiteCurtainDescriptor;
+import com.teammoeg.frostedheart.content.climate.gamedata.climate.WhiteCurtainVisualProfile;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import net.minecraft.core.Direction;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.level.Level;
 
 class ClientWeatherFrameTest {
     private static ResourceKey<Level> testDimension;
@@ -39,8 +38,7 @@ class ClientWeatherFrameTest {
 
     @BeforeAll
     static void bootstrapMinecraftRegistries() {
-        SharedConstants.tryDetectVersion();
-        Bootstrap.bootStrap();
+        CUtils.startTestEnvironment();
         testDimension = ResourceKey.create(
                 Registries.DIMENSION, new ResourceLocation("frostedheart", "weather_frame_test"));
     }

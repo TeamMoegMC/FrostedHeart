@@ -6,10 +6,9 @@
 
 package com.teammoeg.frostedheart.content.town.transport;
 
-import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import org.junit.jupiter.api.Test;
 
 class TransportTransferBudgetTest {
     @Test

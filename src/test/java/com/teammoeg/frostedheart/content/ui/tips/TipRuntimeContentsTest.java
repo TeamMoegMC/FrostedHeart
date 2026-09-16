@@ -6,21 +6,21 @@
 
 package com.teammoeg.frostedheart.content.ui.tips;
 
-import com.google.gson.JsonObject;
-import com.mojang.serialization.JsonOps;
-import net.minecraft.network.chat.Component;
-import net.minecraft.server.Bootstrap;
-import net.minecraft.SharedConstants;
+import static org.junit.jupiter.api.Assertions.*;
+
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.*;
+import com.google.gson.JsonObject;
+import com.mojang.serialization.JsonOps;
+import com.teammoeg.chorda.util.CUtils;
+
+import net.minecraft.network.chat.Component;
 
 class TipRuntimeContentsTest {
     @BeforeAll
     static void bootstrapMinecraftRegistries() {
-        SharedConstants.tryDetectVersion();
-        Bootstrap.bootStrap();
+        CUtils.startTestEnvironment();
     }
 
     @Test

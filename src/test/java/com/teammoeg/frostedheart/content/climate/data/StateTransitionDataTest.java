@@ -1,21 +1,21 @@
 /* Copyright (c) 2026 TeamMoeg */
 package com.teammoeg.frostedheart.content.climate.data;
 
-import com.google.gson.JsonParser;
-import com.mojang.serialization.JsonOps;
-import net.minecraft.SharedConstants;
-import net.minecraft.server.Bootstrap;
-import net.minecraft.world.level.block.Blocks;
+import static org.junit.jupiter.api.Assertions.*;
+
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.*;
+import com.google.gson.JsonParser;
+import com.mojang.serialization.JsonOps;
+import com.teammoeg.chorda.util.CUtils;
+
+import net.minecraft.world.level.block.Blocks;
 
 class StateTransitionDataTest {
     @BeforeAll
     static void bootstrapMinecraft() {
-        SharedConstants.tryDetectVersion();
-        Bootstrap.bootStrap();
+        CUtils.startTestEnvironment();
     }
 
     @Test

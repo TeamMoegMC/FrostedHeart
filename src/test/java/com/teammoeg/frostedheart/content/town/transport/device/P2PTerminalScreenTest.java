@@ -6,32 +6,29 @@
 
 package com.teammoeg.frostedheart.content.town.transport.device;
 
-import com.teammoeg.frostedheart.bootstrap.common.FHMenuSlots;
-import com.teammoeg.frostedheart.content.town.transport.P2PTerminalRole;
-import com.teammoeg.frostedheart.content.town.transport.P2PTerminalEndpoint;
-import net.minecraft.SharedConstants;
-import net.minecraft.core.BlockPos;
-import net.minecraft.core.GlobalPos;
-import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.contents.TranslatableContents;
-import net.minecraft.server.Bootstrap;
-import net.minecraft.world.level.Level;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.Optional;
 import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+
+import com.teammoeg.chorda.util.CUtils;
+import com.teammoeg.frostedheart.bootstrap.common.FHMenuSlots;
+import com.teammoeg.frostedheart.content.town.transport.P2PTerminalEndpoint;
+import com.teammoeg.frostedheart.content.town.transport.P2PTerminalRole;
+
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.GlobalPos;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.contents.TranslatableContents;
+import net.minecraft.world.level.Level;
 
 class P2PTerminalScreenTest {
     @BeforeAll
     static void bootstrapMinecraftRegistries() {
-        SharedConstants.tryDetectVersion();
-        Bootstrap.bootStrap();
+        CUtils.startTestEnvironment();
     }
 
     @Test

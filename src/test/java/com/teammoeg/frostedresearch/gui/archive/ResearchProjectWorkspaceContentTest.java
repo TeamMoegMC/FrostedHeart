@@ -1,15 +1,16 @@
 /* Copyright (c) 2026 TeamMoeg */
 package com.teammoeg.frostedresearch.gui.archive;
 
-import com.teammoeg.frostedresearch.gui.archive.clue.ClueDestination;
-import com.teammoeg.frostedresearch.gui.archive.clue.ResearchClueView;
-import net.minecraft.network.chat.Component;
-import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import org.junit.jupiter.api.Test;
+
+import com.teammoeg.frostedresearch.gui.archive.clue.ClueDestination;
+import com.teammoeg.frostedresearch.gui.archive.clue.ResearchClueView;
+
+import net.minecraft.network.chat.Component;
 
 class ResearchProjectWorkspaceContentTest {
     @Test

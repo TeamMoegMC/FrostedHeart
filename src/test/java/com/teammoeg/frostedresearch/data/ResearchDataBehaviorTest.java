@@ -1,31 +1,27 @@
 /* Copyright (c) 2026 TeamMoeg */
 package com.teammoeg.frostedresearch.data;
 
-import com.teammoeg.frostedresearch.research.Research;
-import com.teammoeg.frostedresearch.research.ResearchCategory;
-import com.teammoeg.frostedresearch.research.clues.CustomClue;
-import net.minecraft.SharedConstants;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.NbtOps;
-import net.minecraft.nbt.LongTag;
-import net.minecraft.nbt.Tag;
-import net.minecraft.server.Bootstrap;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertInstanceOf;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+
+import com.teammoeg.chorda.util.CUtils;
+import com.teammoeg.frostedresearch.research.Research;
+import com.teammoeg.frostedresearch.research.ResearchCategory;
+import com.teammoeg.frostedresearch.research.clues.CustomClue;
+
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.LongTag;
+import net.minecraft.nbt.NbtOps;
+import net.minecraft.nbt.Tag;
 
 class ResearchDataBehaviorTest {
     @BeforeAll
     static void bootstrapMinecraft() {
-        SharedConstants.tryDetectVersion();
-        Bootstrap.bootStrap();
+        CUtils.startTestEnvironment();
     }
 
     @Test

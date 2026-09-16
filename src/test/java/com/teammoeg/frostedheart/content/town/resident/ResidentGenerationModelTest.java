@@ -10,14 +10,13 @@
 
 package com.teammoeg.frostedheart.content.town.resident;
 
-import com.teammoeg.frostedheart.content.town.model.TownModelParameters;
-import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.SplittableRandom;
 
-import static org.junit.jupiter.api.Assertions.assertArrayEquals;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import org.junit.jupiter.api.Test;
+
+import com.teammoeg.frostedheart.content.town.model.TownModelParameters;
 
 class ResidentGenerationModelTest {
     @Test

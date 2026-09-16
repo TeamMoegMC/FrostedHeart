@@ -6,24 +6,8 @@
 
 package com.teammoeg.frostedheart.content.town.transport.device;
 
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
-import com.teammoeg.frostedheart.content.town.transport.P2PRouteCardState;
-import com.teammoeg.frostedheart.content.town.transport.P2PTerminalEndpoint;
-import com.teammoeg.frostedheart.content.town.transport.P2PTerminalRole;
-import net.minecraft.SharedConstants;
-import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
-import net.minecraft.core.GlobalPos;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.server.Bootstrap;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
-import net.minecraft.world.level.Level;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
 
-import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.InputStream;
@@ -33,10 +17,25 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import javax.imageio.ImageIO;
+
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import com.teammoeg.chorda.util.CUtils;
+import com.teammoeg.frostedheart.content.town.transport.P2PRouteCardState;
+import com.teammoeg.frostedheart.content.town.transport.P2PTerminalEndpoint;
+import com.teammoeg.frostedheart.content.town.transport.P2PTerminalRole;
+
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.core.GlobalPos;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.level.Level;
 
 class P2PTerminalResourcesTest {
     private static final List<String> TERMINALS = List.of(
@@ -46,8 +45,7 @@ class P2PTerminalResourcesTest {
 
     @BeforeAll
     static void bootstrapMinecraftRegistries() {
-        SharedConstants.tryDetectVersion();
-        Bootstrap.bootStrap();
+        CUtils.startTestEnvironment();
     }
 
     @Test

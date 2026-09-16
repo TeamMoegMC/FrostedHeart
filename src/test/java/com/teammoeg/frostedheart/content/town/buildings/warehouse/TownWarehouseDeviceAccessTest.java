@@ -6,19 +6,18 @@
 
 package com.teammoeg.frostedheart.content.town.buildings.warehouse;
 
-import com.teammoeg.frostedheart.content.town.provider.ITownProviderSerializable;
-import com.teammoeg.frostedheart.content.town.provider.TeamTownProvider;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.world.level.Level;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+
+import com.teammoeg.frostedheart.content.town.provider.ITownProviderSerializable;
+import com.teammoeg.frostedheart.content.town.provider.TeamTownProvider;
+
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.level.Level;
 
 class TownWarehouseDeviceAccessTest {
     @BeforeAll

@@ -6,31 +6,25 @@
 
 package com.teammoeg.frostedheart.content.town.buildings.warehouse;
 
+import static org.junit.jupiter.api.Assertions.*;
+
+import java.util.Optional;
+
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+
 import com.mojang.serialization.JsonOps;
+import com.teammoeg.chorda.util.CUtils;
 import com.teammoeg.frostedheart.content.town.transport.TownTransportSummary;
 import com.teammoeg.frostedheart.content.town.transport.TransportAdmissionStatus;
 import com.teammoeg.frostedheart.content.town.transport.TransportEndpointKind;
 import com.teammoeg.frostedheart.content.town.transport.TransportReservation;
 import com.teammoeg.frostedheart.content.town.transport.TransportReservationDecision;
-import net.minecraft.SharedConstants;
-import net.minecraft.core.BlockPos;
-import net.minecraft.core.GlobalPos;
-import net.minecraft.server.Bootstrap;
-import net.minecraft.world.level.Level;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
-
-import java.util.Optional;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class WarehouseInterfaceTransportViewTest {
     @BeforeAll
     static void bootstrapMinecraftRegistries() {
-        SharedConstants.tryDetectVersion();
-        Bootstrap.bootStrap();
+        CUtils.startTestEnvironment();
     }
 
     @Test

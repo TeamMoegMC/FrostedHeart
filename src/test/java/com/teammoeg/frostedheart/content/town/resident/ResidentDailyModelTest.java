@@ -10,12 +10,11 @@
 
 package com.teammoeg.frostedheart.content.town.resident;
 
-import com.teammoeg.frostedheart.content.town.model.TownModelParameters;
+import static org.junit.jupiter.api.Assertions.*;
+
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import com.teammoeg.frostedheart.content.town.model.TownModelParameters;
 
 class ResidentDailyModelTest {
     @Test

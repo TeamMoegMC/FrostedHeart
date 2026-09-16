@@ -10,12 +10,14 @@
 
 package com.teammoeg.frostedheart.content.climate.gamedata.climate;
 
-import com.teammoeg.frostedheart.content.town.model.TownModelParameters;
-import com.teammoeg.frostedheart.content.town.model.TownStageFourModel;
-import net.minecraft.util.RandomSource;
+import static org.junit.jupiter.api.Assertions.*;
+
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import com.teammoeg.frostedheart.content.town.model.TownModelParameters;
+import com.teammoeg.frostedheart.content.town.model.TownStageFourModel;
+
+import net.minecraft.util.RandomSource;
 
 class ClimateEventModelTest {
     private static final double EPSILON = 1.0e-6;

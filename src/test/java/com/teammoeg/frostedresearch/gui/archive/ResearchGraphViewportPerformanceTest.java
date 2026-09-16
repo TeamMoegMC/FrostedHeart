@@ -1,23 +1,22 @@
 /* Copyright (c) 2026 TeamMoeg */
 package com.teammoeg.frostedresearch.gui.archive;
 
-import com.teammoeg.frostedresearch.research.Research;
-import com.teammoeg.frostedresearch.research.ResearchCategory;
-import com.teammoeg.chorda.client.cui.base.PanZoomViewport.Camera;
-import net.minecraft.SharedConstants;
-import net.minecraft.server.Bootstrap;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+
+import com.teammoeg.chorda.client.cui.base.PanZoomViewport.Camera;
+import com.teammoeg.chorda.util.CUtils;
+import com.teammoeg.frostedresearch.research.Research;
+import com.teammoeg.frostedresearch.research.ResearchCategory;
 
 class ResearchGraphViewportPerformanceTest {
     @BeforeAll
     static void bootstrapMinecraft() {
-        SharedConstants.tryDetectVersion();
-        Bootstrap.bootStrap();
+        CUtils.startTestEnvironment();
     }
 
     @Test

@@ -1,33 +1,43 @@
 /* Copyright (c) 2026 TeamMoeg */
 package com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft;
 
-import com.teammoeg.frostedheart.content.climate.thermal.mesh.MaterialSample;
+import static com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.input.MinecraftPhaseController.PhaseAttempt.*;
+
+import java.lang.management.ManagementFactory;
+import java.util.Arrays;
 
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.climate.WorldTemperature;
 import com.teammoeg.frostedheart.content.climate.network.InfraredBrickCodec;
-import com.teammoeg.frostedheart.content.climate.thermal.field.*;
+import com.teammoeg.frostedheart.content.climate.thermal.field.ThermalAnalyticField;
+import com.teammoeg.frostedheart.content.climate.thermal.field.ThermalFieldKey;
+import com.teammoeg.frostedheart.content.climate.thermal.mesh.MaterialSample;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.MaterialThermalLaw;
 import com.teammoeg.frostedheart.content.climate.thermal.persistence.DormantThermalCooling;
-import com.teammoeg.frostedheart.content.climate.thermal.persistence.minecraft.*;
+import com.teammoeg.frostedheart.content.climate.thermal.persistence.minecraft.DormantChunkThermalState;
+import com.teammoeg.frostedheart.content.climate.thermal.persistence.minecraft.MaterialSectionState;
+import com.teammoeg.frostedheart.content.climate.thermal.persistence.minecraft.MinecraftThermalChunkAttachment;
 import com.teammoeg.frostedheart.content.climate.thermal.profile.minecraft.MinecraftThermalProfiles;
-import com.teammoeg.frostedheart.content.climate.thermal.query.QueryPublication;
 import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.input.MinecraftPhaseController;
+
+import io.netty.buffer.Unpooled;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.SectionPos;
-import net.minecraft.gametest.framework.*;
-import net.minecraft.nbt.*;
+import net.minecraft.gametest.framework.GameTest;
+import net.minecraft.gametest.framework.GameTestHelper;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.Tag;
 import net.minecraft.network.FriendlyByteBuf;
-import io.netty.buffer.Unpooled;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.GameRules;
-import net.minecraft.world.level.block.*;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.LiquidBlock;
+import net.minecraft.world.level.block.SnowLayerBlock;
 import net.minecraftforge.common.util.FakePlayerFactory;
-import net.minecraftforge.gametest.*;
-import java.lang.management.ManagementFactory;
-import java.util.Arrays;
-import static com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.input.MinecraftPhaseController.PhaseAttempt.*;
+import net.minecraftforge.gametest.GameTestHolder;
+import net.minecraftforge.gametest.PrefixGameTestTemplate;
 
 @GameTestHolder(FHMain.MODID)
 @PrefixGameTestTemplate(false)

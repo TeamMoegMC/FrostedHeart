@@ -6,17 +6,16 @@
 
 package com.teammoeg.frostedheart.content.town.transport;
 
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
-import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import org.junit.jupiter.api.Test;
+
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 
 class TownTransportShortageTipPresentationModelTest {
     @Test

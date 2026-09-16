@@ -10,17 +10,17 @@
 
 package com.teammoeg.frostedheart.infrastructure.command;
 
-import com.mojang.brigadier.tree.CommandNode;
-import com.teammoeg.frostedheart.content.town.resident.Resident;
-import net.minecraft.commands.CommandSourceStack;
-import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import org.junit.jupiter.api.Test;
+
+import com.mojang.brigadier.tree.CommandNode;
+import com.teammoeg.frostedheart.content.town.resident.Resident;
+
+import net.minecraft.commands.CommandSourceStack;
 
 class TownCommandTest {
     @Test

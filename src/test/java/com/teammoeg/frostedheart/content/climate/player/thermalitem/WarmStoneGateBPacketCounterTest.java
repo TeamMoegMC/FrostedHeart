@@ -10,21 +10,18 @@
 
 package com.teammoeg.frostedheart.content.climate.player.thermalitem;
 
-import net.minecraft.SharedConstants;
-import net.minecraft.server.Bootstrap;
+import static org.junit.jupiter.api.Assertions.*;
+
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import com.teammoeg.chorda.util.CUtils;
 
 class WarmStoneGateBPacketCounterTest {
     @BeforeAll
     static void bootstrapMinecraft() {
-        SharedConstants.tryDetectVersion();
-        Bootstrap.bootStrap();
+        CUtils.startTestEnvironment();
     }
 
     @AfterEach

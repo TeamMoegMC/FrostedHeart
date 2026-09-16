@@ -1,6 +1,15 @@
 /* Copyright (c) 2026 TeamMoeg */
 package com.teammoeg.frostedresearch.gui.archive.clue;
 
+import static org.junit.jupiter.api.Assertions.*;
+
+import java.util.List;
+import java.util.Map;
+
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+
+import com.teammoeg.chorda.util.CUtils;
 import com.teammoeg.frostedresearch.data.ResearchData;
 import com.teammoeg.frostedresearch.gui.archive.ResearchOpenContext;
 import com.teammoeg.frostedresearch.gui.archive.ResearchWorkspaceState;
@@ -8,23 +17,11 @@ import com.teammoeg.frostedresearch.research.Research;
 import com.teammoeg.frostedresearch.research.ResearchCategory;
 import com.teammoeg.frostedresearch.research.clues.CustomClue;
 import com.teammoeg.frostedresearch.research.clues.MinigameClue;
-import net.minecraft.SharedConstants;
-import net.minecraft.server.Bootstrap;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
-
-import java.util.List;
-import java.util.Map;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class ResearchClueViewFactoryTest {
     @BeforeAll
     static void bootstrapMinecraft() {
-        SharedConstants.tryDetectVersion();
-        Bootstrap.bootStrap();
+        CUtils.startTestEnvironment();
     }
 
     @Test

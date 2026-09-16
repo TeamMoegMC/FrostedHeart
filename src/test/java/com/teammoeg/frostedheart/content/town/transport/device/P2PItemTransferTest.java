@@ -6,24 +6,23 @@
 
 package com.teammoeg.frostedheart.content.town.transport.device;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
-import net.minecraft.SharedConstants;
-import net.minecraft.server.Bootstrap;
+import java.util.concurrent.atomic.AtomicReference;
+
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+
+import com.teammoeg.chorda.util.CUtils;
+
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraftforge.items.ItemStackHandler;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.BeforeAll;
-
-import java.util.concurrent.atomic.AtomicReference;
 
 class P2PItemTransferTest {
     @BeforeAll
     static void bootstrapMinecraft() {
-        SharedConstants.tryDetectVersion();
-        Bootstrap.bootStrap();
+        CUtils.startTestEnvironment();
     }
 
     @Test

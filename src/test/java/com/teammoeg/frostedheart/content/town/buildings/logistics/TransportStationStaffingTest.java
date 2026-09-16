@@ -6,29 +6,28 @@
 
 package com.teammoeg.frostedheart.content.town.buildings.logistics;
 
-import com.electronwill.nightconfig.core.CommentedConfig;
-import com.teammoeg.frostedheart.content.town.TownStaffingPlan;
-import com.teammoeg.frostedheart.content.town.building.AbstractTownBuilding;
-import com.teammoeg.frostedheart.content.town.model.TownAssignmentModel;
-import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
-import net.minecraft.SharedConstants;
-import net.minecraft.core.BlockPos;
-import net.minecraft.server.Bootstrap;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertSame;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+
+import com.electronwill.nightconfig.core.CommentedConfig;
+import com.teammoeg.chorda.util.CUtils;
+import com.teammoeg.frostedheart.content.town.TownStaffingPlan;
+import com.teammoeg.frostedheart.content.town.building.AbstractTownBuilding;
+import com.teammoeg.frostedheart.content.town.model.TownAssignmentModel;
+import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
+
+import net.minecraft.core.BlockPos;
 
 class TransportStationStaffingTest {
     @BeforeAll
     static void bootstrapMinecraftRegistries() {
-        SharedConstants.tryDetectVersion();
-        Bootstrap.bootStrap();
+        CUtils.startTestEnvironment();
         CommentedConfig serverConfig = CommentedConfig.inMemory();
         FHConfig.SERVER_CONFIG.correct(serverConfig);
         FHConfig.SERVER_CONFIG.setConfig(serverConfig);

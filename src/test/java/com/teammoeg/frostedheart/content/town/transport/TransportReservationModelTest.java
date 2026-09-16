@@ -6,20 +6,19 @@
 
 package com.teammoeg.frostedheart.content.town.transport;
 
-import com.google.gson.JsonPrimitive;
-import com.mojang.serialization.JsonOps;
-import com.teammoeg.frostedheart.content.town.model.TownModelParameters;
-import net.minecraft.core.BlockPos;
-import net.minecraft.core.GlobalPos;
-import net.minecraft.world.level.Level;
-import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import org.junit.jupiter.api.Test;
+
+import com.google.gson.JsonPrimitive;
+import com.mojang.serialization.JsonOps;
+import com.teammoeg.frostedheart.content.town.model.TownModelParameters;
+
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.GlobalPos;
+import net.minecraft.world.level.Level;
 
 class TransportReservationModelTest {
     private static final double EPSILON = 1.0e-12;

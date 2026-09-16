@@ -10,29 +10,27 @@
 
 package com.teammoeg.frostedheart.content.climate.render.weather;
 
-import com.teammoeg.chorda.math.Rect;
-import com.teammoeg.frostedheart.content.climate.gamedata.climate.ClimateType;
-import com.teammoeg.frostedheart.content.climate.gamedata.climate.InterpolationClimateEvent;
-import com.teammoeg.frostedheart.content.climate.gamedata.climate.MutableVisualWeatherSample;
-import com.teammoeg.frostedheart.content.climate.gamedata.climate.WhiteCurtainDescriptor;
-import net.minecraft.SharedConstants;
-import net.minecraft.core.Direction;
-import net.minecraft.core.registries.Registries;
-import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.server.Bootstrap;
-import net.minecraft.world.level.Level;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertSame;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+
+import com.teammoeg.chorda.math.Rect;
+import com.teammoeg.chorda.util.CUtils;
+import com.teammoeg.frostedheart.content.climate.gamedata.climate.ClimateType;
+import com.teammoeg.frostedheart.content.climate.gamedata.climate.InterpolationClimateEvent;
+import com.teammoeg.frostedheart.content.climate.gamedata.climate.MutableVisualWeatherSample;
+import com.teammoeg.frostedheart.content.climate.gamedata.climate.WhiteCurtainDescriptor;
+
+import net.minecraft.core.Direction;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.level.Level;
 
 class ClientWeatherStateTest {
     private static ResourceKey<Level> testDimension;
@@ -40,8 +38,7 @@ class ClientWeatherStateTest {
 
     @BeforeAll
     static void bootstrapMinecraftRegistries() {
-        SharedConstants.tryDetectVersion();
-        Bootstrap.bootStrap();
+        CUtils.startTestEnvironment();
         testDimension = ResourceKey.create(
                 Registries.DIMENSION, new ResourceLocation("frostedheart", "weather_state_test"));
     }

@@ -6,17 +6,18 @@
 
 package com.teammoeg.frostedheart.content.town.network;
 
-import com.teammoeg.frostedheart.content.town.TownStaffingPlan;
-import io.netty.buffer.Unpooled;
-import net.minecraft.core.BlockPos;
-import net.minecraft.network.FriendlyByteBuf;
-import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.List;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import org.junit.jupiter.api.Test;
+
+import com.teammoeg.frostedheart.content.town.TownStaffingPlan;
+
+import io.netty.buffer.Unpooled;
+import net.minecraft.core.BlockPos;
+import net.minecraft.network.FriendlyByteBuf;
 
 class TownStaffingPacketTest {
     @Test

@@ -1,25 +1,24 @@
 package com.teammoeg.frostedresearch.data;
 
-import com.teammoeg.frostedresearch.research.Research;
-import com.teammoeg.frostedresearch.research.ResearchCategory;
-import com.teammoeg.frostedresearch.research.effects.EffectStats;
-import net.minecraft.SharedConstants;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.server.Bootstrap;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.Map;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+
+import com.teammoeg.chorda.util.CUtils;
+import com.teammoeg.frostedresearch.research.Research;
+import com.teammoeg.frostedresearch.research.ResearchCategory;
+import com.teammoeg.frostedresearch.research.effects.EffectStats;
+
+import net.minecraft.nbt.CompoundTag;
 
 class TeamResearchDataResetTest {
     @BeforeAll
     static void bootstrapMinecraft() {
-        SharedConstants.tryDetectVersion();
-        Bootstrap.bootStrap();
+        CUtils.startTestEnvironment();
     }
 
     @Test

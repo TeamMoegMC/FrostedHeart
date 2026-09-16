@@ -19,16 +19,15 @@
 
 package com.teammoeg.frostedheart.mixin.drawer;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.function.LongSupplier;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
-import net.minecraft.SharedConstants;
-import net.minecraft.server.Bootstrap;
+import com.teammoeg.chorda.util.CUtils;
+
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraftforge.items.ItemStackHandler;
@@ -36,8 +35,7 @@ import net.minecraftforge.items.ItemStackHandler;
 class DrawerItemHandlerThrottleTest {
 	@BeforeAll
 	static void bootstrapMinecraftRegistries() {
-		SharedConstants.tryDetectVersion();
-		Bootstrap.bootStrap();
+        CUtils.startTestEnvironment();
 	}
 
 	@Test

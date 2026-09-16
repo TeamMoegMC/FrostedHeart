@@ -10,23 +10,21 @@
 
 package com.teammoeg.frostedheart.content.climate.gamedata.climate;
 
-import com.teammoeg.chorda.math.Rect;
-import net.minecraft.SharedConstants;
-import net.minecraft.core.Direction;
-import net.minecraft.server.Bootstrap;
-import net.minecraft.world.level.ChunkPos;
+import static org.junit.jupiter.api.Assertions.*;
+
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import com.teammoeg.chorda.math.Rect;
+import com.teammoeg.chorda.util.CUtils;
+
+import net.minecraft.core.Direction;
+import net.minecraft.world.level.ChunkPos;
 
 class WhiteCurtainCacheTest {
     @BeforeAll
     static void bootstrapMinecraftRegistries() {
-        SharedConstants.tryDetectVersion();
-        Bootstrap.bootStrap();
+        CUtils.startTestEnvironment();
     }
 
     @Test

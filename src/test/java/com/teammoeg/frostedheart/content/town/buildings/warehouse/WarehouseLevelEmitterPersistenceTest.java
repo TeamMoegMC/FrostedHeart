@@ -6,26 +6,24 @@
 
 package com.teammoeg.frostedheart.content.town.buildings.warehouse;
 
-import com.teammoeg.frostedheart.content.town.provider.ITownProviderSerializable;
-import com.teammoeg.frostedheart.content.town.provider.TeamTownProvider;
-import net.minecraft.SharedConstants;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.server.Bootstrap;
-import net.minecraft.world.item.Items;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+
+import com.teammoeg.chorda.util.CUtils;
+import com.teammoeg.frostedheart.content.town.provider.ITownProviderSerializable;
+import com.teammoeg.frostedheart.content.town.provider.TeamTownProvider;
+
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.item.Items;
 
 class WarehouseLevelEmitterPersistenceTest {
     @BeforeAll
     static void bootstrapMinecraftRegistries() {
-        SharedConstants.tryDetectVersion();
-        Bootstrap.bootStrap();
+        CUtils.startTestEnvironment();
         ITownProviderSerializable.registerAll();
     }
 

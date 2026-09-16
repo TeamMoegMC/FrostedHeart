@@ -1,10 +1,16 @@
 /* Copyright (c) 2026 TeamMoeg */
 package com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft;
 
-import com.teammoeg.frostedheart.content.climate.thermal.mesh.MaterialSample;
+import java.util.Arrays;
+import java.util.List;
 
-import com.teammoeg.frostedheart.content.climate.thermal.mesh.MaterialBoundaryRegistry;
+import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.bootstrap.common.FHItems;
+import com.teammoeg.frostedheart.content.climate.WorldTemperature;
+import com.teammoeg.frostedheart.content.climate.player.thermalitem.WearableThermalState;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.ArenaSpan;
+import com.teammoeg.frostedheart.content.climate.thermal.mesh.MaterialBoundaryRegistry;
+import com.teammoeg.frostedheart.content.climate.thermal.mesh.MaterialSample;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.PagePublication;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.PageSignatures;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.ThermalBrickCellLayout;
@@ -14,26 +20,22 @@ import com.teammoeg.frostedheart.content.climate.thermal.profile.ResolvedThermal
 import com.teammoeg.frostedheart.content.climate.thermal.profile.ThermalSignatureTable;
 import com.teammoeg.frostedheart.content.climate.thermal.query.QueryPublication;
 import com.teammoeg.frostedheart.content.climate.thermal.query.ThermalEnvironmentSample;
+import com.teammoeg.frostedheart.content.climate.thermal.runtime.ThermalMemoryBudget;
 import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.engine.ThermalDimensionEngine;
 import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.engine.ThermalDimensionLimits;
 import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.message.ResolvedGeometryBatch;
 import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.message.ThermalCompletion;
 import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.message.ThermalInputBatch;
-import com.teammoeg.frostedheart.content.climate.thermal.runtime.ThermalMemoryBudget;
 import com.teammoeg.frostedheart.content.climate.thermal.solver.BuoyancyConductance;
 import com.teammoeg.frostedheart.content.climate.thermal.solver.PhaseTransitionRuntime;
 import com.teammoeg.frostedheart.content.climate.thermal.source.EmissionPort;
-import com.teammoeg.frostedheart.content.climate.thermal.source.minecraft.MinecraftPhysicalSourceProfile;
 import com.teammoeg.frostedheart.content.climate.thermal.source.NodePowerAccumulatorArena;
 import com.teammoeg.frostedheart.content.climate.thermal.source.SourceBinding;
 import com.teammoeg.frostedheart.content.climate.thermal.source.ThermalSourceBatch;
 import com.teammoeg.frostedheart.content.climate.thermal.source.ThermalSourceLedger;
+import com.teammoeg.frostedheart.content.climate.thermal.source.minecraft.MinecraftPhysicalSourceProfile;
 import com.teammoeg.frostedheart.content.climate.thermal.topology.FarFieldSettings;
 import com.teammoeg.frostedheart.content.climate.thermal.topology.ThermalTopologyParameters;
-import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.content.climate.WorldTemperature;
-import com.teammoeg.frostedheart.bootstrap.common.FHItems;
-import com.teammoeg.frostedheart.content.climate.player.thermalitem.WearableThermalState;
 import com.teammoeg.frostedheart.util.mixin.ICampfireExtra;
 
 import net.minecraft.core.BlockPos;
@@ -52,9 +54,6 @@ import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraftforge.common.util.FakePlayerFactory;
 import net.minecraftforge.gametest.GameTestHolder;
 import net.minecraftforge.gametest.PrefixGameTestTemplate;
-
-import java.util.Arrays;
-import java.util.List;
 
 @GameTestHolder(FHMain.MODID)
 @PrefixGameTestTemplate(false)

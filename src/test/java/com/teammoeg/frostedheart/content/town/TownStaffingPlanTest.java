@@ -6,15 +6,7 @@
 
 package com.teammoeg.frostedheart.content.town;
 
-import com.google.gson.JsonParser;
-import com.mojang.serialization.JsonOps;
-import com.teammoeg.frostedheart.content.town.building.AbstractTownResidentWorkBuilding;
-import com.teammoeg.frostedheart.content.town.resident.Resident;
-import net.minecraft.SharedConstants;
-import net.minecraft.core.BlockPos;
-import net.minecraft.server.Bootstrap;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -22,13 +14,21 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+
+import com.google.gson.JsonParser;
+import com.mojang.serialization.JsonOps;
+import com.teammoeg.chorda.util.CUtils;
+import com.teammoeg.frostedheart.content.town.building.AbstractTownResidentWorkBuilding;
+import com.teammoeg.frostedheart.content.town.resident.Resident;
+
+import net.minecraft.core.BlockPos;
 
 class TownStaffingPlanTest {
     @BeforeAll
     static void bootstrapMinecraftRegistries() {
-        SharedConstants.tryDetectVersion();
-        Bootstrap.bootStrap();
+        CUtils.startTestEnvironment();
     }
 
     @Test

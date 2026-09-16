@@ -1,8 +1,20 @@
 /* Copyright (c) 2026 TeamMoeg */
 package com.teammoeg.frostedresearch.data;
 
+import static org.junit.jupiter.api.Assertions.*;
+
+import java.util.BitSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+
 import com.mojang.datafixers.util.Either;
 import com.teammoeg.chorda.client.icon.CIcons;
+import com.teammoeg.chorda.util.CUtils;
 import com.teammoeg.frostedresearch.FHResearch;
 import com.teammoeg.frostedresearch.research.Research;
 import com.teammoeg.frostedresearch.research.ResearchCategory;
@@ -10,32 +22,15 @@ import com.teammoeg.frostedresearch.research.clues.Clue;
 import com.teammoeg.frostedresearch.research.clues.CustomClue;
 import com.teammoeg.frostedresearch.research.effects.Effect;
 import com.teammoeg.frostedresearch.research.effects.EffectStats;
-import net.minecraft.SharedConstants;
+
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtOps;
 import net.minecraft.nbt.StringTag;
-import net.minecraft.server.Bootstrap;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
-
-import java.util.BitSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertSame;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertInstanceOf;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class TeamResearchDataMigrationTest {
     @BeforeAll
     static void bootstrapMinecraft() {
-        SharedConstants.tryDetectVersion();
-        Bootstrap.bootStrap();
+        CUtils.startTestEnvironment();
     }
 
     @AfterEach

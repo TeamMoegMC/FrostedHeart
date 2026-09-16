@@ -10,18 +10,16 @@
 
 package com.teammoeg.frostedheart.content.climate.player.thermalitem;
 
-import com.teammoeg.frostedheart.content.climate.thermal.solver.ThermalExchangeKernel;
-import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.lang.reflect.Field;
 import java.util.Collection;
 import java.util.Map;
 import java.util.SplittableRandom;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertSame;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import org.junit.jupiter.api.Test;
+
+import com.teammoeg.frostedheart.content.climate.thermal.solver.ThermalExchangeKernel;
 
 class ThreeNodeWearableHeatExchangeTest {
     private static final double EPSILON = 1.0e-12D;

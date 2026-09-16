@@ -6,15 +6,17 @@
 
 package com.teammoeg.frostedheart.content.town.network;
 
-import com.teammoeg.frostedheart.content.town.observation.TownSignalEvent;
-import com.teammoeg.frostedheart.content.town.observation.TownSignalNotice;
-import io.netty.buffer.Unpooled;
-import net.minecraft.network.FriendlyByteBuf;
-import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import org.junit.jupiter.api.Test;
+
+import com.teammoeg.frostedheart.content.town.observation.TownSignalEvent;
+import com.teammoeg.frostedheart.content.town.observation.TownSignalNotice;
+
+import io.netty.buffer.Unpooled;
+import net.minecraft.network.FriendlyByteBuf;
 
 class TownSignalNotificationPacketTest {
     @Test

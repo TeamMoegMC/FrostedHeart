@@ -6,26 +6,25 @@
 
 package com.teammoeg.frostedheart.content.town.buildings.logistics;
 
-import com.electronwill.nightconfig.core.CommentedConfig;
-import com.teammoeg.frostedheart.content.town.block.OccupiedVolume;
-import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
-import net.minecraft.core.BlockPos;
-import net.minecraft.SharedConstants;
-import net.minecraft.server.Bootstrap;
+import static org.junit.jupiter.api.Assertions.*;
+
+import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
+
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
-import java.util.concurrent.atomic.AtomicInteger;
+import com.electronwill.nightconfig.core.CommentedConfig;
+import com.teammoeg.chorda.util.CUtils;
+import com.teammoeg.frostedheart.content.town.block.blockscanner.RoomPathfinder.OccupiedCell;
+import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import net.minecraft.core.BlockPos;
 
 class TransportStationBuildingChangeTest {
     @BeforeAll
     static void bootstrapMinecraftRegistries() {
-        SharedConstants.tryDetectVersion();
-        Bootstrap.bootStrap();
+        CUtils.startTestEnvironment();
         CommentedConfig serverConfig = CommentedConfig.inMemory();
         FHConfig.SERVER_CONFIG.correct(serverConfig);
         FHConfig.SERVER_CONFIG.setConfig(serverConfig);
@@ -53,7 +52,7 @@ class TransportStationBuildingChangeTest {
         TransportStationBuilding building = new TransportStationBuilding(BlockPos.ZERO);
         AtomicInteger changes = new AtomicInteger();
         building.setChangeEventListener(event -> changes.incrementAndGet());
-        OccupiedVolume firstVolume = occupiedVolume();
+        Set<OccupiedCell> firstVolume = occupiedVolume();
 
         TransportStationBlockEntity.applyScanResult(building, 24, 72, firstVolume);
         int firstScanChanges = changes.get();
@@ -96,10 +95,8 @@ class TransportStationBuildingChangeTest {
         assertTrue(building.isBuildingWorkable());
     }
 
-    private static OccupiedVolume occupiedVolume() {
-        OccupiedVolume volume = new OccupiedVolume();
-        volume.add(new BlockPos(1, 64, 1));
-        volume.add(new BlockPos(2, 64, 1));
-        return volume;
+    private static Set<OccupiedCell> occupiedVolume() {
+    	return Set.of(new OccupiedCell(new BlockPos(4, 64, -2),2),
+        	new OccupiedCell(new BlockPos(5, 64, -2),2));
     }
 }

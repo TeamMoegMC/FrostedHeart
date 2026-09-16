@@ -10,13 +10,13 @@
 
 package com.teammoeg.frostedheart.content.town.buildings.logistics;
 
-import com.teammoeg.frostedheart.content.town.model.TownModelParameters;
-import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import org.junit.jupiter.api.Test;
+
+import com.teammoeg.frostedheart.content.town.model.TownModelParameters;
 
 class TransportStationDailyModelTest {
     private static final double EPSILON = 1.0e-12;

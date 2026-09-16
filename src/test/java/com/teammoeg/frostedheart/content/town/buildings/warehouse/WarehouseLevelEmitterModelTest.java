@@ -6,16 +6,16 @@
 
 package com.teammoeg.frostedheart.content.town.buildings.warehouse;
 
-import com.teammoeg.frostedheart.content.town.resource.watcher.IWarehouseStockWatcher;
-import net.minecraft.world.item.Items;
-import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import org.junit.jupiter.api.Test;
+
+import com.teammoeg.frostedheart.content.town.resource.watcher.IWarehouseStockWatcher;
+
+import net.minecraft.world.item.Items;
 
 class WarehouseLevelEmitterModelTest {
     @Test

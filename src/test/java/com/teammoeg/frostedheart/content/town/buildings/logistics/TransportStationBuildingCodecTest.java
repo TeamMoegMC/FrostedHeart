@@ -19,6 +19,7 @@ import org.junit.jupiter.api.Test;
 import com.google.gson.JsonParser;
 import com.mojang.serialization.JsonOps;
 import com.teammoeg.chorda.io.CodecUtil;
+import com.teammoeg.chorda.util.CUtils;
 import com.teammoeg.frostedheart.content.town.block.blockscanner.RoomPathfinder.OccupiedCell;
 import com.teammoeg.frostedheart.content.town.building.AbstractTownBuilding;
 import com.teammoeg.frostedheart.content.town.building.ITownBuilding;
@@ -29,17 +30,14 @@ import com.teammoeg.frostedheart.content.town.buildings.mine.MineBaseBuilding;
 import com.teammoeg.frostedheart.content.town.buildings.mine.MineBuilding;
 import com.teammoeg.frostedheart.content.town.buildings.warehouse.WarehouseBuilding;
 
-import net.minecraft.SharedConstants;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.NbtOps;
 import net.minecraft.nbt.Tag;
-import net.minecraft.server.Bootstrap;
 
 class TransportStationBuildingCodecTest {
     @BeforeAll
     static void bootstrapMinecraftRegistries() {
-        SharedConstants.tryDetectVersion();
-        Bootstrap.bootStrap();
+        CUtils.startTestEnvironment();
         AbstractTownBuilding.CODEC.getClass();
     }
 

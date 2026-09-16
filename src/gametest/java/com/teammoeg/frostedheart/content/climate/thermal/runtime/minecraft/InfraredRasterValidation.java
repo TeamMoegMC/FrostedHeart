@@ -1,10 +1,34 @@
 /* Copyright (c) 2026 TeamMoeg */
 package com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft;
 
+import static org.lwjgl.glfw.GLFW.*;
+import static org.lwjgl.opengl.GL11C.*;
+import static org.lwjgl.opengl.GL12C.*;
+import static org.lwjgl.opengl.GL13C.*;
+import static org.lwjgl.opengl.GL14C.*;
+import static org.lwjgl.opengl.GL15C.*;
+import static org.lwjgl.opengl.GL20C.*;
+import static org.lwjgl.opengl.GL30C.*;
+
+import java.nio.ByteBuffer;
+import java.nio.ShortBuffer;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.LinkedHashMap;
+import java.util.Map;
+
+import org.joml.Matrix4f;
+import org.joml.Vector3f;
+import org.lwjgl.BufferUtils;
+import org.lwjgl.opengl.GL;
+import org.lwjgl.system.MemoryUtil;
+
 import com.teammoeg.frostedheart.content.climate.render.infrared.BlockOwnerScope;
 import com.teammoeg.frostedheart.content.climate.render.infrared.InfraredCaptureShader;
 import com.teammoeg.frostedheart.content.climate.render.infrared.InfraredSurfaceTarget;
 import com.teammoeg.frostedheart.content.climate.render.infrared.OwnedChunkVertexType;
+
 import me.jellysquid.mods.sodium.client.render.chunk.shader.ChunkFogMode;
 import me.jellysquid.mods.sodium.client.render.chunk.shader.ChunkShaderOptions;
 import me.jellysquid.mods.sodium.client.render.chunk.terrain.TerrainRenderPass;
@@ -12,19 +36,6 @@ import me.jellysquid.mods.sodium.client.render.chunk.terrain.material.Material;
 import me.jellysquid.mods.sodium.client.render.chunk.terrain.material.parameters.AlphaCutoffParameter;
 import me.jellysquid.mods.sodium.client.render.chunk.vertex.format.ChunkVertexEncoder;
 import me.jellysquid.mods.sodium.client.render.viewport.CameraTransform;
-import org.joml.Matrix4f;
-import org.joml.Vector3f;
-import org.lwjgl.BufferUtils;
-import org.lwjgl.opengl.GL;
-import org.lwjgl.system.MemoryUtil;
-import java.nio.ByteBuffer;
-import java.nio.ShortBuffer;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.*;
-import static org.lwjgl.glfw.GLFW.*;
-import static org.lwjgl.opengl.GL33C.*;
 
 /** Real GPU tests: production encoders, attributes, capture GLSL and surface target. No edge exclusions. */
 public final class InfraredRasterValidation {

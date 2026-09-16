@@ -804,6 +804,10 @@ public class CUtils {
 	public static Entity getEntity(ServerLevel level, UUID uuid) {
 		return level.getEntity(uuid);
 	}
+	/**
+	 * 用于在单元测试中初始化注册表，便于测试。
+	 * 
+	 */
 	public static void startTestEnvironment() {
 		SharedConstants.tryDetectVersion();
 	    SharedConstants.enableDataFixerOptimizations();

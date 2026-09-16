@@ -10,15 +10,14 @@
 
 package com.teammoeg.frostedheart.content.climate.thermal.radiation;
 
-import com.teammoeg.frostedheart.content.climate.thermal.runtime.ThermalMemoryBudget;
-import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import org.junit.jupiter.api.Test;
+
+import com.teammoeg.frostedheart.content.climate.thermal.runtime.ThermalMemoryBudget;
 
 class RadiationServiceTest {
     @Test

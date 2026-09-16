@@ -8,6 +8,7 @@ import java.util.List;
 import com.mojang.serialization.Codec;
 import com.teammoeg.chorda.math.BaseRandomSource;
 import com.teammoeg.chorda.math.Rect;
+import com.teammoeg.chorda.util.CUtils;
 
 import net.minecraft.SharedConstants;
 import net.minecraft.core.BlockPos;
@@ -230,10 +231,7 @@ public class WhiteCurtainInfo {
 		return info;
 	}
     public static void main(String[] args) {
-		SharedConstants.tryDetectVersion();
-		SharedConstants.enableDataFixerOptimizations();
-		Bootstrap.bootStrap();
-		System.out.println();
+        CUtils.startTestEnvironment();
 		
     	BaseRandomSource rs=new BaseRandomSource(5678);
     	InterpolationClimateEvent ice=InterpolationClimateEvent.getBlizzardClimateEvent(rs, 1000);

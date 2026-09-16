@@ -1,14 +1,14 @@
 /* Copyright (c) 2026 TeamMoeg */
 package com.teammoeg.frostedheart.content.town.resident;
 
-import com.teammoeg.frostedheart.content.health.nutrition.FoodNutritionProfile;
-import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.List;
 import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import org.junit.jupiter.api.Test;
+
+import com.teammoeg.frostedheart.content.health.nutrition.FoodNutritionProfile;
 
 class ResidentPublicMenuModelTest {
     private static final double EPSILON = 1.0e-9;

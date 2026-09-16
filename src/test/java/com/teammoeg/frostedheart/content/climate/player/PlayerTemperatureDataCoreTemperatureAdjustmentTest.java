@@ -10,22 +10,19 @@
 
 package com.teammoeg.frostedheart.content.climate.player;
 
-import net.minecraft.SharedConstants;
-import net.minecraft.server.Bootstrap;
+import static org.junit.jupiter.api.Assertions.*;
+
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import com.teammoeg.chorda.util.CUtils;
 
 class PlayerTemperatureDataCoreTemperatureAdjustmentTest {
     private static final float EPSILON = 1.0e-6F;
 
     @BeforeAll
     static void bootstrapMinecraft() {
-        SharedConstants.tryDetectVersion();
-        Bootstrap.bootStrap();
+        CUtils.startTestEnvironment();
     }
 
     @Test

@@ -1,6 +1,12 @@
 /* Copyright (c) 2026 TeamMoeg */
 package com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft;
 
+import static com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.ThermalLoadedWorldGameTests.*;
+
+import java.lang.management.ManagementFactory;
+import java.lang.reflect.Method;
+import java.util.UUID;
+
 import com.mojang.authlib.GameProfile;
 import com.teammoeg.chorda.dataholders.team.CTeamDataManager;
 import com.teammoeg.chorda.dataholders.team.SinglePlayerTeam;
@@ -12,17 +18,17 @@ import com.teammoeg.frostedheart.bootstrap.common.FHItems;
 import com.teammoeg.frostedheart.bootstrap.common.FHMultiblocks;
 import com.teammoeg.frostedheart.bootstrap.common.FHSpecialDataTypes;
 import com.teammoeg.frostedheart.content.climate.WorldTemperature;
-import com.teammoeg.frostedheart.content.climate.block.generator.GeneratorState;
 import com.teammoeg.frostedheart.content.climate.block.generator.GeneratorData;
+import com.teammoeg.frostedheart.content.climate.block.generator.GeneratorState;
 import com.teammoeg.frostedheart.content.climate.data.StateTransitionData;
 import com.teammoeg.frostedheart.content.climate.thermal.consumer.TownThermalProjection;
 import com.teammoeg.frostedheart.content.climate.thermal.field.ThermalAnalyticField;
 import com.teammoeg.frostedheart.content.climate.thermal.field.ThermalAnalyticField.CombineMode;
 import com.teammoeg.frostedheart.content.climate.thermal.field.ThermalFieldKey;
 import com.teammoeg.frostedheart.content.climate.thermal.query.ThermalEnvironmentSample;
-import com.teammoeg.frostedheart.content.climate.thermal.profile.minecraft.MinecraftThermalProfiles;
 import com.teammoeg.frostedheart.content.world.entities.CuriosityEntity;
 import com.teammoeg.frostedheart.util.mixin.ICampfireExtra;
+
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.gametest.framework.GameTest;
@@ -39,12 +45,6 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.common.util.FakePlayerFactory;
 import net.minecraftforge.gametest.GameTestHolder;
 import net.minecraftforge.gametest.PrefixGameTestTemplate;
-
-import java.lang.management.ManagementFactory;
-import java.lang.reflect.Method;
-import java.util.UUID;
-
-import static com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.ThermalLoadedWorldGameTests.*;
 
 @GameTestHolder(FHMain.MODID)
 @PrefixGameTestTemplate(false)

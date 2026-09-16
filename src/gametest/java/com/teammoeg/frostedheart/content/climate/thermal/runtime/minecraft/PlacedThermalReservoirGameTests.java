@@ -11,6 +11,7 @@ import com.teammoeg.frostedheart.content.climate.thermal.field.ThermalAnalyticFi
 import com.teammoeg.frostedheart.content.climate.thermal.field.ThermalFieldKey;
 import com.teammoeg.frostedheart.content.climate.thermal.query.ThermalEnvironmentSample;
 import com.teammoeg.frostedheart.util.mixin.ICampfireExtra;
+
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.gametest.framework.GameTest;

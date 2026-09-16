@@ -6,21 +6,21 @@
 
 package com.teammoeg.frostedheart.content.town.network;
 
-import com.teammoeg.frostedheart.content.town.TownHistoryEntry;
-import io.netty.buffer.Unpooled;
-import net.minecraft.SharedConstants;
-import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.server.Bootstrap;
+import static org.junit.jupiter.api.Assertions.*;
+
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import com.teammoeg.chorda.util.CUtils;
+import com.teammoeg.frostedheart.content.town.TownHistoryEntry;
+
+import io.netty.buffer.Unpooled;
+import net.minecraft.network.FriendlyByteBuf;
 
 class TownHistoryUpdatePacketTest {
     @BeforeAll
     static void bootstrapMinecraftRegistries() {
-        SharedConstants.tryDetectVersion();
-        Bootstrap.bootStrap();
+        CUtils.startTestEnvironment();
     }
 
     @Test

@@ -1,12 +1,12 @@
 /* Copyright (c) 2026 TeamMoeg */
 package com.teammoeg.frostedresearch;
 
-import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import org.junit.jupiter.api.Test;
 
 class FHRegistryTest {
     @Test

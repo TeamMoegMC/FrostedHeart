@@ -1,28 +1,25 @@
 package com.teammoeg.frostedresearch.gui.archive;
 
-import com.teammoeg.chorda.client.cui.base.LayerHolder;
-import com.teammoeg.chorda.client.cui.base.UIElement;
-import com.teammoeg.chorda.client.cui.theme.Theme;
-import com.teammoeg.frostedresearch.FHResearch;
-import net.minecraft.SharedConstants;
-import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.server.Bootstrap;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.lang.reflect.Field;
 
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+
+import com.teammoeg.chorda.client.cui.base.LayerHolder;
+import com.teammoeg.chorda.client.cui.base.UIElement;
+import com.teammoeg.chorda.client.cui.theme.Theme;
+import com.teammoeg.chorda.util.CUtils;
+import com.teammoeg.frostedresearch.FHResearch;
+
+import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.screens.Screen;
 
 class ResearchArchiveLayerConstructionTest {
     @BeforeAll
     static void bootstrapMinecraft() {
-        SharedConstants.tryDetectVersion();
-        Bootstrap.bootStrap();
+        CUtils.startTestEnvironment();
     }
 
     @Test

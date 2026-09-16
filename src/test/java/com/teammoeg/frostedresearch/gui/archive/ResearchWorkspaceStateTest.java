@@ -1,18 +1,16 @@
 /* Copyright (c) 2026 TeamMoeg */
 package com.teammoeg.frostedresearch.gui.archive;
 
-import com.teammoeg.chorda.client.cui.base.PanZoomViewport.Camera;
-import com.teammoeg.chorda.client.cui.base.PanZoomViewport;
-import com.teammoeg.chorda.client.cui.base.PanZoomViewport.WorldBounds;
-import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import org.junit.jupiter.api.Test;
+
+import com.teammoeg.chorda.client.cui.base.PanZoomViewport;
+import com.teammoeg.chorda.client.cui.base.PanZoomViewport.Camera;
+import com.teammoeg.chorda.client.cui.base.PanZoomViewport.WorldBounds;
 
 class ResearchWorkspaceStateTest {
     @Test

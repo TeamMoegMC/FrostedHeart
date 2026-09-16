@@ -6,9 +6,9 @@
 
 package com.teammoeg.frostedheart.content.town;
 
-import org.junit.jupiter.api.Test;
-
 import static org.junit.jupiter.api.Assertions.*;
+
+import org.junit.jupiter.api.Test;
 
 class TownNamingModelTest {
     @Test

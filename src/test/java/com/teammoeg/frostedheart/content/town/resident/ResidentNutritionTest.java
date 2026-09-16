@@ -1,25 +1,23 @@
 /* Copyright (c) 2026 TeamMoeg */
 package com.teammoeg.frostedheart.content.town.resident;
 
-import com.electronwill.nightconfig.core.CommentedConfig;
-import com.google.gson.JsonParser;
-import com.mojang.serialization.JsonOps;
-import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
-import net.minecraft.SharedConstants;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.server.Bootstrap;
+import static org.junit.jupiter.api.Assertions.*;
+
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import com.electronwill.nightconfig.core.CommentedConfig;
+import com.google.gson.JsonParser;
+import com.mojang.serialization.JsonOps;
+import com.teammoeg.chorda.util.CUtils;
+import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
+
+import net.minecraft.nbt.CompoundTag;
 
 class ResidentNutritionTest {
     @BeforeAll
     static void bootstrapMinecraftRegistries() {
-        SharedConstants.tryDetectVersion();
-        Bootstrap.bootStrap();
+        CUtils.startTestEnvironment();
         CommentedConfig serverConfig = CommentedConfig.inMemory();
         FHConfig.SERVER_CONFIG.correct(serverConfig);
         FHConfig.SERVER_CONFIG.setConfig(serverConfig);

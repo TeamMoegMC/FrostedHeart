@@ -10,11 +10,11 @@
 
 package com.teammoeg.frostedheart.content.climate.player.thermalitem;
 
-import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.Locale;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import org.junit.jupiter.api.Test;
 
 class WearableThermalCurveFixtureTest {
     private static final int[] CHECKPOINT_SECONDS = {0, 60, 300, 900, 1_800};

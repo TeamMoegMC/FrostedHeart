@@ -1,35 +1,51 @@
 /* Copyright (c) 2026 TeamMoeg */
 package com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft;
 
+import static com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.ThermalLoadedWorldGameTests.*;
+
+import java.lang.reflect.Field;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
+import java.util.UUID;
+
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.climate.WorldTemperature;
 import com.teammoeg.frostedheart.content.climate.data.BiomeTempData;
-import com.teammoeg.frostedheart.content.climate.network.*;
-import com.teammoeg.frostedheart.content.climate.thermal.field.*;
+import com.teammoeg.frostedheart.content.climate.network.FHRequestInfraredViewDataSyncPacket;
+import com.teammoeg.frostedheart.content.climate.network.FHResponseInfraredViewDataSyncPacket;
+import com.teammoeg.frostedheart.content.climate.network.InfraredBrickCodec;
+import com.teammoeg.frostedheart.content.climate.thermal.field.ThermalAnalyticField;
 import com.teammoeg.frostedheart.content.climate.thermal.field.ThermalAnalyticField.CombineMode;
 import com.teammoeg.frostedheart.content.climate.thermal.field.ThermalAnalyticField.Shape;
-import com.teammoeg.frostedheart.content.climate.thermal.mesh.*;
-import com.teammoeg.frostedheart.content.climate.thermal.persistence.minecraft.*;
+import com.teammoeg.frostedheart.content.climate.thermal.field.ThermalFieldKey;
+import com.teammoeg.frostedheart.content.climate.thermal.persistence.minecraft.DormantChunkThermalState;
+import com.teammoeg.frostedheart.content.climate.thermal.persistence.minecraft.MaterialSectionState;
+import com.teammoeg.frostedheart.content.climate.thermal.persistence.minecraft.MinecraftThermalChunkAttachment;
 import com.teammoeg.frostedheart.content.climate.thermal.query.QueryPublication;
 import com.teammoeg.frostedheart.content.climate.thermal.radiation.minecraft.BlockRadiationIndex;
-import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.input.MinecraftPageManager;
 import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.MinecraftThermalInput.InfraredSnapshot;
+import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.input.MinecraftPageManager;
 import com.teammoeg.frostedheart.util.mixin.ICampfireExtra;
+
 import io.netty.buffer.ByteBufUtil;
 import io.netty.buffer.Unpooled;
-import net.minecraft.core.*;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.core.SectionPos;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.gametest.framework.*;
+import net.minecraft.gametest.framework.GameTest;
+import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.server.level.*;
-import net.minecraft.world.level.block.*;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.CampfireBlock;
 import net.minecraftforge.common.util.FakePlayerFactory;
-import net.minecraftforge.gametest.*;
-import java.lang.reflect.Field;
-import java.util.*;
-import static com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.ThermalLoadedWorldGameTests.read;
-import static com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.ThermalLoadedWorldGameTests.start;
+import net.minecraftforge.gametest.GameTestHolder;
+import net.minecraftforge.gametest.PrefixGameTestTemplate;
 
 @GameTestHolder(FHMain.MODID)
 @PrefixGameTestTemplate(false)
