@@ -27,7 +27,6 @@ import com.teammoeg.frostedheart.content.climate.WorldTemperature;
 import com.teammoeg.frostedheart.content.climate.block.generator.GeneratorData;
 import com.teammoeg.frostedheart.content.climate.gamedata.climate.WeatherForecast;
 import com.teammoeg.frostedheart.content.climate.gamedata.climate.WorldClimate;
-import com.teammoeg.frostedheart.content.town.block.OccupiedVolume;
 import com.teammoeg.frostedheart.content.town.buildings.mine.MineBaseBuilding;
 import com.teammoeg.frostedheart.content.town.buildings.mine.MineBuilding;
 import com.teammoeg.frostedheart.content.town.event.*;
@@ -77,7 +76,6 @@ import com.teammoeg.frostedheart.content.town.event.ITownResourceChangeEventList
 import com.teammoeg.frostedheart.content.town.event.TownBuildingChangeEvent;
 import com.teammoeg.frostedheart.content.town.event.TownResidentChangeEvent;
 import com.teammoeg.frostedheart.content.town.event.TownResourceChangeEvent;
-import com.teammoeg.frostedheart.content.town.labour.MachineLevelManager;
 import com.teammoeg.frostedheart.content.town.resident.Resident;
 import com.teammoeg.frostedheart.content.town.resident.ResidentActivity;
 import com.teammoeg.frostedheart.content.town.resident.ResidentAttributeChange;
@@ -168,8 +166,6 @@ public class TeamTownData implements SpecialData{
     		.fieldOf("p2pFilterSummaryState").forGetter(TeamTownData::getP2PFilterSummaryState)))
     	.add(CodecUtil.wrap(CodecUtil.defaultSupply(CodecUtil.catchingCodec(Codec.LONG), () -> -1L)
     	    .fieldOf("lastRefugeeSpawnDay").forGetter(o -> o.lastRefugeeSpawnDay)))
-    	.add(CodecUtil.wrap(CodecUtil.defaultSupply(CodecUtil.catchingCodec(MachineLevelManager.CODEC), () -> new MachineLevelManager())
-    	    .fieldOf("machineData").forGetter(o -> o.machineLevels)))
     	.apply(TeamTownData::new));
 
     
@@ -303,7 +299,6 @@ public class TeamTownData implements SpecialData{
      */
     private ITownResidentListener residentListener;
     
-    private MachineLevelManager machineLevels;
 
     /**
      * 设置居民生命周期监听器（服务端，模拟 adopt 时调用）。
@@ -384,7 +379,7 @@ public class TeamTownData implements SpecialData{
      * @param lastRefugeeSpawnDay 最近一次难民自然刷新所用的稳定世界日
      */
     public TeamTownData(String name, TeamTownResourceHolder resources, Map<BlockPos, ITownBuilding> buildings, Map<UUID, Resident> residents, Map<TerrainResourceType, TerrainResourceData> terrainResource, List<TownHistoryEntry> history, long townDay, TownStaffingPlan staffingPlan, TownHousingPlan housingPlan, TownPolicyState policyState, TownTransportState transportState, P2PBindingState p2pBindingState, P2PFilterSummaryState p2pFilterSummaryState, long lastRefugeeSpawnDay
-    	,MachineLevelManager machines) {
+    	) {
         super();
         this.history = new ArrayList<>(history);
         this.townDay = townDay >= 0L ? townDay : history.size();
@@ -408,7 +403,6 @@ public class TeamTownData implements SpecialData{
         this.p2pFilterSummaryState = p2pFilterSummaryState == null
                 ? P2PFilterSummaryState.EMPTY : p2pFilterSummaryState;
         this.lastRefugeeSpawnDay = lastRefugeeSpawnDay;
-        this.machineLevels=machines;
     }
 
     /** Source-compatible constructor for callers predating P2P filter summaries. */
@@ -416,7 +410,7 @@ public class TeamTownData implements SpecialData{
         this(name, resources, buildings, residents, terrainResource,
                 history, townDay, staffingPlan, housingPlan, policyState,
                 transportState, p2pBindingState, P2PFilterSummaryState.EMPTY,
-                lastRefugeeSpawnDay,new MachineLevelManager());
+                lastRefugeeSpawnDay);
     }
 
     /** Source-compatible constructor for callers predating P2P binding state. */
@@ -424,7 +418,7 @@ public class TeamTownData implements SpecialData{
         this(name, resources, buildings, residents, terrainResource,
                 history, townDay, staffingPlan, housingPlan, policyState,
                 transportState, P2PBindingState.EMPTY, P2PFilterSummaryState.EMPTY,
-                lastRefugeeSpawnDay,new MachineLevelManager());
+                lastRefugeeSpawnDay);
     }
 
     /** Source-compatible constructor for callers predating town transport state. */
@@ -2082,10 +2076,6 @@ public class TeamTownData implements SpecialData{
     public void markFullSynced() {
         this.dataSyncCache.markFullSynced();
     }
-
-    public MachineLevelManager getMachineLevels() {
-		return machineLevels;
-	}
 
 	/**
      * 用于在服务端向客户端同步发生变化的数据

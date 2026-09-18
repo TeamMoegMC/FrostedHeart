@@ -22,20 +22,25 @@ package com.teammoeg.frostedheart.content.robotics.logistics.core;
 import com.teammoeg.chorda.multiblock.components.OwnerState;
 import com.teammoeg.chorda.util.struct.LazyTickWorker;
 import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
+import com.teammoeg.frostedheart.content.robotics.Machine;
+import com.teammoeg.frostedheart.content.robotics.MachineType;
+import com.teammoeg.frostedheart.content.robotics.MachineTypes;
 import com.teammoeg.frostedheart.content.robotics.logistics.LogisticNetwork;
 
 import blusunrize.immersiveengineering.api.multiblocks.blocks.util.StoredCapability;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.GlobalPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
 
-public class LogisticState extends OwnerState {
+public class LogisticState extends OwnerState implements Machine{
 	LogisticNetwork ln;
 	StoredCapability<LogisticNetwork> cap;
 	Level level;
 	BlockPos worldPosition;
+	GlobalPos pos;
 	CompoundTag pendingNetworkData;
 	LazyTickWorker ticker=new LazyTickWorker(20,()->{
 		
@@ -65,6 +70,7 @@ public class LogisticState extends OwnerState {
 			cap=new StoredCapability<>(ln);
 			ticker.enqueue();
 		}
+		pos=GlobalPos.of(level.dimension(),worldPosition);
 	}
 
 	@Override
@@ -103,6 +109,24 @@ public class LogisticState extends OwnerState {
 				if(level.hasChunk(x,z))
 					FHCapabilities.ROBOTIC_LOGISTIC_CHUNK.getCapability(level.getChunk(x,z))
 						.ifPresent(chunk->chunk.release(worldPosition));
+	}
+
+	@Override
+	public GlobalPos getMachineLocation() {
+		return pos;
+	}
+
+	@Override
+	public void applyLevel(int level) {}
+
+	@Override
+	public MachineType getType() {
+		return MachineTypes.LOGISTIC;
+	}
+
+	@Override
+	public boolean isLoaded() {
+		return true;
 	}
 
 }

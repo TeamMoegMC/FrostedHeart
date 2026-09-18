@@ -1,8 +1,10 @@
-package com.teammoeg.frostedheart.content.town.labour;
+package com.teammoeg.frostedheart.content.robotics;
 import java.util.*;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import com.teammoeg.chorda.dataholders.SpecialData;
+import com.teammoeg.chorda.dataholders.SpecialDataHolder;
 
 import net.minecraft.core.GlobalPos;
 import net.minecraft.util.Mth;
@@ -18,37 +20,64 @@ import net.minecraft.util.Mth;
  *   deficientSet 维护所有 actualLevel < desiredLevel 的机器，
  *   补足流程只遍历该集合，避免全量扫描。
  */
-public class MachineLevelManager {
+public class MachineLevelManager implements SpecialData{
 
-
+	
 	public static final Codec<MachineLevelManager> CODEC = RecordCodecBuilder.create(t -> t.group(
 		Codec.list(MachineData.CODEC).fieldOf("machines").forGetter(o->new ArrayList<>(o.machines.values())),
-		Codec.INT.fieldOf("total").forGetter(o->o.totalPool),
-		Codec.INT.fieldOf("allocated").forGetter(o->o.allocatedSum)
+		Codec.list(ProviderData.CODEC).fieldOf("generators").forGetter(o->new ArrayList<>(o.providers.values()))
 		).apply(t, MachineLevelManager::new));
 
     /** 总数值池上限 */
     private int totalPool;
 
     /** 所有机器实际等级消耗之和（缓存） */
-    private int allocatedSum;
+    private transient int allocatedSum;
 
     /** 所有机器数据（包含未加载机器） */
     private final Map<GlobalPos, MachineData> machines = new HashMap<>();
 
     /** 缺少数值的机器 ID 集合（actual < desired） */
     private final Set<GlobalPos> deficientSet = new HashSet<>();
-	public MachineLevelManager() {
+    
+    /** 点数提供者表（有序，便于 UI 展示与调试） */
+    private final Map<GlobalPos, ProviderData> providers = new HashMap<>();
+
+    /** 提供者贡献的总点数（缓存） */
+    private int providerSum = 0;
+    
+	public MachineLevelManager(SpecialDataHolder teamData) {
 		super();
 	}
-    public MachineLevelManager(List<MachineData> machines,int totalPool, int allocatedSum) {
-		super();
-		for(MachineData machine:machines) {
-			this.machines.put(machine.getPos(), machine);
-		}
-		this.totalPool = totalPool;
-		this.allocatedSum = allocatedSum;
-		rebuildDeficientSet();
+	
+	public MachineLevelManager(List<MachineData> initialMachines,List<ProviderData> generators) {
+
+	    this.totalPool = 0;
+	    this.allocatedSum = 0;
+
+	    if (initialMachines == null || initialMachines.isEmpty()) {
+	        return;
+	    }
+
+	    int sum = 0;
+	    for (MachineData raw : initialMachines) {
+
+	        GlobalPos id = raw.getPos();
+	        if (id == null) {
+	            throw new IllegalArgumentException("machineId must not be null/empty");
+	        }
+	        if (machines.containsKey(id)) {
+	            throw new IllegalArgumentException("duplicate machineId: " + id);
+	        }
+	        machines.put(id, raw);
+
+	        sum += raw.getType().getCost(raw.getActualLevel());
+	        
+	    }
+	    rebuildDeficientSet();
+	    this.totalPool=sum;
+	    this.allocatedSum = sum;
+	    this.replaceProviders(generators);
 	}
 
     // ============================================================
@@ -74,9 +103,10 @@ public class MachineLevelManager {
     }
 
     /** 注册机器（幂等）。加载范围内的机器实例由 onMachineLoaded 绑定。 */
-    public MachineData registerMachine(GlobalPos machineId,Machine machine) {
+    public MachineData registerMachine(Machine machine) {
+    	GlobalPos machineId=machine.getMachineLocation();
     	MachineData machineData=getMachine(machineId);
-    	if(machine==null) {
+    	if(machineData==null) {
     		machines.put(machineId,machineData= new MachineData(machine,machineId));
     	}else if(!Objects.equals(machineData.getType(), machine.getType())) {
     		releaseMachine(machineId);
@@ -106,7 +136,7 @@ public class MachineLevelManager {
         deficientSet.remove(machineId);
 
         // 2. 归还该机器占用的点数
-        int releasedCost = data.getType().getCost().cost(data.getActualLevel());
+        int releasedCost = data.getType().getCost(data.getActualLevel());
         allocatedSum -= releasedCost;
 
         // 3. 解绑实例（若已加载），并把等级清零，避免残留状态被误读
@@ -142,7 +172,7 @@ public class MachineLevelManager {
         return count;
     }
     public void onMachineLoaded(Machine machine) {
-        MachineData data = registerMachine(machine.getMachineLocation(),machine);
+        MachineData data = registerMachine(machine);
         data.setInstance(machine);
         machine.applyLevel(data.getActualLevel());
 
@@ -179,13 +209,13 @@ public class MachineLevelManager {
         int newAllocated = 0;
 
         for (MachineData data : machines.values()) {
-        	LevelCostTable costTable=data.getInstance().getType().getCost();
-            int currentCost = costTable.cost(data.getActualLevel());
+        	MachineType costTable=data.getType();
+            int currentCost = costTable.getCost(data.getActualLevel());
             // target = floor(currentCost * newTotal / oldAllocated)
             long targetValue = currentCost * (long) newTotal / oldAllocated;
             int newLevel = costTable.maxLevelForValue((int) targetValue);
             data.setActualLevel(newLevel);
-            newAllocated += costTable.cost(newLevel);
+            newAllocated += costTable.getCost(newLevel);
         }
         allocatedSum = newAllocated;
     }
@@ -194,8 +224,8 @@ public class MachineLevelManager {
     private void increasePool(int newTotal) {
         long totalDesiredCost = 0L;
         for (MachineData d : machines.values()) {
-        	LevelCostTable costTable=d.getInstance().getType().getCost();
-            totalDesiredCost += costTable.cost(d.getDesiredLevel());
+        	MachineType costTable=d.getType();
+            totalDesiredCost += costTable.getCost(d.getDesiredLevel());
         }
 
         if (totalDesiredCost == 0) {
@@ -209,14 +239,14 @@ public class MachineLevelManager {
         int newAllocated = 0;
         for (MachineData d : machines.values()) {
 
-        	LevelCostTable costTable=d.getInstance().getType().getCost();
-            int desiredCost = costTable.cost(d.getDesiredLevel());
+        	MachineType costTable=d.getType();
+            int desiredCost = costTable.getCost(d.getDesiredLevel());
             // target = floor(newTotal * desiredCost / totalDesiredCost)
             long targetValue = (long) newTotal * desiredCost / totalDesiredCost;
             if (targetValue > desiredCost) targetValue = desiredCost; // 不超过期望
             int newLevel = costTable.maxLevelForValue((int) targetValue);
             d.setActualLevel(newLevel);
-            newAllocated += costTable.cost(newLevel);
+            newAllocated += costTable.getCost(newLevel);
         }
         allocatedSum = newAllocated;
     }
@@ -236,7 +266,7 @@ public class MachineLevelManager {
             throw new IllegalArgumentException("Unknown machine: " + machineId);
         }
 
-    	LevelCostTable costTable=data.getInstance().getType().getCost();
+    	MachineType costTable=data.getType();
         newDesired = Mth.clamp(newDesired, 0, costTable.maxLevel());
         int oldDesired = data.getDesiredLevel();
         if (newDesired == oldDesired) return true;
@@ -254,10 +284,10 @@ public class MachineLevelManager {
         int oldActual = data.getActualLevel();
         data.setDesiredLevel(newDesired);
 
-    	LevelCostTable costTable=data.getInstance().getType().getCost();
+    	MachineType costTable=data.getType();
         if (newDesired < oldActual) {
-            int oldCost = costTable.cost(oldActual);
-            int newCost = costTable.cost(newDesired);
+            int oldCost = costTable.getCost(oldActual);
+            int newCost = costTable.getCost(newDesired);
             int freed = oldCost - newCost;
 
             data.setActualLevel(newDesired);
@@ -273,9 +303,9 @@ public class MachineLevelManager {
     /** 提升期望：数值不足则拒绝；足够则允许，并把该机器直接拉到新期望。 */
     private boolean raiseDesired(MachineData data, int newDesired) {
 
-    	LevelCostTable costTable=data.getInstance().getType().getCost();
-        int currentCost = costTable.cost(data.getActualLevel());
-        int newDesiredCost = costTable.cost(newDesired);
+    	MachineType costTable=data.getType();
+        int currentCost = costTable.getCost(data.getActualLevel());
+        int newDesiredCost = costTable.getCost(newDesired);
         int requiredExtra = Math.max(0, newDesiredCost - currentCost);
 
         if (totalPool - allocatedSum < requiredExtra) {
@@ -327,9 +357,9 @@ public class MachineLevelManager {
         int current = data.getActualLevel();
         int target  = data.getDesiredLevel();
 
-    	LevelCostTable costTable=data.getInstance().getType().getCost();
+    	MachineType costTable=data.getType();
         while (current < target) {
-            int stepCost = costTable.cost(current + 1) - costTable.cost(current);
+            int stepCost = costTable.getCost(current + 1) - costTable.getCost(current);
             if (budget < stepCost) break;
             budget -= stepCost;
             current++;
@@ -358,4 +388,95 @@ public class MachineLevelManager {
         }
     }
 
+    /**
+     * 修改提供者的数值。新值可以与旧值相同（幂等，不触发重算）。
+     *
+     * @return true 表示值发生变化并已应用；false 表示新值与旧值相同
+     */
+    public boolean updateProvider(GlobalPos pos, int newValue) {
+        if (newValue < 0) {
+            throw new IllegalArgumentException("value must be >= 0, got " + newValue);
+        }
+        ProviderData p = providers.get(pos);
+        int delta;
+        if (p == null) {
+        	delta=newValue;
+        	p = new ProviderData(pos, newValue);
+            providers.put(pos, p);
+        }else {
+        	delta = newValue - p.getValue();
+	        if (delta == 0) return false;
+	        p.setValueInternal(newValue);
+        }
+        providerSum += delta;
+        applyProviderSumChange();
+        return true;
+    }
+
+    /**
+     * 删除一个提供者。
+     *
+     * @return true 表示存在并已删除；false 表示不存在
+     */
+    public boolean removeProvider(GlobalPos pos) {
+        ProviderData p = providers.remove(pos);
+        if (p == null) return false;
+
+        providerSum -= p.getValue();
+        applyProviderSumChange();
+        return true;
+    }
+
+    public int getProviderSum() {
+        return providerSum;
+    }
+
+    public ProviderData getProvider(GlobalPos pos) {
+        return providers.get(pos);
+    }
+
+    public Collection<ProviderData> getProviders() {
+        return Collections.unmodifiableCollection(providers.values());
+    }
+
+    /**
+     * 批量替换整个提供者集合（用于读档 / 网络同步）。
+     * 会按差量重算，并触发一次 reduce / increase。
+     */
+    public void replaceProviders(Collection<ProviderData> newProviders) {
+        int newSum = 0;
+        if (newProviders != null) {
+            for (ProviderData p : newProviders) {
+                if (p == null) continue;
+                newSum += p.getValue();
+            }
+        }
+        providers.clear();
+        if (newProviders != null) {
+            for (ProviderData p : newProviders) {
+                if (p == null) continue;
+                providers.put(p.getPos(), p);
+            }
+        }
+        providerSum = newSum;
+        applyProviderSumChange();
+    }
+
+    /**
+     * 内部：提供者总和变化后，重新驱动总池。
+     * 若新总和 == 旧总和，不做任何事。
+     */
+    private void applyProviderSumChange() {
+        if (providerSum == totalPool) return;
+
+        int oldTotal = totalPool;
+        totalPool = providerSum;
+
+        if (providerSum < oldTotal) {
+            reducePool(providerSum);
+        } else {
+            increasePool(providerSum);
+        }
+        rebuildDeficientSet();
+    }
 }

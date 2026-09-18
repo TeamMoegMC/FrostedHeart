@@ -19,13 +19,11 @@
 
 package com.teammoeg.frostedheart;
 
-import com.teammoeg.caupona.CPItems;
 import com.teammoeg.caupona.CPMain;
 import com.teammoeg.chorda.util.CRegistryHelper;
 import com.teammoeg.frostedheart.bootstrap.common.FHSpecialDataTypes;
 import com.teammoeg.chorda.ChordaMetaEvents;
 import com.teammoeg.chorda.CompatModule;
-import com.teammoeg.chorda.dataholders.team.CTeamDataManager;
 import com.teammoeg.frostedheart.bootstrap.client.FHTabs;
 import com.teammoeg.frostedheart.bootstrap.common.FHAttributes;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
@@ -48,6 +46,7 @@ import com.teammoeg.frostedheart.compat.caupona.NutritionEvents;
 import com.teammoeg.frostedheart.compat.create.CreateCompat;
 import com.teammoeg.frostedheart.compat.curios.CuriosCompat;
 import com.teammoeg.frostedheart.compat.ftbq.FHRewardTypes;
+import com.teammoeg.frostedheart.content.robotics.MachineTypes;
 import com.teammoeg.frostedheart.content.town.provider.ITownProviderSerializable;
 import com.teammoeg.frostedheart.infrastructure.gen.FHRegistrate;
 import com.teammoeg.frostedheart.restarter.TssapProtocolHandler;
@@ -165,6 +164,7 @@ public class FHMain {
 		FHBlockEntityTypes.init();
 		FHBiomes.init();
 		FHPredicates.init();
+		MachineTypes.init();
 		ChordaMetaEvents.IE_REGISTRY.addListener(() -> FHMultiblocks::registerMultiblocks);
 		// Compat init
 		LOGGER.info(COMMON_INIT, "Initializing Mod Compatibilities");

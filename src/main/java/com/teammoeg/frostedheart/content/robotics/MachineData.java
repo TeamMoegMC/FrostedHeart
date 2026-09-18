@@ -1,4 +1,4 @@
-package com.teammoeg.frostedheart.content.town.labour;
+package com.teammoeg.frostedheart.content.robotics;
 
 import java.lang.ref.WeakReference;
 

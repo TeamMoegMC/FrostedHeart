@@ -1,4 +1,4 @@
-package com.teammoeg.frostedheart.content.town.labour;
+package com.teammoeg.frostedheart.content.robotics;
 import java.util.Arrays;
 
 /**
@@ -7,8 +7,7 @@ import java.util.Arrays;
 public final class LevelCostTable {
 
     private final int[] costs;
-
-    public LevelCostTable(int[] costs) {
+    public LevelCostTable(int... costs) {
         if (costs == null || costs.length == 0) {
             throw new IllegalArgumentException("costs must not be empty");
         }

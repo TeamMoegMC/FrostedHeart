@@ -54,7 +54,6 @@ public class LogisticNetwork {
 	private final Runnable markDirty;
 	private int hubRevalidationTicks;
 	private boolean closed;
-	static final int MAX_WORKING_TASKS=20;
 	private static final int HUB_REVALIDATION_INTERVAL=200;
 	private static final TypedCodecRegistry<LogisticTask> idr=new TypedCodecRegistry<>();
 	static {
@@ -98,7 +97,7 @@ public class LogisticNetwork {
 				keys.add(task.taskKey);
 		}
 	}
-	public void tick() {
+	public void tick(int maxTasks) {
 		if(closed)
 			return;
 		if(++hubRevalidationTicks>=HUB_REVALIDATION_INTERVAL) {
@@ -107,7 +106,10 @@ public class LogisticNetwork {
 		}
 		List<LogisticTask> nextCycle=new ArrayList<>(working);
 		working.clear();
+		int crnTask=maxTasks;
 		for(LogisticTask lt:nextCycle) {
+			if(crnTask<=0)
+				break;
 			if(lt.ticks>0) {
 				lt.ticks--;
 				working.add(lt);
@@ -129,8 +131,9 @@ public class LogisticNetwork {
 					markDirty.run();
 				}
 			}
+			crnTask--;
 		}
-		while(working.size()<MAX_WORKING_TASKS&&!tasks.isEmpty()) {
+		while(working.size()<maxTasks&&!tasks.isEmpty()) {
 			LogisticTask wrapper=tasks.pollFirst();
 			try {
 				LogisticTask lt=wrapper.prepare(this);

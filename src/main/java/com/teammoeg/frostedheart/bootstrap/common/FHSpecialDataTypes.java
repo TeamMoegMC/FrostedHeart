@@ -21,6 +21,7 @@ package com.teammoeg.frostedheart.bootstrap.common;
 
 import com.teammoeg.chorda.dataholders.SpecialDataType;
 import com.teammoeg.frostedheart.content.climate.block.generator.GeneratorData;
+import com.teammoeg.frostedheart.content.robotics.MachineLevelManager;
 import com.teammoeg.frostedheart.content.scenario.client.ClientStoredFlags;
 import com.teammoeg.frostedheart.content.town.TeamTownData;
 import com.teammoeg.frostedheart.content.world.dimensionalseed.DimensionalSeed;
@@ -30,6 +31,7 @@ public class FHSpecialDataTypes {
 
 	public static final SpecialDataType<GeneratorData> GENERATOR_DATA=new SpecialDataType<>("generator",GeneratorData::new,GeneratorData.CODEC);
 	public static final SpecialDataType<TeamTownData> TOWN_DATA=new SpecialDataType<>("town",TeamTownData::new,TeamTownData.CODEC);
+	public static final SpecialDataType<MachineLevelManager> LABOUR_DATA=new SpecialDataType<>("labour",MachineLevelManager::new,MachineLevelManager.CODEC);
 	public static final SpecialDataType<ClientStoredFlags> SCENARIO_COOKIES=new SpecialDataType<>("scenario",ClientStoredFlags::new,ClientStoredFlags.CODEC);
 	public static final SpecialDataType<ClientStoredFlags> COOKIES=new SpecialDataType<>("scenario",ClientStoredFlags::new,ClientStoredFlags.CODEC);
 	public static final SpecialDataType<DimensionalSeed> SEED=new SpecialDataType<>("seed",DimensionalSeed::new,DimensionalSeed.CODEC);

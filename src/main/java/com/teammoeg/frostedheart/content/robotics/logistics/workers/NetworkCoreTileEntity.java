@@ -97,7 +97,7 @@ public class NetworkCoreTileEntity extends CBlockEntity implements CTickableBloc
 			}
 	
 			ticker.tick();
-			ln.tick();
+			ln.tick(10);
 		}
 		
 	}

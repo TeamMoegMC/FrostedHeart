@@ -23,6 +23,7 @@ import java.util.function.Function;
 
 import com.teammoeg.chorda.multiblock.DisassembleListener;
 import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
+import com.teammoeg.frostedheart.bootstrap.common.FHSpecialDataTypes;
 import com.teammoeg.frostedheart.content.climate.block.generator.OwnedLogic;
 
 import blusunrize.immersiveengineering.api.multiblocks.blocks.component.IClientTickableComponent;
@@ -87,7 +88,9 @@ public class LogisticCoreLogic implements IServerTickableComponent<LogisticState
 		LogisticState state=context.getState();
 		state.initialize(context.getLevel().getRawLevel(),context.getLevel().getAbsoluteOrigin(),context::markMasterDirty);
 		state.ticker.tick();
-		state.ln.tick();
+		state.getTeamData().ifPresent(t->{
+			state.ln.tick(t.getData(FHSpecialDataTypes.LABOUR_DATA).registerMachine(state).getActualLevel());
+		});
 		
 	}
 
