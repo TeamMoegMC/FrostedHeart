@@ -89,7 +89,7 @@ public class LogisticCoreLogic implements IServerTickableComponent<LogisticState
 		state.initialize(context.getLevel().getRawLevel(),context.getLevel().getAbsoluteOrigin(),context::markMasterDirty);
 		state.ticker.tick();
 		state.getTeamData().ifPresent(t->{
-			state.ln.tick(t.getData(FHSpecialDataTypes.LABOUR_DATA).registerMachine(state).getActualLevel());
+			state.ln.tick(t.getData(FHSpecialDataTypes.LABOUR_DATA).registerMachine(state.machine).getActualLevel());
 		});
 		
 	}

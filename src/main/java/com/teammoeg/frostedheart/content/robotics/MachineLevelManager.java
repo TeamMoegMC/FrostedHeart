@@ -5,9 +5,14 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.chorda.dataholders.SpecialData;
 import com.teammoeg.chorda.dataholders.SpecialDataHolder;
+import com.teammoeg.chorda.util.struct.WeakReferenceSlot;
 
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.GlobalPos;
 import net.minecraft.util.Mth;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.dimension.BuiltinDimensionTypes;
+import net.minecraft.world.level.dimension.DimensionType;
 
 /**
  * 机器等级管理器。
@@ -46,8 +51,10 @@ public class MachineLevelManager implements SpecialData{
     /** 提供者贡献的总点数（缓存） */
     private int providerSum = 0;
     
+	@SuppressWarnings("rawtypes")
 	public MachineLevelManager(SpecialDataHolder teamData) {
 		super();
+		replaceProviders(null);
 	}
 	
 	public MachineLevelManager(List<MachineData> initialMachines,List<ProviderData> generators) {
@@ -103,12 +110,12 @@ public class MachineLevelManager implements SpecialData{
     }
 
     /** 注册机器（幂等）。加载范围内的机器实例由 onMachineLoaded 绑定。 */
-    public MachineData registerMachine(Machine machine) {
-    	GlobalPos machineId=machine.getMachineLocation();
+    public MachineData registerMachine(WeakReferenceSlot<Machine> machine) {
+    	GlobalPos machineId=machine.getOrThrow().getMachineLocation();
     	MachineData machineData=getMachine(machineId);
     	if(machineData==null) {
     		machines.put(machineId,machineData= new MachineData(machine,machineId));
-    	}else if(!Objects.equals(machineData.getType(), machine.getType())) {
+    	}else if(!Objects.equals(machineData.getType(), machine.orElse(null).getType())) {
     		releaseMachine(machineId);
 
     		machines.put(machineId,machineData= new MachineData(machine,machineId));
@@ -170,15 +177,6 @@ public class MachineLevelManager implements SpecialData{
             if (releaseMachine(id)) count++;
         }
         return count;
-    }
-    public void onMachineLoaded(Machine machine) {
-        MachineData data = registerMachine(machine);
-        data.setInstance(machine);
-        machine.applyLevel(data.getActualLevel());
-
-        if (data.isDeficient()) {
-            deficientSet.add(data.getPos());
-        }
     }
 
     // ============================================================
@@ -458,7 +456,10 @@ public class MachineLevelManager implements SpecialData{
                 providers.put(p.getPos(), p);
             }
         }
-        providerSum = newSum;
+        providers.put(GlobalPos.of(Level.OVERWORLD, BlockPos.ZERO), new ProviderData(GlobalPos.of(Level.OVERWORLD, BlockPos.ZERO),30));
+        
+        providerSum = newSum + 30;
+        
         applyProviderSumChange();
     }
 

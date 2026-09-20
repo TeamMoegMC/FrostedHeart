@@ -68,6 +68,7 @@ public class FHMultiblocks {
 		public static final MultiblockRegistration<LogisticState> LOGISTIC_CORE = metal(new LogisticCoreLogic(), "logistic_core",t->t)
 			.structure(() -> FHMultiblocks.LOGISTIC_CORE)
 			.notMirrored()
+			.component(FHMenuTypes.LOGISTIC_CORE.createComponent())
 			.build();
 		private static <S extends IMultiblockState> IEMultiblockBuilder<S> stone(IMultiblockLogic<S> logic, String name, boolean solid,Function<Properties,Properties> modifier) {
 			Properties properties = Properties.of()

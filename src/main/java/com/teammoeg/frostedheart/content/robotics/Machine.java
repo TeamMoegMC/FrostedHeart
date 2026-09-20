@@ -10,4 +10,5 @@ public interface Machine {
     void applyLevel(int level);
     MachineType getType();
     boolean isLoaded();
+
 }

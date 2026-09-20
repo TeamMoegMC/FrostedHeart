@@ -4,8 +4,10 @@ import java.lang.ref.WeakReference;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import com.teammoeg.chorda.util.struct.WeakReferenceSlot;
 
 import net.minecraft.core.GlobalPos;
+import net.minecraft.util.Mth;
 
 /**
  * 每台机器的持久化数据。即使机器不在加载范围内，这份数据也会保留在管理器中。
@@ -23,7 +25,7 @@ public class MachineData {
     private int desiredLevel;
     private int actualLevel;
 
-    private transient WeakReference<Machine> instance;
+    private transient WeakReferenceSlot<Machine> instance;
     
     public MachineData(GlobalPos pos, MachineType type, int desiredLevel, int actualLevel) {
 		super();
@@ -38,10 +40,10 @@ public class MachineData {
         this.pos = pos;
     }
     
-    public MachineData(Machine machine,GlobalPos pos) {
-        this.type=machine.getType();
+    public MachineData(WeakReferenceSlot<Machine> machine,GlobalPos pos) {
+        this.type=machine.getOrThrow().getType();
         this.pos = pos;
-        this.instance=new WeakReference<>(machine);
+        this.instance=machine;
     }
     public MachineType getType() {
 		return type;
@@ -49,18 +51,26 @@ public class MachineData {
 
 	public GlobalPos getPos()          { return pos; }
     public int  getDesiredLevel()         { return desiredLevel; }
-    public void setDesiredLevel(int v)    { this.desiredLevel = v; }
+    public void setDesiredLevel(int v)    { this.desiredLevel = Mth.clamp(v, 0, type.maxLevel()); }
     public int  getActualLevel()          { return actualLevel; }
     public void setActualLevel(int v)     { this.actualLevel = v; }
-    public boolean isLoaded()             { return instance!=null&&instance.get()!=null&&instance.get().isLoaded(); }
+    public boolean isLoaded()             { return instance!=null&&instance.isPresent(); }
     public boolean isDeficient()          { return actualLevel<desiredLevel; }
-    public Machine getInstance()          { return instance.get(); }
-    public void setInstance(Machine m)    { this.instance = new WeakReference<>(m); }
+    public Machine getInstance()          { return instance==null?null:instance.orElse(null); }
+    public void setInstance(WeakReferenceSlot<Machine> m)    { this.instance = m; }
 
     @Override
     public String toString() {
         return String.format(
             "MachineData[%s desired=%d actual=%d]",
             pos, desiredLevel, actualLevel);
+    }
+
+    public int getActualCost() {
+    	return getType().getCost(getActualLevel());
+    }
+
+    public int getDesiredCost() {
+    	return getType().getCost(getDesiredLevel());
     }
 }

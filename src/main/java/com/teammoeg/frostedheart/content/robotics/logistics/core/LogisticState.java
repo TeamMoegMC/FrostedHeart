@@ -21,7 +21,9 @@ package com.teammoeg.frostedheart.content.robotics.logistics.core;
 
 import com.teammoeg.chorda.multiblock.components.OwnerState;
 import com.teammoeg.chorda.util.struct.LazyTickWorker;
+import com.teammoeg.chorda.util.struct.WeakReferenceSlot;
 import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
+import com.teammoeg.frostedheart.bootstrap.common.FHSpecialDataTypes;
 import com.teammoeg.frostedheart.content.robotics.Machine;
 import com.teammoeg.frostedheart.content.robotics.MachineType;
 import com.teammoeg.frostedheart.content.robotics.MachineTypes;
@@ -42,6 +44,7 @@ public class LogisticState extends OwnerState implements Machine{
 	BlockPos worldPosition;
 	GlobalPos pos;
 	CompoundTag pendingNetworkData;
+	WeakReferenceSlot<Machine> machine=WeakReferenceSlot.of(this);
 	LazyTickWorker ticker=new LazyTickWorker(20,()->{
 		
 		ChunkPos cp=new ChunkPos(worldPosition);
@@ -104,13 +107,16 @@ public class LogisticState extends OwnerState implements Machine{
 		if(level==null||worldPosition==null)
 			return;
 		ChunkPos cp=new ChunkPos(worldPosition);
+		machine.invalidate();
+		getTeamData().ifPresent(t->{
+			t.getData(FHSpecialDataTypes.LABOUR_DATA).releaseMachine(pos);
+		});
 		for(int x=cp.x-1;x<=cp.x+1;x++)
 			for(int z=cp.z-1;z<=cp.z+1;z++)
 				if(level.hasChunk(x,z))
 					FHCapabilities.ROBOTIC_LOGISTIC_CHUNK.getCapability(level.getChunk(x,z))
 						.ifPresent(chunk->chunk.release(worldPosition));
 	}
-
 	@Override
 	public GlobalPos getMachineLocation() {
 		return pos;
@@ -128,5 +134,6 @@ public class LogisticState extends OwnerState implements Machine{
 	public boolean isLoaded() {
 		return true;
 	}
+
 
 }

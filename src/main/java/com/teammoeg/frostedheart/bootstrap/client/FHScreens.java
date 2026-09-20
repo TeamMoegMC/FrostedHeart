@@ -33,6 +33,7 @@ import com.teammoeg.frostedheart.content.decoration.RelicChestScreen;
 import com.teammoeg.frostedheart.content.health.screen.HealthStatScreen;
 import com.teammoeg.frostedheart.content.incubator.IncubatorT1Screen;
 import com.teammoeg.frostedheart.content.incubator.IncubatorT2Screen;
+import com.teammoeg.frostedheart.content.robotics.logistics.core.LogisticCoreScreen;
 import com.teammoeg.frostedheart.content.robotics.logistics.gui.RequesterChestScreen;
 import com.teammoeg.frostedheart.content.robotics.logistics.gui.StorageChestScreen;
 import com.teammoeg.frostedheart.content.robotics.logistics.gui.SupplierChestScreen;
@@ -86,6 +87,9 @@ public class FHScreens {
         registerCUIScreen(FHMenuTypes.SUPPLY_CHEST.get(),SupplierChestScreen::new);
         registerCUIScreen(FHMenuTypes.STORAGE_CHEST.get(), StorageChestScreen::new);
         registerCUIScreen(FHMenuTypes.REQUEST_CHEST.get(), RequesterChestScreen::new);
+        registerCUIScreen(FHMenuTypes.LOGISTIC_CORE.getType(), LogisticCoreScreen::new);
+        
+        
         MenuScreens.register(FHMenuTypes.SNOW_SACK.get(), SnowSackScreen::new);
     }
 

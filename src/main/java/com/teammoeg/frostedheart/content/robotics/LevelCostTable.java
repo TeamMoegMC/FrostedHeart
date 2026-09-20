@@ -12,7 +12,11 @@ public final class LevelCostTable {
             throw new IllegalArgumentException("costs must not be empty");
         }
         if (costs[0] != 0) {
-            throw new IllegalArgumentException("level 0 must cost 0");
+        	int[] costs2=new int[costs.length+1];
+        	costs2[0]=0;
+            for(int i=0;i<costs.length;i++)
+            	costs2[i+1]=costs[i];
+            costs=costs2;
         }
         for (int i = 1; i < costs.length; i++) {
             if (costs[i] <= costs[i - 1]) {

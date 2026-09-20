@@ -59,6 +59,8 @@ import com.teammoeg.frostedheart.content.incubator.HeatIncubatorTileEntity;
 import com.teammoeg.frostedheart.content.incubator.IncubatorT1Container;
 import com.teammoeg.frostedheart.content.incubator.IncubatorT2Container;
 import com.teammoeg.frostedheart.content.incubator.IncubatorTileEntity;
+import com.teammoeg.frostedheart.content.robotics.logistics.core.LogisticCoreMenu;
+import com.teammoeg.frostedheart.content.robotics.logistics.core.LogisticState;
 import com.teammoeg.frostedheart.content.robotics.logistics.gui.RequesterChestMenu;
 import com.teammoeg.frostedheart.content.robotics.logistics.gui.StorageChestMenu;
 import com.teammoeg.frostedheart.content.robotics.logistics.gui.SupplierChestMenu;
@@ -80,8 +82,6 @@ import net.minecraftforge.network.IContainerFactory;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.RegistryObject;
-import org.apache.commons.lang3.mutable.Mutable;
-import org.apache.commons.lang3.mutable.MutableObject;
 
 public class FHMenuTypes {
 	@FunctionalInterface
@@ -104,6 +104,7 @@ public class FHMenuTypes {
 	public static final RegistryObject<MenuType<RequesterChestMenu>> REQUEST_CHEST = register(RequesterTileEntity.class, ("reqeust_chest"), RequesterChestMenu::new);
 	public static final RegistryObject<MenuType<StorageChestMenu>> STORAGE_CHEST = register(StorageTileEntity.class,("storage_chest"), StorageChestMenu::new);
 	public static final RegistryObject<MenuType<SupplierChestMenu>> SUPPLY_CHEST = register(SupplierTileEntity.class,("supply_chest"), SupplierChestMenu::new);
+	public static final MultiblockMenuType<LogisticState,LogisticCoreMenu> LOGISTIC_CORE = registerMultiblock("logistic_core", LogisticCoreMenu::new, LogisticCoreMenu::new);
 
 	public static final RegistryObject<MenuType<SnowSackMenu>> SNOW_SACK = register("snow_sack", SnowSackMenu::new);
 
