@@ -41,6 +41,12 @@ public final class BrickTopologyCompiler {
     private final PrimitiveTopologyScratch.LongPairDouble farBoundaries =
             new PrimitiveTopologyScratch.LongPairDouble();
     private boolean fragmentResolved;
+    private boolean spatialAir;
+    private final it.unimi.dsi.fastutil.ints.IntArrayList farPatchCells = new it.unimi.dsi.fastutil.ints.IntArrayList();
+    private final it.unimi.dsi.fastutil.longs.LongArrayList farPatchBlocks = new it.unimi.dsi.fastutil.longs.LongArrayList();
+    private final it.unimi.dsi.fastutil.doubles.DoubleArrayList farPatchConductances = new it.unimi.dsi.fastutil.doubles.DoubleArrayList();
+
+    public void captureSpatialAirContacts() { spatialAir = true; }
     private static final long[] NEIGHBORS = new long[64];
 
     static {
@@ -219,6 +225,9 @@ public final class BrickTopologyCompiler {
         for (var pairs : airPairs) pairs.reset();
         materialPairs.reset();
         farBoundaries.reset();
+        farPatchCells.clear();
+        farPatchBlocks.clear();
+        farPatchConductances.clear();
         fragmentResolved = true;
         routedContacts.clear();
         var owner = view.brick(page, brick);
@@ -341,7 +350,14 @@ public final class BrickTopologyCompiler {
                 int v =
                         signatures.ventilation(
                                 cut.get(BlockBrickLayout.pageBlock(brick, blockIndex)));
-                farBoundaries.add(slot, 0, farField.conductanceForPatches(16, true) * v / 100.0);
+                double conductance = farField.conductanceForPatches(16, true) * v / 100.0;
+                farBoundaries.add(slot, 0, conductance);
+                if (spatialAir) {
+                    farPatchCells.add(slot);
+                    farPatchBlocks.add(net.minecraft.core.BlockPos.asLong(x + (blockIndex & 3),
+                            y + (blockIndex >>> 4), z + (blockIndex >>> 2 & 3)));
+                    farPatchConductances.add(conductance);
+                }
             }
         }
         long origin = net.minecraft.core.BlockPos.asLong(x, y, z);
@@ -371,7 +387,8 @@ public final class BrickTopologyCompiler {
                                 / (view.airRoutes().normalizedResistance(position)
                                                 / parameters.effectiveMixingWPerBlockK()
                                         + 1 / surfaceG);
-                routedContacts.add(slot, air, conductance, view.airRoutes().validity(position));
+                routedContacts.add(slot, air, conductance, view.airRoutes().validity(position),
+                        null, view.airRoutes().outletTrace(position));
             }
         if (routedLayout != null)
             routedLayout = routedLayout.withAirContactBlocks(airContactBlocks);
@@ -529,7 +546,10 @@ public final class BrickTopologyCompiler {
             cell[index] = (int) farBoundaries.first(index);
             conductance[index] = farBoundaries.value(index);
         }
-        return new ThermalFragment.FarBoundaries(cell, ownerPageSlot, conductance, coefficient);
+        return new ThermalFragment.FarBoundaries(cell, ownerPageSlot, conductance, coefficient,
+                spatialAir ? farPatchCells.toIntArray() : null,
+                spatialAir ? farPatchBlocks.toLongArray() : null,
+                spatialAir ? farPatchConductances.toDoubleArray() : null);
     }
 
     private static int brickMinX(WorkerPageStore.PageState page, int brick) {

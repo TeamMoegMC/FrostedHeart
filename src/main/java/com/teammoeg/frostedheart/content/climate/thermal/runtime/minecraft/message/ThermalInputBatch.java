@@ -210,6 +210,17 @@ public final class ThermalInputBatch {
                     brick, naturalTemperatureC, decayFactor);
         }
 
+        public double temperatureC(double x, double y, double z) {
+            if (entry.spatialAir() != null) {
+                double saved = entry.spatialAir().sampleC(x, y, z);
+                return Double.isFinite(saved)
+                        ? naturalTemperatureC + (saved - naturalTemperatureC) * decayFactor : Double.NaN;
+            }
+            int brick = (((int) Math.floor(x) & 15) >>> 2)
+                    | (((int) Math.floor(z) & 15) >>> 2) << 2 | (((int) Math.floor(y) & 15) >>> 2) << 4;
+            return hasBrick(brick) ? meanTemperatureC(brick) : Double.NaN;
+        }
+
         public void fillBlockTemperatures(int brick,double[] target) {
             entry.fillBlockTemperatures(brick,naturalTemperatureC,decayFactor,target);
         }

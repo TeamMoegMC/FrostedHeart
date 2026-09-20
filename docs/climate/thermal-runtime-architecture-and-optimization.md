@@ -7,6 +7,11 @@
 
 ## Source Layout
 
+`continuousAir` defaults to `false`. The scalar Air solver described here remains the default;
+the implemented opt-in spatial backend and its current limits are documented in
+[Continuous Air Runtime](continuous-air-runtime.md). Shared capture, source, phase and publication
+lifecycle still applies to both. Checkpoint root version is now 5 for both backends.
+
 | Package | Responsibility |
 |---|---|
 | `thermal.runtime.minecraft` | Forge lifecycle, gameplay facade and the shared infrared capture workspace |
@@ -897,11 +902,13 @@ together fit the 640-byte section numeric budget; otherwise only means remain.
 One-node or equal-residual Bricks need no exact entries. Restore fills 64 block
 temperatures from the mean, overlays stored masks, and aggregates into the new
 layout. `BrickMigrationKernel` restores this payload only into actual Air.
-Checkpoint format 4 stores the Air capture's natural baseline, and exact material
+Checkpoint format 5 stores the Air capture's natural baseline, and exact material
 H, branch, BlockState/law and sampling ticks in `MaterialSectionState`. Material
 records do not use Air quantization, mean compression or the 640-byte Air budget.
-Only v4 is read; older thermal checkpoints are not restored. World blocks are not
-removed by this format change. Air history remains a spatial temperature approximation.
+Only v5 is read; older thermal checkpoints are not restored. World blocks are not
+removed by this format change. The above 1/16 C and 640-byte encoding applies only to scalar Air.
+Continuous Air writes the spatial `AirFieldCheckpoint` described in
+[Continuous Air Runtime](continuous-air-runtime.md#queries-and-persistence), without a scalar preview.
 
 `DormantThermalCooling` is a pure, allocation-free projection into a caller-owned
 sample. For a sensible state, `T=N+(T0-N)*exp(-lambda*dt)` with

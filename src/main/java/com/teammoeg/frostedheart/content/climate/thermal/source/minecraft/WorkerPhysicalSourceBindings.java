@@ -3,6 +3,7 @@ package com.teammoeg.frostedheart.content.climate.thermal.source.minecraft;
 
 import com.teammoeg.frostedheart.content.climate.thermal.profile.ThermalSignatureTable;
 import com.teammoeg.frostedheart.content.climate.thermal.source.AirMixingRegion;
+import com.teammoeg.frostedheart.content.climate.thermal.source.AirLoadTable;
 import com.teammoeg.frostedheart.content.climate.thermal.source.EmissionPort;
 import com.teammoeg.frostedheart.content.climate.thermal.source.SourceBinding;
 import com.teammoeg.frostedheart.content.climate.thermal.source.ThermalSourceBatch;
@@ -32,6 +33,7 @@ public final class WorkerPhysicalSourceBindings implements ThermalSourceLedger.E
     private final WorkerPageStore pages;
     private final ThermalSignatureTable signatures;
     private final MinecraftPhysicalSourceProfile campfireProfile;
+    private final AirLoadTable airLoads;
     private final Long2ObjectOpenHashMap<SourceDescriptor> sources = new Long2ObjectOpenHashMap<>();
     private final Long2ObjectOpenHashMap<LongOpenHashSet> sourcesBySection =
             new Long2ObjectOpenHashMap<>();
@@ -45,9 +47,38 @@ public final class WorkerPhysicalSourceBindings implements ThermalSourceLedger.E
             WorkerPageStore pages,
             ThermalSignatureTable signatures,
             MinecraftPhysicalSourceProfile campfireProfile) {
+        this(pages, signatures, campfireProfile, null);
+    }
+
+    public WorkerPhysicalSourceBindings(WorkerPageStore pages, ThermalSignatureTable signatures,
+            MinecraftPhysicalSourceProfile campfireProfile, AirLoadTable airLoads) {
         this.pages = pages;
         this.signatures = signatures;
         this.campfireProfile = Objects.requireNonNull(campfireProfile, "campfireProfile");
+        this.airLoads = airLoads;
+    }
+
+    public void markAllDirty() {
+        for (long sourceId : sources.keySet()) markDirty(sourceId);
+    }
+
+    public void collectAirPorts(AirPortConsumer consumer) {
+        for (SourceDescriptor source : sources.values()) {
+            if (!source.emitting) continue;
+            for (int index = 0; index < source.profile.portCount(); index++) {
+                Port port = source.profile.port(index);
+                if (port.kind() == PortKind.AIR_FACE && port.powerShare() > 0) {
+                    int slot = pages.resolveAirFaceTarget(source.anchorX + port.offsetX(), source.anchorY + port.offsetY(),
+                            source.anchorZ + port.offsetZ(), port.targetFace(), signatures, airTarget);
+                    if (slot >= 0) consumer.accept(airTarget.blockX(), airTarget.blockY(), airTarget.blockZ(), airTarget.face());
+                }
+            }
+        }
+    }
+
+    @FunctionalInterface
+    public interface AirPortConsumer {
+        void accept(int x, int y, int z, com.teammoeg.frostedheart.content.climate.thermal.mesh.BlockFace face);
     }
 
     public void markCommittedSections(long[] sectionKeys) {
@@ -235,7 +266,8 @@ public final class WorkerPhysicalSourceBindings implements ThermalSourceLedger.E
                                 blockX, blockY, blockZ, port.targetFace(), signatures, airTarget);
                 if (slot >= 0) {
                     source.bindings[index] =
-                            SourceBinding.thermalNode(slot, airTarget.generation());
+                            airLoads == null ? SourceBinding.thermalNode(slot, airTarget.generation())
+                                    : airLoads.bind(airTarget.blockX(), airTarget.blockY(), airTarget.blockZ(), airTarget.face());
                 } else if (slot == WorkerPageStore.PORT_TOPOLOGY_UNAVAILABLE) {
                     source.bindings[index] =
                             SourceBinding.degradedLoss(sinkId(source.sourceId, port));

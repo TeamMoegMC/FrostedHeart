@@ -95,6 +95,24 @@ public final class ThermalSourceLedger implements AutoCloseable {
         return accumulators.hasActivePowerOrPendingEnergy();
     }
 
+    /** Records event-time inputs without writing official thermal state. */
+    public void acceptAndRecord(ThermalSourceBatch batch, long targetTick,
+            EventObserver observer, CutLoadBuffer buffer) {
+        buffer.clear();
+        buffer.reserve(Math.addExact(accumulators.liveCount(), Math.multiplyExact(batch.size(), maxPortsPerSource * 3)));
+        accumulators.recordInto(buffer);
+        try {
+            acceptAndAdvance(batch, targetTick, observer);
+        } finally {
+            accumulators.recordInto(null);
+        }
+    }
+
+    /** Called once with the committed numerical result, never for a discarded trial. */
+    public void confirmRecordedDelivery(double deliveredJ, double unacceptedJ) {
+        accumulators.confirmRecordedDelivery(deliveredJ, unacceptedJ);
+    }
+
     public boolean suppliesPower(long sourceId) {
         int slot = findSource(sourceId);
         return slot != NO_SOURCE && effectivePower(slot) > 0;
@@ -168,6 +186,10 @@ public final class ThermalSourceLedger implements AutoCloseable {
         return accumulators.referencesNode(nodeId, lifecycleGeneration);
     }
 
+    public boolean referencesAirStencil(int loadId, int generation) {
+        return accumulators.referencesNode(SourceBinding.airStencil(loadId, generation).accumulatorTargetId(), generation);
+    }
+
     private void reserveBatch(ThermalSourceBatch batch) {
         int registrations = 0;
         int thermalBindings = 0;
@@ -178,7 +200,7 @@ public final class ThermalSourceLedger implements AutoCloseable {
             }
             if (batch.kind(index) == ThermalSourceBatch.Kind.REGISTER) {
                 for (EmissionPort port : batch.ports(index)) {
-                    if (port.binding().isThermalNode()) {
+                    if (port.binding().isThermalTarget()) {
                         thermalBindings++;
                     }
                 }
@@ -282,9 +304,9 @@ public final class ThermalSourceLedger implements AutoCloseable {
         outputEnergyJ += energyJ;
         if (portBindingKinds[portOffset] == SourceBinding.Kind.DECLARED_LOSS.ordinal()) declaredLossEnergyJ += energyJ;
         if (portBindingKinds[portOffset] == SourceBinding.Kind.DEGRADED_LOSS.ordinal()) degradedLossEnergyJ += energyJ;
-        if (isThermalNode(portOffset) && energyJ != 0.0D) {
+        if (isThermalTarget(portOffset) && energyJ != 0.0D) {
             int accumulator = accumulators.ensureNode(
-                    portTargetIds[portOffset],
+                    accumulatorTargetId(portOffset),
                     portBindingGenerations[portOffset],
                     eventTick);
             accumulators.addImpulseAt(accumulator, eventTick, energyJ);
@@ -308,16 +330,16 @@ public final class ThermalSourceLedger implements AutoCloseable {
             double contribution = portContributionW[portOffset];
             outputPowerW -= contribution;
             changeLossPower(portOffset, -contribution);
-            if (isThermalNode(portOffset)) {
+            if (isThermalTarget(portOffset)) {
                 if (contribution != 0.0D) {
                     changeNodePower(
-                            portTargetIds[portOffset],
+                            accumulatorTargetId(portOffset),
                             portBindingGenerations[portOffset],
                             eventTick,
                             -contribution);
                 }
                 accumulators.releaseBinding(
-                        portTargetIds[portOffset],
+                        accumulatorTargetId(portOffset),
                         portBindingGenerations[portOffset],
                         eventTick);
             }
@@ -350,9 +372,9 @@ public final class ThermalSourceLedger implements AutoCloseable {
             double delta = contribution - portContributionW[portOffset];
             outputPowerW += delta;
             changeLossPower(portOffset, delta);
-            if (isThermalNode(portOffset) && delta != 0.0D) {
+            if (isThermalTarget(portOffset) && delta != 0.0D) {
                 changeNodePower(
-                        portTargetIds[portOffset],
+                        accumulatorTargetId(portOffset),
                         portBindingGenerations[portOffset],
                         eventTick,
                         delta);
@@ -368,25 +390,25 @@ public final class ThermalSourceLedger implements AutoCloseable {
     ) {
         double contribution = portContributionW[portOffset];
         changeLossPower(portOffset, -contribution);
-        if (isThermalNode(portOffset)) {
+        if (isThermalTarget(portOffset)) {
             if (contribution != 0.0D) {
                 changeNodePower(
-                        portTargetIds[portOffset],
+                        accumulatorTargetId(portOffset),
                         portBindingGenerations[portOffset],
                         eventTick,
                         -contribution);
             }
             accumulators.releaseBinding(
-                    portTargetIds[portOffset],
+                    accumulatorTargetId(portOffset),
                     portBindingGenerations[portOffset],
                     eventTick);
         }
-        if (next.isThermalNode()) {
+        if (next.isThermalTarget()) {
             accumulators.retainBinding(
-                    next.targetId(), next.lifecycleGeneration(), eventTick);
+                    next.accumulatorTargetId(), next.lifecycleGeneration(), eventTick);
             if (contribution != 0.0D) {
                 changeNodePower(
-                        next.targetId(),
+                        next.accumulatorTargetId(),
                         next.lifecycleGeneration(),
                         eventTick,
                         contribution);
@@ -434,9 +456,9 @@ public final class ThermalSourceLedger implements AutoCloseable {
         portIds[offset] = port.portId();
         portPowerShares[offset] = port.powerShare();
         writeBinding(offset, port.binding());
-        if (port.binding().isThermalNode()) {
+        if (port.binding().isThermalTarget()) {
             accumulators.retainBinding(
-                    port.binding().targetId(),
+                    port.binding().accumulatorTargetId(),
                     port.binding().lifecycleGeneration(),
                     eventTick);
         }
@@ -457,9 +479,15 @@ public final class ThermalSourceLedger implements AutoCloseable {
         portBindingGenerations[offset] = binding.lifecycleGeneration();
     }
 
-    private boolean isThermalNode(int offset) {
+    private boolean isThermalTarget(int offset) {
         return portBindingKinds[offset]
-                == (byte) SourceBinding.Kind.THERMAL_NODE.ordinal();
+                == (byte) SourceBinding.Kind.THERMAL_NODE.ordinal()
+                || portBindingKinds[offset] == (byte) SourceBinding.Kind.AIR_STENCIL.ordinal();
+    }
+
+    private long accumulatorTargetId(int offset) {
+        return portBindingKinds[offset] == (byte) SourceBinding.Kind.AIR_STENCIL.ordinal()
+                ? portTargetIds[offset] | 1L << 31 : portTargetIds[offset];
     }
 
     private boolean sameBinding(int offset, SourceBinding binding) {
@@ -730,17 +758,17 @@ public final class ThermalSourceLedger implements AutoCloseable {
             int firstPort = portBase(slot);
             for (int index = 0; index < portCounts[slot]; index++) {
                 int portOffset = firstPort + index;
-                if (isThermalNode(portOffset)) {
+                if (isThermalTarget(portOffset)) {
                     double contribution = portContributionW[portOffset];
                     if (contribution != 0.0D) {
                         changeNodePower(
-                                portTargetIds[portOffset],
+                                accumulatorTargetId(portOffset),
                                 portBindingGenerations[portOffset],
                                 cursorTick,
                                 -contribution);
                     }
                     accumulators.releaseBinding(
-                            portTargetIds[portOffset],
+                            accumulatorTargetId(portOffset),
                             portBindingGenerations[portOffset],
                             cursorTick);
                 }

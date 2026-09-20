@@ -8,12 +8,16 @@ public final class ThermalEnvironmentSample {
     private double radiantFluxWPerM2;
     private boolean sharedAirRegion;
     private long sharedAirRegionBlock;
+    private long airSampleTick = -1;
+    private int airBasisTerms;
 
     public boolean airAvailable() { return airAvailable; }
     public double airTemperatureC() { return airTemperatureC; }
     public double radiantFluxWPerM2() { return radiantFluxWPerM2; }
     public boolean sharedAirRegion() { return sharedAirRegion; }
     public long sharedAirRegionBlock() { return sharedAirRegionBlock; }
+    public long airSampleTick() { return airSampleTick; }
+    public int airBasisTerms() { return airBasisTerms; }
 
     public void clear() {
         airAvailable = false;
@@ -21,12 +25,22 @@ public final class ThermalEnvironmentSample {
         radiantFluxWPerM2 = 0.0D;
         sharedAirRegion = false;
         sharedAirRegionBlock = 0;
+        airSampleTick = -1;
+        airBasisTerms = 0;
     }
 
     public void setAir(double temperature) {
         airAvailable = true;
         airTemperatureC = temperature;
         sharedAirRegion = false;
+        airSampleTick = -1;
+        airBasisTerms = 0;
+    }
+
+    public void setAir(double temperature, long sampleTick, int basisTerms) {
+        setAir(temperature);
+        airSampleTick = sampleTick;
+        airBasisTerms = basisTerms;
     }
 
     public void setAirFromRegion(double temperature, long regionBlock) {
@@ -50,6 +64,8 @@ public final class ThermalEnvironmentSample {
         radiantFluxWPerM2 = source.radiantFluxWPerM2;
         sharedAirRegion = source.sharedAirRegion;
         sharedAirRegionBlock = source.sharedAirRegionBlock;
+        airSampleTick = source.airSampleTick;
+        airBasisTerms = source.airBasisTerms;
     }
 
 }

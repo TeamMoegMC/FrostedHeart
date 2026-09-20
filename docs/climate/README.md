@@ -6,6 +6,7 @@
 |---|---|---|
 | [world-climate-and-temperature.md](world-climate-and-temperature.md) | 逻辑气候时钟、事件轨道、世界/空气/方块温度公式、局部热区 | Current |
 | [thermal-runtime-architecture-and-optimization.md](thermal-runtime-architecture-and-optimization.md) | thermal runtime 的所有权、生命周期及复杂度；材料新模型正在集成验证 | Transitional |
+| [continuous-air-runtime.md](continuous-air-runtime.md) | 可选连续空气后端、联合材料推进、精确位置查询与新版空间存档 | Partial |
 | [weather-rendering.md](weather-rendering.md) | 暴风雪与白幕的空间状态、天气同步、降水/雾/粒子/声音渲染 | Current |
 | [player-temperature.md](player-temperature.md) | 玩家环境查询、分部位体温、衣物、效果与同步 | Current |
 | [heat-production-and-network.md](heat-production-and-network.md) | 物理 source、worker 能量、材料/phase 与独立热网 | Transitional |

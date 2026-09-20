@@ -239,6 +239,7 @@ public class FHConfig {
 	public static class Common {
 		public static class ThermalRuntime {
 			public final ForgeConfigSpec.DoubleValue airHeatCapacityJPerBlockK;
+			public final ForgeConfigSpec.BooleanValue continuousAir;
 			public final ForgeConfigSpec.DoubleValue airMixingWPerBlockK;
 			public final ForgeConfigSpec.DoubleValue farFieldConductanceWPerK;
 			public final ForgeConfigSpec.DoubleValue campfirePowerW;
@@ -254,6 +255,9 @@ public class FHConfig {
 				builder.comment(
 						"Restart the client or dedicated server after changing thermal runtime values.")
 					.push("Thermal Runtime");
+				continuousAir = builder
+					.comment("Use the continuous Air solver. Restart required. Development backend; disabled by default.")
+					.define("continuousAir", false);
 				airHeatCapacityJPerBlockK = builder
 					.comment("Effective Air heat capacity per block in J/K.")
 					.defineInRange("airHeatCapacityJPerBlockK", 1_200.0D, 1.0D, 1_000_000.0D);

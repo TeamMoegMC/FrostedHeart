@@ -45,7 +45,7 @@ public final class DormantChunkThermalState {
     }
 
     private static final String ROOT_TAG = "FrostedHeartThermal";
-    private static final int FORMAT_VERSION = 4;
+    private static final int FORMAT_VERSION = 5;
     private static final int BRICKS = ThermalPageHandle.BASE_BRICK_COUNT;
     // Air stores signed temperature excess in sixteenths of a degree, relative to savedNaturalC.
     // All short values are valid here, including MIN_VALUE (unlike infrared's missing marker).
@@ -296,6 +296,24 @@ public final class DormantChunkThermalState {
                         DormantThermalCooling.rate(halfLifeSeconds)));
     }
 
+    public double sampleAt(double x, double y, double z, long gameTick, double halfLifeSeconds,
+            ServerLevel level, BlockPos.MutableBlockPos naturalPosition) {
+        int bx = (int) Math.floor(x), by = (int) Math.floor(y), bz = (int) Math.floor(z);
+        int sectionY = by >> 4;
+        int entryIndex = sectionY - minimumSectionY;
+        if (entryIndex < 0 || entryIndex >= entries.length || entries[entryIndex] == null) return Double.NaN;
+        SectionEntry entry = entries[entryIndex];
+        if (entry.spatialAir == null) {
+            int brick = (bx & 15) >>> 2 | ((bz & 15) >>> 2) << 2 | ((by & 15) >>> 2) << 4;
+            return sample(sectionY, brick, gameTick, halfLifeSeconds, level, bx >> 4, bz >> 4, naturalPosition);
+        }
+        double savedC = entry.spatialAir.sampleC(x, y, z);
+        if (!Double.isFinite(savedC)) return Double.NaN;
+        double natural = naturalTemperature(level, bx >> 4, sectionY, bz >> 4, gameTick, naturalPosition);
+        return DormantThermalCooling.temperature(savedC, natural,
+                DormantThermalCooling.factor(entry.savedGameTick, gameTick, DormantThermalCooling.rate(halfLifeSeconds)));
+    }
+
     public ThermalInputBatch.DormantAirCut admissionCut(
             int sectionY,
             long gameTick,
@@ -371,6 +389,17 @@ public final class DormantChunkThermalState {
             QueryPublication.MutableSample sample,
             double naturalTemperatureC,
             CaptureScratch scratch) {
+        if (!queries.beginRead(scratch.cursor)) return CaptureResult.FAILED;
+        if (scratch.cursor.hasSpatialAir()) {
+            if (!scratch.cursor.matchesAirLayout(publication)) { scratch.cursor.clear(); return CaptureResult.FAILED; }
+            AirFieldCheckpoint checkpoint = scratch.cursor.captureAir(publication, naturalTemperatureC);
+            long tick = scratch.cursor.sampleTick();
+            boolean current = scratch.cursor.isCurrent();
+            scratch.cursor.clear();
+            return current ? new CaptureResult(true, checkpoint == null ? null : new SectionEntry(tick, naturalTemperatureC, checkpoint))
+                    : CaptureResult.FAILED;
+        }
+        scratch.cursor.clear();
         long brickMask = 0, sampleTick = -1;
         int exactNodes = 0;
         for (int brick = 0; brick < 64; brick++) {
@@ -467,6 +496,14 @@ public final class DormantChunkThermalState {
         if (previous == null || (previous.brickMask & ~sampledBricks) == 0)
             return replace(sectionY, current);
         if (current == null && sampledBricks == 0) return false;
+        if (previous.spatialAir != null || current != null && current.spatialAir != null) {
+            if (current != null && current.spatialAir == null) return replace(sectionY, current);
+            AirFieldCheckpoint merged = AirFieldCheckpoint.merge(previous.spatialAir, naturalC,
+                    DormantThermalCooling.factor(previous.savedGameTick, tick, rate),
+                    current == null ? null : current.spatialAir, naturalC,
+                    current == null ? 1 : DormantThermalCooling.factor(current.savedGameTick, tick, rate), sampledBricks);
+            return replace(sectionY, merged == null ? null : new SectionEntry(tick, naturalC, merged));
+        }
         long mask = 0;
         int exactNodes = 0;
         for (int brick = 0; brick < BRICKS; brick++) {
@@ -502,6 +539,7 @@ public final class DormantChunkThermalState {
     }
 
     public static final class CaptureScratch {
+        final QueryPublication.ReadCursor cursor = new QueryPublication.ReadCursor();
         final long[] nodeMasks = new long[4096];
         final short[] nodeResiduals = new short[4096], means = new short[64];
         final byte[] counts = new byte[64];
@@ -518,6 +556,7 @@ public final class DormantChunkThermalState {
      * These spatial records remain meaningful after arena slots have been recycled.
      */
     public static final class SectionEntry {
+        private final AirFieldCheckpoint spatialAir;
         private final long savedGameTick, brickMask;
         private final double savedNaturalC;
         private final byte[] exactCounts;
@@ -531,6 +570,7 @@ public final class DormantChunkThermalState {
                 byte[] exactCounts,
                 long[] residuals,
                 long[] blockMasks) {
+            this.spatialAir = null;
             this.savedGameTick = Math.max(0, savedGameTick);
             this.savedNaturalC = savedNaturalC;
             this.brickMask = brickMask;
@@ -548,7 +588,23 @@ public final class DormantChunkThermalState {
                 }
         }
 
+        public SectionEntry(long savedGameTick, double savedNaturalC, AirFieldCheckpoint spatialAir) {
+            this.savedGameTick = savedGameTick;
+            this.savedNaturalC = savedNaturalC;
+            this.spatialAir = spatialAir;
+            this.brickMask = spatialAir.brickMask();
+            this.exactCounts = new byte[0];
+            this.residuals = new long[0];
+            this.blockMasks = new long[0];
+        }
+
+        public AirFieldCheckpoint spatialAir() { return spatialAir; }
+
         private static SectionEntry decode(CompoundTag tag) {
+            if (tag.contains("air", Tag.TAG_COMPOUND)) {
+                AirFieldCheckpoint air = AirFieldCheckpoint.decode(tag.getCompound("air"));
+                return air == null || air.brickMask() == 0 ? null : new SectionEntry(tag.getLong("tick"), tag.getDouble("natural"), air);
+            }
             long bricks = tag.getLong("bricks");
             byte[] counts = tag.getByteArray("counts");
             long[] values = tag.getLongArray("residuals"), masks = tag.getLongArray("blocks");
@@ -581,6 +637,10 @@ public final class DormantChunkThermalState {
             tag.putLong("tick", savedGameTick);
             tag.putDouble("natural", savedNaturalC);
             tag.putLong("bricks", brickMask);
+            if (spatialAir != null) {
+                tag.put("air", spatialAir.encode());
+                return tag;
+            }
             tag.putByteArray("counts", exactCounts);
             tag.putLongArray("residuals", residuals);
             tag.putLongArray("blocks", blockMasks);
@@ -600,6 +660,7 @@ public final class DormantChunkThermalState {
         }
 
         public double meanTemperatureC(int brick, double natural, double factor) {
+            if (spatialAir != null) return DormantThermalCooling.temperature(spatialAir.meanC(brick), natural, factor);
             return temperature(meanResidual(brick), natural, factor);
         }
 
@@ -610,6 +671,13 @@ public final class DormantChunkThermalState {
 
         public void fillBlockTemperatures(
                 int brick, double natural, double factor, double[] target) {
+            if (spatialAir != null) {
+                for (int block = 0; block < 64; block++) {
+                    double savedC = spatialAir.blockCenterC(brick, block);
+                    target[block] = Double.isFinite(savedC) ? DormantThermalCooling.temperature(savedC, natural, factor) : natural;
+                }
+                return;
+            }
             Arrays.fill(target, 0, 64, meanTemperatureC(brick, natural, factor));
             int count = exactCount(brick),
                     offset = residualOffsets[brick] + 1,
@@ -626,6 +694,14 @@ public final class DormantChunkThermalState {
         }
 
         public short warmestResidual(int brick) {
+            if (spatialAir != null) {
+                double warmestC = Double.NEGATIVE_INFINITY;
+                for (int block = 0; block < 64; block++) {
+                    double temperatureC = spatialAir.blockCenterC(brick, block);
+                    if (Double.isFinite(temperatureC)) warmestC = Math.max(warmestC, temperatureC);
+                }
+                return quantizeResidual(warmestC - savedNaturalC);
+            }
             int n = exactCount(brick);
             short warmest = n == 0 ? meanResidual(brick) : Short.MIN_VALUE;
             for (int i = 0; i < n; i++)
@@ -644,6 +720,7 @@ public final class DormantChunkThermalState {
                             && a.savedGameTick == b.savedGameTick
                             && a.savedNaturalC == b.savedNaturalC
                             && a.brickMask == b.brickMask
+                            && a.spatialAir == b.spatialAir
                             && Arrays.equals(a.exactCounts, b.exactCounts)
                             && Arrays.equals(a.residuals, b.residuals)
                             && Arrays.equals(a.blockMasks, b.blockMasks);

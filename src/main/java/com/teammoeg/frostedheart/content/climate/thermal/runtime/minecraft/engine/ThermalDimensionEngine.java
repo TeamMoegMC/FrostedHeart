@@ -9,6 +9,9 @@ import com.teammoeg.frostedheart.content.climate.thermal.runtime.async.ThermalDi
 import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.message.ThermalCompletion;
 import com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.message.ThermalInputBatch;
 import com.teammoeg.frostedheart.content.climate.thermal.solver.PhaseTransitionRuntime;
+import com.teammoeg.frostedheart.content.climate.thermal.solver.ContinuousAirSolver;
+import com.teammoeg.frostedheart.content.climate.thermal.source.AirLoadTable;
+import com.teammoeg.frostedheart.content.climate.thermal.source.CutLoadBuffer;
 import com.teammoeg.frostedheart.content.climate.thermal.solver.ThermalSolver;
 import com.teammoeg.frostedheart.content.climate.thermal.source.minecraft.MinecraftPhysicalSourceProfile;
 import com.teammoeg.frostedheart.content.climate.thermal.source.minecraft.WorkerPhysicalSourceBindings;
@@ -48,6 +51,8 @@ public final class ThermalDimensionEngine implements ThermalDimensionProcessor {
     private final ThermalSourceLedger sources;
     private final WorkerPhysicalSourceBindings sourceBindings;
     private final TopologyUpdatePlanner topologyPlan;
+    private final ContinuousAirSolver continuous;
+    private final CutLoadBuffer cutLoads;
 
     private long lastBatchSequence;
     private long lastTargetTick;
@@ -67,6 +72,14 @@ public final class ThermalDimensionEngine implements ThermalDimensionProcessor {
             ThermalDimensionLimits limits,
             QueryPublication queries
     ) {
+        this(dimensionGeneration, initialTick, arena, signatures, materials, parameters,
+                farField, campfireProfile, limits, queries, false);
+    }
+
+    public ThermalDimensionEngine(long dimensionGeneration, long initialTick, ThermalCellArena arena,
+            ThermalSignatureTable signatures, MaterialBoundaryRegistry materials, ThermalTopologyParameters parameters,
+            FarFieldSettings farField, MinecraftPhysicalSourceProfile campfireProfile,
+            ThermalDimensionLimits limits, QueryPublication queries, boolean continuousAir) {
         if (dimensionGeneration < 0L || initialTick < 0L) {
             throw new IllegalArgumentException("engine identity is invalid");
         }
@@ -93,14 +106,18 @@ public final class ThermalDimensionEngine implements ThermalDimensionProcessor {
         sources = new ThermalSourceLedger(
                 initialTick, 64, 3, limits.maximumSources(),
                 new NodePowerAccumulatorArena(64, limits.maximumSourceNodes()), arena);
+        AirLoadTable airLoads = continuousAir ? new AirLoadTable() : null;
+        cutLoads = continuousAir ? new CutLoadBuffer() : null;
         sourceBindings = new WorkerPhysicalSourceBindings(
-                pages, catalog, Objects.requireNonNull(campfireProfile, "campfireProfile"));
+                pages, catalog, Objects.requireNonNull(campfireProfile, "campfireProfile"), airLoads);
+        continuous = continuousAir ? new ContinuousAirSolver(arena, pages, solver, parameters, materials, airLoads, catalog) : null;
         BrickTopologyCompiler compiler = new BrickTopologyCompiler(
                 arena, catalog,
                 Objects.requireNonNull(materials, "materials"),
                 parameters,
                 Objects.requireNonNull(farField, "farField"),
                 limits.maximumArenaSlots(), sourceBindings::collectMixingSources);
+        if (continuous != null) compiler.captureSpatialAirContacts();
         topologyPlan = new TopologyUpdatePlanner(
                 pages,
                 arena,
@@ -124,6 +141,14 @@ public final class ThermalDimensionEngine implements ThermalDimensionProcessor {
         validateBatch(batch);
         topologyPlan.beginCut();
 
+        if (continuous != null) {
+            continuous.acceptAdmissions(batch);
+            sources.acceptAndRecord(batch.sourceEvents(), batch.targetTick(), sourceBindings, cutLoads);
+            continuous.solveCut(lastTargetTick, batch.targetTick(), cutLoads);
+            continuous.commit();
+            sources.confirmRecordedDelivery(continuous.deliveredEnergyJ(), continuous.unacceptedEnergyJ());
+        }
+
         for (ThermalInputBatch.PhaseAck ack : batch.phaseAcks()) {
             phases.applyAck(ack.request(), ack.outcome());
         }
@@ -139,7 +164,7 @@ public final class ThermalDimensionEngine implements ThermalDimensionProcessor {
         // Source time is settled against the currently installed topology.
         // A topology replacement is prepared only after that settlement so
         // migration cannot overwrite energy delivered in this cut.
-        sources.acceptAndAdvance(
+        if (continuous == null) sources.acceptAndAdvance(
                 batch.sourceEvents(), batch.targetTick(), sourceBindings);
         pages.awaitChangedMaterials(batch, arena);
 
@@ -158,6 +183,11 @@ public final class ThermalDimensionEngine implements ThermalDimensionProcessor {
         if (topology != null) {
             TopologyCommitter.commit(topology, pages, arena, solver, phases);
             topologyPlan.committed();
+            if (continuous != null) {
+                continuous.rebuild(sourceBindings);
+                continuous.commit();
+                sourceBindings.markAllDirty();
+            }
             sourceBindings.mixingCommitted();
         } else if (workLimited) {
             sourceBindings.markCommittedSections(topologyPlan.invalidatedRouteSourceSections());
@@ -220,6 +250,11 @@ public final class ThermalDimensionEngine implements ThermalDimensionProcessor {
 
             lastBatchSequence = batch.sequence();
             lastTargetTick = batch.targetTick();
+            if (continuous != null && batch.targetTick() % 200 == 0) {
+                LOGGER.info("AIR_TRACE tick={} topology={} limited={} components={} modes={} routeVisits={}",
+                        batch.targetTick(), topology != null, workLimited, continuous.layout().componentCount(),
+                        continuous.layout().localShapeCount(), topologyPlan.routeVisitsLastCut());
+            }
             return completion(
                     batch,
                     workLimited
@@ -251,6 +286,7 @@ public final class ThermalDimensionEngine implements ThermalDimensionProcessor {
             boolean unchangedSleeping,
             boolean forward
     ) {
+        if (continuous != null) return ThermalSolver.StepStatus.COMPLETED;
         if (elapsedTicks == 0L || unchangedSleeping) {
             return ThermalSolver.StepStatus.COMPLETED;
         }
@@ -264,6 +300,11 @@ public final class ThermalDimensionEngine implements ThermalDimensionProcessor {
             boolean changed,
             boolean coalesced
     ) {
+        if (continuous != null) {
+            sleeping = false;
+            stableBatches = 0;
+            return;
+        }
         if (step == ThermalSolver.StepStatus.NUMERIC_DEGRADED
                 || coalesced
                 || changed
@@ -287,6 +328,9 @@ public final class ThermalDimensionEngine implements ThermalDimensionProcessor {
             ThermalInputBatch batch,
             boolean unchangedSleeping
     ) {
+        if (continuous != null && !queries.stageAir(continuous.layout(), continuous.coefficientsC(), parameters.referenceTemperatureC())) {
+            throw new IllegalStateException("Continuous Air publication exceeded its query budget");
+        }
         boolean published = unchangedSleeping
                 && queries.republishUnchanged(
                         solver.structuralVersion(),

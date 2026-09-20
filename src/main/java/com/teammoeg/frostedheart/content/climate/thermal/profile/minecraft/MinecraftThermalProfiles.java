@@ -56,7 +56,8 @@ public final class MinecraftThermalProfiles {
                         config.farFieldConductanceWPerK.get(),
                         config.dormantTemperatureHalfLifeSeconds.get(),
                         MinecraftPhysicalSourceProfile.campfire(
-                                config.campfirePowerW.get(), config.campfireRadiationShare.get()));
+                                config.campfirePowerW.get(), config.campfireRadiationShare.get()),
+                        config.continuousAir.get());
         List<Block> blocks = new ArrayList<>(ForgeRegistries.BLOCKS.getValues());
         blocks.sort(
                 Comparator.comparing(
@@ -327,7 +328,8 @@ public final class MinecraftThermalProfiles {
             double airMixingWPerBlockK,
             double farFieldConductanceWPerK,
             double dormantTemperatureHalfLifeSeconds,
-            MinecraftPhysicalSourceProfile campfire) {}
+            MinecraftPhysicalSourceProfile campfire,
+            boolean continuousAir) {}
 
     private record BodyKey(
             double conductance,

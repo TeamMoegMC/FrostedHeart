@@ -37,6 +37,43 @@ import java.util.Objects;
  * 该身份不进入网络或客户端模型。</p>
  */
 public final class WorkerPageStore implements AutoCloseable {
+    private com.teammoeg.frostedheart.content.climate.thermal.mesh.AirFieldLayout airField;
+    private double[] airCoefficientsC;
+    private Long2LongMap airSupportRequests;
+
+    public void setAirSupportRequests(Long2LongMap requests) { airSupportRequests = requests; }
+
+    public long capturedBrickMask(long sectionKey) {
+        PageState page = find(sectionKey);
+        if (page == null) return 0;
+        long mask = 0;
+        for (int brick = 0; brick < 64; brick++) if (page.brick(brick).cellsResolved) mask |= 1L << brick;
+        return mask & page.residentBrickMask;
+    }
+
+    int capturedSignatureAt(int x, int y, int z) {
+        PageState page = find(SectionPos.asLong(x >> 4, y >> 4, z >> 4));
+        int brick = (x & 15) >>> 2 | ((z & 15) >>> 2) << 2 | ((y & 15) >>> 2) << 4;
+        return page != null && (page.residentBrickMask & 1L << brick) != 0
+                ? page.signatures.get((x & 15) | (z & 15) << 4 | (y & 15) << 8) : haloSignatureAt(x, y, z);
+    }
+
+    /** Borrowed worker state for residency bounds; it is not a second temperature authority. */
+    public void setAirField(com.teammoeg.frostedheart.content.climate.thermal.mesh.AirFieldLayout layout, double[] coefficientsC) {
+        airField = layout;
+        airCoefficientsC = coefficientsC;
+    }
+
+    /** Excludes old spans that are still live only until source rebinding releases them. */
+    public boolean ownsCommittedCell(ThermalCellArena arena, int slot) {
+        PageState page = findPageSlot(arena.pageSlot(slot));
+        if (page == null) return false;
+        int x = arena.minimum(slot, 0), y = arena.minimum(slot, 1), z = arena.minimum(slot, 2);
+        int brickIndex = (x & 15) >>> 2 | ((z & 15) >>> 2) << 2 | ((y & 15) >>> 2) << 4;
+        var span = page.brick(brickIndex).span;
+        return slot >= span.firstSlot() && slot < span.endSlotExclusive();
+    }
+
     private final java.util.IdentityHashMap<ThermalPageHandle, GeometryHalo> halos =
             new java.util.IdentityHashMap<>();
     private final Long2IntOpenHashMap haloSignatures = new Long2IntOpenHashMap();
@@ -267,6 +304,9 @@ public final class WorkerPageStore implements AutoCloseable {
                     releaseLowC);
         }
         if (airRoutes != null) airRoutes.collectRequiredBricks(this, desiredScratch);
+        if (airSupportRequests != null) {
+            for (var request : airSupportRequests.long2LongEntrySet()) orDesired(request.getLongKey(), request.getLongValue());
+        }
         ThermalCompletion.BrickResidency[] result = finishResidencyChanges();
         return result;
     }
@@ -381,7 +421,7 @@ public final class WorkerPageStore implements AutoCloseable {
         }
     }
 
-    private static double faceResidualC(
+    private double faceResidualC(
             PageState page,
             int brick,
             BlockFace face,
@@ -391,6 +431,7 @@ public final class WorkerPageStore implements AutoCloseable {
         if (!topology.resolved || topology.coverageSlot < 0) {
             return 0.0D;
         }
+        if (airField != null) return continuousFaceResidual(page, topology, brick, face, arena, referenceTemperatureC);
         if (topology.blockLayout == null) {
             if (face == BlockFace.POSITIVE_Y && allTopColumnsDirectSky(page, brick)) {
                 return 0.0D;
@@ -416,6 +457,31 @@ public final class WorkerPageStore implements AutoCloseable {
                                             - page.naturalTemperatureC));
         }
         return residual;
+    }
+
+    private double continuousFaceResidual(PageState page, WorkerBrickTopology topology, int brick,
+            BlockFace face, ThermalCellArena arena, double referenceC) {
+        int axis = face.ordinal() / 2;
+        int side = (face.ordinal() & 1) == 0 ? 0 : 3;
+        double residualC = 0;
+        for (int patch = 0; patch < 16; patch++) {
+            if (face == BlockFace.POSITIVE_Y && topPortDirectSky(page, brick, patch)) continue;
+            int block = BlockBrickLayout.faceBlock(axis, side, patch);
+            int slot = topology.airSlotAt(block);
+            if (slot < 0) continue;
+            var component = airField.componentForSlot(slot);
+            if (component == null) continue;
+            int x = component.minX + (block & 3), y = component.minY + (block >>> 4), z = component.minZ + (block >>> 2 & 3);
+            for (int corner = 0; corner < 4; corner++) {
+                double u = corner & 1, v = corner >>> 1;
+                double px = x + (axis == 0 ? face.ordinal() & 1 : u);
+                double py = y + (axis == 1 ? face.ordinal() & 1 : axis == 0 ? u : v);
+                double pz = z + (axis == 2 ? face.ordinal() & 1 : v);
+                double temperatureC = referenceC + component.temperatureOffsetC(px, py, pz, airCoefficientsC);
+                residualC = Math.max(residualC, Math.abs(temperatureC - page.naturalTemperatureC));
+            }
+        }
+        return residualC;
     }
 
     private static boolean allTopColumnsDirectSky(PageState page, int brick) {
@@ -669,9 +735,23 @@ public final class WorkerPageStore implements AutoCloseable {
 
     public static final class MutableAirTarget {
         private int generation;
+        private int blockX, blockY, blockZ;
+        private BlockFace face;
 
         public int generation() {
             return generation;
+        }
+        public int blockX() { return blockX; }
+        public int blockY() { return blockY; }
+        public int blockZ() { return blockZ; }
+        public BlockFace face() { return face; }
+
+        private void set(int generation, int x, int y, int z, BlockFace face) {
+            this.generation = generation;
+            blockX = x;
+            blockY = y;
+            blockZ = z;
+            this.face = face;
         }
     }
 
@@ -705,7 +785,7 @@ public final class WorkerPageStore implements AutoCloseable {
         int blockInBrick = localX & 3 | (localZ & 3) << 2 | (localY & 3) << 4;
         int slot = brick.airSlotAt(blockInBrick);
         if (slot >= 0) {
-            out.generation = page.lifecycleGeneration;
+            out.set(page.lifecycleGeneration, blockX, blockY, blockZ, face);
             return slot;
         }
         if (signatures.ventilation(signatureId) == 0) return PORT_BLOCKED;
@@ -719,7 +799,11 @@ public final class WorkerPageStore implements AutoCloseable {
             int targetBlock = (x & 3) | (z & 3) << 2 | (y & 3) << 4;
             slot = topology.cellsResolved ? topology.airSlotAt(targetBlock) : -1;
             if (slot >= 0) {
-                out.generation = targetPage.lifecycleGeneration;
+                var outlet = airRoutes.outletTrace(BlockPos.asLong(blockX, blockY, blockZ));
+                if (outlet == null) return PORT_TOPOLOGY_UNAVAILABLE;
+                long outletBlock = outlet.block(0);
+                out.set(targetPage.lifecycleGeneration, BlockPos.getX(outletBlock), BlockPos.getY(outletBlock),
+                        BlockPos.getZ(outletBlock), BlockFace.fromOrdinal(outlet.face(0)));
                 return slot;
             }
         }

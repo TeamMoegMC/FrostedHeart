@@ -91,6 +91,13 @@ public final class ThermalSolver {
         return structuralVersion;
     }
 
+    public int nextFragmentIndex(int fromInclusive) {
+        return nextPresent(fragmentPresent, fromInclusive, fragments.length);
+    }
+
+    public double naturalTemperatureC(int pageSlot) { return naturalTemperatureByPage[pageSlot]; }
+    public double windScale() { return windScale; }
+
     public int materialEdgeCount() {
         return materialEdges.size();
     }

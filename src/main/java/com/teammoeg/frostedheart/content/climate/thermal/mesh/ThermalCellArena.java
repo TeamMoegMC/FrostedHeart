@@ -331,6 +331,14 @@ public final class ThermalCellArena {
         materialBranches[slot] = branch;
     }
 
+    /** Installs an accepted worker trial without selecting a branch or emitting a phase request. */
+    public void commitMaterialState(int slot, double energyJ, byte branch) {
+        requireLiveSlot(slot);
+        requireFinite("material enthalpy", energyJ);
+        enthalpyJ[slot] = energyJ;
+        materialBranches[slot] = branch;
+    }
+
     public boolean needsMaterialSegments(int slot) {
         MaterialThermalLaw law = materialLaws[slot];
         return law != null
@@ -451,6 +459,15 @@ public final class ThermalCellArena {
     public boolean isAirCell(int slot) {
         requireAllocatedSlot(slot);
         return cellKinds[slot] == REGULAR_CELL || cellKinds[slot] == MIXED_COMPONENT;
+    }
+
+    /** Captured actual Air membership, indexed x | z << 2 | y << 4 within its Brick. */
+    public long airBlockMask(int slot) {
+        requireAllocatedSlot(slot);
+        if (cellKinds[slot] == REGULAR_CELL) return -1L;
+        if (cellKinds[slot] != MIXED_COMPONENT) return 0L;
+        int support = supportRefs[slot];
+        return mixedGeometry(support).nodeBlockMask(slot - support);
     }
 
     /** Adds energy only when the source binding still names this exact cell incarnation. */

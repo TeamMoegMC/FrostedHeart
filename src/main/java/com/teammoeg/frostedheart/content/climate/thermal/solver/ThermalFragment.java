@@ -71,27 +71,46 @@ public record ThermalFragment(
     }
 
     /** Indirect contacts retain the component that made their route possible. */
-    public record RoutedContacts(int[] first, int[] second, double[] conductance, AirRouteValidity[] routes) {
+    /** Physical unit faces forming an area's Air temperature trace; arrays transfer ownership. */
+    public record AirFaceTrace(long[] blocks, byte[] faces, int offset, int size) {
+        public long block(int index) { return blocks[offset + index]; }
+        public byte face(int index) { return faces[offset + index]; }
+    }
+
+    public record RoutedContacts(int[] first, int[] second, double[] conductance, AirRouteValidity[] routes,
+                                 AirFaceTrace[] firstTraces, AirFaceTrace[] secondTraces) {
+        public RoutedContacts(int[] first, int[] second, double[] conductance, AirRouteValidity[] routes) {
+            this(first, second, conductance, routes, null, null);
+        }
         public static final RoutedContacts EMPTY = new RoutedContacts(new int[0], new int[0], new double[0], new AirRouteValidity[0]);
         public int size() { return first.length; }
         public int first(int index) { return first[index]; }
         public int second(int index) { return second[index]; }
         public double conductance(int index) { return conductance[index]; }
         public boolean active(int index) { return routes[index].activeForSolve(); }
+        public AirFaceTrace firstTrace(int index) { return firstTraces == null ? null : firstTraces[index]; }
+        public AirFaceTrace secondTrace(int index) { return secondTraces == null ? null : secondTraces[index]; }
 
         public static final class Builder {
             private final IntArrayList first = new IntArrayList();
             private final IntArrayList second = new IntArrayList();
             private final DoubleArrayList conductance = new DoubleArrayList();
             private final ArrayList<AirRouteValidity> routes = new ArrayList<>();
+            private final ArrayList<AirFaceTrace> firstTraces = new ArrayList<>(), secondTraces = new ArrayList<>();
 
-            public void clear() { first.clear(); second.clear(); conductance.clear(); routes.clear(); }
+            public void clear() { first.clear(); second.clear(); conductance.clear(); routes.clear(); firstTraces.clear(); secondTraces.clear(); }
             public void add(int a, int b, double g, AirRouteValidity route) {
+                add(a, b, g, route, null, null);
+            }
+            public void add(int a, int b, double g, AirRouteValidity route, AirFaceTrace traceA, AirFaceTrace traceB) {
                 first.add(Math.min(a, b)); second.add(Math.max(a, b)); conductance.add(g); routes.add(route);
+                firstTraces.add(a <= b ? traceA : traceB);
+                secondTraces.add(a <= b ? traceB : traceA);
             }
             public RoutedContacts build() {
                 return first.isEmpty() ? EMPTY : new RoutedContacts(first.toIntArray(), second.toIntArray(),
-                        conductance.toDoubleArray(), routes.toArray(AirRouteValidity[]::new));
+                        conductance.toDoubleArray(), routes.toArray(AirRouteValidity[]::new),
+                        firstTraces.toArray(AirFaceTrace[]::new), secondTraces.toArray(AirFaceTrace[]::new));
             }
         }
     }
@@ -148,6 +167,9 @@ public record ThermalFragment(
         private final int pageSlot;
         private final double[] baseConductance;
         private final double[] coefficient;
+        private final int[] patchCells;
+        private final long[] patchBlocks;
+        private final double[] patchConductances;
         private long coefficientWindGeneration = -1L;
 
         public FarBoundaries(
@@ -156,6 +178,11 @@ public record ThermalFragment(
                 double[] baseConductance,
                 double[] coefficient
         ) {
+            this(cell, pageSlot, baseConductance, coefficient, null, null, null);
+        }
+
+        public FarBoundaries(int[] cell, int pageSlot, double[] baseConductance, double[] coefficient,
+                int[] patchCells, long[] patchBlocks, double[] patchConductances) {
             int size = length(cell);
             if (length(baseConductance) != size
                     || length(coefficient) != size
@@ -166,9 +193,16 @@ public record ThermalFragment(
             this.pageSlot = pageSlot;
             this.baseConductance = baseConductance;
             this.coefficient = coefficient;
+            this.patchCells = patchCells;
+            this.patchBlocks = patchBlocks;
+            this.patchConductances = patchConductances;
         }
 
         public int size() { return cell.length; }
+        public int patchCount() { return patchCells == null ? 0 : patchCells.length; }
+        public int patchCell(int index) { return patchCells[index]; }
+        public long patchBlock(int index) { return patchBlocks[index]; }
+        public double patchConductance(int index) { return patchConductances[index]; }
         public int cell(int index) { return cell[index]; }
         public int pageSlot() { return pageSlot; }
         public double baseConductance(int index) {

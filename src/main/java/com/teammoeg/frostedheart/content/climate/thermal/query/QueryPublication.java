@@ -11,6 +11,7 @@
 package com.teammoeg.frostedheart.content.climate.thermal.query;
 
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.MaterialSample;
+import com.teammoeg.frostedheart.content.climate.thermal.mesh.AirFieldLayout;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.MaterialThermalLaw;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.ThermalCellArena;
 import com.teammoeg.frostedheart.content.climate.thermal.runtime.ThermalMemoryBudget;
@@ -37,6 +38,10 @@ public final class QueryPublication implements AutoCloseable {
     private long[][] materialRequests;
     private ThermalMemoryBudget.Reservation cellReservation;
     private ThermalMemoryBudget.Reservation pageReservation;
+    private ThermalMemoryBudget.Reservation airReservation;
+    private double[][] airCoefficientsC = {new double[0], new double[0]};
+    private final AirFieldLayout[] airLayouts = new AirFieldLayout[2];
+    private final double[] airReferenceC = new double[2];
 
     private int capacity;
     private boolean acceptingPublications = true;
@@ -97,6 +102,50 @@ public final class QueryPublication implements AutoCloseable {
     private static long projectedPagePayloadBytes(int maximumPages) {
         return Math.multiplyExact(
                 maximumPages, (long) Double.BYTES + 3L * Long.BYTES + 65L * Integer.BYTES);
+    }
+
+    /** Prepares the same target buffer that the next body publication will expose. */
+    public synchronized boolean stageAir(AirFieldLayout layout, double[] coefficientsC, double referenceC) {
+        if (layout == null) return true;
+        int count = layout.coefficientCount();
+        if (count > airCoefficientsC[0].length) {
+            int capacity = Math.max(count, airCoefficientsC[0].length + Math.max(32, airCoefficientsC[0].length / 2));
+            var reservation = budget.tryReserve(16L * capacity + 64);
+            if (reservation == null) return false;
+            double[][] replacement = {Arrays.copyOf(airCoefficientsC[0], capacity), Arrays.copyOf(airCoefficientsC[1], capacity)};
+            var previous = airReservation;
+            airCoefficientsC = replacement;
+            airReservation = reservation;
+            if (previous != null) previous.close();
+        }
+        int target = publishedBufferIndex == 0 ? 1 : 0;
+        System.arraycopy(coefficientsC, 0, airCoefficientsC[target], 0, count);
+        airLayouts[target] = layout;
+        airReferenceC[target] = referenceC;
+        return true;
+    }
+
+    /** Exact-position field read under the same publication version as material snapshots. */
+    public boolean tryReadAir(double x, double y, double z, MutableSample out) {
+        out.clear();
+        for (int attempt = 0; attempt < 2; attempt++) {
+            long version = publicationVersion;
+            if ((version & 1L) != 0) continue;
+            int buffer = publishedBufferIndex;
+            if (!valid || buffer < 0) return false;
+            AirFieldLayout layout = airLayouts[buffer];
+            if (layout == null) return false;
+            var component = layout.componentAt((int) Math.floor(x), (int) Math.floor(y), (int) Math.floor(z));
+            if (component == null || !component.currentGeometry()) return false;
+            long tick = sampleTick;
+            double temperatureC = airReferenceC[buffer] + component.temperatureOffsetC(x, y, z, airCoefficientsC[buffer]);
+            if (version == publicationVersion && component.currentGeometry() && Double.isFinite(temperatureC)) {
+                out.set(temperatureC, tick);
+                out.airBasisTerms = component.basisCount();
+                return true;
+            }
+        }
+        return false;
     }
 
     /** Geometrically grows the slot-addressed backing before a topology commit. */
@@ -237,6 +286,12 @@ public final class QueryPublication implements AutoCloseable {
                                                                 .progress(arena.enthalpyJ(slot))
                                                         > 0)) {
                     hotMasks.recordHot(pageSlot, brick);
+                } else if (arena.isAirCell(slot) && airLayouts[targetBuffer] != null) {
+                    var component = airLayouts[targetBuffer].componentForSlot(slot);
+                    if (component != null) {
+                        hotMasks.record(pageSlot, brick, referenceTemperatureC + component.minimumOffsetC(airCoefficientsC[targetBuffer]));
+                        hotMasks.record(pageSlot, brick, referenceTemperatureC + component.maximumOffsetC(airCoefficientsC[targetBuffer]));
+                    }
                 } else {
                     hotMasks.record(pageSlot, brick, temperature);
                 }
@@ -420,6 +475,9 @@ public final class QueryPublication implements AutoCloseable {
             int readInfraredEpoch = infraredEpoch;
             double[] readTemperatures = readBuffer < 0 ? null : temperaturesC[readBuffer];
             int[] readGenerations = readBuffer < 0 ? null : slotGenerations[readBuffer];
+            AirFieldLayout readAirLayout = readBuffer < 0 ? null : airLayouts[readBuffer];
+            double[] readAirCoefficients = readBuffer < 0 ? null : airCoefficientsC[readBuffer];
+            double readAirReference = readBuffer < 0 ? 0 : airReferenceC[readBuffer];
             long secondVersion = publicationVersion;
             if (firstVersion == secondVersion && (secondVersion & 1L) == 0L) {
                 out.set(
@@ -433,7 +491,8 @@ public final class QueryPublication implements AutoCloseable {
                         readTemperatures,
                         readGenerations,
                         pageChangeEpochs,
-                        brickChangeEpochs);
+                        brickChangeEpochs,
+                        readAirLayout, readAirCoefficients, readAirReference);
                 return true;
             }
         }
@@ -541,6 +600,10 @@ public final class QueryPublication implements AutoCloseable {
 
     @Override
     public synchronized void close() {
+        if (airReservation != null) {
+            airReservation.close();
+            airReservation = null;
+        }
         if (cellReservation == null) {
             return;
         }
@@ -653,6 +716,9 @@ public final class QueryPublication implements AutoCloseable {
     public static final class MutableSample {
         private double temperatureC;
         private long sampleTick;
+        private int airBasisTerms;
+
+        public int airBasisTerms() { return airBasisTerms; }
 
         public double temperatureC() {
             return temperatureC;
@@ -665,11 +731,13 @@ public final class QueryPublication implements AutoCloseable {
         private void set(double temperatureC, long sampleTick) {
             this.temperatureC = temperatureC;
             this.sampleTick = sampleTick;
+            airBasisTerms = 1;
         }
 
         private void clear() {
             temperatureC = Double.NaN;
             sampleTick = -1L;
+            airBasisTerms = 0;
         }
     }
 
@@ -686,6 +754,29 @@ public final class QueryPublication implements AutoCloseable {
         private int[] slotGenerations;
         private int[] pageChangeEpochs;
         private int[] brickChangeEpochs;
+        private AirFieldLayout airLayout;
+        private double[] airCoefficientsC;
+        private double airReferenceC;
+
+        public boolean hasSpatialAir() { return valid && airLayout != null; }
+
+        public boolean matchesAirLayout(com.teammoeg.frostedheart.content.climate.thermal.mesh.PagePublication page) {
+            if (!hasSpatialAir() || topologyGeneration < page.topologyGeneration()) return false;
+            for (int brick = 0; brick < 64; brick++) {
+                var payload = page.brick(brick);
+                for (int node = 0; node < payload.airNodeCount(); node++) {
+                    var component = airLayout.componentForSlot(payload.firstSlot() + node);
+                    if (component == null || component.arenaGeneration != payload.arenaGeneration()) return false;
+                }
+            }
+            return true;
+        }
+
+        public com.teammoeg.frostedheart.content.climate.thermal.persistence.minecraft.AirFieldCheckpoint captureAir(
+                com.teammoeg.frostedheart.content.climate.thermal.mesh.PagePublication page, double naturalC) {
+            return com.teammoeg.frostedheart.content.climate.thermal.persistence.minecraft.AirFieldCheckpoint.capture(
+                    airLayout, airCoefficientsC, airReferenceC, page, naturalC);
+        }
 
         public boolean valid() {
             return valid;
@@ -764,7 +855,8 @@ public final class QueryPublication implements AutoCloseable {
                 double[] temperaturesC,
                 int[] slotGenerations,
                 int[] pageChangeEpochs,
-                int[] brickChangeEpochs) {
+                int[] brickChangeEpochs,
+                AirFieldLayout airLayout, double[] airCoefficientsC, double airReferenceC) {
             this.owner = owner;
             this.version = version;
             this.valid = valid;
@@ -776,6 +868,9 @@ public final class QueryPublication implements AutoCloseable {
             this.slotGenerations = slotGenerations;
             this.pageChangeEpochs = pageChangeEpochs;
             this.brickChangeEpochs = brickChangeEpochs;
+            this.airLayout = airLayout;
+            this.airCoefficientsC = airCoefficientsC;
+            this.airReferenceC = airReferenceC;
         }
 
         /** Release the borrowed publication and arrays after the read operation. */
@@ -791,6 +886,8 @@ public final class QueryPublication implements AutoCloseable {
             slotGenerations = null;
             pageChangeEpochs = null;
             brickChangeEpochs = null;
+            airLayout = null;
+            airCoefficientsC = null;
         }
     }
 }

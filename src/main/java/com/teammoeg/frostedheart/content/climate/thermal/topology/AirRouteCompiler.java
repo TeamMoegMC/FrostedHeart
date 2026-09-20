@@ -254,7 +254,9 @@ final class AirRouteCompiler {
                             first,
                             second,
                             mixing / component.edgeResistance[edge],
-                            component.validity);
+                            component.validity,
+                            component.outletTraces.get(component.edgeFirst[edge]),
+                            component.outletTraces.get(component.edgeSecond[edge]));
                 }
             }
         }
@@ -296,6 +298,9 @@ final class AirRouteCompiler {
                 edgeOwners = new LongOpenHashSet();
         final IntArrayList portNodes = new IntArrayList();
         final LongArrayList portRegions = new LongArrayList();
+        final LongArrayList portAirBlocks = new LongArrayList();
+        final it.unimi.dsi.fastutil.bytes.ByteArrayList portAirFaces = new it.unimi.dsi.fastutil.bytes.ByteArrayList();
+        final Long2ObjectOpenHashMap<ThermalFragment.AirFaceTrace> outletTraces = new Long2ObjectOpenHashMap<>();
         final DoubleArrayList portResistance = new DoubleArrayList();
         final Long2ObjectOpenHashMap<Long2DoubleOpenHashMap> candidates =
                 new Long2ObjectOpenHashMap<>();
@@ -306,6 +311,8 @@ final class AirRouteCompiler {
         long[] airRegionIds, edgeFirst, edgeSecond;
         double[] edgeResistance;
         int[] heap, heapPositions;
+        int[] outletPortIndices;
+        ThermalFragment.AirFaceTrace[] portTraces;
         int heapSize;
         AirRouteValidity validity;
 
@@ -346,6 +353,8 @@ final class AirRouteCompiler {
                         pathResistance = new double[positions.size()];
                         Arrays.fill(pathResistance, Double.POSITIVE_INFINITY);
                         airRegionIds = new long[positions.size()];
+                        outletPortIndices = new int[positions.size()];
+                        Arrays.fill(outletPortIndices, -1);
                         heap = new int[positions.size()];
                         heapPositions = new int[positions.size()];
                         Arrays.fill(heapPositions, -1);
@@ -390,6 +399,8 @@ final class AirRouteCompiler {
                                                     Math.abs(arena.center(airSlot, axis) - plane));
                             portNodes.add(node);
                             portRegions.add(region);
+                            portAirBlocks.add(neighbor);
+                            portAirFaces.add((byte) (face ^ 1));
                             portResistance.add(resistance);
                             memberBricks.add(brick(region));
                         } else if (signatures.ventilation(signature) > 0
@@ -413,7 +424,7 @@ final class AirRouteCompiler {
                     improve(
                             portNodes.getInt(port),
                             portResistance.getDouble(port),
-                            portRegions.getLong(port));
+                            portRegions.getLong(port), port);
                     used++;
                 } else if (stage == PROPAGATE_RESISTANCE) {
                     if (heapSize == 0) {
@@ -433,7 +444,7 @@ final class AirRouteCompiler {
                                     pathResistance[node]
                                             + 50.0 / ventilation.getInt(node)
                                             + 50.0 / ventilation.getInt(next),
-                                    airRegionIds[node]);
+                                    airRegionIds[node], outletPortIndices[node]);
                     }
                     used += 6;
                 } else {
@@ -480,6 +491,28 @@ final class AirRouteCompiler {
         }
 
         void finish(TopologyView view) {
+            var portsByRegion = new Long2ObjectOpenHashMap<IntArrayList>();
+            for (int port = 0; port < portRegions.size(); port++) {
+                portsByRegion.computeIfAbsent(portRegions.getLong(port), ignored -> new IntArrayList()).add(port);
+            }
+            long[] blocks = new long[portNodes.size()];
+            byte[] faces = new byte[portNodes.size()];
+            portTraces = new ThermalFragment.AirFaceTrace[portNodes.size()];
+            long[] regions = portsByRegion.keySet().toLongArray();
+            Arrays.sort(regions);
+            int nextPort = 0;
+            for (long region : regions) {
+                IntArrayList ports = portsByRegion.get(region);
+                int firstPort = nextPort;
+                for (int index = 0; index < ports.size(); index++) {
+                    int port = ports.getInt(index);
+                    blocks[nextPort] = portAirBlocks.getLong(port);
+                    faces[nextPort] = portAirFaces.getByte(port);
+                    portTraces[port] = new ThermalFragment.AirFaceTrace(blocks, faces, nextPort, 1);
+                    nextPort++;
+                }
+                outletTraces.put(region, new ThermalFragment.AirFaceTrace(blocks, faces, firstPort, ports.size()));
+            }
             var handles = new ArrayList<ThermalPageHandle>();
             var revisions = new LongArrayList();
             for (var dependency : dependencies.long2LongEntrySet()) {
@@ -529,12 +562,13 @@ final class AirRouteCompiler {
             candidates.clear();
         }
 
-        void improve(int node, double candidateResistance, long airRegionId) {
+        void improve(int node, double candidateResistance, long airRegionId, int outletPort) {
             if (candidateResistance > pathResistance[node]
                     || candidateResistance == pathResistance[node]
                             && airRegionId >= airRegionIds[node]) return;
             pathResistance[node] = candidateResistance;
             airRegionIds[node] = airRegionId;
+            outletPortIndices[node] = outletPort;
             int index = heapPositions[node];
             if (index < 0) {
                 index = heapSize++;
@@ -583,6 +617,14 @@ final class AirRouteCompiler {
     }
 
     private record EdgeSlice(Component component, IntArrayList indexes) {}
+
+    ThermalFragment.AirFaceTrace outletTrace(long position) {
+        Component component = atPosition.get(position);
+        if (component == null || !component.ready) return null;
+        int index = component.indexes.get(position);
+        if (index < 0 || component.outletPortIndices[index] < 0) return null;
+        return component.portTraces[component.outletPortIndices[index]];
+    }
 
     static long brickPosition(WorkerPageStore.PageState page, int brick) {
         return BlockPos.asLong(

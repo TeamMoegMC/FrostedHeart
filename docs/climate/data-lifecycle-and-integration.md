@@ -45,8 +45,10 @@ Persistent capabilities remain separate from thermal mesh state:
 | warm stone / hot-water bag | ItemStack NBT | version-1 initialized flag plus absolute core and surface temperatures |
 
 Source bindings, analytic fields and worker topology are not serialized.
-`DormantChunkThermalState` writes quantized Air residuals relative to Section-center
-`WorldTemperature.naturalAir` and separate exact `MaterialSectionState` records.
+`DormantChunkThermalState` writes exact `MaterialSectionState` records and a backend-specific
+Air payload: scalar quantized residuals, or continuous `AirFieldCheckpoint` coefficients/shapes.
+Both use the saved natural baseline. The opt-in `continuousAir` restart setting defaults to false;
+see [Continuous Air Runtime](continuous-air-runtime.md) for ownership and current limits.
 Admission rebuilds topology from current BlockState and restores matching material
 energy. Transition world conditions/effects live only in the shared profile snapshot;
 they add no fields to each saved material record.
@@ -214,7 +216,7 @@ arena access.
 Air and material share lazy natural cooling through `DormantThermalCooling`.
 No source-support flag, source-neighbor refresh or save-time decay remains.
 Infrared does not read dormant Air means. Air restoration targets actual Air only.
-`DormantChunkThermalState` writes and reads format 4 exclusively; older thermal
+`DormantChunkThermalState` writes and reads format 5 exclusively; older thermal
 records are not restored. `MaterialSectionState` records exact material H, active
 phase branch, sampling tick and stable BlockState identity separately from Air history.
 One scalar tick covers uniform-age records; partial writes lazily add per-record

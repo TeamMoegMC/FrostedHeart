@@ -7,6 +7,10 @@
 
 本文只描述当前源码行为。所有温度若无特别说明均为摄氏度；“修正”表示摄氏度增量。
 
+可选 `continuousAir = true` 后端按请求的精确 xyz 求值共享空气场，默认值仍为 false。
+同 Brick 的空气不再只有一个温度；live/dormant 查询、依赖失效和新版空间存档见
+[连续空气实现](continuous-air-runtime.md)。现有解析场、辐射和材料红外合成规则继续适用。
+
 ## 1. 气候状态与更新节奏
 
 `ClimateCommonEvents.attachToWorld` 给所有 `dimensionType().hasFixedTime() == false` 的维度挂载 `FHCapabilities.CLIMATE_DATA`。初始预设事件只在主世界创建，但能力本身不限于主世界。
@@ -226,7 +230,7 @@ Generator 的半径/温差来自 `GeneratorData.getRadius/getTempMod` 和 `Gener
 
 `MinecraftThermalInput.gameplayInfraredSnapshot`通过`BlockBrickLayout.materialNodeMask`
 读取材料本体节点的H→T，包括普通材料、相变平台与相变后的状态。楼梯本体不再与空气
-共用温度；实际Air和休眠Air均温不作为材料基础。材料本体H/分支/时间另存于format 4，
+共用温度；实际Air和休眠Air均温不作为材料基础。材料本体H/分支/时间另存于format 5，
 不通过Air均温恢复。旧相变池和旧存档兼容读取已移除。
 
 活动Brick优先使用当前材料发布；未驻留的Brick可直接读取已加载Chunk中
@@ -341,7 +345,7 @@ publication，未命中时使用已加载 chunk 的 dormant 温度，再回退 `
 `max(physicalOrFallback, naturalAir + maximumMatchingDelta)`，再执行命令和 Boss 控制。
 即使物理 runtime 不存在或刚关闭，世界拥有的解析场仍然生效；查询不会启动 runtime 或加载区块。
 有 runtime 时，同 tick 最多缓存 64 个四分之一方块位置的原始空气/直接辐射结果；解析场不缓存，
-每次按精确位置重新合成，保留同 tick 场更新、移除与边界变化。缓存满后仍采样空气并合成解析场，
+每次按精确位置重新合成，保留同 tick 场更新、移除与边界变化。连续空气后端命中该缓存时仍按实际 xyz 重新读取空气场，避免四分之一方块位置合并丢失空间细节。缓存满后仍采样空气并合成解析场，
 新增位置的直接辐射为零。`RadiationService.sampleItem` 保留独立的物品辐射预算。
 
 住宅与狩猎基地扫描器访问内部空气时同步把坐标压缩成 `TownThermalProjection` 的 `4×4×4` weighted groups。

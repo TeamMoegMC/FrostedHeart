@@ -92,6 +92,12 @@ hundred-player workloads.
 
 ## Worker Energy
 
+This section's direct arena delivery describes the default scalar backend. With
+`continuousAir = true`, `acceptAndRecord` writes W spans/J impulses into `CutLoadBuffer`,
+and `AIR_STENCIL` binds one physical port to a spatial `AirLoadTable` entry. The coupled
+solver accepts delivery before the ledger confirms it; material H/branch and real phase ACKs
+retain their existing owners. See [Continuous Air Runtime](continuous-air-runtime.md#source-and-material-advancement).
+
 `ThermalSourceLedger` integrates continuous power at authoritative event ticks.
 For each source event it settles only the nodes whose power or binding changes;
 the active accumulator list is drained once through the batch target tick. A
@@ -134,7 +140,7 @@ Capacity is fixed for a given material state: the initial ordinary-body tuning
 uses six times the former per-face capacity (stone: 5400 J/K; wood: 2700 J/K).
 Exposure changes connections, not capacity. `MaterialSectionState` stores exact
 body H, phase branch and stable BlockState identity separately from compressed Air
-history. Checkpoint format 4 adds actual state times and has no older-format migration reader.
+history. Checkpoint format 5 retains actual state times and has no older-format migration reader.
 Dormant bodies relax toward current Section-center natural temperature on demand,
 using the same default 1800-game-second sensible half-life as Air. Latent heat is
 advanced by energy flux, not by a temperature lerp; no offline source power is integrated.

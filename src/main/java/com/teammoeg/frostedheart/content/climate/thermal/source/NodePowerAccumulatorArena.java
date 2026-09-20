@@ -10,8 +10,20 @@ import java.util.Arrays;
 public final class NodePowerAccumulatorArena {
     private double deliveredEnergyJ;
     private double unacceptedEnergyJ;
+    private CutLoadBuffer recording;
     public double deliveredEnergyJ() { return deliveredEnergyJ; }
     public double unacceptedEnergyJ() { return unacceptedEnergyJ; }
+
+    void recordInto(CutLoadBuffer buffer) {
+        recording = buffer;
+    }
+
+    void confirmRecordedDelivery(double deliveredJ, double unacceptedJ) {
+        deliveredEnergyJ += deliveredJ;
+        unacceptedEnergyJ += unacceptedJ;
+    }
+
+    int liveCount() { return liveCount; }
     private static final int NO_ACCUMULATOR = -1;
 
     private static final double TICKS_PER_SECOND = 20.0D;
@@ -132,7 +144,8 @@ public final class NodePowerAccumulatorArena {
     public void addImpulseAt(int slot, long eventTick, double energyJ) {
         requireFinite("energyJ", energyJ);
         settleTo(slot, eventTick);
-        addPending(slot, energyJ);
+        if (recording == null) addPending(slot, energyJ);
+        else recording.impulse(nodeIds[slot], lifecycleGenerations[slot], eventTick, energyJ);
         refreshActive(slot);
     }
 
@@ -152,7 +165,8 @@ public final class NodePowerAccumulatorArena {
                 "integrated node energy",
                 currentPowerW[slot],
                 (targetTick - previousTick) / TICKS_PER_SECOND);
-        addPending(slot, energyJ);
+        if (recording == null) addPending(slot, energyJ);
+        else recording.span(nodeIds[slot], lifecycleGenerations[slot], previousTick, targetTick, currentPowerW[slot]);
         lastIntegralTicks[slot] = targetTick;
         refreshActive(slot);
         return energyJ;
@@ -314,9 +328,9 @@ public final class NodePowerAccumulatorArena {
     }
 
     private static long key(long nodeId, int generation) {
-        if (nodeId < 0L || nodeId > Integer.MAX_VALUE) {
+        if (nodeId < 0L || nodeId > 0xffff_ffffL) {
             throw new IllegalArgumentException(
-                    "thermal node ID must be an arena slot");
+                    "thermal target ID exceeds its material/Air address space");
         }
         return (long) generation << 32 | nodeId;
     }
