@@ -250,11 +250,6 @@ public final class ThermalDimensionEngine implements ThermalDimensionProcessor {
 
             lastBatchSequence = batch.sequence();
             lastTargetTick = batch.targetTick();
-            if (continuous != null && batch.targetTick() % 200 == 0) {
-                LOGGER.info("AIR_TRACE tick={} topology={} limited={} components={} modes={} routeVisits={}",
-                        batch.targetTick(), topology != null, workLimited, continuous.layout().componentCount(),
-                        continuous.layout().localShapeCount(), topologyPlan.routeVisitsLastCut());
-            }
             return completion(
                     batch,
                     workLimited

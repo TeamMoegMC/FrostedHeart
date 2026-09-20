@@ -156,7 +156,7 @@ public final class TopologyCommitter {
         for (PreparedTopologyChange.PageWrite write : change.pageWrites) {
             write.page.handle.publish(write.rollbackPublication);
             if (write.replacedPage != null) {
-                write.replacedPage.handle.publish(write.rollbackPublication);
+                write.replacedPage.handle.publish(write.replacedPage.publication);
             }
         }
     }

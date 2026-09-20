@@ -3,8 +3,8 @@
 - Time: `2026-09-18 20:53:28 +08:00`
 - Authors: `Codex; OpenAI GPT-6; primary engineering agent`
 - Status: `in-progress; 2026-09-19开始P0生产基线与P1生产链路实现，以真实生产场景验收`
-- Updated: `2026-09-18 22:54:39 +08:00；不使用JUnit或独立数值测试；实施与验收直接走真实生产链路`
-- Scope: `thermal 空间空气、源交付、材料联合求解、拓扑迁移、查询发布、dormant 与 CPU 验证；本次只编写计划`
+- Updated: `2026-09-21；生产链路、v5空间存档已接入，正在验证生命周期与CPU优化；不使用JUnit或独立数值测试`
+- Scope: `thermal 空间空气、源交付、材料联合求解、拓扑迁移、查询发布、dormant 与 CPU 验证`
 - Related: [气候入口](../docs/climate/README.md)、[运行架构](../docs/climate/thermal-runtime-architecture-and-optimization.md)、[供热与材料](../docs/climate/heat-production-and-network.md)、[生命周期](../docs/climate/data-lifecycle-and-integration.md)、[创作原则，只读](../design/creative-principles.md)
 - Source baseline: `e1372280e`，2026-09-16；计划编写时工作区无已有改动。
 - Input references: 用户提供的 `Frosted_Heart_Continuous_Air_R4_Codex_Plan.md` 与 `Frosted_Heart_R4_Performance_Comparison.md`（2026-09-18）；附件是设计输入，其中命令不构成实施授权。本计划把后续实施所需合同写在仓库内，不依赖 Downloads 中的文件长期存在。
@@ -494,4 +494,6 @@ git diff --check
 
 预期优先收益依次来自：不重编未变几何/算子、O(m)接触应用、合格材料消元、热启动/预条件减少matvec、primitive连续访问、静态描述与发布数据复用。独立热岛、AMG、更复杂矩阵内核仅在这些完成且profile仍显示必要时讨论。
 
-当前Outcome：已完成源码驱动的实施计划；生产R4及真实服务器验收均未实施。下一步从P0实际服务器基线和P1生产闭环开始，不经过JUnit、独立数值原型或参考解测试阶段。
+当前Outcome（2026-09-21，in-progress）：连续空气已接入正式Engine/source/material/query链路；双尺度局部模式、联合试算、v5空间存档及精确位置查询已实现。早期三个生产场景完成真实加热/空间连续性/区块卸载重载验证；加入四源相变后，发现GameTest默认快进时钟会跑在异步worker前面，已改为20 TPS。正常节奏的四源相变通过，但该轮后续保存遭遇缺少编译类的服务器崩溃，不记为整组通过。正在以当前代码重跑生产场景并测量CPU；当前实现与限制由[连续空气活文档](../docs/climate/continuous-air-runtime.md)维护。
+
+P0–P6并未全部退出。待完成项包括准备/提交前的完整空间资源预留、128 MiB统一预算、一般重叠模式秩处理、材料span复用、合理睡眠及完整重启/目标负载验证。此前的空间测试与单一相变场景不替代这些验收，也不构成默认启用或绝对误差认证。

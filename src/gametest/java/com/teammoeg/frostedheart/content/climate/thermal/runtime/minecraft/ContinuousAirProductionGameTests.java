@@ -3,7 +3,6 @@ package com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft;
 
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.climate.WorldTemperature;
-import com.teammoeg.frostedheart.content.climate.thermal.mesh.MaterialSample;
 import com.teammoeg.frostedheart.content.climate.thermal.profile.minecraft.MinecraftThermalProfiles;
 import com.teammoeg.frostedheart.content.climate.thermal.query.ThermalEnvironmentSample;
 import net.minecraft.core.BlockPos;
@@ -182,7 +181,7 @@ public final class ContinuousAirProductionGameTests {
         }).thenSucceed();
     }
 
-    private static BlockPos room(GameTestHelper helper, BlockPos origin) {
+    static BlockPos room(GameTestHelper helper, BlockPos origin) {
         useServerTickRate();
         ServerLevel level = helper.getLevel();
         for (int y = 0; y <= 8; y++) for (int z = 0; z <= 16; z++) for (int x = 0; x <= 16; x++) {
@@ -229,50 +228,6 @@ public final class ContinuousAirProductionGameTests {
         }).thenSucceed();
     }
 
-    @GameTest(template = "phase0a_empty", batch = "thermal_material_production", timeoutTicks = 24000)
-    public static void realCampfiresDriveMaterialEnthalpyThroughWorldPhaseChange(GameTestHelper helper) {
-        ServerLevel level = helper.getLevel();
-        BlockPos center = room(helper, helper.absolutePos(BlockPos.ZERO));
-        BlockPos[] fires = {center.north(2), center.south(2), center.east(2), center.west(2)};
-        for (BlockPos fire : fires) {
-            level.setBlockAndUpdate(fire, Blocks.CAMPFIRE.defaultBlockState().setValue(CampfireBlock.LIT, false));
-            level.getBlockEntity(fire).getCapability(ForgeCapabilities.ITEM_HANDLER).orElseThrow(
-                    () -> new IllegalStateException("Campfire fuel capability is missing")).insertItem(0, new ItemStack(Items.COAL, 4), false);
-            useItem(helper, fire, Items.FLINT_AND_STEEL);
-        }
-        BlockPos material = center.above(2);
-        level.setBlockAndUpdate(material.below(), Blocks.STONE.defaultBlockState());
-        MaterialSample sample = new MaterialSample();
-        double[] initialH = {Double.NaN};
-        long[] started = {0};
-        helper.runAfterDelay(10000, () -> {
-            for (BlockPos fire : fires) {
-                var entity = level.getBlockEntity(fire);
-                if (entity != null) entity.getCapability(ForgeCapabilities.ITEM_HANDLER).ifPresent(
-                        fuel -> fuel.insertItem(0, new ItemStack(Items.COAL, 4), false));
-            }
-        });
-        helper.startSequence().thenIdle(300).thenExecute(() -> {
-            level.setBlockAndUpdate(material, Blocks.POWDER_SNOW.defaultBlockState());
-            started[0] = level.getGameTime();
-        }).thenWaitUntil(() -> {
-            helper.assertTrue(MinecraftThermalInput.sampleMaterial(level, material, sample)
-                    && sample.source() == MaterialSample.Source.LIVE,
-                    "Placed powder snow enters the actual material publication");
-            initialH[0] = sample.enthalpyJ();
-        }).thenWaitUntil(() -> {
-            helper.assertTrue(MinecraftThermalInput.sampleMaterial(level, material, sample)
-                    && sample.source() == MaterialSample.Source.LIVE
-                    && sample.enthalpyJ() > initialH[0] + 10,
-                    "Actual heat exchange must increase stored material H before conversion");
-        }).thenWaitUntil(() -> {
-            helper.assertTrue(level.getBlockState(material).isAir(), "Actual phase controller eventually melts powder snow into Air");
-        }).thenExecute(() -> {
-            for (BlockPos fire : fires) if (level.getBlockState(fire).getValue(CampfireBlock.LIT)) useItem(helper, fire, Items.IRON_SHOVEL);
-            FHMain.LOGGER.info("THERMAL_PRODUCTION_PHASE,initialH={},conversionTicks={}", initialH[0], level.getGameTime() - started[0]);
-        }).thenSucceed();
-    }
-
     private static void sampleAt(ServerLevel level, double x, double y, double z, ThermalEnvironmentSample out) {
         var player = FakePlayerFactory.getMinecraft(level);
         Vec3 previous = player.position();
@@ -285,7 +240,7 @@ public final class ContinuousAirProductionGameTests {
         }
     }
 
-    private static void useItem(GameTestHelper helper, BlockPos position, net.minecraft.world.item.Item item) {
+    static void useItem(GameTestHelper helper, BlockPos position, net.minecraft.world.item.Item item) {
         var player = FakePlayerFactory.getMinecraft(helper.getLevel());
         ItemStack previous = player.getMainHandItem();
         ItemStack held = new ItemStack(item);

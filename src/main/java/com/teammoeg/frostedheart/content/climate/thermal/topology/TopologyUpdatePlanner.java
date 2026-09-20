@@ -486,6 +486,16 @@ public final class TopologyUpdatePlanner {
             long remaining = draft.topologyDirtyMask | draft.fragmentDirtyMask;
             if (draft.retirement) {
                 remaining = draft.page.residentBrickMask;
+            } else if (draft.replacedPage != null) {
+                remaining |= draft.replacedPage.residentBrickMask;
+                // Replacement may admit fewer Bricks. Their old solver fragments still
+                // occupy this Page slot and must be removed along with the old cells.
+                long removed = draft.replacedPage.residentBrickMask & ~draft.nextResidentBrickMask;
+                while (removed != 0L) {
+                    int brick = Long.numberOfTrailingZeros(removed);
+                    affectedFragments.add(draft.page.fragmentIndex(brick));
+                    removed &= removed - 1L;
+                }
             }
             while (remaining != 0L) {
                 int brick = Long.numberOfTrailingZeros(remaining);
@@ -548,7 +558,7 @@ public final class TopologyUpdatePlanner {
                 page = pages.findPageSlot(pageSlot);
             }
             PageDraft draft = acquireDraft(page);
-            if (draft.retirement) {
+            if (draft.retirement || !view.resident(page, brick)) {
                 fragments[index] = ThermalFragment.EMPTY;
                 continue;
             }
@@ -570,18 +580,21 @@ public final class TopologyUpdatePlanner {
     private void prepareMigrationsAndRetirements() {
         for (int draftIndex = 0; draftIndex < draftCount; draftIndex++) {
             PageDraft draft = draftPool.get(draftIndex);
-            if (draft.retirement) {
-                long remaining = draft.page.residentBrickMask;
+            if (draft.retirement || draft.replacedPage != null) {
+                WorkerPageStore.PageState retired = draft.retirement ? draft.page : draft.replacedPage;
+                // Recompiled Bricks migrate below. Old-only Bricks retire directly, without
+                // manufacturing new cells or treating residency loss as a world block edit.
+                long remaining = retired.residentBrickMask & (draft.retirement ? -1L : ~draft.cellReplacementMask);
                 while (remaining != 0L) {
                     int brick = Long.numberOfTrailingZeros(remaining);
-                    WorkerBrickTopology old = draft.page.brick(brick);
-                    collectOldSpan(draft.page, old);
+                    WorkerBrickTopology old = retired.brick(brick);
+                    collectOldSpan(retired, old);
                     for (int slot : old.phaseSlots) {
                         removedPhaseSlots.add(slot);
                     }
                     remaining &= remaining - 1L;
                 }
-                continue;
+                if (draft.retirement) continue;
             }
             WorkerPageStore.PageState previous =
                     draft.replacedPage == null ? draft.page : draft.replacedPage;

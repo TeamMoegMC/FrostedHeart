@@ -451,6 +451,12 @@ perform a retirement transaction followed by a later admission, add a
 phase requests belong to the old lifecycle and are not copied to the new Page;
 their stale ACKs are rejected by the existing lifecycle identity check.
 
+If the replacement's resident mask is smaller, old-only Brick spans and phase registrations
+are retired and their solver fragments are explicitly replaced with `ThermalFragment.EMPTY`.
+Their neighboring fragments still enter the normal dependency rebuild. Loss of residency does
+not manufacture a material world edit. On terminal publication failure, the new and replaced
+handles each recover their own Page publication identity; this does not roll back solver state.
+
 Brick compilation uses 144 interior block-face pairs and 16 aligned pairs per
 shared face; full-Air/full-Air uses one area-16 connection. Interior attributes
 come from reusable 64-entry scratch. Shared faces belong to the negative-coordinate

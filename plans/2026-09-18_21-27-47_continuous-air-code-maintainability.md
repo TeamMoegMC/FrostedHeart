@@ -2,14 +2,14 @@
 
 - Time: `2026-09-18 21:27:47 +08:00`
 - Authors: `Codex; OpenAI GPT-6; primary engineering agent`
-- Status: `ready; 与工程计划共同用于后续实现，当前未修改生产代码`
-- Updated: `2026-09-18 22:54:39 +08:00；验证仅使用真实生产路径，不使用JUnit或独立数值测试`
+- Status: `in-progress; 已用于生产代码实施，事务准备与容量所有权仍需收敛`
+- Updated: `2026-09-21；当前类与调用链见连续空气活文档，验证仅使用真实生产路径`
 - Scope: `连续空气代码职责、调用顺序、数据访问、命名、数值内核和变更入口`
 - Related: [工程计划](2026-09-18_20-53-28_continuous-air-r4-cpu-engineering.md)、[已完成的温度代码整理](2026-09-16_00-15-34_thermal-readability-maintainability-refactor.md)、[当前运行架构](../docs/climate/thermal-runtime-architecture-and-optimization.md)
 
 ## 1. 阅读入口与设计目标
 
-维护者先读本文件理解代码，再按需查工程计划的公式、时序和验收。物理模型、存档格式与精度要求由工程计划拥有，本文件不重复定义另一套。新增类型/方法均为拟定名称，不代表仓库已经实现。
+本文件记录目标职责和代码设计；当前已实现的类、调用链和限制以[连续空气活文档](../docs/climate/continuous-air-runtime.md)及源码为准。物理模型、存档格式与精度目标由工程计划拥有，本文件不重复定义另一套。下列拟定接口不代表全部已落地。
 
 代码应让维护者快速回答：温度存在哪里、谁能修改、一次更新按什么顺序发生、某个公式在哪里、改参数会重算什么。遵循最近温度代码整理的原则：保留已有有意义类型，删除无用转发，不为缩短文件而建立接口或通用Context。
 
@@ -224,4 +224,4 @@ dirty更新集中在实际owner入口：功率变化归源、几何变化归plan
 
 ## Outcome
 
-已确定供后续实施使用的代码职责、调用骨架、状态所有权、命名和优化位置；尚未创建上述生产类。按工程计划P0–P6直接实现生产闭环，并以真实服务器行为与性能验收。该文件不是已经完成可维护性验收的声明。
+生产代码已有独立的AirFieldLayout/LocalAirShape、AirShapeStore/AirFieldCompiler、AirOperatorFragment/CoupledThermalOperator、ContinuousAirSolver、CutLoadBuffer/AirLoadTable和AirFieldCheckpoint。实际维护入口见[连续空气活文档](../docs/climate/continuous-air-runtime.md)。普通算子推进复用primitive数组，材料trial不直接写权威H；几何重建仍在topology提交之后，预算所有权和准备/提交边界未达最终设计。该计划继续in-progress，不声明已完成全部可维护性验收。

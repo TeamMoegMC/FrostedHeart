@@ -313,8 +313,7 @@ public final class PreparedTopologyChange {
             this.residentBrickMask = residentBrickMask;
             this.sourceSeedMask = sourceSeedMask;
             this.publication = publication;
-            rollbackPublication = replacedPage == null
-                    ? page.publication : replacedPage.publication;
+            rollbackPublication = page.publication;
             this.stagedBrickMask = stagedBrickMask;
             this.publicationChangedBrickMask = retirement
                     ? 0L

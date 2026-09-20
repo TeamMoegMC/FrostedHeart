@@ -1,7 +1,7 @@
 # Continuous Air Runtime
 
 - Status: `Partial; production path implemented, lifecycle and capacity work still in progress`
-- Last verified: `2026-09-20`
+- Last verified: `2026-09-21`
 - Scope: optional continuous Air backend, material coupling, source delivery, spatial queries and version-5 checkpoints
 - Code anchors: `AirFieldLayout`, `LocalAirShape`, `AirFieldCompiler`, `AirShapeStore`, `AirOperatorFragment`, `CoupledThermalOperator`, `PcgSolver`, `ContinuousAirSolver`, `AirLoadTable`, `CutLoadBuffer`, `AirFieldCheckpoint`, `ThermalDimensionEngine.process`
 
@@ -53,6 +53,13 @@ volume arrays and flat contact weights; each contact applies a gather/scatter te
 expanding a dense matrix. Coarse/coarse transport mass is lumped; cross terms involving a local
 mode remain. Topology projection uses the full mass matrix instead.
 
+Contact activity/environment are refreshed once per material trial; diagonal/preconditioner
+preparation then runs once per buoyancy iteration, after the material branches are selected.
+`materialContactRates` gathers the same contact temperatures but scatters only the material
+entries consumed by H/branch trials. Two-entry contacts have an explicit rank-one application
+inside `apply`; general spatial traces retain the packed loop. These paths use the same weights,
+conductance and accumulation order, with no altered thermal parameters or convergence threshold.
+
 `PcgSolver` reuses primitive work arrays, warm starts, scalar Jacobi and paired local-mode
 Cholesky blocks. Its preconditioned correction threshold is `1e-9 °C`, with a recomputed
 residual before acceptance. This stopping criterion is not a certified physical temperature-error bound.
@@ -94,7 +101,10 @@ This is finite-support spatial history, not a replay of unloaded-world simulatio
 `ContinuousAirProductionGameTests` uses actual blocks, fuel capabilities, flint-and-steel,
 shovels, normal world ticks and public temperature/material queries. It never writes H,
 constructs an engine, calls a solver, or creates synthetic ACKs. The selected namespace is
-`frostedheart_production`. The fixture paces GameTest world ticks at 20 TPS because its default
+`frostedheart_production`, containing the four shorter heating, spatial, reload and slab-outlet scenarios.
+The long powder-snow phase scenario is in `ContinuousAirPhaseProductionGameTests`, selected only
+with `-PgameTestNamespaces=frostedheart_production_slow`; it is temporarily excluded from the
+normal development run at the user's request. The fixture paces GameTest world ticks at 20 TPS because its default
 unthrottled clock can outrun the production worker.
 
 Run with the GameTest common config's `continuousAir = true`:
