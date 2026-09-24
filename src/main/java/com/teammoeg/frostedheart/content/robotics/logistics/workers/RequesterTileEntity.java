@@ -19,17 +19,15 @@
 
 package com.teammoeg.frostedheart.content.robotics.logistics.workers;
 
-import java.util.Collection;
-import java.util.Collections;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import com.teammoeg.chorda.util.struct.LazyTickWorker;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
-import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
 import com.teammoeg.frostedheart.content.robotics.logistics.Filter;
 import com.teammoeg.frostedheart.content.robotics.logistics.LogisticNetwork;
+import com.teammoeg.frostedheart.content.robotics.logistics.grid.LogisticElement;
 import com.teammoeg.frostedheart.content.robotics.logistics.gui.RequesterChestMenu;
 import com.teammoeg.frostedheart.content.robotics.logistics.tasks.LogisticRequestTask;
 import com.teammoeg.frostedheart.content.robotics.logistics.tasks.LogisticTaskKey;
@@ -52,7 +50,7 @@ import net.minecraftforge.common.capabilities.ForgeCapabilities;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.items.ItemStackHandler;
 
-public class RequesterTileEntity extends LogisticBlockEntity implements  MenuProvider {
+public class RequesterTileEntity extends LogisticProviderBlockEntity implements  MenuProvider {
 	
 	ItemStackHandler container=new ItemStackHandler(27) {
 		@Override
@@ -64,7 +62,7 @@ public class RequesterTileEntity extends LogisticBlockEntity implements  MenuPro
 	public LazyOptional<ItemStackHandler> grid=LazyOptional.of(()->container);
 	public Filter[] filters=new Filter[9];
 	public RequesterTileEntity(BlockPos pos,BlockState bs) {
-		super(FHBlockEntityTypes.REQUESTER_CHEST.get(),pos,bs,9);
+		super(FHBlockEntityTypes.REQUESTER_CHEST.get(),pos,bs,9,new LogisticElement(null,pos));
 
 	}
 
@@ -148,16 +146,6 @@ public class RequesterTileEntity extends LogisticBlockEntity implements  MenuPro
 		}
 	}
 
-	protected void refreshNetwork() {
-		super.refreshNetwork();
-		Collection<LazyOptional<LogisticNetwork>> candidate=FHCapabilities.ROBOTIC_LOGISTIC_CHUNK
-			.getCapability(level.getChunk(worldPosition))
-			.map(chunk->chunk.getNetworkFor(level,worldPosition))
-			.orElse(Collections.emptySet());
-		networks.addAll(candidate);
-		
-	}
-
 	@Override
 	public <T> @NotNull LazyOptional<T> getCapability(@NotNull Capability<T> cap, @Nullable Direction side) {
 		if(cap==ForgeCapabilities.ITEM_HANDLER)
@@ -173,24 +161,6 @@ public class RequesterTileEntity extends LogisticBlockEntity implements  MenuPro
 	@Override
 	public Component getDisplayName() {
 		return Component.translatable(this.getBlockState().getBlock().getDescriptionId());
-	}
-	@Override
-	public void onRemoved() {
-		super.onRemoved();
-		grid.invalidate();
-	}
-
-	@Override
-	public void onUnloaded() {
-		super.onUnloaded();
-		grid.invalidate();
-	}
-
-	@Override
-	public void onLoad() {
-		super.onLoad();
-		if(!grid.isPresent())
-			grid=LazyOptional.of(()->container);
 	}
 
 

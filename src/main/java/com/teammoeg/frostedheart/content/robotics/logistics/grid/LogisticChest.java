@@ -19,8 +19,6 @@
 
 package com.teammoeg.frostedheart.content.robotics.logistics.grid;
 
-import java.util.ArrayList;
-import java.util.List;
 import org.jetbrains.annotations.NotNull;
 
 import com.teammoeg.frostedheart.content.robotics.logistics.data.Index.Coord;
@@ -37,16 +35,10 @@ import net.minecraftforge.items.IItemHandlerModifiable;
 import net.minecraftforge.items.ItemHandlerHelper;
 import net.minecraftforge.items.ItemStackHandler;
 
-public class LogisticChest implements IItemHandler, IGridElement,IItemHandlerModifiable{
+public class LogisticChest extends LogisticElement implements IItemHandler,IItemHandlerModifiable{
 	private static final int MAX_SLOT=27;
 	@Getter
 	ItemStackHandler chest=new ItemStackHandler(MAX_SLOT);
-	List<LogisticHub> hubs=new ArrayList<>();
-	boolean isChanged;
-	@Getter
-	Level level;
-	@Getter
-	BlockPos pos;
 	@Setter
 	@Getter
 	ItemKey filter;
@@ -66,7 +58,7 @@ public class LogisticChest implements IItemHandler, IGridElement,IItemHandlerMod
 	public @NotNull ItemStack getStackInSlot(int slot) {
 		return chest.getStackInSlot(slot);
 	}
-	private void onStackModified(int slot) {
+	protected void onStackModified(int slot) {
 		ItemStack stack=chest.getStackInSlot(slot);
 		if(stack.isEmpty()) {
 			onStackRemoved(slot);
@@ -76,7 +68,7 @@ public class LogisticChest implements IItemHandler, IGridElement,IItemHandlerMod
 			hub.set(new Coord(pos,slot), stack);
 		}
 	}
-	private void onStackRemoved(int slot) {
+	protected void onStackRemoved(int slot) {
 		for(LogisticHub hub:hubs){
 			if(filter==null)
 				hub.set(new Coord(pos,slot), ItemStack.EMPTY);
@@ -137,23 +129,8 @@ public class LogisticChest implements IItemHandler, IGridElement,IItemHandlerMod
 	public boolean isItemValid(int slot, @NotNull ItemStack stack) {
 		return chest.isItemValid(slot, stack);
 	}
-	@Override
-	public boolean isChanged() {
-		return isChanged;
-	}
-	@Override
-	public boolean consumeChange() {
-		boolean changed=isChanged;
-		isChanged=false;
-		return changed;
-	}
 	public LogisticChest(Level level, BlockPos pos) {
-		super();
-		this.level = level;
-		this.pos = pos;
-	}
-	public void setLevel(Level level) {
-		this.level=level;
+		super(level,pos);
 	}
 	@Override
 	public void setStackInSlot(int slot, @NotNull ItemStack stack) {
@@ -161,31 +138,16 @@ public class LogisticChest implements IItemHandler, IGridElement,IItemHandlerMod
 		markChanged();
 		onStackModified(slot);
 	}
-
-	private void markChanged() {
-		isChanged=true;
-	}
-	public void tick() {
-		hubs.removeIf(t->!t.isValid());
-	}
 	@Override
 	public ItemStack takeItem(int slot, int amount) {
 		return chest.extractItem(slot, amount, false);
 	}
 	@Override
 	public void registerSlots(LogisticHub hub) {
+		super.registerSlots(hub);
 		for(int i=0;i<chest.getSlots();i++) {
 			ItemStack stack=chest.getStackInSlot(i);
 			hub.set(new Coord(pos,i), stack);
-		}
-		hubs.add(hub);
-	}
-	
-	@Override
-	public void removeSlots() {
-		for(LogisticHub hub:hubs) {
-			
-			hub.remove(pos);
 		}
 	}
 }

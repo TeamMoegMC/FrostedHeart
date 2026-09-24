@@ -227,7 +227,7 @@ public class WhiteCurtainInfo {
 		int z2=rs.nextInt(8)+totalchunks;
 		Rect rect=generateArea(new ChunkPos(pos),dir,x1,x2,z1,z2);
 		WhiteCurtainInfo info=new WhiteCurtainInfo(rect,dir,ite);
-		System.out.println(rect+","+dir+","+ite);
+		//System.out.println(rect+","+dir+","+ite);
 		return info;
 	}
     public static void main(String[] args) {

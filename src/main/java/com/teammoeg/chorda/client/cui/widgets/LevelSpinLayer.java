@@ -29,6 +29,7 @@ import com.teammoeg.chorda.client.cui.base.UIElement;
 import com.teammoeg.chorda.text.Components;
 
 import lombok.Getter;
+import lombok.Setter;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
@@ -45,6 +46,9 @@ public class LevelSpinLayer extends UIElement {
 	private final int scrollBarSize;
 	/** 当前滚动值 / Current scroll value */
 	private int value = 0;
+	@Getter
+	@Setter
+	private int ghostValue = 0;
 	/** 最小滚动值 / Minimum scroll value */
 	@Getter
 	private int min = 0;
@@ -95,7 +99,6 @@ public class LevelSpinLayer extends UIElement {
 	/** {@inheritDoc} */
 	@Override
 	public boolean onMousePressed(MouseButton button) {
-		System.out.println(this.getMouseX()+","+this.getMouseY()+","+isMouseOver()+"("+this.getWidth()+","+this.getHeight());
 		if (isMouseOver()) {
 			int scrollBarSize=getScrollBarSize();
 			if(this.getMouseX()<10) {
@@ -141,24 +144,27 @@ public class LevelSpinLayer extends UIElement {
 		int scrollBarSize = getScrollBarSize();
 		int dx=x;
 		boolean isMinMouseOver=isMouseOver&&this.getMouseX()<10;
-		hint.theme(this).drawButton(graphics, dx, y, 10, scrollBarSize, isMinMouseOver, true);
+		hint.theme(this).drawButton(graphics, dx, y, 10, scrollBarSize, isMinMouseOver, value>min);
 		graphics.drawString(getFont(), "-", dx+2, y+2, hint.theme(this).buttonTextColor());
 		dx+=11;
 		try(var helper=TesselateHelper.getShapeTesslator()){
 			Matrix4f m4f=graphics.pose().last().pose();
 			int maxVal=(max-min);
 			int curVal=getValue()-min;
+			int curGhost=ghostValue-min;
 			for(int i=0;i<maxVal;i++) {
 
 				helper.drawRect(m4f, dx, y, dx+scrollBarSize, y+scrollBarSize, hint.theme(this).UITextColor(), true);
 				if(i<curVal) {
 					helper.fillRect(m4f, dx+2, y+2, dx+scrollBarSize-2, y+scrollBarSize-2, hint.theme(this).UITextColor());
+				}else if(i<curGhost) {
+					helper.fillRect(m4f, dx+2, y+2, dx+scrollBarSize-2, y+scrollBarSize-2, 0xffaaaaaa);
 				}
 				dx+=scrollBarSize+1;
 			}
 		}
 		boolean isMaxMouseOver=isMouseOver&&this.getMouseX()>dx+1;
-		hint.theme(this).drawButton(graphics, dx, y, 10, scrollBarSize, isMaxMouseOver, true);
+		hint.theme(this).drawButton(graphics, dx, y, 10, scrollBarSize, isMaxMouseOver, value<max);
 		graphics.drawString(getFont(), "+", dx+2, y+2, hint.theme(this).buttonTextColor());
 		
 

@@ -27,10 +27,8 @@ public class SpaceOutlineRenderer<T extends BlockEntity&TownBlockEntity<? extend
 	public void render(T pBlockEntity, float pPartialTick, PoseStack pPoseStack, MultiBufferSource pBuffer, int pPackedLight, int pPackedOverlay) {
 		var data=pBlockEntity.getBuilding();
 		if(data.isPresent()) {
-			System.out.println("data present");
 			Set<OccupiedCell> space=data.get().getOccupiedVolume();
 			if(space!=null) {
-				System.out.println("space present");
 				if(/*cache==null||*/oldSpace==null||!Objects.equals(space, oldSpace)) {
 					oldSpace=Set.copyOf(space);
 					/*Set<BlockPos> poss=new HashSet<>();

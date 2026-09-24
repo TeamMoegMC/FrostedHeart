@@ -52,4 +52,8 @@ public interface IGridElement {
 	boolean fillable();
 
 	void removeSlots();
+
+	void setLevel(Level level);
+
+	void tick();
 }

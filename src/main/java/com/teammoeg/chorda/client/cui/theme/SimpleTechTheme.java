@@ -94,7 +94,7 @@ public class SimpleTechTheme implements Theme{
 
 	@Override
 	public int UIAltTextColor() {
-		return 0xFFe4eff0;
+		return 0xcce4eff0;
 	}
 
 	@Override

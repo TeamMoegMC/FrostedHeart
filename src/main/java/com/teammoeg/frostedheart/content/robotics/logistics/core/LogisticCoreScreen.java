@@ -32,6 +32,7 @@ public class LogisticCoreScreen extends MenuPrimaryLayer<LogisticCoreMenu>{
 	LevelSpinLayer spinner;
 	LimitedTextField actual;
 	LimitedTextField labour;
+	LimitedTextField netStat;
 	
 	public LogisticCoreScreen(LogisticCoreMenu menu) {
 		super(menu);
@@ -39,7 +40,7 @@ public class LogisticCoreScreen extends MenuPrimaryLayer<LogisticCoreMenu>{
 
 			@Override
 			public void onValueChanged() {
-				setValue(this.getValue());
+				LogisticCoreScreen.this.setValue(this.getValue());
 			}
 			
 		};
@@ -47,11 +48,15 @@ public class LogisticCoreScreen extends MenuPrimaryLayer<LogisticCoreMenu>{
 		effeciency.setTitle(Components.literal("Effeciency"));
 		actual=new LimitedTextField(this,Components.empty(),180);
 		labour=new LimitedTextField(this,Components.empty(),180);
-		menu.setLevel.bind(spinner::setValue);
+		netStat=new LimitedTextField(this,Components.empty(),180);
+		menu.setLevel.bind(spinner::setGhostValue);
 		menu.currentLevel.bind(this::updateLevel);
 		menu.totalLabour.bind(n->this.updateLabour(menu.currentLabour.getValue(), menu.desiredLabour.getValue(), n));
 		menu.desiredLabour.bind(n->this.updateLabour(menu.currentLabour.getValue(), n, menu.totalLabour.getValue()));
 		menu.currentLabour.bind(n->this.updateLabour(n, menu.desiredLabour.getValue(), menu.totalLabour.getValue()));
+		menu.taskSize.bind(n->this.updateQueueSize(n, menu.workerSize.getValue(), menu.networkSize.getValue()));
+		menu.workerSize.bind(n->this.updateQueueSize(menu.taskSize.getValue(), n, menu.networkSize.getValue()));
+		menu.networkSize.bind(n->this.updateQueueSize(menu.taskSize.getValue(), menu.workerSize.getValue(), n));
 	}
 	public void setValue(int value) {
 		menu.sendMessage(0, value);
@@ -60,7 +65,11 @@ public class LogisticCoreScreen extends MenuPrimaryLayer<LogisticCoreMenu>{
 		labour.setTitle(Components.literal("labour:"+actual+"("+set+") / "+total));
 	}
 	public void updateLevel(int level) {
+		spinner.setValue(level);
 		actual.setTitle(Components.literal("level:"+level+" / "+10));
+	}
+	public void updateQueueSize(int queue,int worker,int size) {
+		netStat.setTitle(Components.literal("queued:"+queue+" working:"+worker+" terminals:"+size));
 	}
 	@Override
 	public boolean onInit() {
@@ -75,6 +84,7 @@ public class LogisticCoreScreen extends MenuPrimaryLayer<LogisticCoreMenu>{
 		this.add(spinner);
 		this.add(actual);
 		this.add(labour);
+		this.add(netStat);
 		
 	}
 
@@ -85,6 +95,7 @@ public class LogisticCoreScreen extends MenuPrimaryLayer<LogisticCoreMenu>{
 		spinner.setPos(20, 20);
 		actual.setPos(20, 32);
 		labour.setPos(20, 44);
+		netStat.setPos(20, 56);
 	}
 
 

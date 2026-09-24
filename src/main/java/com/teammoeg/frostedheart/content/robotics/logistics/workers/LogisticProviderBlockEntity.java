@@ -5,11 +5,9 @@ import java.util.Collections;
 
 import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
 import com.teammoeg.frostedheart.content.robotics.logistics.LogisticNetwork;
-import com.teammoeg.frostedheart.content.robotics.logistics.grid.LogisticChest;
-
+import com.teammoeg.frostedheart.content.robotics.logistics.grid.IGridElement;
 import lombok.Getter;
 import net.minecraft.core.BlockPos;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
@@ -17,20 +15,12 @@ import net.minecraftforge.common.util.LazyOptional;
 
 public abstract class LogisticProviderBlockEntity extends LogisticBlockEntity implements ILogisticProvider {
 	@Getter
-	private LogisticChest container;
-	public LazyOptional<LogisticChest> grid;
-	public LogisticProviderBlockEntity(BlockEntityType<? extends BlockEntity> type, BlockPos pos, BlockState state, int slots, LogisticChest container) {
+	protected IGridElement container;
+	public LazyOptional<IGridElement> grid;
+	public LogisticProviderBlockEntity(BlockEntityType<? extends BlockEntity> type, BlockPos pos, BlockState state, int slots, IGridElement container) {
 		super(type, pos, state, slots);
 		this.container=container;
 		grid=LazyOptional.of(()->container);
-	}
-	@Override
-	public void readCustomNBT(CompoundTag nbt, boolean descPacket) {
-		container.deserialize(nbt.getCompound("chest"));
-	}
-	@Override
-	public void writeCustomNBT(CompoundTag nbt, boolean descPacket) {
-		nbt.put("chest",container.serialize());
 	}
 	@Override
 	public void tick() {

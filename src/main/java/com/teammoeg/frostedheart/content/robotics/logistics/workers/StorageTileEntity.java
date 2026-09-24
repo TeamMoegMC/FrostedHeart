@@ -28,6 +28,7 @@ import com.teammoeg.frostedheart.content.robotics.logistics.gui.StorageChestMenu
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.MenuProvider;
 import net.minecraft.world.entity.player.Inventory;
@@ -39,13 +40,21 @@ import net.minecraftforge.common.capabilities.ForgeCapabilities;
 import net.minecraftforge.common.util.LazyOptional;
 
 public class StorageTileEntity extends LogisticProviderBlockEntity implements MenuProvider,ILogisticProvider{
-
 	public StorageTileEntity(BlockPos pos,BlockState bs) {
 		super(FHBlockEntityTypes.STORAGE_CHEST.get(),pos,bs,0,new LogisticChest(null,pos));
 	}
+
+	@Override
+	public void readCustomNBT(CompoundTag nbt, boolean descPacket) {
+		((LogisticChest)container).deserialize(nbt.getCompound("chest"));
+	}
+	@Override
+	public void writeCustomNBT(CompoundTag nbt, boolean descPacket) {
+		nbt.put("chest",((LogisticChest)container).serialize());
+	}
 	@Override
 	public AbstractContainerMenu createMenu(int pContainerId, Inventory pPlayerInventory, Player pPlayer) {
-		return new StorageChestMenu(pContainerId,this,pPlayerInventory,getContainer());
+		return new StorageChestMenu(pContainerId,this,pPlayerInventory,(LogisticChest)getContainer());
 	}
 	@Override
 	public <T> @NotNull LazyOptional<T> getCapability(@NotNull Capability<T> cap, @Nullable Direction side) {

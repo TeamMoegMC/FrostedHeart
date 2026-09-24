@@ -1,11 +1,10 @@
 package com.teammoeg.frostedheart.content.robotics;
 
-import java.lang.ref.WeakReference;
-
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.chorda.util.struct.WeakReferenceSlot;
 
+import lombok.Getter;
 import net.minecraft.core.GlobalPos;
 import net.minecraft.util.Mth;
 
@@ -19,10 +18,14 @@ public class MachineData {
 		Codec.INT.fieldOf("desired").forGetter(o->o.desiredLevel),
 		Codec.INT.fieldOf("actual").forGetter(o->o.actualLevel)
 		).apply(t, MachineData::new));
+    @Getter
     private final GlobalPos pos;
+    @Getter
     private final MachineType type;
-    
+
+    @Getter
     private int desiredLevel;
+    @Getter
     private int actualLevel;
 
     private transient WeakReferenceSlot<Machine> instance;
@@ -45,20 +48,15 @@ public class MachineData {
         this.pos = pos;
         this.instance=machine;
     }
-    public MachineType getType() {
-		return type;
-	}
-
-	public GlobalPos getPos()          { return pos; }
-    public int  getDesiredLevel()         { return desiredLevel; }
-    public void setDesiredLevel(int v)    { this.desiredLevel = Mth.clamp(v, 0, type.maxLevel()); }
-    public int  getActualLevel()          { return actualLevel; }
-    public void setActualLevel(int v)     { this.actualLevel = v; }
     public boolean isLoaded()             { return instance!=null&&instance.isPresent(); }
     public boolean isDeficient()          { return actualLevel<desiredLevel; }
     public Machine getInstance()          { return instance==null?null:instance.orElse(null); }
-    public void setInstance(WeakReferenceSlot<Machine> m)    { this.instance = m; }
 
+    // INTERNAL METHODS DO NOT USE
+    void setDesiredLevel(int v)    { this.desiredLevel = Mth.clamp(v, 0, type.maxLevel()); }
+    void setActualLevel(int v)     { this.actualLevel = v; }
+    void setInstance(WeakReferenceSlot<Machine> m)    { this.instance = m; }
+    // INTERNAL METHODS END
     @Override
     public String toString() {
         return String.format(

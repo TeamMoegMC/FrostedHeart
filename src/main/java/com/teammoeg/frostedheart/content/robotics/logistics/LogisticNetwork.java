@@ -35,6 +35,7 @@ import com.teammoeg.frostedheart.content.robotics.logistics.tasks.LogisticReques
 import com.teammoeg.frostedheart.content.robotics.logistics.tasks.LogisticTask;
 import com.teammoeg.frostedheart.content.robotics.logistics.tasks.LogisticTaskKey;
 
+import lombok.Getter;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
@@ -45,11 +46,13 @@ import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.items.IItemHandler;
 
 public class LogisticNetwork {
+	@Getter
 	private LogisticHub hub;
 	Set<LogisticTaskKey> keys=new HashSet<>();
 	LinkedList<LogisticTask> tasks=new LinkedList<>();
 	List<LogisticTask> working=new ArrayList<>(40);
 	Level world;
+	@Getter
 	BlockPos centerPos;
 	private final Runnable markDirty;
 	private int hubRevalidationTicks;
@@ -152,7 +155,12 @@ public class LogisticNetwork {
 			}
 		}
 	}
-
+	public int queueLength() {
+		return tasks.size();
+	}
+	public int workerLength() {
+		return working.size();
+	}
 	public void cancelTasksAt(BlockPos pos) {
 		tasks.removeIf(task->removeQueuedTaskAt(task,pos));
 		List<LogisticTask> retained=new ArrayList<>(working.size());
@@ -207,20 +215,14 @@ public class LogisticNetwork {
 	public void setWorld(Level world) {
 		this.world = world;
 	}
-
-	public BlockPos getCenterPos() {
-		return centerPos;
-	}
-
 	public void setCenterPos(BlockPos centerPos) {
 		this.centerPos = centerPos;
 	}
 
-	public LogisticHub getHub() {
-		return hub;
-	}
-
 	public void setHub(LogisticHub hub) {
 		this.hub = hub;
+	}
+	public int networkSize() {
+		return hub.size();
 	}
 }

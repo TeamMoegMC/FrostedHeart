@@ -131,7 +131,7 @@ public class VanillaTheme implements Theme {
 	}
 	@Override
 	public int UIAltTextColor() {
-		return 0xff000000;
+		return 0xcc000000;
 	}
 
 	@Override

@@ -67,12 +67,20 @@ public class SupplierTileEntity extends LogisticProviderBlockEntity implements M
 	}
 
 
+	@Override
+	public void readCustomNBT(CompoundTag nbt, boolean descPacket) {
+		((RequestLogisticChest)container).deserialize(nbt.getCompound("chest"));
+	}
+	@Override
+	public void writeCustomNBT(CompoundTag nbt, boolean descPacket) {
+		nbt.put("chest",((RequestLogisticChest)container).serialize());
+	}
 	LazyTickWorker pushWorker=new LazyTickWorker(10,()->{
 		if(networks.isEmpty())
 			return;
-		
-		for(int slot=0;slot<getContainer().getSlots();slot++) {
-			if(getContainer().getStackInSlot(slot).isEmpty())
+		RequestLogisticChest chest=(RequestLogisticChest) getContainer();
+		for(int slot=0;slot<chest.getSlots();slot++) {
+			if(chest.getStackInSlot(slot).isEmpty())
 				continue;
 			LogisticTaskKey key=getKeys().get(slot).get();
 			for(LazyOptional<LogisticNetwork> lln:networks) {
@@ -90,8 +98,9 @@ public class SupplierTileEntity extends LogisticProviderBlockEntity implements M
 		super.tick();
 		if(!this.level.isClientSide) {
 			if(!networks.isEmpty()) {
-				for(int i=0;i<getContainer().getSlots();i++){
-					if(!getContainer().getStackInSlot(i).isEmpty()) {
+				RequestLogisticChest chest=(RequestLogisticChest) getContainer();
+				for(int i=0;i<chest.getSlots();i++){
+					if(!chest.getStackInSlot(i).isEmpty()) {
 						uplinkStatus=2;
 						break;
 					}
@@ -102,7 +111,7 @@ public class SupplierTileEntity extends LogisticProviderBlockEntity implements M
 	}
 	@Override
 	public AbstractContainerMenu createMenu(int pContainerId, Inventory pPlayerInventory, Player pPlayer) {
-		return new SupplierChestMenu(pContainerId,this,pPlayerInventory,getContainer());
+		return new SupplierChestMenu(pContainerId,this,pPlayerInventory,(RequestLogisticChest)getContainer());
 	}
 	@Override
 	public <T> @NotNull LazyOptional<T> getCapability(@NotNull Capability<T> cap, @Nullable Direction side) {

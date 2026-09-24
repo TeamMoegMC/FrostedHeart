@@ -157,5 +157,8 @@ public class LogisticHub {
 		}
 		return LazyOptional.empty();
 	}
+	public int size() {
+		return gridByPos.size();
+	}
 
 }

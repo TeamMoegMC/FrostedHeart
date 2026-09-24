@@ -7,6 +7,7 @@ import com.teammoeg.chorda.dataholders.SpecialData;
 import com.teammoeg.chorda.dataholders.SpecialDataHolder;
 import com.teammoeg.chorda.util.struct.WeakReferenceSlot;
 
+import lombok.Getter;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.GlobalPos;
 import net.minecraft.util.Mth;
@@ -34,9 +35,11 @@ public class MachineLevelManager implements SpecialData{
 		).apply(t, MachineLevelManager::new));
 
     /** 总数值池上限 */
+    @Getter
     private int totalPool;
 
     /** 所有机器实际等级消耗之和（缓存） */
+    @Getter
     private transient int allocatedSum;
 
     /** 所有机器数据（包含未加载机器） */
@@ -50,6 +53,8 @@ public class MachineLevelManager implements SpecialData{
 
     /** 提供者贡献的总点数（缓存） */
     private int providerSum = 0;
+    @Getter
+    private int extraProvider=0;
     
 	@SuppressWarnings("rawtypes")
 	public MachineLevelManager(SpecialDataHolder teamData) {
@@ -90,9 +95,6 @@ public class MachineLevelManager implements SpecialData{
     // ============================================================
     // 查询
     // ============================================================
-
-    public int getTotalPool()      { return totalPool; }
-    public int getAllocatedSum()   { return allocatedSum; }
     public int getAvailable()      { return totalPool - allocatedSum; }
     public int getDeficientCount() { return deficientSet.size(); }
 
@@ -119,6 +121,8 @@ public class MachineLevelManager implements SpecialData{
     		releaseMachine(machineId);
 
     		machines.put(machineId,machineData= new MachineData(machine,machineId));
+    	}else {
+    		machineData.setInstance(machine);
     	}
         return machineData;
     }
@@ -442,27 +446,26 @@ public class MachineLevelManager implements SpecialData{
      * 会按差量重算，并触发一次 reduce / increase。
      */
     public void replaceProviders(Collection<ProviderData> newProviders) {
-        int newSum = 0;
-        if (newProviders != null) {
-            for (ProviderData p : newProviders) {
-                if (p == null) continue;
-                newSum += p.getValue();
-            }
-        }
+        int newSum = extraProvider;
         providers.clear();
         if (newProviders != null) {
             for (ProviderData p : newProviders) {
                 if (p == null) continue;
+                newSum += p.getValue();
                 providers.put(p.getPos(), p);
             }
         }
-        providers.put(GlobalPos.of(Level.OVERWORLD, BlockPos.ZERO), new ProviderData(GlobalPos.of(Level.OVERWORLD, BlockPos.ZERO),30));
-        
-        providerSum = newSum + 30;
+        providerSum = newSum;
         
         applyProviderSumChange();
     }
+    public void setExtraProviderValue(int value) {
+    	providerSum-=extraProvider;
+    	extraProvider=value;
+    	providerSum+=extraProvider;
 
+        applyProviderSumChange();
+    }
     /**
      * 内部：提供者总和变化后，重新驱动总池。
      * 若新总和 == 旧总和，不做任何事。

@@ -18,6 +18,10 @@ public class LogisticCoreMenu extends CMultiblockMenu<LogisticState>{
 	public CDataSlot<Integer> totalLabour = CCustomMenuSlot.SLOT_INT.create(this);
 	public CDataSlot<Integer> currentLabour = CCustomMenuSlot.SLOT_INT.create(this);
 	public CDataSlot<Integer> desiredLabour = CCustomMenuSlot.SLOT_INT.create(this);
+
+	public CDataSlot<Integer> taskSize = CCustomMenuSlot.SLOT_INT.create(this);
+	public CDataSlot<Integer> workerSize = CCustomMenuSlot.SLOT_INT.create(this);
+	public CDataSlot<Integer> networkSize = CCustomMenuSlot.SLOT_INT.create(this);
 	public LogisticCoreMenu(MenuType<?> pMenuType, int pContainerId, Inventory inventoryPlayer) {
 		super(pMenuType, pContainerId, inventoryPlayer.player, 0);
 	}
@@ -34,6 +38,9 @@ public class LogisticCoreMenu extends CMultiblockMenu<LogisticState>{
 			desiredLabour.bind(()->data.getMachine(state.pos).getDesiredCost());
 			
 		});
+		taskSize.bind(state.ln::queueLength);
+		workerSize.bind(state.ln::workerLength);
+		networkSize.bind(state.ln::networkSize);
 	}
 
 	@Override
@@ -42,7 +49,7 @@ public class LogisticCoreMenu extends CMultiblockMenu<LogisticState>{
 		var mbState=super.getMenuContext().mbContext().getState();
 		mbState.getTeamData().ifPresent(t->{
 			MachineLevelManager data=t.getData(FHSpecialDataTypes.LABOUR_DATA);
-			data.getMachine(mbState.pos).setDesiredLevel(state);
+			data.setDesiredLevel(mbState.pos,state);
 			
 		});
 	}
