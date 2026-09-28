@@ -1,5 +1,14 @@
-package com.teammoeg.frostedheart.content.robotics;
-import java.util.*;
+package com.teammoeg.frostedheart.content.robotics.labour;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
@@ -8,12 +17,8 @@ import com.teammoeg.chorda.dataholders.SpecialDataHolder;
 import com.teammoeg.chorda.util.struct.WeakReferenceSlot;
 
 import lombok.Getter;
-import net.minecraft.core.BlockPos;
 import net.minecraft.core.GlobalPos;
 import net.minecraft.util.Mth;
-import net.minecraft.world.level.Level;
-import net.minecraft.world.level.dimension.BuiltinDimensionTypes;
-import net.minecraft.world.level.dimension.DimensionType;
 
 /**
  * 机器等级管理器。
@@ -60,6 +65,7 @@ public class MachineLevelManager implements SpecialData{
 	public MachineLevelManager(SpecialDataHolder teamData) {
 		super();
 		replaceProviders(null);
+		
 	}
 	
 	public MachineLevelManager(List<MachineData> initialMachines,List<ProviderData> generators) {
@@ -111,7 +117,7 @@ public class MachineLevelManager implements SpecialData{
         return Collections.unmodifiableSet(deficientSet);
     }
 
-    /** 注册机器（幂等）。加载范围内的机器实例由 onMachineLoaded 绑定。 */
+    /** 注册机器（幂等）。 */
     public MachineData registerMachine(WeakReferenceSlot<Machine> machine) {
     	GlobalPos machineId=machine.getOrThrow().getMachineLocation();
     	MachineData machineData=getMachine(machineId);
@@ -119,7 +125,6 @@ public class MachineLevelManager implements SpecialData{
     		machines.put(machineId,machineData= new MachineData(machine,machineId));
     	}else if(!Objects.equals(machineData.getType(), machine.orElse(null).getType())) {
     		releaseMachine(machineId);
-
     		machines.put(machineId,machineData= new MachineData(machine,machineId));
     	}else {
     		machineData.setInstance(machine);
@@ -203,23 +208,44 @@ public class MachineLevelManager implements SpecialData{
         rebuildDeficientSet();
     }
 
-    /** 总池缩小：按比例缩减每台机器的数值，再映射到合法等级。 */
+    /**
+     * 总池缩小：按当前点数占用从大到小依次降低各机器的实际等级。
+     *
+     * <p>每台机器一次只降一级（降到前一个合法等级），释放的点数立即计入可用池；
+     * 一轮走完如果已分配点数仍超过 {@code newTotal}，就按新的占用量重新排序再来一轮，
+     * 直到 {@code allocatedSum <= newTotal}，或者所有机器都已经降到 0 级为止。</p>
+     *
+     * <p>与按比例缩放不同，这里不做等级的除法映射：每台机器都只下降到相邻的下一级，
+     * 因此不会越过任何合法等级；剩余未分配的点数保留在池中。</p>
+     */
     private void reducePool(int newTotal) {
-        if (allocatedSum <= 0) return;
+        if (allocatedSum <= 0 || allocatedSum <= newTotal) return;
 
-        final long oldAllocated = allocatedSum;
-        int newAllocated = 0;
+        List<MachineData> ordered = new ArrayList<>(machines.values());
+        ordered.sort(Comparator.comparingInt(MachineData::getActualCost).reversed());
 
-        for (MachineData data : machines.values()) {
-        	MachineType costTable=data.getType();
-            int currentCost = costTable.getCost(data.getActualLevel());
-            // target = floor(currentCost * newTotal / oldAllocated)
-            long targetValue = currentCost * (long) newTotal / oldAllocated;
-            int newLevel = costTable.maxLevelForValue((int) targetValue);
-            data.setActualLevel(newLevel);
-            newAllocated += costTable.getCost(newLevel);
+        boolean lowered = true;
+        while (allocatedSum > newTotal && lowered) {
+            lowered = false;
+
+            for (MachineData data : ordered) {
+                if (allocatedSum <= newTotal) break;
+
+                int level = data.getActualLevel();
+                if (level <= 0) continue; // 已到 0 级，无法再降
+
+                MachineType costTable = data.getType();
+                int freed = costTable.getCost(level) - costTable.getCost(level - 1);
+                data.setActualLevel(level - 1);
+                allocatedSum -= freed;
+                lowered = true;
+            }
+
+            if (allocatedSum > newTotal) {
+                // 占用已经变化，重新排序后再来一轮，保证仍然从当前占用最大的机器开始降
+                ordered.sort(Comparator.comparingInt(MachineData::getActualCost).reversed());
+            }
         }
-        allocatedSum = newAllocated;
     }
 
     /** 总池扩大：按期望消耗比例重新分配实际等级。 */
@@ -256,11 +282,28 @@ public class MachineLevelManager implements SpecialData{
     // ============================================================
     // 期望等级变更
     // ============================================================
-
     /**
      * 设置某台机器的期望等级。
      *
-     * @return true 表示操作被接受；false 表示数值不足，提升被拒绝。
+     * @return true 表示数值充足；false 表示数值不足。
+     */
+    public boolean setDesiredLevel(WeakReferenceSlot<Machine> machine, int newDesired) {
+    	if(machine.isPresent())
+    		return setDesiredLevel(machine.getOrThrow().getMachineLocation(),newDesired);
+    	return false;
+    }
+    /**
+     * 设置某台机器的期望等级。
+     *
+     * @return true 表示数值充足；false 表示数值不足。
+     */
+    public boolean setDesiredLevel(Machine machine, int newDesired) {
+    	return setDesiredLevel(machine.getMachineLocation(),newDesired);
+    }
+    /**
+     * 设置某台机器的期望等级。
+     *
+     * @return true 表示数值充足；false 表示数值不足。
      */
     public boolean setDesiredLevel(GlobalPos machineId, int newDesired) {
         MachineData data = machines.get(machineId);
@@ -309,12 +352,12 @@ public class MachineLevelManager implements SpecialData{
         int currentCost = costTable.getCost(data.getActualLevel());
         int newDesiredCost = costTable.getCost(newDesired);
         int requiredExtra = Math.max(0, newDesiredCost - currentCost);
-
+        data.setDesiredLevel(newDesired);
         if (totalPool - allocatedSum < requiredExtra) {
             return false; // 数值不足，拒绝
         }
 
-        data.setDesiredLevel(newDesired);
+        
         if (data.getActualLevel() < newDesired) {
             data.setActualLevel(newDesired);
             allocatedSum += requiredExtra;
