@@ -6,6 +6,7 @@
 *.iml
 *.ipr
 *.iws
+/.reasonix
 
 # IntelliJ
 out/

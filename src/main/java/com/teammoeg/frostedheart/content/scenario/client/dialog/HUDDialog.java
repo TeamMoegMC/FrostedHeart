@@ -21,12 +21,10 @@ package com.teammoeg.frostedheart.content.scenario.client.dialog;
 
 import java.util.List;
 
-import com.mojang.blaze3d.vertex.PoseStack;
 import com.teammoeg.frostedheart.content.scenario.client.ClientScene;
 import com.teammoeg.frostedheart.content.scenario.client.gui.layered.LayerManager;
 import com.teammoeg.frostedheart.content.scenario.client.gui.layered.RenderParams;
 
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 
 public class HUDDialog implements IScenarioDialog{

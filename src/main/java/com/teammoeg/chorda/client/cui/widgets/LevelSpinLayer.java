@@ -45,9 +45,10 @@ public class LevelSpinLayer extends UIElement {
 	@Getter
 	private final int scrollBarSize;
 	/** 当前滚动值 / Current scroll value */
+	@Setter
+	@Getter
 	private int value = 0;
 	@Getter
-	@Setter
 	private int ghostValue = 0;
 	/** 最小滚动值 / Minimum scroll value */
 	@Getter
@@ -80,6 +81,7 @@ public class LevelSpinLayer extends UIElement {
 	 */
 	public void setMinValue(int min) {
 		this.min = min;
+		setGhostValue(getGhostValue());
 		setValue(getValue());
 	}
 
@@ -92,6 +94,7 @@ public class LevelSpinLayer extends UIElement {
 	 */
 	public void setMaxValue(int max) {
 		this.max = max;
+		setGhostValue(getGhostValue());
 		setValue(getValue());
 		this.setWidth(scrollBarSize*(max-min+1)+24);
 	}
@@ -102,15 +105,15 @@ public class LevelSpinLayer extends UIElement {
 		if (isMouseOver()) {
 			int scrollBarSize=getScrollBarSize();
 			if(this.getMouseX()<10) {
-				this.setValue(this.getValue()-1);
+				this.setGhostValue(this.getGhostValue()-1);
 				return true;
 			}
 			if(this.getMouseX()>scrollBarSize*(max-min)+10) {
-				this.setValue(this.getValue()+1);
+				this.setGhostValue(this.getGhostValue()+1);
 				return true;
 			}
 			int setValue=Mth.floor((this.getMouseX()-10)/(scrollBarSize+1))+1;
-			this.setValue(setValue);
+			this.setGhostValue(setValue);
 			
 			return true;
 		}
@@ -144,13 +147,13 @@ public class LevelSpinLayer extends UIElement {
 		int scrollBarSize = getScrollBarSize();
 		int dx=x;
 		boolean isMinMouseOver=isMouseOver&&this.getMouseX()<10;
-		hint.theme(this).drawButton(graphics, dx, y, 10, scrollBarSize, isMinMouseOver, value>min);
+		hint.theme(this).drawButton(graphics, dx, y, 10, scrollBarSize, isMinMouseOver, ghostValue>min);
 		graphics.drawString(getFont(), "-", dx+2, y+2, hint.theme(this).buttonTextColor());
 		dx+=11;
 		try(var helper=TesselateHelper.getShapeTesslator()){
 			Matrix4f m4f=graphics.pose().last().pose();
 			int maxVal=(max-min);
-			int curVal=getValue()-min;
+			int curVal=value-min;
 			int curGhost=ghostValue-min;
 			for(int i=0;i<maxVal;i++) {
 
@@ -164,7 +167,7 @@ public class LevelSpinLayer extends UIElement {
 			}
 		}
 		boolean isMaxMouseOver=isMouseOver&&this.getMouseX()>dx+1;
-		hint.theme(this).drawButton(graphics, dx, y, 10, scrollBarSize, isMaxMouseOver, value<max);
+		hint.theme(this).drawButton(graphics, dx, y, 10, scrollBarSize, isMaxMouseOver, ghostValue<max);
 		graphics.drawString(getFont(), "+", dx+2, y+2, hint.theme(this).buttonTextColor());
 		
 
@@ -186,23 +189,12 @@ public class LevelSpinLayer extends UIElement {
 	 *
 	 * @param v 新的滚动值 / New scroll value
 	 */
-	public void setValue(int v) {
+	public void setGhostValue(int v) {
 		v = Mth.clamp(v, getMin(), getMax());
 
-		if (value != v) {
-			value = v;
+		if (ghostValue != v) {
+			ghostValue = v;
 			onValueChanged();
 		}
-	}
-
-	/**
-	 * 获取当前滚动值。
-	 * <p>
-	 * Gets the current scroll value.
-	 *
-	 * @return 当前滚动值 / Current scroll value
-	 */
-	public int getValue() {
-		return value;
 	}
 }

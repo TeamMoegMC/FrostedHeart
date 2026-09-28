@@ -19,15 +19,15 @@
 
 package com.teammoeg.frostedheart.content.scenario.client.dialog;
 
-import com.teammoeg.frostedheart.content.scenario.client.ClientScene;
-
 import org.apache.commons.lang3.mutable.MutableInt;
 import org.apache.commons.lang3.mutable.MutableObject;
 
 import com.teammoeg.chorda.client.ClientUtils;
-import net.minecraft.util.FormattedCharSink;
-import net.minecraft.util.FormattedCharSequence;
+import com.teammoeg.frostedheart.content.scenario.client.ClientScene;
+
 import net.minecraft.network.chat.Component;
+import net.minecraft.util.FormattedCharSequence;
+import net.minecraft.util.FormattedCharSink;
 
 public class TextInfo {
 	public static class SizedReorderingProcessor implements FormattedCharSequence {

@@ -25,8 +25,8 @@ import com.teammoeg.chorda.util.struct.WeakReferenceSlot;
 import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
 import com.teammoeg.frostedheart.bootstrap.common.FHSpecialDataTypes;
 import com.teammoeg.frostedheart.content.robotics.MachineTypes;
-import com.teammoeg.frostedheart.content.robotics.labour.Machine;
-import com.teammoeg.frostedheart.content.robotics.labour.MachineType;
+import com.teammoeg.frostedheart.content.robotics.labor.Machine;
+import com.teammoeg.frostedheart.content.robotics.labor.MachineType;
 import com.teammoeg.frostedheart.content.robotics.logistics.LogisticNetwork;
 
 import blusunrize.immersiveengineering.api.multiblocks.blocks.util.StoredCapability;

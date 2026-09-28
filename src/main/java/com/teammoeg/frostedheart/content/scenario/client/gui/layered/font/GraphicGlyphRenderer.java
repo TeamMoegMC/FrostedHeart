@@ -27,8 +27,8 @@ import java.awt.geom.AffineTransform;
 
 import com.teammoeg.chorda.client.ClientUtils;
 
-import net.minecraft.util.FormattedCharSink;
 import net.minecraft.network.chat.Style;
+import net.minecraft.util.FormattedCharSink;
 
 public class GraphicGlyphRenderer implements FormattedCharSink{
 	Graphics2D g2d;

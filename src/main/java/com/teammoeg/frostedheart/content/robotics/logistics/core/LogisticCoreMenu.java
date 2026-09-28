@@ -4,7 +4,10 @@ import com.teammoeg.chorda.menu.CCustomMenuSlot;
 import com.teammoeg.chorda.menu.CCustomMenuSlot.CDataSlot;
 import com.teammoeg.chorda.menu.CMultiblockMenu;
 import com.teammoeg.frostedheart.bootstrap.common.FHSpecialDataTypes;
-import com.teammoeg.frostedheart.content.robotics.labour.MachineLevelManager;
+import com.teammoeg.frostedheart.content.robotics.MachineTypes;
+import com.teammoeg.frostedheart.content.robotics.labor.LaborSlot;
+import com.teammoeg.frostedheart.content.robotics.labor.LaborType;
+import com.teammoeg.frostedheart.content.robotics.labor.MachineLevelManager;
 
 import blusunrize.immersiveengineering.common.gui.IEContainerMenu.MultiblockMenuContext;
 import net.minecraft.world.entity.player.Inventory;
@@ -12,13 +15,8 @@ import net.minecraft.world.inventory.MenuType;
 
 public class LogisticCoreMenu extends CMultiblockMenu<LogisticState>{
 
-	public CDataSlot<Integer> currentLevel = CCustomMenuSlot.SLOT_INT.create(this);
-	public CDataSlot<Integer> setLevel = CCustomMenuSlot.SLOT_INT.create(this);
 
-	public CDataSlot<Integer> totalLabour = CCustomMenuSlot.SLOT_INT.create(this);
-	public CDataSlot<Integer> currentLabour = CCustomMenuSlot.SLOT_INT.create(this);
-	public CDataSlot<Integer> desiredLabour = CCustomMenuSlot.SLOT_INT.create(this);
-
+	public LaborSlot laborSlot = new LaborSlot(this,MachineTypes.LOGISTIC);
 	public CDataSlot<Integer> taskSize = CCustomMenuSlot.SLOT_INT.create(this);
 	public CDataSlot<Integer> workerSize = CCustomMenuSlot.SLOT_INT.create(this);
 	public CDataSlot<Integer> networkSize = CCustomMenuSlot.SLOT_INT.create(this);
@@ -31,12 +29,7 @@ public class LogisticCoreMenu extends CMultiblockMenu<LogisticState>{
 		LogisticState state=ctx.mbContext().getState();
 		state.getTeamData().ifPresent(t->{
 			MachineLevelManager data=t.getData(FHSpecialDataTypes.LABOUR_DATA);
-			setLevel.bind(()->data.getMachine(state.pos).getDesiredLevel());
-			currentLevel.bind(()->data.getMachine(state.pos).getActualLevel());
-			totalLabour.bind(()->data.getTotalPool());
-			currentLabour.bind(()->data.getMachine(state.pos).getActualCost());
-			desiredLabour.bind(()->data.getMachine(state.pos).getDesiredCost());
-			
+			laborSlot.bind(data, state.pos);
 		});
 		taskSize.bind(state.ln::queueLength);
 		workerSize.bind(state.ln::workerLength);
@@ -49,7 +42,7 @@ public class LogisticCoreMenu extends CMultiblockMenu<LogisticState>{
 		var mbState=super.getMenuContext().mbContext().getState();
 		mbState.getTeamData().ifPresent(t->{
 			MachineLevelManager data=t.getData(FHSpecialDataTypes.LABOUR_DATA);
-			data.setDesiredLevel(mbState.pos,state);
+			data.setDesiredLevel(mbState.pos,LaborType.registry.byId(btnId),state);
 			
 		});
 	}

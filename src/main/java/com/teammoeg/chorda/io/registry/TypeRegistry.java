@@ -19,7 +19,9 @@
 
 package com.teammoeg.chorda.io.registry;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import com.mojang.datafixers.util.Pair;
@@ -40,6 +42,7 @@ public class TypeRegistry<T> {
 	/** 类 -> (ID, 名称)对的映射 / Mapping from class to (ID, name) pair */
 	protected Map<T, Pair<Integer, String>> typeInfo = new HashMap<>();
 	protected Map<String, T> byType = new HashMap<>();
+	protected List<T> byInt=new ArrayList<>();
 	protected Codec<T> byNameCodec=Codec.STRING.flatXmap(o->CodecUtil.nonNull(byType.get(o), ()->"Registry item"+o+" not exist"), o->CodecUtil.nonNull(typeInfo.get(o), ()->"Registry item"+o+" not exist").map(t->t.getSecond()));
 	public Codec<T> typeCodec() {
 		return byNameCodec;
@@ -80,6 +83,17 @@ public class TypeRegistry<T> {
 		return typeInfo.get(cls).getSecond();
 	}
 	/**
+	 * 获取数字id对应的类。
+	 * <p>
+	 * Gets the class by integer id.
+	 *
+	 * @param idx 数字id / the integer id to look up
+	 * @return 类型名称字符串 / the type name string
+	 */
+	public T byId(int idx) {
+		return byInt.get(idx);
+	}
+	/**
 	 * 获取类的完整类型信息，包括ID和名称。
 	 * <p>
 	 * Gets the full type information for a class, including both ID and name.
@@ -99,9 +113,10 @@ public class TypeRegistry<T> {
 	 * @param type 类型名称 / the type name
 	 */
 	public void register(T cls, String type) {
-	    int id = typeInfo.size();
+	    int id = byInt.size();
 	    byType.put(type, cls);
 	    typeInfo.put(cls, Pair.of(id, type));
+	    byInt.add(cls);
 	}
 
 }

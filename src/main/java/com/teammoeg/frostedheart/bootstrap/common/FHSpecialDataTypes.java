@@ -21,7 +21,7 @@ package com.teammoeg.frostedheart.bootstrap.common;
 
 import com.teammoeg.chorda.dataholders.SpecialDataType;
 import com.teammoeg.frostedheart.content.climate.block.generator.GeneratorData;
-import com.teammoeg.frostedheart.content.robotics.labour.MachineLevelManager;
+import com.teammoeg.frostedheart.content.robotics.labor.MachineLevelManager;
 import com.teammoeg.frostedheart.content.scenario.client.ClientStoredFlags;
 import com.teammoeg.frostedheart.content.town.TeamTownData;
 import com.teammoeg.frostedheart.content.world.dimensionalseed.DimensionalSeed;

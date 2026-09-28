@@ -1,4 +1,4 @@
-package com.teammoeg.frostedheart.content.robotics.labour;
+package com.teammoeg.frostedheart.content.robotics.labor;
 
 import net.minecraft.core.GlobalPos;
 
