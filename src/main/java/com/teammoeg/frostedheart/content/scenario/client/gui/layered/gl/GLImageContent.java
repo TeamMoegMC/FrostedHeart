@@ -23,6 +23,7 @@ import com.teammoeg.chorda.client.ui.CGuiHelper;
 import com.teammoeg.frostedheart.content.scenario.client.gui.layered.PrerenderParams;
 import com.teammoeg.frostedheart.content.scenario.client.gui.layered.RenderParams;
 import com.teammoeg.frostedheart.content.scenario.client.gui.layered.RenderableContent;
+
 import net.minecraft.resources.ResourceLocation;
 
 public class GLImageContent extends GLLayerContent {

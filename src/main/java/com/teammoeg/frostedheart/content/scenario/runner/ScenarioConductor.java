@@ -24,6 +24,9 @@ import java.util.Map;
 
 import javax.annotation.Nullable;
 
+import org.apache.logging.log4j.Marker;
+import org.apache.logging.log4j.MarkerManager;
+
 import com.teammoeg.chorda.io.CodecUtil;
 import com.teammoeg.chorda.io.NBTSerializable;
 import com.teammoeg.chorda.io.registry.IdRegistry;
@@ -32,14 +35,12 @@ import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
 import com.teammoeg.frostedheart.content.scenario.runner.target.ExecuteTarget;
 import com.teammoeg.frostedheart.content.scenario.runner.target.ScenarioTarget;
 
-import net.minecraft.world.entity.player.Player;
-import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.Tag;
 import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.Tag;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.common.util.LazyOptional;
-import org.apache.logging.log4j.Marker;
-import org.apache.logging.log4j.MarkerManager;
 
 /**
  * ScenarioConductor

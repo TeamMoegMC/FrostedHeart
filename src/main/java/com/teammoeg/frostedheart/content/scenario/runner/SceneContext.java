@@ -27,10 +27,11 @@ import java.util.Map;
 import java.util.UUID;
 
 import com.teammoeg.frostedheart.content.scenario.runner.target.ExecuteTarget;
+
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.Tag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.StringTag;
+import net.minecraft.nbt.Tag;
 /**
  * A scene object is used to display things on client, acts as a bridge between user interaction and scenario execution.
  * 

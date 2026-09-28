@@ -28,12 +28,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
-import java.util.Objects;
 
-import com.teammoeg.frostedheart.content.scenario.commands.client.TipCommand;
 import org.apache.logging.log4j.Marker;
 import org.apache.logging.log4j.MarkerManager;
-import org.objectweb.asm.Type;
 
 import com.teammoeg.chorda.CompatModule;
 import com.teammoeg.frostedheart.FHMain;
@@ -47,25 +44,21 @@ import com.teammoeg.frostedheart.content.scenario.commands.MCCommands;
 import com.teammoeg.frostedheart.content.scenario.commands.TextualCommands;
 import com.teammoeg.frostedheart.content.scenario.commands.VariableCommand;
 import com.teammoeg.frostedheart.content.scenario.commands.client.IClientControlCommand;
+import com.teammoeg.frostedheart.content.scenario.commands.client.TipCommand;
 import com.teammoeg.frostedheart.content.scenario.network.S2CScenarioCommandPacket;
 import com.teammoeg.frostedheart.content.scenario.parser.Scenario;
 import com.teammoeg.frostedheart.content.scenario.parser.ScenarioParser;
 import com.teammoeg.frostedheart.content.scenario.parser.providers.FTBQProvider;
 import com.teammoeg.frostedheart.content.scenario.parser.providers.ScenarioProvider;
+import com.teammoeg.frostedheart.content.scenario.runner.ScenarioCommandContext;
 import com.teammoeg.frostedheart.content.scenario.runner.ScenarioConductor;
 import com.teammoeg.frostedheart.content.scenario.runner.ScenarioContext;
 import com.teammoeg.frostedheart.content.scenario.runner.trigger.IVarTrigger;
-import com.teammoeg.frostedheart.content.scenario.runner.ScenarioCommandContext;
 
-import net.minecraft.world.entity.player.Player;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.storage.LevelResource;
-import net.minecraftforge.fml.ModList;
-import net.minecraftforge.fml.ModLoader;
 import net.minecraftforge.fml.loading.FMLPaths;
-import net.minecraftforge.forgespi.language.ModFileScanData;
-import net.minecraftforge.forgespi.language.ModFileScanData.AnnotationData;
-import net.minecraftforge.network.PacketDistributor;
 
 public class FHScenario {
 	static Marker MARKER = MarkerManager.getMarker("Scenario Conductor");

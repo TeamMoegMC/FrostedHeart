@@ -37,7 +37,6 @@ import com.teammoeg.frostedheart.content.scenario.client.gui.layered.RenderableC
 import net.minecraft.client.Minecraft;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.Resource;
-import net.minecraft.util.Unit;
 
 public class GraphicsImageContent extends GraphicLayerContent {
 	public ResourceLocation showingImage;

@@ -21,7 +21,6 @@ package com.teammoeg.frostedheart.content.scenario.runner.target;
 
 import java.util.function.Predicate;
 
-import com.teammoeg.frostedheart.content.scenario.runner.ScenarioThread;
 import com.teammoeg.frostedheart.content.scenario.runner.IScenarioTrigger;
 import com.teammoeg.frostedheart.content.scenario.runner.ScenarioContext;
 

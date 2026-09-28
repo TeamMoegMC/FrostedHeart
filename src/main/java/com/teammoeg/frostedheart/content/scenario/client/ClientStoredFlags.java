@@ -23,7 +23,6 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.chorda.dataholders.SpecialData;
 import com.teammoeg.chorda.dataholders.SpecialDataHolder;
-import com.teammoeg.chorda.io.CodecUtil;
 
 import lombok.Getter;
 import net.minecraft.nbt.CompoundTag;

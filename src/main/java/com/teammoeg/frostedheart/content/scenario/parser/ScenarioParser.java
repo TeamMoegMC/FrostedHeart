@@ -37,7 +37,6 @@ import com.teammoeg.chorda.util.parsereader.ParseReader.ParserState;
 import com.teammoeg.chorda.util.parsereader.source.ReaderLineSource;
 import com.teammoeg.chorda.util.parsereader.source.StringLineSource;
 import com.teammoeg.chorda.util.parsereader.source.StringListStringSource;
-import com.teammoeg.frostedheart.content.scenario.ScenarioExecutionException;
 
 public class ScenarioParser {
     private static class CommandStack {

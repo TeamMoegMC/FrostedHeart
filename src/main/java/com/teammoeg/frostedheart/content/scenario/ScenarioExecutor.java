@@ -40,8 +40,8 @@ import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.scenario.runner.ScenarioConductor;
 
 import net.minecraft.core.BlockPos;
-import net.minecraft.world.phys.Vec3;
 import net.minecraft.core.Vec3i;
+import net.minecraft.world.phys.Vec3;
 
 public class ScenarioExecutor<T> {
     static Marker MARKER = MarkerManager.getMarker("Scenario Executor");

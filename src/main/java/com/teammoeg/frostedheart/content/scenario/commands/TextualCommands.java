@@ -22,14 +22,10 @@ package com.teammoeg.frostedheart.content.scenario.commands;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.content.scenario.FHScenario;
 import com.teammoeg.frostedheart.content.scenario.Param;
-import com.teammoeg.frostedheart.content.scenario.network.S2CWaitTransMessage;
 import com.teammoeg.frostedheart.content.scenario.runner.RunStatus;
 import com.teammoeg.frostedheart.content.scenario.runner.ScenarioCommandContext;
-
-import net.minecraft.server.level.ServerPlayer;
 
 public class TextualCommands {
 	public void nowait(ScenarioCommandContext runner) {

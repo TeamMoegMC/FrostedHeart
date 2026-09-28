@@ -28,15 +28,12 @@ import java.util.PriorityQueue;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.atomic.AtomicInteger;
 
-import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import com.teammoeg.chorda.util.CUtils;
 import com.teammoeg.frostedheart.content.scenario.client.ClientScene;
 import com.teammoeg.frostedheart.content.scenario.client.gui.layered.gl.GLImageContent;
 import com.teammoeg.frostedheart.content.scenario.client.gui.layered.gl.GLLayerContent;
-import com.teammoeg.frostedheart.content.scenario.client.gui.layered.gl.TypedDynamicTexture;
+import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 
 public class LayerManager extends GLLayerContent {
 	private static record RerenderRequest(TransitionFunction trans,int ticks){}
@@ -150,7 +147,7 @@ public class LayerManager extends GLLayerContent {
 		ClientScene.INSTANCE.onRenderComplete.resetFinished();
 		ClientScene.INSTANCE.onTransitionComplete.resetFinished();
 		LayerContext inext=this.createContext();
-		List<CompletableFuture> futures=new LinkedList<>();
+		List<CompletableFuture<Void>> futures=new LinkedList<>();
 		if (!names.isEmpty()) {
 			int i = 0;
 			

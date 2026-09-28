@@ -33,7 +33,6 @@ public class GlyphData {
 	private final int advance;
 	private final int ascent;
 	private final float scale;
-	private final boolean hasAscent;
 	private final boolean unicode;
 	private final BufferedImage image;
 	private final int cacheId;
@@ -46,7 +45,6 @@ public class GlyphData {
 		this.y = y;
 		this.advance = advance;
 		this.ascent = ascent;
-		this.hasAscent = ascent != 0;
 		this.scale = scale;
 		this.unicode = unicode;
 		this.image = image;

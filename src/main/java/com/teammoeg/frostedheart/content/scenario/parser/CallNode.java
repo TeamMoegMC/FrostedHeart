@@ -21,7 +21,6 @@ package com.teammoeg.frostedheart.content.scenario.parser;
 
 import java.util.Map;
 
-import com.teammoeg.frostedheart.content.scenario.Param;
 import com.teammoeg.frostedheart.content.scenario.ScenarioUtils;
 import com.teammoeg.frostedheart.content.scenario.runner.ScenarioCommandContext;
 import com.teammoeg.frostedheart.content.scenario.runner.target.ExecuteTarget;

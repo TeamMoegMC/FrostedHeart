@@ -25,15 +25,14 @@ import java.awt.image.BufferedImage;
 
 import org.lwjgl.opengl.GL11;
 
-import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
-import com.teammoeg.frostedheart.content.scenario.client.gui.layered.gl.TypedDynamicTexture;
-import com.teammoeg.chorda.client.ClientUtils;
-import com.teammoeg.chorda.math.Rect;
-
-import net.minecraft.util.FastColor;
-
 import com.mojang.blaze3d.platform.NativeImage;
 import com.mojang.blaze3d.platform.NativeImage.Format;
+import com.teammoeg.chorda.client.ClientUtils;
+import com.teammoeg.chorda.math.Rect;
+import com.teammoeg.frostedheart.content.scenario.client.gui.layered.gl.TypedDynamicTexture;
+import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
+
+import net.minecraft.util.FastColor;
 
 public class PrerenderParams {
 	Graphics2D g2d;

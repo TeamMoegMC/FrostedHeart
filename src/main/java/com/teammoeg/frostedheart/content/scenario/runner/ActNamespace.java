@@ -25,8 +25,6 @@ import java.util.Objects;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 
-import net.minecraft.network.FriendlyByteBuf;
-
 public record ActNamespace(String chapter,String act) {
 	public static final Codec<ActNamespace> CODEC=RecordCodecBuilder.create(t->t.group(
 		Codec.STRING.fieldOf("chapter").forGetter(o->o.chapter),

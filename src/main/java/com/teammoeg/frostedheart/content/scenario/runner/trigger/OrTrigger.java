@@ -21,7 +21,6 @@ package com.teammoeg.frostedheart.content.scenario.runner.trigger;
 
 import java.util.Arrays;
 
-import com.teammoeg.frostedheart.content.scenario.runner.ScenarioThread;
 import com.teammoeg.frostedheart.content.scenario.runner.IScenarioTrigger;
 import com.teammoeg.frostedheart.content.scenario.runner.ScenarioContext;
 

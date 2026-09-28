@@ -22,6 +22,7 @@ package com.teammoeg.frostedheart.content.scenario.commands.client;
 import com.teammoeg.frostedheart.content.scenario.Param;
 import com.teammoeg.frostedheart.content.scenario.runner.ScenarioCommandContext;
 import com.teammoeg.frostedheart.content.ui.tips.ServerTipHelper;
+
 import net.minecraft.server.level.ServerPlayer;
 
 public class TipCommand {

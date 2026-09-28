@@ -19,11 +19,8 @@
 
 package com.teammoeg.frostedheart.content.scenario.runner.target;
 
-import com.teammoeg.frostedheart.content.scenario.FHScenario;
 import com.teammoeg.frostedheart.content.scenario.parser.Scenario;
-import com.teammoeg.frostedheart.content.scenario.runner.ScenarioCommandContext;
 import com.teammoeg.frostedheart.content.scenario.runner.ScenarioContext;
-import com.teammoeg.frostedheart.content.scenario.runner.ScenarioThread;
 
 public interface ScenarioTarget{
 	PreparedScenarioTarget prepare(ScenarioContext t,Scenario current);

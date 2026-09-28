@@ -19,7 +19,6 @@
 
 package com.teammoeg.frostedheart.content.scenario.commands;
 
-import com.simibubi.create.foundation.utility.Components;
 import com.teammoeg.frostedheart.content.scenario.Param;
 import com.teammoeg.frostedheart.content.scenario.runner.ActNamespace;
 import com.teammoeg.frostedheart.content.scenario.runner.ActScenarioContext;

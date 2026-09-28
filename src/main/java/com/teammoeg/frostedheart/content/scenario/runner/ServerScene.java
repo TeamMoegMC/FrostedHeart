@@ -27,7 +27,6 @@ import com.teammoeg.frostedheart.content.scenario.network.S2CWaitTransMessage;
 import lombok.Getter;
 import lombok.Setter;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraftforge.network.PacketDistributor;
 
 /**
  * A scene is a place to present content to client You should NOT store this

@@ -24,7 +24,6 @@ import java.util.function.Supplier;
 import com.teammoeg.chorda.network.CMessage;
 import com.teammoeg.frostedheart.content.scenario.FHScenario;
 import com.teammoeg.frostedheart.content.scenario.runner.Act;
-import com.teammoeg.frostedheart.content.scenario.runner.ActNamespace;
 import com.teammoeg.frostedheart.content.scenario.runner.IScenarioVaribles;
 import com.teammoeg.frostedheart.content.scenario.runner.RunStatus;
 import com.teammoeg.frostedheart.content.scenario.runner.ScenarioConductor;
