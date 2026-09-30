@@ -27,6 +27,7 @@ import com.teammoeg.frostedheart.content.climate.network.C2SOpenClothesScreenMes
 import com.teammoeg.frostedheart.content.climate.render.InfraredViewRenderer;
 import com.teammoeg.frostedheart.content.health.network.C2SOpenNutritionScreenMessage;
 import com.teammoeg.frostedheart.content.scenario.client.ClientScene;
+import com.teammoeg.frostedheart.content.town.render.SpaceOutlineRenderer;
 import com.teammoeg.frostedheart.content.ui.wheelmenu.WheelMenuRenderer;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.InputEvent;
@@ -66,7 +67,9 @@ public class FHKeyHandler {
             if(FHKeyMappings.key_openWheelMenu.get().consumeClick()&&!WheelMenuRenderer.isOpened()) {
             	WheelMenuRenderer.open();
             }
-
+            if(FHKeyMappings.key_zoneView.get().consumeClick()) {
+            	SpaceOutlineRenderer.show=!SpaceOutlineRenderer.show;
+            }
             // drink water
             // see WaterClientEvents.java
         }

@@ -19,6 +19,20 @@
 
 package com.teammoeg.frostedheart.content.town;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.OptionalDouble;
+import java.util.Set;
+import java.util.TreeMap;
+import java.util.TreeSet;
+import java.util.UUID;
+
 import com.teammoeg.chorda.dataholders.team.CTeamDataManager;
 import com.teammoeg.frostedheart.bootstrap.common.FHSpecialDataTypes;
 import com.teammoeg.frostedheart.content.town.block.TownBlockEntity;
@@ -34,32 +48,37 @@ import com.teammoeg.frostedheart.content.town.resource.TeamTownResourceActionExe
 import com.teammoeg.frostedheart.content.town.resource.TeamTownResourceHolder;
 import com.teammoeg.frostedheart.content.town.resource.VirtualResourceType;
 import com.teammoeg.frostedheart.content.town.terrainresource.TerrainResourceType;
-import com.teammoeg.frostedheart.content.town.transport.*;
+import com.teammoeg.frostedheart.content.town.transport.P2PBindingDecision;
+import com.teammoeg.frostedheart.content.town.transport.P2PBindingResult;
+import com.teammoeg.frostedheart.content.town.transport.P2PBindingState;
+import com.teammoeg.frostedheart.content.town.transport.P2PDirectedBinding;
+import com.teammoeg.frostedheart.content.town.transport.P2PTerminalEndpoint;
+import com.teammoeg.frostedheart.content.town.transport.TownTransportSnapshot;
+import com.teammoeg.frostedheart.content.town.transport.TownTransportState;
+import com.teammoeg.frostedheart.content.town.transport.TownTransportSummary;
+import com.teammoeg.frostedheart.content.town.transport.TransportAdmissionStatus;
+import com.teammoeg.frostedheart.content.town.transport.TransportConsumerParameters;
+import com.teammoeg.frostedheart.content.town.transport.TransportEndpointId;
+import com.teammoeg.frostedheart.content.town.transport.TransportEndpointKind;
+import com.teammoeg.frostedheart.content.town.transport.TransportEndpointRequest;
+import com.teammoeg.frostedheart.content.town.transport.TransportReservation;
+import com.teammoeg.frostedheart.content.town.transport.TransportReservationDecision;
+import com.teammoeg.frostedheart.content.town.transport.TransportReservationModel;
+import com.teammoeg.frostedheart.content.town.transport.TransportReservationResult;
+import com.teammoeg.frostedheart.content.town.transport.WarehouseTopologyListener;
+import com.teammoeg.frostedheart.content.town.transport.WarehouseTopologySnapshot;
 import com.teammoeg.frostedheart.content.town.transport.device.P2PFilterSnapshot;
 import com.teammoeg.frostedheart.content.town.transport.device.P2PFilterSummaryState;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
+
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.GlobalPos;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.level.Level;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.ChunkPos;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
-
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.OptionalDouble;
-import java.util.Set;
-import java.util.TreeMap;
-import java.util.TreeSet;
-import java.util.UUID;
 
 /**
  * The town for a player team.

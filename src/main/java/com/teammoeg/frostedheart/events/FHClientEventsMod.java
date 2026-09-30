@@ -343,6 +343,7 @@ public class FHClientEventsMod {
         ev.register(FHKeyMappings.key_health.get());
         ev.register(FHKeyMappings.key_clothes.get());
         ev.register(FHKeyMappings.key_openWheelMenu.get());
+        ev.register(FHKeyMappings.key_zoneView.get());
 	}
 
 	@SubscribeEvent

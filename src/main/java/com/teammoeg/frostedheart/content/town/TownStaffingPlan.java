@@ -6,12 +6,6 @@
 
 package com.teammoeg.frostedheart.content.town;
 
-import com.mojang.serialization.Codec;
-import com.mojang.serialization.codecs.RecordCodecBuilder;
-import com.teammoeg.frostedheart.content.town.building.AbstractTownBuilding;
-import com.teammoeg.frostedheart.content.town.building.ITownResidentWorkBuilding;
-import net.minecraft.core.BlockPos;
-
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -20,6 +14,13 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
+import com.teammoeg.frostedheart.content.town.building.AbstractTownBuilding;
+import com.teammoeg.frostedheart.content.town.building.ITownResidentWorkBuilding;
+
+import net.minecraft.core.BlockPos;
 
 /**
  * 城镇级岗位队列及每栋工作建筑的保障目标人数。

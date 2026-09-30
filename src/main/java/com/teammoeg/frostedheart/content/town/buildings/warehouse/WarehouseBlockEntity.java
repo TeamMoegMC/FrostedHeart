@@ -28,6 +28,7 @@ import com.teammoeg.frostedheart.content.town.ITownWithBuildings;
 import com.teammoeg.frostedheart.content.town.TeamTown;
 import com.teammoeg.frostedheart.content.town.TeamTownData;
 import com.teammoeg.frostedheart.content.town.block.AbstractTownBuildingBlockEntity;
+import com.teammoeg.frostedheart.content.town.block.OccupiedZoneInfo;
 import com.teammoeg.frostedheart.content.town.block.blockscanner.BlockScanner;
 import com.teammoeg.frostedheart.content.town.block.blockscanner.BlockScanner.RoomData;
 import com.teammoeg.frostedheart.content.town.building.AbstractTownBuilding;
@@ -66,7 +67,7 @@ public class WarehouseBlockEntity extends AbstractTownBuildingBlockEntity<Wareho
             building.setDecorationAmount(rd.countInsideBlock(t->t.getBlock() instanceof WarehouseStorageRackBlock));
 
             building.setCapacity(building.getArea() * Math.pow(building.getVolume() * 0.02 / building.getArea(), 0.9) * 1980 + building.getDecorationAmount() * 512);
-            building.setOccupiedVolume(rd.occupiedCells);
+            building.setOccupiedVolume(new OccupiedZoneInfo(rd.occupiedCells));
             return true;
             
         }

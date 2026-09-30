@@ -19,13 +19,14 @@
 
 package com.teammoeg.frostedheart.content.town;
 
-import com.teammoeg.frostedheart.content.town.block.TownBlockEntity;
-import com.teammoeg.frostedheart.content.town.building.AbstractTownBuilding;
-import net.minecraft.core.BlockPos;
-import net.minecraft.server.level.ServerLevel;
-
 import java.util.Map;
 import java.util.Optional;
+
+import com.teammoeg.frostedheart.content.town.block.TownBlockEntity;
+import com.teammoeg.frostedheart.content.town.building.AbstractTownBuilding;
+
+import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerLevel;
 
 public interface ITownWithBuildings{
     Map<BlockPos, AbstractTownBuilding> getTownBuildings();

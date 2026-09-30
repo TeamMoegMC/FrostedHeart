@@ -25,6 +25,7 @@ import org.jetbrains.annotations.Nullable;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.content.town.TownMathFunctions;
 import com.teammoeg.frostedheart.content.town.block.AbstractTownBuildingBlockEntity;
+import com.teammoeg.frostedheart.content.town.block.OccupiedZoneInfo;
 import com.teammoeg.frostedheart.content.town.block.blockscanner.BlockScanner;
 import com.teammoeg.frostedheart.content.town.block.blockscanner.BlockScanner.RoomData;
 import com.teammoeg.frostedheart.content.town.building.AbstractTownBuilding;
@@ -52,7 +53,7 @@ public class MineBaseBlockEntity extends AbstractTownBuildingBlockEntity<MineBas
             building.setVolume(rd.volume);
             //this.rack = scanner.getRack();
             //this.chest = scanner.getChest();
-            building.setOccupiedVolume(rd.occupiedCells);
+            building.setOccupiedVolume(new OccupiedZoneInfo(rd.occupiedCells));
             FHConfig.Server.Town.BuildingScoring scoring = FHConfig.SERVER.TOWN.BUILDING_SCORING;
             double effectiveFloorBlocks = TownMathFunctions.calculateSpaceRating(
             	rd.volume,
