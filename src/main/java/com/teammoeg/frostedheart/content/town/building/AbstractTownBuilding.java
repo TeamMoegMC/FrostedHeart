@@ -93,11 +93,24 @@ public abstract class AbstractTownBuilding implements ITownBuilding,ITownSpaceOc
         this.isStructureValid = isStructureValid;
         fireChange();
     }
-
+    protected void internalSetOccupiedVolume(OccupiedZoneInfo occupiedVolume) {
+    	this.occupiedVolume = occupiedVolume;
+    }
     public void setOccupiedVolume(OccupiedZoneInfo occupiedVolume) {
         if (java.util.Objects.equals(this.occupiedVolume, occupiedVolume)) return;
         this.occupiedVolume = occupiedVolume;
-        fireChange();
+        
+	    if (this.changeListener != null) {
+	    	TownBuildingChangeEvent event=new TownBuildingChangeEvent(this, this.pos);
+	        this.changeListener.onBuildingZoneChange(event);
+	        this.changeListener.onBuildingChange(event);
+        }
+    }
+    public void setOverlapped(boolean overlapped) {
+    	if(overlapped!=occupiedVolume.isOverlapped()) {
+    		occupiedVolume.setOverlapped(overlapped);
+    		fireChange();
+    	}
     }
 
     protected AbstractTownBuilding(BlockPos pos) {

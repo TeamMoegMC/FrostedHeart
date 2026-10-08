@@ -180,7 +180,7 @@ public class TeamTown implements ITown, ITownWithResidents, ITownWithBuildings {
         data.buildings.remove(pos);
         data.markWarehouseTopologyDirty();
         building.onRemoved(this);
-
+        data.removeOccupiedAreaOverlap(building);
         // Building rosters are normally authoritative, but older or partially
         // repaired saves may disagree with Resident fields. Clear exact
         // position references defensively without reallocating until morning.

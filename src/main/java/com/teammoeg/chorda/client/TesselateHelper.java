@@ -1,6 +1,7 @@
 package com.teammoeg.chorda.client;
 
 import org.joml.Matrix4f;
+import org.joml.Vector3f;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.BufferBuilder;
@@ -15,9 +16,11 @@ import it.unimi.dsi.fastutil.ints.IntIterator;
 import lombok.Getter;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.GameRenderer;
+import net.minecraft.core.Vec3i;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.FastColor;
 import net.minecraft.util.Mth;
+import net.minecraft.world.phys.AABB;
 
 public abstract class TesselateHelper implements AutoCloseable {
 	private static final TextureTesselator TEXTURE = new TextureTesselator();
@@ -183,6 +186,39 @@ public abstract class TesselateHelper implements AutoCloseable {
 	}
 
 	public static class Shape3DTesslator extends TesselateHelper{
+		private static final Vector3f[][] FACE_VERTICES=new Vector3f[][] {
+    	new Vector3f[]{
+                new Vector3f(0 + 1, 0, 0),
+                new Vector3f(0 + 1, 0 + 1, 0),
+                new Vector3f(0 + 1, 0 + 1, 0 + 1),
+                new Vector3f(0 + 1, 0, 0 + 1)
+        },new Vector3f[]{
+                new Vector3f(0, 0, 0),
+                new Vector3f(0, 0, 0 + 1),
+                new Vector3f(0, 0 + 1, 0 + 1),
+                new Vector3f(0, 0 + 1, 0)
+        },new Vector3f[]{
+                new Vector3f(0, 0 + 1, 0),
+                new Vector3f(0, 0 + 1, 0 + 1),
+                new Vector3f(0 + 1, 0 + 1, 0 + 1),
+                new Vector3f(0 + 1, 0 + 1, 0)
+        },new Vector3f[]{
+                new Vector3f(0, 0, 0),
+                new Vector3f(0 + 1, 0, 0),
+                new Vector3f(0 + 1, 0, 0 + 1),
+                new Vector3f(0, 0, 0 + 1)
+        },new Vector3f[]{
+                new Vector3f(0, 0, 0 + 1),
+                new Vector3f(0 + 1, 0, 0 + 1),
+                new Vector3f(0 + 1, 0 + 1, 0 + 1),
+                new Vector3f(0, 0 + 1, 0 + 1)
+        },new Vector3f[]{
+                new Vector3f(0, 0, 0),
+                new Vector3f(0, 0 + 1, 0),
+                new Vector3f(0 + 1, 0 + 1, 0),
+                new Vector3f(0 + 1, 0, 0)
+        }
+    };
 		@Override
 		public void beginBuffer() {
 			RenderSystem.enableDepthTest();
@@ -196,8 +232,16 @@ public abstract class TesselateHelper implements AutoCloseable {
 			bufferbuilder.vertex(matrix, x, y, z).color(color).endVertex();
 			return this;
 		}
-
-
+		public Shape3DTesslator cube(Matrix4f matrix,AABB cube, int color) {
+			for(var face:FACE_VERTICES)
+				for(Vector3f point:face) {
+					bufferbuilder.vertex(matrix,
+						Mth.lerp(point.x, (float)cube.minX, (float)cube.maxX),
+						Mth.lerp(point.y, (float)cube.minY, (float)cube.maxY),
+						Mth.lerp(point.z, (float)cube.minZ, (float)cube.maxZ)).color(color).endVertex();
+				}
+			return this;
+		}
 	}
 	public static class TextureTesselator extends TesselateHelper {
 		private TextureTesselator() {

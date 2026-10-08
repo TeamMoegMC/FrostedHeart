@@ -155,7 +155,7 @@ public class MineBaseBuilding extends AbstractTownResidentWorkBuilding {
 		super(pos);
         this.setInitialized(initialized);
 		this.setIsStructureValid(isStructureValid);
-		this.setOccupiedVolume(occupiedVolume);
+		this.internalSetOccupiedVolume(occupiedVolume);
 		this.residentsID = new HashSet<>(residentsID);
 		this.setArea(area);
 		this.setVolume(volume);

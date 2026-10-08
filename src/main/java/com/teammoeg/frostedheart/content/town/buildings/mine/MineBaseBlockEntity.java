@@ -48,12 +48,17 @@ public class MineBaseBlockEntity extends AbstractTownBuildingBlockEntity<MineBas
     public boolean scanStructure(MineBaseBuilding building){
 		BlockPos housePos = this.getBlockPos();
 		RoomData rd=BlockScanner.scanRoomDataFromBlock(level,housePos);
-		if (rd!=null&&rd.doors.size()>0) {
+
+		building.setOccupiedVolume(rd.occupiedCells);
+		//prerequisition
+		if(rd.doors.size()<=0) {
+			rd.occupiedCells.setValid(false);
+		}
+		if (rd.isValid()) {
             building.setArea(rd.area);
             building.setVolume(rd.volume);
             //this.rack = scanner.getRack();
             //this.chest = scanner.getChest();
-            building.setOccupiedVolume(new OccupiedZoneInfo(rd.occupiedCells));
             FHConfig.Server.Town.BuildingScoring scoring = FHConfig.SERVER.TOWN.BUILDING_SCORING;
             double effectiveFloorBlocks = TownMathFunctions.calculateSpaceRating(
             	rd.volume,

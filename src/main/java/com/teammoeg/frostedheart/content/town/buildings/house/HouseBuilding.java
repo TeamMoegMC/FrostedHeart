@@ -267,7 +267,7 @@ public class HouseBuilding extends AbstractTownBuilding implements ITownResident
     ) {
         super(pos);
         this.setIsStructureValid(isStructureValid);
-        this.setOccupiedVolume(occupiedVolume);
+        this.internalSetOccupiedVolume(occupiedVolume);
         this.setInitialized(initialized);
         this.setArea(area);
         this.setVolume(volume);

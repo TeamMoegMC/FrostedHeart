@@ -73,7 +73,7 @@ public class WarehouseBuilding extends AbstractTownBuilding {
                               double capacity, int area, int volume, int decorationAmount) {
         super(pos);
         this.setIsStructureValid(isStructureValid);
-        this.setOccupiedVolume(occupiedVolume);
+        this.internalSetOccupiedVolume(occupiedVolume);
         this.setInitialized(initialized);
         this.setCapacity(capacity);
         this.setArea(area);

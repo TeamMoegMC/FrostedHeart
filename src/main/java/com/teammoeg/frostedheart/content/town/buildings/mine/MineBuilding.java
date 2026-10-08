@@ -82,7 +82,7 @@ public class MineBuilding extends AbstractTownBuilding {
         super(pos);
         this.setInitialized(initialized);
         this.setIsStructureValid(isStructureValid);
-        this.setOccupiedVolume(occupiedVolume);
+        this.internalSetOccupiedVolume(occupiedVolume);
         this.setRating(rating);
         ResourceLocation decodedBiome = ResourceLocation.tryParse(biomePathString);
         this.setBiomePath(decodedBiome == null

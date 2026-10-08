@@ -9,8 +9,6 @@ package com.teammoeg.frostedheart.content.town.buildings.logistics;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.List;
-import java.util.Optional;
-import java.util.Set;
 import java.util.UUID;
 
 import org.junit.jupiter.api.BeforeAll;
@@ -20,6 +18,7 @@ import com.google.gson.JsonParser;
 import com.mojang.serialization.JsonOps;
 import com.teammoeg.chorda.io.CodecUtil;
 import com.teammoeg.chorda.util.CUtils;
+import com.teammoeg.frostedheart.content.town.block.OccupiedZoneInfo;
 import com.teammoeg.frostedheart.content.town.block.blockscanner.RoomPathfinder.OccupiedCell;
 import com.teammoeg.frostedheart.content.town.building.AbstractTownBuilding;
 import com.teammoeg.frostedheart.content.town.building.ITownBuilding;
@@ -63,9 +62,9 @@ class TransportStationBuildingCodecTest {
         UUID firstResident = UUID.fromString("00000000-0000-0000-0000-000000000002");
         UUID secondResident = UUID.fromString("00000000-0000-0000-0000-000000000001");
         TransportStationBuilding source = new TransportStationBuilding(
-                new BlockPos(4, 64, -2), true, false, true,
-                Optional.of(Set.of(new OccupiedCell(new BlockPos(4, 64, -2),2),
-                	new OccupiedCell(new BlockPos(5, 64, -2),2))),
+                new BlockPos(4, 64, -2), true, true,
+                new OccupiedZoneInfo(new OccupiedCell(new BlockPos(4, 64, -2),2),
+                	new OccupiedCell(new BlockPos(5, 64, -2),2)),
                 List.of(firstResident, secondResident), 24, 72, 6,
                 new TransportStationBuilding.TransportStationDailyReport(
                         true, 2, 2.5, 160.0, 160.0,
@@ -89,12 +88,12 @@ class TransportStationBuildingCodecTest {
         UUID firstResident = UUID.fromString("00000000-0000-0000-0000-000000000001");
         UUID secondResident = UUID.fromString("00000000-0000-0000-0000-000000000002");
         TransportStationBuilding first = new TransportStationBuilding(
-                BlockPos.ZERO, false, false, false,
-                Optional.empty(),
+                BlockPos.ZERO, false, false,
+                OccupiedZoneInfo.empty(),
                 List.of(firstResident, secondResident), 0, 0, 0);
         TransportStationBuilding second = new TransportStationBuilding(
-                BlockPos.ZERO, false, false, false,
-                Optional.empty(),
+                BlockPos.ZERO, false, false,
+                OccupiedZoneInfo.empty(),
                 List.of(secondResident, firstResident), 0, 0, 0);
 
         assertEquals(

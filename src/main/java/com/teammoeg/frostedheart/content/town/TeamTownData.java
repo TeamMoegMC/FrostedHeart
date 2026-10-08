@@ -134,6 +134,7 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.SnowLayerBlock;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.Heightmap;
@@ -812,7 +813,13 @@ public class TeamTownData implements SpecialData{
         // Persisted reservation capacities are derived caches. Rebuild them before
         // the first incremental flush and after server-config formula changes.
         town.getTransportSummary();
-
+        if(dataSyncCache.hasChangedZone()) {
+        	for(BlockPos pos:dataSyncCache.drainChangedBuildingZones()){
+                ITownBuilding building = buildings.get(pos);
+                if(building!=null&&building instanceof AbstractTownBuilding townBuilding)
+                	this.updateOccupiedAreaOverlap(townBuilding);
+        	}
+        }
         if(dataSyncCache.hasChangedResources() || dataSyncCache.hasTransportStateChange()){
             Map<ITownResourceKey, Double> changedResource = new HashMap<>();
             for(ITownResourceKey resourceKey : this.dataSyncCache.drainChangedResources()){
@@ -1148,7 +1155,54 @@ public class TeamTownData implements SpecialData{
         }
         invalidBuildings.forEach(pos -> town.removeTownBlock(level, pos));
     }
+    void updateOccupiedAreaOverlap(AbstractTownBuilding toupdate) {
+        // removeNonTownBlocks(world);
+        BlockPos updateSign=toupdate.getOccupiedVolume().getSignature();
 
+        Set<AbstractTownBuilding> overlapped = new HashSet<>();
+        for (AbstractTownBuilding building:buildings.values()) {
+            OccupiedZoneInfo occupiedVolume = building.getOccupiedVolume();
+            BlockPos curSign=occupiedVolume.getSignature();
+            if(occupiedVolume.isValid()&&updateSign!=null&&curSign!=null&&curSign.equals(updateSign)){
+	            overlapped.add(building);
+            }
+        }
+	    if(overlapped.size()>1) {
+	    	toupdate.setOverlapped(true);
+	        for (AbstractTownBuilding building : overlapped) {
+	            building.setOverlapped(true);
+	        }
+        }else {
+	    	toupdate.setOverlapped(false);
+	        for (AbstractTownBuilding building : overlapped) {
+	            building.setOverlapped(false);
+	        }
+        }
+    }
+    void removeOccupiedAreaOverlap(AbstractTownBuilding toupdate) {
+        // removeNonTownBlocks(world);
+        BlockPos updateSign=toupdate.getOccupiedVolume().getSignature();
+
+        Set<AbstractTownBuilding> overlapped = new HashSet<>();
+        for (AbstractTownBuilding building:buildings.values()) {
+            OccupiedZoneInfo occupiedVolume = building.getOccupiedVolume();
+            BlockPos curSign=occupiedVolume.getSignature();
+            if(occupiedVolume.isValid()&&updateSign!=null&&curSign!=null&&curSign.equals(updateSign)){
+	            overlapped.add(building);
+            }
+        }
+	    if(overlapped.size()>1) {
+	    	toupdate.setOverlapped(true);
+	        for (AbstractTownBuilding building : overlapped) {
+	            building.setOverlapped(true);
+	        }
+        }else {
+	    	toupdate.setOverlapped(false);
+	        for (AbstractTownBuilding building : overlapped) {
+	            building.setOverlapped(false);
+	        }
+        }
+    }
     void checkOccupiedAreaOverlap() {
         // removeNonTownBlocks(world);
 
@@ -1166,7 +1220,7 @@ public class TeamTownData implements SpecialData{
             }
         }
         for (AbstractTownBuilding building : buildings.values()) {
-            building.getOccupiedVolume().setOverlapped(overlapped.contains(building));
+            building.setOverlapped(overlapped.contains(building));
         }
     }
 
@@ -2096,6 +2150,7 @@ public class TeamTownData implements SpecialData{
         private Set<ITownResourceKey> changedResourceKey = new HashSet<>();
         private Set<UUID> changedResidentUUID = new HashSet<>();
         private Set<BlockPos> changedBuildingPos = new HashSet<>();
+        private Set<BlockPos> changedBuildingZonePos = new HashSet<>();
         private boolean transportStateChanged;
 
         /**
@@ -2121,7 +2176,11 @@ public class TeamTownData implements SpecialData{
             return Math.abs(lastSyncedResources.getDouble(key) - currentValue) < TeamTownResourceHolder.DELTA;
         }
 
-        /**
+        public boolean hasChangedZone() {
+			return !changedBuildingZonePos.isEmpty();
+		}
+
+		/**
          * 记录某资源已通过增量包同步（发包后调用）。值近似为 0 时移除记录，
          * 防止快照随"增删交替"的键无限膨胀。
          */
@@ -2160,6 +2219,12 @@ public class TeamTownData implements SpecialData{
             this.changedBuildingPos.add(changedBuildingPos);
         }
 
+        public Set<BlockPos> drainChangedBuildingZones() {
+            if (changedBuildingZonePos.isEmpty()) return Set.of();
+            Set<BlockPos> out = new HashSet<>(changedBuildingZonePos);
+            changedBuildingZonePos.clear();
+            return out;
+        }
         /**
          * 取出当前所有脏建筑键并清空。发包前调用。
          */
@@ -2243,5 +2308,10 @@ public class TeamTownData implements SpecialData{
         public void onResourceChange(TownResourceChangeEvent event) {
             this.addChanged(event.changedResourceKey);
         }
+
+		@Override
+		public void onBuildingZoneChange(TownBuildingChangeEvent event) {
+			changedBuildingZonePos.add(event.changedBuildingPos);
+		}
     }
 }

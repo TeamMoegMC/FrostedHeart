@@ -148,13 +148,16 @@ public class RoomPathfinder {
     public static class ReachabilityResult {
         public final Set<OccupiedCell> occupiedCells;  // 占据格子（从地板上方到天花板下方）
         public final Set<BlockPos> neighborCells;  // 邻居格子（占据格子向外一格，不包含占据格子）
-
-        public ReachabilityResult(Set<OccupiedCell> occupiedCells,
-                                  Set<BlockPos> neighborCells) {
-            this.occupiedCells = occupiedCells;
-            this.neighborCells = neighborCells;
+        public final BlockPos error;
+        public ReachabilityResult(Set<OccupiedCell> occupiedCells, Set<BlockPos> neighborCells, BlockPos error) {
+			super();
+			this.occupiedCells = occupiedCells;
+			this.neighborCells = neighborCells;
+			this.error = error;
+		}
+		public boolean isSucceed() {
+        	return error==null;
         }
-
 		@Override
 		public String toString() {
 			return "ReachabilityResult [occupiedCells=" + occupiedCells + ", neighborCells=" + neighborCells + "]";
@@ -171,7 +174,7 @@ public class RoomPathfinder {
         Deque<BlockPos> stack = new ArrayDeque<>();
 
         if (!canStandAt(world, start)) {
-            return null;
+            return new ReachabilityResult(Set.of(),Set.of(),start);
         }
 
         reachable.add(start);
@@ -186,7 +189,7 @@ public class RoomPathfinder {
 
             for (BlockPos next : neighbors) {
             	if(!isWithinRange(start,next))
-            		return null;
+                    return new ReachabilityResult(occupiedSegCells,Set.of(),next);
                 if (!reachable.contains(next)) {
                     reachable.add(next);
                     stack.push(next);
@@ -198,7 +201,7 @@ public class RoomPathfinder {
         // 基于占据格子计算邻居格子
         Set<BlockPos> neighborCells = computeNeighborCells(occupiedCells, start);
 
-        return new ReachabilityResult(occupiedSegCells, neighborCells);
+        return new ReachabilityResult(occupiedSegCells, neighborCells,null);
     }
 
     // ---------- 以下为辅助方法 ----------

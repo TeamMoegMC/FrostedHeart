@@ -138,7 +138,7 @@ public class TransportStationBuilding extends AbstractTownResidentWorkBuilding {
         super(pos);
         setInitialized(initialized);
         setIsStructureValid(structureValid);
-        setOccupiedVolume(occupiedVolume);
+        internalSetOccupiedVolume(occupiedVolume);
         this.residentsID = new HashSet<>(residentsID);
         setArea(area);
         setVolume(volume);
