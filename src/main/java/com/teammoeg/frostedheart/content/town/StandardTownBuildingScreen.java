@@ -23,6 +23,7 @@ import com.teammoeg.chorda.client.icon.CIcons;
 import com.teammoeg.chorda.menu.CBlockEntityMenu;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.town.block.AbstractTownBuildingBlockEntity;
+
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.resources.ResourceLocation;
 

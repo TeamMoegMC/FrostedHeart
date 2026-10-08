@@ -19,38 +19,24 @@
 
 package com.teammoeg.frostedheart.content.town;
 
-import blusunrize.immersiveengineering.common.util.Utils;
-import com.teammoeg.frostedheart.FHNetwork;
-import com.teammoeg.frostedheart.bootstrap.common.FHEntityTypes;
-import com.teammoeg.frostedheart.bootstrap.common.FHSpecialDataTypes;
-import com.teammoeg.frostedheart.content.climate.WorldTemperature;
-import com.teammoeg.frostedheart.content.climate.block.generator.GeneratorData;
-import com.teammoeg.frostedheart.content.climate.gamedata.climate.WeatherForecast;
-import com.teammoeg.frostedheart.content.climate.gamedata.climate.WorldClimate;
-import com.teammoeg.frostedheart.content.town.buildings.mine.MineBaseBuilding;
-import com.teammoeg.frostedheart.content.town.buildings.mine.MineBuilding;
-import com.teammoeg.frostedheart.content.town.event.*;
-import com.teammoeg.frostedheart.content.town.network.TownBuildingUpdatePacket;
-import com.teammoeg.frostedheart.content.town.network.TownResidentUpdatePacket;
-import com.teammoeg.frostedheart.content.town.network.TownResourceUpdatePacket;
-import com.teammoeg.frostedheart.content.town.network.TownHistoryUpdatePacket;
-import com.teammoeg.frostedheart.content.town.network.TownSignalNotificationPacket;
-import com.teammoeg.frostedheart.content.town.network.TownTransportShortageNotificationPacket;
-import com.teammoeg.frostedheart.content.town.network.TownPolicyStateUpdatePacket;
-import com.teammoeg.frostedheart.content.town.observation.TownNutritionHistory;
-import com.teammoeg.frostedheart.content.town.observation.TownOperationalHistory;
-import com.teammoeg.frostedheart.content.town.observation.TownOperationalStatus;
-import com.teammoeg.frostedheart.content.town.observation.TownOperationalStatusModel;
-import com.teammoeg.frostedheart.content.town.observation.TownOperationalStatusProvider;
-import com.teammoeg.frostedheart.content.town.observation.TownHistoryModel;
-import com.teammoeg.frostedheart.content.town.observation.TownSignalEvent;
-import com.teammoeg.frostedheart.content.town.observation.TownSignalEventModel;
-import com.teammoeg.frostedheart.content.town.observation.TownSignalNotice;
-import com.teammoeg.frostedheart.content.town.observation.TownTowerTipThrottle;
-import com.teammoeg.frostedheart.content.town.resource.ITownResourceKey;
-import com.teammoeg.frostedheart.content.town.util.ObservableTownMap;
-import it.unimi.dsi.fastutil.objects.Object2DoubleOpenHashMap;
-import lombok.Getter;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.EnumMap;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.IdentityHashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
+import java.util.TreeMap;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
@@ -61,38 +47,68 @@ import com.teammoeg.chorda.dataholders.team.TeamDataHolder;
 import com.teammoeg.chorda.io.CodecUtil;
 import com.teammoeg.chorda.math.CMath;
 import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.FHNetwork;
+import com.teammoeg.frostedheart.bootstrap.common.FHEntityTypes;
+import com.teammoeg.frostedheart.bootstrap.common.FHSpecialDataTypes;
+import com.teammoeg.frostedheart.content.climate.WorldTemperature;
+import com.teammoeg.frostedheart.content.climate.block.generator.GeneratorData;
+import com.teammoeg.frostedheart.content.climate.gamedata.climate.WeatherForecast;
+import com.teammoeg.frostedheart.content.climate.gamedata.climate.WorldClimate;
+import com.teammoeg.frostedheart.content.town.block.OccupiedZoneInfo;
 import com.teammoeg.frostedheart.content.town.block.TownBlockEntity;
-import com.teammoeg.frostedheart.content.town.block.blockscanner.RoomPathfinder.OccupiedCell;
 import com.teammoeg.frostedheart.content.town.building.AbstractTownBuilding;
 import com.teammoeg.frostedheart.content.town.building.ITownBuilding;
 import com.teammoeg.frostedheart.content.town.building.ITownResidentBuilding;
 import com.teammoeg.frostedheart.content.town.building.ITownResidentWorkBuilding;
 import com.teammoeg.frostedheart.content.town.buildings.house.HouseBuilding;
 import com.teammoeg.frostedheart.content.town.buildings.house.TownHousingMealService;
+import com.teammoeg.frostedheart.content.town.buildings.mine.MineBaseBuilding;
+import com.teammoeg.frostedheart.content.town.buildings.mine.MineBuilding;
 import com.teammoeg.frostedheart.content.town.buildings.warehouse.WarehouseBuilding;
 import com.teammoeg.frostedheart.content.town.event.ITownBuildingChangeEventListener;
+import com.teammoeg.frostedheart.content.town.event.ITownDataUpdateListener;
 import com.teammoeg.frostedheart.content.town.event.ITownResidentChangeEventListener;
+import com.teammoeg.frostedheart.content.town.event.ITownResidentListener;
 import com.teammoeg.frostedheart.content.town.event.ITownResourceChangeEventListener;
 import com.teammoeg.frostedheart.content.town.event.TownBuildingChangeEvent;
 import com.teammoeg.frostedheart.content.town.event.TownResidentChangeEvent;
 import com.teammoeg.frostedheart.content.town.event.TownResourceChangeEvent;
+import com.teammoeg.frostedheart.content.town.model.TownAssignmentModel;
+import com.teammoeg.frostedheart.content.town.model.TownResidentCareModel;
+import com.teammoeg.frostedheart.content.town.network.TownBuildingUpdatePacket;
+import com.teammoeg.frostedheart.content.town.network.TownHistoryUpdatePacket;
+import com.teammoeg.frostedheart.content.town.network.TownPolicyStateUpdatePacket;
+import com.teammoeg.frostedheart.content.town.network.TownResidentUpdatePacket;
+import com.teammoeg.frostedheart.content.town.network.TownResourceUpdatePacket;
+import com.teammoeg.frostedheart.content.town.network.TownSignalNotificationPacket;
+import com.teammoeg.frostedheart.content.town.network.TownTransportShortageNotificationPacket;
+import com.teammoeg.frostedheart.content.town.observation.TownHistoryModel;
+import com.teammoeg.frostedheart.content.town.observation.TownNutritionHistory;
+import com.teammoeg.frostedheart.content.town.observation.TownOperationalHistory;
+import com.teammoeg.frostedheart.content.town.observation.TownOperationalStatus;
+import com.teammoeg.frostedheart.content.town.observation.TownOperationalStatusModel;
+import com.teammoeg.frostedheart.content.town.observation.TownOperationalStatusProvider;
+import com.teammoeg.frostedheart.content.town.observation.TownSignalEvent;
+import com.teammoeg.frostedheart.content.town.observation.TownSignalEventModel;
+import com.teammoeg.frostedheart.content.town.observation.TownSignalNotice;
+import com.teammoeg.frostedheart.content.town.observation.TownTowerTipThrottle;
 import com.teammoeg.frostedheart.content.town.resident.Resident;
 import com.teammoeg.frostedheart.content.town.resident.ResidentActivity;
 import com.teammoeg.frostedheart.content.town.resident.ResidentAttributeChange;
 import com.teammoeg.frostedheart.content.town.resident.ResidentAttributeModel;
 import com.teammoeg.frostedheart.content.town.resident.ResidentDailyModel;
 import com.teammoeg.frostedheart.content.town.resident.ResidentNutritionSupportModel;
-import com.teammoeg.frostedheart.content.town.model.TownAssignmentModel;
-import com.teammoeg.frostedheart.content.town.model.TownResidentCareModel;
 import com.teammoeg.frostedheart.content.town.resident.WanderingRefugee;
+import com.teammoeg.frostedheart.content.town.resource.ITownResourceKey;
 import com.teammoeg.frostedheart.content.town.resource.TeamTownResourceHolder;
 import com.teammoeg.frostedheart.content.town.resource.VirtualResourceType;
-import com.teammoeg.frostedheart.content.town.transport.TownTransportState;
+import com.teammoeg.frostedheart.content.town.terrainresource.TerrainResourceData;
+import com.teammoeg.frostedheart.content.town.terrainresource.TerrainResourceType;
 import com.teammoeg.frostedheart.content.town.transport.P2PBindingState;
-import com.teammoeg.frostedheart.content.town.transport.device.P2PFilterSummaryState;
-import com.teammoeg.frostedheart.content.town.transport.TownTransportSnapshot;
 import com.teammoeg.frostedheart.content.town.transport.TownTransportShortageNotice;
 import com.teammoeg.frostedheart.content.town.transport.TownTransportShortageNotificationModel;
+import com.teammoeg.frostedheart.content.town.transport.TownTransportSnapshot;
+import com.teammoeg.frostedheart.content.town.transport.TownTransportState;
 import com.teammoeg.frostedheart.content.town.transport.TransportAdmissionStatus;
 import com.teammoeg.frostedheart.content.town.transport.TransportConsumerParameters;
 import com.teammoeg.frostedheart.content.town.transport.TransportEndpointId;
@@ -102,11 +118,15 @@ import com.teammoeg.frostedheart.content.town.transport.TransportReservationMode
 import com.teammoeg.frostedheart.content.town.transport.WarehouseTopologyEntry;
 import com.teammoeg.frostedheart.content.town.transport.WarehouseTopologyListener;
 import com.teammoeg.frostedheart.content.town.transport.WarehouseTopologySnapshot;
-import com.teammoeg.frostedheart.content.town.terrainresource.TerrainResourceType;
-import com.teammoeg.frostedheart.content.town.terrainresource.TerrainResourceData;
+import com.teammoeg.frostedheart.content.town.transport.device.P2PFilterSummaryState;
+import com.teammoeg.frostedheart.content.town.util.ObservableTownMap;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig.Server.Town.RefugeeSpawn;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig.Server.Town.ResidentAging;
+
+import blusunrize.immersiveengineering.common.util.Utils;
+import it.unimi.dsi.fastutil.objects.Object2DoubleOpenHashMap;
+import lombok.Getter;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.GlobalPos;
 import net.minecraft.core.UUIDUtil;
@@ -114,14 +134,10 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.SnowLayerBlock;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.Heightmap;
-
-import java.util.*;
-import java.util.Map.Entry;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Function;
 
 /**
  * ITown data for a whole team.
@@ -797,7 +813,13 @@ public class TeamTownData implements SpecialData{
         // Persisted reservation capacities are derived caches. Rebuild them before
         // the first incremental flush and after server-config formula changes.
         town.getTransportSummary();
-
+        if(dataSyncCache.hasChangedZone()) {
+        	for(BlockPos pos:dataSyncCache.drainChangedBuildingZones()){
+                ITownBuilding building = buildings.get(pos);
+                if(building!=null&&building instanceof AbstractTownBuilding townBuilding)
+                	this.updateOccupiedAreaOverlap(townBuilding);
+        	}
+        }
         if(dataSyncCache.hasChangedResources() || dataSyncCache.hasTransportStateChange()){
             Map<ITownResourceKey, Double> changedResource = new HashMap<>();
             for(ITownResourceKey resourceKey : this.dataSyncCache.drainChangedResources()){
@@ -1133,7 +1155,54 @@ public class TeamTownData implements SpecialData{
         }
         invalidBuildings.forEach(pos -> town.removeTownBlock(level, pos));
     }
+    void updateOccupiedAreaOverlap(AbstractTownBuilding toupdate) {
+        // removeNonTownBlocks(world);
+        BlockPos updateSign=toupdate.getOccupiedVolume().getSignature();
 
+        Set<AbstractTownBuilding> overlapped = new HashSet<>();
+        for (AbstractTownBuilding building:buildings.values()) {
+            OccupiedZoneInfo occupiedVolume = building.getOccupiedVolume();
+            BlockPos curSign=occupiedVolume.getSignature();
+            if(occupiedVolume.isValid()&&updateSign!=null&&curSign!=null&&curSign.equals(updateSign)){
+	            overlapped.add(building);
+            }
+        }
+	    if(overlapped.size()>1) {
+	    	toupdate.setOverlapped(true);
+	        for (AbstractTownBuilding building : overlapped) {
+	            building.setOverlapped(true);
+	        }
+        }else {
+	    	toupdate.setOverlapped(false);
+	        for (AbstractTownBuilding building : overlapped) {
+	            building.setOverlapped(false);
+	        }
+        }
+    }
+    void removeOccupiedAreaOverlap(AbstractTownBuilding toupdate) {
+        // removeNonTownBlocks(world);
+        BlockPos updateSign=toupdate.getOccupiedVolume().getSignature();
+
+        Set<AbstractTownBuilding> overlapped = new HashSet<>();
+        for (AbstractTownBuilding building:buildings.values()) {
+            OccupiedZoneInfo occupiedVolume = building.getOccupiedVolume();
+            BlockPos curSign=occupiedVolume.getSignature();
+            if(occupiedVolume.isValid()&&updateSign!=null&&curSign!=null&&curSign.equals(updateSign)){
+	            overlapped.add(building);
+            }
+        }
+	    if(overlapped.size()>1) {
+	    	toupdate.setOverlapped(true);
+	        for (AbstractTownBuilding building : overlapped) {
+	            building.setOverlapped(true);
+	        }
+        }else {
+	    	toupdate.setOverlapped(false);
+	        for (AbstractTownBuilding building : overlapped) {
+	            building.setOverlapped(false);
+	        }
+        }
+    }
     void checkOccupiedAreaOverlap() {
         // removeNonTownBlocks(world);
 
@@ -1141,15 +1210,9 @@ public class TeamTownData implements SpecialData{
         // 两两比对，根据OccupiedArea的外接矩形是否重合初步筛选可能重叠的worker
         Map<BlockPos,AbstractTownBuilding> signedRoom=new HashMap<>();
         for (AbstractTownBuilding building:buildings.values()) {
-            Set<OccupiedCell> occupiedVolume = building.getOccupiedVolume();
-            if(occupiedVolume!=null) {
-            	BlockPos curPos=new BlockPos(Integer.MAX_VALUE,Integer.MAX_VALUE,Integer.MAX_VALUE);
-	            for(OccupiedCell cell:occupiedVolume) {
-	            	if(curPos.compareTo(cell.getPos())>0) {
-	            		curPos=cell.getPos();
-	            	}
-	            }
-	            AbstractTownBuilding otherBuilding=signedRoom.put(curPos,building);
+            OccupiedZoneInfo occupiedVolume = building.getOccupiedVolume();
+            if(occupiedVolume.isValid()) {
+	            AbstractTownBuilding otherBuilding=signedRoom.put(occupiedVolume.getSignature(),building);
 	            if(otherBuilding!=null) {
 	            	overlapped.add(building);
                     overlapped.add(otherBuilding);
@@ -1157,7 +1220,7 @@ public class TeamTownData implements SpecialData{
             }
         }
         for (AbstractTownBuilding building : buildings.values()) {
-            building.setOccupiedAreaOverlapped(overlapped.contains(building));
+            building.setOverlapped(overlapped.contains(building));
         }
     }
 
@@ -2087,6 +2150,7 @@ public class TeamTownData implements SpecialData{
         private Set<ITownResourceKey> changedResourceKey = new HashSet<>();
         private Set<UUID> changedResidentUUID = new HashSet<>();
         private Set<BlockPos> changedBuildingPos = new HashSet<>();
+        private Set<BlockPos> changedBuildingZonePos = new HashSet<>();
         private boolean transportStateChanged;
 
         /**
@@ -2112,7 +2176,11 @@ public class TeamTownData implements SpecialData{
             return Math.abs(lastSyncedResources.getDouble(key) - currentValue) < TeamTownResourceHolder.DELTA;
         }
 
-        /**
+        public boolean hasChangedZone() {
+			return !changedBuildingZonePos.isEmpty();
+		}
+
+		/**
          * 记录某资源已通过增量包同步（发包后调用）。值近似为 0 时移除记录，
          * 防止快照随"增删交替"的键无限膨胀。
          */
@@ -2151,6 +2219,12 @@ public class TeamTownData implements SpecialData{
             this.changedBuildingPos.add(changedBuildingPos);
         }
 
+        public Set<BlockPos> drainChangedBuildingZones() {
+            if (changedBuildingZonePos.isEmpty()) return Set.of();
+            Set<BlockPos> out = new HashSet<>(changedBuildingZonePos);
+            changedBuildingZonePos.clear();
+            return out;
+        }
         /**
          * 取出当前所有脏建筑键并清空。发包前调用。
          */
@@ -2234,5 +2308,10 @@ public class TeamTownData implements SpecialData{
         public void onResourceChange(TownResourceChangeEvent event) {
             this.addChanged(event.changedResourceKey);
         }
+
+		@Override
+		public void onBuildingZoneChange(TownBuildingChangeEvent event) {
+			changedBuildingZonePos.add(event.changedBuildingPos);
+		}
     }
 }

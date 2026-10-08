@@ -19,13 +19,13 @@
 
 package com.teammoeg.frostedheart.content.town;
 
+import java.util.List;
+
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
-import com.teammoeg.frostedheart.content.town.observation.TownSignalEvent;
-import com.teammoeg.frostedheart.content.town.observation.TownOperationalHistory;
 import com.teammoeg.frostedheart.content.town.observation.TownNutritionHistory;
-
-import java.util.List;
+import com.teammoeg.frostedheart.content.town.observation.TownOperationalHistory;
+import com.teammoeg.frostedheart.content.town.observation.TownSignalEvent;
 
 /**
  * 城镇结算快照。每次城镇结算（tickMorning）后记录一条，

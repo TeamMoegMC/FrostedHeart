@@ -20,12 +20,10 @@
 package com.teammoeg.frostedheart.content.town.building;
 
 import com.teammoeg.frostedheart.content.town.ITownWithBuildings;
-import com.teammoeg.frostedheart.content.town.block.blockscanner.RoomPathfinder.OccupiedCell;
+import com.teammoeg.frostedheart.content.town.block.OccupiedZoneInfo;
 import com.teammoeg.frostedheart.content.town.event.ITownBuildingChangeEventListener;
 import com.teammoeg.frostedheart.content.town.event.TownBuildingChangeEvent;
 import com.teammoeg.frostedheart.content.town.render.ITownSpaceOccupiedBuilding;
-
-import java.util.Set;
 
 import com.mojang.serialization.Codec;
 import lombok.Getter;
@@ -55,12 +53,13 @@ public abstract class AbstractTownBuilding implements ITownBuilding,ITownSpaceOc
      */
     private boolean initialized = false;
 
-    private boolean occupiedAreaOverlapped = false;
-
     private boolean isStructureValid = false;
 
-    private Set<OccupiedCell> occupiedVolume = null;
+    private OccupiedZoneInfo occupiedVolume = OccupiedZoneInfo.EMPTY;
 
+	public boolean isOccupiedAreaOverlapped() {
+		return occupiedVolume.isOverlapped();
+	}
     /**
      * 变化监听。由 TeamTownData 在 building 装入 Map 后注入；
      * 各字段 setter 通过该监听 fire 事件，从而进入增量同步的脏标记。
@@ -89,22 +88,29 @@ public abstract class AbstractTownBuilding implements ITownBuilding,ITownSpaceOc
         fireChange();
     }
 
-    public void setOccupiedAreaOverlapped(boolean occupiedAreaOverlapped) {
-        if (this.occupiedAreaOverlapped == occupiedAreaOverlapped) return;
-        this.occupiedAreaOverlapped = occupiedAreaOverlapped;
-        fireChange();
-    }
-
     public void setIsStructureValid(boolean isStructureValid) {
         if (this.isStructureValid == isStructureValid) return;
         this.isStructureValid = isStructureValid;
         fireChange();
     }
-
-    public void setOccupiedVolume(Set<OccupiedCell> occupiedVolume) {
+    protected void internalSetOccupiedVolume(OccupiedZoneInfo occupiedVolume) {
+    	this.occupiedVolume = occupiedVolume;
+    }
+    public void setOccupiedVolume(OccupiedZoneInfo occupiedVolume) {
         if (java.util.Objects.equals(this.occupiedVolume, occupiedVolume)) return;
         this.occupiedVolume = occupiedVolume;
-        fireChange();
+        
+	    if (this.changeListener != null) {
+	    	TownBuildingChangeEvent event=new TownBuildingChangeEvent(this, this.pos);
+	        this.changeListener.onBuildingZoneChange(event);
+	        this.changeListener.onBuildingChange(event);
+        }
+    }
+    public void setOverlapped(boolean overlapped) {
+    	if(overlapped!=occupiedVolume.isOverlapped()) {
+    		occupiedVolume.setOverlapped(overlapped);
+    		fireChange();
+    	}
     }
 
     protected AbstractTownBuilding(BlockPos pos) {
@@ -113,7 +119,7 @@ public abstract class AbstractTownBuilding implements ITownBuilding,ITownSpaceOc
 
     @Override
     public boolean isBuildingWorkable(){
-        return initialized && !occupiedAreaOverlapped && isStructureValid;
+        return initialized && !occupiedVolume.isOverlapped() && isStructureValid;
     }
 
     @Override

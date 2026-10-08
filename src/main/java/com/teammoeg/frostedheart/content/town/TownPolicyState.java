@@ -6,11 +6,11 @@
 
 package com.teammoeg.frostedheart.content.town;
 
-import com.mojang.serialization.Codec;
-import com.mojang.serialization.codecs.RecordCodecBuilder;
-
 import java.util.LinkedHashMap;
 import java.util.Map;
+
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
 
 /**
  * Extensible town policy state. A domain owns one selected option; dependencies

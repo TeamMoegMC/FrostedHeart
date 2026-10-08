@@ -1,9 +1,7 @@
 package com.teammoeg.frostedheart.content.town.render;
 
-import java.util.Set;
-
-import com.teammoeg.frostedheart.content.town.block.blockscanner.RoomPathfinder.OccupiedCell;
+import com.teammoeg.frostedheart.content.town.block.OccupiedZoneInfo;
 
 public interface ITownSpaceOccupiedBuilding {
-	public Set<OccupiedCell> getOccupiedVolume();
+	public OccupiedZoneInfo getOccupiedVolume();
 }

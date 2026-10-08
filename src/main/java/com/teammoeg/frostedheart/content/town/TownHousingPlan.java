@@ -6,12 +6,6 @@
 
 package com.teammoeg.frostedheart.content.town;
 
-import com.mojang.serialization.Codec;
-import com.mojang.serialization.codecs.RecordCodecBuilder;
-import com.teammoeg.frostedheart.content.town.building.AbstractTownBuilding;
-import com.teammoeg.frostedheart.content.town.buildings.house.HouseBuilding;
-import net.minecraft.core.BlockPos;
-
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -19,6 +13,13 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
+import com.teammoeg.frostedheart.content.town.building.AbstractTownBuilding;
+import com.teammoeg.frostedheart.content.town.buildings.house.HouseBuilding;
+
+import net.minecraft.core.BlockPos;
 
 /** Ordered residential-care queue plus guaranteed-ration targets. */
 public final class TownHousingPlan {

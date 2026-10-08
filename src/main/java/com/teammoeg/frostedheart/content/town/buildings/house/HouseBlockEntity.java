@@ -30,6 +30,7 @@ import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
 import com.teammoeg.frostedheart.content.steamenergy.HeatEndpoint;
 import com.teammoeg.frostedheart.content.town.TownMathFunctions;
 import com.teammoeg.frostedheart.content.town.block.AbstractTownBuildingBlockEntity;
+import com.teammoeg.frostedheart.content.town.block.OccupiedZoneInfo;
 import com.teammoeg.frostedheart.content.town.block.blockscanner.BlockScanner;
 import com.teammoeg.frostedheart.content.town.block.blockscanner.BlockScanner.RoomData;
 import com.teammoeg.frostedheart.content.town.building.AbstractTownBuilding;
@@ -106,7 +107,12 @@ public class HouseBlockEntity extends AbstractTownBuildingBlockEntity<HouseBuild
 	public boolean scanStructure(HouseBuilding building) {
 		BlockPos housePos = this.getBlockPos();
 		RoomData rd=BlockScanner.scanRoomDataFromBlock(level,housePos);
-		if (rd!=null&&rd.doors.size()>0) {
+		building.setOccupiedVolume(rd.occupiedCells);
+		//prerequisition
+		if(rd.doors.size()<=0) {
+			rd.occupiedCells.setValid(false);
+		}
+		if (rd.isValid()) {
 			//FHMain.LOGGER.debug("HouseScanner: scan successful");
 			building.setVolume(rd.volume);
 			building.setArea(rd.area);
@@ -120,7 +126,6 @@ public class HouseBlockEntity extends AbstractTownBuildingBlockEntity<HouseBuild
 					housing.decorationBaseDemand.get(),
 					housing.decorationFloorBlocksPerDemand.get()));
 			building.setTemperature(rd.calculateTemperature(level));
-			building.setOccupiedVolume(rd.occupiedCells);
 			building.setMaxResidents(calculateMaxResidents(building.getArea(), building.getVolume(), rd.countInsideBlock(t->t.is(BlockTags.BEDS))));
 			building.setLayout(rd.findBlockPosition(t->t.is(BlockTags.BEDS)&&((!t.hasProperty(BedBlock.PART))||t.getValue(BedBlock.PART)==BedPart.HEAD)), rd.doors.get(0));
 			return true;

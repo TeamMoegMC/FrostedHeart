@@ -41,7 +41,7 @@ import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.frostedheart.content.town.ITownWithBuildings;
 import com.teammoeg.frostedheart.content.town.ITownWithResidents;
 import com.teammoeg.frostedheart.content.town.TownMathFunctions;
-import com.teammoeg.frostedheart.content.town.block.blockscanner.RoomPathfinder.OccupiedCell;
+import com.teammoeg.frostedheart.content.town.block.OccupiedZoneInfo;
 import com.teammoeg.frostedheart.content.town.building.AbstractTownBuilding;
 import com.teammoeg.frostedheart.content.town.building.ITownResidentBuilding;
 import com.teammoeg.frostedheart.content.town.building.ITownTemperatureBuilding;
@@ -161,9 +161,8 @@ public class HouseBuilding extends AbstractTownBuilding implements ITownResident
     public static final Codec<HouseBuilding> CODEC = RecordCodecBuilder.create(t -> t.group(
             BlockPos.CODEC.optionalFieldOf("pos",BlockPos.ZERO).forGetter(o -> o.pos),
             Codec.BOOL.optionalFieldOf("isStructureValid",false).forGetter(o -> o.isStructureValid()),
-            OccupiedCell.SET_CODEC.optionalFieldOf("occupiedVolume").forGetter(o -> Optional.ofNullable(o.getOccupiedVolume())),
+            OccupiedZoneInfo.CODEC.optionalFieldOf("occupiedVolume",OccupiedZoneInfo.EMPTY).forGetter(o -> o.getOccupiedVolume()),
             Codec.BOOL.optionalFieldOf("initialized", false).forGetter(o -> o.isInitialized()),
-            Codec.BOOL.optionalFieldOf("occupiedAreaOverlapped", false).forGetter(o -> o.isOccupiedAreaOverlapped()),
             Codec.INT.optionalFieldOf("area",0).forGetter(o -> o.getArea()),
             Codec.INT.optionalFieldOf("volume",0).forGetter(o -> o.getVolume()),
             Codec.DOUBLE.optionalFieldOf("temperature",0D).forGetter(o -> o.getTemperature()),
@@ -226,17 +225,16 @@ public class HouseBuilding extends AbstractTownBuilding implements ITownResident
         super(pos);
     }
 
-    public HouseBuilding(BlockPos pos, boolean isStructureValid, Optional<Set<OccupiedCell>> occupiedVolume, int area, int volume, double temperature, double decorationRating, int maxResidents, double temperatureModifier) {
-        this(pos, isStructureValid, occupiedVolume, false, false, area, volume, temperature,
+    public HouseBuilding(BlockPos pos, boolean isStructureValid, OccupiedZoneInfo occupiedVolume, int area, int volume, double temperature, double decorationRating, int maxResidents, double temperatureModifier) {
+        this(pos, isStructureValid, occupiedVolume, false, area, volume, temperature,
                 decorationRating, maxResidents, List.of(), temperatureModifier, DailyReport.EMPTY);
     }
 
     public HouseBuilding(
             BlockPos pos,
             boolean isStructureValid,
-            Optional<Set<OccupiedCell>> occupiedVolume,
+            OccupiedZoneInfo occupiedVolume,
             boolean initialized,
-            boolean occupiedAreaOverlapped,
             int area,
             int volume,
             double temperature,
@@ -246,7 +244,7 @@ public class HouseBuilding extends AbstractTownBuilding implements ITownResident
             double temperatureModifier,
             DailyReport dailyReport
     ) {
-        this(pos, isStructureValid, occupiedVolume, initialized, occupiedAreaOverlapped, area, volume,
+        this(pos, isStructureValid, occupiedVolume, initialized, area, volume,
                 temperature, decorationRating, maxResidents, residentsUUID, temperatureModifier,
                 dailyReport, NO_BED_POSITIONS, Optional.empty());
     }
@@ -254,9 +252,8 @@ public class HouseBuilding extends AbstractTownBuilding implements ITownResident
     private HouseBuilding(
             BlockPos pos,
             boolean isStructureValid,
-            Optional<Set<OccupiedCell>> occupiedVolume,
+            OccupiedZoneInfo occupiedVolume,
             boolean initialized,
-            boolean occupiedAreaOverlapped,
             int area,
             int volume,
             double temperature,
@@ -270,9 +267,8 @@ public class HouseBuilding extends AbstractTownBuilding implements ITownResident
     ) {
         super(pos);
         this.setIsStructureValid(isStructureValid);
-        this.setOccupiedVolume(occupiedVolume.orElse(null));
+        this.internalSetOccupiedVolume(occupiedVolume);
         this.setInitialized(initialized);
-        this.setOccupiedAreaOverlapped(occupiedAreaOverlapped);
         this.setArea(area);
         this.setVolume(volume);
         this.setTemperature(temperature);

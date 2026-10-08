@@ -35,8 +35,9 @@ public class FHKeyMappings {
     public static Lazy<KeyMapping> key_health = createKey("health",GLFW.GLFW_KEY_H,KeyConflictContext.IN_GAME);
     public static Lazy<KeyMapping> key_clothes = createKey("clothes",GLFW.GLFW_KEY_Y,KeyConflictContext.IN_GAME);
     public static Lazy<KeyMapping> key_drink = createKey("drink",GLFW.GLFW_KEY_C,KeyConflictContext.IN_GAME);
+    public static Lazy<KeyMapping> key_zoneView = createKey("building_area",GLFW.GLFW_KEY_J,KeyConflictContext.IN_GAME);
     public static void init() {
-
+    	
     }
     public static Lazy<KeyMapping> createKey(String category,String name,int keyCode,IKeyConflictContext conflictType){
     	return Lazy.of(()->{

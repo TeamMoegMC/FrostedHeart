@@ -19,6 +19,9 @@
 
 package com.teammoeg.frostedheart.content.town;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.teammoeg.chorda.client.RenderingHint;
 import com.teammoeg.chorda.client.cui.base.MenuPrimaryLayer;
 import com.teammoeg.chorda.client.cui.base.MouseButton;
@@ -29,11 +32,9 @@ import com.teammoeg.chorda.menu.CBlockEntityMenu;
 import com.teammoeg.frostedheart.content.town.block.AbstractTownBuildingBlockEntity;
 import com.teammoeg.frostedheart.content.town.event.ITownDataUpdateListener;
 import com.teammoeg.frostedheart.content.town.tabs.AbstractTownTab;
+
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
-
-import java.util.ArrayList;
-import java.util.List;
 
 public abstract class AbstractTownWorkerBlockScreen<C extends CBlockEntityMenu<? extends AbstractTownBuildingBlockEntity>> extends MenuPrimaryLayer<C> implements ITownDataUpdateListener {
 

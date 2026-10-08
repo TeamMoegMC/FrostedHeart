@@ -52,12 +52,11 @@ class TransportStationBuildingChangeTest {
         TransportStationBuilding building = new TransportStationBuilding(BlockPos.ZERO);
         AtomicInteger changes = new AtomicInteger();
         building.setChangeEventListener(event -> changes.incrementAndGet());
-        Set<OccupiedCell> firstVolume = occupiedVolume();
 
-        TransportStationBlockEntity.applyScanResult(building, 24, 72, firstVolume);
+        TransportStationBlockEntity.applyScanResult(building, 24, 72);
         int firstScanChanges = changes.get();
         TransportStationBlockEntity.applyScanResult(
-                building, 24, 72, occupiedVolume());
+                building, 24, 72);
 
         assertTrue(firstScanChanges > 0);
         assertEquals(firstScanChanges, changes.get());

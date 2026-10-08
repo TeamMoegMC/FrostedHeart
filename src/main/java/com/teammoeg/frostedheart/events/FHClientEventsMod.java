@@ -343,6 +343,7 @@ public class FHClientEventsMod {
         ev.register(FHKeyMappings.key_health.get());
         ev.register(FHKeyMappings.key_clothes.get());
         ev.register(FHKeyMappings.key_openWheelMenu.get());
+        ev.register(FHKeyMappings.key_zoneView.get());
 	}
 
 	@SubscribeEvent
@@ -363,12 +364,12 @@ public class FHClientEventsMod {
         event.registerBlockEntityRenderer(FHMultiblocks.Registration.GENERATOR_T2.masterBE().get(), T2GeneratorRenderer::new);
         
         
-        event.registerBlockEntityRenderer(FHBlockEntityTypes.HOUSE.get(), SpaceOutlineRenderer::new);
+        /*event.registerBlockEntityRenderer(FHBlockEntityTypes.HOUSE.get(), SpaceOutlineRenderer::new);
         event.registerBlockEntityRenderer(FHBlockEntityTypes.HUNTING_BASE.get(), SpaceOutlineRenderer::new);
         event.registerBlockEntityRenderer(FHBlockEntityTypes.TRANSPORT_STATION.get(), SpaceOutlineRenderer::new);
         event.registerBlockEntityRenderer(FHBlockEntityTypes.MINE_BASE.get(), SpaceOutlineRenderer::new);
         event.registerBlockEntityRenderer(FHBlockEntityTypes.MINE.get(), SpaceOutlineRenderer::new);
-        event.registerBlockEntityRenderer(FHBlockEntityTypes.WAREHOUSE.get(), SpaceOutlineRenderer::new);
+        event.registerBlockEntityRenderer(FHBlockEntityTypes.WAREHOUSE.get(), SpaceOutlineRenderer::new);*/
 	}
 
     @SubscribeEvent

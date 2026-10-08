@@ -27,8 +27,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
 import java.util.UUID;
 
 import com.mojang.serialization.Codec;
@@ -37,7 +35,7 @@ import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.town.ITownWithBuildings;
 import com.teammoeg.frostedheart.content.town.TeamTown;
 import com.teammoeg.frostedheart.content.town.TownMathFunctions;
-import com.teammoeg.frostedheart.content.town.block.blockscanner.RoomPathfinder.OccupiedCell;
+import com.teammoeg.frostedheart.content.town.block.OccupiedZoneInfo;
 import com.teammoeg.frostedheart.content.town.building.AbstractTownResidentWorkBuilding;
 import com.teammoeg.frostedheart.content.town.building.ITownTemperatureBuilding;
 import com.teammoeg.frostedheart.content.town.building.TownProductionReportItem;
@@ -112,9 +110,8 @@ public class HuntingBaseBuilding extends AbstractTownResidentWorkBuilding implem
 	public static final Codec<HuntingBaseBuilding> CODEC = RecordCodecBuilder.create(t -> t.group(
 					BlockPos.CODEC.optionalFieldOf("pos",BlockPos.ZERO).forGetter(o -> o.pos),
 					Codec.BOOL.optionalFieldOf("initialized", false).forGetter(o -> o.isInitialized()),
-					Codec.BOOL.optionalFieldOf("occupiedAreaOverlapped", false).forGetter(o -> o.isOccupiedAreaOverlapped()),
 					Codec.BOOL.optionalFieldOf("isStructureValid",false).forGetter(o -> o.isStructureValid()),
-					OccupiedCell.SET_CODEC.optionalFieldOf("occupiedVolume").forGetter(o -> Optional.ofNullable(o.getOccupiedVolume())),
+					OccupiedZoneInfo.CODEC.optionalFieldOf("occupiedVolume",OccupiedZoneInfo.EMPTY).forGetter(o -> o.getOccupiedVolume()),
 					Codec.list(UUIDUtil.CODEC).optionalFieldOf("residentsID",List.of()).forGetter(o -> new ArrayList<>(o.getResidentsID())),
 					Codec.INT.optionalFieldOf("area",0).forGetter(o -> o.getArea()),
 					Codec.INT.optionalFieldOf("volume",0).forGetter(o -> o.getVolume()),
@@ -179,17 +176,16 @@ public class HuntingBaseBuilding extends AbstractTownResidentWorkBuilding implem
 	 * @param temperatureModifier the temperature modifier
 	 * @param lootRollCarry fractional expected loot-table rolls retained between work cycles
 	 */
-	public HuntingBaseBuilding(BlockPos pos, boolean initialized, boolean occupiedAreaOverlapped,
-                              boolean isStructureValid, Optional<Set<OccupiedCell>> occupiedVolume,
+	public HuntingBaseBuilding(BlockPos pos, boolean initialized, 
+                              boolean isStructureValid, OccupiedZoneInfo occupiedVolume,
                               java.util.List<UUID> residentsID, int area, int volume,
                               double temperature, int maxResidents, int tanningRackNum,
                               double temperatureModifier, double rating, double lootRollCarry,
                               HuntingDailyReport dailyReport) {
 		super(pos);
         this.setInitialized(initialized);
-        this.setOccupiedAreaOverlapped(occupiedAreaOverlapped);
 		this.setIsStructureValid(isStructureValid);
-		this.setOccupiedVolume(occupiedVolume.orElse(null));
+		this.internalSetOccupiedVolume(occupiedVolume);
 		this.residentsID = new java.util.HashSet<>(residentsID);
 		this.setArea(area);
 		this.setVolume(volume);

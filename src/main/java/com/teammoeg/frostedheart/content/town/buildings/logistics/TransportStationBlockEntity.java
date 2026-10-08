@@ -6,8 +6,6 @@
 
 package com.teammoeg.frostedheart.content.town.buildings.logistics;
 
-import java.util.Set;
-
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -16,7 +14,6 @@ import com.teammoeg.frostedheart.content.town.TownMathFunctions;
 import com.teammoeg.frostedheart.content.town.block.AbstractTownBuildingBlockEntity;
 import com.teammoeg.frostedheart.content.town.block.blockscanner.BlockScanner;
 import com.teammoeg.frostedheart.content.town.block.blockscanner.BlockScanner.RoomData;
-import com.teammoeg.frostedheart.content.town.block.blockscanner.RoomPathfinder.OccupiedCell;
 import com.teammoeg.frostedheart.content.town.building.AbstractTownBuilding;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 
@@ -40,7 +37,13 @@ public class TransportStationBlockEntity
     public boolean scanStructure(TransportStationBuilding building) {
 		BlockPos housePos = this.getBlockPos();
 		RoomData rd=BlockScanner.scanRoomDataFromBlock(level,housePos);
-		if (rd!=null&&rd.doors.size()>0) {
+
+		building.setOccupiedVolume(rd.occupiedCells);
+		//prerequisition
+		if(rd.doors.size()<=0) {
+			rd.occupiedCells.setValid(false);
+		}
+		if (rd.isValid()) {
             applyScan(building, rd);
             return true;
         }
@@ -55,19 +58,16 @@ public class TransportStationBlockEntity
         applyScanResult(
                 building,
                 scanner.area,
-                scanner.volume,
-                scanner.occupiedCells);
+                scanner.volume);
     }
 
     static void applyScanResult(
             TransportStationBuilding building,
             int area,
-            int volume,
-            Set<OccupiedCell> occupiedVolume
+            int volume
     ) {
         building.setArea(area);
         building.setVolume(volume);
-        building.setOccupiedVolume(occupiedVolume);
 
         FHConfig.Server.Town.BuildingScoring scoring = FHConfig.SERVER.TOWN.BUILDING_SCORING;
         FHConfig.Server.Town.TransportStation config = FHConfig.SERVER.TOWN.TRANSPORT_STATION;

@@ -30,6 +30,7 @@ import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
 import com.teammoeg.frostedheart.content.steamenergy.HeatEndpoint;
 import com.teammoeg.frostedheart.content.town.TownMathFunctions;
 import com.teammoeg.frostedheart.content.town.block.AbstractTownBuildingBlockEntity;
+import com.teammoeg.frostedheart.content.town.block.OccupiedZoneInfo;
 import com.teammoeg.frostedheart.content.town.block.blockscanner.BlockScanner;
 import com.teammoeg.frostedheart.content.town.block.blockscanner.BlockScanner.RoomData;
 import com.teammoeg.frostedheart.content.town.building.AbstractTownBuilding;
@@ -68,11 +69,15 @@ public class HuntingBaseBlockEntity extends AbstractTownBuildingBlockEntity<Hunt
 	public boolean scanStructure(HuntingBaseBuilding building) {
 		BlockPos housePos = this.getBlockPos();
 		RoomData rd=BlockScanner.scanRoomDataFromBlock(level,housePos);
-		if (rd!=null&&rd.doors.size()>0) {
+		building.setOccupiedVolume(rd.occupiedCells);
+		//prerequisition
+		if(rd.doors.size()<=0) {
+			rd.occupiedCells.setValid(false);
+		}
+		if (rd.isValid()) {
 			building.setVolume(rd.volume);
 			building.setArea(rd.area);
 			building.setTemperature(rd.calculateTemperature(level));
-			building.setOccupiedVolume(rd.occupiedCells);
 			building.setTanningRackNum(rd.countInsideBlock(t->t.is(FHTags.Blocks.TANNING_RACK.get())));
 			building.setRating(computeRating(building.getVolume(), building.getArea(), building.getTemperature(), this.getTemperatureModifier()));
 			FHConfig.Server.Town.BuildingScoring scoring = FHConfig.SERVER.TOWN.BUILDING_SCORING;

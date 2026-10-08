@@ -8,11 +8,9 @@ package com.teammoeg.frostedheart.content.town.buildings.warehouse;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import java.util.Optional;
-import java.util.Set;
-
 import org.junit.jupiter.api.Test;
 
+import com.teammoeg.frostedheart.content.town.block.OccupiedZoneInfo;
 import com.teammoeg.frostedheart.content.town.block.blockscanner.RoomPathfinder.OccupiedCell;
 
 import net.minecraft.core.BlockPos;
@@ -24,9 +22,9 @@ class WarehouseBuildingCodecTest {
     void codecPersistsOnlyWarehouseStructureAndCapacityState() {
         BlockPos corePos = new BlockPos(12, 64, -8);
         WarehouseBuilding source = new WarehouseBuilding(
-                corePos, true,Optional.of(Set.of(new OccupiedCell(new BlockPos(4, 64, -2),2),
-                    	new OccupiedCell(new BlockPos(5, 64, -2),2)))
-                , true,
+                corePos, true,new OccupiedZoneInfo(new OccupiedCell(new BlockPos(4, 64, -2),2),
+                    	new OccupiedCell(new BlockPos(5, 64, -2),2))
+                ,
                 false, 12_345.5, 48, 144, 3);
 
         CompoundTag encoded = (CompoundTag) WarehouseBuilding.CODEC

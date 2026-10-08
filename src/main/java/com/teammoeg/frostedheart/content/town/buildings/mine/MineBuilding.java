@@ -21,15 +21,13 @@ package com.teammoeg.frostedheart.content.town.buildings.mine;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.chorda.util.CDistHelper;
 import com.teammoeg.chorda.util.CUtils;
 import com.teammoeg.frostedheart.content.town.ITownWithBuildings;
-import com.teammoeg.frostedheart.content.town.block.blockscanner.RoomPathfinder.OccupiedCell;
+import com.teammoeg.frostedheart.content.town.block.OccupiedZoneInfo;
 import com.teammoeg.frostedheart.content.town.building.AbstractTownBuilding;
 
 import lombok.Getter;
@@ -43,9 +41,8 @@ public class MineBuilding extends AbstractTownBuilding {
 	public static final Codec<MineBuilding> CODEC = RecordCodecBuilder.create(t -> t.group(
                     BlockPos.CODEC.optionalFieldOf("pos",BlockPos.ZERO).forGetter(o -> o.pos),
                     Codec.BOOL.optionalFieldOf("initialized", false).forGetter(o -> o.isInitialized()),
-                    Codec.BOOL.optionalFieldOf("occupiedAreaOverlapped", false).forGetter(o -> o.isOccupiedAreaOverlapped()),
                     Codec.BOOL.optionalFieldOf("isStructureValid",false).forGetter(o -> o.isStructureValid()),
-                    OccupiedCell.SET_CODEC.optionalFieldOf("occupiedVolume").forGetter(o -> Optional.ofNullable(o.getOccupiedVolume())),
+                    OccupiedZoneInfo.CODEC.optionalFieldOf("occupiedVolume",OccupiedZoneInfo.EMPTY).forGetter(o -> o.getOccupiedVolume()),
 					Codec.DOUBLE.optionalFieldOf("rating",0D).forGetter(o -> o.getRating()),
 					Codec.STRING.optionalFieldOf("biomePath","minecraft:plains")
                             .forGetter(o -> o.getBiomePath().toString())
@@ -79,14 +76,13 @@ public class MineBuilding extends AbstractTownBuilding {
      * @param rating the building rating
      * @param biomePathString the biome path as string
      */
-    public MineBuilding(BlockPos pos, boolean initialized, boolean occupiedAreaOverlapped,
-                        boolean isStructureValid, Optional<Set<OccupiedCell>> occupiedVolume,
+    public MineBuilding(BlockPos pos, boolean initialized, 
+                        boolean isStructureValid, OccupiedZoneInfo occupiedVolume,
                         double rating, String biomePathString) {
         super(pos);
         this.setInitialized(initialized);
-        this.setOccupiedAreaOverlapped(occupiedAreaOverlapped);
         this.setIsStructureValid(isStructureValid);
-        this.setOccupiedVolume(occupiedVolume.orElse(null));
+        this.internalSetOccupiedVolume(occupiedVolume);
         this.setRating(rating);
         ResourceLocation decodedBiome = ResourceLocation.tryParse(biomePathString);
         this.setBiomePath(decodedBiome == null

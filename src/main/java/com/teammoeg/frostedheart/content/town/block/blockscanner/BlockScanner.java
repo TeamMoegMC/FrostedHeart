@@ -15,10 +15,12 @@ import javax.annotation.Nullable;
 import com.teammoeg.chorda.util.CachedLevel;
 import com.teammoeg.frostedheart.content.climate.WorldTemperature;
 import com.teammoeg.frostedheart.content.town.block.OccupiedVolume;
+import com.teammoeg.frostedheart.content.town.block.OccupiedZoneInfo;
 import com.teammoeg.frostedheart.content.town.block.blockscanner.RoomPathfinder.OccupiedCell;
 import com.teammoeg.frostedheart.content.town.block.blockscanner.RoomPathfinder.ReachabilityResult;
 
 import it.unimi.dsi.fastutil.objects.Reference2IntMap;
+import it.unimi.dsi.fastutil.objects.Reference2IntMaps;
 import it.unimi.dsi.fastutil.objects.Reference2IntMap.Entry;
 import it.unimi.dsi.fastutil.objects.Reference2IntOpenHashMap;
 import net.minecraft.core.BlockPos;
@@ -33,7 +35,7 @@ import net.minecraft.world.phys.AABB;
 
 public class BlockScanner {
     public static class RoomData {
-        public final Set<OccupiedCell> occupiedCells;  // 占据格子（从地板上方到天花板下方）
+        public final OccupiedZoneInfo occupiedCells;  // 占据格子（从地板上方到天花板下方）
         
         public final Set<BlockPos> neighborCells;  // 邻居格子（占据格子向外一格，不包含占据格子）
         public final Map<BlockPos,BlockState> insideBlockIndex;
@@ -42,7 +44,7 @@ public class BlockScanner {
         public final List<BlockPos> doors;
         public final int area;
         public final int volume;
-		public RoomData(Set<OccupiedCell> occupiedCells, Set<BlockPos> neighborCells,Map<BlockPos,BlockState> insideBlockIndex, Reference2IntMap<BlockState> insideBlocks, Reference2IntMap<BlockState> neighborBlocks,List<BlockPos> doors) {
+		public RoomData(OccupiedZoneInfo occupiedCells, Set<BlockPos> neighborCells,Map<BlockPos,BlockState> insideBlockIndex, Reference2IntMap<BlockState> insideBlocks, Reference2IntMap<BlockState> neighborBlocks,List<BlockPos> doors) {
 			super();
 			this.occupiedCells = occupiedCells;
 			this.neighborCells = neighborCells;
@@ -50,8 +52,22 @@ public class BlockScanner {
 			this.insideBlocks = insideBlocks;
 			this.neighborBlocks = neighborBlocks;
 			this.doors=doors;
-			area=occupiedCells.size();
-			volume=occupiedCells.stream().mapToInt(OccupiedCell::height).sum();
+			area=occupiedCells.getOccupiedCells().size();
+			volume=occupiedCells.getOccupiedCells().stream().mapToInt(OccupiedCell::height).sum();
+		}
+		public RoomData(OccupiedZoneInfo occupiedCells) {
+			super();
+			this.occupiedCells = occupiedCells;
+			this.neighborCells = Set.of();
+			this.insideBlockIndex=Map.of();
+			this.insideBlocks = Reference2IntMaps.emptyMap();
+			this.neighborBlocks = Reference2IntMaps.emptyMap();
+			this.doors=List.of();
+			area=occupiedCells.getOccupiedCells().size();
+			volume=occupiedCells.getOccupiedCells().stream().mapToInt(OccupiedCell::height).sum();
+		}
+		public boolean isValid() {
+			return occupiedCells.isValid();
 		}
 		@Override
 		public int hashCode() {
@@ -120,7 +136,7 @@ public class BlockScanner {
 		public float calculateTemperature(Level world) {
 			int volume=0;
 			double temperature=0;
-			for(OccupiedCell cell:occupiedCells)
+			for(OccupiedCell cell:occupiedCells.getOccupiedCells())
 				for(BlockPos pos:cell.reachableIterable()) {
 					temperature+=WorldTemperature.block(world, pos);
 					volume++;
@@ -129,7 +145,7 @@ public class BlockScanner {
 		}
 		public OccupiedVolume calculateOccupiedVolume() {
 			OccupiedVolume ou=new OccupiedVolume();
-			for(OccupiedCell cell:occupiedCells) {
+			for(OccupiedCell cell:occupiedCells.getOccupiedCells()) {
 				ou.add(cell.pos);
 			}
 			return ou;
@@ -150,34 +166,38 @@ public class BlockScanner {
     	
     	ReachabilityResult positions=RoomPathfinder.findReachable(world, start);
     	//System.out.println(positions);
-    	if(positions==null)
-    		return null;
-    	Map<BlockPos,BlockState> insideBlockIndex=new HashMap<>();
-    	Reference2IntOpenHashMap<BlockState> insideBlocks=new Reference2IntOpenHashMap<>();
-    	Reference2IntOpenHashMap<BlockState> neighborBlocks=new Reference2IntOpenHashMap<>();
-    	Set<BlockPos> doors=new HashSet<>();
-        for(BlockPos cpos:positions.neighborCells) {
-        	BlockState block=r.getBlockState(cpos);
-        	if(block.is(BlockTags.DOORS)) {
-        		if(block.hasProperty(DoorBlock.HALF)) {
-        			if(block.getValue(DoorBlock.HALF)==DoubleBlockHalf.UPPER)
-        				doors.add(cpos.below());
-        			else
-        				doors.add(cpos);
-        		}else
-    				doors.add(cpos);
-        	}
-        	neighborBlocks.addTo(block, 1);
-        }
-        for(OccupiedCell ocell:positions.occupiedCells) {
-        	for(MutableBlockPos cpos:ocell) {
-        		BlockState block=r.getBlockState(cpos);
-        		if(!block.isAir())
-        			insideBlockIndex.put(cpos.immutable(),block);
-        		insideBlocks.addTo(block, 1);
-        	}
-        }
-        RoomData rd =  new RoomData(positions.occupiedCells,positions.neighborCells,insideBlockIndex,insideBlocks,neighborBlocks,new ArrayList<>(doors));
+    	RoomData rd;
+    	if(positions.isSucceed()) {
+	    	Map<BlockPos,BlockState> insideBlockIndex=new HashMap<>();
+	    	Reference2IntOpenHashMap<BlockState> insideBlocks=new Reference2IntOpenHashMap<>();
+	    	Reference2IntOpenHashMap<BlockState> neighborBlocks=new Reference2IntOpenHashMap<>();
+	    	Set<BlockPos> doors=new HashSet<>();
+	        for(BlockPos cpos:positions.neighborCells) {
+	        	BlockState block=r.getBlockState(cpos);
+	        	if(block.is(BlockTags.DOORS)) {
+	        		if(block.hasProperty(DoorBlock.HALF)) {
+	        			if(block.getValue(DoorBlock.HALF)==DoubleBlockHalf.UPPER)
+	        				doors.add(cpos.below());
+	        			else
+	        				doors.add(cpos);
+	        		}else
+	    				doors.add(cpos);
+	        	}
+	        	neighborBlocks.addTo(block, 1);
+	        }
+	        for(OccupiedCell ocell:positions.occupiedCells) {
+	        	for(MutableBlockPos cpos:ocell) {
+	        		BlockState block=r.getBlockState(cpos);
+	        		if(!block.isAir())
+	        			insideBlockIndex.put(cpos.immutable(),block);
+	        		insideBlocks.addTo(block, 1);
+	        	}
+	        }
+	        rd =  new RoomData(new OccupiedZoneInfo(positions.occupiedCells),positions.neighborCells,insideBlockIndex,insideBlocks,neighborBlocks,new ArrayList<>(doors));
+	        
+    	}else {
+    		rd =  new RoomData(new OccupiedZoneInfo(positions.occupiedCells,Set.of(positions.error),false,false));
+    	}
         return rd;
     }
 }

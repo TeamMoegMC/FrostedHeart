@@ -19,11 +19,11 @@
 
 package com.teammoeg.frostedheart.content.town;
 
-import com.teammoeg.frostedheart.content.town.resident.Resident;
-
 import java.util.Collection;
 import java.util.Optional;
 import java.util.UUID;
+
+import com.teammoeg.frostedheart.content.town.resident.Resident;
 
 public interface ITownWithResidents{
     /**
