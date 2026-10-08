@@ -138,6 +138,8 @@ old nutritionConsumptionRate * 100
 
 系统没有独立的玩家营养同步包；权威存档和消耗在服务端，打开健康菜单时通过容器数据槽同步。
 
+健康界面底部另显示核心体温升降趋势，规则见[玩家体温](../climate/player-temperature.md#player-facing-values)。
+
 ## 4. 居民每日摄入与住宅菜单
 
 ### 4.1 默认值和顺序

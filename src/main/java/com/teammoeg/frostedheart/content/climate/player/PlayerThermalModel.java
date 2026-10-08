@@ -12,9 +12,14 @@ import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData.Bo
 public class PlayerThermalModel {
     static final double CORE_REFERENCE_TEMPERATURE_C = 37.0D;
     static final double WHOLE_BODY_HEAT_CAPACITY_J_PER_K = 245_000.0D;
-    static final double LEGACY_INSULATION_TO_RESISTANCE = 0.0002D;
     static final double GAMEPLAY_TIME_SCALE = 8.0D;
-    static final double THERMAL_EXCHANGE_RATE_MULTIPLIER = 2.0D;
+    private static final double AIR_EXCHANGE_MULTIPLIER = 0.0824D;
+    private static final double WATER_EXCHANGE_MULTIPLIER = 0.51D;
+    private static final double POWDER_SNOW_EXCHANGE_MULTIPLIER = 0.116D;
+    private static final double WET_EXCHANGE_MULTIPLIER = 0.03D;
+    private static final double LAVA_EXCHANGE_MULTIPLIER = 2.0D;
+    private static final double DIRECT_RADIATION_MULTIPLIER = 2.0D;
+    private static final double INTERNAL_EXCHANGE_MULTIPLIER = 2.0D;
     static final double MAXIMUM_WORLD_WIND_M_PER_S = 19.444D;
 
     private PlayerThermalModel() {
@@ -61,7 +66,7 @@ public class PlayerThermalModel {
      * Builds passive conductance paths for one body part.
      * <p>
      * Contact precedence is lava, water, powder snow, then remaining air.
-     * Clothing thermal resistance affects every path; wind proof affects
+     * Legacy insulation scales environmental exchange; wind proof affects
      * forced convection, water resistance affects contact and Wet, and
      * radiant proof affects absorbed source/fire heat.
      */
@@ -85,42 +90,43 @@ public class PlayerThermalModel {
                 radiantFluxWPerM2, clothing.radiantHeatProof);
         double hTotal = hConvection
                 + LONG_WAVE_COEFFICIENT_W_PER_M2_K;
-        double operativeTemperatureC = operativeTemperatureC(
-                airTemperatureC, hConvection, hTotal, absorbedFluxWPerM2);
         double areaM2 = BODY_SURFACE_AREA_M2 * part.area;
         final double tissueResistanceM2KPerW = 0.04D;
-        double pathResistance = tissueResistanceM2KPerW
-                + clothing.thermalResistanceM2KPerW;
-        // Scale the finalized conductance so clothing and tissue resistance
-        // retain their existing series relationship.
-        double airConductanceWPerK = THERMAL_EXCHANGE_RATE_MULTIPLIER
-                * areaM2 * air / (pathResistance + 1.0D / hTotal);
+        double insulationFactor = clothing.environmentExchangeFactor;
+        double unscaledAirConductanceWPerK =
+                areaM2 * air / (tissueResistanceM2KPerW + 1.0D / hTotal);
+        // The old clothing factor affected ambient exchange, while direct
+        // source radiation heated the body independently of insulation.
+        double directRadiationW = DIRECT_RADIATION_MULTIPLIER
+                * unscaledAirConductanceWPerK * absorbedFluxWPerM2 / hTotal;
+        double airConductanceWPerK = AIR_EXCHANGE_MULTIPLIER
+                * unscaledAirConductanceWPerK * insulationFactor;
         double contactProtection = 1.0D - clothing.waterResistance;
-        double waterConductanceWPerK = THERMAL_EXCHANGE_RATE_MULTIPLIER
-                * mediumConductanceWPerK(
-                        areaM2, water, WATER_COEFFICIENT_W_PER_M2_K * contactProtection, pathResistance);
-        double powderConductanceWPerK = THERMAL_EXCHANGE_RATE_MULTIPLIER
-                * mediumConductanceWPerK(
-                        areaM2, powder, POWDER_SNOW_COEFFICIENT_W_PER_M2_K * contactProtection, pathResistance);
-        double lavaConductanceWPerK = THERMAL_EXCHANGE_RATE_MULTIPLIER
-                * mediumConductanceWPerK(
-                        areaM2, lava, LAVA_COEFFICIENT_W_PER_M2_K * (1.0D - clothing.radiantHeatProof), pathResistance);
+        double waterConductanceWPerK = WATER_EXCHANGE_MULTIPLIER
+                * insulationFactor * mediumConductanceWPerK(
+                        areaM2, water, WATER_COEFFICIENT_W_PER_M2_K * contactProtection, tissueResistanceM2KPerW);
+        double powderConductanceWPerK = POWDER_SNOW_EXCHANGE_MULTIPLIER
+                * insulationFactor * mediumConductanceWPerK(
+                        areaM2, powder, POWDER_SNOW_COEFFICIENT_W_PER_M2_K * contactProtection, tissueResistanceM2KPerW);
+        double lavaConductanceWPerK = LAVA_EXCHANGE_MULTIPLIER
+                * insulationFactor * mediumConductanceWPerK(
+                        areaM2, lava, LAVA_COEFFICIENT_W_PER_M2_K * (1.0D - clothing.radiantHeatProof), tissueResistanceM2KPerW);
         final double wetExchangeCoefficientWPerM2K = 12.0D;
         double wetConductanceWPerK = wet
-                ? THERMAL_EXCHANGE_RATE_MULTIPLIER
-                * areaM2 * air * wetExchangeCoefficientWPerM2K
+                ? WET_EXCHANGE_MULTIPLIER
+                * insulationFactor * areaM2 * air * wetExchangeCoefficientWPerM2K
                 * contactProtection : 0.0D;
         // Copy primitive results into the reusable context for integration.
         context.setPartEnvironment(part,
                 airConductanceWPerK + waterConductanceWPerK
                         + powderConductanceWPerK
                         + lavaConductanceWPerK,
-                airConductanceWPerK * operativeTemperatureC
+                airConductanceWPerK * airTemperatureC + directRadiationW
                         + waterConductanceWPerK * waterTemperatureC
                         + powderConductanceWPerK
                         * POWDER_SNOW_TEMPERATURE_C
                         + lavaConductanceWPerK * LAVA_TEMPERATURE_C,
-                wetConductanceWPerK, operativeTemperatureC, clothing.radiantHeatProof, air);
+                wetConductanceWPerK, airTemperatureC, clothing.radiantHeatProof, air);
     }
 
     static double exposedAreaM2(BodyPart part, double airFraction) {
@@ -137,15 +143,6 @@ public class PlayerThermalModel {
         return Math.max(0.0D, radiantFluxWPerM2)
                 * RADIATION_ABSORPTIVITY
                 * (1.0D - radiantHeatProof);
-    }
-
-    private static double operativeTemperatureC(
-            double airTemperatureC, double hConvection, double hTotal, double absorbedFluxWPerM2) {
-        return (hConvection * airTemperatureC
-                + LONG_WAVE_COEFFICIENT_W_PER_M2_K
-                * (airTemperatureC + absorbedFluxWPerM2
-                / LONG_WAVE_COEFFICIENT_W_PER_M2_K))
-                / hTotal;
     }
 
     private static double mediumConductanceWPerK(
@@ -301,7 +298,7 @@ public class PlayerThermalModel {
         double firstTemperatureC = data.getAbsoluteBodyTempByPart(first);
         double secondTemperatureC = data.getAbsoluteBodyTempByPart(second);
         double differenceK = firstTemperatureC - secondTemperatureC;
-        double requestedJ = THERMAL_EXCHANGE_RATE_MULTIPLIER
+        double requestedJ = INTERNAL_EXCHANGE_MULTIPLIER
                 * conductanceWPerK * differenceK
                 * physiologicalSeconds;
         double firstCapacity = partHeatCapacityJPerK(first);

@@ -92,7 +92,7 @@ public class BodyPartData {
 	 * simulating the effects of outdoor jackets.
 	 * @param player this is important, because we need to know if player is wet etc.
 	 * @param part BodyPart
-	 * @return thermal conductivity, range (0, 1]
+	 * @return weighted legacy insulation and outer-layer protections
 	 */
     public PartClothData getClothData(Player player, BodyPart part) {
 		PartClothData result = new PartClothData();
@@ -110,7 +110,7 @@ public class BodyPartData {
 			}
 		}
 
-		double resistance = 0.0D;
+		double insulation = 0.0D;
 		double heatProof = 0.0D;
 		double windProof = 0.0D;
 		double waterResistance = 0.0D;
@@ -127,8 +127,7 @@ public class BodyPartData {
 							.get(FHAttributes.HEAT_PROOF.get()));
 			double innerWeight = innerWeight(part, layerCount, layer);
 			double outerWeight = outerWeight(part, layer);
-			resistance += innerWeight * insulationFactor
-					* PlayerTemperatureComputation.LEGACY_INSULATION_TO_RESISTANCE;
+			insulation += innerWeight * insulationFactor;
 			heatProof += outerWeight * radiant;
 			windProof += outerWeight * wind;
 			waterResistance += outerWeight * wind;
@@ -141,14 +140,13 @@ public class BodyPartData {
 			if (armor == null) continue;
 			double innerWeight = innerWeight(part, layerCount, layer);
 			double outerWeight = outerWeight(part, layer);
-			resistance += innerWeight * armor.getInsulation()
-					* PlayerTemperatureComputation.LEGACY_INSULATION_TO_RESISTANCE;
+			insulation += innerWeight * armor.getInsulation();
 			heatProof += outerWeight * armor.getHeatProof();
 			windProof += outerWeight * armor.getFluidResistance();
 			waterResistance += outerWeight * armor.getFluidResistance();
 			layer++;
 		}
-		result.set(resistance, heatProof, windProof, waterResistance);
+		result.set(insulation, heatProof, windProof, waterResistance);
 	}
 
 	private static double innerWeight(

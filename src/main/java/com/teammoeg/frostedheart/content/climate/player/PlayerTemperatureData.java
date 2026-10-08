@@ -134,6 +134,7 @@ public class PlayerTemperatureData implements NBTSerializable {
     float coreBodyTemp;
     @Setter
     float envTemp = INVALID_TEMPERATURE;
+    private float environmentEquivalentTemperatureC = INVALID_TEMPERATURE;
     private float netBodyPowerW;
     private float sampledAirTemperatureC;
     private float sampledRadiantFluxWPerM2;
@@ -157,6 +158,7 @@ public class PlayerTemperatureData implements NBTSerializable {
         prevCoreBodyTemp = 0;
         coreBodyTemp = 0;
         envTemp = INVALID_TEMPERATURE;
+        environmentEquivalentTemperatureC = INVALID_TEMPERATURE;
         updateInterval = 0;
 
         for (BodyPartData i : clothesOfParts.values()) {
@@ -202,6 +204,7 @@ public class PlayerTemperatureData implements NBTSerializable {
         refreshCoreTemperature();
         prevCoreBodyTemp = coreBodyTemp;
         envTemp = INVALID_TEMPERATURE;
+        environmentEquivalentTemperatureC = INVALID_TEMPERATURE;
         netBodyPowerW = 0.0F;
         forceThermalSync();
     }
@@ -226,6 +229,7 @@ public class PlayerTemperatureData implements NBTSerializable {
         prevCoreBodyTemp = 0;
         coreBodyTemp = 0;
         envTemp = INVALID_TEMPERATURE;
+        environmentEquivalentTemperatureC = INVALID_TEMPERATURE;
         smoothedBody = 0;
         netBodyPowerW = 0;
         clearAllClothes();
@@ -252,10 +256,10 @@ public class PlayerTemperatureData implements NBTSerializable {
     ) {
         prevCoreBodyTemp = coreBodyTemp;
         refreshCoreTemperature();
-        envTemp = finiteFloat(environmentEquivalentTemperatureC, -20.0F);
+        envTemp = finiteFloat(sampledAirTemperatureC, -20.0F);
+        this.environmentEquivalentTemperatureC = finiteFloat(environmentEquivalentTemperatureC, envTemp);
         this.netBodyPowerW = finiteFloat(netBodyPowerW, 0.0F);
-        this.sampledAirTemperatureC = finiteFloat(
-                sampledAirTemperatureC, envTemp);
+        this.sampledAirTemperatureC = envTemp;
         this.sampledRadiantFluxWPerM2 = finiteFloat(
                 sampledRadiantFluxWPerM2, 0.0F);
         this.sampledOutdoorWindMPerS = finiteFloat(
@@ -289,6 +293,12 @@ public class PlayerTemperatureData implements NBTSerializable {
         if (envTemp == INVALID_TEMPERATURE)
             return -20;
         return envTemp;
+    }
+
+    public float getEnvironmentEquivalentTemperatureC() {
+        if (environmentEquivalentTemperatureC == INVALID_TEMPERATURE)
+            return -20;
+        return environmentEquivalentTemperatureC;
     }
 
     public float getTotalFeelTemp() {
@@ -450,6 +460,8 @@ public class PlayerTemperatureData implements NBTSerializable {
         coreBodyTemp = absoluteCoreTemperatureC
                 - (float) PlayerTemperatureComputation.CORE_REFERENCE_TEMPERATURE_C;
         envTemp = environmentTemperatureC;
+        sampledAirTemperatureC = environmentTemperatureC;
+        environmentEquivalentTemperatureC = INVALID_TEMPERATURE;
     }
 
     public boolean shouldSyncThermalState() {

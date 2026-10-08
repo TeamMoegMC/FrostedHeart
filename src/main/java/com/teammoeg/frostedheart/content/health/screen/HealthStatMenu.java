@@ -26,6 +26,7 @@ import com.teammoeg.frostedheart.bootstrap.common.FHMenuTypes;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData.BodyPart;
 import com.teammoeg.frostedheart.content.health.capability.NutritionCapability;
+import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.world.entity.player.Inventory;
@@ -42,6 +43,7 @@ public class HealthStatMenu extends CBaseMenu {
 	public CDataSlot<Float> handsTemperature=CCustomMenuSlot.SLOT_FIXED.create(this);
 	public CDataSlot<Float> legsTemperature=CCustomMenuSlot.SLOT_FIXED.create(this);
 	public CDataSlot<Float> feetTemperature=CCustomMenuSlot.SLOT_FIXED.create(this);
+	public CDataSlot<Integer> coreTemperatureTrend=CCustomMenuSlot.SLOT_INT.create(this);
 
 
 
@@ -66,7 +68,16 @@ public class HealthStatMenu extends CBaseMenu {
 			handsTemperature.bind(()->data.getBodyTempByPart(BodyPart.HANDS));
 			legsTemperature.bind(()->data.getBodyTempByPart(BodyPart.LEGS));
 			feetTemperature.bind(()->data.getBodyTempByPart(BodyPart.FEET));
+			coreTemperatureTrend.bind(()->coreTemperatureTrend(data));
 		});
+	}
+
+	private static int coreTemperatureTrend(PlayerTemperatureData data) {
+		// Use the completed body step, including subsequent wearable exchange.
+		// Ignore changes within 0.0002 C per elapsed game second.
+		double threshold = 0.0002D * FHConfig.SERVER.CLIMATE.temperatureUpdateIntervalTicks.get() / 20.0D;
+		double change = data.getCoreBodyTemp() - data.getPreviousCoreBodyTemp();
+		return change > threshold ? 1 : change < -threshold ? -1 : 0;
 	}
 
 }

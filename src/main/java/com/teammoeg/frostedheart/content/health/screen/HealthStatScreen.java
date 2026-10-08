@@ -150,6 +150,11 @@ public class HealthStatScreen extends Screen implements MenuAccess<HealthStatMen
         pose.scale(3-progress*2,3-progress*2,1.0f);
         RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, progress*progress);
         FGuis.fillRoundRect(pGuiGraphics,-100, -80, 200, 160, 0.05f,0x4091b6f7);
+        int trend = menu.coreTemperatureTrend.getValue();
+        String trendKey = trend > 0 ? "warming" : trend < 0 ? "cooling" : "stable";
+        int trendColor = trend > 0 ? 0xFFB36B : trend < 0 ? 0x76BFFF : 0xFFFFFF;
+        pGuiGraphics.drawCenteredString(font,
+                Lang.gui("temperature.trend." + trendKey).component(), 0, 62, trendColor);
         RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f);
         pose.popPose();
 

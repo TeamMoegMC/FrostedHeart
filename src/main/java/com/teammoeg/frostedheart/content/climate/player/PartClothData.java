@@ -20,19 +20,19 @@
 package com.teammoeg.frostedheart.content.climate.player;
 
 public class PartClothData {
-	double thermalResistanceM2KPerW;
+	double environmentExchangeFactor = 1.0D;
 	double radiantHeatProof;
 	double windProof;
 	double waterResistance;
 
 	public void set(
-			double thermalResistanceM2KPerW,
+			double weightedInsulation,
 			double radiantHeatProof,
 			double windProof,
 			double waterResistance
 	) {
-		this.thermalResistanceM2KPerW = Math.max(
-				0.0D, thermalResistanceM2KPerW);
+		this.environmentExchangeFactor = 100.0D
+				/ (100.0D + Math.max(0.0D, weightedInsulation));
 		this.radiantHeatProof = clamp01(radiantHeatProof);
 		this.windProof = clamp01(windProof);
 		this.waterResistance = clamp01(waterResistance);

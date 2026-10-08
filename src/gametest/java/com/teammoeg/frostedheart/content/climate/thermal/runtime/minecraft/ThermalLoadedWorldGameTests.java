@@ -18,15 +18,20 @@ import com.teammoeg.chorda.multiblock.CMultiblockHelper;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.bootstrap.common.FHAttributes;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlocks;
+import com.teammoeg.frostedheart.bootstrap.common.FHItems;
+import com.teammoeg.frostedheart.bootstrap.common.FHMobEffects;
 import com.teammoeg.frostedheart.bootstrap.common.FHMultiblocks;
 import com.teammoeg.frostedheart.content.climate.BlockTemperatureModel;
+import com.teammoeg.frostedheart.content.climate.FHTemperatureDifficulty;
 import com.teammoeg.frostedheart.content.climate.WorldTemperature;
 import com.teammoeg.frostedheart.content.climate.block.generator.GeneratorState;
 import com.teammoeg.frostedheart.content.climate.block.radiator.RadiatorState;
 import com.teammoeg.frostedheart.content.climate.data.BiomeTempData;
+import com.teammoeg.frostedheart.content.climate.data.ArmorTempData;
 import com.teammoeg.frostedheart.content.climate.data.WorldTempData;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureComputation;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData;
+import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData.BodyPart;
 import com.teammoeg.frostedheart.content.climate.thermal.consumer.TownThermalProjection;
 import com.teammoeg.frostedheart.content.climate.thermal.field.ThermalAnalyticField;
 import com.teammoeg.frostedheart.content.climate.thermal.field.ThermalFieldKey;
@@ -54,6 +59,8 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.Services;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.server.players.GameProfileCache;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.item.ItemStack;
@@ -138,6 +145,111 @@ public final class ThermalLoadedWorldGameTests {
             helper.succeed();
         } finally {
             attribute.removeModifier(extra);
+            MinecraftGameplayFields.remove(level, fieldKey);
+            MinecraftThermalInput.closeActiveLevel(level);
+        }
+    }
+
+    @GameTest(template = TEMPLATE, batch = "thermal_player_clothing_production", timeoutTicks = 180)
+    public static void realClothingSlowsColdLossWhileCampfireStillWarms(GameTestHelper helper) {
+        ServerLevel level = helper.getLevel();
+        MinecraftThermalInput.closeActiveLevel(level);
+        BlockPos position = helper.absolutePos(new BlockPos(4, 2, 2));
+        BlockPos fire = helper.absolutePos(new BlockPos(2, 2, 2));
+        var player = FakePlayerFactory.get(level,
+                new com.mojang.authlib.GameProfile(java.util.UUID.randomUUID(), "ClothingTest"));
+        player.setPos(position.getX() + .5D, position.getY(), position.getZ() + .5D);
+        ThermalFieldKey fieldKey = ThermalFieldKey.of(FHMain.rl("gametest_clothing"), player.getUUID(), 0);
+        ItemStack original = player.getItemBySlot(EquipmentSlot.CHEST).copy();
+        MinecraftGameplayFields.upsert(level, new ThermalAnalyticField(fieldKey, 100,
+                ThermalAnalyticField.CombineMode.OVERRIDE,
+                player.getX(), player.getEyeY(), player.getZ(), 5, -15));
+        try {
+            ItemStack wool = new ItemStack(FHItems.wool_jacket.get());
+            ItemStack bear = new ItemStack(FHItems.polar_bear_jacket.get());
+            helper.assertTrue(ArmorTempData.getData(wool, BodyPart.TORSO) != null
+                            && ArmorTempData.getData(bear, BodyPart.TORSO) != null,
+                    "production clothing recipes must be loaded");
+
+            player.setItemSlot(EquipmentSlot.CHEST, ItemStack.EMPTY);
+            PlayerTemperatureData naked = new PlayerTemperatureData();
+            PlayerTemperatureComputation.updatePlayer(player, naked, 20);
+            player.setItemSlot(EquipmentSlot.CHEST, wool);
+            PlayerTemperatureData dressed = new PlayerTemperatureData();
+            PlayerTemperatureComputation.updatePlayer(player, dressed, 20);
+            player.setItemSlot(EquipmentSlot.CHEST, bear);
+            PlayerTemperatureData heavy = new PlayerTemperatureData();
+            PlayerTemperatureComputation.updatePlayer(player, heavy, 20);
+            helper.assertTrue(naked.getCoreBodyTemp() < dressed.getCoreBodyTemp()
+                            && dressed.getCoreBodyTemp() < heavy.getCoreBodyTemp(),
+                    "real armor and player update must progressively reduce cold loss");
+            helper.assertTrue(Math.abs(heavy.getEnvTemp() - heavy.getSampledAirTemperatureC()) < 0.01F,
+                    "HUD environment must report sampled Air, not wind-equivalent temperature");
+
+            player.addEffect(new MobEffectInstance(FHMobEffects.WET.get(), 100));
+            PlayerTemperatureData wetHeavy = new PlayerTemperatureData();
+            PlayerTemperatureComputation.updatePlayer(player, wetHeavy, 20);
+            helper.assertTrue(wetHeavy.getCoreBodyTemp() < heavy.getCoreBodyTemp(),
+                    "Wet must add cooling while the same clothing remains equipped");
+            player.removeEffect(FHMobEffects.WET.get());
+
+            campfire(level, fire, true);
+            helper.runAfterDelay(80, () -> {
+                try {
+                    PlayerTemperatureData nearFire = new PlayerTemperatureData();
+                    PlayerTemperatureComputation.updatePlayer(player, nearFire, 20);
+                    helper.assertTrue(nearFire.getSampledRadiantFluxWPerM2() > 0.0F,
+                            "lit campfire must deliver direct radiation to the clothed player");
+                    helper.assertTrue(nearFire.getCoreBodyTemp() > heavy.getCoreBodyTemp(),
+                            "campfire radiation must improve the clothed player's heat balance");
+                    helper.succeed();
+                } finally {
+                    level.setBlockAndUpdate(fire, Blocks.AIR.defaultBlockState());
+                    player.setItemSlot(EquipmentSlot.CHEST, original);
+                    player.removeEffect(FHMobEffects.WET.get());
+                    MinecraftGameplayFields.remove(level, fieldKey);
+                    MinecraftThermalInput.closeActiveLevel(level);
+                }
+            });
+        } catch (RuntimeException | AssertionError error) {
+            player.setItemSlot(EquipmentSlot.CHEST, original);
+            player.removeEffect(FHMobEffects.WET.get());
+            MinecraftGameplayFields.remove(level, fieldKey);
+            MinecraftThermalInput.closeActiveLevel(level);
+            throw error;
+        }
+    }
+
+    @GameTest(template = TEMPLATE, batch = "thermal_player_regulation_production", timeoutTicks = 100)
+    public static void foodEnabledColdRegulationImprovesRealPlayerHeatBalance(GameTestHelper helper) {
+        ServerLevel level = helper.getLevel();
+        MinecraftThermalInput.closeActiveLevel(level);
+        var player = FakePlayerFactory.get(level,
+                new com.mojang.authlib.GameProfile(java.util.UUID.randomUUID(), "RegulationTest"));
+        BlockPos position = helper.absolutePos(new BlockPos(4, 2, 2));
+        player.setPos(position.getX() + .5D, position.getY(), position.getZ() + .5D);
+        ThermalFieldKey fieldKey = ThermalFieldKey.of(FHMain.rl("gametest_regulation"), player.getUUID(), 0);
+        MinecraftGameplayFields.upsert(level, new ThermalAnalyticField(fieldKey, 100,
+                ThermalAnalyticField.CombineMode.OVERRIDE,
+                player.getX(), player.getEyeY(), player.getZ(), 5, -15));
+        int originalFood = player.getFoodData().getFoodLevel();
+        try {
+            player.getFoodData().setFoodLevel(20);
+            PlayerTemperatureData fed = new PlayerTemperatureData();
+            fed.setDifficulty(FHTemperatureDifficulty.normal);
+            fed.setAllPartsBodyTemp(-0.2F);
+            PlayerTemperatureComputation.updatePlayer(player, fed, 20);
+
+            player.getFoodData().setFoodLevel(0);
+            PlayerTemperatureData hungry = new PlayerTemperatureData();
+            hungry.setDifficulty(FHTemperatureDifficulty.normal);
+            hungry.setAllPartsBodyTemp(-0.2F);
+            PlayerTemperatureComputation.updatePlayer(player, hungry, 20);
+            helper.assertTrue(fed.getCoreBodyTemp() > hungry.getCoreBodyTemp(),
+                    "food-enabled cold regulation must improve body heat balance");
+            helper.succeed();
+        } finally {
+            player.getFoodData().setFoodLevel(originalFood);
             MinecraftGameplayFields.remove(level, fieldKey);
             MinecraftThermalInput.closeActiveLevel(level);
         }

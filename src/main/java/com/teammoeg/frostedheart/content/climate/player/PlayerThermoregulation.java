@@ -15,45 +15,37 @@ import net.minecraftforge.common.util.LazyOptional;
 
 /** Owns metabolism, shivering, sweating, and their food/water costs. */
 public final class PlayerThermoregulation {
-    private static final double BASAL_METABOLIC_POWER_W = 90.0D;
-    private static final double WALKING_METABOLIC_POWER_W = 110.0D;
-    private static final double SPRINTING_METABOLIC_POWER_W = 300.0D;
-    private static final double REGULATION_START_DELTA_C = 0.2D;
-    private static final double REGULATION_GAIN_W_PER_K = 180.0D;
-    private static final double MAXIMUM_REGULATION_POWER_W = 300.0D;
-    private static final double JOULES_PER_EXHAUSTION = 20_000.0D;
+    private static final double BASAL_METABOLIC_POWER_W = 30.625D;
+    private static final double WALKING_METABOLIC_POWER_W = 30.625D;
+    private static final double SPRINTING_METABOLIC_POWER_W = 0.0D;
+    private static final double MILD_COLD_POWER_W = 61.25D;
+    private static final double MODERATE_COLD_POWER_W = 91.875D;
+    private static final double SEVERE_COLD_POWER_W = 122.5D;
+    private static final double MILD_HEAT_COOLING_W = 30.625D;
+    private static final double SEVERE_HEAT_COOLING_W = 61.25D;
+    private static final double JOULES_PER_EXHAUSTION = 5_444.444D;
 
     private PlayerThermoregulation() {
     }
 
     static double shiveringPowerW(double coreTemperatureC, double regulationMultiplier, boolean foodAvailable) {
         if (!foodAvailable) return 0.0D;
-        return regulationPowerW(
-                PlayerThermalModel.CORE_REFERENCE_TEMPERATURE_C
-                        - REGULATION_START_DELTA_C
-                        - coreTemperatureC,
-                regulationMultiplier);
+        double belowNormalC = PlayerThermalModel.CORE_REFERENCE_TEMPERATURE_C - coreTemperatureC;
+        if (belowNormalC > 1.0D) return SEVERE_COLD_POWER_W * regulationMultiplier;
+        if (belowNormalC > 0.5D) return MODERATE_COLD_POWER_W * regulationMultiplier;
+        return belowNormalC > 0.1D ? MILD_COLD_POWER_W * regulationMultiplier : 0.0D;
     }
 
     static double sweatingPowerW(double coreTemperatureC, double regulationMultiplier, boolean waterAvailable) {
         if (!waterAvailable) return 0.0D;
-        return regulationPowerW(
-                coreTemperatureC
-                        - PlayerThermalModel.CORE_REFERENCE_TEMPERATURE_C
-                        - REGULATION_START_DELTA_C,
-                regulationMultiplier);
+        double aboveNormalC = coreTemperatureC - PlayerThermalModel.CORE_REFERENCE_TEMPERATURE_C;
+        if (aboveNormalC > 0.5D) return SEVERE_HEAT_COOLING_W * regulationMultiplier;
+        return aboveNormalC > 0.1D ? MILD_HEAT_COOLING_W * regulationMultiplier : 0.0D;
     }
 
-    private static double regulationPowerW(double temperatureErrorK, double regulationMultiplier) {
-        return Math.min(MAXIMUM_REGULATION_POWER_W,
-                Math.max(0.0D, temperatureErrorK)
-                        * REGULATION_GAIN_W_PER_K)
-                * regulationMultiplier;
-    }
-
-    static double sharedBodyPowerW(ServerPlayer player, double shiveringPowerW, double sweatingAppliedW) {
-        return BASAL_METABOLIC_POWER_W
-                + movementPowerW(player)
+    static double sharedBodyPowerW(ServerPlayer player, double difficultyMultiplier,
+                                   double shiveringPowerW, double sweatingAppliedW) {
+        return (BASAL_METABOLIC_POWER_W + movementPowerW(player)) * difficultyMultiplier
                 + shiveringPowerW
                 - sweatingAppliedW;
     }

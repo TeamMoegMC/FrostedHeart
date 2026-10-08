@@ -43,8 +43,6 @@ public final class PlayerTemperatureComputation {
             PlayerThermalModel.CORE_REFERENCE_TEMPERATURE_C;
     static final double WHOLE_BODY_HEAT_CAPACITY_J_PER_K =
             PlayerThermalModel.WHOLE_BODY_HEAT_CAPACITY_J_PER_K;
-    static final double LEGACY_INSULATION_TO_RESISTANCE =
-            PlayerThermalModel.LEGACY_INSULATION_TO_RESISTANCE;
 
     private PlayerTemperatureComputation() {
     }
@@ -134,7 +132,7 @@ public final class PlayerTemperatureComputation {
                 exposedAreaM2, wetCoolingRequestW + sweatingRequestedW);
         double sweatingAppliedW = sweatingRequestedW * evaporationScale;
         double sharedBodyPowerW = PlayerThermoregulation.sharedBodyPowerW(
-                player, shiveringPowerW, sweatingAppliedW);
+                player, regulationMultiplier, shiveringPowerW, sweatingAppliedW);
 
         // Integrate passive exchange, active power, and internal body transfer.
         double integratedEnergyJ = PlayerThermalModel.integrateBody(data, context,

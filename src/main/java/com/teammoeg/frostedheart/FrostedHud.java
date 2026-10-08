@@ -987,13 +987,13 @@ public class FrostedHud {
         boolean f = FHConfig.CLIENT.useFahrenheit.get();
         PlayerTemperatureData temperatureData = PlayerTemperatureData
                 .getCapability(player).orElse(null);
-        float environmentC = temperatureData == null
+        float airC = temperatureData == null
                 ? -20.0F : temperatureData.getEnvTemp();
-        environmentC = Math.max(-273.0F, environmentC);
+        airC = Math.max(-273.0F, airC);
         float temperature = f
-                ? environmentC * 9.0F / 5.0F + 32.0F
-                : environmentC;
-        renderTemp(stack, mc, temperature, (int) environmentC,
+                ? airC * 9.0F / 5.0F + 32.0F
+                : airC;
+        renderTemp(stack, mc, temperature, (int) airC,
                 x + BarPos.temp_orb.getX(), y + BarPos.temp_orb.getY() + 3,
                 !f);
 

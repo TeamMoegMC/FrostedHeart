@@ -1,30 +1,41 @@
 # Player Temperature
 
 - Status: `Current`
-- Last verified: `2026-09-11`
+- Last verified: `2026-09-25`
 - Scope: player environment sampling, five-part body energy, wearable thermal reservoirs, clothing, Wet, heating equipment, thermometers, HUD, effects, persistence, and synchronization
 - Primary code anchors: `PlayerTemperatureUpdate.updateTemperature`, `PlayerTemperatureComputation.updatePlayer`, `PlayerThermalEnvironment`, `PlayerEquipmentHeating`, `PlayerThermoregulation`, `PlayerThermalModel`, `PlayerThermalInjury`, `PlayerTemperatureData`, `ThermometerItem`, `CreativeThermometerItem`, `FHTemperatureDisplayPacket`, `WearableThermalExchangeHandler`, `ThreeNodeWearableHeatExchange`, `ThermalReservoirBlock`, `ThermalReservoirBlockEntity.serverTick`, `FHBodyDataSyncPacket`, `FrostedHud.renderTemperature`
 
 ## Player-Facing Values
 
-The temperature orb uses the environmental equivalent temperature for both its
-number and its color. This keeps the HUD's existing visual language stable:
-the number shows the value and the orb texture shows its cold-to-hot band.
+The temperature orb uses sampled Thermal Air for both its number and color.
+Wind, clothing, and body state do not change this air reading. The still-air
+environmental equivalent remains a server diagnostic in `/temperature get`.
 
 | HUD surface | Value | Meaning |
 |---|---|---|
-| Number | environmental equivalent temperature, `C` | the still-air temperature that would produce the current immediate environmental heat exchange |
-| Orb color | environmental equivalent temperature, `C` | the existing orb texture bands are selected from the same Celsius value as the number |
+| Number | sampled Thermal Air, `C` | the local world air before entity attribute and Sauna adjustments |
+| Orb color | sampled Thermal Air, `C` | the existing orb texture bands are selected from the same Celsius value as the number |
 | Body status/effects | body temperature offset from `37 C` | accumulated physiological danger |
 | Mercury body thermometer | core body temperature, displayed to `0.1 C` | the existing held measurement flow uses the normal client temperature unit |
 | Creative thermometer | raw absolute core body temperature, `C` | right-click reports immediately in every game mode without display quantization |
 
-The number and color are never body temperature and never `air - 37`.
-`FrostedHud.renderTemperature` passes the environmental equivalent Celsius
-value to the existing orb texture thresholds. Clothing, Wet, movement,
-difficulty, food, and equipment can change body power without changing either
-HUD temperature presentation. Net body power remains available to the server
-diagnostic command and body calculation, but is not sent for HUD color.
+The number and color are never body temperature or `air - 37`.
+`PlayerTemperatureData.getEnvTemp()` now returns sampled Air; its previous
+still-air equivalent is available through `getEnvironmentEquivalentTemperatureC()`
+on the server. `FrostedHud.renderTemperature`, the forecast's current-temperature
+reading, and cold-breath particles consume the sampled Air value. Clothing,
+Wet, movement, difficulty, food, and equipment can change body power without
+changing the HUD air reading. The diagnostic command continues to show the
+equivalent, Air, radiation, wind, and net body power separately.
+
+Health-screen trend verified `2026-09-25`: `HealthStatMenu.coreTemperatureTrend`
+uses `getCoreBodyTemp() - getPreviousCoreBodyTemp()` from the latest body update,
+including the subsequent equipped reservoir exchange. Changes within
+`0.0002 C` per elapsed game second are shown as stable; larger positive/negative
+changes are rising/falling. `HealthStatScreen` displays the localized direction
+below the body and nutrition widgets. The value uses the existing menu data-slot
+sync only while the menu is open. It describes core temperature direction, not
+the direction of environmental temperature or whether the player is healthy.
 
 `ThermometerItem` keeps its 100-tick held measurement. Its floating-point
 display packet is quantized to one decimal place and formatted with one decimal
@@ -72,7 +83,7 @@ existing weighted `HEAD + TORSO + LEGS` view. Internal torso/head, torso/legs,
 torso/hands, and legs/feet transfers conserve total body energy and are clamped
 before pair equilibrium.
 
-Air, long-wave exchange, direct source radiation, clothing resistance, contact
+Air, long-wave exchange, direct source radiation, clothing insulation, contact
 media, Wet, metabolism, movement, thermoregulation, and equipment all enter one
 power balance in watts. `PlayerTemperatureComputation.updatePlayer` integrates that
 balance through five visible phases: environment sampling, contact preparation,
@@ -84,16 +95,21 @@ their per-part calculations. The stateless `PlayerThermalModel` owns the formula
 including the closed-form exponential step, so passive water or lava contact
 cannot numerically jump through its boundary temperature. The configured
 `temperatureChangeRate` multiplies one explicit `GAMEPLAY_TIME_SCALE` of
-`8`; this is the gameplay acceleration, not another temperature unit. At the
-default rate, a naked dry player in calm `-15 C` Air is intended to cross the
-first torso cold threshold after roughly `22..30 s`; water and exposed wind
-remain faster because they have independent transfer coefficients.
+`8`; this is the gameplay acceleration, not another temperature unit. The
+runtime configuration default for `temperatureChangeRate` remains `1`.
 
-The current gameplay balance applies `THERMAL_EXCHANGE_RATE_MULTIPLIER = 2` to
-the finalized passive air, water, powder-snow, lava, and Wet conductances, and
-to the conservative internal body-part transfers. It changes temperature
-approach speed without changing clothing resistance, environment observation,
-active heat power, or the separate world thermal runtime.
+`PlayerThermalModel.preparePart` applies separate dimensionless source-default
+exchange multipliers to its base conductances: Air `0.0824`, water `0.51`,
+powder snow `0.116`, Wet `0.03`, and lava `2`. Direct source radiation retains
+its separate multiplier `2`, while conservative internal body-part transfers
+retain `2`. The Wet multiplier applies to its additional `12 W/(m2*K)` path;
+it remains active after leaving water until the Wet effect expires. These
+values target the legacy normal-difficulty initial cold-weather cadence without
+changing the clothing multiplier, world source power, or thermal runtime.
+Full immersion and powder-snow contact have their own calibration; partial
+immersion and strong wind still follow the current model. The still-air HUD
+equivalent continues to be computed for diagnostics and is not scaled by the
+body exchange multipliers.
 
 ## Contact, Wet, And Clothing
 
@@ -111,15 +127,37 @@ physical-source split and radiation path unchanged.
 
 The existing Wet effect remains the only post-exit wetness state. Leaving water
 removes the water-contact conductance on the next player update; Wet continues
-its extra exchange until the existing effect expires. Wet heat loss and
+its reduced extra exchange until the existing effect expires. Wet heat loss and
 sweating share one low-cost evaporation ceiling.
 
 `BodyPartData.fillClothData` reads existing equipment attributes and
 `ArmorTempData` layers directly into one reusable `PartClothData`. It creates
-no per-update list. Legacy insulation recipe values are converted once during
-calculation with `LEGACY_INSULATION_TO_RESISTANCE = 0.0002 m2*K/W`.
-Wind proof, water resistance, and radiant heat proof retain their existing data
-sources.
+no per-update list. The existing layer weights produce a dimensionless legacy
+insulation score `I`; `PartClothData` converts it to the original environmental
+exchange factor `100 / (100 + max(0, I))`. This factor multiplies passive air,
+water, powder-snow, lava, and Wet conductances after the corresponding base
+medium and tissue conductances are computed. It preserves the old clothing
+curve for unchanged recipe values while the body still integrates watts and
+joules. In particular, a lone torso item with `factor=500` has `I=200` and
+one-third the uninsulated passive conductance; `factor=900` has `I=360` and
+`100/460` the uninsulated conductance. Direct source radiation is added to the
+air path's weighted boundary before clothing scaling, so insulation does not
+reduce that heat gain; radiant heat proof still does. Wind proof and water
+resistance retain their existing sources and layer weights. This conversion
+reproduces clothing's relative exchange factor, not the removed model's
+absolute body-temperature cadence, weather formula, or metabolic behavior.
+
+`PlayerThermoregulation` uses source-default basal power `30.625 W`, walking
+adds `30.625 W`, and sprinting adds no power, matching the old executed sprint
+branch. `FHTemperatureDifficulty.heat_unit` (`easy=2`, `normal=1`, `hard=0.5`,
+`hardcore=0`) multiplies basal and movement power as well as regulation.
+With food available, normal-difficulty core temperatures below `36.9`, `36.5`,
+and `36.0 C` select `61.25`, `91.875`, and `122.5 W` of shivering. With water
+available, core temperatures above `37.1` and `37.5 C` request `30.625` and
+`61.25 W` of sweating; the shared evaporation ceiling may reduce applied
+cooling. `JOULES_PER_EXHAUSTION = 5444.444` maps applied regulation power to
+food/water cost. Regulation uses the current weighted core reading, not the
+legacy per-part post-exchange deviation. The five parts remain independent.
 
 ## Equipment, Food, And Effects
 
@@ -231,10 +269,11 @@ into the new model. Loading an old player starts body energy at normal while
 preserving clothing stacks, their complete item NBT, and temperature
 difficulty. Environment observations are transient and are sampled again.
 
-`FHBodyDataSyncPacket` is a 5-byte fixed payload: version byte, environment
+`FHBodyDataSyncPacket` is a 5-byte fixed payload: version byte, sampled Air
 at `0.1 C`, and absolute core at `0.01 C`. Normal packets are sent only on the
 configured temperature cadence and only when a quantized value changes. Login,
 respawn, and dimension change force one complete state packet.
+No player save schema or packet size changed for this balance adjustment.
 
 ## Hot-Path Bound
 

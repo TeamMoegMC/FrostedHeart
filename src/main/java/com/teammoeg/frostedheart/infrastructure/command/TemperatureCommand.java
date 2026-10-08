@@ -64,7 +64,7 @@ public class TemperatureCommand {
                         data.getCoreBodyTemp() + 37, data.getPreviousCoreBodyTemp() + 37));
                 result.append(String.format(
                         "§6Environment equivalent:§r %.1f°C | §6Air:§r %.1f°C\n",
-                        data.getEnvTemp(), data.getSampledAirTemperatureC()));
+                        data.getEnvironmentEquivalentTemperatureC(), data.getEnvTemp()));
                 result.append(String.format(
                         "§6Radiation:§r %.1f W/m² | §6Net body power:§r %.0f W\n",
                         data.getSampledRadiantFluxWPerM2(),
