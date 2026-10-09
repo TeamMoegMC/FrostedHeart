@@ -121,8 +121,4 @@ public class ThermalReservoirBlock extends BaseEntityBlock {
                 ? reservoir.copyStoredStack() : new ItemStack(this);
     }
 
-    @Override
-    public String getDescriptionId() {
-        return asItem().getDescriptionId();
-    }
 }

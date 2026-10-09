@@ -5,7 +5,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.bootstrap.common.FHItems;
+import com.teammoeg.frostedheart.bootstrap.common.FHBlocks;
 import com.teammoeg.frostedheart.content.climate.WorldTemperature;
 import com.teammoeg.frostedheart.content.climate.player.thermalitem.WearableThermalState;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.ArenaSpan;
@@ -539,7 +539,7 @@ public final class FrostedHeartMinecraftThermalInputGameTests {
         ((ICampfireExtra) level.getBlockEntity(source)).setLifeTime(20_000);
 
         double initial = WorldTemperature.naturalAir(level, itemPosition);
-        ItemStack stack = new ItemStack(FHItems.warm_stone.get());
+        ItemStack stack = new ItemStack(FHBlocks.WARM_STONE.asItem());
         new WearableThermalState(initial, initial).writeTo(stack);
         ItemEntity item = new ItemEntity(
                 level,

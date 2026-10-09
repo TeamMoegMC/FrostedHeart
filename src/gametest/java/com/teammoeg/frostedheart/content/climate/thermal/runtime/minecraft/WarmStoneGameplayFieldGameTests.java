@@ -6,7 +6,7 @@ import static com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraf
 import java.util.UUID;
 
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.bootstrap.common.FHItems;
+import com.teammoeg.frostedheart.bootstrap.common.FHBlocks;
 import com.teammoeg.frostedheart.content.climate.WorldTemperature;
 import com.teammoeg.frostedheart.content.climate.block.generator.GeneratorData;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData;
@@ -47,7 +47,7 @@ public final class WarmStoneGameplayFieldGameTests {
             double expected = natural + generator.getTempMod();
             player.setPos(position.getX() + 0.5, position.getY(), position.getZ() + 0.5);
             player.tickCount = 20;
-            for (Item reservoir : new Item[]{FHItems.warm_stone.get(), FHItems.hot_water_bag.get()}) {
+            for (Item reservoir : new Item[]{FHBlocks.WARM_STONE.asItem(), FHBlocks.HOT_WATER_BAG.asItem()}) {
                 ItemStack inventory = new ItemStack(reservoir);
                 player.getInventory().items.set(0, inventory);
                 reservoir.inventoryTick(inventory, level, player, 0, false);
@@ -91,7 +91,7 @@ public final class WarmStoneGameplayFieldGameTests {
         UUID identity = UUID.randomUUID();
         ThermalFieldKey control = new ThermalFieldKey(new ResourceLocation("frostedheart", "warm_stone_test"), 0, position.asLong(), 0);
         ThermalEnvironmentSample sample = new ThermalEnvironmentSample();
-        ItemEntity entity = item(level, position, new ItemStack(FHItems.warm_stone.get()));
+        ItemEntity entity = item(level, position, new ItemStack(FHBlocks.WARM_STONE.asItem()));
         try {
             start(level, position);
             MinecraftThermalInput.gameplayItemEnvironment(entity, 110, sample);
@@ -127,7 +127,7 @@ public final class WarmStoneGameplayFieldGameTests {
             var player = FakePlayerFactory.getMinecraft(level);
             player.setPos(position.getX() + 0.5, position.getY(), position.getZ() + 0.5);
             double air = MinecraftThermalInput.gameplayPlayerEnvironment(player, 110, sample);
-            for (Item reservoir : new Item[]{FHItems.warm_stone.get(), FHItems.hot_water_bag.get()}) {
+            for (Item reservoir : new Item[]{FHBlocks.WARM_STONE.asItem(), FHBlocks.HOT_WATER_BAG.asItem()}) {
                 ItemStack worn = new ItemStack(reservoir);
                 new WearableThermalExchangeHandler().exchangeInto(new PlayerTemperatureData(), worn, air, 1);
                 near(helper, air, WearableThermalState.read(worn).orElseThrow().surfaceTemperatureC(),

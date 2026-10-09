@@ -1576,6 +1576,8 @@
   "gui.frostedheart.town_manager.policy.dependent_first.description": "幼儿及不具备劳动能力者进入第一照护层。",
   "gui.frostedheart.town_manager.policy.workforce_first": "生产保障",
   "gui.frostedheart.town_manager.policy.workforce_first.description": "具备劳动能力的居民进入第一照护层。",
+  "block.frostedheart.hot_water_bag": "热水袋",
+  "block.frostedheart.warm_stone": "暖石",
   "item.frostedheart.hot_water_bag": "热水袋",
   "item.frostedheart.warm_stone": "暖石"
 }

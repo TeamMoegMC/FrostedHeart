@@ -51,6 +51,7 @@ public class WarmStoneItem extends BlockItem
 
     @Override
     public String getDescriptionId() {
+        // Preserve the existing item.* translations; the placed block has its own block.* key.
         return getOrCreateDescriptionId();
     }
 

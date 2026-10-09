@@ -2,7 +2,7 @@
 package com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft;
 
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.bootstrap.common.FHItems;
+import com.teammoeg.frostedheart.bootstrap.common.FHBlocks;
 import com.teammoeg.frostedheart.content.climate.WorldTemperature;
 import com.teammoeg.frostedheart.content.climate.player.thermalitem.ThermalReservoirBlock;
 import com.teammoeg.frostedheart.content.climate.player.thermalitem.ThermalReservoirBlockEntity;
@@ -124,7 +124,7 @@ public final class PlacedThermalReservoirGameTests {
         MinecraftThermalInput.closeActiveLevel(level);
         BlockPos pos = helper.absolutePos(new BlockPos(2, 3, 2));
         ThermalFieldKey key = field(level, pos, 45);
-        place(helper, pos, new ItemStack(FHItems.hot_water_bag.get()), false);
+        place(helper, pos, new ItemStack(FHBlocks.HOT_WATER_BAG.asItem()), false);
         helper.runAfterDelay(45, () -> {
             try {
                 WearableThermalState state = temperature(level, pos);
@@ -184,7 +184,7 @@ public final class PlacedThermalReservoirGameTests {
     }
 
     private static Item[] items() {
-        return new Item[]{FHItems.warm_stone.get(), FHItems.hot_water_bag.get()};
+        return new Item[]{FHBlocks.WARM_STONE.asItem(), FHBlocks.HOT_WATER_BAG.asItem()};
     }
 
     private static void place(GameTestHelper helper, BlockPos pos, ItemStack stack, boolean creative) {

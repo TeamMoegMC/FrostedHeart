@@ -54,7 +54,7 @@ public final class ThermalDormantCoolingGameTests {
         for (int saves = 0; saves < 20; saves++) {
             CompoundTag tag = new CompoundTag(); state.encode(tag);
             state = DormantChunkThermalState.decode(tag, 0, 1);
-            helper.assertTrue(tag.getCompound("FrostedHeartThermal").getInt("version") == 4, "only v4 is written");
+            helper.assertTrue(tag.getCompound("FrostedHeartThermal").getInt("version") == 5, "only v5 is written");
             for (long tick : new long[]{0, 36000, 72000}) {
                 sample.setStored(6000, law, (byte) 0, 0);
                 DormantThermalCooling.project(sample, tick, -20, DormantThermalCooling.rate(1800));

@@ -1,7 +1,7 @@
 # Player Temperature
 
 - Status: `Current`
-- Last verified: `2026-09-25`
+- Last verified: `2026-10-09` (reservoir block registration, language, and loot generation)
 - Scope: player environment sampling, five-part body energy, wearable thermal reservoirs, clothing, Wet, heating equipment, thermometers, HUD, effects, persistence, and synchronization
 - Primary code anchors: `PlayerTemperatureUpdate.updateTemperature`, `PlayerTemperatureComputation.updatePlayer`, `PlayerThermalEnvironment`, `PlayerEquipmentHeating`, `PlayerThermoregulation`, `PlayerThermalModel`, `PlayerThermalInjury`, `PlayerTemperatureData`, `ThermometerItem`, `CreativeThermometerItem`, `FHTemperatureDisplayPacket`, `WearableThermalExchangeHandler`, `ThreeNodeWearableHeatExchange`, `ThermalReservoirBlock`, `ThermalReservoirBlockEntity.serverTick`, `FHBodyDataSyncPacket`, `FrostedHud.renderTemperature`
 
@@ -238,6 +238,16 @@ placement retains the held stack. The small ground models reuse the existing
 item textures. Breaking the block or removing its support drops one item with
 the current core/surface temperatures, custom name, and other original item
 data. Pick block also returns this stored item state.
+
+`FHBlocks.WARM_STONE/HOT_WATER_BAG` register each `WarmStoneItem` through the
+block builder's `.item(...)`. Blocks use the standard
+`block.frostedheart.warm_stone` and `block.frostedheart.hot_water_bag` translation
+keys; items retain `item.frostedheart.warm_stone` and
+`item.frostedheart.hot_water_bag`. Registrate generates both sets
+without disabling block language generation. The normal `dropSelf` loot tables
+are generated under `data/frostedheart/loot_tables/blocks/`; ordinary block
+breaking still uses `ThermalReservoirBlock.getDrops` to preserve the complete
+stored stack, rather than replacing it with a fresh item.
 
 `ThermalReservoirBlockEntity` saves the complete single-item stack under
 `ReservoirItem` using block entity type `frostedheart:thermal_reservoir`.

@@ -14,7 +14,7 @@ import com.teammoeg.chorda.dataholders.team.TeamDataHolder;
 import com.teammoeg.chorda.multiblock.CMultiblockHelper;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.bootstrap.common.FHEntityTypes;
-import com.teammoeg.frostedheart.bootstrap.common.FHItems;
+import com.teammoeg.frostedheart.bootstrap.common.FHBlocks;
 import com.teammoeg.frostedheart.bootstrap.common.FHMultiblocks;
 import com.teammoeg.frostedheart.bootstrap.common.FHSpecialDataTypes;
 import com.teammoeg.frostedheart.content.climate.WorldTemperature;
@@ -400,7 +400,7 @@ public final class ThermalGameplayFieldGameTests {
                 near(helper, raw, WorldTemperature.block(level, enclosedAir), "physical enhancement above the floor");
                 var dropped = new ItemEntity(level,
                         enclosedAir.getX() + 0.5, enclosedAir.getY(), enclosedAir.getZ() + 0.5,
-                        new ItemStack(FHItems.warm_stone.get()));
+                        new ItemStack(FHBlocks.WARM_STONE.asItem()));
                 dropped.setPos(dropped.getX(), enclosedAir.getY() + 0.5 - dropped.getBbHeight() * 0.5, dropped.getZ());
                 ThermalEnvironmentSample itemSample = new ThermalEnvironmentSample();
                 double itemNatural = WorldTemperature.naturalAir(level, enclosedAir);

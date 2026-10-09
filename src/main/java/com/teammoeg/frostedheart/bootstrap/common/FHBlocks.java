@@ -83,7 +83,6 @@ import com.teammoeg.frostedheart.infrastructure.gen.FHBlockStateGen;
 import com.teammoeg.frostedheart.infrastructure.gen.FHLootGen;
 import com.teammoeg.frostedheart.item.FHBlockItem;
 import com.teammoeg.frostedheart.util.FUtils;
-import com.tterrag.registrate.providers.ProviderType;
 import com.tterrag.registrate.providers.loot.RegistrateBlockLootTables;
 import com.tterrag.registrate.util.entry.BlockEntry;
 import net.minecraft.advancements.critereon.StatePropertiesPredicate;
@@ -135,28 +134,28 @@ public class FHBlocks {
             .properties(p -> p.strength(0.3F).sound(SoundType.STONE).noOcclusion()
                     .pushReaction(PushReaction.DESTROY))
             .blockstate(FHBlockStateGen.existed())
-            .item((blk,properties) -> new WarmStoneItem(
-            	blk, properties, WearableThermalProfile.WARM_STONE_DEFAULT))
-        .tag(FHTags.Items.CURIOS_WARM_STONE.tag)
-        .model(FHBlockStateGen.existingItemModel())
-        .lang("Warm Stone")
-        .build()
-        .setData(ProviderType.LANG, FHBlockStateGen.noLang())
-        .loot(FHLootGen.existed()) // Drops the stored ItemStack in getDrops.
-        .register();
+            .lang("Warm Stone")
+            .loot(RegistrateBlockLootTables::dropSelf)
+            .item((block, properties) -> new WarmStoneItem(
+                    block, properties, WearableThermalProfile.WARM_STONE_DEFAULT))
+            .tag(FHTags.Items.CURIOS_WARM_STONE.tag)
+            .model(FHBlockStateGen.existingItemModel())
+            .lang("Warm Stone")
+            .build()
+            .register();
     public static final BlockEntry<ThermalReservoirBlock> HOT_WATER_BAG = REGISTRATE
             .block("hot_water_bag", ThermalReservoirBlock::new)
             .properties(p -> p.strength(0.2F).sound(SoundType.WOOL).noOcclusion()
                     .pushReaction(PushReaction.DESTROY))
             .blockstate(FHBlockStateGen.existed())
-            .item((ctx,properties) -> new WarmStoneItem(
-                ctx, properties, WearableThermalProfile.HOT_WATER_BAG_DEFAULT))
-	        .tag(FHTags.Items.CURIOS_WARM_STONE.tag)
-	        .model(FHBlockStateGen.existingItemModel())
-	        .lang("Hot Water Bag")
-	        .build()
-	        .setData(ProviderType.LANG, FHBlockStateGen.noLang())
-            .loot(FHLootGen.existed())
+            .lang("Hot Water Bag")
+            .loot(RegistrateBlockLootTables::dropSelf)
+            .item((block, properties) -> new WarmStoneItem(
+                    block, properties, WearableThermalProfile.HOT_WATER_BAG_DEFAULT))
+            .tag(FHTags.Items.CURIOS_WARM_STONE.tag)
+            .model(FHBlockStateGen.existingItemModel())
+            .lang("Hot Water Bag")
+            .build()
             .register();
 
     public static final DeferredRegister<Block> BLOCKS = DeferredRegister.create(ForgeRegistries.BLOCKS, FHMain.MODID);
