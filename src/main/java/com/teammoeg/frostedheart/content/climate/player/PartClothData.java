@@ -24,18 +24,20 @@ public class PartClothData {
 	double radiantHeatProof;
 	double windProof;
 	double waterResistance;
-
+	double weight;
 	public void set(
 			double weightedInsulation,
 			double radiantHeatProof,
 			double windProof,
-			double waterResistance
+			double waterResistance,
+			double weight
 	) {
 		this.environmentExchangeFactor = 100.0D
 				/ (100.0D + Math.max(0.0D, weightedInsulation));
 		this.radiantHeatProof = clamp01(radiantHeatProof);
 		this.windProof = clamp01(windProof);
 		this.waterResistance = clamp01(waterResistance);
+		this.weight=weight;
 	}
 
 	private static double clamp01(double value) {

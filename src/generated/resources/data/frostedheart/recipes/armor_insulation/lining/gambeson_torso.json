@@ -4,5 +4,6 @@
   "heat_proof": 0.2,
   "item": "frostedheart:gambeson",
   "slot": "torso",
+  "weight": 2.25,
   "wind_proof": 0.2
 }

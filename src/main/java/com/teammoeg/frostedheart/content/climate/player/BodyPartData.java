@@ -114,6 +114,7 @@ public class BodyPartData {
 		double heatProof = 0.0D;
 		double windProof = 0.0D;
 		double waterResistance = 0.0D;
+		double equipmentWeight = 0.0D;
 		int layer = 0;
 		if (!equipment.isEmpty()) {
 			double insulationFactor = ClothData.sumAttributes(
@@ -125,12 +126,16 @@ public class BodyPartData {
 			double radiant = ClothData.sumAttributesPercentage(
 					equipment.getAttributeModifiers(part.slot)
 							.get(FHAttributes.HEAT_PROOF.get()));
+			double weight = ClothData.sumAttributes(
+				equipment.getAttributeModifiers(part.slot)
+						.get(FHAttributes.EQUIPMENT_WEIGHT.get()));
 			double innerWeight = innerWeight(part, layerCount, layer);
 			double outerWeight = outerWeight(part, layer);
 			insulation += innerWeight * insulationFactor;
 			heatProof += outerWeight * radiant;
 			windProof += outerWeight * wind;
 			waterResistance += outerWeight * wind;
+			equipmentWeight += weight;
 			layer++;
 		}
 		for (int slot = 0; slot < clothes.getSlots(); slot++) {
@@ -144,9 +149,10 @@ public class BodyPartData {
 			heatProof += outerWeight * armor.getHeatProof();
 			windProof += outerWeight * armor.getFluidResistance();
 			waterResistance += outerWeight * armor.getFluidResistance();
+			equipmentWeight += armor.weight();
 			layer++;
 		}
-		result.set(insulation, heatProof, windProof, waterResistance);
+		result.set(insulation, heatProof, windProof, waterResistance, equipmentWeight);
 	}
 
 	private static double innerWeight(

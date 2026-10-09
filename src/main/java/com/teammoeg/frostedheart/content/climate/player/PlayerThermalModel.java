@@ -126,7 +126,8 @@ public class PlayerThermalModel {
                         + powderConductanceWPerK
                         * POWDER_SNOW_TEMPERATURE_C
                         + lavaConductanceWPerK * LAVA_TEMPERATURE_C,
-                wetConductanceWPerK, airTemperatureC, clothing.radiantHeatProof, air);
+                wetConductanceWPerK, airTemperatureC, clothing.radiantHeatProof, air,
+                clothing.weight);
     }
 
     static double exposedAreaM2(BodyPart part, double airFraction) {

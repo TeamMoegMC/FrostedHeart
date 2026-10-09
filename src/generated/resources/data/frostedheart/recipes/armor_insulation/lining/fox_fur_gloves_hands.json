@@ -4,5 +4,6 @@
   "heat_proof": 0.2,
   "item": "frostedheart:fox_fur_gloves",
   "slot": "hands",
+  "weight": 0.4,
   "wind_proof": 0.4
 }

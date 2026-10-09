@@ -4,5 +4,6 @@
   "heat_proof": 0.2,
   "item": "frostedheart:hay_pants",
   "slot": "legs",
+  "weight": 2.8,
   "wind_proof": 0.1
 }

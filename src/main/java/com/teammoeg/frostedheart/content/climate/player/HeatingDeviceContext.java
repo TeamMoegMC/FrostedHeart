@@ -38,6 +38,7 @@ public class HeatingDeviceContext {
     private ServerPlayer player;
     private double elapsedSeconds;
     private double physiologicalSeconds;
+    private final double[] weights = new double[BodyPart.VALUES.length];
     private int consumedHeatingSeconds;
     private final ThermalEnvironmentSample environmentSample =
             new ThermalEnvironmentSample();
@@ -81,6 +82,15 @@ public class HeatingDeviceContext {
         }
     }
 
+    public void addWeight(BodyPart part, double weight) {
+        if (Double.isFinite(weight)) {
+        	weights[part.ordinal()] += weight;
+        }
+    }
+    public double getWeight(BodyPart part) {
+        return weights[part.ordinal()];
+    }
+
     double getPowerW(BodyPart part) {
         return powerW[part.ordinal()];
     }
@@ -105,7 +115,8 @@ public class HeatingDeviceContext {
             double wetConductanceWPerK,
             double operativeTemperatureC,
             double radiantHeatProof,
-            double airFraction
+            double airFraction,
+            double weight
     ) {
         int index = part.ordinal();
         this.dryConductanceWPerK[index] = dryConductanceWPerK;
@@ -114,6 +125,7 @@ public class HeatingDeviceContext {
         this.operativeTemperatureC[index] = operativeTemperatureC;
         this.radiantHeatProof[index] = radiantHeatProof;
         this.airFraction[index] = airFraction;
+        this.weights[index] = weight;
     }
 
     double getDryConductanceWPerK(BodyPart part) {

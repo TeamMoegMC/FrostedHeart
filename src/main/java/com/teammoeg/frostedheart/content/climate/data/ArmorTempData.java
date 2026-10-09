@@ -37,13 +37,14 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.RegistryObject;
 
-public record ArmorTempData(Item item,Optional<BodyPart> slot,float insulation, float heat_proof, float wind_proof){
+public record ArmorTempData(Item item,Optional<BodyPart> slot,float insulation, float heat_proof, float wind_proof, float weight){
 	public static final Codec<ArmorTempData> CODEC=RecordCodecBuilder.create(t->t.group(
-		ForgeRegistries.ITEMS.getCodec().fieldOf("item").forGetter(o->o.item),
-		CodecUtil.enumCodec(BodyPart.class).optionalFieldOf("slot").forGetter(o->o.slot),
-		Codec.FLOAT.optionalFieldOf("factor",0f).forGetter(o->o.insulation),
-		Codec.FLOAT.optionalFieldOf("heat_proof",0f).forGetter(o->o.heat_proof),
-		Codec.FLOAT.optionalFieldOf("wind_proof",0f).forGetter(o->o.wind_proof)).apply(t, ArmorTempData::new));
+		ForgeRegistries.ITEMS.getCodec().fieldOf("item").forGetter(ArmorTempData::item),
+		CodecUtil.enumCodec(BodyPart.class).optionalFieldOf("slot").forGetter(ArmorTempData::slot),
+		Codec.FLOAT.optionalFieldOf("factor",0f).forGetter(ArmorTempData::insulation),
+		Codec.FLOAT.optionalFieldOf("heat_proof",0f).forGetter(ArmorTempData::heat_proof),
+		Codec.FLOAT.optionalFieldOf("wind_proof",0f).forGetter(ArmorTempData::wind_proof),
+		Codec.FLOAT.optionalFieldOf("weight",1f).forGetter(ArmorTempData::weight)).apply(t, ArmorTempData::new));
 
 	public static RegistryObject<CodecRecipeSerializer<ArmorTempData>> TYPE;
 	public static Map<Item,EnumDefaultedMap<BodyPart,ArmorTempData>> cacheList=ImmutableMap.of();

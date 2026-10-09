@@ -4,5 +4,6 @@
   "heat_proof": 0.5,
   "item": "frostedheart:kelp_lining",
   "slot": "hands",
+  "weight": 0.3,
   "wind_proof": 0.8
 }

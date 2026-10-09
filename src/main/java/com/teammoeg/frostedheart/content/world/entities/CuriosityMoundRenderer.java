@@ -20,6 +20,7 @@
 package com.teammoeg.frostedheart.content.world.entities;
 
 import com.mojang.blaze3d.vertex.PoseStack;
+
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;

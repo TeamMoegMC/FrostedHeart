@@ -4,5 +4,6 @@
   "heat_proof": 0.2,
   "item": "frostedheart:hide_gloves",
   "slot": "hands",
+  "weight": 0.3,
   "wind_proof": 0.5
 }

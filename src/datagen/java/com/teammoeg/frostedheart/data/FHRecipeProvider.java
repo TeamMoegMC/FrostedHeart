@@ -221,73 +221,73 @@ public class FHRecipeProvider extends RecipeProvider {
         for(BodyPart part:BodyPart.values()) {
         	if(part.slot!=null) {
         		
-        		out.accept(armorData(FHItems.straw_lining,part,materials.get("hay")[2],materials.get("hay")[1],materials.get("hay")[0]));
-        		out.accept(armorData(FHItems.buff_coat,part,materials.get("hide")[2],materials.get("hide")[1],materials.get("hide")[0]));
-        		out.accept(armorData(FHItems.gambeson,part,materials.get("wool")[2],materials.get("wool")[1],materials.get("wool")[0]));
-        		out.accept(armorData(FHItems.kelp_lining,part,200f,.5f,0.8f));
+        		out.accept(armorData(FHItems.straw_lining,part,materials.get("hay")[2],materials.get("hay")[1],materials.get("hay")[0],8));
+        		out.accept(armorData(FHItems.buff_coat,part,materials.get("hide")[2],materials.get("hide")[1],materials.get("hide")[0],6));
+        		out.accept(armorData(FHItems.gambeson,part,materials.get("wool")[2],materials.get("wool")[1],materials.get("wool")[0],5));
+        		out.accept(armorData(FHItems.kelp_lining,part,200f,.5f,0.8f,6));
         		//out.accept(armorData(FHItems.cotton,part,500f,.2f,.5f));
         		//out.accept(armorData(FHItems.straw_lining,part,600f,.2f,.7f));
         	}
         }
 
-        out.accept(armorArmorData(FHItems.space_hat,500f,.2f,1.0f));
-        out.accept(armorArmorData(FHItems.space_jacket,500f,.2f,1.0f));
-        out.accept(armorArmorData(FHItems.space_pants,500f,.2f,1.0f));
-        out.accept(armorArmorData(FHItems.space_boots,500f,.2f,1.0f));
+        out.accept(armorArmorData(FHItems.space_hat,BodyPart.HEAD,500f,.2f,1.0f,10));
+        out.accept(armorArmorData(FHItems.space_jacket,BodyPart.TORSO,500f,.2f,1.0f,10));
+        out.accept(armorArmorData(FHItems.space_pants,BodyPart.LEGS,500f,.2f,1.0f,10));
+        out.accept(armorArmorData(FHItems.space_boots,BodyPart.FEET,500f,.2f,1.0f,10));
 
 		// leather is good at water resistance but bad insulation
-		out.accept(armorData(FHItems.hide_hat, BodyPart.HEAD, 200f,.2f,0.5f));
-		out.accept(armorData(FHItems.hide_jacket, BodyPart.TORSO, 200f,.2f,0.5f));
-		out.accept(armorData(FHItems.hide_pants, BodyPart.LEGS, 200f,.2f,0.5f));
-		out.accept(armorData(FHItems.hide_boots, BodyPart.FEET, 200f,.2f,0.5f));
-		out.accept(armorData(FHItems.hide_gloves, BodyPart.HANDS, 200f,.2f,0.5f));
+		out.accept(armorData(FHItems.hide_hat, BodyPart.HEAD, 200f,.2f,0.5f,6));
+		out.accept(armorData(FHItems.hide_jacket, BodyPart.TORSO, 200f,.2f,0.5f,6));
+		out.accept(armorData(FHItems.hide_pants, BodyPart.LEGS, 200f,.2f,0.5f,6));
+		out.accept(armorData(FHItems.hide_boots, BodyPart.FEET, 200f,.2f,0.5f,6));
+		out.accept(armorData(FHItems.hide_gloves, BodyPart.HANDS, 200f,.2f,0.5f,6));
 
-		out.accept(armorData(FHItems.hay_hat, BodyPart.HEAD, 250f,.2f,0.1f));
-		out.accept(armorData(FHItems.hay_jacket, BodyPart.TORSO, 250f,.2f,0.1f));
-		out.accept(armorData(FHItems.hay_pants, BodyPart.LEGS, 250f,.2f,0.1f));
-		out.accept(armorData(FHItems.hay_boots, BodyPart.FEET, 250f,.2f,0.1f));
-		out.accept(armorData(FHItems.hay_gloves, BodyPart.HANDS, 250f,.2f,0.1f));
+		out.accept(armorData(FHItems.hay_hat, BodyPart.HEAD, 250f,.2f,0.1f,8));
+		out.accept(armorData(FHItems.hay_jacket, BodyPart.TORSO, 250f,.2f,0.1f,8));
+		out.accept(armorData(FHItems.hay_pants, BodyPart.LEGS, 250f,.2f,0.1f,8));
+		out.accept(armorData(FHItems.hay_boots, BodyPart.FEET, 250f,.2f,0.1f,8));
+		out.accept(armorData(FHItems.hay_gloves, BodyPart.HANDS, 250f,.2f,0.1f,8));
 
-		out.accept(armorData(FHItems.rabbit_hat, BodyPart.HEAD, 300f,.2f,0.05f));
-		out.accept(armorData(FHItems.rabbit_jacket, BodyPart.TORSO, 300f,.2f,0.05f));
-		out.accept(armorData(FHItems.rabbit_pants, BodyPart.LEGS, 300f,.2f,0.05f));
-		out.accept(armorData(FHItems.rabbit_fur_socks, BodyPart.FEET, 300f,.2f,0.05f));
-		out.accept(armorData(FHItems.rabbit_gloves, BodyPart.HANDS, 300f,.2f,0.05f));
+		out.accept(armorData(FHItems.rabbit_hat, BodyPart.HEAD, 300f,.2f,0.05f,6));
+		out.accept(armorData(FHItems.rabbit_jacket, BodyPart.TORSO, 300f,.2f,0.05f,6));
+		out.accept(armorData(FHItems.rabbit_pants, BodyPart.LEGS, 300f,.2f,0.05f,6));
+		out.accept(armorData(FHItems.rabbit_fur_socks, BodyPart.FEET, 300f,.2f,0.05f,6));
+		out.accept(armorData(FHItems.rabbit_gloves, BodyPart.HANDS, 300f,.2f,0.05f,6));
 
-		out.accept(armorData(FHItems.fox_hat, BodyPart.HEAD, 400f,.2f,0.4f));
-		out.accept(armorData(FHItems.fox_jacket, BodyPart.TORSO, 400f,.2f,0.4f));
-		out.accept(armorData(FHItems.fox_pants, BodyPart.LEGS, 400f,.2f,0.4f));
-		out.accept(armorData(FHItems.fox_boots, BodyPart.FEET, 400f,.2f,0.4f));
-		out.accept(armorData(FHItems.fox_gloves, BodyPart.HANDS, 400f,.2f,0.4f));
+		out.accept(armorData(FHItems.fox_hat, BodyPart.HEAD, 400f,.2f,0.4f,8));
+		out.accept(armorData(FHItems.fox_jacket, BodyPart.TORSO, 400f,.2f,0.4f,8));
+		out.accept(armorData(FHItems.fox_pants, BodyPart.LEGS, 400f,.2f,0.4f,8));
+		out.accept(armorData(FHItems.fox_boots, BodyPart.FEET, 400f,.2f,0.4f,8));
+		out.accept(armorData(FHItems.fox_gloves, BodyPart.HANDS, 400f,.2f,0.4f,8));
 
-		out.accept(armorData(FHItems.wolf_hat, BodyPart.HEAD, 350f,.2f,0.3f));
-		out.accept(armorData(FHItems.wolf_jacket, BodyPart.TORSO, 350f,.2f,0.3f));
-		out.accept(armorData(FHItems.wolf_pants, BodyPart.LEGS, 350f,.2f,0.3f));
-		out.accept(armorData(FHItems.wolf_boots, BodyPart.FEET, 350f,.2f,0.3f));
-		out.accept(armorData(FHItems.wolf_gloves, BodyPart.HANDS, 350f,.2f,0.3f));
+		out.accept(armorData(FHItems.wolf_hat, BodyPart.HEAD, 350f,.2f,0.3f,7));
+		out.accept(armorData(FHItems.wolf_jacket, BodyPart.TORSO, 350f,.2f,0.3f,7));
+		out.accept(armorData(FHItems.wolf_pants, BodyPart.LEGS, 350f,.2f,0.3f,7));
+		out.accept(armorData(FHItems.wolf_boots, BodyPart.FEET, 350f,.2f,0.3f,7));
+		out.accept(armorData(FHItems.wolf_gloves, BodyPart.HANDS, 350f,.2f,0.3f,7));
 
-		out.accept(armorData(FHItems.polar_bear_hat, BodyPart.HEAD, 900f,.2f,0.85f));
-		out.accept(armorData(FHItems.polar_bear_jacket, BodyPart.TORSO,  900f,.2f,0.85f));
-		out.accept(armorData(FHItems.polar_bear_pants, BodyPart.LEGS, 900f,.2f,0.85f));
-		out.accept(armorData(FHItems.polar_bear_boots, BodyPart.FEET, 900f,.2f,0.85f));
-		out.accept(armorData(FHItems.polar_bear_gloves, BodyPart.HANDS, 900f,.2f,0.85f));
+		out.accept(armorData(FHItems.polar_bear_hat, BodyPart.HEAD, 900f,.2f,0.85f,12));
+		out.accept(armorData(FHItems.polar_bear_jacket, BodyPart.TORSO,  900f,.2f,0.85f,12));
+		out.accept(armorData(FHItems.polar_bear_pants, BodyPart.LEGS, 900f,.2f,0.85f,12));
+		out.accept(armorData(FHItems.polar_bear_boots, BodyPart.FEET, 900f,.2f,0.85f,12));
+		out.accept(armorData(FHItems.polar_bear_gloves, BodyPart.HANDS, 900f,.2f,0.85f,12));
 
-		out.accept(armorData(FHItems.wool_hat, BodyPart.HEAD, 500f,.2f,0.1f));
-		out.accept(armorData(FHItems.wool_jacket, BodyPart.TORSO, 500f,.2f,0.1f));
-		out.accept(armorData(FHItems.wool_pants, BodyPart.LEGS, 500f,.2f,0.1f));
-		out.accept(armorData(FHItems.wool_boots, BodyPart.FEET, 500f,.2f,0.1f));
-		out.accept(armorData(FHItems.wool_gloves, BodyPart.HANDS, 500f,.2f,0.1f));
+		out.accept(armorData(FHItems.wool_hat, BodyPart.HEAD, 500f,.2f,0.1f,5));
+		out.accept(armorData(FHItems.wool_jacket, BodyPart.TORSO, 500f,.2f,0.1f,5));
+		out.accept(armorData(FHItems.wool_pants, BodyPart.LEGS, 500f,.2f,0.1f,5));
+		out.accept(armorData(FHItems.wool_boots, BodyPart.FEET, 500f,.2f,0.1f,5));
+		out.accept(armorData(FHItems.wool_gloves, BodyPart.HANDS, 500f,.2f,0.1f,5));
 
 
 		buildTradePolicies(out);
 	}
-	private FinishedRecipe armorData(ItemLike item,BodyPart part,float insulation,float heat_proof,float cold_proof) {
+	private FinishedRecipe armorData(ItemLike item,BodyPart part,float insulation,float heat_proof,float cold_proof,float weight) {
 		
-		return new ArmorTempData(item.asItem(), Optional.of(part), insulation, heat_proof,cold_proof).toFinished(FHMain.rl("armor_insulation/lining/"+CRegistryHelper.getPath(item.asItem())+"_"+part.name().toLowerCase()));
+		return new ArmorTempData(item.asItem(), Optional.of(part), insulation, heat_proof, cold_proof, weight*part.area).toFinished(FHMain.rl("armor_insulation/lining/"+CRegistryHelper.getPath(item.asItem())+"_"+part.name().toLowerCase()));
 		
 	}
-	private FinishedRecipe armorArmorData(ItemLike item,float insulation,float heat_proof,float cold_proof) {
-		return new ArmorTempData(item.asItem(), Optional.of(BodyPart.fromVanilla(((Equipable)item.asItem()).getEquipmentSlot())), insulation, heat_proof,cold_proof).toFinished(FHMain.rl("armor_insulation/"+CRegistryHelper.getPath(item.asItem())));
+	private FinishedRecipe armorArmorData(ItemLike item,BodyPart part,float insulation,float heat_proof,float cold_proof,float weight) {
+		return new ArmorTempData(item.asItem(), Optional.of(BodyPart.fromVanilla(((Equipable)item.asItem()).getEquipmentSlot())), insulation, heat_proof,cold_proof, weight*part.area).toFinished(FHMain.rl("armor_insulation/"+CRegistryHelper.getPath(item.asItem())));
 		
 	}
 	/** Spreadsheet is the authoring source; disabled directions stay editable without entering runtime data. */

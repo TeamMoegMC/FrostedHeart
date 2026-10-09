@@ -4,5 +4,6 @@
   "heat_proof": 0.2,
   "item": "frostedheart:spacesuit_body",
   "slot": "torso",
+  "weight": 4.5,
   "wind_proof": 1.0
 }

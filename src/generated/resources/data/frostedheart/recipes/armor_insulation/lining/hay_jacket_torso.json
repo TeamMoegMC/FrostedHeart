@@ -4,5 +4,6 @@
   "heat_proof": 0.2,
   "item": "frostedheart:hay_jacket",
   "slot": "torso",
+  "weight": 3.6,
   "wind_proof": 0.1
 }

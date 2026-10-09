@@ -4,5 +4,6 @@
   "heat_proof": 0.2,
   "item": "frostedheart:wolf_fur_socks",
   "slot": "feet",
+  "weight": 0.35,
   "wind_proof": 0.3
 }

@@ -4,5 +4,6 @@
   "heat_proof": 0.2,
   "item": "frostedheart:rabbit_fur_hat",
   "slot": "head",
+  "weight": 0.6,
   "wind_proof": 0.05
 }
