@@ -1,15 +1,15 @@
 {
   "type": "frostedheart:state_transition",
+  "all_states": true,
   "block": {
     "Name": "frostedheart:cooled_magma_block"
   },
-  "all_states": true,
   "capacity_j_per_k": 5400.0,
   "heating": {
+    "effect": "melting",
     "target": {
       "Name": "minecraft:magma_block"
     },
-    "temperature_c": 400.0,
-    "effect": "melting"
+    "temperature_c": 400.0
   }
 }

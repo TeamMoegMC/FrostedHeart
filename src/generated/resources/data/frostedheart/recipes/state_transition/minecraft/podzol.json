@@ -1,29 +1,29 @@
 {
   "type": "frostedheart:state_transition",
+  "all_states": true,
   "block": {
+    "Name": "minecraft:podzol",
     "Properties": {
       "snowy": "false"
-    },
-    "Name": "minecraft:podzol"
+    }
   },
-  "all_states": true,
   "capacity_j_per_k": 6600.0,
+  "cooling": {
+    "effect": "freezing",
+    "target": {
+      "Name": "frostedheart:podzol_permafrost",
+      "Properties": {
+        "snowy": "false"
+      }
+    },
+    "temperature_c": -10.0
+  },
   "enthalpy_offset_j": 190000.0,
   "heating": {
+    "effect": "evaporation",
     "target": {
       "Name": "minecraft:coarse_dirt"
     },
-    "temperature_c": 100.0,
-    "effect": "evaporation"
-  },
-  "cooling": {
-    "target": {
-      "Properties": {
-        "snowy": "false"
-      },
-      "Name": "frostedheart:podzol_permafrost"
-    },
-    "temperature_c": -10.0,
-    "effect": "freezing"
+    "temperature_c": 100.0
   }
 }

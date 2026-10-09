@@ -19,34 +19,38 @@
 
 package com.teammoeg.frostedheart.content.town.resident;
 
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
+
+import org.jetbrains.annotations.Nullable;
+
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
-
+import com.teammoeg.chorda.io.CodecUtil;
+import com.teammoeg.chorda.io.SerializeUtil;
+import com.teammoeg.chorda.math.CMath;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.town.ITownWithResidents;
-import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import com.teammoeg.frostedheart.content.town.building.ITownResidentWorkBuilding;
 import com.teammoeg.frostedheart.content.town.buildings.hunting.HuntingBaseBuilding;
 import com.teammoeg.frostedheart.content.town.buildings.logistics.TransportStationBuilding;
 import com.teammoeg.frostedheart.content.town.buildings.mine.MineBaseBuilding;
 import com.teammoeg.frostedheart.content.town.event.ITownResidentChangeEventListener;
 import com.teammoeg.frostedheart.content.town.event.TownResidentChangeEvent;
-import com.teammoeg.chorda.io.CodecUtil;
-import com.teammoeg.chorda.io.SerializeUtil;
-import com.teammoeg.chorda.math.CMath;
-import it.unimi.dsi.fastutil.objects.Object2DoubleOpenHashMap;
+import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 
+import it.unimi.dsi.fastutil.objects.Object2DoubleOpenHashMap;
 import lombok.AccessLevel;
 import lombok.Getter;
-import lombok.Setter;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.UUIDUtil;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtOps;
 import net.minecraft.nbt.Tag;
-import net.minecraft.core.BlockPos;
-import net.minecraft.core.UUIDUtil;
-import org.jetbrains.annotations.Nullable;
-
-import java.util.*;
 
 /**
  * A resident of the town.

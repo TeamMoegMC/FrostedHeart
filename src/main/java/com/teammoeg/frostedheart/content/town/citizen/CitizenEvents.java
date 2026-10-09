@@ -163,7 +163,7 @@ public final class CitizenEvents {
 			throws com.mojang.brigadier.exceptions.CommandSyntaxException {
 		ServerPlayer player = ctx.getSource().getPlayerOrException();
 		String name = StringArgumentType.getString(ctx, "name");
-		AITownData town = AITownManager.getOrCreate(name, player.level().dimension());
+		AITownManager.getOrCreate(name, player.level().dimension());
 		ctx.getSource().sendSuccess(() -> Component.literal("AI town '" + name + "' created (dimension "
 				+ player.level().dimension().location() + ")"), true);
 		return 1;

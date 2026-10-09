@@ -13,6 +13,7 @@ import com.teammoeg.frostedheart.content.town.network.WanderingRefugeeOpenTradeG
 import com.teammoeg.frostedheart.content.town.network.WanderingRefugeeRecruitMessage;
 import com.teammoeg.frostedheart.content.ui.dialogue.DialogueOverlay;
 import com.teammoeg.frostedheart.content.ui.dialogue.DialogueScreen;
+
 import net.minecraft.network.chat.Component;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;

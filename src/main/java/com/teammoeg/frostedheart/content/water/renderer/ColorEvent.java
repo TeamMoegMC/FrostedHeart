@@ -35,7 +35,7 @@ public class ColorEvent {
 
     @SubscribeEvent
     public static void registerColors(RegisterColorHandlersEvent.Item event) {
-        event.getItemColors().register(CUP_ITEM, FHItems.wooden_cup_drink.get());
-        event.getItemColors().register(FLUID_BOTTLE_ITEM, FHItems.fluid_bottle.get());
+        event.register(CUP_ITEM, FHItems.wooden_cup_drink.get());
+        event.register(FLUID_BOTTLE_ITEM, FHItems.fluid_bottle.get());
     }
 }

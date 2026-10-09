@@ -240,7 +240,7 @@ public class WarehouseLevelEmitterBlockEntity extends CBlockEntity implements IW
         refreshState();
     }
 
-    private void clearBinding() {
+    protected void clearBinding() {
         unregisterTopologyListener();
         // 释放 watcher，它会自动从资源持有者的索引中清除
         if (watcher != null) {

@@ -6,13 +6,13 @@
 
 package com.teammoeg.frostedheart.content.town.resident;
 
-import com.teammoeg.frostedheart.content.health.nutrition.FoodNutritionProfile;
-
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+
+import com.teammoeg.frostedheart.content.health.nutrition.FoodNutritionProfile;
 
 /**
  * Pure shared-menu planner used for one house or one simulated recipient group.

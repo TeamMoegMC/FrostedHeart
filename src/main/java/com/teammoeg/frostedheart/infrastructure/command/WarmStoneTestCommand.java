@@ -15,6 +15,7 @@ import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
 import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.bootstrap.common.FHBlocks;
 import com.teammoeg.frostedheart.bootstrap.common.FHItems;
 import com.teammoeg.frostedheart.compat.curios.CuriosCompat;
 import com.teammoeg.frostedheart.content.climate.WorldTemperature;
@@ -74,8 +75,8 @@ public final class WarmStoneTestCommand {
 
     private static LiteralArgumentBuilder<CommandSourceStack> giveCommand() {
         return literal("give")
-                .then(giveItemCommand("warm_stone", () -> FHItems.warm_stone.get()))
-                .then(giveItemCommand("hot_water_bag", () -> FHItems.hot_water_bag.get()));
+                .then(giveItemCommand("warm_stone", () -> FHBlocks.WARM_STONE.asItem()))
+                .then(giveItemCommand("hot_water_bag", () -> FHBlocks.HOT_WATER_BAG.asItem()));
     }
 
     private static LiteralArgumentBuilder<CommandSourceStack> giveItemCommand(

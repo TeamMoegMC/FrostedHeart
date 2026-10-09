@@ -1,13 +1,14 @@
 package com.teammoeg.frostedheart.content.town.block.blockscanner;
 
+import static com.teammoeg.frostedheart.content.town.block.blockscanner.AbstractBlockScanner.*;
+
 import com.teammoeg.frostedheart.content.town.block.OccupiedVolume;
+
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import it.unimi.dsi.fastutil.longs.LongSet;
 import lombok.Getter;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
-
-import static com.teammoeg.frostedheart.content.town.block.blockscanner.AbstractBlockScanner.DEFAULT_MAX_SCAN_BLOCKS;
 
 /**
  * 大多数城镇建筑通用的BlockScanner，用以扫描建筑的结构。

@@ -10,6 +10,15 @@
 
 package com.teammoeg.frostedheart.content.town.model;
 
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.SplittableRandom;
+
 import com.teammoeg.frostedheart.content.climate.block.generator.GeneratorFuelModel;
 import com.teammoeg.frostedheart.content.town.buildings.house.HouseDailyModel;
 import com.teammoeg.frostedheart.content.town.buildings.hunting.HuntingDailyModel;
@@ -22,15 +31,6 @@ import com.teammoeg.frostedheart.content.town.resident.ResidentPublicMenuModel;
 import com.teammoeg.frostedheart.content.town.resource.TownFoodInventoryModel;
 import com.teammoeg.frostedheart.content.town.resource.TownFoodProcessingModel;
 import com.teammoeg.frostedheart.content.town.resource.action.ResourceActionMode;
-
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.SplittableRandom;
 
 /** Exact day-order stage-3 transition built from gameplay-owned pure kernels. */
 public final class TownStageThreeModel {

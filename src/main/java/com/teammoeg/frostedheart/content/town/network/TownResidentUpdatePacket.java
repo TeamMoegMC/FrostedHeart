@@ -1,6 +1,9 @@
 package com.teammoeg.frostedheart.content.town.network;
 
-import java.util.*;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
 import java.util.function.Supplier;
 
 import com.teammoeg.chorda.dataholders.team.CClientTeamDataManager;
@@ -9,8 +12,8 @@ import com.teammoeg.chorda.io.codec.DataOps;
 import com.teammoeg.chorda.io.codec.ObjectWriter;
 import com.teammoeg.chorda.network.CMessage;
 import com.teammoeg.frostedheart.bootstrap.common.FHSpecialDataTypes;
-import com.teammoeg.frostedheart.content.town.TeamTownData;
 import com.teammoeg.frostedheart.content.town.resident.Resident;
+
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.network.NetworkEvent;
 

@@ -28,16 +28,16 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.teammoeg.frostedheart.content.town.resource.ItemStackResourceKey;
 
-import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraftforge.registries.ForgeRegistries;
 
 public record SimpleItemKey(Item item, @Nullable CompoundTag tag)
 {
     public static final Codec<SimpleItemKey> CODEC = RecordCodecBuilder.create(instance -> instance.group(
-            BuiltInRegistries.ITEM.byNameCodec().fieldOf("item").forGetter(SimpleItemKey::item),
+    	ForgeRegistries.ITEMS.getCodec().fieldOf("item").forGetter(SimpleItemKey::item),
             CompoundTag.CODEC.optionalFieldOf("tag").forGetter(key -> Optional.ofNullable(key.tag()))
     ).apply(instance, (item, tag) -> new SimpleItemKey(item, tag.orElse(null))));
 
@@ -65,13 +65,13 @@ public record SimpleItemKey(Item item, @Nullable CompoundTag tag)
     }
 
     public void writeTo(FriendlyByteBuf buf) {
-        buf.writeId(BuiltInRegistries.ITEM, item);
+        buf.writeRegistryId(ForgeRegistries.ITEMS, item);
         buf.writeNbt(tag);
     }
 
     public static SimpleItemKey fromBuffer(FriendlyByteBuf buf) {
         return new SimpleItemKey(
-            buf.readById(BuiltInRegistries.ITEM),
+            buf.readRegistryIdUnsafe(ForgeRegistries.ITEMS),
             buf.readNbt()
         );
     }

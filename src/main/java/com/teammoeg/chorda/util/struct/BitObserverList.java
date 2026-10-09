@@ -43,11 +43,16 @@ public class BitObserverList {
 	 *
 	 * @param runnable 监听器供应器，get()返回的Runnable将在触发时执行 / the listener supplier whose get() Runnable will be executed on fire
 	 */
-	public synchronized void addListener(Supplier<Runnable> runnable) {
+	public void addListener(Supplier<Runnable> runnable) {
 		if(isFired) {
 			runnable.get().run();
-		}else 
-			listener.add(runnable);
+		}else synchronized(listener) {
+			if(isFired) {
+				runnable.get().run();
+			}else {
+				listener.add(runnable);
+			}
+		}
 		
 	}
 	/**
@@ -55,18 +60,24 @@ public class BitObserverList {
 	 * <p>
 	 * Set the flag to finished state, fire all pending listeners and clear the list.
 	 */
-	public synchronized void setFinished() {
-		isFired=true;
-		listener.forEach(t->t.get().run());
-		listener.clear();
+	public  void setFinished() {
+		List<Supplier<Runnable>> li=new ArrayList<>();
+		synchronized(listener) {
+			isFired=true;
+			li.addAll(listener);
+			listener.clear();
+		}
+		li.forEach(t->t.get().run());
 	}
 	/**
 	 * 重置标志为未完成状态。
 	 * <p>
 	 * Reset the flag to unfinished state.
 	 */
-	public synchronized void resetFinished() {
-		isFired=false;
+	public void resetFinished() {
+		synchronized(listener) {
+			isFired=false;
+		}
 		
 	}
 }

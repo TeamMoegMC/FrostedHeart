@@ -10,13 +10,6 @@
 
 package com.teammoeg.frostedheart.content.town.model;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.teammoeg.frostedheart.content.town.buildings.house.HouseDailyModel;
-import com.teammoeg.frostedheart.content.town.buildings.hunting.HuntingDailyModel;
-import com.teammoeg.frostedheart.content.town.resource.TownFoodInventoryModel;
-import com.teammoeg.frostedheart.content.town.resource.TownFoodProcessingModel;
-
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -32,6 +25,13 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.SplittableRandom;
+
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.teammoeg.frostedheart.content.town.buildings.house.HouseDailyModel;
+import com.teammoeg.frostedheart.content.town.buildings.hunting.HuntingDailyModel;
+import com.teammoeg.frostedheart.content.town.resource.TownFoodInventoryModel;
+import com.teammoeg.frostedheart.content.town.resource.TownFoodProcessingModel;
 
 /** Runs independent one-day stage-1/2 kernel experiments and diagnostics. */
 public final class TownStageOneTwoSimulator {

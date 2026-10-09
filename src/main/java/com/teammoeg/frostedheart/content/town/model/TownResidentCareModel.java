@@ -6,12 +6,12 @@
 
 package com.teammoeg.frostedheart.content.town.model;
 
-import com.teammoeg.frostedheart.content.town.TownCareLaw;
-import com.teammoeg.frostedheart.content.town.resident.ResidentNutrition;
-
 import java.util.Comparator;
 import java.util.Objects;
 import java.util.UUID;
+
+import com.teammoeg.frostedheart.content.town.TownCareLaw;
+import com.teammoeg.frostedheart.content.town.resident.ResidentNutrition;
 
 /** Forge-independent residential triage and stability rules. */
 public final class TownResidentCareModel {

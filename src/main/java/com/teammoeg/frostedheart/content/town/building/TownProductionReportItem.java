@@ -20,8 +20,9 @@ package com.teammoeg.frostedheart.content.town.building;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
-import net.minecraft.core.registries.BuiltInRegistries;
+
 import net.minecraft.world.item.Item;
+import net.minecraftforge.registries.ForgeRegistries;
 
 /**
  * One item row in a persisted daily production report.
@@ -32,7 +33,7 @@ import net.minecraft.world.item.Item;
  */
 public record TownProductionReportItem(Item item, double produced, double stored) {
     public static final Codec<TownProductionReportItem> CODEC = RecordCodecBuilder.create(instance -> instance.group(
-            BuiltInRegistries.ITEM.byNameCodec().fieldOf("item").forGetter(TownProductionReportItem::item),
+            ForgeRegistries.ITEMS.getCodec().fieldOf("item").forGetter(TownProductionReportItem::item),
             Codec.DOUBLE.optionalFieldOf("produced", 0.0).forGetter(TownProductionReportItem::produced),
             Codec.DOUBLE.optionalFieldOf("stored", 0.0).forGetter(TownProductionReportItem::stored)
     ).apply(instance, TownProductionReportItem::new));

@@ -6,13 +6,14 @@
 
 package com.teammoeg.frostedheart.content.town.network;
 
+import java.util.function.Supplier;
+
 import com.teammoeg.chorda.network.CMessage;
 import com.teammoeg.frostedheart.content.town.observation.TownOperationalStatus;
 import com.teammoeg.frostedheart.content.town.observation.TownOperationalStatusClientCache;
+
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.network.NetworkEvent;
-
-import java.util.function.Supplier;
 
 public class TownOperationalStatusResponsePacket implements CMessage {
     private final TownOperationalStatus status;

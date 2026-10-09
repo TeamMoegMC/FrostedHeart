@@ -20,8 +20,8 @@ import com.teammoeg.frostedheart.content.town.block.blockscanner.RoomPathfinder.
 import com.teammoeg.frostedheart.content.town.block.blockscanner.RoomPathfinder.ReachabilityResult;
 
 import it.unimi.dsi.fastutil.objects.Reference2IntMap;
-import it.unimi.dsi.fastutil.objects.Reference2IntMaps;
 import it.unimi.dsi.fastutil.objects.Reference2IntMap.Entry;
+import it.unimi.dsi.fastutil.objects.Reference2IntMaps;
 import it.unimi.dsi.fastutil.objects.Reference2IntOpenHashMap;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.BlockPos.MutableBlockPos;

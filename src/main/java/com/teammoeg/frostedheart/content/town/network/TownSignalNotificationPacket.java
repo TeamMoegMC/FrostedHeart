@@ -6,18 +6,19 @@
 
 package com.teammoeg.frostedheart.content.town.network;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Supplier;
+
 import com.teammoeg.chorda.network.CMessage;
 import com.teammoeg.frostedheart.content.town.observation.TownSignalEvent;
 import com.teammoeg.frostedheart.content.town.observation.TownSignalNotice;
 import com.teammoeg.frostedheart.content.ui.tips.client.TownSignalTipPresentation;
+
 import io.netty.handler.codec.DecoderException;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.network.NetworkDirection;
 import net.minecraftforge.network.NetworkEvent;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.function.Supplier;
 
 /** Transient S2C notice subset; intentionally excludes detail and episode identifiers. */
 public record TownSignalNotificationPacket(long notificationId, List<TownSignalNotice> notices)

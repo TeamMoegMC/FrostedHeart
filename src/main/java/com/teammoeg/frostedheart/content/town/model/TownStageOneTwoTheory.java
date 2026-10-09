@@ -10,15 +10,15 @@
 
 package com.teammoeg.frostedheart.content.town.model;
 
-import com.teammoeg.frostedheart.content.climate.block.generator.GeneratorFuelModel;
-import com.teammoeg.frostedheart.content.town.buildings.house.HouseDailyModel;
-import com.teammoeg.frostedheart.content.town.buildings.mine.MiningDailyModel;
-import com.teammoeg.frostedheart.content.town.resource.TownFoodProcessingModel;
-
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.SplittableRandom;
+
+import com.teammoeg.frostedheart.content.climate.block.generator.GeneratorFuelModel;
+import com.teammoeg.frostedheart.content.town.buildings.house.HouseDailyModel;
+import com.teammoeg.frostedheart.content.town.buildings.mine.MiningDailyModel;
+import com.teammoeg.frostedheart.content.town.resource.TownFoodProcessingModel;
 
 /** Closed-form and exactly enumerated baselines for stage-1/2 kernels. */
 public final class TownStageOneTwoTheory {

@@ -22,7 +22,8 @@ package com.teammoeg.frostedheart.content.town.buildings.warehouse;
 import java.util.Comparator;
 import java.util.Locale;
 
-import net.minecraft.core.registries.BuiltInRegistries;
+import com.teammoeg.chorda.util.CRegistryHelper;
+
 import net.minecraft.network.chat.Component;
 
 /**
@@ -37,7 +38,7 @@ public enum WarehouseSortMode {
 
     // 最终 tie-break：物品注册名，保证同名同数量（不同 NBT）时顺序确定，避免排序抖动
     private static final Comparator<VirtualItemStack> BY_ITEM_ID =
-            Comparator.comparing(v -> BuiltInRegistries.ITEM.getKey(v.getKey().item()).toString());
+            Comparator.comparing(v -> CRegistryHelper.getRegistryName(v.getKey().item()).toString());
 
     private static final Comparator<VirtualItemStack> AMOUNT_DESC_COMPARATOR =
             Comparator.comparingLong(VirtualItemStack::getAmount).reversed()

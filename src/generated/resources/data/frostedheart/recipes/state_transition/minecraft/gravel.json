@@ -1,19 +1,19 @@
 {
   "type": "frostedheart:state_transition",
+  "all_states": true,
   "block": {
     "Name": "minecraft:gravel"
   },
-  "all_states": true,
   "capacity_j_per_k": 6600.0,
-  "enthalpy_offset_j": 38000.0,
   "cooling": {
+    "effect": "freezing",
     "target": {
+      "Name": "frostedheart:gravel_permafrost",
       "Properties": {
         "snowy": "false"
-      },
-      "Name": "frostedheart:gravel_permafrost"
+      }
     },
-    "temperature_c": -10.0,
-    "effect": "freezing"
-  }
+    "temperature_c": -10.0
+  },
+  "enthalpy_offset_j": 38000.0
 }

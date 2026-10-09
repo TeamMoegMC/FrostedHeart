@@ -10,18 +10,18 @@
 
 package com.teammoeg.frostedheart.content.town.model;
 
-import com.teammoeg.frostedheart.content.town.resource.TownFoodInventoryModel;
-import com.teammoeg.frostedheart.content.town.resource.TownInventoryModel;
-import com.teammoeg.frostedheart.content.town.resource.action.ResourceActionMode;
-import com.teammoeg.frostedheart.content.town.resident.ResidentActivity;
-import com.teammoeg.frostedheart.content.town.resident.ResidentGenerationModel;
-import com.teammoeg.frostedheart.content.town.resident.ResidentNutrition;
-
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.SplittableRandom;
+
+import com.teammoeg.frostedheart.content.town.resident.ResidentActivity;
+import com.teammoeg.frostedheart.content.town.resident.ResidentGenerationModel;
+import com.teammoeg.frostedheart.content.town.resident.ResidentNutrition;
+import com.teammoeg.frostedheart.content.town.resource.TownFoodInventoryModel;
+import com.teammoeg.frostedheart.content.town.resource.TownInventoryModel;
+import com.teammoeg.frostedheart.content.town.resource.action.ResourceActionMode;
 
 /** Mutable, serializable-in-principle state for one stage-3 Monte Carlo run. */
 public final class TownStageThreeState {

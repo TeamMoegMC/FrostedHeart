@@ -28,6 +28,7 @@ import com.tterrag.registrate.builders.BlockBuilder;
 import com.tterrag.registrate.providers.DataGenContext;
 import com.tterrag.registrate.providers.RegistrateBlockstateProvider;
 import com.tterrag.registrate.providers.RegistrateItemModelProvider;
+import com.tterrag.registrate.providers.RegistrateLangProvider;
 import com.tterrag.registrate.util.nullness.NonNullBiConsumer;
 import com.tterrag.registrate.util.nullness.NonNullFunction;
 import net.minecraft.core.Direction;
@@ -54,7 +55,9 @@ import net.minecraftforge.client.model.generators.loaders.ObjModelBuilder;
 import java.util.NoSuchElementException;
 
 public class FHBlockStateGen {
-
+	public static <E,T extends E> NonNullBiConsumer<DataGenContext<E, T>, RegistrateLangProvider> noLang(){
+		return (ctx,prov)->{};
+	}
 	public static <T extends Block> NonNullBiConsumer<DataGenContext<Block, T>, RegistrateBlockstateProvider> existed() {
 		return (c, p) -> {
 			if (!p.models().existingFileHelper.exists(c.getId(), PackType.CLIENT_RESOURCES, ".json", "blockstates")) {

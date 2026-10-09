@@ -6,12 +6,12 @@
 
 package com.teammoeg.frostedheart.content.town.resident;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /** Builds resident nutrition explanations from the persisted settlement snapshot. */
 public final class ResidentNutritionExplanation {

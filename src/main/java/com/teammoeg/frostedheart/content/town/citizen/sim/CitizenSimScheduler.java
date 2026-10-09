@@ -665,6 +665,7 @@ public final class CitizenSimScheduler {
 		return BlockPos.asLong(x, 0, z);
 	}
 
+	@SuppressWarnings("deprecation")
 	private static BlockPos safeExitAt(ServerLevel level, BlockPos anchor, int x, int z) {
 		if (!level.hasChunkAt(x, z))
 			return null;

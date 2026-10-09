@@ -1,15 +1,15 @@
 {
   "type": "frostedheart:state_transition",
+  "all_states": true,
   "block": {
     "Name": "minecraft:snow_block"
   },
-  "all_states": true,
   "capacity_j_per_k": 6600.0,
   "heating": {
+    "effect": "melting",
     "target": {
       "Name": "minecraft:air"
     },
-    "temperature_c": 9.0,
-    "effect": "melting"
+    "temperature_c": 9.0
   }
 }

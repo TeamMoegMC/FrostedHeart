@@ -38,6 +38,7 @@ import java.util.stream.Stream;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import com.teammoeg.chorda.util.CRegistryHelper;
 import com.teammoeg.frostedheart.content.town.ITownWithBuildings;
 import com.teammoeg.frostedheart.content.town.ITownWithResidents;
 import com.teammoeg.frostedheart.content.town.TownMathFunctions;
@@ -54,7 +55,6 @@ import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import lombok.Getter;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.UUIDUtil;
-import net.minecraft.core.registries.BuiltInRegistries;
 
 /**
  * 城镇住宅。
@@ -658,7 +658,8 @@ public class HouseBuilding extends AbstractTownBuilding implements ITownResident
 
     private static String stableMealItemKey(ItemStackResourceKey item) {
         String tag = item.getCompoundTag() == null ? "" : item.getCompoundTag().toString();
-        return BuiltInRegistries.ITEM.getKey(item.getItem()) + "|" + tag;
+
+        return CRegistryHelper.getRegistryName(item.getItem()) + "|" + tag;
     }
 
     private record FoodConsumption(double foodConsumed) {

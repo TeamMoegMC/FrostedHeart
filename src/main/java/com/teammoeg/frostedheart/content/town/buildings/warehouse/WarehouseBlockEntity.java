@@ -28,7 +28,6 @@ import com.teammoeg.frostedheart.content.town.ITownWithBuildings;
 import com.teammoeg.frostedheart.content.town.TeamTown;
 import com.teammoeg.frostedheart.content.town.TeamTownData;
 import com.teammoeg.frostedheart.content.town.block.AbstractTownBuildingBlockEntity;
-import com.teammoeg.frostedheart.content.town.block.OccupiedZoneInfo;
 import com.teammoeg.frostedheart.content.town.block.blockscanner.BlockScanner;
 import com.teammoeg.frostedheart.content.town.block.blockscanner.BlockScanner.RoomData;
 import com.teammoeg.frostedheart.content.town.building.AbstractTownBuilding;

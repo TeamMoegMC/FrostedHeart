@@ -101,7 +101,8 @@ public class WarehouseInterfaceBlock extends CGuiBlock<WarehouseInterfaceBlockEn
         return super.use(state, level, pos, player, hand, hit);
     }
 
-    @Override
+    @SuppressWarnings("deprecation")
+	@Override
     public void neighborChanged(BlockState state, Level level, BlockPos pos, net.minecraft.world.level.block.Block block,
                                 BlockPos fromPos, boolean isMoving) {
         super.neighborChanged(state, level, pos, block, fromPos, isMoving);

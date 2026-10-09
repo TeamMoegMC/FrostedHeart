@@ -21,15 +21,14 @@ package com.teammoeg.frostedheart.content.town.block.blockscanner;
 
 import java.util.HashSet;
 
-import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
-import it.unimi.dsi.fastutil.longs.LongSet;
-
 import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
 
-import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.tags.BlockTags;
+import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
+import it.unimi.dsi.fastutil.longs.LongSet;
 import net.minecraft.core.BlockPos;
+import net.minecraft.tags.BlockTags;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.common.Tags;
 
 /**

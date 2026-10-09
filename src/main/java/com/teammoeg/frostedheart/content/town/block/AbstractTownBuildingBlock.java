@@ -21,33 +21,33 @@ package com.teammoeg.frostedheart.content.town.block;
 
 import javax.annotation.Nullable;
 
+import org.jetbrains.annotations.NotNull;
+
 import com.teammoeg.chorda.block.CBlock;
 import com.teammoeg.chorda.dataholders.team.CTeamDataManager;
 import com.teammoeg.chorda.dataholders.team.TeamDataHolder;
 import com.teammoeg.chorda.text.Components;
-import com.teammoeg.frostedheart.content.town.ITown;
 import com.teammoeg.frostedheart.content.town.TeamTown;
 import com.teammoeg.frostedheart.content.town.building.AbstractTownBuilding;
 import com.teammoeg.frostedheart.content.town.provider.TeamTownProvider;
 import com.teammoeg.frostedresearch.mixinutil.IOwnerTile;
 
 import blusunrize.immersiveengineering.common.util.Utils;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.context.BlockPlaceContext;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.item.context.BlockPlaceContext;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.block.state.properties.BooleanProperty;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
-import net.minecraft.core.Direction;
-import net.minecraft.core.BlockPos;
-import net.minecraft.world.level.Level;
-import org.jetbrains.annotations.NotNull;
+import net.minecraft.world.level.block.state.properties.BooleanProperty;
 
 public abstract class AbstractTownBuildingBlock extends CBlock {
     public static final BooleanProperty LIT = BlockStateProperties.LIT;

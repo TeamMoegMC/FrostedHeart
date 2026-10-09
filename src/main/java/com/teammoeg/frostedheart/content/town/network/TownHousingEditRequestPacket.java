@@ -1,17 +1,18 @@
 /* Copyright (c) 2026 TeamMoeg */
 package com.teammoeg.frostedheart.content.town.network;
 
+import java.util.Optional;
+import java.util.function.Supplier;
+
 import com.teammoeg.chorda.dataholders.team.CTeamDataManager;
 import com.teammoeg.chorda.network.CMessage;
 import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.bootstrap.common.FHSpecialDataTypes;
+
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.network.NetworkEvent;
-
-import java.util.Optional;
-import java.util.function.Supplier;
 
 /** Server-authoritative single-operation edit of the housing-care plan. */
 public final class TownHousingEditRequestPacket implements CMessage {

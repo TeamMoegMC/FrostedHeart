@@ -1,17 +1,18 @@
 package com.teammoeg.frostedheart.content.town.provider;
 
-import com.teammoeg.chorda.dataholders.team.CClientTeamDataManager;
+import java.util.UUID;
+
+import org.jetbrains.annotations.Nullable;
+
 import com.teammoeg.chorda.dataholders.team.CTeamDataManager;
 import com.teammoeg.chorda.dataholders.team.TeamDataHolder;
 import com.teammoeg.frostedheart.bootstrap.common.FHSpecialDataTypes;
 import com.teammoeg.frostedheart.content.town.TeamTown;
 import com.teammoeg.frostedheart.content.town.TeamTownData;
+
 import net.minecraft.nbt.StringTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.world.entity.player.Player;
-import org.jetbrains.annotations.Nullable;
-
-import java.util.UUID;
 
 public class TeamTownProvider implements ITownProviderSerializable<TeamTown>{
 

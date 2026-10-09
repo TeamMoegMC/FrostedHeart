@@ -19,20 +19,21 @@
 
 package com.teammoeg.frostedheart.content.town.network;
 
+import java.util.function.Supplier;
+
 import com.teammoeg.chorda.dataholders.team.CTeamDataManager;
 import com.teammoeg.chorda.dataholders.team.TeamDataHolder;
 import com.teammoeg.chorda.network.CMessage;
 import com.teammoeg.frostedheart.content.town.TeamTown;
 import com.teammoeg.frostedheart.content.town.resident.Resident;
 import com.teammoeg.frostedheart.content.town.resident.WanderingRefugee;
+
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
 import net.minecraftforge.network.NetworkEvent;
-
-import java.util.function.Supplier;
 
 
 public class WanderingRefugeeRecruitMessage implements CMessage {

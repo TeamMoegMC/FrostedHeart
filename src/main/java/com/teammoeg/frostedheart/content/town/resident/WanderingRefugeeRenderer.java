@@ -20,6 +20,7 @@
 package com.teammoeg.frostedheart.content.town.resident;
 
 import com.mojang.blaze3d.vertex.PoseStack;
+
 import net.minecraft.client.model.VillagerModel;
 import net.minecraft.client.model.geom.ModelLayers;
 import net.minecraft.client.renderer.MultiBufferSource;

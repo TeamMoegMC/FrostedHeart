@@ -10,16 +10,16 @@
 
 package com.teammoeg.frostedheart.content.town.model;
 
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
+
 import com.teammoeg.frostedheart.content.climate.block.generator.GeneratorFuelModel;
 import com.teammoeg.frostedheart.content.town.TownMathFunctions;
 import com.teammoeg.frostedheart.content.town.buildings.hunting.HuntingDailyModel;
 import com.teammoeg.frostedheart.content.town.resource.TownFoodInventoryModel;
 import com.teammoeg.frostedheart.content.town.resource.action.ResourceActionMode;
-
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
 
 /** Pure controls and measurements for the fixed 24-resident stage-4 experiment. */
 public final class TownStageFourTensionModel {

@@ -1,16 +1,17 @@
 /* Copyright (c) 2026 TeamMoeg */
 package com.teammoeg.frostedheart.content.town.network;
 
+import java.util.function.Supplier;
+
 import com.teammoeg.chorda.dataholders.team.CTeamDataManager;
 import com.teammoeg.chorda.network.CMessage;
 import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.bootstrap.common.FHSpecialDataTypes;
 import com.teammoeg.frostedheart.content.town.TownCareLaw;
+
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.network.NetworkEvent;
-
-import java.util.function.Supplier;
 
 /** Requests a pending law choice; all policy domains share one cooldown. */
 public final class TownPolicyEditRequestPacket implements CMessage {

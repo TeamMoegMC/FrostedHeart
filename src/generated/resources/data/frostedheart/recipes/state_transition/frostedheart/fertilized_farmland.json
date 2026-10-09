@@ -1,32 +1,32 @@
 {
   "type": "frostedheart:state_transition",
-  "block": {
-    "Properties": {
-      "storage": "1",
-      "moisture": "0",
-      "grade": "basic",
-      "fertilizer": "accelerated"
-    },
-    "Name": "frostedheart:fertilized_farmland"
-  },
   "all_states": true,
+  "block": {
+    "Name": "frostedheart:fertilized_farmland",
+    "Properties": {
+      "fertilizer": "accelerated",
+      "grade": "basic",
+      "moisture": "0",
+      "storage": "1"
+    }
+  },
   "capacity_j_per_k": 3900.0,
+  "cooling": {
+    "effect": "freezing",
+    "target": {
+      "Name": "frostedheart:dirt_permafrost",
+      "Properties": {
+        "snowy": "false"
+      }
+    },
+    "temperature_c": -10.0
+  },
   "enthalpy_offset_j": 353000.0,
   "heating": {
+    "effect": "evaporation",
     "target": {
       "Name": "minecraft:coarse_dirt"
     },
-    "temperature_c": 100.0,
-    "effect": "evaporation"
-  },
-  "cooling": {
-    "target": {
-      "Properties": {
-        "snowy": "false"
-      },
-      "Name": "frostedheart:dirt_permafrost"
-    },
-    "temperature_c": -10.0,
-    "effect": "freezing"
+    "temperature_c": 100.0
   }
 }

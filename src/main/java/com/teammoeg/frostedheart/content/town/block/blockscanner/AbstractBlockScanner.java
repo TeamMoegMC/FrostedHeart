@@ -22,24 +22,24 @@ package com.teammoeg.frostedheart.content.town.block.blockscanner;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.function.Consumer;
 import java.util.function.Predicate;
+
+import org.jetbrains.annotations.Nullable;
 
 import it.unimi.dsi.fastutil.longs.LongIterator;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import it.unimi.dsi.fastutil.longs.LongSet;
 import lombok.Getter;
 import lombok.Setter;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.server.level.ColumnPos;
+import net.minecraft.tags.BlockTags;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.Heightmap;
-import net.minecraft.tags.BlockTags;
-import net.minecraft.core.Direction;
-import net.minecraft.core.BlockPos;
-import net.minecraft.server.level.ColumnPos;
-import net.minecraft.world.level.LevelReader;
-import net.minecraft.world.level.Level;
-import org.jetbrains.annotations.Nullable;
 
 /**
  * 提供了一些扫描方块用的静态方法和模板方法
@@ -110,7 +110,7 @@ public abstract class AbstractBlockScanner {
     /**
      * 添加扫描块（返回是否成功添加）
      */
-    private boolean addScanningBlock(BlockPos pos) {
+    protected boolean addScanningBlock(BlockPos pos) {
         long key = pos.asLong();
         if (scannedBlocks.contains(key)) return false;
         return scanningBlocks.add(key);

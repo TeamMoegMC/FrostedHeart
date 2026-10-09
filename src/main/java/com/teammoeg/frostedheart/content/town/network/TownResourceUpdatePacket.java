@@ -1,6 +1,7 @@
 package com.teammoeg.frostedheart.content.town.network;
 
-import java.util.*;
+import java.util.List;
+import java.util.Map;
 import java.util.function.Supplier;
 
 import com.teammoeg.chorda.dataholders.team.CClientTeamDataManager;
@@ -13,6 +14,7 @@ import com.teammoeg.frostedheart.content.town.TeamTownData;
 import com.teammoeg.frostedheart.content.town.resource.ITownResourceKey;
 import com.teammoeg.frostedheart.content.town.transport.TownTransportSnapshot;
 import com.teammoeg.frostedheart.content.town.transport.TownTransportState;
+
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.network.NetworkEvent;
 

@@ -6,16 +6,17 @@
 
 package com.teammoeg.frostedheart.content.town.network;
 
+import java.util.function.Supplier;
+
 import com.teammoeg.chorda.dataholders.team.CTeamDataManager;
 import com.teammoeg.chorda.network.CMessage;
 import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.bootstrap.common.FHSpecialDataTypes;
 import com.teammoeg.frostedheart.content.town.TownNamingModel;
+
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.network.NetworkEvent;
-
-import java.util.function.Supplier;
 
 /** Server-authoritative town rename; the sender's own team is always used. */
 public class TownNameEditRequestPacket implements CMessage {

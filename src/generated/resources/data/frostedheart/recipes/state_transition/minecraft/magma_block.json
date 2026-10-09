@@ -1,26 +1,26 @@
 {
   "type": "frostedheart:state_transition",
+  "all_states": true,
   "block": {
     "Name": "minecraft:magma_block"
   },
-  "all_states": true,
   "capacity_j_per_k": 5400.0,
-  "enthalpy_offset_j": 190000.0,
-  "heating": {
-    "target": {
-      "Properties": {
-        "level": "0"
-      },
-      "Name": "minecraft:lava"
-    },
-    "temperature_c": 800.0,
-    "effect": "evaporation"
-  },
   "cooling": {
+    "effect": "freezing",
     "target": {
       "Name": "frostedheart:cooled_magma_block"
     },
-    "temperature_c": 300.0,
-    "effect": "freezing"
+    "temperature_c": 300.0
+  },
+  "enthalpy_offset_j": 190000.0,
+  "heating": {
+    "effect": "evaporation",
+    "target": {
+      "Name": "minecraft:lava",
+      "Properties": {
+        "level": "0"
+      }
+    },
+    "temperature_c": 800.0
   }
 }

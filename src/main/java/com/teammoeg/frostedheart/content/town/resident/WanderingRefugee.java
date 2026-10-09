@@ -19,16 +19,25 @@
 
 package com.teammoeg.frostedheart.content.town.resident;
 
+import java.util.UUID;
+
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
 import com.teammoeg.chorda.dataholders.team.CTeamDataManager;
 import com.teammoeg.chorda.dataholders.team.TeamDataHolder;
 import com.teammoeg.chorda.text.Components;
 import com.teammoeg.frostedheart.bootstrap.common.FHSpecialDataTypes;
 import com.teammoeg.frostedheart.bootstrap.reference.FHTags;
-import com.teammoeg.frostedheart.content.town.TeamTownData;
 import com.teammoeg.frostedheart.content.climate.AttractedByGeneratorGoal;
 import com.teammoeg.frostedheart.content.climate.WorldTemperature;
 import com.teammoeg.frostedheart.content.climate.gamedata.climate.WorldClimate;
-import com.teammoeg.frostedheart.content.trade.*;
+import com.teammoeg.frostedheart.content.trade.FHVillagerData;
+import com.teammoeg.frostedheart.content.trade.RelationList;
+import com.teammoeg.frostedheart.content.trade.RelationModifier;
+import com.teammoeg.frostedheart.content.trade.TradeConstants;
+import com.teammoeg.frostedheart.content.trade.TradeHandler;
+import com.teammoeg.frostedheart.content.trade.VillagerDataHolder;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 
 import lombok.Getter;
@@ -40,19 +49,42 @@ import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.DifficultyInstance;
 import net.minecraft.stats.Stats;
 import net.minecraft.util.TimeUtil;
 import net.minecraft.util.valueproviders.UniformInt;
+import net.minecraft.world.DifficultyInstance;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
-import net.minecraft.world.entity.*;
-import net.minecraft.world.entity.ai.goal.*;
+import net.minecraft.world.entity.AgeableMob;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityDimensions;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.MobSpawnType;
+import net.minecraft.world.entity.NeutralMob;
+import net.minecraft.world.entity.Pose;
+import net.minecraft.world.entity.SpawnGroupData;
+import net.minecraft.world.entity.ai.goal.AvoidEntityGoal;
+import net.minecraft.world.entity.ai.goal.FloatGoal;
+import net.minecraft.world.entity.ai.goal.LookAtPlayerGoal;
+import net.minecraft.world.entity.ai.goal.MeleeAttackGoal;
+import net.minecraft.world.entity.ai.goal.MoveTowardsTargetGoal;
+import net.minecraft.world.entity.ai.goal.RandomLookAroundGoal;
+import net.minecraft.world.entity.ai.goal.TemptGoal;
+import net.minecraft.world.entity.ai.goal.WaterAvoidingRandomStrollGoal;
 import net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal;
 import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
 import net.minecraft.world.entity.ai.goal.target.ResetUniversalAngerTargetGoal;
 import net.minecraft.world.entity.animal.Wolf;
-import net.minecraft.world.entity.monster.*;
+import net.minecraft.world.entity.monster.Creeper;
+import net.minecraft.world.entity.monster.Enemy;
+import net.minecraft.world.entity.monster.Evoker;
+import net.minecraft.world.entity.monster.Illusioner;
+import net.minecraft.world.entity.monster.Pillager;
+import net.minecraft.world.entity.monster.Vex;
+import net.minecraft.world.entity.monster.Vindicator;
+import net.minecraft.world.entity.monster.Zoglin;
+import net.minecraft.world.entity.monster.Zombie;
 import net.minecraft.world.entity.npc.AbstractVillager;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
@@ -63,10 +95,6 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.ServerLevelAccessor;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.fml.DistExecutor;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-
-import java.util.UUID;
 
 public class WanderingRefugee extends AbstractVillager implements NeutralMob, VillagerDataHolder {
 //    private static final EntityDataAccessor<Boolean> HIRED = SynchedEntityData.defineId(WanderingRefugee.class, EntityDataSerializers.BOOLEAN);

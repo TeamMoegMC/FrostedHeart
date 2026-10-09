@@ -1,6 +1,7 @@
 package com.teammoeg.frostedheart.content.town.render;
 
 import java.util.Map.Entry;
+
 import org.joml.Matrix4f;
 
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -14,7 +15,6 @@ import com.teammoeg.frostedheart.content.town.block.blockscanner.RoomPathfinder.
 import com.teammoeg.frostedheart.content.town.building.AbstractTownBuilding;
 
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
-import it.unimi.dsi.fastutil.objects.Reference2IntOpenHashMap;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
@@ -79,9 +79,7 @@ public class RoomZoneRenderer {
 				}
 			int color = 0xaa88ff88;
 			if (space.isOverlapped()) {
-				color = 0xaaffff88;
-				if(blink)
-					return;
+				color = blink?0xaaffdd88:0xaaffff88;
 			}
 
 			for (OccupiedCell oc : space.getOccupiedCells())

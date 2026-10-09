@@ -18,12 +18,12 @@
 
 package com.teammoeg.frostedheart.content.town.model;
 
+import java.util.List;
+
 import com.teammoeg.frostedheart.content.town.TownMathFunctions;
 import com.teammoeg.frostedheart.content.town.resident.ResidentActivity;
 import com.teammoeg.frostedheart.content.town.resident.ResidentNutritionSupportModel;
 import com.teammoeg.frostedheart.content.town.transport.TransportConsumerParameters;
-
-import java.util.List;
 
 /**
  * Forge-independent parameter snapshot for the town numerical model.

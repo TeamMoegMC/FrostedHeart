@@ -1,19 +1,19 @@
 {
   "type": "frostedheart:state_transition",
+  "all_states": true,
   "block": {
     "Name": "minecraft:ice"
   },
-  "all_states": true,
   "capacity_j_per_k": 6600.0,
   "enthalpy_offset_j": 1129200.0,
   "heating": {
+    "effect": "evaporation",
     "target": {
       "Name": "frostedheart:thin_ice"
     },
     "temperature_c": 9.0,
     "world_conditions": {
       "excluded_biome_tag": "frostedheart:ice_do_not_smelt"
-    },
-    "effect": "evaporation"
+    }
   }
 }

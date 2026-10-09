@@ -10,15 +10,14 @@
 
 package com.teammoeg.frostedheart.content.town.model;
 
-import com.teammoeg.frostedheart.content.town.observation.TownObservationModel;
-import com.teammoeg.frostedheart.content.town.observation.TownSignalEvent;
-import com.teammoeg.frostedheart.content.town.resident.ResidentDailyModel;
-import com.teammoeg.frostedheart.content.town.resident.ResidentNutrition;
-
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+
+import com.teammoeg.frostedheart.content.town.observation.TownObservationModel;
+import com.teammoeg.frostedheart.content.town.observation.TownSignalEvent;
+import com.teammoeg.frostedheart.content.town.resident.ResidentDailyModel;
 
 /** Stateful event/episode observer layered on the exact stage-4 day transition. */
 final class TownStageFourObserver {

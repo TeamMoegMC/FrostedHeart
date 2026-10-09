@@ -1,8 +1,8 @@
 package com.teammoeg.frostedheart.content.town.event;
 
-import com.teammoeg.frostedheart.content.town.resource.ITownResourceKey;
-
 import java.util.EventObject;
+
+import com.teammoeg.frostedheart.content.town.resource.ITownResourceKey;
 
 public class TownResourceChangeEvent extends EventObject {
     public final ITownResourceKey changedResourceKey;

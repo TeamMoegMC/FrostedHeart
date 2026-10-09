@@ -25,6 +25,7 @@ import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
 import com.teammoeg.frostedheart.content.town.block.AbstractTownBuildingBlockEntity;
 import com.teammoeg.frostedheart.content.town.network.TeamTownDataS2CPacket;
+
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.Level;

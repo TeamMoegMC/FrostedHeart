@@ -10,12 +10,6 @@
 
 package com.teammoeg.frostedheart.content.town.model;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.teammoeg.frostedheart.content.town.TownMathFunctions;
-import com.teammoeg.frostedheart.content.town.buildings.house.HouseDailyModel;
-import com.teammoeg.frostedheart.content.town.buildings.hunting.HuntingDailyModel;
-
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -28,6 +22,12 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.teammoeg.frostedheart.content.town.TownMathFunctions;
+import com.teammoeg.frostedheart.content.town.buildings.house.HouseDailyModel;
+import com.teammoeg.frostedheart.content.town.buildings.hunting.HuntingDailyModel;
 
 /** Paired-seed population sweep for the current stage-4 T1 model. */
 public final class TownStageFourPopulationSweepSimulator {

@@ -6,17 +6,18 @@
 
 package com.teammoeg.frostedheart.content.town.network;
 
-import com.teammoeg.chorda.network.CMessage;
-import com.teammoeg.frostedheart.FHNetwork;
-import com.teammoeg.frostedheart.content.town.observation.TownOperationalStatusProvider;
-import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.server.level.ServerPlayer;
-import net.minecraftforge.network.NetworkEvent;
-
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
+
+import com.teammoeg.chorda.network.CMessage;
+import com.teammoeg.frostedheart.FHNetwork;
+import com.teammoeg.frostedheart.content.town.observation.TownOperationalStatusProvider;
+
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraftforge.network.NetworkEvent;
 
 /** Fieldless C2S request: the server always resolves the sender's own team. */
 public class TownOperationalStatusRequestPacket implements CMessage {

@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.teammoeg.chorda.util.CRegistryHelper;
 import com.teammoeg.frostedheart.content.health.nutrition.FoodNutritionProfile;
 import com.teammoeg.frostedheart.content.health.nutrition.FoodNutritionResolver;
 import com.teammoeg.frostedheart.content.town.TeamTown;
@@ -35,7 +36,6 @@ import com.teammoeg.frostedheart.content.town.resource.action.TownResourceAction
 import com.teammoeg.frostedheart.content.town.resource.action.TownResourceActions;
 import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 
-import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.food.FoodProperties;
 import net.minecraft.world.item.ItemStack;
@@ -299,7 +299,7 @@ public final class TownHousingMealService {
 
     private static String stableKey(ItemStackResourceKey item) {
         String tag = item.getCompoundTag() == null ? "" : item.getCompoundTag().toString();
-        return BuiltInRegistries.ITEM.getKey(item.getItem()) + "|" + tag;
+        return CRegistryHelper.getRegistryName(item.getItem()) + "|" + tag;
     }
 
     private static final class FoodCandidate {

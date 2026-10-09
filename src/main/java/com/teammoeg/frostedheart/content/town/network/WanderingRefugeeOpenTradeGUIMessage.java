@@ -19,14 +19,15 @@
 
 package com.teammoeg.frostedheart.content.town.network;
 
+import java.util.function.Supplier;
+
 import com.teammoeg.chorda.network.CMessage;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.town.resident.WanderingRefugee;
+
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.network.NetworkEvent;
-
-import java.util.function.Supplier;
 
 /**
  *  wanderer open trade gui message.<br>

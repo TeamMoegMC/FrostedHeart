@@ -1337,20 +1337,6 @@ thinner.png
             .model(FHBlockStateGen.existingItemModel())
             .lang("Heating Pad")
             .register();
-    public static final ItemEntry<WarmStoneItem> warm_stone = REGISTRATE
-            .item("warm_stone", properties -> new WarmStoneItem(
-                    FHBlocks.WARM_STONE.get(), properties, WearableThermalProfile.WARM_STONE_DEFAULT))
-            .tag(FHTags.Items.CURIOS_WARM_STONE.tag)
-            .model(FHBlockStateGen.existingItemModel())
-            .lang("Warm Stone")
-            .register();
-    public static final ItemEntry<WarmStoneItem> hot_water_bag = REGISTRATE
-            .item("hot_water_bag", properties -> new WarmStoneItem(
-                    FHBlocks.HOT_WATER_BAG.get(), properties, WearableThermalProfile.HOT_WATER_BAG_DEFAULT))
-            .tag(FHTags.Items.CURIOS_WARM_STONE.tag)
-            .model(FHBlockStateGen.existingItemModel())
-            .lang("Hot Water Bag")
-            .register();
     public static final ItemEntry<CoalHandStove> hand_stove = REGISTRATE.item("hand_stove", CoalHandStove::new)
             .properties(p -> p.defaultDurability(10))
             .tag(FHTags.Items.CURIOS_HANDS.tag)

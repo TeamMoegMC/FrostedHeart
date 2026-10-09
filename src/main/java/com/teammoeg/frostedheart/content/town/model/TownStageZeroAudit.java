@@ -18,15 +18,6 @@
 
 package com.teammoeg.frostedheart.content.town.model;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
-import com.teammoeg.frostedheart.content.climate.block.generator.GeneratorFuelModel;
-import com.teammoeg.frostedheart.content.town.transport.TransportConsumerParameters;
-
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -44,6 +35,14 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import com.teammoeg.frostedheart.content.town.transport.TransportConsumerParameters;
 
 /** Reads current FH/TWR model sources and writes traceable parameter/algebra reports. */
 public final class TownStageZeroAudit {

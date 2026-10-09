@@ -1,9 +1,9 @@
 {
   "type": "frostedheart:state_transition",
+  "all_states": true,
   "block": {
     "Name": "minecraft:red_sand"
   },
-  "all_states": true,
   "capacity_j_per_k": 6600.0,
   "enthalpy_offset_j": 38000.0
 }

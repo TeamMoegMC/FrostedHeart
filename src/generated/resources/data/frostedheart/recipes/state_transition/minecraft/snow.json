@@ -1,12 +1,12 @@
 {
   "type": "frostedheart:state_transition",
+  "all_states": true,
   "block": {
+    "Name": "minecraft:snow",
     "Properties": {
       "layers": "1"
-    },
-    "Name": "minecraft:snow"
+    }
   },
-  "all_states": true,
   "capacity_j_per_k": 720.0,
   "heating": {
     "target": {

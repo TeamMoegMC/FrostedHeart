@@ -1,8 +1,8 @@
 package com.teammoeg.frostedheart.content.town.event;
 
-import net.minecraft.core.BlockPos;
-
 import java.util.EventObject;
+
+import net.minecraft.core.BlockPos;
 
 public class TownBuildingChangeEvent extends EventObject {
     public final BlockPos changedBuildingPos;

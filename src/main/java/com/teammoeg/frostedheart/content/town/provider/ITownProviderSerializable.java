@@ -1,16 +1,17 @@
 package com.teammoeg.frostedheart.content.town.provider;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.function.Supplier;
+
+import org.jetbrains.annotations.Nullable;
+
 import com.teammoeg.frostedheart.content.town.ITown;
 import com.teammoeg.frostedheart.content.town.TeamTown;
 
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
 import net.minecraftforge.common.util.INBTSerializable;
-import org.jetbrains.annotations.Nullable;
-
-import java.util.HashMap;
-import java.util.Map;
-import java.util.function.Supplier;
 
 public interface ITownProviderSerializable<T extends ITown> extends ITownProvider<T>, INBTSerializable<Tag> {
 

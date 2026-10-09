@@ -19,12 +19,13 @@
 
 package com.teammoeg.frostedheart.content.town.block;
 
-import com.teammoeg.frostedheart.content.town.building.AbstractTownBuilding;
-import com.teammoeg.frostedheart.content.town.building.ITownBuilding;
+import java.util.Optional;
+
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Optional;
+import com.teammoeg.frostedheart.content.town.building.AbstractTownBuilding;
+import com.teammoeg.frostedheart.content.town.building.ITownBuilding;
 
 /**
  * A town block's tile entity.

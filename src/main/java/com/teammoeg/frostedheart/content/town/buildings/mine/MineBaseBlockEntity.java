@@ -25,7 +25,6 @@ import org.jetbrains.annotations.Nullable;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlockEntityTypes;
 import com.teammoeg.frostedheart.content.town.TownMathFunctions;
 import com.teammoeg.frostedheart.content.town.block.AbstractTownBuildingBlockEntity;
-import com.teammoeg.frostedheart.content.town.block.OccupiedZoneInfo;
 import com.teammoeg.frostedheart.content.town.block.blockscanner.BlockScanner;
 import com.teammoeg.frostedheart.content.town.block.blockscanner.BlockScanner.RoomData;
 import com.teammoeg.frostedheart.content.town.building.AbstractTownBuilding;

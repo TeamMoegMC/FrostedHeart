@@ -10,9 +10,6 @@
 
 package com.teammoeg.frostedheart.content.town.model;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -23,6 +20,9 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 import java.util.SplittableRandom;
+
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 
 /** Monte Carlo runner and CSV/JSON report writer for stage 3. */
 public final class TownStageThreeSimulator {

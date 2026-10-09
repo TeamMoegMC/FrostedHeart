@@ -6,12 +6,13 @@
 
 package com.teammoeg.frostedheart.content.town.network;
 
-import com.teammoeg.frostedheart.content.town.observation.TownOperationalStatus;
-import com.teammoeg.frostedheart.content.town.observation.TownSignalEvent;
-import net.minecraft.network.FriendlyByteBuf;
-
 import java.util.ArrayList;
 import java.util.List;
+
+import com.teammoeg.frostedheart.content.town.observation.TownOperationalStatus;
+import com.teammoeg.frostedheart.content.town.observation.TownSignalEvent;
+
+import net.minecraft.network.FriendlyByteBuf;
 
 final class TownOperationalStatusPacketCodec {
     private TownOperationalStatusPacketCodec() {

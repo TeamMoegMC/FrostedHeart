@@ -6,16 +6,17 @@
 
 package com.teammoeg.frostedheart.content.town.network;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Supplier;
+
 import com.teammoeg.chorda.dataholders.team.CClientTeamDataManager;
 import com.teammoeg.chorda.network.CMessage;
 import com.teammoeg.frostedheart.bootstrap.common.FHSpecialDataTypes;
 import com.teammoeg.frostedheart.content.town.TownStaffingPlan;
+
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.network.NetworkEvent;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.function.Supplier;
 
 /** Lightweight authoritative replacement of the player-visible staffing plan. */
 public final class TownStaffingPlanUpdatePacket implements CMessage {

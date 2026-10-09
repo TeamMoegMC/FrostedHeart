@@ -19,16 +19,18 @@
 
 package com.teammoeg.frostedheart.content.town.resident;
 
+import org.jetbrains.annotations.NotNull;
+
 import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.content.town.network.WanderingRefugeeOpenTradeGUIMessage;
 import com.teammoeg.frostedheart.content.town.network.WanderingRefugeeRecruitMessage;
+
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
-import org.jetbrains.annotations.NotNull;
 @OnlyIn(Dist.CLIENT)
 public class WanderingRefugeeScreen extends Screen {
     private final WanderingRefugee refugee;

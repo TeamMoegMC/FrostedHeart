@@ -10,17 +10,18 @@
 
 package com.teammoeg.frostedheart.content.town.model;
 
-import com.teammoeg.frostedheart.content.climate.BlockTemperatureModel;
-import com.teammoeg.frostedheart.content.climate.block.generator.GeneratorHeatFieldModel;
-import com.teammoeg.frostedheart.content.climate.thermal.field.SphericalHeatFieldModel;
-import com.teammoeg.frostedheart.content.climate.gamedata.climate.ClimateEventModel;
-import com.teammoeg.frostedheart.content.climate.gamedata.climate.WorldClockSource;
-import com.teammoeg.frostedheart.content.town.TownMathFunctions;
-import com.teammoeg.frostedheart.content.town.buildings.hunting.HuntingDailyModel;
-import net.minecraft.util.RandomSource;
-
 import java.util.ArrayList;
 import java.util.List;
+
+import com.teammoeg.frostedheart.content.climate.BlockTemperatureModel;
+import com.teammoeg.frostedheart.content.climate.block.generator.GeneratorHeatFieldModel;
+import com.teammoeg.frostedheart.content.climate.gamedata.climate.ClimateEventModel;
+import com.teammoeg.frostedheart.content.climate.gamedata.climate.WorldClockSource;
+import com.teammoeg.frostedheart.content.climate.thermal.field.SphericalHeatFieldModel;
+import com.teammoeg.frostedheart.content.town.TownMathFunctions;
+import com.teammoeg.frostedheart.content.town.buildings.hunting.HuntingDailyModel;
+
+import net.minecraft.util.RandomSource;
 
 /** Shared stage-4 climate, T1 sphere, and building-temperature calculations. */
 public final class TownStageFourModel {

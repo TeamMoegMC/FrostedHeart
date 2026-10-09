@@ -19,16 +19,21 @@
 
 package com.teammoeg.frostedheart.content.town.network;
 
+import java.util.function.Supplier;
+
 import com.teammoeg.chorda.network.CMessage;
 import com.teammoeg.frostedheart.content.town.TeamTown;
-import com.teammoeg.frostedheart.content.town.resource.action.*;
 import com.teammoeg.frostedheart.content.town.buildings.warehouse.WarehouseMenu;
+import com.teammoeg.frostedheart.content.town.resource.action.IActionExecutorHandler;
+import com.teammoeg.frostedheart.content.town.resource.action.ResourceActionMode;
+import com.teammoeg.frostedheart.content.town.resource.action.ResourceActionType;
+import com.teammoeg.frostedheart.content.town.resource.action.TownResourceActionResults;
+import com.teammoeg.frostedheart.content.town.resource.action.TownResourceActions;
+
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.network.NetworkEvent;
-
-import java.util.function.Supplier;
 
 public class WarehouseInteractPacket implements CMessage {
 	public enum Action {

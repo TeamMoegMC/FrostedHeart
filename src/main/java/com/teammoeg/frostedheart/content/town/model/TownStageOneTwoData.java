@@ -10,14 +10,6 @@
 
 package com.teammoeg.frostedheart.content.town.model;
 
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
-import com.teammoeg.frostedheart.content.health.nutrition.FoodNutritionProfile;
-import com.teammoeg.frostedheart.content.town.resource.TownFoodProcessingModel;
-import com.teammoeg.frostedheart.content.town.resource.TownFoodResourceAmount;
-import com.teammoeg.frostedheart.content.town.resident.ResidentNutrition;
-
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -26,6 +18,14 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import com.teammoeg.frostedheart.content.health.nutrition.FoodNutritionProfile;
+import com.teammoeg.frostedheart.content.town.resident.ResidentNutrition;
+import com.teammoeg.frostedheart.content.town.resource.TownFoodProcessingModel;
+import com.teammoeg.frostedheart.content.town.resource.TownFoodResourceAmount;
 
 /** Current FH/TWR data inputs required by the stage-1/2 simulator. */
 public record TownStageOneTwoData(

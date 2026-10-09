@@ -19,18 +19,19 @@
 
 package com.teammoeg.frostedheart.content.town.network;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Supplier;
+
 import com.teammoeg.chorda.network.CMessage;
 import com.teammoeg.frostedheart.content.town.buildings.warehouse.SimpleItemKey;
 import com.teammoeg.frostedheart.content.town.buildings.warehouse.VirtualItemStack;
 import com.teammoeg.frostedheart.content.town.buildings.warehouse.WarehouseMenu;
+
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.network.NetworkEvent;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.function.Supplier;
 
 public class WarehouseUpdatePacket implements CMessage {
 	private final List<VirtualItemStack> resources;

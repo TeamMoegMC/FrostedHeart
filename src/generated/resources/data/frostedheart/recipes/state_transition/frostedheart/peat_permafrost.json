@@ -1,18 +1,18 @@
 {
   "type": "frostedheart:state_transition",
+  "all_states": true,
   "block": {
+    "Name": "frostedheart:peat_permafrost",
     "Properties": {
       "snowy": "false"
-    },
-    "Name": "frostedheart:peat_permafrost"
+    }
   },
-  "all_states": true,
   "capacity_j_per_k": 6600.0,
   "heating": {
+    "effect": "melting",
     "target": {
       "Name": "frostedheart:peat_block"
     },
-    "temperature_c": 9.0,
-    "effect": "melting"
+    "temperature_c": 9.0
   }
 }

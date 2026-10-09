@@ -18,14 +18,14 @@
 
 package com.teammoeg.frostedheart.content.town.model;
 
-import com.teammoeg.frostedheart.content.climate.block.generator.GeneratorFuelModel;
-import com.teammoeg.frostedheart.content.climate.block.generator.GeneratorHeatFieldModel;
-import com.teammoeg.frostedheart.content.town.resource.TownFoodResourceAmount;
-
 import java.util.List;
 import java.util.Map;
 import java.util.function.ToDoubleFunction;
 import java.util.stream.Collectors;
+
+import com.teammoeg.frostedheart.content.climate.block.generator.GeneratorFuelModel;
+import com.teammoeg.frostedheart.content.climate.block.generator.GeneratorHeatFieldModel;
+import com.teammoeg.frostedheart.content.town.resource.TownFoodResourceAmount;
 
 /** Pure algebraic audit required by stage 0 of docs/town/town-model.md. */
 public final class TownStageZeroModel {

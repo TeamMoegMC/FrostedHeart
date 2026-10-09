@@ -19,13 +19,27 @@
 
 package com.teammoeg.frostedheart.content.world;
 
+import java.util.List;
+import java.util.function.Function;
+
 import com.mojang.serialization.Codec;
 import com.teammoeg.caupona.blocks.plants.BushLogBlock;
 import com.teammoeg.caupona.worldgen.LeavingLogReplacer;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlocks;
 import com.teammoeg.frostedheart.content.agriculture.WildRubberDandelionBlock;
-import com.teammoeg.frostedheart.content.world.features.*;
+import com.teammoeg.frostedheart.content.world.features.FHFossilFeature;
+import com.teammoeg.frostedheart.content.world.features.FallenLogConfig;
+import com.teammoeg.frostedheart.content.world.features.FallenLogFeature;
+import com.teammoeg.frostedheart.content.world.features.HotdogFoliagePlacer;
+import com.teammoeg.frostedheart.content.world.features.ImprovedFreezeTopLayerFeature;
+import com.teammoeg.frostedheart.content.world.features.ImprovedIceSpikeFeature;
+import com.teammoeg.frostedheart.content.world.features.LayeredDiskConfiguration;
+import com.teammoeg.frostedheart.content.world.features.LayeredDiskFeature;
+import com.teammoeg.frostedheart.content.world.features.ShrubTreeConfig;
+import com.teammoeg.frostedheart.content.world.features.ShrubTreeFeature;
+import com.teammoeg.frostedheart.content.world.features.SpacecraftFeature;
+
 import net.minecraft.core.Holder;
 import net.minecraft.core.HolderGetter;
 import net.minecraft.core.registries.Registries;
@@ -38,8 +52,16 @@ import net.minecraft.util.valueproviders.ConstantInt;
 import net.minecraft.util.valueproviders.UniformInt;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.levelgen.feature.*;
-import net.minecraft.world.level.levelgen.feature.configurations.*;
+import net.minecraft.world.level.levelgen.feature.ConfiguredFeature;
+import net.minecraft.world.level.levelgen.feature.DiskFeature;
+import net.minecraft.world.level.levelgen.feature.Feature;
+import net.minecraft.world.level.levelgen.feature.FossilFeatureConfiguration;
+import net.minecraft.world.level.levelgen.feature.configurations.DiskConfiguration;
+import net.minecraft.world.level.levelgen.feature.configurations.FeatureConfiguration;
+import net.minecraft.world.level.levelgen.feature.configurations.NoneFeatureConfiguration;
+import net.minecraft.world.level.levelgen.feature.configurations.RandomPatchConfiguration;
+import net.minecraft.world.level.levelgen.feature.configurations.SimpleBlockConfiguration;
+import net.minecraft.world.level.levelgen.feature.configurations.TreeConfiguration;
 import net.minecraft.world.level.levelgen.feature.featuresize.TwoLayersFeatureSize;
 import net.minecraft.world.level.levelgen.feature.foliageplacers.FoliagePlacerType;
 import net.minecraft.world.level.levelgen.feature.stateproviders.BlockStateProvider;
@@ -53,9 +75,6 @@ import net.minecraft.world.level.levelgen.placement.RarityFilter;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.RegistryObject;
-
-import java.util.List;
-import java.util.function.Function;
 
 @SuppressWarnings("unused")
 public class FHFeatures {

@@ -21,6 +21,9 @@ package com.teammoeg.frostedheart.content.town.block;
 
 import java.util.Optional;
 
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
 import com.teammoeg.chorda.block.CBlockInterfaces;
 import com.teammoeg.chorda.block.entity.CBlockEntity;
 import com.teammoeg.chorda.block.entity.CTickableBlockEntity;
@@ -39,8 +42,6 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 public abstract class AbstractTownBuildingBlockEntity<T extends AbstractTownBuilding> extends CBlockEntity implements
         TownBlockEntity<T>, ScheduledTaskTileEntity, CBlockInterfaces.IActiveState, CTickableBlockEntity {

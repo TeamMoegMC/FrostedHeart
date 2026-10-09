@@ -10,12 +10,6 @@
 
 package com.teammoeg.frostedheart.content.town.model;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.teammoeg.frostedheart.content.town.buildings.hunting.HuntingDailyModel;
-import com.teammoeg.frostedheart.content.town.observation.TownObservationModel;
-import com.teammoeg.frostedheart.content.town.observation.TownSignalEvent;
-
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -26,6 +20,11 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 import java.util.SplittableRandom;
+
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.teammoeg.frostedheart.content.town.observation.TownObservationModel;
+import com.teammoeg.frostedheart.content.town.observation.TownSignalEvent;
 
 /** Stage-4 Monte Carlo runner coupling current climate/T1 geometry to stage 3. */
 public final class TownStageFourSimulator {

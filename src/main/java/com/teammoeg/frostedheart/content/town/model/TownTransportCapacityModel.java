@@ -10,9 +10,9 @@
 
 package com.teammoeg.frostedheart.content.town.model;
 
-import com.teammoeg.frostedheart.content.town.buildings.logistics.TransportStationDailyModel;
-
 import java.util.List;
+
+import com.teammoeg.frostedheart.content.town.buildings.logistics.TransportStationDailyModel;
 
 /** Forge-independent daily transport-capacity aggregation for a whole town. */
 public final class TownTransportCapacityModel {

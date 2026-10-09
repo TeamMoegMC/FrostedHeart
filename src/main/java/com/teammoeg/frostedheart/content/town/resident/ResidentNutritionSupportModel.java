@@ -6,12 +6,12 @@
 
 package com.teammoeg.frostedheart.content.town.resident;
 
-import com.mojang.serialization.Codec;
-import com.mojang.serialization.codecs.RecordCodecBuilder;
-
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
 
 /**
  * Pure formulas for resident nutrition satisfaction, support, recovery, and explanations.

@@ -6,14 +6,15 @@
 
 package com.teammoeg.frostedheart.content.town.network;
 
+import java.util.function.Supplier;
+
 import com.teammoeg.chorda.dataholders.team.CClientTeamDataManager;
 import com.teammoeg.chorda.network.CMessage;
 import com.teammoeg.frostedheart.bootstrap.common.FHSpecialDataTypes;
 import com.teammoeg.frostedheart.content.town.TownNamingModel;
+
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.network.NetworkEvent;
-
-import java.util.function.Supplier;
 
 /** Lightweight authoritative town-name update. */
 public class TownNameUpdatePacket implements CMessage {
