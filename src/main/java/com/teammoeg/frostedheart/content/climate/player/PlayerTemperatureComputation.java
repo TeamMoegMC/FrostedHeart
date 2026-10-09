@@ -18,6 +18,8 @@ import com.teammoeg.frostedheart.infrastructure.config.FHConfig;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.tags.FluidTags;
+import net.minecraft.util.Mth;
+import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraftforge.common.util.LazyOptional;
 
 import java.util.UUID;
@@ -148,7 +150,19 @@ public final class PlayerTemperatureComputation {
         data.applyThermalObservation(environmentTemperatureC, averageBodyPowerW,
                 sampledAirTemperatureC, sample.radiantFluxWPerM2(),
                 outdoorWindMPerS, localWindMPerS, canSeeSky);
-
+        double totalWeight=0;
+        for(BodyPart part:BodyPart.VALUES)
+        	totalWeight+=context.getWeight(part);
+        if(totalWeight>10) {
+        	int level=Mth.floor((totalWeight-10)/5);
+        	if (player.getEffect(FHMobEffects.HEAVY_LOAD.get()).getAmplifier()!=level) {
+        		player.removeEffectNoUpdate(FHMobEffects.HEAVY_LOAD.get());
+        	}
+        	if(!player.hasEffect(FHMobEffects.HEAVY_LOAD.get()))
+        		player.addEffect(new MobEffectInstance(FHMobEffects.HEAVY_LOAD.get(), -1, level));
+        }else if (player.hasEffect(FHMobEffects.HEAVY_LOAD.get())) {
+        	player.removeEffect(FHMobEffects.HEAVY_LOAD.get());
+        }
         // Resource costs follow applied regulation, not the original request.
         PlayerThermoregulation.consumeResources(
                 player, waterLevel, frozen, physiologicalSeconds, shiveringPowerW, sweatingAppliedW);
