@@ -52,6 +52,8 @@ public class DrawDeskScreen extends MenuPrimaryLayer<DrawDeskContainer> implemen
 	private final ResearchNavigationController navigation;
 	@Nullable
 	private ResearchArchiveLayer archive;
+    private com.teammoeg.frostedresearch.knowledge.client.KnowledgeLayer knowledge;
+    private boolean knowledgeOpen;
 	private final Map<AbstractWidget, WidgetState> hiddenExternalWidgets = new IdentityHashMap<>();
 
 	public DrawDeskScreen(DrawDeskContainer cx) {
@@ -69,6 +71,7 @@ public class DrawDeskScreen extends MenuPrimaryLayer<DrawDeskContainer> implemen
 	@Override
 	public void addChildUIElements() {
 		add(p);
+        if (knowledge != null) add(knowledge);
 		if (archive != null) {
 			add(archive);
 		}
@@ -108,6 +111,7 @@ public class DrawDeskScreen extends MenuPrimaryLayer<DrawDeskContainer> implemen
 	}
 
 	public void showTechTree() {
+        knowledgeOpen = false;
 		workspaceState.setSurface(ResearchWorkspaceState.Surface.RESEARCH_ARCHIVE);
 		ensureArchive();
 		applyWorkspaceSurface();
@@ -122,7 +126,54 @@ public class DrawDeskScreen extends MenuPrimaryLayer<DrawDeskContainer> implemen
 		refreshElements();
 	}
 
+    public void showKnowledge() {
+        if (knowledge == null) {
+            knowledge = new com.teammoeg.frostedresearch.knowledge.client.KnowledgeLayer(this, menu, () -> {
+                knowledgeOpen = false;
+                applyWorkspaceSurface();
+            }, this::applyWorkspaceSurface);
+            refreshElements();
+        }
+        knowledgeOpen = true;
+        applyWorkspaceSurface();
+        knowledge.opened();
+    }
+
+    public com.teammoeg.frostedresearch.knowledge.client.KnowledgeLayer getKnowledgeLayer() {
+        return knowledgeOpen ? knowledge : null;
+    }
+
+    private void resizeKnowledgeToWindow() {
+        int width = Math.min(660, Math.max(296, Minecraft.getInstance().getWindow().getGuiScaledWidth() - 24));
+        int height = Math.min(420, Math.max(210, Minecraft.getInstance().getWindow().getGuiScaledHeight() - 24));
+        if (knowledge.toolsOpen()) {
+            width = Math.min(440, width);
+            height = 210;
+        }
+        if (getWidth() != width || getHeight() != height) setSize(width, height);
+        knowledge.setPos(0, 0);
+        knowledge.resize(width, height);
+    }
 	private void applyWorkspaceSurface() {
+        if (knowledge != null) {
+            knowledge.setVisible(knowledgeOpen);
+            knowledge.setEnabled(knowledgeOpen);
+        }
+        if (knowledgeOpen) {
+            p.setVisible(false);
+            p.setEnabled(false);
+            if (archive != null) {
+                archive.setVisible(false);
+                archive.setEnabled(false);
+            }
+            menu.setSlotVisible(knowledge.toolsOpen());
+            // Knowledge copying needs paper and the examine slot; ink remains a legacy research tool.
+            if (knowledge.toolsOpen() && menu.slots.get(1) instanceof com.teammoeg.chorda.client.cui.menu.DeactivatableSlot slot)
+                slot.setActived(false);
+            resizeKnowledgeToWindow();
+            hideExternalWidgets();
+            return;
+        }
 		boolean showArchive = workspaceState.surface() == ResearchWorkspaceState.Surface.RESEARCH_ARCHIVE;
 		if (archive != null) {
 			archive.setVisible(showArchive);
@@ -159,11 +210,12 @@ public class DrawDeskScreen extends MenuPrimaryLayer<DrawDeskContainer> implemen
 
 	@Override
 	public void tick() {
-		if (workspaceState.surface() == ResearchWorkspaceState.Surface.RESEARCH_ARCHIVE) {
+        if (knowledgeOpen) resizeKnowledgeToWindow();
+        else if (workspaceState.surface() == ResearchWorkspaceState.Surface.RESEARCH_ARCHIVE) {
 			resizeArchiveToWindow();
 		}
 		super.tick();
-		if (workspaceState.surface() == ResearchWorkspaceState.Surface.RESEARCH_ARCHIVE) {
+        if (knowledgeOpen || workspaceState.surface() == ResearchWorkspaceState.Surface.RESEARCH_ARCHIVE) {
 			hideExternalWidgets();
 		}
 	}
@@ -201,6 +253,9 @@ public class DrawDeskScreen extends MenuPrimaryLayer<DrawDeskContainer> implemen
 		hiddenExternalWidgets.clear();
 	}
 
+    public static boolean isKnowledgeOpen() {
+        return Minecraft.getInstance().screen instanceof CUIScreen cui && cui.getPrimaryLayer() instanceof DrawDeskScreen desk && desk.knowledgeOpen;
+    }
 	/** Safe query used by the optional FTB sidebar render hook. */
 	public static boolean isResearchArchiveOpen() {
 		Screen current = Minecraft.getInstance().screen;
@@ -211,6 +266,13 @@ public class DrawDeskScreen extends MenuPrimaryLayer<DrawDeskContainer> implemen
 
 	@Override
 	public void back() {
+        if (knowledgeOpen) {
+            if (!knowledge.goBack()) {
+                knowledgeOpen = false;
+                applyWorkspaceSurface();
+            }
+            return;
+        }
 		if (navigation.back()) {
 			applyWorkspaceSurface();
 			return;
@@ -223,6 +285,10 @@ public class DrawDeskScreen extends MenuPrimaryLayer<DrawDeskContainer> implemen
 		if (super.onKeyPressed(keyCode, scanCode, modifier)) {
 			return true;
 		}
+        if (knowledgeOpen && CInputHelper.isEsc(keyCode)) {
+            back();
+            return true;
+        }
 		if (CInputHelper.isEsc(keyCode)
 				&& workspaceState.surface() == ResearchWorkspaceState.Surface.RESEARCH_ARCHIVE) {
 			if (navigation.back()) {

@@ -25,6 +25,7 @@ import com.teammoeg.frostedresearch.network.FHDrawingDeskOperationPacket;
 import com.teammoeg.frostedresearch.network.FHEffectProgressSyncPacket;
 import com.teammoeg.frostedresearch.network.FHEffectTriggerPacket;
 import com.teammoeg.frostedresearch.network.FHInsightSyncPacket;
+import com.teammoeg.frostedresearch.network.FHKnowledgeDataSyncPacket;
 import com.teammoeg.frostedresearch.network.FHResearchAttributeSyncPacket;
 import com.teammoeg.frostedresearch.network.FHResearchControlPacket;
 import com.teammoeg.frostedresearch.network.FHResearchDataSyncPacket;
@@ -43,11 +44,17 @@ public class FRNetwork extends CBaseNetwork {
 	@Override
 	public void registerMessages() {
 
+        registerMessage("knowledge_snapshot", com.teammoeg.frostedresearch.knowledge.network.KnowledgeSnapshotPacket.class);
+        registerMessage("knowledge_observe", com.teammoeg.frostedresearch.knowledge.observation.ObservationActionPacket.class);
+        registerMessage("knowledge_observation_state", com.teammoeg.frostedresearch.knowledge.observation.ObservationStatePacket.class);
+        registerMessage("knowledge_workbench_action", com.teammoeg.frostedresearch.knowledge.network.KnowledgeWorkbenchActionPacket.class);
+        registerMessage("knowledge_workbench_reply", com.teammoeg.frostedresearch.knowledge.network.KnowledgeWorkbenchReplyPacket.class);
         //Research Messages
         registerMessage("research_registry", FHResearchRegistrtySyncPacket.class);
         registerMessage("research_sync", FHResearchSyncPacket.class);
         registerMessage("research_sync_end", FHResearchSyncEndPacket.class);
         registerMessage("research_data", FHResearchDataSyncPacket.class);
+        registerMessage("knowledge_data", FHKnowledgeDataSyncPacket.class);
         registerMessage("research_data_update", FHResearchDataUpdatePacket.class);
         registerMessage("research_clue", FHS2CClueProgressSyncPacket.class);
         registerMessage("research_attribute", FHResearchAttributeSyncPacket.class);

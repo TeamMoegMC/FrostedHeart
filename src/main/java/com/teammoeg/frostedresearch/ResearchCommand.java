@@ -19,7 +19,10 @@
 
 package com.teammoeg.frostedresearch;
 
+import java.util.LinkedHashSet;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.CommandDispatcher;
@@ -27,22 +30,33 @@ import com.mojang.brigadier.arguments.BoolArgumentType;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
+import com.mojang.brigadier.context.CommandContext;
+import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import com.mojang.brigadier.suggestion.SuggestionProvider;
 import com.teammoeg.chorda.dataholders.team.AbstractTeam;
 import com.teammoeg.chorda.dataholders.team.CTeamDataManager;
 import com.teammoeg.chorda.dataholders.team.TeamDataClosure;
 import com.teammoeg.chorda.dataholders.team.TeamsAPI;
 import com.teammoeg.chorda.text.Components;
 import com.teammoeg.frostedresearch.api.ResearchDataAPI;
+import com.teammoeg.frostedresearch.api.TeamResearchService;
+import com.teammoeg.frostedresearch.data.TeamKnowledgeData;
 import com.teammoeg.frostedresearch.data.TeamResearchData;
+import com.teammoeg.frostedresearch.knowledge.ResearchResult;
+import com.teammoeg.frostedresearch.knowledge.ResearchResultCatalog;
 import com.teammoeg.frostedresearch.research.Research;
 
 import net.minecraft.ChatFormatting;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
+import net.minecraft.commands.arguments.EntityArgument;
 import net.minecraft.commands.arguments.NbtTagArgument;
+import net.minecraft.commands.arguments.ResourceLocationArgument;
 import net.minecraft.commands.arguments.UuidArgument;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.event.RegisterCommandsEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -228,6 +242,11 @@ public class ResearchCommand {
                             return Command.SINGLE_SUCCESS;
                         }))
                 )
+                // V2 results default to the command source's team.
+                .then(resultCommands(context -> context.getSource().getPlayerOrException()))
+                // An explicit online player targets that player's current team instead.
+                .then(Commands.argument("player", EntityArgument.player())
+                        .then(resultCommands(context -> EntityArgument.getPlayer(context, "player"))))
                 // Get Research Information:
                 // keyword: "info"
                 // then, get research information by name
@@ -293,5 +312,126 @@ public class ResearchCommand {
             dispatcher.register(Commands.literal("frostedheart").then(add));
             dispatcher.register(add);
         
+    }
+
+    private static LiteralArgumentBuilder<CommandSourceStack> resultCommands(ResultTarget target) {
+        SuggestionProvider<CommandSourceStack> suggestions = resultSuggestions(target);
+        return Commands.literal("result")
+                .then(Commands.literal("grant")
+                        .then(Commands.argument("result_id", ResourceLocationArgument.id())
+                                .suggests(suggestions)
+                                .executes(context -> {
+                                    ServerPlayer affected = target.resolve(context);
+                                    TeamResearchService.GrantResult result = TeamResearchService.grantResult(
+                                            affected, ResourceLocationArgument.getId(context, "result_id"));
+                                    if (!result.succeeded()) {
+                                        context.getSource().sendFailure(Components.str(
+                                                "Could not grant result " + result.resultId() + " for "
+                                                        + affected.getGameProfile().getName() + ": " + result.status())
+                                                .withStyle(ChatFormatting.RED));
+                                        return 0;
+                                    }
+                                    context.getSource().sendSuccess(() -> Components.str(
+                                            "Result " + result.resultId() + " for "
+                                                    + affected.getGameProfile().getName() + ": " + result.status())
+                                            .withStyle(ChatFormatting.GREEN), false);
+                                    return Command.SINGLE_SUCCESS;
+                                })))
+                .then(Commands.literal("revoke")
+                        .then(Commands.argument("result_id", ResourceLocationArgument.id())
+                                .suggests(suggestions)
+                                .executes(context -> {
+                                    ServerPlayer affected = target.resolve(context);
+                                    TeamResearchService.RevokeResult result = TeamResearchService.revokeResult(
+                                            affected, ResourceLocationArgument.getId(context, "result_id"));
+                                    if (!result.succeeded()) {
+                                        String suffix = result.status()
+                                                == TeamResearchService.Status.PHYSICAL_RESULT_NOT_REVOCABLE
+                                                ? " (remove physical prototype items directly)" : "";
+                                        context.getSource().sendFailure(Components.str(
+                                                "Could not revoke result " + result.resultId() + " for "
+                                                        + affected.getGameProfile().getName() + ": "
+                                                        + result.status() + suffix)
+                                                .withStyle(ChatFormatting.RED));
+                                        return 0;
+                                    }
+                                    context.getSource().sendSuccess(() -> Components.str(
+                                            "Result " + result.resultId() + " for "
+                                                    + affected.getGameProfile().getName() + ": " + result.status()
+                                                    + (result.revokedTypes().isEmpty() ? ""
+                                                            : " " + typeNames(result.revokedTypes())))
+                                            .withStyle(ChatFormatting.GREEN), false);
+                                    return Command.SINGLE_SUCCESS;
+                                })))
+                .then(Commands.literal("info")
+                        .then(Commands.argument("result_id", ResourceLocationArgument.id())
+                                .suggests(suggestions)
+                                .executes(context -> {
+                                    ServerPlayer affected = target.resolve(context);
+                                    TeamResearchService.ResultInfo info = TeamResearchService.resultInfo(
+                                            affected, ResourceLocationArgument.getId(context, "result_id"));
+                                    if (!info.exists()) {
+                                        context.getSource().sendFailure(Components.str(
+                                                "Unknown result " + info.resultId() + " for team " + info.teamId())
+                                                .withStyle(ChatFormatting.RED));
+                                        return 0;
+                                    }
+                                    context.getSource().sendSuccess(
+                                            () -> Components.str(describe(info)).withStyle(ChatFormatting.GREEN), false);
+                                    return Command.SINGLE_SUCCESS;
+                                })));
+    }
+
+    private static SuggestionProvider<CommandSourceStack> resultSuggestions(ResultTarget target) {
+        return (context, suggestions) -> {
+            Set<ResourceLocation> ids = new LinkedHashSet<>(ResearchResultCatalog.current().results().keySet());
+            TeamKnowledgeData data = com.teammoeg.frostedresearch.api.KnowledgeDataAPI
+                    .getData(target.resolve(context)).get();
+            ids.addAll(data.findingIds());
+            ids.addAll(data.designIds());
+            ids.addAll(data.constructionIds());
+            ids.addAll(data.procedureIds());
+            String remaining = suggestions.getRemaining();
+            ids.stream().map(ResourceLocation::toString).sorted()
+                    .filter(id -> id.startsWith(remaining)).forEach(suggestions::suggest);
+            return suggestions.buildFuture();
+        };
+    }
+
+    private static String describe(TeamResearchService.ResultInfo info) {
+        String acquired = info.acquiredTypes().isEmpty() ? "none" : typeNames(info.acquiredTypes());
+        if (info.definition().isEmpty()) {
+            return "Result " + info.resultId() + " team=" + info.teamId()
+                    + " catalogue=orphan acquired=" + acquired;
+        }
+        ResearchResult result = info.definition().get();
+        String payload;
+        if (result instanceof ResearchResult.Finding finding) {
+            payload = "views=" + finding.views();
+        } else if (result instanceof ResearchResult.Design design) {
+            payload = "recipes=" + design.recipes();
+        } else if (result instanceof ResearchResult.Construction construction) {
+            payload = "multiblocks=" + construction.multiblocks();
+        } else if (result instanceof ResearchResult.Procedure procedure) {
+            payload = "usable_blocks=" + procedure.usableBlocks();
+        } else if (result instanceof ResearchResult.Prototype prototype) {
+            payload = "profile=" + prototype.profile() + " profile_revision="
+                    + (info.profileRevision().isPresent() ? info.profileRevision().getAsInt() : "missing");
+        } else {
+            payload = "";
+        }
+        return "Result " + info.resultId() + " team=" + info.teamId()
+                + " topic=" + info.topicId().map(ResourceLocation::toString).orElse("missing")
+                + " type=" + result.type().token() + " acquired=" + acquired + " " + payload;
+    }
+
+    private static String typeNames(Set<ResearchResult.ResultType> types) {
+        return types.stream().map(ResearchResult.ResultType::token).sorted()
+                .collect(Collectors.joining(","));
+    }
+
+    @FunctionalInterface
+    private interface ResultTarget {
+        ServerPlayer resolve(CommandContext<CommandSourceStack> context) throws CommandSyntaxException;
     }
 }

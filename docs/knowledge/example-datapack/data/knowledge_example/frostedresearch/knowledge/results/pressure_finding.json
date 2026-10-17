@@ -1,0 +1,8 @@
+{
+  "title": "knowledge.knowledge_example.results.pressure_finding.title",
+  "body": "knowledge.knowledge_example.results.pressure_finding.body",
+  "result": {
+    "type": "finding",
+    "id": "knowledge_example:pressure_finding"
+  }
+}

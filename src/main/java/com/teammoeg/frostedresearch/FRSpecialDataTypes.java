@@ -20,6 +20,7 @@
 package com.teammoeg.frostedresearch;
 
 import com.teammoeg.chorda.dataholders.SpecialDataType;
+import com.teammoeg.frostedresearch.data.TeamKnowledgeData;
 import com.teammoeg.frostedresearch.data.TeamResearchData;
 
 public class FRSpecialDataTypes {
@@ -27,6 +28,8 @@ public class FRSpecialDataTypes {
 	private FRSpecialDataTypes() {
 	}
 	public static final SpecialDataType<TeamResearchData> RESEARCH_DATA=new SpecialDataType<>("research",TeamResearchData::new,TeamResearchData.CODEC);
+	public static final SpecialDataType<TeamKnowledgeData> KNOWLEDGE_DATA = new SpecialDataType<>(
+		"frostedresearch:knowledge", holder -> new TeamKnowledgeData(), TeamKnowledgeData.CODEC);
 	public static void init() {}
 
 }

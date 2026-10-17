@@ -1,0 +1,18 @@
+{
+  "inputs": [
+    {
+      "name": "heat",
+      "kind": "result",
+      "definition": "knowledge_example:heat_finding"
+    },
+    {
+      "name": "material",
+      "kind": "result",
+      "definition": "knowledge_example:material_finding"
+    }
+  ],
+  "output": "knowledge_example:heat_work",
+  "hints": [
+    "knowledge.knowledge_example.links.heat_work.hint"
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "title": "knowledge.knowledge_example.results.lever_procedure.title",
+  "body": "knowledge.knowledge_example.results.lever_procedure.body",
+  "result": {
+    "type": "procedure",
+    "id": "knowledge_example:lever_procedure",
+    "usable_blocks": [
+      "minecraft:lever"
+    ]
+  }
+}

@@ -1,0 +1,44 @@
+{
+  "format": 3,
+  "results": [
+    {
+      "type": "finding",
+      "id": "frostedresearch_test:smoke_finding",
+      "views": [
+        "frostedresearch_test:smoke_view"
+      ]
+    },
+    {
+      "type": "design",
+      "id": "frostedresearch_test:smoke_design",
+      "recipes": [
+        "minecraft:stick"
+      ]
+    },
+    {
+      "type": "construction",
+      "id": "frostedresearch_test:smoke_construction",
+      "multiblocks": [
+        "immersiveengineering:multiblocks/blast_furnace"
+      ]
+    },
+    {
+      "type": "procedure",
+      "id": "frostedresearch_test:smoke_procedure",
+      "usable_blocks": [
+        "minecraft:crafting_table"
+      ]
+    },
+    {
+      "type": "prototype",
+      "id": "frostedresearch_test:smoke_prototype",
+      "profile": "frostedresearch_test:smoke_profile"
+    }
+  ],
+  "rewards": [
+    {
+      "item": "minecraft:paper",
+      "count": 2
+    }
+  ]
+}

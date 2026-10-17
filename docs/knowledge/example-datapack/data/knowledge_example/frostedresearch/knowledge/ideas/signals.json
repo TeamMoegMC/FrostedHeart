@@ -1,0 +1,7 @@
+{
+  "title": "knowledge.knowledge_example.ideas.signals.title",
+  "body": "knowledge.knowledge_example.ideas.signals.body",
+  "projects": [
+    "knowledge_example:signal_paths"
+  ]
+}

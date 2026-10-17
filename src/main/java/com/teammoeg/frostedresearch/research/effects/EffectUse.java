@@ -109,4 +109,8 @@ public class EffectUse extends Effect {
     public void revoke(TeamResearchData team) {
         team.getUnlockList(ResearchHooks.BLOCK_UNLOCK_LIST).removeAll(blocks);
     }
+
+    public List<Block> getBlocks() {
+        return List.copyOf(blocks);
+    }
 }

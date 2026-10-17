@@ -1,0 +1,18 @@
+{
+  "inputs": [
+    {
+      "name": "heat",
+      "kind": "result",
+      "definition": "knowledge_example:metallurgy_finding"
+    },
+    {
+      "name": "structure",
+      "kind": "result",
+      "definition": "knowledge_example:climbing_finding"
+    }
+  ],
+  "output": "knowledge_example:materials",
+  "hints": [
+    "knowledge.knowledge_example.links.materials_revisited.hint"
+  ]
+}

@@ -23,15 +23,18 @@ import com.teammoeg.frostedresearch.ResearchHooks;
 
 import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.server.packs.resources.ResourceManagerReloadListener;
+import net.minecraft.world.item.crafting.RecipeManager;
 
 public class ServerReloadListener implements ResourceManagerReloadListener {
+	private final RecipeManager recipes;
 
-	public ServerReloadListener() {
+	public ServerReloadListener(RecipeManager recipes) {
+		this.recipes = recipes;
 	}
 
 	@Override
 	public void onResourceManagerReload(ResourceManager pResourceManager) {
-		ResearchHooks.ServerReload();
+		ResearchHooks.ServerReload(pResourceManager, recipes);
 	}
 
 }

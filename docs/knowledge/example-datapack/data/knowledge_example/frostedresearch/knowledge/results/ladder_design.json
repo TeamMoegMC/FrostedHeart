@@ -1,0 +1,11 @@
+{
+  "title": "knowledge.knowledge_example.results.ladder_design.title",
+  "body": "knowledge.knowledge_example.results.ladder_design.body",
+  "result": {
+    "type": "design",
+    "id": "knowledge_example:ladder_design",
+    "recipes": [
+      "minecraft:ladder"
+    ]
+  }
+}

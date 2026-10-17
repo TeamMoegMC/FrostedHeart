@@ -1,0 +1,11 @@
+{
+  "title": "knowledge.knowledge_example.results.furnace_procedure.title",
+  "body": "knowledge.knowledge_example.results.furnace_procedure.body",
+  "result": {
+    "type": "procedure",
+    "id": "knowledge_example:furnace_procedure",
+    "usable_blocks": [
+      "minecraft:furnace"
+    ]
+  }
+}

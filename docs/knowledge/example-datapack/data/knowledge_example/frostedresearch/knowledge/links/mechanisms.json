@@ -1,0 +1,18 @@
+{
+  "inputs": [
+    {
+      "name": "material",
+      "kind": "result",
+      "definition": "knowledge_example:material_finding"
+    },
+    {
+      "name": "button",
+      "kind": "result",
+      "definition": "knowledge_example:oak_button_design"
+    }
+  ],
+  "output": "knowledge_example:mechanisms",
+  "hints": [
+    "knowledge.knowledge_example.links.mechanisms.hint"
+  ]
+}

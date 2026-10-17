@@ -1,0 +1,7 @@
+{
+  "title": "knowledge.knowledge_example.ideas.ignition.title",
+  "body": "knowledge.knowledge_example.ideas.ignition.body",
+  "projects": [
+    "knowledge_example:fire_control"
+  ]
+}

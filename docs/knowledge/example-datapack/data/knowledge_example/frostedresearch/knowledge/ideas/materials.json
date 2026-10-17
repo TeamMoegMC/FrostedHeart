@@ -1,0 +1,9 @@
+{
+  "title": "knowledge.knowledge_example.ideas.materials.title",
+  "body": "knowledge.knowledge_example.ideas.materials.body",
+  "understanding": [],
+  "projects": [
+    "knowledge_example:material_record"
+  ],
+  "enabled": true
+}

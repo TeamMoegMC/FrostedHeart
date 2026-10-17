@@ -1,0 +1,18 @@
+{
+  "inputs": [
+    {
+      "name": "signal",
+      "kind": "result",
+      "definition": "knowledge_example:signal_finding"
+    },
+    {
+      "name": "heat",
+      "kind": "result",
+      "definition": "knowledge_example:metallurgy_finding"
+    }
+  ],
+  "output": "knowledge_example:automation",
+  "hints": [
+    "knowledge.knowledge_example.links.automation.hint"
+  ]
+}

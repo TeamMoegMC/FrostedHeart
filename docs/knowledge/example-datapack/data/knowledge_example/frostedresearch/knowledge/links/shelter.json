@@ -1,0 +1,18 @@
+{
+  "inputs": [
+    {
+      "name": "load",
+      "kind": "result",
+      "definition": "knowledge_example:pressure_finding"
+    },
+    {
+      "name": "material",
+      "kind": "result",
+      "definition": "knowledge_example:material_finding"
+    }
+  ],
+  "output": "knowledge_example:shelter",
+  "hints": [
+    "knowledge.knowledge_example.links.shelter.hint"
+  ]
+}

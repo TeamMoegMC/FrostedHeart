@@ -7,7 +7,11 @@
 
 ## Current Player Surface
 
-`DrawDeskScreen` keeps two mounted CUI layers. In drawing-desk mode, its root remains `387 x 203`; `DrawDeskLayer` owns the drawing game, help, progress summary, item examination action, and inventory slots. In archive mode, `DrawDeskScreen#resizeArchiveToWindow` expands the root to the scaled window minus a `12` pixel margin and hides container slots without moving them.
+`DrawDeskScreen` keeps independent drawing-desk and research archive CUI layers, plus the lazily
+created [knowledge journal layer](../knowledge/workbench.md). In drawing-desk mode, its root remains `387 x 203`;
+`DrawDeskLayer` owns the drawing game, help, progress summary, item examination action, and inventory slots. In archive
+mode, `DrawDeskScreen#resizeArchiveToWindow` expands the root to the scaled window minus a `12` pixel margin and hides
+container slots without moving them.
 
 `ResearchArchiveLayer` is the active player-facing archive. It contains:
 
@@ -25,7 +29,11 @@ At archive widths of at least `620`, the index/summary widths are `142/176`; bel
 
 Graph zoom is clamped to `0.15-1.75`. Node bounds scale directly with zoom instead of retaining a `54 x 24` pixel floor. `fitToVisible` measures the actual projected node bounds, computes the largest scale that fits both axes inside a `24` screen-pixel viewport margin, and clamps it to the same zoom limits. Node content is never disabled by a zoom threshold: research icons retain a `4` pixel minimum and names retain a `0.25` text-scale minimum.
 
-While the archive is active, `DrawDeskScreen` temporarily makes native `AbstractWidget` children inactive and invisible, suppressing their normal input. FTB's `SidebarGroupGuiButton` overrides the native render path and ignores `visible/active`, so an optional `@Pseudo` client mixin cancels that render override while the archive is open. No FTB group collection is removed, cached, or restored; closing the archive naturally reveals FTB's current state, including changes made during a resource reload.
+While the archive is active, `DrawDeskScreen` temporarily makes native `AbstractWidget` children inactive and invisible,
+suppressing their normal input. FTB's `SidebarGroupGuiButton` overrides the native render path and ignores
+`visible/active`, so an optional `@Pseudo` client mixin cancels that render override while the archive or knowledge
+journal is open. No FTB group collection is removed, cached, or restored; closing the archive naturally reveals FTB's
+current state, including changes made during a resource reload.
 
 ## Progress And Completion
 

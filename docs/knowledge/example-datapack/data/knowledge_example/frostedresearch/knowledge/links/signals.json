@@ -1,0 +1,18 @@
+{
+  "inputs": [
+    {
+      "name": "switch",
+      "kind": "result",
+      "definition": "knowledge_example:lever_procedure"
+    },
+    {
+      "name": "load",
+      "kind": "result",
+      "definition": "knowledge_example:pressure_finding"
+    }
+  ],
+  "output": "knowledge_example:signals",
+  "hints": [
+    "knowledge.knowledge_example.links.signals.hint"
+  ]
+}

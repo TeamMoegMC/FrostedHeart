@@ -1,0 +1,11 @@
+{
+  "title": "knowledge.knowledge_example.results.pressure_plate_design.title",
+  "body": "knowledge.knowledge_example.results.pressure_plate_design.body",
+  "result": {
+    "type": "design",
+    "id": "knowledge_example:pressure_plate_design",
+    "recipes": [
+      "minecraft:oak_pressure_plate"
+    ]
+  }
+}

@@ -1,13 +1,17 @@
 # Research System Architecture
 
 - Status: `Current`
-- Last verified: `2026-08-23`
-- Scope: Runtime ownership, subsystem boundaries, lifecycle, and the shortest path through the implementation
-- Code anchors: [`FRMain`](../../src/main/java/com/teammoeg/frostedresearch/FRMain.java), [`FRContents`](../../src/main/java/com/teammoeg/frostedresearch/FRContents.java), [`FRSpecialDataTypes`](../../src/main/java/com/teammoeg/frostedresearch/FRSpecialDataTypes.java), [`FHResearch`](../../src/main/java/com/teammoeg/frostedresearch/FHResearch.java), [`ResearchCatalog`](../../src/main/java/com/teammoeg/frostedresearch/ResearchCatalog.java), [`FHRegistry`](../../src/main/java/com/teammoeg/frostedresearch/FHRegistry.java), [`ResearchCommonEvents`](../../src/main/java/com/teammoeg/frostedresearch/handler/ResearchCommonEvents.java), [`ResearchHooks`](../../src/main/java/com/teammoeg/frostedresearch/ResearchHooks.java), [`ResearchDataAPI`](../../src/main/java/com/teammoeg/frostedresearch/api/ResearchDataAPI.java)
+- Last verified: `2026-09-08` (knowledge integration verified against source)
+- Scope: Runtime ownership, legacy progression, knowledge/result access integration, lifecycle, and the shortest path
+  through the implementation
+- Code anchors: [`FRSpecialDataTypes`](../../src/main/java/com/teammoeg/frostedresearch/FRSpecialDataTypes.java), [`FHResearch`](../../src/main/java/com/teammoeg/frostedresearch/FHResearch.java), [`ResearchResultCatalog`](../../src/main/java/com/teammoeg/frostedresearch/knowledge/ResearchResultCatalog.java), [`TeamResearchData`](../../src/main/java/com/teammoeg/frostedresearch/data/TeamResearchData.java), [`TeamKnowledgeData`](../../src/main/java/com/teammoeg/frostedresearch/data/TeamKnowledgeData.java), [`TechnologyAccessResolver`](../../src/main/java/com/teammoeg/frostedresearch/knowledge/TechnologyAccessResolver.java), [`ResearchHooks`](../../src/main/java/com/teammoeg/frostedresearch/ResearchHooks.java)
 
 ## One-Sentence Model
 
-A server transactionally validates file-based `Research` definitions, installs them under stable string identities, and lets Chorda store one versioned `TeamResearchData` value per team; gameplay hooks mutate that authority, effects derive unlock caches and attributes, and bounded string-keyed packets atomically mirror definitions and team state to the client UI.
+A server retains the legacy `Research` graph and its `TeamResearchData`, alongside the independent knowledge archive and
+inbox. `TeamKnowledgeData` now extends `KnowledgeState`; `KnowledgeService` owns learning and forgetting, and
+`TechnologyAccessResolver` combines active result knowledge with legacy effects in the existing default-open projection.
+The complete knowledge model and lifecycle live in [Knowledge](../knowledge/README.md).
 
 ## Ownership Layers
 
@@ -28,11 +32,15 @@ flowchart LR
 
 There are three different kinds of data. Keeping them separate is the most important architectural rule:
 
-| Layer | Owner | Examples | Persistence |
-|---|---|---|---|
-| Definition | `FHResearch.researches` | parents, clues, effects, costs, flags, migration aliases | JSON in server `config/fhresearches`; old name-to-slot snapshot remains only for legacy active-ID migration |
-| Authoritative progress | team `TeamResearchData` | string-keyed active project, long committed points, nonce-keyed clues/effects, insight, variants | versioned Chorda team NBT |
-| Derived/cache/client state | unlock lists, graph layout, `ResearchWorkspaceState` | locked recipe sets, UI selection, camera, search, bookmarks | rebuilt or transient; not durable team truth |
+| Layer                      | Owner                                                | Examples                                                                                           | Persistence                                                                                                 |
+|----------------------------|------------------------------------------------------|----------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------|
+| Definition                 | `FHResearch.researches`                              | parents, clues, effects, costs, flags, migration aliases                                           | JSON in server `config/fhresearches`; old name-to-slot snapshot remains only for legacy active-ID migration |
+| Authoritative progress     | team `TeamResearchData`                              | string-keyed active project, long committed points, nonce-keyed clues/effects, insight, variants   | versioned Chorda team NBT                                                                                   |
+| Derived/cache/client state | unlock lists, graph layout, `ResearchWorkspaceState` | locked recipe sets, UI selection, camera, search, bookmarks                                        | rebuilt or transient; not durable team truth                                                                |
+| V2 result definitions      | `ResearchResultCatalog.Snapshot`                     | topic ownership, five typed results, prototype profile revision, managed targets                   | effective datapack JSON; immutable in memory with monotonic revision                                        |
+| Knowledge team authority   | team `TeamKnowledgeData` / `KnowledgeState`          | observation, idea, and result archive; inbox; actual links, research/acquisition history and hints | schema-2 Chorda team NBT, component ID unchanged                                                            |
+| Knowledge projection       | `KnowledgeProjection`, `TechnologyAccessProjection`  | active finding views and access decisions with provenance                                          | rebuilt and sent in a full S2C snapshot; not durable truth                                                  |
+| Physical prototype shell   | `upgrade_prototype` ItemStack                        | profile, frozen revision, serial, owner team                                                       | namespaced item NBT; separate from the idempotent Prototype result knowledge                                |
 
 The client must not invent a second progression model. It reads a synchronized Chorda team mirror through `ClientResearchDataAPI` and sends intent packets for server validation.
 
@@ -42,6 +50,8 @@ The client must not invent a second progression model. It reads a synchronized C
 
 - `FRContents`: drawing desk content, research items, recipe serializers, menu, sounds, and Create-backed calculator content;
 - `FRSpecialDataTypes.RESEARCH_DATA`: Chorda's `SpecialDataType<TeamResearchData>` with local ID `research`;
+- `FRSpecialDataTypes.KNOWLEDGE_DATA`: independent `SpecialDataType<TeamKnowledgeData>` with ID `frostedresearch:knowledge`;
+- `frostedresearch:upgrade_prototype`: non-stackable physical shell, intentionally absent from the normal creative tab;
 - server configuration and common/client event handlers;
 - the `FRNetwork` message channel during common setup;
 - compatibility modules selected by loaded-mod checks.
@@ -58,19 +68,20 @@ Important registry IDs include:
 
 ## Package Map
 
-| Package | Responsibility | Start with |
-|---|---|---|
-| `research` | transactional catalogue loading, string identity, definition graph, lock lists | `ResearchCatalog`, `FHResearch`, `Research` |
-| `research.clues` | polymorphic prerequisites and contribution triggers | `Clue`, `ListenerClue`, concrete clue classes |
-| `research.effects` | polymorphic rewards and derived unlock state | `Effect`, concrete effect classes |
-| `data` | team/project state, formulas, persistence codecs, public enum tokens | `TeamResearchData`, `ResearchData`, `ClueData`, `ResearchVariant` |
-| `network` | definition, full-state, delta-state, and player-intent messages | `FRNetwork`, packet classes |
-| `handler` and `events` | Forge lifecycle, trigger routing, locks, reload and team events | `FHServerEvents`, `ResearchCommonEvents`, `ResearchHooks` |
-| `blocks`, `item`, `recipe` | drawing desk, calculator, tools, paper/inspiration recipes | `DrawingDeskTileEntity`, `MechanicalCalculatorTileEntity`, `RubbingTool` |
-| `gui` | drawing-desk screen, archive, graph, project workspace | `DrawDeskScreen`, `ResearchArchiveLayer` |
-| `api` | team-data lookup and client/server helper boundary | `ResearchDataAPI`, `ClientResearchDataAPI` |
-| `compat` | JEI, FTB Quests/Teams, Tetra, Create and IE integration | each compat package |
-| `number` | unfinished/unused number-resource abstraction | do not assume it drives current progression |
+| Package                    | Responsibility                                                                                                     | Start with                                                                                                                         |
+|----------------------------|--------------------------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------|
+| `research`                 | transactional catalogue loading, string identity, definition graph, lock lists                                     | `ResearchCatalog`, `FHResearch`, `Research`                                                                                        |
+| `research.clues`           | polymorphic prerequisites and contribution triggers                                                                | `Clue`, `ListenerClue`, concrete clue classes                                                                                      |
+| `research.effects`         | polymorphic rewards and derived unlock state                                                                       | `Effect`, concrete effect classes                                                                                                  |
+| `data`                     | team/project state, formulas, persistence codecs, public enum tokens                                               | `TeamResearchData`, `ResearchData`, `ClueData`, `ResearchVariant`                                                                  |
+| `knowledge`                | observations, definitions, links, team state, service/events, knowledge UI/notes, plus existing result projections | `KnowledgeService`, `KnowledgeState`, `KnowledgeDefinitions`, `TechnologyAccessResolver`; [knowledge docs](../knowledge/README.md) |
+| `network`                  | definition, full-state, delta-state, and player-intent messages                                                    | `FRNetwork`, packet classes                                                                                                        |
+| `handler` and `events`     | Forge lifecycle, trigger routing, locks, reload and team events                                                    | `FHServerEvents`, `ResearchCommonEvents`, `ResearchHooks`                                                                          |
+| `blocks`, `item`, `recipe` | drawing desk, calculator, tools, paper/inspiration recipes                                                         | `DrawingDeskTileEntity`, `MechanicalCalculatorTileEntity`, `RubbingTool`                                                           |
+| `gui`                      | drawing-desk screen, archive, graph, project workspace                                                             | `DrawDeskScreen`, `ResearchArchiveLayer`                                                                                           |
+| `api`                      | team-data lookup, mutation service and client/server helper boundary                                               | `ResearchDataAPI`, `KnowledgeDataAPI`, `TeamResearchService`                                                                       |
+| `compat`                   | JEI, FTB Quests/Teams, Tetra, Create and IE integration                                                            | each compat package                                                                                                                |
+| `number`                   | unfinished/unused number-resource abstraction                                                                      | do not assume it drives current progression                                                                                        |
 
 ## Server Lifecycle
 
@@ -99,7 +110,12 @@ sequenceDiagram
     Chorda->>Team: save team NBT
 ```
 
-Research JSON is deliberately outside the vanilla datapack resource tree. `/reload` still rereads it because `ResearchHooks.ServerReload` participates in the server resource reload lifecycle; this does not make it a datapack format. The companion pack is the sole production catalogue source. A missing, empty, undecodable, or invalid catalogue aborts startup. Before creating an integrated-server thread, `MinecraftResearchCatalogPreflightMixin` runs the same full catalogue load; failure closes the pending `WorldStem` and level lock and opens a localized error screen while logging every diagnostic. The server repeats validation as the authority, including on dedicated servers. During `/reload`, the same failure keeps the last valid catalogue, listeners, and team state untouched.
+Legacy research JSON remains outside the vanilla datapack resource tree. The existing `ResearchResultCatalog` continues
+reading `data/<namespace>/frostedresearch/topics/<path>.json` and `.../prototypes/<path>.json`; an empty directory is
+valid and a rejected candidate leaves the previous snapshot available. The independent `KnowledgeDefinitions` loader
+reads `data/<namespace>/frostedresearch/knowledge/` for ideas, results, links, retrieval rules, project references, and
+initial knowledge. See [knowledge documentation](../knowledge/README.md) for those contracts. The companion pack remains
+the production source of the playable legacy research catalogue.
 
 ## Runtime Control Flow
 
@@ -135,4 +151,8 @@ Supported extension points are narrower than the package structure may suggest:
 - declare new research JSON in server configuration and translations in resource assets;
 - add enforcement for a new game system by using global lock lists plus team unlock lists, or by consuming a variant.
 
-There is no current datapack loader for research definitions, stable public immutable progress DTO, or general-purpose `Requirement` hierarchy. The implemented migration layer handles research/clue/effect renames declared through `legacyIds` plus the old integer active selection; it is not an arbitrary data-fixer framework. Tetra's `ResearchRequirement` remains a compatibility adapter, not the core model.
+The independent knowledge system does not replace the playable legacy research graph or supply the deferred
+calculation/evidence/experiment execution model. Its project definitions and actual research-history API connect ideas
+to produced results. The compatibility topic loader still compiles `format`, `presentation`, `results`, ordinary
+rewards, and prototype identity/revision; additional project-workflow fields in that format have no runtime meaning.
+See [results-and-access.md](results-and-access.md) and [Knowledge](../knowledge/README.md).

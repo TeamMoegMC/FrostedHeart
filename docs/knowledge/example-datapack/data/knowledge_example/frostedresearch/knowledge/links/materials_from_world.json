@@ -1,0 +1,42 @@
+{
+  "inputs": [
+    {
+      "name": "log",
+      "kind": "observation",
+      "observation_type": "block",
+      "conditions": [
+        {
+          "field": "object",
+          "operator": "eq",
+          "value": {
+            "state": "known",
+            "type": "string",
+            "text": "minecraft:oak_log"
+          }
+        }
+      ]
+    },
+    {
+      "name": "paper",
+      "kind": "observation",
+      "observation_type": "item",
+      "conditions": [
+        {
+          "field": "object",
+          "operator": "eq",
+          "value": {
+            "state": "known",
+            "type": "string",
+            "text": "minecraft:paper"
+          }
+        }
+      ]
+    }
+  ],
+  "conditions": [],
+  "output": "knowledge_example:materials",
+  "hints": [
+    "knowledge.knowledge_example.links.materials_from_world.hint.1",
+    "knowledge.knowledge_example.links.materials_from_world.hint.2"
+  ]
+}

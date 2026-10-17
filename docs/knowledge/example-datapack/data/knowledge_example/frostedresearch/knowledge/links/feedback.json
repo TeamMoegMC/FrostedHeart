@@ -1,0 +1,18 @@
+{
+  "inputs": [
+    {
+      "name": "signal",
+      "kind": "result",
+      "definition": "knowledge_example:signal_finding"
+    },
+    {
+      "name": "switch",
+      "kind": "result",
+      "definition": "knowledge_example:lever_design"
+    }
+  ],
+  "output": "knowledge_example:feedback",
+  "hints": [
+    "knowledge.knowledge_example.links.feedback.hint"
+  ]
+}

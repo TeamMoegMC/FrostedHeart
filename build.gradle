@@ -131,7 +131,7 @@ minecraft {
             property 'mixin.env.remapRefMap', 'true'
             property 'mixin.env.refMapRemappingFile', "${buildDir}/createSrgToMcp/output.srg"
             property 'forge.enabledGameTestNamespaces',
-                    providers.gradleProperty('gameTestNamespaces').getOrElse('frostedresearch,frostedheart')
+                    providers.gradleProperty('gameTestNamespaces').getOrElse('frostedresearch,frostedheart,frostedresearch_knowledge_login')
             property 'forge.logging.console.level', 'info'
             arg "-mixin.config=frostedheart.mixins.json"
             arg "-mixin.config=frostedresearch.mixins.json"

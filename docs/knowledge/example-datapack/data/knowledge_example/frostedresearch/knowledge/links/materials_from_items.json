@@ -1,0 +1,42 @@
+{
+  "inputs": [
+    {
+      "name": "paper",
+      "kind": "observation",
+      "observation_type": "item",
+      "conditions": [
+        {
+          "field": "object",
+          "operator": "eq",
+          "value": {
+            "state": "known",
+            "type": "string",
+            "text": "minecraft:paper"
+          }
+        }
+      ]
+    },
+    {
+      "name": "stick",
+      "kind": "observation",
+      "observation_type": "item",
+      "conditions": [
+        {
+          "field": "object",
+          "operator": "eq",
+          "value": {
+            "state": "known",
+            "type": "string",
+            "text": "minecraft:stick"
+          }
+        }
+      ]
+    }
+  ],
+  "conditions": [],
+  "output": "knowledge_example:materials",
+  "hints": [
+    "knowledge.knowledge_example.links.materials_from_items.hint.1",
+    "knowledge.knowledge_example.links.materials_from_items.hint.2"
+  ]
+}

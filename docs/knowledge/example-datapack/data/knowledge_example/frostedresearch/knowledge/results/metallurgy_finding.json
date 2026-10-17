@@ -1,0 +1,8 @@
+{
+  "title": "knowledge.knowledge_example.results.metallurgy_finding.title",
+  "body": "knowledge.knowledge_example.results.metallurgy_finding.body",
+  "result": {
+    "type": "finding",
+    "id": "knowledge_example:metallurgy_finding"
+  }
+}
