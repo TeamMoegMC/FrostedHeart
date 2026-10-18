@@ -1,9 +1,9 @@
 # Climate Data And Lifecycle
 
 - Status: `Transitional; material lifecycle integration is under validation`
-- Last verified: `2026-09-15`
+- Last verified: `2026-10-18`（本轮核对并更新相变温度入口；其他条目沿用原验证范围）
 - Scope: recipe/configuration ownership, capabilities, server lifecycle, thermal runtime integration, and network boundaries
-- Primary code anchors: `FHRecipeCachingReloadListener`, `WorldTemperature`, `MinecraftThermalEvents`, `MinecraftThermalInput`, `ThermalWorkerPool`, `LevelChunkSectionMixin_ThermalInput`, `FHCapabilities`, `FHNetwork`
+- Primary code anchors: `FHRecipeCachingReloadListener`, `WorldTemperature`, `MinecraftThermalEvents`, `MinecraftThermalInput`, `MinecraftPhaseController.temperature`, `ThermalWorkerPool`, `LevelChunkSectionMixin_ThermalInput`, `FHCapabilities`, `FHNetwork`
 
 源码、已加载数据包和服务端配置是最终权威；本文只记录当前接入顺序。新 thermal runtime 的 Page、source、solver 和 query 细节见 [thermal-runtime-architecture-and-optimization.md](thermal-runtime-architecture-and-optimization.md)。
 
@@ -295,6 +295,9 @@ replacement/mass changes whose target still has material; removal does not query
 `StateTransitionData.hasRandomTransitions`使水不增加方块随机资格，也不在其他方块
 开启的Section中进入通用相变抽样；重载资格变化比较使用同一判断。独立水温/目标算法没有恢复。
 地表积雪/降水与岩浆原生点火继续执行。无记录相变使用编译边做环境平衡近似。
+薄冰热裂与裂纹修复通过 `MinecraftPhaseController.temperature` 读取相同的材料温度：
+活动/休眠本体优先，确实无记录时共用原位环境回退；归属未发布或记录不匹配时等待。
+其每级 1/4 相变预算与部分进度见 [thin-ice.md](thin-ice.md)。
 `DEFERRED`只拦截旧温度转换，保留非相变随机行为；`CHANGED`才终止旧状态的后续回调。
 不另建轮询、候选位图或定时任务。`StateTransitionData.updateCache`在随机资格改变时，
 只于重载边界重算包含相关状态的已加载Section计数。单纯加载、但不参与原随机更新的区域

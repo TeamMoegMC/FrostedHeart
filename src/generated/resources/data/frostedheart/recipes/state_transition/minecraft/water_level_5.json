@@ -11,6 +11,7 @@
     "target": {
       "Name": "frostedheart:layered_thin_ice",
       "Properties": {
+        "crack": "0",
         "layers": "3"
       }
     },

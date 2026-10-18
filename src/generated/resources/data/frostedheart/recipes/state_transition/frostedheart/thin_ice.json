@@ -2,7 +2,10 @@
   "type": "frostedheart:state_transition",
   "all_states": true,
   "block": {
-    "Name": "frostedheart:thin_ice"
+    "Name": "frostedheart:thin_ice",
+    "Properties": {
+      "crack": "0"
+    }
   },
   "capacity_j_per_k": 5400.0,
   "cooling": {

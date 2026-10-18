@@ -193,7 +193,7 @@ public class FHBlocks {
                     .isRedstoneConductor(FHBlocks::never))
             .tag(BlockTags.ICE, BlockTags.SNOW_LAYER_CANNOT_SURVIVE_ON)
             .tag(BlockTags.MINEABLE_WITH_PICKAXE)
-            .blockstate(FHBlockStateGen.simpleCubeAllRandom("thin_ice", 5, true))
+            .blockstate(FHBlockStateGen.thinIce(false))
             .lang("Thin Ice Block")
             .loot((lt, block) -> lt.add(block, lt.createSingleItemTableWithSilkTouch(block, FHItems.ICE_CHIP.get(), ConstantValue.exactly(4))))
             .item()
@@ -385,8 +385,7 @@ public class FHBlocks {
             .tag(BlockTags.ICE)
             .tag(BlockTags.OVERWORLD_CARVER_REPLACEABLES)
             .loot((lt, block) -> lt.add(block, FHLootGen.buildSnowLootTable(block, THIN_ICE_BLOCK.get(), FHItems.ICE_CHIP.get())))
-            .blockstate(FHBlockStateGen.layeredRandom("layered_thin_ice", "thin_ice",
-                    "thin_ice", 5, 8, true))
+            .blockstate(FHBlockStateGen.thinIce(true))
             .item()
             .model(FHBlockStateGen.itemModelLayeredTranslucent("layered_thin_ice", "thin_ice_1"))
             .build()

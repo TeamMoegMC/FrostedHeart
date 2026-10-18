@@ -67,6 +67,7 @@
     "minecraft.temperature.CauldronBlockMixin",
     "minecraft.temperature.ChickenMixin",
     "minecraft.temperature.CowMixin",
+    "minecraft.temperature.EntityMixin_ThinIceLanding",
     "minecraft.temperature.IceBlockMixin_Melt",
     "minecraft.temperature.LevelChunkMixin_DormantThermal",
     "minecraft.temperature.LevelChunkSectionMixin_ThermalInput",

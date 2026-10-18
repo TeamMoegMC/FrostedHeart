@@ -404,7 +404,7 @@ public final class ThermalMaterialBehaviorGameTests {
         helper.succeed();
     }
 
-    static MaterialSectionState storedBrick(GameTestHelper helper, BlockPos material, double temperatureC) {
+    public static MaterialSectionState storedBrick(GameTestHelper helper, BlockPos material, double temperatureC) {
         BlockPos start = new BlockPos(material.getX() & ~3, material.getY() & ~3, material.getZ() & ~3);
         try (Simulation simulation = new Simulation(helper, start, 4, 4, 4, 0)) {
             int slot = simulation.slot(material);

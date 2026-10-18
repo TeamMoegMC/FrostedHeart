@@ -9,7 +9,10 @@
   "capacity_j_per_k": 6600.0,
   "cooling": {
     "target": {
-      "Name": "frostedheart:thin_ice"
+      "Name": "frostedheart:thin_ice",
+      "Properties": {
+        "crack": "0"
+      }
     },
     "temperature_c": -5.0,
     "world_conditions": {

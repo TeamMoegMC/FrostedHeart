@@ -33,7 +33,7 @@ import java.util.ArrayDeque;
 
 /** Main-thread application and acknowledgement of worker phase requests. */
 public final class MinecraftPhaseController {
-    // Both callers run on the main thread and finish reading before modifying the world.
+    // Phase readers run on the main thread and finish reading before modifying the world.
     private static final MaterialSample MATERIAL_SAMPLE = new MaterialSample();
 
     public enum PhaseAttempt {
@@ -75,6 +75,32 @@ public final class MinecraftPhaseController {
 
     private static final ThreadLocal<Mutation> APPLYING = new ThreadLocal<>();
 
+    /**
+     * Temperature used by material phase gameplay. A live or dormant body wins over
+     * its environment. Only a genuinely missing body uses the random-phase fallback;
+     * an unpublished owner or a mismatched checkpoint waits for the next observation.
+     */
+    public static double temperature(ServerLevel level, BlockPos position) {
+        if (MinecraftThermalInput.sampleMaterial(level, position, MATERIAL_SAMPLE))
+            return MATERIAL_SAMPLE.temperatureC();
+        var chunk = level.getChunkSource().getChunkNow(position.getX() >> 4, position.getZ() >> 4);
+        if (chunk == null || level.isOutsideBuildHeight(position)) return Double.NaN;
+        var section = chunk.getSection(chunk.getSectionIndex(position.getY()));
+        int block = (position.getX() & 15) | (position.getZ() & 15) << 4 | (position.getY() & 15) << 8;
+        var owner = ((MinecraftThermalSectionAttachment) (Object) section).frostedheart$getThermalInputOwner();
+        if (owner != null && owner.ownsMaterialPosition(block)) return Double.NaN;
+        var stored = ((MinecraftThermalChunkAttachment) (Object) chunk).frostedheart$getDormantThermalState();
+        if (stored != null && stored.readMaterial(position.getY() >> 4, block,
+                Block.BLOCK_STATE_REGISTRY.getId(level.getBlockState(position)), MATERIAL_SAMPLE)
+                != DormantChunkThermalState.MaterialRead.MISSING) return Double.NaN;
+        return environmentTemperature(level, position);
+    }
+
+    private static double environmentTemperature(ServerLevel level, BlockPos position) {
+        return MinecraftThermalInput.gameplayPassiveEnvironment(
+                level, position, WorldTemperature.naturalBlock(level, position));
+    }
+
     /** Main-thread random updates share the same ownership and phase rules as worker commits. */
     public static PhaseAttempt tryAtRandomTick(
             ServerLevel level, LevelChunk chunk, BlockPos position, BlockState state) {
@@ -112,9 +138,7 @@ public final class MinecraftPhaseController {
                         : stored.readMaterial(
                                 sectionY, block, Block.BLOCK_STATE_REGISTRY.getId(state), sample);
         if (read == DormantChunkThermalState.MaterialRead.MISSING) {
-            double natural = WorldTemperature.naturalBlock(level, position);
-            double temperature =
-                    MinecraftThermalInput.gameplayPassiveEnvironment(level, position, natural);
+            double temperature = environmentTemperature(level, position);
             var edge =
                     law.heating() != null && temperature >= law.heating().transitionTemperatureC()
                             ? law.heating()

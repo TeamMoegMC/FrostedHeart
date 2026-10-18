@@ -1,0 +1,29 @@
+{
+  "elements": [
+    {
+      "faces": {
+        "up": {
+          "texture": "#crack",
+          "forge_data": {
+            "color": "66ffffff"
+          }
+        }
+      },
+      "from": [
+        0,
+        14.01,
+        0
+      ],
+      "to": [
+        16,
+        14.01,
+        16
+      ]
+    }
+  ],
+  "render_type": "minecraft:translucent",
+  "textures": {
+    "crack": "minecraft:block/destroy_stage_5",
+    "particle": "frostedheart:block/thin_ice_1"
+  }
+}
