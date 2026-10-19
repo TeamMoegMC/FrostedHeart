@@ -98,10 +98,13 @@ public final class KnowledgeCommands {
             context.getSource().sendFailure(Component.translatable("knowledge.frostedresearch.command.project_needs_idea"));
             return 0;
         }
-        UUID run = service.state().research().values().stream()
-                .filter(record -> !record.completed() && record.project().equals(project) && record.idea().equals(origin))
-                .map(com.teammoeg.frostedresearch.knowledge.state.ResearchHistory::id).findFirst()
-                .orElseGet(() -> service.startResearch(project, origin).orElseThrow());
+        // A team has one open run per project; reuse it whatever idea began it.
+        UUID run = service.openRun(project).map(com.teammoeg.frostedresearch.knowledge.state.ResearchHistory::id)
+                .orElseGet(() -> service.startResearch(project, origin).orElse(null));
+        if (run == null) {
+            context.getSource().sendFailure(Component.translatable("knowledge.frostedresearch.command.project_unavailable"));
+            return 0;
+        }
         var results = service.completeResearch(run);
         Component title = Component.translatableWithFallback(definition.title(), definition.title());
         context.getSource().sendSuccess(() -> Component.translatable("knowledge.frostedresearch.command.project_completed", title), false);

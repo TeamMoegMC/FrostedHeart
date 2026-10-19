@@ -39,6 +39,7 @@ public final class KnowledgeScreen {
     }
 
     public static KnowledgeLayer current() {
-        return Minecraft.getInstance().screen instanceof CUIScreen cui && cui.getPrimaryLayer() instanceof DrawDeskScreen desk ? desk.getKnowledgeLayer() : null;
+        Minecraft minecraft = Minecraft.getInstance();
+        return minecraft != null && minecraft.screen instanceof CUIScreen cui && cui.getPrimaryLayer() instanceof DrawDeskScreen desk ? desk.getKnowledgeLayer() : null;
     }
 }

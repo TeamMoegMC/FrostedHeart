@@ -49,10 +49,22 @@ public record LinkRule(List<Slot> inputs, List<CrossCondition> conditions, Resou
         this(inputs, conditions, output, List.of());
     }
 
+    public SlotPattern pattern() {
+        return new SlotPattern(inputs, conditions);
+    }
+
     public List<String> validate() {
         List<String> errors = new ArrayList<>();
         if (inputs.size() < 2 || inputs.size() > 5) errors.add("Link rules require 2 to 5 input slots");
         if (conditions.size() > 5) errors.add("Link rules allow at most 5 cross conditions");
+        validateBindings(inputs, conditions, errors);
+        return errors;
+    }
+
+    /**
+     * Slot names, slot conditions and cross conditions, shared with research evidence. Returns the slots by name.
+     */
+    public static Map<String, Slot> validateBindings(List<Slot> inputs, List<CrossCondition> conditions, List<String> errors) {
         Map<String, Slot> names = new LinkedHashMap<>();
         for (Slot slot : inputs) {
             if (slot.name.isBlank() || names.putIfAbsent(slot.name, slot) != null)
@@ -60,7 +72,7 @@ public record LinkRule(List<Slot> inputs, List<CrossCondition> conditions, Resou
             slot.validate(errors);
         }
         for (CrossCondition condition : conditions) condition.validate(names, errors);
-        return errors;
+        return names;
     }
 
     public record Slot(String name, KnowledgeKey.Kind kind, Optional<ResourceLocation> definition,

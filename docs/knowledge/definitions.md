@@ -2,13 +2,14 @@
 
 - Status: `Current`
 - Last verified: `2026-09-08`
-- Scope: 知识身份、不可变观察、独立想法/成果定义、项目关系、物品检索规则、服务端联络匹配及观察用途判定。
+- Scope: 知识身份、不可变观察、独立想法/成果定义、项目关系与研究需求、物品检索规则、服务端联络匹配及观察用途判定。
 - Code anchors: [
   `KnowledgeElement`](../../src/main/java/com/teammoeg/frostedresearch/knowledge/model/KnowledgeElement.java)、[
   `Observation`](../../src/main/java/com/teammoeg/frostedresearch/knowledge/model/Observation.java)、[
   `KnowledgeDefinitions`](../../src/main/java/com/teammoeg/frostedresearch/knowledge/definition/KnowledgeDefinitions.java)、[
   `LinkRule`](../../src/main/java/com/teammoeg/frostedresearch/knowledge/link/LinkRule.java)、[
-  `LinkMatcher`](../../src/main/java/com/teammoeg/frostedresearch/knowledge/link/LinkMatcher.java)。
+  `LinkMatcher`](../../src/main/java/com/teammoeg/frostedresearch/knowledge/link/LinkMatcher.java)、[
+  `ProjectRequirement`](../../src/main/java/com/teammoeg/frostedresearch/knowledge/definition/ProjectRequirement.java)。
 
 ## 身份与观察快照
 
@@ -101,8 +102,47 @@
 `finding`、`design`、`construction`、`procedure`、`prototype` 五类结构，嵌入的 `id` 必须等于资源路径标识。它不需要嵌在旧
 research topic 内。类型效果结构见 [成果与权限](../research/results-and-access.md)。
 
-项目定义只声明知识图谱关系，例如 `{"title":"knowledge.example.tracking","results":["example:bird_map"]}`
-。每个项目至少声明一项存在的成果。它不实现计算、证据和实验的执行玩法。
+项目定义声明成果关系和研究需求：
+
+```json
+{
+  "title": "knowledge.example.tracking",
+  "body": "knowledge.example.tracking.body",
+  "results": ["example:bird_map"],
+  "requirements": [
+    {
+      "id": "two_sites",
+      "type": "evidence",
+      "title": "knowledge.example.tracking.two_sites",
+      "inputs": [
+        {"name": "a", "kind": "observation", "observation_type": "entity",
+         "conditions": [{"field": "object", "operator": "tag", "tag": "example:birds"}]},
+        {"name": "b", "kind": "observation", "observation_type": "entity",
+         "conditions": [{"field": "object", "operator": "tag", "tag": "example:birds"}]}
+      ],
+      "conditions": [{"kind": "distance", "left": "a", "right": "b", "operator": "gte", "value": 1000}],
+      "distinct": [{"field": "biome", "slots": ["a", "b"]}]
+    },
+    {"id": "tabulate", "type": "calculation", "level": 1, "count": 2}
+  ]
+}
+```
+
+`title`、`body` 默认为空；`results` 必填，至少一项且必须存在；`requirements` 默认为空。没有需求的项目只能由研究系统接口或开发指令完成，
+玩家在研究页无法开始它。
+
+每项需求的 `id` 在项目内唯一，是进度身份：增删一项需求不会让其他需求的进度错位。`type` 取：
+
+| 类型            | 字段                                                    | 含义与校验                                                                                       |
+|---------------|-------------------------------------------------------|---------------------------------------------------------------------------------------------|
+| `evidence`    | `title`（必填）、`inputs`、`conditions`、`distinct`          | 提交一组观察，一份记录占一个槽位。`inputs` 为 1–8 个观察槽位，写法同联络规则；`conditions` 最多 10 条跨条件；不使用 `level`/`count` |
+| `calculation` | `title`（可选）、`level`（0–3，默认 0）、`count`（1–16，默认 1） | 在绘图台赢下 `count` 局难度不低于 `level` 的纸牌局；不读取观察                                                   |
+
+`distinct` 中每组的 `field` 必须是已知观察字段，`slots` 至少列出两个不同的已有槽位，表示这些槽位在该字段上两两不同；校验时展开为两两
+`ne` 比较，因此未知或不适用的值同样不满足。证据需求的条件不进入客户端快照，玩家看到的是作者撰写的 `title`，所以证据需求必须提供它。
+
+需求与项目字段使用严格可选字段：字段存在但无法解码时报告错误，而不是静默回落到默认值。进度规则见
+[状态与 API](state-and-api.md#实际联络与研究历史)。
 
 `initial` 文件内容直接是知识身份数组，例如 `[{"kind":"idea","id":"example:seasons"}]`；所有文件合并并按身份去重，由队伍初始化入口授予。
 
@@ -201,7 +241,8 @@ NBT。未列出的数据不会进入这次观察，物品本身不被消耗。
 
 ## 当前用途、差异与重载
 
-`Snapshot.hasObservationUse` 判断观察能否匹配任何已注册规则的局部输入，或外部 `ObservationUse`。不要求队伍已拥有完整组合。
+`Snapshot.hasObservationUse` 判断观察能否匹配任何已注册用途的局部输入：含观察槽位的联络规则、所有项目的证据需求槽位，或外部
+`ObservationUse`。不要求队伍已拥有完整组合。证据需求与联络规则一样参与 `addsObservationDifference`，同一需求中的重复槽位会保留所需数量的独立记录。
 
 `addsObservationDifference` 先排除相同原始 UUID；对不同 UUID
 比较所有当前输入条件的匹配结果，以及跨条件所读取字段的准确值，并保留同规则重复槽位需要的独立记录数。位置、时间、原始观察者或记录身份被跨条件使用时，相关差异会被保留。

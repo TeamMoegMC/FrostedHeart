@@ -190,7 +190,7 @@ class MainGamePanel extends UILayer {
 			DrawDeskIcons.DIALOG_FRAME.draw(matrixStack, x + 7, y + 53, 137, 52);
 			status.render(matrixStack, x + status.getX(), y + status.getY(), status.getWidth(), status.getHeight(), hint);
 		}
-		if (ResearchHooks.fetchGameLevel() == -1) {
+		if (ResearchHooks.fetchGameLevel() == -1 && !ot.dd.getTile().hasCalculation()) {
 			if (lstatus != 4) {
 				status.setText(Lang.translateGui("minigame.no_clue"));
 				status.setPosAndSize(22, 54, 108, 50);

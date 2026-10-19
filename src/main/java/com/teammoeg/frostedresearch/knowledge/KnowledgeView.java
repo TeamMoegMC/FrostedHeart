@@ -21,6 +21,9 @@
 package com.teammoeg.frostedresearch.knowledge;
 
 import com.teammoeg.frostedresearch.knowledge.definition.KnowledgeDefinitions;
+import com.teammoeg.frostedresearch.knowledge.definition.ProjectRequirement;
+import com.teammoeg.frostedresearch.knowledge.link.LinkMatcher;
+import com.teammoeg.frostedresearch.knowledge.link.TagLookup;
 import com.teammoeg.frostedresearch.knowledge.model.*;
 import com.teammoeg.frostedresearch.knowledge.state.*;
 import net.minecraft.nbt.*;
@@ -70,6 +73,7 @@ public final class KnowledgeView {
         });
         view.put("hints", hints);
         ListTag research = new ListTag();
+        List<KnowledgeElement> pool = service.evidencePool();
         service.state().research().values().forEach(record -> {
             CompoundTag tag = new CompoundTag();
             tag.putString("id", record.id().toString());
@@ -80,6 +84,13 @@ public final class KnowledgeView {
             tag.putLong("time", record.time());
             tag.putBoolean("completed", record.completed());
             tag.put("results", KnowledgeState.encode(KnowledgeKey.CODEC.listOf(), record.results()));
+            tag.putString("status", record.open() ? "open" : record.completed() ? "completed" : "abandoned");
+            if (record.open()) {
+                ListTag requirements = new ListTag();
+                for (ProjectRequirement requirement : service.requirements(record))
+                    requirements.add(progress(service, record, requirement, pool));
+                tag.put("requirements", requirements);
+            }
             research.add(tag);
         });
         view.put("research", research);
@@ -104,6 +115,15 @@ public final class KnowledgeView {
             project.put("ideas", KnowledgeState.encode(KnowledgeKey.CODEC.listOf(), origins));
             project.putBoolean("active", origins.stream().anyMatch(service::isActive));
             project.putBoolean("completed", completedProjects.contains(id));
+            project.putString("body", definition.body());
+            ListTag requirements = new ListTag();
+            definition.requirements().forEach(requirement -> requirements.add(requirement(requirement)));
+            project.put("requirements", requirements);
+            KnowledgeKey origin = origins.stream().filter(key -> service.researchStartStatus(id, key) == KnowledgeService.Status.LEARNABLE)
+                    .min(Comparator.comparing(KnowledgeKey::id)).orElse(origins.stream().filter(service::isActive).findFirst().orElse(null));
+            if (origin != null) project.put("origin", KnowledgeState.encode(KnowledgeKey.CODEC, origin));
+            project.putString("start_status", service.researchStartStatus(id, origin).name());
+            service.openRun(id).ifPresent(run -> project.putString("open_run", run.id().toString()));
             ListTag outputs = new ListTag();
             for (var result : definition.results()) {
                 KnowledgeElement element = service.describe(KnowledgeKey.result(result));
@@ -126,6 +146,40 @@ public final class KnowledgeView {
         });
         view.put("acquisitions", history);
         return view;
+    }
+
+    private static CompoundTag requirement(ProjectRequirement requirement) {
+        CompoundTag tag = new CompoundTag();
+        tag.putString("id", requirement.id());
+        tag.putString("type", requirement.type().name().toLowerCase(Locale.ROOT));
+        tag.putString("title", requirement.title());
+        tag.putInt("level", requirement.level());
+        tag.putInt("count", requirement.count());
+        return tag;
+    }
+
+    /**
+     * Progress under the current definition. Unsatisfied evidence also reports how many of the team's records fit
+     * each slot and whether a full binding can be found now, so the page can say what is still missing.
+     */
+    private static CompoundTag progress(KnowledgeService service, ResearchHistory run, ProjectRequirement requirement,
+                                        List<KnowledgeElement> pool) {
+        CompoundTag tag = requirement(requirement);
+        boolean met = service.requirementMet(run, requirement);
+        tag.putBoolean("satisfied", met);
+        if (requirement.type() == ProjectRequirement.Type.CALCULATION) {
+            tag.putInt("done", Math.min(requirement.count(), KnowledgeService.calculationsDone(run, requirement)));
+        } else if (met) {
+            tag.put("bound", KnowledgeState.encode(KnowledgeKey.CODEC.listOf(),
+                    run.evidence().get(requirement.id()).values().stream().map(Observation::key).sorted(Comparator.comparing(KnowledgeKey::id)).toList()));
+        } else {
+            ListTag slots = new ListTag();
+            for (var slot : requirement.inputs())
+                slots.add(IntTag.valueOf((int) Math.min(99, pool.stream().filter(element -> slot.matches(element, TagLookup.SERVER)).count())));
+            tag.put("slots", slots);
+            tag.putBoolean("ready", LinkMatcher.find(pool, requirement.pattern(), TagLookup.SERVER, KnowledgeService.EVIDENCE_SEARCH_STEPS).isPresent());
+        }
+        return tag;
     }
 
     private static boolean activeLink(KnowledgeService service, LinkDiscovery link) {

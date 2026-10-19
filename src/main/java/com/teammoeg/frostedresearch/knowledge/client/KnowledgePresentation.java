@@ -70,6 +70,7 @@ public final class KnowledgePresentation {
             case "DAILY_LIMIT" -> "rest";
             case "NO_MATCH", "NO_HINT" -> "no_match";
             case "NOT_FOUND" -> "missing";
+            case "REQUIREMENTS_UNMET" -> "requirements";
             default -> "unchanged";
         });
     }

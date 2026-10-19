@@ -136,10 +136,31 @@ codec 错误而不是异常。`ObservationSampling` 把非有限的坐标与温�
 
 每队每条规则默认只保存首次成功绑定。同一想法经不同规则产生会增加替代路径；同一规则反复尝试不会无限追加历史。外部学习不创建本队未执行的联络。
 
-`startResearch(project, idea)` 要求实际起源想法有效且声明可以启动该项目，返回本次启动 UUID。`completeResearch(run)`
-使用项目定义的成果集合；带显式列表的重载要求与声明集合相符，不能用任意输出替代项目定义。每个启动记录只有一个实际起源想法，完成重复调用不会重新产出。获得成果失败时保留来件，研究关系仍属于实际历史。
+### 研究启动记录
 
-这些是研究系统接入接口。本轮没有实现新研究的计算、证据、实验执行器，也没有把旧研究项目强行映射成新项目；新研究任务、居民工作时间、实验设施和原型数值升级属于设计文档明确后续展开的部分。
+`ResearchHistory` 是一次启动：实际起源想法、启动时间、`completed` / `abandoned` 状态、完成时的成果，以及按需求 `id` 保存的进度——
+`calculations` 记录每局获胜的难度，`evidence` 记录每个槽位提交的观察副本。空进度不写入存档；进度存在但无法解码时整条启动记录按
+[无法解码的条目](#无法解码的条目) 隔离，不会以丢失证据的样子加载。
+
+| 方法                                                     | 行为                                                                                                        |
+|--------------------------------------------------------|-----------------------------------------------------------------------------------------------------------|
+| `researchStartStatus(project, idea)`                   | 返回 `LEARNABLE` 或不能开始的原因：定义不存在、想法无效或未声明该项目、已有进行中的启动（`ACTIVE`）、已完成且全部成果都在档案中（`ALREADY_OWNED`）                |
+| `startResearch(project, idea)`                         | 状态为 `LEARNABLE` 时记录新启动并返回 UUID。每队每个项目同时最多一次进行中的启动；完成后只有当某项成果不在档案中（例如被忘记）才能再次启动                         |
+| `openRun(project)`                                     | 该项目进行中的启动                                                                                                 |
+| `submitEvidence(run, requirement)`                     | 在档案与来件的全部观察中寻找一组满足该证据需求的互异记录，并保存其副本。搜索至多尝试 `EVIDENCE_SEARCH_STEPS = 20000` 个候选，找不到返回 `NO_MATCH`         |
+| `submitEvidence(run, requirement, keys)`               | 按给定记录精确绑定，每个槽位一份                                                                                          |
+| `calculationLevel(run, requirement)`                   | 该计算需求仍需要的纸牌局难度；已满足或启动已结束时为空                                                                               |
+| `recordCalculation(run, requirement, level)`           | 记录一局胜利；难度低于要求返回 `INVALID_INPUT`，已满足返回 `ALREADY_OWNED`                                                     |
+| `requirementMet(run, requirement)` / `requirementsMet(run)` | 按当前定义重新判断。没有需求的项目对 `requirementsMet` 永远不成立                                                              |
+| `finishResearch(run)`                                  | 玩家路径：全部需求满足时调用 `completeResearch`，否则返回 `REQUIREMENTS_UNMET`                                                  |
+| `abandonResearch(run)`                                 | 结束进行中的启动，清空已提交进度；记录保留为已放弃，脉络历史视图可见                                                                        |
+| `completeResearch(run)`                                | 研究系统接口与开发指令使用，不检查需求。使用项目定义的成果集合；带显式列表的重载要求与声明集合相符                                                         |
+
+进度每次按当前定义判断：证据副本必须仍能完整绑定当前槽位与条件，计算只计难度不低于当前 `level` 的胜局。作者修改需求后，玩家可能需要重新提交。
+证据可以来自档案或来件，提交不消耗观察；之后删除来件或忘记档案条目不影响已提交的副本。同一观察可以用于不同项目，同一需求内各槽位必须是不同记录。
+
+每个启动记录只有一个实际起源想法，完成重复调用不会重新产出。获得成果失败时保留来件，研究关系仍属于实际历史。实验需求、居民参与与原型数值升级尚未实现，
+见 [研究项目执行计划](../../plans/2026-10-18_23-42-16_knowledge-research-project-execution.md)。
 
 ## 梦境、讨论与暗示
 
@@ -220,6 +241,6 @@ NBT 大小限制截断。绘图台回复只携带本次操作结果与联络候�
 用命令字符串参数，必要时加双引号。指令生成历史观察由 `Observation` API 明确提供内容和 `command_generated`
 来源，不会使用一个缺乏历史内容的裸 UUID 伪造观察。
 
-`research complete` 是权限等级 2 的临时开发命令，只跳过未实现的研究任务。它要求队伍拥有实际起源想法，并调用
-`startResearch` / `completeResearch`
-，不会把研究项目当作新的知识元素或直接伪造成果权限。示例操作见 [playthrough.md](playthrough.md)。
+`research complete` 是权限等级 2 的开发命令，跳过项目需求。它沿用该项目进行中的启动；没有时要求队伍拥有能启动它的起源想法，再调用
+`startResearch` / `completeResearch`，不会把研究项目当作新的知识元素或直接伪造成果权限。项目已完成且成果都在档案中时提示无法开始。示例操作见
+[playthrough.md](playthrough.md)。

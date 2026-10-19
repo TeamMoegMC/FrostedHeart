@@ -1,7 +1,35 @@
 {
   "title": "knowledge.knowledge_example.projects.material_record.title",
+  "body": "knowledge.knowledge_example.projects.material_record.body",
   "results": [
     "knowledge_example:material_finding",
     "knowledge_example:oak_button_design"
+  ],
+  "requirements": [
+    {
+      "id": "log",
+      "type": "evidence",
+      "title": "knowledge.knowledge_example.projects.material_record.log",
+      "inputs": [
+        {
+          "name": "log",
+          "kind": "observation",
+          "observation_type": "block",
+          "conditions": [
+            {
+              "field": "object",
+              "operator": "tag",
+              "tag": "minecraft:logs"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "tabulate",
+      "type": "calculation",
+      "level": 0,
+      "count": 1
+    }
   ]
 }

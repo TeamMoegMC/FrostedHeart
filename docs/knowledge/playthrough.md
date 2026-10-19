@@ -2,7 +2,7 @@
 
 - Status: `Current`
 - Last verified: `2026-09-08`
-- Scope: 开发测试用知识联络、项目完成、图谱分支/回环与成果效果
+- Scope: 开发测试用知识联络、研究页上的项目执行与完成、图谱分支/回环与成果效果
 - Code anchors: [`example-datapack`](example-datapack/README.md)、[
   `KnowledgeCommands`](../../src/main/java/com/teammoeg/frostedresearch/knowledge/KnowledgeCommands.java)、[
   `KnowledgeService`](../../src/main/java/com/teammoeg/frostedresearch/knowledge/KnowledgeService.java)、[
@@ -14,17 +14,26 @@
 
 在抄录台检视纸和木棍，把两份观察记入档案，然后联络，得到「纸页与木棍」想法。也可以长按观察键记录放置的橡木原木，再与纸的物品观察联络。
 
-「脉络」现在会显示已经公开的「材料比较」项目；未开始时与想法之间是虚线。管理员执行：
+「脉络」现在会显示已经公开的「材料比较」项目；未开始时与想法之间是虚线。打开「研究」书签选中它，点「开始研究」。它有两项需求：
+
+1. **观察一段原木**：长按观察键记录任意原木方块（`#minecraft:logs`）并收入来件。若走的是橡木原木路线，档案里已有这份记录。点「整理证据」。
+2. **演算**：在绘图台放入研究用纸（`minecraft:paper` 或石质压力板）和笔（炭笔即可，难度 0），点「开始演算」，在游戏区赢一局。
+
+两项都标为 ● 后点「完成研究」，得到 `material_finding`（材料札记）与 `oak_button_design`（木制按钮）。项目与实际成果连接进入图谱，项目标为完成。
+管理员仍可用下面的开发指令跳过需求：
 
 ```text
 /knowledge research complete knowledge_example:material_record
 ```
 
-得到 `material_finding`（材料札记）与 `oak_button_design`（木制按钮）。项目与实际成果连接进入图谱，项目标为完成。
-
 ## 分支与汇合
 
-下表省略 `knowledge_example:` 前缀。每次先在档案中选择输入进行联络，得到想法，再使用对应完整项目 ID 执行完成指令。
+下表省略 `knowledge_example:` 前缀。每次先在档案中选择输入进行联络，得到想法，再完成对应项目。只有两个项目带需求，在研究页完成：
+
+- `basic_switch`：两局难度 1 的演算，需要羽毛笔与墨水，以及 `minecraft:paper`。
+- `lattice`：在两种不同生物群系各观察一段原木，「整理证据」会自动挑出两处不同群系的记录。
+
+其余项目没有需求，研究页显示暂无可做步骤，用完整项目 ID 执行完成指令。
 
 | 联络输入                                     | 想法                  | 完成项目               | 获得成果                                             |
 |------------------------------------------|---------------------|--------------------|--------------------------------------------------|

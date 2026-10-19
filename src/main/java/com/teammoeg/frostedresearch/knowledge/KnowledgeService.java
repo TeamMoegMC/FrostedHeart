@@ -26,8 +26,10 @@ import com.teammoeg.frostedresearch.FRSpecialDataTypes;
 import com.teammoeg.frostedresearch.api.KnowledgeDataAPI;
 import com.teammoeg.frostedresearch.api.TeamResearchService;
 import com.teammoeg.frostedresearch.knowledge.definition.KnowledgeDefinitions;
+import com.teammoeg.frostedresearch.knowledge.definition.ProjectRequirement;
 import com.teammoeg.frostedresearch.knowledge.event.KnowledgeOperationEvent;
 import com.teammoeg.frostedresearch.knowledge.link.LinkMatcher;
+import com.teammoeg.frostedresearch.knowledge.link.TagLookup;
 import com.teammoeg.frostedresearch.knowledge.model.*;
 import com.teammoeg.frostedresearch.knowledge.state.*;
 import net.minecraft.nbt.CompoundTag;
@@ -43,8 +45,14 @@ import java.util.*;
 public final class KnowledgeService {
     public enum Status {
         SUCCESS, LEARNABLE, ACTIVE, ALREADY_OWNED, ALREADY_RECEIVED, NO_NEW_DIFFERENCE, NO_USE,
-        NOT_UNDERSTOOD, DEFINITION_UNAVAILABLE, CAPACITY, CANCELLED, NOT_FOUND, INVALID_INPUT, NO_MATCH, NO_HINT, DAILY_LIMIT
+        NOT_UNDERSTOOD, DEFINITION_UNAVAILABLE, CAPACITY, CANCELLED, NOT_FOUND, INVALID_INPUT, NO_MATCH, NO_HINT, DAILY_LIMIT,
+        REQUIREMENTS_UNMET
     }
+
+    /**
+     * Candidate tries allowed when evidence is matched against a team's whole archive and inbox.
+     */
+    public static final int EVIDENCE_SEARCH_STEPS = 20_000;
 
     public enum Grant {NORMAL, INITIAL, COMMAND}
 
@@ -308,14 +316,169 @@ public final class KnowledgeService {
         notifyChanged();
     }
 
+    /**
+     * Whether the team can begin this project from this idea now: {@code LEARNABLE}, or the reason it cannot. A team
+     * has at most one open run per project, and a completed project starts again only while one of its results is
+     * missing from the archive.
+     */
+    public Status researchStartStatus(ResourceLocation project, KnowledgeKey idea) {
+        var definition = KnowledgeDefinitions.current().projects().get(project);
+        if (definition == null) return Status.DEFINITION_UNAVAILABLE;
+        if (idea == null || idea.kind() != KnowledgeKey.Kind.IDEA || !query(idea).active()) return Status.NOT_UNDERSTOOD;
+        var origin = KnowledgeDefinitions.current().ideas().get(idea.definitionId());
+        if (origin == null || !origin.projects().contains(project)) return Status.INVALID_INPUT;
+        if (openRun(project).isPresent()) return Status.ACTIVE;
+        boolean completed = state.research().values().stream().anyMatch(run -> run.completed() && run.project().equals(project));
+        if (completed && definition.results().stream().allMatch(result -> state.archive().contains(KnowledgeKey.result(result))))
+            return Status.ALREADY_OWNED;
+        return Status.LEARNABLE;
+    }
+
     public Optional<UUID> startResearch(ResourceLocation project, KnowledgeKey idea) {
-        if (idea.kind() != KnowledgeKey.Kind.IDEA || !query(idea).active()) return Optional.empty();
-        var definition = KnowledgeDefinitions.current().ideas().get(new ResourceLocation(idea.id()));
-        if (definition == null || !definition.projects().contains(project)) return Optional.empty();
+        if (researchStartStatus(project, idea) != Status.LEARNABLE) return Optional.empty();
         UUID id = UUID.randomUUID();
         state.recordResearch(new ResearchHistory(id, project, idea, time, false, List.of()));
         notifyChanged();
         return Optional.of(id);
+    }
+
+    public Optional<ResearchHistory> openRun(ResourceLocation project) {
+        return state.research().values().stream().filter(run -> run.open() && run.project().equals(project)).findFirst();
+    }
+
+    /**
+     * Requirements of the run's project under the current definitions.
+     */
+    public List<ProjectRequirement> requirements(ResearchHistory run) {
+        var definition = KnowledgeDefinitions.current().projects().get(run.project());
+        return definition == null ? List.of() : definition.requirements();
+    }
+
+    /**
+     * Stored progress counts only while it satisfies the current definition, so changed requirements may need new work.
+     */
+    public boolean requirementMet(ResearchHistory run, ProjectRequirement requirement) {
+        return switch (requirement.type()) {
+            case CALCULATION -> calculationsDone(run, requirement) >= requirement.count();
+            case EVIDENCE -> {
+                var binding = run.evidence().get(requirement.id());
+                yield binding != null && LinkMatcher.bindExact(binding.values().stream().map(KnowledgeElement::observation).toList(),
+                        requirement.pattern(), TagLookup.SERVER).isPresent();
+            }
+        };
+    }
+
+    /**
+     * Won games at or above the requirement's current level.
+     */
+    public static int calculationsDone(ResearchHistory run, ProjectRequirement requirement) {
+        return (int) run.calculations().getOrDefault(requirement.id(), List.of()).stream()
+                .filter(level -> level >= requirement.level()).count();
+    }
+
+    /**
+     * True when every requirement holds. A project without requirements is only completed by the research system or a
+     * command.
+     */
+    public boolean requirementsMet(UUID runId) {
+        ResearchHistory run = state.research().get(runId);
+        if (run == null || !run.open()) return false;
+        List<ProjectRequirement> requirements = requirements(run);
+        return !requirements.isEmpty() && requirements.stream().allMatch(requirement -> requirementMet(run, requirement));
+    }
+
+    /**
+     * Observations a team may submit as evidence: its archive and its inbox.
+     */
+    public List<KnowledgeElement> evidencePool() {
+        List<KnowledgeElement> pool = new ArrayList<>();
+        for (var entries : List.of(state.archive().entries().values(), state.inbox().entries().values()))
+            for (KnowledgeEntry entry : entries) if (entry.element().observation().isPresent()) pool.add(entry.element());
+        return pool;
+    }
+
+    /**
+     * Finds observations in the archive or inbox that satisfy the requirement and records copies of them.
+     */
+    public OperationResult submitEvidence(UUID runId, String requirementId) {
+        ResearchHistory run = state.research().get(runId);
+        ProjectRequirement requirement = openRequirement(run, requirementId, ProjectRequirement.Type.EVIDENCE);
+        if (requirement == null) return result(Status.NOT_FOUND, null);
+        if (requirementMet(run, requirement)) return result(Status.ALREADY_OWNED, null);
+        return LinkMatcher.find(evidencePool(), requirement.pattern(), TagLookup.SERVER, EVIDENCE_SEARCH_STEPS)
+                .map(binding -> recordEvidence(run, requirement, binding)).orElseGet(() -> result(Status.NO_MATCH, null));
+    }
+
+    /**
+     * Submits exactly these observations, one per slot.
+     */
+    public OperationResult submitEvidence(UUID runId, String requirementId, List<KnowledgeKey> keys) {
+        ResearchHistory run = state.research().get(runId);
+        ProjectRequirement requirement = openRequirement(run, requirementId, ProjectRequirement.Type.EVIDENCE);
+        if (requirement == null) return result(Status.NOT_FOUND, null);
+        if (requirementMet(run, requirement)) return result(Status.ALREADY_OWNED, null);
+        List<KnowledgeElement> records = new ArrayList<>();
+        for (KnowledgeKey key : keys) {
+            KnowledgeEntry entry = entry(key);
+            if (entry == null || entry.element().observation().isEmpty()) return result(Status.INVALID_INPUT, key);
+            records.add(entry.element());
+        }
+        return LinkMatcher.bindExact(records, requirement.pattern(), TagLookup.SERVER)
+                .map(binding -> recordEvidence(run, requirement, binding)).orElseGet(() -> result(Status.NO_MATCH, null));
+    }
+
+    private OperationResult recordEvidence(ResearchHistory run, ProjectRequirement requirement, Map<String, KnowledgeElement> binding) {
+        Map<String, Observation> copies = new HashMap<>();
+        binding.forEach((slot, element) -> copies.put(slot, element.observation().orElseThrow()));
+        state.recordResearch(run.withEvidence(requirement.id(), copies));
+        notifyChanged();
+        return result(Status.SUCCESS, null);
+    }
+
+    /**
+     * Level of the next calculation game this requirement still needs, if it needs one.
+     */
+    public OptionalInt calculationLevel(UUID runId, String requirementId) {
+        ResearchHistory run = state.research().get(runId);
+        ProjectRequirement requirement = openRequirement(run, requirementId, ProjectRequirement.Type.CALCULATION);
+        return requirement == null || requirementMet(run, requirement) ? OptionalInt.empty() : OptionalInt.of(requirement.level());
+    }
+
+    public OperationResult recordCalculation(UUID runId, String requirementId, int level) {
+        ResearchHistory run = state.research().get(runId);
+        ProjectRequirement requirement = openRequirement(run, requirementId, ProjectRequirement.Type.CALCULATION);
+        if (requirement == null) return result(Status.NOT_FOUND, null);
+        if (requirementMet(run, requirement)) return result(Status.ALREADY_OWNED, null);
+        if (level < requirement.level()) return result(Status.INVALID_INPUT, null);
+        state.recordResearch(run.withCalculation(requirement.id(), level));
+        notifyChanged();
+        return result(Status.SUCCESS, null);
+    }
+
+    private ProjectRequirement openRequirement(ResearchHistory run, String requirementId, ProjectRequirement.Type type) {
+        if (run == null || !run.open()) return null;
+        return requirements(run).stream().filter(r -> r.id().equals(requirementId) && r.type() == type).findFirst().orElse(null);
+    }
+
+    /**
+     * Player path: completes an open run once all of its requirements hold.
+     */
+    public List<OperationResult> finishResearch(UUID runId) {
+        ResearchHistory run = state.research().get(runId);
+        if (run == null || !run.open()) return List.of(result(Status.NOT_FOUND, null));
+        if (!requirementsMet(runId)) return List.of(result(Status.REQUIREMENTS_UNMET, null));
+        return completeResearch(runId);
+    }
+
+    /**
+     * Closes an open run. Its submitted progress is dropped; the record stays as history.
+     */
+    public OperationResult abandonResearch(UUID runId) {
+        ResearchHistory run = state.research().get(runId);
+        if (run == null || !run.open()) return result(Status.NOT_FOUND, null);
+        state.recordResearch(run.abandon());
+        notifyChanged();
+        return result(Status.SUCCESS, null);
     }
 
     public List<OperationResult> completeResearch(UUID run) {
@@ -327,11 +490,11 @@ public final class KnowledgeService {
 
     public List<OperationResult> completeResearch(UUID run, List<ResourceLocation> results) {
         ResearchHistory history = state.research().get(run);
-        if (history == null || history.completed() || results.isEmpty()) return List.of();
+        if (history == null || !history.open() || results.isEmpty()) return List.of();
         var definition = KnowledgeDefinitions.current().projects().get(history.project());
         if (definition == null || !new HashSet<>(definition.results()).equals(new HashSet<>(results))) return List.of();
         List<KnowledgeKey> keys = results.stream().distinct().map(KnowledgeKey::result).toList();
-        state.recordResearch(new ResearchHistory(run, history.project(), history.idea(), history.time(), true, keys));
+        state.recordResearch(history.completedWith(keys));
         List<OperationResult> outputs = results.stream().distinct().map(id -> produce(KnowledgeElement.result(id), new AcquisitionSource("research:" + run, actor, time))).toList();
         notifyChanged();
         return outputs;
@@ -353,7 +516,7 @@ public final class KnowledgeService {
         KnowledgeElement element = state.archive().entries().get(topic).element();
         var candidates = KnowledgeDefinitions.current().links().entrySet().stream()
                 .filter(e -> !e.getValue().hints().isEmpty())
-                .filter(e -> e.getValue().inputs().stream().anyMatch(slot -> slot.matches(element, com.teammoeg.frostedresearch.knowledge.link.TagLookup.SERVER)))
+                .filter(e -> e.getValue().inputs().stream().anyMatch(slot -> slot.matches(element, TagLookup.SERVER)))
                 .sorted(Comparator.<Map.Entry<ResourceLocation, com.teammoeg.frostedresearch.knowledge.link.LinkRule>, Boolean>comparing(e -> query(KnowledgeKey.idea(e.getValue().output())).inArchive()).thenComparing(e -> e.getKey().toString())).toList();
         if (candidates.isEmpty()) return result(Status.NO_HINT, topic);
         var chosen = candidates.stream().filter(e -> e.getValue().hints().stream().anyMatch(h -> !state.hasHint(h)))

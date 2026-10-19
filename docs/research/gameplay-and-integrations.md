@@ -68,6 +68,8 @@ Starting a game requires:
 
 The desk consumes one paper and the initial pen cost, then creates a server-side `ResearchGame` using `GenerateInfo.all[level]`. Each successful combine attempt costs another `1` pen use. When the board finishes, `ResearchHooks#commitGameLevel` completes the first unfinished minigame clue whose required level is less than or equal to the won level.
 
+The same board also serves knowledge research calculations. The journal's research page sends `CALCULATE`, which stores a target on the desk: `calculation_run`, `calculation_requirement` and `calculation_level` in the block entity NBT, synchronized to clients. While the target's requirement still needs a game (`KnowledgeService#calculationLevel`), operation `0` starts a game at that level with the same paper and pen rules, and a win calls `KnowledgeService#recordCalculation` instead of `commitGameLevel`. The target clears itself once the requirement is satisfied or its run is no longer open, and `STOP_CALCULATION` clears it explicitly; either way the desk returns to the legacy clue level. `MainGamePanel` treats a desk with a target as playable even when the current legacy research has no minigame clue.
+
 The built-in recipe JSON shape is:
 
 ```json

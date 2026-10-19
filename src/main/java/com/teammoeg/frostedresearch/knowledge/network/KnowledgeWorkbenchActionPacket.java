@@ -53,18 +53,32 @@ import net.minecraftforge.network.NetworkEvent;
  * Drawing desk commands resolve selected identities against current server state.
  */
 public final class KnowledgeWorkbenchActionPacket implements CMessage {
-    public enum Action {REFRESH, LEARN, DELETE, PREVIEW_LINK, LINK, RETRIEVE, EXPORT, DREAM_TOPIC, DISCUSS}
+    public enum Action {
+        REFRESH, LEARN, DELETE, PREVIEW_LINK, LINK, RETRIEVE, EXPORT, DREAM_TOPIC, DISCUSS,
+        START_RESEARCH, SUBMIT_EVIDENCE, CALCULATE, STOP_CALCULATION, COMPLETE_RESEARCH, ABANDON_RESEARCH
+    }
+
+    public static final int REQUIREMENT_LIMIT = 64;
 
     private final BlockPos pos;
     private final java.util.UUID requestId;
     private final Action action;
     private final List<KnowledgeKey> keys;
+    /**
+     * Rule ID for LINK, partner name for DISCUSS, project ID for START_RESEARCH, run UUID for other research actions.
+     */
     private final String rule;
     private final String title;
     private final String remarks;
+    private final String requirement;
 
     public KnowledgeWorkbenchActionPacket(BlockPos pos, Action action, List<KnowledgeKey> keys,
                                           String rule, String title, String remarks) {
+        this(pos, action, keys, rule, title, remarks, "");
+    }
+
+    public KnowledgeWorkbenchActionPacket(BlockPos pos, Action action, List<KnowledgeKey> keys,
+                                          String rule, String title, String remarks, String requirement) {
         this.pos = pos;
         this.requestId = java.util.UUID.randomUUID();
         this.action = action;
@@ -72,6 +86,7 @@ public final class KnowledgeWorkbenchActionPacket implements CMessage {
         this.rule = rule;
         this.title = title;
         this.remarks = remarks;
+        this.requirement = requirement;
     }
 
     public KnowledgeWorkbenchActionPacket(FriendlyByteBuf buffer) {
@@ -82,6 +97,7 @@ public final class KnowledgeWorkbenchActionPacket implements CMessage {
         rule = buffer.readUtf();
         title = buffer.readUtf(ResearchNotes.TITLE_LIMIT);
         remarks = buffer.readUtf(ResearchNotes.REMARKS_LIMIT);
+        requirement = buffer.readUtf(REQUIREMENT_LIMIT);
     }
 
     @Override
@@ -96,6 +112,7 @@ public final class KnowledgeWorkbenchActionPacket implements CMessage {
         buffer.writeUtf(rule);
         buffer.writeUtf(title, ResearchNotes.TITLE_LIMIT);
         buffer.writeUtf(remarks, ResearchNotes.REMARKS_LIMIT);
+        buffer.writeUtf(requirement, REQUIREMENT_LIMIT);
     }
 
     @Override
@@ -151,6 +168,39 @@ public final class KnowledgeWorkbenchActionPacket implements CMessage {
                     boolean invited = keys.size() == 1 && partner != null && KnowledgeDiscussion.invite(player, partner, keys.get(0));
                     response.putString("message", invited ? "discussion.invited" : "discussion.unavailable");
                 }
+                case START_RESEARCH -> startResearch(service, results, response);
+                case SUBMIT_EVIDENCE -> {
+                    OperationResult result = service.submitEvidence(run(), requirement);
+                    addResult(results, result, service);
+                    response.putString("message", result.succeeded() ? "research.evidence_submitted"
+                            : result.status() == KnowledgeService.Status.NO_MATCH ? "research.evidence_missing" : "research.unchanged");
+                }
+                case CALCULATE -> calculate(player, desk, service, results, response);
+                case STOP_CALCULATION -> {
+                    if (desk.isCalculating(run(), requirement)) {
+                        desk.stopCalculation();
+                        desk.setChanged();
+                        desk.syncData();
+                    }
+                    response.putString("message", "research.calculation_stopped");
+                }
+                case COMPLETE_RESEARCH -> {
+                    var outcomes = service.finishResearch(run());
+                    outcomes.forEach(result -> addResult(results, result, service));
+                    boolean unmet = outcomes.stream().anyMatch(r -> r.status() == KnowledgeService.Status.REQUIREMENTS_UNMET);
+                    response.putString("message", unmet ? "research.unmet" : outcomes.isEmpty()
+                            || outcomes.get(0).status() == KnowledgeService.Status.NOT_FOUND ? "research.unchanged" : "research.completed");
+                }
+                case ABANDON_RESEARCH -> {
+                    OperationResult result = service.abandonResearch(run());
+                    addResult(results, result, service);
+                    if (result.succeeded() && java.util.Objects.equals(run(), desk.calculationRun())) {
+                        desk.stopCalculation();
+                        desk.setChanged();
+                        desk.syncData();
+                    }
+                    response.putString("message", result.succeeded() ? "research.abandoned" : "research.unchanged");
+                }
             }
             response.put("results", results);
             // The client applies a reply to the view it already has, e.g. RETRIEVE focuses retrieved_key.
@@ -162,6 +212,53 @@ public final class KnowledgeWorkbenchActionPacket implements CMessage {
 
     public java.util.UUID requestId() {
         return requestId;
+    }
+
+    private java.util.UUID run() {
+        try {
+            return java.util.UUID.fromString(rule);
+        } catch (IllegalArgumentException invalid) {
+            return null;
+        }
+    }
+
+    /**
+     * Starts from the chosen origin idea, or from the first active idea that declares the project.
+     */
+    private void startResearch(KnowledgeService service, ListTag results, CompoundTag response) {
+        ResourceLocation project = ResourceLocation.tryParse(rule);
+        if (project == null) {
+            response.putString("message", "research.unchanged");
+            return;
+        }
+        KnowledgeKey origin = keys.isEmpty() ? service.state().archive().entries().keySet().stream()
+                .filter(key -> key.kind() == KnowledgeKey.Kind.IDEA)
+                .filter(key -> service.researchStartStatus(project, key) == KnowledgeService.Status.LEARNABLE)
+                .min(java.util.Comparator.comparing(KnowledgeKey::id)).orElse(null) : keys.get(0);
+        KnowledgeService.Status status = service.researchStartStatus(project, origin);
+        if (status == KnowledgeService.Status.LEARNABLE && service.startResearch(project, origin).isPresent())
+            status = KnowledgeService.Status.SUCCESS;
+        addResult(results, new OperationResult(status, null), service);
+        response.putString("message", "research.start." + status.name().toLowerCase(java.util.Locale.ROOT));
+    }
+
+    /**
+     * Points the desk's card game at this requirement and starts a game when paper and pen allow it.
+     */
+    private void calculate(ServerPlayer player, DrawingDeskTileEntity desk, KnowledgeService service, ListTag results, CompoundTag response) {
+        java.util.UUID run = run();
+        var level = service.calculationLevel(run, requirement);
+        if (level.isEmpty()) {
+            addResult(results, new OperationResult(KnowledgeService.Status.NOT_FOUND, null), service);
+            response.putString("message", "research.unchanged");
+            return;
+        }
+        desk.setCalculation(run, requirement, level.getAsInt());
+        boolean started = desk.initGame(player);
+        desk.setChanged();
+        desk.syncData();
+        response.putBoolean("calculate", true);
+        response.putString("message", started ? "research.calculation_started" : "research.calculation_prepare");
     }
 
     private static void retrieve(ServerPlayer player, DrawingDeskTileEntity desk, KnowledgeService service,

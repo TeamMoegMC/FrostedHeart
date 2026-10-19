@@ -2,7 +2,7 @@
 
 - Time: `2026-10-18 23:42:16 -0500`
 - Authors: `Claude (Anthropic Opus 5.5), 计划起草；项目所有者确认「决定」一节`
-- Status: `ready`（`2026-10-18 23:58:00 -0500` 项目所有者确认全部采用推荐方案）
+- Status: `in-progress`（`2026-10-18 23:58:00 -0500` 项目所有者确认全部采用推荐方案；R1 已于 2026-10-19 完成，R2 未开始）
 - Scope: `frostedresearch/knowledge` 的研究项目定义、启动记录与进度；绘图台纸牌局；新增实验台；知识札记研究页
 - Related: [`design/knowledge_research.md`](../design/knowledge_research.md)、[V2 计划](2026-08-25_16-17-39_generative-research-knowledge-laboratory-v2.md)、[知识系统审阅](../discussion/2026-10-18_23-01-04_knowledge-system-development-review.md)、[`docs/knowledge/`](../docs/knowledge/README.md)、[`docs/research/`](../docs/research/README.md)
 
@@ -192,7 +192,7 @@ V2 计划写于 2026-08-25，Phase 1（五类成果与权限投影）已经实�
 
 前置：审阅 P0-1（持久化逐条解码、`schema_version`）与 P1（合并同步、权限投影缓存）两个会话的改动已经合入。本计划要在 `KnowledgeState` 里新增持久化字段，也会增加同步触发点，必须建立在它们之上。
 
-### R1：计算 + 证据 + 研究页
+### R1：计算 + 证据 + 研究页（已完成，见 Outcome）
 
 1. **定义**：`ProjectDefinition` 增加 `body`、`requirements`；把 `LinkRule` 的槽位与跨条件抽成共享槽位模式，并新增 `distinct`；校验需求 `id` 唯一、槽位与条件合法、`level` 在 0–3、`count ≥ 1`。证据槽并入 `Snapshot` 的观察用途。
 2. **状态**：`ResearchHistory` 增加可选的 `status`、进度和证据绑定；读取沿用 P0-1 之后的逐条宽松解码。
@@ -233,4 +233,23 @@ V2 计划写于 2026-08-25，Phase 1（五类成果与权限投影）已经实�
 
 ## Outcome
 
-计划已 ready，实现尚未开始。前置的审阅 P0-1 与 P1 已合入（`05f3aa8b4`、`1bdf58fba`，合并提交 `0c448bb3f`），R1 可以开工。
+前置的审阅 P0-1 与 P1 已合入（`05f3aa8b4`、`1bdf58fba`，合并提交 `0c448bb3f`）。
+
+**R1 已完成（2026-10-19）**，记录见 [diary](../diary/2026-10-19_00-36-37_knowledge-research-run-evidence-calculation.md)。按决定实现了：
+
+- 需求定义与校验；
+- 证据槽计入观察用途；
+- 启动记录的状态与进度；
+- B2 的单启动规则与完成后重启条件；
+- B5 的按当前定义重新判断；
+- 纸牌局的演算目标；
+- 札记第五个书签「研究」与脉络浮纸跳转；
+- 示例包三个项目的需求。
+
+实现与方案概要不同的三处：
+
+- **证据不经「放到桌面」选择。** 「整理证据」由服务端在档案和来件中自动挑出一组满足条件的互异记录。D4 让提交不消耗观察，选哪几份并不影响结果，因此省去逐槽选择界面。搜索有 `EVIDENCE_SEARCH_STEPS` 步数上限。按给定记录精确提交的 `submitEvidence(run, requirement, keys)` 仍保留给其他调用方。
+- **`distinct` 写在证据需求自己的 `distinct` 字段里**，没有作为 `conditions` 中的新 `kind`。这样联络规则的跨条件编码保持不变；加载时展开为两两 `ne` 比较。
+- **新增 `STOP_CALCULATION` 动作。** 绘图台的演算目标在需求满足前一直有效，这一动作让玩家能把纸牌局交还给旧研究。
+
+**R2（实验）未开始。**

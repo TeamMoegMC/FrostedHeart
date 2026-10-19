@@ -105,6 +105,13 @@ public final class KnowledgeDefinitions {
         s.projects.forEach((id, p) -> {
             if (p.results().isEmpty()) errors.add(id + ": project must produce at least one result");
             for (var result : p.results()) if (!resultExists(s, result)) errors.add(id + ": missing result " + result);
+            Set<String> requirements = new HashSet<>();
+            for (var requirement : p.requirements()) {
+                if (!requirements.add(requirement.id())) errors.add(id + ": duplicate requirement id " + requirement.id());
+                List<String> local = new ArrayList<>();
+                requirement.validate(local);
+                local.forEach(error -> errors.add(id + ": " + error));
+            }
         });
         s.links.forEach((id, rule) -> {
             rule.validate().forEach(error -> errors.add(id + ": " + error));
@@ -165,7 +172,8 @@ public final class KnowledgeDefinitions {
         private final Map<ResourceLocation, ProjectDefinition> projects;
         private final List<KnowledgeKey> initialKnowledge;
         private final Map<ResourceLocation, ObservationUse> observationUses;
-        private final List<LinkRule> observationRules;
+        /** Link rules with observation slots and every evidence requirement: the registered observation uses. */
+        private final List<SlotPattern> observationPatterns;
 
         public Snapshot(long revision, Map<ResourceLocation, IdeaDefinition> ideas, Map<ResourceLocation, ResultDefinition> results,
                         Map<ResourceLocation, LinkRule> links, Map<ResourceLocation, ItemRetrievalRule> items,
@@ -184,7 +192,12 @@ public final class KnowledgeDefinitions {
             this.projects = Map.copyOf(projects);
             this.initialKnowledge = List.copyOf(initial);
             this.observationUses = Map.copyOf(uses);
-            this.observationRules = links.values().stream().filter(r -> r.inputs().stream().anyMatch(s -> s.kind() == KnowledgeKey.Kind.OBSERVATION)).toList();
+            List<SlotPattern> patterns = new ArrayList<>();
+            links.values().stream().filter(r -> r.inputs().stream().anyMatch(s -> s.kind() == KnowledgeKey.Kind.OBSERVATION))
+                    .map(LinkRule::pattern).forEach(patterns::add);
+            projects.values().forEach(project -> project.requirements().stream()
+                    .filter(r -> r.type() == ProjectRequirement.Type.EVIDENCE).map(ProjectRequirement::pattern).forEach(patterns::add));
+            this.observationPatterns = List.copyOf(patterns);
         }
 
         public static Snapshot empty() {
@@ -229,7 +242,7 @@ public final class KnowledgeDefinitions {
 
         public boolean hasObservationUse(Observation observation, TagLookup tags) {
             KnowledgeElement element = KnowledgeElement.observation(observation);
-            return observationRules.stream().flatMap(r -> r.inputs().stream()).anyMatch(s -> s.matches(element, tags))
+            return observationPatterns.stream().flatMap(p -> p.inputs().stream()).anyMatch(s -> s.matches(element, tags))
                     || observationUses.values().stream().anyMatch(u -> u.matches(observation));
         }
 
@@ -242,8 +255,8 @@ public final class KnowledgeDefinitions {
             if (!hasObservationUse(observation, tags)) return false;
             KnowledgeElement candidate = KnowledgeElement.observation(observation);
             int count = 1;
-            for (LinkRule rule : observationRules)
-                count = Math.max(count, (int) rule.inputs().stream().filter(s -> s.matches(candidate, tags)).count());
+            for (SlotPattern pattern : observationPatterns)
+                count = Math.max(count, (int) pattern.inputs().stream().filter(s -> s.matches(candidate, tags)).count());
             for (ObservationUse use : observationUses.values())
                 if (use.matches(observation)) count = Math.max(count, use.independentRecords());
             int equivalentCount = 0;
@@ -257,14 +270,14 @@ public final class KnowledgeDefinitions {
         private boolean equivalent(Observation first, Observation second, TagLookup tags) {
             if (first.type() != second.type()) return false;
             KnowledgeElement a = KnowledgeElement.observation(first), b = KnowledgeElement.observation(second);
-            for (LinkRule rule : observationRules) {
+            for (SlotPattern pattern : observationPatterns) {
                 Set<String> matchingSlots = new HashSet<>();
-                for (LinkRule.Slot slot : rule.inputs()) {
+                for (LinkRule.Slot slot : pattern.inputs()) {
                     boolean am = slot.matches(a, tags), bm = slot.matches(b, tags);
                     if (am != bm) return false;
                     if (am) matchingSlots.add(slot.name());
                 }
-                for (LinkRule.CrossCondition cross : rule.conditions()) {
+                for (LinkRule.CrossCondition cross : pattern.conditions()) {
                     if (matchingSlots.contains(cross.left()) || matchingSlots.contains(cross.right()))
                         for (String field : cross.fieldsRead())
                             if (!first.value(field).equals(second.value(field))) return false;

@@ -28,7 +28,20 @@ import net.minecraft.SharedConstants;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.server.Bootstrap;
+import com.teammoeg.frostedresearch.knowledge.KnowledgeService;
+import com.teammoeg.frostedresearch.knowledge.ResearchResult;
+import com.teammoeg.frostedresearch.knowledge.definition.*;
+import com.teammoeg.frostedresearch.knowledge.link.FieldCondition;
+import com.teammoeg.frostedresearch.knowledge.link.LinkRule;
+import com.teammoeg.frostedresearch.knowledge.model.*;
+import com.teammoeg.frostedresearch.knowledge.state.AcquisitionSource;
+import com.teammoeg.frostedresearch.knowledge.state.KnowledgeState;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraftforge.common.MinecraftForge;
 import org.junit.jupiter.api.*;
+
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -68,6 +81,52 @@ class KnowledgeLayoutTest {
                     assertTrue(child.getX() + child.getWidth() <= layer.getWidth());
                     assertTrue(child.getY() + child.getHeight() <= layer.getHeight());
                 }
+        }
+    }
+
+    @Test
+    void researchPageFitsAnOpenRunAndAProjectNotYetStarted() {
+        MinecraftForge.EVENT_BUS.start();
+        ResourceLocation origin = new ResourceLocation("test", "origin"), survey = new ResourceLocation("test", "survey"),
+                later = new ResourceLocation("test", "later"), finding = new ResourceLocation("test", "finding");
+        var rock = new LinkRule.Slot("a", KnowledgeKey.Kind.OBSERVATION, Optional.empty(), Optional.of(Observation.Type.BLOCK),
+                List.of(new FieldCondition("object", FieldCondition.Operator.EQ, Optional.of(ObservationValue.known("test:rock")), Optional.empty())));
+        var result = new ResultDefinition(new ResearchResult.Finding(finding, List.of()), "Finding", "", List.of(), true);
+        KnowledgeDefinitions.install(new KnowledgeDefinitions.Snapshot(0,
+                Map.of(origin, new IdeaDefinition("Origin", "", List.of(), List.of(survey, later), true)), Map.of(finding, result), Map.of(), Map.of(),
+                Map.of(survey, new ProjectDefinition("Survey", "Look at rocks.", List.of(finding), List.of(
+                                ProjectRequirement.evidence("rock", "A rock", List.of(rock), List.of(), List.of()),
+                                ProjectRequirement.calculation("calc", "", 1, 2))),
+                        later, new ProjectDefinition("Later", "", List.of(finding), List.of(ProjectRequirement.calculation("calc", "", 0, 1)))), List.of()));
+        var service = new KnowledgeService(UUID.randomUUID(), new KnowledgeState(), 1, () -> {
+        });
+        var source = new AcquisitionSource("test", Optional.empty(), 1);
+        service.learn(KnowledgeElement.idea(origin), source, KnowledgeService.Grant.NORMAL);
+        service.learn(KnowledgeElement.observation(new Observation(UUID.randomUUID(), Observation.Type.BLOCK, new ResourceLocation("test", "rock"),
+                Map.of(), Observation.Source.command(), Optional.empty())), source, KnowledgeService.Grant.NORMAL);
+        UUID run = service.startResearch(survey, KnowledgeKey.idea(origin)).orElseThrow();
+        service.submitEvidence(run, "rock");
+        KnowledgeClientState.setSnapshot(service.snapshot());
+        try {
+            var layer = new KnowledgeLayer(new TestParent(), null, () -> {
+            }, () -> {
+            });
+            for (int width : new int[]{296, 456, 660})
+                for (String project : List.of(survey.toString(), later.toString())) {
+                    layer.resize(width, 246);
+                    layer.openResearch(project);
+                    long buttons = layer.getElements().stream().filter(JournalButton.class::isInstance).filter(UIElement::isVisible).count();
+                    assertTrue(buttons >= 7, "bookmarks, return and the research actions are built for " + project);
+                    for (UIElement child : layer.getElements())
+                        if (child.isVisible()) {
+                            assertTrue(child.getX() >= 0 && child.getY() >= 0, project + " at " + width);
+                            assertTrue(child.getX() + child.getWidth() <= layer.getWidth(), project + " at " + width);
+                            assertTrue(child.getY() + child.getHeight() <= layer.getHeight(), project + " at " + width);
+                        }
+                }
+        } finally {
+            KnowledgeClientState.setSnapshot(new CompoundTag());
+            KnowledgeDefinitions.clearForTests();
         }
     }
 

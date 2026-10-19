@@ -20,7 +20,9 @@
 package com.teammoeg.frostedresearch.blocks;
 
 import java.util.Optional;
+import java.util.OptionalInt;
 import java.util.Random;
+import java.util.UUID;
 
 import com.teammoeg.chorda.block.entity.CBlockEntity;
 import com.teammoeg.chorda.client.ClientUtils;
@@ -71,6 +73,12 @@ public class DrawingDeskTileEntity extends CBlockEntity implements MenuProvider 
         }
     };
     ResearchGame game = new ResearchGame();
+    /**
+     * Knowledge research run and calculation requirement the current game counts toward; null serves the legacy research.
+     */
+    private UUID calculationRun;
+    private String calculationRequirement = "";
+    private int calculationLevel = -1;
 
     public DrawingDeskTileEntity(BlockPos pos, BlockState state) {
         super(FRContents.BlockEntityTypes.DRAWING_DESK.get(), pos, state);
@@ -96,18 +104,73 @@ public class DrawingDeskTileEntity extends CBlockEntity implements MenuProvider 
     }
 
 
-    public void initGame(ServerPlayer player) {
-        if (inventory.getStackInSlot(PAPER_SLOT).isEmpty()) return;
-        int lvl = ResearchHooks.fetchGameLevel(player);
-        if (lvl < 0) return;
+    /**
+     * Starts a game for the knowledge calculation target while it still needs one, otherwise for the legacy research.
+     */
+    public boolean initGame(ServerPlayer player) {
+        if (inventory.getStackInSlot(PAPER_SLOT).isEmpty()) return false;
+        int lvl = gameLevel(player);
+        if (lvl < 0) return false;
         Optional<ResearchPaperRecipe> pr = CUtils.filterRecipes(this.getLevel().getRecipeManager(), ResearchPaperRecipe.TYPE).stream().filter(r -> r.maxlevel >= lvl && r.paper.test(inventory.getStackInSlot(PAPER_SLOT))).findAny();
-        if (!pr.isPresent()) return;
+        if (!pr.isPresent()) return false;
         //if (EnergyCore.getEnergy(player) <= 0) return;
-        if (!damageInk(player, 5, lvl)) return;
+        if (!damageInk(player, 5, lvl)) return false;
         //EnergyCore.costEnergy(player, 1);
         inventory.getStackInSlot(PAPER_SLOT).shrink(1);
         game.init(GenerateInfo.all[lvl], new Random());
         game.setLvl(lvl);
+        return true;
+    }
+
+    private int gameLevel(ServerPlayer player) {
+        if (calculationRun != null) {
+            OptionalInt level = com.teammoeg.frostedresearch.knowledge.KnowledgeService.forPlayer(player)
+                    .calculationLevel(calculationRun, calculationRequirement);
+            if (level.isPresent()) return calculationLevel = level.getAsInt();
+            clearCalculation();
+        }
+        return ResearchHooks.fetchGameLevel(player);
+    }
+
+    /**
+     * Points the next games at a knowledge research calculation. Any unfinished game is discarded.
+     */
+    public void setCalculation(UUID run, String requirement, int level) {
+        calculationRun = run;
+        calculationRequirement = requirement;
+        calculationLevel = level;
+        game.reset();
+    }
+
+    /**
+     * Returns the desk to legacy research calculation and discards any unfinished game.
+     */
+    public void stopCalculation() {
+        clearCalculation();
+        game.reset();
+    }
+
+    private void clearCalculation() {
+        calculationRun = null;
+        calculationRequirement = "";
+        calculationLevel = -1;
+    }
+
+    public boolean hasCalculation() {
+        return calculationRun != null;
+    }
+
+    public UUID calculationRun() {
+        return calculationRun;
+    }
+
+    public boolean isCalculating(UUID run, String requirement) {
+        return run != null && run.equals(calculationRun) && requirement.equals(calculationRequirement);
+    }
+
+    @OnlyIn(Dist.CLIENT)
+    private int clientGameLevel() {
+        return calculationRun != null ? calculationLevel : ResearchHooks.fetchGameLevel();
     }
 
     @OnlyIn(Dist.CLIENT)
@@ -115,14 +178,14 @@ public class DrawingDeskTileEntity extends CBlockEntity implements MenuProvider 
         ItemStack is = inventory.getStackInSlot(INK_SLOT);
         if (is.isEmpty() || !(is.getItem() instanceof IPen)) return false;
         IPen pen = (IPen) is.getItem();
-        return pen.getLevel(is, ClientUtils.getPlayer()) >= ResearchHooks.fetchGameLevel() && pen.canUse(ClientUtils.getPlayer(), is, val);
+        return pen.getLevel(is, ClientUtils.getPlayer()) >= clientGameLevel() && pen.canUse(ClientUtils.getPlayer(), is, val);
     }
 
     @OnlyIn(Dist.CLIENT)
     public boolean isPaperSatisfied() {
         ItemStack is = inventory.getStackInSlot(PAPER_SLOT);
         if (is.isEmpty()) return false;
-        int lvl = ResearchHooks.fetchGameLevel();
+        int lvl = clientGameLevel();
         return CUtils.filterRecipes(this.getLevel().getRecipeManager(), ResearchPaperRecipe.TYPE).stream().anyMatch(r -> r.maxlevel >= lvl && r.paper.test(is));
     }
 
@@ -131,6 +194,11 @@ public class DrawingDeskTileEntity extends CBlockEntity implements MenuProvider 
     public void readCustomNBT(CompoundTag nbt, boolean descPacket) {
         if (nbt.contains("gamedata"))
             game.load(nbt.getCompound("gamedata"));
+        if (nbt.hasUUID("calculation_run")) {
+            calculationRun = nbt.getUUID("calculation_run");
+            calculationRequirement = nbt.getString("calculation_requirement");
+            calculationLevel = nbt.getInt("calculation_level");
+        } else clearCalculation();
         
         if (!descPacket) {
         	if(nbt.contains("Items")) {
@@ -168,8 +236,12 @@ public class DrawingDeskTileEntity extends CBlockEntity implements MenuProvider 
 
     public void updateGame(ServerPlayer player) {
         if (game.isFinished()) {
-
-            ResearchHooks.commitGameLevel(player, game.getLvl());
+            if (calculationRun != null) {
+                var service = com.teammoeg.frostedresearch.knowledge.KnowledgeService.forPlayer(player);
+                service.recordCalculation(calculationRun, calculationRequirement, game.getLvl());
+                // The next reset starts another game for the same requirement until it is satisfied.
+                if (service.calculationLevel(calculationRun, calculationRequirement).isEmpty()) clearCalculation();
+            } else ResearchHooks.commitGameLevel(player, game.getLvl());
             game.reset();
         }
     }
@@ -177,6 +249,11 @@ public class DrawingDeskTileEntity extends CBlockEntity implements MenuProvider 
     @Override
     public void writeCustomNBT(CompoundTag nbt, boolean descPacket) {
         nbt.put("gamedata", game.serialize());
+        if (calculationRun != null) {
+            nbt.putUUID("calculation_run", calculationRun);
+            nbt.putString("calculation_requirement", calculationRequirement);
+            nbt.putInt("calculation_level", calculationLevel);
+        }
         if (!descPacket) {
 
             nbt.put("inv", inventory.serializeNBT());
