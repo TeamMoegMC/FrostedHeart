@@ -93,7 +93,7 @@ public class ResearchCommonEvents {
 			FHResearch.sendSyncPacket(currentPlayer);
 			FRNetwork.INSTANCE.send(currentPlayer,
 					new FHResearchDataSyncPacket(ResearchDataAPI.getData((ServerPlayer) event.getEntity()).get()));
-			TeamResearchService.sync(ResearchDataAPI.getData((ServerPlayer) event.getEntity()).team());
+			// KnowledgeRuntime.login sends the knowledge snapshot at LOWEST, after FTB Teams has set up the team.
 		}
 	}
     @SubscribeEvent

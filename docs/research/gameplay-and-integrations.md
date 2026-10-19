@@ -2,7 +2,7 @@
 
 - Status: `Current`
 - Last verified: `2026-08-25`
-- Scope: Player entry points, legacy progression, V2 result command/prototype shell, unified unlock enforcement, APIs, events, commands, and compatibility modules
+- Scope: Player entry points, legacy progression, the knowledge experiment table, V2 result command/prototype shell, unified unlock enforcement, APIs, events, commands, and compatibility modules
 - Code anchors: [`ResearchHooks`](../../src/main/java/com/teammoeg/frostedresearch/ResearchHooks.java), [`TechnologyAccessResolver`](../../src/main/java/com/teammoeg/frostedresearch/knowledge/TechnologyAccessResolver.java), [`TeamResearchService`](../../src/main/java/com/teammoeg/frostedresearch/api/TeamResearchService.java), [`UpgradePrototypeItem`](../../src/main/java/com/teammoeg/frostedresearch/item/UpgradePrototypeItem.java), [`ResearchCommand`](../../src/main/java/com/teammoeg/frostedresearch/ResearchCommand.java), [`JEICompat`](../../src/main/java/com/teammoeg/frostedresearch/compat/JEICompat.java)
 
 ## Player-Facing Loop
@@ -68,6 +68,10 @@ Starting a game requires:
 
 The desk consumes one paper and the initial pen cost, then creates a server-side `ResearchGame` using `GenerateInfo.all[level]`. Each successful combine attempt costs another `1` pen use. When the board finishes, `ResearchHooks#commitGameLevel` completes the first unfinished minigame clue whose required level is less than or equal to the won level.
 
+The same board also serves knowledge research calculations. The journal's research page sends `CALCULATE`, which stores a target on the desk: `calculation_run`, `calculation_requirement` and `calculation_level` in the block entity NBT, synchronized to clients. While the target's requirement still needs a game (`KnowledgeService#calculationLevel`), operation `0` starts a game at that level with the same paper and pen rules, and a win calls `KnowledgeService#recordCalculation` instead of `commitGameLevel`. The target clears itself once the requirement is satisfied or its run is no longer open, and `STOP_CALCULATION` clears it explicitly; either way the desk returns to the legacy clue level. `MainGamePanel` treats a desk with a target as playable even when the current legacy research has no minigame clue. While a target is set, the desk's top-left research corner, `DeskProgressPanel`, shows the knowledge project the games count toward, the wins out of `count` and the level from the client knowledge snapshot instead of the legacy research progress; it rebuilds when the target or the snapshot serial changes.
+
+Testing shortcut: a player with permission level `2` or higher (cheats allowed in singleplayer, or an operator) can click the final card at the board centre, `ResearchGame.FINAL_CARD` = `(4, 4)`, while a game is running. The client shows a hand cursor and a tooltip and sends the ordinary single-card operation `1`. `DrawingDeskTileEntity#tryCombine` checks the permission again and calls `ResearchGame#forceWin`, which clears the board and marks the game won without spending pen uses. The win is then credited exactly like a normal one: a knowledge calculation target or the legacy minigame clue.
+
 The built-in recipe JSON shape is:
 
 ```json
@@ -120,6 +124,12 @@ Each server tick adds the integer absolute speed to `process`. When it reaches `
 The calculator records the placing real player's current team in the existing `IOwnerTile` NBT. A legacy ownerless calculator is claimed by the first direct or rubbing interaction from a real `ServerPlayer`. Fake players never claim or extract, and another team cannot replace the owner, redirect direct-click progress, inspect the extractable balance, or remove cached points.
 
 `RubbingTool` extracts through the player-authorized `ComputeMachine` interface. `fetchPoint(ServerPlayer,max)` returns zero for `max <= 0` or an unauthorized player; otherwise it removes exactly `min(max,currentPoints)`. The current rubbing workflow waits for at least `100` authorized points and extracts exactly `100`, retaining any excess machine cache.
+
+## Knowledge Experiment Table
+
+`frostedresearch:experiment_table` runs the `experiment` requirements of knowledge research projects ([schema](../knowledge/definitions.md), [screen](../knowledge/workbench.md#实验台)). It is separate from the legacy experiment points above and neither produces nor consumes them. The table records its team in `IOwnerTile` on first use, and only that team's members can open it. `ExperimentTableActionPacket` acts only when the sender's open menu is this table, the table is within 8 blocks, and the sender's team owns it.
+
+[`ExperimentTableBlockEntity`](../../src/main/java/com/teammoeg/frostedresearch/knowledge/experiment/ExperimentTableBlockEntity.java) holds three material slots and one target, a run UUID plus requirement id, set by `SELECT`. `START` checks every condition and then takes all materials at once. After that the table needs no player, only a loaded chunk. Every 20 ticks it reads `WorldTemperature` at the table, and every fifth check it rescans the room with a `ConfinedSpaceScanner` bounded at 4096 air blocks. A failing condition pauses the run and keeps its progress. `STOP`, selecting another experiment, or the run closing ends it without returning materials. When progress reaches the requirement's `duration`, the table calls `KnowledgeService#recordExperiment`, and a satisfied requirement clears the target. While idle with a target, every 20-tick check rebuilds the material and temperature lines without a room scan, synchronizes only when the report changed, and clears a target that is no longer needed. The target, progress and last report are saved and synchronized to clients; the slot contents go only into full saves.
 
 ## Unified Unlock Model
 

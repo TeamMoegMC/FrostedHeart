@@ -2,7 +2,7 @@
 
 - Status: `Current`（源码、构建和布局/展示测试核对；尚未完成更新后界面的游戏内视觉验收）
 - Last verified: `2026-09-08`
-- Scope: 玩家阅读与整理、CUI 绘图台知识页、物品抄录、联络、脉络与观察预览
+- Scope: 玩家阅读与整理、CUI 绘图台知识页、物品抄录、联络、脉络与观察预览、研究页与实验台
 - Code anchors: [
   `KnowledgeLayer`](../../src/main/java/com/teammoeg/frostedresearch/knowledge/client/KnowledgeLayer.java)、[
   `KnowledgeJournalData`](../../src/main/java/com/teammoeg/frostedresearch/knowledge/client/KnowledgeJournalData.java)、[
@@ -10,7 +10,9 @@
   `KnowledgeNodeSheet`](../../src/main/java/com/teammoeg/frostedresearch/knowledge/client/ui/KnowledgeNodeSheet.java)、[
   `KnowledgePresentation`](../../src/main/java/com/teammoeg/frostedresearch/knowledge/client/KnowledgePresentation.java)、[
   `KnowledgeUiTheme`](../../src/main/java/com/teammoeg/frostedresearch/knowledge/client/ui/KnowledgeUiTheme.java)、[
-  `DrawDeskScreen`](../../src/main/java/com/teammoeg/frostedresearch/gui/drawdesk/DrawDeskScreen.java)
+  `DrawDeskScreen`](../../src/main/java/com/teammoeg/frostedresearch/gui/drawdesk/DrawDeskScreen.java)、[
+  `ExperimentTableBlockEntity`](../../src/main/java/com/teammoeg/frostedresearch/knowledge/experiment/ExperimentTableBlockEntity.java)、[
+  `ExperimentTableScreen`](../../src/main/java/com/teammoeg/frostedresearch/knowledge/client/experiment/ExperimentTableScreen.java)
 
 ## 一册可以翻阅的札记
 
@@ -20,8 +22,8 @@
 画面使用暖纸、深墨、旧铜和少量青绿色强调。纸边、分隔线、槽框与按钮框来自现有 `draw_desk.png`、`escritoire.png`，由
 `KnowledgeUiTheme` 统一处理。没有新增位图资源。
 
-顶部书签为「来件」「档案」「脉络」「随想」。左侧翻找条目，右侧阅读。常规页面按窗口大小计算布局，上限 660×420 GUI 像素；宽度不足 420
-时书签独占第二行。抄录页沿用现有物品槽坐标，宽度不超过 440、高度 210。
+顶部书签为「来件」「档案」「脉络」「随想」「研究」。左侧翻找条目，右侧阅读。常规页面按窗口大小计算布局，上限 660×420 GUI 像素；宽度不足
+`KnowledgeLayout.WIDE = 460` 时书签独占第二行。抄录页沿用现有物品槽坐标，宽度不超过 440、高度 210。
 
 ## 先阅读，再整理
 
@@ -45,7 +47,43 @@
 archive。整个阅读区域展示知识、实际联络以及已由掌握的想法公开的项目。待研究项目用虚线连接，实际研究和推导用实线连接；共同输入仍先汇入联络连接点。
 
 滚轮以鼠标位置缩放，空白或节点上拖动可平移，「全图」重新适配。点击而非拖动节点时，`KnowledgeNodeSheet`
-在画布上打开第二张纸，展示该札记、项目或联络；关闭后不会跳回档案，也不重置相机。历史开关允许查看旧关系；历史引用没有当前操作权限。具体研究执行暂由临时完成指令辅助体验，见 [检查路线](playthrough.md)。
+在画布上打开第二张纸，展示该札记、项目或联络；关闭后不会跳回档案，也不重置相机。历史开关允许查看旧关系；历史引用没有当前操作权限。项目浮纸的「查看研究」转到研究页。
+已放弃的启动只在历史视图出现，不把待研究的虚线改成实线。
+
+## 研究页
+
+「研究」左侧列出已掌握想法公开的项目，以及起源想法已离开档案、但仍在进行的启动；副标题说明可以开始、进行中几项已完成、已完成或缺少什么。
+右侧依次是项目正文、研究目标和需求清单。未开始时只有「开始研究」：项目有需求且 `researchStartStatus` 为 `LEARNABLE`
+时可用，起源想法取第一份当前可以启动它的想法。没有需求的项目显示暂无可做步骤，只能由开发指令完成。
+
+进行中时，需求清单标出已完成（●）、未完成（○）与当前选中项（▸），‹ › 切换选中的需求，下方给出该需求的操作：
+
+- 证据：显示每个槽位当前有几份档案或来件记录符合，以及服务端能否凑齐一组。「整理证据」由服务端从档案和来件中挑选一组满足全部条件的记录并保存副本，
+  玩家不需要逐份选择；已完成时列出用作证据的记录。槽位条件不进入快照，玩家只看到作者撰写的需求标题。
+- 演算：「开始演算」把绘图台的纸牌局指向这项需求，有研究用纸和笔时直接开局，并回到绘图台的游戏界面；缺纸或笔时也会切过去，放好材料后按游戏区的开局键即可。
+  每赢一局难度足够的纸牌局计入一次，满足前开局键继续为这项需求开局。正在为它演算时显示「继续演算」与「停止演算」；停止后绘图台回到旧研究的纸牌局。
+  有演算目标时，绘图台左上角的研究栏改为显示「演算中的研究」：项目标题、已赢局数与所需难度，悬停可见需求标题；没有目标时仍显示旧研究的进度。
+  测试时，有作弊权限（权限等级 2 以上）的玩家可以在一局进行中直接点棋盘中心的最终论文格子，立即完成这一局，见
+  [纸牌局](../research/gameplay-and-integrations.md#theory-card-game)。
+- 实验：显示已完成几次、每次需要持续多久。实验在 [实验台](#实验台) 上进行，研究页的「在实验台进行」只作提示，不可点击。
+
+全部需求满足后「完成研究」可用，服务端再次判断后产出成果。「放弃」先确认，作废已提交的进度，记录保留在脉络历史中，之后可以重新开始。
+
+## 实验台
+
+实验台（`frostedresearch:experiment_table`）用玻璃瓶、工作台和木板合成：玻璃瓶在上，工作台居中，木板在两侧和下方两角。第一次使用时归属使用者的队伍，
+之后只有该队成员能打开。左侧上方「材料」下是一排三格材料槽，下方是玩家背包；右侧是实验面板：
+
+- 顶部列出队伍进行中研究里尚未完成的实验，「项目 · 需求标题」，多于一项时用 ‹ › 切换。看到的不是这张实验台正在准备的那一项时，只有「选用这项实验」；
+  选用会替换原来的实验，正在运行的实验随之停止，已投入的材料不退回。
+- 选用后显示状态和逐项检查：房间是否封闭、房间大小、所需方块的数量、实验台处的温度，以及材料槽能提供的材料，满足为 ✓，不满足为红色 ✗。
+  选定实验后，材料与温度每秒刷新，放入或取出材料后一秒内更新；房间只在选用、「检查」和开始时扫描。
+- 全部满足时「开始实验」可用，服务端再次检查后一次扣除材料。之后不需要玩家在场，只需要区块保持加载。运行中每秒读一次温度，每五秒扫描一次房间；
+  任何一项不满足时暂停，保留进度，条件恢复后继续。「停止」结束这次实验，进度清零，材料不退回。
+- 运行满所需时长后计入一次实验。需求还差次数时回到准备状态，再次开始需要重新投入材料；已经满足时实验台清空选择。研究被完成或放弃后，
+  实验台在下一次检查时清空选择并提示这项实验已不再需要。
+
+拆除实验台会掉落材料槽中的物品。房间与温度的判定见 [研究需求](definitions.md)。
 
 「随想」显示已经得到的提示。「细想一会儿」把睡前主题和讨论放入阅读页的次级操作：可以留到睡前思索，或选择身边的同伴发出讨论邀请。双方确认与每日额度仍由服务端处理。
 

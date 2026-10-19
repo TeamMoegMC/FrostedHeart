@@ -31,7 +31,7 @@ import java.util.*;
  * Existing component address, backed by the unified archive rather than separate entitlement sets.
  */
 public final class TeamKnowledgeData extends KnowledgeState {
-    public static final int CURRENT_SCHEMA_VERSION = 2;
+    public static final int CURRENT_SCHEMA_VERSION = KnowledgeState.SCHEMA_VERSION;
     public static final Codec<TeamKnowledgeData> CODEC = KnowledgeState.CODEC.xmap(TeamKnowledgeData::new, data -> data);
 
     public TeamKnowledgeData() {

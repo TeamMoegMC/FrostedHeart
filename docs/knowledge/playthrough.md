@@ -2,29 +2,43 @@
 
 - Status: `Current`
 - Last verified: `2026-09-08`
-- Scope: 开发测试用知识联络、项目完成、图谱分支/回环与成果效果
+- Scope: 开发测试用知识联络、研究页上的项目执行与完成、实验台、图谱分支/回环与成果效果
 - Code anchors: [`example-datapack`](example-datapack/README.md)、[
   `KnowledgeCommands`](../../src/main/java/com/teammoeg/frostedresearch/knowledge/KnowledgeCommands.java)、[
   `KnowledgeService`](../../src/main/java/com/teammoeg/frostedresearch/knowledge/KnowledgeService.java)、[
   `KnowledgeGraphModel`](../../src/main/java/com/teammoeg/frostedresearch/knowledge/client/KnowledgeGraphModel.java)
 
-本轮已同步更新 `run/saves/knowledge-test/datapacks/example-datapack`。重启更新后的开发客户端进入该世界；其他世界需要自行安装此示例包。它不是正式进度内容。
+本轮已同步更新 `run/saves/knowledge-test/datapacks/example-datapack` 与 `run/saves/knowledge-test-world/datapacks/knowledge-example`。重启更新后的开发客户端进入该世界；其他世界需要自行安装此示例包。它不是正式进度内容。
 
 ## 起点
 
 在抄录台检视纸和木棍，把两份观察记入档案，然后联络，得到「纸页与木棍」想法。也可以长按观察键记录放置的橡木原木，再与纸的物品观察联络。
 
-「脉络」现在会显示已经公开的「材料比较」项目；未开始时与想法之间是虚线。管理员执行：
+「脉络」现在会显示已经公开的「材料比较」项目；未开始时与想法之间是虚线。打开「研究」书签选中它，点「开始研究」。它有两项需求：
+
+1. **观察一段原木**：长按观察键记录任意原木方块（`#minecraft:logs`）并收入来件。若走的是橡木原木路线，档案里已有这份记录。点「整理证据」。
+2. **演算**：在绘图台放入研究用纸（`minecraft:paper` 或石质压力板）和笔（炭笔即可，难度 0），点「开始演算」，在游戏区赢一局。
+   开启作弊时可以直接点棋盘中心的最终论文格子完成这一局。
+
+两项都标为 ● 后点「完成研究」，得到 `material_finding`（材料札记）与 `oak_button_design`（木制按钮）。项目与实际成果连接进入图谱，项目标为完成。
+管理员仍可用下面的开发指令跳过需求：
 
 ```text
 /knowledge research complete knowledge_example:material_record
 ```
 
-得到 `material_finding`（材料札记）与 `oak_button_design`（木制按钮）。项目与实际成果连接进入图谱，项目标为完成。
-
 ## 分支与汇合
 
-下表省略 `knowledge_example:` 前缀。每次先在档案中选择输入进行联络，得到想法，再使用对应完整项目 ID 执行完成指令。
+下表省略 `knowledge_example:` 前缀。每次先在档案中选择输入进行联络，得到想法，再完成对应项目。三个项目带需求，在研究页完成：
+
+- `basic_switch`：两局难度 1 的演算，需要羽毛笔与墨水，以及 `minecraft:paper`。
+- `pressure_control`：在木板小屋里做一次受压试验。合成实验台（玻璃瓶在上，工作台居中，木板在两侧和下方两角），放在一间木板围成的小屋里：
+  屋内空气 4–256 格，屋子至少用到 8 块木板，实验台处不高于 40°C。开始研究后打开实验台，「选用这项实验」，放入 4 块任意木板和 1 块石头（`minecraft:stone`，不是圆石），
+  全部打 ✓ 后「开始实验」，20 秒后计入。拆掉一块墙或屋顶会让实验暂停，补上后继续。之前已经完成过这个项目时，先忘记它的一项成果，
+  例如 `/knowledge forget result knowledge_example:pressure_plate_design`，研究页就能再次开始。
+- `lattice`：在两种不同生物群系各观察一段原木，「整理证据」会自动挑出两处不同群系的记录。
+
+其余项目没有需求，研究页显示暂无可做步骤，用完整项目 ID 执行完成指令。
 
 | 联络输入                                     | 想法                  | 完成项目               | 获得成果                                             |
 |------------------------------------------|---------------------|--------------------|--------------------------------------------------|

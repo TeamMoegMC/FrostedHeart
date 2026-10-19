@@ -40,6 +40,9 @@ import com.teammoeg.frostedresearch.blocks.RubbingTool;
 import com.teammoeg.frostedresearch.gui.drawdesk.DrawDeskContainer;
 import com.teammoeg.frostedresearch.item.FRBaseItem;
 import com.teammoeg.frostedresearch.item.UpgradePrototypeItem;
+import com.teammoeg.frostedresearch.knowledge.experiment.ExperimentTableBlock;
+import com.teammoeg.frostedresearch.knowledge.experiment.ExperimentTableBlockEntity;
+import com.teammoeg.frostedresearch.knowledge.experiment.ExperimentTableMenu;
 import com.teammoeg.frostedresearch.knowledge.item.ResearchNoteItem;
 import com.teammoeg.frostedresearch.recipe.InspireRecipe;
 import com.teammoeg.frostedresearch.recipe.ResearchPaperRecipe;
@@ -82,6 +85,12 @@ public class FRContents {
 				.sound(SoundType.WOOD)
 				.strength(2, 6)
 				.noOcclusion()));
+		// EXPERIMENT_TABLE
+		public static final RegistryObject<ExperimentTableBlock> EXPERIMENT_TABLE = register("experiment_table", () -> new ExperimentTableBlock(
+			BlockBehaviour.Properties.of()
+				.mapColor(MapColor.WOOD)
+				.sound(SoundType.WOOD)
+				.strength(2, 6)));
 		// MECHANICAL_CALCULATOR
 		public static final RegistryObject<MechCalcBlock> MECHANICAL_CALCULATOR = CFunctionUtils.makeIf(CompatModule.isCreateLoaded(), ()->
 			register("mechanical_calculator", () -> new MechCalcBlock(
@@ -127,6 +136,8 @@ public class FRContents {
 			ForgeRegistries.BLOCK_ENTITY_TYPES, FRMain.MODID);
 		public static final RegistryObject<BlockEntityType<DrawingDeskTileEntity>> DRAWING_DESK = REGISTER.register(
 			"drawing_desk", makeType(DrawingDeskTileEntity::new, Blocks.DRAWING_DESK::get));
+		public static final RegistryObject<BlockEntityType<ExperimentTableBlockEntity>> EXPERIMENT_TABLE = REGISTER.register(
+			"experiment_table", makeType(ExperimentTableBlockEntity::new, Blocks.EXPERIMENT_TABLE::get));
 		public static final RegistryObject<BlockEntityType<MechCalcTileEntity>> MECH_CALC = CFunctionUtils.makeIf(CompatModule.isCreateLoaded(),()->REGISTER.register(
 			"mechanical_calculator", makeType(MechCalcTileEntity::new, ()->Blocks.MECHANICAL_CALCULATOR.get())));
 
@@ -169,6 +180,7 @@ public class FRContents {
 		public static final DeferredRegister<MenuType<?>> CONTAINERS = DeferredRegister.create(ForgeRegistries.MENU_TYPES,
 			FRMain.MODID);
 		public static final RegistryObject<MenuType<DrawDeskContainer>> DRAW_DESK = register(DrawingDeskTileEntity.class, ("draw_desk"), DrawDeskContainer::new);
+		public static final RegistryObject<MenuType<ExperimentTableMenu>> EXPERIMENT_TABLE = register(ExperimentTableBlockEntity.class, "experiment_table", ExperimentTableMenu::new);
 
 		@SuppressWarnings("unchecked")
 		public static <T extends AbstractContainerMenu, BE extends BlockEntity> RegistryObject<MenuType<T>> register(Class<BE> BEClass, String name, BEMenuFactory<T, BE> factory) {

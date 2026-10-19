@@ -49,10 +49,12 @@ import static com.teammoeg.frostedresearch.knowledge.client.ui.KnowledgeUiTheme.
  */
 public final class KnowledgeLayer extends UILayer {
     private static final com.teammoeg.chorda.client.icon.CIcons.CTextureIcon DESK_INVENTORY = DrawDeskIcons.ALL.withUV(0, 0, 140, 203, 512, 512);
+    private static final Set<String> RESEARCH_ACTIONS = Set.of("START_RESEARCH", "SUBMIT_EVIDENCE", "CALCULATE",
+            "STOP_CALCULATION", "COMPLETE_RESEARCH", "ABANDON_RESEARCH");
 
-    private enum Page {INBOX, ARCHIVE, RELATIONS, HINTS}
+    private enum Page {INBOX, ARCHIVE, RELATIONS, HINTS, RESEARCH}
 
-    private enum Mode {READ, CANDIDATES, THINK, DELETE, TOOLS}
+    private enum Mode {READ, CANDIDATES, THINK, DELETE, TOOLS, ABANDON}
 
     private final DrawDeskContainer menu;
     private final Runnable back, surfaceChanged;
@@ -68,7 +70,8 @@ public final class KnowledgeLayer extends UILayer {
     private Mode mode = Mode.READ;
     private KnowledgeKey.Kind kind = KnowledgeKey.Kind.OBSERVATION;
     private KnowledgeKey focused;
-    private int hintIndex = -1, candidateIndex;
+    private String focusedProject;
+    private int hintIndex = -1, candidateIndex, requirementIndex;
     private boolean organize, details, history, filterOpen;
     private String query = "", statusFilter = "", subtype = "", partner = "", draftTitle = "", draftRemarks = "";
     private final LinkedHashSet<KnowledgeKey> selected = new LinkedHashSet<>();
@@ -103,7 +106,7 @@ public final class KnowledgeLayer extends UILayer {
         reading = new JournalText(this);
         toolSelection = new JournalText(this);
         overview = new KnowledgeGraphViewport(this, this::openGraphNode);
-        nodeSheet = new KnowledgeNodeSheet(this, this::closeGraphSheet, this::openGraphNode);
+        nodeSheet = new KnowledgeNodeSheet(this, this::closeGraphSheet, this::openGraphNode, this::openResearch);
         search = new TextBox(this) {
             @Override
             public void onTextChanged() {
@@ -163,6 +166,7 @@ public final class KnowledgeLayer extends UILayer {
         (page == Page.INBOX ? data.inbox : data.archive).forEach(e -> retained.add(e.key()));
         selected.removeIf(key -> !retained.contains(key) || page == Page.ARCHIVE && !data.entry(key).active());
         if (focused != null && data.entry(focused) == null) focused = null;
+        if (focusedProject != null && researchProject(focusedProject) == null) focusedProject = null;
         rowsDirty = true;
         rebuild();
     }
@@ -227,7 +231,7 @@ public final class KnowledgeLayer extends UILayer {
     }
 
     private void buildHeader() {
-        int tabX = getWidth() < 420 ? 14 : 105, tabY = getWidth() < 420 ? 30 : 12;
+        int tabX = getWidth() < KnowledgeLayout.WIDE ? 14 : 105, tabY = getWidth() < KnowledgeLayout.WIDE ? 30 : 12;
         for (Page value : Page.values())
             button(tabX + value.ordinal() * 43, tabY, 42, 18, t("page." + value.name().toLowerCase(Locale.ROOT)), true, () -> switchPage(value)).selected(page == value);
         button(getWidth() - 122, 12, 57, 18, t("tools"), true, this::openTools);
@@ -320,6 +324,10 @@ public final class KnowledgeLayer extends UILayer {
             reading.text(hintIndex >= 0 && hintIndex < data.hints.size() ? List.of(data.hints.get(hintIndex), t("hint.reflect")) : List.of(t("empty.hints")));
             return;
         }
+        if (page == Page.RESEARCH) {
+            buildResearchReading(x, w, bottom);
+            return;
+        }
         reading.setVisible(true);
         List<Component> paragraphs = new ArrayList<>();
         if (entry == null) paragraphs.add(t(page == Page.INBOX ? "empty.inbox" : "empty.archive"));
@@ -382,6 +390,188 @@ public final class KnowledgeLayer extends UILayer {
         if (remove != null) remove.setEnabled(!selected.isEmpty() && !KnowledgeWorkbenchBatch.running());
         if (combine != null)
             combine.setEnabled(entry != null && entry.active() && (selected.size() < 5 || selected.contains(focused)));
+    }
+
+    /**
+     * A project's aims and requirements, with the actions its open run allows. The server judges every action.
+     */
+    private void buildResearchReading(int x, int w, int bottom) {
+        var project = researchProject(focusedProject);
+        if (project == null) {
+            reading.text(List.of(t(researchProjects().isEmpty() ? "research.empty" : "research.choose")));
+            return;
+        }
+        var run = data.openRun(project.id());
+        if (mode == Mode.ABANDON && run != null) {
+            reading.text(List.of(t("research.abandon.question"), t("research.abandon.explain")));
+            button(x, bottom - 21, w / 2 - 3, 19, t("research.abandon.confirm"), false, () -> {
+                send(Action.ABANDON_RESEARCH, List.of(), run.id(), "", "");
+                mode = Mode.READ;
+                rebuild();
+            });
+            button(x + w / 2 + 2, bottom - 21, w / 2 - 2, 19, t("cancel"), true, () -> {
+                mode = Mode.READ;
+                rebuild();
+            });
+            return;
+        }
+        List<Component> paragraphs = new ArrayList<>();
+        if (!project.body().getString().isBlank()) paragraphs.add(project.body());
+        if (!project.outputTitles().isEmpty()) {
+            paragraphs.add(t("graph.expected_results"));
+            paragraphs.addAll(project.outputTitles());
+        }
+        var requirements = run != null ? run.requirements() : project.requirements();
+        if (requirements.isEmpty()) paragraphs.add(t("research.no_steps"));
+        else {
+            paragraphs.add(t("research.requirements"));
+            requirementIndex = Math.floorMod(requirementIndex, requirements.size());
+            for (int i = 0; i < requirements.size(); i++)
+                paragraphs.add(requirementLine(requirements.get(i), run != null, run != null && i == requirementIndex));
+            if (run != null) paragraphs.addAll(requirementDetails(requirements.get(requirementIndex)));
+        }
+        reading.text(paragraphs);
+        if (run == null) {
+            boolean startable = project.startStatus().equals("LEARNABLE") && !requirements.isEmpty();
+            button(x, bottom - 23, w, 20, t("research.start"), false,
+                    () -> send(Action.START_RESEARCH, project.origin() == null ? List.of() : List.of(project.origin()), project.id(), "", ""))
+                    .tooltip(startable ? t("research.start") : researchState(project)).setEnabled(startable);
+            reading.setHeight(Math.max(20, reading.getHeight() - 21));
+            return;
+        }
+        if (!requirements.isEmpty()) {
+            var requirement = requirements.get(requirementIndex);
+            int ax = x, aw = w;
+            if (requirements.size() > 1) {
+                button(x, bottom - 45, 20, 19, Component.literal("‹"), true, () -> {
+                    requirementIndex--;
+                    rebuild();
+                });
+                button(x + w - 20, bottom - 45, 20, 19, Component.literal("›"), true, () -> {
+                    requirementIndex++;
+                    rebuild();
+                });
+                ax = x + 24;
+                aw = w - 48;
+            }
+            requirementAction(requirement, run, ax, bottom - 45, aw);
+        }
+        button(x, bottom - 22, w / 2 - 3, 19, t("research.complete"), false, () -> send(Action.COMPLETE_RESEARCH, List.of(), run.id(), "", ""))
+                .setEnabled(!requirements.isEmpty() && requirements.stream().allMatch(KnowledgeJournalData.Requirement::satisfied));
+        button(x + w / 2 + 2, bottom - 22, w / 2 - 2, 19, t("research.abandon"), true, () -> {
+            mode = Mode.ABANDON;
+            rebuild();
+        });
+        reading.setHeight(Math.max(20, reading.getHeight() - 46));
+    }
+
+    private void requirementAction(KnowledgeJournalData.Requirement requirement, KnowledgeJournalData.Run run, int x, int y, int w) {
+        if (requirement.satisfied()) {
+            button(x, y, w, 19, t("research.requirement_done"), true, () -> {
+            }).setEnabled(false);
+            return;
+        }
+        if (requirement.experiment()) {
+            // Experiments run on an experiment table, which lists the team's experiments itself.
+            button(x, y, w, 19, t("research.experiment.at_table"), true, () -> {
+            }).tooltip(t("research.experiment.explain", requirement.duration() / 20)).setEnabled(false);
+            return;
+        }
+        if (requirement.evidence()) {
+            button(x, y, w, 19, t("research.evidence.submit"), false,
+                    () -> send(Action.SUBMIT_EVIDENCE, List.of(), run.id(), "", "", requirement.id()))
+                    .tooltip(t(requirement.ready() ? "research.evidence.ready" : "research.evidence.not_ready")).setEnabled(requirement.ready());
+            return;
+        }
+        if (calculating(run, requirement)) {
+            button(x, y, w / 2 - 2, 19, t("research.calculation.continue"), false, back);
+            button(x + w / 2 + 2, y, w - w / 2 - 2, 19, t("research.calculation.stop"), true,
+                    () -> send(Action.STOP_CALCULATION, List.of(), run.id(), "", "", requirement.id()));
+        } else button(x, y, w, 19, t("research.calculation.start"), false,
+                () -> send(Action.CALCULATE, List.of(), run.id(), "", "", requirement.id()))
+                .tooltip(t("research.calculation.explain", requirement.level()));
+    }
+
+    private boolean calculating(KnowledgeJournalData.Run run, KnowledgeJournalData.Requirement requirement) {
+        if (menu == null) return false;
+        try {
+            return menu.getBlock().isCalculating(java.util.UUID.fromString(run.id()), requirement.id());
+        } catch (IllegalArgumentException invalid) {
+            return false;
+        }
+    }
+
+    private Component requirementLine(KnowledgeJournalData.Requirement r, boolean started, boolean selected) {
+        Component title = r.title().getString().isBlank()
+                ? t(r.evidence() ? "research.evidence" : r.experiment() ? "research.experiment" : "research.calculation") : r.title();
+        if (!started) return t("research.line.plain", title);
+        Component progress = r.evidence()
+                ? t(r.satisfied() ? "research.evidence.done" : r.ready() ? "research.evidence.ready_short" : "research.evidence.waiting")
+                : r.experiment() ? t("research.experiment.progress", r.done(), r.count())
+                : t("research.calculation.progress", r.done(), r.count());
+        return t(selected ? "research.line.selected" : r.satisfied() ? "research.line.done" : "research.line.open", title, progress);
+    }
+
+    private List<Component> requirementDetails(KnowledgeJournalData.Requirement r) {
+        List<Component> lines = new ArrayList<>();
+        if (r.experiment()) {
+            lines.add(t("research.experiment.explain", r.duration() / 20));
+            return lines;
+        }
+        if (!r.evidence()) {
+            lines.add(t("research.calculation.explain", r.level()));
+            return lines;
+        }
+        if (r.satisfied()) {
+            lines.add(t("research.evidence.used"));
+            r.bound().forEach(key -> lines.add(data.title(key)));
+            return lines;
+        }
+        for (int i = 0; i < r.slots().size(); i++)
+            lines.add(r.slots().get(i) == 0 ? t("research.evidence.slot_none", i + 1) : t("research.evidence.slot", i + 1, r.slots().get(i)));
+        return lines;
+    }
+
+    /**
+     * Projects disclosed by archived ideas, followed by open runs whose idea has since left the archive.
+     */
+    private List<KnowledgeJournalData.Project> researchProjects() {
+        List<KnowledgeJournalData.Project> projects = new ArrayList<>(data.projects);
+        Set<String> known = new HashSet<>();
+        projects.forEach(project -> known.add(project.id()));
+        for (var run : data.runs)
+            if (run.open() && known.add(run.project()))
+                projects.add(new KnowledgeJournalData.Project(run.project(), run.title(), List.of(run.idea()), List.of(), true, false,
+                        Component.empty(), run.requirements(), null, "", run.id()));
+        return projects;
+    }
+
+    private KnowledgeJournalData.Project researchProject(String id) {
+        return id == null ? null : researchProjects().stream().filter(project -> project.id().equals(id)).findFirst().orElse(null);
+    }
+
+    private Component researchState(KnowledgeJournalData.Project project) {
+        var run = data.openRun(project.id());
+        if (run != null)
+            return t("research.state.open", run.requirements().stream().filter(KnowledgeJournalData.Requirement::satisfied).count(), run.requirements().size());
+        if (project.completed() && !project.startStatus().equals("LEARNABLE")) return t("research.state.completed");
+        if (project.requirements().isEmpty()) return t("research.state.no_steps");
+        return t(switch (project.startStatus()) {
+            case "LEARNABLE" -> "research.state.ready";
+            case "ALREADY_OWNED" -> "research.state.completed";
+            case "DEFINITION_UNAVAILABLE" -> "research.state.unavailable";
+            default -> "research.state.needs_idea";
+        });
+    }
+
+    /**
+     * Opens the research page on one project, as the graph's project sheet does.
+     */
+    void openResearch(String project) {
+        switchPage(Page.RESEARCH);
+        focusedProject = project;
+        rowsDirty = true;
+        rebuild();
     }
 
     private void buildTray() {
@@ -522,6 +712,10 @@ public final class KnowledgeLayer extends UILayer {
                 if (values.size() == 1 || expanded.contains(group.getKey())) for (var entry : values)
                     rows.add(new JournalList.Row(entry.key(), entry.title(), page == Page.INBOX ? KnowledgePresentation.status(entry.status()) : entry.summary().isEmpty() ? KnowledgePresentation.subtype(entry.subtype()) : entry.summary().get(0), entry.icon(), false, values.size() > 1 ? 1 : 0));
             }
+        } else if (page == Page.RESEARCH) {
+            for (var project : researchProjects())
+                if (project.title().getString().toLowerCase(Locale.ROOT).contains(needle))
+                    rows.add(new JournalList.Row(project.id(), project.title(), researchState(project), new ItemStack(Items.WRITABLE_BOOK), false));
         } else {
             for (int i = 0; i < data.hints.size(); i++)
                 if (data.hints.get(i).getString().toLowerCase(Locale.ROOT).contains(needle))
@@ -533,7 +727,7 @@ public final class KnowledgeLayer extends UILayer {
     }
 
     private void updateListFocus() {
-        list.focus(page == Page.HINTS ? hintIndex : focused);
+        list.focus(page == Page.HINTS ? hintIndex : page == Page.RESEARCH ? focusedProject : focused);
     }
 
     private void rowClicked(JournalList.Row row, boolean checkbox) {
@@ -552,6 +746,11 @@ public final class KnowledgeLayer extends UILayer {
                 mode = Mode.READ;
             }
         } else if (row.value() instanceof Integer i) hintIndex = i;
+        else if (row.value() instanceof String project && page == Page.RESEARCH) {
+            if (!project.equals(focusedProject)) requirementIndex = 0;
+            focusedProject = project;
+            mode = Mode.READ;
+        }
         rebuild();
     }
 
@@ -564,6 +763,8 @@ public final class KnowledgeLayer extends UILayer {
         organize = false;
         selected.clear();
         focused = null;
+        focusedProject = null;
+        requirementIndex = 0;
         hintIndex = -1;
         statusFilter = "";
         subtype = "";
@@ -617,7 +818,11 @@ public final class KnowledgeLayer extends UILayer {
     }
 
     private void send(Action action, List<KnowledgeKey> keys, String rule, String title, String remarks) {
-        var packet = new KnowledgeWorkbenchActionPacket(menu.getBlock().getBlockPos(), action, keys, rule, title, remarks);
+        send(action, keys, rule, title, remarks, "");
+    }
+
+    private void send(Action action, List<KnowledgeKey> keys, String rule, String title, String remarks, String requirement) {
+        var packet = new KnowledgeWorkbenchActionPacket(menu.getBlock().getBlockPos(), action, keys, rule, title, remarks, requirement);
         if (action == Action.RETRIEVE) {
             retrievalRequest = packet.requestId();
             retrievePending = true;
@@ -650,6 +855,8 @@ public final class KnowledgeLayer extends UILayer {
 
     public void receiveReply(CompoundTag payload) {
         boolean retrieval = payload.getString("action").equals("RETRIEVE");
+        // Research replies lead with their own message rather than a generic status.
+        boolean research = RESEARCH_ACTIONS.contains(payload.getString("action"));
         if (retrieval && payload.hasUUID("request") && payload.getUUID("request").equals(retrievalRequest)) {
             retrievePending = false;
             inspectedKey = KnowledgeJournalData.key(payload.get("retrieved_key"));
@@ -674,7 +881,8 @@ public final class KnowledgeLayer extends UILayer {
             if (retrieval) {
                 feedback.add(0, message);
                 toolFeedback = message;
-            } else feedback.add(message);
+            } else if (research) feedback.add(0, message);
+            else feedback.add(message);
         }
         if (payload.contains("candidates")) {
             candidates.clear();
@@ -691,6 +899,14 @@ public final class KnowledgeLayer extends UILayer {
         if (payload.getBoolean("exported")) {
             draftTitle = "";
             draftRemarks = "";
+        }
+        if (payload.getBoolean("calculate")) {
+            // The card game is on the drawing desk surface; the journal keeps its page for the return.
+            notices = List.copyOf(feedback);
+            notice = feedback.isEmpty() ? Component.empty() : feedback.get(0);
+            noticeTicks = 100;
+            back.run();
+            return;
         }
         notices = List.copyOf(feedback);
         notice = feedback.isEmpty() ? Component.empty() : feedback.get(0);
@@ -712,6 +928,19 @@ public final class KnowledgeLayer extends UILayer {
             case "discussion.invited" -> "think.invited";
             case "discussion.unavailable" -> "think.unavailable";
             case "desk.unavailable" -> "tools.closed";
+            case "research.start.success" -> "research.msg.started";
+            case "research.start.active" -> "research.msg.running";
+            case "research.start.already_owned" -> "research.state.completed";
+            case "research.start.definition_unavailable" -> "research.state.unavailable";
+            case "research.start.not_understood", "research.start.invalid_input" -> "research.state.needs_idea";
+            case "research.evidence_submitted" -> "research.msg.evidence_submitted";
+            case "research.evidence_missing" -> "research.msg.evidence_missing";
+            case "research.calculation_started" -> "research.msg.calculation_started";
+            case "research.calculation_prepare" -> "research.msg.calculation_prepare";
+            case "research.calculation_stopped" -> "research.msg.calculation_stopped";
+            case "research.completed" -> "research.msg.completed";
+            case "research.unmet" -> "research.msg.unmet";
+            case "research.abandoned" -> "research.msg.abandoned";
             default -> "status.unchanged";
         });
     }
@@ -754,8 +983,11 @@ public final class KnowledgeLayer extends UILayer {
         rule(g, x + 14, y + layout.header() + 1, w - 28);
         if (page == Page.RELATIONS) return;
         g.fill(x + layout.rightX() - 9, y + layout.header() + 8, x + layout.rightX() - 8, y + layout.bottom(), PAPER_DARK);
+        var project = page == Page.RESEARCH ? researchProject(focusedProject) : null;
         Component title = mode == Mode.CANDIDATES ? t("link.possibilities") : mode == Mode.DELETE ? t("delete.title") : mode == Mode.THINK ? t("think")
-                : page == Page.HINTS ? t("page.hints") : data.entry(focused) == null ? t("reading.title") : data.entry(focused).title();
+                : mode == Mode.ABANDON ? t("research.abandon.title") : page == Page.HINTS ? t("page.hints")
+                : page == Page.RESEARCH ? project == null ? t("page.research") : project.title()
+                : data.entry(focused) == null ? t("reading.title") : data.entry(focused).title();
         g.drawString(getFont(), Language.getInstance().getVisualOrder(getFont().substrByWidth(title, layout.rightWidth())), x + layout.rightX(), y + layout.header() + 12, INK, false);
     }
 

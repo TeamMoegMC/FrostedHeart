@@ -129,6 +129,81 @@ class KnowledgeDefinitionsTest {
         assertTrue(KnowledgeDefinitions.validate(bad).stream().anyMatch(s -> s.contains("missing output idea")));
     }
 
+    static LinkRule.Slot rockSlot(String name) {
+        return new LinkRule.Slot(name, KnowledgeKey.Kind.OBSERVATION, Optional.empty(), Optional.of(Observation.Type.BLOCK),
+                List.of(new FieldCondition("object", FieldCondition.Operator.EQ, Optional.of(ObservationValue.known("test:rock")), Optional.empty())));
+    }
+
+    static KnowledgeDefinitions.Snapshot project(List<ProjectRequirement> requirements) {
+        ResourceLocation project = new ResourceLocation("test", "project"), finding = new ResourceLocation("test", "finding");
+        var result = new ResultDefinition(new com.teammoeg.frostedresearch.knowledge.ResearchResult.Finding(finding, List.of()), "Finding", "", List.of(), true);
+        return new KnowledgeDefinitions.Snapshot(1, Map.of(IDEA, new IdeaDefinition("Birds", "", List.of(), List.of(project), true)),
+                Map.of(finding, result), Map.of(), Map.of(), Map.of(project, new ProjectDefinition("Project", "", List.of(finding), requirements)), List.of());
+    }
+
+    @Test
+    void projectRequirementsValidateTheirShape() {
+        var pair = ProjectRequirement.evidence("pair", "Two rocks", List.of(rockSlot("a"), rockSlot("b")), List.of(),
+                List.of(new ProjectRequirement.Distinct("biome", List.of("a", "b"))));
+        assertEquals(List.of(), KnowledgeDefinitions.validate(project(List.of(pair, ProjectRequirement.calculation("calc", "", 3, 2)))));
+        Map<String, ProjectRequirement> invalid = new LinkedHashMap<>();
+        invalid.put("duplicate requirement id", ProjectRequirement.calculation("pair", "", 0, 1));
+        invalid.put("calculation level", ProjectRequirement.calculation("deep", "", 4, 1));
+        invalid.put("calculation count", ProjectRequirement.calculation("none", "", 0, 0));
+        invalid.put("author-written title", ProjectRequirement.evidence("untitled", "", List.of(rockSlot("a")), List.of(), List.of()));
+        invalid.put("must be observations", ProjectRequirement.evidence("idea", "Idea", List.of(new LinkRule.Slot("i", KnowledgeKey.Kind.IDEA,
+                Optional.of(IDEA), Optional.empty(), List.of())), List.of(), List.of()));
+        invalid.put("unknown slot", ProjectRequirement.evidence("lost", "Lost", List.of(rockSlot("a"), rockSlot("b")), List.of(),
+                List.of(new ProjectRequirement.Distinct("biome", List.of("a", "c")))));
+        invalid.put("two different slots", ProjectRequirement.evidence("single", "Single", List.of(rockSlot("a")), List.of(),
+                List.of(new ProjectRequirement.Distinct("biome", List.of("a")))));
+        invalid.put("1 to 8 slots", ProjectRequirement.evidence("crowd", "Crowd", java.util.stream.IntStream.range(0, 9)
+                .mapToObj(i -> rockSlot("s" + i)).toList(), List.of(), List.of()));
+        invalid.forEach((message, requirement) -> assertTrue(KnowledgeDefinitions.validate(project(List.of(pair, requirement))).stream()
+                .anyMatch(error -> error.contains(message)), message));
+    }
+
+    @Test
+    void experimentRequirementsValidateMaterialsSpaceAndDuration() {
+        var planks = new ProjectRequirement.Material(Optional.of(new ResourceLocation("minecraft", "oak_planks")), Optional.empty(), 4);
+        var walls = new ProjectRequirement.BlockCount(Optional.empty(), Optional.of(new ResourceLocation("minecraft", "planks")), 8);
+        var room = new ProjectRequirement.Space(true, 4, 256, Optional.empty(), Optional.of(40.0), List.of(walls));
+        var valid = ProjectRequirement.experiment("load", "Load test", 1, 400, List.of(planks), room);
+        assertEquals(List.of(), KnowledgeDefinitions.validate(project(List.of(valid))));
+        assertEquals(List.of(), KnowledgeDefinitions.validate(project(List.of(
+                ProjectRequirement.experiment("outdoor", "Outdoor", 2, 20, List.of(), ProjectRequirement.Space.NONE)))));
+        Map<String, ProjectRequirement> invalid = new LinkedHashMap<>();
+        invalid.put("author-written title", ProjectRequirement.experiment("untitled", "", 1, 400, List.of(), room));
+        invalid.put("duration must be", ProjectRequirement.experiment("short", "Short", 1, 5, List.of(), room));
+        invalid.put("at most 3 materials", ProjectRequirement.experiment("heavy", "Heavy", 1, 400, List.of(planks, planks, planks, planks), room));
+        invalid.put("unknown material item", ProjectRequirement.experiment("odd", "Odd", 1, 400,
+                List.of(new ProjectRequirement.Material(Optional.of(new ResourceLocation("test", "missing")), Optional.empty(), 1)), room));
+        invalid.put("need an enclosed space", ProjectRequirement.experiment("open", "Open", 1, 400, List.of(),
+                new ProjectRequirement.Space(false, 4, 256, Optional.empty(), Optional.empty(), List.of())));
+        invalid.put("minimum temperature exceeds", ProjectRequirement.experiment("warm", "Warm", 1, 400, List.of(),
+                new ProjectRequirement.Space(true, 1, 10, Optional.of(30.0), Optional.of(10.0), List.of())));
+        invalid.put("unknown space block", ProjectRequirement.experiment("odd_block", "Odd block", 1, 400, List.of(),
+                new ProjectRequirement.Space(true, 1, 10, Optional.empty(), Optional.empty(), List.of(
+                        new ProjectRequirement.BlockCount(Optional.of(new ResourceLocation("test", "missing")), Optional.empty(), 1)))));
+        invalid.put("only experiments take", new ProjectRequirement("calc", ProjectRequirement.Type.CALCULATION, "", 0, 1,
+                List.of(), List.of(), List.of(), 400, List.of(), ProjectRequirement.Space.NONE));
+        invalid.forEach((message, requirement) -> assertTrue(KnowledgeDefinitions.validate(project(List.of(requirement))).stream()
+                .anyMatch(error -> error.contains(message)), message));
+    }
+
+    @Test
+    void evidenceSlotsAreObservationUsesAndRepeatedSlotsKeepIndependentRecords() {
+        var pair = ProjectRequirement.evidence("pair", "Two rocks", List.of(rockSlot("a"), rockSlot("b")), List.of(), List.of());
+        KnowledgeDefinitions.install(project(List.of(pair)));
+        var snapshot = KnowledgeDefinitions.current();
+        var first = new Observation(UUID.randomUUID(), Observation.Type.BLOCK, new ResourceLocation("test", "rock"), Map.of(), Observation.Source.command(), Optional.empty());
+        var second = new Observation(UUID.randomUUID(), Observation.Type.BLOCK, new ResourceLocation("test", "rock"), Map.of(), Observation.Source.command(), Optional.empty());
+        var third = new Observation(UUID.randomUUID(), Observation.Type.BLOCK, new ResourceLocation("test", "rock"), Map.of(), Observation.Source.command(), Optional.empty());
+        assertTrue(snapshot.hasObservationUse(first, TagLookup.NONE));
+        assertTrue(snapshot.addsObservationDifference(second, List.of(first), TagLookup.NONE), "two slots need two records");
+        assertFalse(snapshot.addsObservationDifference(third, List.of(first, second), TagLookup.NONE));
+    }
+
     @Test
     void documentedExampleDatapackLoadsAndItsItemCombinationProducesTheSharedIdea() {
         Path directory = Path.of("docs/knowledge/example-datapack");
@@ -146,6 +221,15 @@ class KnowledgeDefinitionsTest {
             assertEquals(new ResourceLocation("knowledge_example", "materials"), matches.get(0).rule().output());
             assertTrue(loaded.hasObservationUse(paper, TagLookup.NONE));
             assertTrue(loaded.hasObservationUse(stick, TagLookup.NONE));
+            var load = loaded.projects().get(new ResourceLocation("knowledge_example", "pressure_control")).requirement("load_test").orElseThrow();
+            assertEquals(ProjectRequirement.Type.EXPERIMENT, load.type());
+            assertEquals(400, load.duration());
+            assertTrue(load.space().enclosed());
+            var record = loaded.projects().get(new ResourceLocation("knowledge_example", "material_record"));
+            assertEquals(List.of("log", "tabulate"), record.requirements().stream().map(ProjectRequirement::id).toList());
+            var birch = new Observation(UUID.randomUUID(), Observation.Type.BLOCK, new ResourceLocation("minecraft", "birch_log"), Map.of(), Observation.Source.command(), Optional.empty());
+            TagLookup logs = (type, field, value, tag) -> type == Observation.Type.BLOCK && tag.equals(new ResourceLocation("minecraft", "logs"));
+            assertTrue(loaded.hasObservationUse(birch, logs), "evidence for a project makes an otherwise unused log useful");
         }
     }
 

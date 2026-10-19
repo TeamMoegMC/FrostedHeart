@@ -3,5 +3,13 @@
   "results": [
     "knowledge_example:lever_design",
     "knowledge_example:lever_procedure"
+  ],
+  "requirements": [
+    {
+      "id": "linkage",
+      "type": "calculation",
+      "level": 1,
+      "count": 2
+    }
   ]
 }

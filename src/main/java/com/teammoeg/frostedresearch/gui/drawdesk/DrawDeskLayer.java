@@ -30,7 +30,6 @@ import com.teammoeg.frostedresearch.Lang;
 import com.teammoeg.frostedresearch.ResearchHooks;
 import com.teammoeg.frostedresearch.api.ClientResearchDataAPI;
 import com.teammoeg.frostedresearch.blocks.DrawingDeskTileEntity;
-import com.teammoeg.frostedresearch.gui.tech.ResearchProgressPanel;
 import com.teammoeg.frostedresearch.gui.archive.ResearchWorkspaceState;
 import com.teammoeg.frostedresearch.network.FHDrawingDeskOperationPacket;
 import com.teammoeg.frostedresearch.network.FHResearchControlPacket;
@@ -64,7 +63,7 @@ public class DrawDeskLayer extends UILayer {
 		hp.setPosAndSize(140, 19, 243, 170);
 		add(hp);
 
-		ResearchProgressPanel p = new ResearchProgressPanel(this);
+		DeskProgressPanel p = new DeskProgressPanel(this, dd);
 		p.setPosAndSize(14, 19, 111, 68);
 		add(p);
 

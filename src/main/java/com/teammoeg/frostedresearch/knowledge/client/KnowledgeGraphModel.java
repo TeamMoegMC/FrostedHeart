@@ -68,7 +68,7 @@ public final class KnowledgeGraphModel {
         Map<String, Set<String>> flow = new LinkedHashMap<>();
         Set<Origin> actualOrigins = new HashSet<>();
         for (var relation : data.relations)
-            if (relation.research())
+            if (relation.research() && !relation.abandoned())
                 for (var input : relation.inputs()) actualOrigins.add(new Origin(relation.project(), input));
         for (var entry : data.archive) if (history || entry.active()) addKnowledge(seeds, data, entry.key(), history);
         for (var project : data.projects) {

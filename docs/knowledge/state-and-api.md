@@ -16,8 +16,10 @@
 `chorda_data/<内部队伍 UUID>.nbt`。`data/TeamKnowledgeData` 是已有调用位置的薄封装，其实际状态由
 `knowledge/state/KnowledgeState` 保存。`TeamResearchData` 继续独立保存旧研究进度。
 
-本轮存储格式为 `schema_version: 2`，重新定义了原有 knowledge 结构，没有从旧版四个 acquired-ID 集合迁移的逻辑。新源码中的
-`findingIds()` 等旧式访问器从档案派生，不再形成另一份成果权威。
+存储格式为 `schema_version: 2`（`KnowledgeState.SCHEMA_VERSION`；`TeamKnowledgeData.CURRENT_SCHEMA_VERSION` 引用同一常量），重新定义了原有
+knowledge 结构，没有从旧版四个 acquired-ID 集合迁移的逻辑。新源码中的 `findingIds()` 等旧式访问器从档案派生，不再形成另一份成果权威。
+`KnowledgeState.read` 先读取 `schema_version` 并交给 `KnowledgeState.upgrade`，这是存储格式迁移的唯一入口；版本 2 是知识系统的第一版布局，
+目前没有迁移步骤。缺少版本号或版本号高于当前值时按现有格式宽松解码，`write()` 始终写入当前版本。
 
 | 保存项            | 含义                                           |
 |----------------|----------------------------------------------|
@@ -36,6 +38,30 @@
 `Observation.Source` 中，接收笔记不会改变它。
 
 原始记录、知识摘要和实际历史不因数据包重载改写。`KnowledgeState` 的存储写方法供知识服务和持久化桥接使用，游戏系统应通过下述服务提交操作。
+
+### 无法解码的条目
+
+`KnowledgeState.read` 不抛出异常，单条记录无法解码不会再让整个队伍文件加载失败。`archive`、`inbox`、`links`、`research`、`acquisitions`
+逐条解码；`hints` 的规则键（须为 `ResourceLocation`）与 `dream_topics` 的玩家键（须为 UUID）连同各自的值逐键解码。无法解码的条目以原始 NBT
+按原分区保存在 `KnowledgeState` 内部的 `unreadable` 中：
+
+- 不进入档案、来件或其它运行时状态，因此不参与查询、学习、联络、同步视图与权限；
+- `write()` 将其原样写回原分区：列表条目追加在有效条目之后；键值条目只在同一键没有有效条目时写回，有效条目优先；
+- 随保存/加载往返、`replaceState`（包括 `TeamKnowledgeData.CODEC` 解码与 `copy()`）和 `merge` 保留，合并时相同的原始条目只保留一份；
+- 每次加载最多一条 `FRMain.LOGGER` 警告，给出条数以及第一条的位置（如 `archive[1]`、`hints[<键>]`）和原因。
+
+以后能解码它们的版本会在原位置重新读到这些条目。分区本身不是预期的 NBT 类型时（只可能来自手工编辑），列表分区整体作为一条保留，键值分区按空处理。
+
+MC 1.20.1 使用的 DFU 6 会把 `optionalFieldOf` 中“存在但解码失败”的值当作缺失。为免一条观察因单个值无法读取而被清空全部值、再按清空后的样子写回，
+`KnowledgeElement.observation` 与 `Observation.values` 使用 `KnowledgeKey.strictOptionalField`：编码不变，存在但无法解码的值使整条记录进入
+`unreadable`，日志给出的也是内层的真实原因。
+
+`Observation` 紧凑构造器执行与解码相同的规则：字段已知且类型一致；不适用的字段只能记为 `not_applicable`；值的载荷与状态、类型一致且数值有限；
+只有物品观察可以带 `item_data`。违反时抛出 `IllegalArgumentException`，非法观察在产生处就被拒绝，不会写进存档；解码同样经过构造器，失败时返回
+codec 错误而不是异常。`ObservationSampling` 把非有限的坐标与温度记为未采集。
+
+知识组件因此不再触发 Chorda 的整队丢弃。但 `CTeamDataManager.load` 在任一组件加载失败时仍会跳过该队伍文件，`save()` 随后删除没有已加载队伍的
+`.nbt` 文件；这属于 Chorda，尚未改动。
 
 ## 统一操作
 
@@ -110,10 +136,33 @@
 
 每队每条规则默认只保存首次成功绑定。同一想法经不同规则产生会增加替代路径；同一规则反复尝试不会无限追加历史。外部学习不创建本队未执行的联络。
 
-`startResearch(project, idea)` 要求实际起源想法有效且声明可以启动该项目，返回本次启动 UUID。`completeResearch(run)`
-使用项目定义的成果集合；带显式列表的重载要求与声明集合相符，不能用任意输出替代项目定义。每个启动记录只有一个实际起源想法，完成重复调用不会重新产出。获得成果失败时保留来件，研究关系仍属于实际历史。
+### 研究启动记录
 
-这些是研究系统接入接口。本轮没有实现新研究的计算、证据、实验执行器，也没有把旧研究项目强行映射成新项目；新研究任务、居民工作时间、实验设施和原型数值升级属于设计文档明确后续展开的部分。
+`ResearchHistory` 是一次启动：实际起源想法、启动时间、`completed` / `abandoned` 状态、完成时的成果，以及按需求 `id` 保存的进度——
+`calculations` 记录每局获胜的难度，`evidence` 记录每个槽位提交的观察副本，`experiments` 记录每项实验完成的次数。空进度不写入存档；进度存在但无法解码时整条启动记录按
+[无法解码的条目](#无法解码的条目) 隔离，不会以丢失证据的样子加载。
+
+| 方法                                                     | 行为                                                                                                        |
+|--------------------------------------------------------|-----------------------------------------------------------------------------------------------------------|
+| `researchStartStatus(project, idea)`                   | 返回 `LEARNABLE` 或不能开始的原因：定义不存在、想法无效或未声明该项目、已有进行中的启动（`ACTIVE`）、已完成且全部成果都在档案中（`ALREADY_OWNED`）                |
+| `startResearch(project, idea)`                         | 状态为 `LEARNABLE` 时记录新启动并返回 UUID。每队每个项目同时最多一次进行中的启动；完成后只有当某项成果不在档案中（例如被忘记）才能再次启动                         |
+| `openRun(project)`                                     | 该项目进行中的启动                                                                                                 |
+| `submitEvidence(run, requirement)`                     | 在档案与来件的全部观察中寻找一组满足该证据需求的互异记录，并保存其副本。搜索至多尝试 `EVIDENCE_SEARCH_STEPS = 20000` 个候选，找不到返回 `NO_MATCH`         |
+| `submitEvidence(run, requirement, keys)`               | 按给定记录精确绑定，每个槽位一份                                                                                          |
+| `calculationLevel(run, requirement)`                   | 该计算需求仍需要的纸牌局难度；已满足或启动已结束时为空                                                                               |
+| `recordCalculation(run, requirement, level)`           | 记录一局胜利；难度低于要求返回 `INVALID_INPUT`，已满足返回 `ALREADY_OWNED`                                                     |
+| `experimentRequirement(run, requirement)`              | 进行中启动里仍未满足的实验需求定义；已满足、启动已结束或不是实验时为空。实验台据此选用和运行                                                      |
+| `recordExperiment(run, requirement)`                   | 记录一次完成的实验；已满足返回 `ALREADY_OWNED`，没有这项实验或启动已结束返回 `NOT_FOUND`                                           |
+| `requirementMet(run, requirement)` / `requirementsMet(run)` | 按当前定义重新判断。没有需求的项目对 `requirementsMet` 永远不成立                                                              |
+| `finishResearch(run)`                                  | 玩家路径：全部需求满足时调用 `completeResearch`，否则返回 `REQUIREMENTS_UNMET`                                                  |
+| `abandonResearch(run)`                                 | 结束进行中的启动，清空已提交进度；记录保留为已放弃，脉络历史视图可见                                                                        |
+| `completeResearch(run)`                                | 研究系统接口与开发指令使用，不检查需求。使用项目定义的成果集合；带显式列表的重载要求与声明集合相符                                                         |
+
+进度每次按当前定义判断：证据副本必须仍能完整绑定当前槽位与条件，计算只计难度不低于当前 `level` 的胜局，实验按完成次数与当前 `count` 比较。作者修改需求后，玩家可能需要重新提交。
+证据可以来自档案或来件，提交不消耗观察；之后删除来件或忘记档案条目不影响已提交的副本。同一观察可以用于不同项目，同一需求内各槽位必须是不同记录。
+
+每个启动记录只有一个实际起源想法，完成重复调用不会重新产出。获得成果失败时保留来件，研究关系仍属于实际历史。居民参与与原型数值升级尚未实现，
+见 [研究项目执行计划](../../plans/2026-10-18_23-42-16_knowledge-research-project-execution.md)。
 
 ## 梦境、讨论与暗示
 
@@ -144,12 +193,30 @@
 
 ## 生命周期、同步与命令
 
-队伍创建和读取时初始化知识；玩家登录、换队、知识状态变更、数据包重载和标签最终同步时发送对应队伍的可见状态。队伍成员变化只改变查询归属，不自动复制档案。
+队伍创建和读取时初始化知识；玩家登录、换队、知识状态变更以及数据包重载后标签最终同步时发送对应队伍的可见状态。队伍成员变化只改变查询归属，不自动复制档案。
 `merge` 按知识身份、规则 ID 和实际研究 UUID 合并，重新按当前定义计算有效性，保留超容量内容。
 
-首次登录的知识初始化与同步在 `PlayerLoggedInEvent` 的 `LOWEST` 优先级执行，晚于 Architectury/FTB Teams 建立玩家队伍。
-`OnDatapackSyncEvent` 携带单个玩家时属于更早的登录阶段，不在此处读取队伍；其玩家参数为空时才处理 `/reload`
-后已在线队伍的同步。新世界中首次进入的玩家因此不需要预先存在队伍或知识存档。
+`TeamResearchService.sync(team)` 只把队伍标记为待同步，并丢弃该队伍缓存的权限投影。知识服务的每次提交、旧研究访问效果的授予或重置、换队与
+`/reload` 都只做这一标记。`KnowledgeRuntime` 在 `TickEvent.ServerTickEvent` 的 `END` 阶段调用 `TeamResearchService.flush()`
+，为每个待同步队伍构造一次快照，发给已建立网络连接的在线成员；无人在线的队伍只清除标记，不构造快照。某个队伍构造失败只记录错误，不影响其他队伍。
+批量学习/删除、联络产出、研究完成和初始知识发放因此各只发送一次快照。
+
+两条路径不等 tick 结束：
+
+- 登录与绘图台 `REFRESH` 调用 `TeamResearchService.send(player, team)`，立即给该玩家发送当前快照；队伍正待同步时，同一份快照也发给其他在线成员并清除标记。
+- 绘图台其他操作在发送回复前调用 `TeamResearchService.flush(team)`。客户端总是先装入更新后的视图再处理回复，例如 `RETRIEVE` 按
+  `retrieved_key` 聚焦新来件。
+
+首次登录的知识初始化与同步在 `PlayerLoggedInEvent` 的 `LOWEST` 优先级执行，晚于 Architectury/FTB Teams 建立玩家队伍；登录只发送这一份知识快照。
+`OnDatapackSyncEvent` 携带单个玩家时属于更早的登录阶段，不在此处读取队伍；其玩家参数为空时才标记 `/reload`
+后已在线的队伍。更早运行的 `ResearchHooks.ServerReload` 此时标签尚未最终安装，只清除权限投影缓存，不为任何队伍构造快照。新世界中首次进入的玩家因此不需要预先存在队伍或知识存档。
+
+服务端权限投影按队伍缓存：`TechnologyAccessResolver.project(team)`、`projection(teamId)` 及其布尔适配器读取同一份缓存，没有队伍的假玩家和机器共用一份。
+缓存项记下构造时的 `KnowledgeState` 实例与 `mutationRevision()`、`TeamResearchData` 实例，以及 `ResearchResultCatalog`、
+`KnowledgeDefinitions` 的当前快照，任一不同即重建。因此知识变更（包括 `TeamKnowledgeData` 的旧式直接写方法）、成果目录与知识定义安装不需要另行失效。
+旧研究进度没有修订号，由上述同步标记失效；`ResearchHooks.reload`、`FHResearch.reindex`（效果重新声明全局锁定列表）以及 `ServerReload`
+末尾（重新核对各队旧研究进度之后）清空全部缓存。队伍待同步期间的读取每次重新计算、不写入缓存，直到 flush，以免缓存同一操作的中途状态，例如可重复研究在授予后立即重置。
+快照构造复用这份缓存投影。
 
 服务端 `KnowledgeView`
 包含档案、来件、已揭示暗示、实际联络、实际研究和获得经历。未发现规则的全部输入条件不进入快照。正常图谱中的联络必须仍能以历史绑定满足当前规则，并且其实际输入/输出有效；历史视图可以查看失效路径和忘记后的引用。数据包重载不重新编造历史绑定。
@@ -157,8 +224,8 @@
 可见快照还包含 `projects`：仅列出档案中想法已经公开的项目、可用来源与成果说明，供未启动项目展示。它与 `research`
 中的实际启动/完成记录分开。项目完成后的多项成果共用一次最终快照，分别保留其学习事件和结果。
 
-`KnowledgeSnapshotPacket` 将完整的 `KnowledgeSyncSnapshot` NBT 压缩后按 128 KiB
-分片。客户端收齐一轮后一次替换档案、技术投影和可见视图；传输期间继续显示上一份完整状态。这样容量配置允许的观察档案不会被普通单包
+`KnowledgeSnapshotPacket` 将 `KnowledgeSyncSnapshot`（`catalog_revision`、发现投影 `knowledge`、权限投影 `technology` 与可见视图
+`archive_view`）的 NBT 压缩后按 128 KiB 分片。持久化的队伍状态不进入快照，客户端也不保存它的镜像。客户端收齐一轮后一次替换两份投影和可见视图；传输期间继续显示上一份完整状态。这样容量配置允许的观察档案不会被普通单包
 NBT 大小限制截断。绘图台回复只携带本次操作结果与联络候选，不再次复制整个档案。
 
 行政操作：
@@ -172,10 +239,11 @@ NBT 大小限制截断。绘图台回复只携带本次操作结果与联络候�
 ```
 
 授予、忘记、合并需要权限等级 2。普通成员可用 `/knowledge dream <类型> <身份>` 设置主题，用
-`/knowledge discuss invite <玩家> <类型> <身份>` 邀请并通过 `/knowledge discuss accept` 确认。含冒号的 ID
-用命令字符串参数，必要时加双引号。指令生成历史观察由 `Observation` API 明确提供内容和 `command_generated`
+`/knowledge discuss invite <玩家> <类型> <身份>` 邀请并通过 `/knowledge discuss accept` 确认。想法与成果按定义 ID
+读取，即资源位置，不需要引号，并补全已加载的定义；观察按记录 UUID 读取。项目不是知识身份，不能授予或忘记；要重新开始已完成的项目，
+忘记它的一项成果即可。指令生成历史观察由 `Observation` API 明确提供内容和 `command_generated`
 来源，不会使用一个缺乏历史内容的裸 UUID 伪造观察。
 
-`research complete` 是权限等级 2 的临时开发命令，只跳过未实现的研究任务。它要求队伍拥有实际起源想法，并调用
-`startResearch` / `completeResearch`
-，不会把研究项目当作新的知识元素或直接伪造成果权限。示例操作见 [playthrough.md](playthrough.md)。
+`research complete` 是权限等级 2 的开发命令，跳过项目需求。它沿用该项目进行中的启动；没有时要求队伍拥有能启动它的起源想法，再调用
+`startResearch` / `completeResearch`，不会把研究项目当作新的知识元素或直接伪造成果权限。项目已完成且成果都在档案中时提示无法开始。示例操作见
+[playthrough.md](playthrough.md)。

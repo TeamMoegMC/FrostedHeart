@@ -54,6 +54,7 @@ public class FRClient {
 	@SubscribeEvent
 	public static void initScreen(FMLClientSetupEvent event) {
 		registerCUIScreen(FRContents.MenuTypes.DRAW_DESK.get(), DrawDeskScreen::new);
+		registerCUIScreen(FRContents.MenuTypes.EXPERIMENT_TABLE.get(), com.teammoeg.frostedresearch.knowledge.client.experiment.ExperimentTableScreen::new);
 	}
 
 	public static <C extends AbstractContainerMenu, S extends PrimaryLayer> void registerCUIScreen(MenuType<C> type, Function<C, S> factory) {

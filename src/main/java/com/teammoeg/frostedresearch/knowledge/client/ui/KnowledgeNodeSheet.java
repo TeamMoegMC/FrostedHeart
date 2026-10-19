@@ -43,6 +43,7 @@ import static com.teammoeg.frostedresearch.knowledge.client.ui.KnowledgeUiTheme.
  */
 public final class KnowledgeNodeSheet extends UILayer {
     private final Runnable close;
+    private final Consumer<String> research;
     private final JournalText text;
     private final JournalRelation relation;
     private KnowledgeJournalData data;
@@ -50,9 +51,10 @@ public final class KnowledgeNodeSheet extends UILayer {
     private boolean details;
     private FormattedCharSequence heading = FormattedCharSequence.EMPTY;
 
-    public KnowledgeNodeSheet(UIElement parent, Runnable close, Consumer<String> open) {
+    public KnowledgeNodeSheet(UIElement parent, Runnable close, Consumer<String> open, Consumer<String> research) {
         super(parent);
         this.close = close;
+        this.research = research;
         text = new JournalText(this);
         relation = new JournalRelation(this, key -> open.accept(KnowledgeGraphModel.knowledgeId(key)));
         setScissorEnabled(false);
@@ -108,6 +110,12 @@ public final class KnowledgeNodeSheet extends UILayer {
             expand.setPosAndSize(21, height - 31, width - 42, 18);
             add(expand);
         } else if (node.kind() == KnowledgeGraphModel.Kind.PROJECT) {
+            String project = node.project() != null ? node.project().id() : node.link() != null ? node.link().project() : "";
+            if (!project.isBlank()) {
+                JournalButton open = new JournalButton(this, t("graph.open_research"), true, () -> research.accept(project));
+                open.setPosAndSize(21, height - 31, width - 42, 18);
+                add(open);
+            }
             paragraphs.add(t(node.completed() ? "graph.research_done" : "graph.research_waiting"));
             if (node.project() != null) {
                 paragraphs.add(t("graph.related_ideas"));
@@ -121,7 +129,8 @@ public final class KnowledgeNodeSheet extends UILayer {
         } else {
             paragraphs.add(t("graph.old_record"));
         }
-        text.setPosAndSize(23, 64, width - 46, height - (entry == null ? 82 : 104));
+        boolean action = entry != null || node.kind() == KnowledgeGraphModel.Kind.PROJECT;
+        text.setPosAndSize(23, 64, width - 46, height - (action ? 104 : 82));
         text.text(paragraphs);
         add(text);
     }

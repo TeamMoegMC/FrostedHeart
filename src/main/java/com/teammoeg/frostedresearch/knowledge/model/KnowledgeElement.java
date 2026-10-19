@@ -33,7 +33,7 @@ import java.util.Optional;
 public record KnowledgeElement(KnowledgeKey key, Optional<Observation> observation, String title, String body) {
     public static final Codec<KnowledgeElement> CODEC = RecordCodecBuilder.<KnowledgeElement>create(i -> i.group(
             KnowledgeKey.CODEC.fieldOf("key").forGetter(KnowledgeElement::key),
-            Observation.CODEC.optionalFieldOf("observation").forGetter(KnowledgeElement::observation),
+            KnowledgeKey.strictOptionalField(Observation.CODEC, "observation").forGetter(KnowledgeElement::observation),
             Codec.STRING.optionalFieldOf("title", "").forGetter(KnowledgeElement::title),
             Codec.STRING.optionalFieldOf("body", "").forGetter(KnowledgeElement::body)
     ).apply(i, KnowledgeElement::new)).comapFlatMap(e -> {

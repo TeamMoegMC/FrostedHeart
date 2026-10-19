@@ -62,38 +62,64 @@ public final class LinkMatcher {
         return search(List.copyOf(unique.values()), rules, tags, false, limit);
     }
 
+    /**
+     * 所选元素恰好各占一个槽位时的绑定。 / The binding that places every selected element in exactly one slot.
+     */
+    public static Optional<Map<String, KnowledgeElement>> bindExact(List<KnowledgeElement> selected, SlotPattern pattern, TagLookup tags) {
+        if (selected.size() != pattern.inputs().size() || selected.stream().map(KnowledgeElement::key).distinct().count() != selected.size())
+            return Optional.empty();
+        return bind(selected, pattern, tags, Integer.MAX_VALUE);
+    }
+
+    /**
+     * 从候选池中找出任一组满足模式的互异元素，回溯至多尝试 steps 次；超出预算视为没有找到。
+     * Finds any binding of distinct pool elements, trying at most {@code steps} candidates; an exhausted budget finds none.
+     */
+    public static Optional<Map<String, KnowledgeElement>> find(List<KnowledgeElement> pool, SlotPattern pattern, TagLookup tags, int steps) {
+        Map<KnowledgeKey, KnowledgeElement> unique = new LinkedHashMap<>();
+        pool.forEach(element -> unique.putIfAbsent(element.key(), element));
+        return bind(List.copyOf(unique.values()), pattern, tags, steps);
+    }
+
     private static List<Match> search(List<KnowledgeElement> selected, Map<ResourceLocation, LinkRule> rules, TagLookup tags, boolean exact, int limit) {
         List<Match> matches = new ArrayList<>();
         for (var e : rules.entrySet().stream().sorted(Map.Entry.comparingByKey(Comparator.comparing(ResourceLocation::toString))).toList()) {
             if (matches.size() >= limit) break;
             LinkRule rule = e.getValue();
             if (exact && rule.inputs().size() != selected.size() || rule.inputs().size() > selected.size()) continue;
-            Map<String, List<KnowledgeElement>> candidates = new LinkedHashMap<>();
-            for (LinkRule.Slot slot : rule.inputs()) {
-                List<KnowledgeElement> eligible = selected.stream().filter(k -> slot.matches(k, tags))
-                        .sorted(Comparator.comparing(k -> k.key().id())).toList();
-                candidates.put(slot.name(), eligible);
-            }
-            if (candidates.values().stream().anyMatch(List::isEmpty)) continue;
-            List<String> order = candidates.keySet().stream().sorted(Comparator.comparingInt(name -> candidates.get(name).size())).toList();
-            Map<String, KnowledgeElement> bindings = new LinkedHashMap<>();
-            if (bind(0, order, candidates, bindings, new HashSet<>(), rule)) {
+            bind(selected, rule.pattern(), tags, Integer.MAX_VALUE).ifPresent(bindings -> {
                 Map<String, KnowledgeKey> keys = new LinkedHashMap<>();
                 rule.inputs().forEach(s -> keys.put(s.name(), bindings.get(s.name()).key()));
                 matches.add(new Match(e.getKey(), rule, keys));
-            }
+            });
         }
         return List.copyOf(matches);
     }
 
+    private static Optional<Map<String, KnowledgeElement>> bind(List<KnowledgeElement> pool, SlotPattern pattern, TagLookup tags, int steps) {
+        Map<String, List<KnowledgeElement>> candidates = new LinkedHashMap<>();
+        for (LinkRule.Slot slot : pattern.inputs()) {
+            List<KnowledgeElement> eligible = pool.stream().filter(k -> slot.matches(k, tags))
+                    .sorted(Comparator.comparing(k -> k.key().id())).toList();
+            if (eligible.isEmpty()) return Optional.empty();
+            candidates.put(slot.name(), eligible);
+        }
+        List<String> order = candidates.keySet().stream().sorted(Comparator.comparingInt(name -> candidates.get(name).size())).toList();
+        Map<String, KnowledgeElement> bindings = new LinkedHashMap<>();
+        return bind(0, order, candidates, bindings, new HashSet<>(), pattern.conditions(), new int[]{steps})
+                ? Optional.of(Map.copyOf(bindings)) : Optional.empty();
+    }
+
     private static boolean bind(int index, List<String> order, Map<String, List<KnowledgeElement>> candidates,
-                                Map<String, KnowledgeElement> bindings, Set<KnowledgeKey> used, LinkRule rule) {
+                                Map<String, KnowledgeElement> bindings, Set<KnowledgeKey> used,
+                                List<LinkRule.CrossCondition> conditions, int[] budget) {
         if (index == order.size()) return true;
         String slot = order.get(index);
         for (KnowledgeElement candidate : candidates.get(slot)) {
+            if (--budget[0] < 0) return false;
             if (!used.add(candidate.key())) continue;
             bindings.put(slot, candidate);
-            if (rule.conditions().stream().allMatch(c -> c.matches(bindings)) && bind(index + 1, order, candidates, bindings, used, rule))
+            if (conditions.stream().allMatch(c -> c.matches(bindings)) && bind(index + 1, order, candidates, bindings, used, conditions, budget))
                 return true;
             bindings.remove(slot);
             used.remove(candidate.key());

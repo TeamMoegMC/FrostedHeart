@@ -1,9 +1,9 @@
 # 生成式研究系统 V2：从现有研究出发
 
 - Time: 2026-08-25 16:17:39 +0800
-- Updated: 2026-08-25
+- Updated: 2026-10-18
 - Authors: Codex（OpenAI，系统、玩法与工程架构）；项目所有者提供目标、批评与取舍
-- Status: in-progress；Phase 1 五类成果基础层已于 2026-08-25 实现，Phase 2–6 待继续
+- Status: superseded（2026-10-18）；Phase 1 五类成果基础层已于 2026-08-25 实现，Phase 2–6 由[知识研究项目执行计划](2026-10-18_23-42-16_knowledge-research-project-execution.md)取代
 - Scope: FrostedResearch、观察与想法、证据板、居民讨论/计算/实验、实验台、五种研究成果、通用原型升级、数据包创作、旧研究兼容
 - Related: [研究讨论](../discussion/research_conversation.md)、[V0](2026-08-25_10-30-52_player-interactive-generative-research-system-v0.md)、[V1](2026-08-25_10-30-52_player-interactive-generative-research-system-v1.md)、[现有研究文档](../docs/research/README.md)
 
@@ -1088,6 +1088,8 @@ TechnologyAccessResolver
 
 ## Outcome
 
-Status: in-progress。
+Status: superseded（2026-10-18）。
 
 Phase 1 已完成五类成果基础层：Finding、Design、Construction、Procedure、Prototype；其中 Construction 独占多方块成型权，Procedure 独占方块右键使用权。已实现结果/目录、团队权威、物理 Prototype 壳、统一投影与 legacy 来源、执行端/JEI 适配和全量同步，但没有新增正式 topic、改动 companion 配方或迁移五项旧研究。下一步从 Phase 0 流程稿与 Phase 2 岩石 Finding 纵切继续；任何新增后台类型都必须先证明它能让这五项研究更清楚或更可玩，否则不进入 MVP。
+
+2026-10-18 补记（Claude，Anthropic Opus 5.5）：项目所有者确认本计划被[知识研究项目执行计划](2026-10-18_23-42-16_knowledge-research-project-execution.md)取代。原因是本计划早于人类设计文档 [`design/knowledge_research.md`](../design/knowledge_research.md)（2026-09-08），之后知识系统按该设计实现，有几处与本计划冲突：设计中想法来自联络而不是证据板纸牌局，纸牌局改为研究项目的「计算」；讨论用于联想暗示，而不是研究劳动；研究项目改为计算/证据/实验三类需求，而不是工作页缺口编译。Phase 1 的五类成果与权限投影不受影响，继续有效。本文的实验台、研究所、Prototype 章节保留作为后续计划的参考，但不再作为待实施内容。

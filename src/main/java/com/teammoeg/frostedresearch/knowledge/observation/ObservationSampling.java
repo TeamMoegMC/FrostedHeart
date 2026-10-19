@@ -78,16 +78,15 @@ public final class ObservationSampling {
         BlockPos position = BlockPos.containing(location);
         Map<String, ObservationValue> values = new LinkedHashMap<>();
         values.put("dimension", ObservationValue.known(world.dimension().location().toString()));
-        values.put("x", ObservationValue.known(location.x));
-        values.put("y", ObservationValue.known(location.y));
-        values.put("z", ObservationValue.known(location.z));
+        values.put("x", number(location.x));
+        values.put("y", number(location.y));
+        values.put("z", number(location.z));
         values.put("time", ObservationValue.known(world.getGameTime()));
         values.put("biome", world.getBiome(position).unwrapKey()
                 .map(key -> ObservationValue.known(key.location().toString()))
                 .orElseGet(() -> ObservationValue.unknown(ObservationValue.ValueType.STRING)));
         float temperature = WorldTemperature.block(world, position);
-        values.put("temperature", Float.isFinite(temperature) ? ObservationValue.known(temperature)
-                : ObservationValue.unknown(ObservationValue.ValueType.NUMBER));
+        values.put("temperature", number(temperature));
         values.put("temperature_type", Float.isFinite(temperature) ? ObservationValue.known(temperatureCategory(temperature))
                 : ObservationValue.unknown(ObservationValue.ValueType.STRING));
         // Calendar comes from the climate clock snapshot; dimensions without one remain explicitly unknown.
@@ -106,6 +105,13 @@ public final class ObservationSampling {
             values.put("climate", ObservationValue.known(climate.getClimate(new ChunkPos(position)).name().toLowerCase(Locale.ROOT)));
         }
         return values;
+    }
+
+    /**
+     * A reading that is not a finite number is recorded as not collected; observations only hold finite known numbers.
+     */
+    private static ObservationValue number(double value) {
+        return Double.isFinite(value) ? ObservationValue.known(value) : ObservationValue.unknown(ObservationValue.ValueType.NUMBER);
     }
 
     /**

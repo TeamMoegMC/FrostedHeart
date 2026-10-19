@@ -149,4 +149,23 @@ class LinkMatcherTest {
         assertEquals(2, LinkMatcher.candidates(archive, Map.of(id("one"), r, id("two"), r), 3, TagLookup.NONE).size());
         assertTrue(LinkMatcher.candidates(List.of(a, a), Map.of(id("one"), r), 3, TagLookup.NONE).isEmpty());
     }
+
+    @Test
+    void poolSearchFindsDistinctBindingsWithinItsStepBudget() {
+        var pattern = new SlotPattern(List.of(observationSlot("a"), observationSlot("b")), List.of(new LinkRule.CrossCondition(
+                LinkRule.CrossCondition.Kind.COMPARE, "a", "biome", "b", "", FieldCondition.Operator.NE, Optional.empty())));
+        List<KnowledgeElement> pool = new ArrayList<>();
+        for (int i = 0; i < 40; i++)
+            pool.add(KnowledgeElement.observation(observation(Map.of("biome", ObservationValue.known("minecraft:plains")))));
+        var forest = KnowledgeElement.observation(observation(Map.of("biome", ObservationValue.known("minecraft:forest"))));
+        pool.add(forest);
+        pool.add(forest);
+        var found = LinkMatcher.find(pool, pattern, TagLookup.NONE, 10_000).orElseThrow();
+        assertNotEquals(found.get("a").key(), found.get("b").key());
+        assertTrue(found.containsValue(forest));
+        assertTrue(LinkMatcher.find(pool, pattern, TagLookup.NONE, 1).isEmpty(), "an exhausted budget finds nothing");
+        assertTrue(LinkMatcher.bindExact(List.of(forest, forest), pattern, TagLookup.NONE).isEmpty(), "one record cannot fill two slots");
+        assertTrue(LinkMatcher.bindExact(List.of(pool.get(0), forest), pattern, TagLookup.NONE).isPresent());
+        assertTrue(LinkMatcher.bindExact(List.of(pool.get(0), pool.get(1)), pattern, TagLookup.NONE).isEmpty());
+    }
 }
