@@ -20,15 +20,18 @@
 /* Copyright (c) 2026 TeamMoeg */
 package com.teammoeg.frostedresearch.api;
 
+import com.teammoeg.chorda.dataholders.team.CTeamDataManager;
 import com.teammoeg.chorda.dataholders.team.TeamDataClosure;
 import com.teammoeg.chorda.dataholders.team.TeamDataHolder;
 import com.teammoeg.frostedresearch.FRContents;
+import com.teammoeg.frostedresearch.FRMain;
 import com.teammoeg.frostedresearch.FRNetwork;
 import com.teammoeg.frostedresearch.data.TeamKnowledgeData;
 import com.teammoeg.frostedresearch.item.UpgradePrototypeItem;
 import com.teammoeg.frostedresearch.knowledge.PrototypeProfileDefinition;
 import com.teammoeg.frostedresearch.knowledge.ResearchResult;
 import com.teammoeg.frostedresearch.knowledge.ResearchResultCatalog;
+import com.teammoeg.frostedresearch.knowledge.TechnologyAccessResolver;
 import com.teammoeg.frostedresearch.knowledge.network.KnowledgeSnapshotPacket;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
@@ -36,11 +39,14 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.items.ItemHandlerHelper;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Sole mutation service for Phase 1 team results and prototype fabrication.
  */
 public final class TeamResearchService {
+    private static final Set<UUID> PENDING = ConcurrentHashMap.newKeySet();
+
     private TeamResearchService() {
     }
 
@@ -63,7 +69,6 @@ public final class TeamResearchService {
                 com.teammoeg.frostedresearch.knowledge.model.KnowledgeElement.result(resultId),
                 com.teammoeg.frostedresearch.knowledge.state.AcquisitionSource.of("command", player),
                 com.teammoeg.frostedresearch.knowledge.KnowledgeService.Grant.COMMAND);
-        sync(closure.team());
         return new GrantResult(learned.succeeded() ? Status.ACQUIRED
                 : learned.status() == com.teammoeg.frostedresearch.knowledge.KnowledgeService.Status.ALREADY_OWNED
                 ? Status.ALREADY_ACQUIRED : Status.REJECTED, resultId, null);
@@ -118,15 +123,64 @@ public final class TeamResearchService {
         return Set.copyOf(types);
     }
 
+    /**
+     * Marks the team's knowledge snapshot and server access projection stale. Any number of marks in one server tick
+     * cost one snapshot, built by {@link #flush()} at the end of the tick and only for a team with an online member.
+     */
     public static void sync(TeamDataHolder team) {
+        PENDING.add(team.getId());
+        TechnologyAccessResolver.invalidate(team.getId());
+    }
+
+    /** Whether a marked change is still unsent; the team may be part-way through an operation. */
+    public static boolean pending(UUID team) {
+        return PENDING.contains(team);
+    }
+
+    /** Sends every pending snapshot. Called once at the end of each server tick. */
+    public static void flush() {
+        if (PENDING.isEmpty()) return;
+        for (UUID id : List.copyOf(PENDING)) {
+            TeamDataHolder team = CTeamDataManager.INSTANCE.get(id);
+            if (team == null) {
+                PENDING.remove(id);
+                continue;
+            }
+            try {
+                flush(team);
+            } catch (RuntimeException exception) {
+                FRMain.LOGGER.error("Could not send the knowledge snapshot of team {}", id, exception);
+            }
+        }
+    }
+
+    /** Sends the team's pending snapshot now, so that a reply sent next is applied on top of it. */
+    public static void flush(TeamDataHolder team) {
+        send(team, null);
+    }
+
+    /** Sends the current snapshot to one player, together with the team's pending snapshot if there is one. */
+    public static void send(ServerPlayer player, TeamDataHolder team) {
+        send(team, player);
+    }
+
+    /** Drops pending snapshots and cached projections when the server stops. */
+    public static void clear() {
+        PENDING.clear();
+        TechnologyAccessResolver.invalidateAll();
+    }
+
+    private static void send(TeamDataHolder team, ServerPlayer requester) {
+        Set<ServerPlayer> recipients = new LinkedHashSet<>();
+        if (PENDING.remove(team.getId())) recipients.addAll(team.getOnlineMembers());
+        if (requester != null) recipients.add(requester);
+        // A player can already appear in team membership during login or a GameTest before its network listener
+        // has been attached. The login event sends the snapshot once that listener exists.
+        recipients.removeIf(player -> player.connection == null);
+        if (recipients.isEmpty()) return;
         var fragments = KnowledgeSnapshotPacket.create(team);
-        team.forEachOnline(player -> {
-            // A player can already appear in team membership during login or a GameTest
-            // before its network listener has been attached. The login event sends the
-            // same full snapshot once that listener exists.
-            if (player.connection != null)
-                for (var fragment : fragments) FRNetwork.INSTANCE.sendPlayer(player, fragment);
-        });
+        for (ServerPlayer player : recipients)
+            for (var fragment : fragments) FRNetwork.INSTANCE.sendPlayer(player, fragment);
     }
 
     public enum Status {

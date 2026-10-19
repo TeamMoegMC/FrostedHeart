@@ -28,6 +28,7 @@ import com.teammoeg.frostedheart.content.climate.gamedata.climate.WorldClimate;
 import com.teammoeg.frostedheart.content.climate.gamedata.climate.WorldClockSource;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.network.chat.Component;
+import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.event.level.SleepFinishedTimeEvent;
 import net.minecraftforge.event.server.ServerStoppedEvent;
@@ -62,8 +63,13 @@ public final class KnowledgeRuntime {
         // Architectury/FTB Teams establishes a new player's team earlier in this event.
         if (event.getEntity() instanceof ServerPlayer player) {
             KnowledgeService.forPlayer(player).initialize();
-            TeamResearchService.sync(com.teammoeg.frostedresearch.api.KnowledgeDataAPI.getData(player).team());
+            TeamResearchService.send(player, com.teammoeg.frostedresearch.api.KnowledgeDataAPI.getData(player).team());
         }
+    }
+
+    @SubscribeEvent
+    public static void tick(TickEvent.ServerTickEvent event) {
+        if (event.phase == TickEvent.Phase.END) TeamResearchService.flush();
     }
 
     @SubscribeEvent
@@ -82,7 +88,8 @@ public final class KnowledgeRuntime {
         // The player-targeted form fires before PlayerLoggedInEvent, while a first-time
         // player's FTB team does not exist yet. Login sends knowledge after team setup.
         if (event.getPlayer() != null) return;
-        // A reload targets already logged-in players, with the final tags installed.
+        // A reload targets already logged-in players, with the final tags installed. The marks below become one
+        // snapshot per team at the end of the tick.
         java.util.Set<java.util.UUID> sent = new java.util.HashSet<>();
         for (ServerPlayer player : event.getPlayerList().getPlayers()) {
             var closure = com.teammoeg.frostedresearch.api.KnowledgeDataAPI.getData(player);
@@ -96,5 +103,6 @@ public final class KnowledgeRuntime {
     @SubscribeEvent
     public static void stopped(ServerStoppedEvent event) {
         KnowledgeDiscussion.clear();
+        TeamResearchService.clear();
     }
 }

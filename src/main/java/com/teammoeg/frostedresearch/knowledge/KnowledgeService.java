@@ -64,8 +64,6 @@ public final class KnowledgeService {
     private final Runnable changed;
     private final int archiveLimit;
     private final int inboxLimit;
-    private int batchDepth;
-    private boolean syncPending;
     private long observationsRevision = -1;
     private List<Observation> observations = List.of();
 
@@ -197,23 +195,11 @@ public final class KnowledgeService {
     }
 
     public List<OperationResult> learnInbox(Collection<KnowledgeKey> keys) {
-        return batch(keys, this::learnInbox);
+        return keys.stream().distinct().map(this::learnInbox).toList();
     }
 
     public List<OperationResult> deleteInbox(Collection<KnowledgeKey> keys) {
-        return batch(keys, this::deleteInbox);
-    }
-
-    private List<OperationResult> batch(Collection<KnowledgeKey> keys, java.util.function.Function<KnowledgeKey, OperationResult> operation) {
-        batchDepth++;
-        try {
-            return keys.stream().distinct().map(operation).toList();
-        } finally {
-            if (--batchDepth == 0 && syncPending) {
-                syncPending = false;
-                changed.run();
-            }
-        }
+        return keys.stream().distinct().map(this::deleteInbox).toList();
     }
 
     public OperationResult learn(KnowledgeElement element, AcquisitionSource source, Grant grant) {
@@ -344,19 +330,11 @@ public final class KnowledgeService {
         if (history == null || history.completed() || results.isEmpty()) return List.of();
         var definition = KnowledgeDefinitions.current().projects().get(history.project());
         if (definition == null || !new HashSet<>(definition.results()).equals(new HashSet<>(results))) return List.of();
-        batchDepth++;
-        try {
-            List<KnowledgeKey> keys = results.stream().distinct().map(KnowledgeKey::result).toList();
-            state.recordResearch(new ResearchHistory(run, history.project(), history.idea(), history.time(), true, keys));
-            List<OperationResult> outputs = results.stream().distinct().map(id -> produce(KnowledgeElement.result(id), new AcquisitionSource("research:" + run, actor, time))).toList();
-            notifyChanged();
-            return outputs;
-        } finally {
-            if (--batchDepth == 0 && syncPending) {
-                syncPending = false;
-                changed.run();
-            }
-        }
+        List<KnowledgeKey> keys = results.stream().distinct().map(KnowledgeKey::result).toList();
+        state.recordResearch(new ResearchHistory(run, history.project(), history.idea(), history.time(), true, keys));
+        List<OperationResult> outputs = results.stream().distinct().map(id -> produce(KnowledgeElement.result(id), new AcquisitionSource("research:" + run, actor, time))).toList();
+        notifyChanged();
+        return outputs;
     }
 
     public OperationResult setDreamTopic(UUID player, KnowledgeKey key) {
@@ -417,8 +395,8 @@ public final class KnowledgeService {
         return new OperationResult(status, key);
     }
 
+    /** Team services only mark the team; TeamResearchService coalesces every mark of a tick into one snapshot. */
     private void notifyChanged() {
-        if (batchDepth > 0) syncPending = true;
-        else changed.run();
+        changed.run();
     }
 }

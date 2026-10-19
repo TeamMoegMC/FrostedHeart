@@ -27,20 +27,20 @@ import java.util.function.Supplier;
 import com.teammoeg.chorda.dataholders.team.TeamDataHolder;
 import com.teammoeg.chorda.network.CMessage;
 import com.teammoeg.frostedresearch.FRMain;
-import com.teammoeg.frostedresearch.FRNetwork;
+import com.teammoeg.frostedresearch.api.ClientKnowledgeDataAPI;
+import com.teammoeg.frostedresearch.compat.ResearchJeiBridge;
 import com.teammoeg.frostedresearch.knowledge.KnowledgeSyncSnapshot;
-import com.teammoeg.frostedresearch.network.FHKnowledgeDataSyncPacket;
+import com.teammoeg.frostedresearch.knowledge.client.KnowledgeClientState;
 
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtOps;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.network.NetworkEvent;
 
 /**
- * One fragment of a single atomic knowledge state/projection/view replacement.
+ * One fragment of a single atomic knowledge projection/view replacement.
  */
 public final class KnowledgeSnapshotPacket implements CMessage {
     private static final KnowledgeSnapshotTransfer.Accumulator CLIENT = new KnowledgeSnapshotTransfer.Accumulator();
@@ -65,10 +65,6 @@ public final class KnowledgeSnapshotPacket implements CMessage {
         }
     }
 
-    public static void send(ServerPlayer player, TeamDataHolder team) {
-        for (KnowledgeSnapshotPacket packet : create(team)) FRNetwork.INSTANCE.sendPlayer(player, packet);
-    }
-
     @Override
     public void encode(FriendlyByteBuf buffer) {
         buffer.writeUUID(fragment.transfer());
@@ -87,10 +83,20 @@ public final class KnowledgeSnapshotPacket implements CMessage {
         try {
             CLIENT.accept(fragment).ifPresent(tag -> KnowledgeSyncSnapshot.CODEC.parse(NbtOps.INSTANCE, tag)
                     .resultOrPartial(message -> FRMain.LOGGER.error("Knowledge snapshot: {}", message))
-                    .ifPresent(FHKnowledgeDataSyncPacket::installClient));
+                    .ifPresent(KnowledgeSnapshotPacket::install));
         } catch (IOException exception) {
             CLIENT.reset();
             FRMain.LOGGER.error("Could not assemble knowledge snapshot", exception);
+        }
+    }
+
+    private static void install(KnowledgeSyncSnapshot snapshot) {
+        try {
+            ClientKnowledgeDataAPI.install(snapshot.catalogRevision(), snapshot.knowledge(), snapshot.technology());
+            KnowledgeClientState.setSnapshot(snapshot.archiveView());
+            ResearchJeiBridge.sync();
+        } catch (RuntimeException exception) {
+            FRMain.LOGGER.error("Failed to install knowledge snapshot", exception);
         }
     }
 }

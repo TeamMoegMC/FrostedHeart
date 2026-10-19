@@ -40,6 +40,7 @@ import com.teammoeg.frostedresearch.compat.ResearchJeiBridge;
 import com.teammoeg.frostedresearch.data.ClientResearchData;
 import com.teammoeg.frostedresearch.data.TeamResearchData;
 import com.teammoeg.frostedresearch.events.ResearchLoadEvent;
+import com.teammoeg.frostedresearch.knowledge.TechnologyAccessResolver;
 import com.teammoeg.frostedresearch.network.FHResearchRegistrtySyncPacket;
 import com.teammoeg.frostedresearch.network.FHResearchSyncEndPacket;
 import com.teammoeg.frostedresearch.network.FHResearchSyncPacket;
@@ -360,6 +361,8 @@ public class FHResearch {
     public static void reindex() {
         allResearches.get().forEach(Research::doReindex);
         allResearches.get().forEach(Research::doIndex);
+        // Effect indexing re-declares the global lock lists that every access projection reads.
+        TechnologyAccessResolver.invalidateAll();
         DistExecutor.safeRunWhenOn(Dist.CLIENT, ()->ResearchJeiBridge::sync);
     }
 

@@ -4,7 +4,7 @@
 - Last verified: `2026-09-08` (knowledge integration verified against source)
 - Scope: Legacy research state and synchronization, plus its integration with the independent schema-2 knowledge
   component
-- Code anchors: [`TeamResearchData`](../../src/main/java/com/teammoeg/frostedresearch/data/TeamResearchData.java), [`TeamKnowledgeData`](../../src/main/java/com/teammoeg/frostedresearch/data/TeamKnowledgeData.java), [`KnowledgeSyncSnapshot`](../../src/main/java/com/teammoeg/frostedresearch/knowledge/KnowledgeSyncSnapshot.java), [`FHKnowledgeDataSyncPacket`](../../src/main/java/com/teammoeg/frostedresearch/network/FHKnowledgeDataSyncPacket.java), [`ResearchNetworkCodec`](../../src/main/java/com/teammoeg/frostedresearch/network/ResearchNetworkCodec.java), [`FRNetwork`](../../src/main/java/com/teammoeg/frostedresearch/FRNetwork.java)
+- Code anchors: [`TeamResearchData`](../../src/main/java/com/teammoeg/frostedresearch/data/TeamResearchData.java), [`TeamKnowledgeData`](../../src/main/java/com/teammoeg/frostedresearch/data/TeamKnowledgeData.java), [`KnowledgeSyncSnapshot`](../../src/main/java/com/teammoeg/frostedresearch/knowledge/KnowledgeSyncSnapshot.java), [`KnowledgeSnapshotPacket`](../../src/main/java/com/teammoeg/frostedresearch/knowledge/network/KnowledgeSnapshotPacket.java), [`ResearchNetworkCodec`](../../src/main/java/com/teammoeg/frostedresearch/network/ResearchNetworkCodec.java), [`FRNetwork`](../../src/main/java/com/teammoeg/frostedresearch/FRNetwork.java)
 
 ## State Hierarchy
 
@@ -247,8 +247,7 @@ This ordering ensures UI definitions are complete before state is applied. Team/
 | `research_sync`                                            | S2C              | one definition by bounded formal string ID                                                                                                         |
 | `research_sync_end`                                        | S2C              | finish definition indexing                                                                                                                         |
 | `research_data`                                            | S2C              | full string/nonce-keyed `TeamResearchData.NETWORK_CODEC`                                                                                           |
-| `knowledge_snapshot`                                       | S2C              | compressed 128 KiB fragments of schema-2 knowledge state, projections, and visible archive/relations/hints; installed as one completed replacement |
-| `knowledge_data`                                           | S2C              | retained single-envelope handler; ordinary synchronization now uses `knowledge_snapshot`                                                           |
+| `knowledge_snapshot`                                       | S2C              | compressed 128 KiB fragments of the compiled projections and visible archive/relations/hints; installed as one completed replacement               |
 | `research_data_update`                                     | S2C              | one `ResearchData` by research string ID                                                                                                           |
 | `research_clue`                                            | S2C              | one clue Boolean by research string ID and clue nonce                                                                                              |
 | `research_effect`                                          | S2C              | one effect Boolean by research string ID and effect nonce                                                                                          |
@@ -274,14 +273,16 @@ Incremental progress, active, clue, and effect handlers call the corresponding `
 
 `FHResearchDataSyncPacket#handle` atomically replaces the complete client team value, rebuilds derived unlocks/JEI, and emits `ResearchUtils#notifyResearchDataReplaced`. An open archive then rebuilds its visible-definition set, layout, and presentation caches; valid category/filter/camera state is retained, while a removed or newly hidden selection is reconciled to a valid target.
 
-`KnowledgeSnapshotPacket` carries the full-replacement protocol in compressed fragments;
-`FHKnowledgeDataSyncPacket.installClient` remains the shared installation method. Login, team changes, knowledge state
-changes, relevant legacy grants/resets, and catalogue reloads send `KnowledgeSyncSnapshot`. The client replaces schema-2
-`TeamKnowledgeData`, `KnowledgeProjection`, `TechnologyAccessProjection`, and `catalogRevision`, then installs
-`archive_view` through `KnowledgeClientState.setSnapshot` and refreshes JEI. `KnowledgeSnapshotTransfer` uses 128 KiB
-compressed fragments and waits for the entire transfer before decoding/installing; a partially received transfer leaves
-the prior view in place. The view includes only knowledge the team has encountered, actual discovered relationships, and
-revealed hints. It does not contain all undiscovered rule inputs.
+`KnowledgeSnapshotPacket` carries the full-replacement protocol in compressed fragments and installs it on the client.
+Knowledge state changes, relevant legacy grants/resets, team changes, and the datapack sync after a reload mark the team
+through `TeamResearchService.sync`; `TeamResearchService.flush` sends one `KnowledgeSyncSnapshot` per marked team with
+an online member at the end of the server tick, while login and the drawing desk's refresh send at once. The persisted
+`TeamKnowledgeData` stays on the server. The client replaces `KnowledgeProjection`, `TechnologyAccessProjection`, and
+`catalogRevision`, then installs `archive_view` through `KnowledgeClientState.setSnapshot` and refreshes JEI.
+`KnowledgeSnapshotTransfer` uses 128 KiB compressed fragments and waits for the entire transfer before
+decoding/installing; a partially received transfer leaves the prior view in place. The view includes only knowledge the
+team has encountered, actual discovered relationships, and revealed hints. It does not contain all undiscovered rule
+inputs.
 
 Knowledge batch learning/deletion returns individual outcomes while coalescing team synchronization per request. The
 client captures the original selection and submits up to 128 keys per request; UUID-correlated replies accumulate into
