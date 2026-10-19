@@ -139,7 +139,7 @@ codec 错误而不是异常。`ObservationSampling` 把非有限的坐标与温�
 ### 研究启动记录
 
 `ResearchHistory` 是一次启动：实际起源想法、启动时间、`completed` / `abandoned` 状态、完成时的成果，以及按需求 `id` 保存的进度——
-`calculations` 记录每局获胜的难度，`evidence` 记录每个槽位提交的观察副本。空进度不写入存档；进度存在但无法解码时整条启动记录按
+`calculations` 记录每局获胜的难度，`evidence` 记录每个槽位提交的观察副本，`experiments` 记录每项实验完成的次数。空进度不写入存档；进度存在但无法解码时整条启动记录按
 [无法解码的条目](#无法解码的条目) 隔离，不会以丢失证据的样子加载。
 
 | 方法                                                     | 行为                                                                                                        |
@@ -151,15 +151,17 @@ codec 错误而不是异常。`ObservationSampling` 把非有限的坐标与温�
 | `submitEvidence(run, requirement, keys)`               | 按给定记录精确绑定，每个槽位一份                                                                                          |
 | `calculationLevel(run, requirement)`                   | 该计算需求仍需要的纸牌局难度；已满足或启动已结束时为空                                                                               |
 | `recordCalculation(run, requirement, level)`           | 记录一局胜利；难度低于要求返回 `INVALID_INPUT`，已满足返回 `ALREADY_OWNED`                                                     |
+| `experimentRequirement(run, requirement)`              | 进行中启动里仍未满足的实验需求定义；已满足、启动已结束或不是实验时为空。实验台据此选用和运行                                                      |
+| `recordExperiment(run, requirement)`                   | 记录一次完成的实验；已满足返回 `ALREADY_OWNED`，没有这项实验或启动已结束返回 `NOT_FOUND`                                           |
 | `requirementMet(run, requirement)` / `requirementsMet(run)` | 按当前定义重新判断。没有需求的项目对 `requirementsMet` 永远不成立                                                              |
 | `finishResearch(run)`                                  | 玩家路径：全部需求满足时调用 `completeResearch`，否则返回 `REQUIREMENTS_UNMET`                                                  |
 | `abandonResearch(run)`                                 | 结束进行中的启动，清空已提交进度；记录保留为已放弃，脉络历史视图可见                                                                        |
 | `completeResearch(run)`                                | 研究系统接口与开发指令使用，不检查需求。使用项目定义的成果集合；带显式列表的重载要求与声明集合相符                                                         |
 
-进度每次按当前定义判断：证据副本必须仍能完整绑定当前槽位与条件，计算只计难度不低于当前 `level` 的胜局。作者修改需求后，玩家可能需要重新提交。
+进度每次按当前定义判断：证据副本必须仍能完整绑定当前槽位与条件，计算只计难度不低于当前 `level` 的胜局，实验按完成次数与当前 `count` 比较。作者修改需求后，玩家可能需要重新提交。
 证据可以来自档案或来件，提交不消耗观察；之后删除来件或忘记档案条目不影响已提交的副本。同一观察可以用于不同项目，同一需求内各槽位必须是不同记录。
 
-每个启动记录只有一个实际起源想法，完成重复调用不会重新产出。获得成果失败时保留来件，研究关系仍属于实际历史。实验需求、居民参与与原型数值升级尚未实现，
+每个启动记录只有一个实际起源想法，完成重复调用不会重新产出。获得成果失败时保留来件，研究关系仍属于实际历史。居民参与与原型数值升级尚未实现，
 见 [研究项目执行计划](../../plans/2026-10-18_23-42-16_knowledge-research-project-execution.md)。
 
 ## 梦境、讨论与暗示

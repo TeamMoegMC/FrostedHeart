@@ -48,6 +48,7 @@ public class FRNetwork extends CBaseNetwork {
         registerMessage("knowledge_observation_state", com.teammoeg.frostedresearch.knowledge.observation.ObservationStatePacket.class);
         registerMessage("knowledge_workbench_action", com.teammoeg.frostedresearch.knowledge.network.KnowledgeWorkbenchActionPacket.class);
         registerMessage("knowledge_workbench_reply", com.teammoeg.frostedresearch.knowledge.network.KnowledgeWorkbenchReplyPacket.class);
+        registerMessage("knowledge_experiment_table", com.teammoeg.frostedresearch.knowledge.experiment.ExperimentTableActionPacket.class);
         //Research Messages
         registerMessage("research_registry", FHResearchRegistrtySyncPacket.class);
         registerMessage("research_sync", FHResearchSyncPacket.class);

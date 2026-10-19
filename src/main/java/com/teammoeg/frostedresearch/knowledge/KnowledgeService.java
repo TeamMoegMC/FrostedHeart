@@ -360,6 +360,7 @@ public final class KnowledgeService {
     public boolean requirementMet(ResearchHistory run, ProjectRequirement requirement) {
         return switch (requirement.type()) {
             case CALCULATION -> calculationsDone(run, requirement) >= requirement.count();
+            case EXPERIMENT -> experimentsDone(run, requirement) >= requirement.count();
             case EVIDENCE -> {
                 var binding = run.evidence().get(requirement.id());
                 yield binding != null && LinkMatcher.bindExact(binding.values().stream().map(KnowledgeElement::observation).toList(),
@@ -374,6 +375,29 @@ public final class KnowledgeService {
     public static int calculationsDone(ResearchHistory run, ProjectRequirement requirement) {
         return (int) run.calculations().getOrDefault(requirement.id(), List.of()).stream()
                 .filter(level -> level >= requirement.level()).count();
+    }
+
+    public static int experimentsDone(ResearchHistory run, ProjectRequirement requirement) {
+        return run.experiments().getOrDefault(requirement.id(), 0);
+    }
+
+    /**
+     * The experiment requirement while it still needs runs, for an experiment table to work toward.
+     */
+    public Optional<ProjectRequirement> experimentRequirement(UUID runId, String requirementId) {
+        ResearchHistory run = state.research().get(runId);
+        ProjectRequirement requirement = openRequirement(run, requirementId, ProjectRequirement.Type.EXPERIMENT);
+        return requirement == null || requirementMet(run, requirement) ? Optional.empty() : Optional.of(requirement);
+    }
+
+    public OperationResult recordExperiment(UUID runId, String requirementId) {
+        ResearchHistory run = state.research().get(runId);
+        ProjectRequirement requirement = openRequirement(run, requirementId, ProjectRequirement.Type.EXPERIMENT);
+        if (requirement == null) return result(Status.NOT_FOUND, null);
+        if (requirementMet(run, requirement)) return result(Status.ALREADY_OWNED, null);
+        state.recordResearch(run.withExperiment(requirement.id()));
+        notifyChanged();
+        return result(Status.SUCCESS, null);
     }
 
     /**

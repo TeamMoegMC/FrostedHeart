@@ -471,6 +471,12 @@ public final class KnowledgeLayer extends UILayer {
             }).setEnabled(false);
             return;
         }
+        if (requirement.experiment()) {
+            // Experiments run on an experiment table, which lists the team's experiments itself.
+            button(x, y, w, 19, t("research.experiment.at_table"), true, () -> {
+            }).tooltip(t("research.experiment.explain", requirement.duration() / 20)).setEnabled(false);
+            return;
+        }
         if (requirement.evidence()) {
             button(x, y, w, 19, t("research.evidence.submit"), false,
                     () -> send(Action.SUBMIT_EVIDENCE, List.of(), run.id(), "", "", requirement.id()))
@@ -496,16 +502,22 @@ public final class KnowledgeLayer extends UILayer {
     }
 
     private Component requirementLine(KnowledgeJournalData.Requirement r, boolean started, boolean selected) {
-        Component title = r.title().getString().isBlank() ? t(r.evidence() ? "research.evidence" : "research.calculation") : r.title();
+        Component title = r.title().getString().isBlank()
+                ? t(r.evidence() ? "research.evidence" : r.experiment() ? "research.experiment" : "research.calculation") : r.title();
         if (!started) return t("research.line.plain", title);
         Component progress = r.evidence()
                 ? t(r.satisfied() ? "research.evidence.done" : r.ready() ? "research.evidence.ready_short" : "research.evidence.waiting")
+                : r.experiment() ? t("research.experiment.progress", r.done(), r.count())
                 : t("research.calculation.progress", r.done(), r.count());
         return t(selected ? "research.line.selected" : r.satisfied() ? "research.line.done" : "research.line.open", title, progress);
     }
 
     private List<Component> requirementDetails(KnowledgeJournalData.Requirement r) {
         List<Component> lines = new ArrayList<>();
+        if (r.experiment()) {
+            lines.add(t("research.experiment.explain", r.duration() / 20));
+            return lines;
+        }
         if (!r.evidence()) {
             lines.add(t("research.calculation.explain", r.level()));
             return lines;

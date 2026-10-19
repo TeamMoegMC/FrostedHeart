@@ -225,6 +225,32 @@ class ResearchRunTest {
     }
 
     @Test
+    void experimentsCountFinishedRunsAndRoundTrip() {
+        var experiment = ProjectRequirement.experiment("load", "Load test", 2, 40, List.of(), ProjectRequirement.Space.NONE);
+        var finding = new ResultDefinition(new ResearchResult.Finding(FINDING, List.of()), "Finding", "", List.of(), true);
+        KnowledgeDefinitions.install(new KnowledgeDefinitions.Snapshot(0,
+                Map.of(ORIGIN, new IdeaDefinition("Origin", "", List.of(), List.of(PROJECT), true)), Map.of(FINDING, finding), Map.of(), Map.of(),
+                Map.of(PROJECT, new ProjectDefinition("Survey", "", List.of(FINDING), List.of(experiment))), List.of()));
+        var state = new KnowledgeState();
+        var service = service(state);
+        UUID run = service.startResearch(PROJECT, KnowledgeKey.idea(ORIGIN)).orElseThrow();
+        assertTrue(service.experimentRequirement(run, "load").isPresent());
+        assertTrue(service.experimentRequirement(run, "missing").isEmpty());
+        assertEquals(SUCCESS, service.recordExperiment(run, "load").status());
+        assertFalse(service.requirementsMet(run));
+        assertEquals(SUCCESS, service.recordExperiment(run, "load").status());
+        assertTrue(service.requirementsMet(run));
+        assertTrue(service.experimentRequirement(run, "load").isEmpty(), "a satisfied experiment needs no table");
+        assertEquals(ALREADY_OWNED, service.recordExperiment(run, "load").status());
+        assertEquals(Map.of("load", 2), state.research().get(run).experiments());
+        assertEquals(state.research(), KnowledgeState.read(state.write()).research());
+        var progress = service.snapshot().getList("research", Tag.TAG_COMPOUND).getCompound(0).getList("requirements", Tag.TAG_COMPOUND).getCompound(0);
+        assertEquals(List.of("experiment", "2", "40"), List.of(progress.getString("type"), String.valueOf(progress.getInt("done")), String.valueOf(progress.getInt("duration"))));
+        assertEquals(SUCCESS, service.abandonResearch(run).status());
+        assertTrue(state.research().get(run).experiments().isEmpty());
+    }
+
+    @Test
     void openRunsShowProgressAndAvailableRecordsButNoSlotConditions() {
         install("test:rock", 1);
         var state = new KnowledgeState();

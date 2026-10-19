@@ -2,13 +2,13 @@
 
 - Status: `Current`
 - Last verified: `2026-09-08`
-- Scope: 开发测试用知识联络、研究页上的项目执行与完成、图谱分支/回环与成果效果
+- Scope: 开发测试用知识联络、研究页上的项目执行与完成、实验台、图谱分支/回环与成果效果
 - Code anchors: [`example-datapack`](example-datapack/README.md)、[
   `KnowledgeCommands`](../../src/main/java/com/teammoeg/frostedresearch/knowledge/KnowledgeCommands.java)、[
   `KnowledgeService`](../../src/main/java/com/teammoeg/frostedresearch/knowledge/KnowledgeService.java)、[
   `KnowledgeGraphModel`](../../src/main/java/com/teammoeg/frostedresearch/knowledge/client/KnowledgeGraphModel.java)
 
-本轮已同步更新 `run/saves/knowledge-test/datapacks/example-datapack`。重启更新后的开发客户端进入该世界；其他世界需要自行安装此示例包。它不是正式进度内容。
+本轮已同步更新 `run/saves/knowledge-test/datapacks/example-datapack` 与 `run/saves/knowledge-test-world/datapacks/knowledge-example`。重启更新后的开发客户端进入该世界；其他世界需要自行安装此示例包。它不是正式进度内容。
 
 ## 起点
 
@@ -29,9 +29,12 @@
 
 ## 分支与汇合
 
-下表省略 `knowledge_example:` 前缀。每次先在档案中选择输入进行联络，得到想法，再完成对应项目。只有两个项目带需求，在研究页完成：
+下表省略 `knowledge_example:` 前缀。每次先在档案中选择输入进行联络，得到想法，再完成对应项目。三个项目带需求，在研究页完成：
 
 - `basic_switch`：两局难度 1 的演算，需要羽毛笔与墨水，以及 `minecraft:paper`。
+- `pressure_control`：在木板小屋里做一次受压试验。合成实验台（玻璃瓶在上，工作台居中，木板在两侧和下方两角），放在一间木板围成的小屋里：
+  屋内空气 4–256 格，屋子至少用到 8 块木板，实验台处不高于 40°C。开始研究后打开实验台，「选用这项实验」，放入 4 块任意木板和 1 块石头（`minecraft:stone`，不是圆石），
+  全部打 ✓ 后「开始实验」，20 秒后计入。拆掉一块墙或屋顶会让实验暂停，补上后继续。
 - `lattice`：在两种不同生物群系各观察一段原木，「整理证据」会自动挑出两处不同群系的记录。
 
 其余项目没有需求，研究页显示暂无可做步骤，用完整项目 ID 执行完成指令。

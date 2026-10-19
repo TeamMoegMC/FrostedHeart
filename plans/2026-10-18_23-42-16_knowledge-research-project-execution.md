@@ -2,7 +2,7 @@
 
 - Time: `2026-10-18 23:42:16 -0500`
 - Authors: `Claude (Anthropic Opus 5.5), 计划起草；项目所有者确认「决定」一节`
-- Status: `in-progress`（`2026-10-18 23:58:00 -0500` 项目所有者确认全部采用推荐方案；R1 已于 2026-10-19 完成，R2 未开始）
+- Status: `completed`（`2026-10-18 23:58:00 -0500` 项目所有者确认全部采用推荐方案；R1、R2 均于 2026-10-19 完成，游戏内验收由项目所有者进行）
 - Scope: `frostedresearch/knowledge` 的研究项目定义、启动记录与进度；绘图台纸牌局；新增实验台；知识札记研究页
 - Related: [`design/knowledge_research.md`](../design/knowledge_research.md)、[V2 计划](2026-08-25_16-17-39_generative-research-knowledge-laboratory-v2.md)、[知识系统审阅](../discussion/2026-10-18_23-01-04_knowledge-system-development-review.md)、[`docs/knowledge/`](../docs/knowledge/README.md)、[`docs/research/`](../docs/research/README.md)
 
@@ -252,4 +252,18 @@ V2 计划写于 2026-08-25，Phase 1（五类成果与权限投影）已经实�
 - **`distinct` 写在证据需求自己的 `distinct` 字段里**，没有作为 `conditions` 中的新 `kind`。这样联络规则的跨条件编码保持不变；加载时展开为两两 `ne` 比较。
 - **新增 `STOP_CALCULATION` 动作。** 绘图台的演算目标在需求满足前一直有效，这一动作让玩家能把纸牌局交还给旧研究。
 
-**R2（实验）未开始。**
+**R2 已完成（2026-10-19）**，记录见 [diary](../diary/2026-10-19_01-42-23_knowledge-experiment-table.md)。按决定实现了：
+
+- 实验需求的定义与校验：`duration`、至多 3 项材料、`space` 的封闭、体积、温度与方块；
+- 启动记录按需求保存的实验次数，以及 `experimentRequirement` / `recordExperiment`；
+- 实验台方块、方块实体、三格材料槽与界面（E1）；
+- 四项空间条件（E2）、条件不满足时暂停（E3）、区块加载即可运行（E4）；
+- 研究页的实验进度与提示；
+- 示例包 `pressure_control` 的受压试验。
+
+实现与方案不同或方案未写明的三处：
+
+- **E5 的操作扩展点没有写成代码。** 目前没有调用方注册操作，空的注册表只会增加维护面。需求字段都是严格可选字段，之后加一个
+  `operations` 字段和对应的检查行，不会影响现有存档与数据包。
+- **玩家主动停止或换选实验同样不退材料。** 方案写明开始时一次性消耗、E3 中断不退材料；停止若退还，等于把消耗推迟到完成时。界面在按钮提示里写明。
+- **闲置时材料与温度保持最新。** 选定实验后，每次 20 tick 的检查都重算材料与温度，有变化才同步，不重新扫描房间；房间只在选用、检查、开始和运行中每五次检查时扫描。

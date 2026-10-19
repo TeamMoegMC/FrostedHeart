@@ -34,12 +34,13 @@ import java.util.stream.Collectors;
 /**
  * 研究的一次启动及其进度；需求是否满足按当前定义判断。 / One research run and its progress, judged by current definitions.
  * <p>
- * {@code calculations} keeps the level of each won calculation game and {@code evidence} the submitted copies of the
- * observations bound to each slot, both keyed by requirement id. An abandoned run keeps its record but no progress.
+ * {@code calculations} keeps the level of each won calculation game, {@code evidence} the submitted copies of the
+ * observations bound to each slot and {@code experiments} the number of finished experiments, all keyed by requirement
+ * id. An abandoned run keeps its record but no progress.
  */
 public record ResearchHistory(UUID id, ResourceLocation project, KnowledgeKey idea, long time, boolean completed,
                               List<KnowledgeKey> results, boolean abandoned, Map<String, List<Integer>> calculations,
-                              Map<String, Map<String, Observation>> evidence) {
+                              Map<String, Map<String, Observation>> evidence, Map<String, Integer> experiments) {
     public static final Codec<ResearchHistory> CODEC = RecordCodecBuilder.create(i -> i.group(
             UUIDUtil.CODEC.fieldOf("id").forGetter(ResearchHistory::id),
             ResourceLocation.CODEC.fieldOf("project").forGetter(ResearchHistory::project),
@@ -49,7 +50,8 @@ public record ResearchHistory(UUID id, ResourceLocation project, KnowledgeKey id
             KnowledgeKey.CODEC.listOf().fieldOf("results").forGetter(ResearchHistory::results),
             Codec.BOOL.optionalFieldOf("abandoned", false).forGetter(ResearchHistory::abandoned),
             progress(Codec.INT.listOf(), "calculations").forGetter(ResearchHistory::calculations),
-            progress(Codec.unboundedMap(Codec.STRING, Observation.CODEC), "evidence").forGetter(ResearchHistory::evidence)
+            progress(Codec.unboundedMap(Codec.STRING, Observation.CODEC), "evidence").forGetter(ResearchHistory::evidence),
+            progress(Codec.INT, "experiments").forGetter(ResearchHistory::experiments)
     ).apply(i, ResearchHistory::new));
 
     /**
@@ -67,11 +69,12 @@ public record ResearchHistory(UUID id, ResourceLocation project, KnowledgeKey id
                 .collect(Collectors.toUnmodifiableMap(Map.Entry::getKey, e -> List.copyOf(e.getValue())));
         evidence = evidence.entrySet().stream()
                 .collect(Collectors.toUnmodifiableMap(Map.Entry::getKey, e -> Map.copyOf(e.getValue())));
+        experiments = Map.copyOf(experiments);
     }
 
     public ResearchHistory(UUID id, ResourceLocation project, KnowledgeKey idea, long time, boolean completed,
                            List<KnowledgeKey> results) {
-        this(id, project, idea, time, completed, results, false, Map.of(), Map.of());
+        this(id, project, idea, time, completed, results, false, Map.of(), Map.of(), Map.of());
     }
 
     public boolean open() {
@@ -83,20 +86,26 @@ public record ResearchHistory(UUID id, ResourceLocation project, KnowledgeKey id
         List<Integer> levels = new ArrayList<>(next.getOrDefault(requirement, List.of()));
         levels.add(level);
         next.put(requirement, levels);
-        return new ResearchHistory(id, project, idea, time, completed, results, abandoned, next, evidence);
+        return new ResearchHistory(id, project, idea, time, completed, results, abandoned, next, evidence, experiments);
     }
 
     public ResearchHistory withEvidence(String requirement, Map<String, Observation> binding) {
         Map<String, Map<String, Observation>> next = new HashMap<>(evidence);
         next.put(requirement, binding);
-        return new ResearchHistory(id, project, idea, time, completed, results, abandoned, calculations, next);
+        return new ResearchHistory(id, project, idea, time, completed, results, abandoned, calculations, next, experiments);
+    }
+
+    public ResearchHistory withExperiment(String requirement) {
+        Map<String, Integer> next = new HashMap<>(experiments);
+        next.merge(requirement, 1, Integer::sum);
+        return new ResearchHistory(id, project, idea, time, completed, results, abandoned, calculations, evidence, next);
     }
 
     public ResearchHistory completedWith(List<KnowledgeKey> outputs) {
-        return new ResearchHistory(id, project, idea, time, true, outputs, abandoned, calculations, evidence);
+        return new ResearchHistory(id, project, idea, time, true, outputs, abandoned, calculations, evidence, experiments);
     }
 
     public ResearchHistory abandon() {
-        return new ResearchHistory(id, project, idea, time, completed, results, true, Map.of(), Map.of());
+        return new ResearchHistory(id, project, idea, time, completed, results, true, Map.of(), Map.of(), Map.of());
     }
 }

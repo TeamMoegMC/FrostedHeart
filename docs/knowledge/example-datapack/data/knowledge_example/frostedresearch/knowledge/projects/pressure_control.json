@@ -1,7 +1,37 @@
 {
   "title": "knowledge.knowledge_example.projects.pressure_control.title",
+  "body": "knowledge.knowledge_example.projects.pressure_control.body",
   "results": [
     "knowledge_example:pressure_plate_design",
     "knowledge_example:pressure_finding"
+  ],
+  "requirements": [
+    {
+      "id": "load_test",
+      "type": "experiment",
+      "title": "knowledge.knowledge_example.projects.pressure_control.load_test",
+      "duration": 400,
+      "materials": [
+        {
+          "tag": "minecraft:planks",
+          "count": 4
+        },
+        {
+          "item": "minecraft:stone",
+          "count": 1
+        }
+      ],
+      "space": {
+        "min_volume": 4,
+        "max_volume": 256,
+        "max_temperature": 40,
+        "blocks": [
+          {
+            "tag": "minecraft:planks",
+            "count": 8
+          }
+        ]
+      }
+    }
   ]
 }

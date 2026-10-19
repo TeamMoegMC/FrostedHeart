@@ -164,6 +164,34 @@ class KnowledgeDefinitionsTest {
     }
 
     @Test
+    void experimentRequirementsValidateMaterialsSpaceAndDuration() {
+        var planks = new ProjectRequirement.Material(Optional.of(new ResourceLocation("minecraft", "oak_planks")), Optional.empty(), 4);
+        var walls = new ProjectRequirement.BlockCount(Optional.empty(), Optional.of(new ResourceLocation("minecraft", "planks")), 8);
+        var room = new ProjectRequirement.Space(true, 4, 256, Optional.empty(), Optional.of(40.0), List.of(walls));
+        var valid = ProjectRequirement.experiment("load", "Load test", 1, 400, List.of(planks), room);
+        assertEquals(List.of(), KnowledgeDefinitions.validate(project(List.of(valid))));
+        assertEquals(List.of(), KnowledgeDefinitions.validate(project(List.of(
+                ProjectRequirement.experiment("outdoor", "Outdoor", 2, 20, List.of(), ProjectRequirement.Space.NONE)))));
+        Map<String, ProjectRequirement> invalid = new LinkedHashMap<>();
+        invalid.put("author-written title", ProjectRequirement.experiment("untitled", "", 1, 400, List.of(), room));
+        invalid.put("duration must be", ProjectRequirement.experiment("short", "Short", 1, 5, List.of(), room));
+        invalid.put("at most 3 materials", ProjectRequirement.experiment("heavy", "Heavy", 1, 400, List.of(planks, planks, planks, planks), room));
+        invalid.put("unknown material item", ProjectRequirement.experiment("odd", "Odd", 1, 400,
+                List.of(new ProjectRequirement.Material(Optional.of(new ResourceLocation("test", "missing")), Optional.empty(), 1)), room));
+        invalid.put("need an enclosed space", ProjectRequirement.experiment("open", "Open", 1, 400, List.of(),
+                new ProjectRequirement.Space(false, 4, 256, Optional.empty(), Optional.empty(), List.of())));
+        invalid.put("minimum temperature exceeds", ProjectRequirement.experiment("warm", "Warm", 1, 400, List.of(),
+                new ProjectRequirement.Space(true, 1, 10, Optional.of(30.0), Optional.of(10.0), List.of())));
+        invalid.put("unknown space block", ProjectRequirement.experiment("odd_block", "Odd block", 1, 400, List.of(),
+                new ProjectRequirement.Space(true, 1, 10, Optional.empty(), Optional.empty(), List.of(
+                        new ProjectRequirement.BlockCount(Optional.of(new ResourceLocation("test", "missing")), Optional.empty(), 1)))));
+        invalid.put("only experiments take", new ProjectRequirement("calc", ProjectRequirement.Type.CALCULATION, "", 0, 1,
+                List.of(), List.of(), List.of(), 400, List.of(), ProjectRequirement.Space.NONE));
+        invalid.forEach((message, requirement) -> assertTrue(KnowledgeDefinitions.validate(project(List.of(requirement))).stream()
+                .anyMatch(error -> error.contains(message)), message));
+    }
+
+    @Test
     void evidenceSlotsAreObservationUsesAndRepeatedSlotsKeepIndependentRecords() {
         var pair = ProjectRequirement.evidence("pair", "Two rocks", List.of(rockSlot("a"), rockSlot("b")), List.of(), List.of());
         KnowledgeDefinitions.install(project(List.of(pair)));
@@ -193,6 +221,10 @@ class KnowledgeDefinitionsTest {
             assertEquals(new ResourceLocation("knowledge_example", "materials"), matches.get(0).rule().output());
             assertTrue(loaded.hasObservationUse(paper, TagLookup.NONE));
             assertTrue(loaded.hasObservationUse(stick, TagLookup.NONE));
+            var load = loaded.projects().get(new ResourceLocation("knowledge_example", "pressure_control")).requirement("load_test").orElseThrow();
+            assertEquals(ProjectRequirement.Type.EXPERIMENT, load.type());
+            assertEquals(400, load.duration());
+            assertTrue(load.space().enclosed());
             var record = loaded.projects().get(new ResourceLocation("knowledge_example", "material_record"));
             assertEquals(List.of("log", "tabulate"), record.requirements().stream().map(ProjectRequirement::id).toList());
             var birch = new Observation(UUID.randomUUID(), Observation.Type.BLOCK, new ResourceLocation("minecraft", "birch_log"), Map.of(), Observation.Source.command(), Optional.empty());

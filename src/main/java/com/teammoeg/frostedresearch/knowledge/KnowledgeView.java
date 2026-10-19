@@ -155,6 +155,7 @@ public final class KnowledgeView {
         tag.putString("title", requirement.title());
         tag.putInt("level", requirement.level());
         tag.putInt("count", requirement.count());
+        if (requirement.type() == ProjectRequirement.Type.EXPERIMENT) tag.putInt("duration", requirement.duration());
         return tag;
     }
 
@@ -169,6 +170,8 @@ public final class KnowledgeView {
         tag.putBoolean("satisfied", met);
         if (requirement.type() == ProjectRequirement.Type.CALCULATION) {
             tag.putInt("done", Math.min(requirement.count(), KnowledgeService.calculationsDone(run, requirement)));
+        } else if (requirement.type() == ProjectRequirement.Type.EXPERIMENT) {
+            tag.putInt("done", Math.min(requirement.count(), KnowledgeService.experimentsDone(run, requirement)));
         } else if (met) {
             tag.put("bound", KnowledgeState.encode(KnowledgeKey.CODEC.listOf(),
                     run.evidence().get(requirement.id()).values().stream().map(Observation::key).sorted(Comparator.comparing(KnowledgeKey::id)).toList()));

@@ -2,7 +2,7 @@
 
 - Status: `Current`（源码、构建和布局/展示测试核对；尚未完成更新后界面的游戏内视觉验收）
 - Last verified: `2026-09-08`
-- Scope: 玩家阅读与整理、CUI 绘图台知识页、物品抄录、联络、脉络与观察预览
+- Scope: 玩家阅读与整理、CUI 绘图台知识页、物品抄录、联络、脉络与观察预览、研究页与实验台
 - Code anchors: [
   `KnowledgeLayer`](../../src/main/java/com/teammoeg/frostedresearch/knowledge/client/KnowledgeLayer.java)、[
   `KnowledgeJournalData`](../../src/main/java/com/teammoeg/frostedresearch/knowledge/client/KnowledgeJournalData.java)、[
@@ -10,7 +10,9 @@
   `KnowledgeNodeSheet`](../../src/main/java/com/teammoeg/frostedresearch/knowledge/client/ui/KnowledgeNodeSheet.java)、[
   `KnowledgePresentation`](../../src/main/java/com/teammoeg/frostedresearch/knowledge/client/KnowledgePresentation.java)、[
   `KnowledgeUiTheme`](../../src/main/java/com/teammoeg/frostedresearch/knowledge/client/ui/KnowledgeUiTheme.java)、[
-  `DrawDeskScreen`](../../src/main/java/com/teammoeg/frostedresearch/gui/drawdesk/DrawDeskScreen.java)
+  `DrawDeskScreen`](../../src/main/java/com/teammoeg/frostedresearch/gui/drawdesk/DrawDeskScreen.java)、[
+  `ExperimentTableBlockEntity`](../../src/main/java/com/teammoeg/frostedresearch/knowledge/experiment/ExperimentTableBlockEntity.java)、[
+  `ExperimentTableScreen`](../../src/main/java/com/teammoeg/frostedresearch/knowledge/client/experiment/ExperimentTableScreen.java)
 
 ## 一册可以翻阅的札记
 
@@ -62,8 +64,25 @@ archive。整个阅读区域展示知识、实际联络以及已由掌握的想�
   每赢一局难度足够的纸牌局计入一次，满足前开局键继续为这项需求开局。正在为它演算时显示「继续演算」与「停止演算」；停止后绘图台回到旧研究的纸牌局。
   测试时，有作弊权限（权限等级 2 以上）的玩家可以在一局进行中直接点棋盘中心的最终论文格子，立即完成这一局，见
   [纸牌局](../research/gameplay-and-integrations.md#theory-card-game)。
+- 实验：显示已完成几次、每次需要持续多久。实验在 [实验台](#实验台) 上进行，研究页的「在实验台进行」只作提示，不可点击。
 
 全部需求满足后「完成研究」可用，服务端再次判断后产出成果。「放弃」先确认，作废已提交的进度，记录保留在脉络历史中，之后可以重新开始。
+
+## 实验台
+
+实验台（`frostedresearch:experiment_table`）用玻璃瓶、工作台和木板合成：玻璃瓶在上，工作台居中，木板在两侧和下方两角。第一次使用时归属使用者的队伍，
+之后只有该队成员能打开。左侧上方「材料」下是一排三格材料槽，下方是玩家背包；右侧是实验面板：
+
+- 顶部列出队伍进行中研究里尚未完成的实验，「项目 · 需求标题」，多于一项时用 ‹ › 切换。看到的不是这张实验台正在准备的那一项时，只有「选用这项实验」；
+  选用会替换原来的实验，正在运行的实验随之停止，已投入的材料不退回。
+- 选用后显示状态和逐项检查：房间是否封闭、房间大小、所需方块的数量、实验台处的温度，以及材料槽能提供的材料，满足为 ✓，不满足为红色 ✗。
+  选定实验后，材料与温度每秒刷新，放入或取出材料后一秒内更新；房间只在选用、「检查」和开始时扫描。
+- 全部满足时「开始实验」可用，服务端再次检查后一次扣除材料。之后不需要玩家在场，只需要区块保持加载。运行中每秒读一次温度，每五秒扫描一次房间；
+  任何一项不满足时暂停，保留进度，条件恢复后继续。「停止」结束这次实验，进度清零，材料不退回。
+- 运行满所需时长后计入一次实验。需求还差次数时回到准备状态，再次开始需要重新投入材料；已经满足时实验台清空选择。研究被完成或放弃后，
+  实验台在下一次检查时清空选择并提示这项实验已不再需要。
+
+拆除实验台会掉落材料槽中的物品。房间与温度的判定见 [研究需求](definitions.md)。
 
 「随想」显示已经得到的提示。「细想一会儿」把睡前主题和讨论放入阅读页的次级操作：可以留到睡前思索，或选择身边的同伴发出讨论邀请。双方确认与每日额度仍由服务端处理。
 
