@@ -239,8 +239,9 @@ NBT 大小限制截断。绘图台回复只携带本次操作结果与联络候�
 ```
 
 授予、忘记、合并需要权限等级 2。普通成员可用 `/knowledge dream <类型> <身份>` 设置主题，用
-`/knowledge discuss invite <玩家> <类型> <身份>` 邀请并通过 `/knowledge discuss accept` 确认。含冒号的 ID
-用命令字符串参数，必要时加双引号。指令生成历史观察由 `Observation` API 明确提供内容和 `command_generated`
+`/knowledge discuss invite <玩家> <类型> <身份>` 邀请并通过 `/knowledge discuss accept` 确认。想法与成果按定义 ID
+读取，即资源位置，不需要引号，并补全已加载的定义；观察按记录 UUID 读取。项目不是知识身份，不能授予或忘记；要重新开始已完成的项目，
+忘记它的一项成果即可。指令生成历史观察由 `Observation` API 明确提供内容和 `command_generated`
 来源，不会使用一个缺乏历史内容的裸 UUID 伪造观察。
 
 `research complete` 是权限等级 2 的开发命令，跳过项目需求。它沿用该项目进行中的启动；没有时要求队伍拥有能启动它的起源想法，再调用
