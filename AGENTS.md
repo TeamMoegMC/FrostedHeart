@@ -75,3 +75,7 @@ Prohibit safety measures taken without a clearly defined attacker and attack mod
 Prohibit defenses that hinder observability under the pretense of protecting against operations staff.
 Prohibit "fail-closed" and "fail-fast" approaches that push work back to users—instead, resolve edge cases and state inconsistencies properly.
 Prohibit repeated privilege escalation and de-escalation in code that has no external calls.
+
+## Git commit conventions
+
+- Never add "Co-Authored-By: Claude" or any AI-attribution footers to commit messages.
