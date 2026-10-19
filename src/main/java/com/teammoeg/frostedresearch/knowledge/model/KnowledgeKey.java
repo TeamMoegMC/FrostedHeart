@@ -20,13 +20,14 @@
 /* Copyright (c) 2026 TeamMoeg */
 package com.teammoeg.frostedresearch.knowledge.model;
 
-import com.mojang.serialization.Codec;
-import com.mojang.serialization.DataResult;
+import com.mojang.serialization.*;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.resources.ResourceLocation;
 
 import java.util.Locale;
+import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Stream;
 
 /**
  * 知识身份：观察使用原始记录 UUID，想法及成果使用定义标识。
@@ -66,6 +67,26 @@ public record KnowledgeKey(Kind kind, String id) {
                 return DataResult.error(() -> "Unknown " + type.getSimpleName() + ": " + s);
             }
         }, e -> e.name().toLowerCase(Locale.ROOT));
+    }
+
+    /**
+     * {@code optionalFieldOf} with the same encoding, except that a present value which fails to decode is an error.
+     * DFU 6 treats it as absent, so a saved record would load with that part silently dropped and be saved without it.
+     */
+    public static <A> MapCodec<Optional<A>> strictOptionalField(Codec<A> codec, String name) {
+        MapCodec<Optional<A>> lenient = codec.optionalFieldOf(name);
+        return MapCodec.of(lenient, new MapDecoder.Implementation<>() {
+            @Override
+            public <T> DataResult<Optional<A>> decode(DynamicOps<T> ops, MapLike<T> input) {
+                T value = input.get(name);
+                return value == null ? DataResult.success(Optional.empty()) : codec.parse(ops, value).map(Optional::of);
+            }
+
+            @Override
+            public <T> Stream<T> keys(DynamicOps<T> ops) {
+                return lenient.keys(ops);
+            }
+        }, () -> "StrictOptional[" + name + "]");
     }
 
     public ResourceLocation definitionId() {

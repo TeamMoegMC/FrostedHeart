@@ -16,8 +16,10 @@
 `chorda_data/<内部队伍 UUID>.nbt`。`data/TeamKnowledgeData` 是已有调用位置的薄封装，其实际状态由
 `knowledge/state/KnowledgeState` 保存。`TeamResearchData` 继续独立保存旧研究进度。
 
-本轮存储格式为 `schema_version: 2`，重新定义了原有 knowledge 结构，没有从旧版四个 acquired-ID 集合迁移的逻辑。新源码中的
-`findingIds()` 等旧式访问器从档案派生，不再形成另一份成果权威。
+存储格式为 `schema_version: 2`（`KnowledgeState.SCHEMA_VERSION`；`TeamKnowledgeData.CURRENT_SCHEMA_VERSION` 引用同一常量），重新定义了原有
+knowledge 结构，没有从旧版四个 acquired-ID 集合迁移的逻辑。新源码中的 `findingIds()` 等旧式访问器从档案派生，不再形成另一份成果权威。
+`KnowledgeState.read` 先读取 `schema_version` 并交给 `KnowledgeState.upgrade`，这是存储格式迁移的唯一入口；版本 2 是知识系统的第一版布局，
+目前没有迁移步骤。缺少版本号或版本号高于当前值时按现有格式宽松解码，`write()` 始终写入当前版本。
 
 | 保存项            | 含义                                           |
 |----------------|----------------------------------------------|
@@ -36,6 +38,30 @@
 `Observation.Source` 中，接收笔记不会改变它。
 
 原始记录、知识摘要和实际历史不因数据包重载改写。`KnowledgeState` 的存储写方法供知识服务和持久化桥接使用，游戏系统应通过下述服务提交操作。
+
+### 无法解码的条目
+
+`KnowledgeState.read` 不抛出异常，单条记录无法解码不会再让整个队伍文件加载失败。`archive`、`inbox`、`links`、`research`、`acquisitions`
+逐条解码；`hints` 的规则键（须为 `ResourceLocation`）与 `dream_topics` 的玩家键（须为 UUID）连同各自的值逐键解码。无法解码的条目以原始 NBT
+按原分区保存在 `KnowledgeState` 内部的 `unreadable` 中：
+
+- 不进入档案、来件或其它运行时状态，因此不参与查询、学习、联络、同步视图与权限；
+- `write()` 将其原样写回原分区：列表条目追加在有效条目之后；键值条目只在同一键没有有效条目时写回，有效条目优先；
+- 随保存/加载往返、`replaceState`（包括 `TeamKnowledgeData.CODEC` 解码与 `copy()`）和 `merge` 保留，合并时相同的原始条目只保留一份；
+- 每次加载最多一条 `FRMain.LOGGER` 警告，给出条数以及第一条的位置（如 `archive[1]`、`hints[<键>]`）和原因。
+
+以后能解码它们的版本会在原位置重新读到这些条目。分区本身不是预期的 NBT 类型时（只可能来自手工编辑），列表分区整体作为一条保留，键值分区按空处理。
+
+MC 1.20.1 使用的 DFU 6 会把 `optionalFieldOf` 中“存在但解码失败”的值当作缺失。为免一条观察因单个值无法读取而被清空全部值、再按清空后的样子写回，
+`KnowledgeElement.observation` 与 `Observation.values` 使用 `KnowledgeKey.strictOptionalField`：编码不变，存在但无法解码的值使整条记录进入
+`unreadable`，日志给出的也是内层的真实原因。
+
+`Observation` 紧凑构造器执行与解码相同的规则：字段已知且类型一致；不适用的字段只能记为 `not_applicable`；值的载荷与状态、类型一致且数值有限；
+只有物品观察可以带 `item_data`。违反时抛出 `IllegalArgumentException`，非法观察在产生处就被拒绝，不会写进存档；解码同样经过构造器，失败时返回
+codec 错误而不是异常。`ObservationSampling` 把非有限的坐标与温度记为未采集。
+
+知识组件因此不再触发 Chorda 的整队丢弃。但 `CTeamDataManager.load` 在任一组件加载失败时仍会跳过该队伍文件，`save()` 随后删除没有已加载队伍的
+`.nbt` 文件；这属于 Chorda，尚未改动。
 
 ## 统一操作
 

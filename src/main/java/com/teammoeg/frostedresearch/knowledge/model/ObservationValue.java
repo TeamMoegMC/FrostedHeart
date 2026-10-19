@@ -54,7 +54,7 @@ public record ObservationValue(State state, ValueType type, Optional<String> tex
         return new ObservationValue(State.NOT_APPLICABLE, type, Optional.empty(), Optional.empty());
     }
 
-    private boolean valid() {
+    boolean valid() {
         if (state != State.KNOWN) return text.isEmpty() && number.isEmpty();
         return type == ValueType.STRING ? text.isPresent() && number.isEmpty()
                 : text.isEmpty() && number.filter(Double::isFinite).isPresent();

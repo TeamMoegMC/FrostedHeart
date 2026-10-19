@@ -45,29 +45,52 @@ public record Observation(UUID recordId, Type type, ResourceLocation object,
             return DataResult.error(() -> "Invalid UUID: " + s);
         }
     }, UUID::toString);
-    public static final Codec<Observation> CODEC = RecordCodecBuilder.<Observation>create(i -> i.group(
-            UUID_CODEC.fieldOf("record_id").forGetter(Observation::recordId),
-            KnowledgeKey.enumCodec(Type.class).fieldOf("type").forGetter(Observation::type),
-            ResourceLocation.CODEC.fieldOf("object").forGetter(Observation::object),
-            Codec.unboundedMap(Codec.STRING, ObservationValue.CODEC).optionalFieldOf("values", Map.of()).forGetter(Observation::values),
-            Source.CODEC.fieldOf("source").forGetter(Observation::source),
-            CompoundTag.CODEC.optionalFieldOf("item_data").forGetter(Observation::itemData)
-    ).apply(i, Observation::new)).comapFlatMap(o -> {
-        for (var e : o.values.entrySet()) {
-            var expected = ObservationFields.type(e.getKey());
-            if (expected.isEmpty() || expected.get() != e.getValue().type())
-                return DataResult.error(() -> "Unknown or mistyped observation field: " + e.getKey());
-            if (!ObservationFields.applies(e.getKey(), o.type) && e.getValue().state() != ObservationValue.State.NOT_APPLICABLE)
-                return DataResult.error(() -> "Field is not applicable to " + o.type + ": " + e.getKey());
-        }
-        if (o.type != Type.ITEM && o.itemData.isPresent())
-            return DataResult.error(() -> "Only item observations have item_data");
-        return DataResult.success(o);
-    }, java.util.function.Function.identity());
+    public static final Codec<Observation> CODEC = RecordCodecBuilder.<Stored>create(i -> i.group(
+            UUID_CODEC.fieldOf("record_id").forGetter(Stored::recordId),
+            KnowledgeKey.enumCodec(Type.class).fieldOf("type").forGetter(Stored::type),
+            ResourceLocation.CODEC.fieldOf("object").forGetter(Stored::object),
+            KnowledgeKey.strictOptionalField(Codec.unboundedMap(Codec.STRING, ObservationValue.CODEC), "values").forGetter(Stored::values),
+            Source.CODEC.fieldOf("source").forGetter(Stored::source),
+            CompoundTag.CODEC.optionalFieldOf("item_data").forGetter(Stored::itemData)
+    ).apply(i, Stored::new)).comapFlatMap(Stored::observation, Stored::of);
 
+    /**
+     * The one validity rule. Decoding builds records through here as well, so a record that cannot be decoded again is
+     * rejected where it is created and never reaches an archive or a save.
+     */
     public Observation {
         values = Map.copyOf(values);
         itemData = itemData.map(CompoundTag::copy);
+        for (var e : values.entrySet()) {
+            var expected = ObservationFields.type(e.getKey());
+            if (expected.isEmpty() || expected.get() != e.getValue().type())
+                throw new IllegalArgumentException("Unknown or mistyped observation field: " + e.getKey());
+            if (!ObservationFields.applies(e.getKey(), type) && e.getValue().state() != ObservationValue.State.NOT_APPLICABLE)
+                throw new IllegalArgumentException("Field is not applicable to " + type + ": " + e.getKey());
+            if (!e.getValue().valid())
+                throw new IllegalArgumentException("Observation value does not agree with its state and type: " + e.getKey());
+        }
+        if (type != Type.ITEM && itemData.isPresent())
+            throw new IllegalArgumentException("Only item observations have item_data");
+    }
+
+    /**
+     * Decoded fields. A record the constructor rejects becomes a codec error rather than an exception.
+     */
+    private record Stored(UUID recordId, Type type, ResourceLocation object, Optional<Map<String, ObservationValue>> values,
+                          Source source, Optional<CompoundTag> itemData) {
+        static Stored of(Observation o) {
+            return new Stored(o.recordId, o.type, o.object, o.values.isEmpty() ? Optional.empty() : Optional.of(o.values),
+                    o.source, o.itemData());
+        }
+
+        DataResult<Observation> observation() {
+            try {
+                return DataResult.success(new Observation(recordId, type, object, values.orElse(Map.of()), source, itemData));
+            } catch (IllegalArgumentException e) {
+                return DataResult.error(e::getMessage);
+            }
+        }
     }
 
     @Override
