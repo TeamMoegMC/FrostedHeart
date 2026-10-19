@@ -29,7 +29,6 @@ import com.teammoeg.chorda.client.cui.base.Focusable;
 import com.teammoeg.chorda.client.cui.base.MouseButton;
 import com.teammoeg.chorda.client.cui.base.TooltipBuilder;
 import com.teammoeg.chorda.client.cui.base.UIElement;
-import com.teammoeg.chorda.client.cui.base.UILayer;
 import com.teammoeg.chorda.client.cui.base.Verifier;
 import com.teammoeg.chorda.client.cui.base.Verifier.VerifyResult;
 import com.teammoeg.chorda.client.cui.theme.Coloring;
@@ -95,7 +94,7 @@ public class TextBox extends UIElement implements Focusable {
 	 *
 	 * @param panel 父级UI图层 / Parent UI layer
 	 */
-	public TextBox(UILayer panel) {
+	public TextBox(UIElement panel) {
 		super(panel);
 		filter=Verifier.nonNull();
 		validText=filter.test("");

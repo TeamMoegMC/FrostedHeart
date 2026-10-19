@@ -15,6 +15,10 @@ This directory explains implemented, player-facing game systems. Source, configu
 
 `Current` means verified against implementation. `Partial` omits known areas. `Transitional` mixes verified material with legacy, experimental, or proposed content. [`deprecated/`](deprecated/) is historical only.
 
+## Library Guides
+
+- [Chorda UI (CUI) 指南](chorda-cui.md): element tree, lifecycle, layout, input, themes, screen adapters, widgets, content panels, pan/zoom viewport, and editors.
+
 Read the system README, then follow its document and code anchors. When behavior, formulas, persistence, networking, configuration, data formats, commands, or cross-system contracts change, update the owning document and record the impact in [`diary/`](../diary/).
 
 Repository-wide authority and writing rules live in [`AGENTS.md`](../AGENTS.md). Creative intent is under read-only [`design/`](../design/); intended work belongs in [`plans/`](../plans/), and open ideas in [`discussion/`](../discussion/).
