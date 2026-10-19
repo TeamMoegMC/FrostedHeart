@@ -93,7 +93,7 @@ allowed = !managed || sources is not empty
 
 `AccessDecision` returns all three values: `managed`, `allowed`, and `sources`. An ordinary target absent from both systems therefore retains the historical default-open behavior.
 
-The public Boolean adapters are `TechnologyAccessResolver#hasFinding`, `#isRecipeUnlocked`, `#canFormMultiblock`, and `#canUseBlock`. `ResearchHooks`, vanilla/campfire/Create/IE recipe call sites, IE formation, right-click block enforcement, generator formation checks, and JEI consume this same compiled answer.
+The public Boolean adapters are `TechnologyAccessResolver#hasFinding`, `#isRecipeUnlocked`, `#canFormMultiblock`, and `#canUseBlock`. `ResearchHooks`, vanilla/campfire/Create/IE recipe call sites, IE formation, right-click block enforcement, generator formation checks, and JEI consume this same compiled answer. The server caches one `TechnologyAccessProjection` per team (and one for ownerless fake players and machines) and rebuilds it only after an input changes; the invalidation rules are in 「生命周期、同步与命令」 of the [knowledge state and API](../knowledge/state-and-api.md).
 
 ## Legacy Coexistence And Provenance
 
@@ -107,7 +107,7 @@ Legacy effects remain unchanged and are projected only into their matching chann
 
 Legacy entitlement sources are rebuilt by walking loaded research definitions and requiring both a completed `ResearchData` and the matching granted `effectData` nonce. The resolver does not attempt to recover source identity from `UnlockList`, because those sets intentionally contain no provenance.
 
-A V2 result and one or more legacy effects may target the same ID. Every source remains in the decision. Removing/resetting one source leaves access open while another source remains. Grant and reset of legacy access effects send a fresh full knowledge snapshot so client gameplay and JEI see the same answer.
+A V2 result and one or more legacy effects may target the same ID. Every source remains in the decision. Removing/resetting one source leaves access open while another source remains. Grant and reset of legacy access effects mark the team through `TeamResearchService.sync`, which drops its cached server projection and sends one fresh full knowledge snapshot at the end of the server tick, so client gameplay and JEI see the same answer.
 
 ## Physical Prototype Shell
 
@@ -155,20 +155,21 @@ and learning.
 
 `knowledge_snapshot` transports one logical full S2C replacement containing:
 
-- schema-2 `TeamKnowledgeData`;
 - `catalogRevision`;
 - compiled `KnowledgeProjection`;
 - compiled `TechnologyAccessProjection`, including provenance;
 - `archive_view`, the current team-visible entries, actual discovered relations, acquisition history, and revealed
   hints.
 
-It is sent after login, team change, knowledge mutations, relevant legacy effect grant/reset, and catalogue reload.
-Client installation replaces the Chorda knowledge component and both projections, installs `KnowledgeClientState`, and
-requests JEI synchronization. Knowledge synchronization encodes the full snapshot once as compressed NBT, divides it
-into 128 KiB fragments, and installs the replacement only after all fragments arrive. This avoids the single-NBT packet
-limit without adding a knowledge-record limit. Batch learning/deletion sends captured selections in requests of at most
-128 keys, coalesces each request's team update, and accumulates all per-entry outcomes before showing the final
-selection summary. Unrevealed link input definitions are not sent.
+The persisted `TeamKnowledgeData` stays on the server. Knowledge mutations, relevant legacy effect grant/reset, team
+change, and the datapack sync after a reload mark the team; each marked team with an online member gets one snapshot at
+the end of the server tick. Login and the drawing desk's refresh send immediately. Client installation replaces both
+projections, installs `KnowledgeClientState`, and requests JEI synchronization. Knowledge synchronization encodes the
+full snapshot once as compressed NBT, divides it into 128 KiB fragments, and installs the replacement only after all
+fragments arrive. This avoids the single-NBT packet limit without adding a knowledge-record limit. Batch
+learning/deletion sends captured selections in requests of at most 128 keys, coalesces each request's team update, and
+accumulates all per-entry outcomes before showing the final selection summary. Unrevealed link input definitions are not
+sent.
 
 ## Current Limits
 

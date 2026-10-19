@@ -44,7 +44,6 @@ import com.teammoeg.frostedresearch.data.TeamResearchData;
 import com.teammoeg.frostedresearch.data.UnlockListType;
 import com.teammoeg.frostedresearch.events.PopulateUnlockListEvent;
 import com.teammoeg.frostedresearch.recipe.InspireRecipe;
-import com.teammoeg.frostedresearch.api.TeamResearchService;
 import com.teammoeg.frostedresearch.knowledge.ResearchResultCatalog;
 import com.teammoeg.frostedresearch.knowledge.ResearchResultCatalogLoader;
 import com.teammoeg.frostedresearch.knowledge.TechnologyAccessResolver;
@@ -254,6 +253,7 @@ public class ResearchHooks {
 	public static void reload() {
 		locklists.clear();
 		MinecraftForge.EVENT_BUS.post(new PopulateUnlockListEvent(locklists));
+		TechnologyAccessResolver.invalidateAll();
 		tickClues.clear();
 		killClues.clear();
 		RECIPE_OWNER.remove();
@@ -309,23 +309,16 @@ public class ResearchHooks {
             knowledgeReload.diagnostics().forEach(message -> FRMain.LOGGER.error("Knowledge definitions: {}", message));
 		if (CTeamDataManager.INSTANCE == null) return;
 		FRMain.LOGGER.info("reloading research system");
+		// Knowledge snapshots wait for KnowledgeRuntime.datapackSync: tags are not final yet, and offline teams need none.
 		if (!FHResearch.reloadCatalog()) {
 			FRMain.LOGGER.error("Research reload rejected; the previous catalogue remains active");
-			syncKnowledgeSnapshots();
+			TechnologyAccessResolver.invalidateAll();
 			return;
 		}
 		CTeamDataManager.INSTANCE.forAllData(FRSpecialDataTypes.RESEARCH_DATA, TeamResearchData::initResearch);
 		FHResearch.sendSyncPacket(PacketDistributor.ALL.noArg());
 		CTeamDataManager.INSTANCE.forAllData(FRSpecialDataTypes.RESEARCH_DATA, TeamResearchData::sendUpdate);
-		syncKnowledgeSnapshots();
-	}
-
-	private static void syncKnowledgeSnapshots() {
-		CTeamDataManager.INSTANCE.forAllData(FRSpecialDataTypes.RESEARCH_DATA,
-				(ignored, team) -> {
-					team.getData(FRSpecialDataTypes.KNOWLEDGE_DATA);
-					TeamResearchService.sync(team);
-				});
+		TechnologyAccessResolver.invalidateAll();
 	}
 	public static void onAreaVisited(ServerPlayer s,int index) {
 		TeamDataClosure<TeamResearchData> trd = ResearchDataAPI.getData(s);

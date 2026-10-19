@@ -26,6 +26,7 @@ import java.util.function.Supplier;
 import com.teammoeg.chorda.dataholders.team.CTeamDataManager;
 import com.teammoeg.chorda.network.CMessage;
 import com.teammoeg.frostedresearch.FRNetwork;
+import com.teammoeg.frostedresearch.api.TeamResearchService;
 import com.teammoeg.frostedresearch.blocks.DrawingDeskTileEntity;
 import com.teammoeg.frostedresearch.gui.drawdesk.DrawDeskContainer;
 import com.teammoeg.frostedresearch.knowledge.KnowledgeService;
@@ -114,7 +115,7 @@ public final class KnowledgeWorkbenchActionPacket implements CMessage {
             KnowledgeService service = KnowledgeService.forPlayer(player);
             ListTag results = new ListTag();
             switch (action) {
-                case REFRESH -> KnowledgeSnapshotPacket.send(player, CTeamDataManager.get(player));
+                case REFRESH -> TeamResearchService.send(player, CTeamDataManager.get(player));
                 case LEARN ->
                         service.learnInbox(keys.stream().distinct().toList()).forEach(result -> addResult(results, result, service));
                 case DELETE ->
@@ -152,6 +153,8 @@ public final class KnowledgeWorkbenchActionPacket implements CMessage {
                 }
             }
             response.put("results", results);
+            // The client applies a reply to the view it already has, e.g. RETRIEVE focuses retrieved_key.
+            TeamResearchService.flush(CTeamDataManager.get(player));
             FRNetwork.INSTANCE.sendPlayer(player, new KnowledgeWorkbenchReplyPacket(response));
         });
         context.get().setPacketHandled(true);

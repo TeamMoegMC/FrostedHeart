@@ -21,14 +21,17 @@
 package com.teammoeg.frostedresearch.knowledge;
 
 import blusunrize.immersiveengineering.api.multiblocks.MultiblockHandler.IMultiblock;
+import com.teammoeg.chorda.dataholders.team.CTeamDataManager;
 import com.teammoeg.chorda.dataholders.team.TeamDataHolder;
 import com.teammoeg.frostedresearch.FHResearch;
 import com.teammoeg.frostedresearch.FRSpecialDataTypes;
 import com.teammoeg.frostedresearch.ResearchHooks;
 import com.teammoeg.frostedresearch.api.KnowledgeDataAPI;
+import com.teammoeg.frostedresearch.api.TeamResearchService;
 import com.teammoeg.frostedresearch.data.ResearchData;
 import com.teammoeg.frostedresearch.data.TeamKnowledgeData;
 import com.teammoeg.frostedresearch.data.TeamResearchData;
+import com.teammoeg.frostedresearch.knowledge.definition.KnowledgeDefinitions;
 import com.teammoeg.frostedresearch.research.Research;
 import com.teammoeg.frostedresearch.research.effects.Effect;
 import com.teammoeg.frostedresearch.research.effects.EffectBuilding;
@@ -46,9 +49,17 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
-/** Builds the sole access read model consumed by gameplay, machines and JEI. */
+/**
+ * Builds the sole access read model consumed by gameplay, machines and JEI. Server reads are cached per team and
+ * rebuilt only after that team's inputs change.
+ */
 public final class TechnologyAccessResolver {
+    /** Key for fake players and machines without an owning team. */
+    private static final UUID OWNERLESS = new UUID(0, 0);
+    private static final Map<UUID, Cached> CACHE = new ConcurrentHashMap<>();
+
     private TechnologyAccessResolver() {
     }
 
@@ -65,9 +76,8 @@ public final class TechnologyAccessResolver {
     }
 
     public static TechnologyAccessProjection project(TeamDataHolder team) {
-        TeamKnowledgeData knowledge = team.getData(FRSpecialDataTypes.KNOWLEDGE_DATA);
-        TeamResearchData legacy = team.getData(FRSpecialDataTypes.RESEARCH_DATA);
-        return project(knowledge, legacy);
+        return cached(team.getId(), team.getData(FRSpecialDataTypes.KNOWLEDGE_DATA),
+                team.getData(FRSpecialDataTypes.RESEARCH_DATA));
     }
 
     public static TechnologyAccessProjection project(TeamKnowledgeData knowledge, TeamResearchData legacy) {
@@ -118,9 +128,28 @@ public final class TechnologyAccessResolver {
     }
 
     public static TechnologyAccessProjection projection(UUID teamId) {
-        if (teamId == null) return project(new TeamKnowledgeData(), new TeamResearchData());
-        TeamDataHolder holder = com.teammoeg.chorda.dataholders.team.CTeamDataManager.INSTANCE.get(teamId);
-        return holder == null ? project(new TeamKnowledgeData(), new TeamResearchData()) : project(holder);
+        TeamDataHolder holder = teamId == null ? null : CTeamDataManager.INSTANCE.get(teamId);
+        return holder == null ? cached(OWNERLESS, null, null) : project(holder);
+    }
+
+    /** Called with every {@link TeamResearchService#sync} mark, which also covers legacy grants and resets. */
+    public static void invalidate(UUID teamId) {
+        CACHE.remove(teamId);
+    }
+
+    /** Called when lock lists or research definitions are rebuilt, or legacy progress is reconciled after a reload. */
+    public static void invalidateAll() {
+        CACHE.clear();
+    }
+
+    private static TechnologyAccessProjection cached(UUID key, TeamKnowledgeData knowledge, TeamResearchData legacy) {
+        Cached cached = CACHE.get(key);
+        if (cached != null && cached.current(knowledge, legacy)) return cached.projection();
+        cached = Cached.build(knowledge, legacy);
+        // A marked team can be part-way through an operation (a repeatable research resets right after its grant),
+        // so its reads stay exact until the end-of-tick flush settles the change.
+        if (!TeamResearchService.pending(key)) CACHE.put(key, cached);
+        return cached.projection();
     }
 
     private static void addResultSources(TeamKnowledgeData knowledge, ResearchResultCatalog.Snapshot catalog,
@@ -177,5 +206,29 @@ public final class TechnologyAccessResolver {
             ResourceLocation target, AccessSource source) {
         List<AccessSource> values = sources.computeIfAbsent(target, ignored -> new ArrayList<>());
         if (!values.contains(source)) values.add(source);
+    }
+
+    /**
+     * A projection with the inputs it was built from. Catalogue and definition installs replace their snapshots and
+     * every knowledge mutation bumps the state revision, so those changes need no explicit invalidation.
+     */
+    private record Cached(TechnologyAccessProjection projection, TeamKnowledgeData knowledge, long revision,
+                          TeamResearchData legacy, ResearchResultCatalog.Snapshot catalog,
+                          KnowledgeDefinitions.Snapshot definitions) {
+        static Cached build(TeamKnowledgeData knowledge, TeamResearchData legacy) {
+            // Inputs are read before building, so a change during the build fails the next current() check.
+            ResearchResultCatalog.Snapshot catalog = ResearchResultCatalog.current();
+            KnowledgeDefinitions.Snapshot definitions = KnowledgeDefinitions.current();
+            long revision = knowledge == null ? 0 : knowledge.mutationRevision();
+            TechnologyAccessProjection projection = knowledge == null
+                    ? project(new TeamKnowledgeData(), new TeamResearchData()) : project(knowledge, legacy);
+            return new Cached(projection, knowledge, revision, legacy, catalog, definitions);
+        }
+
+        boolean current(TeamKnowledgeData knowledge, TeamResearchData legacy) {
+            return this.knowledge == knowledge && this.legacy == legacy
+                    && (knowledge == null || revision == knowledge.mutationRevision())
+                    && catalog == ResearchResultCatalog.current() && definitions == KnowledgeDefinitions.current();
+        }
     }
 }

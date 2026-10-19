@@ -144,12 +144,30 @@
 
 ## 生命周期、同步与命令
 
-队伍创建和读取时初始化知识；玩家登录、换队、知识状态变更、数据包重载和标签最终同步时发送对应队伍的可见状态。队伍成员变化只改变查询归属，不自动复制档案。
+队伍创建和读取时初始化知识；玩家登录、换队、知识状态变更以及数据包重载后标签最终同步时发送对应队伍的可见状态。队伍成员变化只改变查询归属，不自动复制档案。
 `merge` 按知识身份、规则 ID 和实际研究 UUID 合并，重新按当前定义计算有效性，保留超容量内容。
 
-首次登录的知识初始化与同步在 `PlayerLoggedInEvent` 的 `LOWEST` 优先级执行，晚于 Architectury/FTB Teams 建立玩家队伍。
-`OnDatapackSyncEvent` 携带单个玩家时属于更早的登录阶段，不在此处读取队伍；其玩家参数为空时才处理 `/reload`
-后已在线队伍的同步。新世界中首次进入的玩家因此不需要预先存在队伍或知识存档。
+`TeamResearchService.sync(team)` 只把队伍标记为待同步，并丢弃该队伍缓存的权限投影。知识服务的每次提交、旧研究访问效果的授予或重置、换队与
+`/reload` 都只做这一标记。`KnowledgeRuntime` 在 `TickEvent.ServerTickEvent` 的 `END` 阶段调用 `TeamResearchService.flush()`
+，为每个待同步队伍构造一次快照，发给已建立网络连接的在线成员；无人在线的队伍只清除标记，不构造快照。某个队伍构造失败只记录错误，不影响其他队伍。
+批量学习/删除、联络产出、研究完成和初始知识发放因此各只发送一次快照。
+
+两条路径不等 tick 结束：
+
+- 登录与绘图台 `REFRESH` 调用 `TeamResearchService.send(player, team)`，立即给该玩家发送当前快照；队伍正待同步时，同一份快照也发给其他在线成员并清除标记。
+- 绘图台其他操作在发送回复前调用 `TeamResearchService.flush(team)`。客户端总是先装入更新后的视图再处理回复，例如 `RETRIEVE` 按
+  `retrieved_key` 聚焦新来件。
+
+首次登录的知识初始化与同步在 `PlayerLoggedInEvent` 的 `LOWEST` 优先级执行，晚于 Architectury/FTB Teams 建立玩家队伍；登录只发送这一份知识快照。
+`OnDatapackSyncEvent` 携带单个玩家时属于更早的登录阶段，不在此处读取队伍；其玩家参数为空时才标记 `/reload`
+后已在线的队伍。更早运行的 `ResearchHooks.ServerReload` 此时标签尚未最终安装，只清除权限投影缓存，不为任何队伍构造快照。新世界中首次进入的玩家因此不需要预先存在队伍或知识存档。
+
+服务端权限投影按队伍缓存：`TechnologyAccessResolver.project(team)`、`projection(teamId)` 及其布尔适配器读取同一份缓存，没有队伍的假玩家和机器共用一份。
+缓存项记下构造时的 `KnowledgeState` 实例与 `mutationRevision()`、`TeamResearchData` 实例，以及 `ResearchResultCatalog`、
+`KnowledgeDefinitions` 的当前快照，任一不同即重建。因此知识变更（包括 `TeamKnowledgeData` 的旧式直接写方法）、成果目录与知识定义安装不需要另行失效。
+旧研究进度没有修订号，由上述同步标记失效；`ResearchHooks.reload`、`FHResearch.reindex`（效果重新声明全局锁定列表）以及 `ServerReload`
+末尾（重新核对各队旧研究进度之后）清空全部缓存。队伍待同步期间的读取每次重新计算、不写入缓存，直到 flush，以免缓存同一操作的中途状态，例如可重复研究在授予后立即重置。
+快照构造复用这份缓存投影。
 
 服务端 `KnowledgeView`
 包含档案、来件、已揭示暗示、实际联络、实际研究和获得经历。未发现规则的全部输入条件不进入快照。正常图谱中的联络必须仍能以历史绑定满足当前规则，并且其实际输入/输出有效；历史视图可以查看失效路径和忘记后的引用。数据包重载不重新编造历史绑定。
@@ -157,8 +175,8 @@
 可见快照还包含 `projects`：仅列出档案中想法已经公开的项目、可用来源与成果说明，供未启动项目展示。它与 `research`
 中的实际启动/完成记录分开。项目完成后的多项成果共用一次最终快照，分别保留其学习事件和结果。
 
-`KnowledgeSnapshotPacket` 将完整的 `KnowledgeSyncSnapshot` NBT 压缩后按 128 KiB
-分片。客户端收齐一轮后一次替换档案、技术投影和可见视图；传输期间继续显示上一份完整状态。这样容量配置允许的观察档案不会被普通单包
+`KnowledgeSnapshotPacket` 将 `KnowledgeSyncSnapshot`（`catalog_revision`、发现投影 `knowledge`、权限投影 `technology` 与可见视图
+`archive_view`）的 NBT 压缩后按 128 KiB 分片。持久化的队伍状态不进入快照，客户端也不保存它的镜像。客户端收齐一轮后一次替换两份投影和可见视图；传输期间继续显示上一份完整状态。这样容量配置允许的观察档案不会被普通单包
 NBT 大小限制截断。绘图台回复只携带本次操作结果与联络候选，不再次复制整个档案。
 
 行政操作：

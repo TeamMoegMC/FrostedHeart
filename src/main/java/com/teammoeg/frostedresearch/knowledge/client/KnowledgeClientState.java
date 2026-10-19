@@ -54,7 +54,6 @@ public final class KnowledgeClientState {
             if (KnowledgeScreen.current() != null) KnowledgeScreen.current().batchProgress();
             return;
         }
-        if (value.contains("snapshot")) setSnapshot(value.getCompound("snapshot"));
         if (KnowledgeScreen.current() != null) KnowledgeScreen.current().receiveReply(value);
     }
 }
