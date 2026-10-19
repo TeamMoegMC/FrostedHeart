@@ -27,6 +27,8 @@ import java.util.function.Consumer;
 import com.mojang.datafixers.util.Pair;
 
 public class ResearchGame {
+	/** The final card every board places at its centre; clicking it after the board is cleared wins the game. */
+	public static final CardPos FINAL_CARD = CardPos.valueOf(4, 4);
 	Card[][] cards = new Card[9][9];
 	int addcur;
 	int addmax;
@@ -90,6 +92,22 @@ public class ResearchGame {
 		for (int i = 0; i < 9; i++)
 			for (int j = 0; j < 9; j++)
 				cards[i][j].clear();
+	}
+
+	/**
+	 * Testing shortcut: clears a running board and wins it. The caller decides who may use it.
+	 *
+	 * @return whether a running game was won
+	 */
+	public boolean forceWin() {
+		if (isEmpty())
+			return false;
+		for (int i = 0; i < 9; i++)
+			for (int j = 0; j < 9; j++)
+				cards[i][j].show = false;
+		addcur = addmax;
+		finished = true;
+		return true;
 	}
 
 	public void doWinPending() {

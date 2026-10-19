@@ -20,6 +20,7 @@
   "gui.frostedresearch.draw_desk.examine": "研究物品",
   "gui.frostedresearch.draw_desk.help": "使用方法",
   "gui.frostedresearch.draw_desk.reset": "创建新论文",
+  "gui.frostedresearch.draw_desk.cheat_finish": "作弊模式：点击直接完成这一局",
   "gui.frostedresearch.draw_desk.unable_examine": "暂时无法研究该物品",
   "gui.frostedresearch.effect.building": "解锁新建筑",
   "gui.frostedresearch.effect.category": "新的配方类型",

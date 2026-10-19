@@ -20,6 +20,7 @@
   "gui.frostedresearch.draw_desk.examine": "Examine item",
   "gui.frostedresearch.draw_desk.help": "Help",
   "gui.frostedresearch.draw_desk.reset": "Create new paper",
+  "gui.frostedresearch.draw_desk.cheat_finish": "Cheats: click to finish this game at once",
   "gui.frostedresearch.draw_desk.unable_examine": "Unable to examine this now",
   "gui.frostedresearch.effect.building": "New Building",
   "gui.frostedresearch.effect.category": "New Recipes",

@@ -23,12 +23,16 @@ import com.teammoeg.chorda.client.CInputHelper.Cursor;
 import com.teammoeg.chorda.client.RenderingHint;
 import com.teammoeg.chorda.client.TesselateHelper.TextureTesselator;
 import com.teammoeg.chorda.client.cui.base.MouseButton;
+import com.teammoeg.chorda.client.cui.base.TooltipBuilder;
 import com.teammoeg.chorda.client.cui.base.UIElement;
 import com.teammoeg.chorda.client.cui.widgets.Button;
 import com.teammoeg.frostedresearch.gui.drawdesk.game.Card;
 import com.teammoeg.frostedresearch.gui.drawdesk.game.CardPos;
 import com.teammoeg.frostedresearch.gui.drawdesk.game.ClientResearchGame;
+import com.teammoeg.frostedresearch.gui.drawdesk.game.ResearchGame;
+import com.teammoeg.frostedresearch.Lang;
 
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 
 public class CardButton extends Button {
@@ -59,14 +63,31 @@ public class CardButton extends Button {
 	}
 	@Override
 	public Cursor getCursor() {
-		if (game.isTouchable(card))
+		if (game.isTouchable(card) || cheatFinish())
 			return Cursor.HAND;
 		return super.getCursor();
 	}
 
 	@Override
+	public void getTooltip(TooltipBuilder list) {
+		super.getTooltip(list);
+		if (cheatFinish())
+			list.accept(Lang.translateGui("draw_desk.cheat_finish"));
+	}
+
+	@Override
 	public void onClicked(MouseButton arg0) {
+		if (cheatFinish() && game.finishForTesting(card))
+			return;
 		game.select(card);
+	}
+
+	/**
+	 * With cheats allowed, the final card of a running game finishes it at once; the server checks again.
+	 */
+	private boolean cheatFinish() {
+		var player = Minecraft.getInstance().player;
+		return player != null && player.hasPermissions(2) && ResearchGame.FINAL_CARD.equals(card) && !game.getGame().isEmpty();
 	}
 
 }

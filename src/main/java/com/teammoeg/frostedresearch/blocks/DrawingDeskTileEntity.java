@@ -221,6 +221,9 @@ public class DrawingDeskTileEntity extends CBlockEntity implements MenuProvider 
     }
 
     public boolean tryCombine(ServerPlayer player, CardPos cp1, CardPos cp2) {
+        // Testing shortcut: a player allowed to cheat finishes a running game by clicking its final card.
+        if (cp2 == null && ResearchGame.FINAL_CARD.equals(cp1) && player.hasPermissions(2))
+            return game.forceWin();
         ItemStack is = inventory.getStackInSlot(INK_SLOT);
         if (is.isEmpty() || !(is.getItem() instanceof IPen)) return false;
         IPen pen = (IPen) is.getItem();

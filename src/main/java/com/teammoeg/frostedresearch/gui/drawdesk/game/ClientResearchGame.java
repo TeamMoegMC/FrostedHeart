@@ -112,6 +112,19 @@ public class ClientResearchGame implements Consumer<ResearchGame> {
 		lastSelect = null;
 	}
 
+	/**
+	 * Testing shortcut for players allowed to cheat: asks the server to finish the running game.
+	 *
+	 * @return whether the click was the final card of a running game
+	 */
+	public boolean finishForTesting(CardPos pos) {
+		if (!ResearchGame.FINAL_CARD.equals(pos) || rg.isEmpty())
+			return false;
+		lastSelect = null;
+		FRNetwork.INSTANCE.sendToServer(new FHDrawingDeskOperationPacket(bp, pos));
+		return true;
+	}
+
 	public void select(CardPos pos) {
 		if (!rg.isTouchable(pos)) return;
 		if (!pos.equals(lastSelect) && tryCombine(pos, lastSelect)) {
