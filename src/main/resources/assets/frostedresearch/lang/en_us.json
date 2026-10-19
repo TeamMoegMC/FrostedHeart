@@ -52,6 +52,8 @@
   "gui.frostedresearch.experiment.message.completed": "The experiment is complete and counted.",
   "gui.frostedresearch.experiment.message.not_ready": "Some conditions or materials are missing.",
   "gui.frostedresearch.experiment.message.unavailable": "This experiment is no longer needed, or the research has ended.",
+  "gui.frostedresearch.draw_desk.calculation_for": "Calculating for",
+  "gui.frostedresearch.draw_desk.calculation_progress": "%s/%s · level %s",
   "gui.frostedresearch.draw_desk.cheat_finish": "Cheats: click to finish this game at once",
   "gui.frostedresearch.draw_desk.unable_examine": "Unable to examine this now",
   "gui.frostedresearch.effect.building": "New Building",

@@ -52,6 +52,8 @@
   "gui.frostedresearch.experiment.message.completed": "实验完成了，已计入研究。",
   "gui.frostedresearch.experiment.message.not_ready": "还有条件或材料不满足。",
   "gui.frostedresearch.experiment.message.unavailable": "这项实验已不再需要，或研究已经结束。",
+  "gui.frostedresearch.draw_desk.calculation_for": "演算中的研究",
+  "gui.frostedresearch.draw_desk.calculation_progress": "%s/%s 局 · 难度 %s",
   "gui.frostedresearch.draw_desk.cheat_finish": "作弊模式：点击直接完成这一局",
   "gui.frostedresearch.draw_desk.unable_examine": "暂时无法研究该物品",
   "gui.frostedresearch.effect.building": "解锁新建筑",

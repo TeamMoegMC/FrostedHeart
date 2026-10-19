@@ -164,6 +164,10 @@ public class DrawingDeskTileEntity extends CBlockEntity implements MenuProvider 
         return calculationRun;
     }
 
+    public String calculationRequirement() {
+        return calculationRequirement;
+    }
+
     public boolean isCalculating(UUID run, String requirement) {
         return run != null && run.equals(calculationRun) && requirement.equals(calculationRequirement);
     }
