@@ -1,7 +1,7 @@
 # Climate Data And Lifecycle
 
 - Status: `Transitional; material lifecycle integration is under validation`
-- Last verified: `2026-10-18`（本轮核对并更新相变温度入口；其他条目沿用原验证范围）
+- Last verified: `2026-10-18`（相变温度入口与冰锥相变收据；其他条目沿用原验证范围）
 - Scope: recipe/configuration ownership, capabilities, server lifecycle, thermal runtime integration, and network boundaries
 - Primary code anchors: `FHRecipeCachingReloadListener`, `WorldTemperature`, `MinecraftThermalEvents`, `MinecraftThermalInput`, `MinecraftPhaseController.temperature`, `ThermalWorkerPool`, `LevelChunkSectionMixin_ThermalInput`, `FHCapabilities`, `FHNetwork`
 
@@ -277,6 +277,13 @@ whole journal has retired. Natural temperature remains necessary only for tracke
 replacement/mass changes whose target still has material; removal does not query it.
 
 ## Network And Consumers
+
+冰锥的非原位融化沿用上述材料变更日志与原 `APPLIED` ACK：删除连续链末端后，仍存在的
+受热段翻转 `melt_cycle`，记录为 `GAMEPLAY_TRANSITION`。worker 迁移把已完成的潜热平台
+复位到下一轮起点，checkpoint 保存交由现有通用流程，不为冰锥增加插入 API、保存字段或
+专用保存窗口处理。缺失材料记录与休眠投影同样使用通用规则。没有冰锥独立
+SavedData；警告时间使用 vanilla scheduled block ticks，外观/预警/材料更新标记使用
+BlockState，坠落使用 vanilla falling-block NBT。规则与验证入口见 [icicle.md](icicle.md)。
 
 `SoilThermometer`的方块测量读取`WorldTemperature.material`，不可用时显示明确提示。
 `SoilThermometerRequestPacket`仍读取`WorldTemperature.block`，因为这条网络路径服务于

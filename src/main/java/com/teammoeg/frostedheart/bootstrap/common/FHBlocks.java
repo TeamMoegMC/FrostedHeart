@@ -41,6 +41,7 @@ import com.teammoeg.frostedheart.content.agriculture.WildRubberDandelionBlock;
 import com.teammoeg.frostedheart.content.climate.block.CooledMagmaBlock;
 import com.teammoeg.frostedheart.content.climate.block.LayeredThinIceBlock;
 import com.teammoeg.frostedheart.content.climate.block.ThinIceBlock;
+import com.teammoeg.frostedheart.content.climate.block.IcicleBlock;
 import com.teammoeg.frostedheart.content.climate.block.wardrobe.WardrobeBlock;
 import com.teammoeg.frostedheart.content.climate.player.thermalitem.ThermalReservoirBlock;
 import com.teammoeg.frostedheart.content.climate.player.thermalitem.WarmStoneItem;
@@ -184,6 +185,16 @@ public class FHBlocks {
     static {
         REGISTRATE.setCreativeTab(FHTabs.NATURAL_BLOCKS);
     }
+
+    public static final BlockEntry<IcicleBlock> ICICLE = REGISTRATE.block("icicle", IcicleBlock::new)
+            .properties(p -> p.mapColor(MapColor.ICE).randomTicks().strength(.25F).sound(SoundType.GLASS)
+                    .noOcclusion().pushReaction(PushReaction.DESTROY)
+                    .isRedstoneConductor(FHBlocks::never).isValidSpawn((state, level, pos, type) -> false))
+            .blockstate(FHBlockStateGen.icicle())
+            .lang("Icicle")
+            .loot((lt, block) -> lt.add(block, RegistrateBlockLootTables.createSilkTouchOnlyTable(block)))
+            .item().model((c, p) -> p.withExistingParent(c.getName(), p.modLoc("block/icicle_tip")))
+            .build().register();
 
     // thin_ice
     public static final BlockEntry<ThinIceBlock> THIN_ICE_BLOCK = REGISTRATE.block("thin_ice", ThinIceBlock::new)

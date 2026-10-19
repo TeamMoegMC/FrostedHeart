@@ -469,7 +469,7 @@ public final class ThermalMaterialBehaviorGameTests {
         } finally { attachment.frostedheart$setDormantThermalState(previous); }
     }
 
-    private static final class Simulation implements AutoCloseable {
+    static final class Simulation implements AutoCloseable {
         final GameTestHelper helper;
         final ServerLevel level;
         final MinecraftThermalProfiles.Snapshot profiles = MinecraftThermalProfiles.prepare();

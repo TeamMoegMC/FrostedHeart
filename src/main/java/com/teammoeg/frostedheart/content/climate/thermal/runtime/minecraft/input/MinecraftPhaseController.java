@@ -2,6 +2,7 @@
 package com.teammoeg.frostedheart.content.climate.thermal.runtime.minecraft.input;
 
 import com.teammoeg.frostedheart.content.climate.WorldTemperature;
+import com.teammoeg.frostedheart.content.climate.block.IcicleBlock;
 import com.teammoeg.frostedheart.content.climate.data.StateTransitionData;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.MaterialBoundaryRegistry;
 import com.teammoeg.frostedheart.content.climate.thermal.mesh.MaterialSample;
@@ -151,12 +152,14 @@ public final class MinecraftPhaseController {
             if (!canTransition(level, position, state, edge, definition))
                 return PhaseAttempt.GAMEPLAY;
             boolean changed =
-                    setMaterialBlock(
-                            level,
-                            position,
-                            state,
-                            definition.target(),
-                            MaterialChanges.GAMEPLAY_TRANSITION);
+                    IcicleBlock.isIcicle(state) && edge.heating()
+                            ? meltIcicle(level, position)
+                            : setMaterialBlock(
+                                    level,
+                                    position,
+                                    state,
+                                    definition.target(),
+                                    MaterialChanges.GAMEPLAY_TRANSITION);
             if (changed) playEffect(level, position, definition.effect());
             return changed ? PhaseAttempt.CHANGED : PhaseAttempt.GAMEPLAY;
         }
@@ -186,6 +189,15 @@ public final class MinecraftPhaseController {
         }
         if (before.getBlock() != after.getBlock()) return MaterialChanges.REPLACE;
         return before.getFluidState() != after.getFluidState() ? MaterialChanges.MASS_CHANGE : 0;
+    }
+
+    /** Only the world result differs; energy migration and persistence stay generic. */
+    private static boolean meltIcicle(ServerLevel level, BlockPos position) {
+        if (!IcicleBlock.meltTip(level, position)) return false;
+        BlockState remaining = level.getBlockState(position);
+        return !IcicleBlock.isIcicle(remaining)
+                || setMaterialBlock(level, position, remaining, remaining.cycle(IcicleBlock.MELT_CYCLE),
+                        MaterialChanges.GAMEPLAY_TRANSITION);
     }
 
     private static boolean setMaterialBlock(
@@ -244,6 +256,7 @@ public final class MinecraftPhaseController {
         if (!canTransition(
                 level, position, state, edge, profiles.transitionData(profileId, edge.heating())))
             return false;
+        if (IcicleBlock.isIcicle(state) && edge.heating()) return meltIcicle(level, position);
         BlockState target =
                 net.minecraft.world.level.block.Block.BLOCK_STATE_REGISTRY.byId(
                         edge.targetStateId());
@@ -354,6 +367,8 @@ public final class MinecraftPhaseController {
                 state,
                 transition,
                 profiles.transitionData(profile.id(), transition.heating()))) return Outcome.RETRY;
+        if (IcicleBlock.isIcicle(state) && transition.heating())
+            return meltIcicle(level, position) ? Outcome.APPLIED : Outcome.RETRY;
         BlockState target =
                 net.minecraft.world.level.block.Block.BLOCK_STATE_REGISTRY.byId(
                         transition.targetStateId());

@@ -3,7 +3,7 @@
 - Status: `Current`
 - Last verified: `2026-09-14`
 - Scope: 逻辑气候时钟、长期事件、局部白幕、自然/mesh/analytic 温度合成、红外视野、方块状态消费者
-- Primary code anchors: `WorldClockSource`, `WorldClimate`, `ClimateEventModel`, `ClimateEventTrack`, `InterpolationClimateEvent`, `WhiteCurtainDescriptor`, `WhiteCurtainFieldModel`, `WhiteCurtainInfo`, `WorldTemperature`, `BlockTemperatureModel`, `ThermalAnalyticField`, `ThermalAnalyticFieldIndex`, `MinecraftThermalInput.gameplayPassiveEnvironment`, `MinecraftThermalInput.gameplayCropEnvironment`, `MinecraftThermalInput.gameplayInfraredSnapshot`, `TownThermalProjection`, `MinecraftThermalInput.gameplayTownEnvironment`, `InfraredViewRenderer`
+- Primary code anchors: `WorldClockSource`, `WorldClimate`, `ClimateEventModel`, `ClimateEventTrack`, `InterpolationClimateEvent`, `WhiteCurtainDescriptor`, `WhiteCurtainFieldModel`, `WhiteCurtainInfo`, `WorldTemperature`, `BlockTemperatureModel`, `ThermalAnalyticField`, `ThermalAnalyticFieldIndex`, `MinecraftThermalInput.gameplayPassiveEnvironment`, `MinecraftThermalInput.gameplayCropEnvironment`, `MinecraftThermalInput.gameplayInfraredSnapshot`, `BlockScanner.RoomData.calculateTemperature`, `TownThermalProjection`, `MinecraftThermalInput.gameplayTownEnvironment`, `InfraredViewRenderer`
 
 本文只描述当前源码行为。所有温度若无特别说明均为摄氏度；“修正”表示摄氏度增量。
 
@@ -348,10 +348,12 @@ publication，未命中时使用已加载 chunk 的 dormant 温度，再回退 `
 每次按精确位置重新合成，保留同 tick 场更新、移除与边界变化。连续空气后端命中该缓存时仍按实际 xyz 重新读取空气场，避免四分之一方块位置合并丢失空间细节。缓存满后仍采样空气并合成解析场，
 新增位置的直接辐射为零。`RadiationService.sampleItem` 保留独立的物品辐射预算。
 
-住宅与狩猎基地扫描器访问内部空气时同步把坐标压缩成 `TownThermalProjection` 的 `4×4×4` weighted groups。
-每组在 representative 点独立选择 live/dormant/natural，合成解析场后按体素数加权，并驱动评分与日结算。
-命中相对保底的 live/dormant 点才额外计算当地 natural；不会使用全建筑平均值构造局部保底。
-该路径没有第二次房间/体素遍历，不保留 mesh lease，miss 也不能 admission。矿井基地当前没有温度工作条件。
+城镇建筑调用关系（2026-10-18 局部复核）：`HouseBlockEntity.scanStructure` 与
+`HuntingBaseBlockEntity.scanStructure` 使用 `BlockScanner.RoomData.calculateTemperature`，
+逐个读取 `OccupiedCell.reachableIterable()` 中位置的 `WorldTemperature.block` 并取平均。
+这些查询通过 `gameplayPassiveEnvironment` 读取可用空气状态、自然温度回退和解析场，结果驱动评分与日结算。
+`TownThermalProjection` / `gameplayTownEnvironment` 的 weighted-group API 仍存在，但当前建筑扫描没有调用它；
+直接测试该 API 不能证明实际建筑扫描和日结算已通过集成验收。矿井基地当前没有温度工作条件。
 
 `MinecraftPhaseController` 对编译升温边检查显式解析下限：
 `L = compose(natural, -Infinity)`。被物理 phase 接管的方块，仅当解析下限自身达到对应阈值时，

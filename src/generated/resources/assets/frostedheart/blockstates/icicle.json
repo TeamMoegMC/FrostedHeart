@@ -1,0 +1,21 @@
+{
+  "variants": {
+    "shape=0": {
+      "model": "frostedheart:block/icicle_tip"
+    },
+    "shape=1": {
+      "model": "frostedheart:block/icicle_tail"
+    },
+    "shape=2": [
+      {
+        "model": "frostedheart:block/icicle_middle_1"
+      },
+      {
+        "model": "frostedheart:block/icicle_middle_2"
+      }
+    ],
+    "shape=3": {
+      "model": "frostedheart:block/icicle_top"
+    }
+  }
+}

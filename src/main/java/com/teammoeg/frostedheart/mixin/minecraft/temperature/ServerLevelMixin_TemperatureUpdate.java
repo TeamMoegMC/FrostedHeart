@@ -195,6 +195,8 @@ public abstract class ServerLevelMixin_TemperatureUpdate
 
                         if (!handled)
                         {
+                            com.teammoeg.frostedheart.content.climate.block.IcicleBlock.randomRootTick(
+                                    level, blockpos3, blockstate2, level.random);
                             //@khjxiaogu: omit randomtick from the original block if temperature modification occurred
                             if (blockstate2.isRandomlyTicking())
                             {

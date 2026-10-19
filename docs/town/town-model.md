@@ -5,6 +5,8 @@
 >
 > 目标：把 FH/TWR 当前代码和数据中的城镇数值关系整理为一套可调用、可审计、可模拟的 Java 数学模型。本文是后续实现时的上下文基准。
 
+> 2026-10-18 局部复核：第 4.3 节的公式是离线 Stage 4 保留的旧热场模型，不能作为当前游戏温度或发布平衡验收的依据。当前住宅与狩猎基地使用 `BlockScanner.RoomData.calculateTemperature` → `WorldTemperature.block`；不再经过已移除的 `HouseBlockScanner` / `HuntingBaseBlockScanner`。下文已更正这个调用关系，其余历史模拟结果仍需按现行玩法重新验证。
+
 ## 1. 设计原则
 
 ### 1.1 代码是模型的起点
@@ -217,7 +219,7 @@ T_{building,b,h}=\frac{1}{|V_b|}\sum_{v\in V_b}T_{block,v,h}
 
 这里的 \(|V_b|\) 就是扫描器记录的内部体积。它是离散空气方块数量，不是连续几何球体积。
 
-Phase K 在同一次 `BuildingBlockScanner` 遍历中顺带生成 `TownThermalProjection`：每个 world-aligned `4×4×4` base Brick 保存一个确定的真实内部空气代表点和体素权重；扫描成功后，`HouseBlockScanner` 与 `HuntingBaseBlockScanner` 通过 `MinecraftThermalInput.gameplayTownEnvironment` 各组只读一次已有 Air Mesh publication。所有 group 命中时，新加权平均驱动住宅和狩猎基地的温度、评分与日结算；部分或全部 miss 时整体回退上式 legacy 平均值。它不重新扫描房间、不保存逐体素位置、不创建 Page/Brick/Cell/Interest，也不持有 mesh lease。`MineBaseBlockScanner` 当前不产出 gameplay 温度，停用的 `MineBlockScanner` 也没有重新启用。
+当前游戏调用关系（2026-10-18 按源码复核）：`HouseBlockEntity.scanStructure` 与 `HuntingBaseBlockEntity.scanStructure` 调用 `BlockScanner.scanRoomDataFromBlock`，再用 `RoomData.calculateTemperature` 对各 `OccupiedCell.reachableIterable()` 位置的 `WorldTemperature.block` 结果取平均。`WorldTemperature.block` 经 `MinecraftThermalInput.gameplayPassiveEnvironment` 合成可用空气状态、自然温度回退和解析场；它不使用上式旧热场曲线。`TownThermalProjection` / `gameplayTownEnvironment` 仍有实现及直接 API 测试，但当前城镇建筑扫描没有调用它们，不能把那些测试等同于住宅/狩猎基地生产路径验收。`TownStageFourModel.evaluateHour` 明确保留 legacy heat-chunk 模型，尚未模拟 live analytic floor 或 physical Air；矿井基地当前没有温度工作条件。
 
 ## 5. 能量塔、燃料过程 tick 与 T2 热网
 

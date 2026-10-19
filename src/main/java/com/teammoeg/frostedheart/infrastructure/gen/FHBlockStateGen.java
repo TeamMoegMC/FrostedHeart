@@ -55,6 +55,18 @@ import net.minecraftforge.client.model.generators.loaders.ObjModelBuilder;
 import java.util.NoSuchElementException;
 
 public class FHBlockStateGen {
+    public static <T extends Block> NonNullBiConsumer<DataGenContext<Block, T>, RegistrateBlockstateProvider> icicle() {
+        return (c, p) -> p.getVariantBuilder(c.get()).forAllStatesExcept(state -> {
+            int shape = state.getValue(com.teammoeg.frostedheart.content.climate.block.IcicleBlock.SHAPE);
+            String name = switch (shape) { case 3 -> "top"; case 2 -> "middle_1"; case 1 -> "tail"; default -> "tip"; };
+            var first = p.models().getExistingFile(p.modLoc("block/icicle_" + name));
+            return shape == 2 ? new ConfiguredModel[]{new ConfiguredModel(first),
+                    new ConfiguredModel(p.models().getExistingFile(p.modLoc("block/icicle_middle_2")))}
+                    : new ConfiguredModel[]{new ConfiguredModel(first)};
+        }, com.teammoeg.frostedheart.content.climate.block.IcicleBlock.CRACKED,
+                com.teammoeg.frostedheart.content.climate.block.IcicleBlock.MELT_CYCLE);
+    }
+
 	public static <E,T extends E> NonNullBiConsumer<DataGenContext<E, T>, RegistrateLangProvider> noLang(){
 		return (ctx,prov)->{};
 	}

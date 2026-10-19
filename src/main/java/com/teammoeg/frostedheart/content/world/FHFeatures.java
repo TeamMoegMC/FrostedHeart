@@ -82,6 +82,8 @@ public class FHFeatures {
 
     public static final RegistryObject<ImprovedFreezeTopLayerFeature> FREEZE_TOP_LAYER = register("freeze_top_layer", ImprovedFreezeTopLayerFeature::new, NoneFeatureConfiguration.CODEC);
     public static final RegistryObject<ImprovedIceSpikeFeature> ICE_SPIKES = register("ice_spikes", ImprovedIceSpikeFeature::new, NoneFeatureConfiguration.CODEC);
+    public static final RegistryObject<com.teammoeg.frostedheart.content.world.features.IcicleFeature> ICICLE =
+            register("icicle", com.teammoeg.frostedheart.content.world.features.IcicleFeature::new, NoneFeatureConfiguration.CODEC);
     public static final RegistryObject<DiskFeature> DISK = register("disk", DiskFeature::new, DiskConfiguration.CODEC);
     public static final RegistryObject<LayeredDiskFeature> LAYERED_DISK = register("layered_disk", LayeredDiskFeature::new, LayeredDiskConfiguration.CODEC);
     public static final RegistryObject<SpacecraftFeature> SPACECRAFT = register("spacecraft", SpacecraftFeature::new, NoneFeatureConfiguration.CODEC);
