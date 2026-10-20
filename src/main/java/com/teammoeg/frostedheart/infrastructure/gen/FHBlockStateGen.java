@@ -55,6 +55,16 @@ import net.minecraftforge.client.model.generators.loaders.ObjModelBuilder;
 import java.util.NoSuchElementException;
 
 public class FHBlockStateGen {
+    public static <T extends Block> NonNullBiConsumer<DataGenContext<Block, T>, RegistrateBlockstateProvider> eaveIcicles() {
+        return (c, p) -> {
+            var builder = p.getMultipartBuilder(c.get());
+            for (Direction edge : com.teammoeg.frostedheart.content.climate.block.EaveIcicleBlock.EDGES)
+                builder.part().modelFile(p.models().getExistingFile(p.modLoc("block/eave_icicles")))
+                        .rotationY(((int) edge.toYRot() + 180) % 360).addModel()
+                        .condition(com.teammoeg.frostedheart.content.climate.block.EaveIcicleBlock.property(edge), true).end();
+        };
+    }
+
     public static <T extends Block> NonNullBiConsumer<DataGenContext<Block, T>, RegistrateBlockstateProvider> icicle() {
         return (c, p) -> p.getVariantBuilder(c.get()).forAllStatesExcept(state -> {
             int shape = state.getValue(com.teammoeg.frostedheart.content.climate.block.IcicleBlock.SHAPE);

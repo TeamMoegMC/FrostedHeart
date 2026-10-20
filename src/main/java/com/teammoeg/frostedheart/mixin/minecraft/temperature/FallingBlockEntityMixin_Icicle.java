@@ -3,6 +3,8 @@ package com.teammoeg.frostedheart.mixin.minecraft.temperature;
 
 import com.teammoeg.frostedheart.content.climate.block.IcicleBlock;
 import com.teammoeg.frostedheart.content.climate.block.IcicleFalling;
+import com.teammoeg.frostedheart.content.climate.block.EaveIcicleBlock;
+import com.teammoeg.frostedheart.content.climate.block.IceDripping;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.EntitySelector;
 import net.minecraft.world.entity.item.FallingBlockEntity;
@@ -23,13 +25,18 @@ public abstract class FallingBlockEntityMixin_Icicle {
 
     @Inject(method = "tick", at = @At("HEAD"), cancellable = true)
     private void frostedheart$fallingIce(CallbackInfo ci) {
-        if (!IcicleBlock.isIcicle(blockState)) return;
+        if (!IceDripping.isHangingIce(blockState)) return;
         IcicleFalling.tick((FallingBlockEntity) (Object) this);
         ci.cancel();
     }
 
     @Inject(method = "causeFallDamage", at = @At("HEAD"), cancellable = true)
     private void frostedheart$iceDamage(float distance, float multiplier, DamageSource source, CallbackInfoReturnable<Boolean> ci) {
+        if (EaveIcicleBlock.isEaveIce(blockState)) {
+            // Its swept hit is handled once by IcicleFalling, independent of fall height.
+            ci.setReturnValue(false);
+            return;
+        }
         if (!IcicleBlock.isIcicle(blockState)) return;
         FallingBlockEntity self = (FallingBlockEntity) (Object) this;
         if (hurtEntities && !self.level().isClientSide) {

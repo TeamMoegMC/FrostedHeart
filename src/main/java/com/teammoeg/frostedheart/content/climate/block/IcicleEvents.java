@@ -47,12 +47,12 @@ public final class IcicleEvents {
             if (chunk == null) continue;
             for (int sy = minY >> 4; sy <= maxY >> 4; sy++) {
                 var section = chunk.getSection(chunk.getSectionIndexFromSectionY(sy));
-                if (!section.getStates().maybeHas(IcicleBlock::isIcicle)) continue;
+                if (!section.getStates().maybeHas(IceDripping::isHangingIce)) continue;
                 for (int x = Math.max(minX, cx << 4); x <= Math.min(maxX, (cx << 4) + 15); x++)
                     for (int z = Math.max(minZ, cz << 4); z <= Math.min(maxZ, (cz << 4) + 15); z++)
                         for (int y = Math.max(minY, sy << 4); y <= Math.min(maxY, (sy << 4) + 15); y++) {
                             BlockState state = section.getBlockState(x & 15, y & 15, z & 15);
-                            if (!IcicleBlock.isIcicle(state)) continue;
+                            if (!IceDripping.isHangingIce(state)) continue;
                             cursor.set(x, y, z);
                             if (cursor.distToCenterSqr(center) <= radius * radius)
                                 candidates.add(new Candidate(cursor.immutable(), state));
@@ -62,6 +62,10 @@ public final class IcicleEvents {
         // Snapshot warning state before mutations: a newly warned segment gets no
         // second 90% roll from this same event, even if neighbors change its shape.
         for (Candidate candidate : candidates) {
+            if (EaveIcicleBlock.isEaveIce(candidate.before)) {
+                if (random.nextDouble() < .05) EaveIcicleBlock.fall(level, candidate.pos);
+                continue;
+            }
             boolean cracked = candidate.before.getValue(IcicleBlock.CRACKED);
             if (random.nextDouble() >= (cracked ? .9 : .05)) continue;
             BlockState current = level.getBlockState(candidate.pos);

@@ -42,6 +42,7 @@ import com.teammoeg.frostedheart.content.climate.block.CooledMagmaBlock;
 import com.teammoeg.frostedheart.content.climate.block.LayeredThinIceBlock;
 import com.teammoeg.frostedheart.content.climate.block.ThinIceBlock;
 import com.teammoeg.frostedheart.content.climate.block.IcicleBlock;
+import com.teammoeg.frostedheart.content.climate.block.EaveIcicleBlock;
 import com.teammoeg.frostedheart.content.climate.block.wardrobe.WardrobeBlock;
 import com.teammoeg.frostedheart.content.climate.player.thermalitem.ThermalReservoirBlock;
 import com.teammoeg.frostedheart.content.climate.player.thermalitem.WarmStoneItem;
@@ -194,6 +195,15 @@ public class FHBlocks {
             .lang("Icicle")
             .loot((lt, block) -> lt.add(block, RegistrateBlockLootTables.createSilkTouchOnlyTable(block)))
             .item().model((c, p) -> p.withExistingParent(c.getName(), p.modLoc("block/icicle_tip")))
+            .build().register();
+
+    public static final BlockEntry<EaveIcicleBlock> EAVE_ICICLES = REGISTRATE.block("eave_icicles", EaveIcicleBlock::new)
+            .initialProperties(ICICLE::get)
+            .properties(p -> p.randomTicks())
+            .blockstate(FHBlockStateGen.eaveIcicles())
+            .lang("Eave Icicles")
+            .loot((lt, block) -> lt.add(block, RegistrateBlockLootTables.createSilkTouchOnlyTable(block)))
+            .item().model((c, p) -> p.withExistingParent(c.getName(), p.modLoc("block/eave_icicles")))
             .build().register();
 
     // thin_ice

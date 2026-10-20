@@ -106,6 +106,8 @@ public abstract class ServerLevelMixin_TemperatureUpdate
                     : blockpos1;
 
             BlockState surface = pChunk.getBlockState(blockpos2);
+            com.teammoeg.frostedheart.content.climate.block.EaveIcicleBlock.randomRoofTick(
+                    level, blockpos2, isRaining, pRandomTickSpeed, tempBlockstateUpdateIntervalTicks, level.random);
             if (surface.is(Blocks.WATER)) {
                 MinecraftThermalInput.tryMaterialPhaseAtRandomTick(level, pChunk, blockpos2, surface);
             }

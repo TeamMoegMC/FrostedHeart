@@ -4,6 +4,7 @@ package com.teammoeg.frostedheart.content.climate.block;
 import net.minecraft.core.BlockPos;
 import net.minecraft.tags.FluidTags;
 import net.minecraft.world.entity.MoverType;
+import net.minecraft.world.entity.EntitySelector;
 import net.minecraft.world.entity.item.FallingBlockEntity;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
@@ -23,6 +24,16 @@ public final class IcicleFalling {
         entity.move(MoverType.SELF, entity.getDeltaMovement());
         if (!level.isClientSide) {
             AABB swept = before.minmax(entity.getBoundingBox());
+            boolean hit = false;
+            if (EaveIcicleBlock.isEaveIce(entity.getBlockState())) {
+                var targets = level.getEntities(entity, swept,
+                        EntitySelector.NO_CREATIVE_OR_SPECTATOR.and(EntitySelector.LIVING_ENTITY_STILL_ALIVE));
+                var target = targets.stream().min(java.util.Comparator.comparingDouble(e -> e.distanceToSqr(entity))).orElse(null);
+                if (target != null) {
+                    target.hurt(entity.damageSources().fallingStalactite(entity), .5F);
+                    hit = true;
+                }
+            }
             boolean water = false;
             for (BlockPos pos : BlockPos.betweenClosed(net.minecraft.util.Mth.floor(swept.minX), net.minecraft.util.Mth.floor(swept.minY),
                     net.minecraft.util.Mth.floor(swept.minZ), net.minecraft.util.Mth.floor(swept.maxX),
@@ -32,7 +43,7 @@ public final class IcicleFalling {
                 extinguish(level, pos);
             }
             if (entity.onGround()) extinguish(level, entity.blockPosition().below());
-            if (water || entity.onGround() || entity.verticalCollision || entity.time > 600
+            if (hit || water || entity.onGround() || entity.verticalCollision || entity.time > 600
                     || entity.getY() < level.getMinBuildHeight() - 1) {
                 level.levelEvent(2001, entity.blockPosition(), Block.getId(entity.getBlockState()));
                 entity.discard();

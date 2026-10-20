@@ -226,9 +226,13 @@ public class IcicleBlock extends Block {
     }
 
     @Override public void animateTick(BlockState state, Level level, BlockPos pos, RandomSource random) {
-        if (state.getValue(CRACKED))
+        if (state.getValue(CRACKED)) {
+            // Outside even the widest lower segment. Keep the warning at its source,
+            // without hiding it inside the ice below or disabling terrain collision.
+            double x = random.nextBoolean() ? .06 : .94;
+            double z = random.nextBoolean() ? .06 : .94;
             level.addParticle(new BlockParticleOption(ParticleTypes.FALLING_DUST, state),
-                    pos.getX() + .3 + random.nextDouble() * .4, pos.getY() + .05,
-                    pos.getZ() + .3 + random.nextDouble() * .4, 0, -.03, 0);
+                    pos.getX() + x, pos.getY() + .05, pos.getZ() + z, 0, -.03, 0);
+        }
     }
 }

@@ -416,7 +416,7 @@ public final class IcicleGameTests {
 
     private static int index(BlockPos pos) { return (pos.getX() & 15) | (pos.getZ() & 15) << 4 | (pos.getY() & 15) << 8; }
 
-    private static void seed(GameTestHelper helper, BlockPos pos, double temperature, byte branch) {
+    static void seed(GameTestHelper helper, BlockPos pos, double temperature, byte branch) {
         seedEnergy(helper, pos, MinecraftThermalProfiles.materialLaw(helper.getLevel().getBlockState(pos)).enthalpyAtTemperature(temperature), branch);
     }
 
