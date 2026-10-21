@@ -57,7 +57,7 @@ public class ThinIceBlock extends IceBlock {
         if (entity.isCrouching()) return 96;
         double dx = entity.getX() - entity.xo, dz = entity.getZ() - entity.zo;
         if (dx * dx + dz * dz < 1.0E-6) return 24;
-        return entity.isSprinting() ? 6 : 12;
+        return entity.isSprinting() ? 4 : 12;
     }
 
     @Override

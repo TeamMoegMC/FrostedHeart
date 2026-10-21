@@ -1,7 +1,7 @@
 # 薄冰开裂与回冻
 
 - Status: `Partial`（此前 110 项回归通过；最新踩踏目标修正后的 8 项薄冰专项通过；客户端日志检查与裂纹资源校验通过，调浅观感、音效试听与性能实测待完成）
-- Last verified: `2026-10-18`
+- Last verified: `2026-10-21`（本轮核对跑步参数；测试结果沿用下文各次记录）
 - Scope: `frostedheart:thin_ice`、`frostedheart:layered_thin_ice` 的踩踏、冲击、温度裂纹与堆叠
 - Primary code anchors: `ThinIceBlock`、`LayeredThinIceBlock`、`ThinIceEvents`、`ThinIcePhaseData`、`MinecraftPhaseController.temperature`、`EntityMixin_ThinIceLanding`、`FHBlockStateGen.thinIce`、`ThinIceGameTests`
 
@@ -16,7 +16,7 @@
 | 潜行站立/移动 | 1/96 | 96 ticks |
 | 正常站立 | 1/24 | 24 ticks |
 | 走路 | 1/12 | 12 ticks |
-| 跑步 | 1/6 | 6 ticks |
+| 跑步 | 1/4 | 4 ticks |
 
 单位为 game tick；20 TPS 下 24 ticks 为 1.2 秒。失败不进入冷却。scheduled block tick 仅为冷却令牌，到期不自动推进裂纹。离开后停止普通踩踏推进，保留裂纹。站立首次成功平均约 24 次抽样，成功之间再加约 24 ticks 冷却；整块破碎时间随机，不保证固定撤退时间。
 
