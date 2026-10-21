@@ -206,6 +206,37 @@ public class FHBlocks {
             .item().model((c, p) -> p.withExistingParent(c.getName(), p.modLoc("block/eave_icicles")))
             .build().register();
 
+    public static final BlockEntry<AmethystClusterBlock> ICE_CRYSTAL = REGISTRATE.block("ice_crystal", p -> new AmethystClusterBlock(7, 3, p))
+            .properties(p -> p.mapColor(MapColor.ICE).strength(0.5F).sound(SoundType.GLASS)
+                    .noOcclusion().lightLevel(state -> 1))
+            .blockstate(FHBlockStateGen.existed())
+            .lang("Ice Crystal")
+            .loot((lt, block) -> lt.add(block, RegistrateBlockLootTables.createSilkTouchOnlyTable(block)))
+            .item().model(FHBlockStateGen.existingItemModel())
+            .build().register();
+
+    public static final BlockEntry<Block> GLOWSTONE_CRYSTAL = REGISTRATE.block("glowstone_crystal", Block::new)
+            .properties(p -> p.mapColor(MapColor.COLOR_YELLOW).strength(0.5F).sound(SoundType.GLASS)
+                    .noOcclusion().lightLevel(state -> 7))
+            .color(() -> () -> (state, level, pos, tintIndex) -> 0xE9D78A)
+            .blockstate(FHBlockStateGen.existed())
+            .lang("Glowstone Crystal")
+            .loot((lt, block) -> lt.add(block, LootTable.lootTable().withPool(
+                    LootPool.lootPool().setRolls(ConstantValue.exactly(1)).add(
+                            LootItem.lootTableItem(FHItems.GLOWSTONE_SHARD.get())
+                                    .apply(SetItemCountFunction.setCount(ConstantValue.exactly(2)))))))
+            .item().model(FHBlockStateGen.existingItemModel())
+            .color(() -> () -> (stack, tintIndex) -> 0xE9D78A)
+            .build().register();
+
+    public static final BlockEntry<Block> HYDROTHERMAL_ROCK = REGISTRATE.block("hydrothermal_rock", Block::new)
+            .properties(p -> p.mapColor(MapColor.COLOR_GRAY).strength(1.5F).sound(SoundType.STONE))
+            .blockstate(FHBlockStateGen.existed())
+            .lang("Hydrothermal Rock")
+            .loot(RegistrateBlockLootTables::dropSelf)
+            .item().model(FHBlockStateGen.existingItemModel())
+            .build().register();
+
     // thin_ice
     public static final BlockEntry<ThinIceBlock> THIN_ICE_BLOCK = REGISTRATE.block("thin_ice", ThinIceBlock::new)
             .properties(p -> p.mapColor(MapColor.ICE).friction(0.98F).randomTicks()
@@ -720,6 +751,23 @@ public class FHBlocks {
             .build()
             .register();
 
+    public static final BlockEntry<DropExperienceBlock> PYROLUSITE_ORE = REGISTRATE.block("pyrolusite_ore", DropExperienceBlock::new)
+            .initialProperties(() -> Blocks.IRON_ORE)
+            .lang("Pyrolusite Ore")
+            .properties(p -> p.mapColor(MapColor.COLOR_GRAY).requiresCorrectToolForDrops().sound(SoundType.STONE))
+            .transform(pickaxeOnly())
+            .blockstate(FHBlockStateGen.existed())
+            .loot((lt, b) -> lt.add(b,
+                    RegistrateBlockLootTables.createSilkTouchDispatchTable(b,
+                            lt.applyExplosionDecay(b, LootItem.lootTableItem(FHItems.RAW_PYROLUSITE.get())
+                                    .apply(ApplyBonusCount.addOreBonusCount(Enchantments.BLOCK_FORTUNE))))))
+            .tag(BlockTags.NEEDS_STONE_TOOL)
+            .tag(Tags.Blocks.ORES)
+            .transform(tagBlockAndItem("ores/pyrolusite", "ores_in_ground/stone"))
+            .tag(Tags.Items.ORES)
+            .model(FHBlockStateGen.existingItemModel())
+            .build().register();
+
     // Deepslate ores
 
     public static final BlockEntry<DropExperienceBlock> DEEPSLATE_TIN_ORE = REGISTRATE.block("deepslate_tin_ore", DropExperienceBlock::new)
@@ -811,6 +859,23 @@ public class FHBlocks {
             .tag(Tags.Items.ORES)
             .build()
             .register();
+
+    public static final BlockEntry<DropExperienceBlock> DEEPSLATE_PYROLUSITE_ORE = REGISTRATE.block("deepslate_pyrolusite_ore", DropExperienceBlock::new)
+            .initialProperties(() -> Blocks.DEEPSLATE_IRON_ORE)
+            .lang("Deepslate Pyrolusite Ore")
+            .properties(p -> p.mapColor(MapColor.COLOR_GRAY).requiresCorrectToolForDrops().sound(SoundType.DEEPSLATE))
+            .transform(pickaxeOnly())
+            .blockstate(FHBlockStateGen.existed())
+            .loot((lt, b) -> lt.add(b,
+                    RegistrateBlockLootTables.createSilkTouchDispatchTable(b,
+                            lt.applyExplosionDecay(b, LootItem.lootTableItem(FHItems.RAW_PYROLUSITE.get())
+                                    .apply(ApplyBonusCount.addOreBonusCount(Enchantments.BLOCK_FORTUNE))))))
+            .tag(BlockTags.NEEDS_STONE_TOOL)
+            .tag(Tags.Blocks.ORES)
+            .transform(tagBlockAndItem("ores/pyrolusite", "ores_in_ground/deepslate"))
+            .tag(Tags.Items.ORES)
+            .model(FHBlockStateGen.existingItemModel())
+            .build().register();
 
     // Additional soil, registrate
     public static final BlockEntry<Block> PEAT = REGISTRATE.block("peat_block", Block::new)

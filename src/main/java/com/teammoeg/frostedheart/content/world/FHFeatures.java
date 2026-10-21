@@ -29,6 +29,9 @@ import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlocks;
 import com.teammoeg.frostedheart.content.agriculture.WildRubberDandelionBlock;
 import com.teammoeg.frostedheart.content.world.features.FHFossilFeature;
+import com.teammoeg.frostedheart.content.world.features.CavePyrolusiteFeature;
+import com.teammoeg.frostedheart.content.world.features.IceCaveSpringFeature;
+import com.teammoeg.frostedheart.content.world.features.IceCaveSurfaceFeature;
 import com.teammoeg.frostedheart.content.world.features.FallenLogConfig;
 import com.teammoeg.frostedheart.content.world.features.FallenLogFeature;
 import com.teammoeg.frostedheart.content.world.features.HotdogFoliagePlacer;
@@ -59,6 +62,7 @@ import net.minecraft.world.level.levelgen.feature.FossilFeatureConfiguration;
 import net.minecraft.world.level.levelgen.feature.configurations.DiskConfiguration;
 import net.minecraft.world.level.levelgen.feature.configurations.FeatureConfiguration;
 import net.minecraft.world.level.levelgen.feature.configurations.NoneFeatureConfiguration;
+import net.minecraft.world.level.levelgen.feature.configurations.OreConfiguration;
 import net.minecraft.world.level.levelgen.feature.configurations.RandomPatchConfiguration;
 import net.minecraft.world.level.levelgen.feature.configurations.SimpleBlockConfiguration;
 import net.minecraft.world.level.levelgen.feature.configurations.TreeConfiguration;
@@ -82,6 +86,9 @@ public class FHFeatures {
 
     public static final RegistryObject<ImprovedFreezeTopLayerFeature> FREEZE_TOP_LAYER = register("freeze_top_layer", ImprovedFreezeTopLayerFeature::new, NoneFeatureConfiguration.CODEC);
     public static final RegistryObject<ImprovedIceSpikeFeature> ICE_SPIKES = register("ice_spikes", ImprovedIceSpikeFeature::new, NoneFeatureConfiguration.CODEC);
+    public static final RegistryObject<IceCaveSurfaceFeature> ICE_CAVE_SURFACE = register("ice_cave_surface", IceCaveSurfaceFeature::new, NoneFeatureConfiguration.CODEC);
+    public static final RegistryObject<IceCaveSpringFeature> ICE_CAVE_SPRING = register("ice_cave_spring", IceCaveSpringFeature::new, NoneFeatureConfiguration.CODEC);
+    public static final RegistryObject<CavePyrolusiteFeature> CAVE_PYROLUSITE = register("cave_pyrolusite", CavePyrolusiteFeature::new, OreConfiguration.CODEC);
     public static final RegistryObject<com.teammoeg.frostedheart.content.world.features.IcicleFeature> ICICLE =
             register("icicle", com.teammoeg.frostedheart.content.world.features.IcicleFeature::new, NoneFeatureConfiguration.CODEC);
     public static final RegistryObject<DiskFeature> DISK = register("disk", DiskFeature::new, DiskConfiguration.CODEC);

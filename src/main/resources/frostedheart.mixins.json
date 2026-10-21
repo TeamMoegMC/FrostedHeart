@@ -8,6 +8,8 @@
   "mixins": [
     "caupona.CauponaBonemealableBlockMixin_CheckTemp",
     "create.HandCrankBlockMixin",
+    "create.OpenEndedPipeMixin_HotSpring",
+    "create.FluidDrainingBehaviourMixin_HotSpring",
     "create.MixinAbstractContraption",
     "create.MixinBasinRecipe",
     "create.MixinBlockBreakingMovementBehaviour",
@@ -29,6 +31,7 @@
     "forge.FMLHandshakeAntiCheatMixin",
     "forge.ServerLifecycleHooksMixin",
     "immersiveengineering.IERegistrationMixin",
+    "immersiveengineering.UtilsMixin_HotSpring",
     "immersiveengineering.OwnerableStateMixin",
     "immersiveengineering.ToolboxItemMixin",
     "minecraft.accessors.CacheAllInCellAccessor",
@@ -90,8 +93,10 @@
     "minecraft.trade.AssignProfessionFromJobSite_DisableVanillaProfession",
     "minecraft.trade.ResetProfession_DisableVanillaProfession",
     "minecraft.trade.VillagerMixin",
+    "minecraft.water.GlassBottleItemMixin_HotSpring",
     "registrate.RegistrateBlockLootTablesMixin_RemoveExisted",
     "stoneage.ExampleModMixin",
+    "supplementaries.LiquidBlockInteractionMixin_HotSpring",
     "tetra.MixinToolbeltInventory"
   ],
   "client": [

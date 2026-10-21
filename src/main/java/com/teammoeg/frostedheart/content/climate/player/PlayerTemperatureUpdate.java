@@ -22,6 +22,7 @@ package com.teammoeg.frostedheart.content.climate.player;
 import com.teammoeg.chorda.CompatModule;
 import com.teammoeg.chorda.util.CUtils;
 import com.teammoeg.frostedheart.FHNetwork;
+import com.teammoeg.frostedheart.bootstrap.common.FHFluids;
 import com.teammoeg.frostedheart.bootstrap.common.FHMobEffects;
 import com.teammoeg.frostedheart.compat.curios.CuriosCompat;
 import com.teammoeg.frostedheart.content.climate.network.FHBodyDataSyncPacket;
@@ -66,7 +67,7 @@ public class PlayerTemperatureUpdate {
                 // Rest of update logic is handled every second.
 
                 // Soaked in water wetness
-                if (player.isInWater()) {
+                if (isSoaked(player)) {
                     // Check if an armor piece is on
                     boolean hasArmor = false;
                     for (ItemStack is : player.getArmorSlots()) {
@@ -224,6 +225,11 @@ public class PlayerTemperatureUpdate {
 
             });
         }
+    }
+
+    static boolean isSoaked(ServerPlayer player) {
+        return player.isInWater()
+                || player.getFluidTypeHeight(FHFluids.HOT_SPRING.get().getFluidType()) > 0.0D;
     }
 
     /**

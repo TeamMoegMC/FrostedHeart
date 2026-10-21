@@ -417,6 +417,16 @@ thinner.png
                     forgeItemTag("raw_materials/magnesite"),
                     forgeItemTag("raw_materials/magnesium"),
                     forgeItemTag("raw_materials"));
+    public static final ItemEntry<Item> RAW_PYROLUSITE = REGISTRATE.item("raw_pyrolusite", Item::new)
+            .tag(forgeItemTag("raw_materials/pyrolusite"), forgeItemTag("raw_materials"))
+            .model(FHBlockStateGen.existingItemModel())
+            .lang("Raw Pyrolusite")
+            .register();
+
+    public static final ItemEntry<Item> GLOWSTONE_SHARD = REGISTRATE.item("glowstone_shard", Item::new)
+            .model(FHBlockStateGen.existingItemModel())
+            .lang("Glowstone Crystal Shard")
+            .register();
 
     // MATERIALS
 

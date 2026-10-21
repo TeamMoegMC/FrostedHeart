@@ -10,6 +10,8 @@
 | [thin-ice.md](thin-ice.md) | 薄冰踩踏、冲击、相变温度、热裂与回冻修复 | Partial |
 | [icicle.md](icicle.md) | 冰洞冰锥、生长、相变缩短、断裂坠落与振动 | Partial |
 | [eave-icicles.md](eave-icicles.md) | 房檐冰溜子、供水、轻微坠落伤害，以及冰锥/冰溜子融化滴水 | Partial |
+| [hot-spring.md](hot-spring.md) | 温泉液体、接触换热、湿身与采集限制 | Partial |
+| [ice-cave-blocks.md](ice-cave-blocks.md) | 冰晶、荧石晶体、软锰矿与装饰热液岩 | Partial |
 | [weather-rendering.md](weather-rendering.md) | 暴风雪与白幕的空间状态、天气同步、降水/雾/粒子/声音渲染 | Current |
 | [player-temperature.md](player-temperature.md) | 玩家环境查询、分部位体温、衣物、效果与同步 | Current |
 | [heat-production-and-network.md](heat-production-and-network.md) | 物理 source、worker 能量、材料/phase 与独立热网 | Transitional |

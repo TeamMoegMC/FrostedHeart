@@ -1579,5 +1579,14 @@
   "block.frostedheart.hot_water_bag": "热水袋",
   "block.frostedheart.warm_stone": "暖石",
   "item.frostedheart.hot_water_bag": "热水袋",
-  "item.frostedheart.warm_stone": "暖石"
+  "item.frostedheart.warm_stone": "暖石",
+  "block.frostedheart.ice_crystal": "冰晶",
+  "block.frostedheart.glowstone_crystal": "荧石晶体",
+  "block.frostedheart.hydrothermal_rock": "热液岩",
+  "block.frostedheart.pyrolusite_ore": "软锰矿",
+  "block.frostedheart.deepslate_pyrolusite_ore": "深层软锰矿",
+  "item.frostedheart.glowstone_shard": "荧石晶体碎片",
+  "item.frostedheart.raw_pyrolusite": "粗软锰矿",
+  "fluid.frostedheart.hot_spring": "温泉",
+  "block.frostedheart.hot_spring": "温泉"
 }

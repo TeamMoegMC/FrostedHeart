@@ -10,6 +10,7 @@
 package com.teammoeg.frostedheart.content.climate.player;
 
 import com.teammoeg.frostedheart.bootstrap.common.FHCapabilities;
+import com.teammoeg.frostedheart.bootstrap.common.FHFluids;
 import com.teammoeg.frostedheart.bootstrap.common.FHMobEffects;
 import com.teammoeg.frostedheart.content.climate.player.PlayerTemperatureData.BodyPart;
 import com.teammoeg.frostedheart.content.climate.thermal.query.ThermalEnvironmentSample;
@@ -79,6 +80,9 @@ public final class PlayerTemperatureComputation {
         double bodyHeight = Math.max(0.01D, player.getBbHeight());
         double waterHeightRatio = PlayerThermalEnvironment.fluidHeightRatio(
                 player, FluidTags.WATER, bodyHeight);
+        double hotSpringHeightRatio = PlayerThermalModel.clamp(
+                player.getFluidTypeHeight(FHFluids.HOT_SPRING.get().getFluidType()) / bodyHeight,
+                0.0D, 1.0D);
         double lavaHeightRatio = PlayerThermalEnvironment.fluidHeightRatio(
                 player, FluidTags.LAVA, bodyHeight);
         double waterTemperatureC = PlayerThermalModel.waterTemperatureC(airTemperatureC);
@@ -103,7 +107,8 @@ public final class PlayerTemperatureComputation {
         for (BodyPart part : BodyPart.VALUES) {
             PlayerThermalModel.preparePart(data, context, part,
                     airTemperatureC, hNatural, sample.radiantFluxWPerM2(), localWindMPerS,
-                    waterTemperatureC, waterHeightRatio, lavaHeightRatio, powderSnow, wet);
+                    waterTemperatureC, waterHeightRatio, hotSpringHeightRatio,
+                    lavaHeightRatio, powderSnow, wet);
 
             wetCoolingRequestW += Math.max(0.0D,
                     context.getWetConductanceWPerK(part)
@@ -144,7 +149,8 @@ public final class PlayerTemperatureComputation {
         // 5. Publish observations and charge only actual regulation work.
         double environmentTemperatureC = PlayerThermalModel.environmentalEquivalentTemperatureC(
                 airTemperatureC, hNatural, sample.radiantFluxWPerM2(), localWindMPerS,
-                waterTemperatureC, waterHeightRatio, lavaHeightRatio, powderSnow, onFire);
+                waterTemperatureC, waterHeightRatio, hotSpringHeightRatio,
+                lavaHeightRatio, powderSnow, onFire);
         double averageBodyPowerW = !frozen && physiologicalSeconds > 0.0D
                 ? integratedEnergyJ / physiologicalSeconds : 0.0D;
         data.applyThermalObservation(environmentTemperatureC, averageBodyPowerW,
