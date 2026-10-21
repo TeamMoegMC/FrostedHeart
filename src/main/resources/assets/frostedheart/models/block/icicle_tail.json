@@ -1,7 +1,7 @@
 {
-  "parent": "minecraft:block/pointed_dripstone",
+  "parent": "frostedheart:block/template_icicle_cross",
   "textures": {
     "cross": "frostedheart:block/icicle_tail"
   },
-  "render_type": "minecraft:cutout"
+  "render_type": "minecraft:translucent"
 }

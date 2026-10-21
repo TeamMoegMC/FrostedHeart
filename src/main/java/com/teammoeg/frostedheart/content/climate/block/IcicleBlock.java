@@ -45,6 +45,11 @@ public class IcicleBlock extends Block {
     private static final VoxelShape[] SHAPES = {
             box(5, 8, 5, 11, 16, 11), box(5, 0, 5, 11, 16, 11),
             box(4, 0, 4, 12, 16, 12), box(3, 0, 3, 13, 16, 13)};
+    // Mean of each texture's narrowest and widest occupied rows: 3, 5, 7, 8 pixels.
+    // Keep the larger outline above so thin tips remain easy to select.
+    private static final VoxelShape[] COLLISION_SHAPES = {
+            box(6.5, 8, 6.5, 9.5, 16, 9.5), box(5.5, 0, 5.5, 10.5, 16, 10.5),
+            box(4.5, 0, 4.5, 11.5, 16, 11.5), box(4, 0, 4, 12, 16, 12)};
 
     public IcicleBlock(Properties properties) {
         super(properties);
@@ -123,6 +128,10 @@ public class IcicleBlock extends Block {
 
     @Override public VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
         return SHAPES[state.getValue(SHAPE)];
+    }
+
+    @Override public VoxelShape getCollisionShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
+        return COLLISION_SHAPES[state.getValue(SHAPE)];
     }
 
     @Override public void randomTick(BlockState state, ServerLevel level, BlockPos pos, RandomSource random) {
@@ -227,10 +236,10 @@ public class IcicleBlock extends Block {
 
     @Override public void animateTick(BlockState state, Level level, BlockPos pos, RandomSource random) {
         if (state.getValue(CRACKED)) {
-            // Outside even the widest lower segment. Keep the warning at its source,
-            // without hiding it inside the ice below or disabling terrain collision.
-            double x = random.nextBoolean() ? .06 : .94;
-            double z = random.nextBoolean() ? .06 : .94;
+            // The 0.2-block-wide dust clears even the widest collision (0.25..0.75).
+            // Keep it near the ice without disabling its normal terrain collision.
+            double x = random.nextBoolean() ? .14 : .86;
+            double z = random.nextBoolean() ? .14 : .86;
             level.addParticle(new BlockParticleOption(ParticleTypes.FALLING_DUST, state),
                     pos.getX() + x, pos.getY() + .05, pos.getZ() + z, 0, -.03, 0);
         }
