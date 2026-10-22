@@ -12,8 +12,13 @@ allprojects {
             property 'frostedheart.iceCaveSampleChunks', providers.gradleProperty('iceCaveSampleChunks').getOrElse('4')
             args '--world', sampleWorld
         }
+        def cleanupAssets = tasks.register('cleanupIceCaveSampleAssets', Exec) {
+            workingDir rootProject.projectDir
+            commandLine 'python', 'Scripts/ice_cave_sample_assets.py', 'cleanup'
+        }
         tasks.matching { it.name == 'runGameTestServer' }.configureEach {
             maxHeapSize = '3g'
+            finalizedBy cleanupAssets
             // Resource processing may restore the empty GameTest biome fixture. Prepare the real
             // pack resources after dependencies finish, immediately before launching the JVM.
             doFirst {

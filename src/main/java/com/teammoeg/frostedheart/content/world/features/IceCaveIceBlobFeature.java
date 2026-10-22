@@ -50,20 +50,16 @@ public final class IceCaveIceBlobFeature extends Feature<NoneFeatureConfiguratio
         double cx = center.getX() + halfCell;
         double cy = center.getY() + halfCell;
         double cz = center.getZ() + halfCell;
+        double radiusSquared = radius * radius;
         int extent = diameter / 2;
         BlockState material = chooseMaterial(random);
         IceCaveIceBody body = new IceCaveIceBody(level, origin);
         List<BlockPos> iceCells = new ArrayList<>();
-        Set<BlockPos> volume = new HashSet<>();
         int embedded = 0;
         int exposed = 0;
         for (int dx = -extent; dx <= extent; dx++) for (int dy = -extent; dy <= extent; dy++) for (int dz = -extent; dz <= extent; dz++) {
             BlockPos pos = center.offset(dx, dy, dz);
-            double x = pos.getX() - cx;
-            double y = pos.getY() - cy;
-            double z = pos.getZ() - cz;
-            if (x * x + y * y + z * z > radius * radius) continue;
-            volume.add(pos);
+            if (!inSphere(pos, cx, cy, cz, radiusSquared)) continue;
             if (!IceCaveIceBody.canRead(level, pos)) return false;
             BlockState old = level.getBlockState(pos);
             if (old.isAir()) exposed++;
@@ -85,7 +81,7 @@ public final class IceCaveIceBlobFeature extends Feature<NoneFeatureConfiguratio
         for (BlockPos pos : iceCells) {
             boolean internal = true;
             for (Direction side : Direction.values()) {
-                if (!volume.contains(pos.relative(side))) { internal = false; break; }
+                if (!inSphere(pos.relative(side), cx, cy, cz, radiusSquared)) { internal = false; break; }
             }
             if (internal) interior.add(pos);
         }
@@ -101,6 +97,13 @@ public final class IceCaveIceBlobFeature extends Feature<NoneFeatureConfiguratio
         // If all geometric interior cells are preserved ore, there is no replaceable interior.
         if (fallback != null) level.setBlock(fallback, FHBlocks.GLOWSTONE_CRYSTAL.get().defaultBlockState(), 2);
         return true;
+    }
+
+    static boolean inSphere(BlockPos pos, double cx, double cy, double cz, double radiusSquared) {
+        double x = pos.getX() - cx;
+        double y = pos.getY() - cy;
+        double z = pos.getZ() - cz;
+        return x * x + y * y + z * z <= radiusSquared;
     }
 
     private static BlockState chooseMaterial(RandomSource random) {

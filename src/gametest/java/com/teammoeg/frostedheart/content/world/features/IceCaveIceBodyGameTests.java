@@ -9,6 +9,7 @@ import java.util.Set;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlocks;
 import com.teammoeg.frostedheart.bootstrap.common.FHFluids;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.core.Holder;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.gametest.framework.GameTest;
@@ -23,6 +24,9 @@ import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.biome.Biomes;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.levelgen.LegacyRandomSource;
+import net.minecraft.world.level.levelgen.WorldgenRandom;
+import net.minecraft.world.level.levelgen.XoroshiroRandomSource;
 import net.minecraft.world.level.levelgen.feature.Feature;
 import net.minecraft.world.level.levelgen.feature.FeaturePlaceContext;
 import net.minecraft.world.level.levelgen.feature.configurations.FeatureConfiguration;
@@ -196,6 +200,81 @@ public final class IceCaveIceBodyGameTests {
         helper.succeed();
     }
 
+    @GameTest(template = "phase0a_empty", batch = "ice_cave", timeoutTicks = 80)
+    public static void pyrolusiteQuartileGatePreservesRandomStateAndSkipsUnneededProbes(GameTestHelper helper) {
+        int checks = 0;
+        int probes = 0;
+        for (int type = 0; type < 4; type++) for (int seed = 0; seed < 16; seed++) for (boolean wide : new boolean[] {false, true}) {
+            Terrain room = new Terrain(helper, new BlockPos(8, -20, 8), 20, wide ? 12 : 1);
+            helper.assertTrue(IceCaveSpace.nearWideAir(room.level, room.origin) == wide, "the fixture has the requested cave clearance");
+            long initialSeed = seed * 7919L - 104729;
+            RandomSource reference = randomSource(type, initialSeed);
+            RandomSource optimized = randomSource(type, initialSeed);
+            RandomSource quartiles = randomSource(type, initialSeed);
+            for (int sample = 0; sample < 32; sample++) {
+                boolean expected = reference.nextInt(wide ? 2 : 4) == 0;
+                int roll = quartiles.nextInt(4);
+                room.blockReads = 0;
+                boolean actual = CavePyrolusiteFeature.passesAttempt(room.level, room.origin, optimized);
+                helper.assertTrue(actual == expected, "quartile gating retains the old wide/narrow decision for random source " + type);
+                helper.assertTrue(roll == 1 ? room.blockReads > 0 : room.blockReads == 0,
+                        "only quartile one performs actual cave probes");
+                if (room.blockReads > 0) probes++;
+                long after = reference.nextLong();
+                helper.assertTrue(optimized.nextLong() == after && quartiles.nextLong() == after,
+                        "ore generation receives the identical following random state");
+                if (reference instanceof WorldgenRandom oldWorldgen && optimized instanceof WorldgenRandom newWorldgen) {
+                    helper.assertTrue(oldWorldgen.getCount() == newWorldgen.getCount(), "worldgen random draw counts remain identical");
+                }
+                checks++;
+            }
+        }
+        helper.assertTrue(probes > 0 && probes < checks / 2, "the mixed sample actually reduces spatial probes");
+        System.out.println("ICE_CAVE_PYROLUSITE_GATE equivalent=" + checks + " spatialProbes=" + probes);
+        helper.succeed();
+    }
+
+    private static RandomSource randomSource(int type, long seed) {
+        return switch (type) {
+            case 0 -> new LegacyRandomSource(seed);
+            case 1 -> new XoroshiroRandomSource(seed);
+            case 2 -> new WorldgenRandom(new LegacyRandomSource(seed));
+            default -> new WorldgenRandom(new XoroshiroRandomSource(seed));
+        };
+    }
+
+    @GameTest(template = "phase0a_empty", batch = "ice_cave", timeoutTicks = 40)
+    public static void mathematicalBlobInteriorMatchesEnumeratedVolumeAtEveryBoundary(GameTestHelper helper) {
+        int checked = 0;
+        for (int diameter = 5; diameter <= 10; diameter++) for (int coordinate : new int[] {-30000000, -1, 0, 1, 30000000}) {
+            BlockPos center = new BlockPos(coordinate, -12, coordinate);
+            double halfCell = diameter % 2 == 0 ? 0.5 : 0;
+            double cx = center.getX() + halfCell, cy = center.getY() + halfCell, cz = center.getZ() + halfCell;
+            double radiusSquared = diameter / 2.0 * (diameter / 2.0);
+            int extent = diameter / 2;
+            Set<BlockPos> oldVolume = new java.util.HashSet<>();
+            // Reference the removed bounded enumeration, including even-diameter half-cell centers.
+            for (int dx = -extent; dx <= extent; dx++) for (int dy = -extent; dy <= extent; dy++) for (int dz = -extent; dz <= extent; dz++) {
+                BlockPos pos = center.offset(dx, dy, dz);
+                double x = pos.getX() - cx, y = pos.getY() - cy, z = pos.getZ() - cz;
+                if (x * x + y * y + z * z <= radiusSquared) oldVolume.add(pos);
+            }
+            for (int dx = -extent - 1; dx <= extent + 1; dx++) for (int dy = -extent - 1; dy <= extent + 1; dy++) for (int dz = -extent - 1; dz <= extent + 1; dz++) {
+                BlockPos pos = center.offset(dx, dy, dz);
+                helper.assertTrue(IceCaveIceBlobFeature.inSphere(pos, cx, cy, cz, radiusSquared) == oldVolume.contains(pos),
+                        "sphere membership matches the previous bounded set, including the outer neighbor layer");
+                checked++;
+            }
+            for (BlockPos pos : oldVolume) for (Direction side : Direction.values()) {
+                BlockPos neighbor = pos.relative(side);
+                helper.assertTrue(IceCaveIceBlobFeature.inSphere(neighbor, cx, cy, cz, radiusSquared) == oldVolume.contains(neighbor),
+                        "all six interior tests retain the exact old boundary");
+            }
+        }
+        System.out.println("ICE_CAVE_BLOB_GEOMETRY equivalentBoundaryCells=" + checked);
+        helper.succeed();
+    }
+
     private static final class Terrain {
         private final GameTestHelper helper;
         private final BlockPos origin;
@@ -206,6 +285,7 @@ public final class IceCaveIceBodyGameTests {
         private final WorldGenLevel level;
         private final Holder.Reference<Biome> cave;
         private int boundaryX = Integer.MAX_VALUE;
+        private int blockReads;
 
         Terrain(GameTestHelper helper, BlockPos origin, int height, int width) {
             this.helper = helper;
@@ -234,6 +314,7 @@ public final class IceCaveIceBodyGameTests {
         }
 
         private BlockState get(BlockPos pos) {
+            blockReads++;
             BlockState explicit = states.get(pos);
             if (explicit != null) return explicit;
             // Fixed actual cave elevations, independent of the feature's origin height and chunk.

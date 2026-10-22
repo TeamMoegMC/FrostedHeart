@@ -3,7 +3,6 @@ package com.teammoeg.frostedheart.content.world.features;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import com.teammoeg.frostedheart.bootstrap.common.FHBlocks;
 import com.teammoeg.frostedheart.bootstrap.common.FHFluids;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import net.minecraft.core.BlockPos;
@@ -40,8 +39,7 @@ final class IceCaveIceBody {
     }
 
     static boolean isIce(BlockState state) {
-        return state.is(Blocks.ICE) || state.is(Blocks.PACKED_ICE) || state.is(Blocks.BLUE_ICE)
-                || state.is(FHBlocks.FIRM_ICE_BLOCK.get());
+        return IceCaveTerrain.ice(state);
     }
 
     static boolean isBase(BlockState state) {

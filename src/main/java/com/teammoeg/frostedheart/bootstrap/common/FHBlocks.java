@@ -228,7 +228,7 @@ public class FHBlocks {
 
     public static final BlockEntry<Block> GLOWSTONE_CRYSTAL = REGISTRATE.block("glowstone_crystal", Block::new)
             .properties(p -> p.mapColor(MapColor.COLOR_YELLOW).strength(0.5F).sound(SoundType.GLASS)
-                    .noOcclusion().lightLevel(state -> 7))
+                    .noOcclusion().lightLevel(state -> 12))
             .color(() -> () -> (state, level, pos, tintIndex) -> 0xE9D78A)
             .blockstate(FHBlockStateGen.existed())
             .lang("Glowstone Crystal")

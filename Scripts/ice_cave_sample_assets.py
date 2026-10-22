@@ -93,22 +93,31 @@ def collect(normal_preset=False, client=False, keep_stone_age_spawns=False, runt
             pending.append(path)
 
     active_biomes = set(BIOMES)
+
+    def project_biome_tag(tag):
+        path = resource_path(tag, "tags/worldgen/biome")
+        original = json.loads(path.read_text(encoding="utf-8-sig")) if path.exists() else {}
+        members = sorted(biome for biome in tag_members(tag)
+                         if biome in active_biomes or normal_preset and biome.startswith("minecraft:"))
+        return {"replace": original.get("replace", False), "values": members}
+
     preset = DATA / "minecraft/worldgen/world_preset/normal.json"
     if normal_preset:
-        preset_data = json.loads(preset.read_text(encoding="utf-8-sig"))
+        preset_contents = preset.read_bytes()
+        preset_data = json.loads(preset_contents.decode("utf-8-sig"))
         active_biomes.update(entry["biome"] for entry in preset_data["dimensions"]["minecraft:overworld"]
                              ["generator"]["biome_source"]["biomes"])
-        files[OUTPUT / "data/minecraft/worldgen/world_preset/normal.json"] = preset.read_bytes()
+        files[OUTPUT / "data/minecraft/worldgen/world_preset/normal.json"] = preset_contents
     for biome in active_biomes:
         path = resource_path(biome, "worldgen/biome")
         if path.exists():
             add(path)
     settings = DATA / "minecraft/worldgen/noise_settings/overworld.json"
-    files[OUTPUT / "data/frostedheart_ice_cave_sample/worldgen/noise_settings/overworld.json"] = settings.read_bytes()
+    settings_contents = settings.read_bytes()
+    files[OUTPUT / "data/frostedheart_ice_cave_sample/worldgen/noise_settings/overworld.json"] = settings_contents
     if normal_preset:
-        files[OUTPUT / "data/minecraft/worldgen/noise_settings/overworld.json"] = settings.read_bytes()
-    pending.append(settings)
-    visited.add(settings)
+        files[OUTPUT / "data/minecraft/worldgen/noise_settings/overworld.json"] = settings_contents
+    add(settings)
     # Keep exact vanilla overrides as well as the pack's density/noise graph.
     for namespace in ("minecraft", "the_winter_rescue"):
         for category in ("density_function", "noise"):
@@ -125,13 +134,11 @@ def collect(normal_preset=False, client=False, keep_stone_age_spawns=False, runt
     for path in DATA.glob("*/tags/worldgen/biome/**/*.json"):
         relative = path.relative_to(DATA)
         tag = f"#{relative.parts[0]}:{path.relative_to(DATA / relative.parts[0] / 'tags/worldgen/biome').with_suffix('').as_posix()}"
-        original = json.loads(path.read_text(encoding="utf-8-sig"))
-        members = sorted(biome for biome in tag_members(tag)
-                         if biome in active_biomes or normal_preset and biome.startswith("minecraft:"))
+        config = project_biome_tag(tag)
         # Empty replacement tags intentionally disable a mod's default membership.
         # Vanilla biome holders are registered even when absent from this preset.
-        if members or original.get("replace", False):
-            files[OUTPUT / "data" / relative] = json.dumps({"replace": original.get("replace", False), "values": members}).encode()
+        if config["values"] or config["replace"]:
+            files[OUTPUT / "data" / relative] = json.dumps(config).encode()
 
     if not normal_preset:
         materialized = []
@@ -140,11 +147,8 @@ def collect(normal_preset=False, client=False, keep_stone_age_spawns=False, runt
             destination = OUTPUT / "data" / original_path.relative_to(DATA)
             if destination in files:
                 config = json.loads(files[destination])
-            elif original_path.exists():
-                original = json.loads(original_path.read_text(encoding="utf-8-sig"))
-                config = {"replace": original.get("replace", False), "values": sorted(active_biomes & tag_members(tag))}
             else:
-                config = {"replace": False, "values": []}
+                config = project_biome_tag(tag)
             config["values"] = list(dict.fromkeys([*config["values"], *(biome for biome in additions if biome in active_biomes)]))
             files[destination] = json.dumps(config).encode()
             materialized.append({"tag": tag, "file": destination.relative_to(ROOT).as_posix(), "result": config,
@@ -167,9 +171,9 @@ def collect(normal_preset=False, client=False, keep_stone_age_spawns=False, runt
     removed_spawns = []
     while pending:
         path = pending.pop()
-        config = json.loads(path.read_text(encoding="utf-8-sig"))
+        contents = path.read_bytes()
+        config = json.loads(contents.decode("utf-8-sig"))
         if path != settings:
-            contents = path.read_bytes()
             if normal_preset and not keep_stone_age_spawns and "spawners" in config:
                 for category, entries in config["spawners"].items():
                     removed_spawns.extend({"biome_file": path.relative_to(DATA).as_posix(), "category": category,

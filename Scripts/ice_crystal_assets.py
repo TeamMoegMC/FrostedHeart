@@ -134,13 +134,11 @@ def validate(rows, data):
 
 def write_model(path, data):
     # Keep numeric arrays and each face readable on one line.
-    lines = ['{', '  "parent": "minecraft:block/cross",', '  "render_type": "minecraft:translucent",',
-             '  "textures": ' + json.dumps(data['textures']) + ',', '  "elements": [']
+    lines = ['{', *(f'  {json.dumps(key)}: {json.dumps(value)},'
+                   for key, value in data.items() if key != 'elements'), '  "elements": [']
     for i, e in enumerate(data['elements']):
-        lines += ['    {', '      "from": ' + json.dumps(e['from']) + ',',
-                  '      "to": ' + json.dumps(e['to']) + ',',
-                  '      "rotation": ' + json.dumps(e['rotation']) + ',',
-                  '      "shade": false,', '      "faces": ' + json.dumps(e['faces']),
+        lines += ['    {', ',\n'.join(f'      {json.dumps(key)}: {json.dumps(value)}'
+                                    for key, value in e.items()),
                   '    }' + (',' if i < len(data['elements']) - 1 else '')]
     path.write_text('\n'.join(lines + ['  ]', '}', '']), encoding='utf-8')
 

@@ -92,12 +92,18 @@ public final class IceCaveSurfaceFeature extends Feature<NoneFeatureConfiguratio
         return !changes.isEmpty();
     }
 
-    private static void applyBands(SimplexNoise noise, LongOpenHashSet surfaces,
+    static void applyBands(SimplexNoise noise, LongOpenHashSet surfaces,
             Long2ObjectOpenHashMap<BlockState> changes) {
         Long2ObjectOpenHashMap<BlockState> candidates = new Long2ObjectOpenHashMap<>();
+        BlockState[] columns = new BlockState[16 * 16];
         for (long packed : surfaces) {
             BlockPos pos = BlockPos.of(packed);
-            BlockState material = bandMaterial(noise, pos.getX(), pos.getZ());
+            int column = (pos.getX() & 15) * 16 + (pos.getZ() & 15);
+            BlockState material = columns[column];
+            if (material == null) {
+                material = bandMaterial(noise, pos.getX(), pos.getZ());
+                columns[column] = material;
+            }
             if (!material.is(Blocks.ICE)) candidates.put(packed, material);
         }
         // Count only actual exposed shell blocks, never the buried second layer. A candidate

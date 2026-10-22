@@ -13,6 +13,8 @@ import java.util.function.Function;
 import com.teammoeg.frostedheart.bootstrap.common.FHBlocks;
 import com.teammoeg.frostedheart.bootstrap.common.FHFluids;
 import com.teammoeg.frostedheart.content.world.FHFeatures;
+import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.registries.Registries;
@@ -28,6 +30,7 @@ import net.minecraft.world.level.levelgen.feature.Feature;
 import net.minecraft.world.level.levelgen.feature.FeaturePlaceContext;
 import net.minecraft.world.level.levelgen.feature.configurations.FeatureConfiguration;
 import net.minecraft.world.level.levelgen.feature.configurations.NoneFeatureConfiguration;
+import net.minecraft.world.level.levelgen.synth.SimplexNoise;
 import net.minecraftforge.gametest.GameTestHolder;
 import net.minecraftforge.gametest.PrefixGameTestTemplate;
 
@@ -400,6 +403,31 @@ public final class IceCaveFeatureGameTests {
         far.restrictToChunk = false;
         far.shape = pos -> pos.getX() >= CENTER.getX() + 22 ? Blocks.STONE.defaultBlockState() : Blocks.AIR.defaultBlockState();
         helper.assertTrue(!far.place(small, 21) && far.writes.isEmpty(), "twenty-block searches do not reach distant terrain");
+        helper.succeed();
+    }
+
+    @GameTest(template = "phase0a_empty", batch = "ice_cave", timeoutTicks = 40)
+    public static void surfaceBandsSampleEachColumnOnceIncludingOrdinaryIce(GameTestHelper helper) {
+        for (double value : new double[] {.1, .4, .7}) {
+            int[] calls = {0};
+            SimplexNoise noise = new SimplexNoise(RandomSource.create(17)) {
+                @Override public double getValue(double x, double z) { calls[0]++; return value; }
+            };
+            LongOpenHashSet surfaces = new LongOpenHashSet();
+            Long2ObjectOpenHashMap<BlockState> changes = new Long2ObjectOpenHashMap<>();
+            for (int x = -16; x < 0; x++) for (int z = 16; z < 32; z++) for (int y = -32; y < -16; y++) {
+                long pos = BlockPos.asLong(x, y, z);
+                surfaces.add(pos);
+                changes.put(pos, Blocks.ICE.defaultBlockState());
+            }
+            IceCaveSurfaceFeature.applyBands(noise, surfaces, changes);
+            int expectedCalls = value < .25 ? 256 : 512;
+            helper.assertTrue(calls[0] == expectedCalls, "each x/z column samples its mask and material only once, noise=" + value);
+            var expected = value == .4 ? Blocks.PACKED_ICE : Blocks.ICE;
+            helper.assertTrue(changes.size() == 4096 && changes.values().stream().allMatch(state -> state.is(expected)),
+                    "column caching preserves connected band material and ordinary-ice fallback at negative chunk coordinates");
+            System.out.println("ICE_CAVE_BAND_CACHE cells=" + surfaces.size() + " noise=" + value + " noiseCalls=" + calls[0]);
+        }
         helper.succeed();
     }
 
