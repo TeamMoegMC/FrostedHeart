@@ -1,0 +1,27 @@
+{
+  "snapshot": "26.4-snapshot-5",
+  "release_date": "2026-10-20",
+  "manifest": "https://piston-meta.mojang.com/mc/game/version_manifest_v2.json",
+  "release_notes": "https://www.minecraft.net/en-us/article/minecraft-26-4-snapshot-5",
+  "original_asset": "assets/minecraft/textures/block/ice_crystal.png",
+  "local_asset": "src/main/resources/assets/frostedheart/textures/block/ice_crystal.png",
+  "png_unchanged": true,
+  "dimensions": [
+    16,
+    16
+  ],
+  "alpha_values": [
+    0,
+    255
+  ],
+  "visible_pixel_bounds_inclusive": [
+    1,
+    1,
+    15,
+    15
+  ],
+  "model": "Minecraft 1.20.1 cross geometry, two double-sided planes; scaled at attachment point",
+  "small_visible_height": 0.4375,
+  "large_visible_height": 0.875,
+  "render_type": "minecraft:cutout"
+}

@@ -148,7 +148,7 @@ TWR [`ice_cave_small_crystal.json`](../../../TheWinterRescue/kubejs/data/the_win
 
 `count` 是每区块尝试数，整数端点均包含；高度从世界最低建筑层到 `Y=256` 均匀取值，随后仅保留 `OCEAN_FLOOR_WG` 表面下至少 `13` 格的候选，最后执行群系过滤。它独立于 surface / decoration 的 `-63..128` 扫描窗口。原版地衣的局部搜索同为 `20`，其 `chance_of_spreading=0.5` 与禁用地面属于原版 configured feature；本小晶体每候选最多一块、六面均可，不复制地衣扩散。候选数相同不保证两者的实际成功数或视觉密度相同。
 
-[`FHBlocks.ICE_CRYSTAL`](../../src/main/java/com/teammoeg/frostedheart/bootstrap/common/FHBlocks.java) 的高度为 `7/16` 格、亮度为 `1`；`FHBlocks.LARGE_ICE_CRYSTAL` / `frostedheart:large_ice_crystal` 高 `14/16` 格、亮度为 `3`。两者继续使用紫水晶簇式的六向附着与含水状态，不增加运行时生长。新静态晶簇模型参考紫水晶簇构形，复用 `frostedheart:block/ice_1` 与 `frostedheart:block/packed_ice_1` 的冰色纹理，以不透明 `minecraft:solid` 渲染；模型分别见 [`ice_crystal.json`](../../src/main/resources/assets/frostedheart/models/block/ice_crystal.json) 和 [`large_ice_crystal.json`](../../src/main/resources/assets/frostedheart/models/block/large_ice_crystal.json)。本轮真实客户端已观察大小辨识和自然放置；截图见文末，最终美术观感由用户验收。
+[`FHBlocks.ICE_CRYSTAL`](../../src/main/java/com/teammoeg/frostedheart/bootstrap/common/FHBlocks.java) 的高度为 `7/16` 格、亮度为 `1`；`FHBlocks.LARGE_ICE_CRYSTAL` / `frostedheart:large_ice_crystal` 高 `14/16` 格、亮度为 `3`。两者继续使用紫水晶簇式的六向附着与含水状态，不增加运行时生长。按用户更正，大小冰晶均使用与紫水晶簇相同的双面十字交叉平面，以 `minecraft:cutout` 渲染。纹理原样提取自官方 Java `26.4-snapshot-5` 客户端的 `assets/minecraft/textures/block/ice_crystal.png`，存为 FH 同名纹理；没有重画、改色或缩放PNG。模型以1.20.1原版 `minecraft:block/cross` 的兼容结构为基础，围绕附着面缩放到15个可见像素对应7/16与14/16格高度。模型分别见 [`ice_crystal.json`](../../src/main/resources/assets/frostedheart/models/block/ice_crystal.json) 和 [`large_ice_crystal.json`](../../src/main/resources/assets/frostedheart/models/block/large_ice_crystal.json)。本轮真实客户端已观察大小辨识和自然放置；截图见文末，最终美术观感由用户验收。
 
 ## 区块、群系及运行开销边界
 
@@ -242,9 +242,9 @@ Prism 部署用于用户观察第二版，不等于所有景观和玩法均已�
 找温泉可以使用 `/fh locate hot_spring`，默认只扫描已加载区块；扩大到未加载地形用 `/fh locate hot_spring generate 16`。命令输出真实流体坐标并提供传送建议，不修改温泉生成频率或热行为。范围、进度和取消规则见[温泉定位](hot-spring-locator.md)。
 
 
-## 2026-10-22 晚间：薄冰条带、大小冰晶与矿量校准
+## 历史：2026-10-22 20:03，薄冰条带、大小冰晶与矿量校准
 
-本节对应当前参数。完整首轮32项GameTest中31项通过，唯一失败为测试种子未覆盖团块最大尺寸；连续种子0..23只抽到5/7/9直径。改用明确覆盖5..10的固定24种子集后，相关5项全部通过，其余27项不受测试输入修订影响。合计32项已获通过结果，未将两次运行冒充单次全绿。日志为 `build/ice-caves-crystal-tests.log`、`build/ice-caves-crystal-body-tests.log`。
+本节对应20:03部署参数及当时的立体晶柱模型；后续十字模型更正见文末。完整首轮32项GameTest中31项通过，唯一失败为测试种子未覆盖团块最大尺寸；连续种子0..23只抽到5/7/9直径。改用明确覆盖5..10的固定24种子集后，相关5项全部通过，其余27项不受测试输入修订影响。合计32项已获通过结果，未将两次运行冒充单次全绿。日志为 `build/ice-caves-crystal-tests.log`、`build/ice-caves-crystal-body-tests.log`。
 
 团块受控测试共288个成功候选，252个有内部荧石，比例 **87.5%**；包含普通、50%棋盘矿和全矿岩壁以及正负区块边缘，直径覆盖5/6/7/8/9/10。不删除失败荧石位置对应的成功冰体、不排除全矿团块。此比例是受控夹具结果，不是正常世界分布估计；普通和混矿样本逐团至少一块荧石。模型内容测试另验证真实物品六向放置、亮度1/3、支撑、水浸和两尺寸精准采集掉落。
 
@@ -272,3 +272,18 @@ Prism 部署用于用户观察第二版，不等于所有景观和玩法均已�
 ![晶体模型对照，人工夹具，非自然生成](images/ice-caves-crystals-2026-10-22/seed-111-crystal_model_fixture.png)
 
 生成修改仅作用于新地形，旧区块中的旧小晶体不会自动升级为大晶体；新资源会更新已有小晶体的外观。长期薄冰冻融、全世界含荧石团块比例及视觉平衡仍属试玩验收，未用本次夜视静止捕获代替。
+
+
+## 2026-10-22 22时：官方冰晶纹理与十字模型
+
+用户明确更正外观为紫水晶簇式十字交叉模型。本轮从[Mojang官方版本清单](https://piston-meta.mojang.com/mc/game/version_manifest_v2.json)取得当时最新 `26.4-snapshot-5`（2026-10-20发布，[官方更新记录](https://www.minecraft.net/en-us/article/minecraft-26-4-snapshot-5)），下载清单指向的官方客户端JAR，原样提取 `assets/minecraft/textures/block/ice_crystal.png`。纹理由Mojang提供，[来源及适配记录](validation/ice-crystal-cross-2026-10-22/source-and-model.json)。它是16×16、仅alpha0/255的镂空纹理，PNG未重画、改色或缩放。
+
+两种模型都改为两片双面十字交叉面，使用 `minecraft:cutout` 和完整0..16 UV。采用1.20.1原版cross几何以匹配本项目资源格式，在贴靠支撑面的原点缩放；原纹理顶部一行透明，15个可见像素分别映射为7/16与14/16格。注册ID、亮度1/3、附着/水浸、碰撞、物品、掉落和所有生成规则均沿用20:03版本；旧区块已有冰晶也会使用新外观。
+
+真实客户端正常预设seed111与模型对照台已完成截图，正常退出，`build/ice-crystal-cross-client.log`成功7分10秒。检查自然洞厅和模型对照，没有新冰晶模型/纹理缺失；十字轮廓及大小差异可见。日志仍含上轮已存在的小冰晶远区块候选写入范围诊断（旧日志225条、本轮247条，实际生成邻域不同），不把这些旧诊断宣称为本轮模型回归或完全无错误。资源改动没有重新运行矿量和方块逻辑测试。
+
+下图从左到右为原版紫水晶簇、大冰晶、小冰晶；对照台是自然统计之后搭建的人工夹具，使用夜视，亮度值仍以注册及既有测试为准。
+
+![官方冰晶纹理十字模型对照](images/ice-crystal-cross-2026-10-22/seed-111-crystal_model_fixture.png)
+
+![自然冰洞中的交叉晶体](images/ice-crystal-cross-2026-10-22/seed-111-hall_alternate.png)

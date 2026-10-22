@@ -1,223 +1,93 @@
 {
-  "parent": "minecraft:block/block",
-  "render_type": "minecraft:solid",
-  "ambientocclusion": false,
+  "parent": "minecraft:block/cross",
+  "render_type": "minecraft:cutout",
   "textures": {
-    "ice": "frostedheart:block/ice_1",
-    "facet": "frostedheart:block/packed_ice_1",
-    "particle": "frostedheart:block/ice_1"
+    "cross": "frostedheart:block/ice_crystal"
   },
   "elements": [
     {
       "from": [
-        6.0,
-        0,
-        6.51
+        4.64,
+        0.0,
+        8.0
       ],
       "to": [
-        10.0,
-        5.0,
-        9.49
-      ],
-      "faces": {
-        "down": {
-          "texture": "#facet"
-        },
-        "north": {
-          "texture": "#ice"
-        },
-        "south": {
-          "texture": "#facet"
-        },
-        "west": {
-          "texture": "#facet"
-        },
-        "east": {
-          "texture": "#ice"
-        }
-      }
-    },
-    {
-      "from": [
-        6.585786437626905,
-        3.585786437626905,
-        6.5
-      ],
-      "to": [
-        9.414213562373096,
-        6.414213562373095,
-        9.5
+        11.36,
+        7.46666667,
+        8.0
       ],
       "rotation": {
         "origin": [
           8,
-          5.0,
+          0,
           8
         ],
-        "axis": "z",
+        "axis": "y",
         "angle": 45,
-        "rescale": false
+        "rescale": true
       },
+      "shade": false,
       "faces": {
-        "down": {
-          "texture": "#facet"
-        },
-        "up": {
-          "texture": "#ice"
-        },
         "north": {
-          "texture": "#ice"
+          "uv": [
+            0,
+            0,
+            16,
+            16
+          ],
+          "texture": "#cross"
         },
         "south": {
-          "texture": "#facet"
-        },
-        "west": {
-          "texture": "#facet"
-        },
-        "east": {
-          "texture": "#ice"
+          "uv": [
+            0,
+            0,
+            16,
+            16
+          ],
+          "texture": "#cross"
         }
       }
     },
     {
       "from": [
-        3.51,
-        0,
-        4.75
+        8.0,
+        0.0,
+        4.64
       ],
       "to": [
-        5.49,
-        3.25,
-        7.25
-      ],
-      "faces": {
-        "down": {
-          "texture": "#facet"
-        },
-        "north": {
-          "texture": "#ice"
-        },
-        "south": {
-          "texture": "#facet"
-        },
-        "west": {
-          "texture": "#facet"
-        },
-        "east": {
-          "texture": "#ice"
-        }
-      }
-    },
-    {
-      "from": [
-        3.5,
-        2.3661165235168156,
-        5.116116523516816
-      ],
-      "to": [
-        5.5,
-        4.133883476483184,
-        6.883883476483184
+        8.0,
+        7.46666667,
+        11.36
       ],
       "rotation": {
         "origin": [
-          4.5,
-          3.25,
-          6
+          8,
+          0,
+          8
         ],
-        "axis": "x",
+        "axis": "y",
         "angle": 45,
-        "rescale": false
+        "rescale": true
       },
+      "shade": false,
       "faces": {
-        "down": {
-          "texture": "#facet"
-        },
-        "up": {
-          "texture": "#ice"
-        },
-        "north": {
-          "texture": "#ice"
-        },
-        "south": {
-          "texture": "#facet"
-        },
         "west": {
-          "texture": "#facet"
+          "uv": [
+            0,
+            0,
+            16,
+            16
+          ],
+          "texture": "#cross"
         },
         "east": {
-          "texture": "#ice"
-        }
-      }
-    },
-    {
-      "from": [
-        9.5,
-        0,
-        9.26
-      ],
-      "to": [
-        12.5,
-        4.0,
-        11.74
-      ],
-      "faces": {
-        "down": {
-          "texture": "#facet"
-        },
-        "north": {
-          "texture": "#ice"
-        },
-        "south": {
-          "texture": "#facet"
-        },
-        "west": {
-          "texture": "#facet"
-        },
-        "east": {
-          "texture": "#ice"
-        }
-      }
-    },
-    {
-      "from": [
-        9.939339828220179,
-        2.939339828220179,
-        9.25
-      ],
-      "to": [
-        12.060660171779821,
-        5.060660171779821,
-        11.75
-      ],
-      "rotation": {
-        "origin": [
-          11,
-          4.0,
-          10.5
-        ],
-        "axis": "z",
-        "angle": 45,
-        "rescale": false
-      },
-      "faces": {
-        "down": {
-          "texture": "#facet"
-        },
-        "up": {
-          "texture": "#ice"
-        },
-        "north": {
-          "texture": "#ice"
-        },
-        "south": {
-          "texture": "#facet"
-        },
-        "west": {
-          "texture": "#facet"
-        },
-        "east": {
-          "texture": "#ice"
+          "uv": [
+            0,
+            0,
+            16,
+            16
+          ],
+          "texture": "#cross"
         }
       }
     }
