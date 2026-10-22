@@ -52,7 +52,10 @@ public final class IceCaveNaturalSampleGameTests {
         private int counted;
         private ServerLevel level;
         private int start;
+        private long startedNanos;
+        private long carveNanos, baselineNanos, featureNanos, countNanos;
         private Map<String, Long> counts;
+        private IceCaveLandscapeMetrics landscape;
         private final Set<BlockPos> sources = new HashSet<>();
         private final Set<BlockPos> viableBasins = new HashSet<>();
 
@@ -60,7 +63,7 @@ public final class IceCaveNaturalSampleGameTests {
 
         private void next() {
             if (sample == SEEDS.length * DIMENSIONS.length) {
-                Path output = Path.of("../build/ice-cave-natural-samples.json");
+                Path output = Path.of(System.getProperty("frostedheart.validationRoot", ".."), "build", "ice-cave-natural-samples.json");
                 try {
                     Files.createDirectories(output.getParent());
                     Files.writeString(output, new GsonBuilder().setPrettyPrinting().create().toJson(results));
@@ -82,7 +85,10 @@ public final class IceCaveNaturalSampleGameTests {
             carved = 0;
             probed = 0;
             counted = 0;
+            startedNanos = System.nanoTime();
+            carveNanos = baselineNanos = featureNanos = countNanos = 0;
             counts = new LinkedHashMap<>();
+            landscape = new IceCaveLandscapeMetrics();
             for (String key : List.of("sampled_volume", "air", "air_at_or_below_40", "stone_deepslate_tuff",
                     "vanilla_ice", "pyrite", "pyrolusite", "zinc", "lead", "silver", "ice_crystal",
                     "glowstone_crystal", "hydrothermal_rock", "spring_source", "spring_flowing",
@@ -96,25 +102,34 @@ public final class IceCaveNaturalSampleGameTests {
 
         private void step() {
             int width = SIZE + 2;
+            long operationStart = System.nanoTime();
             if (carved < width * width) {
                 level.getChunkSource().getChunk(start - 1 + carved % width, start - 1 + carved / width,
                         ChunkStatus.CARVERS, true);
                 carved++;
+                carveNanos += System.nanoTime() - operationStart;
             } else if (probed < SIZE * SIZE) {
                 probeBasins(start + probed % SIZE, start + probed / SIZE);
+                landscape.beforeChunk(level, start + probed % SIZE, start + probed / SIZE, pos -> true);
                 probed++;
+                baselineNanos += System.nanoTime() - operationStart;
             } else if (generated < width * width) {
                 // Complete a one-chunk border before counting interior blocks, including neighbors' features.
                 level.getChunk(start - 1 + generated % width, start - 1 + generated / width);
                 generated++;
+                featureNanos += System.nanoTime() - operationStart;
             } else if (counted < SIZE * SIZE) {
                 countChunk(level.getChunk(start + counted % SIZE, start + counted / SIZE));
+                landscape.afterChunk(level, start + counted % SIZE, start + counted / SIZE, pos -> true);
                 counted++;
+                countNanos += System.nanoTime() - operationStart;
             } else {
                 Map<String, Object> result = new LinkedHashMap<>();
                 result.put("seed", SEEDS[sample / DIMENSIONS.length]);
                 result.put("fixed_biome", DIMENSIONS[sample % DIMENSIONS.length]);
                 result.put("scope", "Actual TWR noise/carver/feature terrain with fixed biome; not normal preset biome occurrence");
+                result.put("world_directory", System.getProperty("frostedheart.iceCaveSampleWorld", "legacy default; use sample init script for a new world each run"));
+                result.put("runtime_directory", Path.of("").toAbsolutePath().toString());
                 result.put("interior_chunk_start_xz", start);
                 result.put("interior_chunks", SIZE * SIZE);
                 result.put("generated_border_chunks", width * width - SIZE * SIZE);
@@ -127,6 +142,10 @@ public final class IceCaveNaturalSampleGameTests {
                                 .thenComparingInt(BlockPos::getY))
                         .map(pos -> List.of(pos.getX(), pos.getY(), pos.getZ())).toList());
                 result.put("counts", counts);
+                result.put("landscape", landscape.finish(level));
+                result.put("timing_ms", Map.of("elapsed_wall", (System.nanoTime() - startedNanos) / 1_000_000L,
+                        "carvers_requests", carveNanos / 1_000_000L, "baseline_and_basin_scan", baselineNanos / 1_000_000L,
+                        "features_to_full_requests", featureNanos / 1_000_000L, "final_count_scan", countNanos / 1_000_000L));
                 results.add(result);
                 System.out.println("ICE_CAVE_SAMPLE result " + new GsonBuilder().create().toJson(result));
                 sample++;

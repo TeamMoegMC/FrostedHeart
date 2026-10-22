@@ -1,8 +1,8 @@
 # 冰锥
 
 - Status: `Partial`（2026-10-21 缩细碰撞、内移冰屑并修正半透明交叉面的排序；上轮 130 项回归结果见文末，客户端观感、整合包新洞穴和完整游戏性能待试玩）
-- Last verified: `2026-10-21`
-- Scope: `frostedheart:icicle`、同名 feature、TWR `cave/icicle`、随机生长、材料相变与坠落
+- Last verified: `2026-10-22`（更新第二版世界生成入口；运行时验证沿用下文各次记录）
+- Scope: `frostedheart:icicle`、同名 feature、第二版冰洞装饰、TWR `cave/icicle`、随机生长、材料相变与坠落
 - Primary code anchors: `IcicleBlock`、`IcicleEvents`、`IcicleFalling`、`IcicleFeature`、`FallingBlockEntityMixin_Icicle`、`MinecraftPhaseController.meltIcicle`、`MaterialChanges.GAMEPLAY_TRANSITION`、`IcicleGameTests`、`IcicleThermalGameTests`
 
 源码和数据为最终权威。设计演变见[讨论](../../discussion/2026-10-17_23-27-52_ice-caves-and-thin-ice.md)；本文解释向下悬挂的冰锥，房檐单格小锥见[冰溜子](eave-icicles.md)。数值是源码默认，尚无玩家平衡反馈。
@@ -46,7 +46,9 @@ p_root = 0.005*m_cold(T)
 
 默认 20 TPS、randomTickSpeed=3、持续处于随机刻范围且空间足够时，延长一格平均约 22.8/15.2/11.4 分钟。不是每游戏 tick 5%；八格从已有一格延长需七次成功，0°C 理想均值约 2.65 小时。
 
-新地形使用注册 feature `frostedheart:icicle`（空 config）。TWR 的 `kubejs/data/the_winter_rescue/worldgen/placed_feature/cave/icicle.json` 保留原放置器、改为该 feature；扫描位置若为实心洞顶，则在下方空气放置。长度为 `clamp(round(2+N(0,1)*3.75),1,8)`，遇障碍缩短、检查邻近根部并设置连接形态。初始地形装饰不取决于实时材料温度。旧普通冰柱不追溯替换，旧洞穴靠运行时生长补充。
+第二版冰洞通过 `frostedheart:ice_cave_decoration` 在覆冰及大型冰体之后扫描实际洞顶，调用 `IcicleFeature.placeCaveIcicle`。冰质支撑的候选概率高于裸岩；生成专用间距仅排除四个水平相邻列、竖直 ±1 格内已有的冰锥，不修改上述运行时长根间距。长度仍为 `clamp(round(2+N(0,1)*3.75),1,8)`，遇障碍缩短，链的每个位置保持在实际冰洞群系内。具体分布及验证见[冰洞当前实现](../worldgen/ice-caves.md)。
+
+`frostedheart:icicle`（空 config）与 TWR `cave/icicle.json` 保留供其他原有群系使用，其邻近根部检查维持原规则。初始地形装饰不取决于实时材料温度；旧普通冰柱不追溯替换，旧洞穴靠运行时生长补充。
 
 ## 热裂和预警
 

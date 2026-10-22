@@ -1,0 +1,29 @@
+// Opt-in development run; does not alter build.gradle or normal run/ saves.
+allprojects {
+    afterEvaluate {
+        minecraft.runs.client {
+            workingDirectory project.file('build/ice-cave-client-runtime')
+            args '--width', '1280', '--height', '720'
+            mods { frostedheart { source sourceSets.gameTest } }
+            property 'frostedheart.iceCaveClientValidation', 'true'
+            property 'frostedheart.validationRoot', rootProject.projectDir.absolutePath
+            property 'frostedheart.iceCaveClientSeeds', providers.gradleProperty('iceCaveClientSeeds').getOrElse('111,222,333')
+            property 'frostedheart.iceCaveSampleChunks', providers.gradleProperty('iceCaveSampleChunks').getOrElse('4')
+            property 'frostedheart.iceCaveClientTimeoutSeconds', '1800'
+        }
+        tasks.matching { it.name == 'runClient' }.configureEach {
+            dependsOn tasks.named('compileGameTestJava')
+            maxHeapSize = '3g'
+            doFirst {
+                def prepareArgs = ['python', 'Scripts/ice_cave_sample_assets.py', 'prepare',
+                                   '--normal-preset', '--client', '--keep-stone-age-spawns']
+                def extraMod = providers.gradleProperty('iceCaveClientMod').orNull
+                if (extraMod != null) prepareArgs.addAll(['--client-mod', extraMod])
+                project.exec {
+                    workingDir rootProject.projectDir
+                    commandLine prepareArgs
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,5 @@
+{
+  "worldgen": "Original TWR normal preset, noise settings, referenced biomes/features and applicable modifiers",
+  "dependency_adaptation": "Only absent stone_age mob spawn references removed; world generation unchanged",
+  "removed_spawns": []
+}
