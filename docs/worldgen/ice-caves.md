@@ -148,7 +148,14 @@ TWR [`ice_cave_small_crystal.json`](../../../TheWinterRescue/kubejs/data/the_win
 
 `count` 是每区块尝试数，整数端点均包含；高度从世界最低建筑层到 `Y=256` 均匀取值，随后仅保留 `OCEAN_FLOOR_WG` 表面下至少 `13` 格的候选，最后执行群系过滤。它独立于 surface / decoration 的 `-63..128` 扫描窗口。原版地衣的局部搜索同为 `20`，其 `chance_of_spreading=0.5` 与禁用地面属于原版 configured feature；本小晶体每候选最多一块、六面均可，不复制地衣扩散。候选数相同不保证两者的实际成功数或视觉密度相同。
 
-[`FHBlocks.ICE_CRYSTAL`](../../src/main/java/com/teammoeg/frostedheart/bootstrap/common/FHBlocks.java) 的高度为 `7/16` 格、亮度为 `1`；`FHBlocks.LARGE_ICE_CRYSTAL` / `frostedheart:large_ice_crystal` 高 `14/16` 格、亮度为 `3`。两者继续使用紫水晶簇式的六向附着与含水状态，不增加运行时生长。按用户更正，大小冰晶均使用与紫水晶簇相同的双面十字交叉平面，以 `minecraft:cutout` 渲染。纹理原样提取自官方 Java `26.4-snapshot-5` 客户端的 `assets/minecraft/textures/block/ice_crystal.png`，存为 FH 同名纹理；没有重画、改色或缩放PNG。模型以1.20.1原版 `minecraft:block/cross` 的兼容结构为基础，围绕附着面缩放到15个可见像素对应7/16与14/16格高度。模型分别见 [`ice_crystal.json`](../../src/main/resources/assets/frostedheart/models/block/ice_crystal.json) 和 [`large_ice_crystal.json`](../../src/main/resources/assets/frostedheart/models/block/large_ice_crystal.json)。本轮真实客户端已观察大小辨识和自然放置；截图见文末，最终美术观感由用户验收。
+[`FHBlocks.ICE_CRYSTAL`](../../src/main/java/com/teammoeg/frostedheart/bootstrap/common/FHBlocks.java) 的碰撞高度为 `7/16` 格、亮度为 `1`；`FHBlocks.LARGE_ICE_CRYSTAL` / `frostedheart:large_ice_crystal` 碰撞高 `14/16` 格、亮度为 `3`。两者继续使用紫水晶簇式六向附着与含水状态，不增加运行时生长。
+
+当前美术按用户更正为**独立小纹理、偏白配色、20%透明**：两张PNG都是16×16，小图 `small_ice_crystal.png` 独立逐像素绘制三尖短簇，非透明高度7像素；大图 `ice_crystal.png` 保留原版15像素高轮廓，五种蓝色重配为偏白冷灰。原版轮廓来自官方 Java `26.4-snapshot-5`，当前PNG已重配色，不再是原文件。可见像素统一 `alpha=204/255=0.8`，空白为0；RGB从最暗 `(190,201,209)` 到最亮 `(252,253,254)`，没有额外顶点alpha乘数。
+
+模型仍是十字交叉结构，两者都用1.20.1原版cross坐标、相同像素映射（纵向每像素1模型单位，横向每像素0.9单位），所以小晶体由自身短轮廓表现尺寸，**不再缩小整张大图或整个模型**。当前可见高度为小7/16、大15/16格，碰撞高度沿用上述7/16、14/16。模型用 `minecraft:translucent`，按各自非透明轮廓裁剪且在交线处分半，四朝向分别保留UV，减少空白面写深度及中心重合排序问题；单个可见像素20%透明，多个有色半透明面重叠时仍按引擎规则叠加。
+
+[`Scripts/ice_crystal_assets.py`](../../Scripts/ice_crystal_assets.py) 保存两张像素稿、五色调色板与离线模型生成逻辑，使用Pillow运行，可重建PNG及模型并逐朝向验证可见像素/UV覆盖。大小模型分别60/40个单向面，没有运行期额外渲染器。实际纹理与模型分别见 [`ice_crystal.png`](../../src/main/resources/assets/frostedheart/textures/block/ice_crystal.png)、[`small_ice_crystal.png`](../../src/main/resources/assets/frostedheart/textures/block/small_ice_crystal.png)、[`large_ice_crystal.json`](../../src/main/resources/assets/frostedheart/models/block/large_ice_crystal.json)、[`ice_crystal.json`](../../src/main/resources/assets/frostedheart/models/block/ice_crystal.json)。
+
 
 ## 区块、群系及运行开销边界
 
@@ -274,9 +281,9 @@ Prism 部署用于用户观察第二版，不等于所有景观和玩法均已�
 生成修改仅作用于新地形，旧区块中的旧小晶体不会自动升级为大晶体；新资源会更新已有小晶体的外观。长期薄冰冻融、全世界含荧石团块比例及视觉平衡仍属试玩验收，未用本次夜视静止捕获代替。
 
 
-## 2026-10-22 22时：官方冰晶纹理与十字模型
+## 历史：2026-10-22 22:20，官方冰晶纹理与十字模型
 
-用户明确更正外观为紫水晶簇式十字交叉模型。本轮从[Mojang官方版本清单](https://piston-meta.mojang.com/mc/game/version_manifest_v2.json)取得当时最新 `26.4-snapshot-5`（2026-10-20发布，[官方更新记录](https://www.minecraft.net/en-us/article/minecraft-26-4-snapshot-5)），下载清单指向的官方客户端JAR，原样提取 `assets/minecraft/textures/block/ice_crystal.png`。纹理由Mojang提供，[来源及适配记录](validation/ice-crystal-cross-2026-10-22/source-and-model.json)。它是16×16、仅alpha0/255的镂空纹理，PNG未重画、改色或缩放。
+本节保留22:20部署时使用原始蓝色PNG和cutout的结果，后续淡色及透明度修订见当前行为段和文末。用户明确更正外观为紫水晶簇式十字交叉模型。当时从[Mojang官方版本清单](https://piston-meta.mojang.com/mc/game/version_manifest_v2.json)取得当时最新 `26.4-snapshot-5`（2026-10-20发布，[官方更新记录](https://www.minecraft.net/en-us/article/minecraft-26-4-snapshot-5)），下载清单指向的官方客户端JAR，原样提取 `assets/minecraft/textures/block/ice_crystal.png`。纹理由Mojang提供，[来源及适配记录](validation/ice-crystal-cross-2026-10-22/source-and-model.json)。它是16×16、仅alpha0/255的镂空纹理，PNG未重画、改色或缩放。
 
 两种模型都改为两片双面十字交叉面，使用 `minecraft:cutout` 和完整0..16 UV。采用1.20.1原版cross几何以匹配本项目资源格式，在贴靠支撑面的原点缩放；原纹理顶部一行透明，15个可见像素分别映射为7/16与14/16格。注册ID、亮度1/3、附着/水浸、碰撞、物品、掉落和所有生成规则均沿用20:03版本；旧区块已有冰晶也会使用新外观。
 
@@ -287,3 +294,22 @@ Prism 部署用于用户观察第二版，不等于所有景观和玩法均已�
 ![官方冰晶纹理十字模型对照](images/ice-crystal-cross-2026-10-22/seed-111-crystal_model_fixture.png)
 
 ![自然冰洞中的交叉晶体](images/ice-crystal-cross-2026-10-22/seed-111-hall_alternate.png)
+
+
+## 2026-10-22 22时后续：独立小像素稿、白冰配色与20%透明
+
+用户明确允许Minecraft像素图逐像素绘制。本轮使用 [像素稿脚本](../../Scripts/ice_crystal_assets.py) 重画小晶簇，并统一淡化两者色调。大图122个可见像素，小图39个，分别可见高15/7像素；相同texel世界比例，独立小图不是大图缩放。五色RGB为 `(190,201,209)`、`(210,219,224)`、`(229,234,238)`、`(242,245,247)`、`(252,253,254)`，全部可见像素Alpha=204（80%不透明），空白Alpha=0。[实测纹理和模型记录](validation/ice-crystal-pale-2026-10-22/texture-and-model.json)。
+
+为了使20%透明在不同渲染路径中都来自同一个值，alpha直接写入PNG，不叠加模型顶点alpha。两模型按透明轮廓裁剪并在交线处分半，独立复核每图1024个纹素—朝向中心样本：可见纹素精确覆盖一次、透明纹素零覆盖，四向UV正确。参考此前冰锥模型修复的几何规则，未增加全局着色器或运行期渲染逻辑。
+
+真实客户端正常预设seed111已完成并正常退出，`build/ice-crystal-pale-client.log`成功5分18秒。查看自然洞厅及对照台，色调接近周围白冰，小图三尖短簇与大图密集长簇可区分；所观察冰面交叠处未见原先的明显黑三角，但不宣称解决引擎所有透明排序问题。没有修改亮度1/3、碰撞、附着或生成规则，没有重跑无关矿量/方块逻辑测试。
+
+下图按相同像素比例显示两张纹理（左大右小）；棋盘仅为预览背景，不写入游戏贴图。
+
+![原生像素比例的独立大小纹理](images/ice-crystal-pale-2026-10-22/pixel-comparison.png)
+
+客户端对照从左到右为原版紫水晶簇、大冰晶、小冰晶，夜视人工夹具不计入自然生成统计。
+
+![淡色半透明大小冰晶](images/ice-crystal-pale-2026-10-22/seed-111-crystal_model_fixture.png)
+
+![淡色晶体在自然洞厅中](images/ice-crystal-pale-2026-10-22/seed-111-hall_alternate.png)
